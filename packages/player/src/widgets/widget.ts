@@ -1,6 +1,6 @@
-import { ResourceManager } from "@castmill/cache";
-import { EventEmitter } from "eventemitter3";
-import { NEVER, Observable, of } from "rxjs";
+import { ResourceManager } from '@castmill/cache';
+import { EventEmitter } from 'eventemitter3';
+import { NEVER, Observable, of } from 'rxjs';
 
 interface ProxyMethodData {
   counter: number;
@@ -13,7 +13,7 @@ export abstract class Widget extends EventEmitter {
 
   constructor(
     protected resourceManager: ResourceManager,
-    opts?: {},
+    opts?: {}
   ) {
     super();
 
@@ -30,15 +30,15 @@ export abstract class Widget extends EventEmitter {
 
         let result;
         switch (data.method) {
-          case "unload":
+          case 'unload':
             this.unload();
             break;
-          case "play":
+          case 'play':
             // We need to create an observable based on the notification observable
             // filtering for the timer event.
             // result = this.play.apply(this, data.args);
             break;
-          case "show":
+          case 'show':
           // How to deal with el and offset here?
         }
 
@@ -46,11 +46,11 @@ export abstract class Widget extends EventEmitter {
           JSON.stringify({
             counter: data.counter,
             result,
-          }),
+          })
         );
       });
 
-      window.addEventListener("message", messageHandler, false);
+      window.addEventListener('message', messageHandler, false);
     }
   }
 
@@ -81,7 +81,7 @@ export abstract class Widget extends EventEmitter {
   stop() {}
 
   show(el: HTMLElement, offset: number): Observable<string> {
-    return of("shown");
+    return of('shown');
   }
 
   seek(offset: number): Observable<[number, number]> {

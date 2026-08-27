@@ -18,23 +18,23 @@
  *   node scripts/i18n/translation-helper.js list teams
  */
 
-const fs = require("fs");
-const path = require("path");
+const fs = require('fs');
+const path = require('path');
 
 // Supported languages with their native names
 const SUPPORTED_LANGUAGES = {
-  en: { name: "English", nativeName: "English" },
-  es: { name: "Spanish", nativeName: "Español" },
-  sv: { name: "Swedish", nativeName: "Svenska" },
-  de: { name: "German", nativeName: "Deutsch" },
-  fr: { name: "French", nativeName: "Français" },
-  zh: { name: "Chinese", nativeName: "中文" },
-  ar: { name: "Arabic", nativeName: "العربية" },
-  ko: { name: "Korean", nativeName: "한국어" },
-  ja: { name: "Japanese", nativeName: "日本語" },
+  en: { name: 'English', nativeName: 'English' },
+  es: { name: 'Spanish', nativeName: 'Español' },
+  sv: { name: 'Swedish', nativeName: 'Svenska' },
+  de: { name: 'German', nativeName: 'Deutsch' },
+  fr: { name: 'French', nativeName: 'Français' },
+  zh: { name: 'Chinese', nativeName: '中文' },
+  ar: { name: 'Arabic', nativeName: 'العربية' },
+  ko: { name: 'Korean', nativeName: '한국어' },
+  ja: { name: 'Japanese', nativeName: '日本語' },
 };
 
-const LOCALES_DIR = path.join(__dirname, "../../src/i18n/locales");
+const LOCALES_DIR = path.join(__dirname, '../../src/i18n/locales');
 
 // AI-powered translation suggestions (placeholder - replace with actual API if needed)
 const AUTO_TRANSLATIONS = {
@@ -54,7 +54,7 @@ const AUTO_TRANSLATIONS = {
 function loadTranslationFile(langCode) {
   const filePath = path.join(LOCALES_DIR, `${langCode}.json`);
   try {
-    const content = fs.readFileSync(filePath, "utf8");
+    const content = fs.readFileSync(filePath, 'utf8');
     return JSON.parse(content);
   } catch (error) {
     console.error(`❌ Error loading ${langCode}.json:`, error.message);
@@ -68,7 +68,7 @@ function loadTranslationFile(langCode) {
 function saveTranslationFile(langCode, data) {
   const filePath = path.join(LOCALES_DIR, `${langCode}.json`);
   try {
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2) + "\n", "utf8");
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2) + '\n', 'utf8');
     return true;
   } catch (error) {
     console.error(`❌ Error saving ${langCode}.json:`, error.message);
@@ -80,14 +80,14 @@ function saveTranslationFile(langCode, data) {
  * Get nested value from object by path
  */
 function getNestedValue(obj, path) {
-  return path.split(".").reduce((current, key) => current?.[key], obj);
+  return path.split('.').reduce((current, key) => current?.[key], obj);
 }
 
 /**
  * Set nested value in object by path
  */
 function setNestedValue(obj, path, value) {
-  const keys = path.split(".");
+  const keys = path.split('.');
   const lastKey = keys.pop();
   const target = keys.reduce((current, key) => {
     if (!current[key]) current[key] = {};
@@ -118,7 +118,8 @@ function addTranslation(section, key, englishText) {
     }
 
     // Add the translation
-    const translation = langCode === "en" ? englishText : `[TODO: Translate] ${englishText}`;
+    const translation =
+      langCode === 'en' ? englishText : `[TODO: Translate] ${englishText}`;
 
     setNestedValue(data, fullKey, translation);
 
@@ -129,20 +130,22 @@ function addTranslation(section, key, englishText) {
   }
 
   console.log(
-    `\n✨ Successfully added translation to ${successCount}/${Object.keys(SUPPORTED_LANGUAGES).length} files\n`,
+    `\n✨ Successfully added translation to ${successCount}/${Object.keys(SUPPORTED_LANGUAGES).length} files\n`
   );
-  console.log(`⚠️  Remember to translate the [TODO] placeholders in non-English files!\n`);
+  console.log(
+    `⚠️  Remember to translate the [TODO] placeholders in non-English files!\n`
+  );
 }
 
 /**
  * Check for missing translations
  */
 function checkTranslations() {
-  console.log("\n🔍 Checking for missing translations...\n");
+  console.log('\n🔍 Checking for missing translations...\n');
 
-  const baseData = loadTranslationFile("en");
+  const baseData = loadTranslationFile('en');
   if (!baseData) {
-    console.error("❌ Could not load base language file (en.json)");
+    console.error('❌ Could not load base language file (en.json)');
     return;
   }
 
@@ -150,13 +153,13 @@ function checkTranslations() {
 
   // Check each language against English
   for (const langCode of Object.keys(SUPPORTED_LANGUAGES)) {
-    if (langCode === "en") continue;
+    if (langCode === 'en') continue;
 
     const langData = loadTranslationFile(langCode);
     if (!langData) continue;
 
-    const missing = findMissingKeys(baseData, langData, "");
-    const untranslated = findUntranslatedKeys(langData, "");
+    const missing = findMissingKeys(baseData, langData, '');
+    const untranslated = findUntranslatedKeys(langData, '');
 
     if (missing.length > 0 || untranslated.length > 0) {
       issues.push({ langCode, missing, untranslated });
@@ -164,7 +167,7 @@ function checkTranslations() {
   }
 
   if (issues.length === 0) {
-    console.log("✅ All translations are complete!\n");
+    console.log('✅ All translations are complete!\n');
     return;
   }
 
@@ -190,7 +193,9 @@ function checkTranslations() {
     }
   }
 
-  console.log("\n💡 Run `node scripts/i18n/translation-helper.js sync` to copy missing keys\n");
+  console.log(
+    '\n💡 Run `node scripts/i18n/translation-helper.js sync` to copy missing keys\n'
+  );
 }
 
 /**
@@ -202,8 +207,8 @@ function findMissingKeys(base, target, prefix) {
   for (const key in base) {
     const fullKey = prefix ? `${prefix}.${key}` : key;
 
-    if (typeof base[key] === "object" && !Array.isArray(base[key])) {
-      if (!target[key] || typeof target[key] !== "object") {
+    if (typeof base[key] === 'object' && !Array.isArray(base[key])) {
+      if (!target[key] || typeof target[key] !== 'object') {
         missing.push(fullKey);
       } else {
         missing.push(...findMissingKeys(base[key], target[key], fullKey));
@@ -228,9 +233,9 @@ function findUntranslatedKeys(data, prefix) {
     const fullKey = prefix ? `${prefix}.${key}` : key;
     const value = data[key];
 
-    if (typeof value === "object" && !Array.isArray(value)) {
+    if (typeof value === 'object' && !Array.isArray(value)) {
       untranslated.push(...findUntranslatedKeys(value, fullKey));
-    } else if (typeof value === "string" && value.includes("[TODO")) {
+    } else if (typeof value === 'string' && value.includes('[TODO')) {
       untranslated.push(fullKey);
     }
   }
@@ -242,23 +247,23 @@ function findUntranslatedKeys(data, prefix) {
  * Sync missing keys from English to other languages
  */
 function syncTranslations() {
-  console.log("\n🔄 Syncing translations from English to other languages...\n");
+  console.log('\n🔄 Syncing translations from English to other languages...\n');
 
-  const baseData = loadTranslationFile("en");
+  const baseData = loadTranslationFile('en');
   if (!baseData) {
-    console.error("❌ Could not load base language file (en.json)");
+    console.error('❌ Could not load base language file (en.json)');
     return;
   }
 
   let totalAdded = 0;
 
   for (const langCode of Object.keys(SUPPORTED_LANGUAGES)) {
-    if (langCode === "en") continue;
+    if (langCode === 'en') continue;
 
     const langData = loadTranslationFile(langCode);
     if (!langData) continue;
 
-    const missing = findMissingKeys(baseData, langData, "");
+    const missing = findMissingKeys(baseData, langData, '');
 
     if (missing.length === 0) {
       console.log(`✅ ${langCode}.json: Already up to date`);
@@ -269,7 +274,9 @@ function syncTranslations() {
     for (const key of missing) {
       const englishValue = getNestedValue(baseData, key);
       const todoValue =
-        typeof englishValue === "object" ? englishValue : `[TODO: Translate] ${englishValue}`;
+        typeof englishValue === 'object'
+          ? englishValue
+          : `[TODO: Translate] ${englishValue}`;
       setNestedValue(langData, key, todoValue);
     }
 
@@ -289,7 +296,7 @@ function syncTranslations() {
 function listSection(section) {
   console.log(`\n📋 Listing all keys in section: ${section}\n`);
 
-  const data = loadTranslationFile("en");
+  const data = loadTranslationFile('en');
   if (!data) return;
 
   const sectionData = getNestedValue(data, section);
@@ -298,12 +305,12 @@ function listSection(section) {
     return;
   }
 
-  function printKeys(obj, prefix = "") {
+  function printKeys(obj, prefix = '') {
     for (const key in obj) {
       const fullKey = prefix ? `${prefix}.${key}` : key;
       const value = obj[key];
 
-      if (typeof value === "object" && !Array.isArray(value)) {
+      if (typeof value === 'object' && !Array.isArray(value)) {
         console.log(`  📁 ${fullKey}/`);
         printKeys(value, fullKey);
       } else {
@@ -328,7 +335,7 @@ function showHelp() {
 Manage translations across all 9 supported languages:
   ${Object.values(SUPPORTED_LANGUAGES)
     .map((l) => l.nativeName)
-    .join(", ")}
+    .join(', ')}
 
 Commands:
 
@@ -366,48 +373,50 @@ function main() {
   const command = args[0];
 
   switch (command) {
-    case "add": {
+    case 'add': {
       const keyPath = args[1];
-      const text = args.slice(2).join(" ");
+      const text = args.slice(2).join(' ');
 
       if (!keyPath || !text) {
-        console.error("❌ Usage: add <section.key> <english-text>");
+        console.error('❌ Usage: add <section.key> <english-text>');
         process.exit(1);
       }
 
-      const parts = keyPath.split(".");
+      const parts = keyPath.split('.');
       if (parts.length < 2) {
-        console.error("❌ Key must have at least section.key format (e.g., teams.title)");
+        console.error(
+          '❌ Key must have at least section.key format (e.g., teams.title)'
+        );
         process.exit(1);
       }
 
-      const section = parts.slice(0, -1).join(".");
+      const section = parts.slice(0, -1).join('.');
       const key = parts[parts.length - 1];
       addTranslation(section, key, text);
       break;
     }
 
-    case "check":
+    case 'check':
       checkTranslations();
       break;
 
-    case "sync":
+    case 'sync':
       syncTranslations();
       break;
 
-    case "list": {
+    case 'list': {
       const section = args[1];
       if (!section) {
-        console.error("❌ Usage: list <section>");
+        console.error('❌ Usage: list <section>');
         process.exit(1);
       }
       listSection(section);
       break;
     }
 
-    case "help":
-    case "--help":
-    case "-h":
+    case 'help':
+    case '--help':
+    case '-h':
       showHelp();
       break;
 

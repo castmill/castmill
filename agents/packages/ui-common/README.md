@@ -84,7 +84,10 @@ type WidgetWithId = JsonWidget & { id: number };
 Defines table columns with sorting and custom rendering.
 
 ```typescript
-interface Column<IdType = string, Item extends ItemBase<IdType> = ItemBase<IdType>> {
+interface Column<
+  IdType = string,
+  Item extends ItemBase<IdType> = ItemBase<IdType>,
+> {
   key: string; // Property key to display
   title: string; // Column header text (⚠️ NOT "label"!)
   sortable?: boolean; // Enable sorting for this column
@@ -114,7 +117,7 @@ interface TableAction<Item> {
 ```typescript
 interface SortOptions {
   key?: string; // Column key to sort by
-  direction: "ascending" | "descending"; // Sort direction
+  direction: 'ascending' | 'descending'; // Sort direction
 }
 ```
 
@@ -273,14 +276,14 @@ if (options.sortOptions?.key) {
   const { key, direction } = options.sortOptions;
   filteredData.sort((a, b) => {
     const comparison = String(a[key]).localeCompare(String(b[key]));
-    return direction === "ascending" ? comparison : -comparison;
+    return direction === 'ascending' ? comparison : -comparison;
   });
 }
 
 // ❌ Wrong - uses 'field' and 'asc'/'desc'
 if (options.sortOptions.field) {
   const { field, direction } = options.sortOptions;
-  return direction === "asc" ? comparison : -comparison;
+  return direction === 'asc' ? comparison : -comparison;
 }
 ```
 
@@ -391,7 +394,7 @@ import {
 
   // Utilities
   ResourcesObserver,
-} from "@castmill/ui-common";
+} from '@castmill/ui-common';
 ```
 
 ## Build & Development

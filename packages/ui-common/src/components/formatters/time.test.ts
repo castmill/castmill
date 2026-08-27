@@ -1,32 +1,32 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   formatDuration,
   formatTimestamp,
   formatRelativeTime,
   formatRelativeTimeLocalized,
-} from "./time";
+} from './time';
 
-describe("formatDuration", () => {
-  it("should format milliseconds to mm:ss format", () => {
-    expect(formatDuration(0)).toBe("0:00");
-    expect(formatDuration(1000)).toBe("0:01");
-    expect(formatDuration(60000)).toBe("1:00");
-    expect(formatDuration(125000)).toBe("2:05");
-    expect(formatDuration(3661000)).toBe("61:01");
+describe('formatDuration', () => {
+  it('should format milliseconds to mm:ss format', () => {
+    expect(formatDuration(0)).toBe('0:00');
+    expect(formatDuration(1000)).toBe('0:01');
+    expect(formatDuration(60000)).toBe('1:00');
+    expect(formatDuration(125000)).toBe('2:05');
+    expect(formatDuration(3661000)).toBe('61:01');
   });
 });
 
-describe("formatTimestamp", () => {
-  it("should format ISO string to human-readable format", () => {
-    const result = formatTimestamp("2025-05-10T08:39:59Z");
+describe('formatTimestamp', () => {
+  it('should format ISO string to human-readable format', () => {
+    const result = formatTimestamp('2025-05-10T08:39:59Z');
     // Should contain the date components
     expect(result).toMatch(/May.*10.*2025/);
     expect(result).toMatch(/08:39/);
     expect(result).toMatch(/UTC/);
   });
 
-  it("should format Date object to human-readable format", () => {
-    const date = new Date("2025-01-15T14:30:00Z");
+  it('should format Date object to human-readable format', () => {
+    const date = new Date('2025-01-15T14:30:00Z');
     const result = formatTimestamp(date);
     expect(result).toMatch(/Jan.*15.*2025/);
     expect(result).toMatch(/14:30/);
@@ -34,19 +34,19 @@ describe("formatTimestamp", () => {
   });
 
   it('should return "-" for undefined timestamp', () => {
-    expect(formatTimestamp(undefined as any)).toBe("-");
+    expect(formatTimestamp(undefined as any)).toBe('-');
   });
 
   it('should return "-" for null timestamp', () => {
-    expect(formatTimestamp(null as any)).toBe("-");
+    expect(formatTimestamp(null as any)).toBe('-');
   });
 
   it('should return "-" for invalid date string', () => {
-    expect(formatTimestamp("invalid-date")).toBe("-");
+    expect(formatTimestamp('invalid-date')).toBe('-');
   });
 });
 
-describe("formatRelativeTime", () => {
+describe('formatRelativeTime', () => {
   let originalDate: typeof Date;
 
   beforeEach(() => {
@@ -54,7 +54,7 @@ describe("formatRelativeTime", () => {
     originalDate = global.Date;
 
     // Mock Date to return a fixed time: Jan 1, 2025, 12:00:00 UTC
-    const mockNow = new Date("2025-01-01T12:00:00Z");
+    const mockNow = new Date('2025-01-01T12:00:00Z');
     global.Date = class extends originalDate {
       constructor(...args: any[]) {
         if (args.length === 0) {
@@ -74,83 +74,83 @@ describe("formatRelativeTime", () => {
   });
 
   it('should return "just now" for very recent timestamps', () => {
-    const timestamp = new Date("2025-01-01T11:59:30Z"); // 30 seconds ago
-    expect(formatRelativeTime(timestamp)).toBe("just now");
+    const timestamp = new Date('2025-01-01T11:59:30Z'); // 30 seconds ago
+    expect(formatRelativeTime(timestamp)).toBe('just now');
   });
 
-  it("should format minutes correctly", () => {
-    const timestamp = new Date("2025-01-01T11:55:00Z"); // 5 minutes ago
-    expect(formatRelativeTime(timestamp)).toBe("5 minutes ago");
+  it('should format minutes correctly', () => {
+    const timestamp = new Date('2025-01-01T11:55:00Z'); // 5 minutes ago
+    expect(formatRelativeTime(timestamp)).toBe('5 minutes ago');
 
-    const timestamp2 = new Date("2025-01-01T11:59:00Z"); // 1 minute ago
-    expect(formatRelativeTime(timestamp2)).toBe("1 minute ago");
+    const timestamp2 = new Date('2025-01-01T11:59:00Z'); // 1 minute ago
+    expect(formatRelativeTime(timestamp2)).toBe('1 minute ago');
   });
 
-  it("should format hours correctly", () => {
-    const timestamp = new Date("2025-01-01T10:00:00Z"); // 2 hours ago
-    expect(formatRelativeTime(timestamp)).toBe("2 hours ago");
+  it('should format hours correctly', () => {
+    const timestamp = new Date('2025-01-01T10:00:00Z'); // 2 hours ago
+    expect(formatRelativeTime(timestamp)).toBe('2 hours ago');
 
-    const timestamp2 = new Date("2025-01-01T11:00:00Z"); // 1 hour ago
-    expect(formatRelativeTime(timestamp2)).toBe("1 hour ago");
+    const timestamp2 = new Date('2025-01-01T11:00:00Z'); // 1 hour ago
+    expect(formatRelativeTime(timestamp2)).toBe('1 hour ago');
   });
 
-  it("should format days correctly", () => {
-    const timestamp = new Date("2024-12-30T12:00:00Z"); // 2 days ago
-    expect(formatRelativeTime(timestamp)).toBe("2 days ago");
+  it('should format days correctly', () => {
+    const timestamp = new Date('2024-12-30T12:00:00Z'); // 2 days ago
+    expect(formatRelativeTime(timestamp)).toBe('2 days ago');
 
-    const timestamp2 = new Date("2024-12-31T12:00:00Z"); // 1 day ago
-    expect(formatRelativeTime(timestamp2)).toBe("1 day ago");
+    const timestamp2 = new Date('2024-12-31T12:00:00Z'); // 1 day ago
+    expect(formatRelativeTime(timestamp2)).toBe('1 day ago');
   });
 
-  it("should format months correctly", () => {
-    const timestamp = new Date("2024-11-01T12:00:00Z"); // ~2 months ago
-    expect(formatRelativeTime(timestamp)).toBe("2 months ago");
+  it('should format months correctly', () => {
+    const timestamp = new Date('2024-11-01T12:00:00Z'); // ~2 months ago
+    expect(formatRelativeTime(timestamp)).toBe('2 months ago');
 
-    const timestamp2 = new Date("2024-12-01T12:00:00Z"); // ~1 month ago
-    expect(formatRelativeTime(timestamp2)).toBe("1 month ago");
+    const timestamp2 = new Date('2024-12-01T12:00:00Z'); // ~1 month ago
+    expect(formatRelativeTime(timestamp2)).toBe('1 month ago');
   });
 
-  it("should format years correctly", () => {
-    const timestamp = new Date("2023-01-01T12:00:00Z"); // 2 years ago
-    expect(formatRelativeTime(timestamp)).toBe("2 years ago");
+  it('should format years correctly', () => {
+    const timestamp = new Date('2023-01-01T12:00:00Z'); // 2 years ago
+    expect(formatRelativeTime(timestamp)).toBe('2 years ago');
 
-    const timestamp2 = new Date("2024-01-01T12:00:00Z"); // 1 year ago
-    expect(formatRelativeTime(timestamp2)).toBe("1 year ago");
+    const timestamp2 = new Date('2024-01-01T12:00:00Z'); // 1 year ago
+    expect(formatRelativeTime(timestamp2)).toBe('1 year ago');
   });
 
-  it("should handle future dates", () => {
-    const timestamp = new Date("2025-01-01T12:05:00Z"); // 5 minutes in future
-    expect(formatRelativeTime(timestamp)).toBe("in 5 minutes");
+  it('should handle future dates', () => {
+    const timestamp = new Date('2025-01-01T12:05:00Z'); // 5 minutes in future
+    expect(formatRelativeTime(timestamp)).toBe('in 5 minutes');
 
-    const timestamp2 = new Date("2025-01-01T14:00:00Z"); // 2 hours in future
-    expect(formatRelativeTime(timestamp2)).toBe("in 2 hours");
+    const timestamp2 = new Date('2025-01-01T14:00:00Z'); // 2 hours in future
+    expect(formatRelativeTime(timestamp2)).toBe('in 2 hours');
   });
 
-  it("should handle ISO string input", () => {
-    const result = formatRelativeTime("2025-01-01T11:55:00Z");
-    expect(result).toBe("5 minutes ago");
+  it('should handle ISO string input', () => {
+    const result = formatRelativeTime('2025-01-01T11:55:00Z');
+    expect(result).toBe('5 minutes ago');
   });
 
   it('should return "-" for undefined timestamp', () => {
-    expect(formatRelativeTime(undefined as any)).toBe("-");
+    expect(formatRelativeTime(undefined as any)).toBe('-');
   });
 
   it('should return "-" for null timestamp', () => {
-    expect(formatRelativeTime(null as any)).toBe("-");
+    expect(formatRelativeTime(null as any)).toBe('-');
   });
 
   it('should return "-" for invalid date string', () => {
-    expect(formatRelativeTime("invalid-date")).toBe("-");
+    expect(formatRelativeTime('invalid-date')).toBe('-');
   });
 });
 
-describe("formatRelativeTimeLocalized", () => {
+describe('formatRelativeTimeLocalized', () => {
   let originalDate: typeof Date;
 
   beforeEach(() => {
     originalDate = global.Date;
     // Mock Date.now() to a fixed point: 2025-01-01T12:00:00Z
-    const mockNow = new Date("2025-01-01T12:00:00Z");
+    const mockNow = new Date('2025-01-01T12:00:00Z');
     global.Date = class extends originalDate {
       constructor(...args: any[]) {
         if (args.length === 0) {
@@ -168,45 +168,47 @@ describe("formatRelativeTimeLocalized", () => {
     global.Date = originalDate;
   });
 
-  it("falls back to the English formatter when no locale is provided", () => {
-    const timestamp = new Date("2025-01-01T11:55:00Z"); // 5 minutes ago
-    expect(formatRelativeTimeLocalized(timestamp)).toBe("5 minutes ago");
+  it('falls back to the English formatter when no locale is provided', () => {
+    const timestamp = new Date('2025-01-01T11:55:00Z'); // 5 minutes ago
+    expect(formatRelativeTimeLocalized(timestamp)).toBe('5 minutes ago');
   });
 
-  it("falls back to the English formatter for an English locale", () => {
-    const timestamp = new Date("2025-01-01T11:55:00Z"); // 5 minutes ago
-    expect(formatRelativeTimeLocalized(timestamp, "en")).toBe("5 minutes ago");
-    expect(formatRelativeTimeLocalized(timestamp, "en-US")).toBe("5 minutes ago");
+  it('falls back to the English formatter for an English locale', () => {
+    const timestamp = new Date('2025-01-01T11:55:00Z'); // 5 minutes ago
+    expect(formatRelativeTimeLocalized(timestamp, 'en')).toBe('5 minutes ago');
+    expect(formatRelativeTimeLocalized(timestamp, 'en-US')).toBe(
+      '5 minutes ago'
+    );
   });
 
-  it("formats relative past time using a non-English locale", () => {
+  it('formats relative past time using a non-English locale', () => {
     // Swedish for "5 minutes ago"
-    const timestamp = new Date("2025-01-01T11:55:00Z");
-    const result = formatRelativeTimeLocalized(timestamp, "sv");
+    const timestamp = new Date('2025-01-01T11:55:00Z');
+    const result = formatRelativeTimeLocalized(timestamp, 'sv');
     // Intl.RelativeTimeFormat with sv should produce a Swedish string
-    expect(result).not.toBe("5 minutes ago");
+    expect(result).not.toBe('5 minutes ago');
     expect(result.length).toBeGreaterThan(0);
   });
 
-  it("formats relative future time using a non-English locale", () => {
+  it('formats relative future time using a non-English locale', () => {
     // 2 hours in the future
-    const timestamp = new Date("2025-01-01T14:00:00Z");
-    const result = formatRelativeTimeLocalized(timestamp, "de");
+    const timestamp = new Date('2025-01-01T14:00:00Z');
+    const result = formatRelativeTimeLocalized(timestamp, 'de');
     expect(result.length).toBeGreaterThan(0);
-    expect(result).not.toBe("in 2 hours");
+    expect(result).not.toBe('in 2 hours');
   });
 
-  it("handles ISO string input for a non-English locale", () => {
-    const result = formatRelativeTimeLocalized("2025-01-01T11:55:00Z", "fr");
+  it('handles ISO string input for a non-English locale', () => {
+    const result = formatRelativeTimeLocalized('2025-01-01T11:55:00Z', 'fr');
     expect(result.length).toBeGreaterThan(0);
   });
 
   it('returns "-" for an empty/null timestamp', () => {
-    expect(formatRelativeTimeLocalized("" as any, "sv")).toBe("-");
-    expect(formatRelativeTimeLocalized(null as any, "sv")).toBe("-");
+    expect(formatRelativeTimeLocalized('' as any, 'sv')).toBe('-');
+    expect(formatRelativeTimeLocalized(null as any, 'sv')).toBe('-');
   });
 
   it('returns "-" for an invalid date string', () => {
-    expect(formatRelativeTimeLocalized("invalid-date", "sv")).toBe("-");
+    expect(formatRelativeTimeLocalized('invalid-date', 'sv')).toBe('-');
   });
 });

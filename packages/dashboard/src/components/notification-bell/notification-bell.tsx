@@ -1,10 +1,16 @@
-import { Component, createSignal, createEffect, Show, onCleanup } from "solid-js";
-import { FaRegularBell, FaSolidBell } from "solid-icons/fa";
-import { notificationsService } from "../../services/notifications.service";
-import { NotificationDialog } from "../notification-dialog/notification-dialog";
-import { getUser } from "../auth";
-import { store } from "../../store";
-import "./notification-bell.scss";
+import {
+  Component,
+  createSignal,
+  createEffect,
+  Show,
+  onCleanup,
+} from 'solid-js';
+import { FaRegularBell, FaSolidBell } from 'solid-icons/fa';
+import { notificationsService } from '../../services/notifications.service';
+import { NotificationDialog } from '../notification-dialog/notification-dialog';
+import { getUser } from '../auth';
+import { store } from '../../store';
+import './notification-bell.scss';
 
 interface NotificationBellProps {}
 
@@ -19,7 +25,7 @@ const NotificationBell: Component<NotificationBellProps> = () => {
       const count = await notificationsService.getUnreadCount();
       setUnreadCount(count);
     } catch (error) {
-      console.error("Failed to load unread count:", error);
+      console.error('Failed to load unread count:', error);
     }
   });
 
@@ -34,23 +40,26 @@ const NotificationBell: Component<NotificationBellProps> = () => {
     }
 
     // Join notifications channel using the existing socket
-    const notifChannel = existingSocket.channel(`notifications:${currentUser.id}`, {});
+    const notifChannel = existingSocket.channel(
+      `notifications:${currentUser.id}`,
+      {}
+    );
 
     notifChannel
       .join()
-      .receive("ok", (resp: any) => {
-        console.log("Joined notifications channel", resp);
+      .receive('ok', (resp: any) => {
+        console.log('Joined notifications channel', resp);
         if (resp.unread_count !== undefined) {
           setUnreadCount(resp.unread_count);
         }
       })
-      .receive("error", (resp: any) => {
-        console.error("Failed to join notifications channel", resp);
+      .receive('error', (resp: any) => {
+        console.error('Failed to join notifications channel', resp);
       });
 
     // Listen for new notifications
-    notifChannel.on("new_notification", (payload: any) => {
-      console.log("New notification received:", payload);
+    notifChannel.on('new_notification', (payload: any) => {
+      console.log('New notification received:', payload);
       if (payload.unread_count !== undefined) {
         setUnreadCount(payload.unread_count);
       }

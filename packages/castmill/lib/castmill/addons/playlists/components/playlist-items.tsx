@@ -1,17 +1,29 @@
-import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
+import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 
-import { Component, For, createEffect, createSignal, onCleanup, Show } from "solid-js";
-import { JsonPlaylistItem, JsonWidget, JsonWidgetConfig, OptionsDict } from "@castmill/player";
-import { Modal } from "@castmill/ui-common";
+import {
+  Component,
+  For,
+  createEffect,
+  createSignal,
+  onCleanup,
+  Show,
+} from 'solid-js';
+import {
+  JsonPlaylistItem,
+  JsonWidget,
+  JsonWidgetConfig,
+  OptionsDict,
+} from '@castmill/player';
+import { Modal } from '@castmill/ui-common';
 
-import { PlaylistItem } from "./playlist-item";
-import { WidgetConfig } from "./widget-config";
-import { AddonStore } from "../../common/interfaces/addon-store";
-import { PlaylistsService } from "../services/playlists.service";
+import { PlaylistItem } from './playlist-item';
+import { WidgetConfig } from './widget-config';
+import { AddonStore } from '../../common/interfaces/addon-store';
+import { PlaylistsService } from '../services/playlists.service';
 import {
   getTranslatedWidgetName,
   getTranslatedWidgetDescription,
-} from "../../common/utils/widget-catalog-utils";
+} from '../../common/utils/widget-catalog-utils';
 
 export interface CredentialsError {
   widget: JsonWidget;
@@ -30,7 +42,7 @@ export const PlaylistItems: Component<{
     opts: {
       config: Partial<JsonWidgetConfig>;
       expandedOptions: OptionsDict;
-    },
+    }
   ) => Promise<void>;
   onInsertItem: (
     widget: JsonWidget,
@@ -38,20 +50,21 @@ export const PlaylistItems: Component<{
     opts: {
       config: Partial<JsonWidgetConfig>;
       expandedOptions: OptionsDict;
-    },
+    }
   ) => Promise<void>;
   onMoveItem: (
     item: JsonPlaylistItem,
     currentIndex: number,
-    newIndex: number | undefined,
+    newIndex: number | undefined
   ) => Promise<void>;
   onRemoveItem: (item: JsonPlaylistItem) => Promise<void>;
   onChangeDuration: (item: JsonPlaylistItem, duration: number) => Promise<void>;
   onCredentialsError?: (error: CredentialsError) => void;
   onSeekToItem?: (index: number) => void;
 }> = (props) => {
-  const t = (key: string, params?: Record<string, any>) => props.store.i18n?.t(key, params) || key;
-  const locale = () => props.store.i18n?.locale() || "en";
+  const t = (key: string, params?: Record<string, any>) =>
+    props.store.i18n?.t(key, params) || key;
+  const locale = () => props.store.i18n?.locale() || 'en';
 
   const [showModal, setShowModal] = createSignal<JsonPlaylistItem>();
   const [promiseResolve, setPromiseResolve] = createSignal<{
@@ -61,7 +74,7 @@ export const PlaylistItems: Component<{
             config: Partial<JsonWidgetConfig>;
             expandedOptions: OptionsDict;
           }
-        | undefined,
+        | undefined
     ) => void;
     reject: () => void;
   }>();
@@ -103,7 +116,7 @@ export const PlaylistItems: Component<{
   const moveItem = async (
     item: JsonPlaylistItem,
     currentIndex: number,
-    newIndex: number | undefined,
+    newIndex: number | undefined
   ) => {
     await props.onMoveItem(item, currentIndex, newIndex);
   };
@@ -117,10 +130,10 @@ export const PlaylistItems: Component<{
       prefetchPromise = PlaylistsService.prefetchWidgetData(
         props.baseUrl,
         props.organizationId,
-        widget.id,
+        widget.id
       ).catch((err) => {
         // Don't block on prefetch errors - it's just a performance optimization
-        console.warn("Widget data prefetch failed:", err);
+        console.warn('Widget data prefetch failed:', err);
         return null;
       });
     }
@@ -131,7 +144,7 @@ export const PlaylistItems: Component<{
         const credentialsStatus = await PlaylistsService.checkWidgetCredentials(
           props.baseUrl,
           props.organizationId,
-          widget.id,
+          widget.id
         );
 
         if (!credentialsStatus.configured) {
@@ -144,7 +157,7 @@ export const PlaylistItems: Component<{
         }
       } catch (err) {
         // If the check fails, continue anyway - the server will validate
-        console.warn("Failed to check widget credentials:", err);
+        console.warn('Failed to check widget credentials:', err);
       }
     }
 
@@ -265,7 +278,7 @@ export const PlaylistItems: Component<{
     <>
       <div
         ref={droppableRef}
-        style={{ "background-color": isDraggedOver() ? "lightblue" : "#555" }}
+        style={{ 'background-color': isDraggedOver() ? 'lightblue' : '#555' }}
         class="playlist-items"
       >
         {/* Animates an empty space when dragging over an item
@@ -279,7 +292,9 @@ export const PlaylistItems: Component<{
               locale={locale()}
               t={t}
               dynamicDuration={
-                typeof item.id === "number" ? props.dynamicDurations?.[item.id] : undefined
+                typeof item.id === 'number'
+                  ? props.dynamicDurations?.[item.id]
+                  : undefined
               }
               onRemove={removeItem}
               onChangeDuration={changeDuration}
@@ -303,17 +318,19 @@ export const PlaylistItems: Component<{
           class="playlist-end-drop-zone"
           classList={{ hovered: endZoneHovered() }}
         >
-          <span class="playlist-end-drop-zone-label">{t("playlists.dropHereToAddAtEnd")}</span>
+          <span class="playlist-end-drop-zone-label">
+            {t('playlists.dropHereToAddAtEnd')}
+          </span>
         </div>
       </div>
       <Show when={showModal()}>
         <Modal
-          title={t("playlists.widgetModalTitle", {
+          title={t('playlists.widgetModalTitle', {
             name: getTranslatedWidgetName(showModal()!.widget, locale()),
           })}
           description={
             getTranslatedWidgetDescription(showModal()!.widget, locale()) ||
-            t("playlists.configureYourWidget")
+            t('playlists.configureYourWidget')
           }
           onClose={() => closeDialog()}
         >

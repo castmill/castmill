@@ -3,7 +3,9 @@
   "categories": {
     "correctness": "error"
   },
-  "rules": {},
+  "rules": {
+    "no-unassigned-vars": "off"
+  },
   "env": {
     "builtin": true
   },

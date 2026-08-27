@@ -1,6 +1,6 @@
 /** @jsxImportSource solid-js */
-import { createSignal, createEffect } from "solid-js";
-import styles from "./slider.module.scss";
+import { createSignal, createEffect } from 'solid-js';
+import styles from './slider.module.scss';
 
 export const Slider = (props: {
   name: string;
@@ -9,7 +9,7 @@ export const Slider = (props: {
   max?: number;
   step?: number;
   disabled?: boolean;
-  valueSize?: "normal" | "small";
+  valueSize?: 'normal' | 'small';
   onChange?: (value: number) => void;
   onSlideStop?: (value: number) => void;
   formatValue?: (value: number) => string;
@@ -30,8 +30,12 @@ export const Slider = (props: {
   return (
     <div class={styles.sliderContainer}>
       <label class={styles.filterLabel}>
-        {props.name}:{" "}
-        <span class={props.valueSize === "small" ? styles.valueSmall : styles.valueText}>
+        {props.name}:{' '}
+        <span
+          class={
+            props.valueSize === 'small' ? styles.valueSmall : styles.valueText
+          }
+        >
           {applyFormatting(sliderValue())}
         </span>
       </label>

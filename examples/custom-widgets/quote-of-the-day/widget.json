@@ -75,12 +75,17 @@
     "animations": [
       {
         "keyframes": [
-          { "from": { "opacity": 0 }, "to": { "opacity": 1, "duration": 1, "ease": "power2.out" } }
+          {
+            "from": { "opacity": 0 },
+            "to": { "opacity": 1, "duration": 1, "ease": "power2.out" }
+          }
         ]
       },
       {
         "start": -1000,
-        "keyframes": [{ "to": { "opacity": 0, "duration": 1, "ease": "power2.in" } }]
+        "keyframes": [
+          { "to": { "opacity": 0, "duration": 1, "ease": "power2.in" } }
+        ]
       }
     ],
     "components": [
@@ -198,7 +203,12 @@
                     "keyframes": [
                       {
                         "from": { "scaleX": 0 },
-                        "to": { "scaleX": 1, "duration": 0.6, "ease": "power2.inOut", "delay": 1.2 }
+                        "to": {
+                          "scaleX": 1,
+                          "duration": 0.6,
+                          "ease": "power2.inOut",
+                          "delay": 1.2
+                        }
                       }
                     ]
                   }
@@ -215,7 +225,10 @@
                   "font-family": "'Montserrat', 'Helvetica Neue', Arial, sans-serif",
                   "font-size": "1.25em",
                   "font-weight": "400",
-                  "color": { "key": "options.author_color", "default": "#7f8c8d" },
+                  "color": {
+                    "key": "options.author_color",
+                    "default": "#7f8c8d"
+                  },
                   "letter-spacing": "0.15em",
                   "text-transform": "uppercase"
                 },
@@ -246,7 +259,10 @@
                   "font-family": "'Lato', 'Helvetica Neue', sans-serif",
                   "font-size": "1em",
                   "font-weight": "300",
-                  "color": { "key": "options.author_color", "default": "#95a5a6" },
+                  "color": {
+                    "key": "options.author_color",
+                    "default": "#95a5a6"
+                  },
                   "font-style": "italic"
                 },
                 "animations": [
@@ -290,7 +306,13 @@
             "keyframes": [
               {
                 "from": { "x": 50, "opacity": 0 },
-                "to": { "x": 0, "opacity": 1, "duration": 0.8, "ease": "power2.out", "delay": 1.8 }
+                "to": {
+                  "x": 0,
+                  "opacity": 1,
+                  "duration": 0.8,
+                  "ease": "power2.out",
+                  "delay": 1.8
+                }
               }
             ]
           }
@@ -372,7 +394,13 @@
   },
   "meta": {
     "category": "content",
-    "tags": ["quotes", "inspiration", "motivation", "typography", "custom-fonts"],
+    "tags": [
+      "quotes",
+      "inspiration",
+      "motivation",
+      "typography",
+      "custom-fonts"
+    ],
     "license": "MIT",
     "repository": "https://github.com/castmill/castmill"
   }

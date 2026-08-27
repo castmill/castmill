@@ -1,11 +1,11 @@
-import { toZonedTime, fromZonedTime } from "date-fns-tz";
-import { CalendarEntry } from "./calendar-entry.interface";
-import { JsonChannelEntry } from "../../services/channels.service";
+import { toZonedTime, fromZonedTime } from 'date-fns-tz';
+import { CalendarEntry } from './calendar-entry.interface';
+import { JsonChannelEntry } from '../../services/channels.service';
 
 export function calendarEntryToTimestamps(
   entry: CalendarEntry,
   baseDate: Date,
-  timeZone: string,
+  timeZone: string
 ): { start: number; end: number } {
   // Create start date in the calendar's time zone
   const startDate = new Date(baseDate);
@@ -32,7 +32,7 @@ export function calendarEntryToTimestamps(
 
 export function timestampsToCalendarEntry(
   dbEntry: JsonChannelEntry,
-  timezone: string,
+  timezone: string
 ): CalendarEntry {
   // Convert UTC timestamps to zoned time
   const startDate = toZonedTime(new Date(dbEntry.start), timezone);
@@ -51,16 +51,16 @@ export function timestampsToCalendarEntry(
   const endMinute = endDate.getMinutes();
 
   // Generate title based on local time
-  const title = `${startHour.toString().padStart(2, "0")}:${startMinute
+  const title = `${startHour.toString().padStart(2, '0')}:${startMinute
     .toString()
-    .padStart(2, "0")}-${endHour.toString().padStart(2, "0")}:${endMinute
+    .padStart(2, '0')}-${endHour.toString().padStart(2, '0')}:${endMinute
     .toString()
-    .padStart(2, "0")}`;
+    .padStart(2, '0')}`;
 
   return {
     id: dbEntry.id,
     title,
-    playlist: { id: dbEntry.playlist_id, name: "test" },
+    playlist: { id: dbEntry.playlist_id, name: 'test' },
     startHour,
     startMinute,
     endHour,

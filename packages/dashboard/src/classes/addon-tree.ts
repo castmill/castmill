@@ -1,5 +1,5 @@
-import { AddOnNode } from "../interfaces/addon-node.interface";
-import { AddOn } from "../interfaces/addon.interface";
+import { AddOnNode } from '../interfaces/addon-node.interface';
+import { AddOn } from '../interfaces/addon.interface';
 
 export class AddOnTree {
   root: Map<string, AddOnNode>;
@@ -10,7 +10,7 @@ export class AddOnTree {
   }
 
   getSubTree(path: string): AddOnNode | undefined {
-    const mountPoint = path.split(".");
+    const mountPoint = path.split('.');
     let nodeChildren = this.root;
     for (let i = 0; i < mountPoint.length; i++) {
       const key = mountPoint[i];
@@ -30,7 +30,7 @@ export class AddOnTree {
 
     for (let i = 0; i < addons.length; i++) {
       const addon = addons[i];
-      const mountPoint = addon.mount_point.split(".");
+      const mountPoint = addon.mount_point.split('.');
       let nodeChildren = root;
 
       for (let j = 0; j < mountPoint.length; j++) {

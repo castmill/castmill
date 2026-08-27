@@ -1,8 +1,8 @@
-import { Socket } from "phoenix";
-import { createSignal } from "solid-js";
-import { setStore } from "../store";
+import { Socket } from 'phoenix';
+import { createSignal } from 'solid-js';
+import { setStore } from '../store';
 
-import { baseUrl, wsEndpoint } from "../env";
+import { baseUrl, wsEndpoint } from '../env';
 
 class User {
   id?: string;
@@ -10,7 +10,7 @@ class User {
   name?: string;
 }
 
-const AUTH_TOKEN_KEY = "castmill_auth_token";
+const AUTH_TOKEN_KEY = 'castmill_auth_token';
 
 // Example authentication signal (replace with your actual authentication logic)
 const [isAuthenticated, setIsAuthenticated] = createSignal(true);
@@ -33,11 +33,14 @@ export function getAuthToken(): string | null {
  *
  * All dashboard service calls should use this instead of raw `fetch()`.
  */
-export function authFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+export function authFetch(
+  input: RequestInfo | URL,
+  init?: RequestInit
+): Promise<Response> {
   if (authToken) {
     const headers = new Headers(init?.headers);
-    if (!headers.has("Authorization")) {
-      headers.set("Authorization", `Bearer ${authToken}`);
+    if (!headers.has('Authorization')) {
+      headers.set('Authorization', `Bearer ${authToken}`);
     }
     return fetch(input, { ...init, headers });
   }
@@ -46,7 +49,7 @@ export function authFetch(input: RequestInfo | URL, init?: RequestInit): Promise
 
 // Make authFetch available on the global store so addon components can
 // use `props.store.authFetch()` instead of raw `fetch()`.
-setStore("authFetch", authFetch);
+setStore('authFetch', authFetch);
 
 /**
  * Establish a user session.
@@ -65,10 +68,10 @@ export async function loginUser(sessionData?: { user: User; token: string }) {
     if (sessionData) {
       // Validate required fields
       if (
-        typeof sessionData.token !== "string" ||
-        sessionData.token === "" ||
-        typeof sessionData.user?.id !== "string" ||
-        sessionData.user.id === ""
+        typeof sessionData.token !== 'string' ||
+        sessionData.token === '' ||
+        typeof sessionData.user?.id !== 'string' ||
+        sessionData.user.id === ''
       ) {
         resetSession();
         return;
@@ -83,7 +86,7 @@ export async function loginUser(sessionData?: { user: User; token: string }) {
       }
 
       const result = await authFetch(`${baseUrl}/sessions/`, {
-        method: "GET",
+        method: 'GET',
       });
 
       if (result.status !== 200) {
@@ -93,17 +96,17 @@ export async function loginUser(sessionData?: { user: User; token: string }) {
 
       const json = await result.json();
 
-      if (json.status !== "ok" || typeof json.user !== "object") {
+      if (json.status !== 'ok' || typeof json.user !== 'object') {
         resetSession();
         return;
       }
 
       if (
         json.user == null ||
-        typeof json.user.id !== "string" ||
-        json.user.id === "" ||
-        typeof json.token !== "string" ||
-        json.token === ""
+        typeof json.user.id !== 'string' ||
+        json.user.id === '' ||
+        typeof json.token !== 'string' ||
+        json.token === ''
       ) {
         resetSession();
         return;
@@ -126,20 +129,20 @@ export async function loginUser(sessionData?: { user: User; token: string }) {
 
     channel
       .join()
-      .receive("ok", () => {
-        console.log("Joined successfully");
+      .receive('ok', () => {
+        console.log('Joined successfully');
       })
-      .receive("error", () => {
-        console.log("Unable to join");
+      .receive('error', () => {
+        console.log('Unable to join');
       });
 
-    setStore("socket", socket);
+    setStore('socket', socket);
     setUser(userData);
     setIsAuthenticated(true);
   } catch (error) {
     // Handle network errors (e.g., server is down)
-    if (error instanceof TypeError && error.message === "Failed to fetch") {
-      throw new Error("SERVER_UNREACHABLE");
+    if (error instanceof TypeError && error.message === 'Failed to fetch') {
+      throw new Error('SERVER_UNREACHABLE');
     }
     throw error;
   }

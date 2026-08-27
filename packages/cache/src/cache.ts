@@ -14,8 +14,8 @@
  * all the content. It may be possible in the future to support for "streaming", not cacheable content, but
  * this is a separate case from the general case.
  */
-import { Dexie } from "dexie";
-import { StorageIntegration, StoreOptions } from "./storage.integration";
+import { Dexie } from 'dexie';
+import { StorageIntegration, StoreOptions } from './storage.integration';
 
 /*
 if ("storage" in navigator && "estimate" in navigator.storage) {
@@ -26,9 +26,9 @@ if ("storage" in navigator && "estimate" in navigator.storage) {
 */
 
 export enum ItemType {
-  Code = "code",
-  Data = "data",
-  Media = "media",
+  Code = 'code',
+  Data = 'data',
+  Media = 'media',
 }
 
 interface ItemMetadata {
@@ -52,12 +52,12 @@ export class Cache extends Dexie {
     private integration: StorageIntegration,
     name: string,
     private maxItems: number,
-    version = 1,
+    version = 1
   ) {
     super(name);
 
     this.version(version).stores({
-      items: "url, timestamp, type",
+      items: 'url, timestamp, type',
     });
   }
 
@@ -80,7 +80,9 @@ export class Cache extends Dexie {
 
     // Remove items from cache that are not in the integration
     for (const item of items) {
-      const existsInIntegration = files.some((file) => file.url === item.cachedUrl);
+      const existsInIntegration = files.some(
+        (file) => file.url === item.cachedUrl
+      );
       if (!existsInIntegration) {
         await this.items.delete(item.url);
       }
@@ -107,7 +109,12 @@ export class Cache extends Dexie {
    */
   async list(type: ItemType, offset: number = 0, limit: number = 10) {
     // List all the items of a given type
-    const items = await this.items.where("type").equals(type).offset(offset).limit(limit).toArray();
+    const items = await this.items
+      .where('type')
+      .equals(type)
+      .offset(offset)
+      .limit(limit)
+      .toArray();
 
     return items;
   }
@@ -117,7 +124,7 @@ export class Cache extends Dexie {
    *
    */
   async count(type: ItemType) {
-    return this.items.where("type").equals(type).count();
+    return this.items.where('type').equals(type).count();
   }
 
   /**
@@ -161,7 +168,7 @@ export class Cache extends Dexie {
     url: string,
     type: ItemType,
     mimeType: string,
-    opts: SetItemCacheOptions = { force: false },
+    opts: SetItemCacheOptions = { force: false }
   ) {
     // Check if we are already caching the item - if so, return that promise
     if (!!this.caching[url]) {
@@ -184,7 +191,7 @@ export class Cache extends Dexie {
       const count = await this.items.count();
       if (count >= this.maxItems) {
         const items = await this.items
-          .orderBy("timestamp")
+          .orderBy('timestamp')
           .limit(count - this.maxItems + 1)
           .toArray();
         for (const item of items) {
@@ -211,7 +218,7 @@ export class Cache extends Dexie {
       })
       .catch(async (err) => {
         // TODO: we should use the device logger instead of console.error
-        console.error("Error caching file", url, err);
+        console.error('Error caching file', url, err);
 
         // Only clean up if there was no pre-existing item we want to preserve.
         // When force-refreshing stale data, the old entry should be kept as
@@ -223,7 +230,7 @@ export class Cache extends Dexie {
               await this.del(url);
             }
           } catch (err) {
-            console.error("Error deleting item", url, err);
+            console.error('Error deleting item', url, err);
           }
         }
 
@@ -238,16 +245,19 @@ export class Cache extends Dexie {
     url: string,
     type: ItemType,
     mimeType: string,
-    opts?: StoreOptions,
+    opts?: StoreOptions
   ): Promise<ItemMetadata | undefined> {
     try {
-      const { result, item: storageItem } = await this.integration.storeFile(url, opts);
+      const { result, item: storageItem } = await this.integration.storeFile(
+        url,
+        opts
+      );
       switch (result.code) {
-        case "SUCCESS":
+        case 'SUCCESS':
           if (storageItem) {
             const { url: cachedUrl, size } = storageItem;
             if (!cachedUrl) {
-              throw new Error("Cached url is null");
+              throw new Error('Cached url is null');
             }
             this.totalSize += size;
 
@@ -265,28 +275,32 @@ export class Cache extends Dexie {
             await this.items.put(item);
             return item;
           }
-          throw new Error("Cache: Storage is missing item despite signaling success");
-        case "FAILURE":
+          throw new Error(
+            'Cache: Storage is missing item despite signaling success'
+          );
+        case 'FAILURE':
           switch (result.error) {
-            case "NOT_ENOUGH_SPACE":
+            case 'NOT_ENOUGH_SPACE':
               // TODO: we probably need a counter here to avoid infinite loops
               if (result.errMsg) {
                 const requiredSpace = parseInt(result.errMsg);
                 await this.freeSpace(requiredSpace);
                 return this.storeFile(url, type, mimeType, opts);
               } else {
-                throw new Error("Not enough space, and no error message");
+                throw new Error('Not enough space, and no error message');
               }
-            case "NOT_FOUND":
-              throw new Error("File not found");
+            case 'NOT_FOUND':
+              throw new Error('File not found');
             default:
-              throw new Error(`Unhandled error ${result.error} ${result.errMsg}`);
+              throw new Error(
+                `Unhandled error ${result.error} ${result.errMsg}`
+              );
           }
         default:
           throw new Error(`Unhandled result code ${result.code}`);
       }
     } catch (err) {
-      console.error("Error caching file", url, err);
+      console.error('Error caching file', url, err);
       throw err as Error;
     }
   }
@@ -308,7 +322,7 @@ export class Cache extends Dexie {
     const totalSize = await this.getTotalSize();
 
     if (totalSize < size) {
-      throw new Error("Not enough space to free");
+      throw new Error('Not enough space to free');
     }
 
     // Iterate in chunks of 10, and free as much as needed
@@ -317,7 +331,7 @@ export class Cache extends Dexie {
     const numChunks = Math.ceil(count / chunkSize);
     for (let chunk = 0; chunk < numChunks; chunk++) {
       const items = await this.items
-        .orderBy("timestamp")
+        .orderBy('timestamp')
         .offset(chunk * chunkSize)
         .limit(chunkSize)
         .toArray();
@@ -330,7 +344,7 @@ export class Cache extends Dexie {
       }
     }
 
-    throw new Error("Could not free enough space");
+    throw new Error('Could not free enough space');
   }
 
   private async getTotalSize() {
@@ -342,7 +356,7 @@ export class Cache extends Dexie {
     const numChunks = Math.ceil(count / chunkSize);
     for (let chunk = 0; chunk < numChunks; chunk++) {
       const items = await this.items
-        .orderBy("timestamp")
+        .orderBy('timestamp')
         .offset(chunk * chunkSize)
         .limit(chunkSize)
         .toArray();

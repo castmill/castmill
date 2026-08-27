@@ -8,10 +8,10 @@ import {
   mergeProps,
   onCleanup,
   onMount,
-} from "solid-js";
-import { Button } from "../button/button";
+} from 'solid-js';
+import { Button } from '../button/button';
 
-import "./menu-button.scss";
+import './menu-button.scss';
 
 export interface MenuButtonItem {
   key: string;
@@ -20,7 +20,7 @@ export interface MenuButtonItem {
   disabled?: boolean;
 }
 
-export type MenuButtonSize = "small" | "medium" | "large";
+export type MenuButtonSize = 'small' | 'medium' | 'large';
 
 interface MenuButtonProps {
   label: string;
@@ -30,7 +30,7 @@ interface MenuButtonProps {
 }
 
 export const MenuButton: Component<MenuButtonProps> = (props) => {
-  const mergedProps = mergeProps({ size: "medium" as MenuButtonSize }, props);
+  const mergedProps = mergeProps({ size: 'medium' as MenuButtonSize }, props);
   const [open, setOpen] = createSignal(false);
   const menuId = `castmill-menu-button-${createUniqueId()}`;
   let rootRef: HTMLDivElement | undefined;
@@ -46,11 +46,11 @@ export const MenuButton: Component<MenuButtonProps> = (props) => {
   };
 
   onMount(() => {
-    document.addEventListener("click", handleOutsideClick);
+    document.addEventListener('click', handleOutsideClick);
   });
 
   onCleanup(() => {
-    document.removeEventListener("click", handleOutsideClick);
+    document.removeEventListener('click', handleOutsideClick);
   });
 
   createEffect(() => {
@@ -59,7 +59,7 @@ export const MenuButton: Component<MenuButtonProps> = (props) => {
     }
 
     const firstEnabledItem = menuRef?.querySelector(
-      'button[role="menuitem"]:not(:disabled)',
+      'button[role="menuitem"]:not(:disabled)'
     ) as HTMLButtonElement | null;
 
     firstEnabledItem?.focus();
@@ -74,9 +74,9 @@ export const MenuButton: Component<MenuButtonProps> = (props) => {
     <div
       class="castmill-menu-button"
       classList={{
-        "castmill-menu-button-size-small": mergedProps.size === "small",
-        "castmill-menu-button-size-medium": mergedProps.size === "medium",
-        "castmill-menu-button-size-large": mergedProps.size === "large",
+        'castmill-menu-button-size-small': mergedProps.size === 'small',
+        'castmill-menu-button-size-medium': mergedProps.size === 'medium',
+        'castmill-menu-button-size-large': mergedProps.size === 'large',
       }}
       ref={rootRef}
     >
@@ -90,12 +90,12 @@ export const MenuButton: Component<MenuButtonProps> = (props) => {
         aria-expanded={open()}
         aria-controls={menuId}
         onKeyDown={(event) => {
-          if (event.key === "ArrowDown") {
+          if (event.key === 'ArrowDown') {
             event.preventDefault();
             setOpen(true);
           }
 
-          if (event.key === "Escape") {
+          if (event.key === 'Escape') {
             event.preventDefault();
             setOpen(false);
           }
@@ -110,7 +110,7 @@ export const MenuButton: Component<MenuButtonProps> = (props) => {
           role="menu"
           ref={menuRef}
           onKeyDown={(event) => {
-            if (event.key === "Escape") {
+            if (event.key === 'Escape') {
               event.preventDefault();
               closeMenu();
             }

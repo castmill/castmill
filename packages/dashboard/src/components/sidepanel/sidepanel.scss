@@ -1,4 +1,4 @@
-@use "../../colors.scss";
+@use '../../colors.scss';
 
 .castmill-sidepanel {
   width: 15rem;
@@ -43,7 +43,12 @@
     .section-divider {
       width: 100%;
       height: 0.1em;
-      background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.3), transparent);
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(59, 130, 246, 0.3),
+        transparent
+      );
       margin: 1em 0;
     }
   }

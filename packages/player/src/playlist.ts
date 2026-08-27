@@ -1,13 +1,21 @@
-import { ResourceManager } from "@castmill/cache";
+import { ResourceManager } from '@castmill/cache';
 
-import { Status } from "./playable";
-import { Layer } from "./layer";
-import { EventEmitter } from "eventemitter3";
-import { of, from, Observable } from "rxjs";
-import { concatMap, map, repeat, share, takeWhile, tap, switchMap } from "rxjs/operators";
-import { Renderer } from "./renderer";
-import { JsonPlaylist } from "./";
-import { PlayerGlobals } from "./interfaces/player-globals.interface";
+import { Status } from './playable';
+import { Layer } from './layer';
+import { EventEmitter } from 'eventemitter3';
+import { of, from, Observable } from 'rxjs';
+import {
+  concatMap,
+  map,
+  repeat,
+  share,
+  takeWhile,
+  tap,
+  switchMap,
+} from 'rxjs/operators';
+import { Renderer } from './renderer';
+import { JsonPlaylist } from './';
+import { PlayerGlobals } from './interfaces/player-globals.interface';
 
 export class Playlist extends EventEmitter {
   public layers: Layer[] = [];
@@ -20,7 +28,7 @@ export class Playlist extends EventEmitter {
 
   constructor(
     public name: string,
-    private resourceManager: ResourceManager,
+    private resourceManager: ResourceManager
   ) {
     super();
     // this.toggleDebug();
@@ -35,7 +43,7 @@ export class Playlist extends EventEmitter {
   static fromJSON(
     json: JsonPlaylist,
     resourceManager: ResourceManager,
-    globals: PlayerGlobals = { target: "preview" },
+    globals: PlayerGlobals = { target: 'preview' }
   ) {
     const playlist = new Playlist(json.name, resourceManager);
     const items = json.items || [];
@@ -47,7 +55,11 @@ export class Playlist extends EventEmitter {
     return playlist;
   }
 
-  play(renderer: Renderer, timer$: Observable<number>, opts?: { loop?: boolean }) {
+  play(
+    renderer: Renderer,
+    timer$: Observable<number>,
+    opts?: { loop?: boolean }
+  ) {
     return this.playLayers(renderer, timer$, opts ? opts : {});
   }
 
@@ -77,7 +89,11 @@ export class Playlist extends EventEmitter {
     });
   }
 
-  private playLayers(renderer: Renderer, timer$: Observable<number>, { loop = false }) {
+  private playLayers(
+    renderer: Renderer,
+    timer$: Observable<number>,
+    { loop = false }
+  ) {
     const item = this.findLayer(this.time);
 
     if (item) {
@@ -88,18 +104,23 @@ export class Playlist extends EventEmitter {
       // Rotate array when loop is active
       // (so that we can have a complete array to loop with from current item offset)
       const elements = loop
-        ? layersWithOffsets.slice(index).concat(layersWithOffsets.slice(0, index))
+        ? layersWithOffsets
+            .slice(index)
+            .concat(layersWithOffsets.slice(0, index))
         : layersWithOffsets.slice(index);
 
       // We start playing from the found layer at the current offset.
       let current: Layer;
-      const duration = layersWithOffsets.reduce((acc, item) => acc + item.duration, 0);
+      const duration = layersWithOffsets.reduce(
+        (acc, item) => acc + item.duration,
+        0
+      );
       const playlistTimer$ = timer$.pipe(
         map((value) => value % duration),
         tap((value) => {
           this.time = value;
         }),
-        share(),
+        share()
       );
 
       const playing$ = from(elements).pipe(
@@ -113,9 +134,9 @@ export class Playlist extends EventEmitter {
             element.layer,
             layerOffset,
             element.start,
-            element.end,
+            element.end
           );
-        }),
+        })
       );
 
       if (loop) {
@@ -124,7 +145,7 @@ export class Playlist extends EventEmitter {
         return playing$;
       }
     } else {
-      return of("end");
+      return of('end');
     }
   }
 
@@ -134,7 +155,7 @@ export class Playlist extends EventEmitter {
     layer: Layer,
     layerOffset: number,
     start: number,
-    end: number,
+    end: number
   ): Observable<string | number> {
     const volume = 100;
     return renderer.play(
@@ -142,10 +163,10 @@ export class Playlist extends EventEmitter {
       timer$.pipe(
         takeWhile((value) => value >= start && value < end),
         map((value) => value - start),
-        share(),
+        share()
       ),
       layerOffset,
-      volume,
+      volume
     );
   }
 
@@ -178,7 +199,9 @@ export class Playlist extends EventEmitter {
   seek(_offset: number) {
     const duration = this.duration();
     const offset =
-      Number.isFinite(duration) && duration > 0 ? ((_offset % duration) + duration) % duration : 0;
+      Number.isFinite(duration) && duration > 0
+        ? ((_offset % duration) + duration) % duration
+        : 0;
     this.time = offset;
 
     let result: [number, number] = [offset, duration];
@@ -189,7 +212,7 @@ export class Playlist extends EventEmitter {
         switchMap(() => {
           result = [offset, duration];
           return of(result);
-        }),
+        })
       );
     }
     return of(result);
@@ -201,7 +224,7 @@ export class Playlist extends EventEmitter {
       const { layer, offset = 0 } = item;
       return renderer.show(layer, offset);
     }
-    return of("end");
+    return of('end');
   }
 
   unload(): void {

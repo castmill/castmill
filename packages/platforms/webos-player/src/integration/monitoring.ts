@@ -1,5 +1,5 @@
-import { signage } from "../native";
-const state: Record<string, SystemMonitorEvent["data"]> = {};
+import { signage } from '../native';
+const state: Record<string, SystemMonitorEvent['data']> = {};
 
 // Event example:
 // {

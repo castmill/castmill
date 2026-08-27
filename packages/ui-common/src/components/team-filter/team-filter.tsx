@@ -5,10 +5,10 @@
  * not assigned to any team, and individual team options. Hides the dropdown when no teams exist.
  */
 
-import { Component, Show, createMemo } from "solid-js";
-import { Dropdown } from "../dropdown/dropdown";
+import { Component, Show, createMemo } from 'solid-js';
+import { Dropdown } from '../dropdown/dropdown';
 
-import "./team-filter.scss";
+import './team-filter.scss';
 
 export interface Team {
   id: number;
@@ -29,7 +29,7 @@ export const TeamFilter: Component<TeamFilterProps> = (props) => {
     props.teams.map((team) => ({
       value: team.id.toString(),
       name: team.name,
-    })),
+    }))
   );
 
   const currentValue = createMemo(() => {
@@ -51,7 +51,7 @@ export const TeamFilter: Component<TeamFilterProps> = (props) => {
     <Show when={props.teams.length > 0}>
       <div class="castmill-team-filter">
         <Dropdown
-          label={props.label || "Team"}
+          label={props.label || 'Team'}
           items={items()}
           onSelectChange={handleChange}
           value={currentValue()}

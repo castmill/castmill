@@ -3,19 +3,19 @@
  * Separated from layout.tsx to allow testing without JSX dependencies.
  */
 
-import type { LayoutZone } from "../../interfaces";
+import type { LayoutZone } from '../../interfaces';
 
 /**
  * CSS style properties interface - simplified version for utility functions.
  * Matches the subset needed for layout positioning.
  */
 export interface LayoutStyle {
-  position: "absolute";
+  position: 'absolute';
   width: string;
   height: string;
   top: string;
   left: string;
-  "z-index": number;
+  'z-index': number;
 }
 
 /**
@@ -33,7 +33,7 @@ export interface LayoutRect {
  * CSS style properties interface for rect-to-style conversion.
  */
 export interface RectStyle {
-  position: "absolute";
+  position: 'absolute';
   width: string;
   height: string;
   top: string;
@@ -45,7 +45,7 @@ export interface RectStyle {
  */
 export function rectToStyle(rect: LayoutRect): RectStyle {
   return {
-    position: "absolute",
+    position: 'absolute',
     width: rect.width,
     height: rect.height,
     top: rect.top,
@@ -60,11 +60,11 @@ export function rectToStyle(rect: LayoutRect): RectStyle {
  */
 export function zoneToStyle(zone: LayoutZone): LayoutStyle {
   return {
-    position: "absolute",
+    position: 'absolute',
     width: `${zone.rect.width}%`,
     height: `${zone.rect.height}%`,
     top: `${zone.rect.y}%`,
     left: `${zone.rect.x}%`,
-    "z-index": zone.zIndex,
+    'z-index': zone.zIndex,
   };
 }

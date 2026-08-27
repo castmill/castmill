@@ -1,10 +1,10 @@
-import { Component, createSignal, onMount, Show } from "solid-js";
-import { useNavigate, useSearchParams } from "@solidjs/router";
-import { arrayBufferToBase64, base64URLToArrayBuffer } from "../utils";
-import { baseUrl, domain } from "../../env";
-import { authFetch, loginUser } from "../auth";
-import { useI18n } from "../../i18n";
-import "./login.scss";
+import { Component, createSignal, onMount, Show } from 'solid-js';
+import { useNavigate, useSearchParams } from '@solidjs/router';
+import { arrayBufferToBase64, base64URLToArrayBuffer } from '../utils';
+import { baseUrl, domain } from '../../env';
+import { authFetch, loginUser } from '../auth';
+import { useI18n } from '../../i18n';
+import './login.scss';
 
 const encoder = new TextEncoder();
 
@@ -14,9 +14,9 @@ const CompleteRecovery: Component = () => {
   const navigate = useNavigate();
 
   const [loading, setLoading] = createSignal<boolean>(false);
-  const [status, setStatus] = createSignal<string>("Verifying token...");
-  const [error, setError] = createSignal<string>("");
-  const [userEmail, setUserEmail] = createSignal<string>("");
+  const [status, setStatus] = createSignal<string>('Verifying token...');
+  const [error, setError] = createSignal<string>('');
+  const [userEmail, setUserEmail] = createSignal<string>('');
   const [tokenValid, setTokenValid] = createSignal<boolean>(false);
   const [supportsPasskeys, setSupportsPasskeys] = createSignal<boolean>(false);
 
@@ -25,9 +25,12 @@ const CompleteRecovery: Component = () => {
 
   onMount(async () => {
     // Check passkey support
-    if (!window.PublicKeyCredential || !PublicKeyCredential.isConditionalMediationAvailable) {
-      setError("Your browser does not support Passkeys");
-      setStatus("");
+    if (
+      !window.PublicKeyCredential ||
+      !PublicKeyCredential.isConditionalMediationAvailable
+    ) {
+      setError('Your browser does not support Passkeys');
+      setStatus('');
       return;
     }
 
@@ -37,8 +40,8 @@ const CompleteRecovery: Component = () => {
     ]);
 
     if (!conditional || !userVerifying) {
-      setError("Your browser does not support Passkeys");
-      setStatus("");
+      setError('Your browser does not support Passkeys');
+      setStatus('');
       return;
     }
 
@@ -46,63 +49,67 @@ const CompleteRecovery: Component = () => {
 
     // Verify the token
     if (!token) {
-      setError("Invalid recovery link");
-      setStatus("");
+      setError('Invalid recovery link');
+      setStatus('');
       return;
     }
 
     try {
       const response = await authFetch(
-        `${baseUrl}/credentials/recover/verify?token=${encodeURIComponent(token)}`,
+        `${baseUrl}/credentials/recover/verify?token=${encodeURIComponent(token)}`
       );
 
       if (response.ok) {
         const data = await response.json();
         setUserEmail(data.user.email);
         setTokenValid(true);
-        setStatus("Ready to add new passkey");
+        setStatus('Ready to add new passkey');
       } else {
-        setError("Invalid or expired recovery link");
-        setStatus("");
+        setError('Invalid or expired recovery link');
+        setStatus('');
       }
     } catch (err) {
-      console.error("Token verification failed:", err);
-      setError("Failed to verify recovery link");
-      setStatus("");
+      console.error('Token verification failed:', err);
+      setError('Failed to verify recovery link');
+      setStatus('');
     }
   });
 
   const addNewPasskey = async () => {
     if (!token) {
-      setError("Invalid recovery link");
+      setError('Invalid recovery link');
       return;
     }
 
     setLoading(true);
-    setStatus("Creating new passkey...");
-    setError("");
+    setStatus('Creating new passkey...');
+    setError('');
 
     try {
       // Get challenge
       const challengeResponse = await authFetch(
-        `${baseUrl}/credentials/recover/challenge?token=${encodeURIComponent(token)}`,
+        `${baseUrl}/credentials/recover/challenge?token=${encodeURIComponent(token)}`
       );
 
       if (!challengeResponse.ok) {
-        setError("Failed to create passkey challenge");
+        setError('Failed to create passkey challenge');
         setLoading(false);
-        setStatus("");
+        setStatus('');
         return;
       }
 
-      const { challenge, user_id, email: userEmail } = await challengeResponse.json();
+      const {
+        challenge,
+        user_id,
+        email: userEmail,
+      } = await challengeResponse.json();
 
       // Create passkey
       const createOptions: CredentialCreationOptions = {
         publicKey: {
           rp: {
             id: domain,
-            name: "Castmill AB",
+            name: 'Castmill AB',
           },
           user: {
             id: encoder.encode(user_id),
@@ -110,13 +117,13 @@ const CompleteRecovery: Component = () => {
             displayName: userEmail,
           },
           pubKeyCredParams: [
-            { type: "public-key", alg: -8 }, // Ed25519
-            { type: "public-key", alg: -7 }, // ES256
-            { type: "public-key", alg: -257 }, // RS256
+            { type: 'public-key', alg: -8 }, // Ed25519
+            { type: 'public-key', alg: -7 }, // ES256
+            { type: 'public-key', alg: -257 }, // RS256
           ],
           challenge: base64URLToArrayBuffer(challenge),
           authenticatorSelection: {
-            userVerification: "required",
+            userVerification: 'required',
             requireResidentKey: true,
           },
         },
@@ -125,9 +132,9 @@ const CompleteRecovery: Component = () => {
       const credential = await navigator.credentials.create(createOptions);
 
       if (!credential) {
-        setError("Failed to create passkey");
+        setError('Failed to create passkey');
         setLoading(false);
-        setStatus("");
+        setStatus('');
         return;
       }
 
@@ -137,38 +144,43 @@ const CompleteRecovery: Component = () => {
       const publicKey = authAttestationResponse.getPublicKey();
 
       if (!publicKey) {
-        setError("Failed to get public key from passkey");
+        setError('Failed to get public key from passkey');
         setLoading(false);
-        setStatus("");
+        setStatus('');
         return;
       }
 
       // Decode client data JSON to string (not Base64)
-      const clientDataJSON = new TextDecoder().decode(authAttestationResponse.clientDataJSON);
+      const clientDataJSON = new TextDecoder().decode(
+        authAttestationResponse.clientDataJSON
+      );
 
       // Send credential to server
-      const result = await authFetch(`${baseUrl}/credentials/recover/credential`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          token: token,
-          credential_id: publicKeyCredential.id,
-          public_key_spki: arrayBufferToBase64(publicKey),
-          raw_id: arrayBufferToBase64(publicKeyCredential.rawId),
-          client_data_json: clientDataJSON,
-        }),
-      });
+      const result = await authFetch(
+        `${baseUrl}/credentials/recover/credential`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            token: token,
+            credential_id: publicKeyCredential.id,
+            public_key_spki: arrayBufferToBase64(publicKey),
+            raw_id: arrayBufferToBase64(publicKeyCredential.rawId),
+            client_data_json: clientDataJSON,
+          }),
+        }
+      );
 
       if (!result.ok) {
-        setError("Failed to add passkey to your account");
+        setError('Failed to add passkey to your account');
         setLoading(false);
-        setStatus("");
+        setStatus('');
         return;
       }
 
-      setStatus("Passkey added successfully! Logging you in...");
+      setStatus('Passkey added successfully! Logging you in...');
 
       // Log in the user with the token from the response
       const { user, token: sessionToken } = await result.json();
@@ -176,48 +188,53 @@ const CompleteRecovery: Component = () => {
 
       // Redirect to dashboard
       setTimeout(() => {
-        navigate("/");
+        navigate('/');
       }, 1000);
     } catch (err) {
-      console.error("Passkey creation failed:", err);
-      if (err instanceof Error && err.name === "NotAllowedError") {
-        setError("Passkey creation was cancelled or timed out");
+      console.error('Passkey creation failed:', err);
+      if (err instanceof Error && err.name === 'NotAllowedError') {
+        setError('Passkey creation was cancelled or timed out');
       } else {
-        setError("Failed to create passkey. Please try again.");
+        setError('Failed to create passkey. Please try again.');
       }
       setLoading(false);
-      setStatus("");
+      setStatus('');
     }
   };
 
   return (
     <div class="castmill-login">
       <Show when={loading()}>
-        <div class="loading-overlay">{t("common.loading")}</div>
+        <div class="loading-overlay">{t('common.loading')}</div>
       </Show>
 
       <div class="login-container">
         <div class="login-box">
-          <h2>{t("credentialRecovery.title")}</h2>
+          <h2>{t('credentialRecovery.title')}</h2>
 
           <Show when={error()}>
             <div class="error">{error()}</div>
             <button
               class="login-button"
-              onClick={() => navigate("/login")}
-              style={{ "margin-top": "20px" }}
+              onClick={() => navigate('/login')}
+              style={{ 'margin-top': '20px' }}
             >
-              {t("common.backToLogin")}
+              {t('common.backToLogin')}
             </button>
           </Show>
 
           <Show when={!error() && tokenValid() && supportsPasskeys()}>
             <p class="info-message">
-              Welcome back, {userEmail()}! Add a new passkey to regain access to your account.
+              Welcome back, {userEmail()}! Add a new passkey to regain access to
+              your account.
             </p>
 
-            <button class="signup-button" onClick={addNewPasskey} disabled={loading()}>
-              {t("credentialRecovery.addNewPasskey")}
+            <button
+              class="signup-button"
+              onClick={addNewPasskey}
+              disabled={loading()}
+            >
+              {t('credentialRecovery.addNewPasskey')}
             </button>
 
             <p class="status">Status: {status()}</p>

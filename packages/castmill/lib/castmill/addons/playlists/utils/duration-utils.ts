@@ -1,4 +1,4 @@
-import type { JsonWidgetTemplate, JsonPlaylistItem } from "@castmill/player";
+import type { JsonWidgetTemplate, JsonPlaylistItem } from '@castmill/player';
 
 /**
  * Types of template components that have dynamic durations.
@@ -8,7 +8,12 @@ import type { JsonWidgetTemplate, JsonPlaylistItem } from "@castmill/player";
  * - layout: duration based on contained playlist durations
  * - paginated-list: duration based on number of items and display time per item
  */
-const DYNAMIC_DURATION_TYPES = ["video", "scroller", "layout", "paginated-list"] as const;
+const DYNAMIC_DURATION_TYPES = [
+  'video',
+  'scroller',
+  'layout',
+  'paginated-list',
+] as const;
 
 type DynamicDurationType = (typeof DYNAMIC_DURATION_TYPES)[number];
 
@@ -43,7 +48,7 @@ function isDynamicDurationType(type: string): type is DynamicDurationType {
  * ```
  */
 export function containsDynamicDurationComponent(
-  template: JsonWidgetTemplate | undefined | null,
+  template: JsonWidgetTemplate | undefined | null
 ): boolean {
   if (!template) return false;
 
@@ -61,7 +66,9 @@ export function containsDynamicDurationComponent(
 
   // Check single nested component (for scroller's item template)
   if (template.component) {
-    return containsDynamicDurationComponent(template.component as JsonWidgetTemplate);
+    return containsDynamicDurationComponent(
+      template.component as JsonWidgetTemplate
+    );
   }
 
   return false;

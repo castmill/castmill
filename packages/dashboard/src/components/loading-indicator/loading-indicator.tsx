@@ -1,5 +1,5 @@
-import { Component, createSignal, onMount, onCleanup } from "solid-js";
-import styles from "./loading-indicator.module.scss";
+import { Component, createSignal, onMount, onCleanup } from 'solid-js';
+import styles from './loading-indicator.module.scss';
 
 interface LoadingIndicatorProps {
   delay?: number; // Delay in milliseconds before showing (default 500ms)

@@ -80,7 +80,7 @@ The Dashboard uses URL-based routing with organization context:
 navigate(`/org/${store.organizations.selectedId}/teams`);
 
 // ❌ Never navigate without org context
-navigate("/teams"); // WRONG!
+navigate('/teams'); // WRONG!
 ```
 
 See `AGENTS.md` for complete routing patterns.

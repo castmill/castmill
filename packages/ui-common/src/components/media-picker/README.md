@@ -16,7 +16,7 @@ A reusable, feature-rich media picker component with infinite scrolling, search,
 ## Usage
 
 ```tsx
-import { MediaPicker, MediaItem } from "@castmill/ui-common";
+import { MediaPicker, MediaItem } from '@castmill/ui-common';
 
 function MyComponent() {
   const [showPicker, setShowPicker] = createSignal(false);
@@ -25,7 +25,7 @@ function MyComponent() {
   const fetchMedia = async (
     page: number,
     pageSize: number,
-    search?: string,
+    search?: string
   ): Promise<{ data: MediaItem[]; count: number }> => {
     const params = new URLSearchParams({
       page: page.toString(),
@@ -33,7 +33,7 @@ function MyComponent() {
     });
 
     if (search) {
-      params.set("search", search);
+      params.set('search', search);
     }
 
     const response = await fetch(`/api/medias?${params}`);
@@ -41,7 +41,7 @@ function MyComponent() {
   };
 
   const handleSelect = (mediaId: number) => {
-    console.log("Selected media:", mediaId);
+    console.log('Selected media:', mediaId);
     setShowPicker(false);
   };
 
@@ -101,7 +101,7 @@ function MyComponent() {
   onClose={handleClose}
   onSelect={handleSelect}
   fetchMedia={fetchMedia}
-  filterFn={(media) => media.mimetype?.startsWith("video/")}
+  filterFn={(media) => media.mimetype?.startsWith('video/')}
   title="Select Video"
   description="Choose a video file"
 />
@@ -115,13 +115,13 @@ function MyComponent() {
   onClose={handleClose}
   onSelect={handleSelect}
   fetchMedia={fetchMedia}
-  title={t("media.selectTitle")}
-  description={t("media.selectDescription")}
-  searchPlaceholder={t("common.search")}
-  loadingText={t("common.loading")}
-  noMediaText={t("media.noMediaAvailable")}
-  cancelLabel={t("common.cancel")}
-  selectLabel={t("common.select")}
+  title={t('media.selectTitle')}
+  description={t('media.selectDescription')}
+  searchPlaceholder={t('common.search')}
+  loadingText={t('common.loading')}
+  noMediaText={t('media.noMediaAvailable')}
+  cancelLabel={t('common.cancel')}
+  selectLabel={t('common.select')}
 />
 ```
 

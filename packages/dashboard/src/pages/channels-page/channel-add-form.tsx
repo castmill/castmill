@@ -1,17 +1,21 @@
-import { Component, createSignal } from "solid-js";
-import { Button, Dropdown, FormItem } from "@castmill/ui-common";
-import { useI18n } from "../../i18n";
+import { Component, createSignal } from 'solid-js';
+import { Button, Dropdown, FormItem } from '@castmill/ui-common';
+import { useI18n } from '../../i18n';
 
-import styles from "./channel-add-form.module.scss";
-import { timeZones } from "./timezones";
+import styles from './channel-add-form.module.scss';
+import { timeZones } from './timezones';
 
 export const ChannelAddForm: Component<{
-  onSubmit: (name: string, timezone: string, teamId?: number | null) => Promise<void>;
+  onSubmit: (
+    name: string,
+    timezone: string,
+    teamId?: number | null
+  ) => Promise<void>;
   onClose: () => void;
   teamId?: number | null;
 }> = (props) => {
   const { t } = useI18n();
-  const [name, setName] = createSignal("");
+  const [name, setName] = createSignal('');
   const [errors, setErrors] = createSignal(new Map<string, string>());
   const [isFormModified, setIsFormModified] = createSignal(false);
 
@@ -20,10 +24,10 @@ export const ChannelAddForm: Component<{
 
   const validateField = (field: string, value: string) => {
     const errorsMap = new Map(errors());
-    if (value.trim() === "") {
-      errorsMap.set(field, "This field is required");
+    if (value.trim() === '') {
+      errorsMap.set(field, 'This field is required');
     } else if (value.length < 3) {
-      errorsMap.set(field, "This field must be at least 3 characters long");
+      errorsMap.set(field, 'This field must be at least 3 characters long');
     } else {
       errorsMap.delete(field);
     }
@@ -46,19 +50,19 @@ export const ChannelAddForm: Component<{
     >
       <div class="add-channel">
         <FormItem
-          label={t("common.name")}
+          label={t('common.name')}
           id="name"
           value={name()!}
-          placeholder={t("channels.enterChannelName")}
+          placeholder={t('channels.enterChannelName')}
           autofocus={true}
           onInput={(value: string | number | boolean) => {
             const strValue = value as string;
             setIsFormModified(true);
             setName(strValue);
-            validateField("name", strValue);
+            validateField('name', strValue);
           }}
         >
-          <div class="error">{errors().get("name")}</div>
+          <div class="error">{errors().get('name')}</div>
         </FormItem>
         <Dropdown
           id="channel-timezone"
@@ -74,13 +78,18 @@ export const ChannelAddForm: Component<{
           }}
         ></Dropdown>
 
-        <div class={styles["actions"]}>
-          <Button label="Create" type="submit" color="primary" disabled={!isFormValid()} />
+        <div class={styles['actions']}>
+          <Button
+            label="Create"
+            type="submit"
+            color="primary"
+            disabled={!isFormValid()}
+          />
           <Button
             label="Cancel"
             color="danger"
             onClick={() => {
-              setName("");
+              setName('');
               setIsFormModified(false);
               props.onClose();
             }}

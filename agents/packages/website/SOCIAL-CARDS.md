@@ -96,7 +96,7 @@ image: /img/social/docs-intro.jpg
 Use the `Head` component:
 
 ```tsx
-import Head from "@docusaurus/Head";
+import Head from '@docusaurus/Head';
 
 export default function MyPage() {
   return (

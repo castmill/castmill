@@ -1,5 +1,5 @@
-import { HttpError } from "@castmill/ui-common";
-import { authFetch } from "./auth-fetch";
+import { HttpError } from '@castmill/ui-common';
+import { authFetch } from './auth-fetch';
 
 export interface ResourceQuota {
   used: number;
@@ -33,14 +33,14 @@ export class QuotasService {
     const response = await authFetch(
       `${this.baseUrl}/dashboard/organizations/${organizationId}/usage`,
       {
-        method: "GET",
-      },
+        method: 'GET',
+      }
     );
 
     if (response.status === 200) {
       return (await response.json()) as QuotaUsage;
     } else {
-      let errMsg = "";
+      let errMsg = '';
       try {
         const { errors } = await response.json();
         errMsg = `${errors.detail || response.statusText}`;
@@ -58,7 +58,10 @@ export class QuotasService {
    * @param resourceType - The resource type to check
    * @returns {Promise<boolean>} True if quota is reached, false otherwise
    */
-  async isQuotaReached(organizationId: string, resourceType: ResourceType): Promise<boolean> {
+  async isQuotaReached(
+    organizationId: string,
+    resourceType: ResourceType
+  ): Promise<boolean> {
     const usage = await this.getQuotaUsage(organizationId);
     const resourceQuota = usage[resourceType];
 
@@ -78,7 +81,7 @@ export class QuotasService {
    */
   async getResourceQuota(
     organizationId: string,
-    resourceType: ResourceType,
+    resourceType: ResourceType
   ): Promise<ResourceQuota | null> {
     const usage = await this.getQuotaUsage(organizationId);
     return usage[resourceType] || null;

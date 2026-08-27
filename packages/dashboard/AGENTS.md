@@ -130,7 +130,7 @@ Wraps the entire application and provides i18n context.
 Primary interface for accessing i18n functions.
 
 ```tsx
-import { useI18n } from "../../i18n";
+import { useI18n } from '../../i18n';
 
 const {
   locale, // Current locale (Accessor<Locale>)
@@ -149,7 +149,7 @@ const {
 UI component for switching languages.
 
 ```tsx
-import LanguageSelector from "../../components/language-selector/language-selector";
+import LanguageSelector from '../../components/language-selector/language-selector';
 
 <LanguageSelector />;
 ```
@@ -161,15 +161,15 @@ import LanguageSelector from "../../components/language-selector/language-select
 ### 1. Basic Translation
 
 ```tsx
-import { useI18n } from "../../i18n";
+import { useI18n } from '../../i18n';
 
 function MyComponent() {
   const { t } = useI18n();
 
   return (
     <div>
-      <h1>{t("myComponent.title")}</h1>
-      <button>{t("common.save")}</button>
+      <h1>{t('myComponent.title')}</h1>
+      <button>{t('common.save')}</button>
     </div>
   );
 }
@@ -192,9 +192,9 @@ function MyComponent() {
 
 ```tsx
 const { t } = useI18n();
-const userName = "Alice";
+const userName = 'Alice';
 
-<p>{t("greeting.hello", { name: userName })}</p>;
+<p>{t('greeting.hello', { name: userName })}</p>;
 // Output: "Hello, Alice!"
 ```
 
@@ -214,7 +214,7 @@ const userName = "Alice";
 const { tp } = useI18n();
 const itemCount = 5;
 
-<p>{tp("plurals.items", itemCount)}</p>;
+<p>{tp('plurals.items', itemCount)}</p>;
 // English: "5 items"
 // German: "5 Artikel"
 ```
@@ -312,9 +312,9 @@ When adding a new component or feature:
    const { t } = useI18n();
 
    <div>
-     <h1>{t("myFeature.title")}</h1>
-     <p>{t("myFeature.description")}</p>
-     <button>{t("myFeature.actions.submit")}</button>
+     <h1>{t('myFeature.title')}</h1>
+     <p>{t('myFeature.description')}</p>
+     <button>{t('myFeature.actions.submit')}</button>
    </div>;
    ```
 
@@ -360,19 +360,19 @@ Organize translations by feature/page:
 All component tests must wrap components in `I18nProvider`:
 
 ```tsx
-import { render, screen } from "@solidjs/testing-library";
-import { I18nProvider } from "../../i18n";
-import MyComponent from "./my-component";
+import { render, screen } from '@solidjs/testing-library';
+import { I18nProvider } from '../../i18n';
+import MyComponent from './my-component';
 
-describe("MyComponent", () => {
-  it("renders with translations", () => {
+describe('MyComponent', () => {
+  it('renders with translations', () => {
     render(() => (
       <I18nProvider>
         <MyComponent />
       </I18nProvider>
     ));
 
-    expect(screen.getByText("Settings")).toBeInTheDocument();
+    expect(screen.getByText('Settings')).toBeInTheDocument();
   });
 });
 ```
@@ -380,14 +380,14 @@ describe("MyComponent", () => {
 ### 2. Testing Language Switching
 
 ```tsx
-it("switches language correctly", async () => {
+it('switches language correctly', async () => {
   function TestComponent() {
     const { locale, setLocale, t } = useI18n();
 
     return (
       <div>
-        <button onClick={() => setLocale("es")}>Switch to Spanish</button>
-        <p data-testid="translation">{t("common.save")}</p>
+        <button onClick={() => setLocale('es')}>Switch to Spanish</button>
+        <p data-testid="translation">{t('common.save')}</p>
       </div>
     );
   }
@@ -399,12 +399,12 @@ it("switches language correctly", async () => {
   ));
 
   // Initially English
-  expect(screen.getByTestId("translation").textContent).toBe("Save");
+  expect(screen.getByTestId('translation').textContent).toBe('Save');
 
   // Switch to Spanish
-  fireEvent.click(screen.getByText("Switch to Spanish"));
+  fireEvent.click(screen.getByText('Switch to Spanish'));
   await waitFor(() => {
-    expect(screen.getByTestId("translation").textContent).toBe("Guardar");
+    expect(screen.getByTestId('translation').textContent).toBe('Guardar');
   });
 });
 ```
@@ -414,13 +414,13 @@ it("switches language correctly", async () => {
 Test all i18n functions:
 
 ```tsx
-it("formats plurals correctly", () => {
+it('formats plurals correctly', () => {
   function TestComponent() {
     const { tp } = useI18n();
     return (
       <div>
-        <p data-testid="one">{tp("plurals.items", 1)}</p>
-        <p data-testid="many">{tp("plurals.items", 5)}</p>
+        <p data-testid="one">{tp('plurals.items', 1)}</p>
+        <p data-testid="many">{tp('plurals.items', 5)}</p>
       </div>
     );
   }
@@ -431,8 +431,8 @@ it("formats plurals correctly", () => {
     </I18nProvider>
   ));
 
-  expect(screen.getByTestId("one").textContent).toBe("1 item");
-  expect(screen.getByTestId("many").textContent).toBe("5 items");
+  expect(screen.getByTestId('one').textContent).toBe('1 item');
+  expect(screen.getByTestId('many').textContent).toBe('5 items');
 });
 ```
 
@@ -448,7 +448,7 @@ it("formats plurals correctly", () => {
 
 // CORRECT
 const { t } = useI18n();
-<button>{t("common.saveChanges")}</button>;
+<button>{t('common.saveChanges')}</button>;
 ```
 
 ### ❌ Pitfall 2: Missing Translations in Some Languages
@@ -472,7 +472,7 @@ locales/de.json: "newFeature.title": "Neue Funktion"
 
 // CORRECT - uses locale-specific plural rules
 const { tp } = useI18n();
-<p>{tp("plurals.items", count)}</p>;
+<p>{tp('plurals.items', count)}</p>;
 ```
 
 ### ❌ Pitfall 4: Manual Date/Number Formatting
@@ -707,10 +707,14 @@ The `ProtectedRoute` component syncs URL params to the global store:
 // In protected-route.tsx
 createEffect(() => {
   const urlOrgId = params.orgId;
-  if (store.organizations.loaded && urlOrgId && urlOrgId !== store.organizations.selectedId) {
+  if (
+    store.organizations.loaded &&
+    urlOrgId &&
+    urlOrgId !== store.organizations.selectedId
+  ) {
     const org = store.organizations.data.find((o) => o.id === urlOrgId);
     if (org) {
-      setStore("organizations", {
+      setStore('organizations', {
         selectedId: org.id,
         selectedName: org.name,
       });
@@ -728,21 +732,24 @@ All navigation must include the organization ID:
 navigate(`/org/${store.organizations.selectedId}/teams`);
 
 // ❌ Wrong - missing org ID
-navigate("/teams");
+navigate('/teams');
 ```
 
 **Sidebar navigation example:**
 
 ```tsx
-<PanelItem to={`/org/${store.organizations.selectedId}/teams`} label={t("sidebar.teams")} />
+<PanelItem
+  to={`/org/${store.organizations.selectedId}/teams`}
+  label={t('sidebar.teams')}
+/>
 ```
 
 **Organization dropdown:**
 
 ```tsx
 const handleOrgChange = (value: string) => {
-  const currentPath = location.pathname.replace(/^\/org\/[^\/]+/, "");
-  navigate(`/org/${value}${currentPath || "/"}`);
+  const currentPath = location.pathname.replace(/^\/org\/[^\/]+/, '');
+  navigate(`/org/${value}${currentPath || '/'}`);
 };
 ```
 
@@ -782,7 +789,7 @@ This ensures:
 **Dashboard Core Pages** (Teams, Channels, Usage):
 
 ```tsx
-import { store } from "../../store/store";
+import { store } from '../../store/store';
 
 createEffect(
   on(
@@ -795,8 +802,8 @@ createEffect(
           tableViewRef.reloadData();
         }
       }
-    },
-  ),
+    }
+  )
 );
 ```
 
@@ -841,7 +848,7 @@ The i18n functions are set using `setStore()` in the addon wrapper:
 
 ```tsx
 // In index.tsx - wrapLazyComponent
-setStore("i18n", {
+setStore('i18n', {
   t: i18n.t,
   tp: i18n.tp,
   formatDate: i18n.formatDate,
@@ -854,7 +861,7 @@ setStore("i18n", {
 ❌ **Hardcoding organization ID**
 
 ```tsx
-const orgId = "abc-123"; // Wrong!
+const orgId = 'abc-123'; // Wrong!
 ```
 
 ✅ **Using store or params**
@@ -869,7 +876,7 @@ const orgId = params.orgId;
 ❌ **Navigation without org ID**
 
 ```tsx
-navigate("/teams"); // Wrong - will break routing
+navigate('/teams'); // Wrong - will break routing
 ```
 
 ✅ **Including org ID in all navigation**

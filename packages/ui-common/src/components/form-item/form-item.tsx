@@ -1,6 +1,6 @@
-import { Component, JSX, Show, createSignal } from "solid-js";
-import { StyledInput } from "../styled-input/styled-input";
-import "./form-item.scss";
+import { Component, JSX, Show, createSignal } from 'solid-js';
+import { StyledInput } from '../styled-input/styled-input';
+import './form-item.scss';
 
 interface FormItemProps {
   label: string;
@@ -23,7 +23,7 @@ export const FormItem: Component<FormItemProps> = (props) => {
 
   return (
     <div class="form-item-wrapper">
-      <div class={`form-item1 ${isFocused() ? "focused" : ""}`}>
+      <div class={`form-item1 ${isFocused() ? 'focused' : ''}`}>
         <label for={props.id}>{props.label}</label>
         <StyledInput
           id={props.id}

@@ -1,4 +1,4 @@
-import { AddOn } from "./addon.interface";
+import { AddOn } from './addon.interface';
 
 export interface AddOnNode {
   children?: Map<string, AddOnNode>;

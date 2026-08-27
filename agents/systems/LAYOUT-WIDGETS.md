@@ -88,7 +88,9 @@ The `widget-config.tsx` component filters out playlists that would create cycles
 
 ```typescript
 // Initialize with current playlist ID immediately
-const [excludedPlaylistIds, setExcludedPlaylistIds] = createSignal<number[]>([props.playlistId]);
+const [excludedPlaylistIds, setExcludedPlaylistIds] = createSignal<number[]>([
+  props.playlistId,
+]);
 const [ancestorsLoaded, setAncestorsLoaded] = createSignal(false);
 
 // Fetch ancestor playlist IDs
@@ -96,14 +98,14 @@ createEffect(async () => {
   try {
     const response = await fetch(
       `${props.baseUrl}/dashboard/organizations/${props.organizationId}/playlists/${props.playlistId}/ancestors`,
-      { credentials: "include" },
+      { credentials: 'include' }
     );
     if (response.ok) {
       const data = await response.json();
       setExcludedPlaylistIds([props.playlistId, ...(data.ancestor_ids || [])]);
     }
   } catch (error) {
-    console.error("Failed to fetch playlist ancestors:", error);
+    console.error('Failed to fetch playlist ancestors:', error);
     setExcludedPlaylistIds([props.playlistId]);
   } finally {
     setAncestorsLoaded(true);
@@ -114,7 +116,7 @@ createEffect(async () => {
 const filterParams: Record<string, string | boolean> = {};
 const excluded = excludedPlaylistIds();
 if (excluded.length > 0) {
-  filterParams.exclude_ids = excluded.join(",");
+  filterParams.exclude_ids = excluded.join(',');
 }
 ```
 
@@ -305,12 +307,16 @@ Tests are in `test/castmill_web/controllers/resource_controller/playlists_test.e
 
 ```typescript
 // WRONG - allows self-selection before fetch completes
-const [excludedPlaylistIds, setExcludedPlaylistIds] = createSignal<number[]>([]);
+const [excludedPlaylistIds, setExcludedPlaylistIds] = createSignal<number[]>(
+  []
+);
 ```
 
 ```typescript
 // CORRECT - prevents self-selection immediately
-const [excludedPlaylistIds, setExcludedPlaylistIds] = createSignal<number[]>([props.playlistId]);
+const [excludedPlaylistIds, setExcludedPlaylistIds] = createSignal<number[]>([
+  props.playlistId,
+]);
 ```
 
 ### ❌ Wrong Validation Direction

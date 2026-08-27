@@ -71,12 +71,12 @@ export interface OnboardingProgress {
 
 ```typescript
 export enum OnboardingStep {
-  UploadMedia = "upload_media",
-  CreatePlaylist = "create_playlist",
-  CreateChannel = "create_channel",
-  RegisterDevice = "register_device",
-  AssignChannel = "assign_channel",
-  AdvancedPlaylist = "advanced_playlist",
+  UploadMedia = 'upload_media',
+  CreatePlaylist = 'create_playlist',
+  CreateChannel = 'create_channel',
+  RegisterDevice = 'register_device',
+  AssignChannel = 'assign_channel',
+  AdvancedPlaylist = 'advanced_playlist',
 }
 ```
 
@@ -226,7 +226,7 @@ To add a new onboarding step:
 ```typescript
 export enum OnboardingStep {
   // ... existing steps
-  NewFeature = "new_feature",
+  NewFeature = 'new_feature',
 }
 ```
 

@@ -4,15 +4,15 @@ on:
   pull_request:
     branches: [main, next]
     paths:
-      - "packages/dashboard/src/**/*.tsx"
-      - "packages/dashboard/src/**/*.ts"
-      - "packages/dashboard/src/i18n/locales/*.json"
-      - "packages/dashboard/scripts/check-missing-translations.cjs"
-      - ".github/workflows/check-translations.yml"
+      - 'packages/dashboard/src/**/*.tsx'
+      - 'packages/dashboard/src/**/*.ts'
+      - 'packages/dashboard/src/i18n/locales/*.json'
+      - 'packages/dashboard/scripts/check-missing-translations.cjs'
+      - '.github/workflows/check-translations.yml'
   push:
     branches: [main, next]
     paths:
-      - "packages/dashboard/src/i18n/locales/*.json"
+      - 'packages/dashboard/src/i18n/locales/*.json'
 
 permissions:
   contents: read
@@ -35,8 +35,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "24"
-          cache: "yarn"
+          node-version: '24'
+          cache: 'yarn'
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile

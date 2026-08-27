@@ -7,15 +7,15 @@
  * Optionally includes a remove button for inline removal.
  */
 
-import { Component, Show } from "solid-js";
-import { IoCloseCircle } from "solid-icons/io";
-import type { Tag } from "../../services/tags.service";
+import { Component, Show } from 'solid-js';
+import { IoCloseCircle } from 'solid-icons/io';
+import type { Tag } from '../../services/tags.service';
 
-import "./tag-badge.scss";
+import './tag-badge.scss';
 
 export interface TagBadgeProps {
   tag: Tag;
-  size?: "small" | "medium" | "large";
+  size?: 'small' | 'medium' | 'large';
   removable?: boolean;
   onRemove?: (tag: Tag) => void;
   onClick?: (tag: Tag) => void;
@@ -28,7 +28,7 @@ export interface TagBadgeProps {
  */
 function getContrastColor(hexColor: string): string {
   // Remove # if present
-  const hex = hexColor.replace("#", "");
+  const hex = hexColor.replace('#', '');
 
   // Parse RGB values
   const r = parseInt(hex.substring(0, 2), 16);
@@ -39,7 +39,7 @@ function getContrastColor(hexColor: string): string {
   const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
 
   // Return black for light backgrounds, white for dark
-  return luminance > 0.5 ? "#000000" : "#ffffff";
+  return luminance > 0.5 ? '#000000' : '#ffffff';
 }
 
 export const TagBadge: Component<TagBadgeProps> = (props) => {
@@ -59,16 +59,16 @@ export const TagBadge: Component<TagBadgeProps> = (props) => {
 
   return (
     <span
-      class={`castmill-tag-badge ${props.size || "medium"} ${props.selected ? "selected" : ""} ${props.onClick ? "clickable" : ""} ${props.disabled ? "disabled" : ""}`}
+      class={`castmill-tag-badge ${props.size || 'medium'} ${props.selected ? 'selected' : ''} ${props.onClick ? 'clickable' : ''} ${props.disabled ? 'disabled' : ''}`}
       style={{
-        "--tag-color": props.tag.color,
-        "--tag-text-color": textColor(),
+        '--tag-color': props.tag.color,
+        '--tag-text-color': textColor(),
       }}
       onClick={props.onClick ? handleClick : undefined}
-      role={props.onClick ? "button" : undefined}
+      role={props.onClick ? 'button' : undefined}
       tabIndex={props.onClick && !props.disabled ? 0 : undefined}
       onKeyDown={(e) => {
-        if (props.onClick && (e.key === "Enter" || e.key === " ")) {
+        if (props.onClick && (e.key === 'Enter' || e.key === ' ')) {
           e.preventDefault();
           props.onClick(props.tag);
         }

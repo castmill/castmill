@@ -106,10 +106,10 @@ data:image/png;base64,<paste-base64-here>
 ### Using Node.js
 
 ```javascript
-const fs = require("fs");
+const fs = require('fs');
 
-const imageBuffer = fs.readFileSync("icon.png");
-const base64Image = imageBuffer.toString("base64");
+const imageBuffer = fs.readFileSync('icon.png');
+const base64Image = imageBuffer.toString('base64');
 const dataUri = `data:image/png;base64,${base64Image}`;
 
 console.log(dataUri);

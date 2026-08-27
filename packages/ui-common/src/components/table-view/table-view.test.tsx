@@ -1,20 +1,26 @@
 /** @jsxImportSource solid-js */
-import { describe, it, expect, afterEach, vi } from "vitest";
-import { render, fireEvent, cleanup, screen, waitFor } from "@solidjs/testing-library";
-import { TableView } from "./table-view";
-import { BsEye } from "solid-icons/bs";
+import { describe, it, expect, afterEach, vi } from 'vitest';
+import {
+  render,
+  fireEvent,
+  cleanup,
+  screen,
+  waitFor,
+} from '@solidjs/testing-library';
+import { TableView } from './table-view';
+import { BsEye } from 'solid-icons/bs';
 
-describe("TableView Component - Default Row Action", () => {
+describe('TableView Component - Default Row Action', () => {
   afterEach(() => cleanup());
 
   const columns = [
-    { key: "name", title: "Name", sortable: true },
-    { key: "type", title: "Type", sortable: false },
+    { key: 'name', title: 'Name', sortable: true },
+    { key: 'type', title: 'Type', sortable: false },
   ];
 
   const mockData = [
-    { id: "1", name: "Resource 1", type: "Image" },
-    { id: "2", name: "Resource 2", type: "Video" },
+    { id: '1', name: 'Resource 1', type: 'Image' },
+    { id: '2', name: 'Resource 2', type: 'Video' },
   ];
 
   const mockFetchData = vi.fn().mockResolvedValue({
@@ -25,8 +31,8 @@ describe("TableView Component - Default Row Action", () => {
   const mockDefaultAction = vi.fn();
 
   const defaultProps = {
-    title: "Test Resources",
-    resource: "resources",
+    title: 'Test Resources',
+    resource: 'resources',
     fetchData: mockFetchData,
     table: {
       columns,
@@ -36,7 +42,7 @@ describe("TableView Component - Default Row Action", () => {
     },
   };
 
-  it("renders TableView with default row action", async () => {
+  it('renders TableView with default row action', async () => {
     const propsWithDefaultAction = {
       ...defaultProps,
       table: {
@@ -44,7 +50,7 @@ describe("TableView Component - Default Row Action", () => {
         defaultRowAction: {
           icon: BsEye,
           handler: mockDefaultAction,
-          label: "View",
+          label: 'View',
         },
       },
     };
@@ -53,16 +59,16 @@ describe("TableView Component - Default Row Action", () => {
 
     // Wait for data to load
     await waitFor(() => {
-      expect(screen.getByText("Resource 1")).toBeInTheDocument();
+      expect(screen.getByText('Resource 1')).toBeInTheDocument();
     });
 
     // Check that rows have pointer cursor (indicating row click is enabled)
-    const rows = screen.getAllByRole("row");
+    const rows = screen.getAllByRole('row');
     const dataRow = rows[1]; // First data row (header is index 0)
-    expect(dataRow).toHaveStyle("cursor: pointer");
+    expect(dataRow).toHaveStyle('cursor: pointer');
   });
 
-  it("calls defaultRowAction handler when row is clicked", async () => {
+  it('calls defaultRowAction handler when row is clicked', async () => {
     const propsWithDefaultAction = {
       ...defaultProps,
       table: {
@@ -70,7 +76,7 @@ describe("TableView Component - Default Row Action", () => {
         defaultRowAction: {
           icon: BsEye,
           handler: mockDefaultAction,
-          label: "View",
+          label: 'View',
         },
       },
     };
@@ -79,11 +85,11 @@ describe("TableView Component - Default Row Action", () => {
 
     // Wait for data to load
     await waitFor(() => {
-      expect(screen.getByText("Resource 1")).toBeInTheDocument();
+      expect(screen.getByText('Resource 1')).toBeInTheDocument();
     });
 
     // Click on the first data row
-    const rows = screen.getAllByRole("row");
+    const rows = screen.getAllByRole('row');
     const dataRow = rows[1]; // First data row
     fireEvent.click(dataRow);
 
@@ -91,34 +97,34 @@ describe("TableView Component - Default Row Action", () => {
     expect(mockDefaultAction).toHaveBeenCalledWith(mockData[0]);
   });
 
-  it("works without default row action (backwards compatibility)", async () => {
+  it('works without default row action (backwards compatibility)', async () => {
     render(() => <TableView {...defaultProps} />);
 
     // Wait for data to load
     await waitFor(() => {
-      expect(screen.getByText("Resource 1")).toBeInTheDocument();
+      expect(screen.getByText('Resource 1')).toBeInTheDocument();
     });
 
     // Check that rows have default cursor (no row click enabled)
-    const rows = screen.getAllByRole("row");
+    const rows = screen.getAllByRole('row');
     const dataRow = rows[1]; // First data row
-    expect(dataRow).toHaveStyle("cursor: default");
+    expect(dataRow).toHaveStyle('cursor: default');
   });
 
-  it("forwards toolbar searchPlaceholder to ToolBar search input", () => {
+  it('forwards toolbar searchPlaceholder to ToolBar search input', () => {
     render(() => (
       <TableView
         {...defaultProps}
         toolbar={{
-          searchPlaceholder: "Search resources",
+          searchPlaceholder: 'Search resources',
         }}
       />
     ));
 
-    expect(screen.getByPlaceholderText("Search resources")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Search resources')).toBeInTheDocument();
   });
 
-  it("integrates defaultRowAction with existing actions", async () => {
+  it('integrates defaultRowAction with existing actions', async () => {
     const mockEditAction = vi.fn();
     const propsWithAllActions = {
       ...defaultProps,
@@ -126,15 +132,15 @@ describe("TableView Component - Default Row Action", () => {
         ...defaultProps.table,
         actions: [
           {
-            icon: "Edit",
+            icon: 'Edit',
             handler: mockEditAction,
-            label: "Edit",
+            label: 'Edit',
           },
         ],
         defaultRowAction: {
           icon: BsEye,
           handler: mockDefaultAction,
-          label: "View",
+          label: 'View',
         },
       },
     };
@@ -143,7 +149,7 @@ describe("TableView Component - Default Row Action", () => {
 
     // Wait for data to load
     await waitFor(() => {
-      expect(screen.getByText("Resource 1")).toBeInTheDocument();
+      expect(screen.getByText('Resource 1')).toBeInTheDocument();
     });
 
     // Clear any calls that might have happened during setup
@@ -151,7 +157,7 @@ describe("TableView Component - Default Row Action", () => {
     mockDefaultAction.mockClear();
 
     // Test that action buttons work independently and don't trigger row click
-    const editButton = screen.getByLabelText("Edit Resource 1");
+    const editButton = screen.getByLabelText('Edit Resource 1');
     fireEvent.click(editButton);
 
     // The edit action should be called
@@ -164,7 +170,7 @@ describe("TableView Component - Default Row Action", () => {
     mockDefaultAction.mockClear();
 
     // Test that row click works for default action
-    const rows = screen.getAllByRole("row");
+    const rows = screen.getAllByRole('row');
     const dataRow = rows[1]; // First data row
     fireEvent.click(dataRow);
 
@@ -174,15 +180,15 @@ describe("TableView Component - Default Row Action", () => {
     expect(mockEditAction).not.toHaveBeenCalled();
   });
 
-  it("demonstrates the complete feature integration", async () => {
+  it('demonstrates the complete feature integration', async () => {
     // This test demonstrates the full workflow of the new feature
     const mockViewHandler = vi.fn();
     const mockEditHandler = vi.fn();
     const mockRowSelectHandler = vi.fn();
 
     const completeProps = {
-      title: "Complete Feature Demo",
-      resource: "resources",
+      title: 'Complete Feature Demo',
+      resource: 'resources',
       fetchData: mockFetchData,
       table: {
         columns,
@@ -190,12 +196,12 @@ describe("TableView Component - Default Row Action", () => {
           {
             icon: BsEye,
             handler: mockViewHandler,
-            label: "View",
+            label: 'View',
           },
           {
-            icon: "Edit",
+            icon: 'Edit',
             handler: mockEditHandler,
-            label: "Edit",
+            label: 'Edit',
           },
         ],
         onRowSelect: mockRowSelectHandler,
@@ -203,7 +209,7 @@ describe("TableView Component - Default Row Action", () => {
         defaultRowAction: {
           icon: BsEye,
           handler: mockViewHandler,
-          label: "View",
+          label: 'View',
         },
       },
       pagination: {
@@ -215,7 +221,7 @@ describe("TableView Component - Default Row Action", () => {
 
     // Wait for data to load
     await waitFor(() => {
-      expect(screen.getByText("Resource 1")).toBeInTheDocument();
+      expect(screen.getByText('Resource 1')).toBeInTheDocument();
     });
 
     // Clear any calls that might have happened during setup
@@ -224,7 +230,7 @@ describe("TableView Component - Default Row Action", () => {
     mockRowSelectHandler.mockClear();
 
     // Demonstrate that the View button and row click trigger the same handler
-    const rows = screen.getAllByRole("row");
+    const rows = screen.getAllByRole('row');
     const dataRow = rows[1];
 
     // Test row click triggers view handler
@@ -236,7 +242,7 @@ describe("TableView Component - Default Row Action", () => {
     mockViewHandler.mockClear();
 
     // Test that View button also triggers same handler
-    const viewButton = screen.getByLabelText("View Resource 1");
+    const viewButton = screen.getByLabelText('View Resource 1');
     fireEvent.click(viewButton);
     expect(mockViewHandler).toHaveBeenCalledWith(mockData[0]);
     expect(mockEditHandler).not.toHaveBeenCalled();
@@ -245,13 +251,13 @@ describe("TableView Component - Default Row Action", () => {
     mockViewHandler.mockClear();
 
     // Verify Edit button still works independently
-    const editButton = screen.getByLabelText("Edit Resource 1");
+    const editButton = screen.getByLabelText('Edit Resource 1');
     fireEvent.click(editButton);
     expect(mockEditHandler).toHaveBeenCalledWith(mockData[0]);
     expect(mockViewHandler).not.toHaveBeenCalled();
 
     // Verify checkbox selection still works independently
-    const checkbox = screen.getAllByRole("checkbox")[1]; // First data row checkbox
+    const checkbox = screen.getAllByRole('checkbox')[1]; // First data row checkbox
     fireEvent.click(checkbox);
     expect(mockRowSelectHandler).toHaveBeenCalled();
 
@@ -260,18 +266,18 @@ describe("TableView Component - Default Row Action", () => {
   });
 });
 
-describe("TableView Component - Sorting Functionality", () => {
+describe('TableView Component - Sorting Functionality', () => {
   afterEach(() => cleanup());
 
   const columns = [
-    { key: "name", title: "Name", sortable: true },
-    { key: "created", title: "Created", sortable: true },
-    { key: "type", title: "Type", sortable: false },
+    { key: 'name', title: 'Name', sortable: true },
+    { key: 'created', title: 'Created', sortable: true },
+    { key: 'type', title: 'Type', sortable: false },
   ];
 
   const mockData = [
-    { id: "1", name: "Resource A", type: "Image", created: "2024-01-01" },
-    { id: "2", name: "Resource B", type: "Video", created: "2024-01-02" },
+    { id: '1', name: 'Resource A', type: 'Image', created: '2024-01-01' },
+    { id: '2', name: 'Resource B', type: 'Video', created: '2024-01-02' },
   ];
 
   const mockFetchData = vi.fn().mockResolvedValue({
@@ -280,8 +286,8 @@ describe("TableView Component - Sorting Functionality", () => {
   });
 
   const defaultProps = {
-    title: "Test Resources",
-    resource: "resources",
+    title: 'Test Resources',
+    resource: 'resources',
     fetchData: mockFetchData,
     table: {
       columns,
@@ -291,7 +297,7 @@ describe("TableView Component - Sorting Functionality", () => {
     },
   };
 
-  it("calls fetchData with initial sort options", async () => {
+  it('calls fetchData with initial sort options', async () => {
     render(() => <TableView {...defaultProps} />);
 
     await waitFor(() => {
@@ -301,23 +307,23 @@ describe("TableView Component - Sorting Functionality", () => {
     // Check that fetchData was called with default sort options
     const callArgs = mockFetchData.mock.calls[0][0];
     expect(callArgs.sortOptions).toEqual({
-      key: "name",
-      direction: "ascending",
+      key: 'name',
+      direction: 'ascending',
     });
   });
 
-  it("updates sort options when column header is clicked", async () => {
+  it('updates sort options when column header is clicked', async () => {
     mockFetchData.mockClear();
     render(() => <TableView {...defaultProps} />);
 
     await waitFor(() => {
-      expect(screen.getByText("Resource A")).toBeInTheDocument();
+      expect(screen.getByText('Resource A')).toBeInTheDocument();
     });
 
     mockFetchData.mockClear();
 
     // Click on the "Created" column header to sort
-    const createdHeader = screen.getByText("Created");
+    const createdHeader = screen.getByText('Created');
     fireEvent.click(createdHeader);
 
     // Wait for fetchData to be called with new sort options
@@ -327,20 +333,20 @@ describe("TableView Component - Sorting Functionality", () => {
 
     const callArgs = mockFetchData.mock.calls[0][0];
     expect(callArgs.sortOptions).toEqual({
-      key: "created",
-      direction: "ascending",
+      key: 'created',
+      direction: 'ascending',
     });
   });
 
-  it("toggles sort direction when same column is clicked twice", async () => {
+  it('toggles sort direction when same column is clicked twice', async () => {
     mockFetchData.mockClear();
     render(() => <TableView {...defaultProps} />);
 
     await waitFor(() => {
-      expect(screen.getByText("Resource A")).toBeInTheDocument();
+      expect(screen.getByText('Resource A')).toBeInTheDocument();
     });
 
-    const nameHeader = screen.getByText("Name");
+    const nameHeader = screen.getByText('Name');
 
     // First click - should sort ascending (already default, but click triggers update)
     mockFetchData.mockClear();
@@ -351,7 +357,7 @@ describe("TableView Component - Sorting Functionality", () => {
     });
 
     let callArgs = mockFetchData.mock.calls[0][0];
-    expect(callArgs.sortOptions.direction).toBe("ascending");
+    expect(callArgs.sortOptions.direction).toBe('ascending');
 
     // Second click - should toggle to descending
     mockFetchData.mockClear();
@@ -363,23 +369,23 @@ describe("TableView Component - Sorting Functionality", () => {
 
     callArgs = mockFetchData.mock.calls[0][0];
     expect(callArgs.sortOptions).toEqual({
-      key: "name",
-      direction: "descending",
+      key: 'name',
+      direction: 'descending',
     });
   });
 
-  it("resets to page 1 when sort changes", async () => {
+  it('resets to page 1 when sort changes', async () => {
     mockFetchData.mockClear();
     render(() => <TableView {...defaultProps} />);
 
     await waitFor(() => {
-      expect(screen.getByText("Resource A")).toBeInTheDocument();
+      expect(screen.getByText('Resource A')).toBeInTheDocument();
     });
 
     mockFetchData.mockClear();
 
     // Click on a different column header
-    const createdHeader = screen.getByText("Created");
+    const createdHeader = screen.getByText('Created');
     fireEvent.click(createdHeader);
 
     await waitFor(() => {
@@ -391,19 +397,19 @@ describe("TableView Component - Sorting Functionality", () => {
     expect(callArgs.page.num).toBe(1);
   });
 
-  it("does not sort when clicking non-sortable column", async () => {
+  it('does not sort when clicking non-sortable column', async () => {
     mockFetchData.mockClear();
     render(() => <TableView {...defaultProps} />);
 
     await waitFor(() => {
-      expect(screen.getByText("Resource A")).toBeInTheDocument();
+      expect(screen.getByText('Resource A')).toBeInTheDocument();
     });
 
     const initialCallCount = mockFetchData.mock.calls.length;
     mockFetchData.mockClear();
 
     // Click on the "Type" column header (non-sortable)
-    const typeHeader = screen.getByText("Type");
+    const typeHeader = screen.getByText('Type');
     fireEvent.click(typeHeader);
 
     // Wait a bit to ensure no additional calls are made

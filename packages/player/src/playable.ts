@@ -1,5 +1,5 @@
-import { Observable } from "rxjs";
-import { Renderer } from "./renderer";
+import { Observable } from 'rxjs';
+import { Renderer } from './renderer';
 
 export enum Status {
   NotReady,

@@ -1,4 +1,10 @@
-export type LogLevel = "info" | "warning" | "error" | "debug" | "critical" | "trace";
+export type LogLevel =
+  | 'info'
+  | 'warning'
+  | 'error'
+  | 'debug'
+  | 'critical'
+  | 'trace';
 
 export interface ILogger {
   log(level: LogLevel, message: string): Promise<void>;
@@ -23,27 +29,27 @@ export class Logger {
   }
 
   warn(message: string) {
-    return this.log("warning", message);
+    return this.log('warning', message);
   }
 
   error(message: string) {
-    return this.log("error", message);
+    return this.log('error', message);
   }
 
   info(message: string) {
-    return this.log("info", message);
+    return this.log('info', message);
   }
 
   debug(message: string) {
-    return this.log("debug", message);
+    return this.log('debug', message);
   }
 
   critical(message: string) {
-    return this.log("critical", message);
+    return this.log('critical', message);
   }
 
   trace(message: string) {
-    return this.log("trace", message);
+    return this.log('trace', message);
   }
 
   private async log(level: LogLevel, message: string): Promise<void> {

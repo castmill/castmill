@@ -1,7 +1,12 @@
-import { JsonPlaylist, JsonWidget, JsonWidgetConfig, JsonPlaylistItem } from "@castmill/player";
+import {
+  JsonPlaylist,
+  JsonWidget,
+  JsonWidgetConfig,
+  JsonPlaylistItem,
+} from '@castmill/player';
 
-import { SortOptions, HttpError } from "@castmill/ui-common";
-import { authFetch } from "../../common/services/auth-fetch";
+import { SortOptions, HttpError } from '@castmill/ui-common';
+import { authFetch } from '../../common/services/auth-fetch';
 
 export interface FetchPlaylistsOptions {
   page: number;
@@ -11,7 +16,7 @@ export interface FetchPlaylistsOptions {
   filters?: Record<string, string | boolean>;
   team_id?: number | null;
   tag_ids?: number[];
-  tag_filter_mode?: "any" | "all";
+  tag_filter_mode?: 'any' | 'all';
   missing_tag_group_id?: number;
 }
 type HandleResponseOptions = {
@@ -37,21 +42,24 @@ interface PlaylistItemInsertPayload {
   prev_item_id?: number;
 }
 
-async function handleResponse<T = any>(response: Response, options: { parse: true }): Promise<T>;
 async function handleResponse<T = any>(
   response: Response,
-  options?: { parse?: false },
+  options: { parse: true }
+): Promise<T>;
+async function handleResponse<T = any>(
+  response: Response,
+  options?: { parse?: false }
 ): Promise<void>;
 async function handleResponse<T = any>(
   response: Response,
-  options: HandleResponseOptions = {},
+  options: HandleResponseOptions = {}
 ): Promise<T | void> {
   if (response.status >= 200 && response.status < 300) {
     if (options.parse) {
       return (await response.json()) as T;
     }
   } else {
-    let errMsg = "";
+    let errMsg = '';
     let errorData: any = null;
     try {
       const jsonResponse = await response.json();
@@ -79,7 +87,7 @@ export const PlaylistsService = {
     organizationId: string,
     name: string,
     aspectRatio?: { width: number; height: number },
-    teamId?: number | null,
+    teamId?: number | null
   ) {
     const playlistData: {
       name: string;
@@ -102,12 +110,12 @@ export const PlaylistsService = {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/playlists`,
       {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ playlist: playlistData }),
-      },
+      }
     );
 
     return handleResponse<{ data: JsonPlaylist }>(response, { parse: true });
@@ -131,12 +139,14 @@ export const PlaylistsService = {
       tag_ids,
       tag_filter_mode,
       missing_tag_group_id,
-    }: FetchPlaylistsOptions,
+    }: FetchPlaylistsOptions
   ) {
     const filtersToString = (filters: Record<string, string | boolean>) => {
       return Object.entries(filters)
-        .map(([key, value]) => (typeof value === "boolean" ? `${key}` : `${key}:${value}`))
-        .join(",");
+        .map(([key, value]) =>
+          typeof value === 'boolean' ? `${key}` : `${key}:${value}`
+        )
+        .join(',');
     };
 
     const query = {
@@ -146,27 +156,27 @@ export const PlaylistsService = {
     } as Record<string, string>;
 
     if (search) {
-      query["search"] = search;
+      query['search'] = search;
     }
 
     if (filters) {
-      query["filters"] = filtersToString(filters);
+      query['filters'] = filtersToString(filters);
     }
 
     if (team_id !== undefined && team_id !== null) {
-      query["team_id"] = team_id.toString();
+      query['team_id'] = team_id.toString();
     }
 
     if (tag_ids && tag_ids.length > 0) {
-      query["tag_ids"] = tag_ids.join(",");
+      query['tag_ids'] = tag_ids.join(',');
     }
 
     if (tag_filter_mode) {
-      query["tag_filter_mode"] = tag_filter_mode;
+      query['tag_filter_mode'] = tag_filter_mode;
     }
 
     if (missing_tag_group_id !== undefined) {
-      query["missing_tag_group_id"] = missing_tag_group_id.toString();
+      query['missing_tag_group_id'] = missing_tag_group_id.toString();
     }
 
     const queryString = new URLSearchParams(query).toString();
@@ -174,11 +184,11 @@ export const PlaylistsService = {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/playlists?${queryString}`,
       {
-        method: "GET",
+        method: 'GET',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
-      },
+      }
     );
 
     return handleResponse<{ data: JsonPlaylist[]; count: number }>(response, {
@@ -186,15 +196,19 @@ export const PlaylistsService = {
     });
   },
 
-  async getPlaylist(baseUrl: string, organizationId: string, playlistId: number) {
+  async getPlaylist(
+    baseUrl: string,
+    organizationId: string,
+    playlistId: number
+  ) {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/playlists/${playlistId}`,
       {
-        method: "GET",
+        method: 'GET',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
-      },
+      }
     );
 
     const { data } = await handleResponse<{ data: JsonPlaylist }>(response, {
@@ -210,17 +224,17 @@ export const PlaylistsService = {
     baseUrl: string,
     organizationId: string,
     playlistId: number,
-    item: PlaylistItemInsertPayload,
+    item: PlaylistItemInsertPayload
   ) {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/playlists/${playlistId}/items`,
       {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(item),
-      },
+      }
     );
 
     const { data } = await handleResponse<{
@@ -235,16 +249,16 @@ export const PlaylistsService = {
     baseUrl: string,
     organizationId: string,
     playlistId: number,
-    itemId: number,
+    itemId: number
   ) {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/playlists/${playlistId}/items/${itemId}`,
       {
-        method: "DELETE",
+        method: 'DELETE',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
-      },
+      }
     );
 
     return handleResponse(response);
@@ -255,17 +269,17 @@ export const PlaylistsService = {
     organizationId: string,
     playlistId: number,
     itemId: number,
-    options: Partial<JsonPlaylistItem>,
+    options: Partial<JsonPlaylistItem>
   ) {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/playlists/${playlistId}/items/${itemId}`,
       {
-        method: "PATCH",
+        method: 'PATCH',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ options }),
-      },
+      }
     );
 
     return handleResponse(response);
@@ -276,17 +290,17 @@ export const PlaylistsService = {
     organizationId: string,
     playlistId: number,
     itemId: number,
-    config: Omit<JsonWidgetConfig, "id" | "widget_id">,
+    config: Omit<JsonWidgetConfig, 'id' | 'widget_id'>
   ) {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/playlists/${playlistId}/items/${itemId}/config`,
       {
-        method: "PATCH",
+        method: 'PATCH',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ config }),
-      },
+      }
     );
 
     return handleResponse(response);
@@ -297,17 +311,17 @@ export const PlaylistsService = {
     organizationId: string,
     playlistId: number,
     itemId: number,
-    targetId: number | null,
+    targetId: number | null
   ) {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/playlists/${playlistId}/items/${itemId}`,
       {
-        method: "PUT",
+        method: 'PUT',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ target_id: targetId }),
-      },
+      }
     );
 
     return handleResponse(response);
@@ -316,15 +330,19 @@ export const PlaylistsService = {
   /**
    * Remove Playlist
    */
-  async removePlaylist(baseUrl: string, organizationId: string, playlistId: number) {
+  async removePlaylist(
+    baseUrl: string,
+    organizationId: string,
+    playlistId: number
+  ) {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/playlists/${playlistId}`,
       {
-        method: "DELETE",
+        method: 'DELETE',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
-      },
+      }
     );
 
     await handleResponse(response);
@@ -337,17 +355,17 @@ export const PlaylistsService = {
     baseUrl: string,
     organizationId: string,
     playlistId: string,
-    playlist: PlaylistUpdate,
+    playlist: PlaylistUpdate
   ) {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/playlists/${playlistId}`,
       {
-        method: "PATCH",
+        method: 'PATCH',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ update: playlist }),
-      },
+      }
     );
 
     await handleResponse(response);
@@ -357,16 +375,16 @@ export const PlaylistsService = {
     const query: Record<string, string> = {};
 
     if (search) {
-      query["search"] = search;
+      query['search'] = search;
     }
 
     const queryString = new URLSearchParams(query).toString();
-    const url = `${baseUrl}/dashboard/organizations/${organizationId}/widgets${queryString ? `?${queryString}` : ""}`;
+    const url = `${baseUrl}/dashboard/organizations/${organizationId}/widgets${queryString ? `?${queryString}` : ''}`;
 
     const response = await authFetch(url, {
-      method: "GET",
+      method: 'GET',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
     });
 
@@ -386,7 +404,7 @@ export const PlaylistsService = {
   async checkWidgetCredentials(
     baseUrl: string,
     organizationId: string,
-    widgetId: number,
+    widgetId: number
   ): Promise<{
     configured: boolean;
     missing_integrations: string[];
@@ -394,9 +412,9 @@ export const PlaylistsService = {
     const url = `${baseUrl}/dashboard/organizations/${organizationId}/widgets/${widgetId}/credentials-status`;
 
     const response = await authFetch(url, {
-      method: "GET",
+      method: 'GET',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
     });
 
@@ -425,35 +443,40 @@ export const PlaylistsService = {
     baseUrl: string,
     organizationId: string,
     widgetId: number,
-    options?: Record<string, any>,
+    options?: Record<string, any>
   ): Promise<{
     data: Record<string, any> | null;
-    status: "cached" | "fetched" | "error" | "credentials_required" | "no_integration";
+    status:
+      | 'cached'
+      | 'fetched'
+      | 'error'
+      | 'credentials_required'
+      | 'no_integration';
     message?: string;
   }> {
     try {
       const url = `${baseUrl}/dashboard/organizations/${organizationId}/widgets/${widgetId}/prefetch-data`;
       const response = await authFetch(url, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ options: options || {} }),
       });
 
       if (response.status === 204) {
         // No integrations for this widget
-        return { data: null, status: "no_integration" };
+        return { data: null, status: 'no_integration' };
       }
 
       if (response.ok) {
         return await response.json();
       }
 
-      return { data: null, status: "error", message: "Failed to prefetch" };
+      return { data: null, status: 'error', message: 'Failed to prefetch' };
     } catch (error) {
-      console.warn("Failed to prefetch widget data:", error);
-      return { data: null, status: "error", message: String(error) };
+      console.warn('Failed to prefetch widget data:', error);
+      return { data: null, status: 'error', message: String(error) };
     }
   },
 
@@ -467,7 +490,7 @@ export const PlaylistsService = {
    */
   async fetchWidgetConfigData(
     baseUrl: string,
-    widgetConfigId: string,
+    widgetConfigId: string
   ): Promise<Record<string, any> | null> {
     try {
       const url = `${baseUrl}/dashboard/widget-configs/${widgetConfigId}/data`;
@@ -481,7 +504,7 @@ export const PlaylistsService = {
       }
       return null;
     } catch (error) {
-      console.warn("Failed to fetch widget config data:", error);
+      console.warn('Failed to fetch widget config data:', error);
       return null;
     }
   },

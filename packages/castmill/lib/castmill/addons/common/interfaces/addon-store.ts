@@ -1,28 +1,37 @@
-import { Socket } from "phoenix";
-import { Env } from "./env";
+import { Socket } from 'phoenix';
+import { Env } from './env';
 
 // i18n function types
 export type TranslateFn = (key: string, params?: Record<string, any>) => string;
 export type TranslatePluralFn = (
   key: string,
   count: number,
-  params?: Record<string, any>,
+  params?: Record<string, any>
 ) => string;
 export type FormatDateFn = (date: Date, format?: string) => string;
-export type FormatNumberFn = (value: number, options?: Intl.NumberFormatOptions) => string;
+export type FormatNumberFn = (
+  value: number,
+  options?: Intl.NumberFormatOptions
+) => string;
 export type FormatCurrencyFn = (
   value: number,
   currency?: string,
-  options?: Intl.NumberFormatOptions,
+  options?: Intl.NumberFormatOptions
 ) => string;
 
 // Permission types
-export type Role = "admin" | "manager" | "regular" | "guest";
-export type ResourceType = "playlists" | "medias" | "channels" | "devices" | "teams" | "widgets";
-export type Action = "list" | "show" | "create" | "update" | "delete";
+export type Role = 'admin' | 'manager' | 'regular' | 'guest';
+export type ResourceType =
+  | 'playlists'
+  | 'medias'
+  | 'channels'
+  | 'devices'
+  | 'teams'
+  | 'widgets';
+export type Action = 'list' | 'show' | 'create' | 'update' | 'delete';
 
 // Keyboard shortcut types
-export type ShortcutCategory = "global" | "navigation" | "actions";
+export type ShortcutCategory = 'global' | 'navigation' | 'actions';
 
 export interface KeyboardShortcut {
   key: string;
@@ -47,7 +56,7 @@ export type SearchParams = Record<string, string | undefined>;
  */
 export type SetSearchParams = (
   params: Record<string, string | number | boolean | undefined>,
-  options?: any,
+  options?: any
 ) => void;
 
 export interface AddonStore {
@@ -76,7 +85,11 @@ export interface AddonStore {
   keyboardShortcuts?: {
     registerShortcut: (id: string, shortcut: KeyboardShortcut) => void;
     unregisterShortcut: (id: string) => void;
-    registerShortcutAction: (id: string, action: () => void, condition?: () => boolean) => void;
+    registerShortcutAction: (
+      id: string,
+      action: () => void,
+      condition?: () => boolean
+    ) => void;
     unregisterShortcutAction: (id: string) => void;
     getShortcuts: () => Map<string, KeyboardShortcut>;
     formatShortcut: (shortcut: KeyboardShortcut) => string;
@@ -95,11 +108,11 @@ export interface AddonStore {
     /** Complete an onboarding step - automatically advances to next step */
     completeStep: (
       step:
-        | "upload_media"
-        | "create_playlist"
-        | "create_channel"
-        | "register_device"
-        | "assign_channel",
+        | 'upload_media'
+        | 'create_playlist'
+        | 'create_channel'
+        | 'register_device'
+        | 'assign_channel'
     ) => Promise<void>;
   };
 }

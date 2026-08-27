@@ -1,6 +1,6 @@
-import { baseUrl } from "../env";
+import { baseUrl } from '../env';
 
-import { authFetch } from "../components/auth";
+import { authFetch } from '../components/auth';
 export interface Notification {
   id: string;
   title_key: string;
@@ -24,9 +24,12 @@ export class NotificationsService {
   /**
    * Fetches notifications for the current user with pagination
    */
-  async getNotifications(page = 1, pageSize = 20): Promise<NotificationsResponse> {
+  async getNotifications(
+    page = 1,
+    pageSize = 20
+  ): Promise<NotificationsResponse> {
     const response = await authFetch(
-      `${this.baseUrl}/dashboard/notifications?page=${page}&page_size=${pageSize}`,
+      `${this.baseUrl}/dashboard/notifications?page=${page}&page_size=${pageSize}`
     );
 
     if (!response.ok) {
@@ -44,7 +47,9 @@ export class NotificationsService {
    * Gets the count of unread notifications
    */
   async getUnreadCount(): Promise<number> {
-    const response = await authFetch(`${this.baseUrl}/dashboard/notifications/unread_count`);
+    const response = await authFetch(
+      `${this.baseUrl}/dashboard/notifications/unread_count`
+    );
 
     if (!response.ok) {
       throw new Error(`Failed to fetch unread count: ${response.statusText}`);
@@ -61,12 +66,14 @@ export class NotificationsService {
     const response = await authFetch(
       `${this.baseUrl}/dashboard/notifications/${notificationId}/read`,
       {
-        method: "PATCH",
-      },
+        method: 'PATCH',
+      }
     );
 
     if (!response.ok) {
-      throw new Error(`Failed to mark notification as read: ${response.statusText}`);
+      throw new Error(
+        `Failed to mark notification as read: ${response.statusText}`
+      );
     }
 
     const result = await response.json();
@@ -77,9 +84,12 @@ export class NotificationsService {
    * Marks all notifications as read
    */
   async markAllAsRead(): Promise<number> {
-    const response = await authFetch(`${this.baseUrl}/dashboard/notifications/mark_all_read`, {
-      method: "POST",
-    });
+    const response = await authFetch(
+      `${this.baseUrl}/dashboard/notifications/mark_all_read`,
+      {
+        method: 'POST',
+      }
+    );
 
     if (!response.ok) {
       throw new Error(`Failed to mark all as read: ${response.statusText}`);

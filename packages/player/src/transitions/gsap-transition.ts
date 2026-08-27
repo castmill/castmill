@@ -1,8 +1,8 @@
-import { Observable } from "rxjs";
-import { gsap } from "gsap";
+import { Observable } from 'rxjs';
+import { gsap } from 'gsap';
 
-import { Transition } from "./transition";
-import { Layer } from "../layer";
+import { Transition } from './transition';
+import { Layer } from '../layer';
 
 export class GsapTransition extends Transition {
   protected timeline: gsap.core.Timeline | null = null;
@@ -22,8 +22,8 @@ export class GsapTransition extends Transition {
     this.dst = dst;
 
     // Store original styles
-    this.srcStyle = src.el.getAttribute("style");
-    this.dstStyle = dst.el.getAttribute("style");
+    this.srcStyle = src.el.getAttribute('style');
+    this.dstStyle = dst.el.getAttribute('style');
 
     if (this.timeline) {
       this.timeline.kill();
@@ -36,35 +36,35 @@ export class GsapTransition extends Transition {
     if (this.timeline) {
       // Restore saved styles
       if (this.srcStyle) {
-        this.src!.el.setAttribute("style", this.srcStyle!);
-        this.dst!.el.setAttribute("style", this.dstStyle!);
+        this.src!.el.setAttribute('style', this.srcStyle!);
+        this.dst!.el.setAttribute('style', this.dstStyle!);
       }
     }
   }
 
-  run(offset: number): Observable<"transition:end"> {
+  run(offset: number): Observable<'transition:end'> {
     if (!this.timeline) {
-      throw new Error("Transition not initialized");
+      throw new Error('Transition not initialized');
     }
 
     const tl = this.timeline;
 
-    return new Observable<"transition:end">((subscriber) => {
+    return new Observable<'transition:end'>((subscriber) => {
       tl.seek(offset / 1000);
 
       const handler = (ev: Event) => {
         // Restore original layer styles
         this.reset();
-        subscriber.next("transition:end");
+        subscriber.next('transition:end');
         subscriber.complete();
       };
 
-      tl.eventCallback("onComplete", handler);
+      tl.eventCallback('onComplete', handler);
 
       tl.play();
 
       return () => {
-        tl.eventCallback("onComplete", null);
+        tl.eventCallback('onComplete', null);
         tl.kill();
       };
     });
@@ -72,7 +72,7 @@ export class GsapTransition extends Transition {
 
   seek(offset: number) {
     if (!this.timeline) {
-      throw new Error("Transition not initialized");
+      throw new Error('Transition not initialized');
     }
     const time = offset / 1000;
     this.timeline.seek(time);

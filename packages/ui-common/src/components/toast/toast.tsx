@@ -1,19 +1,26 @@
 /** @jsxImportSource solid-js */
 
-import { Component, Show, onMount, onCleanup, createSignal, mergeProps } from "solid-js";
-import { IconTypes } from "solid-icons";
+import {
+  Component,
+  Show,
+  onMount,
+  onCleanup,
+  createSignal,
+  mergeProps,
+} from 'solid-js';
+import { IconTypes } from 'solid-icons';
 import {
   AiOutlineCheckCircle,
   AiOutlineCloseCircle,
   AiOutlineInfoCircle,
   AiOutlineWarning,
-} from "solid-icons/ai";
-import { VsClose } from "solid-icons/vs";
-import { IconWrapper } from "../icon-wrapper";
+} from 'solid-icons/ai';
+import { VsClose } from 'solid-icons/vs';
+import { IconWrapper } from '../icon-wrapper';
 
-import styles from "./toast.module.scss";
+import styles from './toast.module.scss';
 
-export type ToastType = "success" | "error" | "info" | "warning";
+export type ToastType = 'success' | 'error' | 'info' | 'warning';
 
 export interface ToastProps {
   id: string;
@@ -33,10 +40,10 @@ const iconMap: Record<ToastType, IconTypes> = {
 export const Toast: Component<ToastProps> = (props) => {
   const defaultProps = mergeProps(
     {
-      type: "info" as ToastType,
+      type: 'info' as ToastType,
       duration: 5000,
     },
-    props,
+    props
   );
 
   const [isVisible, setIsVisible] = createSignal(false);
@@ -76,10 +83,10 @@ export const Toast: Component<ToastProps> = (props) => {
     const classes = [
       styles.toast,
       styles[`toast-${defaultProps.type}`],
-      isVisible() ? styles.visible : "",
-      isExiting() ? styles.exiting : "",
+      isVisible() ? styles.visible : '',
+      isExiting() ? styles.exiting : '',
     ];
-    return classes.filter(Boolean).join(" ");
+    return classes.filter(Boolean).join(' ');
   };
 
   return (

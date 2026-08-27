@@ -2,19 +2,23 @@
  * Global store for the application
  *
  */
-import { Socket } from "phoenix";
-import { createStore } from "solid-js/store";
+import { Socket } from 'phoenix';
+import { createStore } from 'solid-js/store';
 
-import { AddOn } from "../interfaces/addon.interface";
-import { Organization } from "../interfaces/organization";
-import { baseUrl, origin, domain } from "../env";
-import type { Role, ResourceType, Action } from "../services/permissions.service";
-import type { KeyboardShortcut } from "../hooks/useKeyboardShortcuts";
+import { AddOn } from '../interfaces/addon.interface';
+import { Organization } from '../interfaces/organization';
+import { baseUrl, origin, domain } from '../env';
+import type {
+  Role,
+  ResourceType,
+  Action,
+} from '../services/permissions.service';
+import type { KeyboardShortcut } from '../hooks/useKeyboardShortcuts';
 import type {
   OnboardingProgress,
   OnboardingStep,
-} from "../interfaces/onboarding-progress.interface";
-import type { NetworkSettings, SocialLinks } from "../services/network.service";
+} from '../interfaces/onboarding-progress.interface';
+import type { NetworkSettings, SocialLinks } from '../services/network.service';
 
 interface OrganizationLogoState {
   mediaId: number | null;
@@ -76,7 +80,10 @@ interface CastmillStore {
 
   // Auth-aware fetch wrapper — automatically adds Bearer token.
   // Addon components should use `props.store.authFetch` instead of raw `fetch`.
-  authFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
+  authFetch: (
+    input: RequestInfo | URL,
+    init?: RequestInit
+  ) => Promise<Response>;
 
   // i18n functions (set by wrapLazyComponent)
   i18n?: {
@@ -87,7 +94,7 @@ interface CastmillStore {
     formatCurrency: (
       value: number,
       currency?: string,
-      options?: Intl.NumberFormatOptions,
+      options?: Intl.NumberFormatOptions
     ) => string;
     locale: () => string;
     setLocale: (locale: any) => void; // Using any to match i18n context signature
@@ -97,7 +104,11 @@ interface CastmillStore {
   keyboardShortcuts?: {
     registerShortcut: (id: string, shortcut: KeyboardShortcut) => void;
     unregisterShortcut: (id: string) => void;
-    registerShortcutAction: (id: string, action: () => void, condition?: () => boolean) => void;
+    registerShortcutAction: (
+      id: string,
+      action: () => void,
+      condition?: () => boolean
+    ) => void;
     unregisterShortcutAction: (id: string) => void;
     getShortcuts: () => Map<string, KeyboardShortcut>;
     formatShortcut: (shortcut: KeyboardShortcut) => string;
@@ -133,7 +144,7 @@ const [store, setStore] = createStore<CastmillStore>({
     loading: false,
     data: [],
     selectedId: null,
-    selectedName: "",
+    selectedName: '',
     logos: {},
   },
 
@@ -152,10 +163,10 @@ const [store, setStore] = createStore<CastmillStore>({
   networkSettings: {
     loaded: false,
     loading: false,
-    logo: "",
-    copyright: "© 2011-2025 Castmill™",
-    email: "support@castmill.com",
-    defaultLocale: "en",
+    logo: '',
+    copyright: '© 2011-2025 Castmill™',
+    email: 'support@castmill.com',
+    defaultLocale: 'en',
     socialLinks: {},
   },
 
@@ -166,7 +177,8 @@ const [store, setStore] = createStore<CastmillStore>({
   },
 
   // Default to plain fetch; replaced with authFetch after auth.ts loads
-  authFetch: (input: RequestInfo | URL, init?: RequestInit) => fetch(input, init ?? {}),
+  authFetch: (input: RequestInfo | URL, init?: RequestInit) =>
+    fetch(input, init ?? {}),
 
   onboarding: {
     showTour: false,

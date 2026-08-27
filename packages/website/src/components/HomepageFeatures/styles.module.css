@@ -14,11 +14,11 @@
   color: var(--ifm-heading-color);
 }
 
-[data-theme="light"] .features h3 {
+[data-theme='light'] .features h3 {
   color: #1e293b;
 }
 
-[data-theme="dark"] .features h3 {
+[data-theme='dark'] .features h3 {
   color: var(--ifm-heading-color);
 }
 
@@ -28,11 +28,11 @@
   line-height: 1.6;
 }
 
-[data-theme="light"] .features p {
+[data-theme='light'] .features p {
   color: #475569;
 }
 
-[data-theme="dark"] .features p {
+[data-theme='dark'] .features p {
   color: var(--ifm-color-content-secondary);
 }
 
@@ -58,7 +58,7 @@
   border-bottom: 1px solid var(--ifm-color-emphasis-200);
 }
 
-[data-theme="dark"] .architectureSection {
+[data-theme='dark'] .architectureSection {
   background: rgba(0, 0, 0, 0.2);
   border-color: rgba(255, 255, 255, 0.05);
 }
@@ -81,12 +81,12 @@
   border-color: var(--ifm-color-primary-lighter);
 }
 
-[data-theme="dark"] .architectureItem {
+[data-theme='dark'] .architectureItem {
   background: rgba(255, 255, 255, 0.02);
   border-color: rgba(255, 255, 255, 0.08);
 }
 
-[data-theme="dark"] .architectureItem:hover {
+[data-theme='dark'] .architectureItem:hover {
   background: rgba(255, 255, 255, 0.04);
   border-color: rgba(255, 255, 255, 0.12);
   box-shadow:
@@ -102,11 +102,11 @@
 }
 
 /* Better contrast for light mode */
-[data-theme="light"] .architectureItem h4 {
+[data-theme='light'] .architectureItem h4 {
   color: #1e40af;
 }
 
-[data-theme="dark"] .architectureItem h4 {
+[data-theme='dark'] .architectureItem h4 {
   color: var(--ifm-color-primary);
 }
 
@@ -117,11 +117,11 @@
 }
 
 /* Better text color for light mode */
-[data-theme="light"] .architectureItem p {
+[data-theme='light'] .architectureItem p {
   color: #475569;
 }
 
-[data-theme="dark"] .architectureItem p {
+[data-theme='dark'] .architectureItem p {
   color: var(--ifm-color-content-secondary);
 }
 
@@ -139,11 +139,11 @@
 }
 
 /* Better contrast for section headings in light mode */
-[data-theme="light"] .quickStartSection h2 {
+[data-theme='light'] .quickStartSection h2 {
   color: #1e293b;
 }
 
-[data-theme="dark"] .quickStartSection h2 {
+[data-theme='dark'] .quickStartSection h2 {
   color: var(--ifm-heading-color);
 }
 
@@ -169,12 +169,12 @@
   border-color: var(--ifm-color-primary-lighter);
 }
 
-[data-theme="dark"] .quickStartStep {
+[data-theme='dark'] .quickStartStep {
   background: rgba(255, 255, 255, 0.02);
   border-color: rgba(255, 255, 255, 0.08);
 }
 
-[data-theme="dark"] .quickStartStep:hover {
+[data-theme='dark'] .quickStartStep:hover {
   background: rgba(255, 255, 255, 0.04);
   border-color: rgba(255, 255, 255, 0.12);
   box-shadow:
@@ -213,7 +213,7 @@
   overflow-x: auto;
 }
 
-[data-theme="dark"] .quickStartStep pre {
+[data-theme='dark'] .quickStartStep pre {
   background: rgba(0, 0, 0, 0.3);
   border-color: rgba(255, 255, 255, 0.08);
 }
@@ -281,18 +281,23 @@
   position: relative;
 }
 
-[data-theme="dark"] .architectureSection {
+[data-theme='dark'] .architectureSection {
   background: rgba(30, 41, 59, 0.3);
 }
 
 .architectureSection::before {
-  content: "";
+  content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, var(--ifm-color-primary), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--ifm-color-primary),
+    transparent
+  );
 }
 
 .architectureItem {
@@ -308,13 +313,17 @@
 }
 
 .architectureItem::before {
-  content: "";
+  content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, var(--ifm-color-primary), var(--ifm-color-secondary));
+  background: linear-gradient(
+    90deg,
+    var(--ifm-color-primary),
+    var(--ifm-color-secondary)
+  );
 }
 
 .architectureItem:hover {
@@ -322,13 +331,13 @@
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
-[data-theme="dark"] .architectureItem {
+[data-theme='dark'] .architectureItem {
   background: rgba(30, 41, 59, 0.6);
   border-color: rgba(255, 255, 255, 0.1);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
-[data-theme="dark"] .architectureItem:hover {
+[data-theme='dark'] .architectureItem:hover {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
@@ -346,7 +355,11 @@
 }
 
 .quickStartSection h2 {
-  background: linear-gradient(135deg, var(--ifm-color-primary), var(--ifm-color-secondary));
+  background: linear-gradient(
+    135deg,
+    var(--ifm-color-primary),
+    var(--ifm-color-secondary)
+  );
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -373,13 +386,17 @@
 }
 
 .quickStartStep::before {
-  content: "";
+  content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(90deg, var(--ifm-color-primary), var(--ifm-color-secondary));
+  background: linear-gradient(
+    90deg,
+    var(--ifm-color-primary),
+    var(--ifm-color-secondary)
+  );
 }
 
 .quickStartStep:hover {
@@ -388,13 +405,13 @@
   border-color: var(--ifm-color-primary-lighter);
 }
 
-[data-theme="dark"] .quickStartStep {
+[data-theme='dark'] .quickStartStep {
   background: rgba(30, 41, 59, 0.6);
   border-color: rgba(255, 255, 255, 0.1);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
 
-[data-theme="dark"] .quickStartStep:hover {
+[data-theme='dark'] .quickStartStep:hover {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
 }
 
@@ -403,7 +420,11 @@
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--ifm-color-primary), var(--ifm-color-secondary));
+  background: linear-gradient(
+    135deg,
+    var(--ifm-color-primary),
+    var(--ifm-color-secondary)
+  );
   color: white;
   font-weight: bold;
   font-size: 1.4rem;
@@ -430,7 +451,7 @@
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-[data-theme="dark"] .quickStartStep pre {
+[data-theme='dark'] .quickStartStep pre {
   background: rgba(0, 0, 0, 0.3);
   border-color: rgba(255, 255, 255, 0.1);
 }
@@ -490,13 +511,13 @@
   border-color: var(--ifm-color-primary-lighter);
 }
 
-[data-theme="dark"] .features .col > div {
+[data-theme='dark'] .features .col > div {
   background: rgba(30, 41, 59, 0.6);
   border-color: rgba(255, 255, 255, 0.1);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
 
-[data-theme="dark"] .features .col > div:hover {
+[data-theme='dark'] .features .col > div:hover {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
   border-color: rgba(255, 255, 255, 0.12);
 }

@@ -4,16 +4,28 @@ export interface MediaPayload {
   [key: string]: unknown;
 }
 
-export type MediaFiles = Record<string, MediaFile | undefined> | MediaFile[] | undefined | null;
+export type MediaFiles =
+  | Record<string, MediaFile | undefined>
+  | MediaFile[]
+  | undefined
+  | null;
 
 export interface MediaFile {
   uri?: string;
   [key: string]: unknown;
 }
 
-const PREFERRED_CONTEXTS = ["thumbnail", "main", "default", "square", "landscape"];
+const PREFERRED_CONTEXTS = [
+  'thumbnail',
+  'main',
+  'default',
+  'square',
+  'landscape',
+];
 
-function extractUriFromRecord(files: Record<string, MediaFile | undefined>): string | null {
+function extractUriFromRecord(
+  files: Record<string, MediaFile | undefined>
+): string | null {
   for (const context of PREFERRED_CONTEXTS) {
     const candidate = files[context]?.uri;
     if (candidate) return candidate;
@@ -30,7 +42,9 @@ function extractUriFromRecord(files: Record<string, MediaFile | undefined>): str
 
 function extractUriFromArray(files: MediaFile[]): string | null {
   for (const context of PREFERRED_CONTEXTS) {
-    const candidate = files.find((file) => (file as any)?.context === context)?.uri;
+    const candidate = files.find(
+      (file) => (file as any)?.context === context
+    )?.uri;
     if (candidate) return candidate;
   }
 
@@ -61,7 +75,7 @@ export function extractMediaFileUrl(payload: unknown): string | null {
     return extractUriFromArray(files);
   }
 
-  if (typeof files === "object") {
+  if (typeof files === 'object') {
     return extractUriFromRecord(files as Record<string, MediaFile | undefined>);
   }
 

@@ -127,7 +127,11 @@
       .arrow-line {
         width: 3em;
         height: 0.125em;
-        background: linear-gradient(to right, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.6));
+        background: linear-gradient(
+          to right,
+          rgba(255, 255, 255, 0.3),
+          rgba(255, 255, 255, 0.6)
+        );
         position: relative;
         animation: pulse 2s ease-in-out infinite;
       }
@@ -268,7 +272,7 @@
   height: 1em;
 }
 
-.item[selected*="yes"] {
+.item[selected*='yes'] {
   background: #f0f0f0;
   transition: none;
 }

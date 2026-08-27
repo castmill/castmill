@@ -1,17 +1,20 @@
-import { DeviceInfo, BrowserMachine } from "@castmill/device";
-import { LegacyMachine, PING_INTERVAL } from "./legacy-machine";
+import { DeviceInfo, BrowserMachine } from '@castmill/device';
+import { LegacyMachine, PING_INTERVAL } from './legacy-machine';
 import {
   getEnvironment,
   reboot,
   restart,
   sendHeartbeat,
   sendPlayerReady,
-} from "../electron-legacy-api";
+} from '../electron-legacy-api';
 
-export class ElectronLegacyMachine extends BrowserMachine implements LegacyMachine {
+export class ElectronLegacyMachine
+  extends BrowserMachine
+  implements LegacyMachine
+{
   initLegacy(): void {
     setInterval(() => {
-      console.log("Sending heartbeat");
+      console.log('Sending heartbeat');
       sendHeartbeat();
     }, PING_INTERVAL);
 
@@ -21,24 +24,25 @@ export class ElectronLegacyMachine extends BrowserMachine implements LegacyMachi
   }
 
   async getMachineGUID(): Promise<string> {
-    console.log("legacy-electron:getMachineGUID");
+    console.log('legacy-electron:getMachineGUID');
     const environment = await getEnvironment();
-    console.log("legacy-electron environment", environment);
+    console.log('legacy-electron environment', environment);
     return environment.deviceId;
   }
 
   async getDeviceInfo(): Promise<DeviceInfo> {
-    console.log("legacy-electron:getDeviceInfo");
+    console.log('legacy-electron:getDeviceInfo');
     // get chromium version from user agent
-    const chromiumVersion = navigator.userAgent.match(/Chrome\/([0-9.]+)/)?.[1] ?? undefined;
+    const chromiumVersion =
+      navigator.userAgent.match(/Chrome\/([0-9.]+)/)?.[1] ?? undefined;
 
     const environment = await getEnvironment();
     console.log(environment);
 
     return {
-      appType: "Electron legacy adapter",
+      appType: 'Electron legacy adapter',
       appVersion: environment.versionStr,
-      os: "Electrion",
+      os: 'Electrion',
       hardware: environment.model,
       chromiumVersion,
       userAgent: navigator.userAgent,
@@ -49,7 +53,7 @@ export class ElectronLegacyMachine extends BrowserMachine implements LegacyMachi
    * Restart the device application.
    */
   async restart(): Promise<void> {
-    console.log("legacy:restart");
+    console.log('legacy:restart');
     return restart();
   }
 
@@ -57,7 +61,7 @@ export class ElectronLegacyMachine extends BrowserMachine implements LegacyMachi
    * Refresh the browser.
    */
   async refresh(): Promise<void> {
-    console.log("legacy:refresh");
+    console.log('legacy:refresh');
     return window.location.reload();
   }
 
@@ -66,7 +70,7 @@ export class ElectronLegacyMachine extends BrowserMachine implements LegacyMachi
    *
    */
   async reboot(): Promise<void> {
-    console.log("legacy:reboot");
+    console.log('legacy:reboot');
     return reboot();
   }
 }

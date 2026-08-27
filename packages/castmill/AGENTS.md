@@ -85,9 +85,10 @@ The dashboard implements a comprehensive internationalization system supporting 
 #### Core Hook
 
 ```typescript
-import { useI18n } from "./i18n";
+import { useI18n } from './i18n';
 
-const { t, tp, formatDate, formatNumber, formatCurrency, locale, setLocale } = useI18n();
+const { t, tp, formatDate, formatNumber, formatCurrency, locale, setLocale } =
+  useI18n();
 ```
 
 ### Translation Functions
@@ -95,24 +96,24 @@ const { t, tp, formatDate, formatNumber, formatCurrency, locale, setLocale } = u
 #### Basic Translation
 
 ```typescript
-t("key.path"); // Simple translation
-t("key.path", { name: "John" }); // With parameters
+t('key.path'); // Simple translation
+t('key.path', { name: 'John' }); // With parameters
 ```
 
 #### Pluralization
 
 ```typescript
-tp("plurals.items", count); // Locale-aware pluralization
-tp("plurals.items", 5, { type: "media" }); // With additional parameters
+tp('plurals.items', count); // Locale-aware pluralization
+tp('plurals.items', 5, { type: 'media' }); // With additional parameters
 ```
 
 #### Formatting Functions
 
 ```typescript
 formatDate(new Date()); // Locale-specific date format
-formatDate(date, "short"); // Custom format using date-fns
+formatDate(date, 'short'); // Custom format using date-fns
 formatNumber(1234.56); // "1,234.56" / "1.234,56" (de)
-formatCurrency(99.99, "USD"); // "$99.99" / "99,99 US$" (es)
+formatCurrency(99.99, 'USD'); // "$99.99" / "99,99 US$" (es)
 ```
 
 ### Translation File Structure
@@ -224,7 +225,8 @@ interface AddonStore {
 }
 
 // In AddOn component
-const t = (key: string, params?: Record<string, any>) => props.store.i18n?.t(key, params) || key;
+const t = (key: string, params?: Record<string, any>) =>
+  props.store.i18n?.t(key, params) || key;
 ```
 
 ### Translation Coverage Workflow
@@ -371,12 +373,12 @@ node scripts/i18n/translation-helper.cjs list teams.invitations
 
 ```typescript
 // Success messages
-toast.success(t("teams.invitations.acceptSuccess"));
-toast.success(t("teams.deleteSuccess"));
+toast.success(t('teams.invitations.acceptSuccess'));
+toast.success(t('teams.deleteSuccess'));
 
 // Error messages
-toast.error(t("errors.networkError"));
-toast.error(t("teams.deleteError"));
+toast.error(t('errors.networkError'));
+toast.error(t('teams.deleteError'));
 ```
 
 #### Form Labels and Placeholders
@@ -405,15 +407,15 @@ toast.error(t("teams.deleteError"));
 The toast system from `@castmill/ui-common` works seamlessly with translations:
 
 ```typescript
-import { useToast } from "@castmill/ui-common";
-import { useI18n } from "../../i18n";
+import { useToast } from '@castmill/ui-common';
+import { useI18n } from '../../i18n';
 
 const toast = useToast();
 const { t } = useI18n();
 
 // Localized toast messages
-toast.success(t("operation.success"));
-toast.error(t("operation.error"));
+toast.success(t('operation.success'));
+toast.error(t('operation.error'));
 ```
 
 ### Migration from alert() to toast
@@ -422,10 +424,10 @@ The project has migrated from blocking `alert()` calls to user-friendly toast no
 
 ```typescript
 // Old pattern (blocking, poor UX)
-alert("Operation completed");
+alert('Operation completed');
 
 // New pattern (non-blocking, good UX)
-toast.success(t("operation.completed"));
+toast.success(t('operation.completed'));
 ```
 
 ## Development Workflow
@@ -510,10 +512,10 @@ const storeWithI18n = {
 Components and AddOns are lazy-loaded to improve initial bundle size:
 
 ```typescript
-const Login = lazy(() => import("./components/login/login"));
+const Login = lazy(() => import('./components/login/login'));
 const Dashboard = lazy(async () => {
   await loginUser();
-  return import("./components/dashboard/dashboard");
+  return import('./components/dashboard/dashboard');
 });
 ```
 
@@ -579,7 +581,14 @@ Returns:
     "playlists": ["list", "show", "create", "update", "delete"],
     "teams": ["list", "show"]
   },
-  "resources": ["playlists", "medias", "channels", "devices", "teams", "widgets"]
+  "resources": [
+    "playlists",
+    "medias",
+    "channels",
+    "devices",
+    "teams",
+    "widgets"
+  ]
 }
 ```
 

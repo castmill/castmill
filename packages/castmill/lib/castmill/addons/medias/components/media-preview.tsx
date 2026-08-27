@@ -1,5 +1,5 @@
-import { Show } from "solid-js";
-import { JsonMedia } from "@castmill/player";
+import { Show } from 'solid-js';
+import { JsonMedia } from '@castmill/player';
 
 /**
  * Props for the MediaPreview component.
@@ -15,14 +15,18 @@ interface MediaPreviewProps {
 export const MediaPreview = (props: MediaPreviewProps) => {
   // Check if the preview file is a video based on mimetype
   const isVideoPreview = () => {
-    const previewFile = props.media.files["preview"];
-    return previewFile && previewFile.mimetype && previewFile.mimetype.startsWith("video/");
+    const previewFile = props.media.files['preview'];
+    return (
+      previewFile &&
+      previewFile.mimetype &&
+      previewFile.mimetype.startsWith('video/')
+    );
   };
 
   return (
-    <div class={`preview ${props.previewClass || ""}`}>
+    <div class={`preview ${props.previewClass || ''}`}>
       <Show
-        when={props.media.files["preview"]}
+        when={props.media.files['preview']}
         fallback={<div class="placeholder">No preview available</div>}
       >
         <Show
@@ -31,12 +35,16 @@ export const MediaPreview = (props: MediaPreviewProps) => {
             <div
               class="image"
               style={{
-                "background-image": `url(${props.media.files["preview"].uri})`,
+                'background-image': `url(${props.media.files['preview'].uri})`,
               }}
             ></div>
           }
         >
-          <video src={props.media.files["preview"].uri} controls class="video-preview"></video>
+          <video
+            src={props.media.files['preview'].uri}
+            controls
+            class="video-preview"
+          ></video>
         </Show>
       </Show>
     </div>

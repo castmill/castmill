@@ -9,6 +9,6 @@ export {
   CredentialConfig,
   type WidgetIntegration,
   type CredentialSchema,
-} from "./credential-config";
-export { IntegrationsList } from "./integrations-list";
-export { QuotaIndicator } from "./quota-indicator";
+} from './credential-config';
+export { IntegrationsList } from './integrations-list';
+export { QuotaIndicator } from './quota-indicator';

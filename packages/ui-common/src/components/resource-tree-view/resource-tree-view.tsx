@@ -7,15 +7,24 @@
  *
  * Think of it as: Location > Campaign grid, but generalized to any tag groups.
  */
-import { Component, createSignal, createEffect, Show, For, JSX, on, batch } from "solid-js";
-import { createStore } from "solid-js/store";
-import { IoChevronForward, IoChevronDown } from "solid-icons/io";
-import { VsFileMedia } from "solid-icons/vs";
-import { IconWrapper } from "../icon-wrapper";
-import { TagBadge } from "../tags/tag-badge";
-import { Dropdown } from "../dropdown/dropdown";
-import type { Tag, TagGroup } from "../../services/tags.service";
-import "./resource-tree-view.scss";
+import {
+  Component,
+  createSignal,
+  createEffect,
+  Show,
+  For,
+  JSX,
+  on,
+  batch,
+} from 'solid-js';
+import { createStore } from 'solid-js/store';
+import { IoChevronForward, IoChevronDown } from 'solid-icons/io';
+import { VsFileMedia } from 'solid-icons/vs';
+import { IconWrapper } from '../icon-wrapper';
+import { TagBadge } from '../tags/tag-badge';
+import { Dropdown } from '../dropdown/dropdown';
+import type { Tag, TagGroup } from '../../services/tags.service';
+import './resource-tree-view.scss';
 
 // A generic resource item that the tree view can display
 export interface TreeResourceItem {
@@ -48,7 +57,7 @@ export interface ResourceTreeViewProps {
    */
   fetchUntaggedResources?: (
     tagGroupId: number,
-    parentTagIds?: number[],
+    parentTagIds?: number[]
   ) => Promise<{
     data: TreeResourceItem[];
     count: number;
@@ -58,7 +67,10 @@ export interface ResourceTreeViewProps {
    * Fetch only the count of resources that have no tags in a given tag group.
    * `parentTagIds` filters to resources that also match those ancestor tags.
    */
-  fetchUntaggedCount?: (tagGroupId: number, parentTagIds?: number[]) => Promise<number>;
+  fetchUntaggedCount?: (
+    tagGroupId: number,
+    parentTagIds?: number[]
+  ) => Promise<number>;
 
   /** Called when a resource is clicked */
   onResourceClick?: (item: TreeResourceItem) => void;
@@ -122,7 +134,9 @@ export const ResourceTreeView: Component<ResourceTreeViewProps> = (props) => {
   // The SolidJS store doesn't reliably propagate array replacements on nested
   // nodes, so we keep fallback items completely outside the store. The pathKey
   // is the comma-joined index path (e.g. "0", "2,1").
-  const [fallbackItems, setFallbackItems] = createSignal<Map<string, FallbackEntry>>(new Map(), {
+  const [fallbackItems, setFallbackItems] = createSignal<
+    Map<string, FallbackEntry>
+  >(new Map(), {
     equals: false,
   });
 
@@ -130,7 +144,8 @@ export const ResourceTreeView: Component<ResourceTreeViewProps> = (props) => {
   let buildGeneration = 0;
 
   // Helpers for localStorage persistence
-  const persistKey = () => (props.storageKey ? `castmill-treeDims-${props.storageKey}` : null);
+  const persistKey = () =>
+    props.storageKey ? `castmill-treeDims-${props.storageKey}` : null;
 
   const loadPersistedDims = (groupCount: number): number[] | null => {
     const key = persistKey();
@@ -143,7 +158,7 @@ export const ResourceTreeView: Component<ResourceTreeViewProps> = (props) => {
       if (
         !Array.isArray(arr) ||
         arr.length === 0 ||
-        arr.some((i) => typeof i !== "number" || i < 0 || i >= groupCount) ||
+        arr.some((i) => typeof i !== 'number' || i < 0 || i >= groupCount) ||
         new Set(arr).size !== arr.length
       )
         return null;
@@ -164,13 +179,15 @@ export const ResourceTreeView: Component<ResourceTreeViewProps> = (props) => {
           if (persisted) {
             setDimensions(persisted);
           } else {
-            setDimensions(groups.length >= 2 ? [0, 1] : groups.length === 1 ? [0] : []);
+            setDimensions(
+              groups.length >= 2 ? [0, 1] : groups.length === 1 ? [0] : []
+            );
           }
         } else {
           setDimensions([]);
         }
-      },
-    ),
+      }
+    )
   );
 
   // Persist dimensions whenever they change
@@ -180,21 +197,27 @@ export const ResourceTreeView: Component<ResourceTreeViewProps> = (props) => {
       if (key && dims.length > 0) {
         localStorage.setItem(key, JSON.stringify(dims));
       }
-    }),
+    })
   );
 
   // Rebuild tree when dimensions, available tags, or refreshKey change
   createEffect(
     on(
-      () => [dimensions(), props.allTags, props.tagGroups, props.refreshKey ?? 0] as const,
+      () =>
+        [
+          dimensions(),
+          props.allTags,
+          props.tagGroups,
+          props.refreshKey ?? 0,
+        ] as const,
       ([dims, , groups]) => {
         if (dims.length === 0 || groups.length === 0) {
           setTreeNodes([]);
           return;
         }
         buildRootLevel(dims);
-      },
-    ),
+      }
+    )
   );
 
   const getGroupTags = (groupIndex: number): Tag[] => {
@@ -226,9 +249,12 @@ export const ResourceTreeView: Component<ResourceTreeViewProps> = (props) => {
         .fetchResources([tag.id])
         .then((r) => r.count)
         .catch((err) => {
-          console.error(`Failed to fetch count for tag "${tag.name}" (id=${tag.id}):`, err);
+          console.error(
+            `Failed to fetch count for tag "${tag.name}" (id=${tag.id}):`,
+            err
+          );
           return 0;
-        }),
+        })
     );
 
     const untaggedPromise =
@@ -236,7 +262,7 @@ export const ResourceTreeView: Component<ResourceTreeViewProps> = (props) => {
         ? props.fetchUntaggedCount(rootGroup.id).catch((err) => {
             console.error(
               `Failed to fetch untagged count for group "${rootGroup.name}" (id=${rootGroup.id}):`,
-              err,
+              err
             );
             return 0;
           })
@@ -247,7 +273,7 @@ export const ResourceTreeView: Component<ResourceTreeViewProps> = (props) => {
               .catch((err) => {
                 console.error(
                   `Failed to fetch untagged count for group "${rootGroup.name}" (id=${rootGroup.id}):`,
-                  err,
+                  err
                 );
                 return 0;
               })
@@ -290,13 +316,17 @@ export const ResourceTreeView: Component<ResourceTreeViewProps> = (props) => {
   const storePath = (path: number[]): (string | number)[] => {
     const result: (string | number)[] = [path[0]];
     for (let i = 1; i < path.length; i++) {
-      result.push("children", path[i]);
+      result.push('children', path[i]);
     }
     return result;
   };
 
   // Toggle a node's expanded state and load data lazily
-  const toggleNode = async (path: number[], dimLevel: number, parentTagIds: number[]) => {
+  const toggleNode = async (
+    path: number[],
+    dimLevel: number,
+    parentTagIds: number[]
+  ) => {
     // Read the current node from the store
     let node: TreeNode | undefined = treeNodes[path[0]];
     for (let i = 1; i < path.length && node; i++) {
@@ -306,7 +336,7 @@ export const ResourceTreeView: Component<ResourceTreeViewProps> = (props) => {
 
     if (node.expanded) {
       // Collapse
-      setTreeNodes(...(storePath(path) as [any]), "expanded", false);
+      setTreeNodes(...(storePath(path) as [any]), 'expanded', false);
       return;
     }
 
@@ -334,7 +364,7 @@ export const ResourceTreeView: Component<ResourceTreeViewProps> = (props) => {
           loading: false,
         });
       } catch (e) {
-        console.error("Failed to load untagged resources:", e);
+        console.error('Failed to load untagged resources:', e);
         setTreeNodes(...(storePath(path) as [any]), {
           items: [],
           loading: false,
@@ -361,9 +391,12 @@ export const ResourceTreeView: Component<ResourceTreeViewProps> = (props) => {
           .fetchResources([...tagIds, tag.id])
           .then((r) => r.count)
           .catch((err) => {
-            console.error(`Failed to fetch count for tag "${tag.name}" (id=${tag.id}):`, err);
+            console.error(
+              `Failed to fetch count for tag "${tag.name}" (id=${tag.id}):`,
+              err
+            );
             return 0;
-          }),
+          })
       );
 
       const childUntaggedPromise =
@@ -371,7 +404,7 @@ export const ResourceTreeView: Component<ResourceTreeViewProps> = (props) => {
           ? props.fetchUntaggedCount(childGroup.id, tagIds).catch((err) => {
               console.error(
                 `Failed to fetch untagged count for group "${childGroup.name}" (id=${childGroup.id}):`,
-                err,
+                err
               );
               return 0;
             })
@@ -382,7 +415,7 @@ export const ResourceTreeView: Component<ResourceTreeViewProps> = (props) => {
                 .catch((err) => {
                   console.error(
                     `Failed to fetch untagged count for group "${childGroup.name}" (id=${childGroup.id}):`,
-                    err,
+                    err
                   );
                   return 0;
                 })
@@ -397,7 +430,9 @@ export const ResourceTreeView: Component<ResourceTreeViewProps> = (props) => {
       });
 
       // Hide child tags with zero resources
-      const nonEmptyChildren = childNodes.filter((n) => n.count !== null && n.count > 0);
+      const nonEmptyChildren = childNodes.filter(
+        (n) => n.count !== null && n.count > 0
+      );
 
       if (childUntaggedCount > 0) {
         nonEmptyChildren.push({
@@ -413,7 +448,7 @@ export const ResourceTreeView: Component<ResourceTreeViewProps> = (props) => {
         // No resources match any tag in the child dimension
         // → fall back to leaf mode and load resources directly.
         // Items are stored in a signal (not the store) for reliable reactivity.
-        const pathKey = path.join(",");
+        const pathKey = path.join(',');
         try {
           const result = await props.fetchResources(tagIds);
           setFallbackItems((prev) => {
@@ -423,7 +458,7 @@ export const ResourceTreeView: Component<ResourceTreeViewProps> = (props) => {
           });
           setTreeNodes(...(storePath(path) as [any]), { loading: false });
         } catch (e) {
-          console.error("Failed to load resources:", e);
+          console.error('Failed to load resources:', e);
           setFallbackItems((prev) => {
             const next = new Map(prev);
             next.set(pathKey, { items: [], count: 0 });
@@ -447,7 +482,7 @@ export const ResourceTreeView: Component<ResourceTreeViewProps> = (props) => {
           loading: false,
         });
       } catch (e) {
-        console.error("Failed to load resources:", e);
+        console.error('Failed to load resources:', e);
         setTreeNodes(...(storePath(path) as [any]), {
           items: [],
           loading: false,
@@ -490,7 +525,7 @@ export const ResourceTreeView: Component<ResourceTreeViewProps> = (props) => {
     path: number[],
     level: number,
     dimLevel: number,
-    parentTagIds: number[],
+    parentTagIds: number[]
   ): JSX.Element => {
     const tagIds = [...parentTagIds, ...(node.tag ? [node.tag.id] : [])];
     const isLeaf = !node.tag || dimLevel >= dimensions().length - 1;
@@ -506,7 +541,10 @@ export const ResourceTreeView: Component<ResourceTreeViewProps> = (props) => {
           onClick={() => toggleNode(path, dimLevel, parentTagIds)}
         >
           <span class="tree-chevron">
-            <Show when={node.expanded} fallback={<IconWrapper icon={IoChevronForward} />}>
+            <Show
+              when={node.expanded}
+              fallback={<IconWrapper icon={IoChevronForward} />}
+            >
               <IconWrapper icon={IoChevronDown} />
             </Show>
           </span>
@@ -515,7 +553,9 @@ export const ResourceTreeView: Component<ResourceTreeViewProps> = (props) => {
             <Show
               when={node.tag}
               fallback={
-                <span class="tree-node-label untagged">{props.untaggedLabel || "Untagged"}</span>
+                <span class="tree-node-label untagged">
+                  {props.untaggedLabel || 'Untagged'}
+                </span>
               }
             >
               <TagBadge tag={node.tag!} />
@@ -532,10 +572,20 @@ export const ResourceTreeView: Component<ResourceTreeViewProps> = (props) => {
         <Show when={node.expanded}>
           <div class="tree-node-children">
             {/* Child dimension nodes */}
-            <Show when={!isLeaf && !fallbackItems().has(path.join(",")) && node.children}>
+            <Show
+              when={
+                !isLeaf && !fallbackItems().has(path.join(',')) && node.children
+              }
+            >
               <For each={node.children}>
                 {(child, childIdx) =>
-                  renderNode(child, [...path, childIdx()], level + 1, dimLevel + 1, tagIds)
+                  renderNode(
+                    child,
+                    [...path, childIdx()],
+                    level + 1,
+                    dimLevel + 1,
+                    tagIds
+                  )
                 }
               </For>
             </Show>
@@ -543,7 +593,7 @@ export const ResourceTreeView: Component<ResourceTreeViewProps> = (props) => {
             {/* Leaf items – shown at leaf level OR when a non-leaf node had
                 its items loaded directly (fallback when sub-dimension has no matches) */}
             {(() => {
-              const pathKey = path.join(",");
+              const pathKey = path.join(',');
               const fb = fallbackItems().get(pathKey);
               const showLeaf = isLeaf || fb !== undefined;
               const items = fb ? fb.items : node.items;
@@ -552,7 +602,9 @@ export const ResourceTreeView: Component<ResourceTreeViewProps> = (props) => {
                   <Show
                     when={items.length > 0}
                     fallback={
-                      <div class="tree-empty-leaf">{props.emptyLeafText || "No items"}</div>
+                      <div class="tree-empty-leaf">
+                        {props.emptyLeafText || 'No items'}
+                      </div>
                     }
                   >
                     <div class="tree-items">
@@ -568,7 +620,10 @@ export const ResourceTreeView: Component<ResourceTreeViewProps> = (props) => {
                             <Show
                               when={props.renderResource}
                               fallback={
-                                <DefaultResourceRow item={item} onClick={props.onResourceClick} />
+                                <DefaultResourceRow
+                                  item={item}
+                                  onClick={props.onResourceClick}
+                                />
                               }
                             >
                               {props.renderResource!(item)}
@@ -577,7 +632,9 @@ export const ResourceTreeView: Component<ResourceTreeViewProps> = (props) => {
                         )}
                       </For>
                       <Show when={items.length > maxLeaf()}>
-                        <div class="tree-more">+{items.length - maxLeaf()} more…</div>
+                        <div class="tree-more">
+                          +{items.length - maxLeaf()} more…
+                        </div>
                       </Show>
                     </div>
                   </Show>
@@ -597,18 +654,20 @@ export const ResourceTreeView: Component<ResourceTreeViewProps> = (props) => {
         when={props.tagGroups.length > 0}
         fallback={
           <div class="tree-empty">
-            {props.emptyText || "Create tag groups to organize resources."}
+            {props.emptyText || 'Create tag groups to organize resources.'}
           </div>
         }
       >
         <div class="dimension-bar">
-          <span class="dimension-label">{props.dimensionLabel || "Organize by"}:</span>
+          <span class="dimension-label">
+            {props.dimensionLabel || 'Organize by'}:
+          </span>
           <div class="dimension-selectors">
             <For each={dimensions()}>
               {(groupIdx, level) => (
                 <div class="dimension-chip">
                   <Dropdown
-                    label={props.tagGroups[groupIdx]?.name || ""}
+                    label={props.tagGroups[groupIdx]?.name || ''}
                     items={props.tagGroups.map((group, gIdx) => ({
                       value: gIdx.toString(),
                       name: group.name,
@@ -636,7 +695,11 @@ export const ResourceTreeView: Component<ResourceTreeViewProps> = (props) => {
             </For>
 
             <Show when={dimensions().length < props.tagGroups.length}>
-              <button class="dimension-add" onClick={addDimension} title="Add level">
+              <button
+                class="dimension-add"
+                onClick={addDimension}
+                title="Add level"
+              >
                 +
               </button>
             </Show>
@@ -674,9 +737,13 @@ export const ResourceTreeView: Component<ResourceTreeViewProps> = (props) => {
           >
             <Show
               when={treeNodes.length > 0}
-              fallback={<div class="tree-empty">No tags in this group yet.</div>}
+              fallback={
+                <div class="tree-empty">No tags in this group yet.</div>
+              }
             >
-              <For each={treeNodes}>{(node, idx) => renderNode(node, [idx()], 0, 0, [])}</For>
+              <For each={treeNodes}>
+                {(node, idx) => renderNode(node, [idx()], 0, 0, [])}
+              </For>
             </Show>
           </Show>
         </div>

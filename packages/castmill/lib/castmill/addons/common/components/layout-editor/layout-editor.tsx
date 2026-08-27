@@ -1,6 +1,18 @@
-import { Component, For, createSignal, createEffect, Show, onMount, onCleanup } from "solid-js";
-import type { LayoutZone, LayoutOptionValue, LayoutFieldAttributes } from "@castmill/player";
-import { Button, FormItem, CompactNumberInput } from "@castmill/ui-common";
+import {
+  Component,
+  For,
+  createSignal,
+  createEffect,
+  Show,
+  onMount,
+  onCleanup,
+} from 'solid-js';
+import type {
+  LayoutZone,
+  LayoutOptionValue,
+  LayoutFieldAttributes,
+} from '@castmill/player';
+import { Button, FormItem, CompactNumberInput } from '@castmill/ui-common';
 import {
   BsPlus,
   BsTrash,
@@ -14,8 +26,8 @@ import {
   BsLayoutThreeColumns,
   BsLock,
   BsUnlock,
-} from "solid-icons/bs";
-import "./layout-editor.scss";
+} from 'solid-icons/bs';
+import './layout-editor.scss';
 import {
   parseAspectRatio,
   calculateCanvasSize,
@@ -23,7 +35,7 @@ import {
   calculateWidthForAspectRatio,
   ZONE_ASPECT_RATIOS,
   DEFAULT_ASPECT_RATIOS,
-} from "./layout-editor-utils";
+} from './layout-editor-utils';
 
 // Re-export utilities for external use
 export {
@@ -33,7 +45,7 @@ export {
   calculateWidthForAspectRatio,
   ZONE_ASPECT_RATIOS,
   DEFAULT_ASPECT_RATIOS,
-} from "./layout-editor-utils";
+} from './layout-editor-utils';
 
 /**
  * Layout template definitions for quick layout creation
@@ -47,24 +59,24 @@ interface LayoutTemplate {
 
 const LAYOUT_TEMPLATES: LayoutTemplate[] = [
   {
-    id: "full",
-    name: "Full Screen",
-    icon: "⬜",
+    id: 'full',
+    name: 'Full Screen',
+    icon: '⬜',
     zones: [{ x: 0, y: 0, width: 100, height: 100 }],
   },
   {
-    id: "split-h-2",
-    name: "2 Columns",
-    icon: "▌▐",
+    id: 'split-h-2',
+    name: '2 Columns',
+    icon: '▌▐',
     zones: [
       { x: 0, y: 0, width: 50, height: 100 },
       { x: 50, y: 0, width: 50, height: 100 },
     ],
   },
   {
-    id: "split-h-3",
-    name: "3 Columns",
-    icon: "▌│▐",
+    id: 'split-h-3',
+    name: '3 Columns',
+    icon: '▌│▐',
     zones: [
       { x: 0, y: 0, width: 33.33, height: 100 },
       { x: 33.33, y: 0, width: 33.34, height: 100 },
@@ -72,18 +84,18 @@ const LAYOUT_TEMPLATES: LayoutTemplate[] = [
     ],
   },
   {
-    id: "split-v-2",
-    name: "2 Rows",
-    icon: "▀▄",
+    id: 'split-v-2',
+    name: '2 Rows',
+    icon: '▀▄',
     zones: [
       { x: 0, y: 0, width: 100, height: 50 },
       { x: 0, y: 50, width: 100, height: 50 },
     ],
   },
   {
-    id: "split-v-3",
-    name: "3 Rows",
-    icon: "▔━▁",
+    id: 'split-v-3',
+    name: '3 Rows',
+    icon: '▔━▁',
     zones: [
       { x: 0, y: 0, width: 100, height: 33.33 },
       { x: 0, y: 33.33, width: 100, height: 33.34 },
@@ -91,9 +103,9 @@ const LAYOUT_TEMPLATES: LayoutTemplate[] = [
     ],
   },
   {
-    id: "grid-2x2",
-    name: "2×2 Grid",
-    icon: "▚",
+    id: 'grid-2x2',
+    name: '2×2 Grid',
+    icon: '▚',
     zones: [
       { x: 0, y: 0, width: 50, height: 50 },
       { x: 50, y: 0, width: 50, height: 50 },
@@ -102,9 +114,9 @@ const LAYOUT_TEMPLATES: LayoutTemplate[] = [
     ],
   },
   {
-    id: "grid-3x3",
-    name: "3×3 Grid",
-    icon: "▦",
+    id: 'grid-3x3',
+    name: '3×3 Grid',
+    icon: '▦',
     zones: [
       { x: 0, y: 0, width: 33.33, height: 33.33 },
       { x: 33.33, y: 0, width: 33.34, height: 33.33 },
@@ -118,27 +130,27 @@ const LAYOUT_TEMPLATES: LayoutTemplate[] = [
     ],
   },
   {
-    id: "main-sidebar",
-    name: "Main + Sidebar",
-    icon: "▌▏",
+    id: 'main-sidebar',
+    name: 'Main + Sidebar',
+    icon: '▌▏',
     zones: [
       { x: 0, y: 0, width: 70, height: 100 },
       { x: 70, y: 0, width: 30, height: 100 },
     ],
   },
   {
-    id: "header-content",
-    name: "Header + Content",
-    icon: "▔▇",
+    id: 'header-content',
+    name: 'Header + Content',
+    icon: '▔▇',
     zones: [
       { x: 0, y: 0, width: 100, height: 20 },
       { x: 0, y: 20, width: 100, height: 80 },
     ],
   },
   {
-    id: "pip",
-    name: "Picture in Picture",
-    icon: "▢◱",
+    id: 'pip',
+    name: 'Picture in Picture',
+    icon: '▢◱',
     zones: [
       { x: 0, y: 0, width: 100, height: 100 },
       { x: 65, y: 65, width: 30, height: 30 },
@@ -179,16 +191,16 @@ const SNAP_THRESHOLD = 2;
  */
 interface SnapGuide {
   position: number; // Percentage position
-  orientation: "horizontal" | "vertical";
+  orientation: 'horizontal' | 'vertical';
 }
 
 const FRACTIONAL_SIZES = [
-  { label: "100%", value: 100 },
-  { label: "1/2", value: 50 },
-  { label: "1/3", value: 33.33 },
-  { label: "2/3", value: 66.67 },
-  { label: "1/4", value: 25 },
-  { label: "3/4", value: 75 },
+  { label: '100%', value: 100 },
+  { label: '1/2', value: 50 },
+  { label: '1/3', value: 33.33 },
+  { label: '2/3', value: 66.67 },
+  { label: '1/4', value: 25 },
+  { label: '3/4', value: 75 },
 ];
 
 /**
@@ -235,7 +247,9 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
   const [customWidth, setCustomWidth] = createSignal(16);
   const [customHeight, setCustomHeight] = createSignal(9);
   const [showTemplates, setShowTemplates] = createSignal(false);
-  const [zoneAspectLocks, setZoneAspectLocks] = createSignal<Record<string, string | null>>({});
+  const [zoneAspectLocks, setZoneAspectLocks] = createSignal<
+    Record<string, string | null>
+  >({});
   const [snapGuides, setSnapGuides] = createSignal<SnapGuide[]>([]);
 
   // Use refs for drag state to avoid stale closures in event listeners
@@ -251,7 +265,8 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
   };
 
   // Available aspect ratios
-  const aspectRatios = () => props.schema?.aspectRatios || DEFAULT_ASPECT_RATIOS;
+  const aspectRatios = () =>
+    props.schema?.aspectRatios || DEFAULT_ASPECT_RATIOS;
 
   // Check if current aspect ratio is custom (not in presets)
   createEffect(() => {
@@ -273,20 +288,24 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
     // Leave some padding
     const containerWidth = containerRect.width - 40;
     const containerHeight = 400; // Fixed max height for editor
-    const size = calculateCanvasSize(containerWidth, containerHeight, props.value.aspectRatio);
+    const size = calculateCanvasSize(
+      containerWidth,
+      containerHeight,
+      props.value.aspectRatio
+    );
     setCanvasSize(size);
   };
 
   onMount(() => {
     updateCanvasSize();
-    window.addEventListener("resize", updateCanvasSize);
+    window.addEventListener('resize', updateCanvasSize);
   });
 
   onCleanup(() => {
-    window.removeEventListener("resize", updateCanvasSize);
+    window.removeEventListener('resize', updateCanvasSize);
     // Clean up any document-level listeners that might still be active
-    document.removeEventListener("mousemove", handleDocumentMouseMove);
-    document.removeEventListener("mouseup", handleDocumentMouseUp);
+    document.removeEventListener('mousemove', handleDocumentMouseMove);
+    document.removeEventListener('mouseup', handleDocumentMouseUp);
   });
 
   // Update canvas when aspect ratio changes
@@ -296,19 +315,27 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
   });
 
   // Convert percentage to pixel position on canvas
-  const percentToPixel = (percent: number, dimension: "width" | "height"): number => {
+  const percentToPixel = (
+    percent: number,
+    dimension: 'width' | 'height'
+  ): number => {
     const size = canvasSize();
-    return (percent / 100) * (dimension === "width" ? size.width : size.height);
+    return (percent / 100) * (dimension === 'width' ? size.width : size.height);
   };
 
   // Convert pixel position to percentage
-  const pixelToPercent = (pixel: number, dimension: "width" | "height"): number => {
+  const pixelToPercent = (
+    pixel: number,
+    dimension: 'width' | 'height'
+  ): number => {
     const size = canvasSize();
-    return (pixel / (dimension === "width" ? size.width : size.height)) * 100;
+    return (pixel / (dimension === 'width' ? size.width : size.height)) * 100;
   };
 
   // Calculate snap targets from other zones and canvas edges
-  const getSnapTargets = (excludeZoneId: string): { horizontal: number[]; vertical: number[] } => {
+  const getSnapTargets = (
+    excludeZoneId: string
+  ): { horizontal: number[]; vertical: number[] } => {
     const horizontal: number[] = [0, 50, 100]; // Canvas edges and center
     const vertical: number[] = [0, 50, 100];
 
@@ -331,7 +358,7 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
   // Apply snapping to a value, returns snapped value and matched target (if any)
   const snapToTarget = (
     value: number,
-    targets: number[],
+    targets: number[]
   ): { snapped: number; target: number | null } => {
     for (const target of targets) {
       if (Math.abs(value - target) <= SNAP_THRESHOLD) {
@@ -345,7 +372,7 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
   const applySnapping = (
     zoneId: string,
     rect: { x: number; y: number; width: number; height: number },
-    isDragging: boolean,
+    isDragging: boolean
   ): {
     rect: { x: number; y: number; width: number; height: number };
     guides: SnapGuide[];
@@ -359,13 +386,13 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
       const leftSnap = snapToTarget(x, targets.horizontal);
       if (leftSnap.target !== null) {
         x = leftSnap.snapped;
-        guides.push({ position: leftSnap.target, orientation: "vertical" });
+        guides.push({ position: leftSnap.target, orientation: 'vertical' });
       } else {
         // Snap right edge
         const rightSnap = snapToTarget(x + width, targets.horizontal);
         if (rightSnap.target !== null) {
           x = rightSnap.snapped - width;
-          guides.push({ position: rightSnap.target, orientation: "vertical" });
+          guides.push({ position: rightSnap.target, orientation: 'vertical' });
         } else {
           // Snap center
           const centerXSnap = snapToTarget(x + width / 2, targets.horizontal);
@@ -373,7 +400,7 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
             x = centerXSnap.snapped - width / 2;
             guides.push({
               position: centerXSnap.target,
-              orientation: "vertical",
+              orientation: 'vertical',
             });
           }
         }
@@ -383,7 +410,7 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
       const topSnap = snapToTarget(y, targets.vertical);
       if (topSnap.target !== null) {
         y = topSnap.snapped;
-        guides.push({ position: topSnap.target, orientation: "horizontal" });
+        guides.push({ position: topSnap.target, orientation: 'horizontal' });
       } else {
         // Snap bottom edge
         const bottomSnap = snapToTarget(y + height, targets.vertical);
@@ -391,7 +418,7 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
           y = bottomSnap.snapped - height;
           guides.push({
             position: bottomSnap.target,
-            orientation: "horizontal",
+            orientation: 'horizontal',
           });
         } else {
           // Snap center
@@ -400,7 +427,7 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
             y = centerYSnap.snapped - height / 2;
             guides.push({
               position: centerYSnap.target,
-              orientation: "horizontal",
+              orientation: 'horizontal',
             });
           }
         }
@@ -414,14 +441,14 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
       const rightSnap = snapToTarget(rightEdge, targets.horizontal);
       if (rightSnap.target !== null) {
         width = rightSnap.snapped - x;
-        guides.push({ position: rightSnap.target, orientation: "vertical" });
+        guides.push({ position: rightSnap.target, orientation: 'vertical' });
       }
 
       // Snap bottom edge
       const bottomSnap = snapToTarget(bottomEdge, targets.vertical);
       if (bottomSnap.target !== null) {
         height = bottomSnap.snapped - y;
-        guides.push({ position: bottomSnap.target, orientation: "horizontal" });
+        guides.push({ position: bottomSnap.target, orientation: 'horizontal' });
       }
     }
 
@@ -469,7 +496,9 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
   const updateZone = (zoneId: string, updates: Partial<LayoutZone>) => {
     props.onChange({
       ...props.value,
-      zones: props.value.zones.map((z) => (z.id === zoneId ? { ...z, ...updates } : z)),
+      zones: props.value.zones.map((z) =>
+        z.id === zoneId ? { ...z, ...updates } : z
+      ),
     });
   };
 
@@ -590,7 +619,7 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
       const newHeight = calculateHeightForAspectRatio(
         newWidth,
         aspectLock,
-        props.value.aspectRatio,
+        props.value.aspectRatio
       );
       const clampedHeight = Math.min(100 - zone.rect.y, Math.max(5, newHeight));
       updateZone(zoneId, {
@@ -616,7 +645,11 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
     const newHeight = Math.min(100 - zone.rect.y, height);
 
     if (aspectLock) {
-      const newWidth = calculateWidthForAspectRatio(newHeight, aspectLock, props.value.aspectRatio);
+      const newWidth = calculateWidthForAspectRatio(
+        newHeight,
+        aspectLock,
+        props.value.aspectRatio
+      );
       const clampedWidth = Math.min(100 - zone.rect.x, Math.max(5, newWidth));
       updateZone(zoneId, {
         rect: {
@@ -678,7 +711,9 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
     const zonesAbove = zones.filter((z) => z.zIndex > zone.zIndex);
     if (zonesAbove.length === 0) return; // Already at top
 
-    const zoneAbove = zonesAbove.reduce((closest, z) => (z.zIndex < closest.zIndex ? z : closest));
+    const zoneAbove = zonesAbove.reduce((closest, z) =>
+      z.zIndex < closest.zIndex ? z : closest
+    );
 
     // Swap z-indices
     const newZones = zones.map((z) => {
@@ -700,7 +735,9 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
     const zonesBelow = zones.filter((z) => z.zIndex < zone.zIndex);
     if (zonesBelow.length === 0) return; // Already at bottom
 
-    const zoneBelow = zonesBelow.reduce((closest, z) => (z.zIndex > closest.zIndex ? z : closest));
+    const zoneBelow = zonesBelow.reduce((closest, z) =>
+      z.zIndex > closest.zIndex ? z : closest
+    );
 
     // Swap z-indices
     const newZones = zones.map((z) => {
@@ -755,12 +792,16 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
     };
 
     // Attach document-level listeners to capture mouse even outside the canvas
-    document.addEventListener("mousemove", handleDocumentMouseMove);
-    document.addEventListener("mouseup", handleDocumentMouseUp);
+    document.addEventListener('mousemove', handleDocumentMouseMove);
+    document.addEventListener('mouseup', handleDocumentMouseUp);
   };
 
   // Handle mouse down on resize handle
-  const handleResizeMouseDown = (e: MouseEvent, zoneId: string, handle: string) => {
+  const handleResizeMouseDown = (
+    e: MouseEvent,
+    zoneId: string,
+    handle: string
+  ) => {
     e.preventDefault();
     e.stopPropagation();
 
@@ -803,8 +844,8 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
     };
 
     // Attach document-level listeners to capture mouse even outside the canvas
-    document.addEventListener("mousemove", handleDocumentMouseMove);
-    document.addEventListener("mouseup", handleDocumentMouseUp);
+    document.addEventListener('mousemove', handleDocumentMouseMove);
+    document.addEventListener('mouseup', handleDocumentMouseUp);
   };
 
   // Handle mouse move at document level (drag or resize) - uses ref to avoid stale closures
@@ -819,8 +860,10 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
     if (canvasBounds.width === 0 || canvasBounds.height === 0) return;
 
     // Calculate mouse position as percentage of canvas
-    const mouseXPercent = ((e.clientX - canvasBounds.left) / canvasBounds.width) * 100;
-    const mouseYPercent = ((e.clientY - canvasBounds.top) / canvasBounds.height) * 100;
+    const mouseXPercent =
+      ((e.clientX - canvasBounds.left) / canvasBounds.width) * 100;
+    const mouseYPercent =
+      ((e.clientY - canvasBounds.top) / canvasBounds.height) * 100;
 
     const start = dragStateRef.dragZoneStart;
     const startMouse = dragStateRef.dragStart;
@@ -844,7 +887,7 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
       const snapped = applySnapping(
         zoneId,
         { x: newX, y: newY, width: start.width, height: start.height },
-        true,
+        true
       );
       setSnapGuides(snapped.guides);
 
@@ -879,16 +922,16 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
 
         // Determine primary axis based on handle
         const isCorner = handle && handle.length === 2;
-        const isHorizontal = handle?.includes("e") || handle?.includes("w");
-        const isVertical = handle?.includes("n") || handle?.includes("s");
+        const isHorizontal = handle?.includes('e') || handle?.includes('w');
+        const isVertical = handle?.includes('n') || handle?.includes('s');
 
         if (isCorner || isHorizontal) {
           // Width-driven resize: calculate height from width
-          if (handle?.includes("e")) {
+          if (handle?.includes('e')) {
             const newRight = Math.max(newX + 5, Math.min(100, mouseXPercent));
             newWidth = newRight - newX;
           }
-          if (handle?.includes("w")) {
+          if (handle?.includes('w')) {
             const rightEdge = startRight;
             newX = Math.max(0, Math.min(rightEdge - 5, mouseXPercent));
             newWidth = rightEdge - newX;
@@ -897,14 +940,14 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
           newHeight = (newWidth * layoutRatio) / zoneRatio;
 
           // Adjust position for n/s handles on corners
-          if (handle?.includes("n")) {
+          if (handle?.includes('n')) {
             newY = start.y + start.height - newHeight;
             newY = Math.max(0, newY);
             if (newY === 0) {
               newHeight = start.y + start.height;
               newWidth = (newHeight * zoneRatio) / layoutRatio;
             }
-          } else if (handle?.includes("s")) {
+          } else if (handle?.includes('s')) {
             // Clamp to bottom
             if (newY + newHeight > 100) {
               newHeight = 100 - newY;
@@ -919,11 +962,11 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
           }
         } else if (isVertical) {
           // Height-driven resize: calculate width from height
-          if (handle?.includes("s")) {
+          if (handle?.includes('s')) {
             const newBottom = Math.max(newY + 5, Math.min(100, mouseYPercent));
             newHeight = newBottom - newY;
           }
-          if (handle?.includes("n")) {
+          if (handle?.includes('n')) {
             const bottomEdge = startBottom;
             newY = Math.max(0, Math.min(bottomEdge - 5, mouseYPercent));
             newHeight = bottomEdge - newY;
@@ -940,27 +983,31 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
       } else {
         // Free resize (no aspect lock)
         // East (right edge): set right edge to mouse position
-        if (handle?.includes("e")) {
+        if (handle?.includes('e')) {
           const newRight = Math.max(newX + 5, Math.min(100, mouseXPercent));
           newWidth = newRight - newX;
         }
 
         // West (left edge): set left edge to mouse position
-        if (handle?.includes("w")) {
-          const rightEdge = handle?.includes("e") ? newX + newWidth : startRight;
+        if (handle?.includes('w')) {
+          const rightEdge = handle?.includes('e')
+            ? newX + newWidth
+            : startRight;
           newX = Math.max(0, Math.min(rightEdge - 5, mouseXPercent));
           newWidth = rightEdge - newX;
         }
 
         // South (bottom edge): set bottom edge to mouse position
-        if (handle?.includes("s")) {
+        if (handle?.includes('s')) {
           const newBottom = Math.max(newY + 5, Math.min(100, mouseYPercent));
           newHeight = newBottom - newY;
         }
 
         // North (top edge): set top edge to mouse position
-        if (handle?.includes("n")) {
-          const bottomEdge = handle?.includes("s") ? newY + newHeight : startBottom;
+        if (handle?.includes('n')) {
+          const bottomEdge = handle?.includes('s')
+            ? newY + newHeight
+            : startBottom;
           newY = Math.max(0, Math.min(bottomEdge - 5, mouseYPercent));
           newHeight = bottomEdge - newY;
         }
@@ -969,7 +1016,7 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
         const snapped = applySnapping(
           zoneId,
           { x: newX, y: newY, width: newWidth, height: newHeight },
-          false,
+          false
         );
         newX = snapped.rect.x;
         newY = snapped.rect.y;
@@ -1005,13 +1052,13 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
     setSnapGuides([]);
 
     // Remove document-level listeners
-    document.removeEventListener("mousemove", handleDocumentMouseMove);
-    document.removeEventListener("mouseup", handleDocumentMouseUp);
+    document.removeEventListener('mousemove', handleDocumentMouseMove);
+    document.removeEventListener('mouseup', handleDocumentMouseUp);
   };
 
   // Change aspect ratio
   const handleAspectRatioChange = (newRatio: string) => {
-    if (newRatio === "custom") {
+    if (newRatio === 'custom') {
       setIsCustomAspectRatio(true);
       // Parse current aspect ratio and use those values as starting point
       const parsed = parseAspectRatio(props.value.aspectRatio);
@@ -1043,7 +1090,8 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
   };
 
   // Get selected zone
-  const selectedZone = () => props.value.zones.find((z) => z.id === selectedZoneId());
+  const selectedZone = () =>
+    props.value.zones.find((z) => z.id === selectedZoneId());
 
   return (
     <div class="layout-editor">
@@ -1054,11 +1102,13 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
           <div class="layout-editor__aspect-ratio">
             <BsAspectRatio class="layout-editor__aspect-icon" />
             <select
-              value={isCustomAspectRatio() ? "custom" : props.value.aspectRatio}
+              value={isCustomAspectRatio() ? 'custom' : props.value.aspectRatio}
               onChange={(e) => handleAspectRatioChange(e.currentTarget.value)}
               title="Aspect Ratio"
             >
-              <For each={aspectRatios()}>{(ratio) => <option value={ratio}>{ratio}</option>}</For>
+              <For each={aspectRatios()}>
+                {(ratio) => <option value={ratio}>{ratio}</option>}
+              </For>
               <option value="custom">Custom...</option>
             </select>
             <Show when={isCustomAspectRatio()}>
@@ -1071,7 +1121,7 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
                   onInput={(e) =>
                     handleCustomAspectRatioChange(
                       parseInt(e.currentTarget.value, 10) || 1,
-                      customHeight(),
+                      customHeight()
                     )
                   }
                   class="layout-editor__aspect-input"
@@ -1085,7 +1135,7 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
                   onInput={(e) =>
                     handleCustomAspectRatioChange(
                       customWidth(),
-                      parseInt(e.currentTarget.value, 10) || 1,
+                      parseInt(e.currentTarget.value, 10) || 1
                     )
                   }
                   class="layout-editor__aspect-input"
@@ -1095,7 +1145,7 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
           </div>
           <div class="layout-editor__toolbar-actions">
             <button
-              class={`layout-editor__icon-btn ${showTemplates() ? "active" : ""}`}
+              class={`layout-editor__icon-btn ${showTemplates() ? 'active' : ''}`}
               onClick={() => setShowTemplates(!showTemplates())}
               title="Layout Templates"
             >
@@ -1107,7 +1157,7 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
               title={
                 props.value.zones.length >= MAX_ZONES
                   ? `Maximum ${MAX_ZONES} zones allowed`
-                  : "Add Zone"
+                  : 'Add Zone'
               }
               disabled={props.value.zones.length >= MAX_ZONES}
             >
@@ -1162,9 +1212,12 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
         {(() => {
           const zone = selectedZone();
           const isDisabled = () => !zone;
-          const hasAspectLock = () => (zone ? !!getZoneAspectLock(zone.id) : false);
+          const hasAspectLock = () =>
+            zone ? !!getZoneAspectLock(zone.id) : false;
           return (
-            <div class={`layout-editor__zone-toolbar ${isDisabled() ? "disabled" : ""}`}>
+            <div
+              class={`layout-editor__zone-toolbar ${isDisabled() ? 'disabled' : ''}`}
+            >
               <div class="layout-editor__zone-toolbar-group">
                 <span class="group-label">Size:</span>
                 <button
@@ -1172,10 +1225,10 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
                   onClick={() => zone && fillWidth(zone.id)}
                   title={
                     isDisabled()
-                      ? "Select a zone first"
+                      ? 'Select a zone first'
                       : hasAspectLock()
-                        ? "Disabled: Would break aspect ratio"
-                        : "Fill Width (100%)"
+                        ? 'Disabled: Would break aspect ratio'
+                        : 'Fill Width (100%)'
                   }
                   disabled={isDisabled() || hasAspectLock()}
                 >
@@ -1186,10 +1239,10 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
                   onClick={() => zone && fillHeight(zone.id)}
                   title={
                     isDisabled()
-                      ? "Select a zone first"
+                      ? 'Select a zone first'
                       : hasAspectLock()
-                        ? "Disabled: Would break aspect ratio"
-                        : "Fill Height (100%)"
+                        ? 'Disabled: Would break aspect ratio'
+                        : 'Fill Height (100%)'
                   }
                   disabled={isDisabled() || hasAspectLock()}
                 >
@@ -1200,10 +1253,10 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
                   onClick={() => zone && fillBoth(zone.id)}
                   title={
                     isDisabled()
-                      ? "Select a zone first"
+                      ? 'Select a zone first'
                       : hasAspectLock()
-                        ? "Disabled: Would break aspect ratio"
-                        : "Fill Both (100% x 100%)"
+                        ? 'Disabled: Would break aspect ratio'
+                        : 'Fill Both (100% x 100%)'
                   }
                   disabled={isDisabled() || hasAspectLock()}
                 >
@@ -1217,13 +1270,17 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
                   {(size) => (
                     <button
                       class={`layout-editor__fraction-btn ${
-                        zone && Math.abs(zone.rect.width - size.value) < 0.5 ? "active" : ""
+                        zone && Math.abs(zone.rect.width - size.value) < 0.5
+                          ? 'active'
+                          : ''
                       }`}
-                      onClick={() => zone && setZoneWidthWithAspect(zone.id, size.value)}
+                      onClick={() =>
+                        zone && setZoneWidthWithAspect(zone.id, size.value)
+                      }
                       title={
                         isDisabled()
-                          ? "Select a zone first"
-                          : `Set width to ${size.label}${hasAspectLock() ? " (height adjusted)" : ""}`
+                          ? 'Select a zone first'
+                          : `Set width to ${size.label}${hasAspectLock() ? ' (height adjusted)' : ''}`
                       }
                       disabled={isDisabled()}
                     >
@@ -1239,13 +1296,17 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
                   {(size) => (
                     <button
                       class={`layout-editor__fraction-btn ${
-                        zone && Math.abs(zone.rect.height - size.value) < 0.5 ? "active" : ""
+                        zone && Math.abs(zone.rect.height - size.value) < 0.5
+                          ? 'active'
+                          : ''
                       }`}
-                      onClick={() => zone && setZoneHeightWithAspect(zone.id, size.value)}
+                      onClick={() =>
+                        zone && setZoneHeightWithAspect(zone.id, size.value)
+                      }
                       title={
                         isDisabled()
-                          ? "Select a zone first"
-                          : `Set height to ${size.label}${hasAspectLock() ? " (width adjusted)" : ""}`
+                          ? 'Select a zone first'
+                          : `Set height to ${size.label}${hasAspectLock() ? ' (width adjusted)' : ''}`
                       }
                       disabled={isDisabled()}
                     >
@@ -1258,9 +1319,10 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
               <div class="layout-editor__zone-toolbar-group">
                 <span class="group-label">Zone Ratio:</span>
                 <select
-                  value={zone ? getZoneAspectLock(zone.id) || "" : ""}
+                  value={zone ? getZoneAspectLock(zone.id) || '' : ''}
                   onChange={(e) =>
-                    zone && setZoneAspectRatio(zone.id, e.currentTarget.value || null)
+                    zone &&
+                    setZoneAspectRatio(zone.id, e.currentTarget.value || null)
                   }
                   class="layout-editor__zone-aspect-select"
                   disabled={isDisabled()}
@@ -1290,18 +1352,20 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
             onClick={() => setSelectedZoneId(null)}
           >
             {/* Zones sorted by z-index */}
-            <For each={[...props.value.zones].sort((a, b) => a.zIndex - b.zIndex)}>
+            <For
+              each={[...props.value.zones].sort((a, b) => a.zIndex - b.zIndex)}
+            >
               {(zone) => (
                 <div
                   class={`layout-editor__zone ${
-                    selectedZoneId() === zone.id ? "selected" : ""
-                  } ${getZoneAspectLock(zone.id) ? "aspect-locked" : ""}`}
+                    selectedZoneId() === zone.id ? 'selected' : ''
+                  } ${getZoneAspectLock(zone.id) ? 'aspect-locked' : ''}`}
                   style={{
                     left: `${zone.rect.x}%`,
                     top: `${zone.rect.y}%`,
                     width: `${zone.rect.width}%`,
                     height: `${zone.rect.height}%`,
-                    "z-index": zone.zIndex,
+                    'z-index': zone.zIndex,
                   }}
                   onMouseDown={(e) => handleZoneMouseDown(e, zone.id)}
                   onClick={(e) => {
@@ -1321,35 +1385,51 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
                   <Show when={selectedZoneId() === zone.id}>
                     <div
                       class="resize-handle nw"
-                      onMouseDown={(e) => handleResizeMouseDown(e, zone.id, "nw")}
+                      onMouseDown={(e) =>
+                        handleResizeMouseDown(e, zone.id, 'nw')
+                      }
                     />
                     <div
                       class="resize-handle n"
-                      onMouseDown={(e) => handleResizeMouseDown(e, zone.id, "n")}
+                      onMouseDown={(e) =>
+                        handleResizeMouseDown(e, zone.id, 'n')
+                      }
                     />
                     <div
                       class="resize-handle ne"
-                      onMouseDown={(e) => handleResizeMouseDown(e, zone.id, "ne")}
+                      onMouseDown={(e) =>
+                        handleResizeMouseDown(e, zone.id, 'ne')
+                      }
                     />
                     <div
                       class="resize-handle e"
-                      onMouseDown={(e) => handleResizeMouseDown(e, zone.id, "e")}
+                      onMouseDown={(e) =>
+                        handleResizeMouseDown(e, zone.id, 'e')
+                      }
                     />
                     <div
                       class="resize-handle se"
-                      onMouseDown={(e) => handleResizeMouseDown(e, zone.id, "se")}
+                      onMouseDown={(e) =>
+                        handleResizeMouseDown(e, zone.id, 'se')
+                      }
                     />
                     <div
                       class="resize-handle s"
-                      onMouseDown={(e) => handleResizeMouseDown(e, zone.id, "s")}
+                      onMouseDown={(e) =>
+                        handleResizeMouseDown(e, zone.id, 's')
+                      }
                     />
                     <div
                       class="resize-handle sw"
-                      onMouseDown={(e) => handleResizeMouseDown(e, zone.id, "sw")}
+                      onMouseDown={(e) =>
+                        handleResizeMouseDown(e, zone.id, 'sw')
+                      }
                     />
                     <div
                       class="resize-handle w"
-                      onMouseDown={(e) => handleResizeMouseDown(e, zone.id, "w")}
+                      onMouseDown={(e) =>
+                        handleResizeMouseDown(e, zone.id, 'w')
+                      }
                     />
                   </Show>
                 </div>
@@ -1362,12 +1442,12 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
                 <div
                   class={`layout-editor__snap-guide layout-editor__snap-guide--${guide.orientation}`}
                   style={{
-                    ...(guide.orientation === "vertical"
-                      ? { left: `${guide.position}%`, top: "0", height: "100%" }
+                    ...(guide.orientation === 'vertical'
+                      ? { left: `${guide.position}%`, top: '0', height: '100%' }
                       : {
                           top: `${guide.position}%`,
-                          left: "0",
-                          width: "100%",
+                          left: '0',
+                          width: '100%',
                         }),
                   }}
                 />
@@ -1384,7 +1464,9 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
           <Show
             when={selectedZone()}
             fallback={
-              <div class="layout-editor__no-selection">Select a zone to edit properties</div>
+              <div class="layout-editor__no-selection">
+                Select a zone to edit properties
+              </div>
             }
           >
             {(zone) => (
@@ -1396,7 +1478,9 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
                   id="zone-name"
                   type="text"
                   value={zone().name}
-                  onInput={(value) => updateZone(zone().id, { name: String(value) })}
+                  onInput={(value) =>
+                    updateZone(zone().id, { name: String(value) })
+                  }
                 >
                   {null}
                 </FormItem>
@@ -1431,7 +1515,9 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
                   <CompactNumberInput
                     label="W"
                     value={zone().rect.width}
-                    onChange={(value) => setZoneWidthWithAspect(zone().id, value)}
+                    onChange={(value) =>
+                      setZoneWidthWithAspect(zone().id, value)
+                    }
                     min={5}
                     max={100 - zone().rect.x}
                     step={1}
@@ -1440,7 +1526,9 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
                   <CompactNumberInput
                     label="H"
                     value={zone().rect.height}
-                    onChange={(value) => setZoneHeightWithAspect(zone().id, value)}
+                    onChange={(value) =>
+                      setZoneHeightWithAspect(zone().id, value)
+                    }
                     min={5}
                     max={100 - zone().rect.y}
                     step={1}
@@ -1476,10 +1564,12 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
         {/* Zones List */}
         <div class="layout-editor__zones-list">
           <h4>Zones ({props.value.zones.length})</h4>
-          <For each={[...props.value.zones].sort((a, b) => b.zIndex - a.zIndex)}>
+          <For
+            each={[...props.value.zones].sort((a, b) => b.zIndex - a.zIndex)}
+          >
             {(zone) => (
               <div
-                class={`layout-editor__zone-item ${selectedZoneId() === zone.id ? "selected" : ""}`}
+                class={`layout-editor__zone-item ${selectedZoneId() === zone.id ? 'selected' : ''}`}
                 onClick={() => setSelectedZoneId(zone.id)}
               >
                 <span class="zone-name">{zone.name}</span>

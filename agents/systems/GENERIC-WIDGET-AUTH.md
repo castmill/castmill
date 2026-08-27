@@ -203,18 +203,18 @@ interface CredentialConfigProps {
 
 export const CredentialConfig: Component<CredentialConfigProps> = (props) => {
   const schema = () => props.integration.credential_schema;
-  const authType = () => schema()?.auth_type || "custom";
+  const authType = () => schema()?.auth_type || 'custom';
 
   // Get localized label
   const getLabel = (field: any) => {
-    if (typeof field.label === "string") return field.label;
-    const locale = props.store.i18n?.locale() || "en";
-    return field.label[locale] || field.label["en"] || "";
+    if (typeof field.label === 'string') return field.label;
+    const locale = props.store.i18n?.locale() || 'en';
+    return field.label[locale] || field.label['en'] || '';
   };
 
   return (
     <div class="credential-config">
-      <Show when={authType() === "oauth2"}>
+      <Show when={authType() === 'oauth2'}>
         <OAuth2Config
           integration={props.integration}
           store={props.store}
@@ -222,12 +222,20 @@ export const CredentialConfig: Component<CredentialConfigProps> = (props) => {
         />
       </Show>
 
-      <Show when={authType() === "api_key"}>
-        <ApiKeyConfig schema={schema()} store={props.store} integration={props.integration} />
+      <Show when={authType() === 'api_key'}>
+        <ApiKeyConfig
+          schema={schema()}
+          store={props.store}
+          integration={props.integration}
+        />
       </Show>
 
-      <Show when={authType() === "custom"}>
-        <CustomFieldsConfig schema={schema()} store={props.store} getLabel={getLabel} />
+      <Show when={authType() === 'custom'}>
+        <CustomFieldsConfig
+          schema={schema()}
+          store={props.store}
+          getLabel={getLabel}
+        />
       </Show>
     </div>
   );
@@ -428,8 +436,13 @@ The Spotify widget would be defined as:
       "client_id": {
         "type": "string",
         "required": true,
-        "label": { "en": "Spotify Client ID", "es": "ID de Cliente de Spotify" },
-        "description": { "en": "Get this from the Spotify Developer Dashboard" },
+        "label": {
+          "en": "Spotify Client ID",
+          "es": "ID de Cliente de Spotify"
+        },
+        "description": {
+          "en": "Get this from the Spotify Developer Dashboard"
+        },
         "input_type": "text",
         "help_url": "https://developer.spotify.com/dashboard"
       },

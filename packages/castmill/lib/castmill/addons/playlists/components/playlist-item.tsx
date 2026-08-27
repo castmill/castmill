@@ -1,28 +1,28 @@
 import {
   draggable,
   dropTargetForElements,
-} from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
-import { setCustomNativeDragPreview } from "@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview";
-import { pointerOutsideOfPreview } from "@atlaskit/pragmatic-drag-and-drop/element/pointer-outside-of-preview";
+} from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
+import { pointerOutsideOfPreview } from '@atlaskit/pragmatic-drag-and-drop/element/pointer-outside-of-preview';
 
-import { debounce } from "lodash";
+import { debounce } from 'lodash';
 
-import { IconWrapper, Slider, formatDuration } from "@castmill/ui-common";
-import { RiEditorDraggable } from "solid-icons/ri";
-import { AiOutlineEdit, AiOutlineWarning } from "solid-icons/ai";
-import { BsTrash3 } from "solid-icons/bs";
+import { IconWrapper, Slider, formatDuration } from '@castmill/ui-common';
+import { RiEditorDraggable } from 'solid-icons/ri';
+import { AiOutlineEdit, AiOutlineWarning } from 'solid-icons/ai';
+import { BsTrash3 } from 'solid-icons/bs';
 
-import { DEFAULT_WIDGET_ICON } from "../../common/constants";
-import { isImageIcon, getIconUrl } from "../utils/icon-utils";
-import { hasDynamicDuration } from "../utils/duration-utils";
+import { DEFAULT_WIDGET_ICON } from '../../common/constants';
+import { isImageIcon, getIconUrl } from '../utils/icon-utils';
+import { hasDynamicDuration } from '../utils/duration-utils';
 import {
   getTranslatedWidgetName,
   getTranslatedWidgetDescription,
-} from "../../common/utils/widget-catalog-utils";
-import styles from "./playlist-item.module.scss";
+} from '../../common/utils/widget-catalog-utils';
+import styles from './playlist-item.module.scss';
 
-import { Component, onMount, createSignal, onCleanup, Show } from "solid-js";
-import { JsonPlaylistItem } from "@castmill/player";
+import { Component, onMount, createSignal, onCleanup, Show } from 'solid-js';
+import { JsonPlaylistItem } from '@castmill/player';
 
 // get thumbnail uri from playlist item
 const getThumbnailUri = (item: JsonPlaylistItem) => {
@@ -38,7 +38,14 @@ const getThumbnailUri = (item: JsonPlaylistItem) => {
 const HEX_COLOR_REGEX = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$/;
 
 // Keywords that indicate a color-related option key
-const COLOR_KEYWORDS = ["color", "background", "bg", "fill", "stroke", "border"];
+const COLOR_KEYWORDS = [
+  'color',
+  'background',
+  'bg',
+  'fill',
+  'stroke',
+  'border',
+];
 
 /**
  * Checks if a value looks like a hex color (#RGB, #RRGGBB, or #RRGGBBAA)
@@ -61,9 +68,9 @@ export const isColorKey = (key: string): boolean => {
 export const getUrlDisplayName = (url: string): string => {
   try {
     const urlObj = new URL(url);
-    return urlObj.hostname.replace(/^www\./, "");
+    return urlObj.hostname.replace(/^www\./, '');
   } catch {
-    return url.length > 40 ? url.substring(0, 37) + "..." : url;
+    return url.length > 40 ? url.substring(0, 37) + '...' : url;
   }
 };
 
@@ -79,7 +86,7 @@ const getWidgetSubtitle = (item: JsonPlaylistItem): string | null => {
   }
 
   // Special handling for layout-widget: show aspect ratio and zone count
-  if (widgetSlug === "layout-widget") {
+  if (widgetSlug === 'layout-widget') {
     const layoutRef = options.layoutRef as any;
     if (layoutRef) {
       const parts: string[] = [];
@@ -88,21 +95,21 @@ const getWidgetSubtitle = (item: JsonPlaylistItem): string | null => {
       }
       if (layoutRef?.zones?.zones) {
         const zoneCount = layoutRef.zones.zones.length;
-        parts.push(`${zoneCount} zone${zoneCount !== 1 ? "s" : ""}`);
+        parts.push(`${zoneCount} zone${zoneCount !== 1 ? 's' : ''}`);
       }
-      return parts.length > 0 ? parts.join(" • ") : null;
+      return parts.length > 0 ? parts.join(' • ') : null;
     }
     return null;
   }
 
   // Special handling for stock-ticker: show symbols
-  if (widgetSlug === "stock-ticker" && options.symbols) {
+  if (widgetSlug === 'stock-ticker' && options.symbols) {
     const symbols = options.symbols as string;
-    return symbols.length > 40 ? symbols.substring(0, 37) + "..." : symbols;
+    return symbols.length > 40 ? symbols.substring(0, 37) + '...' : symbols;
   }
 
   // Special handling for RSS/feed widgets: show feed URL domain
-  if (options.feed_url && typeof options.feed_url === "string") {
+  if (options.feed_url && typeof options.feed_url === 'string') {
     return getUrlDisplayName(options.feed_url);
   }
 
@@ -110,7 +117,7 @@ const getWidgetSubtitle = (item: JsonPlaylistItem): string | null => {
   if (schema) {
     for (const [key, schemaField] of Object.entries(schema)) {
       const field = schemaField as any;
-      if (field.type === "ref" && options[key]) {
+      if (field.type === 'ref' && options[key]) {
         const ref = options[key] as any;
         // Check if it's a media reference with a name
         if (ref?.name) {
@@ -122,29 +129,29 @@ const getWidgetSubtitle = (item: JsonPlaylistItem): string | null => {
 
   // Priority 2: Look for common field names that would make good subtitles
   const priorityFields = [
-    "title",
-    "name",
-    "text",
-    "label",
-    "heading",
-    "description",
-    "message",
-    "content",
-    "url",
-    "symbols",
+    'title',
+    'name',
+    'text',
+    'label',
+    'heading',
+    'description',
+    'message',
+    'content',
+    'url',
+    'symbols',
   ];
 
   for (const field of priorityFields) {
-    if (options[field] && typeof options[field] === "string") {
+    if (options[field] && typeof options[field] === 'string') {
       const value = options[field] as string;
       // Skip color values
       if (isColorValue(value)) continue;
       // For URL fields, show just the domain
-      if (field === "url") {
+      if (field === 'url') {
         return getUrlDisplayName(value);
       }
       // Truncate if too long
-      return value.length > 40 ? value.substring(0, 37) + "..." : value;
+      return value.length > 40 ? value.substring(0, 37) + '...' : value;
     }
   }
 
@@ -153,11 +160,13 @@ const getWidgetSubtitle = (item: JsonPlaylistItem): string | null => {
     // Skip color-related keys
     if (isColorKey(key)) continue;
 
-    if (typeof value === "string" && value.trim().length > 0) {
+    if (typeof value === 'string' && value.trim().length > 0) {
       const stringValue = value.trim();
       // Skip color values
       if (isColorValue(stringValue)) continue;
-      return stringValue.length > 40 ? stringValue.substring(0, 37) + "..." : stringValue;
+      return stringValue.length > 40
+        ? stringValue.substring(0, 37) + '...'
+        : stringValue;
     }
   }
 
@@ -186,7 +195,11 @@ const Thumbnail: Component<{
           <div class={styles.widgetIconContainer}>
             <Show
               when={isImageIcon(iconUrl)}
-              fallback={<span class={styles.iconSymbol}>{widgetIcon || DEFAULT_WIDGET_ICON}</span>}
+              fallback={
+                <span class={styles.iconSymbol}>
+                  {widgetIcon || DEFAULT_WIDGET_ICON}
+                </span>
+              }
             >
               <img
                 draggable={false}
@@ -194,7 +207,7 @@ const Thumbnail: Component<{
                 alt={widgetName}
                 class={styles.iconImage}
                 onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = "none";
+                  (e.target as HTMLImageElement).style.display = 'none';
                   const fallback = document.createTextNode(DEFAULT_WIDGET_ICON);
                   e.target.parentNode?.appendChild(fallback);
                 }}
@@ -204,7 +217,11 @@ const Thumbnail: Component<{
         }
       >
         <div class={styles.thumbnailWrapper}>
-          <img draggable={false} src={thumbnailUri} class={styles.thumbnailImage} />
+          <img
+            draggable={false}
+            src={thumbnailUri}
+            class={styles.thumbnailImage}
+          />
         </div>
       </Show>
       <div class={styles.widgetInfo}>
@@ -237,7 +254,8 @@ export const PlaylistItem: Component<{
   onClick?: () => void;
   animate: boolean;
 }> = (props) => {
-  const t = (key: string, params?: Record<string, any>) => props.t?.(key, params) || key;
+  const t = (key: string, params?: Record<string, any>) =>
+    props.t?.(key, params) || key;
 
   let itemRef: HTMLDivElement | undefined = undefined;
   let draggingRef: HTMLDivElement | undefined = undefined;
@@ -305,11 +323,14 @@ export const PlaylistItem: Component<{
   const isDynamicDuration = () => hasDynamicDuration(props.item);
 
   const resolvedDuration = () => {
-    if (typeof props.item.duration === "number" && props.item.duration > 0) {
+    if (typeof props.item.duration === 'number' && props.item.duration > 0) {
       return props.item.duration;
     }
 
-    if (typeof props.dynamicDuration === "number" && props.dynamicDuration > 0) {
+    if (
+      typeof props.dynamicDuration === 'number' &&
+      props.dynamicDuration > 0
+    ) {
       return props.dynamicDuration;
     }
 
@@ -320,24 +341,24 @@ export const PlaylistItem: Component<{
     const duration = resolvedDuration();
     // For dynamic duration widgets, show "Auto" while waiting for actual duration
     if (duration === 0 && isDynamicDuration()) {
-      return "Auto";
+      return 'Auto';
     }
     return formatDuration(duration);
   };
 
   const wrapperClasses = () => {
-    return `${styles.playlistItemWrapper} ${isDraggedOver() ? styles.draggedOver : ""}`;
+    return `${styles.playlistItemWrapper} ${isDraggedOver() ? styles.draggedOver : ''}`;
   };
 
   return (
     <div
       ref={itemRef}
       class={wrapperClasses()}
-      style={{ display: isDragging() ? "none" : "block" }}
+      style={{ display: isDragging() ? 'none' : 'block' }}
     >
       <div
-        class={`item-placeholder ${animationEnabled() && props.animate ? "animate" : ""}`}
-        style={{ height: isDraggedOver() ? "6em" : "1em" }}
+        class={`item-placeholder ${animationEnabled() && props.animate ? 'animate' : ''}`}
+        style={{ height: isDraggedOver() ? '6em' : '1em' }}
       ></div>
       <div ref={draggingRef} class={styles.playlistItem}>
         <div ref={handleRef} class={styles.playlistItemDragHandle}>
@@ -350,9 +371,13 @@ export const PlaylistItem: Component<{
                 props.onClick?.();
               }
             }}
-            style={{ cursor: props.onClick ? "pointer" : "default" }}
+            style={{ cursor: props.onClick ? 'pointer' : 'default' }}
           >
-            <Thumbnail item={props.item} baseUrl={props.baseUrl} locale={props.locale} />
+            <Thumbnail
+              item={props.item}
+              baseUrl={props.baseUrl}
+              locale={props.locale}
+            />
           </div>
         </div>
         <div class={styles.playlistItemDuration}>
@@ -360,13 +385,17 @@ export const PlaylistItem: Component<{
             when={!isDynamicDuration()}
             fallback={
               <div class={styles.autoDuration}>
-                <span class={styles.autoDurationLabel}>{t("playlists.duration")}</span>
-                <span class={styles.autoDurationValue}>{readableDuration()}</span>
+                <span class={styles.autoDurationLabel}>
+                  {t('playlists.duration')}
+                </span>
+                <span class={styles.autoDurationValue}>
+                  {readableDuration()}
+                </span>
               </div>
             }
           >
             <Slider
-              name={t("playlists.duration")}
+              name={t('playlists.duration')}
               value={props.item.duration || 10000}
               min={1000}
               max={Math.max(60000, props.item.duration || 10000)}

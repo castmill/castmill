@@ -2,7 +2,11 @@
  * Shared aspect ratio validation utilities for playlists
  */
 
-import { MAX_ASPECT_RATIO_VALUE, MAX_ASPECT_RATIO, MIN_ASPECT_RATIO } from "../constants";
+import {
+  MAX_ASPECT_RATIO_VALUE,
+  MAX_ASPECT_RATIO,
+  MIN_ASPECT_RATIO,
+} from '../constants';
 
 type TranslateFn = (key: string, params?: Record<string, any>) => string;
 
@@ -18,17 +22,17 @@ export function validateCustomRatioField(
   field: string,
   value: string,
   t: TranslateFn,
-  errors: Map<string, string>,
+  errors: Map<string, string>
 ): Map<string, string> {
   const newErrors = new Map(errors);
   const num = parseInt(value, 10);
 
   if (!value || isNaN(num)) {
-    newErrors.set(field, t("playlists.errors.aspectRatioNumber"));
+    newErrors.set(field, t('playlists.errors.aspectRatioNumber'));
   } else if (num <= 0) {
-    newErrors.set(field, t("playlists.errors.aspectRatioPositive"));
+    newErrors.set(field, t('playlists.errors.aspectRatioPositive'));
   } else if (num > MAX_ASPECT_RATIO_VALUE) {
-    newErrors.set(field, t("playlists.errors.aspectRatioMax"));
+    newErrors.set(field, t('playlists.errors.aspectRatioMax'));
   } else {
     newErrors.delete(field);
   }
@@ -48,7 +52,7 @@ export function validateAspectRatioExtreme(
   width: string,
   height: string,
   t: TranslateFn,
-  errors: Map<string, string>,
+  errors: Map<string, string>
 ): { isValid: boolean; errors: Map<string, string> } {
   const newErrors = new Map(errors);
   const widthNum = parseInt(width, 10);
@@ -57,15 +61,15 @@ export function validateAspectRatioExtreme(
   if (!isNaN(widthNum) && !isNaN(heightNum) && widthNum > 0 && heightNum > 0) {
     const ratio = widthNum / heightNum;
     if (ratio > MAX_ASPECT_RATIO || ratio < MIN_ASPECT_RATIO) {
-      newErrors.set("ratio", t("playlists.errors.aspectRatioExtreme"));
+      newErrors.set('ratio', t('playlists.errors.aspectRatioExtreme'));
       return { isValid: false, errors: newErrors };
     } else {
-      newErrors.delete("ratio");
+      newErrors.delete('ratio');
       return { isValid: true, errors: newErrors };
     }
   }
 
-  newErrors.delete("ratio");
+  newErrors.delete('ratio');
   return { isValid: true, errors: newErrors };
 }
 

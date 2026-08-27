@@ -1,5 +1,5 @@
-import { WebPlugin } from "@capacitor/core";
-import type { CastmillPlugin } from "./definitions";
+import { WebPlugin } from '@capacitor/core';
+import type { CastmillPlugin } from './definitions';
 
 /**
  * Web implementation of the Castmill plugin. No actual real functionality.
@@ -10,17 +10,17 @@ export class CastmillWeb extends WebPlugin implements CastmillPlugin {
   }
 
   restart(): Promise<void> {
-    console.log("restart");
+    console.log('restart');
     return Promise.resolve();
   }
 
   reboot(): Promise<void> {
-    console.log("reboot");
+    console.log('reboot');
     return Promise.resolve();
   }
 
   quit(): Promise<void> {
-    console.log("quit");
+    console.log('quit');
     return Promise.resolve();
   }
 }

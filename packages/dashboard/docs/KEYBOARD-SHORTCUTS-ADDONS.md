@@ -88,15 +88,16 @@ Addons receive the keyboard shortcuts registry through the `store.keyboardShortc
 Addons should register action shortcuts using the `registerShortcutAction` helper:
 
 ```tsx
-import { Component, onMount } from "solid-js";
-import { AddonStore } from "../../common/interfaces/addon-store";
-import { TableViewRef } from "@castmill/ui-common";
+import { Component, onMount } from 'solid-js';
+import { AddonStore } from '../../common/interfaces/addon-store';
+import { TableViewRef } from '@castmill/ui-common';
 
 const WidgetsPage: Component<{
   store: AddonStore;
   params: any;
 }> = (props) => {
-  const t = (key: string, params?: Record<string, any>) => props.store.i18n?.t(key, params) || key;
+  const t = (key: string, params?: Record<string, any>) =>
+    props.store.i18n?.t(key, params) || key;
 
   const [tableRef, setRef] = createSignal<TableViewRef<number, Widget>>();
 
@@ -117,25 +118,25 @@ const WidgetsPage: Component<{
 
       // C key - Create/Upload widget
       registerShortcutAction(
-        "generic-create",
+        'generic-create',
         () => {
-          if (canPerformAction("widgets", "create")) {
+          if (canPerformAction('widgets', 'create')) {
             openUploadModal();
           }
         },
-        () => window.location.pathname.includes("/widgets"),
+        () => window.location.pathname.includes('/widgets')
       );
 
       // S key - Focus search
       registerShortcutAction(
-        "generic-search",
+        'generic-search',
         () => {
           const currentTableRef = tableRef();
           if (currentTableRef) {
             currentTableRef.focusSearch();
           }
         },
-        () => window.location.pathname.includes("/widgets"),
+        () => window.location.pathname.includes('/widgets')
       );
     }
   });
@@ -161,11 +162,12 @@ const WidgetsPage: Component<{
 ### 2. Register action shortcuts in your addon component
 
 ```tsx
-import { Component, onMount, onCleanup } from "solid-js";
-import { AddonComponentProps } from "../../common/interfaces/addon-store";
+import { Component, onMount, onCleanup } from 'solid-js';
+import { AddonComponentProps } from '../../common/interfaces/addon-store';
 
 const MyAddonPage: Component<AddonComponentProps> = (props) => {
-  const t = (key: string, params?: Record<string, any>) => props.store.i18n?.t(key, params) || key;
+  const t = (key: string, params?: Record<string, any>) =>
+    props.store.i18n?.t(key, params) || key;
 
   // Your addon state and logic
   const [items, setItems] = createSignal([]);
@@ -173,13 +175,13 @@ const MyAddonPage: Component<AddonComponentProps> = (props) => {
 
   const handleCreate = () => {
     // Your create logic
-    console.log("Creating new resource");
+    console.log('Creating new resource');
   };
 
   const handleDelete = () => {
     // Your delete logic
     if (selectedItems().length > 0) {
-      console.log("Deleting selected items:", selectedItems());
+      console.log('Deleting selected items:', selectedItems());
     }
   };
 
@@ -193,36 +195,41 @@ const MyAddonPage: Component<AddonComponentProps> = (props) => {
 
     if (registerShortcut) {
       // Register create shortcut - Ctrl+N
-      registerShortcut("addon-create-resource", {
-        key: "N",
+      registerShortcut('addon-create-resource', {
+        key: 'N',
         ctrl: true,
-        description: () => t("shortcuts.createResource"),
-        category: "actions",
+        description: () => t('shortcuts.createResource'),
+        category: 'actions',
         action: handleCreate,
         // Only active when on this addon's page
-        condition: () => window.location.pathname.includes("/my-addon"),
+        condition: () => window.location.pathname.includes('/my-addon'),
       });
 
       // Register delete shortcut - Delete key
-      registerShortcut("addon-delete-resources", {
-        key: "Delete",
-        description: () => t("shortcuts.deleteSelected"),
-        category: "actions",
+      registerShortcut('addon-delete-resources', {
+        key: 'Delete',
+        description: () => t('shortcuts.deleteSelected'),
+        category: 'actions',
         action: handleDelete,
         condition: () => {
-          return window.location.pathname.includes("/my-addon") && selectedItems().length > 0;
+          return (
+            window.location.pathname.includes('/my-addon') &&
+            selectedItems().length > 0
+          );
         },
       });
 
       // Register select all shortcut - Ctrl+A
-      registerShortcut("addon-select-all", {
-        key: "A",
+      registerShortcut('addon-select-all', {
+        key: 'A',
         ctrl: true,
-        description: () => t("shortcuts.selectAll"),
-        category: "actions",
+        description: () => t('shortcuts.selectAll'),
+        category: 'actions',
         action: handleSelectAll,
         condition: () => {
-          return window.location.pathname.includes("/my-addon") && items().length > 0;
+          return (
+            window.location.pathname.includes('/my-addon') && items().length > 0
+          );
         },
       });
     }
@@ -232,9 +239,9 @@ const MyAddonPage: Component<AddonComponentProps> = (props) => {
     const { unregisterShortcut } = props.store.keyboardShortcuts || {};
 
     if (unregisterShortcut) {
-      unregisterShortcut("addon-create-resource");
-      unregisterShortcut("addon-delete-resources");
-      unregisterShortcut("addon-select-all");
+      unregisterShortcut('addon-create-resource');
+      unregisterShortcut('addon-delete-resources');
+      unregisterShortcut('addon-select-all');
     }
   });
 
@@ -253,19 +260,21 @@ onMount(() => {
   const { registerShortcut } = props.store.keyboardShortcuts || {};
 
   if (registerShortcut) {
-    registerShortcut("addon-search", {
-      key: "S",
-      description: () => t("shortcuts.searchInPage"),
-      category: "actions",
+    registerShortcut('addon-search', {
+      key: 'S',
+      description: () => t('shortcuts.searchInPage'),
+      category: 'actions',
       action: () => {
         // Focus your search input
-        const searchInput = document.querySelector("[data-search-input]") as HTMLInputElement;
+        const searchInput = document.querySelector(
+          '[data-search-input]'
+        ) as HTMLInputElement;
         if (searchInput) {
           searchInput.focus();
           searchInput.select();
         }
       },
-      condition: () => window.location.pathname.includes("/my-addon"),
+      condition: () => window.location.pathname.includes('/my-addon'),
     });
   }
 });
@@ -277,7 +286,7 @@ onMount(() => {
 <input
   type="text"
   data-search-input
-  placeholder={t("common.search")}
+  placeholder={t('common.search')}
   value={searchQuery()}
   onInput={(e) => setSearchQuery(e.currentTarget.value)}
 />
@@ -298,23 +307,23 @@ const CreateButton: Component<AddonComponentProps> = (props) => {
     const { registerShortcut } = props.store.keyboardShortcuts || {};
 
     if (registerShortcut) {
-      registerShortcut("addon-create", {
-        key: "C",
-        description: () => t("shortcuts.create"),
-        category: "actions",
+      registerShortcut('addon-create', {
+        key: 'C',
+        description: () => t('shortcuts.create'),
+        category: 'actions',
         action: handleCreate,
-        condition: () => window.location.pathname.includes("/my-addon"),
+        condition: () => window.location.pathname.includes('/my-addon'),
       });
     }
   });
 
   onCleanup(() => {
-    props.store.keyboardShortcuts?.unregisterShortcut("addon-create");
+    props.store.keyboardShortcuts?.unregisterShortcut('addon-create');
   });
 
   return (
     <button onClick={handleCreate} data-action-button="create">
-      {t("common.create")}
+      {t('common.create')}
     </button>
   );
 };
@@ -450,7 +459,7 @@ tableRef()?.focusSearch();
 ❌ **Bad**:
 
 ```tsx
-document.querySelector(".search-input")?.focus();
+document.querySelector('.search-input')?.focus();
 ```
 
 ### 5. **Check Permissions**
@@ -459,13 +468,13 @@ Always check permissions before executing actions:
 
 ```tsx
 registerShortcutAction(
-  "generic-create",
+  'generic-create',
   () => {
-    if (canPerformAction("widgets", "create")) {
+    if (canPerformAction('widgets', 'create')) {
       openUploadModal();
     }
   },
-  () => window.location.pathname.includes("/widgets"),
+  () => window.location.pathname.includes('/widgets')
 );
 ```
 
@@ -496,11 +505,11 @@ If your addon manually registers navigation shortcuts, migrate to metadata-based
 
 ```tsx
 onMount(() => {
-  registerShortcut("goto-playlists", {
-    key: "P",
+  registerShortcut('goto-playlists', {
+    key: 'P',
     ctrl: true,
-    description: () => t("shortcuts.gotoPlaylists"),
-    category: "navigation",
+    description: () => t('shortcuts.gotoPlaylists'),
+    category: 'navigation',
     action: () => navigate(`/org/${orgId}/content/playlists`),
   });
 });

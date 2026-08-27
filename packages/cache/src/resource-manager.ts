@@ -6,7 +6,7 @@
  */
 // import "whatwg-fetch";
 
-import { Cache, ItemType } from "./cache";
+import { Cache, ItemType } from './cache';
 
 let resourceManager: ResourceManager;
 
@@ -51,14 +51,17 @@ export class ResourceManager {
    * @param cache The cache to use for the resource manager.
    * @returns
    */
-  static createResourceManager(cache: Cache, opts: ResourceManagerOpts): ResourceManager {
+  static createResourceManager(
+    cache: Cache,
+    opts: ResourceManagerOpts
+  ): ResourceManager {
     resourceManager = resourceManager || new ResourceManager(cache, opts);
     return resourceManager;
   }
 
   constructor(
     private cache: Cache,
-    private opts: ResourceManagerOpts = {},
+    private opts: ResourceManagerOpts = {}
   ) {
     this.authHeader = opts.authToken ? `Bearer ${opts.authToken}` : undefined;
   }
@@ -75,10 +78,15 @@ export class ResourceManager {
         const oldCode = await this.fetchCode(codeResource.cachedUrl);
 
         if (oldCode !== newCode) {
-          await this.cache.set(codeResource.url, ItemType.Code, "text/javascript", {
-            force: true,
-            headers: this.getAuthHeader(),
-          });
+          await this.cache.set(
+            codeResource.url,
+            ItemType.Code,
+            'text/javascript',
+            {
+              force: true,
+              headers: this.getAuthHeader(),
+            }
+          );
           needRefresh = true;
         }
       }
@@ -102,7 +110,7 @@ export class ResourceManager {
     let item = await this.cache.get(url);
 
     if (!item) {
-      item = await this.cache.set(url, ItemType.Code, "text/javascript", {
+      item = await this.cache.set(url, ItemType.Code, 'text/javascript', {
         headers: this.getAuthHeader(),
         force: false,
       });
@@ -144,10 +152,15 @@ export class ResourceManager {
 
     if (!item || age > freshness) {
       try {
-        const freshItem = await this.cache.set(url, ItemType.Data, "application/json", {
-          headers: this.getAuthHeader(),
-          force: true,
-        });
+        const freshItem = await this.cache.set(
+          url,
+          ItemType.Data,
+          'application/json',
+          {
+            headers: this.getAuthHeader(),
+            force: true,
+          }
+        );
         if (freshItem) {
           item = freshItem;
         }
@@ -175,18 +188,18 @@ export class ResourceManager {
   async getMedia(url: string): Promise<string | void> {
     // Guard against undefined/null urls
     if (!url) {
-      console.warn("[ResourceManager] getMedia called with undefined/null url");
+      console.warn('[ResourceManager] getMedia called with undefined/null url');
       return;
     }
 
     // We must not cache data uris
-    if (url.startsWith("data:")) {
+    if (url.startsWith('data:')) {
       return url;
     }
 
     let item = await this.cache.get(url);
     if (!item) {
-      item = await this.cache.set(url, ItemType.Media, "media/*", {
+      item = await this.cache.set(url, ItemType.Media, 'media/*', {
         headers: this.getAuthHeader(),
         force: false,
       });
@@ -206,7 +219,7 @@ export class ResourceManager {
    */
   async cacheMedia(url: string): Promise<void> {
     // We must not cache data uris
-    if (url.startsWith("data:")) {
+    if (url.startsWith('data:')) {
       return;
     }
 
@@ -214,7 +227,7 @@ export class ResourceManager {
       return;
     }
 
-    await this.cache.set(url, ItemType.Media, "media/*", {
+    await this.cache.set(url, ItemType.Media, 'media/*', {
       headers: this.getAuthHeader(),
       force: false,
     });
@@ -232,8 +245,8 @@ export class ResourceManager {
     try {
       const response = await fetch(url, {
         headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
           ...this.getAuthHeader(),
         },
       });
@@ -251,7 +264,7 @@ export class ResourceManager {
     try {
       const response = await fetch(url, {
         headers: {
-          Accept: "application/json",
+          Accept: 'application/json',
           ...this.getAuthHeader(),
         },
       });

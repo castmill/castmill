@@ -360,7 +360,7 @@ export const integrationHooks = {
   renderConfig: (integration: WidgetIntegration) => JSX.Element,
 
   // Render credential input
-  renderCredentials: (scope: "organization" | "widget") => JSX.Element,
+  renderCredentials: (scope: 'organization' | 'widget') => JSX.Element,
 
   // Validate credentials
   validateCredentials: (credentials: any) => Promise<boolean>,

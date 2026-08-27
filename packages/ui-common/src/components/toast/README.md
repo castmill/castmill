@@ -21,7 +21,7 @@ The Toast component is part of `@castmill/ui-common` package and is already incl
 ### 1. Wrap Your App with ToastProvider
 
 ```tsx
-import { ToastProvider } from "@castmill/ui-common";
+import { ToastProvider } from '@castmill/ui-common';
 
 function App() {
   return <ToastProvider>{/* Your app content */}</ToastProvider>;
@@ -31,18 +31,18 @@ function App() {
 ### 2. Use the useToast Hook in Components
 
 ```tsx
-import { useToast } from "@castmill/ui-common";
-import { Component } from "solid-js";
+import { useToast } from '@castmill/ui-common';
+import { Component } from 'solid-js';
 
 const MyComponent: Component = () => {
   const toast = useToast();
 
   const handleSuccess = () => {
-    toast.success("Operation completed successfully!");
+    toast.success('Operation completed successfully!');
   };
 
   const handleError = () => {
-    toast.error("Something went wrong!");
+    toast.error('Something went wrong!');
   };
 
   return (
@@ -84,7 +84,7 @@ Returns an object with methods to show and manage toasts.
 ### Toast Types
 
 ```typescript
-type ToastType = "success" | "error" | "info" | "warning";
+type ToastType = 'success' | 'error' | 'info' | 'warning';
 ```
 
 ## Convenience Methods
@@ -94,8 +94,8 @@ type ToastType = "success" | "error" | "info" | "warning";
 Shows a success toast with a green theme.
 
 ```tsx
-toast.success("Profile updated successfully");
-toast.success("Changes saved", 3000); // Custom duration
+toast.success('Profile updated successfully');
+toast.success('Changes saved', 3000); // Custom duration
 ```
 
 ### error(message, duration?)
@@ -103,8 +103,8 @@ toast.success("Changes saved", 3000); // Custom duration
 Shows an error toast with a red theme.
 
 ```tsx
-toast.error("Failed to save changes");
-toast.error("Network error occurred", 5000);
+toast.error('Failed to save changes');
+toast.error('Network error occurred', 5000);
 ```
 
 ### info(message, duration?)
@@ -112,8 +112,8 @@ toast.error("Network error occurred", 5000);
 Shows an info toast with a blue theme.
 
 ```tsx
-toast.info("New features available");
-toast.info("Check your email for confirmation");
+toast.info('New features available');
+toast.info('Check your email for confirmation');
 ```
 
 ### warning(message, duration?)
@@ -121,8 +121,8 @@ toast.info("Check your email for confirmation");
 Shows a warning toast with an orange theme.
 
 ```tsx
-toast.warning("This action cannot be undone");
-toast.warning("Low disk space detected");
+toast.warning('This action cannot be undone');
+toast.warning('Low disk space detected');
 ```
 
 ## Advanced Usage
@@ -131,10 +131,10 @@ toast.warning("Low disk space detected");
 
 ```tsx
 // Show toast for 10 seconds
-toast.success("Long message here", 10000);
+toast.success('Long message here', 10000);
 
 // Prevent auto-dismiss (duration = 0)
-const toastId = toast.error("Critical error - requires action", 0);
+const toastId = toast.error('Critical error - requires action', 0);
 
 // Later, manually close it
 toast.removeToast(toastId);
@@ -145,12 +145,12 @@ toast.removeToast(toastId);
 All toast methods return a unique ID that can be used to manually remove the toast:
 
 ```tsx
-const toastId = toast.info("Processing...");
+const toastId = toast.info('Processing...');
 
 // Later, when processing completes
 setTimeout(() => {
   toast.removeToast(toastId);
-  toast.success("Processing complete!");
+  toast.success('Processing complete!');
 }, 3000);
 ```
 
@@ -158,7 +158,7 @@ setTimeout(() => {
 
 ```tsx
 // Explicit type and duration
-toast.showToast("Custom message", "warning", 7000);
+toast.showToast('Custom message', 'warning', 7000);
 ```
 
 ## Styling
@@ -208,15 +208,15 @@ try {
 ```tsx
 const onSubmit = async (data) => {
   if (!isValid) {
-    toast.warning("Please fill all required fields");
+    toast.warning('Please fill all required fields');
     return;
   }
 
   try {
     await saveData(data);
-    toast.success("Data saved successfully");
+    toast.success('Data saved successfully');
   } catch (error) {
-    toast.error("Failed to save data");
+    toast.error('Failed to save data');
   }
 };
 ```
@@ -229,7 +229,7 @@ const deleteMultiple = async (ids) => {
     await Promise.all(ids.map((id) => deleteItem(id)));
     toast.success(`${ids.length} items deleted successfully`);
   } catch (error) {
-    toast.error("Failed to delete some items");
+    toast.error('Failed to delete some items');
   }
 };
 ```
@@ -276,7 +276,7 @@ const toast = useToast();
 
 try {
   await someOperation();
-  toast.success("Operation completed!"); // Non-blocking, good UX
+  toast.success('Operation completed!'); // Non-blocking, good UX
 } catch (error) {
   toast.error(error.message); // Non-blocking, styled
 }

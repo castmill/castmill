@@ -1,10 +1,10 @@
-import { Organization } from "../interfaces/organization";
-import { baseUrl } from "../env";
-import { FetchDataOptions, HttpError } from "@castmill/ui-common";
-import { fetchOptionsToQueryString, handleResponse } from "./util";
-import { OrganizationRole } from "../types/organization-role.type";
+import { Organization } from '../interfaces/organization';
+import { baseUrl } from '../env';
+import { FetchDataOptions, HttpError } from '@castmill/ui-common';
+import { fetchOptionsToQueryString, handleResponse } from './util';
+import { OrganizationRole } from '../types/organization-role.type';
 
-import { authFetch } from "../components/auth";
+import { authFetch } from '../components/auth';
 export const OrganizationsService = {
   /**
    * Get all Organizations.
@@ -12,14 +12,17 @@ export const OrganizationsService = {
    * @returns {Promise<Organization[]>} A promise that resolves to an array of Organizations.
    */
   async getAll(userId: string) {
-    const response = await authFetch(`${baseUrl}/dashboard/users/${userId}/organizations`, {
-      method: "GET",
-    });
+    const response = await authFetch(
+      `${baseUrl}/dashboard/users/${userId}/organizations`,
+      {
+        method: 'GET',
+      }
+    );
 
     if (response.status === 200) {
       return (await response.json())?.data as Organization[];
     } else {
-      throw new Error("Failed to fetch organizations");
+      throw new Error('Failed to fetch organizations');
     }
   },
 
@@ -33,14 +36,14 @@ export const OrganizationsService = {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/members?${queryString}`,
       {
-        method: "GET",
-      },
+        method: 'GET',
+      }
     );
 
     if (response.status === 200) {
       return await response.json();
     } else {
-      throw new Error("Failed to fetch members");
+      throw new Error('Failed to fetch members');
     }
   },
 
@@ -52,28 +55,31 @@ export const OrganizationsService = {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/members/${memberId}`,
       {
-        method: "DELETE",
-      },
+        method: 'DELETE',
+      }
     );
 
     if (!response.ok) {
-      let errorMessage = "Failed to remove member from organization";
+      let errorMessage = 'Failed to remove member from organization';
 
       try {
         const errorData = await response.json();
-        if (typeof errorData?.error === "string") {
+        if (typeof errorData?.error === 'string') {
           errorMessage = errorData.error;
         }
       } catch (error) {
-        console.error("Failed to parse remove organization member error response", error);
+        console.error(
+          'Failed to parse remove organization member error response',
+          error
+        );
       }
 
       // Map specific error codes to user-friendly messages
-      if (errorMessage === "Failed to remove member from organization") {
+      if (errorMessage === 'Failed to remove member from organization') {
         if (response.status === 422) {
-          errorMessage = "cannot_remove_last_organization_admin";
+          errorMessage = 'cannot_remove_last_organization_admin';
         } else if (response.status === 404) {
-          errorMessage = "member_not_found";
+          errorMessage = 'member_not_found';
         }
       }
 
@@ -88,37 +94,41 @@ export const OrganizationsService = {
   async addMemberToOrganization(
     organizationId: string,
     memberId: string,
-    role: "admin" | "member" | "guest",
+    role: 'admin' | 'member' | 'guest'
   ) {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/members/${memberId}`,
       {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ role }),
-      },
+      }
     );
 
     if (response.status !== 200) {
-      throw new Error("Failed to add member to team");
+      throw new Error('Failed to add member to team');
     }
   },
 
   /**
    * Invite member to an Organization
    */
-  async inviteUser(organizationId: string, email: string, role: OrganizationRole) {
+  async inviteUser(
+    organizationId: string,
+    email: string,
+    role: OrganizationRole
+  ) {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/invitations`,
       {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email, role }),
-      },
+      }
     );
 
     const { data } = await handleResponse<{ data: { id: number } }>(response, {
@@ -128,15 +138,18 @@ export const OrganizationsService = {
   },
 
   async getInvitation(token: string) {
-    const response = await authFetch(`${baseUrl}/dashboard/organizations_invitations/${token}`, {
-      method: "GET",
-    });
+    const response = await authFetch(
+      `${baseUrl}/dashboard/organizations_invitations/${token}`,
+      {
+        method: 'GET',
+      }
+    );
 
     if (response.status === 200) {
       return await response.json();
     } else {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || "Failed to fetch invitation");
+      throw new Error(errorData.error || 'Failed to fetch invitation');
     }
   },
 
@@ -147,15 +160,15 @@ export const OrganizationsService = {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations_invitations/${token}/preview`,
       {
-        method: "GET",
-      },
+        method: 'GET',
+      }
     );
 
     if (response.status === 200) {
       return await response.json();
     } else {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || "Failed to preview invitation");
+      throw new Error(errorData.error || 'Failed to preview invitation');
     }
   },
 
@@ -169,15 +182,15 @@ export const OrganizationsService = {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations_invitations/${token}/accept`,
       {
-        method: "POST",
-      },
+        method: 'POST',
+      }
     );
 
     if (response.status === 200) {
       return await response.json();
     } else {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || "Failed to accept invitation");
+      throw new Error(errorData.error || 'Failed to accept invitation');
     }
   },
 
@@ -191,15 +204,15 @@ export const OrganizationsService = {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations_invitations/${token}/reject`,
       {
-        method: "POST",
-      },
+        method: 'POST',
+      }
     );
 
     if (response.status === 200) {
       return await response.json();
     } else {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || "Failed to reject invitation");
+      throw new Error(errorData.error || 'Failed to reject invitation');
     }
   },
 
@@ -211,16 +224,19 @@ export const OrganizationsService = {
    * @param invitationId
    * @returns
    */
-  async removeInvitationFromOrganization(organizationId: string, invitationId: number) {
+  async removeInvitationFromOrganization(
+    organizationId: string,
+    invitationId: number
+  ) {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/invitations/${invitationId}`,
       {
-        method: "DELETE",
-      },
+        method: 'DELETE',
+      }
     );
 
     if (response.status !== 200) {
-      throw new Error("Failed to remove invitation from organization");
+      throw new Error('Failed to remove invitation from organization');
     }
   },
 
@@ -234,14 +250,14 @@ export const OrganizationsService = {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/invitations?${queryString}`,
       {
-        method: "GET",
-      },
+        method: 'GET',
+      }
     );
 
     if (response.status === 200) {
       return await response.json();
     } else {
-      throw new Error("Failed to fetch invitations");
+      throw new Error('Failed to fetch invitations');
     }
   },
 
@@ -250,18 +266,21 @@ export const OrganizationsService = {
    *
    */
   async update(organizationId: string, organization: Partial<Organization>) {
-    const response = await authFetch(`${baseUrl}/dashboard/organizations/${organizationId}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(organization),
-    });
+    const response = await authFetch(
+      `${baseUrl}/dashboard/organizations/${organizationId}`,
+      {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(organization),
+      }
+    );
 
     if (response.status !== 200) {
       // Try to parse error response
       const errorData = await response.json().catch(() => ({}));
-      const error: any = new Error("Failed to update organization");
+      const error: any = new Error('Failed to update organization');
       error.status = response.status;
       error.data = errorData;
       throw error;
@@ -277,12 +296,12 @@ export const OrganizationsService = {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/medias/${mediaId}`,
       {
-        method: "GET",
-      },
+        method: 'GET',
+      }
     );
 
     if (!response.ok) {
-      const error = new Error("Failed to fetch organization media");
+      const error = new Error('Failed to fetch organization media');
       (error as any).status = response.status;
       throw error;
     }
@@ -294,11 +313,15 @@ export const OrganizationsService = {
    * Update a member's role in an Organization.
    *
    */
-  async updateMemberRole(organizationId: string, memberId: string, role: OrganizationRole) {
+  async updateMemberRole(
+    organizationId: string,
+    memberId: string,
+    role: OrganizationRole
+  ) {
     const response = await authFetch(`${baseUrl}/dashboard/users/${memberId}`, {
-      method: "PUT",
+      method: 'PUT',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         access: role,
@@ -307,15 +330,18 @@ export const OrganizationsService = {
     });
 
     if (!response.ok) {
-      let errorMessage = "Failed to update member role";
+      let errorMessage = 'Failed to update member role';
 
       try {
         const errorData = await response.json();
-        if (typeof errorData?.error === "string") {
+        if (typeof errorData?.error === 'string') {
           errorMessage = errorData.error;
         }
       } catch (error) {
-        console.error("Failed to parse update member role error response", error);
+        console.error(
+          'Failed to parse update member role error response',
+          error
+        );
       }
 
       throw new HttpError(errorMessage, response.status);
@@ -330,17 +356,17 @@ export const OrganizationsService = {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/complete-onboarding`,
       {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ name }),
-      },
+      }
     );
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      let errorMessage = "Failed to complete onboarding";
+      let errorMessage = 'Failed to complete onboarding';
 
       // Check for specific error messages
       if (errorData.errors?.name) {

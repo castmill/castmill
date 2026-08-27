@@ -1,12 +1,28 @@
-import { Component, JSX, mergeProps, onCleanup, onMount, createSignal, Show } from "solid-js";
-import { TemplateConfig, resolveOption } from "./binding";
-import { Observable, Subscription, fromEvent, map, of, take, timeout } from "rxjs";
-import { TemplateComponent, TemplateComponentType } from "./template";
-import { Timeline, TimelineItem } from "./timeline";
-import { ComponentAnimation } from "./animation";
-import { BaseComponentProps } from "./interfaces/base-component-props";
-import { ResourceManager } from "@castmill/cache";
-import { PlayerGlobals } from "../../interfaces/player-globals.interface";
+import {
+  Component,
+  JSX,
+  mergeProps,
+  onCleanup,
+  onMount,
+  createSignal,
+  Show,
+} from 'solid-js';
+import { TemplateConfig, resolveOption } from './binding';
+import {
+  Observable,
+  Subscription,
+  fromEvent,
+  map,
+  of,
+  take,
+  timeout,
+} from 'rxjs';
+import { TemplateComponent, TemplateComponentType } from './template';
+import { Timeline, TimelineItem } from './timeline';
+import { ComponentAnimation } from './animation';
+import { BaseComponentProps } from './interfaces/base-component-props';
+import { ResourceManager } from '@castmill/cache';
+import { PlayerGlobals } from '../../interfaces/player-globals.interface';
 
 enum ReadyState {
   HAVE_NOTHING = 0, // No information is available about the media resource.
@@ -18,7 +34,7 @@ enum ReadyState {
 
 export interface VideoComponentOptions {
   url: string;
-  size: "cover" | "contain";
+  size: 'cover' | 'contain';
 }
 
 export class VideoComponent implements TemplateComponent {
@@ -29,7 +45,7 @@ export class VideoComponent implements TemplateComponent {
     public opts: VideoComponentOptions,
     public style: JSX.CSSProperties,
     public animations?: ComponentAnimation[],
-    public filter?: Record<string, any>,
+    public filter?: Record<string, any>
   ) {}
 
   resolveDuration_old(medias: { [index: string]: string }): Observable<number> {
@@ -39,17 +55,17 @@ export class VideoComponent implements TemplateComponent {
       throw new Error(`Video ${this.opts.url} not found in medias`);
     }
 
-    const video = document.createElement("video");
-    video.preload = "metadata";
+    const video = document.createElement('video');
+    video.preload = 'metadata';
     video.src = videoUrl;
 
-    return fromEvent(video, "durationchange").pipe(
+    return fromEvent(video, 'durationchange').pipe(
       take(1),
       map((evt) => {
         const duration = (video?.duration ?? 0) * 1000;
-        video.src = "";
+        video.src = '';
         return duration;
-      }),
+      })
     );
   }
 
@@ -61,14 +77,20 @@ export class VideoComponent implements TemplateComponent {
   }
 
   static fromJSON(json: any): VideoComponent {
-    return new VideoComponent(json.name, json.opts, json.style, json.animations, json.filter);
+    return new VideoComponent(
+      json.name,
+      json.opts,
+      json.style,
+      json.animations,
+      json.filter
+    );
   }
 
   static resolveOptions(
     opts: any,
     config: TemplateConfig,
     context: any,
-    globals: PlayerGlobals,
+    globals: PlayerGlobals
   ): VideoComponentOptions {
     return {
       url: resolveOption(opts.url, config, context, globals),
@@ -91,10 +113,10 @@ export const Video: Component<VideoProps> = (props) => {
 
   const merged = mergeProps(
     {
-      width: "100%",
-      height: "100%",
+      width: '100%',
+      height: '100%',
     },
-    props.style,
+    props.style
   );
 
   let loadingSubscription: Subscription;
@@ -137,7 +159,7 @@ export const Video: Component<VideoProps> = (props) => {
 
           const slow$ = of([time, 0]);
 
-          return fromEvent(videoRef, "seeked").pipe(
+          return fromEvent(videoRef, 'seeked').pipe(
             take(1),
             // Timeout for slow or video tags not implementing seeked event.
             timeout({
@@ -146,7 +168,7 @@ export const Video: Component<VideoProps> = (props) => {
             }),
             map((evt) => {
               return [time, 0];
-            }),
+            })
           );
         }
         return of([time, 0]);
@@ -167,12 +189,14 @@ export const Video: Component<VideoProps> = (props) => {
         if (timelineAdded || !videoRef) return;
         timelineAdded = true;
 
-        timeline = new Timeline("video");
+        timeline = new Timeline('video');
 
         const child = {
           seek: (time: number) => {
             seekingVideoSubscription?.unsubscribe();
-            seekingVideoSubscription = seekVideo(time).subscribe((evt) => void 0);
+            seekingVideoSubscription = seekVideo(time).subscribe(
+              (evt) => void 0
+            );
           },
           play: (offset: number = 0) => {
             // Always seek to the offset before playing (offset is in milliseconds)
@@ -211,29 +235,29 @@ export const Video: Component<VideoProps> = (props) => {
           const handler = (ev: Event) => {
             // Ensure timeline is added (in case canplaythrough fires before/without metadata)
             addTimelineItem();
-            subscriber.next("video:loaded");
+            subscriber.next('video:loaded');
             subscriber.complete();
           };
 
           const errorHandler = (ev: Event) => {
-            subscriber.error("error");
+            subscriber.error('error');
           };
 
-          videoRef!.addEventListener("loadedmetadata", metadataHandler);
-          videoRef!.addEventListener("canplaythrough", handler);
-          videoRef!.addEventListener("error", errorHandler);
+          videoRef!.addEventListener('loadedmetadata', metadataHandler);
+          videoRef!.addEventListener('canplaythrough', handler);
+          videoRef!.addEventListener('error', errorHandler);
 
           return () => {
-            videoRef!.removeEventListener("loadedmetadata", metadataHandler);
-            videoRef!.removeEventListener("canplaythrough", handler);
-            videoRef!.removeEventListener("error", errorHandler);
+            videoRef!.removeEventListener('loadedmetadata', metadataHandler);
+            videoRef!.removeEventListener('canplaythrough', handler);
+            videoRef!.removeEventListener('error', errorHandler);
           };
         });
         videoRef.load();
       } else {
         // Video is already loaded, add timeline immediately
         addTimelineItem();
-        loading$ = of("video:loaded");
+        loading$ = of('video:loaded');
       }
 
       loadingSubscription = loading$.subscribe({
@@ -241,7 +265,7 @@ export const Video: Component<VideoProps> = (props) => {
           props.onReady();
         },
         error: (err) => {
-          console.error("[Video] Error loading video:", err);
+          console.error('[Video] Error loading video:', err);
           props.onReady();
         },
       });
@@ -256,12 +280,12 @@ export const Video: Component<VideoProps> = (props) => {
           data-name={props.name}
           style={{
             ...merged,
-            display: "flex",
-            "align-items": "center",
-            "justify-content": "center",
-            background: "#1a1a2e",
-            color: "#666",
-            "font-size": "1.5em",
+            display: 'flex',
+            'align-items': 'center',
+            'justify-content': 'center',
+            background: '#1a1a2e',
+            color: '#666',
+            'font-size': '1.5em',
           }}
         >
           No video selected
@@ -273,7 +297,7 @@ export const Video: Component<VideoProps> = (props) => {
         data-name={props.name}
         style={{
           ...merged,
-          display: props.opts.url ? "block" : "none",
+          display: props.opts.url ? 'block' : 'none',
         }}
         playsinline
         muted={props.globals.muted ?? false}

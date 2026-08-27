@@ -7,25 +7,29 @@ import {
   onMount,
   createMemo,
   Show,
-} from "solid-js";
-import { createStore } from "solid-js/store";
-import { autoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/element";
+} from 'solid-js';
+import { createStore } from 'solid-js/store';
+import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
 
-import { CalendarEntryBox } from "./calendar-entry-box";
+import { CalendarEntryBox } from './calendar-entry-box';
 
-import styles from "./calendar-view.module.scss";
-import { CalendarEntry } from "./calendar-entry.interface";
-import { toZonedTime, fromZonedTime } from "date-fns-tz";
-import { PlaylistChooser } from "./playlist-chooser";
-import { baseUrl } from "../../env";
-import { store } from "../../store";
-import { ChannelsService, JsonChannel, JsonChannelEntry } from "../../services/channels.service";
-import { timestampsToCalendarEntry } from "./utils";
-import { CalendarCell } from "./calendar-cell";
-import { DefaultPlaylistComboBox } from "./default-playlist-combobox";
-import { Modal, useToast } from "@castmill/ui-common";
-import { ChanneEntrylView } from "./channel-entry-view";
-import { useI18n } from "../../i18n";
+import styles from './calendar-view.module.scss';
+import { CalendarEntry } from './calendar-entry.interface';
+import { toZonedTime, fromZonedTime } from 'date-fns-tz';
+import { PlaylistChooser } from './playlist-chooser';
+import { baseUrl } from '../../env';
+import { store } from '../../store';
+import {
+  ChannelsService,
+  JsonChannel,
+  JsonChannelEntry,
+} from '../../services/channels.service';
+import { timestampsToCalendarEntry } from './utils';
+import { CalendarCell } from './calendar-cell';
+import { DefaultPlaylistComboBox } from './default-playlist-combobox';
+import { Modal, useToast } from '@castmill/ui-common';
+import { ChanneEntrylView } from './channel-entry-view';
+import { useI18n } from '../../i18n';
 
 export interface DropTargetData {
   dayIndex: number;
@@ -51,7 +55,7 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
 
   let channelsService: ChannelsService = new ChannelsService(
     baseUrl,
-    store.organizations.selectedId!,
+    store.organizations.selectedId!
   );
 
   function calculateSlots(entry: CalendarEntry): number {
@@ -104,16 +108,21 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
 
   let lastDropData: any;
 
-  const handleDragOverCell = (entry: CalendarEntry, ghostPosition?: { x: number; y: number }) => {
+  const handleDragOverCell = (
+    entry: CalendarEntry,
+    ghostPosition?: { x: number; y: number }
+  ) => {
     if (ghostPosition) {
       const { height, width } = getCellDimensions();
 
       const el = document.elementFromPoint(
         ghostPosition.x + width / 2,
-        ghostPosition.y + height / 2,
+        ghostPosition.y + height / 2
       ) as HTMLTableCellElement;
 
-      lastDropData = el?.dataset?.dropData ? JSON.parse(el.dataset.dropData!) : null;
+      lastDropData = el?.dataset?.dropData
+        ? JSON.parse(el.dataset.dropData!)
+        : null;
     }
 
     if (lastDropData) {
@@ -148,13 +157,15 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
 
   const computeNewEntry = (
     entry: CalendarEntry,
-    dropTargetData: { dayIndex: number; hour: number; minute: number },
+    dropTargetData: { dayIndex: number; hour: number; minute: number }
   ): CalendarEntry => {
     const { dayIndex, hour, minute } = dropTargetData;
 
     // Calculate duration in minutes
     const durationMinutes =
-      entry.endHour * 60 + entry.endMinute - (entry.startHour * 60 + entry.startMinute);
+      entry.endHour * 60 +
+      entry.endMinute -
+      (entry.startHour * 60 + entry.startMinute);
 
     // New start time
     const startHour = hour;
@@ -170,7 +181,7 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
     const endMinute = endMinutes % 60;
 
     // Update title
-    const title = `${startHour}:${startMinute.toString().padStart(2, "0")}-${endHour}:${endMinute.toString().padStart(2, "0")}`;
+    const title = `${startHour}:${startMinute.toString().padStart(2, '0')}-${endHour}:${endMinute.toString().padStart(2, '0')}`;
 
     return {
       numDays: entry.numDays,
@@ -186,7 +197,10 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
     };
   };
 
-  function doEntriesOverlap(entryA: CalendarEntry, entryB: CalendarEntry): boolean {
+  function doEntriesOverlap(
+    entryA: CalendarEntry,
+    entryB: CalendarEntry
+  ): boolean {
     // Calculate day ranges
     const aStartDay = entryA.dayIndex;
     const aEndDay = aStartDay + entryA.numDays - 1;
@@ -220,12 +234,14 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
     const result = await channelsService.getChannelEntries(
       props.channel.id,
       startDate().getTime(),
-      getEndOfWeek(startDate()).getTime(),
+      getEndOfWeek(startDate()).getTime()
     );
 
     if (result) {
       setEntries(
-        result.map((entry: JsonChannelEntry) => timestampsToCalendarEntry(entry, props.timeZone)),
+        result.map((entry: JsonChannelEntry) =>
+          timestampsToCalendarEntry(entry, props.timeZone)
+        )
       );
     }
   });
@@ -237,9 +253,9 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
       arr.push({
         hour: h,
         minute: 0,
-        label: `${h.toString().padStart(2, "0")}:00`,
+        label: `${h.toString().padStart(2, '0')}:00`,
       });
-      arr.push({ hour: h, minute: 30, label: "" });
+      arr.push({ hour: h, minute: 30, label: '' });
     }
     return arr;
   });
@@ -298,7 +314,7 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
   const onDrop =
     (el: HTMLElement) =>
     async ({ source }: { source: any }) => {
-      el.style.backgroundColor = "";
+      el.style.backgroundColor = '';
       setHoveredCells([]);
 
       if (lastDropData) {
@@ -311,7 +327,10 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
 
         const newEntry = computeNewEntry(entry, { dayIndex, hour, minute });
         const start = getDateByDayIndex(startDate(), dayIndex);
-        const end = getDateByDayIndex(startDate(), dayIndex + entry.numDays - 1);
+        const end = getDateByDayIndex(
+          startDate(),
+          dayIndex + entry.numDays - 1
+        );
 
         const opts = {
           start: fromZonedTime(
@@ -320,9 +339,9 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
               start.getMonth(),
               start.getDate(),
               newEntry.startHour,
-              newEntry.startMinute,
+              newEntry.startMinute
             ),
-            props.timeZone,
+            props.timeZone
           ).getTime(),
           end: fromZonedTime(
             new Date(
@@ -330,25 +349,32 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
               end.getMonth(),
               end.getDate(),
               newEntry.endHour,
-              newEntry.endMinute,
+              newEntry.endMinute
             ),
-            props.timeZone,
+            props.timeZone
           ).getTime(),
         };
 
         // Hackish
         if (entry.isNewEntry) {
           // Add the new entry
-          const addedEntry = await channelsService.addEntryToChannel(props.channel.id, {
-            playlist_id: newEntry.playlist.id,
-            ...opts,
-          });
+          const addedEntry = await channelsService.addEntryToChannel(
+            props.channel.id,
+            {
+              playlist_id: newEntry.playlist.id,
+              ...opts,
+            }
+          );
 
           newEntry.id = addedEntry.id;
 
           setEntries([...entries, newEntry]);
         } else {
-          await channelsService.updateChannelEntry(props.channel.id, entry.id, opts);
+          await channelsService.updateChannelEntry(
+            props.channel.id,
+            entry.id,
+            opts
+          );
           // Update the store
           setEntries((e) => e.id === entry.id, {
             dayIndex: newEntry.dayIndex,
@@ -390,7 +416,7 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
           const scrollPosition = slotIndex * cellHeight;
           scrollContainer.scrollTo({
             top: scrollPosition,
-            behavior: "smooth",
+            behavior: 'smooth',
           });
         }
       }
@@ -433,7 +459,10 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
   const onResizeComplete = async (updated: CalendarEntry) => {
     // We must convert the entry to UTC before sending it to the server
     const start = getDateByDayIndex(startDate(), updated.dayIndex);
-    const end = getDateByDayIndex(startDate(), updated.dayIndex + updated.numDays - 1);
+    const end = getDateByDayIndex(
+      startDate(),
+      updated.dayIndex + updated.numDays - 1
+    );
 
     await channelsService.updateChannelEntry(props.channel.id, updated.id, {
       start: fromZonedTime(
@@ -442,9 +471,9 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
           start.getMonth(),
           start.getDate(),
           updated.startHour,
-          updated.startMinute,
+          updated.startMinute
         ),
-        props.timeZone,
+        props.timeZone
       ).getTime(),
       end: fromZonedTime(
         new Date(
@@ -452,9 +481,9 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
           end.getMonth(),
           end.getDate(),
           updated.endHour,
-          updated.endMinute,
+          updated.endMinute
         ),
-        props.timeZone,
+        props.timeZone
       ).getTime(),
     });
 
@@ -462,7 +491,7 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
   };
 
   const getCellDimensions = () => {
-    const measureCell = cellRefs.get("day-0-slot-1");
+    const measureCell = cellRefs.get('day-0-slot-1');
     if (!measureCell) {
       return { width: 0, height: 0 };
     }
@@ -484,13 +513,13 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
     const top = (totalMinutes / minutesPerDay) * slotsPerDay * cellHeight;
 
     return {
-      position: "absolute" as const,
+      position: 'absolute' as const,
       top: `${top}px`,
-      left: "10%", // Align with time column (10% width as per CSS)
-      width: "90%", // Span across all day columns (90% width as per CSS)
-      height: "2px", // Thin line
-      background: "#007bff", // Blue line (match your image)
-      "z-index": 10, // Above other elements
+      left: '10%', // Align with time column (10% width as per CSS)
+      width: '90%', // Span across all day columns (90% width as per CSS)
+      height: '2px', // Thin line
+      background: '#007bff', // Blue line (match your image)
+      'z-index': 10, // Above other elements
     };
   };
 
@@ -509,7 +538,7 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
       <Show when={showEntryModal()}>
         <Modal
           title={showEntryModal()?.playlist.name!}
-          description={t("channels.calendarEntryDetails")}
+          description={t('channels.calendarEntryDetails')}
           onClose={closeEntryModal}
         >
           <ChanneEntrylView
@@ -521,8 +550,8 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
                   props.channel.id,
                   showEntryModal()!.id,
                   {
-                    repeat_weekly_until: weekly ? new Date("9999-12-31") : null,
-                  },
+                    repeat_weekly_until: weekly ? new Date('9999-12-31') : null,
+                  }
                 );
 
                 // Must update the entry in the store
@@ -533,47 +562,49 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
                           ...showEntryModal()!,
                           weekly: weekly ?? showEntryModal()!.weekly,
                         }
-                      : x,
-                  ),
+                      : x
+                  )
                 );
 
                 setShowEntryModal();
-                toast.success("Channel entry updated successfully");
+                toast.success('Channel entry updated successfully');
               } catch (error) {
                 toast.error(
-                  t("channels.errors.updateChannelEntry", {
+                  t('channels.errors.updateChannelEntry', {
                     error: String(error),
-                  }),
+                  })
                 );
               }
             }}
           />
         </Modal>
       </Show>
-      <div class={styles["calendar-layout"]}>
-        <div class={styles["left-panel"]}>
+      <div class={styles['calendar-layout']}>
+        <div class={styles['left-panel']}>
           <DefaultPlaylistComboBox channel={props.channel} />
           <PlaylistChooser onDragOverCell={handleDragOverCell} />
         </div>
-        <div class={styles["calendar-wrapper"]}>
+        <div class={styles['calendar-wrapper']}>
           {/* Top bar: nav + range */}
-          <div class={styles["calendar-header"]}>
+          <div class={styles['calendar-header']}>
             <div>
               <button onClick={goPrevWeek}>prev</button>
               <button onClick={goToday}>today</button>
               <button onClick={goNextWeek}>next</button>
             </div>
-            <div style="font-size: 18px; font-weight: bold;">{dateRangeText()}</div>
+            <div style="font-size: 18px; font-weight: bold;">
+              {dateRangeText()}
+            </div>
             <button>Events</button>
           </div>
 
           {/* Pinned header table */}
-          <div class={styles["header-table-container"]}>
-            <table class={styles["header-table"]}>
+          <div class={styles['header-table-container']}>
+            <table class={styles['header-table']}>
               <thead>
                 <tr>
                   {/* Time column: 10% */}
-                  <th class={styles["header-time-col"]}>{props.timeZone}</th>
+                  <th class={styles['header-time-col']}>{props.timeZone}</th>
                   {/* 7 day columns => share 90% */}
                   <For each={dayLabels()}>{(label) => <th>{label}</th>}</For>
                 </tr>
@@ -582,16 +613,19 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
           </div>
 
           {/* Body table (scrollable) */}
-          <div class={styles["body-table-container"]} ref={(el) => (scrollContainer = el)}>
-            <table class={styles["body-table"]}>
+          <div
+            class={styles['body-table-container']}
+            ref={(el) => (scrollContainer = el)}
+          >
+            <table class={styles['body-table']}>
               <tbody>
                 <For each={timeSlots()}>
                   {(slot, slotIndex) => (
                     <tr>
                       {/* Time column cell */}
-                      <td class={styles["body-time-col"]}>
+                      <td class={styles['body-time-col']}>
                         {/* Show label only on top-of-hour rows */}
-                        {slot.minute === 0 ? slot.label : ""}
+                        {slot.minute === 0 ? slot.label : ''}
                       </td>
 
                       {/* 7 day cells */}
@@ -624,7 +658,7 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
             </table>
 
             {/* The event layer => absolutely positioned items */}
-            <div class={styles["event-layer"]}>
+            <div class={styles['event-layer']}>
               <For each={entries}>
                 {(ev) => (
                   <CalendarEntryBox
@@ -635,7 +669,11 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
                     onInfo={onInfo}
                     onDragOverCell={handleDragOverCell}
                     hasOverlap={(candidate) =>
-                      entries.some((x) => x.id !== candidate.id && doEntriesOverlap(x, candidate))
+                      entries.some(
+                        (x) =>
+                          x.id !== candidate.id &&
+                          doEntriesOverlap(x, candidate)
+                      )
                     }
                   />
                 )}
@@ -645,28 +683,28 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
             <div style={getTimeBarStyle()}>
               <div
                 style={{
-                  position: "absolute",
-                  left: "-4em",
-                  top: "-0.5em",
-                  width: "4em",
-                  height: "1em",
-                  background: "#007bff",
-                  "border-radius": "30%",
-                  "font-size": "0.8em",
-                  "text-align": "center",
-                  padding: "0.2em",
-                  display: "flex",
-                  "justify-content": "center",
-                  "align-items": "center",
+                  position: 'absolute',
+                  left: '-4em',
+                  top: '-0.5em',
+                  width: '4em',
+                  height: '1em',
+                  background: '#007bff',
+                  'border-radius': '30%',
+                  'font-size': '0.8em',
+                  'text-align': 'center',
+                  padding: '0.2em',
+                  display: 'flex',
+                  'justify-content': 'center',
+                  'align-items': 'center',
                 }}
               >
                 {(() => {
                   const now = new Date();
                   const zonedNow = toZonedTime(now, props.timeZone);
                   return (
-                    zonedNow.getHours().toString().padStart(2, "0") +
-                    ":" +
-                    zonedNow.getMinutes().toString().padStart(2, "0")
+                    zonedNow.getHours().toString().padStart(2, '0') +
+                    ':' +
+                    zonedNow.getMinutes().toString().padStart(2, '0')
                   );
                 })()}
               </div>

@@ -369,9 +369,10 @@ Permissions should automatically reload when organization changes. If not:
 ### Types
 
 ```typescript
-type Role = "admin" | "manager" | "regular" | "guest";
-type ResourceType = "playlists" | "medias" | "channels" | "devices" | "teams" | "widgets";
-type Action = "list" | "show" | "create" | "update" | "delete";
+type Role = 'admin' | 'manager' | 'regular' | 'guest';
+type ResourceType =
+  'playlists' | 'medias' | 'channels' | 'devices' | 'teams' | 'widgets';
+type Action = 'list' | 'show' | 'create' | 'update' | 'delete';
 ```
 
 ### PermissionButton Props
@@ -390,16 +391,16 @@ interface PermissionButtonProps {
 When testing components with permissions:
 
 ```typescript
-import { setStore } from "../store";
+import { setStore } from '../store';
 
 // Mock permissions for testing
-setStore("permissions", {
+setStore('permissions', {
   loaded: true,
   loading: false,
-  role: "regular",
+  role: 'regular',
   matrix: {
-    playlists: ["list", "show", "create", "update", "delete"],
-    teams: ["list", "show"], // read-only
+    playlists: ['list', 'show', 'create', 'update', 'delete'],
+    teams: ['list', 'show'], // read-only
     // ...
   },
 });

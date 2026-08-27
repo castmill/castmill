@@ -6,10 +6,10 @@
  *
  */
 
-import { Component, Show, createEffect, createSignal } from "solid-js";
-import { ImCancelCircle } from "solid-icons/im";
+import { Component, Show, createEffect, createSignal } from 'solid-js';
+import { ImCancelCircle } from 'solid-icons/im';
 
-import "./dropdown.scss";
+import './dropdown.scss';
 
 interface DropdownItem {
   value: string;
@@ -26,7 +26,7 @@ interface DropdownProps {
   clearable?: boolean;
   clearLabel?: string;
   onClear?: () => void;
-  variant?: "default" | "inline"; // Inline variant for use in table cells
+  variant?: 'default' | 'inline'; // Inline variant for use in table cells
   id?: string; // Optional id for the select element (for forms and accessibility)
   name?: string; // Optional name for the select element (for forms)
 }
@@ -52,10 +52,11 @@ export const Dropdown: Component<DropdownProps> = (props) => {
   };
 
   const [selectedValue, setSelectedValue] = createSignal<string | null>(
-    props.value !== undefined ? props.value : computeFallbackValue(),
+    props.value !== undefined ? props.value : computeFallbackValue()
   );
 
-  const getCurrentValue = () => (props.value !== undefined ? props.value : selectedValue());
+  const getCurrentValue = () =>
+    props.value !== undefined ? props.value : selectedValue();
 
   createEffect(() => {
     if (props.value !== undefined) {
@@ -64,14 +65,16 @@ export const Dropdown: Component<DropdownProps> = (props) => {
     }
 
     const nextValue = computeFallbackValue();
-    setSelectedValue((current) => (current !== nextValue ? nextValue : current));
+    setSelectedValue((current) =>
+      current !== nextValue ? nextValue : current
+    );
   });
 
   // Handle dropdown changes
   const handleChange = (event: Event) => {
     const target = event.target as HTMLSelectElement;
     const value = target.value;
-    const resolvedValue = value === "" ? null : value;
+    const resolvedValue = value === '' ? null : value;
     const resolvedName =
       resolvedValue === null
         ? props.placeholder
@@ -94,12 +97,17 @@ export const Dropdown: Component<DropdownProps> = (props) => {
   };
 
   const shouldShowClear = () =>
-    props.clearable && getCurrentValue() !== null && getCurrentValue() !== undefined;
+    props.clearable &&
+    getCurrentValue() !== null &&
+    getCurrentValue() !== undefined;
 
-  const isInlineVariant = () => props.variant === "inline";
+  const isInlineVariant = () => props.variant === 'inline';
 
   return (
-    <div class="castmill-dropdown" classList={{ "castmill-dropdown--inline": isInlineVariant() }}>
+    <div
+      class="castmill-dropdown"
+      classList={{ 'castmill-dropdown--inline': isInlineVariant() }}
+    >
       <Show when={props.label && !isInlineVariant()}>
         <span class="label">{props.label}</span>
       </Show>
@@ -108,8 +116,8 @@ export const Dropdown: Component<DropdownProps> = (props) => {
           id={dropdownId}
           name={props.name || dropdownId}
           onChange={handleChange}
-          value={selectedValue() ?? ""}
-          classList={{ "is-placeholder": selectedValue() === null }}
+          value={selectedValue() ?? ''}
+          classList={{ 'is-placeholder': selectedValue() === null }}
           aria-label={props.label}
         >
           {props.placeholder && (
@@ -125,7 +133,7 @@ export const Dropdown: Component<DropdownProps> = (props) => {
           <button
             type="button"
             class="clear-button"
-            aria-label={props.clearLabel || "Clear selection"}
+            aria-label={props.clearLabel || 'Clear selection'}
             onClick={handleClear}
           >
             <ImCancelCircle class="clear-button__icon" />

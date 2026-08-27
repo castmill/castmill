@@ -1,6 +1,13 @@
-import { Component, onMount, createEffect, onCleanup, createSignal, createMemo } from "solid-js";
-import { Socket, Channel } from "phoenix";
-import { authFetch } from "../../common/services/auth-fetch";
+import {
+  Component,
+  onMount,
+  createEffect,
+  onCleanup,
+  createSignal,
+  createMemo,
+} from 'solid-js';
+import { Socket, Channel } from 'phoenix';
+import { authFetch } from '../../common/services/auth-fetch';
 
 import {
   Playlist,
@@ -12,12 +19,12 @@ import {
   JsonWidget,
   OptionsDict,
   parseAspectRatio,
-} from "@castmill/player";
-import { ResourceManager, Cache, StorageDummy } from "@castmill/cache";
+} from '@castmill/player';
+import { ResourceManager, Cache, StorageDummy } from '@castmill/cache';
 
-import styles from "./widget-view.module.scss";
-import { safeStringify } from "./utils";
-import { getDefaultDataFromSchema } from "../utils/schema-utils";
+import styles from './widget-view.module.scss';
+import { safeStringify } from './utils';
+import { getDefaultDataFromSchema } from '../utils/schema-utils';
 
 interface WidgetViewProps {
   widget: JsonWidget;
@@ -28,7 +35,11 @@ interface WidgetViewProps {
 }
 
 export const WidgetView: Component<WidgetViewProps> = (props) => {
-  const cache = new Cache(new StorageDummy("widget-editor"), "widget-editor-cache", 100);
+  const cache = new Cache(
+    new StorageDummy('widget-editor'),
+    'widget-editor-cache',
+    100
+  );
   const resourceManager = new ResourceManager(cache);
 
   let controls: PlayerUIControls;
@@ -45,7 +56,10 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
   }>({ width: 0, height: 0 });
 
   // Signal to store integration data
-  const [integrationData, setIntegrationData] = createSignal<Record<string, any> | null>(null);
+  const [integrationData, setIntegrationData] = createSignal<Record<
+    string,
+    any
+  > | null>(null);
   // Start with dataLoaded=true so preview renders immediately with defaults
   // The fetch effect will set it to false only when actually fetching
   const [dataLoaded, setDataLoaded] = createSignal(true);
@@ -69,7 +83,7 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
           }
         }
       } catch (error) {
-        console.warn("Failed to fetch integration data:", error);
+        console.warn('Failed to fetch integration data:', error);
       }
     }
     setDataLoaded(true);
@@ -86,7 +100,8 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
     // Get channels from the socket - the notifications channel should already be joined
     const channels = (props.socket as any).channels as Channel[];
     notificationChannel =
-      channels?.find((ch: Channel) => ch.topic.startsWith("notifications:")) || null;
+      channels?.find((ch: Channel) => ch.topic.startsWith('notifications:')) ||
+      null;
 
     if (!notificationChannel) {
       return;
@@ -94,7 +109,7 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
 
     // Listen for widget config data updates and store the ref for cleanup
     integrationUpdateRef = notificationChannel.on(
-      "widget_config_data_update",
+      'widget_config_data_update',
       (payload: {
         type: string;
         widget_id: string;
@@ -108,7 +123,7 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
         if (payload.widget_id === String(props.widget.id)) {
           setIntegrationData(payload.data);
         }
-      },
+      }
     );
   };
 
@@ -162,14 +177,17 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
     // Priority: integration data > config data > default data
     const integration = integrationData();
     const configData =
-      currentConfig.data && Object.keys(currentConfig.data).length > 0 ? currentConfig.data : null;
+      currentConfig.data && Object.keys(currentConfig.data).length > 0
+        ? currentConfig.data
+        : null;
     const effectiveData = integration || configData || defaultData;
 
     // Calculate duration from options (supports 'duration' or 'display_duration')
     // Convert from seconds to milliseconds, default to 10 seconds
-    const durationFromOptions = currentOptions.duration ?? currentOptions.display_duration ?? null;
+    const durationFromOptions =
+      currentOptions.duration ?? currentOptions.display_duration ?? null;
     const previewDuration =
-      typeof durationFromOptions === "number" ? durationFromOptions * 1000 : 0;
+      typeof durationFromOptions === 'number' ? durationFromOptions * 1000 : 0;
 
     const dummyJsonPlaylistItem: JsonPlaylistItem = {
       id: 123, // Dummy ID
@@ -177,7 +195,7 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
       offset: 0, // Dummy offset
       widget: currentWidget,
       slack: 0, // No slack for preview
-      name: "widget-layer", // Dummy name
+      name: 'widget-layer', // Dummy name
       config: {
         ...currentConfig,
         options: currentOptions,
@@ -187,9 +205,9 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
 
     const jsonPlaylist: JsonPlaylist = {
       id: 123, // Dummy ID
-      name: "widget-playlist", // Dummy name
+      name: 'widget-playlist', // Dummy name
       items: [dummyJsonPlaylistItem],
-      status: "live",
+      status: 'live',
     };
 
     const playlist = Playlist.fromJSON(jsonPlaylist, resourceManager);
@@ -198,7 +216,7 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
     // Use controls.seek (slider value) as it's more reliable than playerUI.position
     if (controls) {
       const sliderValue = controls.seek;
-      if (typeof sliderValue === "number" && sliderValue > 0) {
+      if (typeof sliderValue === 'number' && sliderValue > 0) {
         currentSeekPosition = sliderValue;
       }
     }
@@ -206,9 +224,9 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
     const previousPlayerUI = playerUI;
     const previousControls = controls;
 
-    controls = new PlayerUIControls("controls-widget", {
+    controls = new PlayerUIControls('controls-widget', {
       position: {
-        bottom: "0",
+        bottom: '0',
       },
     });
 
@@ -216,7 +234,7 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
     const initialPosition = isFirstRender ? 0 : currentSeekPosition;
     isFirstRender = false;
 
-    playerUI = new PlayerUI("player-widget", playlist, {
+    playerUI = new PlayerUI('player-widget', playlist, {
       controls,
       controlsMaster: true,
       initialSeekPosition: initialPosition,
@@ -238,7 +256,10 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
   onCleanup(() => {
     // Remove widget config data update listener
     if (notificationChannel && integrationUpdateRef !== null) {
-      notificationChannel.off("widget_config_data_update", integrationUpdateRef);
+      notificationChannel.off(
+        'widget_config_data_update',
+        integrationUpdateRef
+      );
     }
 
     if (playerUI) {
@@ -260,9 +281,16 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
     // This handles widgets where the layout-ref field may have any key name
     if (props.options) {
       for (const value of Object.values(props.options)) {
-        if (value && typeof value === "object" && "aspectRatio" in value && "layoutId" in value) {
+        if (
+          value &&
+          typeof value === 'object' &&
+          'aspectRatio' in value &&
+          'layoutId' in value
+        ) {
           // This looks like a LayoutRefValue
-          const ratio = parseAspectRatio((value as { aspectRatio: string }).aspectRatio);
+          const ratio = parseAspectRatio(
+            (value as { aspectRatio: string }).aspectRatio
+          );
           if (ratio) return ratio;
         }
       }
@@ -276,7 +304,7 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
   const calculateContainDimensions = (
     containerWidth: number,
     containerHeight: number,
-    aspectRatio: number,
+    aspectRatio: number
   ) => {
     const containerAspect = containerWidth / containerHeight;
 
@@ -301,8 +329,10 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
     if (parent) {
       const parentRect = parent.getBoundingClientRect();
       const style = getComputedStyle(parent);
-      const paddingX = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
-      const paddingY = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+      const paddingX =
+        parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+      const paddingY =
+        parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
       const availableWidth = parentRect.width - paddingX;
       const availableHeight = parentRect.height - paddingY;
 
@@ -333,7 +363,11 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
     const aspectRatio = getEffectiveAspectRatio();
 
     if (size.width > 0 && size.height > 0) {
-      const dims = calculateContainDimensions(size.width, size.height, aspectRatio);
+      const dims = calculateContainDimensions(
+        size.width,
+        size.height,
+        aspectRatio
+      );
       return {
         width: `${dims.width}px`,
         height: `${dims.height}px`,
@@ -341,7 +375,7 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
     }
 
     // Fallback to CSS aspect-ratio if parent dimensions not yet available
-    return { "aspect-ratio": `${aspectRatio}`, width: "100%", height: "auto" };
+    return { 'aspect-ratio': `${aspectRatio}`, width: '100%', height: 'auto' };
   });
 
   return (

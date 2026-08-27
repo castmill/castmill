@@ -1,12 +1,14 @@
-import { JSX } from "solid-js";
+import { JSX } from 'solid-js';
 
 /**
  * Parses aspect ratio string "16:9" and returns the numeric ratio (width/height)
  */
-export function parseAspectRatio(aspectRatio: string | undefined): number | null {
+export function parseAspectRatio(
+  aspectRatio: string | undefined
+): number | null {
   if (!aspectRatio) return null;
 
-  const parts = aspectRatio.split(":");
+  const parts = aspectRatio.split(':');
   if (parts.length !== 2) return null;
 
   const width = parseFloat(parts[0]);

@@ -1,5 +1,5 @@
-import { Component, Show } from "solid-js";
-import "./quota-indicator.scss";
+import { Component, Show } from 'solid-js';
+import './quota-indicator.scss';
 
 export interface QuotaIndicatorProps {
   used: number;
@@ -40,27 +40,29 @@ export const QuotaIndicator: Component<QuotaIndicatorProps> = (props) => {
 
   const state = () => {
     const pct = percentage();
-    if (pct >= 100) return "error";
-    if (pct >= warningThreshold()) return "warning";
-    return "normal";
+    if (pct >= 100) return 'error';
+    if (pct >= warningThreshold()) return 'warning';
+    return 'normal';
   };
 
   const stateClass = () => `quota-indicator--${state()}`;
 
   return (
     <div
-      class={`quota-indicator ${stateClass()} ${props.compact ? "quota-indicator--compact" : ""} ${props.isLoading ? "quota-indicator--loading" : ""}`}
-      title={`${formatValue(props.used)} of ${formatValue(props.total)} ${props.resourceName} used${props.isLoading ? " (updating...)" : ""}`}
+      class={`quota-indicator ${stateClass()} ${props.compact ? 'quota-indicator--compact' : ''} ${props.isLoading ? 'quota-indicator--loading' : ''}`}
+      title={`${formatValue(props.used)} of ${formatValue(props.total)} ${props.resourceName} used${props.isLoading ? ' (updating...)' : ''}`}
     >
       <div class="quota-indicator__text">
         <Show when={!props.compact}>
           <span class="quota-indicator__label">
-            {formatValue(props.used)} of {formatValue(props.total)} {props.resourceName}
+            {formatValue(props.used)} of {formatValue(props.total)}{' '}
+            {props.resourceName}
           </span>
         </Show>
         <Show when={props.compact}>
           <span class="quota-indicator__label">
-            {formatValue(props.used)}/{formatValue(props.total)} {props.resourceName}
+            {formatValue(props.used)}/{formatValue(props.total)}{' '}
+            {props.resourceName}
           </span>
         </Show>
         <span class="quota-indicator__percentage">{percentage()}%</span>

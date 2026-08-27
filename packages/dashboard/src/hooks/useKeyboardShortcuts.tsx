@@ -6,9 +6,9 @@ import {
   createSignal,
   onMount,
   onCleanup,
-} from "solid-js";
+} from 'solid-js';
 
-export type ShortcutCategory = "global" | "navigation" | "actions";
+export type ShortcutCategory = 'global' | 'navigation' | 'actions';
 
 export interface KeyboardShortcut {
   key: string;
@@ -25,7 +25,11 @@ export interface KeyboardShortcut {
 interface KeyboardShortcutsContextType {
   registerShortcut: (id: string, shortcut: KeyboardShortcut) => void;
   unregisterShortcut: (id: string) => void;
-  registerShortcutAction: (id: string, action: () => void, condition?: () => boolean) => void;
+  registerShortcutAction: (
+    id: string,
+    action: () => void,
+    condition?: () => boolean
+  ) => void;
   unregisterShortcutAction: (id: string) => void;
   getShortcuts: () => Map<string, KeyboardShortcut>;
   formatShortcut: (shortcut: KeyboardShortcut) => string;
@@ -36,16 +40,23 @@ interface KeyboardShortcutsContextType {
 const KeyboardShortcutsContext = createContext<KeyboardShortcutsContextType>();
 
 export const KeyboardShortcutsProvider: Component<ParentProps> = (props) => {
-  const [shortcuts, setShortcuts] = createSignal(new Map<string, KeyboardShortcut>());
+  const [shortcuts, setShortcuts] = createSignal(
+    new Map<string, KeyboardShortcut>()
+  );
 
   const isMac = () => {
-    return typeof navigator !== "undefined" && navigator.platform.toUpperCase().indexOf("MAC") >= 0;
+    return (
+      typeof navigator !== 'undefined' &&
+      navigator.platform.toUpperCase().indexOf('MAC') >= 0
+    );
   };
 
   const isMobile = () => {
     return (
-      typeof window !== "undefined" &&
-      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+      typeof window !== 'undefined' &&
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      )
     );
   };
 
@@ -65,7 +76,11 @@ export const KeyboardShortcutsProvider: Component<ParentProps> = (props) => {
     });
   };
 
-  const registerShortcutAction = (id: string, action: () => void, condition?: () => boolean) => {
+  const registerShortcutAction = (
+    id: string,
+    action: () => void,
+    condition?: () => boolean
+  ) => {
     setShortcuts((prev) => {
       const newMap = new Map(prev);
       const existing = newMap.get(id);
@@ -99,32 +114,34 @@ export const KeyboardShortcutsProvider: Component<ParentProps> = (props) => {
     const mac = isMac();
 
     if (shortcut.ctrl) {
-      parts.push(mac ? "⌘" : "Ctrl");
+      parts.push(mac ? '⌘' : 'Ctrl');
     }
     if (shortcut.shift) {
-      parts.push(mac ? "⇧" : "Shift");
+      parts.push(mac ? '⇧' : 'Shift');
     }
     if (shortcut.alt) {
-      parts.push(mac ? "⌥" : "Alt");
+      parts.push(mac ? '⌥' : 'Alt');
     }
     if (shortcut.meta && !mac) {
-      parts.push("Meta");
+      parts.push('Meta');
     }
 
     parts.push(shortcut.key.toUpperCase());
 
     // Use space on Mac for cleaner look, + on Windows/Linux
-    return parts.join(mac ? " " : "+");
+    return parts.join(mac ? ' ' : '+');
   };
 
   const checkModifierMatch = (
     shortcut: KeyboardShortcut,
     event: KeyboardEvent,
-    mac: boolean,
+    mac: boolean
   ): boolean => {
     // Check ctrl/cmd modifier
     const ctrlPressed = mac ? event.metaKey : event.ctrlKey;
-    const ctrlMatch = shortcut.ctrl ? ctrlPressed : !event.ctrlKey && !event.metaKey;
+    const ctrlMatch = shortcut.ctrl
+      ? ctrlPressed
+      : !event.ctrlKey && !event.metaKey;
 
     // Check shift modifier
     const shiftMatch = shortcut.shift ? event.shiftKey : !event.shiftKey;
@@ -140,17 +157,17 @@ export const KeyboardShortcutsProvider: Component<ParentProps> = (props) => {
 
     // Check if we're in an input field that should block shortcuts
     const isInInputField =
-      (target.tagName === "INPUT" &&
-        (target as HTMLInputElement).type !== "checkbox" &&
-        (target as HTMLInputElement).type !== "radio") ||
-      target.tagName === "TEXTAREA" ||
-      target.tagName === "SELECT" ||
+      (target.tagName === 'INPUT' &&
+        (target as HTMLInputElement).type !== 'checkbox' &&
+        (target as HTMLInputElement).type !== 'radio') ||
+      target.tagName === 'TEXTAREA' ||
+      target.tagName === 'SELECT' ||
       target.isContentEditable;
 
     // Allow ESC key to work as a shortcut even in input fields (to blur/exit)
     // But Delete/Backspace should NOT be processed as shortcuts when in input fields
     // - they should just work normally for text editing
-    if (isInInputField && event.key !== "Escape") {
+    if (isInInputField && event.key !== 'Escape') {
       return;
     }
 
@@ -167,10 +184,10 @@ export const KeyboardShortcutsProvider: Component<ParentProps> = (props) => {
       let shortcutKey = shortcut.key.toUpperCase();
 
       // On Mac, Backspace is the delete key, so treat them as equivalent
-      if (eventKey === "BACKSPACE" && shortcutKey === "DELETE") {
-        eventKey = "DELETE";
-      } else if (eventKey === "DELETE" && shortcutKey === "BACKSPACE") {
-        eventKey = "BACKSPACE";
+      if (eventKey === 'BACKSPACE' && shortcutKey === 'DELETE') {
+        eventKey = 'DELETE';
+      } else if (eventKey === 'DELETE' && shortcutKey === 'BACKSPACE') {
+        eventKey = 'BACKSPACE';
       }
 
       // Check if the key matches
@@ -191,11 +208,11 @@ export const KeyboardShortcutsProvider: Component<ParentProps> = (props) => {
   };
 
   onMount(() => {
-    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown);
   });
 
   onCleanup(() => {
-    window.removeEventListener("keydown", handleKeyDown);
+    window.removeEventListener('keydown', handleKeyDown);
   });
 
   const value: KeyboardShortcutsContextType = {
@@ -219,7 +236,9 @@ export const KeyboardShortcutsProvider: Component<ParentProps> = (props) => {
 export const useKeyboardShortcuts = () => {
   const context = useContext(KeyboardShortcutsContext);
   if (!context) {
-    throw new Error("useKeyboardShortcuts must be used within KeyboardShortcutsProvider");
+    throw new Error(
+      'useKeyboardShortcuts must be used within KeyboardShortcutsProvider'
+    );
   }
   return context;
 };

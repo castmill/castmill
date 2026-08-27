@@ -1,4 +1,4 @@
 export interface SortOptions {
   key?: string;
-  direction: "ascending" | "descending";
+  direction: 'ascending' | 'descending';
 }

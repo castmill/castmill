@@ -1,1 +1,1 @@
-export * from "./sort-options.interface";
+export * from './sort-options.interface';

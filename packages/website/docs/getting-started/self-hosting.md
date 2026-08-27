@@ -34,13 +34,13 @@ graph TD
 Create a `docker-compose.yml` for production:
 
 ```yaml
-version: "3.8"
+version: '3.8'
 
 services:
   castmill:
     image: ghcr.io/castmill/castmill:latest
     ports:
-      - "4000:4000"
+      - '4000:4000'
     environment:
       - DATABASE_URL=ecto://castmill:password@db/castmill
       - SECRET_KEY_BASE=your-64-char-secret-key
@@ -67,7 +67,7 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U castmill"]
+      test: ['CMD-SHELL', 'pg_isready -U castmill']
       interval: 10s
       timeout: 5s
       retries: 5

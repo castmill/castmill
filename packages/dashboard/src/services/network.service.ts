@@ -1,7 +1,7 @@
-import { baseUrl } from "../env";
-import { handleResponse } from "./util";
+import { baseUrl } from '../env';
+import { handleResponse } from './util';
 
-import { authFetch } from "../components/auth";
+import { authFetch } from '../components/auth';
 export interface SocialLinks {
   github?: string;
   twitter?: string;
@@ -113,9 +113,12 @@ export const NetworkService = {
    * Used for footer branding and signup behavior.
    */
   async getPublicSettings(): Promise<PublicNetworkSettings> {
-    const response = await authFetch(`${baseUrl}/dashboard/network/public-settings`, {
-      method: "GET",
-    });
+    const response = await authFetch(
+      `${baseUrl}/dashboard/network/public-settings`,
+      {
+        method: 'GET',
+      }
+    );
 
     return handleResponse<PublicNetworkSettings>(response, { parse: true });
   },
@@ -125,9 +128,12 @@ export const NetworkService = {
    * This is called during auth/session to determine if network admin UI should be shown.
    */
   async checkAdminStatus(): Promise<NetworkAdminStatus> {
-    const response = await authFetch(`${baseUrl}/dashboard/network/admin-status`, {
-      method: "GET",
-    });
+    const response = await authFetch(
+      `${baseUrl}/dashboard/network/admin-status`,
+      {
+        method: 'GET',
+      }
+    );
 
     return handleResponse<NetworkAdminStatus>(response, { parse: true });
   },
@@ -138,7 +144,7 @@ export const NetworkService = {
    */
   async getSettings(): Promise<NetworkSettings> {
     const response = await authFetch(`${baseUrl}/dashboard/network/settings`, {
-      method: "GET",
+      method: 'GET',
     });
 
     return handleResponse<NetworkSettings>(response, { parse: true });
@@ -152,22 +158,22 @@ export const NetworkService = {
     updates: Partial<
       Pick<
         NetworkSettings,
-        | "name"
-        | "email"
-        | "logo"
-        | "copyright"
-        | "invitation_only"
-        | "invitation_only_org_admins"
-        | "meta"
-        | "default_locale"
-        | "privacy_policy_url"
+        | 'name'
+        | 'email'
+        | 'logo'
+        | 'copyright'
+        | 'invitation_only'
+        | 'invitation_only_org_admins'
+        | 'meta'
+        | 'default_locale'
+        | 'privacy_policy_url'
       >
-    >,
+    >
   ): Promise<NetworkSettings> {
     const response = await authFetch(`${baseUrl}/dashboard/network/settings`, {
-      method: "PUT",
+      method: 'PUT',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({ network: updates }),
     });
@@ -181,7 +187,7 @@ export const NetworkService = {
    */
   async getStats(): Promise<NetworkStats> {
     const response = await authFetch(`${baseUrl}/dashboard/network/stats`, {
-      method: "GET",
+      method: 'GET',
     });
 
     return handleResponse<NetworkStats>(response, { parse: true });
@@ -197,15 +203,15 @@ export const NetworkService = {
     search?: string;
   }): Promise<PaginatedOrganizations> {
     const params = new URLSearchParams();
-    if (options?.page) params.append("page", String(options.page));
-    if (options?.pageSize) params.append("page_size", String(options.pageSize));
-    if (options?.search) params.append("search", options.search);
+    if (options?.page) params.append('page', String(options.page));
+    if (options?.pageSize) params.append('page_size', String(options.pageSize));
+    if (options?.search) params.append('search', options.search);
 
     const queryString = params.toString();
-    const url = `${baseUrl}/dashboard/network/organizations${queryString ? `?${queryString}` : ""}`;
+    const url = `${baseUrl}/dashboard/network/organizations${queryString ? `?${queryString}` : ''}`;
 
     const response = await authFetch(url, {
-      method: "GET",
+      method: 'GET',
     });
 
     return handleResponse<PaginatedOrganizations>(response, { parse: true });
@@ -215,12 +221,14 @@ export const NetworkService = {
    * Delete an organization from the network.
    * Only available to network admins.
    */
-  async deleteOrganization(organizationId: string): Promise<{ success: boolean; message: string }> {
+  async deleteOrganization(
+    organizationId: string
+  ): Promise<{ success: boolean; message: string }> {
     const response = await authFetch(
       `${baseUrl}/dashboard/network/organizations/${organizationId}`,
       {
-        method: "DELETE",
-      },
+        method: 'DELETE',
+      }
     );
 
     return handleResponse<{ success: boolean; message: string }>(response, {
@@ -238,15 +246,15 @@ export const NetworkService = {
     search?: string;
   }): Promise<PaginatedUsers> {
     const params = new URLSearchParams();
-    if (opts?.page) params.set("page", String(opts.page));
-    if (opts?.pageSize) params.set("page_size", String(opts.pageSize));
-    if (opts?.search) params.set("search", opts.search);
+    if (opts?.page) params.set('page', String(opts.page));
+    if (opts?.pageSize) params.set('page_size', String(opts.pageSize));
+    if (opts?.search) params.set('search', opts.search);
 
     const qs = params.toString();
-    const url = `${baseUrl}/dashboard/network/users${qs ? `?${qs}` : ""}`;
+    const url = `${baseUrl}/dashboard/network/users${qs ? `?${qs}` : ''}`;
 
     const response = await authFetch(url, {
-      method: "GET",
+      method: 'GET',
     });
 
     return handleResponse<PaginatedUsers>(response, { parse: true });
@@ -262,13 +270,16 @@ export const NetworkService = {
     inserted_at: string;
     updated_at: string;
   }> {
-    const response = await authFetch(`${baseUrl}/dashboard/network/organizations`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ organization: { name } }),
-    });
+    const response = await authFetch(
+      `${baseUrl}/dashboard/network/organizations`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ organization: { name } }),
+      }
+    );
 
     return handleResponse<{
       id: string;
@@ -283,9 +294,12 @@ export const NetworkService = {
    * Only available to network admins.
    */
   async listInvitations(): Promise<NetworkInvitation[]> {
-    const response = await authFetch(`${baseUrl}/dashboard/network/invitations`, {
-      method: "GET",
-    });
+    const response = await authFetch(
+      `${baseUrl}/dashboard/network/invitations`,
+      {
+        method: 'GET',
+      }
+    );
 
     return handleResponse<NetworkInvitation[]>(response, { parse: true });
   },
@@ -294,10 +308,15 @@ export const NetworkService = {
    * Delete a network invitation.
    * Only available to network admins.
    */
-  async deleteInvitation(invitationId: string): Promise<{ success: boolean; message: string }> {
-    const response = await authFetch(`${baseUrl}/dashboard/network/invitations/${invitationId}`, {
-      method: "DELETE",
-    });
+  async deleteInvitation(
+    invitationId: string
+  ): Promise<{ success: boolean; message: string }> {
+    const response = await authFetch(
+      `${baseUrl}/dashboard/network/invitations/${invitationId}`,
+      {
+        method: 'DELETE',
+      }
+    );
 
     return handleResponse<{ success: boolean; message: string }>(response, {
       parse: true,
@@ -311,17 +330,17 @@ export const NetworkService = {
   async inviteUserToOrganization(
     organizationId: string,
     email: string,
-    role: "admin" | "member",
+    role: 'admin' | 'member'
   ): Promise<{ success: boolean; message: string; token?: string }> {
     const response = await authFetch(
       `${baseUrl}/dashboard/network/organizations/${organizationId}/invitations`,
       {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email, role }),
-      },
+      }
     );
 
     return handleResponse<{
@@ -337,7 +356,7 @@ export const NetworkService = {
    */
   async blockUser(
     userId: string,
-    reason?: string,
+    reason?: string
   ): Promise<{
     success: boolean;
     message: string;
@@ -349,13 +368,16 @@ export const NetworkService = {
       blocked_reason: string | null;
     };
   }> {
-    const response = await authFetch(`${baseUrl}/dashboard/network/users/${userId}/block`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ reason }),
-    });
+    const response = await authFetch(
+      `${baseUrl}/dashboard/network/users/${userId}/block`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ reason }),
+      }
+    );
 
     return handleResponse(response, { parse: true });
   },
@@ -375,9 +397,12 @@ export const NetworkService = {
       blocked_reason: string | null;
     };
   }> {
-    const response = await authFetch(`${baseUrl}/dashboard/network/users/${userId}/block`, {
-      method: "DELETE",
-    });
+    const response = await authFetch(
+      `${baseUrl}/dashboard/network/users/${userId}/block`,
+      {
+        method: 'DELETE',
+      }
+    );
 
     return handleResponse(response, { parse: true });
   },
@@ -386,10 +411,15 @@ export const NetworkService = {
    * Delete a user from the network.
    * Only available to network admins.
    */
-  async deleteUser(userId: string): Promise<{ success: boolean; message: string }> {
-    const response = await authFetch(`${baseUrl}/dashboard/network/users/${userId}`, {
-      method: "DELETE",
-    });
+  async deleteUser(
+    userId: string
+  ): Promise<{ success: boolean; message: string }> {
+    const response = await authFetch(
+      `${baseUrl}/dashboard/network/users/${userId}`,
+      {
+        method: 'DELETE',
+      }
+    );
 
     return handleResponse<{ success: boolean; message: string }>(response, {
       parse: true,
@@ -402,7 +432,7 @@ export const NetworkService = {
    */
   async blockOrganization(
     organizationId: string,
-    reason?: string,
+    reason?: string
   ): Promise<{
     success: boolean;
     message: string;
@@ -416,12 +446,12 @@ export const NetworkService = {
     const response = await authFetch(
       `${baseUrl}/dashboard/network/organizations/${organizationId}/block`,
       {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ reason }),
-      },
+      }
     );
 
     return handleResponse(response, { parse: true });
@@ -444,8 +474,8 @@ export const NetworkService = {
     const response = await authFetch(
       `${baseUrl}/dashboard/network/organizations/${organizationId}/block`,
       {
-        method: "DELETE",
-      },
+        method: 'DELETE',
+      }
     );
 
     return handleResponse(response, { parse: true });

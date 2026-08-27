@@ -4,10 +4,10 @@ on:
   pull_request:
     branches: [main, next]
     paths:
-      - "packages/dashboard/src/**/*.tsx"
-      - "packages/dashboard/src/**/*.ts"
-      - "packages/dashboard/scripts/check-i18n.cjs"
-      - ".github/workflows/check-i18n.yml"
+      - 'packages/dashboard/src/**/*.tsx'
+      - 'packages/dashboard/src/**/*.ts'
+      - 'packages/dashboard/scripts/check-i18n.cjs'
+      - '.github/workflows/check-i18n.yml'
 
 jobs:
   check-i18n:
@@ -25,8 +25,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "24"
-          cache: "yarn"
+          node-version: '24'
+          cache: 'yarn'
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile

@@ -23,16 +23,16 @@ export interface StoreOptions {
   data?: any;
 }
 
-export type StoreResult = "SUCCESS" | "FAILURE";
+export type StoreResult = 'SUCCESS' | 'FAILURE';
 
 export type StoreError =
-  | "NONE"
-  | "UNKNOWN"
-  | "NOT_FOUND"
-  | "NOT_ALLOWED"
-  | "NOT_SUPPORTED"
-  | "TOO_LARGE"
-  | "NOT_ENOUGH_SPACE";
+  | 'NONE'
+  | 'UNKNOWN'
+  | 'NOT_FOUND'
+  | 'NOT_ALLOWED'
+  | 'NOT_SUPPORTED'
+  | 'TOO_LARGE'
+  | 'NOT_ENOUGH_SPACE';
 
 export interface StoreFileReturnValue {
   result: { code: StoreResult; error?: StoreError; errMsg?: string };

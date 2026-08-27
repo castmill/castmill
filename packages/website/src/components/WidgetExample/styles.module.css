@@ -111,12 +111,12 @@
   gap: 0.5rem;
 }
 
-[data-theme="dark"] .sectionHeader {
+[data-theme='dark'] .sectionHeader {
   color: var(--ifm-color-emphasis-600);
 }
 
 .sectionHeader::before {
-  content: "";
+  content: '';
   display: inline-block;
   width: 3px;
   height: 1em;

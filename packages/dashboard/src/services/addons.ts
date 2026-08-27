@@ -1,6 +1,6 @@
-import { baseUrl } from "../env";
+import { baseUrl } from '../env';
 
-import { authFetch } from "../components/auth";
+import { authFetch } from '../components/auth';
 export const AddonsService = {
   /**
    * Get all AddOns.
@@ -9,13 +9,13 @@ export const AddonsService = {
    */
   async getAll() {
     const response = await authFetch(`${baseUrl}/dashboard/addons/`, {
-      method: "GET",
+      method: 'GET',
     });
 
     if (response.status === 200) {
       return response.json();
     } else {
-      throw new Error("Failed to fetch AddOns");
+      throw new Error('Failed to fetch AddOns');
     }
   },
 };

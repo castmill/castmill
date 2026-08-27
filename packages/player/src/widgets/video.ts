@@ -1,7 +1,7 @@
-import { Widget } from "./widget";
-import { fromEvent, race, Observable, of, from } from "rxjs";
-import { map, take, switchMap, timeout, tap, first } from "rxjs/operators";
-import { ResourceManager } from "@castmill/cache";
+import { Widget } from './widget';
+import { fromEvent, race, Observable, of, from } from 'rxjs';
+import { map, take, switchMap, timeout, tap, first } from 'rxjs/operators';
+import { ResourceManager } from '@castmill/cache';
 
 enum ReadyState {
   HAVE_NOTHING = 0, // No information is available about the media resource.
@@ -22,7 +22,10 @@ export class Video extends Widget {
   // private $loading: Observable<HTMLVideoElement>;
   // private lastUrl: string;
 
-  constructor(resourceManager: ResourceManager, opts: { src: string; volume: number }) {
+  constructor(
+    resourceManager: ResourceManager,
+    opts: { src: string; volume: number }
+  ) {
     super(resourceManager);
     this.src = opts.src;
     this._volume = opts.volume;
@@ -32,8 +35,8 @@ export class Video extends Widget {
     return this.load().pipe(
       switchMap(() => {
         el.appendChild(this.video!);
-        return this.seek(offset).pipe(map(() => "shown"));
-      }),
+        return this.seek(offset).pipe(map(() => 'shown'));
+      })
     );
   }
 
@@ -43,15 +46,17 @@ export class Video extends Widget {
   // compensate for drift, etc.
   load(): Observable<string> {
     if (!this.video) {
-      const video = (this.video = document.createElement("video") as HTMLVideoElement);
-      video.style.width = "100%";
-      video.style.height = "100%";
+      const video = (this.video = document.createElement(
+        'video'
+      ) as HTMLVideoElement);
+      video.style.width = '100%';
+      video.style.height = '100%';
       video.loop = true;
     } else if (this.video.src) {
-      return of("video:loaded");
+      return of('video:loaded');
     }
 
-    if (typeof this._volume !== "undefined") {
+    if (typeof this._volume !== 'undefined') {
       this.volume(this._volume);
     }
 
@@ -65,34 +70,34 @@ export class Video extends Widget {
         if (video.readyState < ReadyState.HAVE_ENOUGH_DATA) {
           loading$ = new Observable<string>((subscriber) => {
             const handler = (ev: Event) => {
-              subscriber.next("video:loaded");
+              subscriber.next('video:loaded');
               subscriber.complete();
             };
 
             const errorHandler = (ev: Event) => {
-              subscriber.error("error");
+              subscriber.error('error');
             };
 
-            video.addEventListener("canplaythrough", handler);
-            video.addEventListener("error", errorHandler);
+            video.addEventListener('canplaythrough', handler);
+            video.addEventListener('error', errorHandler);
 
             return () => {
-              video.removeEventListener("canplaythrough", handler);
+              video.removeEventListener('canplaythrough', handler);
             };
           });
           video.load();
         } else {
-          loading$ = of("vide0:loaded");
+          loading$ = of('vide0:loaded');
         }
         return loading$;
-      }),
+      })
     );
   }
 
   // TODO: A correct unload should wait for a load before it tries to unload.
   unload(): void {
     if (this.video) {
-      this.video.src = "";
+      this.video.src = '';
       this.video.parentElement?.removeChild(this.video);
       this.video = void 0;
     }
@@ -103,7 +108,7 @@ export class Video extends Widget {
       switchMap(() => {
         const video = this.video;
         if (!video) {
-          throw new Error("Video not loaded");
+          throw new Error('Video not loaded');
         }
         const playPromise = video.play();
 
@@ -115,7 +120,7 @@ export class Video extends Widget {
               if (time > video.currentTime * 1000) {
                 this.seek(time / 1000);
               }
-            }),
+            })
           )
           .subscribe();
 
@@ -125,7 +130,7 @@ export class Video extends Widget {
           });
         }
 
-        return fromEvent(video, "playing").pipe(
+        return fromEvent(video, 'playing').pipe(
           take(1),
           switchMap(() =>
             race(
@@ -136,9 +141,9 @@ export class Video extends Widget {
                   video.pause();
                 };
               }),
-              super.play(timer$),
-            ),
-          ),
+              super.play(timer$)
+            )
+          )
 
           // The problem with letting the "ended" event
           // decide that the video is over is that it could
@@ -173,7 +178,7 @@ export class Video extends Widget {
             )
             */
         );
-      }),
+      })
     );
   }
 
@@ -188,14 +193,14 @@ export class Video extends Widget {
 
       const slow$ = of([offset, 0]);
 
-      return fromEvent(this.video, "seeked").pipe(
+      return fromEvent(this.video, 'seeked').pipe(
         take(1),
         // Timeout for slow or video tags not implementing seeked event.
         timeout({
           each: 500,
           with: () => slow$,
         }),
-        map((evt) => [offset, 0]),
+        map((evt) => [offset, 0])
       );
     }
     return of([offset, 0]);
@@ -234,6 +239,6 @@ export class Video extends Widget {
   */
 
   mimeType(): string {
-    return "video/mpeg4";
+    return 'video/mpeg4';
   }
 }

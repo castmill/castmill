@@ -24,5 +24,11 @@
     "src/store/index.ts_",
     "glsl.d.ts"
   ],
-  "exclude": ["node_modules", "dist", "tests", "src/widgets/proxy.ts", "src/store/index.ts_"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "tests",
+    "src/widgets/proxy.ts",
+    "src/store/index.ts_"
+  ]
 }

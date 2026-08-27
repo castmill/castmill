@@ -63,18 +63,18 @@ The Castmill Dashboard includes a comprehensive keyboard shortcuts system that e
 ### Shortcut Registration
 
 ```tsx
-import { useKeyboardShortcuts } from "../../hooks/useKeyboardShortcuts";
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 
 const MyComponent = () => {
   const { registerShortcut, unregisterShortcut } = useKeyboardShortcuts();
   const { t } = useI18n();
 
   onMount(() => {
-    registerShortcut("my-action", {
-      key: "S",
+    registerShortcut('my-action', {
+      key: 'S',
       ctrl: true,
-      description: () => t("shortcuts.myAction"), // Use function for reactive i18n
-      category: "actions",
+      description: () => t('shortcuts.myAction'), // Use function for reactive i18n
+      category: 'actions',
       action: () => {
         // Perform action
       },
@@ -86,7 +86,7 @@ const MyComponent = () => {
   });
 
   onCleanup(() => {
-    unregisterShortcut("my-action");
+    unregisterShortcut('my-action');
   });
 };
 ```

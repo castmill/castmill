@@ -4,7 +4,7 @@ interface Utility {
   createToast(
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: CreateToastOptions,
+    options: CreateToastOptions
   ): void;
 }
 

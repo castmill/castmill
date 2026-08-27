@@ -1,4 +1,4 @@
-import { OnboardingProgress } from "./onboarding-progress.interface";
+import { OnboardingProgress } from './onboarding-progress.interface';
 
 export interface User {
   id: string;

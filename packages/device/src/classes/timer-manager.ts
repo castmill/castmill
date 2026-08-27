@@ -1,4 +1,4 @@
-import { Machine, Timers, TimerEntry, WeekDay } from "../interfaces/machine";
+import { Machine, Timers, TimerEntry, WeekDay } from '../interfaces/machine';
 
 /**
  * Manages device on/off timers.
@@ -18,7 +18,7 @@ export class TimerManager {
     private callbacks: {
       onTurnOff: () => Promise<void> | void;
       onTurnOn: () => Promise<void> | void;
-    },
+    }
   ) {}
 
   // ── Public API ──────────────────────────────────────────────
@@ -33,12 +33,12 @@ export class TimerManager {
       try {
         return await this.integration.getTimers();
       } catch (error) {
-        console.warn("Hardware getTimers failed, using fallback:", error);
+        console.warn('Hardware getTimers failed, using fallback:', error);
       }
     }
 
     // Fallback: read from settings
-    const timersJson = await this.integration.getSetting("TIMERS");
+    const timersJson = await this.integration.getSetting('TIMERS');
     if (timersJson) {
       try {
         const parsed = JSON.parse(timersJson);
@@ -69,16 +69,16 @@ export class TimerManager {
       try {
         await this.integration.setTimers(timers);
         // Also save to settings as backup
-        await this.integration.setSetting("TIMERS", JSON.stringify(timers));
+        await this.integration.setSetting('TIMERS', JSON.stringify(timers));
         await this.computeTimerOffState(timers);
         return;
       } catch (error) {
-        console.warn("Hardware setTimers failed, using fallback:", error);
+        console.warn('Hardware setTimers failed, using fallback:', error);
       }
     }
 
     // Fallback: store in settings
-    await this.integration.setSetting("TIMERS", JSON.stringify(timers));
+    await this.integration.setSetting('TIMERS', JSON.stringify(timers));
     await this.computeTimerOffState(timers);
 
     // Schedule timer checks
@@ -93,12 +93,15 @@ export class TimerManager {
    * - If the most recent event is an off-timer → TIMER_OFF = true.
    * - If the most recent event is an on-timer → TIMER_OFF = false.
    */
-  async computeTimerOffState(timers: Timers, now: Date = new Date()): Promise<void> {
+  async computeTimerOffState(
+    timers: Timers,
+    now: Date = new Date()
+  ): Promise<void> {
     const hasOn = timers.on.length > 0;
     const hasOff = timers.off.length > 0;
 
     if (!hasOn && !hasOff) {
-      await this.integration.setSetting("TIMER_OFF", "false");
+      await this.integration.setSetting('TIMER_OFF', 'false');
       return;
     }
 
@@ -107,10 +110,10 @@ export class TimerManager {
 
     if (lastOff && (!lastOn || lastOff > lastOn)) {
       // Most recent event was an off-timer
-      await this.integration.setSetting("TIMER_OFF", "true");
+      await this.integration.setSetting('TIMER_OFF', 'true');
     } else {
       // Most recent event was an on-timer, or no previous events exist
-      await this.integration.setSetting("TIMER_OFF", "false");
+      await this.integration.setSetting('TIMER_OFF', 'false');
     }
   }
 
@@ -126,8 +129,8 @@ export class TimerManager {
    * Check if player is currently off due to timer
    */
   async isTimerOff(): Promise<boolean> {
-    const timerOff = await this.integration.getSetting("TIMER_OFF");
-    return timerOff === "true";
+    const timerOff = await this.integration.getSetting('TIMER_OFF');
+    return timerOff === 'true';
   }
 
   /**
@@ -189,20 +192,26 @@ export class TimerManager {
     const timers = await this.getTimers();
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
-    const currentDay = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"][now.getDay()] as WeekDay;
+    const currentDay = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][
+      now.getDay()
+    ] as WeekDay;
 
     const isTimerActive = (timer: TimerEntry) => {
       if (timer.hours !== currentHour || timer.minutes !== currentMinute) {
         return false;
       }
-      return timer.weekDays.includes(currentDay) || timer.weekDays.includes("ALL");
+      return (
+        timer.weekDays.includes(currentDay) || timer.weekDays.includes('ALL')
+      );
     };
 
     // Check off timers
     const shouldTurnOff = timers.off.some(isTimerActive);
     if (shouldTurnOff) {
-      console.log(`[Timer] Stopping player at ${now.toISOString()} due to off-timer`);
-      await this.integration.setSetting("TIMER_OFF", "true");
+      console.log(
+        `[Timer] Stopping player at ${now.toISOString()} due to off-timer`
+      );
+      await this.integration.setSetting('TIMER_OFF', 'true');
       await this.callbacks.onTurnOff();
       return;
     }
@@ -210,10 +219,12 @@ export class TimerManager {
     // Check on timers
     const shouldTurnOn = timers.on.some(isTimerActive);
     if (shouldTurnOn) {
-      const wasOff = await this.integration.getSetting("TIMER_OFF");
-      if (wasOff === "true") {
-        console.log(`[Timer] Starting player at ${now.toISOString()} due to on-timer`);
-        await this.integration.setSetting("TIMER_OFF", "false");
+      const wasOff = await this.integration.getSetting('TIMER_OFF');
+      if (wasOff === 'true') {
+        console.log(
+          `[Timer] Starting player at ${now.toISOString()} due to on-timer`
+        );
+        await this.integration.setSetting('TIMER_OFF', 'false');
         await this.callbacks.onTurnOn();
       }
     }
@@ -240,7 +251,7 @@ export class TimerManager {
     let minDiff = Infinity;
 
     for (const timer of timers) {
-      const days = timer.weekDays.includes("ALL")
+      const days = timer.weekDays.includes('ALL')
         ? [0, 1, 2, 3, 4, 5, 6]
         : timer.weekDays.map((d) => dayMap[d]);
 
@@ -251,7 +262,10 @@ export class TimerManager {
         // Adjust to the correct day of week, going backwards
         const currentDay = before.getDay();
         let daysToSubtract = currentDay - day;
-        if (daysToSubtract < 0 || (daysToSubtract === 0 && timerDate >= before)) {
+        if (
+          daysToSubtract < 0 ||
+          (daysToSubtract === 0 && timerDate >= before)
+        ) {
           daysToSubtract += 7;
         }
         timerDate.setDate(timerDate.getDate() - daysToSubtract);
@@ -287,7 +301,7 @@ export class TimerManager {
     let minDiff = Infinity;
 
     for (const timer of timers) {
-      const days = timer.weekDays.includes("ALL")
+      const days = timer.weekDays.includes('ALL')
         ? [0, 1, 2, 3, 4, 5, 6]
         : timer.weekDays.map((d) => dayMap[d]);
 

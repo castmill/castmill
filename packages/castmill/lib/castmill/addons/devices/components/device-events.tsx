@@ -1,5 +1,5 @@
-import { Component, createSignal } from "solid-js";
-import { BsTrash } from "solid-icons/bs";
+import { Component, createSignal } from 'solid-js';
+import { BsTrash } from 'solid-icons/bs';
 
 import {
   TableView,
@@ -10,11 +10,11 @@ import {
   ConfirmDialog,
   useToast,
   Button,
-} from "@castmill/ui-common";
+} from '@castmill/ui-common';
 
-import { Device } from "../interfaces/device.interface";
+import { Device } from '../interfaces/device.interface';
 
-import { DevicesService } from "../services/devices.service";
+import { DevicesService } from '../services/devices.service';
 
 interface DeviceTableLogItem {
   id: string;
@@ -33,31 +33,33 @@ export const DeviceLogs: Component<{
   const toast = useToast();
 
   const typeNameMap: Record<string, string> = {
-    e: t("devices.events.filterError"),
-    w: t("devices.events.filterWarning"),
-    i: t("devices.events.filterInfo"),
-    o: t("devices.events.filterOnline"),
-    x: t("devices.events.filterOffline"),
+    e: t('devices.events.filterError'),
+    w: t('devices.events.filterWarning'),
+    i: t('devices.events.filterInfo'),
+    o: t('devices.events.filterOnline'),
+    x: t('devices.events.filterOffline'),
   };
 
   const columns = [
-    { key: "timestamp", title: t("common.time"), sortable: true },
+    { key: 'timestamp', title: t('common.time'), sortable: true },
     {
-      key: "type",
-      title: t("common.type"),
+      key: 'type',
+      title: t('common.type'),
       sortable: true,
-      render: (item: DeviceTableLogItem) => <span>{typeNameMap[item.type] || item.type}</span>,
+      render: (item: DeviceTableLogItem) => (
+        <span>{typeNameMap[item.type] || item.type}</span>
+      ),
     },
-    { key: "msg", title: t("common.message"), sortable: false },
+    { key: 'msg', title: t('common.message'), sortable: false },
   ] as Column<DeviceTableLogItem>[];
 
   // Filters for event types
   const eventFilters: Filter[] = [
-    { key: "e", name: t("devices.events.filterError"), isActive: true },
-    { key: "w", name: t("devices.events.filterWarning"), isActive: true },
-    { key: "i", name: t("devices.events.filterInfo"), isActive: true },
-    { key: "o", name: t("devices.events.filterOnline"), isActive: true },
-    { key: "x", name: t("devices.events.filterOffline"), isActive: true },
+    { key: 'e', name: t('devices.events.filterError'), isActive: true },
+    { key: 'w', name: t('devices.events.filterWarning'), isActive: true },
+    { key: 'i', name: t('devices.events.filterInfo'), isActive: true },
+    { key: 'o', name: t('devices.events.filterOnline'), isActive: true },
+    { key: 'x', name: t('devices.events.filterOffline'), isActive: true },
   ];
 
   const [showConfirmClearAll, setShowConfirmClearAll] = createSignal(false);
@@ -76,7 +78,9 @@ export const DeviceLogs: Component<{
     filters?: Record<string, string | boolean>;
   }) => {
     // Extract active filter keys (event types)
-    const filterTypes = filters ? Object.keys(filters).filter((key) => filters[key]) : [];
+    const filterTypes = filters
+      ? Object.keys(filters).filter((key) => filters[key])
+      : [];
 
     return DevicesService.getDeviceEvents(
       props.baseUrl,
@@ -84,7 +88,7 @@ export const DeviceLogs: Component<{
       page.num,
       page.size,
       sortOptions,
-      filterTypes,
+      filterTypes
     );
   };
 
@@ -102,11 +106,16 @@ export const DeviceLogs: Component<{
 
   const clearAllEvents = async () => {
     try {
-      const result = await DevicesService.deleteDeviceEvents(props.baseUrl, props.device.id);
-      toast.success(t("devices.events.clearAllSuccess", { count: result.deleted }));
+      const result = await DevicesService.deleteDeviceEvents(
+        props.baseUrl,
+        props.device.id
+      );
+      toast.success(
+        t('devices.events.clearAllSuccess', { count: result.deleted })
+      );
       refreshData();
     } catch (error) {
-      toast.error(t("devices.events.deleteError", { error: String(error) }));
+      toast.error(t('devices.events.deleteError', { error: String(error) }));
     }
     setShowConfirmClearAll(false);
   };
@@ -114,8 +123,8 @@ export const DeviceLogs: Component<{
   return (
     <>
       <TableView
-        title={t("devices.events.title")}
-        resource={t("devices.events.items")}
+        title={t('devices.events.title')}
+        resource={t('devices.events.items')}
         fetchData={fetchLogs}
         ref={setRef}
         table={{
@@ -135,7 +144,7 @@ export const DeviceLogs: Component<{
         <Button
           onClick={() => setShowConfirmClearAll(true)}
           icon={BsTrash}
-          label={t("devices.events.clearAll")}
+          label={t('devices.events.clearAll')}
           color="danger"
         />
       </div>
@@ -145,8 +154,8 @@ export const DeviceLogs: Component<{
         show={showConfirmClearAll()}
         onConfirm={clearAllEvents}
         onClose={() => setShowConfirmClearAll(false)}
-        title={t("devices.events.confirmClearAll")}
-        message={t("devices.events.confirmClearAllMessage")}
+        title={t('devices.events.confirmClearAll')}
+        message={t('devices.events.confirmClearAllMessage')}
       />
     </>
   );

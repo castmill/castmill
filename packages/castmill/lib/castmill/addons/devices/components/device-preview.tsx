@@ -1,10 +1,23 @@
-import { Component, createSignal, onMount, onCleanup, Show, For } from "solid-js";
-import { Device } from "../interfaces/device.interface";
-import { authFetch } from "../../common/services/auth-fetch";
-import { DevicesService, JsonChannel } from "../services/devices.service";
-import { Player, Playlist, Renderer, Layer, JsonPlaylist } from "@castmill/player";
-import { ResourceManager, Cache, StorageDummy } from "@castmill/cache";
-import styles from "./devices.module.scss";
+import {
+  Component,
+  createSignal,
+  onMount,
+  onCleanup,
+  Show,
+  For,
+} from 'solid-js';
+import { Device } from '../interfaces/device.interface';
+import { authFetch } from '../../common/services/auth-fetch';
+import { DevicesService, JsonChannel } from '../services/devices.service';
+import {
+  Player,
+  Playlist,
+  Renderer,
+  Layer,
+  JsonPlaylist,
+} from '@castmill/player';
+import { ResourceManager, Cache, StorageDummy } from '@castmill/cache';
+import styles from './devices.module.scss';
 
 /**
  * DevicePreview Component
@@ -24,9 +37,12 @@ export const DevicePreview: Component<{
   const [loading, setLoading] = createSignal(true);
   const [error, setError] = createSignal<string | null>(null);
   const [channels, setChannels] = createSignal<JsonChannel[]>([]);
-  const [currentPlaylistId, setCurrentPlaylistId] = createSignal<number | null>(null);
-  const [currentPlaylistName, setCurrentPlaylistName] = createSignal<string>("");
-  const [currentChannelName, setCurrentChannelName] = createSignal<string>("");
+  const [currentPlaylistId, setCurrentPlaylistId] = createSignal<number | null>(
+    null
+  );
+  const [currentPlaylistName, setCurrentPlaylistName] =
+    createSignal<string>('');
+  const [currentChannelName, setCurrentChannelName] = createSignal<string>('');
   const [player, setPlayer] = createSignal<Player | null>(null);
 
   // Initialize ResourceManager once per component instance and reuse it
@@ -40,7 +56,7 @@ export const DevicePreview: Component<{
    */
   const getPlaylistAt = (
     channel: JsonChannel,
-    timestamp: number,
+    timestamp: number
   ):
     | {
         playlist: number;
@@ -65,7 +81,8 @@ export const DevicePreview: Component<{
         const timestampDay = timestampDate.getUTCDay();
 
         const isBetweenDays =
-          timestampDay >= entryStart.getUTCDay() && timestampDay <= entryEnd.getUTCDay();
+          timestampDay >= entryStart.getUTCDay() &&
+          timestampDay <= entryEnd.getUTCDay();
 
         if (isBetweenDays) {
           const entryStartHours = entryStart.getUTCHours();
@@ -77,15 +94,20 @@ export const DevicePreview: Component<{
 
           const isWithinTime =
             (timestampHours > entryStartHours ||
-              (timestampHours === entryStartHours && timestampMinutes >= entryStartMinutes)) &&
+              (timestampHours === entryStartHours &&
+                timestampMinutes >= entryStartMinutes)) &&
             (timestampHours < entryEndHours ||
-              (timestampHours === entryEndHours && timestampMinutes <= entryEndMinutes));
+              (timestampHours === entryEndHours &&
+                timestampMinutes <= entryEndMinutes));
 
           if (isWithinTime) {
             return {
               playlist: entry.playlist_id,
               endTime: entry.end,
-              nextTime: i + 1 < sortedEntries.length ? sortedEntries[i + 1].start : undefined,
+              nextTime:
+                i + 1 < sortedEntries.length
+                  ? sortedEntries[i + 1].start
+                  : undefined,
             };
           }
         }
@@ -149,7 +171,7 @@ export const DevicePreview: Component<{
 
     // Start new initialization
     resourceManagerPromise = (async () => {
-      const storage = new StorageDummy("preview");
+      const storage = new StorageDummy('preview');
       const cache = new Cache(storage);
       const manager = ResourceManager.createResourceManager(cache, {
         baseUrl: props.baseUrl,
@@ -192,20 +214,22 @@ export const DevicePreview: Component<{
   /**
    * Fetch a single playlist by ID
    */
-  const fetchPlaylist = async (playlistId: number): Promise<JsonPlaylist | null> => {
+  const fetchPlaylist = async (
+    playlistId: number
+  ): Promise<JsonPlaylist | null> => {
     try {
       const response = await authFetch(
         `${props.baseUrl}/dashboard/devices/${props.device.id}/playlists/${playlistId}`,
         {
-          method: "GET",
+          method: 'GET',
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
           },
-        },
+        }
       );
 
       if (!response.ok) {
-        throw new Error("Failed to fetch playlist");
+        throw new Error('Failed to fetch playlist');
       }
 
       return await response.json();
@@ -228,7 +252,9 @@ export const DevicePreview: Component<{
    * - Uses Layer.fromPlaylist() to create layers from playlists
    * - Main loop adds layers to queue when needed and cycles through channels
    */
-  const loadPlaylists = async (playlists: { channelName: string; playlistId: number }[]) => {
+  const loadPlaylists = async (
+    playlists: { channelName: string; playlistId: number }[]
+  ) => {
     try {
       // Clean up existing player FIRST before setting up new state
       cleanupPlayer();
@@ -242,23 +268,27 @@ export const DevicePreview: Component<{
 
       // Filter out any failed fetches
       fetchedPlaylists = playlistResults.filter(
-        (p): p is { channelName: string; playlist: JsonPlaylist } => p !== null,
+        (p): p is { channelName: string; playlist: JsonPlaylist } => p !== null
       );
 
       if (fetchedPlaylists.length === 0) {
-        setError(t("devices.preview.errorLoadingPlaylist"));
+        setError(t('devices.preview.errorLoadingPlaylist'));
         return;
       }
 
-      const channelNames = fetchedPlaylists.map((p) => p.channelName).join(", ");
-      const playlistNames = fetchedPlaylists.map((p) => p.playlist.name || "Unnamed").join(", ");
+      const channelNames = fetchedPlaylists
+        .map((p) => p.channelName)
+        .join(', ');
+      const playlistNames = fetchedPlaylists
+        .map((p) => p.playlist.name || 'Unnamed')
+        .join(', ');
 
       setCurrentChannelName(channelNames);
       setCurrentPlaylistName(playlistNames);
 
       if (!playerContainer) {
-        console.error("Player container not available");
-        setError(t("devices.preview.errorLoadingPlaylist"));
+        console.error('Player container not available');
+        setError(t('devices.preview.errorLoadingPlaylist'));
         return;
       }
 
@@ -266,7 +296,7 @@ export const DevicePreview: Component<{
       const manager = await initializeResourceManager();
 
       // Create a content queue (empty playlist) - same as the real device
-      contentQueue = new Playlist("content-queue", manager);
+      contentQueue = new Playlist('content-queue', manager);
 
       // Create renderer and player with the content queue
       const renderer = new Renderer(playerContainer);
@@ -278,8 +308,8 @@ export const DevicePreview: Component<{
       closing = false;
       runMainLoop(manager, newPlayer);
     } catch (err) {
-      console.error("Error loading playlists:", err);
-      setError(t("devices.preview.errorLoadingPlaylist"));
+      console.error('Error loading playlists:', err);
+      setError(t('devices.preview.errorLoadingPlaylist'));
     }
   };
 
@@ -287,17 +317,24 @@ export const DevicePreview: Component<{
    * Main loop that cycles through channels - same as the real device player.
    * Adds content to the queue when it has less than 2 items, cycles through channels.
    */
-  const runMainLoop = async (manager: ResourceManager, currentPlayer: Player) => {
+  const runMainLoop = async (
+    manager: ResourceManager,
+    currentPlayer: Player
+  ) => {
     try {
       while (!closing) {
         // Add next content when queue is running low
-        if (contentQueue && contentQueue.length < 2 && fetchedPlaylists.length > 0) {
+        if (
+          contentQueue &&
+          contentQueue.length < 2 &&
+          fetchedPlaylists.length > 0
+        ) {
           const currentPlaylist = fetchedPlaylists[channelIndex];
 
           // Create a layer from the playlist - same as the real device
           // Use muted: true for browser preview to allow autoplay
           const layer = Layer.fromPlaylist(currentPlaylist.playlist, manager, {
-            target: "poster",
+            target: 'poster',
             muted: true,
           });
 
@@ -310,9 +347,9 @@ export const DevicePreview: Component<{
           // Set up end handler to remove layer from queue - same as the real device
           const onEnd = () => {
             contentQueue?.remove(layer);
-            layer.off("end", onEnd);
+            layer.off('end', onEnd);
           };
-          layer.on("end", onEnd);
+          layer.on('end', onEnd);
 
           // Move to next channel
           channelIndex = (channelIndex + 1) % fetchedPlaylists.length;
@@ -322,7 +359,7 @@ export const DevicePreview: Component<{
         await new Promise((resolve) => setTimeout(resolve, 5000));
       }
     } catch (err) {
-      console.error("Error in preview main loop:", err);
+      console.error('Error in preview main loop:', err);
     }
   };
 
@@ -337,7 +374,7 @@ export const DevicePreview: Component<{
       // Fetch channels assigned to this device
       const channelsResponse = await DevicesService.fetchChannelByDeviceId(
         props.baseUrl,
-        props.device.id,
+        props.device.id
       );
 
       setChannels(channelsResponse.data || []);
@@ -355,12 +392,12 @@ export const DevicePreview: Component<{
           loadPlaylists(activePlaylists);
         });
       } else {
-        setError(t("devices.preview.noScheduledContent"));
+        setError(t('devices.preview.noScheduledContent'));
         setLoading(false);
       }
     } catch (err) {
-      console.error("Error initializing preview:", err);
-      setError(t("devices.preview.errorInitializing"));
+      console.error('Error initializing preview:', err);
+      setError(t('devices.preview.errorInitializing'));
       setLoading(false);
     }
   });
@@ -374,7 +411,7 @@ export const DevicePreview: Component<{
     <div class={styles.devicePreview}>
       <Show when={loading()}>
         <div class={styles.previewLoading}>
-          <p>{t("common.loading")}</p>
+          <p>{t('common.loading')}</p>
         </div>
       </Show>
 
@@ -387,12 +424,13 @@ export const DevicePreview: Component<{
       <Show when={!loading() && !error() && currentPlaylistId()}>
         <div class={styles.previewInfo}>
           <p>
-            <strong>{t("devices.preview.currentlyPlaying")}:</strong> {currentChannelName()}
+            <strong>{t('devices.preview.currentlyPlaying')}:</strong>{' '}
+            {currentChannelName()}
           </p>
           <p>
-            <strong>{t("common.playlist")}:</strong> {currentPlaylistName()}
+            <strong>{t('common.playlist')}:</strong> {currentPlaylistName()}
           </p>
-          <p class={styles.previewNote}>{t("devices.preview.note")}</p>
+          <p class={styles.previewNote}>{t('devices.preview.note')}</p>
         </div>
         <div class={styles.previewContainer} ref={playerContainer}></div>
       </Show>

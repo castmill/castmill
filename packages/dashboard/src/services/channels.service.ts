@@ -1,7 +1,11 @@
-import { JsonPlaylist } from "@castmill/player";
-import { FetchDataOptions, fetchOptionsToQueryString, HttpError } from "@castmill/ui-common";
+import { JsonPlaylist } from '@castmill/player';
+import {
+  FetchDataOptions,
+  fetchOptionsToQueryString,
+  HttpError,
+} from '@castmill/ui-common';
 
-import { authFetch } from "../components/auth";
+import { authFetch } from '../components/auth';
 type HandleResponseOptions = {
   parse?: boolean;
 };
@@ -32,29 +36,32 @@ export interface JsonChannel {
   entries: JsonChannelEntry[];
 }
 
-async function handleResponse<T = any>(response: Response, options: { parse: true }): Promise<T>;
 async function handleResponse<T = any>(
   response: Response,
-  options?: { parse?: false },
+  options: { parse: true }
+): Promise<T>;
+async function handleResponse<T = any>(
+  response: Response,
+  options?: { parse?: false }
 ): Promise<void>;
 async function handleResponse<T = any>(
   response: Response,
-  options: HandleResponseOptions = {},
+  options: HandleResponseOptions = {}
 ): Promise<T | void> {
   if (response.status >= 200 && response.status < 300) {
     if (options.parse) {
       return (await response.json()) as T;
     }
   } else {
-    let errMsg = "";
+    let errMsg = '';
     let errorData: any = null;
     try {
       const { errors } = await response.json();
       errorData = errors;
       // Handle both array errors and object errors with detail
       if (Array.isArray(errors)) {
-        errMsg = errors.join(", ");
-      } else if (typeof errors === "object" && errors.detail) {
+        errMsg = errors.join(', ');
+      } else if (typeof errors === 'object' && errors.detail) {
         errMsg = errors.detail;
       } else {
         errMsg = `${errors.detail || response.statusText}`;
@@ -71,7 +78,7 @@ async function handleResponse<T = any>(
 export class ChannelsService {
   constructor(
     private baseUrl: string,
-    private organizationId: string,
+    private organizationId: string
   ) {}
 
   /**
@@ -84,11 +91,11 @@ export class ChannelsService {
     const response = await authFetch(
       `${this.baseUrl}/dashboard/organizations/${this.organizationId}/playlists?${queryString}`,
       {
-        method: "GET",
+        method: 'GET',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
-      },
+      }
     );
 
     return handleResponse<{ data: JsonPlaylist[]; count: number }>(response, {
@@ -103,11 +110,11 @@ export class ChannelsService {
     const response = await authFetch(
       `${this.baseUrl}/dashboard/organizations/${this.organizationId}/playlists/${playlistId}`,
       {
-        method: "GET",
+        method: 'GET',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
-      },
+      }
     );
 
     return handleResponse<{ data: JsonPlaylist }>(response, { parse: true });
@@ -130,12 +137,12 @@ export class ChannelsService {
     const response = await authFetch(
       `${this.baseUrl}/dashboard/organizations/${this.organizationId}/channels`,
       {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ channel: channelData }),
-      },
+      }
     );
 
     return handleResponse<{ data: JsonChannel }>(response, { parse: true });
@@ -151,8 +158,8 @@ export class ChannelsService {
     const response = await authFetch(
       `${this.baseUrl}/dashboard/organizations/${this.organizationId}/channels?${queryString}`,
       {
-        method: "GET",
-      },
+        method: 'GET',
+      }
     );
 
     return handleResponse<{ data: JsonChannel[]; count: number }>(response, {
@@ -168,7 +175,7 @@ export class ChannelsService {
     page_size: number;
     sortOptions: { key?: string; direction: string };
     tag_ids?: number[];
-    tag_filter_mode?: "any" | "all";
+    tag_filter_mode?: 'any' | 'all';
     team_id?: number | null;
     missing_tag_group_id?: number;
   }) {
@@ -178,25 +185,28 @@ export class ChannelsService {
       direction: options.sortOptions.direction,
     });
     if (options.sortOptions.key) {
-      query.set("key", options.sortOptions.key);
+      query.set('key', options.sortOptions.key);
     }
     if (options.team_id !== undefined && options.team_id !== null) {
-      query.set("team_id", options.team_id.toString());
+      query.set('team_id', options.team_id.toString());
     }
     if (options.tag_ids && options.tag_ids.length > 0) {
-      query.set("tag_ids", options.tag_ids.join(","));
+      query.set('tag_ids', options.tag_ids.join(','));
     }
     if (options.tag_filter_mode) {
-      query.set("tag_filter_mode", options.tag_filter_mode);
+      query.set('tag_filter_mode', options.tag_filter_mode);
     }
     if (options.missing_tag_group_id !== undefined) {
-      query.set("missing_tag_group_id", options.missing_tag_group_id.toString());
+      query.set(
+        'missing_tag_group_id',
+        options.missing_tag_group_id.toString()
+      );
     }
     const response = await authFetch(
       `${this.baseUrl}/dashboard/organizations/${this.organizationId}/channels?${query}`,
       {
-        method: "GET",
-      },
+        method: 'GET',
+      }
     );
     return handleResponse<{ data: JsonChannel[]; count: number }>(response, {
       parse: true,
@@ -207,11 +217,11 @@ export class ChannelsService {
     const response = await authFetch(
       `${this.baseUrl}/dashboard/organizations/${this.organizationId}/channels/${channelId}`,
       {
-        method: "GET",
+        method: 'GET',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
-      },
+      }
     );
 
     const { data } = await handleResponse<{ data: JsonChannel }>(response, {
@@ -220,7 +230,11 @@ export class ChannelsService {
     return data;
   }
 
-  async getChannelEntries(channelId: number, startDate: number, endDate: number) {
+  async getChannelEntries(
+    channelId: number,
+    startDate: number,
+    endDate: number
+  ) {
     const query = new URLSearchParams({
       start_date: Math.round(startDate).toString(),
       end_date: Math.round(endDate).toString(),
@@ -229,11 +243,11 @@ export class ChannelsService {
     const response = await authFetch(
       `${this.baseUrl}/dashboard/organizations/${this.organizationId}/channels/${channelId}/entries?${query}`,
       {
-        method: "GET",
+        method: 'GET',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
-      },
+      }
     );
 
     const entries = await handleResponse<JsonChannelEntry[]>(response, {
@@ -249,12 +263,12 @@ export class ChannelsService {
     const response = await authFetch(
       `${this.baseUrl}/dashboard/organizations/${this.organizationId}/channels/${channelId}/entries`,
       {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(item),
-      },
+      }
     );
 
     const { data } = await handleResponse<{ data: { id: number } }>(response, {
@@ -267,26 +281,30 @@ export class ChannelsService {
     const response = await authFetch(
       `${this.baseUrl}/dashboard/organizations/${this.organizationId}/channels/${channelId}/entries/${entryId}`,
       {
-        method: "DELETE",
+        method: 'DELETE',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
-      },
+      }
     );
 
     return handleResponse(response);
   }
 
-  async updateChannelEntry(channelId: number, entryId: number, update: Record<string, any>) {
+  async updateChannelEntry(
+    channelId: number,
+    entryId: number,
+    update: Record<string, any>
+  ) {
     const response = await authFetch(
       `${this.baseUrl}/dashboard/organizations/${this.organizationId}/channels/${channelId}/entries/${entryId}`,
       {
-        method: "PATCH",
+        method: 'PATCH',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(update),
-      },
+      }
     );
 
     return handleResponse(response);
@@ -297,16 +315,16 @@ export class ChannelsService {
    * Returns the error data if the channel cannot be removed
    */
   async removeChannel(
-    channelId: number,
+    channelId: number
   ): Promise<{ success: boolean; error?: ChannelDeleteError }> {
     const response = await authFetch(
       `${this.baseUrl}/dashboard/organizations/${this.organizationId}/channels/${channelId}`,
       {
-        method: "DELETE",
+        method: 'DELETE',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
-      },
+      }
     );
 
     if (response.status >= 200 && response.status < 300) {
@@ -322,7 +340,7 @@ export class ChannelsService {
         return {
           success: false,
           error: {
-            detail: "Cannot delete channel that is assigned to devices",
+            detail: 'Cannot delete channel that is assigned to devices',
           },
         };
       }
@@ -346,12 +364,12 @@ export class ChannelsService {
     const response = await authFetch(
       `${this.baseUrl}/dashboard/organizations/${this.organizationId}/channels/${channel.id}`,
       {
-        method: "PATCH",
+        method: 'PATCH',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ update: channel }),
-      },
+      }
     );
 
     handleResponse(response);

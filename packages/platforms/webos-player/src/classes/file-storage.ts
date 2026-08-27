@@ -4,11 +4,11 @@ import {
   StorageItem,
   StoreFileReturnValue,
   StoreOptions,
-} from "@castmill/cache";
-import { storage } from "../native";
-import { simpleHash } from "./utils";
+} from '@castmill/cache';
+import { storage } from '../native';
+import { simpleHash } from './utils';
 
-const CACHE_DIR = "castmill-cache";
+const CACHE_DIR = 'castmill-cache';
 
 // The path to use when accessing the local files using the storage api
 const CACHE_PATH = `file://internal/${CACHE_DIR}`;
@@ -46,7 +46,7 @@ export class FileStorage implements StorageIntegration {
       const total = ((await storage.getStorageInfo()).free + used) * 0.5;
       return { used, total };
     } catch (error) {
-      console.error("Failed to get storage info:", error);
+      console.error('Failed to get storage info:', error);
       throw error;
     }
   }
@@ -56,14 +56,17 @@ export class FileStorage implements StorageIntegration {
 
     return files
       .filter((file): file is { name: string; size: number } => !!file.name)
-      .filter(({ name }) => !name.endsWith(".tmp"))
+      .filter(({ name }) => !name.endsWith('.tmp'))
       .map((file) => ({
         url: getExternalUrl(file.name),
         size: file.size ?? 0,
       }));
   }
 
-  async storeFile(url: string, opts?: StoreOptions): Promise<StoreFileReturnValue> {
+  async storeFile(
+    url: string,
+    opts?: StoreOptions
+  ): Promise<StoreFileReturnValue> {
     try {
       const filename = getFileName(url);
 
@@ -83,7 +86,7 @@ export class FileStorage implements StorageIntegration {
         // Atomically rename the file to its final name
         await storage.moveFile({ oldPath: tempPath, newPath: filePath });
       } catch (error) {
-        console.error("Failed to store file:", error);
+        console.error('Failed to store file:', error);
 
         // Delete the temporary file if it exists
         await storage.removeFile({ file: tempPath });
@@ -93,7 +96,7 @@ export class FileStorage implements StorageIntegration {
       const stats = await storage.statFile({ path: filePath });
 
       return {
-        result: { code: "SUCCESS" },
+        result: { code: 'SUCCESS' },
         item: {
           url: externalUrl,
           size: stats.size,
@@ -101,10 +104,10 @@ export class FileStorage implements StorageIntegration {
       };
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      console.error("Failed to store file:", error);
-      const errMsg = error?.message ?? "Unknown Error";
+      console.error('Failed to store file:', error);
+      const errMsg = error?.message ?? 'Unknown Error';
       return {
-        result: { code: "FAILURE", errMsg },
+        result: { code: 'FAILURE', errMsg },
       };
     }
   }
@@ -118,7 +121,7 @@ export class FileStorage implements StorageIntegration {
       await storage.statFile({ path: filePath }); // Check if file exists
       return filePath;
     } catch (error) {
-      console.error("Failed to retrieve file:", error);
+      console.error('Failed to retrieve file:', error);
       return undefined; // File does not exist
     }
   }
@@ -136,12 +139,12 @@ export class FileStorage implements StorageIntegration {
       });
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      if (error.errorCode === "IO_ERROR") {
+      if (error.errorCode === 'IO_ERROR') {
         // File does not exist, nothing to delete
-        console.warn("File does not exist:", filePath);
+        console.warn('File does not exist:', filePath);
         return;
       }
-      console.error("Failed to delete file:", error);
+      console.error('Failed to delete file:', error);
       throw error;
     }
   }
@@ -169,7 +172,7 @@ export class FileStorage implements StorageIntegration {
 function getFileName(url: string): string {
   const pathName = new URL(url).pathname;
 
-  const [, extension] = pathName.split(".");
+  const [, extension] = pathName.split('.');
 
   const hash = simpleHash(pathName);
   // if extension is present, append it to the hash otherwise, just return the hash
@@ -190,10 +193,10 @@ function getFileName(url: string): string {
  */
 function getLocalPath(url: string): string {
   if (url.startsWith(EXTERNAL_PATH)) {
-    const pathName = new URL(url).pathname.split("/").pop() ?? "";
+    const pathName = new URL(url).pathname.split('/').pop() ?? '';
 
     return getLocalUrl(pathName);
-  } else if (url.startsWith("http")) {
+  } else if (url.startsWith('http')) {
     const filename = getFileName(url);
     return getLocalUrl(filename);
   } else if (url.startsWith(CACHE_PATH)) {
@@ -215,5 +218,5 @@ function mapLocalhostUrl(url: string): string {
     return url;
   }
 
-  return url.replace("localhost", fileHost);
+  return url.replace('localhost', fileHost);
 }

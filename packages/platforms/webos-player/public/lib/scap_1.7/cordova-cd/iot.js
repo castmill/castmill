@@ -1,19 +1,19 @@
-cordova.define("cordova/plugin/iot", function (f, e, g) {
+cordova.define('cordova/plugin/iot', function (f, e, g) {
   var c;
   function h(i) {}
   if (window.PalmSystem) {
-    h("Window.PalmSystem Available");
-    c = f("cordova/plugin/webos/service");
+    h('Window.PalmSystem Available');
+    c = f('cordova/plugin/webos/service');
   } else {
-    h("Window.PalmSystem is NOT Available");
+    h('Window.PalmSystem is NOT Available');
     c = {
       Request: function (i, j) {
-        h(i + " invoked. But I am a dummy because PalmSystem is not available");
-        if (typeof j.onFailure === "function") {
+        h(i + ' invoked. But I am a dummy because PalmSystem is not available');
+        if (typeof j.onFailure === 'function') {
           j.onFailure({
             returnValue: false,
-            errorCode: "CORDOVA_ERR",
-            errorText: "PalmSystem Not Available. Cordova is not installed?",
+            errorCode: 'CORDOVA_ERR',
+            errorText: 'PalmSystem Not Available. Cordova is not installed?',
           });
         }
       },
@@ -29,10 +29,10 @@ cordova.define("cordova/plugin/iot", function (f, e, g) {
     }
   }
   function a(m, l) {
-    var k = "";
+    var k = '';
     var j = m;
-    var i = document.createEvent("HTMLEvents");
-    console.log("event Log created : " + i);
+    var i = document.createEvent('HTMLEvents');
+    console.log('event Log created : ' + i);
     i.initEvent(j, true, false);
     for (k in l) {
       if (l.hasOwnProperty(k)) {
@@ -42,305 +42,305 @@ cordova.define("cordova/plugin/iot", function (f, e, g) {
     document.dispatchEvent(i);
   }
   b.prototype.getFrameworkStatus = function (i, j) {
-    h("getFrameworkStatus Start");
-    c.Request("luna://com.webos.service.commercial.scapadapter/iot", {
-      method: "getFrameworkStatus",
+    h('getFrameworkStatus Start');
+    c.Request('luna://com.webos.service.commercial.scapadapter/iot', {
+      method: 'getFrameworkStatus',
       onSuccess: function (k) {
-        h("getFrameworkStatus: On Success");
+        h('getFrameworkStatus: On Success');
         delete k.returnValue;
-        if (typeof i === "function") {
+        if (typeof i === 'function') {
           i(k);
         }
       },
       onFailure: function (k) {
-        h("getFrameworkStatus: On Failure");
+        h('getFrameworkStatus: On Failure');
         delete k.returnValue;
-        if (typeof j === "function") {
-          d(k, "IGFS", "Iot.getFrameworkStatus returns failure.");
+        if (typeof j === 'function') {
+          d(k, 'IGFS', 'Iot.getFrameworkStatus returns failure.');
           j(k);
         }
       },
     });
-    h("getFrameworkStatus Done");
+    h('getFrameworkStatus Done');
   };
   b.prototype.getBindingIdList = function (i, j) {
-    h("getBindingIdList Start");
-    c.Request("luna://com.webos.service.commercial.scapadapter/iot", {
-      method: "getBindingIdList",
+    h('getBindingIdList Start');
+    c.Request('luna://com.webos.service.commercial.scapadapter/iot', {
+      method: 'getBindingIdList',
       onSuccess: function (k) {
-        h("getBindingIdList: On Success");
+        h('getBindingIdList: On Success');
         delete k.returnValue;
-        if (typeof i === "function") {
+        if (typeof i === 'function') {
           i(k);
         }
       },
       onFailure: function (k) {
-        h("getBindingIdList: On Failure");
+        h('getBindingIdList: On Failure');
         delete k.returnValue;
-        if (typeof j === "function") {
-          d(k, "IGBIL", "Iot.getBindingIdList returns failure.");
+        if (typeof j === 'function') {
+          d(k, 'IGBIL', 'Iot.getBindingIdList returns failure.');
           j(k);
         }
       },
     });
-    h("getBindingIdList Done");
+    h('getBindingIdList Done');
   };
   b.prototype.getVersions = function (i, j) {
-    h("getVersions Start");
-    c.Request("luna://com.webos.service.commercial.scapadapter/iot", {
-      method: "getVersions",
+    h('getVersions Start');
+    c.Request('luna://com.webos.service.commercial.scapadapter/iot', {
+      method: 'getVersions',
       onSuccess: function (k) {
-        h("getVersions: On Success");
+        h('getVersions: On Success');
         delete k.returnValue;
-        if (typeof i === "function") {
+        if (typeof i === 'function') {
           i(k);
         }
       },
       onFailure: function (k) {
-        h("getVersions: On Failure");
+        h('getVersions: On Failure');
         delete k.returnValue;
-        if (typeof j === "function") {
-          d(k, "IGV", "Iot.getVersions returns failure.");
+        if (typeof j === 'function') {
+          d(k, 'IGV', 'Iot.getVersions returns failure.');
           j(k);
         }
       },
     });
-    h("getVersions Done");
+    h('getVersions Done');
   };
   b.prototype.getBridgeStatus = function (i, j, k) {
-    h("getBridgeStatus Start" + JSON.stringify(k));
-    c.Request("luna://com.webos.service.commercial.scapadapter/iot", {
-      method: "getBridgeStatus",
+    h('getBridgeStatus Start' + JSON.stringify(k));
+    c.Request('luna://com.webos.service.commercial.scapadapter/iot', {
+      method: 'getBridgeStatus',
       parameters: { bridgeUid: k.bridgeUid },
       onSuccess: function (l) {
-        h("getBridgeStatus: On Success");
+        h('getBridgeStatus: On Success');
         delete l.returnValue;
-        if (typeof i === "function") {
+        if (typeof i === 'function') {
           i(l);
         }
       },
       onFailure: function (l) {
-        h("getBridgeStatus: On SucFailurecess");
+        h('getBridgeStatus: On SucFailurecess');
         delete l.returnValue;
-        if (typeof j === "function") {
-          d(l, "IGBS", "Iot.getBridgeStatus returns failure.");
+        if (typeof j === 'function') {
+          d(l, 'IGBS', 'Iot.getBridgeStatus returns failure.');
           j(l);
         }
       },
     });
-    h("getBridgeStatus Done");
+    h('getBridgeStatus Done');
   };
   b.prototype.requestRegisterThing = function (i, j, k) {
-    h("requestRegisterThing Start" + JSON.stringify(k));
-    c.Request("luna://com.webos.service.commercial.scapadapter/iot", {
-      method: "requestRegisterThing",
+    h('requestRegisterThing Start' + JSON.stringify(k));
+    c.Request('luna://com.webos.service.commercial.scapadapter/iot', {
+      method: 'requestRegisterThing',
       parameters: { thingUid: k.thingUid },
       onSuccess: function (l) {
-        h("requestRegisterThing: On Success");
+        h('requestRegisterThing: On Success');
         delete l.returnValue;
-        if (typeof i === "function") {
+        if (typeof i === 'function') {
           i();
         }
       },
       onFailure: function (l) {
-        h("requestRegisterThing: On Failure");
+        h('requestRegisterThing: On Failure');
         delete l.returnValue;
-        if (typeof j === "function") {
-          d(l, "IRRT", "Iot.requestRegisterThing returns failure.");
+        if (typeof j === 'function') {
+          d(l, 'IRRT', 'Iot.requestRegisterThing returns failure.');
           j(l);
         }
       },
     });
-    h("requestRegisterThing Done");
+    h('requestRegisterThing Done');
   };
   b.prototype.requestRejectThing = function (i, j, k) {
-    h("requestRejectThing Start" + JSON.stringify(k));
-    c.Request("luna://com.webos.service.commercial.scapadapter/iot", {
-      method: "requestRejectThing",
+    h('requestRejectThing Start' + JSON.stringify(k));
+    c.Request('luna://com.webos.service.commercial.scapadapter/iot', {
+      method: 'requestRejectThing',
       parameters: { thingUid: k.thingUid },
       onSuccess: function (l) {
-        h("requestRejectThing: On Success");
+        h('requestRejectThing: On Success');
         delete l.returnValue;
-        if (typeof i === "function") {
+        if (typeof i === 'function') {
           i();
         }
       },
       onFailure: function (l) {
-        h("requestRejectThing: On Failure");
+        h('requestRejectThing: On Failure');
         delete l.returnValue;
-        if (typeof j === "function") {
-          d(l, "IRRET", "Iot.requestRejectThing returns failure.");
+        if (typeof j === 'function') {
+          d(l, 'IRRET', 'Iot.requestRejectThing returns failure.');
           j(l);
         }
       },
     });
-    h("requestRejectThing Done");
+    h('requestRejectThing Done');
   };
   b.prototype.requestUnregisterThing = function (i, j, k) {
-    h("requestUnregisterThing Start" + JSON.stringify(k));
-    c.Request("luna://com.webos.service.commercial.scapadapter/iot", {
-      method: "requestUnregisterThing",
+    h('requestUnregisterThing Start' + JSON.stringify(k));
+    c.Request('luna://com.webos.service.commercial.scapadapter/iot', {
+      method: 'requestUnregisterThing',
       parameters: { thingUid: k.thingUid },
       onSuccess: function (l) {
-        h("requestUnregisterThing: On Success");
+        h('requestUnregisterThing: On Success');
         delete l.returnValue;
-        if (typeof i === "function") {
+        if (typeof i === 'function') {
           i();
         }
       },
       onFailure: function (l) {
-        h("requestUnregisterThing: On Failure");
+        h('requestUnregisterThing: On Failure');
         delete l.returnValue;
-        if (typeof j === "function") {
-          d(l, "IRUT", "Iot.requestUnregisterThing returns failure.");
+        if (typeof j === 'function') {
+          d(l, 'IRUT', 'Iot.requestUnregisterThing returns failure.');
           j(l);
         }
       },
     });
-    h("requestUnregisterThing Done");
+    h('requestUnregisterThing Done');
   };
   b.prototype.requestSetBridgeStatus = function (i, j, k) {
-    h("requestSetBridgeStatus Start" + JSON.stringify(k));
-    c.Request("luna://com.webos.service.commercial.scapadapter/iot", {
-      method: "requestSetBridgeStatus",
+    h('requestSetBridgeStatus Start' + JSON.stringify(k));
+    c.Request('luna://com.webos.service.commercial.scapadapter/iot', {
+      method: 'requestSetBridgeStatus',
       parameters: { bridgeUid: k.bridgeUid, status: k.status },
       onSuccess: function (l) {
-        h("requestSetBridgeStatus: On Success");
+        h('requestSetBridgeStatus: On Success');
         delete l.returnValue;
-        if (typeof i === "function") {
+        if (typeof i === 'function') {
           i();
         }
       },
       onFailure: function (l) {
-        h("requestSetBridgeStatus: On Failure");
+        h('requestSetBridgeStatus: On Failure');
         delete l.returnValue;
-        if (typeof j === "function") {
-          d(l, "IRSBS", "Iot.requestSetBridgeStatus returns failure.");
+        if (typeof j === 'function') {
+          d(l, 'IRSBS', 'Iot.requestSetBridgeStatus returns failure.');
           j(l);
         }
       },
     });
-    h("requestSetBridgeStatus Done");
+    h('requestSetBridgeStatus Done');
   };
   b.prototype.requestSynchronizeThing = function (i, j, k) {
-    h("requestSynchronizeThing Start" + JSON.stringify(k));
-    c.Request("luna://com.webos.service.commercial.scapadapter/iot", {
-      method: "requestSynchronizeThing",
+    h('requestSynchronizeThing Start' + JSON.stringify(k));
+    c.Request('luna://com.webos.service.commercial.scapadapter/iot', {
+      method: 'requestSynchronizeThing',
       parameters: { thingUid: k.thingUid, componentId: k.componentId },
       onSuccess: function (l) {
-        h("requestSynchronizeThing: On Success");
+        h('requestSynchronizeThing: On Success');
         delete l.returnValue;
-        if (typeof i === "function") {
+        if (typeof i === 'function') {
           i();
         }
       },
       onFailure: function (l) {
-        h("requestSynchronizeThing: On Failure");
+        h('requestSynchronizeThing: On Failure');
         delete l.returnValue;
-        if (typeof j === "function") {
-          d(l, "IRST", "Iot.requestSynchronizeThing returns failure.");
+        if (typeof j === 'function') {
+          d(l, 'IRST', 'Iot.requestSynchronizeThing returns failure.');
           j(l);
         }
       },
     });
-    h("requestSynchronizeThing Done");
+    h('requestSynchronizeThing Done');
   };
   b.prototype.setThingNickname = function (i, j, k) {
-    h("setThingNickname Start" + JSON.stringify(k));
-    c.Request("luna://com.webos.service.commercial.scapadapter/iot", {
-      method: "setThingNickname",
+    h('setThingNickname Start' + JSON.stringify(k));
+    c.Request('luna://com.webos.service.commercial.scapadapter/iot', {
+      method: 'setThingNickname',
       parameters: { thingUid: k.thingUid, nickname: k.nickname },
       onSuccess: function (l) {
-        h("setThingNickname: On Success");
+        h('setThingNickname: On Success');
         delete l.returnValue;
-        if (typeof i === "function") {
+        if (typeof i === 'function') {
           i();
         }
       },
       onFailure: function (l) {
-        h("setThingNickname: On Failure");
+        h('setThingNickname: On Failure');
         delete l.returnValue;
-        if (typeof j === "function") {
-          d(l, "IRST", "Iot.setThingNickname returns failure.");
+        if (typeof j === 'function') {
+          d(l, 'IRST', 'Iot.setThingNickname returns failure.');
           j(l);
         }
       },
     });
-    h("setThingNickname Done");
+    h('setThingNickname Done');
   };
   b.prototype.getThingList = function (i, j, k) {
-    h("getThingList Start" + JSON.stringify(k));
-    c.Request("luna://com.webos.service.commercial.scapadapter/iot", {
-      method: "getThingList",
+    h('getThingList Start' + JSON.stringify(k));
+    c.Request('luna://com.webos.service.commercial.scapadapter/iot', {
+      method: 'getThingList',
       parameters: { thingUidList: k.thingUidList, thingType: k.thingType },
       onSuccess: function (l) {
-        h("getThingList: On Success");
+        h('getThingList: On Success');
         delete l.returnValue;
-        if (typeof i === "function") {
+        if (typeof i === 'function') {
           i(l);
         }
       },
       onFailure: function (l) {
-        h("getThingList: On Failure");
+        h('getThingList: On Failure');
         delete l.returnValue;
-        if (typeof j === "function") {
-          d(l, "IGTL", "Iot.getThingList returns failure.");
+        if (typeof j === 'function') {
+          d(l, 'IGTL', 'Iot.getThingList returns failure.');
           j(l);
         }
       },
     });
-    h("getThingList Done");
+    h('getThingList Done');
   };
   b.prototype.getThingListPrivate = function (i, j, k) {
-    h("getThingListPrivate Start" + JSON.stringify(k));
-    c.Request("luna://com.webos.service.commercial.scapadapter/iot", {
-      method: "getThingListPrivate",
+    h('getThingListPrivate Start' + JSON.stringify(k));
+    c.Request('luna://com.webos.service.commercial.scapadapter/iot', {
+      method: 'getThingListPrivate',
       parameters: { thingUidList: k.thingUidList, thingType: k.thingType },
       onSuccess: function (l) {
-        h("getThingListPrivate: On Success");
+        h('getThingListPrivate: On Success');
         delete l.returnValue;
-        if (typeof i === "function") {
+        if (typeof i === 'function') {
           i(l);
         }
       },
       onFailure: function (l) {
-        h("getThingListPrivate: On Failure");
+        h('getThingListPrivate: On Failure');
         delete l.returnValue;
-        if (typeof j === "function") {
-          d(l, "IGTLP", "Iot.getThingListPrivate returns failure.");
+        if (typeof j === 'function') {
+          d(l, 'IGTLP', 'Iot.getThingListPrivate returns failure.');
           j(l);
         }
       },
     });
-    h("getThingListPrivate Done");
+    h('getThingListPrivate Done');
   };
   b.prototype.requestFactoryReset = function (i, j, k) {
-    h("requestFactoryReset Start" + JSON.stringify(k));
-    c.Request("luna://com.webos.service.commercial.scapadapter/iot", {
-      method: "requestFactoryReset",
+    h('requestFactoryReset Start' + JSON.stringify(k));
+    c.Request('luna://com.webos.service.commercial.scapadapter/iot', {
+      method: 'requestFactoryReset',
       parameters: { bindingIdList: k.bindingIdList },
       onSuccess: function (l) {
-        h("requestFactoryReset: On Success");
+        h('requestFactoryReset: On Success');
         delete l.returnValue;
-        if (typeof i === "function") {
+        if (typeof i === 'function') {
           i();
         }
       },
       onFailure: function (l) {
-        h("requestFactoryReset: On Failure");
+        h('requestFactoryReset: On Failure');
         delete l.returnValue;
-        if (typeof j === "function") {
-          d(l, "IRFR", "Iot.requestFactoryReset returns failure.");
+        if (typeof j === 'function') {
+          d(l, 'IRFR', 'Iot.requestFactoryReset returns failure.');
           j(l);
         }
       },
     });
-    h("requestFactoryReset Done");
+    h('requestFactoryReset Done');
   };
   b.prototype.requestSetComponent = function (i, j, k) {
-    h("requestSetComponent Start" + JSON.stringify(k));
-    c.Request("luna://com.webos.service.commercial.scapadapter/iot", {
-      method: "requestSetComponent",
+    h('requestSetComponent Start' + JSON.stringify(k));
+    c.Request('luna://com.webos.service.commercial.scapadapter/iot', {
+      method: 'requestSetComponent',
       parameters: {
         thingUid: k.thingUid,
         componentId: k.componentId,
@@ -348,30 +348,30 @@ cordova.define("cordova/plugin/iot", function (f, e, g) {
         callId: k.callId,
       },
       onSuccess: function (l) {
-        h("requestSetComponent: On Success");
+        h('requestSetComponent: On Success');
         delete l.returnValue;
-        if (typeof i === "function") {
+        if (typeof i === 'function') {
           i();
         }
       },
       onFailure: function (l) {
-        h("requestSetComponent: On Failure");
+        h('requestSetComponent: On Failure');
         delete l.returnValue;
-        if (typeof j === "function") {
-          d(l, "IRFR", "Iot.requestSetComponent returns failure.");
+        if (typeof j === 'function') {
+          d(l, 'IRFR', 'Iot.requestSetComponent returns failure.');
           j(l);
         }
       },
     });
-    h("requestSetComponent Done");
+    h('requestSetComponent Done');
   };
   b.prototype.subscribeIoTEvent = function (i, j, k) {
-    h("subscribeIoTEvent Start");
-    c.Request("luna://com.webos.service.commercial.scapadapter/iot", {
-      method: "subscribeIoTEvent",
+    h('subscribeIoTEvent Start');
+    c.Request('luna://com.webos.service.commercial.scapadapter/iot', {
+      method: 'subscribeIoTEvent',
       parameters: { subscribe: k.subscribe },
       onSuccess: function (l) {
-        h("subscribeIoTEvent: On Success");
+        h('subscribeIoTEvent: On Success');
         delete l.returnValue;
         if (l.subscribed) {
           i(l);
@@ -382,16 +382,16 @@ cordova.define("cordova/plugin/iot", function (f, e, g) {
         }
       },
       onFailure: function (l) {
-        h("subscribeIoTEvent: On Failure");
+        h('subscribeIoTEvent: On Failure');
         delete l.returnValue;
-        if (typeof j === "function") {
-          d(l, "IGBIL", "Iot.subscribeIoTEvent returns failure.");
+        if (typeof j === 'function') {
+          d(l, 'IGBIL', 'Iot.subscribeIoTEvent returns failure.');
           j(l);
         }
       },
     });
-    h("subscribeIoTEvent Done");
+    h('subscribeIoTEvent Done');
   };
   g.exports = b;
 });
-Iot = cordova.require("cordova/plugin/iot");
+Iot = cordova.require('cordova/plugin/iot');

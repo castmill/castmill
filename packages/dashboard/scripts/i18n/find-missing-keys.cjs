@@ -14,34 +14,37 @@
  * - Typos or incorrect translation key references
  */
 
-const fs = require("fs");
-const path = require("path");
+const fs = require('fs');
+const path = require('path');
 
 // ANSI color codes
 const colors = {
-  reset: "\x1b[0m",
-  red: "\x1b[31m",
-  yellow: "\x1b[33m",
-  green: "\x1b[32m",
-  blue: "\x1b[34m",
-  cyan: "\x1b[36m",
-  gray: "\x1b[90m",
-  bold: "\x1b[1m",
+  reset: '\x1b[0m',
+  red: '\x1b[31m',
+  yellow: '\x1b[33m',
+  green: '\x1b[32m',
+  blue: '\x1b[34m',
+  cyan: '\x1b[36m',
+  gray: '\x1b[90m',
+  bold: '\x1b[1m',
 };
 
-const LOCALES_DIR = path.join(__dirname, "../../src/i18n/locales");
-const SRC_DIR = path.join(__dirname, "../../src");
+const LOCALES_DIR = path.join(__dirname, '../../src/i18n/locales');
+const SRC_DIR = path.join(__dirname, '../../src');
 
 /**
  * Load English translation file
  */
 function loadEnglishTranslations() {
-  const filePath = path.join(LOCALES_DIR, "en.json");
+  const filePath = path.join(LOCALES_DIR, 'en.json');
   try {
-    const content = fs.readFileSync(filePath, "utf8");
+    const content = fs.readFileSync(filePath, 'utf8');
     return JSON.parse(content);
   } catch (error) {
-    console.error(`${colors.red}Error loading en.json:${colors.reset}`, error.message);
+    console.error(
+      `${colors.red}Error loading en.json:${colors.reset}`,
+      error.message
+    );
     process.exit(1);
   }
 }
@@ -49,13 +52,13 @@ function loadEnglishTranslations() {
 /**
  * Flatten nested JSON object into dot-notation keys
  */
-function flattenObject(obj, prefix = "") {
+function flattenObject(obj, prefix = '') {
   const flattened = {};
 
   for (const [key, value] of Object.entries(obj)) {
     const fullKey = prefix ? `${prefix}.${key}` : key;
 
-    if (value !== null && typeof value === "object" && !Array.isArray(value)) {
+    if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
       Object.assign(flattened, flattenObject(value, fullKey));
     } else {
       flattened[fullKey] = value;
@@ -80,7 +83,7 @@ function extractKeysFromCode() {
 
       if (entry.isDirectory()) {
         // Skip node_modules and other build directories
-        if (!["node_modules", "dist", "build", ".next"].includes(entry.name)) {
+        if (!['node_modules', 'dist', 'build', '.next'].includes(entry.name)) {
           scanDirectory(fullPath);
         }
       } else if (entry.isFile() && /\.(ts|tsx)$/.test(entry.name)) {
@@ -94,14 +97,14 @@ function extractKeysFromCode() {
 
   function scanFile(filePath) {
     try {
-      const content = fs.readFileSync(filePath, "utf8");
+      const content = fs.readFileSync(filePath, 'utf8');
 
       // Remove comments before scanning
       const withoutComments = content
         // Remove single-line comments
-        .replace(/\/\/.*$/gm, "")
+        .replace(/\/\/.*$/gm, '')
         // Remove multi-line comments
-        .replace(/\/\*[\s\S]*?\*\//g, "");
+        .replace(/\/\*[\s\S]*?\*\//g, '');
 
       // Match patterns: t('key'), t("key"), tp('key'), tp("key")
       // Also handle multiline and template strings
@@ -117,14 +120,16 @@ function extractKeysFromCode() {
         while ((match = pattern.exec(withoutComments)) !== null) {
           const key = match[1];
           // Ignore keys with template literals ${...}
-          if (!key.includes("${") && !key.includes("`")) {
+          if (!key.includes('${') && !key.includes('`')) {
             keys.add(key);
           }
         }
       }
     } catch (error) {
       // Skip files that can't be read
-      console.error(`${colors.gray}Warning: Could not read ${filePath}${colors.reset}`);
+      console.error(
+        `${colors.gray}Warning: Could not read ${filePath}${colors.reset}`
+      );
     }
   }
 
@@ -139,7 +144,7 @@ function groupByNamespace(keys) {
   const grouped = {};
 
   for (const key of keys) {
-    const namespace = key.split(".")[0];
+    const namespace = key.split('.')[0];
     if (!grouped[namespace]) {
       grouped[namespace] = [];
     }
@@ -153,7 +158,9 @@ function groupByNamespace(keys) {
  * Main execution
  */
 function main() {
-  console.log(`${colors.cyan}${colors.bold}Finding Missing Translation Keys${colors.reset}`);
+  console.log(
+    `${colors.cyan}${colors.bold}Finding Missing Translation Keys${colors.reset}`
+  );
   console.log(`Scanning source code for translation key usage...\n`);
 
   // Load English translations
@@ -161,11 +168,15 @@ function main() {
   const englishKeys = flattenObject(englishData);
   const englishKeySet = new Set(Object.keys(englishKeys));
 
-  console.log(`${colors.blue}English translation keys:${colors.reset} ${englishKeySet.size}`);
+  console.log(
+    `${colors.blue}English translation keys:${colors.reset} ${englishKeySet.size}`
+  );
 
   // Extract keys used in code
   const usedKeys = extractKeysFromCode();
-  console.log(`${colors.blue}Translation keys found in code:${colors.reset} ${usedKeys.size}\n`);
+  console.log(
+    `${colors.blue}Translation keys found in code:${colors.reset} ${usedKeys.size}\n`
+  );
 
   // Find missing keys (used in code but not in en.json)
   const missingKeys = [];
@@ -187,57 +198,71 @@ function main() {
   if (missingKeys.length > 0) {
     const grouped = groupByNamespace(missingKeys);
     console.log(
-      `${colors.red}${colors.bold}MISSING KEYS (used in code but not in en.json):${colors.reset}`,
+      `${colors.red}${colors.bold}MISSING KEYS (used in code but not in en.json):${colors.reset}`
     );
     console.log(`${colors.red}Total: ${missingKeys.length}${colors.reset}\n`);
 
     for (const [namespace, keys] of Object.entries(grouped)) {
-      console.log(`${colors.bold}${namespace}${colors.reset} (${keys.length} missing):`);
+      console.log(
+        `${colors.bold}${namespace}${colors.reset} (${keys.length} missing):`
+      );
       for (const key of keys.sort()) {
-        console.log(`  ${colors.red}✗${colors.reset} ${colors.gray}${key}${colors.reset}`);
+        console.log(
+          `  ${colors.red}✗${colors.reset} ${colors.gray}${key}${colors.reset}`
+        );
       }
-      console.log("");
+      console.log('');
     }
   } else {
-    console.log(`${colors.green}✓ All keys used in code exist in en.json${colors.reset}\n`);
+    console.log(
+      `${colors.green}✓ All keys used in code exist in en.json${colors.reset}\n`
+    );
   }
 
   // Report unused keys (optional, for cleanup)
   if (unusedKeys.length > 0) {
     console.log(
-      `${colors.yellow}${colors.bold}POTENTIALLY UNUSED KEYS (in en.json but not found in code):${colors.reset}`,
+      `${colors.yellow}${colors.bold}POTENTIALLY UNUSED KEYS (in en.json but not found in code):${colors.reset}`
     );
     console.log(
-      `${colors.yellow}Note: These might be used in addons or dynamically constructed keys${colors.reset}`,
+      `${colors.yellow}Note: These might be used in addons or dynamically constructed keys${colors.reset}`
     );
     console.log(`${colors.yellow}Total: ${unusedKeys.length}${colors.reset}\n`);
 
     if (unusedKeys.length <= 20) {
       const grouped = groupByNamespace(unusedKeys);
       for (const [namespace, keys] of Object.entries(grouped)) {
-        console.log(`${colors.bold}${namespace}${colors.reset} (${keys.length} unused):`);
+        console.log(
+          `${colors.bold}${namespace}${colors.reset} (${keys.length} unused):`
+        );
         for (const key of keys.sort().slice(0, 10)) {
-          console.log(`  ${colors.yellow}⚠${colors.reset} ${colors.gray}${key}${colors.reset}`);
+          console.log(
+            `  ${colors.yellow}⚠${colors.reset} ${colors.gray}${key}${colors.reset}`
+          );
         }
         if (keys.length > 10) {
-          console.log(`  ${colors.gray}... and ${keys.length - 10} more${colors.reset}`);
+          console.log(
+            `  ${colors.gray}... and ${keys.length - 10} more${colors.reset}`
+          );
         }
-        console.log("");
+        console.log('');
       }
     } else {
-      console.log(`  ${colors.gray}Run with --verbose to see all unused keys${colors.reset}\n`);
+      console.log(
+        `  ${colors.gray}Run with --verbose to see all unused keys${colors.reset}\n`
+      );
     }
   }
 
   // Exit with error if missing keys found
   if (missingKeys.length > 0) {
     console.log(
-      `${colors.red}${colors.bold}❌ Found ${missingKeys.length} missing translation key(s)${colors.reset}\n`,
+      `${colors.red}${colors.bold}❌ Found ${missingKeys.length} missing translation key(s)${colors.reset}\n`
     );
     process.exit(1);
   } else {
     console.log(
-      `${colors.green}${colors.bold}✅ No missing translation keys found${colors.reset}\n`,
+      `${colors.green}${colors.bold}✅ No missing translation keys found${colors.reset}\n`
     );
     process.exit(0);
   }

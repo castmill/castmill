@@ -1,10 +1,10 @@
 /** @jsxImportSource solid-js */
 
-import { Component, For } from "solid-js";
-import { Portal } from "solid-js/web";
-import { Toast, ToastProps } from "./toast";
+import { Component, For } from 'solid-js';
+import { Portal } from 'solid-js/web';
+import { Toast, ToastProps } from './toast';
 
-import styles from "./toast-container.module.scss";
+import styles from './toast-container.module.scss';
 
 export interface ToastContainerProps {
   toasts: ToastProps[];

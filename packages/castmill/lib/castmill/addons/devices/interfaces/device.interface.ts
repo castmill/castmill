@@ -11,5 +11,5 @@ export interface Device {
   inserted_at: Date;
   updated_at: Date;
   autorecover_until?: string | null;
-  log_level: "info" | "warning" | "error" | "debug" | "critical" | "trace";
+  log_level: 'info' | 'warning' | 'error' | 'debug' | 'critical' | 'trace';
 }

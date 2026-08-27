@@ -250,7 +250,10 @@
                       "type": "text",
                       "name": "story-source",
                       "opts": {
-                        "text": { "key": "$.source", "default": "ycombinator.com" }
+                        "text": {
+                          "key": "$.source",
+                          "default": "ycombinator.com"
+                        }
                       },
                       "style": {
                         "font-size": "1.6vh",

@@ -1,5 +1,5 @@
-import { defineConfig } from "vitest/config";
-import solidPlugin from "vite-plugin-solid";
+import { defineConfig } from 'vitest/config';
+import solidPlugin from 'vite-plugin-solid';
 
 export default defineConfig({
   plugins: [solidPlugin()],
@@ -7,11 +7,11 @@ export default defineConfig({
     port: 3000,
   },
   build: {
-    target: "esnext",
+    target: 'esnext',
   },
   test: {
-    environment: "jsdom",
+    environment: 'jsdom',
     globals: true,
-    testTransformMode: { web: ["/.[jt]sx?$/"] },
+    testTransformMode: { web: ['/.[jt]sx?$/'] },
   },
 });

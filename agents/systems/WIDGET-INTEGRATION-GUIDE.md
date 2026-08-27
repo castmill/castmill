@@ -206,8 +206,8 @@ Create configuration components in the dashboard addon:
 ```tsx
 // packages/castmill/lib/castmill/addons/widgets/components/weather-integration-config.tsx
 
-import { Component, createSignal } from "solid-js";
-import { useI18n } from "../../../dashboard/src/i18n";
+import { Component, createSignal } from 'solid-js';
+import { useI18n } from '../../../dashboard/src/i18n';
 
 interface IntegrationConfigProps {
   integration: any;
@@ -215,9 +215,11 @@ interface IntegrationConfigProps {
   onSave: (credentials: any) => Promise<void>;
 }
 
-export const WeatherIntegrationConfig: Component<IntegrationConfigProps> = (props) => {
+export const WeatherIntegrationConfig: Component<IntegrationConfigProps> = (
+  props
+) => {
   const { t } = useI18n();
-  const [apiKey, setApiKey] = createSignal(props.credentials?.api_key || "");
+  const [apiKey, setApiKey] = createSignal(props.credentials?.api_key || '');
   const [saving, setSaving] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
 
@@ -228,7 +230,7 @@ export const WeatherIntegrationConfig: Component<IntegrationConfigProps> = (prop
     try {
       await props.onSave({ api_key: apiKey() });
     } catch (err) {
-      setError(t("integrations.errors.saveFailed"));
+      setError(t('integrations.errors.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -236,25 +238,25 @@ export const WeatherIntegrationConfig: Component<IntegrationConfigProps> = (prop
 
   return (
     <div class="integration-config">
-      <h3>{t("integrations.openweather.title")}</h3>
-      <p>{t("integrations.openweather.description")}</p>
+      <h3>{t('integrations.openweather.title')}</h3>
+      <p>{t('integrations.openweather.description')}</p>
 
       <div class="form-group">
-        <label for="api-key">{t("integrations.openweather.apiKey")}</label>
+        <label for="api-key">{t('integrations.openweather.apiKey')}</label>
         <input
           id="api-key"
           type="password"
           value={apiKey()}
           onInput={(e) => setApiKey(e.currentTarget.value)}
-          placeholder={t("integrations.openweather.apiKeyPlaceholder")}
+          placeholder={t('integrations.openweather.apiKeyPlaceholder')}
         />
-        <small>{t("integrations.openweather.apiKeyHelp")}</small>
+        <small>{t('integrations.openweather.apiKeyHelp')}</small>
       </div>
 
       {error() && <div class="alert alert-error">{error()}</div>}
 
       <button onClick={handleSave} disabled={saving() || !apiKey()}>
-        {saving() ? t("common.saving") : t("common.save")}
+        {saving() ? t('common.saving') : t('common.save')}
       </button>
     </div>
   );
@@ -500,8 +502,8 @@ Players receive updates via WebSocket channels, not polling. Polling is only use
 ```typescript
 // packages/player/src/widgets/integrated-widget.ts
 
-import { Widget } from "./widget";
-import { Socket } from "phoenix";
+import { Widget } from './widget';
+import { Socket } from 'phoenix';
 
 export class IntegratedWidget extends Widget {
   private currentVersion: number = 0;
@@ -511,8 +513,8 @@ export class IntegratedWidget extends Widget {
 
   constructor(
     protected widgetConfigId: string,
-    protected apiBase: string = "/api",
-    protected wsUrl: string = "ws://localhost:4000/socket",
+    protected apiBase: string = '/api',
+    protected wsUrl: string = 'ws://localhost:4000/socket'
   ) {
     super();
   }
@@ -528,13 +530,14 @@ export class IntegratedWidget extends Widget {
   private async fetchData(): Promise<void> {
     try {
       const url = `${this.apiBase}/widget-configs/${this.widgetConfigId}/data`;
-      const params = this.currentVersion > 0 ? `?version=${this.currentVersion}` : "";
+      const params =
+        this.currentVersion > 0 ? `?version=${this.currentVersion}` : '';
 
       const response = await fetch(url + params);
 
       if (response.status === 304) {
         // Data unchanged
-        console.log("Widget data unchanged");
+        console.log('Widget data unchanged');
         return;
       }
 
@@ -546,11 +549,11 @@ export class IntegratedWidget extends Widget {
 
         console.log(`Widget data updated to version ${this.currentVersion}`);
       } else {
-        console.error("Failed to fetch widget data:", response.status);
+        console.error('Failed to fetch widget data:', response.status);
         this.handleError(response.status);
       }
     } catch (error) {
-      console.error("Widget data fetch error:", error);
+      console.error('Widget data fetch error:', error);
       this.handleError(error);
     }
   }
@@ -564,32 +567,37 @@ export class IntegratedWidget extends Widget {
     this.socket.connect();
 
     // Join the widget-specific channel
-    this.channel = this.socket.channel(`widget_data:${this.widgetConfigId}`, {});
+    this.channel = this.socket.channel(
+      `widget_data:${this.widgetConfigId}`,
+      {}
+    );
 
-    this.channel.on("data_updated", (payload: any) => {
+    this.channel.on('data_updated', (payload: any) => {
       if (payload.version > this.currentVersion) {
         this.currentVersion = payload.version;
         this.updateWidgetData(payload.data);
-        console.log(`Widget data pushed via WebSocket, version ${this.currentVersion}`);
+        console.log(
+          `Widget data pushed via WebSocket, version ${this.currentVersion}`
+        );
       }
     });
 
     this.channel
       .join()
-      .receive("ok", () => {
-        console.log("Joined widget data channel");
+      .receive('ok', () => {
+        console.log('Joined widget data channel');
       })
-      .receive("error", (resp: any) => {
-        console.error("Failed to join channel:", resp);
+      .receive('error', (resp: any) => {
+        console.error('Failed to join channel:', resp);
       });
 
     // Handle reconnection after being offline
     this.socket.onError(() => {
-      console.log("WebSocket connection lost");
+      console.log('WebSocket connection lost');
     });
 
     this.socket.onOpen(() => {
-      console.log("WebSocket reconnected");
+      console.log('WebSocket reconnected');
       // Fetch latest data after coming back online (with jitter to prevent DDoS)
       setTimeout(() => {
         this.fetchData();
@@ -600,17 +608,17 @@ export class IntegratedWidget extends Widget {
   private getAuthToken(): string {
     // Get device authentication token
     // Implementation depends on device authentication mechanism
-    return localStorage.getItem("device_token") || "";
+    return localStorage.getItem('device_token') || '';
   }
 
   private updateWidgetData(data: any): void {
     // Update widget display with new data
-    this.emit("data-updated", data);
+    this.emit('data-updated', data);
   }
 
   private handleError(error: any): void {
     // Show error state or keep displaying stale data
-    this.emit("data-error", error);
+    this.emit('data-error', error);
   }
 
   unload(): void {
@@ -632,7 +640,7 @@ Create a widget template that uses integration data:
 ```typescript
 // Weather widget example
 
-import { IntegratedWidget } from "./integrated-widget";
+import { IntegratedWidget } from './integrated-widget';
 
 export class WeatherWidget extends IntegratedWidget {
   private container?: HTMLElement;
@@ -644,10 +652,10 @@ export class WeatherWidget extends IntegratedWidget {
     this.render();
 
     // Update on data changes
-    this.on("data-updated", () => this.render());
-    this.on("data-error", () => this.renderError());
+    this.on('data-updated', () => this.render());
+    this.on('data-error', () => this.renderError());
 
-    return of("shown");
+    return of('shown');
   }
 
   private render(): void {

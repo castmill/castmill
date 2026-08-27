@@ -1,10 +1,12 @@
-import { expect } from "chai";
+import { expect } from 'chai';
 
 // Mock requestAnimationFrame and cancelAnimationFrame for Node.js environment
 let rafId = 0;
 const rafCallbacks: Map<number, FrameRequestCallback> = new Map();
 
-(global as any).requestAnimationFrame = (callback: FrameRequestCallback): number => {
+(global as any).requestAnimationFrame = (
+  callback: FrameRequestCallback
+): number => {
   const id = ++rafId;
   rafCallbacks.set(id, callback);
   return id;
@@ -52,7 +54,7 @@ class MockHTMLElement {
 // Note: We can't directly import the ScrollAnimation class since it's not exported
 // So we'll test it indirectly through its interface
 
-describe("ScrollAnimation", () => {
+describe('ScrollAnimation', () => {
   // Since ScrollAnimation is a private class, we'll create a minimal implementation
   // that matches the interface for testing purposes
 
@@ -70,7 +72,7 @@ describe("ScrollAnimation", () => {
         scrollDistance: number;
         isHorizontal: boolean;
         isReverse: boolean;
-      },
+      }
     ) {
       this.updateTransform();
     }
@@ -151,8 +153,8 @@ describe("ScrollAnimation", () => {
     }
   }
 
-  describe("constructor", () => {
-    it("should initialize with position 0", () => {
+  describe('constructor', () => {
+    it('should initialize with position 0', () => {
       const element = { style: {} as Record<string, string> };
       const animation = new ScrollAnimation(element, {
         speed: 100,
@@ -161,10 +163,10 @@ describe("ScrollAnimation", () => {
         isReverse: false,
       });
 
-      expect(element.style.transform).to.equal("translateX(0px)");
+      expect(element.style.transform).to.equal('translateX(0px)');
     });
 
-    it("should start paused", () => {
+    it('should start paused', () => {
       const element = { style: {} as Record<string, string> };
       const animation = new ScrollAnimation(element, {
         speed: 100,
@@ -177,8 +179,8 @@ describe("ScrollAnimation", () => {
     });
   });
 
-  describe("duration", () => {
-    it("should calculate duration based on scrollDistance and speed", () => {
+  describe('duration', () => {
+    it('should calculate duration based on scrollDistance and speed', () => {
       const element = { style: {} as Record<string, string> };
       const animation = new ScrollAnimation(element, {
         speed: 100, // 100 px/s
@@ -191,7 +193,7 @@ describe("ScrollAnimation", () => {
       expect(animation.duration).to.equal(5);
     });
 
-    it("should return longer duration for slower speed", () => {
+    it('should return longer duration for slower speed', () => {
       const element = { style: {} as Record<string, string> };
       const animation = new ScrollAnimation(element, {
         speed: 50, // 50 px/s
@@ -205,8 +207,8 @@ describe("ScrollAnimation", () => {
     });
   });
 
-  describe("play and pause", () => {
-    it("should set paused to false when play is called", () => {
+  describe('play and pause', () => {
+    it('should set paused to false when play is called', () => {
       const element = { style: {} as Record<string, string> };
       const animation = new ScrollAnimation(element, {
         speed: 100,
@@ -219,7 +221,7 @@ describe("ScrollAnimation", () => {
       expect(animation.paused).to.be.false;
     });
 
-    it("should set paused to true when pause is called", () => {
+    it('should set paused to true when pause is called', () => {
       const element = { style: {} as Record<string, string> };
       const animation = new ScrollAnimation(element, {
         speed: 100,
@@ -234,8 +236,8 @@ describe("ScrollAnimation", () => {
     });
   });
 
-  describe("seek", () => {
-    it("should ignore seek before initialization", () => {
+  describe('seek', () => {
+    it('should ignore seek before initialization', () => {
       const element = { style: {} as Record<string, string> };
       const animation = new ScrollAnimation(element, {
         speed: 100,
@@ -248,10 +250,10 @@ describe("ScrollAnimation", () => {
       animation.seek(1000);
 
       // Should still be at 0 because not initialized
-      expect(element.style.transform).to.equal("translateX(0px)");
+      expect(element.style.transform).to.equal('translateX(0px)');
     });
 
-    it("should allow seek to 0 before initialization", () => {
+    it('should allow seek to 0 before initialization', () => {
       const element = { style: {} as Record<string, string> };
       const animation = new ScrollAnimation(element, {
         speed: 100,
@@ -261,10 +263,10 @@ describe("ScrollAnimation", () => {
       });
 
       animation.seek(0);
-      expect(element.style.transform).to.equal("translateX(0px)");
+      expect(element.style.transform).to.equal('translateX(0px)');
     });
 
-    it("should update position after markInitialized is called", () => {
+    it('should update position after markInitialized is called', () => {
       const element = { style: {} as Record<string, string> };
       const animation = new ScrollAnimation(element, {
         speed: 100,
@@ -279,10 +281,10 @@ describe("ScrollAnimation", () => {
       animation.seek(1000);
 
       // Should be at -100px (negative because scrolling left)
-      expect(element.style.transform).to.equal("translateX(-100px)");
+      expect(element.style.transform).to.equal('translateX(-100px)');
     });
 
-    it("should work without needing to call play first", () => {
+    it('should work without needing to call play first', () => {
       const element = { style: {} as Record<string, string> };
       const animation = new ScrollAnimation(element, {
         speed: 100,
@@ -296,10 +298,10 @@ describe("ScrollAnimation", () => {
 
       // Seek should work
       animation.seek(2000);
-      expect(element.style.transform).to.equal("translateX(-200px)");
+      expect(element.style.transform).to.equal('translateX(-200px)');
     });
 
-    it("should wrap position when exceeding scrollDistance", () => {
+    it('should wrap position when exceeding scrollDistance', () => {
       const element = { style: {} as Record<string, string> };
       const animation = new ScrollAnimation(element, {
         speed: 100,
@@ -314,12 +316,12 @@ describe("ScrollAnimation", () => {
       animation.seek(6000);
 
       // 600 % 500 = 100
-      expect(element.style.transform).to.equal("translateX(-100px)");
+      expect(element.style.transform).to.equal('translateX(-100px)');
     });
   });
 
-  describe("direction", () => {
-    it("should use negative translateX for left direction", () => {
+  describe('direction', () => {
+    it('should use negative translateX for left direction', () => {
       const element = { style: {} as Record<string, string> };
       const animation = new ScrollAnimation(element, {
         speed: 100,
@@ -331,10 +333,10 @@ describe("ScrollAnimation", () => {
       animation.markInitialized();
       animation.seek(1000); // 100px
 
-      expect(element.style.transform).to.equal("translateX(-100px)");
+      expect(element.style.transform).to.equal('translateX(-100px)');
     });
 
-    it("should use positive translateX for right direction", () => {
+    it('should use positive translateX for right direction', () => {
       const element = { style: {} as Record<string, string> };
       const animation = new ScrollAnimation(element, {
         speed: 100,
@@ -346,10 +348,10 @@ describe("ScrollAnimation", () => {
       animation.markInitialized();
       animation.seek(1000); // 100px
 
-      expect(element.style.transform).to.equal("translateX(100px)");
+      expect(element.style.transform).to.equal('translateX(100px)');
     });
 
-    it("should use translateY for vertical scrolling", () => {
+    it('should use translateY for vertical scrolling', () => {
       const element = { style: {} as Record<string, string> };
       const animation = new ScrollAnimation(element, {
         speed: 100,
@@ -361,10 +363,10 @@ describe("ScrollAnimation", () => {
       animation.markInitialized();
       animation.seek(1000); // 100px
 
-      expect(element.style.transform).to.equal("translateY(-100px)");
+      expect(element.style.transform).to.equal('translateY(-100px)');
     });
 
-    it("should use positive translateY for down direction", () => {
+    it('should use positive translateY for down direction', () => {
       const element = { style: {} as Record<string, string> };
       const animation = new ScrollAnimation(element, {
         speed: 100,
@@ -376,12 +378,12 @@ describe("ScrollAnimation", () => {
       animation.markInitialized();
       animation.seek(1000); // 100px
 
-      expect(element.style.transform).to.equal("translateY(100px)");
+      expect(element.style.transform).to.equal('translateY(100px)');
     });
   });
 
-  describe("destroy", () => {
-    it("should pause animation when destroyed", () => {
+  describe('destroy', () => {
+    it('should pause animation when destroyed', () => {
       const element = { style: {} as Record<string, string> };
       const animation = new ScrollAnimation(element, {
         speed: 100,
@@ -399,10 +401,10 @@ describe("ScrollAnimation", () => {
   });
 });
 
-describe("Scroller duration calculation", () => {
+describe('Scroller duration calculation', () => {
   // Test the loop duration formula
 
-  it("should calculate correct loop duration for given content size and speed", () => {
+  it('should calculate correct loop duration for given content size and speed', () => {
     // Formula: loopDuration = oneSetSize / pixelsPerSecond
     const oneSetSize = 500; // px
     const speed = 100; // px/s
@@ -411,7 +413,7 @@ describe("Scroller duration calculation", () => {
     expect(loopDuration).to.equal(5); // 5 seconds
   });
 
-  it("should account for gap in scroll distance", () => {
+  it('should account for gap in scroll distance', () => {
     // The scroll distance includes half a gap to account for the gap between sets
     const halfContentSize = 480; // Content width / 2
     const gapPx = 32; // e.g., 2em at 16px/em
@@ -420,7 +422,7 @@ describe("Scroller duration calculation", () => {
     expect(oneSetSize).to.equal(496);
   });
 
-  it("should return duration in milliseconds for timeline", () => {
+  it('should return duration in milliseconds for timeline', () => {
     const oneSetSize = 500;
     const speed = 100;
     const loopDurationSeconds = oneSetSize / speed;
@@ -430,19 +432,19 @@ describe("Scroller duration calculation", () => {
   });
 });
 
-describe("Scroller options resolution", () => {
-  it("should use default speed of 100 px/s", () => {
+describe('Scroller options resolution', () => {
+  it('should use default speed of 100 px/s', () => {
     const defaultSpeed = 100;
     expect(defaultSpeed).to.equal(100);
   });
 
-  it("should use default gap of 2em", () => {
-    const defaultGap = "2em";
-    expect(defaultGap).to.equal("2em");
+  it('should use default gap of 2em', () => {
+    const defaultGap = '2em';
+    expect(defaultGap).to.equal('2em');
   });
 
-  it("should use left as default direction", () => {
-    const defaultDirection = "left";
-    expect(defaultDirection).to.equal("left");
+  it('should use left as default direction', () => {
+    const defaultDirection = 'left';
+    expect(defaultDirection).to.equal('left');
   });
 });

@@ -1,13 +1,13 @@
-import { describe, it, expect, vi, afterEach } from "vitest";
-import { render, fireEvent, cleanup, screen } from "@solidjs/testing-library";
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { render, fireEvent, cleanup, screen } from '@solidjs/testing-library';
 
-import { Slider } from "./slider";
-import styles from "./slider.module.scss";
+import { Slider } from './slider';
+import styles from './slider.module.scss';
 
-describe("Slider component", () => {
+describe('Slider component', () => {
   afterEach(() => cleanup());
 
-  it("renders with correct initial value and updates on input", async () => {
+  it('renders with correct initial value and updates on input', async () => {
     const onChange = vi.fn();
     render(() => (
       <Slider
@@ -22,15 +22,15 @@ describe("Slider component", () => {
       />
     ));
 
-    const slider = screen.getByRole("slider");
-    expect(slider).toHaveValue("50");
+    const slider = screen.getByRole('slider');
+    expect(slider).toHaveValue('50');
 
-    await fireEvent.input(slider, { target: { value: "75" } });
+    await fireEvent.input(slider, { target: { value: '75' } });
     expect(onChange).toHaveBeenCalledWith(75);
     expect(onChange).toHaveBeenCalledTimes(1);
   });
 
-  it("renders as disabled when the disabled prop is true", () => {
+  it('renders as disabled when the disabled prop is true', () => {
     render(() => (
       <Slider
         name="Disabled Slider"
@@ -41,11 +41,11 @@ describe("Slider component", () => {
       />
     ));
 
-    const slider = screen.getByRole("slider");
+    const slider = screen.getByRole('slider');
     expect(slider).toBeDisabled();
   });
 
-  it("does not call onChange when disabled", async () => {
+  it('does not call onChange when disabled', async () => {
     const onChange = vi.fn();
     render(() => (
       <Slider
@@ -57,15 +57,15 @@ describe("Slider component", () => {
       />
     ));
 
-    const slider = screen.getByRole("slider");
-    expect(slider).toHaveValue("30");
+    const slider = screen.getByRole('slider');
+    expect(slider).toHaveValue('30');
     expect(slider).toBeDisabled();
 
-    await fireEvent.input(slider, { target: { value: "60" } });
+    await fireEvent.input(slider, { target: { value: '60' } });
     expect(onChange).not.toHaveBeenCalled();
   });
 
-  it("reflects value correctly and updates on user interaction", async () => {
+  it('reflects value correctly and updates on user interaction', async () => {
     const onChange = vi.fn();
     render(() => (
       <Slider
@@ -80,10 +80,10 @@ describe("Slider component", () => {
       />
     ));
 
-    const slider = screen.getByRole("slider");
-    expect(slider).toHaveValue("20");
+    const slider = screen.getByRole('slider');
+    expect(slider).toHaveValue('20');
 
-    await fireEvent.input(slider, { target: { value: "40" } });
+    await fireEvent.input(slider, { target: { value: '40' } });
     expect(onChange).toHaveBeenCalledWith(40);
     expect(onChange).toHaveBeenCalledTimes(1);
   });

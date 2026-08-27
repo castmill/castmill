@@ -6,7 +6,7 @@
 export const formatDuration = (ms: number) => {
   const seconds = Math.floor(ms / 1000);
   const minutes = Math.floor(seconds / 60);
-  return `${minutes}:${String(seconds % 60).padStart(2, "0")}`;
+  return `${minutes}:${String(seconds % 60).padStart(2, '0')}`;
 };
 
 /**
@@ -16,29 +16,29 @@ export const formatDuration = (ms: number) => {
  */
 export const formatTimestamp = (timestamp: string | Date): string => {
   if (!timestamp) {
-    return "-";
+    return '-';
   }
 
-  const date = typeof timestamp === "string" ? new Date(timestamp) : timestamp;
+  const date = typeof timestamp === 'string' ? new Date(timestamp) : timestamp;
 
   // Check if date is valid
   if (isNaN(date.getTime())) {
-    return "-";
+    return '-';
   }
 
   // Format: "MMM d, yyyy, HH:mm UTC"
   const options: Intl.DateTimeFormatOptions = {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
     hour12: false, // Use 24-hour format
-    timeZone: "UTC",
-    timeZoneName: "short",
+    timeZone: 'UTC',
+    timeZoneName: 'short',
   };
 
-  return new Intl.DateTimeFormat("en-US", options).format(date);
+  return new Intl.DateTimeFormat('en-US', options).format(date);
 };
 
 /**
@@ -48,14 +48,14 @@ export const formatTimestamp = (timestamp: string | Date): string => {
  */
 export const formatRelativeTime = (timestamp: string | Date): string => {
   if (!timestamp) {
-    return "-";
+    return '-';
   }
 
-  const date = typeof timestamp === "string" ? new Date(timestamp) : timestamp;
+  const date = typeof timestamp === 'string' ? new Date(timestamp) : timestamp;
 
   // Check if date is valid
   if (isNaN(date.getTime())) {
-    return "-";
+    return '-';
   }
 
   const now = new Date();
@@ -64,7 +64,7 @@ export const formatRelativeTime = (timestamp: string | Date): string => {
   // Future dates
   if (diffInSeconds < 0) {
     const absDiff = Math.abs(diffInSeconds);
-    if (absDiff < 60) return "in a few seconds";
+    if (absDiff < 60) return 'in a few seconds';
     if (absDiff < 3600) return `in ${Math.floor(absDiff / 60)} minutes`;
     if (absDiff < 86400) return `in ${Math.floor(absDiff / 3600)} hours`;
     if (absDiff < 2592000) return `in ${Math.floor(absDiff / 86400)} days`;
@@ -73,25 +73,25 @@ export const formatRelativeTime = (timestamp: string | Date): string => {
   }
 
   // Past dates
-  if (diffInSeconds < 60) return "just now";
+  if (diffInSeconds < 60) return 'just now';
   if (diffInSeconds < 3600) {
     const minutes = Math.floor(diffInSeconds / 60);
-    return `${minutes} minute${minutes !== 1 ? "s" : ""} ago`;
+    return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
   }
   if (diffInSeconds < 86400) {
     const hours = Math.floor(diffInSeconds / 3600);
-    return `${hours} hour${hours !== 1 ? "s" : ""} ago`;
+    return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
   }
   if (diffInSeconds < 2592000) {
     const days = Math.floor(diffInSeconds / 86400);
-    return `${days} day${days !== 1 ? "s" : ""} ago`;
+    return `${days} day${days !== 1 ? 's' : ''} ago`;
   }
   if (diffInSeconds < 31536000) {
     const months = Math.floor(diffInSeconds / 2592000);
-    return `${months} month${months !== 1 ? "s" : ""} ago`;
+    return `${months} month${months !== 1 ? 's' : ''} ago`;
   }
   const years = Math.floor(diffInSeconds / 31536000);
-  return `${years} year${years !== 1 ? "s" : ""} ago`;
+  return `${years} year${years !== 1 ? 's' : ''} ago`;
 };
 
 /**
@@ -101,31 +101,36 @@ export const formatRelativeTime = (timestamp: string | Date): string => {
  * @param locale BCP-47 locale code (e.g. 'sv', 'en-US')
  * @returns Relative time string
  */
-export const formatRelativeTimeLocalized = (timestamp: string | Date, locale?: string): string => {
-  if (!locale || locale.toLowerCase().startsWith("en")) {
+export const formatRelativeTimeLocalized = (
+  timestamp: string | Date,
+  locale?: string
+): string => {
+  if (!locale || locale.toLowerCase().startsWith('en')) {
     return formatRelativeTime(timestamp);
   }
 
   if (!timestamp) {
-    return "-";
+    return '-';
   }
 
-  const date = typeof timestamp === "string" ? new Date(timestamp) : timestamp;
+  const date = typeof timestamp === 'string' ? new Date(timestamp) : timestamp;
 
   if (isNaN(date.getTime())) {
-    return "-";
+    return '-';
   }
 
   const now = Date.now();
   const diffInSeconds = Math.round((date.getTime() - now) / 1000);
   const abs = Math.abs(diffInSeconds);
 
-  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
+  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
 
-  if (abs < 60) return rtf.format(diffInSeconds, "second");
-  if (abs < 3600) return rtf.format(Math.round(diffInSeconds / 60), "minute");
-  if (abs < 86400) return rtf.format(Math.round(diffInSeconds / 3600), "hour");
-  if (abs < 2592000) return rtf.format(Math.round(diffInSeconds / 86400), "day");
-  if (abs < 31536000) return rtf.format(Math.round(diffInSeconds / 2592000), "month");
-  return rtf.format(Math.round(diffInSeconds / 31536000), "year");
+  if (abs < 60) return rtf.format(diffInSeconds, 'second');
+  if (abs < 3600) return rtf.format(Math.round(diffInSeconds / 60), 'minute');
+  if (abs < 86400) return rtf.format(Math.round(diffInSeconds / 3600), 'hour');
+  if (abs < 2592000)
+    return rtf.format(Math.round(diffInSeconds / 86400), 'day');
+  if (abs < 31536000)
+    return rtf.format(Math.round(diffInSeconds / 2592000), 'month');
+  return rtf.format(Math.round(diffInSeconds / 31536000), 'year');
 };

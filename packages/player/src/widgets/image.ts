@@ -1,13 +1,16 @@
-import { ResourceManager } from "@castmill/cache";
-import { from, Observable, of } from "rxjs";
-import { switchMap } from "rxjs/operators";
-import { TimelineWidget } from "./timeline-widget";
+import { ResourceManager } from '@castmill/cache';
+import { from, Observable, of } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
+import { TimelineWidget } from './timeline-widget';
 export class Image extends TimelineWidget {
   private img?: HTMLElement;
   private src: string;
   private size?: string;
 
-  constructor(resourceManager: ResourceManager, opts: { src: string; size?: "contain" | "cover" }) {
+  constructor(
+    resourceManager: ResourceManager,
+    opts: { src: string; size?: 'contain' | 'cover' }
+  ) {
     super(resourceManager, opts);
     this.src = opts.src;
     this.size = opts.size;
@@ -15,16 +18,16 @@ export class Image extends TimelineWidget {
 
   private load(url: string) {
     return new Observable<string>((subscriber) => {
-      const dummy = document.createElement("img");
+      const dummy = document.createElement('img');
       dummy.src = url;
 
       dummy.onload = (ev: Event) => {
-        subscriber.next("loaded");
+        subscriber.next('loaded');
         subscriber.complete();
       };
 
       dummy.onerror = (ev: Event | string) => {
-        subscriber.error("error");
+        subscriber.error('error');
       };
 
       return () => {
@@ -36,18 +39,18 @@ export class Image extends TimelineWidget {
 
   show(el: HTMLElement, offset: number) {
     if (!this.img) {
-      this.img = document.createElement("div");
+      this.img = document.createElement('div');
     } else if (this.img.style.background) {
-      return of("shown");
+      return of('shown');
     }
 
     return from(this.resourceManager.getMedia(this.src)).pipe(
       switchMap((url) => {
         const img = this.img!;
         img.style.background = `url( ${url || this.src} ) no-repeat center`;
-        img.style.backgroundSize = this.size ? this.size : "contain";
-        img.style.width = "100%";
-        img.style.height = "100%";
+        img.style.backgroundSize = this.size ? this.size : 'contain';
+        img.style.width = '100%';
+        img.style.height = '100%';
 
         el.appendChild(img);
 
@@ -64,19 +67,19 @@ export class Image extends TimelineWidget {
               ease: "back",
             });
           */
-      }),
+      })
     );
   }
 
   unload(): void {
     if (this.img) {
-      this.img.style.background = "none";
+      this.img.style.background = 'none';
       this.img.parentElement?.removeChild(this.img);
       this.img = void 0;
     }
   }
 
   mimeType(): string {
-    return "image/jpeg";
+    return 'image/jpeg';
   }
 }

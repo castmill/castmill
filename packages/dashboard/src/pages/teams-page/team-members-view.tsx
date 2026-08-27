@@ -16,18 +16,18 @@ import {
   Dropdown,
   Timestamp,
   useToast,
-} from "@castmill/ui-common";
-import { TeamsService } from "../../services/teams.service";
-import { OrganizationsService } from "../../services/organizations.service";
-import { PermissionButton } from "../../components/permission-button/permission-button";
-import { usePermissions } from "../../hooks/usePermissions";
-import { BsCheckLg } from "solid-icons/bs";
-import { AiOutlineDelete } from "solid-icons/ai";
-import { createMemo, createSignal, Show } from "solid-js";
-import { User } from "../../interfaces/user.interface";
-import { useI18n } from "../../i18n";
-import { getUser } from "../../components/auth";
-import styles from "./teams-page.module.scss";
+} from '@castmill/ui-common';
+import { TeamsService } from '../../services/teams.service';
+import { OrganizationsService } from '../../services/organizations.service';
+import { PermissionButton } from '../../components/permission-button/permission-button';
+import { usePermissions } from '../../hooks/usePermissions';
+import { BsCheckLg } from 'solid-icons/bs';
+import { AiOutlineDelete } from 'solid-icons/ai';
+import { createMemo, createSignal, Show } from 'solid-js';
+import { User } from '../../interfaces/user.interface';
+import { useI18n } from '../../i18n';
+import { getUser } from '../../components/auth';
+import styles from './teams-page.module.scss';
 
 interface TeamMemberRow {
   user: User;
@@ -45,15 +45,22 @@ const [currentMember, setCurrentMember] = createSignal<{
   role: string;
 }>();
 const [showAddMemberDialog, setShowAddMemberDialog] = createSignal(false);
-const [showConfirmDialogMultiple, setShowConfirmDialogMultiple] = createSignal(false);
+const [showConfirmDialogMultiple, setShowConfirmDialogMultiple] =
+  createSignal(false);
 
 const [showConfirmDialog, setShowConfirmDialog] = createSignal(false);
 
 const [selectedMembers, setSelectedMembers] = createSignal(new Set<string>());
-const [selectedMembersMap, setSelectedMembersMap] = createSignal(new Map<string, TeamMemberRow>());
+const [selectedMembersMap, setSelectedMembersMap] = createSignal(
+  new Map<string, TeamMemberRow>()
+);
 
-const [selectedUser, setSelectedUser] = createSignal<User | undefined>(undefined);
-const [selectedRole, setSelectedRole] = createSignal<"member" | "admin">("member");
+const [selectedUser, setSelectedUser] = createSignal<User | undefined>(
+  undefined
+);
+const [selectedRole, setSelectedRole] = createSignal<'member' | 'admin'>(
+  'member'
+);
 const [isFormValid, setIsFormValid] = createSignal(false);
 const [availableUsersCount, setAvailableUsersCount] = createSignal<number>(0);
 
@@ -74,7 +81,9 @@ const onRowSelect = (rowsSelected: Set<string>) => {
   // Add newly selected members from current data
   rowsSelected.forEach((memberId) => {
     if (!newMap.has(memberId)) {
-      const member = data().find((entry: TeamMemberRow) => entry.user_id === memberId);
+      const member = data().find(
+        (entry: TeamMemberRow) => entry.user_id === memberId
+      );
       if (member) {
         newMap.set(memberId, member);
       }
@@ -97,8 +106,8 @@ export const TeamMembersView = (props: {
   const toast = useToast();
   const resolveRemoveMemberError = (message: string) => {
     switch (message) {
-      case "cannot_remove_last_team_admin":
-        return t("teams.errors.cannotRemoveLastAdmin");
+      case 'cannot_remove_last_team_admin':
+        return t('teams.errors.cannotRemoveLastAdmin');
       default:
         return message;
     }
@@ -108,11 +117,13 @@ export const TeamMembersView = (props: {
     if (!currentUser?.id) {
       return undefined;
     }
-    return data().find((entry: TeamMemberRow) => entry.user_id === currentUser.id);
+    return data().find(
+      (entry: TeamMemberRow) => entry.user_id === currentUser.id
+    );
   });
 
   const adminCount = createMemo(
-    () => data().filter((entry: TeamMemberRow) => entry.role === "admin").length,
+    () => data().filter((entry: TeamMemberRow) => entry.role === 'admin').length
   );
 
   const canLeaveTeam = createMemo(() => {
@@ -121,7 +132,7 @@ export const TeamMembersView = (props: {
       return false;
     }
 
-    if (membership.role !== "admin") {
+    if (membership.role !== 'admin') {
       return true;
     }
 
@@ -130,7 +141,7 @@ export const TeamMembersView = (props: {
 
   const addMember = () => {
     setSelectedUser(undefined);
-    setSelectedRole("member");
+    setSelectedRole('member');
     setIsFormValid(false);
     setShowAddMemberDialog(true);
   };
@@ -139,40 +150,49 @@ export const TeamMembersView = (props: {
     {
       icon: AiOutlineDelete,
       handler: (item: any) => {
-        if (!canPerformAction("teams", "update")) {
+        if (!canPerformAction('teams', 'update')) {
           toast.error(
-            t("permissions.noUpdateTeams") || "You don't have permission to update teams",
+            t('permissions.noUpdateTeams') ||
+              "You don't have permission to update teams"
           );
           return;
         }
         setCurrentMember(item);
         setShowConfirmDialog(true);
       },
-      label: t("common.remove"),
+      label: t('common.remove'),
     },
   ];
 
   const columns = [
     {
-      key: "user.name",
-      title: t("common.name"),
+      key: 'user.name',
+      title: t('common.name'),
       sortable: true,
       render: (item: any) => {
         const isCurrentUser = item.user_id === currentUser?.id;
-        return isCurrentUser ? `${item.user.name} ${t("common.youIndicator")}` : item.user.name;
+        return isCurrentUser
+          ? `${item.user.name} ${t('common.youIndicator')}`
+          : item.user.name;
       },
     },
-    { key: "role", title: t("common.role"), sortable: true },
+    { key: 'role', title: t('common.role'), sortable: true },
     {
-      key: "inserted_at",
-      title: t("teams.insertedAt"),
+      key: 'inserted_at',
+      title: t('teams.insertedAt'),
       sortable: true,
-      render: (item: any) => <Timestamp value={item.inserted_at} mode="relative" />,
+      render: (item: any) => (
+        <Timestamp value={item.inserted_at} mode="relative" />
+      ),
     },
   ];
 
   const fetchData = async (opts: FetchDataOptions) => {
-    const result = await TeamsService.fetchMembers(props.organizationId, props.teamId, opts);
+    const result = await TeamsService.fetchMembers(
+      props.organizationId,
+      props.teamId,
+      opts
+    );
     setData(result.data);
     return result;
   };
@@ -208,12 +228,19 @@ export const TeamMembersView = (props: {
   });
 
   // Fetch organization users for the combobox
-  const fetchUsers = async (page: number, pageSize: number, searchQuery: string) => {
-    const result = await OrganizationsService.fetchMembers(props.organizationId, {
-      page: { num: page, size: pageSize },
-      sortOptions: { key: "name", direction: "ascending" },
-      search: searchQuery,
-    });
+  const fetchUsers = async (
+    page: number,
+    pageSize: number,
+    searchQuery: string
+  ) => {
+    const result = await OrganizationsService.fetchMembers(
+      props.organizationId,
+      {
+        page: { num: page, size: pageSize },
+        sortOptions: { key: 'name', direction: 'ascending' },
+        search: searchQuery,
+      }
+    );
 
     // Filter out users that shouldn't be shown in the invite list
     const excluded = excludedUserIds();
@@ -243,10 +270,14 @@ export const TeamMembersView = (props: {
     }
 
     try {
-      await TeamsService.removeMemberFromTeam(props.organizationId, props.teamId, member.id);
+      await TeamsService.removeMemberFromTeam(
+        props.organizationId,
+        props.teamId,
+        member.id
+      );
 
       refreshData();
-      toast.success(t("teams.messages.memberRemoved", { name: member.name }));
+      toast.success(t('teams.messages.memberRemoved', { name: member.name }));
       props.onRemove(member);
       setShowConfirmDialog(false);
     } catch (error) {
@@ -259,12 +290,16 @@ export const TeamMembersView = (props: {
     try {
       await Promise.all(
         Array.from(selectedMembers()).map((memberId) =>
-          TeamsService.removeMemberFromTeam(props.organizationId, props.teamId, memberId),
-        ),
+          TeamsService.removeMemberFromTeam(
+            props.organizationId,
+            props.teamId,
+            memberId
+          )
+        )
       );
 
       refreshData();
-      toast.success(t("teams.messages.membersRemoved"));
+      toast.success(t('teams.messages.membersRemoved'));
       Array.from(selectedMembersMap().values()).forEach((member) => {
         props.onRemove(member.user);
       });
@@ -286,11 +321,13 @@ export const TeamMembersView = (props: {
       await TeamsService.removeMemberFromTeam(
         props.organizationId,
         props.teamId,
-        membership.user_id,
+        membership.user_id
       );
 
       refreshData();
-      toast.success(t("teams.messages.leftTeam", { name: membership.user.name }));
+      toast.success(
+        t('teams.messages.leftTeam', { name: membership.user.name })
+      );
       props.onRemove(membership.user);
     } catch (error) {
       const errorMessage = resolveRemoveMemberError((error as Error).message);
@@ -302,8 +339,8 @@ export const TeamMembersView = (props: {
     <>
       <Show when={showAddMemberDialog()}>
         <Modal
-          title={t("teams.inviteMember")}
-          description={t("teams.inviteMemberDescription")}
+          title={t('teams.inviteMember')}
+          description={t('teams.inviteMemberDescription')}
           onClose={() => setShowAddMemberDialog(false)}
         >
           {/* Select a user from the organization to invite to the team */}
@@ -316,7 +353,7 @@ export const TeamMembersView = (props: {
                     props.organizationId,
                     props.teamId,
                     selectedUser()!.email,
-                    selectedRole(),
+                    selectedRole()
                   );
 
                   refreshData();
@@ -331,24 +368,26 @@ export const TeamMembersView = (props: {
           >
             <ComboBox
               id="user-selector"
-              label={t("teams.memberSelection.selectUser")}
-              placeholder={t("teams.memberSelection.searchUser")}
+              label={t('teams.memberSelection.selectUser')}
+              placeholder={t('teams.memberSelection.searchUser')}
               value={selectedUser()}
               fetchItems={fetchUsers}
               renderItem={(user: User) => (
                 <div>
                   <div style="font-weight: 500;">{user.name}</div>
-                  <div style="font-size: 0.875rem; color: #666;">{user.email}</div>
+                  <div style="font-size: 0.875rem; color: #666;">
+                    {user.email}
+                  </div>
                 </div>
               )}
               onSelect={handleUserSelect}
             />
 
             <Show when={availableUsersCount() === 0}>
-              <div class={styles["no-users-hint"]}>
-                <p>{t("teams.memberSelection.noUsersAvailable")}</p>
-                <p class={styles["no-users-hint-secondary"]}>
-                  {t("teams.memberSelection.inviteToOrgFirst")}
+              <div class={styles['no-users-hint']}>
+                <p>{t('teams.memberSelection.noUsersAvailable')}</p>
+                <p class={styles['no-users-hint-secondary']}>
+                  {t('teams.memberSelection.inviteToOrgFirst')}
                 </p>
               </div>
             </Show>
@@ -357,27 +396,27 @@ export const TeamMembersView = (props: {
               <Dropdown
                 id="team-member-role"
                 name="team_role"
-                label={t("organizations.role")}
+                label={t('organizations.role')}
                 items={[
                   {
-                    value: "member",
-                    name: t("organization.teamRoleMember"),
+                    value: 'member',
+                    name: t('organization.teamRoleMember'),
                   },
-                  { value: "admin", name: t("organization.teamRoleAdmin") },
+                  { value: 'admin', name: t('organization.teamRoleAdmin') },
                 ]}
                 defaultValue={selectedRole()}
                 onSelectChange={(value: string | null) => {
                   if (!value) {
                     return;
                   }
-                  setSelectedRole(value as "member" | "admin");
+                  setSelectedRole(value as 'member' | 'admin');
                 }}
               />
             </div>
 
             <div style="margin-top: 1em;">
               <Button
-                label={t("common.save")}
+                label={t('common.save')}
                 type="submit"
                 disabled={!isFormValid()}
                 color="primary"
@@ -389,9 +428,9 @@ export const TeamMembersView = (props: {
 
       <ConfirmDialog
         show={showConfirmDialog()}
-        title={t("teams.dialogs.removeMemberTitle")}
-        message={t("teams.dialogs.removeMemberMessage", {
-          name: currentMember()?.user?.name || "",
+        title={t('teams.dialogs.removeMemberTitle')}
+        message={t('teams.dialogs.removeMemberMessage', {
+          name: currentMember()?.user?.name || '',
         })}
         onClose={() => setShowConfirmDialog(false)}
         onConfirm={() => confirmRemoveMemberFromTeam(currentMember()?.user)}
@@ -399,8 +438,8 @@ export const TeamMembersView = (props: {
 
       <ConfirmDialog
         show={showConfirmDialogMultiple()}
-        title={t("teams.dialogs.removeMembersTitle")}
-        message={t("teams.dialogs.removeMembersMessage")}
+        title={t('teams.dialogs.removeMembersTitle')}
+        message={t('teams.dialogs.removeMembersMessage')}
         onClose={() => setShowConfirmDialogMultiple(false)}
         onConfirm={() => confirmRemoveMultipleMembersFromTeam()}
       >
@@ -417,12 +456,12 @@ export const TeamMembersView = (props: {
         fetchData={fetchData}
         ref={setRef}
         toolbar={{
-          searchPlaceholder: t("common.search"),
+          searchPlaceholder: t('common.search'),
           mainAction: (
             <PermissionButton
               resource="teams"
               action="update"
-              label={t("teams.inviteMember")}
+              label={t('teams.inviteMember')}
               onClick={addMember}
               icon={BsCheckLg}
               color="primary"
@@ -432,9 +471,10 @@ export const TeamMembersView = (props: {
             <div>
               <IconButton
                 onClick={() => {
-                  if (!canPerformAction("teams", "update")) {
+                  if (!canPerformAction('teams', 'update')) {
                     toast.error(
-                      t("permissions.noUpdateTeams") || "You don't have permission to update teams",
+                      t('permissions.noUpdateTeams') ||
+                        "You don't have permission to update teams"
                     );
                     return;
                   }
@@ -442,7 +482,10 @@ export const TeamMembersView = (props: {
                 }}
                 icon={AiOutlineDelete}
                 color="primary"
-                disabled={selectedMembers().size === 0 || !canPerformAction("teams", "update")}
+                disabled={
+                  selectedMembers().size === 0 ||
+                  !canPerformAction('teams', 'update')
+                }
               />
             </div>
           ),
@@ -450,7 +493,7 @@ export const TeamMembersView = (props: {
         table={{
           columns,
           actions,
-          actionsLabel: t("common.actions"),
+          actionsLabel: t('common.actions'),
           onRowSelect,
         }}
         pagination={{ itemsPerPage }}
@@ -460,14 +503,16 @@ export const TeamMembersView = (props: {
       <Show when={currentMembership()}>
         <div class={styles.leaveTeamPanel}>
           <div class={styles.leaveTeamContent}>
-            <h4>{t("teams.leaveTeamTitle")}</h4>
-            <p>{t("teams.leaveTeamDescription")}</p>
+            <h4>{t('teams.leaveTeamTitle')}</h4>
+            <p>{t('teams.leaveTeamDescription')}</p>
             <Show when={!canLeaveTeam()}>
-              <p class={styles.leaveTeamWarning}>{t("teams.leaveTeamLastAdminWarning")}</p>
+              <p class={styles.leaveTeamWarning}>
+                {t('teams.leaveTeamLastAdminWarning')}
+              </p>
             </Show>
           </div>
           <Button
-            label={t("teams.leaveTeamAction")}
+            label={t('teams.leaveTeamAction')}
             color="danger"
             onClick={leaveTeam}
             disabled={!canLeaveTeam()}

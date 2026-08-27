@@ -11,7 +11,7 @@
  * - Provides handleTagChange callback for TagFilter component
  */
 
-import { Accessor, createEffect, on } from "solid-js";
+import { Accessor, createEffect, on } from 'solid-js';
 
 export interface UseTagFilterEffectProps {
   /**
@@ -27,7 +27,7 @@ export interface UseTagFilterEffectProps {
   /**
    * Signal accessor for tag filter mode ('any' or 'all')
    */
-  tagFilterMode: Accessor<"any" | "all">;
+  tagFilterMode: Accessor<'any' | 'all'>;
 
   /**
    * Callback to refresh table data when tags/mode change
@@ -68,7 +68,9 @@ export interface UseTagFilterEffectReturn {
  * />
  * ```
  */
-export function useTagFilterEffect(props: UseTagFilterEffectProps): UseTagFilterEffectReturn {
+export function useTagFilterEffect(
+  props: UseTagFilterEffectProps
+): UseTagFilterEffectReturn {
   // Reactively refresh table & tree when tag selection or filter mode changes
   // (covers both user interaction and initial load from URL/localStorage)
   createEffect(
@@ -78,8 +80,8 @@ export function useTagFilterEffect(props: UseTagFilterEffectProps): UseTagFilter
         props.onRefreshData();
         props.onRefreshTree();
       },
-      { defer: true },
-    ),
+      { defer: true }
+    )
   );
 
   const handleTagChange = (tagIds: number[]) => {

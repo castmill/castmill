@@ -1,4 +1,4 @@
-import { JSX } from "solid-js";
+import { JSX } from 'solid-js';
 
 /**
  * Simple JSON syntax highlighter for SolidJS

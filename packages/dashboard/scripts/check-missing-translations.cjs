@@ -19,94 +19,94 @@
  *   node scripts/check-missing-translations.cjs de    # Check German only
  */
 
-const fs = require("fs");
-const path = require("path");
+const fs = require('fs');
+const path = require('path');
 
 // ANSI color codes
 const colors = {
-  reset: "\x1b[0m",
-  red: "\x1b[31m",
-  yellow: "\x1b[33m",
-  green: "\x1b[32m",
-  blue: "\x1b[34m",
-  cyan: "\x1b[36m",
-  gray: "\x1b[90m",
-  bold: "\x1b[1m",
+  reset: '\x1b[0m',
+  red: '\x1b[31m',
+  yellow: '\x1b[33m',
+  green: '\x1b[32m',
+  blue: '\x1b[34m',
+  cyan: '\x1b[36m',
+  gray: '\x1b[90m',
+  bold: '\x1b[1m',
 };
 
-const LOCALES_DIR = path.join(__dirname, "../src/i18n/locales");
-const REFERENCE_LANG = "en";
+const LOCALES_DIR = path.join(__dirname, '../src/i18n/locales');
+const REFERENCE_LANG = 'en';
 
 // All supported languages
-const LANGUAGES = ["es", "sv", "de", "fr", "zh", "ar", "ko", "ja"];
+const LANGUAGES = ['es', 'sv', 'de', 'fr', 'zh', 'ar', 'ko', 'ja'];
 
 // Strings that are acceptable to be identical across languages
 // (cognates, proper nouns, technical terms, abbreviations)
 // Technical terms, proper nouns, and universal strings that are identical across languages
 const ALLOWED_IDENTICAL_STRINGS = new Set([
-  "Widgets",
-  "Widget",
-  "JSON",
-  "URL",
-  "Cache",
-  "WiFi",
-  "Passkeys",
-  "Passkey",
-  "ID",
-  "OAuth 2.0",
-  "Webhook",
-  "Data", // Loanword in Swedish, German
-  "Media", // Loanword in Swedish, German, French
-  "Code", // Loanword in German, French
-  "Info", // Loanword in Swedish, German, French
-  "© 2011-2025 Castmill™",
-  "Error", // Cognate in Spanish
-  "Total", // Cognate in Spanish
-  "Status", // Cognate in Swedish, German, French
-  "Version", // Cognate in Swedish, German, French
-  "Online", // Cognate in Swedish, German, French
-  "Offline", // Cognate in Swedish, German
+  'Widgets',
+  'Widget',
+  'JSON',
+  'URL',
+  'Cache',
+  'WiFi',
+  'Passkeys',
+  'Passkey',
+  'ID',
+  'OAuth 2.0',
+  'Webhook',
+  'Data', // Loanword in Swedish, German
+  'Media', // Loanword in Swedish, German, French
+  'Code', // Loanword in German, French
+  'Info', // Loanword in Swedish, German, French
+  '© 2011-2025 Castmill™',
+  'Error', // Cognate in Spanish
+  'Total', // Cognate in Spanish
+  'Status', // Cognate in Swedish, German, French
+  'Version', // Cognate in Swedish, German, French
+  'Online', // Cognate in Swedish, German, French
+  'Offline', // Cognate in Swedish, German
   'Team "{{name}}"', // Cognate in Swedish
-  "Name", // Cognate in German
-  "Details", // Cognate in German
-  "Teams", // Cognate in German
-  "Tags", // Cognate in German
-  "Playlists", // Cognate in German
+  'Name', // Cognate in German
+  'Details', // Cognate in German
+  'Teams', // Cognate in German
+  'Tags', // Cognate in German
+  'Playlists', // Cognate in German
   'Playlist "{{name}}"', // Cognate in German
-  "Type", // Cognate in French
-  "Actions", // Cognate in French
-  "Message", // Cognate in French
-  "Description", // Cognate in French
-  "Maintenance", // Cognate in French
-  "Notifications", // Cognate in French
-  "Invitations", // Cognate in French
-  "Navigation", // Cognate in French
-  "9:16 (Portrait)", // Cognate in French
-  "3:4 (Portrait)", // Cognate in French
-  "Contact", // Cognate in French
-  "Administrator", // Cognate in German
-  "Timers", // Cognate in Swedish
+  'Type', // Cognate in French
+  'Actions', // Cognate in French
+  'Message', // Cognate in French
+  'Description', // Cognate in French
+  'Maintenance', // Cognate in French
+  'Notifications', // Cognate in French
+  'Invitations', // Cognate in French
+  'Navigation', // Cognate in French
+  '9:16 (Portrait)', // Cognate in French
+  '3:4 (Portrait)', // Cognate in French
+  'Contact', // Cognate in French
+  'Administrator', // Cognate in German
+  'Timers', // Cognate in Swedish
   // Widget names that are internationally recognized / same across languages
-  "Video", // Universal loanword in Spanish, Swedish, German, French
-  "Web", // Universal technical term in Spanish, German, French
-  "Intro", // Short for introduction, used in Spanish, Swedish, German, French
-  "Image", // Same word in French
+  'Video', // Universal loanword in Spanish, Swedish, German, French
+  'Web', // Universal technical term in Spanish, German, French
+  'Intro', // Short for introduction, used in Spanish, Swedish, German, French
+  'Image', // Same word in French
   // Time unit abbreviations - internationally recognized
-  "d", // days short
-  "h", // hours short
-  "m", // minutes short
+  'd', // days short
+  'h', // hours short
+  'm', // minutes short
   // Social media URLs and placeholders - intentionally identical
-  "GitHub URL",
-  "X (Twitter) URL",
-  "LinkedIn URL",
-  "Facebook URL",
-  "support@example.com",
-  "https://example.com/logo.png",
-  "https://example.com/privacy",
-  "https://github.com/yourcompany",
-  "https://x.com/yourcompany",
-  "https://linkedin.com/company/yourcompany",
-  "https://facebook.com/yourcompany",
+  'GitHub URL',
+  'X (Twitter) URL',
+  'LinkedIn URL',
+  'Facebook URL',
+  'support@example.com',
+  'https://example.com/logo.png',
+  'https://example.com/privacy',
+  'https://github.com/yourcompany',
+  'https://x.com/yourcompany',
+  'https://linkedin.com/company/yourcompany',
+  'https://facebook.com/yourcompany',
 ]);
 
 /**
@@ -117,9 +117,9 @@ const ALLOWED_IDENTICAL_STRINGS = new Set([
  */
 const ALLOWED_IDENTICAL_KEYS = {
   // 'Widget' is an internationally used technical term in Latin-script languages
-  "playlists.widgetModalTitle": ["es", "sv", "de", "fr"],
+  'playlists.widgetModalTitle': ['es', 'sv', 'de', 'fr'],
   // Product wording intentionally uses the English term "Team"
-  "filters.teamLabel": ["sv", "de"],
+  'filters.teamLabel': ['sv', 'de'],
 };
 
 class TranslationChecker {
@@ -205,7 +205,7 @@ class TranslationChecker {
 
     // For non-Latin script languages (Chinese, Arabic, Korean, Japanese),
     // the translation MUST use non-Latin characters
-    const nonLatinLanguages = ["zh", "ar", "ko", "ja"];
+    const nonLatinLanguages = ['zh', 'ar', 'ko', 'ja'];
     if (nonLatinLanguages.includes(targetLang)) {
       return this.usesNonLatinScript(translatedValue);
     }
@@ -220,10 +220,13 @@ class TranslationChecker {
   loadTranslationFile(lang) {
     const filePath = path.join(LOCALES_DIR, `${lang}.json`);
     try {
-      const content = fs.readFileSync(filePath, "utf8");
+      const content = fs.readFileSync(filePath, 'utf8');
       return JSON.parse(content);
     } catch (error) {
-      console.error(`${colors.red}Error loading ${lang}.json:${colors.reset}`, error.message);
+      console.error(
+        `${colors.red}Error loading ${lang}.json:${colors.reset}`,
+        error.message
+      );
       return null;
     }
   }
@@ -232,13 +235,17 @@ class TranslationChecker {
    * Flatten nested JSON object into dot-notation keys
    * e.g., { common: { save: "Save" } } -> { "common.save": "Save" }
    */
-  flattenObject(obj, prefix = "") {
+  flattenObject(obj, prefix = '') {
     const flattened = {};
 
     for (const [key, value] of Object.entries(obj)) {
       const fullKey = prefix ? `${prefix}.${key}` : key;
 
-      if (value !== null && typeof value === "object" && !Array.isArray(value)) {
+      if (
+        value !== null &&
+        typeof value === 'object' &&
+        !Array.isArray(value)
+      ) {
         // Recursively flatten nested objects
         Object.assign(flattened, this.flattenObject(value, fullKey));
       } else {
@@ -263,16 +270,21 @@ class TranslationChecker {
         missing.push({
           key,
           value: reference[key],
-          type: "missing",
+          type: 'missing',
         });
-      } else if (reference[key] === target[key] && typeof reference[key] === "string") {
+      } else if (
+        reference[key] === target[key] &&
+        typeof reference[key] === 'string'
+      ) {
         // Key exists but value is identical to English
         // Use hybrid validation: character set detection + allowlist
-        if (!this.isProperlyTranslated(reference[key], target[key], lang, key)) {
+        if (
+          !this.isProperlyTranslated(reference[key], target[key], lang, key)
+        ) {
           untranslated.push({
             key,
             value: reference[key],
-            type: "untranslated",
+            type: 'untranslated',
           });
         }
       }
@@ -288,7 +300,7 @@ class TranslationChecker {
     const grouped = {};
 
     for (const item of keys) {
-      const namespace = item.key.split(".")[0];
+      const namespace = item.key.split('.')[0];
       if (!grouped[namespace]) {
         grouped[namespace] = [];
       }
@@ -312,7 +324,11 @@ class TranslationChecker {
     const flatReference = this.flattenObject(reference);
     const flatTarget = this.flattenObject(target);
 
-    const { missing, untranslated } = this.findMissingKeys(flatReference, flatTarget, lang);
+    const { missing, untranslated } = this.findMissingKeys(
+      flatReference,
+      flatTarget,
+      lang
+    );
     const totalIssues = missing.length + untranslated.length;
 
     return {
@@ -348,12 +364,14 @@ class TranslationChecker {
       coverage,
     } = result;
 
-    console.log(`\n${"=".repeat(70)}`);
-    console.log(`${colors.bold}${colors.cyan}Language: ${lang.toUpperCase()}${colors.reset}`);
-    console.log(`${"=".repeat(70)}`);
+    console.log(`\n${'='.repeat(70)}`);
+    console.log(
+      `${colors.bold}${colors.cyan}Language: ${lang.toUpperCase()}${colors.reset}`
+    );
+    console.log(`${'='.repeat(70)}`);
 
     console.log(
-      `${colors.blue}Coverage:${colors.reset} ${coverage}% (${translatedKeys}/${totalKeys} keys)`,
+      `${colors.blue}Coverage:${colors.reset} ${coverage}% (${translatedKeys}/${totalKeys} keys)`
     );
 
     if (totalIssues === 0) {
@@ -362,14 +380,16 @@ class TranslationChecker {
     }
 
     if (missingCount > 0) {
-      console.log(`${colors.red}Missing:${colors.reset} ${missingCount} keys (keys don't exist)`);
+      console.log(
+        `${colors.red}Missing:${colors.reset} ${missingCount} keys (keys don't exist)`
+      );
     }
     if (untranslatedCount > 0) {
       console.log(
-        `${colors.yellow}Untranslated:${colors.reset} ${untranslatedCount} keys (same as English)`,
+        `${colors.yellow}Untranslated:${colors.reset} ${untranslatedCount} keys (same as English)`
       );
     }
-    console.log("");
+    console.log('');
 
     // Show missing keys first
     if (missingKeys.length > 0) {
@@ -377,13 +397,17 @@ class TranslationChecker {
       console.log(`${colors.bold}${colors.red}MISSING KEYS:${colors.reset}`);
 
       for (const [namespace, keys] of Object.entries(grouped)) {
-        console.log(`${colors.bold}${namespace}${colors.reset} (${keys.length} missing):`);
+        console.log(
+          `${colors.bold}${namespace}${colors.reset} (${keys.length} missing):`
+        );
 
         for (const { key, value } of keys) {
-          console.log(`  ${colors.red}✗${colors.reset} ${colors.gray}${key}${colors.reset}`);
+          console.log(
+            `  ${colors.red}✗${colors.reset} ${colors.gray}${key}${colors.reset}`
+          );
           console.log(`    ${colors.gray}English: "${value}"${colors.reset}`);
         }
-        console.log("");
+        console.log('');
       }
     }
 
@@ -391,17 +415,21 @@ class TranslationChecker {
     if (untranslatedKeys.length > 0) {
       const grouped = this.groupByNamespace(untranslatedKeys);
       console.log(
-        `${colors.bold}${colors.yellow}UNTRANSLATED KEYS (same as English):${colors.reset}`,
+        `${colors.bold}${colors.yellow}UNTRANSLATED KEYS (same as English):${colors.reset}`
       );
 
       for (const [namespace, keys] of Object.entries(grouped)) {
-        console.log(`${colors.bold}${namespace}${colors.reset} (${keys.length} untranslated):`);
+        console.log(
+          `${colors.bold}${namespace}${colors.reset} (${keys.length} untranslated):`
+        );
 
         for (const { key, value } of keys) {
-          console.log(`  ${colors.yellow}⚠${colors.reset} ${colors.gray}${key}${colors.reset}`);
+          console.log(
+            `  ${colors.yellow}⚠${colors.reset} ${colors.gray}${key}${colors.reset}`
+          );
           console.log(`    ${colors.gray}English: "${value}"${colors.reset}`);
         }
-        console.log("");
+        console.log('');
       }
     }
   }
@@ -410,21 +438,22 @@ class TranslationChecker {
    * Print summary for all languages
    */
   printSummary(results) {
-    console.log(`\n${"=".repeat(70)}`);
+    console.log(`\n${'='.repeat(70)}`);
     console.log(`${colors.bold}${colors.cyan}SUMMARY${colors.reset}`);
-    console.log(`${"=".repeat(70)}\n`);
+    console.log(`${'='.repeat(70)}\n`);
 
     console.log(
-      `${colors.bold}Language    Coverage    Missing    Untranslated    Status${colors.reset}`,
+      `${colors.bold}Language    Coverage    Missing    Untranslated    Status${colors.reset}`
     );
-    console.log(`${"-".repeat(70)}`);
+    console.log(`${'-'.repeat(70)}`);
 
     let allComplete = true;
 
     for (const result of results) {
       if (!result) continue;
 
-      const { lang, coverage, missingCount, untranslatedCount, totalIssues } = result;
+      const { lang, coverage, missingCount, untranslatedCount, totalIssues } =
+        result;
       const status =
         totalIssues === 0
           ? `${colors.green}✓ Complete${colors.reset}`
@@ -435,7 +464,7 @@ class TranslationChecker {
           `${coverage}%`.padEnd(12) +
           `${missingCount}`.padEnd(11) +
           `${untranslatedCount}`.padEnd(16) +
-          `${status}`,
+          `${status}`
       );
 
       if (totalIssues > 0) {
@@ -444,16 +473,16 @@ class TranslationChecker {
       }
     }
 
-    console.log(`${"=".repeat(70)}\n`);
+    console.log(`${'='.repeat(70)}\n`);
 
     if (allComplete) {
       console.log(
-        `${colors.green}${colors.bold}🎉 All languages are fully translated!${colors.reset}\n`,
+        `${colors.green}${colors.bold}🎉 All languages are fully translated!${colors.reset}\n`
       );
       return 0;
     } else {
       console.log(
-        `${colors.yellow}${colors.bold}⚠ Total issues (missing + untranslated): ${this.totalMissing}${colors.reset}\n`,
+        `${colors.yellow}${colors.bold}⚠ Total issues (missing + untranslated): ${this.totalMissing}${colors.reset}\n`
       );
       return 1;
     }
@@ -463,9 +492,11 @@ class TranslationChecker {
    * Run the checker
    */
   run(targetLang = null) {
-    console.log(`${colors.cyan}${colors.bold}Missing Translations Checker${colors.reset}`);
     console.log(
-      `Checking against reference: ${colors.green}${REFERENCE_LANG}.json${colors.reset}\n`,
+      `${colors.cyan}${colors.bold}Missing Translations Checker${colors.reset}`
+    );
+    console.log(
+      `Checking against reference: ${colors.green}${REFERENCE_LANG}.json${colors.reset}\n`
     );
 
     const languagesToCheck = targetLang ? [targetLang] : LANGUAGES;
@@ -493,8 +524,10 @@ class TranslationChecker {
 const targetLang = process.argv[2];
 
 if (targetLang && !LANGUAGES.includes(targetLang)) {
-  console.error(`${colors.red}Error: Invalid language "${targetLang}"${colors.reset}`);
-  console.error(`Supported languages: ${LANGUAGES.join(", ")}`);
+  console.error(
+    `${colors.red}Error: Invalid language "${targetLang}"${colors.reset}`
+  );
+  console.error(`Supported languages: ${LANGUAGES.join(', ')}`);
   process.exit(1);
 }
 

@@ -1,5 +1,5 @@
-import { SortOptions, HttpError } from "@castmill/ui-common";
-import { authFetch } from "../../common/services/auth-fetch";
+import { SortOptions, HttpError } from '@castmill/ui-common';
+import { authFetch } from '../../common/services/auth-fetch';
 
 /**
  * Zone in a layout (percentages 0-100)
@@ -63,21 +63,24 @@ export interface LayoutCreate {
   team_id?: number;
 }
 
-async function handleResponse<T = any>(response: Response, options: { parse: true }): Promise<T>;
 async function handleResponse<T = any>(
   response: Response,
-  options?: { parse?: false },
+  options: { parse: true }
+): Promise<T>;
+async function handleResponse<T = any>(
+  response: Response,
+  options?: { parse?: false }
 ): Promise<void>;
 async function handleResponse<T = any>(
   response: Response,
-  options: HandleResponseOptions = {},
+  options: HandleResponseOptions = {}
 ): Promise<T | void> {
   if (response.status >= 200 && response.status < 300) {
     if (options.parse) {
       return (await response.json()) as T;
     }
   } else {
-    let errMsg = "";
+    let errMsg = '';
     let errorData: any = null;
     try {
       const jsonResponse = await response.json();
@@ -99,17 +102,17 @@ export const LayoutsService = {
   async createLayout(
     baseUrl: string,
     organizationId: string,
-    data: LayoutCreate,
+    data: LayoutCreate
   ): Promise<JsonLayout> {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/layouts`,
       {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ layout: data }),
-      },
+      }
     );
 
     const result = await handleResponse<{ data: JsonLayout }>(response, {
@@ -124,14 +127,16 @@ export const LayoutsService = {
   async fetchLayouts(
     baseUrl: string,
     organizationId: string,
-    options: FetchLayoutsOptions,
+    options: FetchLayoutsOptions
   ): Promise<{ data: JsonLayout[]; count: number }> {
     const { page, page_size, sortOptions, search, filters, team_id } = options;
 
     const filtersToString = (filters: Record<string, string | boolean>) => {
       return Object.entries(filters)
-        .map(([key, value]) => (typeof value === "boolean" ? `${key}` : `${key}:${value}`))
-        .join(",");
+        .map(([key, value]) =>
+          typeof value === 'boolean' ? `${key}` : `${key}:${value}`
+        )
+        .join(',');
     };
 
     const query: Record<string, string> = {
@@ -141,15 +146,15 @@ export const LayoutsService = {
     };
 
     if (search) {
-      query["search"] = search;
+      query['search'] = search;
     }
 
     if (filters) {
-      query["filters"] = filtersToString(filters);
+      query['filters'] = filtersToString(filters);
     }
 
     if (team_id !== undefined && team_id !== null) {
-      query["team_id"] = team_id.toString();
+      query['team_id'] = team_id.toString();
     }
 
     const queryString = new URLSearchParams(query).toString();
@@ -157,11 +162,11 @@ export const LayoutsService = {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/layouts?${queryString}`,
       {
-        method: "GET",
+        method: 'GET',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
-      },
+      }
     );
 
     return handleResponse<{ data: JsonLayout[]; count: number }>(response, {
@@ -175,16 +180,16 @@ export const LayoutsService = {
   async getLayout(
     baseUrl: string,
     organizationId: string,
-    layoutId: string | number,
+    layoutId: string | number
   ): Promise<JsonLayout> {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/layouts/${layoutId}`,
       {
-        method: "GET",
+        method: 'GET',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
-      },
+      }
     );
 
     const result = await handleResponse<{ data: JsonLayout }>(response, {
@@ -200,17 +205,17 @@ export const LayoutsService = {
     baseUrl: string,
     organizationId: string,
     layoutId: string | number,
-    data: LayoutUpdate,
+    data: LayoutUpdate
   ): Promise<JsonLayout> {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/layouts/${layoutId}`,
       {
-        method: "PATCH",
+        method: 'PATCH',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ update: data }),
-      },
+      }
     );
 
     // Update endpoint returns layout directly, not wrapped in { data: ... }
@@ -225,16 +230,16 @@ export const LayoutsService = {
   async deleteLayout(
     baseUrl: string,
     organizationId: string,
-    layoutId: string | number,
+    layoutId: string | number
   ): Promise<void> {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/layouts/${layoutId}`,
       {
-        method: "DELETE",
+        method: 'DELETE',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
-      },
+      }
     );
 
     await handleResponse(response);

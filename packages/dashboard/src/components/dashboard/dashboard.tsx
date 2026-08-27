@@ -1,10 +1,10 @@
-import { RouteSectionProps } from "@solidjs/router";
-import { Component } from "solid-js";
+import { RouteSectionProps } from '@solidjs/router';
+import { Component } from 'solid-js';
 
-import SidePanel from "../sidepanel/sidepanel";
+import SidePanel from '../sidepanel/sidepanel';
 
-import "./dashboard.scss";
-import { AddOnTree } from "../../classes/addon-tree";
+import './dashboard.scss';
+import { AddOnTree } from '../../classes/addon-tree';
 
 // Define a type that includes RouteSectionProps and your addons
 interface DashboardProps extends RouteSectionProps<unknown> {

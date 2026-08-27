@@ -1,7 +1,7 @@
-cordova.define("cordova/plugin/broadcast", function (i, t, a) {
-  var u = i("cordova/plugin/webos/service"),
-    s = i("cordova/utils"),
-    j = i("cordova/argscheck"),
+cordova.define('cordova/plugin/broadcast', function (i, t, a) {
+  var u = i('cordova/plugin/webos/service'),
+    s = i('cordova/utils'),
+    j = i('cordova/argscheck'),
     n = function (l) {
       this.isATSC = false;
       this.tokenChannelChange = 0;
@@ -13,9 +13,9 @@ cordova.define("cordova/plugin/broadcast", function (i, t, a) {
       this.isLastInput = true;
       this.isLastChannel = true;
       var h = this;
-      u.Request("luna://com.webos.service.tv.systemproperty", {
-        method: "getSystemInfo",
-        parameters: { keys: ["atsc"] },
+      u.Request('luna://com.webos.service.tv.systemproperty', {
+        method: 'getSystemInfo',
+        parameters: { keys: ['atsc'] },
         onSuccess: function (v) {
           h.isATSC = v.atsc;
         },
@@ -25,25 +25,25 @@ cordova.define("cordova/plugin/broadcast", function (i, t, a) {
   ((n.prototype.onchannelchange = function (h) {}),
     (n.prototype.onsignalstatuschange = function (h) {}),
     (n.prototype.initialize = function (h, x, l) {
-      j.checkArgs("fFo", "broadcastCordova.initialize", arguments);
+      j.checkArgs('fFo', 'broadcastCordova.initialize', arguments);
       var v = s.clone(l);
       this.broadcastDivId = document.getElementById(v.divId);
       v.broadcastPlugin = this;
       if (1 != v.isLastInput && v.src) {
         this.isLastInput = false;
-        if (-1 != v.src.indexOf("tv://")) {
+        if (-1 != v.src.indexOf('tv://')) {
           if (1 == v.isLastChannel) {
             this.isLastChannel = true;
-            v.type = "service/webos-broadcast";
+            v.type = 'service/webos-broadcast';
           } else {
             this.isLastChannel = false;
-            v.type = "service/webos-broadcast-standalone";
+            v.type = 'service/webos-broadcast-standalone';
           }
-          this.currentInput = "tv";
+          this.currentInput = 'tv';
           this.currentSource = v.src.substr(5);
         } else {
-          v.type = "service/webos-external";
-          var w = v.src.split(":");
+          v.type = 'service/webos-external';
+          var w = v.src.split(':');
           this.currentInput = w[1].substr(2).toLowerCase();
           this.currentSource = w[2];
         }
@@ -55,10 +55,10 @@ cordova.define("cordova/plugin/broadcast", function (i, t, a) {
       }
     }),
     (n.prototype.channelUp = function (h, v) {
-      j.checkArgs("fF", "broadcastCordova.channelUp", arguments);
+      j.checkArgs('fF', 'broadcastCordova.channelUp', arguments);
       var l = { broadcastId: this.broadcastElement.mediaId };
-      u.Request("luna://com.webos.service.tv.broadcast", {
-        method: "changeChannelUp",
+      u.Request('luna://com.webos.service.tv.broadcast', {
+        method: 'changeChannelUp',
         parameters: l,
         onSuccess: function (w) {
           h && h();
@@ -70,10 +70,10 @@ cordova.define("cordova/plugin/broadcast", function (i, t, a) {
       });
     }),
     (n.prototype.channelDown = function (h, v) {
-      j.checkArgs("fF", "broadcastCordova.channelDown", arguments);
+      j.checkArgs('fF', 'broadcastCordova.channelDown', arguments);
       var l = { broadcastId: this.broadcastElement.mediaId };
-      u.Request("luna://com.webos.service.tv.broadcast", {
-        method: "changeChannelDown",
+      u.Request('luna://com.webos.service.tv.broadcast', {
+        method: 'changeChannelDown',
         parameters: l,
         onSuccess: function (w) {
           h && h();
@@ -85,10 +85,10 @@ cordova.define("cordova/plugin/broadcast", function (i, t, a) {
       });
     }),
     (n.prototype.setChannel = function (h, w, l) {
-      j.checkArgs("fFo", "broadcastCordova.setChannel", arguments);
+      j.checkArgs('fFo', 'broadcastCordova.setChannel', arguments);
       var v = { broadcastId: this.broadcastElement.mediaId, channelId: l.id };
-      u.Request("luna://com.webos.service.tv.broadcast", {
-        method: "changeChannel",
+      u.Request('luna://com.webos.service.tv.broadcast', {
+        method: 'changeChannel',
         parameters: v,
         onSuccess: function (x) {
           h && h();
@@ -100,14 +100,14 @@ cordova.define("cordova/plugin/broadcast", function (i, t, a) {
       });
     }),
     (n.prototype.getCurrentChannel = function (h, v) {
-      j.checkArgs("fF", "broadcastCordova.getCurrentChannel", arguments);
+      j.checkArgs('fF', 'broadcastCordova.getCurrentChannel', arguments);
       var l = { broadcastId: this.broadcastElement.mediaId, subscribe: false };
-      u.Request("luna://com.webos.service.tv.broadcast", {
-        method: "getCurrentChannel",
+      u.Request('luna://com.webos.service.tv.broadcast', {
+        method: 'getCurrentChannel',
         parameters: l,
         onSuccess: function (x) {
           var w = {};
-          w = e(x.channel, "api");
+          w = e(x.channel, 'api');
           h && h(w);
         },
         onFailure: function (w) {
@@ -117,12 +117,12 @@ cordova.define("cordova/plugin/broadcast", function (i, t, a) {
       });
     }),
     (n.prototype.getSignalStatus = function (h, v) {
-      j.checkArgs("fF", "broadcastCordova.getSignalStatus", arguments);
+      j.checkArgs('fF', 'broadcastCordova.getSignalStatus', arguments);
       var l;
-      if ("tv" == this.currentInput) {
+      if ('tv' == this.currentInput) {
         l = { broadcastId: this.broadcastElement.mediaId, subscribe: false };
-        u.Request("luna://com.webos.service.tv.broadcast", {
-          method: "getChannelState",
+        u.Request('luna://com.webos.service.tv.broadcast', {
+          method: 'getChannelState',
           parameters: l,
           onSuccess: function (x) {
             var w = x.channelState;
@@ -136,9 +136,12 @@ cordova.define("cordova/plugin/broadcast", function (i, t, a) {
           },
         });
       } else {
-        l = { externalInputId: this.broadcastElement.mediaId, subscribe: false };
-        u.Request("luna://com.webos.service.tv.externaldevice/input/", {
-          method: "getSignalState",
+        l = {
+          externalInputId: this.broadcastElement.mediaId,
+          subscribe: false,
+        };
+        u.Request('luna://com.webos.service.tv.externaldevice/input/', {
+          method: 'getSignalState',
           parameters: l,
           onSuccess: function (w) {
             h && h(w.signalState);
@@ -151,16 +154,16 @@ cordova.define("cordova/plugin/broadcast", function (i, t, a) {
       }
     }),
     (n.prototype.getCurrentProgram = function (h, v, l) {
-      (j.checkArgs("fFo", "broadcastCordova.getCurrentProgram", arguments),
-        u.Request("luna://com.palm.systemservice/time", {
-          method: "getEffectiveBroadcastTime",
+      (j.checkArgs('fFo', 'broadcastCordova.getCurrentProgram', arguments),
+        u.Request('luna://com.palm.systemservice/time', {
+          method: 'getEffectiveBroadcastTime',
           parameters: {},
           onSuccess: function (x) {
             var w = {};
             w.id = l.id;
             w.startTime = x.localtime;
             w.endTime = x.localtime;
-            w.request = "nowInfo";
+            w.request = 'nowInfo';
             b(h, v, w);
           },
           onFailure: function (w) {
@@ -169,16 +172,16 @@ cordova.define("cordova/plugin/broadcast", function (i, t, a) {
         }));
     }),
     (n.prototype.getNextProgram = function (h, v, l) {
-      (j.checkArgs("fFo", "broadcastCordova.getNextProgram", arguments),
-        u.Request("luna://com.palm.systemservice/time", {
-          method: "getEffectiveBroadcastTime",
+      (j.checkArgs('fFo', 'broadcastCordova.getNextProgram', arguments),
+        u.Request('luna://com.palm.systemservice/time', {
+          method: 'getEffectiveBroadcastTime',
           parameters: {},
           onSuccess: function (x) {
             var w = {};
             ((w.id = l.id),
               (w.startTime = x.localtime),
               (w.endTime = x.localtime),
-              (w.request = "nextInfo"),
+              (w.request = 'nextInfo'),
               b(h, v, w));
           },
           onFailure: function (w) {
@@ -187,27 +190,27 @@ cordova.define("cordova/plugin/broadcast", function (i, t, a) {
         }));
     }),
     (n.prototype.getProgramCount = function (h, w, l) {
-      j.checkArgs("fFo", "broadcastCordova.getProgramCount", arguments);
+      j.checkArgs('fFo', 'broadcastCordova.getProgramCount', arguments);
       var v = s.clone(l);
-      v.request = "count";
+      v.request = 'count';
       b(h, w, v);
     }),
     (n.prototype.getProgramList = function (h, w, l) {
-      j.checkArgs("fFo", "broadcastCordova.getProgramList", arguments);
+      j.checkArgs('fFo', 'broadcastCordova.getProgramList', arguments);
       var v = s.clone(l);
-      v.request = "list";
+      v.request = 'list';
       b(h, w, v);
     }),
     (n.prototype.getChannelCount = function (h, w, l) {
-      j.checkArgs("fFo", "broadcastCordova.getChannelCount", arguments);
+      j.checkArgs('fFo', 'broadcastCordova.getChannelCount', arguments);
       var v = {
-        from: "com.webos.service.tv.channel.dblist:1",
-        select: [""],
-        where: [{ prop: "channelType", op: "=", val: l.type }],
-        filter: [{ prop: "Invisible", op: "=", val: !1 }],
+        from: 'com.webos.service.tv.channel.dblist:1',
+        select: [''],
+        where: [{ prop: 'channelType', op: '=', val: l.type }],
+        filter: [{ prop: 'Invisible', op: '=', val: !1 }],
       };
-      u.Request("luna://com.palm.db/", {
-        method: "search",
+      u.Request('luna://com.palm.db/', {
+        method: 'search',
         parameters: { query: v },
         onSuccess: function (y) {
           var x = {};
@@ -220,31 +223,31 @@ cordova.define("cordova/plugin/broadcast", function (i, t, a) {
       });
     }),
     (n.prototype.getChannelList = function (h, x, v) {
-      j.checkArgs("fFo", "broadcastCordova.getChannelList", arguments);
+      j.checkArgs('fFo', 'broadcastCordova.getChannelList', arguments);
       var l = v.startIndex - 1;
       if (0 > l) {
         l = 0;
       }
       var y = l + v.count,
         w = {
-          from: "com.webos.service.tv.channel.dblist:1",
+          from: 'com.webos.service.tv.channel.dblist:1',
           select: [
-            "channelId",
-            "channelName",
-            "channelMode",
-            "channelNumber",
-            "channelType",
-            "skipped",
-            "locked",
-            "descrambled",
-            "scrambled",
+            'channelId',
+            'channelName',
+            'channelMode',
+            'channelNumber',
+            'channelType',
+            'skipped',
+            'locked',
+            'descrambled',
+            'scrambled',
           ],
-          where: [{ prop: "channelType", op: "=", val: v.type }],
-          filter: [{ prop: "Invisible", op: "=", val: !1 }],
+          where: [{ prop: 'channelType', op: '=', val: v.type }],
+          filter: [{ prop: 'Invisible', op: '=', val: !1 }],
           limit: y,
         };
-      u.Request("luna://com.palm.db/", {
-        method: "search",
+      u.Request('luna://com.palm.db/', {
+        method: 'search',
         parameters: { query: w },
         onSuccess: function (C) {
           var z = {};
@@ -252,7 +255,7 @@ cordova.define("cordova/plugin/broadcast", function (i, t, a) {
           var A = C.results.length - l;
           if (A > 0) {
             for (var B = 0; A > B; B++) {
-              z.channel[B] = e(C.results[B + l], "db8");
+              z.channel[B] = e(C.results[B + l], 'db8');
             }
           }
           h && h(z);
@@ -264,32 +267,32 @@ cordova.define("cordova/plugin/broadcast", function (i, t, a) {
       });
     }),
     (n.prototype.getChannelListByName = function (h, w, v) {
-      j.checkArgs("fFo", "broadcastCordova.getChannelListByName", arguments);
+      j.checkArgs('fFo', 'broadcastCordova.getChannelListByName', arguments);
       var l = {
-        from: "com.webos.service.tv.channel.dblist:1",
+        from: 'com.webos.service.tv.channel.dblist:1',
         select: [
-          "channelId",
-          "channelName",
-          "channelMode",
-          "channelNumber",
-          "channelType",
-          "skipped",
-          "locked",
-          "descrambled",
-          "scrambled",
+          'channelId',
+          'channelName',
+          'channelMode',
+          'channelNumber',
+          'channelType',
+          'skipped',
+          'locked',
+          'descrambled',
+          'scrambled',
         ],
-        where: [{ prop: "channelName", op: "%", val: v.name }],
-        filter: [{ prop: "Invisible", op: "=", val: false }],
+        where: [{ prop: 'channelName', op: '%', val: v.name }],
+        filter: [{ prop: 'Invisible', op: '=', val: false }],
       };
-      (v.type && l.filter.push({ prop: "channelType", op: "=", val: v.type }),
-        u.Request("luna://com.palm.db/", {
-          method: "search",
+      (v.type && l.filter.push({ prop: 'channelType', op: '=', val: v.type }),
+        u.Request('luna://com.palm.db/', {
+          method: 'search',
           parameters: { query: l },
           onSuccess: function (z) {
             var x = {};
             if (((x.channel = []), z.results.length > 0)) {
               for (var y = 0; y < z.results.length; y++) {
-                x.channel[y] = e(z.results[y], "db8");
+                x.channel[y] = e(z.results[y], 'db8');
               }
             }
             h && h(x);
@@ -301,24 +304,24 @@ cordova.define("cordova/plugin/broadcast", function (i, t, a) {
         }));
     }),
     (n.prototype.setInput = function (l) {
-      j.checkArgs("o", "broadcastCordova.setInput", arguments);
+      j.checkArgs('o', 'broadcastCordova.setInput', arguments);
       var w = false;
-      if (-1 != l.src.indexOf("tv://")) {
+      if (-1 != l.src.indexOf('tv://')) {
         if (1 == this.isLastChannel) {
-          l.type = "service/webos-broadcast";
+          l.type = 'service/webos-broadcast';
         } else {
-          l.type = "service/webos-broadcast-standalone";
+          l.type = 'service/webos-broadcast-standalone';
         }
-        this.currentInput = "tv";
+        this.currentInput = 'tv';
         this.currentSource = l.src.substr(5);
       } else {
-        l.type = "service/webos-external";
-        var v = l.src.split(":");
+        l.type = 'service/webos-external';
+        var v = l.src.split(':');
         this.currentInput = v[1].substr(2).toLowerCase();
         this.currentSource = v[2];
       }
       for (var h = 0; h < this.broadcastElement.childNodes.length; h++) {
-        if ("SOURCE" == this.broadcastElement.childNodes[h].nodeName) {
+        if ('SOURCE' == this.broadcastElement.childNodes[h].nodeName) {
           this.broadcastElement.childNodes[h].src = l.src;
           this.broadcastElement.childNodes[h].type = l.type;
           this.broadcastElement.load();
@@ -328,47 +331,65 @@ cordova.define("cordova/plugin/broadcast", function (i, t, a) {
       return w;
     }),
     (n.prototype.addEventListener = function (h, v, l) {
-      if ("channelchange" == h) {
-        this.tokenChannelChange = u.Request("luna://com.webos.service.tv.broadcast", {
-          method: "getCurrentChannel",
-          parameters: { broadcastId: this.broadcastElement.mediaId, subscribe: false },
-          onSuccess: function (x) {
-            var w = x.channel;
-            v && v(w);
-          },
-          onFailure: function (w) {},
-        });
+      if ('channelchange' == h) {
+        this.tokenChannelChange = u.Request(
+          'luna://com.webos.service.tv.broadcast',
+          {
+            method: 'getCurrentChannel',
+            parameters: {
+              broadcastId: this.broadcastElement.mediaId,
+              subscribe: false,
+            },
+            onSuccess: function (x) {
+              var w = x.channel;
+              v && v(w);
+            },
+            onFailure: function (w) {},
+          }
+        );
       } else {
-        if ("signalstatus" == h) {
-          if ("tv" == this.currentInput) {
-            this.tokenSignalState = u.Request("luna://com.webos.service.tv.broadcast", {
-              method: "getChannelState",
-              parameters: { broadcastId: this.broadcastElement.mediaId, subscribe: false },
-              onSuccess: function (x) {
-                var w = x.channelState;
-                w.screensaverType = w.channelScreensaverType;
-                delete w.channelScreensaverType;
-                v && v(w);
-              },
-              onFailure: function (w) {},
-            });
+        if ('signalstatus' == h) {
+          if ('tv' == this.currentInput) {
+            this.tokenSignalState = u.Request(
+              'luna://com.webos.service.tv.broadcast',
+              {
+                method: 'getChannelState',
+                parameters: {
+                  broadcastId: this.broadcastElement.mediaId,
+                  subscribe: false,
+                },
+                onSuccess: function (x) {
+                  var w = x.channelState;
+                  w.screensaverType = w.channelScreensaverType;
+                  delete w.channelScreensaverType;
+                  v && v(w);
+                },
+                onFailure: function (w) {},
+              }
+            );
           } else {
-            this.tokenSignalState = u.Request("luna://com.webos.service.tv.externaldevice/input/", {
-              method: "getSignalState",
-              parameters: { externalInputId: this.broadcastElement.mediaId, subscribe: true },
-              onSuccess: function (x) {
-                var w = x.signalState;
-                v && v(w);
-              },
-              onFailure: function (w) {},
-            });
+            this.tokenSignalState = u.Request(
+              'luna://com.webos.service.tv.externaldevice/input/',
+              {
+                method: 'getSignalState',
+                parameters: {
+                  externalInputId: this.broadcastElement.mediaId,
+                  subscribe: true,
+                },
+                onSuccess: function (x) {
+                  var w = x.signalState;
+                  v && v(w);
+                },
+                onFailure: function (w) {},
+              }
+            );
           }
         }
       }
     }));
   var k = function (h, l) {
       r(h);
-      if ("tv" == h.currentInput) {
+      if ('tv' == h.currentInput) {
         p(h);
         f(h);
       } else {
@@ -377,40 +398,43 @@ cordova.define("cordova/plugin/broadcast", function (i, t, a) {
       }
     },
     c = function (h) {
-      var v = document.createElement("VIDEO");
-      v.setAttribute("id", h.videoId);
-      v.setAttribute("width", "100%");
-      v.setAttribute("height", "100%");
-      v.setAttribute("autoplay", "");
+      var v = document.createElement('VIDEO');
+      v.setAttribute('id', h.videoId);
+      v.setAttribute('width', '100%');
+      v.setAttribute('height', '100%');
+      v.setAttribute('autoplay', '');
       v.addEventListener(
-        "loadedmetadata",
+        'loadedmetadata',
         function () {
           k(h.broadcastPlugin, h.callback);
         },
-        false,
+        false
       );
-      var l = document.createElement("SOURCE");
-      l.setAttribute("src", h.src);
-      l.setAttribute("type", h.type);
+      var l = document.createElement('SOURCE');
+      l.setAttribute('src', h.src);
+      l.setAttribute('type', h.type);
       v.appendChild(l);
       h.broadcastPlugin.broadcastDivId.appendChild(v);
       h.broadcastPlugin.broadcastElement = v;
     },
     d = function (h, l, v) {
-      u.Request("luna://com.webos.service.eim", {
-        method: "getCurrentInput",
+      u.Request('luna://com.webos.service.eim', {
+        method: 'getCurrentInput',
         parameters: {},
         onSuccess: function (x) {
-          if ("ATV" == x.mainInputSourceId || "DTV" == x.mainInputSourceId) {
-            v.broadcastPlugin.currentInput = "tv";
+          if ('ATV' == x.mainInputSourceId || 'DTV' == x.mainInputSourceId) {
+            v.broadcastPlugin.currentInput = 'tv';
             q(h, l, v);
           } else {
-            var w = x.mainInputSourceId.split("_");
+            var w = x.mainInputSourceId.split('_');
             v.broadcastPlugin.currentInput = w[0].toLowerCase();
             v.broadcastPlugin.currentSource = w[1];
             v.src =
-              "ext://" + v.broadcastPlugin.currentInput + ":" + v.broadcastPlugin.currentSource;
-            v.type = "service/webos-external";
+              'ext://' +
+              v.broadcastPlugin.currentInput +
+              ':' +
+              v.broadcastPlugin.currentSource;
+            v.type = 'service/webos-external';
             c(v);
             h && h();
           }
@@ -423,21 +447,30 @@ cordova.define("cordova/plugin/broadcast", function (i, t, a) {
     },
     q = function (l, h, v) {},
     p = function (h) {
-      h.tokenChannelChange = u.Request("luna://com.webos.service.tv.broadcast", {
-        method: "getCurrentChannel",
-        parameters: { broadcastId: h.broadcastElement.mediaId, subscribe: true },
-        onSuccess: function (l) {
-          h.currentSource = l.channel.channelId;
-          var v = {};
-          ((v = e(l.channel, "api")), h.onchannelchange(v));
-        },
-        onFailure: function (l) {},
-      });
+      h.tokenChannelChange = u.Request(
+        'luna://com.webos.service.tv.broadcast',
+        {
+          method: 'getCurrentChannel',
+          parameters: {
+            broadcastId: h.broadcastElement.mediaId,
+            subscribe: true,
+          },
+          onSuccess: function (l) {
+            h.currentSource = l.channel.channelId;
+            var v = {};
+            ((v = e(l.channel, 'api')), h.onchannelchange(v));
+          },
+          onFailure: function (l) {},
+        }
+      );
     },
     f = function (h) {
-      h.tokenSignalState = u.Request("luna://com.webos.service.tv.broadcast", {
-        method: "getChannelState",
-        parameters: { broadcastId: h.broadcastElement.mediaId, subscribe: true },
+      h.tokenSignalState = u.Request('luna://com.webos.service.tv.broadcast', {
+        method: 'getChannelState',
+        parameters: {
+          broadcastId: h.broadcastElement.mediaId,
+          subscribe: true,
+        },
         onSuccess: function (v) {
           var l = v.channelState;
           l.screensaverType = l.channelScreensaverType;
@@ -448,15 +481,21 @@ cordova.define("cordova/plugin/broadcast", function (i, t, a) {
       });
     },
     o = function (h) {
-      h.tokenSignalState = u.Request("luna://com.webos.service.tv.externaldevice/input/", {
-        method: "getSignalState",
-        parameters: { externalInputId: h.broadcastElement.mediaId, subscribe: true },
-        onSuccess: function (l) {
-          var v = l.signalState;
-          h.onsignalstatuschange(v);
-        },
-        onFailure: function (l) {},
-      });
+      h.tokenSignalState = u.Request(
+        'luna://com.webos.service.tv.externaldevice/input/',
+        {
+          method: 'getSignalState',
+          parameters: {
+            externalInputId: h.broadcastElement.mediaId,
+            subscribe: true,
+          },
+          onSuccess: function (l) {
+            var v = l.signalState;
+            h.onsignalstatuschange(v);
+          },
+          onFailure: function (l) {},
+        }
+      );
     },
     r = function (h) {
       if (h.tokenChannelChange) {
@@ -470,51 +509,51 @@ cordova.define("cordova/plugin/broadcast", function (i, t, a) {
       var w = g(v.startTime),
         l = g(v.endTime),
         x = {};
-      if ("count" == v.request) {
+      if ('count' == v.request) {
         x = {
-          from: "com.webos.service.tv.programSCH:4",
-          select: [""],
-          where: [{ prop: "signalChannelId", op: "=", val: v.signalChannelId }],
+          from: 'com.webos.service.tv.programSCH:4',
+          select: [''],
+          where: [{ prop: 'signalChannelId', op: '=', val: v.signalChannelId }],
           filter: [
-            { prop: "localStartTime", op: "<=", val: l },
-            { prop: "localEndTime", op: ">=", val: w },
+            { prop: 'localStartTime', op: '<=', val: l },
+            { prop: 'localEndTime', op: '>=', val: w },
           ],
         };
       } else {
-        if ("nextInfo" == v.request) {
+        if ('nextInfo' == v.request) {
           x = {
-            from: "com.webos.service.tv.programSCH:4",
+            from: 'com.webos.service.tv.programSCH:4',
             select: [
-              "programId",
-              "eventId",
-              "localStartTime",
-              "localEndTime",
-              "duration",
-              "programName",
-              "description",
+              'programId',
+              'eventId',
+              'localStartTime',
+              'localEndTime',
+              'duration',
+              'programName',
+              'description',
             ],
-            where: [{ prop: "channelId", op: "=", val: v.signalChannelId }],
-            filter: [{ prop: "localStartTime", op: ">", val: w }],
-            orderBy: "localStartTime",
+            where: [{ prop: 'channelId', op: '=', val: v.signalChannelId }],
+            filter: [{ prop: 'localStartTime', op: '>', val: w }],
+            orderBy: 'localStartTime',
             limit: 1,
           };
         } else {
-          if ("list" == v.request || "nowInfo" == v.request) {
+          if ('list' == v.request || 'nowInfo' == v.request) {
             x = {
-              from: "com.webos.service.tv.programSCH:4",
+              from: 'com.webos.service.tv.programSCH:4',
               select: [
-                "programId",
-                "eventId",
-                "localStartTime",
-                "localEndTime",
-                "duration",
-                "programName",
-                "description",
+                'programId',
+                'eventId',
+                'localStartTime',
+                'localEndTime',
+                'duration',
+                'programName',
+                'description',
               ],
-              where: [{ prop: "channelId", op: "=", val: v.signalChannelId }],
+              where: [{ prop: 'channelId', op: '=', val: v.signalChannelId }],
               filter: [
-                { prop: "localStartTime", op: "<=", val: l },
-                { prop: "localEndTime", op: ">=", val: w },
+                { prop: 'localStartTime', op: '<=', val: l },
+                { prop: 'localEndTime', op: '>=', val: w },
               ],
             };
           }
@@ -523,12 +562,12 @@ cordova.define("cordova/plugin/broadcast", function (i, t, a) {
     },
     b = function (h, l, v) {
       var w = {
-        from: "com.webos.service.tv.channel.dblist:1",
-        select: ["signalChannelId"],
-        where: [{ prop: "channelId", op: "=", val: v.id }],
+        from: 'com.webos.service.tv.channel.dblist:1',
+        select: ['signalChannelId'],
+        where: [{ prop: 'channelId', op: '=', val: v.id }],
       };
-      u.Request("luna://com.palm.db/", {
-        method: "find",
+      u.Request('luna://com.palm.db/', {
+        method: 'find',
         parameters: { query: w },
         onSuccess: function (x) {
           v.signalChannelId = x.results[0].signalChannelId;
@@ -545,7 +584,7 @@ cordova.define("cordova/plugin/broadcast", function (i, t, a) {
       h.id = v.channelId;
       h.number = v.channelNumber;
       h.name = v.channelName;
-      if ("api" == l) {
+      if ('api' == l) {
         h.mode = v.channelModeName;
         h.type = v.channelTypeName;
         h.isSkipped = v.isSkipped;
@@ -563,31 +602,31 @@ cordova.define("cordova/plugin/broadcast", function (i, t, a) {
       return h;
     },
     g = function (h) {
-      var l = h.year + ",";
-      l += (h.month < 10 ? "0" : "") + h.month + ",";
-      l += (h.day < 10 ? "0" : "") + h.day + ",";
-      l += (h.hour < 10 ? "0" : "") + h.hour + ",";
-      l += (h.minute < 10 ? "0" : "") + h.minute + ",";
-      l += (h.second < 10 ? "0" : "") + h.second;
+      var l = h.year + ',';
+      l += (h.month < 10 ? '0' : '') + h.month + ',';
+      l += (h.day < 10 ? '0' : '') + h.day + ',';
+      l += (h.hour < 10 ? '0' : '') + h.hour + ',';
+      l += (h.minute < 10 ? '0' : '') + h.minute + ',';
+      l += (h.second < 10 ? '0' : '') + h.second;
       return l;
     };
   a.exports = n;
 });
-var Broadcast = cordova.require("cordova/plugin/broadcast");
-cordova.define("cordova/plugin/inputSource", function (c, e, b) {
+var Broadcast = cordova.require('cordova/plugin/broadcast');
+cordova.define('cordova/plugin/inputSource', function (c, e, b) {
   function d(p) {}
   var i;
   if (window.PalmSystem) {
-    d("Window.PalmSystem Available");
-    i = c("cordova/plugin/webos/service");
+    d('Window.PalmSystem Available');
+    i = c('cordova/plugin/webos/service');
   } else {
     i = {
       Request: function (p, q) {
-        d(p + " invoked. But I am a dummy because PalmSystem is not available");
-        if (typeof q.onFailure === "function") {
+        d(p + ' invoked. But I am a dummy because PalmSystem is not available');
+        if (typeof q.onFailure === 'function') {
           q.onFailure({
             returnValue: false,
-            errorText: "PalmSystem Not Available. Cordova is not installed?",
+            errorText: 'PalmSystem Not Available. Cordova is not installed?',
           });
         }
       },
@@ -595,7 +634,7 @@ cordova.define("cordova/plugin/inputSource", function (c, e, b) {
   }
   var k = function () {};
   var n = false;
-  var h = "";
+  var h = '';
   var g = null;
   function m(q, r, p) {
     if (q.errorCode === undefined || q.errorCode === null) {
@@ -612,31 +651,31 @@ cordova.define("cordova/plugin/inputSource", function (c, e, b) {
       p = r.charAt(q - 1);
       q--;
     }
-    r = r.substring(0, q) + ":" + p;
-    r = "ext://" + r.toLowerCase();
+    r = r.substring(0, q) + ':' + p;
+    r = 'ext://' + r.toLowerCase();
     return r;
   }
   var j = null;
   var a = {};
   function o(p) {
     if (j === null) {
-      i.Request("luna://com.webos.service.tv.systemproperty", {
-        method: "getSystemInfo",
-        parameters: { keys: ["sdkVersion", "boardType"] },
+      i.Request('luna://com.webos.service.tv.systemproperty', {
+        method: 'getSystemInfo',
+        parameters: { keys: ['sdkVersion', 'boardType'] },
         onSuccess: function (q) {
-          d("getPlatformInfo: onSuccess");
-          d("version : " + q.sdkVersion);
-          var r = q.sdkVersion.split(".");
-          if (r.length >= 1 && r[0] === "1") {
-            a = { webOSVer: 1, chipset: q.boardType.split("_")[0] };
+          d('getPlatformInfo: onSuccess');
+          d('version : ' + q.sdkVersion);
+          var r = q.sdkVersion.split('.');
+          if (r.length >= 1 && r[0] === '1') {
+            a = { webOSVer: 1, chipset: q.boardType.split('_')[0] };
           } else {
-            if (r.length >= 1 && r[0] === "2") {
-              a = { webOSVer: 2, chipset: q.boardType.split("_")[0] };
+            if (r.length >= 1 && r[0] === '2') {
+              a = { webOSVer: 2, chipset: q.boardType.split('_')[0] };
             } else {
-              if (r.length >= 1 && r[0] === "3") {
-                a = { webOSVer: 3, chipset: q.boardType.split("_")[0] };
+              if (r.length >= 1 && r[0] === '3') {
+                a = { webOSVer: 3, chipset: q.boardType.split('_')[0] };
               } else {
-                a = { webOSVer: 0, chipset: "" };
+                a = { webOSVer: 0, chipset: '' };
               }
             }
           }
@@ -644,8 +683,8 @@ cordova.define("cordova/plugin/inputSource", function (c, e, b) {
           p(a);
         },
         onFailure: function (q) {
-          d("getPlatformInfo: onFailure");
-          a = { webOSVer: 0, chipset: "" };
+          d('getPlatformInfo: onFailure');
+          a = { webOSVer: 0, chipset: '' };
           p(a);
         },
       });
@@ -654,95 +693,102 @@ cordova.define("cordova/plugin/inputSource", function (c, e, b) {
     }
   }
   function l(r, p, q) {
-    var s = r.toUpperCase().substring(6).split(":")[0];
-    if (s === "DP") {
-      s = "DISPLAYPORT";
+    var s = r.toUpperCase().substring(6).split(':')[0];
+    if (s === 'DP') {
+      s = 'DISPLAYPORT';
     }
-    i.Request("luna://com.webos.service.eim/", {
-      method: "getAllInputStatus",
+    i.Request('luna://com.webos.service.eim/', {
+      method: 'getAllInputStatus',
       onSuccess: function (t) {
-        d("convertInputSource: On Success " + r);
+        d('convertInputSource: On Success ' + r);
         if (t.returnValue === true) {
-          if (typeof p === "function") {
+          if (typeof p === 'function') {
             var u = new Array(t.totalCount);
             o(function (D) {
               var B = D.webOSVer;
-              d("convertInputSource: " + JSON.stringify(t.devices));
-              d("version: " + B);
+              d('convertInputSource: ' + JSON.stringify(t.devices));
+              d('version: ' + B);
               if (B >= 3) {
                 for (var y = 0; y < t.devices.length; y++) {
-                  var z = r.substring(6).split(":");
+                  var z = r.substring(6).split(':');
                   var C = t.devices[y].deviceName;
-                  var w = "1";
+                  var w = '1';
                   if (isNaN(C.substring(C.length - 1, C.length)) === false) {
                     w = C.substring(C.length - 1, C.length);
                     C = C.substring(0, C.length - 1);
                   }
-                  if (C.toLowerCase() === "displayport") {
-                    C = "dp";
+                  if (C.toLowerCase() === 'displayport') {
+                    C = 'dp';
                   }
-                  if (C.toLowerCase().indexOf(z[0].toLowerCase()) >= 0 && w === z[1]) {
-                    var A = t.devices[y].id.split("_");
-                    convertedInput = "ext://" + A[0].toLowerCase() + ":" + A[1];
+                  if (
+                    C.toLowerCase().indexOf(z[0].toLowerCase()) >= 0 &&
+                    w === z[1]
+                  ) {
+                    var A = t.devices[y].id.split('_');
+                    convertedInput = 'ext://' + A[0].toLowerCase() + ':' + A[1];
                     p(convertedInput);
                     return;
                   }
                 }
-                d("convertInputSource: On Failure " + r);
+                d('convertInputSource: On Failure ' + r);
                 var v = {};
-                m(v, "IGISS", "convertInputSource. It does not support inputsource type.");
+                m(
+                  v,
+                  'IGISS',
+                  'convertInputSource. It does not support inputsource type.'
+                );
                 q(v);
               } else {
                 switch (B) {
                   case 1:
-                    if (r === "ext://dp:1") {
-                      r = "ext://hdmi:3";
+                    if (r === 'ext://dp:1') {
+                      r = 'ext://hdmi:3';
                     } else {
-                      if (r === "ext://dvi:1") {
-                        r = "ext://hdmi:4";
+                      if (r === 'ext://dvi:1') {
+                        r = 'ext://hdmi:4';
                       }
                     }
                     break;
                   case 2:
-                    if (a.chipset === "H15") {
-                      if (r === "ext://dvi:1") {
-                        r = "ext://hdmi:3";
+                    if (a.chipset === 'H15') {
+                      if (r === 'ext://dvi:1') {
+                        r = 'ext://hdmi:3';
                       } else {
-                        if (r === "ext://ops:1") {
-                          r = "ext://hdmi:3";
+                        if (r === 'ext://ops:1') {
+                          r = 'ext://hdmi:3';
                         } else {
-                          if (r === "ext://dp:1") {
-                            r = "ext://hdmi:3";
+                          if (r === 'ext://dp:1') {
+                            r = 'ext://hdmi:3';
                           } else {
-                            if (r === "ext://hdmi:4") {
-                              r = "ext://dp:1";
+                            if (r === 'ext://hdmi:4') {
+                              r = 'ext://dp:1';
                             }
                           }
                         }
                       }
                     } else {
-                      if (r === "ext://dp:1") {
-                        r = "ext://hdmi:3";
+                      if (r === 'ext://dp:1') {
+                        r = 'ext://hdmi:3';
                       } else {
-                        if (r === "ext://dvi:1") {
-                          r = "ext://hdmi:2";
+                        if (r === 'ext://dvi:1') {
+                          r = 'ext://hdmi:2';
                         } else {
-                          if (r === "ext://ops:1") {
-                            r = "ext://hdmi:4";
+                          if (r === 'ext://ops:1') {
+                            r = 'ext://hdmi:4';
                           }
                         }
                       }
                     }
                     break;
                   case 3:
-                    if (r === "ext://dp:1") {
-                      r = "ext://hdmi:3";
+                    if (r === 'ext://dp:1') {
+                      r = 'ext://hdmi:3';
                     } else {
-                      if (r === "ext://dvi:1") {
-                        r = "ext://hdmi:2";
+                      if (r === 'ext://dvi:1') {
+                        r = 'ext://hdmi:2';
                       } else {
-                        if (r === "ext://ops:1") {
-                          r = "ext://hdmi:4";
+                        if (r === 'ext://ops:1') {
+                          r = 'ext://hdmi:4';
                         }
                       }
                     }
@@ -752,15 +798,15 @@ cordova.define("cordova/plugin/inputSource", function (c, e, b) {
                 }
                 for (var y = 0; y < u.length; y++) {
                   u[y] = {};
-                  if (a.chipset === "H15") {
+                  if (a.chipset === 'H15') {
                     u[y].inputPort = f(t.devices[y].deviceName);
                   } else {
                     u[y].inputPort = f(t.devices[y].label);
                   }
-                  var A = t.devices[y].id.split("_");
-                  u[y].id = "ext://" + A[0].toLowerCase() + ":" + A[1];
+                  var A = t.devices[y].id.split('_');
+                  u[y].id = 'ext://' + A[0].toLowerCase() + ':' + A[1];
                   if (r === u[y].id) {
-                    d("convertInputSource: On Success ok " + r);
+                    d('convertInputSource: On Success ok ' + r);
                     p(r);
                     return;
                   }
@@ -768,14 +814,18 @@ cordova.define("cordova/plugin/inputSource", function (c, e, b) {
                 for (var x = 0; x < u.length; x++) {
                   if (r === u[x].inputPort) {
                     r = u[x].id;
-                    d("convertInputSource: On Success converted " + r);
+                    d('convertInputSource: On Success converted ' + r);
                     p(r);
                     return;
                   }
                 }
-                d("convertInputSource: On Failure " + r);
+                d('convertInputSource: On Failure ' + r);
                 var v = {};
-                m(v, "IGISS", "convertInputSource. It does not support inputsource type.");
+                m(
+                  v,
+                  'IGISS',
+                  'convertInputSource. It does not support inputsource type.'
+                );
                 q(v);
               }
             });
@@ -783,36 +833,44 @@ cordova.define("cordova/plugin/inputSource", function (c, e, b) {
         }
       },
       onFailure: function (t) {
-        d("convertInputSource: On Failure");
+        d('convertInputSource: On Failure');
         delete t.returnValue;
-        if (typeof q === "function") {
-          m(t, "IGISS", "convertInputSource returns failure on gathering input list.");
+        if (typeof q === 'function') {
+          m(
+            t,
+            'IGISS',
+            'convertInputSource returns failure on gathering input list.'
+          );
           q(t);
         }
       },
     });
   }
   k.prototype.initialize = function (q, r, t) {
-    d("initialize: " + JSON.stringify(t));
+    d('initialize: ' + JSON.stringify(t));
     if (
       t.divId === undefined ||
-      typeof t.divId !== "string" ||
+      typeof t.divId !== 'string' ||
       t.divId === null ||
       t.divId.length <= 0 ||
       t.videoId === undefined ||
-      typeof t.videoId !== "string" ||
+      typeof t.videoId !== 'string' ||
       t.videoId === null ||
       t.videoId.length <= 0 ||
       t.callback === undefined ||
-      typeof t.callback !== "function" ||
+      typeof t.callback !== 'function' ||
       t.src === undefined ||
-      typeof t.src !== "string" ||
+      typeof t.src !== 'string' ||
       t.src === null ||
       t.src.length <= 0
     ) {
-      if (typeof r === "function") {
+      if (typeof r === 'function') {
         var p = {};
-        m(p, "II", "InputSource.initialize returns failure. invalid parameters.");
+        m(
+          p,
+          'II',
+          'InputSource.initialize returns failure. invalid parameters.'
+        );
         r(p);
       }
       return;
@@ -821,19 +879,23 @@ cordova.define("cordova/plugin/inputSource", function (c, e, b) {
       document.getElementById(t.divId) === null ||
       document.getElementById(t.divId) === undefined
     ) {
-      if (typeof r === "function") {
+      if (typeof r === 'function') {
         r({
-          errorCode: "II",
-          errorText: "options.divId:[" + t.divId + "] element not exists or cannot approach",
+          errorCode: 'II',
+          errorText:
+            'options.divId:[' +
+            t.divId +
+            '] element not exists or cannot approach',
         });
       }
       return;
     } else {
       if (document.getElementById(t.videoId)) {
-        if (typeof r === "function") {
+        if (typeof r === 'function') {
           r({
-            errorCode: "II",
-            errorText: "options.videoId:[" + t.videoId + "] element already exists.",
+            errorCode: 'II',
+            errorText:
+              'options.videoId:[' + t.videoId + '] element already exists.',
           });
         }
         return;
@@ -853,21 +915,34 @@ cordova.define("cordova/plugin/inputSource", function (c, e, b) {
         h = t.videoId;
       },
       function s(w) {
-        d("initialize: failure " + JSON.stringify(w));
-        if (typeof r === "function") {
+        d('initialize: failure ' + JSON.stringify(w));
+        if (typeof r === 'function') {
           var v = {};
-          m(v, "II", "InputSource.initialize returns failure. invalid parameters.");
+          m(
+            v,
+            'II',
+            'InputSource.initialize returns failure. invalid parameters.'
+          );
           r(v);
         }
-      },
+      }
     );
-    d("initialize: Done");
+    d('initialize: Done');
   };
   k.prototype.changeInputSource = function (q, r, t) {
-    if (t.src === undefined || typeof t.src !== "string" || t.src === null || t.src.length <= 0) {
-      if (typeof r === "function") {
+    if (
+      t.src === undefined ||
+      typeof t.src !== 'string' ||
+      t.src === null ||
+      t.src.length <= 0
+    ) {
+      if (typeof r === 'function') {
         var p = {};
-        m(p, "ICIS", "InputSource.changeInputSource returns failure. invalid argument.");
+        m(
+          p,
+          'ICIS',
+          'InputSource.changeInputSource returns failure. invalid argument.'
+        );
         r(p);
       }
       return;
@@ -877,14 +952,18 @@ cordova.define("cordova/plugin/inputSource", function (c, e, b) {
       document.getElementById(h) === null ||
       document.getElementById(h) === undefined
     ) {
-      if (typeof r === "function") {
+      if (typeof r === 'function') {
         var p = {};
-        m(p, "ICIS", "InputSource.changeInputSource returns failure. Call initialize() first.");
+        m(
+          p,
+          'ICIS',
+          'InputSource.changeInputSource returns failure. Call initialize() first.'
+        );
         r(p);
       }
       return;
     }
-    d("changeInputSource: " + JSON.stringify(t));
+    d('changeInputSource: ' + JSON.stringify(t));
     l(
       t.src,
       function u(w) {
@@ -894,42 +973,46 @@ cordova.define("cordova/plugin/inputSource", function (c, e, b) {
         x.callback = t.callback;
         x.src = w;
         if (g.setInput(x)) {
-          d("changeInputSource: On Success");
-          if (typeof q === "function") {
+          d('changeInputSource: On Success');
+          if (typeof q === 'function') {
             q();
           }
         } else {
-          if (typeof r === "function") {
+          if (typeof r === 'function') {
             var v = {};
-            d("changeInputSource: On Failure");
-            m(v, "ICIS", "InputSource.changeInputSource returns failure.");
+            d('changeInputSource: On Failure');
+            m(v, 'ICIS', 'InputSource.changeInputSource returns failure.');
             r(v);
           }
         }
       },
       function s(w) {
-        d("changeInputSource: failure " + JSON.stringify(w));
-        if (typeof r === "function") {
+        d('changeInputSource: failure ' + JSON.stringify(w));
+        if (typeof r === 'function') {
           var v = {};
-          m(v, "ICIS", "InputSource.changeInputSource returns failure. invalid argument. ");
+          m(
+            v,
+            'ICIS',
+            'InputSource.changeInputSource returns failure. invalid argument. '
+          );
           r(v);
         }
-      },
+      }
     );
-    d("changeInputSource: Done");
+    d('changeInputSource: Done');
   };
   k.prototype.getInputSourceStatus = function (p, q) {
-    d("getInputSourceStatus: ");
-    i.Request("luna://com.webos.service.eim/", {
-      method: "getAllInputStatus",
+    d('getInputSourceStatus: ');
+    i.Request('luna://com.webos.service.eim/', {
+      method: 'getAllInputStatus',
       onSuccess: function (r) {
-        d("getInputSourceStatus: On Success");
+        d('getInputSourceStatus: On Success');
         if (r.returnValue === true) {
           o(function (A) {
             var x = A.webOSVer;
-            d("convertInputSource: " + JSON.stringify(r.totalCount));
-            d("convertInputSource: " + JSON.stringify(r.devices));
-            d("version: " + x);
+            d('convertInputSource: ' + JSON.stringify(r.totalCount));
+            d('convertInputSource: ' + JSON.stringify(r.devices));
+            d('version: ' + x);
             var u = {};
             var s = new Array(r.totalCount);
             var z = new Array(r.totalCount);
@@ -939,38 +1022,38 @@ cordova.define("cordova/plugin/inputSource", function (c, e, b) {
               var w = null;
               switch (x) {
                 case 1:
-                  w = r.devices[v].id.split("_");
-                  s[v].inputPort = "ext://" + w[0].toLowerCase() + ":" + w[1];
-                  if (s[v].inputPort === "ext://hdmi:3") {
-                    s[v].inputPort = "ext://dp:1";
+                  w = r.devices[v].id.split('_');
+                  s[v].inputPort = 'ext://' + w[0].toLowerCase() + ':' + w[1];
+                  if (s[v].inputPort === 'ext://hdmi:3') {
+                    s[v].inputPort = 'ext://dp:1';
                   } else {
-                    if (s[v].inputPort === "ext://hdmi:4") {
-                      s[v].inputPort = "ext://dvi:1";
+                    if (s[v].inputPort === 'ext://hdmi:4') {
+                      s[v].inputPort = 'ext://dvi:1';
                     }
                   }
                   break;
                 case 2:
-                  w = r.devices[v].id.split("_");
-                  s[v].inputPort = "ext://" + w[0].toLowerCase() + ":" + w[1];
-                  if (A.chipset === "H15") {
-                    if (s[v].inputPort === "ext://dvi:4") {
-                      s[v].inputPort = "ext://hdmi:3";
+                  w = r.devices[v].id.split('_');
+                  s[v].inputPort = 'ext://' + w[0].toLowerCase() + ':' + w[1];
+                  if (A.chipset === 'H15') {
+                    if (s[v].inputPort === 'ext://dvi:4') {
+                      s[v].inputPort = 'ext://hdmi:3';
                     }
-                    if (s[v].inputPort === "ext://ops:1") {
-                      s[v].inputPort = "ext://hdmi:3";
+                    if (s[v].inputPort === 'ext://ops:1') {
+                      s[v].inputPort = 'ext://hdmi:3';
                     }
-                    if (s[v].inputPort === "ext://hdmi:4") {
-                      s[v].inputPort = "ext://dp:1";
+                    if (s[v].inputPort === 'ext://hdmi:4') {
+                      s[v].inputPort = 'ext://dp:1';
                     }
                   } else {
-                    if (s[v].inputPort === "ext://hdmi:3") {
-                      s[v].inputPort = "ext://dp:1";
+                    if (s[v].inputPort === 'ext://hdmi:3') {
+                      s[v].inputPort = 'ext://dp:1';
                     } else {
-                      if (s[v].inputPort === "ext://hdmi:2") {
-                        s[v].inputPort = "ext://dvi:1";
+                      if (s[v].inputPort === 'ext://hdmi:2') {
+                        s[v].inputPort = 'ext://dvi:1';
                       } else {
-                        if (s[v].inputPort === "ext://hdmi:4") {
-                          s[v].inputPort = "ext://ops:1";
+                        if (s[v].inputPort === 'ext://hdmi:4') {
+                          s[v].inputPort = 'ext://ops:1';
                         }
                       }
                     }
@@ -982,16 +1065,16 @@ cordova.define("cordova/plugin/inputSource", function (c, e, b) {
                   var t = 1;
                   if (isNaN(y.substring(y.length - 1, y.length)) === false) {
                     y = y.substring(0, y.length - 1);
-                    t = r.devices[v].id.split("_")[1];
+                    t = r.devices[v].id.split('_')[1];
                   }
-                  if (y.toLowerCase() === "displayport") {
-                    y = "dp";
+                  if (y.toLowerCase() === 'displayport') {
+                    y = 'dp';
                   } else {
-                    if (y.toLowerCase() === "ops/dvi") {
-                      y = "ops";
+                    if (y.toLowerCase() === 'ops/dvi') {
+                      y = 'ops';
                     }
                   }
-                  s[v].inputPort = "ext://" + y.toLowerCase() + ":" + t;
+                  s[v].inputPort = 'ext://' + y.toLowerCase() + ':' + t;
                   break;
               }
               z[v] = {};
@@ -999,13 +1082,13 @@ cordova.define("cordova/plugin/inputSource", function (c, e, b) {
               z[v].id = r.devices[v].id;
             }
             u.inputSourceList = s;
-            i.Request("luna://com.webos.service.eim/", {
-              method: "getCurrentInput",
+            i.Request('luna://com.webos.service.eim/', {
+              method: 'getCurrentInput',
               parameters: {},
               onSuccess: function (B) {
-                d("InputSource.getInputSourceStatus: On Success 3");
+                d('InputSource.getInputSourceStatus: On Success 3');
                 if (B.returnValue === true) {
-                  if (typeof p === "function") {
+                  if (typeof p === 'function') {
                     u.currentInputSource = {};
                     for (var C = 0; C < z.length; C++) {
                       if (z[C].id === B.mainInputSourceId) {
@@ -1013,32 +1096,46 @@ cordova.define("cordova/plugin/inputSource", function (c, e, b) {
                         break;
                       }
                     }
-                    u.currentSignalState = "unknown";
+                    u.currentSignalState = 'unknown';
                     if (g !== null) {
-                      d("InputSource.getInputSourceStatus : broadcast is not null");
+                      d(
+                        'InputSource.getInputSourceStatus : broadcast is not null'
+                      );
                       g.getSignalStatus(
                         function D(F) {
                           u.currentSignalState = F.videoSignalState;
-                          d("InputSource.getInputSourceStatus: On Success 2");
-                          if (typeof p === "function") {
-                            d("getInputSourceStatus: On Success" + JSON.stringify(u));
+                          d('InputSource.getInputSourceStatus: On Success 2');
+                          if (typeof p === 'function') {
+                            d(
+                              'getInputSourceStatus: On Success' +
+                                JSON.stringify(u)
+                            );
                             p(u);
                             return;
                           }
                         },
                         function E() {
-                          d("InputSource.getInputSourceStatus : signal state is fail.");
-                          if (typeof p === "function") {
-                            d("getInputSourceStatus: On Success" + JSON.stringify(u));
+                          d(
+                            'InputSource.getInputSourceStatus : signal state is fail.'
+                          );
+                          if (typeof p === 'function') {
+                            d(
+                              'getInputSourceStatus: On Success' +
+                                JSON.stringify(u)
+                            );
                             p(u);
                             return;
                           }
-                        },
+                        }
                       );
                     } else {
-                      d("InputSource.getInputSourceStatus : it does not initialize.");
-                      if (typeof p === "function") {
-                        d("getInputSourceStatus: On Success" + JSON.stringify(u));
+                      d(
+                        'InputSource.getInputSourceStatus : it does not initialize.'
+                      );
+                      if (typeof p === 'function') {
+                        d(
+                          'getInputSourceStatus: On Success' + JSON.stringify(u)
+                        );
                         p(u);
                         return;
                       }
@@ -1047,10 +1144,14 @@ cordova.define("cordova/plugin/inputSource", function (c, e, b) {
                 }
               },
               onFailure: function (B) {
-                d("InputSource.getInputSourceStatus: On Failure 2");
+                d('InputSource.getInputSourceStatus: On Failure 2');
                 delete B.returnValue;
-                if (typeof q === "function") {
-                  m(B, "IGISS", "InputSource.getInputSourceStatus returns failure.");
+                if (typeof q === 'function') {
+                  m(
+                    B,
+                    'IGISS',
+                    'InputSource.getInputSourceStatus returns failure.'
+                  );
                   q(B);
                   return;
                 }
@@ -1060,37 +1161,41 @@ cordova.define("cordova/plugin/inputSource", function (c, e, b) {
         }
       },
       onFailure: function (r) {
-        d("getInputSourceStatus: On Failure");
+        d('getInputSourceStatus: On Failure');
         delete r.returnValue;
-        if (typeof q === "function") {
-          m(r, "IGISS", "InputSource.changeInputSource returns failure on gathering input list.");
+        if (typeof q === 'function') {
+          m(
+            r,
+            'IGISS',
+            'InputSource.changeInputSource returns failure on gathering input list.'
+          );
           q(r);
         }
       },
     });
-    d("InputSource.getInputSourceStatus Done");
+    d('InputSource.getInputSourceStatus Done');
   };
   k.prototype.getExternalInputList = function (p, q, r) {
-    d("getExternalInputList: ");
-    i.Request("luna://com.webos.service.commercial.signage.storageservice/", {
-      method: "getExternalInputList",
+    d('getExternalInputList: ');
+    i.Request('luna://com.webos.service.commercial.signage.storageservice/', {
+      method: 'getExternalInputList',
       parameters: r,
       onSuccess: function (s) {
-        if (typeof p === "function") {
+        if (typeof p === 'function') {
           delete s.returnValue;
           p(s);
         }
       },
       onFailure: function (s) {
-        d("getExternalInputList: onFailure");
+        d('getExternalInputList: onFailure');
         delete s.returnValue;
-        if (typeof q === "function") {
+        if (typeof q === 'function') {
           q(s);
         }
       },
     });
-    d("InputSource.getExternalInputList Done");
+    d('InputSource.getExternalInputList Done');
   };
   b.exports = k;
 });
-InputSource = cordova.require("cordova/plugin/inputSource");
+InputSource = cordova.require('cordova/plugin/inputSource');

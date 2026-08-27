@@ -1,9 +1,9 @@
-import { Component, createSignal, createEffect } from "solid-js";
-import { Button, FormItem } from "@castmill/ui-common";
-import { AddonStore } from "../../common/interfaces/addon-store";
+import { Component, createSignal, createEffect } from 'solid-js';
+import { Button, FormItem } from '@castmill/ui-common';
+import { AddonStore } from '../../common/interfaces/addon-store';
 
-import { BsCheckLg, BsX } from "solid-icons/bs";
-import "./register-device.scss";
+import { BsCheckLg, BsX } from 'solid-icons/bs';
+import './register-device.scss';
 
 const pincodeLength = 10;
 
@@ -16,10 +16,11 @@ const RegisterDevice: Component<{
   onRegisterAnother?: () => void;
 }> = (props) => {
   // Get i18n functions from store
-  const t = (key: string, params?: Record<string, any>) => props.store?.i18n?.t(key, params) || key;
+  const t = (key: string, params?: Record<string, any>) =>
+    props.store?.i18n?.t(key, params) || key;
 
-  const [name, setName] = createSignal("");
-  const [pincode, setPincode] = createSignal("");
+  const [name, setName] = createSignal('');
+  const [pincode, setPincode] = createSignal('');
   const [errors, setErrors] = createSignal(new Map());
   const [wasSuccess, setWasSuccess] = createSignal(false);
 
@@ -31,9 +32,9 @@ const RegisterDevice: Component<{
   createEffect(() => {
     if (wasSuccess() && !props.success) {
       // Reset form fields
-      setName("");
+      setName('');
       if (!props.pincode) {
-        setPincode("");
+        setPincode('');
       }
       setErrors(new Map());
     }
@@ -41,13 +42,13 @@ const RegisterDevice: Component<{
   });
 
   const validateField = (fieldId: string, value: string) => {
-    let error = "";
-    if (fieldId === "name") {
-      error = value ? "" : "Name is required";
-    } else if (fieldId === "pincode") {
+    let error = '';
+    if (fieldId === 'name') {
+      error = value ? '' : 'Name is required';
+    } else if (fieldId === 'pincode') {
       error =
         value && value.length === pincodeLength
-          ? ""
+          ? ''
           : `Pincode must be ${pincodeLength} characters`;
     }
     setErrors((prev) => new Map(prev).set(fieldId, error));
@@ -66,7 +67,7 @@ const RegisterDevice: Component<{
           <div class="success-buttons">
             {props.onRegisterAnother && (
               <Button
-                label={t("devices.registerAnother")}
+                label={t('devices.registerAnother')}
                 onClick={props.onRegisterAnother}
                 icon={BsCheckLg}
                 color="success"
@@ -86,43 +87,48 @@ const RegisterDevice: Component<{
         >
           <div class="form-inputs">
             <FormItem
-              label={t("common.name")}
+              label={t('common.name')}
               id="name"
               value={name()}
-              placeholder={t("devices.enterDeviceName")}
+              placeholder={t('devices.enterDeviceName')}
               autofocus={true}
               onInput={(value: string) => {
                 setName(value);
-                validateField("name", value);
+                validateField('name', value);
               }}
             >
-              <div class="error">{errors().get("name")}</div>
+              <div class="error">{errors().get('name')}</div>
             </FormItem>
 
             <FormItem
-              label={t("devices.pincode")}
+              label={t('devices.pincode')}
               id="pincode"
               value={pincode()}
-              placeholder={t("devices.enterPincode", { length: pincodeLength })}
+              placeholder={t('devices.enterPincode', { length: pincodeLength })}
               disabled={!!props.pincode}
-              description={t("devices.pincodeDescription")}
+              description={t('devices.pincodeDescription')}
               onInput={(value: string) => {
                 setPincode(value);
-                validateField("pincode", value);
+                validateField('pincode', value);
               }}
             >
-              <div class="error">{errors().get("pincode")}</div>
+              <div class="error">{errors().get('pincode')}</div>
             </FormItem>
           </div>
           <div class="bottom-buttons">
             <Button
-              label={t("devices.register")}
+              label={t('devices.register')}
               type="submit"
               disabled={!isFormValid()}
               icon={BsCheckLg}
               color="success"
             />
-            <Button label={t("common.cancel")} onClick={props.onCancel} icon={BsX} color="danger" />
+            <Button
+              label={t('common.cancel')}
+              onClick={props.onCancel}
+              icon={BsX}
+              color="danger"
+            />
           </div>
         </form>
       )}

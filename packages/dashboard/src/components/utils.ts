@@ -1,5 +1,5 @@
 export const arrayBufferToBase64 = (buffer: ArrayBuffer) => {
-  var binary = "";
+  var binary = '';
   var bytes = new Uint8Array(buffer);
   var len = bytes.byteLength;
   for (var i = 0; i < len; i++) {
@@ -19,6 +19,6 @@ export const base64ToArrayBuffer = (b64: string) => {
 };
 
 export const base64URLToArrayBuffer = (b64: string) => {
-  const converted = b64.replace(/[-_]/g, (c) => (c === "-" ? "+" : "/"));
+  const converted = b64.replace(/[-_]/g, (c) => (c === '-' ? '+' : '/'));
   return base64ToArrayBuffer(converted);
 };

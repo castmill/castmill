@@ -7,12 +7,12 @@
  * Allows adding and removing tags with a user-friendly interface.
  */
 
-import { Component, For, Show, createSignal, createMemo } from "solid-js";
-import { IoAddCircle } from "solid-icons/io";
-import type { Tag } from "../../services/tags.service";
-import { TagBadge } from "./tag-badge";
+import { Component, For, Show, createSignal, createMemo } from 'solid-js';
+import { IoAddCircle } from 'solid-icons/io';
+import type { Tag } from '../../services/tags.service';
+import { TagBadge } from './tag-badge';
 
-import "./tag-editor.scss";
+import './tag-editor.scss';
 
 export interface TagEditorProps {
   availableTags: Tag[];
@@ -31,21 +31,25 @@ export interface TagEditorProps {
 
 export const TagEditor: Component<TagEditorProps> = (props) => {
   const [isAdding, setIsAdding] = createSignal(false);
-  const [searchQuery, setSearchQuery] = createSignal("");
+  const [searchQuery, setSearchQuery] = createSignal('');
   const [isCreating, setIsCreating] = createSignal(false);
   let inputRef: HTMLInputElement | undefined;
   let dropdownRef: HTMLDivElement | undefined;
 
   // Available tags that aren't already selected
   const unselectedTags = createMemo(() =>
-    props.availableTags.filter((tag) => !props.selectedTags.some((st) => st.id === tag.id)),
+    props.availableTags.filter(
+      (tag) => !props.selectedTags.some((st) => st.id === tag.id)
+    )
   );
 
   // Filtered tags based on search
   const filteredTags = createMemo(() => {
     const query = searchQuery().toLowerCase().trim();
     if (!query) return unselectedTags();
-    return unselectedTags().filter((tag) => tag.name.toLowerCase().includes(query));
+    return unselectedTags().filter((tag) =>
+      tag.name.toLowerCase().includes(query)
+    );
   });
 
   // Check if can create new tag
@@ -55,31 +59,31 @@ export const TagEditor: Component<TagEditorProps> = (props) => {
     if (!query) return false;
     // Don't allow creating if tag with same name exists
     const exists = props.availableTags.some(
-      (tag) => tag.name.toLowerCase() === query.toLowerCase(),
+      (tag) => tag.name.toLowerCase() === query.toLowerCase()
     );
     return !exists;
   });
 
   // Check if max tags reached
   const maxReached = createMemo(() =>
-    props.maxTags ? props.selectedTags.length >= props.maxTags : false,
+    props.maxTags ? props.selectedTags.length >= props.maxTags : false
   );
 
   const openDropdown = () => {
     if (props.disabled || maxReached()) return;
     setIsAdding(true);
-    setSearchQuery("");
+    setSearchQuery('');
     setTimeout(() => inputRef?.focus(), 0);
   };
 
   const closeDropdown = () => {
     setIsAdding(false);
-    setSearchQuery("");
+    setSearchQuery('');
   };
 
   const handleAddTag = (tag: Tag) => {
     props.onTagAdd(tag);
-    setSearchQuery("");
+    setSearchQuery('');
     inputRef?.focus();
   };
 
@@ -93,10 +97,10 @@ export const TagEditor: Component<TagEditorProps> = (props) => {
     try {
       const newTag = await props.onCreateTag(name);
       props.onTagAdd(newTag);
-      setSearchQuery("");
+      setSearchQuery('');
       inputRef?.focus();
     } catch (error) {
-      console.error("Failed to create tag:", error);
+      console.error('Failed to create tag:', error);
     } finally {
       setIsCreating(false);
     }
@@ -112,17 +116,17 @@ export const TagEditor: Component<TagEditorProps> = (props) => {
   // Manage click outside listener
   createMemo(() => {
     if (isAdding()) {
-      document.addEventListener("click", handleClickOutside);
+      document.addEventListener('click', handleClickOutside);
     } else {
-      document.removeEventListener("click", handleClickOutside);
+      document.removeEventListener('click', handleClickOutside);
     }
-    return () => document.removeEventListener("click", handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
   });
 
   const handleKeyDown = (e: KeyboardEvent) => {
-    if (e.key === "Escape") {
+    if (e.key === 'Escape') {
       closeDropdown();
-    } else if (e.key === "Enter" && canCreate()) {
+    } else if (e.key === 'Enter' && canCreate()) {
       e.preventDefault();
       handleCreateTag();
     }
@@ -130,7 +134,7 @@ export const TagEditor: Component<TagEditorProps> = (props) => {
 
   return (
     <div
-      class={`castmill-tag-editor ${props.disabled ? "disabled" : ""} ${props.loading ? "loading" : ""}`}
+      class={`castmill-tag-editor ${props.disabled ? 'disabled' : ''} ${props.loading ? 'loading' : ''}`}
       ref={(el) => (dropdownRef = el)}
     >
       <Show when={props.label}>
@@ -160,7 +164,7 @@ export const TagEditor: Component<TagEditorProps> = (props) => {
                   ref={inputRef}
                   type="text"
                   class="add-tag-input"
-                  placeholder={props.placeholder || "Search tags..."}
+                  placeholder={props.placeholder || 'Search tags...'}
                   value={searchQuery()}
                   onInput={(e) => setSearchQuery(e.currentTarget.value)}
                   onKeyDown={handleKeyDown}
@@ -177,7 +181,7 @@ export const TagEditor: Component<TagEditorProps> = (props) => {
                 disabled={props.disabled || props.loading}
               >
                 <IoAddCircle />
-                <span>{props.addLabel || "Add tag"}</span>
+                <span>{props.addLabel || 'Add tag'}</span>
               </button>
             </Show>
           </Show>
@@ -191,10 +195,10 @@ export const TagEditor: Component<TagEditorProps> = (props) => {
               fallback={
                 <div class="no-tags-message">
                   {searchQuery()
-                    ? "No matching tags"
+                    ? 'No matching tags'
                     : unselectedTags().length === 0
-                      ? "All tags assigned"
-                      : "No tags available"}
+                      ? 'All tags assigned'
+                      : 'No tags available'}
                 </div>
               }
             >
@@ -207,13 +211,16 @@ export const TagEditor: Component<TagEditorProps> = (props) => {
                       role="option"
                       tabIndex={0}
                       onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
+                        if (e.key === 'Enter' || e.key === ' ') {
                           e.preventDefault();
                           handleAddTag(tag);
                         }
                       }}
                     >
-                      <span class="tag-color-dot" style={{ "background-color": tag.color }} />
+                      <span
+                        class="tag-color-dot"
+                        style={{ 'background-color': tag.color }}
+                      />
                       <span class="tag-option-name">{tag.name}</span>
                     </div>
                   )}
@@ -227,7 +234,7 @@ export const TagEditor: Component<TagEditorProps> = (props) => {
                     role="option"
                     tabIndex={0}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
+                      if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
                         handleCreateTag();
                       }
@@ -235,7 +242,9 @@ export const TagEditor: Component<TagEditorProps> = (props) => {
                   >
                     <IoAddCircle />
                     <span class="create-text">
-                      {isCreating() ? "Creating..." : `Create "${searchQuery().trim()}"`}
+                      {isCreating()
+                        ? 'Creating...'
+                        : `Create "${searchQuery().trim()}"`}
                     </span>
                   </div>
                 </Show>
@@ -246,7 +255,9 @@ export const TagEditor: Component<TagEditorProps> = (props) => {
 
         {/* Max tags message */}
         <Show when={maxReached()}>
-          <div class="max-tags-message">Maximum {props.maxTags} tags reached</div>
+          <div class="max-tags-message">
+            Maximum {props.maxTags} tags reached
+          </div>
         </Show>
       </div>
     </div>

@@ -2,10 +2,10 @@
  * Tests for PlaylistView component
  * Testing the widget search integration
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor, fireEvent } from "@solidjs/testing-library";
-import { PlaylistView } from "./playlist-view";
-import { PlaylistsService } from "../services/playlists.service";
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, waitFor, fireEvent } from '@solidjs/testing-library';
+import { PlaylistView } from './playlist-view';
+import { PlaylistsService } from '../services/playlists.service';
 
 // Stable toast spies that can be referenced inside tests.
 const mockToast = vi.hoisted(() => ({
@@ -13,8 +13,10 @@ const mockToast = vi.hoisted(() => ({
   error: vi.fn(),
 }));
 
-vi.mock("@castmill/ui-common", async () => {
-  const actual = await vi.importActual<typeof import("@castmill/ui-common")>("@castmill/ui-common");
+vi.mock('@castmill/ui-common', async () => {
+  const actual = await vi.importActual<typeof import('@castmill/ui-common')>(
+    '@castmill/ui-common'
+  );
 
   return {
     ...actual,
@@ -23,7 +25,7 @@ vi.mock("@castmill/ui-common", async () => {
 });
 
 // Mock the services
-vi.mock("../services/playlists.service", () => ({
+vi.mock('../services/playlists.service', () => ({
   PlaylistsService: {
     getPlaylist: vi.fn(),
     getWidgets: vi.fn(),
@@ -37,18 +39,21 @@ vi.mock("../services/playlists.service", () => ({
 }));
 
 // Mock the child components
-vi.mock("./playlist-preview", () => ({
+vi.mock('./playlist-preview', () => ({
   PlaylistPreview: () => <div data-testid="playlist-preview">Preview</div>,
 }));
 
-vi.mock("./playlist-items", () => ({
+vi.mock('./playlist-items', () => ({
   PlaylistItems: () => <div data-testid="playlist-items">Items</div>,
 }));
 
-vi.mock("./widget-chooser", () => ({
+vi.mock('./widget-chooser', () => ({
   WidgetChooser: (props: any) => (
     <div data-testid="widget-chooser">
-      <button data-testid="search-trigger" onClick={() => props.onSearch?.("test search")}>
+      <button
+        data-testid="search-trigger"
+        onClick={() => props.onSearch?.('test search')}
+      >
         Trigger Search
       </button>
     </div>
@@ -57,27 +62,27 @@ vi.mock("./widget-chooser", () => ({
 
 const mockPlaylist = {
   id: 1,
-  name: "Test Playlist",
-  description: "Test Description",
+  name: 'Test Playlist',
+  description: 'Test Description',
   items: [],
-  organization_id: "org-123",
+  organization_id: 'org-123',
 };
 
 const mockWidgets = {
   data: [
     {
       id: 1,
-      name: "Image Widget",
-      description: "Display an image",
-      icon: "📦",
+      name: 'Image Widget',
+      description: 'Display an image',
+      icon: '📦',
       options: {},
       default_config: {},
     },
     {
       id: 2,
-      name: "Video Widget",
-      description: "Display a video",
-      icon: "📹",
+      name: 'Video Widget',
+      description: 'Display a video',
+      icon: '📹',
       options: {},
       default_config: {},
     },
@@ -89,9 +94,9 @@ const mockFilteredWidgets = {
   data: [
     {
       id: 2,
-      name: "Video Widget",
-      description: "Display a video",
-      icon: "📹",
+      name: 'Video Widget',
+      description: 'Display a video',
+      icon: '📹',
       options: {},
       default_config: {},
     },
@@ -99,9 +104,9 @@ const mockFilteredWidgets = {
   count: 1,
 };
 
-describe("PlaylistView Component", () => {
-  const baseUrl = "http://test.com";
-  const organizationId = "org-123";
+describe('PlaylistView Component', () => {
+  const baseUrl = 'http://test.com';
+  const organizationId = 'org-123';
   const playlistId = 1;
 
   beforeEach(() => {
@@ -112,71 +117,92 @@ describe("PlaylistView Component", () => {
     vi.mocked(PlaylistsService.getWidgets).mockResolvedValue(mockWidgets);
   });
 
-  it("renders all child components after loading", async () => {
+  it('renders all child components after loading', async () => {
     render(() => (
-      <PlaylistView playlistId={playlistId} organizationId={organizationId} baseUrl={baseUrl} />
+      <PlaylistView
+        playlistId={playlistId}
+        organizationId={organizationId}
+        baseUrl={baseUrl}
+      />
     ));
 
     await waitFor(() => {
-      expect(screen.getByTestId("playlist-preview")).toBeInTheDocument();
-      expect(screen.getByTestId("widget-chooser")).toBeInTheDocument();
-      expect(screen.getByTestId("playlist-items")).toBeInTheDocument();
+      expect(screen.getByTestId('playlist-preview')).toBeInTheDocument();
+      expect(screen.getByTestId('widget-chooser')).toBeInTheDocument();
+      expect(screen.getByTestId('playlist-items')).toBeInTheDocument();
     });
   });
 
-  it("fetches playlist and widgets on mount", async () => {
+  it('fetches playlist and widgets on mount', async () => {
     render(() => (
-      <PlaylistView playlistId={playlistId} organizationId={organizationId} baseUrl={baseUrl} />
+      <PlaylistView
+        playlistId={playlistId}
+        organizationId={organizationId}
+        baseUrl={baseUrl}
+      />
     ));
 
     await waitFor(() => {
       expect(PlaylistsService.getPlaylist).toHaveBeenCalledWith(
         baseUrl,
         organizationId,
-        playlistId,
+        playlistId
       );
-      expect(PlaylistsService.getWidgets).toHaveBeenCalledWith(baseUrl, organizationId);
+      expect(PlaylistsService.getWidgets).toHaveBeenCalledWith(
+        baseUrl,
+        organizationId
+      );
     });
   });
 
-  it("calls getWidgets with search term when search is triggered", async () => {
+  it('calls getWidgets with search term when search is triggered', async () => {
     vi.mocked(PlaylistsService.getWidgets).mockResolvedValueOnce(mockWidgets);
 
     render(() => (
-      <PlaylistView playlistId={playlistId} organizationId={organizationId} baseUrl={baseUrl} />
+      <PlaylistView
+        playlistId={playlistId}
+        organizationId={organizationId}
+        baseUrl={baseUrl}
+      />
     ));
 
     // Wait for initial load
     await waitFor(() => {
-      expect(screen.getByTestId("widget-chooser")).toBeInTheDocument();
+      expect(screen.getByTestId('widget-chooser')).toBeInTheDocument();
     });
 
     // Clear the initial call
     vi.mocked(PlaylistsService.getWidgets).mockClear();
 
     // Mock the search response
-    vi.mocked(PlaylistsService.getWidgets).mockResolvedValueOnce(mockFilteredWidgets);
+    vi.mocked(PlaylistsService.getWidgets).mockResolvedValueOnce(
+      mockFilteredWidgets
+    );
 
     // Trigger search
-    const searchTrigger = screen.getByTestId("search-trigger");
+    const searchTrigger = screen.getByTestId('search-trigger');
     searchTrigger.click();
 
     await waitFor(() => {
       expect(PlaylistsService.getWidgets).toHaveBeenCalledWith(
         baseUrl,
         organizationId,
-        "test search",
+        'test search'
       );
     });
   });
 
-  it("updates widgets when search returns results", async () => {
+  it('updates widgets when search returns results', async () => {
     vi.mocked(PlaylistsService.getWidgets)
       .mockResolvedValueOnce(mockWidgets)
       .mockResolvedValueOnce(mockFilteredWidgets);
 
     render(() => (
-      <PlaylistView playlistId={playlistId} organizationId={organizationId} baseUrl={baseUrl} />
+      <PlaylistView
+        playlistId={playlistId}
+        organizationId={organizationId}
+        baseUrl={baseUrl}
+      />
     ));
 
     // Wait for initial load
@@ -185,7 +211,7 @@ describe("PlaylistView Component", () => {
     });
 
     // Trigger search
-    const searchTrigger = screen.getByTestId("search-trigger");
+    const searchTrigger = screen.getByTestId('search-trigger');
     searchTrigger.click();
 
     await waitFor(() => {
@@ -193,7 +219,7 @@ describe("PlaylistView Component", () => {
     });
   });
 
-  it("handles empty search results", async () => {
+  it('handles empty search results', async () => {
     const emptyResult = { data: [], count: 0 };
 
     vi.mocked(PlaylistsService.getWidgets)
@@ -201,27 +227,31 @@ describe("PlaylistView Component", () => {
       .mockResolvedValueOnce(emptyResult);
 
     render(() => (
-      <PlaylistView playlistId={playlistId} organizationId={organizationId} baseUrl={baseUrl} />
+      <PlaylistView
+        playlistId={playlistId}
+        organizationId={organizationId}
+        baseUrl={baseUrl}
+      />
     ));
 
     await waitFor(() => {
-      expect(screen.getByTestId("widget-chooser")).toBeInTheDocument();
+      expect(screen.getByTestId('widget-chooser')).toBeInTheDocument();
     });
 
     // Trigger search
-    const searchTrigger = screen.getByTestId("search-trigger");
+    const searchTrigger = screen.getByTestId('search-trigger');
     searchTrigger.click();
 
     await waitFor(() => {
       expect(PlaylistsService.getWidgets).toHaveBeenCalledWith(
         baseUrl,
         organizationId,
-        "test search",
+        'test search'
       );
     });
   });
 
-  it("calls onChange callback when provided", async () => {
+  it('calls onChange callback when provided', async () => {
     const onChangeMock = vi.fn();
 
     render(() => (
@@ -234,31 +264,41 @@ describe("PlaylistView Component", () => {
     ));
 
     await waitFor(() => {
-      expect(screen.getByTestId("playlist-preview")).toBeInTheDocument();
+      expect(screen.getByTestId('playlist-preview')).toBeInTheDocument();
     });
 
     // The onChange is called when playlist items are modified
     // This would be tested in integration with actual item operations
   });
 
-  it("shows loading state initially", () => {
+  it('shows loading state initially', () => {
     const { container } = render(() => (
-      <PlaylistView playlistId={playlistId} organizationId={organizationId} baseUrl={baseUrl} />
+      <PlaylistView
+        playlistId={playlistId}
+        organizationId={organizationId}
+        baseUrl={baseUrl}
+      />
     ));
 
     // When loading, the Show component should not render its children
-    expect(container.querySelector(".playlist-view")).not.toBeInTheDocument();
+    expect(container.querySelector('.playlist-view')).not.toBeInTheDocument();
   });
 
-  it.skip("handles errors when fetching playlist fails", async () => {
-    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+  it.skip('handles errors when fetching playlist fails', async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
 
     vi.mocked(PlaylistsService.getPlaylist).mockRejectedValueOnce(
-      new Error("Failed to fetch playlist"),
+      new Error('Failed to fetch playlist')
     );
 
     render(() => (
-      <PlaylistView playlistId={playlistId} organizationId={organizationId} baseUrl={baseUrl} />
+      <PlaylistView
+        playlistId={playlistId}
+        organizationId={organizationId}
+        baseUrl={baseUrl}
+      />
     ));
 
     await waitFor(() => {
@@ -268,15 +308,21 @@ describe("PlaylistView Component", () => {
     consoleErrorSpy.mockRestore();
   });
 
-  it.skip("handles errors when fetching widgets fails", async () => {
-    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+  it.skip('handles errors when fetching widgets fails', async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
 
     vi.mocked(PlaylistsService.getWidgets).mockRejectedValueOnce(
-      new Error("Failed to fetch widgets"),
+      new Error('Failed to fetch widgets')
     );
 
     render(() => (
-      <PlaylistView playlistId={playlistId} organizationId={organizationId} baseUrl={baseUrl} />
+      <PlaylistView
+        playlistId={playlistId}
+        organizationId={organizationId}
+        baseUrl={baseUrl}
+      />
     ));
 
     await waitFor(() => {
@@ -286,7 +332,7 @@ describe("PlaylistView Component", () => {
     consoleErrorSpy.mockRestore();
   });
 
-  describe("Aspect Ratio and ResizeObserver", () => {
+  describe('Aspect Ratio and ResizeObserver', () => {
     let mockResizeObserver: any;
     let observeCallback: ResizeObserverCallback;
 
@@ -304,9 +350,13 @@ describe("PlaylistView Component", () => {
       }) as any;
     });
 
-    it("sets up ResizeObserver when component mounts", async () => {
+    it('sets up ResizeObserver when component mounts', async () => {
       render(() => (
-        <PlaylistView playlistId={playlistId} organizationId={organizationId} baseUrl={baseUrl} />
+        <PlaylistView
+          playlistId={playlistId}
+          organizationId={organizationId}
+          baseUrl={baseUrl}
+        />
       ));
 
       await waitFor(() => {
@@ -315,7 +365,7 @@ describe("PlaylistView Component", () => {
       });
     });
 
-    it("applies constrain-by-width class when container is narrower than target ratio", async () => {
+    it('applies constrain-by-width class when container is narrower than target ratio', async () => {
       const portraitPlaylist = {
         ...mockPlaylist,
         settings: {
@@ -323,10 +373,16 @@ describe("PlaylistView Component", () => {
         },
       };
 
-      vi.mocked(PlaylistsService.getPlaylist).mockResolvedValue(portraitPlaylist);
+      vi.mocked(PlaylistsService.getPlaylist).mockResolvedValue(
+        portraitPlaylist
+      );
 
       const { container } = render(() => (
-        <PlaylistView playlistId={playlistId} organizationId={organizationId} baseUrl={baseUrl} />
+        <PlaylistView
+          playlistId={playlistId}
+          organizationId={organizationId}
+          baseUrl={baseUrl}
+        />
       ));
 
       await waitFor(() => {
@@ -339,7 +395,7 @@ describe("PlaylistView Component", () => {
       // Since 0.375 < 0.5625, should apply constrain-by-width
       const entries = [
         {
-          target: container.querySelector(".playlist-preview-wrapper"),
+          target: container.querySelector('.playlist-preview-wrapper'),
           contentRect: { width: 300, height: 800 },
         },
       ];
@@ -347,12 +403,12 @@ describe("PlaylistView Component", () => {
       observeCallback(entries as any, mockResizeObserver);
 
       await waitFor(() => {
-        const wrapper = container.querySelector(".playlist-preview-wrapper");
-        expect(wrapper?.classList.contains("constrain-by-width")).toBe(true);
+        const wrapper = container.querySelector('.playlist-preview-wrapper');
+        expect(wrapper?.classList.contains('constrain-by-width')).toBe(true);
       });
     });
 
-    it("does not apply constrain-by-width class when container is wider than target ratio", async () => {
+    it('does not apply constrain-by-width class when container is wider than target ratio', async () => {
       const portraitPlaylist = {
         ...mockPlaylist,
         settings: {
@@ -360,10 +416,16 @@ describe("PlaylistView Component", () => {
         },
       };
 
-      vi.mocked(PlaylistsService.getPlaylist).mockResolvedValue(portraitPlaylist);
+      vi.mocked(PlaylistsService.getPlaylist).mockResolvedValue(
+        portraitPlaylist
+      );
 
       const { container } = render(() => (
-        <PlaylistView playlistId={playlistId} organizationId={organizationId} baseUrl={baseUrl} />
+        <PlaylistView
+          playlistId={playlistId}
+          organizationId={organizationId}
+          baseUrl={baseUrl}
+        />
       ));
 
       await waitFor(() => {
@@ -376,7 +438,7 @@ describe("PlaylistView Component", () => {
       // Since 0.75 > 0.5625, should NOT apply constrain-by-width
       const entries = [
         {
-          target: container.querySelector(".playlist-preview-wrapper"),
+          target: container.querySelector('.playlist-preview-wrapper'),
           contentRect: { width: 600, height: 800 },
         },
       ];
@@ -384,14 +446,18 @@ describe("PlaylistView Component", () => {
       observeCallback(entries as any, mockResizeObserver);
 
       await waitFor(() => {
-        const wrapper = container.querySelector(".playlist-preview-wrapper");
-        expect(wrapper?.classList.contains("constrain-by-width")).toBe(false);
+        const wrapper = container.querySelector('.playlist-preview-wrapper');
+        expect(wrapper?.classList.contains('constrain-by-width')).toBe(false);
       });
     });
 
-    it("disconnects ResizeObserver on cleanup", async () => {
+    it('disconnects ResizeObserver on cleanup', async () => {
       const { unmount } = render(() => (
-        <PlaylistView playlistId={playlistId} organizationId={organizationId} baseUrl={baseUrl} />
+        <PlaylistView
+          playlistId={playlistId}
+          organizationId={organizationId}
+          baseUrl={baseUrl}
+        />
       ));
 
       await waitFor(() => {
@@ -403,7 +469,7 @@ describe("PlaylistView Component", () => {
       expect(mockResizeObserver.disconnect).toHaveBeenCalled();
     });
 
-    it("applies correct aspect-ratio style to preview", async () => {
+    it('applies correct aspect-ratio style to preview', async () => {
       const customPlaylist = {
         ...mockPlaylist,
         settings: {
@@ -414,91 +480,113 @@ describe("PlaylistView Component", () => {
       vi.mocked(PlaylistsService.getPlaylist).mockResolvedValue(customPlaylist);
 
       const { container } = render(() => (
-        <PlaylistView playlistId={playlistId} organizationId={organizationId} baseUrl={baseUrl} />
+        <PlaylistView
+          playlistId={playlistId}
+          organizationId={organizationId}
+          baseUrl={baseUrl}
+        />
       ));
 
       await waitFor(() => {
-        const preview = container.querySelector(".playlist-preview");
+        const preview = container.querySelector('.playlist-preview');
         expect(preview).toBeInTheDocument();
-        const style = preview?.getAttribute("style");
-        expect(style).toContain("aspect-ratio: 4 / 3");
+        const style = preview?.getAttribute('style');
+        expect(style).toContain('aspect-ratio: 4 / 3');
       });
     });
   });
 
-  describe("Aspect Ratio Customization", () => {
+  describe('Aspect Ratio Customization', () => {
     beforeEach(() => {
       vi.mocked(PlaylistsService.updatePlaylist).mockResolvedValue(undefined);
     });
 
-    it("saves a preset aspect ratio and shows success toast", async () => {
+    it('saves a preset aspect ratio and shows success toast', async () => {
       render(() => (
-        <PlaylistView playlistId={playlistId} organizationId={organizationId} baseUrl={baseUrl} />
+        <PlaylistView
+          playlistId={playlistId}
+          organizationId={organizationId}
+          baseUrl={baseUrl}
+        />
       ));
 
       await waitFor(() => {
-        expect(screen.getByTestId("playlist-preview")).toBeInTheDocument();
+        expect(screen.getByTestId('playlist-preview')).toBeInTheDocument();
       });
 
       // Select a different preset (default is 16:9, pick 9:16)
-      const select = screen.getByRole("combobox", {
-        name: "playlists.aspectRatio",
+      const select = screen.getByRole('combobox', {
+        name: 'playlists.aspectRatio',
       });
-      fireEvent.change(select, { target: { value: "9:16" } });
+      fireEvent.change(select, { target: { value: '9:16' } });
 
       await waitFor(() => {
         expect(PlaylistsService.updatePlaylist).toHaveBeenCalledWith(
           baseUrl,
           organizationId,
-          "1",
+          '1',
           expect.objectContaining({
             settings: { aspect_ratio: { width: 9, height: 16 } },
-          }),
+          })
         );
-        expect(mockToast.success).toHaveBeenCalledWith("playlists.aspectRatioUpdated");
+        expect(mockToast.success).toHaveBeenCalledWith(
+          'playlists.aspectRatioUpdated'
+        );
       });
     });
 
-    it("shows error toast when preset save fails", async () => {
-      vi.mocked(PlaylistsService.updatePlaylist).mockRejectedValueOnce(new Error("Network error"));
+    it('shows error toast when preset save fails', async () => {
+      vi.mocked(PlaylistsService.updatePlaylist).mockRejectedValueOnce(
+        new Error('Network error')
+      );
 
       render(() => (
-        <PlaylistView playlistId={playlistId} organizationId={organizationId} baseUrl={baseUrl} />
+        <PlaylistView
+          playlistId={playlistId}
+          organizationId={organizationId}
+          baseUrl={baseUrl}
+        />
       ));
 
       await waitFor(() => {
-        expect(screen.getByTestId("playlist-preview")).toBeInTheDocument();
+        expect(screen.getByTestId('playlist-preview')).toBeInTheDocument();
       });
 
-      const select = screen.getByRole("combobox", {
-        name: "playlists.aspectRatio",
+      const select = screen.getByRole('combobox', {
+        name: 'playlists.aspectRatio',
       });
-      fireEvent.change(select, { target: { value: "4:3" } });
+      fireEvent.change(select, { target: { value: '4:3' } });
 
       await waitFor(() => {
         expect(mockToast.error).toHaveBeenCalled();
       });
     });
 
-    it("does not call updatePlaylist when selecting the same preset", async () => {
+    it('does not call updatePlaylist when selecting the same preset', async () => {
       const playlistWith16x9 = {
         ...mockPlaylist,
         settings: { aspect_ratio: { width: 16, height: 9 } },
       };
-      vi.mocked(PlaylistsService.getPlaylist).mockResolvedValue(playlistWith16x9);
+      vi.mocked(PlaylistsService.getPlaylist).mockResolvedValue(
+        playlistWith16x9
+      );
 
       render(() => (
-        <PlaylistView playlistId={playlistId} organizationId={organizationId} baseUrl={baseUrl} />
+        <PlaylistView
+          playlistId={playlistId}
+          organizationId={organizationId}
+          baseUrl={baseUrl}
+        />
       ));
 
       await waitFor(() => {
-        expect(screen.getByTestId("playlist-preview")).toBeInTheDocument();
+        expect(screen.getByTestId('playlist-preview')).toBeInTheDocument();
       });
 
-      const select = screen.getByRole("combobox", {
-        name: "playlists.aspectRatio",
+      const select = screen.getByRole('combobox', {
+        name: 'playlists.aspectRatio',
       });
-      fireEvent.change(select, { target: { value: "16:9" } });
+      fireEvent.change(select, { target: { value: '16:9' } });
 
       // Give any async work time to settle
       await waitFor(() => {
@@ -506,74 +594,86 @@ describe("PlaylistView Component", () => {
       });
     });
 
-    it("saves a custom aspect ratio and shows success toast", async () => {
+    it('saves a custom aspect ratio and shows success toast', async () => {
       render(() => (
-        <PlaylistView playlistId={playlistId} organizationId={organizationId} baseUrl={baseUrl} />
+        <PlaylistView
+          playlistId={playlistId}
+          organizationId={organizationId}
+          baseUrl={baseUrl}
+        />
       ));
 
       await waitFor(() => {
-        expect(screen.getByTestId("playlist-preview")).toBeInTheDocument();
+        expect(screen.getByTestId('playlist-preview')).toBeInTheDocument();
       });
 
       // Select "custom"
-      const select = screen.getByRole("combobox", {
-        name: "playlists.aspectRatio",
+      const select = screen.getByRole('combobox', {
+        name: 'playlists.aspectRatio',
       });
-      fireEvent.change(select, { target: { value: "custom" } });
+      fireEvent.change(select, { target: { value: 'custom' } });
 
       // Fill in width and height
-      const widthInput = screen.getByLabelText("playlists.aspectRatioWidth");
-      const heightInput = screen.getByLabelText("playlists.aspectRatioHeight");
+      const widthInput = screen.getByLabelText('playlists.aspectRatioWidth');
+      const heightInput = screen.getByLabelText('playlists.aspectRatioHeight');
 
-      fireEvent.input(widthInput, { target: { value: "3" } });
-      fireEvent.input(heightInput, { target: { value: "2" } });
+      fireEvent.input(widthInput, { target: { value: '3' } });
+      fireEvent.input(heightInput, { target: { value: '2' } });
 
       // Click the save button
-      const saveButton = screen.getByRole("button", { name: "common.save" });
+      const saveButton = screen.getByRole('button', { name: 'common.save' });
       fireEvent.click(saveButton);
 
       await waitFor(() => {
         expect(PlaylistsService.updatePlaylist).toHaveBeenCalledWith(
           baseUrl,
           organizationId,
-          "1",
+          '1',
           expect.objectContaining({
             settings: { aspect_ratio: { width: 3, height: 2 } },
-          }),
+          })
         );
-        expect(mockToast.success).toHaveBeenCalledWith("playlists.aspectRatioUpdated");
+        expect(mockToast.success).toHaveBeenCalledWith(
+          'playlists.aspectRatioUpdated'
+        );
       });
     });
 
-    it("prevents saving an extreme custom aspect ratio", async () => {
+    it('prevents saving an extreme custom aspect ratio', async () => {
       render(() => (
-        <PlaylistView playlistId={playlistId} organizationId={organizationId} baseUrl={baseUrl} />
+        <PlaylistView
+          playlistId={playlistId}
+          organizationId={organizationId}
+          baseUrl={baseUrl}
+        />
       ));
 
       await waitFor(() => {
-        expect(screen.getByTestId("playlist-preview")).toBeInTheDocument();
+        expect(screen.getByTestId('playlist-preview')).toBeInTheDocument();
       });
 
       // Select "custom"
-      const select = screen.getByRole("combobox", {
-        name: "playlists.aspectRatio",
+      const select = screen.getByRole('combobox', {
+        name: 'playlists.aspectRatio',
       });
-      fireEvent.change(select, { target: { value: "custom" } });
+      fireEvent.change(select, { target: { value: 'custom' } });
 
       // Enter an extreme ratio (100:1 exceeds MAX_ASPECT_RATIO of 10)
-      const widthInput = screen.getByLabelText("playlists.aspectRatioWidth");
-      const heightInput = screen.getByLabelText("playlists.aspectRatioHeight");
+      const widthInput = screen.getByLabelText('playlists.aspectRatioWidth');
+      const heightInput = screen.getByLabelText('playlists.aspectRatioHeight');
 
-      fireEvent.input(widthInput, { target: { value: "100" } });
-      fireEvent.input(heightInput, { target: { value: "1" } });
+      fireEvent.input(widthInput, { target: { value: '100' } });
+      fireEvent.input(heightInput, { target: { value: '1' } });
 
       // The save button should be disabled due to extreme ratio
-      const saveButton = screen.getByRole("button", { name: "common.save" });
+      const saveButton = screen.getByRole('button', { name: 'common.save' });
       expect(saveButton).toBeDisabled();
 
       // Error message should be visible
       await waitFor(() => {
-        expect(screen.getByText("playlists.errors.aspectRatioExtreme")).toBeInTheDocument();
+        expect(
+          screen.getByText('playlists.errors.aspectRatioExtreme')
+        ).toBeInTheDocument();
       });
 
       expect(PlaylistsService.updatePlaylist).not.toHaveBeenCalled();

@@ -53,7 +53,7 @@ The solution requires JavaScript to dynamically adjust sizing based on runtime c
 ```typescript
 function parseAspectRatio(aspectRatio?: string): number | null {
   if (!aspectRatio) return null;
-  const parts = aspectRatio.split(":");
+  const parts = aspectRatio.split(':');
   if (parts.length !== 2) return null;
   const width = parseFloat(parts[0]);
   const height = parseFloat(parts[1]);
@@ -109,9 +109,14 @@ private setupResizeObserver() {
 #### 4. Widget Style Computation
 
 ```typescript
-export function computeWidgetStyle(widget: JsonWidget, globals: PlayerGlobals): JSX.CSSProperties {
+export function computeWidgetStyle(
+  widget: JsonWidget,
+  globals: PlayerGlobals
+): JSX.CSSProperties {
   return {
-    ...(widget.aspect_ratio && { "aspect-ratio": widget.aspect_ratio.replace(":", " / ") }),
+    ...(widget.aspect_ratio && {
+      'aspect-ratio': widget.aspect_ratio.replace(':', ' / '),
+    }),
   };
 }
 ```
@@ -235,7 +240,7 @@ When layouts are implemented, consider:
 ### Potential Fill Modes
 
 ```typescript
-type FillMode = "letterbox" | "cover" | "stretch" | "fill";
+type FillMode = 'letterbox' | 'cover' | 'stretch' | 'fill';
 
 // letterbox: Current implementation (default)
 // cover: Fill container, crop overflow

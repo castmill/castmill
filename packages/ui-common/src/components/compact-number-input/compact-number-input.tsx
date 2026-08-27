@@ -1,5 +1,5 @@
-import { Component, createSignal, createEffect } from "solid-js";
-import styles from "./compact-number-input.module.scss";
+import { Component, createSignal, createEffect } from 'solid-js';
+import styles from './compact-number-input.module.scss';
 
 interface CompactNumberInputProps {
   label: string;
@@ -20,7 +20,9 @@ interface CompactNumberInputProps {
  * - Mouse drag to adjust value
  * - Direct input editing
  */
-export const CompactNumberInput: Component<CompactNumberInputProps> = (props) => {
+export const CompactNumberInput: Component<CompactNumberInputProps> = (
+  props
+) => {
   const [inputEl, setInputEl] = createSignal<HTMLInputElement | null>(null);
   const [isDragging, setIsDragging] = createSignal(false);
   const [isEditing, setIsEditing] = createSignal(false);
@@ -58,8 +60,8 @@ export const CompactNumberInput: Component<CompactNumberInputProps> = (props) =>
     setDragStartX(e.clientX);
     setDragStartValue(props.value);
 
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
 
     // Prevent text selection while dragging
     e.preventDefault();
@@ -77,8 +79,8 @@ export const CompactNumberInput: Component<CompactNumberInputProps> = (props) =>
 
   const handleMouseUp = () => {
     setIsDragging(false);
-    document.removeEventListener("mousemove", handleMouseMove);
-    document.removeEventListener("mouseup", handleMouseUp);
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
   };
 
   const handleDoubleClick = () => {
@@ -119,22 +121,22 @@ export const CompactNumberInput: Component<CompactNumberInputProps> = (props) =>
   };
 
   const handleInputKeyDown = (e: KeyboardEvent) => {
-    if (e.key === "Enter") {
+    if (e.key === 'Enter') {
       commitValue();
       setIsEditing(false);
       (e.target as HTMLInputElement).blur();
-    } else if (e.key === "Escape") {
+    } else if (e.key === 'Escape') {
       setIsEditing(false);
       const el = inputEl();
       if (el) {
         el.value = displayValue();
         el.blur();
       }
-    } else if (e.key === "ArrowUp") {
+    } else if (e.key === 'ArrowUp') {
       e.preventDefault();
       const increment = e.shiftKey ? step() * 10 : step();
       props.onChange(clampValue(props.value + increment));
-    } else if (e.key === "ArrowDown") {
+    } else if (e.key === 'ArrowDown') {
       e.preventDefault();
       const decrement = e.shiftKey ? step() * 10 : step();
       props.onChange(clampValue(props.value - decrement));
@@ -143,7 +145,7 @@ export const CompactNumberInput: Component<CompactNumberInputProps> = (props) =>
 
   return (
     <div
-      class={`${styles.container} ${isDragging() ? styles.dragging : ""} ${isEditing() ? styles.editing : ""} ${props.disabled ? styles.disabled : ""}`}
+      class={`${styles.container} ${isDragging() ? styles.dragging : ''} ${isEditing() ? styles.editing : ''} ${props.disabled ? styles.disabled : ''}`}
       onMouseDown={handleMouseDown}
       onDblClick={handleDoubleClick}
     >

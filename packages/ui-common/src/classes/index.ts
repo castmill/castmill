@@ -1,1 +1,1 @@
-export * from "./resources-observer";
+export * from './resources-observer';

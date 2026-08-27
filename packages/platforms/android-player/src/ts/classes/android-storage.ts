@@ -1,6 +1,6 @@
-import { Capacitor } from "@capacitor/core";
-import { Filesystem, Directory } from "@capacitor/filesystem";
-import { Device } from "@capacitor/device";
+import { Capacitor } from '@capacitor/core';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Device } from '@capacitor/device';
 
 import {
   StorageIntegration,
@@ -8,14 +8,14 @@ import {
   StorageItem,
   StoreOptions,
   StoreFileReturnValue,
-} from "@castmill/cache";
-import { simpleHash } from "../utils";
+} from '@castmill/cache';
+import { simpleHash } from '../utils';
 
 const FALLBACK_MAX_DISK_SPACE = 10e9; // 10 GB
 const DIR = Directory.Documents;
 
 function join(...parts: string[]): string {
-  return parts.join("/");
+  return parts.join('/');
 }
 
 export class AndroidStorage implements StorageIntegration {
@@ -53,10 +53,12 @@ export class AndroidStorage implements StorageIntegration {
 
       const { diskFree } = await Device.getInfo();
       // Use 50% of the free disk space as the total space
-      const total = diskFree ? (diskFree + used) * 0.5 : FALLBACK_MAX_DISK_SPACE;
+      const total = diskFree
+        ? (diskFree + used) * 0.5
+        : FALLBACK_MAX_DISK_SPACE;
       return { used, total };
     } catch (error) {
-      console.error("Failed to get storage info:", error);
+      console.error('Failed to get storage info:', error);
       throw error;
     }
   }
@@ -69,7 +71,7 @@ export class AndroidStorage implements StorageIntegration {
       });
       return Promise.all(
         files
-          .filter(({ name }) => !name.endsWith(".tmp")) // Exclude temporary files
+          .filter(({ name }) => !name.endsWith('.tmp')) // Exclude temporary files
           .map(async ({ name, size }) => {
             const filePath = join(this.storagePath, name);
 
@@ -78,10 +80,10 @@ export class AndroidStorage implements StorageIntegration {
               url: localUrl,
               size,
             };
-          }),
+          })
       );
     } catch (error) {
-      console.error("Failed to list files:", error);
+      console.error('Failed to list files:', error);
       throw error;
     }
   }
@@ -106,7 +108,10 @@ export class AndroidStorage implements StorageIntegration {
     });
   }
 
-  async storeFile(url: string, opts?: StoreOptions): Promise<StoreFileReturnValue> {
+  async storeFile(
+    url: string,
+    opts?: StoreOptions
+  ): Promise<StoreFileReturnValue> {
     try {
       const filename = this.getFileName(url);
 
@@ -119,7 +124,7 @@ export class AndroidStorage implements StorageIntegration {
         // Atomically rename the file to its final name
         await this.rename(tempPath, filePath);
       } catch (error) {
-        console.error("Failed to store file:", error);
+        console.error('Failed to store file:', error);
 
         // Delete the temporary file if it exists
         await Filesystem.deleteFile({
@@ -137,7 +142,7 @@ export class AndroidStorage implements StorageIntegration {
       const localUrl = await this.getLocalUrl(filePath);
 
       return {
-        result: { code: "SUCCESS" },
+        result: { code: 'SUCCESS' },
         item: {
           url: localUrl,
           size: stats.size,
@@ -145,10 +150,10 @@ export class AndroidStorage implements StorageIntegration {
       };
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      console.error("Failed to store file:", error);
-      const errMsg = error?.message ?? "Unknown Error";
+      console.error('Failed to store file:', error);
+      const errMsg = error?.message ?? 'Unknown Error';
       return {
-        result: { code: "FAILURE", errMsg },
+        result: { code: 'FAILURE', errMsg },
       };
     }
   }
@@ -173,12 +178,12 @@ export class AndroidStorage implements StorageIntegration {
       await Filesystem.deleteFile({ path: filePath, directory: DIR });
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      if (error?.message === "File does not exist") {
+      if (error?.message === 'File does not exist') {
         // File does not exist, nothing to do
         return;
       }
 
-      console.error("Failed to delete file:", error);
+      console.error('Failed to delete file:', error);
       throw error;
     }
   }
@@ -195,10 +200,10 @@ export class AndroidStorage implements StorageIntegration {
             path: join(this.storagePath, name),
             directory: DIR,
           });
-        }),
+        })
       );
     } catch (error) {
-      console.error("Failed to delete all files:", error);
+      console.error('Failed to delete all files:', error);
       throw error;
     }
   }
@@ -215,7 +220,7 @@ export class AndroidStorage implements StorageIntegration {
   private getFileName(url: string): string {
     const pathName = new URL(url).pathname;
     // Get the extension of the file using regex. up to 4 characters after the last dot
-    const [, extension] = pathName.split(".");
+    const [, extension] = pathName.split('.');
 
     const hash = simpleHash(pathName);
 
@@ -254,5 +259,5 @@ function mapLocalhostUrl(url: string): string {
     return url;
   }
 
-  return url.replace("localhost", fileHost);
+  return url.replace('localhost', fileHost);
 }

@@ -1,14 +1,14 @@
-import { expect } from "chai";
-import { describe, it, afterEach } from "mocha";
-import { firstValueFrom, NEVER, of, Subscription } from "rxjs";
-import { spy, stub, restore } from "sinon";
+import { expect } from 'chai';
+import { describe, it, afterEach } from 'mocha';
+import { firstValueFrom, NEVER, of, Subscription } from 'rxjs';
+import { spy, stub, restore } from 'sinon';
 
-import { Player, Playlist, timer } from "../dist/index.js";
+import { Player, Playlist, timer } from '../dist/index.js';
 
-describe("Playlist.seek", () => {
-  it("should wrap an end-of-playlist offset to the first layer", async () => {
+describe('Playlist.seek', () => {
+  it('should wrap an end-of-playlist offset to the first layer', async () => {
     const seek = spy((offset: number) => of([offset, 1000]));
-    const playlist = new Playlist("test", {} as any);
+    const playlist = new Playlist('test', {} as any);
     playlist.add({ duration: () => 1000, seek } as any);
 
     const [offset, duration] = await firstValueFrom(playlist.seek(1000));
@@ -20,8 +20,8 @@ describe("Playlist.seek", () => {
   });
 });
 
-describe("Player.play", () => {
-  it("should ignore redundant non-synced play calls while active", () => {
+describe('Player.play', () => {
+  it('should ignore redundant non-synced play calls while active', () => {
     const seek = spy((_: number) => NEVER);
     const play = spy((_: any, __: any, ___: any) => NEVER);
 
@@ -38,7 +38,7 @@ describe("Player.play", () => {
     } as any;
 
     const player = new Player(playlist, renderer);
-    const stopSpy = spy(player, "stop");
+    const stopSpy = spy(player, 'stop');
 
     player.timerSubscription = new Subscription();
     player.playing = new Subscription();
@@ -53,7 +53,7 @@ describe("Player.play", () => {
     player.playing.unsubscribe();
   });
 
-  it("should allow synced play calls while active", () => {
+  it('should allow synced play calls while active', () => {
     const seek = spy((_: number) => NEVER);
     const play = spy((_: any, __: any, ___: any) => NEVER);
 
@@ -70,7 +70,7 @@ describe("Player.play", () => {
     } as any;
 
     const player = new Player(playlist, renderer);
-    const stopSpy = spy(player, "stop");
+    const stopSpy = spy(player, 'stop');
 
     player.timerSubscription = new Subscription();
     player.playing = new Subscription();
@@ -86,20 +86,23 @@ describe("Player.play", () => {
   });
 });
 
-describe("timer", () => {
+describe('timer', () => {
   afterEach(() => restore());
-  it("should keep a stable interval after delayed callbacks", () => {
+  it('should keep a stable interval after delayed callbacks', () => {
     let now = 0;
     const delays: number[] = [];
     let scheduled: (() => void) | undefined;
 
-    stub(Date, "now").callsFake(() => now);
-    stub(globalThis, "setTimeout").callsFake(((fn: () => void, delay?: number) => {
+    stub(Date, 'now').callsFake(() => now);
+    stub(globalThis, 'setTimeout').callsFake(((
+      fn: () => void,
+      delay?: number
+    ) => {
       delays.push((delay ?? 0) as number);
       scheduled = fn;
       return 1 as unknown as ReturnType<typeof setTimeout>;
     }) as any);
-    stub(globalThis, "clearTimeout").callsFake((() => {}) as any);
+    stub(globalThis, 'clearTimeout').callsFake((() => {}) as any);
 
     const values: number[] = [];
     const sub = timer(0, 0, 100, 1000).subscribe((value) => {

@@ -1,12 +1,31 @@
-import { createSignal, onCleanup, For, Show, JSX, onMount, createEffect } from "solid-js";
-import { dropTargetForExternal } from "@atlaskit/pragmatic-drag-and-drop/external/adapter";
-import { authFetch, getAuthToken } from "../../common/services/auth-fetch";
-import "./upload.scss";
+import {
+  createSignal,
+  onCleanup,
+  For,
+  Show,
+  JSX,
+  onMount,
+  createEffect,
+} from 'solid-js';
+import { dropTargetForExternal } from '@atlaskit/pragmatic-drag-and-drop/external/adapter';
+import { authFetch, getAuthToken } from '../../common/services/auth-fetch';
+import './upload.scss';
 
-import { AiOutlineUpload, AiOutlineDelete, AiOutlineCheck, AiOutlineWarning } from "solid-icons/ai";
+import {
+  AiOutlineUpload,
+  AiOutlineDelete,
+  AiOutlineCheck,
+  AiOutlineWarning,
+} from 'solid-icons/ai';
 
-import { Button, IconButton, IconWrapper, useToast, formatBytes } from "@castmill/ui-common";
-import { AddonStore } from "../../common/interfaces/addon-store";
+import {
+  Button,
+  IconButton,
+  IconWrapper,
+  useToast,
+  formatBytes,
+} from '@castmill/ui-common';
+import { AddonStore } from '../../common/interfaces/addon-store';
 
 interface UploadComponentProps {
   baseUrl: string;
@@ -36,19 +55,20 @@ interface FileValidations {
 }
 
 const supportedFileTypes = [
-  "image/png",
-  "image/jpeg",
-  "image/gif",
-  "video/mp4",
-  "video/quicktime",
-  "video/x-msvideo",
-  "video/ogg",
-  "video/x-ms-wmv",
+  'image/png',
+  'image/jpeg',
+  'image/gif',
+  'video/mp4',
+  'video/quicktime',
+  'video/x-msvideo',
+  'video/ogg',
+  'video/x-ms-wmv',
 ];
 
 export const UploadComponent = (props: UploadComponentProps) => {
   // Get i18n functions from store
-  const t = (key: string, params?: Record<string, any>) => props.store?.i18n?.t(key, params) || key;
+  const t = (key: string, params?: Record<string, any>) =>
+    props.store?.i18n?.t(key, params) || key;
   const toast = useToast();
 
   const [files, setFiles] = createSignal<File[]>([]);
@@ -56,24 +76,28 @@ export const UploadComponent = (props: UploadComponentProps) => {
   const [progresses, setProgresses] = createSignal<Progresses>({});
   const [validations, setValidations] = createSignal<FileValidations>({});
   const [isUploading, setIsUploading] = createSignal(false);
-  const [maxUploadSize, setMaxUploadSize] = createSignal<number>(2048 * 1024 * 1024); // Default 2GB in bytes
+  const [maxUploadSize, setMaxUploadSize] = createSignal<number>(
+    2048 * 1024 * 1024
+  ); // Default 2GB in bytes
 
   // Fetch quota information on mount
   onMount(async () => {
     try {
       const response = await authFetch(
-        `${props.baseUrl}/dashboard/organizations/${props.organizationId}/quotas`,
+        `${props.baseUrl}/dashboard/organizations/${props.organizationId}/quotas`
       );
       if (response.ok) {
         const quotas = await response.json();
-        const maxUploadQuota = quotas.find((q: any) => q.resource === "max_upload_size");
+        const maxUploadQuota = quotas.find(
+          (q: any) => q.resource === 'max_upload_size'
+        );
         if (maxUploadQuota) {
           // Quota is stored in MB, convert to bytes
           setMaxUploadSize(maxUploadQuota.max * 1024 * 1024);
         }
       }
     } catch (error) {
-      console.error("Failed to fetch quotas:", error);
+      console.error('Failed to fetch quotas:', error);
     }
   });
 
@@ -88,7 +112,7 @@ export const UploadComponent = (props: UploadComponentProps) => {
       if (file.size > maxSize) {
         newValidations[file.name] = {
           valid: false,
-          error: t("medias.upload.fileTooLarge", {
+          error: t('medias.upload.fileTooLarge', {
             fileSize: formatBytes(file.size),
             maxSize: formatBytes(maxSize),
           }),
@@ -96,7 +120,7 @@ export const UploadComponent = (props: UploadComponentProps) => {
       } else if (file.size > softLimitSize) {
         newValidations[file.name] = {
           valid: true,
-          warning: t("medias.upload.largeFileWarning", {
+          warning: t('medias.upload.largeFileWarning', {
             fileSize: formatBytes(file.size),
           }),
         };
@@ -111,20 +135,21 @@ export const UploadComponent = (props: UploadComponentProps) => {
   // Helper to get count of valid files that can be uploaded
   const getValidFilesCount = () => {
     const currentValidations = validations();
-    return files().filter((file) => currentValidations[file.name]?.valid).length;
+    return files().filter((file) => currentValidations[file.name]?.valid)
+      .length;
   };
 
   // Helper to get count of completed file uploads (excluding global messages)
   const getCompletedFilesCount = () => {
     const msgs = messages();
-    return Object.keys(msgs).filter((key) => key !== "global").length;
+    return Object.keys(msgs).filter((key) => key !== 'global').length;
   };
 
   const handleFileChange = (e: Event) => {
     const target = e.target as HTMLInputElement;
     if (target.files) {
       const selectedFiles = Array.from(target.files).filter((file) =>
-        supportedFileTypes.includes(file.type),
+        supportedFileTypes.includes(file.type)
       );
       setFiles(selectedFiles);
       setProgresses({});
@@ -141,10 +166,12 @@ export const UploadComponent = (props: UploadComponentProps) => {
     const currentValidations = validations();
 
     // Filter out invalid files
-    const validFiles = currentFiles.filter((file) => currentValidations[file.name]?.valid);
+    const validFiles = currentFiles.filter(
+      (file) => currentValidations[file.name]?.valid
+    );
 
     if (validFiles.length === 0) {
-      setMessages((m) => ({ ...m, global: t("medias.upload.noValidFiles") }));
+      setMessages((m) => ({ ...m, global: t('medias.upload.noValidFiles') }));
       return;
     }
 
@@ -161,25 +188,27 @@ export const UploadComponent = (props: UploadComponentProps) => {
 
     validFiles.forEach((file) => {
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append('file', file);
 
       const xhr = new XMLHttpRequest();
       xhr.open(
-        "POST",
+        'POST',
         `${props.baseUrl}/dashboard/organizations/${props.organizationId}/medias`,
-        true,
+        true
       );
 
       // Attach Bearer token for authentication (cookies are no longer used)
       const token = getAuthToken();
       if (token) {
-        xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
       }
 
       xhr.upload.onprogress = (event) => {
         if (event.lengthComputable) {
           const percentComplete =
-            event.total > 0 ? Math.round((event.loaded / event.total) * 100) : 0; // Ensuring division by zero is handled
+            event.total > 0
+              ? Math.round((event.loaded / event.total) * 100)
+              : 0; // Ensuring division by zero is handled
           setProgresses((p) => ({ ...p, [file.name]: percentComplete }));
         }
       };
@@ -196,7 +225,7 @@ export const UploadComponent = (props: UploadComponentProps) => {
             props.onFileUpload?.(file.name, response);
 
             // Complete the onboarding step for media upload
-            props.store?.onboarding?.completeStep?.("upload_media");
+            props.store?.onboarding?.completeStep?.('upload_media');
           } else {
             let errorMessage: string;
             try {
@@ -205,14 +234,15 @@ export const UploadComponent = (props: UploadComponentProps) => {
                 errorData.error ||
                 errorData.message ||
                 xhr.statusText ||
-                t("medias.upload.unknownError");
+                t('medias.upload.unknownError');
             } catch {
               errorMessage =
-                xhr.statusText || t("medias.upload.serverError", { status: xhr.status });
+                xhr.statusText ||
+                t('medias.upload.serverError', { status: xhr.status });
             }
             setMessages((m) => ({
               ...m,
-              [file.name]: t("medias.upload.uploadFailed", {
+              [file.name]: t('medias.upload.uploadFailed', {
                 error: errorMessage,
               }),
             }));
@@ -220,7 +250,7 @@ export const UploadComponent = (props: UploadComponentProps) => {
         } catch {
           setMessages((m) => ({
             ...m,
-            [file.name]: t("medias.upload.uploadError"),
+            [file.name]: t('medias.upload.uploadError'),
           }));
         } finally {
           markUploadCompleted();
@@ -230,7 +260,7 @@ export const UploadComponent = (props: UploadComponentProps) => {
       xhr.onerror = () => {
         setMessages((m) => ({
           ...m,
-          [file.name]: t("medias.upload.uploadError"),
+          [file.name]: t('medias.upload.uploadError'),
         }));
         markUploadCompleted();
       };
@@ -238,7 +268,7 @@ export const UploadComponent = (props: UploadComponentProps) => {
       xhr.onabort = () => {
         setMessages((m) => ({
           ...m,
-          [file.name]: t("medias.upload.uploadError"),
+          [file.name]: t('medias.upload.uploadError'),
         }));
         markUploadCompleted();
       };
@@ -258,15 +288,19 @@ export const UploadComponent = (props: UploadComponentProps) => {
         setIsDraggedOver(false);
 
         const droppedFiles = Array.from(source.items).filter(
-          (file) => file.kind === "file" && supportedFileTypes.includes(file.type),
+          (file) =>
+            file.kind === 'file' && supportedFileTypes.includes(file.type)
         );
 
         if (droppedFiles.length === 0) {
-          toast.error("No supported files found in the dropped files.");
+          toast.error('No supported files found in the dropped files.');
           return;
         }
 
-        setFiles([...files(), ...droppedFiles.map((file) => file.getAsFile()!)]);
+        setFiles([
+          ...files(),
+          ...droppedFiles.map((file) => file.getAsFile()!),
+        ]);
         setProgresses({});
         setMessages({});
       },
@@ -305,7 +339,7 @@ export const UploadComponent = (props: UploadComponentProps) => {
           class="file-input"
           multiple
           onChange={handleFileChange}
-          accept={supportedFileTypes.join(",")}
+          accept={supportedFileTypes.join(',')}
         />
         <label for="file" class="file-label">
           Choose Files
@@ -316,7 +350,7 @@ export const UploadComponent = (props: UploadComponentProps) => {
         ref={setDropZoneElement}
         class="drop-zone"
         style={{
-          "background-color": isDraggedOver() ? "lightblue" : "#555",
+          'background-color': isDraggedOver() ? 'lightblue' : '#555',
         }}
         onDragOver={(e) => e.preventDefault()} // This is crucial for making the drop event work
       >
@@ -327,10 +361,10 @@ export const UploadComponent = (props: UploadComponentProps) => {
           <table>
             <thead>
               <tr>
-                <th>{t("common.fileName")}</th>
-                <th>{t("common.size")}</th>
-                <th>{t("common.progress")}</th>
-                <th>{t("common.actions")}</th>
+                <th>{t('common.fileName')}</th>
+                <th>{t('common.size')}</th>
+                <th>{t('common.progress')}</th>
+                <th>{t('common.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -338,14 +372,15 @@ export const UploadComponent = (props: UploadComponentProps) => {
                 {(file) => {
                   const validation = validations()[file.name];
                   const hasError = validation && !validation.valid;
-                  const hasWarning = validation && validation.valid && validation.warning;
+                  const hasWarning =
+                    validation && validation.valid && validation.warning;
 
                   return (
                     <tr
                       class="file"
                       classList={{
-                        "file-error": hasError,
-                        "file-warning": hasWarning,
+                        'file-error': hasError,
+                        'file-warning': hasWarning,
                       }}
                     >
                       <td class="filename-cell" title={file.name}>
@@ -373,7 +408,10 @@ export const UploadComponent = (props: UploadComponentProps) => {
                         <Show
                           when={messages()[file.name]}
                           fallback={
-                            <progress value={progresses()[file.name] || 0} max="100">
+                            <progress
+                              value={progresses()[file.name] || 0}
+                              max="100"
+                            >
                               {progresses()[file.name]}%
                             </progress>
                           }
@@ -401,17 +439,24 @@ export const UploadComponent = (props: UploadComponentProps) => {
         <Show when={!!props.onCancel}>
           {/* Disable when files start to be uploaded */}
           <Button
-            label={getCompletedFilesCount() === getValidFilesCount() ? "Close" : "Cancel"}
+            label={
+              getCompletedFilesCount() === getValidFilesCount()
+                ? 'Close'
+                : 'Cancel'
+            }
             onClick={() => props.onCancel?.()}
             color="secondary"
             disabled={
-              getCompletedFilesCount() > 0 && getCompletedFilesCount() !== getValidFilesCount()
+              getCompletedFilesCount() > 0 &&
+              getCompletedFilesCount() !== getValidFilesCount()
             }
           />
         </Show>
         {/* Change label to "Close" when all files have been uploaded */}
         <Button
-          disabled={isUploading() || getCompletedFilesCount() === getValidFilesCount()}
+          disabled={
+            isUploading() || getCompletedFilesCount() === getValidFilesCount()
+          }
           label="Upload"
           onClick={handleUpload}
           icon={AiOutlineUpload}

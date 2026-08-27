@@ -7,10 +7,10 @@
 // - device_manager: Full device/channel management
 // - guest: Read-only access
 export type OrganizationRole =
-  | "admin"
-  | "manager"
-  | "member"
-  | "editor"
-  | "publisher"
-  | "device_manager"
-  | "guest";
+  | 'admin'
+  | 'manager'
+  | 'member'
+  | 'editor'
+  | 'publisher'
+  | 'device_manager'
+  | 'guest';

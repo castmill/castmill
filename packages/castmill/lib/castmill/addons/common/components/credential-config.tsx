@@ -1,9 +1,16 @@
-import { Component, createSignal, createEffect, Show, For, onMount } from "solid-js";
-import { Button } from "@castmill/ui-common";
-import { AddonStore } from "../interfaces/addon-store";
-import { authFetch } from "../services/auth-fetch";
+import {
+  Component,
+  createSignal,
+  createEffect,
+  Show,
+  For,
+  onMount,
+} from 'solid-js';
+import { Button } from '@castmill/ui-common';
+import { AddonStore } from '../interfaces/addon-store';
+import { authFetch } from '../services/auth-fetch';
 
-import "./credential-config.scss";
+import './credential-config.scss';
 
 /**
  * OAuth 2.0 configuration from credential_schema.oauth2
@@ -13,7 +20,7 @@ interface OAuth2Config {
   token_url: string;
   scopes?: string[];
   pkce?: boolean;
-  client_auth?: "basic" | "post";
+  client_auth?: 'basic' | 'post';
   refresh_margin_seconds?: number;
 }
 
@@ -21,13 +28,13 @@ interface OAuth2Config {
  * Field definition from credential_schema.fields
  */
 interface CredentialField {
-  type: "string" | "number" | "boolean";
+  type: 'string' | 'number' | 'boolean';
   label?: string | Record<string, string>;
   description?: string | Record<string, string>;
   required?: boolean;
   sensitive?: boolean;
   secret?: boolean;
-  input_type?: "text" | "password" | "url" | "email";
+  input_type?: 'text' | 'password' | 'url' | 'email';
   default?: any;
   placeholder?: string | Record<string, string>;
 }
@@ -36,7 +43,12 @@ interface CredentialField {
  * Credential schema structure
  */
 export interface CredentialSchema {
-  auth_type: "oauth2" | "oauth2_client_credentials" | "api_key" | "basic" | "custom";
+  auth_type:
+    | 'oauth2'
+    | 'oauth2_client_credentials'
+    | 'api_key'
+    | 'basic'
+    | 'custom';
   oauth2?: OAuth2Config;
   fields?: Record<string, CredentialField>;
 }
@@ -49,8 +61,8 @@ export interface WidgetIntegration {
   widget_id: number;
   name: string;
   description?: string;
-  integration_type: "pull" | "push" | "both";
-  credential_scope: "organization" | "widget";
+  integration_type: 'pull' | 'push' | 'both';
+  credential_scope: 'organization' | 'widget';
   credential_schema?: CredentialSchema;
   config_schema?: Record<string, any>;
   pull_endpoint?: string;
@@ -80,7 +92,7 @@ interface CredentialInfo {
  */
 interface Message {
   text: string;
-  type: "success" | "error" | "info";
+  type: 'success' | 'error' | 'info';
 }
 
 /**
@@ -120,20 +132,26 @@ export const CredentialConfig: Component<CredentialConfigProps> = (props) => {
   const [isSaving, setIsSaving] = createSignal(false);
   const [isTesting, setIsTesting] = createSignal(false);
   const [isDisconnecting, setIsDisconnecting] = createSignal(false);
-  const [credentialInfo, setCredentialInfo] = createSignal<CredentialInfo | null>(null);
+  const [credentialInfo, setCredentialInfo] =
+    createSignal<CredentialInfo | null>(null);
   const [formValues, setFormValues] = createSignal<Record<string, string>>({});
   const [formErrors, setFormErrors] = createSignal<Record<string, string>>({});
   const [message, setMessage] = createSignal<Message | null>(null);
 
   // Get i18n functions from store
-  const t = (key: string, params?: Record<string, any>) => props.store.i18n?.t(key, params) || key;
+  const t = (key: string, params?: Record<string, any>) =>
+    props.store.i18n?.t(key, params) || key;
 
-  const locale = () => props.store.i18n?.locale() || "en";
+  const locale = () => props.store.i18n?.locale() || 'en';
 
   /**
    * Show a message and auto-hide after duration
    */
-  const showMessage = (text: string, type: Message["type"], duration: number = 5000) => {
+  const showMessage = (
+    text: string,
+    type: Message['type'],
+    duration: number = 5000
+  ) => {
     setMessage({ text, type });
     setTimeout(() => setMessage(null), duration);
   };
@@ -143,22 +161,24 @@ export const CredentialConfig: Component<CredentialConfigProps> = (props) => {
    */
   const getLocalizedText = (
     text: string | Record<string, string> | undefined,
-    fallback: string = "",
+    fallback: string = ''
   ): string => {
     if (!text) return fallback;
-    if (typeof text === "string") return text;
-    return text[locale()] || text["en"] || fallback;
+    if (typeof text === 'string') return text;
+    return text[locale()] || text['en'] || fallback;
   };
 
   /**
    * Get the auth type from the credential schema
    */
-  const authType = () => props.integration.credential_schema?.auth_type || "custom";
+  const authType = () =>
+    props.integration.credential_schema?.auth_type || 'custom';
 
   /**
    * Check if this integration uses OAuth
    */
-  const isOAuth = () => authType() === "oauth2" || authType() === "oauth2_client_credentials";
+  const isOAuth = () =>
+    authType() === 'oauth2' || authType() === 'oauth2_client_credentials';
 
   /**
    * Get the fields from the credential schema
@@ -188,8 +208,8 @@ export const CredentialConfig: Component<CredentialConfigProps> = (props) => {
       const response = await authFetch(
         `${props.baseUrl}/dashboard/organizations/${organizationId}/widget-integrations/${props.integration.id}`,
         {
-          headers: { "Content-Type": "application/json" },
-        },
+          headers: { 'Content-Type': 'application/json' },
+        }
       );
 
       if (response.ok) {
@@ -205,7 +225,7 @@ export const CredentialConfig: Component<CredentialConfigProps> = (props) => {
         }
       }
     } catch (error) {
-      console.error("Error fetching credential status:", error);
+      console.error('Error fetching credential status:', error);
       setCredentialInfo(null);
       props.onCredentialsChange?.(false);
     } finally {
@@ -218,26 +238,26 @@ export const CredentialConfig: Component<CredentialConfigProps> = (props) => {
    */
   const checkOAuthCallback = () => {
     const urlParams = new URLSearchParams(window.location.search);
-    const oauthStatus = urlParams.get("oauth_status");
-    const errorMessage = urlParams.get("error_message");
-    const integrationId = urlParams.get("integration_id");
+    const oauthStatus = urlParams.get('oauth_status');
+    const errorMessage = urlParams.get('error_message');
+    const integrationId = urlParams.get('integration_id');
 
     // Only process if this is for our integration
     if (integrationId && integrationId !== String(props.integration.id)) {
       return;
     }
 
-    if (oauthStatus === "success") {
-      showMessage(t("widgets.integrations.credentialsSaved"), "success");
+    if (oauthStatus === 'success') {
+      showMessage(t('widgets.integrations.credentialsSaved'), 'success');
       cleanUrlParams();
       fetchCredentialStatus();
-    } else if (oauthStatus === "error") {
+    } else if (oauthStatus === 'error') {
       showMessage(
         errorMessage ||
-          t("widgets.integrations.credentialsSaveFailed", {
-            error: "Unknown error",
+          t('widgets.integrations.credentialsSaveFailed', {
+            error: 'Unknown error',
           }),
-        "error",
+        'error'
       );
       cleanUrlParams();
     }
@@ -248,11 +268,11 @@ export const CredentialConfig: Component<CredentialConfigProps> = (props) => {
    */
   const cleanUrlParams = () => {
     const url = new URL(window.location.href);
-    url.searchParams.delete("oauth_status");
-    url.searchParams.delete("error_message");
-    url.searchParams.delete("integration_id");
-    url.searchParams.delete("widget_config_id");
-    window.history.replaceState({}, "", url.toString());
+    url.searchParams.delete('oauth_status');
+    url.searchParams.delete('error_message');
+    url.searchParams.delete('integration_id');
+    url.searchParams.delete('widget_config_id');
+    window.history.replaceState({}, '', url.toString());
   };
 
   /**
@@ -269,7 +289,7 @@ export const CredentialConfig: Component<CredentialConfigProps> = (props) => {
     });
 
     if (props.widgetConfigId) {
-      params.set("widget_config_id", props.widgetConfigId);
+      params.set('widget_config_id', props.widgetConfigId);
     }
 
     const authUrl = `${props.baseUrl}/auth/widget-integrations/${props.integration.id}/authorize?${params.toString()}`;
@@ -287,7 +307,7 @@ export const CredentialConfig: Component<CredentialConfigProps> = (props) => {
     for (const [key, field] of Object.entries(fieldDefs)) {
       if (field.required && !values[key]) {
         const label = getLocalizedText(field.label, key);
-        errors[key] = t("widgets.integrations.fieldRequired", { field: label });
+        errors[key] = t('widgets.integrations.fieldRequired', { field: label });
       }
     }
 
@@ -307,25 +327,29 @@ export const CredentialConfig: Component<CredentialConfigProps> = (props) => {
       const response = await authFetch(
         `${props.baseUrl}/dashboard/organizations/${organizationId}/widget-integrations/${props.integration.id}/credentials`,
         {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ credentials: formValues() }),
-        },
+        }
       );
 
       if (response.ok) {
-        showMessage(t("widgets.integrations.credentialsSaved"), "success", 3000);
+        showMessage(
+          t('widgets.integrations.credentialsSaved'),
+          'success',
+          3000
+        );
         fetchCredentialStatus();
       } else {
         const error = await response.json();
-        throw new Error(error.error || "Failed to save credentials");
+        throw new Error(error.error || 'Failed to save credentials');
       }
     } catch (error: any) {
       showMessage(
-        t("widgets.integrations.credentialsSaveFailed", {
+        t('widgets.integrations.credentialsSaveFailed', {
           error: error.message,
         }),
-        "error",
+        'error'
       );
     } finally {
       setIsSaving(false);
@@ -342,19 +366,22 @@ export const CredentialConfig: Component<CredentialConfigProps> = (props) => {
       const response = await authFetch(
         `${props.baseUrl}/dashboard/organizations/${organizationId}/widget-integrations/${props.integration.id}/test`,
         {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-        },
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        }
       );
 
       if (response.ok) {
-        showMessage(t("widgets.integrations.testSuccess"), "success", 3000);
+        showMessage(t('widgets.integrations.testSuccess'), 'success', 3000);
       } else {
         const error = await response.json();
-        throw new Error(error.error || "Test failed");
+        throw new Error(error.error || 'Test failed');
       }
     } catch (error: any) {
-      showMessage(t("widgets.integrations.testFailed", { error: error.message }), "error");
+      showMessage(
+        t('widgets.integrations.testFailed', { error: error.message }),
+        'error'
+      );
     } finally {
       setIsTesting(false);
     }
@@ -366,9 +393,9 @@ export const CredentialConfig: Component<CredentialConfigProps> = (props) => {
   const disconnect = async () => {
     if (
       !confirm(
-        t("widgets.integrations.confirmDisconnect", {
+        t('widgets.integrations.confirmDisconnect', {
           provider: providerName(),
-        }),
+        })
       )
     ) {
       return;
@@ -380,25 +407,28 @@ export const CredentialConfig: Component<CredentialConfigProps> = (props) => {
       const response = await authFetch(
         `${props.baseUrl}/dashboard/organizations/${organizationId}/widget-integrations/${props.integration.id}/credentials`,
         {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-        },
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+        }
       );
 
       if (response.ok) {
         showMessage(
-          t("widgets.integrations.disconnected", { provider: providerName() }),
-          "success",
+          t('widgets.integrations.disconnected', { provider: providerName() }),
+          'success'
         );
         setCredentialInfo(null);
         setFormValues({});
         props.onCredentialsChange?.(false);
       } else {
         const error = await response.json();
-        throw new Error(error.error || "Failed to disconnect");
+        throw new Error(error.error || 'Failed to disconnect');
       }
     } catch (error: any) {
-      showMessage(t("widgets.integrations.disconnectFailed", { error: error.message }), "error");
+      showMessage(
+        t('widgets.integrations.disconnectFailed', { error: error.message }),
+        'error'
+      );
     } finally {
       setIsDisconnecting(false);
     }
@@ -424,7 +454,7 @@ export const CredentialConfig: Component<CredentialConfigProps> = (props) => {
    */
   const formatValidatedDate = () => {
     const info = credentialInfo();
-    if (!info?.validated_at) return "";
+    if (!info?.validated_at) return '';
     const date = new Date(info.validated_at);
     return props.store.i18n?.formatDate(date) || date.toLocaleDateString();
   };
@@ -463,20 +493,31 @@ export const CredentialConfig: Component<CredentialConfigProps> = (props) => {
         <div class="integration-info">
           <h4 class="integration-name">{providerName()}</h4>
           <Show when={props.integration.description}>
-            <p class="integration-description">{props.integration.description}</p>
+            <p class="integration-description">
+              {props.integration.description}
+            </p>
           </Show>
         </div>
         <div class="credential-status">
           <Show
             when={isConfigured()}
-            fallback={<span class="status-badge pending">{t("widgets.integrations.pending")}</span>}
+            fallback={
+              <span class="status-badge pending">
+                {t('widgets.integrations.pending')}
+              </span>
+            }
           >
-            <span class="status-badge valid">{t("widgets.integrations.valid")}</span>
+            <span class="status-badge valid">
+              {t('widgets.integrations.valid')}
+            </span>
           </Show>
         </div>
       </div>
 
-      <Show when={!isLoading()} fallback={<div class="loading">{t("common.loading")}</div>}>
+      <Show
+        when={!isLoading()}
+        fallback={<div class="loading">{t('common.loading')}</div>}
+      >
         {/* OAuth flow */}
         <Show when={isOAuth()}>
           <div class="oauth-section">
@@ -486,11 +527,14 @@ export const CredentialConfig: Component<CredentialConfigProps> = (props) => {
               - There are fields defined in the credential_schema
             */}
             <Show
-              when={!props.integration.has_network_credentials && Object.keys(fields()).length > 0}
+              when={
+                !props.integration.has_network_credentials &&
+                Object.keys(fields()).length > 0
+              }
             >
               <div class="credential-form oauth-credentials">
                 <p class="form-description">
-                  {t("widgets.integrations.enterClientCredentials", {
+                  {t('widgets.integrations.enterClientCredentials', {
                     provider: providerName(),
                   })}
                 </p>
@@ -504,15 +548,17 @@ export const CredentialConfig: Component<CredentialConfigProps> = (props) => {
                       <input
                         id={key}
                         type={
-                          field.sensitive || field.secret ? "password" : field.input_type || "text"
+                          field.sensitive || field.secret
+                            ? 'password'
+                            : field.input_type || 'text'
                         }
-                        value={formValues()[key] || ""}
-                        placeholder={getLocalizedText(field.placeholder, "")}
+                        value={formValues()[key] || ''}
+                        placeholder={getLocalizedText(field.placeholder, '')}
                         onInput={(e) => updateField(key, e.currentTarget.value)}
                       />
                       <Show when={field.description}>
                         <span class="field-description">
-                          {getLocalizedText(field.description, "")}
+                          {getLocalizedText(field.description, '')}
                         </span>
                       </Show>
                       <Show when={formErrors()[key]}>
@@ -524,7 +570,9 @@ export const CredentialConfig: Component<CredentialConfigProps> = (props) => {
                 <div class="form-actions">
                   <Button
                     label={
-                      isSaving() ? t("common.saving") : t("widgets.integrations.saveCredentials")
+                      isSaving()
+                        ? t('common.saving')
+                        : t('widgets.integrations.saveCredentials')
                     }
                     onClick={saveCredentials}
                     disabled={isSaving()}
@@ -535,10 +583,14 @@ export const CredentialConfig: Component<CredentialConfigProps> = (props) => {
             </Show>
 
             {/* Show info when network credentials are configured */}
-            <Show when={props.integration.has_network_credentials && !isConfigured()}>
+            <Show
+              when={
+                props.integration.has_network_credentials && !isConfigured()
+              }
+            >
               <div class="network-credentials-info">
                 <p class="info-text">
-                  {t("widgets.integrations.networkCredentialsConfigured", {
+                  {t('widgets.integrations.networkCredentialsConfigured', {
                     provider: providerName(),
                   })}
                 </p>
@@ -552,13 +604,13 @@ export const CredentialConfig: Component<CredentialConfigProps> = (props) => {
                 <div class="oauth-connect">
                   <Show when={!props.integration.has_network_credentials}>
                     <p class="oauth-description">
-                      {t("widgets.integrations.afterSavingCredentials", {
+                      {t('widgets.integrations.afterSavingCredentials', {
                         provider: providerName(),
                       })}
                     </p>
                   </Show>
                   <Button
-                    label={t("widgets.integrations.connectWith", {
+                    label={t('widgets.integrations.connectWith', {
                       provider: providerName(),
                     })}
                     onClick={startOAuthFlow}
@@ -570,13 +622,13 @@ export const CredentialConfig: Component<CredentialConfigProps> = (props) => {
               <div class="oauth-connected">
                 <div class="connection-info">
                   <span class="connected-label">
-                    {t("widgets.integrations.connectedTo", {
+                    {t('widgets.integrations.connectedTo', {
                       provider: providerName(),
                     })}
                   </span>
                   <Show when={formatValidatedDate()}>
                     <span class="validated-date">
-                      {t("widgets.integrations.lastValidated", {
+                      {t('widgets.integrations.lastValidated', {
                         date: formatValidatedDate(),
                       })}
                     </span>
@@ -584,20 +636,20 @@ export const CredentialConfig: Component<CredentialConfigProps> = (props) => {
                 </div>
                 <div class="oauth-actions">
                   <Button
-                    label={t("widgets.integrations.reconnect")}
+                    label={t('widgets.integrations.reconnect')}
                     onClick={startOAuthFlow}
                     color="secondary"
                   />
-                  <Show when={props.integration.integration_type !== "push"}>
+                  <Show when={props.integration.integration_type !== 'push'}>
                     <Button
-                      label={t("widgets.integrations.testConnection")}
+                      label={t('widgets.integrations.testConnection')}
                       onClick={testConnection}
                       disabled={isTesting()}
                       color="info"
                     />
                   </Show>
                   <Button
-                    label={t("widgets.integrations.disconnect")}
+                    label={t('widgets.integrations.disconnect')}
                     onClick={disconnect}
                     disabled={isDisconnecting()}
                     color="danger"
@@ -624,17 +676,21 @@ export const CredentialConfig: Component<CredentialConfigProps> = (props) => {
                         </Show>
                       </label>
                       <Show when={field.description}>
-                        <p class="field-description">{getLocalizedText(field.description)}</p>
+                        <p class="field-description">
+                          {getLocalizedText(field.description)}
+                        </p>
                       </Show>
                       <input
                         id={`field-${key}`}
                         type={
-                          field.sensitive || field.secret ? "password" : field.input_type || "text"
+                          field.sensitive || field.secret
+                            ? 'password'
+                            : field.input_type || 'text'
                         }
-                        value={formValues()[key] || ""}
+                        value={formValues()[key] || ''}
                         placeholder={getLocalizedText(field.placeholder)}
                         onInput={(e) => updateField(key, e.currentTarget.value)}
-                        class={formErrors()[key] ? "error" : ""}
+                        class={formErrors()[key] ? 'error' : ''}
                       />
                       <Show when={formErrors()[key]}>
                         <span class="error-message">{formErrors()[key]}</span>
@@ -645,7 +701,7 @@ export const CredentialConfig: Component<CredentialConfigProps> = (props) => {
 
                 <div class="form-actions">
                   <Button
-                    label={t("widgets.integrations.saveCredentials")}
+                    label={t('widgets.integrations.saveCredentials')}
                     onClick={saveCredentials}
                     disabled={isSaving()}
                     color="primary"
@@ -660,11 +716,11 @@ export const CredentialConfig: Component<CredentialConfigProps> = (props) => {
                 <span class="configured-icon">✓</span>
                 <div class="configured-details">
                   <span class="configured-label">
-                    {t("widgets.integrations.credentialsConfigured")}
+                    {t('widgets.integrations.credentialsConfigured')}
                   </span>
                   <Show when={formatValidatedDate()}>
                     <span class="validated-date">
-                      {t("widgets.integrations.lastValidated", {
+                      {t('widgets.integrations.lastValidated', {
                         date: formatValidatedDate(),
                       })}
                     </span>
@@ -673,13 +729,13 @@ export const CredentialConfig: Component<CredentialConfigProps> = (props) => {
               </div>
               <div class="configured-actions">
                 <Button
-                  label={t("widgets.integrations.testConnection")}
+                  label={t('widgets.integrations.testConnection')}
                   onClick={testConnection}
                   disabled={isTesting()}
                   color="info"
                 />
                 <Button
-                  label={t("widgets.integrations.updateCredentials")}
+                  label={t('widgets.integrations.updateCredentials')}
                   onClick={() => {
                     setCredentialInfo(null);
                     setFormValues({});
@@ -687,7 +743,7 @@ export const CredentialConfig: Component<CredentialConfigProps> = (props) => {
                   color="secondary"
                 />
                 <Button
-                  label={t("widgets.integrations.deleteCredentials")}
+                  label={t('widgets.integrations.deleteCredentials')}
                   onClick={disconnect}
                   disabled={isDisconnecting()}
                   color="danger"
@@ -699,21 +755,21 @@ export const CredentialConfig: Component<CredentialConfigProps> = (props) => {
 
         {/* Integration metadata */}
         <div class="integration-meta">
-          <Show when={props.integration.integration_type === "pull"}>
+          <Show when={props.integration.integration_type === 'pull'}>
             <span class="meta-item">
-              {t("widgets.integrations.pullMode")} •{" "}
-              {t("widgets.integrations.pullInterval", {
+              {t('widgets.integrations.pullMode')} •{' '}
+              {t('widgets.integrations.pullInterval', {
                 seconds: props.integration.pull_interval_seconds || 60,
               })}
             </span>
           </Show>
-          <Show when={props.integration.integration_type === "push"}>
-            <span class="meta-item">{t("widgets.integrations.pushMode")}</span>
+          <Show when={props.integration.integration_type === 'push'}>
+            <span class="meta-item">{t('widgets.integrations.pushMode')}</span>
           </Show>
           <span class="meta-item scope">
-            {props.integration.credential_scope === "organization"
-              ? t("widgets.integrations.scopeOrganization")
-              : t("widgets.integrations.scopeWidget")}
+            {props.integration.credential_scope === 'organization'
+              ? t('widgets.integrations.scopeOrganization')
+              : t('widgets.integrations.scopeWidget')}
           </span>
         </div>
       </Show>

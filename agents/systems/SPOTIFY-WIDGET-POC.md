@@ -657,7 +657,7 @@ No schema changes needed - existing architecture supports this.
 
 ```tsx
 // packages/dashboard/src/addons/widgets/spotify/OAuthSetup.tsx
-import { createSignal } from "solid-js";
+import { createSignal } from 'solid-js';
 
 export function SpotifyOAuthSetup(props: { widgetConfigId: string }) {
   const [isAuthorizing, setIsAuthorizing] = createSignal(false);
@@ -667,16 +667,20 @@ export function SpotifyOAuthSetup(props: { widgetConfigId: string }) {
 
     // Get OAuth URL from backend
     const response = await fetch(
-      `/api/widget-configs/${props.widgetConfigId}/oauth/authorize?provider=spotify`,
+      `/api/widget-configs/${props.widgetConfigId}/oauth/authorize?provider=spotify`
     );
     const { authorization_url } = await response.json();
 
     // Open Spotify authorization in popup
-    const popup = window.open(authorization_url, "spotify-oauth", "width=500,height=700");
+    const popup = window.open(
+      authorization_url,
+      'spotify-oauth',
+      'width=500,height=700'
+    );
 
     // Wait for callback
-    window.addEventListener("message", (event) => {
-      if (event.data.type === "oauth-success") {
+    window.addEventListener('message', (event) => {
+      if (event.data.type === 'oauth-success') {
         setIsAuthorizing(false);
         props.onSuccess?.();
       }
@@ -684,8 +688,12 @@ export function SpotifyOAuthSetup(props: { widgetConfigId: string }) {
   };
 
   return (
-    <button onClick={handleConnect} disabled={isAuthorizing()} class="btn btn-primary">
-      {isAuthorizing() ? "Connecting..." : "Connect to Spotify"}
+    <button
+      onClick={handleConnect}
+      disabled={isAuthorizing()}
+      class="btn btn-primary"
+    >
+      {isAuthorizing() ? 'Connecting...' : 'Connect to Spotify'}
     </button>
   );
 }
@@ -835,13 +843,13 @@ The player resolves style bindings like `{key: "data.progress_percent"}`:
 
 ```typescript
 const resolveStyleBindings = (style: any, model: Model): any => {
-  if (!style || typeof style !== "object") return style;
+  if (!style || typeof style !== 'object') return style;
 
   const resolved: any = {};
   for (const [key, value] of Object.entries(style)) {
-    if (value && typeof value === "object" && "key" in value) {
+    if (value && typeof value === 'object' && 'key' in value) {
       // Resolve binding like {key: "data.progress_percent"}
-      resolved[key] = model.get((value as any).key) ?? "";
+      resolved[key] = model.get((value as any).key) ?? '';
     } else {
       resolved[key] = value;
     }
@@ -863,18 +871,20 @@ field(:aspect_ratio, :string)
 **Player Layer**: `packages/player/src/layer.ts`
 
 ```typescript
-function computeWidgetStyle(widget?: JsonWidget): JSX.CSSProperties | undefined {
+function computeWidgetStyle(
+  widget?: JsonWidget
+): JSX.CSSProperties | undefined {
   if (!widget?.aspect_ratio) return undefined;
 
-  const [w, h] = widget.aspect_ratio.split(":").map(Number);
+  const [w, h] = widget.aspect_ratio.split(':').map(Number);
   if (!w || !h || isNaN(w) || isNaN(h)) return undefined;
 
   return {
-    width: "auto",
-    height: "auto",
-    "max-width": "100%",
-    "max-height": "100%",
-    "aspect-ratio": `${w} / ${h}`,
+    width: 'auto',
+    height: 'auto',
+    'max-width': '100%',
+    'max-height': '100%',
+    'aspect-ratio': `${w} / ${h}`,
   };
 }
 ```

@@ -4,166 +4,166 @@ interface Signage {
   addKeyItem(
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: KeyItemOptions,
+    options: KeyItemOptions
   ): void;
   captureScreen(
     successCallback: (cbObject: CaptureScreenResponse) => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: CaptureScreenOptions,
+    options: CaptureScreenOptions
   ): void;
   clearKeyTable(
     successCallback: () => void,
-    errorCallback: (cbObject: ErrorResponse) => void,
+    errorCallback: (cbObject: ErrorResponse) => void
   ): void;
   enableCheckScreen(
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: CheckScreenOptions,
+    options: CheckScreenOptions
   ): void;
   getFailoverMode(
     successCallback: (cbObject: FailoverModeResponse) => void,
-    errorCallback: (cbObject: ErrorResponse) => void,
+    errorCallback: (cbObject: ErrorResponse) => void
   ): void;
   getIntelligentAuto(
     successCallback: (cbObject: IntelligentAutoResponse) => void,
-    errorCallback: (cbObject: ErrorResponse) => void,
+    errorCallback: (cbObject: ErrorResponse) => void
   ): void;
   getLanDaisyChain(
     successCallback: (cbObject: LanDaisyChainResponse) => void,
-    errorCallback: (cbObject: ErrorResponse) => void,
+    errorCallback: (cbObject: ErrorResponse) => void
   ): void;
   getMirrorMode(
     successCallback: (cbObject: MirrorModeResponse) => void,
-    errorCallback: (cbObject: ErrorResponse) => void,
+    errorCallback: (cbObject: ErrorResponse) => void
   ): void;
   getNoSignalImageMode(
     successCallback: (cbObject: NoSignalImageModeResponse) => void,
-    errorCallback: (cbObject: ErrorResponse) => void,
+    errorCallback: (cbObject: ErrorResponse) => void
   ): void;
   getPowerSaveMode(
     successCallback: (cbObject: PowerSaveModeResponse) => void,
-    errorCallback: (cbObject: ErrorResponse) => void,
+    errorCallback: (cbObject: ErrorResponse) => void
   ): void;
   getSignageInfo(
     successCallback: (cbObject: SignageInfoResponse) => void,
-    errorCallback: (cbObject: ErrorResponse) => void,
+    errorCallback: (cbObject: ErrorResponse) => void
   ): void;
   getSimplinkStatus(
     successCallback: (cbObject: SimplinkStatusResponse) => void,
-    errorCallback: (cbObject: ErrorResponse) => void,
+    errorCallback: (cbObject: ErrorResponse) => void
   ): void;
   getSystemMonitoringInfo(
     successCallback: (cbObject: SystemMonitoringInfoResponse) => void,
-    errorCallback: (cbObject: ErrorResponse) => void,
+    errorCallback: (cbObject: ErrorResponse) => void
   ): void;
   getTileInfo(
     successCallback: (cbObject: TileInfoResponse) => void,
-    errorCallback: (cbObject: ErrorResponse) => void,
+    errorCallback: (cbObject: ErrorResponse) => void
   ): void;
   getUsageData(
     successCallback: (cbObject: UsageDataResponse) => void,
-    errorCallback: (cbObject: ErrorResponse) => void,
+    errorCallback: (cbObject: ErrorResponse) => void
   ): void;
   getUsagePermission(
     successCallback: (cbObject: UsagePermissionResponse) => void,
-    errorCallback: (cbObject: ErrorResponse) => void,
+    errorCallback: (cbObject: ErrorResponse) => void
   ): void;
   registerRS232CEventListener(
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: RS232CEventListenerOptions,
+    options: RS232CEventListenerOptions
   ): void;
   registerSystemMonitor(
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: SystemMonitorOptions,
+    options: SystemMonitorOptions
   ): void;
   removeKeyItem(
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: KeyItemOptions,
+    options: KeyItemOptions
   ): void;
   resetNoSignalImage(
     successCallback: () => void,
-    errorCallback: (cbObject: ErrorResponse) => void,
+    errorCallback: (cbObject: ErrorResponse) => void
   ): void;
   sendKey(
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: SendKeyOptions,
+    options: SendKeyOptions
   ): void;
   setDigitalAudioInputMode(
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: DigitalAudioInputOptions,
+    options: DigitalAudioInputOptions
   ): void;
   setFailoverMode(
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: FailoverModeOptions,
+    options: FailoverModeOptions
   ): void;
   setIntelligentAuto(
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: IntelligentAutoOptions,
+    options: IntelligentAutoOptions
   ): void;
   setIsmMethod(
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: IsmMethodOptions,
+    options: IsmMethodOptions
   ): void;
   setLanDaisyChain(
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: LanDaisyChainOptions,
+    options: LanDaisyChainOptions
   ): void;
   setMirrorMode(
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: MirrorModeOptions,
+    options: MirrorModeOptions
   ): void;
   setNoSignalImageMode(
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: NoSignalImageModeOptions,
+    options: NoSignalImageModeOptions
   ): void;
   setPortraitMode(
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: PortraitModeOptions,
+    options: PortraitModeOptions
   ): void;
   setPowerSaveMode(
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: PowerSaveModeOptions,
+    options: PowerSaveModeOptions
   ): void;
   setSimplinkStatus(
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: SimplinkStatusOptions,
+    options: SimplinkStatusOptions
   ): void;
   setTileInfo(
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: TileInfoOptions,
+    options: TileInfoOptions
   ): void;
   setUsagePermission(
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: UsagePermissionOptions,
+    options: UsagePermissionOptions
   ): void;
   unregisterRS232CEventListener(
     successCallback: () => void,
-    errorCallback: (cbObject: ErrorResponse) => void,
+    errorCallback: (cbObject: ErrorResponse) => void
   ): void;
   unregisterSystemMonitor(
     successCallback: () => void,
-    errorCallback: (cbObject: ErrorResponse) => void,
+    errorCallback: (cbObject: ErrorResponse) => void
   ): void;
   updateNoSignalImageList(
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: UpdateNoSignalImageListOptions,
+    options: UpdateNoSignalImageListOptions
   ): void;
 }
 

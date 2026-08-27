@@ -286,7 +286,7 @@ HTTP 304 Not Modified
 // Player polling logic
 async function pollWidgetData(widgetConfigId, currentVersion) {
   const url = `/widget-configs/${widgetConfigId}/data`;
-  const params = currentVersion ? `?version=${currentVersion}` : "";
+  const params = currentVersion ? `?version=${currentVersion}` : '';
 
   const response = await fetch(url + params);
 
@@ -300,7 +300,7 @@ async function pollWidgetData(widgetConfigId, currentVersion) {
     return data;
   }
 
-  throw new Error("Failed to fetch widget data");
+  throw new Error('Failed to fetch widget data');
 }
 
 // Poll every 30 seconds

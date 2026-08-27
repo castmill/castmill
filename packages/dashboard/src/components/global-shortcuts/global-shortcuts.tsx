@@ -1,8 +1,8 @@
-import { Component, onMount, onCleanup, createEffect } from "solid-js";
-import { useNavigate, useParams } from "@solidjs/router";
-import { useKeyboardShortcuts } from "../../hooks";
-import { useI18n } from "../../i18n";
-import { store } from "../../store/store";
+import { Component, onMount, onCleanup, createEffect } from 'solid-js';
+import { useNavigate, useParams } from '@solidjs/router';
+import { useKeyboardShortcuts } from '../../hooks';
+import { useI18n } from '../../i18n';
+import { store } from '../../store/store';
 
 interface GlobalShortcutsProps {
   onShowShortcuts: () => void;
@@ -40,22 +40,22 @@ export const GlobalShortcuts: Component<GlobalShortcutsProps> = (props) => {
 
   onMount(() => {
     // Show shortcuts legend - Shift+?
-    registerShortcut("show-shortcuts", {
-      key: "?",
+    registerShortcut('show-shortcuts', {
+      key: '?',
       shift: true,
-      description: () => t("shortcuts.showShortcutsLegend"),
-      category: "global",
+      description: () => t('shortcuts.showShortcutsLegend'),
+      category: 'global',
       action: () => props.onShowShortcuts(),
     });
 
     // Core page navigation shortcuts
     // Note: These are core pages that are always available, not addon pages
 
-    registerShortcut("goto-channels", {
-      key: "C",
+    registerShortcut('goto-channels', {
+      key: 'C',
       ctrl: true,
-      description: () => t("shortcuts.gotoChannels"),
-      category: "navigation",
+      description: () => t('shortcuts.gotoChannels'),
+      category: 'navigation',
       action: () => {
         const orgId = getOrgId();
         if (orgId) {
@@ -65,11 +65,11 @@ export const GlobalShortcuts: Component<GlobalShortcutsProps> = (props) => {
       condition: () => !!getOrgId(),
     });
 
-    registerShortcut("goto-organization", {
-      key: "O",
+    registerShortcut('goto-organization', {
+      key: 'O',
       ctrl: true,
-      description: () => t("shortcuts.gotoOrganization"),
-      category: "navigation",
+      description: () => t('shortcuts.gotoOrganization'),
+      category: 'navigation',
       action: () => {
         const orgId = getOrgId();
         if (orgId) {
@@ -79,11 +79,11 @@ export const GlobalShortcuts: Component<GlobalShortcutsProps> = (props) => {
       condition: () => !!getOrgId(),
     });
 
-    registerShortcut("goto-teams", {
-      key: "G",
+    registerShortcut('goto-teams', {
+      key: 'G',
       ctrl: true,
-      description: () => t("shortcuts.gotoTeams"),
-      category: "navigation",
+      description: () => t('shortcuts.gotoTeams'),
+      category: 'navigation',
       action: () => {
         const orgId = getOrgId();
         if (orgId) {
@@ -97,24 +97,24 @@ export const GlobalShortcuts: Component<GlobalShortcutsProps> = (props) => {
     // These are always visible in the legend
     // Addons register their specific actions via registerShortcutAction
 
-    registerShortcut("generic-create", {
-      key: "C",
-      description: () => t("shortcuts.createResource"),
-      category: "actions",
+    registerShortcut('generic-create', {
+      key: 'C',
+      description: () => t('shortcuts.createResource'),
+      category: 'actions',
       // No action - addons will register via registerShortcutAction
     });
 
-    registerShortcut("generic-search", {
-      key: "S",
-      description: () => t("shortcuts.searchResource"),
-      category: "actions",
+    registerShortcut('generic-search', {
+      key: 'S',
+      description: () => t('shortcuts.searchResource'),
+      category: 'actions',
       // No action - addons will register via registerShortcutAction
     });
 
-    registerShortcut("generic-delete", {
-      key: "Delete",
-      description: () => t("shortcuts.deleteSelected"),
-      category: "actions",
+    registerShortcut('generic-delete', {
+      key: 'Delete',
+      description: () => t('shortcuts.deleteSelected'),
+      category: 'actions',
       // No action - addons will register via registerShortcutAction
     });
   });
@@ -138,7 +138,7 @@ export const GlobalShortcuts: Component<GlobalShortcutsProps> = (props) => {
             key: addon.keyboard_shortcut.key,
             ctrl: true,
             description: () => t(addon.keyboard_shortcut!.description_key),
-            category: "navigation",
+            category: 'navigation',
             action: () => {
               const orgId = getOrgId();
               if (orgId) {
@@ -153,19 +153,19 @@ export const GlobalShortcuts: Component<GlobalShortcutsProps> = (props) => {
   });
 
   onCleanup(() => {
-    unregisterShortcut("show-shortcuts");
-    unregisterShortcut("goto-channels");
-    unregisterShortcut("goto-organization");
-    unregisterShortcut("goto-teams");
+    unregisterShortcut('show-shortcuts');
+    unregisterShortcut('goto-channels');
+    unregisterShortcut('goto-organization');
+    unregisterShortcut('goto-teams');
 
     // Dynamically unregister addon shortcuts
     registeredAddonShortcuts.forEach((shortcutId) => {
       unregisterShortcut(shortcutId);
     });
 
-    unregisterShortcut("generic-create");
-    unregisterShortcut("generic-search");
-    unregisterShortcut("generic-delete");
+    unregisterShortcut('generic-create');
+    unregisterShortcut('generic-search');
+    unregisterShortcut('generic-delete');
   });
 
   return null;

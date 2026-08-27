@@ -261,7 +261,7 @@ CastmillWeb.Endpoint.broadcast(
 
 ```typescript
 // Player connected to WebSocket channel
-channel.on("data_updated", (payload) => {
+channel.on('data_updated', (payload) => {
   // Template engine consumes the data
   renderTemplate(widget.template, payload.data);
   // Result:

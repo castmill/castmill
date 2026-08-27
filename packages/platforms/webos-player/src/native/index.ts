@@ -1,1 +1,1 @@
-export * from "./native-api";
+export * from './native-api';

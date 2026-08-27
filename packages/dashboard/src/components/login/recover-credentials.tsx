@@ -1,8 +1,8 @@
-import { Component, createSignal, Show } from "solid-js";
-import { baseUrl } from "../../env";
-import { authFetch } from "../auth";
-import { useI18n } from "../../i18n";
-import "./login.scss";
+import { Component, createSignal, Show } from 'solid-js';
+import { baseUrl } from '../../env';
+import { authFetch } from '../auth';
+import { useI18n } from '../../i18n';
+import './login.scss';
 
 interface RecoverCredentialsProps {
   onBack: () => void;
@@ -10,10 +10,10 @@ interface RecoverCredentialsProps {
 
 const RecoverCredentials: Component<RecoverCredentialsProps> = (props) => {
   const { t } = useI18n();
-  const [email, setEmail] = createSignal<string>("");
+  const [email, setEmail] = createSignal<string>('');
   const [loading, setLoading] = createSignal<boolean>(false);
   const [emailSent, setEmailSent] = createSignal<boolean>(false);
-  const [error, setError] = createSignal<string>("");
+  const [error, setError] = createSignal<string>('');
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const isValidEmail = () => emailRegex.test(email());
@@ -21,29 +21,29 @@ const RecoverCredentials: Component<RecoverCredentialsProps> = (props) => {
   const handleEmailChange = (event: Event) => {
     const target = event.target as HTMLInputElement;
     setEmail(target.value);
-    setError("");
+    setError('');
   };
 
   const handleEmailInput = (event: Event) => {
     const target = event.target as HTMLInputElement;
     setEmail(target.value);
-    setError("");
+    setError('');
   };
 
   const handleSubmit = async () => {
     if (!isValidEmail()) {
-      setError("Please enter a valid email address");
+      setError('Please enter a valid email address');
       return;
     }
 
     setLoading(true);
-    setError("");
+    setError('');
 
     try {
       const response = await authFetch(`${baseUrl}/credentials/recover`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email: email() }),
       });
@@ -51,11 +51,11 @@ const RecoverCredentials: Component<RecoverCredentialsProps> = (props) => {
       if (response.ok) {
         setEmailSent(true);
       } else {
-        setError("Failed to send recovery email. Please try again.");
+        setError('Failed to send recovery email. Please try again.');
       }
     } catch (err) {
-      console.error("Recovery request failed:", err);
-      setError("Failed to send recovery email. Please try again.");
+      console.error('Recovery request failed:', err);
+      setError('Failed to send recovery email. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -67,24 +67,25 @@ const RecoverCredentials: Component<RecoverCredentialsProps> = (props) => {
         when={!emailSent()}
         fallback={
           <>
-            <h2>{t("credentialRecovery.checkYourEmail")}</h2>
+            <h2>{t('credentialRecovery.checkYourEmail')}</h2>
             <p class="info-message">
-              If your email is in our system, you will receive instructions to recover your
-              credentials shortly.
+              If your email is in our system, you will receive instructions to
+              recover your credentials shortly.
             </p>
             <p class="info-message">
-              Please check your email and follow the link to add a new passkey to your account.
+              Please check your email and follow the link to add a new passkey
+              to your account.
             </p>
             <button class="login-button" onClick={props.onBack}>
-              {t("common.backToLogin")}
+              {t('common.backToLogin')}
             </button>
           </>
         }
       >
-        <h2>{t("credentialRecovery.title")}</h2>
+        <h2>{t('credentialRecovery.title')}</h2>
         <p class="info-message">
-          Enter your email address and we'll send you instructions to add a new passkey to your
-          account.
+          Enter your email address and we'll send you instructions to add a new
+          passkey to your account.
         </p>
 
         <input
@@ -100,12 +101,16 @@ const RecoverCredentials: Component<RecoverCredentialsProps> = (props) => {
           <div class="error">{error()}</div>
         </Show>
 
-        <button class="login-button" onClick={handleSubmit} disabled={!isValidEmail() || loading()}>
-          {loading() ? "Sending..." : "Send Recovery Email"}
+        <button
+          class="login-button"
+          onClick={handleSubmit}
+          disabled={!isValidEmail() || loading()}
+        >
+          {loading() ? 'Sending...' : 'Send Recovery Email'}
         </button>
 
         <button class="signup-button" onClick={props.onBack}>
-          {t("common.backToLogin")}
+          {t('common.backToLogin')}
         </button>
       </Show>
     </div>

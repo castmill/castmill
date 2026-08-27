@@ -183,22 +183,22 @@ Castmill.Tasks.CleanupExpiredInvitations.run()
 
 ```typescript
 export type OrganizationRole =
-  | "admin"
-  | "manager"
-  | "member" // Default (was 'regular')
-  | "editor"
-  | "publisher"
-  | "device_manager"
-  | "guest";
+  | 'admin'
+  | 'manager'
+  | 'member' // Default (was 'regular')
+  | 'editor'
+  | 'publisher'
+  | 'device_manager'
+  | 'guest';
 ```
 
 **`team-role.type.ts`**:
 
 ```typescript
 export type TeamRole =
-  | "admin"
-  | "member" // (was 'regular')
-  | "installer"; // 24h temp token
+  | 'admin'
+  | 'member' // (was 'regular')
+  | 'installer'; // 24h temp token
 ```
 
 #### i18n Translations (English):

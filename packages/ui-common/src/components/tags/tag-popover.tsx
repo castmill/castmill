@@ -13,13 +13,21 @@
  * - Keyboard navigation (Escape to close, Enter to create)
  */
 
-import { Component, For, Show, createSignal, createMemo, onCleanup, onMount } from "solid-js";
-import { Portal } from "solid-js/web";
-import { IoAddCircle } from "solid-icons/io";
-import { BsSearch } from "solid-icons/bs";
-import type { Tag, TagGroup } from "../../services/tags.service";
+import {
+  Component,
+  For,
+  Show,
+  createSignal,
+  createMemo,
+  onCleanup,
+  onMount,
+} from 'solid-js';
+import { Portal } from 'solid-js/web';
+import { IoAddCircle } from 'solid-icons/io';
+import { BsSearch } from 'solid-icons/bs';
+import type { Tag, TagGroup } from '../../services/tags.service';
 
-import "./tag-popover.scss";
+import './tag-popover.scss';
 
 export interface TagPopoverProps {
   /** All tags available in the organization */
@@ -51,7 +59,7 @@ export interface TagPopoverProps {
 }
 
 export const TagPopover: Component<TagPopoverProps> = (props) => {
-  const [searchQuery, setSearchQuery] = createSignal("");
+  const [searchQuery, setSearchQuery] = createSignal('');
   const [isCreating, setIsCreating] = createSignal(false);
   const [togglingTags, setTogglingTags] = createSignal(new Set<number>());
   const [position, setPosition] = createSignal({ top: 0, left: 0 });
@@ -97,18 +105,18 @@ export const TagPopover: Component<TagPopoverProps> = (props) => {
 
     // Delay adding click listener so the triggering click doesn't immediately close
     setTimeout(() => {
-      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener('mousedown', handleClickOutside);
     }, 0);
-    document.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("resize", handleResize);
-    window.addEventListener("scroll", handleScroll, true);
+    document.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('scroll', handleScroll, true);
   });
 
   onCleanup(() => {
-    document.removeEventListener("mousedown", handleClickOutside);
-    document.removeEventListener("keydown", handleKeyDown);
-    window.removeEventListener("resize", handleResize);
-    window.removeEventListener("scroll", handleScroll, true);
+    document.removeEventListener('mousedown', handleClickOutside);
+    document.removeEventListener('keydown', handleKeyDown);
+    window.removeEventListener('resize', handleResize);
+    window.removeEventListener('scroll', handleScroll, true);
   });
 
   // ---------------------------------------------------------------------------
@@ -126,7 +134,7 @@ export const TagPopover: Component<TagPopoverProps> = (props) => {
   };
 
   const handleKeyDown = (e: KeyboardEvent) => {
-    if (e.key === "Escape") props.onClose();
+    if (e.key === 'Escape') props.onClose();
   };
 
   const handleResize = () => updatePosition();
@@ -168,7 +176,9 @@ export const TagPopover: Component<TagPopoverProps> = (props) => {
     if (!props.allowCreate || !props.onCreateTag) return false;
     const query = searchQuery().trim();
     if (!query || query.length < 2) return false;
-    return !props.availableTags.some((t) => t.name.toLowerCase() === query.toLowerCase());
+    return !props.availableTags.some(
+      (t) => t.name.toLowerCase() === query.toLowerCase()
+    );
   });
 
   // ---------------------------------------------------------------------------
@@ -208,11 +218,11 @@ export const TagPopover: Component<TagPopoverProps> = (props) => {
     setIsCreating(true);
     try {
       const newTag = await props.onCreateTag(name);
-      setSearchQuery("");
+      setSearchQuery('');
       // Auto-select the freshly created tag
       await props.onToggle(newTag.id, true);
     } catch (error) {
-      console.error("Failed to create tag:", error);
+      console.error('Failed to create tag:', error);
     } finally {
       setIsCreating(false);
     }
@@ -224,12 +234,14 @@ export const TagPopover: Component<TagPopoverProps> = (props) => {
 
   const renderTagRow = (tag: Tag) => (
     <button
-      class={`tag-popover-row ${isTagSelected(tag.id) ? "selected" : ""} ${isTagToggling(tag.id) ? "toggling" : ""}`}
+      class={`tag-popover-row ${isTagSelected(tag.id) ? 'selected' : ''} ${isTagToggling(tag.id) ? 'toggling' : ''}`}
       onClick={() => handleToggle(tag.id)}
       disabled={isTagToggling(tag.id)}
       type="button"
     >
-      <span class={`tag-popover-check ${isTagSelected(tag.id) ? "checked" : ""}`}>
+      <span
+        class={`tag-popover-check ${isTagSelected(tag.id) ? 'checked' : ''}`}
+      >
         <Show when={isTagSelected(tag.id)}>
           <svg viewBox="0 0 12 12" fill="none">
             <path
@@ -242,7 +254,7 @@ export const TagPopover: Component<TagPopoverProps> = (props) => {
           </svg>
         </Show>
       </span>
-      <span class="tag-popover-dot" style={{ "background-color": tag.color }} />
+      <span class="tag-popover-dot" style={{ 'background-color': tag.color }} />
       <span class="tag-popover-name">{tag.name}</span>
     </button>
   );
@@ -255,7 +267,7 @@ export const TagPopover: Component<TagPopoverProps> = (props) => {
     <Portal>
       <div
         ref={(el) => (popoverRef = el)}
-        class={`castmill-tag-popover ${visible() ? "visible" : ""}`}
+        class={`castmill-tag-popover ${visible() ? 'visible' : ''}`}
         style={{
           top: `${position().top}px`,
           left: `${position().left}px`,
@@ -274,11 +286,11 @@ export const TagPopover: Component<TagPopoverProps> = (props) => {
           <input
             ref={inputRef}
             type="text"
-            placeholder={props.placeholder || "Search tags..."}
+            placeholder={props.placeholder || 'Search tags...'}
             value={searchQuery()}
             onInput={(e) => setSearchQuery(e.currentTarget.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && canCreate()) {
+              if (e.key === 'Enter' && canCreate()) {
                 e.preventDefault();
                 handleCreateTag();
               }
@@ -293,8 +305,8 @@ export const TagPopover: Component<TagPopoverProps> = (props) => {
             fallback={
               <div class="tag-popover-empty">
                 {searchQuery()
-                  ? props.noMatchLabel || "No matching tags"
-                  : props.emptyLabel || "No tags available"}
+                  ? props.noMatchLabel || 'No matching tags'
+                  : props.emptyLabel || 'No tags available'}
               </div>
             }
           >
@@ -304,7 +316,10 @@ export const TagPopover: Component<TagPopoverProps> = (props) => {
                 <div class="tag-popover-group">
                   <div class="tag-popover-group-header">
                     <Show when={group.color}>
-                      <span class="group-dot" style={{ "background-color": group.color }} />
+                      <span
+                        class="group-dot"
+                        style={{ 'background-color': group.color }}
+                      />
                     </Show>
                     {group.name}
                   </div>
@@ -317,9 +332,13 @@ export const TagPopover: Component<TagPopoverProps> = (props) => {
             <Show when={groupedTags().ungrouped.length > 0}>
               <div class="tag-popover-group">
                 <Show when={groupedTags().groups.length > 0}>
-                  <div class="tag-popover-group-header">{props.ungroupedLabel || "Other"}</div>
+                  <div class="tag-popover-group-header">
+                    {props.ungroupedLabel || 'Other'}
+                  </div>
                 </Show>
-                <For each={groupedTags().ungrouped}>{(tag) => renderTagRow(tag)}</For>
+                <For each={groupedTags().ungrouped}>
+                  {(tag) => renderTagRow(tag)}
+                </For>
               </div>
             </Show>
 
@@ -333,7 +352,11 @@ export const TagPopover: Component<TagPopoverProps> = (props) => {
                   disabled={isCreating()}
                 >
                   <IoAddCircle />
-                  <span>{isCreating() ? "Creating..." : `Create "${searchQuery().trim()}"`}</span>
+                  <span>
+                    {isCreating()
+                      ? 'Creating...'
+                      : `Create "${searchQuery().trim()}"`}
+                  </span>
                 </button>
               </div>
             </Show>

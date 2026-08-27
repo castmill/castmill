@@ -1,8 +1,16 @@
-import { Component, createSignal, For, Show, onMount, onCleanup, createMemo } from "solid-js";
-import { Device } from "../interfaces/device.interface";
-import { Button, useToast } from "@castmill/ui-common";
-import { DevicesService } from "../services/devices.service";
-import "./device-timers.scss";
+import {
+  Component,
+  createSignal,
+  For,
+  Show,
+  onMount,
+  onCleanup,
+  createMemo,
+} from 'solid-js';
+import { Device } from '../interfaces/device.interface';
+import { Button, useToast } from '@castmill/ui-common';
+import { DevicesService } from '../services/devices.service';
+import './device-timers.scss';
 
 // ── Types ──────────────────────────────────────────────────
 
@@ -16,7 +24,13 @@ export interface ScheduleEntry {
 }
 
 interface DragState {
-  mode: "create" | "move" | "resize-top" | "resize-bottom" | "resize-left" | "resize-right";
+  mode:
+    | 'create'
+    | 'move'
+    | 'resize-top'
+    | 'resize-bottom'
+    | 'resize-left'
+    | 'resize-right';
   entryId?: string;
   startDay: number;
   startHour: number;
@@ -31,13 +45,13 @@ interface DragState {
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const DAY_KEYS = [
-  "deviceSchedule.mon",
-  "deviceSchedule.tue",
-  "deviceSchedule.wed",
-  "deviceSchedule.thu",
-  "deviceSchedule.fri",
-  "deviceSchedule.sat",
-  "deviceSchedule.sun",
+  'deviceSchedule.mon',
+  'deviceSchedule.tue',
+  'deviceSchedule.wed',
+  'deviceSchedule.thu',
+  'deviceSchedule.fri',
+  'deviceSchedule.sat',
+  'deviceSchedule.sun',
 ];
 const CELL_HEIGHT_PX = 20; // px — matches CSS
 
@@ -51,11 +65,11 @@ const toMinutes = (h: number, m: number) => h * 60 + m;
 
 /** Format hour+minute as HH:MM */
 const fmtTime = (h: number, m: number) =>
-  `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+  `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 
 /** Format as HH:MM value for <input type="time"> */
 const toTimeInputValue = (h: number, m: number) =>
-  `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+  `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 
 /** Check if two entries overlap */
 function entriesOverlap(a: ScheduleEntry, b: ScheduleEntry): boolean {
@@ -82,9 +96,11 @@ function entriesEqual(a: ScheduleEntry[], b: ScheduleEntry[]): boolean {
       }))
       .sort(
         (x, y) =>
-          toMinutes(x.startHour, x.startMinute) - toMinutes(y.startHour, y.startMinute) ||
-          toMinutes(x.endHour, x.endMinute) - toMinutes(y.endHour, y.endMinute) ||
-          x.days[0] - y.days[0],
+          toMinutes(x.startHour, x.startMinute) -
+            toMinutes(y.startHour, y.startMinute) ||
+          toMinutes(x.endHour, x.endMinute) -
+            toMinutes(y.endHour, y.endMinute) ||
+          x.days[0] - y.days[0]
       );
 
   return JSON.stringify(normalize(a)) === JSON.stringify(normalize(b));
@@ -93,10 +109,10 @@ function entriesEqual(a: ScheduleEntry[], b: ScheduleEntry[]): boolean {
 /** Build a human-readable summary string */
 export function buildSummary(
   entries: ScheduleEntry[],
-  t: (key: string, params?: Record<string, any>) => string,
+  t: (key: string, params?: Record<string, any>) => string
 ): string {
   if (entries.length === 0) {
-    return t("deviceSchedule.noScheduleAlwaysOn");
+    return t('deviceSchedule.noScheduleAlwaysOn');
   }
 
   // Group by time range
@@ -110,13 +126,13 @@ export function buildSummary(
   }
 
   const dayLabels = [
-    t("deviceSchedule.mon"),
-    t("deviceSchedule.tue"),
-    t("deviceSchedule.wed"),
-    t("deviceSchedule.thu"),
-    t("deviceSchedule.fri"),
-    t("deviceSchedule.sat"),
-    t("deviceSchedule.sun"),
+    t('deviceSchedule.mon'),
+    t('deviceSchedule.tue'),
+    t('deviceSchedule.wed'),
+    t('deviceSchedule.thu'),
+    t('deviceSchedule.fri'),
+    t('deviceSchedule.sat'),
+    t('deviceSchedule.sun'),
   ];
 
   const parts: string[] = [];
@@ -126,13 +142,13 @@ export function buildSummary(
     parts.push(`${dayStr} ${timeRange}`);
   }
 
-  return `${t("deviceSchedule.onLabel")}: ${parts.join(", ")}`;
+  return `${t('deviceSchedule.onLabel')}: ${parts.join(', ')}`;
 }
 
 /** Format day indices into compact ranges like "Mon–Fri" */
 function formatDayRange(days: number[], labels: string[]): string {
   if (days.length === 7) return `${labels[0]}–${labels[6]}`;
-  if (days.length === 0) return "";
+  if (days.length === 0) return '';
 
   const ranges: string[] = [];
   let rangeStart = days[0];
@@ -143,17 +159,21 @@ function formatDayRange(days: number[], labels: string[]): string {
       rangeEnd = days[i];
     } else {
       ranges.push(
-        rangeStart === rangeEnd ? labels[rangeStart] : `${labels[rangeStart]}–${labels[rangeEnd]}`,
+        rangeStart === rangeEnd
+          ? labels[rangeStart]
+          : `${labels[rangeStart]}–${labels[rangeEnd]}`
       );
       rangeStart = days[i];
       rangeEnd = days[i];
     }
   }
   ranges.push(
-    rangeStart === rangeEnd ? labels[rangeStart] : `${labels[rangeStart]}–${labels[rangeEnd]}`,
+    rangeStart === rangeEnd
+      ? labels[rangeStart]
+      : `${labels[rangeStart]}–${labels[rangeEnd]}`
   );
 
-  return ranges.join(", ");
+  return ranges.join(', ');
 }
 
 // ── Component ──────────────────────────────────────────────
@@ -173,7 +193,7 @@ export const DeviceTimers: Component<{
   const [dragState, setDragState] = createSignal<DragState | null>(null);
   const [editingTime, setEditingTime] = createSignal<{
     entryId: string;
-    field: "start" | "end";
+    field: 'start' | 'end';
   } | null>(null);
 
   const isModified = createMemo(() => !entriesEqual(entries(), savedEntries()));
@@ -189,7 +209,10 @@ export const DeviceTimers: Component<{
   const loadSchedule = async () => {
     setLoading(true);
     try {
-      const result = await DevicesService.getDeviceSchedule(props.baseUrl, props.device.id);
+      const result = await DevicesService.getDeviceSchedule(
+        props.baseUrl,
+        props.device.id
+      );
       const loaded = (result.entries || []).map((e) => ({
         id: genId(),
         startHour: e.startHour,
@@ -201,8 +224,8 @@ export const DeviceTimers: Component<{
       setEntries(loaded);
       setSavedEntries(loaded.map((e) => ({ ...e, days: [...e.days] })));
     } catch (err) {
-      toast.error(t("deviceSchedule.loadError"));
-      console.error("Error loading schedule:", err);
+      toast.error(t('deviceSchedule.loadError'));
+      console.error('Error loading schedule:', err);
     } finally {
       setLoading(false);
     }
@@ -218,32 +241,42 @@ export const DeviceTimers: Component<{
         endMinute: e.endMinute,
         days: e.days,
       }));
-      const result = await DevicesService.setDeviceSchedule(props.baseUrl, props.device.id, toSave);
+      const result = await DevicesService.setDeviceSchedule(
+        props.baseUrl,
+        props.device.id,
+        toSave
+      );
 
       if (!result.timers_sent) {
-        toast.warning(t("deviceSchedule.savedOffline"));
+        toast.warning(t('deviceSchedule.savedOffline'));
       } else {
-        toast.success(t("deviceSchedule.saved"));
+        toast.success(t('deviceSchedule.saved'));
       }
 
       setSavedEntries(entries().map((e) => ({ ...e, days: [...e.days] })));
     } catch (err) {
-      toast.error(t("deviceSchedule.saveError"));
-      console.error("Error saving schedule:", err);
+      toast.error(t('deviceSchedule.saveError'));
+      console.error('Error saving schedule:', err);
     } finally {
       setLoading(false);
     }
   };
 
   const resetSchedule = () => {
-    setEntries(savedEntries().map((e) => ({ ...e, id: genId(), days: [...e.days] })));
+    setEntries(
+      savedEntries().map((e) => ({ ...e, id: genId(), days: [...e.days] }))
+    );
     setSelectedId(null);
   };
 
   // ── Time input editing ──────────────────────────────────
 
-  const handleTimeChange = (entryId: string, field: "start" | "end", value: string) => {
-    const [hStr, mStr] = value.split(":");
+  const handleTimeChange = (
+    entryId: string,
+    field: 'start' | 'end',
+    value: string
+  ) => {
+    const [hStr, mStr] = value.split(':');
     const h = parseInt(hStr, 10);
     const m = parseInt(mStr, 10);
     if (isNaN(h) || isNaN(m)) return;
@@ -252,7 +285,7 @@ export const DeviceTimers: Component<{
     if (!entry) return;
 
     let updates: Partial<ScheduleEntry>;
-    if (field === "start") {
+    if (field === 'start') {
       // Start must be before end
       const newStartMins = toMinutes(h, m);
       const endMins = toMinutes(entry.endHour, entry.endMinute);
@@ -268,7 +301,8 @@ export const DeviceTimers: Component<{
 
     const candidate: ScheduleEntry = { ...entry, ...updates };
     const hasOverlap = entries().some(
-      (existing) => existing.id !== entryId && entriesOverlap(candidate, existing),
+      (existing) =>
+        existing.id !== entryId && entriesOverlap(candidate, existing)
     );
     if (!hasOverlap) {
       updateEntry(entryId, updates);
@@ -302,7 +336,7 @@ export const DeviceTimers: Component<{
 
   const getCellFromPoint = (
     clientX: number,
-    clientY: number,
+    clientY: number
   ): { day: number; hour: number } | null => {
     if (!gridRef) return null;
     const rect = gridRef.getBoundingClientRect();
@@ -310,11 +344,15 @@ export const DeviceTimers: Component<{
     const y = clientY - rect.top + gridRef.scrollTop;
 
     // Read the actual header row height from the DOM
-    const headerEl = gridRef.querySelector(".schedule-grid-day-header") as HTMLElement | null;
+    const headerEl = gridRef.querySelector(
+      '.schedule-grid-day-header'
+    ) as HTMLElement | null;
     const headerH = headerEl ? headerEl.offsetHeight : CELL_HEIGHT_PX;
 
     // Time label column width
-    const timeLabelEl = gridRef.querySelector(".schedule-grid-time-label") as HTMLElement | null;
+    const timeLabelEl = gridRef.querySelector(
+      '.schedule-grid-time-label'
+    ) as HTMLElement | null;
     const timeLabelWidth = timeLabelEl
       ? timeLabelEl.offsetWidth
       : 3.5 * parseFloat(getComputedStyle(gridRef).fontSize);
@@ -338,19 +376,19 @@ export const DeviceTimers: Component<{
 
     // Check if we clicked on an entry
     const target = e.target as HTMLElement;
-    const entryEl = target.closest(".schedule-entry") as HTMLElement | null;
+    const entryEl = target.closest('.schedule-entry') as HTMLElement | null;
 
     if (entryEl) {
       const entryId = entryEl.dataset.entryId;
       if (!entryId) return;
 
       // Check if clicking a resize handle
-      if (target.classList.contains("schedule-entry-resize-top")) {
+      if (target.classList.contains('schedule-entry-resize-top')) {
         const entry = entries().find((e) => e.id === entryId);
         if (!entry) return;
         setSelectedId(entryId);
         setDragState({
-          mode: "resize-top",
+          mode: 'resize-top',
           entryId,
           startDay: cell.day,
           startHour: cell.hour,
@@ -362,12 +400,12 @@ export const DeviceTimers: Component<{
         return;
       }
 
-      if (target.classList.contains("schedule-entry-resize-bottom")) {
+      if (target.classList.contains('schedule-entry-resize-bottom')) {
         const entry = entries().find((e) => e.id === entryId);
         if (!entry) return;
         setSelectedId(entryId);
         setDragState({
-          mode: "resize-bottom",
+          mode: 'resize-bottom',
           entryId,
           startDay: cell.day,
           startHour: cell.hour,
@@ -379,12 +417,12 @@ export const DeviceTimers: Component<{
         return;
       }
 
-      if (target.classList.contains("schedule-entry-resize-left")) {
+      if (target.classList.contains('schedule-entry-resize-left')) {
         const entry = entries().find((e) => e.id === entryId);
         if (!entry) return;
         setSelectedId(entryId);
         setDragState({
-          mode: "resize-left",
+          mode: 'resize-left',
           entryId,
           startDay: cell.day,
           startHour: cell.hour,
@@ -396,12 +434,12 @@ export const DeviceTimers: Component<{
         return;
       }
 
-      if (target.classList.contains("schedule-entry-resize-right")) {
+      if (target.classList.contains('schedule-entry-resize-right')) {
         const entry = entries().find((e) => e.id === entryId);
         if (!entry) return;
         setSelectedId(entryId);
         setDragState({
-          mode: "resize-right",
+          mode: 'resize-right',
           entryId,
           startDay: cell.day,
           startHour: cell.hour,
@@ -413,7 +451,7 @@ export const DeviceTimers: Component<{
         return;
       }
 
-      if (target.classList.contains("schedule-entry-delete")) {
+      if (target.classList.contains('schedule-entry-delete')) {
         return; // Let the delete button handle it
       }
 
@@ -422,7 +460,7 @@ export const DeviceTimers: Component<{
       if (!entry) return;
       setSelectedId(entryId);
       setDragState({
-        mode: "move",
+        mode: 'move',
         entryId,
         startDay: cell.day,
         startHour: cell.hour,
@@ -438,7 +476,7 @@ export const DeviceTimers: Component<{
     // Clicked on empty space — deselect and start creating
     setSelectedId(null);
     setDragState({
-      mode: "create",
+      mode: 'create',
       startDay: cell.day,
       startHour: cell.hour,
       currentDay: cell.day,
@@ -457,10 +495,13 @@ export const DeviceTimers: Component<{
     setDragState({ ...ds, currentDay: cell.day, currentHour: cell.hour });
 
     // For move and resize, update in real-time
-    if (ds.mode === "move" && ds.entryId && ds.originalEntry) {
+    if (ds.mode === 'move' && ds.entryId && ds.originalEntry) {
       const dayDelta = cell.day - ds.startDay;
       const hourDelta = cell.hour - ds.startHour;
-      const newStart = Math.max(0, Math.min(23, ds.originalEntry.startHour + hourDelta));
+      const newStart = Math.max(
+        0,
+        Math.min(23, ds.originalEntry.startHour + hourDelta)
+      );
       const duration = ds.originalEntry.endHour - ds.originalEntry.startHour;
       const newEnd = Math.min(23, newStart + duration);
       const adjustedStart = newEnd === 23 ? 23 - duration : newStart;
@@ -481,7 +522,8 @@ export const DeviceTimers: Component<{
 
         // Check overlap with other entries
         const hasOverlap = entries().some(
-          (existing) => existing.id !== ds.entryId && entriesOverlap(candidate, existing),
+          (existing) =>
+            existing.id !== ds.entryId && entriesOverlap(candidate, existing)
         );
 
         if (!hasOverlap) {
@@ -494,37 +536,45 @@ export const DeviceTimers: Component<{
       }
     }
 
-    if (ds.mode === "resize-top" && ds.entryId && ds.originalEntry) {
-      const newStart = Math.max(0, Math.min(ds.originalEntry.endHour - 1, cell.hour));
+    if (ds.mode === 'resize-top' && ds.entryId && ds.originalEntry) {
+      const newStart = Math.max(
+        0,
+        Math.min(ds.originalEntry.endHour - 1, cell.hour)
+      );
       const candidate: ScheduleEntry = {
         ...ds.originalEntry,
         startHour: newStart,
         startMinute: 0,
       };
       const hasOverlap = entries().some(
-        (existing) => existing.id !== ds.entryId && entriesOverlap(candidate, existing),
+        (existing) =>
+          existing.id !== ds.entryId && entriesOverlap(candidate, existing)
       );
       if (!hasOverlap) {
         updateEntry(ds.entryId, { startHour: newStart, startMinute: 0 });
       }
     }
 
-    if (ds.mode === "resize-bottom" && ds.entryId && ds.originalEntry) {
-      const newEnd = Math.max(ds.originalEntry.startHour + 1, Math.min(23, cell.hour + 1));
+    if (ds.mode === 'resize-bottom' && ds.entryId && ds.originalEntry) {
+      const newEnd = Math.max(
+        ds.originalEntry.startHour + 1,
+        Math.min(23, cell.hour + 1)
+      );
       const candidate: ScheduleEntry = {
         ...ds.originalEntry,
         endHour: newEnd,
         endMinute: 0,
       };
       const hasOverlap = entries().some(
-        (existing) => existing.id !== ds.entryId && entriesOverlap(candidate, existing),
+        (existing) =>
+          existing.id !== ds.entryId && entriesOverlap(candidate, existing)
       );
       if (!hasOverlap) {
         updateEntry(ds.entryId, { endHour: newEnd, endMinute: 0 });
       }
     }
 
-    if (ds.mode === "resize-left" && ds.entryId && ds.originalEntry) {
+    if (ds.mode === 'resize-left' && ds.entryId && ds.originalEntry) {
       const origDays = [...ds.originalEntry.days].sort((a, b) => a - b);
       const maxDay = origDays[origDays.length - 1];
       const newMinDay = Math.max(0, Math.min(maxDay, cell.day));
@@ -535,14 +585,15 @@ export const DeviceTimers: Component<{
         days: newDays,
       };
       const hasOverlap = entries().some(
-        (existing) => existing.id !== ds.entryId && entriesOverlap(candidate, existing),
+        (existing) =>
+          existing.id !== ds.entryId && entriesOverlap(candidate, existing)
       );
       if (!hasOverlap) {
         updateEntry(ds.entryId, { days: newDays });
       }
     }
 
-    if (ds.mode === "resize-right" && ds.entryId && ds.originalEntry) {
+    if (ds.mode === 'resize-right' && ds.entryId && ds.originalEntry) {
       const origDays = [...ds.originalEntry.days].sort((a, b) => a - b);
       const minDay = origDays[0];
       const newMaxDay = Math.max(minDay, Math.min(6, cell.day));
@@ -553,7 +604,8 @@ export const DeviceTimers: Component<{
         days: newDays,
       };
       const hasOverlap = entries().some(
-        (existing) => existing.id !== ds.entryId && entriesOverlap(candidate, existing),
+        (existing) =>
+          existing.id !== ds.entryId && entriesOverlap(candidate, existing)
       );
       if (!hasOverlap) {
         updateEntry(ds.entryId, { days: newDays });
@@ -565,7 +617,7 @@ export const DeviceTimers: Component<{
     const ds = dragState();
     if (!ds) return;
 
-    if (ds.mode === "create") {
+    if (ds.mode === 'create') {
       const dayMin = Math.min(ds.startDay, ds.currentDay);
       const dayMax = Math.max(ds.startDay, ds.currentDay);
       const hourMin = Math.min(ds.startHour, ds.currentHour);
@@ -594,22 +646,26 @@ export const DeviceTimers: Component<{
 
   // Global mouse event listeners
   onMount(() => {
-    document.addEventListener("mousemove", handleMouseMove);
-    document.addEventListener("mouseup", handleMouseUp);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
   });
 
   onCleanup(() => {
-    document.removeEventListener("mousemove", handleMouseMove);
-    document.removeEventListener("mouseup", handleMouseUp);
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
   });
 
   // ── Compute entry positions ────────────────────────────
 
   const getEntryStyle = (entry: ScheduleEntry): Record<string, string> => {
     if (!gridRef) return {};
-    const headerEl = gridRef.querySelector(".schedule-grid-day-header") as HTMLElement | null;
+    const headerEl = gridRef.querySelector(
+      '.schedule-grid-day-header'
+    ) as HTMLElement | null;
     const headerH = headerEl ? headerEl.offsetHeight : CELL_HEIGHT_PX;
-    const timeLabelEl = gridRef.querySelector(".schedule-grid-time-label") as HTMLElement | null;
+    const timeLabelEl = gridRef.querySelector(
+      '.schedule-grid-time-label'
+    ) as HTMLElement | null;
     const timeLabelWidth = timeLabelEl
       ? timeLabelEl.offsetWidth
       : 3.5 * parseFloat(getComputedStyle(gridRef).fontSize);
@@ -633,11 +689,15 @@ export const DeviceTimers: Component<{
   // Drag preview for create mode
   const getDragPreviewStyle = (): Record<string, string> | null => {
     const ds = dragState();
-    if (!ds || ds.mode !== "create" || !gridRef) return null;
+    if (!ds || ds.mode !== 'create' || !gridRef) return null;
 
-    const headerEl = gridRef.querySelector(".schedule-grid-day-header") as HTMLElement | null;
+    const headerEl = gridRef.querySelector(
+      '.schedule-grid-day-header'
+    ) as HTMLElement | null;
     const headerH = headerEl ? headerEl.offsetHeight : CELL_HEIGHT_PX;
-    const timeLabelEl = gridRef.querySelector(".schedule-grid-time-label") as HTMLElement | null;
+    const timeLabelEl = gridRef.querySelector(
+      '.schedule-grid-time-label'
+    ) as HTMLElement | null;
     const timeLabelWidth = timeLabelEl
       ? timeLabelEl.offsetWidth
       : 3.5 * parseFloat(getComputedStyle(gridRef).fontSize);
@@ -665,16 +725,22 @@ export const DeviceTimers: Component<{
 
   return (
     <div class="schedule-grid-container">
-      <p class="schedule-grid-description">{t("deviceSchedule.description")}</p>
+      <p class="schedule-grid-description">{t('deviceSchedule.description')}</p>
 
-      <div class="schedule-grid-wrapper" onMouseDown={handleGridMouseDown} ref={gridRef}>
+      <div
+        class="schedule-grid-wrapper"
+        onMouseDown={handleGridMouseDown}
+        ref={gridRef}
+      >
         <div class="schedule-grid">
           {/* Corner cell */}
           <div class="schedule-grid-corner" />
 
           {/* Day headers */}
           <For each={DAY_KEYS}>
-            {(dayKey) => <div class="schedule-grid-day-header">{t(dayKey)}</div>}
+            {(dayKey) => (
+              <div class="schedule-grid-day-header">{t(dayKey)}</div>
+            )}
           </For>
 
           {/* Hour rows */}
@@ -698,8 +764,8 @@ export const DeviceTimers: Component<{
           <For each={entries()}>
             {(entry) => (
               <div
-                class={`schedule-entry${selectedId() === entry.id ? " selected" : ""}${
-                  dragState()?.entryId === entry.id ? " dragging" : ""
+                class={`schedule-entry${selectedId() === entry.id ? ' selected' : ''}${
+                  dragState()?.entryId === entry.id ? ' dragging' : ''
                 }`}
                 data-entry-id={entry.id}
                 style={getEntryStyle(entry)}
@@ -708,13 +774,16 @@ export const DeviceTimers: Component<{
                 <div class="schedule-entry-resize-left" />
                 <span class="schedule-entry-label">
                   <Show
-                    when={editingTime()?.entryId === entry.id && editingTime()?.field === "start"}
+                    when={
+                      editingTime()?.entryId === entry.id &&
+                      editingTime()?.field === 'start'
+                    }
                     fallback={
                       <span
                         class="schedule-entry-time-clickable"
                         onClick={(e) => {
                           e.stopPropagation();
-                          setEditingTime({ entryId: entry.id, field: "start" });
+                          setEditingTime({ entryId: entry.id, field: 'start' });
                         }}
                       >
                         {fmtTime(entry.startHour, entry.startMinute)}
@@ -724,18 +793,29 @@ export const DeviceTimers: Component<{
                     <input
                       type="time"
                       class="schedule-entry-time-input"
-                      value={toTimeInputValue(entry.startHour, entry.startMinute)}
+                      value={toTimeInputValue(
+                        entry.startHour,
+                        entry.startMinute
+                      )}
                       onClick={(e) => e.stopPropagation()}
                       onMouseDown={(e) => e.stopPropagation()}
                       onBlur={(e) => {
-                        handleTimeChange(entry.id, "start", e.currentTarget.value);
+                        handleTimeChange(
+                          entry.id,
+                          'start',
+                          e.currentTarget.value
+                        );
                         setEditingTime(null);
                       }}
                       onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          handleTimeChange(entry.id, "start", e.currentTarget.value);
+                        if (e.key === 'Enter') {
+                          handleTimeChange(
+                            entry.id,
+                            'start',
+                            e.currentTarget.value
+                          );
                           setEditingTime(null);
-                        } else if (e.key === "Escape") {
+                        } else if (e.key === 'Escape') {
                           setEditingTime(null);
                         }
                       }}
@@ -744,13 +824,16 @@ export const DeviceTimers: Component<{
                   </Show>
                   <span>–</span>
                   <Show
-                    when={editingTime()?.entryId === entry.id && editingTime()?.field === "end"}
+                    when={
+                      editingTime()?.entryId === entry.id &&
+                      editingTime()?.field === 'end'
+                    }
                     fallback={
                       <span
                         class="schedule-entry-time-clickable"
                         onClick={(e) => {
                           e.stopPropagation();
-                          setEditingTime({ entryId: entry.id, field: "end" });
+                          setEditingTime({ entryId: entry.id, field: 'end' });
                         }}
                       >
                         {fmtTime(entry.endHour, entry.endMinute)}
@@ -764,14 +847,22 @@ export const DeviceTimers: Component<{
                       onClick={(e) => e.stopPropagation()}
                       onMouseDown={(e) => e.stopPropagation()}
                       onBlur={(e) => {
-                        handleTimeChange(entry.id, "end", e.currentTarget.value);
+                        handleTimeChange(
+                          entry.id,
+                          'end',
+                          e.currentTarget.value
+                        );
                         setEditingTime(null);
                       }}
                       onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          handleTimeChange(entry.id, "end", e.currentTarget.value);
+                        if (e.key === 'Enter') {
+                          handleTimeChange(
+                            entry.id,
+                            'end',
+                            e.currentTarget.value
+                          );
                           setEditingTime(null);
-                        } else if (e.key === "Escape") {
+                        } else if (e.key === 'Escape') {
                           setEditingTime(null);
                         }
                       }}
@@ -785,7 +876,7 @@ export const DeviceTimers: Component<{
                     e.stopPropagation();
                     deleteEntry(entry.id);
                   }}
-                  title={t("deviceSchedule.delete")}
+                  title={t('deviceSchedule.delete')}
                 >
                   ×
                 </button>
@@ -807,7 +898,9 @@ export const DeviceTimers: Component<{
         <Show
           when={entries().length > 0}
           fallback={
-            <span class="schedule-summary-always-on">{t("deviceSchedule.noScheduleAlwaysOn")}</span>
+            <span class="schedule-summary-always-on">
+              {t('deviceSchedule.noScheduleAlwaysOn')}
+            </span>
           }
         >
           {summary()}
@@ -819,18 +912,18 @@ export const DeviceTimers: Component<{
         <Button
           onClick={saveSchedule}
           color="primary"
-          label={t("common.save")}
+          label={t('common.save')}
           disabled={!isModified() || loading()}
         />
         <Button
           onClick={resetSchedule}
-          label={t("deviceSchedule.reset")}
+          label={t('deviceSchedule.reset')}
           disabled={!isModified() || loading()}
         />
       </div>
 
       <Show when={loading()}>
-        <div class="schedule-loading">{t("common.loading")}</div>
+        <div class="schedule-loading">{t('common.loading')}</div>
       </Show>
     </div>
   );

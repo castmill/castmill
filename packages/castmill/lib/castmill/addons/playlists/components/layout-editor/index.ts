@@ -4,4 +4,4 @@ export {
   LayoutEditor,
   parseAspectRatio,
   calculateCanvasSize,
-} from "../../../common/components/layout-editor";
+} from '../../../common/components/layout-editor';

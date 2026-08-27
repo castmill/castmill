@@ -1,5 +1,5 @@
-import { Component } from "solid-js";
-import styles from "./circular-progress.module.scss";
+import { Component } from 'solid-js';
+import styles from './circular-progress.module.scss';
 
 interface CircularProgressProps {
   progress: number;

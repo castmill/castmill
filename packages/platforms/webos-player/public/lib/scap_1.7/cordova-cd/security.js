@@ -1,17 +1,17 @@
-cordova.define("cordova/plugin/security", function (d, c, e) {
+cordova.define('cordova/plugin/security', function (d, c, e) {
   function f(i) {}
   var a;
   if (window.PalmSystem) {
-    f("Window.PalmSystem Available");
-    a = d("cordova/plugin/webos/service");
+    f('Window.PalmSystem Available');
+    a = d('cordova/plugin/webos/service');
   } else {
     a = {
       Request: function (i, j) {
-        f(i + " invoked. But I am a dummy because PalmSystem is not available");
-        if (typeof j.onFailure === "function") {
+        f(i + ' invoked. But I am a dummy because PalmSystem is not available');
+        if (typeof j.onFailure === 'function') {
           j.onFailure({
             returnValue: false,
-            errorText: "PalmSystem Not Available. Cordova is not installed?",
+            errorText: 'PalmSystem Not Available. Cordova is not installed?',
           });
         }
       },
@@ -30,220 +30,253 @@ cordova.define("cordova/plugin/security", function (d, c, e) {
   }
   var g = function () {};
   g.prototype.registerServerCertificate = function (i, j, k) {
-    f("registerServerCertificate: " + JSON.stringify(k));
-    a.Request("luna://com.webos.service.commercial.signage.storageservice/security/", {
-      method: "registerServerCertificate",
-      parameters: { userName: k.userName, password: k.password, certificate: k.certificate },
-      onSuccess: function (l) {
-        f("registerServerCertificate: On Success");
-        if (l.returnValue === true) {
-          if (typeof i === "function") {
-            i();
+    f('registerServerCertificate: ' + JSON.stringify(k));
+    a.Request(
+      'luna://com.webos.service.commercial.signage.storageservice/security/',
+      {
+        method: 'registerServerCertificate',
+        parameters: {
+          userName: k.userName,
+          password: k.password,
+          certificate: k.certificate,
+        },
+        onSuccess: function (l) {
+          f('registerServerCertificate: On Success');
+          if (l.returnValue === true) {
+            if (typeof i === 'function') {
+              i();
+            }
           }
-        }
-      },
-      onFailure: function (l) {
-        f("registerServerCertificate: On Failure");
-        delete l.returnValue;
-        if (typeof j === "function") {
-          b(l, "SRSC", "Security.registerServerCertificate returns failure.");
-          j(l);
-        }
-      },
-    });
-    f("Security.registerServerCertificate Done");
+        },
+        onFailure: function (l) {
+          f('registerServerCertificate: On Failure');
+          delete l.returnValue;
+          if (typeof j === 'function') {
+            b(l, 'SRSC', 'Security.registerServerCertificate returns failure.');
+            j(l);
+          }
+        },
+      }
+    );
+    f('Security.registerServerCertificate Done');
   };
   g.prototype.unregisterServerCertificate = function (i, j, k) {
-    f("unregisterServerCertificate: " + JSON.stringify(k));
-    a.Request("luna://com.webos.service.commercial.signage.storageservice/security/", {
-      method: "unregisterServerCertificate",
-      parameters: { userName: k.userName, password: k.password },
-      onSuccess: function (l) {
-        f("unregisterServerCertificate: On Success");
-        if (l.returnValue === true) {
-          if (typeof i === "function") {
-            i();
+    f('unregisterServerCertificate: ' + JSON.stringify(k));
+    a.Request(
+      'luna://com.webos.service.commercial.signage.storageservice/security/',
+      {
+        method: 'unregisterServerCertificate',
+        parameters: { userName: k.userName, password: k.password },
+        onSuccess: function (l) {
+          f('unregisterServerCertificate: On Success');
+          if (l.returnValue === true) {
+            if (typeof i === 'function') {
+              i();
+            }
           }
-        }
-      },
-      onFailure: function (l) {
-        f("unregisterServerCertificate: On Failure");
-        delete l.returnValue;
-        if (typeof j === "function") {
-          b(l, "SUSC", "Security.unregisterServerCertificate returns failure.");
-          j(l);
-        }
-      },
-    });
-    f("Security.unregisterServerCertificate Done");
+        },
+        onFailure: function (l) {
+          f('unregisterServerCertificate: On Failure');
+          delete l.returnValue;
+          if (typeof j === 'function') {
+            b(
+              l,
+              'SUSC',
+              'Security.unregisterServerCertificate returns failure.'
+            );
+            j(l);
+          }
+        },
+      }
+    );
+    f('Security.unregisterServerCertificate Done');
   };
   g.prototype.existServerCertificate = function (i, j, k) {
-    f("existServerCertificate: " + JSON.stringify(k));
-    a.Request("luna://com.webos.service.commercial.signage.storageservice/security/", {
-      method: "existServerCertificate",
-      parameters: { userName: k.userName, password: k.password },
-      onSuccess: function (l) {
-        f("existServerCertificate: On Success");
-        if (l.returnValue === true) {
-          if (typeof i === "function") {
-            var m = {};
-            m.userName = k.userName;
-            m.exist = l.exist;
-            i(m);
+    f('existServerCertificate: ' + JSON.stringify(k));
+    a.Request(
+      'luna://com.webos.service.commercial.signage.storageservice/security/',
+      {
+        method: 'existServerCertificate',
+        parameters: { userName: k.userName, password: k.password },
+        onSuccess: function (l) {
+          f('existServerCertificate: On Success');
+          if (l.returnValue === true) {
+            if (typeof i === 'function') {
+              var m = {};
+              m.userName = k.userName;
+              m.exist = l.exist;
+              i(m);
+            }
           }
-        }
-      },
-      onFailure: function (l) {
-        f("existServerCertificate: On Failure");
-        delete l.returnValue;
-        if (typeof j === "function") {
-          b(l, "SESC", "Security.existServerCertificate returns failure.");
-          j(l);
-        }
-      },
-    });
-    f("Security.existServerCertificate Done");
+        },
+        onFailure: function (l) {
+          f('existServerCertificate: On Failure');
+          delete l.returnValue;
+          if (typeof j === 'function') {
+            b(l, 'SESC', 'Security.existServerCertificate returns failure.');
+            j(l);
+          }
+        },
+      }
+    );
+    f('Security.existServerCertificate Done');
   };
   g.prototype.registerServerCertificateList = function (j, k, l) {
-    f("Security.registerServerCertificateList");
+    f('Security.registerServerCertificateList');
     var i = {};
     if (h(k) || h(j)) {
-      f("Security.registerServerCertificateList returns failure. callback function is undefined.");
+      f(
+        'Security.registerServerCertificateList returns failure. callback function is undefined.'
+      );
       return;
     }
     if (h(l) || h(l.serverCertificateList)) {
       b(
         i,
-        "SRSL",
-        "Security.registerServerCertificateList returns failure. there is undefined parameter.",
+        'SRSL',
+        'Security.registerServerCertificateList returns failure. there is undefined parameter.'
       );
       k(i);
       return;
     }
-    a.Request("luna://com.webos.service.commercial.scapadapter/security/", {
-      method: "registerServerCertificateList",
+    a.Request('luna://com.webos.service.commercial.scapadapter/security/', {
+      method: 'registerServerCertificateList',
       parameters: { serverCertificateList: l.serverCertificateList },
       onSuccess: function (m) {
-        f("registerServerCertificateList: On Success");
+        f('registerServerCertificateList: On Success');
         if (m.returnValue === true) {
-          if (typeof j === "function") {
+          if (typeof j === 'function') {
             j();
           }
         }
       },
       onFailure: function (m) {
-        f("registerServerCertificateList: On Failure");
+        f('registerServerCertificateList: On Failure');
         delete m.returnValue;
-        if (typeof k === "function") {
-          b(m, "SRSL", "Security.registerServerCertificateList returns failure.");
+        if (typeof k === 'function') {
+          b(
+            m,
+            'SRSL',
+            'Security.registerServerCertificateList returns failure.'
+          );
           k(m);
         }
       },
     });
-    f("Security.registerServerCertificateList Done");
+    f('Security.registerServerCertificateList Done');
   };
   g.prototype.unregisterServerCertificateList = function (j, k, l) {
-    f("Security.unregisterServerCertificateList");
+    f('Security.unregisterServerCertificateList');
     var i = {};
     if (h(k) || h(j)) {
       f(
-        "Security.unregisterServerCertificateList returns failure. callback function is undefined.",
+        'Security.unregisterServerCertificateList returns failure. callback function is undefined.'
       );
       return;
     }
     if (h(l) || h(l.domainNameList)) {
       b(
         i,
-        "SUSL",
-        "Security.unregisterServerCertificateList returns failure. there is undefined parameter.",
+        'SUSL',
+        'Security.unregisterServerCertificateList returns failure. there is undefined parameter.'
       );
       k(i);
       return;
     }
-    a.Request("luna://com.webos.service.commercial.scapadapter/security/", {
-      method: "unregisterServerCertificateList",
+    a.Request('luna://com.webos.service.commercial.scapadapter/security/', {
+      method: 'unregisterServerCertificateList',
       parameters: { domainNameList: l.domainNameList },
       onSuccess: function (m) {
-        f("unregisterServerCertificateList: On Success");
+        f('unregisterServerCertificateList: On Success');
         if (m.returnValue === true) {
-          if (typeof j === "function") {
+          if (typeof j === 'function') {
             delete m.returnValue;
             j(m);
           }
         }
       },
       onFailure: function (m) {
-        f("unregisterServerCertificateList: On Failure");
+        f('unregisterServerCertificateList: On Failure');
         delete m.returnValue;
-        if (typeof k === "function") {
-          b(m, "SUSL", "Security.unregisterServerCertificateList returns failure.");
+        if (typeof k === 'function') {
+          b(
+            m,
+            'SUSL',
+            'Security.unregisterServerCertificateList returns failure.'
+          );
           k(m);
         }
       },
     });
-    f("Security.unregisterServerCertificateList Done");
+    f('Security.unregisterServerCertificateList Done');
   };
   g.prototype.unregisterAllServerCertificateList = function (j, k) {
-    f("Security.unregisterAllServerCertificateList");
+    f('Security.unregisterAllServerCertificateList');
     var i = {};
     if (h(k) || h(j)) {
       f(
-        "Security.unregisterAllServerCertificateList returns failure. callback function is undefined.",
+        'Security.unregisterAllServerCertificateList returns failure. callback function is undefined.'
       );
       return;
     }
-    a.Request("luna://com.webos.service.commercial.scapadapter/security/", {
-      method: "unregisterAllServerCertificateList",
+    a.Request('luna://com.webos.service.commercial.scapadapter/security/', {
+      method: 'unregisterAllServerCertificateList',
       parameters: {},
       onSuccess: function (l) {
-        f("unregisterAllServerCertificateList: On Success");
+        f('unregisterAllServerCertificateList: On Success');
         if (l.returnValue === true) {
-          if (typeof j === "function") {
+          if (typeof j === 'function') {
             j();
           }
         }
       },
       onFailure: function (l) {
-        f("unregisterAllServerCertificateList: On Failure");
+        f('unregisterAllServerCertificateList: On Failure');
         delete l.returnValue;
-        if (typeof k === "function") {
-          b(l, "SUAL", "Security.unregisterAllServerCertificateList returns failure.");
+        if (typeof k === 'function') {
+          b(
+            l,
+            'SUAL',
+            'Security.unregisterAllServerCertificateList returns failure.'
+          );
           k(l);
         }
       },
     });
-    f("Security.unregisterAllServerCertificateList Done");
+    f('Security.unregisterAllServerCertificateList Done');
   };
   g.prototype.getServerCertificateList = function (j, k) {
-    f("Security.getServerCertificateList");
+    f('Security.getServerCertificateList');
     var i = {};
     if (h(k) || h(j)) {
-      f("Security.getServerCertificateList returns failure. callback function is undefined.");
+      f(
+        'Security.getServerCertificateList returns failure. callback function is undefined.'
+      );
       return;
     }
-    a.Request("luna://com.webos.service.commercial.scapadapter/security/", {
-      method: "getServerCertificateList",
+    a.Request('luna://com.webos.service.commercial.scapadapter/security/', {
+      method: 'getServerCertificateList',
       parameters: {},
       onSuccess: function (l) {
-        f("getServerCertificateList: On Success");
+        f('getServerCertificateList: On Success');
         if (l.returnValue === true) {
-          if (typeof j === "function") {
+          if (typeof j === 'function') {
             delete l.returnValue;
             j(l);
           }
         }
       },
       onFailure: function (l) {
-        f("getServerCertificateList: On Failure");
+        f('getServerCertificateList: On Failure');
         delete l.returnValue;
-        if (typeof k === "function") {
-          b(l, "SGSL", "Security.getServerCertificateList returns failure.");
+        if (typeof k === 'function') {
+          b(l, 'SGSL', 'Security.getServerCertificateList returns failure.');
           k(l);
         }
       },
     });
-    f("Security.getServerCertificateList Done");
+    f('Security.getServerCertificateList Done');
   };
   e.exports = g;
 });
-Security = cordova.require("cordova/plugin/security");
+Security = cordova.require('cordova/plugin/security');

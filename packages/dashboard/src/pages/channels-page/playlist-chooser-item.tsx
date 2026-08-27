@@ -1,20 +1,26 @@
-import { draggable } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
-import { JsonPlaylist } from "@castmill/player";
-import { Component, createEffect, createSignal, onCleanup } from "solid-js";
-import { CalendarEntry } from "./calendar-entry.interface";
+import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { JsonPlaylist } from '@castmill/player';
+import { Component, createEffect, createSignal, onCleanup } from 'solid-js';
+import { CalendarEntry } from './calendar-entry.interface';
 
-import styles from "./playlist-chooser-item.module.scss";
-import { RiEditorDraggable } from "solid-icons/ri";
+import styles from './playlist-chooser-item.module.scss';
+import { RiEditorDraggable } from 'solid-icons/ri';
 
 interface PlaylistChooserItemProps {
   playlist: JsonPlaylist;
-  onDragOverCell?: (entry: CalendarEntry, ghostPosition?: { x: number; y: number }) => void;
+  onDragOverCell?: (
+    entry: CalendarEntry,
+    ghostPosition?: { x: number; y: number }
+  ) => void;
   hasOverlap?: (candidate: CalendarEntry) => boolean;
 }
 
-export const PlaylistChooserItem: Component<PlaylistChooserItemProps> = (props) => {
+export const PlaylistChooserItem: Component<PlaylistChooserItemProps> = (
+  props
+) => {
   const [dragging, setDragging] = createSignal(false);
-  const [selectedPlaylist, setSelectedPlaylist] = createSignal<JsonPlaylist | null>(null);
+  const [selectedPlaylist, setSelectedPlaylist] =
+    createSignal<JsonPlaylist | null>(null);
 
   let ref: HTMLDivElement | undefined;
   let deltaX = 0;
@@ -41,8 +47,8 @@ export const PlaylistChooserItem: Component<PlaylistChooserItemProps> = (props) 
           return;
         }
 
-        ref!.style.opacity = "0.3";
-        ref!.style.pointerEvents = "none";
+        ref!.style.opacity = '0.3';
+        ref!.style.pointerEvents = 'none';
 
         // Calculate the relative position of the box top left corner to the mouse pointer
         const rect = ref!.getBoundingClientRect();
@@ -54,8 +60,8 @@ export const PlaylistChooserItem: Component<PlaylistChooserItemProps> = (props) 
         setDragging(true);
       },
       onDrop: () => {
-        ref!.style.opacity = "1";
-        ref!.style.pointerEvents = "auto";
+        ref!.style.opacity = '1';
+        ref!.style.pointerEvents = 'auto';
         setDragging(false);
       },
       onDrag: ({ location, source }) => {
@@ -80,7 +86,11 @@ export const PlaylistChooserItem: Component<PlaylistChooserItemProps> = (props) 
   });
 
   return (
-    <div ref={ref} class={styles.playlistsItem} onClick={() => setSelectedPlaylist(props.playlist)}>
+    <div
+      ref={ref}
+      class={styles.playlistsItem}
+      onClick={() => setSelectedPlaylist(props.playlist)}
+    >
       <RiEditorDraggable />
       <div class={styles.label}>{props.playlist.name}</div>
     </div>

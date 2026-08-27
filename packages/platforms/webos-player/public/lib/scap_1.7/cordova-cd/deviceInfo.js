@@ -1,20 +1,24 @@
 DeviceInfo = (function () {
   var d, a;
   function c(e) {}
-  if (typeof window === "object") {
-    cordova.define("cordova/plugin/deviceInfo", function (f, e, g) {
+  if (typeof window === 'object') {
+    cordova.define('cordova/plugin/deviceInfo', function (f, e, g) {
       d = function () {};
       if (window.PalmSystem) {
-        c("Window.PalmSystem Available");
-        a = f("cordova/plugin/webos/service");
+        c('Window.PalmSystem Available');
+        a = f('cordova/plugin/webos/service');
       } else {
         a = {
           Request: function (h, i) {
-            c(h + " invoked. But I am a dummy because PalmSystem is not available");
-            if (typeof i.onFailure === "function") {
+            c(
+              h +
+                ' invoked. But I am a dummy because PalmSystem is not available'
+            );
+            if (typeof i.onFailure === 'function') {
               i.onFailure({
                 returnValue: false,
-                errorText: "PalmSystem Not Available. Cordova is not installed?",
+                errorText:
+                  'PalmSystem Not Available. Cordova is not installed?',
               });
             }
           },
@@ -22,19 +26,19 @@ DeviceInfo = (function () {
       }
       g.exports = d;
     });
-    d = cordova.require("cordova/plugin/deviceInfo");
+    d = cordova.require('cordova/plugin/deviceInfo');
   } else {
     d = function (e) {
       a = e;
       a.Request = function (f, h) {
-        var g = f + "/" + h.method;
+        var g = f + '/' + h.method;
         var i = {};
-        if (h.hasOwnProperty("parameters") === true) {
+        if (h.hasOwnProperty('parameters') === true) {
           i = h.parameters;
         }
         var j = {};
         var k = function (l) {
-          console.log("res : " + JSON.stringify(l));
+          console.log('res : ' + JSON.stringify(l));
           if (l.payload.returnValue === true) {
             j = l.payload;
             h.onSuccess(j);
@@ -60,611 +64,611 @@ DeviceInfo = (function () {
       f.errorText = e;
     }
   }
-  d.EddystoneFrame = { UUID: "uid", URL: "url" };
+  d.EddystoneFrame = { UUID: 'uid', URL: 'url' };
   d.prototype.getNetworkInfo = function (e, f) {
-    c("getNetworkInfo: ");
-    a.Request("luna://com.webos.service.commercial.scapadapter/network/", {
-      method: "getNetworkInfo",
+    c('getNetworkInfo: ');
+    a.Request('luna://com.webos.service.commercial.scapadapter/network/', {
+      method: 'getNetworkInfo',
       parameters: {},
       onSuccess: function (g) {
-        if (typeof e === "function") {
+        if (typeof e === 'function') {
           delete g.returnValue;
           e(g);
         }
       },
       onFailure: function (g) {
         delete g.returnValue;
-        if (typeof f === "function") {
+        if (typeof f === 'function') {
           f(g);
         }
       },
     });
-    c("DeviceInfo.getNetworkInfo Done");
+    c('DeviceInfo.getNetworkInfo Done');
   };
   d.prototype.setNetworkInfo = function (e, f, g) {
-    c("setNetworkInfo: ");
-    a.Request("luna://com.webos.service.commercial.scapadapter/network/", {
-      method: "setNetworkInfo",
+    c('setNetworkInfo: ');
+    a.Request('luna://com.webos.service.commercial.scapadapter/network/', {
+      method: 'setNetworkInfo',
       parameters: g,
       onSuccess: function (h) {
-        c("setNetworkInfo: onSuccess");
-        if (typeof e === "function") {
+        c('setNetworkInfo: onSuccess');
+        if (typeof e === 'function') {
           e();
         }
       },
       onFailure: function (h) {
-        c("setNetworkInfo: onFailure");
+        c('setNetworkInfo: onFailure');
         delete h.returnValue;
-        if (typeof f === "function") {
+        if (typeof f === 'function') {
           f(h);
         }
       },
     });
-    c("DeviceInfo.setNetworkInfo Done");
+    c('DeviceInfo.setNetworkInfo Done');
   };
   d.prototype.getBeaconInfo = function (e, f) {
-    a.Request("luna://com.webos.service.commercial.scapadapter/network/", {
-      method: "getBeaconInfo",
+    a.Request('luna://com.webos.service.commercial.scapadapter/network/', {
+      method: 'getBeaconInfo',
       parameters: {},
       onSuccess: function (g) {
-        c("getBeaconInfo: onSuccess");
+        c('getBeaconInfo: onSuccess');
         delete g.returnValue;
-        if (typeof e === "function") {
+        if (typeof e === 'function') {
           e(g);
         }
       },
       onFailure: function (g) {
-        c("getBeaconInfo: onFailure");
+        c('getBeaconInfo: onFailure');
         delete g.returnValue;
-        if (typeof f === "function") {
+        if (typeof f === 'function') {
           f(g);
         }
       },
     });
   };
   d.prototype.setBeaconInfo = function (e, f, g) {
-    a.Request("luna://com.webos.service.commercial.scapadapter/network/", {
-      method: "setBeaconInfo",
+    a.Request('luna://com.webos.service.commercial.scapadapter/network/', {
+      method: 'setBeaconInfo',
       parameters: g,
       onSuccess: function (h) {
-        c("setBeaconInfo: onSuccess");
-        if (typeof e === "function") {
+        c('setBeaconInfo: onSuccess');
+        if (typeof e === 'function') {
           e();
         }
       },
       onFailure: function (h) {
-        c("setBeaconInfo: onFailure");
+        c('setBeaconInfo: onFailure');
         delete h.returnValue;
-        if (typeof f === "function") {
+        if (typeof f === 'function') {
           f(h);
         }
       },
     });
   };
   d.prototype.getSoftApInfo = function (e, f) {
-    c("getSoftApInfo: ");
-    a.Request("luna://com.webos.service.commercial.scapadapter/network/", {
-      method: "getSoftApInfo",
+    c('getSoftApInfo: ');
+    a.Request('luna://com.webos.service.commercial.scapadapter/network/', {
+      method: 'getSoftApInfo',
       parameters: {},
       onSuccess: function (g) {
-        c("getSoftApInfo: onSuccess");
+        c('getSoftApInfo: onSuccess');
         delete g.returnValue;
-        if (typeof e === "function") {
+        if (typeof e === 'function') {
           e(g);
         }
       },
       onFailure: function (g) {
-        c("getSoftApInfo: onFailure");
+        c('getSoftApInfo: onFailure');
         delete g.returnValue;
-        if (typeof f === "function") {
+        if (typeof f === 'function') {
           f(g);
         }
       },
     });
-    c("DeviceInfo.getSoftApInfo Done");
+    c('DeviceInfo.getSoftApInfo Done');
   };
   d.prototype.setSoftApInfo = function (f, g, h) {
-    c("setSoftApInfo: ");
+    c('setSoftApInfo: ');
     if (
       h.enabled === true &&
       ((h.ssid !== null && h.ssid.length > 32) ||
         (h.securityKey !== null && h.securityKey.length !== 6))
     ) {
-      c("setSoftApInfo: options are invalid.");
-      if (typeof g === "function") {
+      c('setSoftApInfo: options are invalid.');
+      if (typeof g === 'function') {
         var e = {};
-        b(e, "DSSI", "DeviceInfo.setSoftApInfo. Invalid options.");
+        b(e, 'DSSI', 'DeviceInfo.setSoftApInfo. Invalid options.');
         g(e);
       }
       return;
     }
-    a.Request("luna://com.webos.service.commercial.scapadapter/network/", {
-      method: "setSoftApInfo",
+    a.Request('luna://com.webos.service.commercial.scapadapter/network/', {
+      method: 'setSoftApInfo',
       parameters: h,
       onSuccess: function (i) {
-        c("setSoftApInfo: onSuccess");
-        if (typeof f === "function") {
+        c('setSoftApInfo: onSuccess');
+        if (typeof f === 'function') {
           f();
         }
       },
       onFailure: function (i) {
-        c("setSoftApInfo: onFailure");
+        c('setSoftApInfo: onFailure');
         delete i.returnValue;
-        if (typeof g === "function") {
+        if (typeof g === 'function') {
           g(i);
         }
       },
     });
-    c("DeviceInfo.setSoftApInfo Done");
+    c('DeviceInfo.setSoftApInfo Done');
   };
   d.prototype.getSoftApClientInfo = function (e, f) {
-    c("getSoftApClientInfo: ");
-    a.Request("luna://com.webos.service.commercial.scapadapter/deviceinfo/", {
-      method: "getSoftApClientInfo",
+    c('getSoftApClientInfo: ');
+    a.Request('luna://com.webos.service.commercial.scapadapter/deviceinfo/', {
+      method: 'getSoftApClientInfo',
       parameters: {},
       onSuccess: function (g) {
-        c("getSoftApClientInfo: onSuccess");
+        c('getSoftApClientInfo: onSuccess');
         delete g.returnValue;
-        if (typeof e === "function") {
+        if (typeof e === 'function') {
           e(g);
         }
       },
       onFailure: function (g) {
-        c("getSoftApClientInfo: onFailure");
+        c('getSoftApClientInfo: onFailure');
         delete g.returnValue;
-        if (typeof f === "function") {
+        if (typeof f === 'function') {
           f(g);
         }
       },
     });
-    c("DeviceInfo.getSoftApClientInfo Done");
+    c('DeviceInfo.getSoftApClientInfo Done');
   };
   d.prototype.getWifiList = function (e, f) {
-    c("getWifiList: ");
-    a.Request("luna://com.webos.service.commercial.scapadapter/network/", {
-      method: "getWifiList",
+    c('getWifiList: ');
+    a.Request('luna://com.webos.service.commercial.scapadapter/network/', {
+      method: 'getWifiList',
       parameters: {},
       onSuccess: function (g) {
-        c("getWifiList: onSuccess");
+        c('getWifiList: onSuccess');
         delete g.returnValue;
-        if (typeof e === "function") {
+        if (typeof e === 'function') {
           e(g);
         }
       },
       onFailure: function (g) {
-        c("getWifiList: onFailure");
+        c('getWifiList: onFailure');
         delete g.returnValue;
-        if (typeof f === "function") {
+        if (typeof f === 'function') {
           f(g);
         }
       },
     });
-    c("DeviceInfo.getWifiList Done");
+    c('DeviceInfo.getWifiList Done');
   };
   d.prototype.connectWifi = function (e, f, g) {
-    c("connectWifi: ");
-    a.Request("luna://com.webos.service.commercial.scapadapter/network/", {
-      method: "connectWifi",
+    c('connectWifi: ');
+    a.Request('luna://com.webos.service.commercial.scapadapter/network/', {
+      method: 'connectWifi',
       parameters: g,
       onSuccess: function (h) {
-        c("connectWifi: onSuccess");
-        if (typeof e === "function") {
+        c('connectWifi: onSuccess');
+        if (typeof e === 'function') {
           e();
         }
       },
       onFailure: function (h) {
-        c("connectWifi: onFailure");
+        c('connectWifi: onFailure');
         delete h.returnValue;
-        if (typeof f === "function") {
+        if (typeof f === 'function') {
           f(h);
         }
       },
     });
-    c("DeviceInfo.connectWifi Done");
+    c('DeviceInfo.connectWifi Done');
   };
   d.prototype.startWps = function (e, f, g) {
-    c("startWps: ");
-    a.Request("luna://com.webos.service.commercial.scapadapter/network/", {
-      method: "startWps",
+    c('startWps: ');
+    a.Request('luna://com.webos.service.commercial.scapadapter/network/', {
+      method: 'startWps',
       parameters: g,
       onSuccess: function (h) {
-        c("startWps: onSuccess");
+        c('startWps: onSuccess');
         delete h.returnValue;
-        if (typeof e === "function") {
+        if (typeof e === 'function') {
           e(h);
         }
       },
       onFailure: function (h) {
-        c("startWps: onFailure");
+        c('startWps: onFailure');
         delete h.returnValue;
-        if (typeof f === "function") {
+        if (typeof f === 'function') {
           f(h);
         }
       },
     });
-    c("DeviceInfo.startWps Done");
+    c('DeviceInfo.startWps Done');
   };
   d.prototype.stopWps = function (e, f) {
-    c("stopWps: ");
-    a.Request("luna://com.webos.service.commercial.scapadapter/network/", {
-      method: "stopWps",
+    c('stopWps: ');
+    a.Request('luna://com.webos.service.commercial.scapadapter/network/', {
+      method: 'stopWps',
       parameters: {},
       onSuccess: function (g) {
-        c("stopWps: onSuccess");
-        if (typeof e === "function") {
+        c('stopWps: onSuccess');
+        if (typeof e === 'function') {
           e();
         }
       },
       onFailure: function (g) {
-        c("stopWPS: onFailure");
+        c('stopWPS: onFailure');
         delete g.returnValue;
-        if (typeof f === "function") {
+        if (typeof f === 'function') {
           f(g);
         }
       },
     });
-    c("DeviceInfo.stopWps Done");
+    c('DeviceInfo.stopWps Done');
   };
   d.prototype.getNetworkMacInfo = function (e, f) {
-    c("getNetworkMacInfo");
-    a.Request("luna://com.webos.service.commercial.scapadapter/deviceinfo", {
-      method: "getNetworkMacInfo",
+    c('getNetworkMacInfo');
+    a.Request('luna://com.webos.service.commercial.scapadapter/deviceinfo', {
+      method: 'getNetworkMacInfo',
       parameters: {},
       onSuccess: function (g) {
-        c("getNetworkMacInfo: onSuccess");
+        c('getNetworkMacInfo: onSuccess');
         delete g.returnValue;
-        if (typeof e === "function") {
+        if (typeof e === 'function') {
           e(g);
         }
       },
       onFailure: function (g) {
-        c("getNetworkMacInfo: onFailure");
+        c('getNetworkMacInfo: onFailure');
         delete g.returnValue;
-        if (typeof f === "function") {
+        if (typeof f === 'function') {
           f(g);
         }
       },
     });
-    c("DeviceInfo.getNetworkMacInfo Done");
+    c('DeviceInfo.getNetworkMacInfo Done');
   };
   d.prototype.getPlatformInfo = function (e, f) {
-    a.Request("luna://com.webos.service.commercial.scapadapter/deviceInfo/", {
-      method: "getPlatformInfo",
+    a.Request('luna://com.webos.service.commercial.scapadapter/deviceInfo/', {
+      method: 'getPlatformInfo',
       parameters: {},
       onSuccess: function (g) {
         delete g.returnValue;
-        g.sdkVersion = "1.7.3";
-        if (typeof e === "function") {
+        g.sdkVersion = '1.7.3';
+        if (typeof e === 'function') {
           e(g);
         }
       },
       onFailure: function (g) {
         delete g.returnValue;
-        if (typeof f === "function") {
-          b(g, "DGFI", "DeviceInfo.getPlatformInfo returns failure.");
+        if (typeof f === 'function') {
+          b(g, 'DGFI', 'DeviceInfo.getPlatformInfo returns failure.');
           f(g);
         }
       },
     });
   };
   d.prototype.getSystemUsageInfo = function (e, f, g) {
-    c("getSystemUsageInfo: ");
-    a.Request("luna://com.webos.service.commercial.scapadapter", {
-      method: "getSystemUsageInfo",
+    c('getSystemUsageInfo: ');
+    a.Request('luna://com.webos.service.commercial.scapadapter', {
+      method: 'getSystemUsageInfo',
       parameters: { cpus: g.cpus, memory: g.memory },
       onSuccess: function (h) {
         if (h.returnValue === true) {
           var i = {};
-          if (typeof h.memory !== "undefined") {
+          if (typeof h.memory !== 'undefined') {
             i.memory = h.memory;
           }
-          if (typeof h.cpus !== "undefined") {
+          if (typeof h.cpus !== 'undefined') {
             i.cpus = h.cpus;
           }
-          if (typeof e === "function") {
+          if (typeof e === 'function') {
             e(i);
           }
         } else {
-          if (typeof f === "function") {
+          if (typeof f === 'function') {
             f({ errorCode: h.errorCode, errorText: h.errorText });
           }
         }
       },
       onFailure: function (h) {
-        if (typeof f === "function") {
+        if (typeof f === 'function') {
           f({ errorCode: h.errorCode, errorText: h.errorText });
         }
       },
     });
-    c("DeviceInfo.getSystemUsageInfo Done");
+    c('DeviceInfo.getSystemUsageInfo Done');
   };
   d.prototype.setProxyInfo = function (e, f, g) {
-    a.Request("luna://com.webos.service.commercial.scapadapter/deviceInfo/", {
-      method: "setProxyInfo",
+    a.Request('luna://com.webos.service.commercial.scapadapter/deviceInfo/', {
+      method: 'setProxyInfo',
       parameters: g,
       onSuccess: function (h) {
         delete h.returnValue;
-        if (typeof e === "function") {
+        if (typeof e === 'function') {
           e();
         }
       },
       onFailure: function (h) {
         delete h.returnValue;
-        if (typeof f === "function") {
-          b(h, "DSPI", "DeviceInfo.setProxyInfo returns failure.");
+        if (typeof f === 'function') {
+          b(h, 'DSPI', 'DeviceInfo.setProxyInfo returns failure.');
           f(h);
         }
       },
     });
   };
   d.prototype.getProxyInfo = function (e, f) {
-    a.Request("luna://com.webos.service.commercial.scapadapter/deviceInfo/", {
-      method: "getProxyInfo",
+    a.Request('luna://com.webos.service.commercial.scapadapter/deviceInfo/', {
+      method: 'getProxyInfo',
       parameters: {},
       onSuccess: function (g) {
         delete g.returnValue;
-        if (typeof e === "function") {
+        if (typeof e === 'function') {
           e(g);
         }
       },
       onFailure: function (g) {
         delete g.returnValue;
-        if (typeof f === "function") {
-          b(g, "DGPI", "DeviceInfo.getProxyInfo returns failure.");
+        if (typeof f === 'function') {
+          b(g, 'DGPI', 'DeviceInfo.getProxyInfo returns failure.');
           f(g);
         }
       },
     });
   };
   d.prototype.setiBeaconInfo = function (e, f, g) {
-    a.Request("luna://com.webos.service.commercial.scapadapter/deviceInfo/", {
-      method: "setiBeaconInfo",
+    a.Request('luna://com.webos.service.commercial.scapadapter/deviceInfo/', {
+      method: 'setiBeaconInfo',
       parameters: g,
       onSuccess: function (h) {
         delete h.returnValue;
-        if (typeof e === "function") {
+        if (typeof e === 'function') {
           e();
         }
       },
       onFailure: function (h) {
         delete h.returnValue;
-        if (typeof f === "function") {
-          b(h, "DSIB", "DeviceInfo.setiBeaconInfo returns failure.");
+        if (typeof f === 'function') {
+          b(h, 'DSIB', 'DeviceInfo.setiBeaconInfo returns failure.');
           f(h);
         }
       },
     });
   };
   d.prototype.getiBeaconInfo = function (e, f) {
-    a.Request("luna://com.webos.service.commercial.scapadapter/deviceInfo/", {
-      method: "getiBeaconInfo",
+    a.Request('luna://com.webos.service.commercial.scapadapter/deviceInfo/', {
+      method: 'getiBeaconInfo',
       parameters: {},
       onSuccess: function (g) {
         delete g.returnValue;
-        if (typeof e === "function") {
+        if (typeof e === 'function') {
           e(g);
         }
       },
       onFailure: function (g) {
         delete g.returnValue;
-        if (typeof f === "function") {
-          b(g, "DGIB", "DeviceInfo.getiBeaconInfo returns failure.");
+        if (typeof f === 'function') {
+          b(g, 'DGIB', 'DeviceInfo.getiBeaconInfo returns failure.');
           f(g);
         }
       },
     });
   };
   d.prototype.setEddystoneInfo = function (e, f, g) {
-    a.Request("luna://com.webos.service.commercial.scapadapter/deviceInfo/", {
-      method: "setEddystoneInfo",
+    a.Request('luna://com.webos.service.commercial.scapadapter/deviceInfo/', {
+      method: 'setEddystoneInfo',
       parameters: g,
       onSuccess: function (h) {
         delete h.returnValue;
-        if (typeof e === "function") {
+        if (typeof e === 'function') {
           e();
         }
       },
       onFailure: function (h) {
         delete h.returnValue;
-        if (typeof f === "function") {
-          b(h, "DSEI", "DeviceInfo.setEddystoneInfo returns failure.");
+        if (typeof f === 'function') {
+          b(h, 'DSEI', 'DeviceInfo.setEddystoneInfo returns failure.');
           f(h);
         }
       },
     });
   };
   d.prototype.getEddystoneInfo = function (e, f) {
-    a.Request("luna://com.webos.service.commercial.scapadapter/deviceInfo/", {
-      method: "getEddystoneInfo",
+    a.Request('luna://com.webos.service.commercial.scapadapter/deviceInfo/', {
+      method: 'getEddystoneInfo',
       parameters: {},
       onSuccess: function (g) {
         delete g.returnValue;
-        if (typeof e === "function") {
+        if (typeof e === 'function') {
           e(g);
         }
       },
       onFailure: function (g) {
         delete g.returnValue;
-        if (typeof f === "function") {
-          b(g, "DGEI", "DeviceInfo.getEddystoneInfo returns failure.");
+        if (typeof f === 'function') {
+          b(g, 'DGEI', 'DeviceInfo.getEddystoneInfo returns failure.');
           f(g);
         }
       },
     });
   };
   d.prototype.getBlockedPortList = function (e, f) {
-    a.Request("luna://com.webos.service.commercial.scapadapter/deviceInfo/", {
-      method: "getBlockedPortList",
+    a.Request('luna://com.webos.service.commercial.scapadapter/deviceInfo/', {
+      method: 'getBlockedPortList',
       parameters: {},
       onSuccess: function (g) {
         delete g.returnValue;
-        if (typeof e === "function") {
+        if (typeof e === 'function') {
           e(g);
         }
       },
       onFailure: function (g) {
         delete g.returnValue;
-        if (typeof f === "function") {
-          b(g, "DGEI", "DeviceInfo.getBlockedPortList returns failure.");
+        if (typeof f === 'function') {
+          b(g, 'DGEI', 'DeviceInfo.getBlockedPortList returns failure.');
           f(g);
         }
       },
     });
   };
   d.prototype.addBlockedPortList = function (e, f, g) {
-    a.Request("luna://com.webos.service.commercial.scapadapter/deviceInfo/", {
-      method: "addBlockedPortList",
+    a.Request('luna://com.webos.service.commercial.scapadapter/deviceInfo/', {
+      method: 'addBlockedPortList',
       parameters: g,
       onSuccess: function () {
-        if (typeof e === "function") {
+        if (typeof e === 'function') {
           e();
         }
       },
       onFailure: function (h) {
         delete h.returnValue;
-        if (typeof f === "function") {
+        if (typeof f === 'function') {
           f(h);
         }
       },
     });
   };
   d.prototype.deleteBlockedPortList = function (e, f, g) {
-    a.Request("luna://com.webos.service.commercial.scapadapter/deviceInfo/", {
-      method: "deleteBlockedPortList",
+    a.Request('luna://com.webos.service.commercial.scapadapter/deviceInfo/', {
+      method: 'deleteBlockedPortList',
       parameters: g,
       onSuccess: function () {
-        if (typeof e === "function") {
+        if (typeof e === 'function') {
           e();
         }
       },
       onFailure: function (h) {
         delete h.returnValue;
-        if (typeof f === "function") {
+        if (typeof f === 'function') {
           f(h);
         }
       },
     });
   };
   d.prototype.getSensorValues = function (e, f) {
-    c("getSensorValues: ");
-    a.Request("luna://com.webos.service.commercial.scapadapter/deviceInfo/", {
-      method: "getSensorValues",
+    c('getSensorValues: ');
+    a.Request('luna://com.webos.service.commercial.scapadapter/deviceInfo/', {
+      method: 'getSensorValues',
       parameters: {},
       onSuccess: function (g) {
-        if (typeof e === "function") {
+        if (typeof e === 'function') {
           delete g.returnValue;
           e(g);
         }
       },
       onFailure: function (g) {
-        c("getSensorValues: onFailure");
+        c('getSensorValues: onFailure');
         delete g.returnValue;
-        if (typeof f === "function") {
-          b(g, "DGSV", "DeviceInfo.getSensorValues returns failure.");
+        if (typeof f === 'function') {
+          b(g, 'DGSV', 'DeviceInfo.getSensorValues returns failure.');
           f(g);
         }
       },
     });
-    c("DeviceInfo.getSensorValues Done");
+    c('DeviceInfo.getSensorValues Done');
   };
   d.prototype.setSensorValues = function (e, f, g) {
-    c("setSensorValues: ");
-    a.Request("luna://com.webos.service.commercial.scapadapter/deviceInfo/", {
-      method: "setSensorValues",
+    c('setSensorValues: ');
+    a.Request('luna://com.webos.service.commercial.scapadapter/deviceInfo/', {
+      method: 'setSensorValues',
       parameters: g,
       onSuccess: function () {
-        c("setSensorValues: onSuccess");
-        if (typeof e === "function") {
+        c('setSensorValues: onSuccess');
+        if (typeof e === 'function') {
           e();
         }
       },
       onFailure: function (h) {
-        c("setSensorValues: onFailure");
+        c('setSensorValues: onFailure');
         delete h.returnValue;
-        if (typeof f === "function") {
+        if (typeof f === 'function') {
           f(h);
         }
       },
     });
-    c("DeviceInfo.setSensorValues Done");
+    c('DeviceInfo.setSensorValues Done');
   };
   d.prototype.getHDBaseTMode = function (e, f) {
-    c("getHDBaseTMode: ");
-    a.Request("luna://com.webos.service.commercial.scapadapter/deviceInfo/", {
-      method: "getHDBaseTMode",
+    c('getHDBaseTMode: ');
+    a.Request('luna://com.webos.service.commercial.scapadapter/deviceInfo/', {
+      method: 'getHDBaseTMode',
       parameters: {},
       onSuccess: function (g) {
-        if (typeof e === "function") {
+        if (typeof e === 'function') {
           delete g.returnValue;
           e(g);
         }
       },
       onFailure: function (g) {
-        c("getHDBaseTMode: onFailure");
+        c('getHDBaseTMode: onFailure');
         delete g.returnValue;
-        if (typeof f === "function") {
-          b(g, "DGSV", "DeviceInfo.getHDBaseTMode returns failure.");
+        if (typeof f === 'function') {
+          b(g, 'DGSV', 'DeviceInfo.getHDBaseTMode returns failure.');
           f(g);
         }
       },
     });
-    c("DeviceInfo.getHDBaseTMode Done");
+    c('DeviceInfo.getHDBaseTMode Done');
   };
   d.prototype.setHDBaseTMode = function (e, f, g) {
-    c("setHDBaseTMode: ");
-    a.Request("luna://com.webos.service.commercial.scapadapter/deviceInfo/", {
-      method: "setHDBaseTMode",
+    c('setHDBaseTMode: ');
+    a.Request('luna://com.webos.service.commercial.scapadapter/deviceInfo/', {
+      method: 'setHDBaseTMode',
       parameters: g,
       onSuccess: function () {
-        c("setHDBaseTMode: onSuccess");
-        if (typeof e === "function") {
+        c('setHDBaseTMode: onSuccess');
+        if (typeof e === 'function') {
           e();
         }
       },
       onFailure: function (h) {
-        c("setHDBaseTMode: onFailure");
+        c('setHDBaseTMode: onFailure');
         delete h.returnValue;
-        if (typeof f === "function") {
+        if (typeof f === 'function') {
           f(h);
         }
       },
     });
-    c("DeviceInfo.setHDBaseTMode Done");
+    c('DeviceInfo.setHDBaseTMode Done');
   };
   d.prototype.getNetworkCheckupInfo = function (e, f) {
-    a.Request("luna://com.webos.service.commercial.scapadapter/deviceInfo/", {
-      method: "getNetworkCheckupInfo",
+    a.Request('luna://com.webos.service.commercial.scapadapter/deviceInfo/', {
+      method: 'getNetworkCheckupInfo',
       parameters: {},
       onSuccess: function (g) {
-        c("getNetworkCheckupInfo: onSuccess");
+        c('getNetworkCheckupInfo: onSuccess');
         delete g.returnValue;
-        if (typeof e === "function") {
+        if (typeof e === 'function') {
           e(g);
         }
       },
       onFailure: function (g) {
-        c("getNetworkCheckupInfo: onFailure");
+        c('getNetworkCheckupInfo: onFailure');
         delete g.returnValue;
-        if (typeof f === "function") {
+        if (typeof f === 'function') {
           f(g);
         }
       },
     });
   };
   d.prototype.setNetworkCheckupInfo = function (e, f, g) {
-    a.Request("luna://com.webos.service.commercial.scapadapter/deviceInfo/", {
-      method: "setNetworkCheckupInfo",
+    a.Request('luna://com.webos.service.commercial.scapadapter/deviceInfo/', {
+      method: 'setNetworkCheckupInfo',
       parameters: g,
       onSuccess: function (h) {
         delete h.returnValue;
-        if (typeof e === "function") {
+        if (typeof e === 'function') {
           e();
         }
       },
       onFailure: function (h) {
         delete h.returnValue;
-        if (typeof f === "function") {
-          b(h, "DSIB", "DeviceInfo.setNetworkCheckupInfo returns failure.");
+        if (typeof f === 'function') {
+          b(h, 'DSIB', 'DeviceInfo.setNetworkCheckupInfo returns failure.');
           f(h);
         }
       },

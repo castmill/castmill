@@ -17,7 +17,7 @@ interface EnvironmentData {
  */
 export async function getEnvironment(): Promise<EnvironmentData> {
   if (parent === window) {
-    throw new Error("getEnvironment can only be called from an iframe");
+    throw new Error('getEnvironment can only be called from an iframe');
   }
 
   return new Promise((resolve, reject) => {
@@ -29,7 +29,7 @@ export async function getEnvironment(): Promise<EnvironmentData> {
         const model = data.model;
 
         if (!deviceId || !versionStr || !model) {
-          throw new Error("Invalid environment data: " + event.data);
+          throw new Error('Invalid environment data: ' + event.data);
         }
 
         resolve({
@@ -42,32 +42,32 @@ export async function getEnvironment(): Promise<EnvironmentData> {
       }
     };
 
-    window.addEventListener("message", responseHandler, { once: true });
+    window.addEventListener('message', responseHandler, { once: true });
 
-    parent.postMessage("getEnvironment", "*");
+    parent.postMessage('getEnvironment', '*');
   });
 }
 
 export function reboot() {
-  parent.postMessage("reboot", "*");
+  parent.postMessage('reboot', '*');
 }
 
 export function restart() {
-  parent.postMessage("restart", "*");
+  parent.postMessage('restart', '*');
 }
 
 export function updatePlayer() {
-  parent.postMessage("updatePlayer", "*");
+  parent.postMessage('updatePlayer', '*');
 }
 
 export function clearStorage() {
-  parent.postMessage("clearStorage", "*");
+  parent.postMessage('clearStorage', '*');
 }
 
 export function sendHeartbeat() {
-  parent.postMessage("alive", "*");
+  parent.postMessage('alive', '*');
 }
 
 export function sendPlayerReady() {
-  parent.postMessage("player_ready", "*");
+  parent.postMessage('player_ready', '*');
 }

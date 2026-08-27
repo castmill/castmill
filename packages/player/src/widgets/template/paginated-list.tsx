@@ -1,13 +1,24 @@
-import gsap from "gsap";
-import { Component, createSignal, For, JSX, onCleanup, onMount } from "solid-js";
-import { Item } from "./item";
-import { resolveOption, TemplateConfig } from "./binding";
-import { TemplateComponent, TemplateComponentType, TemplateComponentTypeUnion } from "./template";
-import { ResourceManager } from "@castmill/cache";
-import { Timeline, TimelineItem } from "./timeline";
-import { ComponentAnimation } from "./animation";
-import { BaseComponentProps } from "./interfaces/base-component-props";
-import { PlayerGlobals } from "../../interfaces/player-globals.interface";
+import gsap from 'gsap';
+import {
+  Component,
+  createSignal,
+  For,
+  JSX,
+  onCleanup,
+  onMount,
+} from 'solid-js';
+import { Item } from './item';
+import { resolveOption, TemplateConfig } from './binding';
+import {
+  TemplateComponent,
+  TemplateComponentType,
+  TemplateComponentTypeUnion,
+} from './template';
+import { ResourceManager } from '@castmill/cache';
+import { Timeline, TimelineItem } from './timeline';
+import { ComponentAnimation } from './animation';
+import { BaseComponentProps } from './interfaces/base-component-props';
+import { PlayerGlobals } from '../../interfaces/player-globals.interface';
 
 export interface PaginatedListComponentOptions {
   /**
@@ -65,7 +76,7 @@ export class PaginatedListComponent implements TemplateComponent {
     public style: JSX.CSSProperties,
     public component: TemplateComponentTypeUnion,
     public animations?: ComponentAnimation[],
-    public filter?: Record<string, any>,
+    public filter?: Record<string, any>
   ) {}
 
   resolveDuration(medias: { [index: string]: string }): number {
@@ -75,7 +86,11 @@ export class PaginatedListComponent implements TemplateComponent {
     const pageDuration = this.opts.pageDuration;
 
     // Check if items or pageDuration are unresolved bindings
-    if (!Array.isArray(items) || typeof pageDuration !== "number" || items.length === 0) {
+    if (
+      !Array.isArray(items) ||
+      typeof pageDuration !== 'number' ||
+      items.length === 0
+    ) {
       return 0; // Dynamic duration - will be calculated at runtime
     }
 
@@ -86,7 +101,7 @@ export class PaginatedListComponent implements TemplateComponent {
   static fromJSON(
     json: any,
     resourceManager: ResourceManager,
-    globals: PlayerGlobals,
+    globals: PlayerGlobals
   ): PaginatedListComponent {
     return new PaginatedListComponent(
       json.name,
@@ -95,7 +110,7 @@ export class PaginatedListComponent implements TemplateComponent {
       json.style,
       TemplateComponent.fromJSON(json.component, resourceManager, globals),
       json.animations,
-      json.filter,
+      json.filter
     );
   }
 
@@ -103,9 +118,10 @@ export class PaginatedListComponent implements TemplateComponent {
     opts: any,
     config: TemplateConfig,
     context: any,
-    globals: PlayerGlobals,
+    globals: PlayerGlobals
   ): PaginatedListComponentOptions {
-    const resolvedItems = resolveOption(opts.items, config, context, globals) || [];
+    const resolvedItems =
+      resolveOption(opts.items, config, context, globals) || [];
 
     return {
       pageDuration: resolveOption(opts.pageDuration, config, context, globals),
@@ -129,7 +145,7 @@ interface PaginatedListProps extends BaseComponentProps {
  */
 export const PaginatedList: Component<PaginatedListProps> = (props) => {
   const [pages, setPages] = createSignal<any[][]>([]);
-  const [pageStyle, setPageStyle] = createSignal("");
+  const [pageStyle, setPageStyle] = createSignal('');
 
   let containerRef: HTMLDivElement | undefined;
   let gsapTimeline: GSAPTimeline = gsap.timeline({ repeat: -1, paused: true });
@@ -160,16 +176,25 @@ export const PaginatedList: Component<PaginatedListProps> = (props) => {
     return pagesArray;
   };
 
-  const applyPages = (pagesArray: any[][], containerWidth?: number, containerHeight?: number) => {
+  const applyPages = (
+    pagesArray: any[][],
+    containerWidth?: number,
+    containerHeight?: number
+  ) => {
     expectedPages = pagesArray.length;
     readyCount = 0;
     resetTimeline();
 
     // Pages need both width and height for absolute positioning
-    if (typeof containerWidth === "number" && typeof containerHeight === "number") {
-      setPageStyle(`position: absolute; width: ${containerWidth}px; height: ${containerHeight}px;`);
+    if (
+      typeof containerWidth === 'number' &&
+      typeof containerHeight === 'number'
+    ) {
+      setPageStyle(
+        `position: absolute; width: ${containerWidth}px; height: ${containerHeight}px;`
+      );
     } else {
-      setPageStyle("position: absolute; width: 100%; height: 100%;");
+      setPageStyle('position: absolute; width: 100%; height: 100%;');
     }
 
     setPages(pagesArray);
@@ -186,7 +211,9 @@ export const PaginatedList: Component<PaginatedListProps> = (props) => {
     }
 
     const durationSeconds =
-      currentPages.length === 1 ? props.opts.pageDuration : gsapTimeline.duration();
+      currentPages.length === 1
+        ? props.opts.pageDuration
+        : gsapTimeline.duration();
     const totalDurationMs = durationSeconds * 1000;
 
     const repeatTimeline = currentPages.length > 1 && !!gsapTimeline.repeat();
@@ -219,7 +246,11 @@ export const PaginatedList: Component<PaginatedListProps> = (props) => {
     gsapTimeline.kill();
   });
 
-  const setupPages = (itemsPerPage: number, containerWidth?: number, containerHeight?: number) => {
+  const setupPages = (
+    itemsPerPage: number,
+    containerWidth?: number,
+    containerHeight?: number
+  ) => {
     if (itemsPerPage <= 0) {
       applyPages([]);
       return;
@@ -258,7 +289,7 @@ export const PaginatedList: Component<PaginatedListProps> = (props) => {
     } else {
       itemsPerPage = Math.min(
         Math.max(calcNumItemsPerPage(containerRef, props.opts.items.length), 1),
-        Math.max(props.opts.items.length, 1),
+        Math.max(props.opts.items.length, 1)
       );
     }
 
@@ -268,8 +299,15 @@ export const PaginatedList: Component<PaginatedListProps> = (props) => {
   };
 
   return (
-    <div data-component="paginated-list" data-name={props.name} style={props.style}>
-      <div ref={containerRef} style={{ width: "100%", height: "100%", position: "relative" }}>
+    <div
+      data-component="paginated-list"
+      data-name={props.name}
+      style={props.style}
+    >
+      <div
+        ref={containerRef}
+        style={{ width: '100%', height: '100%', position: 'relative' }}
+      >
         <For each={pages()}>
           {(page, i) => (
             <Page
@@ -342,20 +380,20 @@ const Page: Component<{
         props.gsapTimeline.to(
           pageRef.children,
           { opacity: 0, stagger: 0.1, duration: 1 },
-          `+=${props.duration}`,
+          `+=${props.duration}`
         );
       } else {
         // For subsequent pages, fade in, hold, then fade out
         props.gsapTimeline.to(
           pageRef.children,
           { opacity: 1, stagger: 0.1, duration: 1 },
-          `>`, // Start after previous animation
+          `>` // Start after previous animation
         );
         // Hold for duration then fade out
         props.gsapTimeline.to(
           pageRef.children,
           { opacity: 0, stagger: 0.1, duration: 1 },
-          `>+=${props.duration}`,
+          `>+=${props.duration}`
         );
       }
     }

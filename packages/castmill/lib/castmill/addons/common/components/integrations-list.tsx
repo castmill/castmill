@@ -1,9 +1,13 @@
-import { Component, createSignal, For, Show, onMount, batch } from "solid-js";
-import { AddonStore } from "../interfaces/addon-store";
-import { authFetch } from "../services/auth-fetch";
-import { CredentialConfig, WidgetIntegration, CredentialSchema } from "./credential-config";
+import { Component, createSignal, For, Show, onMount, batch } from 'solid-js';
+import { AddonStore } from '../interfaces/addon-store';
+import { authFetch } from '../services/auth-fetch';
+import {
+  CredentialConfig,
+  WidgetIntegration,
+  CredentialSchema,
+} from './credential-config';
 
-import "./integrations-list.scss";
+import './integrations-list.scss';
 
 /**
  * Extended widget integration with credential info for list display
@@ -32,7 +36,9 @@ interface IntegrationsListProps {
   /** The base URL for API calls */
   baseUrl: string;
   /** Callback when any integration's credential status changes */
-  onIntegrationChange?: (integrations: WidgetIntegrationWithCredential[]) => void;
+  onIntegrationChange?: (
+    integrations: WidgetIntegrationWithCredential[]
+  ) => void;
 }
 
 /**
@@ -52,7 +58,9 @@ interface IntegrationsListProps {
  * ```
  */
 export const IntegrationsList: Component<IntegrationsListProps> = (props) => {
-  const [integrations, setIntegrations] = createSignal<WidgetIntegrationWithCredential[]>([]);
+  const [integrations, setIntegrations] = createSignal<
+    WidgetIntegrationWithCredential[]
+  >([]);
   const [isLoading, setIsLoading] = createSignal(true);
   const [error, setError] = createSignal<string | null>(null);
   const [expandedId, setExpandedId] = createSignal<number | null>(null);
@@ -61,7 +69,8 @@ export const IntegrationsList: Component<IntegrationsListProps> = (props) => {
   let hasFetched = false;
 
   // Get i18n functions from store
-  const t = (key: string, params?: Record<string, any>) => props.store.i18n?.t(key, params) || key;
+  const t = (key: string, params?: Record<string, any>) =>
+    props.store.i18n?.t(key, params) || key;
 
   /**
    * Fetch integrations for the widget
@@ -78,8 +87,8 @@ export const IntegrationsList: Component<IntegrationsListProps> = (props) => {
       const response = await authFetch(
         `${props.baseUrl}/dashboard/organizations/${organizationId}/widgets/${props.widgetSlug}/integrations`,
         {
-          headers: { "Content-Type": "application/json" },
-        },
+          headers: { 'Content-Type': 'application/json' },
+        }
       );
 
       if (!response.ok) {
@@ -91,26 +100,31 @@ export const IntegrationsList: Component<IntegrationsListProps> = (props) => {
 
       // Fetch credential status for each integration and update in batch
       const integrationsWithCredentials = await Promise.all(
-        integrationsData.map(async (integration: WidgetIntegrationWithCredential) => {
-          try {
-            const credResponse = await authFetch(
-              `${props.baseUrl}/dashboard/organizations/${organizationId}/widget-integrations/${integration.id}`,
-              {
-                headers: { "Content-Type": "application/json" },
-              },
-            );
-            if (credResponse.ok) {
-              const credData = await credResponse.json();
-              return {
-                ...integration,
-                credential: credData.data?.credential,
-              };
+        integrationsData.map(
+          async (integration: WidgetIntegrationWithCredential) => {
+            try {
+              const credResponse = await authFetch(
+                `${props.baseUrl}/dashboard/organizations/${organizationId}/widget-integrations/${integration.id}`,
+                {
+                  headers: { 'Content-Type': 'application/json' },
+                }
+              );
+              if (credResponse.ok) {
+                const credData = await credResponse.json();
+                return {
+                  ...integration,
+                  credential: credData.data?.credential,
+                };
+              }
+            } catch (err) {
+              console.error(
+                `Error fetching credential for integration ${integration.id}:`,
+                err
+              );
             }
-          } catch (err) {
-            console.error(`Error fetching credential for integration ${integration.id}:`, err);
+            return integration;
           }
-          return integration;
-        }),
+        )
       );
 
       // Set all integrations at once to avoid multiple renders
@@ -121,7 +135,7 @@ export const IntegrationsList: Component<IntegrationsListProps> = (props) => {
 
       props.onIntegrationChange?.(integrationsWithCredentials);
     } catch (err: any) {
-      console.error("Error fetching integrations:", err);
+      console.error('Error fetching integrations:', err);
       batch(() => {
         setError(err.message);
         setIsLoading(false);
@@ -146,8 +160,8 @@ export const IntegrationsList: Component<IntegrationsListProps> = (props) => {
         prev.map((i) =>
           i.id === integrationId
             ? { ...i, credential: { ...i.credential, is_valid: valid } as any }
-            : i,
-        ),
+            : i
+        )
       );
     });
     // Notify parent outside of batch to avoid loops
@@ -158,35 +172,44 @@ export const IntegrationsList: Component<IntegrationsListProps> = (props) => {
   /**
    * Get status label for an integration
    */
-  const getStatusLabel = (integration: WidgetIntegrationWithCredential): string => {
+  const getStatusLabel = (
+    integration: WidgetIntegrationWithCredential
+  ): string => {
     if (integration.credential?.is_valid) {
-      return t("widgets.integrations.configured");
+      return t('widgets.integrations.configured');
     }
     if (integration.credential_schema?.auth_type) {
-      return t("widgets.integrations.notConfigured");
+      return t('widgets.integrations.notConfigured');
     }
-    return t("widgets.integrations.notConfigured");
+    return t('widgets.integrations.notConfigured');
   };
 
   /**
    * Get status class for an integration
    */
-  const getStatusClass = (integration: WidgetIntegrationWithCredential): string => {
+  const getStatusClass = (
+    integration: WidgetIntegrationWithCredential
+  ): string => {
     if (integration.credential?.is_valid) {
-      return "configured";
+      return 'configured';
     }
-    return "not-configured";
+    return 'not-configured';
   };
 
   /**
    * Check if integration requires configuration
    */
-  const requiresConfiguration = (integration: WidgetIntegrationWithCredential): boolean => {
+  const requiresConfiguration = (
+    integration: WidgetIntegrationWithCredential
+  ): boolean => {
     const schema = integration.credential_schema;
     if (!schema) return false;
 
     // Has OAuth config or credential fields
-    return !!schema.oauth2 || (!!schema.fields && Object.keys(schema.fields).length > 0);
+    return (
+      !!schema.oauth2 ||
+      (!!schema.fields && Object.keys(schema.fields).length > 0)
+    );
   };
 
   // Fetch integrations on mount
@@ -197,7 +220,7 @@ export const IntegrationsList: Component<IntegrationsListProps> = (props) => {
   return (
     <div class="integrations-list">
       <Show when={isLoading()}>
-        <div class="loading">{t("common.loading")}</div>
+        <div class="loading">{t('common.loading')}</div>
       </Show>
 
       <Show when={error()}>
@@ -207,35 +230,45 @@ export const IntegrationsList: Component<IntegrationsListProps> = (props) => {
       <Show when={!isLoading() && !error()}>
         <Show
           when={integrations().length > 0}
-          fallback={<div class="no-integrations">{t("widgets.integrations.noIntegrations")}</div>}
+          fallback={
+            <div class="no-integrations">
+              {t('widgets.integrations.noIntegrations')}
+            </div>
+          }
         >
           <div class="integrations">
             <For each={integrations()}>
               {(integration) => (
                 <div
-                  class={`integration-item ${expandedId() === integration.id ? "expanded" : ""}`}
+                  class={`integration-item ${expandedId() === integration.id ? 'expanded' : ''}`}
                 >
                   <div
                     class="integration-header"
                     onClick={() =>
-                      requiresConfiguration(integration) && toggleExpanded(integration.id)
+                      requiresConfiguration(integration) &&
+                      toggleExpanded(integration.id)
                     }
                   >
                     <div class="integration-info">
                       <span class="integration-name">
-                        {integration.name.charAt(0).toUpperCase() + integration.name.slice(1)}
+                        {integration.name.charAt(0).toUpperCase() +
+                          integration.name.slice(1)}
                       </span>
                       <Show when={integration.description}>
-                        <span class="integration-description">{integration.description}</span>
+                        <span class="integration-description">
+                          {integration.description}
+                        </span>
                       </Show>
                     </div>
                     <div class="integration-status">
-                      <span class={`status-badge ${getStatusClass(integration)}`}>
+                      <span
+                        class={`status-badge ${getStatusClass(integration)}`}
+                      >
                         {getStatusLabel(integration)}
                       </span>
                       <Show when={requiresConfiguration(integration)}>
                         <span class="expand-icon">
-                          {expandedId() === integration.id ? "▲" : "▼"}
+                          {expandedId() === integration.id ? '▲' : '▼'}
                         </span>
                       </Show>
                     </div>

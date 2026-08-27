@@ -89,7 +89,7 @@ Create a clear mapping of what each role can access:
 **File**: `packages/dashboard/src/interfaces/organization.ts`
 
 ```typescript
-export type OrganizationRole = "admin" | "regular" | "guest";
+export type OrganizationRole = 'admin' | 'regular' | 'guest';
 
 export interface Organization {
   id: string;
@@ -105,36 +105,43 @@ export interface Organization {
 **File**: `packages/dashboard/src/utils/permissions.ts` (new file)
 
 ```typescript
-import { OrganizationRole } from "../interfaces/organization";
+import { OrganizationRole } from '../interfaces/organization';
 
 export type Resource =
-  "playlists" | "medias" | "widgets" | "devices" | "channels" | "teams" | "settings" | "usage";
+  | 'playlists'
+  | 'medias'
+  | 'widgets'
+  | 'devices'
+  | 'channels'
+  | 'teams'
+  | 'settings'
+  | 'usage';
 
-export type Permission = "read" | "write" | "delete";
+export type Permission = 'read' | 'write' | 'delete';
 
 /**
  * Permission matrix mapping roles to resources
  */
 const PERMISSIONS: Record<OrganizationRole, Record<Resource, Permission[]>> = {
   admin: {
-    playlists: ["read", "write", "delete"],
-    medias: ["read", "write", "delete"],
-    widgets: ["read", "write", "delete"],
-    devices: ["read", "write", "delete"],
-    channels: ["read", "write", "delete"],
-    teams: ["read", "write", "delete"],
-    settings: ["read", "write", "delete"],
-    usage: ["read"],
+    playlists: ['read', 'write', 'delete'],
+    medias: ['read', 'write', 'delete'],
+    widgets: ['read', 'write', 'delete'],
+    devices: ['read', 'write', 'delete'],
+    channels: ['read', 'write', 'delete'],
+    teams: ['read', 'write', 'delete'],
+    settings: ['read', 'write', 'delete'],
+    usage: ['read'],
   },
   regular: {
     playlists: [],
     medias: [],
     widgets: [],
-    devices: ["read"],
-    channels: ["read"],
+    devices: ['read'],
+    channels: ['read'],
     teams: [],
     settings: [],
-    usage: ["read"],
+    usage: ['read'],
   },
   guest: {
     playlists: [],
@@ -144,7 +151,7 @@ const PERMISSIONS: Record<OrganizationRole, Record<Resource, Permission[]>> = {
     channels: [],
     teams: [],
     settings: [],
-    usage: ["read"],
+    usage: ['read'],
   },
 };
 
@@ -154,7 +161,7 @@ const PERMISSIONS: Record<OrganizationRole, Record<Resource, Permission[]>> = {
 export function hasPermission(
   role: OrganizationRole,
   resource: Resource,
-  permission: Permission = "read",
+  permission: Permission = 'read'
 ): boolean {
   const resourcePermissions = PERMISSIONS[role]?.[resource] || [];
   return resourcePermissions.includes(permission);
@@ -207,7 +214,7 @@ createEffect(() => {
   if (urlOrgId && urlOrgId !== store.organizations.selectedId) {
     const org = store.organizations.data.find((o) => o.id === urlOrgId);
     if (org) {
-      setStore("organizations", {
+      setStore('organizations', {
         selectedId: org.id,
         selectedName: org.name,
         selectedRole: org.role, // <-- Update role
@@ -333,8 +340,8 @@ import { PermissionGuard } from '../permission-guard/permission-guard';
 Add permission checking to routes:
 
 ```tsx
-import { canAccess } from "../utils/permissions";
-import { PermissionDenied } from "@castmill/ui-common";
+import { canAccess } from '../utils/permissions';
+import { PermissionDenied } from '@castmill/ui-common';
 
 // Inside ProtectedRoute component:
 const checkRoutePermission = () => {
@@ -345,17 +352,19 @@ const checkRoutePermission = () => {
 
   // Map routes to resources
   const routeResourceMap: Record<string, Resource> = {
-    "/content/playlists": "playlists",
-    "/content/medias": "medias",
-    "/content/widgets": "widgets",
-    "/devices": "devices",
-    "/channels": "channels",
-    "/teams": "teams",
-    "/settings": "settings",
+    '/content/playlists': 'playlists',
+    '/content/medias': 'medias',
+    '/content/widgets': 'widgets',
+    '/devices': 'devices',
+    '/channels': 'channels',
+    '/teams': 'teams',
+    '/settings': 'settings',
   };
 
   // Find which resource this route maps to
-  const resource = Object.entries(routeResourceMap).find(([route]) => path.includes(route))?.[1];
+  const resource = Object.entries(routeResourceMap).find(([route]) =>
+    path.includes(route)
+  )?.[1];
 
   // If no resource mapping, allow access (e.g., usage, home)
   if (!resource) return true;
@@ -366,7 +375,9 @@ const checkRoutePermission = () => {
 // In render:
 <Show
   when={checkRoutePermission()}
-  fallback={<PermissionDenied message="You don't have permission to access this page." />}
+  fallback={
+    <PermissionDenied message="You don't have permission to access this page." />
+  }
 >
   {props.children}
 </Show>;
@@ -381,55 +392,59 @@ Create tests for permission utilities:
 **File**: `packages/dashboard/src/utils/permissions.test.ts` (new file)
 
 ```typescript
-import { describe, it, expect } from "vitest";
-import { hasPermission, canAccess, getAccessibleResources } from "./permissions";
+import { describe, it, expect } from 'vitest';
+import {
+  hasPermission,
+  canAccess,
+  getAccessibleResources,
+} from './permissions';
 
-describe("Permission System", () => {
-  describe("hasPermission", () => {
-    it("admin can read playlists", () => {
-      expect(hasPermission("admin", "playlists", "read")).toBe(true);
+describe('Permission System', () => {
+  describe('hasPermission', () => {
+    it('admin can read playlists', () => {
+      expect(hasPermission('admin', 'playlists', 'read')).toBe(true);
     });
 
-    it("regular cannot read playlists", () => {
-      expect(hasPermission("regular", "playlists", "read")).toBe(false);
+    it('regular cannot read playlists', () => {
+      expect(hasPermission('regular', 'playlists', 'read')).toBe(false);
     });
 
-    it("regular can read devices", () => {
-      expect(hasPermission("regular", "devices", "read")).toBe(true);
+    it('regular can read devices', () => {
+      expect(hasPermission('regular', 'devices', 'read')).toBe(true);
     });
 
-    it("guest can read usage", () => {
-      expect(hasPermission("guest", "usage", "read")).toBe(true);
-    });
-  });
-
-  describe("canAccess", () => {
-    it("returns true if role has any permission for resource", () => {
-      expect(canAccess("regular", "devices")).toBe(true);
-    });
-
-    it("returns false if role has no permissions for resource", () => {
-      expect(canAccess("regular", "playlists")).toBe(false);
+    it('guest can read usage', () => {
+      expect(hasPermission('guest', 'usage', 'read')).toBe(true);
     });
   });
 
-  describe("getAccessibleResources", () => {
-    it("admin can access all resources", () => {
-      const resources = getAccessibleResources("admin");
+  describe('canAccess', () => {
+    it('returns true if role has any permission for resource', () => {
+      expect(canAccess('regular', 'devices')).toBe(true);
+    });
+
+    it('returns false if role has no permissions for resource', () => {
+      expect(canAccess('regular', 'playlists')).toBe(false);
+    });
+  });
+
+  describe('getAccessibleResources', () => {
+    it('admin can access all resources', () => {
+      const resources = getAccessibleResources('admin');
       expect(resources).toHaveLength(8);
     });
 
-    it("regular has limited access", () => {
-      const resources = getAccessibleResources("regular");
-      expect(resources).toContain("devices");
-      expect(resources).toContain("channels");
-      expect(resources).toContain("usage");
-      expect(resources).not.toContain("playlists");
+    it('regular has limited access', () => {
+      const resources = getAccessibleResources('regular');
+      expect(resources).toContain('devices');
+      expect(resources).toContain('channels');
+      expect(resources).toContain('usage');
+      expect(resources).not.toContain('playlists');
     });
 
-    it("guest has minimal access", () => {
-      const resources = getAccessibleResources("guest");
-      expect(resources).toEqual(["usage"]);
+    it('guest has minimal access', () => {
+      const resources = getAccessibleResources('guest');
+      expect(resources).toEqual(['usage']);
     });
   });
 });
@@ -508,15 +523,15 @@ The Dashboard implements a comprehensive RBAC system to control what users can a
 The permission system provides utilities to check access:
 
 ```typescript
-import { canAccess, hasPermission } from "../utils/permissions";
+import { canAccess, hasPermission } from '../utils/permissions';
 
 // Check if user can access a resource
-if (canAccess(role, "playlists")) {
+if (canAccess(role, 'playlists')) {
   // Show playlists feature
 }
 
 // Check specific permission
-if (hasPermission(role, "playlists", "write")) {
+if (hasPermission(role, 'playlists', 'write')) {
   // Show create/edit buttons
 }
 ```

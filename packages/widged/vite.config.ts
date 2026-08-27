@@ -1,8 +1,8 @@
 /// <reference types="vitest" />
 /// <reference types="vite/client" />
 
-import { defineConfig } from "vite";
-import solidPlugin from "vite-plugin-solid";
+import { defineConfig } from 'vite';
+import solidPlugin from 'vite-plugin-solid';
 // import devtools from 'solid-devtools/vite';
 
 export default defineConfig({
@@ -18,27 +18,27 @@ export default defineConfig({
     port: 3000,
   },
   test: {
-    environment: "jsdom",
+    environment: 'jsdom',
     globals: true,
-    setupFiles: ["node_modules/@testing-library/jest-dom/vitest"],
+    setupFiles: ['node_modules/@testing-library/jest-dom/vitest'],
     // if you have few tests, try commenting this
     // out to improve performance:
     isolate: false,
   },
   build: {
-    target: "esnext",
-    outDir: "dist",
+    target: 'esnext',
+    outDir: 'dist',
     assetsInlineLimit: 131072,
     lib: {
       // Could also be a dictionary or array of multiple entry points
-      entry: "widgets/index.ts",
-      name: "widgets",
+      entry: 'widgets/index.ts',
+      name: 'widgets',
       // the proper extensions will be added
-      fileName: "widgets",
-      formats: ["umd", "cjs", "es"],
+      fileName: 'widgets',
+      formats: ['umd', 'cjs', 'es'],
     },
   },
   resolve: {
-    conditions: ["development", "browser"],
+    conditions: ['development', 'browser'],
   },
 });

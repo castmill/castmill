@@ -8,7 +8,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - '5432:5432'
 
   dashboard:
     build:
@@ -20,7 +20,7 @@ services:
         VITE_DOMAIN: ${VITE_DOMAIN:-localhost}
 
     ports:
-      - "3000:3000"
+      - '3000:3000'
     depends_on:
       - backend
     restart: on-failure
@@ -28,7 +28,7 @@ services:
     build:
       context: .
     ports:
-      - "4000:4000"
+      - '4000:4000'
     depends_on:
       - db
     environment:

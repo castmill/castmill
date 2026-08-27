@@ -1,31 +1,42 @@
-import styles from "./usage-page.module.scss";
+import styles from './usage-page.module.scss';
 
-import { Component, createEffect, createSignal, For, onMount, Show } from "solid-js";
-import { UsageService } from "../../services/usage";
-import { store } from "../../store/store";
-import { Usage } from "../../interfaces/usage";
-import { useI18n } from "../../i18n";
-import { useToast, formatBytes } from "@castmill/ui-common";
-import { IoImagesOutline } from "solid-icons/io";
-import { RiMediaPlayList2Fill } from "solid-icons/ri";
-import { HiOutlineTv } from "solid-icons/hi";
-import { BsCalendarWeek, BsGrid } from "solid-icons/bs";
-import { AiOutlineTeam, AiOutlineDatabase, AiOutlineAppstore } from "solid-icons/ai";
+import {
+  Component,
+  createEffect,
+  createSignal,
+  For,
+  onMount,
+  Show,
+} from 'solid-js';
+import { UsageService } from '../../services/usage';
+import { store } from '../../store/store';
+import { Usage } from '../../interfaces/usage';
+import { useI18n } from '../../i18n';
+import { useToast, formatBytes } from '@castmill/ui-common';
+import { IoImagesOutline } from 'solid-icons/io';
+import { RiMediaPlayList2Fill } from 'solid-icons/ri';
+import { HiOutlineTv } from 'solid-icons/hi';
+import { BsCalendarWeek, BsGrid } from 'solid-icons/bs';
+import {
+  AiOutlineTeam,
+  AiOutlineDatabase,
+  AiOutlineAppstore,
+} from 'solid-icons/ai';
 
 const [usage, setUsage] = createSignal<Usage>();
 const [loading, setLoading] = createSignal(true);
 
 // Map resource identifiers to translation keys for localized labels
 const resourceTranslationKeys = {
-  medias: "usage.resources.medias",
-  storage: "usage.resources.storage",
-  users: "usage.resources.users",
-  devices: "usage.resources.devices",
-  playlists: "usage.resources.playlists",
-  channels: "usage.resources.channels",
-  teams: "usage.resources.teams",
-  widgets: "usage.resources.widgets",
-  layouts: "usage.resources.layouts",
+  medias: 'usage.resources.medias',
+  storage: 'usage.resources.storage',
+  users: 'usage.resources.users',
+  devices: 'usage.resources.devices',
+  playlists: 'usage.resources.playlists',
+  channels: 'usage.resources.channels',
+  teams: 'usage.resources.teams',
+  widgets: 'usage.resources.widgets',
+  layouts: 'usage.resources.layouts',
 } as const;
 
 type ResourceType = keyof typeof resourceTranslationKeys;
@@ -64,7 +75,7 @@ const UsagePage: Component = () => {
         const usageData = await UsageService.getUsage(organizationId);
         setUsage(usageData);
       } catch (error) {
-        toast.error(t("usage.errors.fetchUsageData", { error: String(error) }));
+        toast.error(t('usage.errors.fetchUsageData', { error: String(error) }));
       } finally {
         setLoading(false);
       }
@@ -84,11 +95,11 @@ const UsagePage: Component = () => {
   });
 
   const getUsageState = (used: number, total: number) => {
-    if (total === 0) return "empty";
+    if (total === 0) return 'empty';
     const percentage = (used / total) * 100;
-    if (percentage >= 100) return "full";
-    if (percentage >= 90) return "warning";
-    return "normal";
+    if (percentage >= 100) return 'full';
+    if (percentage >= 90) return 'warning';
+    return 'normal';
   };
 
   const formatNumber = (num: number) => {
@@ -96,21 +107,21 @@ const UsagePage: Component = () => {
   };
 
   const formatValue = (resource: string, value: number) => {
-    return resource === "storage" ? formatBytes(value) : formatNumber(value);
+    return resource === 'storage' ? formatBytes(value) : formatNumber(value);
   };
 
   return (
     <div class={styles.usagePage}>
       <div class={styles.container}>
         <header class={styles.header}>
-          <h1 class={styles.title}>{t("usage.title")}</h1>
-          <p class={styles.subtitle}>{t("usage.description")}</p>
+          <h1 class={styles.title}>{t('usage.title')}</h1>
+          <p class={styles.subtitle}>{t('usage.description')}</p>
         </header>
 
         <Show when={loading()}>
           <div class={styles.loadingState}>
             <div class={styles.spinner}></div>
-            <p>{t("usage.loadingUsageData")}</p>
+            <p>{t('usage.loadingUsageData')}</p>
           </div>
         </Show>
 
@@ -118,11 +129,15 @@ const UsagePage: Component = () => {
           <div class={styles.grid}>
             <For
               each={
-                Object.entries(usage() || {}) as [ResourceType, { used: number; total: number }][]
+                Object.entries(usage() || {}) as [
+                  ResourceType,
+                  { used: number; total: number },
+                ][]
               }
             >
               {([resource, { used, total }]) => {
-                const percentage = total > 0 ? Math.round((used / total) * 100) : 0;
+                const percentage =
+                  total > 0 ? Math.round((used / total) * 100) : 0;
                 const state = getUsageState(used, total);
 
                 return (
@@ -144,13 +159,21 @@ const UsagePage: Component = () => {
                     <div class={styles.cardBody}>
                       <div class={styles.stats}>
                         <div class={styles.stat}>
-                          <span class={styles.statLabel}>{t("usage.used")}</span>
-                          <span class={styles.statValue}>{formatValue(resource, used)}</span>
+                          <span class={styles.statLabel}>
+                            {t('usage.used')}
+                          </span>
+                          <span class={styles.statValue}>
+                            {formatValue(resource, used)}
+                          </span>
                         </div>
                         <div class={styles.statDivider}>/</div>
                         <div class={styles.stat}>
-                          <span class={styles.statLabel}>{t("usage.total")}</span>
-                          <span class={styles.statValue}>{formatValue(resource, total)}</span>
+                          <span class={styles.statLabel}>
+                            {t('usage.total')}
+                          </span>
+                          <span class={styles.statValue}>
+                            {formatValue(resource, total)}
+                          </span>
                         </div>
                       </div>
 
@@ -163,17 +186,17 @@ const UsagePage: Component = () => {
                         </div>
                       </div>
 
-                      <Show when={state === "full"}>
+                      <Show when={state === 'full'}>
                         <div class={styles.alert}>
                           <span class={styles.alertIcon}>⚠️</span>
-                          <span>{t("usage.quotaLimitReached")}</span>
+                          <span>{t('usage.quotaLimitReached')}</span>
                         </div>
                       </Show>
 
-                      <Show when={state === "warning"}>
+                      <Show when={state === 'warning'}>
                         <div class={styles.alert}>
                           <span class={styles.alertIcon}>⚡</span>
-                          <span>{t("usage.approachingLimit")}</span>
+                          <span>{t('usage.approachingLimit')}</span>
                         </div>
                       </Show>
                     </div>
@@ -187,8 +210,8 @@ const UsagePage: Component = () => {
         <Show when={!loading() && !usage()}>
           <div class={styles.emptyState}>
             <span class={styles.emptyIcon}>📊</span>
-            <h3>{t("usage.noUsageData")}</h3>
-            <p>{t("usage.unableToLoad")}</p>
+            <h3>{t('usage.noUsageData')}</h3>
+            <p>{t('usage.unableToLoad')}</p>
           </div>
         </Show>
       </div>

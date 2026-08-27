@@ -1,11 +1,11 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { SearchService } from "../../services/search.service";
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { SearchService } from '../../services/search.service';
 
 // Mock the auth module to prevent side effects (setStore) during test imports
-vi.mock("../../components/auth", () => ({
+vi.mock('../../components/auth', () => ({
   authFetch: vi.fn((...args: any[]) => (global.fetch as any)(...args)),
   getAuthToken: vi.fn(() => null),
-  getUser: vi.fn(() => ({ id: "test-user" })),
+  getUser: vi.fn(() => ({ id: 'test-user' })),
   checkAuth: vi.fn(() => true),
 }));
 
@@ -13,26 +13,32 @@ vi.mock("../../components/auth", () => ({
 // The main functionality is tested through the SearchService tests.
 // For integration testing, manual testing or E2E tests would be more appropriate.
 
-describe("SearchPage", () => {
+describe('SearchPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  describe("Component Integration", () => {
-    it("should be importable", async () => {
-      const module = await import("./search-page");
+  describe('Component Integration', () => {
+    it('should be importable', async () => {
+      const module = await import('./search-page');
       expect(module.default).toBeDefined();
     });
 
-    it("should use SearchService for data fetching", () => {
+    it('should use SearchService for data fetching', () => {
       // The component uses SearchService.search which is tested separately
       expect(SearchService.search).toBeDefined();
     });
   });
 
-  describe("Resource Type Mapping", () => {
-    it("should have translations for all resource types", async () => {
-      const resourceTypes = ["medias", "playlists", "channels", "devices", "teams"];
+  describe('Resource Type Mapping', () => {
+    it('should have translations for all resource types', async () => {
+      const resourceTypes = [
+        'medias',
+        'playlists',
+        'channels',
+        'devices',
+        'teams',
+      ];
 
       // These translations are defined in the i18n locale files
       // and are tested as part of the i18n system
@@ -40,25 +46,25 @@ describe("SearchPage", () => {
     });
   });
 
-  describe("Navigation Integration", () => {
-    it("should support navigation to different resource types", () => {
+  describe('Navigation Integration', () => {
+    it('should support navigation to different resource types', () => {
       const resourceTypes = {
-        medias: "/org/:orgId/content/medias",
-        playlists: "/org/:orgId/content/playlists",
-        channels: "/org/:orgId/channels",
-        devices: "/org/:orgId/devices",
-        teams: "/org/:orgId/teams",
+        medias: '/org/:orgId/content/medias',
+        playlists: '/org/:orgId/content/playlists',
+        channels: '/org/:orgId/channels',
+        devices: '/org/:orgId/devices',
+        teams: '/org/:orgId/teams',
       };
 
       expect(Object.keys(resourceTypes)).toHaveLength(5);
     });
   });
 
-  describe("Pagination Support", () => {
-    it("should display pagination info when total_pages > 1", () => {
+  describe('Pagination Support', () => {
+    it('should display pagination info when total_pages > 1', () => {
       // This is tested through the SearchService which returns pagination data
       const mockResult = {
-        resource_type: "medias",
+        resource_type: 'medias',
         data: [],
         count: 50,
         page: 1,
@@ -69,9 +75,9 @@ describe("SearchPage", () => {
       expect(mockResult.total_pages).toBeGreaterThan(1);
     });
 
-    it("should not display pagination info when total_pages === 1", () => {
+    it('should not display pagination info when total_pages === 1', () => {
       const mockResult = {
-        resource_type: "medias",
+        resource_type: 'medias',
         data: [],
         count: 10,
         page: 1,

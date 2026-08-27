@@ -1,15 +1,15 @@
-import { Component, createSignal, createEffect, Show, For } from "solid-js";
-import { useSearchParams, useNavigate } from "@solidjs/router";
-import { useI18n } from "../../i18n";
-import { store } from "../../store/store";
-import { SearchService, SearchResult } from "../../services/search.service";
-import { IoImagesOutline, IoSearchOutline } from "solid-icons/io";
-import { RiMediaPlayList2Fill } from "solid-icons/ri";
-import { HiOutlineTv } from "solid-icons/hi";
-import { BsCalendarWeek } from "solid-icons/bs";
-import { AiOutlineTeam } from "solid-icons/ai";
-import { BiRegularChevronRight } from "solid-icons/bi";
-import "./search-page.scss";
+import { Component, createSignal, createEffect, Show, For } from 'solid-js';
+import { useSearchParams, useNavigate } from '@solidjs/router';
+import { useI18n } from '../../i18n';
+import { store } from '../../store/store';
+import { SearchService, SearchResult } from '../../services/search.service';
+import { IoImagesOutline, IoSearchOutline } from 'solid-icons/io';
+import { RiMediaPlayList2Fill } from 'solid-icons/ri';
+import { HiOutlineTv } from 'solid-icons/hi';
+import { BsCalendarWeek } from 'solid-icons/bs';
+import { AiOutlineTeam } from 'solid-icons/ai';
+import { BiRegularChevronRight } from 'solid-icons/bi';
+import './search-page.scss';
 
 // Icon component for resource types
 const ResourceIcon = (props: { type: string; size?: number }) => {
@@ -32,11 +32,11 @@ const SearchPage: Component = () => {
   const [results, setResults] = createSignal<SearchResult[]>([]);
   const [loading, setLoading] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
-  const [query, setQuery] = createSignal<string>("");
+  const [query, setQuery] = createSignal<string>('');
 
   // Perform search when query param changes
   createEffect(async () => {
-    const searchQuery = searchParams.s || "";
+    const searchQuery = searchParams.s || '';
     setQuery(searchQuery);
 
     if (!searchQuery.trim()) {
@@ -56,12 +56,12 @@ const SearchPage: Component = () => {
         store.organizations.selectedId,
         searchQuery,
         1,
-        20,
+        20
       );
       setResults(response.results);
     } catch (err) {
-      console.error("Search error:", err);
-      setError(t("search.error"));
+      console.error('Search error:', err);
+      setError(t('search.error'));
     } finally {
       setLoading(false);
     }
@@ -69,11 +69,11 @@ const SearchPage: Component = () => {
 
   const getResourceTypeLabel = (resourceType: string) => {
     const labels: Record<string, string> = {
-      medias: t("sidebar.medias"),
-      playlists: t("sidebar.playlists"),
-      channels: t("sidebar.channels"),
-      devices: t("sidebar.devices"),
-      teams: t("sidebar.teams"),
+      medias: t('sidebar.medias'),
+      playlists: t('sidebar.playlists'),
+      channels: t('sidebar.channels'),
+      devices: t('sidebar.devices'),
+      teams: t('sidebar.teams'),
     };
     return labels[resourceType] || resourceType;
   };
@@ -113,13 +113,21 @@ const SearchPage: Component = () => {
     const parts: string[] = [];
 
     if (item.created_at) {
-      parts.push(t("common.created") + ": " + new Date(item.created_at).toLocaleDateString());
+      parts.push(
+        t('common.created') +
+          ': ' +
+          new Date(item.created_at).toLocaleDateString()
+      );
     }
     if (item.updated_at && item.updated_at !== item.created_at) {
-      parts.push(t("common.updated") + ": " + new Date(item.updated_at).toLocaleDateString());
+      parts.push(
+        t('common.updated') +
+          ': ' +
+          new Date(item.updated_at).toLocaleDateString()
+      );
     }
 
-    return parts.length > 0 ? parts.join(" • ") : null;
+    return parts.length > 0 ? parts.join(' • ') : null;
   };
 
   return (
@@ -129,14 +137,14 @@ const SearchPage: Component = () => {
           <IoSearchOutline size={32} />
         </div>
         <div class="search-page__header-content">
-          <h1 class="search-page__title">{t("search.title")}</h1>
+          <h1 class="search-page__title">{t('search.title')}</h1>
           <Show when={query()}>
             <p class="search-page__query">
-              {t("search.resultsFor", { query: query() })}
+              {t('search.resultsFor', { query: query() })}
               <Show when={!loading() && !error() && results().length > 0}>
                 <span class="search-page__count">
-                  {" • "}
-                  {t("search.foundResults", {
+                  {' • '}
+                  {t('search.foundResults', {
                     count: results().reduce((sum, r) => sum + r.count, 0),
                   })}
                 </span>
@@ -149,14 +157,14 @@ const SearchPage: Component = () => {
       <Show when={!query()}>
         <div class="search-page__empty">
           <IoSearchOutline size={64} class="search-page__empty-icon" />
-          <p class="search-page__empty-text">{t("search.enterQuery")}</p>
+          <p class="search-page__empty-text">{t('search.enterQuery')}</p>
         </div>
       </Show>
 
       <Show when={loading()}>
         <div class="search-page__loading">
           <div class="search-page__spinner"></div>
-          <p>{t("common.loading")}</p>
+          <p>{t('common.loading')}</p>
         </div>
       </Show>
 
@@ -170,8 +178,8 @@ const SearchPage: Component = () => {
       <Show when={!loading() && !error() && query() && results().length === 0}>
         <div class="search-page__no-results">
           <div class="search-page__no-results-icon">🔍</div>
-          <h2>{t("search.noResultsTitle")}</h2>
-          <p>{t("search.noResults", { query: query() })}</p>
+          <h2>{t('search.noResultsTitle')}</h2>
+          <p>{t('search.noResults', { query: query() })}</p>
         </div>
       </Show>
 
@@ -195,7 +203,9 @@ const SearchPage: Component = () => {
                     {(item: any) => (
                       <div
                         class="search-result-item"
-                        onClick={() => navigateToResource(result.resource_type, item.id)}
+                        onClick={() =>
+                          navigateToResource(result.resource_type, item.id)
+                        }
                         role="button"
                         tabindex={0}
                       >
@@ -204,7 +214,9 @@ const SearchPage: Component = () => {
                         </div>
 
                         <div class="search-result-item__content">
-                          <div class="search-result-item__name">{getItemName(item)}</div>
+                          <div class="search-result-item__name">
+                            {getItemName(item)}
+                          </div>
 
                           <Show when={getItemDescription(item)}>
                             <div class="search-result-item__description">
@@ -213,7 +225,9 @@ const SearchPage: Component = () => {
                           </Show>
 
                           <Show when={getItemSecondaryInfo(item)}>
-                            <div class="search-result-item__meta">{getItemSecondaryInfo(item)}</div>
+                            <div class="search-result-item__meta">
+                              {getItemSecondaryInfo(item)}
+                            </div>
                           </Show>
                         </div>
 
@@ -227,7 +241,7 @@ const SearchPage: Component = () => {
 
                 <Show when={result.total_pages > 1}>
                   <div class="search-result-group__pagination">
-                    {t("search.showingPage", {
+                    {t('search.showingPage', {
                       page: result.page,
                       total: result.total_pages,
                     })}

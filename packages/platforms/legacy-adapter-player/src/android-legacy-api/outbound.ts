@@ -8,7 +8,12 @@ export const outbound = {
   stop: async function () {},
   seek: async function (time: number) {},
   getPlayerData: async function () {},
-  setDimensions: async function (x: number, y: number, width: number, height: number) {},
+  setDimensions: async function (
+    x: number,
+    y: number,
+    width: number,
+    height: number
+  ) {},
   setVolume: async function (vol: number) {},
   setRotation: async function (rot: number) {},
   getCurrentPosition: async function () {},

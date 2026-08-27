@@ -1,12 +1,12 @@
-import { Component, createSignal, Show, createEffect } from "solid-js";
-import { Button, useToast, MediaPicker } from "@castmill/ui-common";
-import { JsonMedia } from "@castmill/player";
-import { OrganizationsService } from "../../services/organizations.service";
-import { authFetch } from "../../components/auth";
-import { store, setStore } from "../../store";
-import { useI18n } from "../../i18n";
+import { Component, createSignal, Show, createEffect } from 'solid-js';
+import { Button, useToast, MediaPicker } from '@castmill/ui-common';
+import { JsonMedia } from '@castmill/player';
+import { OrganizationsService } from '../../services/organizations.service';
+import { authFetch } from '../../components/auth';
+import { store, setStore } from '../../store';
+import { useI18n } from '../../i18n';
 
-import "./logo-settings.scss";
+import './logo-settings.scss';
 
 interface LogoSettingsProps {
   organizationId: string;
@@ -21,7 +21,7 @@ export const LogoSettings: Component<LogoSettingsProps> = (props) => {
 
   const [showMediaPicker, setShowMediaPicker] = createSignal(false);
   const [selectedMediaId, setSelectedMediaId] = createSignal<number | null>(
-    props.currentLogoMediaId || null,
+    props.currentLogoMediaId || null
   );
   const [logoUrl, setLogoUrl] = createSignal<string | null>(null);
 
@@ -41,7 +41,7 @@ export const LogoSettings: Component<LogoSettingsProps> = (props) => {
         try {
           const url = `${store.env.baseUrl}/dashboard/organizations/${props.organizationId}/medias/${mediaId}`;
           const response = await authFetch(url, {
-            method: "GET",
+            method: 'GET',
           });
 
           if (response.ok) {
@@ -50,7 +50,7 @@ export const LogoSettings: Component<LogoSettingsProps> = (props) => {
 
             if (media?.files) {
               const files = media.files as Record<string, { uri?: string }>;
-              const preferredOrder = ["thumbnail", "main", "default"];
+              const preferredOrder = ['thumbnail', 'main', 'default'];
 
               const preferredUrl = preferredOrder
                 .map((key) => files[key]?.uri)
@@ -70,11 +70,14 @@ export const LogoSettings: Component<LogoSettingsProps> = (props) => {
 
             setLogoUrl(null);
           } else {
-            console.error("Failed to fetch media for logo preview. Status:", response.status);
+            console.error(
+              'Failed to fetch media for logo preview. Status:',
+              response.status
+            );
             setLogoUrl(null);
           }
         } catch (error) {
-          console.error("Error fetching logo media:", error);
+          console.error('Error fetching logo media:', error);
           setLogoUrl(null);
         }
       })();
@@ -87,7 +90,7 @@ export const LogoSettings: Component<LogoSettingsProps> = (props) => {
   const fetchMedia = async (
     page: number,
     pageSize: number,
-    search?: string,
+    search?: string
   ): Promise<{
     data: {
       id: number;
@@ -100,23 +103,23 @@ export const LogoSettings: Component<LogoSettingsProps> = (props) => {
     const queryParams = new URLSearchParams({
       page: page.toString(),
       page_size: pageSize.toString(),
-      key: "name",
-      direction: "ascending",
+      key: 'name',
+      direction: 'ascending',
     });
 
     if (search) {
-      queryParams.set("search", search);
+      queryParams.set('search', search);
     }
 
     const response = await authFetch(
       `${store.env.baseUrl}/dashboard/organizations/${props.organizationId}/medias?${queryParams}`,
       {
-        method: "GET",
-      },
+        method: 'GET',
+      }
     );
 
     if (!response.ok) {
-      throw new Error("Failed to fetch medias");
+      throw new Error('Failed to fetch medias');
     }
 
     const result: { data: JsonMedia[]; count: number } = await response.json();
@@ -131,7 +134,7 @@ export const LogoSettings: Component<LogoSettingsProps> = (props) => {
               Object.entries(media.files).map(([context, file]) => [
                 context,
                 { ...file, url: file.uri },
-              ]),
+              ])
             )
           : undefined,
       })),
@@ -140,26 +143,31 @@ export const LogoSettings: Component<LogoSettingsProps> = (props) => {
 
   const handleMediaSelect = async (mediaId: number) => {
     try {
-      const updatedOrg = await OrganizationsService.update(props.organizationId, {
-        logo_media_id: mediaId,
-      });
+      const updatedOrg = await OrganizationsService.update(
+        props.organizationId,
+        {
+          logo_media_id: mediaId,
+        }
+      );
 
       setSelectedMediaId(mediaId);
       props.onLogoUpdate(mediaId);
 
       // Update store with the returned organization data
       const updatedLogoId = updatedOrg?.data?.logo_media_id ?? mediaId;
-      setStore("organizations", "data", (orgs) =>
+      setStore('organizations', 'data', (orgs) =>
         orgs.map((org) =>
-          org.id === props.organizationId ? { ...org, logo_media_id: updatedLogoId } : org,
-        ),
+          org.id === props.organizationId
+            ? { ...org, logo_media_id: updatedLogoId }
+            : org
+        )
       );
 
-      toast.success(t("organization.logoUpdated"));
+      toast.success(t('organization.logoUpdated'));
       setShowMediaPicker(false);
     } catch (error: any) {
       // Extract validation errors from backend response
-      let errorMessage = t("organization.errors.updateOrganization", {
+      let errorMessage = t('organization.errors.updateOrganization', {
         error: String(error),
       });
 
@@ -169,17 +177,19 @@ export const LogoSettings: Component<LogoSettingsProps> = (props) => {
         // Handle logo_media_id specific errors
         if (validationErrors.logo_media_id) {
           const logoErrors = Array.isArray(validationErrors.logo_media_id)
-            ? validationErrors.logo_media_id.join(", ")
+            ? validationErrors.logo_media_id.join(', ')
             : validationErrors.logo_media_id;
           errorMessage = `Logo: ${logoErrors}`;
         } else {
           // Format all validation errors
           const errorMessages = Object.entries(validationErrors)
             .map(([field, messages]) => {
-              const msgs = Array.isArray(messages) ? messages.join(", ") : messages;
+              const msgs = Array.isArray(messages)
+                ? messages.join(', ')
+                : messages;
               return `${field}: ${msgs}`;
             })
-            .join("; ");
+            .join('; ');
           errorMessage = errorMessages || errorMessage;
         }
       }
@@ -190,32 +200,37 @@ export const LogoSettings: Component<LogoSettingsProps> = (props) => {
 
   const handleRemoveLogo = async () => {
     try {
-      const updatedOrg = await OrganizationsService.update(props.organizationId, {
-        logo_media_id: null,
-      });
+      const updatedOrg = await OrganizationsService.update(
+        props.organizationId,
+        {
+          logo_media_id: null,
+        }
+      );
 
       setSelectedMediaId(null);
       props.onLogoUpdate(null);
 
       // Update store with the returned organization data
       const updatedLogoId = updatedOrg?.data?.logo_media_id ?? null;
-      setStore("organizations", "data", (orgs) =>
+      setStore('organizations', 'data', (orgs) =>
         orgs.map((org) =>
-          org.id === props.organizationId ? { ...org, logo_media_id: updatedLogoId } : org,
-        ),
+          org.id === props.organizationId
+            ? { ...org, logo_media_id: updatedLogoId }
+            : org
+        )
       );
 
-      setStore("organizations", "logos", props.organizationId, {
+      setStore('organizations', 'logos', props.organizationId, {
         mediaId: null,
         url: null,
         loading: false,
         error: false,
       });
 
-      toast.success(t("organization.logoRemoved"));
+      toast.success(t('organization.logoRemoved'));
     } catch (error: any) {
       // Extract validation errors from backend response
-      let errorMessage = t("organization.errors.updateOrganization", {
+      let errorMessage = t('organization.errors.updateOrganization', {
         error: String(error),
       });
 
@@ -225,16 +240,18 @@ export const LogoSettings: Component<LogoSettingsProps> = (props) => {
         // Format all validation errors
         const errorMessages = Object.entries(validationErrors)
           .map(([field, messages]) => {
-            const msgs = Array.isArray(messages) ? messages.join(", ") : messages;
+            const msgs = Array.isArray(messages)
+              ? messages.join(', ')
+              : messages;
             return `${field}: ${msgs}`;
           })
-          .join("; ");
+          .join('; ');
         errorMessage = errorMessages || errorMessage;
       }
 
       const status = error?.status ?? error?.response?.status;
       if (status === 409) {
-        toast.error(t("organization.errors.mediaInUseAsLogo"));
+        toast.error(t('organization.errors.mediaInUseAsLogo'));
         return;
       }
 
@@ -244,15 +261,15 @@ export const LogoSettings: Component<LogoSettingsProps> = (props) => {
 
   return (
     <div class="logo-settings">
-      <h3>{t("organization.logoSettings")}</h3>
-      <p class="logo-description">{t("organization.logoDescription")}</p>
+      <h3>{t('organization.logoSettings')}</h3>
+      <p class="logo-description">{t('organization.logoDescription')}</p>
 
       <div class="logo-preview-container">
         <Show
           when={logoUrl()}
           fallback={
             <div class="logo-placeholder">
-              <span>{t("organization.noLogo")}</span>
+              <span>{t('organization.noLogo')}</span>
             </div>
           }
         >
@@ -262,14 +279,14 @@ export const LogoSettings: Component<LogoSettingsProps> = (props) => {
 
       <div class="logo-actions">
         <Button
-          label={t("organization.selectLogo")}
+          label={t('organization.selectLogo')}
           onClick={() => setShowMediaPicker(true)}
           color="primary"
           disabled={props.disabled}
         />
         <Show when={selectedMediaId()}>
           <Button
-            label={t("organization.removeLogo")}
+            label={t('organization.removeLogo')}
             onClick={handleRemoveLogo}
             color="secondary"
             disabled={props.disabled}
@@ -283,14 +300,14 @@ export const LogoSettings: Component<LogoSettingsProps> = (props) => {
         onSelect={handleMediaSelect}
         fetchMedia={fetchMedia}
         selectedMediaId={selectedMediaId() || undefined}
-        title={t("organization.selectLogo")}
-        description={t("organization.selectLogoDescription")}
-        searchPlaceholder={t("common.search")}
-        loadingText={t("common.loading")}
-        noMediaText={t("organization.noMediasAvailable")}
-        cancelLabel={t("common.cancel")}
-        selectLabel={t("common.save")}
-        filterFn={(media) => media.mimetype?.startsWith("image/") ?? false}
+        title={t('organization.selectLogo')}
+        description={t('organization.selectLogoDescription')}
+        searchPlaceholder={t('common.search')}
+        loadingText={t('common.loading')}
+        noMediaText={t('organization.noMediasAvailable')}
+        cancelLabel={t('common.cancel')}
+        selectLabel={t('common.save')}
+        filterFn={(media) => media.mimetype?.startsWith('image/') ?? false}
         pageSize={30}
       />
     </div>

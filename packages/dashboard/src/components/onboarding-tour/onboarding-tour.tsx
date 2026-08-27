@@ -1,20 +1,30 @@
-import { Component, createSignal, createEffect, Show, onMount, onCleanup } from "solid-js";
-import { Portal } from "solid-js/web";
-import { useNavigate } from "@solidjs/router";
-import { useI18n } from "../../i18n";
-import { ConfirmDialog, useToast } from "@castmill/ui-common";
-import { RiSystemExternalLinkLine } from "solid-icons/ri";
-import { OnboardingService } from "../../services/onboarding.service";
-import { baseUrl } from "../../env";
-import { OnboardingStep, OnboardingProgress } from "../../interfaces/onboarding-progress.interface";
+import {
+  Component,
+  createSignal,
+  createEffect,
+  Show,
+  onMount,
+  onCleanup,
+} from 'solid-js';
+import { Portal } from 'solid-js/web';
+import { useNavigate } from '@solidjs/router';
+import { useI18n } from '../../i18n';
+import { ConfirmDialog, useToast } from '@castmill/ui-common';
+import { RiSystemExternalLinkLine } from 'solid-icons/ri';
+import { OnboardingService } from '../../services/onboarding.service';
+import { baseUrl } from '../../env';
+import {
+  OnboardingStep,
+  OnboardingProgress,
+} from '../../interfaces/onboarding-progress.interface';
 import {
   ONBOARDING_STEPS,
   getNextStep,
   getStepConfig,
   isOnboardingComplete,
-} from "../../config/onboarding-steps";
-import { store, setStore } from "../../store/store";
-import "./onboarding-tour.scss";
+} from '../../config/onboarding-steps';
+import { store, setStore } from '../../store/store';
+import './onboarding-tour.scss';
 
 interface OnboardingTourProps {
   userId: string;
@@ -27,12 +37,14 @@ export const OnboardingTour: Component<OnboardingTourProps> = (props) => {
   const { t } = useI18n();
   const toast = useToast();
   const navigate = useNavigate();
-  const [progress, setProgress] = createSignal<OnboardingProgress>(props.initialProgress);
+  const [progress, setProgress] = createSignal<OnboardingProgress>(
+    props.initialProgress
+  );
   const [currentStepIndex, setCurrentStepIndex] = createSignal(0);
   const [loading, setLoading] = createSignal(false);
   const [showDismissConfirm, setShowDismissConfirm] = createSignal(false);
 
-  const dismissNoticeKey = "castmill.onboarding.dismissedNoticeShown";
+  const dismissNoticeKey = 'castmill.onboarding.dismissedNoticeShown';
 
   const shouldShowDismissConfirm = () => {
     try {
@@ -52,7 +64,7 @@ export const OnboardingTour: Component<OnboardingTourProps> = (props) => {
 
   const stepDescription = () => {
     const step = currentStep();
-    if (!step) return "";
+    if (!step) return '';
     if (step.id === OnboardingStep.RegisterDevice) {
       return t(step.descriptionKey, {
         playerUrl: resolvePlayerUrl(),
@@ -70,7 +82,9 @@ export const OnboardingTour: Component<OnboardingTourProps> = (props) => {
       const completedSteps = progress().completed_steps;
       const nextStep = getNextStep(completedSteps);
       if (nextStep) {
-        const stepIndex = ONBOARDING_STEPS.findIndex((step) => step.id === nextStep);
+        const stepIndex = ONBOARDING_STEPS.findIndex(
+          (step) => step.id === nextStep
+        );
         setCurrentStepIndex(stepIndex >= 0 ? stepIndex : 0);
       }
     }
@@ -78,7 +92,7 @@ export const OnboardingTour: Component<OnboardingTourProps> = (props) => {
 
   // Keep the store in sync so the position survives close / reopen.
   createEffect(() => {
-    setStore("onboarding", "lastStepIndex", currentStepIndex());
+    setStore('onboarding', 'lastStepIndex', currentStepIndex());
   });
 
   const currentStep = () => ONBOARDING_STEPS[currentStepIndex()];
@@ -112,20 +126,23 @@ export const OnboardingTour: Component<OnboardingTourProps> = (props) => {
 
     setLoading(true);
     try {
-      const updatedProgress = await OnboardingService.completeStep(props.userId, step.id);
+      const updatedProgress = await OnboardingService.completeStep(
+        props.userId,
+        step.id
+      );
       setProgress(updatedProgress);
-      setStore("onboarding", "progress", updatedProgress);
+      setStore('onboarding', 'progress', updatedProgress);
 
       // Check if all steps are complete
       if (isOnboardingComplete(updatedProgress.completed_steps)) {
-        toast.success(t("onboardingTour.allStepsComplete"));
+        toast.success(t('onboardingTour.allStepsComplete'));
         props.onComplete();
       } else {
         handleNext();
       }
     } catch (error) {
-      console.error("Failed to complete step:", error);
-      toast.error(t("onboardingTour.errors.failedToCompleteStep"));
+      console.error('Failed to complete step:', error);
+      toast.error(t('onboardingTour.errors.failedToCompleteStep'));
     } finally {
       setLoading(false);
     }
@@ -139,25 +156,28 @@ export const OnboardingTour: Component<OnboardingTourProps> = (props) => {
     if (step.id === OnboardingStep.FindGuide) {
       // Close the tour and show the pulsing animation on the guide button
       props.onClose();
-      setStore("onboarding", "highlightGuideButton", true);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      setStore('onboarding', 'highlightGuideButton', true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
 
       // After showing the animation, stop it and reopen the guide
       setTimeout(() => {
-        setStore("onboarding", "highlightGuideButton", false);
-        setStore("onboarding", "showTour", true);
+        setStore('onboarding', 'highlightGuideButton', false);
+        setStore('onboarding', 'showTour', true);
       }, 3000);
       return;
     }
 
     // If there's a targetPath, navigate to it
     if (step.targetPath && store.organizations.selectedId) {
-      const path = step.targetPath.replace(":orgId", store.organizations.selectedId);
+      const path = step.targetPath.replace(
+        ':orgId',
+        store.organizations.selectedId
+      );
 
       // If there's also a targetSelector, add highlight param to URL
       // so the target page can highlight the element
       if (step.targetSelector) {
-        const separator = path.includes("?") ? "&" : "?";
+        const separator = path.includes('?') ? '&' : '?';
         const highlightPath = `${path}${separator}highlight=${encodeURIComponent(step.targetSelector)}`;
         navigate(highlightPath);
       } else {
@@ -170,26 +190,27 @@ export const OnboardingTour: Component<OnboardingTourProps> = (props) => {
       props.onClose();
 
       // Enable highlight animation on the guide button
-      setStore("onboarding", "highlightGuideButton", true);
+      setStore('onboarding', 'highlightGuideButton', true);
 
       // Use setTimeout to allow the overlay to close before triggering the click
       setTimeout(() => {
         const element = document.querySelector(step.targetSelector!);
         if (element) {
           // Scroll to element if needed
-          element.scrollIntoView({ behavior: "smooth", block: "center" });
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
           // For dropdown menus, the click handler is on the parent .button-container
           // Try to find and click that, otherwise click the element itself
-          const buttonContainer = element.closest(".button-container") || element;
+          const buttonContainer =
+            element.closest('.button-container') || element;
           (buttonContainer as HTMLElement).click?.();
         }
       }, 100);
 
       // After a delay for user interaction, stop animation and reopen the guide
       setTimeout(() => {
-        setStore("onboarding", "highlightGuideButton", false);
-        setStore("onboarding", "showTour", true);
+        setStore('onboarding', 'highlightGuideButton', false);
+        setStore('onboarding', 'showTour', true);
       }, 3000);
     }
   };
@@ -200,13 +221,13 @@ export const OnboardingTour: Component<OnboardingTourProps> = (props) => {
       await OnboardingService.dismissTour(props.userId);
       props.onClose();
       try {
-        localStorage.setItem(dismissNoticeKey, "true");
+        localStorage.setItem(dismissNoticeKey, 'true');
       } catch {
         // ignore storage errors
       }
     } catch (error) {
-      console.error("Failed to dismiss tour:", error);
-      toast.error(t("onboardingTour.errors.failedToDismiss"));
+      console.error('Failed to dismiss tour:', error);
+      toast.error(t('onboardingTour.errors.failedToDismiss'));
     } finally {
       setLoading(false);
     }
@@ -226,17 +247,17 @@ export const OnboardingTour: Component<OnboardingTourProps> = (props) => {
 
   // Handle ESC key to close
   const handleKeyDown = (e: KeyboardEvent) => {
-    if (e.key === "Escape") {
+    if (e.key === 'Escape') {
       handleDismiss();
     }
   };
 
   onMount(() => {
-    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener('keydown', handleKeyDown);
   });
 
   onCleanup(() => {
-    document.removeEventListener("keydown", handleKeyDown);
+    document.removeEventListener('keydown', handleKeyDown);
   });
 
   return (
@@ -244,8 +265,8 @@ export const OnboardingTour: Component<OnboardingTourProps> = (props) => {
       <div class="onboarding-tour-overlay">
         <ConfirmDialog
           show={showDismissConfirm()}
-          title={t("onboardingTour.dismissConfirmTitle")}
-          message={t("onboardingTour.dismissConfirmMessage")}
+          title={t('onboardingTour.dismissConfirmTitle')}
+          message={t('onboardingTour.dismissConfirmMessage')}
           onClose={() => setShowDismissConfirm(false)}
           onConfirm={() => {
             setShowDismissConfirm(false);
@@ -255,9 +276,9 @@ export const OnboardingTour: Component<OnboardingTourProps> = (props) => {
         <div class="onboarding-tour">
           <div class="onboarding-tour-header">
             <div class="onboarding-tour-title-section">
-              <h2>{t("onboardingTour.title")}</h2>
+              <h2>{t('onboardingTour.title')}</h2>
               <div class="onboarding-tour-progress-text">
-                {t("onboardingTour.progressText", {
+                {t('onboardingTour.progressText', {
                   current: completedCount(),
                   total: totalSteps(),
                 })}
@@ -267,7 +288,7 @@ export const OnboardingTour: Component<OnboardingTourProps> = (props) => {
               class="onboarding-tour-close"
               onClick={handleDismissRequest}
               disabled={loading()}
-              aria-label={t("common.close")}
+              aria-label={t('common.close')}
             >
               ×
             </button>
@@ -288,7 +309,9 @@ export const OnboardingTour: Component<OnboardingTourProps> = (props) => {
                 <div class="onboarding-tour-step-number">
                   <Show
                     when={isStepCompleted(currentStep().id)}
-                    fallback={<span class="step-number">{currentStepIndex() + 1}</span>}
+                    fallback={
+                      <span class="step-number">{currentStepIndex() + 1}</span>
+                    }
                   >
                     <span class="step-checkmark">✓</span>
                   </Show>
@@ -303,7 +326,7 @@ export const OnboardingTour: Component<OnboardingTourProps> = (props) => {
                     rel="noopener noreferrer"
                     class="onboarding-tour-docs-link"
                   >
-                    {t("onboardingTour.learnMore")}
+                    {t('onboardingTour.learnMore')}
                     <RiSystemExternalLinkLine class="onboarding-tour-link-icon" />
                   </a>
                 </Show>
@@ -322,14 +345,14 @@ export const OnboardingTour: Component<OnboardingTourProps> = (props) => {
                       onClick={handleCompleteStep}
                       disabled={loading()}
                     >
-                      {t("onboardingTour.markComplete")}
+                      {t('onboardingTour.markComplete')}
                     </button>
                   </div>
                 </Show>
 
                 <Show when={isStepCompleted(currentStep().id)}>
                   <div class="onboarding-tour-completed-badge">
-                    <span>✓ {t("onboardingTour.stepCompletedBadge")}</span>
+                    <span>✓ {t('onboardingTour.stepCompletedBadge')}</span>
                   </div>
                 </Show>
               </div>
@@ -342,18 +365,18 @@ export const OnboardingTour: Component<OnboardingTourProps> = (props) => {
               onClick={handlePrevious}
               disabled={currentStepIndex() === 0 || loading()}
             >
-              ← {t("common.back")}
+              ← {t('common.back')}
             </button>
 
             <div class="onboarding-tour-dots">
               {ONBOARDING_STEPS.map((step, index) => (
                 <button
                   class={`onboarding-tour-dot ${
-                    index === currentStepIndex() ? "active" : ""
-                  } ${isStepCompleted(step.id) ? "completed" : ""}`}
+                    index === currentStepIndex() ? 'active' : ''
+                  } ${isStepCompleted(step.id) ? 'completed' : ''}`}
                   onClick={() => setCurrentStepIndex(index)}
                   disabled={loading()}
-                  aria-label={t("onboardingTour.goToStep", { step: index + 1 })}
+                  aria-label={t('onboardingTour.goToStep', { step: index + 1 })}
                 />
               ))}
             </div>
@@ -366,12 +389,16 @@ export const OnboardingTour: Component<OnboardingTourProps> = (props) => {
                   onClick={handleDismiss}
                   disabled={loading()}
                 >
-                  {t("onboardingTour.finish")}
+                  {t('onboardingTour.finish')}
                 </button>
               }
             >
-              <button class="onboarding-tour-nav-button" onClick={handleSkip} disabled={loading()}>
-                {t("onboardingTour.skip")} →
+              <button
+                class="onboarding-tour-nav-button"
+                onClick={handleSkip}
+                disabled={loading()}
+              >
+                {t('onboardingTour.skip')} →
               </button>
             </Show>
           </div>

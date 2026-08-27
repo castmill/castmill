@@ -1,18 +1,24 @@
-import { draggable } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
+import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 
-import { Component, For, createEffect, createSignal, onCleanup } from "solid-js";
-import { JsonWidget } from "@castmill/player";
-import { IconWrapper } from "@castmill/ui-common";
-import { RiEditorDraggable } from "solid-icons/ri";
-import { FaSolidMagnifyingGlass } from "solid-icons/fa";
+import {
+  Component,
+  For,
+  createEffect,
+  createSignal,
+  onCleanup,
+} from 'solid-js';
+import { JsonWidget } from '@castmill/player';
+import { IconWrapper } from '@castmill/ui-common';
+import { RiEditorDraggable } from 'solid-icons/ri';
+import { FaSolidMagnifyingGlass } from 'solid-icons/fa';
 
-import { DEFAULT_WIDGET_ICON } from "../../common/constants";
-import { isImageIcon, getIconUrl } from "../utils/icon-utils";
+import { DEFAULT_WIDGET_ICON } from '../../common/constants';
+import { isImageIcon, getIconUrl } from '../utils/icon-utils';
 import {
   getTranslatedWidgetName,
   getTranslatedWidgetDescription,
-} from "../../common/utils/widget-catalog-utils";
-import "./widget-chooser.scss";
+} from '../../common/utils/widget-catalog-utils';
+import './widget-chooser.scss';
 
 const WidgetItem: Component<{
   widget: JsonWidget;
@@ -43,10 +49,15 @@ const WidgetItem: Component<{
   const iconUrl = () => getIconUrl(props.widget.icon, props.baseUrl);
   const showAsImage = () => isImageIcon(iconUrl());
   const widgetName = () => getTranslatedWidgetName(props.widget, props.locale);
-  const widgetDescription = () => getTranslatedWidgetDescription(props.widget, props.locale);
+  const widgetDescription = () =>
+    getTranslatedWidgetDescription(props.widget, props.locale);
 
   return (
-    <div ref={draggableRef} class="widget-item" style={{ opacity: dragging() ? 0.5 : 1.0 }}>
+    <div
+      ref={draggableRef}
+      class="widget-item"
+      style={{ opacity: dragging() ? 0.5 : 1.0 }}
+    >
       <IconWrapper icon={RiEditorDraggable} />
       <div class="widget-icon">
         {showAsImage() ? (
@@ -54,7 +65,7 @@ const WidgetItem: Component<{
             src={iconUrl()}
             alt={widgetName()}
             onError={(e) => {
-              (e.target as HTMLImageElement).style.display = "none";
+              (e.target as HTMLImageElement).style.display = 'none';
               const fallback = document.createTextNode(DEFAULT_WIDGET_ICON);
               e.target.parentNode?.appendChild(fallback);
             }}
@@ -80,8 +91,10 @@ export const WidgetChooser: Component<{
   t?: (key: string, params?: Record<string, any>) => string;
   onSearch?: (searchText: string) => void;
 }> = (props) => {
-  const [searchText, setSearchText] = createSignal("");
-  const [debounceTimeout, setDebounceTimeout] = createSignal<any | undefined>(undefined);
+  const [searchText, setSearchText] = createSignal('');
+  const [debounceTimeout, setDebounceTimeout] = createSignal<any | undefined>(
+    undefined
+  );
 
   const handleSearchChange = (e: Event) => {
     const target = e.target as HTMLInputElement;
@@ -94,7 +107,7 @@ export const WidgetChooser: Component<{
     setDebounceTimeout(
       setTimeout(() => {
         props.onSearch?.(target.value);
-      }, SEARCH_DEBOUNCE_PERIOD),
+      }, SEARCH_DEBOUNCE_PERIOD)
     );
   };
 
@@ -112,14 +125,22 @@ export const WidgetChooser: Component<{
             type="text"
             value={searchText()}
             onInput={handleSearchChange}
-            placeholder={props.t?.("playlists.searchWidgets") || "Search widgets..."}
+            placeholder={
+              props.t?.('playlists.searchWidgets') || 'Search widgets...'
+            }
             class="search-input"
           />
         </div>
       </div>
       <div class="items-container">
         <For each={props.widgets}>
-          {(widget) => <WidgetItem widget={widget} baseUrl={props.baseUrl} locale={props.locale} />}
+          {(widget) => (
+            <WidgetItem
+              widget={widget}
+              baseUrl={props.baseUrl}
+              locale={props.locale}
+            />
+          )}
         </For>
       </div>
     </div>

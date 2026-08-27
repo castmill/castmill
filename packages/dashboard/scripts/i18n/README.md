@@ -400,7 +400,7 @@ Use curly braces for parameters:
 For countable items, use the pluralization function `tp()` in code:
 
 ```typescript
-tp("items.count", count);
+tp('items.count', count);
 ```
 
 Translation file structure:

@@ -196,8 +196,14 @@ Define asset constraints in the widget schema:
           ".*": {
             "type": "object",
             "properties": {
-              "path": { "type": "string", "pattern": "^icons/.*\\.(svg|png|jpg)$" },
-              "type": { "type": "string", "enum": ["image/svg+xml", "image/png", "image/jpeg"] },
+              "path": {
+                "type": "string",
+                "pattern": "^icons/.*\\.(svg|png|jpg)$"
+              },
+              "type": {
+                "type": "string",
+                "enum": ["image/svg+xml", "image/png", "image/jpeg"]
+              },
               "size": { "type": "integer", "maximum": 102400 },
               "hash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" }
             },
@@ -211,8 +217,14 @@ Define asset constraints in the widget schema:
           ".*": {
             "type": "object",
             "properties": {
-              "path": { "type": "string", "pattern": "^fonts/.*\\.(woff|woff2|ttf)$" },
-              "type": { "type": "string", "enum": ["font/woff", "font/woff2", "font/ttf"] },
+              "path": {
+                "type": "string",
+                "pattern": "^fonts/.*\\.(woff|woff2|ttf)$"
+              },
+              "type": {
+                "type": "string",
+                "enum": ["font/woff", "font/woff2", "font/ttf"]
+              },
               "size": { "type": "integer", "maximum": 524288 },
               "hash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" }
             },
@@ -226,8 +238,14 @@ Define asset constraints in the widget schema:
           ".*": {
             "type": "object",
             "properties": {
-              "path": { "type": "string", "pattern": "^images/.*\\.(png|jpg|jpeg|webp)$" },
-              "type": { "type": "string", "enum": ["image/png", "image/jpeg", "image/webp"] },
+              "path": {
+                "type": "string",
+                "pattern": "^images/.*\\.(png|jpg|jpeg|webp)$"
+              },
+              "type": {
+                "type": "string",
+                "enum": ["image/png", "image/jpeg", "image/webp"]
+              },
               "size": { "type": "integer", "maximum": 1048576 },
               "hash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" }
             },
@@ -521,7 +539,11 @@ weather-widget.zip
 
   "data_schema": {
     "temperature": { "type": "number", "required": true },
-    "condition_icon": { "type": "string", "enum": ["sunny", "cloudy", "rainy"], "required": true }
+    "condition_icon": {
+      "type": "string",
+      "enum": ["sunny", "cloudy", "rainy"],
+      "required": true
+    }
   },
 
   "assets": {
@@ -563,10 +585,10 @@ weather-widget.zip
 // Dashboard upload component
 async function uploadWidget(file: File) {
   const formData = new FormData();
-  formData.append("widget_package", file);
+  formData.append('widget_package', file);
 
-  const response = await fetch("/api/widgets/upload", {
-    method: "POST",
+  const response = await fetch('/api/widgets/upload', {
+    method: 'POST',
     body: formData,
   });
 

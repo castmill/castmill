@@ -1,6 +1,6 @@
 /** @jsxImportSource solid-js */
-import { Component, Show } from "solid-js";
-import styles from "./loading-overlay.module.scss";
+import { Component, Show } from 'solid-js';
+import styles from './loading-overlay.module.scss';
 
 interface LoadingOverlayProps {
   show: boolean;

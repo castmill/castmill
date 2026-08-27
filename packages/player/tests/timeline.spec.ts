@@ -1,7 +1,7 @@
 /// <reference types="node" />
 
-import { expect } from "chai";
-import { describe, it } from "mocha";
+import { expect } from 'chai';
+import { describe, it } from 'mocha';
 
 import {
   SinonSpy,
@@ -11,7 +11,7 @@ import {
   useFakeTimers,
   stub,
   SinonFakeTimers,
-} from "sinon";
+} from 'sinon';
 
 // Add these interfaces for the child
 interface TimelineBasicSpy extends TimelineBasic {
@@ -27,20 +27,24 @@ interface TimelineItemSpy {
   child: TimelineBasicSpy;
 }
 
-import { Timeline, TimelineBasic, TimelineItem } from "../src/widgets/template/timeline";
+import {
+  Timeline,
+  TimelineBasic,
+  TimelineItem,
+} from '../src/widgets/template/timeline';
 
-describe("Timeline", () => {
+describe('Timeline', () => {
   let timeline: Timeline;
 
   beforeEach(() => {
-    timeline = new Timeline("test");
+    timeline = new Timeline('test');
   });
 
-  it("should instantiate correctly", () => {
+  it('should instantiate correctly', () => {
     expect(timeline).to.be.instanceOf(Timeline);
   });
 
-  describe("add and remove", () => {
+  describe('add and remove', () => {
     let item: TimelineItem;
 
     beforeEach(() => {
@@ -54,20 +58,23 @@ describe("Timeline", () => {
       timeline.add(item);
     });
 
-    it("should add items correctly", () => {
+    it('should add items correctly', () => {
       const addedItem = timeline.items.find(
-        (i) => i.child === item.child && i.start === item.start && i.duration === item.duration,
+        (i) =>
+          i.child === item.child &&
+          i.start === item.start &&
+          i.duration === item.duration
       );
       expect(addedItem).to.exist;
     });
 
-    it("should remove items correctly", () => {
+    it('should remove items correctly', () => {
       timeline.remove(item);
       expect(timeline.items).to.not.include(item);
     });
   });
 
-  describe("play", () => {
+  describe('play', () => {
     let clock: SinonFakeTimers;
     let item1: TimelineItemSpy, item2: TimelineItemSpy;
 
@@ -96,7 +103,7 @@ describe("Timeline", () => {
       timeline.add(item2);
 
       // Stub Date.now and setInterval
-      stub(Date, "now").returns(0);
+      stub(Date, 'now').returns(0);
       clock = useFakeTimers();
     });
 
@@ -105,7 +112,7 @@ describe("Timeline", () => {
       restore();
     });
 
-    it("should play items correctly", async () => {
+    it('should play items correctly', async () => {
       expect(timeline.duration()).to.equal(10000);
 
       timeline.play(0);
@@ -146,7 +153,7 @@ describe("Timeline", () => {
       expect(timeline.isPlaying(item2)).to.be.true;
     });
 
-    it("should loop correctly", () => {
+    it('should loop correctly', () => {
       timeline.setLoop(true);
 
       timeline.play(0);
@@ -180,7 +187,7 @@ describe("Timeline", () => {
     });
   });
 
-  describe("pause", () => {
+  describe('pause', () => {
     let item: TimelineItemSpy;
     let clock: SinonFakeTimers;
 
@@ -198,7 +205,7 @@ describe("Timeline", () => {
       timeline.add(item);
 
       // Stub Date.now and setInterval
-      stub(Date, "now").returns(0);
+      stub(Date, 'now').returns(0);
       clock = useFakeTimers();
     });
 
@@ -207,7 +214,7 @@ describe("Timeline", () => {
       restore();
     });
 
-    it("should pause items correctly", () => {
+    it('should pause items correctly', () => {
       timeline.play(0);
       clock.tick(100); // Advance the clock by 100 ms
       timeline.pause();
@@ -216,7 +223,7 @@ describe("Timeline", () => {
     });
   });
 
-  describe("seek", () => {
+  describe('seek', () => {
     let item: TimelineItemSpy;
 
     beforeEach(() => {
@@ -234,13 +241,13 @@ describe("Timeline", () => {
       timeline.seek(1000);
     });
 
-    it("should seek items correctly", () => {
+    it('should seek items correctly', () => {
       expect(item.child.seek.calledWith(1000)).to.be.true;
     });
   });
 });
 
-describe("Timeline with child Timeline", () => {
+describe('Timeline with child Timeline', () => {
   let timeline: Timeline;
   let childTimeline: Timeline;
   let childTimelineItem: TimelineItem;
@@ -251,11 +258,11 @@ describe("Timeline with child Timeline", () => {
   let clock: SinonFakeTimers;
 
   beforeEach(() => {
-    timeline = new Timeline("test parent");
-    childTimeline = new Timeline("test child");
-    spy(childTimeline, "play");
-    spy(childTimeline, "seek");
-    spy(childTimeline, "pause");
+    timeline = new Timeline('test parent');
+    childTimeline = new Timeline('test child');
+    spy(childTimeline, 'play');
+    spy(childTimeline, 'seek');
+    spy(childTimeline, 'pause');
 
     item1 = {
       start: 1000,
@@ -293,13 +300,13 @@ describe("Timeline with child Timeline", () => {
     restore();
   });
 
-  it("should add child timeline correctly", () => {
+  it('should add child timeline correctly', () => {
     expect(timeline.items[0].child).to.equal(childTimeline);
 
     expect(timeline.duration()).to.equal(7500);
   });
 
-  it("should play items in child timeline correctly", () => {
+  it('should play items in child timeline correctly', () => {
     timeline.play(0);
 
     clock.tick(500);
@@ -342,7 +349,7 @@ describe("Timeline with child Timeline", () => {
     expect(childTimeline.isPlaying(item3)).to.be.false;
   });
 
-  it("should pause items in child timeline correctly", () => {
+  it('should pause items in child timeline correctly', () => {
     timeline.play(0);
 
     clock.tick(1500);
@@ -350,31 +357,39 @@ describe("Timeline with child Timeline", () => {
     expect(item1.child.pause.calledOnce).to.be.true;
   });
 
-  it("should seek items in child timeline correctly", () => {
+  it('should seek items in child timeline correctly', () => {
     timeline.seek(1500); // Seeking into childTimeline's item1
-    expect((childTimeline.seek as SinonSpy).getCall(0).args).to.deep.equal([1000]);
+    expect((childTimeline.seek as SinonSpy).getCall(0).args).to.deep.equal([
+      1000,
+    ]);
     expect((item1.child.seek as SinonSpy).getCall(0).args).to.deep.equal([0]);
 
     timeline.seek(3500); // Seeking into childTimeline's item2
-    expect((item1.child.seek as SinonSpy).getCall(1).args).to.deep.equal([2000]);
+    expect((item1.child.seek as SinonSpy).getCall(1).args).to.deep.equal([
+      2000,
+    ]);
 
     timeline.seek(4500); // Seeking into childTimeline's item2
-    expect((childTimeline.seek as SinonSpy).getCall(2).args).to.deep.equal([4000]);
+    expect((childTimeline.seek as SinonSpy).getCall(2).args).to.deep.equal([
+      4000,
+    ]);
     expect((item2.child.seek as SinonSpy).getCall(0).args).to.deep.equal([0]);
 
     timeline.seek(6500); // Seeking into childTimeline's item3
-    expect((childTimeline.seek as SinonSpy).getCall(3).args).to.deep.equal([6000]);
+    expect((childTimeline.seek as SinonSpy).getCall(3).args).to.deep.equal([
+      6000,
+    ]);
     expect((item3.child.seek as SinonSpy).getCall(0).args).to.deep.equal([0]);
   });
 });
 
-describe("Repeat functionality", () => {
+describe('Repeat functionality', () => {
   let timeline: Timeline;
   let item: TimelineItemSpy;
   let clock: SinonFakeTimers;
 
   beforeEach(() => {
-    timeline = new Timeline("test", { duration: 6000 });
+    timeline = new Timeline('test', { duration: 6000 });
 
     item = {
       start: 1000,
@@ -389,7 +404,7 @@ describe("Repeat functionality", () => {
     };
     timeline.add(item);
 
-    stub(Date, "now").returns(0);
+    stub(Date, 'now').returns(0);
     clock = useFakeTimers();
   });
 
@@ -397,7 +412,7 @@ describe("Repeat functionality", () => {
     restore();
   });
 
-  it("should handle repeat functionality correctly", () => {
+  it('should handle repeat functionality correctly', () => {
     timeline.play(0);
 
     clock.tick(1000); // Start time
@@ -412,7 +427,7 @@ describe("Repeat functionality", () => {
     expect(item.child.play.callCount).to.equal(1); // Still playing, but not called again
   });
 
-  it("should hadle seek with repeat correctly", () => {
+  it('should hadle seek with repeat correctly', () => {
     timeline.seek(3000); // Seek into the next iteration
     expect(item.child.seek.calledOnce).to.be.true;
     expect(item.child.seek.getCall(0).args[0]).to.equal(0);
@@ -423,12 +438,12 @@ describe("Repeat functionality", () => {
   });
 });
 
-describe("remove with multiple items", () => {
+describe('remove with multiple items', () => {
   let timeline: Timeline;
   let item1: TimelineItem, item2: TimelineItem, item3: TimelineItem;
 
   beforeEach(() => {
-    timeline = new Timeline("test");
+    timeline = new Timeline('test');
 
     item1 = {
       start: 0,
@@ -466,7 +481,7 @@ describe("remove with multiple items", () => {
     timeline.add(item3);
   });
 
-  it("should remove the correct item when multiple items exist", () => {
+  it('should remove the correct item when multiple items exist', () => {
     expect(timeline.items).to.have.lengthOf(3);
     expect(timeline.items).to.include(item1);
     expect(timeline.items).to.include(item2);
@@ -481,7 +496,7 @@ describe("remove with multiple items", () => {
     expect(timeline.items).to.include(item3);
   });
 
-  it("should remove the first item correctly", () => {
+  it('should remove the first item correctly', () => {
     timeline.remove(item1);
 
     expect(timeline.items).to.have.lengthOf(2);
@@ -490,7 +505,7 @@ describe("remove with multiple items", () => {
     expect(timeline.items).to.include(item3);
   });
 
-  it("should remove the last item correctly", () => {
+  it('should remove the last item correctly', () => {
     timeline.remove(item3);
 
     expect(timeline.items).to.have.lengthOf(2);
@@ -499,7 +514,7 @@ describe("remove with multiple items", () => {
     expect(timeline.items).to.not.include(item3);
   });
 
-  it("should not remove anything if item is not in timeline", () => {
+  it('should not remove anything if item is not in timeline', () => {
     const otherItem: TimelineItem = {
       start: 5000,
       duration: 1000,
@@ -520,19 +535,19 @@ describe("remove with multiple items", () => {
   });
 });
 
-describe("duration calculation", () => {
+describe('duration calculation', () => {
   let timeline: Timeline;
   let clock: SinonFakeTimers;
 
   beforeEach(() => {
-    timeline = new Timeline("test");
+    timeline = new Timeline('test');
   });
 
   afterEach(() => {
     restore();
   });
 
-  it("should include repeat items with explicit duration in duration calculation", () => {
+  it('should include repeat items with explicit duration in duration calculation', () => {
     // Repeat items with explicit duration should contribute (one loop cycle)
     const normalItem: TimelineItem = {
       start: 0,
@@ -564,7 +579,7 @@ describe("duration calculation", () => {
     expect(timeline.duration()).to.equal(9000);
   });
 
-  it("should not include repeat items without explicit duration in duration calculation", () => {
+  it('should not include repeat items without explicit duration in duration calculation', () => {
     // Repeat items without explicit duration play indefinitely
     const normalItem: TimelineItem = {
       start: 0,
@@ -595,8 +610,8 @@ describe("duration calculation", () => {
     expect(timeline.duration()).to.equal(5000);
   });
 
-  it("should use timeline opts.duration when set, ignoring items", () => {
-    const timelineWithDuration = new Timeline("test-with-duration", {
+  it('should use timeline opts.duration when set, ignoring items', () => {
+    const timelineWithDuration = new Timeline('test-with-duration', {
       duration: 10000,
     });
 
@@ -617,7 +632,7 @@ describe("duration calculation", () => {
     expect(timelineWithDuration.duration()).to.equal(10000);
   });
 
-  it("should calculate duration correctly with items in different states", () => {
+  it('should calculate duration correctly with items in different states', () => {
     const item1: TimelineItemSpy = {
       start: 0,
       duration: 5000,
@@ -645,7 +660,7 @@ describe("duration calculation", () => {
     // Initially, all items are in 'items' array
     expect(timeline.duration()).to.equal(10000);
 
-    stub(Date, "now").returns(0);
+    stub(Date, 'now').returns(0);
     clock = useFakeTimers();
 
     timeline.play(0);
@@ -661,7 +676,7 @@ describe("duration calculation", () => {
     timeline.pause();
   });
 
-  it("should return max end time, not sum of durations", () => {
+  it('should return max end time, not sum of durations', () => {
     // This test specifically catches the bug where + was used instead of Math.max
     const item1: TimelineItem = {
       start: 0,

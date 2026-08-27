@@ -1,5 +1,5 @@
-import { defineConfig } from "vite";
-import solidPlugin from "vite-plugin-solid";
+import { defineConfig } from 'vite';
+import solidPlugin from 'vite-plugin-solid';
 // import devtools from 'solid-devtools/vite';
 
 export default defineConfig({
@@ -12,18 +12,18 @@ export default defineConfig({
     solidPlugin(),
   ],
   esbuild: {
-    jsx: "automatic",
-    jsxImportSource: "solid-js",
+    jsx: 'automatic',
+    jsxImportSource: 'solid-js',
   },
   css: {
     modules: {
-      localsConvention: "camelCase", // or 'camelCaseOnly', etc.
+      localsConvention: 'camelCase', // or 'camelCaseOnly', etc.
     },
     preprocessorOptions: {
       scss: {
-        api: "modern-compiler",
-        silenceDeprecations: ["legacy-js-api"],
-        math: "always",
+        api: 'modern-compiler',
+        silenceDeprecations: ['legacy-js-api'],
+        math: 'always',
         relativeUrls: true,
         javascriptEnabled: true,
       },
@@ -33,13 +33,13 @@ export default defineConfig({
     port: 3000,
     proxy: {
       // Proxy widget assets to Phoenix backend during development
-      "/widget_assets": {
-        target: "http://localhost:4000",
+      '/widget_assets': {
+        target: 'http://localhost:4000',
         changeOrigin: true,
       },
     },
   },
   build: {
-    target: "esnext",
+    target: 'esnext',
   },
 });

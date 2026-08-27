@@ -6,25 +6,32 @@ import {
   TableView,
   TableViewRef,
   useToast,
-} from "@castmill/ui-common";
-import { AiOutlineDelete } from "solid-icons/ai";
-import { BsCheckLg, BsEye } from "solid-icons/bs";
-import { createSignal, Show, onMount } from "solid-js";
-import { FetchOptions, TeamResource, TeamsService } from "../../services/teams.service";
-import { ResourceChooser } from "./resource-chooser";
+} from '@castmill/ui-common';
+import { AiOutlineDelete } from 'solid-icons/ai';
+import { BsCheckLg, BsEye } from 'solid-icons/bs';
+import { createSignal, Show, onMount } from 'solid-js';
+import {
+  FetchOptions,
+  TeamResource,
+  TeamsService,
+} from '../../services/teams.service';
+import { ResourceChooser } from './resource-chooser';
 
-import { useI18n } from "../../i18n";
-import { QuotaIndicator } from "../../components/quota-indicator";
-import { QuotasService, ResourceQuota } from "../../services/quotas.service";
+import { useI18n } from '../../i18n';
+import { QuotaIndicator } from '../../components/quota-indicator';
+import { QuotasService, ResourceQuota } from '../../services/quotas.service';
 
 const itemsPerPage = 10;
 
 const [currentResource, setCurrentResource] = createSignal<TeamResource>();
 const [showAddResourceDialog, setShowAddResourceDialog] = createSignal(false);
 const [showConfirmDialog, setShowConfirmDialog] = createSignal(false);
-const [showConfirmDialogMultiple, setShowConfirmDialogMultiple] = createSignal(false);
+const [showConfirmDialogMultiple, setShowConfirmDialogMultiple] =
+  createSignal(false);
 
-const [selectedResources, setSelectedResources] = createSignal(new Set<string | number>());
+const [selectedResources, setSelectedResources] = createSignal(
+  new Set<string | number>()
+);
 
 const [isFormValid, setIsFormValid] = createSignal(false);
 
@@ -36,14 +43,14 @@ const onRowSelect = (rowsSelected: Set<string | number>) => {
 
 const openModal = () => {
   // TODO: Implement view modal
-  console.log("View modal not yet implemented");
+  console.log('View modal not yet implemented');
 };
 
 const actions = [
   {
     icon: BsEye,
     handler: openModal,
-    label: "View",
+    label: 'View',
   },
   {
     icon: AiOutlineDelete,
@@ -51,7 +58,7 @@ const actions = [
       setCurrentResource(item);
       setShowConfirmDialog(true);
     },
-    label: "Remove",
+    label: 'Remove',
   },
 ];
 
@@ -68,14 +75,14 @@ export const ResourcesView = (props: {
   const { t } = useI18n();
 
   const openModal = () => {
-    alert(t("teams.errors.openViewModal"));
+    alert(t('teams.errors.openViewModal'));
   };
 
   const actions = [
     {
       icon: BsEye,
       handler: openModal,
-      label: t("common.view"),
+      label: t('common.view'),
     },
     {
       icon: AiOutlineDelete,
@@ -83,7 +90,7 @@ export const ResourcesView = (props: {
         setCurrentResource(item);
         setShowConfirmDialog(true);
       },
-      label: t("common.remove"),
+      label: t('common.remove'),
     },
   ];
   const toast = useToast();
@@ -96,10 +103,13 @@ export const ResourcesView = (props: {
   onMount(async () => {
     try {
       const resourceType = props.resourceType as any;
-      const quotaData = await QuotasService.getResourceQuota(props.organizationId, resourceType);
+      const quotaData = await QuotasService.getResourceQuota(
+        props.organizationId,
+        resourceType
+      );
       setQuota(quotaData);
     } catch (error) {
-      console.error("Failed to fetch quota:", error);
+      console.error('Failed to fetch quota:', error);
     } finally {
       setQuotaLoading(false);
     }
@@ -113,24 +123,24 @@ export const ResourcesView = (props: {
   const columns = [
     {
       key: `${resourceKey}.name`,
-      title: "Icon",
+      title: 'Icon',
       sortable: true,
       render: (item: any) => {
-        const style = "width: 4em; height: 4em;object-fit: contain;";
-        const thumbnail = item[resourceKey].files["thumbnail"]?.uri;
+        const style = 'width: 4em; height: 4em;object-fit: contain;';
+        const thumbnail = item[resourceKey].files['thumbnail']?.uri;
         return <img style={style} src={thumbnail as string} alt={item.name} />;
       },
     },
     {
       key: `${resourceKey}.name`,
-      title: "Name",
+      title: 'Name',
       sortable: true,
     },
     {
-      key: "access",
-      title: "Access",
+      key: 'access',
+      title: 'Access',
       sortable: true,
-      render: (item: TeamResource) => item.access.join(","),
+      render: (item: TeamResource) => item.access.join(','),
     },
   ];
 
@@ -144,13 +154,13 @@ export const ResourcesView = (props: {
         props.organizationId,
         props.teamId,
         props.resourceType,
-        resourceId,
+        resourceId
       );
       refreshData();
-      toast.success("Resource removed from team successfully");
+      toast.success('Resource removed from team successfully');
       setShowConfirmDialog(false);
     } catch (error) {
-      toast.error(t("teams.errors.removeResource", { error: String(error) }));
+      toast.error(t('teams.errors.removeResource', { error: String(error) }));
     }
   };
 
@@ -164,17 +174,17 @@ export const ResourcesView = (props: {
               props.organizationId,
               props.teamId,
               props.resourceType,
-              resource[itemIdKey],
+              resource[itemIdKey]
             );
           }
-        }),
+        })
       );
       refreshData();
       setSelectedResources(new Set<string | number>());
-      toast.success("Resources removed from team successfully");
+      toast.success('Resources removed from team successfully');
       setShowConfirmDialogMultiple(false);
     } catch (error) {
-      toast.error(t("teams.errors.removeResources", { error: String(error) }));
+      toast.error(t('teams.errors.removeResources', { error: String(error) }));
     }
   };
 
@@ -183,7 +193,7 @@ export const ResourcesView = (props: {
       props.organizationId,
       props.teamId,
       props.resourceType,
-      options,
+      options
     );
 
     setData(result.data);
@@ -203,7 +213,7 @@ export const ResourcesView = (props: {
   };
 
   const getName = (resource: TeamResource | undefined) =>
-    resource ? resource[resourceKey].name : "N/A";
+    resource ? resource[resourceKey].name : 'N/A';
 
   return (
     <>
@@ -232,7 +242,12 @@ export const ResourcesView = (props: {
               onSelect={refreshData}
             />
             <div class="form-actions">
-              <Button label="Add" type="submit" disabled={!isFormValid()} color="primary" />
+              <Button
+                label="Add"
+                type="submit"
+                disabled={!isFormValid()}
+                color="primary"
+              />
             </div>
           </form>
         </Modal>
@@ -269,7 +284,7 @@ export const ResourcesView = (props: {
         ref={setRef}
         toolbar={{
           filters: [],
-          searchPlaceholder: t("common.search"),
+          searchPlaceholder: t('common.search'),
           mainAction: (
             <div style="display: flex; align-items: center; gap: 1rem;">
               <Show when={quota() && !quotaLoading()}>
@@ -308,12 +323,12 @@ export const ResourcesView = (props: {
         table={{
           columns,
           actions,
-          actionsLabel: t("common.actions"),
+          actionsLabel: t('common.actions'),
           onRowSelect,
           defaultRowAction: {
             icon: BsEye,
             handler: openModal,
-            label: "View",
+            label: 'View',
           },
         }}
         pagination={{ itemsPerPage }}

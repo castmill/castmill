@@ -34,7 +34,14 @@ GET /dashboard/organizations/:organization_id/permissions
     "teams": ["list", "show"],
     "widgets": ["list", "show"]
   },
-  "resources": ["playlists", "medias", "channels", "devices", "teams", "widgets"]
+  "resources": [
+    "playlists",
+    "medias",
+    "channels",
+    "devices",
+    "teams",
+    "widgets"
+  ]
 }
 ```
 
@@ -210,26 +217,26 @@ class PermissionsHelper {
   }
 
   isAdmin(): boolean {
-    return this.permissions.role === "admin";
+    return this.permissions.role === 'admin';
   }
 
   isManager(): boolean {
-    return this.permissions.role === "manager";
+    return this.permissions.role === 'manager';
   }
 
   isMember(): boolean {
-    return this.permissions.role === "member";
+    return this.permissions.role === 'member';
   }
 
   isGuest(): boolean {
-    return this.permissions.role === "guest";
+    return this.permissions.role === 'guest';
   }
 }
 
 // Usage
 const helper = new PermissionsHelper(permissionsData);
 
-if (helper.can("playlists", "create")) {
+if (helper.can('playlists', 'create')) {
   showCreateButton();
 }
 

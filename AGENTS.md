@@ -67,7 +67,7 @@ This is a Yarn workspace monorepo with the following key packages:
 
 // ✅ ALWAYS use i18n
 const { t } = useI18n();
-<button>{t("common.save")}</button>;
+<button>{t('common.save')}</button>;
 ```
 
 ### Before Every Commit
@@ -141,7 +141,7 @@ The Dashboard uses URL-based routing with organization context:
 navigate(`/org/${store.organizations.selectedId}/teams`);
 
 // ❌ Never navigate without org context
-navigate("/teams");
+navigate('/teams');
 ```
 
 See `packages/dashboard/AGENTS.md` for detailed routing patterns.

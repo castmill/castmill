@@ -4,7 +4,7 @@ import {
   StorageItem,
   StoreOptions,
   StoreFileReturnValue,
-} from "@castmill/cache";
+} from '@castmill/cache';
 
 // import the required functionality from contextBridge
 const fsApi = window.fsApi;
@@ -28,7 +28,10 @@ export class FileStorage implements StorageIntegration {
     return fsApi.listFiles(this.storagePath);
   }
 
-  async storeFile(url: string, opts?: StoreOptions): Promise<StoreFileReturnValue> {
+  async storeFile(
+    url: string,
+    opts?: StoreOptions
+  ): Promise<StoreFileReturnValue> {
     return fsApi.storeFile(this.storagePath, url, opts);
   }
 
@@ -46,6 +49,6 @@ export class FileStorage implements StorageIntegration {
 
   async close(): Promise<void> {
     //noop
-    console.log("Closing storage resources, if any");
+    console.log('Closing storage resources, if any');
   }
 }

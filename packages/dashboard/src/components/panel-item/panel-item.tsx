@@ -10,10 +10,10 @@
  *
  */
 
-import { Component } from "solid-js";
-import { A } from "@solidjs/router";
+import { Component } from 'solid-js';
+import { A } from '@solidjs/router';
 
-import "./panel-item.scss";
+import './panel-item.scss';
 
 interface PanelItemProps {
   to: string;

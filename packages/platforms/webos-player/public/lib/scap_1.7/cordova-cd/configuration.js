@@ -1,20 +1,24 @@
 Configuration = (function () {
   var e, a;
   function d(g) {}
-  if (typeof window === "object") {
-    cordova.define("cordova/plugin/configuration", function (h, g, i) {
+  if (typeof window === 'object') {
+    cordova.define('cordova/plugin/configuration', function (h, g, i) {
       e = function () {};
       if (window.PalmSystem) {
-        d("Window.PalmSystem Available");
-        a = h("cordova/plugin/webos/service");
+        d('Window.PalmSystem Available');
+        a = h('cordova/plugin/webos/service');
       } else {
         a = {
           Request: function (j, k) {
-            d(j + " invoked. But I am a dummy because PalmSystem is not available");
-            if (typeof k.onFailure === "function") {
+            d(
+              j +
+                ' invoked. But I am a dummy because PalmSystem is not available'
+            );
+            if (typeof k.onFailure === 'function') {
               k.onFailure({
                 returnValue: false,
-                errorText: "PalmSystem Not Available. Cordova is not installed?",
+                errorText:
+                  'PalmSystem Not Available. Cordova is not installed?',
               });
             }
           },
@@ -22,19 +26,19 @@ Configuration = (function () {
       }
       i.exports = e;
     });
-    e = cordova.require("cordova/plugin/configuration");
+    e = cordova.require('cordova/plugin/configuration');
   } else {
     e = function (g) {
       a = g;
       a.Request = function (h, j) {
-        var i = h + "/" + j.method;
+        var i = h + '/' + j.method;
         var k = {};
-        if (j.hasOwnProperty("parameters") === true) {
+        if (j.hasOwnProperty('parameters') === true) {
           k = j.parameters;
         }
         var l = {};
         var m = function (n) {
-          console.log("res : " + JSON.stringify(n));
+          console.log('res : ' + JSON.stringify(n));
           if (n.payload.returnValue === true) {
             l = n.payload;
             j.onSuccess(l);
@@ -61,104 +65,116 @@ Configuration = (function () {
     }
   }
   e.PictureMode = {
-    VIVID: "vivid",
-    STANDARD: "normal",
-    APS: "eco",
-    CINEMA: "cinema",
-    GAME: "game",
-    SPORTS: "sports",
-    EXPERT1: "expert1",
-    EXPERT2: "expert2",
+    VIVID: 'vivid',
+    STANDARD: 'normal',
+    APS: 'eco',
+    CINEMA: 'cinema',
+    GAME: 'game',
+    SPORTS: 'sports',
+    EXPERT1: 'expert1',
+    EXPERT2: 'expert2',
   };
-  e.AppMode = { LOCAL: "local", USB: "usb", REMOTE: "remote" };
-  e.AppType = { IPK: "ipk", ZIP: "zip" };
+  e.AppMode = { LOCAL: 'local', USB: 'usb', REMOTE: 'remote' };
+  e.AppType = { IPK: 'ipk', ZIP: 'zip' };
   e.prototype.setPictureMode = function (g, h, i) {
-    a.Request("luna://com.webos.service.commercial.scapadapter/configuration/", {
-      method: "setPictureMode",
-      parameters: i,
-      onSuccess: function (j) {
-        d("setPictureMode: On Success");
-        if (typeof g === "function") {
-          g();
-        }
-      },
-      onFailure: function (j) {
-        d("setPictureMode: On Failure");
-        delete j.returnValue;
-        if (typeof h === "function") {
-          b(j, "CSPP", "Configuration.setPictureMode returns failure.");
-          h(j);
-        }
-      },
-    });
+    a.Request(
+      'luna://com.webos.service.commercial.scapadapter/configuration/',
+      {
+        method: 'setPictureMode',
+        parameters: i,
+        onSuccess: function (j) {
+          d('setPictureMode: On Success');
+          if (typeof g === 'function') {
+            g();
+          }
+        },
+        onFailure: function (j) {
+          d('setPictureMode: On Failure');
+          delete j.returnValue;
+          if (typeof h === 'function') {
+            b(j, 'CSPP', 'Configuration.setPictureMode returns failure.');
+            h(j);
+          }
+        },
+      }
+    );
   };
   e.prototype.getPictureMode = function (g, h) {
-    a.Request("luna://com.webos.service.commercial.scapadapter/configuration/", {
-      method: "getPictureMode",
-      parameters: {},
-      onSuccess: function (i) {
-        d("getPictureMode: On Success");
-        delete i.returnValue;
-        if (typeof g === "function") {
-          g(i);
-        }
-      },
-      onFailure: function (i) {
-        d("getPictureMode: On Failure");
-        delete i.returnValue;
-        if (typeof h === "function") {
-          b(i, "CGPM", "Configuration.getPictureMode returns failure.");
-          h(i);
-        }
-      },
-    });
+    a.Request(
+      'luna://com.webos.service.commercial.scapadapter/configuration/',
+      {
+        method: 'getPictureMode',
+        parameters: {},
+        onSuccess: function (i) {
+          d('getPictureMode: On Success');
+          delete i.returnValue;
+          if (typeof g === 'function') {
+            g(i);
+          }
+        },
+        onFailure: function (i) {
+          d('getPictureMode: On Failure');
+          delete i.returnValue;
+          if (typeof h === 'function') {
+            b(i, 'CGPM', 'Configuration.getPictureMode returns failure.');
+            h(i);
+          }
+        },
+      }
+    );
   };
   e.prototype.setPictureProperty = function (g, h, i) {
-    a.Request("luna://com.webos.service.commercial.scapadapter/configuration/", {
-      method: "setPictureProperty",
-      parameters: i,
-      onSuccess: function (j) {
-        d("setPictureProperty: On Success");
-        if (typeof g === "function") {
-          g();
-        }
-      },
-      onFailure: function (j) {
-        d("setPictureProperty: On Failure");
-        delete j.returnValue;
-        if (typeof h === "function") {
-          b(j, "CSPP", "Configuration.setPictureProperty returns failure.");
-          h(j);
-        }
-      },
-    });
+    a.Request(
+      'luna://com.webos.service.commercial.scapadapter/configuration/',
+      {
+        method: 'setPictureProperty',
+        parameters: i,
+        onSuccess: function (j) {
+          d('setPictureProperty: On Success');
+          if (typeof g === 'function') {
+            g();
+          }
+        },
+        onFailure: function (j) {
+          d('setPictureProperty: On Failure');
+          delete j.returnValue;
+          if (typeof h === 'function') {
+            b(j, 'CSPP', 'Configuration.setPictureProperty returns failure.');
+            h(j);
+          }
+        },
+      }
+    );
   };
   e.prototype.getPictureProperty = function (g, h) {
-    a.Request("luna://com.webos.service.commercial.scapadapter/configuration/", {
-      method: "getPictureProperty",
-      parameters: {},
-      onSuccess: function (i) {
-        d("getPictureProperty: On Success");
-        delete i.returnValue;
-        if (typeof g === "function") {
-          g(i);
-        }
-      },
-      onFailure: function (i) {
-        d("getPictureProperty: On Failure");
-        delete i.returnValue;
-        if (typeof h === "function") {
-          b(i, "CGPP", "Configuration.getPictureProperty returns failure.");
-          h(i);
-        }
-      },
-    });
+    a.Request(
+      'luna://com.webos.service.commercial.scapadapter/configuration/',
+      {
+        method: 'getPictureProperty',
+        parameters: {},
+        onSuccess: function (i) {
+          d('getPictureProperty: On Success');
+          delete i.returnValue;
+          if (typeof g === 'function') {
+            g(i);
+          }
+        },
+        onFailure: function (i) {
+          d('getPictureProperty: On Failure');
+          delete i.returnValue;
+          if (typeof h === 'function') {
+            b(i, 'CGPP', 'Configuration.getPictureProperty returns failure.');
+            h(i);
+          }
+        },
+      }
+    );
   };
   var c = {
-    alias: "deviceName",
-    operation_mode_after_screen_share: "operationModeAfterScreenShare",
-    key_delivery_to_simplink: "propertyKeyDeliveryToSimplink",
-    cec_device_control: "propertyCecDeviceControl",
+    alias: 'deviceName',
+    operation_mode_after_screen_share: 'operationModeAfterScreenShare',
+    key_delivery_to_simplink: 'propertyKeyDeliveryToSimplink',
+    cec_device_control: 'propertyCecDeviceControl',
   };
   var f = function (h, i) {
     for (var g in h) {
@@ -169,51 +185,51 @@ Configuration = (function () {
     return false;
   };
   e.prototype.setProperty = function (h, j, l) {
-    d("setProperty: " + JSON.stringify(l));
+    d('setProperty: ' + JSON.stringify(l));
     var k = JSON.parse(l);
     var n = {};
     var o = {};
     var g = Object.keys(k);
     for (var m = 0; m < g.length; m++) {
       if (c[g[m]] !== undefined) {
-        if (g[m] === "alias") {
-          o.category = "network";
+        if (g[m] === 'alias') {
+          o.category = 'network';
         } else {
-          o.category = "commercial";
+          o.category = 'commercial';
         }
         n[c[g[m]]] = k[g[m]];
         break;
       }
     }
     o.settings = n;
-    a.Request("luna://com.webos.service.commercial.scapadapter/settings/", {
-      method: "set",
+    a.Request('luna://com.webos.service.commercial.scapadapter/settings/', {
+      method: 'set',
       parameters: o,
       onSuccess: function (i) {
-        d("setProperty: On Success");
+        d('setProperty: On Success');
         if (i.returnValue === true) {
-          if (typeof h === "function") {
+          if (typeof h === 'function') {
             h();
           }
         }
       },
       onFailure: function (i) {
-        d("setProperty: On Failure");
+        d('setProperty: On Failure');
         delete i.returnValue;
-        if (typeof j === "function") {
+        if (typeof j === 'function') {
           var p = {};
-          b(p, "CSP", "Configuration.setProperty returns failure.");
+          b(p, 'CSP', 'Configuration.setProperty returns failure.');
           j(p);
         }
       },
     });
-    d("Configuration.setProperty Done");
+    d('Configuration.setProperty Done');
   };
   e.prototype.getProperty = function (h, l, u) {
-    d("getProperty: ");
+    d('getProperty: ');
     var t = {};
-    if (u === null || typeof u === "undefined" || typeof u !== "string") {
-      b(t, "CGP", "Configuration.getProperty check Parameter.");
+    if (u === null || typeof u === 'undefined' || typeof u !== 'string') {
+      b(t, 'CGP', 'Configuration.getProperty check Parameter.');
       l(t);
     }
     ret = JSON.parse(u);
@@ -229,18 +245,18 @@ Configuration = (function () {
           h(n);
         }
       } else {
-        b(o, "CGP", "Configuration.getProperty returns failure.");
+        b(o, 'CGP', 'Configuration.getProperty returns failure.');
         l(o);
       }
     };
     var q = function (i) {
-      a.Request("luna://com.webos.service.commercial.scapadapter/settings/", {
-        method: "get",
+      a.Request('luna://com.webos.service.commercial.scapadapter/settings/', {
+        method: 'get',
         parameters: i,
         onSuccess: function (v) {
-          d("getProperty: On Success");
+          d('getProperty: On Success');
           if (v.returnValue === true) {
-            if (typeof h === "function") {
+            if (typeof h === 'function') {
               for (var w in v.settings) {
                 if (f(c, w) !== false) {
                   n[f(c, w)] = v.settings[w];
@@ -254,9 +270,9 @@ Configuration = (function () {
           }
         },
         onFailure: function (v) {
-          d("getProperty: On Failure");
+          d('getProperty: On Failure');
           delete v.returnValue;
-          if (typeof l === "function") {
+          if (typeof l === 'function') {
             g(false);
           }
         },
@@ -266,36 +282,36 @@ Configuration = (function () {
       var p = s[k];
       if (p !== null && p !== undefined) {
         switch (p) {
-          case "operation_mode_after_screen_share":
-            j.category = "commercial";
-            j.key = "operationModeAfterScreenShare";
+          case 'operation_mode_after_screen_share':
+            j.category = 'commercial';
+            j.key = 'operationModeAfterScreenShare';
             q(j);
             break;
-          case "alias":
-            j.category = "network";
-            j.key = "deviceName";
+          case 'alias':
+            j.category = 'network';
+            j.key = 'deviceName';
             q(j);
             break;
-          case "key_delivery_to_simplink":
-            j.category = "commercial";
-            j.key = "propertyKeyDeliveryToSimplink";
+          case 'key_delivery_to_simplink':
+            j.category = 'commercial';
+            j.key = 'propertyKeyDeliveryToSimplink';
             q(j);
             break;
-          case "cec_device_control":
-            j.category = "commercial";
-            j.key = "propertyCecDeviceControl";
+          case 'cec_device_control':
+            j.category = 'commercial';
+            j.key = 'propertyCecDeviceControl';
             q(j);
             break;
           default:
-            b(t, "CGP", "Configuration.getProperty - wrong key!");
+            b(t, 'CGP', 'Configuration.getProperty - wrong key!');
             l(t);
         }
       }
     }
-    d("Configuration.getProperty Done");
+    d('Configuration.getProperty Done');
   };
   e.prototype.setCurrentTime = function (g, h, i) {
-    d("setCurrentTime: " + JSON.stringify(i));
+    d('setCurrentTime: ' + JSON.stringify(i));
     var j = {};
     j.year = i.year;
     j.month = i.month;
@@ -303,184 +319,190 @@ Configuration = (function () {
     j.hour = i.hour;
     j.minute = i.minute;
     j.sec = i.sec;
-    a.Request("luna://com.webos.service.commercial.scapadapter/settings/", {
-      method: "setSystemTime",
+    a.Request('luna://com.webos.service.commercial.scapadapter/settings/', {
+      method: 'setSystemTime',
       parameters: { time: j, ntp: i.ntp, ntpServerAddress: i.ntpServerAddress },
       onSuccess: function () {
-        d("setCurrentTime: On Success");
-        if (typeof g === "function") {
+        d('setCurrentTime: On Success');
+        if (typeof g === 'function') {
           g();
         }
       },
       onFailure: function (k) {
-        d("setCurrentTime: On Failure");
+        d('setCurrentTime: On Failure');
         delete k.returnValue;
-        if (typeof h === "function") {
-          b(k, "CSCT", "Configuration.setCurrentTime returns failure.");
+        if (typeof h === 'function') {
+          b(k, 'CSCT', 'Configuration.setCurrentTime returns failure.');
           h(k);
         }
       },
     });
-    d("Configuration.setCurrentTime Done");
+    d('Configuration.setCurrentTime Done');
   };
   e.prototype.getCurrentTime = function (g, h) {
-    d("getCurrentTime: ");
-    a.Request("luna://com.webos.service.commercial.scapadapter/settings/", {
-      method: "getSystemTime",
+    d('getCurrentTime: ');
+    a.Request('luna://com.webos.service.commercial.scapadapter/settings/', {
+      method: 'getSystemTime',
       parameters: {},
       onSuccess: function (i) {
-        d("getSystemTime: On Success");
+        d('getSystemTime: On Success');
         delete i.returnValue;
-        if (typeof g === "function") {
+        if (typeof g === 'function') {
           g(i);
         }
       },
       onFailure: function (i) {
-        d("getSystemTime: On Failure");
+        d('getSystemTime: On Failure');
         delete i.returnValue;
-        if (typeof h === "function") {
+        if (typeof h === 'function') {
           h(i);
         }
       },
     });
-    d("Configuration.getCurrentTime Done");
+    d('Configuration.getCurrentTime Done');
   };
   e.prototype.restartApplication = function (g, h) {
-    d("restartApp: ");
-    a.Request("luna://com.webos.service.commercial.scapadapter/", {
-      method: "restart_application",
+    d('restartApp: ');
+    a.Request('luna://com.webos.service.commercial.scapadapter/', {
+      method: 'restart_application',
       onSuccess: function (i) {
-        d("restartApp: On Success");
-        if (typeof g === "function") {
+        d('restartApp: On Success');
+        if (typeof g === 'function') {
           g(i);
         }
       },
       onFailure: function (i) {
-        d("restartApp: On Failure");
+        d('restartApp: On Failure');
         delete i.returnValue;
-        if (typeof h === "function") {
-          b(i, "CRA", "Configuration.restartApp returns failure.");
+        if (typeof h === 'function') {
+          b(i, 'CRA', 'Configuration.restartApp returns failure.');
           h(i);
         }
       },
     });
-    d("Configuration.restartApp Done");
+    d('Configuration.restartApp Done');
   };
   e.prototype.getServerProperty = function (g, h) {
-    a.Request("luna://com.webos.service.commercial.scapadapter/configuration/", {
-      method: "getServerProperty",
-      parameters: {},
-      onSuccess: function (i) {
-        delete i.returnValue;
-        if (typeof g === "function") {
-          g(i);
-        }
-      },
-      onFailure: function (i) {
-        delete i.returnValue;
-        if (typeof h === "function") {
-          b(i, "CGSP", "Configuration.getServerProperty returns failure.");
-          h(i);
-        }
-      },
-    });
+    a.Request(
+      'luna://com.webos.service.commercial.scapadapter/configuration/',
+      {
+        method: 'getServerProperty',
+        parameters: {},
+        onSuccess: function (i) {
+          delete i.returnValue;
+          if (typeof g === 'function') {
+            g(i);
+          }
+        },
+        onFailure: function (i) {
+          delete i.returnValue;
+          if (typeof h === 'function') {
+            b(i, 'CGSP', 'Configuration.getServerProperty returns failure.');
+            h(i);
+          }
+        },
+      }
+    );
   };
   e.prototype.setServerProperty = function (g, h, i) {
-    a.Request("luna://com.webos.service.commercial.scapadapter/configuration/", {
-      method: "setServerProperty",
-      parameters: i,
-      onSuccess: function (j) {
-        if (j.returnValue === true) {
-          if (typeof g === "function") {
-            g();
+    a.Request(
+      'luna://com.webos.service.commercial.scapadapter/configuration/',
+      {
+        method: 'setServerProperty',
+        parameters: i,
+        onSuccess: function (j) {
+          if (j.returnValue === true) {
+            if (typeof g === 'function') {
+              g();
+            }
           }
-        }
-      },
-      onFailure: function (j) {
-        delete j.returnValue;
-        if (typeof h === "function") {
-          b(j, "CSSP", "Configuration.setServerProperty returns failure.");
-          h(j);
-        }
-      },
-    });
+        },
+        onFailure: function (j) {
+          delete j.returnValue;
+          if (typeof h === 'function') {
+            b(j, 'CSSP', 'Configuration.setServerProperty returns failure.');
+            h(j);
+          }
+        },
+      }
+    );
   };
   e.prototype.clearCache = function (g, h) {
-    d("clearCache: ");
-    a.Request("luna://com.webos.service.commercial.scapadapter/", {
-      method: "clearCache",
+    d('clearCache: ');
+    a.Request('luna://com.webos.service.commercial.scapadapter/', {
+      method: 'clearCache',
       onSuccess: function (i) {
-        d("clearCache: On Success");
-        if (typeof g === "function") {
+        d('clearCache: On Success');
+        if (typeof g === 'function') {
           g();
         }
       },
       onFailure: function (i) {
-        d("clearCache: On Failure");
+        d('clearCache: On Failure');
         delete i.returnValue;
-        if (typeof h === "function") {
-          b(i, "CCC", "Configuration.clearCache returns failure.");
+        if (typeof h === 'function') {
+          b(i, 'CCC', 'Configuration.clearCache returns failure.');
           h(i);
         }
       },
     });
-    d("Configuration.clearCache Done");
+    d('Configuration.clearCache Done');
   };
   e.prototype.getTimeZoneList = function (g, h) {
-    d("getTimeZoneList: ");
-    a.Request("luna://com.webos.service.commercial.scapadapter/settings/", {
-      method: "getTimeZoneList",
+    d('getTimeZoneList: ');
+    a.Request('luna://com.webos.service.commercial.scapadapter/settings/', {
+      method: 'getTimeZoneList',
       onSuccess: function (i) {
-        d("getTimeZoneList: On Success");
+        d('getTimeZoneList: On Success');
         if (i.returnValue === true) {
-          if (typeof g === "function") {
+          if (typeof g === 'function') {
             delete i.returnValue;
             g(i);
           }
         }
       },
       onFailure: function (i) {
-        d("getTimeZoneList: On Failure");
+        d('getTimeZoneList: On Failure');
         delete i.returnValue;
-        if (typeof h === "function") {
-          b(i, "CGTL", "Configuration.getTimeZoneList returns failure.");
+        if (typeof h === 'function') {
+          b(i, 'CGTL', 'Configuration.getTimeZoneList returns failure.');
           h(i);
         }
       },
     });
-    d("Configuration.getTimeZoneList Done");
+    d('Configuration.getTimeZoneList Done');
   };
   e.prototype.getTimeZone = function (g, h) {
-    d("getTimeZone: ");
-    a.Request("luna://com.webos.service.commercial.scapadapter/settings/", {
-      method: "getTimeZone",
+    d('getTimeZone: ');
+    a.Request('luna://com.webos.service.commercial.scapadapter/settings/', {
+      method: 'getTimeZone',
       onSuccess: function (i) {
-        d("getTimeZone: On Success");
+        d('getTimeZone: On Success');
         if (i.returnValue === true) {
-          if (typeof g === "function") {
+          if (typeof g === 'function') {
             delete i.returnValue;
             g(i);
           }
         }
       },
       onFailure: function (i) {
-        d("getTimeZone: On Failure");
+        d('getTimeZone: On Failure');
         delete i.returnValue;
-        if (typeof h === "function") {
-          b(i, "CGTZ", "Configuration.getTimeZone returns failure.");
+        if (typeof h === 'function') {
+          b(i, 'CGTZ', 'Configuration.getTimeZone returns failure.');
           h(i);
         }
       },
     });
-    d("Configuration.getTimeZone Done");
+    d('Configuration.getTimeZone Done');
   };
   e.prototype.setTimeZone = function (g, h, i) {
-    a.Request("luna://com.webos.service.commercial.scapadapter/settings/", {
-      method: "setTimeZone",
+    a.Request('luna://com.webos.service.commercial.scapadapter/settings/', {
+      method: 'setTimeZone',
       parameters: i,
       onSuccess: function (j) {
         if (j.returnValue === true) {
-          if (typeof g === "function") {
+          if (typeof g === 'function') {
             delete j.returnValue;
             g(j);
           }
@@ -488,277 +510,318 @@ Configuration = (function () {
       },
       onFailure: function (j) {
         delete j.returnValue;
-        if (typeof h === "function") {
-          b(j, "CSTZ", "Configuration.setTimeZone returns failure.");
+        if (typeof h === 'function') {
+          b(j, 'CSTZ', 'Configuration.setTimeZone returns failure.');
           h(j);
         }
       },
     });
   };
   e.prototype.debug = function (g, h, i) {
-    d("debug: " + i.enabled);
-    a.Request("luna://com.webos.service.commercial.scapadapter/", {
-      method: "debug",
+    d('debug: ' + i.enabled);
+    a.Request('luna://com.webos.service.commercial.scapadapter/', {
+      method: 'debug',
       parameters: { enabled: i.enabled },
       onSuccess: function (j) {
-        d("debug: On Success");
-        if (typeof g === "function") {
+        d('debug: On Success');
+        if (typeof g === 'function') {
           g(j);
         }
       },
       onFailure: function (j) {
-        d("debug: On Failure");
+        d('debug: On Failure');
         delete j.returnValue;
-        if (typeof h === "function") {
-          b(j, "CD", "Configuration.debug returns failure.");
+        if (typeof h === 'function') {
+          b(j, 'CD', 'Configuration.debug returns failure.');
           h(j);
         }
       },
     });
-    d("Configuration.debug Done");
+    d('Configuration.debug Done');
   };
   e.prototype.setUSBLock = function (g, h, i) {
-    a.Request("luna://com.webos.service.commercial.scapadapter/configuration/", {
-      method: "setUSBLock",
-      parameters: i,
-      onSuccess: function (j) {
-        if (j.returnValue === true) {
-          if (typeof g === "function") {
-            g();
+    a.Request(
+      'luna://com.webos.service.commercial.scapadapter/configuration/',
+      {
+        method: 'setUSBLock',
+        parameters: i,
+        onSuccess: function (j) {
+          if (j.returnValue === true) {
+            if (typeof g === 'function') {
+              g();
+            }
           }
-        }
-      },
-      onFailure: function (j) {
-        delete j.returnValue;
-        if (typeof h === "function") {
-          b(j, "CSUL", "Configuration.setUSBLock returns failure.");
-          h(j);
-        }
-      },
-    });
+        },
+        onFailure: function (j) {
+          delete j.returnValue;
+          if (typeof h === 'function') {
+            b(j, 'CSUL', 'Configuration.setUSBLock returns failure.');
+            h(j);
+          }
+        },
+      }
+    );
   };
   e.prototype.getUSBLock = function (g, h) {
-    a.Request("luna://com.webos.service.commercial.scapadapter/configuration/", {
-      method: "getUSBLock",
-      parameters: {},
-      onSuccess: function (i) {
-        delete i.returnValue;
-        if (typeof g === "function") {
-          g(i);
-        }
-      },
-      onFailure: function (i) {
-        delete i.returnValue;
-        if (typeof h === "function") {
-          b(i, "CGUL", "Configuration.getUSBLock returns failure.");
-          h(i);
-        }
-      },
-    });
+    a.Request(
+      'luna://com.webos.service.commercial.scapadapter/configuration/',
+      {
+        method: 'getUSBLock',
+        parameters: {},
+        onSuccess: function (i) {
+          delete i.returnValue;
+          if (typeof g === 'function') {
+            g(i);
+          }
+        },
+        onFailure: function (i) {
+          delete i.returnValue;
+          if (typeof h === 'function') {
+            b(i, 'CGUL', 'Configuration.getUSBLock returns failure.');
+            h(i);
+          }
+        },
+      }
+    );
   };
   e.prototype.setOSDLock = function (g, h, i) {
-    a.Request("luna://com.webos.service.commercial.scapadapter/configuration/", {
-      method: "setOSDLock",
-      parameters: i,
-      onSuccess: function (j) {
-        if (j.returnValue === true) {
-          if (typeof g === "function") {
-            g();
+    a.Request(
+      'luna://com.webos.service.commercial.scapadapter/configuration/',
+      {
+        method: 'setOSDLock',
+        parameters: i,
+        onSuccess: function (j) {
+          if (j.returnValue === true) {
+            if (typeof g === 'function') {
+              g();
+            }
           }
-        }
-      },
-      onFailure: function (j) {
-        delete j.returnValue;
-        if (typeof h === "function") {
-          b(j, "CSOL", "Configuration.setOSDLock returns failure.");
-          h(j);
-        }
-      },
-    });
+        },
+        onFailure: function (j) {
+          delete j.returnValue;
+          if (typeof h === 'function') {
+            b(j, 'CSOL', 'Configuration.setOSDLock returns failure.');
+            h(j);
+          }
+        },
+      }
+    );
   };
   e.prototype.getOSDLock = function (g, h) {
-    a.Request("luna://com.webos.service.commercial.scapadapter/configuration/", {
-      method: "getOSDLock",
-      parameters: {},
-      onSuccess: function (i) {
-        delete i.returnValue;
-        if (typeof g === "function") {
-          g(i);
-        }
-      },
-      onFailure: function (i) {
-        delete i.returnValue;
-        if (typeof h === "function") {
-          b(i, "CGOL", "Configuration.getOSDLock returns failure.");
-          h(i);
-        }
-      },
-    });
+    a.Request(
+      'luna://com.webos.service.commercial.scapadapter/configuration/',
+      {
+        method: 'getOSDLock',
+        parameters: {},
+        onSuccess: function (i) {
+          delete i.returnValue;
+          if (typeof g === 'function') {
+            g(i);
+          }
+        },
+        onFailure: function (i) {
+          delete i.returnValue;
+          if (typeof h === 'function') {
+            b(i, 'CGOL', 'Configuration.getOSDLock returns failure.');
+            h(i);
+          }
+        },
+      }
+    );
   };
   e.prototype.getLocaleList = function (g, h) {
-    a.Request("luna://com.webos.service.commercial.scapadapter/configuration/", {
-      method: "getLocaleList",
-      parameters: {},
-      onSuccess: function (i) {
-        d("getLocaleList: On Success");
-        delete i.returnValue;
-        if (typeof g === "function") {
-          g(i);
-        }
-      },
-      onFailure: function (i) {
-        d("getLocaleList: On Failure");
-        delete i.returnValue;
-        if (typeof h === "function") {
-          b(i, "CGLL", "Configuration.getLocaleList returns failure.");
-          h(i);
-        }
-      },
-    });
+    a.Request(
+      'luna://com.webos.service.commercial.scapadapter/configuration/',
+      {
+        method: 'getLocaleList',
+        parameters: {},
+        onSuccess: function (i) {
+          d('getLocaleList: On Success');
+          delete i.returnValue;
+          if (typeof g === 'function') {
+            g(i);
+          }
+        },
+        onFailure: function (i) {
+          d('getLocaleList: On Failure');
+          delete i.returnValue;
+          if (typeof h === 'function') {
+            b(i, 'CGLL', 'Configuration.getLocaleList returns failure.');
+            h(i);
+          }
+        },
+      }
+    );
   };
   e.prototype.setOSDLanguage = function (g, h, i) {
-    a.Request("luna://com.webos.service.commercial.scapadapter/configuration/", {
-      method: "setOSDLanguage",
-      parameters: i,
-      onSuccess: function (j) {
-        if (j.returnValue === true) {
-          if (typeof g === "function") {
-            g();
+    a.Request(
+      'luna://com.webos.service.commercial.scapadapter/configuration/',
+      {
+        method: 'setOSDLanguage',
+        parameters: i,
+        onSuccess: function (j) {
+          if (j.returnValue === true) {
+            if (typeof g === 'function') {
+              g();
+            }
           }
-        }
-      },
-      onFailure: function (j) {
-        delete j.returnValue;
-        if (typeof h === "function") {
-          b(j, "CSON", "Configuration.setOSDLanguage returns failure.");
-          h(j);
-        }
-      },
-    });
+        },
+        onFailure: function (j) {
+          delete j.returnValue;
+          if (typeof h === 'function') {
+            b(j, 'CSON', 'Configuration.setOSDLanguage returns failure.');
+            h(j);
+          }
+        },
+      }
+    );
   };
   e.prototype.getOSDLanguage = function (g, h) {
-    a.Request("luna://com.webos.service.commercial.scapadapter/configuration/", {
-      method: "getOSDLanguage",
-      parameters: {},
-      onSuccess: function (i) {
-        delete i.returnValue;
-        if (typeof g === "function") {
-          g(i);
-        }
-      },
-      onFailure: function (i) {
-        delete i.returnValue;
-        if (typeof h === "function") {
-          b(i, "CGON", "Configuration.getOSDLanguage returns failure.");
-          h(i);
-        }
-      },
-    });
+    a.Request(
+      'luna://com.webos.service.commercial.scapadapter/configuration/',
+      {
+        method: 'getOSDLanguage',
+        parameters: {},
+        onSuccess: function (i) {
+          delete i.returnValue;
+          if (typeof g === 'function') {
+            g(i);
+          }
+        },
+        onFailure: function (i) {
+          delete i.returnValue;
+          if (typeof h === 'function') {
+            b(i, 'CGON', 'Configuration.getOSDLanguage returns failure.');
+            h(i);
+          }
+        },
+      }
+    );
   };
   e.prototype.setVirtualKeyboardLanguage = function (g, h, i) {
-    d("setVirtualKeyboardLanguage: " + i.languageCodeList);
-    a.Request("luna://com.webos.service.commercial.scapadapter/configuration/", {
-      method: "setVirtualKeyboardLanguage",
-      parameters: { languageCodeList: i.languageCodeList },
-      onSuccess: function (j) {
-        d("setVirtualKeyboardLanguage: On Success");
-        if (j.returnValue === true) {
-          if (typeof g === "function") {
-            g();
+    d('setVirtualKeyboardLanguage: ' + i.languageCodeList);
+    a.Request(
+      'luna://com.webos.service.commercial.scapadapter/configuration/',
+      {
+        method: 'setVirtualKeyboardLanguage',
+        parameters: { languageCodeList: i.languageCodeList },
+        onSuccess: function (j) {
+          d('setVirtualKeyboardLanguage: On Success');
+          if (j.returnValue === true) {
+            if (typeof g === 'function') {
+              g();
+            }
           }
-        }
-      },
-      onFailure: function (j) {
-        d("setVirtualKeyboardLanguage: On Failure");
-        delete j.returnValue;
-        if (typeof h === "function") {
-          b(j, "CSKL", "Configuration.setVirtualKeyboardLanguage returns failure.");
-          h(j);
-        }
-      },
-    });
-    d("Configuration.setVirtualKeyboardLanguage Done");
+        },
+        onFailure: function (j) {
+          d('setVirtualKeyboardLanguage: On Failure');
+          delete j.returnValue;
+          if (typeof h === 'function') {
+            b(
+              j,
+              'CSKL',
+              'Configuration.setVirtualKeyboardLanguage returns failure.'
+            );
+            h(j);
+          }
+        },
+      }
+    );
+    d('Configuration.setVirtualKeyboardLanguage Done');
   };
   e.prototype.getVirtualKeyboardLanguage = function (g, h) {
-    d("getVirtualKeyboardLanguage: ");
-    a.Request("luna://com.webos.service.commercial.scapadapter/configuration/", {
-      method: "getVirtualKeyboardLanguage",
-      parameters: {},
-      onSuccess: function (i) {
-        d("getVirtualKeyboardLanguage: On Success");
-        if (i.returnValue === true) {
-          var j = {};
-          d("keyboards : " + JSON.stringify(i.languageCodeList));
-          j.languageCodeList = i.languageCodeList;
-          if (typeof g === "function") {
-            g(j);
+    d('getVirtualKeyboardLanguage: ');
+    a.Request(
+      'luna://com.webos.service.commercial.scapadapter/configuration/',
+      {
+        method: 'getVirtualKeyboardLanguage',
+        parameters: {},
+        onSuccess: function (i) {
+          d('getVirtualKeyboardLanguage: On Success');
+          if (i.returnValue === true) {
+            var j = {};
+            d('keyboards : ' + JSON.stringify(i.languageCodeList));
+            j.languageCodeList = i.languageCodeList;
+            if (typeof g === 'function') {
+              g(j);
+            }
           }
-        }
-      },
-      onFailure: function (i) {
-        d("getVirtualKeyboardLanguage: On Failure");
-        delete i.returnValue;
-        if (typeof h === "function") {
-          b(i, "CGKL", "Configuration.getVirtualKeyboardLanguage returns failure.");
-          h(i);
-        }
-      },
-    });
-    d("Configuration.getVirtualKeyboardLanguage Done");
+        },
+        onFailure: function (i) {
+          d('getVirtualKeyboardLanguage: On Failure');
+          delete i.returnValue;
+          if (typeof h === 'function') {
+            b(
+              i,
+              'CGKL',
+              'Configuration.getVirtualKeyboardLanguage returns failure.'
+            );
+            h(i);
+          }
+        },
+      }
+    );
+    d('Configuration.getVirtualKeyboardLanguage Done');
   };
   e.prototype.setProxyBypassList = function (h, i, j) {
-    if (typeof j.urlList === "undefined" && typeof i === "function") {
+    if (typeof j.urlList === 'undefined' && typeof i === 'function') {
       var g = {};
       b(
         g,
-        "CSPB",
-        "Configuration.setProxyBypassList returns failure. options.urlList is undefined.",
+        'CSPB',
+        'Configuration.setProxyBypassList returns failure. options.urlList is undefined.'
       );
       i(g);
       return;
     }
-    a.Request("luna://com.webos.service.commercial.scapadapter/configuration/", {
-      method: "setProxyBypassList",
-      parameters: { urlList: j.urlList },
-      onSuccess: function (k) {
-        d("setProxyBypassList: On Success");
-        if (k.returnValue === true) {
-          if (typeof h === "function") {
-            h();
+    a.Request(
+      'luna://com.webos.service.commercial.scapadapter/configuration/',
+      {
+        method: 'setProxyBypassList',
+        parameters: { urlList: j.urlList },
+        onSuccess: function (k) {
+          d('setProxyBypassList: On Success');
+          if (k.returnValue === true) {
+            if (typeof h === 'function') {
+              h();
+            }
           }
-        }
-      },
-      onFailure: function (k) {
-        d("setProxyBypassList: On Failure");
-        delete k.returnValue;
-        if (typeof i === "function") {
-          b(k, "CSPB", "Configuration.setProxyBypassList returns failure.");
-          i(k);
-        }
-      },
-    });
+        },
+        onFailure: function (k) {
+          d('setProxyBypassList: On Failure');
+          delete k.returnValue;
+          if (typeof i === 'function') {
+            b(k, 'CSPB', 'Configuration.setProxyBypassList returns failure.');
+            i(k);
+          }
+        },
+      }
+    );
   };
   e.prototype.getProxyBypassList = function (g, h) {
-    a.Request("luna://com.webos.service.commercial.scapadapter/configuration/", {
-      method: "getProxyBypassList",
-      parameters: {},
-      onSuccess: function (i) {
-        if (i.returnValue === true) {
-          var j = {};
-          j.urlList = i.urlList;
-          if (typeof g === "function") {
-            g(j);
+    a.Request(
+      'luna://com.webos.service.commercial.scapadapter/configuration/',
+      {
+        method: 'getProxyBypassList',
+        parameters: {},
+        onSuccess: function (i) {
+          if (i.returnValue === true) {
+            var j = {};
+            j.urlList = i.urlList;
+            if (typeof g === 'function') {
+              g(j);
+            }
           }
-        }
-      },
-      onFailure: function (i) {
-        delete i.returnValue;
-        if (typeof h === "function") {
-          b(i, "CGPB", "Configuration.getProxyBypassList returns failure.");
-          h(i);
-        }
-      },
-    });
+        },
+        onFailure: function (i) {
+          delete i.returnValue;
+          if (typeof h === 'function') {
+            b(i, 'CGPB', 'Configuration.getProxyBypassList returns failure.');
+            h(i);
+          }
+        },
+      }
+    );
   };
   return e;
 })();

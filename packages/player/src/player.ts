@@ -1,8 +1,8 @@
-import EventEmitter from "eventemitter3";
-import { Observable, Subscription } from "rxjs";
-import { finalize, share, tap, first, concatMap } from "rxjs/operators";
-import { Playlist } from "./playlist";
-import { Renderer, Viewport } from "./renderer";
+import EventEmitter from 'eventemitter3';
+import { Observable, Subscription } from 'rxjs';
+import { finalize, share, tap, first, concatMap } from 'rxjs/operators';
+import { Playlist } from './playlist';
+import { Renderer, Viewport } from './renderer';
 
 const TIMER_RESOLUTION = 50;
 
@@ -19,7 +19,7 @@ export class Player extends EventEmitter {
   constructor(
     private playlist: Playlist,
     private renderer: Renderer,
-    viewport?: Viewport,
+    viewport?: Viewport
   ) {
     super();
 
@@ -41,9 +41,11 @@ export class Player extends EventEmitter {
     opts: { loop?: boolean; synced?: boolean; baseline?: number } = {
       loop: false,
       synced: false,
-    },
+    }
   ) {
-    const timerIsActive = Boolean(this.timerSubscription && !this.timerSubscription.closed);
+    const timerIsActive = Boolean(
+      this.timerSubscription && !this.timerSubscription.closed
+    );
     const playIsActive = Boolean(this.playing && !this.playing.closed);
 
     // Ignore redundant play calls while already running in non-synced mode.
@@ -68,19 +70,19 @@ export class Player extends EventEmitter {
           tap((value) => {
             // Unsure why this is needed
             if (value < currTime) {
-              this.emit("end");
+              this.emit('end');
             }
             currTime = value;
-          }),
+          })
         );
       }),
-      share(),
+      share()
     );
 
     this.timerSubscription = timer$.subscribe({
-      next: (time) => this.emit("time", time),
+      next: (time) => this.emit('time', time),
       error: (err) => {
-        console.log("Timer error", err);
+        console.log('Timer error', err);
       },
     });
 
@@ -91,7 +93,7 @@ export class Player extends EventEmitter {
       .pipe(
         finalize(() => {
           this.timerSubscription?.unsubscribe();
-        }),
+        })
       )
       // Note for the future: for some reason, this subscribe call is a bit slow, between 10-40ms
       // on my machine. This is probably due to the fact that it is a cold observable, and the
@@ -100,11 +102,11 @@ export class Player extends EventEmitter {
       // playlist (i.e. how many layers, how many items in each layer, etc).
       .subscribe({
         error: (err) => {
-          console.log("Playing error", err);
+          console.log('Playing error', err);
         },
         complete: () => {
           this.timerSubscription?.unsubscribe();
-          this.emit("completed");
+          this.emit('completed');
         },
       });
   }
@@ -119,16 +121,24 @@ export class Player extends EventEmitter {
 }
 
 // Custom timer. Simpler than RxJS and more accurate.
-export function timer(baseline: number, start: number, interval: number, period: number) {
+export function timer(
+  baseline: number,
+  start: number,
+  interval: number,
+  period: number
+) {
   return new Observable<number>((subscriber) => {
     let timeout: ReturnType<typeof setTimeout> | undefined;
 
     const hasValidPeriod = Number.isFinite(period) && period > 0;
-    const normalize = (value: number, modulo: number) => ((value % modulo) + modulo) % modulo;
+    const normalize = (value: number, modulo: number) =>
+      ((value % modulo) + modulo) % modulo;
 
     const updateTick = () => {
       const elapsed = Date.now() - baseline;
-      const tick = hasValidPeriod ? normalize(start + elapsed, period) : start + elapsed;
+      const tick = hasValidPeriod
+        ? normalize(start + elapsed, period)
+        : start + elapsed;
 
       subscriber.next(tick);
       timeout = setTimeout(updateTick, interval);

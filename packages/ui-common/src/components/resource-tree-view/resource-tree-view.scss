@@ -35,7 +35,7 @@
 
   // Connector arrow between chips
   &:not(:last-child)::after {
-    content: "›";
+    content: '›';
     margin-left: 0.5em;
     color: var(--text-secondary, #9ca3af);
     font-size: 1.1em;

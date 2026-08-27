@@ -1,21 +1,21 @@
-import "fake-indexeddb/auto";
-import { describe, it, expect, vi } from "vitest";
+import 'fake-indexeddb/auto';
+import { describe, it, expect, vi } from 'vitest';
 
-import { ResourceManager } from "../src/resource-manager";
-import { Cache } from "../src/cache";
-import { StorageMockup } from "./storage.mockup";
+import { ResourceManager } from '../src/resource-manager';
+import { Cache } from '../src/cache';
+import { StorageMockup } from './storage.mockup';
 
-import type { Mock } from "vitest";
+import type { Mock } from 'vitest';
 
-describe("ResourceManager", () => {
+describe('ResourceManager', () => {
   beforeEach(() => {
     // Reset fetch mock to clear histories and restore default implementation
     vi.resetAllMocks();
   });
 
-  describe("code resources", () => {
-    it("should trigger refresh callback if code has been updated", async () => {
-      const uri = "https://app.castmill.com/static/js/doohv2/app.js";
+  describe('code resources', () => {
+    it('should trigger refresh callback if code has been updated', async () => {
+      const uri = 'https://app.castmill.com/static/js/doohv2/app.js';
 
       // We need to mock the fetch function as well as the StorageMockup
       // The reason is that the ResourceManager will issue a fetch to check if the
@@ -28,14 +28,14 @@ describe("ResourceManager", () => {
             ? Promise.resolve(
                 new Response(code, {
                   status: 200,
-                  headers: { "Content-Type": "text/javascript" },
-                }),
+                  headers: { 'Content-Type': 'text/javascript' },
+                })
               )
-            : originalFetch(url),
+            : originalFetch(url)
         ) as unknown as Mock;
       };
 
-      const code1 = "export const a = 1;";
+      const code1 = 'export const a = 1;';
 
       setFetchMock(code1);
 
@@ -45,7 +45,7 @@ describe("ResourceManager", () => {
       });
 
       // Create a cache with the initial code
-      const cache = new Cache(storage, "test-resource", 10);
+      const cache = new Cache(storage, 'test-resource', 10);
       let needsRefreshCalled = false;
       const manager = new ResourceManager(cache);
 
@@ -55,7 +55,7 @@ describe("ResourceManager", () => {
       const { a } = await manager.import(uri);
       expect(a).to.be.eql(1);
 
-      const code2 = "export const a = 20;";
+      const code2 = 'export const a = 20;';
       setFetchMock(code2);
 
       const manager2 = new ResourceManager(cache, {
@@ -74,16 +74,16 @@ describe("ResourceManager", () => {
       global.fetch = originalFetch;
     });
 
-    it("should cache code resources", async () => {
+    it('should cache code resources', async () => {
       const storage = new StorageMockup({
-        "https://example.com/code.js": "export const a = 1;",
+        'https://example.com/code.js': 'export const a = 1;',
       });
-      const cache = new Cache(storage, "test-code-resource", 10);
+      const cache = new Cache(storage, 'test-code-resource', 10);
       const manager = new ResourceManager(cache);
 
       await manager.init();
 
-      const uri = "https://example.com/code.js";
+      const uri = 'https://example.com/code.js';
 
       // Get from cache
       const { a } = await manager.import(uri);
@@ -91,12 +91,12 @@ describe("ResourceManager", () => {
     });
   });
 
-  describe("data resources", () => {
-    it("should get new data if freshness has expired", async () => {
+  describe('data resources', () => {
+    it('should get new data if freshness has expired', async () => {
       // Configure the Mockup to resolve with fresh data
-      const uri = "https://example.com/data.json";
-      const initialData = JSON.stringify({ foo: "initial" });
-      const updatedData = JSON.stringify({ foo: "updated" });
+      const uri = 'https://example.com/data.json';
+      const initialData = JSON.stringify({ foo: 'initial' });
+      const updatedData = JSON.stringify({ foo: 'updated' });
 
       const filesFixture = {
         [uri]: initialData,
@@ -104,7 +104,7 @@ describe("ResourceManager", () => {
 
       const storage = new StorageMockup(filesFixture);
 
-      const cache = new Cache(storage, "test-data-resource", 10);
+      const cache = new Cache(storage, 'test-data-resource', 10);
       const manager = new ResourceManager(cache);
       await manager.init();
 
@@ -123,35 +123,35 @@ describe("ResourceManager", () => {
       expect(data3).to.be.eql(JSON.parse(updatedData));
     });
 
-    it("should cache data resources", async () => {
-      const uri = "https://example.com/data.json";
+    it('should cache data resources', async () => {
+      const uri = 'https://example.com/data.json';
 
       const storage = new StorageMockup({
         [uri]: ' { "foo": "bar" } ',
       });
 
-      const cache = new Cache(storage, "test-data-resource-2", 10);
+      const cache = new Cache(storage, 'test-data-resource-2', 10);
       const manager = new ResourceManager(cache);
 
       await manager.init();
 
       //  Get Data
       const data = await manager.getData(uri, 5000);
-      expect(data).to.be.eql({ foo: "bar" });
+      expect(data).to.be.eql({ foo: 'bar' });
     });
   });
 
-  describe("media resources", () => {
-    it("should cache media resources", async () => {
+  describe('media resources', () => {
+    it('should cache media resources', async () => {
       const storage = new StorageMockup({
-        "https://example.com/movie.mp4": "file:///tmp/movie.mp4",
+        'https://example.com/movie.mp4': 'file:///tmp/movie.mp4',
       });
-      const cache = new Cache(storage, "test-media-resource", 10);
+      const cache = new Cache(storage, 'test-media-resource', 10);
       const manager = new ResourceManager(cache);
 
       await manager.init();
 
-      const uri = "https://example.com/movie.mp4";
+      const uri = 'https://example.com/movie.mp4';
 
       // Trigger cache
       const result = await manager.cacheMedia(uri);
@@ -163,44 +163,44 @@ describe("ResourceManager", () => {
       const media = await fetch(<string>mediaUrl);
       expect(media.status).to.be.eql(200);
       const content = await media.text();
-      expect(content).to.be.eql("file:///tmp/movie.mp4");
+      expect(content).to.be.eql('file:///tmp/movie.mp4');
     });
 
-    it("should rise an error if media not available", async () => {
+    it('should rise an error if media not available', async () => {
       const storage = new StorageMockup({
-        "https://example.com/movie.mp4": "file:///tmp/movie.mp4",
+        'https://example.com/movie.mp4': 'file:///tmp/movie.mp4',
       });
-      const cache = new Cache(storage, "test-resource", 10);
+      const cache = new Cache(storage, 'test-resource', 10);
       await cache.clean();
 
       const manager = new ResourceManager(cache);
 
       await manager.init();
 
-      const uri = "file:///tmp/wrong-file.mp4";
+      const uri = 'file:///tmp/wrong-file.mp4';
 
       // Trigger cache
       try {
         await manager.cacheMedia(uri);
-        expect.fail("Should not reach this point");
+        expect.fail('Should not reach this point');
       } catch (err) {
-        expect((err as Error).message).to.be.eql("File not found");
+        expect((err as Error).message).to.be.eql('File not found');
       }
 
       // Get from cache
       try {
         await manager.getMedia(uri);
-        expect.fail("Should not reach this point");
+        expect.fail('Should not reach this point');
       } catch (err) {
-        expect((err as Error).message).to.be.eql("File not found");
+        expect((err as Error).message).to.be.eql('File not found');
       }
     });
 
-    it("should free space and try to store file is storage is full", async () => {});
+    it('should free space and try to store file is storage is full', async () => {});
 
-    it("should return undefined for undefined/null urls", async () => {
+    it('should return undefined for undefined/null urls', async () => {
       const storage = new StorageMockup({});
-      const cache = new Cache(storage, "test-media-guard", 10);
+      const cache = new Cache(storage, 'test-media-guard', 10);
       const manager = new ResourceManager(cache);
       await manager.init();
 
@@ -210,34 +210,34 @@ describe("ResourceManager", () => {
       const result2 = await manager.getMedia(null as unknown as string);
       expect(result2).to.be.undefined;
 
-      const result3 = await manager.getMedia("");
+      const result3 = await manager.getMedia('');
       expect(result3).to.be.undefined;
     });
 
-    it("should return data uri directly without caching", async () => {
+    it('should return data uri directly without caching', async () => {
       const storage = new StorageMockup({});
-      const cache = new Cache(storage, "test-media-data-uri", 10);
+      const cache = new Cache(storage, 'test-media-data-uri', 10);
       const manager = new ResourceManager(cache);
       await manager.init();
 
       const dataUri =
-        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
+        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
       const result = await manager.getMedia(dataUri);
       expect(result).to.be.eql(dataUri);
     });
   });
 
-  describe("getData offline fallback", () => {
-    it("should fall back to stale cached data when network fetch fails", async () => {
-      const uri = "https://example.com/api/data.json";
-      const cachedData = JSON.stringify({ status: "cached" });
+  describe('getData offline fallback', () => {
+    it('should fall back to stale cached data when network fetch fails', async () => {
+      const uri = 'https://example.com/api/data.json';
+      const cachedData = JSON.stringify({ status: 'cached' });
 
       const filesFixture: { [index: string]: string } = {
         [uri]: cachedData,
       };
 
       const storage = new StorageMockup(filesFixture);
-      const cache = new Cache(storage, "test-offline-fallback", 10);
+      const cache = new Cache(storage, 'test-offline-fallback', 10);
       const manager = new ResourceManager(cache);
       await manager.init();
 
@@ -254,11 +254,11 @@ describe("ResourceManager", () => {
       expect(data2).to.be.eql(JSON.parse(cachedData));
     });
 
-    it("should return undefined when network fails and no cached data exists", async () => {
-      const uri = "https://example.com/api/missing.json";
+    it('should return undefined when network fails and no cached data exists', async () => {
+      const uri = 'https://example.com/api/missing.json';
 
       const storage = new StorageMockup({});
-      const cache = new Cache(storage, "test-no-fallback", 10);
+      const cache = new Cache(storage, 'test-no-fallback', 10);
       const manager = new ResourceManager(cache);
       await manager.init();
 
@@ -267,8 +267,8 @@ describe("ResourceManager", () => {
       expect(data).to.be.undefined;
     });
 
-    it("should update cached data when fresh data is available", async () => {
-      const uri = "https://example.com/api/data.json";
+    it('should update cached data when fresh data is available', async () => {
+      const uri = 'https://example.com/api/data.json';
       const initialData = JSON.stringify({ version: 1 });
       const updatedData = JSON.stringify({ version: 2 });
 
@@ -277,7 +277,7 @@ describe("ResourceManager", () => {
       };
 
       const storage = new StorageMockup(filesFixture);
-      const cache = new Cache(storage, "test-data-update", 10);
+      const cache = new Cache(storage, 'test-data-update', 10);
       const manager = new ResourceManager(cache);
       await manager.init();
 

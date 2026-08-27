@@ -1,5 +1,5 @@
-import { defineConfig } from "vite";
-import solidPlugin from "vite-plugin-solid";
+import { defineConfig } from 'vite';
+import solidPlugin from 'vite-plugin-solid';
 
 export default defineConfig({
   plugins: [
@@ -10,9 +10,9 @@ export default defineConfig({
     // devtools(),
     solidPlugin(),
   ],
-  root: "./src",
+  root: './src',
   build: {
-    outDir: "../dist",
+    outDir: '../dist',
     minify: false,
     emptyOutDir: true,
   },

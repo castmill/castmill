@@ -1,5 +1,5 @@
 /** @jsxImportSource solid-js */
-import styles from "./switch.module.scss";
+import styles from './switch.module.scss';
 
 export const Switch = (props: {
   name: string;

@@ -1,17 +1,17 @@
-cordova.define("cordova/plugin/video", function (c, e, b) {
+cordova.define('cordova/plugin/video', function (c, e, b) {
   function d(j) {}
   var f;
   if (window.PalmSystem) {
-    d("Window.PalmSystem Available");
-    f = c("cordova/plugin/webos/service");
+    d('Window.PalmSystem Available');
+    f = c('cordova/plugin/webos/service');
   } else {
     f = {
       Request: function (j, k) {
-        d(j + " invoked. But I am a dummy because PalmSystem is not available");
-        if (typeof k.onFailure === "function") {
+        d(j + ' invoked. But I am a dummy because PalmSystem is not available');
+        if (typeof k.onFailure === 'function') {
           k.onFailure({
             returnValue: false,
-            errorText: "PalmSystem Not Available. Cordova is not installed?",
+            errorText: 'PalmSystem Not Available. Cordova is not installed?',
           });
         }
       },
@@ -26,31 +26,31 @@ cordova.define("cordova/plugin/video", function (c, e, b) {
       k.errorText = j;
     }
   }
-  var a = { webOSVer: -1, chipset: "undefined" };
+  var a = { webOSVer: -1, chipset: 'undefined' };
   function h(j) {
     if (a.webOSVer === -1) {
-      f.Request("luna://com.webos.service.tv.systemproperty", {
-        method: "getSystemInfo",
-        parameters: { keys: ["sdkVersion", "boardType"] },
+      f.Request('luna://com.webos.service.tv.systemproperty', {
+        method: 'getSystemInfo',
+        parameters: { keys: ['sdkVersion', 'boardType'] },
         onSuccess: function (k) {
-          var l = k.sdkVersion.split(".");
-          if (l.length >= 1 && l[0] === "1") {
-            a = { webOSVer: 1, chipset: k.boardType.split("_")[0] };
+          var l = k.sdkVersion.split('.');
+          if (l.length >= 1 && l[0] === '1') {
+            a = { webOSVer: 1, chipset: k.boardType.split('_')[0] };
           } else {
-            if (l.length >= 1 && l[0] === "2") {
-              a = { webOSVer: 2, chipset: k.boardType.split("_")[0] };
+            if (l.length >= 1 && l[0] === '2') {
+              a = { webOSVer: 2, chipset: k.boardType.split('_')[0] };
             } else {
-              if (l.length >= 1 && l[0] === "3") {
-                a = { webOSVer: 3, chipset: k.boardType.split("_")[0] };
+              if (l.length >= 1 && l[0] === '3') {
+                a = { webOSVer: 3, chipset: k.boardType.split('_')[0] };
               } else {
-                a = { webOSVer: 0, chipset: "" };
+                a = { webOSVer: 0, chipset: '' };
               }
             }
           }
           j(a);
         },
         onFailure: function (k) {
-          a = { webOSVer: 0, chipset: "" };
+          a = { webOSVer: 0, chipset: '' };
           j(a);
         },
       });
@@ -59,13 +59,13 @@ cordova.define("cordova/plugin/video", function (c, e, b) {
     }
   }
   i.prototype.getVideoStatus = function (j, k) {
-    d("getVideoStatus: ");
-    f.Request("luna://com.webos.service.tv.signage/", {
-      method: "getVideoSize",
+    d('getVideoStatus: ');
+    f.Request('luna://com.webos.service.tv.signage/', {
+      method: 'getVideoSize',
       onSuccess: function (l) {
-        d("getVideoStatus: On Success");
+        d('getVideoStatus: On Success');
         if (l.returnValue === true) {
-          if (typeof j === "function") {
+          if (typeof j === 'function') {
             var m = {};
             m.source = l.videoSize.source;
             j(m);
@@ -73,25 +73,25 @@ cordova.define("cordova/plugin/video", function (c, e, b) {
         }
       },
       onFailure: function (l) {
-        d("getVideoStatus: On Failure");
+        d('getVideoStatus: On Failure');
         delete l.returnValue;
-        if (typeof k === "function") {
-          g(l, "VGVS", "Video.getVideoStatus returns failure.");
+        if (typeof k === 'function') {
+          g(l, 'VGVS', 'Video.getVideoStatus returns failure.');
           k(l);
         }
       },
     });
-    d("Video.getVideoStatus Done");
+    d('Video.getVideoStatus Done');
   };
   i.currentVideo = { uri: null, source: null, tagId: null };
   i.prototype.setVideoSize = function (k, l, m) {
-    d("setVideoSize: " + JSON.stringify(m));
+    d('setVideoSize: ' + JSON.stringify(m));
     if (
       m.source === undefined ||
-      typeof m.source.x !== "number" ||
-      typeof m.source.y !== "number" ||
-      typeof m.source.width !== "number" ||
-      typeof m.source.height !== "number" ||
+      typeof m.source.x !== 'number' ||
+      typeof m.source.y !== 'number' ||
+      typeof m.source.width !== 'number' ||
+      typeof m.source.height !== 'number' ||
       isNaN(m.source.x) ||
       isNaN(m.source.y) ||
       isNaN(m.source.width) ||
@@ -103,24 +103,28 @@ cordova.define("cordova/plugin/video", function (c, e, b) {
       m.source.width < 16 ||
       m.source.height < 16
     ) {
-      if (typeof l === "function") {
+      if (typeof l === 'function') {
         var j = {};
-        g(j, "VSVS", "Video.setVideoSize returns failure. out of range or type error.");
+        g(
+          j,
+          'VSVS',
+          'Video.setVideoSize returns failure. out of range or type error.'
+        );
         l(j);
       }
       return;
     }
-    f.Request("luna://com.webos.service.tv.signage/", {
-      method: "getVideoSize",
+    f.Request('luna://com.webos.service.tv.signage/', {
+      method: 'getVideoSize',
       onSuccess: function (n) {
-        d("setVideoSize: On Success");
+        d('setVideoSize: On Success');
         if (n.returnValue === true) {
           var r = {};
           r.x = n.videoSize.destination.x;
           r.y = n.videoSize.destination.y;
           r.width = n.videoSize.destination.width;
           r.height = n.videoSize.destination.height;
-          var o = document.getElementsByTagName("video");
+          var o = document.getElementsByTagName('video');
           var q = false;
           for (var p = 0; p < o.length; p++) {
             if (o[p].currentTime > 0) {
@@ -141,12 +145,13 @@ cordova.define("cordova/plugin/video", function (c, e, b) {
             }
           }
           if (q === false) {
-            f.Request("luna://com.webos.service.eim/", {
-              method: "getCurrentInput",
+            f.Request('luna://com.webos.service.eim/', {
+              method: 'getCurrentInput',
               parameters: {},
               onSuccess: function (t) {
                 if (
-                  (t.returnValue === true && i.currentVideo.uri !== t.mainInputSourceId) ||
+                  (t.returnValue === true &&
+                    i.currentVideo.uri !== t.mainInputSourceId) ||
                   (o[0].id !== null &&
                     o[0].id !== undefined &&
                     i.currentVideo.tagId !== null &&
@@ -155,20 +160,29 @@ cordova.define("cordova/plugin/video", function (c, e, b) {
                 ) {
                   i.currentVideo.uri = t.mainInputSourceId;
                   i.currentVideo.tagId =
-                    o[0] !== null && o[0].id !== null && o[0].id !== undefined ? o[0].id : null;
-                  f.Request("luna://com.webos.service.tv.signage/", {
-                    method: "getVideoSize",
+                    o[0] !== null && o[0].id !== null && o[0].id !== undefined
+                      ? o[0].id
+                      : null;
+                  f.Request('luna://com.webos.service.tv.signage/', {
+                    method: 'getVideoSize',
                     onSuccess: function (x) {
-                      d("setVideoSize: On Success 1");
+                      d('setVideoSize: On Success 1');
                       if (x.returnValue === true) {
                         i.currentVideo.source = x.videoSize.source;
-                        if (x.videoSize.source.width === 0 && x.videoSize.source.height === 0) {
-                          i.currentVideo = { uri: null, source: null, tagId: null };
+                        if (
+                          x.videoSize.source.width === 0 &&
+                          x.videoSize.source.height === 0
+                        ) {
+                          i.currentVideo = {
+                            uri: null,
+                            source: null,
+                            tagId: null,
+                          };
                           var w = {};
                           g(
                             w,
-                            "VSVS",
-                            "Video.setVideoSize returns failure. Not ready to setVideoSize.",
+                            'VSVS',
+                            'Video.setVideoSize returns failure. Not ready to setVideoSize.'
                           );
                           l(w);
                           return;
@@ -177,26 +191,28 @@ cordova.define("cordova/plugin/video", function (c, e, b) {
                             i.currentVideo.uri === null ||
                             i.currentVideo.source === null ||
                             m.source.width + m.source.x >
-                              i.currentVideo.source.x + i.currentVideo.source.width ||
+                              i.currentVideo.source.x +
+                                i.currentVideo.source.width ||
                             m.source.height + m.source.y >
-                              i.currentVideo.source.y + i.currentVideo.source.height
+                              i.currentVideo.source.y +
+                                i.currentVideo.source.height
                           ) {
                             var v = {};
                             g(
                               v,
-                              "VSVS",
-                              "Video.setVideoSize returns failure. out of range or type error.(" +
+                              'VSVS',
+                              'Video.setVideoSize returns failure. out of range or type error.(' +
                                 i.currentVideo.source.width +
-                                " : " +
+                                ' : ' +
                                 i.currentVideo.source.height +
-                                ")",
+                                ')'
                             );
                             l(v);
                             return;
                           }
                         }
-                        f.Request("luna://com.webos.service.tv.signage/", {
-                          method: "setVideoSize",
+                        f.Request('luna://com.webos.service.tv.signage/', {
+                          method: 'setVideoSize',
                           parameters: {
                             videoSize: {
                               source: {
@@ -205,24 +221,32 @@ cordova.define("cordova/plugin/video", function (c, e, b) {
                                 width: m.source.width,
                                 height: m.source.height,
                               },
-                              destination: { x: r.x, y: r.y, width: r.width, height: r.height },
+                              destination: {
+                                x: r.x,
+                                y: r.y,
+                                width: r.width,
+                                height: r.height,
+                              },
                             },
                           },
                           onSuccess: function (y) {
-                            d("setVideoSize: On Success 2");
-                            if (y.returnValue === true && typeof k === "function") {
+                            d('setVideoSize: On Success 2');
+                            if (
+                              y.returnValue === true &&
+                              typeof k === 'function'
+                            ) {
                               k();
                               return;
                             }
                           },
                           onFailure: function (y) {
-                            d("setVideoSize: On Failure 2");
+                            d('setVideoSize: On Failure 2');
                             delete y.returnValue;
-                            if (typeof l === "function") {
+                            if (typeof l === 'function') {
                               g(
                                 y,
-                                "VSVS",
-                                "Video.setVideoSize returns failure. Can't current video source size.",
+                                'VSVS',
+                                "Video.setVideoSize returns failure. Can't current video source size."
                               );
                               l(y);
                               return;
@@ -244,18 +268,18 @@ cordova.define("cordova/plugin/video", function (c, e, b) {
                     var u = {};
                     g(
                       u,
-                      "VSVS",
-                      "Video.setVideoSize returns failure. out of range or type error.(" +
+                      'VSVS',
+                      'Video.setVideoSize returns failure. out of range or type error.(' +
                         i.currentVideo.source.width +
-                        " : " +
+                        ' : ' +
                         i.currentVideo.source.height +
-                        ")",
+                        ')'
                     );
                     l(u);
                     return;
                   }
-                  f.Request("luna://com.webos.service.tv.signage/", {
-                    method: "setVideoSize",
+                  f.Request('luna://com.webos.service.tv.signage/', {
+                    method: 'setVideoSize',
                     parameters: {
                       videoSize: {
                         source: {
@@ -264,24 +288,29 @@ cordova.define("cordova/plugin/video", function (c, e, b) {
                           width: m.source.width,
                           height: m.source.height,
                         },
-                        destination: { x: r.x, y: r.y, width: r.width, height: r.height },
+                        destination: {
+                          x: r.x,
+                          y: r.y,
+                          width: r.width,
+                          height: r.height,
+                        },
                       },
                     },
                     onSuccess: function (v) {
-                      d("setVideoSize: On Success 3");
-                      if (v.returnValue === true && typeof k === "function") {
+                      d('setVideoSize: On Success 3');
+                      if (v.returnValue === true && typeof k === 'function') {
                         k();
                         return;
                       }
                     },
                     onFailure: function (v) {
-                      d("setVideoSize: On Failure 3");
+                      d('setVideoSize: On Failure 3');
                       delete v.returnValue;
-                      if (typeof l === "function") {
+                      if (typeof l === 'function') {
                         g(
                           v,
-                          "VSVS",
-                          "Video.setVideoSize returns failure. Can't current video source size.",
+                          'VSVS',
+                          "Video.setVideoSize returns failure. Can't current video source size."
                         );
                         l(v);
                         return;
@@ -291,13 +320,13 @@ cordova.define("cordova/plugin/video", function (c, e, b) {
                 }
               },
               onFailure: function (t) {
-                d("setVideoSize: On Failure 3");
+                d('setVideoSize: On Failure 3');
                 delete t.returnValue;
-                if (typeof l === "function") {
+                if (typeof l === 'function') {
                   g(
                     t,
-                    "VSVS",
-                    "Video.setVideoSize returns failure. Can't set current video source size.",
+                    'VSVS',
+                    "Video.setVideoSize returns failure. Can't set current video source size."
                   );
                   l(t);
                   return;
@@ -308,24 +337,26 @@ cordova.define("cordova/plugin/video", function (c, e, b) {
             if (
               i.currentVideo.uri === null ||
               i.currentVideo.source === null ||
-              m.source.width + m.source.x > i.currentVideo.source.x + i.currentVideo.source.width ||
-              m.source.height + m.source.y > i.currentVideo.source.y + i.currentVideo.source.height
+              m.source.width + m.source.x >
+                i.currentVideo.source.x + i.currentVideo.source.width ||
+              m.source.height + m.source.y >
+                i.currentVideo.source.y + i.currentVideo.source.height
             ) {
               var s = {};
               g(
                 s,
-                "VSVS",
-                "Video.setVideoSize returns failure. out of range or type error.(" +
+                'VSVS',
+                'Video.setVideoSize returns failure. out of range or type error.(' +
                   i.currentVideo.source.width +
-                  " : " +
+                  ' : ' +
                   i.currentVideo.source.height +
-                  ")",
+                  ')'
               );
               l(s);
               return;
             }
-            f.Request("luna://com.webos.service.tv.signage/", {
-              method: "setVideoSize",
+            f.Request('luna://com.webos.service.tv.signage/', {
+              method: 'setVideoSize',
               parameters: {
                 videoSize: {
                   source: {
@@ -334,24 +365,29 @@ cordova.define("cordova/plugin/video", function (c, e, b) {
                     width: m.source.width,
                     height: m.source.height,
                   },
-                  destination: { x: r.x, y: r.y, width: r.width, height: r.height },
+                  destination: {
+                    x: r.x,
+                    y: r.y,
+                    width: r.width,
+                    height: r.height,
+                  },
                 },
               },
               onSuccess: function (t) {
-                d("setVideoSize: On Success 4");
-                if (t.returnValue === true && typeof k === "function") {
+                d('setVideoSize: On Success 4');
+                if (t.returnValue === true && typeof k === 'function') {
                   k();
                   return;
                 }
               },
               onFailure: function (t) {
-                d("setVideoSize: On Failure 4");
+                d('setVideoSize: On Failure 4');
                 delete t.returnValue;
-                if (typeof l === "function") {
+                if (typeof l === 'function') {
                   g(
                     t,
-                    "VSVS",
-                    "Video.setVideoSize returns failure. Can't current video source size.",
+                    'VSVS',
+                    "Video.setVideoSize returns failure. Can't current video source size."
                   );
                   l(t);
                   return;
@@ -362,49 +398,49 @@ cordova.define("cordova/plugin/video", function (c, e, b) {
         }
       },
       onFailure: function (n) {
-        d("setVideoSize: On Failure");
+        d('setVideoSize: On Failure');
         delete n.returnValue;
-        if (typeof l === "function") {
-          g(n, "VSVS", "Video.setVideoSize returns failure.");
+        if (typeof l === 'function') {
+          g(n, 'VSVS', 'Video.setVideoSize returns failure.');
           l(n);
           return;
         }
       },
     });
-    d("Video.setVideoSize Done");
+    d('Video.setVideoSize Done');
   };
   i.prototype.setContentRotation = function (j, k, m) {
     var l = {};
-    g(l, "ERROR", "This function is not supported");
-    if (typeof k === "function") {
+    g(l, 'ERROR', 'This function is not supported');
+    if (typeof k === 'function') {
       k(l);
     }
     return;
   };
   i.prototype.getContentRotation = function (j, k) {
     var l = {};
-    g(l, "ERROR", "This function is not supported");
-    if (typeof k === "function") {
+    g(l, 'ERROR', 'This function is not supported');
+    if (typeof k === 'function') {
       k(l);
     }
     return;
   };
   i.prototype.setVideoViewTransform = function (j, m, l) {
     var k = {};
-    g(k, "ERROR", "This function is not supported");
-    if (typeof m === "function") {
+    g(k, 'ERROR', 'This function is not supported');
+    if (typeof m === 'function') {
       m(k);
     }
     return;
   };
   i.prototype.setRotatedVideoTransform = function (j, m, l) {
     var k = {};
-    g(k, "ERROR", "This function is not supported");
-    if (typeof m === "function") {
+    g(k, 'ERROR', 'This function is not supported');
+    if (typeof m === 'function') {
       m(k);
     }
     return;
   };
   b.exports = i;
 });
-Video = cordova.require("cordova/plugin/video");
+Video = cordova.require('cordova/plugin/video');

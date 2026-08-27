@@ -118,7 +118,7 @@
   overflow-y: visible;
   font-size: 0.85em;
   max-width: 100%;
-  font-family: "Monaco", "Menlo", "Ubuntu Mono", "Consolas", monospace;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
   line-height: 1.5;
   white-space: pre;
   word-wrap: normal;
@@ -239,7 +239,7 @@
         color: #e2e8f0;
         padding: 16px;
         border-radius: 6px;
-        font-family: "Consolas", "Monaco", "Courier New", monospace;
+        font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
         font-size: 14px;
         line-height: 1.5;
         overflow-x: auto;
@@ -348,7 +348,7 @@
       border-radius: 6px;
       padding: 12px;
       margin: 8px 0;
-      font-family: "Monaco", "Menlo", "Ubuntu Mono", "Consolas", monospace;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
       font-size: 12px;
       overflow-x: auto;
       max-height: 180px;
@@ -375,7 +375,7 @@
       background-color: #1e3a5f;
     }
 
-    input[type="file"] {
+    input[type='file'] {
       width: 100%;
       padding: 0.5rem;
       margin-bottom: 1rem;
@@ -545,7 +545,7 @@
         .asset-path {
           color: #808080;
           font-size: 0.8em;
-          font-family: "Monaco", "Menlo", "Ubuntu Mono", "Consolas", monospace;
+          font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -561,7 +561,7 @@
         .asset-type {
           color: #ce9178;
           font-size: 0.75em;
-          font-family: "Monaco", "Menlo", "Ubuntu Mono", "Consolas", monospace;
+          font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
         }
       }
 

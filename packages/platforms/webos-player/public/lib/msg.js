@@ -1,8 +1,8 @@
-"use strict";
+'use strict';
 function newGuid() {
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
     var r = (Math.random() * 16) | 0,
-      v = c === "x" ? r : (r & 0x3) | 0x8;
+      v = c === 'x' ? r : (r & 0x3) | 0x8;
     return v.toString(16);
   });
 }
@@ -14,7 +14,10 @@ function Msg(target, inbound, outbound) {
   this._resolvers = {};
 
   function ack(guid, msg) {
-    _this._target.postMessage(JSON.stringify({ ack: true, guid: guid, msg: msg }), "*");
+    _this._target.postMessage(
+      JSON.stringify({ ack: true, guid: guid, msg: msg }),
+      '*'
+    );
   }
   function nack(guid, err) {
     err = err || {};
@@ -22,9 +25,9 @@ function Msg(target, inbound, outbound) {
       JSON.stringify({
         ack: true,
         guid: guid,
-        err: { message: err.message || "Generic Error" },
+        err: { message: err.message || 'Generic Error' },
       }),
-      "*",
+      '*'
     );
   }
 
@@ -51,20 +54,24 @@ function Msg(target, inbound, outbound) {
       }
     } else if (action.fn) {
       var fn = inbound[action.fn];
-      if (!fn) return nack(action.guid, 'MSG: function "' + action.fn + '" not implemented');
+      if (!fn)
+        return nack(
+          action.guid,
+          'MSG: function "' + action.fn + '" not implemented'
+        );
       Promise.resolve(fn.apply(inbound, action.args)).then(
         function (msg) {
           ack(action.guid, msg);
         },
         function (err) {
           nack(action.guid, err);
-        },
+        }
       );
     }
   }
 
   this._setupOutbound(outbound);
-  window.addEventListener("message", handleMessage, false);
+  window.addEventListener('message', handleMessage, false);
 }
 
 Msg.prototype._post = function (msg) {
@@ -76,7 +83,7 @@ Msg.prototype._post = function (msg) {
       reject: reject,
     };
     msg.guid = guid;
-    _this._target.postMessage(JSON.stringify(msg), "*");
+    _this._target.postMessage(JSON.stringify(msg), '*');
   });
 };
 

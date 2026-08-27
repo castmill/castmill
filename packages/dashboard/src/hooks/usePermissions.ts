@@ -5,8 +5,8 @@
  * Automatically loads permissions when organization changes.
  */
 
-import { createEffect, createMemo } from "solid-js";
-import { store, setStore } from "../store";
+import { createEffect, createMemo } from 'solid-js';
+import { store, setStore } from '../store';
 import {
   fetchPermissions,
   canPerformAction as checkPermission,
@@ -14,7 +14,7 @@ import {
   type ResourceType,
   type Action,
   type Role,
-} from "../services/permissions.service";
+} from '../services/permissions.service';
 
 /**
  * Hook to manage and check permissions
@@ -28,20 +28,20 @@ export function usePermissions() {
       return;
     }
 
-    setStore("permissions", "loading", true);
+    setStore('permissions', 'loading', true);
 
     try {
       const response = await fetchPermissions(organizationId);
 
-      setStore("permissions", {
+      setStore('permissions', {
         loaded: true,
         loading: false,
         role: response.role,
         matrix: response.permissions,
       });
     } catch (error) {
-      console.error("Failed to load permissions:", error);
-      setStore("permissions", {
+      console.error('Failed to load permissions:', error);
+      setStore('permissions', {
         loaded: false,
         loading: false,
         role: undefined,
@@ -53,7 +53,10 @@ export function usePermissions() {
   /**
    * Check if user can perform an action on a resource
    */
-  const canPerformAction = (resource: ResourceType, action: Action): boolean => {
+  const canPerformAction = (
+    resource: ResourceType,
+    action: Action
+  ): boolean => {
     return checkPermission(store.permissions.matrix, resource, action);
   };
 
@@ -75,7 +78,9 @@ export function usePermissions() {
    * Check if user has any of the specified roles
    */
   const hasAnyRole = (roles: Role[]): boolean => {
-    return store.permissions.role ? roles.includes(store.permissions.role) : false;
+    return store.permissions.role
+      ? roles.includes(store.permissions.role)
+      : false;
   };
 
   /**

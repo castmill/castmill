@@ -46,10 +46,14 @@ Added `createEffect` in `ProtectedRoute` component to sync URL parameters to the
 ```tsx
 createEffect(() => {
   const urlOrgId = params.orgId;
-  if (store.organizations.loaded && urlOrgId && urlOrgId !== store.organizations.selectedId) {
+  if (
+    store.organizations.loaded &&
+    urlOrgId &&
+    urlOrgId !== store.organizations.selectedId
+  ) {
     const org = store.organizations.data.find((o) => o.id === urlOrgId);
     if (org) {
-      setStore("organizations", {
+      setStore('organizations', {
         selectedId: org.id,
         selectedName: org.name,
       });
@@ -96,7 +100,7 @@ const RootRedirect: Component = () => {
     }
   });
 
-  return <div>{t("common.loading")}</div>;
+  return <div>{t('common.loading')}</div>;
 };
 ```
 
@@ -145,7 +149,7 @@ interface CastmillStore {
     formatCurrency: (
       value: number,
       currency?: string,
-      options?: Intl.NumberFormatOptions,
+      options?: Intl.NumberFormatOptions
     ) => string;
     locale: () => string;
     setLocale: (locale: any) => void;
@@ -156,7 +160,7 @@ interface CastmillStore {
 i18n functions are set using `setStore()` in the addon wrapper:
 
 ```tsx
-setStore("i18n", {
+setStore('i18n', {
   t: i18n.t,
   tp: i18n.tp,
   formatDate: i18n.formatDate,

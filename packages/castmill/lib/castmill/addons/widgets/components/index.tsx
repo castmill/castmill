@@ -1,5 +1,5 @@
-import { BsEye, BsTrash } from "solid-icons/bs";
-import { AiOutlineUpload } from "solid-icons/ai";
+import { BsEye, BsTrash } from 'solid-icons/bs';
+import { AiOutlineUpload } from 'solid-icons/ai';
 import {
   Component,
   createSignal,
@@ -9,7 +9,7 @@ import {
   For,
   onMount,
   batch,
-} from "solid-js";
+} from 'solid-js';
 
 import {
   Button,
@@ -23,21 +23,21 @@ import {
   ModalRef,
   Tabs,
   ConfirmDialog,
-} from "@castmill/ui-common";
-import { JsonWidget } from "@castmill/player";
-import { WidgetsService, WidgetUsage } from "../services/widgets.service";
-import { UploadComponent } from "./upload";
-import { JsonHighlight } from "./json-highlight";
-import { AssetsList } from "./assets-list";
-import { IntegrationsList } from "../../common/components/integrations-list";
+} from '@castmill/ui-common';
+import { JsonWidget } from '@castmill/player';
+import { WidgetsService, WidgetUsage } from '../services/widgets.service';
+import { UploadComponent } from './upload';
+import { JsonHighlight } from './json-highlight';
+import { AssetsList } from './assets-list';
+import { IntegrationsList } from '../../common/components/integrations-list';
 
-import { DEFAULT_WIDGET_ICON } from "../../common/constants";
-import "./widgets.scss";
-import { AddonStore } from "../../common/interfaces/addon-store";
+import { DEFAULT_WIDGET_ICON } from '../../common/constants';
+import './widgets.scss';
+import { AddonStore } from '../../common/interfaces/addon-store';
 import {
   getTranslatedWidgetName,
   getTranslatedWidgetDescription,
-} from "../../common/utils/widget-catalog-utils";
+} from '../../common/utils/widget-catalog-utils';
 
 // Widget type with required ID and slug for table display and API calls
 type WidgetWithId = JsonWidget & { id: number; slug: string };
@@ -47,10 +47,12 @@ const WidgetsPage: Component<{
   params: any;
 }> = (props) => {
   // Get i18n functions from store
-  const t = (key: string, params?: Record<string, any>) => props.store.i18n?.t(key, params) || key;
-  const locale = () => props.store.i18n?.locale() || "en";
+  const t = (key: string, params?: Record<string, any>) =>
+    props.store.i18n?.t(key, params) || key;
+  const locale = () => props.store.i18n?.locale() || 'en';
 
-  const getWidgetName = (widget: WidgetWithId): string => getTranslatedWidgetName(widget, locale());
+  const getWidgetName = (widget: WidgetWithId): string =>
+    getTranslatedWidgetName(widget, locale());
 
   const getWidgetDescription = (widget: WidgetWithId): string | undefined =>
     getTranslatedWidgetDescription(widget, locale());
@@ -59,20 +61,26 @@ const WidgetsPage: Component<{
   const canPerformAction = (resource: string, action: string): boolean => {
     if (!props.store.permissions?.matrix) return false;
     const allowedActions =
-      props.store.permissions.matrix[resource as keyof typeof props.store.permissions.matrix];
+      props.store.permissions.matrix[
+        resource as keyof typeof props.store.permissions.matrix
+      ];
     return allowedActions?.includes(action as any) ?? false;
   };
 
   const itemsPerPage = 10;
 
   const [showDrawer, setShowDrawer] = createSignal(false);
-  const [currentWidget, setCurrentWidget] = createSignal<WidgetWithId | undefined>();
+  const [currentWidget, setCurrentWidget] = createSignal<
+    WidgetWithId | undefined
+  >();
   const [initialTabIndex, setInitialTabIndex] = createSignal(0);
   const [widgetHasIntegrations, setWidgetHasIntegrations] = createSignal(false);
 
   // Delete confirmation state
   const [showDeleteConfirm, setShowDeleteConfirm] = createSignal(false);
-  const [widgetToDelete, setWidgetToDelete] = createSignal<WidgetWithId | undefined>();
+  const [widgetToDelete, setWidgetToDelete] = createSignal<
+    WidgetWithId | undefined
+  >();
   const [widgetUsage, setWidgetUsage] = createSignal<WidgetUsage[]>([]);
   const [isLoadingUsage, setIsLoadingUsage] = createSignal(false);
   const [isDeleting, setIsDeleting] = createSignal(false);
@@ -94,34 +102,34 @@ const WidgetsPage: Component<{
 
     const tabs = [
       {
-        title: t("widgets.template"),
+        title: t('widgets.template'),
         content: () => <JsonHighlight json={widget.template} />,
       },
     ];
 
     if (widget.options_schema) {
       tabs.push({
-        title: t("widgets.optionsSchema"),
+        title: t('widgets.optionsSchema'),
         content: () => <JsonHighlight json={widget.options_schema} />,
       });
     }
 
     if (widget.data_schema) {
       tabs.push({
-        title: t("widgets.dataSchema"),
+        title: t('widgets.dataSchema'),
         content: () => <JsonHighlight json={widget.data_schema} />,
       });
     }
 
     tabs.push({
-      title: t("widgets.translations"),
+      title: t('widgets.translations'),
       content: () => <JsonHighlight json={widget.translations || {}} />,
     });
 
     // Add assets tab if widget has assets
     if (widget.assets && Object.keys(widget.assets).length > 0) {
       tabs.push({
-        title: t("widgets.assets.title"),
+        title: t('widgets.assets.title'),
         content: () => (
           <AssetsList
             assets={widget.assets}
@@ -135,7 +143,7 @@ const WidgetsPage: Component<{
 
     if (hasIntegrations) {
       tabs.push({
-        title: t("widgets.integrations.title"),
+        title: t('widgets.integrations.title'),
         content: () => (
           <IntegrationsList
             store={props.store}
@@ -160,7 +168,7 @@ const WidgetsPage: Component<{
       const widget = await WidgetsService.getWidgetById(
         props.store.env.baseUrl,
         props.store.organizations.selectedId,
-        widgetId,
+        widgetId
       );
 
       if (widget) {
@@ -168,7 +176,7 @@ const WidgetsPage: Component<{
         const integrations = await WidgetsService.getWidgetIntegrations(
           props.store.env.baseUrl,
           props.store.organizations.selectedId,
-          (widget as WidgetWithId).slug,
+          (widget as WidgetWithId).slug
         );
         const hasIntegrations = integrations.length > 0;
 
@@ -176,12 +184,13 @@ const WidgetsPage: Component<{
         let tabIndex = 0;
         if (tab) {
           // The tab indices depend on which schemas exist for the widget
-          const tabNames = ["template"];
-          if (widget.options_schema) tabNames.push("options");
-          if (widget.data_schema) tabNames.push("data");
-          tabNames.push("translations");
-          if (widget.assets && Object.keys(widget.assets).length > 0) tabNames.push("assets");
-          if (hasIntegrations) tabNames.push("integrations");
+          const tabNames = ['template'];
+          if (widget.options_schema) tabNames.push('options');
+          if (widget.data_schema) tabNames.push('data');
+          tabNames.push('translations');
+          if (widget.assets && Object.keys(widget.assets).length > 0)
+            tabNames.push('assets');
+          if (hasIntegrations) tabNames.push('integrations');
 
           const foundIndex = tabNames.indexOf(tab);
           if (foundIndex >= 0) {
@@ -197,7 +206,7 @@ const WidgetsPage: Component<{
         });
       }
     } catch (err) {
-      console.error("Failed to open widget:", err);
+      console.error('Failed to open widget:', err);
     }
   };
 
@@ -211,11 +220,14 @@ const WidgetsPage: Component<{
         url += `?tab=${tab}`;
       }
     }
-    window.history.pushState({}, "", url);
+    window.history.pushState({}, '', url);
   };
 
   // Open widget drawer and update URL
-  const openWidgetDrawer = async (widget: WidgetWithId, tabIndex: number = 0) => {
+  const openWidgetDrawer = async (
+    widget: WidgetWithId,
+    tabIndex: number = 0
+  ) => {
     // Set flag to prevent URL effect from interfering
     isOpeningDrawer = true;
 
@@ -223,7 +235,7 @@ const WidgetsPage: Component<{
     const integrations = await WidgetsService.getWidgetIntegrations(
       props.store.env.baseUrl,
       props.store.organizations.selectedId,
-      widget.slug,
+      widget.slug
     );
     const hasIntegrations = integrations.length > 0;
 
@@ -232,7 +244,7 @@ const WidgetsPage: Component<{
     const orgId = props.store.organizations.selectedId;
     const newUrl = `/org/${orgId}/content/widgets/${widget.id}`;
     lastProcessedUrl = newUrl;
-    window.history.pushState({}, "", newUrl);
+    window.history.pushState({}, '', newUrl);
 
     batch(() => {
       setWidgetHasIntegrations(hasIntegrations);
@@ -257,7 +269,7 @@ const WidgetsPage: Component<{
   };
 
   // Track last processed URL to avoid duplicate processing
-  let lastProcessedUrl = "";
+  let lastProcessedUrl = '';
 
   // Check URL for deep links - reactive to location changes for soft navigation
   // URL pattern: /org/:orgId/content/widgets/:widgetId?tab=integrations
@@ -275,7 +287,7 @@ const WidgetsPage: Component<{
     if (fullUrl === lastProcessedUrl) return;
 
     // Check if this is a widgets path
-    if (!path.includes("/content/widgets")) return;
+    if (!path.includes('/content/widgets')) return;
 
     const match = path.match(/\/content\/widgets\/(\d+)/);
 
@@ -284,7 +296,7 @@ const WidgetsPage: Component<{
       if (!isNaN(widgetId)) {
         // Get tab from query params
         const urlParams = new URLSearchParams(search);
-        const tab = urlParams.get("tab") || undefined;
+        const tab = urlParams.get('tab') || undefined;
         lastProcessedUrl = fullUrl;
         openWidgetDrawerById(widgetId, tab);
       }
@@ -305,24 +317,24 @@ const WidgetsPage: Component<{
       const { registerShortcutAction } = props.store.keyboardShortcuts;
 
       registerShortcutAction(
-        "generic-create",
+        'generic-create',
         () => {
-          if (canPerformAction("widgets", "create")) {
+          if (canPerformAction('widgets', 'create')) {
             openUploadModal();
           }
         },
-        () => window.location.pathname.includes("/widgets"),
+        () => window.location.pathname.includes('/widgets')
       );
 
       registerShortcutAction(
-        "generic-search",
+        'generic-search',
         () => {
           const currentTableRef = tableRef();
           if (currentTableRef) {
             currentTableRef.focusSearch();
           }
         },
-        () => window.location.pathname.includes("/widgets"),
+        () => window.location.pathname.includes('/widgets')
       );
     }
   });
@@ -331,11 +343,13 @@ const WidgetsPage: Component<{
   createEffect(() => {
     if (showUploadModal()) {
       setTimeout(() => {
-        const modalElement = document.querySelector(".widget-upload-modal") as HTMLElement;
+        const modalElement = document.querySelector(
+          '.widget-upload-modal'
+        ) as HTMLElement;
         if (modalElement) {
-          modalElement.style.width = "50vw";
-          modalElement.style.maxWidth = "50vw";
-          modalElement.style.minWidth = "50vw";
+          modalElement.style.width = '50vw';
+          modalElement.style.maxWidth = '50vw';
+          modalElement.style.minWidth = '50vw';
         }
       }, 50);
     }
@@ -344,11 +358,13 @@ const WidgetsPage: Component<{
   createEffect(() => {
     if (showDrawer()) {
       setTimeout(() => {
-        const modalElement = document.querySelector(".widget-details-modal") as HTMLElement;
+        const modalElement = document.querySelector(
+          '.widget-details-modal'
+        ) as HTMLElement;
         if (modalElement) {
-          modalElement.style.width = "50vw";
-          modalElement.style.maxWidth = "50vw";
-          modalElement.style.minWidth = "50vw";
+          modalElement.style.width = '50vw';
+          modalElement.style.maxWidth = '50vw';
+          modalElement.style.minWidth = '50vw';
         }
       }, 50);
     }
@@ -368,11 +384,11 @@ const WidgetsPage: Component<{
       const usage = await WidgetsService.getWidgetUsage(
         props.store.env.baseUrl,
         props.store.organizations.selectedId,
-        widget.id,
+        widget.id
       );
       setWidgetUsage(usage.data);
     } catch (error) {
-      console.error("Failed to fetch widget usage:", error);
+      console.error('Failed to fetch widget usage:', error);
       setWidgetUsage([]);
     } finally {
       setIsLoadingUsage(false);
@@ -395,12 +411,12 @@ const WidgetsPage: Component<{
       await WidgetsService.removeWidget(
         props.store.env.baseUrl,
         props.store.organizations.selectedId,
-        String(widget.id),
+        String(widget.id)
       );
       refreshData();
       closeDeleteConfirm();
     } catch (error) {
-      console.error("Failed to delete widget:", error);
+      console.error('Failed to delete widget:', error);
       setIsDeleting(false);
     }
   };
@@ -425,7 +441,7 @@ const WidgetsPage: Component<{
         sortOptions,
         search,
         filters,
-      },
+      }
     );
 
     // Cast to WidgetWithId since widgets from the server always have IDs
@@ -438,19 +454,19 @@ const WidgetsPage: Component<{
   // Use function to make columns reactive to i18n changes
   const columns = (): Column<number, WidgetWithId>[] => [
     {
-      key: "name",
-      title: t("common.name"),
+      key: 'name',
+      title: t('common.name'),
       sortable: true,
       render: (widget: WidgetWithId) => {
         const isImageIcon =
           widget.icon &&
-          (widget.icon.startsWith("data:image/") ||
-            widget.icon.startsWith("http://") ||
-            widget.icon.startsWith("https://") ||
-            widget.icon.startsWith("/"));
+          (widget.icon.startsWith('data:image/') ||
+            widget.icon.startsWith('http://') ||
+            widget.icon.startsWith('https://') ||
+            widget.icon.startsWith('/'));
 
         // Resolve icon URL - prepend baseUrl for relative paths starting with /
-        const iconUrl = widget.icon?.startsWith("/")
+        const iconUrl = widget.icon?.startsWith('/')
           ? `${props.store.env.baseUrl}${widget.icon}`
           : widget.icon;
 
@@ -464,8 +480,9 @@ const WidgetsPage: Component<{
                   style="width: 32px; height: 32px; object-fit: contain; border-radius: 4px;"
                   onError={(e) => {
                     // Fallback to emoji if image fails to load
-                    (e.target as HTMLImageElement).style.display = "none";
-                    const fallback = document.createTextNode(DEFAULT_WIDGET_ICON);
+                    (e.target as HTMLImageElement).style.display = 'none';
+                    const fallback =
+                      document.createTextNode(DEFAULT_WIDGET_ICON);
                     e.target.parentNode?.appendChild(fallback);
                   }}
                 />
@@ -478,7 +495,11 @@ const WidgetsPage: Component<{
               {(() => {
                 const desc = getWidgetDescription(widget);
                 return (
-                  desc && <div style="font-size: 0.85em; color: #666; margin-top: 2px;">{desc}</div>
+                  desc && (
+                    <div style="font-size: 0.85em; color: #666; margin-top: 2px;">
+                      {desc}
+                    </div>
+                  )
                 );
               })()}
             </div>
@@ -487,10 +508,10 @@ const WidgetsPage: Component<{
       },
     },
     {
-      key: "template",
-      title: t("common.type"),
+      key: 'template',
+      title: t('common.type'),
       render: (widget: WidgetWithId) => {
-        const type = widget.template?.type || t("common.unknown");
+        const type = widget.template?.type || t('common.unknown');
         return (
           <span
             style={`
@@ -510,28 +531,28 @@ const WidgetsPage: Component<{
       },
     },
     {
-      key: "update_interval_seconds",
-      title: t("widgets.updateInterval"),
+      key: 'update_interval_seconds',
+      title: t('widgets.updateInterval'),
       sortable: true,
       render: (widget: WidgetWithId) =>
         widget.update_interval_seconds
           ? `${widget.update_interval_seconds}s`
-          : t("common.notAvailable"),
+          : t('common.notAvailable'),
     },
   ];
 
   // Use function to make actions reactive to i18n changes
   const actions = (): TableAction<WidgetWithId>[] => [
     {
-      label: t("widgets.viewDetails"),
+      label: t('widgets.viewDetails'),
       icon: BsEye,
       handler: (widget: WidgetWithId) => openWidgetDrawer(widget),
     },
     // Only include delete action if user has delete permission
-    ...(canPerformAction("widgets", "delete")
+    ...(canPerformAction('widgets', 'delete')
       ? [
           {
-            label: t("widgets.delete"),
+            label: t('widgets.delete'),
             icon: BsTrash,
             handler: (widget: WidgetWithId) => openDeleteConfirm(widget),
           },
@@ -544,14 +565,14 @@ const WidgetsPage: Component<{
       {/* Delete confirmation dialog */}
       <ConfirmDialog
         show={showDeleteConfirm()}
-        title={t("widgets.deleteConfirmTitle")}
+        title={t('widgets.deleteConfirmTitle')}
         message={
           widgetUsage().length > 0
-            ? t("widgets.deleteConfirmUsageWarning", {
+            ? t('widgets.deleteConfirmUsageWarning', {
                 widget: widgetToDelete()?.name,
                 count: widgetUsage().length,
               })
-            : t("widgets.deleteConfirmMessage", {
+            : t('widgets.deleteConfirmMessage', {
                 widget: widgetToDelete()?.name,
               })
         }
@@ -559,29 +580,29 @@ const WidgetsPage: Component<{
         onClose={closeDeleteConfirm}
       >
         <Show when={isLoadingUsage()}>
-          <div class="usage-loading">{t("common.loading")}</div>
+          <div class="usage-loading">{t('common.loading')}</div>
         </Show>
         <Show when={!isLoadingUsage() && widgetUsage().length > 0}>
           <div class="usage-warning">
-            <p class="usage-warning-text">{t("widgets.usedInPlaylists")}</p>
+            <p class="usage-warning-text">{t('widgets.usedInPlaylists')}</p>
             <ul class="usage-list">
               <For each={widgetUsage()}>
                 {(usage) => <li class="usage-item">{usage.playlist_name}</li>}
               </For>
             </ul>
-            <p class="usage-cascade-note">{t("widgets.deleteCascadeNote")}</p>
+            <p class="usage-cascade-note">{t('widgets.deleteCascadeNote')}</p>
           </div>
         </Show>
         <Show when={isDeleting()}>
-          <div class="deleting-indicator">{t("common.deleting")}</div>
+          <div class="deleting-indicator">{t('common.deleting')}</div>
         </Show>
       </ConfirmDialog>
 
       <Show when={showUploadModal()}>
         <Modal
           ref={(ref: ModalRef) => (uploadModalRef = ref)}
-          title={t("widgets.uploadWidget")}
-          description={t("widgets.uploadDescription")}
+          title={t('widgets.uploadWidget')}
+          description={t('widgets.uploadDescription')}
           onClose={() => setShowUploadModal(false)}
           contentClass="widget-upload-modal"
         >
@@ -616,15 +637,17 @@ const WidgetsPage: Component<{
             {/* Widget metadata header */}
             <div class="widget-metadata">
               <div class="metadata-item">
-                <strong>{t("common.type")}:</strong>{" "}
+                <strong>{t('common.type')}:</strong>{' '}
                 <span class="type-value">
-                  {currentWidget()!.template?.type || t("common.unknown")}
+                  {currentWidget()!.template?.type || t('common.unknown')}
                 </span>
               </div>
               {currentWidget()!.update_interval_seconds && (
                 <div class="metadata-item">
-                  <strong>{t("widgets.updateInterval")}:</strong>{" "}
-                  <span class="interval-value">{currentWidget()!.update_interval_seconds}s</span>
+                  <strong>{t('widgets.updateInterval')}:</strong>{' '}
+                  <span class="interval-value">
+                    {currentWidget()!.update_interval_seconds}s
+                  </span>
                 </div>
               )}
             </div>
@@ -636,31 +659,31 @@ const WidgetsPage: Component<{
       </Show>
 
       <TableView<number, WidgetWithId>
-        title={t("widgets.title")}
+        title={t('widgets.title')}
         resource="widgets"
         params={props.params}
         fetchData={fetchData}
         ref={setRef}
         toolbar={{
-          searchPlaceholder: t("common.search"),
+          searchPlaceholder: t('common.search'),
           mainAction: (
             <Button
-              label={t("widgets.uploadWidget")}
+              label={t('widgets.uploadWidget')}
               onClick={openUploadModal}
               icon={AiOutlineUpload}
               color="primary"
-              disabled={!canPerformAction("widgets", "create")}
+              disabled={!canPerformAction('widgets', 'create')}
             />
           ),
         }}
         table={{
           columns,
           actions,
-          actionsLabel: t("common.actions"),
+          actionsLabel: t('common.actions'),
           defaultRowAction: {
             icon: BsEye,
             handler: (widget: WidgetWithId) => openWidgetDrawer(widget),
-            label: t("widgets.viewDetails"),
+            label: t('widgets.viewDetails'),
           },
         }}
         pagination={{ itemsPerPage }}

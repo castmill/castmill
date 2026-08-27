@@ -8,11 +8,11 @@
  *
  * Inspired by the selection patterns in Gmail, Google Drive, and Notion.
  */
-import { Component, JSX, Show } from "solid-js";
-import { IoCloseCircleOutline } from "solid-icons/io";
-import { BiRegularSelectMultiple } from "solid-icons/bi";
-import { IconWrapper } from "../icon-wrapper";
-import "./selection-action-bar.scss";
+import { Component, JSX, Show } from 'solid-js';
+import { IoCloseCircleOutline } from 'solid-icons/io';
+import { BiRegularSelectMultiple } from 'solid-icons/bi';
+import { IconWrapper } from '../icon-wrapper';
+import './selection-action-bar.scss';
 
 export interface SelectionActionBarProps {
   /** Number of selected items */
@@ -32,10 +32,12 @@ export interface SelectionActionBarProps {
   children?: JSX.Element;
 }
 
-export const SelectionActionBar: Component<SelectionActionBarProps> = (props) => {
+export const SelectionActionBar: Component<SelectionActionBarProps> = (
+  props
+) => {
   const label = () => {
-    const template = props.label || "{count} selected";
-    return template.replace("{count}", String(props.count));
+    const template = props.label || '{count} selected';
+    return template.replace('{count}', String(props.count));
   };
 
   const isActive = () => props.count > 0;
@@ -46,7 +48,7 @@ export const SelectionActionBar: Component<SelectionActionBarProps> = (props) =>
       class="castmill-selection-bar"
       classList={{ visible: isActive(), hint: showHint() }}
       role="toolbar"
-      aria-label={isActive() ? "Bulk actions" : "Selection hint"}
+      aria-label={isActive() ? 'Bulk actions' : 'Selection hint'}
     >
       <div class="selection-bar-inner">
         <Show

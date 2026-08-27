@@ -8,7 +8,7 @@
 /// <reference lib="webworker" />
 
 // Version number - update this to force cache refresh
-const SW_VERSION = "1.0.1";
+const SW_VERSION = '1.0.1';
 const APP_CACHE_NAME = `castmill-app-${SW_VERSION}`;
 
 // File patterns that should use network-first strategy (app code that may be updated)
@@ -19,13 +19,13 @@ function shouldUseNetworkFirst(url) {
   return NETWORK_FIRST_PATTERNS.some((pattern) => pattern.test(url));
 }
 
-self.addEventListener("install", function (event) {
+self.addEventListener('install', function (event) {
   console.log(`Installed worker version ${SW_VERSION}`);
   // Skip waiting to activate immediately
   self.skipWaiting();
 });
 
-self.addEventListener("activate", function (event) {
+self.addEventListener('activate', function (event) {
   console.log(`Activated worker version ${SW_VERSION}`);
   // Clean up old caches
   event.waitUntil(
@@ -34,21 +34,24 @@ self.addEventListener("activate", function (event) {
       .then((cacheNames) => {
         return Promise.all(
           cacheNames.map((cacheName) => {
-            if (cacheName.startsWith("castmill-app-") && cacheName !== APP_CACHE_NAME) {
+            if (
+              cacheName.startsWith('castmill-app-') &&
+              cacheName !== APP_CACHE_NAME
+            ) {
               console.log(`Deleting old cache: ${cacheName}`);
               return caches.delete(cacheName);
             }
-          }),
+          })
         );
       })
       .then(() => {
         // Take control of all clients immediately
         return self.clients.claim();
-      }),
+      })
   );
 });
 
-self.addEventListener("fetch", function (event) {
+self.addEventListener('fetch', function (event) {
   const request = event.request;
   const url = new URL(request.url);
 
@@ -70,14 +73,17 @@ self.addEventListener("fetch", function (event) {
           return networkResponse;
         } catch (err) {
           // Network failed, try cache
-          console.log("Network failed, falling back to cache for:", url.pathname);
+          console.log(
+            'Network failed, falling back to cache for:',
+            url.pathname
+          );
           const cachedResponse = await caches.match(request);
           if (cachedResponse) {
             return cachedResponse;
           }
           throw err;
         }
-      })(),
+      })()
     );
   } else {
     // Use cache-first for other assets (media, fonts, etc.)
@@ -92,10 +98,10 @@ self.addEventListener("fetch", function (event) {
             const result = await fetch(fetchRequest);
             return result;
           } catch (err) {
-            console.error("Error fetching", err);
+            console.error('Error fetching', err);
           }
         }
-      })(),
+      })()
     );
   }
 });

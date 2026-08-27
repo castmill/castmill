@@ -1,17 +1,17 @@
-cordova.define("cordova/plugin/security", function (d, c, e) {
+cordova.define('cordova/plugin/security', function (d, c, e) {
   function f(h) {}
   var a;
   if (window.PalmSystem) {
-    f("Window.PalmSystem Available");
-    a = d("cordova/plugin/webos/service");
+    f('Window.PalmSystem Available');
+    a = d('cordova/plugin/webos/service');
   } else {
     a = {
       Request: function (h, i) {
-        f(h + " invoked. But I am a dummy because PalmSystem is not available");
-        if (typeof i.onFailure === "function") {
+        f(h + ' invoked. But I am a dummy because PalmSystem is not available');
+        if (typeof i.onFailure === 'function') {
           i.onFailure({
             returnValue: false,
-            errorText: "PalmSystem Not Available. Cordova is not installed?",
+            errorText: 'PalmSystem Not Available. Cordova is not installed?',
           });
         }
       },
@@ -27,145 +27,162 @@ cordova.define("cordova/plugin/security", function (d, c, e) {
   }
   var g = function () {};
   g.prototype.registerServerCertificate = function (i, j, k) {
-    f("registerServerCertificate: " + JSON.stringify(k));
+    f('registerServerCertificate: ' + JSON.stringify(k));
     if (
       k.userName === undefined ||
-      typeof k.userName !== "string" ||
+      typeof k.userName !== 'string' ||
       k.userName.length < 4 ||
       k.userName.length > 10 ||
       k.password === undefined ||
-      typeof k.password !== "string" ||
+      typeof k.password !== 'string' ||
       k.password.length < 4 ||
       k.password.length > 10 ||
       k.certificate === undefined ||
-      typeof k.certificate !== "string"
+      typeof k.certificate !== 'string'
     ) {
-      if (typeof j === "function") {
+      if (typeof j === 'function') {
         var h = {};
         b(
           h,
-          "SRSC",
-          "Security.registerServerCertificate returns failure. invalid parameters or out of range.",
+          'SRSC',
+          'Security.registerServerCertificate returns failure. invalid parameters or out of range.'
         );
         j(h);
       }
       return;
     }
-    a.Request("luna://com.webos.service.commercial.signage.storageservice/security/", {
-      method: "registerServerCertificate",
-      parameters: { userName: k.userName, password: k.password, certificate: k.certificate },
-      onSuccess: function (l) {
-        f("registerServerCertificate: On Success");
-        if (l.returnValue === true) {
-          if (typeof i === "function") {
-            i();
+    a.Request(
+      'luna://com.webos.service.commercial.signage.storageservice/security/',
+      {
+        method: 'registerServerCertificate',
+        parameters: {
+          userName: k.userName,
+          password: k.password,
+          certificate: k.certificate,
+        },
+        onSuccess: function (l) {
+          f('registerServerCertificate: On Success');
+          if (l.returnValue === true) {
+            if (typeof i === 'function') {
+              i();
+            }
           }
-        }
-      },
-      onFailure: function (l) {
-        f("registerServerCertificate: On Failure");
-        delete l.returnValue;
-        if (typeof j === "function") {
-          b(l, "SRSC", "Security.registerServerCertificate returns failure.");
-          j(l);
-        }
-      },
-    });
-    f("Security.registerServerCertificate Done");
+        },
+        onFailure: function (l) {
+          f('registerServerCertificate: On Failure');
+          delete l.returnValue;
+          if (typeof j === 'function') {
+            b(l, 'SRSC', 'Security.registerServerCertificate returns failure.');
+            j(l);
+          }
+        },
+      }
+    );
+    f('Security.registerServerCertificate Done');
   };
   g.prototype.unregisterServerCertificate = function (i, j, k) {
-    f("unregisterServerCertificate: " + JSON.stringify(k));
+    f('unregisterServerCertificate: ' + JSON.stringify(k));
     if (
       k.userName === undefined ||
-      typeof k.userName !== "string" ||
+      typeof k.userName !== 'string' ||
       k.userName.length < 4 ||
       k.userName.length > 10 ||
       k.password === undefined ||
-      typeof k.password !== "string" ||
+      typeof k.password !== 'string' ||
       k.password.length < 4 ||
       k.password.length > 10
     ) {
-      if (typeof j === "function") {
+      if (typeof j === 'function') {
         var h = {};
         b(
           h,
-          "SUSC",
-          "Security.unregisterServerCertificate returns failure. invalid parameters or out of range.",
+          'SUSC',
+          'Security.unregisterServerCertificate returns failure. invalid parameters or out of range.'
         );
         j(h);
       }
       return;
     }
-    a.Request("luna://com.webos.service.commercial.signage.storageservice/security/", {
-      method: "unregisterServerCertificate",
-      parameters: { userName: k.userName, password: k.password },
-      onSuccess: function (l) {
-        f("unregisterServerCertificate: On Success");
-        if (l.returnValue === true) {
-          if (typeof i === "function") {
-            i();
+    a.Request(
+      'luna://com.webos.service.commercial.signage.storageservice/security/',
+      {
+        method: 'unregisterServerCertificate',
+        parameters: { userName: k.userName, password: k.password },
+        onSuccess: function (l) {
+          f('unregisterServerCertificate: On Success');
+          if (l.returnValue === true) {
+            if (typeof i === 'function') {
+              i();
+            }
           }
-        }
-      },
-      onFailure: function (l) {
-        f("unregisterServerCertificate: On Failure");
-        delete l.returnValue;
-        if (typeof j === "function") {
-          b(l, "SUSC", "Security.unregisterServerCertificate returns failure.");
-          j(l);
-        }
-      },
-    });
-    f("Security.unregisterServerCertificate Done");
+        },
+        onFailure: function (l) {
+          f('unregisterServerCertificate: On Failure');
+          delete l.returnValue;
+          if (typeof j === 'function') {
+            b(
+              l,
+              'SUSC',
+              'Security.unregisterServerCertificate returns failure.'
+            );
+            j(l);
+          }
+        },
+      }
+    );
+    f('Security.unregisterServerCertificate Done');
   };
   g.prototype.existServerCertificate = function (i, j, k) {
-    f("existServerCertificate: " + JSON.stringify(k));
+    f('existServerCertificate: ' + JSON.stringify(k));
     if (
       k.userName === undefined ||
-      typeof k.userName !== "string" ||
+      typeof k.userName !== 'string' ||
       k.userName.length < 4 ||
       k.userName.length > 10 ||
       k.password === undefined ||
-      typeof k.password !== "string" ||
+      typeof k.password !== 'string' ||
       k.password.length < 4 ||
       k.password.length > 10
     ) {
-      if (typeof j === "function") {
+      if (typeof j === 'function') {
         var h = {};
         b(
           h,
-          "SESC",
-          "Security.existServerCertificate returns failure. invalid parameters or out of range.",
+          'SESC',
+          'Security.existServerCertificate returns failure. invalid parameters or out of range.'
         );
         j(h);
       }
       return;
     }
-    a.Request("luna://com.webos.service.commercial.signage.storageservice/security/", {
-      method: "existServerCertificate",
-      parameters: { userName: k.userName, password: k.password },
-      onSuccess: function (l) {
-        f("existServerCertificate: On Success");
-        if (l.returnValue === true) {
-          if (typeof i === "function") {
-            var m = {};
-            m.userName = k.userName;
-            m.exist = l.exist;
-            i(m);
+    a.Request(
+      'luna://com.webos.service.commercial.signage.storageservice/security/',
+      {
+        method: 'existServerCertificate',
+        parameters: { userName: k.userName, password: k.password },
+        onSuccess: function (l) {
+          f('existServerCertificate: On Success');
+          if (l.returnValue === true) {
+            if (typeof i === 'function') {
+              var m = {};
+              m.userName = k.userName;
+              m.exist = l.exist;
+              i(m);
+            }
           }
-        }
-      },
-      onFailure: function (l) {
-        f("existServerCertificate: On Failure");
-        delete l.returnValue;
-        if (typeof j === "function") {
-          b(l, "SESC", "Security.existServerCertificate returns failure.");
-          j(l);
-        }
-      },
-    });
-    f("Security.existServerCertificate Done");
+        },
+        onFailure: function (l) {
+          f('existServerCertificate: On Failure');
+          delete l.returnValue;
+          if (typeof j === 'function') {
+            b(l, 'SESC', 'Security.existServerCertificate returns failure.');
+            j(l);
+          }
+        },
+      }
+    );
+    f('Security.existServerCertificate Done');
   };
   e.exports = g;
 });
-Security = cordova.require("cordova/plugin/security");
+Security = cordova.require('cordova/plugin/security');

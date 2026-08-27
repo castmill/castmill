@@ -1,20 +1,28 @@
-import { Component, Switch, Match, Show } from "solid-js";
+import { Component, Switch, Match, Show } from 'solid-js';
 
-import { ResourceManager } from "@castmill/cache";
+import { ResourceManager } from '@castmill/cache';
 
-import { Group, GroupComponent } from "./group";
-import { Image, ImageComponent } from "./image";
-import { PaginatedList, PaginatedListComponent, ListComponent } from "./paginated-list";
-import { Scroller, ScrollerComponent } from "./scroller";
-import { ImageCarousel, ImageCarouselComponent } from "./image-carousel";
-import { Text, TextComponent, TextComponentOptions } from "./text";
-import { TemplateConfig, resolveKey, resolveOption } from "./binding";
-import { Video, VideoComponent } from "./video";
-import { QRCode, QRCodeComponent } from "./qr-code";
-import { TemplateComponent, TemplateComponentType, TemplateComponentTypeUnion } from "./template";
-import { Layout, LayoutComponent } from "./layout";
-import { Timeline } from "./timeline";
-import { PlayerGlobals } from "../../interfaces/player-globals.interface";
+import { Group, GroupComponent } from './group';
+import { Image, ImageComponent } from './image';
+import {
+  PaginatedList,
+  PaginatedListComponent,
+  ListComponent,
+} from './paginated-list';
+import { Scroller, ScrollerComponent } from './scroller';
+import { ImageCarousel, ImageCarouselComponent } from './image-carousel';
+import { Text, TextComponent, TextComponentOptions } from './text';
+import { TemplateConfig, resolveKey, resolveOption } from './binding';
+import { Video, VideoComponent } from './video';
+import { QRCode, QRCodeComponent } from './qr-code';
+import {
+  TemplateComponent,
+  TemplateComponentType,
+  TemplateComponentTypeUnion,
+} from './template';
+import { Layout, LayoutComponent } from './layout';
+import { Timeline } from './timeline';
+import { PlayerGlobals } from '../../interfaces/player-globals.interface';
 
 /**
  *
@@ -31,14 +39,14 @@ function checkFilter(
   filter: Record<string, any> | undefined,
   config: TemplateConfig,
   context: any,
-  globals: PlayerGlobals,
+  globals: PlayerGlobals
 ): boolean {
   if (!filter) {
     return true;
   }
 
   return Object.keys(filter).every(
-    (key) => filter[key] === resolveKey(key, config, context, globals)[0],
+    (key) => filter[key] === resolveKey(key, config, context, globals)[0]
   );
 }
 
@@ -50,7 +58,7 @@ function resolveStyleBindings(
   style: Record<string, any>,
   config: TemplateConfig,
   context: any,
-  globals: PlayerGlobals,
+  globals: PlayerGlobals
 ): Record<string, any> {
   const resolvedStyle: Record<string, any> = {};
   const keys = Object.keys(style);
@@ -91,7 +99,12 @@ export const Item: Component<{
     for (let i = 0; i < $styles.length; i++) {
       if (
         $styles[i] &&
-        checkFilter($styles[i]!.filter, props.config, props.context, props.globals)
+        checkFilter(
+          $styles[i]!.filter,
+          props.config,
+          props.context,
+          props.globals
+        )
       ) {
         style = { ...style, ...$styles[i]!.style };
       }
@@ -99,11 +112,21 @@ export const Item: Component<{
   }
 
   // Resolve any bindings in style properties (e.g., { key: "data.progress_percent" })
-  style = resolveStyleBindings(style, props.config, props.context, props.globals);
+  style = resolveStyleBindings(
+    style,
+    props.config,
+    props.context,
+    props.globals
+  );
 
   return (
     <Show
-      when={checkFilter(props.component.filter, props.config, props.context, props.globals)}
+      when={checkFilter(
+        props.component.filter,
+        props.config,
+        props.context,
+        props.globals
+      )}
       fallback={<Empty onReady={props.onReady} />}
     >
       <Switch fallback={<p>Invalid component type...</p>}>
@@ -114,7 +137,7 @@ export const Item: Component<{
               props.component.opts,
               props.config,
               props.context,
-              props.globals,
+              props.globals
             )}
             style={style}
             animations={props.component.animations}
@@ -130,7 +153,7 @@ export const Item: Component<{
               props.component.opts,
               props.config,
               props.context,
-              props.globals,
+              props.globals
             )}
             style={style}
             timeline={props.timeline}
@@ -146,7 +169,7 @@ export const Item: Component<{
               props.component.opts as TextComponentOptions,
               props.config,
               props.context,
-              props.globals,
+              props.globals
             )}
             animations={(props.component as TextComponent).animations}
             style={style}
@@ -175,7 +198,7 @@ export const Item: Component<{
               props.component.opts,
               props.config,
               props.context,
-              props.globals,
+              props.globals
             )}
             style={style}
             timeline={props.timeline}
@@ -185,7 +208,9 @@ export const Item: Component<{
           />
         </Match>
         {/* Note: 'list' type is handled by fromJSON which returns PaginatedListComponent */}
-        <Match when={props.component.type == TemplateComponentType.PaginatedList}>
+        <Match
+          when={props.component.type == TemplateComponentType.PaginatedList}
+        >
           <PaginatedList
             name={props.component.name}
             config={props.config}
@@ -193,7 +218,7 @@ export const Item: Component<{
               props.component.opts,
               props.config,
               props.context,
-              props.globals,
+              props.globals
             )}
             component={(props.component as PaginatedListComponent).component}
             style={style}
@@ -211,7 +236,7 @@ export const Item: Component<{
               props.component.opts,
               props.config,
               props.context,
-              props.globals,
+              props.globals
             )}
             component={(props.component as ScrollerComponent).component}
             style={style}
@@ -221,7 +246,9 @@ export const Item: Component<{
             onReady={props.onReady}
           />
         </Match>
-        <Match when={props.component.type == TemplateComponentType.ImageCarousel}>
+        <Match
+          when={props.component.type == TemplateComponentType.ImageCarousel}
+        >
           <ImageCarousel
             name={props.component.name}
             config={props.config}
@@ -230,7 +257,7 @@ export const Item: Component<{
               props.component.opts,
               props.config,
               props.context,
-              props.globals,
+              props.globals
             )}
             style={style}
             timeline={props.timeline}
@@ -246,7 +273,7 @@ export const Item: Component<{
               props.component.opts,
               props.config,
               props.context,
-              props.globals,
+              props.globals
             )}
             style={style}
             animations={props.component.animations}

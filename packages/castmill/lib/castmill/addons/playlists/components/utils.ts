@@ -21,12 +21,12 @@ export function safeStringify(obj: unknown): string {
     return JSON.stringify(obj);
   } catch (error) {
     // If we get a circular reference error, fall back to safe version
-    if (error instanceof TypeError && error.message.includes("circular")) {
+    if (error instanceof TypeError && error.message.includes('circular')) {
       const seen = new WeakSet();
       return JSON.stringify(obj, (_key, value) => {
-        if (typeof value === "object" && value !== null) {
+        if (typeof value === 'object' && value !== null) {
           if (seen.has(value)) {
-            return "[Circular]";
+            return '[Circular]';
           }
           seen.add(value);
         }
@@ -45,7 +45,7 @@ export function safeStringify(obj: unknown): string {
 export function safeDeepClone<T>(obj: T): T {
   const seen = new WeakSet();
   const clone = (value: any): any => {
-    if (value === null || typeof value !== "object") return value;
+    if (value === null || typeof value !== 'object') return value;
     if (seen.has(value)) return undefined; // Skip circular references
     seen.add(value);
     if (Array.isArray(value)) return value.map(clone);

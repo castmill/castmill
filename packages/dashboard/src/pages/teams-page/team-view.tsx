@@ -1,19 +1,19 @@
-import { createSignal, createEffect, Show, on } from "solid-js";
+import { createSignal, createEffect, Show, on } from 'solid-js';
 
-import { Button, FormItem } from "@castmill/ui-common";
-import { usePermissions } from "../../hooks/usePermissions";
+import { Button, FormItem } from '@castmill/ui-common';
+import { usePermissions } from '../../hooks/usePermissions';
 
-import { BsCheckLg, BsX } from "solid-icons/bs";
-import { JsonTeam } from "../../interfaces/team";
-import { TeamUpdate } from "../../services/teams.service";
-import { TeamResourcesView } from "./team-resources-view";
-import { useI18n } from "../../i18n";
+import { BsCheckLg, BsX } from 'solid-icons/bs';
+import { JsonTeam } from '../../interfaces/team';
+import { TeamUpdate } from '../../services/teams.service';
+import { TeamResourcesView } from './team-resources-view';
+import { useI18n } from '../../i18n';
 
-import styles from "./teams-page.module.scss";
+import styles from './teams-page.module.scss';
 
 export const TeamView = (props: {
   organizationId: string;
-  team: Omit<TeamUpdate, "id"> & { id?: number };
+  team: Omit<TeamUpdate, 'id'> & { id?: number };
   onSubmit: (teamUpdate: TeamUpdate) => Promise<JsonTeam | void>;
 }) => {
   const { t } = useI18n();
@@ -29,36 +29,36 @@ export const TeamView = (props: {
       () => props.team.id,
       () => {
         setTeamId(props.team.id);
-        setName(props.team.name || "");
+        setName(props.team.name || '');
         setErrors(new Map());
         setIsFormModified(false);
-      },
-    ),
+      }
+    )
   );
 
   // Check if user can update teams (for existing teams) or create teams (for new teams)
   const canEdit = () => {
     if (props.team.id) {
       // Editing existing team requires update permission
-      return canPerformAction("teams", "update");
+      return canPerformAction('teams', 'update');
     } else {
       // Creating new team requires create permission
-      return canPerformAction("teams", "create");
+      return canPerformAction('teams', 'create');
     }
   };
 
   const validateField = (fieldId: string, value: string) => {
-    let error = "";
+    let error = '';
     switch (fieldId) {
-      case "name":
+      case 'name':
         if (!value) {
-          error = "Name is required";
+          error = 'Name is required';
         } else if (value.length < 5) {
-          error = "Name must be at least 5 characters";
+          error = 'Name must be at least 5 characters';
         }
         break;
       default:
-        error = "";
+        error = '';
     }
 
     setErrors((prev) => new Map(prev).set(fieldId, error));
@@ -72,17 +72,20 @@ export const TeamView = (props: {
   });
 
   const isFormValid = () => {
-    return ![...errors().values()].some((e) => e) && isFormModified() && canEdit();
+    return (
+      ![...errors().values()].some((e) => e) && isFormModified() && canEdit()
+    );
   };
 
   return (
     <div style="width: 100%; box-sizing: border-box;">
       <div class="info">
         <Show when={props.team.insertedAt}>
-          <span>{t("teams.addedOn")} </span> <span>{`${props.team.insertedAt}`}. </span>
+          <span>{t('teams.addedOn')} </span>{' '}
+          <span>{`${props.team.insertedAt}`}. </span>
         </Show>
         <Show when={props.team.updatedAt}>
-          <span>{t("teams.lastUpdatedOn")} </span>
+          <span>{t('teams.lastUpdatedOn')} </span>
           <span>{`${props.team.updatedAt}`}</span>
         </Show>
       </div>
@@ -104,19 +107,19 @@ export const TeamView = (props: {
       >
         <div class="form-inputs">
           <FormItem
-            label={t("common.name")}
+            label={t('common.name')}
             id="name"
             value={name()!}
-            placeholder={t("teams.enterTeamName")}
+            placeholder={t('teams.enterTeamName')}
             disabled={!canEdit()}
             autofocus={!props.team.id}
             onInput={(value: string | number | boolean) => {
               const strValue = value as string;
               setName(strValue);
-              validateField("name", strValue);
+              validateField('name', strValue);
             }}
           >
-            <div class="error">{errors().get("name")}</div>
+            <div class="error">{errors().get('name')}</div>
           </FormItem>
         </div>
 
@@ -126,21 +129,21 @@ export const TeamView = (props: {
             organizationId={props.organizationId}
             teamId={teamId()!}
             onRemove={(member) => {
-              console.log("Remove member", member);
+              console.log('Remove member', member);
             }}
           />
         </Show>
 
-        <div class={styles["actions"]}>
+        <div class={styles['actions']}>
           <Button
-            label={props.team.id ? t("common.save") : t("common.create")}
+            label={props.team.id ? t('common.save') : t('common.create')}
             type="submit"
             disabled={!isFormValid()}
             icon={BsCheckLg}
             color="success"
           />
           <Button
-            label={t("common.reset")}
+            label={t('common.reset')}
             disabled={!canEdit()}
             onClick={() => {
               setName(props.team.name);

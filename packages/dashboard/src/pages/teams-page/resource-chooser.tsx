@@ -7,36 +7,39 @@ import {
   TableAction,
   TableView,
   useToast,
-} from "@castmill/ui-common";
-import { BsEye } from "solid-icons/bs";
-import { createSignal } from "solid-js";
+} from '@castmill/ui-common';
+import { BsEye } from 'solid-icons/bs';
+import { createSignal } from 'solid-js';
 
-import { baseUrl } from "../../env";
-import { authFetch } from "../../components/auth";
-import { FaSolidFolderPlus } from "solid-icons/fa";
-import { TeamsService } from "../../services/teams.service";
-import { AccessSelector } from "./access-selector";
-import { useI18n } from "../../i18n";
+import { baseUrl } from '../../env';
+import { authFetch } from '../../components/auth';
+import { FaSolidFolderPlus } from 'solid-icons/fa';
+import { TeamsService } from '../../services/teams.service';
+import { AccessSelector } from './access-selector';
+import { useI18n } from '../../i18n';
 
 type HandleResponseOptions = {
   parse?: boolean;
 };
 
-async function handleResponse<T = any>(response: Response, options: { parse: true }): Promise<T>;
 async function handleResponse<T = any>(
   response: Response,
-  options?: { parse?: false },
+  options: { parse: true }
+): Promise<T>;
+async function handleResponse<T = any>(
+  response: Response,
+  options?: { parse?: false }
 ): Promise<void>;
 async function handleResponse<T = any>(
   response: Response,
-  options: HandleResponseOptions = {},
+  options: HandleResponseOptions = {}
 ): Promise<T | void> {
   if (response.status >= 200 && response.status < 300) {
     if (options.parse) {
       return (await response.json()) as T;
     }
   } else {
-    let errMsg = "";
+    let errMsg = '';
     try {
       const { errors } = await response.json();
       errMsg = `${errors.detail || response.statusText}`;
@@ -59,13 +62,19 @@ export const ResourceChooser = (props: {
 
   const [data, setData] = createSignal<any[]>([]);
   const [currentResource, setCurrentResource] = createSignal<any>();
-  const [selectedResources, setSelectedResources] = createSignal(new Set<string>());
+  const [selectedResources, setSelectedResources] = createSignal(
+    new Set<string>()
+  );
 
   const [showConfirmDialog, setShowConfirmDialog] = createSignal(false);
-  const [showConfirmDialogMultiple, setShowConfirmDialogMultiple] = createSignal(false);
+  const [showConfirmDialogMultiple, setShowConfirmDialogMultiple] =
+    createSignal(false);
   const [showModal, setShowModal] = createSignal(false);
 
-  const confirmChooseResource = async (resource: { id: string }, access: AccessType[]) => {
+  const confirmChooseResource = async (
+    resource: { id: string },
+    access: AccessType[]
+  ) => {
     if (!resource) {
       return;
     }
@@ -75,13 +84,15 @@ export const ResourceChooser = (props: {
         props.teamId,
         props.resourceType,
         resource.id,
-        access,
+        access
       );
 
       props.onSelect([resource]);
-      toast.success("Resource added to team successfully");
+      toast.success('Resource added to team successfully');
     } catch (error) {
-      toast.error(t("teams.errors.addResourceToTeam", { error: String(error) }));
+      toast.error(
+        t('teams.errors.addResourceToTeam', { error: String(error) })
+      );
     }
     setShowConfirmDialog(false);
   };
@@ -95,16 +106,18 @@ export const ResourceChooser = (props: {
             props.teamId,
             props.resourceType,
             resourceId,
-            access,
-          ),
-        ),
+            access
+          )
+        )
       );
 
       const resources = Array.from(selectedResources()).map((id) => ({ id }));
       props.onSelect(resources);
-      toast.success("Resources added to team successfully");
+      toast.success('Resources added to team successfully');
     } catch (error) {
-      toast.error(t("teams.errors.addResourceToTeam", { error: String(error) }));
+      toast.error(
+        t('teams.errors.addResourceToTeam', { error: String(error) })
+      );
     }
     setShowConfirmDialogMultiple(false);
   };
@@ -120,11 +133,18 @@ export const ResourceChooser = (props: {
    *
    * @returns { page: number, data: Device[], total: number }
    */
-  const fetchResources = async ({ page, sortOptions, search, filters }: FetchDataOptions) => {
+  const fetchResources = async ({
+    page,
+    sortOptions,
+    search,
+    filters,
+  }: FetchDataOptions) => {
     const filtersToString = (filters: Record<string, string | boolean>) => {
       return Object.entries(filters)
-        .map(([key, value]) => (typeof value === "boolean" ? `${key}` : `${key}:${value}`))
-        .join(",");
+        .map(([key, value]) =>
+          typeof value === 'boolean' ? `${key}` : `${key}:${value}`
+        )
+        .join(',');
     };
 
     const query: {
@@ -136,11 +156,11 @@ export const ResourceChooser = (props: {
     };
 
     if (search) {
-      query["search"] = search;
+      query['search'] = search;
     }
 
     if (filters) {
-      query["filters"] = filtersToString(filters);
+      query['filters'] = filtersToString(filters);
     }
 
     const queryString = new URLSearchParams(query).toString();
@@ -148,16 +168,19 @@ export const ResourceChooser = (props: {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${props.organizationId}/${props.resourceType}?${queryString}`,
       {
-        method: "GET",
+        method: 'GET',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
-      },
+      }
     );
 
-    const result = await handleResponse<{ data: any[]; count: number }>(response, {
-      parse: true,
-    });
+    const result = await handleResponse<{ data: any[]; count: number }>(
+      response,
+      {
+        parse: true,
+      }
+    );
 
     setData(result.data);
     return result;
@@ -165,18 +188,18 @@ export const ResourceChooser = (props: {
 
   const columns = [
     {
-      key: "icon",
-      title: "Icon",
+      key: 'icon',
+      title: 'Icon',
       sortable: true,
       render: (item: any) => {
-        const style = "width: 4em; height: 4em;object-fit: contain;";
-        const thumbnail = item.files["thumbnail"]?.uri;
+        const style = 'width: 4em; height: 4em;object-fit: contain;';
+        const thumbnail = item.files['thumbnail']?.uri;
         // TODO: Use a default thumbnail for the resources that don't have one
         return <img style={style} src={thumbnail as string} alt={item.name} />;
       },
     },
-    { key: "name", title: "Name", sortable: true },
-    { key: "id", title: "ID", sortable: true },
+    { key: 'name', title: 'Name', sortable: true },
+    { key: 'id', title: 'ID', sortable: true },
   ];
 
   interface TableItem {}
@@ -188,7 +211,7 @@ export const ResourceChooser = (props: {
         setCurrentResource(item);
         setShowModal(true);
       },
-      label: "View",
+      label: 'View',
     },
     {
       icon: FaSolidFolderPlus,
@@ -196,24 +219,24 @@ export const ResourceChooser = (props: {
         setCurrentResource(item);
         setShowConfirmDialog(true);
       },
-      label: "Choose",
+      label: 'Choose',
     },
   ];
 
-  type AccessType = "read" | "write" | "delete";
-  const [access, setAccess] = createSignal<AccessType[]>(["read"]);
+  type AccessType = 'read' | 'write' | 'delete';
+  const [access, setAccess] = createSignal<AccessType[]>(['read']);
 
   return (
     <div style="width: 50vw;display: flex; flex-direction: column;justify-content: flex-start; padding: 1em 0.5em 0 0.5em;">
       <ConfirmDialog
         show={showConfirmDialog()}
-        title={t("teams.addResourceToTeam")}
+        title={t('teams.addResourceToTeam')}
         message={`Are you sure you want to add resource "${currentResource()?.name}"?`}
         onClose={() => setShowConfirmDialog(false)}
         onConfirm={() => confirmChooseResource(currentResource(), access())}
       >
         <AccessSelector
-          availableAccess={["read", "write", "delete"]}
+          availableAccess={['read', 'write', 'delete']}
           selected={access()}
           onChange={setAccess}
         />
@@ -221,8 +244,8 @@ export const ResourceChooser = (props: {
 
       <ConfirmDialog
         show={showConfirmDialogMultiple()}
-        title={t("teams.addResourcesToTeams")}
-        message={t("teams.confirmAddResources")}
+        title={t('teams.addResourcesToTeams')}
+        message={t('teams.confirmAddResources')}
         onClose={() => setShowConfirmDialogMultiple(false)}
         onConfirm={() => confirmChooseMultipleResources(access())}
       >
@@ -234,7 +257,7 @@ export const ResourceChooser = (props: {
         </div>
 
         <AccessSelector
-          availableAccess={["read", "write", "delete"]}
+          availableAccess={['read', 'write', 'delete']}
           selected={access()}
           onChange={setAccess}
         />
@@ -246,7 +269,7 @@ export const ResourceChooser = (props: {
         fetchData={fetchResources}
         toolbar={{
           filters: [],
-          searchPlaceholder: t("common.search"),
+          searchPlaceholder: t('common.search'),
 
           actions: (
             <div>
@@ -262,7 +285,7 @@ export const ResourceChooser = (props: {
         table={{
           columns,
           actions,
-          actionsLabel: t("common.actions"),
+          actionsLabel: t('common.actions'),
           onRowSelect,
           defaultRowAction: {
             icon: BsEye,
@@ -270,7 +293,7 @@ export const ResourceChooser = (props: {
               setCurrentResource(item);
               setShowModal(true);
             },
-            label: "View",
+            label: 'View',
           },
         }}
         pagination={{ itemsPerPage }}

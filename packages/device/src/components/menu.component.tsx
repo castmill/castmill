@@ -7,10 +7,10 @@ import {
   Show,
   type Component,
   type JSX,
-} from "solid-js";
+} from 'solid-js';
 
-import { Device } from "../classes/device";
-import { BaseMenu, type MenuEntry } from "./basemenu.component";
+import { Device } from '../classes/device';
+import { BaseMenu, type MenuEntry } from './basemenu.component';
 
 interface MenuProps {
   device: Device;
@@ -32,26 +32,30 @@ const fetchSelectedUrl = async (device: Device) => {
 };
 
 const fetchOrganizationName = async (device: Device) => {
-  return (await device.getOrganizationName()) || "N/A";
+  return (await device.getOrganizationName()) || 'N/A';
 };
 
 const fetchCastmillNetworkName = async (device: Device) => {
-  return (await device.getCastmillNetworkName()) || "N/A";
+  return (await device.getCastmillNetworkName()) || 'N/A';
 };
 
 // Helper function to create a menu entry for an action
 const createAction = (name: string, action: () => void): MenuEntry => {
-  const id = name.toLowerCase().replace(" ", "-");
-  return { name, id, type: "action", action };
+  const id = name.toLowerCase().replace(' ', '-');
+  return { name, id, type: 'action', action };
 };
 
 // Helper function to create a menu entry for a submenu
-const createSubmenu = (name: string, entries: MenuEntry[], badge?: string): MenuEntry => {
-  const id = name.toLowerCase().replace(" ", "-");
+const createSubmenu = (
+  name: string,
+  entries: MenuEntry[],
+  badge?: string
+): MenuEntry => {
+  const id = name.toLowerCase().replace(' ', '-');
   return {
     name,
     id,
-    type: "submenu",
+    type: 'submenu',
     children: entries,
     badge,
     action: () => {},
@@ -60,7 +64,7 @@ const createSubmenu = (name: string, entries: MenuEntry[], badge?: string): Menu
 
 // Helper function to create a menu entry for an info item
 const createInfo = (id: string, content: JSX.Element): MenuEntry => {
-  return { id, type: "info", content };
+  return { id, type: 'info', content };
 };
 
 // Helper function to create a menu entry for radio buttons
@@ -68,7 +72,7 @@ const createRadioButtons = (
   options: { name: string; id: string; description?: string }[],
   groupId: string,
   selectedId: string,
-  action: (state: string) => void,
+  action: (state: string) => void
 ): MenuEntry[] => {
   return options.map((option) => {
     return {
@@ -76,47 +80,49 @@ const createRadioButtons = (
       description: option.description,
       groupId,
       id: option.id,
-      type: "radiobutton",
+      type: 'radiobutton',
       state: option.id === selectedId,
       action: (selectedId: string) => action(selectedId),
     };
   });
 };
 
-const shortDeviceId = (deviceId?: string) => deviceId?.split("-").shift();
+const shortDeviceId = (deviceId?: string) => deviceId?.split('-').shift();
 
 export const MenuComponent: Component<MenuProps> = (props) => {
   const [deviceInfo] = createResource(() => props.device, fetchDeviceInfo);
 
-  const [availableUrls] = createResource(() => props.device, fetchAvailableUrls, {
-    initialValue: [],
-  });
+  const [availableUrls] = createResource(
+    () => props.device,
+    fetchAvailableUrls,
+    {
+      initialValue: [],
+    }
+  );
 
   const [selectedUrl] = createResource(() => props.device, fetchSelectedUrl, {
-    initialValue: "",
+    initialValue: '',
   });
 
-  const [organizationName, { refetch: refetchOrganizationName }] = createResource(
-    () => props.device,
-    fetchOrganizationName,
-    {
-      initialValue: "N/A",
-    },
-  );
+  const [organizationName, { refetch: refetchOrganizationName }] =
+    createResource(() => props.device, fetchOrganizationName, {
+      initialValue: 'N/A',
+    });
 
-  const [castmillNetworkName, { refetch: refetchCastmillNetworkName }] = createResource(
-    () => props.device,
-    fetchCastmillNetworkName,
-    {
-      initialValue: "N/A",
-    },
-  );
+  const [castmillNetworkName, { refetch: refetchCastmillNetworkName }] =
+    createResource(() => props.device, fetchCastmillNetworkName, {
+      initialValue: 'N/A',
+    });
 
-  const [deviceName, setDeviceName] = createSignal<string>(props.device?.name || "N/A");
-  const [deviceId, setDeviceId] = createSignal<string>(props.device?.id || "N/A");
+  const [deviceName, setDeviceName] = createSignal<string>(
+    props.device?.name || 'N/A'
+  );
+  const [deviceId, setDeviceId] = createSignal<string>(
+    props.device?.id || 'N/A'
+  );
   const [timerOff, setTimerOff] = createSignal(false);
-  const [nextOnTime, setNextOnTime] = createSignal<string>("");
-  const [nextOffTime, setNextOffTime] = createSignal<string>("");
+  const [nextOnTime, setNextOnTime] = createSignal<string>('');
+  const [nextOffTime, setNextOffTime] = createSignal<string>('');
   const [playing, setPlaying] = createSignal(false);
 
   const deviceStartedHandler = ({ id, name }: { id: string; name: string }) => {
@@ -130,26 +136,26 @@ export const MenuComponent: Component<MenuProps> = (props) => {
       setTimerOff(true);
       setPlaying(false);
       const nextOn = await props.device.getNextOnTime();
-      setNextOnTime(nextOn ? nextOn.toLocaleString() : "");
-      setNextOffTime("");
+      setNextOnTime(nextOn ? nextOn.toLocaleString() : '');
+      setNextOffTime('');
     } else {
       setTimerOff(false);
       setPlaying(true);
       const nextOff = await props.device.getNextOffTime();
-      setNextOffTime(nextOff ? nextOff.toLocaleString() : "");
-      setNextOnTime("");
+      setNextOffTime(nextOff ? nextOff.toLocaleString() : '');
+      setNextOnTime('');
     }
   };
 
   onMount(() => {
-    props.device.once("ready", deviceStartedHandler);
+    props.device.once('ready', deviceStartedHandler);
 
     // Check timer-off status for menu display
     refreshTimerStatus();
   });
 
   onCleanup(() => {
-    props.device.off("ready", deviceStartedHandler);
+    props.device.off('ready', deviceStartedHandler);
   });
 
   const header = (
@@ -164,7 +170,7 @@ export const MenuComponent: Component<MenuProps> = (props) => {
 
   const footer = (
     <>
-      <p>Device ID: {shortDeviceId(deviceId()) || "N/A"} </p>
+      <p>Device ID: {shortDeviceId(deviceId()) || 'N/A'} </p>
       <p>Device Name: {deviceName()}</p>
       <p>Organization: {organizationName()}</p>
       <p>Network: {castmillNetworkName()}</p>
@@ -178,53 +184,63 @@ export const MenuComponent: Component<MenuProps> = (props) => {
   const entries = createMemo((): MenuEntry[] => {
     return [
       // optional actions
-      ...(capabilities.restart ? [createAction("Restart App", () => props.device.restart())] : []),
-      ...(capabilities.quit ? [createAction("Quit App", () => props.device.quit())] : []),
-      ...(capabilities.reboot ? [createAction("Reboot Device", () => props.device.reboot())] : []),
-      ...(capabilities.shutdown
-        ? [createAction("Shutdown Device", () => props.device.shutdown())]
+      ...(capabilities.restart
+        ? [createAction('Restart App', () => props.device.restart())]
         : []),
-      ...(capabilities.update ? [createAction("Update App", () => props.device.update())] : []),
+      ...(capabilities.quit
+        ? [createAction('Quit App', () => props.device.quit())]
+        : []),
+      ...(capabilities.reboot
+        ? [createAction('Reboot Device', () => props.device.reboot())]
+        : []),
+      ...(capabilities.shutdown
+        ? [createAction('Shutdown Device', () => props.device.shutdown())]
+        : []),
+      ...(capabilities.update
+        ? [createAction('Update App', () => props.device.update())]
+        : []),
       ...(capabilities.updateFirmware
-        ? [createAction("Update Firmware", () => props.device.updateFirmware())]
+        ? [createAction('Update Firmware', () => props.device.updateFirmware())]
         : []),
       ...[
-        createSubmenu("Settings", [
-          createSubmenu("Server", [
+        createSubmenu('Settings', [
+          createSubmenu('Server', [
             ...createRadioButtons(
               availableUrls().map(({ name, url }) => ({
                 name,
                 id: url,
                 description: url,
               })),
-              "base-url-group",
+              'base-url-group',
               selectedUrl(),
               (state: string) => {
                 props.device.setBaseUrl(state);
-              },
+              }
             ),
           ]),
         ]),
         createSubmenu(
-          "Status",
+          'Status',
           [
             createInfo(
-              "timer-status",
+              'timer-status',
               <>
-                <div style={{ display: "flex", "flex-direction": "column" }}>
+                <div style={{ display: 'flex', 'flex-direction': 'column' }}>
                   <Show
                     when={playing()}
                     fallback={
                       <>
-                        <span style={{ color: "#ff9900", "font-weight": "bold" }}>
+                        <span
+                          style={{ color: '#ff9900', 'font-weight': 'bold' }}
+                        >
                           Playback turned off by timer
                         </span>
                         <Show when={nextOnTime()}>
                           <span
                             style={{
-                              color: "#ccc",
-                              "font-size": "0.9em",
-                              "margin-top": "0.3em",
+                              color: '#ccc',
+                              'font-size': '0.9em',
+                              'margin-top': '0.3em',
                             }}
                           >
                             Next on: {nextOnTime()}
@@ -233,13 +249,15 @@ export const MenuComponent: Component<MenuProps> = (props) => {
                       </>
                     }
                   >
-                    <span style={{ color: "#4caf50", "font-weight": "bold" }}>Playing</span>
+                    <span style={{ color: '#4caf50', 'font-weight': 'bold' }}>
+                      Playing
+                    </span>
                     <Show when={nextOffTime()}>
                       <span
                         style={{
-                          color: "#ccc",
-                          "font-size": "0.9em",
-                          "margin-top": "0.3em",
+                          color: '#ccc',
+                          'font-size': '0.9em',
+                          'margin-top': '0.3em',
                         }}
                       >
                         Next off: {nextOffTime()}
@@ -247,10 +265,10 @@ export const MenuComponent: Component<MenuProps> = (props) => {
                     </Show>
                   </Show>
                 </div>
-              </>,
+              </>
             ),
           ],
-          timerOff() ? "#ff9900" : "#4caf50",
+          timerOff() ? '#ff9900' : '#4caf50'
         ),
       ],
     ];

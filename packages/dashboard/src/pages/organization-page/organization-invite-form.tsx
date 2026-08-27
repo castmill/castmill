@@ -1,27 +1,27 @@
-import { createSignal } from "solid-js";
-import { OrganizationRole } from "../../types/organization-role.type";
-import { Button, Dropdown, FormItem } from "@castmill/ui-common";
-import { useI18n } from "../../i18n";
+import { createSignal } from 'solid-js';
+import { OrganizationRole } from '../../types/organization-role.type';
+import { Button, Dropdown, FormItem } from '@castmill/ui-common';
+import { useI18n } from '../../i18n';
 
-import style from "./organization-invite-form.module.scss";
+import style from './organization-invite-form.module.scss';
 
 export const OrganizationInviteForm = (props: {
   organizationId: string;
   onSubmit: (email: string, role: OrganizationRole) => void;
 }) => {
   const { t } = useI18n();
-  const [email, setEmail] = createSignal("");
-  const [role, setRole] = createSignal<OrganizationRole>("member");
+  const [email, setEmail] = createSignal('');
+  const [role, setRole] = createSignal<OrganizationRole>('member');
 
   const [errors, setErrors] = createSignal(new Map());
   const [isFormValid, setIsFormValid] = createSignal(false);
 
   const validateField = (field: string, value: string) => {
-    if (field === "email") {
+    if (field === 'email') {
       if (value.length === 0) {
-        errors().set(field, t("organization.errors.emailRequired"));
+        errors().set(field, t('organization.errors.emailRequired'));
       } else if (!value.match(/^[\w-]+@([\w-]+\.)+[\w-]{2,4}$/)) {
-        errors().set(field, t("organization.errors.invalidEmail"));
+        errors().set(field, t('organization.errors.invalidEmail'));
       } else {
         errors().delete(field);
       }
@@ -44,51 +44,51 @@ export const OrganizationInviteForm = (props: {
       }}
     >
       <FormItem
-        label={t("common.name")}
+        label={t('common.name')}
         id="name"
         value={email()!}
-        placeholder={t("organization.enterMemberEmail")}
+        placeholder={t('organization.enterMemberEmail')}
         onInput={(value: string | number | boolean) => {
           const strValue = value as string;
           setEmail(strValue);
-          validateField("email", strValue);
+          validateField('email', strValue);
         }}
       >
-        <div class="error">{errors().get("email")}</div>
+        <div class="error">{errors().get('email')}</div>
       </FormItem>
-      <div class={style["form-input"]}>
+      <div class={style['form-input']}>
         <Dropdown
           id="invite-role"
           name="role"
-          label={t("organization.role")}
+          label={t('organization.role')}
           items={[
             {
-              name: t("organization.roleAdmin"),
-              value: "admin",
+              name: t('organization.roleAdmin'),
+              value: 'admin',
             },
             {
-              name: t("organization.roleManager"),
-              value: "manager",
+              name: t('organization.roleManager'),
+              value: 'manager',
             },
             {
-              name: t("organization.roleEditor"),
-              value: "editor",
+              name: t('organization.roleEditor'),
+              value: 'editor',
             },
             {
-              name: t("organization.rolePublisher"),
-              value: "publisher",
+              name: t('organization.rolePublisher'),
+              value: 'publisher',
             },
             {
-              name: t("organization.roleDeviceManager"),
-              value: "device_manager",
+              name: t('organization.roleDeviceManager'),
+              value: 'device_manager',
             },
             {
-              name: t("organization.roleMember"),
-              value: "member",
+              name: t('organization.roleMember'),
+              value: 'member',
             },
             {
-              name: t("organization.roleGuest"),
-              value: "guest",
+              name: t('organization.roleGuest'),
+              value: 'guest',
             },
           ]}
           defaultValue={role()}
@@ -100,8 +100,13 @@ export const OrganizationInviteForm = (props: {
           }}
         />
       </div>
-      <div class={style["form-actions"]}>
-        <Button label={t("common.add")} type="submit" disabled={!isFormValid()} color="primary" />
+      <div class={style['form-actions']}>
+        <Button
+          label={t('common.add')}
+          type="submit"
+          disabled={!isFormValid()}
+          color="primary"
+        />
       </div>
     </form>
   );

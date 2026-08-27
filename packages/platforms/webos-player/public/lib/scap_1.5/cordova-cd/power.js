@@ -1,20 +1,24 @@
 Power = (function () {
   var h, e;
   function b(j) {}
-  if (typeof window === "object") {
-    cordova.define("cordova/plugin/power", function (k, j, l) {
+  if (typeof window === 'object') {
+    cordova.define('cordova/plugin/power', function (k, j, l) {
       h = function () {};
       if (window.PalmSystem) {
-        b("Window.PalmSystem Available");
-        e = k("cordova/plugin/webos/service");
+        b('Window.PalmSystem Available');
+        e = k('cordova/plugin/webos/service');
       } else {
         e = {
           Request: function (m, n) {
-            b(m + " invoked. But I am a dummy because PalmSystem is not available");
-            if (typeof n.onFailure === "function") {
+            b(
+              m +
+                ' invoked. But I am a dummy because PalmSystem is not available'
+            );
+            if (typeof n.onFailure === 'function') {
               n.onFailure({
                 returnValue: false,
-                errorText: "PalmSystem Not Available. Cordova is not installed?",
+                errorText:
+                  'PalmSystem Not Available. Cordova is not installed?',
               });
             }
           },
@@ -22,19 +26,19 @@ Power = (function () {
       }
       l.exports = h;
     });
-    h = cordova.require("cordova/plugin/power");
+    h = cordova.require('cordova/plugin/power');
   } else {
     h = function (j) {
       e = j;
       e.Request = function (k, m) {
-        var l = k + "/" + m.method;
+        var l = k + '/' + m.method;
         var n = {};
-        if (m.hasOwnProperty("parameters") === true) {
+        if (m.hasOwnProperty('parameters') === true) {
           n = m.parameters;
         }
         var o = {};
         var p = function (q) {
-          console.log("res : " + JSON.stringify(q));
+          console.log('res : ' + JSON.stringify(q));
           if (q.payload.returnValue === true) {
             o = q.payload;
             m.onSuccess(o);
@@ -83,26 +87,26 @@ Power = (function () {
   var a = {};
   function i(j) {
     if (f === null) {
-      e.Request("luna://com.webos.service.tv.systemproperty", {
-        method: "getSystemInfo",
-        parameters: { keys: ["sdkVersion", "boardType"] },
+      e.Request('luna://com.webos.service.tv.systemproperty', {
+        method: 'getSystemInfo',
+        parameters: { keys: ['sdkVersion', 'boardType'] },
         onSuccess: function (k) {
-          b("getPlatformInfo: onSuccess");
-          b("version : " + k.sdkVersion);
-          var l = k.sdkVersion.split(".");
-          if (l.length >= 1 && l[0] === "1") {
-            a = { webOSVer: 1, chipset: k.boardType.split("_")[0] };
+          b('getPlatformInfo: onSuccess');
+          b('version : ' + k.sdkVersion);
+          var l = k.sdkVersion.split('.');
+          if (l.length >= 1 && l[0] === '1') {
+            a = { webOSVer: 1, chipset: k.boardType.split('_')[0] };
           } else {
-            if (l.length >= 1 && l[0] === "2") {
-              a = { webOSVer: 2, chipset: k.boardType.split("_")[0] };
+            if (l.length >= 1 && l[0] === '2') {
+              a = { webOSVer: 2, chipset: k.boardType.split('_')[0] };
             } else {
-              if (l.length >= 1 && l[0] === "3") {
-                a = { webOSVer: 3, chipset: k.boardType.split("_")[0] };
+              if (l.length >= 1 && l[0] === '3') {
+                a = { webOSVer: 3, chipset: k.boardType.split('_')[0] };
               } else {
-                if (l.length >= 1 && l[0] === "4") {
-                  a = { webOSVer: 4, chipset: k.boardType.split("_")[0] };
+                if (l.length >= 1 && l[0] === '4') {
+                  a = { webOSVer: 4, chipset: k.boardType.split('_')[0] };
                 } else {
-                  a = { webOSVer: 0, chipset: "" };
+                  a = { webOSVer: 0, chipset: '' };
                 }
               }
             }
@@ -112,9 +116,9 @@ Power = (function () {
           j(a);
         },
         onFailure: function (k) {
-          b("getPlatformInfo: onFailure");
+          b('getPlatformInfo: onFailure');
           delete k.returnValue;
-          a = { webOSVer: 0, chipset: "" };
+          a = { webOSVer: 0, chipset: '' };
           j(a);
         },
       });
@@ -123,79 +127,79 @@ Power = (function () {
     }
   }
   function d(j) {
-    if (a.chipset == "H15") {
+    if (a.chipset == 'H15') {
       switch (j) {
-        case "ext://hdmi:1":
-          return "HDMI1";
-        case "ext://hdmi:2":
-          return "HDMI2";
-        case "ext://hdmi:3":
-          return "OPS/HDMI3/DVI";
-        case "ext://dvi:1":
-          return "OPS/HDMI3/DVI";
-        case "ext://dp:1":
-          return "DISPLAYPORT";
-        case "ext://rgb:1":
-          return "RGB";
-        case "ext://ops:1":
-          return "OPS/HDMI3/DVI";
-        case "HDMI1":
-          return "ext://hdmi:1";
-        case "HDMI2":
-          return "ext://hdmi:2";
-        case "HDMI3":
-          return "ext://hdmi:3";
-        case "DVI":
-          return "ext://dvi:1";
-        case "DISPLAYPORT":
-          return "ext://dp:1";
-        case "RGB":
-          return "ext://rgb:1";
-        case "OPS":
-          return "ext://ops:1";
-        case "OPS/HDMI3/DVI":
-          return "ext://hdmi:3";
+        case 'ext://hdmi:1':
+          return 'HDMI1';
+        case 'ext://hdmi:2':
+          return 'HDMI2';
+        case 'ext://hdmi:3':
+          return 'OPS/HDMI3/DVI';
+        case 'ext://dvi:1':
+          return 'OPS/HDMI3/DVI';
+        case 'ext://dp:1':
+          return 'DISPLAYPORT';
+        case 'ext://rgb:1':
+          return 'RGB';
+        case 'ext://ops:1':
+          return 'OPS/HDMI3/DVI';
+        case 'HDMI1':
+          return 'ext://hdmi:1';
+        case 'HDMI2':
+          return 'ext://hdmi:2';
+        case 'HDMI3':
+          return 'ext://hdmi:3';
+        case 'DVI':
+          return 'ext://dvi:1';
+        case 'DISPLAYPORT':
+          return 'ext://dp:1';
+        case 'RGB':
+          return 'ext://rgb:1';
+        case 'OPS':
+          return 'ext://ops:1';
+        case 'OPS/HDMI3/DVI':
+          return 'ext://hdmi:3';
       }
     } else {
       switch (j) {
-        case "ext://hdmi:1":
-          return "HDMI1";
-        case "ext://hdmi:2":
-          return "HDMI2";
-        case "ext://hdmi:3":
-          return "HDMI3";
-        case "ext://dvi:1":
-          return "DVI";
-        case "ext://dp:1":
-          return "DISPLAYPORT";
-        case "ext://rgb:1":
-          return "RGB";
-        case "ext://ops:1":
-          return "OPS";
-        case "HDMI1":
-          return "ext://hdmi:1";
-        case "HDMI":
-          return "ext://hdmi:1";
-        case "HDMI2":
-          return "ext://hdmi:2";
-        case "HDMI3":
-          return "ext://hdmi:3";
-        case "DVI":
-          return "ext://dvi:1";
-        case "DISPLAYPORT":
-          return "ext://dp:1";
-        case "RGB":
-          return "ext://rgb:1";
-        case "OPS":
-          return "ext://ops:1";
-        case "OPS/HDMI3/DVI":
-          return "ext://hdmi:3";
+        case 'ext://hdmi:1':
+          return 'HDMI1';
+        case 'ext://hdmi:2':
+          return 'HDMI2';
+        case 'ext://hdmi:3':
+          return 'HDMI3';
+        case 'ext://dvi:1':
+          return 'DVI';
+        case 'ext://dp:1':
+          return 'DISPLAYPORT';
+        case 'ext://rgb:1':
+          return 'RGB';
+        case 'ext://ops:1':
+          return 'OPS';
+        case 'HDMI1':
+          return 'ext://hdmi:1';
+        case 'HDMI':
+          return 'ext://hdmi:1';
+        case 'HDMI2':
+          return 'ext://hdmi:2';
+        case 'HDMI3':
+          return 'ext://hdmi:3';
+        case 'DVI':
+          return 'ext://dvi:1';
+        case 'DISPLAYPORT':
+          return 'ext://dp:1';
+        case 'RGB':
+          return 'ext://rgb:1';
+        case 'OPS':
+          return 'ext://ops:1';
+        case 'OPS/HDMI3/DVI':
+          return 'ext://hdmi:3';
       }
     }
     return null;
   }
-  h.PowerCommand = { SHUTDOWN: "powerOff", REBOOT: "reboot" };
-  h.DisplayMode = { DISPLAY_OFF: "Screen Off", DISPLAY_ON: "Active" };
+  h.PowerCommand = { SHUTDOWN: 'powerOff', REBOOT: 'reboot' };
+  h.DisplayMode = { DISPLAY_OFF: 'Screen Off', DISPLAY_ON: 'Active' };
   h.TimerWeek = {
     MONDAY: 1,
     TUESDAY: 2,
@@ -206,489 +210,580 @@ Power = (function () {
     SUNDAY: 64,
     EVERYDAY: 127,
   };
-  h.DPMSignalType = { CLOCK: "clock", CLOCK_WITH_DATA: "clockAndData" };
+  h.DPMSignalType = { CLOCK: 'clock', CLOCK_WITH_DATA: 'clockAndData' };
   h.PMMode = {
-    PowerOff: "powerOff",
-    SustainAspectRatio: "sustainAspectRatio",
-    ScreenOff: "screenOff",
-    ScreenOffAlways: "screenOffAlways",
-    ScreenOffBacklight: "screenOffBacklight",
+    PowerOff: 'powerOff',
+    SustainAspectRatio: 'sustainAspectRatio',
+    ScreenOff: 'screenOff',
+    ScreenOffAlways: 'screenOffAlways',
+    ScreenOffBacklight: 'screenOffBacklight',
   };
   h.prototype.getPowerStatus = function (j, k) {
-    b("getPowerStatus: ");
-    e.Request("luna://com.webos.service.tv.signage/", {
-      method: "getPowerState",
+    b('getPowerStatus: ');
+    e.Request('luna://com.webos.service.tv.signage/', {
+      method: 'getPowerState',
       onSuccess: function (l) {
-        b("getPowerStatus: On Success");
+        b('getPowerStatus: On Success');
         var m = {};
         if (l.returnValue === true) {
           m.displayMode = l.state;
         }
-        e.Request("luna://com.webos.service.commercial.signage.storageservice/settings/", {
-          method: "get",
-          parameters: { category: "commercial", keys: ["wolEnable"] },
-          onSuccess: function (n) {
-            b("getPowerStatus: On Success 2");
-            if (n.returnValue === true) {
-              m.wakeOnLan = n.settings.wolEnable === "1" ? true : false;
-            }
-            e.Request("luna://com.webos.service.commercial.signage.storageservice/settings/", {
-              method: "get",
-              parameters: { category: "time", keys: ["onTimerEnable", "offTimerEnable"] },
-              onSuccess: function (o) {
-                b("getPowerStatus: On Success 3");
-                if (o.returnValue === true) {
-                  m.allOnTimer = o.settings.onTimerEnable === "on" ? true : false;
-                  m.allOffTimer = o.settings.offTimerEnable === "on" ? true : false;
-                  if (typeof j === "function") {
-                    j(m);
-                  }
+        e.Request(
+          'luna://com.webos.service.commercial.signage.storageservice/settings/',
+          {
+            method: 'get',
+            parameters: { category: 'commercial', keys: ['wolEnable'] },
+            onSuccess: function (n) {
+              b('getPowerStatus: On Success 2');
+              if (n.returnValue === true) {
+                m.wakeOnLan = n.settings.wolEnable === '1' ? true : false;
+              }
+              e.Request(
+                'luna://com.webos.service.commercial.signage.storageservice/settings/',
+                {
+                  method: 'get',
+                  parameters: {
+                    category: 'time',
+                    keys: ['onTimerEnable', 'offTimerEnable'],
+                  },
+                  onSuccess: function (o) {
+                    b('getPowerStatus: On Success 3');
+                    if (o.returnValue === true) {
+                      m.allOnTimer =
+                        o.settings.onTimerEnable === 'on' ? true : false;
+                      m.allOffTimer =
+                        o.settings.offTimerEnable === 'on' ? true : false;
+                      if (typeof j === 'function') {
+                        j(m);
+                      }
+                    }
+                  },
+                  onFailure: function (o) {
+                    b('getPowerStatus: On Failure 3');
+                    delete o.returnValue;
+                    if (typeof k === 'function') {
+                      g(o, 'PGPS', 'Power.getPowerStatus returns failure.');
+                      k(o);
+                    }
+                  },
                 }
-              },
-              onFailure: function (o) {
-                b("getPowerStatus: On Failure 3");
-                delete o.returnValue;
-                if (typeof k === "function") {
-                  g(o, "PGPS", "Power.getPowerStatus returns failure.");
-                  k(o);
-                }
-              },
-            });
-          },
-          onFailure: function (n) {
-            b("getPowerStatus: On Failure 2");
-            delete n.returnValue;
-            if (typeof k === "function") {
-              g(n, "PGPS", "Power.getPowerStatus returns failure.");
-              k(n);
-            }
-          },
-        });
+              );
+            },
+            onFailure: function (n) {
+              b('getPowerStatus: On Failure 2');
+              delete n.returnValue;
+              if (typeof k === 'function') {
+                g(n, 'PGPS', 'Power.getPowerStatus returns failure.');
+                k(n);
+              }
+            },
+          }
+        );
       },
       onFailure: function (l) {
-        b("getPowerStatus: On Failure");
+        b('getPowerStatus: On Failure');
         delete l.returnValue;
-        if (typeof k === "function") {
-          g(l, "PGPS", "Power.getPowerStatus returns failure.");
+        if (typeof k === 'function') {
+          g(l, 'PGPS', 'Power.getPowerStatus returns failure.');
           k(l);
         }
       },
     });
-    b("Power.getPowerStatus Done");
+    b('Power.getPowerStatus Done');
   };
   h.prototype.enableAllOnTimer = function (k, l, m) {
-    b("enableAllOnTimer: " + JSON.stringify(m));
+    b('enableAllOnTimer: ' + JSON.stringify(m));
     var n = null;
     switch (m.allOnTimer) {
       case true:
-        n = "on";
+        n = 'on';
         break;
       case false:
-        n = "off";
+        n = 'off';
         break;
       default:
-        if (typeof l === "function") {
+        if (typeof l === 'function') {
           var j = {};
-          g(j, "PEAOT", "Power.enableAllOnTimer returns failure. Invalid option value.");
+          g(
+            j,
+            'PEAOT',
+            'Power.enableAllOnTimer returns failure. Invalid option value.'
+          );
           l(j);
         }
         return;
     }
     i(function (o) {
       if (o.webOSVer === 4 || o.webOSVer > 4) {
-        e.Request("luna://com.webos.service.commercial.scapadapter/settings/", {
-          method: "set",
-          parameters: { category: "time", settings: { onTimerEnable: n } },
+        e.Request('luna://com.webos.service.commercial.scapadapter/settings/', {
+          method: 'set',
+          parameters: { category: 'time', settings: { onTimerEnable: n } },
           onSuccess: function () {
             if (m.clearOnTimer === true) {
-              e.Request("luna://com.webos.service.commercial.scapadapter/settings/", {
-                method: "get",
-                parameters: { category: "commercial", keys: ["onOffTimeSchedule"] },
-                onSuccess: function (p) {
-                  if (p.returnValue === true) {
-                    var s = 0;
-                    var q = {};
-                    q.onTime = [];
-                    q.offTime = [];
-                    var r = {};
-                    var t =
-                      p.settings.onOffTimeSchedule.offTime === null ||
-                      p.settings.onOffTimeSchedule.offTime === undefined
-                        ? 0
-                        : p.settings.onOffTimeSchedule.offTime.length;
-                    for (s = 0; s < t; s++) {
-                      if (
-                        p.settings.onOffTimeSchedule.offTime[s].day !== undefined &&
-                        p.settings.onOffTimeSchedule.offTime[s].day !== null
-                      ) {
-                        r.day = p.settings.onOffTimeSchedule.offTime[s].day;
-                      }
-                      if (
-                        p.settings.onOffTimeSchedule.offTime[s].hour !== undefined &&
-                        p.settings.onOffTimeSchedule.offTime[s].hour !== null
-                      ) {
-                        r.hour = p.settings.onOffTimeSchedule.offTime[s].hour;
-                      }
-                      if (
-                        p.settings.onOffTimeSchedule.offTime[s].minute !== undefined &&
-                        p.settings.onOffTimeSchedule.offTime[s].minute !== null
-                      ) {
-                        r.minute = p.settings.onOffTimeSchedule.offTime[s].minute;
-                      }
-                      q.offTime.push(r);
-                      r = {};
-                    }
-                    e.Request("luna://com.webos.service.commercial.scapadapter/settings/", {
-                      method: "set",
-                      parameters: { category: "commercial", settings: { onOffTimeSchedule: q } },
-                      onSuccess: function () {
-                        b("enableAllOnTimer: On Success 2");
-                        if (typeof k === "function") {
-                          k();
+              e.Request(
+                'luna://com.webos.service.commercial.scapadapter/settings/',
+                {
+                  method: 'get',
+                  parameters: {
+                    category: 'commercial',
+                    keys: ['onOffTimeSchedule'],
+                  },
+                  onSuccess: function (p) {
+                    if (p.returnValue === true) {
+                      var s = 0;
+                      var q = {};
+                      q.onTime = [];
+                      q.offTime = [];
+                      var r = {};
+                      var t =
+                        p.settings.onOffTimeSchedule.offTime === null ||
+                        p.settings.onOffTimeSchedule.offTime === undefined
+                          ? 0
+                          : p.settings.onOffTimeSchedule.offTime.length;
+                      for (s = 0; s < t; s++) {
+                        if (
+                          p.settings.onOffTimeSchedule.offTime[s].day !==
+                            undefined &&
+                          p.settings.onOffTimeSchedule.offTime[s].day !== null
+                        ) {
+                          r.day = p.settings.onOffTimeSchedule.offTime[s].day;
                         }
-                      },
-                      onFailure: function (u) {
-                        b("enableAllOnTimer: On Failure 2");
-                        delete u.returnValue;
-                        if (typeof l === "function") {
-                          g(u, "PAOT", "Power.enableAllOnTimer returns failure.");
-                          l(u);
+                        if (
+                          p.settings.onOffTimeSchedule.offTime[s].hour !==
+                            undefined &&
+                          p.settings.onOffTimeSchedule.offTime[s].hour !== null
+                        ) {
+                          r.hour = p.settings.onOffTimeSchedule.offTime[s].hour;
                         }
-                        return;
-                      },
-                    });
-                  } else {
-                    if (typeof k === "function") {
-                      b("enableAllOnTimer: On Success");
-                      k();
+                        if (
+                          p.settings.onOffTimeSchedule.offTime[s].minute !==
+                            undefined &&
+                          p.settings.onOffTimeSchedule.offTime[s].minute !==
+                            null
+                        ) {
+                          r.minute =
+                            p.settings.onOffTimeSchedule.offTime[s].minute;
+                        }
+                        q.offTime.push(r);
+                        r = {};
+                      }
+                      e.Request(
+                        'luna://com.webos.service.commercial.scapadapter/settings/',
+                        {
+                          method: 'set',
+                          parameters: {
+                            category: 'commercial',
+                            settings: { onOffTimeSchedule: q },
+                          },
+                          onSuccess: function () {
+                            b('enableAllOnTimer: On Success 2');
+                            if (typeof k === 'function') {
+                              k();
+                            }
+                          },
+                          onFailure: function (u) {
+                            b('enableAllOnTimer: On Failure 2');
+                            delete u.returnValue;
+                            if (typeof l === 'function') {
+                              g(
+                                u,
+                                'PAOT',
+                                'Power.enableAllOnTimer returns failure.'
+                              );
+                              l(u);
+                            }
+                            return;
+                          },
+                        }
+                      );
+                    } else {
+                      if (typeof k === 'function') {
+                        b('enableAllOnTimer: On Success');
+                        k();
+                      }
                     }
-                  }
-                },
-                onFailure: function (p) {
-                  delete p.returnValue;
-                  if (typeof l === "function") {
-                    b("enableAllOnTimer: On Failure");
-                    g(p, "PEAOT", "Power.enableAllOnTimer returns failure.");
-                    l(p);
-                  }
-                },
-              });
+                  },
+                  onFailure: function (p) {
+                    delete p.returnValue;
+                    if (typeof l === 'function') {
+                      b('enableAllOnTimer: On Failure');
+                      g(p, 'PEAOT', 'Power.enableAllOnTimer returns failure.');
+                      l(p);
+                    }
+                  },
+                }
+              );
             } else {
-              if (typeof k === "function") {
-                b("enableAllOnTimer: On Success");
+              if (typeof k === 'function') {
+                b('enableAllOnTimer: On Success');
                 k();
               }
             }
           },
           onFailure: function (p) {
             delete p.returnValue;
-            if (typeof l === "function") {
-              b("enableAllOnTimer: On Failure");
-              g(p, "PEAOT", "Power.enableAllOnTimer returns failure.");
+            if (typeof l === 'function') {
+              b('enableAllOnTimer: On Failure');
+              g(p, 'PEAOT', 'Power.enableAllOnTimer returns failure.');
               l(p);
             }
           },
         });
       } else {
-        e.Request("luna://com.webos.service.commercial.signage.storageservice/settings/", {
-          method: "set",
-          parameters: { category: "time", settings: { onTimerEnable: n } },
-          onSuccess: function () {
-            if (m.clearOnTimer === true) {
-              var s = 0;
-              var p = ["0", "0", "0", "0", "0", "0", "0"],
-                r = ["0", "0", "0", "0", "0", "0", "0"],
-                q = ["0", "0", "0", "0", "0", "0", "0"],
-                t = ["0", "0", "0", "0", "0", "0", "0"],
-                u = [];
-              e.Request("luna://com.webos.service.commercial.signage.storageservice/settings/", {
-                method: "set",
-                parameters: {
-                  category: "commercial",
-                  settings: {
-                    multiOnTimerHour: p,
-                    multiOnTimerMinute: r,
-                    multiOnTimerWeekday: q,
-                    multiOnTimerSource: t,
-                    onTimerCount: s,
-                    onTimerSchedule: u,
-                  },
-                },
-                onSuccess: function () {
-                  b("enableAllOnTimer: On Success 2");
-                  if (typeof k === "function") {
-                    k();
+        e.Request(
+          'luna://com.webos.service.commercial.signage.storageservice/settings/',
+          {
+            method: 'set',
+            parameters: { category: 'time', settings: { onTimerEnable: n } },
+            onSuccess: function () {
+              if (m.clearOnTimer === true) {
+                var s = 0;
+                var p = ['0', '0', '0', '0', '0', '0', '0'],
+                  r = ['0', '0', '0', '0', '0', '0', '0'],
+                  q = ['0', '0', '0', '0', '0', '0', '0'],
+                  t = ['0', '0', '0', '0', '0', '0', '0'],
+                  u = [];
+                e.Request(
+                  'luna://com.webos.service.commercial.signage.storageservice/settings/',
+                  {
+                    method: 'set',
+                    parameters: {
+                      category: 'commercial',
+                      settings: {
+                        multiOnTimerHour: p,
+                        multiOnTimerMinute: r,
+                        multiOnTimerWeekday: q,
+                        multiOnTimerSource: t,
+                        onTimerCount: s,
+                        onTimerSchedule: u,
+                      },
+                    },
+                    onSuccess: function () {
+                      b('enableAllOnTimer: On Success 2');
+                      if (typeof k === 'function') {
+                        k();
+                      }
+                    },
+                    onFailure: function (v) {
+                      b('enableAllOnTimer: On Failure 2');
+                      delete v.returnValue;
+                      if (typeof l === 'function') {
+                        g(
+                          v,
+                          'PEAOT',
+                          'Power.enableAllOnTimer returns failure. / clearOnTimer'
+                        );
+                        l(v);
+                      }
+                    },
                   }
-                },
-                onFailure: function (v) {
-                  b("enableAllOnTimer: On Failure 2");
-                  delete v.returnValue;
-                  if (typeof l === "function") {
-                    g(v, "PEAOT", "Power.enableAllOnTimer returns failure. / clearOnTimer");
-                    l(v);
-                  }
-                },
-              });
-            } else {
-              if (typeof k === "function") {
-                b("enableAllOnTimer: On Success");
-                k();
+                );
+              } else {
+                if (typeof k === 'function') {
+                  b('enableAllOnTimer: On Success');
+                  k();
+                }
               }
-            }
-          },
-          onFailure: function (p) {
-            delete p.returnValue;
-            if (typeof l === "function") {
-              b("enableAllOnTimer: On Failure");
-              g(p, "PEAOT", "Power.enableAllOnTimer returns failure.");
-              l(p);
-            }
-          },
-        });
+            },
+            onFailure: function (p) {
+              delete p.returnValue;
+              if (typeof l === 'function') {
+                b('enableAllOnTimer: On Failure');
+                g(p, 'PEAOT', 'Power.enableAllOnTimer returns failure.');
+                l(p);
+              }
+            },
+          }
+        );
       }
     });
-    b("Power.enableAllOnTimer Done");
+    b('Power.enableAllOnTimer Done');
   };
   h.prototype.enableAllOffTimer = function (k, l, m) {
-    b("enableAllOffTimer: " + JSON.stringify(m));
+    b('enableAllOffTimer: ' + JSON.stringify(m));
     var n = null;
     switch (m.allOffTimer) {
       case true:
-        n = "on";
+        n = 'on';
         break;
       case false:
-        n = "off";
+        n = 'off';
         break;
       default:
-        if (typeof l === "function") {
+        if (typeof l === 'function') {
           var j = {};
-          g(j, "PEAOT", "Power.enableAllOffTimer returns failure. Invalid option value.");
+          g(
+            j,
+            'PEAOT',
+            'Power.enableAllOffTimer returns failure. Invalid option value.'
+          );
           l(j);
         }
         return;
     }
     i(function (o) {
       if (o.webOSVer === 4 || o.webOSVer > 4) {
-        e.Request("luna://com.webos.service.commercial.scapadapter/settings/", {
-          method: "set",
-          parameters: { category: "time", settings: { offTimerEnable: n } },
+        e.Request('luna://com.webos.service.commercial.scapadapter/settings/', {
+          method: 'set',
+          parameters: { category: 'time', settings: { offTimerEnable: n } },
           onSuccess: function () {
             if (m.clearOffTimer === true) {
-              e.Request("luna://com.webos.service.commercial.scapadapter/settings/", {
-                method: "get",
-                parameters: { category: "commercial", keys: ["onOffTimeSchedule"] },
-                onSuccess: function (p) {
-                  if (p.returnValue === true) {
-                    var s = 0;
-                    var q = {};
-                    q.onTime = [];
-                    q.offTime = [];
-                    var r = {};
-                    var t =
-                      p.settings.onOffTimeSchedule.onTime === null ||
-                      p.settings.onOffTimeSchedule.onTime === undefined
-                        ? 0
-                        : p.settings.onOffTimeSchedule.onTime.length;
-                    for (s = 0; s < t; s++) {
-                      if (
-                        p.settings.onOffTimeSchedule.onTime[s].day !== undefined &&
-                        p.settings.onOffTimeSchedule.onTime[s].day !== null
-                      ) {
-                        r.day = p.settings.onOffTimeSchedule.onTime[s].day;
-                      }
-                      if (
-                        p.settings.onOffTimeSchedule.onTime[s].hour !== undefined &&
-                        p.settings.onOffTimeSchedule.onTime[s].hour !== null
-                      ) {
-                        r.hour = p.settings.onOffTimeSchedule.onTime[s].hour;
-                      }
-                      if (
-                        p.settings.onOffTimeSchedule.onTime[s].minute !== undefined &&
-                        p.settings.onOffTimeSchedule.onTime[s].minute !== null
-                      ) {
-                        r.minute = p.settings.onOffTimeSchedule.onTime[s].minute;
-                      }
-                      q.onTime.push(r);
-                      r = {};
-                    }
-                    e.Request("luna://com.webos.service.commercial.scapadapter/settings/", {
-                      method: "set",
-                      parameters: { category: "commercial", settings: { onOffTimeSchedule: q } },
-                      onSuccess: function () {
-                        b("enableAllOffTimer: On Success 2");
-                        if (typeof k === "function") {
-                          k();
+              e.Request(
+                'luna://com.webos.service.commercial.scapadapter/settings/',
+                {
+                  method: 'get',
+                  parameters: {
+                    category: 'commercial',
+                    keys: ['onOffTimeSchedule'],
+                  },
+                  onSuccess: function (p) {
+                    if (p.returnValue === true) {
+                      var s = 0;
+                      var q = {};
+                      q.onTime = [];
+                      q.offTime = [];
+                      var r = {};
+                      var t =
+                        p.settings.onOffTimeSchedule.onTime === null ||
+                        p.settings.onOffTimeSchedule.onTime === undefined
+                          ? 0
+                          : p.settings.onOffTimeSchedule.onTime.length;
+                      for (s = 0; s < t; s++) {
+                        if (
+                          p.settings.onOffTimeSchedule.onTime[s].day !==
+                            undefined &&
+                          p.settings.onOffTimeSchedule.onTime[s].day !== null
+                        ) {
+                          r.day = p.settings.onOffTimeSchedule.onTime[s].day;
                         }
-                      },
-                      onFailure: function (u) {
-                        b("enableAllOffTimer: On Failure 2");
-                        delete u.returnValue;
-                        if (typeof l === "function") {
-                          g(u, "PAOT", "Power.enableAllOffTimer returns failure.");
-                          l(u);
+                        if (
+                          p.settings.onOffTimeSchedule.onTime[s].hour !==
+                            undefined &&
+                          p.settings.onOffTimeSchedule.onTime[s].hour !== null
+                        ) {
+                          r.hour = p.settings.onOffTimeSchedule.onTime[s].hour;
                         }
-                        return;
-                      },
-                    });
-                  } else {
-                    if (typeof k === "function") {
-                      b("enableAllOffTimer: On Success");
-                      k();
+                        if (
+                          p.settings.onOffTimeSchedule.onTime[s].minute !==
+                            undefined &&
+                          p.settings.onOffTimeSchedule.onTime[s].minute !== null
+                        ) {
+                          r.minute =
+                            p.settings.onOffTimeSchedule.onTime[s].minute;
+                        }
+                        q.onTime.push(r);
+                        r = {};
+                      }
+                      e.Request(
+                        'luna://com.webos.service.commercial.scapadapter/settings/',
+                        {
+                          method: 'set',
+                          parameters: {
+                            category: 'commercial',
+                            settings: { onOffTimeSchedule: q },
+                          },
+                          onSuccess: function () {
+                            b('enableAllOffTimer: On Success 2');
+                            if (typeof k === 'function') {
+                              k();
+                            }
+                          },
+                          onFailure: function (u) {
+                            b('enableAllOffTimer: On Failure 2');
+                            delete u.returnValue;
+                            if (typeof l === 'function') {
+                              g(
+                                u,
+                                'PAOT',
+                                'Power.enableAllOffTimer returns failure.'
+                              );
+                              l(u);
+                            }
+                            return;
+                          },
+                        }
+                      );
+                    } else {
+                      if (typeof k === 'function') {
+                        b('enableAllOffTimer: On Success');
+                        k();
+                      }
                     }
-                  }
-                },
-                onFailure: function (p) {
-                  delete p.returnValue;
-                  if (typeof l === "function") {
-                    b("enableAllOffTimer: On Failure");
-                    g(p, "PEAOT", "Power.enableAllOffTimer returns failure.");
-                    l(p);
-                  }
-                },
-              });
+                  },
+                  onFailure: function (p) {
+                    delete p.returnValue;
+                    if (typeof l === 'function') {
+                      b('enableAllOffTimer: On Failure');
+                      g(p, 'PEAOT', 'Power.enableAllOffTimer returns failure.');
+                      l(p);
+                    }
+                  },
+                }
+              );
             } else {
-              if (typeof k === "function") {
-                b("enableAllOffTimer: On Success");
+              if (typeof k === 'function') {
+                b('enableAllOffTimer: On Success');
                 k();
               }
             }
           },
           onFailure: function (p) {
             delete p.returnValue;
-            if (typeof l === "function") {
-              b("enableAllOffTimer: On Failure");
-              g(p, "PEAOT", "Power.enableAllOffTimer returns failure.");
+            if (typeof l === 'function') {
+              b('enableAllOffTimer: On Failure');
+              g(p, 'PEAOT', 'Power.enableAllOffTimer returns failure.');
               l(p);
             }
           },
         });
       } else {
-        e.Request("luna://com.webos.service.commercial.signage.storageservice/settings/", {
-          method: "set",
-          parameters: { category: "time", settings: { offTimerEnable: n } },
-          onSuccess: function () {
-            if (m.clearOffTimer === true) {
-              var s = 0;
-              var p = ["0", "0", "0", "0", "0", "0", "0"],
-                r = ["0", "0", "0", "0", "0", "0", "0"],
-                q = ["0", "0", "0", "0", "0", "0", "0"],
-                t = [];
-              e.Request("luna://com.webos.service.commercial.signage.storageservice/settings/", {
-                method: "set",
-                parameters: {
-                  category: "commercial",
-                  settings: {
-                    multiOffTimerHour: p,
-                    multiOffTimerMinute: r,
-                    multiOffTimerWeekday: q,
-                    offTimerCount: s,
-                    offTimerSchedule: t,
-                  },
-                },
-                onSuccess: function () {
-                  b("enableAllOffTimer: On Success 2");
-                  if (typeof k === "function") {
-                    k();
+        e.Request(
+          'luna://com.webos.service.commercial.signage.storageservice/settings/',
+          {
+            method: 'set',
+            parameters: { category: 'time', settings: { offTimerEnable: n } },
+            onSuccess: function () {
+              if (m.clearOffTimer === true) {
+                var s = 0;
+                var p = ['0', '0', '0', '0', '0', '0', '0'],
+                  r = ['0', '0', '0', '0', '0', '0', '0'],
+                  q = ['0', '0', '0', '0', '0', '0', '0'],
+                  t = [];
+                e.Request(
+                  'luna://com.webos.service.commercial.signage.storageservice/settings/',
+                  {
+                    method: 'set',
+                    parameters: {
+                      category: 'commercial',
+                      settings: {
+                        multiOffTimerHour: p,
+                        multiOffTimerMinute: r,
+                        multiOffTimerWeekday: q,
+                        offTimerCount: s,
+                        offTimerSchedule: t,
+                      },
+                    },
+                    onSuccess: function () {
+                      b('enableAllOffTimer: On Success 2');
+                      if (typeof k === 'function') {
+                        k();
+                      }
+                    },
+                    onFailure: function (u) {
+                      b('enableAllOffTimer: On Failure 2');
+                      delete u.returnValue;
+                      if (typeof l === 'function') {
+                        g(
+                          u,
+                          'PEAOT',
+                          'Power.enableAllOffTimer returns failure. / clearOffTimer'
+                        );
+                        l(u);
+                      }
+                    },
                   }
-                },
-                onFailure: function (u) {
-                  b("enableAllOffTimer: On Failure 2");
-                  delete u.returnValue;
-                  if (typeof l === "function") {
-                    g(u, "PEAOT", "Power.enableAllOffTimer returns failure. / clearOffTimer");
-                    l(u);
-                  }
-                },
-              });
-            } else {
-              if (typeof k === "function") {
-                b("enableAllOffTimer: On Success");
-                k();
+                );
+              } else {
+                if (typeof k === 'function') {
+                  b('enableAllOffTimer: On Success');
+                  k();
+                }
               }
-            }
-          },
-          onFailure: function (p) {
-            delete p.returnValue;
-            if (typeof l === "function") {
-              b("enableAllOffTimer: On Failure");
-              g(p, "PEAOT", "Power.enableAllOffTimer returns failure.");
-              l(p);
-            }
-          },
-        });
+            },
+            onFailure: function (p) {
+              delete p.returnValue;
+              if (typeof l === 'function') {
+                b('enableAllOffTimer: On Failure');
+                g(p, 'PEAOT', 'Power.enableAllOffTimer returns failure.');
+                l(p);
+              }
+            },
+          }
+        );
       }
     });
-    b("Power.enableAllOffTimer Done");
+    b('Power.enableAllOffTimer Done');
   };
   h.prototype.enableWakeOnLan = function (k, l, m) {
-    b("enableWakeOnLan: " + JSON.stringify(m));
+    b('enableWakeOnLan: ' + JSON.stringify(m));
     var n = null;
     switch (m.wakeOnLan) {
       case true:
-        n = "1";
+        n = '1';
         break;
       case false:
-        n = "0";
+        n = '0';
         break;
       default:
-        if (typeof l === "function") {
+        if (typeof l === 'function') {
           var j = {};
-          g(j, "PSWOL", "Power.enableWakeOnLan returns failure. Invalid option value.");
+          g(
+            j,
+            'PSWOL',
+            'Power.enableWakeOnLan returns failure. Invalid option value.'
+          );
           l(j);
         }
         return;
     }
-    e.Request("luna://com.webos.service.commercial.signage.storageservice/settings/", {
-      method: "set",
-      parameters: { category: "commercial", settings: { wolEnable: n } },
-      onSuccess: function () {
-        if (typeof k === "function") {
-          b("enableWakeOnLan: On Success");
-          k();
-        }
-      },
-      onFailure: function (o) {
-        delete o.returnValue;
-        if (typeof l === "function") {
-          b("enableWakeOnLan: On Failure");
-          g(o, "PSWOL", "Power.enableWakeOnLan returns failure.");
-          l(o);
-        }
-      },
-    });
-    b("Power.enableWakeOnLan Done");
+    e.Request(
+      'luna://com.webos.service.commercial.signage.storageservice/settings/',
+      {
+        method: 'set',
+        parameters: { category: 'commercial', settings: { wolEnable: n } },
+        onSuccess: function () {
+          if (typeof k === 'function') {
+            b('enableWakeOnLan: On Success');
+            k();
+          }
+        },
+        onFailure: function (o) {
+          delete o.returnValue;
+          if (typeof l === 'function') {
+            b('enableWakeOnLan: On Failure');
+            g(o, 'PSWOL', 'Power.enableWakeOnLan returns failure.');
+            l(o);
+          }
+        },
+      }
+    );
+    b('Power.enableWakeOnLan Done');
   };
   h.prototype.addOnTimer = function (j, k, l) {
-    b("addOnTimer: " + JSON.stringify(l));
+    b('addOnTimer: ' + JSON.stringify(l));
     i(function (n) {
       if (n.webOSVer === 4 || n.webOSVer > 4) {
         if (
           l.hour === undefined ||
           isNaN(l.hour) ||
-          typeof l.hour !== "number" ||
+          typeof l.hour !== 'number' ||
           l.hour < 0 ||
           l.hour > 23 ||
           l.minute === undefined ||
           isNaN(l.minute) ||
-          typeof l.minute !== "number" ||
+          typeof l.minute !== 'number' ||
           l.minute < 0 ||
           l.minute > 59 ||
           l.week === undefined ||
           isNaN(l.week) ||
-          typeof l.week !== "number" ||
+          typeof l.week !== 'number' ||
           l.week <= 0 ||
           l.week > 127
         ) {
-          if (typeof k === "function") {
+          if (typeof k === 'function') {
             var m = {};
-            g(m, "PAOT", "Power.addOnTimer returns failure. invalid parameters or out of range.");
+            g(
+              m,
+              'PAOT',
+              'Power.addOnTimer returns failure. invalid parameters or out of range.'
+            );
             k(m);
           }
           return;
         }
-        e.Request("luna://com.webos.service.commercial.scapadapter/settings/", {
-          method: "get",
-          parameters: { category: "commercial", keys: ["onOffTimeSchedule"] },
+        e.Request('luna://com.webos.service.commercial.scapadapter/settings/', {
+          method: 'get',
+          parameters: { category: 'commercial', keys: ['onOffTimeSchedule'] },
           onSuccess: function (o) {
             if (o.returnValue === true) {
               var t = 0;
@@ -700,28 +795,28 @@ Power = (function () {
               var p = 1;
               while (l.week !== 0) {
                 if (l.week & 1) {
-                  console.log("AddonTimer - options.week - " + l.week);
+                  console.log('AddonTimer - options.week - ' + l.week);
                   switch (p) {
                     case 1:
-                      v.push("mon");
+                      v.push('mon');
                       break;
                     case 2:
-                      v.push("tue");
+                      v.push('tue');
                       break;
                     case 4:
-                      v.push("wed");
+                      v.push('wed');
                       break;
                     case 8:
-                      v.push("thu");
+                      v.push('thu');
                       break;
                     case 16:
-                      v.push("fri");
+                      v.push('fri');
                       break;
                     case 32:
-                      v.push("sat");
+                      v.push('sat');
                       break;
                     case 64:
-                      v.push("sun");
+                      v.push('sun');
                       break;
                   }
                 }
@@ -782,7 +877,8 @@ Power = (function () {
                   s.hour = o.settings.onOffTimeSchedule.offTime[t].hour;
                 }
                 if (
-                  o.settings.onOffTimeSchedule.offTime[t].minute !== undefined &&
+                  o.settings.onOffTimeSchedule.offTime[t].minute !==
+                    undefined &&
                   o.settings.onOffTimeSchedule.offTime[t].minute !== null
                 ) {
                   s.minute = o.settings.onOffTimeSchedule.offTime[t].minute;
@@ -790,32 +886,38 @@ Power = (function () {
                 q.offTime.push(s);
                 s = {};
               }
-              e.Request("luna://com.webos.service.commercial.scapadapter/settings/", {
-                method: "set",
-                parameters: { category: "commercial", settings: { onOffTimeSchedule: q } },
-                onSuccess: function () {
-                  b("addOnTimer: On Success 2");
-                  if (typeof j === "function") {
-                    j();
-                  }
-                },
-                onFailure: function (w) {
-                  b("addOnTimer: On Failure 2");
-                  delete w.returnValue;
-                  if (typeof k === "function") {
-                    g(w, "PAOT", "Power.addOnTimer returns failure.");
-                    k(w);
-                  }
-                  return;
-                },
-              });
+              e.Request(
+                'luna://com.webos.service.commercial.scapadapter/settings/',
+                {
+                  method: 'set',
+                  parameters: {
+                    category: 'commercial',
+                    settings: { onOffTimeSchedule: q },
+                  },
+                  onSuccess: function () {
+                    b('addOnTimer: On Success 2');
+                    if (typeof j === 'function') {
+                      j();
+                    }
+                  },
+                  onFailure: function (w) {
+                    b('addOnTimer: On Failure 2');
+                    delete w.returnValue;
+                    if (typeof k === 'function') {
+                      g(w, 'PAOT', 'Power.addOnTimer returns failure.');
+                      k(w);
+                    }
+                    return;
+                  },
+                }
+              );
             }
           },
           onFailure: function (o) {
-            b("addOnTimer: On Failure");
+            b('addOnTimer: On Failure');
             delete o.returnValue;
-            if (typeof k === "function") {
-              g(o, "PAOT", "Power.addOnTimer returns failure.");
+            if (typeof k === 'function') {
+              g(o, 'PAOT', 'Power.addOnTimer returns failure.');
               k(o);
             }
             return;
@@ -825,175 +927,204 @@ Power = (function () {
         if (
           l.hour === undefined ||
           isNaN(l.hour) ||
-          typeof l.hour !== "number" ||
+          typeof l.hour !== 'number' ||
           l.hour < 0 ||
           l.hour > 23 ||
           l.minute === undefined ||
           isNaN(l.minute) ||
-          typeof l.minute !== "number" ||
+          typeof l.minute !== 'number' ||
           l.minute < 0 ||
           l.minute > 59 ||
           l.week === undefined ||
           isNaN(l.week) ||
-          typeof l.week !== "number" ||
+          typeof l.week !== 'number' ||
           l.week < 0 ||
           l.week > 127 ||
           l.inputSource === undefined ||
-          typeof l.inputSource !== "string" ||
-          l.inputSource.indexOf("ext://") !== 0
+          typeof l.inputSource !== 'string' ||
+          l.inputSource.indexOf('ext://') !== 0
         ) {
-          if (typeof k === "function") {
+          if (typeof k === 'function') {
             var m = {};
-            g(m, "PAOT", "Power.addOnTimer returns failure. invalid parameters or out of range.");
+            g(
+              m,
+              'PAOT',
+              'Power.addOnTimer returns failure. invalid parameters or out of range.'
+            );
             k(m);
           }
           return;
         }
-        e.Request("luna://com.webos.service.eim/", {
-          method: "getAllInputStatus",
+        e.Request('luna://com.webos.service.eim/', {
+          method: 'getAllInputStatus',
           onSuccess: function (o) {
-            b("getInputSourceStatus: On Success");
+            b('getInputSourceStatus: On Success');
             if (o.returnValue === true) {
               var t = false;
               for (var s = 0; s < o.totalCount; s++) {
                 var r = o.devices[s].deviceName.toLowerCase();
                 var u = r;
-                var p = l.inputSource.substring(6).split(":");
-                var q = "1";
+                var p = l.inputSource.substring(6).split(':');
+                var q = '1';
                 if (isNaN(r.substring(r.length - 1, r.length)) === false) {
                   r = r.substring(0, r.length - 1);
-                  q = o.devices[s].id.split("_")[1];
+                  q = o.devices[s].id.split('_')[1];
                 }
-                if (r.toUpperCase() === "DISPLAYPORT") {
-                  r = "DP";
+                if (r.toUpperCase() === 'DISPLAYPORT') {
+                  r = 'DP';
                 }
-                if (r.toUpperCase().indexOf(p[0].toUpperCase()) >= 0 && q === p[1]) {
+                if (
+                  r.toUpperCase().indexOf(p[0].toUpperCase()) >= 0 &&
+                  q === p[1]
+                ) {
                   t = true;
                   break;
                 }
               }
               if (t === false) {
-                b("addOnTimer: On Failure");
+                b('addOnTimer: On Failure');
                 delete o.returnValue;
-                if (typeof k === "function") {
-                  g(o, "PAOT", "Power.addOnTimer returns failure.");
+                if (typeof k === 'function') {
+                  g(o, 'PAOT', 'Power.addOnTimer returns failure.');
                   k(o);
                 }
                 return;
               }
-              e.Request("luna://com.webos.service.commercial.signage.storageservice/settings/", {
-                method: "get",
-                parameters: {
-                  category: "commercial",
-                  keys: [
-                    "multiOnTimerHour",
-                    "multiOnTimerMinute",
-                    "multiOnTimerWeekday",
-                    "multiOnTimerSource",
-                    "onTimerSchedule",
-                    "onTimerCount",
-                  ],
-                },
-                onSuccess: function (v) {
-                  if (v.returnValue === true) {
-                    b("version : " + n.webOSVer);
-                    if (typeof v.settings.multiOnTimerHour === "string") {
-                      v.settings.multiOnTimerHour = JSON.parse(v.settings.multiOnTimerHour);
-                    }
-                    if (typeof v.settings.multiOnTimerMinute === "string") {
-                      v.settings.multiOnTimerMinute = JSON.parse(v.settings.multiOnTimerMinute);
-                    }
-                    if (typeof v.settings.multiOnTimerWeekday === "string") {
-                      v.settings.multiOnTimerWeekday = JSON.parse(v.settings.multiOnTimerWeekday);
-                    }
-                    if (typeof v.settings.multiOnTimerSource === "string") {
-                      v.settings.multiOnTimerSource = JSON.parse(v.settings.multiOnTimerSource);
-                    }
-                    if (typeof v.settings.onTimerSchedule === "string") {
-                      v.settings.onTimerSchedule = JSON.parse(v.settings.onTimerSchedule);
-                    }
-                    var x =
-                      v.settings.onTimerSchedule === null ||
-                      v.settings.onTimerSchedule === undefined
-                        ? 0
-                        : v.settings.onTimerSchedule.length;
-                    if (v.settings.multiOnTimerHour.length <= x) {
-                      if (typeof k === "function") {
-                        g(v, "PSOT", "Power.addOnTimer returns failure. No space to add timer.");
-                        k(v);
+              e.Request(
+                'luna://com.webos.service.commercial.signage.storageservice/settings/',
+                {
+                  method: 'get',
+                  parameters: {
+                    category: 'commercial',
+                    keys: [
+                      'multiOnTimerHour',
+                      'multiOnTimerMinute',
+                      'multiOnTimerWeekday',
+                      'multiOnTimerSource',
+                      'onTimerSchedule',
+                      'onTimerCount',
+                    ],
+                  },
+                  onSuccess: function (v) {
+                    if (v.returnValue === true) {
+                      b('version : ' + n.webOSVer);
+                      if (typeof v.settings.multiOnTimerHour === 'string') {
+                        v.settings.multiOnTimerHour = JSON.parse(
+                          v.settings.multiOnTimerHour
+                        );
                       }
-                      return;
-                    }
-                    if (n.webOSVer === 3) {
-                      if (l.week >= 64) {
-                        l.week = 1 + (l.week - 64) * 2;
-                      } else {
-                        l.week = l.week * 2;
+                      if (typeof v.settings.multiOnTimerMinute === 'string') {
+                        v.settings.multiOnTimerMinute = JSON.parse(
+                          v.settings.multiOnTimerMinute
+                        );
                       }
-                    }
-                    v.settings.multiOnTimerHour[x] = l.hour;
-                    v.settings.multiOnTimerMinute[x] = l.minute;
-                    v.settings.multiOnTimerWeekday[x] = l.week;
-                    v.settings.multiOnTimerSource[x] = u.toUpperCase();
-                    var w = 360;
-                    v.settings.onTimerSchedule[x] = {
-                      _id: "" + w++,
-                      hour: l.hour,
-                      input: u.toUpperCase(),
-                      minute: l.minute,
-                      weekday: l.week,
-                    };
-                    e.Request(
-                      "luna://com.webos.service.commercial.signage.storageservice/settings/",
-                      {
-                        method: "set",
-                        parameters: {
-                          category: "commercial",
-                          settings: {
-                            multiOnTimerHour: v.settings.multiOnTimerHour,
-                            multiOnTimerMinute: v.settings.multiOnTimerMinute,
-                            multiOnTimerWeekday: v.settings.multiOnTimerWeekday,
-                            multiOnTimerSource: v.settings.multiOnTimerSource,
-                            onTimerCount: x + 1,
-                            onTimerSchedule: v.settings.onTimerSchedule,
+                      if (typeof v.settings.multiOnTimerWeekday === 'string') {
+                        v.settings.multiOnTimerWeekday = JSON.parse(
+                          v.settings.multiOnTimerWeekday
+                        );
+                      }
+                      if (typeof v.settings.multiOnTimerSource === 'string') {
+                        v.settings.multiOnTimerSource = JSON.parse(
+                          v.settings.multiOnTimerSource
+                        );
+                      }
+                      if (typeof v.settings.onTimerSchedule === 'string') {
+                        v.settings.onTimerSchedule = JSON.parse(
+                          v.settings.onTimerSchedule
+                        );
+                      }
+                      var x =
+                        v.settings.onTimerSchedule === null ||
+                        v.settings.onTimerSchedule === undefined
+                          ? 0
+                          : v.settings.onTimerSchedule.length;
+                      if (v.settings.multiOnTimerHour.length <= x) {
+                        if (typeof k === 'function') {
+                          g(
+                            v,
+                            'PSOT',
+                            'Power.addOnTimer returns failure. No space to add timer.'
+                          );
+                          k(v);
+                        }
+                        return;
+                      }
+                      if (n.webOSVer === 3) {
+                        if (l.week >= 64) {
+                          l.week = 1 + (l.week - 64) * 2;
+                        } else {
+                          l.week = l.week * 2;
+                        }
+                      }
+                      v.settings.multiOnTimerHour[x] = l.hour;
+                      v.settings.multiOnTimerMinute[x] = l.minute;
+                      v.settings.multiOnTimerWeekday[x] = l.week;
+                      v.settings.multiOnTimerSource[x] = u.toUpperCase();
+                      var w = 360;
+                      v.settings.onTimerSchedule[x] = {
+                        _id: '' + w++,
+                        hour: l.hour,
+                        input: u.toUpperCase(),
+                        minute: l.minute,
+                        weekday: l.week,
+                      };
+                      e.Request(
+                        'luna://com.webos.service.commercial.signage.storageservice/settings/',
+                        {
+                          method: 'set',
+                          parameters: {
+                            category: 'commercial',
+                            settings: {
+                              multiOnTimerHour: v.settings.multiOnTimerHour,
+                              multiOnTimerMinute: v.settings.multiOnTimerMinute,
+                              multiOnTimerWeekday:
+                                v.settings.multiOnTimerWeekday,
+                              multiOnTimerSource: v.settings.multiOnTimerSource,
+                              onTimerCount: x + 1,
+                              onTimerSchedule: v.settings.onTimerSchedule,
+                            },
                           },
-                        },
-                        onSuccess: function () {
-                          b("addOnTimer: On Success 2");
-                          if (typeof j === "function") {
-                            j();
-                          }
-                        },
-                        onFailure: function (y) {
-                          b("addOnTimer: On Failure 2");
-                          delete y.returnValue;
-                          if (typeof k === "function") {
-                            g(y, "PAOT", "Power.addOnTimer returns failure.");
-                            k(y);
-                          }
-                          return;
-                        },
-                      },
-                    );
-                  }
-                },
-                onFailure: function (v) {
-                  b("addOnTimer: On Failure");
-                  delete v.returnValue;
-                  if (typeof k === "function") {
-                    g(v, "PAOT", "Power.addOnTimer returns failure.");
-                    k(v);
-                  }
-                  return;
-                },
-              });
+                          onSuccess: function () {
+                            b('addOnTimer: On Success 2');
+                            if (typeof j === 'function') {
+                              j();
+                            }
+                          },
+                          onFailure: function (y) {
+                            b('addOnTimer: On Failure 2');
+                            delete y.returnValue;
+                            if (typeof k === 'function') {
+                              g(y, 'PAOT', 'Power.addOnTimer returns failure.');
+                              k(y);
+                            }
+                            return;
+                          },
+                        }
+                      );
+                    }
+                  },
+                  onFailure: function (v) {
+                    b('addOnTimer: On Failure');
+                    delete v.returnValue;
+                    if (typeof k === 'function') {
+                      g(v, 'PAOT', 'Power.addOnTimer returns failure.');
+                      k(v);
+                    }
+                    return;
+                  },
+                }
+              );
             }
           },
           onFailure: function (o) {
-            b("getInputSourceStatus: On Failure");
+            b('getInputSourceStatus: On Failure');
             delete o.returnValue;
-            if (typeof k === "function") {
-              g(o, "PAOT", "Power.addOnTimer returns failure on gathering input list.");
+            if (typeof k === 'function') {
+              g(
+                o,
+                'PAOT',
+                'Power.addOnTimer returns failure on gathering input list.'
+              );
               k(o);
             }
             return;
@@ -1001,43 +1132,43 @@ Power = (function () {
         });
       }
     });
-    b("Power.addOnTimer Done");
+    b('Power.addOnTimer Done');
   };
   h.prototype.deleteOnTimer = function (j, k, l) {
-    b("deleteOnTimer: " + JSON.stringify(l));
+    b('deleteOnTimer: ' + JSON.stringify(l));
     i(function (n) {
       if (n.webOSVer === 4 || n.webOSVer > 4) {
         if (
           l.hour === undefined ||
           isNaN(l.hour) ||
-          typeof l.hour !== "number" ||
+          typeof l.hour !== 'number' ||
           l.hour < 0 ||
           l.hour > 23 ||
           l.minute === undefined ||
           isNaN(l.minute) ||
-          typeof l.minute !== "number" ||
+          typeof l.minute !== 'number' ||
           l.minute < 0 ||
           l.minute > 59 ||
           l.week === undefined ||
           isNaN(l.week) ||
-          typeof l.week !== "number" ||
+          typeof l.week !== 'number' ||
           l.week < 0 ||
           l.week > 127
         ) {
-          if (typeof k === "function") {
+          if (typeof k === 'function') {
             var m = {};
             g(
               m,
-              "PAOT",
-              "Power.deleteOnTimer returns failure. invalid parameters or out of range.",
+              'PAOT',
+              'Power.deleteOnTimer returns failure. invalid parameters or out of range.'
             );
             k(m);
           }
           return;
         }
-        e.Request("luna://com.webos.service.commercial.scapadapter/settings/", {
-          method: "get",
-          parameters: { category: "commercial", keys: ["onOffTimeSchedule"] },
+        e.Request('luna://com.webos.service.commercial.scapadapter/settings/', {
+          method: 'get',
+          parameters: { category: 'commercial', keys: ['onOffTimeSchedule'] },
           onSuccess: function (x) {
             if (x.returnValue === true) {
               var r = 0;
@@ -1052,25 +1183,25 @@ Power = (function () {
                 if (l.week & 1) {
                   switch (o) {
                     case 1:
-                      w.push("mon");
+                      w.push('mon');
                       break;
                     case 2:
-                      w.push("tue");
+                      w.push('tue');
                       break;
                     case 4:
-                      w.push("wed");
+                      w.push('wed');
                       break;
                     case 8:
-                      w.push("thu");
+                      w.push('thu');
                       break;
                     case 16:
-                      w.push("fri");
+                      w.push('fri');
                       break;
                     case 32:
-                      w.push("sat");
+                      w.push('sat');
                       break;
                     case 64:
-                      w.push("sun");
+                      w.push('sun');
                       break;
                   }
                 }
@@ -1115,7 +1246,9 @@ Power = (function () {
                   x.settings.onOffTimeSchedule.onTime[r].minute !== undefined &&
                   x.settings.onOffTimeSchedule.onTime[r].minute !== null
                 ) {
-                  if (x.settings.onOffTimeSchedule.onTime[r].minute === q.minute) {
+                  if (
+                    x.settings.onOffTimeSchedule.onTime[r].minute === q.minute
+                  ) {
                     o++;
                   } else {
                     v.minute = x.settings.onOffTimeSchedule.onTime[r].minute;
@@ -1148,7 +1281,8 @@ Power = (function () {
                   v.hour = x.settings.onOffTimeSchedule.offTime[r].hour;
                 }
                 if (
-                  x.settings.onOffTimeSchedule.offTime[r].minute !== undefined &&
+                  x.settings.onOffTimeSchedule.offTime[r].minute !==
+                    undefined &&
                   x.settings.onOffTimeSchedule.offTime[r].minute !== null
                 ) {
                   v.minute = x.settings.onOffTimeSchedule.offTime[r].minute;
@@ -1157,37 +1291,47 @@ Power = (function () {
                 v = {};
               }
               if (p) {
-                e.Request("luna://com.webos.service.commercial.scapadapter/settings/", {
-                  method: "set",
-                  parameters: { category: "commercial", settings: { onOffTimeSchedule: s } },
-                  onSuccess: function () {
-                    b("deleteOnTimer: On Success 2");
-                    if (typeof j === "function") {
-                      j();
-                    }
-                  },
-                  onFailure: function (y) {
-                    b("deleteOnTimer: On Failure 2");
-                    delete y.returnValue;
-                    if (typeof k === "function") {
-                      g(y, "PAOT", "Power.deleteOnTimer returns failure.");
-                      k(y);
-                    }
-                    return;
-                  },
-                });
+                e.Request(
+                  'luna://com.webos.service.commercial.scapadapter/settings/',
+                  {
+                    method: 'set',
+                    parameters: {
+                      category: 'commercial',
+                      settings: { onOffTimeSchedule: s },
+                    },
+                    onSuccess: function () {
+                      b('deleteOnTimer: On Success 2');
+                      if (typeof j === 'function') {
+                        j();
+                      }
+                    },
+                    onFailure: function (y) {
+                      b('deleteOnTimer: On Failure 2');
+                      delete y.returnValue;
+                      if (typeof k === 'function') {
+                        g(y, 'PAOT', 'Power.deleteOnTimer returns failure.');
+                        k(y);
+                      }
+                      return;
+                    },
+                  }
+                );
               } else {
                 var x = {};
-                g(x, "PAOT", "Power.deleteOnTimer returns failure. / No matched found");
+                g(
+                  x,
+                  'PAOT',
+                  'Power.deleteOnTimer returns failure. / No matched found'
+                );
                 k(x);
               }
             }
           },
           onFailure: function (o) {
-            b("deleteOnTimer: On Failure");
+            b('deleteOnTimer: On Failure');
             delete o.returnValue;
-            if (typeof k === "function") {
-              g(o, "PAOT", "Power.deleteOnTimer returns failure.");
+            if (typeof k === 'function') {
+              g(o, 'PAOT', 'Power.deleteOnTimer returns failure.');
               k(o);
             }
             return;
@@ -1197,246 +1341,272 @@ Power = (function () {
         if (
           l.hour === undefined ||
           isNaN(l.hour) ||
-          typeof l.hour !== "number" ||
+          typeof l.hour !== 'number' ||
           l.hour < 0 ||
           l.hour > 23 ||
           l.minute === undefined ||
           isNaN(l.minute) ||
-          typeof l.minute !== "number" ||
+          typeof l.minute !== 'number' ||
           l.minute < 0 ||
           l.minute > 59 ||
           l.week === undefined ||
           isNaN(l.week) ||
-          typeof l.week !== "number" ||
+          typeof l.week !== 'number' ||
           l.week < 0 ||
           l.week > 127 ||
           l.inputSource === undefined ||
-          typeof l.inputSource !== "string" ||
-          l.inputSource.indexOf("ext://") !== 0
+          typeof l.inputSource !== 'string' ||
+          l.inputSource.indexOf('ext://') !== 0
         ) {
-          if (typeof k === "function") {
+          if (typeof k === 'function') {
             var m = {};
             g(
               m,
-              "PDOT",
-              "Power.deleteOnTimer returns failure. invalid parameters or out of range.",
+              'PDOT',
+              'Power.deleteOnTimer returns failure. invalid parameters or out of range.'
             );
             k(m);
           }
           return;
         }
-        e.Request("luna://com.webos.service.commercial.signage.storageservice/settings/", {
-          method: "get",
-          parameters: {
-            category: "commercial",
-            keys: [
-              "multiOnTimerHour",
-              "multiOnTimerMinute",
-              "multiOnTimerWeekday",
-              "multiOnTimerSource",
-              "onTimerSchedule",
-              "onTimerCount",
-            ],
-          },
-          onSuccess: function (o) {
-            if (o.returnValue === true) {
-              i(function (p) {
-                e.Request("luna://com.webos.service.eim/", {
-                  method: "getAllInputStatus",
-                  onSuccess: function (t) {
-                    b("getInputSourceStatus: On Success");
-                    if (o.returnValue === true) {
-                      b("version : " + p.webOSVer);
-                      if (typeof o.settings.multiOnTimerHour === "string") {
-                        o.settings.multiOnTimerHour = JSON.parse(o.settings.multiOnTimerHour);
-                      }
-                      if (typeof o.settings.multiOnTimerMinute === "string") {
-                        o.settings.multiOnTimerMinute = JSON.parse(o.settings.multiOnTimerMinute);
-                      }
-                      if (typeof o.settings.multiOnTimerWeekday === "string") {
-                        o.settings.multiOnTimerWeekday = JSON.parse(o.settings.multiOnTimerWeekday);
-                      }
-                      if (typeof o.settings.multiOnTimerSource === "string") {
-                        o.settings.multiOnTimerSource = JSON.parse(o.settings.multiOnTimerSource);
-                      }
-                      if (typeof o.settings.onTimerSchedule === "string") {
-                        o.settings.onTimerSchedule = JSON.parse(o.settings.onTimerSchedule);
-                      }
-                      var E = 0,
-                        C =
-                          o.settings.onTimerSchedule === null ||
-                          o.settings.onTimerSchedule === undefined
-                            ? 0
-                            : o.settings.onTimerSchedule.length;
-                      var x = ["0", "0", "0", "0", "0", "0", "0"],
-                        y = ["0", "0", "0", "0", "0", "0", "0"],
-                        r = ["0", "0", "0", "0", "0", "0", "0"],
-                        q = ["0", "0", "0", "0", "0", "0", "0"],
-                        B = [];
-                      var w = d(l.inputSource);
-                      for (var A = 0; A < t.totalCount; A++) {
-                        var D = t.devices[A].deviceName;
-                        var v = D;
-                        var z = l.inputSource.substring(6).split(":");
-                        var u = "1";
-                        if (isNaN(D.substring(D.length - 1, D.length)) === false) {
-                          D = D.substring(0, D.length - 1);
-                          u = t.devices[A].id.split("_")[1];
-                        }
-                        if (D.toUpperCase() === "DISPLAYPORT") {
-                          D = "DP";
-                        }
-                        if (D.toUpperCase().indexOf(z[0].toUpperCase()) >= 0 && u === z[1]) {
-                          w = v;
-                          break;
-                        }
-                      }
-                      var s = false;
-                      if (p.webOSVer === 3) {
-                        if (l.week >= 64) {
-                          l.week = 1 + (l.week - 64) * 2;
-                        } else {
-                          l.week = l.week * 2;
-                        }
-                      }
-                      for (var A = 0; A < C; A++) {
-                        b("deleteOnTimer: " + w);
-                        if (o.settings.onTimerSchedule[A] === null) {
-                          continue;
-                        }
-                        b(
-                          "options.week : " +
-                            l.week +
-                            " result.settings.onTimerSchedule[" +
-                            A +
-                            "].weekday : " +
-                            o.settings.onTimerSchedule[A].weekday,
-                        );
-                        if (
-                          s === false &&
-                          l.hour === o.settings.onTimerSchedule[A].hour &&
-                          l.minute === o.settings.onTimerSchedule[A].minute &&
-                          l.week == o.settings.onTimerSchedule[A].weekday &&
-                          o.settings.onTimerSchedule[A].input.toUpperCase() === w.toUpperCase()
-                        ) {
-                          b("deleteOnTimer: index " + A);
-                          s = true;
-                        } else {
-                          x[E] = o.settings.multiOnTimerHour[A];
-                          y[E] = o.settings.multiOnTimerMinute[A];
-                          r[E] = o.settings.multiOnTimerWeekday[A];
-                          q[E] = o.settings.multiOnTimerSource[A];
-                          B[E] = o.settings.onTimerSchedule[A];
-                          E++;
-                        }
-                      }
-                      if (s === true) {
-                        C--;
-                      }
-                      if (C === 0) {
-                        B = [];
-                      }
-                      if (o.settings.onTimerSchedule.length === C) {
-                        if (typeof k === "function") {
-                          g(
-                            o,
-                            "PDOT",
-                            "Power.deleteOnTimer returns failure. There is no 'on timer' matched in the list.",
+        e.Request(
+          'luna://com.webos.service.commercial.signage.storageservice/settings/',
+          {
+            method: 'get',
+            parameters: {
+              category: 'commercial',
+              keys: [
+                'multiOnTimerHour',
+                'multiOnTimerMinute',
+                'multiOnTimerWeekday',
+                'multiOnTimerSource',
+                'onTimerSchedule',
+                'onTimerCount',
+              ],
+            },
+            onSuccess: function (o) {
+              if (o.returnValue === true) {
+                i(function (p) {
+                  e.Request('luna://com.webos.service.eim/', {
+                    method: 'getAllInputStatus',
+                    onSuccess: function (t) {
+                      b('getInputSourceStatus: On Success');
+                      if (o.returnValue === true) {
+                        b('version : ' + p.webOSVer);
+                        if (typeof o.settings.multiOnTimerHour === 'string') {
+                          o.settings.multiOnTimerHour = JSON.parse(
+                            o.settings.multiOnTimerHour
                           );
-                          k(o);
                         }
-                        return;
-                      }
-                      e.Request(
-                        "luna://com.webos.service.commercial.signage.storageservice/settings/",
-                        {
-                          method: "set",
-                          parameters: {
-                            category: "commercial",
-                            settings: {
-                              multiOnTimerHour: x,
-                              multiOnTimerMinute: y,
-                              multiOnTimerWeekday: r,
-                              multiOnTimerSource: q,
-                              onTimerCount: C,
-                              onTimerSchedule: B,
+                        if (typeof o.settings.multiOnTimerMinute === 'string') {
+                          o.settings.multiOnTimerMinute = JSON.parse(
+                            o.settings.multiOnTimerMinute
+                          );
+                        }
+                        if (
+                          typeof o.settings.multiOnTimerWeekday === 'string'
+                        ) {
+                          o.settings.multiOnTimerWeekday = JSON.parse(
+                            o.settings.multiOnTimerWeekday
+                          );
+                        }
+                        if (typeof o.settings.multiOnTimerSource === 'string') {
+                          o.settings.multiOnTimerSource = JSON.parse(
+                            o.settings.multiOnTimerSource
+                          );
+                        }
+                        if (typeof o.settings.onTimerSchedule === 'string') {
+                          o.settings.onTimerSchedule = JSON.parse(
+                            o.settings.onTimerSchedule
+                          );
+                        }
+                        var E = 0,
+                          C =
+                            o.settings.onTimerSchedule === null ||
+                            o.settings.onTimerSchedule === undefined
+                              ? 0
+                              : o.settings.onTimerSchedule.length;
+                        var x = ['0', '0', '0', '0', '0', '0', '0'],
+                          y = ['0', '0', '0', '0', '0', '0', '0'],
+                          r = ['0', '0', '0', '0', '0', '0', '0'],
+                          q = ['0', '0', '0', '0', '0', '0', '0'],
+                          B = [];
+                        var w = d(l.inputSource);
+                        for (var A = 0; A < t.totalCount; A++) {
+                          var D = t.devices[A].deviceName;
+                          var v = D;
+                          var z = l.inputSource.substring(6).split(':');
+                          var u = '1';
+                          if (
+                            isNaN(D.substring(D.length - 1, D.length)) === false
+                          ) {
+                            D = D.substring(0, D.length - 1);
+                            u = t.devices[A].id.split('_')[1];
+                          }
+                          if (D.toUpperCase() === 'DISPLAYPORT') {
+                            D = 'DP';
+                          }
+                          if (
+                            D.toUpperCase().indexOf(z[0].toUpperCase()) >= 0 &&
+                            u === z[1]
+                          ) {
+                            w = v;
+                            break;
+                          }
+                        }
+                        var s = false;
+                        if (p.webOSVer === 3) {
+                          if (l.week >= 64) {
+                            l.week = 1 + (l.week - 64) * 2;
+                          } else {
+                            l.week = l.week * 2;
+                          }
+                        }
+                        for (var A = 0; A < C; A++) {
+                          b('deleteOnTimer: ' + w);
+                          if (o.settings.onTimerSchedule[A] === null) {
+                            continue;
+                          }
+                          b(
+                            'options.week : ' +
+                              l.week +
+                              ' result.settings.onTimerSchedule[' +
+                              A +
+                              '].weekday : ' +
+                              o.settings.onTimerSchedule[A].weekday
+                          );
+                          if (
+                            s === false &&
+                            l.hour === o.settings.onTimerSchedule[A].hour &&
+                            l.minute === o.settings.onTimerSchedule[A].minute &&
+                            l.week == o.settings.onTimerSchedule[A].weekday &&
+                            o.settings.onTimerSchedule[
+                              A
+                            ].input.toUpperCase() === w.toUpperCase()
+                          ) {
+                            b('deleteOnTimer: index ' + A);
+                            s = true;
+                          } else {
+                            x[E] = o.settings.multiOnTimerHour[A];
+                            y[E] = o.settings.multiOnTimerMinute[A];
+                            r[E] = o.settings.multiOnTimerWeekday[A];
+                            q[E] = o.settings.multiOnTimerSource[A];
+                            B[E] = o.settings.onTimerSchedule[A];
+                            E++;
+                          }
+                        }
+                        if (s === true) {
+                          C--;
+                        }
+                        if (C === 0) {
+                          B = [];
+                        }
+                        if (o.settings.onTimerSchedule.length === C) {
+                          if (typeof k === 'function') {
+                            g(
+                              o,
+                              'PDOT',
+                              "Power.deleteOnTimer returns failure. There is no 'on timer' matched in the list."
+                            );
+                            k(o);
+                          }
+                          return;
+                        }
+                        e.Request(
+                          'luna://com.webos.service.commercial.signage.storageservice/settings/',
+                          {
+                            method: 'set',
+                            parameters: {
+                              category: 'commercial',
+                              settings: {
+                                multiOnTimerHour: x,
+                                multiOnTimerMinute: y,
+                                multiOnTimerWeekday: r,
+                                multiOnTimerSource: q,
+                                onTimerCount: C,
+                                onTimerSchedule: B,
+                              },
                             },
-                          },
-                          onSuccess: function () {
-                            b("deleteOnTimer: On Success 2");
-                            if (typeof j === "function") {
-                              j();
-                            }
-                          },
-                          onFailure: function (F) {
-                            b("deleteOnTimer: On Failure 2");
-                            delete F.returnValue;
-                            if (typeof k === "function") {
-                              g(F, "PDOT", "Power.deleteOnTimer returns failure.");
-                              k(F);
-                            }
-                          },
-                        },
-                      );
-                    }
-                  },
-                  onFailure: function (q) {
-                    b("getInputSourceStatus: On Failure");
-                    delete q.returnValue;
-                    if (typeof k === "function") {
-                      g(q, "PDOT", "Power.deleteOnTimer returns failure");
-                      k(q);
-                    }
-                    return;
-                  },
+                            onSuccess: function () {
+                              b('deleteOnTimer: On Success 2');
+                              if (typeof j === 'function') {
+                                j();
+                              }
+                            },
+                            onFailure: function (F) {
+                              b('deleteOnTimer: On Failure 2');
+                              delete F.returnValue;
+                              if (typeof k === 'function') {
+                                g(
+                                  F,
+                                  'PDOT',
+                                  'Power.deleteOnTimer returns failure.'
+                                );
+                                k(F);
+                              }
+                            },
+                          }
+                        );
+                      }
+                    },
+                    onFailure: function (q) {
+                      b('getInputSourceStatus: On Failure');
+                      delete q.returnValue;
+                      if (typeof k === 'function') {
+                        g(q, 'PDOT', 'Power.deleteOnTimer returns failure');
+                        k(q);
+                      }
+                      return;
+                    },
+                  });
                 });
-              });
-            }
-          },
-          onFailure: function (o) {
-            b("deleteOnTimer: On Failure");
-            delete o.returnValue;
-            if (typeof k === "function") {
-              g(o, "PDOT", "Power.deleteOnTimer returns failure.");
-              k(o);
-            }
-          },
-        });
+              }
+            },
+            onFailure: function (o) {
+              b('deleteOnTimer: On Failure');
+              delete o.returnValue;
+              if (typeof k === 'function') {
+                g(o, 'PDOT', 'Power.deleteOnTimer returns failure.');
+                k(o);
+              }
+            },
+          }
+        );
       }
     });
-    b("Power.deleteOnTimer Done");
+    b('Power.deleteOnTimer Done');
   };
   h.prototype.addOffTimer = function (k, l, m) {
-    b("addOffTimer: " + JSON.stringify(m));
+    b('addOffTimer: ' + JSON.stringify(m));
     if (
       m.hour === undefined ||
       isNaN(m.hour) ||
-      typeof m.hour !== "number" ||
+      typeof m.hour !== 'number' ||
       m.hour < 0 ||
       m.hour > 23 ||
       m.minute === undefined ||
       isNaN(m.minute) ||
-      typeof m.minute !== "number" ||
+      typeof m.minute !== 'number' ||
       m.minute < 0 ||
       m.minute > 59 ||
       m.week === undefined ||
       isNaN(m.week) ||
-      typeof m.week !== "number" ||
+      typeof m.week !== 'number' ||
       m.week <= 0 ||
       m.week > 127
     ) {
-      if (typeof l === "function") {
+      if (typeof l === 'function') {
         var j = {};
-        g(j, "PAOT", "Power.addOffTimer returns failure. Invalid parameter.");
+        g(j, 'PAOT', 'Power.addOffTimer returns failure. Invalid parameter.');
         l(j);
       }
       return;
     }
     i(function (n) {
       if (n.webOSVer === 4 || n.webOSVer > 4) {
-        e.Request("luna://com.webos.service.commercial.scapadapter/settings/", {
-          method: "get",
-          parameters: { category: "commercial", keys: ["onOffTimeSchedule"] },
+        e.Request('luna://com.webos.service.commercial.scapadapter/settings/', {
+          method: 'get',
+          parameters: { category: 'commercial', keys: ['onOffTimeSchedule'] },
           onSuccess: function (o) {
             if (o.returnValue === true) {
               var t = 0;
@@ -1450,25 +1620,25 @@ Power = (function () {
                 if (m.week & 1) {
                   switch (p) {
                     case 1:
-                      v.push("mon");
+                      v.push('mon');
                       break;
                     case 2:
-                      v.push("tue");
+                      v.push('tue');
                       break;
                     case 4:
-                      v.push("wed");
+                      v.push('wed');
                       break;
                     case 8:
-                      v.push("thu");
+                      v.push('thu');
                       break;
                     case 16:
-                      v.push("fri");
+                      v.push('fri');
                       break;
                     case 32:
-                      v.push("sat");
+                      v.push('sat');
                       break;
                     case 64:
-                      v.push("sun");
+                      v.push('sun');
                       break;
                   }
                 }
@@ -1529,7 +1699,8 @@ Power = (function () {
                   s.hour = o.settings.onOffTimeSchedule.offTime[t].hour;
                 }
                 if (
-                  o.settings.onOffTimeSchedule.offTime[t].minute !== undefined &&
+                  o.settings.onOffTimeSchedule.offTime[t].minute !==
+                    undefined &&
                   o.settings.onOffTimeSchedule.offTime[t].minute !== null
                 ) {
                   s.minute = o.settings.onOffTimeSchedule.offTime[t].minute;
@@ -1537,173 +1708,205 @@ Power = (function () {
                 q.offTime.push(s);
                 s = {};
               }
-              e.Request("luna://com.webos.service.commercial.scapadapter/settings/", {
-                method: "set",
-                parameters: { category: "commercial", settings: { onOffTimeSchedule: q } },
-                onSuccess: function () {
-                  b("addOffTimer: On Success 2");
-                  if (typeof k === "function") {
-                    k();
-                  }
-                },
-                onFailure: function (w) {
-                  b("addOffTimer: On Failure 2");
-                  delete w.returnValue;
-                  if (typeof l === "function") {
-                    g(w, "PAOT", "Power.addOffTimer returns failure.");
-                    l(w);
-                  }
-                  return;
-                },
-              });
+              e.Request(
+                'luna://com.webos.service.commercial.scapadapter/settings/',
+                {
+                  method: 'set',
+                  parameters: {
+                    category: 'commercial',
+                    settings: { onOffTimeSchedule: q },
+                  },
+                  onSuccess: function () {
+                    b('addOffTimer: On Success 2');
+                    if (typeof k === 'function') {
+                      k();
+                    }
+                  },
+                  onFailure: function (w) {
+                    b('addOffTimer: On Failure 2');
+                    delete w.returnValue;
+                    if (typeof l === 'function') {
+                      g(w, 'PAOT', 'Power.addOffTimer returns failure.');
+                      l(w);
+                    }
+                    return;
+                  },
+                }
+              );
             }
           },
           onFailure: function (o) {
-            b("addOffTimer: On Failure");
+            b('addOffTimer: On Failure');
             delete o.returnValue;
-            if (typeof l === "function") {
-              g(o, "PAOT", "Power.addOffTimer returns failure.");
+            if (typeof l === 'function') {
+              g(o, 'PAOT', 'Power.addOffTimer returns failure.');
               l(o);
             }
             return;
           },
         });
       } else {
-        e.Request("luna://com.webos.service.commercial.signage.storageservice/settings/", {
-          method: "get",
-          parameters: {
-            category: "commercial",
-            keys: [
-              "multiOffTimerHour",
-              "multiOffTimerMinute",
-              "multiOffTimerWeekday",
-              "offTimerSchedule",
-              "offTimerCount",
-            ],
-          },
-          onSuccess: function (o) {
-            if (o.returnValue === true) {
-              if (typeof o.settings.multiOffTimerHour === "string") {
-                o.settings.multiOffTimerHour = JSON.parse(o.settings.multiOffTimerHour);
-              }
-              if (typeof o.settings.multiOffTimerMinute === "string") {
-                o.settings.multiOffTimerMinute = JSON.parse(o.settings.multiOffTimerMinute);
-              }
-              if (typeof o.settings.multiOffTimerWeekday === "string") {
-                o.settings.multiOffTimerWeekday = JSON.parse(o.settings.multiOffTimerWeekday);
-              }
-              if (typeof o.settings.offTimerSchedule === "string") {
-                o.settings.offTimerSchedule = JSON.parse(o.settings.offTimerSchedule);
-              }
-              var p =
-                o.settings.offTimerSchedule === null || o.settings.offTimerSchedule === undefined
-                  ? 0
-                  : o.settings.offTimerSchedule.length;
-              if (o.settings.multiOffTimerHour.length <= p) {
-                if (typeof l === "function") {
-                  g(o, "PAOT", "Power.addOffTimer returns failure. No space to add timer.");
-                  l(o);
+        e.Request(
+          'luna://com.webos.service.commercial.signage.storageservice/settings/',
+          {
+            method: 'get',
+            parameters: {
+              category: 'commercial',
+              keys: [
+                'multiOffTimerHour',
+                'multiOffTimerMinute',
+                'multiOffTimerWeekday',
+                'offTimerSchedule',
+                'offTimerCount',
+              ],
+            },
+            onSuccess: function (o) {
+              if (o.returnValue === true) {
+                if (typeof o.settings.multiOffTimerHour === 'string') {
+                  o.settings.multiOffTimerHour = JSON.parse(
+                    o.settings.multiOffTimerHour
+                  );
                 }
-                return;
-              }
-              i(function (r) {
-                b("version : " + r.webOSVer);
-                if (r.webOSVer === 3) {
-                  if (m.week >= 64) {
-                    m.week = 1 + (m.week - 64) * 2;
-                  } else {
-                    m.week = m.week * 2;
+                if (typeof o.settings.multiOffTimerMinute === 'string') {
+                  o.settings.multiOffTimerMinute = JSON.parse(
+                    o.settings.multiOffTimerMinute
+                  );
+                }
+                if (typeof o.settings.multiOffTimerWeekday === 'string') {
+                  o.settings.multiOffTimerWeekday = JSON.parse(
+                    o.settings.multiOffTimerWeekday
+                  );
+                }
+                if (typeof o.settings.offTimerSchedule === 'string') {
+                  o.settings.offTimerSchedule = JSON.parse(
+                    o.settings.offTimerSchedule
+                  );
+                }
+                var p =
+                  o.settings.offTimerSchedule === null ||
+                  o.settings.offTimerSchedule === undefined
+                    ? 0
+                    : o.settings.offTimerSchedule.length;
+                if (o.settings.multiOffTimerHour.length <= p) {
+                  if (typeof l === 'function') {
+                    g(
+                      o,
+                      'PAOT',
+                      'Power.addOffTimer returns failure. No space to add timer.'
+                    );
+                    l(o);
                   }
+                  return;
                 }
-                o.settings.multiOffTimerHour[p] = m.hour;
-                o.settings.multiOffTimerMinute[p] = m.minute;
-                o.settings.multiOffTimerWeekday[p] = m.week;
-                b("add hour: " + m.hour + ", min : " + m.minute + ", week : " + m.week);
-                var q = 360;
-                o.settings.offTimerSchedule[p] = {
-                  _id: "" + q++,
-                  hour: m.hour,
-                  minute: m.minute,
-                  weekday: m.week,
-                };
-                e.Request("luna://com.webos.service.commercial.signage.storageservice/settings/", {
-                  method: "set",
-                  parameters: {
-                    category: "commercial",
-                    settings: {
-                      multiOffTimerHour: o.settings.multiOffTimerHour,
-                      multiOffTimerMinute: o.settings.multiOffTimerMinute,
-                      multiOffTimerWeekday: o.settings.multiOffTimerWeekday,
-                      offTimerCount: p + 1,
-                      offTimerSchedule: o.settings.offTimerSchedule,
-                    },
-                  },
-                  onSuccess: function () {
-                    b("addOffTimer: On Success 2");
-                    if (typeof k === "function") {
-                      k();
+                i(function (r) {
+                  b('version : ' + r.webOSVer);
+                  if (r.webOSVer === 3) {
+                    if (m.week >= 64) {
+                      m.week = 1 + (m.week - 64) * 2;
+                    } else {
+                      m.week = m.week * 2;
                     }
-                  },
-                  onFailure: function (s) {
-                    b("addOffTimer: On Failure 2");
-                    delete s.returnValue;
-                    if (typeof l === "function") {
-                      g(s, "PAOT", "Power.addOffTimer returns failure.");
-                      l(s);
+                  }
+                  o.settings.multiOffTimerHour[p] = m.hour;
+                  o.settings.multiOffTimerMinute[p] = m.minute;
+                  o.settings.multiOffTimerWeekday[p] = m.week;
+                  b(
+                    'add hour: ' +
+                      m.hour +
+                      ', min : ' +
+                      m.minute +
+                      ', week : ' +
+                      m.week
+                  );
+                  var q = 360;
+                  o.settings.offTimerSchedule[p] = {
+                    _id: '' + q++,
+                    hour: m.hour,
+                    minute: m.minute,
+                    weekday: m.week,
+                  };
+                  e.Request(
+                    'luna://com.webos.service.commercial.signage.storageservice/settings/',
+                    {
+                      method: 'set',
+                      parameters: {
+                        category: 'commercial',
+                        settings: {
+                          multiOffTimerHour: o.settings.multiOffTimerHour,
+                          multiOffTimerMinute: o.settings.multiOffTimerMinute,
+                          multiOffTimerWeekday: o.settings.multiOffTimerWeekday,
+                          offTimerCount: p + 1,
+                          offTimerSchedule: o.settings.offTimerSchedule,
+                        },
+                      },
+                      onSuccess: function () {
+                        b('addOffTimer: On Success 2');
+                        if (typeof k === 'function') {
+                          k();
+                        }
+                      },
+                      onFailure: function (s) {
+                        b('addOffTimer: On Failure 2');
+                        delete s.returnValue;
+                        if (typeof l === 'function') {
+                          g(s, 'PAOT', 'Power.addOffTimer returns failure.');
+                          l(s);
+                        }
+                      },
                     }
-                  },
+                  );
                 });
-              });
-            }
-          },
-          onFailure: function (o) {
-            b("addOffTimer: On Failure");
-            delete o.returnValue;
-            if (typeof l === "function") {
-              g(o, "PAOT", "Power.addOffTimer returns failure.");
-              l(o);
-            }
-          },
-        });
+              }
+            },
+            onFailure: function (o) {
+              b('addOffTimer: On Failure');
+              delete o.returnValue;
+              if (typeof l === 'function') {
+                g(o, 'PAOT', 'Power.addOffTimer returns failure.');
+                l(o);
+              }
+            },
+          }
+        );
       }
     });
-    b("Power.addOffTimer Done");
+    b('Power.addOffTimer Done');
   };
   h.prototype.deleteOffTimer = function (j, k, l) {
-    b("deleteOffTimer: " + JSON.stringify(l));
+    b('deleteOffTimer: ' + JSON.stringify(l));
     i(function (n) {
       if (n.webOSVer === 4 || n.webOSVer > 4) {
         if (
           l.hour === undefined ||
           isNaN(l.hour) ||
-          typeof l.hour !== "number" ||
+          typeof l.hour !== 'number' ||
           l.hour < 0 ||
           l.hour > 23 ||
           l.minute === undefined ||
           isNaN(l.minute) ||
-          typeof l.minute !== "number" ||
+          typeof l.minute !== 'number' ||
           l.minute < 0 ||
           l.minute > 59 ||
           l.week === undefined ||
           isNaN(l.week) ||
-          typeof l.week !== "number" ||
+          typeof l.week !== 'number' ||
           l.week < 0 ||
           l.week > 127
         ) {
-          if (typeof k === "function") {
+          if (typeof k === 'function') {
             var m = {};
             g(
               m,
-              "PAOT",
-              "Power.deleteOffTimer returns failure. invalid parameters or out of range.",
+              'PAOT',
+              'Power.deleteOffTimer returns failure. invalid parameters or out of range.'
             );
             k(m);
           }
           return;
         }
-        e.Request("luna://com.webos.service.commercial.scapadapter/settings/", {
-          method: "get",
-          parameters: { category: "commercial", keys: ["onOffTimeSchedule"] },
+        e.Request('luna://com.webos.service.commercial.scapadapter/settings/', {
+          method: 'get',
+          parameters: { category: 'commercial', keys: ['onOffTimeSchedule'] },
           onSuccess: function (x) {
             if (x.returnValue === true) {
               var r = 0;
@@ -1718,25 +1921,25 @@ Power = (function () {
                 if (l.week & 1) {
                   switch (o) {
                     case 1:
-                      w.push("mon");
+                      w.push('mon');
                       break;
                     case 2:
-                      w.push("tue");
+                      w.push('tue');
                       break;
                     case 4:
-                      w.push("wed");
+                      w.push('wed');
                       break;
                     case 8:
-                      w.push("thu");
+                      w.push('thu');
                       break;
                     case 16:
-                      w.push("fri");
+                      w.push('fri');
                       break;
                     case 32:
-                      w.push("sat");
+                      w.push('sat');
                       break;
                     case 64:
-                      w.push("sun");
+                      w.push('sun');
                       break;
                   }
                 }
@@ -1805,10 +2008,13 @@ Power = (function () {
                   }
                 }
                 if (
-                  x.settings.onOffTimeSchedule.offTime[r].minute !== undefined &&
+                  x.settings.onOffTimeSchedule.offTime[r].minute !==
+                    undefined &&
                   x.settings.onOffTimeSchedule.offTime[r].minute !== null
                 ) {
-                  if (x.settings.onOffTimeSchedule.offTime[r].minute === q.minute) {
+                  if (
+                    x.settings.onOffTimeSchedule.offTime[r].minute === q.minute
+                  ) {
                     o++;
                   } else {
                     v.minute = x.settings.onOffTimeSchedule.offTime[r].minute;
@@ -1823,37 +2029,47 @@ Power = (function () {
                 v = {};
               }
               if (p) {
-                e.Request("luna://com.webos.service.commercial.scapadapter/settings/", {
-                  method: "set",
-                  parameters: { category: "commercial", settings: { onOffTimeSchedule: s } },
-                  onSuccess: function () {
-                    b("deleteOffTimer: On Success 2");
-                    if (typeof j === "function") {
-                      j();
-                    }
-                  },
-                  onFailure: function (y) {
-                    b("deleteOffTimer: On Failure 2");
-                    delete y.returnValue;
-                    if (typeof k === "function") {
-                      g(y, "PAOT", "Power.deleteOffTimer returns failure.");
-                      k(y);
-                    }
-                    return;
-                  },
-                });
+                e.Request(
+                  'luna://com.webos.service.commercial.scapadapter/settings/',
+                  {
+                    method: 'set',
+                    parameters: {
+                      category: 'commercial',
+                      settings: { onOffTimeSchedule: s },
+                    },
+                    onSuccess: function () {
+                      b('deleteOffTimer: On Success 2');
+                      if (typeof j === 'function') {
+                        j();
+                      }
+                    },
+                    onFailure: function (y) {
+                      b('deleteOffTimer: On Failure 2');
+                      delete y.returnValue;
+                      if (typeof k === 'function') {
+                        g(y, 'PAOT', 'Power.deleteOffTimer returns failure.');
+                        k(y);
+                      }
+                      return;
+                    },
+                  }
+                );
               } else {
                 var x = {};
-                g(x, "PAOT", "Power.deleteOffTimer returns failure. / No matched found.");
+                g(
+                  x,
+                  'PAOT',
+                  'Power.deleteOffTimer returns failure. / No matched found.'
+                );
                 k(x);
               }
             }
           },
           onFailure: function (o) {
-            b("deleteOffTimer: On Failure");
+            b('deleteOffTimer: On Failure');
             delete o.returnValue;
-            if (typeof k === "function") {
-              g(o, "PAOT", "Power.deleteOffTimer returns failure.");
+            if (typeof k === 'function') {
+              g(o, 'PAOT', 'Power.deleteOffTimer returns failure.');
               k(o);
             }
             return;
@@ -1863,170 +2079,185 @@ Power = (function () {
         if (
           l.hour === undefined ||
           isNaN(l.hour) ||
-          typeof l.hour !== "number" ||
+          typeof l.hour !== 'number' ||
           l.hour < 0 ||
           l.hour > 23 ||
           l.minute === undefined ||
           isNaN(l.minute) ||
-          typeof l.minute !== "number" ||
+          typeof l.minute !== 'number' ||
           l.minute < 0 ||
           l.minute > 59 ||
           l.week === undefined ||
           isNaN(l.week) ||
-          typeof l.week !== "number" ||
+          typeof l.week !== 'number' ||
           l.week < 0 ||
           l.week > 127
         ) {
-          if (typeof k === "function") {
+          if (typeof k === 'function') {
             var m = {};
             g(
               m,
-              "PDOT",
-              "Power.deleteOffTimer returns failure. invalid parameters or out of range.",
+              'PDOT',
+              'Power.deleteOffTimer returns failure. invalid parameters or out of range.'
             );
             k(m);
           }
           return;
         }
-        e.Request("luna://com.webos.service.commercial.signage.storageservice/settings/", {
-          method: "get",
-          parameters: {
-            category: "commercial",
-            keys: [
-              "multiOffTimerHour",
-              "multiOffTimerMinute",
-              "multiOffTimerWeekday",
-              "offTimerSchedule",
-              "offTimerCount",
-            ],
-          },
-          onSuccess: function (w) {
-            if (w.returnValue === true) {
-              if (typeof w.settings.multiOffTimerHour === "string") {
-                w.settings.multiOffTimerHour = JSON.parse(w.settings.multiOffTimerHour);
-              }
-              if (typeof w.settings.multiOffTimerMinute === "string") {
-                w.settings.multiOffTimerMinute = JSON.parse(w.settings.multiOffTimerMinute);
-              }
-              if (typeof w.settings.multiOffTimerWeekday === "string") {
-                w.settings.multiOffTimerWeekday = JSON.parse(w.settings.multiOffTimerWeekday);
-              }
-              if (typeof w.settings.offTimerSchedule === "string") {
-                w.settings.offTimerSchedule = JSON.parse(w.settings.offTimerSchedule);
-              }
-              var v = 0,
-                u =
-                  w.settings.offTimerSchedule === null || w.settings.offTimerSchedule === undefined
-                    ? 0
-                    : w.settings.offTimerSchedule.length;
-              var q = ["0", "0", "0", "0", "0", "0", "0"],
-                r = ["0", "0", "0", "0", "0", "0", "0"],
-                o = ["0", "0", "0", "0", "0", "0", "0"],
-                t = [];
-              var p = false;
-              i(function (x) {
-                b("version : " + x.webOSVer);
-                if (x.webOSVer === 3) {
-                  if (l.week >= 64) {
-                    l.week = 1 + (l.week - 64) * 2;
-                  } else {
-                    l.week = l.week * 2;
-                  }
-                }
-              });
-              for (var s = 0; s < u; s++) {
-                if (w.settings.offTimerSchedule[s] === null) {
-                  continue;
-                }
-                b(
-                  "options.week : " +
-                    l.week +
-                    " result.settings.offTimerSchedule[" +
-                    s +
-                    "].weekday : " +
-                    w.settings.offTimerSchedule[s].weekday,
-                );
-                if (
-                  p === false &&
-                  l.hour === w.settings.offTimerSchedule[s].hour &&
-                  l.minute === w.settings.offTimerSchedule[s].minute &&
-                  l.week === w.settings.offTimerSchedule[s].weekday
-                ) {
-                  p = true;
-                } else {
-                  q[v] = w.settings.multiOffTimerHour[s];
-                  r[v] = w.settings.multiOffTimerMinute[s];
-                  o[v] = w.settings.multiOffTimerWeekday[s];
-                  t[v] = w.settings.offTimerSchedule[s];
-                  v++;
-                }
-              }
-              if (p === true) {
-                u--;
-              }
-              if (u === 0) {
-                t = [];
-              }
-              if (w.settings.offTimerSchedule.length === u) {
-                if (typeof k === "function") {
-                  g(
-                    w,
-                    "PDOT",
-                    "Power.deleteOffTimer returns failure. There is no 'off timer' matched in the list.",
+        e.Request(
+          'luna://com.webos.service.commercial.signage.storageservice/settings/',
+          {
+            method: 'get',
+            parameters: {
+              category: 'commercial',
+              keys: [
+                'multiOffTimerHour',
+                'multiOffTimerMinute',
+                'multiOffTimerWeekday',
+                'offTimerSchedule',
+                'offTimerCount',
+              ],
+            },
+            onSuccess: function (w) {
+              if (w.returnValue === true) {
+                if (typeof w.settings.multiOffTimerHour === 'string') {
+                  w.settings.multiOffTimerHour = JSON.parse(
+                    w.settings.multiOffTimerHour
                   );
-                  k(w);
                 }
-                return;
+                if (typeof w.settings.multiOffTimerMinute === 'string') {
+                  w.settings.multiOffTimerMinute = JSON.parse(
+                    w.settings.multiOffTimerMinute
+                  );
+                }
+                if (typeof w.settings.multiOffTimerWeekday === 'string') {
+                  w.settings.multiOffTimerWeekday = JSON.parse(
+                    w.settings.multiOffTimerWeekday
+                  );
+                }
+                if (typeof w.settings.offTimerSchedule === 'string') {
+                  w.settings.offTimerSchedule = JSON.parse(
+                    w.settings.offTimerSchedule
+                  );
+                }
+                var v = 0,
+                  u =
+                    w.settings.offTimerSchedule === null ||
+                    w.settings.offTimerSchedule === undefined
+                      ? 0
+                      : w.settings.offTimerSchedule.length;
+                var q = ['0', '0', '0', '0', '0', '0', '0'],
+                  r = ['0', '0', '0', '0', '0', '0', '0'],
+                  o = ['0', '0', '0', '0', '0', '0', '0'],
+                  t = [];
+                var p = false;
+                i(function (x) {
+                  b('version : ' + x.webOSVer);
+                  if (x.webOSVer === 3) {
+                    if (l.week >= 64) {
+                      l.week = 1 + (l.week - 64) * 2;
+                    } else {
+                      l.week = l.week * 2;
+                    }
+                  }
+                });
+                for (var s = 0; s < u; s++) {
+                  if (w.settings.offTimerSchedule[s] === null) {
+                    continue;
+                  }
+                  b(
+                    'options.week : ' +
+                      l.week +
+                      ' result.settings.offTimerSchedule[' +
+                      s +
+                      '].weekday : ' +
+                      w.settings.offTimerSchedule[s].weekday
+                  );
+                  if (
+                    p === false &&
+                    l.hour === w.settings.offTimerSchedule[s].hour &&
+                    l.minute === w.settings.offTimerSchedule[s].minute &&
+                    l.week === w.settings.offTimerSchedule[s].weekday
+                  ) {
+                    p = true;
+                  } else {
+                    q[v] = w.settings.multiOffTimerHour[s];
+                    r[v] = w.settings.multiOffTimerMinute[s];
+                    o[v] = w.settings.multiOffTimerWeekday[s];
+                    t[v] = w.settings.offTimerSchedule[s];
+                    v++;
+                  }
+                }
+                if (p === true) {
+                  u--;
+                }
+                if (u === 0) {
+                  t = [];
+                }
+                if (w.settings.offTimerSchedule.length === u) {
+                  if (typeof k === 'function') {
+                    g(
+                      w,
+                      'PDOT',
+                      "Power.deleteOffTimer returns failure. There is no 'off timer' matched in the list."
+                    );
+                    k(w);
+                  }
+                  return;
+                }
+                e.Request(
+                  'luna://com.webos.service.commercial.signage.storageservice/settings/',
+                  {
+                    method: 'set',
+                    parameters: {
+                      category: 'commercial',
+                      settings: {
+                        multiOffTimerHour: q,
+                        multiOffTimerMinute: r,
+                        multiOffTimerWeekday: o,
+                        offTimerCount: u,
+                        offTimerSchedule: t,
+                      },
+                    },
+                    onSuccess: function () {
+                      b('deleteOffTimer: On Success 2');
+                      if (typeof j === 'function') {
+                        j();
+                      }
+                    },
+                    onFailure: function (x) {
+                      b('deleteOffTimer: On Failure 2');
+                      delete x.returnValue;
+                      if (typeof k === 'function') {
+                        g(x, 'PDOT', 'Power.deleteOffTimer returns failure.');
+                        k(x);
+                      }
+                    },
+                  }
+                );
               }
-              e.Request("luna://com.webos.service.commercial.signage.storageservice/settings/", {
-                method: "set",
-                parameters: {
-                  category: "commercial",
-                  settings: {
-                    multiOffTimerHour: q,
-                    multiOffTimerMinute: r,
-                    multiOffTimerWeekday: o,
-                    offTimerCount: u,
-                    offTimerSchedule: t,
-                  },
-                },
-                onSuccess: function () {
-                  b("deleteOffTimer: On Success 2");
-                  if (typeof j === "function") {
-                    j();
-                  }
-                },
-                onFailure: function (x) {
-                  b("deleteOffTimer: On Failure 2");
-                  delete x.returnValue;
-                  if (typeof k === "function") {
-                    g(x, "PDOT", "Power.deleteOffTimer returns failure.");
-                    k(x);
-                  }
-                },
-              });
-            }
-          },
-          onFailure: function (o) {
-            b("deleteOffTimer: On Failure");
-            delete o.returnValue;
-            if (typeof k === "function") {
-              g(o, "PDOT", "Power.deleteOffTimer returns failure.");
-              k(o);
-            }
-          },
-        });
+            },
+            onFailure: function (o) {
+              b('deleteOffTimer: On Failure');
+              delete o.returnValue;
+              if (typeof k === 'function') {
+                g(o, 'PDOT', 'Power.deleteOffTimer returns failure.');
+                k(o);
+              }
+            },
+          }
+        );
       }
     });
-    b("Power.deleteOffTimer Done");
+    b('Power.deleteOffTimer Done');
   };
   h.prototype.getOnTimerList = function (j, k) {
-    b("getOnTimerList: ");
+    b('getOnTimerList: ');
     i(function (l) {
       if (l.webOSVer === 4 || l.webOSVer > 4) {
-        e.Request("luna://com.webos.service.commercial.scapadapter/settings/", {
-          method: "get",
-          parameters: { category: "commercial", keys: ["onOffTimeSchedule"] },
+        e.Request('luna://com.webos.service.commercial.scapadapter/settings/', {
+          method: 'get',
+          parameters: { category: 'commercial', keys: ['onOffTimeSchedule'] },
           onSuccess: function (m) {
             if (m.returnValue === true) {
               var s = {};
@@ -2034,7 +2265,7 @@ Power = (function () {
                 m.settings.onOffTimeSchedule.onTime === null ||
                   m.settings.onOffTimeSchedule.onTime === undefined
                   ? 0
-                  : m.settings.onOffTimeSchedule.onTime.length,
+                  : m.settings.onOffTimeSchedule.onTime.length
               );
               for (var p = 0, q = 0; q < t.length; q++, p++) {
                 if (
@@ -2047,25 +2278,25 @@ Power = (function () {
                 var r = m.settings.onOffTimeSchedule.onTime[q].day;
                 var n = 0;
                 for (var o = 0; o < r.length; o++) {
-                  if (r[o] === "mon") {
+                  if (r[o] === 'mon') {
                     n += 1;
                   }
-                  if (r[o] === "tue") {
+                  if (r[o] === 'tue') {
                     n += 2;
                   }
-                  if (r[o] === "wed") {
+                  if (r[o] === 'wed') {
                     n += 4;
                   }
-                  if (r[o] === "thu") {
+                  if (r[o] === 'thu') {
                     n += 8;
                   }
-                  if (r[o] === "fri") {
+                  if (r[o] === 'fri') {
                     n += 16;
                   }
-                  if (r[o] === "sat") {
+                  if (r[o] === 'sat') {
                     n += 32;
                   }
-                  if (r[o] === "sun") {
+                  if (r[o] === 'sun') {
                     n += 64;
                   }
                 }
@@ -2074,101 +2305,107 @@ Power = (function () {
                 t[p].week = n;
               }
               s.timerList = t;
-              if (typeof j === "function") {
+              if (typeof j === 'function') {
                 j(s);
               }
             }
           },
           onFailure: function (m) {
-            b("getOnTimerList: On Failure");
+            b('getOnTimerList: On Failure');
             delete m.returnValue;
-            if (typeof k === "function") {
-              g(m, "PGOTL", "Power.getOnTimerList returns failure.");
+            if (typeof k === 'function') {
+              g(m, 'PGOTL', 'Power.getOnTimerList returns failure.');
               k(m);
             }
           },
         });
       } else {
-        e.Request("luna://com.webos.service.commercial.signage.storageservice/settings/", {
-          method: "get",
-          parameters: { category: "commercial", keys: ["onTimerSchedule"] },
-          onSuccess: function (m) {
-            if (m.returnValue === true) {
-              i(function (p) {
-                b("version : " + p.webOSVer);
-                var q = {};
-                if (typeof m.settings.onTimerSchedule === "string") {
-                  m.settings.onTimerSchedule = JSON.parse(m.settings.onTimerSchedule);
-                }
-                var v = new Array(
-                  m.settings.onTimerSchedule === null || m.settings.onTimerSchedule === undefined
-                    ? 0
-                    : m.settings.onTimerSchedule.length,
-                );
-                for (var t = 0, r = 0; r < v.length; r++) {
-                  if (
-                    m.settings.onTimerSchedule[r] === null ||
-                    m.settings.onTimerSchedule[r] === undefined
-                  ) {
-                    continue;
+        e.Request(
+          'luna://com.webos.service.commercial.signage.storageservice/settings/',
+          {
+            method: 'get',
+            parameters: { category: 'commercial', keys: ['onTimerSchedule'] },
+            onSuccess: function (m) {
+              if (m.returnValue === true) {
+                i(function (p) {
+                  b('version : ' + p.webOSVer);
+                  var q = {};
+                  if (typeof m.settings.onTimerSchedule === 'string') {
+                    m.settings.onTimerSchedule = JSON.parse(
+                      m.settings.onTimerSchedule
+                    );
                   }
-                  v[t] = { hour: 0, minute: 0, week: 0, inputSource: 0 };
-                  if (p.webOSVer === 3) {
-                    var n = m.settings.onTimerSchedule[r].weekday;
-                    if (n % 2) {
-                      var w = n % 2;
-                      n = 64 + (n - w) / 2;
-                    } else {
-                      n = n / 2;
+                  var v = new Array(
+                    m.settings.onTimerSchedule === null ||
+                      m.settings.onTimerSchedule === undefined
+                      ? 0
+                      : m.settings.onTimerSchedule.length
+                  );
+                  for (var t = 0, r = 0; r < v.length; r++) {
+                    if (
+                      m.settings.onTimerSchedule[r] === null ||
+                      m.settings.onTimerSchedule[r] === undefined
+                    ) {
+                      continue;
                     }
-                  } else {
-                    n = m.settings.onTimerSchedule[r].weekday;
+                    v[t] = { hour: 0, minute: 0, week: 0, inputSource: 0 };
+                    if (p.webOSVer === 3) {
+                      var n = m.settings.onTimerSchedule[r].weekday;
+                      if (n % 2) {
+                        var w = n % 2;
+                        n = 64 + (n - w) / 2;
+                      } else {
+                        n = n / 2;
+                      }
+                    } else {
+                      n = m.settings.onTimerSchedule[r].weekday;
+                    }
+                    v[t].hour = m.settings.onTimerSchedule[r].hour;
+                    v[t].minute = m.settings.onTimerSchedule[r].minute;
+                    v[t].week = n;
+                    var s = 'ext://';
+                    var u = m.settings.onTimerSchedule[r].input.toUpperCase();
+                    var o = '1';
+                    if (isNaN(u.substring(u.length - 1, u.length)) === false) {
+                      o = u.substring(u.length - 1, u.length);
+                      u = u.substring(0, u.length - 1);
+                    }
+                    u = u.split('/')[0];
+                    if (u.toUpperCase() === 'DISPLAYPORT') {
+                      s = s + 'dp:' + o;
+                    } else {
+                      s = s + u.toLowerCase() + ':' + o;
+                    }
+                    v[t++].inputSource = s;
                   }
-                  v[t].hour = m.settings.onTimerSchedule[r].hour;
-                  v[t].minute = m.settings.onTimerSchedule[r].minute;
-                  v[t].week = n;
-                  var s = "ext://";
-                  var u = m.settings.onTimerSchedule[r].input.toUpperCase();
-                  var o = "1";
-                  if (isNaN(u.substring(u.length - 1, u.length)) === false) {
-                    o = u.substring(u.length - 1, u.length);
-                    u = u.substring(0, u.length - 1);
+                  q.timerList = v;
+                  if (typeof j === 'function') {
+                    j(q);
                   }
-                  u = u.split("/")[0];
-                  if (u.toUpperCase() === "DISPLAYPORT") {
-                    s = s + "dp:" + o;
-                  } else {
-                    s = s + u.toLowerCase() + ":" + o;
-                  }
-                  v[t++].inputSource = s;
-                }
-                q.timerList = v;
-                if (typeof j === "function") {
-                  j(q);
-                }
-              });
-            }
-          },
-          onFailure: function (m) {
-            b("getOnTimerList: On Failure");
-            delete m.returnValue;
-            if (typeof k === "function") {
-              g(m, "PGOTL", "Power.getOnTimerList returns failure.");
-              k(m);
-            }
-          },
-        });
+                });
+              }
+            },
+            onFailure: function (m) {
+              b('getOnTimerList: On Failure');
+              delete m.returnValue;
+              if (typeof k === 'function') {
+                g(m, 'PGOTL', 'Power.getOnTimerList returns failure.');
+                k(m);
+              }
+            },
+          }
+        );
       }
     });
-    b("Power.getOnTimerList Done");
+    b('Power.getOnTimerList Done');
   };
   h.prototype.getOffTimerList = function (j, k) {
-    b("getOffTimerList: ");
+    b('getOffTimerList: ');
     i(function (l) {
       if (l.webOSVer === 4 || l.webOSVer > 4) {
-        e.Request("luna://com.webos.service.commercial.scapadapter/settings/", {
-          method: "get",
-          parameters: { category: "commercial", keys: ["onOffTimeSchedule"] },
+        e.Request('luna://com.webos.service.commercial.scapadapter/settings/', {
+          method: 'get',
+          parameters: { category: 'commercial', keys: ['onOffTimeSchedule'] },
           onSuccess: function (m) {
             if (m.returnValue === true) {
               var s = {};
@@ -2176,7 +2413,7 @@ Power = (function () {
                 m.settings.onOffTimeSchedule.offTime === null ||
                   m.settings.onOffTimeSchedule.offTime === undefined
                   ? 0
-                  : m.settings.onOffTimeSchedule.offTime.length,
+                  : m.settings.onOffTimeSchedule.offTime.length
               );
               for (var p = 0, q = 0; q < t.length; q++, p++) {
                 if (
@@ -2189,25 +2426,25 @@ Power = (function () {
                 var r = m.settings.onOffTimeSchedule.offTime[q].day;
                 var n = 0;
                 for (var o = 0; o < r.length; o++) {
-                  if (r[o] === "mon") {
+                  if (r[o] === 'mon') {
                     n += 1;
                   }
-                  if (r[o] === "tue") {
+                  if (r[o] === 'tue') {
                     n += 2;
                   }
-                  if (r[o] === "wed") {
+                  if (r[o] === 'wed') {
                     n += 4;
                   }
-                  if (r[o] === "thu") {
+                  if (r[o] === 'thu') {
                     n += 8;
                   }
-                  if (r[o] === "fri") {
+                  if (r[o] === 'fri') {
                     n += 16;
                   }
-                  if (r[o] === "sat") {
+                  if (r[o] === 'sat') {
                     n += 32;
                   }
-                  if (r[o] === "sun") {
+                  if (r[o] === 'sun') {
                     n += 64;
                   }
                 }
@@ -2216,487 +2453,544 @@ Power = (function () {
                 t[p].week = n;
               }
               s.timerList = t;
-              if (typeof j === "function") {
+              if (typeof j === 'function') {
                 j(s);
               }
             }
           },
           onFailure: function (m) {
-            b("getOffTimerList: On Failure");
+            b('getOffTimerList: On Failure');
             delete m.returnValue;
-            if (typeof k === "function") {
-              g(m, "PGOTL", "Power.getOffTimerList returns failure.");
+            if (typeof k === 'function') {
+              g(m, 'PGOTL', 'Power.getOffTimerList returns failure.');
               k(m);
             }
           },
         });
       } else {
-        e.Request("luna://com.webos.service.commercial.signage.storageservice/settings/", {
-          method: "get",
-          parameters: { category: "commercial", keys: ["offTimerSchedule"] },
-          onSuccess: function (m) {
-            b("getOffTimerList: On Success");
-            i(function (s) {
-              b("version : " + s.webOSVer);
-              if (m.returnValue === true) {
-                var r = {};
-                if (typeof m.settings.offTimerSchedule === "string") {
-                  m.settings.offTimerSchedule = JSON.parse(m.settings.offTimerSchedule);
-                }
-                var t = new Array(
-                  m.settings.offTimerSchedule === null || m.settings.offTimerSchedule === undefined
-                    ? 0
-                    : m.settings.offTimerSchedule.length,
-                );
-                for (var n = 0, o = 0; o < t.length; o++) {
-                  if (
-                    m.settings.offTimerSchedule[o] === null ||
-                    m.settings.offTimerSchedule[o] === undefined
-                  ) {
-                    continue;
+        e.Request(
+          'luna://com.webos.service.commercial.signage.storageservice/settings/',
+          {
+            method: 'get',
+            parameters: { category: 'commercial', keys: ['offTimerSchedule'] },
+            onSuccess: function (m) {
+              b('getOffTimerList: On Success');
+              i(function (s) {
+                b('version : ' + s.webOSVer);
+                if (m.returnValue === true) {
+                  var r = {};
+                  if (typeof m.settings.offTimerSchedule === 'string') {
+                    m.settings.offTimerSchedule = JSON.parse(
+                      m.settings.offTimerSchedule
+                    );
                   }
-                  t[n] = { hour: 0, minute: 0, week: 0 };
-                  if (s.webOSVer === 3) {
-                    var p = m.settings.offTimerSchedule[o].weekday;
-                    if (p % 2) {
-                      var q = p % 2;
-                      p = 64 + (p - q) / 2;
-                    } else {
-                      p = p / 2;
+                  var t = new Array(
+                    m.settings.offTimerSchedule === null ||
+                      m.settings.offTimerSchedule === undefined
+                      ? 0
+                      : m.settings.offTimerSchedule.length
+                  );
+                  for (var n = 0, o = 0; o < t.length; o++) {
+                    if (
+                      m.settings.offTimerSchedule[o] === null ||
+                      m.settings.offTimerSchedule[o] === undefined
+                    ) {
+                      continue;
                     }
-                  } else {
-                    p = m.settings.offTimerSchedule[o].weekday;
+                    t[n] = { hour: 0, minute: 0, week: 0 };
+                    if (s.webOSVer === 3) {
+                      var p = m.settings.offTimerSchedule[o].weekday;
+                      if (p % 2) {
+                        var q = p % 2;
+                        p = 64 + (p - q) / 2;
+                      } else {
+                        p = p / 2;
+                      }
+                    } else {
+                      p = m.settings.offTimerSchedule[o].weekday;
+                    }
+                    t[n].hour = m.settings.offTimerSchedule[o].hour;
+                    t[n].minute = m.settings.offTimerSchedule[o].minute;
+                    t[n++].week = p;
                   }
-                  t[n].hour = m.settings.offTimerSchedule[o].hour;
-                  t[n].minute = m.settings.offTimerSchedule[o].minute;
-                  t[n++].week = p;
+                  r.timerList = t;
+                  if (typeof j === 'function') {
+                    j(r);
+                  }
                 }
-                r.timerList = t;
-                if (typeof j === "function") {
-                  j(r);
-                }
+              });
+            },
+            onFailure: function (m) {
+              b('getOffTimerList: On Failure');
+              delete m.returnValue;
+              if (typeof k === 'function') {
+                g(m, 'PGOTL', 'Power.getOffTimerList returns failure.');
+                k(m);
               }
-            });
-          },
-          onFailure: function (m) {
-            b("getOffTimerList: On Failure");
-            delete m.returnValue;
-            if (typeof k === "function") {
-              g(m, "PGOTL", "Power.getOffTimerList returns failure.");
-              k(m);
-            }
-          },
-        });
+            },
+          }
+        );
       }
     });
-    b("Power.getOffTimerList Done");
+    b('Power.getOffTimerList Done');
   };
   h.prototype.setDisplayMode = function (k, l, m) {
-    b("setDisplayMode: " + JSON.stringify(m));
+    b('setDisplayMode: ' + JSON.stringify(m));
     var n = null;
     switch (m.displayMode) {
       case h.DisplayMode.DISPLAY_OFF:
-        n = "turnOffScreen";
+        n = 'turnOffScreen';
         break;
       case h.DisplayMode.DISPLAY_ON:
-        n = "turnOnScreen";
+        n = 'turnOnScreen';
         break;
       default:
-        if (typeof l === "function") {
+        if (typeof l === 'function') {
           var j = {};
-          g(j, "PSDM", "Power.setDisplayMode returns failure. Invalid option value.");
+          g(
+            j,
+            'PSDM',
+            'Power.setDisplayMode returns failure. Invalid option value.'
+          );
           l(j);
         }
         return;
     }
-    b("setDisplayMode: " + n);
-    if (n === null && typeof l === "function") {
+    b('setDisplayMode: ' + n);
+    if (n === null && typeof l === 'function') {
       var j = {};
-      g(j, "PSDM", "Power.setDisplayMode returns failure. command was not defined.");
+      g(
+        j,
+        'PSDM',
+        'Power.setDisplayMode returns failure. command was not defined.'
+      );
       l(j);
-      b("Power.setDisplayMode invalid ");
+      b('Power.setDisplayMode invalid ');
       return;
     }
-    e.Request("luna://com.webos.service.tv.signage/", {
-      method: "getPowerState",
+    e.Request('luna://com.webos.service.tv.signage/', {
+      method: 'getPowerState',
       onSuccess: function (o) {
-        b("setDisplayMode: On Success");
+        b('setDisplayMode: On Success');
         if (o.returnValue === true && o.state === m.displayMode) {
-          if (typeof k === "function") {
-            b("setDisplayMode: no need to do any action.");
+          if (typeof k === 'function') {
+            b('setDisplayMode: no need to do any action.');
             k();
           }
           return;
         }
-        e.Request("luna://com.webos.service.tv.signage/", {
+        e.Request('luna://com.webos.service.tv.signage/', {
           method: n,
           onSuccess: function (p) {
-            b("setDisplayMode: On Success");
+            b('setDisplayMode: On Success');
             if (p.returnValue === true) {
-              if (typeof k === "function") {
+              if (typeof k === 'function') {
                 k();
               }
             }
           },
           onFailure: function (p) {
-            b("setDisplayMode: On Failure");
+            b('setDisplayMode: On Failure');
             delete p.returnValue;
-            if (typeof l === "function") {
-              g(p, "PSDM", "Power.setDisplayMode returns failure.");
+            if (typeof l === 'function') {
+              g(p, 'PSDM', 'Power.setDisplayMode returns failure.');
               l(p);
             }
           },
         });
       },
       onFailure: function (o) {
-        b("setDisplayMode: On Failure 2");
+        b('setDisplayMode: On Failure 2');
         delete o.returnValue;
-        if (typeof l === "function") {
-          g(o, "PSDM", "Power.setDisplayMode returns failure.");
+        if (typeof l === 'function') {
+          g(o, 'PSDM', 'Power.setDisplayMode returns failure.');
           l(o);
         }
       },
     });
-    b("Power.setDisplayMode Done");
+    b('Power.setDisplayMode Done');
   };
   h.prototype.executePowerCommand = function (k, l, m) {
-    b("executePowerCommand: " + JSON.stringify(m));
+    b('executePowerCommand: ' + JSON.stringify(m));
     if (
       m.powerCommand === undefined ||
-      typeof m.powerCommand !== "string" ||
+      typeof m.powerCommand !== 'string' ||
       m.powerCommand === null ||
       m.powerCommand.length <= 0
     ) {
-      if (typeof l === "function") {
+      if (typeof l === 'function') {
         var j = {};
         g(
           j,
-          "PEPM",
-          "Power.executePowerCommand returns failure. invalid argument or out of range. ",
+          'PEPM',
+          'Power.executePowerCommand returns failure. invalid argument or out of range. '
         );
         l(j);
       }
       return;
     }
-    if (m.powerCommand !== h.PowerCommand.REBOOT && m.powerCommand !== h.PowerCommand.SHUTDOWN) {
+    if (
+      m.powerCommand !== h.PowerCommand.REBOOT &&
+      m.powerCommand !== h.PowerCommand.SHUTDOWN
+    ) {
       var j = {};
-      g(j, "PEPM", "Power.executePowerCommand returns failure. invalid argument.");
+      g(
+        j,
+        'PEPM',
+        'Power.executePowerCommand returns failure. invalid argument.'
+      );
       l(j);
       return;
     }
-    e.Request("luna://com.webos.service.tv.signage/", {
+    e.Request('luna://com.webos.service.tv.signage/', {
       method: m.powerCommand,
-      parameters: { reason: "unknown" },
+      parameters: { reason: 'unknown' },
       onSuccess: function (n) {
-        b("executePowerCommand: On Success");
+        b('executePowerCommand: On Success');
         if (n.returnValue === true) {
-          if (typeof k === "function") {
+          if (typeof k === 'function') {
             k();
           }
         }
       },
       onFailure: function (n) {
-        b("executePowerCommand: On Failure");
+        b('executePowerCommand: On Failure');
         delete n.returnValue;
-        if (typeof l === "function") {
-          g(n, "PEPM", "Power.executePowerCommand returns failure.");
+        if (typeof l === 'function') {
+          g(n, 'PEPM', 'Power.executePowerCommand returns failure.');
           l(n);
         }
       },
     });
-    b("Power.executePowerCommand Done");
+    b('Power.executePowerCommand Done');
   };
   h.prototype.setDPMWakeup = function (k, m, n) {
     var l = null;
     switch (n.dpmSignalType) {
       case h.DPMSignalType.CLOCK:
-        l = "clock";
+        l = 'clock';
         break;
       case h.DPMSignalType.CLOCK_WITH_DATA:
-        l = "clockAndData";
+        l = 'clockAndData';
         break;
     }
-    b("setDPMWakeup: " + l);
-    if (l === null && typeof m === "function") {
+    b('setDPMWakeup: ' + l);
+    if (l === null && typeof m === 'function') {
       var j = {};
-      g(j, "PSDW", "Power.setDPMWakeup returns failure. command was not defined.");
+      g(
+        j,
+        'PSDW',
+        'Power.setDPMWakeup returns failure. command was not defined.'
+      );
       m(j);
-      b("Power.setDPMWakeup invalid ");
+      b('Power.setDPMWakeup invalid ');
       return;
     }
-    e.Request("luna://com.webos.service.commercial.signage.storageservice/settings/", {
-      method: "set",
-      parameters: { category: "commercial", settings: { dpmWakeUpControl: l } },
-      onSuccess: function (o) {
-        b("setDPMWakeup: On Success");
-        if (o.returnValue === true) {
-          if (typeof k === "function") {
-            k();
+    e.Request(
+      'luna://com.webos.service.commercial.signage.storageservice/settings/',
+      {
+        method: 'set',
+        parameters: {
+          category: 'commercial',
+          settings: { dpmWakeUpControl: l },
+        },
+        onSuccess: function (o) {
+          b('setDPMWakeup: On Success');
+          if (o.returnValue === true) {
+            if (typeof k === 'function') {
+              k();
+            }
           }
-        }
-      },
-      onFailure: function (o) {
-        b("setDPMWakeup: On Failure");
-        delete o.returnValue;
-        if (typeof m === "function") {
-          g(o, "PSDW", "Power.setDPMWakeup returns failure.");
-          m(o);
-        }
-      },
-    });
-    b("Power.setDPMWakeup Done");
+        },
+        onFailure: function (o) {
+          b('setDPMWakeup: On Failure');
+          delete o.returnValue;
+          if (typeof m === 'function') {
+            g(o, 'PSDW', 'Power.setDPMWakeup returns failure.');
+            m(o);
+          }
+        },
+      }
+    );
+    b('Power.setDPMWakeup Done');
   };
   h.prototype.getDPMWakeup = function (j, k) {
-    b("getDPMWakeup: ");
-    e.Request("luna://com.webos.service.commercial.signage.storageservice/settings/", {
-      method: "get",
-      parameters: { category: "commercial", keys: ["dpmWakeUpControl"] },
-      onSuccess: function (l) {
-        b("getDPMWakeup: On Success");
-        if (l.returnValue === true) {
-          var m = {};
-          m.dpmSignalType = l.settings.dpmWakeUpControl;
-          if (typeof j === "function") {
-            j(m);
+    b('getDPMWakeup: ');
+    e.Request(
+      'luna://com.webos.service.commercial.signage.storageservice/settings/',
+      {
+        method: 'get',
+        parameters: { category: 'commercial', keys: ['dpmWakeUpControl'] },
+        onSuccess: function (l) {
+          b('getDPMWakeup: On Success');
+          if (l.returnValue === true) {
+            var m = {};
+            m.dpmSignalType = l.settings.dpmWakeUpControl;
+            if (typeof j === 'function') {
+              j(m);
+            }
           }
-        }
-      },
-      onFailure: function (l) {
-        b("getDPMWakeup: On Failure");
-        delete l.returnValue;
-        if (typeof k === "function") {
-          g(l, "PGDW", "Power.getDPMWakeup returns failure.");
-          k(l);
-        }
-      },
-    });
-    b("Power.getDPMWakeup Done");
+        },
+        onFailure: function (l) {
+          b('getDPMWakeup: On Failure');
+          delete l.returnValue;
+          if (typeof k === 'function') {
+            g(l, 'PGDW', 'Power.getDPMWakeup returns failure.');
+            k(l);
+          }
+        },
+      }
+    );
+    b('Power.getDPMWakeup Done');
   };
   h.prototype.setPMMode = function (k, l, m) {
     var n = null;
     switch (m.mode) {
       case h.PMMode.PowerOff:
-        n = "powerOff";
+        n = 'powerOff';
         break;
       case h.PMMode.SustainAspectRatio:
-        n = "sustainAspectRatio";
+        n = 'sustainAspectRatio';
         break;
       case h.PMMode.ScreenOff:
-        n = "screenOff";
+        n = 'screenOff';
         break;
       case h.PMMode.ScreenOffAlways:
-        n = "screenOffAlways";
+        n = 'screenOffAlways';
         break;
       case h.PMMode.ScreenOffBacklight:
-        n = "screenOffBacklight";
+        n = 'screenOffBacklight';
         break;
     }
-    b("setPMMode: " + n);
-    if (n === null && typeof l === "function") {
+    b('setPMMode: ' + n);
+    if (n === null && typeof l === 'function') {
       var j = {};
-      g(j, "PSPM", "Power.setPMMode returns failure. command was not defined.");
+      g(j, 'PSPM', 'Power.setPMMode returns failure. command was not defined.');
       l(j);
-      b("Power.setPMMode invalid ");
+      b('Power.setPMMode invalid ');
       return;
     }
-    e.Request("luna://com.webos.service.commercial.signage.storageservice/settings/", {
-      method: "set",
-      parameters: { category: "commercial", settings: { pmMode: n } },
-      onSuccess: function (o) {
-        b("setPMMode: On Success");
-        if (o.returnValue === true) {
-          if (typeof k === "function") {
-            k();
+    e.Request(
+      'luna://com.webos.service.commercial.signage.storageservice/settings/',
+      {
+        method: 'set',
+        parameters: { category: 'commercial', settings: { pmMode: n } },
+        onSuccess: function (o) {
+          b('setPMMode: On Success');
+          if (o.returnValue === true) {
+            if (typeof k === 'function') {
+              k();
+            }
           }
-        }
-      },
-      onFailure: function (o) {
-        b("setPMMode: On Failure");
-        delete o.returnValue;
-        if (typeof l === "function") {
-          g(o, "PSPM", "Power.setPMMode returns failure.");
-          l(o);
-        }
-      },
-    });
-    b("Power.setPMMode Done");
+        },
+        onFailure: function (o) {
+          b('setPMMode: On Failure');
+          delete o.returnValue;
+          if (typeof l === 'function') {
+            g(o, 'PSPM', 'Power.setPMMode returns failure.');
+            l(o);
+          }
+        },
+      }
+    );
+    b('Power.setPMMode Done');
   };
   h.prototype.getPMMode = function (j, k) {
-    b("getPMMode: ");
-    e.Request("luna://com.webos.service.commercial.signage.storageservice/settings/", {
-      method: "get",
-      parameters: { category: "commercial", keys: ["pmMode"] },
-      onSuccess: function (l) {
-        b("getPMMode: On Success");
-        if (l.returnValue === true) {
-          var m = {};
-          m.mode = l.settings.pmMode;
-          if (typeof j === "function") {
-            j(m);
+    b('getPMMode: ');
+    e.Request(
+      'luna://com.webos.service.commercial.signage.storageservice/settings/',
+      {
+        method: 'get',
+        parameters: { category: 'commercial', keys: ['pmMode'] },
+        onSuccess: function (l) {
+          b('getPMMode: On Success');
+          if (l.returnValue === true) {
+            var m = {};
+            m.mode = l.settings.pmMode;
+            if (typeof j === 'function') {
+              j(m);
+            }
           }
-        }
-      },
-      onFailure: function (l) {
-        b("getPMMode: On Failure");
-        delete l.returnValue;
-        if (typeof k === "function") {
-          g(l, "PGPM", "Power.getPMMode returns failure.");
-          k(l);
-        }
-      },
-    });
-    b("Power.getPMMode Done");
+        },
+        onFailure: function (l) {
+          b('getPMMode: On Failure');
+          delete l.returnValue;
+          if (typeof k === 'function') {
+            g(l, 'PGPM', 'Power.getPMMode returns failure.');
+            k(l);
+          }
+        },
+      }
+    );
+    b('Power.getPMMode Done');
   };
   h.prototype.setPowerOnDelay = function (k, l, m) {
-    b("setPowerOnDelay: " + m.delayTime);
-    if (m.delayTime === null && typeof l === "function") {
+    b('setPowerOnDelay: ' + m.delayTime);
+    if (m.delayTime === null && typeof l === 'function') {
       var j = {};
-      g(j, "PSPD", "Power.setPowerOnDelay returns failure. command was not defined.");
+      g(
+        j,
+        'PSPD',
+        'Power.setPowerOnDelay returns failure. command was not defined.'
+      );
       l(j);
-      b("Power.setPowerOnDelay invalid ");
+      b('Power.setPowerOnDelay invalid ');
       return;
     }
-    if (typeof m.delayTime !== "number") {
+    if (typeof m.delayTime !== 'number') {
       var j = {};
-      g(j, "PSPD", "Power.setPowerOnDelay returns failure. delayTime is not a number.");
+      g(
+        j,
+        'PSPD',
+        'Power.setPowerOnDelay returns failure. delayTime is not a number.'
+      );
       l(j);
-      b("Power.setPowerOnDelay invalid type");
+      b('Power.setPowerOnDelay invalid type');
       return;
     }
     if (m.delayTime < 0 || m.delayTime > 250) {
       var j = {};
-      g(j, "PSPD", "Power.setPowerOnDelay returns failure. Out of range.");
+      g(j, 'PSPD', 'Power.setPowerOnDelay returns failure. Out of range.');
       l(j);
-      b("Power.setPowerOnDelay invalid range");
+      b('Power.setPowerOnDelay invalid range');
       return;
     }
-    e.Request("luna://com.webos.service.commercial.signage.storageservice/settings/", {
-      method: "set",
-      parameters: { category: "commercial", settings: { powerOnDelay: m.delayTime } },
-      onSuccess: function (n) {
-        b("setPowerOnDelay: On Success");
-        if (n.returnValue === true) {
-          if (typeof k === "function") {
-            k();
+    e.Request(
+      'luna://com.webos.service.commercial.signage.storageservice/settings/',
+      {
+        method: 'set',
+        parameters: {
+          category: 'commercial',
+          settings: { powerOnDelay: m.delayTime },
+        },
+        onSuccess: function (n) {
+          b('setPowerOnDelay: On Success');
+          if (n.returnValue === true) {
+            if (typeof k === 'function') {
+              k();
+            }
           }
-        }
-      },
-      onFailure: function (n) {
-        b("setPowerOnDelay: On Failure");
-        delete n.returnValue;
-        if (typeof l === "function") {
-          g(n, "PSPD", "Power.setPowerOnDelay returns failure.");
-          l(n);
-        }
-      },
-    });
-    b("Power.setPowerOnDelay Done");
+        },
+        onFailure: function (n) {
+          b('setPowerOnDelay: On Failure');
+          delete n.returnValue;
+          if (typeof l === 'function') {
+            g(n, 'PSPD', 'Power.setPowerOnDelay returns failure.');
+            l(n);
+          }
+        },
+      }
+    );
+    b('Power.setPowerOnDelay Done');
   };
   h.prototype.getPowerOnDelay = function (j, k) {
-    b("getPowerOnDelay: ");
-    e.Request("luna://com.webos.service.commercial.signage.storageservice/settings/", {
-      method: "get",
-      parameters: { category: "commercial", keys: ["powerOnDelay"] },
-      onSuccess: function (l) {
-        b("getPowerOnDelay: On Success");
-        if (l.returnValue === true) {
-          var m = {};
-          m.delayTime = l.settings.powerOnDelay;
-          if (typeof j === "function") {
-            j(m);
+    b('getPowerOnDelay: ');
+    e.Request(
+      'luna://com.webos.service.commercial.signage.storageservice/settings/',
+      {
+        method: 'get',
+        parameters: { category: 'commercial', keys: ['powerOnDelay'] },
+        onSuccess: function (l) {
+          b('getPowerOnDelay: On Success');
+          if (l.returnValue === true) {
+            var m = {};
+            m.delayTime = l.settings.powerOnDelay;
+            if (typeof j === 'function') {
+              j(m);
+            }
           }
-        }
-      },
-      onFailure: function (l) {
-        b("getPowerOnDelay: On Failure");
-        delete l.returnValue;
-        if (typeof k === "function") {
-          g(l, "PGPD", "Power.getPowerOnDelay returns failure.");
-          k(l);
-        }
-      },
-    });
-    b("Power.getPowerOnDelay Done");
+        },
+        onFailure: function (l) {
+          b('getPowerOnDelay: On Failure');
+          delete l.returnValue;
+          if (typeof k === 'function') {
+            g(l, 'PGPD', 'Power.getPowerOnDelay returns failure.');
+            k(l);
+          }
+        },
+      }
+    );
+    b('Power.getPowerOnDelay Done');
   };
   h.prototype.getOnOffTimeSchedule = function (j, k) {
-    b("getOnOffTimeSchedule: ");
-    e.Request("luna://com.webos.service.commercial.signage.storageservice/", {
-      method: "getOnOffTimeSchedule",
+    b('getOnOffTimeSchedule: ');
+    e.Request('luna://com.webos.service.commercial.signage.storageservice/', {
+      method: 'getOnOffTimeSchedule',
       parameters: {},
       onSuccess: function (l) {
-        b("getOnOffTimeSchedule: On Success");
+        b('getOnOffTimeSchedule: On Success');
         if (l.returnValue === true) {
-          if (typeof j === "function") {
+          if (typeof j === 'function') {
             var m = {};
             m.onOffTimeScheduleList = l.settings.onOffTimeSchedule;
-            if (typeof j === "function") {
+            if (typeof j === 'function') {
               j(m);
             }
           }
         }
       },
       onFailure: function (l) {
-        b("getOnOffTimeSchedule: On Failure");
+        b('getOnOffTimeSchedule: On Failure');
         delete l.returnValue;
-        if (typeof k === "function") {
-          g(l, "TGAS", "Power.getOnOffTimeSchedule returns failure.");
+        if (typeof k === 'function') {
+          g(l, 'TGAS', 'Power.getOnOffTimeSchedule returns failure.');
           k(l);
         }
       },
     });
-    b("Power.getOnOffTimeSchedule Done");
+    b('Power.getOnOffTimeSchedule Done');
   };
   h.prototype.setOnOffTimeSchedule = function (j, k, l) {
-    b("setOnOffTimeSchedule: ");
-    e.Request("luna://com.webos.service.commercial.signage.storageservice/", {
-      method: "setOnOffTimeSchedule",
+    b('setOnOffTimeSchedule: ');
+    e.Request('luna://com.webos.service.commercial.signage.storageservice/', {
+      method: 'setOnOffTimeSchedule',
       parameters: l,
       onSuccess: function (m) {
-        b("setOnOffTimeSchedule: On Success");
+        b('setOnOffTimeSchedule: On Success');
         if (m.returnValue === true) {
-          if (typeof j === "function") {
-            if (typeof j === "function") {
+          if (typeof j === 'function') {
+            if (typeof j === 'function') {
               j();
             }
           }
         }
       },
       onFailure: function (m) {
-        b("setOnOffTimeSchedule: On Failure");
+        b('setOnOffTimeSchedule: On Failure');
         delete m.returnValue;
-        if (typeof k === "function") {
-          g(m, "TGAS", "Power.setOnOffTimeSchedule returns failure.");
+        if (typeof k === 'function') {
+          g(m, 'TGAS', 'Power.setOnOffTimeSchedule returns failure.');
           k(m);
         }
       },
     });
-    b("Power.setOnOffTimeSchedule Done");
+    b('Power.setOnOffTimeSchedule Done');
   };
   h.prototype.unsetOnOffTimeSchedule = function (j, k) {
-    b("unsetOnOffTimeSchedule: ");
-    e.Request("luna://com.webos.service.commercial.signage.storageservice/", {
-      method: "unsetOnOffTimeSchedule",
+    b('unsetOnOffTimeSchedule: ');
+    e.Request('luna://com.webos.service.commercial.signage.storageservice/', {
+      method: 'unsetOnOffTimeSchedule',
       parameters: {},
       onSuccess: function (l) {
-        b("unsetOnOffTimeSchedule: On Success");
+        b('unsetOnOffTimeSchedule: On Success');
         if (l.returnValue === true) {
-          if (typeof j === "function") {
-            if (typeof j === "function") {
+          if (typeof j === 'function') {
+            if (typeof j === 'function') {
               j();
             }
           }
         }
       },
       onFailure: function (l) {
-        b("unsetOnOffTimeSchedule: On Failure");
+        b('unsetOnOffTimeSchedule: On Failure');
         delete l.returnValue;
-        if (typeof k === "function") {
-          g(l, "TGAS", "Power.unsetOnOffTimeSchedule returns failure.");
+        if (typeof k === 'function') {
+          g(l, 'TGAS', 'Power.unsetOnOffTimeSchedule returns failure.');
           k(l);
         }
       },
     });
-    b("Power.unsetHolidaySchedule Done");
+    b('Power.unsetHolidaySchedule Done');
   };
   return h;
 })();

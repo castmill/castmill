@@ -1,12 +1,12 @@
-import gsap from "gsap";
+import gsap from 'gsap';
 
-import { Component, JSX, mergeProps, onCleanup, onMount } from "solid-js";
-import { TemplateConfig, resolveOption } from "./binding";
-import { TemplateComponent, TemplateComponentType } from "./template";
-import { TimelineItem } from "./timeline";
-import { ComponentAnimation, applyAnimations } from "./animation";
-import { BaseComponentProps } from "./interfaces/base-component-props";
-import { PlayerGlobals } from "../../interfaces/player-globals.interface";
+import { Component, JSX, mergeProps, onCleanup, onMount } from 'solid-js';
+import { TemplateConfig, resolveOption } from './binding';
+import { TemplateComponent, TemplateComponentType } from './template';
+import { TimelineItem } from './timeline';
+import { ComponentAnimation, applyAnimations } from './animation';
+import { BaseComponentProps } from './interfaces/base-component-props';
+import { PlayerGlobals } from '../../interfaces/player-globals.interface';
 interface AutoFitOpts {
   // Base size of the text (in em). Used if the text fits in the container.
   baseSize?: number;
@@ -37,7 +37,7 @@ export class TextComponent implements TemplateComponent {
     public opts: TextComponentOptions,
     public style: JSX.CSSProperties,
     public animations?: ComponentAnimation[],
-    public filter?: Record<string, any>,
+    public filter?: Record<string, any>
   ) {}
 
   resolveDuration(): number {
@@ -45,21 +45,32 @@ export class TextComponent implements TemplateComponent {
   }
 
   static fromJSON(json: any): TextComponent {
-    return new TextComponent(json.name, json.opts, json.style, json.animations, json.filter);
+    return new TextComponent(
+      json.name,
+      json.opts,
+      json.style,
+      json.animations,
+      json.filter
+    );
   }
 
   static resolveOptions(
     opts: TextComponentOptions,
     config: TemplateConfig,
     context: any,
-    globals: PlayerGlobals,
+    globals: PlayerGlobals
   ): TextComponentOptions {
     return {
       text: resolveOption(opts.text, config, context, globals),
       autofit: {
         maxSize: resolveOption(opts.autofit?.maxSize, config, context, globals),
         minSize: resolveOption(opts.autofit?.minSize, config, context, globals),
-        baseSize: resolveOption(opts.autofit?.baseSize, config, context, globals),
+        baseSize: resolveOption(
+          opts.autofit?.baseSize,
+          config,
+          context,
+          globals
+        ),
       },
     };
   }
@@ -91,24 +102,25 @@ export const Text: Component<TextProps> = (props) => {
   // 1. Positioned elements (absolute/fixed) - no default size, auto-size to content
   // 2. Flex items (have flex property) - let flex control sizing, don't override with 100%
   // 3. Other elements - apply width/height 100% for autofit to work
-  const isPositioned = props.style?.position === "absolute" || props.style?.position === "fixed";
+  const isPositioned =
+    props.style?.position === 'absolute' || props.style?.position === 'fixed';
   const isFlexItem = props.style?.flex !== undefined;
 
   let defaultStyle: JSX.CSSProperties;
   if (isPositioned) {
     // Positioned elements auto-size to content
-    defaultStyle = { "line-height": "1em" };
+    defaultStyle = { 'line-height': '1em' };
   } else if (isFlexItem) {
     // Flex items: let flex control height, but keep width for autofit measurement
-    defaultStyle = { width: "100%", "line-height": "1em" };
+    defaultStyle = { width: '100%', 'line-height': '1em' };
   } else {
     // Default: fill container for autofit to measure
-    defaultStyle = { width: "100%", height: "100%", "line-height": "1em" };
+    defaultStyle = { width: '100%', height: '100%', 'line-height': '1em' };
   }
   const merged = mergeProps(defaultStyle, props.style);
 
   const spanStyle = {
-    "line-height": merged["line-height"],
+    'line-height': merged['line-height'],
   };
 
   onCleanup(() => {
@@ -134,7 +146,7 @@ export const Text: Component<TextProps> = (props) => {
         props.timeline,
         props.animations,
         splittedText.chars || splittedText.words,
-        props.timeline.duration(),
+        props.timeline.duration()
       );
     }
 
@@ -157,9 +169,9 @@ export const Text: Component<TextProps> = (props) => {
           {
             duration,
             x: -(textRect.width + slack),
-            ease: "none",
+            ease: 'none',
           },
-          1, // Wait 1 second before starting the animation
+          1 // Wait 1 second before starting the animation
         );
 
         timelineItem = {
@@ -198,7 +210,7 @@ function autoFitText(div: HTMLDivElement, options: AutoFitOpts): number {
   }
 
   const textElement = div;
-  textElement.style.overflowWrap = "normal";
+  textElement.style.overflowWrap = 'normal';
 
   const setSize = function (size: number) {
     textElement.style.fontSize = `${size}em`;
@@ -287,7 +299,7 @@ function autoFitText(div: HTMLDivElement, options: AutoFitOpts): number {
 }
 
 function createElementFromHTML(htmlString: string) {
-  const div = document.createElement("div");
+  const div = document.createElement('div');
   div.innerHTML = htmlString.trim();
   return Array.prototype.slice.call(div.children);
 }
@@ -296,21 +308,23 @@ function splitText(div: HTMLDivElement, splitChars?: boolean) {
   if (splitChars) {
     const chars: HTMLDivElement[] = [];
     const words = div.innerHTML
-      .split(" ")
-      .map((word, index, arr) => splitInChars(word, chars, index === arr.length - 1));
+      .split(' ')
+      .map((word, index, arr) =>
+        splitInChars(word, chars, index === arr.length - 1)
+      );
 
     div.replaceChildren(...words);
 
     return { words, chars };
   } else {
     const wordsHTML = div.innerHTML
-      .split(" ")
+      .split(' ')
       .map(
         (word) =>
-          `<div style="display: inline-block; text-align: start; position: relative;">${word}</div>`,
+          `<div style="display: inline-block; text-align: start; position: relative;">${word}</div>`
       )
       .join(
-        `<div style="display: inline-block; text-align: start; position: relative;">&nbsp;</div>`,
+        `<div style="display: inline-block; text-align: start; position: relative;">&nbsp;</div>`
       );
 
     const words = createElementFromHTML(wordsHTML);
@@ -321,28 +335,32 @@ function splitText(div: HTMLDivElement, splitChars?: boolean) {
   }
 }
 
-function splitInChars(word: string, charArray: HTMLDivElement[], isLast: boolean) {
-  const div = document.createElement("div");
-  div.style.display = "inline-block";
-  div.style.textAlign = "start";
-  div.style.position = "relative";
+function splitInChars(
+  word: string,
+  charArray: HTMLDivElement[],
+  isLast: boolean
+) {
+  const div = document.createElement('div');
+  div.style.display = 'inline-block';
+  div.style.textAlign = 'start';
+  div.style.position = 'relative';
 
   const charElements = createElementFromHTML(
     word
-      .split("")
+      .split('')
       .map(
         (char) =>
-          `<div style="display: inline-block; text-align: start; position: relative;">${char}</div>`,
+          `<div style="display: inline-block; text-align: start; position: relative;">${char}</div>`
       )
-      .join(""),
+      .join('')
   );
 
   if (!isLast) {
-    const space = document.createElement("div");
-    space.style.display = "inline-block";
-    space.style.textAlign = "start";
-    space.style.position = "relative";
-    space.innerHTML = "&nbsp;";
+    const space = document.createElement('div');
+    space.style.display = 'inline-block';
+    space.style.textAlign = 'start';
+    space.style.position = 'relative';
+    space.innerHTML = '&nbsp;';
     charElements.push(space);
   }
 

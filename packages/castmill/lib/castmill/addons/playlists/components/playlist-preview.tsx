@@ -1,11 +1,16 @@
-import { Component, onMount, createEffect, onCleanup, untrack } from "solid-js";
-import { Subscription } from "rxjs";
+import { Component, onMount, createEffect, onCleanup, untrack } from 'solid-js';
+import { Subscription } from 'rxjs';
 
-import { Playlist, PlayerUI, PlayerUIControls, JsonPlaylist } from "@castmill/player";
-import { safeStringify } from "./utils";
-import { ResourceManager, Cache, StorageDummy } from "@castmill/cache";
+import {
+  Playlist,
+  PlayerUI,
+  PlayerUIControls,
+  JsonPlaylist,
+} from '@castmill/player';
+import { safeStringify } from './utils';
+import { ResourceManager, Cache, StorageDummy } from '@castmill/cache';
 
-import styles from "./widget-view.module.scss";
+import styles from './widget-view.module.scss';
 
 export interface LayerOffset {
   start: number;
@@ -27,8 +32,8 @@ interface PlaylistPreviewProps {
 
 export const resolvePlaylistDuration = (
   playlist: Playlist,
-  items: JsonPlaylist["items"],
-  dynamicDurations?: Record<number, number>,
+  items: JsonPlaylist['items'],
+  dynamicDurations?: Record<number, number>
 ) => {
   const durations: Record<number, number> = dynamicDurations ?? {};
 
@@ -36,14 +41,14 @@ export const resolvePlaylistDuration = (
     const item = items[index];
     const dynamicDuration =
       item &&
-      !(typeof item.duration === "number" && item.duration > 0) &&
-      typeof item.id === "number"
+      !(typeof item.duration === 'number' && item.duration > 0) &&
+      typeof item.id === 'number'
         ? durations[item.id]
         : undefined;
 
     return (
       total +
-      (typeof dynamicDuration === "number" && dynamicDuration > 0
+      (typeof dynamicDuration === 'number' && dynamicDuration > 0
         ? dynamicDuration
         : layer.duration())
     );
@@ -51,7 +56,11 @@ export const resolvePlaylistDuration = (
 };
 
 export const PlaylistPreview: Component<PlaylistPreviewProps> = (props) => {
-  const cache = new Cache(new StorageDummy("widget-editor"), "widget-editor-cache", 100);
+  const cache = new Cache(
+    new StorageDummy('widget-editor'),
+    'widget-editor-cache',
+    100
+  );
   const resourceManager = new ResourceManager(cache);
 
   let controls: PlayerUIControls;
@@ -77,9 +86,9 @@ export const PlaylistPreview: Component<PlaylistPreviewProps> = (props) => {
       controls.destroy();
     }
 
-    controls = new PlayerUIControls("controls", {
+    controls = new PlayerUIControls('controls', {
       position: {
-        bottom: "0",
+        bottom: '0',
       },
     });
 
@@ -87,7 +96,7 @@ export const PlaylistPreview: Component<PlaylistPreviewProps> = (props) => {
       playerUI.destroy();
     }
 
-    playerUI = new PlayerUI("player", playlist, {
+    playerUI = new PlayerUI('player', playlist, {
       controls,
       controlsMaster: true,
     });
@@ -97,9 +106,9 @@ export const PlaylistPreview: Component<PlaylistPreviewProps> = (props) => {
       resolvePlaylistDuration(
         playlist,
         props.playlist.items,
-        untrack(() => props.dynamicDurations),
+        untrack(() => props.dynamicDurations)
       ),
-      true,
+      true
     );
 
     // Expose seek function and layer offsets to parent component
@@ -112,7 +121,7 @@ export const PlaylistPreview: Component<PlaylistPreviewProps> = (props) => {
         }
 
         currentSeekSubscription = playerUI.seek(offset).subscribe({
-          error: (err) => console.error("[PlaylistPreview] seek error:", err),
+          error: (err) => console.error('[PlaylistPreview] seek error:', err),
           complete: () => {
             currentSeekSubscription = null;
           },
@@ -188,7 +197,7 @@ export const PlaylistPreview: Component<PlaylistPreviewProps> = (props) => {
           // Fire seek to trigger the layer to load - don't wait for completion
           // The seek triggers show() which starts loading the widget
           playerUI.seek(seekTarget).subscribe({
-            error: (err) => console.error("[primeAllLayers] seek error:", err),
+            error: (err) => console.error('[primeAllLayers] seek error:', err),
           });
 
           // Wait for this layer's duration to be calculated
@@ -198,11 +207,15 @@ export const PlaylistPreview: Component<PlaylistPreviewProps> = (props) => {
 
         // Seek back to start (fire and forget)
         playerUI.seek(0).subscribe({
-          error: (err) => console.error("[primeAllLayers] seek to start error:", err),
+          error: (err) =>
+            console.error('[primeAllLayers] seek to start error:', err),
         });
 
         // Update the controls with the correct total duration now that all layers are primed
-        const totalDuration = pl.layers.reduce((acc, layer) => acc + layer.duration(), 0);
+        const totalDuration = pl.layers.reduce(
+          (acc, layer) => acc + layer.duration(),
+          0
+        );
         controls.setTimeDuration(0, totalDuration, true);
 
         // Return the updated offsets

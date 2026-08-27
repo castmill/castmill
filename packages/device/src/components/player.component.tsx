@@ -1,5 +1,5 @@
-import { onMount } from "solid-js";
-import { Device } from "../classes";
+import { onMount } from 'solid-js';
+import { Device } from '../classes';
 
 export function PlayerComponent(props: { device: Device }) {
   let playerElement: HTMLDivElement | undefined;
@@ -10,7 +10,7 @@ export function PlayerComponent(props: { device: Device }) {
     const isOff = await props.device.isTimerOff();
     if (isOff) {
       // Signal that device is ready (just in standby) so the progress bar hides
-      props.device.emit("ready", {
+      props.device.emit('ready', {
         id: props.device.id,
         name: props.device.name,
       });
@@ -26,10 +26,10 @@ export function PlayerComponent(props: { device: Device }) {
       <div
         ref={playerElement}
         style={{
-          width: "100%",
-          height: "100%",
-          background: "black",
-          position: "absolute",
+          width: '100%',
+          height: '100%',
+          background: 'black',
+          position: 'absolute',
           top: 0,
           bottom: 0,
           left: 0,

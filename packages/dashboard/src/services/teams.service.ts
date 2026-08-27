@@ -1,9 +1,14 @@
-import { baseUrl } from "../env";
-import { fetchOptionsToQueryString, handleResponse } from "./util";
-import { JsonTeam, Team } from "../interfaces/team";
-import { FetchDataOptions, HttpError, ItemBase, SortOptions } from "@castmill/ui-common";
+import { baseUrl } from '../env';
+import { fetchOptionsToQueryString, handleResponse } from './util';
+import { JsonTeam, Team } from '../interfaces/team';
+import {
+  FetchDataOptions,
+  HttpError,
+  ItemBase,
+  SortOptions,
+} from '@castmill/ui-common';
 
-import { authFetch } from "../components/auth";
+import { authFetch } from '../components/auth';
 export type TeamUpdate = Partial<Team> & { id: number };
 
 // This is code repetition that comes from devices.service.ts and must be refactored.
@@ -28,13 +33,16 @@ export const TeamsService = {
    * @returns JsonTeam
    */
   async addTeam(organizationId: string, name: string) {
-    const response = await authFetch(`${baseUrl}/dashboard/organizations/${organizationId}/teams`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ team: { name } }),
-    });
+    const response = await authFetch(
+      `${baseUrl}/dashboard/organizations/${organizationId}/teams`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ team: { name } }),
+      }
+    );
 
     const result = await handleResponse<{ data: JsonTeam }>(response, {
       parse: true,
@@ -51,18 +59,20 @@ export const TeamsService = {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/teams/${team.id}`,
       {
-        method: "PUT",
+        method: 'PUT',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(team),
-      },
+      }
     );
 
     if (response.status >= 400) {
       let errMessage;
       try {
-        const error = JSON.stringify((await response.json()) || response.statusText);
+        const error = JSON.stringify(
+          (await response.json()) || response.statusText
+        );
         errMessage = error;
       } catch (error) {
         throw new Error(`Failed to update team ${team.name} ${error}`);
@@ -79,27 +89,29 @@ export const TeamsService = {
     organizationId: string,
     teamId: number,
     email: string,
-    role: "member" | "admin" = "member",
+    role: 'member' | 'admin' = 'member'
   ) {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/teams/${teamId}/invitations`,
       {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email, role }),
-      },
+      }
     );
 
     if (!response.ok) {
       // Handle specific error messages from the server
       try {
         const errorData = await response.json();
-        if (errorData.error === "already_invited") {
-          throw new Error("This user has already been invited to this team");
+        if (errorData.error === 'already_invited') {
+          throw new Error('This user has already been invited to this team');
         }
-        throw new Error(errorData.error || errorData.errors?.detail || response.statusText);
+        throw new Error(
+          errorData.error || errorData.errors?.detail || response.statusText
+        );
       } catch (e) {
         if (e instanceof Error && e.message) {
           throw e;
@@ -118,16 +130,20 @@ export const TeamsService = {
    * Remove Invitation from team
    *
    */
-  async removeInvitationFromTeam(organizationId: string, teamId: number, invitationId: number) {
+  async removeInvitationFromTeam(
+    organizationId: string,
+    teamId: number,
+    invitationId: number
+  ) {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/teams/${teamId}/invitations/${invitationId}`,
       {
-        method: "DELETE",
-      },
+        method: 'DELETE',
+      }
     );
 
     if (response.status !== 200) {
-      throw new Error("Failed to remove invitation from team");
+      throw new Error('Failed to remove invitation from team');
     }
   },
 
@@ -138,24 +154,28 @@ export const TeamsService = {
    * @param memberId
    * @returns
    */
-  async removeMemberFromTeam(organizationId: string, teamId: number, memberId: string) {
+  async removeMemberFromTeam(
+    organizationId: string,
+    teamId: number,
+    memberId: string
+  ) {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/teams/${teamId}/members/${memberId}`,
       {
-        method: "DELETE",
-      },
+        method: 'DELETE',
+      }
     );
 
     if (!response.ok) {
-      let errorMessage = "Failed to remove member from team";
+      let errorMessage = 'Failed to remove member from team';
 
       try {
         const errorData = await response.json();
-        if (typeof errorData?.error === "string") {
+        if (typeof errorData?.error === 'string') {
           errorMessage = errorData.error;
         }
       } catch (error) {
-        console.error("Failed to parse remove member error response", error);
+        console.error('Failed to parse remove member error response', error);
       }
 
       throw new HttpError(errorMessage, response.status);
@@ -173,13 +193,13 @@ export const TeamsService = {
     organizationId: string,
     teamId: number,
     resourceType: string,
-    resourceId: string | number,
+    resourceId: string | number
   ) {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/teams/${teamId}/${resourceType}/${resourceId}`,
       {
-        method: "DELETE",
-      },
+        method: 'DELETE',
+      }
     );
   },
 
@@ -195,12 +215,12 @@ export const TeamsService = {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/teams/${teamId}/accept`,
       {
-        method: "POST",
-      },
+        method: 'POST',
+      }
     );
 
     if (response.status !== 200) {
-      throw new Error("Failed to accept team invitation");
+      throw new Error('Failed to accept team invitation');
     }
   },
 
@@ -214,12 +234,12 @@ export const TeamsService = {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/teams/${teamId}/invitations`,
       {
-        method: "DELETE",
-      },
+        method: 'DELETE',
+      }
     );
 
     if (response.status !== 200) {
-      throw new Error("Failed to remove team invitation");
+      throw new Error('Failed to remove team invitation');
     }
   },
   /**
@@ -230,14 +250,18 @@ export const TeamsService = {
    * @param opts
    * @returns
    */
-  async fetchInvitations(organizationId: string, teamId: number, opts: FetchDataOptions) {
+  async fetchInvitations(
+    organizationId: string,
+    teamId: number,
+    opts: FetchDataOptions
+  ) {
     const queryString = fetchOptionsToQueryString(opts);
 
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/teams/${teamId}/invitations?${queryString}`,
       {
-        method: "GET",
-      },
+        method: 'GET',
+      }
     );
 
     return handleResponse(response, { parse: true });
@@ -248,8 +272,8 @@ export const TeamsService = {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/teams?${queryString}`,
       {
-        method: "GET",
-      },
+        method: 'GET',
+      }
     );
 
     return handleResponse(response, { parse: true });
@@ -259,11 +283,11 @@ export const TeamsService = {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/teams/${teamId}`,
       {
-        method: "GET",
+        method: 'GET',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
-      },
+      }
     );
 
     const { data } = await handleResponse<{ data: JsonTeam }>(response, {
@@ -276,100 +300,121 @@ export const TeamsService = {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/teams/${teamId}`,
       {
-        method: "DELETE",
-      },
+        method: 'DELETE',
+      }
     );
 
     if (response.status >= 400) {
-      throw new Error("Failed to remove team");
+      throw new Error('Failed to remove team');
     }
   },
 
-  async fetchMembers(organizationId: string, teamId: number, opts: FetchDataOptions) {
+  async fetchMembers(
+    organizationId: string,
+    teamId: number,
+    opts: FetchDataOptions
+  ) {
     const queryString = fetchOptionsToQueryString(opts);
 
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/teams/${teamId}/members?${queryString}`,
       {
-        method: "GET",
-      },
+        method: 'GET',
+      }
     );
 
     return handleResponse(response, { parse: true });
   },
 
-  async fetchResourcesLegacy(organizationId: string, teamId: number, options: any) {
+  async fetchResourcesLegacy(
+    organizationId: string,
+    teamId: number,
+    options: any
+  ) {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/teams/${teamId}/resources`,
       {
-        method: "GET",
-      },
+        method: 'GET',
+      }
     );
 
     if (response.status === 200) {
       return await response.json();
     } else {
-      throw new Error("Failed to fetch resources");
+      throw new Error('Failed to fetch resources');
     }
   },
 
   async getInvitation(email: string, token: string) {
-    const response = await authFetch(`${baseUrl}/dashboard/invitations/${token}`, {
-      method: "GET",
-    });
+    const response = await authFetch(
+      `${baseUrl}/dashboard/invitations/${token}`,
+      {
+        method: 'GET',
+      }
+    );
 
     if (response.status === 200) {
       const data = await response.json();
       if (!data) {
-        throw new Error("This invitation link is invalid or the team no longer exists.");
+        throw new Error(
+          'This invitation link is invalid or the team no longer exists.'
+        );
       }
       return data;
     } else if (response.status === 404) {
-      throw new Error("This invitation link is invalid or the team no longer exists.");
+      throw new Error(
+        'This invitation link is invalid or the team no longer exists.'
+      );
     } else if (response.status === 403) {
       throw new Error(
-        "You do not have permission to view this invitation. Make sure you are logged in with the correct email address.",
+        'You do not have permission to view this invitation. Make sure you are logged in with the correct email address.'
       );
     } else if (response.status === 401) {
-      throw new Error("Please log in to view this invitation.");
+      throw new Error('Please log in to view this invitation.');
     } else {
-      throw new Error("Failed to fetch invitation. Please try again later.");
+      throw new Error('Failed to fetch invitation. Please try again later.');
     }
   },
 
   async acceptInvitation(email: string, token: string) {
-    const response = await authFetch(`${baseUrl}/dashboard/invitations/${token}/accept`, {
-      method: "POST",
-    });
+    const response = await authFetch(
+      `${baseUrl}/dashboard/invitations/${token}/accept`,
+      {
+        method: 'POST',
+      }
+    );
 
     if (response.status === 200) {
       return await response.json();
     } else if (response.status === 403) {
       throw new Error(
-        "You do not have permission to accept this invitation. Make sure you are logged in with the correct email address.",
+        'You do not have permission to accept this invitation. Make sure you are logged in with the correct email address.'
       );
     } else if (response.status === 401) {
-      throw new Error("Please log in to accept this invitation.");
+      throw new Error('Please log in to accept this invitation.');
     } else {
-      throw new Error("Failed to accept invitation. Please try again later.");
+      throw new Error('Failed to accept invitation. Please try again later.');
     }
   },
 
   async rejectInvitation(token: string) {
-    const response = await authFetch(`${baseUrl}/dashboard/invitations/${token}/reject`, {
-      method: "POST",
-    });
+    const response = await authFetch(
+      `${baseUrl}/dashboard/invitations/${token}/reject`,
+      {
+        method: 'POST',
+      }
+    );
 
     if (response.status === 200) {
       return await response.json();
     } else if (response.status === 403) {
       throw new Error(
-        "You do not have permission to reject this invitation. Make sure you are logged in with the correct email address.",
+        'You do not have permission to reject this invitation. Make sure you are logged in with the correct email address.'
       );
     } else if (response.status === 401) {
-      throw new Error("Please log in to reject this invitation.");
+      throw new Error('Please log in to reject this invitation.');
     } else {
-      throw new Error("Failed to reject invitation. Please try again later.");
+      throw new Error('Failed to reject invitation. Please try again later.');
     }
   },
 
@@ -377,12 +422,14 @@ export const TeamsService = {
     organizationId: string,
     teamId: number,
     resourceType: string,
-    { page, sortOptions, search, filters }: FetchOptions,
+    { page, sortOptions, search, filters }: FetchOptions
   ) {
     const filtersToString = (filters: Record<string, string | boolean>) => {
       return Object.entries(filters)
-        .map(([key, value]) => (typeof value === "boolean" ? `${key}` : `${key}:${value}`))
-        .join(",");
+        .map(([key, value]) =>
+          typeof value === 'boolean' ? `${key}` : `${key}:${value}`
+        )
+        .join(',');
     };
 
     const query: {
@@ -394,11 +441,11 @@ export const TeamsService = {
     };
 
     if (search) {
-      query["search"] = search;
+      query['search'] = search;
     }
 
     if (filters) {
-      query["filters"] = filtersToString(filters);
+      query['filters'] = filtersToString(filters);
     }
 
     const queryString = new URLSearchParams(query).toString();
@@ -406,11 +453,11 @@ export const TeamsService = {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/teams/${teamId}/${resourceType}?${queryString}`,
       {
-        method: "GET",
+        method: 'GET',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
-      },
+      }
     );
 
     return handleResponse<{ data: TeamResource[]; count: number }>(response, {
@@ -423,21 +470,21 @@ export const TeamsService = {
     teamId: number,
     resourceType: string,
     resourceId: string,
-    access: string[],
+    access: string[]
   ) {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/teams/${teamId}/${resourceType}/${resourceId}`,
       {
-        method: "PUT",
+        method: 'PUT',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ access }),
-      },
+      }
     );
 
     if (response.status >= 400) {
-      throw new Error("Failed to add resource");
+      throw new Error('Failed to add resource');
     }
   },
 };

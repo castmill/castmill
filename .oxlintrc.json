@@ -4,9 +4,18 @@
   "categories": {
     "correctness": "error"
   },
-  "rules": {},
+  "rules": {
+    "no-unassigned-vars": "off"
+  },
   "env": {
     "builtin": true
   },
-  "ignorePatterns": ["node_modules", "dist", "build", "out", "android", "public/lib"]
+  "ignorePatterns": [
+    "node_modules",
+    "dist",
+    "build",
+    "out",
+    "android",
+    "public/lib"
+  ]
 }

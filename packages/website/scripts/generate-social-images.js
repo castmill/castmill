@@ -1,6 +1,6 @@
-const puppeteer = require("puppeteer");
-const fs = require("fs");
-const path = require("path");
+const puppeteer = require('puppeteer');
+const fs = require('fs');
+const path = require('path');
 
 /**
  * Convert HTML social cards to JPG images
@@ -10,10 +10,10 @@ const path = require("path");
  */
 
 async function generateImages() {
-  console.log("🚀 Starting social media image generation...");
+  console.log('🚀 Starting social media image generation...');
 
-  const buildSocialDir = path.join(__dirname, "..", "build", "img", "social");
-  const staticSocialDir = path.join(__dirname, "..", "static", "img", "social");
+  const buildSocialDir = path.join(__dirname, '..', 'build', 'img', 'social');
+  const staticSocialDir = path.join(__dirname, '..', 'static', 'img', 'social');
 
   // Ensure output directory exists
   if (!fs.existsSync(staticSocialDir)) {
@@ -23,18 +23,18 @@ async function generateImages() {
   // Get all HTML files
   const htmlFiles = fs
     .readdirSync(buildSocialDir)
-    .filter((file) => file.endsWith(".html"))
-    .filter((file) => file !== "README.md");
+    .filter((file) => file.endsWith('.html'))
+    .filter((file) => file !== 'README.md');
 
   if (htmlFiles.length === 0) {
-    console.log("❌ No HTML files found. Run `yarn build` first.");
+    console.log('❌ No HTML files found. Run `yarn build` first.');
     return;
   }
 
   console.log(`📝 Found ${htmlFiles.length} HTML templates to convert`);
 
   const browser = await puppeteer.launch({
-    headless: "new",
+    headless: 'new',
     defaultViewport: {
       width: 1200,
       height: 630,
@@ -45,7 +45,10 @@ async function generateImages() {
   try {
     for (const htmlFile of htmlFiles) {
       const htmlPath = path.join(buildSocialDir, htmlFile);
-      const outputPath = path.join(staticSocialDir, htmlFile.replace(".html", ".jpg"));
+      const outputPath = path.join(
+        staticSocialDir,
+        htmlFile.replace('.html', '.jpg')
+      );
 
       console.log(`🎨 Processing ${htmlFile}...`);
 
@@ -54,14 +57,14 @@ async function generateImages() {
       // Load the HTML file
       const fileUrl = `file://${htmlPath}`;
       await page.goto(fileUrl, {
-        waitUntil: "networkidle0",
+        waitUntil: 'networkidle0',
         timeout: 30000,
       });
 
       // Take screenshot
       await page.screenshot({
         path: outputPath,
-        type: "jpeg",
+        type: 'jpeg',
         quality: 90,
         fullPage: false,
         clip: {
@@ -76,17 +79,17 @@ async function generateImages() {
       console.log(`✅ Generated ${path.basename(outputPath)}`);
     }
 
-    console.log("🎉 All social media images generated successfully!");
+    console.log('🎉 All social media images generated successfully!');
     console.log(`📂 Images saved to: ${staticSocialDir}`);
-    console.log("");
-    console.log("📋 Next steps:");
-    console.log("1. Verify images in static/img/social/");
-    console.log("2. Update page frontmatter to use the images:");
-    console.log("   ---");
-    console.log("   image: /img/social/home.jpg");
-    console.log("   ---");
+    console.log('');
+    console.log('📋 Next steps:');
+    console.log('1. Verify images in static/img/social/');
+    console.log('2. Update page frontmatter to use the images:');
+    console.log('   ---');
+    console.log('   image: /img/social/home.jpg');
+    console.log('   ---');
   } catch (error) {
-    console.error("❌ Error generating images:", error);
+    console.error('❌ Error generating images:', error);
   } finally {
     await browser.close();
   }
@@ -94,14 +97,16 @@ async function generateImages() {
 
 // Check if Puppeteer is installed
 try {
-  require.resolve("puppeteer");
+  require.resolve('puppeteer');
   generateImages().catch(console.error);
 } catch (error) {
-  console.log("❌ Puppeteer is not installed.");
-  console.log("📦 Install it with: npm install puppeteer");
-  console.log("");
-  console.log("Alternative options:");
-  console.log("1. Manual screenshots: Open HTML files and screenshot at 1200x630");
-  console.log("2. Online tools: Upload HTML to htmlcsstoimage.com");
-  console.log("3. Browser DevTools: Set device emulation to 1200x630");
+  console.log('❌ Puppeteer is not installed.');
+  console.log('📦 Install it with: npm install puppeteer');
+  console.log('');
+  console.log('Alternative options:');
+  console.log(
+    '1. Manual screenshots: Open HTML files and screenshot at 1200x630'
+  );
+  console.log('2. Online tools: Upload HTML to htmlcsstoimage.com');
+  console.log('3. Browser DevTools: Set device emulation to 1200x630');
 }

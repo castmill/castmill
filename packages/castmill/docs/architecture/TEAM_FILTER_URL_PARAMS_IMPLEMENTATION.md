@@ -395,28 +395,28 @@ Users can share links like:
 ### Automated Testing
 
 ```typescript
-describe("useTeamFilter URL params", () => {
-  it("should select team from URL param", () => {
+describe('useTeamFilter URL params', () => {
+  it('should select team from URL param', () => {
     // Mock params: [{ team_id: '5' }, setSearchParams]
     // Mock teams: [{ id: 5, name: 'Team 5' }]
     // Assert: selectedTeamId() === 5
   });
 
-  it("should ignore invalid team_id in URL", () => {
+  it('should ignore invalid team_id in URL', () => {
     // Mock params: [{ team_id: '999' }, setSearchParams]
     // Mock teams: [{ id: 5, name: 'Team 5' }]
     // Assert: selectedTeamId() === null
     // Assert: console.warn called
   });
 
-  it("should prioritize URL over localStorage", () => {
+  it('should prioritize URL over localStorage', () => {
     // Mock localStorage: team_id = 3
     // Mock params: [{ team_id: '5' }, setSearchParams]
     // Mock teams: [{ id: 3 }, { id: 5 }]
     // Assert: selectedTeamId() === 5
   });
 
-  it("should fallback to localStorage if no URL param", () => {
+  it('should fallback to localStorage if no URL param', () => {
     // Mock localStorage: team_id = 3
     // Mock params: [{}, setSearchParams]
     // Mock teams: [{ id: 3 }, { id: 5 }]
@@ -471,7 +471,7 @@ const urlParamsApi = {
   },
 };
 
-setStore("urlParams", urlParamsApi);
+setStore('urlParams', urlParamsApi);
 ```
 
 3. Update addons to use bridge:
@@ -479,7 +479,7 @@ setStore("urlParams", urlParamsApi);
 ```typescript
 const setTeamId = (id: number | null) => {
   setSelectedTeamId(id);
-  props.store.urlParams?.set("team_id", id?.toString() || null);
+  props.store.urlParams?.set('team_id', id?.toString() || null);
 };
 ```
 

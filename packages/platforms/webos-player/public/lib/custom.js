@@ -10,233 +10,268 @@
  *   See ./doc/index.html for more detail
  * ============================================================================
  */
-(cordova.define("cordova/plugin/custom", function (e, a, t) {
+(cordova.define('cordova/plugin/custom', function (e, a, t) {
   function c() {}
   var o = window.PalmSystem
-      ? e("cordova/plugin/webos/service")
+      ? e('cordova/plugin/webos/service')
       : {
           Request: function (e, a) {
-            "function" == typeof a.onFailure &&
+            'function' == typeof a.onFailure &&
               a.onFailure({
                 returnValue: !1,
-                errorCode: "NOT_WEBOS",
-                errorText: "PalmSystem Not Available. Cordova is not installed?",
+                errorCode: 'NOT_WEBOS',
+                errorText:
+                  'PalmSystem Not Available. Cordova is not installed?',
               });
           },
         },
     n = {
-      "1.0": [
-        "getPowerOnOffHistory",
-        "changePassword",
-        "getwebOSVersion",
-        "disableApplication",
-        "setPowerOnStatus",
-        "getPowerOnStatus",
-        "setWhiteBalanceRGB",
-        "getWhiteBalanceRGB",
-        "getCustomJSVersion",
+      '1.0': [
+        'getPowerOnOffHistory',
+        'changePassword',
+        'getwebOSVersion',
+        'disableApplication',
+        'setPowerOnStatus',
+        'getPowerOnStatus',
+        'setWhiteBalanceRGB',
+        'getWhiteBalanceRGB',
+        'getCustomJSVersion',
       ],
-      "2.0": [
-        "getKAM",
-        "setKAM",
-        "getApplicationInfo",
-        "switchApplication",
-        "setMaster",
-        "setSlave",
-        "setAvSync",
-        "setAvSyncSpeaker",
-        "setAvSyncBypass",
-        "getAvSync",
-        "getAvSyncSpeaker",
-        "getAvSyncBypass",
-        "addUSBAttachEventListener",
-        "removeUSBAttachEventListener",
+      '2.0': [
+        'getKAM',
+        'setKAM',
+        'getApplicationInfo',
+        'switchApplication',
+        'setMaster',
+        'setSlave',
+        'setAvSync',
+        'setAvSyncSpeaker',
+        'setAvSyncBypass',
+        'getAvSync',
+        'getAvSyncSpeaker',
+        'getAvSyncBypass',
+        'addUSBAttachEventListener',
+        'removeUSBAttachEventListener',
       ],
-      "3.0": [
-        "getWoWLAN",
-        "setWoWLAN",
-        "getNativePortraitMode",
-        "setNativePortraitMode",
-        "setNoSignalImageStatus",
-        "getNoSignalImageStatus",
-        "clearBrowsingData",
-        "enableScreenShareApp",
+      '3.0': [
+        'getWoWLAN',
+        'setWoWLAN',
+        'getNativePortraitMode',
+        'setNativePortraitMode',
+        'setNoSignalImageStatus',
+        'getNoSignalImageStatus',
+        'clearBrowsingData',
+        'enableScreenShareApp',
       ],
-      3.2: ["setEnterpriseCode", "getPortControl", "setPortControl"],
-      "4.0": [],
+      3.2: ['setEnterpriseCode', 'getPortControl', 'setPortControl'],
+      '4.0': [],
       4.1: [],
-      "5.0": [],
-      "6.0": [],
-      "7.0": [],
-      "8.0": [],
-      "9.0": [],
+      '5.0': [],
+      '6.0': [],
+      '7.0': [],
+      '8.0': [],
+      '9.0': [],
     },
     l = { USBAttachEventListener: null },
     s = { webOSVersion: -2 },
-    R = "commercial",
-    O = "hotelMode",
-    r = "network",
-    u = "option",
-    E = "sound",
-    C = "picture",
-    p = "lock",
-    f = "enableKAM",
-    d = "password",
-    b = "siAppOrientation",
-    A = "screenRotation",
-    S = "wolwowlOnOff",
-    M = "powerOnStatus",
-    N = "powerOnOffHistory",
-    g = "avSync",
-    m = "avSyncSpeaker",
-    _ = "avSyncBypassInput",
-    I = "noSignalImage",
-    v = "pictureMode",
-    P = "systemPin",
-    k = "blockedPortList";
+    R = 'commercial',
+    O = 'hotelMode',
+    r = 'network',
+    u = 'option',
+    E = 'sound',
+    C = 'picture',
+    p = 'lock',
+    f = 'enableKAM',
+    d = 'password',
+    b = 'siAppOrientation',
+    A = 'screenRotation',
+    S = 'wolwowlOnOff',
+    M = 'powerOnStatus',
+    N = 'powerOnOffHistory',
+    g = 'avSync',
+    m = 'avSyncSpeaker',
+    _ = 'avSyncBypassInput',
+    I = 'noSignalImage',
+    v = 'pictureMode',
+    P = 'systemPin',
+    k = 'blockedPortList';
   ((c.ERROR_CODE = {
     COMMON: {
-      OLD_WEBOS_VERSION: "OLD_WEBOS_VERSION",
-      UNSUPPORTED_API: "UNSUPPORTED_API",
-      BAD_PARAMETERS: "BAD_PARAMETERS",
-      INTERNAL_ERROR: "INTERNAL_ERROR",
-      NOT_MONITORING: "NOT_MONITORING",
-      MEDIA_ERROR: "MEDIA_ERROR",
+      OLD_WEBOS_VERSION: 'OLD_WEBOS_VERSION',
+      UNSUPPORTED_API: 'UNSUPPORTED_API',
+      BAD_PARAMETERS: 'BAD_PARAMETERS',
+      INTERNAL_ERROR: 'INTERNAL_ERROR',
+      NOT_MONITORING: 'NOT_MONITORING',
+      MEDIA_ERROR: 'MEDIA_ERROR',
     },
     CONFIGURATION: {
-      INVALID_PASSWORD_FORMAT: "BAD_PARAMETERS",
-      ACCESS_DENIED: "ACCESS_DENIED",
-      INVALID_CONFIG: "INVALID_CONFIGURATION",
+      INVALID_PASSWORD_FORMAT: 'BAD_PARAMETERS',
+      ACCESS_DENIED: 'ACCESS_DENIED',
+      INVALID_CONFIG: 'INVALID_CONFIGURATION',
     },
-    APPLICATION: { SETTINGS_ERROR: "SETTINGS_ERROR", NOT_INSTALLED: "NOT_INSTALLED" },
+    APPLICATION: {
+      SETTINGS_ERROR: 'SETTINGS_ERROR',
+      NOT_INSTALLED: 'NOT_INSTALLED',
+    },
   }),
     (c.CLEARBROWSINGDATATYPES = {
-      ALL: "all",
-      APPCACHE: "appcache",
-      CACHE: "cache",
-      CHANNELIDS: "channelIDs",
-      COOKIES: "cookies",
-      FILESYSTEMS: "fileSystems",
-      INDEXEDDB: "indexedDB",
-      LOCALSTORAGE: "localStorage",
-      SERVICEWORKERS: "serviceWorkers",
-      WEBSQL: "webSQL",
+      ALL: 'all',
+      APPCACHE: 'appcache',
+      CACHE: 'cache',
+      CHANNELIDS: 'channelIDs',
+      COOKIES: 'cookies',
+      FILESYSTEMS: 'fileSystems',
+      INDEXEDDB: 'indexedDB',
+      LOCALSTORAGE: 'localStorage',
+      SERVICEWORKERS: 'serviceWorkers',
+      WEBSQL: 'webSQL',
     }),
-    (c.AVSYNC = { ON: "on", OFF: "off" }),
-    (c.AVSYNCBYPASS = { ON: "on", OFF: "off" }),
-    (c.NOSIGNALIMAGE = { ON: "on", OFF: "off" }),
-    (c.POWERONSTATUS = { POWERON: "power_on", STANDBY: "stand_by", LASTSTATUS: "lst" }),
+    (c.AVSYNC = { ON: 'on', OFF: 'off' }),
+    (c.AVSYNCBYPASS = { ON: 'on', OFF: 'off' }),
+    (c.NOSIGNALIMAGE = { ON: 'on', OFF: 'off' }),
+    (c.POWERONSTATUS = {
+      POWERON: 'power_on',
+      STANDBY: 'stand_by',
+      LASTSTATUS: 'lst',
+    }),
     (c.APPLICATION = {
-      ZIP_TYPE: "commercial.signage.signageapplauncher",
-      IPK_TYPE: "com.lg.app.signage",
-      EXTERNAL_HDMI: "com.webos.app.hdmi1",
-      EXTERNAL_HDMI1: "com.webos.app.hdmi1",
-      EXTERNAL_HDMI2: "com.webos.app.hdmi2",
-      EXTERNAL_HDMI3: "com.webos.app.hdmi3",
-      EXTERNAL_HDMI4: "com.webos.app.hdmi4",
-      EXTERNAL_RGB: "com.webos.app.externalinput.rgb",
-      EXTERNAL_DVI: "com.webos.app.hdmi2",
-      EXTERNAL_DP: "com.webos.app.hdmi3",
-      EXTERNAL_OPS: "com.webos.app.hdmi4",
-      SCREEN_SHARE: "com.webos.app.miracast",
+      ZIP_TYPE: 'commercial.signage.signageapplauncher',
+      IPK_TYPE: 'com.lg.app.signage',
+      EXTERNAL_HDMI: 'com.webos.app.hdmi1',
+      EXTERNAL_HDMI1: 'com.webos.app.hdmi1',
+      EXTERNAL_HDMI2: 'com.webos.app.hdmi2',
+      EXTERNAL_HDMI3: 'com.webos.app.hdmi3',
+      EXTERNAL_HDMI4: 'com.webos.app.hdmi4',
+      EXTERNAL_RGB: 'com.webos.app.externalinput.rgb',
+      EXTERNAL_DVI: 'com.webos.app.hdmi2',
+      EXTERNAL_DP: 'com.webos.app.hdmi3',
+      EXTERNAL_OPS: 'com.webos.app.hdmi4',
+      SCREEN_SHARE: 'com.webos.app.miracast',
     }),
-    (c.NATIVEPORTRAIT = { OFF: "off", DEGREE_90: "90", DEGREE_180: "180", DEGREE_270: "270" }));
+    (c.NATIVEPORTRAIT = {
+      OFF: 'off',
+      DEGREE_90: '90',
+      DEGREE_180: '180',
+      DEGREE_270: '270',
+    }));
   var T = {
       checkPlatformSupportedThisAPI: function (e) {
         for (var a in n)
           for (var t in n[a])
-            if (n[a][t] === e) return parseFloat(a) <= s.webOSVersion || parseFloat(a);
+            if (n[a][t] === e)
+              return parseFloat(a) <= s.webOSVersion || parseFloat(a);
         return !1;
       },
     },
     D = {
       checkParametersValidation: function (e, a, t) {
-        if ("object" != typeof e || "object" != typeof a || "string" != typeof t) return null;
+        if (
+          'object' != typeof e ||
+          'object' != typeof a ||
+          'string' != typeof t
+        )
+          return null;
         for (var n in e) if (a[t] === e[n]) return !0;
         return !1;
       },
       checkMulltiParametersValidation: function (e, a, t) {
         if (
-          "object" != typeof e ||
-          "object" != typeof a ||
-          "string" != typeof t ||
-          "object" != typeof a[t]
+          'object' != typeof e ||
+          'object' != typeof a ||
+          'string' != typeof t ||
+          'object' != typeof a[t]
         )
           return null;
         a[t].length;
-        for (var n in a[t]) for (var i = 0; i < e.length; i++) if (a[t][n] !== e[i]) return !1;
+        for (var n in a[t])
+          for (var i = 0; i < e.length; i++) if (a[t][n] !== e[i]) return !1;
         return !0;
       },
       checkMissingParameters: function (e, a) {
-        if ("object" != typeof e || null == e) return !1;
+        if ('object' != typeof e || null == e) return !1;
         for (var t = 0; t < a.length; t++)
-          if (!1 === e.hasOwnProperty(a[t]) || void 0 === e[a[t]] || null === e[a[t]]) return !1;
+          if (
+            !1 === e.hasOwnProperty(a[t]) ||
+            void 0 === e[a[t]] ||
+            null === e[a[t]]
+          )
+            return !1;
         return !0;
       },
     },
     y = {
       callSuccessCallback: function (e, a) {
-        "function" == typeof e &&
-          ("object" == typeof a ? (a.returnValue && delete a.returnValue, e(a)) : e());
+        'function' == typeof e &&
+          ('object' == typeof a
+            ? (a.returnValue && delete a.returnValue, e(a))
+            : e());
       },
       callFailureCallback: function (e, a, t, n) {
-        "function" == typeof e &&
+        'function' == typeof e &&
           (a.returnValue && delete a.returnValue,
           -1 === a.errorCode
-            ? (-1 < a.errorText.indexOf("Unknown method") ||
-                -1 < a.errorText.indexOf("Service does not exist")) &&
+            ? (-1 < a.errorText.indexOf('Unknown method') ||
+                -1 < a.errorText.indexOf('Service does not exist')) &&
               (a.errorCode = c.ERROR_CODE.COMMON.UNSUPPORTED_API)
-            : ((void 0 !== a.errorCode && null !== a.errorCode) || (a.errorCode = t),
-              (void 0 !== a.errorText && null !== a.errorText) || (a.errorText = n)),
+            : ((void 0 !== a.errorCode && null !== a.errorCode) ||
+                (a.errorCode = t),
+              (void 0 !== a.errorText && null !== a.errorText) ||
+                (a.errorText = n)),
           e(a));
       },
     },
     F = {
       setValue: function (e, a, t, n) {
-        o.Request("luna://com.webos.service.commercial.signage.storageservice/settings/", {
-          method: "set",
-          parameters: { category: e, settings: a },
-          onSuccess: function (e) {
-            "function" == typeof t && (delete e.returnValue, t(e));
-          },
-          onFailure: function (e) {
-            "function" == typeof n && (delete e.returnValue, n(e));
-          },
-        });
+        o.Request(
+          'luna://com.webos.service.commercial.signage.storageservice/settings/',
+          {
+            method: 'set',
+            parameters: { category: e, settings: a },
+            onSuccess: function (e) {
+              'function' == typeof t && (delete e.returnValue, t(e));
+            },
+            onFailure: function (e) {
+              'function' == typeof n && (delete e.returnValue, n(e));
+            },
+          }
+        );
       },
       setValueBySettingsService: function (e, a, t, n) {
-        o.Request("palm://com.webos.settingsservice", {
-          method: "setSystemSettings",
+        o.Request('palm://com.webos.settingsservice', {
+          method: 'setSystemSettings',
           parameters: { category: e, settings: a },
           onSuccess: function (e) {
-            "function" == typeof t && (delete e.returnValue, t(e));
+            'function' == typeof t && (delete e.returnValue, t(e));
           },
           onFailure: function (e) {
-            "function" == typeof n && (delete e.returnValue, n(e));
+            'function' == typeof n && (delete e.returnValue, n(e));
           },
         });
       },
       getValue: function (e, a, t, n) {
-        o.Request("luna://com.webos.service.commercial.signage.storageservice/settings/", {
-          method: "get",
-          parameters: { category: e, keys: a },
-          onSuccess: function (e) {
-            "function" == typeof t && (delete e.returnValue, t(e.settings));
-          },
-          onFailure: function (e) {
-            "function" == typeof n && (delete e.returnValue, n(e));
-          },
-        });
+        o.Request(
+          'luna://com.webos.service.commercial.signage.storageservice/settings/',
+          {
+            method: 'get',
+            parameters: { category: e, keys: a },
+            onSuccess: function (e) {
+              'function' == typeof t && (delete e.returnValue, t(e.settings));
+            },
+            onFailure: function (e) {
+              'function' == typeof n && (delete e.returnValue, n(e));
+            },
+          }
+        );
       },
       getValueBySettingsService: function (e, a, t, n) {
-        o.Request("palm://com.webos.settingsservice", {
-          method: "getSystemSettings",
+        o.Request('palm://com.webos.settingsservice', {
+          method: 'getSystemSettings',
           parameters: { category: e, keys: a },
           onSuccess: function (e) {
-            "function" == typeof t && (delete e.returnValue, t(e.settings));
+            'function' == typeof t && (delete e.returnValue, t(e.settings));
           },
           onFailure: function (e) {
-            "function" == typeof n && (delete e.returnValue, n(e));
+            'function' == typeof n && (delete e.returnValue, n(e));
           },
         });
       },
@@ -247,72 +282,93 @@
       var e = T.checkPlatformSupportedThisAPI(a);
       -1 !== s.webOSVersion
         ? !1 !== e
-          ? !0 === e || "number" != typeof e
+          ? !0 === e || 'number' != typeof e
             ? n(!0)
             : y.callFailureCallback(
                 t,
                 {},
                 c.ERROR_CODE.COMMON.OLD_WEBOS_VERSION,
-                "webOS Signage " +
+                'webOS Signage ' +
                   s.webOSVersion.toFixed(1) +
                   " doesn't support " +
                   a +
-                  " API. webOS Signage version should be later than " +
+                  ' API. webOS Signage version should be later than ' +
                   e.toFixed(1) +
-                  ".",
+                  '.'
               )
           : y.callFailureCallback(
               t,
               {},
               c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-              "Cannot found called API in CustomJS.",
+              'Cannot found called API in CustomJS.'
             )
         : y.callFailureCallback(
             t,
             {},
             c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-            "Unknown webOS Signage version.",
+            'Unknown webOS Signage version.'
           );
     }),
       -2 === s.webOSVersion
-        ? o.Request("luna://com.webos.service.systemservice/osInfo/", {
-            method: "query",
-            parameters: { parameters: ["webos_release_codename"] },
+        ? o.Request('luna://com.webos.service.systemservice/osInfo/', {
+            method: 'query',
+            parameters: { parameters: ['webos_release_codename'] },
             onSuccess: function (e) {
               (delete e.returnValue,
-                -1 !== (s = e).webos_release_codename.indexOf("deua") ||
-                -1 !== s.webos_release_codename.indexOf("denali") ||
-                -1 !== s.webos_release_codename.indexOf("dreadlocks")
-                  ? o.Request("luna://com.webos.service.commercial.signage.storageservice", {
-                      method: "getOnOffTimeSchedule",
-                      parameters: {},
-                      onComplete: function (e) {
-                        (e.settings && e.settings.hasOwnProperty("onOffTimeSchedule")
-                          ? (s.webOSVersion = 3.2)
-                          : (s.webOSVersion = 3),
-                          i());
-                      },
-                    })
-                  : (-1 !== s.webos_release_codename.indexOf("ponytail") ||
-                    -1 !== s.webos_release_codename.indexOf("pallini")
+                -1 !== (s = e).webos_release_codename.indexOf('deua') ||
+                -1 !== s.webos_release_codename.indexOf('denali') ||
+                -1 !== s.webos_release_codename.indexOf('dreadlocks')
+                  ? o.Request(
+                      'luna://com.webos.service.commercial.signage.storageservice',
+                      {
+                        method: 'getOnOffTimeSchedule',
+                        parameters: {},
+                        onComplete: function (e) {
+                          (e.settings &&
+                          e.settings.hasOwnProperty('onOffTimeSchedule')
+                            ? (s.webOSVersion = 3.2)
+                            : (s.webOSVersion = 3),
+                            i());
+                        },
+                      }
+                    )
+                  : (-1 !== s.webos_release_codename.indexOf('ponytail') ||
+                    -1 !== s.webos_release_codename.indexOf('pallini')
                       ? (s.webOSVersion = 9)
-                      : -1 !== s.webos_release_codename.indexOf("negroni")
+                      : -1 !== s.webos_release_codename.indexOf('negroni')
                         ? (s.webOSVersion = 8)
-                        : -1 !== s.webos_release_codename.indexOf("number1") ||
-                            -1 !== s.webos_release_codename.indexOf("napoleon")
+                        : -1 !== s.webos_release_codename.indexOf('number1') ||
+                            -1 !== s.webos_release_codename.indexOf('napoleon')
                           ? (s.webOSVersion = 7)
-                          : -1 !== s.webos_release_codename.indexOf("libertyspikes") ||
-                              -1 !== s.webos_release_codename.indexOf("lager")
+                          : -1 !==
+                                s.webos_release_codename.indexOf(
+                                  'libertyspikes'
+                                ) ||
+                              -1 !== s.webos_release_codename.indexOf('lager')
                             ? (s.webOSVersion = 6)
-                            : -1 !== s.webos_release_codename.indexOf("jhericurl")
+                            : -1 !==
+                                s.webos_release_codename.indexOf('jhericurl')
                               ? (s.webOSVersion = 5)
-                              : -1 !== s.webos_release_codename.indexOf("geumsan")
+                              : -1 !==
+                                  s.webos_release_codename.indexOf('geumsan')
                                 ? (s.webOSVersion = 4.1)
-                                : -1 !== s.webos_release_codename.indexOf("genepi") ||
-                                    -1 !== s.webos_release_codename.indexOf("goldilocks") ||
-                                    -1 !== s.webos_release_codename.indexOf("galliano")
+                                : -1 !==
+                                      s.webos_release_codename.indexOf(
+                                        'genepi'
+                                      ) ||
+                                    -1 !==
+                                      s.webos_release_codename.indexOf(
+                                        'goldilocks'
+                                      ) ||
+                                    -1 !==
+                                      s.webos_release_codename.indexOf(
+                                        'galliano'
+                                      )
                                   ? (s.webOSVersion = 4)
-                                  : -1 !== s.webos_release_codename.indexOf("webos-master")
+                                  : -1 !==
+                                      s.webos_release_codename.indexOf(
+                                        'webos-master'
+                                      )
                                     ? (s.webOSVersion = 6)
                                     : (s.webOSVersion = -1),
                     i()));
@@ -321,60 +377,65 @@
               function a(e, a) {
                 return -1 !== e.indexOf(a);
               }
-              !0 === a(navigator.userAgent, "Web0S") ||
-              !0 === a(navigator.userAgent, "WebAppManager")
-                ? a(navigator.userAgent, "AppleWebKit/537.41")
+              !0 === a(navigator.userAgent, 'Web0S') ||
+              !0 === a(navigator.userAgent, 'WebAppManager')
+                ? a(navigator.userAgent, 'AppleWebKit/537.41')
                   ? ((s.webOSVersion = 1), i())
-                  : a(navigator.userAgent, "AppleWebKit/538.2") && ((s.webOSVersion = 2), i())
+                  : a(navigator.userAgent, 'AppleWebKit/538.2') &&
+                    ((s.webOSVersion = 2), i())
                 : ((s.webOSVersion = -1), i());
             },
           })
         : i());
   }
   function h(t, n, e) {
-    e.videoEl && "object" == typeof e.videoEl
+    e.videoEl && 'object' == typeof e.videoEl
       ? 3 < e.videoEl.readyState
-        ? e.videoEl.mediaId && "string" == typeof e.videoEl.mediaId
+        ? e.videoEl.mediaId && 'string' == typeof e.videoEl.mediaId
           ? t(e.videoEl.mediaId)
           : n({
               errorCode: c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-              errorText: "Cannot found video element.",
+              errorText: 'Cannot found video element.',
             })
         : n({
             returnValue: !1,
             errorCode: c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-            errorText: "Video is not loaded yet. Try again after video is loaded.",
+            errorText:
+              'Video is not loaded yet. Try again after video is loaded.',
           })
-      : o.Request("luna://com.webos.service.commercial.signage.storageservice/video/", {
-          method: "getMediaID",
-          onSuccess: function (e) {
-            e.hasOwnProperty("id")
-              ? t(e.id)
-              : n({
-                  returnValue: !1,
-                  errorCode: c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-                  errorText: "Failed to check media id value.",
-                });
-          },
-          onFailure: function (e) {
-            var a = document.getElementsByTagName("video")[0];
-            (a && t(a.mediaId), n(e));
-          },
-        });
+      : o.Request(
+          'luna://com.webos.service.commercial.signage.storageservice/video/',
+          {
+            method: 'getMediaID',
+            onSuccess: function (e) {
+              e.hasOwnProperty('id')
+                ? t(e.id)
+                : n({
+                    returnValue: !1,
+                    errorCode: c.ERROR_CODE.COMMON.INTERNAL_ERROR,
+                    errorText: 'Failed to check media id value.',
+                  });
+            },
+            onFailure: function (e) {
+              var a = document.getElementsByTagName('video')[0];
+              (a && t(a.mediaId), n(e));
+            },
+          }
+        );
   }
   ((c.prototype.Configuration = {
     getCustomJSVersion: function (e, a) {
-      w("getCustomJSVersion", a, function () {
-        y.callSuccessCallback(e, { version: "1.4240508" });
+      w('getCustomJSVersion', a, function () {
+        y.callSuccessCallback(e, { version: '1.4240508' });
       });
     },
     getPortControl: function (a, t, e) {
-      w("getPortControl", t, function () {
+      w('getPortControl', t, function () {
         F.getValue(
           R,
           [k],
           function (e) {
-            ("string" == typeof e.blockedPortList &&
+            ('string' == typeof e.blockedPortList &&
               (e.blockedPortList = parseInt(e.blockedPortList)),
               y.callSuccessCallback(a, { blockedPortList: e.blockedPortList }));
           },
@@ -383,17 +444,18 @@
               t,
               e,
               c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-              "Failed to get AvSync Bypass status.",
+              'Failed to get AvSync Bypass status.'
             );
-          },
+          }
         );
       });
     },
     setPortControl: function (a, t, n) {
-      w("setPortControl", t, function () {
-        if (!1 !== D.checkMissingParameters(n, ["blockedPortList"])) {
+      w('setPortControl', t, function () {
+        if (!1 !== D.checkMissingParameters(n, ['blockedPortList'])) {
           for (var e = 0; e < n.blockedPortList.length; e++)
-            n.blockedPortList[e].blockedPort = n.blockedPortList[e].blockedPort.toString();
+            n.blockedPortList[e].blockedPort =
+              n.blockedPortList[e].blockedPort.toString();
           F.setValue(
             R,
             n,
@@ -405,22 +467,22 @@
                 t,
                 e,
                 c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-                "Failed to set white balance settings.",
+                'Failed to set white balance settings.'
               );
-            },
+            }
           );
         } else
           y.callFailureCallback(
             t,
             {},
             c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-            "Missing required parameters.",
+            'Missing required parameters.'
           );
       });
     },
     setEnterpriseCode: function (a, t, e) {
-      w("setEnterpriseCode", t, function () {
-        !1 !== D.checkMissingParameters(e, ["enterpriseCode"])
+      w('setEnterpriseCode', t, function () {
+        !1 !== D.checkMissingParameters(e, ['enterpriseCode'])
           ? F.setValue(
               R,
               e,
@@ -432,24 +494,29 @@
                   t,
                   e,
                   c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-                  "Failed to set white balance settings.",
+                  'Failed to set white balance settings.'
                 );
-              },
+              }
             )
           : y.callFailureCallback(
               t,
               {},
               c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-              "Missing required parameters.",
+              'Missing required parameters.'
             );
       });
     },
     clearBrowsingData: function (a, t, e) {
-      w("clearBrowsingData", t, function () {
-        !1 !== D.checkMissingParameters(e, ["types"])
-          ? !1 !== D.checkMulltiParametersValidation(c.CLEARBROWSINGDATATYPES, e, "types")
-            ? o.Request("palm://com.palm.webappmanager/", {
-                method: "clearBrowsingData",
+      w('clearBrowsingData', t, function () {
+        !1 !== D.checkMissingParameters(e, ['types'])
+          ? !1 !==
+            D.checkMulltiParametersValidation(
+              c.CLEARBROWSINGDATATYPES,
+              e,
+              'types'
+            )
+            ? o.Request('palm://com.palm.webappmanager/', {
+                method: 'clearBrowsingData',
                 parameters: e,
                 onSuccess: function (e) {
                   y.callSuccessCallback(a);
@@ -459,7 +526,7 @@
                     t,
                     e,
                     c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-                    "Failed to clear browsing data.",
+                    'Failed to clear browsing data.'
                   );
                 },
               })
@@ -467,29 +534,29 @@
                 t,
                 {},
                 c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-                "Invalid parameters.",
+                'Invalid parameters.'
               )
           : y.callFailureCallback(
               t,
               {},
               c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-              "Missing required parameters.",
+              'Missing required parameters.'
             );
       });
     },
     setWhiteBalanceRGB: function (t, n, i) {
-      w("setWhiteBalanceRGB", n, function () {
-        !1 !== i.hasOwnProperty("rGain") ||
-        !1 !== i.hasOwnProperty("gGain") ||
-        !1 !== i.hasOwnProperty("bGain")
-          ? (!0 === i.hasOwnProperty("rGain") && "number" != typeof i.rGain) ||
-            (!0 === i.hasOwnProperty("gGain") && "number" != typeof i.gGain) ||
-            (!0 === i.hasOwnProperty("bGain") && "number" != typeof i.bGain)
+      w('setWhiteBalanceRGB', n, function () {
+        !1 !== i.hasOwnProperty('rGain') ||
+        !1 !== i.hasOwnProperty('gGain') ||
+        !1 !== i.hasOwnProperty('bGain')
+          ? (!0 === i.hasOwnProperty('rGain') && 'number' != typeof i.rGain) ||
+            (!0 === i.hasOwnProperty('gGain') && 'number' != typeof i.gGain) ||
+            (!0 === i.hasOwnProperty('bGain') && 'number' != typeof i.bGain)
             ? y.callFailureCallback(
                 n,
                 {},
                 c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-                "Invalid parameters. r/g/bGain value type must be number.",
+                'Invalid parameters. r/g/bGain value type must be number.'
               )
             : s.webOSVersion <= 3
               ? F.getValue(
@@ -498,27 +565,36 @@
                   function (e) {
                     var a = {};
                     switch (e.pictureMode) {
-                      case "normal":
-                        ("number" == typeof i.rGain && (a.rSubGainMedium = i.rGain),
-                          "number" == typeof i.gGain && (a.gSubGainMedium = i.gGain),
-                          "number" == typeof i.bGain && (a.bSubGainMedium = i.bGain));
+                      case 'normal':
+                        ('number' == typeof i.rGain &&
+                          (a.rSubGainMedium = i.rGain),
+                          'number' == typeof i.gGain &&
+                            (a.gSubGainMedium = i.gGain),
+                          'number' == typeof i.bGain &&
+                            (a.bSubGainMedium = i.bGain));
                         break;
-                      case "vivid":
-                        ("number" == typeof i.rGain && (a.rSubGainCool = i.rGain),
-                          "number" == typeof i.gGain && (a.gSubGainCool = i.gGain),
-                          "number" == typeof i.bGain && (a.bSubGainCool = i.bGain));
+                      case 'vivid':
+                        ('number' == typeof i.rGain &&
+                          (a.rSubGainCool = i.rGain),
+                          'number' == typeof i.gGain &&
+                            (a.gSubGainCool = i.gGain),
+                          'number' == typeof i.bGain &&
+                            (a.bSubGainCool = i.bGain));
                         break;
-                      case "cinema":
-                        ("number" == typeof i.rGain && (a.rSubGainWarm = i.rGain),
-                          "number" == typeof i.gGain && (a.gSubGainWarm = i.gGain),
-                          "number" == typeof i.bGain && (a.bSubGainWarm = i.bGain));
+                      case 'cinema':
+                        ('number' == typeof i.rGain &&
+                          (a.rSubGainWarm = i.rGain),
+                          'number' == typeof i.gGain &&
+                            (a.gSubGainWarm = i.gGain),
+                          'number' == typeof i.bGain &&
+                            (a.bSubGainWarm = i.bGain));
                         break;
                       default:
                         return void y.callFailureCallback(
                           n,
                           {},
                           c.ERROR_CODE.CONFIGURATION.INVALID_CONFIG,
-                          "This API supports only if picture mode is Vivid, Standard or Cinema.",
+                          'This API supports only if picture mode is Vivid, Standard or Cinema.'
                         );
                     }
                     F.setValue(
@@ -532,9 +608,9 @@
                           n,
                           e,
                           c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-                          "Failed to set white balance settings.",
+                          'Failed to set white balance settings.'
                         );
-                      },
+                      }
                     );
                   },
                   function (e) {
@@ -542,9 +618,9 @@
                       n,
                       errorObject,
                       c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-                      "Failed to set white balance settings.",
+                      'Failed to set white balance settings.'
                     );
-                  },
+                  }
                 )
               : F.getValue(
                   C,
@@ -552,22 +628,24 @@
                   function (e) {
                     var a = {};
                     switch (e.pictureMode) {
-                      case "normal":
-                      case "vivid":
-                      case "sports":
-                      case "game":
-                      case "govCorp":
-                      case "eco":
-                        ("number" == typeof i.rGain && (a.redOffset = i.rGain),
-                          "number" == typeof i.gGain && (a.greenOffset = i.gGain),
-                          "number" == typeof i.bGain && (a.blueOffset = i.bGain));
+                      case 'normal':
+                      case 'vivid':
+                      case 'sports':
+                      case 'game':
+                      case 'govCorp':
+                      case 'eco':
+                        ('number' == typeof i.rGain && (a.redOffset = i.rGain),
+                          'number' == typeof i.gGain &&
+                            (a.greenOffset = i.gGain),
+                          'number' == typeof i.bGain &&
+                            (a.blueOffset = i.bGain));
                         break;
                       default:
                         return void y.callFailureCallback(
                           n,
                           {},
                           c.ERROR_CODE.CONFIGURATION.INVALID_CONFIG,
-                          "This API is not supports when picture mode is Calibration.",
+                          'This API is not supports when picture mode is Calibration.'
                         );
                     }
                     F.setValue(
@@ -581,9 +659,9 @@
                           n,
                           e,
                           c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-                          "Failed to set white balance settings.",
+                          'Failed to set white balance settings.'
                         );
-                      },
+                      }
                     );
                   },
                   function (e) {
@@ -591,49 +669,49 @@
                       n,
                       e,
                       c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-                      "Failed to set white balance settings.",
+                      'Failed to set white balance settings.'
                     );
-                  },
+                  }
                 )
           : y.callFailureCallback(
               n,
               {},
               c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-              "Missing required parameters. At least one of rGain, gGain or bGain parameter should be used.",
+              'Missing required parameters. At least one of rGain, gGain or bGain parameter should be used.'
             );
       });
     },
     getWhiteBalanceRGB: function (n, i) {
-      w("getWhiteBalanceRGB", i, function () {
+      w('getWhiteBalanceRGB', i, function () {
         s.webOSVersion <= 3
           ? F.getValue(C, [v], function (t) {
               F.getValue(
                 R,
                 [
-                  "rSubGainMedium",
-                  "gSubGainMedium",
-                  "bSubGainMedium",
-                  "rSubGainCool",
-                  "gSubGainCool",
-                  "bSubGainCool",
-                  "rSubGainWarm",
-                  "gSubGainWarm",
-                  "bSubGainWarm",
+                  'rSubGainMedium',
+                  'gSubGainMedium',
+                  'bSubGainMedium',
+                  'rSubGainCool',
+                  'gSubGainCool',
+                  'bSubGainCool',
+                  'rSubGainWarm',
+                  'gSubGainWarm',
+                  'bSubGainWarm',
                 ],
                 function (e) {
                   var a = {};
                   switch (t.pictureMode) {
-                    case "normal":
+                    case 'normal':
                       ((a.rGain = e.rSubGainMedium),
                         (a.gGain = e.gSubGainMedium),
                         (a.bGain = e.bSubGainMedium));
                       break;
-                    case "vivid":
+                    case 'vivid':
                       ((a.rGain = e.rSubGainCool),
                         (a.gGain = e.gSubGainCool),
                         (a.bGain = e.bSubGainCool));
                       break;
-                    case "cinema":
+                    case 'cinema':
                       ((a.rGain = e.rSubGainWarm),
                         (a.gGain = e.gSubGainWarm),
                         (a.bGain = e.bSubGainWarm));
@@ -643,12 +721,12 @@
                         i,
                         {},
                         c.ERROR_CODE.CONFIGURATION.INVALID_CONFIG,
-                        "This API supports only if picture mode is Vivid, Standard or Cinema.",
+                        'This API supports only if picture mode is Vivid, Standard or Cinema.'
                       );
                   }
-                  ("string" == typeof a.rGain && (a.rGain = parseInt(a.rGain)),
-                    "string" == typeof a.gGain && (a.gGain = parseInt(a.gGain)),
-                    "string" == typeof a.bGain && (a.bGain = parseInt(a.bGain)),
+                  ('string' == typeof a.rGain && (a.rGain = parseInt(a.rGain)),
+                    'string' == typeof a.gGain && (a.gGain = parseInt(a.gGain)),
+                    'string' == typeof a.bGain && (a.bGain = parseInt(a.bGain)),
                     y.callSuccessCallback(n, a));
                 },
                 function (e) {
@@ -656,36 +734,38 @@
                     i,
                     errorObject,
                     c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-                    "Failed to get white balance settings.",
+                    'Failed to get white balance settings.'
                   );
-                },
+                }
               );
             })
           : F.getValue(
               C,
-              [v, "redOffset", "greenOffset", "blueOffset"],
+              [v, 'redOffset', 'greenOffset', 'blueOffset'],
               function (e) {
                 var a = {};
                 switch (e.pictureMode) {
-                  case "normal":
-                  case "vivid":
-                  case "sports":
-                  case "game":
-                  case "govCorp":
-                  case "eco":
-                    ((a.rGain = e.redOffset), (a.gGain = e.greenOffset), (a.bGain = e.blueOffset));
+                  case 'normal':
+                  case 'vivid':
+                  case 'sports':
+                  case 'game':
+                  case 'govCorp':
+                  case 'eco':
+                    ((a.rGain = e.redOffset),
+                      (a.gGain = e.greenOffset),
+                      (a.bGain = e.blueOffset));
                     break;
                   default:
                     return void y.callFailureCallback(
                       i,
                       {},
                       c.ERROR_CODE.CONFIGURATION.INVALID_CONFIG,
-                      "This API is not supports when picture mode is Calibration.",
+                      'This API is not supports when picture mode is Calibration.'
                     );
                 }
-                ("string" == typeof a.rGain && (a.rGain = parseInt(a.rGain)),
-                  "string" == typeof a.gGain && (a.gGain = parseInt(a.gGain)),
-                  "string" == typeof a.bGain && (a.bGain = parseInt(a.bGain)),
+                ('string' == typeof a.rGain && (a.rGain = parseInt(a.rGain)),
+                  'string' == typeof a.gGain && (a.gGain = parseInt(a.gGain)),
+                  'string' == typeof a.bGain && (a.bGain = parseInt(a.bGain)),
                   y.callSuccessCallback(n, a));
               },
               function (e) {
@@ -693,16 +773,16 @@
                   i,
                   e,
                   c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-                  "Failed to get white balance settings.",
+                  'Failed to get white balance settings.'
                 );
-              },
+              }
             );
       });
     },
     setAvSync: function (a, t, e) {
-      w("setAvSync", t, function () {
-        !1 !== D.checkMissingParameters(e, ["avSync"])
-          ? !1 !== D.checkParametersValidation(c.AVSYNC, e, "avSync")
+      w('setAvSync', t, function () {
+        !1 !== D.checkMissingParameters(e, ['avSync'])
+          ? !1 !== D.checkParametersValidation(c.AVSYNC, e, 'avSync')
             ? F.setValue(
                 E,
                 e,
@@ -714,26 +794,26 @@
                     t,
                     e,
                     c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-                    "Failed to set AvSync settings.",
+                    'Failed to set AvSync settings.'
                   );
-                },
+                }
               )
             : y.callFailureCallback(
                 t,
                 {},
                 c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-                "Invalid parameters.",
+                'Invalid parameters.'
               )
           : y.callFailureCallback(
               t,
               {},
               c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-              "Missing required parameters.",
+              'Missing required parameters.'
             );
       });
     },
     getAvSync: function (a, t) {
-      w("getAvSync", t, function () {
+      w('getAvSync', t, function () {
         F.getValue(
           E,
           [g],
@@ -745,16 +825,17 @@
               t,
               e,
               c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-              "Failed to get AvSync status.",
+              'Failed to get AvSync status.'
             );
-          },
+          }
         );
       });
     },
     setAvSyncSpeaker: function (a, t, e) {
-      w("setAvSyncSpeaker", t, function () {
-        !1 !== D.checkMissingParameters(e, ["avSyncSpeaker"])
-          ? !1 !== D.checkParametersValidation(c.AVSYNCSPEAKER, e, "avSyncSpeaker")
+      w('setAvSyncSpeaker', t, function () {
+        !1 !== D.checkMissingParameters(e, ['avSyncSpeaker'])
+          ? !1 !==
+            D.checkParametersValidation(c.AVSYNCSPEAKER, e, 'avSyncSpeaker')
             ? F.setValue(
                 E,
                 e,
@@ -766,31 +847,32 @@
                     t,
                     e,
                     c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-                    "Failed to set AvSync Speaker settings.",
+                    'Failed to set AvSync Speaker settings.'
                   );
-                },
+                }
               )
             : y.callFailureCallback(
                 t,
                 {},
                 c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-                "Invalid parameters.",
+                'Invalid parameters.'
               )
           : y.callFailureCallback(
               t,
               {},
               c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-              "Missing required parameters.",
+              'Missing required parameters.'
             );
       });
     },
     getAvSyncSpeaker: function (a, t) {
-      w("getAvSyncSpeaker", t, function () {
+      w('getAvSyncSpeaker', t, function () {
         F.getValue(
           E,
           [m],
           function (e) {
-            ("string" == typeof e.avSyncSpeaker && (e.avSyncSpeaker = parseInt(e.avSyncSpeaker)),
+            ('string' == typeof e.avSyncSpeaker &&
+              (e.avSyncSpeaker = parseInt(e.avSyncSpeaker)),
               y.callSuccessCallback(a, { avSyncSpeaker: e.avSyncSpeaker }));
           },
           function (e) {
@@ -798,16 +880,17 @@
               t,
               e,
               c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-              "Failed to get AvSync Speaker status.",
+              'Failed to get AvSync Speaker status.'
             );
-          },
+          }
         );
       });
     },
     setAvSyncBypass: function (a, t, e) {
-      w("setAvSyncBypass", t, function () {
-        !1 !== D.checkMissingParameters(e, ["avSyncBypassInput"])
-          ? !1 !== D.checkParametersValidation(c.AVSYNCBYPASS, e, "avSyncBypassInput")
+      w('setAvSyncBypass', t, function () {
+        !1 !== D.checkMissingParameters(e, ['avSyncBypassInput'])
+          ? !1 !==
+            D.checkParametersValidation(c.AVSYNCBYPASS, e, 'avSyncBypassInput')
             ? F.setValue(
                 E,
                 e,
@@ -819,47 +902,50 @@
                     t,
                     e,
                     c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-                    "Failed to set AvSync Bypass settings.",
+                    'Failed to set AvSync Bypass settings.'
                   );
-                },
+                }
               )
             : y.callFailureCallback(
                 t,
                 {},
                 c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-                "Invalid parameters.",
+                'Invalid parameters.'
               )
           : y.callFailureCallback(
               t,
               {},
               c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-              "Missing required parameters.",
+              'Missing required parameters.'
             );
       });
     },
     getAvSyncBypass: function (a, t) {
-      w("getAvSyncBypass", t, function () {
+      w('getAvSyncBypass', t, function () {
         F.getValue(
           E,
           [_],
           function (e) {
-            y.callSuccessCallback(a, { avSyncBypassInput: e.avSyncBypassInput });
+            y.callSuccessCallback(a, {
+              avSyncBypassInput: e.avSyncBypassInput,
+            });
           },
           function (e) {
             y.callFailureCallback(
               t,
               e,
               c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-              "Failed to get AvSync Bypass status.",
+              'Failed to get AvSync Bypass status.'
             );
-          },
+          }
         );
       });
     },
     setNoSignalImageStatus: function (a, t, e) {
-      w("setNoSignalImageStatus", t, function () {
-        !1 !== D.checkMissingParameters(e, ["noSignalImage"])
-          ? !1 !== D.checkParametersValidation(c.NOSIGNALIMAGE, e, "noSignalImage")
+      w('setNoSignalImageStatus', t, function () {
+        !1 !== D.checkMissingParameters(e, ['noSignalImage'])
+          ? !1 !==
+            D.checkParametersValidation(c.NOSIGNALIMAGE, e, 'noSignalImage')
             ? F.setValue(
                 R,
                 e,
@@ -871,26 +957,26 @@
                     t,
                     e,
                     c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-                    "Failed to set NoSignalImage status.",
+                    'Failed to set NoSignalImage status.'
                   );
-                },
+                }
               )
             : y.callFailureCallback(
                 t,
                 {},
                 c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-                "Invalid parameters.",
+                'Invalid parameters.'
               )
           : y.callFailureCallback(
               t,
               {},
               c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-              "Missing required parameters.",
+              'Missing required parameters.'
             );
       });
     },
     getNoSignalImageStatus: function (a, t) {
-      w("getNoSignalImageStatus", t, function () {
+      w('getNoSignalImageStatus', t, function () {
         F.getValue(
           R,
           [I],
@@ -902,24 +988,25 @@
               t,
               e,
               c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-              "Failed to get NoSignalImage status.",
+              'Failed to get NoSignalImage status.'
             );
-          },
+          }
         );
       });
     },
     getPowerOnOffHistory: function (n, a) {
-      w("getPowerOnOffHistory", a, function () {
+      w('getPowerOnOffHistory', a, function () {
         F.getValue(
           R,
           [N],
           function (e) {
             var a = e.powerOnOffHistory;
             for (
-              "string" == typeof e.powerOnOffHistory && (a = JSON.parse(e.powerOnOffHistory));
+              'string' == typeof e.powerOnOffHistory &&
+              (a = JSON.parse(e.powerOnOffHistory));
               ;
             ) {
-              var t = a.indexOf(" ");
+              var t = a.indexOf(' ');
               if (-1 === t) break;
               a.splice(t, 1);
             }
@@ -930,16 +1017,16 @@
               a,
               e,
               c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-              "Failed to get Power On/Off history.",
+              'Failed to get Power On/Off history.'
             );
-          },
+          }
         );
       });
     },
     setPowerOnStatus: function (a, t, e) {
-      w("setPowerOnStatus", t, function () {
-        !1 !== D.checkMissingParameters(e, ["mode"])
-          ? !1 !== D.checkParametersValidation(c.POWERONSTATUS, e, "mode")
+      w('setPowerOnStatus', t, function () {
+        !1 !== D.checkMissingParameters(e, ['mode'])
+          ? !1 !== D.checkParametersValidation(c.POWERONSTATUS, e, 'mode')
             ? F.setValue(
                 O,
                 { powerOnStatus: e.mode },
@@ -951,26 +1038,26 @@
                     t,
                     e,
                     c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-                    "Failed to set Power On status.",
+                    'Failed to set Power On status.'
                   );
-                },
+                }
               )
             : y.callFailureCallback(
                 t,
                 {},
                 c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-                "Invalid parameters.",
+                'Invalid parameters.'
               )
           : y.callFailureCallback(
               t,
               {},
               c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-              "Missing required parameters.",
+              'Missing required parameters.'
             );
       });
     },
     getPowerOnStatus: function (a, t) {
-      w("getPowerOnStatus", t, function () {
+      w('getPowerOnStatus', t, function () {
         F.getValue(
           O,
           [M],
@@ -982,26 +1069,26 @@
               t,
               e,
               c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-              "Failed to get Power On status.",
+              'Failed to get Power On status.'
             );
-          },
+          }
         );
       });
     },
     setKAM: function (a, t, n) {
-      w("setKAM", t, function () {
+      w('setKAM', t, function () {
         var e;
-        if (!1 !== D.checkMissingParameters(n, ["keepAliveMode"])) {
-          if (!0 === n.keepAliveMode) e = "enable";
+        if (!1 !== D.checkMissingParameters(n, ['keepAliveMode'])) {
+          if (!0 === n.keepAliveMode) e = 'enable';
           else {
             if (!1 !== n.keepAliveMode)
               return void y.callFailureCallback(
                 t,
                 {},
                 c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-                "Invalid parameter. parameters.enable should be true or false.",
+                'Invalid parameter. parameters.enable should be true or false.'
               );
-            e = "disable";
+            e = 'disable';
           }
           F.setValue(
             R,
@@ -1014,60 +1101,60 @@
                 t,
                 e,
                 c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-                "Failed to set Keep Alive Mode settings.",
+                'Failed to set Keep Alive Mode settings.'
               );
-            },
+            }
           );
         } else
           y.callFailureCallback(
             t,
             {},
             c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-            "Missing required parameters.",
+            'Missing required parameters.'
           );
       });
     },
     getKAM: function (a, t) {
-      w("getKAM", t, function () {
+      w('getKAM', t, function () {
         F.getValue(
           R,
           [f],
           function (e) {
             e = e[f];
-            y.callSuccessCallback(a, { keepAliveMode: "enable" === e });
+            y.callSuccessCallback(a, { keepAliveMode: 'enable' === e });
           },
           function (e) {
             y.callFailureCallback(
               t,
               e,
               c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-              "Failed to get Keep Alive Mode settings.",
+              'Failed to get Keep Alive Mode settings.'
             );
-          },
+          }
         );
       });
     },
     changePassword: function (l, r, o) {
-      w("changePassword", r, function () {
+      w('changePassword', r, function () {
         var a,
           t,
           e,
           n = 4;
-        !1 !== D.checkMissingParameters(o, ["currentPassword", "newPassword"])
+        !1 !== D.checkMissingParameters(o, ['currentPassword', 'newPassword'])
           ? ((a = o.currentPassword),
             (t = o.newPassword),
-            "string" == typeof a && "string" == typeof t
+            'string' == typeof a && 'string' == typeof t
               ? /(\w)\1\1\1\1\1/.test(t)
                 ? y.callFailureCallback(
                     r,
                     {},
                     c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-                    "Invalid parameter type. Same number repeated.",
+                    'Invalid parameter type. Same number repeated.'
                   )
                 : (4 <= s.webOSVersion && (n = 6),
                   (e = (function () {
-                    var e = "";
-                    for (i = 0; i < n; i++) e += "9";
+                    var e = '';
+                    for (i = 0; i < n; i++) e += '9';
                     return parseInt(e);
                   })()),
                   t.length === n
@@ -1076,15 +1163,15 @@
                           r,
                           {},
                           c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-                          "Invalid password format. Valid password value range is from " +
+                          'Invalid password format. Valid password value range is from ' +
                             (function () {
-                              var e = "";
-                              for (i = 0; i < n; i++) e += "0";
+                              var e = '';
+                              for (i = 0; i < n; i++) e += '0';
                               return e;
                             })() +
-                            " to " +
+                            ' to ' +
                             e +
-                            ".",
+                            '.'
                         )
                       : a !== t
                         ? 3.2 <= s.webOSVersion
@@ -1092,12 +1179,12 @@
                               p,
                               [P],
                               function (e) {
-                                e[P] !== a && "" !== e[P]
+                                e[P] !== a && '' !== e[P]
                                   ? y.callFailureCallback(
                                       r,
                                       {},
                                       c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-                                      "Incorrect password. Access denied.",
+                                      'Incorrect password. Access denied.'
                                     )
                                   : F.setValueBySettingsService(
                                       p,
@@ -1106,14 +1193,14 @@
                                         y.callSuccessCallback(l);
                                       },
                                       function (e) {
-                                        "function" == typeof r &&
+                                        'function' == typeof r &&
                                           y.callFailureCallback(
                                             r,
                                             errorObject,
                                             c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-                                            "Failed to set new password.",
+                                            'Failed to set new password.'
                                           );
-                                      },
+                                      }
                                     );
                               },
                               function (e) {
@@ -1121,9 +1208,9 @@
                                   r,
                                   e,
                                   c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-                                  "Failed to get current password from platform.",
+                                  'Failed to get current password from platform.'
                                 );
-                              },
+                              }
                             )
                           : F.getValue(
                               O,
@@ -1134,7 +1221,7 @@
                                       r,
                                       {},
                                       c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-                                      "Incorrect password. Access denied.",
+                                      'Incorrect password. Access denied.'
                                     )
                                   : F.setValue(
                                       O,
@@ -1143,27 +1230,31 @@
                                         var e, a;
                                         3.2 <= s.webOSVersion
                                           ? y.callSuccessCallback(l)
-                                          : ((a = ""),
+                                          : ((a = ''),
                                             (a =
-                                              "0000" === t
-                                                ? "8080"
+                                              '0000' === t
+                                                ? '8080'
                                                 : ((e = parseInt(t)),
                                                   (
-                                                    "0000" +
-                                                    parseInt((e / 10).toString()) +
+                                                    '0000' +
+                                                    parseInt(
+                                                      (e / 10).toString()
+                                                    ) +
                                                     ((e + 1) % 10).toString()
                                                   ).substr(-4))),
-                                            y.callSuccessCallback(l, { serverUIPassword: a }));
+                                            y.callSuccessCallback(l, {
+                                              serverUIPassword: a,
+                                            }));
                                       },
                                       function (e) {
-                                        "function" == typeof r &&
+                                        'function' == typeof r &&
                                           y.callFailureCallback(
                                             r,
                                             errorObject,
                                             c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-                                            "Failed to set new password.",
+                                            'Failed to set new password.'
                                           );
-                                      },
+                                      }
                                     );
                               },
                               function (e) {
@@ -1171,38 +1262,39 @@
                                   r,
                                   e,
                                   c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-                                  "Failed to get current password from platform.",
+                                  'Failed to get current password from platform.'
                                 );
-                              },
+                              }
                             )
                         : y.callFailureCallback(
                             r,
                             {},
                             c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-                            "Current and new password are same.",
+                            'Current and new password are same.'
                           )
                     : y.callFailureCallback(
                         r,
                         {},
                         c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-                        "Invalid password format. Password length should be " + n,
+                        'Invalid password format. Password length should be ' +
+                          n
                       ))
               : y.callFailureCallback(
                   r,
                   {},
                   c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-                  "Invalid parameter type.",
+                  'Invalid parameter type.'
                 ))
           : y.callFailureCallback(
               r,
               {},
               c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-              "Missing required parameters.",
+              'Missing required parameters.'
             );
       });
     },
     getNativePortraitMode: function (a, t) {
-      w("getNativePortraitMode", t, function () {
+      w('getNativePortraitMode', t, function () {
         3 === s.webOSVersion
           ? F.getValue(
               R,
@@ -1215,9 +1307,9 @@
                   t,
                   e,
                   c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-                  "Failed to get Native Portrait Mode settings.",
+                  'Failed to get Native Portrait Mode settings.'
                 );
-              },
+              }
             )
           : 3.2 <= s.webOSVersion
             ? F.getValue(
@@ -1231,22 +1323,23 @@
                     t,
                     e,
                     c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-                    "Failed to get Native Portrait Mode settings.",
+                    'Failed to get Native Portrait Mode settings.'
                   );
-                },
+                }
               )
             : y.callFailureCallback(
                 t,
                 {},
                 c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-                "Cannot get platform information yet. Try again later.",
+                'Cannot get platform information yet. Try again later.'
               );
       });
     },
     setNativePortraitMode: function (a, t, e) {
-      w("setNativePortraitMode", t, function () {
-        !1 !== D.checkMissingParameters(e, ["nativePortrait"])
-          ? !1 !== D.checkParametersValidation(c.NATIVEPORTRAIT, e, "nativePortrait")
+      w('setNativePortraitMode', t, function () {
+        !1 !== D.checkMissingParameters(e, ['nativePortrait'])
+          ? !1 !==
+            D.checkParametersValidation(c.NATIVEPORTRAIT, e, 'nativePortrait')
             ? 3 === s.webOSVersion
               ? F.setValue(
                   R,
@@ -1259,9 +1352,9 @@
                       t,
                       e,
                       c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-                      "Failed to set Native Portrait Mode settings.",
+                      'Failed to set Native Portrait Mode settings.'
                     );
-                  },
+                  }
                 )
               : 3.2 <= s.webOSVersion
                 ? F.setValue(
@@ -1275,37 +1368,37 @@
                         t,
                         e,
                         c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-                        "Failed to set Native Portrait Mode settings.",
+                        'Failed to set Native Portrait Mode settings.'
                       );
-                    },
+                    }
                   )
                 : y.callFailureCallback(
                     t,
                     {},
                     c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-                    "Cannot get platform information yet. Try again later.",
+                    'Cannot get platform information yet. Try again later.'
                   )
             : y.callFailureCallback(
                 t,
                 {},
                 c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-                "Invalid parameters.",
+                'Invalid parameters.'
               )
           : y.callFailureCallback(
               t,
               {},
               c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-              "Missing required parameters.",
+              'Missing required parameters.'
             );
       });
     },
     getWoWLAN: function (a, t) {
-      w("getWoWLAN", t, function () {
+      w('getWoWLAN', t, function () {
         F.getValue(
           r,
           [S],
           function (e) {
-            e = "true" === e[S];
+            e = 'true' === e[S];
             y.callSuccessCallback(a, { enableWoWLAN: e });
           },
           function (e) {
@@ -1313,16 +1406,16 @@
               t,
               e,
               c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-              "Failed to get WoWLAN settings.",
+              'Failed to get WoWLAN settings.'
             );
-          },
+          }
         );
       });
     },
     setWoWLAN: function (e, a, t) {
-      w("setWoWLAN", a, function () {
-        !1 !== D.checkMissingParameters(t, ["enableWoWLAN"])
-          ? "boolean" == typeof t.enableWoWLAN
+      w('setWoWLAN', a, function () {
+        !1 !== D.checkMissingParameters(t, ['enableWoWLAN'])
+          ? 'boolean' == typeof t.enableWoWLAN
             ? F.setValue(
                 r,
                 { wolwowlOnOff: t.enableWoWLAN.toString() },
@@ -1334,39 +1427,41 @@
                     a,
                     e,
                     c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-                    "Failed to set WoWLAN settings.",
+                    'Failed to set WoWLAN settings.'
                   );
-                },
+                }
               )
             : y.callFailureCallback(
                 a,
                 {},
                 c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-                "enableWoWLAN property value must be true or false boolean value.",
+                'enableWoWLAN property value must be true or false boolean value.'
               )
           : y.callFailureCallback(
               a,
               {},
               c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-              "Missing required parameters.",
+              'Missing required parameters.'
             );
       });
     },
   }),
     (c.prototype.Signage = {
       enableScreenShareApp: function (a, t, n) {
-        w("enableScreenShareApp", t, function () {
+        w('enableScreenShareApp', t, function () {
           var e;
-          !1 !== D.checkMissingParameters(n, ["enable"])
-            ? ("boolean" != typeof n.enable &&
+          !1 !== D.checkMissingParameters(n, ['enable'])
+            ? ('boolean' != typeof n.enable &&
                 y.callFailureCallback(
                   t,
                   {},
                   c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-                  "Invalid parameters.",
+                  'Invalid parameters.'
                 ),
               (e = {}),
-              !0 === n.enable ? (e.enableScreenShare = "on") : (e.enableScreenShare = "off"),
+              !0 === n.enable
+                ? (e.enableScreenShare = 'on')
+                : (e.enableScreenShare = 'off'),
               F.setValue(
                 R,
                 e,
@@ -1378,88 +1473,97 @@
                     t,
                     e,
                     c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-                    "Failed to set enable of Screen Share application.",
+                    'Failed to set enable of Screen Share application.'
                   );
-                },
+                }
               ))
             : y.callFailureCallback(
                 t,
                 {},
                 c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-                "Missing required parameters.",
+                'Missing required parameters.'
               );
         });
       },
       addUSBAttachEventListener: function (i, e) {
-        w("addUSBAttachEventListener", e, function () {
-          l.USBAttachEventListener = o.Request("luna://com.webos.service.attachedstoragemanager", {
-            method: "listDevices",
-            parameters: { subscribe: !0 },
-            onSuccess: function (e) {
-              var a = [];
-              if (e.devices)
-                for (var t = 0; t < e.devices.length; t++) {
-                  var n = e.devices[t];
-                  ("usb" !== n.deviceType && "sdcard" !== n.deviceType) ||
-                    a.push({ type: n.deviceType, vendor: n.vendorName, device: n.deviceName });
-                }
-              y.callSuccessCallback(i, { deviceList: a });
-            },
-            onFailure: function () {
-              y.callFailureCallback(
-                e,
-                {},
-                c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-                "Cannot get USB device information.",
-              );
-            },
-          });
+        w('addUSBAttachEventListener', e, function () {
+          l.USBAttachEventListener = o.Request(
+            'luna://com.webos.service.attachedstoragemanager',
+            {
+              method: 'listDevices',
+              parameters: { subscribe: !0 },
+              onSuccess: function (e) {
+                var a = [];
+                if (e.devices)
+                  for (var t = 0; t < e.devices.length; t++) {
+                    var n = e.devices[t];
+                    ('usb' !== n.deviceType && 'sdcard' !== n.deviceType) ||
+                      a.push({
+                        type: n.deviceType,
+                        vendor: n.vendorName,
+                        device: n.deviceName,
+                      });
+                  }
+                y.callSuccessCallback(i, { deviceList: a });
+              },
+              onFailure: function () {
+                y.callFailureCallback(
+                  e,
+                  {},
+                  c.ERROR_CODE.COMMON.INTERNAL_ERROR,
+                  'Cannot get USB device information.'
+                );
+              },
+            }
+          );
         });
       },
       removeUSBAttachEventListener: function (e, a) {
-        w("removeUSBAttachEventListener", a, function () {
+        w('removeUSBAttachEventListener', a, function () {
           null === l.USBAttachEventListener
             ? y.callFailureCallback(
                 a,
                 {},
                 c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-                "Event listener is not set. Use addUSBAttachEventListener() first.",
+                'Event listener is not set. Use addUSBAttachEventListener() first.'
               )
             : (l.USBAttachEventListener.cancel(), y.callSuccessCallback(e));
         });
       },
       getwebOSVersion: function (e, a) {
-        w("getwebOSVersion", a, function () {
+        w('getwebOSVersion', a, function () {
           -2 === s.webOSVersion
             ? y.callFailureCallback(
                 a,
                 {},
                 c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-                "Cannot get platform information yet. Please try later.",
+                'Cannot get platform information yet. Please try later.'
               )
-            : -1 !== s.webOSVersion && "number" == typeof s.webOSVersion
-              ? y.callSuccessCallback(e, { webOSVersion: s.webOSVersion.toFixed(1) })
+            : -1 !== s.webOSVersion && 'number' == typeof s.webOSVersion
+              ? y.callSuccessCallback(e, {
+                  webOSVersion: s.webOSVersion.toFixed(1),
+                })
               : y.callFailureCallback(
                   a,
                   {},
                   c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-                  "Cannot get platform information.",
+                  'Cannot get platform information.'
                 );
         });
       },
       getApplicationInfo: function (a, t) {
-        w("getApplicationInfo", t, function () {
+        w('getApplicationInfo', t, function () {
           var e;
           (function () {
-            if (window.PalmSystem) return PalmSystem.identifier.split(" ")[0];
+            if (window.PalmSystem) return PalmSystem.identifier.split(' ')[0];
             var e = location.href;
             return -1 !== e.indexOf(c.APPLICATION.IPK_TYPE)
               ? c.APPLICATION.IPK_TYPE
-              : -1 !== e.indexOf(c.APPLICATION.ZIP_TYPE + ".debug")
-                ? c.APPLICATION.ZIP_TYPE + ".debug"
+              : -1 !== e.indexOf(c.APPLICATION.ZIP_TYPE + '.debug')
+                ? c.APPLICATION.ZIP_TYPE + '.debug'
                 : -1 !== e.indexOf(c.APPLICATION.ZIP_TYPE)
                   ? c.APPLICATION.ZIP_TYPE
-                  : "__UNKNOWN__";
+                  : '__UNKNOWN__';
           })() === c.APPLICATION.IPK_TYPE
             ? (((e = new XMLHttpRequest()).onreadystatechange = function () {
                 if (4 == this.readyState)
@@ -1471,7 +1575,7 @@
                       t,
                       {},
                       c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-                      "Failed to get application information.",
+                      'Failed to get application information.'
                     );
                   }
               }),
@@ -1480,36 +1584,41 @@
                   t,
                   {},
                   c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-                  "Failed to get application information.",
+                  'Failed to get application information.'
                 );
               }),
-              e.open("GET", "appinfo.json", !0),
+              e.open('GET', 'appinfo.json', !0),
               e.send())
             : y.callFailureCallback(
                 t,
                 {},
                 c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-                "This application is not IPK type.",
+                'This application is not IPK type.'
               );
         });
       },
       switchApplication: function (i, l, r) {
-        w("switchApplication", l, function () {
+        w('switchApplication', l, function () {
           var t, n;
-          !1 !== D.checkMissingParameters(r, ["application"])
+          !1 !== D.checkMissingParameters(r, ['application'])
             ? (6 <= s.webOSVersion &&
                 r.application === c.APPLICATION.SCREEN_SHARE &&
-                ((c.APPLICATION.SCREEN_SHARE = "com.webos.app.commercial.miracastguide"),
+                ((c.APPLICATION.SCREEN_SHARE =
+                  'com.webos.app.commercial.miracastguide'),
                 (r.application = c.APPLICATION.SCREEN_SHARE)),
-              "string" == typeof r.application &&
-              !1 !== D.checkParametersValidation(c.APPLICATION, r, "application")
+              'string' == typeof r.application &&
+              !1 !==
+                D.checkParametersValidation(c.APPLICATION, r, 'application')
                 ? ((t = function (a) {
                     var t, n;
                     ((t = function (e) {
-                      (!0 === e && (c.APPLICATION.ZIP_TYPE += ".debug"),
-                        o.Request("luna://com.webos.applicationManager", {
-                          method: "launch",
-                          parameters: { id: r.application, params: { path: a } },
+                      (!0 === e && (c.APPLICATION.ZIP_TYPE += '.debug'),
+                        o.Request('luna://com.webos.applicationManager', {
+                          method: 'launch',
+                          parameters: {
+                            id: r.application,
+                            params: { path: a },
+                          },
                           onSuccess: function () {
                             y.callSuccessCallback(i);
                           },
@@ -1519,13 +1628,13 @@
                                   l,
                                   {},
                                   c.ERROR_CODE.APPLICATION.NOT_INSTALLED,
-                                  "Application is not installed.",
+                                  'Application is not installed.'
                                 )
                               : y.callFailureCallback(
                                   l,
                                   e,
                                   c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-                                  "Failed to launch target application.",
+                                  'Failed to launch target application.'
                                 );
                           },
                         }));
@@ -1535,11 +1644,11 @@
                           l,
                           e,
                           c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-                          "Failed to get application information.",
+                          'Failed to get application information.'
                         );
                       }),
-                      o.Request("palm://com.palm.service.devmode", {
-                        method: "getDevMode",
+                      o.Request('palm://com.palm.service.devmode', {
+                        method: 'getDevMode',
                         parameters: {},
                         onSuccess: function (e) {
                           t(e.enabled);
@@ -1554,107 +1663,111 @@
                       l,
                       e,
                       c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-                      "Failed to get application launch settings.",
+                      'Failed to get application launch settings.'
                     );
                   }),
                   F.getValue(
                     R,
                     [
-                      "serverIpPort",
-                      "siServerIp",
-                      "secureConnection",
-                      "appLaunchMode",
-                      "fqdnAddr",
-                      "fqdnMode",
+                      'serverIpPort',
+                      'siServerIp',
+                      'secureConnection',
+                      'appLaunchMode',
+                      'fqdnAddr',
+                      'fqdnMode',
                     ],
                     function (e) {
-                      var a = "";
-                      ("none" === e.appLaunchMode
+                      var a = '';
+                      ('none' === e.appLaunchMode
                         ? n({
                             errorCode: c.ERROR_CODE.APPLICATION.SETTINGS_ERROR,
                             errorText:
-                              "Application launch mode is NONE. Set SI Server settings first.",
+                              'Application launch mode is NONE. Set SI Server settings first.',
                           })
-                        : "local" === e.appLaunchMode
+                        : 'local' === e.appLaunchMode
                           ? (a =
-                              "file:////mnt/lg/appstore/scap/procentric/scap/application/app/index.html")
-                          : "usb" === e.appLaunchMode
-                            ? (a = "file:////tmp/usb/sda/sda/index.html")
-                            : "remote" === e.appLaunchMode
-                              ? "on" === e.fqdnMode
+                              'file:////mnt/lg/appstore/scap/procentric/scap/application/app/index.html')
+                          : 'usb' === e.appLaunchMode
+                            ? (a = 'file:////tmp/usb/sda/sda/index.html')
+                            : 'remote' === e.appLaunchMode
+                              ? 'on' === e.fqdnMode
                                 ? (a = e.fqdnAddr)
-                                : "off" === e.fqdnMode
-                                  ? "on" === e.secureConnection
+                                : 'off' === e.fqdnMode
+                                  ? 'on' === e.secureConnection
                                     ? (a +=
-                                        "http://" +
+                                        'http://' +
                                         e.siServerIp +
-                                        ":" +
+                                        ':' +
                                         e.serverIpPort +
-                                        "/procentric/scap/application/index.html")
-                                    : "on" === e.secureConnection
+                                        '/procentric/scap/application/index.html')
+                                    : 'on' === e.secureConnection
                                       ? (a +=
-                                          "https://" +
+                                          'https://' +
                                           e.siServerIp +
-                                          ":" +
+                                          ':' +
                                           e.serverIpPort +
-                                          "/procentric/scap/application/index.html")
+                                          '/procentric/scap/application/index.html')
                                       : n({
-                                          errorCode: c.ERROR_CODE.COMMON.INTERNAL_ERROR,
+                                          errorCode:
+                                            c.ERROR_CODE.COMMON.INTERNAL_ERROR,
                                           errorText:
-                                            "Failed to get application installation settings.",
+                                            'Failed to get application installation settings.',
                                         })
                                   : n({
-                                      errorCode: c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-                                      errorText: "Failed to get application installation settings.",
+                                      errorCode:
+                                        c.ERROR_CODE.COMMON.INTERNAL_ERROR,
+                                      errorText:
+                                        'Failed to get application installation settings.',
                                     })
                               : n({
                                   errorCode: c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-                                  errorText: "Failed to get application installation settings.",
+                                  errorText:
+                                    'Failed to get application installation settings.',
                                 }),
                         t(a));
                     },
                     function (e) {
                       n(e);
-                    },
+                    }
                   ))
                 : y.callFailureCallback(
                     l,
                     {},
                     c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-                    "Invalid application.",
+                    'Invalid application.'
                   ))
             : y.callFailureCallback(
                 l,
                 {},
                 c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-                "Missing required parameters.",
+                'Missing required parameters.'
               );
         });
       },
       disableApplication: function (a, t, n) {
-        w("disableApplication", t, function () {
-          var e = { appLaunchMode: "none" };
-          if (!0 === D.checkMissingParameters(n, ["reset"])) {
-            if ("boolean" != typeof n.reset)
+        w('disableApplication', t, function () {
+          var e = { appLaunchMode: 'none' };
+          if (!0 === D.checkMissingParameters(n, ['reset'])) {
+            if ('boolean' != typeof n.reset)
               return void y.callFailureCallback(
                 t,
                 {},
                 c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-                "reset property value must be true or false boolean value, if use this property.",
+                'reset property value must be true or false boolean value, if use this property.'
               );
             !0 === n.reset &&
-              ((e.siServerIp = "0.0.0.0"),
-              (e.serverIpPort = "0"),
-              (e.secureConnection = "off"),
-              (e.appType = "zip"),
-              (e.fqdnMode = "off"),
-              (e.fqdnAddr = "http://"));
+              ((e.siServerIp = '0.0.0.0'),
+              (e.serverIpPort = '0'),
+              (e.secureConnection = 'off'),
+              (e.appType = 'zip'),
+              (e.fqdnMode = 'off'),
+              (e.fqdnAddr = 'http://'));
           } else
             y.callFailureCallback(
               t,
               {},
               c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-              "Application will be disabled after reboot only if reset property is true.",
+              'Application will be disabled after reboot only if reset property is true.'
             );
           F.setValue(
             R,
@@ -1667,31 +1780,31 @@
                 t,
                 e,
                 c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-                "Failed to disable application.",
+                'Failed to disable application.'
               );
-            },
+            }
           );
         });
       },
     }),
     (c.prototype.VideoSync = {
       setMaster: function (n, i, l) {
-        w("setMaster", i, function () {
-          if (!1 !== D.checkMissingParameters(l, ["ip", "port"]))
+        w('setMaster', i, function () {
+          if (!1 !== D.checkMissingParameters(l, ['ip', 'port']))
             if (
-              "object" != typeof l ||
-              "string" != typeof l.ip ||
-              "number" != typeof l.port ||
+              'object' != typeof l ||
+              'string' != typeof l.ip ||
+              'number' != typeof l.port ||
               isNaN(l.port)
             )
               y.callFailureCallback(
                 i,
                 {},
                 c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-                "Invalid parameters.",
+                'Invalid parameters.'
               );
             else {
-              var e = l.ip.split(".");
+              var e = l.ip.split('.');
               if (4 === e.length) {
                 for (var a = 0; a < 4; a++) {
                   var t = parseInt(e[a]);
@@ -1700,7 +1813,7 @@
                       i,
                       {},
                       c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-                      "Invalid IP format.",
+                      'Invalid IP format.'
                     );
                 }
                 l.port < 0 || 65535 < l.port
@@ -1708,12 +1821,12 @@
                       i,
                       {},
                       c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-                      "Invalid port value.",
+                      'Invalid port value.'
                     )
                   : h(
                       function (e) {
-                        o.Request("luna://com.webos.media", {
-                          method: "setMaster",
+                        o.Request('luna://com.webos.media', {
+                          method: 'setMaster',
                           parameters: { mediaId: e, ip: l.ip, port: l.port },
                           onSuccess: function (e) {
                             y.callSuccessCallback(n, { basetime: e.basetime });
@@ -1723,7 +1836,7 @@
                               i,
                               e,
                               c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-                              "Failed to set master.",
+                              'Failed to set master.'
                             );
                           },
                         });
@@ -1733,17 +1846,17 @@
                           i,
                           e,
                           c.ERROR_CODE.COMMON.MEDIA_ERROR,
-                          "Failed to get loaded media information.",
+                          'Failed to get loaded media information.'
                         );
                       },
-                      { videoEl: l.videoElement },
+                      { videoEl: l.videoElement }
                     );
               } else
                 y.callFailureCallback(
                   i,
                   {},
                   c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-                  "Invalid IP format.",
+                  'Invalid IP format.'
                 );
             }
           else
@@ -1751,27 +1864,27 @@
               i,
               {},
               c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-              "Missing required parameters.",
+              'Missing required parameters.'
             );
         });
       },
       setSlave: function (n, i, l) {
-        w("setSlave", i, function () {
-          if (!1 !== D.checkMissingParameters(l, ["ip", "port", "basetime"]))
+        w('setSlave', i, function () {
+          if (!1 !== D.checkMissingParameters(l, ['ip', 'port', 'basetime']))
             if (
-              "object" != typeof l ||
-              "string" != typeof l.ip ||
-              "number" != typeof l.port ||
+              'object' != typeof l ||
+              'string' != typeof l.ip ||
+              'number' != typeof l.port ||
               isNaN(l.port)
             )
               y.callFailureCallback(
                 i,
                 {},
                 c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-                "Invalid parameters.",
+                'Invalid parameters.'
               );
             else {
-              var e = l.ip.split(".");
+              var e = l.ip.split('.');
               if (4 === e.length) {
                 for (var a = 0; a < 4; a++) {
                   var t = parseInt(e[a]);
@@ -1780,7 +1893,7 @@
                       i,
                       {},
                       c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-                      "Invalid IP format.",
+                      'Invalid IP format.'
                     );
                 }
                 l.port < 0 || 65535 < l.port
@@ -1788,19 +1901,19 @@
                       i,
                       {},
                       c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-                      "Invalid port value.",
+                      'Invalid port value.'
                     )
                   : parseInt(l.basetime < 0)
                     ? y.callFailureCallback(
                         i,
                         {},
                         c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-                        "Invalid basetime value.",
+                        'Invalid basetime value.'
                       )
                     : h(
                         function (e) {
-                          o.Request("luna://com.webos.media", {
-                            method: "setSlave",
+                          o.Request('luna://com.webos.media', {
+                            method: 'setSlave',
                             parameters: {
                               mediaId: e,
                               ip: l.ip,
@@ -1815,7 +1928,7 @@
                                 i,
                                 e,
                                 c.ERROR_CODE.COMMON.INTERNAL_ERROR,
-                                "Failed to set slave.",
+                                'Failed to set slave.'
                               );
                             },
                           });
@@ -1825,17 +1938,17 @@
                             i,
                             e,
                             c.ERROR_CODE.COMMON.MEDIA_ERROR,
-                            "Failed to get loaded media information.",
+                            'Failed to get loaded media information.'
                           );
                         },
-                        { videoEl: l.videoElement },
+                        { videoEl: l.videoElement }
                       );
               } else
                 y.callFailureCallback(
                   i,
                   {},
                   c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-                  "Invalid IP format.",
+                  'Invalid IP format.'
                 );
             }
           else
@@ -1843,11 +1956,11 @@
               i,
               {},
               c.ERROR_CODE.COMMON.BAD_PARAMETERS,
-              "Missing required parameters.",
+              'Missing required parameters.'
             );
         });
       },
     }),
     (t.exports = c));
 }),
-  (Custom = cordova.require("cordova/plugin/custom")));
+  (Custom = cordova.require('cordova/plugin/custom')));

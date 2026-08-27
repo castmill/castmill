@@ -1,15 +1,19 @@
-import { Component, createSignal, onMount, Show } from "solid-js";
-import { useNavigate, useSearchParams } from "@solidjs/router";
-import { useToast } from "@castmill/ui-common";
+import { Component, createSignal, onMount, Show } from 'solid-js';
+import { useNavigate, useSearchParams } from '@solidjs/router';
+import { useToast } from '@castmill/ui-common';
 
-import { arrayBufferToBase64, base64URLToArrayBuffer } from "../utils";
+import { arrayBufferToBase64, base64URLToArrayBuffer } from '../utils';
 
-import "./signup.scss";
+import './signup.scss';
 
-import { baseUrl, origin, domain } from "../../env";
-import { authFetch } from "../auth";
-import { useI18n } from "../../i18n";
-import { LOCALE_STORAGE_KEY, SUPPORTED_LOCALES, Locale } from "../../i18n/types";
+import { baseUrl, origin, domain } from '../../env';
+import { authFetch } from '../auth';
+import { useI18n } from '../../i18n';
+import {
+  LOCALE_STORAGE_KEY,
+  SUPPORTED_LOCALES,
+  Locale,
+} from '../../i18n/types';
 
 /**
  * Sign Up Component.
@@ -40,9 +44,10 @@ const SignUp: Component = () => {
   const toast = useToast();
 
   const [isMounted, setIsMounted] = createSignal<boolean>(false);
-  const [status, setStatus] = createSignal<string>("Ready");
+  const [status, setStatus] = createSignal<string>('Ready');
   const [supportsPasskeys, setSupportsPasskeys] = createSignal<boolean>(false);
-  const [networkSettings, setNetworkSettings] = createSignal<NetworkSettings | null>(null);
+  const [networkSettings, setNetworkSettings] =
+    createSignal<NetworkSettings | null>(null);
 
   const [searchParams, setSearchParams] = useSearchParams<SignUpQueryParams>();
 
@@ -51,12 +56,14 @@ const SignUp: Component = () => {
   const { email, signup_id, challenge } = searchParams;
 
   if (!email || !signup_id || !challenge) {
-    setStatus("Invalid query params");
+    setStatus('Invalid query params');
   }
 
   async function fetchNetworkSettings() {
     try {
-      const response = await authFetch(`${baseUrl}/dashboard/network/public-settings`);
+      const response = await authFetch(
+        `${baseUrl}/dashboard/network/public-settings`
+      );
       if (response.ok) {
         const settings = await response.json();
         setNetworkSettings({
@@ -74,12 +81,15 @@ const SignUp: Component = () => {
         }
       }
     } catch (error) {
-      console.error("Failed to fetch network settings:", error);
+      console.error('Failed to fetch network settings:', error);
     }
   }
 
   async function checkPasskeysSupport() {
-    if (!window.PublicKeyCredential || !PublicKeyCredential.isConditionalMediationAvailable) {
+    if (
+      !window.PublicKeyCredential ||
+      !PublicKeyCredential.isConditionalMediationAvailable
+    ) {
       return false;
     }
     const [conditional, userVerifiying] = await Promise.all([
@@ -95,7 +105,7 @@ const SignUp: Component = () => {
         // rp -> Relying Party
         rp: {
           id: domain, // your domain (should be sent from the server I guess)
-          name: "Castmill AB", // your company name
+          name: 'Castmill AB', // your company name
         },
         user: {
           id: encoder.encode(signup_id!),
@@ -103,13 +113,13 @@ const SignUp: Component = () => {
           displayName: email!,
         },
         pubKeyCredParams: [
-          { type: "public-key", alg: -8 }, // Ed25519
-          { type: "public-key", alg: -7 }, // ES256
-          { type: "public-key", alg: -257 }, // RS256
+          { type: 'public-key', alg: -8 }, // Ed25519
+          { type: 'public-key', alg: -7 }, // ES256
+          { type: 'public-key', alg: -257 }, // RS256
         ],
         challenge: base64URLToArrayBuffer(searchParams.challenge!),
         authenticatorSelection: {
-          userVerification: "required",
+          userVerification: 'required',
           requireResidentKey: true,
         },
         /*
@@ -123,7 +133,7 @@ const SignUp: Component = () => {
 
     const credential = await navigator.credentials.create(createOptions);
     if (!credential) {
-      toast.error(t("signup.errors.couldNotCreateCredential"));
+      toast.error(t('signup.errors.couldNotCreateCredential'));
       return;
     }
 
@@ -132,29 +142,31 @@ const SignUp: Component = () => {
       publicKeyCredential.response as AuthenticatorAttestationResponse;
     const publicKey = authAttestationResponse.getPublicKey();
     if (!publicKey) {
-      toast.error(t("signup.errors.couldNotGetPublicKey"));
+      toast.error(t('signup.errors.couldNotGetPublicKey'));
       return;
     }
 
-    const clientDataJSON = new TextDecoder().decode(authAttestationResponse.clientDataJSON);
+    const clientDataJSON = new TextDecoder().decode(
+      authAttestationResponse.clientDataJSON
+    );
     const clientData = JSON.parse(clientDataJSON);
 
     console.log({ clientData, authAttestationResponse, publicKey });
 
     if (
-      clientData.type !== "webauthn.create" ||
-      ("crossOrigin" in clientData && clientData.crossOrigin) ||
+      clientData.type !== 'webauthn.create' ||
+      ('crossOrigin' in clientData && clientData.crossOrigin) ||
       clientData.origin !== origin
     ) {
-      toast.error(t("signup.errors.invalidCredential"));
+      toast.error(t('signup.errors.invalidCredential'));
       return;
     }
 
     // Send the credential to the server to be stored
     const result = await authFetch(`${baseUrl}/signups/${signup_id}/users`, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         email,
@@ -168,16 +180,16 @@ const SignUp: Component = () => {
 
     if (!result.ok) {
       const data = await result.json().catch(() => ({}));
-      const isObject = data !== null && typeof data === "object";
+      const isObject = data !== null && typeof data === 'object';
       const serverMessage =
         (isObject
           ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
             ((data as any).message ?? (data as any).msg)
           : undefined) || result.statusText;
-      toast.error(t("signup.errors.signupFailed", { error: serverMessage }));
+      toast.error(t('signup.errors.signupFailed', { error: serverMessage }));
     } else {
-      toast.success(t("signup.success.accountCreated"));
-      navigate("/");
+      toast.success(t('signup.success.accountCreated'));
+      navigate('/');
     }
   }
 
@@ -186,7 +198,7 @@ const SignUp: Component = () => {
     await fetchNetworkSettings();
 
     if (!(await checkPasskeysSupport())) {
-      setStatus("Passkey not supported");
+      setStatus('Passkey not supported');
       return;
     } else {
       setSupportsPasskeys(true);
@@ -198,28 +210,35 @@ const SignUp: Component = () => {
     <Show when={isMounted()}>
       <div class="castmill-signup">
         <div class="login-box">
-          <h2>{t("signup.title")}</h2>
+          <h2>{t('signup.title')}</h2>
 
           <input type="text" placeholder={email} value={email} disabled />
-          <button class="login-button" onClick={signupWithPasskey} disabled={!supportsPasskeys()}>
-            {t("signup.continueWithPasskey")}
+          <button
+            class="login-button"
+            onClick={signupWithPasskey}
+            disabled={!supportsPasskeys()}
+          >
+            {t('signup.continueWithPasskey')}
           </button>
 
           <p class="status">Status: {status()}</p>
           <Show when={!supportsPasskeys()}>
-            <p class="warn">Your browser does not support Passkeys. Link here with more info...</p>
+            <p class="warn">
+              Your browser does not support Passkeys. Link here with more
+              info...
+            </p>
           </Show>
 
           <Show when={networkSettings()?.privacy_policy_url}>
             <div class="privacy">
               <p>
-                {t("signup.privacyNotice")}{" "}
+                {t('signup.privacyNotice')}{' '}
                 <a
-                  href={networkSettings()?.privacy_policy_url || "#"}
+                  href={networkSettings()?.privacy_policy_url || '#'}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  {t("signup.privacyPolicy")}
+                  {t('signup.privacyPolicy')}
                 </a>
                 .
               </p>

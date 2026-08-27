@@ -1,21 +1,24 @@
-import { Component, createSignal, createEffect } from "solid-js";
-import { Button, FormItem, useToast } from "@castmill/ui-common";
-import { BsSave } from "solid-icons/bs";
-import type { LayoutZone, LayoutOptionValue } from "@castmill/player";
+import { Component, createSignal, createEffect } from 'solid-js';
+import { Button, FormItem, useToast } from '@castmill/ui-common';
+import { BsSave } from 'solid-icons/bs';
+import type { LayoutZone, LayoutOptionValue } from '@castmill/player';
 import {
   LayoutsService,
   JsonLayout,
   JsonLayoutZone,
   LayoutUpdate,
-} from "../services/layouts.service";
-import { AddonStore } from "../../common/interfaces/addon-store";
-import { LayoutEditor } from "../../common/components/layout-editor";
-import "./layout-view.scss";
+} from '../services/layouts.service';
+import { AddonStore } from '../../common/interfaces/addon-store';
+import { LayoutEditor } from '../../common/components/layout-editor';
+import './layout-view.scss';
 
 /**
  * Converts JsonLayoutZone (backend format) to LayoutZone (editor format)
  */
-const convertToLayoutZone = (zone: JsonLayoutZone, index: number): LayoutZone => ({
+const convertToLayoutZone = (
+  zone: JsonLayoutZone,
+  index: number
+): LayoutZone => ({
   id: zone.id || `zone-${index}-${Date.now()}`,
   name: zone.name || `Zone ${index + 1}`,
   rect: {
@@ -54,22 +57,26 @@ export const LayoutView: Component<{
 
   // Editable state for layout metadata
   const [name, setName] = createSignal(props.layout.name);
-  const [description, setDescription] = createSignal(props.layout.description || "");
+  const [description, setDescription] = createSignal(
+    props.layout.description || ''
+  );
   const [isSaving, setIsSaving] = createSignal(false);
   const [hasChanges, setHasChanges] = createSignal(false);
 
   // Layout value for the editor (zones + aspect ratio)
-  const initialZones = (props.layout.zones?.zones || []).map(convertToLayoutZone);
+  const initialZones = (props.layout.zones?.zones || []).map(
+    convertToLayoutZone
+  );
   const [layoutValue, setLayoutValue] = createSignal<LayoutOptionValue>({
-    aspectRatio: props.layout.aspect_ratio || "16:9",
+    aspectRatio: props.layout.aspect_ratio || '16:9',
     zones: initialZones,
   });
 
   // Store the initial state for comparison (normalized JSON)
   const initialState = {
     name: props.layout.name,
-    description: props.layout.description || "",
-    aspectRatio: props.layout.aspect_ratio || "16:9",
+    description: props.layout.description || '',
+    aspectRatio: props.layout.aspect_ratio || '16:9',
     zonesJson: JSON.stringify(initialZones.map(convertToJsonLayoutZone)),
   };
 
@@ -79,13 +86,15 @@ export const LayoutView: Component<{
     const currentDesc = description();
     const currentValue = layoutValue();
 
-    const currentZonesJson = JSON.stringify(currentValue.zones.map(convertToJsonLayoutZone));
+    const currentZonesJson = JSON.stringify(
+      currentValue.zones.map(convertToJsonLayoutZone)
+    );
 
     setHasChanges(
       currentName !== initialState.name ||
         currentDesc !== initialState.description ||
         currentValue.aspectRatio !== initialState.aspectRatio ||
-        currentZonesJson !== initialState.zonesJson,
+        currentZonesJson !== initialState.zonesJson
     );
   });
 
@@ -112,15 +121,15 @@ export const LayoutView: Component<{
         props.store.env.baseUrl,
         props.store.organizations.selectedId,
         props.layout.id,
-        updateData,
+        updateData
       );
 
       props.onUpdate(updatedLayout);
-      toast.success(t("layouts.saveSuccess") || "Layout saved successfully");
+      toast.success(t('layouts.saveSuccess') || 'Layout saved successfully');
       setHasChanges(false);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      toast.error(`${t("common.error")}: ${message}`);
+      toast.error(`${t('common.error')}: ${message}`);
     } finally {
       setIsSaving(false);
     }
@@ -131,7 +140,7 @@ export const LayoutView: Component<{
       <div class="layout-view-header">
         <div class="layout-info">
           <FormItem
-            label={t("common.name")}
+            label={t('common.name')}
             id="layout-name"
             value={name()}
             onInput={(v) => setName(String(v))}
@@ -139,7 +148,7 @@ export const LayoutView: Component<{
             <></>
           </FormItem>
           <FormItem
-            label={t("common.description")}
+            label={t('common.description')}
             id="layout-description"
             value={description()}
             onInput={(v) => setDescription(String(v))}
@@ -152,7 +161,7 @@ export const LayoutView: Component<{
             onClick={handleSave}
             disabled={!hasChanges() || isSaving()}
             color="primary"
-            label={isSaving() ? t("common.saving") : t("common.save")}
+            label={isSaving() ? t('common.saving') : t('common.save')}
             icon={BsSave}
           />
         </div>

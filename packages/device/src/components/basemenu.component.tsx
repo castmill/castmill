@@ -8,8 +8,8 @@ import {
   For,
   type JSX,
   type Component,
-} from "solid-js";
-import styles from "./basemenu.module.css";
+} from 'solid-js';
+import styles from './basemenu.module.css';
 
 const MENU_TIMEOUT = 10 * 1000;
 
@@ -17,14 +17,14 @@ const MENU_TIMEOUT = 10 * 1000;
 interface ActionMenuEntry {
   name: string;
   id: string;
-  type: "action";
+  type: 'action';
   action: () => void;
 }
 
 interface CheckboxMenuEntry {
   name: string;
   id: string;
-  type: "checkbox";
+  type: 'checkbox';
   state: boolean;
   action: (state: boolean) => void;
 }
@@ -34,7 +34,7 @@ interface RadioButtonMenuEntry {
   description?: string;
   groupId: string;
   id: string;
-  type: "radiobutton";
+  type: 'radiobutton';
   state: boolean;
   action: (selectedId: string) => void;
 }
@@ -42,7 +42,7 @@ interface RadioButtonMenuEntry {
 interface SubmenuMenuEntry {
   name: string;
   id: string;
-  type: "submenu";
+  type: 'submenu';
   badge?: string;
   action?: (state: boolean) => void;
   children: MenuEntry[];
@@ -50,7 +50,7 @@ interface SubmenuMenuEntry {
 
 interface InfoMenuEntry {
   id: string;
-  type: "info";
+  type: 'info';
   content: JSX.Element;
 }
 
@@ -71,14 +71,17 @@ interface MenuRowItem {
 }
 
 // type guards
-const isActionMenuEntry = (entry: MenuEntry): entry is ActionMenuEntry => entry.type === "action";
+const isActionMenuEntry = (entry: MenuEntry): entry is ActionMenuEntry =>
+  entry.type === 'action';
 const isCheckboxMenuEntry = (entry: MenuEntry): entry is CheckboxMenuEntry =>
-  entry.type === "checkbox";
-const isRadioButtonMenuEntry = (entry: MenuEntry): entry is RadioButtonMenuEntry =>
-  entry.type === "radiobutton";
+  entry.type === 'checkbox';
+const isRadioButtonMenuEntry = (
+  entry: MenuEntry
+): entry is RadioButtonMenuEntry => entry.type === 'radiobutton';
 const isSubmenuMenuEntry = (entry: MenuEntry): entry is SubmenuMenuEntry =>
-  entry.type === "submenu";
-const isInfoMenuEntry = (entry: MenuEntry): entry is InfoMenuEntry => entry.type === "info";
+  entry.type === 'submenu';
+const isInfoMenuEntry = (entry: MenuEntry): entry is InfoMenuEntry =>
+  entry.type === 'info';
 
 // BaseMenu component props
 interface BaseMenuProps {
@@ -111,11 +114,13 @@ export const BaseMenu: Component<BaseMenuProps> = (props) => {
   const [active, setActive] = createSignal();
   // checkbox states
   const [checked, setChecked] = createSignal<Record<string, boolean>>(
-    getCheckboxState(props.entries),
+    getCheckboxState(props.entries)
   );
 
   // submenu states (expanded or not)
-  const [submenuState, setSubmenuState] = createSignal<Record<string, boolean>>({});
+  const [submenuState, setSubmenuState] = createSignal<Record<string, boolean>>(
+    {}
+  );
 
   // Show menu when triggering action. Hide it after MENU_TIMEOUT ms of inactivity
   const showMenu = () => {
@@ -167,9 +172,12 @@ export const BaseMenu: Component<BaseMenuProps> = (props) => {
           },
           content: (
             <span class={styles.submenuHeader}>
-              {expanded ? "▼" : "▶"} {entry.name}
+              {expanded ? '▼' : '▶'} {entry.name}
               <Show when={entry.badge}>
-                <span class={styles.badge} style={{ "background-color": entry.badge }}></span>
+                <span
+                  class={styles.badge}
+                  style={{ 'background-color': entry.badge }}
+                ></span>
               </Show>
             </span>
           ),
@@ -206,7 +214,9 @@ export const BaseMenu: Component<BaseMenuProps> = (props) => {
             <div class={styles.radiobutton}>
               {entry.name}
               {entry.description && (
-                <span class={styles.radiobuttonDescription}>{entry.description}</span>
+                <span class={styles.radiobuttonDescription}>
+                  {entry.description}
+                </span>
               )}
               <input type="radio" checked={entry.state} />
             </div>
@@ -276,7 +286,9 @@ export const BaseMenu: Component<BaseMenuProps> = (props) => {
 
       switch (e.keyCode) {
         case Key.Up:
-          setSelected((s) => (s - 1 + currentItems.length) % currentItems.length);
+          setSelected(
+            (s) => (s - 1 + currentItems.length) % currentItems.length
+          );
           break;
         case Key.Down:
           setSelected((s) => (s + 1) % currentItems.length);
@@ -294,17 +306,17 @@ export const BaseMenu: Component<BaseMenuProps> = (props) => {
     };
 
     //register keypresses
-    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener('keydown', onKeyDown);
 
     //register mouse and touch events
-    window.addEventListener("touchstart", showMenu);
-    window.addEventListener("click", showMenu);
+    window.addEventListener('touchstart', showMenu);
+    window.addEventListener('click', showMenu);
 
     //cleanup
     onCleanup(() => {
-      window.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("touchstart", showMenu);
-      window.removeEventListener("click", showMenu);
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('touchstart', showMenu);
+      window.removeEventListener('click', showMenu);
     });
   });
 
@@ -330,8 +342,8 @@ export const BaseMenu: Component<BaseMenuProps> = (props) => {
                     [styles.active]: active() === item.id,
                   }}
                 >
-                  <div style={{ "margin-left": `${item.offset * 20}px` }}>
-                    {item.content ? item.content : ""}
+                  <div style={{ 'margin-left': `${item.offset * 20}px` }}>
+                    {item.content ? item.content : ''}
                   </div>
                 </li>
               )}

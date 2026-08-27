@@ -187,9 +187,12 @@ Widget icons use relative paths (starting with `/`) that are resolved using the 
 
 ```typescript
 // In playlist-item.tsx and widget-chooser.tsx
-const getIconUrl = (icon: string | undefined, baseUrl: string): string | undefined => {
+const getIconUrl = (
+  icon: string | undefined,
+  baseUrl: string
+): string | undefined => {
   if (!icon) return undefined;
-  if (icon.startsWith("/")) {
+  if (icon.startsWith('/')) {
     return `${baseUrl}${icon}`;
   }
   return icon;

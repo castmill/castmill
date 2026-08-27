@@ -1,6 +1,6 @@
-import { Component } from "solid-js";
-import { AiOutlineLock } from "solid-icons/ai";
-import styles from "./permission-denied.module.scss";
+import { Component } from 'solid-js';
+import { AiOutlineLock } from 'solid-icons/ai';
+import styles from './permission-denied.module.scss';
 
 interface PermissionDeniedProps {
   /**
@@ -33,7 +33,8 @@ export const PermissionDenied: Component<PermissionDeniedProps> = (props) => {
       <h2 class={styles.title}>Access Restricted</h2>
       <p class={styles.message}>{props.message || defaultMessage()}</p>
       <p class={styles.hint}>
-        Contact your organization administrator if you need access to this resource.
+        Contact your organization administrator if you need access to this
+        resource.
       </p>
     </div>
   );

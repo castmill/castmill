@@ -1,4 +1,11 @@
-import { Component, createEffect, createSignal, onCleanup, onMount, Show } from "solid-js";
+import {
+  Component,
+  createEffect,
+  createSignal,
+  onCleanup,
+  onMount,
+  Show,
+} from 'solid-js';
 
 import {
   Button,
@@ -11,32 +18,33 @@ import {
   ConfirmDialog,
   FetchDataOptions,
   useToast,
-} from "@castmill/ui-common";
+} from '@castmill/ui-common';
 
-import { store } from "../../store/store";
-import { PermissionButton } from "../../components/permission-button/permission-button";
-import { usePermissions } from "../../hooks/usePermissions";
+import { store } from '../../store/store';
+import { PermissionButton } from '../../components/permission-button/permission-button';
+import { usePermissions } from '../../hooks/usePermissions';
 
-import { BsCheckLg, BsEye } from "solid-icons/bs";
-import { AiOutlineDelete } from "solid-icons/ai";
+import { BsCheckLg, BsEye } from 'solid-icons/bs';
+import { AiOutlineDelete } from 'solid-icons/ai';
 
-import { Team } from "../../interfaces/team";
-import styles from "./teams-page.module.scss";
-import { useSearchParams } from "@solidjs/router";
-import { TeamsService, TeamUpdate } from "../../services/teams.service";
-import { TeamView } from "./team-view";
-import { useI18n } from "../../i18n";
-import { QuotaIndicator } from "../../components/quota-indicator";
-import { QuotasService, ResourceQuota } from "../../services/quotas.service";
-import { useKeyboardShortcuts } from "../../hooks/useKeyboardShortcuts";
-import { useLocation } from "@solidjs/router";
-import { useModalFromUrl } from "../../hooks/useModalFromUrl";
+import { Team } from '../../interfaces/team';
+import styles from './teams-page.module.scss';
+import { useSearchParams } from '@solidjs/router';
+import { TeamsService, TeamUpdate } from '../../services/teams.service';
+import { TeamView } from './team-view';
+import { useI18n } from '../../i18n';
+import { QuotaIndicator } from '../../components/quota-indicator';
+import { QuotasService, ResourceQuota } from '../../services/quotas.service';
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
+import { useLocation } from '@solidjs/router';
+import { useModalFromUrl } from '../../hooks/useModalFromUrl';
 
 const TeamsPage: Component = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { t } = useI18n();
   const { canPerformAction } = usePermissions();
-  const { registerShortcutAction, unregisterShortcutAction } = useKeyboardShortcuts();
+  const { registerShortcutAction, unregisterShortcutAction } =
+    useKeyboardShortcuts();
   const location = useLocation();
 
   const toast = useToast();
@@ -63,11 +71,11 @@ const TeamsPage: Component = () => {
       setQuotaLoading(true);
       const quotaData = await QuotasService.getResourceQuota(
         store.organizations.selectedId,
-        "teams",
+        'teams'
       );
       setQuota(quotaData);
     } catch (error) {
-      console.error("Failed to fetch quota:", error);
+      console.error('Failed to fetch quota:', error);
     } finally {
       setQuotaLoading(false);
     }
@@ -78,33 +86,33 @@ const TeamsPage: Component = () => {
 
     // Register keyboard shortcuts
     registerShortcutAction(
-      "generic-create",
+      'generic-create',
       () => {
-        if (!isQuotaReached() && canPerformAction("teams", "create")) {
+        if (!isQuotaReached() && canPerformAction('teams', 'create')) {
           addTeam();
         }
       },
-      () => location.pathname.includes("/teams"),
+      () => location.pathname.includes('/teams')
     );
 
     registerShortcutAction(
-      "generic-search",
+      'generic-search',
       () => {
         if (tableViewRef) {
           tableViewRef.focusSearch();
         }
       },
-      () => location.pathname.includes("/teams"),
+      () => location.pathname.includes('/teams')
     );
 
     registerShortcutAction(
-      "generic-delete",
+      'generic-delete',
       () => {
-        if (selectedTeams().size > 0 && canPerformAction("teams", "delete")) {
+        if (selectedTeams().size > 0 && canPerformAction('teams', 'delete')) {
           setShowConfirmDialogMultiple(true);
         }
       },
-      () => location.pathname.includes("/teams"),
+      () => location.pathname.includes('/teams')
     );
   });
 
@@ -138,8 +146,8 @@ const TeamsPage: Component = () => {
 
   const columns = () =>
     [
-      { key: "id", title: () => t("common.id"), sortable: true },
-      { key: "name", title: () => t("common.name"), sortable: true },
+      { key: 'id', title: () => t('common.id'), sortable: true },
+      { key: 'name', title: () => t('common.name'), sortable: true },
     ] as Column<Team>[];
 
   interface TeamTableItem extends Team {}
@@ -151,35 +159,44 @@ const TeamsPage: Component = () => {
         setCurrentTeam(item);
         setShowModal(true);
       },
-      label: () => t("common.view"),
+      label: () => t('common.view'),
     },
     {
       icon: AiOutlineDelete,
       handler: (item: TeamTableItem) => {
-        if (!canPerformAction("teams", "delete")) {
+        if (!canPerformAction('teams', 'delete')) {
           toast.error(
-            t("permissions.noDeleteTeams") || "You don't have permission to delete teams",
+            t('permissions.noDeleteTeams') ||
+              "You don't have permission to delete teams"
           );
           return;
         }
         setCurrentTeam(item);
         setShowConfirmDialog(true);
       },
-      label: () => t("common.remove"),
+      label: () => t('common.remove'),
     },
   ];
 
-  const fetchData = async ({ page, sortOptions, search, filters }: FetchDataOptions) => {
+  const fetchData = async ({
+    page,
+    sortOptions,
+    search,
+    filters,
+  }: FetchDataOptions) => {
     if (!store.organizations.selectedId) {
       return { count: 0, data: [] };
     }
 
-    const result = await TeamsService.fetchTeams(store.organizations.selectedId, {
-      page,
-      sortOptions,
-      search,
-      filters,
-    });
+    const result = await TeamsService.fetchTeams(
+      store.organizations.selectedId,
+      {
+        page,
+        sortOptions,
+        search,
+        filters,
+      }
+    );
 
     setData(result.data);
 
@@ -187,13 +204,14 @@ const TeamsPage: Component = () => {
   };
 
   onCleanup(() => {
-    unregisterShortcutAction("generic-create");
-    unregisterShortcutAction("generic-search");
-    unregisterShortcutAction("generic-delete");
+    unregisterShortcutAction('generic-create');
+    unregisterShortcutAction('generic-search');
+    unregisterShortcutAction('generic-delete');
   });
 
   const [showConfirmDialog, setShowConfirmDialog] = createSignal(false);
-  const [showConfirmDialogMultiple, setShowConfirmDialogMultiple] = createSignal(false);
+  const [showConfirmDialogMultiple, setShowConfirmDialogMultiple] =
+    createSignal(false);
 
   const confirmRemoveTeam = async (team: TeamUpdate | undefined) => {
     if (!team) {
@@ -206,10 +224,10 @@ const TeamsPage: Component = () => {
       loadQuota(); // Reload quota after deletion
     } catch (error) {
       toast.error(
-        t("teams.errors.removeTeam", {
-          name: team.name || "",
+        t('teams.errors.removeTeam', {
+          name: team.name || '',
           error: String(error),
-        }),
+        })
       );
     }
     setShowConfirmDialog(false);
@@ -219,15 +237,15 @@ const TeamsPage: Component = () => {
     try {
       await Promise.all(
         Array.from(selectedTeams()).map((teamId) =>
-          TeamsService.removeTeam(store.organizations.selectedId!, teamId),
-        ),
+          TeamsService.removeTeam(store.organizations.selectedId!, teamId)
+        )
       );
 
       refreshData();
-      toast.success(t("teams.teamsRemovedSuccessfully"));
+      toast.success(t('teams.teamsRemovedSuccessfully'));
       loadQuota(); // Reload quota after deletion
     } catch (error) {
-      toast.error(t("teams.errors.removeTeams", { error: String(error) }));
+      toast.error(t('teams.errors.removeTeams', { error: String(error) }));
     }
     setShowConfirmDialogMultiple(false);
   };
@@ -265,13 +283,13 @@ const TeamsPage: Component = () => {
     setShowModal(true);
   };
 
-  const [title, setTitle] = createSignal("");
+  const [title, setTitle] = createSignal('');
 
   createEffect(() => {
     if (currentTeam()?.id) {
-      setTitle(t("teams.teamTitle", { name: currentTeam()?.name || "" }));
+      setTitle(t('teams.teamTitle', { name: currentTeam()?.name || '' }));
     } else {
-      setTitle(t("teams.newTeam"));
+      setTitle(t('teams.newTeam'));
     }
   });
 
@@ -288,13 +306,13 @@ const TeamsPage: Component = () => {
         >
           <TeamView
             organizationId={store.organizations.selectedId!}
-            team={currentTeam() || { name: "" }}
+            team={currentTeam() || { name: '' }}
             onSubmit={async (team: TeamUpdate) => {
               try {
                 if (!team.id) {
                   const newTeam = await TeamsService.addTeam(
                     store.organizations.selectedId!,
-                    team.name!,
+                    team.name!
                   );
                   setCurrentTeam({ id: newTeam.id, name: newTeam.name });
                   refreshData();
@@ -306,14 +324,16 @@ const TeamsPage: Component = () => {
                 } else {
                   const updatedTeam = await TeamsService.updateTeam(
                     store.organizations.selectedId!,
-                    team,
+                    team
                   );
                   updateItem(team.id, team);
                   toast.success(`Team ${team.name} updated successfully`);
                   return updatedTeam;
                 }
               } catch (error) {
-                toast.error(t("teams.errors.saveTeam", { error: String(error) }));
+                toast.error(
+                  t('teams.errors.saveTeam', { error: String(error) })
+                );
               }
             }}
           />
@@ -322,9 +342,9 @@ const TeamsPage: Component = () => {
 
       <ConfirmDialog
         show={showConfirmDialog()}
-        title={t("teams.removeTeam")}
-        message={t("teams.confirmRemoveTeam", {
-          name: currentTeam()?.name || "",
+        title={t('teams.removeTeam')}
+        message={t('teams.confirmRemoveTeam', {
+          name: currentTeam()?.name || '',
         })}
         onClose={() => setShowConfirmDialog(false)}
         onConfirm={() => confirmRemoveTeam(currentTeam())}
@@ -332,8 +352,8 @@ const TeamsPage: Component = () => {
 
       <ConfirmDialog
         show={showConfirmDialogMultiple()}
-        title={t("teams.removeTeams")}
-        message={t("teams.confirmRemoveTeams")}
+        title={t('teams.removeTeams')}
+        message={t('teams.confirmRemoveTeams')}
         onClose={() => setShowConfirmDialogMultiple(false)}
         onConfirm={() => confirmRemoveMultipleTeams()}
       >
@@ -346,14 +366,14 @@ const TeamsPage: Component = () => {
       </ConfirmDialog>
 
       <TableView
-        title={() => t("teams.title")}
+        title={() => t('teams.title')}
         resource="teams"
         params={[searchParams, setSearchParams]}
         fetchData={fetchData}
         ref={setRef}
         toolbar={{
           filters: [],
-          searchPlaceholder: t("common.search"),
+          searchPlaceholder: t('common.search'),
           mainAction: (
             <div style="display: flex; align-items: center; gap: 1rem;">
               <Show when={quota() && !quotaLoading()}>
@@ -367,7 +387,7 @@ const TeamsPage: Component = () => {
               <PermissionButton
                 resource="teams"
                 action="create"
-                label={() => t("teams.addTeam")}
+                label={() => t('teams.addTeam')}
                 onClick={addTeam}
                 icon={BsCheckLg}
                 color="primary"
@@ -376,29 +396,29 @@ const TeamsPage: Component = () => {
             </div>
           ),
         }}
-        selectionHint={t("common.selectionHint")}
-        selectionLabel={t("common.selectionCount")}
+        selectionHint={t('common.selectionHint')}
+        selectionLabel={t('common.selectionCount')}
         selectionActions={({ count, clear }) => (
           <button
             class="selection-action-btn danger"
-            disabled={!canPerformAction("teams", "delete")}
+            disabled={!canPerformAction('teams', 'delete')}
             onClick={() => setShowConfirmDialogMultiple(true)}
           >
             <AiOutlineDelete />
-            {t("common.delete")}
+            {t('common.delete')}
           </button>
         )}
         table={{
           columns,
           actions,
-          actionsLabel: t("common.actions"),
+          actionsLabel: t('common.actions'),
           onRowSelect,
           defaultRowAction: {
             icon: BsEye,
             handler: (item: TeamTableItem) => {
               setSearchParams({ itemId: String(item.id) });
             },
-            label: t("common.view"),
+            label: t('common.view'),
           },
         }}
         pagination={{ itemsPerPage }}

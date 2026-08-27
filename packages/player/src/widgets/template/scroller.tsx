@@ -1,14 +1,25 @@
-import { Component, createSignal, For, JSX, onCleanup, onMount } from "solid-js";
-import { Item } from "./item";
-import { resolveOption, TemplateConfig } from "./binding";
-import { TemplateComponent, TemplateComponentType, TemplateComponentTypeUnion } from "./template";
-import { ResourceManager } from "@castmill/cache";
-import { Timeline, TimelineItem } from "./timeline";
-import { ComponentAnimation } from "./animation";
-import { BaseComponentProps } from "./interfaces/base-component-props";
-import { PlayerGlobals } from "../../interfaces/player-globals.interface";
+import {
+  Component,
+  createSignal,
+  For,
+  JSX,
+  onCleanup,
+  onMount,
+} from 'solid-js';
+import { Item } from './item';
+import { resolveOption, TemplateConfig } from './binding';
+import {
+  TemplateComponent,
+  TemplateComponentType,
+  TemplateComponentTypeUnion,
+} from './template';
+import { ResourceManager } from '@castmill/cache';
+import { Timeline, TimelineItem } from './timeline';
+import { ComponentAnimation } from './animation';
+import { BaseComponentProps } from './interfaces/base-component-props';
+import { PlayerGlobals } from '../../interfaces/player-globals.interface';
 
-export type ScrollDirection = "left" | "right" | "up" | "down";
+export type ScrollDirection = 'left' | 'right' | 'up' | 'down';
 
 export interface ScrollerComponentOptions {
   /**
@@ -92,7 +103,7 @@ export class ScrollerComponent implements TemplateComponent {
     public style: JSX.CSSProperties,
     public component: TemplateComponentTypeUnion,
     public animations?: ComponentAnimation[],
-    public filter?: Record<string, any>,
+    public filter?: Record<string, any>
   ) {}
 
   resolveDuration(medias: { [index: string]: string }): number {
@@ -103,7 +114,7 @@ export class ScrollerComponent implements TemplateComponent {
   static fromJSON(
     json: any,
     resourceManager: ResourceManager,
-    globals: PlayerGlobals,
+    globals: PlayerGlobals
   ): ScrollerComponent {
     return new ScrollerComponent(
       json.name,
@@ -112,7 +123,7 @@ export class ScrollerComponent implements TemplateComponent {
       json.style,
       TemplateComponent.fromJSON(json.component, resourceManager, globals),
       json.animations,
-      json.filter,
+      json.filter
     );
   }
 
@@ -120,13 +131,14 @@ export class ScrollerComponent implements TemplateComponent {
     opts: any,
     config: TemplateConfig,
     context: any,
-    globals: PlayerGlobals,
+    globals: PlayerGlobals
   ): ScrollerComponentOptions {
     return {
       items: resolveOption(opts.items, config, context, globals) || [],
-      direction: resolveOption(opts.direction, config, context, globals) || "left",
+      direction:
+        resolveOption(opts.direction, config, context, globals) || 'left',
       speed: resolveOption(opts.speed, config, context, globals) ?? 100,
-      gap: resolveOption(opts.gap, config, context, globals) || "2em",
+      gap: resolveOption(opts.gap, config, context, globals) || '2em',
       delay: resolveOption(opts.delay, config, context, globals) || 0,
     };
   }
@@ -150,7 +162,7 @@ class ScrollAnimation {
       scrollDistance: number; // distance to scroll before resetting (one set of items)
       isHorizontal: boolean;
       isReverse: boolean;
-    },
+    }
   ) {
     // Set initial transform to position 0
     this.updateTransform();
@@ -246,9 +258,9 @@ class ScrollAnimation {
  */
 function parseGap(gap: string, referenceElement: HTMLElement): number {
   // Create a temporary element to measure the gap
-  const temp = document.createElement("div");
-  temp.style.position = "absolute";
-  temp.style.visibility = "hidden";
+  const temp = document.createElement('div');
+  temp.style.position = 'absolute';
+  temp.style.visibility = 'hidden';
   temp.style.width = gap;
 
   // Append to the reference element's parent to inherit font-size for em units
@@ -310,8 +322,10 @@ export const Scroller: Component<ScrollerProps> = (props) => {
       return;
     }
 
-    const isHorizontal = props.opts.direction === "left" || props.opts.direction === "right";
-    const isReverse = props.opts.direction === "right" || props.opts.direction === "down";
+    const isHorizontal =
+      props.opts.direction === 'left' || props.opts.direction === 'right';
+    const isReverse =
+      props.opts.direction === 'right' || props.opts.direction === 'down';
 
     // Get the size of one set of items (half of duplicated content)
     const contentRect = contentRef.getBoundingClientRect();
@@ -320,8 +334,10 @@ export const Scroller: Component<ScrollerProps> = (props) => {
     // Half the content gives us n items but only (n - 0.5) gaps worth.
     // We need to add half a gap to get the correct scroll distance
     // (which represents n items + n gaps, including the gap to the duplicate's first item)
-    const gapPx = parseGap(props.opts.gap || "2em", contentRef);
-    const halfContentSize = isHorizontal ? contentRect.width / 2 : contentRect.height / 2;
+    const gapPx = parseGap(props.opts.gap || '2em', contentRef);
+    const halfContentSize = isHorizontal
+      ? contentRect.width / 2
+      : contentRect.height / 2;
     const oneSetSize = halfContentSize + gapPx / 2;
 
     const pixelsPerSecond = props.opts.speed || 100;
@@ -375,42 +391,54 @@ export const Scroller: Component<ScrollerProps> = (props) => {
   // If no items, render empty and signal ready
   if (!props.opts.items || props.opts.items.length === 0) {
     onMount(() => props.onReady());
-    return <div data-component="scroller" data-name={props.name} style={props.style} />;
+    return (
+      <div
+        data-component="scroller"
+        data-name={props.name}
+        style={props.style}
+      />
+    );
   }
 
-  const isHorizontal = props.opts.direction === "left" || props.opts.direction === "right";
+  const isHorizontal =
+    props.opts.direction === 'left' || props.opts.direction === 'right';
 
   // Container style with overflow hidden
   const containerStyle: JSX.CSSProperties = {
     ...props.style,
-    overflow: "hidden",
-    position: "relative",
+    overflow: 'hidden',
+    position: 'relative',
   };
 
   // Content wrapper style - flex container for items
   const contentStyle: JSX.CSSProperties = {
-    display: "flex",
-    "flex-direction": isHorizontal ? "row" : "column",
-    gap: props.opts.gap || "2em",
-    "will-change": "transform",
-    "flex-wrap": "nowrap",
-    "white-space": isHorizontal ? "nowrap" : undefined,
+    display: 'flex',
+    'flex-direction': isHorizontal ? 'row' : 'column',
+    gap: props.opts.gap || '2em',
+    'will-change': 'transform',
+    'flex-wrap': 'nowrap',
+    'white-space': isHorizontal ? 'nowrap' : undefined,
     // Set initial transform to prevent clipping before animation initializes
-    transform: isHorizontal ? "translateX(0px)" : "translateY(0px)",
+    transform: isHorizontal ? 'translateX(0px)' : 'translateY(0px)',
   };
 
   // Duplicate items for seamless infinite scroll
   const duplicatedItems = [...props.opts.items, ...props.opts.items];
 
   return (
-    <div ref={containerRef} data-component="scroller" data-name={props.name} style={containerStyle}>
+    <div
+      ref={containerRef}
+      data-component="scroller"
+      data-name={props.name}
+      style={containerStyle}
+    >
       <div ref={contentRef} style={contentStyle}>
         <For each={duplicatedItems}>
           {(item, i) => (
             <div
               style={{
-                "flex-shrink": 0,
-                display: isHorizontal ? "inline-flex" : "flex",
+                'flex-shrink': 0,
+                display: isHorizontal ? 'inline-flex' : 'flex',
               }}
             >
               <Item

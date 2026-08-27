@@ -1,4 +1,4 @@
-import { Socket, Channel } from "phoenix";
+import { Socket, Channel } from 'phoenix';
 
 export class ResourcesObserver<T extends { id: string | number }> {
   channels: Record<string, Channel> = {};
@@ -8,11 +8,13 @@ export class ResourcesObserver<T extends { id: string | number }> {
     private updateRoom: string,
     /* Called everytime a new resource is added to the list, must return a topic to join to */
     private onJoin: (resource: T) => string,
-    private onUpdate: (resource: T, data: any) => void,
+    private onUpdate: (resource: T, data: any) => void
   ) {}
 
   observe(resources: T[]) {
-    const resourceIds = new Set(resources.map((resource) => String(resource.id)));
+    const resourceIds = new Set(
+      resources.map((resource) => String(resource.id))
+    );
 
     // Clean all the old unused channel subscriptions
     Object.keys(this.channels).forEach((id) => {

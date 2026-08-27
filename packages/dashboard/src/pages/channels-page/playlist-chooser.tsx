@@ -1,16 +1,19 @@
-import { JsonPlaylist } from "@castmill/player";
-import { Component, createEffect, createSignal, For } from "solid-js";
-import { PlaylistChooserItem } from "./playlist-chooser-item";
+import { JsonPlaylist } from '@castmill/player';
+import { Component, createEffect, createSignal, For } from 'solid-js';
+import { PlaylistChooserItem } from './playlist-chooser-item';
 
-import style from "./playlist-chooser.module.scss";
-import { CalendarEntry } from "./calendar-entry.interface";
-import { ChannelsService } from "../../services/channels.service";
-import { baseUrl } from "../../env";
-import { store } from "../../store";
-import { useI18n } from "../../i18n";
+import style from './playlist-chooser.module.scss';
+import { CalendarEntry } from './calendar-entry.interface';
+import { ChannelsService } from '../../services/channels.service';
+import { baseUrl } from '../../env';
+import { store } from '../../store';
+import { useI18n } from '../../i18n';
 
 interface PlaylistChooserProps {
-  onDragOverCell?: (entry: CalendarEntry, ghostPosition?: { x: number; y: number }) => void;
+  onDragOverCell?: (
+    entry: CalendarEntry,
+    ghostPosition?: { x: number; y: number }
+  ) => void;
 }
 
 export const PlaylistChooser: Component<PlaylistChooserProps> = (props) => {
@@ -18,7 +21,7 @@ export const PlaylistChooser: Component<PlaylistChooserProps> = (props) => {
 
   let channelsService: ChannelsService = new ChannelsService(
     baseUrl,
-    store.organizations.selectedId!,
+    store.organizations.selectedId!
   );
   const [playlists, setPlaylists] = createSignal<JsonPlaylist[]>([]);
 
@@ -30,8 +33,8 @@ export const PlaylistChooser: Component<PlaylistChooserProps> = (props) => {
         size: 100,
       },
       sortOptions: {
-        key: "name",
-        direction: "ascending",
+        key: 'name',
+        direction: 'ascending',
       },
     });
     setPlaylists(data);
@@ -39,11 +42,14 @@ export const PlaylistChooser: Component<PlaylistChooserProps> = (props) => {
 
   return (
     <div>
-      <h2>{t("channels.dragPlaylists")}</h2>
+      <h2>{t('channels.dragPlaylists')}</h2>
       <div class={style.playlistsList}>
         <For each={playlists()}>
           {(playlist) => (
-            <PlaylistChooserItem playlist={playlist} onDragOverCell={props.onDragOverCell} />
+            <PlaylistChooserItem
+              playlist={playlist}
+              onDragOverCell={props.onDragOverCell}
+            />
           )}
         </For>
       </div>

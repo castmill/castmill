@@ -12,8 +12,10 @@
  * @param ratio - Aspect ratio string in "width:height" format
  * @returns Object with width and height numbers
  */
-export const parseAspectRatio = (ratio: string): { width: number; height: number } => {
-  const [w, h] = ratio.split(":").map(Number);
+export const parseAspectRatio = (
+  ratio: string
+): { width: number; height: number } => {
+  const [w, h] = ratio.split(':').map(Number);
   if (!w || !h || isNaN(w) || isNaN(h) || w <= 0 || h <= 0) {
     return { width: 16, height: 9 }; // Default aspect ratio
   }
@@ -31,7 +33,7 @@ export const parseAspectRatio = (ratio: string): { width: number; height: number
 export const calculateCanvasSize = (
   containerWidth: number,
   containerHeight: number,
-  aspectRatio: string,
+  aspectRatio: string
 ): { width: number; height: number } => {
   const { width: arW, height: arH } = parseAspectRatio(aspectRatio);
   const aspectValue = arW / arH;
@@ -77,7 +79,7 @@ export const calculateCanvasSize = (
 export const calculateHeightForAspectRatio = (
   width: number,
   zoneAspectRatio: string,
-  layoutAspectRatio: string,
+  layoutAspectRatio: string
 ): number => {
   const layoutAR = parseAspectRatio(layoutAspectRatio);
   const layoutRatio = layoutAR.width / layoutAR.height;
@@ -109,7 +111,7 @@ export const calculateHeightForAspectRatio = (
 export const calculateWidthForAspectRatio = (
   height: number,
   zoneAspectRatio: string,
-  layoutAspectRatio: string,
+  layoutAspectRatio: string
 ): number => {
   const layoutAR = parseAspectRatio(layoutAspectRatio);
   const layoutRatio = layoutAR.width / layoutAR.height;
@@ -122,9 +124,9 @@ export const calculateWidthForAspectRatio = (
  * Available aspect ratios for zones.
  * Includes common video/display formats.
  */
-export const ZONE_ASPECT_RATIOS = ["16:9", "9:16", "4:3", "3:4", "1:1", "21:9"];
+export const ZONE_ASPECT_RATIOS = ['16:9', '9:16', '4:3', '3:4', '1:1', '21:9'];
 
 /**
  * Default aspect ratios for layouts.
  */
-export const DEFAULT_ASPECT_RATIOS = ["16:9", "9:16", "4:3", "1:1", "21:9"];
+export const DEFAULT_ASPECT_RATIOS = ['16:9', '9:16', '4:3', '1:1', '21:9'];

@@ -2,10 +2,14 @@
  * A dummy storage integration when no storage is needed or available.
  *
  */
-import { StorageIntegration, StoreFileReturnValue, StoreOptions } from "../storage.integration";
+import {
+  StorageIntegration,
+  StoreFileReturnValue,
+  StoreOptions,
+} from '../storage.integration';
 
 export class StorageDummy implements StorageIntegration {
-  prefix = "castmill:storage";
+  prefix = 'castmill:storage';
   cacheName: string;
   private cache: {
     [url: string]: {
@@ -47,7 +51,10 @@ export class StorageDummy implements StorageIntegration {
    *
    * @param url
    */
-  async storeFile(url: string, opts?: StoreOptions): Promise<StoreFileReturnValue> {
+  async storeFile(
+    url: string,
+    opts?: StoreOptions
+  ): Promise<StoreFileReturnValue> {
     const item = {
       url,
       size: 0,
@@ -55,7 +62,7 @@ export class StorageDummy implements StorageIntegration {
     const file: StoreFileReturnValue = {
       item,
       result: {
-        code: "SUCCESS",
+        code: 'SUCCESS',
       },
     };
 

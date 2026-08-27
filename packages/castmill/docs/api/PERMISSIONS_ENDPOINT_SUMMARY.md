@@ -223,12 +223,14 @@ curl -X GET \
 ```typescript
 // packages/dashboard/src/services/permissions.service.ts
 export async function fetchPermissions(organizationId: string) {
-  const response = await fetch(`/dashboard/organizations/${organizationId}/permissions`);
+  const response = await fetch(
+    `/dashboard/organizations/${organizationId}/permissions`
+  );
   return response.json();
 }
 
 // packages/dashboard/src/stores/permissions.store.ts
-import { createStore } from "solid-js/store";
+import { createStore } from 'solid-js/store';
 
 const [permissions, setPermissions] = createStore({
   role: null,

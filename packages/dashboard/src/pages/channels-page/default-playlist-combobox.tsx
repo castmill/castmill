@@ -1,14 +1,14 @@
-import { JsonPlaylist } from "@castmill/player";
-import { ComboBox, useToast } from "@castmill/ui-common";
-import { Component, createEffect, createSignal, on } from "solid-js";
+import { JsonPlaylist } from '@castmill/player';
+import { ComboBox, useToast } from '@castmill/ui-common';
+import { Component, createEffect, createSignal, on } from 'solid-js';
 
-import { baseUrl } from "../../env";
-import { store } from "../../store";
+import { baseUrl } from '../../env';
+import { store } from '../../store';
 
-import styles from "./default-playlist-combobox.module.scss";
+import styles from './default-playlist-combobox.module.scss';
 
-import { ChannelsService, JsonChannel } from "../../services/channels.service";
-import { useI18n } from "../../i18n";
+import { ChannelsService, JsonChannel } from '../../services/channels.service';
+import { useI18n } from '../../i18n';
 
 export const DefaultPlaylistComboBox: Component<{
   channel: JsonChannel;
@@ -18,7 +18,10 @@ export const DefaultPlaylistComboBox: Component<{
 
   const [defaultPlaylist, setDefaultPlaylist] = createSignal<JsonPlaylist>();
 
-  const channelsService = new ChannelsService(baseUrl, store.organizations.selectedId!);
+  const channelsService = new ChannelsService(
+    baseUrl,
+    store.organizations.selectedId!
+  );
 
   let activeFetchId = 0;
 
@@ -46,21 +49,21 @@ export const DefaultPlaylistComboBox: Component<{
             setDefaultPlaylist(undefined);
           }
         }
-      },
-    ),
+      }
+    )
   );
 
   return (
     <ComboBox<JsonPlaylist>
       id={123}
-      label={t("channels.defaultPlaylist")}
-      placeholder={t("channels.selectPlaylist")}
+      label={t('channels.defaultPlaylist')}
+      placeholder={t('channels.selectPlaylist')}
       value={defaultPlaylist()}
       clearable={true}
-      clearLabel={t("channels.clearDefaultPlaylist")}
+      clearLabel={t('channels.clearDefaultPlaylist')}
       renderItem={(item: JsonPlaylist) => {
         return (
-          <div class={styles["playlist-combobox"]}>
+          <div class={styles['playlist-combobox']}>
             {/* TODO: Add Thumbnail support */}
             <div>{item.name}</div>
           </div>
@@ -73,8 +76,8 @@ export const DefaultPlaylistComboBox: Component<{
             size: pageSize,
           },
           sortOptions: {
-            key: "name",
-            direction: "ascending",
+            key: 'name',
+            direction: 'ascending',
           },
           search,
         });
@@ -87,9 +90,11 @@ export const DefaultPlaylistComboBox: Component<{
             default_playlist_id: playlist.id,
           });
           setDefaultPlaylist(playlist);
-          toast.success(t("channels.success.updateDefaultPlaylist"));
+          toast.success(t('channels.success.updateDefaultPlaylist'));
         } catch (e) {
-          toast.error(t("channels.errors.updateDefaultPlaylist", { error: String(e) }));
+          toast.error(
+            t('channels.errors.updateDefaultPlaylist', { error: String(e) })
+          );
         }
       }}
       onClear={async () => {
@@ -100,9 +105,11 @@ export const DefaultPlaylistComboBox: Component<{
             default_playlist_id: null,
           });
           setDefaultPlaylist(undefined);
-          toast.success(t("channels.success.clearDefaultPlaylist"));
+          toast.success(t('channels.success.clearDefaultPlaylist'));
         } catch (e) {
-          toast.error(t("channels.errors.clearDefaultPlaylist", { error: String(e) }));
+          toast.error(
+            t('channels.errors.clearDefaultPlaylist', { error: String(e) })
+          );
         }
       }}
     />

@@ -1,4 +1,4 @@
-import { type Component, createSignal } from "solid-js";
+import { type Component, createSignal } from 'solid-js';
 
 const Versions: Component = () => {
   const [versions] = createSignal(window.electron.process.versions);

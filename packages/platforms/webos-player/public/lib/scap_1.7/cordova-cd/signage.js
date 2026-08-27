@@ -1,19 +1,19 @@
-cordova.define("cordova/plugin/signage", function (k, B, c) {
+cordova.define('cordova/plugin/signage', function (k, B, c) {
   var C;
   function i(D) {}
   if (window.PalmSystem) {
-    i("Window.PalmSystem Available");
-    C = k("cordova/plugin/webos/service");
+    i('Window.PalmSystem Available');
+    C = k('cordova/plugin/webos/service');
   } else {
-    i("Window.PalmSystem is NOT Available");
+    i('Window.PalmSystem is NOT Available');
     C = {
       Request: function (D, E) {
-        i(D + " invoked. But I am a dummy because PalmSystem is not available");
-        if (typeof E.onFailure === "function") {
+        i(D + ' invoked. But I am a dummy because PalmSystem is not available');
+        if (typeof E.onFailure === 'function') {
           E.onFailure({
             returnValue: false,
-            errorCode: "CORDOVA_ERR",
-            errorText: "PalmSystem Not Available. Cordova is not installed?",
+            errorCode: 'CORDOVA_ERR',
+            errorText: 'PalmSystem Not Available. Cordova is not installed?',
           });
         }
       },
@@ -31,26 +31,26 @@ cordova.define("cordova/plugin/signage", function (k, B, c) {
   };
   var p = function (E, D) {
     var F = n[E];
-    if (F && typeof F.createListener === "function") {
+    if (F && typeof F.createListener === 'function') {
       F.listenerObj = F.createListener(D);
       F.getEvent = true;
     }
   };
   function d(E) {
-    if (E.substring(0, "ext://".length) !== "ext://") {
-      i("Bad prefix: " + E);
+    if (E.substring(0, 'ext://'.length) !== 'ext://') {
+      i('Bad prefix: ' + E);
       return false;
     }
-    var D = E.substring("ext://".length);
-    i("body is: " + D);
-    var F = D.split(":");
+    var D = E.substring('ext://'.length);
+    i('body is: ' + D);
+    var F = D.split(':');
     if (F.length === 2) {
       return F[0] + F[1];
     } else {
       if (F.length === 1) {
         return F[0];
       } else {
-        i("Bad Syntax: " + E);
+        i('Bad Syntax: ' + E);
         return false;
       }
     }
@@ -64,148 +64,152 @@ cordova.define("cordova/plugin/signage", function (k, B, c) {
     return false;
   }
   var s = {
-    FAILOVER_MODE: "failover",
-    FAILOVER_BACKUPVIASTORAGE_MODE: "backupViaStorage",
-    FAILOVER_PRIORITY: "failoverPriority",
-    IR_OPERATION_MODE: "enableIrRemote",
-    LOCALKEY_OPERATION_MODE: "enableLocalKey",
-    OSD_PORTRAIT_MODE: "osdPortraitMode",
-    TILE_MODE: "tileMode",
-    TILE_ID: "tileId",
-    TILE_ROW: "tileRow",
-    TILE_COLUME: "tileCol",
-    TILE_NATURALMODE: "naturalMode",
-    DPM_MODE: "dpmMode",
-    AUTOMATIC_STANDBY_MODE: "autoSB",
-    ISM_METHOD: "ismmethod",
-    SES_MODE: "smartEnergy",
-    DO_15OFF_MODE: "15off",
-    MONITOR_FAN: "monitorFan",
-    MONITOR_SIGNAL: "monitorSignal",
-    MONITOR_LAMP: "monitorLamp",
-    MONITOR_SCREEN: "monitorScreen",
-    MONITOR_AUDIO: "monitorAudio",
-    AUDIO_SOURCE_HDMI1: "audioSourceHdmi1",
-    AUDIO_SOURCE_HDMI2: "audioSourceHdmi2",
-    AUDIO_SOURCE_DP: "audioSourceDp",
+    FAILOVER_MODE: 'failover',
+    FAILOVER_BACKUPVIASTORAGE_MODE: 'backupViaStorage',
+    FAILOVER_PRIORITY: 'failoverPriority',
+    IR_OPERATION_MODE: 'enableIrRemote',
+    LOCALKEY_OPERATION_MODE: 'enableLocalKey',
+    OSD_PORTRAIT_MODE: 'osdPortraitMode',
+    TILE_MODE: 'tileMode',
+    TILE_ID: 'tileId',
+    TILE_ROW: 'tileRow',
+    TILE_COLUME: 'tileCol',
+    TILE_NATURALMODE: 'naturalMode',
+    DPM_MODE: 'dpmMode',
+    AUTOMATIC_STANDBY_MODE: 'autoSB',
+    ISM_METHOD: 'ismmethod',
+    SES_MODE: 'smartEnergy',
+    DO_15OFF_MODE: '15off',
+    MONITOR_FAN: 'monitorFan',
+    MONITOR_SIGNAL: 'monitorSignal',
+    MONITOR_LAMP: 'monitorLamp',
+    MONITOR_SCREEN: 'monitorScreen',
+    MONITOR_AUDIO: 'monitorAudio',
+    AUDIO_SOURCE_HDMI1: 'audioSourceHdmi1',
+    AUDIO_SOURCE_HDMI2: 'audioSourceHdmi2',
+    AUDIO_SOURCE_DP: 'audioSourceDp',
   };
   var t = function (D) {
-    i("Create Listener for monitorTemperature");
-    var E = C.Request("luna://com.webos.service.commercial.scapadapter", {
-      method: "systemMonitor/getTemperature",
+    i('Create Listener for monitorTemperature');
+    var E = C.Request('luna://com.webos.service.commercial.scapadapter', {
+      method: 'systemMonitor/getTemperature',
       parameters: { subscribe: true },
       onSuccess: function (F) {
-        i("temperature : " + JSON.stringify(F, null, 3));
+        i('temperature : ' + JSON.stringify(F, null, 3));
         if (F.returnValue === true) {
           var G = {
             source: a.MonitoringSource.THERMOMETER,
             type: a.EventType.CURRENT_TEMPERATURE,
             data: { temperature: F.temperature },
           };
-          if (typeof D === "function") {
+          if (typeof D === 'function') {
             D(G);
           }
         }
       },
       onFailure: function (F) {
-        i("monitor_temperature : FAIL " + JSON.stringify(F, null, 3));
+        i('monitor_temperature : FAIL ' + JSON.stringify(F, null, 3));
       },
     });
     return E;
   };
   var g = function (D) {
-    i("Create Listener for monitorFan");
-    var E = C.Request("luna://com.webos.service.commercial.scapadapter", {
-      method: "systemMonitor/getFanEvent",
+    i('Create Listener for monitorFan');
+    var E = C.Request('luna://com.webos.service.commercial.scapadapter', {
+      method: 'systemMonitor/getFanEvent',
       parameters: { subscribe: true },
       onSuccess: function (F) {
-        i("monitor_fan : " + JSON.stringify(F, null, 3));
+        i('monitor_fan : ' + JSON.stringify(F, null, 3));
         if (F.returnValue === true) {
           var G = {
             source: a.MonitoringSource.FAN,
             type: a.EventType.FAN_STATUS,
             data: { status: F.fanFault },
           };
-          if (typeof D === "function") {
+          if (typeof D === 'function') {
             D(G);
           }
         }
       },
       onFailure: function (F) {
-        i("monitor_fan : FAIL " + JSON.stringify(F, null, 3));
+        i('monitor_fan : FAIL ' + JSON.stringify(F, null, 3));
       },
     });
     return E;
   };
   var j = function (D) {
-    i("Create Listener for monitorLamp");
-    var E = C.Request("luna://com.webos.service.commercial.scapadapter", {
-      method: "systemMonitor/getLampEvent",
+    i('Create Listener for monitorLamp');
+    var E = C.Request('luna://com.webos.service.commercial.scapadapter', {
+      method: 'systemMonitor/getLampEvent',
       parameters: { subscribe: true },
       onSuccess: function (F) {
-        i("monitor_lamp : " + JSON.stringify(F, null, 3));
+        i('monitor_lamp : ' + JSON.stringify(F, null, 3));
         if (F.returnValue === true) {
           var G = {
             source: a.MonitoringSource.LAMP,
             type: a.EventType.LAMP_STATUS,
             data: { status: F.lampFault },
           };
-          if (typeof D === "function") {
+          if (typeof D === 'function') {
             D(G);
           }
         }
       },
       onFailure: function (F) {
-        i("monitor_lamp : FAIL " + JSON.stringify(F, null, 3));
+        i('monitor_lamp : FAIL ' + JSON.stringify(F, null, 3));
       },
     });
     return E;
   };
   var r = function (D) {
-    i("Create Listener for monitorSignal");
-    var E = C.Request("luna://com.webos.service.commercial.scapadapter", {
-      method: "systemMonitor/getSignalEvent",
+    i('Create Listener for monitorSignal');
+    var E = C.Request('luna://com.webos.service.commercial.scapadapter', {
+      method: 'systemMonitor/getSignalEvent',
       parameters: { subscribe: true },
       onSuccess: function (F) {
-        i("monitor_signal : " + JSON.stringify(F, null, 3));
+        i('monitor_signal : ' + JSON.stringify(F, null, 3));
         if (F.returnValue === true) {
-          var G = { type: a.EventType.SIGNAL_STATUS, source: a.MonitoringSource.SIGNAL, data: {} };
+          var G = {
+            type: a.EventType.SIGNAL_STATUS,
+            source: a.MonitoringSource.SIGNAL,
+            data: {},
+          };
           if (F.noSignal === true) {
-            G.data.status = "no_signal";
+            G.data.status = 'no_signal';
           } else {
-            G.data.status = "signal_available";
+            G.data.status = 'signal_available';
           }
-          if (typeof D === "function") {
+          if (typeof D === 'function') {
             D(G);
           }
         }
       },
       onFailure: function (F) {
-        i("monitor_signal : FAIL " + JSON.stringify(F, null, 3));
+        i('monitor_signal : FAIL ' + JSON.stringify(F, null, 3));
       },
     });
     return E;
   };
   var y = function (D) {
-    i("Create Listener for monitorScreen");
-    var E = C.Request("luna://com.webos.service.commercial.scapadapter", {
-      method: "systemMonitor/getScreenEvent",
+    i('Create Listener for monitorScreen');
+    var E = C.Request('luna://com.webos.service.commercial.scapadapter', {
+      method: 'systemMonitor/getScreenEvent',
       parameters: { subscribe: true },
       onSuccess: function (F) {
-        i("monitor_screen : " + JSON.stringify(F, null, 3));
+        i('monitor_screen : ' + JSON.stringify(F, null, 3));
         if (F.returnValue === true) {
           var G = {
             source: a.MonitoringSource.SCREEN,
             type: a.EventType.SCREEN_STATUS,
             data: { status: F.screen },
           };
-          if (typeof D === "function") {
+          if (typeof D === 'function') {
             D(G);
           }
         }
       },
       onFailure: function (F) {
-        i("monitor_screen FAIL : " + JSON.stringify(F, null, 3));
+        i('monitor_screen FAIL : ' + JSON.stringify(F, null, 3));
       },
     });
     return E;
@@ -243,41 +247,50 @@ cordova.define("cordova/plugin/signage", function (k, B, c) {
     }
   }
   var e = function (D, F, E) {
-    i("Create Listener for monitorRS232C");
-    var G = C.Request("luna://com.webos.service.commercial.scapadapter", {
-      method: "systemMonitor/startMonitorRS232C",
+    i('Create Listener for monitorRS232C');
+    var G = C.Request('luna://com.webos.service.commercial.scapadapter', {
+      method: 'systemMonitor/startMonitorRS232C',
       parameters: { subscribe: true },
       onSuccess: function (H) {
-        i("monitorRS232C success : " + JSON.stringify(H, null, 3));
+        i('monitorRS232C success : ' + JSON.stringify(H, null, 3));
         if (H.returnValue === true) {
           if (Object.keys(H).length === 1) {
-            A("RS232C", G, E);
+            A('RS232C', G, E);
             D();
           } else {
-            if (H.hasOwnProperty("data") === true) {
-              var J = m("RS232C");
+            if (H.hasOwnProperty('data') === true) {
+              var J = m('RS232C');
               if (J === false) {
-                F({ errorCode: "INTERNAL_ERROR", errorText: "There is not subscriptionEventInfo" });
+                F({
+                  errorCode: 'INTERNAL_ERROR',
+                  errorText: 'There is not subscriptionEventInfo',
+                });
               } else {
-                if (typeof J.eventListener === "function") {
+                if (typeof J.eventListener === 'function') {
                   var I = {};
                   I.data = H.data;
-                  if (typeof H.dataLength !== "undefined") {
+                  if (typeof H.dataLength !== 'undefined') {
                     I.dataLength = H.dataLength;
                   }
                   J.eventListener(I);
                 }
               }
             } else {
-              F({ errorCode: "INTERNAL_ERROR", errorText: "Unknown return value" });
+              F({
+                errorCode: 'INTERNAL_ERROR',
+                errorText: 'Unknown return value',
+              });
             }
           }
           return;
         }
       },
       onFailure: function (H) {
-        i("monitorRS232C fail : " + JSON.stringify(H, null, 3));
-        F({ errorCode: "LUNA_ERROR", errorText: "Failed to request getRS232CEvent to system" });
+        i('monitorRS232C fail : ' + JSON.stringify(H, null, 3));
+        F({
+          errorCode: 'LUNA_ERROR',
+          errorText: 'Failed to request getRS232CEvent to system',
+        });
       },
     });
   };
@@ -291,46 +304,50 @@ cordova.define("cordova/plugin/signage", function (k, B, c) {
   var l = { RS232C: { instanceOfSubscription: null, eventListener: null } };
   var u = { row: 0, col: 0 };
   var a = function () {};
-  a.UNDEFINED = "___undefined___";
-  a.OsdPortraitMode = { ON: "90", OFF: "off" };
-  a.ImgResolution = { HD: "HD", FHD: "FHD" };
-  a.AutomaticStandbyMode = { OFF: "off", STANDBY_4HOURS: "4hours" };
+  a.UNDEFINED = '___undefined___';
+  a.OsdPortraitMode = { ON: '90', OFF: 'off' };
+  a.ImgResolution = { HD: 'HD', FHD: 'FHD' };
+  a.AutomaticStandbyMode = { OFF: 'off', STANDBY_4HOURS: '4hours' };
   a.IsmMethod = {
-    NORMAL: "NORMAL",
-    ORBITER: "ORBITER",
-    INVERSION: "INVERSION",
-    COLORWASH: "COLORWASH",
-    WHITEWASH: "WHITEWASH",
-    WASHING_BAR: "WASHINGBAR",
-    USER_IMAGE: "USERIMAGE",
-    USER_VIDEO: "USERVIDEO",
+    NORMAL: 'NORMAL',
+    ORBITER: 'ORBITER',
+    INVERSION: 'INVERSION',
+    COLORWASH: 'COLORWASH',
+    WHITEWASH: 'WHITEWASH',
+    WASHING_BAR: 'WASHINGBAR',
+    USER_IMAGE: 'USERIMAGE',
+    USER_VIDEO: 'USERVIDEO',
   };
-  a.FailoverMode = { OFF: "off", AUTO: "auto", MANUAL: "manual" };
-  a.DigitalAudioInput = { HDMI_DP: "hdmi", AUDIO_IN: "audioIn" };
+  a.FailoverMode = { OFF: 'off', AUTO: 'auto', MANUAL: 'manual' };
+  a.DigitalAudioInput = { HDMI_DP: 'hdmi', AUDIO_IN: 'audioIn' };
   a.DpmMode = {
-    OFF: "off",
-    POWER_OFF_5SECOND: "5sec",
-    POWER_OFF_10SECOND: "10sec",
-    POWER_OFF_15SECOND: "15sec",
-    POWER_OFF_1MINUTE: "1min",
-    POWER_OFF_3MINUTE: "3min",
-    POWER_OFF_5MINUTE: "5min",
-    POWER_OFF_10MINUTE: "10min",
+    OFF: 'off',
+    POWER_OFF_5SECOND: '5sec',
+    POWER_OFF_10SECOND: '10sec',
+    POWER_OFF_15SECOND: '15sec',
+    POWER_OFF_1MINUTE: '1min',
+    POWER_OFF_3MINUTE: '3min',
+    POWER_OFF_5MINUTE: '5min',
+    POWER_OFF_10MINUTE: '10min',
   };
-  a.KeyOperationMode = { ALLOW_ALL: "normal", POWER_ONLY: "usePwrOnly", BLOCK_ALL: "blockAll" };
+  a.KeyOperationMode = {
+    ALLOW_ALL: 'normal',
+    POWER_ONLY: 'usePwrOnly',
+    BLOCK_ALL: 'blockAll',
+  };
   a.EventType = {
-    CURRENT_TEMPERATURE: "CURRENT_TEMPERATURE",
-    FAN_STATUS: "FAN_STATUS",
-    LAMP_STATUS: "LAMP_STATUS",
-    SCREEN_STATUS: "SCREEN_STATUS",
-    SIGNAL_STATUS: "SIGNAL_STATUS",
+    CURRENT_TEMPERATURE: 'CURRENT_TEMPERATURE',
+    FAN_STATUS: 'FAN_STATUS',
+    LAMP_STATUS: 'LAMP_STATUS',
+    SCREEN_STATUS: 'SCREEN_STATUS',
+    SIGNAL_STATUS: 'SIGNAL_STATUS',
   };
   a.MonitoringSource = {
-    FAN: "FAN",
-    LAMP: "LAMP",
-    SIGNAL: "SIGNAL",
-    SCREEN: "SCREEN",
-    THERMOMETER: "THERMOMETER",
+    FAN: 'FAN',
+    LAMP: 'LAMP',
+    SIGNAL: 'SIGNAL',
+    SCREEN: 'SCREEN',
+    THERMOMETER: 'THERMOMETER',
   };
   a.KeyCode = {
     POWER: 409,
@@ -411,7 +428,7 @@ cordova.define("cordova/plugin/signage", function (k, B, c) {
   a.RS232C.Parity = { UNKNOWN: 0, NONE: 1, EVEN: 2, ODD: 3 };
   a.RS232C.StopBit = { BIT_UNKNOWN: 0, BIT_1: 1, BIT_2: 2 };
   a.RS232C.Mode = { MODE_0: 0, MODE_1: 1 };
-  a.ResetMode = { SOFT_RESET: "softReset", FACTORY_RESET: "factoryReset" };
+  a.ResetMode = { SOFT_RESET: 'softReset', FACTORY_RESET: 'factoryReset' };
   function o(E, F, D) {
     if (E.errorCode === undefined || E.errorCode === null) {
       E.errorCode = F;
@@ -422,97 +439,105 @@ cordova.define("cordova/plugin/signage", function (k, B, c) {
   }
   function w(G, F, H, D, E) {
     var I = { category: G, keys: F };
-    C.Request("luna://com.webos.service.commercial.scapadapter/settings/", {
-      method: "get",
+    C.Request('luna://com.webos.service.commercial.scapadapter/settings/', {
+      method: 'get',
       parameters: I,
       onSuccess: function (J) {
-        i("On Success");
+        i('On Success');
         if (J.returnValue === true) {
           var K = H(J.settings);
           if (K === false) {
-            if (typeof E === "function") {
-              E({ errorText: "Invalid DB value", errorCode: "DB_ERROR" });
+            if (typeof E === 'function') {
+              E({ errorText: 'Invalid DB value', errorCode: 'DB_ERROR' });
             }
           } else {
-            if (typeof D === "function") {
-              i("successCallback");
+            if (typeof D === 'function') {
+              i('successCallback');
               D(K);
             } else {
-              i("successCallback not registered or is not a function: " + D);
+              i('successCallback not registered or is not a function: ' + D);
             }
           }
         } else {
-          i("Settings Failed:  " + JSON.stringify(J, null, 3));
-          if (typeof E === "function") {
-            E({ errorText: "Invalid DB value : " + J.errorText, errorCode: "DB_ERROR" });
+          i('Settings Failed:  ' + JSON.stringify(J, null, 3));
+          if (typeof E === 'function') {
+            E({
+              errorText: 'Invalid DB value : ' + J.errorText,
+              errorCode: 'DB_ERROR',
+            });
           }
         }
       },
       onFailure: function (J) {
-        i("On Failure");
+        i('On Failure');
         delete J.returnValue;
         if (J.settings) {
-          i("settings = " + JSON.stringify(J.settings, null, 3));
+          i('settings = ' + JSON.stringify(J.settings, null, 3));
           var L = H(J.settings);
-          i("errorKey = " + JSON.stringify(J.errorKey, null, 3));
+          i('errorKey = ' + JSON.stringify(J.errorKey, null, 3));
           for (var K = 0; K < J.errorKey.length; ++K) {
             L[J.errorKey[K]] = a.UNDEFINED;
           }
-          i("cbObj = " + JSON.stringify(L, null, 3));
-          if (typeof D === "function") {
-            i("successCallback");
+          i('cbObj = ' + JSON.stringify(L, null, 3));
+          if (typeof D === 'function') {
+            i('successCallback');
             D(L);
           }
         } else {
-          if (typeof E === "function") {
+          if (typeof E === 'function') {
             E({
-              errorText: typeof J.errorText === "undefined" ? "DB Failure" : J.errorText,
-              errorCode: "DB_ERROR",
+              errorText:
+                typeof J.errorText === 'undefined' ? 'DB Failure' : J.errorText,
+              errorCode: 'DB_ERROR',
             });
           }
         }
       },
     });
-    i("Requested Service: luna://com.webos.service.commercial.scapadapter/settings/");
-    i("params : " + JSON.stringify(I));
+    i(
+      'Requested Service: luna://com.webos.service.commercial.scapadapter/settings/'
+    );
+    i('params : ' + JSON.stringify(I));
   }
   function f(I, H, D, E) {
     var J = { category: I, settings: H };
-    i("settings : " + JSON.stringify(H, null, 3));
+    i('settings : ' + JSON.stringify(H, null, 3));
     var F = false;
     for (var G in H) {
       if (G) {
-        i("has key : " + G);
+        i('has key : ' + G);
         F = true;
         break;
       }
     }
     if (F === false) {
-      i("Nothing to set");
+      i('Nothing to set');
       D();
       return;
     }
-    C.Request("luna://com.webos.service.commercial.scapadapter/settings/", {
-      method: "set",
+    C.Request('luna://com.webos.service.commercial.scapadapter/settings/', {
+      method: 'set',
       parameters: J,
       onSuccess: function () {
-        i("On Success");
-        if (typeof D === "function") {
-          i("SUCCEES CALLBACK");
+        i('On Success');
+        if (typeof D === 'function') {
+          i('SUCCEES CALLBACK');
           D();
         }
       },
       onFailure: function (K) {
-        i("On Failure");
+        i('On Failure');
         delete K.returnValue;
-        if (typeof E === "function") {
-          i("ERROR CALLBACK");
+        if (typeof E === 'function') {
+          i('ERROR CALLBACK');
           E(K);
         }
       },
     });
-    i("Requested Service: luna://com.webos.service.commercial.scapadapter/settings/");
-    i("params : " + JSON.stringify(J));
+    i(
+      'Requested Service: luna://com.webos.service.commercial.scapadapter/settings/'
+    );
+    i('params : ' + JSON.stringify(J));
   }
   a.prototype.setPortraitMode = function (D, F, I) {
     var J = {};
@@ -524,54 +549,56 @@ cordova.define("cordova/plugin/signage", function (k, B, c) {
             return true;
           }
         }
-        H = "Signage.setPortraitMode: Unrecognized OsdPortraintMode : " + K.portraitMode;
+        H =
+          'Signage.setPortraitMode: Unrecognized OsdPortraintMode : ' +
+          K.portraitMode;
         return false;
       } else {
-        H = "Signage.setPortraitMode: portraitMode does not exist.";
+        H = 'Signage.setPortraitMode: portraitMode does not exist.';
         return false;
       }
     }
     if (G(I)) {
       var E = I.portraitMode;
       J[s.OSD_PORTRAIT_MODE] = E;
-      C.Request("luna://com.webos.service.commercial.scapadapter", {
-        method: "setOsdPortraitMode",
+      C.Request('luna://com.webos.service.commercial.scapadapter', {
+        method: 'setOsdPortraitMode',
         parameters: { osdPortraitMode: I.portraitMode },
         onSuccess: function (K) {
           D();
         },
         onFailure: function (K) {
-          if (K.errorText.indexOf("Unknown method") !== -1) {
-            f("commercial", J, D, F);
+          if (K.errorText.indexOf('Unknown method') !== -1) {
+            f('commercial', J, D, F);
           } else {
             F({ errorCode: K.errorCode, errorText: K.errorText });
           }
         },
       });
-      i("setPortraitMode Done");
+      i('setPortraitMode Done');
     } else {
-      F({ errorCode: "BAD_PARAMETER", errorText: H });
+      F({ errorCode: 'BAD_PARAMETER', errorText: H });
     }
   };
   a.prototype.setFailoverMode = function (D, E, F) {
-    C.Request("luna://com.webos.service.commercial.scapadapter/signage", {
-      method: "setFailoverMode",
+    C.Request('luna://com.webos.service.commercial.scapadapter/signage', {
+      method: 'setFailoverMode',
       parameters: F,
       onSuccess: function (G) {
-        i("onSuccess");
+        i('onSuccess');
         delete G.returnValue;
         D();
       },
       onFailure: function (G) {
-        i("onFailure");
+        i('onFailure');
         delete G.returnValue;
         E(G);
       },
     });
   };
   a.prototype.getFailoverMode = function (D, E) {
-    C.Request("luna://com.webos.service.commercial.scapadapter/signage", {
-      method: "getFailoverMode",
+    C.Request('luna://com.webos.service.commercial.scapadapter/signage', {
+      method: 'getFailoverMode',
       parameters: {},
       onSuccess: function (F) {
         delete F.returnValue;
@@ -584,60 +611,66 @@ cordova.define("cordova/plugin/signage", function (k, B, c) {
     });
   };
   a.prototype.setTileInfo = function (D, E, F) {
-    C.Request("luna://com.webos.service.commercial.scapadapter/signage", {
-      method: "setTileInfo",
+    C.Request('luna://com.webos.service.commercial.scapadapter/signage', {
+      method: 'setTileInfo',
       parameters: F,
       onSuccess: function (G) {
-        i("onSuccess");
+        i('onSuccess');
         delete G.returnValue;
         D();
       },
       onFailure: function (G) {
-        i("onFailure");
+        i('onFailure');
         delete G.returnValue;
         E(G);
       },
     });
   };
   function q(D) {
-    if (D === "on") {
+    if (D === 'on') {
       return true;
     } else {
       return false;
     }
   }
   a.prototype.getTileInfo = function (D, E) {
-    C.Request("luna://com.webos.service.commercial.scapadapter/signage", {
-      method: "getTileInfo",
+    C.Request('luna://com.webos.service.commercial.scapadapter/signage', {
+      method: 'getTileInfo',
       parameters: {},
       onSuccess: function (F) {
-        if (typeof D === "function") {
+        if (typeof D === 'function') {
           delete F.returnValue;
           D(F);
         }
       },
       onFailure: function (F) {
         delete F.returnValue;
-        if (typeof E === "function") {
+        if (typeof E === 'function') {
           E(F);
         }
       },
     });
   };
   a.prototype.getSignageInfo = function (D, E) {
-    C.Request("luna://com.webos.service.commercial.scapadapter/", {
-      method: "getSignageInformation",
+    C.Request('luna://com.webos.service.commercial.scapadapter/', {
+      method: 'getSignageInformation',
       parameters: {},
       onSuccess: function (G) {
-        if (typeof D === "function") {
+        if (typeof D === 'function') {
           i(G.signageInfo);
-          if (typeof G.signageInfo.digitalAudioInputMode !== "undefined") {
+          if (typeof G.signageInfo.digitalAudioInputMode !== 'undefined') {
             var F = a.DigitalAudioInput.HDMI_DP;
-            if (G.signageInfo.digitalAudioInputMode.hasOwnProperty("ext://HDMI:1")) {
-              F = G.signageInfo.digitalAudioInputMode["ext://HDMI:1"];
+            if (
+              G.signageInfo.digitalAudioInputMode.hasOwnProperty('ext://HDMI:1')
+            ) {
+              F = G.signageInfo.digitalAudioInputMode['ext://HDMI:1'];
             } else {
-              if (G.signageInfo.digitalAudioInputMode.hasOwnProperty("ext://hdmi:1")) {
-                F = G.signageInfo.digitalAudioInputMode["ext://hdmi:1"];
+              if (
+                G.signageInfo.digitalAudioInputMode.hasOwnProperty(
+                  'ext://hdmi:1'
+                )
+              ) {
+                F = G.signageInfo.digitalAudioInputMode['ext://hdmi:1'];
               }
             }
             G.signageInfo.digitalAudioInputMode = F;
@@ -647,7 +680,7 @@ cordova.define("cordova/plugin/signage", function (k, B, c) {
       },
       onFailure: function (F) {
         delete F.returnValue;
-        if (typeof E === "function") {
+        if (typeof E === 'function') {
           E(F);
         }
       },
@@ -656,50 +689,50 @@ cordova.define("cordova/plugin/signage", function (k, B, c) {
   a.prototype.enableCheckScreen = function (D, E, H) {
     var G;
     var F = function (J) {
-      if (typeof J.checkScreen !== "undefined" || J.checkScreen !== null) {
+      if (typeof J.checkScreen !== 'undefined' || J.checkScreen !== null) {
         return true;
       } else {
-        G = "need options.checkScreen.";
+        G = 'need options.checkScreen.';
         return false;
       }
     };
     if (F(H)) {
-      C.Request("luna://com.webos.service.commercial.scapadapter", {
-        method: "signage/enableCheckScreen",
+      C.Request('luna://com.webos.service.commercial.scapadapter', {
+        method: 'signage/enableCheckScreen',
         parameters: H,
         onSuccess: function (J) {
-          if (typeof D === "function") {
+          if (typeof D === 'function') {
             D();
           }
         },
         onFailure: function (J) {
           delete J.returnValue;
-          if (typeof E === "function") {
+          if (typeof E === 'function') {
             E(J);
           }
         },
       });
-      i("enableCheckScreen Done");
+      i('enableCheckScreen Done');
     } else {
-      var I = { errorCode: "BAD_PARAMETER", errorText: G };
+      var I = { errorCode: 'BAD_PARAMETER', errorText: G };
       E(I);
     }
   };
   a.prototype.setIsmMethod = function (D, E, F) {
-    C.Request("luna://com.webos.service.commercial.scapadapter/signage/", {
-      method: "setIsmMethod",
+    C.Request('luna://com.webos.service.commercial.scapadapter/signage/', {
+      method: 'setIsmMethod',
       parameters: F,
       onSuccess: function (G) {
-        i("setIsmMethod: On Success");
-        if (typeof D === "function") {
+        i('setIsmMethod: On Success');
+        if (typeof D === 'function') {
           D();
         }
       },
       onFailure: function (G) {
-        i("setIsmMethod: On Failure");
+        i('setIsmMethod: On Failure');
         delete G.returnValue;
-        if (typeof E === "function") {
-          o(G, "CSIM", "Configuration.setIsmMethod returns failure.");
+        if (typeof E === 'function') {
+          o(G, 'CSIM', 'Configuration.setIsmMethod returns failure.');
           E(G);
         }
       },
@@ -708,53 +741,55 @@ cordova.define("cordova/plugin/signage", function (k, B, c) {
   a.prototype.setDigitalAudioInputMode = function (D, E, H) {
     var G;
     function F(J) {
-      if (J.hasOwnProperty("digitalAudioInputList")) {
+      if (J.hasOwnProperty('digitalAudioInputList')) {
         return false;
       } else {
-        if (J.hasOwnProperty("digitalAudioInput")) {
+        if (J.hasOwnProperty('digitalAudioInput')) {
           return true;
         } else {
-          G = "digitalAudioInputList  does not exist.";
+          G = 'digitalAudioInputList  does not exist.';
           return false;
         }
       }
     }
     if (F(H)) {
-      C.Request("luna://com.webos.service.commercial.scapadapter/", {
-        method: "setDigitalAudioInputList",
-        parameters: { digitalAudioInputList: { "ext://hdmi:1": H.digitalAudioInput } },
+      C.Request('luna://com.webos.service.commercial.scapadapter/', {
+        method: 'setDigitalAudioInputList',
+        parameters: {
+          digitalAudioInputList: { 'ext://hdmi:1': H.digitalAudioInput },
+        },
         onSuccess: function () {
-          if (typeof D === "function") {
+          if (typeof D === 'function') {
             D();
           }
         },
         onFailure: function (J) {
           delete J.returnValue;
-          if (typeof E === "function") {
+          if (typeof E === 'function') {
             E(J);
           }
         },
       });
     } else {
-      var I = { errorCode: "BAD_PARAMETER", errorText: G };
+      var I = { errorCode: 'BAD_PARAMETER', errorText: G };
       E(I);
     }
   };
   var z = false;
   a.prototype.registerSystemMonitor = function (E, I, M) {
-    var L = ["fan", "signal", "lamp", "screen", "temperature"];
+    var L = ['fan', 'signal', 'lamp', 'screen', 'temperature'];
     var J;
-    var K = "BAD_PARAMETER";
-    i("Listeners are: " + JSON.stringify(n, null, 3));
+    var K = 'BAD_PARAMETER';
+    i('Listeners are: ' + JSON.stringify(n, null, 3));
     function D(N) {
       if (z === true) {
-        J = "Not ready to register monitor now.";
-        K = "SYSTEM_ERROR";
+        J = 'Not ready to register monitor now.';
+        K = 'SYSTEM_ERROR';
         return false;
       }
-      i("options are: " + JSON.stringify(N, null, 3));
-      if (typeof N.eventHandler !== "function") {
-        J = "No event handler was given or event hadnler is not a function";
+      i('options are: ' + JSON.stringify(N, null, 3));
+      if (typeof N.eventHandler !== 'function') {
+        J = 'No event handler was given or event hadnler is not a function';
         return false;
       }
       if (N.monitorConfiguration) {
@@ -763,63 +798,63 @@ cordova.define("cordova/plugin/signage", function (k, B, c) {
             var R = false;
             for (var O = 0; O < L.length; ++O) {
               if (P === L[O]) {
-                i("Found key: " + L[O]);
+                i('Found key: ' + L[O]);
                 R = true;
               }
             }
             if (!R) {
-              J = "Invalid Monitoring source  : " + P;
+              J = 'Invalid Monitoring source  : ' + P;
               return false;
             }
             var Q = N.monitorConfiguration[P];
-            i("value: " + Q);
-            if (typeof Q !== "boolean") {
-              J = "Invalid value  : " + Q;
+            i('value: ' + Q);
+            if (typeof Q !== 'boolean') {
+              J = 'Invalid value  : ' + Q;
               return false;
             }
           }
         }
         return true;
       } else {
-        J = "monitorConfiguration  does not exist.";
+        J = 'monitorConfiguration  does not exist.';
         return false;
       }
     }
     if (D(M)) {
       var G = function () {
-        i("Canceled all previous message subscriptions");
+        i('Canceled all previous message subscriptions');
         var O = M.eventHandler;
         for (var N in M.monitorConfiguration) {
           if (N) {
             var P = M.monitorConfiguration[N];
             if (P === true) {
-              i("Add listener for : " + N);
+              i('Add listener for : ' + N);
               p(N, O);
             }
           }
         }
-        i("Monitoring Setup : " + JSON.stringify(n, null, 3));
-        i("Start Polling : ");
-        C.Request("luna://com.webos.service.commercial.scapadapter", {
-          method: "systemMonitor/startMonitor",
+        i('Monitoring Setup : ' + JSON.stringify(n, null, 3));
+        i('Start Polling : ');
+        C.Request('luna://com.webos.service.commercial.scapadapter', {
+          method: 'systemMonitor/startMonitor',
           parameters: {},
           onSuccess: function (Q) {
-            i("On Success");
+            i('On Success');
             if (Q.returnValue === true) {
-              if (typeof E === "function") {
+              if (typeof E === 'function') {
                 E();
               }
             } else {
-              if (typeof I === "function") {
+              if (typeof I === 'function') {
                 I(Q);
               }
             }
             z = false;
           },
           onFailure: function (Q) {
-            i("On Failure");
+            i('On Failure');
             delete Q.returnValue;
-            if (typeof I === "function") {
+            if (typeof I === 'function') {
               I(Q);
             }
             z = false;
@@ -829,7 +864,7 @@ cordova.define("cordova/plugin/signage", function (k, B, c) {
       var F = function (N) {
         I(N);
       };
-      i("Cancel all previous message subscriptions");
+      i('Cancel all previous message subscriptions');
       z = true;
       b(G, F);
     } else {
@@ -839,35 +874,38 @@ cordova.define("cordova/plugin/signage", function (k, B, c) {
   };
   a.prototype.unregisterSystemMonitor = function (D, E) {
     b(D, E);
-    i("After unregister, _gSystemMonitoringSetup are: " + JSON.stringify(n, null, 3));
+    i(
+      'After unregister, _gSystemMonitoringSetup are: ' +
+        JSON.stringify(n, null, 3)
+    );
   };
   function b(D, E) {
-    i("cancelAllSubscription> setup are: " + JSON.stringify(n, null, 3));
+    i('cancelAllSubscription> setup are: ' + JSON.stringify(n, null, 3));
     for (var F in n) {
       if (F) {
         x(F);
       }
     }
-    i("Stop Polling");
-    C.Request("luna://com.webos.service.commercial.scapadapter", {
-      method: "systemMonitor/stopMonitor",
+    i('Stop Polling');
+    C.Request('luna://com.webos.service.commercial.scapadapter', {
+      method: 'systemMonitor/stopMonitor',
       parameters: {},
       onSuccess: function (G) {
-        i("On Success");
+        i('On Success');
         if (G.returnValue === true) {
-          if (typeof D === "function") {
+          if (typeof D === 'function') {
             D();
           }
         } else {
-          if (typeof E === "function") {
+          if (typeof E === 'function') {
             E(G);
           }
         }
       },
       onFailure: function (G) {
-        i("On Failure");
+        i('On Failure');
         delete G.returnValue;
-        if (typeof E === "function") {
+        if (typeof E === 'function') {
           E(G);
         }
       },
@@ -883,7 +921,10 @@ cordova.define("cordova/plugin/signage", function (k, B, c) {
         temperature: n.temperature.getEvent,
       });
     } else {
-      var F = { errorCode: "ERROR", errorText: "Failed to get system monitoring setup" };
+      var F = {
+        errorCode: 'ERROR',
+        errorText: 'Failed to get system monitoring setup',
+      };
       E(F);
     }
   };
@@ -894,25 +935,25 @@ cordova.define("cordova/plugin/signage", function (k, B, c) {
         for (var K in J.powerSaveMode) {
           if (K) {
             var L = J.powerSaveMode[K];
-            if (K === "ses" || K === "do15MinOff") {
-              if (typeof L !== "boolean") {
-                G = "Invalid value  : " + L;
+            if (K === 'ses' || K === 'do15MinOff') {
+              if (typeof L !== 'boolean') {
+                G = 'Invalid value  : ' + L;
                 return false;
               }
             } else {
-              if (K === "automaticStandby") {
+              if (K === 'automaticStandby') {
                 if (!v(a.AutomaticStandbyMode, L)) {
-                  G = "Invalid automaticStandby value  : " + L;
+                  G = 'Invalid automaticStandby value  : ' + L;
                   return false;
                 }
               } else {
-                if (K === "dpmMode") {
+                if (K === 'dpmMode') {
                   if (!v(a.DpmMode, L)) {
-                    G = "Invalid dpmMode value  : " + L;
+                    G = 'Invalid dpmMode value  : ' + L;
                     return false;
                   }
                 } else {
-                  G = "Unknown value  : " + K;
+                  G = 'Unknown value  : ' + K;
                   return false;
                 }
               }
@@ -921,112 +962,120 @@ cordova.define("cordova/plugin/signage", function (k, B, c) {
         }
         return true;
       } else {
-        G = "powerSaveMode  does not exist.";
+        G = 'powerSaveMode  does not exist.';
         return false;
       }
     }
     if (F(H)) {
       i(H.powerSaveMode);
-      C.Request("luna://com.webos.service.commercial.scapadapter", {
-        method: "setPowerSaveMode",
+      C.Request('luna://com.webos.service.commercial.scapadapter', {
+        method: 'setPowerSaveMode',
         parameters: { mode: H.powerSaveMode },
         onSuccess: function (J) {
-          i("onSuccess");
+          i('onSuccess');
           if (J.returnValue) {
             D(J.mode);
           } else {
-            i("FAILED: " + J.errorText);
+            i('FAILED: ' + J.errorText);
             E({ errorCode: J.errorCode, errorText: J.errorText });
           }
         },
         onFailure: function (J) {
-          i("onFailure");
-          i("FAILED: " + J.errorText);
+          i('onFailure');
+          i('FAILED: ' + J.errorText);
           E({ errorCode: J.errorCode, errorText: J.errorText });
         },
       });
     } else {
-      var I = { errorCode: "BAD_PARAMETER", errorText: G };
+      var I = { errorCode: 'BAD_PARAMETER', errorText: G };
       E(I);
     }
   };
   a.prototype.getPowerSaveMode = function (D, E) {
-    C.Request("luna://com.webos.service.commercial.scapadapter", {
-      method: "getPowerSaveMode",
+    C.Request('luna://com.webos.service.commercial.scapadapter', {
+      method: 'getPowerSaveMode',
       parameters: {},
       onSuccess: function (F) {
-        i("onSuccess");
+        i('onSuccess');
         if (F.returnValue) {
           D(F.mode);
         } else {
-          i("FAILED: " + F.errorText);
+          i('FAILED: ' + F.errorText);
           E({ errorCode: F.errorCode, errorText: F.errorText });
         }
       },
       onFailure: function (F) {
-        i("onFailure");
-        i("FAILED: " + F.errorText);
+        i('onFailure');
+        i('FAILED: ' + F.errorText);
         E({ errorCode: F.errorCode, errorText: F.errorText });
       },
     });
   };
   a.prototype.setUsagePermission = function (D, E, F) {
-    C.Request("luna://com.webos.service.commercial.scapadapter/signage/", {
-      method: "setUsagePermission",
+    C.Request('luna://com.webos.service.commercial.scapadapter/signage/', {
+      method: 'setUsagePermission',
       parameters: F,
       onSuccess: function (G) {
         delete G.returnValue;
-        if (typeof D === "function") {
+        if (typeof D === 'function') {
           D();
         }
       },
       onFailure: function (G) {
         delete G.returnValue;
-        if (typeof E === "function") {
-          o(G, "SSUP", "Signage.setUsagePermission returns failure.");
+        if (typeof E === 'function') {
+          o(G, 'SSUP', 'Signage.setUsagePermission returns failure.');
           E(G);
         }
       },
     });
   };
   a.prototype.getUsagePermission = function (D, E) {
-    C.Request("luna://com.webos.service.commercial.scapadapter/signage/", {
-      method: "getUsagePermission",
+    C.Request('luna://com.webos.service.commercial.scapadapter/signage/', {
+      method: 'getUsagePermission',
       parameters: {},
       onSuccess: function (F) {
         delete F.returnValue;
-        if (typeof D === "function") {
+        if (typeof D === 'function') {
           D(F);
         }
       },
       onFailure: function (F) {
         delete F.returnValue;
-        if (typeof E === "function") {
-          o(F, "SGUP", "Signage.getUsagePermission returns failure.");
+        if (typeof E === 'function') {
+          o(F, 'SGUP', 'Signage.getUsagePermission returns failure.');
           E(F);
         }
       },
     });
   };
   a.prototype.getUsageData = function (D, E) {
-    C.Request("luna://com.webos.service.commercial.scapadapter/signage", {
-      method: "getUsageData",
+    C.Request('luna://com.webos.service.commercial.scapadapter/signage', {
+      method: 'getUsageData',
       parameters: {},
       onSuccess: function (F) {
-        console.log("On getUsageData Success");
+        console.log('On getUsageData Success');
         delete F.returnValue;
         D(F);
       },
       onFailure: function (F) {
-        console.log("On getUsageData Failure");
+        console.log('On getUsageData Failure');
         delete F.returnValue;
         E(F);
       },
     });
   };
   a.prototype.captureScreen = function (D, E, F) {
-    var G = { save: F === undefined || F === null || F.save === undefined ? false : F.save };
-    if (F !== undefined && F !== null && F.thumbnail !== undefined && F.thumbnail === true) {
+    var G = {
+      save:
+        F === undefined || F === null || F.save === undefined ? false : F.save,
+    };
+    if (
+      F !== undefined &&
+      F !== null &&
+      F.thumbnail !== undefined &&
+      F.thumbnail === true
+    ) {
       G.width = 128;
       G.height = 72;
     } else {
@@ -1038,11 +1087,11 @@ cordova.define("cordova/plugin/signage", function (k, B, c) {
         G.height = 720;
       }
     }
-    C.Request("luna://com.webos.service.commercial.scapadapter", {
-      method: "captureScreen",
+    C.Request('luna://com.webos.service.commercial.scapadapter', {
+      method: 'captureScreen',
       parameters: G,
       onSuccess: function (H) {
-        i("On Success");
+        i('On Success');
         if (H.returnValue === true) {
           D({ data: H.data, size: H.size, encoding: H.encoding });
         } else {
@@ -1050,48 +1099,48 @@ cordova.define("cordova/plugin/signage", function (k, B, c) {
         }
       },
       onFailure: function (H) {
-        i("On Failure");
+        i('On Failure');
         E({ errorCode: H.errorCode, errorText: H.errorText });
       },
     });
   };
   a.prototype.setIntelligentAuto = function (D, E, F) {
-    C.Request("luna://com.webos.service.commercial.scapadapter/signage/", {
-      method: "setIntelligentAuto",
+    C.Request('luna://com.webos.service.commercial.scapadapter/signage/', {
+      method: 'setIntelligentAuto',
       parameters: { enabled: F.enabled },
       onSuccess: function (G) {
-        i("setIntelligentAuto: On Success");
+        i('setIntelligentAuto: On Success');
         delete G.returnValue;
-        if (typeof D === "function") {
+        if (typeof D === 'function') {
           D();
         }
       },
       onFailure: function (G) {
-        i("setIntelligentAuto: On Failure");
+        i('setIntelligentAuto: On Failure');
         delete G.returnValue;
-        if (typeof E === "function") {
-          o(G, "SSIA", "Signage.setIntelligentAuto returns failure.");
+        if (typeof E === 'function') {
+          o(G, 'SSIA', 'Signage.setIntelligentAuto returns failure.');
           E(G);
         }
       },
     });
   };
   a.prototype.getIntelligentAuto = function (D, E) {
-    C.Request("luna://com.webos.service.commercial.scapadapter/signage/", {
-      method: "getIntelligentAuto",
+    C.Request('luna://com.webos.service.commercial.scapadapter/signage/', {
+      method: 'getIntelligentAuto',
       parameters: {},
       onSuccess: function (F) {
-        i("getIntelligentAuto: On Success");
+        i('getIntelligentAuto: On Success');
         delete F.returnValue;
-        if (typeof D === "function") {
+        if (typeof D === 'function') {
           D();
         }
       },
       onFailure: function (F) {
-        i("getIntelligentAuto: On Failure");
+        i('getIntelligentAuto: On Failure');
         delete F.returnValue;
-        if (typeof E === "function") {
-          o(F, "SGIA", "Signage.getIntelligentAuto returns failure.");
+        if (typeof E === 'function') {
+          o(F, 'SGIA', 'Signage.getIntelligentAuto returns failure.');
           E(F);
         }
       },
@@ -1099,61 +1148,62 @@ cordova.define("cordova/plugin/signage", function (k, B, c) {
   };
   a.prototype.setStudioMode = function (D, E, G) {
     var F = {};
-    o(F, "DEPRECATED_API", "This function is deprecated.");
+    o(F, 'DEPRECATED_API', 'This function is deprecated.');
     E(F);
   };
   a.prototype.getStudioMode = function (D, E) {
     var F = {};
-    o(F, "DEPRECATED_API", "This function is deprecated.");
+    o(F, 'DEPRECATED_API', 'This function is deprecated.');
     E(F);
   };
   a.prototype.setLanDaisyChain = function (D, E, F) {
-    C.Request("luna://com.webos.service.commercial.scapadapter/signage/", {
-      method: "setLanDaisyChain",
+    C.Request('luna://com.webos.service.commercial.scapadapter/signage/', {
+      method: 'setLanDaisyChain',
       parameters: F,
       onSuccess: function (G) {
-        i("setLanDaisyChain: On Success");
+        i('setLanDaisyChain: On Success');
         delete G.returnValue;
-        if (typeof D === "function") {
+        if (typeof D === 'function') {
           D();
         }
       },
       onFailure: function (G) {
-        i("setLanDaisyChain: On Failure");
+        i('setLanDaisyChain: On Failure');
         delete G.returnValue;
-        if (typeof E === "function") {
-          o(G, "SSLD", "Signage.setLanDaisyChain returns failure.");
+        if (typeof E === 'function') {
+          o(G, 'SSLD', 'Signage.setLanDaisyChain returns failure.');
           E(G);
         }
       },
     });
   };
   a.prototype.getLanDaisyChain = function (D, E) {
-    C.Request("luna://com.webos.service.commercial.scapadapter/signage/", {
-      method: "getLanDaisyChain",
+    C.Request('luna://com.webos.service.commercial.scapadapter/signage/', {
+      method: 'getLanDaisyChain',
       parameters: {},
       onSuccess: function (F) {
-        i("getLanDaisyChain: On Success");
+        i('getLanDaisyChain: On Success');
         delete F.returnValue;
-        if (typeof D === "function") {
+        if (typeof D === 'function') {
           D();
         }
       },
       onFailure: function (F) {
-        i("getLanDaisyChain: On Failure");
+        i('getLanDaisyChain: On Failure');
         delete F.returnValue;
-        if (typeof E === "function") {
-          o(F, "SGLD", "Signage.getLanDaisyChain returns failure.");
+        if (typeof E === 'function') {
+          o(F, 'SGLD', 'Signage.getLanDaisyChain returns failure.');
           E(F);
         }
       },
     });
   };
   a.prototype.registerRS232CEventListener = function (D, E, F) {
-    if (typeof F.eventListener !== "function") {
+    if (typeof F.eventListener !== 'function') {
       var G = {
-        errorCode: "BAD_PARAMETER",
-        errorText: "No event listener was given or event listener is not a function",
+        errorCode: 'BAD_PARAMETER',
+        errorText:
+          'No event listener was given or event listener is not a function',
       };
       E(G);
       return false;
@@ -1161,31 +1211,34 @@ cordova.define("cordova/plugin/signage", function (k, B, c) {
     e(D, E, F.eventListener);
   };
   a.prototype.unregisterRS232CEventListener = function (D, E) {
-    if (h("RS232C") === false) {
-      if (typeof E === "function") {
-        E({ errorCode: "BAD_PARAMETER", errorText: "Failed to remove event listener" });
+    if (h('RS232C') === false) {
+      if (typeof E === 'function') {
+        E({
+          errorCode: 'BAD_PARAMETER',
+          errorText: 'Failed to remove event listener',
+        });
       }
       return;
     } else {
-      C.Request("luna://com.webos.service.commercial.scapadapter", {
-        method: "systemMonitor/stopMonitorRS232C",
+      C.Request('luna://com.webos.service.commercial.scapadapter', {
+        method: 'systemMonitor/stopMonitorRS232C',
         parameters: {},
         onSuccess: function (F) {
-          i("On Success");
+          i('On Success');
           if (F.returnValue === true) {
-            if (typeof D === "function") {
+            if (typeof D === 'function') {
               D();
             }
           } else {
-            if (typeof E === "function") {
+            if (typeof E === 'function') {
               E(F);
             }
           }
         },
         onFailure: function (F) {
-          i("On Failure");
+          i('On Failure');
           delete F.returnValue;
-          if (typeof E === "function") {
+          if (typeof E === 'function') {
             E(F);
           }
         },
@@ -1193,274 +1246,274 @@ cordova.define("cordova/plugin/signage", function (k, B, c) {
     }
   };
   a.prototype.getNoSignalImageMode = function (D, E) {
-    i("getnoSignalImage: ");
-    C.Request("luna://com.webos.service.commercial.scapadapter/signage", {
-      method: "getNoSignalImageMode",
+    i('getnoSignalImage: ');
+    C.Request('luna://com.webos.service.commercial.scapadapter/signage', {
+      method: 'getNoSignalImageMode',
       parameters: {},
       onSuccess: function (F) {
-        i("getNoSignalImage: On Success");
+        i('getNoSignalImage: On Success');
         if (F.returnValue === true) {
           var G = {};
-          G.enabled = F.noSignalImage === "on" ? "on" : "off";
-          if (typeof D === "function") {
+          G.enabled = F.noSignalImage === 'on' ? 'on' : 'off';
+          if (typeof D === 'function') {
             D(G);
           }
         }
       },
       onFailure: function (F) {
-        i("getNoSignalImage: On Failure");
+        i('getNoSignalImage: On Failure');
         delete F.returnValue;
-        if (typeof E === "function") {
-          o(F, "SGSI", "Signage.getNoSignalImage returns failure.");
+        if (typeof E === 'function') {
+          o(F, 'SGSI', 'Signage.getNoSignalImage returns failure.');
           E(F);
         }
       },
     });
-    i("Signage.getNoSignalImageMode Done");
+    i('Signage.getNoSignalImageMode Done');
   };
   a.prototype.setNoSignalImageMode = function (D, E, F) {
-    i("setNoSignalImageMode: ");
-    C.Request("luna://com.webos.service.commercial.scapadapter/signage", {
-      method: "setNoSignalImageMode",
+    i('setNoSignalImageMode: ');
+    C.Request('luna://com.webos.service.commercial.scapadapter/signage', {
+      method: 'setNoSignalImageMode',
       parameters: { noSignalImageMode: F.noSignalImageMode },
       onSuccess: function (G) {
-        i("setNoSignalImageMode: On Success");
+        i('setNoSignalImageMode: On Success');
         if (G.returnValue === true) {
-          if (typeof D === "function") {
+          if (typeof D === 'function') {
             D();
           }
         }
       },
       onFailure: function (G) {
-        i("setNoSignalImageMode: On Failure");
+        i('setNoSignalImageMode: On Failure');
         delete G.returnValue;
-        if (typeof E === "function") {
-          o(G, "SSSI", "Signage.setNoSignalImageMode returns failure.");
+        if (typeof E === 'function') {
+          o(G, 'SSSI', 'Signage.setNoSignalImageMode returns failure.');
           E(G);
         }
       },
     });
-    i("Signage.setNoSignalImageMode Done");
+    i('Signage.setNoSignalImageMode Done');
   };
   a.prototype.updateNoSignalImageList = function (D, E, F) {
-    i("updateNoSingalImageList");
-    C.Request("luna://com.webos.service.commercial.scapadapter/signage", {
-      method: "updateNoSignalImageList",
+    i('updateNoSingalImageList');
+    C.Request('luna://com.webos.service.commercial.scapadapter/signage', {
+      method: 'updateNoSignalImageList',
       parameters: F,
       onSuccess: function (G) {
-        i("updateNoSignalImageList: On Success");
+        i('updateNoSignalImageList: On Success');
         if (G.returnValue === true) {
-          if (typeof D === "function") {
+          if (typeof D === 'function') {
             D();
           }
         }
       },
       onFailure: function (G) {
-        i("updateNoSignalImageList: On Failure");
+        i('updateNoSignalImageList: On Failure');
         delete G.returnValue;
-        if (typeof E === "function") {
-          o(G, "SUNSIL", "Signage.updateNoSignalImageList returns failure.");
+        if (typeof E === 'function') {
+          o(G, 'SUNSIL', 'Signage.updateNoSignalImageList returns failure.');
           E(G);
         }
       },
     });
-    i("Signage.updateNoSignalImageList Done");
+    i('Signage.updateNoSignalImageList Done');
   };
   a.prototype.resetNoSignalImage = function (D, E) {
-    i("resetNoSignalImage: ");
-    C.Request("luna://com.webos.service.commercial.scapadapter/signage", {
-      method: "resetNoSignalImage",
+    i('resetNoSignalImage: ');
+    C.Request('luna://com.webos.service.commercial.scapadapter/signage', {
+      method: 'resetNoSignalImage',
       onSuccess: function (F) {
-        i("resetNoSignalImage: On Success");
+        i('resetNoSignalImage: On Success');
         if (F.returnValue === true) {
-          if (typeof D === "function") {
+          if (typeof D === 'function') {
             D();
           }
         }
       },
       onFailure: function (F) {
-        i("resetNoSignalImage: On Failure");
+        i('resetNoSignalImage: On Failure');
         delete F.returnValue;
-        if (typeof E === "function") {
-          o(F, "SRNSI", "Signage.resetNoSignalImage returns failure.");
+        if (typeof E === 'function') {
+          o(F, 'SRNSI', 'Signage.resetNoSignalImage returns failure.');
           E(F);
         }
       },
     });
-    i("Signage.resetNoSignalImage Done");
+    i('Signage.resetNoSignalImage Done');
   };
   a.prototype.addKeyItem = function (D, E, F) {
-    C.Request("luna://com.webos.service.commercial.scapadapter/signage", {
-      method: "addKeyItem",
+    C.Request('luna://com.webos.service.commercial.scapadapter/signage', {
+      method: 'addKeyItem',
       parameters: F,
       onSuccess: function (G) {
-        i("addKeyItem: On Success");
+        i('addKeyItem: On Success');
         if (G.returnValue === true) {
-          if (typeof D === "function") {
+          if (typeof D === 'function') {
             D();
           }
         }
       },
       onFailure: function (G) {
-        i("addKeyItem: On Failure");
+        i('addKeyItem: On Failure');
         delete G.returnValue;
-        if (typeof E === "function") {
-          o(G, "SAKI", "Signage.addKeyItem returns failure.");
+        if (typeof E === 'function') {
+          o(G, 'SAKI', 'Signage.addKeyItem returns failure.');
           E(G);
         }
       },
     });
-    i("Signage.addKeyItem Done");
+    i('Signage.addKeyItem Done');
   };
   a.prototype.clearKeyTable = function (D, E) {
-    C.Request("luna://com.webos.service.commercial.scapadapter/signage", {
-      method: "clearKeyTable",
+    C.Request('luna://com.webos.service.commercial.scapadapter/signage', {
+      method: 'clearKeyTable',
       onSuccess: function (F) {
-        i("clearKeyTable: On Success");
+        i('clearKeyTable: On Success');
         if (F.returnValue === true) {
-          if (typeof D === "function") {
+          if (typeof D === 'function') {
             D();
           }
         }
       },
       onFailure: function (F) {
-        i("clearKeyTable: On Failure");
+        i('clearKeyTable: On Failure');
         delete F.returnValue;
-        if (typeof E === "function") {
-          o(F, "SCKT", "Signage.clearKeyTable returns failure.");
+        if (typeof E === 'function') {
+          o(F, 'SCKT', 'Signage.clearKeyTable returns failure.');
           E(F);
         }
       },
     });
-    i("Signage.clearKeyTable Done");
+    i('Signage.clearKeyTable Done');
   };
   a.prototype.removeKeyItem = function (D, E, F) {
-    C.Request("luna://com.webos.service.commercial.scapadapter/signage", {
-      method: "removeKeyItem",
+    C.Request('luna://com.webos.service.commercial.scapadapter/signage', {
+      method: 'removeKeyItem',
       parameters: F,
       onSuccess: function (G) {
-        i("removeKeyItem: On Success");
+        i('removeKeyItem: On Success');
         if (G.returnValue === true) {
-          if (typeof D === "function") {
+          if (typeof D === 'function') {
             D();
           }
         }
       },
       onFailure: function (G) {
-        i("removeKeyItem: On Failure");
+        i('removeKeyItem: On Failure');
         delete G.returnValue;
-        if (typeof E === "function") {
-          o(G, "SAKI", "Signage.removeKeyItem returns failure.");
+        if (typeof E === 'function') {
+          o(G, 'SAKI', 'Signage.removeKeyItem returns failure.');
           E(G);
         }
       },
     });
-    i("Signage.removeKeyItem Done");
+    i('Signage.removeKeyItem Done');
   };
   a.prototype.sendKey = function (D, E, F) {
-    C.Request("luna://com.webos.service.commercial.scapadapter/signage", {
-      method: "sendKey",
+    C.Request('luna://com.webos.service.commercial.scapadapter/signage', {
+      method: 'sendKey',
       parameters: F,
       onSuccess: function (G) {
-        i("sendKey: On Success");
+        i('sendKey: On Success');
         if (G.returnValue === true) {
-          if (typeof D === "function") {
+          if (typeof D === 'function') {
             D();
           }
         }
       },
       onFailure: function (G) {
-        i("sendKey: On Failure");
+        i('sendKey: On Failure');
         delete G.returnValue;
-        if (typeof E === "function") {
-          o(G, "SSKY", "Signage.sendKey returns failure.");
+        if (typeof E === 'function') {
+          o(G, 'SSKY', 'Signage.sendKey returns failure.');
           E(G);
         }
       },
     });
-    i("Signage.sendKey Done");
+    i('Signage.sendKey Done');
   };
   a.prototype.getMirrorMode = function (D, E) {
-    C.Request("luna://com.webos.service.commercial.scapadapter/signage", {
-      method: "getMirrorMode",
+    C.Request('luna://com.webos.service.commercial.scapadapter/signage', {
+      method: 'getMirrorMode',
       parameters: {},
       onSuccess: function (F) {
         delete F.returnValue;
-        if (typeof D === "function") {
+        if (typeof D === 'function') {
           D(F);
         }
       },
       onFailure: function (F) {
         delete F.returnValue;
-        if (typeof E === "function") {
+        if (typeof E === 'function') {
           E(F);
         }
       },
     });
   };
   a.prototype.setMirrorMode = function (D, E, F) {
-    C.Request("luna://com.webos.service.commercial.scapadapter/signage", {
-      method: "setMirrorMode",
+    C.Request('luna://com.webos.service.commercial.scapadapter/signage', {
+      method: 'setMirrorMode',
       parameters: F,
       onSuccess: function () {
-        if (typeof D === "function") {
+        if (typeof D === 'function') {
           D();
         }
       },
       onFailure: function (G) {
         delete G.returnValue;
-        if (typeof E === "function") {
+        if (typeof E === 'function') {
           E(G);
         }
       },
     });
   };
   a.prototype.getQuietMode = function (D, E) {
-    C.Request("luna://com.webos.service.commercial.scapadapter/signage", {
-      method: "getQuietMode",
+    C.Request('luna://com.webos.service.commercial.scapadapter/signage', {
+      method: 'getQuietMode',
       parameters: {},
       onSuccess: function (F) {
         delete F.returnValue;
-        if (typeof D === "function") {
+        if (typeof D === 'function') {
           D(F);
         }
       },
       onFailure: function (F) {
         delete F.returnValue;
-        if (typeof E === "function") {
+        if (typeof E === 'function') {
           E(F);
         }
       },
     });
   };
   a.prototype.setQuietMode = function (D, E, F) {
-    C.Request("luna://com.webos.service.commercial.scapadapter/signage", {
-      method: "setQuietMode",
+    C.Request('luna://com.webos.service.commercial.scapadapter/signage', {
+      method: 'setQuietMode',
       parameters: F,
       onSuccess: function () {
-        if (typeof D === "function") {
+        if (typeof D === 'function') {
           D();
         }
       },
       onFailure: function (G) {
         delete G.returnValue;
-        if (typeof E === "function") {
+        if (typeof E === 'function') {
           E(G);
         }
       },
     });
   };
   a.prototype.getRS232CConfiguration = function (D, E) {
-    C.Request("luna://com.webos.service.commercial.scapadapter", {
-      method: "signage/getRS232CConfiguration",
+    C.Request('luna://com.webos.service.commercial.scapadapter', {
+      method: 'signage/getRS232CConfiguration',
       parameters: {},
       onSuccess: function (F) {
-        i("onSuccess");
+        i('onSuccess');
         if (F.returnValue) {
           delete F.returnValue;
           D(F);
         } else {
-          i("FAILED: " + F.errorText);
+          i('FAILED: ' + F.errorText);
           delete F.returnValue;
           E({ errorCode: F.errorCode, errorText: F.errorText });
         }
@@ -1472,17 +1525,17 @@ cordova.define("cordova/plugin/signage", function (k, B, c) {
     });
   };
   a.prototype.setRS232CConfiguration = function (D, E, F) {
-    i("setRS232CConfiguration options : " + JSON.stringify(F));
-    C.Request("luna://com.webos.service.commercial.scapadapter", {
-      method: "signage/setRS232CConfiguration",
+    i('setRS232CConfiguration options : ' + JSON.stringify(F));
+    C.Request('luna://com.webos.service.commercial.scapadapter', {
+      method: 'signage/setRS232CConfiguration',
       parameters: F,
       onSuccess: function (G) {
-        i("onSuccess");
+        i('onSuccess');
         if (G.returnValue) {
           delete G.returnValue;
           D(G);
         } else {
-          i("FAILED: " + G.errorText);
+          i('FAILED: ' + G.errorText);
           delete G.returnValue;
           E({ errorCode: G.errorCode, errorText: G.errorText });
         }
@@ -1494,9 +1547,9 @@ cordova.define("cordova/plugin/signage", function (k, B, c) {
     });
   };
   a.prototype.sendRS232CData = function (D, E, F) {
-    i("sendRS232CData options : " + JSON.stringify(F));
-    C.Request("luna://com.webos.service.commercial.scapadapter", {
-      method: "signage/sendRS232CData",
+    i('sendRS232CData options : ' + JSON.stringify(F));
+    C.Request('luna://com.webos.service.commercial.scapadapter', {
+      method: 'signage/sendRS232CData',
       parameters: F,
       onSuccess: function (G) {
         if (G.returnValue) {
@@ -1514,52 +1567,52 @@ cordova.define("cordova/plugin/signage", function (k, B, c) {
     });
   };
   a.prototype.reset = function (D, E, F) {
-    C.Request("luna://com.webos.service.commercial.scapadapter/signage", {
-      method: "reset",
+    C.Request('luna://com.webos.service.commercial.scapadapter/signage', {
+      method: 'reset',
       parameters: F,
       onSuccess: function () {
-        if (typeof D === "function") {
+        if (typeof D === 'function') {
           D();
         }
       },
       onFailure: function (G) {
         delete G.returnValue;
-        if (typeof E === "function") {
+        if (typeof E === 'function') {
           E(G);
         }
       },
     });
   };
   a.prototype.getSimplinkStatus = function (D, E) {
-    C.Request("luna://com.webos.service.commercial.scapadapter/signage", {
-      method: "getSimplinkStatus",
+    C.Request('luna://com.webos.service.commercial.scapadapter/signage', {
+      method: 'getSimplinkStatus',
       parameters: {},
       onSuccess: function (F) {
         delete F.returnValue;
-        if (typeof D === "function") {
+        if (typeof D === 'function') {
           D(F);
         }
       },
       onFailure: function (F) {
         delete F.returnValue;
-        if (typeof E === "function") {
+        if (typeof E === 'function') {
           E(F);
         }
       },
     });
   };
   a.prototype.setSimplinkStatus = function (D, E, F) {
-    C.Request("luna://com.webos.service.commercial.scapadapter/signage", {
-      method: "setSimplinkStatus",
+    C.Request('luna://com.webos.service.commercial.scapadapter/signage', {
+      method: 'setSimplinkStatus',
       parameters: F,
       onSuccess: function () {
-        if (typeof D === "function") {
+        if (typeof D === 'function') {
           D();
         }
       },
       onFailure: function (G) {
         delete G.returnValue;
-        if (typeof E === "function") {
+        if (typeof E === 'function') {
           E(G);
         }
       },
@@ -1569,4 +1622,4 @@ cordova.define("cordova/plugin/signage", function (k, B, c) {
   a.prototype.removeEventListener = x;
   c.exports = a;
 });
-Signage = cordova.require("cordova/plugin/signage");
+Signage = cordova.require('cordova/plugin/signage');

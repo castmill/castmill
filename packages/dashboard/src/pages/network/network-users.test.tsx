@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@solidjs/testing-library";
-import { I18nProvider } from "../../i18n";
-import NetworkUsers from "./network-users";
-import { NetworkService } from "../../services/network.service";
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, waitFor } from '@solidjs/testing-library';
+import { I18nProvider } from '../../i18n';
+import NetworkUsers from './network-users';
+import { NetworkService } from '../../services/network.service';
 
 // Toast spies
 const toastSpies = {
@@ -11,15 +11,15 @@ const toastSpies = {
   info: vi.fn(),
 };
 
-vi.mock("@castmill/ui-common", async () => {
-  const actual = await vi.importActual("@castmill/ui-common");
+vi.mock('@castmill/ui-common', async () => {
+  const actual = await vi.importActual('@castmill/ui-common');
   return {
     ...actual,
     useToast: () => toastSpies,
   };
 });
 
-vi.mock("../../services/network.service", () => ({
+vi.mock('../../services/network.service', () => ({
   NetworkService: {
     listUsers: vi.fn(),
     listInvitations: vi.fn(),
@@ -40,7 +40,7 @@ const mockStats = {
   total_storage_bytes: 1073741824,
 };
 
-vi.mock("./network-context", () => ({
+vi.mock('./network-context', () => ({
   useNetworkContext: () => ({
     settings: () => null,
     setSettings: vi.fn(),
@@ -54,16 +54,16 @@ vi.mock("./network-context", () => ({
 
 const mockUsers = [
   {
-    id: "user-1",
-    name: "User 1",
-    email: "user1@example.com",
-    inserted_at: "2024-01-01T00:00:00Z",
+    id: 'user-1',
+    name: 'User 1',
+    email: 'user1@example.com',
+    inserted_at: '2024-01-01T00:00:00Z',
   },
   {
-    id: "user-2",
-    name: "User 2",
-    email: "user2@example.com",
-    inserted_at: "2024-01-02T00:00:00Z",
+    id: 'user-2',
+    name: 'User 2',
+    email: 'user2@example.com',
+    inserted_at: '2024-01-02T00:00:00Z',
   },
 ];
 
@@ -74,7 +74,7 @@ const renderUsers = () =>
     </I18nProvider>
   ));
 
-describe("NetworkUsers", () => {
+describe('NetworkUsers', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(NetworkService.listUsers).mockResolvedValue({
@@ -88,18 +88,18 @@ describe("NetworkUsers", () => {
     });
   });
 
-  it("displays list of users", async () => {
+  it('displays list of users', async () => {
     renderUsers();
 
     await waitFor(() => {
-      expect(screen.getByText("User 1")).toBeInTheDocument();
-      expect(screen.getByText("user1@example.com")).toBeInTheDocument();
-      expect(screen.getByText("User 2")).toBeInTheDocument();
-      expect(screen.getByText("user2@example.com")).toBeInTheDocument();
+      expect(screen.getByText('User 1')).toBeInTheDocument();
+      expect(screen.getByText('user1@example.com')).toBeInTheDocument();
+      expect(screen.getByText('User 2')).toBeInTheDocument();
+      expect(screen.getByText('user2@example.com')).toBeInTheDocument();
     });
   });
 
-  it("shows empty state when no users", async () => {
+  it('shows empty state when no users', async () => {
     vi.mocked(NetworkService.listUsers).mockResolvedValue({
       data: [],
       pagination: { page: 1, page_size: 20, total_count: 0, total_pages: 0 },
@@ -112,7 +112,7 @@ describe("NetworkUsers", () => {
     });
   });
 
-  it("loads invitations on mount", async () => {
+  it('loads invitations on mount', async () => {
     renderUsers();
 
     await waitFor(() => {

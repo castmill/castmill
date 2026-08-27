@@ -60,26 +60,28 @@ export interface TagUsageStats {
   count: number;
 }
 
-export type ResourceType = "media" | "device" | "playlist" | "channel";
+export type ResourceType = 'media' | 'device' | 'playlist' | 'channel';
 
 // Default color palette for tags
 export const TAG_COLOR_PALETTE = [
-  "#3B82F6", // Blue (default)
-  "#10B981", // Green
-  "#F59E0B", // Amber
-  "#EF4444", // Red
-  "#8B5CF6", // Purple
-  "#EC4899", // Pink
-  "#06B6D4", // Cyan
-  "#6B7280", // Gray
+  '#3B82F6', // Blue (default)
+  '#10B981', // Green
+  '#F59E0B', // Amber
+  '#EF4444', // Red
+  '#8B5CF6', // Purple
+  '#EC4899', // Pink
+  '#06B6D4', // Cyan
+  '#6B7280', // Gray
 ] as const;
 
 export const DEFAULT_TAG_COLOR = TAG_COLOR_PALETTE[0];
 
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: response.statusText }));
-    throw new Error(error.error || error.message || "Request failed");
+    const error = await response
+      .json()
+      .catch(() => ({ error: response.statusText }));
+    throw new Error(error.error || error.message || 'Request failed');
   }
   return response.json();
 }
@@ -87,19 +89,22 @@ async function handleResponse<T>(response: Response): Promise<T> {
 export class TagsService {
   constructor(private baseUrl: string) {}
 
-  private async authFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
-    const token = localStorage.getItem("castmill_auth_token");
+  private async authFetch(
+    input: RequestInfo | URL,
+    init?: RequestInit
+  ): Promise<Response> {
+    const token = localStorage.getItem('castmill_auth_token');
     if (token) {
       const headers = new Headers(init?.headers);
-      if (!headers.has("Authorization")) {
-        headers.set("Authorization", `Bearer ${token}`);
+      if (!headers.has('Authorization')) {
+        headers.set('Authorization', `Bearer ${token}`);
       }
       return fetch(input, { ...init, headers });
     }
     return fetch(input, init ?? {});
   }
 
-  private getUrl(organizationId: string, path: string = ""): string {
+  private getUrl(organizationId: string, path: string = ''): string {
     return `${this.baseUrl}/dashboard/organizations/${organizationId}${path}`;
   }
 
@@ -112,17 +117,17 @@ export class TagsService {
    */
   async listTagGroups(
     organizationId: string,
-    opts?: { preloadTags?: boolean },
+    opts?: { preloadTags?: boolean }
   ): Promise<TagGroup[]> {
     const params = new URLSearchParams();
     if (opts?.preloadTags) {
-      params.set("preload_tags", "true");
+      params.set('preload_tags', 'true');
     }
 
-    const url = `${this.getUrl(organizationId, "/tag-groups")}?${params.toString()}`;
+    const url = `${this.getUrl(organizationId, '/tag-groups')}?${params.toString()}`;
     const response = await this.authFetch(url, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
     });
 
     const result = await handleResponse<{ data: TagGroup[] }>(response);
@@ -132,11 +137,14 @@ export class TagsService {
   /**
    * Get a single tag group by ID.
    */
-  async getTagGroup(organizationId: string, tagGroupId: number): Promise<TagGroup> {
+  async getTagGroup(
+    organizationId: string,
+    tagGroupId: number
+  ): Promise<TagGroup> {
     const url = this.getUrl(organizationId, `/tag-groups/${tagGroupId}`);
     const response = await this.authFetch(url, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
     });
 
     const result = await handleResponse<{ data: TagGroup }>(response);
@@ -146,11 +154,14 @@ export class TagsService {
   /**
    * Create a new tag group.
    */
-  async createTagGroup(organizationId: string, input: CreateTagGroupInput): Promise<TagGroup> {
-    const url = this.getUrl(organizationId, "/tag-groups");
+  async createTagGroup(
+    organizationId: string,
+    input: CreateTagGroupInput
+  ): Promise<TagGroup> {
+    const url = this.getUrl(organizationId, '/tag-groups');
     const response = await this.authFetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input),
     });
 
@@ -164,12 +175,12 @@ export class TagsService {
   async updateTagGroup(
     organizationId: string,
     tagGroupId: number,
-    input: UpdateTagGroupInput,
+    input: UpdateTagGroupInput
   ): Promise<TagGroup> {
     const url = this.getUrl(organizationId, `/tag-groups/${tagGroupId}`);
     const response = await this.authFetch(url, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input),
     });
 
@@ -180,11 +191,14 @@ export class TagsService {
   /**
    * Delete a tag group.
    */
-  async deleteTagGroup(organizationId: string, tagGroupId: number): Promise<void> {
+  async deleteTagGroup(
+    organizationId: string,
+    tagGroupId: number
+  ): Promise<void> {
     const url = this.getUrl(organizationId, `/tag-groups/${tagGroupId}`);
     const response = await this.authFetch(url, {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
     });
 
     await handleResponse<{ success: boolean }>(response);
@@ -199,20 +213,20 @@ export class TagsService {
    */
   async listTags(
     organizationId: string,
-    opts?: { tagGroupId?: number; preloadTagGroup?: boolean },
+    opts?: { tagGroupId?: number; preloadTagGroup?: boolean }
   ): Promise<Tag[]> {
     const params = new URLSearchParams();
     if (opts?.tagGroupId) {
-      params.set("tag_group_id", String(opts.tagGroupId));
+      params.set('tag_group_id', String(opts.tagGroupId));
     }
     if (opts?.preloadTagGroup) {
-      params.set("preload_tag_group", "true");
+      params.set('preload_tag_group', 'true');
     }
 
-    const url = `${this.getUrl(organizationId, "/tags")}?${params.toString()}`;
+    const url = `${this.getUrl(organizationId, '/tags')}?${params.toString()}`;
     const response = await this.authFetch(url, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
     });
 
     const result = await handleResponse<{ data: Tag[] }>(response);
@@ -225,8 +239,8 @@ export class TagsService {
   async getTag(organizationId: string, tagId: number): Promise<Tag> {
     const url = this.getUrl(organizationId, `/tags/${tagId}`);
     const response = await this.authFetch(url, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
     });
 
     const result = await handleResponse<{ data: Tag }>(response);
@@ -237,10 +251,10 @@ export class TagsService {
    * Create a new tag.
    */
   async createTag(organizationId: string, input: CreateTagInput): Promise<Tag> {
-    const url = this.getUrl(organizationId, "/tags");
+    const url = this.getUrl(organizationId, '/tags');
     const response = await this.authFetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input),
     });
 
@@ -251,11 +265,15 @@ export class TagsService {
   /**
    * Update a tag.
    */
-  async updateTag(organizationId: string, tagId: number, input: UpdateTagInput): Promise<Tag> {
+  async updateTag(
+    organizationId: string,
+    tagId: number,
+    input: UpdateTagInput
+  ): Promise<Tag> {
     const url = this.getUrl(organizationId, `/tags/${tagId}`);
     const response = await this.authFetch(url, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input),
     });
 
@@ -269,8 +287,8 @@ export class TagsService {
   async deleteTag(organizationId: string, tagId: number): Promise<void> {
     const url = this.getUrl(organizationId, `/tags/${tagId}`);
     const response = await this.authFetch(url, {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
     });
 
     await handleResponse<{ success: boolean }>(response);
@@ -280,10 +298,10 @@ export class TagsService {
    * Get the color palette for tags.
    */
   async getColorPalette(organizationId: string): Promise<string[]> {
-    const url = this.getUrl(organizationId, "/tags/colors");
+    const url = this.getUrl(organizationId, '/tags/colors');
     const response = await this.authFetch(url, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
     });
 
     const result = await handleResponse<{ data: string[] }>(response);
@@ -294,10 +312,10 @@ export class TagsService {
    * Get tag usage statistics.
    */
   async getTagStats(organizationId: string): Promise<TagUsageStats[]> {
-    const url = this.getUrl(organizationId, "/tags/stats");
+    const url = this.getUrl(organizationId, '/tags/stats');
     const response = await this.authFetch(url, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
     });
 
     const result = await handleResponse<{ data: TagUsageStats[] }>(response);
@@ -314,12 +332,15 @@ export class TagsService {
   async getResourceTags(
     organizationId: string,
     resourceType: ResourceType,
-    resourceId: number | string,
+    resourceId: number | string
   ): Promise<Tag[]> {
-    const url = this.getUrl(organizationId, `/${resourceType}s/${resourceId}/tags`);
+    const url = this.getUrl(
+      organizationId,
+      `/${resourceType}s/${resourceId}/tags`
+    );
     const response = await this.authFetch(url, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
     });
 
     const result = await handleResponse<{ data: Tag[] }>(response);
@@ -333,12 +354,15 @@ export class TagsService {
     organizationId: string,
     resourceType: ResourceType,
     resourceId: number | string,
-    tagId: number,
+    tagId: number
   ): Promise<void> {
-    const url = this.getUrl(organizationId, `/${resourceType}s/${resourceId}/tags`);
+    const url = this.getUrl(
+      organizationId,
+      `/${resourceType}s/${resourceId}/tags`
+    );
     const response = await this.authFetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ tag_id: tagId }),
     });
 
@@ -352,12 +376,15 @@ export class TagsService {
     organizationId: string,
     resourceType: ResourceType,
     resourceId: number | string,
-    tagId: number,
+    tagId: number
   ): Promise<void> {
-    const url = this.getUrl(organizationId, `/${resourceType}s/${resourceId}/tags/${tagId}`);
+    const url = this.getUrl(
+      organizationId,
+      `/${resourceType}s/${resourceId}/tags/${tagId}`
+    );
     const response = await this.authFetch(url, {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
     });
 
     await handleResponse<{ success: boolean }>(response);
@@ -370,12 +397,15 @@ export class TagsService {
     organizationId: string,
     resourceType: ResourceType,
     resourceId: number | string,
-    tagIds: number[],
+    tagIds: number[]
   ): Promise<void> {
-    const url = this.getUrl(organizationId, `/${resourceType}s/${resourceId}/tags`);
+    const url = this.getUrl(
+      organizationId,
+      `/${resourceType}s/${resourceId}/tags`
+    );
     const response = await this.authFetch(url, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ tag_ids: tagIds }),
     });
 
@@ -393,19 +423,21 @@ export class TagsService {
     organizationId: string,
     tagId: number,
     resourceType: ResourceType,
-    resourceIds: (number | string)[],
+    resourceIds: (number | string)[]
   ): Promise<number> {
     const url = this.getUrl(organizationId, `/tags/${tagId}/bulk`);
     const response = await this.authFetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         resource_type: resourceType,
         resource_ids: resourceIds,
       }),
     });
 
-    const result = await handleResponse<{ success: boolean; count: number }>(response);
+    const result = await handleResponse<{ success: boolean; count: number }>(
+      response
+    );
     return result.count;
   }
 
@@ -416,19 +448,21 @@ export class TagsService {
     organizationId: string,
     tagId: number,
     resourceType: ResourceType,
-    resourceIds: (number | string)[],
+    resourceIds: (number | string)[]
   ): Promise<number> {
     const url = this.getUrl(organizationId, `/tags/${tagId}/bulk`);
     const response = await this.authFetch(url, {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         resource_type: resourceType,
         resource_ids: resourceIds,
       }),
     });
 
-    const result = await handleResponse<{ success: boolean; count: number }>(response);
+    const result = await handleResponse<{ success: boolean; count: number }>(
+      response
+    );
     return result.count;
   }
 }

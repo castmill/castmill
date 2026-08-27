@@ -1,6 +1,14 @@
-import { Component, createSignal, onMount, onCleanup, Show, createEffect, on } from "solid-js";
-import { ComboBox } from "../combobox/combobox";
-import "./location-picker.scss";
+import {
+  Component,
+  createSignal,
+  onMount,
+  onCleanup,
+  Show,
+  createEffect,
+  on,
+} from 'solid-js';
+import { ComboBox } from '../combobox/combobox';
+import './location-picker.scss';
 
 /**
  * Location value structure with coordinates and address information.
@@ -67,7 +75,10 @@ interface LeafletMarker {
 }
 
 interface LeafletStatic {
-  map: (element: HTMLElement, options?: { scrollWheelZoom?: boolean }) => LeafletMap;
+  map: (
+    element: HTMLElement,
+    options?: { scrollWheelZoom?: boolean }
+  ) => LeafletMap;
   tileLayer: (url: string, options: any) => any;
   marker: (latlng: [number, number], options?: any) => LeafletMarker;
 }
@@ -88,7 +99,7 @@ export const LocationPicker: Component<LocationPickerProps> = (props) => {
   let marker: LeafletMarker | undefined;
 
   const [editingAddress, setEditingAddress] = createSignal(false);
-  const [manualAddress, setManualAddress] = createSignal("");
+  const [manualAddress, setManualAddress] = createSignal('');
 
   const defaultLocation = { lat: 51.505, lng: -0.09 }; // Default to London
   const zoom = props.defaultZoom || 13;
@@ -96,7 +107,7 @@ export const LocationPicker: Component<LocationPickerProps> = (props) => {
   // Initialize Leaflet dynamically
   const loadLeaflet = async (): Promise<LeafletStatic> => {
     // Check if Leaflet is already loaded
-    if (typeof window !== "undefined" && (window as any).L) {
+    if (typeof window !== 'undefined' && (window as any).L) {
       return (window as any).L;
     }
 
@@ -104,20 +115,20 @@ export const LocationPicker: Component<LocationPickerProps> = (props) => {
     const existingLink = document.querySelector('link[href*="leaflet.css"]');
     if (!existingLink) {
       // Load Leaflet CSS
-      const cssLink = document.createElement("link");
-      cssLink.rel = "stylesheet";
-      cssLink.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
-      cssLink.integrity = "sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=";
-      cssLink.crossOrigin = "";
+      const cssLink = document.createElement('link');
+      cssLink.rel = 'stylesheet';
+      cssLink.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+      cssLink.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
+      cssLink.crossOrigin = '';
       document.head.appendChild(cssLink);
     }
 
     // Load Leaflet JS
     return new Promise<LeafletStatic>((resolve, reject) => {
-      const script = document.createElement("script");
-      script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
-      script.integrity = "sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=";
-      script.crossOrigin = "";
+      const script = document.createElement('script');
+      script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+      script.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
+      script.crossOrigin = '';
       script.onload = () => resolve((window as any).L);
       script.onerror = reject;
       document.head.appendChild(script);
@@ -128,7 +139,7 @@ export const LocationPicker: Component<LocationPickerProps> = (props) => {
   const fetchLocations = async (
     _page: number,
     _pageSize: number,
-    searchQuery: string,
+    searchQuery: string
   ): Promise<{ count: number; data: LocationSearchResult[] }> => {
     if (!searchQuery.trim()) {
       return { count: 0, data: [] };
@@ -140,9 +151,9 @@ export const LocationPicker: Component<LocationPickerProps> = (props) => {
           `format=json&q=${encodeURIComponent(searchQuery)}&limit=10&addressdetails=1`,
         {
           headers: {
-            "User-Agent": "Castmill Digital Signage Platform",
+            'User-Agent': 'Castmill Digital Signage Platform',
           },
-        },
+        }
       );
       const results = await response.json();
       // Add unique IDs to results (Nominatim returns place_id)
@@ -152,7 +163,7 @@ export const LocationPicker: Component<LocationPickerProps> = (props) => {
       }));
       return { count: data.length, data };
     } catch (error) {
-      console.error("Geocoding error:", error);
+      console.error('Geocoding error:', error);
       return { count: 0, data: [] };
     }
   };
@@ -166,7 +177,8 @@ export const LocationPicker: Component<LocationPickerProps> = (props) => {
       lat,
       lng,
       address: result.display_name,
-      city: result.address?.city || result.address?.town || result.address?.village,
+      city:
+        result.address?.city || result.address?.town || result.address?.village,
       country: result.address?.country,
       postalCode: result.address?.postcode,
     };
@@ -188,14 +200,14 @@ export const LocationPicker: Component<LocationPickerProps> = (props) => {
           `format=json&lat=${lat}&lon=${lng}&addressdetails=1`,
         {
           headers: {
-            "User-Agent": "Castmill Digital Signage Platform",
+            'User-Agent': 'Castmill Digital Signage Platform',
           },
-        },
+        }
       );
       const result = await response.json();
       return result;
     } catch (error) {
-      console.error("Reverse geocoding error:", error);
+      console.error('Reverse geocoding error:', error);
       return null;
     }
   };
@@ -219,7 +231,10 @@ export const LocationPicker: Component<LocationPickerProps> = (props) => {
       lat,
       lng,
       address: result?.display_name,
-      city: result?.address?.city || result?.address?.town || result?.address?.village,
+      city:
+        result?.address?.city ||
+        result?.address?.town ||
+        result?.address?.village,
       country: result?.address?.country,
       postalCode: result?.address?.postcode,
     };
@@ -248,18 +263,20 @@ export const LocationPicker: Component<LocationPickerProps> = (props) => {
     // Create map with scroll wheel zoom disabled by default
     // This prevents scroll hijacking when users scroll past the map
     map = L.map(mapContainer, { scrollWheelZoom: false }).setView(
-      props.value ? [props.value.lat, props.value.lng] : [defaultLocation.lat, defaultLocation.lng],
-      zoom,
+      props.value
+        ? [props.value.lat, props.value.lng]
+        : [defaultLocation.lat, defaultLocation.lng],
+      zoom
     );
 
     // Enable scroll wheel zoom only when map is focused (clicked)
     const mapEl = map.getContainer();
-    mapEl.addEventListener("mouseenter", () => {
-      mapEl.addEventListener("click", enableScrollZoom);
+    mapEl.addEventListener('mouseenter', () => {
+      mapEl.addEventListener('click', enableScrollZoom);
     });
-    mapEl.addEventListener("mouseleave", () => {
+    mapEl.addEventListener('mouseleave', () => {
       map?.scrollWheelZoom.disable();
-      mapEl.removeEventListener("click", enableScrollZoom);
+      mapEl.removeEventListener('click', enableScrollZoom);
     });
 
     const enableScrollZoom = () => {
@@ -267,7 +284,7 @@ export const LocationPicker: Component<LocationPickerProps> = (props) => {
     };
 
     // Add OpenStreetMap tile layer
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution:
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       maxZoom: 19,
@@ -275,17 +292,19 @@ export const LocationPicker: Component<LocationPickerProps> = (props) => {
 
     // Add marker
     marker = L.marker(
-      props.value ? [props.value.lat, props.value.lng] : [defaultLocation.lat, defaultLocation.lng],
+      props.value
+        ? [props.value.lat, props.value.lng]
+        : [defaultLocation.lat, defaultLocation.lng],
       {
         draggable: !props.disabled,
-      },
+      }
     ).addTo(map);
 
     // Handle map clicks
-    map.on("click", handleMapClick);
+    map.on('click', handleMapClick);
 
     // Handle marker drag
-    marker.on("dragend", async (e: any) => {
+    marker.on('dragend', async (e: any) => {
       const position = e.target.getLatLng();
       await handleMapClick({ latlng: position });
     });
@@ -302,13 +321,15 @@ export const LocationPicker: Component<LocationPickerProps> = (props) => {
           value &&
           map &&
           marker &&
-          (!prevValue || value.lat !== prevValue.lat || value.lng !== prevValue.lng)
+          (!prevValue ||
+            value.lat !== prevValue.lat ||
+            value.lng !== prevValue.lng)
         ) {
           map.setView([value.lat, value.lng]);
           marker.setLatLng([value.lat, value.lng]);
         }
-      },
-    ),
+      }
+    )
   );
 
   // Cleanup
@@ -323,10 +344,12 @@ export const LocationPicker: Component<LocationPickerProps> = (props) => {
       <div class="location-picker__search">
         <ComboBox<LocationSearchResult>
           id="location-search"
-          label={props.searchLabel ?? "Search Location"}
-          placeholder={props.placeholder ?? "Search for a location..."}
+          label={props.searchLabel ?? 'Search Location'}
+          placeholder={props.placeholder ?? 'Search for a location...'}
           fetchItems={fetchLocations}
-          renderItem={(item) => <div class="location-picker__result-item">{item.display_name}</div>}
+          renderItem={(item) => (
+            <div class="location-picker__result-item">{item.display_name}</div>
+          )}
           onSelect={handleLocationSelect}
         />
       </div>
@@ -334,23 +357,25 @@ export const LocationPicker: Component<LocationPickerProps> = (props) => {
       <Show when={props.value}>
         <div class="location-picker__info">
           <div class="location-picker__coordinates">
-            <strong>{props.coordinatesLabel ?? "Coordinates"}:</strong>{" "}
+            <strong>{props.coordinatesLabel ?? 'Coordinates'}:</strong>{' '}
             {props.value?.lat.toFixed(6)}, {props.value?.lng.toFixed(6)}
           </div>
 
           <Show when={!editingAddress()}>
             <div class="location-picker__address">
-              <strong>{props.addressLabel ?? "Address"}:</strong>{" "}
-              {props.value?.address ?? props.noAddressText ?? "No address available"}
+              <strong>{props.addressLabel ?? 'Address'}:</strong>{' '}
+              {props.value?.address ??
+                props.noAddressText ??
+                'No address available'}
               <button
                 class="location-picker__edit-button"
                 onClick={() => {
-                  setManualAddress(props.value?.address || "");
+                  setManualAddress(props.value?.address || '');
                   setEditingAddress(true);
                 }}
                 disabled={props.disabled}
               >
-                {props.editLabel ?? "Edit"}
+                {props.editLabel ?? 'Edit'}
               </button>
             </div>
           </Show>
@@ -362,16 +387,21 @@ export const LocationPicker: Component<LocationPickerProps> = (props) => {
                 class="location-picker__address-input"
                 value={manualAddress()}
                 onInput={(e) => setManualAddress(e.currentTarget.value)}
-                placeholder={props.manualAddressPlaceholder ?? "Enter address..."}
+                placeholder={
+                  props.manualAddressPlaceholder ?? 'Enter address...'
+                }
               />
-              <button class="location-picker__save-button" onClick={updateManualAddress}>
-                {props.saveLabel ?? "Save"}
+              <button
+                class="location-picker__save-button"
+                onClick={updateManualAddress}
+              >
+                {props.saveLabel ?? 'Save'}
               </button>
               <button
                 class="location-picker__cancel-button"
                 onClick={() => setEditingAddress(false)}
               >
-                {props.cancelLabel ?? "Cancel"}
+                {props.cancelLabel ?? 'Cancel'}
               </button>
             </div>
           </Show>
