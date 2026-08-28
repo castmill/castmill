@@ -722,11 +722,40 @@ defmodule CastmillWeb.Router do
   defp get_bearer_token(conn) do
     auth_header = List.first(get_req_header(conn, "authorization"))
     auth_param = conn.params["auth"]
+    raw = auth_header || auth_param
 
-    case String.split(auth_header || auth_param || "", " ") do
-      ["Bearer", token] -> {:ok, token}
-      [] -> {:error, "No token provided"}
-      _ -> {:error, "Invalid token format"}
+    cond do
+      is_nil(raw) or String.trim(raw) == "" ->
+        {:error, "No token provided"}
+
+      true ->
+        case extract_bearer_token(raw) do
+          token when is_binary(token) -> {:ok, token}
+          nil -> {:error, "Invalid token format"}
+        end
+    end
+  end
+
+  # Extracts the token from an `Authorization: ****** value (or the
+  # equivalent `auth` query param). Tolerant of the exact formatting so that
+  # otherwise-valid tokens are not rejected: the scheme match is
+  # case-insensitive and surrounding/duplicate whitespace is ignored.
+  # Returns the token string, or nil when the value is not a bearer token.
+  defp extract_bearer_token(nil), do: nil
+
+  defp extract_bearer_token(value) when is_binary(value) do
+    case String.split(value, " ", parts: 2, trim: true) do
+      [scheme, token] ->
+        trimmed = String.trim(token)
+
+        if String.downcase(scheme) == "bearer" and trimmed != "" do
+          trimmed
+        else
+          nil
+        end
+
+      _ ->
+        nil
     end
   end
 
@@ -776,7 +805,8 @@ defmodule CastmillWeb.Router do
   # Cookies are NOT used for dashboard auth (they are blocked cross-origin
   # by Safari ITP and future browser privacy defaults).
   defp fetch_dashboard_user(conn, _opts) do
-    with ["Bearer " <> token] <- get_req_header(conn, "authorization"),
+    with token when is_binary(token) <-
+           extract_bearer_token(List.first(get_req_header(conn, "authorization"))),
          {:ok, user_id} <-
            Phoenix.Token.verify(
              CastmillWeb.Endpoint,
