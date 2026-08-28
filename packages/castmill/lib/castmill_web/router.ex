@@ -101,6 +101,8 @@ defmodule CastmillWeb.Router do
 
   # The legacy adapter player is a standalone public application.
   scope "/", CastmillWeb do
+    pipe_through(:device)
+
     get("/legacy", LegacyPlayerController, :index)
   end
 
