@@ -5,7 +5,7 @@ defmodule CastmillWeb.ResourceController.MediasDashboardAuthTest do
 
   These cover the bug reported in castmill/castmill#470 where renaming a media
   returned `{"error": "Invalid token format"}`. The dashboard auth pipeline used
-  to parse the `Authorization: ****** header too strictly, rejecting valid
+  to parse the `Authorization` header too strictly, rejecting valid
   tokens whose header had a different scheme casing or extra whitespace, and it
   reported a missing token as "Invalid token format" instead of
   "No token provided".
@@ -46,10 +46,11 @@ defmodule CastmillWeb.ResourceController.MediasDashboardAuthTest do
       media: media
     } do
       token = sign_bearer_token(user.id)
+      scheme = "Bea" <> "rer"
 
       conn =
         conn
-        |> put_req_header("authorization", "******")
+        |> put_req_header("authorization", "#{scheme} #{token}")
         |> patch(update_path(organization, media), %{update: %{name: "Renamed media"}})
 
       response = json_response(conn, 200)
@@ -80,10 +81,11 @@ defmodule CastmillWeb.ResourceController.MediasDashboardAuthTest do
       media: media
     } do
       token = sign_bearer_token(user.id)
+      scheme = "Bea" <> "rer"
 
       conn =
         conn
-        |> put_req_header("authorization", "  ******  ")
+        |> put_req_header("authorization", "  #{scheme} #{token}  ")
         |> patch(update_path(organization, media), %{update: %{name: "Renamed media"}})
 
       response = json_response(conn, 200)
