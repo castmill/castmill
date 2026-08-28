@@ -8,5 +8,5 @@ export const getThumbnailProgress = (
   }
 
   const progress = Number.parseFloat(item.status_message || '');
-  return Number.isFinite(progress) ? progress : 0;
+  return Number.isFinite(progress) ? Math.min(100, Math.max(0, progress)) : 0;
 };

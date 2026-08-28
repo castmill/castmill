@@ -14,6 +14,15 @@ describe('getThumbnailProgress', () => {
     ).toBe(46);
   });
 
+  it('clamps reported progress to the supported range', () => {
+    expect(
+      getThumbnailProgress({ status: 'transcoding', status_message: '-1' })
+    ).toBe(0);
+    expect(
+      getThumbnailProgress({ status: 'transcoding', status_message: '101' })
+    ).toBe(100);
+  });
+
   it('shows active transcoding with a non-numeric message at zero progress', () => {
     expect(
       getThumbnailProgress({
