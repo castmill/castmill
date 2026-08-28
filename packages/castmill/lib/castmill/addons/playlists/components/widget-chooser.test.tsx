@@ -240,6 +240,78 @@ describe('WidgetChooser Component', () => {
     expect(firstItem.querySelector('.name')).toBeInTheDocument();
     expect(firstItem.querySelector('.description')).toBeInTheDocument();
   });
+
+  it('shows a loading indicator when loading is true', () => {
+    render(() => <WidgetChooser widgets={mockWidgets} loading={true} />);
+
+    expect(screen.getByText('Loading...')).toBeInTheDocument();
+  });
+
+  it('does not show a loading indicator when loading is false', () => {
+    render(() => <WidgetChooser widgets={mockWidgets} loading={false} />);
+
+    expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+  });
+
+  it('calls onLoadMore when scrolled near the bottom', () => {
+    const onLoadMoreMock = vi.fn();
+
+    const { container } = render(() => (
+      <WidgetChooser widgets={mockWidgets} onLoadMore={onLoadMoreMock} />
+    ));
+
+    const itemsContainer = container.querySelector(
+      '.items-container'
+    ) as HTMLDivElement;
+    expect(itemsContainer).toBeInTheDocument();
+
+    // Simulate a container that is scrolled to the bottom
+    Object.defineProperty(itemsContainer, 'scrollHeight', {
+      value: 1000,
+      configurable: true,
+    });
+    Object.defineProperty(itemsContainer, 'clientHeight', {
+      value: 400,
+      configurable: true,
+    });
+    Object.defineProperty(itemsContainer, 'scrollTop', {
+      value: 600,
+      configurable: true,
+    });
+
+    fireEvent.scroll(itemsContainer);
+
+    expect(onLoadMoreMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not call onLoadMore when scrolled far from the bottom', () => {
+    const onLoadMoreMock = vi.fn();
+
+    const { container } = render(() => (
+      <WidgetChooser widgets={mockWidgets} onLoadMore={onLoadMoreMock} />
+    ));
+
+    const itemsContainer = container.querySelector(
+      '.items-container'
+    ) as HTMLDivElement;
+
+    Object.defineProperty(itemsContainer, 'scrollHeight', {
+      value: 1000,
+      configurable: true,
+    });
+    Object.defineProperty(itemsContainer, 'clientHeight', {
+      value: 400,
+      configurable: true,
+    });
+    Object.defineProperty(itemsContainer, 'scrollTop', {
+      value: 0,
+      configurable: true,
+    });
+
+    fireEvent.scroll(itemsContainer);
+
+    expect(onLoadMoreMock).not.toHaveBeenCalled();
+  });
 });
 
 describe('WidgetChooser Icon URL Resolution', () => {

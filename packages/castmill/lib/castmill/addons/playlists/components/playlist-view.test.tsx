@@ -56,6 +56,12 @@ vi.mock('./widget-chooser', () => ({
       >
         Trigger Search
       </button>
+      <button
+        data-testid="load-more-trigger"
+        onClick={() => props.onLoadMore?.()}
+      >
+        Trigger Load More
+      </button>
     </div>
   ),
 }));
@@ -150,7 +156,10 @@ describe('PlaylistView Component', () => {
       );
       expect(PlaylistsService.getWidgets).toHaveBeenCalledWith(
         baseUrl,
-        organizationId
+        organizationId,
+        '',
+        1,
+        20
       );
     });
   });
@@ -187,7 +196,9 @@ describe('PlaylistView Component', () => {
       expect(PlaylistsService.getWidgets).toHaveBeenCalledWith(
         baseUrl,
         organizationId,
-        'test search'
+        'test search',
+        1,
+        20
       );
     });
   });
@@ -246,9 +257,118 @@ describe('PlaylistView Component', () => {
       expect(PlaylistsService.getWidgets).toHaveBeenCalledWith(
         baseUrl,
         organizationId,
-        'test search'
+        'test search',
+        1,
+        20
       );
     });
+  });
+
+  it('loads the next page of widgets when load more is triggered', async () => {
+    const firstPage = {
+      data: [
+        {
+          id: 1,
+          name: 'Widget 1',
+          description: 'First',
+          icon: '📦',
+          options: {},
+          default_config: {},
+        },
+      ],
+      count: 2,
+    };
+    const secondPage = {
+      data: [
+        {
+          id: 2,
+          name: 'Widget 2',
+          description: 'Second',
+          icon: '📹',
+          options: {},
+          default_config: {},
+        },
+      ],
+      count: 2,
+    };
+
+    vi.mocked(PlaylistsService.getWidgets)
+      .mockResolvedValueOnce(firstPage)
+      .mockResolvedValueOnce(secondPage);
+
+    render(() => (
+      <PlaylistView
+        playlistId={playlistId}
+        organizationId={organizationId}
+        baseUrl={baseUrl}
+      />
+    ));
+
+    // Wait for initial load (page 1)
+    await waitFor(() => {
+      expect(PlaylistsService.getWidgets).toHaveBeenCalledWith(
+        baseUrl,
+        organizationId,
+        '',
+        1,
+        20
+      );
+    });
+
+    // Trigger load more (infinite scroll)
+    const loadMoreTrigger = screen.getByTestId('load-more-trigger');
+    loadMoreTrigger.click();
+
+    // Should fetch the next page
+    await waitFor(() => {
+      expect(PlaylistsService.getWidgets).toHaveBeenCalledWith(
+        baseUrl,
+        organizationId,
+        '',
+        2,
+        20
+      );
+    });
+  });
+
+  it('does not load more widgets when all widgets are already loaded', async () => {
+    // count equals number of loaded widgets, so there is nothing more to load
+    const fullResult = {
+      data: [
+        {
+          id: 1,
+          name: 'Widget 1',
+          description: 'First',
+          icon: '📦',
+          options: {},
+          default_config: {},
+        },
+      ],
+      count: 1,
+    };
+
+    vi.mocked(PlaylistsService.getWidgets).mockResolvedValue(fullResult);
+
+    render(() => (
+      <PlaylistView
+        playlistId={playlistId}
+        organizationId={organizationId}
+        baseUrl={baseUrl}
+      />
+    ));
+
+    await waitFor(() => {
+      expect(PlaylistsService.getWidgets).toHaveBeenCalledTimes(1);
+    });
+
+    // Trigger load more - should be a no-op since all widgets are loaded
+    const loadMoreTrigger = screen.getByTestId('load-more-trigger');
+    loadMoreTrigger.click();
+
+    // Give any potential async work a chance to run
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(PlaylistsService.getWidgets).toHaveBeenCalledTimes(1);
   });
 
   it('calls onChange callback when provided', async () => {
@@ -567,7 +687,9 @@ describe('PlaylistView Component', () => {
         ...mockPlaylist,
         settings: { aspect_ratio: { width: 16, height: 9 } },
       };
-      vi.mocked(PlaylistsService.getPlaylist).mockResolvedValue(playlistWith16x9);
+      vi.mocked(PlaylistsService.getPlaylist).mockResolvedValue(
+        playlistWith16x9
+      );
 
       render(() => (
         <PlaylistView
