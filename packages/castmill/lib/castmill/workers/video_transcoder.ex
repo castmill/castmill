@@ -66,7 +66,7 @@ defmodule Castmill.Workers.VideoTranscoder do
          {:ok, media_file_records} <-
            persist_transcoded_files(transcoded_files_metadata, media_id, organization_id) do
       notify_media_progress(media_id, 100.0, media_file_records, total_size, true)
-      :ok
+      {:ok, media_file_records, total_size}
     end
   end
 
@@ -213,7 +213,20 @@ defmodule Castmill.Workers.VideoTranscoder do
     |> inspect()
   end
 
-  defp handle_process_result(_media_id, :ok), do: :ok
+  # On success, return a structured result carrying the full notification
+  # payload. BullMQ stores this as the job's return value so a QueueEvents
+  # completion listener (on a separate web node) can broadcast the update
+  # without a secondary database lookup.
+  defp handle_process_result(media_id, {:ok, media_file_records, total_size}) do
+    {:ok,
+     %{
+       "media_id" => media_id,
+       "status" => "ready",
+       "status_message" => "100",
+       "files" => media_file_records,
+       "size" => total_size
+     }}
+  end
 
   defp handle_process_result(media_id, {:error, reason}) do
     status_message = normalize_error_message(reason)

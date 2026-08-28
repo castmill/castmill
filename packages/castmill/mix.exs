@@ -49,7 +49,9 @@ defmodule Castmill.MixProject do
       {:jason, "~> 1.2"},
       {:mox, "~> 1.0", only: [:test]},
       {:multipart, "~> 0.4.0"},
-      {:bullmq, "~> 2.0"},
+      # >= 2.2.1: forwards :ssl to Postgrex (RDS force_ssl) and resolves the priv
+      # SQL dir at runtime (fixes migrations in a Mix release).
+      {:bullmq, "~> 2.2.1"},
       {:phoenix, "~> 1.7.2"},
       {:phoenix_ecto, "~> 4.4"},
       {:plug_cowboy, "~> 2.5"},

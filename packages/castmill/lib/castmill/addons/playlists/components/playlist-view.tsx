@@ -685,6 +685,7 @@ export const PlaylistView: Component<{
               >
                 <PlaylistPreview
                   playlist={playlist()!}
+                  dynamicDurations={dynamicDurations()}
                   onReady={async (ref) => {
                     previewRef = ref;
                     // Prime all layers to calculate their actual durations
