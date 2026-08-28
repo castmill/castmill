@@ -408,13 +408,15 @@ const ChannelsPage: Component = () => {
         key: 'default_playlist_name',
         title: t('channels.defaultPlaylist'),
         sortable: false,
-        render: (item: JsonChannel) => item.default_playlist_name || '—',
+        render: (item: JsonChannel) =>
+          item.default_playlist_name || t('common.notAvailable'),
       },
       {
         key: 'current_playlist_name',
         title: t('channels.currentPlaylist'),
         sortable: false,
-        render: (item: JsonChannel) => item.current_playlist_name || '—',
+        render: (item: JsonChannel) =>
+          item.current_playlist_name || t('common.notAvailable'),
       },
       {
         key: 'tags',

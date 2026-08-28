@@ -118,7 +118,7 @@ describe('ChannelsPage - Delete Button Permission Tests', () => {
       expect(await screen.findByText('Default playlist 1')).toBeInTheDocument();
       expect(screen.getByText('Scheduled playlist 1')).toBeInTheDocument();
       expect(screen.getByText('Current playlist')).toBeInTheDocument();
-      expect(screen.getAllByText('—')).toHaveLength(2);
+      expect(screen.getAllByText('N/A')).toHaveLength(2);
     });
 
     it('should enable delete button when user has delete permissions and items are selected', async () => {
