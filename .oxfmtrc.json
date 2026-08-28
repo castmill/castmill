@@ -10,6 +10,8 @@
     "build",
     "out",
     "android",
-    "public/lib"
+    "public/lib",
+    "**/*.md",
+    "**/*.mdx"
   ]
 }
