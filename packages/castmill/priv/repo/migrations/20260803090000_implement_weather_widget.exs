@@ -15,6 +15,7 @@ defmodule Castmill.Repo.Migrations.ImplementWeatherWidget do
       set: [
         description: "Displays current weather and a five-day forecast for a selected location.",
         aspect_ratio: "16:9",
+        options_schema: options_schema(),
         template: template(),
         data_schema: data_schema(),
         webhook_url: nil,
@@ -76,6 +77,7 @@ defmodule Castmill.Repo.Migrations.ImplementWeatherWidget do
         set: [
           description: "Display weather information.",
           aspect_ratio: nil,
+          options_schema: options_schema(),
           template: %{
             "type" => "group",
             "name" => "weather",
@@ -113,6 +115,23 @@ defmodule Castmill.Repo.Migrations.ImplementWeatherWidget do
         ]
       )
     end
+  end
+
+  defp options_schema do
+    %{
+      "location" => %{
+        "type" => "location",
+        "required" => true,
+        "description" => "Select the location for weather information",
+        "default" => %{
+          "lat" => 51.505,
+          "lng" => -0.09,
+          "address" => "London, United Kingdom"
+        },
+        "defaultZoom" => 10,
+        "order" => 1
+      }
+    }
   end
 
   defp template do
