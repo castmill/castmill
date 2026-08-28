@@ -7,7 +7,6 @@ A new REST API endpoint has been added to allow the frontend to fetch the curren
 ## What Was Added
 
 ### 1. Permissions Controller
-
 **File**: `lib/castmill_web/controllers/permissions_controller.ex`
 
 - **Endpoint**: `GET /dashboard/organizations/:organization_id/permissions`
@@ -27,21 +26,17 @@ A new REST API endpoint has been added to allow the frontend to fetch the curren
   ```
 
 ### 2. Router Configuration
-
 **File**: `lib/castmill_web/router.ex` (line ~178)
 
 Added route:
-
 ```elixir
 get("/organizations/:organization_id/permissions", PermissionsController, :show)
 ```
 
 ### 3. Controller Tests
-
 **File**: `test/castmill_web/controllers/permissions_controller_test.exs`
 
 Test coverage includes:
-
 - ✅ Admin user permissions (full access to all resources)
 - ✅ Member user permissions (CRUD on content, read-only on teams/widgets)
 - ✅ Guest user permissions (read-only on content, no teams access)
@@ -51,11 +46,9 @@ Test coverage includes:
 All 5 tests passing ✅
 
 ### 4. Documentation
-
 **File**: `PERMISSIONS_ENDPOINT_GUIDE.md`
 
 Complete guide including:
-
 - API specification with all parameters and responses
 - Permission levels by role
 - Frontend usage examples (React/TypeScript and SolidJS)
@@ -67,7 +60,7 @@ Complete guide including:
 1. **User makes request** to `/dashboard/organizations/{org-id}/permissions`
 2. **Authentication check**: Middleware verifies user is logged in
 3. **Role lookup**: Controller gets user's role in the organization via `Organizations.get_user_role/2`
-4. **Permission matrix build**:
+4. **Permission matrix build**: 
    - Uses `Permissions.allowed_actions/2` for each resource
    - Filters to only include accessible resources
    - Returns role, permissions map, and resource list
@@ -76,7 +69,6 @@ Complete guide including:
 ## Frontend Integration
 
 ### Basic Usage
-
 ```typescript
 // Fetch permissions for current organization
 const response = await fetch(`/dashboard/organizations/${orgId}/permissions`);
@@ -90,7 +82,6 @@ const canCreate = permissions.playlists?.includes('create');
 ```
 
 ### Recommended Pattern
-
 ```typescript
 // Create a permissions context/store
 const [permissions] = createResource(() => orgId, fetchPermissions);
@@ -106,15 +97,14 @@ const canCreate = () => permissions()?.permissions.playlists?.includes('create')
 
 ## Permission Matrix by Role
 
-| Role        | Playlists | Medias    | Channels  | Devices   | Teams     | Widgets   |
-| ----------- | --------- | --------- | --------- | --------- | --------- | --------- |
-| **Admin**   | Full CRUD | Full CRUD | Full CRUD | Full CRUD | Full CRUD | Full CRUD |
+| Role | Playlists | Medias | Channels | Devices | Teams | Widgets |
+|------|-----------|--------|----------|---------|-------|---------|
+| **Admin** | Full CRUD | Full CRUD | Full CRUD | Full CRUD | Full CRUD | Full CRUD |
 | **Manager** | Full CRUD | Full CRUD | Full CRUD | Full CRUD | Full CRUD | Full CRUD |
-| **Member**  | Full CRUD | Full CRUD | Full CRUD | Full CRUD | Read-only | Read-only |
-| **Guest**   | Read-only | Read-only | Read-only | Read-only | No access | No access |
+| **Member** | Full CRUD | Full CRUD | Full CRUD | Full CRUD | Read-only | Read-only |
+| **Guest** | Read-only | Read-only | Read-only | Read-only | No access | No access |
 
-**Actions**:
-
+**Actions**: 
 - Full CRUD = `["list", "show", "create", "update", "delete"]`
 - Read-only = `["list", "show"]`
 - No access = Not included in permissions map
@@ -124,7 +114,6 @@ const canCreate = () => permissions()?.permissions.playlists?.includes('create')
 The endpoint is designed to support future dynamic roles:
 
 ### Current Implementation
-
 ```json
 {
   "role": "member",
@@ -133,7 +122,6 @@ The endpoint is designed to support future dynamic roles:
 ```
 
 ### Future Enhancement (when dynamic roles are added)
-
 ```json
 {
   "role": "content_editor",
@@ -152,7 +140,6 @@ The endpoint is designed to support future dynamic roles:
 ```
 
 The frontend should:
-
 1. **Not hardcode role names** - Use the `role` field dynamically
 2. **Check permissions array** - Don't assume fixed permission sets
 3. **Handle missing resources** - A resource not in the map means no access
@@ -161,14 +148,12 @@ The frontend should:
 ## Testing
 
 ### Run Tests
-
 ```bash
 cd packages/castmill
 mix test test/castmill_web/controllers/permissions_controller_test.exs
 ```
 
 ### Manual Testing
-
 ```bash
 # Get permissions for a member user
 curl -X GET \
@@ -212,14 +197,12 @@ curl -X GET \
 ## Next Steps
 
 ### Frontend Integration
-
 1. Create a permissions service/hook in the Dashboard
 2. Fetch permissions when user selects an organization
 3. Use permissions to conditionally render UI elements
 4. Cache permissions in global store (refresh on org switch)
 
 ### Example Implementation
-
 ```typescript
 // packages/dashboard/src/services/permissions.service.ts
 export async function fetchPermissions(organizationId: string) {
@@ -235,7 +218,7 @@ import { createStore } from 'solid-js/store';
 const [permissions, setPermissions] = createStore({
   role: null,
   permissions: {},
-  resources: [],
+  resources: []
 });
 
 export function loadPermissions(orgId: string) {

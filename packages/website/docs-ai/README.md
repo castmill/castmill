@@ -14,13 +14,11 @@ AI-specific documentation serves several key purposes:
 ## Documentation Standards
 
 ### File Naming Convention
-
 - Use descriptive, hyphenated names: `SOCIAL-CARDS.md`, `BUILD-SYSTEM.md`
 - Include version dates when documenting major changes
 - Use ALL-CAPS for file names to distinguish from regular docs
 
 ### Content Structure
-
 Each AI documentation file should include:
 
 1. **System Overview** - High-level description of the feature/system
@@ -33,7 +31,6 @@ Each AI documentation file should include:
 ### When to Create AI Documentation
 
 Create AI documentation when:
-
 - ✅ Implementing complex automated systems (build tools, generators, etc.)
 - ✅ Creating intricate integrations between multiple technologies
 - ✅ Building custom plugins or extensions
@@ -42,7 +39,6 @@ Create AI documentation when:
 - ✅ Creating systems with multiple configuration options
 
 Don't create AI documentation for:
-
 - ❌ Simple component implementations
 - ❌ Standard configuration files
 - ❌ Basic styling changes
@@ -50,16 +46,16 @@ Don't create AI documentation for:
 
 ## Current Documentation
 
-| File                                 | Purpose                           | Last Updated |
-| ------------------------------------ | --------------------------------- | ------------ |
-| [SOCIAL-CARDS.md](./SOCIAL-CARDS.md) | Dynamic social media cards system | 2025-09-27   |
+| File | Purpose | Last Updated |
+|------|---------|--------------|
+| [SOCIAL-CARDS.md](./SOCIAL-CARDS.md) | Dynamic social media cards system | 2025-09-27 |
 
 ## Future Documentation Candidates
 
 As the project grows, consider creating AI documentation for:
 
 - **BUILD-SYSTEM.md** - Comprehensive build pipeline and automation
-- **DEPLOYMENT.md** - GitHub Pages deployment and CI/CD processes
+- **DEPLOYMENT.md** - GitHub Pages deployment and CI/CD processes  
 - **SEARCH-SYSTEM.md** - Local search implementation and optimization
 - **THEME-SYSTEM.md** - Custom theming and design system architecture
 - **PLUGIN-ARCHITECTURE.md** - Guidelines for creating Docusaurus plugins
@@ -89,4 +85,4 @@ When adding new AI documentation:
 
 ---
 
-_This directory helps ensure consistent, informed AI assistance for the Castmill documentation website project._
+*This directory helps ensure consistent, informed AI assistance for the Castmill documentation website project.*

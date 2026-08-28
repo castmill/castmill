@@ -168,30 +168,30 @@ MAILER_FROM=noreply@your-domain.com
 
 ## Environment Variables Reference
 
-| Variable                | Required | Default                 | Description                         |
-| ----------------------- | -------- | ----------------------- | ----------------------------------- |
-| `DATABASE_URL`          | Yes      | —                       | PostgreSQL connection string        |
-| `SECRET_KEY_BASE`       | Yes      | —                       | Phoenix secret (min 64 chars)       |
-| `CASTMILL_HOST`         | Yes      | `localhost`             | Public hostname                     |
-| `CASTMILL_SCHEME`       | No       | `http`                  | Public URL scheme                   |
-| `CASTMILL_PORT`         | No       | `4000`                  | Public URL port                     |
-| `PORT`                  | No       | `4000`                  | Bound HTTP listen port              |
-| `POOL_SIZE`             | No       | `10`                    | Database connection pool size       |
-| `ENCRYPTION_MASTER_KEY` | Yes      | —                       | Encryption key for sensitive data   |
-| `AWS_ACCESS_KEY_ID`     | Yes      | —                       | S3 access key                       |
-| `AWS_SECRET_ACCESS_KEY` | Yes      | —                       | S3 secret key                       |
-| `AWS_S3_BUCKET`         | Yes      | —                       | S3 bucket name                      |
-| `AWS_REGION`            | No       | `eu-central-1`          | S3 region                           |
-| `MAILGUN_API_KEY`       | Cond.    | —                       | Mailgun API key (if using Mailgun)  |
-| `MAILGUN_DOMAIN`        | Cond.    | —                       | Mailgun sending domain              |
+| Variable                | Required | Default                 | Description                       |
+| ----------------------- | -------- | ----------------------- | --------------------------------- |
+| `DATABASE_URL`          | Yes      | —                       | PostgreSQL connection string      |
+| `SECRET_KEY_BASE`       | Yes      | —                       | Phoenix secret (min 64 chars)     |
+| `CASTMILL_HOST`         | Yes      | `localhost`             | Public hostname                   |
+| `CASTMILL_SCHEME`       | No       | `http`                  | Public URL scheme                 |
+| `CASTMILL_PORT`         | No       | `4000`                  | Public URL port                   |
+| `PORT`                  | No       | `4000`                  | Bound HTTP listen port            |
+| `POOL_SIZE`             | No       | `10`                    | Database connection pool size     |
+| `ENCRYPTION_MASTER_KEY` | Yes      | —                       | Encryption key for sensitive data |
+| `AWS_ACCESS_KEY_ID`     | Yes      | —                       | S3 access key                     |
+| `AWS_SECRET_ACCESS_KEY` | Yes      | —                       | S3 secret key                     |
+| `AWS_S3_BUCKET`         | Yes      | —                       | S3 bucket name                    |
+| `AWS_REGION`            | No       | `eu-central-1`          | S3 region                         |
+| `MAILGUN_API_KEY`       | Cond.    | —                       | Mailgun API key (if using Mailgun) |
+| `MAILGUN_DOMAIN`        | Cond.    | —                       | Mailgun sending domain            |
 | `SMTP_HOST`             | Cond.    | —                       | SMTP relay hostname (if using SMTP) |
-| `SMTP_PORT`             | No       | `587`                   | SMTP port                           |
-| `SMTP_USERNAME`         | Cond.    | —                       | SMTP authentication username        |
-| `SMTP_PASSWORD`         | Cond.    | —                       | SMTP authentication password        |
-| `SMTP_SSL`              | No       | `false`                 | Set `true` for SSL/TLS (port 465)   |
-| `MAILER_FROM`           | No       | `no-reply@castmill.com` | Sender email address                |
-| `REDIS_HOST`            | No       | `localhost`             | Redis host                          |
-| `REDIS_PORT`            | No       | `6379`                  | Redis port                          |
+| `SMTP_PORT`             | No       | `587`                   | SMTP port                         |
+| `SMTP_USERNAME`         | Cond.    | —                       | SMTP authentication username      |
+| `SMTP_PASSWORD`         | Cond.    | —                       | SMTP authentication password      |
+| `SMTP_SSL`              | No       | `false`                 | Set `true` for SSL/TLS (port 465) |
+| `MAILER_FROM`           | No       | `no-reply@castmill.com` | Sender email address              |
+| `REDIS_HOST`            | No       | `localhost`             | Redis host                        |
+| `REDIS_PORT`            | No       | `6379`                  | Redis port                        |
 
 ## Database Setup
 

@@ -96,37 +96,37 @@
 ```
 1. User makes request:
    GET /dashboard/organizations/123/resources/playlists
-
+   
 2. Router matches:
    resources "/organizations/:organization_id/resources/:resource_type",
      OrganizationController, only: [:index]
-
+   
 3. AuthorizeDash plug intercepts:
    - Extracts actor_id from session
    - Extracts action = :index
    - Extracts params = %{"organization_id" => "123", "resource_type" => "playlists"}
-
+   
 4. Calls controller's check_access:
    check_access(actor_id, :list_resources, %{
      "organization_id" => "123",
      "resource_type" => "playlists"
    })
-
+   
 5. Controller method:
    - Converts "playlists" to :playlists atom
    - Calls ResourceAccess.check_resource_access(actor_id, "123", :playlists, :list)
-
+   
 6. ResourceAccess helper:
    - Calls Organizations.get_user_role("123", actor_id)
    - Gets role = :regular
    - Calls Permissions.can?(:regular, :playlists, :list)
-
+   
 7. Permissions matrix:
    - Looks up @permissions[:regular][:playlists]
    - Finds [:list, :show, :create, :update, :delete]
    - Checks if :list is in the list
    - Returns true
-
+   
 8. Result flows back:
    ResourceAccess → {:ok, true}
    → Controller → {:ok, true}
@@ -168,28 +168,24 @@
 ## Component Responsibilities
 
 ### 1. Permissions Module (Core Logic)
-
 - ✅ Defines the permission matrix
 - ✅ Pure functions for permission lookups
 - ✅ No external dependencies
 - ✅ Easy to test in isolation
 
 ### 2. ResourceAccess Module (Integration Layer)
-
 - ✅ Bridges user context with permissions
 - ✅ Integrates with Organizations module
 - ✅ Provides convenience functions
 - ✅ Handles role lookup
 
 ### 3. Controller (Request Handler)
-
 - ✅ Implements check_access callbacks
 - ✅ Extracts resource type from params
 - ✅ Delegates to ResourceAccess helpers
 - ✅ Generic methods for all resources
 
 ### 4. AuthorizeDash Plug (Enforcement)
-
 - ✅ Intercepts requests before controller
 - ✅ Calls check_access with actor + params
 - ✅ Returns 403 if access denied
@@ -228,7 +224,7 @@
 # Update permissions.ex
 @permissions %{
   # ... existing roles ...
-
+  
   contributor: %{
     playlists: [:list, :show, :create, :update],
     medias: [:list, :show, :create],
@@ -270,7 +266,6 @@ end
 ## Performance Considerations
 
 ### Current Implementation (O(1) lookups)
-
 ```elixir
 # Direct map access - constant time
 @permissions[role][resource_type]
@@ -278,7 +273,6 @@ action in allowed_actions  # List membership check
 ```
 
 ### Future Optimizations (if needed)
-
 1. **Role caching**: Cache `Organizations.get_user_role/2` results
 2. **Permission preloading**: Load all user permissions at login
 3. **Database indexing**: Index organizations_users_access table

@@ -19,14 +19,12 @@ Currently, users with different roles (admin, regular, guest) can see all naviga
 ## 🔍 Current State
 
 ### What Works ✅
-
 - Backend enforces permissions (returns 403 for unauthorized access)
 - Error handling shows user-friendly message for 403 errors (see #XXX)
 - Role system exists for organization members (admin, regular, guest)
 - URL-based routing with organization context
 
 ### What's Missing ❌
-
 - Organization interface doesn't include user's role
 - No permission checking before rendering UI elements
 - All navigation items visible regardless of permissions
@@ -37,7 +35,6 @@ Currently, users with different roles (admin, regular, guest) can see all naviga
 ### Phase 1: Backend API Enhancement
 
 #### 1.1 Add Role to Organizations Endpoint
-
 **File**: `packages/castmill/lib/castmill_web/controllers/dashboard/organization_controller.ex`
 
 Update the organizations list endpoint to include the user's role:
@@ -54,7 +51,7 @@ Update the organizations list endpoint to include the user's role:
     ...
   },
   {
-    "id": "org-456",
+    "id": "org-456", 
     "name": "Widget Co",
     "role": "regular",  # <-- User's role in this org
     "created_at": "2024-01-01T00:00:00Z",
@@ -64,7 +61,6 @@ Update the organizations list endpoint to include the user's role:
 ```
 
 #### 1.2 Document Permission Matrix
-
 Create a clear mapping of what each role can access:
 
 ```
@@ -85,7 +81,6 @@ Create a clear mapping of what each role can access:
 ### Phase 2: Frontend Type & Interface Updates
 
 #### 2.1 Update Organization Interface
-
 **File**: `packages/dashboard/src/interfaces/organization.ts`
 
 ```typescript
@@ -94,27 +89,26 @@ export type OrganizationRole = 'admin' | 'regular' | 'guest';
 export interface Organization {
   id: string;
   name: string;
-  role: OrganizationRole; // <-- Add this
+  role: OrganizationRole;  // <-- Add this
   created_at: string;
   updated_at: string;
 }
 ```
 
 #### 2.2 Create Permission System
-
 **File**: `packages/dashboard/src/utils/permissions.ts` (new file)
 
 ```typescript
 import { OrganizationRole } from '../interfaces/organization';
 
-export type Resource =
-  | 'playlists'
-  | 'medias'
-  | 'widgets'
-  | 'devices'
-  | 'channels'
-  | 'teams'
-  | 'settings'
+export type Resource = 
+  | 'playlists' 
+  | 'medias' 
+  | 'widgets' 
+  | 'devices' 
+  | 'channels' 
+  | 'teams' 
+  | 'settings' 
   | 'usage';
 
 export type Permission = 'read' | 'write' | 'delete';
@@ -170,7 +164,10 @@ export function hasPermission(
 /**
  * Check if a role can access a resource at all (any permission)
  */
-export function canAccess(role: OrganizationRole, resource: Resource): boolean {
+export function canAccess(
+  role: OrganizationRole,
+  resource: Resource
+): boolean {
   const resourcePermissions = PERMISSIONS[role]?.[resource] || [];
   return resourcePermissions.length > 0;
 }
@@ -178,7 +175,9 @@ export function canAccess(role: OrganizationRole, resource: Resource): boolean {
 /**
  * Get all resources a role can access
  */
-export function getAccessibleResources(role: OrganizationRole): Resource[] {
+export function getAccessibleResources(
+  role: OrganizationRole
+): Resource[] {
   return Object.entries(PERMISSIONS[role])
     .filter(([_, permissions]) => permissions.length > 0)
     .map(([resource]) => resource as Resource);
@@ -188,7 +187,6 @@ export function getAccessibleResources(role: OrganizationRole): Resource[] {
 ### Phase 3: UI Implementation
 
 #### 3.1 Update Store to Include Role
-
 **File**: `packages/dashboard/src/store/store.ts`
 
 Ensure the store properly tracks the current organization's role:
@@ -198,7 +196,7 @@ interface CastmillStore {
   organizations: {
     selectedId: string | null;
     selectedName: string;
-    selectedRole: OrganizationRole | null; // <-- Add this
+    selectedRole: OrganizationRole | null;  // <-- Add this
     data: Organization[];
     loaded: boolean;
   };
@@ -212,12 +210,12 @@ Update in `ProtectedRoute` when organization changes:
 createEffect(() => {
   const urlOrgId = params.orgId;
   if (urlOrgId && urlOrgId !== store.organizations.selectedId) {
-    const org = store.organizations.data.find((o) => o.id === urlOrgId);
+    const org = store.organizations.data.find(o => o.id === urlOrgId);
     if (org) {
       setStore('organizations', {
         selectedId: org.id,
         selectedName: org.name,
-        selectedRole: org.role, // <-- Update role
+        selectedRole: org.role,  // <-- Update role
       });
     }
   }
@@ -225,7 +223,6 @@ createEffect(() => {
 ```
 
 #### 3.2 Create Permission Guard Component
-
 **File**: `packages/dashboard/src/components/permission-guard/permission-guard.tsx` (new file)
 
 ```typescript
@@ -244,7 +241,7 @@ interface PermissionGuardProps {
  */
 export const PermissionGuard: Component<PermissionGuardProps> = (props) => {
   const { store } = useStore();
-
+  
   const hasAccess = () => {
     const role = store.organizations.selectedRole;
     if (!role) return false;
@@ -260,7 +257,6 @@ export const PermissionGuard: Component<PermissionGuardProps> = (props) => {
 ```
 
 #### 3.3 Update Sidebar Navigation
-
 **File**: `packages/dashboard/src/components/sidebar/sidebar.tsx`
 
 Wrap navigation items with `PermissionGuard`:
@@ -270,7 +266,7 @@ import { PermissionGuard } from '../permission-guard/permission-guard';
 
 // Inside sidebar render:
 <PermissionGuard resource="playlists">
-  <SidebarItem
+  <SidebarItem 
     href={`/org/${orgId}/content/playlists`}
     icon={BsCollectionPlay}
     label={t('sidebar.playlists')}
@@ -278,7 +274,7 @@ import { PermissionGuard } from '../permission-guard/permission-guard';
 </PermissionGuard>
 
 <PermissionGuard resource="medias">
-  <SidebarItem
+  <SidebarItem 
     href={`/org/${orgId}/content/medias`}
     icon={BsImages}
     label={t('sidebar.medias')}
@@ -286,7 +282,7 @@ import { PermissionGuard } from '../permission-guard/permission-guard';
 </PermissionGuard>
 
 <PermissionGuard resource="widgets">
-  <SidebarItem
+  <SidebarItem 
     href={`/org/${orgId}/content/widgets`}
     icon={BsGrid3x3Gap}
     label={t('sidebar.widgets')}
@@ -294,7 +290,7 @@ import { PermissionGuard } from '../permission-guard/permission-guard';
 </PermissionGuard>
 
 <PermissionGuard resource="devices">
-  <SidebarItem
+  <SidebarItem 
     href={`/org/${orgId}/devices`}
     icon={BsDisplay}
     label={t('sidebar.devices')}
@@ -302,7 +298,7 @@ import { PermissionGuard } from '../permission-guard/permission-guard';
 </PermissionGuard>
 
 <PermissionGuard resource="channels">
-  <SidebarItem
+  <SidebarItem 
     href={`/org/${orgId}/channels`}
     icon={BsBroadcast}
     label={t('sidebar.channels')}
@@ -310,7 +306,7 @@ import { PermissionGuard } from '../permission-guard/permission-guard';
 </PermissionGuard>
 
 <PermissionGuard resource="teams">
-  <SidebarItem
+  <SidebarItem 
     href={`/org/${orgId}/teams`}
     icon={BsPeople}
     label={t('sidebar.teams')}
@@ -318,7 +314,7 @@ import { PermissionGuard } from '../permission-guard/permission-guard';
 </PermissionGuard>
 
 <PermissionGuard resource="settings">
-  <SidebarItem
+  <SidebarItem 
     href={`/org/${orgId}/settings`}
     icon={BsGear}
     label={t('sidebar.settings')}
@@ -326,7 +322,7 @@ import { PermissionGuard } from '../permission-guard/permission-guard';
 </PermissionGuard>
 
 {/* Usage is always visible */}
-<SidebarItem
+<SidebarItem 
   href={`/org/${orgId}/usage`}
   icon={BsBarChart}
   label={t('sidebar.usage')}
@@ -334,7 +330,6 @@ import { PermissionGuard } from '../permission-guard/permission-guard';
 ```
 
 #### 3.4 Add Route Guards
-
 **File**: `packages/dashboard/src/pages/protected-route.tsx`
 
 Add permission checking to routes:
@@ -349,7 +344,7 @@ const checkRoutePermission = () => {
   if (!role) return false;
 
   const path = location.pathname;
-
+  
   // Map routes to resources
   const routeResourceMap: Record<string, Resource> = {
     '/content/playlists': 'playlists',
@@ -373,31 +368,28 @@ const checkRoutePermission = () => {
 };
 
 // In render:
-<Show
-  when={checkRoutePermission()}
+<Show 
+  when={checkRoutePermission()} 
   fallback={
-    <PermissionDenied message="You don't have permission to access this page." />
+    <PermissionDenied 
+      message="You don't have permission to access this page."
+    />
   }
 >
   {props.children}
-</Show>;
+</Show>
 ```
 
 ### Phase 4: Testing & Documentation
 
 #### 4.1 Unit Tests
-
 Create tests for permission utilities:
 
 **File**: `packages/dashboard/src/utils/permissions.test.ts` (new file)
 
 ```typescript
 import { describe, it, expect } from 'vitest';
-import {
-  hasPermission,
-  canAccess,
-  getAccessibleResources,
-} from './permissions';
+import { hasPermission, canAccess, getAccessibleResources } from './permissions';
 
 describe('Permission System', () => {
   describe('hasPermission', () => {
@@ -451,7 +443,6 @@ describe('Permission System', () => {
 ```
 
 #### 4.2 Integration Tests
-
 Test role-based navigation:
 
 **File**: `packages/dashboard/src/components/sidebar/sidebar.test.tsx`
@@ -463,10 +454,10 @@ import { Sidebar } from './sidebar';
 
 describe('Sidebar - Role-Based Rendering', () => {
   it('admin sees all navigation items', () => {
-    const { getByText } = render(() =>
+    const { getByText } = render(() => 
       <Sidebar store={mockStoreWithRole('admin')} />
     );
-
+    
     expect(getByText('Playlists')).toBeInTheDocument();
     expect(getByText('Medias')).toBeInTheDocument();
     expect(getByText('Widgets')).toBeInTheDocument();
@@ -475,10 +466,10 @@ describe('Sidebar - Role-Based Rendering', () => {
   });
 
   it('regular user sees limited navigation', () => {
-    const { getByText, queryByText } = render(() =>
+    const { getByText, queryByText } = render(() => 
       <Sidebar store={mockStoreWithRole('regular')} />
     );
-
+    
     expect(queryByText('Playlists')).not.toBeInTheDocument();
     expect(queryByText('Medias')).not.toBeInTheDocument();
     expect(getByText('Devices')).toBeInTheDocument();
@@ -486,10 +477,10 @@ describe('Sidebar - Role-Based Rendering', () => {
   });
 
   it('guest user sees minimal navigation', () => {
-    const { getByText, queryByText } = render(() =>
+    const { getByText, queryByText } = render(() => 
       <Sidebar store={mockStoreWithRole('guest')} />
     );
-
+    
     expect(queryByText('Playlists')).not.toBeInTheDocument();
     expect(queryByText('Devices')).not.toBeInTheDocument();
     expect(getByText('Usage')).toBeInTheDocument();
@@ -505,13 +496,12 @@ Update AGENTS.md with RBAC implementation details:
 
 Add new section:
 
-````markdown
+```markdown
 ## 🔐 Role-Based Access Control (RBAC)
 
 The Dashboard implements a comprehensive RBAC system to control what users can access based on their role in each organization.
 
 ### Role Types
-
 - **admin**: Full access to all features
 - **regular**: Limited access to view-only features
 - **guest**: Minimal access (usage stats only)
@@ -535,12 +525,10 @@ if (hasPermission(role, 'playlists', 'write')) {
   // Show create/edit buttons
 }
 ```
-````
 
 ### UI Components
 
 **PermissionGuard**: Conditionally renders based on permissions
-
 ```tsx
 <PermissionGuard resource="playlists">
   <PlaylistsFeature />
@@ -554,14 +542,12 @@ Routes automatically check permissions in `ProtectedRoute`. Users without access
 ### Testing Permissions
 
 When writing tests for role-based features:
-
 1. Mock store with different roles
 2. Verify correct UI elements render/hide
 3. Test route guards work correctly
 4. Ensure permission denied messages display
 
 See `src/components/sidebar/sidebar.test.tsx` for examples.
-
 ```
 
 ## 📊 Success Criteria
@@ -655,4 +641,3 @@ See `src/components/sidebar/sidebar.test.tsx` for examples.
 **Labels**: `enhancement`, `security`, `RBAC`, `dashboard`, `UX`
 **Priority**: High
 **Estimated Effort**: 2-3 days
-```

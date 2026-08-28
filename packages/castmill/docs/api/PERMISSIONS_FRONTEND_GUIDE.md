@@ -371,7 +371,12 @@ Permissions should automatically reload when organization changes. If not:
 ```typescript
 type Role = 'admin' | 'manager' | 'regular' | 'guest';
 type ResourceType =
-  'playlists' | 'medias' | 'channels' | 'devices' | 'teams' | 'widgets';
+  | 'playlists'
+  | 'medias'
+  | 'channels'
+  | 'devices'
+  | 'teams'
+  | 'widgets';
 type Action = 'list' | 'show' | 'create' | 'update' | 'delete';
 ```
 

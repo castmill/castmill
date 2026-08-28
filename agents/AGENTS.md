@@ -5,7 +5,6 @@ This directory contains AI-optimized technical documentation for the Castmill mo
 ## 📝 Documentation Standards
 
 ### Content Guidelines
-
 - **Accuracy**: Information must reflect actual codebase state
 - **Completeness**: Cover all major architectural decisions and patterns
 - **Clarity**: Write for both human and machine understanding
@@ -13,7 +12,6 @@ This directory contains AI-optimized technical documentation for the Castmill mo
 - **Searchability**: Structure content for efficient agent navigation
 
 ### File Structure
-
 - **README.md files**: Provide overviews and navigation for each directory
 - **Specific guides**: Focus on particular systems, technologies, or processes
 - **Cross-references**: Link related documentation across packages/systems
@@ -21,13 +19,11 @@ This directory contains AI-optimized technical documentation for the Castmill mo
 ## 🎯 When Working on Agent Documentation
 
 ### Before Making Changes
-
 1. **Understand the audience**: AI agents need different information than human developers
 2. **Check current state**: Verify information is still accurate with codebase
 3. **Maintain consistency**: Follow established patterns and terminology
 
 ### Content Focus Areas
-
 - **Architecture overviews** - High-level system understanding
 - **Common patterns** - Repeated architectural decisions
 - **Integration points** - How systems connect and communicate
@@ -35,7 +31,6 @@ This directory contains AI-optimized technical documentation for the Castmill mo
 - **Gotchas and pitfalls** - Known issues and their solutions
 
 ### Writing Style
-
 - **Direct and factual**: Avoid marketing language or opinions
 - **Structured information**: Use headings, lists, and tables for scannability
 - **Actionable guidance**: Include specific commands, file paths, and procedures
@@ -64,7 +59,6 @@ agents/
 ## ✅ Quality Checklist
 
 When updating documentation:
-
 - [ ] Information is current and accurate
 - [ ] Cross-references are updated
 - [ ] Code examples work as written
@@ -75,7 +69,6 @@ When updating documentation:
 ## 🔄 Maintenance
 
 This documentation should evolve with the codebase:
-
 - **Update immediately** when making architectural changes
 - **Review periodically** to ensure accuracy
 - **Expand coverage** for new systems or patterns

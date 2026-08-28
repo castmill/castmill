@@ -5,7 +5,6 @@ This document describes the Location Picker feature implementation for the Castm
 ## Overview
 
 The Location Picker allows users to select geographic locations using an interactive map interface. This is useful for:
-
 - Setting device locations in the Device Details view
 - Configuring location-based widgets (e.g., weather, local time, maps)
 - Any widget that needs geographic coordinates
@@ -35,12 +34,12 @@ The Location Picker allows users to select geographic locations using an interac
 
 ```typescript
 interface LocationValue {
-  lat: number; // Latitude (-90 to 90)
-  lng: number; // Longitude (-180 to 180)
-  address?: string; // Human-readable address
-  city?: string; // City name
-  country?: string; // Country name
-  postalCode?: string; // Postal/ZIP code
+  lat: number;          // Latitude (-90 to 90)
+  lng: number;          // Longitude (-180 to 180)
+  address?: string;     // Human-readable address
+  city?: string;        // City name
+  country?: string;     // Country name
+  postalCode?: string;  // Postal/ZIP code
 }
 ```
 
@@ -98,7 +97,6 @@ options_schema: %{
   - Rate limit: 1 request per second (recommended)
 
 **Production Considerations**:
-
 - For high-traffic deployments, consider hosting your own Nominatim instance
 - Alternative: Use a commercial geocoding service (Google, Mapbox, etc.)
 - Current implementation uses public Nominatim with appropriate User-Agent header
@@ -106,7 +104,6 @@ options_schema: %{
 ## Internationalization
 
 All UI text is fully internationalized in 9 languages:
-
 - English (en)
 - Spanish (es)
 - Swedish (sv)
@@ -118,7 +115,6 @@ All UI text is fully internationalized in 9 languages:
 - Japanese (ja)
 
 Translation keys added:
-
 - `common.searchLocation`: "Search for a location..."
 - `common.coordinates`: "Coordinates"
 - `common.address`: "Address"
@@ -130,14 +126,12 @@ A demo widget (`location-display-demo`) is included in:
 `packages/castmill/priv/repo/migrations/20260114100000_add_location_demo_widget.exs`
 
 This widget demonstrates:
-
 - Using the location picker in options_schema
 - Accessing location data in the template
 - Displaying coordinates and address
 - Template interpolation with location values
 
 To add the demo widget to your database:
-
 ```bash
 cd packages/castmill
 mix ecto.migrate
@@ -149,7 +143,6 @@ Comprehensive tests are included in:
 `packages/ui-common/src/components/location-picker/location-picker.test.tsx`
 
 Tests cover:
-
 - Component rendering with various props
 - Location value updates
 - Search functionality
@@ -158,7 +151,6 @@ Tests cover:
 - Address editing
 
 Run tests with:
-
 ```bash
 cd packages/ui-common
 yarn test
@@ -167,7 +159,6 @@ yarn test
 ## Accessibility
 
 The LocationPicker is fully accessible:
-
 - Keyboard navigation support
 - ARIA labels for screen readers
 - Focus management
@@ -177,7 +168,6 @@ The LocationPicker is fully accessible:
 ## Browser Support
 
 Works in all modern browsers supporting:
-
 - ES6+ JavaScript
 - Fetch API
 - CSS Grid/Flexbox
@@ -186,7 +176,6 @@ Works in all modern browsers supporting:
 ## Future Enhancements
 
 Potential improvements for future versions:
-
 1. Custom map tile providers (satellite view, terrain, etc.)
 2. Drawing tools (radius, polygon areas)
 3. Multiple marker support
@@ -199,7 +188,6 @@ Potential improvements for future versions:
 ## Files Changed
 
 ### New Files
-
 - `packages/ui-common/src/components/location-picker/location-picker.tsx`
 - `packages/ui-common/src/components/location-picker/location-picker.scss`
 - `packages/ui-common/src/components/location-picker/location-picker.test.tsx`
@@ -208,7 +196,6 @@ Potential improvements for future versions:
 - `docs/LOCATION-PICKER.md` (this file)
 
 ### Modified Files
-
 - `packages/player/src/interfaces/schema.interface.ts` - Added LocationValue and LocationFieldAttributes
 - `packages/device/src/interfaces/schema.ts` - Added LocationValue and LocationFieldAttributes
 - `packages/ui-common/src/components/index.ts` - Export LocationPicker

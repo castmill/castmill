@@ -30,10 +30,10 @@ hacker-news/
 
 ## 🔧 Configuration Options
 
-| Option         | Type   | Default | Description                       |
-| -------------- | ------ | ------- | --------------------------------- |
-| `scroll_speed` | number | 30      | Pixels per second (10-100)        |
-| `max_items`    | number | 20      | Maximum stories to display (5-30) |
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `scroll_speed` | number | 30 | Pixels per second (10-100) |
+| `max_items` | number | 20 | Maximum stories to display (5-30) |
 
 ## 📡 Data Integration
 
@@ -55,7 +55,6 @@ This widget is designed to work with the **RSS fetcher** integration:
 ### Expected Data Format
 
 The RSS fetcher provides items with these fields:
-
 - `title` - Story headline
 - `pubDate_formatted` - Human-readable time (e.g., "2 hours ago")
 - `source` - Domain name of the linked article
@@ -80,7 +79,6 @@ zip -r hacker-news.zip hacker-news/
 ### Option 2: Upload JSON Only
 
 If you don't need custom assets:
-
 1. Navigate to **Dashboard → Widgets → Upload Widget**
 2. Select just the `widget.json` file
 3. Asset references will need to be removed or use absolute URLs
@@ -103,7 +101,6 @@ At runtime, these placeholders are resolved to the actual asset URLs based on th
 ## 🖼️ Preview
 
 The widget displays:
-
 - Header with HN logo and "Top Stories" label
 - Scrolling list of story cards
 - Each card shows: title, score, comments, time, source
@@ -129,16 +126,16 @@ When creating custom widgets, be aware of the schema validation rules:
 
 ### Valid Schema Types
 
-| Type      | Description                 | Example                                            |
-| --------- | --------------------------- | -------------------------------------------------- |
-| `string`  | Text values                 | `"title": "string"`                                |
-| `number`  | Numeric values              | `"score": "number"`                                |
-| `boolean` | True/false                  | `"enabled": "boolean"`                             |
-| `url`     | URL strings                 | `"link": "url"`                                    |
-| `color`   | Color values (hex, rgba)    | `"bg": "color"`                                    |
-| `list`    | Array of items              | See below                                          |
-| `map`     | Nested object               | See below                                          |
-| `ref`     | Reference to another entity | `"media": {"type": "ref", "collection": "medias"}` |
+| Type | Description | Example |
+|------|-------------|--------|
+| `string` | Text values | `"title": "string"` |
+| `number` | Numeric values | `"score": "number"` |
+| `boolean` | True/false | `"enabled": "boolean"` |
+| `url` | URL strings | `"link": "url"` |
+| `color` | Color values (hex, rgba) | `"bg": "color"` |
+| `list` | Array of items | See below |
+| `map` | Nested object | See below |
+| `ref` | Reference to another entity | `"media": {"type": "ref", "collection": "medias"}` |
 
 ### List Schema (for arrays)
 

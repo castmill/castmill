@@ -7,7 +7,6 @@ This document describes the implementation of URL-based routing with organizatio
 ## Problem Statement
 
 Prior to this implementation, the Dashboard had issues with organization switching:
-
 - Organization selection was not persisted across page refreshes
 - Data did not reload when switching between organizations
 - Addon pages (Playlists, Medias, Devices) showed stale data after organization changes
@@ -22,21 +21,18 @@ Implemented comprehensive URL-based routing where all authenticated routes inclu
 ### 1. Route Structure
 
 Changed from:
-
 ```
 /teams
 /content/playlists
 ```
 
 To:
-
 ```
 /org/:orgId/teams
 /org/:orgId/content/playlists
 ```
 
 **Files Modified:**
-
 - `packages/dashboard/src/index.tsx` - Route definitions updated
 
 ### 2. ProtectedRoute Synchronization
@@ -46,12 +42,8 @@ Added `createEffect` in `ProtectedRoute` component to sync URL parameters to the
 ```tsx
 createEffect(() => {
   const urlOrgId = params.orgId;
-  if (
-    store.organizations.loaded &&
-    urlOrgId &&
-    urlOrgId !== store.organizations.selectedId
-  ) {
-    const org = store.organizations.data.find((o) => o.id === urlOrgId);
+  if (store.organizations.loaded && urlOrgId && urlOrgId !== store.organizations.selectedId) {
+    const org = store.organizations.data.find(o => o.id === urlOrgId);
     if (org) {
       setStore('organizations', {
         selectedId: org.id,
@@ -63,7 +55,6 @@ createEffect(() => {
 ```
 
 **Files Modified:**
-
 - `packages/dashboard/src/components/protected-route.tsx`
 
 ### 3. Navigation Updates
@@ -82,7 +73,6 @@ navigate(`/org/${newOrgId}${currentPath}`);
 ```
 
 **Files Modified:**
-
 - `packages/dashboard/src/components/sidepanel/sidepanel.tsx`
 
 ### 4. Root Redirect
@@ -92,20 +82,19 @@ Implemented redirect from `/` to first organization:
 ```tsx
 const RootRedirect: Component = () => {
   const navigate = useNavigate();
-
+  
   createEffect(() => {
     if (store.organizations.loaded && store.organizations.data.length > 0) {
       const firstOrg = store.organizations.data[0];
       navigate(`/org/${firstOrg.id}/`, { replace: true });
     }
   });
-
+  
   return <div>{t('common.loading')}</div>;
 };
 ```
 
 **Files Modified:**
-
 - `packages/dashboard/src/index.tsx`
 
 ### 5. Addon Component Remounting
@@ -125,13 +114,12 @@ const KeyedComponent = (props: any) => {
   );
 };
 
-<Route path={addon.mount_path} component={KeyedComponent} />;
+<Route path={addon.mount_path} component={KeyedComponent} />
 ```
 
 This forces the addon component to **unmount and remount** when the organization ID changes, ensuring fresh data loads.
 
 **Files Modified:**
-
 - `packages/dashboard/src/index.tsx`
 
 ### 6. Store Structure for i18n
@@ -146,11 +134,7 @@ interface CastmillStore {
     tp: (key: string, count: number, params?: Record<string, any>) => string;
     formatDate: (date: Date, format?: string) => string;
     formatNumber: (value: number, options?: Intl.NumberFormatOptions) => string;
-    formatCurrency: (
-      value: number,
-      currency?: string,
-      options?: Intl.NumberFormatOptions
-    ) => string;
+    formatCurrency: (value: number, currency?: string, options?: Intl.NumberFormatOptions) => string;
     locale: () => string;
     setLocale: (locale: any) => void;
   };
@@ -169,25 +153,21 @@ setStore('i18n', {
 ```
 
 **Files Modified:**
-
 - `packages/dashboard/src/store/store.tsx`
 - `packages/dashboard/src/index.tsx`
 
 ### 7. Data Reloading
 
 **Dashboard Core Pages** (Teams, Channels, Usage):
-
 - Use `createEffect` with `on()` helper to watch `store.organizations.selectedId`
 - Reload data when organization changes
 
 **Addon Pages** (Playlists, Medias, Devices):
-
 - Component remounts when organization changes (due to `keyed Show`)
 - `onMount()` loads fresh data automatically
 - `createEffect` pattern included as fallback
 
 **Files Modified:**
-
 - `packages/dashboard/src/pages/channels-page/channels-page.tsx`
 - `packages/dashboard/src/pages/usage-page/usage-page.tsx`
 - `packages/castmill/lib/castmill/addons/playlists/components/index.tsx`
@@ -201,13 +181,11 @@ setStore('i18n', {
 **Problem**: Passing the store as a prop to addon components broke reactivity. Store changes weren't detected.
 
 **Attempted Solutions**:
-
 1. Object spread (`{...store, i18n}`) - broke reactivity (creates snapshot)
 2. Proxy wrapper - broke SolidJS reactivity tracking
 3. createMemo with object spread - same issue as #1
 
-**Final Solution**:
-
+**Final Solution**: 
 - Pass store directly without wrapping
 - Add i18n to store structure using `setStore()`
 - Force component remounting with `Show keyed` instead of relying on reactivity
@@ -278,7 +256,6 @@ If organization switching isn't working:
 ## Related Issues
 
 This implementation resolves the following user-reported issues:
-
 - Data not reloading when switching organizations
 - 403 Forbidden errors due to stale organization context
 - Selected organization lost on page refresh

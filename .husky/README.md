@@ -38,7 +38,6 @@ When you modify any translation file in `packages/dashboard/src/i18n/locales/`:
 - **Shows**: Detailed report of what's missing in which language
 
 Example output:
-
 ```
 Checking all languages against English reference...
 
@@ -86,30 +85,26 @@ yarn check-translations
 ✅ 100% translation coverage enforced automatically  
 ✅ Cleaner git diffs  
 ✅ Faster PR reviews  
-✅ No more "fix formatting" or "add missing translations" commits
+✅ No more "fix formatting" or "add missing translations" commits  
 
 ### Troubleshooting
 
 **Hook not running?**
-
 - Check if `.husky/pre-commit` is executable: `ls -la .husky/pre-commit`
 - Re-run: `chmod +x .husky/pre-commit`
 
 **Mix format failing?**
-
 - Ensure you're in the right directory
 - Check Elixir is installed: `elixir --version`
 - Try manually: `cd packages/castmill && mix format`
 
 **Translation check failing?**
-
 - See which language is incomplete in the error message
 - Run manually to see details: `yarn check-translations`
 - Fix missing translations in `packages/dashboard/src/i18n/locales/[language].json`
 - All 9 languages (en, es, sv, de, fr, zh, ar, ko, ja) must be 100% complete
 
 **Want to see what will be formatted?**
-
 ```bash
 npx lint-staged --dry-run
 ```

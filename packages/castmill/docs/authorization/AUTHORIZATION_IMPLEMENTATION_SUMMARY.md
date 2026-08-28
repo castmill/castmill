@@ -45,14 +45,14 @@ You now have a **centralized, matrix-based authorization system** for managing p
 
 ## 🎯 Current Permission Matrix
 
-| Resource      | Admin         | Manager       | Member              | Guest      |
-| ------------- | ------------- | ------------- | ------------------- | ---------- |
-| **Playlists** | Full (CRUD+L) | Full (CRUD+L) | Full (CRUD+L)       | Read (L+S) |
-| **Medias**    | Full (CRUD+L) | Full (CRUD+L) | Full (CRUD+L)       | Read (L+S) |
-| **Channels**  | Full (CRUD+L) | Full (CRUD+L) | Full (CRUD+L)       | Read (L+S) |
-| **Devices**   | Full (CRUD+L) | Full (CRUD+L) | Full (CRUD+L)       | Read (L+S) |
-| **Teams**     | Full (CRUD+L) | Full (CRUD+L) | **Read only (L+S)** | None       |
-| **Widgets**   | Full (CRUD+L) | Full (CRUD+L) | **Read only (L+S)** | Read (L+S) |
+| Resource | Admin | Manager | Member | Guest |
+|----------|-------|---------|---------|-------|
+| **Playlists** | Full (CRUD+L) | Full (CRUD+L) | Full (CRUD+L) | Read (L+S) |
+| **Medias** | Full (CRUD+L) | Full (CRUD+L) | Full (CRUD+L) | Read (L+S) |
+| **Channels** | Full (CRUD+L) | Full (CRUD+L) | Full (CRUD+L) | Read (L+S) |
+| **Devices** | Full (CRUD+L) | Full (CRUD+L) | Full (CRUD+L) | Read (L+S) |
+| **Teams** | Full (CRUD+L) | Full (CRUD+L) | **Read only (L+S)** | None |
+| **Widgets** | Full (CRUD+L) | Full (CRUD+L) | **Read only (L+S)** | Read (L+S) |
 
 **Actions:** List (L), Show (S), Create (C), Update (U), Delete (D)
 
@@ -129,7 +129,7 @@ Edit `lib/castmill/authorization/permissions.ex`:
 ```elixir
 @permissions %{
   # ... existing roles ...
-
+  
   # New role
   contributor: %{
     playlists: [:list, :show, :create, :update],  # No delete
@@ -172,12 +172,12 @@ Running `elixir demo_authorization.exs` shows:
 ```
 📋 PERMISSION MATRIX:
 
-Role        playlists   medias      channels    devices     teams       widgets
+Role        playlists   medias      channels    devices     teams       widgets     
 ------------------------------------------------------------------------------------
-admin       Full        Full        Full        Full        Full        Full
-manager     Full        Full        Full        Full        Full        Full
-member      Full        Full        Full        Full        Read        Read
-guest       Read        Read        Read        Read        None        Read
+admin       Full        Full        Full        Full        Full        Full        
+manager     Full        Full        Full        Full        Full        Full        
+member      Full        Full        Full        Full        Read        Read        
+guest       Read        Read        Read        Read        None        Read        
 
 🧪 TESTING SPECIFIC PERMISSIONS:
 
@@ -216,15 +216,15 @@ guest       Read        Read        Read        Read        None        Read
 
 ## 📊 Benefits Over Previous System
 
-| Aspect               | Before                         | After                     |
-| -------------------- | ------------------------------ | ------------------------- |
-| **Maintenance**      | Scattered checks across files  | Single permission matrix  |
-| **Adding roles**     | Update multiple controllers    | Update one matrix         |
-| **Adding resources** | Write new check_access clauses | Add to matrix             |
-| **Testing**          | Integration tests only         | Unit + integration tests  |
-| **Documentation**    | Implicit in code               | Self-documenting matrix   |
-| **Type safety**      | String-based                   | Atom-based (compile-time) |
-| **Consistency**      | Varies by controller           | Uniform pattern           |
+| Aspect | Before | After |
+|--------|--------|-------|
+| **Maintenance** | Scattered checks across files | Single permission matrix |
+| **Adding roles** | Update multiple controllers | Update one matrix |
+| **Adding resources** | Write new check_access clauses | Add to matrix |
+| **Testing** | Integration tests only | Unit + integration tests |
+| **Documentation** | Implicit in code | Self-documenting matrix |
+| **Type safety** | String-based | Atom-based (compile-time) |
+| **Consistency** | Varies by controller | Uniform pattern |
 
 ## 🔐 Security Considerations
 

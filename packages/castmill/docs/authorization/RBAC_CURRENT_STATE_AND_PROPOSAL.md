@@ -3,7 +3,6 @@
 **⚠️ CRITICAL: This document analyzes existing authorization logic with extensive test coverage. Changes must be made carefully to avoid breaking security or tests.**
 
 ## Table of Contents
-
 1. [Current Authorization Architecture](#current-authorization-architecture)
 2. [Current Role Permissions](#current-role-permissions)
 3. [Proposed Permission Model](#proposed-permission-model)
@@ -35,7 +34,6 @@
    - `Organizations.get_user_role/2` - Returns user's role (`:admin`, `:manager`, `:regular`, `:guest`, or `nil`)
 
 ### Current Roles
-
 - **`:admin`** - Full organizational access
 - **`:manager`** - Can create teams, elevated permissions
 - **`:regular`** - Standard user with limited access
@@ -48,7 +46,6 @@
 ### Resource Controller (`resource_controller.ex`)
 
 **Current Logic:**
-
 ```elixir
 # Line 52: Update devices, playlists, medias, channels
 Organizations.has_any_role?(organization_id, actor_id, [:admin, :regular])
@@ -61,7 +58,6 @@ Organizations.has_access(organization_id, actor_id, resources, action)
 ```
 
 **Interpretation:**
-
 - ✅ Regular users CAN: Update devices, playlists, medias, channels (line 52)
 - ✅ Guest users CAN: Read channel entries (line 60)
 - ⚠️ For other actions: Depends on `OrganizationsUsersAccess` table or defaults to admin-only
@@ -69,7 +65,6 @@ Organizations.has_access(organization_id, actor_id, resources, action)
 ### Team Controller (`team_controller.ex`)
 
 **Current Logic:**
-
 ```elixir
 # Lines 17-23: Manage teams (invite, update, remove members, add/remove resources)
 isOrganizationAdmin?(team_id, actor_id)  # Returns true if :admin OR :manager
@@ -79,7 +74,6 @@ isOrganizationMember?(team_id, actor_id)  # Returns true if :admin, :manager, OR
 ```
 
 **Interpretation:**
-
 - ✅ Managers CAN: Manage team membership (same as admins)
 - ✅ Regular users CAN: View teams, members, invitations (read-only)
 - ❌ Regular users CANNOT: Create teams, invite members, update teams, remove members
@@ -87,7 +81,6 @@ isOrganizationMember?(team_id, actor_id)  # Returns true if :admin, :manager, OR
 ### Organization Controller (`organization_controller.ex`)
 
 **Current Logic:**
-
 ```elixir
 # Lines 39-50: Widget management (create, update, delete)
 Organizations.is_admin?(organization_id, actor_id)  # Admin-only
@@ -100,7 +93,6 @@ Organizations.is_admin?(organization_id, actor_id)  # Admin-only
 ```
 
 **Interpretation:**
-
 - ❌ Regular users CANNOT: Manage widgets (admin-only)
 - ✅ Regular users CAN: View organization members
 - ❌ Regular users CANNOT: Manage organization invitations
@@ -109,31 +101,29 @@ Organizations.is_admin?(organization_id, actor_id)  # Admin-only
 
 ## Proposed Permission Model
 
-Based on your requirements: _"a regular role should probably be able to read/write access to the following resources: playlists, medias, devices, channels, but probably not teams other than read access."_
+Based on your requirements: *"a regular role should probably be able to read/write access to the following resources: playlists, medias, devices, channels, but probably not teams other than read access."*
 
 ### Desired Permissions Matrix
 
-| Resource                  | Admin | Manager | Regular           | Guest     |
-| ------------------------- | ----- | ------- | ----------------- | --------- |
-| **Playlists**             | Full  | Full    | **✅ Read/Write** | Read-only |
-| **Medias**                | Full  | Full    | **✅ Read/Write** | Read-only |
-| **Devices**               | Full  | Full    | **✅ Read/Write** | Read-only |
-| **Channels**              | Full  | Full    | **✅ Read/Write** | Read-only |
-| **Teams** (View)          | Full  | Full    | **✅ Read-only**  | No access |
-| **Teams** (Manage)        | Full  | Full    | **❌ No access**  | No access |
-| **Widgets**               | Full  | ?       | ?                 | No access |
-| **Organization Settings** | Full  | ?       | No access         | No access |
+| Resource | Admin | Manager | Regular | Guest |
+|----------|-------|---------|---------|-------|
+| **Playlists** | Full | Full | **✅ Read/Write** | Read-only |
+| **Medias** | Full | Full | **✅ Read/Write** | Read-only |
+| **Devices** | Full | Full | **✅ Read/Write** | Read-only |
+| **Channels** | Full | Full | **✅ Read/Write** | Read-only |
+| **Teams** (View) | Full | Full | **✅ Read-only** | No access |
+| **Teams** (Manage) | Full | Full | **❌ No access** | No access |
+| **Widgets** | Full | ? | ? | No access |
+| **Organization Settings** | Full | ? | No access | No access |
 
 ### Rationale
 
 **Why Regular users should have full access to content resources:**
-
 - Digital signage platform: Regular users are content creators/managers
 - Core workflow: Create playlists → Upload media → Assign to devices → Distribute via channels
 - Team management affects organizational structure and permissions → Admin-level concern
 
 **Why Regular users should have read-only Teams access:**
-
 - Need to see which teams exist and who's in them for collaboration
 - Should NOT be able to add/remove members (affects permissions)
 - Should NOT be able to create teams (organizational decision)
@@ -157,7 +147,6 @@ Based on your requirements: _"a regular role should probably be able to read/wri
 #### 1. **Team Controller - Write Operations**
 
 **Current behavior** (Lines 17-23):
-
 ```elixir
 def check_access(actor_id, action, %{"team_id" => team_id})
     when action in [
@@ -181,7 +170,6 @@ end
 ```
 
 **Issue:** This is actually **CORRECT** for your requirements!
-
 - Only Admins and Managers can modify teams
 - Regular users blocked from team management
 - ✅ No changes needed
@@ -189,7 +177,6 @@ end
 #### 2. **Organizations.has_access/4 - Default Behavior**
 
 **Current behavior** (`organizations.ex:313`):
-
 ```elixir
 def has_access(organization_id, user_id, resource_type, action) do
   cond do
@@ -207,12 +194,10 @@ end
 ```
 
 **Question:** What happens when `OrganizationsUsersAccess` table is empty?
-
 - If no rows exist for a user → Access denied (except for admins/managers with teams)
 - This means Regular users might be **blocked by default** unless explicit access rows exist
 
-**Action Required:**
-
+**Action Required:** 
 1. Check if `OrganizationsUsersAccess` table is populated in production
 2. If empty: Need to either:
    - Add default rows for Regular users, OR
@@ -221,7 +206,6 @@ end
 #### 3. **Widget Management**
 
 **Current behavior** (`organization_controller.ex:39-50`):
-
 ```elixir
 def check_access(actor_id, :create_widget, %{"organization_id" => organization_id}) do
   # Only admins can create widgets for now
@@ -230,12 +214,10 @@ end
 ```
 
 **Question:** Should Regular users be able to create/manage widgets?
-
 - Widgets are reusable content components (like video player, image carousel, etc.)
 - In a digital signage context, content creators likely need this
 
 **Decision needed:**
-
 - **Option A:** Keep admin-only (organizational widgets managed centrally)
 - **Option B:** Allow Regular users (content creators need widget flexibility)
 
@@ -257,13 +239,11 @@ end
 ### Tests That May Need Updates
 
 **If you modify `has_access/4` logic:**
-
 - Any tests that rely on default access behavior
 - Integration tests for resource CRUD operations
 - Authorization tests in controllers
 
 **Search for tests:**
-
 ```bash
 cd packages/castmill
 grep -r "has_access\|check_access\|has_any_role" test/ --include="*.exs"
@@ -274,7 +254,6 @@ grep -r "has_access\|check_access\|has_any_role" test/ --include="*.exs"
 ## Migration Strategy
 
 ### Phase 1: Validation (NO CODE CHANGES)
-
 ✅ **Current Phase**
 
 1. ✅ Document current authorization architecture
@@ -291,19 +270,16 @@ grep -r "has_access\|check_access\|has_any_role" test/ --include="*.exs"
    - Attempt to view team → Should succeed (line 87)
 
 ### Phase 2: Analysis
-
 1. Check `OrganizationsUsersAccess` table schema and data
 2. Determine if default permissions exist for Regular users
 3. Decide on Widget management permissions (Regular access or not?)
 
 ### Phase 3: Documentation Update
-
 1. Update RBAC_IMPLEMENTATION_ISSUE.md with findings
 2. Document exact changes needed (if any)
 3. List tests that need updating
 
 ### Phase 4: Implementation (Only if needed)
-
 1. Make minimal, targeted changes
 2. Update tests incrementally
 3. Run test suite after each change
@@ -341,23 +317,21 @@ Based on analysis, the **current authorization logic already matches your requir
 **Before any code changes:**
 
 1. **Test current behavior** with Regular user:
-
    ```bash
    # In IEx console
    iex -S mix phx.server
-
+   
    # Create test Regular user
    org = Castmill.Organizations.get_organization!(1)
    user = Castmill.Accounts.get_user_by_email("regular@test.com")
    Castmill.Organizations.set_user_role(org.id, user.id, :regular)
-
+   
    # Test permissions
    Castmill.Organizations.has_access(org.id, user.id, "playlists", :create)
    Castmill.Organizations.has_access(org.id, user.id, "teams", :create)
    ```
 
 2. **Run existing tests:**
-
    ```bash
    cd packages/castmill
    mix test test/castmill_web/controllers/team_controller_test.exs
@@ -365,7 +339,6 @@ Based on analysis, the **current authorization logic already matches your requir
    ```
 
 3. **Check database:**
-
    ```sql
    SELECT * FROM organizations_users_access LIMIT 10;
    ```
@@ -384,7 +357,6 @@ Based on analysis, the **current authorization logic already matches your requir
 **Recommendation: Validate first, modify only if necessary.**
 
 Before updating RBAC_IMPLEMENTATION_ISSUE.md or making code changes, please:
-
 1. Test current Regular user permissions in running system
 2. Review `OrganizationsUsersAccess` table structure
 3. Confirm whether changes are actually needed

@@ -7,7 +7,6 @@ The Castmill documentation site now has a comprehensive dynamic social media car
 ## System Components
 
 ### 1. Social Cards Plugin (`plugins/social-cards/index.js`)
-
 - **Purpose**: Custom Docusaurus plugin that generates HTML templates for social cards during the build process
 - **Features**:
   - Automatically discovers all documentation routes
@@ -17,7 +16,6 @@ The Castmill documentation site now has a comprehensive dynamic social media car
   - Generates custom titles and descriptions for each page
 
 ### 2. Image Generation Script (`scripts/generate-social-images.js`)
-
 - **Purpose**: Converts HTML templates to high-quality JPG images using Puppeteer
 - **Features**:
   - Automated screenshot generation at exact 1200x630 dimensions
@@ -26,7 +24,6 @@ The Castmill documentation site now has a comprehensive dynamic social media car
   - 90% JPEG quality for optimal file size vs quality
 
 ### 3. Package Scripts
-
 ```json
 {
   "social-cards": "node scripts/generate-social-images.js",
@@ -37,16 +34,14 @@ The Castmill documentation site now has a comprehensive dynamic social media car
 ## Generated Cards
 
 The system automatically generates social cards for:
-
 - **Homepage** (`home.jpg`) - Main landing page
 - **Documentation pages** - All pages under `/docs/`
 - **Dynamic discovery** - Automatically finds new pages during build
 
 ### Current Generated Cards (21 total):
-
 - `home.jpg` - Your Digital Signage Partner
 - `docs-intro.jpg` - Getting Started
-- `docs-player.jpg` - Player Documentation
+- `docs-player.jpg` - Player Documentation  
 - `docs-widgets.jpg` - Widget Development
 - `docs-api.jpg` - API Reference
 - Plus 16 more automatically discovered pages
@@ -54,7 +49,6 @@ The system automatically generates social cards for:
 ## Usage Instructions
 
 ### Automated Workflow (Recommended)
-
 ```bash
 # Build site and generate all social cards
 yarn build:full
@@ -65,12 +59,11 @@ yarn social-cards
 ```
 
 ### Manual Process
-
 ```bash
 # 1. Build the site to generate HTML templates
 yarn build
 
-# 2. Generate images from templates
+# 2. Generate images from templates  
 yarn social-cards
 
 # 3. Images are saved to static/img/social/
@@ -79,7 +72,6 @@ yarn social-cards
 ## Adding Social Cards to Pages
 
 ### For Markdown Documentation Pages
-
 Add the `image` frontmatter property:
 
 ```markdown
@@ -92,7 +84,6 @@ image: /img/social/docs-intro.jpg
 ```
 
 ### For React Pages (like Home)
-
 Use the `Head` component:
 
 ```tsx
@@ -114,15 +105,13 @@ export default function MyPage() {
 ## Design Specifications
 
 ### Visual Design
-
 - **Dimensions**: 1200x630 pixels (Twitter/Facebook optimal)
-- **Background**: Blue gradient (#3b82f6 to #6366f1)
+- **Background**: Blue gradient (#3b82f6 to #6366f1)  
 - **Pattern**: Subtle dot pattern overlay
 - **Typography**: System fonts (-apple-system, BlinkMacSystemFont, 'Segoe UI')
 - **Branding**: Castmill logo with clean, modern styling
 
 ### Content Structure
-
 - **Logo**: CASTMILL (spaced uppercase lettering)
 - **Title**: Large, bold page-specific title (52px)
 - **Description**: Descriptive text about the page content (22px)
@@ -132,7 +121,6 @@ export default function MyPage() {
 ## Customization
 
 ### Adding New Card Templates
-
 Edit `plugins/social-cards/index.js` and add to the `cards` array:
 
 ```javascript
@@ -145,18 +133,14 @@ Edit `plugins/social-cards/index.js` and add to the `cards` array:
 ```
 
 ### Customizing Design
-
 Modify the CSS styles in the `generateCardHTML` function within the plugin. Key areas:
-
 - **Background**: Change gradient colors
-- **Typography**: Adjust font sizes and weights
+- **Typography**: Adjust font sizes and weights  
 - **Layout**: Modify padding, positioning
 - **Branding**: Update logo, colors, stats
 
 ### Dynamic Route Detection
-
 The plugin automatically detects routes starting with `/docs/` and creates cards with:
-
 - Capitalized route names as titles
 - Generic descriptions
 - 'Documentation' type badge
@@ -164,20 +148,17 @@ The plugin automatically detects routes starting with `/docs/` and creates cards
 ## Technical Details
 
 ### Build Integration
-
 - Runs during Docusaurus `postBuild` lifecycle
 - Creates HTML templates in `build/img/social/`
 - Generates README with usage instructions
 
 ### Image Generation
-
 - Uses Puppeteer headless Chrome
 - High DPI rendering (deviceScaleFactor: 2)
 - JPEG compression (90% quality)
 - Exact 1200x630 pixel dimensions
 
 ### File Organization
-
 ```
 static/img/social/           # Generated JPG images (git tracked)
 build/img/social/            # HTML templates (build artifact)
@@ -190,14 +171,12 @@ scripts/generate-social-images.js  # Image generation script
 ### Common Issues
 
 **"No HTML files found" Error**
-
 ```bash
 yarn build  # Make sure to build first
 yarn social-cards
 ```
 
 **Puppeteer Installation Issues**
-
 ```bash
 yarn add puppeteer --dev
 # or use npm
@@ -205,13 +184,11 @@ npm install puppeteer --save-dev
 ```
 
 **Image Quality Issues**
-
 - Increase `deviceScaleFactor` in the script
 - Adjust JPEG `quality` parameter
 - Check viewport dimensions match 1200x630
 
 ### Alternative Image Generation
-
 If Puppeteer doesn't work in your environment:
 
 1. **Manual Screenshots**

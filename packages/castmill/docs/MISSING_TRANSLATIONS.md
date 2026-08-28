@@ -9,18 +9,16 @@ During the merge from main, several hardcoded strings were found in toast messag
 ### 1. `/packages/dashboard/src/pages/teams-page/teams-invitations-view.tsx`
 
 **Changes Made:**
-
-- `toast.success(\`Invitation for \${invitation.email} removed successfully\`)`→`toast.success(t('teams.invitationRemovedSuccessfully', { email: invitation.email }))`
+- `toast.success(\`Invitation for \${invitation.email} removed successfully\`)` → `toast.success(t('teams.invitationRemovedSuccessfully', { email: invitation.email }))`
 - `toast.success('Invitations removed successfully')` → `toast.success(t('teams.invitationsRemovedSuccessfully'))`
-- `title={\`Remove Invitation From Team\`}`→`title={t('teams.removeInvitationFromTeam')}`
-- `message={\`Are you sure...\`}`→`message={t('teams.confirmRemoveInvitation', { email: ... })}`
-- `title={\`Remove members From Team\`}`→`title={t('teams.removeMembersFromTeam')}`
-- `message={\`Are you sure...\`}`→`message={t('teams.confirmRemoveMembers')}`
+- `title={\`Remove Invitation From Team\`}` → `title={t('teams.removeInvitationFromTeam')}`
+- `message={\`Are you sure...\`}` → `message={t('teams.confirmRemoveInvitation', { email: ... })}`
+- `title={\`Remove members From Team\`}` → `title={t('teams.removeMembersFromTeam')}`
+- `message={\`Are you sure...\`}` → `message={t('teams.confirmRemoveMembers')}`
 
 ### 2. `/packages/dashboard/src/pages/teams-page/teams-page.tsx`
 
 **Changes Made:**
-
 - `toast.success('Teams removed successfully')` → `toast.success(t('teams.teamsRemovedSuccessfully'))`
 
 ## Required Translation Keys
@@ -48,41 +46,34 @@ While examining the codebase, I also found other hardcoded strings in toast mess
 ### Device Components (`/packages/castmill/lib/castmill/addons/devices/components/`)
 
 **channels.tsx:**
-
 - `'Failed to fetch device channels'`
 - `'This channel is already assigned to the device.'`
 - `'At least one channel must be assigned to the device.'`
 - `'Channel removed successfully'`
 
 **device-view.tsx:**
-
 - `'Device updated successfully'`
 
 **index.tsx:**
-
 - `'Device "${device.name}" removed successfully'`
 - `'${selectedDevices().size} device(s) removed successfully'`
 
 **maintainance.tsx:**
-
 - `'Command "${command}" sent successfully'`
 - `'An error occurred while processing your request: ${error}'`
 
 ### Media Components (`/packages/castmill/lib/castmill/addons/medias/components/`)
 
 **index.tsx:**
-
 - `'Media "${resource.name}" removed successfully'`
 - `'${selectedMedias().size} media(s) removed successfully'`
 
 **upload.tsx:**
-
 - `'No supported files found in the dropped files.'`
 
 ### Playlist Components (`/packages/castmill/lib/castmill/addons/playlists/components/`)
 
 **index.tsx:**
-
 - `'Playlist "${resource.name}" removed successfully'`
 - `'${selectedPlaylists().size} playlist(s) removed successfully'`
 - `'Playlist "${name}" created successfully'`
@@ -98,7 +89,6 @@ While examining the codebase, I also found other hardcoded strings in toast mess
 ## Location of i18n Files
 
 Based on the imports (`import { useI18n } from '../../i18n'`), the i18n configuration should be in `/packages/dashboard/src/i18n/` directory. Look for files like:
-
 - `index.ts` (main i18n configuration)
 - `locales/en.json` or similar locale files
 - Translation files in JSON or similar format

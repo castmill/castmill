@@ -1,14 +1,21 @@
 # Castmill Notification System# Notification System
 
+
+
 ## Overview
 
 The Castmill Notification System provides real-time notifications to users about important events in the platform, such as invitations, device registrations, and more.
 
+
+
 The Castmill notification system provides real-time notifications to users about important events in the platform. Notifications are delivered via WebSocket (Phoenix Channels) and displayed in the Dashboard UI with full internationalization support across 9 languages.## Architecture
 
-## Architecture
 
+
+## Architecture
 ### Backend Components
+
+
 
 ### Backend Components#### 1. Database Schema
 
@@ -18,31 +25,31 @@ The Castmill notification system provides real-time notifications to users about
 
 - **Fields**:
 
-**Table**: `notifications` - `title_key` (string): Translation key for notification title (e.g., "organizations.notifications.types.deviceRegistration.title")
+**Table**: `notifications`  - `title_key` (string): Translation key for notification title (e.g., "organizations.notifications.types.deviceRegistration.title")
 
-- `description_key` (string): Translation key for notification description
+  - `description_key` (string): Translation key for notification description
 
-**Primary Key**: `id` (bigint) - Auto-incrementing integer for optimal performance - `link` (string): Optional link to related resource
+**Primary Key**: `id` (bigint) - Auto-incrementing integer for optimal performance  - `link` (string): Optional link to related resource
 
-- `type` (string): Notification type identifier (e.g., "device_registration", "organization_invitation")
+  - `type` (string): Notification type identifier (e.g., "device_registration", "organization_invitation")
 
-**Fields**: - `read` (boolean): Whether the notification has been read (default: false)
+**Fields**:  - `read` (boolean): Whether the notification has been read (default: false)
 
-- `title_key` (string): Translation key for notification title (e.g., `"organizations.notifications.types.deviceRegistration.title"`) - `user_id` (binary_id): Foreign key to users (for user-specific notifications)
+- `title_key` (string): Translation key for notification title (e.g., `"organizations.notifications.types.deviceRegistration.title"`)  - `user_id` (binary_id): Foreign key to users (for user-specific notifications)
 
-- `description_key` (string): Translation key for notification description - `organization_id` (binary_id): Foreign key to organizations (for org-wide notifications)
+- `description_key` (string): Translation key for notification description  - `organization_id` (binary_id): Foreign key to organizations (for org-wide notifications)
 
-- `link` (string): Optional link to related resource - `team_id` (bigint): Foreign key to teams (for team-wide notifications) - **Note: Teams use integer IDs**
+- `link` (string): Optional link to related resource  - `team_id` (bigint): Foreign key to teams (for team-wide notifications) - **Note: Teams use integer IDs**
 
-- `type` (string): Notification type identifier (e.g., `"device_registration"`, `"organization_invitation"`) - `roles` (array of strings): Optional role filter for org/team notifications (e.g., ["admin", "device_manager"])
+- `type` (string): Notification type identifier (e.g., `"device_registration"`, `"organization_invitation"`)  - `roles` (array of strings): Optional role filter for org/team notifications (e.g., ["admin", "device_manager"])
 
-- `read` (boolean): Whether the notification has been read (default: false) - `metadata` (map): Extensible JSON field for dynamic interpolation values and special fields like `excluded_user_ids`
+- `read` (boolean): Whether the notification has been read (default: false)  - `metadata` (map): Extensible JSON field for dynamic interpolation values and special fields like `excluded_user_ids`
 
-- `user_id` (binary_id): Foreign key to users (for user-specific notifications) - `actor_id` (string): ID of who/what triggered the notification (user ID, device ID, etc.)
+- `user_id` (binary_id): Foreign key to users (for user-specific notifications)  - `actor_id` (string): ID of who/what triggered the notification (user ID, device ID, etc.)
 
-- `organization_id` (binary_id): Foreign key to organizations (for org-wide notifications) - `actor_type` (string): Type of actor - "user", "device", "system", "integration", "scheduler" (default: "user")
+- `organization_id` (binary_id): Foreign key to organizations (for org-wide notifications)  - `actor_type` (string): Type of actor - "user", "device", "system", "integration", "scheduler" (default: "user")
 
-- `team_id` (bigint): Foreign key to teams (for team-wide notifications) - **Note: Teams use integer IDs** - `inserted_at`, `updated_at`: Timestamps
+- `team_id` (bigint): Foreign key to teams (for team-wide notifications) - **Note: Teams use integer IDs**  - `inserted_at`, `updated_at`: Timestamps
 
 - `roles` (array of strings): Optional role filter for org/team notifications (e.g., `["admin", "device_manager"]`)
 
@@ -74,23 +81,23 @@ The Castmill notification system provides real-time notifications to users about
 
 schema "notifications" do- `list_user_notifications/2` - List notifications for a user (with pagination)
 
-field :title_key, :string- `count_unread_notifications/1` - Count unread notifications for a user
+  field :title_key, :string- `count_unread_notifications/1` - Count unread notifications for a user
 
-field :description_key, :string- `mark_as_read/1` - Mark a notification as read
+  field :description_key, :string- `mark_as_read/1` - Mark a notification as read
 
-field :link, :string- `mark_all_as_read/1` - Mark all notifications as read for a user
+  field :link, :string- `mark_all_as_read/1` - Mark all notifications as read for a user
 
-field :type, :string
+  field :type, :string
 
-field :read, :boolean, default: false#### 3. Events Module: `Castmill.Notifications.Events`
+  field :read, :boolean, default: false#### 3. Events Module: `Castmill.Notifications.Events`
 
-field :metadata, :map, default: %{}Located in: `packages/castmill/lib/castmill/notifications/events.ex`
+  field :metadata, :map, default: %{}Located in: `packages/castmill/lib/castmill/notifications/events.ex`
 
-field :roles, {:array, :string}, default: []
+  field :roles, {:array, :string}, default: []
 
-field :actor_id, :stringHelper functions for common notification events:
+  field :actor_id, :stringHelper functions for common notification events:
 
-field :actor_type, :string, default: "user"- `notify_organization_invitation/3` - Notify user about organization invitation
+  field :actor_type, :string, default: "user"- `notify_organization_invitation/3` - Notify user about organization invitation
 
 - `notify_team_invitation/3` - Notify user about team invitation
 
@@ -98,7 +105,7 @@ field :actor_type, :string, default: "user"- `notify_organization_invitation/3` 
 
   belongs_to :organization, Organization- `notify_device_removal/2` - Notify organization about device removal
 
-  belongs_to :team, Team, type: :integer # Teams use integer PKs- `notify_media_transcoded/4` - Notify user when media transcoding completes
+  belongs_to :team, Team, type: :integer  # Teams use integer PKs- `notify_media_transcoded/4` - Notify user when media transcoding completes
 
 - `notify_media_uploaded/5` - Notify user or organization about media upload (with optional role filter)
 
@@ -107,6 +114,8 @@ field :actor_type, :string, default: "user"- `notify_organization_invitation/3` 
 end- `notify_device_offline_alert/5` - Alert about device going offline (with role filter, defaults to admin & device_manager)
 
 ```- `notify_device_online_alert/5` - Notify when device comes back online (with role filter)
+
+
 
 #### 2. Elixir Context: `Castmill.Notifications`#### 4. Phoenix Channel: `CastmillWeb.NotificationsChannel`
 
@@ -120,11 +129,11 @@ Located in: `packages/castmill/lib/castmill_web/channels/notifications_channel.e
 
 - `create_user_notification/1` - Create notification for a specific user- **Events**:
 
-- `create_organization_notification/1` - Create notification for all users in an organization - `new_notification` (server->client): Pushed when a new notification is created
+- `create_organization_notification/1` - Create notification for all users in an organization  - `new_notification` (server->client): Pushed when a new notification is created
 
-- `create_team_notification/1` - Create notification for all users in a team - `mark_read` (client->server): Mark a notification as read
+- `create_team_notification/1` - Create notification for all users in a team  - `mark_read` (client->server): Mark a notification as read
 
-- `list_user_notifications/2` - List notifications for a user (with pagination) - `mark_all_read` (client->server): Mark all notifications as read
+- `list_user_notifications/2` - List notifications for a user (with pagination)  - `mark_all_read` (client->server): Mark all notifications as read
 
 - `count_unread_notifications/1` - Count unread notifications for a user
 
@@ -164,39 +173,39 @@ Helper functions for common notification events:| GET | `/notifications/unread_c
 
 {
 
-#### 4. Phoenix Channel: `CastmillWeb.NotificationsChannel` "data": [
+#### 4. Phoenix Channel: `CastmillWeb.NotificationsChannel`  "data": [
 
     {
 
-**Location**: `packages/castmill/lib/castmill_web/channels/notifications_channel.ex` "id": "uuid",
+**Location**: `packages/castmill/lib/castmill_web/channels/notifications_channel.ex`      "id": "uuid",
 
       "title": "Organization Invitation",
 
-- **Channel Topic**: `notifications:user_id` "description": "You have been invited to join Acme Corp",
+- **Channel Topic**: `notifications:user_id`      "description": "You have been invited to join Acme Corp",
 
-- **Join**: User can only join their own notification channel "link": "/invite-organization",
+- **Join**: User can only join their own notification channel      "link": "/invite-organization",
 
-- **Events**: "type": "organization_invitation",
+- **Events**:      "type": "organization_invitation",
 
-  - `new_notification` (server→client): Pushed when a new notification is created "read": false,
+  - `new_notification` (server→client): Pushed when a new notification is created      "read": false,
 
-  - `mark_read` (client→server): Mark a notification as read "metadata": {
+  - `mark_read` (client→server): Mark a notification as read      "metadata": {
 
-  - `mark_all_read` (client→server): Mark all notifications as read "organization_id": "uuid",
+  - `mark_all_read` (client→server): Mark all notifications as read        "organization_id": "uuid",
 
         "organization_name": "Acme Corp"
 
-#### 5. REST API Endpoints },
+#### 5. REST API Endpoints      },
 
       "inserted_at": "2025-10-14T20:00:00Z",
 
-**Base Path**: `/api/notifications` "updated_at": "2025-10-14T20:00:00Z"
+**Base Path**: `/api/notifications`      "updated_at": "2025-10-14T20:00:00Z"
 
     }
 
-| Method | Endpoint | Description | ],
+| Method | Endpoint | Description |  ],
 
-|--------|----------|-------------| "unread_count": 5
+|--------|----------|-------------|  "unread_count": 5
 
 | GET | `/notifications` | List notifications for current user (supports pagination) |}
 
@@ -205,6 +214,8 @@ Helper functions for common notification events:| GET | `/notifications/unread_c
 | PATCH | `/notifications/:id/read` | Mark a notification as read |
 
 | POST | `/notifications/mark_all_read` | Mark all notifications as read |### Frontend Components
+
+
 
 **Query Parameters** (for GET /notifications):#### 1. Notification Service
 
@@ -220,7 +231,7 @@ Provides API methods:
 
 {- `markAsRead(notificationId)` - Mark notification as read
 
-"data": [- `markAllAsRead()` - Mark all notifications as read
+  "data": [- `markAllAsRead()` - Mark all notifications as read
 
     {
 
@@ -248,13 +259,13 @@ Provides API methods:
 
     }
 
-],Features:
+  ],Features:
 
-"unread_count": 5- Modal dialog displaying notifications
+  "unread_count": 5- Modal dialog displaying notifications
 
 }- Infinite scroll for pagination
 
-````- Mark individual notification as read on click
+```- Mark individual notification as read on click
 
 - Mark all as read button
 
@@ -602,39 +613,39 @@ Castmill.Notifications.Events.notify_media_uploaded(  nil,  # org-wide
 
 ))
 
-````
+```
 
 # Media uploaded - organization wide with role filter
 
 Castmill.Notifications.Events.notify_media_uploaded(**Administrative Notifications**
 
-nil, # no specific user```elixir
+  nil,  # no specific user```elixir
 
-organization_id,# Only admins and managers get quota warnings
+  organization_id,# Only admins and managers get quota warnings
 
-media_name,create_organization_notification(%{
+  media_name,create_organization_notification(%{
 
-media_id, organization_id: org_id,
+  media_id,  organization_id: org_id,
 
-["admin", "editor", "publisher"] # only these roles see it title: "Storage Quota Warning",
+  ["admin", "editor", "publisher"]  # only these roles see it  title: "Storage Quota Warning",
 
-) description: "You've used 90% of your storage quota",
+)  description: "You've used 90% of your storage quota",
 
-type: "quota_warning",
+  type: "quota_warning",
 
-# Invitation accepted roles: ["admin", "manager"]
+# Invitation accepted  roles: ["admin", "manager"]
 
 Castmill.Notifications.Events.notify_invitation_accepted(})
 
-user_name,```
+  user_name,```
 
-organization_id, # or nil
+  organization_id,  # or nil
 
-team_id # or nil## Notification Types
+  team_id           # or nil## Notification Types
 
 )
 
-````Current built-in notification types:
+```Current built-in notification types:
 
 - `organization_invitation` - User invited to organization
 
@@ -686,49 +697,49 @@ Castmill.Notifications.create_organization_notification(%{       title: "Custom 
 
 })   end
 
-````
+   ```
 
 # Organization-wide notification (role-filtered)
 
 Castmill.Notifications.create_organization_notification(%{2. **Add a notification icon** in the frontend `notification-dialog.tsx`:
 
-organization_id: org_id, ```typescript
+  organization_id: org_id,   ```typescript
 
-title_key: "organizations.notifications.types.adminAlert.title", const getNotificationIcon = (type: string) => {
+  title_key: "organizations.notifications.types.adminAlert.title",   const getNotificationIcon = (type: string) => {
 
-description_key: "organizations.notifications.types.adminAlert.description", switch (type) {
+  description_key: "organizations.notifications.types.adminAlert.description",     switch (type) {
 
-type: "admin_alert", case 'custom_event':
+  type: "admin_alert",       case 'custom_event':
 
-roles: ["admin", "manager"] # Only admins and managers see this return '🎉';
+  roles: ["admin", "manager"]  # Only admins and managers see this         return '🎉';
 
-}) // ... other cases
+})       // ... other cases
 
      }
 
-# Team-wide notification (excluding actor) }
+# Team-wide notification (excluding actor)   }
 
-Castmill.Notifications.create_team_notification(%{ ```
+Castmill.Notifications.create_team_notification(%{   ```
 
-team_id: team_id,
+  team_id: team_id,
 
-title_key: "organizations.notifications.types.teamEvent.title",3. **Add translations** if needed in all 9 language files in:
+  title_key: "organizations.notifications.types.teamEvent.title",3. **Add translations** if needed in all 9 language files in:
 
-description_key: "organizations.notifications.types.teamEvent.description", `packages/dashboard/src/i18n/locales/`
+  description_key: "organizations.notifications.types.teamEvent.description",   `packages/dashboard/src/i18n/locales/`
 
-type: "team_event",
+  type: "team_event",
 
-metadata: %{### Monitoring & Alert System Integration
+  metadata: %{### Monitoring & Alert System Integration
 
     user_name: user.name,
 
     excluded_user_ids: [user_id]  # Don't notify the person who triggered itThe notification system is designed to work seamlessly with monitoring and alerting systems. Here's how to integrate:
 
-}
+  }
 
 })**Device Offline Monitoring**
 
-````elixir
+``````elixir
 
 # In your monitoring service/worker
 
@@ -742,7 +753,7 @@ metadata: %{### Monitoring & Alert System Integration
 
 #### 1. Define Notification Type    send_pagerduty_alert(device)
 
-
+    
 
 Choose a descriptive type identifier (e.g., `"device_registration"`, `"media_uploaded"`).    # Also create in-app notification
 
@@ -796,7 +807,7 @@ Add translation keys to **all 9 language files** in `packages/dashboard/src/i18n
 
 - `de.json` (German)    send_slack(details)
 
-- `fr.json` (French)
+- `fr.json` (French)    
 
 - `zh.json` (Chinese)    # Create in-app notification for logged-in users
 
@@ -983,7 +994,7 @@ notify_invitation_accepted(
   "user"                # actor_type
 )
 
-# Device-triggered notification
+# Device-triggered notification  
 notify_device_offline_alert(
   device.name,
   device.id,            # actor_id: The device that went offline
@@ -1015,19 +1026,19 @@ Actor tracking enables:
 1. **Rich UI Display**
    - Show user avatars: "**John Smith** invited you to the team"
    - Show device icons: "Device **Screen-01** went offline"
-
+   
 2. **Filtering and Search**
    - "Show me all notifications from user X"
    - "Show me all device alerts"
-
+   
 3. **Analytics**
    - Which users generate most notifications?
    - Which devices have most alerts?
-
+   
 4. **User Preferences**
    - "Mute notifications from this user"
    - "Only show critical device alerts"
-
+   
 5. **Audit Trails**
    - Complete history of who triggered what events
 
@@ -1285,4 +1296,3 @@ The system was migrated from UUID primary keys to auto-incrementing integers for
 - [ ] Add push notifications for mobile apps
 - [ ] Add notification templates for easier creation
 - [ ] Add notification analytics dashboard
-````

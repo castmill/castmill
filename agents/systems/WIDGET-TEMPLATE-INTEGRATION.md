@@ -9,7 +9,6 @@ Castmill widgets are **JSON-based templates** that define both the UI structure 
 A widget consists of three main components:
 
 ### 1. Template
-
 Defines the visual layout and components using JSON:
 
 ```json
@@ -22,12 +21,12 @@ Defines the visual layout and components using JSON:
     {
       "type": "text",
       "field": "temperature",
-      "style": { "fontSize": "48px" }
+      "style": {"fontSize": "48px"}
     },
     {
       "type": "text",
       "field": "condition",
-      "style": { "fontSize": "24px" }
+      "style": {"fontSize": "24px"}
     },
     {
       "type": "image",
@@ -38,7 +37,6 @@ Defines the visual layout and components using JSON:
 ```
 
 ### 2. Options Schema
-
 Defines configuration options that users can set when creating a widget instance:
 
 ```json
@@ -70,7 +68,6 @@ Defines configuration options that users can set when creating a widget instance
 ```
 
 ### 3. Data Schema
-
 Defines the structure of data that the template expects:
 
 ```json
@@ -104,7 +101,6 @@ Defines the structure of data that the template expects:
 ### Complete Flow
 
 1. **Widget Definition** (created once)
-
 ```elixir
 # Weather widget with template and schemas
 {:ok, widget} = Widgets.create_widget(%{
@@ -131,7 +127,6 @@ Defines the structure of data that the template expects:
 ```
 
 2. **Integration Definition** (created once per third-party service)
-
 ```elixir
 # OpenWeather integration for the weather widget
 {:ok, integration} = Integrations.create_integration(%{
@@ -140,7 +135,7 @@ Defines the structure of data that the template expects:
   description: "OpenWeather API Integration",
   integration_type: "pull",
   credential_scope: "organization",
-
+  
   # Credentials needed from third-party
   credential_schema: %{
     "api_key" => %{
@@ -150,7 +145,7 @@ Defines the structure of data that the template expects:
       "label" => "OpenWeather API Key"
     }
   },
-
+  
   # Configuration for the integration
   pull_endpoint: "https://api.openweathermap.org/data/2.5/weather",
   pull_interval_seconds: 1800,
@@ -162,7 +157,6 @@ Defines the structure of data that the template expects:
 ```
 
 3. **Organization Sets Credentials** (once per organization)
-
 ```bash
 POST /organizations/org-123/widget-integrations/1/credentials
 {
@@ -173,7 +167,6 @@ POST /organizations/org-123/widget-integrations/1/credentials
 ```
 
 4. **User Creates Widget Instance** (per playlist/channel)
-
 ```elixir
 # User adds weather widget to a playlist
 playlist_item = create_playlist_item(%{
@@ -195,7 +188,6 @@ playlist_item = create_playlist_item(%{
 ```
 
 5. **Integration Fetches Data** (automatically, periodically)
-
 ```elixir
 # System calls the fetcher module
 defmodule Castmill.Widgets.Integrations.Fetchers.OpenWeather do
@@ -206,10 +198,10 @@ defmodule Castmill.Widgets.Integrations.Fetchers.OpenWeather do
           "lon=#{options["longitude"]}&" <>
           "units=#{options["units"]}&" <>
           "appid=#{credentials["api_key"]}"
-
+    
     {:ok, response} = HTTPoison.get(url)
     {:ok, api_data} = Jason.decode(response.body)
-
+    
     # Transform to match widget's data_schema
     {:ok, %{
       "temperature" => api_data["main"]["temp"],
@@ -223,7 +215,6 @@ end
 ```
 
 6. **Data is Cached and Versioned**
-
 ```elixir
 # System automatically stores in widget_integration_data
 %{
@@ -240,7 +231,6 @@ end
 ```
 
 7. **Updates Broadcast via WebSocket**
-
 ```elixir
 # System broadcasts to all connected players
 CastmillWeb.Endpoint.broadcast(
@@ -258,7 +248,6 @@ CastmillWeb.Endpoint.broadcast(
 ```
 
 8. **Player Receives and Renders**
-
 ```typescript
 // Player connected to WebSocket channel
 channel.on('data_updated', (payload) => {
@@ -288,7 +277,6 @@ Before creating widgets, understand these validation rules:
 See [WIDGET-ASSETS.md](./WIDGET-ASSETS.md) for complete schema reference.
 
 ### 1. Widget Creation
-
 ```elixir
 # Validates options_schema and data_schema syntax
 {:ok, widget} = Widgets.create_widget(%{
@@ -307,7 +295,6 @@ See [WIDGET-ASSETS.md](./WIDGET-ASSETS.md) for complete schema reference.
 ```
 
 ### 2. Widget Instance Creation
-
 ```elixir
 # Validates options against options_schema
 {:ok, config} = Widgets.new_widget_config(widget.id, item.id, %{
@@ -321,7 +308,6 @@ See [WIDGET-ASSETS.md](./WIDGET-ASSETS.md) for complete schema reference.
 ```
 
 ### 3. Integration Data Storage
-
 ```elixir
 # Validates data against data_schema
 {:ok, _} = Integrations.upsert_integration_data(%{
@@ -343,7 +329,6 @@ See [WIDGET-ASSETS.md](./WIDGET-ASSETS.md) for complete schema reference.
 ## Advanced Template Features
 
 ### Lists and Iterations
-
 ```json
 {
   "template": {
@@ -352,8 +337,8 @@ See [WIDGET-ASSETS.md](./WIDGET-ASSETS.md) for complete schema reference.
     "item_template": {
       "type": "container",
       "components": [
-        { "type": "text", "field": "day" },
-        { "type": "text", "field": "temp" }
+        {"type": "text", "field": "day"},
+        {"type": "text", "field": "temp"}
       ]
     }
   },
@@ -363,8 +348,8 @@ See [WIDGET-ASSETS.md](./WIDGET-ASSETS.md) for complete schema reference.
       "items": {
         "type": "map",
         "schema": {
-          "day": { "type": "string" },
-          "temp": { "type": "number" }
+          "day": {"type": "string"},
+          "temp": {"type": "number"}
         }
       }
     }
@@ -373,19 +358,17 @@ See [WIDGET-ASSETS.md](./WIDGET-ASSETS.md) for complete schema reference.
 ```
 
 Integration provides:
-
 ```json
 {
   "forecast": [
-    { "day": "Monday", "temp": 18 },
-    { "day": "Tuesday", "temp": 20 },
-    { "day": "Wednesday", "temp": 17 }
+    {"day": "Monday", "temp": 18},
+    {"day": "Tuesday", "temp": 20},
+    {"day": "Wednesday", "temp": 17}
   ]
 }
 ```
 
 ### References to Media
-
 ```json
 {
   "data_schema": {
@@ -398,7 +381,6 @@ Integration provides:
 ```
 
 Integration can reference uploaded media:
-
 ```json
 {
   "background_image": "media-uuid-123"
@@ -406,15 +388,14 @@ Integration can reference uploaded media:
 ```
 
 ### Nested Objects
-
 ```json
 {
   "data_schema": {
     "current": {
       "type": "map",
       "schema": {
-        "temp": { "type": "number" },
-        "humidity": { "type": "number" }
+        "temp": {"type": "number"},
+        "humidity": {"type": "number"}
       }
     }
   }
@@ -446,7 +427,6 @@ Users choose which integration to use when configuring the widget instance.
 ## Best Practices
 
 ### 1. Match Data Schema Exactly
-
 ```elixir
 # Widget expects:
 data_schema: %{"temperature" => "number"}
@@ -460,7 +440,6 @@ data_schema: %{"temperature" => "number"}
 ```
 
 ### 2. Handle Missing Optional Fields
-
 ```elixir
 data_schema: %{
   "temperature" => %{"type" => "number", "required" => true},
@@ -473,7 +452,6 @@ data_schema: %{
 ```
 
 ### 3. Use Defaults in Options Schema
-
 ```elixir
 options_schema: %{
   "units" => %{
@@ -484,7 +462,6 @@ options_schema: %{
 ```
 
 ### 4. Document Field Meanings
-
 ```elixir
 data_schema: %{
   "temperature" => %{
@@ -560,10 +537,10 @@ defmodule Castmill.Widgets.Integrations.Fetchers.RSS do
   def fetch(_credentials, options) do
     # Fetch RSS feed
     {:ok, response} = HTTPoison.get(options["feed_url"])
-
+    
     # Parse XML
     {:ok, feed} = parse_rss(response.body)
-
+    
     # Transform to data_schema
     items = feed.items
     |> Enum.take(options["max_items"] || 10)
@@ -574,7 +551,7 @@ defmodule Castmill.Widgets.Integrations.Fetchers.RSS do
         "link" => item.link
       }
     end)
-
+    
     {:ok, %{"items" => items}}
   end
 end
@@ -599,7 +576,6 @@ The integration system is designed to work seamlessly with Castmill's JSON-based
 5. **Template engine** renders the data automatically
 
 This architecture allows:
-
 - **Widget developers** to focus on templates and UI
 - **Integration developers** to focus on data transformation
 - **Users** to configure widgets without coding

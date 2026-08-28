@@ -5,7 +5,6 @@
 Widgets in Castmill can have defined aspect ratios (e.g., "16:9", "4:3", "1:1"). When a widget's aspect ratio differs from its container's aspect ratio, the system implements **letterboxing** - displaying the widget at its correct proportions with empty space (letterbox bars) filling the remaining area.
 
 This is crucial for:
-
 - **Playlists**: Items with different aspect ratios playing in sequence
 - **Layouts**: Multiple widgets arranged in zones with various aspect ratios
 - **Responsive displays**: Same content on landscape and portrait screens
@@ -114,9 +113,7 @@ export function computeWidgetStyle(
   globals: PlayerGlobals
 ): JSX.CSSProperties {
   return {
-    ...(widget.aspect_ratio && {
-      'aspect-ratio': widget.aspect_ratio.replace(':', ' / '),
-    }),
+    ...(widget.aspect_ratio && { 'aspect-ratio': widget.aspect_ratio.replace(':', ' / ') }),
   };
 }
 ```
@@ -163,8 +160,8 @@ The layer container uses flex centering to position the widget:
   width: 100%;
   height: 100%;
   display: flex;
-  justify-content: center; /* Horizontal centering */
-  align-items: center; /* Vertical centering */
+  justify-content: center;  /* Horizontal centering */
+  align-items: center;      /* Vertical centering */
 }
 ```
 
@@ -211,7 +208,6 @@ When implementing multi-zone layouts:
 ### Browser Support
 
 ResizeObserver is supported in all modern browsers:
-
 - Chrome 64+
 - Firefox 69+
 - Safari 13.1+

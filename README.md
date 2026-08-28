@@ -31,13 +31,11 @@ This project uses **automatic code formatting and translation validation** via G
 - **Translation files** (i18n) are automatically validated for 100% coverage across all 9 languages
 
 **No manual formatting or translation checking needed!** Just `git commit` and:
-
 1. Your code will be formatted automatically
 2. Translation coverage will be validated
 3. Commit will be blocked if translations are incomplete
 
 You can still format and validate manually if needed:
-
 ```bash
 yarn format:all                         # Format all frontend packages
 cd packages/castmill && mix format      # Format Elixir code

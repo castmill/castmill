@@ -13,7 +13,6 @@ Addon components already receive `params` prop from the dashboard's parent route
 ### Design Philosophy
 
 Following Linus Torvalds-style principles:
-
 - **Simplicity**: Leverage existing props instead of bespoke bridges
 - **Robustness**: Validate all inputs, handle edge cases gracefully
 - **Consistency**: Unified behavior across dashboard and addon components
@@ -41,7 +40,6 @@ export interface AddonComponentProps {
 ```
 
 **Benefits**:
-
 - Proper TypeScript typing eliminates `any` types
 - Self-documenting interface for addon developers
 - Matches @solidjs/router's useSearchParams signature
@@ -51,7 +49,6 @@ export interface AddonComponentProps {
 **File**: `packages/castmill/lib/castmill/addons/common/hooks/useTeamFilter.ts`
 
 **Key Changes**:
-
 - Added optional `params` prop to `UseTeamFilterProps`
 - Implemented priority-based initialization:
   1. URL parameter (`?team_id=X`) - highest priority
@@ -62,19 +59,18 @@ export interface AddonComponentProps {
 - Comprehensive error handling and console warnings
 
 **Priority Logic**:
-
-````typescript
+```typescript
 createEffect(() => {
   const loadedTeams = teams();
-
+  
   if (!initialized() && loadedTeams.length > 0) {
     let initialTeamId: number | null = null;
-
+    
     // Priority 1: URL parameter (for shareable links)
     if (props.params) {
       const [searchParams, setSearchParams] = props.params;
       const urlTeamId = searchParams.team_id;
-
+      
       if (urlTeamId) {
         const parsed = parseInt(urlTeamId, 10);
         if (!isNaN(parsed)) {
@@ -88,7 +84,7 @@ createEffect(() => {
         }
       }
     }
-
+    
     // Priority 2: localStorage
     if (initialTeamId === null) {
       const persistedTeamId = loadSelectedTeamId(props.organizationId);
@@ -101,7 +97,7 @@ createEffect(() => {
         }
       }
     }
-
+    
     setSelectedTeamId(initialTeamId);
     setInitialized(true);
   }
@@ -126,9 +122,8 @@ const setAndPersistTeamId = (teamId: number | null) => {
     }
   }
 };
-````
-
-````
+```
+```
 
 ### 3. Hook Enhancement - Dashboard Version
 
@@ -152,10 +147,9 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
     organizationId: props.store.organizations.selectedId,
     params: props.params, // Pass URL params for shareable filtered views
   });
-````
+```
 
 #### Medias Addon
-
 **File**: `packages/castmill/lib/castmill/addons/medias/components/index.tsx`
 
 ```typescript
@@ -168,7 +162,6 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
 ```
 
 #### Devices Addon
-
 **File**: `packages/castmill/lib/castmill/addons/devices/components/index.tsx`
 
 ```typescript
@@ -181,7 +174,6 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
 ```
 
 #### Channels Page (Dashboard)
-
 **File**: `packages/dashboard/src/pages/channels-page/channels-page.tsx`
 
 ```typescript
@@ -193,14 +185,14 @@ const { teams, selectedTeamId, setSelectedTeamId } = useTeamFilter({
 
 /**
  * Sync URL parameter with team selection (write mode - Dashboard only)
- *
+ * 
  * Note: URL reading is handled by the useTeamFilter hook. This effect only
  * handles URL writing when the user changes the team selection.
  */
 createEffect(() => {
   const teamId = selectedTeamId();
   const urlTeamId = searchParams.team_id;
-
+  
   if (teamId !== null) {
     const teamIdStr = teamId.toString();
     if (urlTeamId !== teamIdStr) {
@@ -214,30 +206,26 @@ createEffect(() => {
 
 ## Behavior Matrix
 
-| Scenario                            | URL Param                          | localStorage    | Result                                         |
-| ----------------------------------- | ---------------------------------- | --------------- | ---------------------------------------------- |
-| Fresh page load with `?team_id=5`   | `5` (valid)                        | -               | Team 5 selected                                |
-| Fresh page load with `?team_id=999` | `999` (invalid)                    | -               | No team selected, warning logged & URL cleaned |
-| Page load with no URL param         | -                                  | `3` (valid)     | Team 3 selected (from localStorage)            |
-| Page load with no URL param         | -                                  | `999` (invalid) | No team selected, localStorage cleared         |
-| User changes team in Channels       | Updates to `?team_id=7`            | Saves `7`       | Team 7 selected, URL synced                    |
-| User changes team in Playlists      | Updates to `?team_id=4`            | Saves `4`       | Team 4 selected, URL synced                    |
-| Navigate from Channels→Playlists    | URL reflects most recent selection | `latest`        | Team consistent across pages                   |
-| Refresh any page                    | Reads from URL first               | Fallback        | Priority: URL > localStorage > null            |
+| Scenario | URL Param | localStorage | Result |
+|----------|-----------|--------------|--------|
+| Fresh page load with `?team_id=5` | `5` (valid) | - | Team 5 selected |
+| Fresh page load with `?team_id=999` | `999` (invalid) | - | No team selected, warning logged & URL cleaned |
+| Page load with no URL param | - | `3` (valid) | Team 3 selected (from localStorage) |
+| Page load with no URL param | - | `999` (invalid) | No team selected, localStorage cleared |
+| User changes team in Channels | Updates to `?team_id=7` | Saves `7` | Team 7 selected, URL synced |
+| User changes team in Playlists | Updates to `?team_id=4` | Saves `4` | Team 4 selected, URL synced |
+| Navigate from Channels→Playlists | URL reflects most recent selection | `latest` | Team consistent across pages |
+| Refresh any page | Reads from URL first | Fallback | Priority: URL > localStorage > null |
 
 ## URL Write Behavior
 
 ### Dashboard Pages (Channels)
-
 ✅ **Full URL Sync**: URL updates when user changes team selection
-
 - Uses the shared `useTeamFilter` hook to synchronize URL + localStorage
 - Maintains shareable links that stay current
 
 ### Addon Pages (Playlists, Medias, Devices)
-
 ✅ **Full URL Sync**: URL updates instantly when user changes team selection
-
 - Leverages the injected `[searchParams, setSearchParams]` tuple already passed from the dashboard
 - No additional bridge or router dependency required inside addons
 
@@ -246,7 +234,6 @@ createEffect(() => {
 ## Edge Cases Handled
 
 ### Invalid Team ID in URL
-
 ```
 URL: /org/123/content/playlists?team_id=999
 Available teams: [1, 2, 3, 5]
@@ -258,7 +245,6 @@ Result:
 ```
 
 ### Stale localStorage Value
-
 ```
 localStorage: team_id = 7
 Available teams: [1, 2, 3, 5] (team 7 was deleted)
@@ -270,7 +256,6 @@ Result:
 ```
 
 ### URL Param Takes Precedence
-
 ```
 URL: ?team_id=3
 localStorage: team_id = 5
@@ -281,7 +266,6 @@ Result:
 ```
 
 ### Team Deleted While Page Open
-
 ```
 Initial: Team 5 selected
 Server: Team 5 deleted
@@ -297,33 +281,27 @@ Result:
 ## Benefits Achieved
 
 ### 1. **Shareable Filtered Views**
-
 Users can share links like:
-
 - `/org/abc/content/playlists?team_id=5` - Shows only Team 5's playlists
 - `/org/abc/channels?team_id=7` - Shows only Team 7's channels
 
 ### 2. **Consistent UX Across Pages**
-
 - URL param works on ALL pages (Channels, Playlists, Medias, Devices)
 - localStorage ensures team selection persists when navigating
 - Predictable behavior: URL → localStorage → null
 
 ### 3. **Type Safety**
-
 - No `any` types in addon props
 - Proper TypeScript interfaces throughout
 - Self-documenting code
 
 ### 4. **Robustness**
-
 - Validates team IDs against actual team list
 - Handles deleted teams gracefully
 - Clear error messages and warnings
 - No crashes on invalid input
 
 ### 5. **Maintainability**
-
 - Centralized logic in `useTeamFilter` hooks
 - Identical implementation for dashboard and addons
 - Comprehensive inline documentation
@@ -332,7 +310,6 @@ Users can share links like:
 ## Performance Characteristics
 
 ### Initial Page Load
-
 1. `useTeamFilter` hook mounts
 2. Teams fetched asynchronously (`createEffect`)
 3. Once teams loaded, initialization effect runs:
@@ -346,7 +323,6 @@ Users can share links like:
 **Network Calls**: 1 (teams fetch, cached per organization)
 
 ### Team Change
-
 1. User selects new team from dropdown
 2. `setSelectedTeamId()` called
 3. localStorage updated (synchronous)
@@ -386,11 +362,10 @@ Users can share links like:
    - [ ] Verify URL updates to `?team_id=X`
 
 6. **Addon URL Sync**
-
-- [ ] Go to Playlists with `?team_id=5`
-- [ ] Change team to Team 7
-- [ ] Verify URL immediately updates to `?team_id=7`
-- [ ] Refresh the page and confirm Team 7 stays selected
+  - [ ] Go to Playlists with `?team_id=5`
+  - [ ] Change team to Team 7
+  - [ ] Verify URL immediately updates to `?team_id=7`
+  - [ ] Refresh the page and confirm Team 7 stays selected
 
 ### Automated Testing
 
@@ -430,7 +405,6 @@ describe('useTeamFilter URL params', () => {
 ### Backward Compatibility
 
 ✅ **Fully backward compatible**
-
 - Components without `params` prop still work (localStorage-only mode)
 - Existing behavior preserved when no URL params present
 - No breaking changes to public APIs
@@ -450,7 +424,6 @@ describe('useTeamFilter URL params', () => {
 If bidirectional URL sync is needed for addons:
 
 1. Extend `AddonStore` interface:
-
 ```typescript
 export interface AddonStore {
   // ... existing fields
@@ -462,7 +435,6 @@ export interface AddonStore {
 ```
 
 2. Implement bridge in `index.tsx`:
-
 ```typescript
 const urlParamsApi = {
   get: (key: string) => searchParams[key],
@@ -475,7 +447,6 @@ setStore('urlParams', urlParamsApi);
 ```
 
 3. Update addons to use bridge:
-
 ```typescript
 const setTeamId = (id: number | null) => {
   setSelectedTeamId(id);
@@ -491,7 +462,6 @@ const setTeamId = (id: number | null) => {
 ## Conclusion
 
 This implementation delivers **enterprise-grade quality** with:
-
 - ✅ Full type safety
 - ✅ Comprehensive error handling
 - ✅ Graceful degradation
@@ -506,11 +476,10 @@ The solution respects the existing architecture while extending it elegantly. No
 
 ✅ **Dashboard Build**: Success (401.56 kB, 3.03s)
 ✅ **Addon Builds**: All successful
-
-- Playlists: 883.0kb
-- Medias: 226.5kb
-- Devices: 195.4kb
-- Widgets: 194.9kb
+  - Playlists: 883.0kb
+  - Medias: 226.5kb
+  - Devices: 195.4kb
+  - Widgets: 194.9kb
 
 ✅ **TypeScript Compilation**: No errors introduced
 ✅ **Pre-existing Errors**: Not addressed (out of scope)
@@ -518,4 +487,4 @@ The solution respects the existing architecture while extending it elegantly. No
 
 ---
 
-_Implementation completed with Linus Torvalds-style precision and zero compromises on quality._
+*Implementation completed with Linus Torvalds-style precision and zero compromises on quality.*

@@ -110,12 +110,12 @@ defmodule Castmill.Workers.IntegrationAssetCleanup do
   @impl Oban.Worker
   def perform(_job) do
     cutoff_date = Date.utc_today() |> Date.add(-@retention_days)
-
+    
     # Delete all date directories older than cutoff
     list_date_directories()
     |> Enum.filter(&(Date.compare(&1, cutoff_date) == :lt))
     |> Enum.each(&delete_directory/1)
-
+    
     :ok
   end
 end
@@ -125,14 +125,12 @@ end
 
 ```json
 {
-  "Rules": [
-    {
-      "ID": "DeleteOldIntegrationAssets",
-      "Status": "Enabled",
-      "Filter": { "Prefix": "integration-assets/" },
-      "Expiration": { "Days": 2 }
-    }
-  ]
+  "Rules": [{
+    "ID": "DeleteOldIntegrationAssets",
+    "Status": "Enabled",
+    "Filter": {"Prefix": "integration-assets/"},
+    "Expiration": {"Days": 2}
+  }]
 }
 ```
 
@@ -168,10 +166,10 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Spotify do
 
   defp process_media_fields(data, config) do
     media_fields = config["media_fields"] || []
-
+    
     Enum.reduce(media_fields, {:ok, data}, fn field_config, {:ok, acc} ->
       source_url = get_in(acc, String.split(field_config["path"], "."))
-
+      
       case AssetProcessor.process_media_url(source_url) do
         {:ok, files} ->
           {:ok, put_in(acc, String.split(field_config["output_path"], "."), files)}
@@ -186,7 +184,6 @@ end
 ### Resulting Data Structure
 
 Before processing (raw from Spotify):
-
 ```json
 {
   "album_art_url": "https://i.scdn.co/image/ab67616d0000b273...",
@@ -196,7 +193,6 @@ Before processing (raw from Spotify):
 ```
 
 After processing:
-
 ```json
 {
   "album_art": {
@@ -220,7 +216,7 @@ Templates use the standard `@target` pattern:
 {
   "type": "image",
   "opts": {
-    "url": { "key": "data.album_art.files[@target]" },
+    "url": {"key": "data.album_art.files[@target]"},
     "size": "cover"
   }
 }
@@ -231,21 +227,20 @@ The player's `@target` global resolves to the appropriate variant based on conte
 ### Deduplication
 
 Content-hash based within the time partition:
-
 - Same source URL on same day = reuse existing assets
 - No complex reference counting needed
 - Natural cleanup via time-based expiration
 
 ### Benefits
 
-| Aspect          | Benefit                                        |
-| --------------- | ---------------------------------------------- |
-| **Offline**     | Players cache Castmill-hosted URLs normally    |
-| **Bandwidth**   | Images properly sized, WebP compressed         |
-| **Consistency** | Same variant pattern as regular medias         |
-| **Cleanup**     | Simple time-based deletion, no orphan tracking |
-| **Storage**     | Content-hash dedup within retention window     |
-| **Complexity**  | No new PostgreSQL tables for assets            |
+| Aspect | Benefit |
+|--------|---------|
+| **Offline** | Players cache Castmill-hosted URLs normally |
+| **Bandwidth** | Images properly sized, WebP compressed |
+| **Consistency** | Same variant pattern as regular medias |
+| **Cleanup** | Simple time-based deletion, no orphan tracking |
+| **Storage** | Content-hash dedup within retention window |
+| **Complexity** | No new PostgreSQL tables for assets |
 
 ### Implementation Phases
 
@@ -264,5 +259,5 @@ Content-hash based within the time partition:
 
 ---
 
-_This document was created on 2025-12-11 as part of the widget integration system design._
-_See also: WIDGET-INTEGRATIONS.md, WIDGET-INTEGRATION-API.md_
+*This document was created on 2025-12-11 as part of the widget integration system design.*
+*See also: WIDGET-INTEGRATIONS.md, WIDGET-INTEGRATION-API.md*

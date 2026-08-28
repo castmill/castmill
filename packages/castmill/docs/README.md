@@ -5,18 +5,16 @@ This directory contains comprehensive technical documentation for the Castmill p
 ## 📚 Documentation Structure
 
 ### 🔐 Authorization & RBAC
-
 **Location**: [`authorization/`](./authorization/)
 
 Documentation about Castmill's role-based access control (RBAC) system, permissions, and authorization mechanisms.
 
 #### Core Documentation
-
 - **[RBAC Overview](./authorization/RBAC_OVERVIEW.md)** - Quick reference guide to backend RBAC system ⭐
   - Permission matrix summary
   - Key modules and request flow
   - Related documentation references
-
+  
 - **[Authorization Test Suite](./authorization/AUTHORIZATION_TEST_SUITE.md)** - Comprehensive test suite documentation for the permission matrix and RBAC system
   - Unit tests for permission matrix logic
   - Integration tests for resource access
@@ -24,31 +22,26 @@ Documentation about Castmill's role-based access control (RBAC) system, permissi
   - Test coverage for all roles: admin, manager, member, guest
 
 #### Implementation Guides
-
 - **[Authorization Architecture Diagram](./authorization/AUTHORIZATION_ARCHITECTURE_DIAGRAM.md)** - Visual architecture overview
 - **[Authorization Implementation Summary](./authorization/AUTHORIZATION_IMPLEMENTATION_SUMMARY.md)** - Implementation details and patterns
 - **[Castmill 2.0 Permission System](./authorization/CASTMILL_2.0_PERMISSION_SYSTEM_IMPLEMENTATION.md)** - Version 2.0 permission system design
 - **[Generic Resource Authorization Guide](./authorization/GENERIC_RESOURCE_AUTHORIZATION_GUIDE.md)** - Guide for implementing authorization on new resources
 
 #### Role-Specific Documentation
-
 - **[Manager Role Implementation](./authorization/MANAGER_ROLE_IMPLEMENTATION.md)** - Manager role design and implementation
 - **[Member User Access Fix](./authorization/MEMBER_USER_ACCESS_FIX.md)** - Member role access control fixes
 - **[Member User Access Fix Visual](./authorization/MEMBER_USER_ACCESS_FIX_VISUAL.md)** - Visual guide to member access fixes
 
 #### Design & Planning
-
 - **[RBAC Current State and Proposal](./authorization/RBAC_CURRENT_STATE_AND_PROPOSAL.md)** - Current state analysis and future proposals
 - **[RBAC Implementation Issue](./authorization/RBAC_IMPLEMENTATION_ISSUE.md)** - Known issues and resolutions
 
 ### 🌐 API Documentation
-
 **Location**: [`api/`](./api/)
 
 REST API endpoint documentation and integration guides.
 
 #### Permissions API
-
 - **[Permissions Endpoint Guide](./api/PERMISSIONS_ENDPOINT_GUIDE.md)** - Complete API reference for the permissions endpoint
   - Endpoint specification and authentication
   - Request/response formats
@@ -63,13 +56,11 @@ REST API endpoint documentation and integration guides.
   - Quick reference for developers
 
 #### Frontend Integration
-
 - **[Permissions Frontend Guide](./api/PERMISSIONS_FRONTEND_GUIDE.md)** - How to use permissions in frontend components
 - **[Permissions Complete](./api/PERMISSIONS_COMPLETE.md)** - Complete permissions reference
 - **[Permissions Implementation Summary](./api/PERMISSIONS_IMPLEMENTATION_SUMMARY.md)** - Implementation summary
 
 ### 🔌 AddOns & Extensions
-
 **Location**: [`addons/`](./addons/)
 
 Documentation for Castmill's modular addon system and widget development.
@@ -81,7 +72,6 @@ Documentation for Castmill's modular addon system and widget development.
   - Examples and code snippets
 
 ### 🏗️ Architecture
-
 **Location**: [`architecture/`](./architecture/)
 
 System architecture, design patterns, and implementation strategies.
@@ -90,14 +80,13 @@ System architecture, design patterns, and implementation strategies.
   - Organization selection persistence
   - Deep linking support
   - State synchronization
-
+  
 - **[Team Filter URL Parameters](./architecture/TEAM_FILTER_URL_PARAMS_IMPLEMENTATION.md)** - URL synchronization for team filtering
   - Full URL synchronization
   - Shareable filtered views
   - Live-updating filters
 
 ### ⚡ Features
-
 **Location**: [`features/`](./features/)
 
 Feature-specific documentation and user guides.
@@ -108,7 +97,6 @@ Feature-specific documentation and user guides.
   - Implementation details
 
 ### 🧪 Testing
-
 **Location**: [`testing/`](./testing/)
 
 Test specifications, test patterns, and quality assurance documentation.
@@ -127,7 +115,6 @@ Test specifications, test patterns, and quality assurance documentation.
   - Integration tests
 
 ### 📝 Miscellaneous
-
 - **[Missing Translations](./MISSING_TRANSLATIONS.md)** - Tracking document for missing i18n translations
 
 ## 🎯 Quick Navigation
@@ -135,19 +122,16 @@ Test specifications, test patterns, and quality assurance documentation.
 ### For New Developers
 
 #### Getting Started with RBAC
-
 1. **Understanding RBAC**: Start with [Authorization Test Suite](./authorization/AUTHORIZATION_TEST_SUITE.md)
 2. **Architecture Overview**: Read [Authorization Architecture Diagram](./authorization/AUTHORIZATION_ARCHITECTURE_DIAGRAM.md)
 3. **Implementation Patterns**: Study [Generic Resource Authorization Guide](./authorization/GENERIC_RESOURCE_AUTHORIZATION_GUIDE.md)
 
 #### API Integration
-
 1. **Permissions API**: Start with [Permissions Endpoint Guide](./api/PERMISSIONS_ENDPOINT_GUIDE.md)
 2. **Frontend Integration**: Read [Permissions Frontend Guide](./api/PERMISSIONS_FRONTEND_GUIDE.md)
 3. **Implementation Summary**: Check [Permissions Implementation Summary](./api/PERMISSIONS_IMPLEMENTATION_SUMMARY.md)
 
 #### Feature Development
-
 1. **URL Routing**: Understand [URL Routing Implementation](./architecture/URL_ROUTING_IMPLEMENTATION.md)
 2. **Team Filtering**: Learn about [Team Filter URL Parameters](./architecture/TEAM_FILTER_URL_PARAMS_IMPLEMENTATION.md)
 3. **Widget Development**: See [Icon Upload Guide](./addons/ICON-UPLOAD.md)
@@ -155,7 +139,6 @@ Test specifications, test patterns, and quality assurance documentation.
 ### For AI Agents
 
 The documentation in this directory provides essential context for:
-
 - **Understanding permission checks and access control** - See [`authorization/`](./authorization/)
 - **Implementing authorization-aware features** - Reference [`api/`](./api/) and [`authorization/`](./authorization/)
 - **Working with the permissions API** - Study [`api/PERMISSIONS_ENDPOINT_GUIDE.md`](./api/PERMISSIONS_ENDPOINT_GUIDE.md)
@@ -171,12 +154,12 @@ The documentation in this directory provides essential context for:
 
 Castmill implements a comprehensive RBAC system with four roles:
 
-| Role        | Access Level                                          | Use Case                                   |
-| ----------- | ----------------------------------------------------- | ------------------------------------------ |
-| **Admin**   | Full access to all resources and actions              | Organization owners, system administrators |
-| **Manager** | Full access to all resources and actions              | Team leaders, project managers             |
-| **Member**  | CRUD on content resources, read-only on teams/widgets | Content creators, editors                  |
-| **Guest**   | Read-only access to content, no team access           | Viewers, observers                         |
+| Role | Access Level | Use Case |
+|------|-------------|----------|
+| **Admin** | Full access to all resources and actions | Organization owners, system administrators |
+| **Manager** | Full access to all resources and actions | Team leaders, project managers |
+| **Member** | CRUD on content resources, read-only on teams/widgets | Content creators, editors |
+| **Guest** | Read-only access to content, no team access | Viewers, observers |
 
 **Resources**: `playlists`, `medias`, `channels`, `devices`, `teams`, `widgets`
 

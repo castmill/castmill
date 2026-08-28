@@ -5,19 +5,16 @@ This guide explains how to create, add, and manage icons for widgets in the Cast
 ## Overview
 
 Each widget can have two icon variants:
-
 - **`icon`** - Main icon (64x64px) used in the widget chooser and larger displays
 - **`small_icon`** - Compact icon (32x32px) used in playlist items and tight spaces
 
 Icons are displayed in:
-
 1. **Widget Chooser** - When adding widgets to a playlist
 2. **Playlist Items** - As thumbnails for widgets without media (Image/Video widgets show actual media thumbnails instead)
 
 ## Icon Storage Location
 
 Widget icons are stored as static files in:
-
 ```
 packages/castmill/priv/static/widgets/{widget-slug}/
 ├── icon.svg          # Main icon (64x64)
@@ -25,7 +22,6 @@ packages/castmill/priv/static/widgets/{widget-slug}/
 ```
 
 The icons are served at URLs like:
-
 - `/widgets/{widget-slug}/icon.svg`
 - `/widgets/{widget-slug}/icon-small.svg`
 
@@ -33,29 +29,29 @@ The icons are served at URLs like:
 
 ## Current Widget Icons
 
-| Widget              | Slug                  | Main Icon | Small Icon | Theme               |
-| ------------------- | --------------------- | --------- | ---------- | ------------------- |
-| Image               | `image`               | ✅        | ✅         | Dark                |
-| Video               | `video`               | ✅        | ✅         | Dark                |
-| Weather             | `weather`             | ✅        | ✅         | Dark                |
-| Web                 | `web`                 | ✅        | ✅         | Dark                |
-| Intro               | `intro`               | ✅        | ✅         | Dark                |
-| QR Code             | `qr-code`             | ✅        | ✅         | Light (traditional) |
-| Spotify Now Playing | `spotify-now-playing` | ✅        | ✅         | Brand (green)       |
-| Stock Ticker        | `stock-ticker`        | ✅        | ✅         | Dark                |
-| Layout Widget       | `layout-widget`       | ✅        | ✅         | Dark                |
+| Widget | Slug | Main Icon | Small Icon | Theme |
+|--------|------|-----------|------------|-------|
+| Image | `image` | ✅ | ✅ | Dark |
+| Video | `video` | ✅ | ✅ | Dark |
+| Weather | `weather` | ✅ | ✅ | Dark |
+| Web | `web` | ✅ | ✅ | Dark |
+| Intro | `intro` | ✅ | ✅ | Dark |
+| QR Code | `qr-code` | ✅ | ✅ | Light (traditional) |
+| Spotify Now Playing | `spotify-now-playing` | ✅ | ✅ | Brand (green) |
+| Stock Ticker | `stock-ticker` | ✅ | ✅ | Dark |
+| Layout Widget | `layout-widget` | ✅ | ✅ | Dark |
 
 ## Icon Design Guidelines
 
 ### Technical Requirements
 
-| Property      | Main Icon                | Small Icon               |
-| ------------- | ------------------------ | ------------------------ |
-| Format        | SVG (required)           | SVG (required)           |
-| ViewBox       | `0 0 64 64`              | `0 0 32 32`              |
-| Size          | 64x64 pixels             | 32x32 pixels             |
-| Background    | Rounded rect with border | Rounded rect with border |
-| Border radius | 8px                      | 4px                      |
+| Property | Main Icon | Small Icon |
+|----------|-----------|------------|
+| Format | SVG (required) | SVG (required) |
+| ViewBox | `0 0 64 64` | `0 0 32 32` |
+| Size | 64x64 pixels | 32x32 pixels |
+| Background | Rounded rect with border | Rounded rect with border |
+| Border radius | 8px | 4px |
 
 ### Dark Theme Design (Standard)
 
@@ -65,7 +61,7 @@ Most widget icons use a dark theme for consistency with the dashboard UI:
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
   <!-- Background -->
   <rect x="2" y="2" width="60" height="60" rx="8" fill="#1a1a2e" stroke="#2d2d4a" stroke-width="2"/>
-
+  
   <!-- Icon content with bright/colorful elements -->
 </svg>
 ```
@@ -74,23 +70,23 @@ Most widget icons use a dark theme for consistency with the dashboard UI:
 
 ```css
 /* Dark theme background */
---icon-bg: #1a1a2e; /* Dark blue-black background */
---icon-border: #2d2d4a; /* Subtle border */
---icon-surface: #4a4a6a; /* Secondary surface color */
+--icon-bg: #1a1a2e;           /* Dark blue-black background */
+--icon-border: #2d2d4a;       /* Subtle border */
+--icon-surface: #4a4a6a;      /* Secondary surface color */
 
 /* Accent colors (for icon content) */
---yellow: #fbbf24; /* Sun, stars, highlights */
---blue: #3b82f6; /* Web, data elements */
---light-blue: #60a5fa; /* Highlights, gradients */
---green: #10b981; /* Success, nature */
---red: #ef4444; /* Play buttons, alerts */
---indigo: #6366f1; /* Layout zones, UI elements */
---purple: #818cf8; /* Layout highlights */
+--yellow: #fbbf24;            /* Sun, stars, highlights */
+--blue: #3b82f6;              /* Web, data elements */
+--light-blue: #60a5fa;        /* Highlights, gradients */
+--green: #10b981;             /* Success, nature */
+--red: #ef4444;               /* Play buttons, alerts */
+--indigo: #6366f1;            /* Layout zones, UI elements */
+--purple: #818cf8;            /* Layout highlights */
 
 /* Cloud/neutral colors */
---cloud-gray: #64748b; /* Gray clouds, neutral elements */
---cloud-light: #e2e8f0; /* White/light clouds */
---cloud-lighter: #f1f5f9; /* Highlights on clouds */
+--cloud-gray: #64748b;        /* Gray clouds, neutral elements */
+--cloud-light: #e2e8f0;       /* White/light clouds */
+--cloud-lighter: #f1f5f9;     /* Highlights on clouds */
 ```
 
 ### Design Best Practices
@@ -106,7 +102,6 @@ Most widget icons use a dark theme for consistency with the dashboard UI:
 ### Step 1: Create the Icon Files
 
 **Main Icon (64x64):**
-
 ```svg
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
   <defs>
@@ -115,21 +110,20 @@ Most widget icons use a dark theme for consistency with the dashboard UI:
       <feDropShadow dx="1" dy="2" stdDeviation="2" flood-color="#000" flood-opacity="0.3"/>
     </filter>
   </defs>
-
+  
   <!-- Dark background -->
   <rect x="2" y="2" width="60" height="60" rx="8" fill="#1a1a2e" stroke="#2d2d4a" stroke-width="2"/>
-
+  
   <!-- Icon content with colorful elements -->
 </svg>
 ```
 
 **Small Icon (32x32):**
-
 ```svg
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
   <!-- Dark background -->
   <rect x="1" y="1" width="30" height="30" rx="4" fill="#1a1a2e" stroke="#2d2d4a" stroke-width="1"/>
-
+  
   <!-- Simplified icon content -->
 </svg>
 ```
@@ -187,10 +181,7 @@ Widget icons use relative paths (starting with `/`) that are resolved using the 
 
 ```typescript
 // In playlist-item.tsx and widget-chooser.tsx
-const getIconUrl = (
-  icon: string | undefined,
-  baseUrl: string
-): string | undefined => {
+const getIconUrl = (icon: string | undefined, baseUrl: string): string | undefined => {
   if (!icon) return undefined;
   if (icon.startsWith('/')) {
     return `${baseUrl}${icon}`;
@@ -204,38 +195,31 @@ This ensures icons work correctly regardless of the deployment URL.
 ## Widget-Specific Icon Designs
 
 ### Weather Widget
-
 - Sun with rays (upper right)
 - Layered clouds: gray (back) + white (front)
 - Drop shadows for depth
 
-### Image Widget
-
+### Image Widget  
 - Picture frame with mountains and sun
 - Green nature tones
 
 ### Video Widget
-
 - Film frame with sprocket holes
 - Red play button
 
 ### Web Widget
-
 - Globe with meridian lines
 - Blue color scheme
 
 ### Layout Widget
-
 - 3-zone grid representation
 - Indigo/purple zones
 
 ### Intro Widget
-
 - Star burst with rays
 - Yellow/gold tones
 
 ### QR Code Widget (Exception)
-
 - **White background** (traditional QR appearance)
 - Black QR pattern for recognizability
 
@@ -264,7 +248,6 @@ After adding icons:
 - **Phosphor Icons** - https://phosphoricons.com/
 
 When using icons from libraries:
-
 1. Check the license allows commercial use
 2. Customize colors to match dark theme palette
 3. Maintain consistent sizing with other widget icons

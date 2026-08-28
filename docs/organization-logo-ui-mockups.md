@@ -55,7 +55,6 @@
 ## 3. Topbar with Organization Logo
 
 **Before (no logo):**
-
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │ [Castmill Logo]  🔍  ❓Help  🔔  [EN ▼]  [User Name ▼]         │
@@ -63,7 +62,6 @@
 ```
 
 **After (with logo):**
-
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │ [Castmill Logo] │ [Org Logo]  🔍  ❓Help  🔔  [EN ▼]  [User ▼] │
@@ -71,9 +69,8 @@
 ```
 
 The organization logo appears after a vertical separator (│), with:
-
 - Maximum height: 3em
-- Maximum width: 10em
+- Maximum width: 10em  
 - Object-fit: contain (maintains aspect ratio)
 - Updates automatically when switching organizations
 

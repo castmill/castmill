@@ -88,9 +88,7 @@ The `widget-config.tsx` component filters out playlists that would create cycles
 
 ```typescript
 // Initialize with current playlist ID immediately
-const [excludedPlaylistIds, setExcludedPlaylistIds] = createSignal<number[]>([
-  props.playlistId,
-]);
+const [excludedPlaylistIds, setExcludedPlaylistIds] = createSignal<number[]>([props.playlistId]);
 const [ancestorsLoaded, setAncestorsLoaded] = createSignal(false);
 
 // Fetch ancestor playlist IDs
@@ -175,7 +173,7 @@ defp get_playlist_ancestors_recursive(playlist_id, visited, ancestors) do
   else
     new_visited = MapSet.put(visited, playlist_id)
     parent_ids = get_direct_parent_playlists(playlist_id)
-
+    
     Enum.reduce(parent_ids, ancestors, fn parent_id, acc ->
       updated = MapSet.put(acc, parent_id)
       get_playlist_ancestors_recursive(parent_id, new_visited, updated)
@@ -194,12 +192,12 @@ def validate_no_circular_reference(current_playlist_id, selected_playlist_id) do
     # Can't select the same playlist
     current_playlist_id == selected_playlist_id ->
       {:error, :circular_reference}
-
+    
     # If selected is an ancestor of current, adding it as child creates cycle
     # Example: A -> B exists, now B tries to add A -> would create A -> B -> A
     selected_playlist_id in get_playlist_ancestors(current_playlist_id) ->
       {:error, :circular_reference}
-
+    
     true ->
       :ok
   end
@@ -213,10 +211,10 @@ Public entry point for validation before creating playlist items.
 ```elixir
 def validate_playlist_references_for_widget(widget_id, playlist_id, options) do
   widget = get_widget(widget_id)
-
+  
   if widget && is_layout_widget?(widget) do
     playlist_refs = extract_playlist_references(options)
-
+    
     Enum.reduce_while(playlist_refs, :ok, fn ref_playlist_id, _acc ->
       case Castmill.Resources.validate_no_circular_reference(playlist_id, ref_playlist_id) do
         :ok -> {:cont, :ok}
@@ -238,7 +236,7 @@ defp extract_playlist_references(options) when is_map(options) do
   |> Enum.filter(&(&1 != nil))
   |> Enum.map(fn
     id when is_integer(id) -> id
-    id when is_binary(id) ->
+    id when is_binary(id) -> 
       case Integer.parse(id) do
         {int_id, ""} -> int_id
         _ -> nil
@@ -259,7 +257,6 @@ GET /api/organizations/:org_id/playlists/:playlist_id/ancestors
 ```
 
 **Response:**
-
 ```json
 {
   "ancestor_ids": [123, 456, 789]
@@ -283,7 +280,6 @@ Implemented via `Playlist.apply_filter/1` in the Filterable behaviour.
 Tests are in `test/castmill_web/controllers/resource_controller/playlists_test.exs`:
 
 ### Ancestors API Tests (9 tests)
-
 - Standalone playlist returns empty ancestors
 - Single parent returns that parent
 - Chain returns all ancestors (grandparent -> parent -> child)
@@ -295,7 +291,6 @@ Tests are in `test/castmill_web/controllers/resource_controller/playlists_test.e
 - Cycle detection doesn't cause infinite loop
 
 ### Circular Reference Prevention Tests (4 tests)
-
 - Self-reference prevention
 - Direct cycle prevention (A -> B -> A)
 - Indirect cycle prevention (A -> B -> C -> A)
@@ -307,16 +302,12 @@ Tests are in `test/castmill_web/controllers/resource_controller/playlists_test.e
 
 ```typescript
 // WRONG - allows self-selection before fetch completes
-const [excludedPlaylistIds, setExcludedPlaylistIds] = createSignal<number[]>(
-  []
-);
+const [excludedPlaylistIds, setExcludedPlaylistIds] = createSignal<number[]>([]);
 ```
 
 ```typescript
 // CORRECT - prevents self-selection immediately
-const [excludedPlaylistIds, setExcludedPlaylistIds] = createSignal<number[]>([
-  props.playlistId,
-]);
+const [excludedPlaylistIds, setExcludedPlaylistIds] = createSignal<number[]>([props.playlistId]);
 ```
 
 ### ❌ Wrong Validation Direction
@@ -385,7 +376,7 @@ defp get_direct_parent_playlists(playlist_id) do
     select: pi.playlist_id,
     distinct: true
   )
-
+  
   Repo.all(query)
 end
 ```

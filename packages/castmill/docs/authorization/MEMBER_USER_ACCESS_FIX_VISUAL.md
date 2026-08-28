@@ -91,7 +91,6 @@ Member User Tries to Access Playlists
 ## 🔄 Comparison
 
 ### Before (Database-Driven)
-
 ```
 has_access → Admin check → Database query → Return result
                  ↓              ↓
@@ -100,7 +99,6 @@ has_access → Admin check → Database query → Return result
 ```
 
 ### After (Matrix-Driven)
-
 ```
 has_access → Get role → Check matrix → Return result
                 ↓            ↓
@@ -151,21 +149,20 @@ has_access → Get role → Check matrix → Return result
 ## 🎯 Key Changes Highlighted
 
 ### Old Code
-
 ```elixir
 def has_access(organization_id, user_id, resource_type, action) do
   cond do
     is_admin?(organization_id, user_id) ->
       true
 
-    resource_type == "teams" and action == :create and
+    resource_type == "teams" and action == :create and 
       is_manager?(organization_id, user_id) ->
       true
 
     true ->
       # ❌ ALWAYS queries database, even for member users
       query = from(oua in OrganizationsUsersAccess, ...)
-
+      
       if is_nil(Repo.one(query)) do
         # No permission found → return false
         check_parent_org_or_false()
@@ -177,21 +174,20 @@ end
 ```
 
 ### New Code
-
 ```elixir
 def has_access(organization_id, user_id, resource_type, action) do
   role = get_user_role(organization_id, user_id)
-
+  
   resource_atom = case resource_type do
     "playlists" -> :playlists
     "medias" -> :medias
     # ... etc
     _ -> nil
   end
-
-  action_atom = if is_atom(action), do: action,
+  
+  action_atom = if is_atom(action), do: action, 
                   else: String.to_existing_atom(action)
-
+  
   # ✅ NEW: Check permission matrix FIRST
   if role != nil and resource_atom != nil do
     Castmill.Authorization.Permissions.can?(
@@ -210,7 +206,6 @@ end
 ## 📈 Performance Improvement
 
 ### Before (Database Query)
-
 ```
 Request → Check access → Database query (slow)
                               ↓
@@ -221,7 +216,6 @@ Request → Check access → Database query (slow)
 ```
 
 ### After (Memory Lookup)
-
 ```
 Request → Check access → Map lookup (fast)
                               ↓
@@ -255,14 +249,12 @@ Integration Tests:
 ## 🚀 What This Enables
 
 ### Immediate Benefits
-
 1. ✅ Member users can use the platform (playlists, medias, etc.)
 2. ✅ No database migrations required
 3. ✅ Faster permission checks (no DB queries)
 4. ✅ Centralized permission management
 
 ### Future Possibilities
-
 1. 🔮 Easy role additions (just update matrix)
 2. 🔮 Easy resource additions (just update matrix)
 3. 🔮 Permission caching (already fast, can cache role lookups)
@@ -277,8 +269,7 @@ Integration Tests:
 
 **Solution**: Update `has_access()` to check permission matrix first
 
-**Result**:
-
+**Result**: 
 - ✅ Member users can now access all content resources
 - ✅ Permissions correctly enforced per matrix
 - ✅ Backward compatible with existing system
