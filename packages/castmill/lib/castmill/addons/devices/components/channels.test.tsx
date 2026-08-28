@@ -35,24 +35,34 @@ describe('Device channels', () => {
     vi.restoreAllMocks();
   });
 
-  it('opens the selected channel details in a new tab', () => {
-    const open = vi.spyOn(window, 'open').mockImplementation(() => null);
+  it('navigates to the selected channel details in the current view', () => {
+    const navigate = vi.fn();
 
     render(() => (
       <Channels
         baseUrl="/api"
         organizationId="organization-1"
         device={device}
-        t={(key) => (key === 'common.openInNewTab' ? 'Open in new tab' : key)}
+        store={
+          {
+            router: {
+              navigate,
+              location: () => ({
+                pathname: '/',
+                search: '',
+                hash: '',
+              }),
+            },
+          } as any
+        }
+        t={(key) => (key === 'common.view' ? 'View' : key)}
       />
     ));
 
-    fireEvent.click(screen.getByRole('button', { name: 'Open in new tab' }));
+    fireEvent.click(screen.getByRole('button', { name: 'View' }));
 
-    expect(open).toHaveBeenCalledWith(
-      '/org/organization-1/channels?itemId=42',
-      '_blank',
-      'noopener,noreferrer'
+    expect(navigate).toHaveBeenCalledWith(
+      '/org/organization-1/channels?itemId=42'
     );
   });
 });
