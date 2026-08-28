@@ -1039,23 +1039,27 @@ describe('Device - loginOrRegister (non-blocking login)', () => {
     const fetchMock = vi.fn().mockResolvedValue({ ok: true });
     vi.stubGlobal('fetch', fetchMock);
 
-    await (device as any).updateDeviceInfo(credentials);
+    try {
+      await (device as any).updateDeviceInfo(credentials);
 
-    expect(fetchMock).toHaveBeenCalledWith(
-      'http://localhost:4000/devices/device1/info',
-      expect.objectContaining({
-        method: 'POST',
-        body: JSON.stringify({
-          info: {
-            appType: 'Electron',
-            appVersion: '1.2.3',
-            os: 'Linux',
-            hardware: 'x86_64',
-            userAgent: 'Castmill Player',
-          },
-        }),
-      })
-    );
+      expect(fetchMock).toHaveBeenCalledWith(
+        'http://localhost:4000/devices/device1/info',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({
+            info: {
+              appType: 'Electron',
+              appVersion: '1.2.3',
+              os: 'Linux',
+              hardware: 'x86_64',
+              userAgent: 'Castmill Player',
+            },
+          }),
+        })
+      );
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it('should handle invalid_device error by clearing credentials and reloading', async () => {

@@ -13,7 +13,7 @@ export interface Device {
   inserted_at: Date;
   updated_at: Date;
   autorecover_until?: string | null;
-  info?: DeviceInfo | null;
+  info?: Partial<DeviceInfo> | null;
   timezone?: string;
   user_agent?: string;
   version?: string;

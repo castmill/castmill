@@ -123,6 +123,8 @@ defmodule CastmillWeb.DeviceController do
     end
   end
 
+  def info(conn, _params), do: send_resp(conn, :bad_request, "")
+
   def start_registration(conn, %{"hardware_id" => hardware_id, "timezone" => timezone} = params) do
     location = Map.get(params, "location")
 

@@ -72,6 +72,24 @@ defmodule CastmillWeb.DeviceControllerTest do
       assert response(conn, 204)
       assert Castmill.Devices.get_device(device.id).info == info
     end
+
+    test "rejects invalid player metadata", %{organization: organization} do
+      {:ok, devices_registration} =
+        device_registration_fixture(%{hardware_id: "invalid-info-hw-id", pincode: "info5678"})
+
+      {:ok, {device, token}} =
+        Castmill.Devices.register_device(organization.id, devices_registration.pincode, %{
+          name: "Invalid Info Device"
+        })
+
+      conn =
+        build_conn()
+        |> put_req_header("accept", "application/json")
+        |> put_req_header("authorization", Enum.join(["Bearer", token], " "))
+        |> post("/devices/#{device.id}/info", %{"info" => "invalid"})
+
+      assert response(conn, 400)
+    end
   end
 
   describe "get_channels as admin" do
