@@ -639,6 +639,13 @@ defmodule CastmillWeb.WidgetIntegrationController do
               |> json(%{data: nil, status: "error", message: "Failed to cache data"})
           end
 
+        {:error, reason, _creds} ->
+          Logger.warning("Prefetch failed for widget #{widget_id}: #{inspect(reason)}")
+
+          conn
+          |> put_status(:ok)
+          |> json(%{data: nil, status: "error", message: "Failed to fetch data"})
+
         {:error, reason} ->
           Logger.warning("Prefetch failed for widget #{widget_id}: #{inspect(reason)}")
 

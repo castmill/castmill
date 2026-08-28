@@ -315,5 +315,39 @@ defmodule CastmillWeb.WidgetIntegrationControllerTest do
       assert length(items) == 10
       # Test now runs in inline mode by default
     end
+
+  end
+
+  describe "prefetch_widget_data/2" do
+    test "handles fetcher 3-tuple errors without crashing", %{
+      conn: conn,
+      organization: organization
+    } do
+      suffix = System.unique_integer([:positive])
+
+      widget =
+        widget_fixture(%{
+          name: "Weather #{suffix}",
+          slug: "weather-#{suffix}",
+          template: %{"type" => "group"}
+        })
+
+      widget_integration_fixture(%{
+        widget_id: widget.id,
+        name: "weather-integration-#{suffix}",
+        credential_scope: "widget",
+        discriminator_key: "location",
+        pull_config: %{
+          "auth_type" => "none",
+          "fetcher_module" => "Castmill.Widgets.Integrations.Fetchers.OpenMeteo"
+        }
+      })
+
+      conn =
+        post(conn, "/dashboard/organizations/#{organization.id}/widgets/#{widget.id}/prefetch-data")
+
+      assert %{"data" => nil, "status" => "error", "message" => "Failed to fetch data"} =
+               json_response(conn, 200)
+    end
   end
 end

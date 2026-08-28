@@ -96,6 +96,14 @@ defmodule Castmill.Workers.IntegrationPoller do
 
         :ok
 
+      {:error, reason, _updated_credentials} ->
+        Logger.error(
+          "IntegrationPoller: Failed to poll integration #{integration_id}: #{inspect(reason)}"
+        )
+
+        # Return error to trigger retry
+        {:error, reason}
+
       {:error, reason} ->
         Logger.error(
           "IntegrationPoller: Failed to poll integration #{integration_id}: #{inspect(reason)}"

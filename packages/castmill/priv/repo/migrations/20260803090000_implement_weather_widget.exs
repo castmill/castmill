@@ -22,8 +22,7 @@ defmodule Castmill.Repo.Migrations.ImplementWeatherWidget do
       ]
     )
 
-    %WidgetIntegration{}
-    |> WidgetIntegration.changeset(%{
+    integration_attrs = %{
       widget_id: weather.id,
       name: "open-meteo",
       description: "Free weather forecasts from Open-Meteo",
@@ -36,10 +35,31 @@ defmodule Castmill.Repo.Migrations.ImplementWeatherWidget do
         "auth_type" => "none",
         "fetcher_module" => "Castmill.Widgets.Integrations.Fetchers.OpenMeteo"
       },
-      discriminator_type: "widget_config",
+      discriminator_type: "widget_option",
+      discriminator_key: "location",
       is_active: true
-    })
-    |> Repo.insert!()
+    }
+
+    %WidgetIntegration{}
+    |> WidgetIntegration.changeset(integration_attrs)
+    |> Repo.insert!(
+      on_conflict:
+        {:replace,
+         [
+           :description,
+           :integration_type,
+           :credential_scope,
+           :credential_schema,
+           :pull_endpoint,
+           :pull_interval_seconds,
+           :pull_config,
+           :discriminator_type,
+           :discriminator_key,
+           :is_active,
+           :updated_at
+         ]},
+      conflict_target: [:widget_id, :name]
+    )
   end
 
   def down do
