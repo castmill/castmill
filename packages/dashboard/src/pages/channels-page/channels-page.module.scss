@@ -1,3 +1,9 @@
 .channels-page {
   margin: 2em;
 }
+
+@media (max-width: 48em) {
+  .channels-page {
+    margin: 1em;
+  }
+}

@@ -243,6 +243,59 @@
   }
 }
 
+@media (max-width: 48em) {
+  .playlist-view-container {
+    height: auto !important;
+    padding-top: 0.5em;
+  }
+
+  .playlist-view {
+    flex-direction: column;
+    height: auto;
+    overflow: visible;
+
+    .playlist-items-wrapper {
+      flex-direction: column;
+      width: 100%;
+      gap: 0.5em;
+    }
+
+    .playlist-items-wrapper .drag-indicator {
+      display: none;
+    }
+
+    .playlist-preview-panel {
+      width: 100%;
+      flex: 0 0 auto;
+    }
+
+    .playlist-preview-wrapper {
+      height: auto;
+      min-height: 12em;
+      max-height: 45vh;
+    }
+
+    .playlist-preview-panel .playlist-aspect-ratio-form {
+      .custom-aspect-ratio {
+        flex-wrap: wrap;
+
+        > div {
+          min-width: 7em;
+        }
+      }
+    }
+
+    .playlist-items {
+      width: auto;
+      min-width: 0;
+      max-height: 20em;
+      margin: 0;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+  }
+}
+
 .item-fade-enter-active,
 .item-fade-exit-active {
   transition: all 0.3s;
