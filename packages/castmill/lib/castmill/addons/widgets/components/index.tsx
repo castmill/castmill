@@ -596,7 +596,9 @@ const WidgetsPage: Component<{
           {
             label: t('widgets.editor.editWidget'),
             icon: BsPencil,
-            hidden: (widget: WidgetWithId) => !!widget.is_system,
+            hidden: (widget: WidgetWithId) =>
+              !!widget.is_system ||
+              widget.organization_id !== props.store.organizations.selectedId,
             handler: (widget: WidgetWithId) => openEditorForWidget(widget),
           },
         ]
@@ -617,7 +619,9 @@ const WidgetsPage: Component<{
           {
             label: t('widgets.delete'),
             icon: BsTrash,
-            hidden: (widget: WidgetWithId) => !!widget.is_system,
+            hidden: (widget: WidgetWithId) =>
+              !!widget.is_system ||
+              widget.organization_id !== props.store.organizations.selectedId,
             handler: (widget: WidgetWithId) => openDeleteConfirm(widget),
           },
         ]

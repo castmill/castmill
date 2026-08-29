@@ -22,6 +22,7 @@ export interface JsonWidget {
   aspect_ratio?: string;
   update_interval_seconds?: number;
   is_system?: boolean;
+  organization_id?: string;
   // Custom fonts included with the widget
   fonts?: { url: string; name: string }[];
   // Original assets definition from widget.json

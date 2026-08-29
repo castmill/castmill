@@ -87,14 +87,12 @@ defmodule CastmillWeb.OrganizationController do
     end
   end
 
-  def check_access(_actor_id, :list_widgets, %{"organization_id" => _organization_id}) do
-    # Normally all users can list widgets, but will not get the same ones.
-    {:ok, true}
+  def check_access(actor_id, :list_widgets, %{"organization_id" => organization_id}) do
+    {:ok, Organizations.has_access(organization_id, actor_id, "widgets", :list)}
   end
 
-  def check_access(_actor_id, :get_widget, %{"organization_id" => _organization_id}) do
-    # Any authenticated user can view widget details
-    {:ok, true}
+  def check_access(actor_id, :get_widget, %{"organization_id" => organization_id}) do
+    {:ok, Organizations.has_access(organization_id, actor_id, "widgets", :show)}
   end
 
   def check_access(actor_id, :create_widget, %{"organization_id" => organization_id}) do
@@ -337,18 +335,16 @@ defmodule CastmillWeb.OrganizationController do
     end
   end
 
-  # List all the widgets available an organization
-  def list_widgets(conn, %{"organization_id" => _organization_id} = params) do
-    # Note: for now we return all widgets, but we should only return the widgets that are available
-    # for the organization (some widgets are available to all organizations though).
-
+  # List all widgets available to an organization.
+  def list_widgets(conn, %{"organization_id" => organization_id} = params) do
     # Extract pagination, search, and sorting parameters
     query_params = %{
       page: String.to_integer(params["page"] || "1"),
       page_size: String.to_integer(params["page_size"] || "10"),
       search: params["search"],
       key: params["key"] || "name",
-      direction: params["direction"] || "ascending"
+      direction: params["direction"] || "ascending",
+      organization_id: organization_id
     }
 
     widgets = Castmill.Widgets.list_widgets(query_params)
@@ -365,8 +361,8 @@ defmodule CastmillWeb.OrganizationController do
   end
 
   # Get a widget by its ID
-  def get_widget(conn, %{"organization_id" => _organization_id, "widget_id" => widget_id}) do
-    case Castmill.Widgets.get_widget(widget_id) do
+  def get_widget(conn, %{"organization_id" => organization_id, "widget_id" => widget_id}) do
+    case Castmill.Widgets.get_widget_for_organization(widget_id, organization_id) do
       nil ->
         conn
         |> put_status(:not_found)
@@ -379,7 +375,7 @@ defmodule CastmillWeb.OrganizationController do
     end
   end
 
-  def create_widget(conn, %{"organization_id" => _organization_id, "widget" => widget_file}) do
+  def create_widget(conn, %{"organization_id" => organization_id, "widget" => widget_file}) do
     alias Castmill.Widgets.PackageProcessor
     alias Castmill.Widgets.AssetStorage
 
@@ -394,6 +390,11 @@ defmodule CastmillWeb.OrganizationController do
          widget_data <- resolve_widget_fonts(widget_data, widget_slug, stored_assets),
          # Store integration definition in meta for later use
          widget_data <- store_integration_in_meta(widget_data),
+         widget_data <-
+          Map.merge(widget_data, %{
+            "organization_id" => organization_id,
+            "is_system" => false
+          }),
          {:ok, widget} <- Castmill.Widgets.create_widget(widget_data) do
       # Clean up temporary asset files
       PackageProcessor.cleanup_assets(assets)
@@ -481,15 +482,18 @@ defmodule CastmillWeb.OrganizationController do
   @doc """
   Gets the usage information for a widget, showing all playlists where it's being used.
   """
-  def get_widget_usage(conn, %{"organization_id" => _organization_id, "widget_id" => widget_id}) do
-    case Castmill.Widgets.get_widget(widget_id) do
+  def get_widget_usage(conn, %{
+        "organization_id" => organization_id,
+        "widget_id" => widget_id
+      }) do
+    case Castmill.Widgets.get_widget_for_organization(widget_id, organization_id) do
       nil ->
         conn
         |> put_status(:not_found)
         |> json(%{error: "Widget not found"})
 
       _widget ->
-        usage = Castmill.Widgets.get_widget_usage(widget_id)
+        usage = Castmill.Widgets.get_widget_usage(widget_id, organization_id)
 
         conn
         |> put_status(:ok)
@@ -497,9 +501,10 @@ defmodule CastmillWeb.OrganizationController do
     end
   end
 
-  def delete_widget(conn, %{"organization_id" => _organization_id, "widget_id" => widget_id}) do
-    with widget when not is_nil(widget) <- Castmill.Widgets.get_widget(widget_id),
-         true <- editable_widget?(conn, widget),
+  def delete_widget(conn, %{"organization_id" => organization_id, "widget_id" => widget_id}) do
+    with widget when not is_nil(widget) <-
+           Castmill.Widgets.get_widget_for_organization(widget_id, organization_id),
+         true <- editable_widget?(conn, widget, organization_id),
          {:ok, _} <- Castmill.Widgets.delete_widget_with_cascade(widget) do
       # Also delete the widget's assets
       Castmill.Widgets.AssetStorage.delete_assets(widget.slug)
@@ -524,11 +529,22 @@ defmodule CastmillWeb.OrganizationController do
 
   def update_widget(
         conn,
-        %{"organization_id" => _organization_id, "widget_id" => widget_id} = params
+        %{"organization_id" => organization_id, "widget_id" => widget_id} = params
       ) do
-    with widget when not is_nil(widget) <- Castmill.Widgets.get_widget(widget_id),
-         true <- editable_widget?(conn, widget),
-         {:ok, updated_widget} <- Castmill.Widgets.update_widget(widget, params) do
+    with widget when not is_nil(widget) <-
+           Castmill.Widgets.get_widget_for_organization(widget_id, organization_id),
+         true <- editable_widget?(conn, widget, organization_id),
+         update_params <-
+           Map.take(params, [
+             "name",
+             "description",
+             "template",
+             "options_schema",
+             "data_schema",
+             "aspect_ratio",
+             "update_interval_seconds"
+           ]),
+         {:ok, updated_widget} <- Castmill.Widgets.update_widget(widget, update_params) do
       conn
       |> put_status(:ok)
       |> json(updated_widget)
@@ -561,7 +577,7 @@ defmodule CastmillWeb.OrganizationController do
   Accepts all widget fields as JSON – name, description, template, options_schema,
   data_schema, aspect_ratio, update_interval_seconds, slug, etc.
   """
-  def create_widget_from_json(conn, %{"organization_id" => _organization_id} = params) do
+  def create_widget_from_json(conn, %{"organization_id" => organization_id} = params) do
     widget_data =
       params
       |> Map.take([
@@ -574,6 +590,7 @@ defmodule CastmillWeb.OrganizationController do
         "update_interval_seconds"
       ])
       |> Map.put("is_system", false)
+      |> Map.put("organization_id", organization_id)
       |> maybe_generate_slug()
 
     case Castmill.Widgets.create_widget(widget_data) do
@@ -599,8 +616,12 @@ defmodule CastmillWeb.OrganizationController do
 
   The clone is marked as non-system so the user can freely edit and delete it.
   """
-  def clone_widget(conn, %{"organization_id" => _organization_id, "widget_id" => widget_id} = params) do
-    with widget when not is_nil(widget) <- Castmill.Widgets.get_widget(widget_id) do
+  def clone_widget(
+        conn,
+        %{"organization_id" => organization_id, "widget_id" => widget_id} = params
+      ) do
+    with widget when not is_nil(widget) <-
+           Castmill.Widgets.get_widget_for_organization(widget_id, organization_id) do
       new_name = Map.get(params, "name") || unique_widget_copy_name(widget.name)
 
       clone_attrs = %{
@@ -618,7 +639,8 @@ defmodule CastmillWeb.OrganizationController do
         "assets" => rewrite_widget_asset_urls(widget.assets, widget.slug, slugify(new_name)),
         "aspect_ratio" => widget.aspect_ratio,
         "update_interval_seconds" => widget.update_interval_seconds,
-        "is_system" => false
+        "is_system" => false,
+        "organization_id" => organization_id
       }
 
       case Castmill.Widgets.create_widget(clone_attrs) do
@@ -637,7 +659,6 @@ defmodule CastmillWeb.OrganizationController do
               |> put_status(:internal_server_error)
               |> json(%{error: "Failed to copy widget assets: #{inspect(reason)}"})
           end
-
         {:error, %Ecto.Changeset{} = changeset} ->
           conn
           |> put_status(:unprocessable_entity)
@@ -692,9 +713,11 @@ defmodule CastmillWeb.OrganizationController do
     end)
   end
 
-  defp editable_widget?(conn, widget) do
+  defp editable_widget?(conn, widget, organization_id) do
     actor = conn.assigns[:current_actor] || conn.assigns[:current_user]
-    not widget.is_system or (actor && Map.get(actor, :is_root, false))
+
+    (not widget.is_system and widget.organization_id == organization_id) or
+      (actor && Map.get(actor, :is_root, false))
   end
 
   # Generates a slug from name if slug is not provided

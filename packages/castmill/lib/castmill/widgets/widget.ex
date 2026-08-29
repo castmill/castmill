@@ -19,7 +19,8 @@ defmodule Castmill.Widgets.Widget do
              :update_interval_seconds,
              :fonts,
              :assets,
-             :is_system
+             :is_system,
+             :organization_id
            ]}
   schema "widgets" do
     field(:name, :string)
@@ -38,9 +39,9 @@ defmodule Castmill.Widgets.Widget do
     # Preferred aspect ratio for the widget (e.g., "16:9", "9:16", "4:3", "1:1", or "liquid" for any)
     field(:aspect_ratio, :string)
 
-    # Not sure we need this field. Widgets should be either global, per network or per organization, not sure which
-    # would be the best way to model this.
+    # System widgets are global; user-created widgets belong to an organization.
     field(:is_system, :boolean)
+    belongs_to(:organization, Castmill.Organizations.Organization, type: Ecto.UUID)
 
     # The endpoint in which the widget should ask the server for data updates.
     field(:webhook_url, :string)
@@ -75,7 +76,8 @@ defmodule Castmill.Widgets.Widget do
       :is_system,
       :webhook_url,
       :fonts,
-      :assets
+      :assets,
+      :organization_id
     ])
     |> validate_required([:name, :template])
     |> unique_constraint(:name)
