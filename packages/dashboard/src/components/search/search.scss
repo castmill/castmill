@@ -74,3 +74,23 @@
     color: colors.$component-color;
   }
 }
+
+@media (max-width: 48em) {
+  .castmill-search {
+    flex: 1 1 100%;
+    justify-content: flex-start;
+    order: -1;
+
+    input {
+      width: 100%;
+
+      &:focus {
+        width: 100%;
+      }
+    }
+
+    .keyboard-shortcut {
+      display: none;
+    }
+  }
+}
