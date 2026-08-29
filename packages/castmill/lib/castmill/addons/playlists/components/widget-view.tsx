@@ -34,6 +34,80 @@ interface WidgetViewProps {
   socket?: Socket;
 }
 
+export const getWidgetViewAspectRatio = (
+  widget: JsonWidget,
+  options?: OptionsDict
+): number | null => {
+  if (options) {
+    for (const value of Object.values(options)) {
+      if (
+        value &&
+        typeof value === 'object' &&
+        'aspectRatio' in value &&
+        'layoutId' in value
+      ) {
+        const ratio = parseAspectRatio(
+          (value as { aspectRatio: string }).aspectRatio
+        );
+        if (ratio) return ratio;
+      }
+    }
+  }
+
+  return parseAspectRatio(widget.aspect_ratio);
+};
+
+export const getWidgetViewContainerStyle = (
+  size: { width: number; height: number },
+  aspectRatio: number | null
+) => {
+  if (size.width > 0 && size.height > 0) {
+    if (aspectRatio === null) {
+      return {
+        width: `${size.width}px`,
+        height: `${size.height}px`,
+      };
+    }
+
+    const dims = calculateContainDimensions(
+      size.width,
+      size.height,
+      aspectRatio
+    );
+
+    return {
+      width: `${dims.width}px`,
+      height: `${dims.height}px`,
+    };
+  }
+
+  if (aspectRatio === null) {
+    return { width: '100%', height: '100%' };
+  }
+
+  return { 'aspect-ratio': `${aspectRatio}`, width: '100%', height: 'auto' };
+};
+
+const calculateContainDimensions = (
+  containerWidth: number,
+  containerHeight: number,
+  aspectRatio: number
+) => {
+  const containerAspect = containerWidth / containerHeight;
+
+  if (aspectRatio > containerAspect) {
+    return {
+      width: containerWidth,
+      height: containerWidth / aspectRatio,
+    };
+  } else {
+    return {
+      width: containerHeight * aspectRatio,
+      height: containerHeight,
+    };
+  }
+};
+
 export const WidgetView: Component<WidgetViewProps> = (props) => {
   const cache = new Cache(
     new StorageDummy('widget-editor'),
@@ -275,54 +349,6 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
     }
   });
 
-  // Get the effective aspect ratio from options or widget definition
-  const getEffectiveAspectRatio = (): number => {
-    // Check all options for any that might be a layout-ref value with aspectRatio
-    // This handles widgets where the layout-ref field may have any key name
-    if (props.options) {
-      for (const value of Object.values(props.options)) {
-        if (
-          value &&
-          typeof value === 'object' &&
-          'aspectRatio' in value &&
-          'layoutId' in value
-        ) {
-          // This looks like a LayoutRefValue
-          const ratio = parseAspectRatio(
-            (value as { aspectRatio: string }).aspectRatio
-          );
-          if (ratio) return ratio;
-        }
-      }
-    }
-
-    // Fall back to widget's own aspect ratio, default to 1:1
-    return parseAspectRatio(props.widget.aspect_ratio) || 1;
-  };
-
-  // Calculate dimensions to fit within container while maintaining aspect ratio (contain behavior)
-  const calculateContainDimensions = (
-    containerWidth: number,
-    containerHeight: number,
-    aspectRatio: number
-  ) => {
-    const containerAspect = containerWidth / containerHeight;
-
-    if (aspectRatio > containerAspect) {
-      // Width-constrained: content is wider relative to container
-      return {
-        width: containerWidth,
-        height: containerWidth / aspectRatio,
-      };
-    } else {
-      // Height-constrained: content is taller relative to container
-      return {
-        width: containerHeight * aspectRatio,
-        height: containerHeight,
-      };
-    }
-  };
-
   // Helper to update container size from parent
   const updateContainerSize = () => {
     const parent = containerRef?.parentElement;
@@ -359,23 +385,10 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
   // Calculate container style based on aspect ratio and available space
   // This is reactive to both containerSize and props.options changes
   const containerStyle = createMemo(() => {
-    const size = containerSize();
-    const aspectRatio = getEffectiveAspectRatio();
-
-    if (size.width > 0 && size.height > 0) {
-      const dims = calculateContainDimensions(
-        size.width,
-        size.height,
-        aspectRatio
-      );
-      return {
-        width: `${dims.width}px`,
-        height: `${dims.height}px`,
-      };
-    }
-
-    // Fallback to CSS aspect-ratio if parent dimensions not yet available
-    return { 'aspect-ratio': `${aspectRatio}`, width: '100%', height: 'auto' };
+    return getWidgetViewContainerStyle(
+      containerSize(),
+      getWidgetViewAspectRatio(props.widget, props.options)
+    );
   });
 
   return (

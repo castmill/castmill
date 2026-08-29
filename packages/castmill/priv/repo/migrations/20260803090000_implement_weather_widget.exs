@@ -14,7 +14,7 @@ defmodule Castmill.Repo.Migrations.ImplementWeatherWidget do
     |> Repo.update_all(
       set: [
         description: "Displays current weather and a five-day forecast for a selected location.",
-        aspect_ratio: "16:9",
+        aspect_ratio: nil,
         options_schema: options_schema(),
         template: template(),
         data_schema: data_schema(),
