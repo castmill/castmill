@@ -57,6 +57,22 @@ defmodule Castmill.Widgets.Integrations.Fetchers.OpenMeteoTest do
            ]
   end
 
+  test "builds Fahrenheit query params when configured" do
+    fahrenheit_params =
+      OpenMeteo.query_params(%{
+        "location" => %{"lat" => 51.505, "lng" => -0.09},
+        "fahrenheit" => true
+      })
+
+    celsius_params =
+      OpenMeteo.query_params(%{
+        "location" => %{"lat" => 51.505, "lng" => -0.09}
+      })
+
+    assert fahrenheit_params["temperature_unit"] == "fahrenheit"
+    assert celsius_params["temperature_unit"] == "celsius"
+  end
+
   test "rejects malformed API data" do
     assert {:error, :invalid_response} = OpenMeteo.transform(%{"current" => %{}}, %{})
   end

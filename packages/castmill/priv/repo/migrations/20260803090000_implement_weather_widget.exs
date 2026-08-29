@@ -130,6 +130,12 @@ defmodule Castmill.Repo.Migrations.ImplementWeatherWidget do
         },
         "defaultZoom" => 10,
         "order" => 1
+      },
+      "fahrenheit" => %{
+        "type" => "boolean",
+        "default" => false,
+        "description" => "Display temperatures in Fahrenheit instead of Celsius",
+        "order" => 2
       }
     }
   end

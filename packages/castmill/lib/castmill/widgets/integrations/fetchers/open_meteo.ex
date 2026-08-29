@@ -12,16 +12,7 @@ defmodule Castmill.Widgets.Integrations.Fetchers.OpenMeteo do
   @impl true
   def fetch(credentials, %{"location" => %{"lat" => lat, "lng" => lng}} = options)
       when is_number(lat) and is_number(lng) do
-    query =
-      URI.encode_query(%{
-        "latitude" => lat,
-        "longitude" => lng,
-        "current" =>
-          "temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m",
-        "daily" => "weather_code,temperature_2m_max,temperature_2m_min",
-        "forecast_days" => 6,
-        "timezone" => "auto"
-      })
+    query = URI.encode_query(query_params(options))
 
     headers = [{"Accept", "application/json"}, {"User-Agent", "Castmill/1.0"}]
 
@@ -44,6 +35,20 @@ defmodule Castmill.Widgets.Integrations.Fetchers.OpenMeteo do
   end
 
   def fetch(credentials, _options), do: {:error, :invalid_location, credentials}
+
+  @doc false
+  def query_params(%{"location" => %{"lat" => lat, "lng" => lng}} = options) do
+    %{
+      "latitude" => lat,
+      "longitude" => lng,
+      "current" =>
+        "temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m",
+      "daily" => "weather_code,temperature_2m_max,temperature_2m_min",
+      "forecast_days" => 6,
+      "timezone" => "auto",
+      "temperature_unit" => temperature_unit(options)
+    }
+  end
 
   @doc false
   def transform(
@@ -101,6 +106,11 @@ defmodule Castmill.Widgets.Integrations.Fetchers.OpenMeteo do
   end
 
   def transform(_response, _location), do: {:error, :invalid_response}
+
+  defp temperature_unit(%{"fahrenheit" => value}) when value in [true, "true"],
+    do: "fahrenheit"
+
+  defp temperature_unit(_options), do: "celsius"
 
   defp format_day(date) do
     case Date.from_iso8601(date) do
