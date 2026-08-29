@@ -282,6 +282,7 @@ describe('PlaylistView Component', () => {
 
     // When loading, the Show component should not render its children
     expect(container.querySelector('.playlist-view')).not.toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('common.loading');
   });
 
   it.skip('handles errors when fetching playlist fails', async () => {
@@ -567,7 +568,9 @@ describe('PlaylistView Component', () => {
         ...mockPlaylist,
         settings: { aspect_ratio: { width: 16, height: 9 } },
       };
-      vi.mocked(PlaylistsService.getPlaylist).mockResolvedValue(playlistWith16x9);
+      vi.mocked(PlaylistsService.getPlaylist).mockResolvedValue(
+        playlistWith16x9
+      );
 
       render(() => (
         <PlaylistView
