@@ -146,6 +146,7 @@ defmodule Castmill.Repo.Migrations.ImplementWeatherWidget do
         "box-sizing" => "border-box",
         "overflow" => "hidden",
         "padding" => "2.5em 3em",
+        "font-size" => "1.8vh",
         "color" => "#f8fafc",
         "background" =>
           "radial-gradient(circle at top right, #38bdf8 0%, #2563eb 35%, #172554 100%)",
@@ -156,7 +157,8 @@ defmodule Castmill.Repo.Migrations.ImplementWeatherWidget do
           "type" => "text",
           "name" => "location",
           "opts" => %{
-            "text" => %{"key" => "data.location", "default" => "London, United Kingdom"}
+            "text" => %{"key" => "data.location", "default" => "London, United Kingdom"},
+            "autofit" => %{"baseSize" => 1.35, "maxSize" => 1.35, "minSize" => 0.8}
           },
           "style" => %{
             "height" => "12%",
@@ -178,7 +180,10 @@ defmodule Castmill.Repo.Migrations.ImplementWeatherWidget do
             %{
               "type" => "text",
               "name" => "current-icon",
-              "opts" => %{"text" => %{"key" => "data.icon", "default" => "🌤️"}},
+              "opts" => %{
+                "text" => %{"key" => "data.icon", "default" => "🌤️"},
+                "autofit" => %{"baseSize" => 5.0, "maxSize" => 5.0, "minSize" => 2.5}
+              },
               "style" => %{
                 "width" => "24%",
                 "font-size" => "5em",
@@ -198,7 +203,10 @@ defmodule Castmill.Repo.Migrations.ImplementWeatherWidget do
                 %{
                   "type" => "text",
                   "name" => "temperature",
-                  "opts" => %{"text" => %{"key" => "data.temperature", "default" => "18°C"}},
+                  "opts" => %{
+                    "text" => %{"key" => "data.temperature", "default" => "18°C"},
+                    "autofit" => %{"baseSize" => 4.8, "maxSize" => 4.8, "minSize" => 2.2}
+                  },
                   "style" => %{
                     "height" => "55%",
                     "font-size" => "4.8em",
@@ -210,7 +218,8 @@ defmodule Castmill.Repo.Migrations.ImplementWeatherWidget do
                   "type" => "text",
                   "name" => "condition",
                   "opts" => %{
-                    "text" => %{"key" => "data.condition", "default" => "Partly cloudy"}
+                    "text" => %{"key" => "data.condition", "default" => "Partly cloudy"},
+                    "autofit" => %{"baseSize" => 1.6, "maxSize" => 1.6, "minSize" => 0.85}
                   },
                   "style" => %{
                     "height" => "25%",
@@ -222,7 +231,8 @@ defmodule Castmill.Repo.Migrations.ImplementWeatherWidget do
                   "type" => "text",
                   "name" => "feels-like",
                   "opts" => %{
-                    "text" => %{"key" => "data.feels_like", "default" => "Feels like 17°C"}
+                    "text" => %{"key" => "data.feels_like", "default" => "Feels like 17°C"},
+                    "autofit" => %{"baseSize" => 1.0, "maxSize" => 1.0, "minSize" => 0.75}
                   },
                   "style" => %{"height" => "20%", "font-size" => "1em", "opacity" => "0.72"}
                 }
@@ -245,7 +255,8 @@ defmodule Castmill.Repo.Migrations.ImplementWeatherWidget do
                   "type" => "text",
                   "name" => "humidity",
                   "opts" => %{
-                    "text" => %{"key" => "data.humidity", "default" => "Humidity 72%"}
+                    "text" => %{"key" => "data.humidity", "default" => "Humidity 72%"},
+                    "autofit" => %{"baseSize" => 1.1, "maxSize" => 1.1, "minSize" => 0.8}
                   },
                   "style" => %{"height" => "2em", "font-size" => "1.1em"}
                 },
@@ -253,7 +264,8 @@ defmodule Castmill.Repo.Migrations.ImplementWeatherWidget do
                   "type" => "text",
                   "name" => "wind",
                   "opts" => %{
-                    "text" => %{"key" => "data.wind", "default" => "Wind 11 km/h"}
+                    "text" => %{"key" => "data.wind", "default" => "Wind 11 km/h"},
+                    "autofit" => %{"baseSize" => 1.1, "maxSize" => 1.1, "minSize" => 0.8}
                   },
                   "style" => %{"height" => "2em", "font-size" => "1.1em"}
                 }
@@ -264,7 +276,10 @@ defmodule Castmill.Repo.Migrations.ImplementWeatherWidget do
         %{
           "type" => "text",
           "name" => "forecast-title",
-          "opts" => %{"text" => "5-DAY FORECAST"},
+          "opts" => %{
+            "text" => "5-DAY FORECAST",
+            "autofit" => %{"baseSize" => 0.8, "maxSize" => 0.8, "minSize" => 0.65}
+          },
           "style" => %{
             "height" => "8%",
             "font-size" => "0.8em",
@@ -300,7 +315,10 @@ defmodule Castmill.Repo.Migrations.ImplementWeatherWidget do
               %{
                 "type" => "text",
                 "name" => "day",
-                "opts" => %{"text" => %{"key" => "$.day"}},
+                "opts" => %{
+                  "text" => %{"key" => "$.day"},
+                  "autofit" => %{"baseSize" => 1.0, "maxSize" => 1.0, "minSize" => 0.75}
+                },
                 "style" => %{
                   "height" => "20%",
                   "font-size" => "1em",
@@ -311,13 +329,19 @@ defmodule Castmill.Repo.Migrations.ImplementWeatherWidget do
               %{
                 "type" => "text",
                 "name" => "icon",
-                "opts" => %{"text" => %{"key" => "$.icon"}},
+                "opts" => %{
+                  "text" => %{"key" => "$.icon"},
+                  "autofit" => %{"baseSize" => 2.4, "maxSize" => 2.4, "minSize" => 1.4}
+                },
                 "style" => %{"height" => "45%", "font-size" => "2.4em", "text-align" => "center"}
               },
               %{
                 "type" => "text",
                 "name" => "forecast-temperature",
-                "opts" => %{"text" => %{"key" => "$.temperature"}},
+                "opts" => %{
+                  "text" => %{"key" => "$.temperature"},
+                  "autofit" => %{"baseSize" => 0.95, "maxSize" => 0.95, "minSize" => 0.7}
+                },
                 "style" => %{
                   "height" => "22%",
                   "font-size" => "0.95em",
