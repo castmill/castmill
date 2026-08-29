@@ -276,12 +276,16 @@ defmodule Castmill.Widgets do
     case integration.discriminator_type do
       "widget_option" ->
         key = integration.discriminator_key || "id"
+        include_keys = String.contains?(key, ",")
 
-        value =
-          Map.get(merged_options, key) || Map.get(merged_options, String.to_atom(key)) ||
-            "default"
-
-        "#{key}:#{value}"
+        case Castmill.Widgets.Integrations.widget_option_discriminator_value(key, merged_options,
+               missing: :default,
+               include_keys: include_keys
+             ) do
+          {:ok, value} when include_keys -> value
+          {:ok, value} -> "#{key}:#{value}"
+          {:error, _reason} -> "#{key}:default"
+        end
 
       "organization" ->
         "org"

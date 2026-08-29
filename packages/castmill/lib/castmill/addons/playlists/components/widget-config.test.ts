@@ -9,6 +9,7 @@ import {
   normalizeSchemaEntries,
   isLayoutRefValid,
   isLocationValueValid,
+  normalizeFormValue,
 } from './widget-config';
 
 describe('WidgetConfig - Collection Parsing', () => {
@@ -197,5 +198,16 @@ describe('WidgetConfig - Location Validation Logic', () => {
   it('returns false for out-of-range coordinates', () => {
     expect(isLocationValueValid({ lat: 91, lng: 0 } as any)).toBe(false);
     expect(isLocationValueValid({ lat: 0, lng: -181 } as any)).toBe(false);
+  });
+});
+
+describe('WidgetConfig - Form Value Normalization', () => {
+  it('preserves boolean values for checkbox fields', () => {
+    expect(normalizeFormValue(false)).toBe(false);
+    expect(normalizeFormValue(true)).toBe(true);
+  });
+
+  it('falls back to an empty string for object values', () => {
+    expect(normalizeFormValue({ value: true })).toBe('');
   });
 });

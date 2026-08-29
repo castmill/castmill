@@ -37,7 +37,7 @@ defmodule Castmill.Repo.Migrations.ImplementWeatherWidget do
         "fetcher_module" => "Castmill.Widgets.Integrations.Fetchers.OpenMeteo"
       },
       discriminator_type: "widget_option",
-      discriminator_key: "location",
+      discriminator_key: "location,fahrenheit",
       is_active: true
     }
 

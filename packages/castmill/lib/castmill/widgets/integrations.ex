@@ -494,9 +494,12 @@ defmodule Castmill.Widgets.Integrations do
       "widget_option" ->
         key = integration.discriminator_key
 
-        case Map.get(widget_options, key) || Map.get(widget_options, String.to_atom(key)) do
-          nil -> {:error, {:missing_option, key}}
-          value -> {:ok, "opt:#{value}"}
+        case widget_option_discriminator_value(key, widget_options,
+               missing: if(composite_discriminator_key?(key), do: :default, else: :error),
+               include_keys: composite_discriminator_key?(key)
+             ) do
+          {:ok, value} -> {:ok, "opt:#{value}"}
+          {:error, reason} -> {:error, reason}
         end
 
       "widget_config" ->
@@ -511,6 +514,32 @@ defmodule Castmill.Widgets.Integrations do
           nil -> {:ok, "org:#{organization_id}"}
           id -> {:ok, "cfg:#{id}"}
         end
+    end
+  end
+
+  @doc false
+  def widget_option_discriminator_value(discriminator_key, widget_options, opts \\ [])
+      when is_binary(discriminator_key) do
+    keys =
+      discriminator_key
+      |> String.split(",", trim: true)
+      |> Enum.map(&String.trim/1)
+      |> Enum.reject(&(&1 == ""))
+
+    missing = Keyword.get(opts, :missing, :error)
+    include_keys = Keyword.get(opts, :include_keys, false)
+
+    with {:ok, resolved} <- resolve_discriminator_values(keys, widget_options || %{}, missing) do
+      case {include_keys, resolved} do
+        {false, [{_key, value}]} ->
+          {:ok, serialize_discriminator_value(value)}
+
+        _ ->
+          {:ok,
+           Enum.map_join(resolved, "|", fn {key, value} ->
+             "#{key}=#{serialize_discriminator_value(value)}"
+           end)}
+      end
     end
   end
 
@@ -904,12 +933,16 @@ defmodule Castmill.Widgets.Integrations do
     case integration.discriminator_type do
       "widget_option" ->
         key = integration.discriminator_key || "id"
+        include_keys = composite_discriminator_key?(key)
 
-        value =
-          Map.get(merged_options, key) || Map.get(merged_options, String.to_atom(key)) ||
-            "default"
-
-        "#{key}:#{value}"
+        case widget_option_discriminator_value(key, merged_options,
+               missing: :default,
+               include_keys: include_keys
+             ) do
+          {:ok, value} when include_keys -> value
+          {:ok, value} -> "#{key}:#{value}"
+          {:error, _reason} -> "#{key}:default"
+        end
 
       "organization" ->
         "org"
@@ -918,6 +951,62 @@ defmodule Castmill.Widgets.Integrations do
         "default"
     end
   end
+
+  defp composite_discriminator_key?(key) when is_binary(key), do: String.contains?(key, ",")
+
+  defp resolve_discriminator_values(keys, widget_options, missing) do
+    Enum.reduce_while(keys, {:ok, []}, fn key, {:ok, acc} ->
+      case fetch_discriminator_option(widget_options, key) do
+        {:ok, value} ->
+          {:cont, {:ok, acc ++ [{key, value}]}}
+
+        :error when missing == :default ->
+          {:cont, {:ok, acc ++ [{key, :default}]}}
+
+        :error ->
+          {:halt, {:error, {:missing_option, key}}}
+      end
+    end)
+  end
+
+  defp fetch_discriminator_option(widget_options, key) when is_binary(key) do
+    cond do
+      Map.has_key?(widget_options, key) ->
+        {:ok, Map.get(widget_options, key)}
+
+      Map.has_key?(widget_options, String.to_atom(key)) ->
+        {:ok, Map.get(widget_options, String.to_atom(key))}
+
+      true ->
+        :error
+    end
+  end
+
+  defp serialize_discriminator_value(:default), do: "default"
+  defp serialize_discriminator_value(value) when is_binary(value), do: value
+  defp serialize_discriminator_value(value) when is_boolean(value), do: to_string(value)
+  defp serialize_discriminator_value(value) when is_number(value), do: to_string(value)
+
+  defp serialize_discriminator_value(value) do
+    value
+    |> normalize_discriminator_value()
+    |> Jason.encode!()
+  end
+
+  defp normalize_discriminator_value(value) when is_map(value) do
+    value
+    |> Enum.map(fn {key, nested_value} ->
+      {to_string(key), normalize_discriminator_value(nested_value)}
+    end)
+    |> Enum.sort_by(fn {key, _value} -> key end)
+    |> Enum.into(%{})
+  end
+
+  defp normalize_discriminator_value(value) when is_list(value) do
+    Enum.map(value, &normalize_discriminator_value/1)
+  end
+
+  defp normalize_discriminator_value(value), do: value
 
   @doc """
   Gets organization-level integration data.

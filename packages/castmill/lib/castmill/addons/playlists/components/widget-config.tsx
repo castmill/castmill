@@ -130,6 +130,20 @@ export const isLocationValueValid = (
   return true;
 };
 
+export const normalizeFormValue = (
+  value: unknown
+): string | number | boolean => {
+  if (
+    typeof value === 'string' ||
+    typeof value === 'number' ||
+    typeof value === 'boolean'
+  ) {
+    return value;
+  }
+
+  return '';
+};
+
 export function isValidURL(url: string): boolean {
   if (!url || url.trim() === '') {
     return true;
@@ -507,7 +521,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
             label={translateWidgetOptionLabel(key, fieldSchema.title || key)}
             id={key}
             type={type}
-            value={typeof formValue === 'object' ? '' : String(formValue ?? '')}
+            value={normalizeFormValue(formValue)}
             placeholder={translateWidgetOptionPlaceholder(
               key,
               fieldSchema.placeholder

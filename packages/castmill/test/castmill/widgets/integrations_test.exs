@@ -489,6 +489,74 @@ defmodule Castmill.Widgets.IntegrationsTest do
       assert discriminator == "opt:xyz-789"
     end
 
+    test "compute_discriminator_id/4 for widget_option type preserves false values", %{
+      widget: widget,
+      organization: organization
+    } do
+      {:ok, integration} =
+        Integrations.create_integration(%{
+          widget_id: widget.id,
+          name: "opt-test-#{System.unique_integer([:positive])}",
+          integration_type: "pull",
+          credential_scope: "organization",
+          discriminator_type: "widget_option",
+          discriminator_key: "fahrenheit",
+          pull_endpoint: "https://api.example.com/data",
+          pull_interval_seconds: 300
+        })
+
+      options = %{"fahrenheit" => false}
+
+      assert {:ok, discriminator} =
+               Integrations.compute_discriminator_id(integration, organization.id, nil, options)
+
+      assert discriminator == "opt:false"
+    end
+
+    test "compute_discriminator_id/4 for composite widget_option keys includes the unit", %{
+      widget: widget,
+      organization: organization
+    } do
+      {:ok, integration} =
+        Integrations.create_integration(%{
+          widget_id: widget.id,
+          name: "opt-test-#{System.unique_integer([:positive])}",
+          integration_type: "pull",
+          credential_scope: "organization",
+          discriminator_type: "widget_option",
+          discriminator_key: "location,fahrenheit",
+          pull_endpoint: "https://api.example.com/data",
+          pull_interval_seconds: 300
+        })
+
+      celsius_options = %{"location" => %{"lat" => 55.666667, "lng" => 13.083333}}
+
+      fahrenheit_options = %{
+        "location" => %{"lat" => 55.666667, "lng" => 13.083333},
+        "fahrenheit" => true
+      }
+
+      assert {:ok, celsius_discriminator} =
+               Integrations.compute_discriminator_id(
+                 integration,
+                 organization.id,
+                 nil,
+                 celsius_options
+               )
+
+      assert {:ok, fahrenheit_discriminator} =
+               Integrations.compute_discriminator_id(
+                 integration,
+                 organization.id,
+                 nil,
+                 fahrenheit_options
+               )
+
+      refute celsius_discriminator == fahrenheit_discriminator
+      assert String.contains?(celsius_discriminator, "fahrenheit=default")
+      assert String.contains?(fahrenheit_discriminator, "fahrenheit=true")
+    end
+
     test "compute_discriminator_id/4 for widget_option type missing option returns error", %{
       widget: widget,
       organization: organization
