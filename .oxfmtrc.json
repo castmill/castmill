@@ -11,6 +11,7 @@
     "out",
     "android",
     "public/lib",
+    "packages/castmill/assets/vendor",
     "**/*.md",
     "**/*.mdx"
   ]

@@ -21,7 +21,7 @@
 
   <body id="body">
     <script type="module">
-      import { Castmill } from '<%= widgetSrc %>';
+      import { Castmill } from '<%= widgetSrc %>';
 
            console.log('Loading widget...');
            document.addEventListener("DOMContentLoaded", function () {
@@ -48,14 +48,14 @@
            				case 'stop':
            				case 'seek':
            				case 'duration':
-           					return widget[data.method].apply(widget, data.args ||  []).then(function (result) {
+           					return widget[data.method].apply(widget, data.args ||  []).then(function (result) {
            						event.source.postMessage(JSON.stringify({
            							counter: data.counter,
            							result: result
            						}), event.origin);
            					});
            				default:
-           				parent.postMessage(JSON.stringify({ counter: counter, result: 'Error: Unknown method' }), origin);
+           				parent.postMessage(JSON.stringify({ counter: data.counter, result: 'Error: Unknown method' }), origin);
            			}
            		});
            	};

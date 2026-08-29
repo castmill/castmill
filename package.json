@@ -66,7 +66,9 @@
     "lint:platforms:electron": "cd packages/platforms/electron-player && yarn lint",
     "lint:platforms:legacy": "cd packages/platforms/legacy-adapter-player && yarn lint",
     "lint:platforms": "yarn run lint:platforms:android && yarn run lint:platforms:webos && yarn run lint:platforms:electron && yarn run lint:platforms:legacy",
-    "lint:all": "yarn run lint:ui-common && yarn run lint:cache && yarn run lint:dashboard && yarn run lint:device && yarn run lint:player && yarn run lint:widged && yarn run lint:platforms"
+    "lint:website": "cd packages/website && yarn lint",
+    "lint:castmill-assets": "cd packages/castmill/assets && yarn lint",
+    "lint:all": "yarn run lint:ui-common && yarn run lint:cache && yarn run lint:dashboard && yarn run lint:device && yarn run lint:player && yarn run lint:widged && yarn run lint:platforms && yarn run lint:website && yarn run lint:castmill-assets"
   },
   "dependencies": {
     "@docusaurus/core": "^3.9.1",
@@ -99,7 +101,8 @@
       "oxfmt --write",
       "oxlint --fix"
     ],
-    "packages/castmill/**/*.{ex,exs}": "cd packages/castmill && mix format && cd ../.."
+    "packages/castmill/**/*.{ex,exs}": "cd packages/castmill && mix format && cd ../..",
+    "packages/dashboard/src/i18n/locales/**/*.json": "cd packages/dashboard && yarn check-translations"
   },
   "packageManager": "yarn@1.22.22"
 }

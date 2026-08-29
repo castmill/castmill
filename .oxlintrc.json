@@ -16,6 +16,7 @@
     "build",
     "out",
     "android",
-    "public/lib"
+    "public/lib",
+    "packages/castmill/assets/vendor"
   ]
 }
