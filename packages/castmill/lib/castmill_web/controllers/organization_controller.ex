@@ -105,6 +105,11 @@ defmodule CastmillWeb.OrganizationController do
     end
   end
 
+  def check_access(actor_id, action, %{"organization_id" => organization_id})
+      when action in [:create_widget_from_json, :clone_widget] do
+    {:ok, Organizations.has_access(organization_id, actor_id, "widgets", :create)}
+  end
+
   def check_access(actor_id, :delete_widget, %{"organization_id" => organization_id}) do
     if Organizations.has_access(organization_id, actor_id, "widgets", :delete) do
       {:ok, true}
@@ -122,8 +127,7 @@ defmodule CastmillWeb.OrganizationController do
   end
 
   def check_access(actor_id, :update_widget, %{"organization_id" => organization_id}) do
-    # Only admins can update widgets for now
-    {:ok, Organizations.is_admin?(organization_id, actor_id)}
+    {:ok, Organizations.has_access(organization_id, actor_id, "widgets", :update)}
   end
 
   def check_access(actor_id, :list_members, %{"organization_id" => organization_id}) do
@@ -495,6 +499,7 @@ defmodule CastmillWeb.OrganizationController do
 
   def delete_widget(conn, %{"organization_id" => _organization_id, "widget_id" => widget_id}) do
     with widget when not is_nil(widget) <- Castmill.Widgets.get_widget(widget_id),
+         true <- editable_widget?(conn, widget),
          {:ok, _} <- Castmill.Widgets.delete_widget_with_cascade(widget) do
       # Also delete the widget's assets
       Castmill.Widgets.AssetStorage.delete_assets(widget.slug)
@@ -504,6 +509,11 @@ defmodule CastmillWeb.OrganizationController do
         conn
         |> put_status(:not_found)
         |> json(%{error: "Widget not found"})
+
+      false ->
+        conn
+        |> put_status(:forbidden)
+        |> json(%{error: "System widgets must be cloned before editing"})
 
       {:error, reason} ->
         conn
@@ -517,6 +527,7 @@ defmodule CastmillWeb.OrganizationController do
         %{"organization_id" => _organization_id, "widget_id" => widget_id} = params
       ) do
     with widget when not is_nil(widget) <- Castmill.Widgets.get_widget(widget_id),
+         true <- editable_widget?(conn, widget),
          {:ok, updated_widget} <- Castmill.Widgets.update_widget(widget, params) do
       conn
       |> put_status(:ok)
@@ -527,10 +538,15 @@ defmodule CastmillWeb.OrganizationController do
         |> put_status(:not_found)
         |> json(%{error: "Widget not found"})
 
+      false ->
+        conn
+        |> put_status(:forbidden)
+        |> json(%{error: "System widgets must be cloned before editing"})
+
       {:error, %Ecto.Changeset{} = changeset} ->
         conn
         |> put_status(:unprocessable_entity)
-        |> json(%{errors: changeset})
+        |> json(%{errors: changeset_errors(changeset)})
 
       {:error, reason} ->
         conn
@@ -548,7 +564,16 @@ defmodule CastmillWeb.OrganizationController do
   def create_widget_from_json(conn, %{"organization_id" => _organization_id} = params) do
     widget_data =
       params
-      |> Map.drop(["organization_id"])
+      |> Map.take([
+        "name",
+        "description",
+        "template",
+        "options_schema",
+        "data_schema",
+        "aspect_ratio",
+        "update_interval_seconds"
+      ])
+      |> Map.put("is_system", false)
       |> maybe_generate_slug()
 
     case Castmill.Widgets.create_widget(widget_data) do
@@ -558,16 +583,9 @@ defmodule CastmillWeb.OrganizationController do
         |> json(widget)
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        errors =
-          Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
-            Regex.replace(~r"%{(\w+)}", msg, fn _, key ->
-              opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
-            end)
-          end)
-
         conn
         |> put_status(:unprocessable_entity)
-        |> json(%{errors: errors})
+        |> json(%{errors: changeset_errors(changeset)})
 
       {:error, reason} ->
         conn
@@ -583,16 +601,21 @@ defmodule CastmillWeb.OrganizationController do
   """
   def clone_widget(conn, %{"organization_id" => _organization_id, "widget_id" => widget_id} = params) do
     with widget when not is_nil(widget) <- Castmill.Widgets.get_widget(widget_id) do
-      new_name = Map.get(params, "name", "#{widget.name} (Copy)")
+      new_name = Map.get(params, "name") || unique_widget_copy_name(widget.name)
 
       clone_attrs = %{
         "name" => new_name,
         "slug" => slugify(new_name),
         "description" => widget.description,
-        "template" => widget.template,
+        "template" => rewrite_widget_asset_urls(widget.template, widget.slug, slugify(new_name)),
         "options_schema" => widget.options_schema,
         "data_schema" => widget.data_schema,
         "meta" => widget.meta,
+        "icon" => rewrite_widget_asset_urls(widget.icon, widget.slug, slugify(new_name)),
+        "small_icon" =>
+          rewrite_widget_asset_urls(widget.small_icon, widget.slug, slugify(new_name)),
+        "fonts" => rewrite_widget_asset_urls(widget.fonts, widget.slug, slugify(new_name)),
+        "assets" => rewrite_widget_asset_urls(widget.assets, widget.slug, slugify(new_name)),
         "aspect_ratio" => widget.aspect_ratio,
         "update_interval_seconds" => widget.update_interval_seconds,
         "is_system" => false
@@ -600,33 +623,78 @@ defmodule CastmillWeb.OrganizationController do
 
       case Castmill.Widgets.create_widget(clone_attrs) do
         {:ok, cloned_widget} ->
-          conn
-          |> put_status(:created)
-          |> json(cloned_widget)
+          case Castmill.Widgets.AssetStorage.clone_assets(widget.slug, cloned_widget.slug) do
+            :ok ->
+              conn
+              |> put_status(:created)
+              |> json(cloned_widget)
+
+            {:error, reason} ->
+              Castmill.Widgets.delete_widget(cloned_widget)
+              Castmill.Widgets.AssetStorage.delete_assets(cloned_widget.slug)
+
+              conn
+              |> put_status(:internal_server_error)
+              |> json(%{error: "Failed to copy widget assets: #{inspect(reason)}"})
+          end
 
         {:error, %Ecto.Changeset{} = changeset} ->
-          errors =
-            Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
-              Regex.replace(~r"%{(\w+)}", msg, fn _, key ->
-                opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
-              end)
-            end)
-
           conn
           |> put_status(:unprocessable_entity)
-          |> json(%{errors: errors})
+          |> json(%{errors: changeset_errors(changeset)})
 
         {:error, reason} ->
           conn
           |> put_status(:bad_request)
           |> json(%{error: inspect(reason)})
       end
+
     else
       nil ->
         conn
         |> put_status(:not_found)
         |> json(%{error: "Widget not found"})
     end
+  end
+
+  defp unique_widget_copy_name(name, copy_number \\ 1) do
+    suffix = if copy_number == 1, do: " (Copy)", else: " (Copy #{copy_number})"
+    candidate = "#{name}#{suffix}"
+
+    if Castmill.Widgets.get_widget_by_name(candidate) do
+      unique_widget_copy_name(name, copy_number + 1)
+    else
+      candidate
+    end
+  end
+
+  defp rewrite_widget_asset_urls(value, old_slug, new_slug) when is_binary(value) do
+    String.replace(value, "/widget_assets/#{old_slug}/", "/widget_assets/#{new_slug}/")
+  end
+
+  defp rewrite_widget_asset_urls(value, old_slug, new_slug) when is_list(value) do
+    Enum.map(value, &rewrite_widget_asset_urls(&1, old_slug, new_slug))
+  end
+
+  defp rewrite_widget_asset_urls(value, old_slug, new_slug) when is_map(value) do
+    Map.new(value, fn {key, item} ->
+      {key, rewrite_widget_asset_urls(item, old_slug, new_slug)}
+    end)
+  end
+
+  defp rewrite_widget_asset_urls(value, _old_slug, _new_slug), do: value
+
+  defp changeset_errors(changeset) do
+    Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
+      Regex.replace(~r"%{(\w+)}", msg, fn _, key ->
+        opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
+      end)
+    end)
+  end
+
+  defp editable_widget?(conn, widget) do
+    actor = conn.assigns[:current_actor] || conn.assigns[:current_user]
+    not widget.is_system or (actor && Map.get(actor, :is_root, false))
   end
 
   # Generates a slug from name if slug is not provided

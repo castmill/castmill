@@ -1,5 +1,9 @@
 import { BsEye, BsTrash, BsPencil } from 'solid-icons/bs';
-import { AiOutlineUpload, AiOutlinePlusCircle, AiOutlineCopy } from 'solid-icons/ai';
+import {
+  AiOutlineUpload,
+  AiOutlinePlusCircle,
+  AiOutlineCopy,
+} from 'solid-icons/ai';
 import {
   Component,
   createSignal,
@@ -24,6 +28,7 @@ import {
   Tabs,
   ConfirmDialog,
   ToastProvider,
+  useToast,
 } from '@castmill/ui-common';
 import { JsonWidget } from '@castmill/player';
 import { WidgetsService, WidgetUsage } from '../services/widgets.service';
@@ -44,6 +49,7 @@ const WidgetsPage: Component<{
   store: AddonStore;
   params: any;
 }> = (props) => {
+  const toast = useToast();
   // Get i18n functions from store
   const t = (key: string, params?: Record<string, any>) =>
     props.store.i18n?.t(key, params) || key;
@@ -69,7 +75,9 @@ const WidgetsPage: Component<{
 
   // Widget editor state
   const [showEditor, setShowEditor] = createSignal(false);
-  const [editorWidget, setEditorWidget] = createSignal<WidgetWithId | undefined>();
+  const [editorWidget, setEditorWidget] = createSignal<
+    WidgetWithId | undefined
+  >();
 
   // Delete confirmation state
   const [showDeleteConfirm, setShowDeleteConfirm] = createSignal(false);
@@ -392,14 +400,24 @@ const WidgetsPage: Component<{
 
   const handleCloneWidget = async (widget: WidgetWithId) => {
     try {
-      await WidgetsService.cloneWidget(
+      const clonedWidget = await WidgetsService.cloneWidget(
         props.store.env.baseUrl,
         props.store.organizations.selectedId,
         widget.id
       );
       refreshData();
+      batch(() => {
+        setEditorWidget(clonedWidget as WidgetWithId);
+        setShowEditor(true);
+      });
+      toast.success(t('widgets.editor.clonedSuccess'), 3000);
     } catch (error) {
-      console.error('Failed to clone widget:', error);
+      toast.error(
+        t('widgets.editor.cloneError', {
+          error: error instanceof Error ? error.message : String(error),
+        }),
+        5000
+      );
     }
   };
 
@@ -578,6 +596,7 @@ const WidgetsPage: Component<{
           {
             label: t('widgets.editor.editWidget'),
             icon: BsPencil,
+            hidden: (widget: WidgetWithId) => !!widget.is_system,
             handler: (widget: WidgetWithId) => openEditorForWidget(widget),
           },
         ]
@@ -598,6 +617,7 @@ const WidgetsPage: Component<{
           {
             label: t('widgets.delete'),
             icon: BsTrash,
+            hidden: (widget: WidgetWithId) => !!widget.is_system,
             handler: (widget: WidgetWithId) => openDeleteConfirm(widget),
           },
         ]

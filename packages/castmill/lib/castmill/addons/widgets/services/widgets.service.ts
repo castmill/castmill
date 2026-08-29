@@ -68,8 +68,13 @@ async function handleResponse<T = any>(
   } else {
     let errMsg = '';
     try {
-      const { errors } = await response.json();
-      errMsg = `${errors.detail || response.statusText}`;
+      const body = await response.json();
+      const errorDetails = body.errors || body.error;
+      errMsg =
+        typeof errorDetails === 'string'
+          ? errorDetails
+          : errorDetails?.detail ||
+            (errorDetails ? JSON.stringify(errorDetails) : response.statusText);
     } catch (error) {
       errMsg = `${response.statusText}`;
     }

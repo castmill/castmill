@@ -169,6 +169,22 @@ defmodule Castmill.Widgets.AssetStorage do
     :ok
   end
 
+  def clone_assets(source_slug, target_slug) do
+    source_dir = widget_assets_dir(source_slug)
+    target_dir = widget_assets_dir(target_slug)
+
+    if File.dir?(source_dir) do
+      File.rm_rf(target_dir)
+
+      case File.cp_r(source_dir, target_dir) do
+        {:ok, _files} -> :ok
+        {:error, reason, _file} -> {:error, reason}
+      end
+    else
+      :ok
+    end
+  end
+
   @doc """
   Gets the full path for an asset file.
   Returns {:ok, path} if the file exists, {:error, :not_found} otherwise.
