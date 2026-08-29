@@ -686,6 +686,45 @@ defmodule Castmill.WidgetsTest do
                options: ["Location field \"location\" must have a lat number"]
              }
     end
+
+    test "accepts valid weather widget options when widget_id comes from stored config", %{
+      playlist: playlist,
+      playlist_item: playlist_item
+    } do
+      widget =
+        widget_fixture(%{
+          name: "weather widget with unit option",
+          template: %{"type" => "group", "components" => []},
+          options_schema: %{
+            "location" => %{"type" => "location", "required" => true},
+            "fahrenheit" => %{"type" => "boolean", "default" => false}
+          },
+          data_schema: %{}
+        })
+
+      widget_config =
+        Widgets.get_widget_config(playlist.id, playlist_item.id)
+        |> Ecto.Changeset.change(widget_id: widget.id)
+        |> Castmill.Repo.update!()
+
+      assert {:ok, "Widget configuration updated successfully"} =
+               Widgets.update_widget_config(
+                 playlist.id,
+                 playlist_item.id,
+                 %{
+                   "location" => %{"lat" => 55.666667, "lng" => 13.083333},
+                   "fahrenheit" => true
+                 },
+                 %{}
+               )
+
+      updated_widget_config = Widgets.get_widget_config(playlist.id, playlist_item.id)
+
+      assert updated_widget_config.id == widget_config.id
+      assert updated_widget_config.options["fahrenheit"] == true
+      assert updated_widget_config.options["location"]["lat"] == 55.666667
+      assert updated_widget_config.options["location"]["lng"] == 13.083333
+    end
   end
 
   describe "list_widgets/1" do
