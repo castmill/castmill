@@ -119,6 +119,17 @@ export const isLayoutRefValid = (
   return true;
 };
 
+export const isLocationValueValid = (
+  value: LocationValue | null | undefined
+): boolean => {
+  if (!value) return false;
+  if (typeof value.lat !== 'number' || Number.isNaN(value.lat)) return false;
+  if (typeof value.lng !== 'number' || Number.isNaN(value.lng)) return false;
+  if (value.lat < -90 || value.lat > 90) return false;
+  if (value.lng < -180 || value.lng > 180) return false;
+  return true;
+};
+
 export function isValidURL(url: string): boolean {
   if (!url || url.trim() === '') {
     return true;
@@ -332,6 +343,13 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
         }
       }
 
+      if (fieldType === 'location') {
+        const locationValue = options[key] as LocationValue | null | undefined;
+        if (!isLocationValueValid(locationValue)) {
+          return false;
+        }
+      }
+
       if (
         (schema as FieldAttributes).required &&
         typeof (schema as FieldAttributes).default === 'undefined' &&
@@ -388,6 +406,11 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
       case 'map':
         break;
       case 'list':
+        break;
+      case 'location':
+        if (!isLocationValueValid(value as LocationValue | null | undefined)) {
+          errorMessage = 'This field must have valid coordinates';
+        }
         break;
       default:
         errorMessage = `Unknown type: ${type}`;
@@ -762,6 +785,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
             <LocationPicker
               value={getCurrentLocation()}
               onChange={(newValue: LocationValue) => {
+                validateField('location', locationSchema, key, newValue);
                 setWidgetOptions({ ...widgetOptions(), [key]: newValue });
                 setIsFormModified(true);
                 setIsFormValid(checkFormValidity());
@@ -776,6 +800,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
               saveLabel={t('common.save')}
               cancelLabel={t('common.cancel')}
             />
+            <div class="error">{errors().get(key)}</div>
           </div>
         );
       case 'map':

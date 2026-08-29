@@ -86,10 +86,7 @@ defmodule CastmillWeb.PlaylistController do
         |> halt()
 
       {:error, _} = error ->
-        conn
-        |> put_status(:internal_server_error)
-        |> json(%{error: "Failed to update widget config due to #{inspect(error)}"})
-        |> halt()
+        error
     end
   end
 

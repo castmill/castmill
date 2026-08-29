@@ -361,29 +361,28 @@ defmodule Castmill.Widgets do
   def update_widget_config(playlist_id, playlist_item_id, options, data) do
     # First, check for circular references if this is a layout widget with playlist references
     with :ok <- validate_playlist_references(playlist_id, playlist_item_id, options) do
-      # Define the current timestamp for the last_request_at field
-      current_timestamp = DateTime.utc_now()
+      case get_widget_config(playlist_id, playlist_item_id) do
+        nil ->
+          {:error, "No widget configuration found with the provided IDs"}
 
-      # Directly use keyword list for the update clause
-      {count, _} =
-        from(wc in WidgetConfig,
-          join: pi in assoc(wc, :playlist_item),
-          where: pi.playlist_id == ^playlist_id and pi.id == ^playlist_item_id,
-          update: [
-            set: [
-              options: ^options,
-              data: ^data,
-              last_request_at: ^current_timestamp,
-              version: fragment("version + 1")
-            ]
-          ]
-        )
-        |> Repo.update_all([])
+        %WidgetConfig{} = widget_config ->
+          current_timestamp = DateTime.utc_now()
 
-      case count do
-        1 -> {:ok, "Widget configuration updated successfully"}
-        0 -> {:error, "No widget configuration found with the provided IDs"}
-        _ -> {:error, "Unexpected number of records updated"}
+          widget_config
+          |> WidgetConfig.changeset(%{
+            options: options,
+            data: data,
+            last_request_at: current_timestamp
+          })
+          |> Ecto.Changeset.change(%{version: widget_config.version + 1})
+          |> Repo.update()
+          |> case do
+            {:ok, _updated_widget_config} ->
+              {:ok, "Widget configuration updated successfully"}
+
+            {:error, _changeset} = error ->
+              error
+          end
       end
     end
   end

@@ -8,6 +8,7 @@ import {
   isValidURL,
   normalizeSchemaEntries,
   isLayoutRefValid,
+  isLocationValueValid,
 } from './widget-config';
 
 describe('WidgetConfig - Collection Parsing', () => {
@@ -177,5 +178,24 @@ describe('WidgetConfig - Layout Ref Validation Logic', () => {
     expect(isLayoutRefValid({ layoutId: 10, zones: { zones: [] } })).toBe(
       false
     );
+  });
+});
+
+describe('WidgetConfig - Location Validation Logic', () => {
+  it('returns true for valid location coordinates', () => {
+    expect(isLocationValueValid({ lat: 51.505, lng: -0.09 })).toBe(true);
+  });
+
+  it('returns false for missing or non-numeric coordinates', () => {
+    expect(isLocationValueValid(undefined)).toBe(false);
+    expect(isLocationValueValid({ lat: '51.505' as any, lng: -0.09 } as any)).toBe(
+      false
+    );
+    expect(isLocationValueValid({ lat: 51.505, lng: NaN } as any)).toBe(false);
+  });
+
+  it('returns false for out-of-range coordinates', () => {
+    expect(isLocationValueValid({ lat: 91, lng: 0 } as any)).toBe(false);
+    expect(isLocationValueValid({ lat: 0, lng: -181 } as any)).toBe(false);
   });
 });

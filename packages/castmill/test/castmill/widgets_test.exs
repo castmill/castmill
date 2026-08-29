@@ -652,6 +652,40 @@ defmodule Castmill.WidgetsTest do
       assert updated_widget_config.options == options
       assert updated_widget_config.data == data
     end
+
+    test "rejects invalid location widget options", %{
+      playlist: playlist,
+      playlist_item: playlist_item
+    } do
+      widget =
+        widget_fixture(%{
+          name: "weather widget",
+          template: %{"type" => "group", "components" => []},
+          options_schema: %{
+            "location" => %{"type" => "location", "required" => true}
+          },
+          data_schema: %{}
+        })
+
+      widget_config =
+        Widgets.get_widget_config(playlist.id, playlist_item.id)
+        |> Ecto.Changeset.change(widget_id: widget.id)
+        |> Castmill.Repo.update!()
+
+      assert widget_config.widget_id == widget.id
+
+      assert {:error, changeset} =
+               Widgets.update_widget_config(
+                 playlist.id,
+                 playlist_item.id,
+                 %{"location" => %{"lat" => "51.5", "lng" => -0.09}},
+                 %{}
+               )
+
+      assert errors_on(changeset) == %{
+               options: ["Location field \"location\" must have a lat number"]
+             }
+    end
   end
 
   describe "list_widgets/1" do
