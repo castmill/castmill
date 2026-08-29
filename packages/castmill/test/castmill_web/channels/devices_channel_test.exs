@@ -135,4 +135,74 @@ defmodule CastmillWeb.DevicesChannelTest do
       }
     end
   end
+
+  describe "handle_info/2 - device update (enabled)" do
+    test "pushes update event to client when device is disabled", %{
+      socket: socket,
+      device: device,
+      token: token
+    } do
+      {:ok, _reply, socket} =
+        subscribe_and_join(socket, DevicesChannel, "devices:#{device.id}", %{"token" => token})
+
+      message = %{
+        update: "device",
+        resource: "device",
+        action: "update",
+        data: %{enabled: false}
+      }
+
+      DevicesChannel.handle_info(message, socket)
+
+      assert_push "update", %{
+        resource: "device",
+        action: "update",
+        data: %{enabled: false}
+      }
+    end
+
+    test "pushes update event to client when device is enabled", %{
+      socket: socket,
+      device: device,
+      token: token
+    } do
+      {:ok, _reply, socket} =
+        subscribe_and_join(socket, DevicesChannel, "devices:#{device.id}", %{"token" => token})
+
+      message = %{
+        update: "device",
+        resource: "device",
+        action: "update",
+        data: %{enabled: true}
+      }
+
+      DevicesChannel.handle_info(message, socket)
+
+      assert_push "update", %{
+        resource: "device",
+        action: "update",
+        data: %{enabled: true}
+      }
+    end
+  end
+
+  describe "handle_info/2 - sync_enabled" do
+    test "pushes the current enabled state to the client on sync", %{
+      socket: socket,
+      device: device,
+      token: token
+    } do
+      {:ok, _reply, socket} =
+        subscribe_and_join(socket, DevicesChannel, "devices:#{device.id}", %{"token" => token})
+
+      DevicesChannel.handle_info(:sync_enabled, socket)
+
+      # Newly registered devices default to enabled
+      assert_push "update", %{
+        resource: "device",
+        action: "update",
+        data: %{enabled: true}
+      }
+    end
+  end
 end

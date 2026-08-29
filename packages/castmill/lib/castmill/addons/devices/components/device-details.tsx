@@ -10,6 +10,7 @@ export interface DeviceUpdate {
   name?: string;
   description?: string;
   autorecover_until?: string | null;
+  enabled?: boolean;
 }
 
 // Optionally we should allow using protonmaps

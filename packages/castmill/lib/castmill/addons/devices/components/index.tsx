@@ -40,7 +40,7 @@ import {
   useViewMode,
 } from '@castmill/ui-common';
 
-import { BsCheckLg, BsEye, BsTagFill } from 'solid-icons/bs';
+import { BsCheckLg, BsEye, BsTagFill, BsToggleOff, BsToggleOn } from 'solid-icons/bs';
 import { AiOutlineDelete } from 'solid-icons/ai';
 
 import { Device } from '../interfaces/device.interface';
@@ -461,8 +461,16 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
       return `device_updates:${resource.id}`;
     },
     /* onUpdate */
-    (resource: DeviceTableItem, { online }: { online: boolean }) => {
-      updateDeviceStatus(resource.id, online);
+    (
+      resource: DeviceTableItem,
+      { online, enabled }: { online?: boolean; enabled?: boolean }
+    ) => {
+      if (online !== undefined) {
+        updateDeviceStatus(resource.id, online);
+      }
+      if (enabled !== undefined) {
+        updateItem(resource.id, { enabled } as Partial<DeviceTableItem>);
+      }
     }
   );
 
@@ -577,6 +585,39 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
         ),
       },
       { key: 'timezone', title: t('common.timezone'), sortable: true },
+      {
+        key: 'enabled',
+        title: t('devices.enabled'),
+        sortable: true,
+        render: (item: DeviceTableItem) => {
+          const enabled = item.enabled !== false;
+          return (
+            <button
+              type="button"
+              class="device-enabled-toggle"
+              classList={{
+                enabled: enabled,
+                disabled: !enabled,
+              }}
+              title={
+                enabled
+                  ? t('devices.disableDevice')
+                  : t('devices.enableDevice')
+              }
+              aria-pressed={enabled}
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleDeviceEnabled(item);
+              }}
+            >
+              {enabled ? <BsToggleOn /> : <BsToggleOff />}
+              <span>
+                {enabled ? t('devices.enabled') : t('devices.disabled')}
+              </span>
+            </button>
+          );
+        },
+      },
       { key: 'version', title: t('common.version'), sortable: true },
       { key: 'last_ip', title: t('common.ip'), sortable: true },
       {
@@ -638,6 +679,51 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
 
   const updateDeviceStatus = (deviceId: string, newOnlineStatus: boolean) => {
     updateItem(deviceId, { online: newOnlineStatus } as DeviceTableItem);
+  };
+
+  const toggleDeviceEnabled = async (item: DeviceTableItem) => {
+    if (!canPerformAction('devices', 'update')) {
+      toast.error(
+        t('permissions.noUpdateDevices') ||
+          "You don't have permission to update devices"
+      );
+      return;
+    }
+
+    const orgId = props.store.organizations.selectedId;
+    if (!orgId) return;
+
+    // Treat a missing `enabled` value as enabled, consistent with how the
+    // column renders the current state (`item.enabled !== false`).
+    const currentEnabled = item.enabled !== false;
+    const newEnabled = !currentEnabled;
+
+    try {
+      await DevicesService.updateDevice(
+        props.store.env.baseUrl,
+        orgId,
+        item.id,
+        { enabled: newEnabled }
+      );
+
+      // Optimistically reflect the new state; the realtime observer will also
+      // update it once the server broadcasts the change.
+      updateItem(item.id, { enabled: newEnabled } as Partial<DeviceTableItem>);
+
+      toast.success(
+        newEnabled
+          ? t('devices.deviceEnabledSuccess', { name: item.name })
+          : t('devices.deviceDisabledSuccess', { name: item.name })
+      );
+    } catch (error) {
+      console.error(error);
+      toast.error(
+        t('devices.errorUpdatingDevice', {
+          name: item.name,
+          error: String(error),
+        })
+      );
+    }
   };
 
   const fetchData = async ({

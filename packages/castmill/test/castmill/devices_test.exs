@@ -141,6 +141,30 @@ defmodule Castmill.DevicesTest do
       assert device.name == "some updated name"
     end
 
+    test "devices are enabled by default and can be disabled/enabled via update_device/2" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+
+      {:ok, devices_registration} =
+        device_registration_fixture(%{hardware_id: "some hardware id", pincode: "some pincode"})
+
+      assert {:ok, {device, _token}} =
+               Devices.register_device(organization.id, devices_registration.pincode, %{
+                 name: "some device"
+               })
+
+      # Devices are enabled by default
+      assert device.enabled == true
+
+      # Disable the device
+      assert {:ok, device} = Devices.update_device(device, %{enabled: false})
+      assert device.enabled == false
+
+      # Re-enable the device
+      assert {:ok, device} = Devices.update_device(device, %{enabled: true})
+      assert device.enabled == true
+    end
+
     test "delete_device/1 deletes the device and broadcasts removal notification" do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})

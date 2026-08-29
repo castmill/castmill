@@ -25,6 +25,10 @@ defmodule CastmillWeb.DevicesChannel do
         # Push saved schedule timers to device after a short delay
         Process.send_after(self(), :sync_schedule, 1_000)
 
+        # Push current enabled/disabled state so a device that reconnects
+        # (e.g. after being offline) learns its status right away.
+        Process.send_after(self(), :sync_enabled, 1_000)
+
         {:ok, socket}
 
       {:error, reason} ->
@@ -153,6 +157,19 @@ defmodule CastmillWeb.DevicesChannel do
     {:noreply, socket}
   end
 
+  # Relay generic resource "update" broadcasts (e.g. device enabled/disabled,
+  # autorecover_until) to the device so it can react in realtime.
+  @impl true
+  def handle_info(%{update: "device"} = message, socket) do
+    push(socket, "update", %{
+      resource: Map.get(message, :resource, "device"),
+      action: Map.get(message, :action, "update"),
+      data: Map.get(message, :data, %{})
+    })
+
+    {:noreply, socket}
+  end
+
   @impl true
   def handle_info(%{event: "channel_updated"} = message, socket) do
     push(socket, "channel_updated", message)
@@ -213,6 +230,25 @@ defmodule CastmillWeb.DevicesChannel do
       {:error, _} ->
         {:noreply, socket}
     end
+  end
+
+  @impl true
+  def handle_info(:sync_enabled, socket) do
+    device_id = socket.assigns.device.device_id
+
+    case Devices.get_device(device_id) do
+      %{enabled: enabled} ->
+        push(socket, "update", %{
+          resource: "device",
+          action: "update",
+          data: %{enabled: enabled}
+        })
+
+      _ ->
+        :ok
+    end
+
+    {:noreply, socket}
   end
 
   @impl true
