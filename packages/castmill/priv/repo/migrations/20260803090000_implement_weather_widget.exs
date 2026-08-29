@@ -146,7 +146,7 @@ defmodule Castmill.Repo.Migrations.ImplementWeatherWidget do
         "box-sizing" => "border-box",
         "overflow" => "hidden",
         "padding" => "2.5em 3em",
-        "font-size" => "1.8vmin",
+        "font-size" => "1.8vh",
         "color" => "#f8fafc",
         "background" =>
           "radial-gradient(circle at top right, #38bdf8 0%, #2563eb 35%, #172554 100%)",

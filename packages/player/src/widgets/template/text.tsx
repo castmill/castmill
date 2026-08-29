@@ -7,7 +7,10 @@ import { TimelineItem } from './timeline';
 import { ComponentAnimation, applyAnimations } from './animation';
 import { BaseComponentProps } from './interfaces/base-component-props';
 import { PlayerGlobals } from '../../interfaces/player-globals.interface';
-import { observeTextContainerResize } from './text-autofit';
+import {
+  observeTextContainerResize,
+  observeTextContentChanges,
+} from './text-autofit';
 interface AutoFitOpts {
   // Base size of the text (in em). Used if the text fits in the container.
   baseSize?: number;
@@ -99,6 +102,7 @@ export const Text: Component<TextProps> = (props) => {
   let scrollTimeline: gsap.core.Timeline;
   let cleanUpAnimations: () => void;
   let resizeObserver: ResizeObserver | null = null;
+  let contentObserver: MutationObserver | null = null;
 
   // Determine default sizing based on context:
   // 1. Positioned elements (absolute/fixed) - no default size, auto-size to content
@@ -130,6 +134,7 @@ export const Text: Component<TextProps> = (props) => {
     timelineItem && props.timeline.remove(timelineItem);
     scrollTimeline?.kill();
     resizeObserver?.disconnect();
+    contentObserver?.disconnect();
   });
 
   onMount(() => {
@@ -138,6 +143,9 @@ export const Text: Component<TextProps> = (props) => {
     }
     const size = autoFitText(textRef, props.opts?.autofit || {});
     resizeObserver = observeTextContainerResize(textRef, () => {
+      autoFitText(textRef!, props.opts?.autofit || {});
+    });
+    contentObserver = observeTextContentChanges(textRef, () => {
       autoFitText(textRef!, props.opts?.autofit || {});
     });
 

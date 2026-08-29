@@ -18,3 +18,24 @@ export function observeTextContainerResize(
   observer.observe(parentElement);
   return observer;
 }
+
+export function observeTextContentChanges(
+  textElement: HTMLDivElement,
+  onChange: () => void
+): MutationObserver | null {
+  if (typeof MutationObserver === 'undefined') {
+    return null;
+  }
+
+  const observer = new MutationObserver(() => {
+    onChange();
+  });
+
+  observer.observe(textElement, {
+    childList: true,
+    characterData: true,
+    subtree: true,
+  });
+
+  return observer;
+}
