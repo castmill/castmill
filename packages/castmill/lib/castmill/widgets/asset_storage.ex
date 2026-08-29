@@ -97,6 +97,37 @@ defmodule Castmill.Widgets.AssetStorage do
   def resolve_icon(icon, _widget_slug, _stored_assets), do: icon
 
   @doc """
+  Validates a public icon path before it is sent to clients.
+
+  Returns the original icon when it is an external/data URL, an existing static
+  widget asset, an existing uploaded widget asset, or a non-path icon glyph.
+  Returns nil for broken relative icon paths so clients can fall back without
+  generating avoidable 404 requests.
+  """
+  def sanitize_public_icon(icon) when is_binary(icon) do
+    cond do
+      String.starts_with?(icon, "data:") or
+          String.starts_with?(icon, "http://") or
+          String.starts_with?(icon, "https://") ->
+        icon
+
+      String.starts_with?(icon, "/widgets/") ->
+        if static_asset_exists?(icon), do: icon, else: nil
+
+      String.starts_with?(icon, "/widget_assets/") ->
+        if uploaded_asset_exists?(icon), do: icon, else: nil
+
+      String.starts_with?(icon, "/") ->
+        nil
+
+      true ->
+        icon
+    end
+  end
+
+  def sanitize_public_icon(icon), do: icon
+
+  @doc """
   Extracts font metadata from widget assets and returns a list of font definitions
   suitable for the player's FontFace API.
 
@@ -208,6 +239,23 @@ defmodule Castmill.Widgets.AssetStorage do
       ".otf" -> "font/otf"
       ".css" -> "text/css"
       _ -> "application/octet-stream"
+    end
+  end
+
+  defp static_asset_exists?(icon_path) do
+    static_path =
+      Application.app_dir(:castmill, Path.join("priv/static", String.trim_leading(icon_path, "/")))
+
+    File.exists?(static_path) and File.regular?(static_path)
+  end
+
+  defp uploaded_asset_exists?(icon_path) do
+    case String.split(String.trim_leading(icon_path, "/"), "/", parts: 3) do
+      ["widget_assets", widget_slug, asset_path] ->
+        match?({:ok, _path}, get_asset_path(widget_slug, asset_path))
+
+      _ ->
+        false
     end
   end
 end

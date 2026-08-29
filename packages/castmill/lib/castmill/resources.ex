@@ -185,6 +185,8 @@ defmodule Castmill.Resources do
     merged_options = Map.merge(original_options, resolved_refs)
 
     # Drop the :widget key from widget_config
+    sanitized_widget = Castmill.Widgets.sanitize_widget_assets(item.widget_config.widget)
+
     modified_widget_config = Map.drop(item.widget_config, [:widget])
 
     # Put the merged options into modified_widget_config
@@ -273,7 +275,7 @@ defmodule Castmill.Resources do
       |> Map.take([:id, :duration, :offset, :inserted_at, :updated_at])
       |> Map.merge(%{
         config: modified_widget_config_with_integration,
-        widget: item.widget_config.widget
+        widget: sanitized_widget
       })
 
     # Add integration_error field if there was an error fetching data

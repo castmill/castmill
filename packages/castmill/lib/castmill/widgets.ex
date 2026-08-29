@@ -7,6 +7,7 @@ defmodule Castmill.Widgets do
 
   alias Castmill.Repo
   alias Castmill.Protocol.Access
+  alias Castmill.Widgets.AssetStorage
   alias Castmill.Widgets.Widget
   alias Castmill.Widgets.WidgetConfig
   alias Castmill.QueryHelpers
@@ -71,11 +72,13 @@ defmodule Castmill.Widgets do
     |> limit(^page_size)
     |> offset(^offset)
     |> Repo.all()
+    |> Enum.map(&sanitize_widget_assets/1)
   end
 
   def list_widgets(_params) do
     Widget.base_query()
     |> Repo.all()
+    |> Enum.map(&sanitize_widget_assets/1)
   end
 
   @doc """
@@ -110,12 +113,30 @@ defmodule Castmill.Widgets do
       iex> get_widget("1234")
       %Widget{}
   """
-  def get_widget(id), do: Repo.get(Widget, id)
+  def get_widget(id) do
+    Widget
+    |> Repo.get(id)
+    |> sanitize_widget_assets()
+  end
 
   @doc """
   Gets a widget by name.
   """
-  def get_widget_by_name(name), do: Repo.get_by(Widget, name: name)
+  def get_widget_by_name(name) do
+    Widget
+    |> Repo.get_by(name: name)
+    |> sanitize_widget_assets()
+  end
+
+  def sanitize_widget_assets(%Widget{} = widget) do
+    %{
+      widget
+      | icon: AssetStorage.sanitize_public_icon(widget.icon),
+        small_icon: AssetStorage.sanitize_public_icon(widget.small_icon)
+    }
+  end
+
+  def sanitize_widget_assets(widget), do: widget
 
   @doc """
   Instantiate a new widget.
