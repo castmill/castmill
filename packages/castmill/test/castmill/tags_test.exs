@@ -4,6 +4,8 @@ defmodule Castmill.TagsTest do
   @moduletag :tags_data_case
 
   alias Castmill.Tags
+  alias Castmill.Resources
+  alias Castmill.Resources.Media
 
   import Castmill.NetworksFixtures
   import Castmill.OrganizationsFixtures
@@ -242,6 +244,38 @@ defmodule Castmill.TagsTest do
       assert hd(results).id == media1.id
     end
 
+    test "filter_missing_tag_group/3 filters medias missing tags from a group", %{
+      organization: org
+    } do
+      group = tag_group_fixture(%{organization_id: org.id})
+      other_group = tag_group_fixture(%{organization_id: org.id})
+      group_tag = tag_fixture(%{organization_id: org.id, tag_group_id: group.id})
+      other_group_tag = tag_fixture(%{organization_id: org.id, tag_group_id: other_group.id})
+
+      media_with_group_tag = media_fixture(%{organization_id: org.id, name: "has_group_tag"})
+
+      media_with_other_group_tag =
+        media_fixture(%{organization_id: org.id, name: "has_other_group_tag"})
+
+      untagged_media = media_fixture(%{organization_id: org.id, name: "untagged"})
+
+      {:ok, _} = Tags.tag_resource(group_tag.id, :media, to_string(media_with_group_tag.id))
+
+      {:ok, _} =
+        Tags.tag_resource(other_group_tag.id, :media, to_string(media_with_other_group_tag.id))
+
+      query = from(m in Castmill.Resources.Media)
+
+      results =
+        Tags.filter_missing_tag_group(query, :media, group.id)
+        |> Repo.all()
+        |> Enum.map(& &1.id)
+
+      refute media_with_group_tag.id in results
+      assert media_with_other_group_tag.id in results
+      assert untagged_media.id in results
+    end
+
     test "bulk_tag_resources/3 tags multiple medias", %{organization: org} do
       tag = tag_fixture(%{organization_id: org.id})
       media1 = media_fixture(%{organization_id: org.id})
@@ -399,6 +433,47 @@ defmodule Castmill.TagsTest do
 
       assert length(results) == 1
       assert hd(results).id == device_both.id
+    end
+
+    test "filter_missing_tag_group/3 filters devices missing tags from a group", %{
+      organization: org
+    } do
+      group = tag_group_fixture(%{organization_id: org.id})
+      other_group = tag_group_fixture(%{organization_id: org.id})
+      group_tag = tag_fixture(%{organization_id: org.id, tag_group_id: group.id})
+      other_group_tag = tag_fixture(%{organization_id: org.id, tag_group_id: other_group.id})
+
+      device_with_group_tag =
+        device_fixture(%{
+          organization_id: org.id,
+          hardware_id: "dev-missing-group-1-#{System.unique_integer([:positive])}"
+        })
+
+      device_with_other_group_tag =
+        device_fixture(%{
+          organization_id: org.id,
+          hardware_id: "dev-missing-group-2-#{System.unique_integer([:positive])}"
+        })
+
+      untagged_device =
+        device_fixture(%{
+          organization_id: org.id,
+          hardware_id: "dev-missing-group-3-#{System.unique_integer([:positive])}"
+        })
+
+      {:ok, _} = Tags.tag_resource(group_tag.id, :device, device_with_group_tag.id)
+      {:ok, _} = Tags.tag_resource(other_group_tag.id, :device, device_with_other_group_tag.id)
+
+      query = from(d in Castmill.Devices.Device)
+
+      results =
+        Tags.filter_missing_tag_group(query, :device, group.id)
+        |> Repo.all()
+        |> Enum.map(& &1.id)
+
+      refute device_with_group_tag.id in results
+      assert device_with_other_group_tag.id in results
+      assert untagged_device.id in results
     end
 
     test "bulk_tag_resources/3 tags multiple devices", %{organization: org} do
@@ -674,6 +749,103 @@ defmodule Castmill.TagsTest do
       assert_raise Ecto.NoResultsError, fn ->
         Tags.get_tag_group!(999_999)
       end
+    end
+  end
+
+  # ============================================================================
+  # Resources.list_resources / count_resources integration with missing_tag_group_id
+  # ============================================================================
+
+  describe "list_resources and count_resources with missing_tag_group_id" do
+    test "list_resources returns medias missing a tag from the given group", %{
+      organization: org
+    } do
+      group = tag_group_fixture(%{organization_id: org.id})
+      other_group = tag_group_fixture(%{organization_id: org.id})
+      group_tag = tag_fixture(%{organization_id: org.id, tag_group_id: group.id})
+      other_tag = tag_fixture(%{organization_id: org.id, tag_group_id: other_group.id})
+
+      media_with_tag = media_fixture(%{organization_id: org.id, name: "with_group_tag"})
+      media_with_other = media_fixture(%{organization_id: org.id, name: "with_other_tag"})
+      untagged_media = media_fixture(%{organization_id: org.id, name: "untagged"})
+
+      {:ok, _} = Tags.tag_resource(group_tag.id, :media, to_string(media_with_tag.id))
+      {:ok, _} = Tags.tag_resource(other_tag.id, :media, to_string(media_with_other.id))
+
+      results =
+        Resources.list_resources(Media, %{
+          organization_id: org.id,
+          page: 1,
+          page_size: 50,
+          search: nil,
+          filters: nil,
+          missing_tag_group_id: group.id
+        })
+
+      result_ids = Enum.map(results, & &1.id)
+
+      refute media_with_tag.id in result_ids
+      assert media_with_other.id in result_ids
+      assert untagged_media.id in result_ids
+    end
+
+    test "list_resources combined with tag_ids returns medias matching parent tags but missing group tag",
+         %{organization: org} do
+      parent_group = tag_group_fixture(%{organization_id: org.id})
+      child_group = tag_group_fixture(%{organization_id: org.id})
+      parent_tag = tag_fixture(%{organization_id: org.id, tag_group_id: parent_group.id})
+      child_tag = tag_fixture(%{organization_id: org.id, tag_group_id: child_group.id})
+
+      # has parent tag + child tag -> should NOT appear (has child group tag)
+      media_full = media_fixture(%{organization_id: org.id, name: "full"})
+      # has parent tag but no child tag -> SHOULD appear
+      media_parent_only = media_fixture(%{organization_id: org.id, name: "parent_only"})
+      # has no tags at all -> should NOT appear (doesn't match parent tag filter)
+      _media_no_tags = media_fixture(%{organization_id: org.id, name: "no_tags"})
+
+      {:ok, _} = Tags.tag_resource(parent_tag.id, :media, to_string(media_full.id))
+      {:ok, _} = Tags.tag_resource(child_tag.id, :media, to_string(media_full.id))
+      {:ok, _} = Tags.tag_resource(parent_tag.id, :media, to_string(media_parent_only.id))
+
+      results =
+        Resources.list_resources(Media, %{
+          organization_id: org.id,
+          page: 1,
+          page_size: 50,
+          search: nil,
+          filters: nil,
+          tag_ids: [parent_tag.id],
+          tag_filter_mode: "all",
+          missing_tag_group_id: child_group.id
+        })
+
+      result_ids = Enum.map(results, & &1.id)
+
+      refute media_full.id in result_ids
+      assert media_parent_only.id in result_ids
+    end
+
+    test "count_resources returns count of medias missing a tag from the given group", %{
+      organization: org
+    } do
+      group = tag_group_fixture(%{organization_id: org.id})
+      group_tag = tag_fixture(%{organization_id: org.id, tag_group_id: group.id})
+
+      media_with_tag = media_fixture(%{organization_id: org.id, name: "with_tag"})
+      _untagged1 = media_fixture(%{organization_id: org.id, name: "untagged1"})
+      _untagged2 = media_fixture(%{organization_id: org.id, name: "untagged2"})
+
+      {:ok, _} = Tags.tag_resource(group_tag.id, :media, to_string(media_with_tag.id))
+
+      count =
+        Resources.count_resources(Media, %{
+          organization_id: org.id,
+          search: nil,
+          filters: nil,
+          missing_tag_group_id: group.id
+        })
+
+      assert count == 2
     end
   end
 

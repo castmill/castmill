@@ -528,6 +528,51 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
     };
   };
 
+  const fetchTreeUntaggedResources = async (
+    tagGroupId: number,
+    parentTagIds?: number[]
+  ) => {
+    const result = await PlaylistsService.fetchPlaylists(
+      props.store.env.baseUrl,
+      props.store.organizations.selectedId,
+      {
+        page: 1,
+        page_size: 100,
+        sortOptions: { key: 'name', direction: 'ascending' },
+        tag_filter_mode: 'all',
+        missing_tag_group_id: tagGroupId,
+        tag_ids: parentTagIds,
+        team_id: selectedTeamId(),
+      }
+    );
+
+    return {
+      data: result.data as TreeResourceItem[],
+      count: result.count,
+    };
+  };
+
+  const fetchTreeUntaggedCount = async (
+    tagGroupId: number,
+    parentTagIds?: number[]
+  ) => {
+    const result = await PlaylistsService.fetchPlaylists(
+      props.store.env.baseUrl,
+      props.store.organizations.selectedId,
+      {
+        page: 1,
+        page_size: 1,
+        sortOptions: { key: 'name', direction: 'ascending' },
+        tag_filter_mode: 'all',
+        missing_tag_group_id: tagGroupId,
+        tag_ids: parentTagIds,
+        team_id: selectedTeamId(),
+      }
+    );
+
+    return result.count;
+  };
+
   const fetchData = async ({
     page,
     sortOptions,
@@ -1055,7 +1100,6 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
           onClose={closePlaylistDrawer}
           placement="right"
           size="xl"
-          showBackdrop="auto"
           closeOnOutsideClick
           outsideClickIgnoreSelector="tbody tr, .playlist-tree-item"
           contentClass="playlist-modal"
@@ -1099,7 +1143,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
             </FormItem>
             <div class="actions">
               <Button
-                label={t('common.update')}
+                label={t('common.save')}
                 onClick={async () => {
                   try {
                     await PlaylistsService.updatePlaylist(
@@ -1172,6 +1216,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
           fetchData={fetchData}
           ref={setRef}
           toolbar={{
+            searchPlaceholder: t('common.search'),
             mainAction: (
               <div style="display: flex; align-items: center; gap: 1rem;">
                 <Show when={quota()}>
@@ -1256,6 +1301,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
           table={{
             columns,
             actions,
+            actionsLabel: t('common.actions'),
             onRowSelect,
             defaultRowAction: {
               icon: BsEye,
@@ -1316,6 +1362,10 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
           tagGroups={tagGroups()}
           allTags={allTags()}
           fetchResources={fetchTreeResources}
+          fetchUntaggedResources={fetchTreeUntaggedResources}
+          fetchUntaggedCount={fetchTreeUntaggedCount}
+          untaggedLabel={t('tags.groups.untagged')}
+          emptyLeafText={t('filters.noItems')}
           refreshKey={treeVersion()}
           storageKey="playlists"
           onResourceClick={(item) =>

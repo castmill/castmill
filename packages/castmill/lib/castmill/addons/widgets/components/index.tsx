@@ -41,6 +41,10 @@ import { WidgetEditor } from './widget-editor';
 import { DEFAULT_WIDGET_ICON } from '../../common/constants';
 import './widgets.scss';
 import { AddonStore } from '../../common/interfaces/addon-store';
+import {
+  getTranslatedWidgetName,
+  getTranslatedWidgetDescription,
+} from '../../common/utils/widget-catalog-utils';
 
 // Widget type with required ID and slug for table display and API calls
 type WidgetWithId = JsonWidget & { id: number; slug: string };
@@ -53,6 +57,13 @@ const WidgetsPage: Component<{
   // Get i18n functions from store
   const t = (key: string, params?: Record<string, any>) =>
     props.store.i18n?.t(key, params) || key;
+  const locale = () => props.store.i18n?.locale() || 'en';
+
+  const getWidgetName = (widget: WidgetWithId): string =>
+    getTranslatedWidgetName(widget, locale());
+
+  const getWidgetDescription = (widget: WidgetWithId): string | undefined =>
+    getTranslatedWidgetDescription(widget, locale());
 
   // Helper function to check permissions
   const canPerformAction = (resource: string, action: string): boolean => {
@@ -124,6 +135,11 @@ const WidgetsPage: Component<{
       });
     }
 
+    tabs.push({
+      title: t('widgets.translations'),
+      content: () => <JsonHighlight json={widget.translations || {}} />,
+    });
+
     // Add assets tab if widget has assets
     if (widget.assets && Object.keys(widget.assets).length > 0) {
       tabs.push({
@@ -185,6 +201,7 @@ const WidgetsPage: Component<{
           const tabNames = ['template'];
           if (widget.options_schema) tabNames.push('options');
           if (widget.data_schema) tabNames.push('data');
+          tabNames.push('translations');
           if (widget.assets && Object.keys(widget.assets).length > 0)
             tabNames.push('assets');
           if (hasIntegrations) tabNames.push('integrations');
@@ -538,12 +555,17 @@ const WidgetsPage: Component<{
               )}
             </div>
             <div style="text-align: left; flex: 1;">
-              <div style="font-weight: 500;">{widget.name}</div>
-              {widget.description && (
-                <div style="font-size: 0.85em; color: #666; margin-top: 2px;">
-                  {widget.description}
-                </div>
-              )}
+              <div style="font-weight: 500;">{getWidgetName(widget)}</div>
+              {(() => {
+                const desc = getWidgetDescription(widget);
+                return (
+                  desc && (
+                    <div style="font-size: 0.85em; color: #666; margin-top: 2px;">
+                      {desc}
+                    </div>
+                  )
+                );
+              })()}
             </div>
           </div>
         );
@@ -687,6 +709,7 @@ const WidgetsPage: Component<{
           <UploadComponent
             baseUrl={props.store.env.baseUrl}
             organizationId={props.store.organizations.selectedId}
+            t={t}
             onFileUpload={() => {
               // File upload started
             }}
@@ -702,11 +725,10 @@ const WidgetsPage: Component<{
 
       <Show when={showDrawer()}>
         <Drawer
-          title={currentWidget()!.name}
+          title={getWidgetName(currentWidget()!)}
           onClose={closeWidgetDrawer}
           placement="right"
           size="xl"
-          showBackdrop="auto"
           closeOnOutsideClick
           outsideClickIgnoreSelector="tbody tr"
           contentClass="widget-details-modal"
@@ -743,6 +765,7 @@ const WidgetsPage: Component<{
         fetchData={fetchData}
         ref={setRef}
         toolbar={{
+          searchPlaceholder: t('common.search'),
           mainAction: (
             <div style={{ display: 'flex', gap: '0.5em' }}>
               <Button
@@ -765,6 +788,7 @@ const WidgetsPage: Component<{
         table={{
           columns,
           actions,
+          actionsLabel: t('common.actions'),
           defaultRowAction: {
             icon: BsEye,
             handler: (widget: WidgetWithId) => openWidgetDrawer(widget),

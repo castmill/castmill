@@ -170,7 +170,7 @@ defmodule CastmillWeb.DeviceController do
 
   @get_cache_pagination_schema %{
     device_id: [type: :string],
-    type: [type: :string, allowed: ["code", "data", "media"], default: "data"],
+    type: [type: :string, in: ["code", "data", "media"], default: "data"],
     page: [type: :integer, number: [min: 1]],
     page_size: [type: :integer, number: [min: 1, max: 100]]
   }
@@ -224,7 +224,7 @@ defmodule CastmillWeb.DeviceController do
 
   @delete_cache_schema %{
     device_id: [type: :string],
-    type: [type: :string, allowed: ["code", "data", "media", "all"]],
+    type: [type: :string, in: ["code", "data", "media", "all"]],
     urls: [type: {:array, :string}]
   }
 

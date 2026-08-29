@@ -177,7 +177,9 @@ export const OrganizationInvitationsView = (props: {
         resource="invitations"
         fetchData={fetchData}
         ref={setRef}
-        toolbar={{}}
+        toolbar={{
+          searchPlaceholder: t('common.search'),
+        }}
         selectionHint={t('common.selectionHint')}
         selectionLabel={t('common.selectionCount')}
         selectionActions={({ count, clear }) => (
@@ -192,6 +194,7 @@ export const OrganizationInvitationsView = (props: {
         table={{
           columns,
           actions,
+          actionsLabel: t('common.actions'),
           onRowSelect,
         }}
         pagination={{ itemsPerPage }}

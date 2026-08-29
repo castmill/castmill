@@ -205,7 +205,9 @@ export const Table = <
                     !(e.target as Element)?.closest(
                       `.${style['checkbox-touch-target']}`
                     ) &&
-                    !(e.target as Element)?.closest('.table-actions')
+                    !(e.target as Element)?.closest(
+                      `.${style['table-actions']}`
+                    )
                   ) {
                     props.onRowClick(item);
                   }

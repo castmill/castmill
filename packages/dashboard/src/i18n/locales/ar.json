@@ -102,6 +102,7 @@
     "coordinates": "الإحداثيات",
     "address": "العنوان",
     "noAddressAvailable": "لا يوجد عنوان متاح",
+    "noConfigurationAvailable": "لا توجد إعدادات متاحة",
     "playlist": "قائمة التشغيل",
     "addPlaylist": "إضافة قائمة تشغيل",
     "selectVideo": "اختر فيديو",
@@ -522,7 +523,8 @@
       "editGroup": "تعديل المجموعة",
       "deleteGroup": "حذف المجموعة",
       "noGroups": "لا توجد مجموعات علامات",
-      "ungrouped": "غير مجمعة"
+      "ungrouped": "غير مجمعة",
+      "untagged": "غير مُعلَّم"
     },
     "messages": {
       "tagCreated": "تم إنشاء العلامة \"{{name}}\" بنجاح",
@@ -757,6 +759,9 @@
     "errorRemovingPlaylists": "خطأ في إزالة قوائم التشغيل: {{error}}",
     "enterPlaylistName": "أدخل اسم قائمة التشغيل",
     "dragToAdd": "اسحب للإضافة",
+    "searchWidgets": "ابحث عن الأدوات...",
+    "dropHereToAddAtEnd": "أفلت هنا للإضافة في النهاية",
+    "duration": "المدة",
     "aspectRatio": "نسبة العرض إلى الارتفاع",
     "aspectRatioWidth": "العرض",
     "aspectRatioHeight": "الارتفاع",
@@ -786,7 +791,9 @@
     "credentialsRequired": "بيانات الاعتماد مطلوبة",
     "credentialsRequiredDescription": "يتطلب Widget \"{{widget}}\" تكوين بيانات الاعتماد قبل إضافته إلى قائمة التشغيل.",
     "missingIntegrations": "التكاملات المفقودة",
-    "goToIntegrations": "الذهاب إلى التكاملات"
+    "goToIntegrations": "الذهاب إلى التكاملات",
+    "widgetModalTitle": "أداة \"{{name}}\"",
+    "configureYourWidget": "قم بتكوين أداتك"
   },
   "layouts": {
     "title": "التخطيطات",
@@ -823,6 +830,20 @@
     "title": "Widgets",
     "uploadWidget": "تحميل Widget",
     "uploadDescription": "تحميل ملف تعريف Widget بصيغة JSON.",
+    "upload": {
+      "jsonDescription": "قم بتحميل ملف JSON يحتوي على تعريف ويدجت.",
+      "requiredFields": "الحقول المطلوبة",
+      "and": "و",
+      "exampleFormat": "تنسيق المثال",
+      "dragAndDropHint": "أو اسحب وأفلت ملفات JSON أو ZIP هنا...",
+      "ready": "جاهز",
+      "invalidFileType": "نوع ملف غير صالح. يتم دعم ملفات JSON و ZIP فقط.",
+      "invalidWidgetJson": "JSON ويدجت غير صالح: يجب أن يحتوي على الحقلين \"name\" و\"template\"",
+      "validationFailed": "فشل التحقق",
+      "uploadFailed": "فشل الرفع",
+      "uploadedSuccessfully": "تم الرفع بنجاح",
+      "uploadError": "خطأ في الرفع"
+    },
     "widgetDetails": "تفاصيل Widget",
     "updateInterval": "فترة التحديث",
     "viewDetails": "عرض التفاصيل",
@@ -964,7 +985,8 @@
       "templatePlaceholder": "الصق أو اكتب JSON الخاص بقالب الودجت هنا...",
       "optionsSchemaPlaceholder": "JSON لمخطط الخيارات (يحدد الخيارات القابلة للتهيئة)...",
       "dataSchemaPlaceholder": "JSON لمخطط البيانات (يحدد شكل البيانات المتوقعة من هذا الودجت)..."
-    }
+    },
+    "translations": "الترجمات"
   },
   "devices": {
     "setDeviceChannel": "تعيين قناة الجهاز",
@@ -1125,6 +1147,9 @@
       "couldNotGetPublicKey": "تعذر الحصول على المفتاح العام",
       "invalidCredential": "بيانات اعتماد غير صالحة",
       "signupFailed": "فشل التسجيل: {{error}}. يرجى المحاولة مرة أخرى أو الاتصال بالدعم."
+    },
+    "success": {
+      "accountCreated": "تم إنشاء الحساب بنجاح!"
     }
   },
   "search": {

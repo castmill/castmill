@@ -416,7 +416,7 @@ export const TeamMembersView = (props: {
 
             <div style="margin-top: 1em;">
               <Button
-                label="Invite"
+                label={t('common.save')}
                 type="submit"
                 disabled={!isFormValid()}
                 color="primary"
@@ -456,6 +456,7 @@ export const TeamMembersView = (props: {
         fetchData={fetchData}
         ref={setRef}
         toolbar={{
+          searchPlaceholder: t('common.search'),
           mainAction: (
             <PermissionButton
               resource="teams"
@@ -492,6 +493,7 @@ export const TeamMembersView = (props: {
         table={{
           columns,
           actions,
+          actionsLabel: t('common.actions'),
           onRowSelect,
         }}
         pagination={{ itemsPerPage }}

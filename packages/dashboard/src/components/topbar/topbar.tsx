@@ -8,7 +8,7 @@ import {
 import './topbar.scss';
 
 import { checkAuth, getUser, resetSession, authFetch } from '../auth';
-import { useNavigate } from '@solidjs/router';
+import { A, useNavigate } from '@solidjs/router';
 import TopbarLink from '../topbar-link/topbar-link';
 import Search from '../search/search';
 
@@ -192,8 +192,7 @@ const Topbar: Component = () => {
                   <div {...props}>{getUser().name || getUser().email}</div>
                 )}
               >
-                <a href="/profile">{t('common.profile')}</a>
-                <a href="/settings">{t('common.settings')}</a>
+                <A href="/settings">{t('common.settings')}</A>
                 <button class="logout" onClick={() => setTriggerLogout(true)}>
                   {t('common.logout')}
                 </button>

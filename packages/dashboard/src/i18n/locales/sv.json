@@ -97,6 +97,7 @@
     "coordinates": "Koordinater",
     "address": "Adress",
     "noAddressAvailable": "Ingen adress tillgänglig",
+    "noConfigurationAvailable": "Ingen konfiguration tillgänglig",
     "playlist": "Spellista",
     "addPlaylist": "Lägg till spellista",
     "selectVideo": "Välj en video",
@@ -354,7 +355,7 @@
     "title": "Användning",
     "resourceUsage": "Resursanvändning",
     "resource": "Resurs",
-    "used": "Använd",
+    "used": "Använt",
     "total": "Totalt",
     "progress": "Framsteg",
     "description": "Övervaka din organisations kvotanvändning över alla resurser",
@@ -516,8 +517,9 @@
       "newGroup": "Ny grupp",
       "editGroup": "Redigera grupp",
       "deleteGroup": "Ta bort grupp",
-      "noGroups": "Inga tagggrupper",
-      "ungrouped": "Ogrupperad"
+      "noGroups": "Inga taggrupper",
+      "ungrouped": "Ogrupperad",
+      "untagged": "Omärkt"
     },
     "messages": {
       "tagCreated": "Taggen \"{{name}}\" skapades framgångsrikt",
@@ -752,6 +754,9 @@
     "errorRemovingPlaylists": "Fel vid borttagning av spellistor: {{error}}",
     "enterPlaylistName": "Ange spellistnamn",
     "dragToAdd": "Dra för att lägga till",
+    "searchWidgets": "Sök widgets...",
+    "dropHereToAddAtEnd": "Släpp här för att lägga till i slutet",
+    "duration": "Varaktighet",
     "aspectRatio": "Bildformat",
     "aspectRatioWidth": "Bredd",
     "aspectRatioHeight": "Höjd",
@@ -781,7 +786,9 @@
     "credentialsRequired": "Inloggningsuppgifter Krävs",
     "credentialsRequiredDescription": "Widgeten \"{{widget}}\" kräver att inloggningsuppgifter konfigureras innan den kan läggas till i en spellista.",
     "missingIntegrations": "Saknade integrationer",
-    "goToIntegrations": "Gå till Integrationer"
+    "goToIntegrations": "Gå till Integrationer",
+    "widgetModalTitle": "Widget \"{{name}}\"",
+    "configureYourWidget": "Konfigurera din widget"
   },
   "layouts": {
     "title": "Layouter",
@@ -818,6 +825,20 @@
     "title": "Widgets",
     "uploadWidget": "Ladda upp Widget",
     "uploadDescription": "Ladda upp en Widget JSON-definitionsfil.",
+    "upload": {
+      "jsonDescription": "Ladda upp en JSON-fil som innehåller en widgetdefinition.",
+      "requiredFields": "Obligatoriska fält",
+      "and": "och",
+      "exampleFormat": "Exempelformat",
+      "dragAndDropHint": "Eller dra och släpp JSON- eller ZIP-filer här...",
+      "ready": "Klar",
+      "invalidFileType": "Ogiltig filtyp. Endast JSON- och ZIP-filer stöds.",
+      "invalidWidgetJson": "Ogiltig widget-JSON: måste innehålla fälten \"name\" och \"template\"",
+      "validationFailed": "Validering misslyckades",
+      "uploadFailed": "Uppladdning misslyckades",
+      "uploadedSuccessfully": "Uppladdningen lyckades",
+      "uploadError": "Uppladdningsfel"
+    },
     "widgetDetails": "Widget-detaljer",
     "updateInterval": "Uppdateringsintervall",
     "viewDetails": "Visa detaljer",
@@ -959,7 +980,8 @@
       "templatePlaceholder": "Klistra in eller skriv widget-mallens JSON här...",
       "optionsSchemaPlaceholder": "JSON för optionsschema (definierar konfigurerbara alternativ)...",
       "dataSchemaPlaceholder": "JSON för dataschema (definierar den dataform som widgeten förväntar sig)..."
-    }
+    },
+    "translations": "Översättningar"
   },
   "devices": {
     "setDeviceChannel": "Ställ in enhetskanal",
@@ -1120,6 +1142,9 @@
       "couldNotGetPublicKey": "Kunde inte hämta publik nyckel",
       "invalidCredential": "Ogiltig inloggningsuppgift",
       "signupFailed": "Registreringen misslyckades: {{error}}. Försök igen eller kontakta support."
+    },
+    "success": {
+      "accountCreated": "Kontot skapades framgångsrikt!"
     }
   },
   "search": {
@@ -1182,7 +1207,7 @@
           "description": "Du har blivit inbjuden att gå med i {{organization_name}}"
         },
         "teamInvitation": {
-          "title": "Laginbjudan",
+          "title": "Teaminbjudan",
           "description": "Du har blivit inbjuden att gå med i {{team_name}}"
         },
         "deviceRegistration": {
@@ -1208,7 +1233,7 @@
         "invitationAccepted": {
           "title": "Inbjudan Accepterad",
           "descriptionOrg": "{{user_name}} har gått med i organisationen",
-          "descriptionTeam": "{{user_name}} har gått med i laget"
+          "descriptionTeam": "{{user_name}} har gått med i teamet"
         },
         "deviceOfflineAlert": {
           "title": "Enheten Offline-varning",
@@ -1233,9 +1258,9 @@
     }
   },
   "filters": {
-    "teamLabel": "Lag",
-    "teamPlaceholder": "Välj lag",
-    "teamClear": "Rensa lagfilter",
+    "teamLabel": "Team",
+    "teamPlaceholder": "Välj team",
+    "teamClear": "Rensa teamfilter",
     "tagLabel": "Taggar",
     "tagPlaceholder": "Filtrera efter taggar…",
     "tagClear": "Rensa taggfilter",
@@ -1355,7 +1380,7 @@
       },
       "exploreTreeView": {
         "title": "Utforska Trädvyn",
-        "description": "Byt till trädvy för att se ditt innehåll organiserat efter tagggrupper. Expandera taggar för att gå djupare, ändra ordning på dimensioner och upptäck ett helt nytt sätt att navigera ditt bibliotek.",
+        "description": "Byt till trädvy för att se ditt innehåll organiserat efter taggrupper. Expandera taggar för att gå djupare, ändra ordning på dimensioner och upptäck ett helt nytt sätt att navigera ditt bibliotek.",
         "action": "Prova Trädvyn"
       }
     },

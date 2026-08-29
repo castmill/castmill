@@ -98,6 +98,7 @@
     "coordinates": "Koordinaten",
     "address": "Adresse",
     "noAddressAvailable": "Keine Adresse verfügbar",
+    "noConfigurationAvailable": "Keine Konfiguration verfügbar",
     "playlist": "Wiedergabeliste",
     "addPlaylist": "Wiedergabeliste hinzufügen",
     "widget": "Widget",
@@ -536,7 +537,8 @@
       "editGroup": "Gruppe bearbeiten",
       "deleteGroup": "Gruppe löschen",
       "noGroups": "Keine Tag-Gruppen",
-      "ungrouped": "Nicht gruppiert"
+      "ungrouped": "Nicht gruppiert",
+      "untagged": "Ohne Tag"
     },
     "messages": {
       "tagCreated": "Tag \"{{name}}\" erfolgreich erstellt",
@@ -731,6 +733,9 @@
       "couldNotGetPublicKey": "Öffentlicher Schlüssel konnte nicht abgerufen werden",
       "invalidCredential": "Ungültige Anmeldedaten",
       "signupFailed": "Registrierung fehlgeschlagen: {{error}}. Bitte versuchen Sie es erneut oder kontaktieren Sie den Support."
+    },
+    "success": {
+      "accountCreated": "Konto erfolgreich erstellt!"
     }
   },
   "search": {
@@ -776,6 +781,9 @@
     "errorRemovingPlaylists": "Fehler beim Entfernen der Playlists: {{error}}",
     "enterPlaylistName": "Playlist-Namen eingeben",
     "dragToAdd": "Zum Hinzufügen ziehen",
+    "searchWidgets": "Widgets suchen...",
+    "dropHereToAddAtEnd": "Hier ablegen, um am Ende hinzuzufügen",
+    "duration": "Dauer",
     "aspectRatio": "Seitenverhältnis",
     "aspectRatioWidth": "Breite",
     "aspectRatioHeight": "Höhe",
@@ -805,7 +813,9 @@
     "credentialsRequired": "Anmeldedaten Erforderlich",
     "credentialsRequiredDescription": "Das Widget \"{{widget}}\" erfordert die Konfiguration von Anmeldedaten, bevor es einer Wiedergabeliste hinzugefügt werden kann.",
     "missingIntegrations": "Fehlende Integrationen",
-    "goToIntegrations": "Zu Integrationen"
+    "goToIntegrations": "Zu Integrationen",
+    "widgetModalTitle": "Widget \"{{name}}\"",
+    "configureYourWidget": "Konfiguriere dein Widget"
   },
   "layouts": {
     "title": "Layoutvorlagen",
@@ -842,6 +852,20 @@
     "title": "Widgets",
     "uploadWidget": "Widget hochladen",
     "uploadDescription": "Laden Sie eine JSON Widget-Definitionsdatei hoch.",
+    "upload": {
+      "jsonDescription": "Laden Sie eine JSON-Datei hoch, die eine Widget-Definition enthält.",
+      "requiredFields": "Erforderliche Felder",
+      "and": "und",
+      "exampleFormat": "Beispielformat",
+      "dragAndDropHint": "Oder ziehen Sie JSON- oder ZIP-Dateien hierher...",
+      "ready": "Bereit",
+      "invalidFileType": "Ungültiger Dateityp. Nur JSON- und ZIP-Dateien werden unterstützt.",
+      "invalidWidgetJson": "Ungültiges Widget-JSON: muss die Felder \"name\" und \"template\" enthalten",
+      "validationFailed": "Validierung fehlgeschlagen",
+      "uploadFailed": "Upload fehlgeschlagen",
+      "uploadedSuccessfully": "Erfolgreich hochgeladen",
+      "uploadError": "Upload-Fehler"
+    },
     "widgetDetails": "Widget-Details",
     "updateInterval": "Aktualisierungsintervall",
     "viewDetails": "Details anzeigen",
@@ -983,7 +1007,8 @@
       "templatePlaceholder": "Widget-Template-JSON hier einfügen oder eingeben...",
       "optionsSchemaPlaceholder": "JSON für das Optionsschema (definiert konfigurierbare Optionen)...",
       "dataSchemaPlaceholder": "JSON für das Datenschema (definiert die von diesem Widget erwartete Datenform)..."
-    }
+    },
+    "translations": "Übersetzungen"
   },
   "devices": {
     "setDeviceChannel": "Gerätekanal festlegen",
@@ -1233,9 +1258,9 @@
     }
   },
   "filters": {
-    "teamLabel": "Mannschaft",
-    "teamPlaceholder": "Mannschaft auswählen",
-    "teamClear": "Mannschaftsfilter löschen",
+    "teamLabel": "Team",
+    "teamPlaceholder": "Team auswählen",
+    "teamClear": "Team-Filter löschen",
     "tagLabel": "Tags",
     "tagPlaceholder": "Nach Tags filtern…",
     "tagClear": "Tag-Filter löschen",

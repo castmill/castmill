@@ -30,6 +30,7 @@ import {
 import { ResourcesService } from '../services/resources.service';
 import { PlaylistsService } from '../services/playlists.service';
 import { AddonStore } from '../../common/interfaces/addon-store';
+import { getTranslatedWidgetOption } from '../../common/utils/widget-catalog-utils';
 
 import './widget-config.scss';
 import { WidgetView } from './widget-view';
@@ -70,6 +71,109 @@ type FormTypes =
   | 'map'
   | 'list';
 
+export type SchemaAttributeType =
+  | SimpleType
+  | FieldAttributes
+  | ComplexFieldAttributes
+  | ReferenceAttributes
+  | LayoutFieldAttributes
+  | LayoutRefFieldAttributes
+  | LocationFieldAttributes;
+
+export const normalizeSchemaEntries = (
+  rawOptionsSchema: unknown
+): [string, SchemaAttributeType][] => {
+  let entries: [string, SchemaAttributeType][];
+
+  if (Array.isArray(rawOptionsSchema)) {
+    entries = rawOptionsSchema.map(
+      (item: any) => [item.key, item] as [string, SchemaAttributeType]
+    );
+  } else {
+    entries = Object.entries(
+      (rawOptionsSchema || {}) as Record<string, SchemaAttributeType>
+    ) as [string, SchemaAttributeType][];
+  }
+
+  return entries.sort((a, b) => {
+    const orderA = (a[1] as FieldAttributes).order ?? Infinity;
+    const orderB = (b[1] as FieldAttributes).order ?? Infinity;
+    return orderA - orderB;
+  });
+};
+
+export const isLayoutRefValid = (
+  value: LayoutRefValue | null | undefined
+): boolean => {
+  if (!value) return false;
+  if (!value.layoutId) return false;
+  if (!value.zones?.zones || value.zones.zones.length === 0) return false;
+
+  const zonePlaylistMap = value.zonePlaylistMap || {};
+  for (const zone of value.zones.zones) {
+    const assignment = zonePlaylistMap[zone.id];
+    if (!assignment || !assignment.playlistId) {
+      return false;
+    }
+  }
+  return true;
+};
+
+export function isValidURL(url: string): boolean {
+  if (!url || url.trim() === '') {
+    return true;
+  }
+
+  if (!/^(https?|ftp):\/\//i.test(url)) {
+    return false;
+  }
+
+  try {
+    const urlObj = new URL(url);
+    const hostname = urlObj.hostname;
+    if (!hostname || hostname.length === 0) {
+      return false;
+    }
+
+    const isLocalhost = hostname === 'localhost';
+    const isIPAddress = /^(\d{1,3}\.){3}\d{1,3}$/.test(hostname);
+    const hasTLD = /\.[a-z]{2,}$/i.test(hostname);
+
+    return isLocalhost || isIPAddress || hasTLD;
+  } catch {
+    return false;
+  }
+}
+
+export const parseCollectionFilters = (
+  collection: string
+): { collectionName: string; filters: Record<string, string | boolean> } => {
+  const collectionParts = collection.split('|');
+  const collectionName = collectionParts[0];
+
+  const filters: Record<string, string | boolean> = {};
+  if (collectionParts.length > 1) {
+    collectionParts.slice(1).forEach((part) => {
+      const [filterKey, filterValue] = part.split(':');
+      if (filterKey && filterValue) {
+        filters[filterKey] = filterValue;
+      }
+    });
+  }
+
+  return { collectionName, filters };
+};
+
+export const getMediaPlaceholderText = (
+  filters: Record<string, string | boolean>,
+  t: (key: string) => string
+): string =>
+  filters['type'] === 'image'
+    ? t('common.selectImage')
+    : filters['type'] === 'video'
+      ? t('common.selectVideo')
+      : t('common.selectMedia');
+
 export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
   const toast = useToast();
   const [widgetConfig, setWidgetConfig] = createSignal(props.item.config);
@@ -84,6 +188,45 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
   // Get i18n functions from store
   const t = (key: string, params?: Record<string, any>) =>
     props.store.i18n?.t(key, params) || key;
+  const locale = () => props.store.i18n?.locale() || 'en';
+
+  const translateWidgetOptionLabel = (
+    optionKey: string,
+    fallback?: string
+  ): string =>
+    getTranslatedWidgetOption(
+      props.item.widget,
+      optionKey,
+      'label',
+      fallback,
+      locale()
+    ) ??
+    fallback ??
+    optionKey;
+
+  const translateWidgetOptionDescription = (
+    optionKey: string,
+    fallback?: string
+  ): string | undefined =>
+    getTranslatedWidgetOption(
+      props.item.widget,
+      optionKey,
+      'description',
+      fallback,
+      locale()
+    );
+
+  const translateWidgetOptionPlaceholder = (
+    optionKey: string,
+    fallback?: string
+  ): string | undefined =>
+    getTranslatedWidgetOption(
+      props.item.widget,
+      optionKey,
+      'placeholder',
+      fallback,
+      locale()
+    );
 
   // Fetch ancestor playlist IDs to prevent circular references
   createEffect(async () => {
@@ -108,47 +251,10 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
 
   const rawOptionsSchema = props.item.widget.options_schema || {};
 
-  // Type for all possible schema attribute types
-  type SchemaAttributeType =
-    | SimpleType
-    | FieldAttributes
-    | ComplexFieldAttributes
-    | ReferenceAttributes
-    | LayoutFieldAttributes
-    | LayoutRefFieldAttributes
-    | LocationFieldAttributes;
-
-  // Normalize options_schema to entries format: [[key, schema], ...]
-  // Supports both list format (with "key" property) and map format
-  // Sorts by "order" property if present for consistent field ordering
-  const getSchemaEntries = (): [string, SchemaAttributeType][] => {
-    let entries: [string, SchemaAttributeType][];
-
-    if (Array.isArray(rawOptionsSchema)) {
-      // List format: [{key: "name", type: "string", ...}, ...]
-      entries = rawOptionsSchema.map(
-        (item: any) => [item.key, item] as [string, SchemaAttributeType]
-      );
-    } else {
-      // Map format: {name: {type: "string", ...}, ...}
-      entries = Object.entries(rawOptionsSchema) as [
-        string,
-        SchemaAttributeType,
-      ][];
-    }
-
-    // Sort by order property if present
-    return entries.sort((a, b) => {
-      const orderA = (a[1] as FieldAttributes).order ?? Infinity;
-      const orderB = (b[1] as FieldAttributes).order ?? Infinity;
-      return orderA - orderB;
-    });
-  };
-
-  const schemaEntries = getSchemaEntries();
+  const schemaEntries = normalizeSchemaEntries(rawOptionsSchema);
 
   if (!rawOptionsSchema || schemaEntries.length === 0) {
-    return <div>No configuration available</div>;
+    return <div>{t('common.noConfigurationAvailable')}</div>;
   }
 
   const copyOptions = (options: Record<string, any>) => {
@@ -189,28 +295,6 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
 
   const [widgetOptions, setWidgetOptions] =
     createSignal<OptionsDict>(originalOptions);
-
-  /**
-   * Validates that a layout-ref value has all zones assigned with playlists.
-   * Returns true if valid, false if any zone is missing a playlist.
-   */
-  const isLayoutRefValid = (
-    value: LayoutRefValue | null | undefined
-  ): boolean => {
-    if (!value) return false;
-    if (!value.layoutId) return false;
-    if (!value.zones?.zones || value.zones.zones.length === 0) return false;
-
-    // Check that every zone has a playlist assigned
-    const zonePlaylistMap = value.zonePlaylistMap || {};
-    for (const zone of value.zones.zones) {
-      const assignment = zonePlaylistMap[zone.id];
-      if (!assignment || !assignment.playlistId) {
-        return false;
-      }
-    }
-    return true;
-  };
 
   /**
    * Gets the form type for a schema entry.
@@ -263,39 +347,6 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
 
     return true;
   };
-
-  function isValidURL(url: string): boolean {
-    // Empty strings are handled by required validation
-    if (!url || url.trim() === '') {
-      return true;
-    }
-
-    // First, check that URL starts with a valid protocol followed by ://
-    // This catches malformed URLs like "https:example.com" (missing //)
-    if (!/^(https?|ftp):\/\//i.test(url)) {
-      return false;
-    }
-
-    // Use URL constructor for parsing
-    try {
-      const urlObj = new URL(url);
-
-      // Verify the hostname exists and is valid
-      const hostname = urlObj.hostname;
-      if (!hostname || hostname.length === 0) {
-        return false;
-      }
-
-      // Allow localhost for development, IP addresses, or proper domains with TLD
-      const isLocalhost = hostname === 'localhost';
-      const isIPAddress = /^(\d{1,3}\.){3}\d{1,3}$/.test(hostname);
-      const hasTLD = /\.[a-z]{2,}$/i.test(hostname);
-
-      return isLocalhost || isIPAddress || hasTLD;
-    } catch {
-      return false;
-    }
-  }
 
   const validateField = (
     type: FormTypes,
@@ -423,17 +474,27 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
       case 'boolean':
       case 'color':
       case 'url':
-        const formValue = getValue(key, schema as FieldAttributes);
+        const fieldSchema = schema as FieldAttributes & {
+          title?: string;
+          placeholder?: string;
+        };
+        const formValue = getValue(key, fieldSchema);
         return (
           <FormItem
-            label={key}
+            label={translateWidgetOptionLabel(key, fieldSchema.title || key)}
             id={key}
             type={type}
             value={typeof formValue === 'object' ? '' : String(formValue ?? '')}
-            placeholder={(schema as FieldAttributes).placeholder}
-            description={(schema as FieldAttributes).description}
+            placeholder={translateWidgetOptionPlaceholder(
+              key,
+              fieldSchema.placeholder
+            )}
+            description={translateWidgetOptionDescription(
+              key,
+              fieldSchema.description
+            )}
             onInput={(value: string | number | boolean) => {
-              if (validateField(type, schema as FieldAttributes, key, value)) {
+              if (validateField(type, fieldSchema, key, value)) {
                 setWidgetOptions({ ...widgetOptions(), [key]: value });
                 setIsFormModified(true);
               }
@@ -456,7 +517,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
         return (
           <div class="form-item-wrapper">
             <div class="form-item1">
-              <label for={key}>{key}</label>
+              <label for={key}>{translateWidgetOptionLabel(key, key)}</label>
               <select
                 id={key}
                 value={currentValue}
@@ -477,35 +538,17 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
               <div class="error">{errors().get(key)}</div>
             </div>
             <Show when={enumSchema.description}>
-              <div class="description">{enumSchema.description}</div>
+              <div class="description">
+                {translateWidgetOptionDescription(key, enumSchema.description)}
+              </div>
             </Show>
           </div>
         );
       case 'ref':
         const collection = (schema as ReferenceAttributes).collection;
 
-        // Parse collection string (e.g., "medias|type:image" or "medias|type:video")
-        const collectionParts = collection.split('|');
-        const collectionName = collectionParts[0];
-
-        // Extract filters from collection string
-        const filters: Record<string, string | boolean> = {};
-        if (collectionParts.length > 1) {
-          collectionParts.slice(1).forEach((part) => {
-            const [filterKey, filterValue] = part.split(':');
-            if (filterKey && filterValue) {
-              filters[filterKey] = filterValue;
-            }
-          });
-        }
-
-        // Determine media type for placeholder text
-        const placeholderText =
-          filters['type'] === 'image'
-            ? t('common.selectImage')
-            : filters['type'] === 'video'
-              ? t('common.selectVideo')
-              : t('common.selectMedia');
+        const { collectionName, filters } = parseCollectionFilters(collection);
+        const placeholderText = getMediaPlaceholderText(filters, t);
 
         switch (collectionName) {
           case 'medias':
@@ -513,7 +556,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
               <>
                 <ComboBox<JsonMedia>
                   id={key}
-                  label={key}
+                  label={translateWidgetOptionLabel(key, key)}
                   placeholder={placeholderText}
                   value={getReferenceValue<JsonMedia>(key)}
                   renderItem={(item: JsonMedia) => {
@@ -561,7 +604,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
               <>
                 <ComboBox<JsonPlaylist>
                   id={key}
-                  label={key}
+                  label={translateWidgetOptionLabel(key, key)}
                   placeholder={t('common.selectPlaylist')}
                   value={getReferenceValue<JsonPlaylist>(key)}
                   renderItem={(item: JsonPlaylist) => {
@@ -642,9 +685,14 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
 
         return (
           <div class="form-item-wrapper">
-            <label>{key}</label>
+            <label>{translateWidgetOptionLabel(key, key)}</label>
             <Show when={layoutSchema.description}>
-              <div class="description">{layoutSchema.description}</div>
+              <div class="description">
+                {translateWidgetOptionDescription(
+                  key,
+                  layoutSchema.description
+                )}
+              </div>
             </Show>
             <LayoutEditor
               value={getCurrentLayout()}
@@ -667,7 +715,12 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
         return (
           <div class="form-item-wrapper">
             <Show when={layoutRefSchema.description}>
-              <div class="description">{layoutRefSchema.description}</div>
+              <div class="description">
+                {translateWidgetOptionDescription(
+                  key,
+                  layoutRefSchema.description
+                )}
+              </div>
             </Show>
             <LayoutRefEditor
               value={getCurrentLayoutRef()}
@@ -699,7 +752,12 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
         return (
           <div class="form-item-wrapper">
             <Show when={locationSchema.description}>
-              <div class="description">{locationSchema.description}</div>
+              <div class="description">
+                {translateWidgetOptionDescription(
+                  key,
+                  locationSchema.description
+                )}
+              </div>
             </Show>
             <LocationPicker
               value={getCurrentLocation()}
@@ -710,7 +768,13 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
               }}
               defaultZoom={locationSchema.defaultZoom}
               placeholder={t('common.searchLocation')}
-              searchLabel={key}
+              searchLabel={translateWidgetOptionLabel(key, key)}
+              coordinatesLabel={t('common.coordinates')}
+              addressLabel={t('common.address')}
+              noAddressText={t('common.noAddressAvailable')}
+              editLabel={t('common.edit')}
+              saveLabel={t('common.save')}
+              cancelLabel={t('common.cancel')}
             />
           </div>
         );
@@ -731,10 +795,18 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
       <div class="widget-config">
         <Show when={props.item.inserted_at}>
           <div style="font-size: 0.8em; color: darkgray;">
-            <span>Created on </span>{' '}
-            <Timestamp value={props.item.inserted_at!} mode="relative" />.{' '}
-            <span>Last updated on </span>
-            <Timestamp value={props.item.updated_at!} mode="relative" />
+            <span>{t('common.addedOn')} </span>{' '}
+            <Timestamp
+              value={props.item.inserted_at!}
+              mode="relative"
+              locale={props.store.i18n?.locale?.()}
+            />
+            . <span>{t('common.lastUpdatedOn')} </span>
+            <Timestamp
+              value={props.item.updated_at!}
+              mode="relative"
+              locale={props.store.i18n?.locale?.()}
+            />
           </div>
         </Show>
         <form
@@ -788,14 +860,14 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
           </div>
           <div class="form-actions">
             <Button
-              label="Update"
+              label={t('common.save')}
               type="submit"
               disabled={!isFormValid()}
               icon={BsCheckLg}
               color="success"
             />
             <Button
-              label="Reset"
+              label={t('common.reset')}
               disabled={!isFormModified()}
               onClick={() => {
                 resetForm();

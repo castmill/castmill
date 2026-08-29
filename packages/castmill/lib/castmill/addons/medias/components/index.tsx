@@ -70,6 +70,7 @@ import {
   AddonComponentProps,
 } from '../../common/interfaces/addon-store';
 import { useTeamFilter, useModalFromUrl } from '../../common/hooks';
+import { getThumbnailProgress } from './thumbnail-status';
 
 const MediasPage: Component<AddonComponentProps> = (props) => {
   // Get i18n functions from store
@@ -344,6 +345,54 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
       })) as TreeResourceItem[],
       count: result.count,
     };
+  };
+
+  const fetchTreeUntaggedResources = async (
+    tagGroupId: number,
+    parentTagIds?: number[]
+  ) => {
+    const result = await MediasService.fetchMedias(
+      props.store.env.baseUrl,
+      props.store.organizations.selectedId,
+      {
+        page: 1,
+        page_size: 100,
+        sortOptions: { key: 'name', direction: 'ascending' },
+        tag_filter_mode: 'all',
+        missing_tag_group_id: tagGroupId,
+        tag_ids: parentTagIds,
+        team_id: selectedTeamId(),
+      }
+    );
+
+    return {
+      data: result.data.map((m: JsonMedia) => ({
+        ...m,
+        thumbnail: m.files?.['thumbnail']?.uri,
+      })) as TreeResourceItem[],
+      count: result.count,
+    };
+  };
+
+  const fetchTreeUntaggedCount = async (
+    tagGroupId: number,
+    parentTagIds?: number[]
+  ) => {
+    const result = await MediasService.fetchMedias(
+      props.store.env.baseUrl,
+      props.store.organizations.selectedId,
+      {
+        page: 1,
+        page_size: 1,
+        sortOptions: { key: 'name', direction: 'ascending' },
+        tag_filter_mode: 'all',
+        missing_tag_group_id: tagGroupId,
+        tag_ids: parentTagIds,
+        team_id: selectedTeamId(),
+      }
+    );
+
+    return result.count;
   };
 
   const [showDrawer, setShowDrawer] = createSignal(false);
@@ -637,9 +686,9 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
   };
 
   const renderThumbnailFallback = (item: JsonMedia) => {
-    const progress = Number.parseFloat(item.status_message || '');
+    const progress = getThumbnailProgress(item);
 
-    if (item.status === 'transcoding' && Number.isFinite(progress)) {
+    if (progress !== null) {
       return <CircularProgress progress={progress} />;
     }
 
@@ -876,7 +925,6 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
           onClose={closeMediaDrawer}
           placement="right"
           size="xl"
-          showBackdrop="auto"
           closeOnOutsideClick
           outsideClickIgnoreSelector="tbody tr, .media-tree-item"
           contentClass="medias-modal"
@@ -948,6 +996,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
           ref={setRef}
           itemIdKey="id"
           toolbar={{
+            searchPlaceholder: t('common.search'),
             mainAction: (
               <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
                 <Show when={quota()}>
@@ -1103,6 +1152,10 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
           tagGroups={tagGroups()}
           allTags={allTags()}
           fetchResources={fetchTreeResources}
+          fetchUntaggedResources={fetchTreeUntaggedResources}
+          fetchUntaggedCount={fetchTreeUntaggedCount}
+          untaggedLabel={t('tags.groups.untagged')}
+          emptyLeafText={t('filters.noItems')}
           refreshKey={treeVersion()}
           storageKey="medias"
           onResourceClick={(item) =>

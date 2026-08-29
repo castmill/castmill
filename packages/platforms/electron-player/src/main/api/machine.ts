@@ -20,6 +20,30 @@ const showToast = (title: string, message: string) => {
   );
 };
 
+let updateHandlersConfigured = false;
+let quitAndInstallTriggered = false;
+
+const configureSilentAutoUpdater = () => {
+  if (updateHandlersConfigured) return;
+
+  updateHandlersConfigured = true;
+
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+
+  autoUpdater.on('update-downloaded', () => {
+    if (quitAndInstallTriggered) return;
+    quitAndInstallTriggered = true;
+
+    console.log('Update downloaded. Installing immediately...');
+    autoUpdater.quitAndInstall(true, true);
+  });
+
+  autoUpdater.on('error', (error) => {
+    console.error('Auto-update failed:', error);
+  });
+};
+
 /*
  * relaunch the app
  */
@@ -82,10 +106,24 @@ export const reboot = () => {
 /*
  * update the app
  */
-export const update = () => {
-  showToast('Update', 'Checking for updates...');
-  // Won't work in dev mode.
-  autoUpdater.checkForUpdatesAndNotify();
+export const update = async (): Promise<void> => {
+  if (is.dev) {
+    console.log('Auto-update is disabled in development mode.');
+    return;
+  }
+
+  configureSilentAutoUpdater();
+  quitAndInstallTriggered = false;
+
+  console.log('Checking for updates (silent mode)...');
+  try {
+    await Promise.resolve().then(() => autoUpdater.checkForUpdates());
+  } catch (error) {
+    console.error('Failed to check for updates:', error);
+    throw error instanceof Error
+      ? error
+      : new Error('Failed to check for updates');
+  }
 };
 
 /*

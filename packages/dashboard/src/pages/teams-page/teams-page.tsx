@@ -273,7 +273,8 @@ const TeamsPage: Component = () => {
   };
   // Function to close the modal and remove blur
   const closeModal = () => {
-    // Only clear URL - let createEffect handle closing the modal
+    // Always close the drawer, including "new team" mode where itemId is absent.
+    setShowModal(false);
     setSearchParams({ itemId: undefined });
   };
 
@@ -300,7 +301,6 @@ const TeamsPage: Component = () => {
           onClose={closeModal}
           placement="right"
           size="xl"
-          showBackdrop="auto"
           closeOnOutsideClick
           outsideClickIgnoreSelector="tbody tr"
         >
@@ -373,6 +373,7 @@ const TeamsPage: Component = () => {
         ref={setRef}
         toolbar={{
           filters: [],
+          searchPlaceholder: t('common.search'),
           mainAction: (
             <div style="display: flex; align-items: center; gap: 1rem;">
               <Show when={quota() && !quotaLoading()}>
@@ -410,6 +411,7 @@ const TeamsPage: Component = () => {
         table={{
           columns,
           actions,
+          actionsLabel: t('common.actions'),
           onRowSelect,
           defaultRowAction: {
             icon: BsEye,

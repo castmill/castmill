@@ -22,7 +22,7 @@ defmodule Castmill.Workers.BullMQHelper do
       scheduler_id = "int_poll_\#{org_id}_\#{integration_id}_\#{sanitized}"
       # Result = 0 colon parts → Works correctly!
 
-  See `MIGRATION_OBAN_TO_BULLMQ.md` for more details.
+  See `BULLMQ_POSTGRES_OPERATIONS.md` for more details.
   """
 
   require Logger
@@ -41,7 +41,7 @@ defmodule Castmill.Workers.BullMQHelper do
     - :schedule_in - Same as delay (for Oban compatibility)
     - :priority - Job priority (lower = higher priority)
     - :attempts - Maximum retry attempts
-    - :connection - Redis connection name (defaults to :castmill_redis)
+    - :connection - BullMQ connection name (defaults to :castmill_bullmq)
 
   ## Returns
     - {:ok, job} on success
@@ -54,9 +54,7 @@ defmodule Castmill.Workers.BullMQHelper do
       execute_job_inline(queue, job_name, args)
     else
       # Normal mode - add to BullMQ queue
-      # NOTE: BullMQ API based on v1.2 documentation
-      # See: https://hexdocs.pm/bullmq/BullMQ.Queue.html#add/4
-      connection = Keyword.get(opts, :connection, :castmill_redis)
+      connection = Keyword.get(opts, :connection, :castmill_bullmq)
 
       # Convert Oban-style options to BullMQ options
       bullmq_opts = convert_options(opts) ++ [connection: connection]
@@ -129,9 +127,7 @@ defmodule Castmill.Workers.BullMQHelper do
 
       {:ok, mock_job}
     else
-      # BullMQ.JobScheduler uses Redix.command directly (not the connection pool)
-      # so we need to use the direct Redix connection
-      connection = Keyword.get(opts, :connection, :castmill_redis_direct)
+      connection = Keyword.get(opts, :connection, :castmill_bullmq)
       job_opts = Keyword.drop(opts, [:connection])
 
       BullMQ.JobScheduler.upsert(
@@ -162,9 +158,7 @@ defmodule Castmill.Workers.BullMQHelper do
     if testing_mode?() do
       {:ok, true}
     else
-      # BullMQ.JobScheduler uses Redix.command directly (not the connection pool)
-      # so we need to use the direct Redix connection
-      connection = Keyword.get(opts, :connection, :castmill_redis_direct)
+      connection = Keyword.get(opts, :connection, :castmill_bullmq)
       BullMQ.JobScheduler.remove(connection, to_string(queue), scheduler_id)
     end
   end
@@ -197,9 +191,6 @@ defmodule Castmill.Workers.BullMQHelper do
     worker_module = worker_module_for_queue(queue, job_name)
 
     # Create a job struct that matches BullMQ.Job
-    # NOTE: This structure is based on BullMQ Elixir v1.2 documentation
-    # If the BullMQ library is updated, this may need adjustment
-    # See: https://hexdocs.pm/bullmq/BullMQ.Job.html
     job =
       BullMQ.Job.new(
         to_string(queue),

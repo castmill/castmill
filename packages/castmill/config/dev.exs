@@ -95,7 +95,15 @@ config :castmill, :encryption, %{
 # widgets json files
 config :castmill, CastmillWeb.Widgets.WidgetsLoader, json_dir: "../widged/dist/widgets"
 
-# BullMQ uses real Redis in dev (same as production)
-# Start Redis locally: docker run -d -p 6379:6379 redis:alpine
-# Or use inline mode for quick testing without Redis:
+# BullMQ uses PostgreSQL backend in dev.
+# Local Postgres normally doesn't use SSL. If you point dev at a managed DB that
+# enforces SSL, add `ssl: [verify: :verify_none]` here (prod uses BULLMQ_DB_SSL).
+config :castmill, :bullmq_postgres,
+  hostname: System.get_env("BULLMQ_DB_HOST") || "localhost",
+  port: String.to_integer(System.get_env("BULLMQ_DB_PORT") || "5432"),
+  database: System.get_env("BULLMQ_DB_NAME") || "castmill_bullmq_dev",
+  username: System.get_env("BULLMQ_DB_USER") || "postgres",
+  password: System.get_env("BULLMQ_DB_PASSWORD") || "postgres"
+
+# Or use inline mode for quick testing without BullMQ DB:
 # config :castmill, :bullmq, testing: :inline

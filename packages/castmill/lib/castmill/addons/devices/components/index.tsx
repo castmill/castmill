@@ -774,6 +774,51 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
     };
   };
 
+  const fetchTreeUntaggedResources = async (
+    tagGroupId: number,
+    parentTagIds?: number[]
+  ) => {
+    const result = await DevicesService.fetchDevices(
+      props.store.env.baseUrl,
+      props.store.organizations.selectedId,
+      {
+        page: 1,
+        page_size: 100,
+        sortOptions: { key: 'name', direction: 'ascending' },
+        tag_filter_mode: 'all',
+        missing_tag_group_id: tagGroupId,
+        tag_ids: parentTagIds,
+        team_id: selectedTeamId(),
+      }
+    );
+
+    return {
+      data: result.data as TreeResourceItem[],
+      count: result.count,
+    };
+  };
+
+  const fetchTreeUntaggedCount = async (
+    tagGroupId: number,
+    parentTagIds?: number[]
+  ) => {
+    const result = await DevicesService.fetchDevices(
+      props.store.env.baseUrl,
+      props.store.organizations.selectedId,
+      {
+        page: 1,
+        page_size: 1,
+        sortOptions: { key: 'name', direction: 'ascending' },
+        tag_filter_mode: 'all',
+        missing_tag_group_id: tagGroupId,
+        tag_ids: parentTagIds,
+        team_id: selectedTeamId(),
+      }
+    );
+
+    return result.count;
+  };
+
   const updateItem = (itemId: string, item: Partial<DeviceTableItem>) => {
     if (tableViewRef) {
       tableViewRef.updateItem(itemId, item);
@@ -807,7 +852,6 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
           onClose={closeDeviceDrawer}
           placement="right"
           size="xl"
-          showBackdrop="auto"
           closeOnOutsideClick
           outsideClickIgnoreSelector="tbody tr, .device-tree-item"
         >
@@ -865,6 +909,7 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
               { name: t('common.online'), key: 'online', isActive: true },
               { name: t('common.offline'), key: 'offline', isActive: true },
             ],
+            searchPlaceholder: t('common.search'),
             mainAction: (
               <div style="display: flex; align-items: center; gap: 1rem;">
                 <Show when={quota()}>
@@ -1008,6 +1053,10 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
           tagGroups={tagGroups()}
           allTags={allTags()}
           fetchResources={fetchTreeResources}
+          fetchUntaggedResources={fetchTreeUntaggedResources}
+          fetchUntaggedCount={fetchTreeUntaggedCount}
+          untaggedLabel={t('tags.groups.untagged')}
+          emptyLeafText={t('filters.noItems')}
           refreshKey={treeVersion()}
           storageKey="devices"
           onResourceClick={(item) =>

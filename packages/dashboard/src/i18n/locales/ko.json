@@ -102,6 +102,7 @@
     "coordinates": "좌표",
     "address": "주소",
     "noAddressAvailable": "사용 가능한 주소 없음",
+    "noConfigurationAvailable": "사용 가능한 구성이 없습니다",
     "playlist": "재생목록",
     "addPlaylist": "재생목록 추가",
     "selectVideo": "비디오 선택",
@@ -522,7 +523,8 @@
       "editGroup": "그룹 편집",
       "deleteGroup": "그룹 삭제",
       "noGroups": "태그 그룹 없음",
-      "ungrouped": "그룹 없음"
+      "ungrouped": "그룹 없음",
+      "untagged": "태그 없음"
     },
     "messages": {
       "tagCreated": "태그 \"{{name}}\"이(가) 성공적으로 생성되었습니다",
@@ -757,6 +759,9 @@
     "errorRemovingPlaylists": "재생목록 제거 오류: {{error}}",
     "enterPlaylistName": "재생목록 이름 입력",
     "dragToAdd": "드래그하여 추가",
+    "searchWidgets": "위젯 검색...",
+    "dropHereToAddAtEnd": "끝에 추가하려면 여기에 놓으세요",
+    "duration": "지속 시간",
     "aspectRatio": "화면 비율",
     "aspectRatioWidth": "너비",
     "aspectRatioHeight": "높이",
@@ -786,7 +791,9 @@
     "credentialsRequired": "자격 증명 필요",
     "credentialsRequiredDescription": "Widget \"{{widget}}\"을(를) 재생 목록에 추가하려면 먼저 자격 증명을 구성해야 합니다.",
     "missingIntegrations": "누락된 통합",
-    "goToIntegrations": "통합으로 이동"
+    "goToIntegrations": "통합으로 이동",
+    "widgetModalTitle": "위젯 \"{{name}}\"",
+    "configureYourWidget": "위젯을 구성하세요"
   },
   "layouts": {
     "title": "레이아웃",
@@ -823,6 +830,20 @@
     "title": "Widgets",
     "uploadWidget": "Widget 업로드",
     "uploadDescription": "Widget JSON 정의 파일을 업로드합니다.",
+    "upload": {
+      "jsonDescription": "위젯 정의가 포함된 JSON 파일을 업로드하세요.",
+      "requiredFields": "필수 필드",
+      "and": "및",
+      "exampleFormat": "예시 형식",
+      "dragAndDropHint": "또는 JSON 또는 ZIP 파일을 여기로 드래그 앤 드롭하세요...",
+      "ready": "준비됨",
+      "invalidFileType": "잘못된 파일 형식입니다. JSON 및 ZIP 파일만 지원됩니다.",
+      "invalidWidgetJson": "잘못된 위젯 JSON: \"name\" 및 \"template\" 필드를 포함해야 합니다",
+      "validationFailed": "유효성 검사 실패",
+      "uploadFailed": "업로드 실패",
+      "uploadedSuccessfully": "업로드 성공",
+      "uploadError": "업로드 오류"
+    },
     "widgetDetails": "Widget 세부정보",
     "updateInterval": "업데이트 간격",
     "viewDetails": "세부정보 보기",
@@ -964,7 +985,8 @@
       "templatePlaceholder": "위젯 템플릿 JSON을 여기에 붙여넣거나 입력하세요...",
       "optionsSchemaPlaceholder": "옵션 스키마 JSON (구성 가능한 옵션 정의)...",
       "dataSchemaPlaceholder": "데이터 스키마 JSON (이 위젯이 예상하는 데이터 형태 정의)..."
-    }
+    },
+    "translations": "번역"
   },
   "devices": {
     "setDeviceChannel": "기기 채널 설정",
@@ -1125,6 +1147,9 @@
       "couldNotGetPublicKey": "공개 키를 가져올 수 없습니다",
       "invalidCredential": "유효하지 않은 자격 증명",
       "signupFailed": "회원가입 실패: {{error}}. 다시 시도하거나 지원팀에 문의하세요."
+    },
+    "success": {
+      "accountCreated": "계정이 성공적으로 생성되었습니다!"
     }
   },
   "search": {

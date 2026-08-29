@@ -1129,6 +1129,21 @@ defmodule Castmill.Resources do
     end
   end
 
+  defp apply_missing_tag_group_filter(query, _resource, nil), do: query
+
+  defp apply_missing_tag_group_filter(query, resource, missing_tag_group_id)
+       when is_integer(missing_tag_group_id) do
+    resource_type = resource_type_for_module(resource)
+
+    if resource_type do
+      Tags.filter_missing_tag_group(query, resource_type, missing_tag_group_id)
+    else
+      query
+    end
+  end
+
+  defp apply_missing_tag_group_filter(query, _resource, _missing_tag_group_id), do: query
+
   @doc """
   Returns the list of a given resource for a given organization.
 
@@ -1155,6 +1170,7 @@ defmodule Castmill.Resources do
     tag_ids = Map.get(params, :tag_ids, [])
     tag_filter_mode_str = Map.get(params, :tag_filter_mode, "any") || "any"
     tag_filter_mode = parse_tag_filter_mode(tag_filter_mode_str)
+    missing_tag_group_id = Map.get(params, :missing_tag_group_id)
 
     preloads =
       if function_exported?(resource, :preloads, 0) do
@@ -1173,6 +1189,7 @@ defmodule Castmill.Resources do
       |> join(:inner, [r], t in ^join_module, on: field(t, ^foreign_key) == r.id)
       |> where([_, t], t.team_id == ^team_id)
       |> apply_tag_filter(resource, tag_ids, tag_filter_mode)
+      |> apply_missing_tag_group_filter(resource, missing_tag_group_id)
       |> QueryHelpers.apply_combined_filters(filters, resource)
       |> QueryHelpers.where_name_like(search)
       |> apply_sorting(params)
@@ -1199,6 +1216,7 @@ defmodule Castmill.Resources do
     tag_ids = Map.get(params, :tag_ids, [])
     tag_filter_mode_str = Map.get(params, :tag_filter_mode, "any") || "any"
     tag_filter_mode = parse_tag_filter_mode(tag_filter_mode_str)
+    missing_tag_group_id = Map.get(params, :missing_tag_group_id)
 
     preloads =
       if function_exported?(resource, :preloads, 0) do
@@ -1210,6 +1228,7 @@ defmodule Castmill.Resources do
     resource.base_query()
     |> Organization.where_org_id(organization_id)
     |> apply_tag_filter(resource, tag_ids, tag_filter_mode)
+    |> apply_missing_tag_group_filter(resource, missing_tag_group_id)
     |> QueryHelpers.apply_combined_filters(filters, resource)
     |> QueryHelpers.where_name_like(search)
     |> Ecto.Query.distinct(true)
@@ -1264,6 +1283,7 @@ defmodule Castmill.Resources do
     tag_ids = Map.get(params, :tag_ids, [])
     tag_filter_mode_str = Map.get(params, :tag_filter_mode, "any") || "any"
     tag_filter_mode = parse_tag_filter_mode(tag_filter_mode_str)
+    missing_tag_group_id = Map.get(params, :missing_tag_group_id)
 
     # Get the join module for this resource type
     {join_module, foreign_key} = get_team_join_info(resource)
@@ -1273,6 +1293,7 @@ defmodule Castmill.Resources do
     |> join(:inner, [r], t in ^join_module, on: field(t, ^foreign_key) == r.id)
     |> where([_, t], t.team_id == ^team_id)
     |> apply_tag_filter(resource, tag_ids, tag_filter_mode)
+    |> apply_missing_tag_group_filter(resource, missing_tag_group_id)
     |> QueryHelpers.apply_combined_filters(filters, resource)
     |> QueryHelpers.where_name_like(search)
     |> Repo.aggregate(:count, :id)
@@ -1290,10 +1311,12 @@ defmodule Castmill.Resources do
     tag_ids = Map.get(params, :tag_ids, [])
     tag_filter_mode_str = Map.get(params, :tag_filter_mode, "any") || "any"
     tag_filter_mode = parse_tag_filter_mode(tag_filter_mode_str)
+    missing_tag_group_id = Map.get(params, :missing_tag_group_id)
 
     resource.base_query()
     |> Organization.where_org_id(organization_id)
     |> apply_tag_filter(resource, tag_ids, tag_filter_mode)
+    |> apply_missing_tag_group_filter(resource, missing_tag_group_id)
     |> QueryHelpers.apply_combined_filters(filters, resource)
     |> QueryHelpers.where_name_like(search)
     |> Repo.aggregate(:count, :id)

@@ -102,6 +102,7 @@
     "coordinates": "座標",
     "address": "住所",
     "noAddressAvailable": "利用可能な住所がありません",
+    "noConfigurationAvailable": "利用可能な設定がありません",
     "playlist": "プレイリスト",
     "addPlaylist": "プレイリストを追加",
     "selectVideo": "ビデオを選択",
@@ -522,7 +523,8 @@
       "editGroup": "グループを編集",
       "deleteGroup": "グループを削除",
       "noGroups": "タググループなし",
-      "ungrouped": "グループなし"
+      "ungrouped": "グループなし",
+      "untagged": "タグなし"
     },
     "messages": {
       "tagCreated": "タグ「{{name}}」を正常に作成しました",
@@ -758,6 +760,9 @@
     "errorRemovingPlaylists": "プレイリストの削除中にエラーが発生しました：{{error}}",
     "enterPlaylistName": "プレイリスト名を入力してください",
     "dragToAdd": "ドラッグして追加",
+    "searchWidgets": "ウィジェットを検索...",
+    "dropHereToAddAtEnd": "末尾に追加するにはここにドロップ",
+    "duration": "再生時間",
     "aspectRatio": "アスペクト比",
     "aspectRatioWidth": "幅",
     "aspectRatioHeight": "高さ",
@@ -787,7 +792,9 @@
     "credentialsRequired": "認証情報が必要です",
     "credentialsRequiredDescription": "Widget「{{widget}}」をプレイリストに追加する前に、認証情報を設定する必要があります。",
     "missingIntegrations": "不足している統合",
-    "goToIntegrations": "統合に移動"
+    "goToIntegrations": "統合に移動",
+    "widgetModalTitle": "ウィジェット \"{{name}}\"",
+    "configureYourWidget": "ウィジェットを設定してください"
   },
   "layouts": {
     "title": "レイアウト",
@@ -824,6 +831,20 @@
     "title": "Widgets",
     "uploadWidget": "Widgetをアップロード",
     "uploadDescription": "Widget JSON定義ファイルをアップロードします。",
+    "upload": {
+      "jsonDescription": "ウィジェット定義を含む JSON ファイルをアップロードします。",
+      "requiredFields": "必須フィールド",
+      "and": "と",
+      "exampleFormat": "サンプル形式",
+      "dragAndDropHint": "または JSON / ZIP ファイルをここにドラッグ＆ドロップしてください...",
+      "ready": "準備完了",
+      "invalidFileType": "無効なファイル形式です。JSON と ZIP ファイルのみサポートされています。",
+      "invalidWidgetJson": "無効なウィジェット JSON: \"name\" と \"template\" フィールドが必要です",
+      "validationFailed": "検証に失敗しました",
+      "uploadFailed": "アップロードに失敗しました",
+      "uploadedSuccessfully": "アップロードに成功しました",
+      "uploadError": "アップロードエラー"
+    },
     "widgetDetails": "Widgetの詳細",
     "updateInterval": "更新間隔",
     "viewDetails": "詳細を表示",
@@ -965,7 +986,8 @@
       "templatePlaceholder": "ウィジェットテンプレートのJSONをここに貼り付けるか入力してください...",
       "optionsSchemaPlaceholder": "オプションスキーマJSON（設定可能なオプションを定義）...",
       "dataSchemaPlaceholder": "データスキーマJSON（このウィジェットが期待するデータ形状を定義）..."
-    }
+    },
+    "translations": "翻訳"
   },
   "devices": {
     "setDeviceChannel": "デバイスチャンネルを設定",
@@ -1126,6 +1148,9 @@
       "couldNotGetPublicKey": "公開鍵を取得できませんでした",
       "invalidCredential": "無効な認証情報です",
       "signupFailed": "サインアップに失敗しました：{{error}}。もう一度お試しいただくか、サポートにお問い合わせください。"
+    },
+    "success": {
+      "accountCreated": "アカウントが正常に作成されました！"
     }
   },
   "search": {

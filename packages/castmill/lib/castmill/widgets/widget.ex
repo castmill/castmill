@@ -20,7 +20,8 @@ defmodule Castmill.Widgets.Widget do
              :fonts,
              :assets,
              :is_system,
-             :organization_id
+             :organization_id,
+             :translations
            ]}
   schema "widgets" do
     field(:name, :string)
@@ -55,6 +56,10 @@ defmodule Castmill.Widgets.Widget do
     # Original assets definition from widget.json (icons, images, fonts metadata)
     field(:assets, :map, default: %{})
 
+    # Widget-provided translations keyed by locale code
+    # e.g. %{"en" => %{"name" => "QR Code", ...}, "es" => %{"name" => "Código QR", ...}}
+    field(:translations, :map, default: %{})
+
     timestamps()
   end
 
@@ -77,7 +82,8 @@ defmodule Castmill.Widgets.Widget do
       :webhook_url,
       :fonts,
       :assets,
-      :organization_id
+      :organization_id,
+      :translations
     ])
     |> validate_required([:name, :template])
     |> unique_constraint(:name)

@@ -51,86 +51,108 @@ defmodule Castmill.Workers.ImageTranscoder do
     {:ok, stream} = Helpers.get_stream_from_uri(filepath)
 
     # Iterate through the file sizes and names
-    Repo.transaction(fn ->
-      {_final_progress, files_map, new_size} =
-        Enum.reduce(@file_sizes_and_contexts, {0.0, %{}, 0}, fn {size, context},
-                                                                {acc_progress, acc_map, acc_size} ->
-          {uri, size} =
-            Image.open!(stream)
-            |> Image.thumbnail!(size)
-            |> upload_image(organization_id, media_id, "#{context}#{extension}")
+    result =
+      Repo.transaction(fn ->
+        {_final_progress, files_map, new_size} =
+          Enum.reduce(@file_sizes_and_contexts, {0.0, %{}, 0}, fn {size, context},
+                                                                  {acc_progress, acc_map,
+                                                                   acc_size} ->
+            {uri, size} =
+              Image.open!(stream)
+              |> Image.thumbnail!(size)
+              |> upload_image(organization_id, media_id, "#{context}#{extension}")
 
-          {:ok, file} =
-            Castmill.Files.create_file(%{
-              media_id: media_id,
-              name: "#{media_id}-#{context}",
-              uri: uri,
-              size: size,
-              organization_id: organization_id,
-              mimetype: mimetype
-            })
+            {:ok, file} =
+              Castmill.Files.create_file(%{
+                media_id: media_id,
+                name: "#{media_id}-#{context}",
+                uri: uri,
+                size: size,
+                organization_id: organization_id,
+                mimetype: mimetype
+              })
 
-          Castmill.Files.add_file_to_media(file.id, media_id, context)
+            Castmill.Files.add_file_to_media(file.id, media_id, context)
 
-          new_progress = Float.floor(acc_progress + 100 / length(@file_sizes_and_contexts))
+            new_progress = Float.floor(acc_progress + 100 / length(@file_sizes_and_contexts))
 
-          # Update media status and broadcast progress
-          {:ok, _media} =
-            Castmill.Resources.update_media(%Castmill.Resources.Media{id: media_id}, %{
-              status: :transcoding,
+            # Update media status and broadcast progress
+            {:ok, _media} =
+              Castmill.Resources.update_media(%Castmill.Resources.Media{id: media_id}, %{
+                status: :transcoding,
+                status_message: "#{new_progress}"
+              })
+
+            Phoenix.PubSub.broadcast(Castmill.PubSub, "resource:media:#{media_id}", %{
               status_message: "#{new_progress}"
             })
 
-          Phoenix.PubSub.broadcast(Castmill.PubSub, "resource:media:#{media_id}", %{
-            status_message: "#{new_progress}"
+            new_map = Map.put(acc_map, context, file)
+            new_size = size + acc_size
+
+            {new_progress, new_map, new_size}
+          end)
+
+        # Finalize by setting media status to ready
+        {:ok, _media} =
+          Castmill.Resources.update_media(%Castmill.Resources.Media{id: media_id}, %{
+            status: :ready,
+            status_message: "100"
           })
 
-          new_map = Map.put(acc_map, context, file)
-          new_size = size + acc_size
+        # Get the full media record to access organization_id and name
+        media = Castmill.Resources.get_media(media_id)
 
-          {new_progress, new_map, new_size}
-        end)
-
-      # Finalize by setting media status to ready
-      {:ok, _media} =
-        Castmill.Resources.update_media(%Castmill.Resources.Media{id: media_id}, %{
-          status: :ready,
-          status_message: "100"
-        })
-
-      # Get the full media record to access organization_id and name
-      media = Castmill.Resources.get_media(media_id)
-
-      # Only send notification for image files (not videos - video transcoder handles those)
-      if media.mimetype && String.starts_with?(media.mimetype, "image/") do
-        Logger.info(
-          "Sending media upload notification for image: #{media.id}, org: #{media.organization_id}, name: #{media.name}"
-        )
-
-        # Send organization-wide notification (Media doesn't track user_id)
-        result =
-          Events.notify_media_uploaded(
-            media.id,
-            media.name,
-            media.mimetype,
-            # org-wide notification (no user_id in Media schema)
-            nil,
-            media.organization_id,
-            # no role filter - all users in org will see it
-            []
+        # Only send notification for image files (not videos - video transcoder handles those)
+        if media.mimetype && String.starts_with?(media.mimetype, "image/") do
+          Logger.info(
+            "Sending media upload notification for image: #{media.id}, org: #{media.organization_id}, name: #{media.name}"
           )
 
-        Logger.info("Notification result: #{inspect(result)}")
-      end
+          # Send organization-wide notification (Media doesn't track user_id)
+          result =
+            Events.notify_media_uploaded(
+              media.id,
+              media.name,
+              media.mimetype,
+              # org-wide notification (no user_id in Media schema)
+              nil,
+              media.organization_id,
+              # no role filter - all users in org will see it
+              []
+            )
 
-      # Send a message to the medias observer channel to notify the user about the media progress
-      Phoenix.PubSub.broadcast(Castmill.PubSub, "resource:media:#{media_id}", %{
-        status: :ready,
-        status_message: "100",
-        files: files_map,
-        size: new_size
-      })
-    end)
+          Logger.info("Notification result: #{inspect(result)}")
+        end
+
+        # Send a message to the medias observer channel to notify the user about the media progress
+        Phoenix.PubSub.broadcast(Castmill.PubSub, "resource:media:#{media_id}", %{
+          status: :ready,
+          status_message: "100",
+          files: files_map,
+          size: new_size
+        })
+
+        {files_map, new_size}
+      end)
+
+    # Return a structured result carrying the notification payload so a
+    # QueueEvents completion listener (on a separate web node) can broadcast the
+    # update without a secondary database lookup.
+    case result do
+      {:ok, {files_map, new_size}} ->
+        {:ok,
+         %{
+           "media_id" => media_id,
+           "status" => "ready",
+           "status_message" => "100",
+           "files" => files_map,
+           "size" => new_size
+         }}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
   end
 
   @doc """

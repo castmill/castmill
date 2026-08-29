@@ -98,12 +98,10 @@ config :ex_aws, :s3,
   secret_access_key: System.get_env("AWS_SECRET_ACCESS_KEY")
 
 # Configure BullMQ
-config :castmill, :redis,
-  host: System.get_env("REDIS_HOST") || "localhost",
-  port: String.to_integer(System.get_env("REDIS_PORT") || "6379")
+config :bullmq, :backend, BullMQ.Backends.Postgres
 
 config :castmill, :bullmq,
-  connection: :castmill_redis,
+  connection: :castmill_bullmq,
   queues: [
     {:image_transcoder, concurrency: 10},
     {:video_transcoder, concurrency: 10},
@@ -111,7 +109,17 @@ config :castmill, :bullmq,
     {:integrations, concurrency: 5},
     {:maintenance, concurrency: 2},
     {:email, concurrency: 5}
-  ]
+  ],
+  # Queues whose completion/failure events a web-capable node listens to (via
+  # BullMQ.QueueEvents) when it does not process the queue locally. This lets a
+  # web+worker node run light queues while re-broadcasting dashboard updates from
+  # heavy queues on a separate fleet. Entries may be a bare queue atom (which uses
+  # the default transcoder handler) or a `{queue, handler_module}` tuple.
+  completion_event_queues: [:video_transcoder, :image_transcoder]
+
+config :castmill, :bullmq_postgres,
+  schema: "bullmq",
+  pool_size: 10
 
 # Configure Spotify OAuth (widget integration)
 # In production, set SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, and SPOTIFY_REDIRECT_URI

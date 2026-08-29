@@ -269,6 +269,7 @@ export const ResourceChooser = (props: {
         fetchData={fetchResources}
         toolbar={{
           filters: [],
+          searchPlaceholder: t('common.search'),
 
           actions: (
             <div>
@@ -284,6 +285,7 @@ export const ResourceChooser = (props: {
         table={{
           columns,
           actions,
+          actionsLabel: t('common.actions'),
           onRowSelect,
           defaultRowAction: {
             icon: BsEye,

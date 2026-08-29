@@ -19,6 +19,7 @@ export interface FetchDevicesOptions {
   team_id?: number | null;
   tag_ids?: number[];
   tag_filter_mode?: 'any' | 'all';
+  missing_tag_group_id?: number;
 }
 type HandleResponseOptions = {
   parse?: boolean;
@@ -143,6 +144,7 @@ export const DevicesService = {
       team_id,
       tag_ids,
       tag_filter_mode,
+      missing_tag_group_id,
     }: FetchDevicesOptions
   ) {
     const filtersToString = (filters: Record<string, string | boolean>) => {
@@ -181,6 +183,10 @@ export const DevicesService = {
 
     if (tag_filter_mode) {
       query.set('tag_filter_mode', tag_filter_mode);
+    }
+
+    if (missing_tag_group_id !== undefined) {
+      query.set('missing_tag_group_id', missing_tag_group_id.toString());
     }
 
     const queryString = query.toString();

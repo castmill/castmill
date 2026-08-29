@@ -20,6 +20,10 @@ import { PlaylistItem } from './playlist-item';
 import { WidgetConfig } from './widget-config';
 import { AddonStore } from '../../common/interfaces/addon-store';
 import { PlaylistsService } from '../services/playlists.service';
+import {
+  getTranslatedWidgetName,
+  getTranslatedWidgetDescription,
+} from '../../common/utils/widget-catalog-utils';
 
 export interface CredentialsError {
   widget: JsonWidget;
@@ -58,6 +62,10 @@ export const PlaylistItems: Component<{
   onCredentialsError?: (error: CredentialsError) => void;
   onSeekToItem?: (index: number) => void;
 }> = (props) => {
+  const t = (key: string, params?: Record<string, any>) =>
+    props.store.i18n?.t(key, params) || key;
+  const locale = () => props.store.i18n?.locale() || 'en';
+
   const [showModal, setShowModal] = createSignal<JsonPlaylistItem>();
   const [promiseResolve, setPromiseResolve] = createSignal<{
     resolve: (
@@ -281,6 +289,8 @@ export const PlaylistItems: Component<{
             <PlaylistItem
               item={item}
               baseUrl={props.baseUrl}
+              locale={locale()}
+              t={t}
               dynamicDuration={
                 typeof item.id === 'number'
                   ? props.dynamicDurations?.[item.id]
@@ -307,12 +317,21 @@ export const PlaylistItems: Component<{
           ref={endZoneRef}
           class="playlist-end-drop-zone"
           classList={{ hovered: endZoneHovered() }}
-        />
+        >
+          <span class="playlist-end-drop-zone-label">
+            {t('playlists.dropHereToAddAtEnd')}
+          </span>
+        </div>
       </div>
       <Show when={showModal()}>
         <Modal
-          title={`Widget "${showModal()?.widget.name}"`}
-          description="Configure your widget"
+          title={t('playlists.widgetModalTitle', {
+            name: getTranslatedWidgetName(showModal()!.widget, locale()),
+          })}
+          description={
+            getTranslatedWidgetDescription(showModal()!.widget, locale()) ||
+            t('playlists.configureYourWidget')
+          }
           onClose={() => closeDialog()}
         >
           <WidgetConfig

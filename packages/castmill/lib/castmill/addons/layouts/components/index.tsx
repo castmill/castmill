@@ -450,6 +450,7 @@ const LayoutsPage: Component<AddonComponentProps> = (props) => {
         fetchData={fetchData}
         ref={setRef}
         toolbar={{
+          searchPlaceholder: t('common.search'),
           mainAction: (
             <div style="display: flex; align-items: center; gap: 1rem;">
               <Show when={quota()}>
@@ -500,6 +501,7 @@ const LayoutsPage: Component<AddonComponentProps> = (props) => {
         table={{
           columns,
           actions,
+          actionsLabel: t('common.actions'),
           onRowSelect,
           defaultRowAction: {
             icon: BsEye,
@@ -540,7 +542,6 @@ const LayoutsPage: Component<AddonComponentProps> = (props) => {
           onClose={closeLayoutDrawer}
           placement="right"
           size="xl"
-          showBackdrop="auto"
           closeOnOutsideClick
           outsideClickIgnoreSelector="tbody tr"
           contentClass="layout-modal"

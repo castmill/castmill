@@ -102,6 +102,7 @@
     "coordinates": "Coordonnées",
     "address": "Adresse",
     "noAddressAvailable": "Aucune adresse disponible",
+    "noConfigurationAvailable": "Aucune configuration disponible",
     "playlist": "Liste de lecture",
     "addPlaylist": "Ajouter une liste de lecture",
     "selectVideo": "Sélectionner une vidéo",
@@ -522,7 +523,8 @@
       "editGroup": "Modifier le groupe",
       "deleteGroup": "Supprimer le groupe",
       "noGroups": "Aucun groupe d'étiquettes",
-      "ungrouped": "Non groupé"
+      "ungrouped": "Non groupé",
+      "untagged": "Non étiqueté"
     },
     "messages": {
       "tagCreated": "Étiquette \"{{name}}\" créée avec succès",
@@ -769,6 +771,9 @@
     "errorRemovingPlaylists": "Erreur lors de la suppression des playlists : {{error}}",
     "enterPlaylistName": "Entrez le nom de la playlist",
     "dragToAdd": "Glisser pour ajouter",
+    "searchWidgets": "Rechercher des widgets...",
+    "dropHereToAddAtEnd": "Déposez ici pour ajouter à la fin",
+    "duration": "Durée",
     "aspectRatio": "Ratio d'aspect",
     "aspectRatioWidth": "Largeur",
     "aspectRatioHeight": "Hauteur",
@@ -798,7 +803,9 @@
     "credentialsRequired": "Identifiants Requis",
     "credentialsRequiredDescription": "Le widget \"{{widget}}\" nécessite la configuration d'identifiants avant de pouvoir être ajouté à une liste de lecture.",
     "missingIntegrations": "Intégrations manquantes",
-    "goToIntegrations": "Aller aux Intégrations"
+    "goToIntegrations": "Aller aux Intégrations",
+    "widgetModalTitle": "Widget \"{{name}}\"",
+    "configureYourWidget": "Configurez votre widget"
   },
   "layouts": {
     "title": "Mises en page",
@@ -835,6 +842,20 @@
     "title": "Widgets",
     "uploadWidget": "Télécharger un widget",
     "uploadDescription": "Télécharger un fichier de définition de widget JSON.",
+    "upload": {
+      "jsonDescription": "Téléchargez un fichier JSON contenant une définition de widget.",
+      "requiredFields": "Champs requis",
+      "and": "et",
+      "exampleFormat": "Format d'exemple",
+      "dragAndDropHint": "Ou glissez-déposez des fichiers JSON ou ZIP ici...",
+      "ready": "Prêt",
+      "invalidFileType": "Type de fichier invalide. Seuls les fichiers JSON et ZIP sont pris en charge.",
+      "invalidWidgetJson": "JSON de widget invalide : doit contenir les champs \"name\" et \"template\"",
+      "validationFailed": "Échec de la validation",
+      "uploadFailed": "Échec du téléversement",
+      "uploadedSuccessfully": "Téléversé avec succès",
+      "uploadError": "Erreur de téléversement"
+    },
     "widgetDetails": "Détails du widget",
     "updateInterval": "Intervalle de mise à jour",
     "viewDetails": "Voir les détails",
@@ -976,7 +997,8 @@
       "templatePlaceholder": "Collez ou saisissez le JSON du template du widget ici...",
       "optionsSchemaPlaceholder": "JSON du schéma d'options (définit les options configurables)...",
       "dataSchemaPlaceholder": "JSON du schéma de données (définit la structure des données attendues par ce widget)..."
-    }
+    },
+    "translations": "Traductions"
   },
   "devices": {
     "setDeviceChannel": "Définir le canal de l'appareil",
@@ -1137,6 +1159,9 @@
       "couldNotGetPublicKey": "Impossible d'obtenir la clé publique",
       "invalidCredential": "Identifiants invalides",
       "signupFailed": "Échec de l'inscription : {{error}}. Veuillez réessayer ou contacter le support."
+    },
+    "success": {
+      "accountCreated": "Compte créé avec succès !"
     }
   },
   "search": {

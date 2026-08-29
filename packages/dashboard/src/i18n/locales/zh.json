@@ -103,6 +103,7 @@
     "address": "地址",
     "noAddressAvailable": "无可用地址",
     "playlist": "播放列表",
+    "noConfigurationAvailable": "没有可用配置",
     "addPlaylist": "添加播放列表",
     "selectVideo": "选择视频",
     "widget": "Widget",
@@ -522,7 +523,8 @@
       "editGroup": "编辑组",
       "deleteGroup": "删除组",
       "noGroups": "无标签组",
-      "ungrouped": "未分组"
+      "ungrouped": "未分组",
+      "untagged": "未标记"
     },
     "messages": {
       "tagCreated": "标签 \"{{name}}\" 创建成功",
@@ -757,6 +759,9 @@
     "errorRemovingPlaylists": "删除播放列表时出错：{{error}}",
     "enterPlaylistName": "输入播放列表名称",
     "dragToAdd": "拖动以添加",
+    "searchWidgets": "搜索小部件...",
+    "dropHereToAddAtEnd": "拖放到此处以添加到末尾",
+    "duration": "时长",
     "aspectRatio": "宽高比",
     "aspectRatioWidth": "宽度",
     "aspectRatioHeight": "高度",
@@ -786,7 +791,9 @@
     "credentialsRequired": "需要凭据",
     "credentialsRequiredDescription": "Widget \"{{widget}}\" 在添加到播放列表之前需要配置凭据。",
     "missingIntegrations": "缺少集成",
-    "goToIntegrations": "前往集成"
+    "goToIntegrations": "前往集成",
+    "widgetModalTitle": "小工具 \"{{name}}\"",
+    "configureYourWidget": "配置您的小工具"
   },
   "layouts": {
     "title": "布局",
@@ -823,6 +830,20 @@
     "title": "Widgets",
     "uploadWidget": "上传 Widget",
     "uploadDescription": "上传 Widget JSON 定义文件。",
+    "upload": {
+      "jsonDescription": "上传包含组件定义的 JSON 文件。",
+      "requiredFields": "必填字段",
+      "and": "和",
+      "exampleFormat": "示例格式",
+      "dragAndDropHint": "或将 JSON 或 ZIP 文件拖放到此处...",
+      "ready": "就绪",
+      "invalidFileType": "文件类型无效。仅支持 JSON 和 ZIP 文件。",
+      "invalidWidgetJson": "组件 JSON 无效：必须包含 \"name\" 和 \"template\" 字段",
+      "validationFailed": "验证失败",
+      "uploadFailed": "上传失败",
+      "uploadedSuccessfully": "上传成功",
+      "uploadError": "上传错误"
+    },
     "widgetDetails": "Widget 详情",
     "updateInterval": "更新间隔",
     "viewDetails": "查看详情",
@@ -964,7 +985,8 @@
       "templatePlaceholder": "在此粘贴或输入 Widget 模板 JSON...",
       "optionsSchemaPlaceholder": "选项模式 JSON（定义可配置选项）...",
       "dataSchemaPlaceholder": "数据模式 JSON（定义此 Widget 期望的数据结构）..."
-    }
+    },
+    "translations": "翻译"
   },
   "devices": {
     "setDeviceChannel": "设置设备频道",
@@ -1125,6 +1147,9 @@
       "couldNotGetPublicKey": "无法获取公钥",
       "invalidCredential": "凭据无效",
       "signupFailed": "注册失败：{{error}}。请重试或联系支持。"
+    },
+    "success": {
+      "accountCreated": "账号创建成功！"
     }
   },
   "search": {
