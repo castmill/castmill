@@ -200,12 +200,16 @@ defmodule Castmill.Widgets do
       })
       |> Repo.insert()
 
-    # Schedule polling for auth-free integrations (like RSS)
+    # Schedule polling for integrations that can be fetched without the
+    # organization having to configure credentials (like RSS or Open-Meteo)
     with {:ok, _widget_config} <- result,
          %Castmill.Widgets.Integrations.WidgetIntegration{} = int <- integration,
-         true <- is_auth_free_integration?(int),
+         true <- is_credential_free_integration?(int),
          org_id when not is_nil(org_id) <- organization_id do
-      Logger.info("new_widget_config: Scheduling polling for auth-free integration #{int.id}")
+      Logger.info(
+        "new_widget_config: Scheduling polling for credential-free integration #{int.id}"
+      )
+
       schedule_auth_free_polling(org_id, widget_id, int, options)
     else
       other ->
@@ -219,18 +223,22 @@ defmodule Castmill.Widgets do
     result
   end
 
-  defp is_auth_free_integration?(%Castmill.Widgets.Integrations.WidgetIntegration{} = integration) do
-    # Check if the integration requires no authentication
+  defp is_credential_free_integration?(
+         %Castmill.Widgets.Integrations.WidgetIntegration{} = integration
+       ) do
+    # Integrations that can be fetched without credentials configured by the
+    # organization. "optional" integrations are included: any configured key is
+    # still resolved at fetch time by `Integrations.get_fetch_credentials/2`.
     auth_type =
       get_in(integration.pull_config, ["auth_type"]) ||
         get_in(integration.credential_schema, ["auth_type"])
 
-    auth_type == "none"
+    auth_type in ["none", "optional"]
   end
 
   defp schedule_auth_free_polling(organization_id, widget_id, integration, widget_options) do
     # Build discriminator ID based on integration type
-    discriminator_id = build_discriminator_id(integration, widget_options)
+    discriminator_id = build_discriminator_id(integration, widget_options, organization_id)
 
     Logger.info(
       "Scheduling auth-free polling for widget #{widget_id}, org #{organization_id}, discriminator: #{discriminator_id}"
@@ -267,33 +275,12 @@ defmodule Castmill.Widgets do
     end
   end
 
-  defp build_discriminator_id(integration, widget_options) do
-    # For widget_option discriminators, also check pull_config for hardcoded values
-    # (e.g., RSS widgets have feed_url in pull_config, not in widget_options)
-    pull_config = integration.pull_config || %{}
-    merged_options = Map.merge(pull_config, widget_options || %{})
-
-    case integration.discriminator_type do
-      "widget_option" ->
-        key = integration.discriminator_key || "id"
-        include_keys = String.contains?(key, ",")
-
-        case Castmill.Widgets.Integrations.widget_option_discriminator_value(key, merged_options,
-               missing: :default,
-               include_keys: include_keys
-             ) do
-          {:ok, value} when include_keys -> value
-          {:ok, value} -> "#{key}:#{value}"
-          {:error, _reason} -> "#{key}:default"
-        end
-
-      "organization" ->
-        "org"
-
-      _ ->
-        # widget_config or default
-        "default"
-    end
+  defp build_discriminator_id(integration, widget_options, organization_id) do
+    Castmill.Widgets.Integrations.build_discriminator_id(
+      integration,
+      widget_options,
+      organization_id
+    )
   end
 
   def get_widget_by_slug(slug) do
@@ -370,24 +357,50 @@ defmodule Castmill.Widgets do
           {:error, "No widget configuration found with the provided IDs"}
 
         %WidgetConfig{} = widget_config ->
-          current_timestamp = DateTime.utc_now()
-
-          widget_config
-          |> WidgetConfig.changeset(%{
-            options: options,
-            data: data,
-            last_request_at: current_timestamp
-          })
-          |> Ecto.Changeset.change(%{version: widget_config.version + 1})
-          |> Repo.update()
-          |> case do
-            {:ok, _updated_widget_config} ->
-              {:ok, "Widget configuration updated successfully"}
-
-            {:error, _changeset} = error ->
-              error
-          end
+          do_update_widget_config(widget_config, options, data, 3)
       end
+    end
+  end
+
+  # Updates the widget config through its changeset (so that the options and
+  # data schemas are validated) while still guaranteeing that every successful
+  # update advances the version. Optimistic locking makes the version bump
+  # conflict-safe: concurrent writers raise `Ecto.StaleEntryError` and retry
+  # against the freshly loaded record instead of silently writing the same
+  # version twice.
+  defp do_update_widget_config(%WidgetConfig{} = widget_config, options, data, attempts_left) do
+    current_timestamp = DateTime.utc_now()
+
+    changeset =
+      widget_config
+      |> Ecto.Changeset.optimistic_lock(:version)
+      |> WidgetConfig.changeset(%{
+        options: options,
+        data: data,
+        last_request_at: current_timestamp
+      })
+
+    try do
+      case Repo.update(changeset) do
+        {:ok, _updated_widget_config} ->
+          {:ok, "Widget configuration updated successfully"}
+
+        {:error, _changeset} = error ->
+          error
+      end
+    rescue
+      Ecto.StaleEntryError ->
+        if attempts_left > 1 do
+          case Repo.get(WidgetConfig, widget_config.id) do
+            nil ->
+              {:error, "No widget configuration found with the provided IDs"}
+
+            %WidgetConfig{} = reloaded ->
+              do_update_widget_config(reloaded, options, data, attempts_left - 1)
+          end
+        else
+          {:error, "Widget configuration was updated concurrently, please retry"}
+        end
     end
   end
 

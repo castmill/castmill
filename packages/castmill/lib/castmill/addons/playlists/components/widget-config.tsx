@@ -339,6 +339,9 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
   > | null>(null);
 
   let previewFetchTimer: ReturnType<typeof setTimeout> | undefined;
+  // Monotonic id used to discard responses from superseded requests, so that a
+  // slow request cannot overwrite the preview of a newer one.
+  let previewRequestId = 0;
 
   createEffect(() => {
     // Track option changes so the preview refetches when they change.
@@ -356,12 +359,19 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
     }
 
     previewFetchTimer = setTimeout(async () => {
+      const requestId = ++previewRequestId;
+
       const result = await PlaylistsService.prefetchWidgetData(
         props.baseUrl,
         props.organizationId,
         widgetId,
         options
       );
+
+      // Ignore out-of-order responses from superseded requests.
+      if (requestId !== previewRequestId) {
+        return;
+      }
 
       setPreviewData(result && result.data ? result.data : null);
     }, 500);
@@ -371,6 +381,8 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
     if (previewFetchTimer) {
       clearTimeout(previewFetchTimer);
     }
+    // Discard any in-flight response once the component goes away.
+    previewRequestId++;
   });
 
   /**
@@ -475,7 +487,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
         break;
       case 'location':
         if (!isLocationValueValid(value as LocationValue | null | undefined)) {
-          errorMessage = 'This field must have valid coordinates';
+          errorMessage = t('validation.invalidCoordinates');
         }
         break;
       default:

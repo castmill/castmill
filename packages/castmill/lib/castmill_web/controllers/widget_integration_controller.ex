@@ -533,7 +533,7 @@ defmodule CastmillWeb.WidgetIntegrationController do
       |> text("")
     else
       # Check if we already have cached data for this discriminator
-      discriminator_id = build_discriminator_id(integration, widget_options)
+      discriminator_id = build_discriminator_id(integration, widget_options, organization_id)
 
       case Integrations.get_integration_data_by_discriminator(integration.id, discriminator_id) do
         %Integrations.WidgetIntegrationData{} = data ->
@@ -598,7 +598,7 @@ defmodule CastmillWeb.WidgetIntegrationController do
       case fetch_with_module(fetcher_module_name, credentials, merged_options) do
         {:ok, data, _creds} ->
           # Store the data
-          discriminator_id = build_discriminator_id(integration, widget_options)
+          discriminator_id = build_discriminator_id(integration, widget_options, organization_id)
 
           case store_fetched_data(organization_id, widget_id, integration, discriminator_id, data) do
             {:ok, integration_data} ->
@@ -847,7 +847,11 @@ defmodule CastmillWeb.WidgetIntegrationController do
                     {:ok, data, _creds} ->
                       # Store the data and return it
                       discriminator_id =
-                        build_discriminator_id(integration, widget_config.options || %{})
+                        build_discriminator_id(
+                          integration,
+                          widget_config.options || %{},
+                          organization_id
+                        )
 
                       case store_fetched_data(
                              organization_id,
@@ -917,32 +921,8 @@ defmodule CastmillWeb.WidgetIntegrationController do
     end
   end
 
-  defp build_discriminator_id(integration, options) do
-    # For widget_option discriminators, also check pull_config for hardcoded values
-    # (e.g., RSS widgets have feed_url in pull_config, not in widget_options)
-    pull_config = integration.pull_config || %{}
-    merged_options = Map.merge(pull_config, options || %{})
-
-    case integration.discriminator_type do
-      "widget_option" ->
-        key = integration.discriminator_key || "id"
-        include_keys = String.contains?(key, ",")
-
-        case Castmill.Widgets.Integrations.widget_option_discriminator_value(key, merged_options,
-               missing: :default,
-               include_keys: include_keys
-             ) do
-          {:ok, value} when include_keys -> value
-          {:ok, value} -> "#{key}:#{value}"
-          {:error, _reason} -> "#{key}:default"
-        end
-
-      "organization" ->
-        "org"
-
-      _ ->
-        "default"
-    end
+  defp build_discriminator_id(integration, options, organization_id) do
+    Integrations.build_discriminator_id(integration, options, organization_id)
   end
 
   defp store_fetched_data(organization_id, widget_id, integration, discriminator_id, data) do
@@ -1028,7 +1008,8 @@ defmodule CastmillWeb.WidgetIntegrationController do
       end
 
     if refresh_due do
-      discriminator_id = build_discriminator_id(integration, widget_options || %{})
+      discriminator_id =
+        build_discriminator_id(integration, widget_options || %{}, organization_id)
 
       schedule_polling(
         organization_id,

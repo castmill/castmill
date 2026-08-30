@@ -389,7 +389,8 @@ defmodule Castmill.Resources do
               case fetch_with_module(fetcher_module_name, credentials, widget_options) do
                 {:ok, data, _creds} ->
                   # Store the data and return it
-                  discriminator_id = build_discriminator_id(integration, widget_options)
+                  discriminator_id =
+                    build_discriminator_id(integration, widget_options, organization_id)
 
                   case Integrations.upsert_integration_data(%{
                          widget_integration_id: integration.id,
@@ -453,32 +454,12 @@ defmodule Castmill.Resources do
     end
   end
 
-  defp build_discriminator_id(integration, options) do
-    # For widget_option discriminators, also check pull_config for hardcoded values
-    # (e.g., RSS widgets have feed_url in pull_config, not in widget_options)
-    pull_config = integration.pull_config || %{}
-    merged_options = Map.merge(pull_config, options || %{})
-
-    case integration.discriminator_type do
-      "widget_option" ->
-        key = integration.discriminator_key || "id"
-        include_keys = String.contains?(key, ",")
-
-        case Castmill.Widgets.Integrations.widget_option_discriminator_value(key, merged_options,
-               missing: :default,
-               include_keys: include_keys
-             ) do
-          {:ok, value} when include_keys -> value
-          {:ok, value} -> "#{key}:#{value}"
-          {:error, _reason} -> "#{key}:default"
-        end
-
-      "organization" ->
-        "org"
-
-      _ ->
-        "default"
-    end
+  defp build_discriminator_id(integration, options, organization_id) do
+    Castmill.Widgets.Integrations.build_discriminator_id(
+      integration,
+      options,
+      organization_id
+    )
   end
 
   defp resolve_widget_references(schema, data) do

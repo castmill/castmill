@@ -1049,7 +1049,8 @@
   },
   "validation": {
     "fieldRequired": "이 필드는 필수입니다",
-    "minLength": "이 필드는 최소 {{min}}자 이상이어야 합니다"
+    "minLength": "이 필드는 최소 {{min}}자 이상이어야 합니다",
+    "invalidCoordinates": "이 필드에는 유효한 좌표가 필요합니다"
   },
   "plurals": {
     "items": {

@@ -547,7 +547,7 @@ defmodule Castmill.Widgets.IntegrationsTest do
       assert {:ok, discriminator} =
                Integrations.compute_discriminator_id(integration, organization.id, nil, options)
 
-      assert discriminator == "opt:abc-123"
+      assert discriminator == "org:#{organization.id}|opt:abc-123"
     end
 
     test "compute_discriminator_id/4 for widget_option type with atom keys", %{
@@ -571,7 +571,7 @@ defmodule Castmill.Widgets.IntegrationsTest do
       assert {:ok, discriminator} =
                Integrations.compute_discriminator_id(integration, organization.id, nil, options)
 
-      assert discriminator == "opt:xyz-789"
+      assert discriminator == "org:#{organization.id}|opt:xyz-789"
     end
 
     test "compute_discriminator_id/4 for widget_option type preserves false values", %{
@@ -595,7 +595,7 @@ defmodule Castmill.Widgets.IntegrationsTest do
       assert {:ok, discriminator} =
                Integrations.compute_discriminator_id(integration, organization.id, nil, options)
 
-      assert discriminator == "opt:false"
+      assert discriminator == "org:#{organization.id}|opt:false"
     end
 
     test "compute_discriminator_id/4 for composite widget_option keys includes the unit", %{
@@ -640,6 +640,33 @@ defmodule Castmill.Widgets.IntegrationsTest do
       refute celsius_discriminator == fahrenheit_discriminator
       assert String.contains?(celsius_discriminator, "fahrenheit=default")
       assert String.contains?(fahrenheit_discriminator, "fahrenheit=true")
+    end
+
+    test "build_discriminator_id/3 scopes widget_option discriminators by organization", %{
+      widget: widget,
+      organization: organization
+    } do
+      {:ok, integration} =
+        Integrations.create_integration(%{
+          widget_id: widget.id,
+          name: "opt-test-#{System.unique_integer([:positive])}",
+          integration_type: "pull",
+          credential_scope: "organization",
+          discriminator_type: "widget_option",
+          discriminator_key: "property_id",
+          pull_endpoint: "https://api.example.com/data",
+          pull_interval_seconds: 300
+        })
+
+      options = %{"property_id" => "abc-123"}
+
+      discriminator = Integrations.build_discriminator_id(integration, options, organization.id)
+
+      other_discriminator =
+        Integrations.build_discriminator_id(integration, options, "other-organization")
+
+      assert discriminator == "org:#{organization.id}|property_id:abc-123"
+      refute discriminator == other_discriminator
     end
 
     test "compute_discriminator_id/4 for widget_option type missing option returns error", %{

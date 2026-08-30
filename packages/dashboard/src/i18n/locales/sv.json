@@ -1044,7 +1044,8 @@
   },
   "validation": {
     "fieldRequired": "Detta fält är obligatoriskt",
-    "minLength": "Detta fält måste vara minst {{min}} tecken långt"
+    "minLength": "Detta fält måste vara minst {{min}} tecken långt",
+    "invalidCoordinates": "Detta fält måste ha giltiga koordinater"
   },
   "plurals": {
     "items": {

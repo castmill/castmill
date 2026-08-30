@@ -653,6 +653,26 @@ defmodule Castmill.WidgetsTest do
       assert updated_widget_config.data == data
     end
 
+    test "advances the version on every successful update", %{
+      playlist: playlist,
+      playlist_item: playlist_item,
+      widget_config: widget_config,
+      options: options,
+      data: data
+    } do
+      initial_version = widget_config.version
+
+      assert {:ok, _} = Widgets.update_widget_config(playlist.id, playlist_item.id, options, data)
+
+      assert Widgets.get_widget_config(playlist.id, playlist_item.id).version ==
+               initial_version + 1
+
+      assert {:ok, _} = Widgets.update_widget_config(playlist.id, playlist_item.id, options, data)
+
+      assert Widgets.get_widget_config(playlist.id, playlist_item.id).version ==
+               initial_version + 2
+    end
+
     test "rejects invalid location widget options", %{
       playlist: playlist,
       playlist_item: playlist_item

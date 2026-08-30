@@ -521,7 +521,8 @@ defmodule Castmill.Widgets.Integrations do
   The discriminator determines how integration data is grouped and shared:
 
   - `"organization"` - All widgets in the org share data: discriminator = "org:#{org_id}"
-  - `"widget_option"` - Widgets with same option value share: discriminator = "opt:#{option_value}"
+  - `"widget_option"` - Widgets in the same organization with the same option
+    value share: discriminator = "org:#{org_id}|opt:#{option_value}"
   - `"widget_config"` - Each widget unique: discriminator = "cfg:#{widget_config_id}"
 
   ## Parameters
@@ -553,8 +554,11 @@ defmodule Castmill.Widgets.Integrations do
                missing: if(composite_discriminator_key?(key), do: :default, else: :error),
                include_keys: composite_discriminator_key?(key)
              ) do
-          {:ok, value} -> {:ok, "opt:#{value}"}
-          {:error, reason} -> {:error, reason}
+          {:ok, value} ->
+            {:ok, scope_discriminator_by_organization(organization_id, "opt:#{value}")}
+
+          {:error, reason} ->
+            {:error, reason}
         end
 
       "widget_config" ->
@@ -975,11 +979,16 @@ defmodule Castmill.Widgets.Integrations do
     end
   end
 
-  # Build discriminator ID based on integration configuration
-  # NOTE: discriminator does NOT
-  # include organization_id because all lookups are already scoped by organization.
-  # This keeps the discriminator consistent across all code paths.
-  defp build_discriminator_id(%WidgetIntegration{} = integration, options, _organization_id) do
+  @doc """
+  Builds the discriminator ID used to key cached integration data.
+
+  Widget-option discriminators are scoped by organization, since cached rows
+  are unique per `(widget_integration_id, discriminator_id)`: without the
+  organization scope two organizations using the same system integration and
+  the same options would share a single cache row, and could therefore be
+  served data fetched with another network's credentials.
+  """
+  def build_discriminator_id(%WidgetIntegration{} = integration, options, organization_id) do
     # For widget_option discriminators, also check pull_config for hardcoded values
     # (e.g., RSS widgets have feed_url in pull_config, not in widget_options)
     pull_config = integration.pull_config || %{}
@@ -990,14 +999,17 @@ defmodule Castmill.Widgets.Integrations do
         key = integration.discriminator_key || "id"
         include_keys = composite_discriminator_key?(key)
 
-        case widget_option_discriminator_value(key, merged_options,
-               missing: :default,
-               include_keys: include_keys
-             ) do
-          {:ok, value} when include_keys -> value
-          {:ok, value} -> "#{key}:#{value}"
-          {:error, _reason} -> "#{key}:default"
-        end
+        value =
+          case widget_option_discriminator_value(key, merged_options,
+                 missing: :default,
+                 include_keys: include_keys
+               ) do
+            {:ok, value} when include_keys -> value
+            {:ok, value} -> "#{key}:#{value}"
+            {:error, _reason} -> "#{key}:default"
+          end
+
+        scope_discriminator_by_organization(organization_id, value)
 
       "organization" ->
         "org"
@@ -1006,6 +1018,11 @@ defmodule Castmill.Widgets.Integrations do
         "default"
     end
   end
+
+  defp scope_discriminator_by_organization(nil, discriminator), do: discriminator
+
+  defp scope_discriminator_by_organization(organization_id, discriminator),
+    do: "org:#{organization_id}|#{discriminator}"
 
   defp composite_discriminator_key?(key) when is_binary(key), do: String.contains?(key, ",")
 

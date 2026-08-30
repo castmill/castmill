@@ -85,10 +85,34 @@ defmodule CastmillWeb.PlaylistController do
         |> json(%{error: "Cannot select this playlist as it would create a circular reference"})
         |> halt()
 
-      {:error, _} = error ->
-        error
+      {:error, %Ecto.Changeset{} = changeset} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{
+          error: "Invalid widget configuration",
+          errors: changeset_errors(changeset)
+        })
+        |> halt()
+
+      {:error, reason} ->
+        conn
+        |> put_status(:bad_request)
+        |> json(%{error: error_message(reason)})
+        |> halt()
     end
   end
+
+  defp changeset_errors(changeset) do
+    Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
+      Regex.replace(~r"%{(\w+)}", msg, fn _, key ->
+        opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
+      end)
+    end)
+  end
+
+  defp error_message(reason) when is_binary(reason), do: reason
+  defp error_message(reason) when is_atom(reason), do: to_string(reason)
+  defp error_message(reason), do: inspect(reason)
 
   def move_item(conn, %{
         "playlist_id" => playlist_id,

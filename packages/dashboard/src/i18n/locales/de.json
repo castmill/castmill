@@ -1071,7 +1071,8 @@
   },
   "validation": {
     "fieldRequired": "Dieses Feld ist erforderlich",
-    "minLength": "Dieses Feld muss mindestens {{min}} Zeichen lang sein"
+    "minLength": "Dieses Feld muss mindestens {{min}} Zeichen lang sein",
+    "invalidCoordinates": "Dieses Feld muss gültige Koordinaten enthalten"
   },
   "plurals": {
     "items": {

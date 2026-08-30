@@ -84,7 +84,7 @@ defmodule CastmillWeb.WidgetIntegrationControllerTest do
         widget_integration_id: integration.id,
         organization_id: organization.id,
         widget_config_id: widget_config.id,
-        discriminator_id: "feed_url:#{feed_url}",
+        discriminator_id: "org:#{organization.id}|feed_url:#{feed_url}",
         data: %{"items" => []},
         status: "active",
         version: 1,
@@ -156,7 +156,7 @@ defmodule CastmillWeb.WidgetIntegrationControllerTest do
 
       assert version > 0
 
-      discriminator = "feed_url:#{feed_url}"
+      discriminator = "org:#{organization.id}|feed_url:#{feed_url}"
 
       data =
         WidgetIntegrationData.base_query()
@@ -224,7 +224,7 @@ defmodule CastmillWeb.WidgetIntegrationControllerTest do
         widget_integration_id: integration.id,
         organization_id: organization.id,
         widget_config_id: widget_config.id,
-        discriminator_id: "feed_url:#{feed_url}",
+        discriminator_id: "org:#{organization.id}|feed_url:#{feed_url}",
         data: %{"items" => many_items},
         status: "active",
         version: 1,
@@ -296,7 +296,7 @@ defmodule CastmillWeb.WidgetIntegrationControllerTest do
         widget_integration_id: integration.id,
         organization_id: organization.id,
         widget_config_id: widget_config.id,
-        discriminator_id: "feed_url:#{feed_url}",
+        discriminator_id: "org:#{organization.id}|feed_url:#{feed_url}",
         data: %{"items" => many_items},
         status: "active",
         version: 1,

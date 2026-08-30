@@ -1049,7 +1049,8 @@
   },
   "validation": {
     "fieldRequired": "此字段为必填项",
-    "minLength": "此字段必须至少包含 {{min}} 个字符"
+    "minLength": "此字段必须至少包含 {{min}} 个字符",
+    "invalidCoordinates": "此字段必须包含有效的坐标"
   },
   "plurals": {
     "items": {

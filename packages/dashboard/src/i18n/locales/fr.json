@@ -1061,7 +1061,8 @@
   },
   "validation": {
     "fieldRequired": "Ce champ est requis",
-    "minLength": "Ce champ doit contenir au moins {{min}} caractères"
+    "minLength": "Ce champ doit contenir au moins {{min}} caractères",
+    "invalidCoordinates": "Ce champ doit contenir des coordonnées valides"
   },
   "plurals": {
     "items": {

@@ -1050,7 +1050,8 @@
   },
   "validation": {
     "fieldRequired": "この項目は必須です",
-    "minLength": "この項目は最低{{min}}文字以上である必要があります"
+    "minLength": "この項目は最低{{min}}文字以上である必要があります",
+    "invalidCoordinates": "この項目には有効な座標を入力してください"
   },
   "plurals": {
     "items": {
