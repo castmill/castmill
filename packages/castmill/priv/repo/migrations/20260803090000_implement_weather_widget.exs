@@ -7,6 +7,45 @@ defmodule Castmill.Repo.Migrations.ImplementWeatherWidget do
   alias Castmill.Widgets.Widget
   alias Castmill.Widgets.Integrations.WidgetIntegration
 
+  @weather_option_translations %{
+    "en" => %{
+      "label" => "Use Fahrenheit",
+      "description" => "Display temperatures in Fahrenheit instead of Celsius"
+    },
+    "es" => %{
+      "label" => "Usar Fahrenheit",
+      "description" => "Muestra las temperaturas en Fahrenheit en lugar de Celsius"
+    },
+    "sv" => %{
+      "label" => "Använd Fahrenheit",
+      "description" => "Visa temperaturer i Fahrenheit istället för Celsius"
+    },
+    "de" => %{
+      "label" => "Fahrenheit verwenden",
+      "description" => "Temperaturen in Fahrenheit statt in Celsius anzeigen"
+    },
+    "fr" => %{
+      "label" => "Utiliser Fahrenheit",
+      "description" => "Afficher les températures en Fahrenheit au lieu de Celsius"
+    },
+    "zh" => %{
+      "label" => "使用华氏度",
+      "description" => "以华氏度而不是摄氏度显示温度"
+    },
+    "ar" => %{
+      "label" => "استخدام فهرنهايت",
+      "description" => "اعرض درجات الحرارة بالفهرنهايت بدلًا من المئوية"
+    },
+    "ko" => %{
+      "label" => "화씨 사용",
+      "description" => "섭씨 대신 화씨로 온도를 표시합니다"
+    },
+    "ja" => %{
+      "label" => "華氏を使用",
+      "description" => "摂氏ではなく華氏で気温を表示します"
+    }
+  }
+
   def up do
     weather = Repo.one!(from(w in Widget, where: w.slug == "weather"))
 
@@ -18,6 +57,7 @@ defmodule Castmill.Repo.Migrations.ImplementWeatherWidget do
         options_schema: options_schema(),
         template: template(),
         data_schema: data_schema(),
+        translations: add_option_translations(weather.translations || %{}),
         webhook_url: nil,
         update_interval_seconds: 900
       ]
@@ -89,7 +129,7 @@ defmodule Castmill.Repo.Migrations.ImplementWeatherWidget do
         set: [
           description: "Display weather information.",
           aspect_ratio: nil,
-          options_schema: options_schema(),
+          options_schema: original_options_schema(),
           template: %{
             "type" => "group",
             "name" => "weather",
@@ -122,11 +162,29 @@ defmodule Castmill.Repo.Migrations.ImplementWeatherWidget do
               }
             }
           },
+          translations: remove_option_translations(weather.translations || %{}),
           webhook_url: "widgets/weather",
           update_interval_seconds: 60
         ]
       )
     end
+  end
+
+  defp original_options_schema do
+    %{
+      "location" => %{
+        "type" => "location",
+        "required" => true,
+        "description" => "Select the location for weather information",
+        "default" => %{
+          "lat" => 51.505,
+          "lng" => -0.09,
+          "address" => "London, United Kingdom"
+        },
+        "defaultZoom" => 10,
+        "order" => 1
+      }
+    }
   end
 
   defp options_schema do
@@ -164,7 +222,7 @@ defmodule Castmill.Repo.Migrations.ImplementWeatherWidget do
         "box-sizing" => "border-box",
         "overflow" => "hidden",
         "padding" => "2.5em 3em",
-        "font-size" => "1.8vh",
+        "font-size" => "1.8vmin",
         "color" => "#f8fafc",
         "background" =>
           "radial-gradient(circle at top right, #38bdf8 0%, #2563eb 35%, #172554 100%)",
@@ -372,6 +430,40 @@ defmodule Castmill.Repo.Migrations.ImplementWeatherWidget do
         }
       ]
     }
+  end
+
+  defp add_option_translations(existing_translations) do
+    Enum.reduce(
+      @weather_option_translations,
+      existing_translations,
+      fn {locale, translation}, acc ->
+        Map.update(
+          acc,
+          locale,
+          %{"options" => %{"fahrenheit" => translation}},
+          fn locale_translations ->
+            options = Map.get(locale_translations, "options", %{})
+            updated_options = Map.put(options, "fahrenheit", translation)
+            Map.put(locale_translations, "options", updated_options)
+          end
+        )
+      end
+    )
+  end
+
+  defp remove_option_translations(existing_translations) do
+    Enum.into(existing_translations, %{}, fn {locale, locale_translations} ->
+      options = Map.get(locale_translations, "options", %{}) |> Map.delete("fahrenheit")
+
+      updated_locale_translations =
+        if map_size(options) == 0 do
+          Map.delete(locale_translations, "options")
+        else
+          Map.put(locale_translations, "options", options)
+        end
+
+      {locale, updated_locale_translations}
+    end)
   end
 
   defp data_schema do
