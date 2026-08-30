@@ -20,7 +20,27 @@ defmodule CastmillWeb.Live.Admin.NetworkIntegrationForm do
         </p>
       </div>
 
+      <div :if={@optional} class="mt-4 p-3 bg-blue-50 rounded-md border border-blue-200">
+        <p class="text-sm text-blue-800">
+          <span class="font-semibold">Optional</span>
+          - this integration works for free for non-commercial use. For commercial use,
+          configure a subscription API key below. It is stored once for the whole network
+          and shared by all organizations. Leave it empty to keep using the free tier.
+        </p>
+      </div>
+
+      <div
+        :if={not @optional and not @has_config_form}
+        class="mt-4 p-3 bg-blue-50 rounded-md border border-blue-200"
+      >
+        <p class="text-sm text-blue-800">
+          <span class="font-semibold">No configuration required</span>
+          - this integration works without any credentials, so there is nothing to set up here.
+        </p>
+      </div>
+
       <.simple_form
+        :if={@has_config_form}
         for={@form}
         id="network-integration-form"
         phx-target={@myself}
@@ -63,7 +83,10 @@ defmodule CastmillWeb.Live.Admin.NetworkIntegrationForm do
         </:actions>
       </.simple_form>
 
-      <div :if={@has_existing} class="mt-4 p-3 bg-green-50 rounded-md border border-green-200">
+      <div
+        :if={@has_config_form && @has_existing}
+        class="mt-4 p-3 bg-green-50 rounded-md border border-green-200"
+      >
         <p class="text-sm text-green-800">
           <span class="font-semibold">✓ Configured</span>
           - Credentials are stored and encrypted for this network.
@@ -103,6 +126,9 @@ defmodule CastmillWeb.Live.Admin.NetworkIntegrationForm do
      |> assign(:credential_fields, credential_fields)
      |> assign(:has_existing, has_existing)
      |> assign(:is_enabled, is_enabled)
+     |> assign(:requires_config, Integrations.requires_network_credentials?(integration))
+     |> assign(:optional, get_in(integration.credential_schema, ["auth_type"]) == "optional")
+     |> assign(:has_config_form, credential_fields != [])
      |> assign_form(form_data)}
   end
 

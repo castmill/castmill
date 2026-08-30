@@ -73,6 +73,17 @@ defmodule Castmill.Widgets.Integrations.Fetchers.OpenMeteoTest do
     assert celsius_params["temperature_unit"] == "celsius"
   end
 
+  test "extracts the optional commercial API key from credentials or options" do
+    assert OpenMeteo.api_key(%{"apikey" => "secret"}) == "secret"
+    assert OpenMeteo.api_key(%{apikey: "secret"}) == "secret"
+    assert OpenMeteo.api_key(%{}, %{"apikey" => "from-options"}) == "from-options"
+
+    # Blank or missing keys fall back to nil (free non-commercial tier).
+    assert OpenMeteo.api_key(%{"apikey" => "  "}) == nil
+    assert OpenMeteo.api_key(%{}) == nil
+    assert OpenMeteo.api_key(%{}, %{}) == nil
+  end
+
   test "rejects malformed API data" do
     assert {:error, :invalid_response} = OpenMeteo.transform(%{"current" => %{}}, %{})
   end

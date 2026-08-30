@@ -28,12 +28,24 @@ defmodule Castmill.Repo.Migrations.ImplementWeatherWidget do
       name: "open-meteo",
       description: "Free weather forecasts from Open-Meteo",
       integration_type: "pull",
-      credential_scope: "widget",
-      credential_schema: %{"auth_type" => "none"},
+      credential_scope: "organization",
+      credential_schema: %{
+        "auth_type" => "optional",
+        "fields" => %{
+          "apikey" => %{
+            "label" => "Commercial API Key",
+            "type" => "password",
+            "required" => false,
+            "description" =>
+              "Optional. Open-Meteo is free for non-commercial use. For commercial use, " <>
+                "enter the API key from your Open-Meteo subscription."
+          }
+        }
+      },
       pull_endpoint: "https://api.open-meteo.com/v1/forecast",
       pull_interval_seconds: 900,
       pull_config: %{
-        "auth_type" => "none",
+        "auth_type" => "optional",
         "fetcher_module" => "Castmill.Widgets.Integrations.Fetchers.OpenMeteo"
       },
       discriminator_type: "widget_option",

@@ -317,6 +317,61 @@ defmodule Castmill.Widgets.Integrations do
   # ============================================================================
 
   @doc """
+  Resolves the effective credentials to pass to a fetcher for an organization.
+
+  Credentials can come from two levels:
+
+    - Network-level credentials shared across all organizations in the network
+      (e.g. a single commercial Open-Meteo API key for the whole network).
+    - Organization-level credentials specific to the organization.
+
+  Organization-level values take precedence over network-level values. For
+  integrations whose `auth_type` is `"optional"` or `"none"`, missing
+  credentials are not an error (the fetcher works without them); otherwise a
+  missing credential returns `{:error, :no_credentials}`.
+  """
+  def get_fetch_credentials(organization_id, %WidgetIntegration{} = integration) do
+    network_creds = get_network_credentials_for_organization(organization_id, integration.id)
+
+    org_creds =
+      case get_organization_credentials(organization_id, integration.id) do
+        {:ok, creds} when is_map(creds) -> creds
+        _ -> %{}
+      end
+
+    merged = Map.merge(network_creds, org_creds)
+
+    cond do
+      merged != %{} -> {:ok, merged}
+      optional_or_none_auth?(integration) -> {:ok, %{}}
+      true -> {:error, :no_credentials}
+    end
+  end
+
+  @doc """
+  Returns decrypted network-level credentials for the network that owns the
+  given organization, or an empty map when none are configured.
+  """
+  def get_network_credentials_for_organization(organization_id, integration_id) do
+    with %{network_id: network_id} when not is_nil(network_id) <-
+           Castmill.Organizations.get_organization(organization_id),
+         {:ok, creds} when is_map(creds) <-
+           get_decrypted_network_credentials(network_id, integration_id) do
+      creds
+    else
+      _ -> %{}
+    end
+  end
+
+  defp optional_or_none_auth?(%WidgetIntegration{} = integration) do
+    auth_type =
+      get_in(integration.pull_config || %{}, ["auth_type"]) ||
+        get_in(integration.credential_schema || %{}, ["auth_type"])
+
+    auth_type in ["optional", "none"]
+  end
+
+  @doc """
   Gets decrypted organization-scoped credentials for an integration.
 
   Uses the organization's encryption key to decrypt stored credentials.
@@ -1374,9 +1429,13 @@ defmodule Castmill.Widgets.Integrations do
   end
 
   @doc """
-  Lists all integrations that require network-level credentials (system widgets).
+  Lists all system-widget integrations that expose a credential schema.
+
+  This includes credential-free integrations (e.g. Open-Meteo); callers can use
+  `requires_network_credentials?/1` to determine whether a given integration
+  actually needs a network administrator to configure anything.
   """
-  def list_system_integrations_requiring_credentials do
+  def list_system_integrations do
     from(wi in WidgetIntegration,
       join: w in assoc(wi, :widget),
       where: w.is_system == true,
@@ -1385,6 +1444,49 @@ defmodule Castmill.Widgets.Integrations do
     )
     |> Repo.all()
   end
+
+  @doc """
+  Lists all integrations that require network-level credentials (system widgets).
+
+  Integrations that are credential-free (`auth_type` of `"none"` or `"optional"`,
+  or an otherwise empty credential schema) are excluded, since there is nothing
+  for a network administrator to configure for them (e.g. the credential-free
+  Open-Meteo weather integration).
+  """
+  def list_system_integrations_requiring_credentials do
+    list_system_integrations()
+    |> Enum.filter(&requires_network_credentials?/1)
+  end
+
+  @doc false
+  def requires_network_credentials?(%WidgetIntegration{credential_schema: schema}) do
+    requires_network_credentials?(schema)
+  end
+
+  def requires_network_credentials?(nil), do: false
+  def requires_network_credentials?(schema) when schema == %{}, do: false
+
+  def requires_network_credentials?(schema) when is_map(schema) do
+    auth_type = Map.get(schema, "auth_type")
+
+    cond do
+      # Credential-free or optionally-authenticated integrations need no setup.
+      auth_type in ["none", "optional"] -> false
+      # OAuth or an explicit (non-optional) auth type requires configuration.
+      Map.has_key?(schema, "oauth2") -> true
+      not is_nil(auth_type) -> true
+      # Fall back to whether there are any credential fields to fill in.
+      true -> has_credential_fields?(Map.get(schema, "fields"))
+    end
+  end
+
+  def requires_network_credentials?(_schema), do: false
+
+  # Credential fields may be provided either as a map keyed by field name or as
+  # a list of field definitions.
+  defp has_credential_fields?(fields) when is_map(fields), do: map_size(fields) > 0
+  defp has_credential_fields?(fields) when is_list(fields), do: fields != []
+  defp has_credential_fields?(_fields), do: false
 
   @doc """
   Gets and decrypts widget-scoped credentials for an integration.

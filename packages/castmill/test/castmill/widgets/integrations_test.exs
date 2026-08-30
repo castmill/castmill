@@ -340,6 +340,44 @@ defmodule Castmill.Widgets.IntegrationsTest do
       assert creds.client_secret == "network-secret"
     end
 
+    test "get_fetch_credentials/2 merges network-level credentials for the organization", %{
+      network: _network,
+      organization: organization,
+      integration: integration
+    } do
+      # No credentials configured yet: spotify requires credentials, so error.
+      assert {:error, :no_credentials} =
+               Integrations.get_fetch_credentials(organization.id, integration)
+
+      # Configure a network-level credential shared across the network.
+      {:ok, _} =
+        Integrations.upsert_network_credentials(
+          organization.network_id,
+          integration.id,
+          %{"apikey" => "network-shared-key"}
+        )
+
+      assert {:ok, creds} = Integrations.get_fetch_credentials(organization.id, integration)
+      assert creds["apikey"] == "network-shared-key"
+    end
+
+    test "get_fetch_credentials/2 returns empty map for optional integrations without credentials",
+         %{organization: organization, widget: widget} do
+      {:ok, optional_integration} =
+        Integrations.create_integration(%{
+          widget_id: widget.id,
+          name: "optional-#{System.unique_integer([:positive])}",
+          integration_type: "pull",
+          credential_scope: "organization",
+          pull_endpoint: "https://example.com/api",
+          pull_interval_seconds: 300,
+          credential_schema: %{"auth_type" => "optional"}
+        })
+
+      assert {:ok, %{}} =
+               Integrations.get_fetch_credentials(organization.id, optional_integration)
+    end
+
     test "list_system_integrations_requiring_credentials/0 returns system integrations with schemas",
          %{
            integration: integration
@@ -351,6 +389,53 @@ defmodule Castmill.Widgets.IntegrationsTest do
       found = Enum.find(integrations, fn i -> i.id == integration.id end)
       assert found.widget.is_system == true
       assert found.credential_schema != nil
+    end
+
+    test "list_system_integrations_requiring_credentials/0 excludes credential-free integrations" do
+      {:ok, widget} =
+        Widgets.create_widget(%{
+          name: "Auth-free Widget #{System.unique_integer([:positive])}",
+          slug: "authfree-#{System.unique_integer([:positive])}",
+          template: %{"html" => "<div>Weather</div>"},
+          is_system: true
+        })
+
+      {:ok, integration} =
+        Integrations.create_integration(%{
+          widget_id: widget.id,
+          name: "open-meteo",
+          description: "Credential-free weather",
+          integration_type: "pull",
+          credential_scope: "widget",
+          pull_endpoint: "https://api.open-meteo.com/v1/forecast",
+          pull_interval_seconds: 900,
+          credential_schema: %{"auth_type" => "none"}
+        })
+
+      integrations = Integrations.list_system_integrations_requiring_credentials()
+
+      refute Enum.any?(integrations, fn i -> i.id == integration.id end)
+    end
+
+    test "requires_network_credentials?/1 classifies schemas correctly" do
+      refute Integrations.requires_network_credentials?(nil)
+      refute Integrations.requires_network_credentials?(%{})
+      refute Integrations.requires_network_credentials?(%{"auth_type" => "none"})
+      refute Integrations.requires_network_credentials?(%{"auth_type" => "optional"})
+      refute Integrations.requires_network_credentials?(%{"fields" => %{}})
+      refute Integrations.requires_network_credentials?(%{"fields" => []})
+
+      assert Integrations.requires_network_credentials?(%{"auth_type" => "oauth2"})
+      assert Integrations.requires_network_credentials?(%{"auth_type" => "api_key"})
+      assert Integrations.requires_network_credentials?(%{"oauth2" => %{}})
+
+      assert Integrations.requires_network_credentials?(%{
+               "fields" => [%{"name" => "client_id"}]
+             })
+
+      assert Integrations.requires_network_credentials?(%{
+               "fields" => %{"api_key" => %{"required" => true}}
+             })
     end
   end
 

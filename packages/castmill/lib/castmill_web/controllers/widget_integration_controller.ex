@@ -179,9 +179,10 @@ defmodule CastmillWeb.WidgetIntegrationController do
       credential_schema == %{} ->
         false
 
-      # "optional" auth_type means credentials are not required upfront
-      # (e.g., RSS feeds that work without auth but optionally support Basic Auth)
-      Map.get(credential_schema, "auth_type") == "optional" ->
+      # "optional" or "none" auth_type means credentials are not required
+      # upfront (e.g., RSS feeds that work without auth but optionally support
+      # Basic Auth, or credential-free APIs like Open-Meteo).
+      Map.get(credential_schema, "auth_type") in ["optional", "none"] ->
         false
 
       # Has required auth_type (e.g., "oauth2", "api_key", "basic")
@@ -572,24 +573,14 @@ defmodule CastmillWeb.WidgetIntegrationController do
          widget_options,
          fetcher_module_name,
          pull_config,
-         credential_schema
+         _credential_schema
        ) do
-    # Get credentials or use empty map for optional auth
-    auth_type =
-      Map.get(pull_config, "auth_type") ||
-        Map.get(credential_schema, "auth_type") ||
-        "required"
-
+    # Resolve credentials, merging network-level credentials (shared across the
+    # network, e.g. a commercial API key) with any organization-level ones.
     credentials =
-      case Integrations.get_organization_credentials(organization_id, integration.id) do
-        {:ok, creds} ->
-          creds
-
-        {:error, _reason} when auth_type in ["optional", "none"] ->
-          %{}
-
-        {:error, _reason} ->
-          nil
+      case Integrations.get_fetch_credentials(organization_id, integration) do
+        {:ok, creds} -> creds
+        {:error, _reason} -> nil
       end
 
     if is_nil(credentials) do
@@ -823,27 +814,16 @@ defmodule CastmillWeb.WidgetIntegrationController do
         # Only handle PULL integrations with fetcher modules
         if integration.integration_type == "pull" do
           pull_config = integration.pull_config || %{}
-          credential_schema = integration.credential_schema || %{}
           fetcher_module_name = Map.get(pull_config, "fetcher_module")
 
           if fetcher_module_name do
-            # Get credentials (already decrypted) or use empty map for optional auth
-            # auth_type can be in pull_config or credential_schema
-            auth_type =
-              Map.get(pull_config, "auth_type") ||
-                Map.get(credential_schema, "auth_type") ||
-                "required"
-
+            # Resolve credentials, merging network-level credentials (shared
+            # across the network, e.g. a commercial API key) with any
+            # organization-level ones. Optional/none auth yields an empty map.
             credentials =
-              case Integrations.get_organization_credentials(organization_id, integration.id) do
-                {:ok, creds} ->
-                  creds
-
-                {:error, _reason} when auth_type in ["optional", "none"] ->
-                  %{}
-
-                {:error, _reason} ->
-                  nil
+              case Integrations.get_fetch_credentials(organization_id, integration) do
+                {:ok, creds} -> creds
+                {:error, _reason} -> nil
               end
 
             if credentials do

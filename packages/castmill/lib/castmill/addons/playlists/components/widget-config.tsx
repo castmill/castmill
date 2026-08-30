@@ -1,4 +1,11 @@
-import { Component, For, createEffect, createSignal, Show } from 'solid-js';
+import {
+  Component,
+  For,
+  createEffect,
+  createSignal,
+  onCleanup,
+  Show,
+} from 'solid-js';
 import { authFetch } from '../../common/services/auth-fetch';
 import {
   JsonPlaylistItem,
@@ -320,6 +327,51 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
 
   const [widgetOptions, setWidgetOptions] =
     createSignal<OptionsDict>(originalOptions);
+
+  // Integration data shown in the live preview. Unlike the playlist item view,
+  // the preview must reflect the options currently being edited (e.g. toggling
+  // the temperature unit on the Weather widget) before they are saved. We fetch
+  // it via the prefetch endpoint, which computes the data from the supplied
+  // options rather than the previously persisted ones.
+  const [previewData, setPreviewData] = createSignal<Record<
+    string,
+    any
+  > | null>(null);
+
+  let previewFetchTimer: ReturnType<typeof setTimeout> | undefined;
+
+  createEffect(() => {
+    // Track option changes so the preview refetches when they change.
+    const options = widgetOptions();
+    const widgetId = props.item.widget?.id;
+
+    if (!widgetId || !props.baseUrl || !props.organizationId) {
+      return;
+    }
+
+    // Debounce to avoid hammering the integration endpoint while the user is
+    // still editing (e.g. typing into text fields).
+    if (previewFetchTimer) {
+      clearTimeout(previewFetchTimer);
+    }
+
+    previewFetchTimer = setTimeout(async () => {
+      const result = await PlaylistsService.prefetchWidgetData(
+        props.baseUrl,
+        props.organizationId,
+        widgetId,
+        options
+      );
+
+      setPreviewData(result && result.data ? result.data : null);
+    }, 500);
+  });
+
+  onCleanup(() => {
+    if (previewFetchTimer) {
+      clearTimeout(previewFetchTimer);
+    }
+  });
 
   /**
    * Gets the form type for a schema entry.
@@ -923,6 +975,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
           widget={props.item.widget}
           config={widgetConfig()}
           options={widgetOptions()}
+          previewData={previewData()}
           baseUrl={props.baseUrl}
           socket={props.store.socket}
         />

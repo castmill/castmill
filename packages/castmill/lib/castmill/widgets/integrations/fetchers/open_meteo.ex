@@ -1,22 +1,34 @@
 defmodule Castmill.Widgets.Integrations.Fetchers.OpenMeteo do
   @moduledoc """
-  Fetches current conditions and a short forecast from the credential-free
-  Open-Meteo API.
+  Fetches current conditions and a short forecast from Open-Meteo.
+
+  Open-Meteo is free for non-commercial use and requires no credentials. For
+  commercial use an API key from an Open-Meteo subscription can be provided; when
+  present the fetcher uses the commercial (`customer-api`) endpoint and appends
+  the key as the `apikey` query parameter.
   """
 
   @behaviour Castmill.Widgets.Integrations.Fetcher
 
-  @endpoint "https://api.open-meteo.com/v1/forecast"
+  @free_endpoint "https://api.open-meteo.com/v1/forecast"
+  @commercial_endpoint "https://customer-api.open-meteo.com/v1/forecast"
   @timeout 10_000
 
   @impl true
   def fetch(credentials, %{"location" => %{"lat" => lat, "lng" => lng}} = options)
       when is_number(lat) and is_number(lng) do
-    query = URI.encode_query(query_params(options))
+    api_key = api_key(credentials, options)
+    endpoint = if api_key, do: @commercial_endpoint, else: @free_endpoint
+
+    query =
+      options
+      |> query_params()
+      |> maybe_put_api_key(api_key)
+      |> URI.encode_query()
 
     headers = [{"Accept", "application/json"}, {"User-Agent", "Castmill/1.0"}]
 
-    case HTTPoison.get("#{@endpoint}?#{query}", headers, recv_timeout: @timeout) do
+    case HTTPoison.get("#{endpoint}?#{query}", headers, recv_timeout: @timeout) do
       {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
         with {:ok, response} <- Jason.decode(body),
              {:ok, data} <- transform(response, options["location"]) do
@@ -35,6 +47,33 @@ defmodule Castmill.Widgets.Integrations.Fetchers.OpenMeteo do
   end
 
   def fetch(credentials, _options), do: {:error, :invalid_location, credentials}
+
+  # Reads the optional commercial API key from stored credentials (preferred) or
+  # from the widget options, normalizing blank values to `nil`.
+  @doc false
+  def api_key(credentials, options \\ %{}) do
+    raw =
+      credential_value(credentials, "apikey") ||
+        credential_value(options, "apikey")
+
+    case raw do
+      value when is_binary(value) ->
+        trimmed = String.trim(value)
+        if trimmed == "", do: nil, else: trimmed
+
+      _ ->
+        nil
+    end
+  end
+
+  defp credential_value(map, key) when is_map(map) do
+    Map.get(map, key) || Map.get(map, String.to_atom(key))
+  end
+
+  defp credential_value(_map, _key), do: nil
+
+  defp maybe_put_api_key(params, nil), do: params
+  defp maybe_put_api_key(params, api_key), do: Map.put(params, "apikey", api_key)
 
   @doc false
   def query_params(%{"location" => %{"lat" => lat, "lng" => lng}} = options) do

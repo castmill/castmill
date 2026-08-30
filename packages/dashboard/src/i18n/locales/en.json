@@ -950,7 +950,9 @@
       "pending": "Pending Setup",
       "enterClientCredentials": "Enter your {{provider}} API credentials below:",
       "afterSavingCredentials": "After saving your credentials, click below to authorize with {{provider}}:",
-      "networkCredentialsConfigured": "Your network administrator has already configured {{provider}} credentials. Simply click the button below to connect your account."
+      "networkCredentialsConfigured": "Your network administrator has already configured {{provider}} credentials. Simply click the button below to connect your account.",
+      "noConfigurationRequired": "No Configuration Required",
+      "optional": "Optional"
     },
     "translations": "Translations"
   },

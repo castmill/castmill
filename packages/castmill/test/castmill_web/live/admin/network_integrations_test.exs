@@ -222,6 +222,120 @@ defmodule CastmillWeb.Live.Admin.NetworkIntegrationsTest do
     end
   end
 
+  describe "network tabs" do
+    test "widgets tab renders without crashing and lists widgets", %{
+      conn: conn,
+      network: network,
+      admin_user: admin_user,
+      widget: widget
+    } do
+      conn = log_in_admin(conn, admin_user)
+      {:ok, _view, html} = live(conn, ~p"/admin/networks/#{network.id}/widgets")
+
+      assert html =~ widget.name
+    end
+
+    test "not-yet-implemented tabs render gracefully instead of crashing", %{
+      conn: conn,
+      network: network,
+      admin_user: admin_user
+    } do
+      conn = log_in_admin(conn, admin_user)
+
+      for tab <- ["channels", "playlists", "medias"] do
+        assert {:ok, _view, _html} = live(conn, ~p"/admin/networks/#{network.id}/#{tab}")
+      end
+    end
+
+    test "credential-free integrations are shown as needing no configuration", %{
+      conn: conn,
+      network: network,
+      admin_user: admin_user
+    } do
+      {:ok, weather_widget} =
+        Widgets.create_widget(%{
+          name: "Weather #{System.unique_integer([:positive])}",
+          slug: "weather-#{System.unique_integer([:positive])}",
+          template: %{"html" => "<div>Weather</div>"},
+          is_system: true
+        })
+
+      {:ok, integration} =
+        Integrations.create_integration(%{
+          widget_id: weather_widget.id,
+          name: "no-auth-#{System.unique_integer([:positive])}",
+          description: "Credential-free integration",
+          integration_type: "pull",
+          credential_scope: "widget",
+          pull_endpoint: "https://example.com/api",
+          pull_interval_seconds: 900,
+          credential_schema: %{"auth_type" => "none"}
+        })
+
+      conn = log_in_admin(conn, admin_user)
+      {:ok, _view, html} = live(conn, ~p"/admin/networks/#{network.id}/integrations")
+
+      assert html =~ integration.name
+      assert html =~ "No configuration required"
+
+      {:ok, _view, configure_html} =
+        live(
+          conn,
+          ~p"/admin/networks/#{network.id}/integrations/#{integration.id}/configure"
+        )
+
+      assert configure_html =~ "No configuration required"
+    end
+
+    test "optional integrations are shown as optional with a per-organization note", %{
+      conn: conn,
+      network: network,
+      admin_user: admin_user
+    } do
+      {:ok, weather_widget} =
+        Widgets.create_widget(%{
+          name: "Weather #{System.unique_integer([:positive])}",
+          slug: "weather-#{System.unique_integer([:positive])}",
+          template: %{"html" => "<div>Weather</div>"},
+          is_system: true
+        })
+
+      {:ok, weather_integration} =
+        Integrations.create_integration(%{
+          widget_id: weather_widget.id,
+          name: "open-meteo",
+          description: "Weather with optional commercial key",
+          integration_type: "pull",
+          credential_scope: "organization",
+          pull_endpoint: "https://api.open-meteo.com/v1/forecast",
+          pull_interval_seconds: 900,
+          credential_schema: %{
+            "auth_type" => "optional",
+            "fields" => %{
+              "apikey" => %{"label" => "Commercial API Key", "required" => false}
+            }
+          }
+        })
+
+      conn = log_in_admin(conn, admin_user)
+      {:ok, _view, html} = live(conn, ~p"/admin/networks/#{network.id}/integrations")
+
+      # It should be listed and flagged as optional.
+      assert html =~ weather_integration.name
+      assert html =~ "Optional"
+
+      # The configure page should explain it's optional and configured per organization.
+      {:ok, _view, configure_html} =
+        live(
+          conn,
+          ~p"/admin/networks/#{network.id}/integrations/#{weather_integration.id}/configure"
+        )
+
+      assert configure_html =~ "Optional"
+      assert configure_html =~ "whole network"
+    end
+  end
+
   # Helper to log in as admin
   defp log_in_admin(conn, user) do
     # Generate a session token for the user

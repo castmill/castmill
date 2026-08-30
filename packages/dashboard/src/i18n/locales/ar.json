@@ -915,7 +915,9 @@
       "pending": "في انتظار الإعداد",
       "enterClientCredentials": "أدخل بيانات اعتماد API الخاصة بـ {{provider}} أدناه:",
       "afterSavingCredentials": "بعد حفظ بيانات الاعتماد الخاصة بك، انقر أدناه للتفويض مع {{provider}}:",
-      "networkCredentialsConfigured": "قام مسؤول الشبكة لديك بالفعل بتكوين بيانات اعتماد {{provider}}. ما عليك سوى النقر على الزر أدناه لربط حسابك."
+      "networkCredentialsConfigured": "قام مسؤول الشبكة لديك بالفعل بتكوين بيانات اعتماد {{provider}}. ما عليك سوى النقر على الزر أدناه لربط حسابك.",
+      "noConfigurationRequired": "لا يتطلب أي إعداد",
+      "optional": "اختياري"
     },
     "translations": "الترجمات"
   },

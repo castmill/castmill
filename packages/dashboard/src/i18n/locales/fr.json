@@ -927,7 +927,9 @@
       "pending": "Configuration en attente",
       "enterClientCredentials": "Entrez vos identifiants API {{provider}} ci-dessous :",
       "afterSavingCredentials": "Après avoir enregistré vos identifiants, cliquez ci-dessous pour autoriser avec {{provider}} :",
-      "networkCredentialsConfigured": "Votre administrateur réseau a déjà configuré les identifiants {{provider}}. Cliquez simplement sur le bouton ci-dessous pour connecter votre compte."
+      "networkCredentialsConfigured": "Votre administrateur réseau a déjà configuré les identifiants {{provider}}. Cliquez simplement sur le bouton ci-dessous pour connecter votre compte.",
+      "noConfigurationRequired": "Aucune configuration requise",
+      "optional": "Facultatif"
     },
     "translations": "Traductions"
   },

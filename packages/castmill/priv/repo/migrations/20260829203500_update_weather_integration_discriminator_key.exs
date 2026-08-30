@@ -14,7 +14,9 @@ defmodule Castmill.Repo.Migrations.UpdateWeatherIntegrationDiscriminatorKey do
       from(i in WidgetIntegration,
         where: i.widget_id == ^weather.id and i.name == "open-meteo"
       )
-      |> Repo.update_all(set: [discriminator_key: "location,fahrenheit"])
+      |> Repo.update_all(
+        set: [discriminator_type: "widget_option", discriminator_key: "location,fahrenheit"]
+      )
     end
   end
 

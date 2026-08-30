@@ -916,7 +916,9 @@
       "pending": "設定待ち",
       "enterClientCredentials": "以下に{{provider}} APIの資格情報を入力してください：",
       "afterSavingCredentials": "資格情報を保存した後、下のボタンをクリックして{{provider}}で認証してください：",
-      "networkCredentialsConfigured": "ネットワーク管理者が{{provider}}の資格情報を既に設定しています。下のボタンをクリックするだけでアカウントを接続できます。"
+      "networkCredentialsConfigured": "ネットワーク管理者が{{provider}}の資格情報を既に設定しています。下のボタンをクリックするだけでアカウントを接続できます。",
+      "noConfigurationRequired": "設定不要",
+      "optional": "任意"
     },
     "translations": "翻訳"
   },

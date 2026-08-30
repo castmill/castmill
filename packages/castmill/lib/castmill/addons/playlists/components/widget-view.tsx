@@ -32,7 +32,29 @@ interface WidgetViewProps {
   options: OptionsDict;
   baseUrl?: string;
   socket?: Socket;
+  /**
+   * When provided, the parent controls the integration data shown in the
+   * preview (e.g. the widget config dialog fetches data based on the live,
+   * in-progress options). Supplying this prop (even as `null`) disables the
+   * internal config-id based fetch so the preview reflects unsaved option
+   * changes such as switching temperature units.
+   */
+  previewData?: Record<string, any> | null;
 }
+
+/**
+ * Resolves which data set the widget preview should render, in priority order:
+ * parent-provided preview data (live, unsaved options) > fetched integration
+ * data > saved config data > schema defaults.
+ */
+export const resolveEffectiveWidgetData = (
+  previewData: Record<string, any> | null | undefined,
+  integrationData: Record<string, any> | null,
+  configData: Record<string, any> | null,
+  defaultData: Record<string, any>
+): Record<string, any> => {
+  return previewData ?? (integrationData || configData || defaultData);
+};
 
 export const getWidgetViewAspectRatio = (
   widget: JsonWidget,
@@ -217,6 +239,14 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
     const configId = props.config.id;
     const configOptions = props.config.options;
 
+    // When previewData is supplied, the parent drives the integration data
+    // based on the live (possibly unsaved) options, so skip the config-id
+    // fetch which would otherwise read the previously saved options.
+    if (props.previewData !== undefined) {
+      setDataLoaded(true);
+      return;
+    }
+
     // Only set loading state if we have something to fetch
     // For new widgets without an ID, we skip fetching and use defaults
     if (configId && props.baseUrl) {
@@ -248,13 +278,18 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
     // Generate default data from data_schema for preview mode
     const defaultData = getDefaultDataFromSchema(currentWidget.data_schema);
 
-    // Priority: integration data > config data > default data
+    // Priority: parent-provided preview data > integration data > config data > default data
     const integration = integrationData();
     const configData =
       currentConfig.data && Object.keys(currentConfig.data).length > 0
         ? currentConfig.data
         : null;
-    const effectiveData = integration || configData || defaultData;
+    const effectiveData = resolveEffectiveWidgetData(
+      props.previewData,
+      integration,
+      configData,
+      defaultData
+    );
 
     // Calculate duration from options (supports 'duration' or 'display_duration')
     // Convert from seconds to milliseconds, default to 10 seconds
