@@ -523,6 +523,7 @@ defmodule CastmillWeb.WidgetIntegrationController do
   end
 
   defp prefetch_pull_integration(conn, organization_id, widget_id, integration, widget_options) do
+    widget_options = Integrations.with_display_locale(organization_id, widget_options)
     pull_config = integration.pull_config || %{}
     credential_schema = integration.credential_schema || %{}
     fetcher_module_name = Map.get(pull_config, "fetcher_module")
@@ -694,7 +695,8 @@ defmodule CastmillWeb.WidgetIntegrationController do
 
     # Get the widget config to access its options for discriminator-based lookup
     widget_config = Widgets.get_widget_config_by_id(widget_config_id)
-    widget_options = (widget_config && widget_config.options) || %{}
+    widget_options =
+      Integrations.with_display_locale(organization_id, (widget_config && widget_config.options) || %{})
 
     widget_id =
       cond do
@@ -725,7 +727,7 @@ defmodule CastmillWeb.WidgetIntegrationController do
                    ) do
                 nil ->
                   # No cached data - try on-demand fetch for PULL integrations
-                  try_on_demand_fetch(organization_id, widget_config_id, widget_id)
+                  try_on_demand_fetch(organization_id, widget_config_id, widget_id, widget_options)
 
                 data ->
                   data
@@ -802,7 +804,7 @@ defmodule CastmillWeb.WidgetIntegrationController do
   defp apply_max_items_filter(data, _widget_options), do: data
 
   # Attempts to fetch data on-demand for PULL integrations when no cached data exists
-  defp try_on_demand_fetch(organization_id, widget_config_id, widget_id) do
+  defp try_on_demand_fetch(organization_id, widget_config_id, widget_id, widget_options) do
     alias Castmill.Widgets
 
     # Get the widget's integration
@@ -832,11 +834,11 @@ defmodule CastmillWeb.WidgetIntegrationController do
                 nil ->
                   nil
 
-                widget_config ->
+                _widget_config ->
                   # Merge pull_config with widget_options so fetcher has access to both
                   # pull_config contains integration-level settings (like feed_url for RSS)
                   # widget_options contains widget instance settings (like max_items)
-                  merged_options = Map.merge(pull_config, widget_config.options || %{})
+                  merged_options = Map.merge(pull_config, widget_options || %{})
 
                   # Try to fetch data using the fetcher
                   case fetch_with_module(
@@ -849,7 +851,7 @@ defmodule CastmillWeb.WidgetIntegrationController do
                       discriminator_id =
                         build_discriminator_id(
                           integration,
-                          widget_config.options || %{},
+                          widget_options || %{},
                           organization_id
                         )
 
@@ -867,7 +869,7 @@ defmodule CastmillWeb.WidgetIntegrationController do
                             widget_id,
                             integration,
                             discriminator_id,
-                            widget_config.options || %{}
+                            widget_options || %{}
                           )
 
                           integration_data
@@ -875,6 +877,9 @@ defmodule CastmillWeb.WidgetIntegrationController do
                         {:error, _reason} ->
                           nil
                       end
+
+                    {:error, _reason, _creds} ->
+                      nil
 
                     {:error, _reason} ->
                       nil

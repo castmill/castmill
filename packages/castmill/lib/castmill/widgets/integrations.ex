@@ -515,6 +515,25 @@ defmodule Castmill.Widgets.Integrations do
   # Discriminator-based Data Caching
   # ============================================================================
 
+  @doc """
+  Adds the organization's display locale to widget options when the caller has
+  not already supplied an explicit locale.
+  """
+  def with_display_locale(organization_id, widget_options) do
+    widget_options = widget_options || %{}
+
+    cond do
+      Map.has_key?(widget_options, "display_locale") ->
+        widget_options
+
+      Map.has_key?(widget_options, :display_locale) ->
+        Map.put(widget_options, "display_locale", Map.get(widget_options, :display_locale))
+
+      true ->
+        Map.put(widget_options, "display_locale", display_locale_for_organization(organization_id))
+    end
+  end
+
   @doc ~S"""
   Computes the discriminator ID for integration data caching.
 
@@ -543,6 +562,8 @@ defmodule Castmill.Widgets.Integrations do
         widget_config_id \\ nil,
         widget_options \\ %{}
       ) do
+    widget_options = with_display_locale(organization_id, widget_options)
+
     case integration.discriminator_type do
       "organization" ->
         {:ok, "org:#{organization_id}"}
@@ -574,6 +595,29 @@ defmodule Castmill.Widgets.Integrations do
           id -> {:ok, "cfg:#{id}"}
         end
     end
+  end
+
+  defp display_locale_for_organization(nil), do: "en"
+
+  defp display_locale_for_organization(organization_id) when is_binary(organization_id) do
+    with {:ok, organization_id} <- Ecto.UUID.cast(organization_id) do
+      from(org in Castmill.Organizations.Organization,
+        join: network in assoc(org, :network),
+        where: org.id == ^organization_id,
+        select: network.default_locale
+      )
+      |> Repo.one()
+      |> case do
+        locale when is_binary(locale) and locale != "" -> locale
+        _ -> "en"
+      end
+    else
+      :error -> "en"
+    end
+  end
+
+  defp display_locale_for_organization(_organization_id) do
+    "en"
   end
 
   @doc false
@@ -628,7 +672,7 @@ defmodule Castmill.Widgets.Integrations do
   """
   def get_or_fetch_integration_data(integration_id, organization_id, opts \\ []) do
     widget_config_id = Keyword.get(opts, :widget_config_id)
-    widget_options = Keyword.get(opts, :widget_options, %{})
+    widget_options = with_display_locale(organization_id, Keyword.get(opts, :widget_options, %{}))
 
     with %WidgetIntegration{} = integration <- get_integration(integration_id),
          {:ok, discriminator_id} <-
@@ -992,7 +1036,7 @@ defmodule Castmill.Widgets.Integrations do
     # For widget_option discriminators, also check pull_config for hardcoded values
     # (e.g., RSS widgets have feed_url in pull_config, not in widget_options)
     pull_config = integration.pull_config || %{}
-    merged_options = Map.merge(pull_config, options || %{})
+    merged_options = Map.merge(pull_config, with_display_locale(organization_id, options || %{}))
 
     case integration.discriminator_type do
       "widget_option" ->

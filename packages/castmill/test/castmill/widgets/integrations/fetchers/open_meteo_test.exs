@@ -35,26 +35,71 @@ defmodule Castmill.Widgets.Integrations.Fetchers.OpenMeteoTest do
     assert {:ok, data} = OpenMeteo.transform(response, %{"address" => "London, United Kingdom"})
 
     assert data["location"] == "London, United Kingdom"
+    assert data["display_locale"] == "en"
     assert data["temperature"] == "18°C"
     assert data["condition"] == "Overcast"
+    assert data["condition_key"] == "overcast"
+    assert data["weather_code"] == 3
     assert data["icon"] == "☁️"
     assert data["humidity"] == "Humidity 72%"
     assert data["wind"] == "Wind 11 km/h"
+    assert data["forecast_title"] == "5-day forecast"
 
     assert data["forecast"] == [
              %{
+               "date" => "2026-08-04",
                "day" => "Tue",
+               "weather_code" => 61,
+               "condition_key" => "rain",
                "icon" => "🌧️",
                "condition" => "Rain",
                "temperature" => "19°C / 12°C"
              },
              %{
+               "date" => "2026-08-05",
                "day" => "Wed",
+               "weather_code" => 1,
+               "condition_key" => "mostly_clear",
                "icon" => "🌤️",
                "condition" => "Mostly clear",
                "temperature" => "22°C / 13°C"
              }
            ]
+  end
+
+  test "localizes display strings for an explicit display locale" do
+    response = %{
+      "current" => %{
+        "temperature_2m" => 18.4,
+        "apparent_temperature" => 17.6,
+        "relative_humidity_2m" => 72,
+        "weather_code" => 3,
+        "wind_speed_10m" => 11.2
+      },
+      "current_units" => %{
+        "temperature_2m" => "°C",
+        "wind_speed_10m" => "km/h"
+      },
+      "daily" => %{
+        "time" => ["2026-08-03", "2026-08-04"],
+        "weather_code" => [3, 61],
+        "temperature_2m_max" => [20.1, 19.4],
+        "temperature_2m_min" => [12.0, 11.8]
+      },
+      "daily_units" => %{"temperature_2m_max" => "°C"}
+    }
+
+    assert {:ok, data} =
+             OpenMeteo.transform(response, %{}, %{"display_locale" => "es-MX"})
+
+    assert data["display_locale"] == "es"
+    assert data["location"] == "Ubicación seleccionada"
+    assert data["condition"] == "Cubierto"
+    assert data["feels_like"] == "Sensación 18°C"
+    assert data["humidity"] == "Humedad 72%"
+    assert data["wind"] == "Viento 11 km/h"
+    assert data["forecast_title"] == "Pronóstico de 5 días"
+    assert [%{"day" => "mar", "condition" => "Lluvia"}] = data["forecast"]
   end
 
   test "builds Fahrenheit query params when configured" do

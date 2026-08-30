@@ -217,7 +217,11 @@ defmodule Castmill.Resources do
     #
     # Extract widget_options here so it can be used both for looking up integration data
     # and for filtering max_items when serving data to each widget instance
-    widget_options_for_filtering = modified_widget_config_with_defaults.options || %{}
+    widget_options_for_filtering =
+      Castmill.Widgets.Integrations.with_display_locale(
+        organization_id,
+        modified_widget_config_with_defaults.options || %{}
+      )
 
     integration_data =
       case Castmill.Widgets.Integrations.get_integration_data_by_config(item.widget_config.id) do

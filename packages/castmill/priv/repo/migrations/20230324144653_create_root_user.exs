@@ -1,29 +1,15 @@
 defmodule Castmill.Repo.Migrations.AddRootUser do
   use Ecto.Migration
 
-  # Seeds an initial root (super-admin) user ONLY when both
-  # CASTMILL_ROOT_USER_EMAIL and CASTMILL_ROOT_USER_PASSWORD are explicitly set.
-  #
-  # Read the environment directly (not CastmillWeb.Secrets, which provides the
-  # weak "root@example.com" / "root" defaults) so that a deployment which does
-  # NOT set these variables gets NO root here instead of a trivially-guessable
-  # one. Runtime provisioning (e.g. CastmillSaas.Release with CASTMILL_ROOT_ADMINS)
-  # is responsible for creating root users in that case.
-  #
-  # This only affects fresh databases; existing databases already ran this
-  # migration. Tests create their own root via fixtures, so skipping here is safe.
   def change do
-    email = System.get_env("CASTMILL_ROOT_USER_EMAIL")
-    password = System.get_env("CASTMILL_ROOT_USER_PASSWORD")
+    email =
+      CastmillWeb.Secrets.get_root_user_email() ||
+        raise "environment variable CASTMILL_ROOT_USER_EMAIL is missing."
 
-    if is_binary(email) and email != "" and is_binary(password) and password != "" do
-      seed_root_user(email, password)
-    else
-      :ok
-    end
-  end
+    password =
+      CastmillWeb.Secrets.get_root_user_password() ||
+        raise "environment variable CASTMILL_ROOT_USER_PASSWORD is missing."
 
-  defp seed_root_user(email, password) do
     # Use raw SQL to avoid schema changes affecting this migration
     user_id = Ecto.UUID.generate()
     now = DateTime.utc_now() |> DateTime.truncate(:second)

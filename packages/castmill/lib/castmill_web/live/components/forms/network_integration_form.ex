@@ -20,17 +20,20 @@ defmodule CastmillWeb.Live.Admin.NetworkIntegrationForm do
         </p>
       </div>
 
-      <div :if={@optional} class="mt-4 p-3 bg-blue-50 rounded-md border border-blue-200">
+      <div
+        :if={@optional and @has_config_form}
+        class="mt-4 p-3 bg-blue-50 rounded-md border border-blue-200"
+      >
         <p class="text-sm text-blue-800">
           <span class="font-semibold">Optional</span>
-          - this integration works for free for non-commercial use. For commercial use,
-          configure a subscription API key below. It is stored once for the whole network
-          and shared by all organizations. Leave it empty to keep using the free tier.
+          - this integration can run without configured credentials. Configure credentials
+          below only if you want to use an authenticated mode. They are stored once for
+          the whole network and shared by all organizations.
         </p>
       </div>
 
       <div
-        :if={not @optional and not @has_config_form}
+        :if={not @has_config_form}
         class="mt-4 p-3 bg-blue-50 rounded-md border border-blue-200"
       >
         <p class="text-sm text-blue-800">

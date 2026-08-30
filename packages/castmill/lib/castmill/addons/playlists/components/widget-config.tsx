@@ -345,7 +345,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
 
   createEffect(() => {
     // Track option changes so the preview refetches when they change.
-    const options = widgetOptions();
+    const options = { ...widgetOptions(), display_locale: locale() };
     const widgetId = props.item.widget?.id;
 
     if (!widgetId || !props.baseUrl || !props.organizationId) {
@@ -358,9 +358,8 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
       clearTimeout(previewFetchTimer);
     }
 
+    const requestId = ++previewRequestId;
     previewFetchTimer = setTimeout(async () => {
-      const requestId = ++previewRequestId;
-
       const result = await PlaylistsService.prefetchWidgetData(
         props.baseUrl,
         props.organizationId,

@@ -89,7 +89,7 @@ defmodule Castmill.Repo.Migrations.ImplementWeatherWidget do
         "fetcher_module" => "Castmill.Widgets.Integrations.Fetchers.OpenMeteo"
       },
       discriminator_type: "widget_option",
-      discriminator_key: "location,fahrenheit",
+      discriminator_key: "location,fahrenheit,display_locale",
       is_active: true
     }
 
@@ -294,7 +294,7 @@ defmodule Castmill.Repo.Migrations.ImplementWeatherWidget do
                   "type" => "text",
                   "name" => "condition",
                   "opts" => %{
-                    "text" => %{"key" => "data.condition", "default" => "Partly cloudy"},
+                    "text" => %{"key" => "data.condition", "default" => "—"},
                     "autofit" => %{"baseSize" => 1.6, "maxSize" => 1.6, "minSize" => 0.85}
                   },
                   "style" => %{
@@ -307,7 +307,7 @@ defmodule Castmill.Repo.Migrations.ImplementWeatherWidget do
                   "type" => "text",
                   "name" => "feels-like",
                   "opts" => %{
-                    "text" => %{"key" => "data.feels_like", "default" => "Feels like 17°C"},
+                    "text" => %{"key" => "data.feels_like", "default" => "—"},
                     "autofit" => %{"baseSize" => 1.0, "maxSize" => 1.0, "minSize" => 0.75}
                   },
                   "style" => %{"height" => "20%", "font-size" => "1em", "opacity" => "0.72"}
@@ -331,7 +331,7 @@ defmodule Castmill.Repo.Migrations.ImplementWeatherWidget do
                   "type" => "text",
                   "name" => "humidity",
                   "opts" => %{
-                    "text" => %{"key" => "data.humidity", "default" => "Humidity 72%"},
+                    "text" => %{"key" => "data.humidity", "default" => "💧 72%"},
                     "autofit" => %{"baseSize" => 1.1, "maxSize" => 1.1, "minSize" => 0.8}
                   },
                   "style" => %{"height" => "2em", "font-size" => "1.1em"}
@@ -340,7 +340,7 @@ defmodule Castmill.Repo.Migrations.ImplementWeatherWidget do
                   "type" => "text",
                   "name" => "wind",
                   "opts" => %{
-                    "text" => %{"key" => "data.wind", "default" => "Wind 11 km/h"},
+                    "text" => %{"key" => "data.wind", "default" => "💨 11 km/h"},
                     "autofit" => %{"baseSize" => 1.1, "maxSize" => 1.1, "minSize" => 0.8}
                   },
                   "style" => %{"height" => "2em", "font-size" => "1.1em"}
@@ -353,7 +353,7 @@ defmodule Castmill.Repo.Migrations.ImplementWeatherWidget do
           "type" => "text",
           "name" => "forecast-title",
           "opts" => %{
-            "text" => "5-DAY FORECAST",
+            "text" => %{"key" => "data.forecast_title", "default" => ""},
             "autofit" => %{"baseSize" => 0.8, "maxSize" => 0.8, "minSize" => 0.65}
           },
           "style" => %{
@@ -468,48 +468,68 @@ defmodule Castmill.Repo.Migrations.ImplementWeatherWidget do
 
   defp data_schema do
     %{
-      "location" => %{"type" => "string", "default" => "London, United Kingdom"},
+      "location" => %{"type" => "string", "default" => "—"},
       "temperature" => %{"type" => "string", "default" => "18°C"},
-      "feels_like" => %{"type" => "string", "default" => "Feels like 17°C"},
-      "condition" => %{"type" => "string", "default" => "Partly cloudy"},
+      "feels_like" => %{"type" => "string", "default" => "—"},
+      "condition" => %{"type" => "string", "default" => "—"},
       "icon" => %{"type" => "string", "default" => "🌤️"},
-      "humidity" => %{"type" => "string", "default" => "Humidity 72%"},
-      "wind" => %{"type" => "string", "default" => "Wind 11 km/h"},
+      "humidity" => %{"type" => "string", "default" => "💧 72%"},
+      "wind" => %{"type" => "string", "default" => "💨 11 km/h"},
+      "forecast_title" => %{"type" => "string", "default" => ""},
+      "weather_code" => %{"type" => "number", "default" => 2},
+      "condition_key" => %{"type" => "string", "default" => "partly_cloudy"},
       "forecast" => %{
         "type" => "list",
         "default" => [
-          %{"day" => "Tue", "icon" => "🌧️", "condition" => "Rain", "temperature" => "19°C / 12°C"},
           %{
-            "day" => "Wed",
+            "date" => "2026-08-04",
+            "day" => "—",
+            "icon" => "🌧️",
+            "weather_code" => 61,
+            "condition_key" => "rain",
+            "temperature" => "19°C / 12°C"
+          },
+          %{
+            "date" => "2026-08-05",
+            "day" => "—",
             "icon" => "☀️",
-            "condition" => "Clear sky",
+            "weather_code" => 0,
+            "condition_key" => "clear_sky",
             "temperature" => "22°C / 13°C"
           },
           %{
-            "day" => "Thu",
+            "date" => "2026-08-06",
+            "day" => "—",
             "icon" => "🌤️",
-            "condition" => "Partly cloudy",
+            "weather_code" => 2,
+            "condition_key" => "partly_cloudy",
             "temperature" => "21°C / 14°C"
           },
           %{
-            "day" => "Fri",
+            "date" => "2026-08-07",
+            "day" => "—",
             "icon" => "☁️",
-            "condition" => "Cloudy",
+            "weather_code" => 3,
+            "condition_key" => "overcast",
             "temperature" => "20°C / 13°C"
           },
           %{
-            "day" => "Sat",
+            "date" => "2026-08-08",
+            "day" => "—",
             "icon" => "☀️",
-            "condition" => "Clear sky",
+            "weather_code" => 0,
+            "condition_key" => "clear_sky",
             "temperature" => "23°C / 15°C"
           }
         ],
         "items" => %{
           "type" => "map",
           "schema" => %{
+            "date" => "string",
             "day" => "string",
             "icon" => "string",
-            "condition" => "string",
+            "weather_code" => "number",
+            "condition_key" => "string",
             "temperature" => "string"
           }
         }

@@ -237,6 +237,9 @@ defmodule Castmill.Widgets do
   end
 
   defp schedule_auth_free_polling(organization_id, widget_id, integration, widget_options) do
+    widget_options =
+      Castmill.Widgets.Integrations.with_display_locale(organization_id, widget_options)
+
     # Build discriminator ID based on integration type
     discriminator_id = build_discriminator_id(integration, widget_options, organization_id)
 
