@@ -28,6 +28,7 @@ import {
 } from '../services/widgets.service';
 import { AddonStore } from '../../common/interfaces/addon-store';
 import { validateWidgetTemplate } from './widget-template-validation';
+import { WidgetPreviewDesigner } from './widget-preview-designer';
 
 import './widget-editor.scss';
 
@@ -445,6 +446,22 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
     if (!template) return;
     setTemplateJson(
       prettyJson(updateNodeAtPath(template, selectedPath(), update))
+    );
+  };
+
+  const updateNodeStyle = (
+    path: number[],
+    styleUpdate: Record<string, string>
+  ) => {
+    const template = templateParsed();
+    if (!template) return;
+    setTemplateJson(
+      prettyJson(
+        updateNodeAtPath(template, path, (node) => ({
+          ...node,
+          style: { ...(node.style || {}), ...styleUpdate },
+        }))
+      )
     );
   };
 
@@ -995,8 +1012,8 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
           </div>
 
           <div class="widget-editor__preview-container">
-            <For
-              each={previewKey() ? [previewKey()!] : []}
+            <Show
+              when={previewKey()}
               fallback={
                 <div class="widget-editor__preview-placeholder">
                   <BsExclamationTriangle size={32} />
@@ -1004,30 +1021,41 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
                 </div>
               }
             >
-              {() => (
-                <div
-                  class="widget-editor__preview-aspect"
-                  style={aspectRatioStyle(aspectRatio())}
+              <div
+                class="widget-editor__preview-aspect"
+                style={aspectRatioStyle(aspectRatio())}
+              >
+                <WidgetPreviewDesigner
+                  enabled={activeTab() === 'design'}
+                  template={templateParsed()!}
+                  selectedPath={selectedPath()}
+                  onSelect={setSelectedPath}
+                  onTransform={updateNodeStyle}
+                  moveLabel={t('widgets.editor.resize')}
                 >
-                  <ErrorBoundary
-                    fallback={
-                      <div class="widget-editor__preview-placeholder">
-                        <BsExclamationTriangle size={32} />
-                        <p>{t('widgets.editor.fixJsonToPreview')}</p>
-                      </div>
-                    }
-                  >
-                    <WidgetView
-                      widget={previewWidget()!}
-                      config={previewConfig()}
-                      options={previewOptions()}
-                      baseUrl={props.store.env.baseUrl}
-                      socket={props.store.socket}
-                    />
-                  </ErrorBoundary>
-                </div>
-              )}
-            </For>
+                  <For each={[previewKey()!]}>
+                    {() => (
+                      <ErrorBoundary
+                        fallback={
+                          <div class="widget-editor__preview-placeholder">
+                            <BsExclamationTriangle size={32} />
+                            <p>{t('widgets.editor.fixJsonToPreview')}</p>
+                          </div>
+                        }
+                      >
+                        <WidgetView
+                          widget={previewWidget()!}
+                          config={previewConfig()}
+                          options={previewOptions()}
+                          baseUrl={props.store.env.baseUrl}
+                          socket={props.store.socket}
+                        />
+                      </ErrorBoundary>
+                    )}
+                  </For>
+                </WidgetPreviewDesigner>
+              </div>
+            </Show>
           </div>
         </div>
       </div>

@@ -1012,6 +1012,7 @@
       "componentStyles": "Component styles (JSON)",
       "visibilityFilter": "Visibility filter (JSON)",
       "invalidJsonObject": "Enter a valid JSON object.",
+      "resize": "Resize",
       "invalidTemplate": "Invalid component at {{path}}. Check its type, name, options, styles, and child components.",
       "schemaMustBeObject": "The schema must be a JSON object.",
       "assetsMustBeObject": "Assets must be a JSON object.",

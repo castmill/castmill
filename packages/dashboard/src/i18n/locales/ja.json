@@ -978,6 +978,7 @@
       "componentStyles": "コンポーネントスタイル (JSON)",
       "visibilityFilter": "表示フィルター (JSON)",
       "invalidJsonObject": "有効な JSON オブジェクトを入力してください。",
+      "resize": "サイズ変更",
       "invalidTemplate": "{{path}} のコンポーネントが無効です。タイプ、名前、オプション、スタイル、子コンポーネントを確認してください。",
       "schemaMustBeObject": "スキーマは JSON オブジェクトである必要があります。",
       "assetsMustBeObject": "アセットはJSONオブジェクトである必要があります。",

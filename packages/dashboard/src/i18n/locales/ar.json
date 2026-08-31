@@ -977,6 +977,7 @@
       "componentStyles": "أنماط المكون (JSON)",
       "visibilityFilter": "مرشح الظهور (JSON)",
       "invalidJsonObject": "أدخل كائن JSON صالحًا.",
+      "resize": "تغيير الحجم",
       "invalidTemplate": "مكوّن غير صالح في {{path}}. تحقق من النوع والاسم والخيارات والأنماط والمكوّنات الفرعية.",
       "schemaMustBeObject": "يجب أن يكون المخطط كائن JSON.",
       "assetsMustBeObject": "يجب أن تكون الأصول كائن JSON.",

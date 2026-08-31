@@ -977,6 +977,7 @@
       "componentStyles": "컴포넌트 스타일 (JSON)",
       "visibilityFilter": "표시 필터 (JSON)",
       "invalidJsonObject": "유효한 JSON 객체를 입력하세요.",
+      "resize": "크기 조절",
       "invalidTemplate": "{{path}}의 구성 요소가 유효하지 않습니다. 유형, 이름, 옵션, 스타일 및 하위 구성 요소를 확인하세요.",
       "schemaMustBeObject": "스키마는 JSON 객체여야 합니다.",
       "assetsMustBeObject": "에셋은 JSON 객체여야 합니다.",

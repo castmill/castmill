@@ -999,6 +999,7 @@
       "componentStyles": "Komponentenstile (JSON)",
       "visibilityFilter": "Sichtbarkeitsfilter (JSON)",
       "invalidJsonObject": "Geben Sie ein gültiges JSON-Objekt ein.",
+      "resize": "Größe ändern",
       "invalidTemplate": "Ungültige Komponente bei {{path}}. Überprüfen Sie Typ, Name, Optionen, Stile und untergeordnete Komponenten.",
       "schemaMustBeObject": "Das Schema muss ein JSON-Objekt sein.",
       "assetsMustBeObject": "Assets müssen ein JSON-Objekt sein.",

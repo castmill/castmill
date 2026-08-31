@@ -977,6 +977,7 @@
       "componentStyles": "组件样式 (JSON)",
       "visibilityFilter": "可见性筛选器 (JSON)",
       "invalidJsonObject": "请输入有效的 JSON 对象。",
+      "resize": "调整大小",
       "invalidTemplate": "{{path}} 处的组件无效。请检查其类型、名称、选项、样式和子组件。",
       "schemaMustBeObject": "架构必须是 JSON 对象。",
       "assetsMustBeObject": "资源必须是 JSON 对象。",

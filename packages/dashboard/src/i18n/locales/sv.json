@@ -972,6 +972,7 @@
       "componentStyles": "Komponentstilar (JSON)",
       "visibilityFilter": "Synlighetsfilter (JSON)",
       "invalidJsonObject": "Ange ett giltigt JSON-objekt.",
+      "resize": "Ändra storlek",
       "invalidTemplate": "Ogiltig komponent vid {{path}}. Kontrollera dess typ, namn, alternativ, stilar och underkomponenter.",
       "schemaMustBeObject": "Schemat måste vara ett JSON-objekt.",
       "assetsMustBeObject": "Tillgångar måste vara ett JSON-objekt.",

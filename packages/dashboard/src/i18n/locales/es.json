@@ -1005,6 +1005,7 @@
       "componentStyles": "Estilos del componente (JSON)",
       "visibilityFilter": "Filtro de visibilidad (JSON)",
       "invalidJsonObject": "Introduce un objeto JSON válido.",
+      "resize": "Redimensionar",
       "invalidTemplate": "Componente no válido en {{path}}. Comprueba su tipo, nombre, opciones, estilos y componentes secundarios.",
       "schemaMustBeObject": "El esquema debe ser un objeto JSON.",
       "assetsMustBeObject": "Los recursos deben ser un objeto JSON.",
