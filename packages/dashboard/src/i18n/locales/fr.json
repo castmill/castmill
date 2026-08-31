@@ -968,7 +968,7 @@
       "background": "Arrière-plan",
       "fontSize": "Taille de police",
       "spacing": "Espacement",
-      "invalidTemplate": "Le modèle doit être un objet avec un type de composant.",
+      "invalidTemplate": "Composant non valide à {{path}}. Vérifiez son type, son nom, ses options, ses styles et ses composants enfants.",
       "schemaMustBeObject": "Le schéma doit être un objet JSON.",
       "savedSuccess": "Widget enregistré avec succès !",
       "createdSuccess": "Widget créé avec succès !",

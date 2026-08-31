@@ -956,7 +956,7 @@
       "background": "배경",
       "fontSize": "글꼴 크기",
       "spacing": "간격",
-      "invalidTemplate": "템플릿은 구성 요소 유형을 포함한 객체여야 합니다.",
+      "invalidTemplate": "{{path}}의 구성 요소가 유효하지 않습니다. 유형, 이름, 옵션, 스타일 및 하위 구성 요소를 확인하세요.",
       "schemaMustBeObject": "스키마는 JSON 객체여야 합니다.",
       "savedSuccess": "위젯이 저장되었습니다!",
       "createdSuccess": "위젯이 생성되었습니다!",

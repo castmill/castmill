@@ -26,6 +26,7 @@ import {
   WidgetFullUpdate,
 } from '../services/widgets.service';
 import { AddonStore } from '../../common/interfaces/addon-store';
+import { validateWidgetTemplate } from './widget-template-validation';
 
 import './widget-editor.scss';
 
@@ -270,14 +271,10 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
   const [activeTab, setActiveTab] = createSignal<EditorTab>('design');
   const [selectedPath, setSelectedPath] = createSignal<number[]>([]);
   const [isSaving, setIsSaving] = createSignal(false);
-  // Used to force the preview panel to remount WidgetView
-  const [showPreview, setShowPreview] = createSignal(true);
-  let previewTimer: ReturnType<typeof setTimeout> | undefined;
+  const [previewRevision, setPreviewRevision] = createSignal(0);
 
   const refreshPreview = () => {
-    setShowPreview(false);
-    clearTimeout(previewTimer);
-    previewTimer = setTimeout(() => setShowPreview(true), 50);
+    setPreviewRevision((revision) => revision + 1);
   };
 
   // ── Derived: parsed JSON ─────────────────────────────────────────────────
@@ -337,16 +334,16 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
   window.addEventListener('beforeunload', beforeUnload);
   onCleanup(() => {
     window.removeEventListener('beforeunload', beforeUnload);
-    clearTimeout(previewTimer);
   });
 
   // ── Derived: per-tab validation errors ──────────────────────────────────
   const templateError = createMemo(() => {
     const [ok, value] = tryParseJson(templateJson());
     if (!ok) return String(value);
-    return isJsonObject(value) && typeof value.type === 'string'
-      ? null
-      : t('widgets.editor.invalidTemplate');
+    const invalidPath = validateWidgetTemplate(value);
+    return invalidPath
+      ? t('widgets.editor.invalidTemplate', { path: invalidPath })
+      : null;
   });
   const optionsSchemaError = createMemo(() => {
     const [ok, value] = tryParseJson(optionsSchemaJson());
@@ -466,7 +463,7 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
   // ── Preview widget derived from editor state ─────────────────────────────
   const previewWidget = createMemo<JsonWidget | null>(() => {
     const template = templateParsed();
-    if (!template) return null;
+    if (!template || templateError()) return null;
     return {
       id: props.widget?.id,
       name: name() || 'Preview',
@@ -494,6 +491,17 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
   const previewOptions = createMemo<OptionsDict>(
     () => fixtureParsed().options as OptionsDict
   );
+  const previewKey = createMemo(() => {
+    if (!previewWidget() || fixtureError()) return null;
+    return JSON.stringify({
+      revision: previewRevision(),
+      template: templateJson(),
+      optionsSchema: optionsSchemaJson(),
+      dataSchema: dataSchemaJson(),
+      fixture: fixtureJson(),
+      aspectRatio: aspectRatio(),
+    });
+  });
 
   // ── Fixture helpers ──────────────────────────────────────────────────────
   const saveFixture = () => {
@@ -751,10 +759,7 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
 
                 <JsonEditorPane
                   value={fixtureJson()}
-                  onChange={(v) => {
-                    setFixtureJson(v);
-                    refreshPreview();
-                  }}
+                  onChange={setFixtureJson}
                   error={fixtureError()}
                   placeholder={t('widgets.editor.fixturePlaceholder')}
                 />
@@ -886,8 +891,8 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
           </div>
 
           <div class="widget-editor__preview-container">
-            <Show
-              when={previewWidget() !== null}
+            <For
+              each={previewKey() ? [previewKey()!] : []}
               fallback={
                 <div class="widget-editor__preview-placeholder">
                   <BsExclamationTriangle size={32} />
@@ -895,11 +900,11 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
                 </div>
               }
             >
-              <div
-                class="widget-editor__preview-aspect"
-                style={aspectRatioStyle(aspectRatio())}
-              >
-                <Show when={showPreview()}>
+              {() => (
+                <div
+                  class="widget-editor__preview-aspect"
+                  style={aspectRatioStyle(aspectRatio())}
+                >
                   <ErrorBoundary
                     fallback={
                       <div class="widget-editor__preview-placeholder">
@@ -916,9 +921,9 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
                       socket={props.store.socket}
                     />
                   </ErrorBoundary>
-                </Show>
-              </div>
-            </Show>
+                </div>
+              )}
+            </For>
           </div>
         </div>
       </div>

@@ -957,7 +957,7 @@
       "background": "背景",
       "fontSize": "フォントサイズ",
       "spacing": "間隔",
-      "invalidTemplate": "テンプレートはコンポーネントタイプを含むオブジェクトである必要があります。",
+      "invalidTemplate": "{{path}} のコンポーネントが無効です。タイプ、名前、オプション、スタイル、子コンポーネントを確認してください。",
       "schemaMustBeObject": "スキーマは JSON オブジェクトである必要があります。",
       "savedSuccess": "ウィジェットが保存されました！",
       "createdSuccess": "ウィジェットが作成されました！",

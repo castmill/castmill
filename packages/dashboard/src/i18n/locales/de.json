@@ -978,7 +978,7 @@
       "background": "Hintergrund",
       "fontSize": "Schriftgröße",
       "spacing": "Abstand",
-      "invalidTemplate": "Die Vorlage muss ein Objekt mit einem Komponententyp sein.",
+      "invalidTemplate": "Ungültige Komponente bei {{path}}. Überprüfen Sie Typ, Name, Optionen, Stile und untergeordnete Komponenten.",
       "schemaMustBeObject": "Das Schema muss ein JSON-Objekt sein.",
       "savedSuccess": "Widget erfolgreich gespeichert!",
       "createdSuccess": "Widget erfolgreich erstellt!",

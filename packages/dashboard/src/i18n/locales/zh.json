@@ -956,7 +956,7 @@
       "background": "背景",
       "fontSize": "字体大小",
       "spacing": "间距",
-      "invalidTemplate": "模板必须是包含组件类型的对象。",
+      "invalidTemplate": "{{path}} 处的组件无效。请检查其类型、名称、选项、样式和子组件。",
       "schemaMustBeObject": "架构必须是 JSON 对象。",
       "savedSuccess": "Widget 保存成功！",
       "createdSuccess": "Widget 创建成功！",

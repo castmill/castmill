@@ -991,7 +991,7 @@
       "background": "Background",
       "fontSize": "Font size",
       "spacing": "Spacing",
-      "invalidTemplate": "The template must be an object with a component type.",
+      "invalidTemplate": "Invalid component at {{path}}. Check its type, name, options, styles, and child components.",
       "schemaMustBeObject": "The schema must be a JSON object.",
       "savedSuccess": "Widget saved successfully!",
       "createdSuccess": "Widget created successfully!",

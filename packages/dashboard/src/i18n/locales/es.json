@@ -984,7 +984,7 @@
       "background": "Fondo",
       "fontSize": "Tamaño de fuente",
       "spacing": "Espaciado",
-      "invalidTemplate": "La plantilla debe ser un objeto con un tipo de componente.",
+      "invalidTemplate": "Componente no válido en {{path}}. Comprueba su tipo, nombre, opciones, estilos y componentes secundarios.",
       "schemaMustBeObject": "El esquema debe ser un objeto JSON.",
       "savedSuccess": "¡Widget guardado correctamente!",
       "createdSuccess": "¡Widget creado correctamente!",

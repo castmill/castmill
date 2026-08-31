@@ -951,7 +951,7 @@
       "background": "Bakgrund",
       "fontSize": "Textstorlek",
       "spacing": "Avstånd",
-      "invalidTemplate": "Mallen måste vara ett objekt med en komponenttyp.",
+      "invalidTemplate": "Ogiltig komponent vid {{path}}. Kontrollera dess typ, namn, alternativ, stilar och underkomponenter.",
       "schemaMustBeObject": "Schemat måste vara ett JSON-objekt.",
       "savedSuccess": "Widget sparades!",
       "createdSuccess": "Widget skapades!",
