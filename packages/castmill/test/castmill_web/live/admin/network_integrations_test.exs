@@ -142,6 +142,37 @@ defmodule CastmillWeb.Live.Admin.NetworkIntegrationsTest do
       assert creds["client_secret"] == "my-new-secret"
     end
 
+    test "keeps the stored secret when the password field is left blank", %{
+      conn: conn,
+      network: network,
+      admin_user: admin_user,
+      integration: integration
+    } do
+      credentials = %{"client_id" => "existing-id", "client_secret" => "existing-secret"}
+      {:ok, _} = Integrations.upsert_network_credentials(network.id, integration.id, credentials)
+
+      conn = log_in_admin(conn, admin_user)
+
+      {:ok, view, _html} =
+        live(conn, ~p"/admin/networks/#{network.id}/integrations/#{integration.id}/configure")
+
+      # Password inputs are rendered blank, so submitting the form without
+      # retyping the secret must not erase it
+      view
+      |> form("#network-integration-form",
+        credentials: %{
+          client_id: "existing-id",
+          client_secret: ""
+        }
+      )
+      |> render_submit()
+
+      assert {:ok, creds} =
+               Integrations.get_decrypted_network_credentials(network.id, integration.id)
+
+      assert creds["client_secret"] == "existing-secret"
+    end
+
     test "validates required fields", %{
       conn: conn,
       network: network,

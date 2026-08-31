@@ -360,9 +360,110 @@ defmodule Castmill.Widgets do
           {:error, "No widget configuration found with the provided IDs"}
 
         %WidgetConfig{} = widget_config ->
-          do_update_widget_config(widget_config, options, data, 3)
+          previous_options = widget_config.options || %{}
+
+          case do_update_widget_config(widget_config, options, data, 3) do
+            {:ok, _} = ok ->
+              maybe_reschedule_polling(
+                playlist_id,
+                widget_config.widget_id,
+                previous_options,
+                options || %{}
+              )
+
+              ok
+
+            error ->
+              error
+          end
       end
     end
+  end
+
+  # When the saved options change the integration discriminator, the polling
+  # scheduler for the previous discriminator becomes orphaned. Cancel it (unless
+  # another widget config in the organization still uses it) and schedule the
+  # discriminator that is actually saved.
+  defp maybe_reschedule_polling(playlist_id, widget_id, previous_options, new_options) do
+    alias Castmill.Widgets.Integrations
+
+    with org_id when not is_nil(org_id) <- organization_id_for_playlist(playlist_id),
+         %Widget{} = widget <- get_widget(widget_id),
+         {:ok, integration} <- Integrations.ensure_integration_for_widget(widget),
+         true <- is_credential_free_integration?(integration) do
+      previous_discriminator = discriminator_for_options(integration, org_id, previous_options)
+
+      new_discriminator = discriminator_for_options(integration, org_id, new_options)
+
+      if previous_discriminator != new_discriminator do
+        unless discriminator_still_used?(
+                 integration,
+                 org_id,
+                 widget_id,
+                 previous_discriminator
+               ) do
+          cancel_polling(org_id, integration.id, previous_discriminator)
+        end
+
+        schedule_auth_free_polling(org_id, widget_id, integration, new_options)
+      end
+
+      :ok
+    else
+      _ -> :ok
+    end
+  end
+
+  defp organization_id_for_playlist(playlist_id) do
+    from(p in Castmill.Resources.Playlist,
+      where: p.id == ^playlist_id,
+      select: p.organization_id
+    )
+    |> Repo.one()
+  end
+
+  defp discriminator_for_options(integration, organization_id, options) do
+    options = Castmill.Widgets.Integrations.with_display_locale(organization_id, options || %{})
+    build_discriminator_id(integration, options, organization_id)
+  end
+
+  defp discriminator_still_used?(integration, organization_id, widget_id, discriminator_id) do
+    from(wc in WidgetConfig,
+      join: pi in Castmill.Resources.PlaylistItem,
+      on: pi.id == wc.playlist_item_id,
+      join: p in Castmill.Resources.Playlist,
+      on: p.id == pi.playlist_id,
+      where: p.organization_id == ^organization_id and wc.widget_id == ^widget_id,
+      select: wc.options
+    )
+    |> Repo.all()
+    |> Enum.any?(fn options ->
+      discriminator_for_options(integration, organization_id, options) == discriminator_id
+    end)
+  end
+
+  defp cancel_polling(organization_id, integration_id, discriminator_id) do
+    cancel_fn = fn ->
+      try do
+        Castmill.Workers.IntegrationPoller.cancel_polling(
+          organization_id,
+          integration_id,
+          discriminator_id
+        )
+      rescue
+        e -> Logger.warning("Failed to cancel polling: #{inspect(e)}")
+      catch
+        :exit, reason -> Logger.warning("Failed to cancel polling (exit): #{inspect(reason)}")
+      end
+    end
+
+    if Application.get_env(:castmill, :async_poll_scheduling, true) do
+      Task.start(cancel_fn)
+    else
+      cancel_fn.()
+    end
+
+    :ok
   end
 
   # Updates the widget config through its changeset (so that the options and

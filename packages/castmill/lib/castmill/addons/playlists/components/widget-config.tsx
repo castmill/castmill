@@ -364,7 +364,10 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
         props.baseUrl,
         props.organizationId,
         widgetId,
-        options
+        options,
+        // Live preview fetches are ephemeral: they must not register background
+        // polling schedulers for option combinations that may never be saved.
+        { preview: true }
       );
 
       // Ignore out-of-order responses from superseded requests.

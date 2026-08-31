@@ -472,6 +472,9 @@ defmodule CastmillWeb.WidgetIntegrationController do
 
   Request body (optional):
     - options: Widget options to use for discriminator calculation (for widget_option type)
+    - preview: When true the fetch is ephemeral (used by the dashboard live
+      preview): data is cached but no background polling scheduler is created,
+      since the options being previewed may never be saved.
 
   Returns:
     - 200 with data if successfully fetched
@@ -496,11 +499,12 @@ defmodule CastmillWeb.WidgetIntegrationController do
 
       id ->
         widget_options = Map.get(params, "options", %{})
-        do_prefetch_widget_data(conn, organization_id, id, widget_options)
+        preview? = Map.get(params, "preview", false) in [true, "true"]
+        do_prefetch_widget_data(conn, organization_id, id, widget_options, preview?)
     end
   end
 
-  defp do_prefetch_widget_data(conn, organization_id, widget_id, widget_options) do
+  defp do_prefetch_widget_data(conn, organization_id, widget_id, widget_options, preview?) do
     # Get the widget's integrations
     case Integrations.list_integrations(widget_id: widget_id) do
       [] ->
@@ -512,7 +516,14 @@ defmodule CastmillWeb.WidgetIntegrationController do
       [integration | _] ->
         # Only handle PULL integrations with fetcher modules
         if integration.integration_type == "pull" do
-          prefetch_pull_integration(conn, organization_id, widget_id, integration, widget_options)
+          prefetch_pull_integration(
+            conn,
+            organization_id,
+            widget_id,
+            integration,
+            widget_options,
+            preview?
+          )
         else
           # PUSH integrations don't support prefetching
           conn
@@ -522,7 +533,14 @@ defmodule CastmillWeb.WidgetIntegrationController do
     end
   end
 
-  defp prefetch_pull_integration(conn, organization_id, widget_id, integration, widget_options) do
+  defp prefetch_pull_integration(
+         conn,
+         organization_id,
+         widget_id,
+         integration,
+         widget_options,
+         preview?
+       ) do
     widget_options = Integrations.with_display_locale(organization_id, widget_options)
     pull_config = integration.pull_config || %{}
     credential_schema = integration.credential_schema || %{}
@@ -560,7 +578,8 @@ defmodule CastmillWeb.WidgetIntegrationController do
             widget_options,
             fetcher_module_name,
             pull_config,
-            credential_schema
+            credential_schema,
+            preview?
           )
       end
     end
@@ -574,7 +593,8 @@ defmodule CastmillWeb.WidgetIntegrationController do
          widget_options,
          fetcher_module_name,
          pull_config,
-         _credential_schema
+         _credential_schema,
+         preview?
        ) do
     # Resolve credentials, merging network-level credentials (shared across the
     # network, e.g. a commercial API key) with any organization-level ones.
@@ -603,14 +623,17 @@ defmodule CastmillWeb.WidgetIntegrationController do
 
           case store_fetched_data(organization_id, widget_id, integration, discriminator_id, data) do
             {:ok, integration_data} ->
-              # Schedule background polling for future updates
-              schedule_polling(
-                organization_id,
-                widget_id,
-                integration,
-                discriminator_id,
-                widget_options
-              )
+              # Schedule background polling for future updates, unless this is
+              # an ephemeral preview fetch whose options may never be saved.
+              unless preview? do
+                schedule_polling(
+                  organization_id,
+                  widget_id,
+                  integration,
+                  discriminator_id,
+                  widget_options
+                )
+              end
 
               filtered_data = apply_max_items_filter(integration_data.data, widget_options)
 

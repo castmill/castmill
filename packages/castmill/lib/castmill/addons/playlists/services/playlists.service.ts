@@ -437,13 +437,17 @@ export const PlaylistsService = {
    * @param organizationId - The organization ID
    * @param widgetId - The widget ID to prefetch data for
    * @param options - Optional widget options for discriminator calculation
+   * @param opts.preview - When true the fetch is ephemeral: the server caches
+   *   the data but does not create a background polling scheduler for these
+   *   options (used by the live preview while the user edits a widget).
    * @returns Promise with prefetch result (data, status, etc.)
    */
   async prefetchWidgetData(
     baseUrl: string,
     organizationId: string,
     widgetId: number,
-    options?: Record<string, any>
+    options?: Record<string, any>,
+    opts?: { preview?: boolean }
   ): Promise<{
     data: Record<string, any> | null;
     status:
@@ -461,7 +465,10 @@ export const PlaylistsService = {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ options: options || {} }),
+        body: JSON.stringify({
+          options: options || {},
+          preview: opts?.preview === true,
+        }),
       });
 
       if (response.status === 204) {

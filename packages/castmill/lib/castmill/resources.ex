@@ -255,6 +255,16 @@ defmodule Castmill.Resources do
     {modified_widget_config_with_integration, integration_error} =
       case integration_data do
         {:ok, %Castmill.Widgets.Integrations.WidgetIntegrationData{} = data} ->
+          # Make sure background polling is scheduled for this discriminator so
+          # that pre-existing widget configs (created before polling existed, or
+          # whose scheduler was lost) keep receiving fresh data.
+          maybe_schedule_refresh(
+            data,
+            organization_id,
+            item.widget_config.widget.id,
+            widget_options_for_filtering
+          )
+
           # Merge integration data into the existing data field (overrides defaults)
           existing_data = Map.get(modified_widget_config_with_defaults, :data, %{}) || %{}
           merged_data = Map.merge(existing_data, data.data || %{})
@@ -382,7 +392,7 @@ defmodule Castmill.Resources do
                 "required"
 
             credentials =
-              case Integrations.get_organization_credentials(organization_id, integration.id) do
+              case Integrations.get_fetch_credentials(organization_id, integration) do
                 {:ok, creds} -> creds
                 {:error, _} when auth_type in ["optional", "none"] -> %{}
                 {:error, _} -> nil
@@ -396,16 +406,29 @@ defmodule Castmill.Resources do
                   discriminator_id =
                     build_discriminator_id(integration, widget_options, organization_id)
 
+                  now = DateTime.utc_now()
+                  interval = integration.pull_interval_seconds || 300
+
                   case Integrations.upsert_integration_data(%{
                          widget_integration_id: integration.id,
                          organization_id: organization_id,
                          discriminator_id: discriminator_id,
                          data: data,
                          status: "active",
-                         fetched_at: DateTime.utc_now(),
+                         fetched_at: now,
+                         refresh_at: DateTime.add(now, interval, :second),
                          version: :os.system_time(:second)
                        }) do
                     {:ok, integration_data} ->
+                      # Keep the data fresh from now on
+                      schedule_integration_polling(
+                        organization_id,
+                        widget_id,
+                        integration,
+                        discriminator_id,
+                        widget_options
+                      )
+
                       {:ok, integration_data}
 
                     {:error, _reason} ->
@@ -430,6 +453,96 @@ defmodule Castmill.Resources do
           nil
         end
     end
+  end
+
+  # Ensures that background polling exists for cached integration data that is
+  # due for a refresh. Widget configs created before polling was introduced (or
+  # whose scheduler was removed) would otherwise keep serving the very first
+  # fetched payload forever.
+  defp maybe_schedule_refresh(
+         %Castmill.Widgets.Integrations.WidgetIntegrationData{} = data,
+         organization_id,
+         widget_id,
+         widget_options
+       )
+       when not is_nil(organization_id) and not is_nil(widget_id) do
+    alias Castmill.Widgets.Integrations
+
+    case Integrations.list_integrations(widget_id: widget_id) do
+      [%{integration_type: "pull"} = integration | _] ->
+        if pollable_integration?(integration) and refresh_due?(data, integration) do
+          discriminator_id =
+            build_discriminator_id(integration, widget_options || %{}, organization_id)
+
+          schedule_integration_polling(
+            organization_id,
+            widget_id,
+            integration,
+            discriminator_id,
+            widget_options || %{},
+            delay: 0
+          )
+        end
+
+      _ ->
+        :ok
+    end
+  end
+
+  defp maybe_schedule_refresh(_data, _organization_id, _widget_id, _widget_options), do: :ok
+
+  defp pollable_integration?(integration) do
+    is_binary(Map.get(integration.pull_config || %{}, "fetcher_module"))
+  end
+
+  defp refresh_due?(data, integration) do
+    now = DateTime.utc_now()
+    interval = integration.pull_interval_seconds || 300
+
+    cond do
+      data.refresh_at -> DateTime.compare(data.refresh_at, now) != :gt
+      data.fetched_at -> DateTime.diff(now, data.fetched_at) >= interval
+      true -> true
+    end
+  end
+
+  defp schedule_integration_polling(
+         organization_id,
+         widget_id,
+         integration,
+         discriminator_id,
+         widget_options,
+         opts \\ []
+       ) do
+    delay = Keyword.get(opts, :delay, integration.pull_interval_seconds || 30)
+
+    schedule_fn = fn ->
+      try do
+        Castmill.Workers.IntegrationPoller.schedule_poll(
+          %{
+            organization_id: organization_id,
+            widget_id: widget_id,
+            integration_id: integration.id,
+            discriminator_id: discriminator_id,
+            widget_options: widget_options
+          },
+          delay: delay
+        )
+      rescue
+        _e -> :error
+      catch
+        :exit, _reason -> :error
+      end
+    end
+
+    if Application.get_env(:castmill, :async_poll_scheduling, true) do
+      # Don't block (or crash) playlist serialization if the queue is unavailable
+      Task.start(schedule_fn)
+    else
+      schedule_fn.()
+    end
+
+    :ok
   end
 
   defp fetch_with_module(module_name, credentials, options) when is_binary(module_name) do
