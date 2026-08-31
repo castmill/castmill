@@ -2,6 +2,7 @@ import {
   Component,
   createSignal,
   createMemo,
+  createEffect,
   Show,
   For,
   onCleanup,
@@ -164,7 +165,18 @@ const DEFAULT_FIXTURE = prettyJson({
 });
 
 function getComponents(node: TemplateNode): TemplateNode[] {
-  return Array.isArray(node.components) ? node.components : [];
+  if (Array.isArray(node.components)) return node.components;
+  return node.component ? [node.component] : [];
+}
+
+function setComponents(
+  node: TemplateNode,
+  components: TemplateNode[]
+): TemplateNode {
+  if ('component' in node && !Array.isArray(node.components)) {
+    return { ...node, component: components[0] };
+  }
+  return { ...node, components };
 }
 
 function getNodeAtPath(
@@ -185,14 +197,14 @@ function updateNodeAtPath(
   if (path.length === 0) return update(root);
   const [index, ...rest] = path;
   const components = getComponents(root);
-  return {
-    ...root,
-    components: components.map((component, componentIndex) =>
+  return setComponents(
+    root,
+    components.map((component, componentIndex) =>
       componentIndex === index
         ? updateNodeAtPath(component, rest, update)
         : component
-    ),
-  };
+    )
+  );
 }
 
 function newTemplateNode(
@@ -448,11 +460,10 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
     setTemplateJson(
       prettyJson(
         updateNodeAtPath(template, parentPath, (node) => ({
-          ...node,
-          components: [
+          ...setComponents(node, [
             ...getComponents(node),
             newTemplateNode(type, t('widgets.editor.defaultText')),
-          ],
+          ]),
         }))
       )
     );
@@ -468,8 +479,10 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
     setTemplateJson(
       prettyJson(
         updateNodeAtPath(template, parentPath, (node) => ({
-          ...node,
-          components: getComponents(node).filter((_, i) => i !== index),
+          ...setComponents(
+            node,
+            getComponents(node).filter((_, i) => i !== index)
+          ),
         }))
       )
     );
@@ -491,7 +504,7 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
         updateNodeAtPath(template, parentPath, (node) => {
           const next = [...getComponents(node)];
           [next[index], next[target]] = [next[target], next[index]];
-          return { ...node, components: next };
+          return setComponents(node, next);
         })
       )
     );
@@ -1037,9 +1050,19 @@ interface VisualDesignerProps {
 }
 
 const VisualDesigner: Component<VisualDesignerProps> = (props) => {
+  const styleValue = (key: string) => {
+    const value = props.selectedNode?.style?.[key];
+    return typeof value === 'string' || typeof value === 'number'
+      ? String(value)
+      : '';
+  };
+
   const selectedValue = () => {
     const node = props.selectedNode;
-    const value = node?.type === 'image' ? node.opts?.url : node?.opts?.text;
+    const value =
+      node?.type === 'image'
+        ? (node.opts?.url ?? node.opts?.src)
+        : node?.opts?.text;
     return typeof value === 'object' && value?.key
       ? String(value.key)
       : String(value ?? '');
@@ -1048,7 +1071,7 @@ const VisualDesigner: Component<VisualDesignerProps> = (props) => {
   const valueSource = () => {
     const value =
       props.selectedNode?.type === 'image'
-        ? props.selectedNode?.opts?.url
+        ? (props.selectedNode?.opts?.url ?? props.selectedNode?.opts?.src)
         : props.selectedNode?.opts?.text;
     if (typeof value !== 'object' || !value?.key) return 'literal';
     return String(value.key).startsWith('data.') ? 'data' : 'options';
@@ -1056,7 +1079,8 @@ const VisualDesigner: Component<VisualDesignerProps> = (props) => {
 
   const updateValue = (source: string, value: string) => {
     props.onUpdate((node) => {
-      const key = node.type === 'image' ? 'url' : 'text';
+      const key =
+        node.type === 'image' && 'src' in (node.opts || {}) ? 'src' : 'url';
       const nextValue =
         source === 'literal'
           ? value
@@ -1251,7 +1275,7 @@ const VisualDesigner: Component<VisualDesignerProps> = (props) => {
               <div class="widget-editor__property-grid">
                 <DesignerField label={props.t('widgets.editor.width')}>
                   <input
-                    value={node().style?.width || ''}
+                    value={styleValue('width')}
                     placeholder="100%"
                     onInput={(event) =>
                       updateStyle('width', event.currentTarget.value)
@@ -1260,7 +1284,7 @@ const VisualDesigner: Component<VisualDesignerProps> = (props) => {
                 </DesignerField>
                 <DesignerField label={props.t('widgets.editor.height')}>
                   <input
-                    value={node().style?.height || ''}
+                    value={styleValue('height')}
                     placeholder="100%"
                     onInput={(event) =>
                       updateStyle('height', event.currentTarget.value)
@@ -1270,7 +1294,7 @@ const VisualDesigner: Component<VisualDesignerProps> = (props) => {
                 <DesignerField label={props.t('widgets.editor.textColor')}>
                   <input
                     type="color"
-                    value={node().style?.color || '#ffffff'}
+                    value={styleValue('color') || '#ffffff'}
                     onInput={(event) =>
                       updateStyle('color', event.currentTarget.value)
                     }
@@ -1278,16 +1302,23 @@ const VisualDesigner: Component<VisualDesignerProps> = (props) => {
                 </DesignerField>
                 <DesignerField label={props.t('widgets.editor.background')}>
                   <input
-                    type="color"
-                    value={node().style?.['background-color'] || '#000000'}
+                    value={
+                      styleValue('background') || styleValue('background-color')
+                    }
+                    placeholder="#000000"
                     onInput={(event) =>
-                      updateStyle('background-color', event.currentTarget.value)
+                      updateStyle(
+                        node().style?.background !== undefined
+                          ? 'background'
+                          : 'background-color',
+                        event.currentTarget.value
+                      )
                     }
                   />
                 </DesignerField>
                 <DesignerField label={props.t('widgets.editor.fontSize')}>
                   <input
-                    value={node().style?.['font-size'] || ''}
+                    value={styleValue('font-size')}
                     placeholder="1em"
                     onInput={(event) =>
                       updateStyle('font-size', event.currentTarget.value)
@@ -1296,14 +1327,204 @@ const VisualDesigner: Component<VisualDesignerProps> = (props) => {
                 </DesignerField>
                 <DesignerField label={props.t('widgets.editor.spacing')}>
                   <input
-                    value={node().style?.padding || ''}
+                    value={styleValue('padding')}
                     placeholder="1em"
                     onInput={(event) =>
                       updateStyle('padding', event.currentTarget.value)
                     }
                   />
                 </DesignerField>
+                <DesignerField label={props.t('widgets.editor.position')}>
+                  <select
+                    value={styleValue('position')}
+                    onChange={(event) =>
+                      updateStyle('position', event.currentTarget.value)
+                    }
+                  >
+                    <option value="">
+                      {props.t('widgets.editor.automatic')}
+                    </option>
+                    <option value="relative">relative</option>
+                    <option value="absolute">absolute</option>
+                    <option value="fixed">fixed</option>
+                  </select>
+                </DesignerField>
+                <DesignerField label={props.t('widgets.editor.display')}>
+                  <select
+                    value={styleValue('display')}
+                    onChange={(event) =>
+                      updateStyle('display', event.currentTarget.value)
+                    }
+                  >
+                    <option value="">
+                      {props.t('widgets.editor.automatic')}
+                    </option>
+                    <option value="block">block</option>
+                    <option value="flex">flex</option>
+                    <option value="grid">grid</option>
+                    <option value="none">none</option>
+                  </select>
+                </DesignerField>
+                <For each={['top', 'right', 'bottom', 'left']}>
+                  {(key) => (
+                    <DesignerField label={props.t(`widgets.editor.${key}`)}>
+                      <input
+                        value={styleValue(key)}
+                        placeholder="0"
+                        onInput={(event) =>
+                          updateStyle(key, event.currentTarget.value)
+                        }
+                      />
+                    </DesignerField>
+                  )}
+                </For>
+                <DesignerField label={props.t('widgets.editor.alignment')}>
+                  <select
+                    value={styleValue('align-items')}
+                    onChange={(event) =>
+                      updateStyle('align-items', event.currentTarget.value)
+                    }
+                  >
+                    <option value="">
+                      {props.t('widgets.editor.automatic')}
+                    </option>
+                    <option value="flex-start">flex-start</option>
+                    <option value="center">center</option>
+                    <option value="flex-end">flex-end</option>
+                    <option value="stretch">stretch</option>
+                    <option value="baseline">baseline</option>
+                  </select>
+                </DesignerField>
+                <DesignerField label={props.t('widgets.editor.justification')}>
+                  <select
+                    value={styleValue('justify-content')}
+                    onChange={(event) =>
+                      updateStyle('justify-content', event.currentTarget.value)
+                    }
+                  >
+                    <option value="">
+                      {props.t('widgets.editor.automatic')}
+                    </option>
+                    <option value="flex-start">flex-start</option>
+                    <option value="center">center</option>
+                    <option value="flex-end">flex-end</option>
+                    <option value="space-between">space-between</option>
+                    <option value="space-around">space-around</option>
+                    <option value="space-evenly">space-evenly</option>
+                  </select>
+                </DesignerField>
+                <DesignerField label={props.t('widgets.editor.gap')}>
+                  <input
+                    value={styleValue('gap')}
+                    placeholder="0.5em"
+                    onInput={(event) =>
+                      updateStyle('gap', event.currentTarget.value)
+                    }
+                  />
+                </DesignerField>
+                <DesignerField label={props.t('widgets.editor.margin')}>
+                  <input
+                    value={styleValue('margin')}
+                    placeholder="0"
+                    onInput={(event) =>
+                      updateStyle('margin', event.currentTarget.value)
+                    }
+                  />
+                </DesignerField>
+                <DesignerField label={props.t('widgets.editor.overflow')}>
+                  <select
+                    value={styleValue('overflow')}
+                    onChange={(event) =>
+                      updateStyle('overflow', event.currentTarget.value)
+                    }
+                  >
+                    <option value="">
+                      {props.t('widgets.editor.automatic')}
+                    </option>
+                    <option value="visible">visible</option>
+                    <option value="hidden">hidden</option>
+                    <option value="auto">auto</option>
+                    <option value="scroll">scroll</option>
+                  </select>
+                </DesignerField>
+                <DesignerField label={props.t('widgets.editor.opacity')}>
+                  <input
+                    type="number"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    value={styleValue('opacity')}
+                    placeholder="1"
+                    onInput={(event) =>
+                      updateStyle('opacity', event.currentTarget.value)
+                    }
+                  />
+                </DesignerField>
+                <DesignerField label={props.t('widgets.editor.fontWeight')}>
+                  <input
+                    value={styleValue('font-weight')}
+                    placeholder="400"
+                    onInput={(event) =>
+                      updateStyle('font-weight', event.currentTarget.value)
+                    }
+                  />
+                </DesignerField>
+                <DesignerField label={props.t('widgets.editor.lineHeight')}>
+                  <input
+                    value={styleValue('line-height')}
+                    placeholder="1.4"
+                    onInput={(event) =>
+                      updateStyle('line-height', event.currentTarget.value)
+                    }
+                  />
+                </DesignerField>
+                <DesignerField label={props.t('widgets.editor.textAlign')}>
+                  <select
+                    value={styleValue('text-align')}
+                    onChange={(event) =>
+                      updateStyle('text-align', event.currentTarget.value)
+                    }
+                  >
+                    <option value="">
+                      {props.t('widgets.editor.automatic')}
+                    </option>
+                    <option value="left">left</option>
+                    <option value="center">center</option>
+                    <option value="right">right</option>
+                  </select>
+                </DesignerField>
               </div>
+              <details class="widget-editor__advanced-properties">
+                <summary>{props.t('widgets.editor.advanced')}</summary>
+                <JsonObjectDesignerField
+                  label={props.t('widgets.editor.componentOptions')}
+                  value={node().opts || {}}
+                  onChange={(opts) =>
+                    props.onUpdate((current) => ({ ...current, opts }))
+                  }
+                  invalidLabel={props.t('widgets.editor.invalidJsonObject')}
+                />
+                <JsonObjectDesignerField
+                  label={props.t('widgets.editor.componentStyles')}
+                  value={node().style || {}}
+                  onChange={(style) =>
+                    props.onUpdate((current) => ({ ...current, style }))
+                  }
+                  invalidLabel={props.t('widgets.editor.invalidJsonObject')}
+                />
+                <JsonObjectDesignerField
+                  label={props.t('widgets.editor.visibilityFilter')}
+                  value={node().filter || {}}
+                  onChange={(filter) =>
+                    props.onUpdate((current) => ({
+                      ...current,
+                      filter:
+                        Object.keys(filter).length > 0 ? filter : undefined,
+                    }))
+                  }
+                  invalidLabel={props.t('widgets.editor.invalidJsonObject')}
+                />
+              </details>
             </div>
           )}
         </Show>
@@ -1321,6 +1542,40 @@ const DesignerField: Component<{
     {props.children}
   </label>
 );
+
+const JsonObjectDesignerField: Component<{
+  label: string;
+  value: Record<string, any>;
+  onChange: (value: Record<string, any>) => void;
+  invalidLabel: string;
+}> = (props) => {
+  const [text, setText] = createSignal(prettyJson(props.value));
+  const error = createMemo(() => {
+    const [ok, value] = tryParseJson(text());
+    return ok && isJsonObject(value) ? null : props.invalidLabel;
+  });
+
+  createEffect(() => setText(prettyJson(props.value)));
+
+  const update = (value: string) => {
+    setText(value);
+    const [ok, parsed] = tryParseJson(value);
+    if (ok && isJsonObject(parsed)) props.onChange(parsed);
+  };
+
+  return (
+    <DesignerField label={props.label}>
+      <textarea
+        classList={{ error: !!error() }}
+        value={text()}
+        onInput={(event) => update(event.currentTarget.value)}
+      />
+      <Show when={error()}>
+        <small class="widget-editor__designer-error">{error()}</small>
+      </Show>
+    </DesignerField>
+  );
+};
 
 const ComponentTree: Component<{
   node: TemplateNode;

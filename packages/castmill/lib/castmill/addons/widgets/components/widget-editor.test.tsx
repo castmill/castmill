@@ -143,6 +143,79 @@ describe('WidgetEditor', () => {
     );
   });
 
+  it('edits positioned components nested in collection templates', () => {
+    render(() => (
+      <WidgetEditor
+        store={store}
+        widget={
+          {
+            id: 1,
+            name: 'Feed',
+            slug: 'feed',
+            template: {
+              type: 'paginated-list',
+              name: 'posts',
+              opts: {
+                items: { key: 'data.posts' },
+                pageSize: 1,
+                pageDuration: 8,
+              },
+              style: { width: '100%', height: '100%' },
+              component: {
+                type: 'image',
+                name: 'post-media',
+                opts: { url: { key: '$.media_url' }, size: 'cover' },
+                style: {
+                  position: 'absolute',
+                  top: '0',
+                  left: '0',
+                  width: '100%',
+                  height: '100%',
+                },
+              },
+            },
+            options_schema: {},
+            data_schema: {},
+          } as any
+        }
+        onSave={vi.fn()}
+        onCancel={vi.fn()}
+      />
+    ));
+
+    fireEvent.click(screen.getByText('post-media'));
+    fireEvent.input(screen.getByLabelText('widgets.editor.top'), {
+      target: { value: '2em' },
+    });
+
+    expect(screen.getByTestId('widget-preview').textContent).toContain(
+      '"top":"2em"'
+    );
+    expect(
+      (screen.getByLabelText('widgets.editor.position') as HTMLSelectElement)
+        .value
+    ).toBe('absolute');
+
+    fireEvent.click(screen.getByText('widgets.editor.advanced'));
+    fireEvent.input(screen.getByLabelText('widgets.editor.componentStyles'), {
+      target: {
+        value: JSON.stringify({
+          position: 'absolute',
+          top: '2em',
+          background: 'linear-gradient(to top, rgba(0,0,0,0.75), transparent)',
+          'pointer-events': 'none',
+        }),
+      },
+    });
+
+    expect(screen.getByTestId('widget-preview').textContent).toContain(
+      'linear-gradient'
+    );
+    expect(screen.getByTestId('widget-preview').textContent).toContain(
+      'pointer-events'
+    );
+  });
+
   it('uses the supported toast API when saving a fixture', () => {
     render(() => (
       <WidgetEditor store={store} onSave={vi.fn()} onCancel={vi.fn()} />
