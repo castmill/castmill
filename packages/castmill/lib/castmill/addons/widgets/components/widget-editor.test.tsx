@@ -1,10 +1,14 @@
 // @vitest-environment jsdom
 
-import { fireEvent, render, screen } from '@solidjs/testing-library';
-import { describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen, waitFor } from '@solidjs/testing-library';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { WidgetEditor } from './widget-editor';
 
-const previewState = vi.hoisted(() => ({ mounts: 0 }));
+const previewState = vi.hoisted(() => ({
+  mounts: 0,
+  showToast: vi.fn(),
+  createFromJson: vi.fn(),
+}));
 
 vi.mock('@castmill/ui-common', () => ({
   Button: (props: any) => (
@@ -17,8 +21,7 @@ vi.mock('@castmill/ui-common', () => ({
     </button>
   ),
   useToast: () => ({
-    success: vi.fn(),
-    error: vi.fn(),
+    showToast: previewState.showToast,
   }),
 }));
 
@@ -27,9 +30,19 @@ vi.mock('../../playlists/components/widget-view', () => ({
     const mount = ++previewState.mounts;
     return (
       <div data-testid="widget-preview" data-mount={mount}>
-        {JSON.stringify(props.widget.template)}
+        {JSON.stringify({
+          template: props.widget.template,
+          assets: props.widget.assets,
+          fonts: props.widget.fonts,
+        })}
       </div>
     );
+  },
+}));
+
+vi.mock('../services/widgets.service', () => ({
+  WidgetsService: {
+    createFromJson: previewState.createFromJson,
   },
 }));
 
@@ -43,6 +56,11 @@ const store = {
 } as any;
 
 describe('WidgetEditor', () => {
+  beforeEach(() => {
+    previewState.showToast.mockClear();
+    previewState.createFromJson.mockReset();
+  });
+
   it('updates the rendered preview when the template changes', () => {
     render(() => (
       <WidgetEditor store={store} onSave={vi.fn()} onCancel={vi.fn()} />
@@ -99,5 +117,102 @@ describe('WidgetEditor', () => {
       screen.getByText('widgets.editor.createWidget').hasAttribute('disabled')
     ).toBe(true);
     expect(screen.queryByTestId('widget-preview')).toBeNull();
+  });
+
+  it('includes edited assets in the live preview', () => {
+    render(() => (
+      <WidgetEditor store={store} onSave={vi.fn()} onCancel={vi.fn()} />
+    ));
+
+    fireEvent.click(screen.getByText('widgets.assets.title'));
+    fireEvent.input(screen.getByPlaceholderText('{"images": {}}'), {
+      target: {
+        value: JSON.stringify({
+          images: {
+            background: {
+              path: 'https://example.com/background.png',
+              type: 'image/png',
+            },
+          },
+        }),
+      },
+    });
+
+    expect(screen.getByTestId('widget-preview').textContent).toContain(
+      'https://example.com/background.png'
+    );
+  });
+
+  it('uses the supported toast API when saving a fixture', () => {
+    render(() => (
+      <WidgetEditor store={store} onSave={vi.fn()} onCancel={vi.fn()} />
+    ));
+
+    fireEvent.click(screen.getByText('widgets.editor.fixture'));
+    fireEvent.input(
+      screen.getByPlaceholderText('widgets.editor.fixtureNamePlaceholder'),
+      { target: { value: 'Example' } }
+    );
+    fireEvent.click(screen.getByText('widgets.editor.saveFixture'));
+
+    expect(previewState.showToast).toHaveBeenCalledWith(
+      'widgets.editor.fixtureSaved',
+      'success',
+      2000
+    );
+  });
+
+  it('saves asset manifests and fonts with the widget', async () => {
+    previewState.createFromJson.mockResolvedValue({ name: 'Asset widget' });
+    render(() => (
+      <WidgetEditor store={store} onSave={vi.fn()} onCancel={vi.fn()} />
+    ));
+
+    fireEvent.input(
+      screen.getByPlaceholderText('widgets.editor.namePlaceholder'),
+      { target: { value: 'Asset widget' } }
+    );
+    fireEvent.click(screen.getByText('widgets.assets.title'));
+    fireEvent.input(screen.getByPlaceholderText('{"images": {}}'), {
+      target: {
+        value: JSON.stringify({
+          images: {
+            logo: { path: 'https://example.com/logo.png', type: 'image/png' },
+          },
+        }),
+      },
+    });
+    fireEvent.click(screen.getByText('widgets.assets.fonts'));
+    fireEvent.input(screen.getByPlaceholderText('[{"name": "", "url": ""}]'), {
+      target: {
+        value: JSON.stringify([
+          { name: 'Brand Font', url: 'https://example.com/font.woff2' },
+        ]),
+      },
+    });
+    fireEvent.click(screen.getByText('widgets.editor.createWidget'));
+
+    await waitFor(() => {
+      expect(previewState.createFromJson).toHaveBeenCalledWith(
+        'http://localhost',
+        'organization-id',
+        expect.objectContaining({
+          assets: {
+            images: {
+              logo: {
+                path: 'https://example.com/logo.png',
+                type: 'image/png',
+              },
+            },
+          },
+          fonts: [
+            {
+              name: 'Brand Font',
+              url: 'https://example.com/font.woff2',
+            },
+          ],
+        })
+      );
+    });
   });
 });

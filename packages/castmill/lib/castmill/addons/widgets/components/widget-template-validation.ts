@@ -26,7 +26,6 @@ function validateComponent(value: unknown, path: string): string | null {
     return path;
   }
   if (value.opts !== undefined && !isObject(value.opts)) return path;
-  if (value.type !== 'group' && !isObject(value.opts)) return path;
   if (value.style !== undefined && !isObject(value.style)) return path;
   if (value.animations !== undefined && !Array.isArray(value.animations)) {
     return path;

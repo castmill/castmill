@@ -29,19 +29,25 @@ export interface JsonWidget {
   assets?: {
     icons?: Record<
       string,
-      { path: string; type: string; description?: string }
+      { path: string; url?: string; type: string; description?: string }
     >;
     images?: Record<
       string,
-      { path: string; type: string; description?: string }
+      { path: string; url?: string; type: string; description?: string }
     >;
     fonts?: Record<
       string,
-      { path: string; name: string; type: string; description?: string }
+      {
+        path: string;
+        url?: string;
+        name: string;
+        type: string;
+        description?: string;
+      }
     >;
     styles?: Record<
       string,
-      { path: string; type: string; description?: string }
+      { path: string; url?: string; type: string; description?: string }
     >;
   };
   // Widget-provided translations keyed by locale code

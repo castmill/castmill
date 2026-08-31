@@ -541,6 +541,8 @@ defmodule CastmillWeb.OrganizationController do
              "template",
              "options_schema",
              "data_schema",
+             "assets",
+             "fonts",
              "aspect_ratio",
              "update_interval_seconds"
            ]),
@@ -586,6 +588,8 @@ defmodule CastmillWeb.OrganizationController do
         "template",
         "options_schema",
         "data_schema",
+        "assets",
+        "fonts",
         "aspect_ratio",
         "update_interval_seconds"
       ])

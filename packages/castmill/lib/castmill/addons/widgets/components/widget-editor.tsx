@@ -77,6 +77,8 @@ type EditorTab =
   | 'template'
   | 'options_schema'
   | 'data_schema'
+  | 'assets'
+  | 'fonts'
   | 'fixture'
   | 'settings';
 
@@ -259,6 +261,12 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
   const [dataSchemaJson, setDataSchemaJson] = createSignal(
     prettyJson(props.widget?.data_schema) || DEFAULT_DATA_SCHEMA
   );
+  const [assetsJson, setAssetsJson] = createSignal(
+    prettyJson(props.widget?.assets) || '{}'
+  );
+  const [fontsJson, setFontsJson] = createSignal(
+    prettyJson(props.widget?.fonts) || '[]'
+  );
 
   // ── Fixture ─────────────────────────────────────────────────────────────
   const [fixtureJson, setFixtureJson] = createSignal(DEFAULT_FIXTURE);
@@ -290,6 +298,14 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
     const [ok, val] = tryParseJson(dataSchemaJson());
     return ok ? val : undefined;
   });
+  const assetsParsed = createMemo(() => {
+    const [ok, val] = tryParseJson(assetsJson());
+    return ok && isJsonObject(val) ? val : {};
+  });
+  const fontsParsed = createMemo(() => {
+    const [ok, val] = tryParseJson(fontsJson());
+    return ok && Array.isArray(val) ? val : [];
+  });
   const fixtureParsed = createMemo(() => {
     const [ok, val] = tryParseJson(fixtureJson());
     if (!ok || !val) return { data: {}, options: {} };
@@ -312,6 +328,8 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
     templateJson: templateJson(),
     optionsSchemaJson: optionsSchemaJson(),
     dataSchemaJson: dataSchemaJson(),
+    assetsJson: assetsJson(),
+    fontsJson: fontsJson(),
   });
 
   const isDirty = createMemo(
@@ -325,6 +343,8 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
         templateJson: templateJson(),
         optionsSchemaJson: optionsSchemaJson(),
         dataSchemaJson: dataSchemaJson(),
+        assetsJson: assetsJson(),
+        fontsJson: fontsJson(),
       })
   );
 
@@ -361,6 +381,31 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
         ? t('widgets.editor.schemaMustBeObject')
         : String(value);
   });
+  const assetsError = createMemo(() => {
+    const [ok, value] = tryParseJson(assetsJson());
+    return ok && (value === undefined || isJsonObject(value))
+      ? null
+      : ok
+        ? t('widgets.editor.assetsMustBeObject')
+        : String(value);
+  });
+  const fontsError = createMemo(() => {
+    const [ok, value] = tryParseJson(fontsJson());
+    return ok &&
+      Array.isArray(value) &&
+      value.every(
+        (font) =>
+          isJsonObject(font) &&
+          typeof font.name === 'string' &&
+          !!font.name.trim() &&
+          typeof font.url === 'string' &&
+          !!font.url.trim()
+      )
+      ? null
+      : ok
+        ? t('widgets.editor.fontsMustBeArray')
+        : String(value);
+  });
   const fixtureError = createMemo(() => {
     const [ok, err] = tryParseJson(fixtureJson());
     return ok ? null : String(err);
@@ -377,6 +422,8 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
       !!templateError() ||
       !!optionsSchemaError() ||
       !!dataSchemaError() ||
+      !!assetsError() ||
+      !!fontsError() ||
       !!updateIntervalError() ||
       !name().trim()
   );
@@ -474,8 +521,8 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
       data_schema: dataSchemaParsed(),
       update_interval_seconds: Number(updateInterval()) || 60,
       aspect_ratio: aspectRatio() || undefined,
-      fonts: props.widget?.fonts || [],
-      assets: props.widget?.assets || {},
+      fonts: fontsParsed(),
+      assets: assetsParsed(),
     };
   });
 
@@ -498,6 +545,8 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
       template: templateJson(),
       optionsSchema: optionsSchemaJson(),
       dataSchema: dataSchemaJson(),
+      assets: assetsJson(),
+      fonts: fontsJson(),
       fixture: fixtureJson(),
       aspectRatio: aspectRatio(),
     });
@@ -507,12 +556,12 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
   const saveFixture = () => {
     const n = fixtureName().trim();
     if (!n) {
-      toast.error(t('widgets.editor.fixtureNameRequired'), 3000);
+      toast.showToast(t('widgets.editor.fixtureNameRequired'), 'error', 3000);
       return;
     }
     const [ok, val] = tryParseJson(fixtureJson());
     if (!ok) {
-      toast.error(t('widgets.editor.invalidJson'), 3000);
+      toast.showToast(t('widgets.editor.invalidJson'), 'error', 3000);
       return;
     }
     const lib = {
@@ -521,7 +570,7 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
     };
     setFixtureLibrary(lib);
     saveFixtureLibrary(props.store.organizations.selectedId, lib);
-    toast.success(t('widgets.editor.fixtureSaved'), 2000);
+    toast.showToast(t('widgets.editor.fixtureSaved'), 'success', 2000);
   };
 
   const loadFixture = (fixtureName: string) => {
@@ -553,6 +602,8 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
         template: templateParsed()!,
         options_schema: optionsSchemaParsed() || {},
         data_schema: dataSchemaParsed() || {},
+        assets: assetsParsed(),
+        fonts: fontsParsed(),
         aspect_ratio: aspectRatio() || undefined,
         update_interval_seconds: Number(updateInterval()) || 60,
       };
@@ -573,18 +624,20 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
         );
       }
 
-      toast.success(
+      toast.showToast(
         isEditing()
           ? t('widgets.editor.savedSuccess')
           : t('widgets.editor.createdSuccess'),
+        'success',
         3000
       );
       props.onSave(savedWidget);
     } catch (err: any) {
-      toast.error(
+      toast.showToast(
         t('widgets.editor.saveError', {
           error: err.message || String(err),
         }),
+        'error',
         5000
       );
     } finally {
@@ -613,6 +666,16 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
       key: 'data_schema',
       label: t('widgets.dataSchema'),
       hasError: () => !!dataSchemaError(),
+    },
+    {
+      key: 'assets',
+      label: t('widgets.assets.title'),
+      hasError: () => !!assetsError(),
+    },
+    {
+      key: 'fonts',
+      label: t('widgets.assets.fonts'),
+      hasError: () => !!fontsError(),
     },
     {
       key: 'fixture',
@@ -748,6 +811,34 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
                 error={dataSchemaError()}
                 placeholder={t('widgets.editor.dataSchemaPlaceholder')}
               />
+            </Show>
+
+            <Show when={activeTab() === 'assets'}>
+              <div class="widget-editor__fixture-panel">
+                <p class="widget-editor__fixture-hint">
+                  {t('widgets.editor.assetsHint')}
+                </p>
+                <JsonEditorPane
+                  value={assetsJson()}
+                  onChange={setAssetsJson}
+                  error={assetsError()}
+                  placeholder='{"images": {}}'
+                />
+              </div>
+            </Show>
+
+            <Show when={activeTab() === 'fonts'}>
+              <div class="widget-editor__fixture-panel">
+                <p class="widget-editor__fixture-hint">
+                  {t('widgets.editor.fontsHint')}
+                </p>
+                <JsonEditorPane
+                  value={fontsJson()}
+                  onChange={setFontsJson}
+                  error={fontsError()}
+                  placeholder='[{"name": "", "url": ""}]'
+                />
+              </div>
             </Show>
 
             {/* Fixture */}

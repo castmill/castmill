@@ -27,6 +27,8 @@ export interface WidgetFullUpdate {
   data_schema?: Record<string, any>;
   aspect_ratio?: string;
   update_interval_seconds?: number;
+  fonts?: { url: string; name: string }[];
+  assets?: JsonWidget['assets'];
   slug?: string;
 }
 
@@ -38,6 +40,8 @@ export interface WidgetCreateFromJson {
   data_schema?: Record<string, any>;
   aspect_ratio?: string;
   update_interval_seconds?: number;
+  fonts?: { url: string; name: string }[];
+  assets?: JsonWidget['assets'];
   slug?: string;
   is_system?: boolean;
 }
