@@ -46,7 +46,9 @@ describe('observeTextContainerResize', () => {
 
     const textElement = { parentElement: null } as unknown as HTMLDivElement;
 
-    expect(observeTextContainerResize(textElement, () => undefined)).to.equal(null);
+    expect(observeTextContainerResize(textElement, () => undefined)).to.equal(
+      null
+    );
   });
 });
 
@@ -87,7 +89,9 @@ describe('observeTextContentChanges', () => {
 
     const textElement = { id: 'text' } as unknown as HTMLDivElement;
 
-    expect(observeTextContentChanges(textElement, () => undefined)).to.equal(null);
+    expect(observeTextContentChanges(textElement, () => undefined)).to.equal(
+      null
+    );
 
     (globalThis as any).MutationObserver = previousMutationObserver;
   });
