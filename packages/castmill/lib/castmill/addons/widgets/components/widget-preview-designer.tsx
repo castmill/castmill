@@ -71,7 +71,10 @@ export const WidgetPreviewDesigner: Component<WidgetPreviewDesignerProps> = (
   const [selectedElement, setSelectedElement] = createSignal<HTMLElement>();
 
   const measure = (element: HTMLElement): Bounds => {
-    const canvasRect = canvas!.getBoundingClientRect();
+    if (!canvas) {
+      return { left: 0, top: 0, width: 0, height: 0 };
+    }
+    const canvasRect = canvas.getBoundingClientRect();
     const rect = element.getBoundingClientRect();
     return {
       left: rect.left - canvasRect.left,
