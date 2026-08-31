@@ -26,6 +26,38 @@ function assetUrl(
   return widgetSlug ? `/widget_assets/${widgetSlug}/${path}` : path;
 }
 
+function resolveStringAssets(
+  value: string,
+  assets: AssetManifest,
+  widgetSlug?: string
+): string {
+  const parts: string[] = [];
+  let cursor = 0;
+
+  while (cursor < value.length) {
+    const start = value.indexOf('{{asset:', cursor);
+    if (start < 0) {
+      parts.push(value.slice(cursor));
+      break;
+    }
+
+    const end = value.indexOf('}}', start + 8);
+    if (end < 0) {
+      parts.push(value.slice(cursor));
+      break;
+    }
+
+    const reference = value.slice(start + 8, end);
+    parts.push(value.slice(cursor, start));
+    parts.push(
+      assetUrl(reference, assets, widgetSlug) || value.slice(start, end + 2)
+    );
+    cursor = end + 2;
+  }
+
+  return parts.join('');
+}
+
 export function resolveWidgetAssets<T>(
   value: T,
   assets: AssetManifest | undefined,
@@ -34,11 +66,7 @@ export function resolveWidgetAssets<T>(
   if (!assets) return value;
 
   if (typeof value === 'string') {
-    return value.replace(
-      /\{\{asset:([^}]+)\}\}/g,
-      (placeholder, reference: string) =>
-        assetUrl(reference, assets, widgetSlug) || placeholder
-    ) as T;
+    return resolveStringAssets(value, assets, widgetSlug) as T;
   }
 
   if (Array.isArray(value)) {
