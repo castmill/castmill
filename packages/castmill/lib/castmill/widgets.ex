@@ -389,7 +389,8 @@ defmodule Castmill.Widgets do
 
     with org_id when not is_nil(org_id) <- organization_id_for_playlist(playlist_id),
          %Widget{} = widget <- get_widget(widget_id),
-         {:ok, integration} <- Integrations.ensure_integration_for_widget(widget),
+         {:ok, %Castmill.Widgets.Integrations.WidgetIntegration{} = integration} <-
+           Integrations.ensure_integration_for_widget(widget),
          true <- is_credential_free_integration?(integration) do
       previous_discriminator = discriminator_for_options(integration, org_id, previous_options)
 
