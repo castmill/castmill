@@ -15,10 +15,9 @@ This document outlines the architecture for managing static assets (icons, fonts
 ## Problem Statement
 
 Widgets need bundled static assets:
-
 - **Icons**: Weather conditions, social media logos, status indicators
 - **Fonts**: Custom typography for branding
-- **Images**: Backgrounds, decorative elements, logos
+- **Images**: Backgrounds, decorative elements, logos  
 - **Styles**: CSS for advanced layouts (optional)
 
 Widget packages provide standardized bundling, upload validation, manifests,
@@ -32,60 +31,58 @@ When creating custom widgets, the `options_schema` and `data_schema` fields are 
 
 ### Valid Schema Types
 
-| Type         | Description                           | Example                     |
-| ------------ | ------------------------------------- | --------------------------- |
-| `string`     | Text values                           | `"title": "string"`         |
-| `number`     | Numeric values (int or float)         | `"score": "number"`         |
-| `boolean`    | True/false values                     | `"enabled": "boolean"`      |
-| `url`        | URL strings                           | `"link": "url"`             |
-| `color`      | Color values (hex #RGB/#RRGGBB, rgba) | `"bg_color": "color"`       |
-| `city`       | City name strings                     | `"location": "city"`        |
-| `layout`     | Layout configuration object           | `"layout": "layout"`        |
-| `layout-ref` | Reference to existing layout by ID    | `"layout_id": "layout-ref"` |
-| `list`       | Array of items (NOT "array"!)         | See below                   |
-| `map`        | Nested object structure               | See below                   |
-| `ref`        | Reference to another entity           | See below                   |
+| Type | Description | Example |
+|------|-------------|---------|
+| `string` | Text values | `"title": "string"` |
+| `number` | Numeric values (int or float) | `"score": "number"` |
+| `boolean` | True/false values | `"enabled": "boolean"` |
+| `url` | URL strings | `"link": "url"` |
+| `color` | Color values (hex #RGB/#RRGGBB, rgba) | `"bg_color": "color"` |
+| `city` | City name strings | `"location": "city"` |
+| `layout` | Layout configuration object | `"layout": "layout"` |
+| `layout-ref` | Reference to existing layout by ID | `"layout_id": "layout-ref"` |
+| `list` | Array of items (NOT "array"!) | See below |
+| `map` | Nested object structure | See below |
+| `ref` | Reference to another entity | See below |
 
 ### ⚠️ Common Mistakes
 
 1. **Using `"type": "array"` instead of `"type": "list"`**
-
    ```json
    // ❌ WRONG - will cause validation error
    "items": { "type": "array" }
-
+   
    // ✅ CORRECT
    "items": { "type": "list", "items": { ... } }
    ```
 
 2. **Using `"label"` attribute (not allowed)**
-
    ```json
    // ❌ WRONG - "label" is not a valid attribute
    "scroll_speed": { "type": "number", "label": "Speed" }
-
+   
    // ✅ CORRECT - use "description" instead
    "scroll_speed": { "type": "number", "description": "Scroll speed" }
    ```
 
 ### Allowed Field Attributes
 
-| Attribute      | Type    | Description                         |
-| -------------- | ------- | ----------------------------------- |
-| `type`         | string  | **Required** - The data type        |
-| `required`     | boolean | Whether the field is required       |
-| `default`      | varies  | Default value if not provided       |
-| `description`  | string  | Human-readable description          |
-| `help`         | string  | Additional help text                |
-| `placeholder`  | string  | Placeholder text for inputs         |
-| `min`          | number  | Minimum value (for numbers)         |
-| `max`          | number  | Maximum value (for numbers)         |
-| `order`        | number  | Display order in UI                 |
-| `enum`         | array   | Allowed values for strings          |
-| `aspectRatios` | array   | For layout types                    |
-| `schema`       | object  | For `map` types - nested schema     |
-| `items`        | object  | For `list` types - item schema      |
-| `collection`   | string  | For `ref` types - target collection |
+| Attribute | Type | Description |
+|-----------|------|-------------|
+| `type` | string | **Required** - The data type |
+| `required` | boolean | Whether the field is required |
+| `default` | varies | Default value if not provided |
+| `description` | string | Human-readable description |
+| `help` | string | Additional help text |
+| `placeholder` | string | Placeholder text for inputs |
+| `min` | number | Minimum value (for numbers) |
+| `max` | number | Maximum value (for numbers) |
+| `order` | number | Display order in UI |
+| `enum` | array | Allowed values for strings |
+| `aspectRatios` | array | For layout types |
+| `schema` | object | For `map` types - nested schema |
+| `items` | object | For `list` types - item schema |
+| `collection` | string | For `ref` types - target collection |
 
 ### List Schema Example
 
@@ -200,16 +197,10 @@ Define asset constraints in the widget schema:
           ".*": {
             "type": "object",
             "properties": {
-              "path": {
-                "type": "string",
-                "pattern": "^icons/.*\\.(svg|png|jpg)$"
-              },
-              "type": {
-                "type": "string",
-                "enum": ["image/svg+xml", "image/png", "image/jpeg"]
-              },
-              "size": { "type": "integer", "maximum": 102400 },
-              "hash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" }
+              "path": {"type": "string", "pattern": "^icons/.*\\.(svg|png|jpg)$"},
+              "type": {"type": "string", "enum": ["image/svg+xml", "image/png", "image/jpeg"]},
+              "size": {"type": "integer", "maximum": 102400},
+              "hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
             },
             "required": ["path", "type", "size", "hash"]
           }
@@ -221,16 +212,10 @@ Define asset constraints in the widget schema:
           ".*": {
             "type": "object",
             "properties": {
-              "path": {
-                "type": "string",
-                "pattern": "^fonts/.*\\.(woff|woff2|ttf)$"
-              },
-              "type": {
-                "type": "string",
-                "enum": ["font/woff", "font/woff2", "font/ttf"]
-              },
-              "size": { "type": "integer", "maximum": 524288 },
-              "hash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" }
+              "path": {"type": "string", "pattern": "^fonts/.*\\.(woff|woff2|ttf)$"},
+              "type": {"type": "string", "enum": ["font/woff", "font/woff2", "font/ttf"]},
+              "size": {"type": "integer", "maximum": 524288},
+              "hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
             },
             "required": ["path", "type", "size", "hash"]
           }
@@ -242,16 +227,10 @@ Define asset constraints in the widget schema:
           ".*": {
             "type": "object",
             "properties": {
-              "path": {
-                "type": "string",
-                "pattern": "^images/.*\\.(png|jpg|jpeg|webp)$"
-              },
-              "type": {
-                "type": "string",
-                "enum": ["image/png", "image/jpeg", "image/webp"]
-              },
-              "size": { "type": "integer", "maximum": 1048576 },
-              "hash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" }
+              "path": {"type": "string", "pattern": "^images/.*\\.(png|jpg|jpeg|webp)$"},
+              "type": {"type": "string", "enum": ["image/png", "image/jpeg", "image/webp"]},
+              "size": {"type": "integer", "maximum": 1048576},
+              "hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
             },
             "required": ["path", "type", "size", "hash"]
           }
@@ -306,7 +285,7 @@ defmodule Castmill.Widgets.PackageValidator do
 
   defp validate_structure(files) do
     required_files = ["widget.json"]
-
+    
     if Enum.all?(required_files, &(&1 in files)) do
       :ok
     else
@@ -316,11 +295,11 @@ defmodule Castmill.Widgets.PackageValidator do
 
   defp validate_asset_files(zip_path, widget_json) do
     manifest = widget_json["assets"] || %{}
-
+    
     Enum.reduce_while(manifest, :ok, fn {category, assets}, _acc ->
       max_size = @max_file_size[category] || 1024 * 1024
       allowed_exts = @allowed_extensions[category] || []
-
+      
       case validate_category_assets(zip_path, assets, max_size, allowed_exts) do
         :ok -> {:cont, :ok}
         error -> {:halt, error}
@@ -330,7 +309,7 @@ defmodule Castmill.Widgets.PackageValidator do
 
   defp verify_asset_hashes(zip_path, widget_json) do
     manifest = widget_json["assets"] || %{}
-
+    
     Enum.reduce_while(manifest, :ok, fn {_category, assets}, _acc ->
       case verify_category_hashes(zip_path, assets) do
         :ok -> {:cont, :ok}
@@ -343,7 +322,7 @@ defmodule Castmill.Widgets.PackageValidator do
     Enum.reduce_while(assets, :ok, fn {_name, asset}, _acc ->
       path = asset["path"]
       expected_hash = asset["hash"]
-
+      
       with {:ok, content} <- extract_file(zip_path, "assets/#{path}"),
            actual_hash <- "sha256:" <> Base.encode16(:crypto.hash(:sha256, content), case: :lower) do
         if actual_hash == expected_hash do
@@ -395,7 +374,7 @@ defmodule Castmill.Widgets.AssetSecurityValidator do
       ~r/on\w+\s*=/i,  # Event handlers
       ~r/<!ENTITY/i     # Entity definitions
     ]
-
+    
     if Enum.any?(forbidden_patterns, &Regex.match?(&1, content)) do
       {:error, "SVG contains forbidden content"}
     else
@@ -423,21 +402,21 @@ defmodule Castmill.Widgets.AssetResolver do
   def resolve_asset_urls(widget, storage_config \\ nil) do
     storage = storage_config || Application.get_env(:castmill, :asset_storage)
     base_url = get_base_url(storage, widget.slug)
-
-    resolved_assets =
+    
+    resolved_assets = 
       widget.assets
       |> Enum.map(fn {category, assets} ->
-        resolved_category =
+        resolved_category = 
           assets
           |> Enum.map(fn {name, asset} ->
             {name, Map.put(asset, "url", "#{base_url}/#{asset["path"]}")}
           end)
           |> Map.new()
-
+        
         {category, resolved_category}
       end)
       |> Map.new()
-
+    
     %{widget | assets: resolved_assets}
   end
 
@@ -491,7 +470,6 @@ Templates reference assets using the `{key: "path"}` binding syntax with `assets
 ```
 
 The player resolves these bindings at runtime:
-
 - `{key: "assets.icons.sunny.url"}` → `https://cdn.castmill.com/widgets/weather/assets/icons/sunny.svg`
 - `{key: "assets.icons.{data.condition_icon}.url"}` → Dynamically resolves based on `data.condition_icon` value
 
@@ -514,42 +492,37 @@ weather-widget.zip
 ```
 
 **widget.json**:
-
 ```json
 {
   "name": "Weather Widget",
   "slug": "weather",
   "version": "1.0.0",
   "description": "Display current weather conditions",
-
+  
   "template": {
     "type": "group",
     "components": [
       {
         "type": "image",
-        "source": { "key": "assets.icons.{data.condition_icon}.url" }
+        "source": {"key": "assets.icons.{data.condition_icon}.url"}
       },
       {
         "type": "text",
-        "text": { "key": "data.temperature" }
+        "text": {"key": "data.temperature"}
       }
     ]
   },
-
+  
   "options_schema": {
-    "latitude": { "type": "number", "required": true },
-    "longitude": { "type": "number", "required": true }
+    "latitude": {"type": "number", "required": true},
+    "longitude": {"type": "number", "required": true}
   },
-
+  
   "data_schema": {
-    "temperature": { "type": "number", "required": true },
-    "condition_icon": {
-      "type": "string",
-      "enum": ["sunny", "cloudy", "rainy"],
-      "required": true
-    }
+    "temperature": {"type": "number", "required": true},
+    "condition_icon": {"type": "string", "enum": ["sunny", "cloudy", "rainy"], "required": true}
   },
-
+  
   "assets": {
     "icons": {
       "sunny": {
@@ -590,12 +563,12 @@ weather-widget.zip
 async function uploadWidget(file: File) {
   const formData = new FormData();
   formData.append('widget_package', file);
-
+  
   const response = await fetch('/api/widgets/upload', {
     method: 'POST',
-    body: formData,
+    body: formData
   });
-
+  
   return response.json();
 }
 ```
@@ -631,9 +604,9 @@ defmodule CastmillWeb.WidgetController do
       widget.slug,
       "assets"
     ])
-
+    
     File.mkdir_p!(storage_path)
-
+    
     # Extract assets from ZIP to storage
     extract_assets(zip_path, storage_path)
   end
@@ -648,10 +621,10 @@ User can use built-in RSS integration without coding:
 # Pre-built generic integration
 defmodule Castmill.Widgets.Integrations.Fetchers.RSS do
   @behaviour Castmill.Widgets.Integrations.Fetcher
-
+  
   def fetch(_credentials, options) do
     url = options["feed_url"]
-
+    
     with {:ok, %{body: body}} <- HTTPoison.get(url),
          {:ok, feed} <- parse_rss(body) do
       {:ok, %{
@@ -678,7 +651,7 @@ class WeatherWidget {
     // Assets already resolved to absolute URLs
     const iconUrl = assets.icons[data.condition_icon].url;
     // → "https://cdn.castmill.com/widgets/weather/assets/icons/sunny.svg"
-
+    
     return `
       <div class="weather-widget">
         <img src="${iconUrl}" alt="${data.condition_icon}" />
@@ -723,14 +696,14 @@ class WeatherWidget {
 ```elixir
 defp validate_asset_path(path) do
   normalized = Path.expand(path)
-
+  
   cond do
     String.contains?(path, "..") ->
       {:error, "Path traversal detected"}
-
+    
     String.starts_with?(normalized, "/") ->
       {:error, "Absolute paths not allowed"}
-
+    
     true ->
       :ok
   end
@@ -854,7 +827,6 @@ Castmill.Widgets.delete_widget_with_cascade(widget)
 #### Frontend UI
 
 The widgets page includes a delete action in the table row menu:
-
 - Shows confirmation dialog with usage warning
 - Lists all playlists where the widget is used
 - Warns that instances will be removed from playlists
@@ -867,7 +839,6 @@ Widget deletion requires the `widgets:delete` permission on the organization.
 ## Example: Complete Weather Widget
 
 See above implementation flow for a complete working example that demonstrates:
-
 - Widget package structure
 - Asset manifest with hashes
 - Template asset references
