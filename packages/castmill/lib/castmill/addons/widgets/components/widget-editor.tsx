@@ -85,6 +85,38 @@ type EditorTab =
   | 'settings';
 
 type TemplateNode = Record<string, any>;
+type TemplateComponentType =
+  | 'group'
+  | 'text'
+  | 'image'
+  | 'video'
+  | 'paginated-list'
+  | 'scroller'
+  | 'layout'
+  | 'image-carousel'
+  | 'qr-code';
+
+const COMPONENT_TYPES: TemplateComponentType[] = [
+  'text',
+  'image',
+  'video',
+  'group',
+  'paginated-list',
+  'scroller',
+  'layout',
+  'image-carousel',
+  'qr-code',
+];
+const SINGLE_CHILD_COMPONENT_TYPES = new Set(['paginated-list', 'scroller']);
+
+function componentTranslationKey(type: TemplateComponentType): string {
+  return type.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+}
+
+function componentTranslationSuffix(type: TemplateComponentType): string {
+  const key = componentTranslationKey(type);
+  return key.charAt(0).toUpperCase() + key.slice(1);
+}
 
 export interface WidgetEditorProps {
   store: AddonStore;
@@ -174,10 +206,19 @@ function setComponents(
   node: TemplateNode,
   components: TemplateNode[]
 ): TemplateNode {
-  if ('component' in node && !Array.isArray(node.components)) {
+  if (SINGLE_CHILD_COMPONENT_TYPES.has(node.type)) {
     return { ...node, component: components[0] };
   }
   return { ...node, components };
+}
+
+function canAddComponent(node?: TemplateNode): boolean {
+  if (!node) return false;
+  if (node.type === 'group') return true;
+  return (
+    SINGLE_CHILD_COMPONENT_TYPES.has(node.type) &&
+    getComponents(node).length === 0
+  );
 }
 
 function getNodeAtPath(
@@ -209,38 +250,91 @@ function updateNodeAtPath(
 }
 
 function newTemplateNode(
-  type: 'group' | 'text' | 'image',
+  type: TemplateComponentType,
   defaultText: string
 ): TemplateNode {
   const name = `${type}-${Date.now().toString(36)}`;
-  if (type === 'group') {
-    return {
-      type,
-      name,
-      opts: {},
-      style: {
-        display: 'flex',
-        'flex-direction': 'column',
-        width: '100%',
-        height: '100%',
-      },
-      components: [],
-    };
+  const fillStyle = { width: '100%', height: '100%' };
+  switch (type) {
+    case 'group':
+      return {
+        type,
+        name,
+        opts: {},
+        style: {
+          ...fillStyle,
+          display: 'flex',
+          'flex-direction': 'column',
+        },
+        components: [],
+      };
+    case 'text':
+      return {
+        type,
+        name,
+        opts: { text: defaultText },
+        style: { color: '#ffffff', 'font-size': '1em' },
+      };
+    case 'image':
+    case 'video':
+      return {
+        type,
+        name,
+        opts: { url: '', size: 'cover' },
+        style: fillStyle,
+      };
+    case 'paginated-list':
+      return {
+        type,
+        name,
+        opts: {
+          items: { key: 'data.items', default: [] },
+          pageDuration: 5,
+          pageSize: 1,
+        },
+        style: fillStyle,
+        component: newTemplateNode('group', defaultText),
+      };
+    case 'scroller':
+      return {
+        type,
+        name,
+        opts: {
+          items: { key: 'data.items', default: [] },
+          direction: 'left',
+          speed: 100,
+          gap: '2em',
+        },
+        style: fillStyle,
+        component: newTemplateNode('group', defaultText),
+      };
+    case 'layout':
+      return {
+        type,
+        name,
+        opts: { containers: [] },
+        style: fillStyle,
+      };
+    case 'image-carousel':
+      return {
+        type,
+        name,
+        opts: { images: [], imageDuration: 5 },
+        style: fillStyle,
+      };
+    case 'qr-code':
+      return {
+        type,
+        name,
+        opts: {
+          content: 'https://castmill.com',
+          foregroundColor: '#000000',
+          backgroundColor: '#ffffff',
+          errorCorrectionLevel: 'M',
+        },
+        style: fillStyle,
+      };
   }
-  if (type === 'image') {
-    return {
-      type,
-      name,
-      opts: { url: '', size: 'cover' },
-      style: { width: '100%', height: '100%' },
-    };
-  }
-  return {
-    type,
-    name,
-    opts: { text: defaultText },
-    style: { color: '#ffffff', 'font-size': '1em' },
-  };
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -465,14 +559,13 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
     );
   };
 
-  const addComponent = (type: 'group' | 'text' | 'image') => {
+  const addComponent = (type: TemplateComponentType) => {
     const selected = selectedNode();
-    const parentPath =
-      selected?.type === 'group' ? selectedPath() : selectedPath().slice(0, -1);
+    const parentPath = selectedPath();
     const template = templateParsed();
-    if (!template) return;
+    if (!template || !canAddComponent(selected)) return;
     const parent = getNodeAtPath(template, parentPath);
-    if (!parent || parent.type !== 'group') return;
+    if (!parent || !canAddComponent(parent)) return;
     const nextIndex = getComponents(parent).length;
     setTemplateJson(
       prettyJson(
@@ -1071,7 +1164,7 @@ interface VisualDesignerProps {
   selectedNode?: TemplateNode;
   onSelect: (path: number[]) => void;
   onUpdate: (update: (node: TemplateNode) => TemplateNode) => void;
-  onAdd: (type: 'group' | 'text' | 'image') => void;
+  onAdd: (type: TemplateComponentType) => void;
   onRemove: () => void;
   onMove: (offset: -1 | 1) => void;
   t: (key: string, params?: Record<string, any>) => string;
@@ -1134,26 +1227,23 @@ const VisualDesigner: Component<VisualDesignerProps> = (props) => {
       <div class="widget-editor__component-panel">
         <div class="widget-editor__section-header">
           <span>{props.t('widgets.editor.components')}</span>
-          <div class="widget-editor__add-menu">
-            <button
-              onClick={() => props.onAdd('text')}
-              title={props.t('widgets.editor.addText')}
-            >
-              <BsPlus size={12} /> {props.t('widgets.editor.text')}
-            </button>
-            <button
-              onClick={() => props.onAdd('image')}
-              title={props.t('widgets.editor.addImage')}
-            >
-              <BsPlus size={12} /> {props.t('widgets.editor.image')}
-            </button>
-            <button
-              onClick={() => props.onAdd('group')}
-              title={props.t('widgets.editor.addGroup')}
-            >
-              <BsPlus size={12} /> {props.t('widgets.editor.group')}
-            </button>
-          </div>
+          <Show when={canAddComponent(props.selectedNode)}>
+            <div class="widget-editor__add-menu">
+              <For each={COMPONENT_TYPES}>
+                {(type) => (
+                  <button
+                    onClick={() => props.onAdd(type)}
+                    title={props.t(
+                      `widgets.editor.add${componentTranslationSuffix(type)}`
+                    )}
+                  >
+                    <BsPlus size={12} />
+                    {props.t(`widgets.editor.${componentTranslationKey(type)}`)}
+                  </button>
+                )}
+              </For>
+            </div>
+          </Show>
         </div>
         <Show
           when={props.template}

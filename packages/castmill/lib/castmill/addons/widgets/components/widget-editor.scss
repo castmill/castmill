@@ -235,6 +235,15 @@
       color: #fca5a5;
     }
   }
+
+  .widget-editor__add-menu {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+
+    button {
+      white-space: nowrap;
+    }
+  }
 }
 
 .widget-editor__component-tree,

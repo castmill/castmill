@@ -143,6 +143,48 @@ describe('WidgetEditor', () => {
     );
   });
 
+  it('offers every component only when the selection can contain children', () => {
+    render(() => (
+      <WidgetEditor store={store} onSave={vi.fn()} onCancel={vi.fn()} />
+    ));
+
+    [
+      'Text',
+      'Image',
+      'Video',
+      'Group',
+      'PaginatedList',
+      'Scroller',
+      'Layout',
+      'ImageCarousel',
+      'QrCode',
+    ].forEach((type) => {
+      expect(screen.getByTitle(`widgets.editor.add${type}`)).not.toBeNull();
+    });
+
+    fireEvent.click(screen.getByTitle('widgets.editor.addVideo'));
+
+    expect(screen.getByTestId('widget-preview').textContent).toContain(
+      '"type":"video"'
+    );
+    expect(screen.queryByTitle('widgets.editor.addText')).toBeNull();
+  });
+
+  it('creates collection components with a valid item template', () => {
+    render(() => (
+      <WidgetEditor store={store} onSave={vi.fn()} onCancel={vi.fn()} />
+    ));
+
+    fireEvent.click(screen.getByTitle('widgets.editor.addPaginatedList'));
+
+    const preview = screen.getByTestId('widget-preview').textContent;
+    expect(preview).toContain('"type":"paginated-list"');
+    expect(preview).toContain('"pageDuration":5');
+    expect(preview).toContain('"component":{"type":"group"');
+    expect(screen.queryByText(/widgets\.editor\.invalidTemplate/)).toBeNull();
+    expect(screen.queryByTitle('widgets.editor.addText')).toBeNull();
+  });
+
   it('edits positioned components nested in collection templates', () => {
     render(() => (
       <WidgetEditor
