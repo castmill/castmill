@@ -530,7 +530,11 @@ defmodule Castmill.Widgets.Integrations do
         Map.put(widget_options, "display_locale", Map.get(widget_options, :display_locale))
 
       true ->
-        Map.put(widget_options, "display_locale", display_locale_for_organization(organization_id))
+        Map.put(
+          widget_options,
+          "display_locale",
+          display_locale_for_organization(organization_id)
+        )
     end
   end
 

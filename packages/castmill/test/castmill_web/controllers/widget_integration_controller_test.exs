@@ -315,7 +315,6 @@ defmodule CastmillWeb.WidgetIntegrationControllerTest do
       assert length(items) == 10
       # Test now runs in inline mode by default
     end
-
   end
 
   describe "prefetch_widget_data/2" do
@@ -344,7 +343,10 @@ defmodule CastmillWeb.WidgetIntegrationControllerTest do
       })
 
       conn =
-        post(conn, "/dashboard/organizations/#{organization.id}/widgets/#{widget.id}/prefetch-data")
+        post(
+          conn,
+          "/dashboard/organizations/#{organization.id}/widgets/#{widget.id}/prefetch-data"
+        )
 
       assert %{"data" => nil, "status" => "error", "message" => "Failed to fetch data"} =
                json_response(conn, 200)

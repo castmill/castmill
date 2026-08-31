@@ -107,7 +107,7 @@ defmodule Castmill.Widgets.AssetStorage do
   def sanitize_public_icon(icon) when is_binary(icon) do
     cond do
       String.starts_with?(icon, "data:") or
-          String.starts_with?(icon, "http://") or
+        String.starts_with?(icon, "http://") or
           String.starts_with?(icon, "https://") ->
         icon
 
@@ -244,7 +244,10 @@ defmodule Castmill.Widgets.AssetStorage do
 
   defp static_asset_exists?(icon_path) do
     static_path =
-      Application.app_dir(:castmill, Path.join("priv/static", String.trim_leading(icon_path, "/")))
+      Application.app_dir(
+        :castmill,
+        Path.join("priv/static", String.trim_leading(icon_path, "/"))
+      )
 
     File.exists?(static_path) and File.regular?(static_path)
   end

@@ -32,10 +32,7 @@ defmodule CastmillWeb.Live.Admin.NetworkIntegrationForm do
         </p>
       </div>
 
-      <div
-        :if={not @has_config_form}
-        class="mt-4 p-3 bg-blue-50 rounded-md border border-blue-200"
-      >
+      <div :if={not @has_config_form} class="mt-4 p-3 bg-blue-50 rounded-md border border-blue-200">
         <p class="text-sm text-blue-800">
           <span class="font-semibold">No configuration required</span>
           - this integration works without any credentials, so there is nothing to set up here.

@@ -718,8 +718,12 @@ defmodule CastmillWeb.WidgetIntegrationController do
 
     # Get the widget config to access its options for discriminator-based lookup
     widget_config = Widgets.get_widget_config_by_id(widget_config_id)
+
     widget_options =
-      Integrations.with_display_locale(organization_id, (widget_config && widget_config.options) || %{})
+      Integrations.with_display_locale(
+        organization_id,
+        (widget_config && widget_config.options) || %{}
+      )
 
     widget_id =
       cond do
@@ -750,7 +754,12 @@ defmodule CastmillWeb.WidgetIntegrationController do
                    ) do
                 nil ->
                   # No cached data - try on-demand fetch for PULL integrations
-                  try_on_demand_fetch(organization_id, widget_config_id, widget_id, widget_options)
+                  try_on_demand_fetch(
+                    organization_id,
+                    widget_config_id,
+                    widget_id,
+                    widget_options
+                  )
 
                 data ->
                   data

@@ -373,34 +373,36 @@ defmodule Castmill.Widgets.Integrations.Fetchers.OpenMeteo do
 
     code = current["weather_code"]
     condition_key = weather_condition_key(code)
-    apparent_temperature = "#{format_temperature(current["apparent_temperature"])}#{temperature_unit}"
+
+    apparent_temperature =
+      "#{format_temperature(current["apparent_temperature"])}#{temperature_unit}"
 
     {:ok,
      %{
-      "display_locale" => locale,
-      "location" => location["address"] || translate(locale, "selected_location"),
-      "temperature" => "#{format_temperature(current["temperature_2m"])}#{temperature_unit}",
-      "temperature_value" => current["temperature_2m"],
-      "temperature_unit" => temperature_unit,
-      "feels_like" => translate(locale, "feels_like", %{"temperature" => apparent_temperature}),
-      "feels_like_value" => current["apparent_temperature"],
-      "condition" => translate(locale, condition_key),
-      "condition_key" => condition_key,
-      "weather_code" => code,
-      "icon" => weather_icon(code),
-      "humidity" =>
-        translate(locale, "humidity", %{"humidity" => current["relative_humidity_2m"]}),
-      "humidity_value" => current["relative_humidity_2m"],
-      "wind" =>
-        translate(locale, "wind", %{
-          "wind" => format_temperature(current["wind_speed_10m"]),
-          "unit" => wind_unit
-        }),
-      "wind_value" => current["wind_speed_10m"],
-      "wind_unit" => wind_unit,
-      "forecast_title" => translate(locale, "forecast_title"),
-      "forecast" => forecast,
-      "last_updated" => System.system_time(:second)
+       "display_locale" => locale,
+       "location" => location["address"] || translate(locale, "selected_location"),
+       "temperature" => "#{format_temperature(current["temperature_2m"])}#{temperature_unit}",
+       "temperature_value" => current["temperature_2m"],
+       "temperature_unit" => temperature_unit,
+       "feels_like" => translate(locale, "feels_like", %{"temperature" => apparent_temperature}),
+       "feels_like_value" => current["apparent_temperature"],
+       "condition" => translate(locale, condition_key),
+       "condition_key" => condition_key,
+       "weather_code" => code,
+       "icon" => weather_icon(code),
+       "humidity" =>
+         translate(locale, "humidity", %{"humidity" => current["relative_humidity_2m"]}),
+       "humidity_value" => current["relative_humidity_2m"],
+       "wind" =>
+         translate(locale, "wind", %{
+           "wind" => format_temperature(current["wind_speed_10m"]),
+           "unit" => wind_unit
+         }),
+       "wind_value" => current["wind_speed_10m"],
+       "wind_unit" => wind_unit,
+       "forecast_title" => translate(locale, "forecast_title"),
+       "forecast" => forecast,
+       "last_updated" => System.system_time(:second)
      }}
   rescue
     _ -> {:error, :invalid_response}
@@ -432,7 +434,8 @@ defmodule Castmill.Widgets.Integrations.Fetchers.OpenMeteo do
         day_key = Enum.at(@day_keys, Date.day_of_week(parsed) - 1)
         translate(locale, day_key)
 
-      _ -> date
+      _ ->
+        date
     end
   end
 
