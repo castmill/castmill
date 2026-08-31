@@ -5,7 +5,8 @@
     "correctness": "error"
   },
   "rules": {
-    "no-unassigned-vars": "off"
+    "no-unassigned-vars": "off",
+    "no-unused-vars": "off"
   },
   "env": {
     "builtin": true
