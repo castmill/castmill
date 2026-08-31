@@ -71,4 +71,18 @@ describe('StyledInput Component', () => {
 
     expect(screen.getByRole('checkbox')).not.toBeChecked();
   });
+
+  it('renders a serialized true boolean value as checked', () => {
+    const mockOnInput = vi.fn();
+    render(() => (
+      <StyledInput
+        id="test-input"
+        type="boolean"
+        value="true"
+        onInput={mockOnInput}
+      />
+    ));
+
+    expect(screen.getByRole('checkbox')).toBeChecked();
+  });
 });
