@@ -486,7 +486,11 @@ defmodule Castmill.Widgets do
       })
 
     try do
-      case Repo.update(changeset) do
+      # `force: true` guarantees the update (and therefore the optimistic lock
+      # version bump) is issued even when the payload is identical to what is
+      # already stored, e.g. two updates within the same second where the
+      # truncated `last_request_at` does not change either.
+      case Repo.update(changeset, force: true) do
         {:ok, _updated_widget_config} ->
           {:ok, "Widget configuration updated successfully"}
 
