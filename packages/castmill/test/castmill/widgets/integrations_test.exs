@@ -669,6 +669,54 @@ defmodule Castmill.Widgets.IntegrationsTest do
       refute discriminator == other_discriminator
     end
 
+    test "discriminators longer than the column are bounded with a digest", %{
+      widget: widget,
+      organization: organization
+    } do
+      {:ok, integration} =
+        Integrations.create_integration(%{
+          widget_id: widget.id,
+          name: "opt-test-#{System.unique_integer([:positive])}",
+          integration_type: "pull",
+          credential_scope: "organization",
+          discriminator_type: "widget_option",
+          discriminator_key: "location,fahrenheit",
+          pull_endpoint: "https://api.example.com/data",
+          pull_interval_seconds: 300
+        })
+
+      long_address = String.duplicate("Very Long Street Name 123, ", 20)
+
+      options = %{
+        "location" => %{"lat" => 55.666667, "lng" => 13.083333, "address" => long_address}
+      }
+
+      other_options = %{
+        "location" => %{"lat" => 55.666667, "lng" => 13.083333, "address" => long_address <> "b"}
+      }
+
+      built = Integrations.build_discriminator_id(integration, options, organization.id)
+
+      assert {:ok, computed} =
+               Integrations.compute_discriminator_id(integration, organization.id, nil, options)
+
+      assert {:ok, other_computed} =
+               Integrations.compute_discriminator_id(
+                 integration,
+                 organization.id,
+                 nil,
+                 other_options
+               )
+
+      for discriminator <- [built, computed, other_computed] do
+        assert byte_size(discriminator) <= 255
+        assert String.contains?(discriminator, "|sha256:")
+        assert String.valid?(discriminator)
+      end
+
+      refute computed == other_computed
+    end
+
     test "compute_discriminator_id/4 for widget_option type missing option returns error", %{
       widget: widget,
       organization: organization

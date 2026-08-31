@@ -18,6 +18,9 @@ defmodule Castmill.Widgets.Integrations do
     NetworkIntegrationCredential
   }
 
+  # `widget_integration_data.discriminator_id` is a varchar(255) column.
+  @discriminator_id_max_bytes 255
+
   # ============================================================================
   # Integration Data Broadcasting
   # ============================================================================
@@ -580,7 +583,12 @@ defmodule Castmill.Widgets.Integrations do
                include_keys: composite_discriminator_key?(key)
              ) do
           {:ok, value} ->
-            {:ok, scope_discriminator_by_organization(organization_id, "opt:#{value}")}
+            discriminator =
+              organization_id
+              |> scope_discriminator_by_organization("opt:#{value}")
+              |> bound_discriminator_id()
+
+            {:ok, discriminator}
 
           {:error, reason} ->
             {:error, reason}
@@ -1058,13 +1066,65 @@ defmodule Castmill.Widgets.Integrations do
             {:error, _reason} -> "#{key}:default"
           end
 
-        scope_discriminator_by_organization(organization_id, value)
+        organization_id
+        |> scope_discriminator_by_organization(value)
+        |> bound_discriminator_id()
 
       "organization" ->
         "org"
 
       _ ->
         "default"
+    end
+  end
+
+  @doc """
+  Bounds a discriminator ID so that it always fits in the
+  `widget_integration_data.discriminator_id` column (varchar(255)).
+
+  Discriminator values may embed arbitrarily long option values (for example a
+  full geocoded address), so anything longer than the column is replaced by a
+  truncated prefix plus a fixed-length digest of the full value. The digest
+  keeps the key deterministic and collision resistant.
+  """
+  def bound_discriminator_id(discriminator) when is_binary(discriminator) do
+    if byte_size(discriminator) <= @discriminator_id_max_bytes do
+      discriminator
+    else
+      digest =
+        :sha256
+        |> :crypto.hash(discriminator)
+        |> Base.encode16(case: :lower)
+
+      suffix = "|sha256:" <> digest
+
+      prefix = truncate_to_bytes(discriminator, @discriminator_id_max_bytes - byte_size(suffix))
+
+      prefix <> suffix
+    end
+  end
+
+  defp truncate_to_bytes(_string, max_bytes) when max_bytes <= 0, do: ""
+
+  defp truncate_to_bytes(string, max_bytes) do
+    if byte_size(string) <= max_bytes do
+      string
+    else
+      string
+      |> binary_part(0, max_bytes)
+      |> drop_invalid_trailing_bytes()
+    end
+  end
+
+  defp drop_invalid_trailing_bytes(<<>>), do: <<>>
+
+  defp drop_invalid_trailing_bytes(binary) do
+    if String.valid?(binary) do
+      binary
+    else
+      binary
+      |> binary_part(0, byte_size(binary) - 1)
+      |> drop_invalid_trailing_bytes()
     end
   end
 
