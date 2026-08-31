@@ -162,15 +162,18 @@ defmodule Castmill.Resources do
     if is_nil(playlist) do
       nil
     else
+      display_locale =
+        Castmill.Widgets.Integrations.display_locale_for_organization(playlist.organization_id)
+
       items =
         get_playlist_items(id)
-        |> Enum.map(&transform_item(&1, playlist.organization_id))
+        |> Enum.map(&transform_item(&1, playlist.organization_id, display_locale))
 
       %{playlist | items: items}
     end
   end
 
-  defp transform_item(item, organization_id) do
+  defp transform_item(item, organization_id, display_locale) do
     # Resolve widget references (media, playlist refs, etc.) and merge them into options
     # resolve_widget_references only returns the resolved ref fields, so we merge them
     # back into the original options to preserve all other option values
@@ -220,7 +223,8 @@ defmodule Castmill.Resources do
     widget_options_for_filtering =
       Castmill.Widgets.Integrations.with_display_locale(
         organization_id,
-        modified_widget_config_with_defaults.options || %{}
+        modified_widget_config_with_defaults.options || %{},
+        display_locale
       )
 
     integration_data =

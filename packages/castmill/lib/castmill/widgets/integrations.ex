@@ -519,7 +519,7 @@ defmodule Castmill.Widgets.Integrations do
   Adds the organization's display locale to widget options when the caller has
   not already supplied an explicit locale.
   """
-  def with_display_locale(organization_id, widget_options) do
+  def with_display_locale(organization_id, widget_options, display_locale \\ nil) do
     widget_options = widget_options || %{}
 
     cond do
@@ -533,7 +533,7 @@ defmodule Castmill.Widgets.Integrations do
         Map.put(
           widget_options,
           "display_locale",
-          display_locale_for_organization(organization_id)
+          display_locale || display_locale_for_organization(organization_id)
         )
     end
   end
@@ -601,9 +601,10 @@ defmodule Castmill.Widgets.Integrations do
     end
   end
 
-  defp display_locale_for_organization(nil), do: "en"
+  @doc false
+  def display_locale_for_organization(nil), do: "en"
 
-  defp display_locale_for_organization(organization_id) when is_binary(organization_id) do
+  def display_locale_for_organization(organization_id) when is_binary(organization_id) do
     with {:ok, organization_id} <- Ecto.UUID.cast(organization_id) do
       from(org in Castmill.Organizations.Organization,
         join: network in assoc(org, :network),
@@ -620,7 +621,7 @@ defmodule Castmill.Widgets.Integrations do
     end
   end
 
-  defp display_locale_for_organization(_organization_id) do
+  def display_locale_for_organization(_organization_id) do
     "en"
   end
 
