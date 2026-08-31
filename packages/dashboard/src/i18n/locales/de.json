@@ -939,7 +939,7 @@
       "afterSavingCredentials": "Nachdem Sie Ihre Anmeldedaten gespeichert haben, klicken Sie unten, um sich bei {{provider}} zu autorisieren:",
       "networkCredentialsConfigured": "Die {{provider}}-Integration wurde von Ihrem Netzwerkadministrator konfiguriert. Klicken Sie unten, um Ihr Konto zu autorisieren:",
       "noConfigurationRequired": "Keine Konfiguration erforderlich",
-      "optional": "Optional"
+      "optional": "Fakultativ"
     },
     "translations": "Übersetzungen"
   },
