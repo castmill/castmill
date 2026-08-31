@@ -150,7 +150,7 @@ export class ResourceManager {
     let item = await this.cache.get(url);
     const age = item ? Date.now() - item.timestamp : Infinity;
 
-    if (!item || age > freshness) {
+    if (!item || age >= freshness) {
       try {
         const freshItem = await this.cache.set(
           url,

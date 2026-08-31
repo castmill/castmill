@@ -151,7 +151,7 @@ export class Cache extends Dexie {
 
   async hasUrl(url: string) {
     // Check if we are caching the item.
-    if (!!this.caching[url]) {
+    if (this.caching[url]) {
       return true;
     }
 
@@ -171,7 +171,7 @@ export class Cache extends Dexie {
     opts: SetItemCacheOptions = { force: false }
   ) {
     // Check if we are already caching the item - if so, return that promise
-    if (!!this.caching[url]) {
+    if (this.caching[url]) {
       return this.caching[url];
     }
 

@@ -100,7 +100,7 @@ export const Image: Component<ImageProps> = (props: ImageProps) => {
   );
 
   onCleanup(() => {
-    cleanUpAnimations && cleanUpAnimations();
+    cleanUpAnimations?.();
   });
 
   onMount(async () => {

@@ -114,7 +114,7 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
   });
 
   onMount(async () => {
-    const images = parentRef?.children!;
+    const images = parentRef!.children;
     const targetArgs = {
       duration: 1,
       x: 0,

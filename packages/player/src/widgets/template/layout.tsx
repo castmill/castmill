@@ -320,7 +320,7 @@ const LayoutContainer: Component<{
   onCleanup(() => {
     showingSubscription?.unsubscribe();
     seekingSubscription?.unsubscribe();
-    timelineItem && props.timeline.remove(timelineItem);
+    if (timelineItem) props.timeline.remove(timelineItem);
     playlist.layers.forEach((item) => item.unload());
     renderer?.clean();
   });

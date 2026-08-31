@@ -124,8 +124,8 @@ export const Text: Component<TextProps> = (props) => {
   };
 
   onCleanup(() => {
-    cleanUpAnimations && cleanUpAnimations();
-    timelineItem && props.timeline.remove(timelineItem);
+    cleanUpAnimations?.();
+    if (timelineItem) props.timeline.remove(timelineItem);
     scrollTimeline?.kill();
   });
 
