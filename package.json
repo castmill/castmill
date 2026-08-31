@@ -68,7 +68,18 @@
     "lint:platforms": "yarn run lint:platforms:android && yarn run lint:platforms:webos && yarn run lint:platforms:electron && yarn run lint:platforms:legacy",
     "lint:website": "cd packages/website && yarn lint",
     "lint:castmill-assets": "cd packages/castmill/assets && yarn lint",
-    "lint:all": "yarn run lint:ui-common && yarn run lint:cache && yarn run lint:dashboard && yarn run lint:device && yarn run lint:player && yarn run lint:widged && yarn run lint:platforms && yarn run lint:website && yarn run lint:castmill-assets"
+    "lint:all": "yarn run lint:ui-common && yarn run lint:cache && yarn run lint:dashboard && yarn run lint:device && yarn run lint:player && yarn run lint:widged && yarn run lint:platforms && yarn run lint:website && yarn run lint:castmill-assets",
+    "test:ui-common": "cd packages/ui-common && yarn vitest run",
+    "test:cache": "cd packages/cache && yarn vitest run",
+    "test:dashboard": "cd packages/dashboard && yarn vitest run",
+    "test:device": "cd packages/device && yarn test",
+    "test:player": "cd packages/player && yarn test",
+    "test:platforms:android": "cd packages/platforms/android-player && yarn test",
+    "test:platforms:webos": "cd packages/platforms/webos-player && yarn test",
+    "test:platforms:electron": "cd packages/platforms/electron-player && yarn test",
+    "test:platforms:legacy": "cd packages/platforms/legacy-adapter-player && yarn test",
+    "test:platforms": "yarn run test:platforms:android && yarn run test:platforms:webos && yarn run test:platforms:electron && yarn run test:platforms:legacy",
+    "test:all": "yarn run test:ui-common && yarn run test:cache && yarn run test:dashboard && yarn run test:device && yarn run test:player && yarn run test:platforms"
   },
   "dependencies": {
     "@docusaurus/core": "^3.9.1",
