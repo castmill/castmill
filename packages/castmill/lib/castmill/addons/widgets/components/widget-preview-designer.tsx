@@ -121,9 +121,7 @@ export const WidgetPreviewDesigner: Component<WidgetPreviewDesignerProps> = (
   };
 
   createEffect(() => {
-    props.enabled;
-    props.template;
-    props.selectedPath;
+    void [props.enabled, props.template, props.selectedPath];
     if (scheduledFrame !== undefined) cancelAnimationFrame(scheduledFrame);
     scheduledFrame = requestAnimationFrame(refreshSelection);
   });
