@@ -149,6 +149,8 @@ const ComponentTypeIcon: Component<{ type: TemplateComponentType }> = (
       return <BsImages />;
     case 'qr-code':
       return <BsQrCode />;
+    default:
+      return <BsPlus />;
   }
 };
 
