@@ -25,6 +25,7 @@ import {
   BsLayoutSplit,
   BsListUl,
   BsQrCode,
+  BsSearch,
   BsType,
 } from 'solid-icons/bs';
 import { AiOutlineSave } from 'solid-icons/ai';
@@ -152,6 +153,114 @@ const ComponentTypeIcon: Component<{ type: TemplateComponentType }> = (
     default:
       return <BsPlus />;
   }
+};
+
+interface ComponentPickerProps {
+  types: TemplateComponentType[];
+  onPick: (type: TemplateComponentType) => void;
+  t: (key: string, params?: Record<string, any>) => string;
+}
+
+const ComponentPicker: Component<ComponentPickerProps> = (props) => {
+  const [open, setOpen] = createSignal(false);
+  const [query, setQuery] = createSignal('');
+  let container: HTMLDivElement | undefined;
+
+  const close = () => {
+    setOpen(false);
+    setQuery('');
+  };
+
+  const onDocumentPointerDown = (event: PointerEvent) => {
+    if (!open()) return;
+    if (container && !container.contains(event.target as Node)) close();
+  };
+
+  const onDocumentKeyDown = (event: KeyboardEvent) => {
+    if (open() && event.key === 'Escape') close();
+  };
+
+  document.addEventListener('pointerdown', onDocumentPointerDown);
+  document.addEventListener('keydown', onDocumentKeyDown);
+  onCleanup(() => {
+    document.removeEventListener('pointerdown', onDocumentPointerDown);
+    document.removeEventListener('keydown', onDocumentKeyDown);
+  });
+
+  const label = (type: TemplateComponentType) =>
+    props.t(`widgets.editor.${componentTranslationKey(type)}`);
+
+  const addLabel = (type: TemplateComponentType) =>
+    props.t(`widgets.editor.add${componentTranslationSuffix(type)}`);
+
+  const filtered = () => {
+    const search = query().trim().toLowerCase();
+    if (!search) return props.types;
+    return props.types.filter(
+      (type) =>
+        label(type).toLowerCase().includes(search) ||
+        type.replace(/-/g, ' ').includes(search)
+    );
+  };
+
+  return (
+    <div class="widget-editor__add-menu" ref={container}>
+      <button
+        class="widget-editor__add-trigger"
+        classList={{ 'is-open': open() }}
+        onClick={() => (open() ? close() : setOpen(true))}
+        aria-haspopup="menu"
+        aria-expanded={open()}
+        title={props.t('widgets.editor.addComponent')}
+      >
+        <BsPlus size={18} />
+        <span>{props.t('widgets.editor.addComponent')}</span>
+      </button>
+      <Show when={open()}>
+        <div class="widget-editor__add-popover" role="menu">
+          <div class="widget-editor__add-search">
+            <BsSearch size={12} />
+            <input
+              type="search"
+              autofocus
+              value={query()}
+              placeholder={props.t('widgets.editor.searchComponents')}
+              aria-label={props.t('widgets.editor.searchComponents')}
+              onInput={(e) => setQuery(e.currentTarget.value)}
+            />
+          </div>
+          <div class="widget-editor__add-grid">
+            <For each={filtered()}>
+              {(type) => (
+                <button
+                  class="widget-editor__add-option"
+                  role="menuitem"
+                  onClick={() => {
+                    props.onPick(type);
+                    close();
+                  }}
+                  title={addLabel(type)}
+                  aria-label={addLabel(type)}
+                >
+                  <span class="widget-editor__add-option-icon">
+                    <ComponentTypeIcon type={type} />
+                  </span>
+                  <span class="widget-editor__add-option-label">
+                    {label(type)}
+                  </span>
+                </button>
+              )}
+            </For>
+          </div>
+          <Show when={filtered().length === 0}>
+            <p class="widget-editor__add-empty">
+              {props.t('widgets.editor.noComponentsFound')}
+            </p>
+          </Show>
+        </div>
+      </Show>
+    </div>
+  );
 };
 
 export interface WidgetEditorProps {
@@ -1264,27 +1373,11 @@ const VisualDesigner: Component<VisualDesignerProps> = (props) => {
         <div class="widget-editor__section-header">
           <span>{props.t('widgets.editor.components')}</span>
           <Show when={canAddComponent(props.selectedNode)}>
-            <div class="widget-editor__add-menu">
-              <For each={COMPONENT_TYPES}>
-                {(type) => {
-                  const label = () =>
-                    props.t(
-                      `widgets.editor.add${componentTranslationSuffix(type)}`
-                    );
-                  return (
-                    <button
-                      class="widget-editor__add-component"
-                      onClick={() => props.onAdd(type)}
-                      title={label()}
-                      aria-label={label()}
-                    >
-                      <ComponentTypeIcon type={type} />
-                      <BsPlus class="widget-editor__add-component-badge" />
-                    </button>
-                  );
-                }}
-              </For>
-            </div>
+            <ComponentPicker
+              types={COMPONENT_TYPES}
+              onPick={props.onAdd}
+              t={props.t}
+            />
           </Show>
         </div>
         <Show

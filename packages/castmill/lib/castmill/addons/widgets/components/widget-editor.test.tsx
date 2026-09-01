@@ -148,6 +148,8 @@ describe('WidgetEditor', () => {
       <WidgetEditor store={store} onSave={vi.fn()} onCancel={vi.fn()} />
     ));
 
+    fireEvent.click(screen.getByTitle('widgets.editor.addComponent'));
+
     [
       'Text',
       'Image',
@@ -173,6 +175,7 @@ describe('WidgetEditor', () => {
       '"type":"video"'
     );
     expect(screen.queryByTitle('widgets.editor.addText')).toBeNull();
+    expect(screen.queryByTitle('widgets.editor.addComponent')).toBeNull();
   });
 
   it('creates collection components with a valid item template', () => {
@@ -180,6 +183,7 @@ describe('WidgetEditor', () => {
       <WidgetEditor store={store} onSave={vi.fn()} onCancel={vi.fn()} />
     ));
 
+    fireEvent.click(screen.getByTitle('widgets.editor.addComponent'));
     fireEvent.click(screen.getByTitle('widgets.editor.addPaginatedList'));
 
     const preview = screen.getByTestId('widget-preview').textContent;
@@ -188,6 +192,26 @@ describe('WidgetEditor', () => {
     expect(preview).toContain('"component":{"type":"group"');
     expect(screen.queryByText(/widgets\.editor\.invalidTemplate/)).toBeNull();
     expect(screen.queryByTitle('widgets.editor.addText')).toBeNull();
+    expect(screen.queryByTitle('widgets.editor.addComponent')).toBeNull();
+  });
+
+  it('filters the component picker and closes it on escape', () => {
+    render(() => (
+      <WidgetEditor store={store} onSave={vi.fn()} onCancel={vi.fn()} />
+    ));
+
+    fireEvent.click(screen.getByTitle('widgets.editor.addComponent'));
+    fireEvent.input(
+      screen.getByPlaceholderText('widgets.editor.searchComponents'),
+      { target: { value: 'qr' } }
+    );
+
+    expect(screen.getByTitle('widgets.editor.addQrCode')).not.toBeNull();
+    expect(screen.queryByTitle('widgets.editor.addText')).toBeNull();
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+
+    expect(screen.queryByTitle('widgets.editor.addQrCode')).toBeNull();
   });
 
   it('edits positioned components nested in collection templates', () => {
