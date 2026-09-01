@@ -8,6 +8,8 @@ const previewState = vi.hoisted(() => ({
   mounts: 0,
   showToast: vi.fn(),
   createFromJson: vi.fn(),
+  uploadWidgetAsset: vi.fn(),
+  deleteWidgetAsset: vi.fn(),
 }));
 
 vi.mock('@castmill/ui-common', () => ({
@@ -43,6 +45,8 @@ vi.mock('../../playlists/components/widget-view', () => ({
 vi.mock('../services/widgets.service', () => ({
   WidgetsService: {
     createFromJson: previewState.createFromJson,
+    uploadWidgetAsset: previewState.uploadWidgetAsset,
+    deleteWidgetAsset: previewState.deleteWidgetAsset,
   },
 }));
 
@@ -59,6 +63,8 @@ describe('WidgetEditor', () => {
   beforeEach(() => {
     previewState.showToast.mockClear();
     previewState.createFromJson.mockReset();
+    previewState.uploadWidgetAsset.mockReset();
+    previewState.deleteWidgetAsset.mockReset();
   });
 
   it('updates the rendered preview when the template changes', () => {
@@ -125,18 +131,22 @@ describe('WidgetEditor', () => {
     ));
 
     fireEvent.click(screen.getByText('widgets.assets.title'));
-    fireEvent.input(screen.getByPlaceholderText('{"images": {}}'), {
-      target: {
-        value: JSON.stringify({
-          images: {
-            background: {
-              path: 'https://example.com/background.png',
-              type: 'image/png',
+    fireEvent.click(screen.getByText('widgets.editor.showAssetsJson'));
+    fireEvent.input(
+      screen.getByPlaceholderText('widgets.editor.assetsPlaceholder'),
+      {
+        target: {
+          value: JSON.stringify({
+            images: {
+              background: {
+                path: 'https://example.com/background.png',
+                type: 'image/png',
+              },
             },
-          },
-        }),
-      },
-    });
+          }),
+        },
+      }
+    );
 
     expect(screen.getByTestId('widget-preview').textContent).toContain(
       'https://example.com/background.png'
@@ -317,23 +327,25 @@ describe('WidgetEditor', () => {
       { target: { value: 'Asset widget' } }
     );
     fireEvent.click(screen.getByText('widgets.assets.title'));
-    fireEvent.input(screen.getByPlaceholderText('{"images": {}}'), {
-      target: {
-        value: JSON.stringify({
-          images: {
-            logo: { path: 'https://example.com/logo.png', type: 'image/png' },
-          },
-        }),
-      },
+    fireEvent.input(screen.getByLabelText('widgets.editor.assetName'), {
+      target: { value: 'logo' },
     });
-    fireEvent.click(screen.getByText('widgets.assets.fonts'));
-    fireEvent.input(screen.getByPlaceholderText('[{"name": "", "url": ""}]'), {
-      target: {
-        value: JSON.stringify([
-          { name: 'Brand Font', url: 'https://example.com/font.woff2' },
-        ]),
-      },
+    fireEvent.input(screen.getByLabelText('widgets.editor.assetUrl'), {
+      target: { value: 'https://example.com/logo.png' },
     });
+    fireEvent.click(screen.getByText('widgets.editor.addAssetUrl'));
+
+    fireEvent.change(screen.getByLabelText('widgets.editor.assetCategory'), {
+      target: { value: 'fonts' },
+    });
+    fireEvent.input(screen.getByLabelText('widgets.editor.assetName'), {
+      target: { value: 'Brand Font' },
+    });
+    fireEvent.input(screen.getByLabelText('widgets.editor.assetUrl'), {
+      target: { value: 'https://example.com/font.woff2' },
+    });
+    fireEvent.click(screen.getByText('widgets.editor.addAssetUrl'));
+
     fireEvent.click(screen.getByText('widgets.editor.createWidget'));
 
     await waitFor(() => {
@@ -343,20 +355,105 @@ describe('WidgetEditor', () => {
         expect.objectContaining({
           assets: {
             images: {
-              logo: {
-                path: 'https://example.com/logo.png',
-                type: 'image/png',
-              },
+              logo: { url: 'https://example.com/logo.png' },
+            },
+            fonts: {
+              'Brand-Font': { url: 'https://example.com/font.woff2' },
             },
           },
           fonts: [
             {
-              name: 'Brand Font',
+              name: 'Brand-Font',
               url: 'https://example.com/font.woff2',
             },
           ],
         })
       );
     });
+  });
+  it('uploads and deletes asset files for a saved widget', async () => {
+    previewState.uploadWidgetAsset.mockResolvedValue({
+      assets: {
+        images: {
+          logo: {
+            path: 'uploads/images/logo.png',
+            url: '/widget_assets/feed/uploads/images/logo.png',
+            type: 'image/png',
+          },
+        },
+      },
+    });
+    previewState.deleteWidgetAsset.mockResolvedValue({ assets: {} });
+
+    const { container } = render(() => (
+      <WidgetEditor
+        store={store}
+        widget={{ id: 7, name: 'Feed', slug: 'feed' } as any}
+        onSave={vi.fn()}
+        onCancel={vi.fn()}
+      />
+    ));
+
+    fireEvent.click(screen.getByText('widgets.assets.title'));
+
+    const fileInput = container.querySelector(
+      '.widget-editor__asset-file-input'
+    ) as HTMLInputElement;
+    const file = new File(['x'], 'logo.png', { type: 'image/png' });
+    Object.defineProperty(fileInput, 'files', { value: [file] });
+    fireEvent.change(fileInput);
+
+    await waitFor(() => {
+      expect(previewState.uploadWidgetAsset).toHaveBeenCalledWith(
+        'http://localhost',
+        'organization-id',
+        7,
+        'images',
+        'logo',
+        file
+      );
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('{{asset:images.logo}}')).not.toBeNull();
+    });
+
+    fireEvent.click(screen.getByTitle('common.delete'));
+
+    await waitFor(() => {
+      expect(previewState.deleteWidgetAsset).toHaveBeenCalledWith(
+        'http://localhost',
+        'organization-id',
+        7,
+        'images',
+        'logo'
+      );
+    });
+  });
+
+  it('loads fonts declared in the asset manifest into the preview', () => {
+    render(() => (
+      <WidgetEditor
+        store={store}
+        widget={
+          {
+            id: 9,
+            name: 'Feed',
+            slug: 'feed',
+            assets: {
+              fonts: {
+                Brand: { path: 'assets/fonts/brand.woff2', type: 'font/woff2' },
+              },
+            },
+          } as any
+        }
+        onSave={vi.fn()}
+        onCancel={vi.fn()}
+      />
+    ));
+
+    expect(screen.getByTestId('widget-preview').textContent).toContain(
+      '"fonts":[{"name":"Brand","url":"/widget_assets/feed/assets/fonts/brand.woff2"}]'
+    );
   });
 });

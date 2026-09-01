@@ -20,7 +20,9 @@ import {
   BsArrowDown,
   BsArrowLeftRight,
   BsCameraVideo,
+  BsClipboard,
   BsCollection,
+  BsFileEarmarkCode,
   BsImage,
   BsImages,
   BsLayoutSplit,
@@ -91,7 +93,6 @@ type EditorTab =
   | 'options_schema'
   | 'data_schema'
   | 'assets'
-  | 'fonts'
   | 'fixture'
   | 'settings';
 
@@ -485,6 +486,62 @@ function newTemplateNode(
   }
 }
 
+// ─── Assets ─────────────────────────────────────────────────────────────────
+
+export type AssetEntry = {
+  path?: string;
+  url?: string;
+  type?: string;
+  name?: string;
+  description?: string;
+};
+export type AssetManifest = Record<string, Record<string, AssetEntry>>;
+
+const ASSET_CATEGORIES = ['images', 'icons', 'fonts', 'styles'] as const;
+type AssetCategory = (typeof ASSET_CATEGORIES)[number];
+
+const ASSET_ACCEPT: Record<AssetCategory, string> = {
+  images: 'image/png,image/jpeg,image/gif,image/webp,image/svg+xml',
+  icons: 'image/png,image/jpeg,image/gif,image/webp,image/svg+xml,image/x-icon',
+  fonts: '.woff,.woff2,.ttf,.otf',
+  styles: '.css,text/css',
+};
+
+/** Resolves an asset entry to a URL usable in the browser preview. */
+export function assetEntryUrl(
+  entry: AssetEntry | undefined,
+  widgetSlug?: string
+): string {
+  const path = entry?.url || entry?.path || '';
+  if (!path) return '';
+  if (
+    path.startsWith('/') ||
+    path.startsWith('data:') ||
+    /^https?:\/\//i.test(path)
+  ) {
+    return path;
+  }
+  return widgetSlug ? `/widget_assets/${widgetSlug}/${path}` : path;
+}
+
+/**
+ * Derives the player font list from the assets manifest so fonts only have to
+ * be managed in one place (the Assets tab).
+ */
+export function fontsFromAssets(
+  assets: AssetManifest | undefined,
+  widgetSlug?: string
+): { name: string; url: string }[] {
+  const fonts = assets?.fonts;
+  if (!isJsonObject(fonts)) return [];
+  return Object.keys(fonts)
+    .map((key) => ({
+      name: fonts[key]?.name || key,
+      url: assetEntryUrl(fonts[key], widgetSlug),
+    }))
+    .filter((font) => !!font.url);
+}
+
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
@@ -519,8 +576,14 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
   const [assetsJson, setAssetsJson] = createSignal(
     prettyJson(props.widget?.assets) || '{}'
   );
-  const [fontsJson, setFontsJson] = createSignal(
-    prettyJson(props.widget?.fonts) || '[]'
+  // Fonts defined outside the assets manifest (e.g. legacy widgets) are kept so
+  // they are not lost when the manifest is edited.
+  const externalFonts = (props.widget?.fonts || []).filter(
+    (font) =>
+      !fontsFromAssets(
+        props.widget?.assets as AssetManifest | undefined,
+        props.widget?.slug
+      ).some((derived) => derived.name === font.name)
   );
 
   // ── Fixture ─────────────────────────────────────────────────────────────
@@ -557,10 +620,10 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
     const [ok, val] = tryParseJson(assetsJson());
     return ok && isJsonObject(val) ? val : {};
   });
-  const fontsParsed = createMemo(() => {
-    const [ok, val] = tryParseJson(fontsJson());
-    return ok && Array.isArray(val) ? val : [];
-  });
+  const fontsParsed = createMemo(() => [
+    ...fontsFromAssets(assetsParsed() as AssetManifest, props.widget?.slug),
+    ...externalFonts,
+  ]);
   const fixtureParsed = createMemo(() => {
     const [ok, val] = tryParseJson(fixtureJson());
     if (!ok || !val) return { data: {}, options: {} };
@@ -584,7 +647,6 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
     optionsSchemaJson: optionsSchemaJson(),
     dataSchemaJson: dataSchemaJson(),
     assetsJson: assetsJson(),
-    fontsJson: fontsJson(),
   });
 
   const isDirty = createMemo(
@@ -599,7 +661,6 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
         optionsSchemaJson: optionsSchemaJson(),
         dataSchemaJson: dataSchemaJson(),
         assetsJson: assetsJson(),
-        fontsJson: fontsJson(),
       })
   );
 
@@ -644,23 +705,6 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
         ? t('widgets.editor.assetsMustBeObject')
         : String(value);
   });
-  const fontsError = createMemo(() => {
-    const [ok, value] = tryParseJson(fontsJson());
-    return ok &&
-      Array.isArray(value) &&
-      value.every(
-        (font) =>
-          isJsonObject(font) &&
-          typeof font.name === 'string' &&
-          !!font.name.trim() &&
-          typeof font.url === 'string' &&
-          !!font.url.trim()
-      )
-      ? null
-      : ok
-        ? t('widgets.editor.fontsMustBeArray')
-        : String(value);
-  });
   const fixtureError = createMemo(() => {
     const [ok, err] = tryParseJson(fixtureJson());
     return ok ? null : String(err);
@@ -678,7 +722,6 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
       !!optionsSchemaError() ||
       !!dataSchemaError() ||
       !!assetsError() ||
-      !!fontsError() ||
       !!updateIntervalError() ||
       !name().trim()
   );
@@ -817,7 +860,6 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
       optionsSchema: optionsSchemaJson(),
       dataSchema: dataSchemaJson(),
       assets: assetsJson(),
-      fonts: fontsJson(),
       fixture: fixtureJson(),
       aspectRatio: aspectRatio(),
     });
@@ -942,11 +984,6 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
       key: 'assets',
       label: t('widgets.assets.title'),
       hasError: () => !!assetsError(),
-    },
-    {
-      key: 'fonts',
-      label: t('widgets.assets.fonts'),
-      hasError: () => !!fontsError(),
     },
     {
       key: 'fixture',
@@ -1085,31 +1122,20 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
             </Show>
 
             <Show when={activeTab() === 'assets'}>
-              <div class="widget-editor__fixture-panel">
-                <p class="widget-editor__fixture-hint">
-                  {t('widgets.editor.assetsHint')}
-                </p>
-                <JsonEditorPane
-                  value={assetsJson()}
-                  onChange={setAssetsJson}
-                  error={assetsError()}
-                  placeholder='{"images": {}}'
-                />
-              </div>
-            </Show>
-
-            <Show when={activeTab() === 'fonts'}>
-              <div class="widget-editor__fixture-panel">
-                <p class="widget-editor__fixture-hint">
-                  {t('widgets.editor.fontsHint')}
-                </p>
-                <JsonEditorPane
-                  value={fontsJson()}
-                  onChange={setFontsJson}
-                  error={fontsError()}
-                  placeholder='[{"name": "", "url": ""}]'
-                />
-              </div>
+              <AssetsPanel
+                assets={assetsParsed() as AssetManifest}
+                assetsJson={assetsJson()}
+                assetsError={assetsError()}
+                onAssetsJsonChange={setAssetsJson}
+                onAssetsChange={(assets) => setAssetsJson(prettyJson(assets))}
+                widgetId={props.widget?.id}
+                widgetSlug={props.widget?.slug}
+                store={props.store}
+                t={t}
+                onNotify={(message, type) =>
+                  toast.showToast(message, type, type === 'error' ? 5000 : 2500)
+                }
+              />
             </Show>
 
             {/* Fixture */}
@@ -1866,6 +1892,321 @@ const ComponentTree: Component<{
           />
         )}
       </For>
+    </div>
+  );
+};
+
+// ─── Assets panel ─────────────────────────────────────────────────────────────
+
+interface AssetsPanelProps {
+  assets: AssetManifest;
+  assetsJson: string;
+  assetsError: string | null;
+  onAssetsJsonChange: (value: string) => void;
+  onAssetsChange: (assets: AssetManifest) => void;
+  widgetId?: number;
+  widgetSlug?: string;
+  store: AddonStore;
+  t: (key: string, params?: Record<string, any>) => string;
+  onNotify: (message: string, type: 'success' | 'error') => void;
+}
+
+const AssetsPanel: Component<AssetsPanelProps> = (props) => {
+  const [category, setCategory] = createSignal<AssetCategory>('images');
+  const [assetName, setAssetName] = createSignal('');
+  const [assetUrl, setAssetUrl] = createSignal('');
+  const [showJson, setShowJson] = createSignal(false);
+  const [isUploading, setIsUploading] = createSignal(false);
+  let fileInput: HTMLInputElement | undefined;
+
+  const entries = (cat: AssetCategory) => {
+    const group = props.assets?.[cat];
+    return isJsonObject(group) ? Object.keys(group).sort() : [];
+  };
+
+  const totalAssets = () =>
+    ASSET_CATEGORIES.reduce((sum, cat) => sum + entries(cat).length, 0);
+
+  const canUpload = () => !!props.widgetId;
+
+  const sanitizeName = (value: string) =>
+    value.trim().replace(/[^A-Za-z0-9._-]/g, '-');
+
+  const setEntry = (cat: AssetCategory, name: string, entry: AssetEntry) => {
+    props.onAssetsChange({
+      ...props.assets,
+      [cat]: { ...(props.assets?.[cat] || {}), [name]: entry },
+    });
+  };
+
+  const addFromUrl = () => {
+    const name = sanitizeName(assetName());
+    const url = assetUrl().trim();
+    if (!name || !url) {
+      props.onNotify(
+        props.t('widgets.editor.assetNameAndUrlRequired'),
+        'error'
+      );
+      return;
+    }
+    setEntry(category(), name, { url });
+    setAssetName('');
+    setAssetUrl('');
+  };
+
+  const uploadFile = async (file: File) => {
+    if (!props.widgetId) return;
+    const name =
+      sanitizeName(assetName()) ||
+      sanitizeName(file.name.replace(/\.[^.]+$/, ''));
+    setIsUploading(true);
+    try {
+      const updated = await WidgetsService.uploadWidgetAsset(
+        props.store.env.baseUrl,
+        props.store.organizations.selectedId,
+        props.widgetId,
+        category(),
+        name,
+        file
+      );
+      props.onAssetsChange((updated.assets as AssetManifest) || {});
+      setAssetName('');
+      props.onNotify(props.t('widgets.editor.assetUploaded'), 'success');
+    } catch (err: any) {
+      props.onNotify(
+        props.t('widgets.editor.assetUploadError', {
+          error: err?.message || String(err),
+        }),
+        'error'
+      );
+    } finally {
+      setIsUploading(false);
+      if (fileInput) fileInput.value = '';
+    }
+  };
+
+  const removeAsset = async (cat: AssetCategory, name: string) => {
+    const entry = props.assets?.[cat]?.[name];
+    const isUploaded = !!entry?.path && !!props.widgetId;
+
+    const next = { ...(props.assets?.[cat] || {}) };
+    delete next[name];
+    props.onAssetsChange({ ...props.assets, [cat]: next });
+
+    if (isUploaded) {
+      try {
+        await WidgetsService.deleteWidgetAsset(
+          props.store.env.baseUrl,
+          props.store.organizations.selectedId,
+          props.widgetId!,
+          cat,
+          name
+        );
+      } catch (err: any) {
+        props.onNotify(
+          props.t('widgets.editor.assetDeleteError', {
+            error: err?.message || String(err),
+          }),
+          'error'
+        );
+      }
+    }
+  };
+
+  const copyReference = async (cat: AssetCategory, name: string) => {
+    const reference = `{{asset:${cat}.${name}}}`;
+    try {
+      await navigator.clipboard?.writeText(reference);
+      props.onNotify(
+        props.t('widgets.editor.assetReferenceCopied', { reference }),
+        'success'
+      );
+    } catch {
+      props.onNotify(reference, 'success');
+    }
+  };
+
+  return (
+    <div class="widget-editor__assets-panel">
+      <p class="widget-editor__fixture-hint">
+        {props.t('widgets.editor.assetsHint')}
+      </p>
+
+      <div class="widget-editor__asset-form">
+        <select
+          value={category()}
+          aria-label={props.t('widgets.editor.assetCategory')}
+          onChange={(e) => setCategory(e.currentTarget.value as AssetCategory)}
+        >
+          <For each={ASSET_CATEGORIES}>
+            {(cat) => (
+              <option value={cat}>{props.t(`widgets.assets.${cat}`)}</option>
+            )}
+          </For>
+        </select>
+        <input
+          type="text"
+          value={assetName()}
+          placeholder={props.t('widgets.editor.assetNamePlaceholder')}
+          aria-label={props.t('widgets.editor.assetName')}
+          onInput={(e) => setAssetName(e.currentTarget.value)}
+        />
+        <input
+          type="text"
+          value={assetUrl()}
+          placeholder={props.t('widgets.editor.assetUrlPlaceholder')}
+          aria-label={props.t('widgets.editor.assetUrl')}
+          onInput={(e) => setAssetUrl(e.currentTarget.value)}
+        />
+        <Button
+          label={props.t('widgets.editor.addAssetUrl')}
+          onClick={addFromUrl}
+          color="secondary"
+        />
+        <input
+          ref={fileInput}
+          class="widget-editor__asset-file-input"
+          type="file"
+          accept={ASSET_ACCEPT[category()]}
+          onChange={(e) => {
+            const file = e.currentTarget.files?.[0];
+            if (file) uploadFile(file);
+          }}
+        />
+        <Button
+          label={
+            isUploading()
+              ? props.t('widgets.editor.uploadingAsset')
+              : props.t('widgets.editor.uploadAsset')
+          }
+          icon={BsUpload}
+          onClick={() => fileInput?.click()}
+          disabled={!canUpload() || isUploading()}
+        />
+      </div>
+
+      <Show when={!canUpload()}>
+        <p class="widget-editor__asset-note">
+          {props.t('widgets.editor.assetUploadRequiresSave')}
+        </p>
+      </Show>
+
+      <div class="widget-editor__asset-list">
+        <For each={ASSET_CATEGORIES}>
+          {(cat) => (
+            <Show when={entries(cat).length > 0}>
+              <div class="widget-editor__asset-group">
+                <h4>{props.t(`widgets.assets.${cat}`)}</h4>
+                <div class="widget-editor__asset-items">
+                  <For each={entries(cat)}>
+                    {(name) => {
+                      const entry = () => props.assets[cat]?.[name] || {};
+                      const url = () =>
+                        assetEntryUrl(entry(), props.widgetSlug);
+                      return (
+                        <div class="widget-editor__asset-item">
+                          <div class="widget-editor__asset-preview">
+                            <Show
+                              when={cat === 'images' || cat === 'icons'}
+                              fallback={
+                                <Show
+                                  when={cat === 'fonts'}
+                                  fallback={<BsFileEarmarkCode size={20} />}
+                                >
+                                  <span
+                                    style={{
+                                      'font-family': entry().name || name,
+                                    }}
+                                  >
+                                    Aa
+                                  </span>
+                                </Show>
+                              }
+                            >
+                              <img src={url()} alt={name} loading="lazy" />
+                            </Show>
+                          </div>
+                          <div class="widget-editor__asset-info">
+                            <strong>{name}</strong>
+                            <code>{`{{asset:${cat}.${name}}}`}</code>
+                            <input
+                              type="text"
+                              value={entry().url || entry().path || ''}
+                              aria-label={props.t(
+                                'widgets.editor.assetUrlFor',
+                                {
+                                  name,
+                                }
+                              )}
+                              onChange={(e) =>
+                                setEntry(cat, name, {
+                                  ...entry(),
+                                  url: e.currentTarget.value,
+                                })
+                              }
+                            />
+                          </div>
+                          <div class="widget-editor__asset-actions">
+                            <button
+                              onClick={() => copyReference(cat, name)}
+                              title={props.t(
+                                'widgets.editor.copyAssetReference'
+                              )}
+                              aria-label={props.t(
+                                'widgets.editor.copyAssetReference'
+                              )}
+                            >
+                              <BsClipboard size={14} />
+                            </button>
+                            <button
+                              class="danger"
+                              onClick={() => removeAsset(cat, name)}
+                              title={props.t('common.delete')}
+                              aria-label={props.t('common.delete')}
+                            >
+                              <BsTrash size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    }}
+                  </For>
+                </div>
+              </div>
+            </Show>
+          )}
+        </For>
+
+        <Show when={totalAssets() === 0}>
+          <p class="widget-editor__asset-note">
+            {props.t('widgets.editor.noAssets')}
+          </p>
+        </Show>
+      </div>
+
+      <Show when={entries('fonts').length > 0}>
+        <p class="widget-editor__asset-note">
+          {props.t('widgets.editor.fontsAutoLoaded')}
+        </p>
+      </Show>
+
+      <button
+        class="widget-editor__asset-json-toggle"
+        onClick={() => setShowJson(!showJson())}
+      >
+        {showJson()
+          ? props.t('widgets.editor.hideAssetsJson')
+          : props.t('widgets.editor.showAssetsJson')}
+      </button>
+
+      <Show when={showJson() || props.assetsError}>
+        <JsonEditorPane
+          value={props.assetsJson}
+          onChange={props.onAssetsJsonChange}
+          error={props.assetsError}
+          placeholder={props.t('widgets.editor.assetsPlaceholder')}
+        />
+      </Show>
     </div>
   );
 };

@@ -430,6 +430,19 @@ defmodule CastmillWeb.Router do
       :clone_widget
     )
 
+    # Widget asset uploads (used by the widget editor)
+    post(
+      "/organizations/:organization_id/widgets/:widget_id/assets",
+      OrganizationController,
+      :upload_widget_asset
+    )
+
+    delete(
+      "/organizations/:organization_id/widgets/:widget_id/assets/:category/:name",
+      OrganizationController,
+      :delete_widget_asset
+    )
+
     delete(
       "/organizations/:organization_id/widgets/:widget_id",
       OrganizationController,

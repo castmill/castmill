@@ -79,6 +79,103 @@ defmodule Castmill.Widgets.AssetStorage do
   def store_assets(_widget_slug, _assets), do: {:ok, %{files: %{}}}
 
   @doc """
+  Categories that individual asset uploads may be stored under.
+  """
+  def upload_categories, do: ~w(images icons fonts styles)
+
+  @extensions_by_category %{
+    "images" => ~w(.png .jpg .jpeg .gif .webp .svg),
+    "icons" => ~w(.png .jpg .jpeg .gif .webp .svg .ico),
+    "fonts" => ~w(.woff .woff2 .ttf .otf),
+    "styles" => ~w(.css)
+  }
+
+  @doc """
+  Stores a single uploaded asset file for a widget.
+
+  The file is written to `priv/static/widget_assets/{slug}/uploads/{category}/{file}`.
+  Returns `{:ok, %{path: relative_path, url: public_url, type: mime_type}}`.
+  """
+  def store_file(widget_slug, category, filename, source_path) do
+    with {:ok, category} <- validate_category(category),
+         {:ok, safe_name} <- sanitize_filename(filename),
+         :ok <- validate_extension(category, safe_name) do
+      relative_path = Path.join(["uploads", category, safe_name])
+      target_path = Path.join(widget_assets_dir(widget_slug), relative_path)
+
+      target_path |> Path.dirname() |> File.mkdir_p!()
+
+      case File.cp(source_path, target_path) do
+        :ok ->
+          {:ok,
+           %{
+             path: relative_path,
+             url: "#{widget_assets_url(widget_slug)}/#{relative_path}",
+             type: get_mime_type(safe_name)
+           }}
+
+        {:error, reason} ->
+          Logger.error("Failed to store widget asset #{safe_name}: #{inspect(reason)}")
+          {:error, :write_failed}
+      end
+    end
+  end
+
+  @doc """
+  Deletes a previously uploaded asset file. Absolute or external URLs are ignored.
+  """
+  def delete_file(widget_slug, path) when is_binary(path) do
+    if String.contains?(path, "..") or String.starts_with?(path, "/") or
+         String.contains?(path, "://") do
+      :ok
+    else
+      widget_assets_dir(widget_slug)
+      |> Path.join(path)
+      |> File.rm()
+
+      :ok
+    end
+  end
+
+  def delete_file(_widget_slug, _path), do: :ok
+
+  defp validate_category(category) when is_binary(category) do
+    if category in upload_categories() do
+      {:ok, category}
+    else
+      {:error, :invalid_category}
+    end
+  end
+
+  defp validate_category(_category), do: {:error, :invalid_category}
+
+  defp sanitize_filename(filename) when is_binary(filename) do
+    safe_name =
+      filename
+      |> Path.basename()
+      |> String.replace(~r/[^A-Za-z0-9._-]/, "_")
+      |> String.trim_leading(".")
+
+    if safe_name == "" or String.contains?(safe_name, "..") do
+      {:error, :invalid_filename}
+    else
+      {:ok, safe_name}
+    end
+  end
+
+  defp sanitize_filename(_filename), do: {:error, :invalid_filename}
+
+  defp validate_extension(category, filename) do
+    extension = filename |> Path.extname() |> String.downcase()
+
+    if extension in Map.fetch!(@extensions_by_category, category) do
+      :ok
+    else
+      {:error, :invalid_file_type}
+    end
+  end
+
+  @doc """
   Resolves the icon field to a full URL if it's a relative asset path.
   """
   def resolve_icon(icon, widget_slug, _stored_assets) when is_binary(icon) do

@@ -109,6 +109,8 @@ const ALLOWED_IDENTICAL_STRINGS = new Set([
   'https://facebook.com/yourcompany',
   // Widget editor fixture placeholder - JSON format string, identical in all languages
   '{"data": {}, "options": {}}',
+  // Widget editor assets placeholder - JSON format string, identical in all languages
+  '{"images": {"logo": {"url": "https://example.com/logo.png"}}}',
 ]);
 
 /**

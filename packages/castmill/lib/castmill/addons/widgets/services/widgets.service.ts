@@ -376,6 +376,73 @@ export const WidgetsService = {
   },
 
   /**
+   * Upload a single asset file (image, icon, font or stylesheet) for a widget.
+   *
+   * @param baseUrl - The base URL of the server
+   * @param organizationId - The organization ID
+   * @param widgetId - The widget the asset belongs to
+   * @param category - Asset category (images, icons, fonts, styles)
+   * @param name - Name used to reference the asset in the template
+   * @param file - The file to upload
+   * @returns Promise resolving to the updated widget
+   */
+  async uploadWidgetAsset(
+    baseUrl: string,
+    organizationId: string,
+    widgetId: number,
+    category: string,
+    name: string,
+    file: File
+  ): Promise<JsonWidget> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('category', category);
+    formData.append('name', name);
+
+    const response = await authFetch(
+      `${baseUrl}/dashboard/organizations/${organizationId}/widgets/${widgetId}/assets`,
+      {
+        method: 'POST',
+        body: formData,
+      }
+    );
+
+    return handleResponse<JsonWidget>(response, { parse: true });
+  },
+
+  /**
+   * Delete an uploaded widget asset.
+   *
+   * @param baseUrl - The base URL of the server
+   * @param organizationId - The organization ID
+   * @param widgetId - The widget the asset belongs to
+   * @param category - Asset category (images, icons, fonts, styles)
+   * @param name - Name of the asset to delete
+   * @returns Promise resolving to the updated widget
+   */
+  async deleteWidgetAsset(
+    baseUrl: string,
+    organizationId: string,
+    widgetId: number,
+    category: string,
+    name: string
+  ): Promise<JsonWidget> {
+    const response = await authFetch(
+      `${baseUrl}/dashboard/organizations/${organizationId}/widgets/${widgetId}/assets/${encodeURIComponent(
+        category
+      )}/${encodeURIComponent(name)}`,
+      {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    return handleResponse<JsonWidget>(response, { parse: true });
+  },
+
+  /**
    * Clone a widget, optionally with a new name.
    *
    * @param baseUrl - The base URL of the server

@@ -682,6 +682,184 @@ defmodule CastmillWeb.OrganizationController do
     end
   end
 
+  @doc """
+  Uploads a single asset file (image, icon, font or stylesheet) for a widget.
+
+  The file is stored under the widget's asset directory and registered in the
+  widget's asset manifest so it can be referenced from the template using
+  `{{asset:category.name}}`.
+  """
+  def upload_widget_asset(
+        conn,
+        %{
+          "organization_id" => organization_id,
+          "widget_id" => widget_id,
+          "category" => category,
+          "file" => %Plug.Upload{} = upload
+        } = params
+      ) do
+    alias Castmill.Widgets.AssetStorage
+
+    with widget when not is_nil(widget) <-
+           Castmill.Widgets.get_widget_for_organization(widget_id, organization_id),
+         true <- editable_widget?(conn, widget, organization_id),
+         {:ok, asset_name} <- asset_name_from(params, upload.filename),
+         {:ok, stored} <-
+           AssetStorage.store_file(widget.slug, category, upload.filename, upload.path) do
+      asset_entry = %{
+        "path" => stored.path,
+        "url" => stored.url,
+        "type" => stored.type
+      }
+
+      assets =
+        widget.assets
+        |> normalize_assets()
+        |> Map.update(category, %{asset_name => asset_entry}, fn entries ->
+          Map.put(entries || %{}, asset_name, asset_entry)
+        end)
+
+      update_widget_assets(conn, widget, assets)
+    else
+      nil ->
+        conn |> put_status(:not_found) |> json(%{error: "Widget not found"})
+
+      false ->
+        conn
+        |> put_status(:forbidden)
+        |> json(%{error: "System widgets must be cloned before editing"})
+
+      {:error, :invalid_category} ->
+        conn |> put_status(:bad_request) |> json(%{error: "Unsupported asset category"})
+
+      {:error, :invalid_file_type} ->
+        conn |> put_status(:bad_request) |> json(%{error: "Unsupported file type"})
+
+      {:error, :invalid_filename} ->
+        conn |> put_status(:bad_request) |> json(%{error: "Invalid file name"})
+
+      {:error, reason} ->
+        conn |> put_status(:bad_request) |> json(%{error: to_string(reason)})
+    end
+  end
+
+  def upload_widget_asset(conn, _params) do
+    conn
+    |> put_status(:bad_request)
+    |> json(%{error: "A file and a category are required"})
+  end
+
+  @doc """
+  Removes an asset from a widget's manifest and deletes the stored file.
+  """
+  def delete_widget_asset(conn, %{
+        "organization_id" => organization_id,
+        "widget_id" => widget_id,
+        "category" => category,
+        "name" => asset_name
+      }) do
+    alias Castmill.Widgets.AssetStorage
+
+    with widget when not is_nil(widget) <-
+           Castmill.Widgets.get_widget_for_organization(widget_id, organization_id),
+         true <- editable_widget?(conn, widget, organization_id) do
+      assets = normalize_assets(widget.assets)
+      entry = get_in(assets, [category, asset_name])
+
+      if entry do
+        AssetStorage.delete_file(widget.slug, Map.get(entry, "path"))
+      end
+
+      updated_assets =
+        Map.update(assets, category, %{}, fn entries ->
+          Map.delete(entries || %{}, asset_name)
+        end)
+
+      update_widget_assets(conn, widget, updated_assets)
+    else
+      nil ->
+        conn |> put_status(:not_found) |> json(%{error: "Widget not found"})
+
+      false ->
+        conn
+        |> put_status(:forbidden)
+        |> json(%{error: "System widgets must be cloned before editing"})
+    end
+  end
+
+  defp update_widget_assets(conn, widget, assets) do
+    case Castmill.Widgets.update_widget(widget, %{
+           "assets" => assets,
+           "fonts" => merge_widget_fonts(widget.fonts, fonts_from_assets(assets))
+         }) do
+      {:ok, updated_widget} ->
+        conn |> put_status(:ok) |> json(updated_widget)
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{errors: changeset_errors(changeset)})
+    end
+  end
+
+  # Derives the player font list (FontFace API) from the assets manifest so that
+  # fonts only have to be managed in one place.
+  defp fonts_from_assets(assets) do
+    case Map.get(assets, "fonts") do
+      fonts when is_map(fonts) ->
+        fonts
+        |> Enum.filter(fn {_key, info} -> is_map(info) end)
+        |> Enum.map(fn {key, info} ->
+          %{
+            "name" => Map.get(info, "name") || key,
+            "url" => Map.get(info, "url") || Map.get(info, "path")
+          }
+        end)
+        |> Enum.reject(fn font -> is_nil(font["url"]) end)
+
+      _ ->
+        []
+    end
+  end
+
+  # Fonts declared directly on the widget (legacy or third-party hosted fonts)
+  # are kept as long as they are not shadowed by a manifest font of the same name.
+  defp merge_widget_fonts(existing_fonts, derived_fonts) do
+    derived_names = MapSet.new(derived_fonts, & &1["name"])
+
+    external =
+      existing_fonts
+      |> List.wrap()
+      |> Enum.map(&normalize_assets/1)
+      |> Enum.filter(fn font ->
+        is_binary(font["name"]) and is_binary(font["url"]) and
+          not MapSet.member?(derived_names, font["name"])
+      end)
+
+    derived_fonts ++ external
+  end
+
+  defp normalize_assets(assets) when is_map(assets) do
+    Map.new(assets, fn {key, value} -> {to_string(key), value} end)
+  end
+
+  defp normalize_assets(_assets), do: %{}
+
+  defp asset_name_from(params, filename) do
+    name =
+      params
+      |> Map.get("name")
+      |> case do
+        value when is_binary(value) -> String.trim(value)
+        _ -> ""
+      end
+
+    name = if name == "", do: filename |> Path.basename() |> Path.rootname(), else: name
+    sanitized = String.replace(name, ~r/[^A-Za-z0-9._-]/, "-")
+
+    if sanitized == "", do: {:error, :invalid_filename}, else: {:ok, sanitized}
+  end
+
   defp unique_widget_copy_name(name, copy_number \\ 1) do
     suffix = if copy_number == 1, do: " (Copy)", else: " (Copy #{copy_number})"
     candidate = "#{name}#{suffix}"
@@ -721,12 +899,13 @@ defmodule CastmillWeb.OrganizationController do
     actor = conn.assigns[:current_actor] || conn.assigns[:current_user]
 
     (not widget.is_system and widget.organization_id == organization_id) or
-      (actor && Map.get(actor, :is_root, false))
+      (actor != nil and Map.get(actor, :is_root, false) == true)
   end
 
   # Generates a slug from name if slug is not provided
   defp maybe_generate_slug(%{"slug" => slug} = data) when is_binary(slug) and slug != "", do: data
-  defp maybe_generate_slug(%{"name" => name} = data) when is_binary(name), do: Map.put(data, "slug", slugify(name))
+  defp maybe_generate_slug(%{"name" => name} = data) when is_binary(name),
+    do: Map.put(data, "slug", slugify(name))
   defp maybe_generate_slug(data), do: data
 
   def list_members(conn, params) do
