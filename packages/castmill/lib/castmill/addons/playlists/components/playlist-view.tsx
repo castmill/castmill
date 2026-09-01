@@ -629,7 +629,15 @@ export const PlaylistView: Component<{
   });
 
   return (
-    <Show when={!loading()}>
+    <Show
+      when={!loading()}
+      fallback={
+        <div class="playlist-view-loading" role="status" aria-live="polite">
+          <div class="playlist-view-loading__spinner" aria-hidden="true" />
+          <div class="playlist-view-loading__text">{t('common.loading')}</div>
+        </div>
+      }
+    >
       <div class="playlist-view-container" style={{ height: '100%' }}>
         <div class="playlist-view">
           <div class="playlist-items-wrapper">

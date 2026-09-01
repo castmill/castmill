@@ -18,6 +18,9 @@ defmodule Castmill.Widgets.Integrations do
     NetworkIntegrationCredential
   }
 
+  # `widget_integration_data.discriminator_id` is a varchar(255) column.
+  @discriminator_id_max_bytes 255
+
   # ============================================================================
   # Integration Data Broadcasting
   # ============================================================================
@@ -317,6 +320,61 @@ defmodule Castmill.Widgets.Integrations do
   # ============================================================================
 
   @doc """
+  Resolves the effective credentials to pass to a fetcher for an organization.
+
+  Credentials can come from two levels:
+
+    - Network-level credentials shared across all organizations in the network
+      (e.g. a single commercial Open-Meteo API key for the whole network).
+    - Organization-level credentials specific to the organization.
+
+  Organization-level values take precedence over network-level values. For
+  integrations whose `auth_type` is `"optional"` or `"none"`, missing
+  credentials are not an error (the fetcher works without them); otherwise a
+  missing credential returns `{:error, :no_credentials}`.
+  """
+  def get_fetch_credentials(organization_id, %WidgetIntegration{} = integration) do
+    network_creds = get_network_credentials_for_organization(organization_id, integration.id)
+
+    org_creds =
+      case get_organization_credentials(organization_id, integration.id) do
+        {:ok, creds} when is_map(creds) -> creds
+        _ -> %{}
+      end
+
+    merged = Map.merge(network_creds, org_creds)
+
+    cond do
+      merged != %{} -> {:ok, merged}
+      optional_or_none_auth?(integration) -> {:ok, %{}}
+      true -> {:error, :no_credentials}
+    end
+  end
+
+  @doc """
+  Returns decrypted network-level credentials for the network that owns the
+  given organization, or an empty map when none are configured.
+  """
+  def get_network_credentials_for_organization(organization_id, integration_id) do
+    with %{network_id: network_id} when not is_nil(network_id) <-
+           Castmill.Organizations.get_organization(organization_id),
+         {:ok, creds} when is_map(creds) <-
+           get_decrypted_network_credentials(network_id, integration_id) do
+      creds
+    else
+      _ -> %{}
+    end
+  end
+
+  defp optional_or_none_auth?(%WidgetIntegration{} = integration) do
+    auth_type =
+      get_in(integration.pull_config || %{}, ["auth_type"]) ||
+        get_in(integration.credential_schema || %{}, ["auth_type"])
+
+    auth_type in ["optional", "none"]
+  end
+
+  @doc """
   Gets decrypted organization-scoped credentials for an integration.
 
   Uses the organization's encryption key to decrypt stored credentials.
@@ -460,13 +518,37 @@ defmodule Castmill.Widgets.Integrations do
   # Discriminator-based Data Caching
   # ============================================================================
 
+  @doc """
+  Adds the organization's display locale to widget options when the caller has
+  not already supplied an explicit locale.
+  """
+  def with_display_locale(organization_id, widget_options, display_locale \\ nil) do
+    widget_options = widget_options || %{}
+
+    cond do
+      Map.has_key?(widget_options, "display_locale") ->
+        widget_options
+
+      Map.has_key?(widget_options, :display_locale) ->
+        Map.put(widget_options, "display_locale", Map.get(widget_options, :display_locale))
+
+      true ->
+        Map.put(
+          widget_options,
+          "display_locale",
+          display_locale || display_locale_for_organization(organization_id)
+        )
+    end
+  end
+
   @doc ~S"""
   Computes the discriminator ID for integration data caching.
 
   The discriminator determines how integration data is grouped and shared:
 
   - `"organization"` - All widgets in the org share data: discriminator = "org:#{org_id}"
-  - `"widget_option"` - Widgets with same option value share: discriminator = "opt:#{option_value}"
+  - `"widget_option"` - Widgets in the same organization with the same option
+    value share: discriminator = "org:#{org_id}|opt:#{option_value}"
   - `"widget_config"` - Each widget unique: discriminator = "cfg:#{widget_config_id}"
 
   ## Parameters
@@ -487,6 +569,8 @@ defmodule Castmill.Widgets.Integrations do
         widget_config_id \\ nil,
         widget_options \\ %{}
       ) do
+    widget_options = with_display_locale(organization_id, widget_options)
+
     case integration.discriminator_type do
       "organization" ->
         {:ok, "org:#{organization_id}"}
@@ -494,9 +578,20 @@ defmodule Castmill.Widgets.Integrations do
       "widget_option" ->
         key = integration.discriminator_key
 
-        case Map.get(widget_options, key) || Map.get(widget_options, String.to_atom(key)) do
-          nil -> {:error, {:missing_option, key}}
-          value -> {:ok, "opt:#{value}"}
+        case widget_option_discriminator_value(key, widget_options,
+               missing: if(composite_discriminator_key?(key), do: :default, else: :error),
+               include_keys: composite_discriminator_key?(key)
+             ) do
+          {:ok, value} ->
+            discriminator =
+              organization_id
+              |> scope_discriminator_by_organization("opt:#{value}")
+              |> bound_discriminator_id()
+
+            {:ok, discriminator}
+
+          {:error, reason} ->
+            {:error, reason}
         end
 
       "widget_config" ->
@@ -511,6 +606,56 @@ defmodule Castmill.Widgets.Integrations do
           nil -> {:ok, "org:#{organization_id}"}
           id -> {:ok, "cfg:#{id}"}
         end
+    end
+  end
+
+  @doc false
+  def display_locale_for_organization(nil), do: "en"
+
+  def display_locale_for_organization(organization_id) when is_binary(organization_id) do
+    with {:ok, organization_id} <- Ecto.UUID.cast(organization_id) do
+      from(org in Castmill.Organizations.Organization,
+        join: network in assoc(org, :network),
+        where: org.id == ^organization_id,
+        select: network.default_locale
+      )
+      |> Repo.one()
+      |> case do
+        locale when is_binary(locale) and locale != "" -> locale
+        _ -> "en"
+      end
+    else
+      :error -> "en"
+    end
+  end
+
+  def display_locale_for_organization(_organization_id) do
+    "en"
+  end
+
+  @doc false
+  def widget_option_discriminator_value(discriminator_key, widget_options, opts \\ [])
+      when is_binary(discriminator_key) do
+    keys =
+      discriminator_key
+      |> String.split(",", trim: true)
+      |> Enum.map(&String.trim/1)
+      |> Enum.reject(&(&1 == ""))
+
+    missing = Keyword.get(opts, :missing, :error)
+    include_keys = Keyword.get(opts, :include_keys, false)
+
+    with {:ok, resolved} <- resolve_discriminator_values(keys, widget_options || %{}, missing) do
+      case {include_keys, resolved} do
+        {false, [{_key, value}]} ->
+          {:ok, serialize_discriminator_value(value)}
+
+        _ ->
+          {:ok,
+           Enum.map_join(resolved, "|", fn {key, value} ->
+             "#{key}=#{serialize_discriminator_value(value)}"
+           end)}
+      end
     end
   end
 
@@ -540,7 +685,7 @@ defmodule Castmill.Widgets.Integrations do
   """
   def get_or_fetch_integration_data(integration_id, organization_id, opts \\ []) do
     widget_config_id = Keyword.get(opts, :widget_config_id)
-    widget_options = Keyword.get(opts, :widget_options, %{})
+    widget_options = with_display_locale(organization_id, Keyword.get(opts, :widget_options, %{}))
 
     with %WidgetIntegration{} = integration <- get_integration(integration_id),
          {:ok, discriminator_id} <-
@@ -891,25 +1036,39 @@ defmodule Castmill.Widgets.Integrations do
     end
   end
 
-  # Build discriminator ID based on integration configuration
-  # NOTE: discriminator does NOT
-  # include organization_id because all lookups are already scoped by organization.
-  # This keeps the discriminator consistent across all code paths.
-  defp build_discriminator_id(%WidgetIntegration{} = integration, options, _organization_id) do
+  @doc """
+  Builds the discriminator ID used to key cached integration data.
+
+  Widget-option discriminators are scoped by organization, since cached rows
+  are unique per `(widget_integration_id, discriminator_id)`: without the
+  organization scope two organizations using the same system integration and
+  the same options would share a single cache row, and could therefore be
+  served data fetched with another network's credentials.
+  """
+  def build_discriminator_id(%WidgetIntegration{} = integration, options, organization_id) do
     # For widget_option discriminators, also check pull_config for hardcoded values
     # (e.g., RSS widgets have feed_url in pull_config, not in widget_options)
     pull_config = integration.pull_config || %{}
-    merged_options = Map.merge(pull_config, options || %{})
+    merged_options = Map.merge(pull_config, with_display_locale(organization_id, options || %{}))
 
     case integration.discriminator_type do
       "widget_option" ->
         key = integration.discriminator_key || "id"
+        include_keys = composite_discriminator_key?(key)
 
         value =
-          Map.get(merged_options, key) || Map.get(merged_options, String.to_atom(key)) ||
-            "default"
+          case widget_option_discriminator_value(key, merged_options,
+                 missing: :default,
+                 include_keys: include_keys
+               ) do
+            {:ok, value} when include_keys -> value
+            {:ok, value} -> "#{key}:#{value}"
+            {:error, _reason} -> "#{key}:default"
+          end
 
-        "#{key}:#{value}"
+        organization_id
+        |> scope_discriminator_by_organization(value)
+        |> bound_discriminator_id()
 
       "organization" ->
         "org"
@@ -918,6 +1077,117 @@ defmodule Castmill.Widgets.Integrations do
         "default"
     end
   end
+
+  @doc """
+  Bounds a discriminator ID so that it always fits in the
+  `widget_integration_data.discriminator_id` column (varchar(255)).
+
+  Discriminator values may embed arbitrarily long option values (for example a
+  full geocoded address), so anything longer than the column is replaced by a
+  truncated prefix plus a fixed-length digest of the full value. The digest
+  keeps the key deterministic and collision resistant.
+  """
+  def bound_discriminator_id(discriminator) when is_binary(discriminator) do
+    if byte_size(discriminator) <= @discriminator_id_max_bytes do
+      discriminator
+    else
+      digest =
+        :sha256
+        |> :crypto.hash(discriminator)
+        |> Base.encode16(case: :lower)
+
+      suffix = "|sha256:" <> digest
+
+      prefix = truncate_to_bytes(discriminator, @discriminator_id_max_bytes - byte_size(suffix))
+
+      prefix <> suffix
+    end
+  end
+
+  defp truncate_to_bytes(_string, max_bytes) when max_bytes <= 0, do: ""
+
+  defp truncate_to_bytes(string, max_bytes) do
+    if byte_size(string) <= max_bytes do
+      string
+    else
+      string
+      |> binary_part(0, max_bytes)
+      |> drop_invalid_trailing_bytes()
+    end
+  end
+
+  defp drop_invalid_trailing_bytes(<<>>), do: <<>>
+
+  defp drop_invalid_trailing_bytes(binary) do
+    if String.valid?(binary) do
+      binary
+    else
+      binary
+      |> binary_part(0, byte_size(binary) - 1)
+      |> drop_invalid_trailing_bytes()
+    end
+  end
+
+  defp scope_discriminator_by_organization(nil, discriminator), do: discriminator
+
+  defp scope_discriminator_by_organization(organization_id, discriminator),
+    do: "org:#{organization_id}|#{discriminator}"
+
+  defp composite_discriminator_key?(key) when is_binary(key), do: String.contains?(key, ",")
+
+  defp resolve_discriminator_values(keys, widget_options, missing) do
+    Enum.reduce_while(keys, {:ok, []}, fn key, {:ok, acc} ->
+      case fetch_discriminator_option(widget_options, key) do
+        {:ok, value} ->
+          {:cont, {:ok, acc ++ [{key, value}]}}
+
+        :error when missing == :default ->
+          {:cont, {:ok, acc ++ [{key, :default}]}}
+
+        :error ->
+          {:halt, {:error, {:missing_option, key}}}
+      end
+    end)
+  end
+
+  defp fetch_discriminator_option(widget_options, key) when is_binary(key) do
+    cond do
+      Map.has_key?(widget_options, key) ->
+        {:ok, Map.get(widget_options, key)}
+
+      Map.has_key?(widget_options, String.to_atom(key)) ->
+        {:ok, Map.get(widget_options, String.to_atom(key))}
+
+      true ->
+        :error
+    end
+  end
+
+  defp serialize_discriminator_value(:default), do: "default"
+  defp serialize_discriminator_value(value) when is_binary(value), do: value
+  defp serialize_discriminator_value(value) when is_boolean(value), do: to_string(value)
+  defp serialize_discriminator_value(value) when is_number(value), do: to_string(value)
+
+  defp serialize_discriminator_value(value) do
+    value
+    |> normalize_discriminator_value()
+    |> Jason.encode!()
+  end
+
+  defp normalize_discriminator_value(value) when is_map(value) do
+    value
+    |> Enum.map(fn {key, nested_value} ->
+      {to_string(key), normalize_discriminator_value(nested_value)}
+    end)
+    |> Enum.sort_by(fn {key, _value} -> key end)
+    |> Enum.into(%{})
+  end
+
+  defp normalize_discriminator_value(value) when is_list(value) do
+    Enum.map(value, &normalize_discriminator_value/1)
+  end
+
+  defp normalize_discriminator_value(value), do: value
 
   @doc """
   Gets organization-level integration data.
@@ -1285,9 +1555,13 @@ defmodule Castmill.Widgets.Integrations do
   end
 
   @doc """
-  Lists all integrations that require network-level credentials (system widgets).
+  Lists all system-widget integrations that expose a credential schema.
+
+  This includes credential-free integrations (e.g. Open-Meteo); callers can use
+  `requires_network_credentials?/1` to determine whether a given integration
+  actually needs a network administrator to configure anything.
   """
-  def list_system_integrations_requiring_credentials do
+  def list_system_integrations do
     from(wi in WidgetIntegration,
       join: w in assoc(wi, :widget),
       where: w.is_system == true,
@@ -1296,6 +1570,49 @@ defmodule Castmill.Widgets.Integrations do
     )
     |> Repo.all()
   end
+
+  @doc """
+  Lists all integrations that require network-level credentials (system widgets).
+
+  Integrations that are credential-free (`auth_type` of `"none"` or `"optional"`,
+  or an otherwise empty credential schema) are excluded, since there is nothing
+  for a network administrator to configure for them (e.g. the credential-free
+  Open-Meteo weather integration).
+  """
+  def list_system_integrations_requiring_credentials do
+    list_system_integrations()
+    |> Enum.filter(&requires_network_credentials?/1)
+  end
+
+  @doc false
+  def requires_network_credentials?(%WidgetIntegration{credential_schema: schema}) do
+    requires_network_credentials?(schema)
+  end
+
+  def requires_network_credentials?(nil), do: false
+  def requires_network_credentials?(schema) when schema == %{}, do: false
+
+  def requires_network_credentials?(schema) when is_map(schema) do
+    auth_type = Map.get(schema, "auth_type")
+
+    cond do
+      # Credential-free or optionally-authenticated integrations need no setup.
+      auth_type in ["none", "optional"] -> false
+      # OAuth or an explicit (non-optional) auth type requires configuration.
+      Map.has_key?(schema, "oauth2") -> true
+      not is_nil(auth_type) -> true
+      # Fall back to whether there are any credential fields to fill in.
+      true -> has_credential_fields?(Map.get(schema, "fields"))
+    end
+  end
+
+  def requires_network_credentials?(_schema), do: false
+
+  # Credential fields may be provided either as a map keyed by field name or as
+  # a list of field definitions.
+  defp has_credential_fields?(fields) when is_map(fields), do: map_size(fields) > 0
+  defp has_credential_fields?(fields) when is_list(fields), do: fields != []
+  defp has_credential_fields?(_fields), do: false
 
   @doc """
   Gets and decrypts widget-scoped credentials for an integration.

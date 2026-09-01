@@ -32,7 +32,103 @@ interface WidgetViewProps {
   options: OptionsDict;
   baseUrl?: string;
   socket?: Socket;
+  /**
+   * When provided, the parent controls the integration data shown in the
+   * preview (e.g. the widget config dialog fetches data based on the live,
+   * in-progress options). Supplying this prop (even as `null`) disables the
+   * internal config-id based fetch so the preview reflects unsaved option
+   * changes such as switching temperature units.
+   */
+  previewData?: Record<string, any> | null;
 }
+
+/**
+ * Resolves which data set the widget preview should render, in priority order:
+ * parent-provided preview data (live, unsaved options) > fetched integration
+ * data > saved config data > schema defaults.
+ */
+export const resolveEffectiveWidgetData = (
+  previewData: Record<string, any> | null | undefined,
+  integrationData: Record<string, any> | null,
+  configData: Record<string, any> | null,
+  defaultData: Record<string, any>
+): Record<string, any> => {
+  return previewData ?? (integrationData || configData || defaultData);
+};
+
+export const getWidgetViewAspectRatio = (
+  widget: JsonWidget,
+  options?: OptionsDict
+): number | null => {
+  if (options) {
+    for (const value of Object.values(options)) {
+      if (
+        value &&
+        typeof value === 'object' &&
+        'aspectRatio' in value &&
+        'layoutId' in value
+      ) {
+        const ratio = parseAspectRatio(
+          (value as { aspectRatio: string }).aspectRatio
+        );
+        if (ratio) return ratio;
+      }
+    }
+  }
+
+  return parseAspectRatio(widget.aspect_ratio);
+};
+
+export const getWidgetViewContainerStyle = (
+  size: { width: number; height: number },
+  aspectRatio: number | null
+) => {
+  if (size.width > 0 && size.height > 0) {
+    if (aspectRatio === null) {
+      return {
+        width: `${size.width}px`,
+        height: `${size.height}px`,
+      };
+    }
+
+    const dims = calculateContainDimensions(
+      size.width,
+      size.height,
+      aspectRatio
+    );
+
+    return {
+      width: `${dims.width}px`,
+      height: `${dims.height}px`,
+    };
+  }
+
+  if (aspectRatio === null) {
+    return { width: '100%', height: '100%' };
+  }
+
+  return { 'aspect-ratio': `${aspectRatio}`, width: '100%', height: 'auto' };
+};
+
+const calculateContainDimensions = (
+  containerWidth: number,
+  containerHeight: number,
+  aspectRatio: number
+) => {
+  const containerAspect = containerWidth / containerHeight;
+
+  if (aspectRatio > containerAspect) {
+    return {
+      width: containerWidth,
+      height: containerWidth / aspectRatio,
+    };
+  } else {
+    return {
+      width: containerHeight * aspectRatio,
+      height: containerHeight,
+    };
+  }
+};
 
 export const WidgetView: Component<WidgetViewProps> = (props) => {
   const cache = new Cache(
@@ -143,6 +239,14 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
     const configId = props.config.id;
     const configOptions = props.config.options;
 
+    // When previewData is supplied, the parent drives the integration data
+    // based on the live (possibly unsaved) options, so skip the config-id
+    // fetch which would otherwise read the previously saved options.
+    if (props.previewData !== undefined) {
+      setDataLoaded(true);
+      return;
+    }
+
     // Only set loading state if we have something to fetch
     // For new widgets without an ID, we skip fetching and use defaults
     if (configId && props.baseUrl) {
@@ -174,13 +278,18 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
     // Generate default data from data_schema for preview mode
     const defaultData = getDefaultDataFromSchema(currentWidget.data_schema);
 
-    // Priority: integration data > config data > default data
+    // Priority: parent-provided preview data > integration data > config data > default data
     const integration = integrationData();
     const configData =
       currentConfig.data && Object.keys(currentConfig.data).length > 0
         ? currentConfig.data
         : null;
-    const effectiveData = integration || configData || defaultData;
+    const effectiveData = resolveEffectiveWidgetData(
+      props.previewData,
+      integration,
+      configData,
+      defaultData
+    );
 
     // Calculate duration from options (supports 'duration' or 'display_duration')
     // Convert from seconds to milliseconds, default to 10 seconds
@@ -275,54 +384,6 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
     }
   });
 
-  // Get the effective aspect ratio from options or widget definition
-  const getEffectiveAspectRatio = (): number => {
-    // Check all options for any that might be a layout-ref value with aspectRatio
-    // This handles widgets where the layout-ref field may have any key name
-    if (props.options) {
-      for (const value of Object.values(props.options)) {
-        if (
-          value &&
-          typeof value === 'object' &&
-          'aspectRatio' in value &&
-          'layoutId' in value
-        ) {
-          // This looks like a LayoutRefValue
-          const ratio = parseAspectRatio(
-            (value as { aspectRatio: string }).aspectRatio
-          );
-          if (ratio) return ratio;
-        }
-      }
-    }
-
-    // Fall back to widget's own aspect ratio, default to 1:1
-    return parseAspectRatio(props.widget.aspect_ratio) || 1;
-  };
-
-  // Calculate dimensions to fit within container while maintaining aspect ratio (contain behavior)
-  const calculateContainDimensions = (
-    containerWidth: number,
-    containerHeight: number,
-    aspectRatio: number
-  ) => {
-    const containerAspect = containerWidth / containerHeight;
-
-    if (aspectRatio > containerAspect) {
-      // Width-constrained: content is wider relative to container
-      return {
-        width: containerWidth,
-        height: containerWidth / aspectRatio,
-      };
-    } else {
-      // Height-constrained: content is taller relative to container
-      return {
-        width: containerHeight * aspectRatio,
-        height: containerHeight,
-      };
-    }
-  };
-
   // Helper to update container size from parent
   const updateContainerSize = () => {
     const parent = containerRef?.parentElement;
@@ -359,23 +420,10 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
   // Calculate container style based on aspect ratio and available space
   // This is reactive to both containerSize and props.options changes
   const containerStyle = createMemo(() => {
-    const size = containerSize();
-    const aspectRatio = getEffectiveAspectRatio();
-
-    if (size.width > 0 && size.height > 0) {
-      const dims = calculateContainDimensions(
-        size.width,
-        size.height,
-        aspectRatio
-      );
-      return {
-        width: `${dims.width}px`,
-        height: `${dims.height}px`,
-      };
-    }
-
-    // Fallback to CSS aspect-ratio if parent dimensions not yet available
-    return { 'aspect-ratio': `${aspectRatio}`, width: '100%', height: 'auto' };
+    return getWidgetViewContainerStyle(
+      containerSize(),
+      getWidgetViewAspectRatio(props.widget, props.options)
+    );
   });
 
   return (
