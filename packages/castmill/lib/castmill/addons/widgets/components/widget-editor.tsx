@@ -6,6 +6,7 @@ import {
   Show,
   For,
   onCleanup,
+  onMount,
   ErrorBoundary,
 } from 'solid-js';
 import { Button, useToast } from '@castmill/ui-common';
@@ -180,11 +181,13 @@ const ComponentPicker: Component<ComponentPickerProps> = (props) => {
     if (open() && event.key === 'Escape') close();
   };
 
-  document.addEventListener('pointerdown', onDocumentPointerDown);
-  document.addEventListener('keydown', onDocumentKeyDown);
-  onCleanup(() => {
-    document.removeEventListener('pointerdown', onDocumentPointerDown);
-    document.removeEventListener('keydown', onDocumentKeyDown);
+  onMount(() => {
+    document.addEventListener('pointerdown', onDocumentPointerDown);
+    document.addEventListener('keydown', onDocumentKeyDown);
+    onCleanup(() => {
+      document.removeEventListener('pointerdown', onDocumentPointerDown);
+      document.removeEventListener('keydown', onDocumentKeyDown);
+    });
   });
 
   const label = (type: TemplateComponentType) =>
@@ -210,7 +213,7 @@ const ComponentPicker: Component<ComponentPickerProps> = (props) => {
         classList={{ 'is-open': open() }}
         onClick={() => (open() ? close() : setOpen(true))}
         aria-haspopup="menu"
-        aria-expanded={open()}
+        aria-expanded={open() ? 'true' : 'false'}
         title={props.t('widgets.editor.addComponent')}
       >
         <BsPlus size={18} />
