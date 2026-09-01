@@ -17,6 +17,15 @@ import {
   BsTrash,
   BsArrowUp,
   BsArrowDown,
+  BsArrowLeftRight,
+  BsCameraVideo,
+  BsCollection,
+  BsImage,
+  BsImages,
+  BsLayoutSplit,
+  BsListUl,
+  BsQrCode,
+  BsType,
 } from 'solid-icons/bs';
 import { AiOutlineSave } from 'solid-icons/ai';
 import { JsonWidget, JsonWidgetConfig, OptionsDict } from '@castmill/player';
@@ -117,6 +126,31 @@ function componentTranslationSuffix(type: TemplateComponentType): string {
   const key = componentTranslationKey(type);
   return key.charAt(0).toUpperCase() + key.slice(1);
 }
+
+const ComponentTypeIcon: Component<{ type: TemplateComponentType }> = (
+  props
+) => {
+  switch (props.type) {
+    case 'text':
+      return <BsType />;
+    case 'image':
+      return <BsImage />;
+    case 'video':
+      return <BsCameraVideo />;
+    case 'group':
+      return <BsCollection />;
+    case 'paginated-list':
+      return <BsListUl />;
+    case 'scroller':
+      return <BsArrowLeftRight />;
+    case 'layout':
+      return <BsLayoutSplit />;
+    case 'image-carousel':
+      return <BsImages />;
+    case 'qr-code':
+      return <BsQrCode />;
+  }
+};
 
 export interface WidgetEditorProps {
   store: AddonStore;
@@ -1230,17 +1264,23 @@ const VisualDesigner: Component<VisualDesignerProps> = (props) => {
           <Show when={canAddComponent(props.selectedNode)}>
             <div class="widget-editor__add-menu">
               <For each={COMPONENT_TYPES}>
-                {(type) => (
-                  <button
-                    onClick={() => props.onAdd(type)}
-                    title={props.t(
+                {(type) => {
+                  const label = () =>
+                    props.t(
                       `widgets.editor.add${componentTranslationSuffix(type)}`
-                    )}
-                  >
-                    <BsPlus size={12} />
-                    {props.t(`widgets.editor.${componentTranslationKey(type)}`)}
-                  </button>
-                )}
+                    );
+                  return (
+                    <button
+                      class="widget-editor__add-component"
+                      onClick={() => props.onAdd(type)}
+                      title={label()}
+                      aria-label={label()}
+                    >
+                      <ComponentTypeIcon type={type} />
+                      <BsPlus class="widget-editor__add-component-badge" />
+                    </button>
+                  );
+                }}
               </For>
             </div>
           </Show>

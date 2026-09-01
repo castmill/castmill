@@ -159,7 +159,12 @@ describe('WidgetEditor', () => {
       'ImageCarousel',
       'QrCode',
     ].forEach((type) => {
-      expect(screen.getByTitle(`widgets.editor.add${type}`)).not.toBeNull();
+      const action = screen.getByTitle(`widgets.editor.add${type}`);
+      expect(action).not.toBeNull();
+      expect(action.getAttribute('aria-label')).toBe(
+        `widgets.editor.add${type}`
+      );
+      expect(action.querySelector('svg')).not.toBeNull();
     });
 
     fireEvent.click(screen.getByTitle('widgets.editor.addVideo'));
