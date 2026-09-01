@@ -43,6 +43,22 @@ let baseOpts = {
     /*'solid-js', 'solid-js/web',  */ '@solidjs/router',
   ], // Mark fonts, images, and SolidJS router as external
   // packages: 'external',
+  platform: 'browser',
+  loader: {
+    '.js': 'jsx',
+    '.ts': 'ts',
+    '.tsx': 'tsx',
+    '.scss': 'css',
+  },
+  plugins: [
+    ScssModulesPlugin({
+      inject: true,
+      minify: true,
+      cssCallback: (css) => console.log(css),
+    }),
+    inlineCSSPlugin,
+    solidPlugin(),
+  ],
 };
 
 // Add minify option for deployment
