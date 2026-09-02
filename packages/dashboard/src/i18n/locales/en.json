@@ -1080,7 +1080,19 @@
       "pincodeExpired": "This pincode has expired. Please restart the device registration process."
     },
     "enterDescription": "Enter a description",
-    "drawerTitle": "Device \"{{name}}\""
+    "drawerTitle": "Device \"{{name}}\"",
+    "info": {
+      "title": "Info",
+      "platform": "Platform",
+      "playerVersion": "Player version",
+      "operatingSystem": "Operating system",
+      "hardware": "Hardware",
+      "environmentVersion": "Environment version",
+      "chromiumVersion": "Chromium version",
+      "v8Version": "V8 version",
+      "nodeVersion": "Node.js version",
+      "userAgent": "User agent"
+    }
   },
   "validation": {
     "fieldRequired": "This field is required",

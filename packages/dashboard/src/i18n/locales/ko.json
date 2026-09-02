@@ -1045,7 +1045,19 @@
     "errorRemovingDevice": "기기 {{name}} 제거 오류: {{error}}",
     "errorRemovingDevices": "기기 제거 오류: {{error}}",
     "enterDescription": "설명을 입력하세요",
-    "drawerTitle": "기기 \"{{name}}\""
+    "drawerTitle": "기기 \"{{name}}\"",
+    "info": {
+      "title": "정보",
+      "platform": "플랫폼",
+      "playerVersion": "플레이어 버전",
+      "operatingSystem": "운영 체제",
+      "hardware": "하드웨어",
+      "environmentVersion": "환경 버전",
+      "chromiumVersion": "Chromium 버전",
+      "v8Version": "V8 버전",
+      "nodeVersion": "Node.js 버전",
+      "userAgent": "사용자 에이전트"
+    }
   },
   "validation": {
     "fieldRequired": "이 필드는 필수입니다",

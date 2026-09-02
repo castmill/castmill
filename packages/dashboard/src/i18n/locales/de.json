@@ -1067,7 +1067,19 @@
     "errorRemovingDevice": "Fehler beim Entfernen des Geräts {{name}}: {{error}}",
     "errorRemovingDevices": "Fehler beim Entfernen der Geräte: {{error}}",
     "enterDescription": "Beschreibung eingeben",
-    "drawerTitle": "Gerät \"{{name}}\""
+    "drawerTitle": "Gerät \"{{name}}\"",
+    "info": {
+      "title": "Informationen",
+      "platform": "Plattform",
+      "playerVersion": "Player-Version",
+      "operatingSystem": "Betriebssystem",
+      "hardware": "Hardware-Ausstattung",
+      "environmentVersion": "Umgebungsversion",
+      "chromiumVersion": "Chromium-Version",
+      "v8Version": "V8-Version",
+      "nodeVersion": "Node.js-Version",
+      "userAgent": "User-Agent"
+    }
   },
   "validation": {
     "fieldRequired": "Dieses Feld ist erforderlich",

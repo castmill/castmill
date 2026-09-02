@@ -1040,7 +1040,19 @@
     "errorRemovingDevice": "Fel vid borttagning av enhet {{name}}: {{error}}",
     "errorRemovingDevices": "Fel vid borttagning av enheter: {{error}}",
     "enterDescription": "Ange en beskrivning",
-    "drawerTitle": "Enhet \"{{name}}\""
+    "drawerTitle": "Enhet \"{{name}}\"",
+    "info": {
+      "title": "Information",
+      "platform": "Plattform",
+      "playerVersion": "Spelarversion",
+      "operatingSystem": "Operativsystem",
+      "hardware": "Maskinvara",
+      "environmentVersion": "Miljöversion",
+      "chromiumVersion": "Chromium-version",
+      "v8Version": "V8-version",
+      "nodeVersion": "Node.js-version",
+      "userAgent": "Användaragent"
+    }
   },
   "validation": {
     "fieldRequired": "Detta fält är obligatoriskt",

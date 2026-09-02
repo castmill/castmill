@@ -1045,7 +1045,19 @@
     "errorRemovingDevice": "删除设备{{name}}时出错：{{error}}",
     "errorRemovingDevices": "删除设备时出错：{{error}}",
     "enterDescription": "输入描述",
-    "drawerTitle": "设备 \"{{name}}\""
+    "drawerTitle": "设备 \"{{name}}\"",
+    "info": {
+      "title": "信息",
+      "platform": "平台",
+      "playerVersion": "播放器版本",
+      "operatingSystem": "操作系统",
+      "hardware": "硬件",
+      "environmentVersion": "环境版本",
+      "chromiumVersion": "Chromium 版本",
+      "v8Version": "V8 版本",
+      "nodeVersion": "Node.js 版本",
+      "userAgent": "用户代理"
+    }
   },
   "validation": {
     "fieldRequired": "此字段为必填项",
