@@ -338,7 +338,17 @@ defmodule Castmill.Application do
           [url: url]
       end
 
-    {BullMQ.Backends.Postgres.Connection, base_opts ++ conn_opts}
+    # Forward SSL options to the underlying Postgrex connection when configured.
+    # Required for RDS instances that enforce SSL (rds.force_ssl=1). When unset
+    # the connection behaves exactly as before (no SSL), so this is backward
+    # compatible with environments whose database does not require encryption.
+    ssl_opts =
+      case Keyword.get(bullmq_pg_config, :ssl) do
+        ssl when ssl in [nil, false] -> []
+        ssl -> [ssl: ssl]
+      end
+
+    {BullMQ.Backends.Postgres.Connection, base_opts ++ conn_opts ++ ssl_opts}
   end
 
   defp compact_keyword(keyword) do

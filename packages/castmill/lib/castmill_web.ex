@@ -18,7 +18,7 @@ defmodule CastmillWeb do
   """
 
   def static_paths,
-    do: ~w(assets fonts images favicon.ico castmill_favicon.png robots.txt medias widgets)
+    do: ~w(assets fonts images favicon.ico castmill_favicon.png robots.txt medias widgets legacy)
 
   def router do
     quote do
