@@ -729,22 +729,21 @@ defmodule CastmillWeb.Router do
   defp get_bearer_token(conn) do
     auth_header = List.first(get_req_header(conn, "authorization"))
     auth_param = conn.params["auth"]
-    raw = auth_header || auth_param
 
-    cond do
-      is_nil(raw) or String.trim(raw) == "" ->
-        {:error, "No token provided"}
+    raw =
+      Enum.find([auth_header, auth_param], fn value ->
+        is_binary(value) and String.trim(value) != ""
+      end)
 
-      true ->
-        case extract_bearer_token(raw) do
-          token when is_binary(token) -> {:ok, token}
-          nil -> {:error, "Invalid token format"}
-        end
+    case extract_bearer_token(raw) do
+      token when is_binary(token) -> {:ok, token}
+      nil when is_nil(raw) -> {:error, "No token provided"}
+      nil -> {:error, "Invalid token format"}
     end
   end
 
-  # Extracts the token from an `Authorization: ****** value (or the
-  # equivalent `auth` query param). Tolerant of the exact formatting so that
+  # Extracts the token from an `Authorization` header containing a `Bearer`
+  # value (or the equivalent `auth` query param). Tolerant of the formatting so that
   # otherwise-valid tokens are not rejected: the scheme match is
   # case-insensitive and surrounding/duplicate whitespace is ignored.
   # Returns the token string, or nil when the value is not a bearer token.

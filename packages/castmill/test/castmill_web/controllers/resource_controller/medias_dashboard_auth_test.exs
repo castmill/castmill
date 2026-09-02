@@ -21,7 +21,8 @@ defmodule CastmillWeb.ResourceController.MediasDashboardAuthTest do
   setup %{conn: conn} do
     network = network_fixture()
     organization = organization_fixture(%{network_id: network.id})
-    user = user_fixture(%{organization_id: organization.id})
+    user = user_fixture()
+    {:ok, _} = Castmill.Organizations.add_user(organization.id, user.id, :admin)
 
     media =
       media_fixture(%{
