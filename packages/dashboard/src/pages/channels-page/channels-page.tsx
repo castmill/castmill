@@ -379,6 +379,7 @@ const ChannelsPage: Component = () => {
 
   const closeChannelDrawer = () => {
     setSearchParams({ itemId: undefined });
+    refreshData();
   };
 
   // Sync modal state with URL itemId parameter
