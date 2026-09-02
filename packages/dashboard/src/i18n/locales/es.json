@@ -943,7 +943,9 @@
       "pending": "Configuración pendiente",
       "enterClientCredentials": "Ingrese sus credenciales de API de {{provider}} a continuación:",
       "afterSavingCredentials": "Después de guardar sus credenciales, haga clic abajo para autorizar con {{provider}}:",
-      "networkCredentialsConfigured": "Su administrador de red ya ha configurado las credenciales de {{provider}}. Simplemente haga clic en el botón de abajo para conectar su cuenta."
+      "networkCredentialsConfigured": "Su administrador de red ya ha configurado las credenciales de {{provider}}. Simplemente haga clic en el botón de abajo para conectar su cuenta.",
+      "noConfigurationRequired": "No requiere configuración",
+      "optional": "Opcional"
     },
     "translations": "Traducciones"
   },
@@ -1071,11 +1073,24 @@
     "errorRemovingDevice": "Error al eliminar el dispositivo {{name}}: {{error}}",
     "errorRemovingDevices": "Error al eliminar los dispositivos: {{error}}",
     "enterDescription": "Ingrese una descripción",
-    "drawerTitle": "Dispositivo \"{{name}}\""
+    "drawerTitle": "Dispositivo \"{{name}}\"",
+    "info": {
+      "title": "Información",
+      "platform": "Plataforma",
+      "playerVersion": "Versión del reproductor",
+      "operatingSystem": "Sistema operativo",
+      "hardware": "Equipo",
+      "environmentVersion": "Versión del entorno",
+      "chromiumVersion": "Versión de Chromium",
+      "v8Version": "Versión de V8",
+      "nodeVersion": "Versión de Node.js",
+      "userAgent": "Agente de usuario"
+    }
   },
   "validation": {
     "fieldRequired": "Este campo es obligatorio",
-    "minLength": "Este campo debe tener al menos {{min}} caracteres"
+    "minLength": "Este campo debe tener al menos {{min}} caracteres",
+    "invalidCoordinates": "Este campo debe tener coordenadas válidas"
   },
   "plurals": {
     "items": {

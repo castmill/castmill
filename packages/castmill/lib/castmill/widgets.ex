@@ -7,6 +7,7 @@ defmodule Castmill.Widgets do
 
   alias Castmill.Repo
   alias Castmill.Protocol.Access
+  alias Castmill.Widgets.AssetStorage
   alias Castmill.Widgets.Widget
   alias Castmill.Widgets.WidgetConfig
   alias Castmill.QueryHelpers
@@ -71,11 +72,13 @@ defmodule Castmill.Widgets do
     |> limit(^page_size)
     |> offset(^offset)
     |> Repo.all()
+    |> Enum.map(&sanitize_widget_assets/1)
   end
 
   def list_widgets(_params) do
     Widget.base_query()
     |> Repo.all()
+    |> Enum.map(&sanitize_widget_assets/1)
   end
 
   @doc """
@@ -110,12 +113,30 @@ defmodule Castmill.Widgets do
       iex> get_widget("1234")
       %Widget{}
   """
-  def get_widget(id), do: Repo.get(Widget, id)
+  def get_widget(id) do
+    Widget
+    |> Repo.get(id)
+    |> sanitize_widget_assets()
+  end
 
   @doc """
   Gets a widget by name.
   """
-  def get_widget_by_name(name), do: Repo.get_by(Widget, name: name)
+  def get_widget_by_name(name) do
+    Widget
+    |> Repo.get_by(name: name)
+    |> sanitize_widget_assets()
+  end
+
+  def sanitize_widget_assets(%Widget{} = widget) do
+    %{
+      widget
+      | icon: AssetStorage.sanitize_public_icon(widget.icon),
+        small_icon: AssetStorage.sanitize_public_icon(widget.small_icon)
+    }
+  end
+
+  def sanitize_widget_assets(widget), do: widget
 
   @doc """
   Instantiate a new widget.
@@ -179,12 +200,16 @@ defmodule Castmill.Widgets do
       })
       |> Repo.insert()
 
-    # Schedule polling for auth-free integrations (like RSS)
+    # Schedule polling for integrations that can be fetched without the
+    # organization having to configure credentials (like RSS or Open-Meteo)
     with {:ok, _widget_config} <- result,
          %Castmill.Widgets.Integrations.WidgetIntegration{} = int <- integration,
-         true <- is_auth_free_integration?(int),
+         true <- is_credential_free_integration?(int),
          org_id when not is_nil(org_id) <- organization_id do
-      Logger.info("new_widget_config: Scheduling polling for auth-free integration #{int.id}")
+      Logger.info(
+        "new_widget_config: Scheduling polling for credential-free integration #{int.id}"
+      )
+
       schedule_auth_free_polling(org_id, widget_id, int, options)
     else
       other ->
@@ -198,18 +223,25 @@ defmodule Castmill.Widgets do
     result
   end
 
-  defp is_auth_free_integration?(%Castmill.Widgets.Integrations.WidgetIntegration{} = integration) do
-    # Check if the integration requires no authentication
+  defp is_credential_free_integration?(
+         %Castmill.Widgets.Integrations.WidgetIntegration{} = integration
+       ) do
+    # Integrations that can be fetched without credentials configured by the
+    # organization. "optional" integrations are included: any configured key is
+    # still resolved at fetch time by `Integrations.get_fetch_credentials/2`.
     auth_type =
       get_in(integration.pull_config, ["auth_type"]) ||
         get_in(integration.credential_schema, ["auth_type"])
 
-    auth_type == "none"
+    auth_type in ["none", "optional"]
   end
 
   defp schedule_auth_free_polling(organization_id, widget_id, integration, widget_options) do
+    widget_options =
+      Castmill.Widgets.Integrations.with_display_locale(organization_id, widget_options)
+
     # Build discriminator ID based on integration type
-    discriminator_id = build_discriminator_id(integration, widget_options)
+    discriminator_id = build_discriminator_id(integration, widget_options, organization_id)
 
     Logger.info(
       "Scheduling auth-free polling for widget #{widget_id}, org #{organization_id}, discriminator: #{discriminator_id}"
@@ -246,29 +278,12 @@ defmodule Castmill.Widgets do
     end
   end
 
-  defp build_discriminator_id(integration, widget_options) do
-    # For widget_option discriminators, also check pull_config for hardcoded values
-    # (e.g., RSS widgets have feed_url in pull_config, not in widget_options)
-    pull_config = integration.pull_config || %{}
-    merged_options = Map.merge(pull_config, widget_options || %{})
-
-    case integration.discriminator_type do
-      "widget_option" ->
-        key = integration.discriminator_key || "id"
-
-        value =
-          Map.get(merged_options, key) || Map.get(merged_options, String.to_atom(key)) ||
-            "default"
-
-        "#{key}:#{value}"
-
-      "organization" ->
-        "org"
-
-      _ ->
-        # widget_config or default
-        "default"
-    end
+  defp build_discriminator_id(integration, widget_options, organization_id) do
+    Castmill.Widgets.Integrations.build_discriminator_id(
+      integration,
+      widget_options,
+      organization_id
+    )
   end
 
   def get_widget_by_slug(slug) do
@@ -340,30 +355,161 @@ defmodule Castmill.Widgets do
   def update_widget_config(playlist_id, playlist_item_id, options, data) do
     # First, check for circular references if this is a layout widget with playlist references
     with :ok <- validate_playlist_references(playlist_id, playlist_item_id, options) do
-      # Define the current timestamp for the last_request_at field
-      current_timestamp = DateTime.utc_now()
+      case get_widget_config(playlist_id, playlist_item_id) do
+        nil ->
+          {:error, "No widget configuration found with the provided IDs"}
 
-      # Directly use keyword list for the update clause
-      {count, _} =
-        from(wc in WidgetConfig,
-          join: pi in assoc(wc, :playlist_item),
-          where: pi.playlist_id == ^playlist_id and pi.id == ^playlist_item_id,
-          update: [
-            set: [
-              options: ^options,
-              data: ^data,
-              last_request_at: ^current_timestamp,
-              version: fragment("version + 1")
-            ]
-          ]
-        )
-        |> Repo.update_all([])
+        %WidgetConfig{} = widget_config ->
+          previous_options = widget_config.options || %{}
 
-      case count do
-        1 -> {:ok, "Widget configuration updated successfully"}
-        0 -> {:error, "No widget configuration found with the provided IDs"}
-        _ -> {:error, "Unexpected number of records updated"}
+          case do_update_widget_config(widget_config, options, data, 3) do
+            {:ok, _} = ok ->
+              maybe_reschedule_polling(
+                playlist_id,
+                widget_config.widget_id,
+                previous_options,
+                options || %{}
+              )
+
+              ok
+
+            error ->
+              error
+          end
       end
+    end
+  end
+
+  # When the saved options change the integration discriminator, the polling
+  # scheduler for the previous discriminator becomes orphaned. Cancel it (unless
+  # another widget config in the organization still uses it) and schedule the
+  # discriminator that is actually saved.
+  defp maybe_reschedule_polling(playlist_id, widget_id, previous_options, new_options) do
+    alias Castmill.Widgets.Integrations
+
+    with org_id when not is_nil(org_id) <- organization_id_for_playlist(playlist_id),
+         %Widget{} = widget <- get_widget(widget_id),
+         {:ok, %Castmill.Widgets.Integrations.WidgetIntegration{} = integration} <-
+           Integrations.ensure_integration_for_widget(widget),
+         true <- is_credential_free_integration?(integration) do
+      previous_discriminator = discriminator_for_options(integration, org_id, previous_options)
+
+      new_discriminator = discriminator_for_options(integration, org_id, new_options)
+
+      if previous_discriminator != new_discriminator do
+        unless discriminator_still_used?(
+                 integration,
+                 org_id,
+                 widget_id,
+                 previous_discriminator
+               ) do
+          cancel_polling(org_id, integration.id, previous_discriminator)
+        end
+
+        schedule_auth_free_polling(org_id, widget_id, integration, new_options)
+      end
+
+      :ok
+    else
+      _ -> :ok
+    end
+  end
+
+  defp organization_id_for_playlist(playlist_id) do
+    from(p in Castmill.Resources.Playlist,
+      where: p.id == ^playlist_id,
+      select: p.organization_id
+    )
+    |> Repo.one()
+  end
+
+  defp discriminator_for_options(integration, organization_id, options) do
+    options = Castmill.Widgets.Integrations.with_display_locale(organization_id, options || %{})
+    build_discriminator_id(integration, options, organization_id)
+  end
+
+  defp discriminator_still_used?(integration, organization_id, widget_id, discriminator_id) do
+    from(wc in WidgetConfig,
+      join: pi in Castmill.Resources.PlaylistItem,
+      on: pi.id == wc.playlist_item_id,
+      join: p in Castmill.Resources.Playlist,
+      on: p.id == pi.playlist_id,
+      where: p.organization_id == ^organization_id and wc.widget_id == ^widget_id,
+      select: wc.options
+    )
+    |> Repo.all()
+    |> Enum.any?(fn options ->
+      discriminator_for_options(integration, organization_id, options) == discriminator_id
+    end)
+  end
+
+  defp cancel_polling(organization_id, integration_id, discriminator_id) do
+    cancel_fn = fn ->
+      try do
+        Castmill.Workers.IntegrationPoller.cancel_polling(
+          organization_id,
+          integration_id,
+          discriminator_id
+        )
+      rescue
+        e -> Logger.warning("Failed to cancel polling: #{inspect(e)}")
+      catch
+        :exit, reason -> Logger.warning("Failed to cancel polling (exit): #{inspect(reason)}")
+      end
+    end
+
+    if Application.get_env(:castmill, :async_poll_scheduling, true) do
+      Task.start(cancel_fn)
+    else
+      cancel_fn.()
+    end
+
+    :ok
+  end
+
+  # Updates the widget config through its changeset (so that the options and
+  # data schemas are validated) while still guaranteeing that every successful
+  # update advances the version. Optimistic locking makes the version bump
+  # conflict-safe: concurrent writers raise `Ecto.StaleEntryError` and retry
+  # against the freshly loaded record instead of silently writing the same
+  # version twice.
+  defp do_update_widget_config(%WidgetConfig{} = widget_config, options, data, attempts_left) do
+    current_timestamp = DateTime.utc_now()
+
+    changeset =
+      widget_config
+      |> Ecto.Changeset.optimistic_lock(:version)
+      |> WidgetConfig.changeset(%{
+        options: options,
+        data: data,
+        last_request_at: current_timestamp
+      })
+
+    try do
+      # `force: true` guarantees the update (and therefore the optimistic lock
+      # version bump) is issued even when the payload is identical to what is
+      # already stored, e.g. two updates within the same second where the
+      # truncated `last_request_at` does not change either.
+      case Repo.update(changeset, force: true) do
+        {:ok, _updated_widget_config} ->
+          {:ok, "Widget configuration updated successfully"}
+
+        {:error, _changeset} = error ->
+          error
+      end
+    rescue
+      Ecto.StaleEntryError ->
+        if attempts_left > 1 do
+          case Repo.get(WidgetConfig, widget_config.id) do
+            nil ->
+              {:error, "No widget configuration found with the provided IDs"}
+
+            %WidgetConfig{} = reloaded ->
+              do_update_widget_config(reloaded, options, data, attempts_left - 1)
+          end
+        else
+          {:error, "Widget configuration was updated concurrently, please retry"}
+        end
     end
   end
 

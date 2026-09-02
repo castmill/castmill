@@ -916,7 +916,9 @@
       "pending": "設定待ち",
       "enterClientCredentials": "以下に{{provider}} APIの資格情報を入力してください：",
       "afterSavingCredentials": "資格情報を保存した後、下のボタンをクリックして{{provider}}で認証してください：",
-      "networkCredentialsConfigured": "ネットワーク管理者が{{provider}}の資格情報を既に設定しています。下のボタンをクリックするだけでアカウントを接続できます。"
+      "networkCredentialsConfigured": "ネットワーク管理者が{{provider}}の資格情報を既に設定しています。下のボタンをクリックするだけでアカウントを接続できます。",
+      "noConfigurationRequired": "設定不要",
+      "optional": "任意"
     },
     "translations": "翻訳"
   },
@@ -1044,11 +1046,24 @@
     "errorRemovingDevice": "デバイス{{name}}の削除エラー: {{error}}",
     "errorRemovingDevices": "デバイスの削除エラー: {{error}}",
     "enterDescription": "説明を入力してください",
-    "drawerTitle": "デバイス \"{{name}}\""
+    "drawerTitle": "デバイス \"{{name}}\"",
+    "info": {
+      "title": "情報",
+      "platform": "プラットフォーム",
+      "playerVersion": "プレーヤーのバージョン",
+      "operatingSystem": "オペレーティングシステム",
+      "hardware": "ハードウェア",
+      "environmentVersion": "環境のバージョン",
+      "chromiumVersion": "Chromium のバージョン",
+      "v8Version": "V8 のバージョン",
+      "nodeVersion": "Node.js のバージョン",
+      "userAgent": "ユーザーエージェント"
+    }
   },
   "validation": {
     "fieldRequired": "この項目は必須です",
-    "minLength": "この項目は最低{{min}}文字以上である必要があります"
+    "minLength": "この項目は最低{{min}}文字以上である必要があります",
+    "invalidCoordinates": "この項目には有効な座標を入力してください"
   },
   "plurals": {
     "items": {

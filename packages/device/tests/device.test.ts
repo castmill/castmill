@@ -944,6 +944,13 @@ describe('Device - loginOrRegister (non-blocking login)', () => {
       storeCredentials: vi.fn(),
       getLocation: vi.fn().mockResolvedValue({ latitude: 0, longitude: 0 }),
       getTimezone: vi.fn().mockResolvedValue('UTC'),
+      getDeviceInfo: vi.fn().mockResolvedValue({
+        appType: 'Electron',
+        appVersion: '1.2.3',
+        os: 'Linux',
+        hardware: 'x86_64',
+        userAgent: 'Castmill Player',
+      }),
     };
 
     mockStorageIntegration = {
@@ -1008,6 +1015,9 @@ describe('Device - loginOrRegister (non-blocking login)', () => {
 
     const initListenersSpy = vi.spyOn(device as any, 'initListeners');
     const initHeartbeatSpy = vi.spyOn(device as any, 'initHeartbeat');
+    const updateDeviceInfoSpy = vi
+      .spyOn(device as any, 'updateDeviceInfo')
+      .mockResolvedValue(undefined);
 
     await device.loginOrRegister();
 
@@ -1017,6 +1027,39 @@ describe('Device - loginOrRegister (non-blocking login)', () => {
     });
 
     expect(initHeartbeatSpy).toHaveBeenCalledWith(mockChannel);
+    expect(updateDeviceInfoSpy).toHaveBeenCalledWith({
+      device: { id: 'device1', token: 'token123', name: 'Device 1' },
+    });
+  });
+
+  it('should post device metadata after connecting', async () => {
+    const credentials = {
+      device: { id: 'device1', token: 'token123', name: 'Device 1' },
+    };
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+    vi.stubGlobal('fetch', fetchMock);
+
+    try {
+      await (device as any).updateDeviceInfo(credentials);
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        'http://localhost:4000/devices/device1/info',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({
+            info: {
+              appType: 'Electron',
+              appVersion: '1.2.3',
+              os: 'Linux',
+              hardware: 'x86_64',
+              userAgent: 'Castmill Player',
+            },
+          }),
+        })
+      );
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it('should handle invalid_device error by clearing credentials and reloading', async () => {

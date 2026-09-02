@@ -9,6 +9,8 @@ The **Castmill Legacy Adapter** is a bridge designed to support legacy Castmill 
 - [Overview](#overview)
 - [Features](#features)
 - [Usage](#usage)
+- [Serving from Castmill](#serving-from-castmill)
+- [Migration rollout](#migration-rollout)
 - [Configuration](#configuration)
 - [Contributing](#contributing)
 - [License](#license)
@@ -17,12 +19,13 @@ The **Castmill Legacy Adapter** is a bridge designed to support legacy Castmill 
 
 ## Overview
 
-The Castmill Legacy Adapter serves at the endpoint where the old Castmill application was hosted. It ensures that legacy players, which rely on the original APIs, continue to function without modification. Internally, it proxies or adapts these requests to the new Castmill player, enabling a seamless experience for both legacy and new clients.
+The Castmill Legacy Adapter enables old Castmill Electron and Android players to connect to a new Castmill server without changing those players. It preserves the legacy player APIs and adapts them to the modern Castmill player and server.
 
 ### Key Purpose:
 
-- Maintain compatibility with legacy Electron and Android Castmill players.
-- Integrate the modern Castmill player without disrupting existing workflows.
+- Allow existing legacy Castmill players to connect to new Castmill deployments.
+- Maintain compatibility with the Electron and Android legacy player APIs.
+- Enable migration to the modern player without disrupting existing workflows.
 
 ---
 
@@ -31,16 +34,44 @@ The Castmill Legacy Adapter serves at the endpoint where the old Castmill applic
 - **Legacy API Support**: Implements the APIs required by legacy players.
 - **Modern Player Integration**: Uses the new Castmill player internally.
 - **Seamless Transition**: Allows legacy embeds to function as expected without updates.
-- **Endpoint Compatibility**: Serves on the original Castmill hosting URL.
+- **Castmill Server Deployment**: Served at `/legacy` by the Castmill Phoenix server.
 - **Configurable Base URL**: Easily configure the default base URL using environment variables.
 
 ---
 
 ## Usage
 
-1. Deploy the adapter to the same endpoint where the old Castmill was hosted.
-2. Verify that legacy players point to this endpoint for their API interactions.
+1. Build the Castmill server image or run `yarn build:server` from the repository root.
+2. Open the adapter at `https://<castmill-server>/legacy`.
 3. Test the functionality of legacy players to ensure smooth operation with the new Castmill player.
+
+---
+
+## Serving from Castmill
+
+The production Castmill build runs this workspace's `build:server` script. It generates
+the adapter in `packages/castmill/priv/static/legacy/`, which Phoenix serves as:
+
+| URL                | Purpose                                       |
+| ------------------ | --------------------------------------------- |
+| `/legacy`          | Legacy adapter entry page                     |
+| `/legacy/assets/*` | Adapter JavaScript and other generated assets |
+
+Use `yarn build` for a standalone workspace build, or `yarn build:server` to generate
+the files for the Castmill server. The server-targeted build uses `/legacy/` as its Vite
+base URL, so generated assets load from the same Castmill server.
+
+---
+
+## Migration rollout
+
+During migration, the old Castmill player server proxies migrated players to `/legacy`
+on the new Castmill Phoenix server. This allows individual legacy players to use the new
+server while the old player domain continues to serve players that have not migrated.
+
+After all players have migrated, point the old player domain at the new Phoenix server.
+The Phoenix server must then serve the same legacy adapter content for requests received
+through that domain as it does for `/legacy`.
 
 ---
 

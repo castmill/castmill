@@ -12,6 +12,19 @@ defmodule CastmillWeb.DeviceController do
 
   action_fallback(CastmillWeb.FallbackController)
 
+  @device_info_keys ~w(
+    appType
+    appVersion
+    os
+    hardware
+    environmentVersion
+    chromiumVersion
+    v8Version
+    nodeVersion
+    userAgent
+  )
+  @max_device_info_value_bytes 1024
+
   @impl CastmillWeb.AccessActorBehaviour
 
   def check_access(actor_id, action, %{"device_id" => device_id})
@@ -112,6 +125,28 @@ defmodule CastmillWeb.DeviceController do
 
   def home(conn, _params) do
     render(conn, :device, layout: false)
+  end
+
+  def info(conn, %{"info" => info}) when is_map(info) do
+    device = conn.assigns.current_actor
+
+    if valid_device_info?(info) do
+      case Devices.update_device(device, %{info: info}) do
+        {:ok, _device} -> send_resp(conn, :no_content, "")
+        {:error, changeset} -> {:error, changeset}
+      end
+    else
+      send_resp(conn, :bad_request, "")
+    end
+  end
+
+  def info(conn, _params), do: send_resp(conn, :bad_request, "")
+
+  defp valid_device_info?(info) do
+    Enum.all?(info, fn {key, value} ->
+      key in @device_info_keys and is_binary(value) and
+        byte_size(value) <= @max_device_info_value_bytes
+    end)
   end
 
   def start_registration(conn, %{"hardware_id" => hardware_id, "timezone" => timezone} = params) do

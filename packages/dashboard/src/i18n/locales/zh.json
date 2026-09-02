@@ -915,7 +915,9 @@
       "pending": "等待设置",
       "enterClientCredentials": "在下方输入您的 {{provider}} API 凭据：",
       "afterSavingCredentials": "保存凭据后，点击下方按钮以授权 {{provider}}：",
-      "networkCredentialsConfigured": "您的网络管理员已配置 {{provider}} 凭据。只需点击下方按钮即可连接您的账户。"
+      "networkCredentialsConfigured": "您的网络管理员已配置 {{provider}} 凭据。只需点击下方按钮即可连接您的账户。",
+      "noConfigurationRequired": "无需配置",
+      "optional": "可选"
     },
     "translations": "翻译"
   },
@@ -1043,11 +1045,24 @@
     "errorRemovingDevice": "删除设备{{name}}时出错：{{error}}",
     "errorRemovingDevices": "删除设备时出错：{{error}}",
     "enterDescription": "输入描述",
-    "drawerTitle": "设备 \"{{name}}\""
+    "drawerTitle": "设备 \"{{name}}\"",
+    "info": {
+      "title": "信息",
+      "platform": "平台",
+      "playerVersion": "播放器版本",
+      "operatingSystem": "操作系统",
+      "hardware": "硬件",
+      "environmentVersion": "环境版本",
+      "chromiumVersion": "Chromium 版本",
+      "v8Version": "V8 版本",
+      "nodeVersion": "Node.js 版本",
+      "userAgent": "用户代理"
+    }
   },
   "validation": {
     "fieldRequired": "此字段为必填项",
-    "minLength": "此字段必须至少包含 {{min}} 个字符"
+    "minLength": "此字段必须至少包含 {{min}} 个字符",
+    "invalidCoordinates": "此字段必须包含有效的坐标"
   },
   "plurals": {
     "items": {
