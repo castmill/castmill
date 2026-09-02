@@ -73,7 +73,9 @@ defmodule CastmillWeb.DeviceControllerTest do
       assert Castmill.Devices.get_device(device.id).info == info
     end
 
-    test "rejects invalid player metadata", %{organization: organization} do
+    test "rejects malformed, unknown, and oversized player metadata", %{
+      organization: organization
+    } do
       {:ok, devices_registration} =
         device_registration_fixture(%{hardware_id: "invalid-info-hw-id", pincode: "info5678"})
 
@@ -82,13 +84,24 @@ defmodule CastmillWeb.DeviceControllerTest do
           name: "Invalid Info Device"
         })
 
-      conn =
-        build_conn()
-        |> put_req_header("accept", "application/json")
-        |> put_req_header("authorization", Enum.join(["Bearer", token], " "))
-        |> post("/devices/#{device.id}/info", %{"info" => "invalid"})
+      invalid_info_values = [
+        "invalid",
+        %{"unknown" => "value"},
+        %{"appType" => %{"nested" => "value"}},
+        %{"userAgent" => String.duplicate("a", 1025)}
+      ]
 
-      assert response(conn, 400)
+      for info <- invalid_info_values do
+        conn =
+          build_conn()
+          |> put_req_header("accept", "application/json")
+          |> put_req_header("authorization", Enum.join(["Bearer", token], " "))
+          |> post("/devices/#{device.id}/info", %{"info" => info})
+
+        assert response(conn, 400)
+      end
+
+      assert Castmill.Devices.get_device(device.id).info == nil
     end
   end
 
