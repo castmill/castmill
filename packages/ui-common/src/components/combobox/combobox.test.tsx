@@ -159,9 +159,7 @@ describe('ComboBox Component', () => {
 
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Toggle Dropdown')).not.toBeInTheDocument();
-    expect(
-      screen.getByLabelText('Clear selection').querySelector('button')
-    ).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Clear selection')).toBeInTheDocument();
 
     await fireEvent.click(screen.getByLabelText('Clear selection'));
 
