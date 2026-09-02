@@ -102,6 +102,8 @@ defimpl Jason.Encoder, for: Castmill.Resources.Channel do
       name: channel.name,
       timezone: channel.timezone,
       default_playlist_id: channel.default_playlist_id,
+      default_playlist_name: channel.default_playlist_name,
+      current_playlist_name: channel.current_playlist_name,
       entries: entries,
       organization_name: organization_name,
       network_name: network_name
