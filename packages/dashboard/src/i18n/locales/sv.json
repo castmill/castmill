@@ -910,7 +910,9 @@
       "pending": "Väntar på konfiguration",
       "enterClientCredentials": "Ange dina {{provider}} API-uppgifter nedan:",
       "afterSavingCredentials": "Efter att du sparat dina uppgifter, klicka nedan för att auktorisera med {{provider}}:",
-      "networkCredentialsConfigured": "Din nätverksadministratör har redan konfigurerat {{provider}}-uppgifter. Klicka bara på knappen nedan för att ansluta ditt konto."
+      "networkCredentialsConfigured": "Din nätverksadministratör har redan konfigurerat {{provider}}-uppgifter. Klicka bara på knappen nedan för att ansluta ditt konto.",
+      "noConfigurationRequired": "Ingen konfiguration krävs",
+      "optional": "Valfritt"
     },
     "translations": "Översättningar"
   },
@@ -1054,7 +1056,8 @@
   },
   "validation": {
     "fieldRequired": "Detta fält är obligatoriskt",
-    "minLength": "Detta fält måste vara minst {{min}} tecken långt"
+    "minLength": "Detta fält måste vara minst {{min}} tecken långt",
+    "invalidCoordinates": "Detta fält måste ha giltiga koordinater"
   },
   "plurals": {
     "items": {

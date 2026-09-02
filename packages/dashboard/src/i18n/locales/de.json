@@ -937,7 +937,9 @@
       "pending": "Einrichtung ausstehend",
       "enterClientCredentials": "Geben Sie unten Ihre {{provider}} API-Anmeldedaten ein:",
       "afterSavingCredentials": "Nachdem Sie Ihre Anmeldedaten gespeichert haben, klicken Sie unten, um sich bei {{provider}} zu autorisieren:",
-      "networkCredentialsConfigured": "Die {{provider}}-Integration wurde von Ihrem Netzwerkadministrator konfiguriert. Klicken Sie unten, um Ihr Konto zu autorisieren:"
+      "networkCredentialsConfigured": "Die {{provider}}-Integration wurde von Ihrem Netzwerkadministrator konfiguriert. Klicken Sie unten, um Ihr Konto zu autorisieren:",
+      "noConfigurationRequired": "Keine Konfiguration erforderlich",
+      "optional": "Fakultativ"
     },
     "translations": "Übersetzungen"
   },
@@ -1081,7 +1083,8 @@
   },
   "validation": {
     "fieldRequired": "Dieses Feld ist erforderlich",
-    "minLength": "Dieses Feld muss mindestens {{min}} Zeichen lang sein"
+    "minLength": "Dieses Feld muss mindestens {{min}} Zeichen lang sein",
+    "invalidCoordinates": "Dieses Feld muss gültige Koordinaten enthalten"
   },
   "plurals": {
     "items": {
