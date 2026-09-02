@@ -162,15 +162,18 @@ defmodule Castmill.Resources do
     if is_nil(playlist) do
       nil
     else
+      display_locale =
+        Castmill.Widgets.Integrations.display_locale_for_organization(playlist.organization_id)
+
       items =
         get_playlist_items(id)
-        |> Enum.map(&transform_item(&1, playlist.organization_id))
+        |> Enum.map(&transform_item(&1, playlist.organization_id, display_locale))
 
       %{playlist | items: items}
     end
   end
 
-  defp transform_item(item, organization_id) do
+  defp transform_item(item, organization_id, display_locale) do
     # Resolve widget references (media, playlist refs, etc.) and merge them into options
     # resolve_widget_references only returns the resolved ref fields, so we merge them
     # back into the original options to preserve all other option values
@@ -185,6 +188,8 @@ defmodule Castmill.Resources do
     merged_options = Map.merge(original_options, resolved_refs)
 
     # Drop the :widget key from widget_config
+    sanitized_widget = Castmill.Widgets.sanitize_widget_assets(item.widget_config.widget)
+
     modified_widget_config = Map.drop(item.widget_config, [:widget])
 
     # Put the merged options into modified_widget_config
@@ -215,7 +220,12 @@ defmodule Castmill.Resources do
     #
     # Extract widget_options here so it can be used both for looking up integration data
     # and for filtering max_items when serving data to each widget instance
-    widget_options_for_filtering = modified_widget_config_with_defaults.options || %{}
+    widget_options_for_filtering =
+      Castmill.Widgets.Integrations.with_display_locale(
+        organization_id,
+        modified_widget_config_with_defaults.options || %{},
+        display_locale
+      )
 
     integration_data =
       case Castmill.Widgets.Integrations.get_integration_data_by_config(item.widget_config.id) do
@@ -249,6 +259,16 @@ defmodule Castmill.Resources do
     {modified_widget_config_with_integration, integration_error} =
       case integration_data do
         {:ok, %Castmill.Widgets.Integrations.WidgetIntegrationData{} = data} ->
+          # Make sure background polling is scheduled for this discriminator so
+          # that pre-existing widget configs (created before polling existed, or
+          # whose scheduler was lost) keep receiving fresh data.
+          maybe_schedule_refresh(
+            data,
+            organization_id,
+            item.widget_config.widget.id,
+            widget_options_for_filtering
+          )
+
           # Merge integration data into the existing data field (overrides defaults)
           existing_data = Map.get(modified_widget_config_with_defaults, :data, %{}) || %{}
           merged_data = Map.merge(existing_data, data.data || %{})
@@ -273,7 +293,7 @@ defmodule Castmill.Resources do
       |> Map.take([:id, :duration, :offset, :inserted_at, :updated_at])
       |> Map.merge(%{
         config: modified_widget_config_with_integration,
-        widget: item.widget_config.widget
+        widget: sanitized_widget
       })
 
     # Add integration_error field if there was an error fetching data
@@ -376,7 +396,7 @@ defmodule Castmill.Resources do
                 "required"
 
             credentials =
-              case Integrations.get_organization_credentials(organization_id, integration.id) do
+              case Integrations.get_fetch_credentials(organization_id, integration) do
                 {:ok, creds} -> creds
                 {:error, _} when auth_type in ["optional", "none"] -> %{}
                 {:error, _} -> nil
@@ -387,7 +407,11 @@ defmodule Castmill.Resources do
               case fetch_with_module(fetcher_module_name, credentials, widget_options) do
                 {:ok, data, _creds} ->
                   # Store the data and return it
-                  discriminator_id = build_discriminator_id(integration, widget_options)
+                  discriminator_id =
+                    build_discriminator_id(integration, widget_options, organization_id)
+
+                  now = DateTime.utc_now()
+                  interval = integration.pull_interval_seconds || 300
 
                   case Integrations.upsert_integration_data(%{
                          widget_integration_id: integration.id,
@@ -395,10 +419,20 @@ defmodule Castmill.Resources do
                          discriminator_id: discriminator_id,
                          data: data,
                          status: "active",
-                         fetched_at: DateTime.utc_now(),
+                         fetched_at: now,
+                         refresh_at: DateTime.add(now, interval, :second),
                          version: :os.system_time(:second)
                        }) do
                     {:ok, integration_data} ->
+                      # Keep the data fresh from now on
+                      schedule_integration_polling(
+                        organization_id,
+                        widget_id,
+                        integration,
+                        discriminator_id,
+                        widget_options
+                      )
+
                       {:ok, integration_data}
 
                     {:error, _reason} ->
@@ -423,6 +457,96 @@ defmodule Castmill.Resources do
           nil
         end
     end
+  end
+
+  # Ensures that background polling exists for cached integration data that is
+  # due for a refresh. Widget configs created before polling was introduced (or
+  # whose scheduler was removed) would otherwise keep serving the very first
+  # fetched payload forever.
+  defp maybe_schedule_refresh(
+         %Castmill.Widgets.Integrations.WidgetIntegrationData{} = data,
+         organization_id,
+         widget_id,
+         widget_options
+       )
+       when not is_nil(organization_id) and not is_nil(widget_id) do
+    alias Castmill.Widgets.Integrations
+
+    case Integrations.list_integrations(widget_id: widget_id) do
+      [%{integration_type: "pull"} = integration | _] ->
+        if pollable_integration?(integration) and refresh_due?(data, integration) do
+          discriminator_id =
+            build_discriminator_id(integration, widget_options || %{}, organization_id)
+
+          schedule_integration_polling(
+            organization_id,
+            widget_id,
+            integration,
+            discriminator_id,
+            widget_options || %{},
+            delay: 0
+          )
+        end
+
+      _ ->
+        :ok
+    end
+  end
+
+  defp maybe_schedule_refresh(_data, _organization_id, _widget_id, _widget_options), do: :ok
+
+  defp pollable_integration?(integration) do
+    is_binary(Map.get(integration.pull_config || %{}, "fetcher_module"))
+  end
+
+  defp refresh_due?(data, integration) do
+    now = DateTime.utc_now()
+    interval = integration.pull_interval_seconds || 300
+
+    cond do
+      data.refresh_at -> DateTime.compare(data.refresh_at, now) != :gt
+      data.fetched_at -> DateTime.diff(now, data.fetched_at) >= interval
+      true -> true
+    end
+  end
+
+  defp schedule_integration_polling(
+         organization_id,
+         widget_id,
+         integration,
+         discriminator_id,
+         widget_options,
+         opts \\ []
+       ) do
+    delay = Keyword.get(opts, :delay, integration.pull_interval_seconds || 30)
+
+    schedule_fn = fn ->
+      try do
+        Castmill.Workers.IntegrationPoller.schedule_poll(
+          %{
+            organization_id: organization_id,
+            widget_id: widget_id,
+            integration_id: integration.id,
+            discriminator_id: discriminator_id,
+            widget_options: widget_options
+          },
+          delay: delay
+        )
+      rescue
+        _e -> :error
+      catch
+        :exit, _reason -> :error
+      end
+    end
+
+    if Application.get_env(:castmill, :async_poll_scheduling, true) do
+      # Don't block (or crash) playlist serialization if the queue is unavailable
+      Task.start(schedule_fn)
+    else
+      schedule_fn.()
+    end
+
+    :ok
   end
 
   defp fetch_with_module(module_name, credentials, options) when is_binary(module_name) do
@@ -451,28 +575,12 @@ defmodule Castmill.Resources do
     end
   end
 
-  defp build_discriminator_id(integration, options) do
-    # For widget_option discriminators, also check pull_config for hardcoded values
-    # (e.g., RSS widgets have feed_url in pull_config, not in widget_options)
-    pull_config = integration.pull_config || %{}
-    merged_options = Map.merge(pull_config, options || %{})
-
-    case integration.discriminator_type do
-      "widget_option" ->
-        key = integration.discriminator_key || "id"
-
-        value =
-          Map.get(merged_options, key) || Map.get(merged_options, String.to_atom(key)) ||
-            "default"
-
-        "#{key}:#{value}"
-
-      "organization" ->
-        "org"
-
-      _ ->
-        "default"
-    end
+  defp build_discriminator_id(integration, options, organization_id) do
+    Castmill.Widgets.Integrations.build_discriminator_id(
+      integration,
+      options,
+      organization_id
+    )
   end
 
   defp resolve_widget_references(schema, data) do
@@ -1547,6 +1655,54 @@ defmodule Castmill.Resources do
     |> where(id: ^id)
     |> Repo.one()
     |> Repo.preload(:entries)
+  end
+
+  def add_channel_playlist_names(channels, now \\ DateTime.utc_now())
+  def add_channel_playlist_names([], _now), do: []
+
+  def add_channel_playlist_names(channels, now) do
+    channels = Repo.preload(channels, :playlist)
+    channel_ids = Enum.map(channels, & &1.id)
+    today = DateTime.to_date(now)
+
+    current_playlist_names =
+      from(entry in ChannelEntry,
+        join: playlist in assoc(entry, :playlist),
+        where:
+          entry.channel_id in ^channel_ids and entry.start <= ^now and
+            (entry.end > ^now or
+               (not is_nil(entry.repeat_weekly_until) and
+                  entry.repeat_weekly_until >= ^today)),
+        order_by: [asc: entry.start],
+        select: {entry, playlist.name}
+      )
+      |> Repo.all()
+      |> Enum.reduce(%{}, fn {entry, playlist_name}, names ->
+        if channel_entry_active_at?(entry, now) do
+          Map.put(names, entry.channel_id, playlist_name)
+        else
+          names
+        end
+      end)
+
+    Enum.map(channels, fn channel ->
+      default_playlist_name = channel.playlist && channel.playlist.name
+
+      channel
+      |> Map.put(:default_playlist_name, default_playlist_name)
+      |> Map.put(
+        :current_playlist_name,
+        Map.get(current_playlist_names, channel.id, default_playlist_name)
+      )
+    end)
+  end
+
+  defp channel_entry_active_at?(entry, now) do
+    weekday = fn datetime -> rem(Date.day_of_week(DateTime.to_date(datetime)), 7) end
+    minute = fn datetime -> datetime.hour * 60 + datetime.minute end
+
+    weekday.(now) >= weekday.(entry.start) and weekday.(now) <= weekday.(entry.end) and
+      minute.(now) >= minute.(entry.start) and minute.(now) <= minute.(entry.end)
   end
 
   @doc """

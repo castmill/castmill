@@ -5,18 +5,14 @@ import { I18nProvider } from '../../i18n';
 import { ToastProvider } from '@castmill/ui-common';
 import * as storeModule from '../../store/store';
 
+const { mockFetchChannels } = vi.hoisted(() => ({
+  mockFetchChannels: vi.fn(),
+}));
+
 // Mock the channels service
 vi.mock('../../services/channels.service', () => ({
   ChannelsService: vi.fn().mockImplementation(() => ({
-    fetchChannels: vi.fn(() =>
-      Promise.resolve({
-        data: [
-          { id: 1, name: 'Channel 1' },
-          { id: 2, name: 'Channel 2' },
-        ],
-        count: 2,
-      })
-    ),
+    fetchChannels: mockFetchChannels,
     removeChannel: vi.fn(() => Promise.resolve({ success: true })),
     addChannel: vi.fn(() =>
       Promise.resolve({ data: { id: 3, name: 'New Channel' } })
@@ -26,6 +22,10 @@ vi.mock('../../services/channels.service', () => ({
     ),
   })),
   JsonChannel: {} as any,
+}));
+
+vi.mock('./channel-view', () => ({
+  ChannelView: () => <div>Calendar details</div>,
 }));
 
 // Mock the quotas service
@@ -85,6 +85,23 @@ describe('ChannelsPage - Delete Button Permission Tests', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
+    mockFetchChannels.mockResolvedValue({
+      data: [
+        {
+          id: 1,
+          name: 'Channel 1',
+          default_playlist_name: 'Default playlist 1',
+          current_playlist_name: 'Scheduled playlist 1',
+        },
+        {
+          id: 2,
+          name: 'Channel 2',
+          default_playlist_name: null,
+          current_playlist_name: null,
+        },
+      ],
+      count: 2,
+    });
 
     // Mock the store
     vi.spyOn(storeModule, 'store', 'get').mockReturnValue({
@@ -102,6 +119,53 @@ describe('ChannelsPage - Delete Button Permission Tests', () => {
   });
 
   describe('Delete Button Permissions', () => {
+    it('shows default and current playlists', async () => {
+      renderWithProviders(() => <ChannelsPage />);
+
+      expect(await screen.findByText('Default playlist 1')).toBeInTheDocument();
+      expect(screen.getByText('Scheduled playlist 1')).toBeInTheDocument();
+      expect(screen.getByText('Current playlist')).toBeInTheDocument();
+      expect(screen.getAllByText('N/A')).toHaveLength(2);
+    });
+
+    it('refreshes playlist names when the calendar drawer closes', async () => {
+      mockFetchChannels
+        .mockResolvedValueOnce({
+          data: [
+            {
+              id: 1,
+              name: 'Channel 1',
+              default_playlist_name: 'Old default playlist',
+              current_playlist_name: 'Old current playlist',
+            },
+          ],
+          count: 1,
+        })
+        .mockResolvedValue({
+          data: [
+            {
+              id: 1,
+              name: 'Channel 1',
+              default_playlist_name: 'New default playlist',
+              current_playlist_name: 'New current playlist',
+            },
+          ],
+          count: 1,
+        });
+
+      renderWithProviders(() => <ChannelsPage />);
+
+      const channelCell = await screen.findByText('Channel 1');
+      fireEvent.click(channelCell.closest('tr')!);
+      fireEvent.click(await screen.findByTitle('Close'));
+
+      await waitFor(() => {
+        expect(mockFetchChannels).toHaveBeenCalledTimes(2);
+        expect(screen.getByText('New default playlist')).toBeInTheDocument();
+        expect(screen.getByText('New current playlist')).toBeInTheDocument();
+      });
+    });
+
     it('should enable delete button when user has delete permissions and items are selected', async () => {
       // Mock user with delete permissions
       mockCanPerformAction.mockImplementation(

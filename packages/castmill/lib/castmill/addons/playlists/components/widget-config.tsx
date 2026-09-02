@@ -1,4 +1,11 @@
-import { Component, For, createEffect, createSignal, Show } from 'solid-js';
+import {
+  Component,
+  For,
+  createEffect,
+  createSignal,
+  onCleanup,
+  Show,
+} from 'solid-js';
 import { authFetch } from '../../common/services/auth-fetch';
 import {
   JsonPlaylistItem,
@@ -117,6 +124,31 @@ export const isLayoutRefValid = (
     }
   }
   return true;
+};
+
+export const isLocationValueValid = (
+  value: LocationValue | null | undefined
+): boolean => {
+  if (!value) return false;
+  if (typeof value.lat !== 'number' || Number.isNaN(value.lat)) return false;
+  if (typeof value.lng !== 'number' || Number.isNaN(value.lng)) return false;
+  if (value.lat < -90 || value.lat > 90) return false;
+  if (value.lng < -180 || value.lng > 180) return false;
+  return true;
+};
+
+export const normalizeFormValue = (
+  value: unknown
+): string | number | boolean => {
+  if (
+    typeof value === 'string' ||
+    typeof value === 'number' ||
+    typeof value === 'boolean'
+  ) {
+    return value;
+  }
+
+  return '';
 };
 
 export function isValidURL(url: string): boolean {
@@ -296,6 +328,65 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
   const [widgetOptions, setWidgetOptions] =
     createSignal<OptionsDict>(originalOptions);
 
+  // Integration data shown in the live preview. Unlike the playlist item view,
+  // the preview must reflect the options currently being edited (e.g. toggling
+  // the temperature unit on the Weather widget) before they are saved. We fetch
+  // it via the prefetch endpoint, which computes the data from the supplied
+  // options rather than the previously persisted ones.
+  const [previewData, setPreviewData] = createSignal<Record<
+    string,
+    any
+  > | null>(null);
+
+  let previewFetchTimer: ReturnType<typeof setTimeout> | undefined;
+  // Monotonic id used to discard responses from superseded requests, so that a
+  // slow request cannot overwrite the preview of a newer one.
+  let previewRequestId = 0;
+
+  createEffect(() => {
+    // Track option changes so the preview refetches when they change.
+    const options = { ...widgetOptions(), display_locale: locale() };
+    const widgetId = props.item.widget?.id;
+
+    if (!widgetId || !props.baseUrl || !props.organizationId) {
+      return;
+    }
+
+    // Debounce to avoid hammering the integration endpoint while the user is
+    // still editing (e.g. typing into text fields).
+    if (previewFetchTimer) {
+      clearTimeout(previewFetchTimer);
+    }
+
+    const requestId = ++previewRequestId;
+    previewFetchTimer = setTimeout(async () => {
+      const result = await PlaylistsService.prefetchWidgetData(
+        props.baseUrl,
+        props.organizationId,
+        widgetId,
+        options,
+        // Live preview fetches are ephemeral: they must not register background
+        // polling schedulers for option combinations that may never be saved.
+        { preview: true }
+      );
+
+      // Ignore out-of-order responses from superseded requests.
+      if (requestId !== previewRequestId) {
+        return;
+      }
+
+      setPreviewData(result && result.data ? result.data : null);
+    }, 500);
+  });
+
+  onCleanup(() => {
+    if (previewFetchTimer) {
+      clearTimeout(previewFetchTimer);
+    }
+    // Discard any in-flight response once the component goes away.
+    previewRequestId++;
+  });
+
   /**
    * Gets the form type for a schema entry.
    */
@@ -328,6 +419,13 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
           | null
           | undefined;
         if (!isLayoutRefValid(layoutRefValue)) {
+          return false;
+        }
+      }
+
+      if (fieldType === 'location') {
+        const locationValue = options[key] as LocationValue | null | undefined;
+        if (!isLocationValueValid(locationValue)) {
           return false;
         }
       }
@@ -388,6 +486,11 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
       case 'map':
         break;
       case 'list':
+        break;
+      case 'location':
+        if (!isLocationValueValid(value as LocationValue | null | undefined)) {
+          errorMessage = t('validation.invalidCoordinates');
+        }
         break;
       default:
         errorMessage = `Unknown type: ${type}`;
@@ -484,7 +587,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
             label={translateWidgetOptionLabel(key, fieldSchema.title || key)}
             id={key}
             type={type}
-            value={typeof formValue === 'object' ? '' : String(formValue ?? '')}
+            value={normalizeFormValue(formValue)}
             placeholder={translateWidgetOptionPlaceholder(
               key,
               fieldSchema.placeholder
@@ -762,6 +865,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
             <LocationPicker
               value={getCurrentLocation()}
               onChange={(newValue: LocationValue) => {
+                validateField('location', locationSchema, key, newValue);
                 setWidgetOptions({ ...widgetOptions(), [key]: newValue });
                 setIsFormModified(true);
                 setIsFormValid(checkFormValidity());
@@ -776,6 +880,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
               saveLabel={t('common.save')}
               cancelLabel={t('common.cancel')}
             />
+            <div class="error">{errors().get(key)}</div>
           </div>
         );
       case 'map':
@@ -884,6 +989,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
           widget={props.item.widget}
           config={widgetConfig()}
           options={widgetOptions()}
+          previewData={previewData()}
           baseUrl={props.baseUrl}
           socket={props.store.socket}
         />

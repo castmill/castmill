@@ -9,6 +9,46 @@ defmodule Castmill.Workers.IntegrationPollerTest do
   alias Castmill.Widgets.Integrations.WidgetIntegrationData
   alias Castmill.Workers.IntegrationPoller
 
+  test "process returns fetcher 3-tuple errors without crashing" do
+    organization = organization_fixture()
+    suffix = System.unique_integer([:positive])
+
+    widget =
+      widget_fixture(%{
+        name: "Weather Test #{suffix}",
+        slug: "weather-test-#{suffix}",
+        template: %{"type" => "group"}
+      })
+
+    integration =
+      widget_integration_fixture(%{
+        widget_id: widget.id,
+        name: "weather-test-#{suffix}",
+        credential_scope: "widget",
+        discriminator_key: "location",
+        pull_config: %{
+          "auth_type" => "none",
+          "fetcher_module" => "Castmill.Widgets.Integrations.Fetchers.OpenMeteo"
+        }
+      })
+
+    job =
+      BullMQ.Job.new(
+        "integrations",
+        "integration_poll",
+        %{
+          "organization_id" => organization.id,
+          "widget_id" => widget.id,
+          "integration_id" => integration.id,
+          "discriminator_id" => "location:default",
+          "widget_options" => %{}
+        },
+        timestamp: System.system_time(:millisecond)
+      )
+
+    assert {:error, :invalid_location} = IntegrationPoller.process(job)
+  end
+
   test "process stores refresh_at relative to fetched_at" do
     organization = organization_fixture()
     suffix = System.unique_integer([:positive])

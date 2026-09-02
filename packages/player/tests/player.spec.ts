@@ -3,7 +3,12 @@ import { describe, it, afterEach } from 'mocha';
 import { firstValueFrom, NEVER, of, Subscription } from 'rxjs';
 import { spy, stub, restore } from 'sinon';
 
-import { Player, Playlist, timer } from '../dist/index.js';
+import {
+  getImageBackgroundSize,
+  Player,
+  Playlist,
+  timer,
+} from '../dist/index.js';
 
 describe('Playlist.seek', () => {
   it('should wrap an end-of-playlist offset to the first layer', async () => {
@@ -83,6 +88,13 @@ describe('Player.play', () => {
     expect(play.calledOnce).to.equal(true);
 
     player.stop();
+  });
+});
+
+describe('Image autozoom', () => {
+  it('uses contain for serialized false and cover for serialized true', () => {
+    expect(getImageBackgroundSize({ autozoom: 'false' })).to.equal('contain');
+    expect(getImageBackgroundSize({ autozoom: 'true' })).to.equal('cover');
   });
 });
 

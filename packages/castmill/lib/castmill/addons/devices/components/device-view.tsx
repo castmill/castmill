@@ -10,6 +10,7 @@ import { DeviceCache } from './device-cache';
 import { DevicePreview } from './device-preview';
 import { DeviceTelemetry } from './device-telemetry';
 import { DeviceSchedule } from './device-schedule';
+import { DeviceInfo } from './device-info';
 import { AddonStore } from '../../common/interfaces/addon-store';
 
 // Optionally we should allow using protonmaps
@@ -60,6 +61,10 @@ const DeviceView: Component<{
       content: () => (
         <DeviceDetails device={props.device} onSubmit={updateDevice} t={t} />
       ),
+    },
+    {
+      title: t('devices.info.title'),
+      content: () => <DeviceInfo device={props.device} t={t} />,
     },
     {
       title: t('common.channels'),

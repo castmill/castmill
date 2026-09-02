@@ -637,6 +637,7 @@
     "confirmRemoveChannels": "هل أنت متأكد من أنك تريد إزالة القنوات التالية؟",
     "enterChannelName": "أدخل اسم القناة",
     "defaultPlaylist": "قائمة التشغيل الافتراضية",
+    "currentPlaylist": "قائمة التشغيل الحالية",
     "selectPlaylist": "اختر قائمة التشغيل",
     "clearDefaultPlaylist": "مسح قائمة التشغيل الافتراضية",
     "dragPlaylists": "اسحب قوائم التشغيل",
@@ -915,7 +916,9 @@
       "pending": "في انتظار الإعداد",
       "enterClientCredentials": "أدخل بيانات اعتماد API الخاصة بـ {{provider}} أدناه:",
       "afterSavingCredentials": "بعد حفظ بيانات الاعتماد الخاصة بك، انقر أدناه للتفويض مع {{provider}}:",
-      "networkCredentialsConfigured": "قام مسؤول الشبكة لديك بالفعل بتكوين بيانات اعتماد {{provider}}. ما عليك سوى النقر على الزر أدناه لربط حسابك."
+      "networkCredentialsConfigured": "قام مسؤول الشبكة لديك بالفعل بتكوين بيانات اعتماد {{provider}}. ما عليك سوى النقر على الزر أدناه لربط حسابك.",
+      "noConfigurationRequired": "لا يتطلب أي إعداد",
+      "optional": "اختياري"
     },
     "translations": "الترجمات"
   },
@@ -1043,11 +1046,24 @@
     "errorRemovingDevice": "خطأ في إزالة الجهاز {{name}}: {{error}}",
     "errorRemovingDevices": "خطأ في إزالة الأجهزة: {{error}}",
     "enterDescription": "أدخل وصفًا",
-    "drawerTitle": "الجهاز \"{{name}}\""
+    "drawerTitle": "الجهاز \"{{name}}\"",
+    "info": {
+      "title": "معلومات",
+      "platform": "المنصة",
+      "playerVersion": "إصدار المشغل",
+      "operatingSystem": "نظام التشغيل",
+      "hardware": "الأجهزة",
+      "environmentVersion": "إصدار البيئة",
+      "chromiumVersion": "إصدار Chromium",
+      "v8Version": "إصدار V8",
+      "nodeVersion": "إصدار Node.js",
+      "userAgent": "وكيل المستخدم"
+    }
   },
   "validation": {
     "fieldRequired": "هذا الحقل مطلوب",
-    "minLength": "يجب أن يحتوي هذا الحقل على {{min}} أحرف على الأقل"
+    "minLength": "يجب أن يحتوي هذا الحقل على {{min}} أحرف على الأقل",
+    "invalidCoordinates": "يجب أن يحتوي هذا الحقل على إحداثيات صالحة"
   },
   "plurals": {
     "items": {
