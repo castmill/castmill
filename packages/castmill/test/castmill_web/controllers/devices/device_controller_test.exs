@@ -45,6 +45,66 @@ defmodule CastmillWeb.DeviceControllerTest do
     {:ok, conn: conn, user: user, organization: organization}
   end
 
+  describe "info as device" do
+    test "stores the player metadata", %{organization: organization} do
+      {:ok, devices_registration} =
+        device_registration_fixture(%{hardware_id: "info-hw-id", pincode: "info1234"})
+
+      {:ok, {device, token}} =
+        Castmill.Devices.register_device(organization.id, devices_registration.pincode, %{
+          name: "Info Device"
+        })
+
+      info = %{
+        "appType" => "Electron",
+        "appVersion" => "1.2.3",
+        "os" => "Linux",
+        "hardware" => "x86_64",
+        "userAgent" => "Castmill Player"
+      }
+
+      conn =
+        build_conn()
+        |> put_req_header("accept", "application/json")
+        |> put_req_header("authorization", Enum.join(["Bearer", token], " "))
+        |> post("/devices/#{device.id}/info", %{"info" => info})
+
+      assert response(conn, 204)
+      assert Castmill.Devices.get_device(device.id).info == info
+    end
+
+    test "rejects malformed, unknown, and oversized player metadata", %{
+      organization: organization
+    } do
+      {:ok, devices_registration} =
+        device_registration_fixture(%{hardware_id: "invalid-info-hw-id", pincode: "info5678"})
+
+      {:ok, {device, token}} =
+        Castmill.Devices.register_device(organization.id, devices_registration.pincode, %{
+          name: "Invalid Info Device"
+        })
+
+      invalid_info_values = [
+        "invalid",
+        %{"unknown" => "value"},
+        %{"appType" => %{"nested" => "value"}},
+        %{"userAgent" => String.duplicate("a", 1025)}
+      ]
+
+      for info <- invalid_info_values do
+        conn =
+          build_conn()
+          |> put_req_header("accept", "application/json")
+          |> put_req_header("authorization", Enum.join(["Bearer", token], " "))
+          |> post("/devices/#{device.id}/info", %{"info" => info})
+
+        assert response(conn, 400)
+      end
+
+      assert Castmill.Devices.get_device(device.id).info == nil
+    end
+  end
+
   describe "get_channels as admin" do
     @describetag device_controller: true
 

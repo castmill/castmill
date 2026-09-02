@@ -10,9 +10,14 @@ export interface ImageComponentOptions {
   url?: string;
   size?: 'cover' | 'contain';
   duration?: number;
-  autozoom?: boolean;
+  autozoom?: boolean | 'true' | 'false';
   fallbackUrl?: string;
 }
+
+export const getImageBackgroundSize = (opts: ImageComponentOptions) =>
+  opts.autozoom === true || opts.autozoom === 'true'
+    ? 'cover'
+    : opts.size || 'contain';
 
 export class ImageComponent implements TemplateComponent {
   readonly type = TemplateComponentType.Image;
@@ -82,9 +87,7 @@ export const Image: Component<ImageProps> = (props: ImageProps) => {
   const hasValidUrl = effectiveUrl !== '';
 
   // Determine background-size: autozoom uses 'cover' to fill container without black borders
-  const backgroundSize = props.opts.autozoom
-    ? 'cover'
-    : props.opts.size || 'contain';
+  const backgroundSize = getImageBackgroundSize(props.opts);
 
   const merged = mergeProps(
     {

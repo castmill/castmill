@@ -916,7 +916,9 @@
       "pending": "설정 대기 중",
       "enterClientCredentials": "아래에 {{provider}} API 자격 증명을 입력하세요:",
       "afterSavingCredentials": "자격 증명을 저장한 후 아래를 클릭하여 {{provider}}로 인증하세요:",
-      "networkCredentialsConfigured": "네트워크 관리자가 이미 {{provider}} 자격 증명을 구성했습니다. 아래 버튼을 클릭하여 계정을 연결하기만 하면 됩니다."
+      "networkCredentialsConfigured": "네트워크 관리자가 이미 {{provider}} 자격 증명을 구성했습니다. 아래 버튼을 클릭하여 계정을 연결하기만 하면 됩니다.",
+      "noConfigurationRequired": "구성이 필요하지 않음",
+      "optional": "선택 사항"
     },
     "translations": "번역"
   },
@@ -1044,11 +1046,24 @@
     "errorRemovingDevice": "기기 {{name}} 제거 오류: {{error}}",
     "errorRemovingDevices": "기기 제거 오류: {{error}}",
     "enterDescription": "설명을 입력하세요",
-    "drawerTitle": "기기 \"{{name}}\""
+    "drawerTitle": "기기 \"{{name}}\"",
+    "info": {
+      "title": "정보",
+      "platform": "플랫폼",
+      "playerVersion": "플레이어 버전",
+      "operatingSystem": "운영 체제",
+      "hardware": "하드웨어",
+      "environmentVersion": "환경 버전",
+      "chromiumVersion": "Chromium 버전",
+      "v8Version": "V8 버전",
+      "nodeVersion": "Node.js 버전",
+      "userAgent": "사용자 에이전트"
+    }
   },
   "validation": {
     "fieldRequired": "이 필드는 필수입니다",
-    "minLength": "이 필드는 최소 {{min}}자 이상이어야 합니다"
+    "minLength": "이 필드는 최소 {{min}}자 이상이어야 합니다",
+    "invalidCoordinates": "이 필드에는 유효한 좌표가 필요합니다"
   },
   "plurals": {
     "items": {

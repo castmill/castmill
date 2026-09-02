@@ -47,7 +47,7 @@ export const StyledInput: Component<{
           id={props.id}
           type="checkbox"
           class={styles['input-checkbox']}
-          checked={Boolean(props.value)}
+          checked={props.value === true || props.value === 'true'}
           onChange={(e) => props.onInput(e.currentTarget.checked)}
           placeholder={props.placeholder}
           disabled={props.disabled}

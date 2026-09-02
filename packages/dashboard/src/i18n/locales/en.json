@@ -951,7 +951,9 @@
       "pending": "Pending Setup",
       "enterClientCredentials": "Enter your {{provider}} API credentials below:",
       "afterSavingCredentials": "After saving your credentials, click below to authorize with {{provider}}:",
-      "networkCredentialsConfigured": "Your network administrator has already configured {{provider}} credentials. Simply click the button below to connect your account."
+      "networkCredentialsConfigured": "Your network administrator has already configured {{provider}} credentials. Simply click the button below to connect your account.",
+      "noConfigurationRequired": "No Configuration Required",
+      "optional": "Optional"
     },
     "translations": "Translations"
   },
@@ -1079,11 +1081,24 @@
       "pincodeExpired": "This pincode has expired. Please restart the device registration process."
     },
     "enterDescription": "Enter a description",
-    "drawerTitle": "Device \"{{name}}\""
+    "drawerTitle": "Device \"{{name}}\"",
+    "info": {
+      "title": "Info",
+      "platform": "Platform",
+      "playerVersion": "Player version",
+      "operatingSystem": "Operating system",
+      "hardware": "Hardware",
+      "environmentVersion": "Environment version",
+      "chromiumVersion": "Chromium version",
+      "v8Version": "V8 version",
+      "nodeVersion": "Node.js version",
+      "userAgent": "User agent"
+    }
   },
   "validation": {
     "fieldRequired": "This field is required",
-    "minLength": "This field must be at least {{min}} characters long"
+    "minLength": "This field must be at least {{min}} characters long",
+    "invalidCoordinates": "This field must have valid coordinates"
   },
   "plurals": {
     "items": {

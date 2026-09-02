@@ -911,7 +911,9 @@
       "pending": "Väntar på konfiguration",
       "enterClientCredentials": "Ange dina {{provider}} API-uppgifter nedan:",
       "afterSavingCredentials": "Efter att du sparat dina uppgifter, klicka nedan för att auktorisera med {{provider}}:",
-      "networkCredentialsConfigured": "Din nätverksadministratör har redan konfigurerat {{provider}}-uppgifter. Klicka bara på knappen nedan för att ansluta ditt konto."
+      "networkCredentialsConfigured": "Din nätverksadministratör har redan konfigurerat {{provider}}-uppgifter. Klicka bara på knappen nedan för att ansluta ditt konto.",
+      "noConfigurationRequired": "Ingen konfiguration krävs",
+      "optional": "Valfritt"
     },
     "translations": "Översättningar"
   },
@@ -1039,11 +1041,24 @@
     "errorRemovingDevice": "Fel vid borttagning av enhet {{name}}: {{error}}",
     "errorRemovingDevices": "Fel vid borttagning av enheter: {{error}}",
     "enterDescription": "Ange en beskrivning",
-    "drawerTitle": "Enhet \"{{name}}\""
+    "drawerTitle": "Enhet \"{{name}}\"",
+    "info": {
+      "title": "Information",
+      "platform": "Plattform",
+      "playerVersion": "Spelarversion",
+      "operatingSystem": "Operativsystem",
+      "hardware": "Maskinvara",
+      "environmentVersion": "Miljöversion",
+      "chromiumVersion": "Chromium-version",
+      "v8Version": "V8-version",
+      "nodeVersion": "Node.js-version",
+      "userAgent": "Användaragent"
+    }
   },
   "validation": {
     "fieldRequired": "Detta fält är obligatoriskt",
-    "minLength": "Detta fält måste vara minst {{min}} tecken långt"
+    "minLength": "Detta fält måste vara minst {{min}} tecken långt",
+    "invalidCoordinates": "Detta fält måste ha giltiga koordinater"
   },
   "plurals": {
     "items": {
