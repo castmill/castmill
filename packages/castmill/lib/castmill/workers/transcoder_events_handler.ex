@@ -3,18 +3,18 @@ defmodule Castmill.Workers.TranscoderEventsHandler do
   `BullMQ.QueueEvents` handler that turns transcoder job lifecycle events into
   local `resource:media:<id>` PubSub broadcasts.
 
-  This is the mechanism that lets a **web-only** node deliver live transcode
+  This is the mechanism that lets a web-capable node deliver live transcode
   status to connected dashboards when the actual transcoding happens on a
-  **separate worker fleet** that shares only PostgreSQL (no BEAM clustering).
+  separate worker fleet that shares only PostgreSQL (no BEAM clustering).
 
   BullMQ already streams `:completed` / `:failed` events through the PostgreSQL
   backend, so this handler simply re-broadcasts them on the local node's
   `Castmill.PubSub`, which then reaches dashboards via the normal in-tier
   `CastmillWeb.ResourceUpdatesChannel` subscription.
 
-  The listener is only started on `web` nodes (see `Castmill.Application`); in
-  `web+worker` mode the co-located worker broadcasts directly, so enabling this
-  handler there would cause duplicate broadcasts.
+  The listener is started for queues that a web-capable node does not process
+  locally (see `Castmill.Application`). A co-located worker broadcasts directly,
+  so its queue is excluded to prevent duplicate broadcasts.
 
   ## Payloads
 

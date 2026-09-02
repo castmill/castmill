@@ -943,7 +943,9 @@
       "pending": "Configuración pendiente",
       "enterClientCredentials": "Ingrese sus credenciales de API de {{provider}} a continuación:",
       "afterSavingCredentials": "Después de guardar sus credenciales, haga clic abajo para autorizar con {{provider}}:",
-      "networkCredentialsConfigured": "Su administrador de red ya ha configurado las credenciales de {{provider}}. Simplemente haga clic en el botón de abajo para conectar su cuenta."
+      "networkCredentialsConfigured": "Su administrador de red ya ha configurado las credenciales de {{provider}}. Simplemente haga clic en el botón de abajo para conectar su cuenta.",
+      "noConfigurationRequired": "No requiere configuración",
+      "optional": "Opcional"
     },
     "translations": "Traducciones"
   },
@@ -1075,7 +1077,8 @@
   },
   "validation": {
     "fieldRequired": "Este campo es obligatorio",
-    "minLength": "Este campo debe tener al menos {{min}} caracteres"
+    "minLength": "Este campo debe tener al menos {{min}} caracteres",
+    "invalidCoordinates": "Este campo debe tener coordenadas válidas"
   },
   "plurals": {
     "items": {

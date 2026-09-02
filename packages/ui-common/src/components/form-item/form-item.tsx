@@ -5,7 +5,7 @@ import './form-item.scss';
 interface FormItemProps {
   label: string;
   id: string;
-  value: string;
+  value: string | number | boolean;
   children?: JSX.Element;
   onInput: (value: string | boolean | number) => void;
   placeholder?: string;
