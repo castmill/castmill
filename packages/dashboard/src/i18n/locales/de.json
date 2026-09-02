@@ -575,6 +575,7 @@
     "confirmRemoveChannels": "Sind Sie sicher, dass Sie die folgenden Kanäle entfernen möchten?",
     "enterChannelName": "Kanalnamen eingeben",
     "defaultPlaylist": "Standard-Playlist",
+    "currentPlaylist": "Aktuelle Playlist",
     "selectPlaylist": "Playlist auswählen",
     "clearDefaultPlaylist": "Standard-Playlist löschen",
     "dragPlaylists": "Playlists ziehen",

@@ -9,6 +9,7 @@ defmodule CastmillWeb.ResourceController.ChannelsTest do
   import Castmill.TeamsFixtures
   import Castmill.ChannelsFixtures
   import Castmill.DevicesFixtures
+  import Castmill.PlaylistsFixtures
 
   @moduletag :e2e
 
@@ -61,6 +62,53 @@ defmodule CastmillWeb.ResourceController.ChannelsTest do
 
       assert %{"data" => [%{"name" => "channel1"}, %{"name" => "channel2"}], "count" => 5} =
                response
+    end
+
+    test "lists default and current playlist names", %{
+      conn: conn,
+      organization: organization
+    } do
+      default_playlist =
+        playlist_fixture(%{organization_id: organization.id, name: "Default playlist"})
+
+      scheduled_playlist =
+        playlist_fixture(%{organization_id: organization.id, name: "Scheduled playlist"})
+
+      channel =
+        channel_fixture(%{
+          organization_id: organization.id,
+          name: "channel1",
+          timezone: "Europe/Amsterdam",
+          default_playlist_id: default_playlist.id
+        })
+
+      now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+      channel_entry_fixture(channel.id, %{
+        playlist_id: scheduled_playlist.id,
+        start: DateTime.add(now, -60, :second),
+        end: DateTime.add(now, 60, :second)
+      })
+
+      channel_fixture(%{
+        organization_id: organization.id,
+        name: "channel2",
+        timezone: "Europe/Amsterdam",
+        default_playlist_id: default_playlist.id
+      })
+
+      conn = get(conn, "/api/organizations/#{organization.id}/channels")
+      response = json_response(conn, 200)
+
+      assert %{
+               "default_playlist_name" => "Default playlist",
+               "current_playlist_name" => "Scheduled playlist"
+             } = Enum.find(response["data"], &(&1["name"] == "channel1"))
+
+      assert %{
+               "default_playlist_name" => "Default playlist",
+               "current_playlist_name" => "Default playlist"
+             } = Enum.find(response["data"], &(&1["name"] == "channel2"))
     end
   end
 
@@ -164,8 +212,6 @@ defmodule CastmillWeb.ResourceController.ChannelsTest do
   end
 
   describe "update channel default_playlist_id" do
-    import Castmill.PlaylistsFixtures
-
     test "updates channel default_playlist_id and broadcasts to devices", %{
       conn: conn,
       organization: organization

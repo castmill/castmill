@@ -637,6 +637,7 @@
     "confirmRemoveChannels": "您确定要删除以下频道吗？",
     "enterChannelName": "输入频道名称",
     "defaultPlaylist": "默认播放列表",
+    "currentPlaylist": "当前播放列表",
     "selectPlaylist": "选择播放列表",
     "clearDefaultPlaylist": "清除默认播放列表",
     "dragPlaylists": "拖动播放列表",

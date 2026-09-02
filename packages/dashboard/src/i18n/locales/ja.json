@@ -637,6 +637,7 @@
     "confirmRemoveChannels": "以下のチャンネルを削除してもよろしいですか？",
     "enterChannelName": "チャンネル名を入力してください",
     "defaultPlaylist": "デフォルトプレイリスト",
+    "currentPlaylist": "現在のプレイリスト",
     "selectPlaylist": "プレイリストを選択",
     "clearDefaultPlaylist": "デフォルトプレイリストをクリア",
     "dragPlaylists": "プレイリストをドラッグ",

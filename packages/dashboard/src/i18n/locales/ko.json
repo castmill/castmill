@@ -637,6 +637,7 @@
     "confirmRemoveChannels": "다음 채널을 제거하시겠습니까?",
     "enterChannelName": "채널 이름 입력",
     "defaultPlaylist": "기본 재생목록",
+    "currentPlaylist": "현재 재생목록",
     "selectPlaylist": "재생목록 선택",
     "clearDefaultPlaylist": "기본 재생목록 지우기",
     "dragPlaylists": "재생목록 드래그",
