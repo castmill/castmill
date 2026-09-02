@@ -73,6 +73,10 @@ describe('ComboBox Component', () => {
     expect(comboBoxCss).toMatch(/\.dropdown\s*{[^}]*position:\s*absolute/s);
   });
 
+  it('uses compact padding on the trigger', () => {
+    expect(comboBoxCss).toMatch(/\.header\s*{[^}]*padding:\s*0\.5em/s);
+  });
+
   it('opens and closes dropdown when clicking toggle icon button', async () => {
     renderComboBox();
 
@@ -154,10 +158,15 @@ describe('ComboBox Component', () => {
     ));
 
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Toggle Dropdown')).not.toBeInTheDocument();
+    expect(
+      screen.getByLabelText('Clear selection').querySelector('button')
+    ).not.toBeInTheDocument();
 
     await fireEvent.click(screen.getByLabelText('Clear selection'));
 
     expect(onClear).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Toggle Dropdown')).toBeInTheDocument();
   });
 });
