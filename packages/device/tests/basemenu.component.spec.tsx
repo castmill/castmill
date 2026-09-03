@@ -1,3 +1,4 @@
+/* oxlint-disable no-unused-expressions */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, fireEvent } from '@solidjs/testing-library';
 import '@testing-library/jest-dom';

@@ -57,15 +57,9 @@ export class Renderer {
         25 - viewport.left
       }%, ${25 - viewport.top}%)`;
 
-      this.el.style.clip = `rect(0px, ${width / scale}px, ${
-        height / scale
-      }px, 0px)`;
-      this.el.style.webkitMaskClip = `rect(0px, ${width / scale}px, ${
-        height / scale
-      }px, 0px)`;
-      this.el.style.clipPath = `inset(0px ${width / scale}px ${
-        height / scale
-      }px 0px)`;
+      this.el.style.clip = `rect(0px, ${width / scale}px, ${height / scale}px, 0px)`;
+      this.el.style.webkitMaskClip = `rect(0px, ${width / scale}px, ${height / scale}px, 0px)`;
+      this.el.style.clipPath = `inset(0px ${width / scale}px ${height / scale}px 0px)`;
     } else {
       const newWidth = 100 * (100 / viewport.width);
       const newHeight = 100 * (100 / viewport.height);

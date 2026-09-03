@@ -148,7 +148,7 @@ const ProtectedRoute: Component<ProtectedRouteProps> = (
           selectedOrg = organizations[0];
           // Only redirect if we're on an /org/ route with an invalid org ID
           if (urlOrgId) {
-            const currentPath = location.pathname.replace(/^\/org\/[^\/]+/, '');
+            const currentPath = location.pathname.replace(/^\/org\/[^/]+/, '');
             navigate(`/org/${selectedOrg.id}${currentPath || '/'}`, {
               replace: true,
             });

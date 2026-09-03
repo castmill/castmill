@@ -292,9 +292,7 @@ export class Device extends EventEmitter {
           if (entry) {
             const jsonPlaylist: JsonPlaylist | void =
               await this.resourceManager.getData(
-                `${this.baseUrl}/devices/${device.id}/playlists/${
-                  entry.playlist
-                }`,
+                `${this.baseUrl}/devices/${device.id}/playlists/${entry.playlist}`,
                 1000
               );
 

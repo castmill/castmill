@@ -57,10 +57,10 @@ describe('formatRelativeTime', () => {
     const mockNow = new Date('2025-01-01T12:00:00Z');
     global.Date = class extends originalDate {
       constructor(...args: any[]) {
+        super(...args);
         if (args.length === 0) {
           return mockNow;
         }
-        return new originalDate(...args);
       }
       static now() {
         return mockNow.getTime();
@@ -153,10 +153,10 @@ describe('formatRelativeTimeLocalized', () => {
     const mockNow = new Date('2025-01-01T12:00:00Z');
     global.Date = class extends originalDate {
       constructor(...args: any[]) {
+        super(...args);
         if (args.length === 0) {
           return mockNow;
         }
-        return new originalDate(...args);
       }
       static now() {
         return mockNow.getTime();

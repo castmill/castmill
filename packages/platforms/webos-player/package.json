@@ -2,11 +2,12 @@
   "name": "@castmill/webos-player",
   "version": "2.0.0",
   "description": "",
+  "license": "AGPL-3.0-or-later",
   "type": "module",
   "scripts": {
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "lint": "eslint .",
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt .",
+    "lint": "oxlint .",
     "start": "vite",
     "dev": "vite",
     "build": "VITE_UPDATE_URL=${VITE_UPDATE_URL:-https://updates.castmill.io/webos/player.ipk} vite build",
@@ -15,26 +16,23 @@
     "package": "bash -lic scripts/ares-package.sh",
     "test": "vitest run"
   },
-  "license": "AGPL-3.0-or-later",
+  "dependencies": {
+    "@castmill/cache": "*",
+    "@castmill/device": "*",
+    "@castmill/player": "*",
+    "solid-js": "^1.8.11"
+  },
   "devDependencies": {
     "@solidjs/testing-library": "^0.8.5",
     "@vitejs/plugin-legacy": "^5.4.1",
-    "eslint-plugin-solid": "^0.14.5",
     "express": "^4.19.2",
     "jsdom": "^23.2.0",
     "on-finished": "^2.4.1",
-    "prettier": "^3.3.2",
     "solid-devtools": "^0.29.2",
     "typescript": "^5.3.3",
     "vite": "^5.0.11",
     "vite-plugin-copy": "^0.1.6",
     "vite-plugin-solid": "^2.8.2",
     "vitest": "^1.5.3"
-  },
-  "dependencies": {
-    "@castmill/cache": "*",
-    "@castmill/device": "*",
-    "@castmill/player": "*",
-    "solid-js": "^1.8.11"
   }
 }

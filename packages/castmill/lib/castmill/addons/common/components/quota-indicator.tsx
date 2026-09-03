@@ -13,15 +13,15 @@ export interface QuotaIndicatorProps {
 
 /**
  * QuotaIndicator Component
- * 
+ *
  * Displays the current usage versus the total quota for a resource.
  * Shows a progress bar with different states based on usage percentage:
  * - Normal: < warningThreshold (default 90%)
  * - Warning: >= warningThreshold and < 100%
  * - Error: 100% (quota reached)
- * 
+ *
  * When isLoading is true, shows a subtle pulsing animation to indicate data is refreshing.
- * 
+ *
  * @example
  * <QuotaIndicator used={10} total={100} resourceName="Playlists" />
  * <QuotaIndicator used={95} total={100} resourceName="Medias" compact isLoading={true} />
@@ -55,12 +55,14 @@ export const QuotaIndicator: Component<QuotaIndicatorProps> = (props) => {
       <div class="quota-indicator__text">
         <Show when={!props.compact}>
           <span class="quota-indicator__label">
-            {formatValue(props.used)} of {formatValue(props.total)} {props.resourceName}
+            {formatValue(props.used)} of {formatValue(props.total)}{' '}
+            {props.resourceName}
           </span>
         </Show>
         <Show when={props.compact}>
           <span class="quota-indicator__label">
-            {formatValue(props.used)}/{formatValue(props.total)} {props.resourceName}
+            {formatValue(props.used)}/{formatValue(props.total)}{' '}
+            {props.resourceName}
           </span>
         </Show>
         <span class="quota-indicator__percentage">{percentage()}%</span>

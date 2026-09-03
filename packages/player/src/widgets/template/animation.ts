@@ -42,7 +42,7 @@ export const applyAnimations = (
   const timelines: gsap.core.Timeline[] = [];
 
   animations.forEach((animation) => {
-    const tl = gsap.timeline({ ...(animation.init || {}), paused: true });
+    const tl = gsap.timeline({ ...animation.init, paused: true });
 
     const keyframes = animation.keyframes;
     for (let i = 0; i < keyframes.length; i++) {

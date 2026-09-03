@@ -384,7 +384,7 @@ export const Scroller: Component<ScrollerProps> = (props) => {
   };
 
   onCleanup(() => {
-    timelineItem && props.timeline.remove(timelineItem);
+    if (timelineItem) props.timeline.remove(timelineItem);
     scrollAnimation?.destroy();
   });
 

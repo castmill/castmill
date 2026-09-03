@@ -583,7 +583,7 @@ export const QRCode: Component<QRCodeProps> = (props: QRCodeProps) => {
   );
 
   onCleanup(() => {
-    cleanUpAnimations && cleanUpAnimations();
+    cleanUpAnimations?.();
   });
 
   onMount(() => {

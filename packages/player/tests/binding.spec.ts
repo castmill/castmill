@@ -1,3 +1,4 @@
+/* oxlint-disable no-unused-expressions, unicorn/no-thenable */
 import { expect } from 'chai';
 import { describe, it } from 'mocha';
 import {

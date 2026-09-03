@@ -77,7 +77,7 @@ export const Group: Component<GroupProps> = (props) => {
   };
 
   onCleanup(() => {
-    cleanUpAnimations && cleanUpAnimations();
+    cleanUpAnimations?.();
   });
 
   onMount(() => {

@@ -1,3 +1,4 @@
+/* oxlint-disable no-unused-expressions */
 import 'fake-indexeddb/auto';
 import { describe, it, expect, vi } from 'vitest';
 

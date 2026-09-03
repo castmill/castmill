@@ -3,7 +3,7 @@ import { JsonMedia } from '@castmill/player';
 
 /**
  * Props for the MediaPreview component.
- * 
+ *
  * @property media - The media object containing details about the preview, including files and metadata.
  * @property previewClass - An optional CSS class to apply custom styling to the preview container.
  */
@@ -16,7 +16,11 @@ export const MediaPreview = (props: MediaPreviewProps) => {
   // Check if the preview file is a video based on mimetype
   const isVideoPreview = () => {
     const previewFile = props.media.files['preview'];
-    return previewFile && previewFile.mimetype && previewFile.mimetype.startsWith('video/');
+    return (
+      previewFile &&
+      previewFile.mimetype &&
+      previewFile.mimetype.startsWith('video/')
+    );
   };
 
   return (
@@ -36,9 +40,9 @@ export const MediaPreview = (props: MediaPreviewProps) => {
             ></div>
           }
         >
-          <video 
-            src={props.media.files['preview'].uri} 
-            controls 
+          <video
+            src={props.media.files['preview'].uri}
+            controls
             class="video-preview"
           ></video>
         </Show>

@@ -1,3 +1,4 @@
+/* oxlint-disable no-unused-expressions */
 /// <reference types="node" />
 
 import { expect } from 'chai';

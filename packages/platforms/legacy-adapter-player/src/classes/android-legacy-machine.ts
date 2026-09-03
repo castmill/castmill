@@ -88,7 +88,6 @@ export class AndroidLegacyMachine implements LegacyMachine {
     undefined | { latitude: number; longitude: number }
   > {
     logger.log('getLocation');
-    return undefined;
     try {
       const location = await new Promise<GeolocationPosition>(
         (resolve, reject) => {
