@@ -39,6 +39,19 @@
       }
     }
 
+    @media (max-width: 48em) {
+      .playlist-details {
+        form {
+          align-items: stretch;
+
+          .custom-aspect-ratio,
+          .actions {
+            flex-wrap: wrap;
+          }
+        }
+      }
+    }
+
     .aspect-ratio-error {
       margin-top: 0.5em;
       width: 100%;

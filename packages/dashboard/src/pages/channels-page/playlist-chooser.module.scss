@@ -3,3 +3,14 @@
   padding: 0;
   margin-right: 0.5em;
 }
+
+@media (max-width: 48em) {
+  .playlists-list {
+    display: flex;
+    gap: 0.5em;
+    margin: 0;
+    overflow-x: auto;
+    padding-bottom: 0.25em;
+    -webkit-overflow-scrolling: touch;
+  }
+}
