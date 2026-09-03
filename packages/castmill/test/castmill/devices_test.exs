@@ -159,10 +159,54 @@ defmodule Castmill.DevicesTest do
       # Disable the device
       assert {:ok, device} = Devices.update_device(device, %{enabled: false})
       assert device.enabled == false
+      assert [disabled_device] =
+               Resources.list_resources(Castmill.Devices.Device, %{
+                 organization_id: organization.id,
+                 filters: [{"disabled", true}]
+               })
+
+      assert disabled_device.id == device.id
+
+      assert Resources.count_resources(Castmill.Devices.Device, %{
+               organization_id: organization.id,
+               filters: [{"disabled", true}]
+             }) == 1
+
+      assert Resources.list_resources(Castmill.Devices.Device, %{
+               organization_id: organization.id,
+               filters: [{"enabled", true}]
+             }) == []
+
+      assert Resources.count_resources(Castmill.Devices.Device, %{
+               organization_id: organization.id,
+               filters: [{"enabled", true}]
+             }) == 0
 
       # Re-enable the device
       assert {:ok, device} = Devices.update_device(device, %{enabled: true})
       assert device.enabled == true
+      assert [enabled_device] =
+               Resources.list_resources(Castmill.Devices.Device, %{
+                 organization_id: organization.id,
+                 filters: [{"enabled", true}]
+               })
+
+      assert enabled_device.id == device.id
+
+      assert Resources.count_resources(Castmill.Devices.Device, %{
+               organization_id: organization.id,
+               filters: [{"enabled", true}]
+             }) == 1
+
+      assert Resources.list_resources(Castmill.Devices.Device, %{
+               organization_id: organization.id,
+               filters: [{"disabled", true}]
+             }) == []
+
+      assert Resources.count_resources(Castmill.Devices.Device, %{
+               organization_id: organization.id,
+               filters: [{"disabled", true}]
+             }) == 0
     end
 
     test "delete_device/1 deletes the device and broadcasts removal notification" do

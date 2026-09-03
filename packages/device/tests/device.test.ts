@@ -210,8 +210,10 @@ describe('Device - Commands', () => {
   beforeEach(() => {
     mockIntegration = {
       getCredentials: vi.fn(),
+      getSetting: vi.fn().mockResolvedValue(null),
       getMachineGUID: vi.fn(),
       removeCredentials: vi.fn().mockResolvedValue(undefined),
+      setTimers: vi.fn(),
     };
 
     mockStorageIntegration = {
@@ -279,6 +281,7 @@ describe('Device - Channel Updates', () => {
   beforeEach(() => {
     mockIntegration = {
       getCredentials: vi.fn(),
+      getSetting: vi.fn().mockResolvedValue(null),
       getMachineGUID: vi.fn(),
       removeCredentials: vi.fn().mockResolvedValue(undefined),
     };
@@ -552,8 +555,10 @@ describe('Device - Enable/Disable', () => {
   beforeEach(() => {
     mockIntegration = {
       getCredentials: vi.fn(),
+      getSetting: vi.fn().mockResolvedValue(null),
       getMachineGUID: vi.fn(),
       removeCredentials: vi.fn().mockResolvedValue(undefined),
+      setTimers: vi.fn(),
     };
 
     mockStorageIntegration = {
@@ -667,6 +672,61 @@ describe('Device - Enable/Disable', () => {
     expect(
       document.querySelectorAll('[data-disabled-overlay]').length
     ).toBe(1);
+  });
+
+  it('does not schedule more playback while disabled', async () => {
+    vi.useFakeTimers();
+
+    const getData = vi
+      .fn()
+      .mockResolvedValueOnce({
+        data: [
+          {
+            id: 'channel-1',
+            name: 'Channel 1',
+            description: '',
+            timezone: 'UTC',
+            entries: [],
+            default_playlist_id: 'playlist-1',
+          },
+        ],
+      })
+      .mockResolvedValueOnce({
+        name: 'Playlist 1',
+        items: [],
+      });
+
+    vi.mocked(ResourceManager).mockImplementation(
+      () =>
+        ({
+          init: vi.fn().mockResolvedValue(undefined),
+          getData,
+          cacheMedia: vi.fn().mockResolvedValue(undefined),
+        }) as any
+    );
+
+    mockIntegration.getCredentials.mockResolvedValue(
+      JSON.stringify({
+        device: { id: 'device-1', token: 'token-1', name: 'Device 1' },
+      })
+    );
+
+    device['baseUrl'] = 'http://localhost:4000';
+    device['enabled'] = false;
+
+    const startPromise = device.start(document.createElement('div'));
+
+    await vi.waitFor(() => {
+      expect(getData).toHaveBeenCalledTimes(1);
+    });
+    await vi.advanceTimersByTimeAsync(5000);
+
+    expect(getData).toHaveBeenCalledTimes(1);
+
+    await device.stop();
+    await vi.advanceTimersByTimeAsync(5000);
+    await startPromise;
+    vi.useRealTimers();
   });
 });
 
@@ -1325,6 +1385,25 @@ describe('Device - Login Reconnection', () => {
     await loginPromise;
 
     expect(clearIntervalSpy).toHaveBeenCalled();
+  });
+
+  it('should apply enabled state from the join reply before resolving login', async () => {
+    const credentials = {
+      device: { id: 'd1', token: 't1', name: 'D1' },
+    };
+
+    const setEnabledSpy = vi
+      .spyOn(device, 'setEnabled')
+      .mockResolvedValue(undefined);
+
+    const loginPromise = device.login(credentials as any, 'hw1');
+
+    mockPhoenixChannel._joinPush._trigger('ok', { enabled: false });
+
+    const result = await loginPromise;
+
+    expect(setEnabledSpy).toHaveBeenCalledWith(false);
+    expect(result).toBe(mockPhoenixChannel);
   });
 
   it('should not resolve twice when both ok and polling detect joined', async () => {

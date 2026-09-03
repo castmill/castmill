@@ -186,23 +186,18 @@ defmodule CastmillWeb.DevicesChannelTest do
     end
   end
 
-  describe "handle_info/2 - sync_enabled" do
-    test "pushes the current enabled state to the client on sync", %{
+  describe "join/3" do
+    test "returns the persisted enabled state in the join reply", %{
       socket: socket,
       device: device,
       token: token
     } do
-      {:ok, _reply, socket} =
+      assert {:ok, device} = Castmill.Devices.update_device(device, %{enabled: false})
+
+      {:ok, reply, _socket} =
         subscribe_and_join(socket, DevicesChannel, "devices:#{device.id}", %{"token" => token})
 
-      DevicesChannel.handle_info(:sync_enabled, socket)
-
-      # Newly registered devices default to enabled
-      assert_push "update", %{
-        resource: "device",
-        action: "update",
-        data: %{enabled: true}
-      }
+      assert reply == %{enabled: false}
     end
   end
 end

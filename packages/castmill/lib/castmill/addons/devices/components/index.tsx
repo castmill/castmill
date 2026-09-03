@@ -588,7 +588,7 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
       {
         key: 'enabled',
         title: t('devices.enabled'),
-        sortable: true,
+        sortable: false,
         render: (item: DeviceTableItem) => {
           const enabled = item.enabled !== false;
           return (
@@ -697,6 +697,7 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
     // column renders the current state (`item.enabled !== false`).
     const currentEnabled = item.enabled !== false;
     const newEnabled = !currentEnabled;
+    updateItem(item.id, { enabled: newEnabled } as Partial<DeviceTableItem>);
 
     try {
       await DevicesService.updateDevice(
@@ -706,10 +707,6 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
         { enabled: newEnabled }
       );
 
-      // Optimistically reflect the new state; the realtime observer will also
-      // update it once the server broadcasts the change.
-      updateItem(item.id, { enabled: newEnabled } as Partial<DeviceTableItem>);
-
       toast.success(
         newEnabled
           ? t('devices.deviceEnabledSuccess', { name: item.name })
@@ -717,6 +714,7 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
       );
     } catch (error) {
       console.error(error);
+      updateItem(item.id, { enabled: currentEnabled } as Partial<DeviceTableItem>);
       toast.error(
         t('devices.errorUpdatingDevice', {
           name: item.name,

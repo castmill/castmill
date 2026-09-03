@@ -537,7 +537,7 @@ export const DevicesService = {
       }
     );
 
-    handleResponse(response);
+    return handleResponse(response);
   },
 
   /**

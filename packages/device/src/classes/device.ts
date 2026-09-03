@@ -282,6 +282,11 @@ export class Device extends EventEmitter {
 
     // Main loop. This loop will run until the device is stopped.
     while (!this.closing) {
+      if (!this.enabled) {
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+        continue;
+      }
+
       // Add next batch of items from the next calendar.
       // Play until only one item remains in the playlist or the device is stopped.
       if (this.contentQueue.length < 2) {
@@ -306,11 +311,19 @@ export class Device extends EventEmitter {
             }
 
             if (jsonPlaylist) {
+              if (!this.enabled || this.closing) {
+                continue;
+              }
+
               const medias = this.getPlaylistMedias(jsonPlaylist);
               await this.cacheMedias(medias);
 
               // Check again after caching
-              if (this.channelGeneration !== currentGeneration) {
+              if (
+                this.channelGeneration !== currentGeneration ||
+                !this.enabled ||
+                this.closing
+              ) {
                 continue;
               }
 
@@ -323,11 +336,19 @@ export class Device extends EventEmitter {
               );
 
               // Final check before adding to queue
-              if (this.channelGeneration !== currentGeneration) {
+              if (
+                this.channelGeneration !== currentGeneration ||
+                !this.enabled ||
+                this.closing
+              ) {
                 continue;
               }
 
               this.contentQueue.add(layer);
+              if (!this.enabled || this.closing || !this.player) {
+                this.contentQueue.remove(layer);
+                continue;
+              }
 
               this.player.play({ loop: true });
 
@@ -773,7 +794,10 @@ export class Device extends EventEmitter {
       // Handle initial join attempt and rejoins after reconnection
       channel
         .join()
-        .receive('ok', () => {
+        .receive('ok', async (resp?: { enabled?: boolean }) => {
+          if (typeof resp?.enabled === 'boolean') {
+            await this.setEnabled(resp.enabled);
+          }
           safeResolve(channel);
         })
         .receive('error', (resp) => {
