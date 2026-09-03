@@ -6,9 +6,36 @@ defmodule Castmill.WidgetsTest do
   import Castmill.PlaylistsFixtures
 
   alias Castmill.Widgets.Schema
+  alias Castmill.Widgets.Widget
   alias Castmill.Widgets
 
   @moduletag :widgets_config_case
+
+  describe "widget changeset" do
+    test "allows empty option and data schemas" do
+      changeset =
+        Widget.changeset(%Widget{}, %{
+          name: "Visual widget",
+          template: %{"type" => "group"},
+          options_schema: %{},
+          data_schema: %{}
+        })
+
+      assert changeset.valid?
+    end
+
+    test "validates the update interval range" do
+      changeset =
+        Widget.changeset(%Widget{}, %{
+          name: "Visual widget",
+          template: %{"type" => "group"},
+          update_interval_seconds: 4
+        })
+
+      refute changeset.valid?
+      assert "must be greater than or equal to 5" in errors_on(changeset).update_interval_seconds
+    end
+  end
 
   describe "widgets schemas" do
     test "validate_schema/1 returns error if empty schema" do

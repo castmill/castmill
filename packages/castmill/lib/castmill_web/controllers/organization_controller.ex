@@ -87,14 +87,12 @@ defmodule CastmillWeb.OrganizationController do
     end
   end
 
-  def check_access(_actor_id, :list_widgets, %{"organization_id" => _organization_id}) do
-    # Normally all users can list widgets, but will not get the same ones.
-    {:ok, true}
+  def check_access(actor_id, :list_widgets, %{"organization_id" => organization_id}) do
+    {:ok, Organizations.has_access(organization_id, actor_id, "widgets", :list)}
   end
 
-  def check_access(_actor_id, :get_widget, %{"organization_id" => _organization_id}) do
-    # Any authenticated user can view widget details
-    {:ok, true}
+  def check_access(actor_id, :get_widget, %{"organization_id" => organization_id}) do
+    {:ok, Organizations.has_access(organization_id, actor_id, "widgets", :show)}
   end
 
   def check_access(actor_id, :create_widget, %{"organization_id" => organization_id}) do
@@ -103,6 +101,11 @@ defmodule CastmillWeb.OrganizationController do
     else
       {:ok, false}
     end
+  end
+
+  def check_access(actor_id, action, %{"organization_id" => organization_id})
+      when action in [:create_widget_from_json, :clone_widget] do
+    {:ok, Organizations.has_access(organization_id, actor_id, "widgets", :create)}
   end
 
   def check_access(actor_id, :delete_widget, %{"organization_id" => organization_id}) do
@@ -122,8 +125,7 @@ defmodule CastmillWeb.OrganizationController do
   end
 
   def check_access(actor_id, :update_widget, %{"organization_id" => organization_id}) do
-    # Only admins can update widgets for now
-    {:ok, Organizations.is_admin?(organization_id, actor_id)}
+    {:ok, Organizations.has_access(organization_id, actor_id, "widgets", :update)}
   end
 
   def check_access(actor_id, :list_members, %{"organization_id" => organization_id}) do
@@ -333,18 +335,16 @@ defmodule CastmillWeb.OrganizationController do
     end
   end
 
-  # List all the widgets available an organization
-  def list_widgets(conn, %{"organization_id" => _organization_id} = params) do
-    # Note: for now we return all widgets, but we should only return the widgets that are available
-    # for the organization (some widgets are available to all organizations though).
-
+  # List all widgets available to an organization.
+  def list_widgets(conn, %{"organization_id" => organization_id} = params) do
     # Extract pagination, search, and sorting parameters
     query_params = %{
       page: String.to_integer(params["page"] || "1"),
       page_size: String.to_integer(params["page_size"] || "10"),
       search: params["search"],
       key: params["key"] || "name",
-      direction: params["direction"] || "ascending"
+      direction: params["direction"] || "ascending",
+      organization_id: organization_id
     }
 
     widgets = Castmill.Widgets.list_widgets(query_params)
@@ -361,8 +361,8 @@ defmodule CastmillWeb.OrganizationController do
   end
 
   # Get a widget by its ID
-  def get_widget(conn, %{"organization_id" => _organization_id, "widget_id" => widget_id}) do
-    case Castmill.Widgets.get_widget(widget_id) do
+  def get_widget(conn, %{"organization_id" => organization_id, "widget_id" => widget_id}) do
+    case Castmill.Widgets.get_widget_for_organization(widget_id, organization_id) do
       nil ->
         conn
         |> put_status(:not_found)
@@ -375,7 +375,7 @@ defmodule CastmillWeb.OrganizationController do
     end
   end
 
-  def create_widget(conn, %{"organization_id" => _organization_id, "widget" => widget_file}) do
+  def create_widget(conn, %{"organization_id" => organization_id, "widget" => widget_file}) do
     alias Castmill.Widgets.PackageProcessor
     alias Castmill.Widgets.AssetStorage
 
@@ -390,6 +390,11 @@ defmodule CastmillWeb.OrganizationController do
          widget_data <- resolve_widget_fonts(widget_data, widget_slug, stored_assets),
          # Store integration definition in meta for later use
          widget_data <- store_integration_in_meta(widget_data),
+         widget_data <-
+          Map.merge(widget_data, %{
+            "organization_id" => organization_id,
+            "is_system" => false
+          }),
          {:ok, widget} <- Castmill.Widgets.create_widget(widget_data) do
       # Clean up temporary asset files
       PackageProcessor.cleanup_assets(assets)
@@ -477,15 +482,18 @@ defmodule CastmillWeb.OrganizationController do
   @doc """
   Gets the usage information for a widget, showing all playlists where it's being used.
   """
-  def get_widget_usage(conn, %{"organization_id" => _organization_id, "widget_id" => widget_id}) do
-    case Castmill.Widgets.get_widget(widget_id) do
+  def get_widget_usage(conn, %{
+        "organization_id" => organization_id,
+        "widget_id" => widget_id
+      }) do
+    case Castmill.Widgets.get_widget_for_organization(widget_id, organization_id) do
       nil ->
         conn
         |> put_status(:not_found)
         |> json(%{error: "Widget not found"})
 
       _widget ->
-        usage = Castmill.Widgets.get_widget_usage(widget_id)
+        usage = Castmill.Widgets.get_widget_usage(widget_id, organization_id)
 
         conn
         |> put_status(:ok)
@@ -493,8 +501,10 @@ defmodule CastmillWeb.OrganizationController do
     end
   end
 
-  def delete_widget(conn, %{"organization_id" => _organization_id, "widget_id" => widget_id}) do
-    with widget when not is_nil(widget) <- Castmill.Widgets.get_widget(widget_id),
+  def delete_widget(conn, %{"organization_id" => organization_id, "widget_id" => widget_id}) do
+    with widget when not is_nil(widget) <-
+           Castmill.Widgets.get_widget_for_organization(widget_id, organization_id),
+         true <- editable_widget?(conn, widget, organization_id),
          {:ok, _} <- Castmill.Widgets.delete_widget_with_cascade(widget) do
       # Also delete the widget's assets
       Castmill.Widgets.AssetStorage.delete_assets(widget.slug)
@@ -505,6 +515,11 @@ defmodule CastmillWeb.OrganizationController do
         |> put_status(:not_found)
         |> json(%{error: "Widget not found"})
 
+      false ->
+        conn
+        |> put_status(:forbidden)
+        |> json(%{error: "System widgets must be cloned before editing"})
+
       {:error, reason} ->
         conn
         |> put_status(:bad_request)
@@ -514,10 +529,24 @@ defmodule CastmillWeb.OrganizationController do
 
   def update_widget(
         conn,
-        %{"organization_id" => _organization_id, "widget_id" => widget_id} = params
+        %{"organization_id" => organization_id, "widget_id" => widget_id} = params
       ) do
-    with widget when not is_nil(widget) <- Castmill.Widgets.get_widget(widget_id),
-         {:ok, updated_widget} <- Castmill.Widgets.update_widget(widget, params) do
+    with widget when not is_nil(widget) <-
+           Castmill.Widgets.get_widget_for_organization(widget_id, organization_id),
+         true <- editable_widget?(conn, widget, organization_id),
+         update_params <-
+           Map.take(params, [
+             "name",
+             "description",
+             "template",
+             "options_schema",
+             "data_schema",
+             "assets",
+             "fonts",
+             "aspect_ratio",
+             "update_interval_seconds"
+           ]),
+         {:ok, updated_widget} <- Castmill.Widgets.update_widget(widget, update_params) do
       conn
       |> put_status(:ok)
       |> json(updated_widget)
@@ -527,10 +556,15 @@ defmodule CastmillWeb.OrganizationController do
         |> put_status(:not_found)
         |> json(%{error: "Widget not found"})
 
+      false ->
+        conn
+        |> put_status(:forbidden)
+        |> json(%{error: "System widgets must be cloned before editing"})
+
       {:error, %Ecto.Changeset{} = changeset} ->
         conn
         |> put_status(:unprocessable_entity)
-        |> json(%{errors: changeset})
+        |> json(%{errors: changeset_errors(changeset)})
 
       {:error, reason} ->
         conn
@@ -538,6 +572,341 @@ defmodule CastmillWeb.OrganizationController do
         |> json(%{error: to_string(reason)})
     end
   end
+
+  @doc """
+  Creates a widget from a JSON request body (used by the widget editor).
+
+  Accepts all widget fields as JSON – name, description, template, options_schema,
+  data_schema, aspect_ratio, update_interval_seconds, slug, etc.
+  """
+  def create_widget_from_json(conn, %{"organization_id" => organization_id} = params) do
+    widget_data =
+      params
+      |> Map.take([
+        "name",
+        "description",
+        "template",
+        "options_schema",
+        "data_schema",
+        "assets",
+        "fonts",
+        "aspect_ratio",
+        "update_interval_seconds"
+      ])
+      |> Map.put("is_system", false)
+      |> Map.put("organization_id", organization_id)
+      |> maybe_generate_slug()
+
+    case Castmill.Widgets.create_widget(widget_data) do
+      {:ok, widget} ->
+        conn
+        |> put_status(:created)
+        |> json(widget)
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{errors: changeset_errors(changeset)})
+
+      {:error, reason} ->
+        conn
+        |> put_status(:bad_request)
+        |> json(%{error: inspect(reason)})
+    end
+  end
+
+  @doc """
+  Clones an existing widget, optionally overriding the name.
+
+  The clone is marked as non-system so the user can freely edit and delete it.
+  """
+  def clone_widget(
+        conn,
+        %{"organization_id" => organization_id, "widget_id" => widget_id} = params
+      ) do
+    with widget when not is_nil(widget) <-
+           Castmill.Widgets.get_widget_for_organization(widget_id, organization_id) do
+      new_name = Map.get(params, "name") || unique_widget_copy_name(widget.name)
+
+      clone_attrs = %{
+        "name" => new_name,
+        "slug" => slugify(new_name),
+        "description" => widget.description,
+        "template" => rewrite_widget_asset_urls(widget.template, widget.slug, slugify(new_name)),
+        "options_schema" => widget.options_schema,
+        "data_schema" => widget.data_schema,
+        "meta" => widget.meta,
+        "icon" => rewrite_widget_asset_urls(widget.icon, widget.slug, slugify(new_name)),
+        "small_icon" =>
+          rewrite_widget_asset_urls(widget.small_icon, widget.slug, slugify(new_name)),
+        "fonts" => rewrite_widget_asset_urls(widget.fonts, widget.slug, slugify(new_name)),
+        "assets" => rewrite_widget_asset_urls(widget.assets, widget.slug, slugify(new_name)),
+        "aspect_ratio" => widget.aspect_ratio,
+        "update_interval_seconds" => widget.update_interval_seconds,
+        "is_system" => false,
+        "organization_id" => organization_id
+      }
+
+      case Castmill.Widgets.create_widget(clone_attrs) do
+        {:ok, cloned_widget} ->
+          case Castmill.Widgets.AssetStorage.clone_assets(widget.slug, cloned_widget.slug) do
+            :ok ->
+              conn
+              |> put_status(:created)
+              |> json(cloned_widget)
+
+            {:error, reason} ->
+              Castmill.Widgets.delete_widget(cloned_widget)
+              Castmill.Widgets.AssetStorage.delete_assets(cloned_widget.slug)
+
+              conn
+              |> put_status(:internal_server_error)
+              |> json(%{error: "Failed to copy widget assets: #{inspect(reason)}"})
+          end
+        {:error, %Ecto.Changeset{} = changeset} ->
+          conn
+          |> put_status(:unprocessable_entity)
+          |> json(%{errors: changeset_errors(changeset)})
+
+        {:error, reason} ->
+          conn
+          |> put_status(:bad_request)
+          |> json(%{error: inspect(reason)})
+      end
+
+    else
+      nil ->
+        conn
+        |> put_status(:not_found)
+        |> json(%{error: "Widget not found"})
+    end
+  end
+
+  @doc """
+  Uploads a single asset file (image, icon, font or stylesheet) for a widget.
+
+  The file is stored under the widget's asset directory and registered in the
+  widget's asset manifest so it can be referenced from the template using
+  `{{asset:category.name}}`.
+  """
+  def upload_widget_asset(
+        conn,
+        %{
+          "organization_id" => organization_id,
+          "widget_id" => widget_id,
+          "category" => category,
+          "file" => %Plug.Upload{} = upload
+        } = params
+      ) do
+    alias Castmill.Widgets.AssetStorage
+
+    with widget when not is_nil(widget) <-
+           Castmill.Widgets.get_widget_for_organization(widget_id, organization_id),
+         true <- editable_widget?(conn, widget, organization_id),
+         {:ok, asset_name} <- asset_name_from(params, upload.filename),
+         {:ok, stored} <-
+           AssetStorage.store_file(widget.slug, category, upload.filename, upload.path) do
+      asset_entry = %{
+        "path" => stored.path,
+        "url" => stored.url,
+        "type" => stored.type
+      }
+
+      assets =
+        widget.assets
+        |> normalize_assets()
+        |> Map.update(category, %{asset_name => asset_entry}, fn entries ->
+          Map.put(entries || %{}, asset_name, asset_entry)
+        end)
+
+      update_widget_assets(conn, widget, assets)
+    else
+      nil ->
+        conn |> put_status(:not_found) |> json(%{error: "Widget not found"})
+
+      false ->
+        conn
+        |> put_status(:forbidden)
+        |> json(%{error: "System widgets must be cloned before editing"})
+
+      {:error, :invalid_category} ->
+        conn |> put_status(:bad_request) |> json(%{error: "Unsupported asset category"})
+
+      {:error, :invalid_file_type} ->
+        conn |> put_status(:bad_request) |> json(%{error: "Unsupported file type"})
+
+      {:error, :invalid_filename} ->
+        conn |> put_status(:bad_request) |> json(%{error: "Invalid file name"})
+
+      {:error, reason} ->
+        conn |> put_status(:bad_request) |> json(%{error: to_string(reason)})
+    end
+  end
+
+  def upload_widget_asset(conn, _params) do
+    conn
+    |> put_status(:bad_request)
+    |> json(%{error: "A file and a category are required"})
+  end
+
+  @doc """
+  Removes an asset from a widget's manifest and deletes the stored file.
+  """
+  def delete_widget_asset(conn, %{
+        "organization_id" => organization_id,
+        "widget_id" => widget_id,
+        "category" => category,
+        "name" => asset_name
+      }) do
+    alias Castmill.Widgets.AssetStorage
+
+    with widget when not is_nil(widget) <-
+           Castmill.Widgets.get_widget_for_organization(widget_id, organization_id),
+         true <- editable_widget?(conn, widget, organization_id) do
+      assets = normalize_assets(widget.assets)
+      entry = get_in(assets, [category, asset_name])
+
+      if entry do
+        AssetStorage.delete_file(widget.slug, Map.get(entry, "path"))
+      end
+
+      updated_assets =
+        Map.update(assets, category, %{}, fn entries ->
+          Map.delete(entries || %{}, asset_name)
+        end)
+
+      update_widget_assets(conn, widget, updated_assets)
+    else
+      nil ->
+        conn |> put_status(:not_found) |> json(%{error: "Widget not found"})
+
+      false ->
+        conn
+        |> put_status(:forbidden)
+        |> json(%{error: "System widgets must be cloned before editing"})
+    end
+  end
+
+  defp update_widget_assets(conn, widget, assets) do
+    case Castmill.Widgets.update_widget(widget, %{
+           "assets" => assets,
+           "fonts" => merge_widget_fonts(widget.fonts, fonts_from_assets(assets))
+         }) do
+      {:ok, updated_widget} ->
+        conn |> put_status(:ok) |> json(updated_widget)
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{errors: changeset_errors(changeset)})
+    end
+  end
+
+  # Derives the player font list (FontFace API) from the assets manifest so that
+  # fonts only have to be managed in one place.
+  defp fonts_from_assets(assets) do
+    case Map.get(assets, "fonts") do
+      fonts when is_map(fonts) ->
+        fonts
+        |> Enum.filter(fn {_key, info} -> is_map(info) end)
+        |> Enum.map(fn {key, info} ->
+          %{
+            "name" => Map.get(info, "name") || key,
+            "url" => Map.get(info, "url") || Map.get(info, "path")
+          }
+        end)
+        |> Enum.reject(fn font -> is_nil(font["url"]) end)
+
+      _ ->
+        []
+    end
+  end
+
+  # Fonts declared directly on the widget (legacy or third-party hosted fonts)
+  # are kept as long as they are not shadowed by a manifest font of the same name.
+  defp merge_widget_fonts(existing_fonts, derived_fonts) do
+    derived_names = MapSet.new(derived_fonts, & &1["name"])
+
+    external =
+      existing_fonts
+      |> List.wrap()
+      |> Enum.map(&normalize_assets/1)
+      |> Enum.filter(fn font ->
+        is_binary(font["name"]) and is_binary(font["url"]) and
+          not MapSet.member?(derived_names, font["name"])
+      end)
+
+    derived_fonts ++ external
+  end
+
+  defp normalize_assets(assets) when is_map(assets) do
+    Map.new(assets, fn {key, value} -> {to_string(key), value} end)
+  end
+
+  defp normalize_assets(_assets), do: %{}
+
+  defp asset_name_from(params, filename) do
+    name =
+      params
+      |> Map.get("name")
+      |> case do
+        value when is_binary(value) -> String.trim(value)
+        _ -> ""
+      end
+
+    name = if name == "", do: filename |> Path.basename() |> Path.rootname(), else: name
+    sanitized = String.replace(name, ~r/[^A-Za-z0-9._-]/, "-")
+
+    if sanitized == "", do: {:error, :invalid_filename}, else: {:ok, sanitized}
+  end
+
+  defp unique_widget_copy_name(name, copy_number \\ 1) do
+    suffix = if copy_number == 1, do: " (Copy)", else: " (Copy #{copy_number})"
+    candidate = "#{name}#{suffix}"
+
+    if Castmill.Widgets.get_widget_by_name(candidate) do
+      unique_widget_copy_name(name, copy_number + 1)
+    else
+      candidate
+    end
+  end
+
+  defp rewrite_widget_asset_urls(value, old_slug, new_slug) when is_binary(value) do
+    String.replace(value, "/widget_assets/#{old_slug}/", "/widget_assets/#{new_slug}/")
+  end
+
+  defp rewrite_widget_asset_urls(value, old_slug, new_slug) when is_list(value) do
+    Enum.map(value, &rewrite_widget_asset_urls(&1, old_slug, new_slug))
+  end
+
+  defp rewrite_widget_asset_urls(value, old_slug, new_slug) when is_map(value) do
+    Map.new(value, fn {key, item} ->
+      {key, rewrite_widget_asset_urls(item, old_slug, new_slug)}
+    end)
+  end
+
+  defp rewrite_widget_asset_urls(value, _old_slug, _new_slug), do: value
+
+  defp changeset_errors(changeset) do
+    Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
+      Regex.replace(~r"%{(\w+)}", msg, fn _, key ->
+        opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
+      end)
+    end)
+  end
+
+  defp editable_widget?(conn, widget, organization_id) do
+    actor = conn.assigns[:current_actor] || conn.assigns[:current_user]
+
+    (not widget.is_system and widget.organization_id == organization_id) or
+      (actor != nil and Map.get(actor, :is_root, false) == true)
+  end
+
+  # Generates a slug from name if slug is not provided
+  defp maybe_generate_slug(%{"slug" => slug} = data) when is_binary(slug) and slug != "", do: data
+  defp maybe_generate_slug(%{"name" => name} = data) when is_binary(name),
+    do: Map.put(data, "slug", slugify(name))
+  defp maybe_generate_slug(data), do: data
 
   def list_members(conn, params) do
     with {:ok, params} <- Tarams.cast(params, @index_params_schema) do
