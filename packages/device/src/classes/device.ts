@@ -353,6 +353,17 @@ export class Device extends EventEmitter {
     this.player = undefined;
   }
 
+  private async reloadContent() {
+    this.channelGeneration++;
+    await this.player?.stop();
+
+    if (this.contentQueue) {
+      while (this.contentQueue.length > 0) {
+        this.contentQueue.remove(this.contentQueue.layers[0]);
+      }
+    }
+  }
+
   /**
    * Get the credentials from the integration and validate them.
    * If the credentials are valid, return them.
@@ -916,8 +927,7 @@ export class Device extends EventEmitter {
           // when the channel would be used.
           break;
         case 'playlist':
-          // We could mark the playlist as dirty (in the resource manager), as we do not know
-          // when or even if the playlist will be used.
+          await this.reloadContent();
           break;
         case 'widget':
           break;
@@ -939,9 +949,8 @@ export class Device extends EventEmitter {
         updatedChannel.attrs.default_playlist_id = message.default_playlist_id
           ? String(message.default_playlist_id)
           : undefined;
-        this.logger.info(
-          'Channel default playlist updated, will take effect on next schedule check'
-        );
+        this.logger.info('Channel default playlist updated, reloading content');
+        await this.reloadContent();
       }
     });
 
@@ -950,9 +959,6 @@ export class Device extends EventEmitter {
       this.logger.info(
         `Channel ${message.channel.id} (${message.channel.name}) added to device`
       );
-
-      // Increment generation to invalidate any in-flight content loading
-      this.channelGeneration++;
 
       // Create a new Channel instance and add it to the channels list
       const newChannel = new Channel({
@@ -969,23 +975,12 @@ export class Device extends EventEmitter {
       this.channels.push(newChannel);
       this.logger.info(`Device now has ${this.channels.length} channel(s)`);
 
-      // Stop player and clear content queue to force loading content from the updated channel list
-      if (this.player) {
-        this.player.stop();
-      }
-      if (this.contentQueue) {
-        while (this.contentQueue.length > 0) {
-          this.contentQueue.remove(this.contentQueue.layers[0]);
-        }
-      }
+      await this.reloadContent();
     });
 
     // Handle channel removed from device
     channel.on('channel_removed', async (message: ChannelRemovedMessage) => {
       this.logger.info(`Channel ${message.channel_id} removed from device`);
-
-      // Increment generation to invalidate any in-flight content loading
-      this.channelGeneration++;
 
       // Find and remove the channel from the channels list
       // Compare as strings to handle both string and number IDs
@@ -1004,15 +999,7 @@ export class Device extends EventEmitter {
 
         this.logger.info(`Device now has ${this.channels.length} channel(s)`);
 
-        // Stop player and clear content queue to force loading content from the updated channel list
-        if (this.player) {
-          this.player.stop();
-        }
-        if (this.contentQueue) {
-          while (this.contentQueue.length > 0) {
-            this.contentQueue.remove(this.contentQueue.layers[0]);
-          }
-        }
+        await this.reloadContent();
       }
     });
   }

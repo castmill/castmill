@@ -1821,6 +1821,26 @@ defmodule Castmill.Resources do
   end
 
   @doc """
+  Gets the devices whose assigned channels use a specific playlist.
+  """
+  def get_devices_using_playlist(playlist_id) when is_integer(playlist_id) do
+    query =
+      from(dc in Castmill.Devices.DevicesChannels,
+        join: d in Castmill.Devices.Device,
+        on: dc.device_id == d.id,
+        join: c in Channel,
+        on: dc.channel_id == c.id,
+        left_join: ce in ChannelEntry,
+        on: ce.channel_id == c.id,
+        where: c.default_playlist_id == ^playlist_id or ce.playlist_id == ^playlist_id,
+        distinct: d.id,
+        select: %{id: d.id, name: d.name}
+      )
+
+    Repo.all(query)
+  end
+
+  @doc """
   Removes a channel and all its entries.
   Returns {:error, :channel_has_devices} if the channel is assigned to any devices.
   """

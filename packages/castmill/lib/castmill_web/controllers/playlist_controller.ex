@@ -32,6 +32,8 @@ defmodule CastmillWeb.PlaylistController do
 
     case result do
       {:ok, item} ->
+        notify_devices_of_playlist_update(String.to_integer(playlist_id))
+
         conn
         |> put_status(:created)
         |> put_resp_header("location", ~p"/api/playlists/#{playlist_id}/items/#{item.id}")
@@ -57,6 +59,7 @@ defmodule CastmillWeb.PlaylistController do
       }) do
     with %PlaylistItem{} = item <- Resources.get_playlist_item(playlist_id, item_id) do
       {:ok, item} = Resources.update_playlist_item(item, options_params)
+      notify_devices_of_playlist_update(item.playlist_id)
 
       conn
       |> put_status(:ok)
@@ -76,6 +79,8 @@ defmodule CastmillWeb.PlaylistController do
            widget_config_params["data"]
          ) do
       {:ok, _} ->
+        notify_devices_of_playlist_update(String.to_integer(playlist_id))
+
         conn
         |> send_resp(:no_content, "")
 
@@ -123,7 +128,7 @@ defmodule CastmillWeb.PlaylistController do
     case target_id do
       nil ->
         # Proceed to move the item to the end of the playlist
-        perform_move_item(conn, item_id, nil)
+        perform_move_item(conn, playlist_id, item_id, nil)
 
       _ ->
         # Attempt to retrieve the target item
@@ -137,14 +142,16 @@ defmodule CastmillWeb.PlaylistController do
 
           _item ->
             # Proceed if item is found
-            perform_move_item(conn, item_id, target_id)
+            perform_move_item(conn, playlist_id, item_id, target_id)
         end
     end
   end
 
-  defp perform_move_item(conn, item_id, target_id) do
+  defp perform_move_item(conn, playlist_id, item_id, target_id) do
     case Resources.move_item_in_playlist(item_id, target_id) do
       {:ok, _} ->
+        notify_devices_of_playlist_update(String.to_integer(playlist_id))
+
         # Successfully moved the item
         conn
         |> send_resp(:no_content, "")
@@ -168,6 +175,7 @@ defmodule CastmillWeb.PlaylistController do
 
   def delete_item(conn, %{"playlist_id" => playlist_id, "item_id" => item_id}) do
     {:ok, _} = Resources.remove_item_from_playlist(playlist_id, item_id)
+    notify_devices_of_playlist_update(String.to_integer(playlist_id))
 
     conn
     |> send_resp(:no_content, "")
@@ -185,5 +193,30 @@ defmodule CastmillWeb.PlaylistController do
     conn
     |> put_status(:ok)
     |> json(%{ancestor_ids: ancestor_ids})
+  end
+
+  defp notify_devices_of_playlist_update(playlist_id) do
+    notify_fn = fn ->
+      playlist_id
+      |> Resources.get_devices_using_playlist()
+      |> Enum.each(fn device ->
+        Phoenix.PubSub.broadcast(
+          Castmill.PubSub,
+          "devices:#{device.id}",
+          %{
+            update: "playlist",
+            resource: "playlist",
+            action: "update",
+            data: %{id: playlist_id}
+          }
+        )
+      end)
+    end
+
+    if Application.get_env(:castmill, :async_background_tasks, true) do
+      Task.start(notify_fn)
+    else
+      notify_fn.()
+    end
   end
 end
