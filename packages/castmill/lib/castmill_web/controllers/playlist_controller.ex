@@ -197,20 +197,26 @@ defmodule CastmillWeb.PlaylistController do
 
   defp notify_devices_of_playlist_update(playlist_id) do
     notify_fn = fn ->
-      playlist_id
-      |> Resources.get_devices_using_playlist()
-      |> Enum.each(fn device ->
-        Phoenix.PubSub.broadcast(
-          Castmill.PubSub,
-          "devices:#{device.id}",
-          %{
-            update: "playlist",
-            resource: "playlist",
-            action: "update",
-            data: %{id: playlist_id}
-          }
-        )
-      end)
+      try do
+        playlist_id
+        |> Resources.get_devices_using_playlist()
+        |> Enum.each(fn device ->
+          Phoenix.PubSub.broadcast(
+            Castmill.PubSub,
+            "devices:#{device.id}",
+            %{
+              update: "playlist",
+              resource: "playlist",
+              action: "update",
+              data: %{id: playlist_id}
+            }
+          )
+        end)
+      rescue
+        error ->
+          require Logger
+          Logger.error("Failed to notify devices of playlist update: #{inspect(error)}")
+      end
     end
 
     if Application.get_env(:castmill, :async_background_tasks, true) do
