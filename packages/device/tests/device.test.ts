@@ -294,6 +294,44 @@ describe('Device - Channel Updates', () => {
     });
   });
 
+  it('should restart playback when a playlist is updated', async () => {
+    const mockChannel = {
+      on: vi.fn(),
+      push: vi.fn(),
+      join: vi.fn(),
+    };
+    const layer = {};
+    const contentQueue = {
+      layers: [layer],
+      length: 1,
+      remove: vi.fn(function (this: { layers: object[] }) {
+        this.layers.shift();
+        this.length = this.layers.length;
+      }),
+    };
+    const player = { stop: vi.fn() };
+    device['contentQueue'] = contentQueue as any;
+    device['player'] = player as any;
+
+    device['initListeners'](mockChannel as any);
+
+    const updateHandler = mockChannel.on.mock.calls.find(
+      (call) => call[0] === 'update'
+    )?.[1];
+
+    await updateHandler({
+      update: 'playlist',
+      resource: 'playlist',
+      action: 'update',
+      data: { id: 123 },
+    });
+
+    expect(device['channelGeneration']).toBe(1);
+    expect(player.stop).toHaveBeenCalledOnce();
+    expect(contentQueue.remove).toHaveBeenCalledWith(layer);
+    expect(contentQueue.layers).toHaveLength(0);
+  });
+
   it('should handle channel_updated event and update channel default_playlist_id', async () => {
     // Create a mock Phoenix channel
     const mockChannel = {
@@ -342,6 +380,7 @@ describe('Device - Channel Updates', () => {
 
     // Verify that the other channel was not affected
     expect(device['channels'][1].attrs.default_playlist_id).toBe('200');
+    expect(device['channelGeneration']).toBe(1);
   });
 
   it('should handle channel_updated event with null default_playlist_id', async () => {

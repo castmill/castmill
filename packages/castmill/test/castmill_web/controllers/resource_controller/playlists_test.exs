@@ -4,6 +4,8 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
   alias Castmill.Teams
 
   import Castmill.AccountsFixtures
+  import Castmill.ChannelsFixtures
+  import Castmill.DevicesFixtures
   import Castmill.NetworksFixtures
   import Castmill.OrganizationsFixtures
   import Castmill.TeamsFixtures
@@ -193,6 +195,45 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
 
       # Adjust the assertion based on your error response structure
       assert response["errors"] != nil
+    end
+  end
+
+  describe "update playlist items" do
+    test "notifies devices using the playlist", %{conn: conn, organization: organization} do
+      playlist = playlist_fixture(%{organization_id: organization.id})
+      widget = widget_fixture()
+
+      {:ok, item} =
+        Castmill.Resources.insert_item_into_playlist(playlist.id, nil, widget.id, 0, 10_000)
+
+      channel =
+        channel_fixture(%{
+          organization_id: organization.id,
+          timezone: "UTC",
+          default_playlist_id: playlist.id
+        })
+
+      device = device_fixture(%{organization_id: organization.id})
+      {:ok, _} = Castmill.Devices.add_channel(device.id, channel.id)
+      Phoenix.PubSub.subscribe(Castmill.PubSub, "devices:#{device.id}")
+
+      conn =
+        patch(
+          conn,
+          "/api/organizations/#{organization.id}/playlists/#{playlist.id}/items/#{item.id}",
+          %{"options" => %{"duration" => 20_000}}
+        )
+
+      assert json_response(conn, 200)
+
+      assert_receive %{
+        update: "playlist",
+        resource: "playlist",
+        action: "update",
+        data: %{id: id}
+      }
+
+      assert id == playlist.id
     end
   end
 

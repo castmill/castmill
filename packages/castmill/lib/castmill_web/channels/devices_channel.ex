@@ -148,6 +148,12 @@ defmodule CastmillWeb.DevicesChannel do
   end
 
   @impl true
+  def handle_info(%{update: _resource} = payload, socket) do
+    push(socket, "update", payload)
+    {:noreply, socket}
+  end
+
+  @impl true
   def handle_info(%{command: _command} = params, socket) do
     push(socket, "command", params)
     {:noreply, socket}
