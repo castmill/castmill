@@ -156,6 +156,28 @@ describe('ProtectedRoute auth-guard', () => {
     expect(mockLoginUser).not.toHaveBeenCalled();
   });
 
+  it('preserves the QR code when a fresh browser has no session to restore', async () => {
+    const auth = await vi.importActual<typeof import('./auth')>('./auth');
+    auth.resetSession();
+    auth.setAuthenticated(true);
+    mockCheckAuth.mockImplementation(auth.checkAuth);
+    mockGetUser.mockImplementation(auth.getUser);
+    mockLoginUser.mockImplementation(() => auth.loginUser());
+    mockLocation.pathname = '/';
+    mockLocation.search = '?registrationCode=XUFUG53BKL';
+
+    render(() => ProtectedRoute({ children: (_addons) => <></> }));
+
+    await waitFor(() =>
+      expect(mockNavigate).toHaveBeenCalledWith(
+        '/login?redirectTo=%2F%3FregistrationCode%3DXUFUG53BKL',
+        { replace: true }
+      )
+    );
+    expect(mockLoginUser).toHaveBeenCalledTimes(1);
+    expect(auth.checkAuth()).toBe(false);
+  });
+
   it('skips loginUser() when user is already loaded', async () => {
     mockGetUser.mockReturnValue({ id: 'user-123', email: 'test@example.com' });
 
