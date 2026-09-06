@@ -16,7 +16,9 @@ export function RegisterComponent(props: { device: Device; pincode: string }) {
 
     try {
       // Generate QR code for the registration URL with responsive sizing
-      const registrationUrl = `https://app.castmill.com/register/${props.pincode}`;
+      const dashboardUrl =
+        import.meta.env.VITE_DASHBOARD_URL || 'https://app.castmill.dev';
+      const registrationUrl = `${dashboardUrl.replace(/\/$/, '')}/?registrationCode=${encodeURIComponent(props.pincode)}`;
 
       // Make QR code size responsive to screen dimensions
       const getQrSize = () => {
