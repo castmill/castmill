@@ -9,3 +9,13 @@
   flex-direction: row;
   gap: 1em;
 }
+
+@media (max-width: 48em) {
+  .main {
+    margin: 1em 0;
+  }
+
+  .actions {
+    flex-wrap: wrap;
+  }
+}

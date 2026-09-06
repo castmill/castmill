@@ -1,5 +1,17 @@
 @use '../../colors.scss';
 
+.channel-view {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.channel-content {
+  width: 100%;
+  min-width: 0;
+}
+
 .notice {
   margin: 0 0 1em 0;
   padding: 0.75em 1em;
@@ -9,4 +21,10 @@
   color: colors.$base-color;
   font-size: 0.95em;
   line-height: 1.5;
+}
+
+@media (max-width: 48em) {
+  .channel-view {
+    display: block;
+  }
 }

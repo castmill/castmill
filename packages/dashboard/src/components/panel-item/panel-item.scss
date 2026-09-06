@@ -54,3 +54,28 @@
   padding-left: 8em;
   font-size: 0.6em;
 }
+
+@media (max-width: 48em) {
+  .castmill-panel-item {
+    a {
+      min-height: 2.75em;
+      margin: 0;
+      padding: 0 0.75em;
+      border-radius: 0.5em;
+      background-color: colors.$component-background-color;
+
+      svg {
+        margin: 0 0.35em 0 0;
+      }
+    }
+  }
+
+  .item-level-0,
+  .item-level-1,
+  .item-level-2,
+  .item-level-3,
+  .item-level-4 {
+    padding-left: 0;
+    font-size: 1em;
+  }
+}

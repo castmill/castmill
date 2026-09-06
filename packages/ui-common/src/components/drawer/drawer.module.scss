@@ -122,4 +122,17 @@ $animation-duration: 0.3s;
     border-left: none;
     border-right: none;
   }
+
+  .header {
+    padding: 1em;
+  }
+
+  .body {
+    padding: 0.75em;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .footer {
+    padding: 0.75em 1em;
+  }
 }
