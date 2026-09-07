@@ -7,6 +7,13 @@ New devices can be added by implementing the `Machine` interface. This interface
 that are required by the device to work. You can check the integrations folder for examples on how to implement the
 interface for different platforms.
 
+## Device registration
+
+The registration QR code opens the dashboard and carries the pincode through login
+to the device registration form. Set `VITE_DASHBOARD_URL` when building the device
+package to use a custom dashboard URL (for example, `http://localhost:3000`).
+When unset, it uses the current origin.
+
 ## Learn more
 
 - Official website: https://castmill.com/
