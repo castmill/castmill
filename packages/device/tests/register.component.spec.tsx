@@ -26,7 +26,7 @@ describe('registration QR code', () => {
 
     await waitFor(() => {
       expect(QRCode.toDataURL).toHaveBeenCalledWith(
-        'https://app.castmill.dev/?registrationCode=XUFUG53BKL',
+        'http://localhost:3000/?registrationCode=XUFUG53BKL',
         expect.any(Object)
       );
       expect(
