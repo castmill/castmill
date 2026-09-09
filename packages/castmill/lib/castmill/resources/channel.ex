@@ -9,6 +9,8 @@ defmodule Castmill.Resources.Channel do
     field(:description, :string)
     field(:name, :string)
     field(:timezone, :string)
+    field(:default_playlist_name, :string, virtual: true)
+    field(:current_playlist_name, :string, virtual: true)
 
     belongs_to(:playlist, Castmill.Resources.Playlist, foreign_key: :default_playlist_id)
 
@@ -72,12 +74,39 @@ defimpl Jason.Encoder, for: Castmill.Resources.Channel do
         entries -> entries
       end
 
+    organization_name =
+      case channel.organization do
+        %Ecto.Association.NotLoaded{} -> nil
+        nil -> nil
+        organization -> organization.name
+      end
+
+    network_name =
+      case channel.organization do
+        %Ecto.Association.NotLoaded{} ->
+          nil
+
+        nil ->
+          nil
+
+        organization ->
+          case organization.network do
+            %Ecto.Association.NotLoaded{} -> nil
+            nil -> nil
+            network -> network.name
+          end
+      end
+
     map = %{
       id: channel.id,
       name: channel.name,
       timezone: channel.timezone,
       default_playlist_id: channel.default_playlist_id,
-      entries: entries
+      default_playlist_name: channel.default_playlist_name,
+      current_playlist_name: channel.current_playlist_name,
+      entries: entries,
+      organization_name: organization_name,
+      network_name: network_name
     }
 
     Jason.Encode.map(map, opts)

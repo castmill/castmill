@@ -1,5 +1,7 @@
 import {
   Component,
+  For,
+  batch,
   createEffect,
   createSignal,
   onCleanup,
@@ -13,31 +15,42 @@ import {
   IconButton,
   ConfirmDialog,
   Modal,
+  Drawer,
   Column,
   TableView,
   TableViewRef,
   TableAction,
   ResourcesObserver,
   TeamFilter,
+  TagFilter,
+  useTagFilter,
+  useTagFilterEffect,
   FetchDataOptions,
   ToastProvider,
   useToast,
+  ViewModeToggle,
+  ResourceTreeView,
+  TreeResourceItem,
+  ToolBar,
+  TagsService,
+  Tag,
+  TagGroup,
+  TagBadge,
+  TagPopover,
+  useViewMode,
 } from '@castmill/ui-common';
 
-import { BsCheckLg } from 'solid-icons/bs';
-import { BsEye } from 'solid-icons/bs';
+import { BsCheckLg, BsEye, BsTagFill } from 'solid-icons/bs';
 import { AiOutlineDelete } from 'solid-icons/ai';
 
 import { Device } from '../interfaces/device.interface';
 import DeviceView from './device-view';
 import styles from './devices.module.scss';
+import './devices.scss';
 
 import RegisterDevice from './register-device';
 import { DevicesService } from '../services/devices.service';
-import {
-  AddonStore,
-  AddonComponentProps,
-} from '../../common/interfaces/addon-store';
+import { AddonComponentProps } from '../../common/interfaces/addon-store';
 import { useTeamFilter, useModalFromUrl } from '../../common/hooks';
 
 import { QuotaIndicator } from '../../common/components/quota-indicator';
@@ -56,14 +69,6 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
   // Get i18n functions from store
   const t = (key: string, params?: Record<string, any>) => {
     const result = props.store.i18n?.t(key, params) || key;
-    console.log(
-      '[Devices] Translation:',
-      key,
-      '=>',
-      result,
-      'i18n available:',
-      !!props.store.i18n
-    );
     return result;
   };
   const toast = useToast();
@@ -78,14 +83,209 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
     return allowedActions?.includes(action as any) ?? false;
   };
 
-  const [currentPage, setCurrentPage] = createSignal(1);
+  // ---------------------------------------------------------------------------
+  // Tag support (device IDs are strings)
+  // ---------------------------------------------------------------------------
+  const [tagGroups, setTagGroups] = createSignal<TagGroup[]>([]);
+  const [allTags, setAllTags] = createSignal<Tag[]>([]);
+  const [resourceTagsMap, setResourceTagsMap] = createSignal<
+    Map<string, Tag[]>
+  >(new Map());
+  const [tagPopoverTarget, setTagPopoverTarget] = createSignal<{
+    item: DeviceTableItem;
+    anchorEl: HTMLElement;
+  } | null>(null);
+  const [bulkTagAnchorEl, setBulkTagAnchorEl] =
+    createSignal<HTMLElement | null>(null);
+
+  const canManageTags = () => {
+    const role = props.store.permissions?.role;
+    return role === 'admin' || role === 'manager';
+  };
+
+  const tagsService = new TagsService(props.store.env.baseUrl);
+
+  const loadTagGroups = async () => {
+    if (!props.store.organizations.selectedId) return;
+    try {
+      const [groups, allTagsList] = await Promise.all([
+        tagsService.listTagGroups(props.store.organizations.selectedId, {
+          preloadTags: true,
+        }),
+        tagsService.listTags(props.store.organizations.selectedId),
+      ]);
+      batch(() => {
+        setTagGroups(groups);
+        setAllTags(allTagsList);
+      });
+    } catch (error) {
+      console.error('Failed to load tag groups:', error);
+    }
+  };
+
+  createEffect(
+    on(
+      () => props.store.organizations.selectedId,
+      () => loadTagGroups()
+    )
+  );
+
+  const loadResourceTags = async (items: DeviceTableItem[]) => {
+    if (!items.length || !props.store.organizations.selectedId) {
+      setResourceTagsMap(new Map());
+      return;
+    }
+    const tagMap = new Map<string, Tag[]>();
+    await Promise.all(
+      items.map(async (item) => {
+        try {
+          const itemTags = await tagsService.getResourceTags(
+            props.store.organizations.selectedId,
+            'device',
+            item.id
+          );
+          tagMap.set(item.id, itemTags);
+        } catch {
+          tagMap.set(item.id, []);
+        }
+      })
+    );
+    setResourceTagsMap(tagMap);
+  };
+
+  const handleTagToggle = async (
+    item: DeviceTableItem,
+    tagId: number,
+    selected: boolean
+  ) => {
+    const orgId = props.store.organizations.selectedId;
+    if (!orgId) return;
+
+    setResourceTagsMap((prev) => {
+      const next = new Map(prev);
+      const current = next.get(item.id) || [];
+      if (selected) {
+        const tag = allTags().find((t) => t.id === tagId);
+        if (tag) next.set(item.id, [...current, tag]);
+      } else {
+        next.set(
+          item.id,
+          current.filter((t) => t.id !== tagId)
+        );
+      }
+      return next;
+    });
+
+    try {
+      if (selected) {
+        await tagsService.tagResource(orgId, 'device', item.id, tagId);
+      } else {
+        await tagsService.untagResource(orgId, 'device', item.id, tagId);
+      }
+    } catch (error) {
+      console.error('Failed to toggle tag:', error);
+      toast.error(t('tags.errors.tagResource', { error: String(error) }));
+      try {
+        const freshTags = await tagsService.getResourceTags(
+          orgId,
+          'device',
+          item.id
+        );
+        setResourceTagsMap((prev) => {
+          const next = new Map(prev);
+          next.set(item.id, freshTags);
+          return next;
+        });
+      } catch {
+        /* ignore */
+      }
+    }
+  };
+
+  const handleBulkTagToggle = async (tagId: number, selected: boolean) => {
+    const orgId = props.store.organizations.selectedId;
+    if (!orgId) return;
+
+    const resourceIds = Array.from(selectedDevices());
+    try {
+      if (selected) {
+        await tagsService.bulkTagResources(orgId, tagId, 'device', resourceIds);
+      } else {
+        await tagsService.bulkUntagResources(
+          orgId,
+          tagId,
+          'device',
+          resourceIds
+        );
+      }
+
+      const tagMap = new Map(resourceTagsMap());
+      await Promise.all(
+        resourceIds.map(async (id) => {
+          try {
+            const freshTags = await tagsService.getResourceTags(
+              orgId,
+              'device',
+              id
+            );
+            tagMap.set(id, freshTags);
+          } catch {
+            /* ignore */
+          }
+        })
+      );
+      setResourceTagsMap(tagMap);
+    } catch (error) {
+      console.error('Failed to bulk toggle tag:', error);
+      toast.error(t('tags.errors.tagResource', { error: String(error) }));
+    }
+  };
+
+  const bulkSelectedTagIds = () => {
+    const ids = Array.from(selectedDevices());
+    if (ids.length === 0) return [];
+    const allItemTags = ids.map((id) => resourceTagsMap().get(id) || []);
+    if (allItemTags.length === 0) return [];
+    const firstItemTagIds = new Set(allItemTags[0].map((t) => t.id));
+    return [...firstItemTagIds].filter((tagId) =>
+      allItemTags.every((tags) => tags.some((t) => t.id === tagId))
+    );
+  };
+
+  const handleCreateTag = async (name: string): Promise<Tag> => {
+    const newTag = await tagsService.createTag(
+      props.store.organizations.selectedId,
+      { name }
+    );
+    setAllTags((prev) => [...prev, newTag]);
+    return newTag;
+  };
+
   const [totalItems, setTotalItems] = createSignal(0);
 
   const { teams, selectedTeamId, setSelectedTeamId } = useTeamFilter({
     baseUrl: props.store.env.baseUrl,
     organizationId: props.store.organizations.selectedId,
-    params: props.params, // Pass URL params for shareable filtered views
+    params: props.params, // Pass URL search params for shareable filtered views
   });
+
+  // Tag filtering for organization
+  const {
+    tags,
+    selectedTagIds,
+    setSelectedTagIds,
+    filterMode: tagFilterMode,
+    setFilterMode: setTagFilterMode,
+  } = useTagFilter({
+    baseUrl: props.store.env.baseUrl,
+    organizationId: props.store.organizations.selectedId,
+    params: props.params,
+  });
+
+  // View mode: list (table) or tree – persisted in localStorage
+  const [viewMode, setViewMode] = useViewMode('devices');
+  const [treeVersion, setTreeVersion] = createSignal(0);
+  const bumpTree = () => setTreeVersion((v) => v + 1);
 
   const itemsPerPage = 10; // Number of items to show per page
 
@@ -93,12 +293,15 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
     equals: false,
   });
 
+  // Load tags whenever the visible table page changes
+  createEffect(on(data, (items) => loadResourceTags(items)));
+
   const [loading, setLoading] = createSignal(false);
   const [loadingSuccess, setLoadingSuccess] = createSignal('');
 
   const [pincode, setPincode] = createSignal('');
 
-  const [showModal, setShowModal] = createSignal(false);
+  const [showDrawer, setShowDrawer] = createSignal(false);
   const [showRegisterModal, setShowRegisterModal] = createSignal(false);
 
   const [registerError, setRegisterError] = createSignal('');
@@ -219,28 +422,25 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
     )
   );
 
-  // Function to close the modal and update URL
-  const closeModalAndClearUrl = () => {
-    // Clear URL FIRST (before animation starts) for immediate feedback
+  // Close the device drawer and clear URL
+  const closeDeviceDrawer = () => {
     if (props.params) {
       const [, setSearchParams] = props.params;
       setSearchParams({ itemId: undefined }, { replace: true });
     }
-
-    // Then close modal (triggers 300ms animation)
-    setShowModal(false);
+    setShowDrawer(false);
   };
 
   // Sync modal state with URL itemId parameter
   useModalFromUrl({
     getItemIdFromUrl: () => props.params?.[0]?.itemId,
-    isModalOpen: () => showModal(),
-    closeModal: closeModalAndClearUrl,
+    isModalOpen: () => showDrawer(),
+    closeModal: () => setShowDrawer(false),
     openModal: (itemId) => {
       const device = data().find((d) => String(d.id) === String(itemId));
       if (device) {
         setCurrentDevice(device);
-        setShowModal(true);
+        setShowDrawer(true);
       }
     },
   });
@@ -273,6 +473,36 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
     setPincode(searchParams.registrationCode);
   }
 
+  /**
+   * Maps backend error to user-friendly translated message
+   */
+  const mapErrorToMessage = (error: any): string => {
+    // Default error message
+    let errorMessage = t('devices.errorRegisteringDevice', {
+      error: String(error),
+    });
+
+    // Check if this is an HttpError with pincode-specific error
+    if (
+      error?.details?.field === 'pincode' &&
+      error?.details?.errors?.pincode
+    ) {
+      const pincodeError = error.details.errors.pincode[0];
+
+      // Map backend error messages to translation keys
+      if (pincodeError === 'Invalid pincode') {
+        errorMessage = t('devices.errors.invalidPincode');
+      } else if (pincodeError === 'Pincode has expired') {
+        errorMessage = t('devices.errors.pincodeExpired');
+      } else {
+        // Use the error message from backend but in a more user-friendly way
+        errorMessage = pincodeError;
+      }
+    }
+
+    return errorMessage;
+  };
+
   const handleDeviceRegistrationSubmit = async (registrationData: {
     name: string;
     pincode: string;
@@ -292,22 +522,21 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
 
       // Update total items
       setTotalItems(totalItems() + 1);
-    } catch (error) {
-      setRegisterError(
-        t('devices.errorRegisteringDevice', { error: String(error) })
-      );
+
+      // Complete the onboarding step for device registration
+      props.store.onboarding?.completeStep?.('register_device');
+    } catch (error: any) {
+      setRegisterError(mapErrorToMessage(error));
     } finally {
       setLoading(false);
     }
   };
 
-  // Function to open the modal
-  const openModal = (item: DeviceTableItem) => {
-    // Open modal immediately
+  // Open the device drawer and update URL
+  const openDeviceDrawer = (item: DeviceTableItem) => {
     setCurrentDevice(item);
-    setShowModal(true);
+    setShowDrawer(true);
 
-    // Also update URL for shareability (use replace to avoid polluting browser history)
     if (props.params) {
       const [, setSearchParams] = props.params;
       setSearchParams({ itemId: String(item.id) }, { replace: true });
@@ -328,33 +557,66 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
     setPincode('');
   };
 
-  const columns = [
-    { key: 'name', title: t('common.name'), sortable: true },
-    {
-      key: 'online',
-      title: t('common.online'),
-      sortable: true,
-      render: (item: DeviceTableItem) => (
-        <svg
-          width="16"
-          height="16"
-          fill={item.online ? 'green' : 'red'}
-          viewBox="0 0 16 16"
-        >
-          <circle cx="8" cy="8" r="6" />
-        </svg>
-      ),
-    },
-    { key: 'timezone', title: t('common.timezone'), sortable: true },
-    { key: 'version', title: t('common.version'), sortable: true },
-    { key: 'last_ip', title: t('common.ip'), sortable: true },
-    { key: 'id', title: t('common.id'), sortable: true },
-  ] as Column<DeviceTableItem>[];
+  // Use function to make columns reactive to i18n changes
+  const columns = () =>
+    [
+      { key: 'name', title: t('common.name'), sortable: true },
+      {
+        key: 'online',
+        title: t('common.online'),
+        sortable: true,
+        render: (item: DeviceTableItem) => (
+          <svg
+            width="16"
+            height="16"
+            fill={item.online ? 'green' : 'red'}
+            viewBox="0 0 16 16"
+          >
+            <circle cx="8" cy="8" r="6" />
+          </svg>
+        ),
+      },
+      { key: 'timezone', title: t('common.timezone'), sortable: true },
+      { key: 'version', title: t('common.version'), sortable: true },
+      { key: 'last_ip', title: t('common.ip'), sortable: true },
+      {
+        key: 'tags',
+        title: t('tags.title'),
+        sortable: false,
+        render: (item: DeviceTableItem) => {
+          const itemTags = () => resourceTagsMap().get(item.id) || [];
+          return (
+            <div class="tags-cell">
+              <For each={itemTags().slice(0, 3)}>
+                {(tag) => <TagBadge tag={tag} size="small" />}
+              </For>
+              <Show when={itemTags().length > 3}>
+                <span class="tags-overflow">+{itemTags().length - 3}</span>
+              </Show>
+              <button
+                class="tag-manage-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setTagPopoverTarget({
+                    item,
+                    anchorEl: e.currentTarget as HTMLElement,
+                  });
+                }}
+                title={t('tags.manageTags')}
+              >
+                <BsTagFill />
+              </button>
+            </div>
+          );
+        },
+      },
+    ] as Column<DeviceTableItem>[];
 
-  const actions: TableAction<DeviceTableItem>[] = [
+  // Use function to make actions reactive to i18n changes
+  const actions = (): TableAction<DeviceTableItem>[] => [
     {
       icon: BsEye,
-      handler: openModal,
+      handler: openDeviceDrawer,
       label: t('common.view'),
     },
     {
@@ -394,6 +656,8 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
         search,
         filters,
         team_id: selectedTeamId(),
+        tag_ids: selectedTagIds(),
+        tag_filter_mode: tagFilterMode(),
       }
     );
 
@@ -463,9 +727,9 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
     setSelectedDevices(rowsSelected);
   };
 
-  let tableViewRef: TableViewRef<DeviceTableItem>;
+  let tableViewRef: TableViewRef<string, DeviceTableItem>;
 
-  const setRef = (ref: TableViewRef<DeviceTableItem>) => {
+  const setRef = (ref: TableViewRef<string, DeviceTableItem>) => {
     tableViewRef = ref;
   };
 
@@ -478,6 +742,81 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
   const handleTeamChange = (teamId: number | null) => {
     setSelectedTeamId(teamId);
     refreshData();
+    bumpTree();
+  };
+
+  // Use hook to manage tag filter effects
+  const { handleTagChange } = useTagFilterEffect({
+    selectedTagIds,
+    setSelectedTagIds,
+    tagFilterMode,
+    onRefreshData: refreshData,
+    onRefreshTree: bumpTree,
+  });
+
+  // Fetch resources for tree view nodes (filter by tag IDs in AND mode)
+  const fetchTreeResources = async (tagIds: number[]) => {
+    const result = await DevicesService.fetchDevices(
+      props.store.env.baseUrl,
+      props.store.organizations.selectedId,
+      {
+        page: 1,
+        page_size: 100,
+        sortOptions: { key: 'name', direction: 'ascending' },
+        tag_ids: tagIds,
+        tag_filter_mode: 'all',
+        team_id: selectedTeamId(),
+      }
+    );
+    return {
+      data: result.data as TreeResourceItem[],
+      count: result.count,
+    };
+  };
+
+  const fetchTreeUntaggedResources = async (
+    tagGroupId: number,
+    parentTagIds?: number[]
+  ) => {
+    const result = await DevicesService.fetchDevices(
+      props.store.env.baseUrl,
+      props.store.organizations.selectedId,
+      {
+        page: 1,
+        page_size: 100,
+        sortOptions: { key: 'name', direction: 'ascending' },
+        tag_filter_mode: 'all',
+        missing_tag_group_id: tagGroupId,
+        tag_ids: parentTagIds,
+        team_id: selectedTeamId(),
+      }
+    );
+
+    return {
+      data: result.data as TreeResourceItem[],
+      count: result.count,
+    };
+  };
+
+  const fetchTreeUntaggedCount = async (
+    tagGroupId: number,
+    parentTagIds?: number[]
+  ) => {
+    const result = await DevicesService.fetchDevices(
+      props.store.env.baseUrl,
+      props.store.organizations.selectedId,
+      {
+        page: 1,
+        page_size: 1,
+        sortOptions: { key: 'name', direction: 'ascending' },
+        tag_filter_mode: 'all',
+        missing_tag_group_id: tagGroupId,
+        tag_ids: parentTagIds,
+        team_id: selectedTeamId(),
+      }
+    );
+
+    return result.count;
   };
 
   const updateItem = (itemId: string, item: Partial<DeviceTableItem>) => {
@@ -507,23 +846,30 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
           />
         </Modal>
       </Show>
-      <Show when={showModal()}>
-        <Modal
-          title={`Device "${currentDevice()?.name}"`}
-          description={t('devices.deviceDetails')}
-          onClose={closeModalAndClearUrl}
+      <Show when={showDrawer()}>
+        <Drawer
+          title={t('devices.drawerTitle', { name: currentDevice()?.name })}
+          onClose={closeDeviceDrawer}
+          placement="right"
+          size="xl"
+          closeOnOutsideClick
+          outsideClickIgnoreSelector="tbody tr, .device-tree-item"
         >
-          <DeviceView
-            baseUrl={props.store.env.baseUrl}
-            organization_id={props.store.organizations.selectedId}
-            device={currentDevice()!}
-            store={props.store}
-            onChange={(device) => {
-              updateItem(device.id, device);
-            }}
-            t={t}
-          />
-        </Modal>
+          <Show when={currentDevice()} keyed>
+            {(device) => (
+              <DeviceView
+                baseUrl={props.store.env.baseUrl}
+                organization_id={props.store.organizations.selectedId}
+                device={device}
+                store={props.store}
+                onChange={(updatedDevice) => {
+                  updateItem(updatedDevice.id, updatedDevice);
+                }}
+                t={t}
+              />
+            )}
+          </Show>
+        </Drawer>
       </Show>
 
       <ConfirmDialog
@@ -551,19 +897,125 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
         </div>
       </ConfirmDialog>
 
-      <TableView
-        title={t('devices.title')}
-        resource="devices"
-        params={props.params}
-        fetchData={fetchData}
-        ref={setRef}
-        toolbar={{
-          filters: [
-            { name: t('common.online'), key: 'online', isActive: true },
-            { name: t('common.offline'), key: 'offline', isActive: true },
-          ],
-          mainAction: (
-            <div style="display: flex; align-items: center; gap: 1rem;">
+      <Show when={viewMode() === 'list'}>
+        <TableView
+          title={t('devices.title')}
+          resource="devices"
+          params={props.params}
+          fetchData={fetchData}
+          ref={setRef}
+          toolbar={{
+            filters: [
+              { name: t('common.online'), key: 'online', isActive: true },
+              { name: t('common.offline'), key: 'offline', isActive: true },
+            ],
+            searchPlaceholder: t('common.search'),
+            mainAction: (
+              <div style="display: flex; align-items: center; gap: 1rem;">
+                <Show when={quota()}>
+                  <QuotaIndicator
+                    used={quota()!.used}
+                    total={quota()!.total}
+                    resourceName={t('devices.title')}
+                    compact
+                    isLoading={showLoadingIndicator()}
+                  />
+                </Show>
+                <Button
+                  label={t('devices.addDevice')}
+                  onClick={openRegisterModal}
+                  icon={BsCheckLg}
+                  color="primary"
+                  disabled={
+                    isQuotaReached() || !canPerformAction('devices', 'create')
+                  }
+                />
+              </div>
+            ),
+            titleActions: (
+              <ViewModeToggle mode={viewMode()} onChange={setViewMode} />
+            ),
+            actions: (
+              <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+                <TeamFilter
+                  teams={teams()}
+                  selectedTeamId={selectedTeamId()}
+                  onTeamChange={handleTeamChange}
+                  label={t('filters.teamLabel')}
+                  placeholder={t('filters.teamPlaceholder')}
+                  clearLabel={t('filters.teamClear')}
+                />
+                <TagFilter
+                  tags={tags()}
+                  selectedTagIds={selectedTagIds()}
+                  onTagChange={handleTagChange}
+                  filterMode={tagFilterMode()}
+                  onFilterModeChange={setTagFilterMode}
+                  label={t('filters.tagLabel')}
+                  placeholder={t('filters.tagPlaceholder')}
+                  clearLabel={t('filters.tagClear')}
+                  searchPlaceholder={t('filters.tagSearchPlaceholder')}
+                  filterModeLabels={{
+                    any: t('filters.tagFilterModeAny'),
+                    all: t('filters.tagFilterModeAll'),
+                  }}
+                  noMatchMessage={t('filters.noMatches')}
+                  emptyMessage={t('filters.noItems')}
+                />
+              </div>
+            ),
+          }}
+          selectionHint={t('common.selectionHint')}
+          selectionLabel={t('common.selectionCount')}
+          selectionActions={({ count, clear }) => (
+            <>
+              <Show when={canManageTags()}>
+                <button
+                  class="selection-action-btn"
+                  onClick={(e) => {
+                    setBulkTagAnchorEl(e.currentTarget as HTMLElement);
+                  }}
+                >
+                  <BsTagFill />
+                  {t('tags.manageTags')}
+                </button>
+              </Show>
+              <button
+                class="selection-action-btn danger"
+                disabled={!canPerformAction('devices', 'delete')}
+                onClick={() => setShowConfirmDialogMultiple(true)}
+              >
+                <AiOutlineDelete />
+                Delete
+              </button>
+            </>
+          )}
+          table={{
+            columns,
+            actions,
+            actionsLabel: t('common.actions'),
+            onRowSelect,
+            defaultRowAction: {
+              icon: BsEye,
+              handler: (item: DeviceTableItem) => {
+                openDeviceDrawer(item);
+              },
+              label: t('common.view'),
+            },
+          }}
+          pagination={{ itemsPerPage }}
+        ></TableView>
+      </Show>
+
+      <Show when={viewMode() === 'tree'}>
+        <ToolBar
+          title={t('devices.title')}
+          titleActions={
+            <ViewModeToggle mode={viewMode()} onChange={setViewMode} />
+          }
+          hideSearch
+          mainAction={
+            <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
               <Show when={quota()}>
                 <QuotaIndicator
                   used={quota()!.used}
@@ -583,9 +1035,9 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
                 }
               />
             </div>
-          ),
-          actions: (
-            <div style="display: flex; gap: 1rem; align-items: center;">
+          }
+          actions={
+            <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
               <TeamFilter
                 teams={teams()}
                 selectedTeamId={selectedTeamId()}
@@ -594,30 +1046,113 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
                 placeholder={t('filters.teamPlaceholder')}
                 clearLabel={t('filters.teamClear')}
               />
-              <IconButton
-                onClick={() => setShowConfirmDialogMultiple(true)}
-                icon={AiOutlineDelete}
-                color="primary"
-                disabled={selectedDevices().size === 0}
-              />
             </div>
-          ),
-        }}
-        table={{
-          columns,
-          actions,
-          actionsLabel: t('common.actions'),
-          onRowSelect,
-          defaultRowAction: {
-            icon: BsEye,
-            handler: (item: DeviceTableItem) => {
-              openModal(item);
-            },
-            label: t('common.view'),
-          },
-        }}
-        pagination={{ itemsPerPage }}
-      ></TableView>
+          }
+        />
+        <ResourceTreeView
+          tagGroups={tagGroups()}
+          allTags={allTags()}
+          fetchResources={fetchTreeResources}
+          fetchUntaggedResources={fetchTreeUntaggedResources}
+          fetchUntaggedCount={fetchTreeUntaggedCount}
+          untaggedLabel={t('tags.groups.untagged')}
+          emptyLeafText={t('filters.noItems')}
+          refreshKey={treeVersion()}
+          storageKey="devices"
+          onResourceClick={(item) =>
+            openDeviceDrawer(item as unknown as DeviceTableItem)
+          }
+          renderResource={(item) => (
+            <div
+              class="device-tree-item"
+              onClick={() =>
+                openDeviceDrawer(item as unknown as DeviceTableItem)
+              }
+            >
+              <div class="device-tree-info">
+                <span class="device-tree-name">{item.name}</span>
+                <Show when={(item as any).last_ip}>
+                  <span class="device-tree-meta">{(item as any).last_ip}</span>
+                </Show>
+              </div>
+              <button
+                class="device-tree-tag-btn"
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  const device = item as unknown as DeviceTableItem;
+                  const orgId = props.store.organizations.selectedId;
+                  if (orgId && !resourceTagsMap().has(device.id)) {
+                    try {
+                      const itemTags = await tagsService.getResourceTags(
+                        orgId,
+                        'device',
+                        device.id
+                      );
+                      setResourceTagsMap((prev) => {
+                        const next = new Map(prev);
+                        next.set(device.id, itemTags);
+                        return next;
+                      });
+                    } catch {
+                      /* ignore */
+                    }
+                  }
+                  setTagPopoverTarget({
+                    item: device,
+                    anchorEl: e.currentTarget as HTMLElement,
+                  });
+                }}
+                title={t('tags.manageTags')}
+              >
+                <BsTagFill />
+              </button>
+            </div>
+          )}
+        />
+      </Show>
+
+      {/* Single-item tag popover */}
+      <Show when={tagPopoverTarget()}>
+        {(target) => (
+          <TagPopover
+            availableTags={allTags()}
+            tagGroups={tagGroups()}
+            selectedTagIds={(resourceTagsMap().get(target().item.id) || []).map(
+              (t) => t.id
+            )}
+            onToggle={(tagId, selected) =>
+              handleTagToggle(target().item, tagId, selected)
+            }
+            onCreateTag={canManageTags() ? handleCreateTag : undefined}
+            allowCreate={canManageTags()}
+            anchorEl={target().anchorEl}
+            onClose={() => setTagPopoverTarget(null)}
+            placeholder={t('tags.searchTags')}
+            ungroupedLabel={t('tags.groups.ungrouped')}
+            emptyLabel={t('tags.noTagsAvailable')}
+            noMatchLabel={t('tags.noMatchingTags')}
+          />
+        )}
+      </Show>
+
+      {/* Bulk tag popover */}
+      <Show when={bulkTagAnchorEl()}>
+        <TagPopover
+          availableTags={allTags()}
+          tagGroups={tagGroups()}
+          selectedTagIds={bulkSelectedTagIds()}
+          onToggle={handleBulkTagToggle}
+          onCreateTag={canManageTags() ? handleCreateTag : undefined}
+          allowCreate={canManageTags()}
+          anchorEl={bulkTagAnchorEl()!}
+          onClose={() => setBulkTagAnchorEl(null)}
+          title={t('tags.manageTags')}
+          placeholder={t('tags.searchTags')}
+          ungroupedLabel={t('tags.groups.ungrouped')}
+          emptyLabel={t('tags.noTagsAvailable')}
+          noMatchLabel={t('tags.noMatchingTags')}
+        />
+      </Show>
     </div>
   );
 };

@@ -31,6 +31,13 @@ export default defineConfig({
   },
   server: {
     port: 3000,
+    proxy: {
+      // Proxy widget assets to Phoenix backend during development
+      '/widget_assets': {
+        target: 'http://localhost:4000',
+        changeOrigin: true,
+      },
+    },
   },
   build: {
     target: 'esnext',

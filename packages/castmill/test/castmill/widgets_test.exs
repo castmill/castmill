@@ -652,6 +652,99 @@ defmodule Castmill.WidgetsTest do
       assert updated_widget_config.options == options
       assert updated_widget_config.data == data
     end
+
+    test "advances the version on every successful update", %{
+      playlist: playlist,
+      playlist_item: playlist_item,
+      widget_config: widget_config,
+      options: options,
+      data: data
+    } do
+      initial_version = widget_config.version
+
+      assert {:ok, _} = Widgets.update_widget_config(playlist.id, playlist_item.id, options, data)
+
+      assert Widgets.get_widget_config(playlist.id, playlist_item.id).version ==
+               initial_version + 1
+
+      assert {:ok, _} = Widgets.update_widget_config(playlist.id, playlist_item.id, options, data)
+
+      assert Widgets.get_widget_config(playlist.id, playlist_item.id).version ==
+               initial_version + 2
+    end
+
+    test "rejects invalid location widget options", %{
+      playlist: playlist,
+      playlist_item: playlist_item
+    } do
+      widget =
+        widget_fixture(%{
+          name: "weather widget",
+          template: %{"type" => "group", "components" => []},
+          options_schema: %{
+            "location" => %{"type" => "location", "required" => true}
+          },
+          data_schema: %{}
+        })
+
+      widget_config =
+        Widgets.get_widget_config(playlist.id, playlist_item.id)
+        |> Ecto.Changeset.change(widget_id: widget.id)
+        |> Castmill.Repo.update!()
+
+      assert widget_config.widget_id == widget.id
+
+      assert {:error, changeset} =
+               Widgets.update_widget_config(
+                 playlist.id,
+                 playlist_item.id,
+                 %{"location" => %{"lat" => "51.5", "lng" => -0.09}},
+                 %{}
+               )
+
+      assert errors_on(changeset) == %{
+               options: ["Location field \"location\" must have a lat number"]
+             }
+    end
+
+    test "accepts valid weather widget options when widget_id comes from stored config", %{
+      playlist: playlist,
+      playlist_item: playlist_item
+    } do
+      widget =
+        widget_fixture(%{
+          name: "weather widget with unit option",
+          template: %{"type" => "group", "components" => []},
+          options_schema: %{
+            "location" => %{"type" => "location", "required" => true},
+            "fahrenheit" => %{"type" => "boolean", "default" => false}
+          },
+          data_schema: %{}
+        })
+
+      widget_config =
+        Widgets.get_widget_config(playlist.id, playlist_item.id)
+        |> Ecto.Changeset.change(widget_id: widget.id)
+        |> Castmill.Repo.update!()
+
+      assert {:ok, "Widget configuration updated successfully"} =
+               Widgets.update_widget_config(
+                 playlist.id,
+                 playlist_item.id,
+                 %{
+                   "location" => %{"lat" => 55.666667, "lng" => 13.083333},
+                   "fahrenheit" => true
+                 },
+                 %{}
+               )
+
+      updated_widget_config = Widgets.get_widget_config(playlist.id, playlist_item.id)
+
+      assert updated_widget_config.id == widget_config.id
+      assert updated_widget_config.options["fahrenheit"] == true
+      assert updated_widget_config.options["location"]["lat"] == 55.666667
+      assert updated_widget_config.options["location"]["lng"] == 13.083333
+    end
   end
 
   describe "list_widgets/1" do
@@ -819,6 +912,115 @@ defmodule Castmill.WidgetsTest do
     test "search count is case insensitive" do
       count = Widgets.count_widgets(%{search: "counter"})
       assert count >= 2
+    end
+  end
+
+  describe "get_widget_usage/1" do
+    setup do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+
+      {:ok, widget} =
+        Widgets.create_widget(%{
+          name: "Usage Test Widget",
+          slug: "usage-test-widget",
+          template: %{},
+          options_schema: %{},
+          data_schema: %{}
+        })
+
+      {:ok, organization: organization, widget: widget}
+    end
+
+    test "returns empty list for widget not used in any playlist", %{widget: widget} do
+      usage = Widgets.get_widget_usage(widget.id)
+      assert usage == []
+    end
+
+    test "returns usage info when widget is used in a playlist", %{
+      organization: organization,
+      widget: widget
+    } do
+      # Create a playlist and add the widget to it
+      playlist = playlist_fixture(%{organization_id: organization.id})
+
+      {:ok, playlist_item} =
+        Castmill.Resources.insert_item_into_playlist(
+          playlist.id,
+          # prev_item_id
+          nil,
+          widget.id,
+          # offset
+          0,
+          # duration
+          10000
+        )
+
+      usage = Widgets.get_widget_usage(widget.id)
+
+      assert length(usage) == 1
+      [usage_entry] = usage
+      assert usage_entry.playlist_id == playlist.id
+      assert usage_entry.playlist_name == playlist.name
+      assert usage_entry.playlist_item_id == playlist_item.id
+    end
+  end
+
+  describe "delete_widget_with_cascade/1" do
+    setup do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+
+      {:ok, widget} =
+        Widgets.create_widget(%{
+          name: "Delete Test Widget",
+          slug: "delete-test-widget",
+          template: %{},
+          options_schema: %{},
+          data_schema: %{}
+        })
+
+      {:ok, organization: organization, widget: widget}
+    end
+
+    test "deletes widget not in use", %{widget: widget} do
+      {:ok, deleted_widget} = Widgets.delete_widget_with_cascade(widget)
+      assert deleted_widget.id == widget.id
+      assert Widgets.get_widget(widget.id) == nil
+    end
+
+    test "deletes widget and its widget_configs when in use", %{
+      organization: organization,
+      widget: widget
+    } do
+      # Create a playlist and add the widget to it
+      playlist = playlist_fixture(%{organization_id: organization.id})
+
+      {:ok, playlist_item} =
+        Castmill.Resources.insert_item_into_playlist(
+          playlist.id,
+          # prev_item_id
+          nil,
+          widget.id,
+          # offset
+          0,
+          # duration
+          10000
+        )
+
+      # Verify widget_config exists
+      widget_config = Widgets.get_widget_config(playlist.id, playlist_item.id)
+      assert widget_config != nil
+
+      # Delete the widget
+      {:ok, deleted_widget} = Widgets.delete_widget_with_cascade(widget)
+      assert deleted_widget.id == widget.id
+
+      # Verify widget is deleted
+      assert Widgets.get_widget(widget.id) == nil
+
+      # Verify widget_config is also deleted
+      assert Widgets.get_widget_config(playlist.id, playlist_item.id) == nil
     end
   end
 end

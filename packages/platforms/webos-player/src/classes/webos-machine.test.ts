@@ -1,6 +1,8 @@
 import { vi, describe, it, beforeEach, expect } from 'vitest';
 import { WebosMachine } from './webos-machine';
 
+vi.stubEnv('VITE_UPDATE_URL', 'https://updates.castmill.io/webos/player.ipk');
+
 vi.mock('../native', () => ({
   storage: {
     writeFile: vi.fn(() => Promise.resolve()),
@@ -139,7 +141,7 @@ describe('WebosMachine', () => {
       appLaunchMode: 'local',
       appType: 'ipk',
       fqdnMode: true,
-      fqdnAddr: 'https://update.castmill.io/webos/player-new.ipk',
+      fqdnAddr: 'https://updates.castmill.io/webos/player.ipk',
     });
     expect(storage.upgradeApplication).toHaveBeenCalledOnce();
     expect(rebootSpy).toHaveBeenCalledOnce();

@@ -1,5 +1,10 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { formatDuration, formatTimestamp, formatRelativeTime } from './time';
+import {
+  formatDuration,
+  formatTimestamp,
+  formatRelativeTime,
+  formatRelativeTimeLocalized,
+} from './time';
 
 describe('formatDuration', () => {
   it('should format milliseconds to mm:ss format', () => {
@@ -136,5 +141,74 @@ describe('formatRelativeTime', () => {
 
   it('should return "-" for invalid date string', () => {
     expect(formatRelativeTime('invalid-date')).toBe('-');
+  });
+});
+
+describe('formatRelativeTimeLocalized', () => {
+  let originalDate: typeof Date;
+
+  beforeEach(() => {
+    originalDate = global.Date;
+    // Mock Date.now() to a fixed point: 2025-01-01T12:00:00Z
+    const mockNow = new Date('2025-01-01T12:00:00Z');
+    global.Date = class extends originalDate {
+      constructor(...args: any[]) {
+        if (args.length === 0) {
+          return mockNow;
+        }
+        return new originalDate(...args);
+      }
+      static now() {
+        return mockNow.getTime();
+      }
+    } as any;
+  });
+
+  afterEach(() => {
+    global.Date = originalDate;
+  });
+
+  it('falls back to the English formatter when no locale is provided', () => {
+    const timestamp = new Date('2025-01-01T11:55:00Z'); // 5 minutes ago
+    expect(formatRelativeTimeLocalized(timestamp)).toBe('5 minutes ago');
+  });
+
+  it('falls back to the English formatter for an English locale', () => {
+    const timestamp = new Date('2025-01-01T11:55:00Z'); // 5 minutes ago
+    expect(formatRelativeTimeLocalized(timestamp, 'en')).toBe('5 minutes ago');
+    expect(formatRelativeTimeLocalized(timestamp, 'en-US')).toBe(
+      '5 minutes ago'
+    );
+  });
+
+  it('formats relative past time using a non-English locale', () => {
+    // Swedish for "5 minutes ago"
+    const timestamp = new Date('2025-01-01T11:55:00Z');
+    const result = formatRelativeTimeLocalized(timestamp, 'sv');
+    // Intl.RelativeTimeFormat with sv should produce a Swedish string
+    expect(result).not.toBe('5 minutes ago');
+    expect(result.length).toBeGreaterThan(0);
+  });
+
+  it('formats relative future time using a non-English locale', () => {
+    // 2 hours in the future
+    const timestamp = new Date('2025-01-01T14:00:00Z');
+    const result = formatRelativeTimeLocalized(timestamp, 'de');
+    expect(result.length).toBeGreaterThan(0);
+    expect(result).not.toBe('in 2 hours');
+  });
+
+  it('handles ISO string input for a non-English locale', () => {
+    const result = formatRelativeTimeLocalized('2025-01-01T11:55:00Z', 'fr');
+    expect(result.length).toBeGreaterThan(0);
+  });
+
+  it('returns "-" for an empty/null timestamp', () => {
+    expect(formatRelativeTimeLocalized('' as any, 'sv')).toBe('-');
+    expect(formatRelativeTimeLocalized(null as any, 'sv')).toBe('-');
+  });
+
+  it('returns "-" for an invalid date string', () => {
+    expect(formatRelativeTimeLocalized('invalid-date', 'sv')).toBe('-');
   });
 });

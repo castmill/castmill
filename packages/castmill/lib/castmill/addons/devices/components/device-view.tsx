@@ -7,6 +7,11 @@ import { DeviceLogs } from './device-events';
 import { DeviceDetails, DeviceUpdate } from './device-details';
 import { DevicesService } from '../services/devices.service';
 import { DeviceCache } from './device-cache';
+import { DevicePreview } from './device-preview';
+import { DeviceTelemetry } from './device-telemetry';
+import { DeviceSchedule } from './device-schedule';
+import { DeviceInfo } from './device-info';
+import { AddonStore } from '../../common/interfaces/addon-store';
 import { RemoteControl } from './remote-control';
 
 // Optionally we should allow using protonmaps
@@ -17,8 +22,8 @@ const DeviceView: Component<{
   baseUrl: string;
   device: Device;
   organization_id: string;
+  store?: AddonStore;
   onChange?: (device: Device) => void;
-  store?: import('../../common/interfaces/addon-store').AddonStore;
   t?: (key: string, params?: Record<string, any>) => string;
 }> = (props) => {
   const t = props.t || ((key: string) => key);
@@ -59,6 +64,10 @@ const DeviceView: Component<{
       ),
     },
     {
+      title: t('devices.info.title'),
+      content: () => <DeviceInfo device={props.device} t={t} />,
+    },
+    {
       title: t('common.channels'),
       content: () => (
         <div>
@@ -66,6 +75,7 @@ const DeviceView: Component<{
             baseUrl={props.baseUrl}
             organizationId={props.organization_id}
             device={props.device}
+            store={props.store}
             t={t}
           />
         </div>
@@ -87,7 +97,11 @@ const DeviceView: Component<{
     },
     {
       title: t('common.preview'),
-      content: () => <div>{t('devices.preview.placeholder')}</div>,
+      content: () => (
+        <div>
+          <DevicePreview baseUrl={props.baseUrl} device={props.device} t={t} />
+        </div>
+      ),
     },
     {
       title: t('common.cache'),
@@ -105,7 +119,15 @@ const DeviceView: Component<{
       title: t('common.maintainance'),
       content: () => (
         <div>
-          <Maintainance baseUrl={props.baseUrl} device={props.device} t={t} />
+          <Maintainance
+            baseUrl={props.baseUrl}
+            organizationId={props.organization_id}
+            device={props.device}
+            onDeviceUpdated={(device) => {
+              props.onChange?.({ ...props.device, ...device });
+            }}
+            t={t}
+          />
         </div>
       ),
     },
@@ -123,15 +145,25 @@ const DeviceView: Component<{
     },
     {
       title: t('common.telemetry'),
-      content: () => <div>{t('devices.telemetry.placeholder')}</div>,
+      content: () => (
+        <DeviceTelemetry baseUrl={props.baseUrl} device={props.device} t={t} />
+      ),
+    },
+    {
+      title: t('deviceSchedule.title'),
+      content: () => (
+        <div>
+          <DeviceSchedule baseUrl={props.baseUrl} device={props.device} t={t} />
+        </div>
+      ),
     },
   ];
 
   return (
-    <>
+    <div style="width: 100%; min-height: 28em;">
       <Tabs tabs={tabs} />
       <LoadingOverlay show={loading()} />
-    </>
+    </div>
   );
 };
 

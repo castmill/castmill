@@ -10,13 +10,16 @@ import {
 } from '@castmill/ui-common';
 import { Device } from '../interfaces/device.interface';
 import { AiOutlineDelete } from 'solid-icons/ai';
+import { BsEye } from 'solid-icons/bs';
 import styles from './devices.module.scss';
 import { DevicesService, JsonChannel } from '../services/devices.service';
+import { AddonStore } from '../../common/interfaces/addon-store';
 
 export const Channels: Component<{
   baseUrl: string;
   organizationId: string;
   device: Device;
+  store?: AddonStore;
   t?: (key: string, params?: Record<string, any>) => string;
 }> = (props) => {
   const t = props.t || ((key: string) => key);
@@ -52,6 +55,15 @@ export const Channels: Component<{
 
   // Define table actions with i18n
   const actions: TableAction<JsonChannel>[] = [
+    {
+      icon: BsEye,
+      handler: (item: JsonChannel) => {
+        props.store?.router?.navigate(
+          `/org/${props.organizationId}/channels?itemId=${item.id}`
+        );
+      },
+      label: t('common.view'),
+    },
     {
       icon: AiOutlineDelete,
       handler: async (item: JsonChannel) => {
@@ -130,6 +142,9 @@ export const Channels: Component<{
       // Refresh the table to show the updated list
       refreshData();
       toast.success(`Channel "${selectedChannel.name}" added successfully`);
+
+      // Complete the onboarding step for assigning a channel to a device
+      props.store?.onboarding?.completeStep?.('assign_channel');
     } catch (e) {
       toast.error(`Failed to add channel: ${e}`);
     }

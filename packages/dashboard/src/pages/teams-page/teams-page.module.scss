@@ -61,3 +61,24 @@
   font-size: 0.95em;
   margin: 0;
 }
+
+.no-users-hint {
+  margin-top: 1em;
+  padding: 1em;
+  background: var(--castmill-warning-bg, rgba(234, 179, 8, 0.1));
+  border: 0.1em solid var(--castmill-warning-border, rgba(234, 179, 8, 0.3));
+  border-radius: 0.5em;
+  text-align: center;
+
+  p {
+    margin: 0;
+    color: var(--castmill-warning-text, #eab308);
+    font-size: 0.95em;
+  }
+}
+
+.no-users-hint-secondary {
+  margin-top: 0.5em !important;
+  color: var(--castmill-text-muted, #6b7280) !important;
+  font-size: 0.85em !important;
+}

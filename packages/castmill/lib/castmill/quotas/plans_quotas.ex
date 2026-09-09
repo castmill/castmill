@@ -18,7 +18,9 @@ defmodule Castmill.Quotas.PlansQuotas do
         :devices,
         :users,
         :teams,
-        :storage
+        :storage,
+        :layouts,
+        :max_upload_size
       ],
       primary_key: true
 

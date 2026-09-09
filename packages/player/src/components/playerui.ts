@@ -74,11 +74,17 @@ const controlsTemplate = (id: string) => `
 </div>
 `;
 
-const template = (id: string) => `
-  <div id="playerui-${id}">
-    <div id="player-${id}" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; overflow: hidden;"></div>
-  </div>
-`;
+function createPlayerElement(id: string): HTMLDivElement {
+  const el = document.createElement('div');
+  el.id = `player-${id}`;
+  el.style.position = 'absolute';
+  el.style.top = '0';
+  el.style.left = '0';
+  el.style.right = '0';
+  el.style.bottom = '0';
+  el.style.overflow = 'hidden';
+  return el;
+}
 
 function htmlToElement(html: string) {
   const template = document.createElement('template');
@@ -256,6 +262,12 @@ export interface PlayerUIOptions {
   controls?: PlayerUIControls;
   controlsMaster?: boolean;
   synced?: boolean;
+  /**
+   * Initial seek position in milliseconds.
+   * If provided, the player will start at this position instead of 0.
+   * Useful for editor mode to skip intro animations.
+   */
+  initialSeekPosition?: number;
 }
 
 export class PlayerUI {
@@ -279,16 +291,14 @@ export class PlayerUI {
     private playlist: Playlist,
     private opts: PlayerUIOptions = {}
   ) {
-    this.ui = document.createElement('div');
-    this.ui.innerHTML = template(this.id);
+    // Set initial time from options (for editor mode to skip intro animations)
+    this.time = opts.initialSeekPosition ?? 0;
+
+    this.ui = createPlayerElement(this.id);
 
     document.querySelector(`#${id}`)?.appendChild(this.ui);
 
-    const playerElement = this.ui.querySelector(
-      `#player-${id}`
-    ) as HTMLDivElement;
-
-    const renderer = (this.renderer = new Renderer(playerElement));
+    const renderer = (this.renderer = new Renderer(this.ui));
 
     this.player = new Player(this.playlist, renderer, opts.viewport);
 
@@ -353,8 +363,26 @@ export class PlayerUI {
       this.stop();
       this.seek(0);
     });
-    this.playlist.seek(0);
-    this.playlist.show(this.renderer).subscribe(() => void 0);
+
+    // Use initialSeekPosition if provided (for editor mode to skip intro animations)
+    const startPosition = this.opts.initialSeekPosition ?? 0;
+    this.time = startPosition;
+
+    // Chain seek and show - must wait for seek to complete before showing
+    this.playlist
+      .seek(startPosition)
+      .pipe(switchMap(() => this.playlist.show(this.renderer)))
+      .subscribe(() => {
+        // Update the controls duration after the widgets have loaded.
+        // This is important for widgets like video that determine their duration dynamically.
+        if (this.opts.controls) {
+          this.opts.controls.setTimeDuration(
+            this.time,
+            this.playlist.duration(),
+            this.loop
+          );
+        }
+      });
   }
 
   get position(): number {

@@ -60,6 +60,29 @@
       gap: 1rem;
     }
 
+    .onboarding-reset-confirmation {
+      margin-top: 1em;
+      padding: 1em;
+      border: 1px solid colors.$separator-color;
+      border-radius: 0.5em;
+      background: colors.$highlight-background-color;
+
+      p {
+        margin: 0 0 0.5em 0;
+      }
+
+      p:last-of-type {
+        margin-bottom: 0.75em;
+        color: colors.$component-color;
+      }
+    }
+
+    .onboarding-reset-actions {
+      display: flex;
+      gap: 1em;
+      flex-wrap: wrap;
+    }
+
     .form-actions {
       display: flex;
       align-items: center;

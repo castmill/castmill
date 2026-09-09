@@ -6,8 +6,9 @@ import {
   IpcMainInvokeEvent,
   protocol,
   net,
+  session,
 } from 'electron';
-import { join } from 'path';
+import { join, normalize, resolve } from 'path';
 import { pathToFileURL } from 'url';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import Store from 'electron-store';
@@ -16,6 +17,15 @@ import * as api from './api';
 import { Action } from '../common';
 import icon from '../../resources/icon.png?asset';
 import { LOCAL_URL_SCHEME, CACHE_DIR } from './constants';
+
+// Set GOOGLE_API_KEY so Chromium's network location provider can resolve
+// geolocation requests. Without this, navigator.geolocation will time out
+// in Electron since it doesn't bundle a key like Chrome does.
+// The key is provided via VITE_GOOGLE_API_KEY at build time.
+const googleApiKey = import.meta.env.VITE_GOOGLE_API_KEY;
+if (googleApiKey) {
+  process.env.GOOGLE_API_KEY = googleApiKey;
+}
 
 function createWindow(): void {
   // Determine if the app is running in kiosk mode.
@@ -65,7 +75,7 @@ protocol.registerSchemesAsPrivileged([
       secure: true,
       standard: true,
       supportFetchAPI: true,
-      // stream: true, // Add this if you intend to use the protocol for streaming i.e. in video/audio html tags.
+      stream: true, // Required for video/audio elements to load media from this scheme
       // corsEnabled: true, // Add this if you need to enable cors for this protocol.
     },
   },
@@ -78,11 +88,21 @@ protocol.registerSchemesAsPrivileged([
 // eslint-disable-next-line no-unused-labels
 file: app.whenReady().then(() => {
   protocol.handle(LOCAL_URL_SCHEME, async (request: Request) => {
-    const localPath = request.url.slice(LOCAL_URL_SCHEME.length + 3); // 3 for '://
+    const localPath = decodeURIComponent(
+      request.url.slice(LOCAL_URL_SCHEME.length + 3) // 3 for '://
+    );
 
-    const fullPath = pathToFileURL(
-      join(__dirname, CACHE_DIR, localPath)
-    ).toString();
+    // Sanitize: resolve to an absolute path and ensure it stays within the cache root
+    const cacheRoot = resolve(app.getPath('userData'), CACHE_DIR);
+    const resolvedPath = resolve(cacheRoot, normalize(localPath));
+
+    if (!resolvedPath.startsWith(cacheRoot)) {
+      throw new Error(
+        `Path traversal blocked: ${localPath} resolves outside cache directory`
+      );
+    }
+
+    const fullPath = pathToFileURL(resolvedPath).toString();
 
     try {
       return net.fetch(fullPath);
@@ -95,6 +115,34 @@ file: app.whenReady().then(() => {
   const store = new Store();
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron');
+
+  // Auto-approve geolocation (and other) permission checks and requests.
+  // Both handlers are needed:
+  // - setPermissionCheckHandler handles the synchronous permission *check*
+  //   that Chromium performs before even issuing a request. Without it,
+  //   Chromium's default policy applies which requires a user gesture for
+  //   geolocation ("Only request geolocation information in response to a
+  //   user gesture" violation).
+  // - setPermissionRequestHandler handles the actual asynchronous permission
+  //   *request* that follows a successful check.
+  session.defaultSession.setPermissionCheckHandler(
+    (_webContents, permission) => {
+      if (permission === 'geolocation') {
+        return true; // Bypass user-gesture requirement for geolocation
+      }
+      return true;
+    }
+  );
+
+  session.defaultSession.setPermissionRequestHandler(
+    (_webContents, permission, callback) => {
+      if (permission === 'geolocation') {
+        callback(true); // Always allow geolocation
+        return;
+      }
+      callback(true);
+    }
+  );
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
@@ -122,8 +170,8 @@ file: app.whenReady().then(() => {
     api.reboot();
   });
 
-  ipcMain.on(Action.UPDATE, () => {
-    api.update();
+  ipcMain.handle(Action.UPDATE, () => {
+    return api.update();
   });
 
   ipcMain.handle(Action.GET_MACHINE_GUID, () => {
@@ -196,6 +244,10 @@ file: app.whenReady().then(() => {
     (_event: IpcMainInvokeEvent, storagePath: string) =>
       api.deleteAllFiles(storagePath)
   );
+
+  ipcMain.handle(Action.GET_TELEMETRY, () => {
+    return api.getTelemetry();
+  });
 
   createWindow();
 

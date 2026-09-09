@@ -5,6 +5,7 @@ import {
   HttpError,
 } from '@castmill/ui-common';
 
+import { authFetch } from '../components/auth';
 type HandleResponseOptions = {
   parse?: boolean;
 };
@@ -32,6 +33,8 @@ export interface JsonChannel {
   timezone: string;
 
   default_playlist_id: number | null;
+  default_playlist_name: string | null;
+  current_playlist_name: string | null;
   entries: JsonChannelEntry[];
 }
 
@@ -87,11 +90,10 @@ export class ChannelsService {
    */
   async fetchPlaylists(fetchDataOptions: FetchDataOptions) {
     const queryString = fetchOptionsToQueryString(fetchDataOptions);
-    const response = await fetch(
+    const response = await authFetch(
       `${this.baseUrl}/dashboard/organizations/${this.organizationId}/playlists?${queryString}`,
       {
         method: 'GET',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -107,11 +109,10 @@ export class ChannelsService {
    * Fetch Playlist.
    */
   async fetchPlaylist(playlistId: number): Promise<{ data: JsonPlaylist }> {
-    const response = await fetch(
+    const response = await authFetch(
       `${this.baseUrl}/dashboard/organizations/${this.organizationId}/playlists/${playlistId}`,
       {
         method: 'GET',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -135,11 +136,10 @@ export class ChannelsService {
       channelData.team_id = teamId;
     }
 
-    const response = await fetch(
+    const response = await authFetch(
       `${this.baseUrl}/dashboard/organizations/${this.organizationId}/channels`,
       {
         method: 'POST',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -157,11 +157,10 @@ export class ChannelsService {
    */
   async fetchChannels(opts: FetchDataOptions) {
     const queryString = fetchOptionsToQueryString(opts);
-    const response = await fetch(
+    const response = await authFetch(
       `${this.baseUrl}/dashboard/organizations/${this.organizationId}/channels?${queryString}`,
       {
         method: 'GET',
-        credentials: 'include',
       }
     );
 
@@ -170,12 +169,57 @@ export class ChannelsService {
     });
   }
 
+  /**
+   * Fetch channels with tag & team filtering (used by tree view).
+   */
+  async fetchChannelsFiltered(options: {
+    page: number;
+    page_size: number;
+    sortOptions: { key?: string; direction: string };
+    tag_ids?: number[];
+    tag_filter_mode?: 'any' | 'all';
+    team_id?: number | null;
+    missing_tag_group_id?: number;
+  }) {
+    const query = new URLSearchParams({
+      page: options.page.toString(),
+      page_size: options.page_size.toString(),
+      direction: options.sortOptions.direction,
+    });
+    if (options.sortOptions.key) {
+      query.set('key', options.sortOptions.key);
+    }
+    if (options.team_id !== undefined && options.team_id !== null) {
+      query.set('team_id', options.team_id.toString());
+    }
+    if (options.tag_ids && options.tag_ids.length > 0) {
+      query.set('tag_ids', options.tag_ids.join(','));
+    }
+    if (options.tag_filter_mode) {
+      query.set('tag_filter_mode', options.tag_filter_mode);
+    }
+    if (options.missing_tag_group_id !== undefined) {
+      query.set(
+        'missing_tag_group_id',
+        options.missing_tag_group_id.toString()
+      );
+    }
+    const response = await authFetch(
+      `${this.baseUrl}/dashboard/organizations/${this.organizationId}/channels?${query}`,
+      {
+        method: 'GET',
+      }
+    );
+    return handleResponse<{ data: JsonChannel[]; count: number }>(response, {
+      parse: true,
+    });
+  }
+
   async getChannel(channelId: number): Promise<JsonChannel> {
-    const response = await fetch(
+    const response = await authFetch(
       `${this.baseUrl}/dashboard/organizations/${this.organizationId}/channels/${channelId}`,
       {
         method: 'GET',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -198,11 +242,10 @@ export class ChannelsService {
       end_date: Math.round(endDate).toString(),
     });
 
-    const response = await fetch(
+    const response = await authFetch(
       `${this.baseUrl}/dashboard/organizations/${this.organizationId}/channels/${channelId}/entries?${query}`,
       {
         method: 'GET',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -219,11 +262,10 @@ export class ChannelsService {
    * Insert widget into playlist
    */
   async addEntryToChannel(channelId: number, item: Partial<JsonChannelEntry>) {
-    const response = await fetch(
+    const response = await authFetch(
       `${this.baseUrl}/dashboard/organizations/${this.organizationId}/channels/${channelId}/entries`,
       {
         method: 'POST',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -238,11 +280,10 @@ export class ChannelsService {
   }
 
   async removeEntryFromChannel(channelId: number, entryId: number) {
-    const response = await fetch(
+    const response = await authFetch(
       `${this.baseUrl}/dashboard/organizations/${this.organizationId}/channels/${channelId}/entries/${entryId}`,
       {
         method: 'DELETE',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -257,11 +298,10 @@ export class ChannelsService {
     entryId: number,
     update: Record<string, any>
   ) {
-    const response = await fetch(
+    const response = await authFetch(
       `${this.baseUrl}/dashboard/organizations/${this.organizationId}/channels/${channelId}/entries/${entryId}`,
       {
         method: 'PATCH',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -279,11 +319,10 @@ export class ChannelsService {
   async removeChannel(
     channelId: number
   ): Promise<{ success: boolean; error?: ChannelDeleteError }> {
-    const response = await fetch(
+    const response = await authFetch(
       `${this.baseUrl}/dashboard/organizations/${this.organizationId}/channels/${channelId}`,
       {
         method: 'DELETE',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -324,11 +363,10 @@ export class ChannelsService {
    * Update playlist
    * */
   async updateChannel(channel: Partial<JsonChannel>) {
-    const response = await fetch(
+    const response = await authFetch(
       `${this.baseUrl}/dashboard/organizations/${this.organizationId}/channels/${channel.id}`,
       {
         method: 'PATCH',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },

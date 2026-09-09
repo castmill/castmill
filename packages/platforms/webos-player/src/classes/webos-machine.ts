@@ -1,19 +1,37 @@
-import { Machine, DeviceInfo, SettingKey, Timers } from '@castmill/device';
+import {
+  Machine,
+  DeviceInfo,
+  SettingKey,
+  Timers,
+  TelemetryData,
+} from '@castmill/device';
 import { configuration, deviceInfo, power, storage } from '../native';
 import { simpleHash, getTimers, setTimers } from './utils';
 import { version } from '../../package.json';
+import { systemMonitor } from './system-monitor';
+
+// Network Information API types (not in standard TypeScript DOM types)
+interface NetworkInformation {
+  type?: string;
+  effectiveType?: string;
+}
+
+interface NavigatorWithConnection extends Navigator {
+  connection?: NetworkInformation;
+}
 
 // The update config is used to update the application on the device. We set this
 // to make sure the application updates from the correct source.
-const UPDATE_CONFIG = {
+// The update URL is injected at build time via the VITE_UPDATE_URL env variable.
+const getUpdateConfig = () => ({
   serverIp: '0.0.0.0',
   serverPort: 0,
   secureConnection: true,
   appLaunchMode: 'local',
   appType: 'ipk',
   fqdnMode: true,
-  fqdnAddr: 'https://update.castmill.io/webos/player-new.ipk',
-};
+  fqdnAddr: import.meta.env.VITE_UPDATE_URL,
+});
 
 const CREDENTIALS_FILE_PATH = 'credentials.txt';
 
@@ -166,7 +184,7 @@ export class WebosMachine implements Machine {
       import.meta.env.VITE_KEEP_SERVER_SETTINGS === 'true';
     if (!keepServerSettings) {
       // Set the server properties to the correct values
-      await configuration.setServerProperty(UPDATE_CONFIG);
+      await configuration.setServerProperty(getUpdateConfig());
     }
 
     // Then download the application
@@ -215,5 +233,68 @@ export class WebosMachine implements Machine {
 
   async setTimers(timers: Timers): Promise<void> {
     return setTimers(timers);
+  }
+
+  /**
+   * Returns telemetry data from the WebOS signage display.
+   * Uses SCAP APIs for storage, temperature, and fan status.
+   */
+  async getTelemetry(): Promise<TelemetryData> {
+    const telemetry: TelemetryData = {};
+
+    // Storage info via SCAP Storage API
+    try {
+      const storageInfo = await storage.getStorageInfo();
+      if (storageInfo) {
+        // getStorageInfo returns { totalSize, usedSize } in bytes or KB depending on firmware
+        telemetry.storage = {
+          totalBytes: storageInfo.totalSize,
+          usedBytes: storageInfo.usedSize,
+        };
+      }
+    } catch (error) {
+      console.error('Error getting storage info:', error);
+    }
+
+    // Temperature and fan status via System Monitor
+    try {
+      // Ensure system monitor is running
+      if (!systemMonitor.isMonitoring()) {
+        await systemMonitor.start();
+      }
+
+      const tempInfo = systemMonitor.getTemperature();
+      if (tempInfo && tempInfo.temperature !== undefined) {
+        telemetry.temperatures = [
+          { label: 'Panel', celsius: tempInfo.temperature },
+        ];
+      }
+
+      const fanInfo = systemMonitor.getFanStatus();
+      if (fanInfo && Array.isArray(fanInfo.fanStatus)) {
+        telemetry.fanSpeeds = fanInfo.fanStatus.map(
+          (fan: { name?: string; rpm?: number }, index: number) => ({
+            label: fan.name || `Fan ${index + 1}`,
+            rpm: fan.rpm || 0,
+          })
+        );
+      }
+    } catch (error) {
+      console.error('Error getting system monitor data:', error);
+    }
+
+    // Network info via Navigator API
+    try {
+      const connection = (navigator as NavigatorWithConnection).connection;
+      if (connection) {
+        telemetry.network = {
+          type: connection.type || connection.effectiveType || undefined,
+        };
+      }
+    } catch (error) {
+      console.error('Error getting network info:', error);
+    }
+
+    return telemetry;
   }
 }

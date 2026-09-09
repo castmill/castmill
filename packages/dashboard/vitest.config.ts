@@ -8,5 +8,9 @@ export default defineConfig({
     globals: true,
     testTransformMode: { web: ['/.[jt]sx?$/'] },
     setupFiles: ['./vitest-setup.ts'],
+    include: [
+      'src/**/*.{test,spec}.?(c|m)[jt]s?(x)',
+      '../castmill/lib/castmill/addons/**/services/*.{test,spec}.?(c|m)[jt]s?(x)',
+    ],
   },
 });

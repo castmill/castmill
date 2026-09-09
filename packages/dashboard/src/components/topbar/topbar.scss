@@ -71,4 +71,66 @@
       background-color: rgba(255, 255, 255, 0.1);
     }
   }
+
+  // Getting Started button with progress ring
+  .getting-started-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    &.animate-pulse {
+      animation: pulse-glow 1.5s ease-in-out infinite;
+      background-color: rgba(0, 123, 255, 0.3);
+    }
+
+    .progress-ring {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+
+      &__background {
+        stroke: rgba(255, 255, 255, 0.15);
+      }
+
+      &__progress {
+        stroke: #28a745; // Green for progress
+        stroke-linecap: round;
+        transition: stroke-dasharray 0.3s ease;
+      }
+    }
+
+    .getting-started-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1;
+
+      svg {
+        font-size: 1.25rem;
+      }
+    }
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0.5em 0.25em rgba(0, 123, 255, 0.4);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 1em 0.5em rgba(0, 123, 255, 0.6);
+    transform: scale(1.1);
+  }
 }

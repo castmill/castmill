@@ -204,7 +204,8 @@ defmodule CastmillWeb.CoreComponents do
   """
   attr :type, :string, default: nil
   attr :class, :string, default: nil
-  attr :rest, :global, include: ~w(disabled form name value)
+  attr :disabled, :boolean, default: false
+  attr :rest, :global, include: ~w(form name value)
 
   slot :inner_block, required: true
 
@@ -212,9 +213,12 @@ defmodule CastmillWeb.CoreComponents do
     ~H"""
     <button
       type={@type}
+      disabled={@disabled}
       class={[
-        "phx-submit-loading:opacity-75 rounded-lg bg-blue-700 hover:bg-blue-800 py-2 px-3",
+        "phx-submit-loading:opacity-75 rounded-lg py-2 px-3",
         "text-sm font-semibold leading-6 text-white active:text-white/80",
+        @disabled && "bg-gray-400 cursor-not-allowed",
+        !@disabled && "bg-blue-700 hover:bg-blue-800",
         @class
       ]}
       {@rest}

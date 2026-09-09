@@ -12,6 +12,8 @@ defmodule Castmill.Accounts.User do
              :name,
              :email,
              :role,
+             :blocked_at,
+             :blocked_reason,
              :inserted_at,
              :updated_at
            ]}
@@ -20,7 +22,12 @@ defmodule Castmill.Accounts.User do
     field(:email, :string)
     field(:name, :string)
 
+    # Organization role (virtual, computed from organizations_users join table)
     field(:role, Ecto.Enum, values: [:admin, :manager, :member, :guest], virtual: true)
+
+    # Blocking fields - when blocked_at is set, user cannot login
+    field(:blocked_at, :utc_datetime_usec)
+    field(:blocked_reason, :string)
 
     field(:meta, :map)
 
@@ -31,7 +38,12 @@ defmodule Castmill.Accounts.User do
       on_replace: :delete
     )
 
-    belongs_to(:network, Castmill.Networks.Network, foreign_key: :network_id, type: Ecto.UUID)
+    many_to_many(
+      :networks,
+      Castmill.Networks.Network,
+      join_through: "networks_users",
+      on_replace: :delete
+    )
 
     has_many(:access_tokens, Castmill.Accounts.AccessToken)
 
@@ -41,7 +53,7 @@ defmodule Castmill.Accounts.User do
   @doc false
   def changeset(user, attrs) do
     user
-    |> cast(attrs, [:name, :avatar, :email, :network_id])
+    |> cast(attrs, [:name, :avatar, :email])
     |> validate_required([:name, :email])
     |> validate_length(:name, min: 2, max: 50)
     |> validate_format(
@@ -49,7 +61,7 @@ defmodule Castmill.Accounts.User do
       ~r/^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/
     )
     |> validate_format(:email, ~r/@/)
-    |> unique_constraint([:email, :network_id], name: :users_name_network_id_index)
+    |> unique_constraint(:email, name: :users_email_index)
   end
 
   @doc """
@@ -82,6 +94,20 @@ defmodule Castmill.Accounts.User do
     # |> validate_format(:password, ~r/[!?@#$%^&*_0-9]/, message: "at least one digit or punctuation character")
     # |> maybe_hash_password(opts)
   end
+
+  @doc """
+  Changeset for blocking/unblocking a user.
+  """
+  def block_changeset(user, attrs) do
+    user
+    |> cast(attrs, [:blocked_at, :blocked_reason])
+  end
+
+  @doc """
+  Returns true if the user is blocked.
+  """
+  def blocked?(%__MODULE__{blocked_at: nil}), do: false
+  def blocked?(%__MODULE__{blocked_at: _}), do: true
 
   def base_query() do
     from(users in Castmill.Accounts.User, as: :user)

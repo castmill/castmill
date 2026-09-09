@@ -15,6 +15,7 @@
  */
 
 import { createEffect, createSignal, on } from 'solid-js';
+import { authFetch } from '../components/auth';
 
 export interface Team {
   id: number;
@@ -262,11 +263,10 @@ export const useTeamFilter = (
   createEffect(async () => {
     if (props.organizationId) {
       try {
-        const response = await fetch(
+        const response = await authFetch(
           `${props.baseUrl}/dashboard/organizations/${props.organizationId}/teams?page=1&page_size=100`,
           {
             method: 'GET',
-            credentials: 'include',
           }
         );
         if (response.ok) {

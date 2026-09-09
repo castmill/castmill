@@ -14,9 +14,21 @@ defmodule CastmillWeb.OrganizationQuotaController do
     "team" => Castmill.Teams.Team
   }
 
+  # All resource types that can have quotas
+  @all_resources ~w(organizations medias playlists channels channels_entries devices users teams storage layouts max_upload_size)
+
   def index(conn, %{"organization_id" => organization_id}) do
-    quotas = Quotas.list_quotas(organization_id)
-    render_json(conn, :index, quotas: quotas)
+    # Resolve all quotas through the full resolution chain
+    # (org overrides -> plan -> network default plan -> network quotas -> 0)
+    quotas =
+      Enum.map(@all_resources, fn resource ->
+        max = Quotas.get_quota_for_organization(organization_id, resource)
+        %{resource: resource, max: max}
+      end)
+
+    conn
+    |> put_status(:ok)
+    |> json(quotas)
   end
 
   def show(conn, %{"organization_id" => organization_id, "id" => id}) do

@@ -11,6 +11,11 @@ defmodule Castmill.Quotas do
   alias Castmill.Quotas.QuotasNetworks
   alias Castmill.Quotas.QuotasOrganizations
 
+  # Resources whose plan/quota max values are stored in MB
+  @mb_resources ~w(storage max_upload_size)a ++ ~w(storage max_upload_size)
+
+  defp mb_to_bytes(mb), do: mb * 1_024 * 1_024
+
   @doc """
     Create a plan based on a list of resource types and their max values.
   """
@@ -88,11 +93,19 @@ defmodule Castmill.Quotas do
     Returns the quota for a given resource in a given organization. The quota
     is resolved in the following order:
     1. Organization-specific quota override
-    2. Organization's assigned plan quota
+    2. Organization's assigned plan quota (if the plan has this resource)
     3. Network's default plan quota (using network.default_plan_id)
     4. Network's direct quota
     5. Returns zero as final fallback
+
+    Note: If an organization has an assigned plan but that plan doesn't define
+    a quota for the requested resource, it falls back to step 3 (network's default plan)
+    rather than returning 0. This ensures backward compatibility when new resource
+    types are added to the system.
   """
+  def get_quota_for_organization(_organization_id, "widgets"), do: 0
+  def get_quota_for_organization(_organization_id, :widgets), do: 0
+
   def get_quota_for_organization(organization_id, resource) do
     # 1. Check for organization-specific quota override
     organization_quota =
@@ -128,12 +141,33 @@ defmodule Castmill.Quotas do
         if plan_quotas do
           plan_quotas.max
         else
-          0
+          # Plan exists but doesn't have this resource quota
+          # Fall back to network's default plan
+          get_quota_from_network_default_plan(organization_id, resource)
         end
       else
         # 3. Fall back to network's default plan
         get_quota_from_network_default_plan(organization_id, resource)
       end
+    end
+  end
+
+  @doc """
+    Returns the quota for a given resource in a given organization, normalised to
+    bytes for storage-related resources (`:storage`, `"storage"`,
+    `:max_upload_size`, `"max_upload_size"`).
+
+    For all other resources the raw count is returned unchanged.
+    This is the preferred API when you need to **compare** a quota limit with
+    actual byte-level usage (file sizes, upload sizes, etc.).
+  """
+  def get_quota_for_organization_bytes(organization_id, resource) do
+    raw = get_quota_for_organization(organization_id, resource)
+
+    if resource in @mb_resources do
+      mb_to_bytes(raw)
+    else
+      raw
     end
   end
 
@@ -234,6 +268,10 @@ defmodule Castmill.Quotas do
 
     For storage, returns the total file size in bytes.
     For other resources, returns the count.
+
+    To compare usage against a quota limit, pair this with
+    `get_quota_for_organization_bytes/2` which returns storage/max_upload_size
+    quotas already converted to bytes.
   """
   def get_quota_used_for_organization(organization_id, :storage) do
     # Sum the size of all files associated with media in the organization
@@ -250,6 +288,28 @@ defmodule Castmill.Quotas do
       nil -> 0
       size -> size
     end
+  end
+
+  def get_quota_used_for_organization(organization_id, Castmill.Organizations.OrganizationsUsers) do
+    # Count users in the organization (via the join table)
+    from(ou in Castmill.Organizations.OrganizationsUsers,
+      where: ou.organization_id == ^organization_id,
+      select: count(ou.user_id)
+    )
+    |> Repo.one()
+  end
+
+  def get_quota_used_for_organization(organization_id, Castmill.Widgets.WidgetConfig) do
+    # Count widget instances (widgets_config) linked to playlist items in the organization.
+    from(wc in Castmill.Widgets.WidgetConfig,
+      join: pi in Castmill.Resources.PlaylistItem,
+      on: wc.playlist_item_id == pi.id,
+      join: p in Castmill.Resources.Playlist,
+      on: pi.playlist_id == p.id,
+      where: p.organization_id == ^organization_id,
+      select: count(wc.id)
+    )
+    |> Repo.one()
   end
 
   def get_quota_used_for_organization(organization_id, schema_module) do

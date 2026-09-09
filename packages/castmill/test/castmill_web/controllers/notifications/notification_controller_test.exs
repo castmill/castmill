@@ -9,7 +9,7 @@ defmodule CastmillWeb.NotificationControllerTest do
   setup %{conn: conn} do
     network = network_fixture()
     organization = organization_fixture(%{network_id: network.id})
-    user = user_fixture(%{organization_id: organization.id})
+    user = user_fixture(%{network_id: network.id})
 
     # Setup session-based auth (for /dashboard routes)
     # The authenticate_user plug checks conn.assigns[:current_user]
@@ -25,7 +25,11 @@ defmodule CastmillWeb.NotificationControllerTest do
       |> put_req_header("accept", "application/json")
 
     {:ok,
-     conn_session: conn_session, conn_token: conn_token, user: user, organization: organization}
+     conn_session: conn_session,
+     conn_token: conn_token,
+     user: user,
+     organization: organization,
+     network: network}
   end
 
   describe "index/2 with session auth" do
@@ -270,14 +274,15 @@ defmodule CastmillWeb.NotificationControllerTest do
     test "user can only see their own notifications", %{
       conn_session: conn,
       organization: org,
-      user: user
+      user: _user,
+      network: network
     } do
       # Create another user using fixture
       other_user =
         user_fixture(%{
           email: "other@example.com",
           name: "Other User",
-          network_id: user.network_id
+          network_id: network.id
         })
 
       # Create notification for other user

@@ -174,6 +174,11 @@ defmodule Castmill.QuotasTest do
       # Organization should use its assigned plan, not the network default
       assert Quotas.get_quota_for_organization(organization.id, "medias") == 500
       assert Quotas.get_quota_for_organization(organization.id, "teams") == 25
+
+      # For resources not in the org plan, should fall back to network default plan
+      # Storage quota in MB (1 GB = 1024 MB)
+      assert Quotas.get_quota_for_organization(organization.id, "storage") == 1024
+      assert Quotas.get_quota_for_organization(organization.id, "users") == 50
     end
 
     test "get_quota_for_organization/2 prioritizes org-specific quota over all plans" do
@@ -240,6 +245,35 @@ defmodule Castmill.QuotasTest do
       assert Quotas.has_organization_enough_quota?(organization.id, "medias", 50) == true
       assert Quotas.has_organization_enough_quota?(organization.id, "medias", 1000) == true
       assert Quotas.has_organization_enough_quota?(organization.id, "medias", 1001) == false
+    end
+
+    test "get_quota_for_organization/2 falls back when assigned plan lacks specific resource" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+
+      # Create a plan with only medias quota (no storage or users)
+      limited_plan =
+        Quotas.create_plan("Limited Plan", network.id, [
+          %{max: 100, resource: :medias}
+        ])
+
+      Quotas.assign_plan_to_organization(limited_plan.id, organization.id)
+
+      # Organization should use its assigned plan for medias
+      assert Quotas.get_quota_for_organization(organization.id, "medias") == 100
+
+      # For storage and users (not in assigned plan), should fall back to network default plan
+      # Storage quota in MB (1 GB = 1024 MB)
+      assert Quotas.get_quota_for_organization(organization.id, "storage") == 1024
+      assert Quotas.get_quota_for_organization(organization.id, "users") == 50
+
+      # Verify this allows uploads to work even with partial plan definitions
+      # Storage quota is in MB, so check against MB value (512 MB)
+      assert Quotas.has_organization_enough_quota?(
+               organization.id,
+               "storage",
+               512
+             ) == true
     end
 
     test "team creation enforces quota from network default plan" do
@@ -409,26 +443,146 @@ defmodule Castmill.QuotasTest do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
 
-      # Create a plan with 10 MB storage quota
+      # Create a plan with 10 MB storage quota (stored in MB)
       plan =
         Quotas.create_plan("Storage Plan", network.id, [
           # 10 MB
-          %{max: 10 * 1024 * 1024, resource: :storage}
+          %{max: 10, resource: :storage}
         ])
 
       Quotas.assign_plan_to_organization(plan.id, organization.id)
 
       # Should have enough for 5 MB
-      assert Quotas.has_organization_enough_quota?(organization.id, :storage, 5 * 1024 * 1024) ==
+      assert Quotas.has_organization_enough_quota?(organization.id, :storage, 5) ==
                true
 
       # Should have enough for exactly 10 MB
-      assert Quotas.has_organization_enough_quota?(organization.id, :storage, 10 * 1024 * 1024) ==
+      assert Quotas.has_organization_enough_quota?(organization.id, :storage, 10) ==
                true
 
       # Should NOT have enough for 11 MB
-      assert Quotas.has_organization_enough_quota?(organization.id, :storage, 11 * 1024 * 1024) ==
+      assert Quotas.has_organization_enough_quota?(organization.id, :storage, 11) ==
                false
+    end
+
+    test "users quota calculation counts organization members" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+
+      # Initially, should have 0 users (organization creator not counted in this test)
+      # Note: In practice, the organization creator is typically added as the first user
+      assert Quotas.get_quota_used_for_organization(
+               organization.id,
+               Castmill.Organizations.OrganizationsUsers
+             ) == 0
+
+      # Add users to the organization (use unique emails to avoid conflicts)
+      unique_id = System.unique_integer([:positive])
+
+      user1 =
+        user_fixture(%{
+          email: "user1_#{unique_id}@test.com",
+          name: "User1 #{unique_id}",
+          network_id: network.id
+        })
+
+      user2 =
+        user_fixture(%{
+          email: "user2_#{unique_id}@test.com",
+          name: "User2 #{unique_id}",
+          network_id: network.id
+        })
+
+      user3 =
+        user_fixture(%{
+          email: "user3_#{unique_id}@test.com",
+          name: "User3 #{unique_id}",
+          network_id: network.id
+        })
+
+      # Associate users with organization
+      Castmill.Repo.insert!(%Castmill.Organizations.OrganizationsUsers{
+        organization_id: organization.id,
+        user_id: user1.id,
+        role: :member
+      })
+
+      Castmill.Repo.insert!(%Castmill.Organizations.OrganizationsUsers{
+        organization_id: organization.id,
+        user_id: user2.id,
+        role: :member
+      })
+
+      Castmill.Repo.insert!(%Castmill.Organizations.OrganizationsUsers{
+        organization_id: organization.id,
+        user_id: user3.id,
+        role: :admin
+      })
+
+      # Should now have 3 users
+      assert Quotas.get_quota_used_for_organization(
+               organization.id,
+               Castmill.Organizations.OrganizationsUsers
+             ) == 3
+
+      # Test with another organization - should be isolated
+      organization2 = organization_fixture(%{name: "Another Org", network_id: network.id})
+
+      assert Quotas.get_quota_used_for_organization(
+               organization2.id,
+               Castmill.Organizations.OrganizationsUsers
+             ) == 0
+
+      # Add one user to organization2
+      user4 = user_fixture(%{email: "user4@test.com", network_id: network.id})
+
+      Castmill.Repo.insert!(%Castmill.Organizations.OrganizationsUsers{
+        organization_id: organization2.id,
+        user_id: user4.id,
+        role: :member
+      })
+
+      # organization2 should have 1 user, organization1 should still have 3
+      assert Quotas.get_quota_used_for_organization(
+               organization2.id,
+               Castmill.Organizations.OrganizationsUsers
+             ) == 1
+
+      assert Quotas.get_quota_used_for_organization(
+               organization.id,
+               Castmill.Organizations.OrganizationsUsers
+             ) == 3
+    end
+
+    test "get_quota_for_organization_bytes/2 converts MB resources to bytes" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+
+      plan =
+        Quotas.create_plan("bytes test plan", network.id, [
+          %{max: 100, resource: :storage},
+          %{max: 2048, resource: :max_upload_size},
+          %{max: 50, resource: :medias}
+        ])
+
+      Quotas.assign_plan_to_organization(plan.id, organization.id)
+
+      # Storage (100 MB) should be returned as bytes
+      assert Quotas.get_quota_for_organization_bytes(organization.id, :storage) ==
+               100 * 1_024 * 1_024
+
+      assert Quotas.get_quota_for_organization_bytes(organization.id, "storage") ==
+               100 * 1_024 * 1_024
+
+      # Max upload size (2048 MB = 2 GB) should be returned as bytes
+      assert Quotas.get_quota_for_organization_bytes(organization.id, :max_upload_size) ==
+               2048 * 1_024 * 1_024
+
+      assert Quotas.get_quota_for_organization_bytes(organization.id, "max_upload_size") ==
+               2048 * 1_024 * 1_024
+
+      # Non-MB resources should be returned unchanged
+      assert Quotas.get_quota_for_organization_bytes(organization.id, "medias") == 50
     end
   end
 end

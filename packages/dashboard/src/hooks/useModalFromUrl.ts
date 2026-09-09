@@ -37,19 +37,24 @@ export function useModalFromUrl(options: {
   openModal: (itemId: string) => void;
 }): void {
   const { getItemIdFromUrl, isModalOpen, closeModal, openModal } = options;
+  let previousItemId: string | undefined;
 
   // Sync modal state with URL changes
   const syncModalWithUrl = () => {
     const itemId = getItemIdFromUrl();
+    const modalOpen = untrack(isModalOpen);
 
     if (itemId) {
-      // URL has itemId - open modal if not already open
-      if (!untrack(isModalOpen)) {
+      // URL has itemId - open modal when closed OR when item selection changed
+      const itemChanged = itemId !== previousItemId;
+      if (!modalOpen || itemChanged) {
         openModal(itemId);
       }
+      previousItemId = itemId;
     } else {
       // URL has no itemId - close modal if open
-      if (untrack(isModalOpen)) {
+      previousItemId = undefined;
+      if (modalOpen) {
         closeModal();
       }
     }

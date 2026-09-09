@@ -37,6 +37,23 @@ body {
   min-height: 100vh; /* Minimum height to fill the viewport */
 }
 
+/* Onboarding highlight animation for guided tour */
+.onboarding-highlight {
+  animation: onboarding-pulse 1.5s ease-in-out infinite;
+  position: relative;
+  z-index: 100;
+}
+
+@keyframes onboarding-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 0.75em rgba(59, 130, 246, 0);
+  }
+}
+
 code {
   font-family:
     source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;

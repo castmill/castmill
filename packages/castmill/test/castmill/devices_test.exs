@@ -32,6 +32,31 @@ defmodule Castmill.DevicesTest do
       assert Devices.list_devices(%{organization_id: organization.id}) == [device]
     end
 
+    test "register_device/1 broadcasts flat organization and network names" do
+      network = network_fixture(%{name: "Main Network"})
+      organization = organization_fixture(%{network_id: network.id, name: "Main Organization"})
+
+      {:ok, devices_registration} =
+        device_registration_fixture(%{hardware_id: "register-broadcast-hw", pincode: "abc123"})
+
+      Phoenix.PubSub.subscribe(Castmill.PubSub, "register:#{devices_registration.hardware_id}")
+
+      assert {:ok, {_device, _token}} =
+               Devices.register_device(organization.id, devices_registration.pincode, %{
+                 name: "broadcast device"
+               })
+
+      assert_receive %Phoenix.Socket.Broadcast{
+        event: "device:registered",
+        payload: %{device: payload_device}
+      }
+
+      assert payload_device.organizationName == organization.name
+      assert payload_device.networkName == network.name
+      refute Map.has_key?(payload_device, :organization)
+      refute Map.has_key?(payload_device, :network)
+    end
+
     test "register_device/1 cannot register the same device twice" do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
@@ -157,7 +182,7 @@ defmodule Castmill.DevicesTest do
       assert {:ok, _device} = Devices.verify_device_token(device.id, token)
     end
 
-    test "recover_device/2 recovers a device that may have lost its token" do
+    test "recover_device/2 recovers a device when IP matches even without autorecover_until" do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
 
@@ -169,20 +194,37 @@ defmodule Castmill.DevicesTest do
                  name: "some device"
                })
 
-      # The updated at isn't older than an hour, so it should not be possible to recover the device
-      assert {:error, _} = Devices.recover_device(device.hardware_id, device.last_ip)
-
-      # Setting the updated_at to an hour ago
-      hour_ago = DateTime.utc_now() |> DateTime.add(-1, :hour)
-
-      from(d in Devices.Device, where: d.id == ^device.id)
-      |> Repo.update_all(set: [updated_at: hour_ago])
-
-      # Now it should be possible to recover the device
       assert {:ok, _} = Devices.recover_device(device.hardware_id, device.last_ip)
     end
 
-    test "recover_device/2 do not recover a device with different ip address" do
+    test "recover_device/2 returns a device with a valid token so the player can reconnect" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+
+      {:ok, devices_registration} =
+        device_registration_fixture(%{hardware_id: "some hardware id", pincode: "some pincode"})
+
+      assert {:ok, {device, _original_token}} =
+               Devices.register_device(organization.id, devices_registration.pincode, %{
+                 name: "some device"
+               })
+
+      assert {:ok, recovered_device} =
+               Devices.recover_device(device.hardware_id, device.last_ip)
+
+      # The recovered device MUST carry a plain-text token so the controller can
+      # include it in the HTTP response and the player can authenticate with it.
+      assert is_binary(recovered_device.token),
+             "recover_device/2 must return a device with a non-nil plain-text token"
+
+      assert String.length(recovered_device.token) > 0
+
+      # The returned token must be valid for the device (i.e. it was actually
+      # persisted as the new token hash for this device).
+      assert {:ok, _} = Devices.verify_device_token(device.id, recovered_device.token)
+    end
+
+    test "recover_device/2 blocks recovery for different IP when autorecover_until is inactive" do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
 
@@ -194,7 +236,27 @@ defmodule Castmill.DevicesTest do
                  name: "some device"
                })
 
-      assert {:error, _} = Devices.recover_device(device.hardware_id, "128.2.3.1")
+      assert {:error, :recovery_blocked} = Devices.recover_device(device.hardware_id, "128.2.3.1")
+    end
+
+    test "recover_device/2 allows different IP when autorecover_until is active" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+
+      {:ok, devices_registration} =
+        device_registration_fixture(%{hardware_id: "some hardware id", pincode: "some pincode"})
+
+      assert {:ok, {device, _token}} =
+               Devices.register_device(organization.id, devices_registration.pincode, %{
+                 name: "some device"
+               })
+
+      future_time = DateTime.utc_now() |> DateTime.add(1, :hour) |> DateTime.truncate(:second)
+
+      from(d in Devices.Device, where: d.id == ^device.id)
+      |> Repo.update_all(set: [autorecover_until: future_time])
+
+      assert {:ok, _} = Devices.recover_device(device.hardware_id, "128.2.3.1")
     end
 
     test "add_channel/2 adds a channel to a device" do
@@ -352,6 +414,106 @@ defmodule Castmill.DevicesTest do
       assert Devices.has_access_to_playlist(device.id, playlist.id) == false
     end
 
+    test "has_access_to_playlist/2 checks if a device has access to a default playlist" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+
+      {:ok, devices_registration} =
+        device_registration_fixture(%{
+          hardware_id: "default-playlist-hw-id",
+          pincode: "default123"
+        })
+
+      assert {:ok, {device, _token}} =
+               Devices.register_device(organization.id, devices_registration.pincode, %{
+                 name: "device with default playlist"
+               })
+
+      assert Devices.list_channels(device.id) == []
+
+      # Create a playlist to be used as default
+      default_playlist =
+        playlist_fixture(%{organization_id: organization.id, name: "Default Playlist"})
+
+      # Create a channel with the default playlist
+      channel =
+        channel_fixture(%{
+          organization_id: organization.id,
+          timezone: "America/Sao_Paulo",
+          default_playlist_id: default_playlist.id
+        })
+
+      # Device should not have access before channel is assigned
+      assert Devices.has_access_to_playlist(device.id, default_playlist.id) == false
+
+      # Assign channel to device
+      Devices.add_channel(device.id, channel.id)
+
+      # Now device should have access to the default playlist
+      assert Devices.has_access_to_playlist(device.id, default_playlist.id)
+
+      # Remove channel from device
+      Devices.remove_channel(device.id, channel.id)
+
+      # Device should no longer have access
+      assert Devices.has_access_to_playlist(device.id, default_playlist.id) == false
+    end
+
+    test "has_access_to_playlist/2 grants access through either channel entry or default playlist" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+
+      {:ok, devices_registration} =
+        device_registration_fixture(%{
+          hardware_id: "combined-access-hw-id",
+          pincode: "combined123"
+        })
+
+      assert {:ok, {device, _token}} =
+               Devices.register_device(organization.id, devices_registration.pincode, %{
+                 name: "device with combined access"
+               })
+
+      # Create two playlists
+      default_playlist =
+        playlist_fixture(%{organization_id: organization.id, name: "Default Playlist"})
+
+      entry_playlist =
+        playlist_fixture(%{organization_id: organization.id, name: "Entry Playlist"})
+
+      # Create a channel with one playlist as default
+      channel =
+        channel_fixture(%{
+          organization_id: organization.id,
+          timezone: "Europe/Stockholm",
+          default_playlist_id: default_playlist.id
+        })
+
+      # Add a channel entry with the other playlist
+      entry_attrs = %{
+        "name" => "scheduled entry",
+        "start" => DateTime.to_unix(~U[2025-01-01 10:00:00Z]),
+        "end" => DateTime.to_unix(~U[2025-01-01 18:00:00Z]),
+        "playlist_id" => entry_playlist.id
+      }
+
+      assert {:ok, _entry} = Resources.add_channel_entry(channel.id, entry_attrs)
+
+      # Assign channel to device
+      Devices.add_channel(device.id, channel.id)
+
+      # Device should have access to both playlists
+      assert Devices.has_access_to_playlist(device.id, default_playlist.id)
+      assert Devices.has_access_to_playlist(device.id, entry_playlist.id)
+
+      # Create an unrelated playlist
+      unrelated_playlist =
+        playlist_fixture(%{organization_id: organization.id, name: "Unrelated"})
+
+      # Device should NOT have access to unrelated playlist
+      assert Devices.has_access_to_playlist(device.id, unrelated_playlist.id) == false
+    end
+
     test "add_channel/2 can assign multiple channels to a device" do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
@@ -482,6 +644,251 @@ defmodule Castmill.DevicesTest do
       assert channel1.id in channel_ids
       assert channel3.id in channel_ids
       refute channel2.id in channel_ids
+    end
+  end
+
+  describe "schedule_to_timers/1" do
+    alias Castmill.Devices
+
+    test "returns empty timers for nil" do
+      assert Devices.schedule_to_timers(nil) == %{on: [], off: []}
+    end
+
+    test "returns empty timers for empty list" do
+      assert Devices.schedule_to_timers([]) == %{on: [], off: []}
+    end
+
+    test "converts a basic schedule entry to on/off timers" do
+      entries = [
+        %{
+          "startHour" => 8,
+          "startMinute" => 0,
+          "endHour" => 17,
+          "endMinute" => 0,
+          "days" => [0, 1, 2, 3, 4]
+        }
+      ]
+
+      result = Devices.schedule_to_timers(entries)
+
+      assert length(result.on) == 1
+      assert length(result.off) == 1
+
+      [on_timer] = result.on
+      assert on_timer.hours == 8
+      assert on_timer.minutes == 0
+      assert Enum.sort(on_timer.weekDays) == ["FRI", "MON", "THU", "TUE", "WED"]
+
+      [off_timer] = result.off
+      assert off_timer.hours == 17
+      assert off_timer.minutes == 0
+      assert Enum.sort(off_timer.weekDays) == ["FRI", "MON", "THU", "TUE", "WED"]
+    end
+
+    test "normalizes endHour 24 to 0:00 on the next day with shifted weekdays" do
+      # Mon-Fri schedule ending at 24:00 (midnight)
+      entries = [
+        %{
+          "startHour" => 8,
+          "startMinute" => 0,
+          "endHour" => 24,
+          "endMinute" => 0,
+          "days" => [0, 1, 2, 3, 4]
+        }
+      ]
+
+      result = Devices.schedule_to_timers(entries)
+
+      [on_timer] = result.on
+      assert on_timer.hours == 8
+      assert on_timer.minutes == 0
+      assert Enum.sort(on_timer.weekDays) == ["FRI", "MON", "THU", "TUE", "WED"]
+
+      # Off timer should be at 0:00 with weekdays shifted by +1 (Tue-Sat)
+      [off_timer] = result.off
+      assert off_timer.hours == 0
+      assert off_timer.minutes == 0
+      assert Enum.sort(off_timer.weekDays) == ["FRI", "SAT", "THU", "TUE", "WED"]
+    end
+
+    test "normalizes endHour 24 wraps Sunday to Monday" do
+      # Sunday (6) schedule ending at 24:00 should wrap to Monday (0)
+      entries = [
+        %{"startHour" => 9, "startMinute" => 0, "endHour" => 24, "endMinute" => 0, "days" => [6]}
+      ]
+
+      result = Devices.schedule_to_timers(entries)
+
+      [on_timer] = result.on
+      assert on_timer.hours == 9
+      assert Enum.sort(on_timer.weekDays) == ["SUN"]
+
+      # Sunday + 1 = day 0 = Monday
+      [off_timer] = result.off
+      assert off_timer.hours == 0
+      assert off_timer.minutes == 0
+      assert off_timer.weekDays == ["MON"]
+    end
+
+    test "merges timers with the same hour across entries" do
+      entries = [
+        %{
+          "startHour" => 8,
+          "startMinute" => 0,
+          "endHour" => 17,
+          "endMinute" => 0,
+          "days" => [0, 1, 2]
+        },
+        %{
+          "startHour" => 8,
+          "startMinute" => 0,
+          "endHour" => 17,
+          "endMinute" => 0,
+          "days" => [3, 4]
+        }
+      ]
+
+      result = Devices.schedule_to_timers(entries)
+
+      # Should merge into single on/off timers
+      assert length(result.on) == 1
+      assert length(result.off) == 1
+
+      [on_timer] = result.on
+      assert Enum.sort(on_timer.weekDays) == ["FRI", "MON", "THU", "TUE", "WED"]
+    end
+
+    test "unwraps entries map format" do
+      schedule = %{
+        "entries" => [
+          %{
+            "startHour" => 9,
+            "startMinute" => 30,
+            "endHour" => 18,
+            "endMinute" => 0,
+            "days" => [0]
+          }
+        ]
+      }
+
+      result = Devices.schedule_to_timers(schedule)
+
+      [on_timer] = result.on
+      assert on_timer.hours == 9
+      assert on_timer.minutes == 30
+    end
+
+    test "MON-FRI 23-24 and TUE-SAT 00-03 merge into continuous 23-03 schedule" do
+      # Entry 1: MON-FRI 23:00-24:00
+      #   on@23:00 [MON..FRI], off@0:00 [TUE..SAT] (day-shifted)
+      # Entry 2: TUE-SAT 00:00-03:00
+      #   on@0:00 [TUE..SAT], off@3:00 [TUE..SAT]
+      #
+      # The on@0:00 and off@0:00 both have [TUE..SAT], so they cancel out.
+      # Result: on@23:00 [MON..FRI], off@3:00 [TUE..SAT]
+      entries = [
+        %{
+          "startHour" => 23,
+          "startMinute" => 0,
+          "endHour" => 24,
+          "endMinute" => 0,
+          "days" => [0, 1, 2, 3, 4]
+        },
+        %{
+          "startHour" => 0,
+          "startMinute" => 0,
+          "endHour" => 3,
+          "endMinute" => 0,
+          "days" => [1, 2, 3, 4, 5]
+        }
+      ]
+
+      result = Devices.schedule_to_timers(entries)
+
+      # Only one on timer remains: 23:00 MON-FRI
+      assert length(result.on) == 1
+      [on_timer] = result.on
+      assert on_timer.hours == 23
+      assert on_timer.minutes == 0
+      assert Enum.sort(on_timer.weekDays) == ["FRI", "MON", "THU", "TUE", "WED"]
+
+      # Only one off timer remains: 03:00 TUE-SAT (midnight ones cancelled)
+      assert length(result.off) == 1
+      [off_timer] = result.off
+      assert off_timer.hours == 3
+      assert off_timer.minutes == 0
+      assert Enum.sort(off_timer.weekDays) == ["FRI", "SAT", "THU", "TUE", "WED"]
+    end
+
+    test "week wrap-around: SUN 23-24 and MON 00-03 merge across week boundary" do
+      # Entry 1: SUN 23:00-24:00
+      #   on@23:00 [SUN], off@0:00 [MON] (day 6+1=0=MON)
+      # Entry 2: MON 00:00-03:00
+      #   on@0:00 [MON], off@3:00 [MON]
+      #
+      # on@0:00[MON] and off@0:00[MON] cancel → player on from SUN 23 to MON 03
+      entries = [
+        %{
+          "startHour" => 23,
+          "startMinute" => 0,
+          "endHour" => 24,
+          "endMinute" => 0,
+          "days" => [6]
+        },
+        %{"startHour" => 0, "startMinute" => 0, "endHour" => 3, "endMinute" => 0, "days" => [0]}
+      ]
+
+      result = Devices.schedule_to_timers(entries)
+
+      # Only on@23:00 SUN remains
+      assert length(result.on) == 1
+      [on_timer] = result.on
+      assert on_timer.hours == 23
+      assert on_timer.weekDays == ["SUN"]
+
+      # Only off@3:00 MON remains (midnight pair cancelled)
+      assert length(result.off) == 1
+      [off_timer] = result.off
+      assert off_timer.hours == 3
+      assert off_timer.weekDays == ["MON"]
+    end
+
+    test "partial weekday overlap cancels only matching days" do
+      # Entry 1: MON-WED 23:00-24:00
+      #   off@0:00 [TUE,WED,THU]
+      # Entry 2: TUE-SAT 00:00-03:00
+      #   on@0:00 [TUE,WED,THU,FRI,SAT]
+      #
+      # Overlap at 0:00 is [TUE,WED,THU] → cancel those
+      # Remaining: on@0:00 [FRI,SAT], off@0:00 is empty (deleted)
+      entries = [
+        %{
+          "startHour" => 23,
+          "startMinute" => 0,
+          "endHour" => 24,
+          "endMinute" => 0,
+          "days" => [0, 1, 2]
+        },
+        %{
+          "startHour" => 0,
+          "startMinute" => 0,
+          "endHour" => 3,
+          "endMinute" => 0,
+          "days" => [1, 2, 3, 4, 5]
+        }
+      ]
+
+      result = Devices.schedule_to_timers(entries)
+
+      # on timers: 23:00 [MON,TUE,WED] and 0:00 [FRI,SAT] (remaining after cancel)
+      on_by_hour = Map.new(result.on, fn t -> {t.hours, t} end)
+      assert Enum.sort(on_by_hour[23].weekDays) == ["MON", "TUE", "WED"]
+      assert Enum.sort(on_by_hour[0].weekDays) == ["FRI", "SAT"]
+
+      # off timers: only 3:00 [TUE-SAT] (midnight ones fully cancelled)
+      off_by_hour = Map.new(result.off, fn t -> {t.hours, t} end)
+      assert off_by_hour[0] == nil
+      assert Enum.sort(off_by_hour[3].weekDays) == ["FRI", "SAT", "THU", "TUE", "WED"]
     end
   end
 end

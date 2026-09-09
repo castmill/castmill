@@ -27,4 +27,12 @@ export interface Usage {
     total: number;
     used: number;
   };
+  widgets: {
+    total: number;
+    used: number;
+  };
+  layouts: {
+    total: number;
+    used: number;
+  };
 }

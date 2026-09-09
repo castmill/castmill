@@ -1,0 +1,174 @@
+/* selection-action-bar.scss */
+@use '../../colors.scss';
+
+.castmill-selection-bar {
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  pointer-events: none;
+  padding-top: 0.5em;
+
+  // Hidden by default
+  opacity: 0;
+  transform: translateY(100%);
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+
+  // Active state — items selected
+  &.visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+
+    .selection-bar-inner {
+      background: colors.$highlight-color;
+      box-shadow:
+        0 -0.125em 0.5em rgba(0, 0, 0, 0.18),
+        0 0.25em 1.5em rgba(87, 146, 238, 0.25);
+    }
+  }
+
+  // Hint state — no items selected, shows guidance
+  &.hint {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: none; // Not interactive in hint mode
+
+    .selection-bar-inner {
+      background: rgba(255, 255, 255, 0.06);
+      box-shadow: none;
+      border: 1px dashed rgba(255, 255, 255, 0.15);
+    }
+  }
+}
+
+.selection-bar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1em;
+
+  margin: 0 auto;
+  padding: 0.625em 1.25em;
+  border-radius: 0.75em;
+  max-width: 40em;
+
+  background: colors.$highlight-color;
+  box-shadow:
+    0 -0.125em 0.5em rgba(0, 0, 0, 0.18),
+    0 0.25em 1.5em rgba(87, 146, 238, 0.25);
+
+  color: #fff;
+  font-size: 0.9em;
+
+  transition:
+    background 0.25s ease,
+    box-shadow 0.25s ease,
+    border 0.25s ease;
+}
+
+// Hint content styling
+.selection-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.85em;
+  font-weight: 400;
+  margin: 0 auto;
+
+  span {
+    white-space: nowrap;
+  }
+}
+
+.selection-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.deselect-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  padding: 0.25em;
+  border-radius: 50%;
+  font-size: 1.25em;
+  line-height: 1;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+  }
+
+  &:active {
+    transform: scale(0.92);
+  }
+}
+
+.selection-count {
+  font-weight: 600;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+}
+
+.selection-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.375em;
+
+  // Style action buttons uniformly inside the bar
+  button,
+  .selection-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.375em;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #fff;
+    cursor: pointer;
+    padding: 0.375em 0.75em;
+    border-radius: 0.5em;
+    font-size: 0.9em;
+    font-weight: 500;
+    white-space: nowrap;
+    transition:
+      background 0.15s ease,
+      border-color 0.15s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.22);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    &:active {
+      transform: scale(0.97);
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    &.danger {
+      background: rgba(239, 68, 68, 0.25);
+      border-color: rgba(239, 68, 68, 0.4);
+
+      &:hover {
+        background: rgba(239, 68, 68, 0.4);
+        border-color: rgba(239, 68, 68, 0.55);
+      }
+    }
+  }
+}

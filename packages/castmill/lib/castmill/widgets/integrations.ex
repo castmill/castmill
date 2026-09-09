@@ -1,0 +1,1879 @@
+defmodule Castmill.Widgets.Integrations do
+  @moduledoc """
+  The Widgets Integrations context.
+
+  Provides functions for managing widget third-party integrations,
+  credentials, and integration data.
+  """
+  import Ecto.Query, warn: false
+
+  require Logger
+
+  alias Castmill.Repo
+
+  alias Castmill.Widgets.Integrations.{
+    WidgetIntegration,
+    WidgetIntegrationCredential,
+    WidgetIntegrationData,
+    NetworkIntegrationCredential
+  }
+
+  # `widget_integration_data.discriminator_id` is a varchar(255) column.
+  @discriminator_id_max_bytes 255
+
+  # ============================================================================
+  # Integration Data Broadcasting
+  # ============================================================================
+
+  @doc """
+  Broadcasts a widget config data update to authorized users in the organization.
+
+  This notification is sent when integration data is updated for widgets that use
+  organization-level credentials. Users receive this update because:
+  1. They are members of the organization (subscribed to `organization:<org_id>` channel)
+  2. They have at least "list" access to playlists (which contain widget_configs)
+
+  Use cases:
+  - Dashboard users previewing widgets with live integration data (e.g., Spotify Now Playing)
+  - Real-time updates to widget previews without manual refresh
+
+  The broadcast payload includes:
+  - `widget_id` - The widget type identifier (e.g., "spotify-now-playing")
+  - `integration_id` - The integration that provided the data
+  - `discriminator_id` - The cache key (for data routing on the client)
+  - `data` - The updated widget data
+
+  ## Security
+  Only users who are members of the organization will receive this notification.
+  The notification is broadcast to the `organization:<org_id>` PubSub topic,
+  which users are only subscribed to if they belong to the organization.
+
+  ## Examples
+
+      iex> broadcast_widget_config_data_update(org_id, widget_id, integration_id, data, discriminator_id)
+      :ok
+  """
+  def broadcast_widget_config_data_update(
+        organization_id,
+        widget_id,
+        integration_id,
+        data,
+        discriminator_id
+      ) do
+    payload = %{
+      type: "widget_config_data_update",
+      widget_id: widget_id,
+      integration_id: integration_id,
+      discriminator_id: discriminator_id,
+      data: data,
+      updated_at: DateTime.utc_now() |> DateTime.to_iso8601()
+    }
+
+    # Broadcast to organization channel (for dashboard previews)
+    # Only users who are members of this organization will receive this
+    Phoenix.PubSub.broadcast(
+      Castmill.PubSub,
+      "organization:#{organization_id}",
+      {:widget_config_data_update, payload}
+    )
+
+    Logger.debug("Broadcasted widget config data update to organization:#{organization_id}")
+
+    :ok
+  end
+
+  # ============================================================================
+  # Widget Integrations
+  # ============================================================================
+
+  @doc """
+  Returns the list of widget integrations.
+
+  ## Examples
+
+      iex> list_integrations()
+      [%WidgetIntegration{}, ...]
+
+      iex> list_integrations(widget_id: "widget-123")
+      [%WidgetIntegration{}, ...]
+  """
+  def list_integrations(filters \\ []) do
+    WidgetIntegration.base_query()
+    |> apply_filters(filters)
+    |> Repo.all()
+  end
+
+  @doc """
+  Gets a single widget integration.
+
+  Returns `nil` if the integration does not exist.
+
+  ## Examples
+
+      iex> get_integration(123)
+      %WidgetIntegration{}
+
+      iex> get_integration(456)
+      nil
+  """
+  def get_integration(id), do: Repo.get(WidgetIntegration, id)
+
+  @doc """
+  Gets a widget integration by widget_id and name.
+
+  ## Examples
+
+      iex> get_integration_by_widget_and_name("widget-123", "openweather")
+      %WidgetIntegration{}
+  """
+  def get_integration_by_widget_and_name(widget_id, name) do
+    WidgetIntegration.base_query()
+    |> where([wi], wi.widget_id == ^widget_id and wi.name == ^name)
+    |> Repo.one()
+  end
+
+  @doc """
+  Creates a widget integration.
+
+  ## Examples
+
+      iex> create_integration(%{field: value})
+      {:ok, %WidgetIntegration{}}
+
+      iex> create_integration(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+  """
+  def create_integration(attrs \\ %{}) do
+    %WidgetIntegration{}
+    |> WidgetIntegration.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a widget integration.
+
+  ## Examples
+
+      iex> update_integration(integration, %{field: new_value})
+      {:ok, %WidgetIntegration{}}
+
+      iex> update_integration(integration, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+  """
+  def update_integration(%WidgetIntegration{} = integration, attrs) do
+    integration
+    |> WidgetIntegration.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a widget integration.
+
+  ## Examples
+
+      iex> delete_integration(integration)
+      {:ok, %WidgetIntegration{}}
+
+      iex> delete_integration(integration)
+      {:error, %Ecto.Changeset{}}
+  """
+  def delete_integration(%WidgetIntegration{} = integration) do
+    Repo.delete(integration)
+  end
+
+  # ============================================================================
+  # Widget Integration Credentials
+  # ============================================================================
+
+  @doc """
+  Gets credentials for an integration.
+
+  Returns organization-scoped or widget-scoped credentials based on the integration's
+  credential_scope and the provided parameters.
+
+  ## Examples
+
+      iex> get_credentials(integration, organization_id: "org-123")
+      %WidgetIntegrationCredential{}
+
+      iex> get_credentials(integration, widget_config_id: "config-456")
+      %WidgetIntegrationCredential{}
+  """
+  def get_credentials(%WidgetIntegration{} = integration, opts) do
+    query = WidgetIntegrationCredential.base_query()
+    query = where(query, [wic], wic.widget_integration_id == ^integration.id)
+
+    cond do
+      org_id = Keyword.get(opts, :organization_id) ->
+        query
+        |> where([wic], wic.organization_id == ^org_id)
+        |> Repo.one()
+
+      widget_config_id = Keyword.get(opts, :widget_config_id) ->
+        query
+        |> where([wic], wic.widget_config_id == ^widget_config_id)
+        |> Repo.one()
+
+      true ->
+        nil
+    end
+  end
+
+  @doc """
+  Creates or updates credentials for an integration.
+
+  ## Examples
+
+      iex> upsert_credentials(%{
+      ...>   widget_integration_id: 123,
+      ...>   organization_id: "org-123",
+      ...>   encrypted_credentials: <<...>>
+      ...> })
+      {:ok, %WidgetIntegrationCredential{}}
+  """
+  def upsert_credentials(attrs) do
+    # Check if credentials already exist
+    existing =
+      if org_id = attrs[:organization_id] do
+        get_credentials_by_scope(attrs[:widget_integration_id], organization_id: org_id)
+      else
+        get_credentials_by_scope(
+          attrs[:widget_integration_id],
+          widget_config_id: attrs[:widget_config_id]
+        )
+      end
+
+    if existing do
+      update_credentials(existing, attrs)
+    else
+      create_credentials(attrs)
+    end
+  end
+
+  @doc """
+  Creates new credentials.
+  """
+  def create_credentials(attrs \\ %{}) do
+    %WidgetIntegrationCredential{}
+    |> WidgetIntegrationCredential.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates credentials.
+  """
+  def update_credentials(%WidgetIntegrationCredential{} = credential, attrs) do
+    credential
+    |> WidgetIntegrationCredential.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes credentials.
+  """
+  def delete_credentials(%WidgetIntegrationCredential{} = credential) do
+    Repo.delete(credential)
+  end
+
+  @doc """
+  Deletes organization-scoped credentials for an integration.
+
+  ## Parameters
+
+    - organization_id: The organization ID
+    - integration_id: The widget integration ID
+
+  ## Returns
+
+    - `{:ok, credential}` - Deleted credential
+    - `{:error, :not_found}` - No credentials found
+  """
+  def delete_organization_credentials(organization_id, integration_id) do
+    case get_credentials_by_scope(integration_id, organization_id: organization_id) do
+      nil -> {:error, :not_found}
+      credential -> delete_credentials(credential)
+    end
+  end
+
+  @doc """
+  Deletes widget-scoped credentials for an integration.
+
+  ## Parameters
+
+    - widget_config_id: The widget config ID
+    - integration_id: The widget integration ID
+
+  ## Returns
+
+    - `{:ok, credential}` - Deleted credential
+    - `{:error, :not_found}` - No credentials found
+  """
+  def delete_widget_credentials(widget_config_id, integration_id) do
+    case get_credentials_by_scope(integration_id, widget_config_id: widget_config_id) do
+      nil -> {:error, :not_found}
+      credential -> delete_credentials(credential)
+    end
+  end
+
+  # ============================================================================
+  # Convenience Functions for OAuth and Credential Management
+  # ============================================================================
+
+  @doc """
+  Resolves the effective credentials to pass to a fetcher for an organization.
+
+  Credentials can come from two levels:
+
+    - Network-level credentials shared across all organizations in the network
+      (e.g. a single commercial Open-Meteo API key for the whole network).
+    - Organization-level credentials specific to the organization.
+
+  Organization-level values take precedence over network-level values. For
+  integrations whose `auth_type` is `"optional"` or `"none"`, missing
+  credentials are not an error (the fetcher works without them); otherwise a
+  missing credential returns `{:error, :no_credentials}`.
+  """
+  def get_fetch_credentials(organization_id, %WidgetIntegration{} = integration) do
+    network_creds = get_network_credentials_for_organization(organization_id, integration.id)
+
+    org_creds =
+      case get_organization_credentials(organization_id, integration.id) do
+        {:ok, creds} when is_map(creds) -> creds
+        _ -> %{}
+      end
+
+    merged = Map.merge(network_creds, org_creds)
+
+    cond do
+      merged != %{} -> {:ok, merged}
+      optional_or_none_auth?(integration) -> {:ok, %{}}
+      true -> {:error, :no_credentials}
+    end
+  end
+
+  @doc """
+  Returns decrypted network-level credentials for the network that owns the
+  given organization, or an empty map when none are configured.
+  """
+  def get_network_credentials_for_organization(organization_id, integration_id) do
+    with %{network_id: network_id} when not is_nil(network_id) <-
+           Castmill.Organizations.get_organization(organization_id),
+         {:ok, creds} when is_map(creds) <-
+           get_decrypted_network_credentials(network_id, integration_id) do
+      creds
+    else
+      _ -> %{}
+    end
+  end
+
+  defp optional_or_none_auth?(%WidgetIntegration{} = integration) do
+    auth_type =
+      get_in(integration.pull_config || %{}, ["auth_type"]) ||
+        get_in(integration.credential_schema || %{}, ["auth_type"])
+
+    auth_type in ["optional", "none"]
+  end
+
+  @doc """
+  Gets decrypted organization-scoped credentials for an integration.
+
+  Uses the organization's encryption key to decrypt stored credentials.
+
+  ## Parameters
+
+    - organization_id: The organization ID
+    - integration_id: The widget integration ID
+
+  ## Returns
+
+    - `{:ok, credentials_map}` - Decrypted credentials
+    - `{:error, :not_found}` - No credentials stored
+    - `{:error, reason}` - Decryption or other error
+  """
+  def get_organization_credentials(organization_id, integration_id) do
+    credential = get_credentials_by_scope(integration_id, organization_id: organization_id)
+
+    case credential do
+      nil ->
+        {:error, :not_found}
+
+      %WidgetIntegrationCredential{encrypted_credentials: encrypted} when is_binary(encrypted) ->
+        with {:ok, organization} <- fetch_organization(organization_id),
+             {:ok, encryption_key} <- get_or_create_encryption_key(organization),
+             {:ok, credentials} <- Castmill.Crypto.decrypt(encrypted, encryption_key) do
+          {:ok, credentials}
+        end
+
+      _ ->
+        {:error, :not_found}
+    end
+  end
+
+  @doc """
+  Creates or updates encrypted organization-scoped credentials.
+
+  Encrypts the credentials using the organization's encryption key.
+
+  ## Parameters
+
+    - organization_id: The organization ID
+    - integration_id: The widget integration ID
+    - credentials: Map of credentials to store
+
+  ## Returns
+
+    - `{:ok, credential}` - Stored credential record
+    - `{:error, reason}` - Storage or encryption error
+  """
+  def upsert_organization_credentials(organization_id, integration_id, credentials)
+      when is_map(credentials) do
+    with {:ok, organization} <- fetch_organization(organization_id),
+         {:ok, encryption_key} <- get_or_create_encryption_key(organization),
+         encrypted <- Castmill.Crypto.encrypt(credentials, encryption_key) do
+      upsert_credentials(%{
+        widget_integration_id: integration_id,
+        organization_id: organization_id,
+        encrypted_credentials: encrypted,
+        is_valid: true,
+        validated_at: DateTime.utc_now()
+      })
+    end
+  end
+
+  @doc """
+  Creates or updates encrypted widget-scoped credentials.
+
+  Uses the organization's encryption key for the widget's organization.
+
+  ## Parameters
+
+    - widget_config_id: The widget config ID
+    - integration_id: The widget integration ID
+    - credentials: Map of credentials to store
+
+  ## Returns
+
+    - `{:ok, credential}` - Stored credential record
+    - `{:error, reason}` - Storage or encryption error
+  """
+  def upsert_widget_credentials(widget_config_id, integration_id, credentials)
+      when is_map(credentials) do
+    # Widget configs belong to organizations through playlists
+    # We need to get the organization to access the encryption key
+    with {:ok, organization_id} <- get_organization_for_widget_config(widget_config_id),
+         {:ok, organization} <- fetch_organization(organization_id),
+         {:ok, encryption_key} <- get_or_create_encryption_key(organization),
+         encrypted <- Castmill.Crypto.encrypt(credentials, encryption_key) do
+      upsert_credentials(%{
+        widget_integration_id: integration_id,
+        widget_config_id: widget_config_id,
+        encrypted_credentials: encrypted,
+        is_valid: true,
+        validated_at: DateTime.utc_now()
+      })
+    end
+  end
+
+  defp fetch_organization(organization_id) do
+    case Castmill.Organizations.get_organization(organization_id) do
+      nil -> {:error, :organization_not_found}
+      org -> {:ok, org}
+    end
+  end
+
+  @doc false
+  # Gets or creates the encryption key for an organization.
+  # The key is stored Base64-encoded in the database but returned as raw bytes.
+  defp get_or_create_encryption_key(organization) do
+    if organization.encryption_key do
+      Castmill.Crypto.decode_key(organization.encryption_key)
+    else
+      # Generate and save new key
+      key = Castmill.Crypto.generate_key()
+      encoded = Castmill.Crypto.encode_key(key)
+
+      case Castmill.Organizations.update_organization(organization, %{encryption_key: encoded}) do
+        {:ok, _org} -> {:ok, key}
+        {:error, changeset} -> {:error, changeset}
+      end
+    end
+  end
+
+  defp get_organization_for_widget_config(widget_config_id) do
+    # Widget configs are linked to medias, which belong to organizations
+    query =
+      from wc in Castmill.Widgets.WidgetConfig,
+        join: m in Castmill.Resources.Media,
+        on: m.id == wc.media_id,
+        where: wc.id == ^widget_config_id,
+        select: m.organization_id
+
+    case Repo.one(query) do
+      nil -> {:error, :widget_config_not_found}
+      organization_id -> {:ok, organization_id}
+    end
+  end
+
+  # ============================================================================
+  # Discriminator-based Data Caching
+  # ============================================================================
+
+  @doc """
+  Adds the organization's display locale to widget options when the caller has
+  not already supplied an explicit locale.
+  """
+  def with_display_locale(organization_id, widget_options, display_locale \\ nil) do
+    widget_options = widget_options || %{}
+
+    cond do
+      Map.has_key?(widget_options, "display_locale") ->
+        widget_options
+
+      Map.has_key?(widget_options, :display_locale) ->
+        Map.put(widget_options, "display_locale", Map.get(widget_options, :display_locale))
+
+      true ->
+        Map.put(
+          widget_options,
+          "display_locale",
+          display_locale || display_locale_for_organization(organization_id)
+        )
+    end
+  end
+
+  @doc ~S"""
+  Computes the discriminator ID for integration data caching.
+
+  The discriminator determines how integration data is grouped and shared:
+
+  - `"organization"` - All widgets in the org share data: discriminator = "org:#{org_id}"
+  - `"widget_option"` - Widgets in the same organization with the same option
+    value share: discriminator = "org:#{org_id}|opt:#{option_value}"
+  - `"widget_config"` - Each widget unique: discriminator = "cfg:#{widget_config_id}"
+
+  ## Parameters
+
+    - integration: The WidgetIntegration with discriminator_type and discriminator_key
+    - organization_id: The organization ID
+    - widget_config_id: The widget config ID (optional for org-level)
+    - widget_options: Map of widget options (required for widget_option type)
+
+  ## Returns
+
+    - `{:ok, discriminator_id}` on success
+    - `{:error, reason}` if required data is missing
+  """
+  def compute_discriminator_id(
+        %WidgetIntegration{} = integration,
+        organization_id,
+        widget_config_id \\ nil,
+        widget_options \\ %{}
+      ) do
+    widget_options = with_display_locale(organization_id, widget_options)
+
+    case integration.discriminator_type do
+      "organization" ->
+        {:ok, "org:#{organization_id}"}
+
+      "widget_option" ->
+        key = integration.discriminator_key
+
+        case widget_option_discriminator_value(key, widget_options,
+               missing: if(composite_discriminator_key?(key), do: :default, else: :error),
+               include_keys: composite_discriminator_key?(key)
+             ) do
+          {:ok, value} ->
+            discriminator =
+              organization_id
+              |> scope_discriminator_by_organization("opt:#{value}")
+              |> bound_discriminator_id()
+
+            {:ok, discriminator}
+
+          {:error, reason} ->
+            {:error, reason}
+        end
+
+      "widget_config" ->
+        case widget_config_id do
+          nil -> {:error, :widget_config_required}
+          id -> {:ok, "cfg:#{id}"}
+        end
+
+      nil ->
+        # Legacy fallback - treat as widget_config
+        case widget_config_id do
+          nil -> {:ok, "org:#{organization_id}"}
+          id -> {:ok, "cfg:#{id}"}
+        end
+    end
+  end
+
+  @doc false
+  def display_locale_for_organization(nil), do: "en"
+
+  def display_locale_for_organization(organization_id) when is_binary(organization_id) do
+    with {:ok, organization_id} <- Ecto.UUID.cast(organization_id) do
+      from(org in Castmill.Organizations.Organization,
+        join: network in assoc(org, :network),
+        where: org.id == ^organization_id,
+        select: network.default_locale
+      )
+      |> Repo.one()
+      |> case do
+        locale when is_binary(locale) and locale != "" -> locale
+        _ -> "en"
+      end
+    else
+      :error -> "en"
+    end
+  end
+
+  def display_locale_for_organization(_organization_id) do
+    "en"
+  end
+
+  @doc false
+  def widget_option_discriminator_value(discriminator_key, widget_options, opts \\ [])
+      when is_binary(discriminator_key) do
+    keys =
+      discriminator_key
+      |> String.split(",", trim: true)
+      |> Enum.map(&String.trim/1)
+      |> Enum.reject(&(&1 == ""))
+
+    missing = Keyword.get(opts, :missing, :error)
+    include_keys = Keyword.get(opts, :include_keys, false)
+
+    with {:ok, resolved} <- resolve_discriminator_values(keys, widget_options || %{}, missing) do
+      case {include_keys, resolved} do
+        {false, [{_key, value}]} ->
+          {:ok, serialize_discriminator_value(value)}
+
+        _ ->
+          {:ok,
+           Enum.map_join(resolved, "|", fn {key, value} ->
+             "#{key}=#{serialize_discriminator_value(value)}"
+           end)}
+      end
+    end
+  end
+
+  @doc """
+  Gets or fetches integration data using discriminator-based caching.
+
+  This is the main entry point for widgets to get integration data:
+  1. Computes the discriminator_id based on integration configuration
+  2. Checks cache for existing data
+  3. If cached data is fresh enough, returns it
+  4. Otherwise fetches new data from the integration endpoint
+  5. Updates cache and returns the data
+
+  ## Parameters
+
+    - integration_id: The widget integration ID
+    - organization_id: The organization ID
+    - opts: Options including:
+      - `:widget_config_id` - The widget config ID
+      - `:widget_options` - Map of widget options
+      - `:max_age_seconds` - Max cache age before refresh (default: uses integration interval)
+
+  ## Returns
+
+    - `{:ok, data_map}` on success
+    - `{:error, reason}` on failure
+  """
+  def get_or_fetch_integration_data(integration_id, organization_id, opts \\ []) do
+    widget_config_id = Keyword.get(opts, :widget_config_id)
+    widget_options = with_display_locale(organization_id, Keyword.get(opts, :widget_options, %{}))
+
+    with %WidgetIntegration{} = integration <- get_integration(integration_id),
+         {:ok, discriminator_id} <-
+           compute_discriminator_id(
+             integration,
+             organization_id,
+             widget_config_id,
+             widget_options
+           ) do
+      # Check cache first
+      cached = get_integration_data_by_discriminator(integration_id, discriminator_id)
+
+      max_age = Keyword.get(opts, :max_age_seconds, integration.pull_interval_seconds || 300)
+
+      case cached do
+        %WidgetIntegrationData{} = data when not is_nil(data.fetched_at) ->
+          age_seconds = DateTime.diff(DateTime.utc_now(), data.fetched_at)
+
+          if age_seconds < max_age do
+            # Cache hit - update last_used_at and return
+            update_last_used(data)
+            {:ok, data.data}
+          else
+            # Cache stale - fetch fresh data
+            fetch_and_cache_data(integration, organization_id, discriminator_id, widget_config_id)
+          end
+
+        _ ->
+          # No cache - fetch fresh data
+          fetch_and_cache_data(integration, organization_id, discriminator_id, widget_config_id)
+      end
+    else
+      nil -> {:error, :integration_not_found}
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  @doc """
+  Gets integration data by discriminator ID.
+  """
+  def get_integration_data_by_discriminator(integration_id, discriminator_id) do
+    WidgetIntegrationData.base_query()
+    |> where(
+      [wid],
+      wid.widget_integration_id == ^integration_id and wid.discriminator_id == ^discriminator_id
+    )
+    |> Repo.one()
+  end
+
+  @doc """
+  Updates the last_used_at timestamp for cache entry tracking.
+  """
+  def update_last_used(%WidgetIntegrationData{} = data) do
+    now = DateTime.utc_now() |> DateTime.truncate(:second)
+
+    data
+    |> Ecto.Changeset.change(last_used_at: now)
+    |> Repo.update()
+  end
+
+  @doc """
+  Fetches data from integration endpoint and caches it.
+
+  This is called when cache is stale or missing.
+  """
+  def fetch_and_cache_data(
+        %WidgetIntegration{} = integration,
+        organization_id,
+        discriminator_id,
+        widget_config_id
+      ) do
+    # Get credentials for the fetch
+    credentials_result = get_organization_credentials(organization_id, integration.id)
+
+    case credentials_result do
+      {:ok, credentials} ->
+        # Build the fetch request
+        case do_fetch_integration_data(integration, credentials) do
+          {:ok, data} ->
+            # Cache the result
+            upsert_discriminator_data(%{
+              widget_integration_id: integration.id,
+              organization_id: organization_id,
+              discriminator_id: discriminator_id,
+              widget_config_id: widget_config_id,
+              data: data,
+              fetched_at: DateTime.utc_now() |> DateTime.truncate(:second),
+              last_used_at: DateTime.utc_now() |> DateTime.truncate(:second),
+              status: "ok"
+            })
+
+            {:ok, data}
+
+          {:error, reason} ->
+            # Cache the error state
+            upsert_discriminator_data(%{
+              widget_integration_id: integration.id,
+              organization_id: organization_id,
+              discriminator_id: discriminator_id,
+              widget_config_id: widget_config_id,
+              data: %{},
+              fetched_at: DateTime.utc_now() |> DateTime.truncate(:second),
+              last_used_at: DateTime.utc_now() |> DateTime.truncate(:second),
+              status: "error",
+              error_message: inspect(reason)
+            })
+
+            {:error, reason}
+        end
+
+      {:error, :not_found} ->
+        {:error, :no_credentials}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  @doc """
+  Performs the actual HTTP fetch from integration endpoint.
+
+  Override this for specific integrations with custom logic.
+  """
+  def do_fetch_integration_data(
+        %WidgetIntegration{pull_endpoint: endpoint} = integration,
+        credentials
+      )
+      when is_binary(endpoint) do
+    # Build URL with any config parameters
+    url = build_integration_url(endpoint, integration.pull_config, credentials)
+    headers = build_integration_headers(integration.pull_config, credentials)
+
+    case HTTPoison.get(url, headers, timeout: 30_000, recv_timeout: 30_000) do
+      {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
+        case Jason.decode(body) do
+          {:ok, data} -> {:ok, data}
+          {:error, _} -> {:ok, %{"raw" => body}}
+        end
+
+      {:ok, %HTTPoison.Response{status_code: status}} ->
+        {:error, {:http_error, status}}
+
+      {:error, %HTTPoison.Error{reason: reason}} ->
+        {:error, {:request_failed, reason}}
+    end
+  end
+
+  def do_fetch_integration_data(_integration, _credentials) do
+    {:error, :no_pull_endpoint}
+  end
+
+  defp build_integration_url(endpoint, config, credentials) do
+    # Replace placeholders in URL
+    endpoint
+    |> replace_placeholders(config)
+    |> replace_placeholders(credentials)
+  end
+
+  defp build_integration_headers(config, credentials) do
+    headers = Map.get(config, "headers", %{})
+
+    Enum.map(headers, fn {key, value} ->
+      {key, replace_placeholders(value, credentials)}
+    end)
+  end
+
+  defp replace_placeholders(text, params) when is_binary(text) do
+    Enum.reduce(params, text, fn {key, value}, acc ->
+      String.replace(acc, "{{#{key}}}", to_string(value))
+    end)
+  end
+
+  defp replace_placeholders(other, _params), do: other
+
+  @doc """
+  Creates or updates integration data using discriminator_id as the unique key.
+  """
+  def upsert_discriminator_data(attrs) do
+    integration_id = attrs[:widget_integration_id]
+    discriminator_id = attrs[:discriminator_id]
+
+    existing = get_integration_data_by_discriminator(integration_id, discriminator_id)
+
+    if existing do
+      # Increment version on update
+      attrs = Map.put(attrs, :version, existing.version + 1)
+      update_integration_data(existing, attrs)
+    else
+      attrs = Map.put(attrs, :version, 1)
+      create_integration_data(attrs)
+    end
+  end
+
+  @doc """
+  Deletes stale integration data entries.
+
+  Removes cache entries that haven't been used in the specified number of days.
+  This should be called periodically by a cleanup job.
+
+  ## Parameters
+
+    - days_old: Number of days since last use to consider stale (default: 30)
+
+  ## Returns
+
+    - `{:ok, count}` with number of deleted entries
+  """
+  def delete_stale_integration_data(days_old \\ 30) do
+    cutoff = DateTime.utc_now() |> DateTime.add(-days_old * 24 * 60 * 60, :second)
+
+    {count, _} =
+      from(wid in WidgetIntegrationData,
+        where: wid.last_used_at < ^cutoff or is_nil(wid.last_used_at)
+      )
+      |> Repo.delete_all()
+
+    {:ok, count}
+  end
+
+  # ============================================================================
+  # Widget Integration Data
+  # ============================================================================
+
+  @doc """
+  Gets integration data for a specific widget config.
+
+  ## Examples
+
+      iex> get_integration_data(integration_id, widget_config_id)
+      %WidgetIntegrationData{}
+  """
+  def get_integration_data(integration_id, widget_config_id) do
+    WidgetIntegrationData.base_query()
+    |> where(
+      [wid],
+      wid.widget_integration_id == ^integration_id and wid.widget_config_id == ^widget_config_id
+    )
+    |> Repo.one()
+  end
+
+  @doc """
+  Gets integration data by widget config ID only (for player polling).
+
+  ## Examples
+
+      iex> get_integration_data_by_config("config-123")
+      %WidgetIntegrationData{}
+  """
+  def get_integration_data_by_config(widget_config_id) do
+    # Validate UUID before querying to avoid cast errors with integer IDs
+    case Ecto.UUID.cast(widget_config_id) do
+      {:ok, _uuid} ->
+        WidgetIntegrationData.base_query()
+        |> where([wid], wid.widget_config_id == ^widget_config_id)
+        |> Repo.one()
+
+      :error ->
+        # Not a valid UUID (e.g., integer ID from older widget configs)
+        nil
+    end
+  end
+
+  @doc """
+  Gets the most recent integration data for a widget in an organization.
+
+  This is used when widgets share integration data at the organization level.
+  For example, all Spotify widgets in an organization should show the same
+  "Now Playing" data since they're connected to the same Spotify account.
+
+  Looks up by:
+  1. Finding the widget integration for the given widget
+  2. First checking for organization-level data (organization_id set directly)
+  3. Falling back to widget-config-level data if no org-level data exists
+
+  Returns `nil` if no integration or data found.
+
+  ## Examples
+
+      iex> get_integration_data_for_widget_in_org("org-123", 7)
+      %WidgetIntegrationData{}
+  """
+  def get_integration_data_for_widget_in_org(organization_id, widget_id) do
+    get_integration_data_for_widget_with_options(organization_id, widget_id, %{})
+  end
+
+  @doc """
+  Gets the most relevant integration data for a widget using widget options.
+
+  This is the preferred method for fetching integration data as it handles
+  discriminator-based caching properly.
+
+  Strategy:
+  1. First try discriminator-based lookup using widget options
+  2. Fall back to organization-level data
+  3. Fall back to finding any widget config data in this org
+
+  Returns `nil` if no integration or data found.
+
+  ## Examples
+
+      iex> get_integration_data_for_widget_with_options("org-123", 7, %{"symbols" => "AAPL,GOOGL"})
+      %WidgetIntegrationData{}
+  """
+  def get_integration_data_for_widget_with_options(organization_id, widget_id, widget_options) do
+    # First, find the integration for this widget
+    integration =
+      WidgetIntegration.base_query()
+      |> where([wi], wi.widget_id == ^widget_id)
+      |> Repo.one()
+
+    case integration do
+      nil ->
+        nil
+
+      %WidgetIntegration{} = wi ->
+        # Try discriminator-based lookup first
+        discriminator_id = build_discriminator_id(wi, widget_options, organization_id)
+
+        case get_integration_data_by_discriminator(wi.id, discriminator_id) do
+          %WidgetIntegrationData{} = data ->
+            data
+
+          nil ->
+            # Fall back to organization-level data
+            case get_organization_integration_data(organization_id, wi.id) do
+              %WidgetIntegrationData{} = data ->
+                data
+
+              nil ->
+                # Fall back to finding any widget config data in this org
+                WidgetIntegrationData.base_query()
+                |> join(:inner, [wid], wc in Castmill.Widgets.WidgetConfig,
+                  on: wid.widget_config_id == wc.id
+                )
+                |> join(:inner, [wid, wc], pi in Castmill.Resources.PlaylistItem,
+                  on: wc.playlist_item_id == pi.id
+                )
+                |> join(:inner, [wid, wc, pi], p in Castmill.Resources.Playlist,
+                  on: pi.playlist_id == p.id
+                )
+                |> where([wid, wc, pi, p], p.organization_id == ^organization_id)
+                |> where([wid], wid.widget_integration_id == ^wi.id)
+                |> order_by([wid], desc: wid.updated_at)
+                |> limit(1)
+                |> Repo.one()
+            end
+        end
+    end
+  end
+
+  @doc """
+  Builds the discriminator ID used to key cached integration data.
+
+  Widget-option discriminators are scoped by organization, since cached rows
+  are unique per `(widget_integration_id, discriminator_id)`: without the
+  organization scope two organizations using the same system integration and
+  the same options would share a single cache row, and could therefore be
+  served data fetched with another network's credentials.
+  """
+  def build_discriminator_id(%WidgetIntegration{} = integration, options, organization_id) do
+    # For widget_option discriminators, also check pull_config for hardcoded values
+    # (e.g., RSS widgets have feed_url in pull_config, not in widget_options)
+    pull_config = integration.pull_config || %{}
+    merged_options = Map.merge(pull_config, with_display_locale(organization_id, options || %{}))
+
+    case integration.discriminator_type do
+      "widget_option" ->
+        key = integration.discriminator_key || "id"
+        include_keys = composite_discriminator_key?(key)
+
+        value =
+          case widget_option_discriminator_value(key, merged_options,
+                 missing: :default,
+                 include_keys: include_keys
+               ) do
+            {:ok, value} when include_keys -> value
+            {:ok, value} -> "#{key}:#{value}"
+            {:error, _reason} -> "#{key}:default"
+          end
+
+        organization_id
+        |> scope_discriminator_by_organization(value)
+        |> bound_discriminator_id()
+
+      "organization" ->
+        "org"
+
+      _ ->
+        "default"
+    end
+  end
+
+  @doc """
+  Bounds a discriminator ID so that it always fits in the
+  `widget_integration_data.discriminator_id` column (varchar(255)).
+
+  Discriminator values may embed arbitrarily long option values (for example a
+  full geocoded address), so anything longer than the column is replaced by a
+  truncated prefix plus a fixed-length digest of the full value. The digest
+  keeps the key deterministic and collision resistant.
+  """
+  def bound_discriminator_id(discriminator) when is_binary(discriminator) do
+    if byte_size(discriminator) <= @discriminator_id_max_bytes do
+      discriminator
+    else
+      digest =
+        :sha256
+        |> :crypto.hash(discriminator)
+        |> Base.encode16(case: :lower)
+
+      suffix = "|sha256:" <> digest
+
+      prefix = truncate_to_bytes(discriminator, @discriminator_id_max_bytes - byte_size(suffix))
+
+      prefix <> suffix
+    end
+  end
+
+  defp truncate_to_bytes(_string, max_bytes) when max_bytes <= 0, do: ""
+
+  defp truncate_to_bytes(string, max_bytes) do
+    if byte_size(string) <= max_bytes do
+      string
+    else
+      string
+      |> binary_part(0, max_bytes)
+      |> drop_invalid_trailing_bytes()
+    end
+  end
+
+  defp drop_invalid_trailing_bytes(<<>>), do: <<>>
+
+  defp drop_invalid_trailing_bytes(binary) do
+    if String.valid?(binary) do
+      binary
+    else
+      binary
+      |> binary_part(0, byte_size(binary) - 1)
+      |> drop_invalid_trailing_bytes()
+    end
+  end
+
+  defp scope_discriminator_by_organization(nil, discriminator), do: discriminator
+
+  defp scope_discriminator_by_organization(organization_id, discriminator),
+    do: "org:#{organization_id}|#{discriminator}"
+
+  defp composite_discriminator_key?(key) when is_binary(key), do: String.contains?(key, ",")
+
+  defp resolve_discriminator_values(keys, widget_options, missing) do
+    Enum.reduce_while(keys, {:ok, []}, fn key, {:ok, acc} ->
+      case fetch_discriminator_option(widget_options, key) do
+        {:ok, value} ->
+          {:cont, {:ok, acc ++ [{key, value}]}}
+
+        :error when missing == :default ->
+          {:cont, {:ok, acc ++ [{key, :default}]}}
+
+        :error ->
+          {:halt, {:error, {:missing_option, key}}}
+      end
+    end)
+  end
+
+  defp fetch_discriminator_option(widget_options, key) when is_binary(key) do
+    cond do
+      Map.has_key?(widget_options, key) ->
+        {:ok, Map.get(widget_options, key)}
+
+      Map.has_key?(widget_options, String.to_atom(key)) ->
+        {:ok, Map.get(widget_options, String.to_atom(key))}
+
+      true ->
+        :error
+    end
+  end
+
+  defp serialize_discriminator_value(:default), do: "default"
+  defp serialize_discriminator_value(value) when is_binary(value), do: value
+  defp serialize_discriminator_value(value) when is_boolean(value), do: to_string(value)
+  defp serialize_discriminator_value(value) when is_number(value), do: to_string(value)
+
+  defp serialize_discriminator_value(value) do
+    value
+    |> normalize_discriminator_value()
+    |> Jason.encode!()
+  end
+
+  defp normalize_discriminator_value(value) when is_map(value) do
+    value
+    |> Enum.map(fn {key, nested_value} ->
+      {to_string(key), normalize_discriminator_value(nested_value)}
+    end)
+    |> Enum.sort_by(fn {key, _value} -> key end)
+    |> Enum.into(%{})
+  end
+
+  defp normalize_discriminator_value(value) when is_list(value) do
+    Enum.map(value, &normalize_discriminator_value/1)
+  end
+
+  defp normalize_discriminator_value(value), do: value
+
+  @doc """
+  Gets organization-level integration data.
+
+  ## Examples
+
+      iex> get_organization_integration_data("org-123", 1)
+      %WidgetIntegrationData{}
+  """
+  def get_organization_integration_data(organization_id, integration_id) do
+    # Use discriminator-based lookup
+    discriminator_id = "org:#{organization_id}"
+    get_integration_data_by_discriminator(integration_id, discriminator_id)
+  end
+
+  @doc """
+  Creates or updates organization-level integration data.
+
+  ## Examples
+
+      iex> upsert_organization_integration_data("org-123", 1, %{"track_name" => "Song"})
+      {:ok, %WidgetIntegrationData{}}
+  """
+  def upsert_organization_integration_data(organization_id, integration_id, data, opts \\ []) do
+    # Use the discriminator-based lookup for organization-level data
+    discriminator_id = "org:#{organization_id}"
+    existing = get_integration_data_by_discriminator(integration_id, discriminator_id)
+
+    now = DateTime.utc_now() |> DateTime.truncate(:second)
+    status = Keyword.get(opts, :status, "ok")
+    error_message = Keyword.get(opts, :error_message)
+
+    attrs = %{
+      widget_integration_id: integration_id,
+      organization_id: organization_id,
+      discriminator_id: discriminator_id,
+      data: data,
+      fetched_at: now,
+      last_used_at: now,
+      status: status,
+      error_message: error_message
+    }
+
+    if existing do
+      # Increment version on update
+      attrs = Map.put(attrs, :version, existing.version + 1)
+      update_integration_data(existing, attrs)
+    else
+      create_integration_data(attrs)
+    end
+  end
+
+  @doc """
+  Creates or updates integration data.
+
+  Automatically increments version number when updating.
+
+  ## Examples
+
+      iex> upsert_integration_data(%{
+      ...>   widget_integration_id: 123,
+      ...>   widget_config_id: "config-456",
+      ...>   data: %{"temperature" => 72},
+      ...>   fetched_at: DateTime.utc_now()
+      ...> })
+      {:ok, %WidgetIntegrationData{}}
+  """
+  def upsert_integration_data(attrs) do
+    # Look up existing data - prefer discriminator_id lookup if provided, otherwise widget_config_id
+    existing =
+      cond do
+        attrs[:discriminator_id] && attrs[:widget_integration_id] ->
+          get_integration_data_by_discriminator(
+            attrs[:widget_integration_id],
+            attrs[:discriminator_id]
+          )
+
+        attrs[:widget_config_id] && attrs[:widget_integration_id] ->
+          get_integration_data(attrs[:widget_integration_id], attrs[:widget_config_id])
+
+        true ->
+          nil
+      end
+
+    if existing do
+      # Increment version on update
+      attrs = Map.put(attrs, :version, existing.version + 1)
+      update_integration_data(existing, attrs)
+    else
+      create_integration_data(attrs)
+    end
+  end
+
+  @doc """
+  Creates new integration data.
+  """
+  def create_integration_data(attrs \\ %{}) do
+    %WidgetIntegrationData{}
+    |> WidgetIntegrationData.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates integration data.
+  """
+  def update_integration_data(%WidgetIntegrationData{} = data, attrs) do
+    data
+    |> WidgetIntegrationData.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes integration data.
+  """
+  def delete_integration_data(%WidgetIntegrationData{} = data) do
+    Repo.delete(data)
+  end
+
+  @doc """
+  Lists all integration data that needs to be refreshed (for PULL mode).
+
+  Returns data records where refresh_at is in the past.
+
+  ## Examples
+
+      iex> list_data_to_refresh()
+      [%WidgetIntegrationData{}, ...]
+  """
+  def list_data_to_refresh do
+    now = DateTime.utc_now()
+
+    WidgetIntegrationData.base_query()
+    |> where([wid], wid.refresh_at <= ^now)
+    |> preload(:widget_integration)
+    |> Repo.all()
+  end
+
+  # ============================================================================
+  # Helper Functions
+  # ============================================================================
+
+  @doc """
+  Gets credentials by scope (organization or widget config).
+
+  ## Examples
+
+      iex> get_credentials_by_scope(integration_id, organization_id: "org-123")
+      %WidgetIntegrationCredential{}
+
+      iex> get_credentials_by_scope(integration_id, widget_config_id: "config-456")
+      %WidgetIntegrationCredential{}
+  """
+  def get_credentials_by_scope(integration_id, opts) do
+    query = WidgetIntegrationCredential.base_query()
+    query = where(query, [wic], wic.widget_integration_id == ^integration_id)
+
+    cond do
+      org_id = Keyword.get(opts, :organization_id) ->
+        query
+        |> where([wic], wic.organization_id == ^org_id)
+        |> Repo.one()
+
+      widget_config_id = Keyword.get(opts, :widget_config_id) ->
+        query
+        |> where([wic], wic.widget_config_id == ^widget_config_id)
+        |> Repo.one()
+
+      true ->
+        nil
+    end
+  end
+
+  defp apply_filters(query, []), do: query
+
+  defp apply_filters(query, [{:widget_id, widget_id} | rest]) do
+    query
+    |> where([wi], wi.widget_id == ^widget_id)
+    |> apply_filters(rest)
+  end
+
+  defp apply_filters(query, [{:is_active, is_active} | rest]) do
+    query
+    |> where([wi], wi.is_active == ^is_active)
+    |> apply_filters(rest)
+  end
+
+  defp apply_filters(query, [_unknown | rest]) do
+    apply_filters(query, rest)
+  end
+
+  # ============================================================================
+  # Network Integration Credentials
+  # ============================================================================
+
+  @doc """
+  Gets network credentials for a specific integration.
+
+  ## Examples
+
+      iex> get_network_credentials(network_id, integration_id)
+      %NetworkIntegrationCredential{}
+
+      iex> get_network_credentials(network_id, missing_integration_id)
+      nil
+  """
+  def get_network_credentials(network_id, integration_id) do
+    NetworkIntegrationCredential.by_network_and_integration(network_id, integration_id)
+    |> Repo.one()
+  end
+
+  @doc """
+  Gets and decrypts network credentials for a specific integration.
+
+  ## Returns
+
+    - `{:ok, credentials_map}` - Decrypted credentials
+    - `{:error, :not_found}` - No credentials configured
+    - `{:error, :disabled}` - Credentials exist but are disabled
+    - `{:error, reason}` - Decryption failed
+  """
+  def get_decrypted_network_credentials(network_id, integration_id) do
+    case get_network_credentials(network_id, integration_id) do
+      nil ->
+        {:error, :not_found}
+
+      %{is_enabled: false} ->
+        {:error, :disabled}
+
+      credential ->
+        NetworkIntegrationCredential.decrypt_credentials(credential)
+    end
+  end
+
+  @doc """
+  Lists all configured integrations for a network.
+
+  Returns integrations with their credential status.
+  """
+  def list_network_integrations(network_id) do
+    NetworkIntegrationCredential.enabled_for_network(network_id)
+    |> Repo.all()
+  end
+
+  @doc """
+  Creates or updates network credentials for an integration.
+
+  ## Parameters
+
+    - network_id: The network UUID
+    - integration_id: The widget integration ID
+    - credentials: Plain map of credentials to encrypt
+
+  ## Examples
+
+      iex> upsert_network_credentials(network_id, integration_id, %{"client_id" => "xxx", "client_secret" => "yyy"})
+      {:ok, %NetworkIntegrationCredential{}}
+  """
+  def upsert_network_credentials(network_id, integration_id, credentials)
+      when is_map(credentials) do
+    case get_network_credentials(network_id, integration_id) do
+      nil ->
+        %NetworkIntegrationCredential{}
+        |> NetworkIntegrationCredential.changeset_with_encryption(
+          %{network_id: network_id, integration_id: integration_id},
+          credentials
+        )
+        |> Repo.insert()
+
+      existing ->
+        existing
+        |> NetworkIntegrationCredential.changeset_with_encryption(%{}, credentials)
+        |> Repo.update()
+    end
+  end
+
+  @doc """
+  Enables or disables network credentials for an integration.
+  """
+  def set_network_credentials_enabled(network_id, integration_id, enabled)
+      when is_boolean(enabled) do
+    case get_network_credentials(network_id, integration_id) do
+      nil ->
+        {:error, :not_found}
+
+      credential ->
+        credential
+        |> NetworkIntegrationCredential.changeset(%{is_enabled: enabled})
+        |> Repo.update()
+    end
+  end
+
+  @doc """
+  Deletes network credentials for an integration.
+  """
+  def delete_network_credentials(network_id, integration_id) do
+    case get_network_credentials(network_id, integration_id) do
+      nil ->
+        {:error, :not_found}
+
+      credential ->
+        Repo.delete(credential)
+    end
+  end
+
+  @doc """
+  Checks if a network has configured credentials for an integration.
+  """
+  def has_network_credentials?(network_id, integration_id) do
+    case get_network_credentials(network_id, integration_id) do
+      %{is_enabled: true} -> true
+      _ -> false
+    end
+  end
+
+  @doc """
+  Gets client credentials for OAuth, checking network level first, then organization.
+
+  This is the main credential resolution function used by OAuth flows.
+
+  ## Parameters
+
+    - integration_id: The widget integration ID
+    - organization_id: The organization ID (used to find network and as fallback)
+
+  ## Returns
+
+    - `{:ok, %{client_id: ..., client_secret: ...}}` - Credentials found
+    - `{:error, :not_configured}` - No credentials at any level
+  """
+  def get_client_credentials(integration_id, organization_id) do
+    # Get organization to find its network
+    org = Repo.get(Castmill.Organizations.Organization, organization_id)
+
+    if org && org.network_id do
+      # Try network-level first
+      case get_decrypted_network_credentials(org.network_id, integration_id) do
+        {:ok, credentials} ->
+          {:ok, normalize_credentials(credentials)}
+
+        {:error, _} ->
+          # Fall back to organization-level credentials (for backward compatibility)
+          get_org_client_credentials(integration_id, organization_id)
+      end
+    else
+      # No network, try org-level only
+      get_org_client_credentials(integration_id, organization_id)
+    end
+  end
+
+  defp get_org_client_credentials(integration_id, organization_id) do
+    case get_organization_credentials(organization_id, integration_id) do
+      {:ok, credentials} ->
+        {:ok, normalize_credentials(credentials)}
+
+      {:error, _reason} = error ->
+        error
+    end
+  end
+
+  defp normalize_credentials(credentials) do
+    %{
+      client_id: credentials["client_id"],
+      client_secret: credentials["client_secret"]
+    }
+  end
+
+  @doc """
+  Lists all system-widget integrations that expose a credential schema.
+
+  This includes credential-free integrations (e.g. Open-Meteo); callers can use
+  `requires_network_credentials?/1` to determine whether a given integration
+  actually needs a network administrator to configure anything.
+  """
+  def list_system_integrations do
+    from(wi in WidgetIntegration,
+      join: w in assoc(wi, :widget),
+      where: w.is_system == true,
+      where: not is_nil(wi.credential_schema),
+      preload: [:widget]
+    )
+    |> Repo.all()
+  end
+
+  @doc """
+  Lists all integrations that require network-level credentials (system widgets).
+
+  Integrations that are credential-free (`auth_type` of `"none"` or `"optional"`,
+  or an otherwise empty credential schema) are excluded, since there is nothing
+  for a network administrator to configure for them (e.g. the credential-free
+  Open-Meteo weather integration).
+  """
+  def list_system_integrations_requiring_credentials do
+    list_system_integrations()
+    |> Enum.filter(&requires_network_credentials?/1)
+  end
+
+  @doc false
+  def requires_network_credentials?(%WidgetIntegration{credential_schema: schema}) do
+    requires_network_credentials?(schema)
+  end
+
+  def requires_network_credentials?(nil), do: false
+  def requires_network_credentials?(schema) when schema == %{}, do: false
+
+  def requires_network_credentials?(schema) when is_map(schema) do
+    auth_type = Map.get(schema, "auth_type")
+
+    cond do
+      # Credential-free or optionally-authenticated integrations need no setup.
+      auth_type in ["none", "optional"] -> false
+      # OAuth or an explicit (non-optional) auth type requires configuration.
+      Map.has_key?(schema, "oauth2") -> true
+      not is_nil(auth_type) -> true
+      # Fall back to whether there are any credential fields to fill in.
+      true -> has_credential_fields?(Map.get(schema, "fields"))
+    end
+  end
+
+  def requires_network_credentials?(_schema), do: false
+
+  # Credential fields may be provided either as a map keyed by field name or as
+  # a list of field definitions.
+  defp has_credential_fields?(fields) when is_map(fields), do: map_size(fields) > 0
+  defp has_credential_fields?(fields) when is_list(fields), do: fields != []
+  defp has_credential_fields?(_fields), do: false
+
+  @doc """
+  Gets and decrypts widget-scoped credentials for an integration.
+
+  Widget-scoped credentials are used when each widget instance has its own
+  authentication (e.g., each user connects their own Spotify account).
+
+  ## Parameters
+
+    - widget_config_id: The widget configuration ID
+    - integration_id: The widget integration ID
+
+  ## Returns
+
+    - `{:ok, credentials_map}` - Decrypted credentials
+    - `{:error, :not_found}` - No credentials stored
+    - `{:error, reason}` - Decryption or other error
+  """
+  def get_widget_credentials(widget_config_id, integration_id) do
+    credential = get_credentials_by_scope(integration_id, widget_config_id: widget_config_id)
+
+    case credential do
+      nil ->
+        {:error, :not_found}
+
+      %WidgetIntegrationCredential{
+        encrypted_credentials: encrypted,
+        organization_id: organization_id
+      }
+      when is_binary(encrypted) ->
+        with {:ok, organization} <- fetch_organization(organization_id),
+             {:ok, encryption_key} <- get_or_create_encryption_key(organization),
+             {:ok, credentials} <- Castmill.Crypto.decrypt(encrypted, encryption_key) do
+          {:ok, credentials}
+        end
+
+      _ ->
+        {:error, :not_found}
+    end
+  end
+
+  @doc """
+  Marks organization credentials as invalid.
+
+  This is called when token refresh fails, indicating the user may have
+  revoked access or the refresh token is no longer valid.
+
+  ## Parameters
+
+    - organization_id: The organization ID
+    - integration_id: The widget integration ID
+  """
+  def mark_credentials_invalid(organization_id, integration_id) do
+    case get_credentials_by_scope(integration_id, organization_id: organization_id) do
+      nil ->
+        {:error, :not_found}
+
+      credential ->
+        credential
+        |> WidgetIntegrationCredential.changeset(%{is_valid: false})
+        |> Repo.update()
+    end
+  end
+
+  @doc """
+  Ensures a widget integration exists for a widget based on its meta.integration definition.
+
+  If the widget has an integration definition in its meta field and no integration
+  record exists yet, this function creates one.
+
+  This is called when a widget is added to a playlist (widget_config is created).
+
+  ## Parameters
+
+    - widget: The Widget struct with meta field potentially containing integration config
+
+  ## Returns
+
+    - {:ok, %WidgetIntegration{}} if integration exists or was created
+    - {:ok, nil} if widget has no integration definition
+    - {:error, changeset} if creation failed
+  """
+  def ensure_integration_for_widget(%Castmill.Widgets.Widget{} = widget) do
+    integration_config =
+      get_in(widget.meta, ["integration"]) || get_in(widget.meta, [:integration])
+
+    case integration_config do
+      nil ->
+        # No integration defined in widget meta
+        {:ok, nil}
+
+      config when is_map(config) ->
+        # Check if integration already exists for this widget
+        integration_name = Map.get(config, "name") || Map.get(config, :name) || "default"
+
+        case get_integration_by_widget_and_name(widget.id, integration_name) do
+          %WidgetIntegration{} = existing ->
+            {:ok, existing}
+
+          nil ->
+            # Create the integration from the widget's meta config
+            create_integration_from_meta(widget.id, integration_name, config)
+        end
+
+      _ ->
+        {:ok, nil}
+    end
+  end
+
+  @doc """
+  Creates a widget integration from a widget's meta.integration configuration.
+
+  Maps the simplified widget.json integration format to the full WidgetIntegration schema.
+  """
+  def create_integration_from_meta(widget_id, name, config) do
+    integration_type = normalize_integration_type(config)
+    fetcher = Map.get(config, "fetcher") || Map.get(config, :fetcher)
+    fetcher_config = Map.get(config, "config") || Map.get(config, :config) || %{}
+
+    # Build the integration attributes
+    attrs = %{
+      widget_id: widget_id,
+      name: name,
+      description:
+        Map.get(config, "description") || Map.get(config, :description) ||
+          "Auto-created from widget definition",
+      integration_type: integration_type,
+      credential_scope: determine_credential_scope(config),
+      discriminator_type: determine_discriminator_type(fetcher, fetcher_config),
+      discriminator_key: determine_discriminator_key(fetcher, fetcher_config),
+      pull_endpoint: determine_pull_endpoint(fetcher, fetcher_config),
+      pull_interval_seconds:
+        Map.get(fetcher_config, "refresh_interval") || Map.get(fetcher_config, :refresh_interval) ||
+          300,
+      pull_config: build_pull_config(fetcher, fetcher_config),
+      credential_schema: build_credential_schema(fetcher, config),
+      is_active: true
+    }
+
+    create_integration(attrs)
+  end
+
+  defp normalize_integration_type(config) do
+    type = Map.get(config, "type") || Map.get(config, :type) || "pull"
+
+    case String.downcase(to_string(type)) do
+      "pull" -> "pull"
+      "push" -> "push"
+      "both" -> "both"
+      _ -> "pull"
+    end
+  end
+
+  defp determine_credential_scope(config) do
+    scope = Map.get(config, "credential_scope") || Map.get(config, :credential_scope)
+
+    case scope do
+      s when s in ["organization", "widget"] -> s
+      _ -> "organization"
+    end
+  end
+
+  defp determine_discriminator_type(fetcher, config) do
+    # For RSS feeds, discriminate by feed_url so different feeds don't share data
+    case fetcher do
+      "rss" ->
+        "widget_option"
+
+      _ ->
+        Map.get(config, "discriminator_type") || "organization"
+    end
+  end
+
+  defp determine_discriminator_key(fetcher, config) do
+    case fetcher do
+      "rss" -> "feed_url"
+      _ -> Map.get(config, "discriminator_key")
+    end
+  end
+
+  defp determine_pull_endpoint(fetcher, fetcher_config) do
+    # For RSS feeds, the endpoint is the feed URL
+    # For other integrations, look for an endpoint in the config
+    case fetcher do
+      "rss" -> Map.get(fetcher_config, "feed_url") || Map.get(fetcher_config, :feed_url)
+      _ -> Map.get(fetcher_config, "endpoint") || Map.get(fetcher_config, :endpoint)
+    end
+  end
+
+  defp build_pull_config(fetcher, fetcher_config) do
+    fetcher_module = resolve_fetcher_module(fetcher)
+
+    base_config = %{
+      "fetcher_module" => fetcher_module,
+      "auth_type" => determine_auth_type(fetcher)
+    }
+
+    # Merge any additional config from the widget definition
+    Map.merge(base_config, fetcher_config)
+  end
+
+  defp resolve_fetcher_module(fetcher) when is_binary(fetcher) do
+    # Map short fetcher names to full module names
+    case String.downcase(fetcher) do
+      "rss" ->
+        "Castmill.Widgets.Integrations.Fetchers.Rss"
+
+      "spotify" ->
+        "Castmill.Widgets.Integrations.Fetchers.Spotify"
+
+      "finnhub" ->
+        "Castmill.Widgets.Integrations.Fetchers.Finnhub"
+
+      # If it already looks like a module name, use it as-is
+      name when byte_size(name) > 0 ->
+        if String.starts_with?(name, "Castmill.") or String.starts_with?(name, "Elixir.") do
+          name
+        else
+          # Try to construct a module name from the fetcher name
+          "Castmill.Widgets.Integrations.Fetchers.#{Macro.camelize(name)}"
+        end
+
+      _ ->
+        nil
+    end
+  end
+
+  defp resolve_fetcher_module(_), do: nil
+
+  defp determine_auth_type(fetcher) do
+    # RSS feeds don't require authentication
+    case fetcher do
+      "rss" -> "none"
+      "spotify" -> "oauth"
+      "finnhub" -> "api_key"
+      _ -> "optional"
+    end
+  end
+
+  defp build_credential_schema(fetcher, _config) do
+    case fetcher do
+      "rss" ->
+        # RSS doesn't need credentials
+        %{"auth_type" => "none"}
+
+      "spotify" ->
+        %{
+          "auth_type" => "oauth",
+          "oauth_provider" => "spotify"
+        }
+
+      "finnhub" ->
+        %{
+          "auth_type" => "api_key",
+          "fields" => %{
+            "api_key" => %{"type" => "string", "required" => true, "label" => "API Key"}
+          }
+        }
+
+      _ ->
+        %{"auth_type" => "optional"}
+    end
+  end
+end

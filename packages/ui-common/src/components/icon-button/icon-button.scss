@@ -22,6 +22,10 @@
     cursor: not-allowed;
   }
 
+  &.icon-button-loading {
+    cursor: wait;
+  }
+
   // Color modifiers
   &-primary {
     background-color: #007bff;
@@ -37,5 +41,19 @@
   }
   &-info {
     background-color: #17a2b8;
+  }
+
+  &-spinner {
+    display: inline-flex;
+    animation: icon-button-spin 1s linear infinite;
+  }
+}
+
+@keyframes icon-button-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
   }
 }

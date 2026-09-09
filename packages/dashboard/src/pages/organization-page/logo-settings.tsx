@@ -2,6 +2,7 @@ import { Component, createSignal, Show, createEffect } from 'solid-js';
 import { Button, useToast, MediaPicker } from '@castmill/ui-common';
 import { JsonMedia } from '@castmill/player';
 import { OrganizationsService } from '../../services/organizations.service';
+import { authFetch } from '../../components/auth';
 import { store, setStore } from '../../store';
 import { useI18n } from '../../i18n';
 
@@ -39,9 +40,8 @@ export const LogoSettings: Component<LogoSettingsProps> = (props) => {
       (async () => {
         try {
           const url = `${store.env.baseUrl}/dashboard/organizations/${props.organizationId}/medias/${mediaId}`;
-          const response = await fetch(url, {
+          const response = await authFetch(url, {
             method: 'GET',
-            credentials: 'include',
           });
 
           if (response.ok) {
@@ -91,7 +91,15 @@ export const LogoSettings: Component<LogoSettingsProps> = (props) => {
     page: number,
     pageSize: number,
     search?: string
-  ): Promise<{ data: JsonMedia[]; count: number }> => {
+  ): Promise<{
+    data: {
+      id: number;
+      mimetype?: string;
+      name: string;
+      files?: { [context: string]: { url: string } };
+    }[];
+    count: number;
+  }> => {
     const queryParams = new URLSearchParams({
       page: page.toString(),
       page_size: pageSize.toString(),
@@ -103,11 +111,10 @@ export const LogoSettings: Component<LogoSettingsProps> = (props) => {
       queryParams.set('search', search);
     }
 
-    const response = await fetch(
+    const response = await authFetch(
       `${store.env.baseUrl}/dashboard/organizations/${props.organizationId}/medias?${queryParams}`,
       {
         method: 'GET',
-        credentials: 'include',
       }
     );
 
@@ -115,7 +122,23 @@ export const LogoSettings: Component<LogoSettingsProps> = (props) => {
       throw new Error('Failed to fetch medias');
     }
 
-    return await response.json();
+    const result: { data: JsonMedia[]; count: number } = await response.json();
+
+    // Transform JsonMedia to MediaItem format (uri -> url)
+    return {
+      ...result,
+      data: result.data.map((media) => ({
+        ...media,
+        files: media.files
+          ? Object.fromEntries(
+              Object.entries(media.files).map(([context, file]) => [
+                context,
+                { ...file, url: file.uri },
+              ])
+            )
+          : undefined,
+      })),
+    };
   };
 
   const handleMediaSelect = async (mediaId: number) => {
@@ -284,7 +307,7 @@ export const LogoSettings: Component<LogoSettingsProps> = (props) => {
         noMediaText={t('organization.noMediasAvailable')}
         cancelLabel={t('common.cancel')}
         selectLabel={t('common.save')}
-        filterFn={(media) => media.mimetype?.startsWith('image/')}
+        filterFn={(media) => media.mimetype?.startsWith('image/') ?? false}
         pageSize={30}
       />
     </div>

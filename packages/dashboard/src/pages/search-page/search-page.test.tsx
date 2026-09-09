@@ -1,6 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { SearchService } from '../../services/search.service';
 
+// Mock the auth module to prevent side effects (setStore) during test imports
+vi.mock('../../components/auth', () => ({
+  authFetch: vi.fn((...args: any[]) => (global.fetch as any)(...args)),
+  getAuthToken: vi.fn(() => null),
+  getUser: vi.fn(() => ({ id: 'test-user' })),
+  checkAuth: vi.fn(() => true),
+}));
+
 // Note: Full component tests for SearchPage are challenging due to router and reactive dependencies.
 // The main functionality is tested through the SearchService tests.
 // For integration testing, manual testing or E2E tests would be more appropriate.

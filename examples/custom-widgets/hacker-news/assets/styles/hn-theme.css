@@ -1,0 +1,112 @@
+/**
+ * Hacker News Widget Theme
+ * Custom CSS for the HN News Feed widget
+ */
+
+/* Import a nice monospace font for that tech feel */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  /* HN Brand Colors */
+  --hn-orange: #ff6600;
+  --hn-orange-light: #ff8533;
+  --hn-orange-dark: #cc5200;
+  
+  /* Background Colors */
+  --bg-primary: #1a1a2e;
+  --bg-secondary: #16213e;
+  --bg-tertiary: #0f0f23;
+  --bg-card: rgba(255, 255, 255, 0.05);
+  --bg-card-hover: rgba(255, 255, 255, 0.08);
+  
+  /* Text Colors */
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.7);
+  --text-tertiary: rgba(255, 255, 255, 0.4);
+  --text-accent: var(--hn-orange);
+  
+  /* Spacing */
+  --spacing-xs: 0.5vh;
+  --spacing-sm: 1vh;
+  --spacing-md: 2vh;
+  --spacing-lg: 3vh;
+  --spacing-xl: 4vh;
+  
+  /* Typography */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  
+  /* Border Radius */
+  --radius-sm: 0.5vh;
+  --radius-md: 1vh;
+  --radius-lg: 1.5vh;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.4);
+}
+
+/* Animation keyframes */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Utility classes for the widget */
+.hn-widget {
+  font-family: var(--font-sans);
+  background: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary));
+}
+
+.hn-title {
+  color: var(--hn-orange);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.hn-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--hn-orange);
+  transition: background-color 0.2s ease;
+}
+
+.hn-card:hover {
+  background: var(--bg-card-hover);
+}
+
+.hn-meta {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  color: var(--text-tertiary);
+}
+
+.hn-score {
+  color: var(--hn-orange);
+  font-weight: 600;
+}
+
+/* Scrollbar styling */
+.hn-widget::-webkit-scrollbar {
+  width: 6px;
+}
+
+.hn-widget::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.hn-widget::-webkit-scrollbar-thumb {
+  background: var(--hn-orange);
+  border-radius: 3px;
+}

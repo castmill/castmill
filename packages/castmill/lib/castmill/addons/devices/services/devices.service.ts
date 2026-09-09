@@ -1,9 +1,11 @@
 import { Device } from '../interfaces/device.interface';
-import { SortOptions,
+import {
+  SortOptions,
   FetchDataOptions,
   fetchOptionsToQueryString,
   HttpError,
 } from '@castmill/ui-common';
+import { authFetch } from '../../common/services/auth-fetch';
 import { DeviceCommand } from '../types/device-command.type';
 import { DeviceEvent as DeviceEvent } from '../interfaces/device-event.interface';
 import { DeviceUpdate } from '../components/device-details';
@@ -15,6 +17,9 @@ export interface FetchDevicesOptions {
   search?: string;
   filters?: Record<string, string | boolean>;
   team_id?: number | null;
+  tag_ids?: number[];
+  tag_filter_mode?: 'any' | 'all';
+  missing_tag_group_id?: number;
 }
 type HandleResponseOptions = {
   parse?: boolean;
@@ -59,10 +64,36 @@ async function handleResponse<T = any>(
     }
   } else {
     let errMsg = '';
+    let errorData: any = null;
     try {
-      const { errors } = await response.json();
-      errMsg = `${errors.detail || response.statusText}`;
+      errorData = await response.json();
+      const { errors } = errorData;
+
+      // Check for specific error fields (e.g., pincode errors)
+      if (errors && typeof errors === 'object') {
+        // If errors is an object with field-specific errors, extract the first error message
+        const errorFields = Object.keys(errors);
+        if (errorFields.length > 0) {
+          const firstField = errorFields[0];
+          const fieldErrors = errors[firstField];
+          if (Array.isArray(fieldErrors) && fieldErrors.length > 0) {
+            // Pass both the error message and field name for translation
+            errMsg = fieldErrors[0];
+            // Throw HttpError with both message and error details
+            throw new HttpError(errMsg, response.status, {
+              field: firstField,
+              errors: errorData.errors,
+            });
+          }
+        }
+      }
+
+      // Fallback to detail or statusText
+      errMsg = `${errors?.detail || response.statusText}`;
     } catch (error) {
+      if (error instanceof HttpError) {
+        throw error;
+      }
       errMsg = `${response.statusText}`;
     }
     // Throw HttpError with status code for better error handling
@@ -82,11 +113,10 @@ export const DevicesService = {
     name: string,
     pincode: string
   ) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/devices`,
       {
         method: 'POST',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -105,7 +135,17 @@ export const DevicesService = {
   async fetchDevices(
     baseUrl: string,
     organizationId: string,
-    { page, page_size, sortOptions, search, filters, team_id }: FetchDevicesOptions
+    {
+      page,
+      page_size,
+      sortOptions,
+      search,
+      filters,
+      team_id,
+      tag_ids,
+      tag_filter_mode,
+      missing_tag_group_id,
+    }: FetchDevicesOptions
   ) {
     const filtersToString = (filters: Record<string, string | boolean>) => {
       return Object.entries(filters)
@@ -137,13 +177,24 @@ export const DevicesService = {
       query.set('team_id', team_id.toString());
     }
 
+    if (tag_ids && tag_ids.length > 0) {
+      query.set('tag_ids', tag_ids.join(','));
+    }
+
+    if (tag_filter_mode) {
+      query.set('tag_filter_mode', tag_filter_mode);
+    }
+
+    if (missing_tag_group_id !== undefined) {
+      query.set('missing_tag_group_id', missing_tag_group_id.toString());
+    }
+
     const queryString = query.toString();
 
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/devices?${queryString}`,
       {
         method: 'GET',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -159,14 +210,16 @@ export const DevicesService = {
    * Send Command.
    */
   async sendCommand(baseUrl: string, deviceId: string, command: DeviceCommand) {
-    const response = await fetch(`${baseUrl}/dashboard/devices/${deviceId}/commands`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ command }),
-    });
+    const response = await authFetch(
+      `${baseUrl}/dashboard/devices/${deviceId}/commands`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ command }),
+      }
+    );
 
     handleResponse(response);
   },
@@ -179,19 +232,26 @@ export const DevicesService = {
     deviceId: string,
     page: number,
     page_size: number,
-    sortOptions: SortOptions
+    sortOptions: SortOptions,
+    types?: string[]
   ) {
-    const query = new URLSearchParams({
+    const params: Record<string, string> = {
       ...sortOptions,
       page_size: page_size.toString(),
       page: page.toString(),
-    }).toString();
+    };
 
-    const response = await fetch(
+    // Add event type filters if provided
+    if (types && types.length > 0) {
+      params.types = types.join(',');
+    }
+
+    const query = new URLSearchParams(params).toString();
+
+    const response = await authFetch(
       `${baseUrl}/dashboard/devices/${deviceId}/events?${query}`,
       {
         method: 'GET',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -199,6 +259,29 @@ export const DevicesService = {
     );
 
     return handleResponse<{ data: DeviceEvent[]; count: number }>(response, {
+      parse: true,
+    });
+  },
+
+  /**
+   * Delete Device Events
+   * @param baseUrl API base URL
+   * @param deviceId Device ID
+   * @param type Optional event type to delete ('o', 'x', 'e', 'w', 'i'). If not provided, deletes all events.
+   */
+  async deleteDeviceEvents(baseUrl: string, deviceId: string, type?: string) {
+    const params = type ? `?type=${encodeURIComponent(type)}` : '';
+    const response = await authFetch(
+      `${baseUrl}/dashboard/devices/${deviceId}/events${params}`,
+      {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    return handleResponse<{ success: boolean; deleted: number }>(response, {
       parse: true,
     });
   },
@@ -225,11 +308,10 @@ export const DevicesService = {
       type: type || 'data',
     }).toString();
 
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/devices/${deviceId}/cache?${query}`,
       {
         method: 'GET',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -242,14 +324,190 @@ export const DevicesService = {
   },
 
   /**
+   * Delete Device Cache Entries
+   * @param baseUrl API base URL
+   * @param deviceId Device ID
+   * @param type Cache type ('data', 'code', 'media', or 'all' to clear everything)
+   * @param urls Array of URLs to delete (empty array will delete all of the specified type)
+   */
+  async deleteDeviceCache(
+    baseUrl: string,
+    deviceId: string,
+    type: string,
+    urls: string[]
+  ) {
+    const response = await authFetch(
+      `${baseUrl}/dashboard/devices/${deviceId}/cache`,
+      {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ type, urls }),
+      }
+    );
+
+    return handleResponse<{ success: boolean; deleted: number }>(response, {
+      parse: true,
+    });
+  },
+
+  /**
+   * Get telemetry data from the device (proxied through the backend WebSocket).
+   */
+  async getDeviceTelemetry(baseUrl: string, deviceId: string) {
+    const response = await authFetch(
+      `${baseUrl}/dashboard/devices/${deviceId}/telemetry`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    return handleResponse<Record<string, any>>(response, {
+      parse: true,
+    });
+  },
+
+  /**
+   * Get device timers (proxied through the backend WebSocket).
+   */
+  async getDeviceTimers(baseUrl: string, deviceId: string) {
+    const response = await authFetch(
+      `${baseUrl}/dashboard/devices/${deviceId}/timers`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    return handleResponse<{
+      on: Array<{
+        hours: number;
+        minutes: number;
+        weekDays: string[];
+      }>;
+      off: Array<{
+        hours: number;
+        minutes: number;
+        weekDays: string[];
+      }>;
+    }>(response, {
+      parse: true,
+    });
+  },
+
+  /**
+   * Set device timers (proxied through the backend WebSocket).
+   */
+  async setDeviceTimers(
+    baseUrl: string,
+    deviceId: string,
+    timers: {
+      on: Array<{
+        hours: number;
+        minutes: number;
+        weekDays: string[];
+      }>;
+      off: Array<{
+        hours: number;
+        minutes: number;
+        weekDays: string[];
+      }>;
+    }
+  ) {
+    const response = await authFetch(
+      `${baseUrl}/dashboard/devices/${deviceId}/timers`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(timers),
+      }
+    );
+
+    return handleResponse<{ success: boolean }>(response, {
+      parse: true,
+    });
+  },
+
+  /**
+   * Get device schedule from the database.
+   */
+  async getDeviceSchedule(baseUrl: string, deviceId: string) {
+    const response = await authFetch(
+      `${baseUrl}/dashboard/devices/${deviceId}/schedule`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    return handleResponse<{
+      entries: Array<{
+        startHour: number;
+        startMinute?: number;
+        endHour: number;
+        endMinute?: number;
+        days: number[];
+      }>;
+    }>(response, {
+      parse: true,
+    });
+  },
+
+  /**
+   * Set device schedule in the database and push timers to device.
+   */
+  async setDeviceSchedule(
+    baseUrl: string,
+    deviceId: string,
+    entries: Array<{
+      startHour: number;
+      startMinute: number;
+      endHour: number;
+      endMinute: number;
+      days: number[];
+    }>
+  ) {
+    const response = await authFetch(
+      `${baseUrl}/dashboard/devices/${deviceId}/schedule`,
+      {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ entries }),
+      }
+    );
+
+    return handleResponse<{ success: boolean; timers_sent: boolean }>(
+      response,
+      {
+        parse: true,
+      }
+    );
+  },
+
+  /**
    * Remove Device.
    */
-  async removeDevice(baseUrl: string, organizationId: string, deviceId: string) {
-    const response = await fetch(
+  async removeDevice(
+    baseUrl: string,
+    organizationId: string,
+    deviceId: string
+  ) {
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/devices/${deviceId}`,
       {
         method: 'DELETE',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -268,11 +526,10 @@ export const DevicesService = {
     deviceId: string,
     device: DeviceUpdate
   ) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/devices/${deviceId}`,
       {
         method: 'PATCH',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -292,11 +549,10 @@ export const DevicesService = {
     opts: FetchDataOptions
   ) {
     const queryString = fetchOptionsToQueryString(opts);
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/channels?${queryString}`,
       {
         method: 'GET',
-        credentials: 'include',
       }
     );
 
@@ -310,15 +566,11 @@ export const DevicesService = {
   /**
    * Get the current channel of a device
    */
-  async fetchChannelByDeviceId(
-    baseUrl: string,
-    deviceId: string
-  ) {
-    const response = await fetch(
+  async fetchChannelByDeviceId(baseUrl: string, deviceId: string) {
+    const response = await authFetch(
       `${baseUrl}/dashboard/devices/${deviceId}/channels`,
       {
         method: 'GET',
-        credentials: 'include',
       }
     );
 
@@ -333,7 +585,7 @@ export const DevicesService = {
    * Add a channel to a device without replacing existing channels.
    * This method ensures that the specified channel is added to the device
    * while preserving any other channels already associated with it.
-   * 
+   *
    * @param baseUrl API base URL
    * @param deviceId Device ID
    * @param channelId Channel ID to add
@@ -349,8 +601,8 @@ export const DevicesService = {
 
   /**
    * Remove a channel from a device.
-   * 
-   * @param baseUrl API base URL 
+   *
+   * @param baseUrl API base URL
    * @param deviceId Device ID
    * @param channelId Channel ID to remove
    * @returns Promise that resolves when the channel is removed
@@ -363,15 +615,6 @@ export const DevicesService = {
     return await removeChannelFromDevice(baseUrl, deviceId, channelId);
   },
 
-  /**
-   * Start a remote control session for a device.
-   * 
-   * @param baseUrl API base URL
-   * @param deviceId Device ID
-   * @param resolution Resolution setting (auto, 480p, 720p)
-   * @param fps FPS setting (auto, 10, 15, 30)
-   * @returns Promise that resolves with the session data
-   */
   async startRemoteControlSession(
     baseUrl: string,
     deviceId: string,
@@ -393,12 +636,12 @@ export const DevicesService = {
     return handleResponse<{ session_id: string; url: string }>(response, {
       parse: true,
     });
-  }
+  },
 };
 
 /**
  * Adds a channel to a device.
- * 
+ *
  * @param baseUrl API base URL
  * @param deviceId Device ID
  * @param channelId Channel ID to add
@@ -409,11 +652,10 @@ const addChannelToDevice = async (
   deviceId: string,
   channelId: number
 ) => {
-  const response = await fetch(
+  const response = await authFetch(
     `${baseUrl}/dashboard/devices/${deviceId}/channels`,
     {
       method: 'POST',
-      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
       },
@@ -422,11 +664,11 @@ const addChannelToDevice = async (
   );
 
   return handleResponse(response);
-}
+};
 
 /**
  * Removes a channel from a device.
- * 
+ *
  * @param baseUrl API base URL
  * @param deviceId Device ID
  * @param channelId Channel ID to remove
@@ -437,11 +679,10 @@ const removeChannelFromDevice = async (
   deviceId: string,
   channelId: number
 ) => {
-  const response = await fetch(
+  const response = await authFetch(
     `${baseUrl}/dashboard/devices/${deviceId}/channels/${channelId}`,
     {
       method: 'DELETE',
-      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
       },
@@ -449,24 +690,20 @@ const removeChannelFromDevice = async (
   );
 
   return handleResponse(response);
-}
+};
 
 /**
  * Gets all channels of a device.
- * 
+ *
  * @param baseUrl API base URL
  * @param deviceId Device ID
  * @returns Promise that resolves with the channels of the device
  */
-const getChannelsOfDevice = async (
-  baseUrl: string,
-  deviceId: string
-) => {
-  const response = await fetch(
+const getChannelsOfDevice = async (baseUrl: string, deviceId: string) => {
+  const response = await authFetch(
     `${baseUrl}/dashboard/devices/${deviceId}/channels`,
     {
       method: 'GET',
-      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
       },
@@ -474,4 +711,4 @@ const getChannelsOfDevice = async (
   );
 
   return handleResponse(response, { parse: true });
-}
+};

@@ -29,11 +29,26 @@ defmodule CastmillWeb.SessionControllerTest do
   end
 
   describe "create_challenge/2" do
-    test "creates a new challenge", %{conn: conn} do
+    test "creates a new challenge and returns a signed challenge_token", %{conn: conn} do
       conn = get(conn, Helpers.session_path(conn, :create_challenge))
-      assert json_response(conn, 200)
+      body = json_response(conn, 200)
+
+      # Session still populated for backwards compatibility
       challenge = get_session(conn, :webauthn_challenge)
       assert challenge
+      assert body["challenge"] == challenge
+
+      # Signed token is also returned
+      assert body["challenge_token"]
+
+      # Token contains the same challenge
+      assert {:ok, ^challenge} =
+               Phoenix.Token.verify(
+                 CastmillWeb.Endpoint,
+                 "CastmillWeb.SessionController.challenge.v1",
+                 body["challenge_token"],
+                 max_age: 300
+               )
     end
   end
 
@@ -43,20 +58,16 @@ defmodule CastmillWeb.SessionControllerTest do
       assert json_response(conn, 401) == %{"status" => "error", "message" => "Not logged in"}
     end
 
-    test "returns current user if logged in", %{conn: conn} do
-      user = %{:id => "some_id", :name => "John Doe"}
-      conn = conn |> put_session(:user, user) |> get(Helpers.session_path(conn, :get))
+    test "returns current user if logged in", %{conn: conn, user: user} do
+      conn = conn |> put_bearer_auth(user) |> get(Helpers.session_path(conn, :get))
 
       result = json_response(conn, 200)
 
       # assert that has a defined token
       assert result["token"]
 
-      assert result == %{
-               "status" => "ok",
-               "user" => Jason.decode!(Jason.encode!(user)),
-               "token" => result["token"]
-             }
+      assert result["status"] == "ok"
+      assert result["user"]["id"] == user.id
     end
   end
 

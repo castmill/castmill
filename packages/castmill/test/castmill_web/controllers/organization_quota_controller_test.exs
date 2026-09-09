@@ -16,7 +16,8 @@ defmodule CastmillWeb.OrganizationQuotaControllerTest do
     test "lists all quotas for an organization", %{conn: conn} do
       quota = quota_organization_fixture(%{organization_id: @organization_id, resource: :medias})
 
-      conn = get(conn, Routes.organization_quota_path(conn, :index, @organization_id))
+      conn =
+        get(conn, Routes.organization_organization_quota_path(conn, :index, @organization_id))
 
       assert json_response(conn, 200)["data"] == [
                %{
@@ -33,7 +34,15 @@ defmodule CastmillWeb.OrganizationQuotaControllerTest do
       quota = quota_organization_fixture(%{organization_id: @organization_id, resource: :medias})
 
       conn =
-        get(conn, Routes.organization_quota_path(conn, :show, @organization_id, quota.resource))
+        get(
+          conn,
+          Routes.organization_organization_quota_path(
+            conn,
+            :show,
+            @organization_id,
+            quota.resource
+          )
+        )
 
       assert json_response(conn, 200)["data"] == %{
                "organization_id" => @organization_id,
@@ -46,7 +55,12 @@ defmodule CastmillWeb.OrganizationQuotaControllerTest do
       assert_error_sent 404, fn ->
         get(
           conn,
-          Routes.organization_quota_path(conn, :show, @organization_id, "non_existent_resource")
+          Routes.organization_organization_quota_path(
+            conn,
+            :show,
+            @organization_id,
+            "non_existent_resource"
+          )
         )
       end
     end
@@ -58,7 +72,9 @@ defmodule CastmillWeb.OrganizationQuotaControllerTest do
       attrs = %{resource: "devices", max: 100}
 
       conn =
-        post(conn, Routes.organization_quota_path(conn, :create, @organization_id), quota: attrs)
+        post(conn, Routes.organization_organization_quota_path(conn, :create, @organization_id),
+          quota: attrs
+        )
 
       assert %{
                "organization_id" => @organization_id,
@@ -68,7 +84,10 @@ defmodule CastmillWeb.OrganizationQuotaControllerTest do
 
       # Verify by fetching the created quota
       conn =
-        get(conn, Routes.organization_quota_path(conn, :show, @organization_id, "devices"))
+        get(
+          conn,
+          Routes.organization_organization_quota_path(conn, :show, @organization_id, "devices")
+        )
 
       assert json_response(conn, 200)["data"]["resource"] == "devices"
     end
@@ -82,7 +101,12 @@ defmodule CastmillWeb.OrganizationQuotaControllerTest do
       conn =
         patch(
           conn,
-          Routes.organization_quota_path(conn, :update, @organization_id, quota.resource),
+          Routes.organization_organization_quota_path(
+            conn,
+            :update,
+            @organization_id,
+            quota.resource
+          ),
           quota: update_attrs
         )
 
@@ -101,7 +125,7 @@ defmodule CastmillWeb.OrganizationQuotaControllerTest do
       conn =
         get(
           conn,
-          Routes.organization_quota_path(
+          Routes.organization_organization_quota_path(
             conn,
             :check_quota_usage,
             @organization_id,

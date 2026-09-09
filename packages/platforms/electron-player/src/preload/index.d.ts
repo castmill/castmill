@@ -5,17 +5,19 @@ import {
   StoreOptions,
   StoreFileReturnValue,
 } from '@castmill/cache';
+import { TelemetryData } from '@castmill/device';
 
 export interface ApplicationAPI {
   relaunch: () => void;
   quit: () => void;
   shutdown: () => void;
   reboot: () => void;
-  update: () => void;
+  update: () => Promise<void>;
   getMachineGUID: () => Promise<string>;
   setItem: (key: string, value: string) => void;
   getItem: (key: string) => Promise<string>;
   deleteItem: (key: string) => void;
+  getTelemetry: () => Promise<TelemetryData>;
 }
 
 interface OsInfo {

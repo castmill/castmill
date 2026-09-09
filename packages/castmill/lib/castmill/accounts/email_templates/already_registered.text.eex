@@ -1,0 +1,32 @@
+========================================
+CASTMILL™ - Digital Signage Platform
+========================================
+
+You already have an account
+
+Hi <%= @email %>,
+
+Someone (hopefully you) tried to sign up for Castmill™ using this email address. However, an account with this email already exists.
+
+If this was you, you can simply log in by visiting:
+
+<%= @login_url %>
+
+If you've lost your passkey or are having trouble logging in, use the credential recovery option on the login page.
+
+----------------------------------------
+
+🔒 SECURITY NOTICE:
+If you didn't attempt to sign up, you can safely ignore this email. Your existing account has not been affected.
+
+----------------------------------------
+
+Need help?
+Visit our support center: https://castmill.com/support
+Contact us: support@castmill.com
+
+© <%= @year %> Castmill AB. All rights reserved.
+
+This is an automated message, please do not reply to this email.
+
+========================================

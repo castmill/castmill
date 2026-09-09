@@ -22,6 +22,7 @@ export const StyledInput: Component<{
       }, 100);
     }
   });
+
   return (
     <Switch
       fallback={
@@ -46,7 +47,7 @@ export const StyledInput: Component<{
           id={props.id}
           type="checkbox"
           class={styles['input-checkbox']}
-          checked={Boolean(props.value)}
+          checked={props.value === true || props.value === 'true'}
           onChange={(e) => props.onInput(e.currentTarget.checked)}
           placeholder={props.placeholder}
           disabled={props.disabled}
@@ -83,6 +84,19 @@ export const StyledInput: Component<{
           onFocus={props.onFocus}
           onBlur={props.onBlur}
           autocomplete="off"
+        />
+      </Match>
+      <Match when={props.type === 'color'}>
+        <input
+          ref={inputRef}
+          id={props.id}
+          type="color"
+          class={styles['input-color']}
+          value={String(props.value || '#000000')}
+          onInput={(e) => props.onInput(e.currentTarget.value)}
+          disabled={props.disabled}
+          onFocus={props.onFocus}
+          onBlur={props.onBlur}
         />
       </Match>
       {/* Additional cases can be added here */}

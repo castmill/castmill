@@ -1,8 +1,11 @@
 {
   "common": {
     "save": "حفظ",
+    "saving": "جارٍ الحفظ...",
     "cancel": "إلغاء",
     "delete": "حذف",
+    "deleting": "جاري الحذف...",
+    "blocking": "جاري الحظر...",
     "edit": "تعديل",
     "rename": "إعادة تسمية",
     "add": "إضافة",
@@ -11,6 +14,7 @@
     "confirm": "تأكيد",
     "back": "رجوع",
     "next": "التالي",
+    "previous": "السابق",
     "search": "بحث...",
     "loading": "جاري التحميل...",
     "error": "خطأ",
@@ -25,6 +29,9 @@
     "signup": "التسجيل",
     "language": "اللغة",
     "create": "إنشاء",
+    "creating": "جارٍ الإنشاء...",
+    "sending": "جارٍ الإرسال...",
+    "clear": "مسح",
     "view": "عرض",
     "status": "الحالة",
     "created": "تم الإنشاء",
@@ -42,6 +49,9 @@
     "requestedPath": "المسار المطلوب",
     "goToDashboard": "انتقل إلى لوحة التحكم",
     "copyright": "© 2011-2025 Castmill™",
+    "privacy": "الخصوصية",
+    "terms": "الشروط",
+    "contact": "اتصل بنا",
     "invitedEmail": "البريد الإلكتروني المدعو:",
     "acceptInvitation": "قبول الدعوة",
     "loadingInvitation": "جاري تحميل الدعوة...",
@@ -60,8 +70,12 @@
     "ip": "عنوان IP",
     "description": "الوصف",
     "online": "متصل",
+    "offline": "غير متصل",
     "update": "تحديث",
     "reset": "إعادة تعيين",
+    "apply": "تطبيق",
+    "change": "تغيير",
+    "openInNewTab": "فتح في علامة تبويب جديدة",
     "addedOn": "تمت الإضافة في",
     "lastUpdatedOn": "آخر تحديث في",
     "details": "التفاصيل",
@@ -71,6 +85,7 @@
     "maintainance": "الصيانة",
     "events": "الأحداث",
     "telemetry": "القياس عن بعد",
+    "timers": "المؤقتات",
     "youIndicator": "(أنت)",
     "addonLoadingError": "خطأ في تحميل الإضافة",
     "filters": {
@@ -82,14 +97,24 @@
     "backToLogin": "العودة لتسجيل الدخول",
     "selectImage": "اختر صورة",
     "selectMedia": "اختر وسائط",
-    "apply": "تطبيق",
+    "selectPlaylist": "اختر قائمة التشغيل",
+    "searchLocation": "البحث عن موقع...",
+    "coordinates": "الإحداثيات",
+    "address": "العنوان",
+    "noAddressAvailable": "لا يوجد عنوان متاح",
+    "noConfigurationAvailable": "لا توجد إعدادات متاحة",
+    "playlist": "قائمة التشغيل",
+    "addPlaylist": "إضافة قائمة تشغيل",
     "selectVideo": "اختر فيديو",
-    "offline": "غير متصل",
+    "widget": "Widget",
+    "selectionHint": "استخدم مربعات الاختيار لتحديد العناصر لتنفيذ إجراءات جماعية",
+    "selectionCount": "{count} محدد",
     "no": "لا"
   },
   "topbar": {
     "help": "مساعدة",
-    "notifications": "الإشعارات"
+    "notifications": "الإشعارات",
+    "gettingStarted": "البدء"
   },
   "settings": {
     "title": "الإعدادات",
@@ -114,6 +139,14 @@
     "failedLoadCredentials": "فشل تحميل بيانات الاعتماد. يرجى محاولة تحديث الصفحة.",
     "languageSettings": "إعدادات اللغة",
     "selectLanguage": "اختر لغتك المفضلة",
+    "onboardingTour": "جولة البدء",
+    "onboardingTourDescription": "أعد تعيين الجولة لتتمكن من المرور على الخطوات مرة أخرى.",
+    "onboardingTourResetButton": "إعادة تعيين الجولة",
+    "onboardingTourResetConfirmTitle": "إعادة تعيين جولة البدء؟",
+    "onboardingTourResetConfirmDescription": "سيؤدي هذا إلى مسح تقدم الجولة وإظهارها مرة أخرى.",
+    "onboardingTourResetAction": "إعادة تعيين الجولة",
+    "onboardingTourResetSuccess": "تمت إعادة تعيين جولة البدء. يمكنك البدء من جديد الآن.",
+    "onboardingTourResetError": "فشل إعادة تعيين جولة البدء. يرجى المحاولة مرة أخرى.",
     "description": "إدارة معلومات حسابك وتفضيلاتك",
     "confirmDeletePasskey": "هل أنت متأكد من أنك تريد إزالة مفتاح المرور هذا؟\n\nملاحظة: سيؤدي هذا إلى إزالة مفتاح المرور من حسابك، ولكن قد تحتاج إلى حذفه يدويًا من إعدادات جهازك (مثل iCloud Keychain أو Google Password Manager أو Windows Hello).\n\nتأكد من أنك اختبرت مفاتيح المرور الأخرى قبل إزالة هذا المفتاح.",
     "fullName": "الاسم الكامل",
@@ -164,6 +197,166 @@
     "deleteAccountPasskeyInfo": "بعد الحذف، إذا حاولت تسجيل الدخول باستخدام مفتاح مرور قديم، فسيفشل. لتجنب الارتباك، يرجى إزالة مفاتيح المرور لهذا الحساب يدويًا من إعدادات جهازك.",
     "deleteAccountPasskeyInfoWithSignalAPI": "بعد الحذف، ستتم إزالة مفاتيح المرور تلقائيًا من جهازك. إذا حاولت تسجيل الدخول لاحقًا، فستحتاج إلى إنشاء حساب جديد."
   },
+  "network": {
+    "title": "إعدادات الشبكة",
+    "adminBadge": "مسؤول الشبكة",
+    "saveSuccess": "تم حفظ إعدادات الشبكة",
+    "saveError": "فشل في حفظ إعدادات الشبكة",
+    "errorHint": "حاول مرة أخرى أو اتصل بالدعم إذا استمرت المشكلة.",
+    "accessDenied": "تم رفض الوصول",
+    "accessDeniedMessage": "ليس لديك صلاحية عرض إعدادات الشبكة. يمكن لمسؤولي الشبكة فقط الوصول إلى هذه الصفحة.",
+    "tabs": {
+      "settings": "الإعدادات",
+      "organizations": "المنظمات",
+      "users": "المستخدمون",
+      "invitations": "الدعوات"
+    },
+    "stats": {
+      "organizations": "المنظمات",
+      "users": "المستخدمون",
+      "devices": "الأجهزة",
+      "teams": "الفرق",
+      "storage": "إجمالي التخزين"
+    },
+    "overview": {
+      "networkInfo": "معلومات الشبكة"
+    },
+    "identity": {
+      "title": "هوية الشبكة",
+      "description": "قم بتكوين العلامة التجارية وهوية شبكتك.",
+      "name": "اسم الشبكة",
+      "namePlaceholder": "أدخل اسم الشبكة",
+      "nameHelp": "اسم شبكتك، يُعرض في رأس لوحة التحكم.",
+      "email": "بريد الدعم",
+      "emailPlaceholder": "support@example.com",
+      "emailHelp": "سيتم عرض هذا البريد الإلكتروني للمستخدمين لاستفسارات الدعم.",
+      "logo": "رابط الشعار",
+      "logoPlaceholder": "https://example.com/logo.png",
+      "logoHelp": "رابط صورة شعار شبكتك.",
+      "copyright": "نص حقوق النشر",
+      "copyrightPlaceholder": "© 2025 شركتك",
+      "copyrightHelp": "إشعار حقوق النشر المعروض في تذييل لوحة التحكم.",
+      "privacyPolicyUrl": "رابط سياسة الخصوصية",
+      "privacyPolicyUrlPlaceholder": "https://example.com/privacy",
+      "privacyPolicyUrlHelp": "رابط سياسة الخصوصية الخاصة بك، يظهر في صفحات تسجيل الدخول والتسجيل.",
+      "defaultLanguage": "اللغة الافتراضية",
+      "defaultLanguageHelp": "اللغة الافتراضية للمستخدمين الجدد وصفحة تسجيل الدخول/التسجيل."
+    },
+    "socialLinks": {
+      "title": "روابط التواصل الاجتماعي",
+      "description": "قم بتكوين روابط وسائل التواصل الاجتماعي المعروضة في التذييل.",
+      "github": "رابط GitHub",
+      "githubPlaceholder": "https://github.com/yourcompany",
+      "twitter": "رابط X (Twitter)",
+      "twitterPlaceholder": "https://x.com/yourcompany",
+      "linkedin": "رابط LinkedIn",
+      "linkedinPlaceholder": "https://linkedin.com/company/yourcompany",
+      "facebook": "رابط Facebook",
+      "facebookPlaceholder": "https://facebook.com/yourcompany"
+    },
+    "domain": {
+      "title": "تكوين النطاق",
+      "description": "يستخدم النطاق لتحديد شبكتك. يصل المستخدمون إلى لوحة التحكم عبر هذا النطاق.",
+      "label": "نطاق الشبكة",
+      "note": "اتصل بالدعم لتغيير نطاقك."
+    },
+    "access": {
+      "title": "التحكم في الوصول",
+      "description": "تحكم في كيفية انضمام المستخدمين إلى شبكتك وإنشاء المنظمات.",
+      "invitationOnly": "بالدعوة فقط",
+      "invitationOnlyDescription": "عند التفعيل، يمكن للمستخدمين الجدد الانضمام إلى الشبكة عبر الدعوة فقط. سيتم تعطيل التسجيل العام.",
+      "invitationOnlyOrgAdmins": "تقييد إنشاء المنظمات",
+      "invitationOnlyOrgAdminsDescription": "عند التفعيل، يمكن لمسؤولي الشبكة فقط إنشاء منظمات جديدة. لا يمكن للمستخدمين العاديين إنشاء منظماتهم الخاصة."
+    },
+    "validation": {
+      "emailRequired": "البريد الإلكتروني للدعم مطلوب",
+      "emailInvalid": "يرجى إدخال عنوان بريد إلكتروني صالح"
+    },
+    "organizations": {
+      "createTitle": "إنشاء منظمة",
+      "createDescription": "أنشئ منظمة جديدة ضمن هذه الشبكة.",
+      "name": "اسم المنظمة",
+      "namePlaceholder": "أدخل اسم المنظمة",
+      "nameRequired": "اسم المنظمة مطلوب",
+      "listTitle": "جميع المنظمات",
+      "noOrganizations": "لا توجد منظمات في هذه الشبكة بعد",
+      "noSearchResults": "لم يتم العثور على منظمات تطابق بحثك.",
+      "searchPlaceholder": "بحث المنظمات...",
+      "createSuccess": "تم إنشاء المنظمة بنجاح",
+      "createError": "فشل إنشاء المنظمة",
+      "loadError": "فشل تحميل المنظمات",
+      "deleteTitle": "حذف المنظمة",
+      "deleteConfirmation": "هل أنت متأكد من أنك تريد حذف \"{{name}}\"? لا يمكن التراجع عن هذا الإجراء وسيتم حذف جميع البيانات المرتبطة بهذه المنظمة.",
+      "deleteSuccess": "تم حذف المنظمة بنجاح",
+      "deleteError": "فشل حذف المنظمة",
+      "showingOf": "عرض {{showing}} من {{total}} منظمة",
+      "block": "حظر",
+      "unblock": "إلغاء الحظر",
+      "blockTitle": "حظر المنظمة",
+      "blockConfirmation": "هل أنت متأكد من أنك تريد حظر \"{{name}}\"? لن يتمكن جميع المستخدمين في هذه المنظمة من تسجيل الدخول.",
+      "blockSuccess": "تم حظر المنظمة بنجاح",
+      "blockError": "فشل في حظر المنظمة",
+      "unblockTitle": "إلغاء حظر المنظمة",
+      "unblockConfirmation": "هل أنت متأكد من أنك تريد إلغاء حظر \"{{name}}\"? سيتمكن المستخدمون من تسجيل الدخول مرة أخرى.",
+      "unblockSuccess": "تم إلغاء حظر المنظمة بنجاح",
+      "unblockError": "فشل في إلغاء حظر المنظمة"
+    },
+    "users": {
+      "listTitle": "جميع المستخدمين",
+      "name": "الاسم",
+      "email": "البريد الإلكتروني",
+      "noUsers": "لا يوجد مستخدمون في هذه الشبكة بعد",
+      "searchPlaceholder": "البحث بالاسم أو البريد الإلكتروني...",
+      "inviteTitle": "دعوة مستخدم",
+      "inviteDescription": "ادعُ مستخدمًا للانضمام إلى منظمة في هذه الشبكة.",
+      "inviteButton": "دعوة مستخدم",
+      "inviteModalTitle": "دعوة مستخدم إلى منظمة",
+      "selectOrganization": "المنظمة",
+      "selectOrganizationPlaceholder": "اختر منظمة...",
+      "inviteEmailLabel": "عنوان البريد الإلكتروني",
+      "inviteEmailPlaceholder": "أدخل عنوان البريد الإلكتروني",
+      "roleLabel": "الدور",
+      "roleAdmin": "مسؤول",
+      "roleMember": "عضو",
+      "sendInvite": "إرسال الدعوة",
+      "inviteSuccess": "تم إرسال الدعوة بنجاح",
+      "inviteError": "فشل إرسال الدعوة",
+      "inviteEmailRequired": "عنوان البريد الإلكتروني مطلوب",
+      "inviteEmailInvalid": "يرجى إدخال عنوان بريد إلكتروني صالح",
+      "block": "حظر",
+      "unblock": "إلغاء الحظر",
+      "blockTitle": "حظر المستخدم",
+      "blockConfirmation": "هل أنت متأكد من أنك تريد حظر \"{{name}}\"? لن يتمكن هذا المستخدم من تسجيل الدخول.",
+      "blockSuccess": "تم حظر المستخدم بنجاح",
+      "blockError": "فشل في حظر المستخدم",
+      "unblockTitle": "إلغاء حظر المستخدم",
+      "unblockConfirmation": "هل أنت متأكد من أنك تريد إلغاء حظر \"{{name}}\"? سيتمكن هذا المستخدم من تسجيل الدخول مرة أخرى.",
+      "unblockSuccess": "تم إلغاء حظر المستخدم بنجاح",
+      "unblockError": "فشل في إلغاء حظر المستخدم",
+      "deleteTitle": "حذف المستخدم",
+      "deleteConfirmation": "هل أنت متأكد من أنك تريد حذف \"{{name}}\"? لا يمكن التراجع عن هذا الإجراء.",
+      "deleteSuccess": "تم حذف المستخدم بنجاح",
+      "deleteError": "فشل في حذف المستخدم"
+    },
+    "invitations": {
+      "title": "دعوات الشبكة",
+      "description": "عرض وإدارة الدعوات المعلقة للمنظمات الجديدة في هذه الشبكة.",
+      "noInvitations": "لا توجد دعوات معلقة.",
+      "organizationName": "اسم المنظمة",
+      "expires": "تنتهي الصلاحية",
+      "loadError": "فشل في تحميل الدعوات",
+      "deleteTitle": "حذف الدعوة",
+      "deleteConfirmation": "هل أنت متأكد من أنك تريد حذف الدعوة لـ \"{{email}}\"؟",
+      "deleteSuccess": "تم حذف الدعوة بنجاح",
+      "deleteError": "فشل في حذف الدعوة"
+    },
+    "status": {
+      "active": "نشط",
+      "blocked": "محظور"
+    },
+    "blockReason": "السبب (اختياري)",
+    "blockReasonPlaceholder": "أدخل سبب الحظر..."
+  },
   "usage": {
     "title": "الاستخدام",
     "resourceUsage": "استخدام الموارد",
@@ -177,6 +370,17 @@
     "approachingLimit": "الاقتراب من الحد",
     "noUsageData": "لا توجد بيانات استخدام متاحة",
     "unableToLoad": "تعذر تحميل معلومات استخدام الموارد",
+    "resources": {
+      "medias": "ملفات الوسائط",
+      "storage": "التخزين",
+      "users": "المستخدمون",
+      "devices": "الأجهزة",
+      "playlists": "قوائم التشغيل",
+      "channels": "القنوات",
+      "teams": "الفرق",
+      "widgets": "الأدوات",
+      "layouts": "التخطيطات"
+    },
     "errors": {
       "fetchUsageData": "فشل جلب بيانات الاستخدام: {{error}}"
     }
@@ -275,9 +479,76 @@
     },
     "memberSelection": {
       "selectUser": "اختر مستخدمًا",
-      "searchUser": "البحث عن مستخدم..."
+      "searchUser": "البحث عن مستخدم...",
+      "noUsersAvailable": "لا يوجد مستخدمون متاحون للدعوة.",
+      "inviteToOrgFirst": "يجب دعوة المستخدمين أولاً إلى المنظمة قبل إضافتهم إلى الفرق."
     },
     "teamsRemovedSuccessfully": "تمت إزالة الفرق بنجاح"
+  },
+  "tags": {
+    "title": "العلامات",
+    "addTag": "إضافة علامة",
+    "createTag": "إنشاء علامة",
+    "editTag": "تعديل العلامة",
+    "deleteTag": "حذف العلامة",
+    "newTag": "علامة جديدة",
+    "tagName": "اسم العلامة",
+    "tagColor": "لون العلامة",
+    "tagGroup": "مجموعة العلامات",
+    "assignedTags": "العلامات المعينة",
+    "availableTags": "العلامات المتاحة",
+    "noTags": "لا توجد علامات",
+    "noTagsAvailable": "لا توجد علامات متاحة",
+    "noMatchingTags": "لا توجد علامات مطابقة",
+    "allTagsAssigned": "تم تعيين جميع العلامات",
+    "addToResource": "إضافة علامات",
+    "removeFromResource": "إزالة العلامة",
+    "filterByTags": "تصفية حسب العلامات...",
+    "clearAll": "مسح الكل",
+    "manageTags": "إدارة العلامات",
+    "colorPicker": "اختيار اللون",
+    "searchTags": "البحث عن علامات...",
+    "filterMode": {
+      "any": "أي",
+      "all": "الكل",
+      "description": "مطابقة الموارد مع أي أو كل العلامات المحددة"
+    },
+    "confirmDelete": "هل أنت متأكد من أنك تريد حذف العلامة \"{{name}}\"؟",
+    "confirmDeleteMultiple": "هل أنت متأكد من أنك تريد حذف العلامات التالية؟",
+    "confirmDeleteGroup": "هل أنت متأكد من أنك تريد حذف مجموعة العلامات \"{{name}}\"? سيتم أيضًا حذف جميع العلامات في هذه المجموعة نهائيًا.",
+    "maxTagsReached": "تم الوصول إلى الحد الأقصى {{max}} علامة",
+    "groups": {
+      "title": "مجموعات العلامات",
+      "addGroup": "إضافة مجموعة",
+      "newGroup": "مجموعة جديدة",
+      "editGroup": "تعديل المجموعة",
+      "deleteGroup": "حذف المجموعة",
+      "noGroups": "لا توجد مجموعات علامات",
+      "ungrouped": "غير مجمعة",
+      "untagged": "غير مُعلَّم"
+    },
+    "messages": {
+      "tagCreated": "تم إنشاء العلامة \"{{name}}\" بنجاح",
+      "tagUpdated": "تم تحديث العلامة \"{{name}}\" بنجاح",
+      "tagDeleted": "تم حذف العلامة \"{{name}}\" بنجاح",
+      "tagAddedToResource": "تمت إضافة العلامة بنجاح",
+      "tagRemovedFromResource": "تمت إزالة العلامة بنجاح",
+      "tagsUpdated": "تم تحديث العلامات بنجاح",
+      "groupCreated": "تم إنشاء مجموعة العلامات \"{{name}}\" بنجاح",
+      "groupUpdated": "تم تحديث مجموعة العلامات \"{{name}}\" بنجاح",
+      "groupDeleted": "تم حذف مجموعة العلامات \"{{name}}\" بنجاح"
+    },
+    "errors": {
+      "createTag": "خطأ في إنشاء العلامة: {{error}}",
+      "updateTag": "خطأ في تحديث العلامة: {{error}}",
+      "deleteTag": "خطأ في حذف العلامة: {{error}}",
+      "tagResource": "خطأ في إضافة العلامة إلى المورد: {{error}}",
+      "untagResource": "خطأ في إزالة العلامة من المورد: {{error}}",
+      "createGroup": "خطأ في إنشاء مجموعة العلامات: {{error}}",
+      "updateGroup": "خطأ في تحديث مجموعة العلامات: {{error}}",
+      "deleteGroup": "خطأ في حذف مجموعة العلامات: {{error}}",
+      "loadFailed": "فشل في تحميل العلامات"
+    }
   },
   "login": {
     "title": "تسجيل الدخول",
@@ -289,12 +560,39 @@
     "loading": "جاري التحميل...",
     "loginWithPasskey": "تسجيل الدخول باستخدام مفتاح المرور",
     "privacyPolicy": "سياسة الخصوصية",
-    "lostCredentials": "هل فقدت بيانات الاعتماد؟"
+    "privacyNotice": "نحن نهتم بخصوصيتك. اقرأ",
+    "lostCredentials": "هل فقدت بيانات الاعتماد؟",
+    "invitationOnlyNotice": "ليس لديك حساب؟ تتطلب هذه الخدمة دعوة للتسجيل.",
+    "passkeysNotSupported": "متصفحك لا يدعم مفاتيح المرور. يرجى استخدام متصفح حديث لتسجيل الدخول.",
+    "errors": {
+      "authenticationFailed": "فشل المصادقة. يرجى المحاولة مرة أخرى.",
+      "userBlocked": "تم حظر حسابك. السبب: {{reason}}",
+      "organizationBlocked": "تم حظر مؤسستك. السبب: {{reason}}",
+      "signupFailed": "تعذر بدء التسجيل. يرجى المحاولة لاحقاً."
+    }
   },
   "credentialRecovery": {
     "title": "استعادة بيانات الاعتماد الخاصة بك",
     "checkYourEmail": "تحقق من بريدك الإلكتروني",
     "addNewPasskey": "إضافة مفتاح مرور جديد"
+  },
+  "setupPasskey": {
+    "title": "إعداد مفتاح المرور الخاص بك",
+    "subtitle": "أنشئ مفتاح مرور لـ {{domain}} لتتمكن من تسجيل الدخول مباشرة.",
+    "instructions": "مرحباً، {{email}}! انقر على الزر أدناه لإنشاء مفتاح مرور لهذا النطاق.",
+    "createButton": "إنشاء مفتاح مرور",
+    "passkeysNotSupported": "متصفحك لا يدعم مفاتيح المرور.",
+    "invalidLink": "رابط إعداد غير صالح.",
+    "expiredLink": "انتهت صلاحية هذا الرابط. يرجى طلب رابط جديد.",
+    "verificationFailed": "فشل التحقق من الرابط.",
+    "verifying": "جارٍ التحقق من الرابط...",
+    "creatingPasskey": "جارٍ إنشاء مفتاح المرور...",
+    "challengeFailed": "فشل بدء إنشاء مفتاح المرور.",
+    "creationCancelled": "تم إلغاء إنشاء مفتاح المرور.",
+    "noPublicKey": "تعذر الحصول على المفتاح العام.",
+    "registrationFailed": "فشل تسجيل مفتاح المرور.",
+    "success": "تم إنشاء مفتاح المرور! جارٍ تسجيل الدخول...",
+    "unexpectedError": "حدث خطأ ما. يرجى المحاولة مرة أخرى."
   },
   "errors": {
     "generic": "حدث خطأ. يرجى المحاولة مرة أخرى.",
@@ -306,7 +604,8 @@
     "checkServerRunning": "تأكد من تشغيل خادم Castmill",
     "checkNetworkConnection": "تحقق من اتصال الشبكة",
     "checkServerUrl": "تحقق من عنوان URL للخادم في التكوين",
-    "retryConnection": "إعادة محاولة الاتصال"
+    "retryConnection": "إعادة محاولة الاتصال",
+    "authenticationError": "خطأ في المصادقة: {{message}}"
   },
   "sidebar": {
     "organization": "المنظمة",
@@ -316,9 +615,16 @@
     "devices": "الأجهزة",
     "content": "المحتوى",
     "playlists": "قوائم التشغيل",
+    "layouts": "التخطيطات",
     "medias": "الوسائط",
     "widgets": "Widgets",
-    "members": "الأعضاء"
+    "members": "الأعضاء",
+    "network": "الشبكة",
+    "networkOverview": "نظرة عامة",
+    "networkSettings": "الإعدادات",
+    "networkOrganizations": "المنظمات",
+    "networkUsers": "المستخدمون والدعوات",
+    "tags": "العلامات"
   },
   "channels": {
     "title": "القنوات",
@@ -332,6 +638,7 @@
     "confirmRemoveChannels": "هل أنت متأكد من أنك تريد إزالة القنوات التالية؟",
     "enterChannelName": "أدخل اسم القناة",
     "defaultPlaylist": "قائمة التشغيل الافتراضية",
+    "currentPlaylist": "قائمة التشغيل الحالية",
     "selectPlaylist": "اختر قائمة التشغيل",
     "clearDefaultPlaylist": "مسح قائمة التشغيل الافتراضية",
     "dragPlaylists": "اسحب قوائم التشغيل",
@@ -340,8 +647,14 @@
     "removeChannelEntry": "إزالة إدخال القناة",
     "cannotDeleteChannel": "لا يمكن حذف القناة",
     "success": {
+      "added": "تمت إضافة القناة {{name}} بنجاح",
+      "created": "تم إنشاء القناة {{name}} بنجاح",
+      "updated": "تم تحديث القناة {{name}} بنجاح",
       "updateDefaultPlaylist": "تم تحديث قائمة التشغيل الافتراضية بنجاح",
       "clearDefaultPlaylist": "تم مسح قائمة التشغيل الافتراضية بنجاح"
+    },
+    "info": {
+      "contentRequired": "لعرض المحتوى، عيّن قائمة تشغيل افتراضية أو أضف إدخالاً مجدولاً لهذه القناة."
     },
     "errors": {
       "removeChannel": "خطأ في إزالة القناة {{name}}: {{error}}",
@@ -437,7 +750,9 @@
     "buildPlaylist": "أنشئ قائمة التشغيل هنا",
     "renamePlaylist": "إعادة تسمية قائمة التشغيل",
     "playlistUpdated": "تم تحديث قائمة التشغيل \"{{name}}\" بنجاح",
+    "playlistCreated": "تم إنشاء قائمة التشغيل \"{{name}}\" بنجاح",
     "errorUpdating": "خطأ في تحديث قائمة التشغيل {{name}}: {{error}}",
+    "errorCreating": "خطأ في إنشاء قائمة التشغيل: {{error}}",
     "removePlaylist": "إزالة قائمة التشغيل",
     "removePlaylists": "إزالة قوائم التشغيل",
     "confirmRemovePlaylist": "هل أنت متأكد من أنك تريد إزالة قائمة التشغيل \"{{name}}\"؟",
@@ -446,6 +761,9 @@
     "errorRemovingPlaylists": "خطأ في إزالة قوائم التشغيل: {{error}}",
     "enterPlaylistName": "أدخل اسم قائمة التشغيل",
     "dragToAdd": "اسحب للإضافة",
+    "searchWidgets": "ابحث عن الأدوات...",
+    "dropHereToAddAtEnd": "أفلت هنا للإضافة في النهاية",
+    "duration": "المدة",
     "aspectRatio": "نسبة العرض إلى الارتفاع",
     "aspectRatioWidth": "العرض",
     "aspectRatioHeight": "الارتفاع",
@@ -471,27 +789,172 @@
       "aspectRatioMax": "يجب أن تكون القيمة 100 أو أقل",
       "aspectRatioExtreme": "نسبة العرض إلى الارتفاع متطرفة للغاية (الحد الأقصى 10:1)",
       "updateAspectRatio": "خطأ في تحديث نسبة العرض: {{error}}"
-    }
+    },
+    "credentialsRequired": "بيانات الاعتماد مطلوبة",
+    "credentialsRequiredDescription": "يتطلب Widget \"{{widget}}\" تكوين بيانات الاعتماد قبل إضافته إلى قائمة التشغيل.",
+    "missingIntegrations": "التكاملات المفقودة",
+    "goToIntegrations": "الذهاب إلى التكاملات",
+    "widgetModalTitle": "أداة \"{{name}}\"",
+    "configureYourWidget": "قم بتكوين أداتك"
+  },
+  "layouts": {
+    "title": "التخطيطات",
+    "addLayout": "إضافة تخطيط",
+    "createNewLayout": "إنشاء تخطيط جديد",
+    "layoutTitle": "التخطيط \"{{name}}\"",
+    "layoutDetails": "تفاصيل التخطيط",
+    "deleteLayout": "حذف التخطيط",
+    "deleteLayouts": "حذف التخطيطات",
+    "confirmDelete": "هل أنت متأكد من أنك تريد حذف \"{{name}}\"؟",
+    "confirmDeleteMultiple": "هل أنت متأكد من أنك تريد حذف {{count}} تخطيط(ات)؟",
+    "deleteSuccess": "تم حذف التخطيط \"{{name}}\" بنجاح",
+    "saveSuccess": "تم حفظ التخطيط بنجاح",
+    "addSuccess": "تم إنشاء التخطيط بنجاح",
+    "enterLayoutName": "أدخل اسم التخطيط",
+    "searchPlaceholder": "البحث عن تخطيطات...",
+    "noLayouts": "لم يتم العثور على تخطيطات",
+    "aspectRatio": "نسبة العرض إلى الارتفاع",
+    "customAspectRatio": "نسبة عرض مخصصة",
+    "invalidAspectRatio": "تنسيق غير صالح. استخدم العرض:الارتفاع (مثل 16:9)",
+    "extremeAspectRatio": "نسبة العرض إلى الارتفاع متطرفة جداً",
+    "zones": "المناطق",
+    "addZone": "إضافة منطقة",
+    "zoneProperties": "خصائص المنطقة",
+    "templates": "القوالب",
+    "bringForward": "إحضار للأمام",
+    "sendBackward": "إرسال للخلف",
+    "selectLayout": "اختر تخطيطاً",
+    "searchLayouts": "البحث عن تخطيطات...",
+    "assignPlaylists": "تعيين قوائم التشغيل للمناطق",
+    "zonesCount": "{{count}} مناطق"
   },
   "widgets": {
     "title": "Widgets",
     "uploadWidget": "تحميل Widget",
     "uploadDescription": "تحميل ملف تعريف Widget بصيغة JSON.",
+    "upload": {
+      "jsonDescription": "قم بتحميل ملف JSON يحتوي على تعريف ويدجت.",
+      "requiredFields": "الحقول المطلوبة",
+      "and": "و",
+      "exampleFormat": "تنسيق المثال",
+      "dragAndDropHint": "أو اسحب وأفلت ملفات JSON أو ZIP هنا...",
+      "ready": "جاهز",
+      "invalidFileType": "نوع ملف غير صالح. يتم دعم ملفات JSON و ZIP فقط.",
+      "invalidWidgetJson": "JSON ويدجت غير صالح: يجب أن يحتوي على الحقلين \"name\" و\"template\"",
+      "validationFailed": "فشل التحقق",
+      "uploadFailed": "فشل الرفع",
+      "uploadedSuccessfully": "تم الرفع بنجاح",
+      "uploadError": "خطأ في الرفع"
+    },
     "widgetDetails": "تفاصيل Widget",
     "updateInterval": "فترة التحديث",
     "viewDetails": "عرض التفاصيل",
+    "delete": "حذف",
+    "deleteConfirmTitle": "حذف Widget",
+    "deleteConfirmMessage": "هل أنت متأكد أنك تريد حذف \"{{widget}}\"؟",
+    "deleteConfirmUsageWarning": "Widget \"{{widget}}\" يُستخدم حاليًا في {{count}} قائمة/قوائم تشغيل. سيؤدي حذفه إلى إزالة جميع الحالات من هذه القوائم.",
+    "usedInPlaylists": "مستخدم في قوائم التشغيل التالية:",
+    "deleteCascadeNote": "لا يمكن التراجع عن هذا الإجراء.",
     "template": "القالب",
     "optionsSchema": "مخطط الخيارات",
-    "dataSchema": "مخطط البيانات"
+    "dataSchema": "مخطط البيانات",
+    "noAssets": "لا يحتوي هذا الـ Widget على أصول مضمنة.",
+    "assets": {
+      "title": "الأصول",
+      "icons": "الأيقونات",
+      "images": "الصور",
+      "fonts": "الخطوط",
+      "styles": "الأنماط"
+    },
+    "spotify": {
+      "title": "اتصال Spotify",
+      "connectButton": "الاتصال بـ Spotify",
+      "disconnectButton": "قطع الاتصال",
+      "connectDescription": "اربط حساب Spotify الخاص بك لعرض المقطع الصوتي قيد التشغيل على اللافتات الرقمية.",
+      "connected": "متصل",
+      "connectedSince": "متصل منذ {{date}}",
+      "connectionSuccess": "تم الاتصال بـ Spotify بنجاح!",
+      "connectionFailed": "فشل الاتصال بـ Spotify. يرجى المحاولة مرة أخرى.",
+      "disconnectNotSupported": "قطع الاتصال غير مدعوم حاليًا. يرجى إلغاء الوصول من إعدادات حساب Spotify."
+    },
+    "integrations": {
+      "title": "التكاملات",
+      "noIntegrations": "هذا الـ Widget ليس لديه تكاملات مُعدّة.",
+      "configure": "تكوين",
+      "configured": "مُعدّ",
+      "notConfigured": "غير مُعدّ",
+      "requiresAuth": "يتطلب المصادقة",
+      "authType": "نوع المصادقة",
+      "oauth2": "OAuth 2.0",
+      "apiKey": "مفتاح API",
+      "credentials": "بيانات الاعتماد",
+      "saveCredentials": "حفظ بيانات الاعتماد",
+      "testConnection": "اختبار الاتصال",
+      "testSuccess": "نجح اختبار الاتصال!",
+      "testFailed": "فشل اختبار الاتصال: {{error}}",
+      "credentialsSaved": "تم حفظ بيانات الاعتماد بنجاح!",
+      "credentialsSaveFailed": "فشل حفظ بيانات الاعتماد: {{error}}",
+      "credentialsConfigured": "تم تكوين بيانات اعتماد API",
+      "updateCredentials": "تحديث بيانات الاعتماد",
+      "deleteCredentials": "حذف بيانات الاعتماد",
+      "connectWith": "الاتصال بـ {{provider}}",
+      "connectedTo": "متصل بـ {{provider}}",
+      "disconnect": "قطع الاتصال",
+      "confirmDisconnect": "هل أنت متأكد من أنك تريد قطع الاتصال بـ {{provider}}؟ ستحتاج إلى إعادة الاتصال لاستخدام هذا التكامل.",
+      "disconnected": "تم قطع الاتصال بـ {{provider}}",
+      "disconnectFailed": "فشل قطع الاتصال: {{error}}",
+      "reconnect": "إعادة الاتصال",
+      "lastValidated": "آخر تحقق: {{date}}",
+      "scopeOrganization": "على مستوى المنظمة",
+      "scopeWidget": "خاص بالـ Widget",
+      "pullMode": "جلب البيانات",
+      "pushMode": "Webhook",
+      "pullInterval": "يتم التحديث كل {{seconds}} ثانية",
+      "fieldRequired": "{{field}} مطلوب",
+      "connectionStatus": "حالة الاتصال",
+      "valid": "صالح",
+      "invalid": "غير صالح",
+      "pending": "في انتظار الإعداد",
+      "enterClientCredentials": "أدخل بيانات اعتماد API الخاصة بـ {{provider}} أدناه:",
+      "afterSavingCredentials": "بعد حفظ بيانات الاعتماد الخاصة بك، انقر أدناه للتفويض مع {{provider}}:",
+      "networkCredentialsConfigured": "قام مسؤول الشبكة لديك بالفعل بتكوين بيانات اعتماد {{provider}}. ما عليك سوى النقر على الزر أدناه لربط حسابك.",
+      "noConfigurationRequired": "لا يتطلب أي إعداد",
+      "optional": "اختياري"
+    },
+    "translations": "الترجمات"
   },
   "devices": {
     "setDeviceChannel": "تعيين قناة الجهاز",
     "selectChannel": "اختر القناة",
     "preview": {
-      "placeholder": "معاينة"
+      "placeholder": "معاينة",
+      "noChannels": "لا توجد قنوات مخصصة لهذا الجهاز",
+      "noScheduledContent": "لا يوجد محتوى مجدول في هذا الوقت",
+      "errorLoadingPlaylist": "فشل تحميل محتوى قائمة التشغيل",
+      "errorInitializing": "فشل تهيئة المعاينة",
+      "currentlyPlaying": "مجدول حاليا من القناة",
+      "note": "يوضح هذا ما يجب أن يعرضه الجهاز الآن بناءً على جداول القنوات، وليس بالضرورة ما يتم عرضه فعليًا على الجهاز."
     },
     "telemetry": {
-      "placeholder": "التتبع والسجلات والمقاييس والاتصال (جودة WiFi وما إلى ذلك)"
+      "placeholder": "التتبع والسجلات والمقاييس والاتصال (جودة WiFi وما إلى ذلك)",
+      "storage": "التخزين",
+      "memory": "الذاكرة",
+      "cpu": "استخدام المعالج",
+      "cpuLoad": "متوسط حمل المعالج",
+      "network": "الشبكة",
+      "connectionType": "نوع الاتصال",
+      "wifiSignal": "إشارة WiFi",
+      "temperature": "درجة الحرارة",
+      "fanSpeed": "سرعة المروحة",
+      "battery": "البطارية",
+      "charging": "جارٍ الشحن",
+      "uptime": "وقت التشغيل",
+      "refresh": "تحديث بيانات القياس",
+      "offlineWarning": "الجهاز غير متصل. بيانات القياس متاحة فقط عندما يكون الجهاز متصلاً.",
+      "noData": "لا تتوفر بيانات قياس من هذا الجهاز.",
+      "daysShort": "ي",
+      "hoursShort": "س",
+      "minutesShort": "د"
     },
     "maintenance": {
       "refresh": "تحديث",
@@ -506,11 +969,57 @@
       "checkUpdatesDescription": "التحقق من التحديثات وتثبيتها. لن يؤدي هذا إلى إعادة تشغيل الجهاز",
       "updateFirmware": "تحديث البرنامج الثابت",
       "updateFirmwareDescription": "يحدث البرنامج الثابت للجهاز",
-      "offlineMessage": "الجهاز غير متصل بالإنترنت، لذا لا يمكن إرسال أوامر إليه"
+      "offlineMessage": "الجهاز غير متصل بالإنترنت، لذا لا يمكن إرسال أوامر إليه",
+      "autorecoveryUpdated": "تم تحديث الاسترداد التلقائي",
+      "autorecoveryUpdateFailed": "فشل تحديث الاسترداد التلقائي",
+      "edit": "تعديل",
+      "enableForOneHour": "تفعيل لمدة ساعة",
+      "enableForever": "تفعيل دائم",
+      "disable": "تعطيل",
+      "recoverLostSettingsLabel": "استعادة الإعدادات المفقودة",
+      "disabled": "معطل",
+      "enabledMinutesRemaining": "مفعل (متبقي {{minutes}} دقيقة)",
+      "enabledForever": "مفعل دائمًا"
+    },
+    "cache": {
+      "title": "ذاكرة التخزين المؤقت للجهاز",
+      "items": "عناصر ذاكرة التخزين المؤقت",
+      "dataTab": "البيانات",
+      "codeTab": "الكود",
+      "mediaTab": "الوسائط",
+      "deleteSelected": "حذف العناصر المحددة",
+      "clearAll": "مسح الكل",
+      "confirmDelete": "حذف إدخال ذاكرة التخزين المؤقت",
+      "confirmDeleteMessage": "هل أنت متأكد من أنك تريد حذف هذا الإدخال من ذاكرة التخزين المؤقت؟ عنوان URL: {{url}}",
+      "confirmDeleteMultiple": "حذف إدخالات متعددة",
+      "confirmDeleteMultipleMessage": "هل أنت متأكد من أنك تريد حذف {{count}} من إدخالات ذاكرة التخزين المؤقت؟",
+      "confirmClearAll": "مسح جميع ذاكرة التخزين المؤقت",
+      "confirmClearAllMessage": "هل أنت متأكد من أنك تريد مسح جميع إدخالات ذاكرة التخزين المؤقت {{type}}؟ لا يمكن التراجع عن هذا الإجراء.",
+      "deleteSuccess": "تم حذف إدخال ذاكرة التخزين المؤقت بنجاح",
+      "deleteMultipleSuccess": "تم حذف {{count}} من إدخالات ذاكرة التخزين المؤقت بنجاح",
+      "clearAllSuccess": "تم مسح جميع إدخالات ذاكرة التخزين المؤقت بنجاح",
+      "deleteError": "خطأ في حذف ذاكرة التخزين المؤقت: {{error}}",
+      "offlineWarning": "الجهاز غير متصل حاليًا. لا يمكن استرداد معلومات ذاكرة التخزين المؤقت حتى يعود الجهاز متصلاً."
+    },
+    "events": {
+      "title": "أحداث الجهاز",
+      "items": "أحداث",
+      "filterError": "أخطاء",
+      "filterWarning": "تحذيرات",
+      "filterInfo": "معلومات",
+      "filterOnline": "متصل",
+      "filterOffline": "غير متصل",
+      "clearAll": "مسح جميع الأحداث",
+      "confirmClearAll": "مسح جميع الأحداث",
+      "confirmClearAllMessage": "هل أنت متأكد من أنك تريد حذف جميع الأحداث لهذا الجهاز؟ لا يمكن التراجع عن هذا الإجراء.",
+      "clearAllSuccess": "تم حذف {{count}} من الأحداث بنجاح",
+      "deleteError": "خطأ في حذف الأحداث: {{error}}"
     },
     "errors": {
       "setChannelFailed": "فشل تعيين قناة الجهاز: {{error}}",
-      "commandFailed": "حدث خطأ أثناء معالجة طلبك"
+      "commandFailed": "حدث خطأ أثناء معالجة طلبك",
+      "invalidPincode": "رمز PIN غير صالح. يرجى التحقق من الرمز المعروض على جهازك والمحاولة مرة أخرى.",
+      "pincodeExpired": "انتهت صلاحية رمز PIN هذا. يرجى إعادة بدء عملية تسجيل الجهاز."
     },
     "assignedChannels": "القنوات المخصصة",
     "addChannel": "إضافة قناة",
@@ -537,6 +1046,20 @@
     "errorRegisteringDevice": "خطأ في تسجيل الجهاز: {{error}}",
     "errorRemovingDevice": "خطأ في إزالة الجهاز {{name}}: {{error}}",
     "errorRemovingDevices": "خطأ في إزالة الأجهزة: {{error}}",
+    "enterDescription": "أدخل وصفًا",
+    "drawerTitle": "الجهاز \"{{name}}\"",
+    "info": {
+      "title": "معلومات",
+      "platform": "المنصة",
+      "playerVersion": "إصدار المشغل",
+      "operatingSystem": "نظام التشغيل",
+      "hardware": "الأجهزة",
+      "environmentVersion": "إصدار البيئة",
+      "chromiumVersion": "إصدار Chromium",
+      "v8Version": "إصدار V8",
+      "nodeVersion": "إصدار Node.js",
+      "userAgent": "وكيل المستخدم"
+    },
     "remoteControl": {
       "title": "التحكم عن بعد",
       "status": "الحالة",
@@ -583,7 +1106,8 @@
   },
   "validation": {
     "fieldRequired": "هذا الحقل مطلوب",
-    "minLength": "يجب أن يحتوي هذا الحقل على {{min}} أحرف على الأقل"
+    "minLength": "يجب أن يحتوي هذا الحقل على {{min}} أحرف على الأقل",
+    "invalidCoordinates": "يجب أن يحتوي هذا الحقل على إحداثيات صالحة"
   },
   "plurals": {
     "items": {
@@ -607,12 +1131,16 @@
     "title": "التسجيل",
     "continueWithPasskey": "المتابعة باستخدام مفتاح المرور",
     "privacyPolicy": "سياسة الخصوصية",
+    "privacyNotice": "نحن نهتم بخصوصيتك. اقرأ",
     "checkYourEmail": "تحقق من بريدك الإلكتروني",
     "errors": {
       "couldNotCreateCredential": "تعذر إنشاء بيانات الاعتماد",
       "couldNotGetPublicKey": "تعذر الحصول على المفتاح العام",
       "invalidCredential": "بيانات اعتماد غير صالحة",
       "signupFailed": "حدث خطأ أثناء التسجيل، اتصل بالدعم. الخطأ: {{error}}"
+    },
+    "success": {
+      "accountCreated": "تم إنشاء الحساب بنجاح!"
     }
   },
   "search": {
@@ -728,12 +1256,21 @@
   "filters": {
     "teamLabel": "الفريق",
     "teamPlaceholder": "اختر الفريق",
-    "teamClear": "مسح فلتر الفريق"
+    "teamClear": "مسح فلتر الفريق",
+    "tagLabel": "العلامات",
+    "tagPlaceholder": "تصفية حسب العلامات…",
+    "tagClear": "مسح فلتر العلامات",
+    "tagSearchPlaceholder": "بحث في العلامات…",
+    "tagFilterModeAny": "أي",
+    "tagFilterModeAll": "الكل",
+    "noMatches": "لا توجد نتائج",
+    "noItems": "لا توجد عناصر"
   },
   "shortcuts": {
     "showShortcutsLegend": "عرض اختصارات لوحة المفاتيح",
     "closeDialog": "إغلاق مربع الحوار",
     "gotoPlaylists": "الانتقال إلى قوائم التشغيل",
+    "gotoLayouts": "الانتقال إلى التخطيطات",
     "gotoMedias": "الانتقال إلى الوسائط",
     "gotoWidgets": "الانتقال إلى الأدوات",
     "gotoChannels": "الانتقال إلى القنوات",
@@ -755,5 +1292,179 @@
       "title": "اختصارات لوحة المفاتيح",
       "description": "استخدم هذه الاختصارات للتنقل بشكل أسرع"
     }
+  },
+  "onboarding": {
+    "title": "مرحبًا بك في Castmill!",
+    "subtitle": "لنبدأ بتسمية مؤسستك.",
+    "organizationNameLabel": "اسم المؤسسة",
+    "organizationNamePlaceholder": "أدخل اسم مؤسستك",
+    "helpText": "سيتم استخدام هذا الاسم لتحديد مساحة العمل الخاصة بك. يمكنك تغييره لاحقًا في الإعدادات.",
+    "continueButton": "متابعة",
+    "success": "اكتمل إعداد المؤسسة!",
+    "errors": {
+      "organizationNameRequired": "اسم المؤسسة مطلوب",
+      "organizationNameTooShort": "يجب أن يتكون اسم المؤسسة من حرفين على الأقل",
+      "organizationNameTooLong": "يجب أن يكون اسم المؤسسة أقل من 50 حرفًا",
+      "organizationNameTaken": "اسم المؤسسة هذا مستخدم بالفعل. يرجى اختيار اسم مختلف.",
+      "failed": "فشل إكمال الإعداد. يرجى المحاولة مرة أخرى."
+    }
+  },
+  "onboardingTour": {
+    "title": "جولة البدء",
+    "progressText": "{{current}} من {{total}} خطوات مكتملة",
+    "markComplete": "وضع علامة كمكتمل",
+    "stepCompleted": "تم إكمال الخطوة!",
+    "stepCompletedBadge": "مكتمل",
+    "allStepsComplete": "تهانينا! لقد أكملت جميع خطوات الإعداد!",
+    "dismissed": "تم إغلاق جولة الإعداد. يمكنك إعادة تشغيلها في أي وقت من الإعدادات.",
+    "dismissConfirmTitle": "إغلاق جولة الإعداد؟",
+    "dismissConfirmMessage": "يمكنك إعادة فتحها في أي وقت من خلال أيقونة الصاروخ في شريط الأدوات العلوي.",
+    "skip": "تخطي",
+    "finish": "إنهاء الجولة",
+    "goToStep": "الانتقال إلى الخطوة {{step}}",
+    "learnMore": "اعرف المزيد",
+    "steps": {
+      "findGuide": {
+        "title": "ابحث عن هذا الدليل في أي وقت",
+        "description": "ابحث عن أيقونة الصاروخ في شريط التنقل العلوي. يمكنك النقر عليها في أي وقت لإعادة فتح دليل البدء هذا والمتابعة من حيث توقفت.",
+        "action": "أرني"
+      },
+      "chooseLanguage": {
+        "title": "اختر لغتك",
+        "description": "اختر لغتك المفضلة من القائمة المنسدلة في شريط التنقل العلوي. سيؤدي هذا إلى ترجمة واجهة التطبيق بالكامل لتسهيل استخدامها.",
+        "action": "اختيار اللغة"
+      },
+      "uploadMedia": {
+        "title": "تحميل أول محتوى لك",
+        "description": "ابدأ بتحميل الصور أو الفيديوهات أو المحتويات الأخرى التي تريد عرضها على شاشات اللافتات الرقمية الخاصة بك. يمكنك سحب الملفات وإفلاتها أو استخدام زر التحميل.",
+        "action": "الذهاب إلى مكتبة الوسائط"
+      },
+      "createPlaylist": {
+        "title": "إنشاء أول قائمة تشغيل لك",
+        "description": "نظم محتواك في قوائم تشغيل. أضف ملفات الوسائط والأدوات لإنشاء تسلسلات محتوى جذابة. يمكنك ضبط مدد العرض والانتقالات لكل عنصر.",
+        "action": "الذهاب إلى قوائم التشغيل"
+      },
+      "createChannel": {
+        "title": "إعداد قناة",
+        "description": "تجمع القنوات بين قوائم التشغيل والجداول الزمنية. أنشئ قناة وعين قائمة تشغيل افتراضية للتحكم في المحتوى الذي يتم تشغيله في أوقات مختلفة من اليوم.",
+        "action": "الذهاب إلى القنوات"
+      },
+      "registerDevice": {
+        "title": "تسجيل جهازك الأول",
+        "description": "افتح المشغل أولاً للحصول على رمز التسجيل، ثم أدخل هذا الرمز هنا لتسجيل الجهاز. تلميح: يمكنك فتح مشغل عبر المتصفح على جهازك للاختبار—استخدم {{playerUrl}}.",
+        "action": "الذهاب إلى الأجهزة"
+      },
+      "assignChannel": {
+        "title": "تعيين قناة للجهاز",
+        "description": "اربط قناة بجهازك حتى يعرف المحتوى الذي سيتم عرضه. يمكن تعيين كل جهاز لقناة واحدة في المرة الواحدة، ولكن يمكنك تغييرها في أي وقت.",
+        "action": "إدارة الأجهزة"
+      },
+      "advancedPlaylist": {
+        "title": "إنشاء قوائم تشغيل متقدمة مع التخطيطات",
+        "description": "انتقل بمحتواك إلى المستوى التالي باستخدام التخطيطات لعرض عناصر متعددة في وقت واحد. قسم شاشتك إلى مناطق واعرض محتوى مختلف في كل منطقة.",
+        "action": "استكشاف التخطيطات"
+      },
+      "createTagGroup": {
+        "title": "نظّم بمجموعات الوسوم",
+        "description": "انتقل إلى صفحة الوسوم وأنشئ أول مجموعة وسوم—مثل 'الموقع' أو 'الحملة'. تتيح لك المجموعات تصنيف الوسوم إلى أبعاد ذات معنى تغذي العرض الشجري.",
+        "action": "الذهاب إلى الوسوم"
+      },
+      "tagContent": {
+        "title": "وسم محتواك",
+        "description": "افتح أي عنصر وسائط وأسند إليه وسوماً. تجعل الوسوم محتواك قابلاً للبحث والتصفية والتنظيم. يمكنك أيضاً تحديد عناصر متعددة ووسمها جميعاً دفعة واحدة.",
+        "action": "الذهاب إلى مكتبة الوسائط"
+      },
+      "exploreTreeView": {
+        "title": "استكشف العرض الشجري",
+        "description": "انتقل إلى العرض الشجري لرؤية محتواك منظماً حسب مجموعات الوسوم. وسّع الوسوم للتعمق أكثر، أعد ترتيب الأبعاد، واكتشف طريقة جديدة تماماً للتنقل في مكتبتك.",
+        "action": "جرّب العرض الشجري"
+      }
+    },
+    "errors": {
+      "failedToCompleteStep": "فشل وضع علامة على الخطوة كمكتملة. يرجى المحاولة مرة أخرى.",
+      "failedToDismiss": "فشل إغلاق الجولة. يرجى المحاولة مرة أخرى."
+    }
+  },
+  "medias": {
+    "upload": {
+      "fileTooLarge": "حجم الملف ({{fileSize}}) يتجاوز الحد الأقصى للتحميل وهو {{maxSize}}",
+      "largeFileWarning": "ملف كبير ({{fileSize}}). قد يستغرق التحميل بعض الوقت.",
+      "noValidFiles": "لا توجد ملفات صالحة للتحميل.",
+      "uploadError": "خطأ في تحميل الملف.",
+      "uploadFailed": "فشل التحميل: {{error}}",
+      "serverError": "خطأ في الخادم (الحالة {{status}})",
+      "unknownError": "خطأ غير معروف"
+    },
+    "thumbnail": {
+      "failedTitle": "فشل تحويل الوسائط",
+      "failedDefaultMessage": "تعذر إنشاء المعاينة تلقائيًا."
+    },
+    "drawerTitle": "الوسائط \"{{name}}\"",
+    "mediaUpdated": "تم تحديث الوسائط \"{{name}}\" بنجاح",
+    "errorUpdating": "خطأ في تحديث الوسائط {{name}}: {{error}}"
+  },
+  "dashboard": {
+    "noOrganizations": {
+      "title": "لا توجد منظمات",
+      "description": "أنت لا تنتمي إلى أي منظمة في هذه الشبكة بعد. يرجى الاتصال بمسؤول الشبكة للحصول على حق الوصول."
+    }
+  },
+  "aspectRatio": {
+    "custom": "مخصص"
+  },
+  "deviceTimers": {
+    "title": "مؤقتات الطاقة للجهاز",
+    "description": "قم بتكوين وقت تشغيل وإيقاف الجهاز تلقائيًا",
+    "onTimers": "مؤقتات التشغيل",
+    "offTimers": "مؤقتات الإيقاف",
+    "addOnTimer": "إضافة مؤقت تشغيل",
+    "addOffTimer": "إضافة مؤقت إيقاف",
+    "time": "الوقت",
+    "days": "الأيام",
+    "deleteTimer": "حذف المؤقت",
+    "saveTimers": "حفظ المؤقتات",
+    "maxTimersReached": "تم الوصول إلى أقصى حد من 6 مؤقتات",
+    "monday": "الاثنين",
+    "tuesday": "الثلاثاء",
+    "wednesday": "الأربعاء",
+    "thursday": "الخميس",
+    "friday": "الجمعة",
+    "saturday": "السبت",
+    "sunday": "الأحد",
+    "mon": "الاثنين",
+    "tue": "الثلاثاء",
+    "wed": "الأربعاء",
+    "thu": "الخميس",
+    "fri": "الجمعة",
+    "sat": "السبت",
+    "sun": "الأحد",
+    "allDays": "كل الأيام",
+    "noTimers": "لا توجد مؤقتات مكونة",
+    "timersSaved": "تم حفظ المؤقتات بنجاح",
+    "timersLoadError": "خطأ في تحميل المؤقتات",
+    "timersSaveError": "خطأ في حفظ المؤقتات",
+    "playerOffByTimer": "تم إيقاف التشغيل بواسطة المؤقت",
+    "nextOnTime": "وقت التشغيل المجدول التالي: {time}",
+    "notSupported": "لا يتم دعم التحكم بأجهزة المؤقت على هذا الجهاز. استخدام بديل البرنامج."
+  },
+  "deviceSchedule": {
+    "title": "جدول الجهاز",
+    "description": "حدد متى يجب أن يكون الجهاز قيد التشغيل. انقر واسحب على الشبكة لإنشاء إدخالات الجدول. خارج الساعات المجدولة، سيتم إيقاف تشغيل الجهاز. إذا لم يتم تعيين أي إدخالات، فإن الجهاز يكون دائمًا قيد التشغيل.",
+    "mon": "الاثنين",
+    "tue": "الثلاثاء",
+    "wed": "الأربعاء",
+    "thu": "الخميس",
+    "fri": "الجمعة",
+    "sat": "السبت",
+    "sun": "الأحد",
+    "save": "حفظ الجدول",
+    "reset": "إعادة تعيين",
+    "delete": "حذف الإدخال",
+    "onLabel": "تشغيل",
+    "noScheduleAlwaysOn": "لم يتم تعيين جدول — الجهاز دائمًا قيد التشغيل",
+    "saved": "تم حفظ الجدول وإرساله إلى الجهاز",
+    "savedOffline": "تم حفظ الجدول. الجهاز غير متصل — سيتم إرسال المؤقتات عند إعادة الاتصال.",
+    "loadError": "خطأ في تحميل الجدول",
+    "saveError": "خطأ في حفظ الجدول"
   }
 }

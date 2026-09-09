@@ -24,6 +24,13 @@ end
 
 IO.puts("Loading runtime configuration for #{config_env()} environment")
 
+# Node mode selection (applies to every environment). Controls whether this
+# node runs the web endpoint, the BullMQ workers, or both. Valid values are
+# "web+worker" (default), "web" and "worker". See lib/castmill/application.ex.
+if node_mode = System.get_env("CASTMILL_NODE_MODE") do
+  config :castmill, :node_mode, node_mode
+end
+
 if config_env() == :prod do
   IO.puts("Loading production configuration...")
 
@@ -34,12 +41,31 @@ if config_env() == :prod do
       For example: ecto://USER:PASS@HOST/DATABASE
       """
 
-  # Configures the mailer. For now we use Mailgun, maybe we can include others in the future
-  config :castmill, Castmill.Mailer,
-    adapter: Swoosh.Adapters.Mailgun,
-    api_key: CastmillWeb.Secrets.get_mailgun_api_key(),
-    domain: System.get_env("MAILGUN_DOMAIN"),
-    base_url: System.get_env("MAILGUN_BASE_URL")
+  # Configures the mailer — choose between generic SMTP or Mailgun based on env vars.
+  # If SMTP_HOST is set, generic SMTP is used; otherwise Mailgun is configured.
+  if smtp_host = System.get_env("SMTP_HOST") do
+    smtp_port =
+      case Integer.parse(System.get_env("SMTP_PORT") || "587") do
+        {port, ""} -> port
+        _ -> raise "SMTP_PORT must be a valid integer, e.g. 587 or 465"
+      end
+
+    config :castmill, Castmill.Mailer,
+      adapter: Swoosh.Adapters.SMTP,
+      relay: smtp_host,
+      port: smtp_port,
+      username: System.get_env("SMTP_USERNAME"),
+      password: System.get_env("SMTP_PASSWORD"),
+      ssl: System.get_env("SMTP_SSL") == "true",
+      tls: :if_available,
+      auth: :if_available
+  else
+    config :castmill, Castmill.Mailer,
+      adapter: Swoosh.Adapters.Mailgun,
+      api_key: CastmillWeb.Secrets.get_mailgun_api_key(),
+      domain: System.get_env("MAILGUN_DOMAIN"),
+      base_url: System.get_env("MAILGUN_BASE_URL")
+  end
 
   # Choose S3 or Local as file upload destination
   # config :castmill, :file_storage, :s3
@@ -90,4 +116,69 @@ if config_env() == :prod do
       port: port
     ],
     secret_key_base: secret_key_base
+
+  # Configure encryption for sensitive data (OAuth credentials, API keys, etc.)
+  # ENCRYPTION_MASTER_KEY is required in production.
+  # For key rotation, add ENCRYPTION_MASTER_KEY_V2, V3, etc. and set ENCRYPTION_CURRENT_VERSION
+  encryption_keys =
+    1..10
+    |> Enum.reduce(%{}, fn version, acc ->
+      env_var =
+        if version == 1,
+          do: "ENCRYPTION_MASTER_KEY",
+          else: "ENCRYPTION_MASTER_KEY_V#{version}"
+
+      case CastmillWeb.Secrets.get_encryption_key(env_var) do
+        {:ok, key} -> Map.put(acc, version, key)
+        :not_set -> acc
+      end
+    end)
+
+  if map_size(encryption_keys) == 0 do
+    raise """
+    ENCRYPTION_MASTER_KEY environment variable is required in production.
+    Generate one with: openssl rand -base64 32
+    """
+  end
+
+  current_version =
+    case System.get_env("ENCRYPTION_CURRENT_VERSION") do
+      nil -> Enum.max(Map.keys(encryption_keys))
+      v -> String.to_integer(v)
+    end
+
+  config :castmill, :encryption, %{
+    keys: encryption_keys,
+    current_version: current_version
+  }
+
+  # Configure PostgreSQL backend for BullMQ in production.
+  # Use a dedicated database via BULLMQ_DATABASE_URL when available.
+  bullmq_database_url = CastmillWeb.Secrets.get_bullmq_database_url() || database_url
+
+  # SSL for the BullMQ connection. Required when the database enforces SSL
+  # (e.g. AWS RDS with rds.force_ssl=1). Disabled by default for backward
+  # compatibility. Set BULLMQ_DB_SSL=true to enable; BULLMQ_DB_SSL_VERIFY controls
+  # peer verification ("verify_none" — the default — or "verify_peer").
+  bullmq_db_ssl =
+    if System.get_env("BULLMQ_DB_SSL", "false") in ["true", "1", "TRUE"] do
+      case String.downcase(System.get_env("BULLMQ_DB_SSL_VERIFY") || "verify_none") do
+        "verify_none" -> [verify: :verify_none]
+        "verify_peer" -> true
+        value -> raise "invalid BULLMQ_DB_SSL_VERIFY value: #{inspect(value)}"
+      end
+    else
+      false
+    end
+
+  config :castmill, :bullmq_postgres,
+    url: bullmq_database_url,
+    ssl: bullmq_db_ssl,
+    schema: System.get_env("BULLMQ_DB_SCHEMA") || "bullmq",
+    pool_size: String.to_integer(System.get_env("BULLMQ_DB_POOL_SIZE") || "10")
+
+  # Mailer "from" address — override via MAILER_FROM env var
+  if mailer_from = System.get_env("MAILER_FROM") do
+    config :castmill, :mailer_from, {"Castmill", mailer_from}
+  end
 end

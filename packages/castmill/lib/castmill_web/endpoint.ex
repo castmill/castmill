@@ -7,11 +7,17 @@ defmodule CastmillWeb.Endpoint do
   # The session will be stored in the cookie and signed,
   # this means its contents can be read but not tampered with.
   # Set :encryption_salt if you would also like to encrypt it.
+  #
+  # SameSite=None with Secure is required in production so that cross-origin
+  # requests from custom domains (e.g. signage.acmecorp.com → api.castmill.dev)
+  # include the session cookie. In development and test we fall back to
+  # SameSite=Lax over plain HTTP to avoid browsers dropping the cookie.
   @session_options [
     store: :cookie,
     key: "_castmill_key",
     signing_salt: "bqbGIetq",
-    same_site: "Lax"
+    same_site: Application.compile_env(:castmill, :session_same_site, "Lax"),
+    secure: Application.compile_env(:castmill, :session_secure, false)
   ]
 
   socket("/live", Phoenix.LiveView.Socket,
@@ -68,8 +74,11 @@ defmodule CastmillWeb.Endpoint do
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.
   if code_reloading? do
-    socket("/phoenix/live_reload/socket", Phoenix.LiveReloader.Socket)
-    plug(Phoenix.LiveReloader)
+    if Code.ensure_loaded?(Phoenix.LiveReloader) do
+      socket("/phoenix/live_reload/socket", Phoenix.LiveReloader.Socket)
+      plug(Phoenix.LiveReloader)
+    end
+
     plug(Phoenix.CodeReloader)
     plug(Phoenix.Ecto.CheckRepoStatus, otp_app: :castmill)
   end
@@ -83,14 +92,23 @@ defmodule CastmillWeb.Endpoint do
   plug(Plug.Telemetry, event_prefix: [:phoenix, :endpoint])
 
   plug(Plug.Parsers,
-    parsers: [:urlencoded, :multipart, :json],
+    parsers: [:urlencoded, :json],
     pass: ["*/*"],
+    # Cache the raw body for webhook signature verification (e.g., Stripe)
+    body_reader: {CastmillWeb.Plugs.CacheBodyReader, :read_body, []},
+    # Default limit for JSON and urlencoded bodies
+    # Multipart parsing is handled in router pipelines for better control
+    length: 8_000_000,
     json_decoder: Phoenix.json_library()
   )
 
   plug(Plug.MethodOverride)
   plug(Plug.Head)
   plug(Plug.Session, @session_options)
+
+  # Serve static files from external addon packages
+  plug(CastmillWeb.Plugs.AddonStatic)
+
   plug(CastmillWeb.Router)
 
   # The endpoints used exclusively by the player apps
@@ -103,7 +121,12 @@ defmodule CastmillWeb.Endpoint do
     if Enum.member?(@player_endpoints, conn.request_path) do
       ["*"]
     else
+      # Domains are stored without protocol, but CORS needs full origins.
+      # Return both http:// and https:// variants for each domain.
       Castmill.Networks.list_network_domains()
+      |> Enum.flat_map(fn domain ->
+        ["http://" <> domain, "https://" <> domain]
+      end)
     end
   end
 end

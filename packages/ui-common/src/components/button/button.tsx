@@ -1,74 +1,109 @@
-import { Component, mergeProps, Show } from 'solid-js';
+import { Component, mergeProps, Show, splitProps, JSX } from 'solid-js';
 import { IconTypes } from 'solid-icons';
 import { IconWrapper } from '../icon-wrapper';
+import { VsLoading } from 'solid-icons/vs';
 
 import styles from './button.module.scss';
 
-export const Button: Component<{
+export type ButtonProps = JSX.ButtonHTMLAttributes<HTMLButtonElement> & {
   onClick?: () => void;
   disabled?: boolean;
+  loading?: boolean;
   icon?: IconTypes; // This can be any SVG component from solid-icons or other libraries
   iconProps?: Record<string, any>;
   type?: 'button' | 'submit' | 'reset';
-  label?: string;
-  color?: 'primary' | 'secondary' | 'danger' | 'success' | 'info';
+  label?: string | (() => string);
+  color?: 'primary' | 'secondary' | 'danger' | 'success' | 'info' | 'warning';
   title?: string;
-}> = (props) => {
-  const defaultProps = mergeProps(
+};
+
+export const Button: Component<ButtonProps> = (props) => {
+  const mergedProps = mergeProps(
     {
       type: 'button',
       disabled: false,
+      loading: false,
       color: 'primary', // Default color
       title: undefined as string | undefined,
     },
     props
   );
 
+  const [local, others] = splitProps(mergedProps, [
+    'onClick',
+    'disabled',
+    'loading',
+    'icon',
+    'iconProps',
+    'type',
+    'label',
+    'color',
+    'title',
+    'class',
+    'classList',
+  ]);
+
   let buttonElement: HTMLButtonElement | null = null;
 
   const handleClick = () => {
-    if (!buttonElement || defaultProps.disabled) return;
+    if (!buttonElement || local.disabled || local.loading) return;
 
     // Add the "pressed" class to the current button
-    buttonElement.classList.add(styles[`button-${defaultProps.color}-active`]);
+    buttonElement.classList.add(styles[`button-${local.color}-active`]);
 
     // Remove the "pressed" class after a short delay
     setTimeout(() => {
-      buttonElement?.classList.remove(
-        styles[`button-${defaultProps.color}-active`]
-      );
+      buttonElement?.classList.remove(styles[`button-${local.color}-active`]);
     }, 200); // Adjust the delay as needed
 
-    if (defaultProps.onClick) {
-      defaultProps.onClick();
+    if (local.onClick) {
+      local.onClick();
     }
   };
 
   const getClassNames = () => {
     return [
       styles.button,
-      styles[`button-${defaultProps.color}`],
-      defaultProps.disabled ? styles['button-disabled'] : '',
+      styles[`button-${local.color}`],
+      local.disabled || local.loading ? styles['button-disabled'] : '',
+      local.loading ? styles['button-loading'] : '',
+      local.class || '',
     ].join(' ');
   };
 
-  const ariaLabel = () => defaultProps.label || defaultProps.title;
+  const getLabel = () =>
+    typeof local.label === 'function' ? local.label() : local.label;
+
+  const ariaLabel = () => getLabel() || local.title;
 
   return (
     <button
       ref={(el) => (buttonElement = el)} // Attach ref to the button
-      type={defaultProps.type as 'button' | 'submit' | 'reset'}
+      type={local.type as 'button' | 'submit' | 'reset'}
       class={getClassNames()}
       onClick={handleClick}
-      disabled={defaultProps.disabled}
-      title={defaultProps.title}
+      disabled={local.disabled || local.loading}
+      title={local.title}
       aria-label={ariaLabel()}
+      classList={local.classList}
+      {...others}
     >
-      <Show when={defaultProps.icon}>
-        <IconWrapper icon={defaultProps.icon!} />
+      <Show
+        when={local.loading}
+        fallback={
+          <>
+            <Show when={local.icon}>
+              <IconWrapper icon={local.icon!} />
+            </Show>
+            {getLabel() ? <span>{getLabel()}</span> : null}
+          </>
+        }
+      >
+        <span class={styles.spinner}>
+          <VsLoading />
+        </span>
+        {getLabel() ? <span>{getLabel()}</span> : null}
       </Show>
-
-      {defaultProps.label ? <span>{defaultProps.label}</span> : null}
     </button>
   );
 };

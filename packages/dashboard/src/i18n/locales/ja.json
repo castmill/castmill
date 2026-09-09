@@ -1,8 +1,11 @@
 {
   "common": {
     "save": "保存",
+    "saving": "保存中...",
     "cancel": "キャンセル",
     "delete": "削除",
+    "deleting": "削除中...",
+    "blocking": "ブロック中...",
     "edit": "編集",
     "rename": "名前を変更",
     "add": "追加",
@@ -11,6 +14,7 @@
     "confirm": "確認",
     "back": "戻る",
     "next": "次へ",
+    "previous": "前へ",
     "search": "検索...",
     "loading": "読み込み中...",
     "error": "エラー",
@@ -25,6 +29,9 @@
     "signup": "新規登録",
     "language": "言語",
     "create": "作成",
+    "creating": "作成中...",
+    "sending": "送信中...",
+    "clear": "クリア",
     "view": "表示",
     "status": "ステータス",
     "created": "作成日時",
@@ -42,6 +49,9 @@
     "requestedPath": "リクエストされたパス",
     "goToDashboard": "ダッシュボードに移動",
     "copyright": "© 2011-2025 Castmill™",
+    "privacy": "プライバシー",
+    "terms": "利用規約",
+    "contact": "お問い合わせ",
     "invitedEmail": "招待メールアドレス：",
     "acceptInvitation": "招待を承諾",
     "loadingInvitation": "招待を読み込み中...",
@@ -60,8 +70,12 @@
     "ip": "IPアドレス",
     "description": "説明",
     "online": "オンライン",
+    "offline": "オフライン",
     "update": "更新",
     "reset": "リセット",
+    "apply": "適用",
+    "change": "変更",
+    "openInNewTab": "新しいタブで開く",
     "addedOn": "追加日",
     "lastUpdatedOn": "最終更新日",
     "details": "詳細",
@@ -71,6 +85,7 @@
     "maintainance": "メンテナンス",
     "events": "イベント",
     "telemetry": "テレメトリ",
+    "timers": "タイマー",
     "youIndicator": "(あなた)",
     "addonLoadingError": "アドオン読み込みエラー",
     "filters": {
@@ -82,14 +97,24 @@
     "backToLogin": "ログインに戻る",
     "selectImage": "画像を選択",
     "selectMedia": "メディアを選択",
-    "apply": "適用",
+    "selectPlaylist": "プレイリストを選択",
+    "searchLocation": "場所を検索...",
+    "coordinates": "座標",
+    "address": "住所",
+    "noAddressAvailable": "利用可能な住所がありません",
+    "noConfigurationAvailable": "利用可能な設定がありません",
+    "playlist": "プレイリスト",
+    "addPlaylist": "プレイリストを追加",
     "selectVideo": "ビデオを選択",
-    "offline": "オフライン",
+    "widget": "Widget",
+    "selectionHint": "チェックボックスを使用してアイテムを選択し、一括操作を実行します",
+    "selectionCount": "{count} 件選択中",
     "no": "いいえ"
   },
   "topbar": {
     "help": "ヘルプ",
-    "notifications": "通知"
+    "notifications": "通知",
+    "gettingStarted": "はじめに"
   },
   "settings": {
     "title": "設定",
@@ -114,6 +139,14 @@
     "failedLoadCredentials": "認証情報の読み込みに失敗しました。ページを更新してください。",
     "languageSettings": "言語設定",
     "selectLanguage": "お好みの言語を選択してください",
+    "onboardingTour": "オンボーディングツアー",
+    "onboardingTourDescription": "ツアーをリセットして、もう一度手順を進められるようにします。",
+    "onboardingTourResetButton": "ツアーをリセット",
+    "onboardingTourResetConfirmTitle": "オンボーディングツアーをリセットしますか？",
+    "onboardingTourResetConfirmDescription": "これにより進捗が消去され、ツアーが再表示されます。",
+    "onboardingTourResetAction": "ツアーをリセット",
+    "onboardingTourResetSuccess": "オンボーディングツアーをリセットしました。今すぐ再開できます。",
+    "onboardingTourResetError": "オンボーディングツアーのリセットに失敗しました。もう一度お試しください。",
     "description": "アカウント情報と設定を管理",
     "confirmDeletePasskey": "このパスキーを削除してもよろしいですか？\n\n注：アカウントからパスキーが削除されますが、デバイスの設定（iCloudキーチェーン、Googleパスワードマネージャー、Windows Helloなど）から手動で削除する必要がある場合があります。\n\nこのパスキーを削除する前に、他のパスキーが機能することをテストしてください。",
     "fullName": "フルネーム",
@@ -164,6 +197,166 @@
     "deleteAccountPasskeyInfo": "削除後、古いパスキーでログインしようとすると失敗します。混乱を避けるため、デバイスの設定からこのアカウントのパスキーを手動で削除してください。",
     "deleteAccountPasskeyInfoWithSignalAPI": "削除後、パスキーは自動的にデバイスから削除されます。後でログインする場合は、新しいアカウントを作成する必要があります。"
   },
+  "network": {
+    "title": "ネットワーク設定",
+    "adminBadge": "ネットワーク管理者",
+    "saveSuccess": "ネットワーク設定が保存されました",
+    "saveError": "ネットワーク設定の保存に失敗しました",
+    "errorHint": "問題が続く場合は、もう一度お試しいただくか、サポートにお問い合わせください。",
+    "accessDenied": "アクセス拒否",
+    "accessDeniedMessage": "ネットワーク設定を表示する権限がありません。ネットワーク管理者のみがこのページにアクセスできます。",
+    "tabs": {
+      "settings": "設定",
+      "organizations": "組織",
+      "users": "ユーザー",
+      "invitations": "招待"
+    },
+    "stats": {
+      "organizations": "組織",
+      "users": "ユーザー",
+      "devices": "デバイス",
+      "teams": "チーム",
+      "storage": "合計ストレージ"
+    },
+    "overview": {
+      "networkInfo": "ネットワーク情報"
+    },
+    "identity": {
+      "title": "ネットワークアイデンティティ",
+      "description": "ネットワークのブランドとアイデンティティを設定します。",
+      "name": "ネットワーク名",
+      "namePlaceholder": "ネットワーク名を入力",
+      "nameHelp": "ダッシュボードのヘッダーに表示されるネットワーク名です。",
+      "email": "サポートメール",
+      "emailPlaceholder": "support@example.com",
+      "emailHelp": "このメールはサポート問い合わせ時にユーザーに表示されます。",
+      "logo": "ロゴ URL",
+      "logoPlaceholder": "https://example.com/logo.png",
+      "logoHelp": "ネットワークロゴ画像の URL。",
+      "copyright": "著作権テキスト",
+      "copyrightPlaceholder": "© 2025 御社",
+      "copyrightHelp": "ダッシュボードのフッターに表示される著作権表示です。",
+      "privacyPolicyUrl": "プライバシーポリシー URL",
+      "privacyPolicyUrlPlaceholder": "https://example.com/privacy",
+      "privacyPolicyUrlHelp": "ログインおよびサインアップページに表示されるプライバシーポリシーへのリンクです。",
+      "defaultLanguage": "デフォルト言語",
+      "defaultLanguageHelp": "新規ユーザーおよびログイン/サインアップページのデフォルト言語です。"
+    },
+    "socialLinks": {
+      "title": "ソーシャルリンク",
+      "description": "フッターに表示されるソーシャルメディアリンクを設定します。",
+      "github": "GitHub URL",
+      "githubPlaceholder": "https://github.com/yourcompany",
+      "twitter": "X (Twitter) URL",
+      "twitterPlaceholder": "https://x.com/yourcompany",
+      "linkedin": "LinkedIn URL",
+      "linkedinPlaceholder": "https://linkedin.com/company/yourcompany",
+      "facebook": "Facebook URL",
+      "facebookPlaceholder": "https://facebook.com/yourcompany"
+    },
+    "domain": {
+      "title": "ドメイン設定",
+      "description": "ドメインはネットワークの識別に使用されます。ユーザーはこのドメインを通じてダッシュボードにアクセスします。",
+      "label": "ネットワークドメイン",
+      "note": "ドメインを変更するにはサポートにお問い合わせください。"
+    },
+    "access": {
+      "title": "アクセス制御",
+      "description": "ユーザーがネットワークに参加し、組織を作成する方法を制御します。",
+      "invitationOnly": "招待制",
+      "invitationOnlyDescription": "有効にすると、新しいユーザーは招待によってのみネットワークに参加できます。公開登録は無効になります。",
+      "invitationOnlyOrgAdmins": "組織作成を制限",
+      "invitationOnlyOrgAdminsDescription": "有効にすると、ネットワーク管理者のみが新しい組織を作成できます。通常のユーザーは独自の組織を作成できません。"
+    },
+    "validation": {
+      "emailRequired": "サポートメールアドレスは必須です",
+      "emailInvalid": "有効なメールアドレスを入力してください"
+    },
+    "organizations": {
+      "createTitle": "組織を作成",
+      "createDescription": "このネットワーク内に新しい組織を作成します。",
+      "name": "組織名",
+      "namePlaceholder": "組織名を入力",
+      "nameRequired": "組織名は必須です",
+      "listTitle": "すべての組織",
+      "noOrganizations": "このネットワークにはまだ組織がありません",
+      "noSearchResults": "検索に一致する組織が見つかりません。",
+      "searchPlaceholder": "組織を検索...",
+      "createSuccess": "組織が正常に作成されました",
+      "createError": "組織の作成に失敗しました",
+      "loadError": "組織の読み込みに失敗しました",
+      "deleteTitle": "組織を削除",
+      "deleteConfirmation": "「{{name}}」を削除してもよろしいですか？この操作は取り消せず、この組織に関連するすべてのデータが削除されます。",
+      "deleteSuccess": "組織が正常に削除されました",
+      "deleteError": "組織の削除に失敗しました",
+      "showingOf": "{{total}}件中{{showing}}件の組織を表示",
+      "block": "ブロック",
+      "unblock": "ブロック解除",
+      "blockTitle": "組織をブロック",
+      "blockConfirmation": "\"{{name}}\" をブロックしてもよろしいですか？この組織のすべてのユーザーはログインできなくなります。",
+      "blockSuccess": "組織を正常にブロックしました",
+      "blockError": "組織のブロックに失敗しました",
+      "unblockTitle": "組織のブロックを解除",
+      "unblockConfirmation": "\"{{name}}\" のブロックを解除してもよろしいですか？ユーザーは再度ログインできるようになります。",
+      "unblockSuccess": "組織のブロックを正常に解除しました",
+      "unblockError": "組織のブロック解除に失敗しました"
+    },
+    "users": {
+      "listTitle": "すべてのユーザー",
+      "name": "名前",
+      "email": "メールアドレス",
+      "noUsers": "このネットワークにはまだユーザーがいません",
+      "searchPlaceholder": "名前またはメールで検索...",
+      "inviteTitle": "ユーザーを招待",
+      "inviteDescription": "このネットワーク内の組織にユーザーを招待します。",
+      "inviteButton": "ユーザーを招待",
+      "inviteModalTitle": "組織にユーザーを招待",
+      "selectOrganization": "組織",
+      "selectOrganizationPlaceholder": "組織を選択...",
+      "inviteEmailLabel": "メールアドレス",
+      "inviteEmailPlaceholder": "user@example.com",
+      "roleLabel": "役割",
+      "roleAdmin": "管理者",
+      "roleMember": "メンバー",
+      "sendInvite": "招待を送信",
+      "inviteSuccess": "招待が正常に送信されました",
+      "inviteError": "招待の送信に失敗しました",
+      "inviteEmailRequired": "メールアドレスを入力してください",
+      "inviteEmailInvalid": "有効なメールアドレスを入力してください",
+      "block": "ブロック",
+      "unblock": "ブロック解除",
+      "blockTitle": "ユーザーをブロック",
+      "blockConfirmation": "\"{{name}}\" をブロックしてもよろしいですか？このユーザーはログインできなくなります。",
+      "blockSuccess": "ユーザーを正常にブロックしました",
+      "blockError": "ユーザーのブロックに失敗しました",
+      "unblockTitle": "ユーザーのブロックを解除",
+      "unblockConfirmation": "\"{{name}}\" のブロックを解除してもよろしいですか？このユーザーは再度ログインできるようになります。",
+      "unblockSuccess": "ユーザーのブロックを正常に解除しました",
+      "unblockError": "ユーザーのブロック解除に失敗しました",
+      "deleteTitle": "ユーザーを削除",
+      "deleteConfirmation": "\"{{name}}\" を削除してもよろしいですか？この操作は元に戻せません。",
+      "deleteSuccess": "ユーザーを正常に削除しました",
+      "deleteError": "ユーザーの削除に失敗しました"
+    },
+    "invitations": {
+      "title": "ネットワーク招待",
+      "description": "このネットワークの新しい組織への保留中の招待を表示および管理します。",
+      "noInvitations": "保留中の招待はありません。",
+      "organizationName": "組織名",
+      "expires": "有効期限",
+      "loadError": "招待の読み込みに失敗しました",
+      "deleteTitle": "招待を削除",
+      "deleteConfirmation": "\"{{email}}\" への招待を削除してもよろしいですか？",
+      "deleteSuccess": "招待が正常に削除されました",
+      "deleteError": "招待の削除に失敗しました"
+    },
+    "status": {
+      "active": "アクティブ",
+      "blocked": "ブロック中"
+    },
+    "blockReason": "理由（任意）",
+    "blockReasonPlaceholder": "ブロックの理由を入力..."
+  },
   "usage": {
     "title": "使用量",
     "resourceUsage": "リソース使用状況",
@@ -177,6 +370,17 @@
     "approachingLimit": "制限に近づいています",
     "noUsageData": "利用可能な使用量データがありません",
     "unableToLoad": "リソース使用量情報を読み込めません",
+    "resources": {
+      "medias": "メディアファイル",
+      "storage": "ストレージ",
+      "users": "ユーザー",
+      "devices": "デバイス",
+      "playlists": "プレイリスト",
+      "channels": "チャンネル",
+      "teams": "チーム",
+      "widgets": "ウィジェット",
+      "layouts": "レイアウト"
+    },
     "errors": {
       "fetchUsageData": "使用量データの取得に失敗しました：{{error}}"
     }
@@ -275,9 +479,76 @@
     },
     "memberSelection": {
       "selectUser": "ユーザーを選択",
-      "searchUser": "ユーザーを検索..."
+      "searchUser": "ユーザーを検索...",
+      "noUsersAvailable": "招待できるユーザーがいません。",
+      "inviteToOrgFirst": "ユーザーをチームに追加する前に、まず組織に招待する必要があります。"
     },
     "teamsRemovedSuccessfully": "チームが正常に削除されました"
+  },
+  "tags": {
+    "title": "タグ",
+    "addTag": "タグを追加",
+    "createTag": "タグを作成",
+    "editTag": "タグを編集",
+    "deleteTag": "タグを削除",
+    "newTag": "新しいタグ",
+    "tagName": "タグ名",
+    "tagColor": "タグの色",
+    "tagGroup": "タググループ",
+    "assignedTags": "割り当て済みタグ",
+    "availableTags": "利用可能なタグ",
+    "noTags": "タグなし",
+    "noTagsAvailable": "利用可能なタグがありません",
+    "noMatchingTags": "一致するタグがありません",
+    "allTagsAssigned": "すべてのタグが割り当て済み",
+    "addToResource": "タグを追加",
+    "removeFromResource": "タグを削除",
+    "filterByTags": "タグでフィルター...",
+    "clearAll": "すべてクリア",
+    "manageTags": "タグを管理",
+    "colorPicker": "色を選択",
+    "searchTags": "タグを検索...",
+    "filterMode": {
+      "any": "いずれか",
+      "all": "すべて",
+      "description": "選択したタグのいずれかまたはすべてに一致するリソースを検索"
+    },
+    "confirmDelete": "タグ「{{name}}」を削除してもよろしいですか？",
+    "confirmDeleteMultiple": "以下のタグを削除してもよろしいですか？",
+    "confirmDeleteGroup": "タググループ\"{{name}}\"を削除してもよろしいですか？このグループ内のすべてのタグも完全に削除されます。",
+    "maxTagsReached": "最大{{max}}タグに達しました",
+    "groups": {
+      "title": "タググループ",
+      "addGroup": "グループを追加",
+      "newGroup": "新しいグループ",
+      "editGroup": "グループを編集",
+      "deleteGroup": "グループを削除",
+      "noGroups": "タググループなし",
+      "ungrouped": "グループなし",
+      "untagged": "タグなし"
+    },
+    "messages": {
+      "tagCreated": "タグ「{{name}}」を正常に作成しました",
+      "tagUpdated": "タグ「{{name}}」を正常に更新しました",
+      "tagDeleted": "タグ「{{name}}」を正常に削除しました",
+      "tagAddedToResource": "タグを正常に追加しました",
+      "tagRemovedFromResource": "タグを正常に削除しました",
+      "tagsUpdated": "タグを正常に更新しました",
+      "groupCreated": "タググループ「{{name}}」を正常に作成しました",
+      "groupUpdated": "タググループ「{{name}}」を正常に更新しました",
+      "groupDeleted": "タググループ「{{name}}」を正常に削除しました"
+    },
+    "errors": {
+      "createTag": "タグの作成中にエラーが発生しました：{{error}}",
+      "updateTag": "タグの更新中にエラーが発生しました：{{error}}",
+      "deleteTag": "タグの削除中にエラーが発生しました：{{error}}",
+      "tagResource": "リソースへのタグ追加中にエラーが発生しました：{{error}}",
+      "untagResource": "リソースからのタグ削除中にエラーが発生しました：{{error}}",
+      "createGroup": "タググループの作成中にエラーが発生しました：{{error}}",
+      "updateGroup": "タググループの更新中にエラーが発生しました：{{error}}",
+      "deleteGroup": "タググループの削除中にエラーが発生しました：{{error}}",
+      "loadFailed": "タグの読み込みに失敗しました"
+    }
   },
   "login": {
     "title": "ログイン",
@@ -289,12 +560,39 @@
     "loading": "読み込み中...",
     "loginWithPasskey": "パスキーでログイン",
     "privacyPolicy": "プライバシーポリシー",
-    "lostCredentials": "認証情報をお忘れですか？"
+    "privacyNotice": "お客様のプライバシーを大切にしています。",
+    "lostCredentials": "認証情報をお忘れですか？",
+    "invitationOnlyNotice": "アカウントをお持ちでないですか？このサービスは登録に招待が必要です。",
+    "passkeysNotSupported": "お使いのブラウザはパスキーに対応していません。ログインするには最新のブラウザをご利用ください。",
+    "errors": {
+      "authenticationFailed": "認証に失敗しました。もう一度お試しください。",
+      "userBlocked": "あなたのアカウントはブロックされています。理由: {{reason}}",
+      "organizationBlocked": "あなたの組織はブロックされています。理由: {{reason}}",
+      "signupFailed": "サインアップを開始できませんでした。後でもう一度お試しください。"
+    }
   },
   "credentialRecovery": {
     "title": "認証情報の回復",
     "checkYourEmail": "メールを確認してください",
     "addNewPasskey": "新しいパスキーを追加"
+  },
+  "setupPasskey": {
+    "title": "パスキーの設定",
+    "subtitle": "{{domain}}に直接ログインできるようパスキーを作成します。",
+    "instructions": "ようこそ、{{email}}さん！下のボタンをクリックして、このドメインのパスキーを作成してください。",
+    "createButton": "パスキーを作成",
+    "passkeysNotSupported": "お使いのブラウザはパスキーに対応していません。",
+    "invalidLink": "無効な設定リンクです。",
+    "expiredLink": "このリンクは期限切れです。新しいリンクをリクエストしてください。",
+    "verificationFailed": "リンクの確認に失敗しました。",
+    "verifying": "リンクを確認中...",
+    "creatingPasskey": "パスキーを作成中...",
+    "challengeFailed": "パスキーの作成を開始できませんでした。",
+    "creationCancelled": "パスキーの作成がキャンセルされました。",
+    "noPublicKey": "公開鍵を取得できませんでした。",
+    "registrationFailed": "パスキーの登録に失敗しました。",
+    "success": "パスキーが作成されました！ログイン中...",
+    "unexpectedError": "エラーが発生しました。もう一度お試しください。"
   },
   "errors": {
     "generic": "エラーが発生しました。もう一度お試しください。",
@@ -306,7 +604,8 @@
     "checkServerRunning": "Castmill サーバーが実行されていることを確認してください",
     "checkNetworkConnection": "ネットワーク接続を確認してください",
     "checkServerUrl": "設定でサーバー URL を確認してください",
-    "retryConnection": "接続を再試行"
+    "retryConnection": "接続を再試行",
+    "authenticationError": "認証エラー: {{message}}"
   },
   "sidebar": {
     "organization": "組織",
@@ -316,9 +615,16 @@
     "devices": "デバイス",
     "content": "コンテンツ",
     "playlists": "プレイリスト",
+    "layouts": "レイアウト",
     "medias": "メディア",
     "widgets": "Widgets",
-    "members": "メンバー"
+    "members": "メンバー",
+    "network": "ネットワーク",
+    "networkOverview": "概要",
+    "networkSettings": "設定",
+    "networkOrganizations": "組織",
+    "networkUsers": "ユーザーと招待",
+    "tags": "タグ"
   },
   "channels": {
     "title": "チャンネル",
@@ -332,6 +638,7 @@
     "confirmRemoveChannels": "以下のチャンネルを削除してもよろしいですか？",
     "enterChannelName": "チャンネル名を入力してください",
     "defaultPlaylist": "デフォルトプレイリスト",
+    "currentPlaylist": "現在のプレイリスト",
     "selectPlaylist": "プレイリストを選択",
     "clearDefaultPlaylist": "デフォルトプレイリストをクリア",
     "dragPlaylists": "プレイリストをドラッグ",
@@ -340,8 +647,14 @@
     "removeChannelEntry": "チャンネルエントリーを削除",
     "cannotDeleteChannel": "チャンネルを削除できません",
     "success": {
+      "added": "チャンネル{{name}}を追加しました",
+      "created": "チャンネル{{name}}を作成しました",
+      "updated": "チャンネル{{name}}を更新しました",
       "updateDefaultPlaylist": "デフォルトプレイリストの更新に成功しました",
       "clearDefaultPlaylist": "デフォルトプレイリストのクリアに成功しました"
+    },
+    "info": {
+      "contentRequired": "コンテンツを表示するには、このチャンネルにデフォルトのプレイリストを設定するか、時間指定のエントリーを追加してください。"
     },
     "errors": {
       "removeChannel": "チャンネル{{name}}の削除中にエラーが発生しました：{{error}}",
@@ -438,7 +751,9 @@
     "buildPlaylist": "ここでプレイリストを作成してください",
     "renamePlaylist": "プレイリストの名前を変更",
     "playlistUpdated": "プレイリスト「{{name}}」が正常に更新されました",
+    "playlistCreated": "プレイリスト「{{name}}」が正常に作成されました",
     "errorUpdating": "プレイリスト{{name}}の更新中にエラーが発生しました：{{error}}",
+    "errorCreating": "プレイリストの作成中にエラーが発生しました：{{error}}",
     "removePlaylist": "プレイリストを削除",
     "removePlaylists": "プレイリストを削除",
     "confirmRemovePlaylist": "プレイリスト「{{name}}」を削除してもよろしいですか？",
@@ -447,6 +762,9 @@
     "errorRemovingPlaylists": "プレイリストの削除中にエラーが発生しました：{{error}}",
     "enterPlaylistName": "プレイリスト名を入力してください",
     "dragToAdd": "ドラッグして追加",
+    "searchWidgets": "ウィジェットを検索...",
+    "dropHereToAddAtEnd": "末尾に追加するにはここにドロップ",
+    "duration": "再生時間",
     "aspectRatio": "アスペクト比",
     "aspectRatioWidth": "幅",
     "aspectRatioHeight": "高さ",
@@ -472,27 +790,172 @@
       "aspectRatioMax": "値は100以下である必要があります",
       "aspectRatioExtreme": "アスペクト比が極端すぎます（最大比率は10:1）",
       "updateAspectRatio": "アスペクト比の更新中にエラーが発生しました：{{error}}"
-    }
+    },
+    "credentialsRequired": "認証情報が必要です",
+    "credentialsRequiredDescription": "Widget「{{widget}}」をプレイリストに追加する前に、認証情報を設定する必要があります。",
+    "missingIntegrations": "不足している統合",
+    "goToIntegrations": "統合に移動",
+    "widgetModalTitle": "ウィジェット \"{{name}}\"",
+    "configureYourWidget": "ウィジェットを設定してください"
+  },
+  "layouts": {
+    "title": "レイアウト",
+    "addLayout": "レイアウトを追加",
+    "createNewLayout": "新しいレイアウトを作成",
+    "layoutTitle": "レイアウト「{{name}}」",
+    "layoutDetails": "レイアウトの詳細",
+    "deleteLayout": "レイアウトを削除",
+    "deleteLayouts": "レイアウトを削除",
+    "confirmDelete": "「{{name}}」を削除してもよろしいですか？",
+    "confirmDeleteMultiple": "{{count}}個のレイアウトを削除してもよろしいですか？",
+    "deleteSuccess": "レイアウト「{{name}}」が正常に削除されました",
+    "saveSuccess": "レイアウトが正常に保存されました",
+    "addSuccess": "レイアウトが正常に作成されました",
+    "enterLayoutName": "レイアウト名を入力",
+    "searchPlaceholder": "レイアウトを検索...",
+    "noLayouts": "レイアウトが見つかりません",
+    "aspectRatio": "アスペクト比",
+    "customAspectRatio": "カスタムアスペクト比",
+    "invalidAspectRatio": "無効な形式です。幅:高さの形式を使用してください（例：16:9）",
+    "extremeAspectRatio": "アスペクト比が極端すぎます",
+    "zones": "ゾーン",
+    "addZone": "ゾーンを追加",
+    "zoneProperties": "ゾーンのプロパティ",
+    "templates": "テンプレート",
+    "bringForward": "前面へ移動",
+    "sendBackward": "背面へ移動",
+    "selectLayout": "レイアウトを選択",
+    "searchLayouts": "レイアウトを検索...",
+    "assignPlaylists": "ゾーンにプレイリストを割り当て",
+    "zonesCount": "{{count}}個のゾーン"
   },
   "widgets": {
     "title": "Widgets",
     "uploadWidget": "Widgetをアップロード",
     "uploadDescription": "Widget JSON定義ファイルをアップロードします。",
+    "upload": {
+      "jsonDescription": "ウィジェット定義を含む JSON ファイルをアップロードします。",
+      "requiredFields": "必須フィールド",
+      "and": "と",
+      "exampleFormat": "サンプル形式",
+      "dragAndDropHint": "または JSON / ZIP ファイルをここにドラッグ＆ドロップしてください...",
+      "ready": "準備完了",
+      "invalidFileType": "無効なファイル形式です。JSON と ZIP ファイルのみサポートされています。",
+      "invalidWidgetJson": "無効なウィジェット JSON: \"name\" と \"template\" フィールドが必要です",
+      "validationFailed": "検証に失敗しました",
+      "uploadFailed": "アップロードに失敗しました",
+      "uploadedSuccessfully": "アップロードに成功しました",
+      "uploadError": "アップロードエラー"
+    },
     "widgetDetails": "Widgetの詳細",
     "updateInterval": "更新間隔",
     "viewDetails": "詳細を表示",
+    "delete": "削除",
+    "deleteConfirmTitle": "Widgetを削除",
+    "deleteConfirmMessage": "\"{{widget}}\"を削除してもよろしいですか？",
+    "deleteConfirmUsageWarning": "Widget \"{{widget}}\"は現在{{count}}個のプレイリストで使用されています。削除すると、これらのプレイリストからすべてのインスタンスが削除されます。",
+    "usedInPlaylists": "以下のプレイリストで使用中：",
+    "deleteCascadeNote": "この操作は元に戻せません。",
     "template": "テンプレート",
     "optionsSchema": "オプションスキーマ",
-    "dataSchema": "データスキーマ"
+    "dataSchema": "データスキーマ",
+    "noAssets": "このWidgetにはバンドルされたアセットがありません。",
+    "assets": {
+      "title": "アセット",
+      "icons": "アイコン",
+      "images": "画像",
+      "fonts": "フォント",
+      "styles": "スタイル"
+    },
+    "spotify": {
+      "title": "Spotify 接続",
+      "connectButton": "Spotify に接続",
+      "disconnectButton": "切断",
+      "connectDescription": "Spotify アカウントを接続して、デジタルサイネージに現在再生中のトラックを表示します。",
+      "connected": "接続済み",
+      "connectedSince": "{{date}} から接続",
+      "connectionSuccess": "Spotify への接続に成功しました！",
+      "connectionFailed": "Spotify への接続に失敗しました。もう一度お試しください。",
+      "disconnectNotSupported": "切断はまだサポートされていません。Spotify のアカウント設定からアクセスを取り消してください。"
+    },
+    "integrations": {
+      "title": "統合",
+      "noIntegrations": "このWidgetには設定された統合がありません。",
+      "configure": "設定",
+      "configured": "設定済み",
+      "notConfigured": "未設定",
+      "requiresAuth": "認証が必要",
+      "authType": "認証タイプ",
+      "oauth2": "OAuth 2.0",
+      "apiKey": "APIキー",
+      "credentials": "資格情報",
+      "saveCredentials": "資格情報を保存",
+      "testConnection": "接続テスト",
+      "testSuccess": "接続テスト成功！",
+      "testFailed": "接続テスト失敗：{{error}}",
+      "credentialsSaved": "資格情報が正常に保存されました！",
+      "credentialsSaveFailed": "資格情報の保存に失敗しました：{{error}}",
+      "credentialsConfigured": "API資格情報が設定されています",
+      "updateCredentials": "資格情報を更新",
+      "deleteCredentials": "資格情報を削除",
+      "connectWith": "{{provider}}で接続",
+      "connectedTo": "{{provider}}に接続済み",
+      "disconnect": "切断",
+      "confirmDisconnect": "{{provider}}から切断してもよろしいですか？この統合を使用するには再接続が必要です。",
+      "disconnected": "{{provider}}から切断しました",
+      "disconnectFailed": "切断に失敗しました：{{error}}",
+      "reconnect": "再接続",
+      "lastValidated": "最終検証：{{date}}",
+      "scopeOrganization": "組織全体",
+      "scopeWidget": "Widget固有",
+      "pullMode": "データ取得",
+      "pushMode": "Webhook",
+      "pullInterval": "{{seconds}}秒ごとに更新",
+      "fieldRequired": "{{field}}は必須です",
+      "connectionStatus": "接続状態",
+      "valid": "有効",
+      "invalid": "無効",
+      "pending": "設定待ち",
+      "enterClientCredentials": "以下に{{provider}} APIの資格情報を入力してください：",
+      "afterSavingCredentials": "資格情報を保存した後、下のボタンをクリックして{{provider}}で認証してください：",
+      "networkCredentialsConfigured": "ネットワーク管理者が{{provider}}の資格情報を既に設定しています。下のボタンをクリックするだけでアカウントを接続できます。",
+      "noConfigurationRequired": "設定不要",
+      "optional": "任意"
+    },
+    "translations": "翻訳"
   },
   "devices": {
     "setDeviceChannel": "デバイスチャンネルを設定",
     "selectChannel": "チャンネルを選択",
     "preview": {
-      "placeholder": "プレビュー"
+      "placeholder": "プレビュー",
+      "noChannels": "このデバイスにチャンネルが割り当てられていません",
+      "noScheduledContent": "現在スケジュールされたコンテンツがありません",
+      "errorLoadingPlaylist": "プレイリストコンテンツの読み込みに失敗しました",
+      "errorInitializing": "プレビューの初期化に失敗しました",
+      "currentlyPlaying": "現在チャンネルからスケジュール中",
+      "note": "これは、チャンネルスケジュールに基づいてデバイスが現在再生すべき内容を示しており、デバイスに実際に表示されている内容とは限りません。"
     },
     "telemetry": {
-      "placeholder": "トレース、ログ、メトリクス、および接続性(WiFi品質など)"
+      "placeholder": "トレース、ログ、メトリクス、および接続性(WiFi品質など)",
+      "storage": "ストレージ",
+      "memory": "メモリ",
+      "cpu": "CPU使用率",
+      "cpuLoad": "CPU負荷平均",
+      "network": "ネットワーク",
+      "connectionType": "接続タイプ",
+      "wifiSignal": "WiFi信号",
+      "temperature": "温度",
+      "fanSpeed": "ファン速度",
+      "battery": "バッテリー",
+      "charging": "充電中",
+      "uptime": "稼働時間",
+      "refresh": "テレメトリを更新",
+      "offlineWarning": "デバイスがオフラインです。テレメトリデータはデバイスが接続されている場合にのみ利用可能です。",
+      "noData": "このデバイスからのテレメトリデータはありません。",
+      "daysShort": "日",
+      "hoursShort": "時",
+      "minutesShort": "分"
     },
     "maintenance": {
       "refresh": "更新",
@@ -507,11 +970,57 @@
       "checkUpdatesDescription": "更新を確認してインストールします。これによりデバイスは再起動されません",
       "updateFirmware": "ファームウェアを更新",
       "updateFirmwareDescription": "デバイスのファームウェアを更新します",
-      "offlineMessage": "デバイスがオフラインのため、コマンドを送信できません"
+      "offlineMessage": "デバイスがオフラインのため、コマンドを送信できません",
+      "autorecoveryUpdated": "自動復旧が更新されました",
+      "autorecoveryUpdateFailed": "自動復旧の更新に失敗しました",
+      "edit": "編集",
+      "enableForOneHour": "1時間有効にする",
+      "enableForever": "無期限で有効にする",
+      "disable": "無効化",
+      "recoverLostSettingsLabel": "失われた設定を復元",
+      "disabled": "無効",
+      "enabledMinutesRemaining": "有効（残り {{minutes}} 分）",
+      "enabledForever": "無期限で有効"
+    },
+    "cache": {
+      "title": "デバイスキャッシュ",
+      "items": "キャッシュアイテム",
+      "dataTab": "データ",
+      "codeTab": "コード",
+      "mediaTab": "メディア",
+      "deleteSelected": "選択した項目を削除",
+      "clearAll": "すべてクリア",
+      "confirmDelete": "キャッシュエントリを削除",
+      "confirmDeleteMessage": "このキャッシュエントリを削除してもよろしいですか？URL: {{url}}",
+      "confirmDeleteMultiple": "複数のエントリを削除",
+      "confirmDeleteMultipleMessage": "{{count}}個のキャッシュエントリを削除してもよろしいですか？",
+      "confirmClearAll": "すべてのキャッシュをクリア",
+      "confirmClearAllMessage": "すべての{{type}}キャッシュエントリをクリアしてもよろしいですか？この操作は元に戻せません。",
+      "deleteSuccess": "キャッシュエントリが正常に削除されました",
+      "deleteMultipleSuccess": "{{count}}個のキャッシュエントリが正常に削除されました",
+      "clearAllSuccess": "すべてのキャッシュエントリが正常にクリアされました",
+      "deleteError": "キャッシュの削除中にエラーが発生しました: {{error}}",
+      "offlineWarning": "デバイスは現在オフラインです。デバイスがオンラインに戻るまで、キャッシュ情報を取得できません。"
+    },
+    "events": {
+      "title": "デバイスイベント",
+      "items": "イベント",
+      "filterError": "エラー",
+      "filterWarning": "警告",
+      "filterInfo": "情報",
+      "filterOnline": "オンライン",
+      "filterOffline": "オフライン",
+      "clearAll": "すべてのイベントをクリア",
+      "confirmClearAll": "すべてのイベントをクリア",
+      "confirmClearAllMessage": "このデバイスのすべてのイベントを削除してもよろしいですか？この操作は元に戻せません。",
+      "clearAllSuccess": "{{count}}件のイベントが正常に削除されました",
+      "deleteError": "イベントの削除中にエラーが発生しました: {{error}}"
     },
     "errors": {
       "setChannelFailed": "デバイスチャンネルの設定に失敗しました: {{error}}",
-      "commandFailed": "リクエストの処理中にエラーが発生しました"
+      "commandFailed": "リクエストの処理中にエラーが発生しました",
+      "invalidPincode": "無効なPINコードです。デバイスに表示されているPINコードを確認して、もう一度お試しください。",
+      "pincodeExpired": "このPINコードの有効期限が切れました。デバイスの登録プロセスを最初からやり直してください."
     },
     "assignedChannels": "割り当てられたチャンネル",
     "addChannel": "チャンネルを追加",
@@ -538,6 +1047,20 @@
     "errorRegisteringDevice": "デバイスの登録エラー: {{error}}",
     "errorRemovingDevice": "デバイス{{name}}の削除エラー: {{error}}",
     "errorRemovingDevices": "デバイスの削除エラー: {{error}}",
+    "enterDescription": "説明を入力してください",
+    "drawerTitle": "デバイス \"{{name}}\"",
+    "info": {
+      "title": "情報",
+      "platform": "プラットフォーム",
+      "playerVersion": "プレーヤーのバージョン",
+      "operatingSystem": "オペレーティングシステム",
+      "hardware": "ハードウェア",
+      "environmentVersion": "環境のバージョン",
+      "chromiumVersion": "Chromium のバージョン",
+      "v8Version": "V8 のバージョン",
+      "nodeVersion": "Node.js のバージョン",
+      "userAgent": "ユーザーエージェント"
+    },
     "remoteControl": {
       "title": "リモートコントロール",
       "status": "ステータス",
@@ -584,7 +1107,8 @@
   },
   "validation": {
     "fieldRequired": "この項目は必須です",
-    "minLength": "この項目は最低{{min}}文字以上である必要があります"
+    "minLength": "この項目は最低{{min}}文字以上である必要があります",
+    "invalidCoordinates": "この項目には有効な座標を入力してください"
   },
   "plurals": {
     "items": {
@@ -608,12 +1132,16 @@
     "title": "サインアップ",
     "continueWithPasskey": "パスキーで続行",
     "privacyPolicy": "プライバシーポリシー",
+    "privacyNotice": "お客様のプライバシーを大切にしています。",
     "checkYourEmail": "メールを確認してください",
     "errors": {
       "couldNotCreateCredential": "認証情報を作成できませんでした",
       "couldNotGetPublicKey": "公開鍵を取得できませんでした",
       "invalidCredential": "無効な認証情報です",
       "signupFailed": "サインアップ中に問題が発生しました。サポートにお問い合わせください。エラー：{{error}}"
+    },
+    "success": {
+      "accountCreated": "アカウントが正常に作成されました！"
     }
   },
   "search": {
@@ -729,12 +1257,21 @@
   "filters": {
     "teamLabel": "チーム",
     "teamPlaceholder": "チームを選択",
-    "teamClear": "チームフィルターをクリア"
+    "teamClear": "チームフィルターをクリア",
+    "tagLabel": "タグ",
+    "tagPlaceholder": "タグでフィルター…",
+    "tagClear": "タグフィルターをクリア",
+    "tagSearchPlaceholder": "タグを検索…",
+    "tagFilterModeAny": "いずれか",
+    "tagFilterModeAll": "すべて",
+    "noMatches": "一致なし",
+    "noItems": "項目なし"
   },
   "shortcuts": {
     "showShortcutsLegend": "キーボードショートカットを表示",
     "closeDialog": "ダイアログを閉じる",
     "gotoPlaylists": "プレイリストに移動",
+    "gotoLayouts": "レイアウトに移動",
     "gotoMedias": "メディアに移動",
     "gotoWidgets": "ウィジェットに移動",
     "gotoChannels": "チャンネルに移動",
@@ -756,5 +1293,179 @@
       "title": "キーボードショートカット",
       "description": "これらのショートカットを使用してより速くナビゲートします"
     }
+  },
+  "onboarding": {
+    "title": "Castmillへようこそ！",
+    "subtitle": "まず、組織に名前を付けましょう。",
+    "organizationNameLabel": "組織名",
+    "organizationNamePlaceholder": "組織名を入力してください",
+    "helpText": "この名前はワークスペースの識別に使用されます。後で設定で変更できます。",
+    "continueButton": "続ける",
+    "success": "組織の設定が完了しました！",
+    "errors": {
+      "organizationNameRequired": "組織名は必須です",
+      "organizationNameTooShort": "組織名は2文字以上である必要があります",
+      "organizationNameTooLong": "組織名は50文字未満である必要があります",
+      "organizationNameTaken": "この組織名は既に使用されています。別の名前を選択してください。",
+      "failed": "設定の完了に失敗しました。もう一度お試しください。"
+    }
+  },
+  "onboardingTour": {
+    "title": "はじめに",
+    "progressText": "{{current}}/{{total}} ステップ完了",
+    "markComplete": "完了としてマーク",
+    "stepCompleted": "ステップ完了！",
+    "stepCompletedBadge": "完了",
+    "allStepsComplete": "おめでとうございます！すべてのオンボーディングステップが完了しました！",
+    "dismissed": "オンボーディングツアーを閉じました。設定からいつでも再開できます。",
+    "dismissConfirmTitle": "オンボーディングツアーを閉じますか？",
+    "dismissConfirmMessage": "上部ツールバーのロケットアイコンからいつでも再開できます。",
+    "skip": "スキップ",
+    "finish": "ツアーを終了",
+    "goToStep": "ステップ {{step}} に移動",
+    "learnMore": "詳しく見る",
+    "steps": {
+      "findGuide": {
+        "title": "いつでもこのガイドを見つける",
+        "description": "上部ナビゲーションバーのロケットアイコンを探してください。いつでもクリックしてこのスタートガイドを再度開き、中断したところから続けることができます。",
+        "action": "見せて"
+      },
+      "chooseLanguage": {
+        "title": "言語を選択",
+        "description": "上部ナビゲーションバーのドロップダウンからお好みの言語を選択してください。これにより、アプリケーション全体のインターフェースが翻訳され、使いやすくなります。",
+        "action": "言語を選択"
+      },
+      "uploadMedia": {
+        "title": "最初のメディアをアップロード",
+        "description": "デジタルサイネージ画面に表示したい画像、動画、その他のコンテンツをアップロードして始めましょう。ファイルをドラッグ＆ドロップするか、アップロードボタンを使用できます。",
+        "action": "メディアライブラリへ"
+      },
+      "createPlaylist": {
+        "title": "最初のプレイリストを作成",
+        "description": "コンテンツをプレイリストに整理します。メディアファイルとウィジェットを追加して、魅力的なコンテンツシーケンスを作成します。各項目の表示時間とトランジションを設定できます。",
+        "action": "プレイリストへ"
+      },
+      "createChannel": {
+        "title": "チャンネルを設定",
+        "description": "チャンネルはプレイリストとスケジュールを組み合わせます。チャンネルを作成してデフォルトのプレイリストを割り当て、1日の異なる時間帯に再生するコンテンツを制御します。",
+        "action": "チャンネルへ"
+      },
+      "registerDevice": {
+        "title": "最初のデバイスを登録",
+        "description": "まずプレーヤーを開いて登録コードを取得し、そのコードをここに入力してデバイスを登録します。ヒント：テスト用にPCのブラウザプレーヤーを開くことができます—{{playerUrl}} を使用してください。",
+        "action": "デバイスへ"
+      },
+      "assignChannel": {
+        "title": "デバイスにチャンネルを割り当て",
+        "description": "デバイスにチャンネルをリンクして、表示するコンテンツを認識させます。各デバイスは一度に1つのチャンネルに割り当てることができますが、いつでも変更できます。",
+        "action": "デバイスを管理"
+      },
+      "advancedPlaylist": {
+        "title": "レイアウトを使用した高度なプレイリストを作成",
+        "description": "レイアウトを使用して複数のアイテムを同時に表示し、コンテンツを次のレベルに引き上げましょう。画面をゾーンに分割し、各エリアに異なるコンテンツを表示します。",
+        "action": "レイアウトを探索"
+      },
+      "createTagGroup": {
+        "title": "タググループで整理する",
+        "description": "タグページに移動して、最初のタググループを作成しましょう—「場所」や「キャンペーン」のように。グループを使用すると、タグを意味のある次元に分類でき、ツリービューを活用できます。",
+        "action": "タグへ移動"
+      },
+      "tagContent": {
+        "title": "コンテンツにタグ付け",
+        "description": "メディアアイテムを開いてタグを割り当てましょう。タグによりコンテンツが検索可能、フィルタリング可能、整理可能になります。複数のアイテムを選択して一括でタグ付けすることもできます。",
+        "action": "メディアライブラリへ移動"
+      },
+      "exploreTreeView": {
+        "title": "ツリービューを探索",
+        "description": "ツリービューに切り替えて、タググループ別に整理されたコンテンツを確認しましょう。タグを展開して掘り下げ、次元を並べ替え、ライブラリを閲覧するまったく新しい方法を発見してください。",
+        "action": "ツリービューを試す"
+      }
+    },
+    "errors": {
+      "failedToCompleteStep": "ステップを完了としてマークできませんでした。もう一度お試しください。",
+      "failedToDismiss": "ツアーを閉じることができませんでした。もう一度お試しください。"
+    }
+  },
+  "medias": {
+    "upload": {
+      "fileTooLarge": "ファイルサイズ（{{fileSize}}）が最大アップロード制限（{{maxSize}}）を超えています",
+      "largeFileWarning": "大きなファイル（{{fileSize}}）。アップロードに時間がかかる場合があります。",
+      "noValidFiles": "アップロードする有効なファイルがありません。",
+      "uploadError": "ファイルのアップロード中にエラーが発生しました。",
+      "uploadFailed": "アップロード失敗：{{error}}",
+      "serverError": "サーバーエラー（ステータス {{status}}）",
+      "unknownError": "不明なエラー"
+    },
+    "thumbnail": {
+      "failedTitle": "トランスコードに失敗しました",
+      "failedDefaultMessage": "プレビューを自動生成できませんでした。"
+    },
+    "drawerTitle": "メディア \"{{name}}\"",
+    "mediaUpdated": "メディア \"{{name}}\" が正常に更新されました",
+    "errorUpdating": "メディア {{name}} の更新エラー：{{error}}"
+  },
+  "dashboard": {
+    "noOrganizations": {
+      "title": "組織がありません",
+      "description": "このネットワークのどの組織にもまだ所属していません。ネットワーク管理者に連絡してアクセス権を取得してください。"
+    }
+  },
+  "aspectRatio": {
+    "custom": "カスタム"
+  },
+  "deviceTimers": {
+    "title": "デバイス電源タイマー",
+    "description": "デバイスが自動的にオン/オフになる時間を設定します",
+    "onTimers": "オンタイマー",
+    "offTimers": "オフタイマー",
+    "addOnTimer": "オンタイマーを追加",
+    "addOffTimer": "オフタイマーを追加",
+    "time": "時間",
+    "days": "曜日",
+    "deleteTimer": "タイマーを削除",
+    "saveTimers": "タイマーを保存",
+    "maxTimersReached": "最大6つのタイマーに達しました",
+    "monday": "月",
+    "tuesday": "火",
+    "wednesday": "水",
+    "thursday": "木",
+    "friday": "金",
+    "saturday": "土",
+    "sunday": "日",
+    "mon": "月",
+    "tue": "火",
+    "wed": "水",
+    "thu": "木",
+    "fri": "金",
+    "sat": "土",
+    "sun": "日",
+    "allDays": "全日",
+    "noTimers": "構成されたタイマーなし",
+    "timersSaved": "タイマーが正常に保存されました",
+    "timersLoadError": "タイマーの読み込みエラー",
+    "timersSaveError": "タイマーの保存エラー",
+    "playerOffByTimer": "タイマーで再生が終了しました",
+    "nextOnTime": "次のスケジュールオン時間: {time}",
+    "notSupported": "このデバイスではタイマーハードウェア制御がサポートされていません。ソフトウェアフォールバックを使用しています。"
+  },
+  "deviceSchedule": {
+    "title": "デバイススケジュール",
+    "description": "デバイスがオンになる時間を定義します。グリッド上でクリックしてドラッグしてスケジュールエントリを作成します。スケジュールされた時間外はデバイスがオフになります。エントリが設定されていない場合、デバイスは常にオンです。",
+    "mon": "月",
+    "tue": "火",
+    "wed": "水",
+    "thu": "木",
+    "fri": "金",
+    "sat": "土",
+    "sun": "日",
+    "save": "スケジュールを保存",
+    "reset": "リセット",
+    "delete": "エントリを削除",
+    "onLabel": "オン",
+    "noScheduleAlwaysOn": "スケジュール未設定 — デバイスは常にオン",
+    "saved": "スケジュールを保存しデバイスに送信しました",
+    "savedOffline": "スケジュールを保存しました。デバイスはオフラインです — 再接続時にタイマーが送信されます。",
+    "loadError": "スケジュールの読み込みエラー",
+    "saveError": "スケジュールの保存エラー"
   }
 }

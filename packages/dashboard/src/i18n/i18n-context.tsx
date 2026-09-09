@@ -56,6 +56,11 @@ interface I18nContextValue {
     options?: Intl.NumberFormatOptions
   ) => string;
   translations: Accessor<Translations>;
+  /**
+   * Extend translations with addon-specific translations.
+   * Merges the provided translations into the current translations object.
+   */
+  extendTranslations: (addonTranslations: Record<string, any>) => void;
 }
 
 const I18nContext = createContext<I18nContextValue>();
@@ -127,36 +132,59 @@ function getPluralForm(count: number, locale: Locale): PluralForm {
  * I18n Provider Component
  */
 export function I18nProvider(props: { children: JSX.Element }) {
-  const [locale, setLocaleSignal] = createSignal<Locale>(getInitialLocale());
+  const initialLocale = getInitialLocale();
+  const [requestedLocale, setRequestedLocale] =
+    createSignal<Locale>(initialLocale);
+  const [locale, setLocaleSignal] = createSignal<Locale>(initialLocale);
   const [translations, setTranslations] = createSignal<Translations>(en);
+  // Accumulated addon translations — kept separately so they can be re-merged
+  // when the base locale changes (setTranslations replaces everything).
+  // This is a single merged object; repeated extendTranslations calls for the
+  // same addon keys simply overwrite previous values.
+  let addonTranslationsCache: Record<string, any> = {};
+  let loadId = 0;
 
   // Load translations when locale changes
   createEffect(() => {
-    const currentLocale = locale();
+    const targetLocale = requestedLocale();
+    const currentLoadId = ++loadId;
 
-    // Load translations asynchronously
-    void loadTranslations(currentLocale).then((loadedTranslations) => {
-      setTranslations(loadedTranslations);
+    void loadTranslations(targetLocale).then((loadedTranslations) => {
+      // Ignore stale loads
+      if (currentLoadId !== loadId) {
+        return;
+      }
+
+      // Re-apply cached addon translations on top of the fresh base so there
+      // is no gap where addon keys are missing between the base replacement
+      // and the async addon translation re-fetch.
+      const merged = deepMerge(loadedTranslations, addonTranslationsCache);
+
+      setTranslations(merged as Translations);
+      setLocaleSignal(targetLocale);
+
+      // Set HTML lang attribute
+      document.documentElement.lang = targetLocale;
+
+      // Set RTL direction for Arabic
+      const localeInfo = SUPPORTED_LOCALES.find((l) => l.code === targetLocale);
+      if (localeInfo?.rtl) {
+        document.documentElement.dir = 'rtl';
+      } else {
+        document.documentElement.dir = 'ltr';
+      }
     });
-
-    // Set HTML lang attribute
-    document.documentElement.lang = currentLocale;
-
-    // Set RTL direction for Arabic
-    const localeInfo = SUPPORTED_LOCALES.find((l) => l.code === currentLocale);
-    if (localeInfo?.rtl) {
-      document.documentElement.dir = 'rtl';
-    } else {
-      document.documentElement.dir = 'ltr';
-    }
   });
 
   /**
    * Set locale and persist to localStorage
    */
   const setLocale = (newLocale: Locale) => {
+    if (newLocale === requestedLocale()) {
+      return;
+    }
     localStorage.setItem(LOCALE_STORAGE_KEY, newLocale);
-    setLocaleSignal(newLocale);
+    setRequestedLocale(newLocale);
   };
 
   /**
@@ -297,6 +325,46 @@ export function I18nProvider(props: { children: JSX.Element }) {
     }
   };
 
+  /**
+   * Deep merge two objects, with source taking precedence
+   */
+  const deepMerge = (
+    target: Record<string, any>,
+    source: Record<string, any>
+  ): Record<string, any> => {
+    const result = { ...target };
+    for (const key of Object.keys(source)) {
+      if (
+        source[key] &&
+        typeof source[key] === 'object' &&
+        !Array.isArray(source[key]) &&
+        target[key] &&
+        typeof target[key] === 'object' &&
+        !Array.isArray(target[key])
+      ) {
+        result[key] = deepMerge(target[key], source[key]);
+      } else {
+        result[key] = source[key];
+      }
+    }
+    return result;
+  };
+
+  /**
+   * Extend translations with addon-specific translations.
+   * Merges the provided translations into the current translations object
+   * and caches them so they survive base-locale replacement.
+   */
+  const extendTranslations = (addonTranslations: Record<string, any>) => {
+    addonTranslationsCache = deepMerge(
+      addonTranslationsCache,
+      addonTranslations
+    );
+    setTranslations(
+      (current) => deepMerge(current, addonTranslations) as Translations
+    );
+  };
+
   const value: I18nContextValue = {
     locale,
     setLocale,
@@ -306,6 +374,7 @@ export function I18nProvider(props: { children: JSX.Element }) {
     formatNumber,
     formatCurrency,
     translations,
+    extendTranslations,
   };
 
   return (

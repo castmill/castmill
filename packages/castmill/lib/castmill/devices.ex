@@ -256,17 +256,27 @@ defmodule Castmill.Devices do
   @doc """
     Gets a device registration.
   """
-  def get_devices_registration(hardware_id, pincode) do
+  def get_devices_registration(hardware_id, pincode) when is_binary(pincode) do
+    # Normalize pincode to uppercase for case-insensitive comparison
+    normalized_pincode = String.upcase(pincode)
+
     DevicesRegistrations
-    |> where([d], d.hardware_id == ^hardware_id and d.pincode == ^pincode)
+    |> where([d], d.hardware_id == ^hardware_id and d.pincode == ^normalized_pincode)
     |> Repo.one()
   end
 
-  def get_devices_registration(pincode) do
+  def get_devices_registration(_hardware_id, _pincode), do: nil
+
+  def get_devices_registration(pincode) when is_binary(pincode) do
+    # Normalize pincode to uppercase for case-insensitive comparison
+    normalized_pincode = String.upcase(pincode)
+
     DevicesRegistrations
-    |> where([d], d.pincode == ^pincode)
+    |> where([d], d.pincode == ^normalized_pincode)
     |> Repo.one()
   end
+
+  def get_devices_registration(_pincode), do: nil
 
   @doc """
   Registers a device.
@@ -278,9 +288,13 @@ defmodule Castmill.Devices do
     If there is a register, but the pincode is expired, return an error.
     Optionally, add a default channel to the device based on the `add_default_channel` option.
   """
-  def register_device(organization_id, pincode, attrs \\ %{}, opts \\ %{}) do
+  def register_device(organization_id, pincode, attrs \\ %{}, opts \\ %{})
+
+  def register_device(organization_id, pincode, attrs, opts) when is_binary(pincode) do
     Repo.transaction(fn ->
-      devices_registration = Repo.get_by(DevicesRegistrations, pincode: pincode)
+      # Make pincode comparison case-insensitive
+      normalized_pincode = String.upcase(pincode)
+      devices_registration = Repo.get_by(DevicesRegistrations, pincode: normalized_pincode)
 
       if devices_registration do
         case DateTime.compare(devices_registration.expires_at, DateTime.utc_now()) do
@@ -299,6 +313,10 @@ defmodule Castmill.Devices do
         Repo.rollback(:invalid_pincode)
       end
     end)
+  end
+
+  def register_device(_organization_id, _pincode, _attrs, _opts) do
+    {:error, :invalid_pincode}
   end
 
   defp handle_non_expired_device(devices_registration, organization_id, opts, attrs) do
@@ -333,11 +351,20 @@ defmodule Castmill.Devices do
 
       case add_channel_result do
         {:ok, _channel} ->
+          organization = Castmill.Organizations.get_organization(device.organization_id)
+
+          network =
+            if organization && organization.network_id,
+              do: Castmill.Networks.get_network(organization.network_id),
+              else: nil
+
           Endpoint.broadcast("register:#{device.hardware_id}", "device:registered", %{
             device: %{
               id: device.id,
               name: device.name,
-              token: token
+              token: token,
+              organizationName: organization && organization.name,
+              networkName: network && network.name
             }
           })
 
@@ -432,9 +459,11 @@ defmodule Castmill.Devices do
 
   @doc """
     Automatically recovers a device. If a device has lost its token for some reason, it is possible to recover it
-    by providing the device id only, but some limitations apply, a device can only be recovered once per hour,
-    it must have the same IP address as the last time it was online, and it must have the "auto_recovery"
-    setting enabled.
+    by providing the device id only.
+
+    Recovery is allowed when either:
+    - The current IP matches the last known device IP.
+    - The IP does not match, but `autorecover_until` is still in the future.
   """
   def recover_device(hardware_id, device_ip) do
     Repo.transaction(fn ->
@@ -445,18 +474,20 @@ defmodule Castmill.Devices do
         is_nil(device) ->
           Repo.rollback("Device not found")
 
-        device.last_ip != device_ip ->
-          Repo.rollback("IP mismatch")
-
-        DateTime.compare(device.updated_at, hour_ago()) == :gt ->
-          Repo.rollback("Device updated recently")
+        device.last_ip != device_ip and !autorecovery_active?(device.autorecover_until) ->
+          Repo.rollback(:recovery_blocked)
 
         true ->
           token = generate_token()
 
           case update_device(device, %{token: token}) do
-            {:ok, device} ->
-              device
+            {:ok, updated_device} ->
+              # Explicitly set the virtual :token field on the returned struct so
+              # that callers (e.g. the JSON view) can read the plain-text token.
+              # Ecto does not persist virtual fields to the database, but we need
+              # the value available in memory after the update so the controller
+              # can include it in the HTTP response sent back to the device.
+              %{updated_device | token: token}
 
             {:error, changeset} ->
               Repo.rollback("Failed to update device: #{inspect(changeset.errors)}")
@@ -465,8 +496,10 @@ defmodule Castmill.Devices do
     end)
   end
 
-  defp hour_ago do
-    DateTime.utc_now() |> DateTime.add(-1, :hour)
+  defp autorecovery_active?(nil), do: false
+
+  defp autorecovery_active?(autorecover_until) do
+    DateTime.compare(autorecover_until, DateTime.utc_now()) == :gt
   end
 
   defp generate_token do
@@ -510,7 +543,7 @@ defmodule Castmill.Devices do
       )
 
     Repo.all(query)
-    |> Repo.preload(:entries)
+    |> Repo.preload([:entries, organization: :network])
   end
 
   @doc """
@@ -556,11 +589,13 @@ defmodule Castmill.Devices do
 
   @doc """
     Checks if a device has access to a playlist.
-    If a playlist is used by a channel entry, it is considered to be accessible
-    by the device that has the channel with the given channel entry.
+    A playlist is accessible if:
+    - It is used by a channel entry in a channel assigned to the device, OR
+    - It is set as the default_playlist_id of a channel assigned to the device
   """
   def has_access_to_playlist(device_id, playlist_id) do
-    query =
+    # Check if playlist is in a channel entry
+    channel_entry_query =
       from(dc in Castmill.Devices.DevicesChannels,
         join: ce in Castmill.Resources.ChannelEntry,
         on: dc.channel_id == ce.channel_id,
@@ -569,7 +604,15 @@ defmodule Castmill.Devices do
         where: dc.device_id == ^device_id and pl.id == ^playlist_id
       )
 
-    Repo.one(query) !== nil
+    # Check if playlist is a default playlist for an assigned channel
+    default_playlist_query =
+      from(dc in Castmill.Devices.DevicesChannels,
+        join: c in Castmill.Resources.Channel,
+        on: dc.channel_id == c.id,
+        where: dc.device_id == ^device_id and c.default_playlist_id == ^playlist_id
+      )
+
+    Repo.one(channel_entry_query) !== nil or Repo.one(default_playlist_query) !== nil
   end
 
   @doc """
@@ -612,22 +655,53 @@ defmodule Castmill.Devices do
       iex> list_resources(Media, params)
       [%Media{}, ...]
   """
-  def list_devices_events(%{
-        device_id: device_id,
-        page: page,
-        page_size: page_size,
-        search: search
-      }) do
-    offset = if is_nil(page_size), do: 0, else: max((page - 1) * page_size, 0)
+  def list_devices_events(%{device_id: device_id} = params) do
+    page = Map.get(params, :page, 1)
+    page_size = Map.get(params, :page_size, 10)
+    search = Map.get(params, :search)
+    types = Map.get(params, :types)
+    offset = max((page - 1) * page_size, 0)
 
     Castmill.Devices.DevicesEvents.base_query()
     # Pin the device_id variable using ^
     |> where([dl], dl.device_id == ^device_id)
     |> where_msg_like(search)
-    |> Ecto.Query.order_by([d], desc: d.timestamp)
+    |> where_types(types)
+    |> apply_events_sorting(params)
     |> Ecto.Query.limit(^page_size)
     |> Ecto.Query.offset(^offset)
     |> Repo.all()
+  end
+
+  # Helper function to apply sorting to events query
+  defp apply_events_sorting(query, params) do
+    sort_key = Map.get(params, :key)
+    sort_direction = Map.get(params, :direction, "descending")
+
+    # Convert sort direction string to atom
+    sort_dir =
+      case sort_direction do
+        "ascending" -> :asc
+        "descending" -> :desc
+        _ -> :desc
+      end
+
+    # Convert sort key string to atom, with validation
+    # Only allow sorting by known safe columns
+    sort_field =
+      case sort_key do
+        "timestamp" -> :timestamp
+        "type" -> :type
+        "msg" -> :msg
+        _ -> :timestamp
+      end
+
+    order =
+      if sort_field == :timestamp,
+        do: [{sort_dir, sort_field}],
+        else: [{sort_dir, sort_field}, {:desc, :timestamp}]
+
+    Ecto.Query.order_by(query, ^order)
   end
 
   defp where_msg_like(query, nil) do
@@ -640,11 +714,46 @@ defmodule Castmill.Devices do
     )
   end
 
-  def count_devices_events(%{device_id: device_id, search: search}) do
+  # Filter events by types (comma-separated string like "e,w,i")
+  defp where_types(query, nil), do: query
+  defp where_types(query, ""), do: query
+
+  defp where_types(query, types) when is_binary(types) do
+    type_list = String.split(types, ",") |> Enum.map(&String.trim/1)
+    from(e in query, where: e.type in ^type_list)
+  end
+
+  def count_devices_events(%{device_id: device_id} = params) do
+    search = Map.get(params, :search)
+    types = Map.get(params, :types)
+
     Castmill.Devices.DevicesEvents.base_query()
     |> where([dl], dl.device_id == ^device_id)
     |> where_msg_like(search)
+    |> where_types(types)
     |> Repo.aggregate(:count, :id)
+  end
+
+  @doc """
+  Deletes device events. Can delete all events or filter by type.
+  Returns the number of deleted events.
+  """
+  def delete_devices_events(%{device_id: device_id} = params) do
+    event_type = Map.get(params, :type)
+
+    query =
+      from(e in DevicesEvents, where: e.device_id == ^device_id)
+      |> maybe_filter_by_type(event_type)
+
+    {deleted_count, _} = Repo.delete_all(query)
+    deleted_count
+  end
+
+  defp maybe_filter_by_type(query, nil), do: query
+  defp maybe_filter_by_type(query, ""), do: query
+
+  defp maybe_filter_by_type(query, type) do
+    from(e in query, where: e.type == ^type)
   end
 
   # Quota enforcement helper functions
@@ -665,5 +774,155 @@ defmodule Castmill.Devices do
       select: count(r.id)
     )
     |> Repo.one()
+  end
+
+  # ── Schedule ──────────────────────────────────────────────
+
+  @weekday_names %{
+    0 => "MON",
+    1 => "TUE",
+    2 => "WED",
+    3 => "THU",
+    4 => "FRI",
+    5 => "SAT",
+    6 => "SUN"
+  }
+
+  @doc """
+  Get the schedule for a device. Returns the schedule entries list or nil.
+  """
+  def get_device_schedule(device_id) do
+    case get_device(device_id) do
+      nil -> {:error, :not_found}
+      device -> {:ok, device.schedule}
+    end
+  end
+
+  @doc """
+  Set the schedule for a device.
+  `schedule_entries` is a list of maps: `[%{"startHour" => 8, "endHour" => 17, "days" => [0,1,2,3,4]}]`
+  """
+  def set_device_schedule(device_id, schedule_entries) do
+    case get_device(device_id) do
+      nil ->
+        {:error, :not_found}
+
+      device ->
+        update_device(device, %{schedule: %{"entries" => schedule_entries || []}})
+    end
+  end
+
+  @doc """
+  Convert schedule entries (ON windows) to the device timer format `%{on: [...], off: [...]}`.
+
+  Each schedule entry produces:
+  - One ON timer at `startHour:00` for the specified days
+  - One OFF timer at `endHour:00` for the specified days
+
+  If no schedule entries exist, returns empty timers (device stays always on).
+  """
+  def schedule_to_timers(nil), do: %{on: [], off: []}
+  def schedule_to_timers(%{"entries" => entries}), do: schedule_to_timers(entries)
+
+  def schedule_to_timers(entries) when is_list(entries) do
+    {on_timers, off_timers} =
+      entries
+      |> Enum.reduce({[], []}, fn entry, {on_acc, off_acc} ->
+        start_hour = entry["startHour"] || entry[:startHour]
+        start_minute = entry["startMinute"] || entry[:startMinute] || 0
+        end_hour = entry["endHour"] || entry[:endHour]
+        end_minute = entry["endMinute"] || entry[:endMinute] || 0
+        days = entry["days"] || entry[:days] || []
+
+        weekdays = Enum.map(days, fn d -> Map.get(@weekday_names, d, "MON") end)
+
+        on_timer = %{hours: start_hour, minutes: start_minute, weekDays: weekdays}
+
+        # Normalize endHour 24 to 0:00 on the next day (shift weekdays by +1)
+        {off_hours, off_minutes, off_weekdays} =
+          if end_hour >= 24 do
+            next_days = Enum.map(days, fn d -> rem(d + 1, 7) end)
+            next_weekdays = Enum.map(next_days, fn d -> Map.get(@weekday_names, d, "MON") end)
+            {0, 0, next_weekdays}
+          else
+            {end_hour, end_minute, weekdays}
+          end
+
+        off_timer = %{hours: off_hours, minutes: off_minutes, weekDays: off_weekdays}
+
+        {[on_timer | on_acc], [off_timer | off_acc]}
+      end)
+
+    # Merge timers with the same hour so we don't send duplicates
+    merged_on = merge_timers(on_timers)
+    merged_off = merge_timers(off_timers)
+
+    # Cancel out on/off timers that fire at the same time and weekdays.
+    # E.g. MON-FRI 23-24 produces off@0:00 TUE-SAT, while TUE-SAT 00-03
+    # produces on@0:00 TUE-SAT. These cancel, leaving the player on 23-03.
+    {cancelled_on, cancelled_off} = cancel_matching_timers(merged_on, merged_off)
+
+    %{on: cancelled_on, off: cancelled_off}
+  end
+
+  defp merge_timers(timers) do
+    timers
+    |> Enum.group_by(fn t -> {t.hours, t.minutes} end)
+    |> Enum.map(fn {{hours, minutes}, group} ->
+      all_days = group |> Enum.flat_map(& &1.weekDays) |> Enum.uniq() |> Enum.sort()
+      %{hours: hours, minutes: minutes, weekDays: all_days}
+    end)
+  end
+
+  # When an on-timer and off-timer fire at the same time on the same weekday,
+  # they cancel each other out (the device would turn off and immediately on).
+  # Remove overlapping weekdays from both; drop timers that become empty.
+  defp cancel_matching_timers(on_timers, off_timers) do
+    on_map = Map.new(on_timers, fn t -> {{t.hours, t.minutes}, t.weekDays} end)
+    off_map = Map.new(off_timers, fn t -> {{t.hours, t.minutes}, t.weekDays} end)
+
+    all_times =
+      (Map.keys(on_map) ++ Map.keys(off_map))
+      |> Enum.uniq()
+
+    {new_on_map, new_off_map} =
+      Enum.reduce(all_times, {on_map, off_map}, fn time, {on_acc, off_acc} ->
+        on_days = Map.get(on_acc, time, [])
+        off_days = Map.get(off_acc, time, [])
+
+        overlap = MapSet.intersection(MapSet.new(on_days), MapSet.new(off_days))
+
+        if MapSet.size(overlap) == 0 do
+          {on_acc, off_acc}
+        else
+          overlap_list = MapSet.to_list(overlap)
+          remaining_on = on_days -- overlap_list
+          remaining_off = off_days -- overlap_list
+
+          on_acc =
+            if remaining_on == [],
+              do: Map.delete(on_acc, time),
+              else: Map.put(on_acc, time, remaining_on)
+
+          off_acc =
+            if remaining_off == [],
+              do: Map.delete(off_acc, time),
+              else: Map.put(off_acc, time, remaining_off)
+
+          {on_acc, off_acc}
+        end
+      end)
+
+    on_result =
+      Enum.map(new_on_map, fn {{hours, minutes}, days} ->
+        %{hours: hours, minutes: minutes, weekDays: Enum.sort(days)}
+      end)
+
+    off_result =
+      Enum.map(new_off_map, fn {{hours, minutes}, days} ->
+        %{hours: hours, minutes: minutes, weekDays: Enum.sort(days)}
+      end)
+
+    {on_result, off_result}
   end
 end

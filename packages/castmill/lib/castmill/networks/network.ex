@@ -12,11 +12,21 @@ defmodule Castmill.Networks.Network do
     field(:email, :string)
     field(:logo, :string, default: "https://castmill.com/images/logo.png")
     field(:name, :string)
+    field(:default_locale, :string, default: "en")
+    field(:privacy_policy_url, :string)
+
+    field(:invitation_only, :boolean, default: true)
+    field(:invitation_only_org_admins, :boolean, default: false)
 
     field(:meta, :map)
 
     has_many(:organizations, Castmill.Organizations.Organization)
-    has_many(:users, Castmill.Accounts.User)
+
+    many_to_many(:users, Castmill.Accounts.User,
+      join_through: "networks_users",
+      on_replace: :delete
+    )
+
     has_many(:plans, Castmill.Quotas.Plan)
 
     belongs_to(:default_plan, Castmill.Quotas.Plan,
@@ -30,9 +40,26 @@ defmodule Castmill.Networks.Network do
   @doc false
   def changeset(network, attrs) do
     network
-    |> cast(attrs, [:name, :copyright, :email, :logo, :domain, :meta, :default_plan_id])
-    |> validate_required([:name, :email])
-    |> validate_format(:email, ~r/@/)
+    |> cast(attrs, [
+      :name,
+      :copyright,
+      :email,
+      :logo,
+      :domain,
+      :meta,
+      :default_plan_id,
+      :default_locale,
+      :privacy_policy_url,
+      :invitation_only,
+      :invitation_only_org_admins
+    ])
+    |> validate_required([:name, :email, :domain])
+    |> validate_format(:email, ~r/@/, message: "must be a valid email address")
+    |> validate_format(
+      :domain,
+      ~r/^[a-zA-Z0-9]([a-zA-Z0-9\-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]*[a-zA-Z0-9])?)*(:\d+)?$/,
+      message: "must be a valid domain (e.g., app.example.com or localhost:3000)"
+    )
     |> unique_constraint(:name)
   end
 

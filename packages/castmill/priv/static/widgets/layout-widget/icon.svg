@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Background -->
+  <rect x="2" y="2" width="60" height="60" rx="8" fill="#1a1a2e" stroke="#2d2d4a" stroke-width="2"/>
+  
+  <!-- Layout zones -->
+  <!-- Top zone -->
+  <rect x="10" y="10" width="44" height="14" rx="2" fill="#4a4a6a" stroke="#6366f1" stroke-width="1.5"/>
+  
+  <!-- Bottom left zone -->
+  <rect x="10" y="28" width="20" height="26" rx="2" fill="#4a4a6a" stroke="#6366f1" stroke-width="1.5"/>
+  
+  <!-- Bottom right zone -->
+  <rect x="34" y="28" width="20" height="26" rx="2" fill="#4a4a6a" stroke="#6366f1" stroke-width="1.5"/>
+  
+  <!-- Zone content indicators -->
+  <rect x="14" y="14" width="16" height="2" rx="1" fill="#818cf8"/>
+  <rect x="14" y="18" width="10" height="2" rx="1" fill="#818cf8"/>
+  
+  <rect x="14" y="32" width="12" height="18" rx="1" fill="#818cf8" opacity="0.5"/>
+  <rect x="38" y="32" width="12" height="18" rx="1" fill="#818cf8" opacity="0.5"/>
+</svg>

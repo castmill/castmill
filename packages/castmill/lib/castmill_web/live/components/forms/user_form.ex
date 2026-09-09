@@ -20,12 +20,6 @@ defmodule CastmillWeb.Live.Admin.UserForm do
       >
         <.input field={@form[:name]} type="text" label="Name" />
         <.input field={@form[:email]} type="text" label="Email" />
-        <.input
-          field={@form[:role]}
-          type="select"
-          options={[member: :member, admin: :admin, guest: :guest]}
-          label="Role"
-        />
 
         <:actions>
           <.button phx-disable-with="Saving...">Save User</.button>
@@ -37,7 +31,6 @@ defmodule CastmillWeb.Live.Admin.UserForm do
 
   @impl true
   def update(%{action: :new} = assigns, socket) do
-    # team = %Teams.Team{organization_id: socket.assigns.resource.id}
     user = %Accounts.User{}
     changeset = Accounts.change_user(user)
 
@@ -49,8 +42,19 @@ defmodule CastmillWeb.Live.Admin.UserForm do
   end
 
   @impl true
-  def update(_assigns, socket) do
-    {:ok, socket}
+  def update(%{resource: user} = assigns, socket) when not is_nil(user) do
+    changeset = Accounts.change_user(user)
+
+    {:ok,
+     socket
+     |> assign(assigns)
+     |> assign(:user, user)
+     |> assign_form(changeset)}
+  end
+
+  @impl true
+  def update(assigns, socket) do
+    {:ok, assign(socket, assigns)}
   end
 
   @impl true
@@ -86,13 +90,12 @@ defmodule CastmillWeb.Live.Admin.UserForm do
   defp save(socket, :new, %{"role" => role} = params) do
     organization = Organizations.get_organization!(socket.assigns.resource.id)
 
-    case Accounts.create_user(
-           Map.merge(params, %{
-             "network_id" => organization.network_id,
-             "organization_id" => organization.id
-           })
-         ) do
+    # Create user without network_id, then add to network via networks_users
+    case Accounts.create_user(params) do
       {:ok, user} ->
+        # Add user to the organization's network
+        Castmill.Networks.add_user_to_network(user.id, organization.network_id)
+
         case Organizations.add_user(organization.id, user.id, String.to_existing_atom(role)) do
           {:ok, _} ->
             notify_parent({:created, user})

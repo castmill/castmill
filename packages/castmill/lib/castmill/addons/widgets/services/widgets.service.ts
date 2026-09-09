@@ -1,5 +1,6 @@
 import { JsonWidget } from '@castmill/player';
 import { SortOptions, HttpError } from '@castmill/ui-common';
+import { authFetch } from '../../common/services/auth-fetch';
 
 export interface FetchWidgetsOptions {
   page: number;
@@ -16,6 +17,13 @@ type HandleResponseOptions = {
 export interface WidgetsUpdate {
   name: string;
   description: string;
+}
+
+export interface WidgetUsage {
+  playlist_id: number;
+  playlist_name: string;
+  playlist_item_id: string;
+  widget_config_id: string;
 }
 
 async function handleResponse<T = any>(
@@ -85,11 +93,10 @@ export const WidgetsService = {
 
     const queryString = new URLSearchParams(query).toString();
 
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/widgets?${queryString}`,
       {
         method: 'GET',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -117,11 +124,10 @@ export const WidgetsService = {
     const formData = new FormData();
     formData.append('widget', file);
 
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/widgets`,
       {
         method: 'POST',
-        credentials: 'include',
         body: formData,
       }
     );
@@ -142,11 +148,10 @@ export const WidgetsService = {
     organizationId: string,
     widgetId: string
   ): Promise<void> {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/widgets/${widgetId}`,
       {
         method: 'DELETE',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -154,6 +159,34 @@ export const WidgetsService = {
     );
 
     return handleResponse(response);
+  },
+
+  /**
+   * Get widget usage information - playlists where the widget is being used.
+   *
+   * @param baseUrl - The base URL of the server
+   * @param organizationId - The organization ID
+   * @param widgetId - The widget ID to check usage for
+   * @returns Promise resolving to usage data including count and playlist details
+   */
+  async getWidgetUsage(
+    baseUrl: string,
+    organizationId: string,
+    widgetId: number
+  ): Promise<{ data: WidgetUsage[]; count: number }> {
+    const response = await authFetch(
+      `${baseUrl}/dashboard/organizations/${organizationId}/widgets/${widgetId}/usage`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    return handleResponse<{ data: WidgetUsage[]; count: number }>(response, {
+      parse: true,
+    });
   },
 
   /**
@@ -171,11 +204,10 @@ export const WidgetsService = {
     widgetId: string,
     updates: WidgetsUpdate
   ): Promise<JsonWidget> {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/widgets/${widgetId}`,
       {
         method: 'PATCH',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -184,5 +216,74 @@ export const WidgetsService = {
     );
 
     return handleResponse<JsonWidget>(response, { parse: true });
+  },
+
+  /**
+   * Get a widget by its ID.
+   *
+   * @param baseUrl - The base URL of the server
+   * @param organizationId - The organization ID
+   * @param widgetId - The widget ID
+   * @returns Promise resolving to the widget or null if not found
+   */
+  async getWidgetById(
+    baseUrl: string,
+    organizationId: string,
+    widgetId: number
+  ): Promise<JsonWidget | null> {
+    const response = await authFetch(
+      `${baseUrl}/dashboard/organizations/${organizationId}/widgets/${widgetId}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    if (response.status === 404) {
+      return null;
+    }
+
+    const result = await handleResponse<{ data: JsonWidget }>(response, {
+      parse: true,
+    });
+    return result.data;
+  },
+
+  /**
+   * Get integrations for a widget.
+   *
+   * @param baseUrl - The base URL of the server
+   * @param organizationId - The organization ID
+   * @param widgetSlug - The widget slug
+   * @returns Promise resolving to the widget integrations or empty array
+   */
+  async getWidgetIntegrations(
+    baseUrl: string,
+    organizationId: string,
+    widgetSlug: string
+  ): Promise<any[]> {
+    try {
+      const response = await authFetch(
+        `${baseUrl}/dashboard/organizations/${organizationId}/widgets/${widgetSlug}/integrations`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (!response.ok) {
+        return [];
+      }
+
+      const result = await response.json();
+      return result.data || [];
+    } catch (error) {
+      console.error('Failed to fetch widget integrations:', error);
+      return [];
+    }
   },
 };

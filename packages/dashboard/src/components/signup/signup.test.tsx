@@ -20,6 +20,11 @@ vi.mock('../utils', () => ({
   arrayBufferToBase64: vi.fn(),
 }));
 
+// Mock auth to prevent setStore side effects from authFetch import
+vi.mock('../auth', () => ({
+  authFetch: vi.fn((input: any, init?: any) => fetch(input, init ?? {})),
+}));
+
 vi.stubGlobal(
   'fetch',
   vi.fn(() =>

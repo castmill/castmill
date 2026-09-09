@@ -20,6 +20,7 @@ vi.mock('../../components/auth', () => ({
     email: 'member@example.com',
   })),
   loginUser: vi.fn(() => Promise.resolve()),
+  authFetch: vi.fn(),
 }));
 
 const mockNavigate = vi.fn();

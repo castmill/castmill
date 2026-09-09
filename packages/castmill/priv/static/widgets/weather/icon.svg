@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <!-- Shadow filter -->
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="1" dy="2" stdDeviation="2" flood-color="#000" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect x="2" y="2" width="60" height="60" rx="8" fill="#1a1a2e" stroke="#2d2d4a" stroke-width="2"/>
+  
+  <!-- Sun -->
+  <circle cx="44" cy="18" r="10" fill="#fbbf24"/>
+  
+  <!-- Sun rays -->
+  <g stroke="#fbbf24" stroke-width="2.5" stroke-linecap="round">
+    <line x1="44" y1="3" x2="44" y2="6"/>
+    <line x1="55" y1="7" x2="53" y2="9"/>
+    <line x1="59" y1="18" x2="56" y2="18"/>
+    <line x1="55" y1="29" x2="53" y2="27"/>
+    <line x1="33" y1="7" x2="35" y2="9"/>
+  </g>
+  
+  <!-- Gray cloud (back) -->
+  <g filter="url(#shadow)">
+    <ellipse cx="22" cy="36" rx="10" ry="7" fill="#64748b"/>
+    <ellipse cx="32" cy="34" rx="8" ry="6" fill="#64748b"/>
+    <ellipse cx="14" cy="38" rx="6" ry="5" fill="#64748b"/>
+  </g>
+  
+  <!-- White cloud (front) -->
+  <g filter="url(#shadow)">
+    <ellipse cx="36" cy="44" rx="12" ry="8" fill="#e2e8f0"/>
+    <ellipse cx="48" cy="42" rx="9" ry="7" fill="#f1f5f9"/>
+    <ellipse cx="26" cy="46" rx="8" ry="6" fill="#e2e8f0"/>
+    <ellipse cx="42" cy="40" rx="7" ry="5" fill="#f8fafc"/>
+  </g>
+</svg>

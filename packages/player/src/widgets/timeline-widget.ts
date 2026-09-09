@@ -23,9 +23,9 @@ export class TimelineWidget extends Widget {
   }
 
   play(timer$: Observable<number>) {
-    if (this.timeline.duration() > 0) {
-      this.timeline.play(this.offset);
-    }
+    // Always call play on the timeline - child items may be added dynamically
+    // (e.g., Layout widget whose containers mount after the component is rendered)
+    this.timeline.play(this.offset);
 
     // We must concat with super.play(timer$) so that slack/duration is also taken into account.
     return concat(

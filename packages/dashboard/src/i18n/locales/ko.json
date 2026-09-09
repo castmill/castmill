@@ -1,8 +1,11 @@
 {
   "common": {
     "save": "저장",
+    "saving": "저장 중...",
     "cancel": "취소",
     "delete": "삭제",
+    "deleting": "삭제 중...",
+    "blocking": "차단 중...",
     "edit": "편집",
     "rename": "이름 변경",
     "add": "추가",
@@ -11,6 +14,7 @@
     "confirm": "확인",
     "back": "뒤로",
     "next": "다음",
+    "previous": "이전",
     "search": "검색...",
     "loading": "로딩 중...",
     "error": "오류",
@@ -25,6 +29,9 @@
     "signup": "회원가입",
     "language": "언어",
     "create": "생성",
+    "creating": "생성 중...",
+    "sending": "전송 중...",
+    "clear": "지우기",
     "view": "보기",
     "status": "상태",
     "created": "생성됨",
@@ -42,6 +49,9 @@
     "requestedPath": "요청된 경로",
     "goToDashboard": "대시보드로 이동",
     "copyright": "© 2011-2025 Castmill™",
+    "privacy": "개인정보",
+    "terms": "약관",
+    "contact": "연락처",
     "invitedEmail": "초대된 이메일:",
     "acceptInvitation": "초대 수락",
     "loadingInvitation": "초대 로딩 중...",
@@ -60,8 +70,12 @@
     "ip": "IP 주소",
     "description": "설명",
     "online": "온라인",
+    "offline": "오프라인",
     "update": "업데이트",
     "reset": "재설정",
+    "apply": "적용",
+    "change": "변경",
+    "openInNewTab": "새 탭에서 열기",
     "addedOn": "추가됨",
     "lastUpdatedOn": "마지막 업데이트",
     "details": "세부정보",
@@ -71,6 +85,7 @@
     "maintainance": "유지보수",
     "events": "이벤트",
     "telemetry": "원격 측정",
+    "timers": "타이머",
     "youIndicator": "(본인)",
     "addonLoadingError": "애드온 로딩 오류",
     "filters": {
@@ -82,14 +97,24 @@
     "backToLogin": "로그인으로 돌아가기",
     "selectImage": "이미지 선택",
     "selectMedia": "미디어 선택",
-    "apply": "적용",
+    "selectPlaylist": "재생목록 선택",
+    "searchLocation": "위치 검색...",
+    "coordinates": "좌표",
+    "address": "주소",
+    "noAddressAvailable": "사용 가능한 주소 없음",
+    "noConfigurationAvailable": "사용 가능한 구성이 없습니다",
+    "playlist": "재생목록",
+    "addPlaylist": "재생목록 추가",
     "selectVideo": "비디오 선택",
-    "offline": "오프라인",
+    "widget": "Widget",
+    "selectionHint": "체크박스를 사용하여 항목을 선택하고 일괄 작업을 수행하세요",
+    "selectionCount": "{count}개 선택됨",
     "no": "아니오"
   },
   "topbar": {
     "help": "도움말",
-    "notifications": "알림"
+    "notifications": "알림",
+    "gettingStarted": "시작하기"
   },
   "settings": {
     "title": "설정",
@@ -114,6 +139,14 @@
     "failedLoadCredentials": "자격 증명을 불러오지 못했습니다. 페이지를 새로고침해 주세요.",
     "languageSettings": "언어 설정",
     "selectLanguage": "선호하는 언어를 선택하세요",
+    "onboardingTour": "온보딩 투어",
+    "onboardingTourDescription": "투어를 재설정하여 단계를 다시 진행할 수 있습니다.",
+    "onboardingTourResetButton": "투어 재설정",
+    "onboardingTourResetConfirmTitle": "온보딩 투어를 재설정할까요?",
+    "onboardingTourResetConfirmDescription": "이 작업은 투어 진행 상황을 초기화하고 투어를 다시 표시합니다.",
+    "onboardingTourResetAction": "투어 재설정",
+    "onboardingTourResetSuccess": "온보딩 투어가 재설정되었습니다. 지금 다시 시작할 수 있습니다.",
+    "onboardingTourResetError": "온보딩 투어 재설정에 실패했습니다. 다시 시도해 주세요.",
     "description": "계정 정보 및 환경 설정 관리",
     "confirmDeletePasskey": "이 패스키를 제거하시겠습니까?\n\n참고: 계정에서 패스키가 제거되지만, 기기 설정(예: iCloud 키체인, Google 비밀번호 관리자 또는 Windows Hello)에서 수동으로 삭제해야 할 수 있습니다.\n\n이 패스키를 제거하기 전에 다른 패스키가 작동하는지 테스트했는지 확인하세요.",
     "fullName": "전체 이름",
@@ -164,6 +197,166 @@
     "deleteAccountPasskeyInfo": "삭제 후 오래된 패스키로 로그인을 시도하면 실패합니다. 혼란을 방지하려면 기기 설정에서 이 계정의 패스키를 수동으로 삭제하세요.",
     "deleteAccountPasskeyInfoWithSignalAPI": "삭제 후 패스키가 기기에서 자동으로 삭제됩니다. 나중에 로그인하려면 새 계정을 만들어야 합니다."
   },
+  "network": {
+    "title": "네트워크 설정",
+    "adminBadge": "네트워크 관리자",
+    "saveSuccess": "네트워크 설정이 저장되었습니다",
+    "saveError": "네트워크 설정 저장에 실패했습니다",
+    "errorHint": "다시 시도하거나 문제가 지속되면 지원팀에 문의하세요.",
+    "accessDenied": "접근 거부",
+    "accessDeniedMessage": "네트워크 설정을 볼 권한이 없습니다. 네트워크 관리자만 이 페이지에 액세스할 수 있습니다.",
+    "tabs": {
+      "settings": "설정",
+      "organizations": "조직",
+      "users": "사용자",
+      "invitations": "초대"
+    },
+    "stats": {
+      "organizations": "조직",
+      "users": "사용자",
+      "devices": "장치",
+      "teams": "팀",
+      "storage": "총 저장소"
+    },
+    "overview": {
+      "networkInfo": "네트워크 정보"
+    },
+    "identity": {
+      "title": "네트워크 아이덴티티",
+      "description": "네트워크의 브랜드와 아이덴티티를 구성하세요.",
+      "name": "네트워크 이름",
+      "namePlaceholder": "네트워크 이름 입력",
+      "nameHelp": "대시보드 헤더에 표시되는 네트워크 이름입니다.",
+      "email": "지원 이메일",
+      "emailPlaceholder": "support@example.com",
+      "emailHelp": "이 이메일은 지원 문의 시 사용자에게 표시됩니다.",
+      "logo": "로고 URL",
+      "logoPlaceholder": "https://example.com/logo.png",
+      "logoHelp": "네트워크 로고 이미지의 URL.",
+      "copyright": "저작권 텍스트",
+      "copyrightPlaceholder": "© 2025 귀사",
+      "copyrightHelp": "대시보드 바닥글에 표시되는 저작권 안내문입니다.",
+      "privacyPolicyUrl": "개인정보 처리방침 URL",
+      "privacyPolicyUrlPlaceholder": "https://example.com/privacy",
+      "privacyPolicyUrlHelp": "로그인 및 회원가입 페이지에 표시되는 개인정보 처리방침 링크입니다.",
+      "defaultLanguage": "기본 언어",
+      "defaultLanguageHelp": "신규 사용자 및 로그인/회원가입 페이지의 기본 언어입니다."
+    },
+    "socialLinks": {
+      "title": "소셜 링크",
+      "description": "푸터에 표시되는 소셜 미디어 링크를 구성합니다.",
+      "github": "GitHub URL",
+      "githubPlaceholder": "https://github.com/yourcompany",
+      "twitter": "X (Twitter) URL",
+      "twitterPlaceholder": "https://x.com/yourcompany",
+      "linkedin": "LinkedIn URL",
+      "linkedinPlaceholder": "https://linkedin.com/company/yourcompany",
+      "facebook": "Facebook URL",
+      "facebookPlaceholder": "https://facebook.com/yourcompany"
+    },
+    "domain": {
+      "title": "도메인 구성",
+      "description": "도메인은 네트워크를 식별하는 데 사용됩니다. 사용자는 이 도메인을 통해 대시보드에 액세스합니다.",
+      "label": "네트워크 도메인",
+      "note": "도메인을 변경하려면 지원팀에 문의하세요."
+    },
+    "access": {
+      "title": "액세스 제어",
+      "description": "사용자가 네트워크에 가입하고 조직을 만드는 방법을 제어합니다.",
+      "invitationOnly": "초대만",
+      "invitationOnlyDescription": "활성화하면 새 사용자는 초대를 통해서만 네트워크에 가입할 수 있습니다. 공개 등록이 비활성화됩니다.",
+      "invitationOnlyOrgAdmins": "조직 생성 제한",
+      "invitationOnlyOrgAdminsDescription": "활성화하면 네트워크 관리자만 새 조직을 만들 수 있습니다. 일반 사용자는 자체 조직을 만들 수 없습니다."
+    },
+    "validation": {
+      "emailRequired": "지원 이메일이 필요합니다",
+      "emailInvalid": "유효한 이메일 주소를 입력해 주세요"
+    },
+    "organizations": {
+      "createTitle": "조직 생성",
+      "createDescription": "이 네트워크 내에 새 조직을 생성합니다.",
+      "name": "조직 이름",
+      "namePlaceholder": "조직 이름 입력",
+      "nameRequired": "조직 이름이 필요합니다",
+      "listTitle": "모든 조직",
+      "noOrganizations": "이 네트워크에 아직 조직이 없습니다",
+      "noSearchResults": "검색과 일치하는 조직을 찾을 수 없습니다.",
+      "searchPlaceholder": "조직 검색...",
+      "createSuccess": "조직이 성공적으로 생성되었습니다",
+      "createError": "조직 생성에 실패했습니다",
+      "loadError": "조직 로드에 실패했습니다",
+      "deleteTitle": "조직 삭제",
+      "deleteConfirmation": "\"{{name}}\"을(를) 삭제하시겠습니까? 이 작업은 취소할 수 없으며 이 조직과 연관된 모든 데이터가 삭제됩니다.",
+      "deleteSuccess": "조직이 성공적으로 삭제되었습니다",
+      "deleteError": "조직 삭제에 실패했습니다",
+      "showingOf": "{{total}}개 조직 중 {{showing}}개 표시",
+      "block": "차단",
+      "unblock": "차단 해제",
+      "blockTitle": "조직 차단",
+      "blockConfirmation": "\"{{name}}\"을(를) 차단하시겠습니까? 이 조직의 모든 사용자가 로그인할 수 없게 됩니다.",
+      "blockSuccess": "조직이 성공적으로 차단되었습니다",
+      "blockError": "조직 차단에 실패했습니다",
+      "unblockTitle": "조직 차단 해제",
+      "unblockConfirmation": "\"{{name}}\"의 차단을 해제하시겠습니까? 사용자가 다시 로그인할 수 있게 됩니다.",
+      "unblockSuccess": "조직 차단이 성공적으로 해제되었습니다",
+      "unblockError": "조직 차단 해제에 실패했습니다"
+    },
+    "users": {
+      "listTitle": "모든 사용자",
+      "name": "이름",
+      "email": "이메일",
+      "noUsers": "이 네트워크에 아직 사용자가 없습니다",
+      "searchPlaceholder": "이름 또는 이메일로 검색...",
+      "inviteTitle": "사용자 초대",
+      "inviteDescription": "이 네트워크 내 조직에 사용자를 초대합니다.",
+      "inviteButton": "사용자 초대",
+      "inviteModalTitle": "조직에 사용자 초대",
+      "selectOrganization": "조직",
+      "selectOrganizationPlaceholder": "조직 선택...",
+      "inviteEmailLabel": "이메일 주소",
+      "inviteEmailPlaceholder": "user@example.com",
+      "roleLabel": "역할",
+      "roleAdmin": "관리자",
+      "roleMember": "멤버",
+      "sendInvite": "초대 보내기",
+      "inviteSuccess": "초대가 성공적으로 전송되었습니다",
+      "inviteError": "초대 전송 실패",
+      "inviteEmailRequired": "이메일 주소를 입력해 주세요",
+      "inviteEmailInvalid": "유효한 이메일 주소를 입력해 주세요",
+      "block": "차단",
+      "unblock": "차단 해제",
+      "blockTitle": "사용자 차단",
+      "blockConfirmation": "\"{{name}}\"을(를) 차단하시겠습니까? 이 사용자는 로그인할 수 없게 됩니다.",
+      "blockSuccess": "사용자가 성공적으로 차단되었습니다",
+      "blockError": "사용자 차단에 실패했습니다",
+      "unblockTitle": "사용자 차단 해제",
+      "unblockConfirmation": "\"{{name}}\"의 차단을 해제하시겠습니까? 이 사용자가 다시 로그인할 수 있게 됩니다.",
+      "unblockSuccess": "사용자 차단이 성공적으로 해제되었습니다",
+      "unblockError": "사용자 차단 해제에 실패했습니다",
+      "deleteTitle": "사용자 삭제",
+      "deleteConfirmation": "\"{{name}}\"을(를) 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+      "deleteSuccess": "사용자가 성공적으로 삭제되었습니다",
+      "deleteError": "사용자 삭제에 실패했습니다"
+    },
+    "invitations": {
+      "title": "네트워크 초대",
+      "description": "이 네트워크의 새 조직에 대한 대기 중인 초대를 확인하고 관리합니다.",
+      "noInvitations": "대기 중인 초대가 없습니다.",
+      "organizationName": "조직 이름",
+      "expires": "만료",
+      "loadError": "초대를 불러오지 못했습니다",
+      "deleteTitle": "초대 삭제",
+      "deleteConfirmation": "\"{{email}}\"에 대한 초대를 삭제하시겠습니까?",
+      "deleteSuccess": "초대가 성공적으로 삭제되었습니다",
+      "deleteError": "초대 삭제에 실패했습니다"
+    },
+    "status": {
+      "active": "활성",
+      "blocked": "차단됨"
+    },
+    "blockReason": "사유 (선택사항)",
+    "blockReasonPlaceholder": "차단 사유를 입력하세요..."
+  },
   "usage": {
     "title": "사용량",
     "resourceUsage": "리소스 사용량",
@@ -177,6 +370,17 @@
     "approachingLimit": "한도에 근접",
     "noUsageData": "사용 가능한 사용량 데이터가 없습니다",
     "unableToLoad": "리소스 사용량 정보를 로드할 수 없습니다",
+    "resources": {
+      "medias": "미디어 파일",
+      "storage": "저장소",
+      "users": "사용자",
+      "devices": "디바이스",
+      "playlists": "재생목록",
+      "channels": "채널",
+      "teams": "팀",
+      "widgets": "위젯",
+      "layouts": "레이아웃"
+    },
     "errors": {
       "fetchUsageData": "사용량 데이터를 가져오는데 실패했습니다: {{error}}"
     }
@@ -275,9 +479,76 @@
     },
     "memberSelection": {
       "selectUser": "사용자 선택",
-      "searchUser": "사용자 검색..."
+      "searchUser": "사용자 검색...",
+      "noUsersAvailable": "초대할 수 있는 사용자가 없습니다.",
+      "inviteToOrgFirst": "사용자는 팀에 추가되기 전에 먼저 조직에 초대되어야 합니다."
     },
     "teamsRemovedSuccessfully": "팀이 성공적으로 제거되었습니다"
+  },
+  "tags": {
+    "title": "태그",
+    "addTag": "태그 추가",
+    "createTag": "태그 생성",
+    "editTag": "태그 편집",
+    "deleteTag": "태그 삭제",
+    "newTag": "새 태그",
+    "tagName": "태그 이름",
+    "tagColor": "태그 색상",
+    "tagGroup": "태그 그룹",
+    "assignedTags": "할당된 태그",
+    "availableTags": "사용 가능한 태그",
+    "noTags": "태그 없음",
+    "noTagsAvailable": "사용 가능한 태그 없음",
+    "noMatchingTags": "일치하는 태그 없음",
+    "allTagsAssigned": "모든 태그 할당됨",
+    "addToResource": "태그 추가",
+    "removeFromResource": "태그 제거",
+    "filterByTags": "태그로 필터링...",
+    "clearAll": "모두 지우기",
+    "manageTags": "태그 관리",
+    "colorPicker": "색상 선택",
+    "searchTags": "태그 검색...",
+    "filterMode": {
+      "any": "일부",
+      "all": "전체",
+      "description": "선택한 태그 중 일부 또는 전체와 일치하는 리소스 찾기"
+    },
+    "confirmDelete": "태그 \"{{name}}\"을(를) 삭제하시겠습니까?",
+    "confirmDeleteMultiple": "다음 태그를 삭제하시겠습니까?",
+    "confirmDeleteGroup": "태그 그룹 \"{{name}}\"을(를) 삭제하시겠습니까? 이 그룹의 모든 태그도 영구적으로 삭제됩니다.",
+    "maxTagsReached": "최대 {{max}}개 태그 도달",
+    "groups": {
+      "title": "태그 그룹",
+      "addGroup": "그룹 추가",
+      "newGroup": "새 그룹",
+      "editGroup": "그룹 편집",
+      "deleteGroup": "그룹 삭제",
+      "noGroups": "태그 그룹 없음",
+      "ungrouped": "그룹 없음",
+      "untagged": "태그 없음"
+    },
+    "messages": {
+      "tagCreated": "태그 \"{{name}}\"이(가) 성공적으로 생성되었습니다",
+      "tagUpdated": "태그 \"{{name}}\"이(가) 성공적으로 업데이트되었습니다",
+      "tagDeleted": "태그 \"{{name}}\"이(가) 성공적으로 삭제되었습니다",
+      "tagAddedToResource": "태그가 성공적으로 추가되었습니다",
+      "tagRemovedFromResource": "태그가 성공적으로 제거되었습니다",
+      "tagsUpdated": "태그가 성공적으로 업데이트되었습니다",
+      "groupCreated": "태그 그룹 \"{{name}}\"이(가) 성공적으로 생성되었습니다",
+      "groupUpdated": "태그 그룹 \"{{name}}\"이(가) 성공적으로 업데이트되었습니다",
+      "groupDeleted": "태그 그룹 \"{{name}}\"이(가) 성공적으로 삭제되었습니다"
+    },
+    "errors": {
+      "createTag": "태그 생성 오류: {{error}}",
+      "updateTag": "태그 업데이트 오류: {{error}}",
+      "deleteTag": "태그 삭제 오류: {{error}}",
+      "tagResource": "리소스에 태그 추가 오류: {{error}}",
+      "untagResource": "리소스에서 태그 제거 오류: {{error}}",
+      "createGroup": "태그 그룹 생성 오류: {{error}}",
+      "updateGroup": "태그 그룹 업데이트 오류: {{error}}",
+      "deleteGroup": "태그 그룹 삭제 오류: {{error}}",
+      "loadFailed": "태그 로드 실패"
+    }
   },
   "login": {
     "title": "로그인",
@@ -289,12 +560,39 @@
     "loading": "로딩 중...",
     "loginWithPasskey": "패스키로 로그인",
     "privacyPolicy": "개인정보 처리방침",
-    "lostCredentials": "자격 증명을 잃어버리셨나요?"
+    "privacyNotice": "귀하의 개인정보를 소중히 여깁니다.",
+    "lostCredentials": "자격 증명을 잃어버리셨나요?",
+    "invitationOnlyNotice": "계정이 없으신가요? 이 서비스는 등록하려면 초대가 필요합니다.",
+    "passkeysNotSupported": "브라우저가 패스키를 지원하지 않습니다. 로그인하려면 최신 브라우저를 사용하세요.",
+    "errors": {
+      "authenticationFailed": "인증에 실패했습니다. 다시 시도해 주세요.",
+      "userBlocked": "귀하의 계정이 차단되었습니다. 사유: {{reason}}",
+      "organizationBlocked": "귀하의 조직이 차단되었습니다. 사유: {{reason}}",
+      "signupFailed": "가입을 시작할 수 없습니다. 나중에 다시 시도해 주세요."
+    }
   },
   "credentialRecovery": {
     "title": "자격 증명 복구",
     "checkYourEmail": "이메일을 확인하세요",
     "addNewPasskey": "새 패스키 추가"
+  },
+  "setupPasskey": {
+    "title": "패스키 설정",
+    "subtitle": "{{domain}}에서 직접 로그인할 수 있도록 패스키를 생성하세요.",
+    "instructions": "환영합니다, {{email}}님! 아래 버튼을 클릭하여 이 도메인의 패스키를 생성하세요.",
+    "createButton": "패스키 생성",
+    "passkeysNotSupported": "브라우저가 패스키를 지원하지 않습니다.",
+    "invalidLink": "잘못된 설정 링크입니다.",
+    "expiredLink": "이 링크가 만료되었습니다. 새 링크를 요청하세요.",
+    "verificationFailed": "링크 확인에 실패했습니다.",
+    "verifying": "링크 확인 중...",
+    "creatingPasskey": "패스키 생성 중...",
+    "challengeFailed": "패스키 생성을 시작할 수 없습니다.",
+    "creationCancelled": "패스키 생성이 취소되었습니다.",
+    "noPublicKey": "공개 키를 가져올 수 없습니다.",
+    "registrationFailed": "패스키 등록에 실패했습니다.",
+    "success": "패스키가 생성되었습니다! 로그인 중...",
+    "unexpectedError": "문제가 발생했습니다. 다시 시도하세요."
   },
   "errors": {
     "generic": "오류가 발생했습니다. 다시 시도해 주세요.",
@@ -306,7 +604,8 @@
     "checkServerRunning": "Castmill 서버가 실행 중인지 확인하세요",
     "checkNetworkConnection": "네트워크 연결을 확인하세요",
     "checkServerUrl": "구성에서 서버 URL을 확인하세요",
-    "retryConnection": "연결 재시도"
+    "retryConnection": "연결 재시도",
+    "authenticationError": "인증 오류: {{message}}"
   },
   "sidebar": {
     "organization": "조직",
@@ -316,9 +615,16 @@
     "devices": "장치",
     "content": "콘텐츠",
     "playlists": "재생 목록",
+    "layouts": "레이아웃",
     "medias": "미디어",
     "widgets": "Widgets",
-    "members": "구성원"
+    "members": "구성원",
+    "network": "네트워크",
+    "networkOverview": "개요",
+    "networkSettings": "설정",
+    "networkOrganizations": "조직",
+    "networkUsers": "사용자 및 초대",
+    "tags": "태그"
   },
   "channels": {
     "title": "채널",
@@ -332,6 +638,7 @@
     "confirmRemoveChannels": "다음 채널을 제거하시겠습니까?",
     "enterChannelName": "채널 이름 입력",
     "defaultPlaylist": "기본 재생목록",
+    "currentPlaylist": "현재 재생목록",
     "selectPlaylist": "재생목록 선택",
     "clearDefaultPlaylist": "기본 재생목록 지우기",
     "dragPlaylists": "재생목록 드래그",
@@ -340,8 +647,14 @@
     "removeChannelEntry": "채널 항목 제거",
     "cannotDeleteChannel": "채널을 삭제할 수 없습니다",
     "success": {
+      "added": "채널 {{name}}이(가) 성공적으로 추가되었습니다",
+      "created": "채널 {{name}}이(가) 생성되었습니다",
+      "updated": "채널 {{name}}이(가) 업데이트되었습니다",
       "updateDefaultPlaylist": "기본 재생목록 업데이트 성공",
       "clearDefaultPlaylist": "기본 재생목록 지우기 성공"
+    },
+    "info": {
+      "contentRequired": "콘텐츠를 표시하려면 이 채널에 기본 재생목록을 설정하거나 예약된 항목을 추가하세요."
     },
     "errors": {
       "removeChannel": "채널 {{name}} 제거 오류: {{error}}",
@@ -437,7 +750,9 @@
     "buildPlaylist": "여기서 재생목록을 만드세요",
     "renamePlaylist": "재생목록 이름 변경",
     "playlistUpdated": "재생목록 \"{{name}}\"이(가) 성공적으로 업데이트되었습니다",
+    "playlistCreated": "재생목록 \"{{name}}\"이(가) 성공적으로 생성되었습니다",
     "errorUpdating": "재생목록 {{name}} 업데이트 오류: {{error}}",
+    "errorCreating": "재생목록 생성 오류: {{error}}",
     "removePlaylist": "재생목록 제거",
     "removePlaylists": "재생목록 제거",
     "confirmRemovePlaylist": "재생목록 \"{{name}}\"을(를) 제거하시겠습니까?",
@@ -446,6 +761,9 @@
     "errorRemovingPlaylists": "재생목록 제거 오류: {{error}}",
     "enterPlaylistName": "재생목록 이름 입력",
     "dragToAdd": "드래그하여 추가",
+    "searchWidgets": "위젯 검색...",
+    "dropHereToAddAtEnd": "끝에 추가하려면 여기에 놓으세요",
+    "duration": "지속 시간",
     "aspectRatio": "화면 비율",
     "aspectRatioWidth": "너비",
     "aspectRatioHeight": "높이",
@@ -471,27 +789,172 @@
       "aspectRatioMax": "값은 100 이하여야 합니다",
       "aspectRatioExtreme": "화면 비율이 너무 극단적입니다 (최대 비율 10:1)",
       "updateAspectRatio": "화면 비율 업데이트 중 오류 발생: {{error}}"
-    }
+    },
+    "credentialsRequired": "자격 증명 필요",
+    "credentialsRequiredDescription": "Widget \"{{widget}}\"을(를) 재생 목록에 추가하려면 먼저 자격 증명을 구성해야 합니다.",
+    "missingIntegrations": "누락된 통합",
+    "goToIntegrations": "통합으로 이동",
+    "widgetModalTitle": "위젯 \"{{name}}\"",
+    "configureYourWidget": "위젯을 구성하세요"
+  },
+  "layouts": {
+    "title": "레이아웃",
+    "addLayout": "레이아웃 추가",
+    "createNewLayout": "새 레이아웃 만들기",
+    "layoutTitle": "레이아웃 \"{{name}}\"",
+    "layoutDetails": "레이아웃 세부정보",
+    "deleteLayout": "레이아웃 삭제",
+    "deleteLayouts": "레이아웃 삭제",
+    "confirmDelete": "\"{{name}}\"을(를) 삭제하시겠습니까?",
+    "confirmDeleteMultiple": "{{count}}개의 레이아웃을 삭제하시겠습니까?",
+    "deleteSuccess": "레이아웃 \"{{name}}\"이(가) 성공적으로 삭제되었습니다",
+    "saveSuccess": "레이아웃이 성공적으로 저장되었습니다",
+    "addSuccess": "레이아웃이 성공적으로 생성되었습니다",
+    "enterLayoutName": "레이아웃 이름 입력",
+    "searchPlaceholder": "레이아웃 검색...",
+    "noLayouts": "레이아웃을 찾을 수 없습니다",
+    "aspectRatio": "화면 비율",
+    "customAspectRatio": "사용자 지정 화면 비율",
+    "invalidAspectRatio": "잘못된 형식입니다. 너비:높이 형식을 사용하세요 (예: 16:9)",
+    "extremeAspectRatio": "화면 비율이 너무 극단적입니다",
+    "zones": "영역",
+    "addZone": "영역 추가",
+    "zoneProperties": "영역 속성",
+    "templates": "템플릿",
+    "bringForward": "앞으로 가져오기",
+    "sendBackward": "뒤로 보내기",
+    "selectLayout": "레이아웃 선택",
+    "searchLayouts": "레이아웃 검색...",
+    "assignPlaylists": "영역에 재생 목록 할당",
+    "zonesCount": "{{count}}개 영역"
   },
   "widgets": {
     "title": "Widgets",
     "uploadWidget": "Widget 업로드",
     "uploadDescription": "Widget JSON 정의 파일을 업로드합니다.",
+    "upload": {
+      "jsonDescription": "위젯 정의가 포함된 JSON 파일을 업로드하세요.",
+      "requiredFields": "필수 필드",
+      "and": "및",
+      "exampleFormat": "예시 형식",
+      "dragAndDropHint": "또는 JSON 또는 ZIP 파일을 여기로 드래그 앤 드롭하세요...",
+      "ready": "준비됨",
+      "invalidFileType": "잘못된 파일 형식입니다. JSON 및 ZIP 파일만 지원됩니다.",
+      "invalidWidgetJson": "잘못된 위젯 JSON: \"name\" 및 \"template\" 필드를 포함해야 합니다",
+      "validationFailed": "유효성 검사 실패",
+      "uploadFailed": "업로드 실패",
+      "uploadedSuccessfully": "업로드 성공",
+      "uploadError": "업로드 오류"
+    },
     "widgetDetails": "Widget 세부정보",
     "updateInterval": "업데이트 간격",
     "viewDetails": "세부정보 보기",
+    "delete": "삭제",
+    "deleteConfirmTitle": "Widget 삭제",
+    "deleteConfirmMessage": "\"{{widget}}\"을(를) 삭제하시겠습니까?",
+    "deleteConfirmUsageWarning": "Widget \"{{widget}}\"이(가) 현재 {{count}}개의 재생 목록에서 사용되고 있습니다. 삭제하면 이 재생 목록에서 모든 인스턴스가 제거됩니다.",
+    "usedInPlaylists": "다음 재생 목록에서 사용 중:",
+    "deleteCascadeNote": "이 작업은 취소할 수 없습니다.",
     "template": "템플릿",
     "optionsSchema": "옵션 스키마",
-    "dataSchema": "데이터 스키마"
+    "dataSchema": "데이터 스키마",
+    "noAssets": "이 Widget에는 포함된 자산이 없습니다.",
+    "assets": {
+      "title": "자산",
+      "icons": "아이콘",
+      "images": "이미지",
+      "fonts": "글꼴",
+      "styles": "스타일"
+    },
+    "spotify": {
+      "title": "Spotify 연결",
+      "connectButton": "Spotify에 연결",
+      "disconnectButton": "연결 해제",
+      "connectDescription": "Spotify 계정을 연결하여 디지털 사이니지에 현재 재생 중인 트랙을 표시합니다.",
+      "connected": "연결됨",
+      "connectedSince": "{{date}}부터 연결됨",
+      "connectionSuccess": "Spotify에 성공적으로 연결되었습니다!",
+      "connectionFailed": "Spotify 연결에 실패했습니다. 다시 시도해 주세요.",
+      "disconnectNotSupported": "연결 해제는 아직 지원되지 않습니다. Spotify 계정 설정에서 액세스를 취소해 주세요."
+    },
+    "integrations": {
+      "title": "통합",
+      "noIntegrations": "이 Widget에 구성된 통합이 없습니다.",
+      "configure": "구성",
+      "configured": "구성됨",
+      "notConfigured": "구성되지 않음",
+      "requiresAuth": "인증 필요",
+      "authType": "인증 유형",
+      "oauth2": "OAuth 2.0",
+      "apiKey": "API 키",
+      "credentials": "자격 증명",
+      "saveCredentials": "자격 증명 저장",
+      "testConnection": "연결 테스트",
+      "testSuccess": "연결 테스트 성공!",
+      "testFailed": "연결 테스트 실패: {{error}}",
+      "credentialsSaved": "자격 증명이 성공적으로 저장되었습니다!",
+      "credentialsSaveFailed": "자격 증명 저장 실패: {{error}}",
+      "credentialsConfigured": "API 자격 증명이 구성되었습니다",
+      "updateCredentials": "자격 증명 업데이트",
+      "deleteCredentials": "자격 증명 삭제",
+      "connectWith": "{{provider}}로 연결",
+      "connectedTo": "{{provider}}에 연결됨",
+      "disconnect": "연결 해제",
+      "confirmDisconnect": "{{provider}} 연결을 해제하시겠습니까? 이 통합을 사용하려면 다시 연결해야 합니다.",
+      "disconnected": "{{provider}} 연결이 해제됨",
+      "disconnectFailed": "연결 해제 실패: {{error}}",
+      "reconnect": "다시 연결",
+      "lastValidated": "마지막 검증: {{date}}",
+      "scopeOrganization": "조직 전체",
+      "scopeWidget": "Widget 전용",
+      "pullMode": "데이터 가져오기",
+      "pushMode": "Webhook",
+      "pullInterval": "{{seconds}}초마다 업데이트",
+      "fieldRequired": "{{field}}은(는) 필수입니다",
+      "connectionStatus": "연결 상태",
+      "valid": "유효",
+      "invalid": "유효하지 않음",
+      "pending": "설정 대기 중",
+      "enterClientCredentials": "아래에 {{provider}} API 자격 증명을 입력하세요:",
+      "afterSavingCredentials": "자격 증명을 저장한 후 아래를 클릭하여 {{provider}}로 인증하세요:",
+      "networkCredentialsConfigured": "네트워크 관리자가 이미 {{provider}} 자격 증명을 구성했습니다. 아래 버튼을 클릭하여 계정을 연결하기만 하면 됩니다.",
+      "noConfigurationRequired": "구성이 필요하지 않음",
+      "optional": "선택 사항"
+    },
+    "translations": "번역"
   },
   "devices": {
     "setDeviceChannel": "기기 채널 설정",
     "selectChannel": "채널 선택",
     "preview": {
-      "placeholder": "미리보기"
+      "placeholder": "미리보기",
+      "noChannels": "이 장치에 할당된 채널이 없습니다",
+      "noScheduledContent": "현재 예약된 콘텐츠가 없습니다",
+      "errorLoadingPlaylist": "재생 목록 콘텐츠를 로드하지 못했습니다",
+      "errorInitializing": "미리보기를 초기화하지 못했습니다",
+      "currentlyPlaying": "현재 채널에서 예약됨",
+      "note": "이것은 채널 일정에 따라 장치가 현재 재생해야 하는 내용을 보여주며, 장치에 실제로 표시되는 내용은 아닐 수 있습니다."
     },
     "telemetry": {
-      "placeholder": "추적, 로그, 메트릭 및 연결성(WiFi 품질 등)"
+      "placeholder": "추적, 로그, 메트릭 및 연결성(WiFi 품질 등)",
+      "storage": "저장소",
+      "memory": "메모리",
+      "cpu": "CPU 사용률",
+      "cpuLoad": "CPU 평균 부하",
+      "network": "네트워크",
+      "connectionType": "연결 유형",
+      "wifiSignal": "WiFi 신호",
+      "temperature": "온도",
+      "fanSpeed": "팬 속도",
+      "battery": "배터리",
+      "charging": "충전 중",
+      "uptime": "가동 시간",
+      "refresh": "원격 측정 새로고침",
+      "offlineWarning": "장치가 오프라인입니다. 원격 측정 데이터는 장치가 연결된 경우에만 사용할 수 있습니다.",
+      "noData": "이 장치에서 사용 가능한 원격 측정 데이터가 없습니다.",
+      "daysShort": "일",
+      "hoursShort": "시",
+      "minutesShort": "분"
     },
     "maintenance": {
       "refresh": "새로고침",
@@ -506,11 +969,57 @@
       "checkUpdatesDescription": "업데이트를 확인하고 설치합니다. 기기를 재시작하지 않습니다",
       "updateFirmware": "펌웨어 업데이트",
       "updateFirmwareDescription": "기기의 펌웨어를 업데이트합니다",
-      "offlineMessage": "기기가 오프라인 상태이므로 명령을 보낼 수 없습니다"
+      "offlineMessage": "기기가 오프라인 상태이므로 명령을 보낼 수 없습니다",
+      "autorecoveryUpdated": "자동 복구가 업데이트되었습니다",
+      "autorecoveryUpdateFailed": "자동 복구 업데이트에 실패했습니다",
+      "edit": "편집",
+      "enableForOneHour": "1시간 동안 활성화",
+      "enableForever": "영구 활성화",
+      "disable": "비활성화",
+      "recoverLostSettingsLabel": "분실 설정 복구",
+      "disabled": "비활성화됨",
+      "enabledMinutesRemaining": "활성화됨 ({{minutes}}분 남음)",
+      "enabledForever": "영구 활성화됨"
+    },
+    "cache": {
+      "title": "기기 캐시",
+      "items": "캐시 항목",
+      "dataTab": "데이터",
+      "codeTab": "코드",
+      "mediaTab": "미디어",
+      "deleteSelected": "선택한 항목 삭제",
+      "clearAll": "모두 지우기",
+      "confirmDelete": "캐시 항목 삭제",
+      "confirmDeleteMessage": "이 캐시 항목을 삭제하시겠습니까? URL: {{url}}",
+      "confirmDeleteMultiple": "여러 항목 삭제",
+      "confirmDeleteMultipleMessage": "{{count}}개의 캐시 항목을 삭제하시겠습니까?",
+      "confirmClearAll": "모든 캐시 지우기",
+      "confirmClearAllMessage": "모든 {{type}} 캐시 항목을 지우시겠습니까? 이 작업은 취소할 수 없습니다.",
+      "deleteSuccess": "캐시 항목이 성공적으로 삭제되었습니다",
+      "deleteMultipleSuccess": "{{count}}개의 캐시 항목이 성공적으로 삭제되었습니다",
+      "clearAllSuccess": "모든 캐시 항목이 성공적으로 지워졌습니다",
+      "deleteError": "캠시 삭제 중 오류 발생: {{error}}",
+      "offlineWarning": "기기가 현재 오프라인 상태입니다. 기기가 다시 온라인 상태가 될 때까지 캠시 정보를 가져올 수 없습니다."
+    },
+    "events": {
+      "title": "기기 이벤트",
+      "items": "이벤트",
+      "filterError": "오류",
+      "filterWarning": "경고",
+      "filterInfo": "정보",
+      "filterOnline": "온라인",
+      "filterOffline": "오프라인",
+      "clearAll": "모든 이벤트 지우기",
+      "confirmClearAll": "모든 이벤트 지우기",
+      "confirmClearAllMessage": "이 기기의 모든 이벤트를 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.",
+      "clearAllSuccess": "{{count}}개의 이벤트가 성공적으로 삭제되었습니다",
+      "deleteError": "이벤트 삭제 중 오류 발생: {{error}}"
     },
     "errors": {
       "setChannelFailed": "기기 채널 설정 실패: {{error}}",
-      "commandFailed": "요청 처리 중 오류가 발생했습니다"
+      "commandFailed": "요청 처리 중 오류가 발생했습니다",
+      "invalidPincode": "유효하지 않은 PIN 코드입니다. 기기에 표시된 PIN 코드를 확인한 후 다시 시도하세요.",
+      "pincodeExpired": "이 PIN 코드는 만료되었습니다. 기기 등록 과정을 다시 시작해 주세요."
     },
     "assignedChannels": "할당된 채널",
     "addChannel": "채널 추가",
@@ -537,6 +1046,20 @@
     "errorRegisteringDevice": "기기 등록 오류: {{error}}",
     "errorRemovingDevice": "기기 {{name}} 제거 오류: {{error}}",
     "errorRemovingDevices": "기기 제거 오류: {{error}}",
+    "enterDescription": "설명을 입력하세요",
+    "drawerTitle": "기기 \"{{name}}\"",
+    "info": {
+      "title": "정보",
+      "platform": "플랫폼",
+      "playerVersion": "플레이어 버전",
+      "operatingSystem": "운영 체제",
+      "hardware": "하드웨어",
+      "environmentVersion": "환경 버전",
+      "chromiumVersion": "Chromium 버전",
+      "v8Version": "V8 버전",
+      "nodeVersion": "Node.js 버전",
+      "userAgent": "사용자 에이전트"
+    },
     "remoteControl": {
       "title": "원격 제어",
       "status": "상태",
@@ -583,7 +1106,8 @@
   },
   "validation": {
     "fieldRequired": "이 필드는 필수입니다",
-    "minLength": "이 필드는 최소 {{min}}자 이상이어야 합니다"
+    "minLength": "이 필드는 최소 {{min}}자 이상이어야 합니다",
+    "invalidCoordinates": "이 필드에는 유효한 좌표가 필요합니다"
   },
   "plurals": {
     "items": {
@@ -607,12 +1131,16 @@
     "title": "회원가입",
     "continueWithPasskey": "패스키로 계속",
     "privacyPolicy": "개인정보 처리방침",
+    "privacyNotice": "귀하의 개인정보를 소중히 여깁니다.",
     "checkYourEmail": "이메일을 확인하세요",
     "errors": {
       "couldNotCreateCredential": "자격 증명을 생성할 수 없습니다",
       "couldNotGetPublicKey": "공개 키를 가져올 수 없습니다",
       "invalidCredential": "유효하지 않은 자격 증명",
       "signupFailed": "회원가입 중 문제가 발생했습니다. 지원팀에 문의하세요. 오류: {{error}}"
+    },
+    "success": {
+      "accountCreated": "계정이 성공적으로 생성되었습니다!"
     }
   },
   "search": {
@@ -728,12 +1256,21 @@
   "filters": {
     "teamLabel": "팀",
     "teamPlaceholder": "팀 선택",
-    "teamClear": "팀 필터 지우기"
+    "teamClear": "팀 필터 지우기",
+    "tagLabel": "태그",
+    "tagPlaceholder": "태그로 필터링…",
+    "tagClear": "태그 필터 지우기",
+    "tagSearchPlaceholder": "태그 검색…",
+    "tagFilterModeAny": "하나라도",
+    "tagFilterModeAll": "모두",
+    "noMatches": "일치하는 항목 없음",
+    "noItems": "항목 없음"
   },
   "shortcuts": {
     "showShortcutsLegend": "키보드 단축키 표시",
     "closeDialog": "대화 상자 닫기",
     "gotoPlaylists": "재생 목록으로 이동",
+    "gotoLayouts": "레이아웃으로 이동",
     "gotoMedias": "미디어로 이동",
     "gotoWidgets": "위젯으로 이동",
     "gotoChannels": "채널로 이동",
@@ -755,5 +1292,179 @@
       "title": "키보드 단축키",
       "description": "이 단축키를 사용하여 더 빠르게 탐색하세요"
     }
+  },
+  "onboarding": {
+    "title": "Castmill에 오신 것을 환영합니다!",
+    "subtitle": "조직 이름을 지정하는 것으로 시작하겠습니다.",
+    "organizationNameLabel": "조직 이름",
+    "organizationNamePlaceholder": "조직 이름을 입력하세요",
+    "helpText": "이 이름은 작업 공간을 식별하는 데 사용됩니다. 나중에 설정에서 변경할 수 있습니다.",
+    "continueButton": "계속",
+    "success": "조직 설정 완료!",
+    "errors": {
+      "organizationNameRequired": "조직 이름이 필요합니다",
+      "organizationNameTooShort": "조직 이름은 최소 2자 이상이어야 합니다",
+      "organizationNameTooLong": "조직 이름은 50자 미만이어야 합니다",
+      "organizationNameTaken": "이 조직 이름은 이미 사용 중입니다. 다른 이름을 선택해 주세요.",
+      "failed": "설정을 완료하지 못했습니다. 다시 시도해 주세요."
+    }
+  },
+  "onboardingTour": {
+    "title": "시작 가이드",
+    "progressText": "{{total}}단계 중 {{current}}단계 완료",
+    "markComplete": "완료로 표시",
+    "stepCompleted": "단계가 완료되었습니다!",
+    "stepCompletedBadge": "완료됨",
+    "allStepsComplete": "축하합니다! 모든 온보딩 단계를 완료했습니다!",
+    "dismissed": "온보딩 가이드가 닫혔습니다. 설정에서 언제든지 다시 시작할 수 있습니다.",
+    "dismissConfirmTitle": "시작 가이드를 닫으시겠어요?",
+    "dismissConfirmMessage": "상단 툴바의 로켓 아이콘에서 언제든지 다시 열 수 있습니다.",
+    "skip": "건너뛰기",
+    "finish": "가이드 종료",
+    "goToStep": "{{step}}단계로 이동",
+    "learnMore": "더 알아보기",
+    "steps": {
+      "findGuide": {
+        "title": "언제든지 이 가이드 찾기",
+        "description": "상단 탐색 바에서 로켓 아이콘을 찾으세요. 언제든지 클릭하여 이 시작 가이드를 다시 열고 중단한 부분부터 계속할 수 있습니다.",
+        "action": "보여주세요"
+      },
+      "chooseLanguage": {
+        "title": "언어 선택",
+        "description": "상단 탐색 바의 드롭다운에서 원하는 언어를 선택하세요. 이렇게 하면 전체 애플리케이션 인터페이스가 번역되어 사용이 더 쉬워집니다.",
+        "action": "언어 선택"
+      },
+      "uploadMedia": {
+        "title": "첫 번째 미디어 업로드",
+        "description": "디지털 사이니지 화면에 표시할 이미지, 동영상 또는 기타 콘텐츠를 업로드하여 시작하세요. 파일을 드래그 앤 드롭하거나 업로드 버튼을 사용할 수 있습니다.",
+        "action": "미디어 라이브러리로 이동"
+      },
+      "createPlaylist": {
+        "title": "첫 번째 재생목록 만들기",
+        "description": "콘텐츠를 재생목록으로 구성하세요. 미디어 파일과 위젯을 추가하여 매력적인 콘텐츠 시퀀스를 만들 수 있습니다. 각 항목의 표시 시간과 전환 효과를 설정할 수 있습니다.",
+        "action": "재생목록으로 이동"
+      },
+      "createChannel": {
+        "title": "채널 설정",
+        "description": "채널은 재생목록과 일정을 결합합니다. 채널을 만들고 기본 재생목록을 할당하여 하루 중 다른 시간에 재생할 콘텐츠를 제어하세요.",
+        "action": "채널로 이동"
+      },
+      "registerDevice": {
+        "title": "첫 번째 디바이스 등록",
+        "description": "먼저 플레이어를 열어 등록 코드를 받은 다음, 여기에서 해당 코드를 입력해 디바이스를 등록하세요. 팁: 테스트를 위해 컴퓨터에서 브라우저 플레이어를 열 수 있습니다—{{playerUrl}}을(를) 사용하세요.",
+        "action": "디바이스로 이동"
+      },
+      "assignChannel": {
+        "title": "디바이스에 채널 할당",
+        "description": "디바이스가 표시할 콘텐츠를 알 수 있도록 채널을 연결하세요. 각 디바이스는 한 번에 하나의 채널에 할당할 수 있지만 언제든지 변경할 수 있습니다.",
+        "action": "디바이스 관리"
+      },
+      "advancedPlaylist": {
+        "title": "레이아웃을 사용한 고급 재생목록 만들기",
+        "description": "레이아웃을 사용하여 여러 항목을 동시에 표시함으로써 콘텐츠를 한 단계 업그레이드하세요. 화면을 영역으로 나누고 각 영역에 다른 콘텐츠를 표시하세요.",
+        "action": "레이아웃 탐색"
+      },
+      "createTagGroup": {
+        "title": "태그 그룹으로 정리하기",
+        "description": "태그 페이지로 이동하여 첫 번째 태그 그룹을 만드세요—'위치'나 '캐페인'처럼요. 그룹을 사용하면 태그를 의미 있는 차원으로 분류하여 트리 뷰를 구동할 수 있습니다.",
+        "action": "태그로 이동"
+      },
+      "tagContent": {
+        "title": "콘텐츠에 태그 지정",
+        "description": "미디어 항목을 열고 태그를 할당하세요. 태그는 콘텐츠를 검색, 필터링 및 정리할 수 있게 해줍니다. 여러 항목을 선택하여 한꺼번에 태그를 지정할 수도 있습니다.",
+        "action": "미디어 라이브러리로 이동"
+      },
+      "exploreTreeView": {
+        "title": "트리 뷰 탐색하기",
+        "description": "트리 뷰로 전환하여 태그 그룹별로 정리된 콘텐츠를 확인하세요. 태그를 펼쳐 세부 내용을 살펴보고, 차원을 재배치하고, 라이브러리를 탐색하는 완전히 새로운 방법을 발견하세요.",
+        "action": "트리 뷰 사용해보기"
+      }
+    },
+    "errors": {
+      "failedToCompleteStep": "단계를 완료로 표시하지 못했습니다. 다시 시도해 주세요.",
+      "failedToDismiss": "가이드를 닫지 못했습니다. 다시 시도해 주세요."
+    }
+  },
+  "medias": {
+    "upload": {
+      "fileTooLarge": "파일 크기({{fileSize}})가 최대 업로드 제한({{maxSize}})을 초과합니다",
+      "largeFileWarning": "대용량 파일({{fileSize}}). 업로드에 시간이 걸릴 수 있습니다.",
+      "noValidFiles": "업로드할 유효한 파일이 없습니다.",
+      "uploadError": "파일 업로드 중 오류가 발생했습니다.",
+      "uploadFailed": "업로드 실패: {{error}}",
+      "serverError": "서버 오류 (상태 {{status}})",
+      "unknownError": "알 수 없는 오류"
+    },
+    "thumbnail": {
+      "failedTitle": "트랜스코딩 실패",
+      "failedDefaultMessage": "미리보기를 자동으로 생성할 수 없습니다."
+    },
+    "drawerTitle": "미디어 \"{{name}}\"",
+    "mediaUpdated": "미디어 \"{{name}}\"이(가) 성공적으로 업데이트되었습니다",
+    "errorUpdating": "미디어 {{name}} 업데이트 오류: {{error}}"
+  },
+  "dashboard": {
+    "noOrganizations": {
+      "title": "조직 없음",
+      "description": "아직 이 네트워크의 조직에 소속되어 있지 않습니다. 네트워크 관리자에게 연락하여 액세스 권한을 받으세요."
+    }
+  },
+  "aspectRatio": {
+    "custom": "사용자 정의"
+  },
+  "deviceTimers": {
+    "title": "기기 전원 타이머",
+    "description": "기기가 자동으로 켜지고 꺼지는 시간을 설정하십시오",
+    "onTimers": "켜짐 타이머",
+    "offTimers": "꺼짐 타이머",
+    "addOnTimer": "켜짐 타이머 추가",
+    "addOffTimer": "꺼짐 타이머 추가",
+    "time": "시간",
+    "days": "요일",
+    "deleteTimer": "타이머 삭제",
+    "saveTimers": "타이머 저장",
+    "maxTimersReached": "최대 6개의 타이머에 도달했습니다",
+    "monday": "월",
+    "tuesday": "화",
+    "wednesday": "수",
+    "thursday": "목",
+    "friday": "금",
+    "saturday": "토",
+    "sunday": "일",
+    "mon": "월",
+    "tue": "화",
+    "wed": "수",
+    "thu": "목",
+    "fri": "금",
+    "sat": "토",
+    "sun": "일",
+    "allDays": "모든 요일",
+    "noTimers": "구성된 타이머 없음",
+    "timersSaved": "타이머가 성공적으로 저장되었습니다",
+    "timersLoadError": "타이머 로드 오류",
+    "timersSaveError": "타이머 저장 오류",
+    "playerOffByTimer": "재생이 타이머에 의해 꺼졌습니다",
+    "nextOnTime": "다음 예약된 켜짐: {time}",
+    "notSupported": "이 기기에서는 타이머 하드웨어 제어가 지원되지 않습니다. 소프트웨어 폴백을 사용합니다."
+  },
+  "deviceSchedule": {
+    "title": "기기 스케줄",
+    "description": "기기가 켜져야 하는 시간을 정의합니다. 그리드에서 클릭하고 드래그하여 스케줄 항목을 만듭니다. 예약된 시간 외에는 기기가 꺼집니다. 항목이 설정되지 않으면 기기는 항상 켜져 있습니다.",
+    "mon": "월",
+    "tue": "화",
+    "wed": "수",
+    "thu": "목",
+    "fri": "금",
+    "sat": "토",
+    "sun": "일",
+    "save": "스케줄 저장",
+    "reset": "초기화",
+    "delete": "항목 삭제",
+    "onLabel": "켜짐",
+    "noScheduleAlwaysOn": "스케줄 미설정 — 기기는 항상 켜져 있음",
+    "saved": "스케줄이 저장되고 기기로 전송되었습니다",
+    "savedOffline": "스케줄이 저장되었습니다. 기기가 오프라인입니다 — 재연결 시 타이머가 전송됩니다.",
+    "loadError": "스케줄 로드 오류",
+    "saveError": "스케줄 저장 오류"
   }
 }

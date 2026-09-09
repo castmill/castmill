@@ -43,6 +43,18 @@ export class Player extends EventEmitter {
       synced: false,
     }
   ) {
+    const timerIsActive = Boolean(
+      this.timerSubscription && !this.timerSubscription.closed
+    );
+    const playIsActive = Boolean(this.playing && !this.playing.closed);
+
+    // Ignore redundant play calls while already running in non-synced mode.
+    // External callers may invoke play() repeatedly (e.g. UI/watchers), which
+    // would otherwise stop/restart playback and truncate current segments.
+    if (timerIsActive && playIsActive && !opts.synced) {
+      return;
+    }
+
     // Define the baseline time for the timer
     const baseline = opts.baseline || Date.now();
 
@@ -116,19 +128,27 @@ export function timer(
   period: number
 ) {
   return new Observable<number>((subscriber) => {
-    let timeout = 0;
-    let tick = start;
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+
+    const hasValidPeriod = Number.isFinite(period) && period > 0;
+    const normalize = (value: number, modulo: number) =>
+      ((value % modulo) + modulo) % modulo;
+
     const updateTick = () => {
+      const elapsed = Date.now() - baseline;
+      const tick = hasValidPeriod
+        ? normalize(start + elapsed, period)
+        : start + elapsed;
+
       subscriber.next(tick);
-      tick = (tick + interval) % period;
-      baseline = baseline + interval;
-      const drift = baseline - Date.now();
-      timeout = setTimeout(updateTick, interval + drift);
+      timeout = setTimeout(updateTick, interval);
     };
     updateTick();
 
     return () => {
-      clearTimeout(timeout);
+      if (timeout !== undefined) {
+        clearTimeout(timeout);
+      }
     };
   });
 }

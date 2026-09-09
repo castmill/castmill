@@ -1,20 +1,20 @@
 /**
  * Custom hook for managing team filtering in resource pages
- * 
+ *
  * This hook provides team fetching and filtering logic that can be reused
  * across all resource pages (medias, playlists, devices, channels).
- * 
+ *
  * Features:
  * - Team selection persisted in localStorage per organization
  * - Optional URL parameter reading for shareable filtered views
  * - Automatic validation of URL params against loaded teams
  * - Consistent behavior across dashboard and addon components
- * 
+ *
  * URL Parameter Support:
  * When params is provided, the hook reads ?team_id=X from the URL on mount
  * and validates it against the loaded teams. If valid, it sets the initial
  * selection. This enables shareable links like /org/123/content/playlists?team_id=5
- * 
+ *
  * Note: URL parameter updates (write) should be handled by the parent component
  * if needed, as addons cannot directly access @solidjs/router. This hook only
  * reads from URL (Option A: Read-Only URL Support).
@@ -22,6 +22,7 @@
 
 import { createEffect, createSignal, on } from 'solid-js';
 import type { SearchParams, SetSearchParams } from '../interfaces/addon-store';
+import { authFetch } from '../services/auth-fetch';
 
 export interface Team {
   id: number;
@@ -31,7 +32,7 @@ export interface Team {
 interface UseTeamFilterProps {
   baseUrl: string;
   organizationId: string;
-  /** 
+  /**
    * Optional URL search params tuple from useSearchParams() or props.params
    * Enables reading ?team_id=X from URL for initial team selection
    */
@@ -104,7 +105,10 @@ const loadSelectedTeamId = (organizationId: string): number | null => {
 /**
  * Save the selected team ID to localStorage for an organization
  */
-const saveSelectedTeamId = (organizationId: string, teamId: number | null): void => {
+const saveSelectedTeamId = (
+  organizationId: string,
+  teamId: number | null
+): void => {
   try {
     const key = getStorageKey(organizationId);
     if (teamId === null) {
@@ -117,7 +121,9 @@ const saveSelectedTeamId = (organizationId: string, teamId: number | null): void
   }
 };
 
-export const useTeamFilter = (props: UseTeamFilterProps): UseTeamFilterReturn => {
+export const useTeamFilter = (
+  props: UseTeamFilterProps
+): UseTeamFilterReturn => {
   const [teams, setTeams] = createSignal<Team[]>([]);
 
   const getInitialTeamId = (): number | null => {
@@ -145,10 +151,17 @@ export const useTeamFilter = (props: UseTeamFilterProps): UseTeamFilterReturn =>
   };
 
   const initialTeamId = getInitialTeamId();
-  const [selectedTeamId, setSelectedTeamId] = createSignal<number | null>(initialTeamId);
-  const [hasHydratedFromParams, setHasHydratedFromParams] = createSignal(initialTeamId !== null);
+  const [selectedTeamId, setSelectedTeamId] = createSignal<number | null>(
+    initialTeamId
+  );
+  const [hasHydratedFromParams, setHasHydratedFromParams] = createSignal(
+    initialTeamId !== null
+  );
 
-  const syncTeamIdSearchParam = (teamId: number | null, options?: { replace?: boolean }) => {
+  const syncTeamIdSearchParam = (
+    teamId: number | null,
+    options?: { replace?: boolean }
+  ) => {
     if (!props.params) {
       return;
     }
@@ -256,11 +269,10 @@ export const useTeamFilter = (props: UseTeamFilterProps): UseTeamFilterReturn =>
   createEffect(async () => {
     if (props.organizationId) {
       try {
-        const response = await fetch(
+        const response = await authFetch(
           `${props.baseUrl}/dashboard/organizations/${props.organizationId}/teams?page=1&page_size=100`,
           {
             method: 'GET',
-            credentials: 'include',
           }
         );
         if (response.ok) {

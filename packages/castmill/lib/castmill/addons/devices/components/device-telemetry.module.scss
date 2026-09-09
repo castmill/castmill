@@ -1,0 +1,231 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+  padding: 0.5em 0;
+}
+
+.offlineWarning {
+  background-color: #3d3d3d;
+  border-left: 4px solid #f0ad4e;
+  padding: 0.8em 1em;
+  border-radius: 4px;
+}
+
+.offlineWarning p {
+  margin: 0;
+  color: #f0ad4e;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14em, 1fr));
+  gap: 1em;
+}
+
+.card {
+  background: #2a2a2e;
+  border-radius: 0.5em;
+  padding: 1em;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75em;
+  border: 1px solid #3a3a3e;
+  transition: border-color 0.2s;
+}
+
+.card:hover {
+  border-color: #5792ee;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  font-size: 0.85em;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.cardIcon {
+  font-size: 1.1em;
+}
+
+.cardValue {
+  font-size: 1.4em;
+  font-weight: 700;
+  color: #e8e8e8;
+}
+
+.cardDetail {
+  font-size: 0.8em;
+  color: #888;
+}
+
+/* Progress bar */
+.progressBarContainer {
+  width: 100%;
+  height: 0.5em;
+  background: #1a1a1e;
+  border-radius: 0.25em;
+  overflow: hidden;
+}
+
+.progressBarFill {
+  height: 100%;
+  border-radius: 0.25em;
+  transition: width 0.3s ease;
+}
+
+/* Signal strength bars */
+.signalBars {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.15em;
+  height: 1.2em;
+}
+
+.signalBar {
+  width: 0.3em;
+  border-radius: 0.1em;
+  background: #3a3a3e;
+  transition: background 0.2s;
+}
+
+.signalBarActive {
+  /* color set inline */
+}
+
+/* Temperature list */
+.tempList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4em;
+}
+
+.tempItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85em;
+}
+
+.tempLabel {
+  color: #aaa;
+}
+
+.tempValue {
+  font-weight: 600;
+}
+
+/* Fan list */
+.fanList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4em;
+}
+
+.fanItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85em;
+}
+
+.fanLabel {
+  color: #aaa;
+}
+
+.fanValue {
+  font-weight: 600;
+  color: #e8e8e8;
+}
+
+/* Toolbar */
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5em;
+}
+
+/* Load average pills */
+.loadAvgContainer {
+  display: flex;
+  gap: 0.5em;
+}
+
+.loadAvgPill {
+  background: #1a1a1e;
+  border-radius: 0.3em;
+  padding: 0.2em 0.5em;
+  font-size: 0.8em;
+  color: #aaa;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15em;
+}
+
+.loadAvgLabel {
+  font-size: 0.7em;
+  color: #666;
+  text-transform: uppercase;
+}
+
+.loadAvgValue {
+  font-weight: 600;
+  color: #e8e8e8;
+}
+
+/* Battery indicator */
+.batteryContainer {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.chargingIcon {
+  color: #4caf50;
+  font-size: 0.9em;
+}
+
+/* Network info row */
+.networkInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3em;
+  font-size: 0.85em;
+}
+
+.networkRow {
+  display: flex;
+  justify-content: space-between;
+}
+
+.networkLabel {
+  color: #aaa;
+}
+
+.networkValue {
+  color: #e8e8e8;
+  font-weight: 500;
+}
+
+/* No data message */
+.noData {
+  color: #888;
+  text-align: center;
+  padding: 2em;
+  font-style: italic;
+}
+
+/* Error message */
+.errorMessage {
+  background-color: #3d2020;
+  border-left: 4px solid #e74c3c;
+  padding: 0.8em 1em;
+  border-radius: 4px;
+  color: #e74c3c;
+}

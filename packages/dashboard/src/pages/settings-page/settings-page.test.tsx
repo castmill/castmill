@@ -12,6 +12,7 @@ vi.mock('../../components/auth', () => ({
     email: 'john@example.com',
   })),
   updateUser: vi.fn(),
+  authFetch: vi.fn(),
 }));
 
 // Mock the user service

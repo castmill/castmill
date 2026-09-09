@@ -33,6 +33,9 @@ config :castmill, CastmillWeb.Endpoint,
 # at the `config/runtime.exs`.
 config :castmill, Castmill.Mailer, adapter: Swoosh.Adapters.Local
 
+# Default sender address for outgoing emails
+config :castmill, :mailer_from, {"Castmill", "no-reply@castmill.com"}
+
 # Configure esbuild (the version is required)
 config :esbuild,
   version: "0.17.11",
@@ -71,6 +74,7 @@ config :castmill, :addons, [
   Castmill.Addons.Onboarding,
   Castmill.Addons.Content,
   Castmill.Addons.Playlists,
+  Castmill.Addons.Layouts,
   Castmill.Addons.Medias,
   Castmill.Addons.Widgets,
   Castmill.Addons.Devices
@@ -93,12 +97,38 @@ config :ex_aws, :s3,
   access_key_id: System.get_env("AWS_ACCESS_KEY_ID"),
   secret_access_key: System.get_env("AWS_SECRET_ACCESS_KEY")
 
-# Configure Oban
-config :castmill, Oban,
-  plugins: [{Oban.Plugins.Pruner, max_age: 300}],
-  engine: Oban.Engines.Basic,
-  queues: [image_transcoder: 10, video_transcoder: 10],
-  repo: Castmill.Repo
+# Configure BullMQ
+config :bullmq, :backend, BullMQ.Backends.Postgres
+
+config :castmill, :bullmq,
+  connection: :castmill_bullmq,
+  queues: [
+    {:image_transcoder, concurrency: 10},
+    {:video_transcoder, concurrency: 10},
+    {:integration_polling, concurrency: 5},
+    {:integrations, concurrency: 5},
+    {:maintenance, concurrency: 2},
+    {:email, concurrency: 5}
+  ],
+  # Queues whose completion/failure events a web-capable node listens to (via
+  # BullMQ.QueueEvents) when it does not process the queue locally. This lets a
+  # web+worker node run light queues while re-broadcasting dashboard updates from
+  # heavy queues on a separate fleet. Entries may be a bare queue atom (which uses
+  # the default transcoder handler) or a `{queue, handler_module}` tuple.
+  completion_event_queues: [:video_transcoder, :image_transcoder]
+
+config :castmill, :bullmq_postgres,
+  schema: "bullmq",
+  pool_size: 10
+
+# Configure Spotify OAuth (widget integration)
+# In production, set SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, and SPOTIFY_REDIRECT_URI
+config :castmill, :spotify_oauth,
+  client_id: System.get_env("SPOTIFY_CLIENT_ID"),
+  client_secret: System.get_env("SPOTIFY_CLIENT_SECRET"),
+  redirect_uri:
+    System.get_env("SPOTIFY_REDIRECT_URI") || "http://localhost:4000/auth/spotify/callback",
+  scopes: ["user-read-currently-playing", "user-read-playback-state"]
 
 # Configure gettext
 config :castmill, CastmillWeb.Gettext, default_locale: "en"

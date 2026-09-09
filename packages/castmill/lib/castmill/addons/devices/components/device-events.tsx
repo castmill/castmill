@@ -1,10 +1,15 @@
 import { Component, createSignal } from 'solid-js';
+import { BsTrash } from 'solid-icons/bs';
 
 import {
   TableView,
   TableViewRef,
   SortOptions,
   Column,
+  Filter,
+  ConfirmDialog,
+  useToast,
+  Button,
 } from '@castmill/ui-common';
 
 import { Device } from '../interfaces/device.interface';
@@ -12,7 +17,9 @@ import { Device } from '../interfaces/device.interface';
 import { DevicesService } from '../services/devices.service';
 
 interface DeviceTableLogItem {
+  id: string;
   timestamp: string;
+  type: string;
   type_name: string;
   msg?: string;
 }
@@ -23,14 +30,39 @@ export const DeviceLogs: Component<{
   t?: (key: string, params?: Record<string, any>) => string;
 }> = (props) => {
   const t = props.t || ((key: string) => key);
+  const toast = useToast();
+
+  const typeNameMap: Record<string, string> = {
+    e: t('devices.events.filterError'),
+    w: t('devices.events.filterWarning'),
+    i: t('devices.events.filterInfo'),
+    o: t('devices.events.filterOnline'),
+    x: t('devices.events.filterOffline'),
+  };
 
   const columns = [
     { key: 'timestamp', title: t('common.time'), sortable: true },
-    { key: 'type_name', title: t('common.type'), sortable: true },
+    {
+      key: 'type',
+      title: t('common.type'),
+      sortable: true,
+      render: (item: DeviceTableLogItem) => (
+        <span>{typeNameMap[item.type] || item.type}</span>
+      ),
+    },
     { key: 'msg', title: t('common.message'), sortable: false },
   ] as Column<DeviceTableLogItem>[];
 
-  const [selectedItems, setSelectedItems] = createSignal(new Set<string>());
+  // Filters for event types
+  const eventFilters: Filter[] = [
+    { key: 'e', name: t('devices.events.filterError'), isActive: true },
+    { key: 'w', name: t('devices.events.filterWarning'), isActive: true },
+    { key: 'i', name: t('devices.events.filterInfo'), isActive: true },
+    { key: 'o', name: t('devices.events.filterOnline'), isActive: true },
+    { key: 'x', name: t('devices.events.filterOffline'), isActive: true },
+  ];
+
+  const [showConfirmClearAll, setShowConfirmClearAll] = createSignal(false);
 
   const itemsPerPage = 10; // Number of items to show per page
 
@@ -45,12 +77,18 @@ export const DeviceLogs: Component<{
     search?: string;
     filters?: Record<string, string | boolean>;
   }) => {
+    // Extract active filter keys (event types)
+    const filterTypes = filters
+      ? Object.keys(filters).filter((key) => filters[key])
+      : [];
+
     return DevicesService.getDeviceEvents(
       props.baseUrl,
       props.device.id,
       page.num,
       page.size,
-      sortOptions
+      sortOptions,
+      filterTypes
     );
   };
 
@@ -66,23 +104,59 @@ export const DeviceLogs: Component<{
     }
   };
 
-  const onRowSelect = (rowsSelected: Set<string>) => {
-    setSelectedItems(rowsSelected);
+  const clearAllEvents = async () => {
+    try {
+      const result = await DevicesService.deleteDeviceEvents(
+        props.baseUrl,
+        props.device.id
+      );
+      toast.success(
+        t('devices.events.clearAllSuccess', { count: result.deleted })
+      );
+      refreshData();
+    } catch (error) {
+      toast.error(t('devices.events.deleteError', { error: String(error) }));
+    }
+    setShowConfirmClearAll(false);
   };
 
   return (
-    <div>
+    <>
       <TableView
-        title="Device's Events"
-        resource="events"
+        title={t('devices.events.title')}
+        resource={t('devices.events.items')}
         fetchData={fetchLogs}
         ref={setRef}
         table={{
           columns,
-          onRowSelect,
+          hideCheckboxes: true,
+        }}
+        toolbar={{
+          filters: eventFilters,
+          requireOneActiveFilter: false,
+          hideSearch: true,
+          hideTitle: true,
         }}
         pagination={{ itemsPerPage }}
       ></TableView>
-    </div>
+
+      <div style="display: flex; justify-content: flex-end; margin-top: 1em;">
+        <Button
+          onClick={() => setShowConfirmClearAll(true)}
+          icon={BsTrash}
+          label={t('devices.events.clearAll')}
+          color="danger"
+        />
+      </div>
+
+      {/* Confirm dialog for clearing all events */}
+      <ConfirmDialog
+        show={showConfirmClearAll()}
+        onConfirm={clearAllEvents}
+        onClose={() => setShowConfirmClearAll(false)}
+        title={t('devices.events.confirmClearAll')}
+        message={t('devices.events.confirmClearAllMessage')}
+      />
+    </>
   );
 };

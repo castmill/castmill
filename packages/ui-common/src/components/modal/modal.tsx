@@ -196,6 +196,7 @@ export const Modal: Component<ModalProps> = (props) => {
     <Portal mount={document.body}>
       <div
         data-testid="modal-overlay"
+        data-modal-overlay
         class={`${styles.modalOverlay} ${isActive() ? styles.active : ''}`}
         onClick={closeModalOnOverlayClick}
       >

@@ -13,17 +13,20 @@ defmodule Castmill.Devices.Device do
              :id,
              :name,
              :description,
+             :autorecover_until,
              :last_ip,
              :last_online,
              :online,
              :loc_lat,
              :loc_long,
+             :info,
              :meta,
              :settings,
              :timezone,
              :user_agent,
              :version,
              :volume,
+             :schedule,
              :rc_last_heartbeat,
              :inserted_at,
              :updated_at
@@ -47,6 +50,8 @@ defmodule Castmill.Devices.Device do
     field(:hardware_id, :string)
     field(:token_hash, :string)
     field(:mode, :string, default: "normal")
+    field(:schedule, :map)
+    field(:autorecover_until, :utc_datetime)
     field(:rc_last_heartbeat, :utc_datetime)
 
     field(:token, :string, virtual: true)
@@ -83,7 +88,8 @@ defmodule Castmill.Devices.Device do
       :volume,
       :info,
       :hardware_id,
-      :organization_id
+      :organization_id,
+      :autorecover_until
     ])
     |> put_pass_hash()
     |> validate_required([
@@ -118,7 +124,9 @@ defmodule Castmill.Devices.Device do
       :volume,
       :info,
       :hardware_id,
-      :organization_id
+      :organization_id,
+      :schedule,
+      :autorecover_until
     ])
     |> put_pass_hash()
   end

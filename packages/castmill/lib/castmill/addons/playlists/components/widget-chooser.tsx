@@ -13,9 +13,18 @@ import { RiEditorDraggable } from 'solid-icons/ri';
 import { FaSolidMagnifyingGlass } from 'solid-icons/fa';
 
 import { DEFAULT_WIDGET_ICON } from '../../common/constants';
+import { isImageIcon, getIconUrl } from '../utils/icon-utils';
+import {
+  getTranslatedWidgetName,
+  getTranslatedWidgetDescription,
+} from '../../common/utils/widget-catalog-utils';
 import './widget-chooser.scss';
 
-const WidgetItem: Component<{ widget: JsonWidget }> = (props) => {
+const WidgetItem: Component<{
+  widget: JsonWidget;
+  baseUrl: string;
+  locale?: string;
+}> = (props) => {
   const [dragging, setDragging] = createSignal(false);
 
   let draggableRef: HTMLDivElement | undefined = undefined;
@@ -37,12 +46,11 @@ const WidgetItem: Component<{ widget: JsonWidget }> = (props) => {
     }
   });
 
-  const isImageIcon =
-    props.widget.icon &&
-    (props.widget.icon.startsWith('data:image/') ||
-      props.widget.icon.startsWith('http://') ||
-      props.widget.icon.startsWith('https://') ||
-      props.widget.icon.startsWith('/'));
+  const iconUrl = () => getIconUrl(props.widget.icon, props.baseUrl);
+  const showAsImage = () => isImageIcon(iconUrl());
+  const widgetName = () => getTranslatedWidgetName(props.widget, props.locale);
+  const widgetDescription = () =>
+    getTranslatedWidgetDescription(props.widget, props.locale);
 
   return (
     <div
@@ -52,10 +60,10 @@ const WidgetItem: Component<{ widget: JsonWidget }> = (props) => {
     >
       <IconWrapper icon={RiEditorDraggable} />
       <div class="widget-icon">
-        {isImageIcon ? (
+        {showAsImage() ? (
           <img
-            src={props.widget.icon}
-            alt={props.widget.name}
+            src={iconUrl()}
+            alt={widgetName()}
             onError={(e) => {
               (e.target as HTMLImageElement).style.display = 'none';
               const fallback = document.createTextNode(DEFAULT_WIDGET_ICON);
@@ -67,8 +75,8 @@ const WidgetItem: Component<{ widget: JsonWidget }> = (props) => {
         )}
       </div>
       <div class="info">
-        <div class="name">{props.widget.name}</div>
-        <div class="description">{props.widget.description}</div>
+        <div class="name">{widgetName()}</div>
+        <div class="description">{widgetDescription()}</div>
       </div>
     </div>
   );
@@ -78,6 +86,9 @@ const SEARCH_DEBOUNCE_PERIOD = 300;
 
 export const WidgetChooser: Component<{
   widgets: JsonWidget[];
+  baseUrl: string;
+  locale?: string;
+  t?: (key: string, params?: Record<string, any>) => string;
   onSearch?: (searchText: string) => void;
 }> = (props) => {
   const [searchText, setSearchText] = createSignal('');
@@ -114,14 +125,22 @@ export const WidgetChooser: Component<{
             type="text"
             value={searchText()}
             onInput={handleSearchChange}
-            placeholder="Search widgets..."
+            placeholder={
+              props.t?.('playlists.searchWidgets') || 'Search widgets...'
+            }
             class="search-input"
           />
         </div>
       </div>
       <div class="items-container">
         <For each={props.widgets}>
-          {(widget) => <WidgetItem widget={widget} />}
+          {(widget) => (
+            <WidgetItem
+              widget={widget}
+              baseUrl={props.baseUrl}
+              locale={props.locale}
+            />
+          )}
         </For>
       </div>
     </div>

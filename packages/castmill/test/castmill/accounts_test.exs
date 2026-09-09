@@ -365,4 +365,135 @@ defmodule Castmill.AccountsTest do
       assert {:error, :not_found} = Accounts.delete_user(fake_user_id)
     end
   end
+
+  describe "get_network_id_by_domain/1" do
+    import Castmill.NetworksFixtures
+
+    test "resolves network by primary domain" do
+      network = network_fixture(%{domain: "primary.example.com", name: "Primary Net"})
+
+      assert {:ok, network.id} == Accounts.get_network_id_by_domain("https://primary.example.com")
+    end
+
+    test "strips protocol before matching" do
+      network = network_fixture(%{domain: "myapp.example.com", name: "Proto Net"})
+
+      assert {:ok, network.id} == Accounts.get_network_id_by_domain("http://myapp.example.com")
+      assert {:ok, network.id} == Accounts.get_network_id_by_domain("https://myapp.example.com")
+    end
+
+    test "strips path and query from origin" do
+      network = network_fixture(%{domain: "myapp.example.com", name: "Path Net"})
+
+      assert {:ok, network.id} ==
+               Accounts.get_network_id_by_domain("https://myapp.example.com/some/path?q=1")
+    end
+
+    test "returns error for unknown domain with no resolver configured" do
+      Application.delete_env(:castmill, :additional_domain_resolver)
+
+      assert {:error, :network_not_found} =
+               Accounts.get_network_id_by_domain("https://unknown.example.com")
+    end
+
+    test "falls back to additional resolver when primary domain not found" do
+      _network = network_fixture(%{domain: "primary.example.com", name: "Fallback Net"})
+
+      Application.put_env(:castmill, :additional_domain_resolver, {__MODULE__, :mock_resolver})
+
+      on_exit(fn -> Application.delete_env(:castmill, :additional_domain_resolver) end)
+
+      assert {:ok, "mock-resolved-id"} =
+               Accounts.get_network_id_by_domain("https://custom.example.com")
+    end
+
+    test "does not call resolver when primary domain matches" do
+      network = network_fixture(%{domain: "primary.example.com", name: "NoFallback Net"})
+
+      # Configure a resolver that would fail if called
+      Application.put_env(
+        :castmill,
+        :additional_domain_resolver,
+        {__MODULE__, :mock_resolver_raise}
+      )
+
+      on_exit(fn -> Application.delete_env(:castmill, :additional_domain_resolver) end)
+
+      # Should resolve via primary domain, never hitting the resolver
+      assert {:ok, network.id} ==
+               Accounts.get_network_id_by_domain("https://primary.example.com")
+    end
+
+    test "normalizes resolver errors to :network_not_found" do
+      Application.put_env(
+        :castmill,
+        :additional_domain_resolver,
+        {__MODULE__, :mock_resolver_bad_error}
+      )
+
+      on_exit(fn -> Application.delete_env(:castmill, :additional_domain_resolver) end)
+
+      assert {:error, :network_not_found} =
+               Accounts.get_network_id_by_domain("https://unknown.example.com")
+    end
+
+    test "normalizes resolver non-binary ok result to :network_not_found" do
+      Application.put_env(
+        :castmill,
+        :additional_domain_resolver,
+        {__MODULE__, :mock_resolver_bad_ok}
+      )
+
+      on_exit(fn -> Application.delete_env(:castmill, :additional_domain_resolver) end)
+
+      assert {:error, :network_not_found} =
+               Accounts.get_network_id_by_domain("https://unknown.example.com")
+    end
+
+    test "handles resolver crash gracefully" do
+      Application.put_env(
+        :castmill,
+        :additional_domain_resolver,
+        {__MODULE__, :mock_resolver_raise}
+      )
+
+      on_exit(fn -> Application.delete_env(:castmill, :additional_domain_resolver) end)
+
+      import ExUnit.CaptureLog
+
+      {result, log} =
+        with_log(fn ->
+          Accounts.get_network_id_by_domain("https://unknown.example.com")
+        end)
+
+      assert {:error, :network_not_found} = result
+      assert log =~ "additional_domain_resolver failed"
+    end
+
+    test "supports {mod, fun, args} tuple config" do
+      Application.put_env(
+        :castmill,
+        :additional_domain_resolver,
+        {__MODULE__, :mock_resolver_with_args, [:extra_arg]}
+      )
+
+      on_exit(fn -> Application.delete_env(:castmill, :additional_domain_resolver) end)
+
+      assert {:ok, "resolved-with-extra_arg"} =
+               Accounts.get_network_id_by_domain("https://unknown.example.com")
+    end
+
+    test "returns error for nil origin" do
+      assert {:error, :network_not_found} = Accounts.get_network_id_by_domain(nil)
+    end
+
+    # Mock resolver functions
+    def mock_resolver("custom.example.com"), do: {:ok, "mock-resolved-id"}
+    def mock_resolver(_domain), do: {:error, :network_not_found}
+
+    def mock_resolver_bad_error(_domain), do: {:error, :some_other_reason}
+    def mock_resolver_bad_ok(_domain), do: {:ok, 12345}
+    def mock_resolver_raise(_domain), do: raise(RuntimeError, "resolver exploded")
+    def mock_resolver_with_args(_domain, extra), do: {:ok, "resolved-with-#{extra}"}
+  end
 end

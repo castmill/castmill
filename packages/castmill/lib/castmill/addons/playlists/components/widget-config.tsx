@@ -1,6 +1,15 @@
-import { Component, For, createEffect, createSignal, Show } from 'solid-js';
+import {
+  Component,
+  For,
+  createEffect,
+  createSignal,
+  onCleanup,
+  Show,
+} from 'solid-js';
+import { authFetch } from '../../common/services/auth-fetch';
 import {
   JsonPlaylistItem,
+  JsonPlaylist,
   JsonMedia,
   FieldAttributes,
   SimpleType,
@@ -8,6 +17,12 @@ import {
   ComplexFieldAttributes,
   OptionsDict,
   JsonWidgetConfig,
+  LayoutFieldAttributes,
+  LayoutOptionValue,
+  LayoutRefFieldAttributes,
+  LayoutRefValue,
+  LocationValue,
+  LocationFieldAttributes,
 } from '@castmill/player';
 import { BsCheckLg } from 'solid-icons/bs';
 import { BsX } from 'solid-icons/bs';
@@ -17,12 +32,17 @@ import {
   ComboBox,
   useToast,
   Timestamp,
+  LocationPicker,
 } from '@castmill/ui-common';
 import { ResourcesService } from '../services/resources.service';
+import { PlaylistsService } from '../services/playlists.service';
 import { AddonStore } from '../../common/interfaces/addon-store';
+import { getTranslatedWidgetOption } from '../../common/utils/widget-catalog-utils';
 
 import './widget-config.scss';
 import { WidgetView } from './widget-view';
+import { LayoutEditor } from '../../common/components/layout-editor';
+import { LayoutRefEditor } from '../../common/components/layout-ref-editor';
 
 /**
  * WidgetConfig
@@ -37,13 +57,154 @@ interface WidgetConfigProps {
   baseUrl: string;
   item: JsonPlaylistItem;
   organizationId: string;
+  playlistId: number;
   onSubmit: (value: {
     config: Partial<JsonWidgetConfig>;
     expandedOptions: OptionsDict;
   }) => Promise<void>;
 }
 
-type FormTypes = 'text' | 'number' | 'boolean' | 'ref' | 'color' | 'url';
+type FormTypes =
+  | 'text'
+  | 'number'
+  | 'boolean'
+  | 'ref'
+  | 'color'
+  | 'url'
+  | 'select'
+  | 'layout'
+  | 'layout-ref'
+  | 'location'
+  | 'map'
+  | 'list';
+
+export type SchemaAttributeType =
+  | SimpleType
+  | FieldAttributes
+  | ComplexFieldAttributes
+  | ReferenceAttributes
+  | LayoutFieldAttributes
+  | LayoutRefFieldAttributes
+  | LocationFieldAttributes;
+
+export const normalizeSchemaEntries = (
+  rawOptionsSchema: unknown
+): [string, SchemaAttributeType][] => {
+  let entries: [string, SchemaAttributeType][];
+
+  if (Array.isArray(rawOptionsSchema)) {
+    entries = rawOptionsSchema.map(
+      (item: any) => [item.key, item] as [string, SchemaAttributeType]
+    );
+  } else {
+    entries = Object.entries(
+      (rawOptionsSchema || {}) as Record<string, SchemaAttributeType>
+    ) as [string, SchemaAttributeType][];
+  }
+
+  return entries.sort((a, b) => {
+    const orderA = (a[1] as FieldAttributes).order ?? Infinity;
+    const orderB = (b[1] as FieldAttributes).order ?? Infinity;
+    return orderA - orderB;
+  });
+};
+
+export const isLayoutRefValid = (
+  value: LayoutRefValue | null | undefined
+): boolean => {
+  if (!value) return false;
+  if (!value.layoutId) return false;
+  if (!value.zones?.zones || value.zones.zones.length === 0) return false;
+
+  const zonePlaylistMap = value.zonePlaylistMap || {};
+  for (const zone of value.zones.zones) {
+    const assignment = zonePlaylistMap[zone.id];
+    if (!assignment || !assignment.playlistId) {
+      return false;
+    }
+  }
+  return true;
+};
+
+export const isLocationValueValid = (
+  value: LocationValue | null | undefined
+): boolean => {
+  if (!value) return false;
+  if (typeof value.lat !== 'number' || Number.isNaN(value.lat)) return false;
+  if (typeof value.lng !== 'number' || Number.isNaN(value.lng)) return false;
+  if (value.lat < -90 || value.lat > 90) return false;
+  if (value.lng < -180 || value.lng > 180) return false;
+  return true;
+};
+
+export const normalizeFormValue = (
+  value: unknown
+): string | number | boolean => {
+  if (
+    typeof value === 'string' ||
+    typeof value === 'number' ||
+    typeof value === 'boolean'
+  ) {
+    return value;
+  }
+
+  return '';
+};
+
+export function isValidURL(url: string): boolean {
+  if (!url || url.trim() === '') {
+    return true;
+  }
+
+  if (!/^(https?|ftp):\/\//i.test(url)) {
+    return false;
+  }
+
+  try {
+    const urlObj = new URL(url);
+    const hostname = urlObj.hostname;
+    if (!hostname || hostname.length === 0) {
+      return false;
+    }
+
+    const isLocalhost = hostname === 'localhost';
+    const isIPAddress = /^(\d{1,3}\.){3}\d{1,3}$/.test(hostname);
+    const hasTLD = /\.[a-z]{2,}$/i.test(hostname);
+
+    return isLocalhost || isIPAddress || hasTLD;
+  } catch {
+    return false;
+  }
+}
+
+export const parseCollectionFilters = (
+  collection: string
+): { collectionName: string; filters: Record<string, string | boolean> } => {
+  const collectionParts = collection.split('|');
+  const collectionName = collectionParts[0];
+
+  const filters: Record<string, string | boolean> = {};
+  if (collectionParts.length > 1) {
+    collectionParts.slice(1).forEach((part) => {
+      const [filterKey, filterValue] = part.split(':');
+      if (filterKey && filterValue) {
+        filters[filterKey] = filterValue;
+      }
+    });
+  }
+
+  return { collectionName, filters };
+};
+
+export const getMediaPlaceholderText = (
+  filters: Record<string, string | boolean>,
+  t: (key: string) => string
+): string =>
+  filters['type'] === 'image'
+    ? t('common.selectImage')
+    : filters['type'] === 'video'
+      ? t('common.selectVideo')
+      : t('common.selectMedia');
 
 export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
   const toast = useToast();
@@ -51,24 +212,104 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
   const [isFormModified, setIsFormModified] = createSignal(false);
   const [isFormValid, setIsFormValid] = createSignal(false);
   const [errors, setErrors] = createSignal(new Map());
+  // Initialize with current playlist ID to prevent self-selection immediately
+  const [excludedPlaylistIds, setExcludedPlaylistIds] = createSignal<number[]>([
+    props.playlistId,
+  ]);
 
   // Get i18n functions from store
   const t = (key: string, params?: Record<string, any>) =>
     props.store.i18n?.t(key, params) || key;
+  const locale = () => props.store.i18n?.locale() || 'en';
 
-  console.log('WidgetConfig', props.item, props.organizationId);
-  const optionsSchema = props.item.widget.options_schema || {};
+  const translateWidgetOptionLabel = (
+    optionKey: string,
+    fallback?: string
+  ): string =>
+    getTranslatedWidgetOption(
+      props.item.widget,
+      optionKey,
+      'label',
+      fallback,
+      locale()
+    ) ??
+    fallback ??
+    optionKey;
 
-  if (!optionsSchema) {
-    return <div>No configuration available</div>;
+  const translateWidgetOptionDescription = (
+    optionKey: string,
+    fallback?: string
+  ): string | undefined =>
+    getTranslatedWidgetOption(
+      props.item.widget,
+      optionKey,
+      'description',
+      fallback,
+      locale()
+    );
+
+  const translateWidgetOptionPlaceholder = (
+    optionKey: string,
+    fallback?: string
+  ): string | undefined =>
+    getTranslatedWidgetOption(
+      props.item.widget,
+      optionKey,
+      'placeholder',
+      fallback,
+      locale()
+    );
+
+  // Fetch ancestor playlist IDs to prevent circular references
+  createEffect(async () => {
+    try {
+      const response = await authFetch(
+        `${props.baseUrl}/dashboard/organizations/${props.organizationId}/playlists/${props.playlistId}/ancestors`
+      );
+      if (response.ok) {
+        const data = await response.json();
+        // Include the current playlist and its ancestors in the exclusion list
+        setExcludedPlaylistIds([
+          props.playlistId,
+          ...(data.ancestor_ids || []),
+        ]);
+      }
+    } catch (error) {
+      console.error('Failed to fetch playlist ancestors:', error);
+      // At minimum, exclude the current playlist itself
+      setExcludedPlaylistIds([props.playlistId]);
+    }
+  });
+
+  const rawOptionsSchema = props.item.widget.options_schema || {};
+
+  const schemaEntries = normalizeSchemaEntries(rawOptionsSchema);
+
+  if (!rawOptionsSchema || schemaEntries.length === 0) {
+    return <div>{t('common.noConfigurationAvailable')}</div>;
   }
 
   const copyOptions = (options: Record<string, any>) => {
-    return JSON.parse(JSON.stringify(options));
+    // Use a safe deep clone that handles circular references
+    const seen = new WeakSet();
+    const safeClone = (obj: any): any => {
+      if (obj === null || typeof obj !== 'object') return obj;
+      if (seen.has(obj)) return undefined; // Skip circular references
+      seen.add(obj);
+      if (Array.isArray(obj)) return obj.map(safeClone);
+      const result: Record<string, any> = {};
+      for (const key in obj) {
+        if (Object.prototype.hasOwnProperty.call(obj, key)) {
+          result[key] = safeClone(obj[key]);
+        }
+      }
+      return result;
+    };
+    return safeClone(options);
   };
 
   const setDefaultOptions = (options: Record<string, any>) => {
-    const entries = Object.entries(optionsSchema);
+    const entries = schemaEntries;
     for (const [key, schema] of entries) {
       if (
         typeof options[key] === 'undefined' &&
@@ -87,10 +328,108 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
   const [widgetOptions, setWidgetOptions] =
     createSignal<OptionsDict>(originalOptions);
 
+  // Integration data shown in the live preview. Unlike the playlist item view,
+  // the preview must reflect the options currently being edited (e.g. toggling
+  // the temperature unit on the Weather widget) before they are saved. We fetch
+  // it via the prefetch endpoint, which computes the data from the supplied
+  // options rather than the previously persisted ones.
+  const [previewData, setPreviewData] = createSignal<Record<
+    string,
+    any
+  > | null>(null);
+
+  let previewFetchTimer: ReturnType<typeof setTimeout> | undefined;
+  // Monotonic id used to discard responses from superseded requests, so that a
+  // slow request cannot overwrite the preview of a newer one.
+  let previewRequestId = 0;
+
+  createEffect(() => {
+    // Track option changes so the preview refetches when they change.
+    const options = { ...widgetOptions(), display_locale: locale() };
+    const widgetId = props.item.widget?.id;
+
+    if (!widgetId || !props.baseUrl || !props.organizationId) {
+      return;
+    }
+
+    // Debounce to avoid hammering the integration endpoint while the user is
+    // still editing (e.g. typing into text fields).
+    if (previewFetchTimer) {
+      clearTimeout(previewFetchTimer);
+    }
+
+    const requestId = ++previewRequestId;
+    previewFetchTimer = setTimeout(async () => {
+      const result = await PlaylistsService.prefetchWidgetData(
+        props.baseUrl,
+        props.organizationId,
+        widgetId,
+        options,
+        // Live preview fetches are ephemeral: they must not register background
+        // polling schedulers for option combinations that may never be saved.
+        { preview: true }
+      );
+
+      // Ignore out-of-order responses from superseded requests.
+      if (requestId !== previewRequestId) {
+        return;
+      }
+
+      setPreviewData(result && result.data ? result.data : null);
+    }, 500);
+  });
+
+  onCleanup(() => {
+    if (previewFetchTimer) {
+      clearTimeout(previewFetchTimer);
+    }
+    // Discard any in-flight response once the component goes away.
+    previewRequestId++;
+  });
+
+  /**
+   * Gets the form type for a schema entry.
+   */
+  const getFormType = (schema: any): FormTypes => {
+    // If it's an object schema with enum, render as select
+    if (schema && typeof schema === 'object' && schema.enum) {
+      return 'select';
+    }
+    const schemaType = schema?.type || schema;
+    switch (schemaType) {
+      case 'string':
+        return 'text';
+      case 'integer':
+        return 'number';
+      default:
+        return schemaType;
+    }
+  };
+
   const checkFormValidity = () => {
-    const entries = Object.entries(optionsSchema);
+    const entries = schemaEntries;
     const options = widgetOptions();
+
     for (const [key, schema] of entries) {
+      // Check layout-ref fields have all zones assigned
+      const fieldType = getFormType(schema);
+      if (fieldType === 'layout-ref') {
+        const layoutRefValue = options[key] as
+          | LayoutRefValue
+          | null
+          | undefined;
+        if (!isLayoutRefValid(layoutRefValue)) {
+          return false;
+        }
+      }
+
+      if (fieldType === 'location') {
+        const locationValue = options[key] as LocationValue | null | undefined;
+        if (!isLocationValueValid(locationValue)) {
+          return false;
+        }
+      }
+
       if (
         (schema as FieldAttributes).required &&
         typeof (schema as FieldAttributes).default === 'undefined' &&
@@ -106,19 +445,6 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
 
     return true;
   };
-
-  function isValidURL(url: string): boolean {
-    const urlPattern = new RegExp(
-      '^((https?|ftp):\\/\\/)?' + // protocol
-        '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.?)+[a-z]{2,}|' + // domain name
-        '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
-        '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' + // port and path
-        '(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
-        '(\\#[-a-z\\d_]*)?$',
-      'i' // fragment locator
-    );
-    return !!urlPattern.test(url);
-  }
 
   const validateField = (
     type: FormTypes,
@@ -161,6 +487,11 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
         break;
       case 'list':
         break;
+      case 'location':
+        if (!isLocationValueValid(value as LocationValue | null | undefined)) {
+          errorMessage = t('validation.invalidCoordinates');
+        }
+        break;
       default:
         errorMessage = `Unknown type: ${type}`;
     }
@@ -177,18 +508,56 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
   const getValue = (
     key: string,
     schema: { default?: any }
-  ): string | number | boolean | object => {
+  ): string | number | boolean | object | null => {
     const options = widgetOptions();
-    return options[key] || schema.default || '';
+    return options[key] ?? schema.default ?? '';
   };
 
+  /**
+   * Gets a reference value (media or playlist) from widget options.
+   * Returns undefined if the value is not an object with the expected type.
+   */
+  const getReferenceValue = <T extends object>(key: string): T | undefined => {
+    const value = widgetOptions()[key];
+    if (value && typeof value === 'object') {
+      return value as T;
+    }
+    return undefined;
+  };
+
+  /**
+   * Maps JSON Schema types to form field types.
+   * Also handles special cases like enums (which render as select dropdowns).
+   */
   const getType = (value: any): FormTypes => {
-    return value.type || value;
+    // If it's an object schema with enum, render as select
+    if (value && typeof value === 'object' && value.enum) {
+      return 'select';
+    }
+
+    const schemaType = value?.type || value;
+
+    // Map JSON Schema types to form types
+    switch (schemaType) {
+      case 'string':
+        return 'text';
+      case 'integer':
+        return 'number';
+      default:
+        return schemaType;
+    }
   };
 
+  // Re-validate form whenever widgetOptions or errors change
+  // Note: checkFormValidity reads widgetOptions() and errors(),
+  // so SolidJS will automatically track these dependencies
   createEffect(() => {
+    // Read signals to create dependencies
+    widgetOptions();
+    errors();
+    // Now check validity
     setIsFormValid(checkFormValidity());
-  }, [isFormModified, widgetOptions]);
+  });
 
   function componentForItem(
     key: string,
@@ -197,6 +566,9 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
       | ReferenceAttributes
       | SimpleType
       | ComplexFieldAttributes
+      | LayoutFieldAttributes
+      | LayoutRefFieldAttributes
+      | LocationFieldAttributes
   ) {
     const type = getType(schema);
     switch (type) {
@@ -205,16 +577,27 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
       case 'boolean':
       case 'color':
       case 'url':
-        /* placeholder={schema?.placeholder} */
+        const fieldSchema = schema as FieldAttributes & {
+          title?: string;
+          placeholder?: string;
+        };
+        const formValue = getValue(key, fieldSchema);
         return (
           <FormItem
-            label={key}
+            label={translateWidgetOptionLabel(key, fieldSchema.title || key)}
             id={key}
             type={type}
-            value={getValue(key, schema as FieldAttributes)}
-            description={(schema as FieldAttributes).description}
+            value={normalizeFormValue(formValue)}
+            placeholder={translateWidgetOptionPlaceholder(
+              key,
+              fieldSchema.placeholder
+            )}
+            description={translateWidgetOptionDescription(
+              key,
+              fieldSchema.description
+            )}
             onInput={(value: string | number | boolean) => {
-              if (validateField(type, schema as FieldAttributes, key, value)) {
+              if (validateField(type, fieldSchema, key, value)) {
                 setWidgetOptions({ ...widgetOptions(), [key]: value });
                 setIsFormModified(true);
               }
@@ -224,31 +607,51 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
             <div class="error">{errors().get(key)}</div>
           </FormItem>
         );
+      case 'select':
+        // Handle enum fields as dropdown selects
+        const enumSchema = schema as {
+          enum?: string[];
+          default?: string;
+          description?: string;
+        };
+        const enumOptions = enumSchema.enum || [];
+        const currentValue = getValue(key, enumSchema) as string;
+
+        return (
+          <div class="form-item-wrapper">
+            <div class="form-item1">
+              <label for={key}>{translateWidgetOptionLabel(key, key)}</label>
+              <select
+                id={key}
+                value={currentValue}
+                onChange={(e) => {
+                  const newValue = e.currentTarget.value;
+                  setWidgetOptions({ ...widgetOptions(), [key]: newValue });
+                  setIsFormModified(true);
+                  setIsFormValid(checkFormValidity());
+                }}
+                class="styled-select"
+              >
+                {enumOptions.map((option) => (
+                  <option value={option} selected={option === currentValue}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+              <div class="error">{errors().get(key)}</div>
+            </div>
+            <Show when={enumSchema.description}>
+              <div class="description">
+                {translateWidgetOptionDescription(key, enumSchema.description)}
+              </div>
+            </Show>
+          </div>
+        );
       case 'ref':
         const collection = (schema as ReferenceAttributes).collection;
 
-        // Parse collection string (e.g., "medias|type:image" or "medias|type:video")
-        const collectionParts = collection.split('|');
-        const collectionName = collectionParts[0];
-
-        // Extract filters from collection string
-        const filters: Record<string, string | boolean> = {};
-        if (collectionParts.length > 1) {
-          collectionParts.slice(1).forEach((part) => {
-            const [filterKey, filterValue] = part.split(':');
-            if (filterKey && filterValue) {
-              filters[filterKey] = filterValue;
-            }
-          });
-        }
-
-        // Determine media type for placeholder text
-        const placeholderText =
-          filters['type'] === 'image'
-            ? t('common.selectImage')
-            : filters['type'] === 'video'
-              ? t('common.selectVideo')
-              : t('common.selectMedia');
+        const { collectionName, filters } = parseCollectionFilters(collection);
+        const placeholderText = getMediaPlaceholderText(filters, t);
 
         switch (collectionName) {
           case 'medias':
@@ -256,9 +659,9 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
               <>
                 <ComboBox<JsonMedia>
                   id={key}
-                  label={key}
+                  label={translateWidgetOptionLabel(key, key)}
                   placeholder={placeholderText}
-                  value={getValue(key, schema as FieldAttributes)}
+                  value={getReferenceValue<JsonMedia>(key)}
                   renderItem={(item: JsonMedia) => {
                     return (
                       <div class="media-item">
@@ -299,14 +702,189 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
                 <div class="error">{errors().get(key)}</div>
               </>
             );
+          case 'playlists':
+            return (
+              <>
+                <ComboBox<JsonPlaylist>
+                  id={key}
+                  label={translateWidgetOptionLabel(key, key)}
+                  placeholder={t('common.selectPlaylist')}
+                  value={getReferenceValue<JsonPlaylist>(key)}
+                  renderItem={(item: JsonPlaylist) => {
+                    return (
+                      <div class="playlist-item">
+                        <div>{item.name}</div>
+                      </div>
+                    );
+                  }}
+                  fetchItems={async (
+                    page: number,
+                    pageSize: number,
+                    search: string
+                  ) => {
+                    // Filter out playlists that would cause circular references
+                    const excluded = excludedPlaylistIds();
+                    const filterParams: Record<string, string | boolean> = {};
+                    if (excluded.length > 0) {
+                      filterParams.exclude_ids = excluded.join(',');
+                    }
+                    return ResourcesService.fetch<JsonPlaylist>(
+                      props.baseUrl,
+                      props.organizationId,
+                      collectionName,
+                      {
+                        page,
+                        page_size: pageSize,
+                        search,
+                        filters:
+                          Object.keys(filterParams).length > 0
+                            ? filterParams
+                            : undefined,
+                      }
+                    );
+                  }}
+                  onSelect={async (playlist: JsonPlaylist) => {
+                    // Fetch the full playlist with items for proper preview rendering
+                    // The list endpoint returns playlists without items loaded
+                    try {
+                      const fullPlaylist = await PlaylistsService.getPlaylist(
+                        props.baseUrl,
+                        props.organizationId,
+                        playlist.id
+                      );
+                      setWidgetOptions({
+                        ...widgetOptions(),
+                        [key]: fullPlaylist,
+                      });
+                    } catch (error) {
+                      // Fallback to the basic playlist if full fetch fails
+                      console.warn(
+                        'Failed to fetch full playlist, using basic data:',
+                        error
+                      );
+                      setWidgetOptions({ ...widgetOptions(), [key]: playlist });
+                    }
+                    setIsFormModified(true);
+                    setIsFormValid(checkFormValidity());
+                  }}
+                />
+                <div class="error">{errors().get(key)}</div>
+              </>
+            );
           default:
             throw new Error(
               t('errors.unknownResourceType', { resourceType: collectionName })
             );
         }
+      case 'layout':
+        const layoutSchema = schema as LayoutFieldAttributes;
+        const defaultLayout: LayoutOptionValue = layoutSchema.default || {
+          aspectRatio: '16:9',
+          zones: [],
+        };
+        // Use a getter function to ensure reactivity - widgetOptions() is a signal
+        const getCurrentLayout = () =>
+          (widgetOptions()[key] as LayoutOptionValue) || defaultLayout;
+
+        return (
+          <div class="form-item-wrapper">
+            <label>{translateWidgetOptionLabel(key, key)}</label>
+            <Show when={layoutSchema.description}>
+              <div class="description">
+                {translateWidgetOptionDescription(
+                  key,
+                  layoutSchema.description
+                )}
+              </div>
+            </Show>
+            <LayoutEditor
+              value={getCurrentLayout()}
+              schema={layoutSchema}
+              onChange={(newValue: LayoutOptionValue) => {
+                setWidgetOptions({ ...widgetOptions(), [key]: newValue });
+                setIsFormModified(true);
+                setIsFormValid(checkFormValidity());
+              }}
+              organizationId={props.organizationId}
+              baseUrl={props.baseUrl}
+            />
+          </div>
+        );
+      case 'layout-ref':
+        const layoutRefSchema = schema as LayoutRefFieldAttributes;
+        const getCurrentLayoutRef = () =>
+          (widgetOptions()[key] as LayoutRefValue) || null;
+
+        return (
+          <div class="form-item-wrapper">
+            <Show when={layoutRefSchema.description}>
+              <div class="description">
+                {translateWidgetOptionDescription(
+                  key,
+                  layoutRefSchema.description
+                )}
+              </div>
+            </Show>
+            <LayoutRefEditor
+              value={getCurrentLayoutRef()}
+              onChange={(newValue: LayoutRefValue | null) => {
+                const newOptions = { ...widgetOptions() };
+                if (newValue === null) {
+                  delete newOptions[key];
+                } else {
+                  newOptions[key] = newValue;
+                }
+                setWidgetOptions(newOptions);
+                setIsFormModified(true);
+                setIsFormValid(checkFormValidity());
+              }}
+              organizationId={props.organizationId}
+              baseUrl={props.baseUrl}
+              t={t}
+              excludedPlaylistIds={excludedPlaylistIds()}
+            />
+          </div>
+        );
+      case 'location':
+        const locationSchema = schema as LocationFieldAttributes;
+        const getCurrentLocation = () =>
+          (widgetOptions()[key] as LocationValue) ||
+          locationSchema.default ||
+          null;
+
+        return (
+          <div class="form-item-wrapper">
+            <Show when={locationSchema.description}>
+              <div class="description">
+                {translateWidgetOptionDescription(
+                  key,
+                  locationSchema.description
+                )}
+              </div>
+            </Show>
+            <LocationPicker
+              value={getCurrentLocation()}
+              onChange={(newValue: LocationValue) => {
+                validateField('location', locationSchema, key, newValue);
+                setWidgetOptions({ ...widgetOptions(), [key]: newValue });
+                setIsFormModified(true);
+                setIsFormValid(checkFormValidity());
+              }}
+              defaultZoom={locationSchema.defaultZoom}
+              placeholder={t('common.searchLocation')}
+              searchLabel={translateWidgetOptionLabel(key, key)}
+              coordinatesLabel={t('common.coordinates')}
+              addressLabel={t('common.address')}
+              noAddressText={t('common.noAddressAvailable')}
+              editLabel={t('common.edit')}
+              saveLabel={t('common.save')}
+              cancelLabel={t('common.cancel')}
+            />
+            <div class="error">{errors().get(key)}</div>
+          </div>
+        );
       case 'map':
-      case 'list':
-        return <div>Not implemented yet</div>;
+        return <div>Map type not implemented yet</div>;
       default:
         throw new Error(`Unknown type: ${type}`);
     }
@@ -322,10 +900,18 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
       <div class="widget-config">
         <Show when={props.item.inserted_at}>
           <div style="font-size: 0.8em; color: darkgray;">
-            <span>Created on </span>{' '}
-            <Timestamp value={props.item.inserted_at} mode="relative" />.{' '}
-            <span>Last updated on </span>
-            <Timestamp value={props.item.updated_at} mode="relative" />
+            <span>{t('common.addedOn')} </span>{' '}
+            <Timestamp
+              value={props.item.inserted_at!}
+              mode="relative"
+              locale={props.store.i18n?.locale?.()}
+            />
+            . <span>{t('common.lastUpdatedOn')} </span>
+            <Timestamp
+              value={props.item.updated_at!}
+              mode="relative"
+              locale={props.store.i18n?.locale?.()}
+            />
           </div>
         </Show>
         <form
@@ -333,10 +919,15 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
             e.preventDefault();
             if (isFormValid()) {
               // For references we need to pick the ID, not the full expanded object
-              const options = Object.entries(optionsSchema).reduce(
+              const options = schemaEntries.reduce(
                 (acc: Record<string, any>, [key, schema]) => {
-                  if (getType(schema) === 'ref') {
-                    acc[key] = widgetOptions()[key].id;
+                  const type = getType(schema);
+                  if (type === 'ref') {
+                    const value = widgetOptions()[key];
+                    acc[key] =
+                      value && typeof value === 'object'
+                        ? (value as any).id
+                        : value;
                   } else {
                     acc[key] = widgetOptions()[key];
                   }
@@ -350,6 +941,13 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
                   config: { options },
                   expandedOptions: widgetOptions(),
                 });
+
+                // Update widgetConfig with the new options so WidgetView
+                // can reactively fetch new integration data
+                setWidgetConfig((prev) => ({
+                  ...prev,
+                  options: widgetOptions(),
+                }));
               } catch (err) {
                 toast.error(`Error submitting form ${(err as Error).message}`);
               }
@@ -359,7 +957,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
           }}
         >
           <div class="form-inputs">
-            <For each={Object.entries(optionsSchema)}>
+            <For each={schemaEntries}>
               {([key, schema]) => {
                 return componentForItem(key, schema);
               }}
@@ -367,14 +965,14 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
           </div>
           <div class="form-actions">
             <Button
-              label="Update"
+              label={t('common.save')}
               type="submit"
               disabled={!isFormValid()}
               icon={BsCheckLg}
               color="success"
             />
             <Button
-              label="Reset"
+              label={t('common.reset')}
               disabled={!isFormModified()}
               onClick={() => {
                 resetForm();
@@ -387,13 +985,14 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
         </form>
       </div>
       <div class="preview">
-        <Show when={isFormValid()}>
-          <WidgetView
-            widget={props.item.widget}
-            config={widgetConfig()}
-            options={widgetOptions()}
-          />
-        </Show>
+        <WidgetView
+          widget={props.item.widget}
+          config={widgetConfig()}
+          options={widgetOptions()}
+          previewData={previewData()}
+          baseUrl={props.baseUrl}
+          socket={props.store.socket}
+        />
       </div>
     </div>
   );

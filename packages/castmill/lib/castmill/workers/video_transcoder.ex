@@ -1,23 +1,26 @@
 defmodule Castmill.Workers.VideoTranscoder do
-  use Oban.Worker, queue: :video_transcoder
+  require Logger
+
   alias Castmill.Repo
   alias Castmill.Resources
   alias Castmill.Resources.Media
   alias Castmill.Files
   alias Castmill.Workers.Helpers
+  alias Castmill.Workers.BullMQHelper
   alias Castmill.Notifications.Events
-
-  require Logger
 
   @file_sizes_and_contexts [
     {640, "preview"},
     {1920, "poster"}
   ]
 
-  @impl Oban.Worker
-  def perform(%Oban.Job{args: args} = job) do
-    dbg(job)
+  @queue "video_transcoder"
 
+  @doc """
+  Processes the video transcoding job.
+  This is called by BullMQ worker.
+  """
+  def process(%BullMQ.Job{data: args}) do
     media = args["media"]
     organization_id = media["organization_id"]
     media_id = media["id"]
@@ -32,131 +35,232 @@ defmodule Castmill.Workers.VideoTranscoder do
     # Input file path or URL
     input_uri = args["filepath"]
 
-    # Handle input file or download if it's a remote URL
-    input_file = Helpers.get_file_from_uri(input_uri)
-    {:ok, total_duration} = get_video_duration(input_file)
+    case get_input_file(input_uri) do
+      {:ok, input_file} ->
+        result =
+          try do
+            do_process(input_file, media_id, organization_id)
+          rescue
+            e ->
+              stacktrace = __STACKTRACE__
+              formatted_error = Exception.format(:error, e, stacktrace)
 
+              Logger.error("Video transcoding failed: #{formatted_error}")
+
+              {:error, exception_to_status_message(e)}
+          after
+            cleanup_downloaded_input_file(input_file, input_uri)
+          end
+
+        handle_process_result(media_id, result)
+
+      {:error, reason} ->
+        handle_process_result(media_id, {:error, reason})
+    end
+  end
+
+  defp do_process(input_file, media_id, organization_id) do
+    with {:ok, total_duration} <- get_video_duration(input_file),
+         {:ok, transcoded_files_metadata, total_size} <-
+           transcode_assets(input_file, media_id, organization_id, total_duration),
+         {:ok, media_file_records} <-
+           persist_transcoded_files(transcoded_files_metadata, media_id, organization_id) do
+      notify_media_progress(media_id, 100.0, media_file_records, total_size, true)
+      {:ok, media_file_records, total_size}
+    end
+  end
+
+  defp transcode_assets(input_file, media_id, organization_id, total_duration) do
     total_duration = length(@file_sizes_and_contexts) * total_duration
 
-    try do
-      # Process within a transaction
-      # Extract thumbnail image at 5 seconds
-      output_image_filename = "thumbnail.jpg"
-      output_image_path = Path.join("/tmp", "#{media_id}_#{output_image_filename}")
+    output_image_filename = "thumbnail.jpg"
+    output_image_path = Path.join("/tmp", "#{media_id}_#{output_image_filename}")
 
-      {transcoded_files_metadata, total_size} =
-        case extract_thumbnail(input_file, output_image_path) do
-          :ok ->
-            # Upload the image file
-            {uri, size} =
-              upload_file(output_image_path, organization_id, media_id, output_image_filename)
+    thumbnail_result =
+      try do
+        with :ok <- extract_thumbnail(input_file, output_image_path),
+             {thumbnail_uri, thumbnail_size} <-
+               upload_file(output_image_path, organization_id, media_id, output_image_filename) do
+          {:ok, thumbnail_uri, thumbnail_size}
+        else
+          {:error, reason} -> {:error, "Thumbnail extraction failed: #{inspect(reason)}"}
+        end
+      after
+        cleanup_temp_file(output_image_path)
+      end
 
-            # Clean up temporary file
-            File.rm(output_image_path)
+    with {:ok, thumbnail_uri, thumbnail_size} <- thumbnail_result do
+      transcoded_files_metadata = %{"thumbnail" => {thumbnail_uri, thumbnail_size, "image/jpeg"}}
 
-            # Update accumulated files and size
-            transcoded_files_metadata = %{"thumbnail" => {uri, size, "image/jpeg"}}
+      Enum.reduce_while(
+        @file_sizes_and_contexts,
+        {:ok, 0.0, transcoded_files_metadata, thumbnail_size},
+        fn {width, context}, {:ok, acc_progress, acc_files, acc_size} ->
+          output_filename = "#{context}.mp4"
+          output_path = Path.join("/tmp", "#{media_id}_#{output_filename}")
 
-            {transcoded_files_metadata, size}
+          step_result =
+            try do
+              case transcode_video(
+                     input_file,
+                     output_path,
+                     width,
+                     media_id,
+                     total_duration,
+                     acc_progress
+                   ) do
+                :ok ->
+                  {uri, size} =
+                    upload_file(output_path, organization_id, media_id, output_filename)
+
+                  new_progress =
+                    Float.floor(acc_progress + 100 / length(@file_sizes_and_contexts))
+
+                  notify_media_progress(media_id, new_progress)
+
+                  {:ok, new_progress, Map.put(acc_files, context, {uri, size, "video/mp4"}),
+                   acc_size + size}
+
+                {:error, reason} ->
+                  {:error, "Transcoding failed: #{inspect(reason)}"}
+              end
+            after
+              cleanup_temp_file(output_path)
+            end
+
+          case step_result do
+            {:ok, new_progress, files, size} -> {:cont, {:ok, new_progress, files, size}}
+            {:error, _} = error -> {:halt, error}
+          end
+        end
+      )
+      |> case do
+        {:ok, _final_progress, files_metadata, size} -> {:ok, files_metadata, size}
+        {:error, _} = error -> error
+      end
+    else
+      {:error, _} = error -> error
+    end
+  end
+
+  defp persist_transcoded_files(transcoded_files_metadata, media_id, organization_id) do
+    Repo.transaction(fn ->
+      Enum.reduce(transcoded_files_metadata, %{}, fn {context, {uri, size, mimetype}}, acc ->
+        attrs = %{
+          media_id: media_id,
+          name: "#{media_id}-#{context}",
+          uri: uri,
+          size: size,
+          organization_id: organization_id,
+          mimetype: mimetype
+        }
+
+        with {:ok, file} <- Files.create_file(attrs),
+             {:ok, _file_media} <- Files.add_file_to_media(file.id, media_id, context) do
+          Map.put(acc, context, file)
+        else
+          {:error, %Ecto.Changeset{} = changeset} ->
+            reason = "Failed to persist transcoded #{context} file"
+
+            Logger.error("#{reason} for media #{media_id}: #{format_changeset_errors(changeset)}")
+
+            Repo.rollback(reason)
 
           {:error, reason} ->
-            raise "Thumbnail extraction failed: #{inspect(reason)}"
+            formatted_reason = normalize_error_message(reason)
+
+            Logger.error(
+              "Failed to associate transcoded #{context} file for media #{media_id}: #{formatted_reason}"
+            )
+
+            Repo.rollback("Failed to associate transcoded #{context} file")
         end
-
-      # Initialize progress and file map
-      {_final_progress, transcoded_files_metadata, total_size} =
-        Enum.reduce(
-          @file_sizes_and_contexts,
-          {0.0, transcoded_files_metadata, total_size},
-          fn {width, context}, {acc_progress, acc_files, acc_size} ->
-            # Output file paths
-            output_filename = "#{context}.mp4"
-            output_path = Path.join("/tmp", "#{media_id}_#{output_filename}")
-
-            # Transcode video
-            case transcode_video(
-                   input_file,
-                   output_path,
-                   width,
-                   media_id,
-                   total_duration,
-                   acc_progress
-                 ) do
-              :ok ->
-                # Upload the video file
-                {uri, size} = upload_file(output_path, organization_id, media_id, output_filename)
-
-                # Update progress
-                new_progress =
-                  Float.floor(acc_progress + 100 / length(@file_sizes_and_contexts))
-
-                notify_media_progress(media_id, new_progress)
-
-                # Clean up temporary file
-                File.rm(output_path)
-
-                # Update accumulated files and size
-                new_transcoded_files_metadata =
-                  Map.put(acc_files, context, {uri, size, "video/mp4"})
-
-                new_total_size = acc_size + size
-
-                {new_progress, new_transcoded_files_metadata, new_total_size}
-
-              {:error, reason} ->
-                raise "Transcoding failed: #{inspect(reason)}"
-            end
-          end
-        )
-
-      # Update database in one transaction, adding the new files according to the files_map
-      {:ok, media_file_records} =
-        Repo.transaction(fn ->
-          Enum.reduce(transcoded_files_metadata, %{}, fn {context, {uri, size, mimetype}}, acc ->
-            # Create a File record in the database
-            {:ok, file} =
-              Files.create_file(%{
-                media_id: media_id,
-                name: "#{media_id}-#{context}",
-                uri: uri,
-                size: size,
-                organization_id: organization_id,
-                mimetype: mimetype
-              })
-
-            # Associate the file with the media
-            Files.add_file_to_media(file.id, media_id, context)
-
-            # Accumulate the file record in the result map
-            Map.put(acc, context, file)
-          end)
-        end)
-
-      notify_media_progress(media_id, 100.0, media_file_records, total_size, true)
-    rescue
-      e ->
-        # Capture and format the error and stack trace
-        stacktrace = __STACKTRACE__
-        formatted_error = Exception.format(:error, e, stacktrace)
-
-        # Log the full error and stack trace
-        Logger.error("Video transcoding failed: #{formatted_error}")
-
-        {:ok, _media} =
-          Resources.update_media(%Media{id: media_id}, %{
-            status: :error,
-            status_message: "Error: #{inspect(e)}"
-          })
-
-        {:error, e}
-    after
-      # Clean up temporary input file if it was downloaded
-      if input_file != input_uri && File.exists?(input_file) do
-        File.rm(input_file)
-      end
+      end)
+    end)
+    |> case do
+      {:ok, media_file_records} -> {:ok, media_file_records}
+      {:error, reason} -> {:error, reason}
     end
+  end
 
-    :ok
+  defp get_input_file(input_uri) do
+    {:ok, Helpers.get_file_from_uri(input_uri)}
+  rescue
+    e ->
+      Logger.error("Failed to prepare input file for transcoding: #{Exception.message(e)}")
+      {:error, exception_to_status_message(e)}
+  end
+
+  defp cleanup_downloaded_input_file(input_file, input_uri) do
+    if input_file != input_uri && File.exists?(input_file) do
+      File.rm(input_file)
+    end
+  end
+
+  defp cleanup_temp_file(path) do
+    if File.exists?(path) do
+      File.rm(path)
+    end
+  end
+
+  defp format_changeset_errors(changeset) do
+    changeset
+    |> Ecto.Changeset.traverse_errors(fn {message, opts} ->
+      Enum.reduce(opts, message, fn {key, value}, acc ->
+        String.replace(acc, "%{#{key}}", to_string(value))
+      end)
+    end)
+    |> inspect()
+  end
+
+  # On success, return a structured result carrying the full notification
+  # payload. BullMQ stores this as the job's return value so a QueueEvents
+  # completion listener (on a separate web node) can broadcast the update
+  # without a secondary database lookup.
+  defp handle_process_result(media_id, {:ok, media_file_records, total_size}) do
+    {:ok,
+     %{
+       "media_id" => media_id,
+       "status" => "ready",
+       "status_message" => "100",
+       "files" => media_file_records,
+       "size" => total_size
+     }}
+  end
+
+  defp handle_process_result(media_id, {:error, reason}) do
+    status_message = normalize_error_message(reason)
+
+    {:ok, _media} =
+      Resources.update_media(%Media{id: media_id}, %{
+        status: :failed,
+        status_message: status_message
+      })
+
+    Phoenix.PubSub.broadcast(Castmill.PubSub, "resource:media:#{media_id}", %{
+      status: :failed,
+      status_message: status_message,
+      files: nil,
+      size: nil
+    })
+
+    {:error, reason}
+  end
+
+  defp normalize_error_message(reason) when is_binary(reason), do: reason
+  defp normalize_error_message(reason) when is_atom(reason), do: inspect(reason)
+  defp normalize_error_message({:error, reason}), do: normalize_error_message(reason)
+  defp normalize_error_message(reason) when is_exception(reason), do: Exception.message(reason)
+  defp normalize_error_message(reason), do: inspect(reason)
+
+  defp exception_to_status_message(%RuntimeError{message: message}) when is_binary(message),
+    do: message
+
+  defp exception_to_status_message(exception) do
+    case Exception.message(exception) do
+      "" -> inspect(exception)
+      message -> message
+    end
   end
 
   defp transcode_video(input_file, output_path, width, media_id, total_duration, acc_progress) do
@@ -184,29 +288,42 @@ defmodule Castmill.Workers.VideoTranscoder do
     run_ffmpeg_with_progress(ffmpeg_args, media_id, total_duration, acc_progress)
   end
 
-  defp extract_thumbnail(input_file, output_path) do
-    ffmpeg_args = [
-      "-i",
-      input_file,
-      "-ss",
-      "5",
-      "-vframes",
-      "1",
-      "-q:v",
-      "2",
-      "-y",
-      output_path
-    ]
+  @doc false
+  # This function is made public for testing purposes only.
+  # It extracts a thumbnail from a video file, trying multiple timestamps.
+  def extract_thumbnail(input_file, output_path, system_cmd \\ nil) do
+    system_cmd = system_cmd || system_cmd_module()
 
-    # Run FFmpeg command
-    case System.cmd("ffmpeg", ffmpeg_args, stderr_to_stdout: true) do
-      {_output, 0} ->
-        :ok
+    # Try to extract at 5 seconds first, then at 1 second, then at 0 for very short videos
+    timestamps = ["5", "1", "0"]
 
-      {output, _exit_code} ->
-        Logger.error("FFmpeg error: #{output}")
-        {:error, :ffmpeg_failed}
-    end
+    Enum.reduce_while(timestamps, {:error, :ffmpeg_failed}, fn timestamp, _acc ->
+      ffmpeg_args = [
+        "-i",
+        input_file,
+        "-ss",
+        timestamp,
+        "-vframes",
+        "1",
+        "-q:v",
+        "2",
+        "-y",
+        output_path
+      ]
+
+      case system_cmd.cmd("ffmpeg", ffmpeg_args, stderr_to_stdout: true) do
+        {_output, 0} ->
+          if File.exists?(output_path) do
+            {:halt, :ok}
+          else
+            {:cont, {:error, :ffmpeg_failed}}
+          end
+
+        {output, _exit_code} ->
+          Logger.warning("FFmpeg thumbnail extraction at #{timestamp}s failed: #{output}")
+          {:cont, {:error, :ffmpeg_failed}}
+      end
+    end)
   end
 
   defp run_ffmpeg_with_progress(args, media_id, total_duration, acc_progress) do
@@ -227,6 +344,10 @@ defmodule Castmill.Workers.VideoTranscoder do
     listen_for_progress(port, media_id, total_duration, acc_progress)
   end
 
+  # Timeout for receiving FFmpeg progress data. If no data is received within this
+  # period, FFmpeg is assumed to have been killed (e.g., OOM on constrained containers).
+  @ffmpeg_receive_timeout_ms 120_000
+
   defp listen_for_progress(port, media_id, total_duration, acc_progress) do
     receive do
       {^port, {:data, data}} ->
@@ -244,6 +365,22 @@ defmodule Castmill.Workers.VideoTranscoder do
         else
           {:error, :ffmpeg_failed}
         end
+    after
+      @ffmpeg_receive_timeout_ms ->
+        # FFmpeg stopped sending data — likely OOM-killed or hung.
+        # Try to kill the port to clean up, then fail the job.
+        Logger.error(
+          "FFmpeg timed out after #{@ffmpeg_receive_timeout_ms}ms with no output for media #{media_id}. " <>
+            "The process may have been OOM-killed."
+        )
+
+        try do
+          Port.close(port)
+        catch
+          _, _ -> :ok
+        end
+
+        {:error, :ffmpeg_timeout}
     end
   end
 
@@ -296,6 +433,11 @@ defmodule Castmill.Workers.VideoTranscoder do
   defp upload_file(local_path, organization_id, media_id, filename) do
     dst_path = "#{organization_id}/#{media_id}/#{filename}"
 
+    # Verify source file exists before attempting upload
+    unless File.exists?(local_path) do
+      raise "Source file does not exist for upload: #{local_path} (#{filename})"
+    end
+
     case Application.get_env(:castmill, :file_storage) do
       :local ->
         dest_dir =
@@ -321,7 +463,13 @@ defmodule Castmill.Workers.VideoTranscoder do
     System.find_executable("ffmpeg") || "/usr/bin/ffmpeg"
   end
 
+  defp system_cmd_module do
+    Application.get_env(:castmill, :system_cmd, Castmill.Workers.SystemCmd)
+  end
+
   defp get_video_duration(input_file) do
+    system_cmd = system_cmd_module()
+
     ffprobe_args = [
       "-v",
       "error",
@@ -332,16 +480,20 @@ defmodule Castmill.Workers.VideoTranscoder do
       input_file
     ]
 
-    case System.cmd("ffprobe", ffprobe_args) do
+    case system_cmd.cmd("ffprobe", ffprobe_args, stderr_to_stdout: true) do
       {duration_str, 0} ->
-        duration_str
-        |> String.trim()
-        |> String.to_float()
-        |> then(&{:ok, &1})
+        case Float.parse(String.trim(duration_str)) do
+          {duration, _rest} ->
+            {:ok, duration}
+
+          :error ->
+            Logger.error("FFprobe returned an invalid duration: #{inspect(duration_str)}")
+            {:error, "Could not determine video duration"}
+        end
 
       {error_output, _exit_code} ->
         Logger.error("FFprobe error: #{error_output}")
-        {:error, :ffprobe_failed}
+        {:error, "Could not determine video duration"}
     end
   end
 
@@ -393,4 +545,39 @@ defmodule Castmill.Workers.VideoTranscoder do
       size: total_size
     })
   end
+
+  @doc """
+  Schedules a video transcoding job.
+  """
+  def schedule(media, filepath, mime_type \\ nil) do
+    # Convert Ecto struct to plain map with string keys for BullMQ serialization
+    media_map = media_to_map(media)
+
+    args = %{
+      "media" => media_map,
+      "filepath" => filepath
+    }
+
+    # Add mime_type if provided (for compatibility)
+    args = if mime_type, do: Map.put(args, "mime_type", mime_type), else: args
+
+    BullMQHelper.add_job(
+      @queue,
+      "video_transcode",
+      args,
+      job_id: "video_transcode:#{media_map["id"]}"
+    )
+  end
+
+  defp media_to_map(%Castmill.Resources.Media{} = media) do
+    %{
+      "id" => media.id,
+      "organization_id" => media.organization_id,
+      "name" => media.name,
+      "mimetype" => media.mimetype,
+      "status" => media.status
+    }
+  end
+
+  defp media_to_map(media) when is_map(media), do: media
 end

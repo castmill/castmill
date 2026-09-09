@@ -10,7 +10,10 @@ defmodule CastmillWeb.OrganizationUsageController do
     "playlists" => Castmill.Resources.Playlist,
     "devices" => Castmill.Devices.Device,
     "channels" => Castmill.Resources.Channel,
-    "teams" => Castmill.Teams.Team
+    "widgets" => Castmill.Widgets.WidgetConfig,
+    "teams" => Castmill.Teams.Team,
+    "users" => Castmill.Organizations.OrganizationsUsers,
+    "layouts" => Castmill.Resources.Layout
   }
 
   def index(conn, %{"organization_id" => organization_id}) do
@@ -34,7 +37,7 @@ defmodule CastmillWeb.OrganizationUsageController do
 
     # Add storage usage (special case - sums file sizes instead of counting)
     storage_usage = Quotas.get_quota_used_for_organization(organization_id, :storage)
-    storage_total = Quotas.get_quota_for_organization(organization_id, "storage")
+    storage_total = Quotas.get_quota_for_organization_bytes(organization_id, "storage")
 
     Map.put(resource_usage, "storage", %{used: storage_usage, total: storage_total})
   end

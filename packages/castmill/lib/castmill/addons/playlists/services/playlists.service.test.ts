@@ -84,7 +84,6 @@ describe('PlaylistsService', () => {
         `${baseUrl}/dashboard/organizations/${organizationId}/widgets`,
         expect.objectContaining({
           method: 'GET',
-          credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
           },
@@ -123,7 +122,6 @@ describe('PlaylistsService', () => {
         `${baseUrl}/dashboard/organizations/${organizationId}/widgets?search=${searchTerm}`,
         expect.objectContaining({
           method: 'GET',
-          credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
           },
@@ -162,7 +160,6 @@ describe('PlaylistsService', () => {
         `${baseUrl}/dashboard/organizations/${organizationId}/widgets`,
         expect.objectContaining({
           method: 'GET',
-          credentials: 'include',
         })
       );
     });

@@ -9,6 +9,41 @@
   box-sizing: border-box;
 }
 
+.playlist-view-loading {
+  display: flex;
+  flex: 1;
+  min-height: 16em;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1em;
+  color: rgba(255, 255, 255, 0.82);
+
+  &__spinner {
+    width: 2.5em;
+    height: 2.5em;
+    border: 0.2em solid rgba(255, 255, 255, 0.16);
+    border-top-color: rgba(255, 255, 255, 0.92);
+    border-radius: 50%;
+    animation: playlist-view-spin 0.9s linear infinite;
+  }
+
+  &__text {
+    font-size: 0.95em;
+    letter-spacing: 0.01em;
+  }
+}
+
+@keyframes playlist-view-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .playlist-view {
   display: flex;
   flex-direction: row; // Always use row layout
@@ -45,6 +80,52 @@
     &.constrain-by-width .playlist-preview {
       width: 100%;
       height: auto;
+    }
+  }
+
+  .playlist-preview-panel {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    gap: 0.75em;
+
+    .playlist-preview-wrapper {
+      flex: 1 1 auto;
+      height: auto;
+    }
+
+    .playlist-aspect-ratio-form {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6em;
+      padding: 0.75em;
+      border-radius: 0.5em;
+      background: rgba(255, 255, 255, 0.04);
+
+      .custom-aspect-ratio {
+        display: flex;
+        align-items: center;
+        gap: 0.5em;
+
+        > div {
+          flex: 1;
+        }
+
+        .separator {
+          font-size: 1.2em;
+          font-weight: bold;
+        }
+
+        .save-custom-aspect-ratio {
+          margin-bottom: 0.2em;
+        }
+      }
+
+      .aspect-ratio-error {
+        margin-top: 0.2em;
+      }
     }
   }
 
@@ -165,6 +246,10 @@
       position: relative;
       min-height: 3em; // Minimum height to ensure it's visible
 
+      .playlist-end-drop-zone-label {
+        display: none;
+      }
+
       &.hovered {
         background: linear-gradient(
           180deg,
@@ -174,8 +259,8 @@
         );
         border: 2px dashed rgba(255, 255, 255, 0.4);
 
-        &::after {
-          content: 'Drop here to add at the end';
+        .playlist-end-drop-zone-label {
+          display: block;
           position: absolute;
           top: 50%;
           left: 50%;

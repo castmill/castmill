@@ -1,0 +1,180 @@
+/**
+ * IntegrationsList Component Styles
+ *
+ * Styles for displaying widget integrations with expandable configuration panels.
+ * Dashboard is dark mode by default.
+ */
+
+.integrations-list {
+  --il-gap: 1em;
+  --il-border-color: #363a45;
+  --il-hover-bg: #1c263a;
+  --il-card-bg: #2c303b;
+  --il-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --il-shadow-hover: 0 4px 6px rgba(0, 0, 0, 0.3);
+  --il-radius: 0.5em;
+  --il-text-primary: #f1f5f9;
+  --il-text-secondary: #94a3b8;
+  --il-configured: #22c55e;
+  --il-not-configured: #94a3b8;
+  --il-error: #ef4444;
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--il-gap);
+  padding: 1em 0;
+}
+
+.integrations-title {
+  font-size: 1.125em;
+  font-weight: 600;
+  color: var(--il-text-primary);
+  margin: 0 0 0.5em 0;
+}
+
+/* Loading and error states */
+.loading,
+.error,
+.no-integrations {
+  padding: 1.5em;
+  text-align: center;
+  color: var(--il-text-secondary);
+  border-radius: var(--il-radius);
+  background: var(--il-card-bg);
+  border: 1px dashed var(--il-border-color);
+}
+
+.error {
+  color: var(--il-error);
+  border-color: var(--il-error);
+  background: #450a0a;
+}
+
+/* Integrations container */
+.integrations {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75em;
+}
+
+/* Individual integration item */
+.integration-item {
+  background: var(--il-card-bg);
+  border: 1px solid var(--il-border-color);
+  border-radius: var(--il-radius);
+  overflow: hidden;
+  transition:
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.integration-item:hover {
+  box-shadow: var(--il-shadow);
+}
+
+.integration-item.expanded {
+  box-shadow: var(--il-shadow-hover);
+  border-color: #4a5568;
+}
+
+/* Integration header (clickable) */
+.integration-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1em 1.25em;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.integration-header:hover {
+  background: var(--il-hover-bg);
+}
+
+.integration-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25em;
+}
+
+.integration-name {
+  font-size: 1em;
+  font-weight: 500;
+  color: var(--il-text-primary);
+}
+
+.integration-description {
+  font-size: 0.875em;
+  color: var(--il-text-secondary);
+}
+
+/* Status section */
+.integration-status {
+  display: flex;
+  align-items: center;
+  gap: 0.75em;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25em 0.75em;
+  font-size: 0.75em;
+  font-weight: 500;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.status-badge.configured {
+  background: #166534;
+  color: #dcfce7;
+}
+
+.status-badge.not-configured {
+  background: #363a45;
+  color: #94a3b8;
+}
+
+.expand-icon {
+  font-size: 0.75em;
+  color: var(--il-text-secondary);
+  transition: transform 0.2s ease;
+}
+
+.integration-item.expanded .expand-icon {
+  transform: rotate(180deg);
+}
+
+/* Expanded content area */
+.integration-content {
+  padding: 1.25em;
+  border-top: 1px solid var(--il-border-color);
+  background: var(--il-hover-bg);
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-0.5em);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .integration-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75em;
+  }
+
+  .integration-status {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

@@ -12,10 +12,37 @@ defmodule CastmillWeb.DeviceController do
 
   action_fallback(CastmillWeb.FallbackController)
 
+  @device_info_keys ~w(
+    appType
+    appVersion
+    os
+    hardware
+    environmentVersion
+    chromiumVersion
+    v8Version
+    nodeVersion
+    userAgent
+  )
+  @max_device_info_value_bytes 1024
+
   @impl CastmillWeb.AccessActorBehaviour
 
   def check_access(actor_id, action, %{"device_id" => device_id})
-      when action in [:send_command, :get_cache, :get_channels, :add_channel, :remove_channel] do
+      when action in [
+             :send_command,
+             :get_cache,
+             :delete_cache,
+             :get_channels,
+             :add_channel,
+             :remove_channel,
+             :list_events,
+             :delete_events,
+             :get_telemetry,
+             :get_timers,
+             :set_timers,
+             :get_schedule,
+             :set_schedule
+           ] do
     # Device can access its own resources for these actions
     if actor_id == device_id do
       {:ok, true}
@@ -27,6 +54,37 @@ defmodule CastmillWeb.DeviceController do
         {:ok, true}
       else
         # TODO: Check if the actor has access via teams
+        {:ok, false}
+      end
+    end
+  end
+
+  # For get_playlist action in dashboard context:
+  # - If actor is the device itself, check if playlist is assigned to it
+  # - If actor is a user, check if they have access to view the device
+  #   (users who can see devices can see the preview/playlist content)
+  def check_access(actor_id, :get_playlist, %{
+        "device_id" => device_id,
+        "playlist_id" => playlist_id
+      }) do
+    # Device can access its own assigned playlists
+    if actor_id == device_id do
+      {:ok, Devices.has_access_to_playlist(device_id, playlist_id)}
+    else
+      # For dashboard users: if they can view the device, they can view the preview
+      # But we still verify the playlist is actually assigned to this device for security
+      device = Devices.get_device(device_id)
+
+      if device do
+        organization_id = device.organization_id
+        # Use :get_channels action which maps to :show permission (viewing devices)
+        user_can_view_device =
+          Organizations.has_access(organization_id, actor_id, "devices", :get_channels)
+
+        playlist_assigned = Devices.has_access_to_playlist(device_id, playlist_id)
+
+        {:ok, user_can_view_device and playlist_assigned}
+      else
         {:ok, false}
       end
     end
@@ -49,16 +107,46 @@ defmodule CastmillWeb.DeviceController do
     %{}
     when action in [
            :send_command,
+           :get_cache,
+           :delete_cache,
+           :delete_events,
            :add_channel,
            :remove_channel,
            :get_channels,
            :get_playlist,
-           :list_events
+           :list_events,
+           :get_telemetry,
+           :get_timers,
+           :set_timers,
+           :get_schedule,
+           :set_schedule
          ]
   )
 
   def home(conn, _params) do
     render(conn, :device, layout: false)
+  end
+
+  def info(conn, %{"info" => info}) when is_map(info) do
+    device = conn.assigns.current_actor
+
+    if valid_device_info?(info) do
+      case Devices.update_device(device, %{info: info}) do
+        {:ok, _device} -> send_resp(conn, :no_content, "")
+        {:error, changeset} -> {:error, changeset}
+      end
+    else
+      send_resp(conn, :bad_request, "")
+    end
+  end
+
+  def info(conn, _params), do: send_resp(conn, :bad_request, "")
+
+  defp valid_device_info?(info) do
+    Enum.all?(info, fn {key, value} ->
+      key in @device_info_keys and is_binary(value) and
+        byte_size(value) <= @max_device_info_value_bytes
+    end)
   end
 
   def start_registration(conn, %{"hardware_id" => hardware_id, "timezone" => timezone} = params) do
@@ -83,7 +171,20 @@ defmodule CastmillWeb.DeviceController do
         |> put_status(:ok)
         |> render(:recover, device: device)
 
-      {:error, _reason} ->
+      {:error, :recovery_blocked} ->
+        Logger.warning(
+          "Device recovery blocked for hardware_id=#{hardware_id}: IP mismatch and autorecovery inactive"
+        )
+
+        conn
+        |> put_status(:forbidden)
+        |> render(:recovery_blocked)
+
+      {:error, reason} ->
+        Logger.warning(
+          "Device recovery failed for hardware_id=#{hardware_id}: #{inspect(reason)}"
+        )
+
         case Castmill.Devices.create_device_registration(device_attrs) do
           {:ok, device} ->
             Logger.info("New device registered: #{device.hardware_id}")
@@ -104,7 +205,7 @@ defmodule CastmillWeb.DeviceController do
 
   @get_cache_pagination_schema %{
     device_id: [type: :string],
-    type: [type: :string, allowed: ["code", "data", "media"], default: "data"],
+    type: [type: :string, in: ["code", "data", "media"], default: "data"],
     page: [type: :integer, number: [min: 1]],
     page_size: [type: :integer, number: [min: 1, max: 100]]
   }
@@ -156,6 +257,258 @@ defmodule CastmillWeb.DeviceController do
     end
   end
 
+  @delete_cache_schema %{
+    device_id: [type: :string],
+    type: [type: :string, in: ["code", "data", "media", "all"]],
+    urls: [type: {:array, :string}]
+  }
+
+  def delete_cache(conn, %{"device_id" => device_id} = params) do
+    with {:ok, params} <- Tarams.cast(params, @delete_cache_schema) do
+      pid = self()
+
+      # Serialize PID to a string and encode it to be used as a reference
+      ref =
+        pid
+        |> :erlang.term_to_binary()
+        |> Base.url_encode64()
+
+      # Broadcast delete command to the Device channel
+      Phoenix.PubSub.broadcast(Castmill.PubSub, "devices:#{device_id}", %{
+        delete: "cache",
+        payload: %{
+          resource: "cache",
+          opts: %{
+            type: params.type,
+            urls: params.urls,
+            ref: ref
+          }
+        }
+      })
+
+      # Wait for the response
+      receive do
+        {:device_response, data} ->
+          conn
+          |> put_status(:ok)
+          |> json(data)
+      after
+        5_000 ->
+          conn
+          |> put_status(:bad_request)
+          |> json(%{error: "No response from device"})
+      end
+    else
+      {:error, errors} ->
+        conn
+        |> put_status(:bad_request)
+        |> Phoenix.Controller.json(%{errors: errors})
+        |> halt()
+    end
+  end
+
+  def get_telemetry(conn, %{"device_id" => device_id}) do
+    pid = self()
+
+    ref =
+      pid
+      |> :erlang.term_to_binary()
+      |> Base.url_encode64()
+
+    Phoenix.PubSub.broadcast(Castmill.PubSub, "devices:#{device_id}", %{
+      get: "telemetry",
+      payload: %{
+        resource: "telemetry",
+        opts: %{
+          ref: ref
+        }
+      }
+    })
+
+    receive do
+      {:device_response, data} ->
+        conn
+        |> put_status(:ok)
+        |> json(data)
+    after
+      5_000 ->
+        conn
+        |> put_status(:request_timeout)
+        |> json(%{error: "No response from device. It may be offline."})
+    end
+  end
+
+  def get_timers(conn, %{"device_id" => device_id}) do
+    pid = self()
+
+    ref =
+      pid
+      |> :erlang.term_to_binary()
+      |> Base.url_encode64()
+
+    Phoenix.PubSub.broadcast(Castmill.PubSub, "devices:#{device_id}", %{
+      get: "timers",
+      payload: %{
+        resource: "timers",
+        opts: %{
+          ref: ref
+        }
+      }
+    })
+
+    receive do
+      {:device_response, data} ->
+        conn
+        |> put_status(:ok)
+        |> json(data)
+    after
+      5_000 ->
+        conn
+        |> put_status(:request_timeout)
+        |> json(%{error: "No response from device. It may be offline."})
+    end
+  end
+
+  @set_timers_schema %{
+    device_id: [type: :string],
+    on: [type: {:array, :map}],
+    off: [type: {:array, :map}]
+  }
+
+  def set_timers(conn, %{"device_id" => device_id} = params) do
+    with {:ok, params} <- Tarams.cast(params, @set_timers_schema) do
+      pid = self()
+
+      ref =
+        pid
+        |> :erlang.term_to_binary()
+        |> Base.url_encode64()
+
+      Phoenix.PubSub.broadcast(Castmill.PubSub, "devices:#{device_id}", %{
+        set: "timers",
+        payload: %{
+          resource: "timers",
+          timers: %{
+            on: params.on,
+            off: params.off
+          },
+          opts: %{
+            ref: ref
+          }
+        }
+      })
+
+      receive do
+        {:device_response, data} ->
+          conn
+          |> put_status(:ok)
+          |> json(data)
+      after
+        5_000 ->
+          conn
+          |> put_status(:request_timeout)
+          |> json(%{error: "No response from device. It may be offline."})
+      end
+    else
+      {:error, errors} ->
+        conn
+        |> put_status(:bad_request)
+        |> Phoenix.Controller.json(%{errors: errors})
+        |> halt()
+    end
+  end
+
+  # ── Schedule endpoints ──────────────────────────────────────────────
+
+  @doc """
+  Get the schedule for a device from the database.
+  """
+  def get_schedule(conn, %{"device_id" => device_id}) do
+    case Devices.get_device_schedule(device_id) do
+      {:ok, schedule} ->
+        entries =
+          case schedule do
+            %{"entries" => e} -> e
+            _ -> []
+          end
+
+        conn
+        |> put_status(:ok)
+        |> json(%{entries: entries})
+
+      {:error, :not_found} ->
+        conn
+        |> put_status(:not_found)
+        |> json(%{error: "Device not found"})
+    end
+  end
+
+  @set_schedule_schema %{
+    device_id: [type: :string],
+    entries: [type: {:array, :map}]
+  }
+
+  @doc """
+  Set the schedule for a device. Saves to DB and pushes timers to the device.
+  """
+  def set_schedule(conn, %{"device_id" => device_id} = params) do
+    with {:ok, params} <- Tarams.cast(params, @set_schedule_schema) do
+      entries = params.entries || []
+
+      case Devices.set_device_schedule(device_id, entries) do
+        {:ok, _device} ->
+          # Convert schedule to timers and push to device
+          timers = Devices.schedule_to_timers(entries)
+          timers_sent = push_timers_to_device(device_id, timers)
+
+          conn
+          |> put_status(:ok)
+          |> json(%{success: true, timers_sent: timers_sent})
+
+        {:error, reason} ->
+          conn
+          |> put_status(:bad_request)
+          |> json(%{error: inspect(reason)})
+      end
+    else
+      {:error, errors} ->
+        conn
+        |> put_status(:bad_request)
+        |> json(%{errors: errors})
+    end
+  end
+
+  defp push_timers_to_device(device_id, timers) do
+    pid = self()
+
+    ref =
+      pid
+      |> :erlang.term_to_binary()
+      |> Base.url_encode64()
+
+    Phoenix.PubSub.broadcast(Castmill.PubSub, "devices:#{device_id}", %{
+      set: "timers",
+      payload: %{
+        resource: "timers",
+        timers: %{
+          on: timers.on,
+          off: timers.off
+        },
+        opts: %{
+          ref: ref
+        }
+      }
+    })
+
+    receive do
+      {:device_response, _data} ->
+        true
+    after
+      5_000 ->
+        false
+    end
+  end
+
   # Not used?
   def index(conn, params) do
     devices = Organizations.list_devices(params)
@@ -175,17 +528,24 @@ defmodule CastmillWeb.DeviceController do
   end
 
   @doc """
-    Returns the given playlists.
-    TODO: Add authorization check to ensure that the device has access to the playlist.
-    Basically check if the playlist is referenced by a channel that is associated to the device.
+    Returns the given playlist.
+    Authorization is handled by check_access/3 which verifies:
+    - For devices: the playlist is assigned to the device via a channel
+    - For dashboard users: the user can view the device AND the playlist is assigned to it
   """
   def get_playlist(conn, %{"device_id" => _device_id, "playlist_id" => playlist_id}) do
-    playlist = Resources.get_playlist(playlist_id)
+    case Resources.get_playlist(playlist_id) do
+      nil ->
+        conn
+        |> put_status(:not_found)
+        |> json(%{error: "Playlist not found"})
 
-    conn
-    |> put_status(:ok)
-    |> put_resp_header("content-type", "application/json")
-    |> json(playlist)
+      playlist ->
+        conn
+        |> put_status(:ok)
+        |> put_resp_header("content-type", "application/json")
+        |> json(playlist)
+    end
   end
 
   @doc """
@@ -193,6 +553,25 @@ defmodule CastmillWeb.DeviceController do
   """
   def add_channel(conn, %{"device_id" => device_id, "channel_id" => channel_id}) do
     with {:ok, _device} <- Devices.add_channel(device_id, channel_id) do
+      # Get the full channel data to send to the device
+      channel = Castmill.Resources.get_channel(channel_id)
+
+      # Notify the device about the new channel via WebSocket
+      Phoenix.PubSub.broadcast(
+        Castmill.PubSub,
+        "devices:#{device_id}",
+        %{
+          event: "channel_added",
+          channel: %{
+            id: channel.id,
+            name: channel.name,
+            timezone: channel.timezone,
+            default_playlist_id: channel.default_playlist_id,
+            entries: []
+          }
+        }
+      )
+
       conn
       |> put_status(:ok)
       |> send_resp(200, "")
@@ -204,6 +583,16 @@ defmodule CastmillWeb.DeviceController do
   """
   def remove_channel(conn, %{"device_id" => device_id, "channel_id" => channel_id}) do
     with {num_deleted, nil} <- Devices.remove_channel(device_id, channel_id) do
+      # Notify the device about the removed channel via WebSocket
+      Phoenix.PubSub.broadcast(
+        Castmill.PubSub,
+        "devices:#{device_id}",
+        %{
+          event: "channel_removed",
+          channel_id: String.to_integer(channel_id)
+        }
+      )
+
       conn
       |> put_status(:ok)
       |> json(%{message: "#{num_deleted} channels removed successfully"})
@@ -220,12 +609,33 @@ defmodule CastmillWeb.DeviceController do
     Not used?
   """
   def create(conn, %{"name" => name, "pincode" => pincode, "organization_id" => organization_id}) do
-    with {:ok, {device, _token}} <-
-           Castmill.Devices.register_device(organization_id, pincode, %{name: name}) do
-      conn
-      |> put_status(:created)
-      |> put_resp_header("location", ~p"/devices/#{device.id}")
-      |> render(:show, device: device)
+    case Castmill.Devices.register_device(organization_id, pincode, %{name: name}) do
+      {:ok, {device, _token}} ->
+        conn
+        |> put_status(:created)
+        |> put_resp_header("location", ~p"/devices/#{device.id}")
+        |> render(:show, device: device)
+
+      {:error, :invalid_pincode} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{errors: %{pincode: ["Invalid pincode"]}})
+
+      {:error, :pincode_expired} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{errors: %{pincode: ["Pincode has expired"]}})
+
+      {:error, :quota_exceeded} ->
+        conn
+        |> put_status(:forbidden)
+        |> json(%{errors: %{quota: ["Device quota exceeded"]}})
+
+      {:error, changeset} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> put_view(CastmillWeb.ChangesetJSON)
+        |> render("error.json", changeset: changeset)
     end
   end
 
@@ -276,9 +686,12 @@ defmodule CastmillWeb.DeviceController do
     with {:ok, params} <-
            Tarams.cast(params, %{
              device_id: [type: :string, required: true],
-             page: [type: :integer, number: [min: 1]],
-             page_size: [type: :integer, number: [min: 1, max: 100]],
-             search: :string
+             page: [type: :integer, number: [min: 1], default: 1],
+             page_size: [type: :integer, number: [min: 1, max: 100], default: 10],
+             search: :string,
+             key: [type: :string, default: "timestamp"],
+             direction: [type: :string, default: "descending"],
+             types: :string
            }) do
       response = %{
         data: Devices.list_devices_events(params),
@@ -288,6 +701,29 @@ defmodule CastmillWeb.DeviceController do
       conn
       |> put_status(:ok)
       |> json(response)
+    else
+      {:error, errors} ->
+        conn
+        |> put_status(:bad_request)
+        |> Phoenix.Controller.json(%{errors: errors})
+        |> halt()
+    end
+  end
+
+  @doc """
+    Deletes device events
+  """
+  def delete_events(conn, %{"device_id" => _device_id} = params) do
+    with {:ok, params} <-
+           Tarams.cast(params, %{
+             device_id: [type: :string, required: true],
+             type: [type: :string]
+           }) do
+      deleted_count = Devices.delete_devices_events(params)
+
+      conn
+      |> put_status(:ok)
+      |> json(%{success: true, deleted: deleted_count})
     else
       {:error, errors} ->
         conn

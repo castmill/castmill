@@ -1,6 +1,11 @@
 import { useNavigate, useSearchParams } from '@solidjs/router';
 import { createSignal, onMount, Show } from 'solid-js';
-import { checkAuth, getUser, loginUser } from '../../components/auth';
+import {
+  authFetch,
+  checkAuth,
+  getUser,
+  loginUser,
+} from '../../components/auth';
 import { OrganizationsService } from '../../services/organizations.service';
 import { useI18n } from '../../i18n';
 import {
@@ -68,15 +73,17 @@ const OrganizationsInvitationPage = () => {
 
     try {
       // Get challenge from server for new signup
-      const challengeResponse = await fetch(`${baseUrl}/signups/challenges`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: invitation()!.email,
-          invitation_token: token,
-        }),
-        credentials: 'include',
-      });
+      const challengeResponse = await authFetch(
+        `${baseUrl}/signups/challenges`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: invitation()!.email,
+            invitation_token: token,
+          }),
+        }
+      );
 
       if (!challengeResponse.ok) {
         throw new Error('Failed to get signup challenge');
@@ -127,7 +134,7 @@ const OrganizationsInvitationPage = () => {
       );
 
       // Create user account
-      const signupResponse = await fetch(
+      const signupResponse = await authFetch(
         `${baseUrl}/signups/${signup_id}/users`,
         {
           method: 'POST',
@@ -141,7 +148,6 @@ const OrganizationsInvitationPage = () => {
             client_data_json: clientDataJSON,
             invitation_token: token,
           }),
-          credentials: 'include',
         }
       );
 
@@ -151,11 +157,11 @@ const OrganizationsInvitationPage = () => {
 
       toast.success(t('organizations.invitation.accountCreated'));
 
-      // Login the user
-      await loginUser();
-
-      // Auto-accept invitation since user signed up specifically for this invitation
-      await acceptInvitation();
+      // Redirect to login — the user will authenticate with their new passkey
+      // and be redirected back to the invitation page to accept it
+      navigate(
+        `/login?redirectTo=${encodeURIComponent(window.location.pathname + window.location.search)}`
+      );
     } catch (error: any) {
       console.error('Signup error:', error);
       toast.error(
@@ -183,15 +189,15 @@ const OrganizationsInvitationPage = () => {
     setLoggingIn(true);
 
     try {
-      const challengeResponse = await fetch(`${baseUrl}/sessions/challenges`, {
-        credentials: 'include',
-      });
+      const challengeResponse = await authFetch(
+        `${baseUrl}/sessions/challenges`
+      );
 
       if (!challengeResponse.ok) {
         throw new Error('Failed to get login challenge');
       }
 
-      const { challenge } = await challengeResponse.json();
+      const { challenge, challenge_token } = await challengeResponse.json();
 
       const credential = await navigator.credentials.get({
         publicKey: {
@@ -211,7 +217,7 @@ const OrganizationsInvitationPage = () => {
         assertionResponse.clientDataJSON
       );
 
-      const loginResponse = await fetch(`${baseUrl}/sessions/`, {
+      const loginResponse = await authFetch(`${baseUrl}/sessions/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -226,15 +232,16 @@ const OrganizationsInvitationPage = () => {
           signature: arrayBufferToBase64(assertionResponse.signature),
           email: invitation()!.email,
           challenge,
+          challenge_token,
         }),
-        credentials: 'include',
       });
 
       if (!loginResponse.ok) {
         throw new Error('Failed to authenticate');
       }
 
-      await loginUser();
+      const { user, token: sessionToken } = await loginResponse.json();
+      await loginUser({ user, token: sessionToken });
     } catch (error: any) {
       console.error('Login error:', error);
       toast.error(error?.message || 'Failed to authenticate');

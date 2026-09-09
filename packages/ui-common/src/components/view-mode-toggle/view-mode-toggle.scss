@@ -1,0 +1,45 @@
+.castmill-view-mode-toggle {
+  display: inline-flex;
+  border: 1px solid var(--border-color, #363a45);
+  border-radius: 0.375em;
+  overflow: hidden;
+
+  &.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+}
+
+.toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.375em 0.625em;
+  background: var(--background-secondary, #1c263a);
+  color: var(--text-secondary, #9ca3af);
+  border: none;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+  font-size: 1em;
+  line-height: 1;
+
+  &:hover:not(:disabled) {
+    background: var(--castmill-layer, #2c303b);
+    color: var(--text-primary, #e5e7eb);
+  }
+
+  &.active {
+    background: var(--primary-color, #5792ee);
+    color: #fff;
+  }
+
+  &:first-child {
+    border-right: 1px solid var(--border-color, #363a45);
+  }
+
+  &:disabled {
+    cursor: default;
+  }
+}

@@ -42,6 +42,7 @@ export class TemplateWidget extends TimelineWidget {
   private fontFaces: { [key: string]: Promise<FontFace> } = {};
   private medias: { [key: string]: string } = {};
   private template: TemplateComponent;
+  private displayDuration?: number;
 
   constructor(
     resourceManager: ResourceManager,
@@ -54,6 +55,15 @@ export class TemplateWidget extends TimelineWidget {
       resourceManager,
       opts.globals
     );
+
+    // Check for display_duration or duration option and set timeline duration
+    // This prevents animations from looping when a fixed duration is specified
+    const durationOption =
+      opts.config.options?.display_duration ?? opts.config.options?.duration;
+    if (typeof durationOption === 'number' && durationOption > 0) {
+      this.displayDuration = durationOption * 1000; // Convert seconds to ms
+      this.timeline.setDuration(this.displayDuration);
+    }
   }
 
   /**
@@ -175,6 +185,26 @@ export class TemplateWidget extends TimelineWidget {
   }
 
   duration(): number {
-    return this.template.resolveDuration(this.medias);
+    // If displayDuration was explicitly set from options, use that
+    if (this.displayDuration && this.displayDuration > 0) {
+      return this.displayDuration;
+    }
+
+    // Prefer the dynamic timeline duration if it's available (non-zero).
+    // This is important for components like video that add their own timeline items
+    // with actual durations after loading (e.g., actual video length).
+    const timelineDuration = this.timeline.duration();
+
+    // Fall back to the static resolveDuration for components that don't
+    // dynamically add timeline items (e.g., static images, text).
+    // Note: resolveDuration may return 0 or NaN if bindings aren't resolved yet,
+    // so we default to 10000ms (10 seconds) in that case.
+    const resolved = this.template.resolveDuration(this.medias);
+
+    if (timelineDuration > 0) {
+      return timelineDuration;
+    }
+
+    return resolved > 0 ? resolved : 10000;
   }
 }

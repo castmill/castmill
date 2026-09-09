@@ -191,10 +191,10 @@ export const OrganizationMembersView = (props: {
     return adminCount() > 1;
   });
 
-  const columns = [
+  const columns = () => [
     {
       key: 'user.name',
-      title: t('common.name'),
+      title: () => t('common.name'),
       sortable: true,
       render: (item: any) => {
         const isCurrentUser = item.user_id === currentUser?.id;
@@ -205,7 +205,7 @@ export const OrganizationMembersView = (props: {
     },
     {
       key: 'role',
-      title: t('common.role'),
+      title: () => t('common.role'),
       sortable: true,
       render: (item: any) => {
         const isCurrentUser = item.user_id === currentUser?.id;
@@ -235,7 +235,7 @@ export const OrganizationMembersView = (props: {
     },
     {
       key: 'inserted_at',
-      title: t('common.insertedAt'),
+      title: () => t('common.insertedAt'),
       sortable: true,
       render: (item: any) => (
         <Timestamp value={item.inserted_at} mode="relative" />
@@ -440,7 +440,7 @@ export const OrganizationMembersView = (props: {
         show={showConfirmDialog()}
         title={t('organization.dialogs.removeMemberTitle')}
         message={t('organization.dialogs.removeMemberMessage', {
-          name: currentMember()?.user?.name,
+          name: currentMember()?.user?.name || '',
         })}
         onClose={() => setShowConfirmDialog(false)}
         onConfirm={() =>
@@ -468,42 +468,34 @@ export const OrganizationMembersView = (props: {
         fetchData={fetchData}
         ref={setRef}
         toolbar={{
+          searchPlaceholder: t('common.search'),
           mainAction: (
             <PermissionButton
               resource="organizations"
               action="create"
-              label={t('organization.inviteMember')}
+              label={() => t('organization.inviteMember')}
               onClick={addMember}
               icon={BsCheckLg}
               color="primary"
             />
           ),
-          actions: (
-            <div>
-              <IconButton
-                onClick={() => {
-                  if (!canPerformAction('organizations', 'delete')) {
-                    toast.error(
-                      t('permissions.noDeleteOrganizations') ||
-                        "You don't have permission to remove organization members"
-                    );
-                    return;
-                  }
-                  setShowConfirmDialogMultiple(true);
-                }}
-                icon={AiOutlineDelete}
-                color="primary"
-                disabled={
-                  selectedMembers().size === 0 ||
-                  !canPerformAction('organizations', 'delete')
-                }
-              />
-            </div>
-          ),
         }}
+        selectionHint={t('common.selectionHint')}
+        selectionLabel={t('common.selectionCount')}
+        selectionActions={({ count, clear }) => (
+          <button
+            class="selection-action-btn danger"
+            disabled={!canPerformAction('organizations', 'delete')}
+            onClick={() => setShowConfirmDialogMultiple(true)}
+          >
+            <AiOutlineDelete />
+            {t('common.remove')}
+          </button>
+        )}
         table={{
           columns,
           actions,
+          actionsLabel: t('common.actions'),
           onRowSelect,
         }}
         pagination={{ itemsPerPage }}

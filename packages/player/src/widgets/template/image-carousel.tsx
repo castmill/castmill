@@ -72,7 +72,7 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
   let parentRef: HTMLDivElement | undefined;
   const timeline: GSAPTimeline = gsap.timeline();
   const timelineItem = {
-    start: props.timeline.duration(),
+    start: 0, // Carousel should start immediately, not after other items
     child: timeline,
   };
 

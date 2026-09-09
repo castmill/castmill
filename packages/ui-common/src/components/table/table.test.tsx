@@ -110,7 +110,10 @@ describe('Table Component', () => {
     ));
 
     // Find the label element (the touch target) for the first row checkbox
-    const label = container.querySelector('label[for="row-checkbox-1"]');
+    // The label's "for" attribute contains the row ID pattern
+    const label = container.querySelector(
+      'label[for^="row-checkbox-"][for$="-1"]'
+    );
     expect(label).toBeInTheDocument();
 
     fireEvent.click(label!);
@@ -134,6 +137,23 @@ describe('Table Component', () => {
 
     expect(mockOnRowClick).not.toHaveBeenCalled();
     expect(actions[0].handler).toHaveBeenCalled();
+  });
+
+  it('does not call onRowClick when the actions area is clicked', async () => {
+    const mockOnRowClick = vi.fn();
+    render(() => (
+      <Table
+        columns={columns}
+        data={data}
+        actions={actions}
+        onRowClick={mockOnRowClick}
+      />
+    ));
+
+    const actionButton = screen.getByLabelText(`Edit ${data[0].name}`);
+    fireEvent.click(actionButton.parentElement!);
+
+    expect(mockOnRowClick).not.toHaveBeenCalled();
   });
 
   it('sets cursor to pointer when onRowClick is provided', () => {

@@ -1,9 +1,9 @@
-import { BsCheckLg } from 'solid-icons/bs';
-import { BsEye } from 'solid-icons/bs';
-
+import { BsCheckLg, BsEye, BsTagFill } from 'solid-icons/bs';
 import { AiOutlineDelete, AiOutlineEdit } from 'solid-icons/ai';
 import {
   Component,
+  For,
+  batch,
   createEffect,
   createSignal,
   Show,
@@ -17,6 +17,7 @@ import {
   Button,
   IconButton,
   Modal,
+  Drawer,
   TableAction,
   Column,
   TableView,
@@ -24,11 +25,24 @@ import {
   FetchDataOptions,
   ConfirmDialog,
   TeamFilter,
+  TagFilter,
+  useTagFilter,
+  useTagFilterEffect,
   Timestamp,
   ToastProvider,
   useToast,
   FormItem,
   Dropdown,
+  ViewModeToggle,
+  ResourceTreeView,
+  TreeResourceItem,
+  ToolBar,
+  TagsService,
+  Tag,
+  TagGroup,
+  TagBadge,
+  TagPopover,
+  useViewMode,
 } from '@castmill/ui-common';
 import { JsonPlaylist } from '@castmill/player';
 import { PlaylistsService } from '../services/playlists.service';
@@ -42,7 +56,11 @@ import './playlists.scss';
 import { PlaylistView } from './playlist-view';
 import { AddonComponentProps } from '../../common/interfaces/addon-store';
 import { PlaylistAddForm, AspectRatio } from './playlist-add-form';
-import { useTeamFilter, useModalFromUrl } from '../../common/hooks';
+import {
+  useTeamFilter,
+  useModalFromUrl,
+  useOnboardingHighlight,
+} from '../../common/hooks';
 import { ASPECT_RATIO_OPTIONS } from '../constants';
 import {
   validateCustomRatioField,
@@ -53,7 +71,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
   const toast = useToast();
   const [data, setData] = createSignal<JsonPlaylist[]>([]);
   const [currentPlaylist, setCurrentPlaylist] = createSignal<JsonPlaylist>();
-  const [showModal, setShowModal] = createSignal(false);
+  const [showDrawer, setShowDrawer] = createSignal(false);
   const [showRenameModal, setShowRenameModal] = createSignal(false);
 
   // Create a derived signal from props.params to make it reactive
@@ -63,27 +81,24 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
     return props.params[0]?.itemId;
   };
 
-  // Function to close the modal and update URL
-  const closeModalAndClearUrl = () => {
-    // Clear URL FIRST (before animation starts) for immediate feedback
+  // Close the playlist drawer and clear URL
+  const closePlaylistDrawer = () => {
     if (props.params) {
       const [, setSearchParams] = props.params;
       setSearchParams({ itemId: undefined }, { replace: true });
     }
-
-    // Then close modal (triggers 300ms animation)
-    setShowModal(false);
+    setShowDrawer(false);
   };
 
-  // Helper function to open modal for a given itemId
-  const openModalFromItemId = (itemId: string) => {
+  // Helper function to open drawer for a given itemId
+  const openPlaylistDrawerFromItemId = (itemId: string) => {
     const currentData = data();
 
     // First check if item is in current page data
     const playlist = currentData.find((p) => String(p.id) === String(itemId));
     if (playlist) {
       setCurrentPlaylist(playlist);
-      setShowModal(true);
+      setShowDrawer(true);
     } else if (currentData.length > 0 && props.store.organizations.selectedId) {
       // Item not in current page - fetch it by ID
       PlaylistsService.getPlaylist(
@@ -93,7 +108,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
       )
         .then((fetchedPlaylist) => {
           setCurrentPlaylist(fetchedPlaylist);
-          setShowModal(true);
+          setShowDrawer(true);
         })
         .catch((error) => {
           console.error('Failed to fetch playlist by ID:', error);
@@ -105,8 +120,26 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
   const { teams, selectedTeamId, setSelectedTeamId } = useTeamFilter({
     baseUrl: props.store.env.baseUrl,
     organizationId: props.store.organizations.selectedId,
-    params: props.params, // Pass URL params for shareable filtered views
+    params: props.params, // Pass URL search params for shareable filtered views
   });
+
+  // Tag filtering for organization
+  const {
+    tags,
+    selectedTagIds,
+    setSelectedTagIds,
+    filterMode: tagFilterMode,
+    setFilterMode: setTagFilterMode,
+  } = useTagFilter({
+    baseUrl: props.store.env.baseUrl,
+    organizationId: props.store.organizations.selectedId,
+    params: props.params,
+  });
+
+  // View mode: list (table) or tree – persisted in localStorage
+  const [viewMode, setViewMode] = useViewMode('playlists');
+  const [treeVersion, setTreeVersion] = createSignal(0);
+  const bumpTree = () => setTreeVersion((v) => v + 1);
 
   const [showAddPlaylistModal, setShowAddPlaylistModal] = createSignal(false);
   const [selectedPlaylists, setSelectedPlaylists] = createSignal(
@@ -127,13 +160,201 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
     return allowedActions?.includes(action as any) ?? false;
   };
 
+  // ---------------------------------------------------------------------------
+  // Tag support
+  // ---------------------------------------------------------------------------
+  const [tagGroups, setTagGroups] = createSignal<TagGroup[]>([]);
+  const [allTags, setAllTags] = createSignal<Tag[]>([]);
+  const [resourceTagsMap, setResourceTagsMap] = createSignal<
+    Map<number, Tag[]>
+  >(new Map());
+  const [tagPopoverTarget, setTagPopoverTarget] = createSignal<{
+    item: JsonPlaylist;
+    anchorEl: HTMLElement;
+  } | null>(null);
+  const [bulkTagAnchorEl, setBulkTagAnchorEl] =
+    createSignal<HTMLElement | null>(null);
+
+  const canManageTags = () => {
+    const role = props.store.permissions?.role;
+    return role === 'admin' || role === 'manager';
+  };
+
+  const tagsService = new TagsService(props.store.env.baseUrl);
+
+  const loadTagGroups = async () => {
+    if (!props.store.organizations.selectedId) return;
+    try {
+      const [groups, allTagsList] = await Promise.all([
+        tagsService.listTagGroups(props.store.organizations.selectedId, {
+          preloadTags: true,
+        }),
+        tagsService.listTags(props.store.organizations.selectedId),
+      ]);
+      batch(() => {
+        setTagGroups(groups);
+        setAllTags(allTagsList);
+      });
+    } catch (error) {
+      console.error('Failed to load tag groups:', error);
+    }
+  };
+
+  createEffect(
+    on(
+      () => props.store.organizations.selectedId,
+      () => loadTagGroups()
+    )
+  );
+
+  const loadResourceTags = async (items: JsonPlaylist[]) => {
+    if (!items.length || !props.store.organizations.selectedId) {
+      setResourceTagsMap(new Map());
+      return;
+    }
+    const tagMap = new Map<number, Tag[]>();
+    await Promise.all(
+      items.map(async (item) => {
+        try {
+          const itemTags = await tagsService.getResourceTags(
+            props.store.organizations.selectedId,
+            'playlist',
+            item.id
+          );
+          tagMap.set(item.id, itemTags);
+        } catch {
+          tagMap.set(item.id, []);
+        }
+      })
+    );
+    setResourceTagsMap(tagMap);
+  };
+
+  createEffect(on(data, (items) => loadResourceTags(items)));
+
+  const handleTagToggle = async (
+    item: JsonPlaylist,
+    tagId: number,
+    selected: boolean
+  ) => {
+    const orgId = props.store.organizations.selectedId;
+    if (!orgId) return;
+
+    setResourceTagsMap((prev) => {
+      const next = new Map(prev);
+      const current = next.get(item.id) || [];
+      if (selected) {
+        const tag = allTags().find((t) => t.id === tagId);
+        if (tag) next.set(item.id, [...current, tag]);
+      } else {
+        next.set(
+          item.id,
+          current.filter((t) => t.id !== tagId)
+        );
+      }
+      return next;
+    });
+
+    try {
+      if (selected) {
+        await tagsService.tagResource(orgId, 'playlist', item.id, tagId);
+      } else {
+        await tagsService.untagResource(orgId, 'playlist', item.id, tagId);
+      }
+    } catch (error) {
+      console.error('Failed to toggle tag:', error);
+      toast.error(t('tags.errors.tagResource', { error: String(error) }));
+      try {
+        const freshTags = await tagsService.getResourceTags(
+          orgId,
+          'playlist',
+          item.id
+        );
+        setResourceTagsMap((prev) => {
+          const next = new Map(prev);
+          next.set(item.id, freshTags);
+          return next;
+        });
+      } catch {
+        /* ignore */
+      }
+    }
+  };
+
+  const handleBulkTagToggle = async (tagId: number, selected: boolean) => {
+    const orgId = props.store.organizations.selectedId;
+    if (!orgId) return;
+
+    const resourceIds = Array.from(selectedPlaylists());
+    try {
+      if (selected) {
+        await tagsService.bulkTagResources(
+          orgId,
+          tagId,
+          'playlist',
+          resourceIds
+        );
+      } else {
+        await tagsService.bulkUntagResources(
+          orgId,
+          tagId,
+          'playlist',
+          resourceIds
+        );
+      }
+
+      const tagMap = new Map(resourceTagsMap());
+      await Promise.all(
+        resourceIds.map(async (id) => {
+          try {
+            const freshTags = await tagsService.getResourceTags(
+              orgId,
+              'playlist',
+              id
+            );
+            tagMap.set(id, freshTags);
+          } catch {
+            /* ignore */
+          }
+        })
+      );
+      setResourceTagsMap(tagMap);
+    } catch (error) {
+      console.error('Failed to bulk toggle tag:', error);
+      toast.error(t('tags.errors.tagResource', { error: String(error) }));
+    }
+  };
+
+  const bulkSelectedTagIds = () => {
+    const ids = Array.from(selectedPlaylists());
+    if (ids.length === 0) return [];
+    const allItemTags = ids.map((id) => resourceTagsMap().get(id) || []);
+    if (allItemTags.length === 0) return [];
+    const firstItemTagIds = new Set(allItemTags[0].map((t) => t.id));
+    return [...firstItemTagIds].filter((tagId) =>
+      allItemTags.every((tags) => tags.some((t) => t.id === tagId))
+    );
+  };
+
+  const handleCreateTag = async (name: string): Promise<Tag> => {
+    const newTag = await tagsService.createTag(
+      props.store.organizations.selectedId,
+      { name }
+    );
+    setAllTags((prev) => [...prev, newTag]);
+    return newTag;
+  };
+
   // Sync modal state with URL for shareable deep links and browser navigation
   useModalFromUrl({
     getItemIdFromUrl: itemIdFromUrl,
-    isModalOpen: () => showModal(),
-    closeModal: closeModalAndClearUrl,
-    openModal: openModalFromItemId,
+    isModalOpen: () => showDrawer(),
+    closeModal: () => setShowDrawer(false),
+    openModal: openPlaylistDrawerFromItemId,
   });
+
+  // Handle onboarding highlight for the Add Playlist button
+  useOnboardingHighlight(props.params);
 
   const [quota, setQuota] = createSignal<ResourceQuota | null>(null);
   const [quotaLoading, setQuotaLoading] = createSignal(false);
@@ -275,6 +496,81 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
   const handleTeamChange = (teamId: number | null) => {
     setSelectedTeamId(teamId);
     refreshData();
+    bumpTree();
+  };
+
+  // Use hook to manage tag filter effects
+  const { handleTagChange } = useTagFilterEffect({
+    selectedTagIds,
+    setSelectedTagIds,
+    tagFilterMode,
+    onRefreshData: refreshData,
+    onRefreshTree: bumpTree,
+  });
+
+  // Fetch resources for tree view nodes (filter by tag IDs in AND mode)
+  const fetchTreeResources = async (tagIds: number[]) => {
+    const result = await PlaylistsService.fetchPlaylists(
+      props.store.env.baseUrl,
+      props.store.organizations.selectedId,
+      {
+        page: 1,
+        page_size: 100,
+        sortOptions: { key: 'name', direction: 'ascending' },
+        tag_ids: tagIds,
+        tag_filter_mode: 'all',
+        team_id: selectedTeamId(),
+      }
+    );
+    return {
+      data: result.data as TreeResourceItem[],
+      count: result.count,
+    };
+  };
+
+  const fetchTreeUntaggedResources = async (
+    tagGroupId: number,
+    parentTagIds?: number[]
+  ) => {
+    const result = await PlaylistsService.fetchPlaylists(
+      props.store.env.baseUrl,
+      props.store.organizations.selectedId,
+      {
+        page: 1,
+        page_size: 100,
+        sortOptions: { key: 'name', direction: 'ascending' },
+        tag_filter_mode: 'all',
+        missing_tag_group_id: tagGroupId,
+        tag_ids: parentTagIds,
+        team_id: selectedTeamId(),
+      }
+    );
+
+    return {
+      data: result.data as TreeResourceItem[],
+      count: result.count,
+    };
+  };
+
+  const fetchTreeUntaggedCount = async (
+    tagGroupId: number,
+    parentTagIds?: number[]
+  ) => {
+    const result = await PlaylistsService.fetchPlaylists(
+      props.store.env.baseUrl,
+      props.store.organizations.selectedId,
+      {
+        page: 1,
+        page_size: 1,
+        sortOptions: { key: 'name', direction: 'ascending' },
+        tag_filter_mode: 'all',
+        missing_tag_group_id: tagGroupId,
+        tag_ids: parentTagIds,
+        team_id: selectedTeamId(),
+      }
+    );
+
+    return result.count;
   };
 
   const fetchData = async ({
@@ -293,6 +589,8 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
         search,
         filters,
         team_id: selectedTeamId(),
+        tag_ids: selectedTagIds(),
+        tag_filter_mode: tagFilterMode(),
       }
     );
 
@@ -305,29 +603,14 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
     setShowAddPlaylistModal(true);
   };
 
-  // Function to open the modal
-  const openModal = (item: JsonPlaylist) => {
-    // Open modal immediately
+  // Open the playlist drawer and update URL
+  const openPlaylistDrawer = (item: JsonPlaylist) => {
     setCurrentPlaylist(item);
-    setShowModal(true);
-
-    // Also update URL for shareability (use replace to avoid polluting browser history)
+    setShowDrawer(true);
     if (props.params) {
       const [searchParams, setSearchParams] = props.params;
       setSearchParams({ itemId: String(item.id) }, { replace: true });
     }
-  };
-
-  // Function to close the modal and remove blur
-  const closeModal = () => {
-    // Clear URL FIRST (before animation starts) for immediate feedback
-    if (props.params) {
-      const [, setSearchParams] = props.params;
-      setSearchParams({ itemId: undefined }, { replace: true });
-    }
-
-    // Then close modal (triggers 300ms animation)
-    setShowModal(false);
   };
 
   const [customRatioModal, setCustomRatioModal] = createSignal<{
@@ -451,82 +734,89 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
     }
   };
 
-  const columns = [
-    { key: 'name', title: t('common.name'), sortable: true },
-    {
-      key: 'aspect_ratio',
-      title: t('playlists.aspectRatio'),
-      sortable: false,
-      render: (item: JsonPlaylist) => {
-        const aspectRatio = item.settings?.aspect_ratio;
-        const currentRatio = aspectRatio
-          ? `${aspectRatio.width}:${aspectRatio.height}`
-          : '16:9';
-        const isStandardRatio = ASPECT_RATIO_OPTIONS.slice(0, -1).some(
-          (opt) => opt.value === currentRatio
-        );
+  // Use function to make columns reactive to i18n changes
+  const columns = () =>
+    [
+      { key: 'name', title: () => t('common.name'), sortable: true },
+      {
+        key: 'aspect_ratio',
+        title: () => t('playlists.aspectRatio'),
+        sortable: false,
+        render: (item: JsonPlaylist) => {
+          const aspectRatio = item.settings?.aspect_ratio;
+          const currentRatio = aspectRatio
+            ? `${aspectRatio.width}:${aspectRatio.height}`
+            : '16:9';
+          const preset = ASPECT_RATIO_OPTIONS.find(
+            (opt) => opt.value === currentRatio
+          );
+          const label = preset ? t(preset.label) : currentRatio;
 
-        // Build dropdown items - include current custom ratio if it exists
-        const dropdownItems = [...ASPECT_RATIO_OPTIONS];
-        if (!isStandardRatio && currentRatio !== '16:9') {
-          // Insert the current custom ratio before the "Custom" option
-          dropdownItems.splice(dropdownItems.length - 1, 0, {
-            value: currentRatio,
-            label: `${currentRatio} (${t('playlists.aspectRatioPresets.custom')})`,
-          });
-        }
-
-        return (
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              'font-size': '0.85em',
-              'line-height': '1.2',
-              width: '12em',
-              'text-align': 'center',
-              margin: '0 auto',
-            }}
-          >
-            <Dropdown
-              label=""
-              items={dropdownItems.map((opt) => ({
-                value: opt.value,
-                name: t(opt.label),
-              }))}
-              value={currentRatio}
-              onSelectChange={(value: string | null) => {
-                if (value) {
-                  handleAspectRatioChange(item, value);
-                }
-              }}
-            />
-          </div>
-        );
+          return (
+            <span
+              title={label !== currentRatio ? label : undefined}
+              style={{ 'font-size': '0.85em', 'white-space': 'nowrap' }}
+            >
+              {currentRatio}
+            </span>
+          );
+        },
       },
-    },
-    { key: 'status', title: t('common.status'), sortable: false },
-    {
-      key: 'inserted_at',
-      title: t('common.created'),
-      sortable: true,
-      render: (item: JsonPlaylist) => (
-        <Timestamp value={item.inserted_at} mode="relative" />
-      ),
-    },
-    {
-      key: 'updated_at',
-      title: t('common.updated'),
-      sortable: true,
-      render: (item: JsonPlaylist) => (
-        <Timestamp value={item.updated_at} mode="relative" />
-      ),
-    },
-  ] as Column<JsonPlaylist>[];
+      { key: 'status', title: () => t('common.status'), sortable: false },
+      {
+        key: 'inserted_at',
+        title: () => t('common.created'),
+        sortable: true,
+        render: (item: JsonPlaylist) => (
+          <Timestamp value={item.inserted_at!} mode="relative" />
+        ),
+      },
+      {
+        key: 'updated_at',
+        title: () => t('common.updated'),
+        sortable: true,
+        render: (item: JsonPlaylist) => (
+          <Timestamp value={item.updated_at!} mode="relative" />
+        ),
+      },
+      {
+        key: 'tags',
+        title: () => t('tags.title'),
+        sortable: false,
+        render: (item: JsonPlaylist) => {
+          const itemTags = () => resourceTagsMap().get(item.id) || [];
+          return (
+            <div class="tags-cell">
+              <For each={itemTags().slice(0, 3)}>
+                {(tag) => <TagBadge tag={tag} size="small" />}
+              </For>
+              <Show when={itemTags().length > 3}>
+                <span class="tags-overflow">+{itemTags().length - 3}</span>
+              </Show>
+              <button
+                class="tag-manage-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setTagPopoverTarget({
+                    item,
+                    anchorEl: e.currentTarget as HTMLElement,
+                  });
+                }}
+                title={t('tags.manageTags')}
+              >
+                <BsTagFill />
+              </button>
+            </div>
+          );
+        },
+      },
+    ] as Column<JsonPlaylist>[];
 
-  const actions: TableAction<JsonPlaylist>[] = [
+  // Use function to make actions reactive to i18n changes
+  const actions = (): TableAction<JsonPlaylist>[] => [
     {
       icon: BsEye,
-      handler: openModal,
+      handler: openPlaylistDrawer,
       label: t('common.view'),
     },
     {
@@ -785,25 +1075,33 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
                 setShowAddPlaylistModal(false);
                 if (result?.data) {
                   setCurrentPlaylist(result.data);
-                  setShowModal(true);
+                  setShowDrawer(true);
                   refreshData();
-                  toast.success(`Playlist "${name}" created successfully`);
+                  toast.success(t('playlists.playlistCreated', { name }));
                   loadQuota(); // Reload quota after creation
+
+                  // Complete the onboarding step for playlist creation
+                  props.store.onboarding?.completeStep?.('create_playlist');
                 }
               } catch (error) {
-                toast.error(`Error creating playlist: ${error}`);
+                toast.error(
+                  t('playlists.errorCreating', { error: String(error) })
+                );
               }
             }}
           />
         </Modal>
       </Show>
-      <Show when={showModal()}>
-        <Modal
+      <Show when={showDrawer()}>
+        <Drawer
           title={t('playlists.playlistTitle', {
             name: currentPlaylist()?.name,
           })}
-          description={t('playlists.buildPlaylist')}
-          onClose={closeModal}
+          onClose={closePlaylistDrawer}
+          placement="right"
+          size="xl"
+          closeOnOutsideClick
+          outsideClickIgnoreSelector="tbody tr, .playlist-tree-item"
           contentClass="playlist-modal"
         >
           <PlaylistView
@@ -812,11 +1110,12 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
             organizationId={props.store.organizations.selectedId}
             playlistId={currentPlaylist()?.id!}
             t={t}
-            onChange={(playlist) => {
-              console.log('Playlist changed', playlist);
+            onChange={() => {
+              // Playlist changed
             }}
+            onNavigateAway={closePlaylistDrawer}
           />
-        </Modal>
+        </Drawer>
       </Show>
 
       <Show when={showRenameModal()}>
@@ -844,7 +1143,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
             </FormItem>
             <div class="actions">
               <Button
-                label={t('common.update')}
+                label={t('common.save')}
                 onClick={async () => {
                   try {
                     await PlaylistsService.updatePlaylist(
@@ -903,22 +1202,128 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
       >
         <div style="margin: 1.5em; line-height: 1.5em;">
           {Array.from(selectedPlaylists()).map((resourceId) => {
-            console.log('Resource ID', resourceId);
             const resource = data().find((d) => d.id == resourceId);
             return <div>{`- ${resource?.name}`}</div>;
           })}
         </div>
       </ConfirmDialog>
 
-      <TableView
-        title={t('playlists.title')}
-        resource="playlists"
-        params={props.params}
-        fetchData={fetchData}
-        ref={setRef}
-        toolbar={{
-          mainAction: (
-            <div style="display: flex; align-items: center; gap: 1rem;">
+      <Show when={viewMode() === 'list'}>
+        <TableView
+          title={t('playlists.title')}
+          resource="playlists"
+          params={props.params}
+          fetchData={fetchData}
+          ref={setRef}
+          toolbar={{
+            searchPlaceholder: t('common.search'),
+            mainAction: (
+              <div style="display: flex; align-items: center; gap: 1rem;">
+                <Show when={quota()}>
+                  <QuotaIndicator
+                    used={quota()!.used}
+                    total={quota()!.total}
+                    resourceName="Playlists"
+                    compact
+                    isLoading={showLoadingIndicator()}
+                  />
+                </Show>
+                <Button
+                  label={t('playlists.addPlaylist')}
+                  onClick={openAddPlaylistModal}
+                  icon={BsCheckLg}
+                  color="primary"
+                  disabled={
+                    isQuotaReached() || !canPerformAction('playlists', 'create')
+                  }
+                  data-onboarding="add-playlist"
+                />
+              </div>
+            ),
+            titleActions: (
+              <ViewModeToggle mode={viewMode()} onChange={setViewMode} />
+            ),
+            actions: (
+              <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+                <TeamFilter
+                  teams={teams()}
+                  selectedTeamId={selectedTeamId()}
+                  onTeamChange={handleTeamChange}
+                  label={t('filters.teamLabel')}
+                  placeholder={t('filters.teamPlaceholder')}
+                  clearLabel={t('filters.teamClear')}
+                />
+                <TagFilter
+                  tags={tags()}
+                  selectedTagIds={selectedTagIds()}
+                  onTagChange={handleTagChange}
+                  filterMode={tagFilterMode()}
+                  onFilterModeChange={setTagFilterMode}
+                  label={t('filters.tagLabel')}
+                  placeholder={t('filters.tagPlaceholder')}
+                  clearLabel={t('filters.tagClear')}
+                  searchPlaceholder={t('filters.tagSearchPlaceholder')}
+                  filterModeLabels={{
+                    any: t('filters.tagFilterModeAny'),
+                    all: t('filters.tagFilterModeAll'),
+                  }}
+                  noMatchMessage={t('filters.noMatches')}
+                  emptyMessage={t('filters.noItems')}
+                />
+              </div>
+            ),
+          }}
+          selectionHint={t('common.selectionHint')}
+          selectionLabel={t('common.selectionCount')}
+          selectionActions={({ count, clear }) => (
+            <>
+              <Show when={canManageTags()}>
+                <button
+                  class="selection-action-btn"
+                  onClick={(e) => {
+                    setBulkTagAnchorEl(e.currentTarget as HTMLElement);
+                  }}
+                >
+                  <BsTagFill />
+                  {t('tags.manageTags')}
+                </button>
+              </Show>
+              <button
+                class="selection-action-btn danger"
+                disabled={!canPerformAction('playlists', 'delete')}
+                onClick={() => setShowConfirmDialogMultiple(true)}
+              >
+                <AiOutlineDelete />
+                Delete
+              </button>
+            </>
+          )}
+          table={{
+            columns,
+            actions,
+            actionsLabel: t('common.actions'),
+            onRowSelect,
+            defaultRowAction: {
+              icon: BsEye,
+              handler: (item: JsonPlaylist) => {
+                openPlaylistDrawer(item);
+              },
+              label: t('common.view'),
+            },
+          }}
+          pagination={{ itemsPerPage }}
+        ></TableView>
+      </Show>
+
+      <Show when={viewMode() === 'tree'}>
+        <ToolBar
+          title={t('playlists.title')}
+          titleActions={
+            <ViewModeToggle mode={viewMode()} onChange={setViewMode} />
+          }
+          hideSearch
+          mainAction={
+            <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
               <Show when={quota()}>
                 <QuotaIndicator
                   used={quota()!.used}
@@ -936,11 +1341,12 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
                 disabled={
                   isQuotaReached() || !canPerformAction('playlists', 'create')
                 }
+                data-onboarding="add-playlist"
               />
             </div>
-          ),
-          actions: (
-            <div style="display: flex; gap: 1rem; align-items: center;">
+          }
+          actions={
+            <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
               <TeamFilter
                 teams={teams()}
                 selectedTeamId={selectedTeamId()}
@@ -949,29 +1355,116 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
                 placeholder={t('filters.teamPlaceholder')}
                 clearLabel={t('filters.teamClear')}
               />
-              <IconButton
-                onClick={() => setShowConfirmDialogMultiple(true)}
-                icon={AiOutlineDelete}
-                color="primary"
-                disabled={selectedPlaylists().size === 0}
-              />
             </div>
-          ),
-        }}
-        table={{
-          columns,
-          actions,
-          onRowSelect,
-          defaultRowAction: {
-            icon: BsEye,
-            handler: (item: JsonPlaylist) => {
-              openModal(item);
-            },
-            label: t('common.view'),
-          },
-        }}
-        pagination={{ itemsPerPage }}
-      ></TableView>
+          }
+        />
+        <ResourceTreeView
+          tagGroups={tagGroups()}
+          allTags={allTags()}
+          fetchResources={fetchTreeResources}
+          fetchUntaggedResources={fetchTreeUntaggedResources}
+          fetchUntaggedCount={fetchTreeUntaggedCount}
+          untaggedLabel={t('tags.groups.untagged')}
+          emptyLeafText={t('filters.noItems')}
+          refreshKey={treeVersion()}
+          storageKey="playlists"
+          onResourceClick={(item) =>
+            openPlaylistDrawer(item as unknown as JsonPlaylist)
+          }
+          renderResource={(item) => (
+            <div
+              class="playlist-tree-item"
+              onClick={() =>
+                openPlaylistDrawer(item as unknown as JsonPlaylist)
+              }
+            >
+              <div class="playlist-tree-info">
+                <span class="playlist-tree-name">{item.name}</span>
+                <Show when={(item as any).settings?.aspect_ratio}>
+                  <span class="playlist-tree-meta">
+                    {(item as any).settings.aspect_ratio.width}:
+                    {(item as any).settings.aspect_ratio.height}
+                  </span>
+                </Show>
+              </div>
+              <button
+                class="playlist-tree-tag-btn"
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  const playlist = item as unknown as JsonPlaylist;
+                  const orgId = props.store.organizations.selectedId;
+                  if (orgId && !resourceTagsMap().has(playlist.id)) {
+                    try {
+                      const itemTags = await tagsService.getResourceTags(
+                        orgId,
+                        'playlist',
+                        playlist.id
+                      );
+                      setResourceTagsMap((prev) => {
+                        const next = new Map(prev);
+                        next.set(playlist.id, itemTags);
+                        return next;
+                      });
+                    } catch {
+                      /* ignore */
+                    }
+                  }
+                  setTagPopoverTarget({
+                    item: playlist,
+                    anchorEl: e.currentTarget as HTMLElement,
+                  });
+                }}
+                title={t('tags.manageTags')}
+              >
+                <BsTagFill />
+              </button>
+            </div>
+          )}
+        />
+      </Show>
+
+      {/* Single-item tag popover */}
+      <Show when={tagPopoverTarget()}>
+        {(target) => (
+          <TagPopover
+            availableTags={allTags()}
+            tagGroups={tagGroups()}
+            selectedTagIds={(resourceTagsMap().get(target().item.id) || []).map(
+              (t) => t.id
+            )}
+            onToggle={(tagId, selected) =>
+              handleTagToggle(target().item, tagId, selected)
+            }
+            onCreateTag={canManageTags() ? handleCreateTag : undefined}
+            allowCreate={canManageTags()}
+            anchorEl={target().anchorEl}
+            onClose={() => setTagPopoverTarget(null)}
+            placeholder={t('tags.searchTags')}
+            ungroupedLabel={t('tags.groups.ungrouped')}
+            emptyLabel={t('tags.noTagsAvailable')}
+            noMatchLabel={t('tags.noMatchingTags')}
+          />
+        )}
+      </Show>
+
+      {/* Bulk tag popover */}
+      <Show when={bulkTagAnchorEl()}>
+        <TagPopover
+          availableTags={allTags()}
+          tagGroups={tagGroups()}
+          selectedTagIds={bulkSelectedTagIds()}
+          onToggle={handleBulkTagToggle}
+          onCreateTag={canManageTags() ? handleCreateTag : undefined}
+          allowCreate={canManageTags()}
+          anchorEl={bulkTagAnchorEl()!}
+          onClose={() => setBulkTagAnchorEl(null)}
+          title={t('tags.manageTags')}
+          placeholder={t('tags.searchTags')}
+          ungroupedLabel={t('tags.groups.ungrouped')}
+          emptyLabel={t('tags.noTagsAvailable')}
+          noMatchLabel={t('tags.noMatchingTags')}
+        />
+      </Show>
     </div>
   );
 };

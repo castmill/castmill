@@ -1,4 +1,5 @@
-@use '../../colors.scss';
+@use 'sass:color';
+@use '../../colors.scss' as colors;
 
 .castmill-invitation {
   position: fixed; // Changed from relative to fixed
@@ -167,7 +168,7 @@
     transition: all 0.2s ease-in-out;
 
     &:hover {
-      background-color: lighten(colors.$highlight-color, 10%);
+      background-color: color.adjust(colors.$highlight-color, $lightness: 10%);
       transform: translateY(-2px);
     }
 

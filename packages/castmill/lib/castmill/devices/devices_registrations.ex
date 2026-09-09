@@ -33,10 +33,20 @@ defmodule Castmill.Devices.DevicesRegistrations do
       :loc_long
     ])
     |> validate_required([:pincode, :hardware_id, :device_ip, :user_agent, :version, :timezone])
+    |> normalize_pincode()
     |> unique_constraint(:pincode)
     |> unique_constraint(:hardware_id)
     |> put_expire()
   end
+
+  defp normalize_pincode(%Ecto.Changeset{valid?: true} = changeset) do
+    case get_change(changeset, :pincode) do
+      nil -> changeset
+      pincode -> put_change(changeset, :pincode, String.upcase(pincode))
+    end
+  end
+
+  defp normalize_pincode(changeset), do: changeset
 
   defp put_expire(%Ecto.Changeset{valid?: true} = changeset) do
     {:ok, expires_at} = DateTime.from_unix(:os.system_time(:seconds) + 60 * 60, :second)

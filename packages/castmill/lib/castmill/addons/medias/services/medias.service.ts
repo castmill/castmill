@@ -1,5 +1,6 @@
 import { JsonMedia } from '@castmill/player';
 import { SortOptions, HttpError } from '@castmill/ui-common';
+import { authFetch } from '../../common/services/auth-fetch';
 
 export interface FetchMediasOptions {
   page: number;
@@ -8,6 +9,9 @@ export interface FetchMediasOptions {
   search?: string;
   filters?: Record<string, string | boolean>;
   team_id?: number | null;
+  tag_ids?: number[];
+  tag_filter_mode?: 'any' | 'all';
+  missing_tag_group_id?: number;
 }
 type HandleResponseOptions = {
   parse?: boolean;
@@ -54,11 +58,10 @@ export const MediasService = {
    * @returns JsonPlaylist
    */
   async uploadMedia(baseUrl: string, organizationId: string, name: string) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/playlists`,
       {
         method: 'POST',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -84,6 +87,9 @@ export const MediasService = {
       search,
       filters,
       team_id,
+      tag_ids,
+      tag_filter_mode,
+      missing_tag_group_id,
     }: FetchMediasOptions
   ) {
     const filtersToString = (filters: Record<string, string | boolean>) => {
@@ -112,13 +118,25 @@ export const MediasService = {
       query['team_id'] = team_id.toString();
     }
 
+    // Add tag filtering parameters
+    if (tag_ids && tag_ids.length > 0) {
+      query['tag_ids'] = tag_ids.join(',');
+    }
+
+    if (tag_filter_mode) {
+      query['tag_filter_mode'] = tag_filter_mode;
+    }
+
+    if (missing_tag_group_id !== undefined) {
+      query['missing_tag_group_id'] = missing_tag_group_id.toString();
+    }
+
     const queryString = new URLSearchParams(query).toString();
 
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/medias?${queryString}`,
       {
         method: 'GET',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -135,11 +153,10 @@ export const MediasService = {
     organizationId: string,
     playlistId: number
   ) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/playlists/${playlistId}`,
       {
         method: 'GET',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -156,11 +173,10 @@ export const MediasService = {
    * Remove Media
    */
   async removeMedia(baseUrl: string, organizationId: string, mediaId: string) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/medias/${mediaId}`,
       {
         method: 'DELETE',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -179,11 +195,10 @@ export const MediasService = {
     mediaId: string,
     playlist: Partial<MediasUpdate>
   ) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/medias/${mediaId}`,
       {
         method: 'PATCH',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },

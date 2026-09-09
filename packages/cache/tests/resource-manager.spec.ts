@@ -197,5 +197,100 @@ describe('ResourceManager', () => {
     });
 
     it('should free space and try to store file is storage is full', async () => {});
+
+    it('should return undefined for undefined/null urls', async () => {
+      const storage = new StorageMockup({});
+      const cache = new Cache(storage, 'test-media-guard', 10);
+      const manager = new ResourceManager(cache);
+      await manager.init();
+
+      const result1 = await manager.getMedia(undefined as unknown as string);
+      expect(result1).to.be.undefined;
+
+      const result2 = await manager.getMedia(null as unknown as string);
+      expect(result2).to.be.undefined;
+
+      const result3 = await manager.getMedia('');
+      expect(result3).to.be.undefined;
+    });
+
+    it('should return data uri directly without caching', async () => {
+      const storage = new StorageMockup({});
+      const cache = new Cache(storage, 'test-media-data-uri', 10);
+      const manager = new ResourceManager(cache);
+      await manager.init();
+
+      const dataUri =
+        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+      const result = await manager.getMedia(dataUri);
+      expect(result).to.be.eql(dataUri);
+    });
+  });
+
+  describe('getData offline fallback', () => {
+    it('should fall back to stale cached data when network fetch fails', async () => {
+      const uri = 'https://example.com/api/data.json';
+      const cachedData = JSON.stringify({ status: 'cached' });
+
+      const filesFixture: { [index: string]: string } = {
+        [uri]: cachedData,
+      };
+
+      const storage = new StorageMockup(filesFixture);
+      const cache = new Cache(storage, 'test-offline-fallback', 10);
+      const manager = new ResourceManager(cache);
+      await manager.init();
+
+      // First fetch — populates the cache
+      const data1 = await manager.getData(uri, 5000);
+      expect(data1).to.be.eql(JSON.parse(cachedData));
+
+      // Remove fixture to simulate network failure
+      delete filesFixture[uri];
+
+      // Request with expired freshness (0ms) — should try to refresh but fail,
+      // then fall back to the stale cached data
+      const data2 = await manager.getData(uri, 0);
+      expect(data2).to.be.eql(JSON.parse(cachedData));
+    });
+
+    it('should return undefined when network fails and no cached data exists', async () => {
+      const uri = 'https://example.com/api/missing.json';
+
+      const storage = new StorageMockup({});
+      const cache = new Cache(storage, 'test-no-fallback', 10);
+      const manager = new ResourceManager(cache);
+      await manager.init();
+
+      // No cached data, network fails — should return undefined (not throw)
+      const data = await manager.getData(uri, 5000);
+      expect(data).to.be.undefined;
+    });
+
+    it('should update cached data when fresh data is available', async () => {
+      const uri = 'https://example.com/api/data.json';
+      const initialData = JSON.stringify({ version: 1 });
+      const updatedData = JSON.stringify({ version: 2 });
+
+      const filesFixture: { [index: string]: string } = {
+        [uri]: initialData,
+      };
+
+      const storage = new StorageMockup(filesFixture);
+      const cache = new Cache(storage, 'test-data-update', 10);
+      const manager = new ResourceManager(cache);
+      await manager.init();
+
+      // First fetch
+      const data1 = await manager.getData(uri, 5000);
+      expect(data1).to.be.eql({ version: 1 });
+
+      // Update fixture data
+      filesFixture[uri] = updatedData;
+
+      // With 0 freshness, should fetch fresh data
+      const data2 = await manager.getData(uri, 0);
+      expect(data2).to.be.eql({ version: 2 });
+    });
   });
 });

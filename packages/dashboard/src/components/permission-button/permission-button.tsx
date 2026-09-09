@@ -30,7 +30,7 @@ interface PermissionButtonProps extends ComponentProps<typeof Button> {
   /**
    * Accessible label rendered by the underlying button component
    */
-  label?: string;
+  label?: string | (() => string);
 
   /**
    * Click handler forwarded to the underlying button component

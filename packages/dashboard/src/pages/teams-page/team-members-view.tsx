@@ -62,6 +62,7 @@ const [selectedRole, setSelectedRole] = createSignal<'member' | 'admin'>(
   'member'
 );
 const [isFormValid, setIsFormValid] = createSignal(false);
+const [availableUsersCount, setAvailableUsersCount] = createSignal<number>(0);
 
 const onRowSelect = (rowsSelected: Set<string>) => {
   const previousSelection = selectedMembers();
@@ -208,6 +209,24 @@ export const TeamMembersView = (props: {
     }
   };
 
+  // Set of user IDs that should be excluded from the invite combobox
+  // (current user + users already in the team)
+  const excludedUserIds = createMemo(() => {
+    const ids = new Set<string>();
+
+    // Exclude current user (can't invite yourself)
+    if (currentUser?.id) {
+      ids.add(currentUser.id);
+    }
+
+    // Exclude users already in the team
+    data().forEach((member: TeamMemberRow) => {
+      ids.add(member.user_id);
+    });
+
+    return ids;
+  });
+
   // Fetch organization users for the combobox
   const fetchUsers = async (
     page: number,
@@ -223,9 +242,20 @@ export const TeamMembersView = (props: {
       }
     );
 
+    // Filter out users that shouldn't be shown in the invite list
+    const excluded = excludedUserIds();
+    const filteredUsers = result.data
+      .map((member: any) => member.user)
+      .filter((user: User) => !excluded.has(user.id));
+
+    // Track available users count for empty state hint (only on first page with no search)
+    if (page === 1 && !searchQuery) {
+      setAvailableUsersCount(filteredUsers.length);
+    }
+
     return {
-      count: result.count,
-      data: result.data.map((member: any) => member.user),
+      count: filteredUsers.length,
+      data: filteredUsers,
     };
   };
 
@@ -353,6 +383,15 @@ export const TeamMembersView = (props: {
               onSelect={handleUserSelect}
             />
 
+            <Show when={availableUsersCount() === 0}>
+              <div class={styles['no-users-hint']}>
+                <p>{t('teams.memberSelection.noUsersAvailable')}</p>
+                <p class={styles['no-users-hint-secondary']}>
+                  {t('teams.memberSelection.inviteToOrgFirst')}
+                </p>
+              </div>
+            </Show>
+
             <div style="margin-top: 1em;">
               <Dropdown
                 id="team-member-role"
@@ -377,7 +416,7 @@ export const TeamMembersView = (props: {
 
             <div style="margin-top: 1em;">
               <Button
-                label="Invite"
+                label={t('common.save')}
                 type="submit"
                 disabled={!isFormValid()}
                 color="primary"
@@ -391,7 +430,7 @@ export const TeamMembersView = (props: {
         show={showConfirmDialog()}
         title={t('teams.dialogs.removeMemberTitle')}
         message={t('teams.dialogs.removeMemberMessage', {
-          name: currentMember()?.user?.name,
+          name: currentMember()?.user?.name || '',
         })}
         onClose={() => setShowConfirmDialog(false)}
         onConfirm={() => confirmRemoveMemberFromTeam(currentMember()?.user)}
@@ -417,6 +456,7 @@ export const TeamMembersView = (props: {
         fetchData={fetchData}
         ref={setRef}
         toolbar={{
+          searchPlaceholder: t('common.search'),
           mainAction: (
             <PermissionButton
               resource="teams"
@@ -453,6 +493,7 @@ export const TeamMembersView = (props: {
         table={{
           columns,
           actions,
+          actionsLabel: t('common.actions'),
           onRowSelect,
         }}
         pagination={{ itemsPerPage }}

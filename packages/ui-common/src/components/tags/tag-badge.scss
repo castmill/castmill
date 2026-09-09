@@ -1,0 +1,120 @@
+.castmill-tag-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375em;
+  padding: 0.25em 0.625em;
+  border-radius: 9999px;
+  background-color: var(--tag-color);
+  color: var(--tag-text-color);
+  font-weight: 500;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  user-select: none;
+
+  // Size variants
+  &.small {
+    padding: 0.125em 0.5em;
+    font-size: 0.75em;
+    gap: 0.25em;
+
+    .tag-dot {
+      width: 0.375em;
+      height: 0.375em;
+    }
+
+    .tag-remove {
+      font-size: 0.875em;
+    }
+  }
+
+  &.medium {
+    padding: 0.25em 0.625em;
+    font-size: 0.8125em;
+
+    .tag-dot {
+      width: 0.5em;
+      height: 0.5em;
+    }
+  }
+
+  &.large {
+    padding: 0.375em 0.75em;
+    font-size: 0.875em;
+
+    .tag-dot {
+      width: 0.5em;
+      height: 0.5em;
+    }
+  }
+
+  // Interactive states
+  &.clickable {
+    cursor: pointer;
+
+    &:hover:not(.disabled) {
+      filter: brightness(1.1);
+      transform: scale(1.02);
+    }
+
+    &:active:not(.disabled) {
+      transform: scale(0.98);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--tag-color);
+      outline-offset: 2px;
+    }
+  }
+
+  &.selected {
+    box-shadow:
+      0 0 0 2px var(--tag-color),
+      0 0 0 4px rgba(255, 255, 255, 0.3);
+  }
+
+  &.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .tag-dot {
+    width: 0.5em;
+    height: 0.5em;
+    border-radius: 50%;
+    background-color: var(--tag-text-color);
+    opacity: 0.6;
+    flex-shrink: 0;
+  }
+
+  .tag-name {
+    line-height: 1.4;
+  }
+
+  .tag-remove {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin: 0 -0.25em 0 0;
+    border: none;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font-size: 1em;
+    opacity: 0.7;
+    transition: opacity 0.15s ease;
+
+    &:hover:not(:disabled) {
+      opacity: 1;
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+    }
+
+    svg {
+      width: 1em;
+      height: 1em;
+    }
+  }
+}

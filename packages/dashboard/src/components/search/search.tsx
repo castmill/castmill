@@ -30,7 +30,7 @@ const Search: Component = () => {
   const globalSearchShortcut = {
     key: 'F',
     ctrl: true,
-    description: t('shortcuts.globalSearch'),
+    description: () => t('shortcuts.globalSearch'),
     category: 'global' as const,
     action: () => {
       inputRef?.focus();
@@ -88,10 +88,20 @@ const Search: Component = () => {
         onKeyDown={handleEnterKeyDown}
         ref={inputRef} // Use ref to access the input element
       />
-      <span class="keyboard-shortcut">
-        {formatShortcut(globalSearchShortcut)}
-      </span>
-      <ImCancelCircle class="reset-icon" onClick={resetSearch} />
+      {searchString() === '' ? (
+        <span class="keyboard-shortcut">
+          {formatShortcut(globalSearchShortcut)}
+        </span>
+      ) : (
+        <button
+          type="button"
+          class="reset-button"
+          onClick={resetSearch}
+          aria-label={t('common.clear')}
+        >
+          <ImCancelCircle class="reset-icon" />
+        </button>
+      )}
     </div>
   );
 };

@@ -1,0 +1,50 @@
+/* tag-filter.scss — tag-specific overrides for MultiSelectFilter */
+
+/* ─── Dropdown item: color dot + name + check ──────── */
+
+.tag-option-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  width: 100%;
+}
+
+.tag-color-dot {
+  width: 0.625em;
+  height: 0.625em;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.tag-option-name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #d0d5dd;
+  font-size: 0.9em;
+}
+
+.tag-option-check {
+  color: #5792ee;
+  font-weight: 600;
+  font-size: 0.9em;
+  flex-shrink: 0;
+}
+
+/* ─── Chip content: dot + name ─────────────────────── */
+
+.tag-chip-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  font-size: 0.9em;
+}
+
+.tag-chip-dot {
+  width: 0.5em;
+  height: 0.5em;
+  border-radius: 50%;
+  flex-shrink: 0;
+}

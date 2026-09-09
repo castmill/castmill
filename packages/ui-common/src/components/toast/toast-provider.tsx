@@ -37,7 +37,7 @@ export const ToastProvider: Component<ToastProviderProps> = (props) => {
   const [toasts, setToasts] = createSignal<ToastProps[]>([]);
 
   const generateId = (): string => {
-    return `toast-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    return `toast-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
   };
 
   const showToast = (

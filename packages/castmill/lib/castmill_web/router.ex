@@ -71,6 +71,12 @@ defmodule CastmillWeb.Router do
         live("/networks/:id/show/edit", Admin.NetworkShow, :edit)
         live("/networks/:id/:resource/new", Admin.NetworkShow, :new)
 
+        live(
+          "/networks/:id/integrations/:integration_id/configure",
+          Admin.NetworkShow,
+          :configure_integration
+        )
+
         # Organizations
         live("/organizations/:id/", Admin.OrganizationShow, :show)
         live("/organizations/:id/:resource", Admin.OrganizationShow, :show)
@@ -93,8 +99,20 @@ defmodule CastmillWeb.Router do
     get("/", DeviceController, :home)
   end
 
+  # The legacy adapter player is a standalone public application.
+  scope "/", CastmillWeb do
+    pipe_through(:device)
+
+    get("/legacy", LegacyPlayerController, :index)
+  end
+
   pipeline :register do
     plug(:accepts, ["json"])
+  end
+
+  # Public route for serving widget assets (icons, fonts, images, etc.)
+  scope "/widget_assets", CastmillWeb do
+    get("/:slug/*path", WidgetAssetsController, :show)
   end
 
   # This is most likely not used anymore as registrations go through the dashboard.
@@ -102,6 +120,55 @@ defmodule CastmillWeb.Router do
     pipe_through(:register)
 
     post("/", DeviceController, :start_registration)
+  end
+
+  # Public webhook endpoints for third-party integrations
+  pipeline :webhooks do
+    plug(:accepts, ["json"])
+  end
+
+  # Public API endpoints (no auth, no pipeline): /api/health for load balancer probes and /api/version for version/diagnostic info
+  scope "/api", CastmillWeb do
+    get("/health", HealthController, :check)
+    get("/version", HealthController, :version)
+  end
+
+  scope "/webhooks/widgets", CastmillWeb do
+    pipe_through(:webhooks)
+
+    post("/:integration_id/:widget_config_id", WidgetIntegrationController, :receive_webhook)
+  end
+
+  # Webhook endpoints for addons
+  # Addons define their webhook handlers via the webhook_handlers/0 callback
+  scope "/webhooks/addons", CastmillWeb do
+    pipe_through(:webhooks)
+
+    # Catch-all route for addon webhooks: /webhooks/addons/:addon_id/*path
+    post("/:addon_id/*path", AddonWebhookController, :handle_webhook)
+  end
+
+  # OAuth routes for third-party widget integrations
+  # These routes use session for authentication (authorize endpoint)
+  # The callback endpoint validates signed state parameter instead
+  pipeline :oauth do
+    plug(:accepts, ["html", "json"])
+    plug(:fetch_session)
+    plug(:put_secure_browser_headers)
+    plug(:fetch_current_user)
+  end
+
+  # Generic OAuth routes for widget integrations
+  # These routes work with any OAuth provider based on credential_schema configuration
+  scope "/auth/widget-integrations", CastmillWeb do
+    pipe_through(:oauth)
+
+    # Initiate OAuth flow - reads config from integration's credential_schema
+    get("/:integration_id/authorize", WidgetOAuthController, :authorize)
+
+    # Fixed callback URL for all integrations - integration_id is in state parameter
+    # Use this URL when registering with OAuth providers (e.g., Spotify)
+    get("/callback", WidgetOAuthController, :callback_unified)
   end
 
   scope "/devices", CastmillWeb do
@@ -125,7 +192,32 @@ defmodule CastmillWeb.Router do
     plug(:put_secure_browser_headers)
     plug(:fetch_session)
     plug(:fetch_dashboard_user)
+    plug(CastmillWeb.Plugs.ResolveNetwork)
     plug(:accepts, ["json"])
+    # Add multipart parsing for standard dashboard routes with 10MB limit
+    plug(Plug.Parsers,
+      parsers: [:multipart],
+      pass: ["*/*"],
+      length: 10_000_000
+    )
+  end
+
+  # Pipeline for large file uploads with 5GB limit
+  # Authenticates before parsing to prevent unauthenticated large requests
+  pipeline :large_upload do
+    plug(:put_secure_browser_headers)
+    plug(:fetch_session)
+    plug(:fetch_dashboard_user)
+    # Check auth before parsing large bodies
+    plug(:authenticate_user)
+    plug(:accepts, ["json"])
+
+    # Use custom parser plug that returns JSON on RequestTooLargeError
+    plug(CastmillWeb.Plugs.LargeUploadParser,
+      parsers: [:multipart],
+      pass: ["*/*"],
+      length: 5_368_709_120
+    )
   end
 
   scope "/signups", CastmillWeb do
@@ -159,6 +251,31 @@ defmodule CastmillWeb.Router do
     pipe_through(:dashboard)
 
     get("/organizations_invitations/:token/preview", OrganizationController, :preview_invitation)
+    get("/network_invitations/:token/preview", NetworkInvitationController, :preview_invitation)
+    get("/network/public-settings", NetworkSettingsController, :show)
+  end
+
+  # Addon API routes - supports both public and authenticated endpoints
+  # Public routes (defined via public_api_routes/0) don't require authentication
+  # Routes are mounted under /api/addons/:addon_id/*path
+  scope "/api/addons", CastmillWeb do
+    pipe_through(:dashboard)
+
+    get("/:addon_id/*path", AddonApiController, :dispatch_get)
+    post("/:addon_id/*path", AddonApiController, :dispatch_post)
+    put("/:addon_id/*path", AddonApiController, :dispatch_put)
+    delete("/:addon_id/*path", AddonApiController, :dispatch_delete)
+  end
+
+  # Large file upload routes - uses separate pipeline with 5GB limit
+  # MUST be defined before the main dashboard scope to prevent the catch-all
+  # "/:resources" route from matching POST /organizations/:id/medias with
+  # the dashboard pipeline's 8MB multipart limit.
+  scope "/dashboard", CastmillWeb do
+    pipe_through(:large_upload)
+
+    # Media upload endpoint - requires large body size support
+    post("/organizations/:organization_id/medias", UploadController, :create)
   end
 
   scope "/dashboard", CastmillWeb do
@@ -166,6 +283,42 @@ defmodule CastmillWeb.Router do
 
     get("/addons", AddonsController, :index)
     get("/users/:user_id/organizations", OrganizationController, :list_users_organizations)
+
+    # Network admin endpoints
+    get("/network/admin-status", NetworkDashboardController, :check_admin_status)
+    get("/network/settings", NetworkDashboardController, :show_settings)
+    put("/network/settings", NetworkDashboardController, :update_settings)
+    get("/network/stats", NetworkDashboardController, :show_stats)
+    get("/network/organizations", NetworkDashboardController, :list_organizations)
+    post("/network/organizations", NetworkDashboardController, :create_organization)
+    delete("/network/organizations/:id", NetworkDashboardController, :delete_organization)
+    get("/network/users", NetworkDashboardController, :list_users)
+    get("/network/invitations", NetworkDashboardController, :list_invitations)
+    delete("/network/invitations/:id", NetworkDashboardController, :delete_invitation)
+
+    post(
+      "/network/organizations/:organization_id/invitations",
+      NetworkDashboardController,
+      :invite_user_to_organization
+    )
+
+    # Network admin user management
+    post("/network/users/:user_id/block", NetworkDashboardController, :block_user)
+    delete("/network/users/:user_id/block", NetworkDashboardController, :unblock_user)
+    delete("/network/users/:user_id", NetworkDashboardController, :delete_user)
+
+    # Network admin organization management
+    post(
+      "/network/organizations/:organization_id/block",
+      NetworkDashboardController,
+      :block_organization
+    )
+
+    delete(
+      "/network/organizations/:organization_id/block",
+      NetworkDashboardController,
+      :unblock_organization
+    )
 
     # Search endpoint
     get("/organizations/:organization_id/search", SearchController, :search)
@@ -175,12 +328,93 @@ defmodule CastmillWeb.Router do
     put("/users/:id", UserController, :update)
     delete("/users/:id", UserController, :delete)
 
+    # Onboarding progress
+    get("/users/:user_id/onboarding-progress", OnboardingProgressController, :show)
+    put("/users/:user_id/onboarding-progress", OnboardingProgressController, :update)
+
+    post(
+      "/users/:user_id/onboarding-progress/complete-step",
+      OnboardingProgressController,
+      :complete_step
+    )
+
+    post("/users/:user_id/onboarding-progress/dismiss", OnboardingProgressController, :dismiss)
+    post("/users/:user_id/onboarding-progress/reset", OnboardingProgressController, :reset)
+
     # List all the widgets available for the organization
     get("/organizations/:organization_id/widgets", OrganizationController, :list_widgets)
     post("/organizations/:organization_id/widgets", OrganizationController, :create_widget)
 
+    # Get a widget by ID
+    get(
+      "/organizations/:organization_id/widgets/:widget_id",
+      OrganizationController,
+      :get_widget
+    )
+
+    # Check if a widget's integration credentials are configured
+    get(
+      "/organizations/:organization_id/widgets/:widget_id/credentials-status",
+      WidgetIntegrationController,
+      :check_widget_credentials
+    )
+
+    # Widget Integration Management
+    get(
+      "/organizations/:organization_id/widgets/:widget_id/integrations",
+      WidgetIntegrationController,
+      :list_integrations
+    )
+
+    get(
+      "/organizations/:organization_id/widget-integrations/:integration_id",
+      WidgetIntegrationController,
+      :get_integration
+    )
+
+    # Organization-scoped credentials
+    post(
+      "/organizations/:organization_id/widget-integrations/:integration_id/credentials",
+      WidgetIntegrationController,
+      :upsert_organization_credentials
+    )
+
+    put(
+      "/organizations/:organization_id/widget-integrations/:integration_id/credentials",
+      WidgetIntegrationController,
+      :upsert_organization_credentials
+    )
+
+    delete(
+      "/organizations/:organization_id/widget-integrations/:integration_id/credentials",
+      WidgetIntegrationController,
+      :delete_organization_credentials
+    )
+
+    # Test integration
+    post(
+      "/organizations/:organization_id/widget-integrations/:integration_id/test",
+      WidgetIntegrationController,
+      :test_integration
+    )
+
     # Get permissions matrix for current user in organization
     get("/organizations/:organization_id/permissions", PermissionsController, :show)
+
+    # Get widget usage before deletion
+    get(
+      "/organizations/:organization_id/widgets/:widget_id/usage",
+      OrganizationController,
+      :get_widget_usage
+    )
+
+    # Prefetch integration data for a widget (before widget_config exists)
+    # This allows the UI to warm up the cache while showing the widget details modal
+    post(
+      "/organizations/:organization_id/widgets/:widget_id/prefetch-data",
+      WidgetIntegrationController,
+      :prefetch_widget_data
+    )
 
     delete(
       "/organizations/:organization_id/widgets/:widget_id",
@@ -217,6 +451,11 @@ defmodule CastmillWeb.Router do
     post("/organizations_invitations/:token/accept", OrganizationController, :accept_invitation)
     post("/organizations_invitations/:token/reject", OrganizationController, :reject_invitation)
 
+    # Network invitations
+    get("/network_invitations/:token", NetworkInvitationController, :show_invitation)
+    post("/network_invitations/:token/accept", NetworkInvitationController, :accept_invitation)
+    post("/network_invitations/:token/reject", NetworkInvitationController, :reject_invitation)
+
     # Return Usage information for the organization
     get("/organizations/:organization_id/usage", OrganizationUsageController, :index)
 
@@ -226,10 +465,8 @@ defmodule CastmillWeb.Router do
     post("/invitations/:token/reject", TeamController, :reject_invitation, as: :team_invitation)
 
     resources "/organizations", OrganizationController, only: [:update] do
+      post("/complete-onboarding", OrganizationController, :complete_onboarding)
       post("/devices", OrganizationController, :register_device)
-
-      # This route is used to upload media files to the server.
-      post("/medias", UploadController, :create)
 
       # Playlist specific routes
       post("/playlists/:playlist_id/items", PlaylistController, :add_item)
@@ -243,6 +480,9 @@ defmodule CastmillWeb.Router do
 
       put("/playlists/:playlist_id/items/:item_id", PlaylistController, :move_item)
       delete("/playlists/:playlist_id/items/:item_id", PlaylistController, :delete_item)
+
+      # Get ancestor playlist IDs (for circular reference prevention in layout widgets)
+      get("/playlists/:playlist_id/ancestors", PlaylistController, :get_ancestors)
 
       # Channel Entries
       get("/channels/:channel_id/entries", ResourceController, :list_channel_entries)
@@ -264,20 +504,72 @@ defmodule CastmillWeb.Router do
       get("/teams/:team_id/:resource_type", TeamController, :list_resources)
       put("/teams/:team_id/:resource_type/:resource_id", TeamController, :add_resource)
       delete("/teams/:team_id/:resource_type/:resource_id", TeamController, :remove_resource)
+      # Routes for organization quotas
+      resources "/quotas", OrganizationQuotaController, only: [:index, :show, :create, :update]
+
+      # Tags - flexible resource organization
+      get("/tags", TagController, :list_tags)
+      post("/tags", TagController, :create_tag)
+      get("/tags/colors", TagController, :color_palette)
+      get("/tags/stats", TagController, :stats)
+      get("/tags/:id", TagController, :show_tag)
+      put("/tags/:id", TagController, :update_tag)
+      delete("/tags/:id", TagController, :delete_tag)
+
+      # Tag Groups
+      get("/tag-groups", TagController, :list_tag_groups)
+      post("/tag-groups", TagController, :create_tag_group)
+      get("/tag-groups/:id", TagController, :show_tag_group)
+      put("/tag-groups/:id", TagController, :update_tag_group)
+      delete("/tag-groups/:id", TagController, :delete_tag_group)
+
+      # Bulk tag operations
+      post("/tags/:tag_id/bulk", TagController, :bulk_tag)
+      delete("/tags/:tag_id/bulk", TagController, :bulk_untag)
+
+      # Resource tags (get/set tags for specific resources)
+      get("/:resource_type/:resource_id/tags", TagController, :get_resource_tags)
+      post("/:resource_type/:resource_id/tags", TagController, :tag_resource)
+      put("/:resource_type/:resource_id/tags", TagController, :set_resource_tags)
+      delete("/:resource_type/:resource_id/tags/:tag_id", TagController, :untag_resource)
 
       # Fall back route for all other resources
       resources "/:resources", ResourceController, except: [:new, :edit] do
       end
     end
 
-    # Routes for organization quotas
-    resources("/organizations/:organization_id/quotas", OrganizationQuotaController,
-      only: [:index, :show, :create, :update]
+    # Widget-scoped credentials (for widgets that require per-instance credentials)
+    post(
+      "/widget-configs/:widget_config_id/credentials",
+      WidgetIntegrationController,
+      :upsert_widget_credentials
+    )
+
+    put(
+      "/widget-configs/:widget_config_id/credentials",
+      WidgetIntegrationController,
+      :upsert_widget_credentials
+    )
+
+    # Widget data access (for players)
+    get("/widget-configs/:widget_config_id/data", WidgetIntegrationController, :get_widget_data)
+
+    post(
+      "/widget-configs/:widget_config_id/refresh",
+      WidgetIntegrationController,
+      :refresh_widget_data
     )
 
     post("/devices/:device_id/commands", DeviceController, :send_command)
     get("/devices/:device_id/events", DeviceController, :list_events)
+    delete("/devices/:device_id/events", DeviceController, :delete_events)
     get("/devices/:device_id/cache", DeviceController, :get_cache)
+    get("/devices/:device_id/telemetry", DeviceController, :get_telemetry)
+    get("/devices/:device_id/timers", DeviceController, :get_timers)
+    post("/devices/:device_id/timers", DeviceController, :set_timers)
+    get("/devices/:device_id/schedule", DeviceController, :get_schedule)
+    put("/devices/:device_id/schedule", DeviceController, :set_schedule)
+    delete("/devices/:device_id/cache", DeviceController, :delete_cache)
 
     # Endpoint to get all channels of a device in the dashboard scope
     get("/devices/:device_id/channels", DeviceController, :get_channels)
@@ -287,6 +579,9 @@ defmodule CastmillWeb.Router do
 
     # Endpoint to remove a channel from a device in the dashboard scope
     delete("/devices/:device_id/channels/:channel_id", DeviceController, :remove_channel)
+
+    # Endpoint to get a playlist for device preview in the dashboard scope
+    get("/devices/:device_id/playlists/:playlist_id", DeviceController, :get_playlist)
 
     # Remote control session routes
     post("/devices/:device_id/rc/sessions", RcSessionController, :create)
@@ -344,6 +639,9 @@ defmodule CastmillWeb.Router do
 
       post("/playlists/:playlist_id/items", PlaylistController, :add_item)
       delete("/playlists/:playlist_id/items/:id", PlaylistController, :delete_item)
+
+      # Get ancestor playlist IDs (for circular reference prevention in layout widgets)
+      get("/playlists/:playlist_id/ancestors", PlaylistController, :get_ancestors)
     end
 
     resources("/users", UserController, except: [:new, :edit, :index])
@@ -437,17 +735,44 @@ defmodule CastmillWeb.Router do
     auth_header = List.first(get_req_header(conn, "authorization"))
     auth_param = conn.params["auth"]
 
-    case String.split(auth_header || auth_param || "", " ") do
-      ["Bearer", token] -> {:ok, token}
-      [] -> {:error, "No token provided"}
-      _ -> {:error, "Invalid token format"}
+    raw =
+      Enum.find([auth_header, auth_param], fn value ->
+        is_binary(value) and String.trim(value) != ""
+      end)
+
+    case extract_bearer_token(raw) do
+      token when is_binary(token) -> {:ok, token}
+      nil when is_nil(raw) -> {:error, "No token provided"}
+      nil -> {:error, "Invalid token format"}
+    end
+  end
+
+  # Extracts the token from an `Authorization` header containing a `Bearer`
+  # value (or the equivalent `auth` query param). Tolerant of the formatting so that
+  # otherwise-valid tokens are not rejected: the scheme match is
+  # case-insensitive and surrounding/duplicate whitespace is ignored.
+  # Returns the token string, or nil when the value is not a bearer token.
+  defp extract_bearer_token(nil), do: nil
+
+  defp extract_bearer_token(value) when is_binary(value) do
+    case String.split(value, " ", parts: 2, trim: true) do
+      [scheme, token] ->
+        trimmed = String.trim(token)
+
+        if String.downcase(scheme) == "bearer" and trimmed != "" do
+          trimmed
+        else
+          nil
+        end
+
+      _ ->
+        nil
     end
   end
 
   defp assign_user(conn, user) do
     conn
     |> assign(:current_user, user)
-    |> assign(:network, user.network)
   end
 
   defp respond_with_error(conn, message) do
@@ -485,15 +810,52 @@ defmodule CastmillWeb.Router do
     end
   end
 
-  # Fetches the user from the session for dashboard API requests
+  # Fetches the user from the dashboard API request via Bearer token.
+  # The client sends `Authorization: Bearer <Phoenix.Token>` — the same
+  # token returned by POST /sessions/ and used for WebSocket auth.
+  # Cookies are NOT used for dashboard auth (they are blocked cross-origin
+  # by Safari ITP and future browser privacy defaults).
   defp fetch_dashboard_user(conn, _opts) do
-    case get_session(conn, :user_session_token) do
-      nil ->
-        conn
+    with token when is_binary(token) <-
+           extract_bearer_token(List.first(get_req_header(conn, "authorization"))),
+         {:ok, user_id} <-
+           Phoenix.Token.verify(
+             CastmillWeb.Endpoint,
+             CastmillWeb.Secrets.get_dashboard_user_token_salt(),
+             token,
+             max_age: 86_400
+           ),
+         %{} = user <- Castmill.Accounts.get_user(user_id) do
+      verify_user_status(conn, user)
+    else
+      _ -> conn
+    end
+  end
 
-      token ->
-        user = Castmill.Accounts.get_user_by_session_token(token)
+  # Verifies user/org blocked status and assigns current_user or halts.
+  defp verify_user_status(conn, user) do
+    case CastmillWeb.SessionUtils.check_user_blocked_status(user) do
+      {:ok, _user} ->
         assign(conn, :current_user, user)
+
+      {:error, {:user_blocked, reason}} ->
+        conn
+        |> delete_session(:user)
+        |> delete_session(:user_session_token)
+        |> put_status(:forbidden)
+        |> Phoenix.Controller.json(%{error: reason, code: "user_blocked"})
+        |> halt()
+
+      {:error, {:organization_blocked, reason}} ->
+        conn
+        |> delete_session(:user)
+        |> delete_session(:user_session_token)
+        |> put_status(:forbidden)
+        |> Phoenix.Controller.json(%{error: reason, code: "organization_blocked"})
+        |> halt()
+
+      {:error, _} ->
+        conn
     end
   end
 end

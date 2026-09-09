@@ -1,8 +1,11 @@
 {
   "common": {
     "save": "Save",
+    "saving": "Saving...",
     "cancel": "Cancel",
     "delete": "Delete",
+    "deleting": "Deleting...",
+    "blocking": "Blocking...",
     "edit": "Edit",
     "rename": "Rename",
     "add": "Add",
@@ -11,6 +14,7 @@
     "confirm": "Confirm",
     "back": "Back",
     "next": "Next",
+    "previous": "Previous",
     "search": "Search...",
     "loading": "Loading...",
     "error": "Error",
@@ -25,6 +29,9 @@
     "signup": "Sign Up",
     "language": "Language",
     "create": "Create",
+    "creating": "Creating...",
+    "sending": "Sending...",
+    "clear": "Clear",
     "view": "View",
     "status": "Status",
     "created": "Created",
@@ -42,6 +49,9 @@
     "requestedPath": "Requested path",
     "goToDashboard": "Go to Dashboard",
     "copyright": "© 2011-2025 Castmill™",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "contact": "Contact",
     "invitedEmail": "Invited Email:",
     "acceptInvitation": "Accept Invitation",
     "loadingInvitation": "Loading invitation...",
@@ -67,6 +77,8 @@
     "update": "Update",
     "reset": "Reset",
     "apply": "Apply",
+    "change": "Change",
+    "openInNewTab": "Open in new tab",
     "addedOn": "Added on",
     "lastUpdatedOn": "Last updated on",
     "details": "Details",
@@ -76,16 +88,36 @@
     "maintainance": "Maintenance",
     "events": "Events",
     "telemetry": "Telemetry",
+    "timers": "Timers",
     "selectImage": "Select an Image",
     "selectVideo": "Select a Video",
     "selectMedia": "Select a Media",
+    "selectPlaylist": "Select a Playlist",
+    "searchLocation": "Search for a location...",
+    "coordinates": "Coordinates",
+    "address": "Address",
+    "noAddressAvailable": "No address available",
+    "noConfigurationAvailable": "No configuration available",
+    "playlist": "Playlist",
+    "addPlaylist": "Add Playlist",
     "youIndicator": "(you)",
+    "widget": "Widget",
+    "selectionHint": "Use checkboxes to select items for bulk actions",
+    "selectionCount": "{count} selected",
     "no": "No"
   },
   "filters": {
     "teamLabel": "Team",
     "teamPlaceholder": "Select team",
-    "teamClear": "Clear team filter"
+    "teamClear": "Clear team filter",
+    "tagLabel": "Tags",
+    "tagPlaceholder": "Filter by tags…",
+    "tagClear": "Clear tag filter",
+    "tagSearchPlaceholder": "Search tags…",
+    "tagFilterModeAny": "Any",
+    "tagFilterModeAll": "All",
+    "noMatches": "No matches",
+    "noItems": "No items"
   },
   "sidebar": {
     "organization": "Organization",
@@ -95,13 +127,21 @@
     "devices": "Devices",
     "content": "Content",
     "playlists": "Playlists",
+    "layouts": "Layouts",
     "medias": "Medias",
     "widgets": "Widgets",
-    "members": "Members"
+    "members": "Members",
+    "network": "Network",
+    "networkOverview": "Overview",
+    "networkSettings": "Settings",
+    "networkOrganizations": "Organizations",
+    "networkUsers": "Users & Invitations",
+    "tags": "Tags"
   },
   "topbar": {
     "help": "Help",
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "gettingStarted": "Getting Started"
   },
   "settings": {
     "title": "Settings",
@@ -127,6 +167,14 @@
     "failedLoadCredentials": "Failed to load credentials. Please try refreshing the page.",
     "languageSettings": "Language Settings",
     "selectLanguage": "Select your preferred language",
+    "onboardingTour": "Onboarding Tour",
+    "onboardingTourDescription": "Reset the tour so you can go through the steps again.",
+    "onboardingTourResetButton": "Reset tour",
+    "onboardingTourResetConfirmTitle": "Reset the onboarding tour?",
+    "onboardingTourResetConfirmDescription": "This will clear your tour progress and show the tour again.",
+    "onboardingTourResetAction": "Reset tour",
+    "onboardingTourResetSuccess": "Onboarding tour reset. You can start it again now.",
+    "onboardingTourResetError": "Failed to reset onboarding tour. Please try again.",
     "confirmDeletePasskey": "Are you sure you want to remove this passkey?\n\nNote: This will remove the passkey from your account, but you may need to manually delete it from your device's settings (like iCloud Keychain, Google Password Manager, or Windows Hello).\n\nMake sure you have tested your other passkey(s) work before removing this one.",
     "fullName": "Full Name",
     "emailAddress": "Email Address",
@@ -176,6 +224,166 @@
       "addPasskey": "Failed to add new passkey. Please try again."
     }
   },
+  "network": {
+    "title": "Network Settings",
+    "adminBadge": "Network Admin",
+    "saveSuccess": "Network settings saved successfully",
+    "saveError": "Failed to save network settings",
+    "errorHint": "Please try again or contact support if the problem persists.",
+    "accessDenied": "Access Denied",
+    "accessDeniedMessage": "You don't have permission to view network settings. Only network administrators can access this page.",
+    "tabs": {
+      "settings": "Settings",
+      "organizations": "Organizations",
+      "users": "Users",
+      "invitations": "Invitations"
+    },
+    "stats": {
+      "organizations": "Organizations",
+      "users": "Users",
+      "devices": "Devices",
+      "teams": "Teams",
+      "storage": "Total Storage"
+    },
+    "overview": {
+      "networkInfo": "Network Information"
+    },
+    "identity": {
+      "title": "Network Identity",
+      "description": "Configure the branding and identity of your network.",
+      "name": "Network Name",
+      "namePlaceholder": "Enter network name",
+      "nameHelp": "The name of your network, displayed in the dashboard header.",
+      "email": "Support Email",
+      "emailPlaceholder": "support@example.com",
+      "emailHelp": "This email is shown to users for support inquiries.",
+      "logo": "Logo URL",
+      "logoPlaceholder": "https://example.com/logo.png",
+      "logoHelp": "URL to the network logo image.",
+      "copyright": "Copyright Text",
+      "copyrightPlaceholder": "© 2025 Your Company",
+      "copyrightHelp": "Copyright notice displayed in the dashboard footer.",
+      "privacyPolicyUrl": "Privacy Policy URL",
+      "privacyPolicyUrlPlaceholder": "https://example.com/privacy",
+      "privacyPolicyUrlHelp": "Link to your privacy policy, shown on login and signup pages.",
+      "defaultLanguage": "Default Language",
+      "defaultLanguageHelp": "The default language for new users and the login/signup page."
+    },
+    "socialLinks": {
+      "title": "Social Links",
+      "description": "Configure social media links shown in the footer.",
+      "github": "GitHub URL",
+      "githubPlaceholder": "https://github.com/yourcompany",
+      "twitter": "X (Twitter) URL",
+      "twitterPlaceholder": "https://x.com/yourcompany",
+      "linkedin": "LinkedIn URL",
+      "linkedinPlaceholder": "https://linkedin.com/company/yourcompany",
+      "facebook": "Facebook URL",
+      "facebookPlaceholder": "https://facebook.com/yourcompany"
+    },
+    "domain": {
+      "title": "Domain Configuration",
+      "description": "The domain is used to identify your network. Users access the dashboard through this domain.",
+      "label": "Network Domain",
+      "note": "Contact support to change your domain."
+    },
+    "access": {
+      "title": "Access Control",
+      "description": "Control how users can join your network and create organizations.",
+      "invitationOnly": "Invitation Only",
+      "invitationOnlyDescription": "When enabled, new users can only join the network via invitation. Public signup will be disabled.",
+      "invitationOnlyOrgAdmins": "Restrict Organization Creation",
+      "invitationOnlyOrgAdminsDescription": "When enabled, only network administrators can create new organizations. Regular users cannot create their own organizations."
+    },
+    "validation": {
+      "emailRequired": "Support email is required",
+      "emailInvalid": "Please enter a valid email address"
+    },
+    "organizations": {
+      "createTitle": "Create Organization",
+      "createDescription": "Create a new organization within this network.",
+      "name": "Organization Name",
+      "namePlaceholder": "Enter organization name",
+      "nameRequired": "Organization name is required",
+      "listTitle": "All Organizations",
+      "noOrganizations": "No organizations in this network yet.",
+      "noSearchResults": "No organizations found matching your search.",
+      "searchPlaceholder": "Search organizations...",
+      "createSuccess": "Organization created successfully",
+      "createError": "Failed to create organization",
+      "loadError": "Failed to load organizations",
+      "deleteTitle": "Delete Organization",
+      "deleteConfirmation": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone and will remove all data associated with this organization.",
+      "deleteSuccess": "Organization deleted successfully",
+      "deleteError": "Failed to delete organization",
+      "showingOf": "Showing {{showing}} of {{total}} organizations",
+      "block": "Block",
+      "unblock": "Unblock",
+      "blockTitle": "Block Organization",
+      "blockConfirmation": "Are you sure you want to block \"{{name}}\"? All users in this organization will be unable to log in.",
+      "blockSuccess": "Organization blocked successfully",
+      "blockError": "Failed to block organization",
+      "unblockTitle": "Unblock Organization",
+      "unblockConfirmation": "Are you sure you want to unblock \"{{name}}\"? Users will be able to log in again.",
+      "unblockSuccess": "Organization unblocked successfully",
+      "unblockError": "Failed to unblock organization"
+    },
+    "users": {
+      "listTitle": "All Users",
+      "name": "Name",
+      "email": "Email",
+      "noUsers": "No users in this network yet.",
+      "searchPlaceholder": "Search by name or email...",
+      "inviteTitle": "Invite User",
+      "inviteDescription": "Invite a user to join an organization in this network.",
+      "inviteButton": "Invite User",
+      "inviteModalTitle": "Invite User to Organization",
+      "selectOrganization": "Organization",
+      "selectOrganizationPlaceholder": "Select an organization...",
+      "inviteEmailLabel": "Email Address",
+      "inviteEmailPlaceholder": "Enter email address",
+      "roleLabel": "Role",
+      "roleAdmin": "Administrator",
+      "roleMember": "Member",
+      "sendInvite": "Send Invitation",
+      "inviteSuccess": "Invitation sent successfully",
+      "inviteError": "Failed to send invitation",
+      "inviteEmailRequired": "Email address is required",
+      "inviteEmailInvalid": "Please enter a valid email address",
+      "block": "Block",
+      "unblock": "Unblock",
+      "blockTitle": "Block User",
+      "blockConfirmation": "Are you sure you want to block \"{{name}}\"? This user will be unable to log in.",
+      "blockSuccess": "User blocked successfully",
+      "blockError": "Failed to block user",
+      "unblockTitle": "Unblock User",
+      "unblockConfirmation": "Are you sure you want to unblock \"{{name}}\"? This user will be able to log in again.",
+      "unblockSuccess": "User unblocked successfully",
+      "unblockError": "Failed to unblock user",
+      "deleteTitle": "Delete User",
+      "deleteConfirmation": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
+      "deleteSuccess": "User deleted successfully",
+      "deleteError": "Failed to delete user"
+    },
+    "invitations": {
+      "title": "Network Invitations",
+      "description": "View and manage pending invitations for new organizations in this network.",
+      "noInvitations": "No pending invitations.",
+      "organizationName": "Organization Name",
+      "expires": "Expires",
+      "loadError": "Failed to load invitations",
+      "deleteTitle": "Delete Invitation",
+      "deleteConfirmation": "Are you sure you want to delete the invitation for \"{{email}}\"?",
+      "deleteSuccess": "Invitation deleted successfully",
+      "deleteError": "Failed to delete invitation"
+    },
+    "status": {
+      "active": "Active",
+      "blocked": "Blocked"
+    },
+    "blockReason": "Reason (optional)",
+    "blockReasonPlaceholder": "Enter reason for blocking..."
+  },
   "usage": {
     "title": "Usage",
     "resourceUsage": "Resource Usage",
@@ -189,6 +397,17 @@
     "approachingLimit": "Approaching limit",
     "noUsageData": "No usage data available",
     "unableToLoad": "Unable to load resource usage information",
+    "resources": {
+      "medias": "Media Files",
+      "storage": "Storage",
+      "users": "Users",
+      "devices": "Devices",
+      "playlists": "Playlists",
+      "channels": "Channels",
+      "teams": "Teams",
+      "widgets": "Widgets",
+      "layouts": "Layouts"
+    },
     "errors": {
       "fetchUsageData": "Failed to fetch usage data: {{error}}"
     }
@@ -221,7 +440,9 @@
     "members": "Members",
     "memberSelection": {
       "selectUser": "Select User",
-      "searchUser": "Search for a user..."
+      "searchUser": "Search for a user...",
+      "noUsersAvailable": "No users available to invite.",
+      "inviteToOrgFirst": "Users must first be invited to the organization before they can be added to teams."
     },
     "invitations": "Invitations",
     "invitationAcceptSuccess": "Invitation accepted successfully",
@@ -291,6 +512,71 @@
       "accept": "Accept Invitation"
     }
   },
+  "tags": {
+    "title": "Tags",
+    "addTag": "Add Tag",
+    "createTag": "Create Tag",
+    "editTag": "Edit Tag",
+    "deleteTag": "Delete Tag",
+    "newTag": "New Tag",
+    "tagName": "Tag Name",
+    "tagColor": "Tag Color",
+    "tagGroup": "Tag Group",
+    "assignedTags": "Assigned Tags",
+    "availableTags": "Available Tags",
+    "noTags": "No tags",
+    "noTagsAvailable": "No tags available",
+    "noMatchingTags": "No matching tags",
+    "allTagsAssigned": "All tags assigned",
+    "addToResource": "Add Tags",
+    "removeFromResource": "Remove Tag",
+    "filterByTags": "Filter by tags...",
+    "clearAll": "Clear all",
+    "manageTags": "Manage Tags",
+    "colorPicker": "Choose Color",
+    "searchTags": "Search tags...",
+    "filterMode": {
+      "any": "Any",
+      "all": "All",
+      "description": "Match resources with any or all selected tags"
+    },
+    "confirmDelete": "Are you sure you want to delete tag \"{{name}}\"?",
+    "confirmDeleteMultiple": "Are you sure you want to delete the following tags?",
+    "confirmDeleteGroup": "Are you sure you want to delete tag group \"{{name}}\"? All tags in this group will also be permanently deleted.",
+    "maxTagsReached": "Maximum {{max}} tags reached",
+    "groups": {
+      "title": "Tag Groups",
+      "addGroup": "Add Group",
+      "newGroup": "New Group",
+      "editGroup": "Edit Group",
+      "deleteGroup": "Delete Group",
+      "noGroups": "No tag groups",
+      "ungrouped": "Ungrouped",
+      "untagged": "Untagged"
+    },
+    "messages": {
+      "tagCreated": "Tag \"{{name}}\" created successfully",
+      "tagUpdated": "Tag \"{{name}}\" updated successfully",
+      "tagDeleted": "Tag \"{{name}}\" deleted successfully",
+      "tagAddedToResource": "Tag added successfully",
+      "tagRemovedFromResource": "Tag removed successfully",
+      "tagsUpdated": "Tags updated successfully",
+      "groupCreated": "Tag group \"{{name}}\" created successfully",
+      "groupUpdated": "Tag group \"{{name}}\" updated successfully",
+      "groupDeleted": "Tag group \"{{name}}\" deleted successfully"
+    },
+    "errors": {
+      "createTag": "Error creating tag: {{error}}",
+      "updateTag": "Error updating tag: {{error}}",
+      "deleteTag": "Error deleting tag: {{error}}",
+      "tagResource": "Error adding tag to resource: {{error}}",
+      "untagResource": "Error removing tag from resource: {{error}}",
+      "createGroup": "Error creating tag group: {{error}}",
+      "updateGroup": "Error updating tag group: {{error}}",
+      "deleteGroup": "Error deleting tag group: {{error}}",
+      "loadFailed": "Failed to load tags"
+    }
+  },
   "channels": {
     "title": "Channels",
     "addChannel": "Add Channel",
@@ -303,6 +589,7 @@
     "confirmRemoveChannels": "Are you sure you want to remove the following channels?",
     "enterChannelName": "Enter Channel name",
     "defaultPlaylist": "Default playlist",
+    "currentPlaylist": "Current playlist",
     "selectPlaylist": "Select Playlist",
     "clearDefaultPlaylist": "Clear default playlist",
     "dragPlaylists": "Drag playlists",
@@ -311,8 +598,14 @@
     "removeChannelEntry": "Remove Channel Entry",
     "cannotDeleteChannel": "Cannot Delete Channel",
     "success": {
+      "added": "Channel {{name}} added successfully",
+      "created": "Channel {{name}} created successfully",
+      "updated": "Channel {{name}} updated successfully",
       "updateDefaultPlaylist": "Default playlist updated successfully",
       "clearDefaultPlaylist": "Default playlist cleared successfully"
+    },
+    "info": {
+      "contentRequired": "To display content, set a default playlist or add a scheduled entry for this channel."
     },
     "errors": {
       "removeChannel": "Error removing channel {{name}}: {{error}}",
@@ -410,23 +703,54 @@
     "loading": "Loading...",
     "loginWithPasskey": "Login with Passkey",
     "privacyPolicy": "Privacy Policy",
-    "lostCredentials": "Lost your credentials?"
+    "privacyNotice": "We care about your privacy. Read our",
+    "lostCredentials": "Lost your credentials?",
+    "invitationOnlyNotice": "Don't have an account? This service requires an invitation to register.",
+    "passkeysNotSupported": "Your browser does not support passkeys. Please use a modern browser to log in.",
+    "errors": {
+      "authenticationFailed": "Authentication failed. Please try again.",
+      "userBlocked": "Your account has been blocked. Reason: {{reason}}",
+      "organizationBlocked": "Your organization has been blocked. Reason: {{reason}}",
+      "signupFailed": "Could not start signup. Please try again later."
+    }
   },
   "credentialRecovery": {
     "title": "Recover Your Credentials",
     "checkYourEmail": "Check Your Email",
     "addNewPasskey": "Add New Passkey"
   },
+  "setupPasskey": {
+    "title": "Set Up Your Passkey",
+    "subtitle": "Create a passkey for {{domain}} so you can sign in directly.",
+    "instructions": "Welcome, {{email}}! Click the button below to create a passkey for this domain.",
+    "createButton": "Create Passkey",
+    "passkeysNotSupported": "Your browser does not support Passkeys.",
+    "invalidLink": "Invalid setup link.",
+    "expiredLink": "This setup link has expired. Please request a new one.",
+    "verificationFailed": "Failed to verify the setup link.",
+    "verifying": "Verifying link...",
+    "creatingPasskey": "Creating passkey...",
+    "challengeFailed": "Failed to start passkey creation.",
+    "creationCancelled": "Passkey creation was cancelled.",
+    "noPublicKey": "Could not retrieve public key from passkey.",
+    "registrationFailed": "Failed to register the passkey.",
+    "success": "Passkey created! Signing you in...",
+    "unexpectedError": "Something went wrong. Please try again."
+  },
   "signup": {
     "title": "Sign up",
     "continueWithPasskey": "Continue with Passkey",
     "privacyPolicy": "Privacy Policy",
+    "privacyNotice": "We care about your privacy. Read our",
     "checkYourEmail": "Check your Email",
     "errors": {
       "couldNotCreateCredential": "Could not create credential",
       "couldNotGetPublicKey": "Could not get public key",
       "invalidCredential": "Invalid credential",
       "signupFailed": "Something went wrong when signing up, contact support. ERROR: {{error}}"
+    },
+    "success": {
+      "accountCreated": "Account created successfully!"
     }
   },
   "search": {
@@ -450,7 +774,8 @@
     "checkServerRunning": "Make sure the Castmill server is running",
     "checkNetworkConnection": "Check your network connection",
     "checkServerUrl": "Verify the server URL in your configuration",
-    "retryConnection": "Retry Connection"
+    "retryConnection": "Retry Connection",
+    "authenticationError": "Authentication error: {{message}}"
   },
   "playlists": {
     "title": "Playlists",
@@ -460,7 +785,9 @@
     "buildPlaylist": "Build your playlist here",
     "renamePlaylist": "Rename Playlist",
     "playlistUpdated": "Playlist \"{{name}}\" updated successfully",
+    "playlistCreated": "Playlist \"{{name}}\" created successfully",
     "errorUpdating": "Error updating playlist {{name}}: {{error}}",
+    "errorCreating": "Error creating playlist: {{error}}",
     "removePlaylist": "Remove Playlist",
     "removePlaylists": "Remove Playlists",
     "confirmRemovePlaylist": "Are you sure you want to remove playlist \"{{name}}\"?",
@@ -469,6 +796,9 @@
     "errorRemovingPlaylists": "Error removing playlists: {{error}}",
     "enterPlaylistName": "Enter Playlist name",
     "dragToAdd": "Drag to add",
+    "searchWidgets": "Search widgets...",
+    "dropHereToAddAtEnd": "Drop here to add at the end",
+    "duration": "Duration",
     "aspectRatio": "Aspect Ratio",
     "aspectRatioWidth": "Width",
     "aspectRatioHeight": "Height",
@@ -494,18 +824,139 @@
       "aspectRatioMax": "Value must be 100 or less",
       "aspectRatioExtreme": "Aspect ratio is too extreme (max ratio is 10:1)",
       "updateAspectRatio": "Error updating aspect ratio: {{error}}"
-    }
+    },
+    "credentialsRequired": "Credentials Required",
+    "credentialsRequiredDescription": "The widget \"{{widget}}\" requires credentials to be configured before it can be added to a playlist.",
+    "missingIntegrations": "Missing integrations",
+    "goToIntegrations": "Go to Integrations",
+    "widgetModalTitle": "Widget \"{{name}}\"",
+    "configureYourWidget": "Configure your widget"
+  },
+  "layouts": {
+    "title": "Layouts",
+    "addLayout": "Add Layout",
+    "createNewLayout": "Create a new layout",
+    "layoutTitle": "Layout \"{{name}}\"",
+    "layoutDetails": "Layout Details",
+    "deleteLayout": "Delete Layout",
+    "deleteLayouts": "Delete Layouts",
+    "confirmDelete": "Are you sure you want to delete \"{{name}}\"?",
+    "confirmDeleteMultiple": "Are you sure you want to delete {{count}} layout(s)?",
+    "deleteSuccess": "Layout \"{{name}}\" deleted successfully",
+    "saveSuccess": "Layout saved successfully",
+    "addSuccess": "Layout created successfully",
+    "enterLayoutName": "Enter layout name",
+    "searchPlaceholder": "Search layouts...",
+    "noLayouts": "No layouts found",
+    "aspectRatio": "Aspect Ratio",
+    "customAspectRatio": "Custom Aspect Ratio",
+    "invalidAspectRatio": "Invalid format. Use width:height (e.g., 16:9)",
+    "extremeAspectRatio": "Aspect ratio is too extreme",
+    "zones": "Zones",
+    "addZone": "Add Zone",
+    "zoneProperties": "Zone Properties",
+    "templates": "Templates",
+    "bringForward": "Bring Forward",
+    "sendBackward": "Send Backward",
+    "selectLayout": "Select Layout",
+    "searchLayouts": "Search layouts...",
+    "assignPlaylists": "Assign Playlists to Zones",
+    "zonesCount": "{{count}} zones"
   },
   "widgets": {
     "title": "Widgets",
     "uploadWidget": "Upload Widget",
     "uploadDescription": "Upload a JSON widget definition file.",
+    "upload": {
+      "jsonDescription": "Upload a JSON file containing a widget definition.",
+      "requiredFields": "Required fields",
+      "and": "and",
+      "exampleFormat": "Example format",
+      "dragAndDropHint": "Or drag and drop JSON or ZIP files here...",
+      "ready": "Ready",
+      "invalidFileType": "Invalid file type. Only JSON and ZIP files are supported.",
+      "invalidWidgetJson": "Invalid widget JSON: must contain \"name\" and \"template\" fields",
+      "validationFailed": "Validation failed",
+      "uploadFailed": "Upload failed",
+      "uploadedSuccessfully": "Uploaded successfully",
+      "uploadError": "Upload error"
+    },
     "widgetDetails": "Widget details",
     "updateInterval": "Update Interval",
     "viewDetails": "View Details",
+    "delete": "Delete",
+    "deleteConfirmTitle": "Delete Widget",
+    "deleteConfirmMessage": "Are you sure you want to delete \"{{widget}}\"?",
+    "deleteConfirmUsageWarning": "The widget \"{{widget}}\" is currently used in {{count}} playlist(s). Deleting it will remove all instances from these playlists.",
+    "usedInPlaylists": "Used in the following playlists:",
+    "deleteCascadeNote": "This action cannot be undone.",
     "template": "Template",
     "optionsSchema": "Options Schema",
-    "dataSchema": "Data Schema"
+    "dataSchema": "Data Schema",
+    "noAssets": "This widget has no bundled assets.",
+    "assets": {
+      "title": "Assets",
+      "icons": "Icons",
+      "images": "Images",
+      "fonts": "Fonts",
+      "styles": "Styles"
+    },
+    "spotify": {
+      "title": "Spotify Connection",
+      "connectButton": "Connect to Spotify",
+      "disconnectButton": "Disconnect",
+      "connectDescription": "Connect your Spotify account to display the currently playing track on your digital signage.",
+      "connected": "Connected",
+      "connectedSince": "Connected since {{date}}",
+      "connectionSuccess": "Successfully connected to Spotify!",
+      "connectionFailed": "Failed to connect to Spotify. Please try again.",
+      "disconnectNotSupported": "Disconnecting is not yet supported. Please revoke access from your Spotify account settings."
+    },
+    "integrations": {
+      "title": "Integrations",
+      "noIntegrations": "This widget has no integrations configured.",
+      "configure": "Configure",
+      "configured": "Configured",
+      "notConfigured": "Not Configured",
+      "requiresAuth": "Requires Authentication",
+      "authType": "Authentication Type",
+      "oauth2": "OAuth 2.0",
+      "apiKey": "API Key",
+      "credentials": "Credentials",
+      "saveCredentials": "Save Credentials",
+      "testConnection": "Test Connection",
+      "testSuccess": "Connection test successful!",
+      "testFailed": "Connection test failed: {{error}}",
+      "credentialsSaved": "Credentials saved successfully!",
+      "credentialsSaveFailed": "Failed to save credentials: {{error}}",
+      "credentialsConfigured": "API credentials are configured",
+      "updateCredentials": "Update Credentials",
+      "deleteCredentials": "Delete Credentials",
+      "connectWith": "Connect with {{provider}}",
+      "connectedTo": "Connected to {{provider}}",
+      "disconnect": "Disconnect",
+      "confirmDisconnect": "Are you sure you want to disconnect from {{provider}}? You will need to reconnect to use this integration.",
+      "disconnected": "Disconnected from {{provider}}",
+      "disconnectFailed": "Failed to disconnect: {{error}}",
+      "reconnect": "Reconnect",
+      "lastValidated": "Last validated: {{date}}",
+      "scopeOrganization": "Organization-wide",
+      "scopeWidget": "Widget-specific",
+      "pullMode": "Data Fetching",
+      "pushMode": "Webhook",
+      "pullInterval": "Updates every {{seconds}} seconds",
+      "fieldRequired": "{{field}} is required",
+      "connectionStatus": "Connection Status",
+      "valid": "Valid",
+      "invalid": "Invalid",
+      "pending": "Pending Setup",
+      "enterClientCredentials": "Enter your {{provider}} API credentials below:",
+      "afterSavingCredentials": "After saving your credentials, click below to authorize with {{provider}}:",
+      "networkCredentialsConfigured": "Your network administrator has already configured {{provider}} credentials. Simply click the button below to connect your account.",
+      "noConfigurationRequired": "No Configuration Required",
+      "optional": "Optional"
+    },
+    "translations": "Translations"
   },
   "devices": {
     "title": "Devices",
@@ -536,10 +987,34 @@
     "pincodeDescription": "The pincode will be shown on the device's screen.",
     "register": "Register",
     "preview": {
-      "placeholder": "Preview"
+      "placeholder": "Preview",
+      "noChannels": "No channels assigned to this device",
+      "noScheduledContent": "No content scheduled at this time",
+      "errorLoadingPlaylist": "Failed to load playlist content",
+      "errorInitializing": "Failed to initialize preview",
+      "currentlyPlaying": "Currently scheduled from channel",
+      "note": "This shows what the device should be playing now based on channel schedules, not necessarily what is actually displayed on the device."
     },
     "telemetry": {
-      "placeholder": "Traces, Logs, Metrics and Connectivity (WiFi quality, etc.)"
+      "placeholder": "Traces, Logs, Metrics and Connectivity (WiFi quality, etc.)",
+      "storage": "Storage",
+      "memory": "Memory",
+      "cpu": "CPU Usage",
+      "cpuLoad": "CPU Load Average",
+      "network": "Network",
+      "connectionType": "Connection",
+      "wifiSignal": "WiFi Signal",
+      "temperature": "Temperature",
+      "fanSpeed": "Fan Speed",
+      "battery": "Battery",
+      "charging": "Charging",
+      "uptime": "Uptime",
+      "refresh": "Refresh telemetry",
+      "offlineWarning": "Device is offline. Telemetry data is only available when the device is connected.",
+      "noData": "No telemetry data available from this device.",
+      "daysShort": "d",
+      "hoursShort": "h",
+      "minutesShort": "m"
     },
     "maintenance": {
       "refresh": "Refresh",
@@ -554,11 +1029,71 @@
       "checkUpdatesDescription": "Check for updates and install them. This will not restart the device",
       "updateFirmware": "Update Firmware",
       "updateFirmwareDescription": "Updates the firmware of the device",
-      "offlineMessage": "Device is offline, so no commands can be sent to it"
+      "offlineMessage": "Device is offline, so no commands can be sent to it",
+      "autorecoveryUpdated": "Autorecovery has been updated",
+      "autorecoveryUpdateFailed": "Failed to update autorecovery",
+      "edit": "Edit",
+      "enableForOneHour": "Enable for one hour",
+      "enableForever": "Enable forever",
+      "disable": "Disable",
+      "recoverLostSettingsLabel": "Recover lost settings",
+      "disabled": "Disabled",
+      "enabledMinutesRemaining": "Enabled ({{minutes}} minutes remaining)",
+      "enabledForever": "Enabled forever"
+    },
+    "cache": {
+      "title": "Device Cache",
+      "items": "cache items",
+      "dataTab": "Data",
+      "codeTab": "Code",
+      "mediaTab": "Media",
+      "deleteSelected": "Delete selected items",
+      "clearAll": "Clear All",
+      "confirmDelete": "Delete Cache Entry",
+      "confirmDeleteMessage": "Are you sure you want to delete this cache entry? URL: {{url}}",
+      "confirmDeleteMultiple": "Delete Multiple Entries",
+      "confirmDeleteMultipleMessage": "Are you sure you want to delete {{count}} cache entries?",
+      "confirmClearAll": "Clear All Cache",
+      "confirmClearAllMessage": "Are you sure you want to clear all {{type}} cache entries? This action cannot be undone.",
+      "deleteSuccess": "Cache entry deleted successfully",
+      "deleteMultipleSuccess": "{{count}} cache entries deleted successfully",
+      "clearAllSuccess": "All cache entries cleared successfully",
+      "deleteError": "Error deleting cache: {{error}}",
+      "offlineWarning": "The device is currently offline. Cache information cannot be retrieved until the device comes back online."
+    },
+    "events": {
+      "title": "Device Events",
+      "items": "events",
+      "filterError": "Errors",
+      "filterWarning": "Warnings",
+      "filterInfo": "Info",
+      "filterOnline": "Online",
+      "filterOffline": "Offline",
+      "clearAll": "Clear All Events",
+      "confirmClearAll": "Clear All Events",
+      "confirmClearAllMessage": "Are you sure you want to delete all events for this device? This action cannot be undone.",
+      "clearAllSuccess": "Successfully deleted {{count}} events",
+      "deleteError": "Error deleting events: {{error}}"
     },
     "errors": {
       "setChannelFailed": "Failed to set device channel: {{error}}",
-      "commandFailed": "An error occurred while processing your request"
+      "commandFailed": "An error occurred while processing your request",
+      "invalidPincode": "Invalid pincode. Please check the pincode displayed on your device and try again.",
+      "pincodeExpired": "This pincode has expired. Please restart the device registration process."
+    },
+    "enterDescription": "Enter a description",
+    "drawerTitle": "Device \"{{name}}\"",
+    "info": {
+      "title": "Info",
+      "platform": "Platform",
+      "playerVersion": "Player version",
+      "operatingSystem": "Operating system",
+      "hardware": "Hardware",
+      "environmentVersion": "Environment version",
+      "chromiumVersion": "Chromium version",
+      "v8Version": "V8 version",
+      "nodeVersion": "Node.js version",
+      "userAgent": "User agent"
     },
     "remoteControl": {
       "title": "Remote Control",
@@ -606,7 +1141,8 @@
   },
   "validation": {
     "fieldRequired": "This field is required",
-    "minLength": "This field must be at least {{min}} characters long"
+    "minLength": "This field must be at least {{min}} characters long",
+    "invalidCoordinates": "This field must have valid coordinates"
   },
   "plurals": {
     "items": {
@@ -735,6 +1271,7 @@
     "createResource": "Create resource",
     "deleteSelected": "Delete selected",
     "gotoPlaylists": "Go to Playlists",
+    "gotoLayouts": "Go to Layouts",
     "gotoMedias": "Go to Medias",
     "gotoWidgets": "Go to Widgets",
     "gotoChannels": "Go to Channels",
@@ -750,5 +1287,179 @@
       "title": "Keyboard Shortcuts",
       "description": "Use these shortcuts to navigate faster"
     }
+  },
+  "onboarding": {
+    "title": "Welcome to Castmill!",
+    "subtitle": "Let's get started by naming your organization.",
+    "organizationNameLabel": "Organization Name",
+    "organizationNamePlaceholder": "Enter your organization name",
+    "helpText": "This name will be used to identify your workspace. You can change it later in settings.",
+    "continueButton": "Continue",
+    "success": "Organization setup complete!",
+    "errors": {
+      "organizationNameRequired": "Organization name is required",
+      "organizationNameTooShort": "Organization name must be at least 2 characters",
+      "organizationNameTooLong": "Organization name must be less than 50 characters",
+      "organizationNameTaken": "This organization name is already taken. Please choose a different name.",
+      "failed": "Failed to complete setup. Please try again."
+    }
+  },
+  "onboardingTour": {
+    "title": "Getting Started Tour",
+    "progressText": "{{current}} of {{total}} steps completed",
+    "markComplete": "Mark as Complete",
+    "stepCompleted": "Step completed!",
+    "stepCompletedBadge": "Completed",
+    "allStepsComplete": "Congratulations! You've completed all onboarding steps!",
+    "dismissed": "Onboarding tour dismissed. You can restart it anytime from settings.",
+    "dismissConfirmTitle": "Dismiss the onboarding tour?",
+    "dismissConfirmMessage": "You can reopen it anytime from the rocket icon in the top toolbar.",
+    "skip": "Skip",
+    "finish": "Finish Tour",
+    "goToStep": "Go to step {{step}}",
+    "learnMore": "Learn more",
+    "steps": {
+      "findGuide": {
+        "title": "Find This Guide Anytime",
+        "description": "Look for the rocket icon in the top navigation bar. You can click it anytime to reopen this getting started guide and continue where you left off.",
+        "action": "Show Me"
+      },
+      "chooseLanguage": {
+        "title": "Choose Your Language",
+        "description": "Select your preferred language from the dropdown in the top navigation bar. This will translate the entire application interface to make it easier for you to use.",
+        "action": "Select Language"
+      },
+      "uploadMedia": {
+        "title": "Upload Your First Media",
+        "description": "Start by uploading images, videos, or other content that you want to display on your digital signage screens. You can drag and drop files or use the upload button.",
+        "action": "Go to Media Library"
+      },
+      "createPlaylist": {
+        "title": "Create Your First Playlist",
+        "description": "Organize your content into playlists. Add media files and widgets to create engaging content sequences. You can set display durations and transitions for each item.",
+        "action": "Go to Playlists"
+      },
+      "createChannel": {
+        "title": "Set Up a Channel",
+        "description": "Channels combine playlists and schedules. Create a channel and assign a default playlist to control what content plays at different times of the day.",
+        "action": "Go to Channels"
+      },
+      "registerDevice": {
+        "title": "Register Your First Device",
+        "description": "Open the player first to get a registration code, then enter that code here to register the device. Tip: you can open a browser player on your computer for testing—use {{playerUrl}}.",
+        "action": "Go to Devices"
+      },
+      "assignChannel": {
+        "title": "Assign Channel to Device",
+        "description": "Link a channel to your device so it knows what content to display. Each device can be assigned to one channel at a time, but you can change it anytime.",
+        "action": "Manage Devices"
+      },
+      "advancedPlaylist": {
+        "title": "Create Advanced Playlists with Layouts",
+        "description": "Take your content to the next level by using layouts to display multiple items simultaneously. Split your screen into zones and show different content in each area.",
+        "action": "Explore Layouts"
+      },
+      "createTagGroup": {
+        "title": "Organize with Tag Groups",
+        "description": "Head to the Tags page and create your first tag group—like 'Location' or 'Campaign'. Groups let you categorize tags into meaningful dimensions that power the tree view.",
+        "action": "Go to Tags"
+      },
+      "tagContent": {
+        "title": "Tag Your Content",
+        "description": "Open any media item and assign tags to it. Tags make your content searchable, filterable, and organizable. You can also select multiple items and tag them all at once.",
+        "action": "Go to Media Library"
+      },
+      "exploreTreeView": {
+        "title": "Explore the Tree View",
+        "description": "Switch to tree view to see your content organized by tag groups. Expand tags to drill down, rearrange dimensions, and discover a whole new way to navigate your library.",
+        "action": "Try Tree View"
+      }
+    },
+    "errors": {
+      "failedToCompleteStep": "Failed to mark step as complete. Please try again.",
+      "failedToDismiss": "Failed to dismiss tour. Please try again."
+    }
+  },
+  "medias": {
+    "upload": {
+      "fileTooLarge": "File size ({{fileSize}}) exceeds the maximum upload limit of {{maxSize}}",
+      "largeFileWarning": "Large file ({{fileSize}}). Upload may take a while.",
+      "noValidFiles": "No valid files to upload.",
+      "uploadError": "Error uploading file.",
+      "uploadFailed": "Upload failed: {{error}}",
+      "serverError": "Server error (status {{status}})",
+      "unknownError": "Unknown error"
+    },
+    "thumbnail": {
+      "failedTitle": "Transcoding failed",
+      "failedDefaultMessage": "The preview could not be generated automatically."
+    },
+    "drawerTitle": "Media \"{{name}}\"",
+    "mediaUpdated": "Media \"{{name}}\" updated successfully",
+    "errorUpdating": "Error updating media {{name}}: {{error}}"
+  },
+  "dashboard": {
+    "noOrganizations": {
+      "title": "No Organizations",
+      "description": "You don't belong to any organization in this network yet. Please contact your network administrator to get access."
+    }
+  },
+  "aspectRatio": {
+    "custom": "Custom"
+  },
+  "deviceTimers": {
+    "title": "Device Power Timers",
+    "description": "Configure when the device turns on and off automatically",
+    "onTimers": "Turn On Timers",
+    "offTimers": "Turn Off Timers",
+    "addOnTimer": "Add Turn On Timer",
+    "addOffTimer": "Add Turn Off Timer",
+    "time": "Time",
+    "days": "Days",
+    "deleteTimer": "Delete Timer",
+    "saveTimers": "Save Timers",
+    "maxTimersReached": "Maximum of 6 timers reached",
+    "monday": "Mon",
+    "tuesday": "Tue",
+    "wednesday": "Wed",
+    "thursday": "Thu",
+    "friday": "Fri",
+    "saturday": "Sat",
+    "sunday": "Sun",
+    "mon": "Mon",
+    "tue": "Tue",
+    "wed": "Wed",
+    "thu": "Thu",
+    "fri": "Fri",
+    "sat": "Sat",
+    "sun": "Sun",
+    "allDays": "All Days",
+    "noTimers": "No timers configured",
+    "timersSaved": "Timers saved successfully",
+    "timersLoadError": "Error loading timers",
+    "timersSaveError": "Error saving timers",
+    "playerOffByTimer": "Playback turned off by timer",
+    "nextOnTime": "Next scheduled turn on: {time}",
+    "notSupported": "Timer hardware control not supported on this device. Using software fallback."
+  },
+  "deviceSchedule": {
+    "title": "Device Schedule",
+    "description": "Define when the device should be ON. Click and drag on the grid to create schedule entries. Outside scheduled hours, the device will turn off. If no entries are set, the device is always on.",
+    "mon": "Mon",
+    "tue": "Tue",
+    "wed": "Wed",
+    "thu": "Thu",
+    "fri": "Fri",
+    "sat": "Sat",
+    "sun": "Sun",
+    "save": "Save Schedule",
+    "reset": "Reset",
+    "delete": "Delete Entry",
+    "onLabel": "ON",
+    "noScheduleAlwaysOn": "No schedule set — device is always on",
+    "saved": "Schedule saved and sent to device",
+    "savedOffline": "Schedule saved. Device is offline — timers will be sent when it reconnects.",
+    "loadError": "Error loading schedule",
+    "saveError": "Error saving schedule"
   }
 }

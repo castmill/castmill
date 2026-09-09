@@ -1,27 +1,69 @@
 defmodule Castmill.Accounts.UserNotifier do
   import Swoosh.Email
-  require Logger
+  require EEx
 
-  alias Castmill.Mailer
+  alias Castmill.EmailDelivery
+
+  # Compile email templates at compile time
+  @templates_dir Path.join([__DIR__, "email_templates"])
+
+  EEx.function_from_file(
+    :defp,
+    :render_signup_html,
+    Path.join(@templates_dir, "signup.html.eex"),
+    [:assigns]
+  )
+
+  EEx.function_from_file(
+    :defp,
+    :render_signup_text,
+    Path.join(@templates_dir, "signup.text.eex"),
+    [:assigns]
+  )
+
+  EEx.function_from_file(
+    :defp,
+    :render_already_registered_html,
+    Path.join(@templates_dir, "already_registered.html.eex"),
+    [:assigns]
+  )
+
+  EEx.function_from_file(
+    :defp,
+    :render_already_registered_text,
+    Path.join(@templates_dir, "already_registered.text.eex"),
+    [:assigns]
+  )
 
   # Delivers the email using the application mailer.
-  defp deliver(recipient, subject, body) do
+  defp deliver(recipient, subject, body, opts \\ []) do
+    context = Keyword.get(opts, :context, "user_notifier.text")
+    metadata = Keyword.get(opts, :metadata, %{})
+
     email =
       new()
       |> to(recipient)
-      |> from({"Castmill", System.get_env("MAILER_FROM") || "noreply@missing.email"})
+      |> from(Application.get_env(:castmill, :mailer_from))
       |> subject(subject)
       |> text_body(body)
 
-    case Mailer.deliver(email) do
-      {:ok, response} ->
-        Logger.info("Email sent successfully: #{inspect(response)}")
-        {:ok, email}
+    EmailDelivery.deliver(email, context: context, metadata: metadata)
+  end
 
-      {:error, reason} ->
-        Logger.error("Failed to send email: #{inspect(reason)}")
-        {:error, reason}
-    end
+  # Delivers the email with both HTML and text body.
+  defp deliver_with_html(recipient, subject, text_body, html_body, opts \\ []) do
+    context = Keyword.get(opts, :context, "user_notifier.html")
+    metadata = Keyword.get(opts, :metadata, %{})
+
+    email =
+      new()
+      |> to(recipient)
+      |> from(Application.get_env(:castmill, :mailer_from))
+      |> subject(subject)
+      |> text_body(text_body)
+      |> html_body(html_body)
+
+    EmailDelivery.deliver(email, context: context, metadata: metadata)
   end
 
   @doc """
@@ -143,20 +185,81 @@ defmodule Castmill.Accounts.UserNotifier do
   Deliver Signup instructions.
   """
   def deliver_signup_instructions(signup, dashboard_uri) do
-    deliver(signup.email, "Signup instructions", """
+    url = signup_url(signup, dashboard_uri)
 
-    ==============================
+    assigns = %{
+      email: signup.email,
+      signup_url: url,
+      year: DateTime.utc_now().year
+    }
 
-    Hi #{signup.email},
+    html_body = render_signup_html(assigns)
+    text_body = render_signup_text(assigns)
 
-    You can signup by visiting the URL below:
+    deliver_with_html(
+      signup.email,
+      "Complete Your Castmill Signup",
+      text_body,
+      html_body
+    )
+  end
 
-    #{signup_url(signup, dashboard_uri)}
+  @doc """
+  Deliver a notice to an existing user who tried to sign up again.
+  Informs them they already have an account and directs them to log in.
+  """
+  def deliver_already_registered_notice(email, dashboard_uri) do
+    login_url = "#{dashboard_uri}/login?email=#{URI.encode_www_form(email)}"
 
-    If you didn't request this, please ignore this.
+    assigns = %{
+      email: email,
+      login_url: login_url,
+      year: DateTime.utc_now().year
+    }
 
-    ==============================
-    """)
+    html_body = render_already_registered_html(assigns)
+    text_body = render_already_registered_text(assigns)
+
+    deliver_with_html(
+      email,
+      "Castmill™ — You Already Have an Account",
+      text_body,
+      html_body
+    )
+  end
+
+  @doc """
+  Deliver network invitation instructions.
+  """
+  def deliver_network_invitation_instructions(invitation, dashboard_uri, opts \\ []) do
+    invitation_url =
+      "#{dashboard_uri}/?email=#{URI.encode_www_form(invitation.email)}"
+
+    deliver(
+      invitation.email,
+      "You're invited to join #{invitation.organization_name} on Castmill",
+      """
+
+      ==============================
+
+      Hi,
+
+      You've been invited to create and manage the organization \"#{invitation.organization_name}\".
+
+      To continue, open the dashboard:
+
+      #{invitation_url}
+
+      Then continue with this invitation token:
+
+      #{invitation.token}
+
+      This invitation expires at: #{invitation.expires_at}
+
+      ==============================
+      """,
+      opts
+    )
   end
 
   defp signup_url(

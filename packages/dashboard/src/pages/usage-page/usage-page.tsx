@@ -11,46 +11,53 @@ import {
 import { UsageService } from '../../services/usage';
 import { store } from '../../store/store';
 import { Usage } from '../../interfaces/usage';
-
-import { UsageComponent } from '../../components/usage/usage';
 import { useI18n } from '../../i18n';
-import { useToast } from '@castmill/ui-common';
+import { useToast, formatBytes } from '@castmill/ui-common';
 import { IoImagesOutline } from 'solid-icons/io';
 import { RiMediaPlayList2Fill } from 'solid-icons/ri';
 import { HiOutlineTv } from 'solid-icons/hi';
-import { BsCalendarWeek } from 'solid-icons/bs';
-import { AiOutlineTeam, AiOutlineDatabase } from 'solid-icons/ai';
+import { BsCalendarWeek, BsGrid } from 'solid-icons/bs';
+import {
+  AiOutlineTeam,
+  AiOutlineDatabase,
+  AiOutlineAppstore,
+} from 'solid-icons/ai';
 
 const [usage, setUsage] = createSignal<Usage>();
 const [loading, setLoading] = createSignal(true);
 
+// Map resource identifiers to translation keys for localized labels
+const resourceTranslationKeys = {
+  medias: 'usage.resources.medias',
+  storage: 'usage.resources.storage',
+  users: 'usage.resources.users',
+  devices: 'usage.resources.devices',
+  playlists: 'usage.resources.playlists',
+  channels: 'usage.resources.channels',
+  teams: 'usage.resources.teams',
+  widgets: 'usage.resources.widgets',
+  layouts: 'usage.resources.layouts',
+} as const;
+
+type ResourceType = keyof typeof resourceTranslationKeys;
+
 // Icon component using the same icons as the sidebar
-const ResourceIcon = (props: { type: string }) => {
-  const icons: Record<string, any> = {
+const ResourceIcon = (props: { type: ResourceType }) => {
+  const icons: Record<ResourceType, any> = {
     medias: IoImagesOutline,
     storage: AiOutlineDatabase,
-    users: AiOutlineTeam, // Using team icon for users
+    users: AiOutlineTeam,
     devices: HiOutlineTv,
     playlists: RiMediaPlayList2Fill,
     channels: BsCalendarWeek,
     teams: AiOutlineTeam,
+    widgets: AiOutlineAppstore,
+    layouts: BsGrid,
   };
 
   const Icon = icons[props.type] || IoImagesOutline;
 
   return <Icon size={28} />;
-};
-
-// Display names for resources
-const resourceNames: Record<string, string> = {
-  medias: 'Media Files',
-  storage: 'Storage',
-  users: 'Users',
-  devices: 'Devices',
-  playlists: 'Playlists',
-  channels: 'Channels',
-  teams: 'Teams',
-  widgets: 'Widgets',
 };
 
 /**
@@ -99,14 +106,6 @@ const UsagePage: Component = () => {
     return new Intl.NumberFormat().format(num);
   };
 
-  const formatBytes = (bytes: number) => {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
-  };
-
   const formatValue = (resource: string, value: number) => {
     return resource === 'storage' ? formatBytes(value) : formatNumber(value);
   };
@@ -128,7 +127,14 @@ const UsagePage: Component = () => {
 
         <Show when={!loading() && usage()}>
           <div class={styles.grid}>
-            <For each={Object.entries(usage() || {})}>
+            <For
+              each={
+                Object.entries(usage() || {}) as [
+                  ResourceType,
+                  { used: number; total: number },
+                ][]
+              }
+            >
               {([resource, { used, total }]) => {
                 const percentage =
                   total > 0 ? Math.round((used / total) * 100) : 0;
@@ -141,7 +147,11 @@ const UsagePage: Component = () => {
                         <ResourceIcon type={resource} />
                       </div>
                       <div class={styles.cardTitle}>
-                        <h3>{resourceNames[resource] || resource}</h3>
+                        <h3>
+                          {resourceTranslationKeys[resource]
+                            ? t(resourceTranslationKeys[resource])
+                            : resource}
+                        </h3>
                         <span class={styles.percentage}>{percentage}%</span>
                       </div>
                     </div>
@@ -149,14 +159,18 @@ const UsagePage: Component = () => {
                     <div class={styles.cardBody}>
                       <div class={styles.stats}>
                         <div class={styles.stat}>
-                          <span class={styles.statLabel}>Used</span>
+                          <span class={styles.statLabel}>
+                            {t('usage.used')}
+                          </span>
                           <span class={styles.statValue}>
                             {formatValue(resource, used)}
                           </span>
                         </div>
                         <div class={styles.statDivider}>/</div>
                         <div class={styles.stat}>
-                          <span class={styles.statLabel}>Total</span>
+                          <span class={styles.statLabel}>
+                            {t('usage.total')}
+                          </span>
                           <span class={styles.statValue}>
                             {formatValue(resource, total)}
                           </span>

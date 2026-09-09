@@ -1,18 +1,49 @@
-## Created with Capacitor Create App
+# Android Player
 
-This app was created using [`@capacitor/create-app`](https://github.com/ionic-team/create-capacitor-app),
-and comes with a very minimal shell for building an app.
+This package contains the Castmill Android player built with Vite + Capacitor.
 
-### Running this example
+## Prerequisites
 
-To run the provided example, you can use `npm start` command.
+- Android SDK and platform tools installed
+- A connected Android device (USB or wireless adb)
+- Dependencies installed from the workspace root (`yarn install`)
+
+## Build, Install, and Start
+
+From this folder, run:
 
 ```bash
-npm start
+yarn android:build
 ```
 
-## How to build the app
+This command:
 
-1. `yarn build` - build typescript
-2. `npx cap sync` - sync built assets to android project
-3. Build in android studio
+1. Builds web assets with Vite
+2. Runs `npx cap sync`
+3. Builds the debug APK with Gradle
+
+Then install and launch the app on your connected device:
+
+```bash
+yarn android:install
+```
+
+`android:install` installs the debug APK and immediately starts the app.
+
+## Restart the App over adb
+
+If the app is already installed and you only want to restart it:
+
+```bash
+yarn android:restart
+```
+
+This force-stops the app and launches it again over adb.
+
+## Dev Web Build Only
+
+For web-only local development:
+
+```bash
+yarn start
+```

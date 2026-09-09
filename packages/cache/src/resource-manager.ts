@@ -148,10 +148,23 @@ export class ResourceManager {
     const age = item ? Date.now() - item.timestamp : Infinity;
 
     if (!item || age > freshness) {
-      item = await this.cache.set(url, ItemType.Data, 'application/json', {
-        headers: this.getAuthHeader(),
-        force: true,
-      });
+      try {
+        const freshItem = await this.cache.set(
+          url,
+          ItemType.Data,
+          'application/json',
+          {
+            headers: this.getAuthHeader(),
+            force: true,
+          }
+        );
+        if (freshItem) {
+          item = freshItem;
+        }
+      } catch (err) {
+        // Network fetch failed — fall back to stale cached data if available.
+        // cache.set preserves the old entry on failure, so `item` is still valid.
+      }
     }
     if (item) {
       return this.fetchJson(item.cachedUrl) as Promise<T>;
@@ -170,6 +183,12 @@ export class ResourceManager {
    * @returns
    */
   async getMedia(url: string): Promise<string | void> {
+    // Guard against undefined/null urls
+    if (!url) {
+      console.warn('[ResourceManager] getMedia called with undefined/null url');
+      return;
+    }
+
     // We must not cache data uris
     if (url.startsWith('data:')) {
       return url;

@@ -49,7 +49,7 @@ export type SetItemCacheOptions = StoreOptions & { force: boolean };
 
 export class Cache extends Dexie {
   items!: Dexie.Table<ItemMetadata, string>;
-  caching: { [index: string]: Promise<StorageItem | undefined> } = {};
+  caching: { [index: string]: Promise<ItemMetadata | undefined> } = {};
   totalSize: number = 0;
 
   constructor(
@@ -174,9 +174,9 @@ export class Cache extends Dexie {
     mimeType: string,
     opts: SetItemCacheOptions = { force: false }
   ) {
-    // Check if we are already caching the item.
+    // Check if we are already caching the item - if so, return that promise
     if (!!this.caching[url]) {
-      return;
+      return this.caching[url];
     }
 
     // Check if the item  is not  already cached
@@ -185,7 +185,9 @@ export class Cache extends Dexie {
       if (!opts.force) {
         return;
       }
-      await this.del(url);
+      // Don't delete the old cached data yet — defer until after the new
+      // data is successfully fetched. This preserves stale cached content
+      // when the device is offline and the fetch fails.
     }
 
     // Check if we need to delete old items (based on max amount)
@@ -206,17 +208,34 @@ export class Cache extends Dexie {
     this.caching[url] = storeFilePromise;
 
     return storeFilePromise
+      .then(async (newItem) => {
+        // If we had an old cached entry, clean up its file now that the new
+        // data has been stored successfully.
+        if (item && newItem && item.cachedUrl !== newItem.cachedUrl) {
+          try {
+            await this.integration.deleteFile(item.cachedUrl);
+          } catch {
+            // Best-effort cleanup — ignore errors
+          }
+        }
+        return newItem;
+      })
       .catch(async (err) => {
         // TODO: we should use the device logger instead of console.error
         console.error('Error caching file', url, err);
 
-        try {
-          const item = await this.items.get({ url });
-          if (item) {
-            await this.del(url);
+        // Only clean up if there was no pre-existing item we want to preserve.
+        // When force-refreshing stale data, the old entry should be kept as
+        // a fallback.
+        if (!item) {
+          try {
+            const newItem = await this.items.get({ url });
+            if (newItem) {
+              await this.del(url);
+            }
+          } catch (err) {
+            console.error('Error deleting item', url, err);
           }
-        } catch (err) {
-          console.error('Error deleting item', url, err);
         }
 
         throw err;
@@ -255,7 +274,9 @@ export class Cache extends Dexie {
               cachedUrl,
               mimeType,
             };
-            await this.items.add(item);
+            // Use put instead of add to handle race conditions where the same
+            // URL might be cached simultaneously from multiple sources
+            await this.items.put(item);
             return item;
           }
           throw new Error(

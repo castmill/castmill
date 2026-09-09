@@ -1,6 +1,8 @@
 @use '../../colors.scss';
 
 .combo-box {
+  position: relative;
+
   .base-box {
     border: 1px solid #555;
     border-radius: 0.3em;
@@ -87,7 +89,13 @@
   }
 
   .dropdown {
-    margin-top: 0.25em;
+    position: absolute;
+    top: calc(100% + 0.25em);
+    left: 0;
+    z-index: 50;
+    width: 100%;
+    box-sizing: border-box;
+
     .search-box {
       display: flex;
       flex-direction: row;

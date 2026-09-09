@@ -4,7 +4,9 @@ import {
   onCleanup,
   onMount,
   createMemo,
+  Show,
   type Component,
+  type JSX,
 } from 'solid-js';
 
 import { Device } from '../classes/device';
@@ -29,6 +31,14 @@ const fetchSelectedUrl = async (device: Device) => {
   return baseUrl;
 };
 
+const fetchOrganizationName = async (device: Device) => {
+  return (await device.getOrganizationName()) || 'N/A';
+};
+
+const fetchCastmillNetworkName = async (device: Device) => {
+  return (await device.getCastmillNetworkName()) || 'N/A';
+};
+
 // Helper function to create a menu entry for an action
 const createAction = (name: string, action: () => void): MenuEntry => {
   const id = name.toLowerCase().replace(' ', '-');
@@ -36,14 +46,30 @@ const createAction = (name: string, action: () => void): MenuEntry => {
 };
 
 // Helper function to create a menu entry for a submenu
-const createSubmenu = (name: string, entries: MenuEntry[]): MenuEntry => {
+const createSubmenu = (
+  name: string,
+  entries: MenuEntry[],
+  badge?: string
+): MenuEntry => {
   const id = name.toLowerCase().replace(' ', '-');
-  return { name, id, type: 'submenu', children: entries, action: () => {} };
+  return {
+    name,
+    id,
+    type: 'submenu',
+    children: entries,
+    badge,
+    action: () => {},
+  };
+};
+
+// Helper function to create a menu entry for an info item
+const createInfo = (id: string, content: JSX.Element): MenuEntry => {
+  return { id, type: 'info', content };
 };
 
 // Helper function to create a menu entry for radio buttons
 const createRadioButtons = (
-  options: { name: string; id: string }[],
+  options: { name: string; id: string; description?: string }[],
   groupId: string,
   selectedId: string,
   action: (state: string) => void
@@ -51,6 +77,7 @@ const createRadioButtons = (
   return options.map((option) => {
     return {
       name: option.name,
+      description: option.description,
       groupId,
       id: option.id,
       type: 'radiobutton',
@@ -77,24 +104,58 @@ export const MenuComponent: Component<MenuProps> = (props) => {
     initialValue: '',
   });
 
+  const [organizationName, { refetch: refetchOrganizationName }] =
+    createResource(() => props.device, fetchOrganizationName, {
+      initialValue: 'N/A',
+    });
+
+  const [castmillNetworkName, { refetch: refetchCastmillNetworkName }] =
+    createResource(() => props.device, fetchCastmillNetworkName, {
+      initialValue: 'N/A',
+    });
+
   const [deviceName, setDeviceName] = createSignal<string>(
     props.device?.name || 'N/A'
   );
   const [deviceId, setDeviceId] = createSignal<string>(
     props.device?.id || 'N/A'
   );
+  const [timerOff, setTimerOff] = createSignal(false);
+  const [nextOnTime, setNextOnTime] = createSignal<string>('');
+  const [nextOffTime, setNextOffTime] = createSignal<string>('');
+  const [playing, setPlaying] = createSignal(false);
 
   const deviceStartedHandler = ({ id, name }: { id: string; name: string }) => {
     setDeviceName(name);
     setDeviceId(id);
   };
 
+  const refreshTimerStatus = async () => {
+    const isOff = await props.device.isTimerOff();
+    if (isOff) {
+      setTimerOff(true);
+      setPlaying(false);
+      const nextOn = await props.device.getNextOnTime();
+      setNextOnTime(nextOn ? nextOn.toLocaleString() : '');
+      setNextOffTime('');
+    } else {
+      setTimerOff(false);
+      setPlaying(true);
+      const nextOff = await props.device.getNextOffTime();
+      setNextOffTime(nextOff ? nextOff.toLocaleString() : '');
+      setNextOnTime('');
+    }
+  };
+
   onMount(() => {
-    props.device.once('started', deviceStartedHandler);
+    props.device.once('ready', deviceStartedHandler);
+
+    // Check timer-off status for menu display
+    refreshTimerStatus();
   });
 
   onCleanup(() => {
-    props.device.off('started', deviceStartedHandler);
+    props.device.off('ready', deviceStartedHandler);
   });
 
   const header = (
@@ -111,7 +172,9 @@ export const MenuComponent: Component<MenuProps> = (props) => {
     <>
       <p>Device ID: {shortDeviceId(deviceId()) || 'N/A'} </p>
       <p>Device Name: {deviceName()}</p>
-      <p>© 2024 Castmill AB</p>
+      <p>Organization: {organizationName()}</p>
+      <p>Network: {castmillNetworkName()}</p>
+      <p>© 2011-{new Date().getFullYear()} Castmill AB</p>
     </>
   );
 
@@ -143,7 +206,11 @@ export const MenuComponent: Component<MenuProps> = (props) => {
         createSubmenu('Settings', [
           createSubmenu('Server', [
             ...createRadioButtons(
-              availableUrls().map(({ name, url }) => ({ name, id: url })),
+              availableUrls().map(({ name, url }) => ({
+                name,
+                id: url,
+                description: url,
+              })),
               'base-url-group',
               selectedUrl(),
               (state: string) => {
@@ -152,9 +219,71 @@ export const MenuComponent: Component<MenuProps> = (props) => {
             ),
           ]),
         ]),
+        createSubmenu(
+          'Status',
+          [
+            createInfo(
+              'timer-status',
+              <>
+                <div style={{ display: 'flex', 'flex-direction': 'column' }}>
+                  <Show
+                    when={playing()}
+                    fallback={
+                      <>
+                        <span
+                          style={{ color: '#ff9900', 'font-weight': 'bold' }}
+                        >
+                          Playback turned off by timer
+                        </span>
+                        <Show when={nextOnTime()}>
+                          <span
+                            style={{
+                              color: '#ccc',
+                              'font-size': '0.9em',
+                              'margin-top': '0.3em',
+                            }}
+                          >
+                            Next on: {nextOnTime()}
+                          </span>
+                        </Show>
+                      </>
+                    }
+                  >
+                    <span style={{ color: '#4caf50', 'font-weight': 'bold' }}>
+                      Playing
+                    </span>
+                    <Show when={nextOffTime()}>
+                      <span
+                        style={{
+                          color: '#ccc',
+                          'font-size': '0.9em',
+                          'margin-top': '0.3em',
+                        }}
+                      >
+                        Next off: {nextOffTime()}
+                      </span>
+                    </Show>
+                  </Show>
+                </div>
+              </>
+            ),
+          ],
+          timerOff() ? '#ff9900' : '#4caf50'
+        ),
       ],
     ];
   });
 
-  return <BaseMenu header={header} entries={entries()} footer={footer} />;
+  return (
+    <BaseMenu
+      header={header}
+      entries={entries()}
+      footer={footer}
+      onShow={() => {
+        refreshTimerStatus();
+        refetchOrganizationName();
+        refetchCastmillNetworkName();
+      }}
+    />
+  );
 };

@@ -1,6 +1,6 @@
 /**
  * Tests for WidgetChooser component
- * Testing the search functionality and widget rendering
+ * Testing the search functionality, widget rendering, and icon URL resolution
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@solidjs/testing-library';
@@ -30,6 +30,49 @@ const mockWidgets: JsonWidget[] = [
     name: 'Weather Widget',
     description: 'Display weather information',
     icon: '🌤️',
+    options: {},
+    default_config: {},
+  },
+];
+
+// Mock widgets with various icon types for icon URL testing
+const mockWidgetsWithIcons: JsonWidget[] = [
+  {
+    id: 1,
+    name: 'Widget with relative icon',
+    description: 'Icon starts with /',
+    icon: '/widgets/test/icon.svg',
+    options: {},
+    default_config: {},
+  },
+  {
+    id: 2,
+    name: 'Widget with absolute URL icon',
+    description: 'Icon is absolute URL',
+    icon: 'https://example.com/icon.svg',
+    options: {},
+    default_config: {},
+  },
+  {
+    id: 3,
+    name: 'Widget with data URI icon',
+    description: 'Icon is data URI',
+    icon: 'data:image/svg+xml,<svg></svg>',
+    options: {},
+    default_config: {},
+  },
+  {
+    id: 4,
+    name: 'Widget with emoji icon',
+    description: 'Icon is emoji',
+    icon: '📦',
+    options: {},
+    default_config: {},
+  },
+  {
+    id: 5,
+    name: 'Widget without icon',
+    description: 'No icon specified',
     options: {},
     default_config: {},
   },
@@ -196,5 +239,85 @@ describe('WidgetChooser Component', () => {
     expect(firstItem.querySelector('.info')).toBeInTheDocument();
     expect(firstItem.querySelector('.name')).toBeInTheDocument();
     expect(firstItem.querySelector('.description')).toBeInTheDocument();
+  });
+});
+
+describe('WidgetChooser Icon URL Resolution', () => {
+  const baseUrl = 'http://localhost:4000';
+
+  it('renders relative icon URL with baseUrl prefix', () => {
+    const widgetWithRelativeIcon = [mockWidgetsWithIcons[0]]; // /widgets/test/icon.svg
+    const { container } = render(() => (
+      <WidgetChooser widgets={widgetWithRelativeIcon} baseUrl={baseUrl} />
+    ));
+
+    const iconImg = container.querySelector('.widget-icon img');
+    expect(iconImg).toBeInTheDocument();
+    expect(iconImg).toHaveAttribute(
+      'src',
+      'http://localhost:4000/widgets/test/icon.svg'
+    );
+  });
+
+  it('renders absolute URL icon without modification', () => {
+    const widgetWithAbsoluteIcon = [mockWidgetsWithIcons[1]]; // https://example.com/icon.svg
+    const { container } = render(() => (
+      <WidgetChooser widgets={widgetWithAbsoluteIcon} baseUrl={baseUrl} />
+    ));
+
+    const iconImg = container.querySelector('.widget-icon img');
+    expect(iconImg).toBeInTheDocument();
+    expect(iconImg).toHaveAttribute('src', 'https://example.com/icon.svg');
+  });
+
+  it('renders data URI icon without modification', () => {
+    const widgetWithDataUri = [mockWidgetsWithIcons[2]]; // data:image/svg+xml,...
+    const { container } = render(() => (
+      <WidgetChooser widgets={widgetWithDataUri} baseUrl={baseUrl} />
+    ));
+
+    const iconImg = container.querySelector('.widget-icon img');
+    expect(iconImg).toBeInTheDocument();
+    expect(iconImg).toHaveAttribute('src', 'data:image/svg+xml,<svg></svg>');
+  });
+
+  it('renders emoji icon as text symbol', () => {
+    const widgetWithEmoji = [mockWidgetsWithIcons[3]]; // 📦
+    const { container } = render(() => (
+      <WidgetChooser widgets={widgetWithEmoji} baseUrl={baseUrl} />
+    ));
+
+    // Emoji icons should not render as img
+    const iconImg = container.querySelector('.widget-icon img');
+    expect(iconImg).not.toBeInTheDocument();
+
+    // Should render as text in a span
+    const iconContainer = container.querySelector('.widget-icon span');
+    expect(iconContainer).toBeInTheDocument();
+    expect(iconContainer?.textContent).toBe('📦');
+  });
+
+  it('renders default icon when widget has no icon', () => {
+    const widgetWithoutIcon = [mockWidgetsWithIcons[4]]; // no icon
+    const { container } = render(() => (
+      <WidgetChooser widgets={widgetWithoutIcon} baseUrl={baseUrl} />
+    ));
+
+    // Should render default icon in a span (DEFAULT_WIDGET_ICON = '📦')
+    const iconContainer = container.querySelector('.widget-icon span');
+    expect(iconContainer).toBeInTheDocument();
+    expect(iconContainer?.textContent).toBe('📦');
+  });
+
+  it('handles empty baseUrl gracefully', () => {
+    const widgetWithRelativeIcon = [mockWidgetsWithIcons[0]];
+    const { container } = render(() => (
+      <WidgetChooser widgets={widgetWithRelativeIcon} baseUrl="" />
+    ));
+
+    // Should still render the icon with just the relative path
+    const iconImg = container.querySelector('.widget-icon img');
+    expect(iconImg).toBeInTheDocument();
+    expect(iconImg).toHaveAttribute('src', '/widgets/test/icon.svg');
   });
 });

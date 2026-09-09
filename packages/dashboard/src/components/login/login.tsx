@@ -9,23 +9,37 @@ import {
 import { arrayBufferToBase64, base64URLToArrayBuffer } from '../utils';
 
 import './login.scss';
-import { loginUser, resetSession } from '../auth';
+import { authFetch, loginUser, resetSession } from '../auth';
 import { useNavigate } from '@solidjs/router';
 import SignUpEmailSent from '../signup/signup-email-sent';
 import RecoverCredentials from './recover-credentials';
 
 import { baseUrl, domain } from '../../env';
 import { useI18n } from '../../i18n';
+import {
+  LOCALE_STORAGE_KEY,
+  SUPPORTED_LOCALES,
+  Locale,
+} from '../../i18n/types';
 
 const encoder = new TextEncoder(); // Creates a new encoder
 
+interface NetworkSettings {
+  name: string;
+  invitation_only: boolean;
+  logo: string;
+  default_locale: string;
+  privacy_policy_url: string | null;
+}
+
 const Login: Component = () => {
-  const { t } = useI18n();
+  const { t, setLocale } = useI18n();
   const [isMounted, setIsMounted] = createSignal<boolean>(false);
   const [loading, setLoading] = createSignal<boolean>(false);
-  const [status, setStatus] = createSignal<string>('Ready');
   const [error, setError] = createSignal<string>('');
   const [supportsPasskeys, setSupportsPasskeys] = createSignal<boolean>(false);
+  const [networkSettings, setNetworkSettings] =
+    createSignal<NetworkSettings | null>(null);
 
   // Check for email parameter in URL
   const urlParams = new URLSearchParams(window.location.search);
@@ -57,10 +71,36 @@ const Login: Component = () => {
     return conditional && userVerifiying;
   }
 
+  async function fetchNetworkSettings() {
+    try {
+      const response = await authFetch(
+        `${baseUrl}/dashboard/network/public-settings`
+      );
+      if (response.ok) {
+        const settings = await response.json();
+        setNetworkSettings(settings);
+
+        // Apply network's default locale if user has no stored preference
+        const storedLocale = localStorage.getItem(LOCALE_STORAGE_KEY);
+        if (
+          !storedLocale &&
+          settings.default_locale &&
+          SUPPORTED_LOCALES.some((l) => l.code === settings.default_locale)
+        ) {
+          setLocale(settings.default_locale as Locale);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch network settings:', error);
+    }
+  }
+
   onMount(async () => {
+    await fetchNetworkSettings();
+
     if (!(await checkPasskeysSupport())) {
-      setStatus('Passkey not supported');
-      return;
+      setSupportsPasskeys(false);
+      setError(t('login.passkeysNotSupported'));
     } else {
       setSupportsPasskeys(true);
     }
@@ -69,19 +109,21 @@ const Login: Component = () => {
 
   const loginWithPasskey = async (): Promise<void> => {
     try {
-      setStatus('Authenticating...');
+      setError('');
+      setLoading(true);
 
-      const response = await fetch(`${baseUrl}/sessions/challenges`, {
-        credentials: 'include', // Essential for including cookies
-      });
+      const response = await authFetch(`${baseUrl}/sessions/challenges`);
       if (!response.ok) {
         console.error('Failed to get challenge');
-        setStatus('Authentication failed');
+        setError(t('login.errors.authenticationFailed'));
+        setLoading(false);
         return;
       }
 
-      const { challenge } = (await response.json()) as { challenge: string };
-      console.log('Challenge:', challenge);
+      const { challenge, challenge_token } = (await response.json()) as {
+        challenge: string;
+        challenge_token: string;
+      };
 
       const publicKey: PublicKeyCredentialRequestOptions = {
         rpId: domain,
@@ -94,7 +136,8 @@ const Login: Component = () => {
 
       if (!credential) {
         console.error('No credentials received');
-        setStatus('Authentication failed');
+        setError(t('login.errors.authenticationFailed'));
+        setLoading(false);
         return;
       }
 
@@ -106,7 +149,7 @@ const Login: Component = () => {
         authAssertionResponse.clientDataJSON
       );
 
-      const result = await fetch(`${baseUrl}/sessions/`, {
+      const result = await authFetch(`${baseUrl}/sessions/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -121,18 +164,38 @@ const Login: Component = () => {
           signature: arrayBufferToBase64(authAssertionResponse.signature),
           email,
           challenge,
+          challenge_token,
         }),
-        credentials: 'include',
       });
 
       if (!result.ok) {
-        console.error('Failed to authenticate');
-        setStatus('Authentication failed');
+        // Try to parse the error response to get specific error codes
+        try {
+          const errorData = await result.json();
+          if (errorData.code === 'user_blocked') {
+            setError(
+              t('login.errors.userBlocked', { reason: errorData.message || '' })
+            );
+          } else if (errorData.code === 'organization_blocked') {
+            setError(
+              t('login.errors.organizationBlocked', {
+                reason: errorData.message || '',
+              })
+            );
+          } else {
+            setError(t('login.errors.authenticationFailed'));
+          }
+        } catch {
+          setError(t('login.errors.authenticationFailed'));
+        }
+        setLoading(false);
         return;
       } else {
-        setStatus('Authenticated');
-
-        await loginUser();
+        // Use the user + token from the POST response directly so we
+        // don't need a follow-up GET that depends on session cookies
+        // (blocked cross-origin due to SameSite=Lax).
+        const { user, token } = await result.json();
+        await loginUser({ user, token });
 
         // Redirect to page specified by the redirectTo query parameter of '/' if not present
         const urlParams = new URLSearchParams(window.location.search);
@@ -141,7 +204,16 @@ const Login: Component = () => {
       }
     } catch (error) {
       console.error('Authentication error:', error);
-      setStatus('Authentication failed');
+
+      // If user cancelled/aborted the passkey authentication, just reset loading state
+      // without showing an error - let them try again
+      if (error instanceof Error && error.name === 'NotAllowedError') {
+        setLoading(false);
+        return;
+      }
+
+      setError(t('login.errors.authenticationFailed'));
+      setLoading(false);
     }
   };
 
@@ -149,21 +221,20 @@ const Login: Component = () => {
     // Send the email to the server to start the signup process
     // The server will send a challenge to the email with a link to the SignUp component
     setLoading(true);
+    setError('');
 
-    const result = await fetch(`${baseUrl}/signups`, {
+    const result = await authFetch(`${baseUrl}/signups`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      credentials: 'include',
       body: JSON.stringify({ email: email() }),
     });
 
     if (!result.ok) {
-      setStatus('Failed to start signup process');
-      setError(`Failed to start signup process ${result.statusText}`);
+      const data = await result.json().catch(() => ({}));
+      setError(data.msg || t('login.errors.signupFailed'));
     } else {
-      setStatus('Check your email for the signup link');
       setShowEmailSent(true);
     }
     setLoading(false);
@@ -202,10 +273,10 @@ const Login: Component = () => {
           >
             <div class="login-box">
               <Switch fallback={<SignUpEmailSent />}>
-                <Match when={error()}>
-                  <div class="error">{error()}</div>
-                </Match>
                 <Match when={!showEmailSent()}>
+                  <Show when={error()}>
+                    <div class="error">{error()}</div>
+                  </Show>
                   <h2>Login</h2>
 
                   <button
@@ -216,26 +287,34 @@ const Login: Component = () => {
                     {t('login.loginWithPasskey')}
                   </button>
 
-                  <div>
-                    <p>or</p>
-                  </div>
-
-                  <h2>{t('common.signup')}</h2>
-                  <input
-                    type="text"
-                    placeholder="Email"
-                    value={email()}
-                    onChange={handleEmailChange}
-                  />
-                  <button
-                    class="login-button"
-                    onClick={startSignupProcess}
-                    disabled={disabledSignUp()}
+                  <Show
+                    when={!networkSettings()?.invitation_only}
+                    fallback={
+                      <div class="invitation-only-notice">
+                        <p>{t('login.invitationOnlyNotice')}</p>
+                      </div>
+                    }
                   >
-                    Continue
-                  </button>
+                    <div>
+                      <p>or</p>
+                    </div>
 
-                  <p class="status">Status: {status()}</p>
+                    <h2>{t('common.signup')}</h2>
+                    <input
+                      type="text"
+                      placeholder="Email"
+                      value={email()}
+                      onChange={handleEmailChange}
+                    />
+                    <button
+                      class="login-button"
+                      onClick={startSignupProcess}
+                      disabled={disabledSignUp()}
+                    >
+                      Continue
+                    </button>
+                  </Show>
+
                   <Show when={!supportsPasskeys()}>
                     <p class="warn">
                       Your browser does not support Passkeys. Link here with
@@ -243,12 +322,21 @@ const Login: Component = () => {
                     </p>
                   </Show>
 
-                  <div class="privacy">
-                    <p>
-                      We care about your privacy. Read our{' '}
-                      <a href="#">Privacy Policy</a>.
-                    </p>
-                  </div>
+                  <Show when={networkSettings()?.privacy_policy_url}>
+                    <div class="privacy">
+                      <p>
+                        {t('login.privacyNotice')}{' '}
+                        <a
+                          href={networkSettings()?.privacy_policy_url || '#'}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {t('login.privacyPolicy')}
+                        </a>
+                        .
+                      </p>
+                    </div>
+                  </Show>
                   <div>
                     <p>
                       <a

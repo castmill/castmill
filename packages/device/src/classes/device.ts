@@ -15,21 +15,50 @@ import {
   StorageIntegration,
   ItemType,
 } from '@castmill/cache';
-import { Machine, DeviceInfo } from '../interfaces/machine';
+import {
+  Machine,
+  DeviceInfo,
+  Timers,
+  TimerEntry,
+  WeekDay,
+} from '../interfaces/machine';
 import { getCastmillIntro } from './intro';
 import { Channel, JsonChannel } from './channel';
 import { Schema } from '../interfaces';
 import { JsonMedia } from '../interfaces/json-media';
 import { DivLogger, Logger, NullLogger, WebSocketLogger } from './logger';
+import { TimerManager } from './timer-manager';
 
 const HEARTBEAT_INTERVAL = 1000 * 30; // 30 seconds
 const DEFAULT_MAX_LOGS = 100;
+const MAX_RECONNECT_DELAY_MS = 60_000; // 60 seconds max delay between reconnect attempts
+
+// Socket reconnection error types
+const AUTH_ERROR_INVALID_DEVICE = 'invalid_device';
+const AUTH_ERROR_UNAUTHORIZED = 'unauthorized';
+
+// Exponential backoff for socket reconnection
+// Returns delay in ms: 1s, 2s, 4s, 8s, …, capped at 60s
+const getReconnectDelay = (tries: number): number => {
+  return Math.min(
+    1000 * Math.pow(2, Math.max(tries - 1, 0)),
+    MAX_RECONNECT_DELAY_MS
+  );
+};
 
 const supportedDebugModes = ['remote', 'local', 'none'];
 
 export enum Status {
   Registering = 'registering',
-  Login = 'login', // Loggedin?
+  RecoveryBlocked = 'recovery_blocked',
+  Ready = 'ready', // Player is ready to play content, but may be offline
+}
+
+class RecoveryBlockedError extends Error {
+  constructor() {
+    super('Device recovery blocked for security reasons');
+    this.name = 'RecoveryBlockedError';
+  }
 }
 
 export interface DeviceMessage {
@@ -50,15 +79,56 @@ export interface DeviceCommand {
     | 'device_removed';
 }
 
+export interface ChannelUpdatedMessage {
+  event: string;
+  channel_id: number;
+  default_playlist_id: number | null;
+}
+
+export interface ChannelAddedMessage {
+  event: string;
+  channel: {
+    id: number;
+    name: string;
+    timezone: string;
+    default_playlist_id: number | null;
+    entries: [];
+  };
+}
+
+export interface ChannelRemovedMessage {
+  event: string;
+  channel_id: number;
+}
+
 interface CachePage {
   page: number;
   page_size: number;
   type: ItemType;
 }
 
+interface CacheDeleteRequest {
+  type: ItemType | 'all';
+  urls: string[];
+}
+
 interface DeviceRequest {
-  resource: 'cache';
+  resource: 'cache' | 'telemetry' | 'timers';
   opts: CachePage & { ref: string };
+}
+
+interface DeviceSetRequest {
+  resource: 'timers';
+  timers: {
+    on: Array<{ hours: number; minutes: number; weekDays: string[] }>;
+    off: Array<{ hours: number; minutes: number; weekDays: string[] }>;
+  };
+  opts: { ref: string };
+}
+
+interface DeviceDeleteRequest {
+  resource: 'cache';
+  opts: CacheDeleteRequest & { ref: string };
 }
 
 interface Credentials {
@@ -66,7 +136,16 @@ interface Credentials {
     id: string;
     name: string;
     token: string;
+    organizationName?: string;
+    networkName?: string;
   };
+}
+
+export interface ProgressEvent {
+  step: number;
+  totalSteps: number;
+  percent: number;
+  label: string;
 }
 
 /**
@@ -84,9 +163,14 @@ export class Device extends EventEmitter {
   private player?: Player;
   private channels: Channel[] = [];
   private channelIndex = 0;
+  private channelGeneration = 0; // Incremented when channels change, used to invalidate in-flight operations
   private logger: Logger = new Logger();
   private logDiv?: HTMLDivElement;
   private socket?: Socket;
+  private timerManager: TimerManager;
+  private playerContainer?: HTMLElement;
+  private timerOffOverlay?: HTMLDivElement;
+  private recoveryWatcherRunning = false;
 
   // The base url is the url of the Castmill API. By default it is assumed that the API is
   // hosted at the same domain as this device and accessible through a relative path.
@@ -110,6 +194,19 @@ export class Device extends EventEmitter {
     super();
 
     this.logger.setLogger(new NullLogger());
+
+    this.timerManager = new TimerManager(this.integration, {
+      onTurnOff: async () => {
+        if (this.player) {
+          await this.player.stop();
+        }
+        this.showTimerOffOverlay();
+      },
+      onTurnOn: () => {
+        this.hideTimerOffOverlay();
+        location.reload();
+      },
+    });
 
     this.cache = new Cache(
       this.storageIntegration,
@@ -151,15 +248,24 @@ export class Device extends EventEmitter {
       (channel: JsonChannel) => new Channel(channel)
     );
 
+    this.emitProgress(4, 5, 'Loading channels');
+
     this.id = device.id;
     this.name = device.name;
     this.logDiv = logDiv;
 
-    this.emit('started', device);
-
     // TODO: Should be able to pass the logger to the renderer and the player.
+    this.playerContainer = el;
     const renderer = new Renderer(el);
     this.player = new Player(this.contentQueue, renderer, this.opts?.viewport);
+
+    this.emitProgress(5, 5, 'Starting player');
+
+    this.emit('ready', device);
+    // Start timer checks only if using software fallback
+    if (!this.integration.setTimers) {
+      this.timerManager.scheduleTimerChecks();
+    }
 
     // this.player.play({ loop: true });
 
@@ -178,6 +284,9 @@ export class Device extends EventEmitter {
       // Play until only one item remains in the playlist or the device is stopped.
       if (this.contentQueue.length < 2) {
         if (this.channels.length) {
+          // Capture current generation to detect if channels change during async operations
+          const currentGeneration = this.channelGeneration;
+
           const calendar = this.channels[this.channelIndex];
           const entry = calendar.getPlaylistAt(Date.now());
           if (entry) {
@@ -189,9 +298,20 @@ export class Device extends EventEmitter {
                 1000
               );
 
+            // Check if channels changed while we were fetching - if so, discard this content
+            if (this.channelGeneration !== currentGeneration) {
+              continue;
+            }
+
             if (jsonPlaylist) {
               const medias = this.getPlaylistMedias(jsonPlaylist);
               await this.cacheMedias(medias);
+
+              // Check again after caching
+              if (this.channelGeneration !== currentGeneration) {
+                continue;
+              }
+
               const layer = await Layer.fromPlaylist(
                 jsonPlaylist,
                 this.resourceManager,
@@ -199,6 +319,12 @@ export class Device extends EventEmitter {
                   target: 'poster',
                 }
               );
+
+              // Final check before adding to queue
+              if (this.channelGeneration !== currentGeneration) {
+                continue;
+              }
+
               this.contentQueue.add(layer);
 
               this.player.play({ loop: true });
@@ -320,41 +446,104 @@ export class Device extends EventEmitter {
     );
   }
 
-  private async requestPincode(hardwareId: string) {
+  private async requestPincode(hardwareId: string): Promise<string> {
+    this.emitProgress(2, 3, 'Connecting to server');
+
     const location = await this.integration.getLocation!();
-    const pincodeResponse = await fetch(`${this.baseUrl}/registrations`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        hardware_id: hardwareId,
-        location,
-        timezone: await this.integration.getTimezone!(),
-      }),
-    });
+    const timezone = await this.integration.getTimezone!();
 
-    if (pincodeResponse.status === 201) {
-      const { data } = await pincodeResponse.json();
-      return data.pincode;
-    } else if (pincodeResponse.status === 200) {
-      // Device was already registered, and we got the token to recover it.
-      const { data } = await pincodeResponse.json();
+    // Retry loop: keep trying to reach the server with exponential backoff
+    let tries = 0;
+    let recovered = false;
+    while (!this.closing && !recovered) {
+      try {
+        const pincodeResponse = await fetch(`${this.baseUrl}/registrations`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            hardware_id: hardwareId,
+            location,
+            timezone,
+          }),
+        });
 
-      const credentials = {
-        device: {
-          id: data.id,
-          name: data.name,
-          token: data.token,
-        },
-      };
-      await this.integration.storeCredentials!(JSON.stringify(credentials));
+        if (pincodeResponse.status === 201) {
+          const { data } = await pincodeResponse.json();
+          return data.pincode;
+        } else if (pincodeResponse.status === 200) {
+          // Device was already registered, and we got the token to recover it.
+          const { data } = await pincodeResponse.json();
 
-      // Refresh the page to initialize the player with the new credentials.
-      window.location.reload();
-    } else {
-      throw new Error(`Invalid status ${pincodeResponse.status}`);
+          const credentials = {
+            device: {
+              id: data.id,
+              name: data.name,
+              token: data.token,
+              organizationName: data.organization_name,
+              networkName: data.network_name,
+            },
+          };
+          await this.integration.storeCredentials!(JSON.stringify(credentials));
+
+          // Refresh the page to initialize the player with the new credentials.
+          window.location.reload();
+
+          // Mark as recovered so the retry loop is not re-entered.
+          // In production the page reload above destroys this context.
+          // In environments where reload is a no-op (e.g. tests), the loop
+          // below keeps waiting until the device is closed, preventing
+          // another POST /registrations call that would overwrite the
+          // recovered credentials with a new pincode.
+          recovered = true;
+        } else if (pincodeResponse.status === 403) {
+          const body = await pincodeResponse.json().catch(() => ({}));
+
+          if (body?.error_code === 'recovery_blocked') {
+            throw new RecoveryBlockedError();
+          }
+
+          throw new Error(`Invalid status ${pincodeResponse.status}`);
+        } else {
+          throw new Error(`Invalid status ${pincodeResponse.status}`);
+        }
+      } catch (error) {
+        if (error instanceof RecoveryBlockedError) {
+          throw error;
+        }
+
+        tries++;
+        const delay = getReconnectDelay(tries);
+        this.logger.info(
+          `Failed to request pincode: ${error}. Retrying in ${delay / 1000}s...`
+        );
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
     }
+
+    if (recovered) {
+      // Wait for the page reload to complete.  In production the reload
+      // destroys this execution context before the first iteration runs.
+      // In environments where reload does not terminate execution (e.g.
+      // tests), we idle here until the device is closed so that we never
+      // return a pincode or re-enter the registration flow.
+      while (!this.closing) {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+    }
+
+    throw new Error('Pincode request cancelled: device is closing');
+  }
+
+  private emitProgress(step: number, totalSteps: number, label: string) {
+    const percent = Math.round((step / totalSteps) * 100);
+    this.emit('progress', {
+      step,
+      totalSteps,
+      percent,
+      label,
+    } as ProgressEvent);
   }
 
   async loginOrRegister(): Promise<{ status: Status; pincode?: string }> {
@@ -364,29 +553,111 @@ export class Device extends EventEmitter {
     // Check if this device is registered by getting the credentials from the local storage (if they exist).
     let credentials = await this.getCredentials();
 
+    this.emitProgress(1, credentials ? 5 : 3, 'Identifying device');
+
     if (credentials) {
-      try {
-        const phoenixChannel = await this.login(credentials, hardwareId);
-        this.initListeners(phoenixChannel);
-        this.initHeartbeat(phoenixChannel);
-      } catch (error) {
-        if (error === 'invalid_device') {
-          // Clean all app data and refresh the page.
-          await this.integration.removeCredentials();
-          window.location.reload();
-        } else {
-          this.logger.error(`Unable to login ${error}`);
+      // Set device id and name early so they're available even if start() isn't called (e.g. timer-off)
+      this.id = credentials.device.id;
+      this.name = credentials.device.name;
 
-          // Wait 5 seconds and refresh
-          await new Promise((resolve) => setTimeout(resolve, 5000));
-          window.location.reload();
-        }
-      }
+      // Start login in the background so the player can begin playing cached
+      // content immediately, even when the device is offline.
+      this.login(credentials, hardwareId)
+        .then((phoenixChannel) => {
+          this.initListeners(phoenixChannel);
+          this.initHeartbeat(phoenixChannel);
+          void this.updateDeviceInfo(credentials);
+        })
+        .catch(async (error) => {
+          if (
+            error === AUTH_ERROR_INVALID_DEVICE ||
+            error === AUTH_ERROR_UNAUTHORIZED
+          ) {
+            // Clean all app data and refresh the page.
+            await this.integration.removeCredentials();
+            window.location.reload();
+          } else {
+            this.logger.error(`Unable to login ${error}`);
+          }
+        });
 
-      return { status: Status.Login };
+      return { status: Status.Ready };
     } else {
-      const pincode = await this.register(hardwareId);
-      return { status: Status.Registering, pincode };
+      try {
+        const pincode = await this.register(hardwareId);
+        return { status: Status.Registering, pincode };
+      } catch (error) {
+        if (error instanceof RecoveryBlockedError) {
+          this.startRecoveryBlockedWatcher(hardwareId);
+          return { status: Status.RecoveryBlocked };
+        }
+
+        throw error;
+      }
+    }
+  }
+
+  private async startRecoveryBlockedWatcher(hardwareId: string) {
+    if (this.recoveryWatcherRunning) {
+      return;
+    }
+
+    this.recoveryWatcherRunning = true;
+
+    try {
+      while (!this.closing) {
+        try {
+          const location = await this.integration.getLocation!();
+          const timezone = await this.integration.getTimezone!();
+
+          const response = await fetch(`${this.baseUrl}/registrations`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              hardware_id: hardwareId,
+              location,
+              timezone,
+            }),
+          });
+
+          if (response.status === 200) {
+            const { data } = await response.json();
+            const credentials = {
+              device: {
+                id: data.id,
+                name: data.name,
+                token: data.token,
+              },
+            };
+
+            await this.integration.storeCredentials!(
+              JSON.stringify(credentials)
+            );
+            window.location.reload();
+            return;
+          }
+
+          if (response.status === 201) {
+            // Device moved back to regular registration flow.
+            window.location.reload();
+            return;
+          }
+
+          if (response.status !== 403) {
+            this.logger.info(
+              `Unexpected status while waiting for recovery eligibility: ${response.status}`
+            );
+          }
+        } catch (error) {
+          this.logger.info(`Recovery eligibility check failed: ${error}`);
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+      }
+    } finally {
+      this.recoveryWatcherRunning = false;
     }
   }
 
@@ -397,8 +668,12 @@ export class Device extends EventEmitter {
   async register(hardwareId: string) {
     const pincode = await this.requestPincode(hardwareId);
 
+    this.emitProgress(3, 3, 'Preparing registration');
+
     let socket = new Socket(this.socketEndpoint, {
       params: { token: pincode },
+      reconnectAfterMs: getReconnectDelay,
+      rejoinAfterMs: getReconnectDelay,
     });
 
     socket.connect();
@@ -416,13 +691,30 @@ export class Device extends EventEmitter {
       .receive('error', (resp) => {
         // TODO: Show error in UI.
         this.logger.error(`Unable to join ${resp}`);
+      })
+      .receive('timeout', () => {
+        this.logger.info(
+          'Registration channel join timeout, waiting for connection...'
+        );
       });
 
     channel.on('device:registered', async (payload) => {
       this.logger.info(`Device registered ${payload}`);
 
+      const normalizedCredentials: Credentials = {
+        device: {
+          id: payload.device.id,
+          name: payload.device.name,
+          token: payload.device.token,
+          organizationName: payload.device.organizationName,
+          networkName: payload.device.networkName,
+        },
+      };
+
       // Store token in local storage as credentials.
-      await this.integration.storeCredentials!(JSON.stringify(payload));
+      await this.integration.storeCredentials!(
+        JSON.stringify(normalizedCredentials)
+      );
 
       // Refresh the page to initialize the player with the new credentials.
       window.location.reload();
@@ -430,14 +722,15 @@ export class Device extends EventEmitter {
 
     return pincode;
   }
-
   async login(credentials: Credentials, hardwareId: string) {
     const { device } = credentials;
 
+    this.emitProgress(2, 5, 'Connecting to server');
+
     const socket = (this.socket = new Socket(this.socketEndpoint, {
       params: { device_id: device.id, hardware_id: hardwareId },
-      reconnectAfterMs: (_tries: number) => 10_000,
-      rejoinAfterMs: (_tries: number) => 10_000,
+      reconnectAfterMs: getReconnectDelay,
+      rejoinAfterMs: getReconnectDelay,
     }));
 
     socket.connect();
@@ -448,14 +741,73 @@ export class Device extends EventEmitter {
     });
 
     return new Promise<PhoenixChannel>((resolve, reject) => {
+      // Track if we've already resolved/rejected
+      let settled = false;
+      let stateCheckInterval: ReturnType<typeof setInterval> | null = null;
+
+      const cleanup = () => {
+        if (stateCheckInterval) {
+          clearInterval(stateCheckInterval);
+          stateCheckInterval = null;
+        }
+      };
+
+      const safeResolve = (value: PhoenixChannel) => {
+        if (!settled) {
+          settled = true;
+          cleanup();
+          this.emitProgress(3, 5, 'Authenticating');
+          resolve(value);
+        }
+      };
+
+      const safeReject = (reason?: any) => {
+        if (!settled) {
+          settled = true;
+          cleanup();
+          reject(reason);
+        }
+      };
+
+      // Handle initial join attempt and rejoins after reconnection
       channel
         .join()
-        .receive('ok', (resp) => {
-          resolve(channel);
+        .receive('ok', () => {
+          safeResolve(channel);
         })
         .receive('error', (resp) => {
-          reject(resp);
+          // Only reject for auth errors, not connection failures
+          if (
+            resp === AUTH_ERROR_INVALID_DEVICE ||
+            resp === AUTH_ERROR_UNAUTHORIZED
+          ) {
+            safeReject(resp);
+          } else {
+            this.logger.error(
+              `Channel join error: ${resp}, will keep trying...`
+            );
+          }
+        })
+        .receive('timeout', () => {
+          this.logger.info('Channel join timeout, waiting for connection...');
         });
+
+      // Poll channel state to detect successful reconnection and rejoin
+      // This handles the case where the initial join times out but a rejoin succeeds
+      stateCheckInterval = setInterval(() => {
+        // If the device is closing while we're still trying to log in, cancel the attempt
+        if (this.closing) {
+          this.logger.info(
+            'Device is closing while waiting for login, cancelling login attempt.'
+          );
+          safeReject(new Error('Login cancelled because device is closing'));
+          return;
+        }
+
+        if (!settled && channel.state === 'joined') {
+          safeResolve(channel);
+        }
+      }, 1000);
     });
   }
 
@@ -502,6 +854,56 @@ export class Device extends EventEmitter {
           const page = await this.getCache(opts);
           channel.push('res:get', { page, ref: opts.ref });
           break;
+        case 'telemetry':
+          const telemetry = (await this.integration.getTelemetry?.()) ?? {};
+          channel.push('res:get', { telemetry, ref: opts.ref });
+          break;
+        case 'timers':
+          const timers = await this.getTimers();
+          channel.push('res:get', { timers, ref: opts.ref });
+          break;
+      }
+    });
+
+    channel.on('set', async (payload: DeviceSetRequest) => {
+      const { resource, timers, opts } = payload;
+      switch (resource) {
+        case 'timers':
+          try {
+            // Idempotency check: skip if timers haven't changed
+            const currentTimers = await this.getTimers();
+            const normalize = (t: Timers) =>
+              JSON.stringify({
+                on: [...t.on].sort(
+                  (a, b) => a.hours - b.hours || a.minutes - b.minutes
+                ),
+                off: [...t.off].sort(
+                  (a, b) => a.hours - b.hours || a.minutes - b.minutes
+                ),
+              });
+
+            if (normalize(timers as Timers) === normalize(currentTimers)) {
+              console.log('[Device] Timers unchanged, skipping update');
+              channel.push('res:set', { success: true, ref: opts.ref });
+            } else {
+              // Send ack before reload to avoid WebSocket timeout
+              channel.push('res:set', { success: true, ref: opts.ref });
+              await this.setTimers(timers as Timers);
+            }
+          } catch (error) {
+            channel.push('res:set', { success: false, ref: opts.ref });
+          }
+          break;
+      }
+    });
+
+    channel.on('delete', async (payload: DeviceDeleteRequest) => {
+      const { resource, opts } = payload;
+      switch (resource) {
+        case 'cache':
+          const result = await this.deleteCache(opts);
+          channel.push('res:delete', { result, ref: opts.ref });
+          break;
       }
     });
 
@@ -521,6 +923,98 @@ export class Device extends EventEmitter {
           break;
       }
     });
+
+    // Handle channel updates (e.g., when default playlist changes)
+    channel.on('channel_updated', async (message: ChannelUpdatedMessage) => {
+      this.logger.info(
+        `Channel ${message.channel_id} updated, default playlist: ${message.default_playlist_id}`
+      );
+
+      // Find the channel that was updated
+      const updatedChannel = this.channels.find(
+        (ch) => ch.attrs.id === String(message.channel_id)
+      );
+      if (updatedChannel) {
+        // Update the channel's default playlist ID
+        updatedChannel.attrs.default_playlist_id = message.default_playlist_id
+          ? String(message.default_playlist_id)
+          : undefined;
+        this.logger.info(
+          'Channel default playlist updated, will take effect on next schedule check'
+        );
+      }
+    });
+
+    // Handle channel added to device
+    channel.on('channel_added', async (message: ChannelAddedMessage) => {
+      this.logger.info(
+        `Channel ${message.channel.id} (${message.channel.name}) added to device`
+      );
+
+      // Increment generation to invalidate any in-flight content loading
+      this.channelGeneration++;
+
+      // Create a new Channel instance and add it to the channels list
+      const newChannel = new Channel({
+        id: String(message.channel.id),
+        name: message.channel.name,
+        description: undefined,
+        timezone: message.channel.timezone,
+        default_playlist_id: message.channel.default_playlist_id
+          ? String(message.channel.default_playlist_id)
+          : undefined,
+        entries: [],
+      });
+
+      this.channels.push(newChannel);
+      this.logger.info(`Device now has ${this.channels.length} channel(s)`);
+
+      // Stop player and clear content queue to force loading content from the updated channel list
+      if (this.player) {
+        this.player.stop();
+      }
+      if (this.contentQueue) {
+        while (this.contentQueue.length > 0) {
+          this.contentQueue.remove(this.contentQueue.layers[0]);
+        }
+      }
+    });
+
+    // Handle channel removed from device
+    channel.on('channel_removed', async (message: ChannelRemovedMessage) => {
+      this.logger.info(`Channel ${message.channel_id} removed from device`);
+
+      // Increment generation to invalidate any in-flight content loading
+      this.channelGeneration++;
+
+      // Find and remove the channel from the channels list
+      // Compare as strings to handle both string and number IDs
+      const channelIdToRemove = String(message.channel_id);
+      const channelIndex = this.channels.findIndex(
+        (ch) => String(ch.attrs.id) === channelIdToRemove
+      );
+
+      if (channelIndex !== -1) {
+        this.channels.splice(channelIndex, 1);
+
+        // Reset channel index if needed to prevent out-of-bounds access
+        if (this.channelIndex >= this.channels.length) {
+          this.channelIndex = 0;
+        }
+
+        this.logger.info(`Device now has ${this.channels.length} channel(s)`);
+
+        // Stop player and clear content queue to force loading content from the updated channel list
+        if (this.player) {
+          this.player.stop();
+        }
+        if (this.contentQueue) {
+          while (this.contentQueue.length > 0) {
+            this.contentQueue.remove(this.contentQueue.layers[0]);
+          }
+        }
+      }
+    });
   }
 
   private async getCache({ page, page_size: perPage, type }: CachePage) {
@@ -528,6 +1022,34 @@ export class Device extends EventEmitter {
     const count = await this.cache.count(type);
 
     return { data, count };
+  }
+
+  private async deleteCache({ type, urls }: CacheDeleteRequest) {
+    try {
+      let deleted = 0;
+
+      if (type === 'all') {
+        // Clear all cache
+        await this.cache.clean();
+        const [dataCount, codeCount, mediaCount] = await Promise.all([
+          this.cache.count(ItemType.Data),
+          this.cache.count(ItemType.Code),
+          this.cache.count(ItemType.Media),
+        ]);
+        deleted = dataCount + codeCount + mediaCount;
+      } else if (urls && urls.length > 0) {
+        // Delete specific URLs
+        for (const url of urls) {
+          await this.cache.del(url);
+          deleted++;
+        }
+      }
+
+      return { success: true, deleted };
+    } catch (error) {
+      console.error('Error deleting cache:', error);
+      return { success: false, error: String(error) };
+    }
   }
 
   private initHeartbeat(channel: PhoenixChannel) {
@@ -565,7 +1087,7 @@ export class Device extends EventEmitter {
       ...(productionBaseUrl
         ? [{ name: 'Production', url: productionBaseUrl }]
         : []),
-      ...(devBaseUrl ? [{ name: 'Dev', url: devBaseUrl }] : []),
+      ...(devBaseUrl ? [{ name: 'Stage', url: devBaseUrl }] : []),
       ...(localBaseUrl ? [{ name: 'Local', url: localBaseUrl }] : []),
     ];
   }
@@ -587,9 +1109,13 @@ export class Device extends EventEmitter {
       return baseUrl;
     }
 
-    // If there is no base url set in the settings, we check if there is a default
-    // base url set in the environment variables.
-    const defaultBaseUrl = import.meta.env.VITE_DEFAULT_BASE_URL;
+    // If there is no base URL set in settings, use default first, then dev,
+    // then production for backward compatibility.
+    const defaultBaseUrl =
+      import.meta.env.VITE_DEFAULT_BASE_URL ||
+      import.meta.env.VITE_DEV_BASE_URL ||
+      import.meta.env.VITE_PRODUCTION_BASE_URL;
+
     if (defaultBaseUrl) {
       return defaultBaseUrl;
     }
@@ -605,6 +1131,103 @@ export class Device extends EventEmitter {
 
   getDeviceInfo() {
     return this.integration.getDeviceInfo();
+  }
+
+  private async updateDeviceInfo(credentials: Credentials) {
+    try {
+      const info = await this.integration.getDeviceInfo();
+      const response = await fetch(
+        `${this.baseUrl}/devices/${credentials.device.id}/info`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: ['Bearer', credentials.device.token].join(' '),
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ info }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Invalid status ${response.status}`);
+      }
+    } catch (error) {
+      this.logger.error(`Unable to update device info: ${error}`);
+    }
+  }
+
+  private async getChannelMetadata(credentials: Credentials): Promise<{
+    organizationName?: string;
+    networkName?: string;
+  }> {
+    try {
+      const response = await fetch(
+        `${this.baseUrl}/devices/${credentials.device.id}/channels`,
+        {
+          headers: {
+            Authorization: `Bearer ${credentials.device.token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        return {};
+      }
+
+      const payload = await response.json();
+      const channels: Array<{
+        organization_name?: string;
+        network_name?: string;
+      }> = Array.isArray(payload?.data) ? payload.data : [];
+
+      const first = channels.find(
+        (channel) => channel.organization_name || channel.network_name
+      );
+
+      return {
+        organizationName: first?.organization_name,
+        networkName: first?.network_name,
+      };
+    } catch (error) {
+      this.logger.error(`Unable to resolve channel metadata: ${error}`);
+      return {};
+    }
+  }
+
+  async getOrganizationName(): Promise<string | undefined> {
+    const credentials = await this.getCredentials();
+    if (!credentials) {
+      return;
+    }
+
+    if (credentials.device.organizationName) {
+      return credentials.device.organizationName;
+    }
+
+    const { organizationName } = await this.getChannelMetadata(credentials);
+    if (organizationName) {
+      return organizationName;
+    }
+
+    return;
+  }
+
+  async getCastmillNetworkName(): Promise<string | undefined> {
+    const credentials = await this.getCredentials();
+    if (!credentials) {
+      return;
+    }
+
+    if (credentials.device.networkName) {
+      return credentials.device.networkName;
+    }
+
+    const { networkName } = await this.getChannelMetadata(credentials);
+    if (networkName) {
+      return networkName;
+    }
+
+    return;
   }
 
   restart() {
@@ -631,6 +1254,84 @@ export class Device extends EventEmitter {
     return this.integration.updateFirmware?.();
   }
 
+  /**
+   * Show a full-screen black overlay on top of the player when the soft timer
+   * turns the device off. This prevents the last frame from remaining visible.
+   */
+  private showTimerOffOverlay() {
+    if (this.timerOffOverlay) return; // already showing
+
+    const overlay = document.createElement('div');
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100%';
+    overlay.style.height = '100%';
+    overlay.style.background = 'black';
+    // Must be above the player but below the menu (z-index: 1000000 in basemenu.module.css)
+    overlay.style.zIndex = '999999';
+    overlay.setAttribute('data-timer-off-overlay', 'true');
+
+    document.body.appendChild(overlay);
+    this.timerOffOverlay = overlay;
+  }
+
+  /**
+   * Remove the black overlay (if any) before reloading on timer-on.
+   */
+  private hideTimerOffOverlay() {
+    if (this.timerOffOverlay) {
+      this.timerOffOverlay.remove();
+      this.timerOffOverlay = undefined;
+    }
+  }
+
+  /**
+   * Get timers from the timer manager.
+   */
+  async getTimers(): Promise<Timers> {
+    return this.timerManager.getTimers();
+  }
+
+  /**
+   * Set timers via the timer manager.
+   * Computes the initial TIMER_OFF state based on the most recent timer event,
+   * then reloads so the device applies the new schedule.
+   */
+  async setTimers(timers: Timers): Promise<void> {
+    await this.timerManager.setTimers(timers);
+    location.reload();
+  }
+
+  /**
+   * Start monitoring timers without starting the full player.
+   * Used when the device is in timer-off state to detect ON timers.
+   */
+  startTimerMonitoring() {
+    this.timerManager.startTimerMonitoring();
+  }
+
+  /**
+   * Check if player is currently off due to timer
+   */
+  async isTimerOff(): Promise<boolean> {
+    return this.timerManager.isTimerOff();
+  }
+
+  /**
+   * Get next scheduled on time
+   */
+  async getNextOnTime(): Promise<Date | null> {
+    return this.timerManager.getNextOnTime();
+  }
+
+  /**
+   * Get next scheduled off time based on configured off-timers
+   */
+  async getNextOffTime(): Promise<Date | null> {
+    return this.timerManager.getNextOffTime();
+  }
+
   setLogMode(logMode: 'remote' | 'local' | 'none') {
     if (supportedDebugModes.indexOf(logMode) !== -1) {
       this.debugMode = logMode;
@@ -655,21 +1356,3 @@ export class Device extends EventEmitter {
     }
   }
 }
-
-/*
-  private async sendCommand(
-    channel: Channel,
-    command: string,
-    payload: any = {}
-  ) {
-    return new Promise((resolve, reject) => {
-      channel
-        .push(command, {
-          device_id: this.integration.getMachineGUID(),
-          ...payload,
-        })
-        .receive("ok", (payload) => resolve(payload))
-        .receive("error", (payload) => reject(payload));
-    });
-  }
-  */

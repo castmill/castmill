@@ -100,7 +100,86 @@ defmodule CastmillWeb.ResourceController.DevicesTest do
       }
 
       conn = post(conn, "/api/organizations/#{organization.id}/devices", device_params)
-      assert json_response(conn, 422)
+      response = json_response(conn, 422)
+
+      assert %{"errors" => %{"pincode" => ["Invalid pincode"]}} = response
+    end
+
+    test "fails to register a device with expired pincode", %{
+      conn: conn,
+      organization: organization
+    } do
+      # Create a device registration with an expired pincode
+      {:ok, expired_registration} =
+        device_registration_fixture(%{
+          hardware_id: "expired_hardware",
+          pincode: "EXPIRED1"
+        })
+
+      # Update the registration to set expires_at to the past
+      # Use DateTime.truncate to remove microseconds for :utc_datetime fields
+      expired_datetime =
+        DateTime.utc_now()
+        |> DateTime.add(-3600, :second)
+        |> DateTime.truncate(:second)
+
+      Castmill.Repo.update!(
+        Ecto.Changeset.change(expired_registration, %{
+          expires_at: expired_datetime
+        })
+      )
+
+      device_params = %{
+        "name" => "expired_device",
+        "pincode" => "EXPIRED1"
+      }
+
+      conn = post(conn, "/api/organizations/#{organization.id}/devices", device_params)
+      response = json_response(conn, 422)
+
+      assert %{"errors" => %{"pincode" => ["Pincode has expired"]}} = response
+    end
+
+    test "registers a device with case-insensitive pincode (lowercase)", %{
+      conn: conn,
+      organization: organization
+    } do
+      device_registration_fixture(%{hardware_id: "hardware_lowercase", pincode: "DEADBEEF"})
+
+      device_params = %{
+        "name" => "device_lowercase",
+        "pincode" => "deadbeef"
+      }
+
+      conn = post(conn, "/api/organizations/#{organization.id}/devices", device_params)
+      response = json_response(conn, 201)
+
+      assert %{
+               "data" => %{
+                 "name" => "device_lowercase"
+               }
+             } = response
+    end
+
+    test "registers a device with case-insensitive pincode (mixed case)", %{
+      conn: conn,
+      organization: organization
+    } do
+      device_registration_fixture(%{hardware_id: "hardware_mixed", pincode: "DEADBEEF"})
+
+      device_params = %{
+        "name" => "device_mixed",
+        "pincode" => "DeAdBeEf"
+      }
+
+      conn = post(conn, "/api/organizations/#{organization.id}/devices", device_params)
+      response = json_response(conn, 201)
+
+      assert %{
+               "data" => %{
+                 "name" => "device_mixed"
+               }
+             } = response
     end
 
     test "fails to register a new device with missing parameters", %{
@@ -147,6 +226,54 @@ defmodule CastmillWeb.ResourceController.DevicesTest do
                ],
                "count" => 1
              } = response
+    end
+
+    test "returns forbidden when auto recovery is blocked by IP mismatch", %{
+      conn: conn,
+      organization: organization
+    } do
+      registration_params = %{
+        "hardware_id" => "blocked-hardware-id",
+        "location" => %{
+          "latitude" => 55.7298126,
+          "longitude" => 13.2001097
+        },
+        "timezone" => "Europe/Stockholm"
+      }
+
+      conn =
+        conn
+        |> put_req_header("user-agent", "some user agent")
+        |> post("/registrations", registration_params)
+
+      %{
+        "data" => %{
+          "pincode" => pincode
+        }
+      } = json_response(conn, 201)
+
+      device_params = %{
+        "name" => "blocked_device",
+        "pincode" => pincode
+      }
+
+      conn = post(conn, "/api/organizations/#{organization.id}/devices", device_params)
+      %{"data" => %{"id" => device_id}} = json_response(conn, 201)
+
+      device = Castmill.Devices.get_device(device_id)
+
+      {:ok, _} =
+        Castmill.Devices.update_device(device, %{last_ip: "10.0.0.10", autorecover_until: nil})
+
+      conn =
+        conn
+        |> recycle()
+        |> put_req_header("user-agent", "some user agent")
+        |> post("/registrations", registration_params)
+
+      assert %{
+               "error_code" => "recovery_blocked"
+             } = json_response(conn, 403)
     end
 
     test "lists devices with pagination", %{conn: conn, organization: organization} do
@@ -275,6 +402,46 @@ defmodule CastmillWeb.ResourceController.DevicesTest do
                # Total count of devices matching the search term remains the same
                "count" => 10
              } = response
+    end
+  end
+
+  describe "update device" do
+    test "updates autorecover_until and persists null when disabling", %{
+      conn: conn,
+      organization: organization
+    } do
+      device_registration_fixture(%{hardware_id: "hardware-update-1", pincode: "UPDDEAD1"})
+      device_params = %{"name" => "device-update-1", "pincode" => "UPDDEAD1"}
+
+      create_conn = post(conn, "/api/organizations/#{organization.id}/devices", device_params)
+      %{"data" => %{"id" => device_id}} = json_response(create_conn, 201)
+
+      future_time =
+        DateTime.utc_now() |> DateTime.add(3600, :second) |> DateTime.truncate(:second)
+
+      conn =
+        patch(
+          conn,
+          "/api/organizations/#{organization.id}/devices/#{device_id}",
+          %{"update" => %{"autorecover_until" => future_time}}
+        )
+
+      assert json_response(conn, 200)
+
+      assert %Castmill.Devices.Device{autorecover_until: %DateTime{}} =
+               Castmill.Devices.get_device(device_id)
+
+      conn =
+        patch(
+          conn,
+          "/api/organizations/#{organization.id}/devices/#{device_id}",
+          %{"update" => %{"autorecover_until" => nil}}
+        )
+
+      assert json_response(conn, 200)
+
+      assert %Castmill.Devices.Device{autorecover_until: nil} =
+               Castmill.Devices.get_device(device_id)
     end
   end
 

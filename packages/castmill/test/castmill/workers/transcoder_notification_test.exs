@@ -1,6 +1,5 @@
 defmodule Castmill.Workers.TranscoderNotificationTest do
   use Castmill.DataCase
-  use Oban.Testing, repo: Castmill.Repo
 
   alias Castmill.{Repo, Notifications}
   alias Castmill.Resources.Media

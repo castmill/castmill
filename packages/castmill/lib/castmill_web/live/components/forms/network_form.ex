@@ -23,8 +23,22 @@ defmodule CastmillWeb.Live.Admin.NetworkForm do
         <.input field={@form[:logo]} type="text" label="Logo" />
         <.input field={@form[:copyright]} type="text" label="Copyright" />
 
+        <div class="space-y-4 border-t pt-4 mt-4">
+          <h3 class="text-sm font-semibold text-gray-900">Invitation Settings</h3>
+          <.input
+            field={@form[:invitation_only]}
+            type="checkbox"
+            label="Invitation Only Mode - Only invited users can sign up"
+          />
+          <.input
+            field={@form[:invitation_only_org_admins]}
+            type="checkbox"
+            label="Allow Organization Admins to Invite - Let org admins invite users to their organizations"
+          />
+        </div>
+
         <:actions>
-          <.button phx-disable-with="Saving...">Save Network</.button>
+          <.button phx-disable-with="Saving..." disabled={not @valid?}>Save Network</.button>
         </:actions>
       </.simple_form>
     </div>
@@ -38,7 +52,8 @@ defmodule CastmillWeb.Live.Admin.NetworkForm do
     {:ok,
      socket
      |> assign(assigns)
-     |> assign_form(changeset)}
+     |> assign_form(changeset)
+     |> assign(:valid?, form_valid?(changeset, network))}
   end
 
   @impl true
@@ -48,7 +63,10 @@ defmodule CastmillWeb.Live.Admin.NetworkForm do
       |> Networks.change_network(params)
       |> Map.put(:action, :validate)
 
-    {:noreply, assign_form(socket, changeset)}
+    {:noreply,
+     socket
+     |> assign_form(changeset)
+     |> assign(:valid?, changeset.valid?)}
   end
 
   def handle_event("save", %{"network" => params}, socket) do
@@ -87,6 +105,20 @@ defmodule CastmillWeb.Live.Admin.NetworkForm do
 
   defp assign_form(socket, %Ecto.Changeset{} = changeset) do
     assign(socket, :form, to_form(changeset))
+  end
+
+  # Check if form is valid - for new networks, also check that required fields have values
+  defp form_valid?(changeset, network) do
+    if is_nil(network.id) do
+      # New network - check required fields have values
+      has_name = not is_nil(network.name) and network.name != ""
+      has_email = not is_nil(network.email) and network.email != ""
+      has_domain = not is_nil(network.domain) and network.domain != ""
+      changeset.valid? and has_name and has_email and has_domain
+    else
+      # Existing network - just use changeset validity
+      changeset.valid?
+    end
   end
 
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})

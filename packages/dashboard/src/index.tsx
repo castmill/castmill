@@ -10,6 +10,7 @@ import {
   useSearchParams,
   useNavigate,
   useParams,
+  useLocation,
 } from '@solidjs/router';
 
 import {
@@ -20,7 +21,6 @@ import {
   ErrorBoundary,
   onMount,
   createEffect,
-  createMemo,
   Show,
 } from 'solid-js';
 import ProtectedRoute from './components/protected-route';
@@ -39,6 +39,14 @@ import TeamsInvitationPage from './pages/teams-invitations-page/teams-invitation
 import OrganizationPage from './pages/organization-page/organization-page';
 import OrganizationsInvitationPage from './pages/organization-invitations/organizations-invitations-page';
 import ChannelsPage from './pages/channels-page/channels-page';
+import TagsPage from './pages/tags-page/tags-page';
+import {
+  NetworkProvider,
+  NetworkOverview,
+  NetworkSettings,
+  NetworkOrganizations,
+  NetworkUsers,
+} from './pages/network';
 import { I18nProvider, useI18n } from './i18n';
 import { KeyboardShortcutsProvider, useKeyboardShortcuts } from './hooks';
 
@@ -47,6 +55,7 @@ const SignUp = lazy(() => import('./components/signup/signup'));
 const CompleteRecovery = lazy(
   () => import('./components/login/complete-recovery')
 );
+const SetupPasskey = lazy(() => import('./components/login/setup-passkey'));
 const NotFound = lazy(() => import('./components/not-found'));
 const RemoteControlWindow = lazy(
   () => import('./pages/remote-control-window/remote-control-window')
@@ -72,6 +81,7 @@ const LoadingFallback: Component = () => {
 
 const RootRedirect: Component = () => {
   const navigate = useNavigate();
+  const { t } = useI18n();
 
   // Use createEffect to reactively watch for organizations to load
   createEffect(() => {
@@ -80,7 +90,29 @@ const RootRedirect: Component = () => {
     }
   });
 
-  return <LoadingFallback />;
+  return (
+    <Show
+      when={store.organizations.loaded && store.organizations.data.length === 0}
+      fallback={<LoadingFallback />}
+    >
+      <div
+        style={{
+          display: 'flex',
+          'flex-direction': 'column',
+          'align-items': 'center',
+          'justify-content': 'center',
+          flex: '1',
+          padding: '2em',
+          'text-align': 'center',
+        }}
+      >
+        <h2>{t('dashboard.noOrganizations.title')}</h2>
+        <p style={{ 'max-width': '30em', color: '#666' }}>
+          {t('dashboard.noOrganizations.description')}
+        </p>
+      </div>
+    </Show>
+  );
 };
 
 const App: Component<RouteSectionProps<unknown>> = (props) => {
@@ -103,7 +135,9 @@ const App: Component<RouteSectionProps<unknown>> = (props) => {
   return (
     <div style={{ display: 'flex', 'flex-direction': 'column', flex: '1' }}>
       <Topbar />
-      {props.children}
+      <div style={{ flex: '1', display: 'flex', 'flex-direction': 'column' }}>
+        {props.children}
+      </div>
       <Footer />
     </div>
   );
@@ -112,10 +146,12 @@ const App: Component<RouteSectionProps<unknown>> = (props) => {
 const wrapLazyComponent = (addon: { path: string; name: string }) => {
   return (props: any) => {
     const [searchParams, setSearchParams] = useSearchParams();
+    const routeParams = props.routeParams;
     const i18n = useI18n();
     const navigate = useNavigate();
+    const location = useLocation();
 
-    // Update store with i18n functions using setStore (the proper way)
+    // Initial synchronous update of store with i18n functions
     setStore('i18n', {
       t: i18n.t,
       tp: i18n.tp,
@@ -124,6 +160,22 @@ const wrapLazyComponent = (addon: { path: string; name: string }) => {
       formatCurrency: i18n.formatCurrency,
       locale: i18n.locale,
       setLocale: i18n.setLocale,
+    });
+
+    // Also track locale changes to update store reactively when language changes
+    createEffect(() => {
+      // Access locale() to create reactive dependency
+      const currentLocale = i18n.locale();
+      // Update the store when locale changes
+      setStore('i18n', {
+        t: i18n.t,
+        tp: i18n.tp,
+        formatDate: i18n.formatDate,
+        formatNumber: i18n.formatNumber,
+        formatCurrency: i18n.formatCurrency,
+        locale: i18n.locale,
+        setLocale: i18n.setLocale,
+      });
     });
 
     // Update store with router utilities
@@ -156,12 +208,16 @@ const wrapLazyComponent = (addon: { path: string; name: string }) => {
       }
     });
 
-    // Create a wrapper component that tracks selectedOrgId reactively
+    // Create a wrapper component that tracks selectedOrgId and locale reactively
     const ReactiveWrapper: Component = () => {
-      // Access selectedOrgId in this component's render to create reactive dependency
+      // Access selectedOrgId and locale in this component's render to create reactive dependencies
       const orgId = () => store.organizations.selectedId;
+      const locale = () => i18n.locale();
 
-      // Use key to force remount when org changes
+      // Create a combined key that changes when org or locale changes
+      const componentKey = () => `${orgId()}-${locale()}`;
+
+      // Use key to force remount when org or locale changes
       return (
         <ErrorBoundary
           fallback={(err, reset) => {
@@ -178,17 +234,18 @@ const wrapLazyComponent = (addon: { path: string; name: string }) => {
             );
           }}
         >
-          {/* Use a Show with keyed to force re-render when orgId changes */}
-          <Show when={orgId()} keyed>
-            {(currentOrgId) => (
+          {/* Use For with a single-item array keyed by locale+orgId to force full remount on change */}
+          <For each={[componentKey()]}>
+            {(key) => (
               <LazyComponent
                 {...props}
                 store={store}
-                selectedOrgId={currentOrgId}
+                selectedOrgId={orgId()}
                 params={[searchParams, setSearchParams]}
+                routeParams={routeParams}
               />
             )}
-          </Show>
+          </For>
         </ErrorBoundary>
       );
     };
@@ -209,6 +266,7 @@ render(() => {
             <Route path="/login" component={Login} />
             <Route path="/signup" component={SignUp} />
             <Route path="/recover-credentials" component={CompleteRecovery} />
+            <Route path="/setup-passkey" component={SetupPasskey} />
             <Route
               path="/invite-organization"
               component={OrganizationsInvitationPage}
@@ -253,10 +311,10 @@ render(() => {
                 )}
               >
                 <Route path="/" component={EmptyComponent} />
-                <Route path="settings" component={SettingsPage} />
                 <Route path="search" component={SearchPage} />
                 <Route path="usage" component={UsagePage} />
                 <Route path="teams" component={TeamsPage} />
+                <Route path="tags" component={TagsPage} />
                 <Route path="organization" component={OrganizationPage} />
                 <Route path="channels" component={ChannelsPage} />
                 <Route path="invite" component={TeamsInvitationPage} />
@@ -269,12 +327,19 @@ render(() => {
                     }
                     // Wrap component to force remount when orgId changes
                     const KeyedComponent = (props: any) => {
-                      const params = useParams();
+                      const routeParams = useParams();
                       return (
-                        <Show when={params.orgId} keyed>
+                        <Show when={routeParams.orgId} keyed>
                           {(orgId) => {
                             const Component = wrapLazyComponent(addon);
-                            return <Component {...props} key={orgId} />;
+                            // Pass routeParams from this context where wildcard is available
+                            return (
+                              <Component
+                                {...props}
+                                key={orgId}
+                                routeParams={routeParams}
+                              />
+                            );
                           }}
                         </Show>
                       );
@@ -284,6 +349,95 @@ render(() => {
                       <Route
                         path={addon.mount_path}
                         component={KeyedComponent}
+                      />
+                    );
+                  }}
+                </For>
+
+                <Route path="/*404" component={NotFound} />
+              </Route>
+
+              <Route
+                path="/settings"
+                component={(props: any) => (
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ProtectedRoute>
+                      {(addons) => (
+                        <Dashboard {...props} addons={new AddOnTree(addons)} />
+                      )}
+                    </ProtectedRoute>
+                  </Suspense>
+                )}
+              >
+                <Route path="/" component={SettingsPage} />
+              </Route>
+
+              {/* Network admin routes (top-level, not scoped to org) */}
+              <Route
+                path="/network"
+                component={(props: any) => (
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ProtectedRoute>
+                      {(addons) => (
+                        <Dashboard {...props} addons={new AddOnTree(addons)} />
+                      )}
+                    </ProtectedRoute>
+                  </Suspense>
+                )}
+              >
+                <Route
+                  path="/"
+                  component={() => (
+                    <NetworkProvider>
+                      <NetworkOverview />
+                    </NetworkProvider>
+                  )}
+                />
+                <Route
+                  path="/settings"
+                  component={() => (
+                    <NetworkProvider>
+                      <NetworkSettings />
+                    </NetworkProvider>
+                  )}
+                />
+                <Route
+                  path="/organizations"
+                  component={() => (
+                    <NetworkProvider>
+                      <NetworkOrganizations />
+                    </NetworkProvider>
+                  )}
+                />
+                <Route
+                  path="/users"
+                  component={() => (
+                    <NetworkProvider>
+                      <NetworkUsers />
+                    </NetworkProvider>
+                  )}
+                />
+
+                {/* Dynamically generate routes for network AddOns */}
+                <For
+                  each={store.addons.filter((a) =>
+                    a.mount_point?.startsWith('network.')
+                  )}
+                >
+                  {(addon) => {
+                    if (!addon.mount_path) {
+                      return null;
+                    }
+                    const NetworkAddonComponent = (props: any) => {
+                      const routeParams = useParams();
+                      const Component = wrapLazyComponent(addon);
+                      return <Component {...props} routeParams={routeParams} />;
+                    };
+
+                    return (
+                      <Route
+                        path={addon.mount_path}
+                        component={NetworkAddonComponent}
                       />
                     );
                   }}

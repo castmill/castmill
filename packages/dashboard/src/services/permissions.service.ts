@@ -7,6 +7,7 @@
 
 import { baseUrl } from '../env';
 
+import { authFetch } from '../components/auth';
 export type Role = 'admin' | 'manager' | 'member' | 'guest';
 
 export type ResourceType =
@@ -16,9 +17,18 @@ export type ResourceType =
   | 'devices'
   | 'teams'
   | 'widgets'
+  | 'layouts'
+  | 'tags'
   | 'organizations';
 
-export type Action = 'list' | 'show' | 'create' | 'update' | 'delete';
+export type Action =
+  | 'list'
+  | 'show'
+  | 'create'
+  | 'update'
+  | 'delete'
+  | 'publish'
+  | 'manage';
 
 export interface PermissionsResponse {
   role: Role;
@@ -32,10 +42,9 @@ export interface PermissionsResponse {
 export async function fetchPermissions(
   organizationId: string
 ): Promise<PermissionsResponse> {
-  const response = await fetch(
+  const response = await authFetch(
     `${baseUrl}/dashboard/organizations/${organizationId}/permissions`,
     {
-      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
       },

@@ -93,3 +93,44 @@ export const formatRelativeTime = (timestamp: string | Date): string => {
   const years = Math.floor(diffInSeconds / 31536000);
   return `${years} year${years !== 1 ? 's' : ''} ago`;
 };
+
+/**
+ * Formats a timestamp as relative time in a specific locale.
+ * Falls back to the legacy English formatter when locale is missing or English.
+ * @param timestamp ISO date string or Date object
+ * @param locale BCP-47 locale code (e.g. 'sv', 'en-US')
+ * @returns Relative time string
+ */
+export const formatRelativeTimeLocalized = (
+  timestamp: string | Date,
+  locale?: string
+): string => {
+  if (!locale || locale.toLowerCase().startsWith('en')) {
+    return formatRelativeTime(timestamp);
+  }
+
+  if (!timestamp) {
+    return '-';
+  }
+
+  const date = typeof timestamp === 'string' ? new Date(timestamp) : timestamp;
+
+  if (isNaN(date.getTime())) {
+    return '-';
+  }
+
+  const now = Date.now();
+  const diffInSeconds = Math.round((date.getTime() - now) / 1000);
+  const abs = Math.abs(diffInSeconds);
+
+  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
+
+  if (abs < 60) return rtf.format(diffInSeconds, 'second');
+  if (abs < 3600) return rtf.format(Math.round(diffInSeconds / 60), 'minute');
+  if (abs < 86400) return rtf.format(Math.round(diffInSeconds / 3600), 'hour');
+  if (abs < 2592000)
+    return rtf.format(Math.round(diffInSeconds / 86400), 'day');
+  if (abs < 31536000)
+    return rtf.format(Math.round(diffInSeconds / 2592000), 'month');
+  return rtf.format(Math.round(diffInSeconds / 31536000), 'year');
+};

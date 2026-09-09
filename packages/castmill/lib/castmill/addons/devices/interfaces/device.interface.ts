@@ -1,3 +1,5 @@
+import type { DeviceInfo } from '@castmill/device';
+
 export interface Device {
   id: string;
   name: string;
@@ -10,6 +12,11 @@ export interface Device {
   last_ip: string;
   inserted_at: Date;
   updated_at: Date;
-  log_level: "info" | "warning" | "error" | "debug" | "critical" | "trace";
+  autorecover_until?: string | null;
+  info?: Partial<DeviceInfo> | null;
+  timezone?: string;
+  user_agent?: string;
+  version?: string;
+  log_level: 'info' | 'warning' | 'error' | 'debug' | 'critical' | 'trace';
   rc_last_heartbeat?: Date | string | null;
 }

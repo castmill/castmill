@@ -68,7 +68,7 @@ defmodule Castmill.Accounts do
     if is_nil(token) do
       {:error, "No token provided"}
     else
-      secret_hash = :crypto.hash(:sha256, token) |> Base.encode16()
+      secret_hash = :crypto.hash(:sha256, token) |> Base.encode16(case: :lower)
 
       from(at in AccessToken, where: at.secret_hash == ^secret_hash, select: at)
       |> Repo.update_all(
@@ -288,7 +288,7 @@ defmodule Castmill.Accounts do
         end
       end)
 
-      # Now delete the user (org_user relationships will be deleted via cascade or above)
+      # Delete the user (network memberships and org_user relationships cascade automatically)
       case Repo.delete_all(
              from(user in Castmill.Accounts.User,
                where: user.id == ^user_id
@@ -496,7 +496,8 @@ defmodule Castmill.Accounts do
            {:ok, %{id: user_id} = user} <-
              create_user_with_optional_organization(email, signup.network_id, invitation_token),
            :ok <- create_user_credential(user_id, credential_id, public_key_spki, device_info),
-           :ok <- update_signup_status(signup, user_id) do
+           :ok <- update_signup_status(signup, user_id),
+           :ok <- handle_invitation_acceptance(invitation_token, user_id) do
         Castmill.Hooks.trigger_hook(:user_signup, %{user_id: user_id, email: email})
 
         sanitize_user(user)
@@ -630,28 +631,91 @@ defmodule Castmill.Accounts do
     end
   end
 
-  def get_network_id_by_domain(domain) do
+  @doc """
+  Resolves a network ID from a request origin (e.g., "https://net-abc.castmill.dev").
+
+  First checks the primary `networks.domain` field. If no match is found, falls
+  back to `:additional_domain_resolver` configuration, allowing external addons
+  (e.g., custom domains) to provide alternative domain-to-network mappings.
+
+  ## Configuration
+
+      config :castmill, :additional_domain_resolver, {MyModule, :resolve, []}
+
+  The configured module function receives the domain string (without protocol)
+  and must return `{:ok, network_id}` or `{:error, reason}`.
+  """
+  def get_network_id_by_domain(origin) do
+    # Strip protocol (http:// or https://) from Origin header to match stored domains
+    domain = strip_protocol(origin)
+
     case from(network in Castmill.Networks.Network,
            where: network.domain == ^domain,
            select: network.id
          )
          |> Repo.one() do
       nil ->
-        {:error, :network_not_found}
+        # Primary domain not found — check additional domain resolver if configured
+        resolve_additional_domain(domain)
 
       network_id ->
         {:ok, network_id}
     end
   end
 
+  defp resolve_additional_domain(domain) do
+    result =
+      case Application.get_env(:castmill, :additional_domain_resolver) do
+        {mod, fun} ->
+          try do
+            apply(mod, fun, [domain])
+          rescue
+            e ->
+              require Logger
+              Logger.warning("[Accounts] additional_domain_resolver failed: #{inspect(e)}")
+              {:error, :network_not_found}
+          end
+
+        {mod, fun, args} ->
+          try do
+            apply(mod, fun, [domain | args])
+          rescue
+            e ->
+              require Logger
+              Logger.warning("[Accounts] additional_domain_resolver failed: #{inspect(e)}")
+              {:error, :network_not_found}
+          end
+
+        _ ->
+          {:error, :network_not_found}
+      end
+
+    # Normalize return value so callers can rely on the stable API:
+    # {:ok, binary_id} | {:error, :network_not_found}
+    case result do
+      {:ok, network_id} when is_binary(network_id) -> {:ok, network_id}
+      _ -> {:error, :network_not_found}
+    end
+  end
+
+  defp strip_protocol(nil), do: ""
+
+  defp strip_protocol(origin) when is_binary(origin) do
+    origin
+    |> String.replace(~r{^https?://}, "")
+    |> then(fn s ->
+      # Keep only host and optional port, strip any path/query/fragment
+      case String.split(s, "/", parts: 2) do
+        [host_port | _] -> host_port
+        [] -> s
+      end
+    end)
+  end
+
   ## Addons
   def list_addons(_user_id) do
-    # Get all addons from the configuration
-    Application.get_env(:castmill, :addons)
-    # Call component_info/0 on each
-    |> Enum.map(& &1.component_info())
-    # Exclude addons that return nil
-    |> Enum.filter(&(&1 != nil))
+    # Use the supervisor to get all addons (internal and external)
+    Castmill.Addons.Supervisor.list_component_infos()
   end
 
   defp validate_signup(signup_id, email) do
@@ -674,15 +738,31 @@ defmodule Castmill.Accounts do
   end
 
   # Creates a user with the given email and network_id with a default organization
-  # with the same name as the user.
+  # The organization is created with a temporary name (user's email) and onboarding_completed set to false
+  # to trigger the onboarding flow where the user must provide a proper organization name.
   defp create_user_and_organization(email, network_id) do
+    alias Castmill.Networks.NetworksUsers
+
+    # Generate a temporary organization name based on timestamp to avoid conflicts
+    temp_org_name = "org_#{:os.system_time(:millisecond)}"
+
     with {:ok, user} <-
+           Repo.insert(User.changeset(%User{}, %{name: email, email: email})),
+         {:ok, _nu} <-
            Repo.insert(
-             User.changeset(%User{}, %{name: email, email: email, network_id: network_id})
+             NetworksUsers.changeset(%NetworksUsers{}, %{
+               role: :member,
+               network_id: network_id,
+               user_id: user.id
+             })
            ),
          {:ok, organization} <-
            Repo.insert(
-             Organization.changeset(%Organization{}, %{name: email, network_id: network_id})
+             Organization.changeset(%Organization{}, %{
+               name: temp_org_name,
+               network_id: network_id,
+               onboarding_completed: false
+             })
            ),
          {:ok, _org_user} <-
            Repo.insert(
@@ -723,9 +803,53 @@ defmodule Castmill.Accounts do
   end
 
   defp create_user_with_optional_organization(email, network_id, _invitation_token) do
-    # Has invitation token - just create user, skip organization
-    # User will be added to organization when invitation is accepted
-    Repo.insert(User.changeset(%User{}, %{name: email, email: email, network_id: network_id}))
+    alias Castmill.Networks.NetworksUsers
+
+    # Has invitation token - just create user + network membership, skip organization
+    # Organization will be created/joined when invitation is accepted
+    with {:ok, user} <-
+           Repo.insert(User.changeset(%User{}, %{name: email, email: email})),
+         {:ok, _nu} <-
+           Repo.insert(
+             NetworksUsers.changeset(%NetworksUsers{}, %{
+               role: :member,
+               network_id: network_id,
+               user_id: user.id
+             })
+           ) do
+      {:ok, user}
+    end
+  end
+
+  # Handles accepting invitations after user is created
+  defp handle_invitation_acceptance(nil, _user_id), do: :ok
+
+  defp handle_invitation_acceptance(invitation_token, user_id) do
+    # Try network invitation first
+    case Castmill.Networks.get_network_invitation_by_token(invitation_token) do
+      nil ->
+        # Try organization invitation
+        case Castmill.Organizations.get_invitation_by_token(invitation_token) do
+          nil ->
+            # No valid invitation found, but we already created the user
+            # This is okay - they might accept the invitation later
+            :ok
+
+          _org_invitation ->
+            # Accept organization invitation
+            case Castmill.Organizations.accept_invitation(invitation_token, user_id) do
+              {:ok, _} -> :ok
+              {:error, reason} -> {:error, reason}
+            end
+        end
+
+      _net_invitation ->
+        # Accept network invitation
+        case Castmill.Networks.accept_network_invitation(invitation_token, user_id) do
+          {:ok, _organization} -> :ok
+          {:error, reason} -> {:error, reason}
+        end
+    end
   end
 
   defp create_user_credential(user_id, credential_id, public_key_spki, device_info) do

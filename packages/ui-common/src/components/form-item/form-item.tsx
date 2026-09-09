@@ -5,8 +5,8 @@ import './form-item.scss';
 interface FormItemProps {
   label: string;
   id: string;
-  value: string;
-  children: JSX.Element;
+  value: string | number | boolean;
+  children?: JSX.Element;
   onInput: (value: string | boolean | number) => void;
   placeholder?: string;
   type?: string;

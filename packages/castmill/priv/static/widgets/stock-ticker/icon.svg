@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Background -->
+  <rect x="2" y="2" width="60" height="60" rx="8" fill="#1a1a2e" stroke="#2d2d4a" stroke-width="2"/>
+  
+  <!-- Chart line (green upward trend) -->
+  <polyline 
+    points="8,44 18,38 28,42 38,28 48,32 56,18" 
+    fill="none" 
+    stroke="#00C853" 
+    stroke-width="3" 
+    stroke-linecap="round" 
+    stroke-linejoin="round"/>
+  
+  <!-- Upward arrow indicator -->
+  <polygon points="56,18 52,26 56,24 60,26" fill="#00C853"/>
+  
+  <!-- Ticker strip at bottom -->
+  <rect x="4" y="48" width="56" height="12" rx="2" fill="#2d2d4a"/>
+  
+  <!-- Stock symbols representation -->
+  <rect x="8" y="51" width="12" height="6" rx="1" fill="#00C853" opacity="0.8"/>
+  <rect x="24" y="51" width="12" height="6" rx="1" fill="#FF1744" opacity="0.8"/>
+  <rect x="40" y="51" width="12" height="6" rx="1" fill="#00C853" opacity="0.8"/>
+  
+  <!-- Grid lines (subtle) -->
+  <line x1="8" y1="24" x2="56" y2="24" stroke="#3d3d5c" stroke-width="0.5" opacity="0.5"/>
+  <line x1="8" y1="36" x2="56" y2="36" stroke="#3d3d5c" stroke-width="0.5" opacity="0.5"/>
+  
+  <!-- Y-axis values representation -->
+  <rect x="4" y="22" width="2" height="4" rx="0.5" fill="#666680"/>
+  <rect x="4" y="34" width="2" height="4" rx="0.5" fill="#666680"/>
+</svg>

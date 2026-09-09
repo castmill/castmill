@@ -15,7 +15,8 @@ defmodule CastmillWeb.PlaylistJSON do
         playlist_id: item.playlist_id,
         prev_item_id: item.prev_item_id,
         offset: item.offset,
-        duration: item.duration
+        duration: item.duration,
+        widget_config_id: Map.get(item, :widget_config_id)
       }
     }
   end

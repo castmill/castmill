@@ -6,7 +6,15 @@
  * (c) 2024 Castmill AB.
  */
 import { JSX, Show, createSignal, onMount } from 'solid-js';
-import { Filter, ItemBase, Pagination, Table, TableAction, ToolBar } from '../';
+import {
+  Filter,
+  ItemBase,
+  Pagination,
+  Table,
+  TableAction,
+  ToolBar,
+  SelectionActionBar,
+} from '../';
 import { PermissionDenied } from '../permission-denied/permission-denied';
 import { SortOptions } from '../../interfaces/sort-options.interface';
 
@@ -18,6 +26,8 @@ export interface FetchDataOptions {
   search?: string;
   filters?: Record<string, string | boolean>;
   team_id?: number | null;
+  tag_ids?: number[];
+  tag_filter_mode?: 'any' | 'all';
 }
 
 export interface TableViewRef<
@@ -29,20 +39,18 @@ export interface TableViewRef<
   focusSearch: () => void;
 }
 
-type Params = Record<string, string>;
-type SetParams = Record<string, string | number | boolean | null | undefined>;
+// Type aliases for URL params that are compatible with both SolidJS router and internal usage
+type Params = Record<string, string | undefined>;
+type SetParams = Record<string, string | number | boolean | undefined>;
 
 interface TableViewProps<
   IdType = string,
   Item extends ItemBase<IdType> = ItemBase<IdType>,
 > {
-  title: string;
+  title?: string | (() => string);
   resource: string;
-
-  params?: [Partial<Params>, (params: SetParams, options?: any) => void]; // typeof useSearchParams;
-
+  params?: [Params, (params: SetParams, options?: any) => void]; // typeof useSearchParams;
   ref?: (ref: TableViewRef<IdType, Item>) => void;
-
   fetchData: (params: {
     page: { num: number; size: number };
     sortOptions: SortOptions;
@@ -51,14 +59,20 @@ interface TableViewProps<
   }) => Promise<{ data: Item[]; count: number }>;
 
   table: {
-    columns: {
-      key: string;
-      title: string;
-      sortable?: boolean;
-    }[];
+    columns:
+      | {
+          key: string;
+          title: string | (() => string);
+          sortable?: boolean;
+        }[]
+      | (() => {
+          key: string;
+          title: string | (() => string);
+          sortable?: boolean;
+        }[]);
     onSort?: (options: SortOptions) => void;
-    actions?: TableAction<Item>[];
-    actionsLabel?: string; // Label for the Actions column header
+    actions?: TableAction<Item>[] | (() => TableAction<Item>[]);
+    actionsLabel?: string | (() => string);
     onRowSelect?: (selectedIds: Set<IdType>) => void;
     defaultRowAction?: TableAction<Item>;
     hideCheckboxes?: boolean;
@@ -72,7 +86,24 @@ interface TableViewProps<
     filters?: Filter[];
     mainAction?: JSX.Element;
     actions?: JSX.Element;
+    titleActions?: JSX.Element;
+    requireOneActiveFilter?: boolean;
+    hideSearch?: boolean;
+    searchPlaceholder?: string;
+    hideTitle?: boolean;
   };
+
+  /** Render prop for bulk actions shown in the floating selection bar */
+  selectionActions?: (selection: {
+    count: number;
+    clear: () => void;
+  }) => JSX.Element;
+
+  /** Label for the selection bar — use {count} as placeholder */
+  selectionLabel?: string;
+
+  /** Hint message shown when no items are selected, guiding users to use checkboxes */
+  selectionHint?: string;
 
   itemIdKey?: string;
 }
@@ -95,12 +126,37 @@ export const TableView = <
     props.toolbar?.filters || []
   );
 
+  // Track selection count for the floating action bar
+  const [selectedCount, setSelectedCount] = createSignal(0);
+  let clearSelectionRef: (() => void) | undefined;
+
+  const handleRowSelect = (selectedIds: Set<IdType>) => {
+    setSelectedCount(selectedIds.size);
+    props.table.onRowSelect?.(selectedIds);
+  };
+
+  const clearSelection = () => {
+    setSelectedCount(0);
+    // Notify parent to clear their selection state
+    props.table.onRowSelect?.(new Set<IdType>());
+    // Clear internal table checkboxes via reload workaround
+    clearSelectionRef?.();
+  };
+
   // If props.params is defined, it’s `[searchParams, setSearchParams]` from useSearchParams
   // Otherwise use reactive signals (or store) as a fallback
+  // Track current sort options
+  const [sortOptions, setSortOptions] = createSignal<SortOptions>({
+    key: 'name',
+    direction: 'ascending',
+  });
+
   const [fallbackParams, setFallbackParams] = createSignal<{
     page?: number;
     search?: string;
     filters?: string;
+    sortKey?: string;
+    sortDirection?: string;
   }>({});
 
   const getSearchParams = () => {
@@ -115,6 +171,8 @@ export const TableView = <
     page?: number;
     search?: string;
     filters?: string;
+    sortKey?: string;
+    sortDirection?: string;
   }) => {
     if (props.params) {
       const [searchParams, setSearchParamsEx] = props.params;
@@ -132,6 +190,15 @@ export const TableView = <
     if (initialFilters) {
       filters().forEach((filter) => {
         filter.isActive = initialFilters.includes(filter.key);
+      });
+    }
+
+    // Get initial sort options from search params
+    const params = getSearchParams();
+    if (params.sortKey || params.sortDirection) {
+      setSortOptions({
+        key: params.sortKey,
+        direction: params.sortDirection as 'ascending' | 'descending',
       });
     }
 
@@ -162,10 +229,7 @@ export const TableView = <
 
       const result = await props.fetchData({
         page: { num: currentPage(), size: props.pagination.itemsPerPage },
-        sortOptions: {
-          key: 'name',
-          direction: 'ascending',
-        },
+        sortOptions: sortOptions(),
         search,
         filters: filters().length ? filtersObject : undefined,
       });
@@ -188,6 +252,8 @@ export const TableView = <
     page?: number;
     search?: string;
     filters?: string;
+    sortKey?: string;
+    sortDirection?: string;
   }) => {
     // Since it takes one event loop to update the search params, we need to wait for it.
     await new Promise<void>((resolve) =>
@@ -209,6 +275,14 @@ export const TableView = <
 
         if (typeof opts.filters != 'undefined') {
           params['filters'] = opts.filters;
+        }
+
+        if (typeof opts.sortKey != 'undefined') {
+          params['sortKey'] = opts.sortKey;
+        }
+
+        if (typeof opts.sortDirection != 'undefined') {
+          params['sortDirection'] = opts.sortDirection;
         }
 
         console.log('handleChange', params);
@@ -236,6 +310,15 @@ export const TableView = <
     await handleChange({
       filters: activeFilters().join(','),
       page: 1,
+    });
+  };
+
+  const handleSort = async (options: SortOptions) => {
+    setSortOptions(options);
+    await handleChange({
+      sortKey: options.key,
+      sortDirection: options.direction,
+      page: 1, // Reset to first page when sorting changes
     });
   };
 
@@ -267,6 +350,9 @@ export const TableView = <
     props.ref(ref); // Assign the methods to the ref passed from the parent
   }
 
+  const getTitle = () =>
+    typeof props.title === 'function' ? props.title() : props.title;
+
   return (
     <>
       <Show
@@ -283,13 +369,17 @@ export const TableView = <
         <div class={style['table-view']}>
           <Show when={props.toolbar}>
             <ToolBar
-              title={props.title}
+              title={props.toolbar?.hideTitle ? undefined : getTitle()}
+              titleActions={props.toolbar?.titleActions}
               filters={filters()}
               onFilterChange={handleFilterChange}
               initialSearchText={(getSearchParams().search as string) || ''}
               onSearch={handleSearch}
               mainAction={props.toolbar?.mainAction}
               actions={props.toolbar?.actions}
+              requireOneActiveFilter={props.toolbar?.requireOneActiveFilter}
+              hideSearch={props.toolbar?.hideSearch}
+              searchPlaceholder={props.toolbar?.searchPlaceholder}
             />
           </Show>
 
@@ -298,12 +388,29 @@ export const TableView = <
             data={data()}
             actions={props.table.actions}
             actionsLabel={props.table.actionsLabel}
-            onRowSelect={props.table.onRowSelect}
-            onSort={props.table.onSort}
+            onRowSelect={handleRowSelect}
+            onSort={handleSort}
             onRowClick={props.table.defaultRowAction?.handler}
             itemIdKey={props.itemIdKey}
             hideCheckboxes={props.table.hideCheckboxes}
+            clearSelectionRef={(fn) => {
+              clearSelectionRef = fn;
+            }}
           />
+
+          <Show when={props.selectionActions}>
+            <SelectionActionBar
+              count={selectedCount()}
+              onDeselectAll={clearSelection}
+              label={props.selectionLabel}
+              hintMessage={props.selectionHint}
+            >
+              {props.selectionActions?.({
+                count: selectedCount(),
+                clear: clearSelection,
+              })}
+            </SelectionActionBar>
+          </Show>
 
           <div
             class={`${style['pagination-wrapper']} ${totalItems() <= props.pagination.itemsPerPage ? style['hidden'] : ''}`}

@@ -29,5 +29,13 @@ export const fetchOptionsToQueryString = (options: FetchDataOptions) => {
     query['team_id'] = options.team_id.toString();
   }
 
+  if (options.tag_ids && options.tag_ids.length > 0) {
+    query['tag_ids'] = options.tag_ids.join(',');
+  }
+
+  if (options.tag_filter_mode) {
+    query['tag_filter_mode'] = options.tag_filter_mode;
+  }
+
   return new URLSearchParams(query).toString();
 };

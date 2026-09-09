@@ -14,7 +14,7 @@ import {
   TableView,
   TableViewRef,
   TableAction,
-  Modal,
+  Drawer,
   ConfirmDialog,
   FetchDataOptions,
   useToast,
@@ -144,10 +144,11 @@ const TeamsPage: Component = () => {
     return q ? q.used >= q.total : false;
   };
 
-  const columns = [
-    { key: 'id', title: t('common.id'), sortable: true },
-    { key: 'name', title: t('common.name'), sortable: true },
-  ] as Column<Team>[];
+  const columns = () =>
+    [
+      { key: 'id', title: () => t('common.id'), sortable: true },
+      { key: 'name', title: () => t('common.name'), sortable: true },
+    ] as Column<Team>[];
 
   interface TeamTableItem extends Team {}
 
@@ -158,7 +159,7 @@ const TeamsPage: Component = () => {
         setCurrentTeam(item);
         setShowModal(true);
       },
-      label: t('common.view'),
+      label: () => t('common.view'),
     },
     {
       icon: AiOutlineDelete,
@@ -173,7 +174,7 @@ const TeamsPage: Component = () => {
         setCurrentTeam(item);
         setShowConfirmDialog(true);
       },
-      label: t('common.remove'),
+      label: () => t('common.remove'),
     },
   ];
 
@@ -223,7 +224,10 @@ const TeamsPage: Component = () => {
       loadQuota(); // Reload quota after deletion
     } catch (error) {
       toast.error(
-        t('teams.errors.removeTeam', { name: team.name, error: String(error) })
+        t('teams.errors.removeTeam', {
+          name: team.name || '',
+          error: String(error),
+        })
       );
     }
     setShowConfirmDialog(false);
@@ -269,7 +273,8 @@ const TeamsPage: Component = () => {
   };
   // Function to close the modal and remove blur
   const closeModal = () => {
-    // Only clear URL - let createEffect handle closing the modal
+    // Always close the drawer, including "new team" mode where itemId is absent.
+    setShowModal(false);
     setSearchParams({ itemId: undefined });
   };
 
@@ -291,10 +296,13 @@ const TeamsPage: Component = () => {
   return (
     <div class={`${styles.teamsPage}`}>
       <Show when={showModal()}>
-        <Modal
+        <Drawer
           title={title()}
-          description={t('teams.description')}
           onClose={closeModal}
+          placement="right"
+          size="xl"
+          closeOnOutsideClick
+          outsideClickIgnoreSelector="tbody tr"
         >
           <TeamView
             organizationId={store.organizations.selectedId!}
@@ -329,7 +337,7 @@ const TeamsPage: Component = () => {
               }
             }}
           />
-        </Modal>
+        </Drawer>
       </Show>
 
       <ConfirmDialog
@@ -358,13 +366,14 @@ const TeamsPage: Component = () => {
       </ConfirmDialog>
 
       <TableView
-        title={t('teams.title')}
+        title={() => t('teams.title')}
         resource="teams"
         params={[searchParams, setSearchParams]}
         fetchData={fetchData}
         ref={setRef}
         toolbar={{
           filters: [],
+          searchPlaceholder: t('common.search'),
           mainAction: (
             <div style="display: flex; align-items: center; gap: 1rem;">
               <Show when={quota() && !quotaLoading()}>
@@ -378,7 +387,7 @@ const TeamsPage: Component = () => {
               <PermissionButton
                 resource="teams"
                 action="create"
-                label={t('teams.addTeam')}
+                label={() => t('teams.addTeam')}
                 onClick={addTeam}
                 icon={BsCheckLg}
                 color="primary"
@@ -386,32 +395,23 @@ const TeamsPage: Component = () => {
               />
             </div>
           ),
-          actions: (
-            <div>
-              <IconButton
-                onClick={() => {
-                  if (!canPerformAction('teams', 'delete')) {
-                    toast.error(
-                      t('permissions.noDeleteTeams') ||
-                        "You don't have permission to delete teams"
-                    );
-                    return;
-                  }
-                  setShowConfirmDialogMultiple(true);
-                }}
-                icon={AiOutlineDelete}
-                color="primary"
-                disabled={
-                  selectedTeams().size === 0 ||
-                  !canPerformAction('teams', 'delete')
-                }
-              />
-            </div>
-          ),
         }}
+        selectionHint={t('common.selectionHint')}
+        selectionLabel={t('common.selectionCount')}
+        selectionActions={({ count, clear }) => (
+          <button
+            class="selection-action-btn danger"
+            disabled={!canPerformAction('teams', 'delete')}
+            onClick={() => setShowConfirmDialogMultiple(true)}
+          >
+            <AiOutlineDelete />
+            {t('common.delete')}
+          </button>
+        )}
         table={{
           columns,
           actions,
+          actionsLabel: t('common.actions'),
           onRowSelect,
           defaultRowAction: {
             icon: BsEye,

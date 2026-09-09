@@ -58,96 +58,104 @@ defmodule CastmillWeb.UploadController do
   end
 
   defp process_file(conn, organization_id, filename, path, mime_type) do
-    # Check storage quota before uploading
     file_size = File.stat!(path).size
-    current_storage = Castmill.Quotas.get_quota_used_for_organization(organization_id, :storage)
-    storage_quota = Castmill.Quotas.get_quota_for_organization(organization_id, "storage")
 
-    if current_storage + file_size > storage_quota do
+    max_upload_size =
+      Castmill.Quotas.get_quota_for_organization_bytes(organization_id, :max_upload_size)
+
+    if file_size > max_upload_size do
       conn
-      |> put_status(:forbidden)
+      |> put_status(:request_entity_too_large)
       |> json(%{
-        error: "Storage quota exceeded",
-        message: "Uploading this file would exceed your storage quota limit"
+        error: "File too large",
+        message: "The file size exceeds the maximum upload size limit",
+        max_size: max_upload_size,
+        file_size: file_size
       })
       |> halt()
     else
-      case upload_file(path, filename) do
-        {:ok, destpath} ->
-          # Extract the name from the filename without extension
-          name = Path.basename(filename, Path.extname(filename))
+      # Check storage quota
+      current_storage = Castmill.Quotas.get_quota_used_for_organization(organization_id, :storage)
+      storage_quota = Castmill.Quotas.get_quota_for_organization_bytes(organization_id, :storage)
 
-          # Create media with the extracted mime_type - check media count quota
-          case Castmill.Resources.create_media(%{
-                 organization_id: organization_id,
-                 status: :uploading,
-                 name: name,
-                 path: filename,
-                 mimetype: mime_type
-               }) do
-            {:ok, media} ->
-              # Proceed with transcoding and job queuing
-              case queue_transcoding_job(media, destpath, mime_type) do
-                :ok ->
-                  # Return successful response
-                  conn
-                  |> put_status(:ok)
-                  |> json(media)
+      if current_storage + file_size > storage_quota do
+        conn
+        |> put_status(:forbidden)
+        |> json(%{
+          error: "Storage quota exceeded",
+          message: "Uploading this file would exceed your storage quota limit"
+        })
+        |> halt()
+      else
+        case upload_file(path, filename) do
+          {:ok, destpath} ->
+            # Extract the name from the filename without extension
+            name = Path.basename(filename, Path.extname(filename))
 
-                :unsupported_mime_type ->
-                  conn
-                  |> put_status(:bad_request)
-                  |> json(%{
-                    error: "Unsupported MIME type",
-                    message: "The MIME type is not supported"
-                  })
-                  |> halt()
-              end
+            # Create media with the extracted mime_type - check media count quota
+            case Castmill.Resources.create_media(%{
+                   organization_id: organization_id,
+                   status: :uploading,
+                   name: name,
+                   path: filename,
+                   mimetype: mime_type
+                 }) do
+              {:ok, media} ->
+                # Proceed with transcoding and job queuing
+                case queue_transcoding_job(media, destpath, mime_type) do
+                  :ok ->
+                    # Return successful response
+                    conn
+                    |> put_status(:ok)
+                    |> json(media)
 
-            {:error, :quota_exceeded} ->
-              conn
-              |> put_status(:forbidden)
-              |> json(%{
-                error: "Media quota exceeded",
-                message: "You have reached your media quota limit"
-              })
-              |> halt()
+                  :unsupported_mime_type ->
+                    conn
+                    |> put_status(:bad_request)
+                    |> json(%{
+                      error: "Unsupported MIME type",
+                      message: "The MIME type is not supported"
+                    })
+                    |> halt()
+                end
 
-            {:error, _changeset} ->
-              conn
-              |> put_status(:bad_request)
-              |> json(%{
-                error: "Failed to create media",
-                message: "An error occurred while creating the media"
-              })
-              |> halt()
-          end
+              {:error, :quota_exceeded} ->
+                conn
+                |> put_status(:forbidden)
+                |> json(%{
+                  error: "Media quota exceeded",
+                  message: "You have reached your media quota limit"
+                })
+                |> halt()
 
-        {:error, reason} ->
-          conn
-          |> put_status(:internal_server_error)
-          |> json(%{error: "File upload failed", reason: inspect(reason)})
+              {:error, _changeset} ->
+                conn
+                |> put_status(:bad_request)
+                |> json(%{
+                  error: "Failed to create media",
+                  message: "An error occurred while creating the media"
+                })
+                |> halt()
+            end
+
+          {:error, reason} ->
+            conn
+            |> put_status(:internal_server_error)
+            |> json(%{error: "File upload failed", reason: inspect(reason)})
+        end
       end
     end
   end
 
   defp queue_transcoding_job(media, destpath, mime_type) do
-    job_args = %{media: media, filepath: destpath, mime_type: mime_type}
-
     cond do
       String.starts_with?(mime_type, "image/") ->
-        job_args
-        |> Castmill.Workers.ImageTranscoder.new()
-        |> Oban.insert()
-
+        Castmill.Workers.ImageTranscoder.schedule(media, destpath, mime_type)
         :ok
 
       ## Either starts with video or is an ASF file ( "application/vnd.ms-asf" )
       String.starts_with?(mime_type, "video/") or mime_type == "application/vnd.ms-asf" ->
-        job_args
-        |> Castmill.Workers.VideoTranscoder.new()
-        |> Oban.insert()
-
+        Castmill.Workers.VideoTranscoder.schedule(media, destpath, mime_type)
         :ok
 
       true ->

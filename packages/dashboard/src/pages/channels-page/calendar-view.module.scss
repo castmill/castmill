@@ -16,6 +16,12 @@ body {
   margin-top: 1em;
 }
 
+.calendar-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 1em;
+}
+
 /* Top header (navigation + date range) */
 .calendar-header {
   display: flex;

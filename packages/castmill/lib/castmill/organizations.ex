@@ -13,7 +13,7 @@ defmodule Castmill.Organizations do
   alias Castmill.Organizations.ResourceSharing
   alias Castmill.Protocol.Access
   alias Castmill.QueryHelpers
-  alias Castmill.Mailer
+  alias Castmill.EmailDelivery
 
   alias Swoosh.Email
 
@@ -49,12 +49,12 @@ defmodule Castmill.Organizations do
       [%Organization{}, ...]
 
   """
-  def list_organizations(%{search: search, page: page, page_size: page_size}) do
+  def list_organizations(%{search: search, page: page, page_size: page_size} = params) do
     offset = if is_nil(page_size), do: 0, else: max((page - 1) * page_size, 0)
 
     Organization.base_query()
     |> QueryHelpers.where_name_like(search)
-    |> Ecto.Query.order_by([d], asc: d.name)
+    |> apply_sorting(params)
     |> Ecto.Query.limit(^page_size)
     |> Ecto.Query.offset(^offset)
     |> Repo.all()
@@ -74,6 +74,29 @@ defmodule Castmill.Organizations do
     Repo.all(Organization)
   end
 
+  # Helper function to apply sorting to a query based on params
+  defp apply_sorting(query, params) do
+    sort_key = Map.get(params, :key)
+    sort_direction = Map.get(params, :direction, "ascending")
+
+    sort_dir =
+      case sort_direction do
+        "ascending" -> :asc
+        "descending" -> :desc
+        _ -> :asc
+      end
+
+    sort_field =
+      case sort_key do
+        "name" -> :name
+        "inserted_at" -> :inserted_at
+        "updated_at" -> :updated_at
+        _ -> :name
+      end
+
+    Ecto.Query.order_by(query, [{^sort_dir, ^sort_field}])
+  end
+
   def count_organizations(%{search: search}) do
     Organization.base_query()
     |> QueryHelpers.where_name_like(search)
@@ -81,9 +104,13 @@ defmodule Castmill.Organizations do
   end
 
   @doc """
-    List all organizations a user is part of
+  List all organizations a user is part of.
+
+  When `network_id` is provided, only returns organizations belonging to that network.
+  This is used to scope results to the network the user is currently accessing
+  (determined by the request's Origin domain).
   """
-  def list_user_organizations(user_id) do
+  def list_user_organizations(user_id, network_id \\ nil) do
     query =
       from(ou in OrganizationsUsers,
         join: o in Organization,
@@ -91,6 +118,13 @@ defmodule Castmill.Organizations do
         where: ou.user_id == ^user_id,
         select: o
       )
+
+    query =
+      if network_id do
+        from([ou, o] in query, where: o.network_id == ^network_id)
+      else
+        query
+      end
 
     Repo.all(query)
   end
@@ -219,6 +253,48 @@ defmodule Castmill.Organizations do
   end
 
   @doc """
+  Blocks an organization with an optional reason.
+
+  ## Examples
+
+      iex> block_organization(organization, "Violation of terms")
+      {:ok, %Organization{}}
+
+      iex> block_organization(organization, "Violation of terms")
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def block_organization(%Organization{} = organization, reason \\ nil) do
+    organization
+    |> Organization.block_changeset(%{
+      blocked_at: DateTime.utc_now(),
+      blocked_reason: reason
+    })
+    |> Repo.update()
+  end
+
+  @doc """
+  Unblocks an organization.
+
+  ## Examples
+
+      iex> unblock_organization(organization)
+      {:ok, %Organization{}}
+
+      iex> unblock_organization(organization)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def unblock_organization(%Organization{} = organization) do
+    organization
+    |> Organization.block_changeset(%{
+      blocked_at: nil,
+      blocked_reason: nil
+    })
+    |> Repo.update()
+  end
+
+  @doc """
   Returns an `%Ecto.Changeset{}` for tracking organization changes.
 
   ## Examples
@@ -229,6 +305,23 @@ defmodule Castmill.Organizations do
   """
   def change_organization(%Organization{} = organization, attrs \\ %{}) do
     Organization.changeset(organization, attrs)
+  end
+
+  @doc """
+    Complete the onboarding process for an organization by setting its name
+    and marking onboarding as completed.
+  """
+  def complete_onboarding(organization_id, name) do
+    case get_organization(organization_id) do
+      nil ->
+        {:error, :not_found}
+
+      organization ->
+        update_organization(organization, %{
+          name: name,
+          onboarding_completed: true
+        })
+    end
   end
 
   @doc """
@@ -361,6 +454,20 @@ defmodule Castmill.Organizations do
         "create" -> :create
         "update" -> :update
         "delete" -> :delete
+        # Map device-specific actions to standard permission actions
+        :get_channels -> :show
+        :add_channel -> :update
+        :remove_channel -> :update
+        :send_command -> :update
+        :get_cache -> :show
+        :delete_cache -> :update
+        :list_events -> :show
+        :delete_events -> :update
+        :get_telemetry -> :show
+        :get_timers -> :show
+        :set_timers -> :update
+        :get_schedule -> :show
+        :set_schedule -> :update
         # Keep other atoms as-is
         a when is_atom(a) -> a
         _ -> :unknown
@@ -436,12 +543,14 @@ defmodule Castmill.Organizations do
     do_list_users(merged_params)
   end
 
-  def do_list_users(%{
-        organization_id: organization_id,
-        search: search,
-        page: page,
-        page_size: page_size
-      }) do
+  def do_list_users(
+        %{
+          organization_id: organization_id,
+          search: search,
+          page: page,
+          page_size: page_size
+        } = params
+      ) do
     offset = if page_size == nil, do: 0, else: max((page - 1) * page_size, 0)
 
     users =
@@ -449,7 +558,7 @@ defmodule Castmill.Organizations do
       |> OrganizationsUsers.where_organization_id(organization_id)
       |> join(:inner, [ou], u in assoc(ou, :user), as: :user)
       |> maybe_search_by_user_name(search)
-      |> order_by([organizations_users: _ou, user: u], asc: u.name)
+      |> apply_users_sorting(params)
       |> Ecto.Query.limit(^page_size)
       |> Ecto.Query.offset(^offset)
       |> select([organizations_users: ou, user: u], %{
@@ -485,6 +594,36 @@ defmodule Castmill.Organizations do
   defp maybe_search_by_user_name(query, search) do
     from [user: u] in query,
       where: ilike(u.name, ^"%#{search}%")
+  end
+
+  # Helper function to apply sorting to organization users query
+  defp apply_users_sorting(query, params) do
+    sort_key = Map.get(params, :key)
+    sort_direction = Map.get(params, :direction, "ascending")
+
+    sort_dir =
+      case sort_direction do
+        "ascending" -> :asc
+        "descending" -> :desc
+        _ -> :asc
+      end
+
+    case sort_key do
+      "user.name" ->
+        Ecto.Query.order_by(query, [organizations_users: _ou, user: u], [{^sort_dir, u.name}])
+
+      "role" ->
+        Ecto.Query.order_by(query, [organizations_users: ou, user: _u], [{^sort_dir, ou.role}])
+
+      "inserted_at" ->
+        Ecto.Query.order_by(query, [organizations_users: ou, user: _u], [
+          {^sort_dir, ou.inserted_at}
+        ])
+
+      _ ->
+        # Default sorting by user name ascending
+        Ecto.Query.order_by(query, [organizations_users: _ou, user: u], asc: u.name)
+    end
   end
 
   def create_organizations_user(attrs) when is_map(attrs) do
@@ -595,7 +734,7 @@ defmodule Castmill.Organizations do
         # now we can send the email outside the transaction.
         organization = Castmill.Organizations.get_organization(organization_id)
         network = Castmill.Networks.get_network(organization.network_id)
-        send_invitation_email(network.domain, network.name, email, token)
+        send_invitation_email(network.domain, network.name, organization.name, email, token)
 
         # Check if user exists and send notification
         case Castmill.Accounts.get_user_by_email(email) do
@@ -686,6 +825,60 @@ defmodule Castmill.Organizations do
     |> Repo.aggregate(:count, :email)
   end
 
+  @doc """
+  Lists all pending organization invitations across all organizations in a network.
+  Used by the network admin dashboard.
+  """
+  def list_invitations_for_network(network_id) do
+    from(i in OrganizationsInvitation,
+      join: o in Organization,
+      on: o.id == i.organization_id,
+      where: o.network_id == ^network_id and i.status == "invited",
+      order_by: [desc: i.inserted_at],
+      preload: [:organization]
+    )
+    |> Repo.all()
+  end
+
+  @doc """
+  Deletes an organization invitation by ID, verifying it belongs to the given network.
+  Used by the network admin dashboard.
+  """
+  def delete_invitation_for_network(invitation_id, network_id) do
+    parsed_id =
+      case invitation_id do
+        id when is_integer(id) ->
+          id
+
+        id when is_binary(id) ->
+          case Integer.parse(id) do
+            {int_id, ""} -> int_id
+            _ -> :error
+          end
+
+        _ ->
+          :error
+      end
+
+    case parsed_id do
+      :error ->
+        {:error, :not_found}
+
+      id ->
+        query =
+          from(i in OrganizationsInvitation,
+            join: o in Organization,
+            on: o.id == i.organization_id,
+            where: i.id == ^id and o.network_id == ^network_id
+          )
+
+        case Repo.one(query) do
+          nil -> {:error, :not_found}
+          invitation -> Repo.delete(invitation)
+        end
+    end
+  end
+
   defp maybe_search_by_email(query, nil), do: query
   defp maybe_search_by_email(query, ""), do: query
 
@@ -694,34 +887,32 @@ defmodule Castmill.Organizations do
       where: ilike(u.email, ^"%#{search}%")
   end
 
-  defp send_invitation_email(baseUrl, name, email, token) do
-    subject = "You have been invited to an Organization on #{name}"
+  defp send_invitation_email(baseUrl, network_name, organization_name, email, token) do
+    subject = "You have been invited to an Organization on #{network_name}"
 
-    body = """
-    Hello
+    {html_body, text_body} =
+      Castmill.EmailRenderer.render_organization_invite(
+        organization_name,
+        network_name,
+        email,
+        token,
+        baseUrl
+      )
 
-    You have been invited to join an organization on #{name}. Please click on the link below to accept the invitation.
-
-    #{baseUrl}/invite-organization/?token=#{token}
-
-    """
-
-    deliver(email, subject, body)
+    deliver(email, subject, html_body, text_body)
   end
 
   # Delivers the email using the application mailer.
-  defp deliver(recipient, subject, body) do
+  defp deliver(recipient, subject, html_body, text_body) do
     email =
       Email.new()
       |> Email.to(recipient)
-      # TODO: fetch this info from the Network
-      |> Email.from({"Castmill", "no-reply@castmill.com"})
+      |> Email.from(Application.get_env(:castmill, :mailer_from))
       |> Email.subject(subject)
-      |> Email.text_body(body)
+      |> Email.html_body(html_body)
+      |> Email.text_body(text_body)
 
-    with {:ok, _metadata} <- Mailer.deliver(email) do
-      {:ok, email}
-    end
+    EmailDelivery.deliver(email, context: "organizations.invitation")
   end
 
   def get_invitation(token) do
@@ -732,6 +923,11 @@ defmodule Castmill.Organizations do
     )
     |> Repo.one()
   end
+
+  @doc """
+  Gets an invitation by token (alias for get_invitation for consistency)
+  """
+  def get_invitation_by_token(token), do: get_invitation(token)
 
   # Accepts an invitation by updating the status of the invitation to accepted and
   # adding the user to the organization.
@@ -744,6 +940,21 @@ defmodule Castmill.Organizations do
         cond do
           OrganizationsInvitation.expired?(invitation) ->
             {:error, :expired}
+
+          invitation.status == "accepted" ->
+            # Check if the user is already in the organization (idempotent case)
+            case Repo.get_by(OrganizationsUsers,
+                   organization_id: invitation.organization_id,
+                   user_id: user_id
+                 ) do
+              nil ->
+                # Invitation was accepted by a different user
+                {:error, :invitation_accepted_by_different_user}
+
+              _org_user ->
+                # User is already in the organization, return success (idempotent)
+                {:ok, invitation}
+            end
 
           invitation.status != "invited" ->
             {:error, :invalid_status}
@@ -831,10 +1042,16 @@ defmodule Castmill.Organizations do
       Castmill.Resources.Channel,
       params
     )
+    |> Castmill.Resources.add_channel_playlist_names()
   end
 
   def list_resources(%{resources: "devices"} = params) do
     Castmill.Resources.list_resources(Castmill.Devices.Device, params)
+  end
+
+  def list_resources(%{resources: "layouts"} = params) do
+    # Use specialized list_layouts to include system layouts
+    Castmill.Resources.list_layouts(params)
   end
 
   def list_resources(%{resources: "teams"} = params) do
@@ -858,6 +1075,11 @@ defmodule Castmill.Organizations do
 
   def count_resources(%{resources: "devices"} = params) do
     Castmill.Resources.count_resources(Castmill.Devices.Device, params)
+  end
+
+  def count_resources(%{resources: "layouts"} = params) do
+    # Use specialized count_layouts to include system layouts
+    Castmill.Resources.count_layouts(params)
   end
 
   def count_resources(%{resources: "teams"} = params) do
@@ -920,6 +1142,34 @@ defmodule Castmill.Organizations do
   """
   def count_playlists(params) do
     Castmill.Resources.count_resources(Castmill.Resources.Playlist, params)
+  end
+
+  @doc """
+  Returns the list of layouts.
+  Includes both organization-specific layouts and system layouts.
+
+  ## Examples
+
+      iex> list_layouts()
+      [%Layout{}, ...]
+
+  """
+  def list_layouts(params) do
+    Castmill.Resources.list_layouts(params)
+  end
+
+  @doc """
+  Returns number of matching layouts.
+  Includes both organization-specific layouts and system layouts.
+
+  ## Examples
+
+      iex> count_layouts()
+      2
+
+  """
+  def count_layouts(params) do
+    Castmill.Resources.count_layouts(params)
   end
 
   @doc """

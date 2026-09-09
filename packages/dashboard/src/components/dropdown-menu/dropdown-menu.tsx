@@ -13,7 +13,7 @@ import { createSignal, onMount, Show } from 'solid-js';
 import { FaSolidAngleDown, FaSolidAngleUp } from 'solid-icons/fa';
 
 interface DropdownMenuProps {
-  ButtonComponent: Component<{ onClick: () => void }>; // Define prop for custom button component
+  ButtonComponent: Component<Record<string, never>>; // Define prop for custom button component
   children: JSX.Element;
   onItemClick?: () => void; // Optional callback when a menu item is clicked
 }
@@ -22,8 +22,8 @@ const DropdownMenu: Component<DropdownMenuProps> = (props) => {
   const [isOpen, setIsOpen] = createSignal(false);
   const [positionStyle, setPositionStyle] = createSignal({});
 
-  let buttonRef: HTMLDivElement;
-  let menuRef: HTMLUListElement;
+  let buttonRef: HTMLDivElement | undefined;
+  let menuRef: HTMLUListElement | undefined;
 
   const menuItems = children(() => props.children).toArray();
 
@@ -44,6 +44,8 @@ const DropdownMenu: Component<DropdownMenuProps> = (props) => {
     if (
       event.target &&
       isOpen() &&
+      buttonRef &&
+      menuRef &&
       !buttonRef.contains(event.target as Node) &&
       !menuRef.contains(event.target as Node)
     ) {
@@ -54,6 +56,7 @@ const DropdownMenu: Component<DropdownMenuProps> = (props) => {
   onMount(() => {
     document.addEventListener('click', handleClickOutside);
 
+    if (!buttonRef) return;
     const buttonRect = buttonRef.getBoundingClientRect();
     const viewportHeight = window.innerHeight;
     const spaceBelow = viewportHeight - buttonRect.bottom;
@@ -78,9 +81,18 @@ const DropdownMenu: Component<DropdownMenuProps> = (props) => {
     <div class="castmill-dropdown-menu">
       <div class="container">
         <div ref={buttonRef!} class="button-container" onClick={toggleDropdown}>
-          <props.ButtonComponent onClick={toggleDropdown} />
-          <Show when={isOpen()} fallback={<FaSolidAngleDown />}>
-            <FaSolidAngleUp />
+          <props.ButtonComponent />
+          <Show
+            when={isOpen()}
+            fallback={
+              <span class="dropdown-icon">
+                <FaSolidAngleDown />
+              </span>
+            }
+          >
+            <span class="dropdown-icon">
+              <FaSolidAngleUp />
+            </span>
           </Show>
         </div>
         <ul

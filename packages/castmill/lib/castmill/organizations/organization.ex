@@ -18,6 +18,12 @@ defmodule Castmill.Organizations.Organization do
 
     field(:meta, :map)
 
+    # Encryption key for sensitive data (Base64-encoded 32-byte key)
+    field(:encryption_key, :string)
+
+    # Onboarding status - tracks if organization setup is complete
+    field(:onboarding_completed, :boolean, default: true)
+
     # Castmill 2.0 Permission System Fields
     # Default role for new users joining this organization
     field(:default_role, Ecto.Enum,
@@ -33,6 +39,10 @@ defmodule Castmill.Organizations.Organization do
       values: [:full, :read_only_parent, :isolated],
       default: :full
     )
+
+    # Blocking fields - when blocked_at is set, all users in this org cannot login
+    field(:blocked_at, :utc_datetime_usec)
+    field(:blocked_reason, :string)
 
     belongs_to(:network, Castmill.Networks.Network, foreign_key: :network_id, type: Ecto.UUID)
     belongs_to(:organization, Castmill.Organizations.Organization, type: Ecto.UUID)
@@ -61,7 +71,9 @@ defmodule Castmill.Organizations.Organization do
       :network_id,
       :default_role,
       :visibility_mode,
-      :logo_media_id
+      :logo_media_id,
+      :encryption_key,
+      :onboarding_completed
     ])
     |> validate_required([:name, :network_id])
     |> validate_inclusion(:default_role, [
@@ -111,4 +123,18 @@ defmodule Castmill.Organizations.Organization do
       where: e.organization_id == ^id
     )
   end
+
+  @doc """
+  Changeset for blocking/unblocking an organization.
+  """
+  def block_changeset(organization, attrs) do
+    organization
+    |> cast(attrs, [:blocked_at, :blocked_reason])
+  end
+
+  @doc """
+  Returns true if the organization is blocked.
+  """
+  def blocked?(%__MODULE__{blocked_at: nil}), do: false
+  def blocked?(%__MODULE__{blocked_at: _}), do: true
 end

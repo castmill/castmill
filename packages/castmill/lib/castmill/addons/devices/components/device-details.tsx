@@ -1,4 +1,4 @@
-import { createSignal, createEffect } from 'solid-js';
+import { createSignal, createEffect, on } from 'solid-js';
 
 import { Device } from '../interfaces/device.interface';
 import { Button, FormItem } from '@castmill/ui-common';
@@ -7,8 +7,9 @@ import { AddonStore } from '../../common/interfaces/addon-store';
 import { BsCheckLg, BsX } from 'solid-icons/bs';
 
 export interface DeviceUpdate {
-  name: string;
-  description: string;
+  name?: string;
+  description?: string;
+  autorecover_until?: string | null;
 }
 
 // Optionally we should allow using protonmaps
@@ -30,6 +31,18 @@ export const DeviceDetails = (props: {
   const [errors, setErrors] = createSignal(new Map());
 
   const [onlineStatus, setOnlineStatus] = createSignal('');
+
+  createEffect(
+    on(
+      () => props.device.id,
+      () => {
+        setName(props.device.name);
+        setDescription(props.device.description);
+        setIsFormModified(false);
+        setErrors(new Map());
+      }
+    )
+  );
 
   const validateField = (fieldId: string, value: string) => {
     let error = '';
@@ -74,7 +87,8 @@ export const DeviceDetails = (props: {
   return (
     <>
       <div style="font-size: 0.8em; color: darkgray;">
-        <span>{t('common.addedOn')} </span> <span>{`${props.device.inserted_at}`}. </span>
+        <span>{t('common.addedOn')} </span>{' '}
+        <span>{`${props.device.inserted_at}`}. </span>
         <span>{t('common.lastUpdatedOn')} </span>
         <span>{`${props.device.updated_at}`}</span>
       </div>
@@ -95,10 +109,11 @@ export const DeviceDetails = (props: {
             label={t('common.name')}
             id="name"
             value={name()}
-            placeholder="Enter device name"
-            onInput={(value: string) => {
-              setName(value);
-              validateField('name', value);
+            placeholder={t('devices.enterDeviceName')}
+            onInput={(value: string | number | boolean) => {
+              const nextValue = String(value);
+              setName(nextValue);
+              validateField('name', nextValue);
             }}
           >
             <div class="error">{errors().get('name')}</div>
@@ -108,10 +123,11 @@ export const DeviceDetails = (props: {
             label={t('common.description')}
             id="description"
             value={description()}
-            placeholder="Enter a description"
-            onInput={(value: string) => {
-              setDescription(value);
-              validateField('description', value);
+            placeholder={t('devices.enterDescription')}
+            onInput={(value: string | number | boolean) => {
+              const nextValue = String(value);
+              setDescription(nextValue);
+              validateField('description', nextValue);
             }}
           >
             <div class="error">{errors().get('description')}</div>
@@ -122,6 +138,7 @@ export const DeviceDetails = (props: {
             id="online"
             value={onlineStatus()}
             disabled={true}
+            onInput={() => {}}
           ></FormItem>
 
           <FormItem
@@ -129,11 +146,20 @@ export const DeviceDetails = (props: {
             id="last_ip"
             value={props.device.last_ip}
             disabled={true}
+            onInput={() => {}}
+          ></FormItem>
+
+          <FormItem
+            label={t('common.id')}
+            id="device_id"
+            value={props.device.id}
+            disabled={true}
+            onInput={() => {}}
           ></FormItem>
         </div>
         <div class="bottom-buttons">
           <Button
-            label={t('common.update')}
+            label={t('common.save')}
             type="submit"
             disabled={!isFormValid()}
             icon={BsCheckLg}

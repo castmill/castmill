@@ -14,6 +14,11 @@ import type {
   Action,
 } from '../services/permissions.service';
 import type { KeyboardShortcut } from '../hooks/useKeyboardShortcuts';
+import type {
+  OnboardingProgress,
+  OnboardingStep,
+} from '../interfaces/onboarding-progress.interface';
+import type { NetworkSettings, SocialLinks } from '../services/network.service';
 
 interface OrganizationLogoState {
   mediaId: number | null;
@@ -44,6 +49,27 @@ interface CastmillStore {
     matrix?: Record<ResourceType, Action[]>;
   };
 
+  // Network admin state
+  network: {
+    loaded: boolean;
+    loading: boolean;
+    isAdmin: boolean;
+    networkId: string | null;
+    access?: string;
+  };
+
+  // Network settings (loaded for all users, used for footer/topbar branding)
+  networkSettings: {
+    loaded: boolean;
+    loading: boolean;
+    logo: string;
+    copyright: string;
+    email: string;
+    defaultLocale: string;
+    socialLinks: SocialLinks;
+    data?: NetworkSettings;
+  };
+
   socket?: Socket;
 
   env: {
@@ -51,6 +77,13 @@ interface CastmillStore {
     origin: string;
     domain: string;
   };
+
+  // Auth-aware fetch wrapper — automatically adds Bearer token.
+  // Addon components should use `props.store.authFetch` instead of raw `fetch`.
+  authFetch: (
+    input: RequestInfo | URL,
+    init?: RequestInit
+  ) => Promise<Response>;
 
   // i18n functions (set by wrapLazyComponent)
   i18n?: {
@@ -87,6 +120,18 @@ interface CastmillStore {
   router?: {
     navigate: (path: string, options?: any) => void;
   };
+
+  // Onboarding tour state
+  onboarding: {
+    showTour: boolean;
+    progress: OnboardingProgress | null;
+    /** Complete an onboarding step - automatically advances to next step */
+    completeStep?: (step: OnboardingStep) => Promise<void>;
+    /** Flag to highlight the guide button with animation */
+    highlightGuideButton?: boolean;
+    /** Last viewed step index — persists across tour open/close */
+    lastStepIndex?: number;
+  };
 }
 
 const [store, setStore] = createStore<CastmillStore>({
@@ -108,10 +153,36 @@ const [store, setStore] = createStore<CastmillStore>({
     loading: false,
   },
 
+  network: {
+    loaded: false,
+    loading: false,
+    isAdmin: false,
+    networkId: null,
+  },
+
+  networkSettings: {
+    loaded: false,
+    loading: false,
+    logo: '',
+    copyright: '© 2011-2025 Castmill™',
+    email: 'support@castmill.com',
+    defaultLocale: 'en',
+    socialLinks: {},
+  },
+
   env: {
     baseUrl,
     origin,
     domain,
+  },
+
+  // Default to plain fetch; replaced with authFetch after auth.ts loads
+  authFetch: (input: RequestInfo | URL, init?: RequestInit) =>
+    fetch(input, init ?? {}),
+
+  onboarding: {
+    showTour: false,
+    progress: null,
   },
 });
 

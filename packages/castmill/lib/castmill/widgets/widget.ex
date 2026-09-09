@@ -15,7 +15,11 @@ defmodule Castmill.Widgets.Widget do
              :meta,
              :icon,
              :small_icon,
-             :update_interval_seconds
+             :aspect_ratio,
+             :update_interval_seconds,
+             :fonts,
+             :assets,
+             :translations
            ]}
   schema "widgets" do
     field(:name, :string)
@@ -31,6 +35,9 @@ defmodule Castmill.Widgets.Widget do
     field(:icon, :string)
     field(:small_icon, :string)
 
+    # Preferred aspect ratio for the widget (e.g., "16:9", "9:16", "4:3", "1:1", or "liquid" for any)
+    field(:aspect_ratio, :string)
+
     # Not sure we need this field. Widgets should be either global, per network or per organization, not sure which
     # would be the best way to model this.
     field(:is_system, :boolean)
@@ -40,6 +47,16 @@ defmodule Castmill.Widgets.Widget do
 
     # Granularity in seconds for how often the widget should ask the server for updates.
     field(:update_interval_seconds, :integer, default: 60)
+
+    # Custom fonts included with the widget (list of %{"url" => string, "name" => string})
+    field(:fonts, {:array, :map}, default: [])
+
+    # Original assets definition from widget.json (icons, images, fonts metadata)
+    field(:assets, :map, default: %{})
+
+    # Widget-provided translations keyed by locale code
+    # e.g. %{"en" => %{"name" => "QR Code", ...}, "es" => %{"name" => "Código QR", ...}}
+    field(:translations, :map, default: %{})
 
     timestamps()
   end
@@ -55,11 +72,15 @@ defmodule Castmill.Widgets.Widget do
       :options_schema,
       :data_schema,
       :meta,
+      :aspect_ratio,
       :update_interval_seconds,
       :icon,
       :small_icon,
       :is_system,
-      :webhook_url
+      :webhook_url,
+      :fonts,
+      :assets,
+      :translations
     ])
     |> validate_required([:name, :template])
     |> unique_constraint(:name)

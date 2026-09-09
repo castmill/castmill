@@ -1,6 +1,16 @@
 defmodule Castmill.NetworksTest do
   use Castmill.DataCase
 
+  import ExUnit.CaptureLog
+  import Swoosh.TestAssertions
+
+  defmodule RaisingMailerAdapter do
+    use Swoosh.Adapter, required_config: []
+
+    @impl true
+    def deliver(_email, _config), do: raise(ArgumentError, "forced mailer failure")
+  end
+
   alias Castmill.Networks
 
   @moduletag :networks
@@ -53,7 +63,7 @@ defmodule Castmill.NetworksTest do
 
       update_attrs = %{
         copyright: "some updated copyright",
-        domain: "some updated domain",
+        domain: "some-updated.domain",
         email: "some@updated.email.com",
         logo: "some updated logo",
         name: "some updated name"
@@ -136,6 +146,283 @@ defmodule Castmill.NetworksTest do
       assert Castmill.Quotas.get_quota_for_organization(org.id, "playlists") == 50
       assert Castmill.Quotas.get_quota_for_organization(org.id, "devices") == 20
       assert Castmill.Quotas.get_quota_for_organization(org.id, "channels") == 20
+      assert Castmill.Quotas.get_quota_for_organization(org.id, "layouts") == 100
     end
+
+    test "invitation_only defaults to true" do
+      network = network_fixture()
+      assert network.invitation_only == true
+    end
+
+    test "update_network/2 can enable invitation_only mode" do
+      network = network_fixture()
+
+      update_attrs = %{invitation_only: true}
+
+      assert {:ok, %Network{} = updated_network} =
+               Networks.update_network(network, update_attrs)
+
+      assert updated_network.invitation_only == true
+    end
+
+    test "invitation_only_org_admins defaults to false" do
+      network = network_fixture()
+      assert network.invitation_only_org_admins == false
+    end
+  end
+
+  describe "network invitations" do
+    import Castmill.NetworksFixtures
+
+    setup do
+      previous_mailer_config = Application.get_env(:castmill, Castmill.Mailer)
+
+      on_exit(fn ->
+        Application.put_env(:castmill, Castmill.Mailer, previous_mailer_config)
+      end)
+
+      :ok
+    end
+
+    test "invite_user_to_new_organization/3 creates an invitation" do
+      network = network_fixture()
+      email = "newuser@example.com"
+      org_name = "New Organization"
+
+      assert {:ok, invitation} =
+               Networks.invite_user_to_new_organization(network.id, email, org_name)
+
+      assert invitation.email == email
+      assert invitation.organization_name == org_name
+      assert invitation.network_id == network.id
+      assert invitation.status == "invited"
+      assert invitation.token != nil
+    end
+
+    test "invite_user_to_new_organization/3 sends invitation email on success" do
+      network = network_fixture()
+      email = "invitation-success@example.com"
+      org_name = "Success Org"
+
+      assert {:ok, invitation} =
+               Networks.invite_user_to_new_organization(network.id, email, org_name)
+
+      assert invitation.email == email
+
+      assert_email_sent(
+        to: email,
+        subject: "You're invited to join #{org_name} on Castmill"
+      )
+    end
+
+    test "invite_user_to_new_organization/3 fails for existing user" do
+      network = network_fixture()
+      # Create a user and add them to the network
+      {:ok, user} =
+        Castmill.Accounts.create_user(%{
+          name: "Test User",
+          email: "existing@example.com"
+        })
+
+      {:ok, _} = Networks.add_user_to_network(user.id, network.id, :member)
+
+      assert {:error, message} =
+               Networks.invite_user_to_new_organization(
+                 network.id,
+                 "existing@example.com",
+                 "New Org"
+               )
+
+      assert message =~ "already exists"
+    end
+
+    test "invite_user_to_new_organization/3 fails for duplicate invitation" do
+      network = network_fixture()
+      email = "duplicate@example.com"
+
+      {:ok, _} = Networks.invite_user_to_new_organization(network.id, email, "Org 1")
+
+      assert {:error, message} =
+               Networks.invite_user_to_new_organization(network.id, email, "Org 2")
+
+      assert message =~ "already exists"
+    end
+
+    test "get_network_invitation_by_token/1 returns invitation" do
+      network = network_fixture()
+
+      {:ok, invitation} =
+        Networks.invite_user_to_new_organization(network.id, "test@example.com", "Test Org")
+
+      found = Networks.get_network_invitation_by_token(invitation.token)
+      assert found.id == invitation.id
+      assert found.email == invitation.email
+    end
+
+    test "list_network_invitations/1 returns network invitations" do
+      network = network_fixture()
+
+      {:ok, _inv1} =
+        Networks.invite_user_to_new_organization(network.id, "user1@example.com", "Org 1")
+
+      {:ok, _inv2} =
+        Networks.invite_user_to_new_organization(network.id, "user2@example.com", "Org 2")
+
+      invitations = Networks.list_network_invitations(network.id)
+      assert length(invitations) == 2
+    end
+
+    test "delete_network_invitation/1 removes invitation" do
+      network = network_fixture()
+
+      {:ok, invitation} =
+        Networks.invite_user_to_new_organization(network.id, "delete@example.com", "Test Org")
+
+      assert {:ok, _} = Networks.delete_network_invitation(invitation.id)
+      assert Networks.get_network_invitation_by_token(invitation.token) == nil
+    end
+
+    test "invite_user_to_new_organization/3 returns ok even when email delivery fails" do
+      Application.put_env(:castmill, Castmill.Mailer, adapter: RaisingMailerAdapter)
+
+      network = network_fixture()
+      email = "delivery-fail@example.com"
+
+      {result, _log} =
+        with_log(fn ->
+          Networks.invite_user_to_new_organization(network.id, email, "New Org")
+        end)
+
+      assert {:ok, invitation} = result
+
+      assert invitation.email == email
+
+      persisted = Networks.get_network_invitation_by_token(invitation.token)
+      assert persisted != nil
+      assert persisted.email == email
+      assert persisted.status == "invited"
+    end
+  end
+
+  describe "list_network_domains/0" do
+    import Castmill.NetworksFixtures
+
+    test "returns primary domains from networks" do
+      _network1 = network_fixture(%{domain: "net-aaa.example.com", name: "Net A"})
+      _network2 = network_fixture(%{domain: "net-bbb.example.com", name: "Net B"})
+
+      domains = Networks.list_network_domains()
+
+      assert "net-aaa.example.com" in domains
+      assert "net-bbb.example.com" in domains
+    end
+
+    test "includes additional domains from configured hook" do
+      _network = network_fixture(%{domain: "primary.example.com", name: "Primary Net"})
+
+      # Configure a hook that returns extra domains
+      Application.put_env(
+        :castmill,
+        :additional_domain_sources,
+        {__MODULE__, :mock_domain_source, []}
+      )
+
+      on_exit(fn -> Application.delete_env(:castmill, :additional_domain_sources) end)
+
+      domains = Networks.list_network_domains()
+
+      assert "primary.example.com" in domains
+      assert "custom.example.com" in domains
+      assert "extra.example.com" in domains
+    end
+
+    test "deduplicates domains from primary and additional sources" do
+      _network = network_fixture(%{domain: "shared.example.com", name: "Shared Net"})
+
+      Application.put_env(
+        :castmill,
+        :additional_domain_sources,
+        {__MODULE__, :mock_domain_source_with_overlap, []}
+      )
+
+      on_exit(fn -> Application.delete_env(:castmill, :additional_domain_sources) end)
+
+      domains = Networks.list_network_domains()
+
+      # "shared.example.com" appears in both primary and additional — should appear once
+      assert Enum.count(domains, &(&1 == "shared.example.com")) == 1
+    end
+
+    test "filters out non-binary, empty, and whitespace-only entries from additional sources" do
+      _network = network_fixture(%{domain: "primary.example.com", name: "Filter Net"})
+
+      Application.put_env(
+        :castmill,
+        :additional_domain_sources,
+        {__MODULE__, :mock_bad_domain_source, []}
+      )
+
+      on_exit(fn -> Application.delete_env(:castmill, :additional_domain_sources) end)
+
+      domains = Networks.list_network_domains()
+
+      assert "primary.example.com" in domains
+      assert "valid.example.com" in domains
+      # nil, 123, "", and whitespace-only strings should be filtered out
+      refute nil in domains
+      refute "" in domains
+      refute "  " in domains
+      assert Enum.all?(domains, &is_binary/1)
+    end
+
+    test "returns only primary domains when additional source is not configured" do
+      _network = network_fixture(%{domain: "only-primary.example.com", name: "Only Primary"})
+
+      Application.delete_env(:castmill, :additional_domain_sources)
+
+      domains = Networks.list_network_domains()
+
+      assert "only-primary.example.com" in domains
+    end
+
+    test "returns primary domains when additional source raises" do
+      _network = network_fixture(%{domain: "primary.example.com", name: "Error Net"})
+
+      Application.put_env(
+        :castmill,
+        :additional_domain_sources,
+        {__MODULE__, :mock_raising_source, []}
+      )
+
+      on_exit(fn -> Application.delete_env(:castmill, :additional_domain_sources) end)
+
+      {domains, log} = with_log(fn -> Networks.list_network_domains() end)
+
+      assert "primary.example.com" in domains
+      assert log =~ "additional_domain_sources failed"
+    end
+
+    test "returns primary domains when additional source returns non-list" do
+      _network = network_fixture(%{domain: "primary.example.com", name: "NonList Net"})
+
+      Application.put_env(
+        :castmill,
+        :additional_domain_sources,
+        {__MODULE__, :mock_nonlist_source, []}
+      )
+
+      on_exit(fn -> Application.delete_env(:castmill, :additional_domain_sources) end)
+
+      domains = Networks.list_network_domains()
+
+      assert "primary.example.com" in domains
+    end
+
+    # Mock functions for domain source hooks
+    def mock_domain_source, do: ["custom.example.com", "extra.example.com"]
+    def mock_domain_source_with_overlap, do: ["shared.example.com", "another.example.com"]
+    def mock_bad_domain_source, do: ["valid.example.com", nil, 123, "", "  "]
+    def mock_raising_source, do: raise(RuntimeError, "boom")
+    def mock_nonlist_source, do: :not_a_list
   end
 end

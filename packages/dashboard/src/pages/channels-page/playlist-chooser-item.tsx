@@ -22,7 +22,7 @@ export const PlaylistChooserItem: Component<PlaylistChooserItemProps> = (
   const [selectedPlaylist, setSelectedPlaylist] =
     createSignal<JsonPlaylist | null>(null);
 
-  let ref: HTMLElement | undefined;
+  let ref: HTMLDivElement | undefined;
   let deltaX = 0;
   let deltaY = 0;
   let currentGhostX = 0;

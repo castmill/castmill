@@ -7,7 +7,13 @@ import { arrayBufferToBase64, base64URLToArrayBuffer } from '../utils';
 import './signup.scss';
 
 import { baseUrl, origin, domain } from '../../env';
+import { authFetch } from '../auth';
 import { useI18n } from '../../i18n';
+import {
+  LOCALE_STORAGE_KEY,
+  SUPPORTED_LOCALES,
+  Locale,
+} from '../../i18n/types';
 
 /**
  * Sign Up Component.
@@ -28,14 +34,20 @@ interface SignUpQueryParams {
   challenge: string;
 }
 
+interface NetworkSettings {
+  privacy_policy_url: string | null;
+}
+
 const SignUp: Component = () => {
-  const { t } = useI18n();
+  const { t, setLocale } = useI18n();
   const navigate = useNavigate();
   const toast = useToast();
 
   const [isMounted, setIsMounted] = createSignal<boolean>(false);
   const [status, setStatus] = createSignal<string>('Ready');
   const [supportsPasskeys, setSupportsPasskeys] = createSignal<boolean>(false);
+  const [networkSettings, setNetworkSettings] =
+    createSignal<NetworkSettings | null>(null);
 
   const [searchParams, setSearchParams] = useSearchParams<SignUpQueryParams>();
 
@@ -45,6 +57,32 @@ const SignUp: Component = () => {
 
   if (!email || !signup_id || !challenge) {
     setStatus('Invalid query params');
+  }
+
+  async function fetchNetworkSettings() {
+    try {
+      const response = await authFetch(
+        `${baseUrl}/dashboard/network/public-settings`
+      );
+      if (response.ok) {
+        const settings = await response.json();
+        setNetworkSettings({
+          privacy_policy_url: settings.privacy_policy_url,
+        });
+
+        // Apply network's default locale if user has no stored preference
+        const storedLocale = localStorage.getItem(LOCALE_STORAGE_KEY);
+        if (
+          !storedLocale &&
+          settings.default_locale &&
+          SUPPORTED_LOCALES.some((l) => l.code === settings.default_locale)
+        ) {
+          setLocale(settings.default_locale as Locale);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch network settings:', error);
+    }
   }
 
   async function checkPasskeysSupport() {
@@ -125,7 +163,7 @@ const SignUp: Component = () => {
     }
 
     // Send the credential to the server to be stored
-    const result = await fetch(`${baseUrl}/signups/${signup_id}/users`, {
+    const result = await authFetch(`${baseUrl}/signups/${signup_id}/users`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -138,20 +176,27 @@ const SignUp: Component = () => {
         raw_id: arrayBufferToBase64(publicKeyCredential.rawId),
         client_data_json: clientDataJSON,
       }),
-      credentials: 'include', // Essential for including cookies
     });
 
     if (!result.ok) {
-      toast.error(
-        t('signup.errors.signupFailed', { error: result.statusText })
-      );
+      const data = await result.json().catch(() => ({}));
+      const isObject = data !== null && typeof data === 'object';
+      const serverMessage =
+        (isObject
+          ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            ((data as any).message ?? (data as any).msg)
+          : undefined) || result.statusText;
+      toast.error(t('signup.errors.signupFailed', { error: serverMessage }));
     } else {
-      toast.success('Account created successfully!');
+      toast.success(t('signup.success.accountCreated'));
       navigate('/');
     }
   }
 
   onMount(async () => {
+    // Fetch network settings to apply default locale if needed
+    await fetchNetworkSettings();
+
     if (!(await checkPasskeysSupport())) {
       setStatus('Passkey not supported');
       return;
@@ -184,12 +229,21 @@ const SignUp: Component = () => {
             </p>
           </Show>
 
-          <div class="privacy">
-            <p>
-              We care about your privacy. Read our{' '}
-              <a href="#">{t('signup.privacyPolicy')}</a>.
-            </p>
-          </div>
+          <Show when={networkSettings()?.privacy_policy_url}>
+            <div class="privacy">
+              <p>
+                {t('signup.privacyNotice')}{' '}
+                <a
+                  href={networkSettings()?.privacy_policy_url || '#'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {t('signup.privacyPolicy')}
+                </a>
+                .
+              </p>
+            </div>
+          </Show>
         </div>
       </div>
     </Show>

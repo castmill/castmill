@@ -24,9 +24,9 @@ defmodule CastmillWeb.UserController do
   end
 
   def create(conn, %{"user" => user_params, "network_id" => network_id}) do
-    create_attrs = Map.merge(user_params, %{"network_id" => network_id})
-
-    with {:ok, %User{} = user} <- Castmill.Accounts.create_user(create_attrs) do
+    # Create user without network_id, then add to network via networks_users
+    with {:ok, %User{} = user} <- Castmill.Accounts.create_user(user_params),
+         {:ok, _nu} <- Castmill.Networks.add_user_to_network(user.id, network_id) do
       conn
       |> put_status(:created)
       |> put_resp_header("location", ~p"/api/networks/#{network_id}/users/#{user}")
@@ -45,9 +45,8 @@ defmodule CastmillWeb.UserController do
     organization = Organizations.get_organization!(organization_id)
     network_id = organization.network_id
 
-    create_attrs = Map.merge(user, %{"network_id" => network_id})
-
-    with {:ok, user} <- Castmill.Accounts.create_user(create_attrs) do
+    with {:ok, user} <- Castmill.Accounts.create_user(user),
+         {:ok, _nu} <- Castmill.Networks.add_user_to_network(user.id, network_id) do
       update(conn, %{"id" => user.id, "access" => access, "organization_id" => organization_id})
     end
   end
@@ -69,14 +68,6 @@ defmodule CastmillWeb.UserController do
     user = Accounts.get_user(user_id)
 
     with {:ok, updated_user} <- Accounts.update_user(user, user_params) do
-      # Update the session with the new user data if this is the current user's session
-      conn =
-        if get_session(conn, :user) && get_session(conn, :user).id == user_id do
-          put_session(conn, :user, updated_user)
-        else
-          conn
-        end
-
       render(conn, :show, user: updated_user)
     end
   end
@@ -180,29 +171,42 @@ defmodule CastmillWeb.UserController do
   end
 
   @doc """
-  Create a challenge for adding a new credential/passkey
+  Create a challenge for adding a new credential/passkey.
+  Returns a signed challenge_token (Phoenix.Token) so the challenge can be
+  verified in the follow-up add_credential request without relying on sessions.
   """
   def create_credential_challenge(conn, %{"id" => user_id}) do
     challenge = CastmillWeb.SessionUtils.new_challenge()
 
+    challenge_token =
+      Phoenix.Token.sign(
+        CastmillWeb.Endpoint,
+        "credential_challenge",
+        %{challenge: challenge, user_id: user_id}
+      )
+
     conn
-    |> put_session(:credential_challenge, challenge)
-    |> put_session(:credential_user_id, user_id)
-    |> json(%{challenge: challenge, user_id: user_id})
+    |> json(%{challenge: challenge, user_id: user_id, challenge_token: challenge_token})
   end
 
   @doc """
-  Add a new credential/passkey for the user
+  Add a new credential/passkey for the user.
+  Verifies the challenge via the signed challenge_token (stateless).
   """
   def add_credential(conn, %{
         "id" => user_id,
         "credential_id" => credential_id,
         "public_key_spki" => public_key_spki_base64,
-        "client_data_json" => client_data_json
+        "client_data_json" => client_data_json,
+        "challenge_token" => challenge_token
       }) do
     with {:ok, challenge} <- CastmillWeb.SessionUtils.check_client_data_json(client_data_json),
-         true <- challenge == get_session(conn, :credential_challenge),
-         true <- user_id == get_session(conn, :credential_user_id) do
+         {:ok, %{challenge: expected_challenge, user_id: expected_user_id}} <-
+           Phoenix.Token.verify(CastmillWeb.Endpoint, "credential_challenge", challenge_token,
+             max_age: 300
+           ),
+         true <- Plug.Crypto.secure_compare(challenge, expected_challenge),
+         true <- user_id == expected_user_id do
       # Extract and parse User-Agent for device information
       user_agent = get_req_header(conn, "user-agent") |> List.first()
 
@@ -215,8 +219,6 @@ defmodule CastmillWeb.UserController do
       case Accounts.add_user_credential(user_id, credential_id, public_key_spki, device_info) do
         {:ok, credential} ->
           conn
-          |> delete_session(:credential_challenge)
-          |> delete_session(:credential_user_id)
           |> put_status(:created)
           |> json(%{
             status: "ok",
@@ -236,8 +238,6 @@ defmodule CastmillWeb.UserController do
     else
       false ->
         conn
-        |> delete_session(:credential_challenge)
-        |> delete_session(:credential_user_id)
         |> put_status(:unauthorized)
         |> json(%{status: "error", message: "Invalid challenge or user ID"})
 

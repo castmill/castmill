@@ -41,7 +41,6 @@ export const MediaDetails = (props: {
   };
 
   createEffect(() => {
-    // We need to check both fields or create effect will not detect the dependencies.
     const hasModifiedName = name() !== props.media.name;
     setIsFormModified(hasModifiedName);
   });
@@ -53,7 +52,8 @@ export const MediaDetails = (props: {
   return (
     <>
       <div class="info">
-        <span>Added on </span> <Timestamp value={props.media.inserted_at} mode="relative" />.{' '}
+        <span>Added on </span>{' '}
+        <Timestamp value={props.media.inserted_at} mode="relative" />.{' '}
         <span>Last updated on </span>
         <Timestamp value={props.media.updated_at} mode="relative" />
       </div>
@@ -73,9 +73,10 @@ export const MediaDetails = (props: {
             id="name"
             value={name()}
             placeholder="Enter media name"
-            onInput={(value: string) => {
-              setName(value);
-              validateField('name', value);
+            onInput={(value: string | number | boolean) => {
+              const nextValue = String(value);
+              setName(nextValue);
+              validateField('name', nextValue);
             }}
           >
             <div class="error">{errors().get('name')}</div>
@@ -86,14 +87,14 @@ export const MediaDetails = (props: {
 
         <div class="actions">
           <Button
-            label="Update"
+            label={t('common.save')}
             type="submit"
             disabled={!isFormValid()}
             icon={BsCheckLg}
             color="success"
           />
           <Button
-            label="Reset"
+            label={t('common.reset')}
             onClick={() => {
               setName(props.media.name);
               setIsFormModified(false);

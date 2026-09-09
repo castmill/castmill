@@ -79,13 +79,40 @@ defmodule CastmillWeb.PlaylistController do
         conn
         |> send_resp(:no_content, "")
 
-      {:error, _} = error ->
+      {:error, :circular_reference} ->
         conn
-        |> put_status(:internal_server_error)
-        |> json(%{error: "Failed to update widget config due to #{inspect(error)}"})
+        |> put_status(:bad_request)
+        |> json(%{error: "Cannot select this playlist as it would create a circular reference"})
+        |> halt()
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{
+          error: "Invalid widget configuration",
+          errors: changeset_errors(changeset)
+        })
+        |> halt()
+
+      {:error, reason} ->
+        conn
+        |> put_status(:bad_request)
+        |> json(%{error: error_message(reason)})
         |> halt()
     end
   end
+
+  defp changeset_errors(changeset) do
+    Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
+      Regex.replace(~r"%{(\w+)}", msg, fn _, key ->
+        opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
+      end)
+    end)
+  end
+
+  defp error_message(reason) when is_binary(reason), do: reason
+  defp error_message(reason) when is_atom(reason), do: to_string(reason)
+  defp error_message(reason), do: inspect(reason)
 
   def move_item(conn, %{
         "playlist_id" => playlist_id,
@@ -144,5 +171,19 @@ defmodule CastmillWeb.PlaylistController do
 
     conn
     |> send_resp(:no_content, "")
+  end
+
+  @doc """
+  Returns the list of ancestor playlist IDs for a given playlist.
+  Ancestors are playlists that contain layout widgets referencing this playlist.
+  This is used to prevent circular references when configuring layout widgets.
+  """
+  def get_ancestors(conn, %{"playlist_id" => playlist_id}) do
+    playlist_id = String.to_integer(playlist_id)
+    ancestor_ids = Resources.get_playlist_ancestors(playlist_id)
+
+    conn
+    |> put_status(:ok)
+    |> json(%{ancestor_ids: ancestor_ids})
   end
 end

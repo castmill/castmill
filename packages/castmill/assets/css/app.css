@@ -1,7 +1,7 @@
-@import "tailwindcss/base";
-@import "tailwindcss/components";
-@import "tailwindcss/utilities";
-@import "@castmill/device/dist/style.css"; 
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+@import '@castmill/device/dist/style.css';
 
 /* This file is for your main application CSS */
 .title {
@@ -10,4 +10,21 @@
 
 .container {
   background-color: rgb(17 24 39);
+}
+
+/* Onboarding highlight animation for guided tour */
+.onboarding-highlight {
+  animation: onboarding-pulse 1.5s ease-in-out infinite;
+  position: relative;
+  z-index: 100;
+}
+
+@keyframes onboarding-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 12px rgba(59, 130, 246, 0);
+  }
 }

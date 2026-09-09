@@ -83,5 +83,27 @@ config :swoosh, :api_client, false
 config :castmill, :file_storage, :local
 # config :castmill, :file_storage, :s3
 
+# Encryption configuration for development (deterministic key for convenience)
+# DO NOT use this key in production!
+config :castmill, :encryption, %{
+  keys: %{
+    1 => :crypto.hash(:sha256, "castmill-dev-encryption-key-v1-not-for-production")
+  },
+  current_version: 1
+}
+
 # widgets json files
 config :castmill, CastmillWeb.Widgets.WidgetsLoader, json_dir: "../widged/dist/widgets"
+
+# BullMQ uses PostgreSQL backend in dev.
+# Local Postgres normally doesn't use SSL. If you point dev at a managed DB that
+# enforces SSL, add `ssl: [verify: :verify_none]` here (prod uses BULLMQ_DB_SSL).
+config :castmill, :bullmq_postgres,
+  hostname: System.get_env("BULLMQ_DB_HOST") || "localhost",
+  port: String.to_integer(System.get_env("BULLMQ_DB_PORT") || "5432"),
+  database: System.get_env("BULLMQ_DB_NAME") || "castmill_bullmq_dev",
+  username: System.get_env("BULLMQ_DB_USER") || "postgres",
+  password: System.get_env("BULLMQ_DB_PASSWORD") || "postgres"
+
+# Or use inline mode for quick testing without BullMQ DB:
+# config :castmill, :bullmq, testing: :inline

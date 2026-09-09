@@ -36,7 +36,7 @@ defmodule Castmill.MixProject do
       {:cors_plug, "~> 3.0"},
       {:ecto_sql, "~> 3.6"},
       {:esbuild, "~> 0.7", runtime: Mix.env() == :dev},
-      {:ex_aws, "~> 2.1"},
+      {:ex_aws, "~> 2.5.9"},
       {:ex_aws_s3, "~> 2.0"},
       {:ffmpex, "~> 0.11.0"},
       {:file_type, "~> 0.1.0"},
@@ -49,7 +49,9 @@ defmodule Castmill.MixProject do
       {:jason, "~> 1.2"},
       {:mox, "~> 1.0", only: [:test]},
       {:multipart, "~> 0.4.0"},
-      {:oban, "~> 2.17"},
+      # >= 2.2.1: forwards :ssl to Postgrex (RDS force_ssl) and resolves the priv
+      # SQL dir at runtime (fixes migrations in a Mix release).
+      {:bullmq, "~> 2.2.1"},
       {:phoenix, "~> 1.7.2"},
       {:phoenix_ecto, "~> 4.4"},
       {:plug_cowboy, "~> 2.5"},
@@ -58,13 +60,16 @@ defmodule Castmill.MixProject do
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:phoenix_live_view, "~> 0.18.16"},
       {:phoenix_live_dashboard, "~> 0.7.2"},
+      {:sweet_xml, "~> 0.7"},
+      {:gen_smtp, "~> 1.0"},
       {:swoosh, "~> 1.3"},
       {:tailwind, "~> 0.2.0", runtime: Mix.env() == :dev},
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},
       {:tarams, "~> 1.8.0"},
       {:tzdata, "~> 1.1"},
-      {:uuid, "~> 1.1"},
+      # Note: UUID functionality provided by elixir_uuid (transitive dep from bullmq)
+      # Both packages provide UUID.uuid4() - elixir_uuid is preferred to avoid conflicts
       {:wax_, "~> 0.6.0"}
     ]
   end

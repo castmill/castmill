@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080">
+  <defs>
+    <linearGradient id="mainGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e"/>
+      <stop offset="50%" style="stop-color:#16213e"/>
+      <stop offset="100%" style="stop-color:#0f0f23"/>
+    </linearGradient>
+    <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+      <path d="M 60 0 L 0 0 0 60" fill="none" stroke="rgba(255,102,0,0.03)" stroke-width="1"/>
+    </pattern>
+    <pattern id="dots" width="40" height="40" patternUnits="userSpaceOnUse">
+      <circle cx="20" cy="20" r="1" fill="rgba(255,102,0,0.1)"/>
+    </pattern>
+  </defs>
+  
+  <!-- Main background -->
+  <rect width="100%" height="100%" fill="url(#mainGrad)"/>
+  
+  <!-- Subtle grid pattern -->
+  <rect width="100%" height="100%" fill="url(#grid)"/>
+  
+  <!-- Dot pattern overlay -->
+  <rect width="100%" height="100%" fill="url(#dots)"/>
+  
+  <!-- Decorative corner accents -->
+  <path d="M0 0 L200 0 L0 200 Z" fill="rgba(255,102,0,0.05)"/>
+  <path d="M1920 1080 L1720 1080 L1920 880 Z" fill="rgba(255,102,0,0.05)"/>
+  
+  <!-- Subtle glow effect -->
+  <ellipse cx="960" cy="540" rx="800" ry="400" fill="rgba(255,102,0,0.02)"/>
+</svg>

@@ -3,23 +3,26 @@ import './sidepanel.scss';
 import PanelItem from '../panel-item/panel-item';
 import { Dropdown } from '@castmill/ui-common';
 
-import { IoSettingsOutline } from 'solid-icons/io';
+import { IoSettingsOutline, IoPersonOutline } from 'solid-icons/io';
 import { AddOnTree } from '../../classes/addon-tree';
 import { AddOnNode } from '../../interfaces/addon-node.interface';
 import { store, setStore } from '../../store/store';
 import { baseUrl } from '../../env';
 import { TbChartHistogram } from 'solid-icons/tb';
-import { AiOutlineTeam } from 'solid-icons/ai';
+import { AiOutlineTeam, AiOutlineTags } from 'solid-icons/ai';
 import { RiEditorOrganizationChart } from 'solid-icons/ri';
-import { BsCalendarWeek } from 'solid-icons/bs';
+import { BsCalendarWeek, BsBuilding } from 'solid-icons/bs';
 import { useI18n } from '../../i18n';
 import { useNavigate, useLocation } from '@solidjs/router';
 
 const addOnBasePath = `${baseUrl}/assets/addons`;
 
-const SidePanelTree: Component<{ node: AddOnNode; level: number }> = (
-  props
-) => {
+const SidePanelTree: Component<{
+  node: AddOnNode;
+  level: number;
+  skipKeys?: string[];
+  basePath?: string;
+}> = (props) => {
   const { t } = useI18n();
   const addon = props.node.addon;
   const children = Array.from(props.node.children || []);
@@ -32,22 +35,45 @@ const SidePanelTree: Component<{ node: AddOnNode; level: number }> = (
     return addon.name_key ? t(addon.name_key) : addon.name;
   };
 
+  // Get the link path without wildcard suffixes (used for routes, not links)
+  const getLinkPath = () => {
+    if (!addon?.mount_path) return '';
+    // Remove wildcard suffixes like /* or /*rest from the path
+    return addon.mount_path.replace(/\/\*.*$/, '');
+  };
+
+  // Resolve base path: use provided basePath or default to org-scoped path
+  const getBasePath = () =>
+    props.basePath ?? `/org/${store.organizations.selectedId}`;
+
   return (
     <>
       <Show when={addon}>
         <Suspense fallback={<div style="height: 2.5em;"></div>}>
           <PanelItem
-            to={`/org/${store.organizations.selectedId}${addon!.mount_path || ''}`}
+            to={`${getBasePath()}${getLinkPath()}`}
             text={getAddonName()}
             level={props.level}
-            icon={lazy(() => import(`${addOnBasePath}${addon?.icon}`))}
+            icon={lazy(
+              () => import(/* @vite-ignore */ `${addOnBasePath}${addon?.icon}`)
+            )}
           />
         </Suspense>
       </Show>
       <For each={children}>
         {([name, node]) => (
-          <Show when={node.children || node.addon}>
-            <SidePanelTree node={node} level={props.level + 1} />
+          <Show
+            when={
+              (node.children || node.addon) &&
+              !(props.skipKeys && props.skipKeys.includes(name))
+            }
+          >
+            <SidePanelTree
+              node={node}
+              level={props.level + 1}
+              skipKeys={props.skipKeys}
+              basePath={props.basePath}
+            />
           </Show>
         )}
       </For>
@@ -71,6 +97,8 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
   example: "sidepanel.content.medias" create the proper entry in the panel.
   */
   const addonsPanelTree = props.addons.getSubTree('sidepanel');
+  const addonsBottomTree = props.addons.getSubTree('sidepanel.bottom');
+  const addonsNetworkTree = props.addons.getSubTree('network');
 
   return (
     <div class="castmill-sidepanel">
@@ -88,18 +116,25 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
             if (!value) {
               return;
             }
-            // Extract current path without /org/:orgId prefix
-            const currentPath =
-              location.pathname.replace(/^\/org\/[^\/]+/, '') || '/';
 
-            // Navigate to new organization with same path
-            navigate(`/org/${value}${currentPath}`);
-
-            // Update store (will be synced from URL by protected route)
+            // Update store
             setStore('organizations', {
               selectedId: value,
               selectedName: name,
             });
+
+            if (location.pathname.startsWith('/org/')) {
+              // Preserve current sub-path within the new organization
+              const currentPath =
+                location.pathname.replace(/^\/org\/[^\/]+/, '') || '/';
+              navigate(`/org/${value}${currentPath}`);
+            } else if (location.pathname === '/settings') {
+              // Settings is a global route and should not be org-prefixed
+              return;
+            } else {
+              // On non-org routes (e.g., network admin), navigate to the new org's home
+              navigate(`/org/${value}`);
+            }
           }}
         />
       </div>
@@ -112,7 +147,11 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
         />
 
         <Show when={addonsPanelTree}>
-          <SidePanelTree node={addonsPanelTree!} level={-1} />
+          <SidePanelTree
+            node={addonsPanelTree!}
+            level={-1}
+            skipKeys={['bottom']}
+          />
         </Show>
         <PanelItem
           to={`/org/${store.organizations.selectedId}/channels`}
@@ -128,17 +167,65 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
           icon={AiOutlineTeam}
         />
         <PanelItem
+          to={`/org/${store.organizations.selectedId}/tags`}
+          text={t('sidebar.tags')}
+          level={0}
+          icon={AiOutlineTags}
+        />
+        <PanelItem
           to={`/org/${store.organizations.selectedId}/usage`}
           text={t('sidebar.usage')}
           level={0}
           icon={TbChartHistogram}
         />
         <PanelItem
-          to={`/org/${store.organizations.selectedId}/settings`}
+          to="/settings"
           text={t('common.settings')}
           level={0}
           icon={IoSettingsOutline}
         />
+
+        <Show when={addonsBottomTree}>
+          <SidePanelTree node={addonsBottomTree!} level={-1} />
+        </Show>
+
+        {/* Network Admin Section - only visible to network admins */}
+        <Show when={store.network.isAdmin}>
+          <div class="network-admin-section">
+            <div class="section-divider"></div>
+            <PanelItem
+              to="/network"
+              text={t('sidebar.network')}
+              level={0}
+              icon={BsBuilding}
+            />
+            <PanelItem
+              to="/network/settings"
+              text={t('sidebar.networkSettings')}
+              level={1}
+              icon={IoSettingsOutline}
+            />
+            <PanelItem
+              to="/network/organizations"
+              text={t('sidebar.networkOrganizations')}
+              level={1}
+              icon={RiEditorOrganizationChart}
+            />
+            <PanelItem
+              to="/network/users"
+              text={t('sidebar.networkUsers')}
+              level={1}
+              icon={IoPersonOutline}
+            />
+            <Show when={addonsNetworkTree}>
+              <SidePanelTree
+                node={addonsNetworkTree!}
+                level={0}
+                basePath="/network"
+              />
+            </Show>
+          </div>
+        </Show>
       </div>
     </div>
   );

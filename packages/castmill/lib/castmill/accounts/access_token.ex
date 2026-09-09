@@ -27,7 +27,7 @@ defmodule Castmill.Accounts.AccessToken do
     case changeset do
       %Ecto.Changeset{valid?: true, changes: %{secret: secret}} ->
         changeset
-        |> put_change(:secret_hash, :crypto.hash(:sha256, secret) |> Base.encode16())
+        |> put_change(:secret_hash, :crypto.hash(:sha256, secret) |> Base.encode16(case: :lower))
 
       _ ->
         changeset

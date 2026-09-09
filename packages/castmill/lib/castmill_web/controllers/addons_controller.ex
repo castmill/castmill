@@ -10,8 +10,7 @@ defmodule CastmillWeb.AddonsController do
     List all addons available for the current signed-in user.
   """
   def index(conn, _params) do
-    # Get user from session
-    user = get_session(conn, :user)
+    user = conn.assigns[:current_user]
 
     if is_nil(user) do
       conn

@@ -98,4 +98,12 @@ export interface AddOn {
      */
     description_key: string;
   };
+
+  /**
+   * Optional path to addon-specific translations.
+   * If provided, the dashboard will lazily load translations from this path.
+   * The path should point to a directory containing JSON files named by locale (e.g., en.json, es.json).
+   * Translations will be merged into the main i18n system.
+   */
+  translations_path?: string;
 }

@@ -9,7 +9,7 @@ defmodule Castmill.Teams do
 
   alias Swoosh.Email
 
-  alias Castmill.Mailer
+  alias Castmill.EmailDelivery
   alias Castmill.Repo
 
   alias Castmill.Organizations.Organization
@@ -21,10 +21,11 @@ defmodule Castmill.Teams do
     TeamsPlaylists,
     TeamsChannels,
     TeamsDevices,
+    TeamsLayouts,
     Invitation
   }
 
-  alias Castmill.Resources.{Media, Playlist, Channel}
+  alias Castmill.Resources.{Media, Playlist, Channel, Layout}
   alias Castmill.Devices.Device
   alias Castmill.QueryHelpers
 
@@ -37,32 +38,57 @@ defmodule Castmill.Teams do
       [%Team{}, ...]
 
   """
-  def list_teams(%{
-        organization_id: organization_id,
-        search: search,
-        page: page,
-        page_size: page_size
-      }) do
+  def list_teams(
+        %{
+          organization_id: organization_id,
+          search: search,
+          page: page,
+          page_size: page_size
+        } = params
+      ) do
     offset = if page_size == nil, do: 0, else: max((page - 1) * page_size, 0)
 
     Team.base_query()
     |> Organization.where_org_id(organization_id)
     |> QueryHelpers.where_name_like(search)
-    |> order_by([t], desc: t.id)
+    |> apply_sorting(params)
     |> Ecto.Query.limit(^page_size)
     |> Ecto.Query.offset(^offset)
     |> Repo.all()
   end
 
-  def list_teams(%{search: search, page: page, page_size: page_size}) do
-    list_teams(%{organization_id: nil, search: search, page: page, page_size: page_size})
+  def list_teams(%{search: _search, page: _page, page_size: _page_size} = params) do
+    list_teams(Map.put(params, :organization_id, nil))
   end
 
   def list_teams(organization_id) do
     Team.base_query()
     |> Organization.where_org_id(organization_id)
-    |> order_by([t], desc: t.id)
+    |> Ecto.Query.order_by([t], desc: t.id)
     |> Repo.all()
+  end
+
+  # Helper function to apply sorting to a query based on params
+  defp apply_sorting(query, params) do
+    sort_key = Map.get(params, :key)
+    sort_direction = Map.get(params, :direction, "ascending")
+
+    sort_dir =
+      case sort_direction do
+        "ascending" -> :asc
+        "descending" -> :desc
+        _ -> :asc
+      end
+
+    sort_field =
+      case sort_key do
+        "name" -> :name
+        "inserted_at" -> :inserted_at
+        "updated_at" -> :updated_at
+        _ -> :name
+      end
+
+    Ecto.Query.order_by(query, [{^sort_dir, ^sort_field}])
   end
 
   def count_teams(%{organization_id: organization_id, search: search}) do
@@ -525,6 +551,12 @@ defmodule Castmill.Teams do
         :device_id,
         Device,
         :device
+      },
+      "layouts" => {
+        TeamsLayouts,
+        :layout_id,
+        Layout,
+        :layout
       }
     }
   end
@@ -633,11 +665,12 @@ defmodule Castmill.Teams do
         # now we can send the email outside the transaction.
         organization = Castmill.Organizations.get_organization(organization_id)
         network = Castmill.Networks.get_network(organization.network_id)
-        send_invitation_email(network.domain, email, token)
 
-        # Get team info and send notification if user exists
+        # Get team info for email
         team = get_team(team_id)
+        send_invitation_email(network.domain, team.name, email, token)
 
+        # Send notification if user exists
         case Castmill.Accounts.get_user_by_email(email) do
           nil ->
             # User doesn't exist yet, no notification to send
@@ -680,33 +713,31 @@ defmodule Castmill.Teams do
     |> Repo.exists?()
   end
 
-  defp send_invitation_email(baseUrl, email, token) do
-    subject = "You have been invited to a team on Castmill"
+  defp send_invitation_email(baseUrl, team_name, email, token) do
+    subject = "You have been invited to a Team on Castmill™"
 
-    body = """
-    Hello
+    {html_body, text_body} =
+      Castmill.EmailRenderer.render_team_invite(
+        team_name,
+        email,
+        token,
+        baseUrl
+      )
 
-    You have been invited to join a team on Castmill. Please click on the link below to accept the invitation.
-
-    #{baseUrl}/invite/?token=#{token}
-
-    """
-
-    deliver(email, subject, body)
+    deliver(email, subject, html_body, text_body)
   end
 
   # Delivers the email using the application mailer.
-  defp deliver(recipient, subject, body) do
+  defp deliver(recipient, subject, html_body, text_body) do
     email =
       Email.new()
       |> Email.to(recipient)
-      |> Email.from({"Castmill", "no-reply@castmill.com"})
+      |> Email.from(Application.get_env(:castmill, :mailer_from))
       |> Email.subject(subject)
-      |> Email.text_body(body)
+      |> Email.html_body(html_body)
+      |> Email.text_body(text_body)
 
-    with {:ok, _metadata} <- Mailer.deliver(email) do
-      {:ok, email}
-    end
+    EmailDelivery.deliver(email, context: "teams.invitation")
   end
 
   def get_invitation(token) do

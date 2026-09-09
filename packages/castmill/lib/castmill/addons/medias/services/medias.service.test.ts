@@ -27,7 +27,6 @@ describe('MediasService', () => {
         `${baseUrl}/dashboard/organizations/${organizationId}/medias/${mediaId}`,
         {
           method: 'DELETE',
-          credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
           },
@@ -128,7 +127,6 @@ describe('MediasService', () => {
         `${baseUrl}/dashboard/organizations/${organizationId}/medias/${mediaId}`,
         {
           method: 'PATCH',
-          credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
           },

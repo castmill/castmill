@@ -1,8 +1,11 @@
 {
   "common": {
     "save": "保存",
+    "saving": "保存中...",
     "cancel": "取消",
     "delete": "删除",
+    "deleting": "删除中...",
+    "blocking": "封锁中...",
     "edit": "编辑",
     "rename": "重命名",
     "add": "添加",
@@ -11,6 +14,7 @@
     "confirm": "确认",
     "back": "返回",
     "next": "下一步",
+    "previous": "上一页",
     "search": "搜索...",
     "loading": "加载中...",
     "error": "错误",
@@ -25,6 +29,9 @@
     "signup": "注册",
     "language": "语言",
     "create": "创建",
+    "creating": "创建中...",
+    "sending": "发送中...",
+    "clear": "清除",
     "view": "查看",
     "status": "状态",
     "created": "已创建",
@@ -42,6 +49,9 @@
     "requestedPath": "请求的路径",
     "goToDashboard": "转到仪表板",
     "copyright": "© 2011-2025 Castmill™",
+    "privacy": "隐私",
+    "terms": "条款",
+    "contact": "联系我们",
     "invitedEmail": "受邀邮箱：",
     "acceptInvitation": "接受邀请",
     "loadingInvitation": "加载邀请中...",
@@ -60,8 +70,12 @@
     "ip": "IP地址",
     "description": "描述",
     "online": "在线",
+    "offline": "离线",
     "update": "更新",
     "reset": "重置",
+    "apply": "应用",
+    "change": "更改",
+    "openInNewTab": "在新标签页中打开",
     "addedOn": "添加于",
     "lastUpdatedOn": "最后更新于",
     "details": "详情",
@@ -71,6 +85,7 @@
     "maintainance": "维护",
     "events": "事件",
     "telemetry": "遥测",
+    "timers": "计时器",
     "youIndicator": "(你)",
     "addonLoadingError": "插件加载错误",
     "filters": {
@@ -82,14 +97,24 @@
     "backToLogin": "返回登录",
     "selectImage": "选择图片",
     "selectMedia": "选择媒体",
-    "apply": "应用",
+    "selectPlaylist": "选择播放列表",
+    "searchLocation": "搜索位置...",
+    "coordinates": "坐标",
+    "address": "地址",
+    "noAddressAvailable": "无可用地址",
+    "playlist": "播放列表",
+    "noConfigurationAvailable": "没有可用配置",
+    "addPlaylist": "添加播放列表",
     "selectVideo": "选择视频",
-    "offline": "离线",
+    "widget": "Widget",
+    "selectionHint": "使用复选框选择项目以执行批量操作",
+    "selectionCount": "已选择 {count} 项",
     "no": "否"
   },
   "topbar": {
     "help": "帮助",
-    "notifications": "通知"
+    "notifications": "通知",
+    "gettingStarted": "快速入门"
   },
   "settings": {
     "title": "设置",
@@ -114,6 +139,14 @@
     "failedLoadCredentials": "加载凭据失败。请尝试刷新页面。",
     "languageSettings": "语言设置",
     "selectLanguage": "选择您的首选语言",
+    "onboardingTour": "新手引导",
+    "onboardingTourDescription": "重置引导，以便再次完成这些步骤。",
+    "onboardingTourResetButton": "重置引导",
+    "onboardingTourResetConfirmTitle": "重置新手引导？",
+    "onboardingTourResetConfirmDescription": "这将清除你的引导进度并重新显示引导。",
+    "onboardingTourResetAction": "重置引导",
+    "onboardingTourResetSuccess": "已重置新手引导。现在可以重新开始。",
+    "onboardingTourResetError": "重置新手引导失败。请重试。",
     "description": "管理您的账户信息和偏好设置",
     "confirmDeletePasskey": "您确定要删除此密钥吗？\n\n注意：这将从您的账户中删除该密钥，但您可能需要从设备的设置中手动删除它（如 iCloud 钥匙串、Google 密码管理器或 Windows Hello）。\n\n请确保在删除此密钥之前测试其他密钥是否正常工作。",
     "fullName": "全名",
@@ -164,6 +197,166 @@
     "deleteAccountPasskeyInfo": "删除后，如果您尝试使用旧密钥登录，将会失败。为避免混淆，请从您的设备设置中手动删除此账户的密钥。",
     "deleteAccountPasskeyInfoWithSignalAPI": "删除后，密钥将自动从您的设备中删除。如果您以后尝试登录，则需要创建新账户。"
   },
+  "network": {
+    "title": "网络设置",
+    "adminBadge": "网络管理员",
+    "saveSuccess": "网络设置已保存",
+    "saveError": "保存网络设置失败",
+    "errorHint": "请重试或联系支持如果问题仍然存在。",
+    "accessDenied": "访问被拒绝",
+    "accessDeniedMessage": "您无权查看网络设置。只有网络管理员才能访问此页面。",
+    "tabs": {
+      "settings": "设置",
+      "organizations": "组织",
+      "users": "用户",
+      "invitations": "邀请"
+    },
+    "stats": {
+      "organizations": "组织",
+      "users": "用户",
+      "devices": "设备",
+      "teams": "团队",
+      "storage": "总存储"
+    },
+    "overview": {
+      "networkInfo": "网络信息"
+    },
+    "identity": {
+      "title": "网络身份",
+      "description": "配置您网络的品牌和身份。",
+      "name": "网络名称",
+      "namePlaceholder": "输入网络名称",
+      "nameHelp": "您的网络名称，显示在仪表板标题中。",
+      "email": "支持邮箱",
+      "emailPlaceholder": "support@example.com",
+      "emailHelp": "此邮箱将在支持查询时显示给用户。",
+      "logo": "徽标 URL",
+      "logoPlaceholder": "https://example.com/logo.png",
+      "logoHelp": "您网络徽标图片的 URL。",
+      "copyright": "版权文本",
+      "copyrightPlaceholder": "© 2025 您的公司",
+      "copyrightHelp": "显示在仪表板页脚的版权声明。",
+      "privacyPolicyUrl": "隐私政策链接",
+      "privacyPolicyUrlPlaceholder": "https://example.com/privacy",
+      "privacyPolicyUrlHelp": "指向您的隐私政策的链接，显示在登录和注册页面。",
+      "defaultLanguage": "默认语言",
+      "defaultLanguageHelp": "新用户和登录/注册页面的默认语言。"
+    },
+    "socialLinks": {
+      "title": "社交链接",
+      "description": "配置显示在页脚的社交媒体链接。",
+      "github": "GitHub 链接",
+      "githubPlaceholder": "https://github.com/yourcompany",
+      "twitter": "X (Twitter) 链接",
+      "twitterPlaceholder": "https://x.com/yourcompany",
+      "linkedin": "LinkedIn 链接",
+      "linkedinPlaceholder": "https://linkedin.com/company/yourcompany",
+      "facebook": "Facebook 链接",
+      "facebookPlaceholder": "https://facebook.com/yourcompany"
+    },
+    "domain": {
+      "title": "域名配置",
+      "description": "域名用于识别您的网络。用户通过此域名访问仪表板。",
+      "label": "网络域名",
+      "note": "联系支持以更改您的域名。"
+    },
+    "access": {
+      "title": "访问控制",
+      "description": "控制用户如何加入您的网络并创建组织。",
+      "invitationOnly": "仅邀请",
+      "invitationOnlyDescription": "启用后，新用户只能通过邀请加入网络。公开注册将被禁用。",
+      "invitationOnlyOrgAdmins": "限制组织创建",
+      "invitationOnlyOrgAdminsDescription": "启用后，只有网络管理员才能创建新组织。普通用户无法创建自己的组织。"
+    },
+    "validation": {
+      "emailRequired": "支持邮箱为必填项",
+      "emailInvalid": "请输入有效的电子邮件地址"
+    },
+    "organizations": {
+      "createTitle": "创建组织",
+      "createDescription": "在此网络中创建一个新组织。",
+      "name": "组织名称",
+      "namePlaceholder": "输入组织名称",
+      "nameRequired": "组织名称为必填项",
+      "listTitle": "所有组织",
+      "noOrganizations": "此网络中还没有组织",
+      "noSearchResults": "未找到与您的搜索匹配的组织。",
+      "searchPlaceholder": "搜索组织...",
+      "createSuccess": "组织创建成功",
+      "createError": "创建组织失败",
+      "loadError": "加载组织失败",
+      "deleteTitle": "删除组织",
+      "deleteConfirmation": "您确定要删除\"{{name}}\"吗？此操作无法撤消，并将删除与此组织关联的所有数据。",
+      "deleteSuccess": "组织删除成功",
+      "deleteError": "删除组织失败",
+      "showingOf": "显示 {{showing}} / {{total}} 个组织",
+      "block": "封锁",
+      "unblock": "解封",
+      "blockTitle": "封锁组织",
+      "blockConfirmation": "您确定要封锁 \"{{name}}\" 吗？该组织的所有用户将无法登录。",
+      "blockSuccess": "组织封锁成功",
+      "blockError": "封锁组织失败",
+      "unblockTitle": "解封组织",
+      "unblockConfirmation": "您确定要解封 \"{{name}}\" 吗？用户将能够重新登录。",
+      "unblockSuccess": "组织解封成功",
+      "unblockError": "解封组织失败"
+    },
+    "users": {
+      "listTitle": "所有用户",
+      "name": "名称",
+      "email": "电子邮件",
+      "noUsers": "此网络中还没有用户",
+      "searchPlaceholder": "按名称或邮箱搜索...",
+      "inviteTitle": "邀请用户",
+      "inviteDescription": "邀请用户加入此网络中的组织。",
+      "inviteButton": "邀请用户",
+      "inviteModalTitle": "邀请用户加入组织",
+      "selectOrganization": "组织",
+      "selectOrganizationPlaceholder": "选择组织...",
+      "inviteEmailLabel": "电子邮件地址",
+      "inviteEmailPlaceholder": "输入电子邮件地址",
+      "roleLabel": "角色",
+      "roleAdmin": "管理员",
+      "roleMember": "成员",
+      "sendInvite": "发送邀请",
+      "inviteSuccess": "邀请发送成功",
+      "inviteError": "邀请发送失败",
+      "inviteEmailRequired": "电子邮件地址是必填的",
+      "inviteEmailInvalid": "请输入有效的电子邮件地址",
+      "block": "封锁",
+      "unblock": "解封",
+      "blockTitle": "封锁用户",
+      "blockConfirmation": "您确定要封锁 \"{{name}}\" 吗？该用户将无法登录。",
+      "blockSuccess": "用户封锁成功",
+      "blockError": "封锁用户失败",
+      "unblockTitle": "解封用户",
+      "unblockConfirmation": "您确定要解封 \"{{name}}\" 吗？该用户将能够重新登录。",
+      "unblockSuccess": "用户解封成功",
+      "unblockError": "解封用户失败",
+      "deleteTitle": "删除用户",
+      "deleteConfirmation": "您确定要删除 \"{{name}}\" 吗？此操作无法撤销。",
+      "deleteSuccess": "用户删除成功",
+      "deleteError": "删除用户失败"
+    },
+    "invitations": {
+      "title": "网络邀请",
+      "description": "查看和管理此网络中新组织的待处理邀请。",
+      "noInvitations": "没有待处理的邀请。",
+      "organizationName": "组织名称",
+      "expires": "过期时间",
+      "loadError": "加载邀请失败",
+      "deleteTitle": "删除邀请",
+      "deleteConfirmation": "您确定要删除发送给 \"{{email}}\" 的邀请吗？",
+      "deleteSuccess": "邀请删除成功",
+      "deleteError": "删除邀请失败"
+    },
+    "status": {
+      "active": "活跃",
+      "blocked": "已封锁"
+    },
+    "blockReason": "原因（可选）",
+    "blockReasonPlaceholder": "输入封锁原因..."
+  },
   "usage": {
     "title": "使用情况",
     "resourceUsage": "资源使用情况",
@@ -177,6 +370,17 @@
     "approachingLimit": "接近限制",
     "noUsageData": "没有可用的使用数据",
     "unableToLoad": "无法加载资源使用信息",
+    "resources": {
+      "medias": "媒体文件",
+      "storage": "存储",
+      "users": "用户",
+      "devices": "设备",
+      "playlists": "播放列表",
+      "channels": "频道",
+      "teams": "团队",
+      "widgets": "小部件",
+      "layouts": "布局"
+    },
     "errors": {
       "fetchUsageData": "获取使用数据失败：{{error}}"
     }
@@ -275,9 +479,76 @@
     },
     "memberSelection": {
       "selectUser": "选择用户",
-      "searchUser": "搜索用户..."
+      "searchUser": "搜索用户...",
+      "noUsersAvailable": "没有可邀请的用户。",
+      "inviteToOrgFirst": "用户必须先被邀请加入组织，然后才能被添加到团队。"
     },
     "teamsRemovedSuccessfully": "团队删除成功"
+  },
+  "tags": {
+    "title": "标签",
+    "addTag": "添加标签",
+    "createTag": "创建标签",
+    "editTag": "编辑标签",
+    "deleteTag": "删除标签",
+    "newTag": "新标签",
+    "tagName": "标签名称",
+    "tagColor": "标签颜色",
+    "tagGroup": "标签组",
+    "assignedTags": "已分配标签",
+    "availableTags": "可用标签",
+    "noTags": "无标签",
+    "noTagsAvailable": "没有可用标签",
+    "noMatchingTags": "没有匹配的标签",
+    "allTagsAssigned": "所有标签已分配",
+    "addToResource": "添加标签",
+    "removeFromResource": "移除标签",
+    "filterByTags": "按标签筛选...",
+    "clearAll": "清除全部",
+    "manageTags": "管理标签",
+    "colorPicker": "选择颜色",
+    "searchTags": "搜索标签...",
+    "filterMode": {
+      "any": "任意",
+      "all": "全部",
+      "description": "匹配具有任意或全部所选标签的资源"
+    },
+    "confirmDelete": "您确定要删除标签 \"{{name}}\" 吗？",
+    "confirmDeleteMultiple": "您确定要删除以下标签吗？",
+    "confirmDeleteGroup": "您确定要删除标签组 \"{{name}}\" 吗？该组中的所有标签也将被永久删除。",
+    "maxTagsReached": "已达到最大 {{max}} 个标签",
+    "groups": {
+      "title": "标签组",
+      "addGroup": "添加组",
+      "newGroup": "新组",
+      "editGroup": "编辑组",
+      "deleteGroup": "删除组",
+      "noGroups": "无标签组",
+      "ungrouped": "未分组",
+      "untagged": "未标记"
+    },
+    "messages": {
+      "tagCreated": "标签 \"{{name}}\" 创建成功",
+      "tagUpdated": "标签 \"{{name}}\" 更新成功",
+      "tagDeleted": "标签 \"{{name}}\" 删除成功",
+      "tagAddedToResource": "标签添加成功",
+      "tagRemovedFromResource": "标签移除成功",
+      "tagsUpdated": "标签更新成功",
+      "groupCreated": "标签组 \"{{name}}\" 创建成功",
+      "groupUpdated": "标签组 \"{{name}}\" 更新成功",
+      "groupDeleted": "标签组 \"{{name}}\" 删除成功"
+    },
+    "errors": {
+      "createTag": "创建标签时出错：{{error}}",
+      "updateTag": "更新标签时出错：{{error}}",
+      "deleteTag": "删除标签时出错：{{error}}",
+      "tagResource": "向资源添加标签时出错：{{error}}",
+      "untagResource": "从资源移除标签时出错：{{error}}",
+      "createGroup": "创建标签组时出错：{{error}}",
+      "updateGroup": "更新标签组时出错：{{error}}",
+      "deleteGroup": "删除标签组时出错：{{error}}",
+      "loadFailed": "加载标签失败"
+    }
   },
   "login": {
     "title": "登录",
@@ -289,12 +560,39 @@
     "loading": "加载中...",
     "loginWithPasskey": "使用密钥登录",
     "privacyPolicy": "隐私政策",
-    "lostCredentials": "忘记凭据？"
+    "privacyNotice": "我们重视您的隐私。请阅读我们的",
+    "lostCredentials": "忘记凭据？",
+    "invitationOnlyNotice": "没有账户？此服务需要邀请才能注册。",
+    "passkeysNotSupported": "您的浏览器不支持密钥。请使用现代浏览器登录。",
+    "errors": {
+      "authenticationFailed": "身份验证失败。请重试。",
+      "userBlocked": "您的账户已被封禁。原因：{{reason}}",
+      "organizationBlocked": "您的组织已被封禁。原因：{{reason}}",
+      "signupFailed": "无法开始注册。请稍后再试。"
+    }
   },
   "credentialRecovery": {
     "title": "恢复您的凭据",
     "checkYourEmail": "检查您的电子邮件",
     "addNewPasskey": "添加新密钥"
+  },
+  "setupPasskey": {
+    "title": "设置您的密钥",
+    "subtitle": "为 {{domain}} 创建密钥，以便直接登录。",
+    "instructions": "欢迎，{{email}}！点击下方按钮为此域名创建密钥。",
+    "createButton": "创建密钥",
+    "passkeysNotSupported": "您的浏览器不支持密钥。",
+    "invalidLink": "无效的设置链接。",
+    "expiredLink": "此链接已过期。请申请新链接。",
+    "verificationFailed": "验证链接失败。",
+    "verifying": "正在验证链接...",
+    "creatingPasskey": "正在创建密钥...",
+    "challengeFailed": "无法开始创建密钥。",
+    "creationCancelled": "密钥创建已取消。",
+    "noPublicKey": "无法获取公钥。",
+    "registrationFailed": "注册密钥失败。",
+    "success": "密钥已创建！正在登录...",
+    "unexpectedError": "出现错误，请重试。"
   },
   "errors": {
     "generic": "发生错误。请重试。",
@@ -306,7 +604,8 @@
     "checkServerRunning": "确保 Castmill 服务器正在运行",
     "checkNetworkConnection": "检查您的网络连接",
     "checkServerUrl": "验证配置中的服务器 URL",
-    "retryConnection": "重试连接"
+    "retryConnection": "重试连接",
+    "authenticationError": "认证错误：{{message}}"
   },
   "sidebar": {
     "organization": "组织",
@@ -316,9 +615,16 @@
     "devices": "设备",
     "content": "内容",
     "playlists": "播放列表",
+    "layouts": "布局",
     "medias": "媒体",
     "widgets": "Widgets",
-    "members": "成员"
+    "members": "成员",
+    "network": "网络",
+    "networkOverview": "概览",
+    "networkSettings": "设置",
+    "networkOrganizations": "组织",
+    "networkUsers": "用户与邀请",
+    "tags": "标签"
   },
   "channels": {
     "title": "频道",
@@ -332,6 +638,7 @@
     "confirmRemoveChannels": "您确定要删除以下频道吗？",
     "enterChannelName": "输入频道名称",
     "defaultPlaylist": "默认播放列表",
+    "currentPlaylist": "当前播放列表",
     "selectPlaylist": "选择播放列表",
     "clearDefaultPlaylist": "清除默认播放列表",
     "dragPlaylists": "拖动播放列表",
@@ -340,8 +647,14 @@
     "removeChannelEntry": "删除频道条目",
     "cannotDeleteChannel": "无法删除频道",
     "success": {
+      "added": "频道 {{name}} 添加成功",
+      "created": "频道 {{name}} 创建成功",
+      "updated": "频道 {{name}} 更新成功",
       "updateDefaultPlaylist": "默认播放列表更新成功",
       "clearDefaultPlaylist": "默认播放列表清除成功"
+    },
+    "info": {
+      "contentRequired": "要显示内容，请为此频道设置默认播放列表或添加一个定时条目。"
     },
     "errors": {
       "removeChannel": "删除频道 {{name}} 时出错：{{error}}",
@@ -437,7 +750,9 @@
     "buildPlaylist": "在此处创建您的播放列表",
     "renamePlaylist": "重命名播放列表",
     "playlistUpdated": "播放列表 \"{{name}}\" 已成功更新",
+    "playlistCreated": "播放列表 \"{{name}}\" 已成功创建",
     "errorUpdating": "更新播放列表 {{name}} 时出错：{{error}}",
+    "errorCreating": "创建播放列表时出错：{{error}}",
     "removePlaylist": "删除播放列表",
     "removePlaylists": "删除播放列表",
     "confirmRemovePlaylist": "您确定要删除播放列表 \"{{name}}\" 吗？",
@@ -446,6 +761,9 @@
     "errorRemovingPlaylists": "删除播放列表时出错：{{error}}",
     "enterPlaylistName": "输入播放列表名称",
     "dragToAdd": "拖动以添加",
+    "searchWidgets": "搜索小部件...",
+    "dropHereToAddAtEnd": "拖放到此处以添加到末尾",
+    "duration": "时长",
     "aspectRatio": "宽高比",
     "aspectRatioWidth": "宽度",
     "aspectRatioHeight": "高度",
@@ -471,27 +789,172 @@
       "aspectRatioMax": "值必须为100或更少",
       "aspectRatioExtreme": "宽高比太极端（最大比例为10:1）",
       "updateAspectRatio": "更新宽高比时出错：{{error}}"
-    }
+    },
+    "credentialsRequired": "需要凭据",
+    "credentialsRequiredDescription": "Widget \"{{widget}}\" 在添加到播放列表之前需要配置凭据。",
+    "missingIntegrations": "缺少集成",
+    "goToIntegrations": "前往集成",
+    "widgetModalTitle": "小工具 \"{{name}}\"",
+    "configureYourWidget": "配置您的小工具"
+  },
+  "layouts": {
+    "title": "布局",
+    "addLayout": "添加布局",
+    "createNewLayout": "创建新布局",
+    "layoutTitle": "布局 \"{{name}}\"",
+    "layoutDetails": "布局详情",
+    "deleteLayout": "删除布局",
+    "deleteLayouts": "删除布局",
+    "confirmDelete": "确定要删除 \"{{name}}\" 吗？",
+    "confirmDeleteMultiple": "确定要删除 {{count}} 个布局吗？",
+    "deleteSuccess": "布局 \"{{name}}\" 删除成功",
+    "saveSuccess": "布局保存成功",
+    "addSuccess": "布局创建成功",
+    "enterLayoutName": "输入布局名称",
+    "searchPlaceholder": "搜索布局...",
+    "noLayouts": "未找到布局",
+    "aspectRatio": "宽高比",
+    "customAspectRatio": "自定义宽高比",
+    "invalidAspectRatio": "格式无效。请使用 宽:高（例如 16:9）",
+    "extremeAspectRatio": "宽高比过于极端",
+    "zones": "区域",
+    "addZone": "添加区域",
+    "zoneProperties": "区域属性",
+    "templates": "模板",
+    "bringForward": "向前移动",
+    "sendBackward": "向后移动",
+    "selectLayout": "选择布局",
+    "searchLayouts": "搜索布局...",
+    "assignPlaylists": "为区域分配播放列表",
+    "zonesCount": "{{count}} 个区域"
   },
   "widgets": {
     "title": "Widgets",
     "uploadWidget": "上传 Widget",
     "uploadDescription": "上传 Widget JSON 定义文件。",
+    "upload": {
+      "jsonDescription": "上传包含组件定义的 JSON 文件。",
+      "requiredFields": "必填字段",
+      "and": "和",
+      "exampleFormat": "示例格式",
+      "dragAndDropHint": "或将 JSON 或 ZIP 文件拖放到此处...",
+      "ready": "就绪",
+      "invalidFileType": "文件类型无效。仅支持 JSON 和 ZIP 文件。",
+      "invalidWidgetJson": "组件 JSON 无效：必须包含 \"name\" 和 \"template\" 字段",
+      "validationFailed": "验证失败",
+      "uploadFailed": "上传失败",
+      "uploadedSuccessfully": "上传成功",
+      "uploadError": "上传错误"
+    },
     "widgetDetails": "Widget 详情",
     "updateInterval": "更新间隔",
     "viewDetails": "查看详情",
+    "delete": "删除",
+    "deleteConfirmTitle": "删除 Widget",
+    "deleteConfirmMessage": "您确定要删除 \"{{widget}}\" 吗？",
+    "deleteConfirmUsageWarning": "Widget \"{{widget}}\" 当前在 {{count}} 个播放列表中使用。删除它将从这些播放列表中移除所有实例。",
+    "usedInPlaylists": "在以下播放列表中使用：",
+    "deleteCascadeNote": "此操作无法撤消。",
     "template": "模板",
     "optionsSchema": "选项架构",
-    "dataSchema": "数据架构"
+    "dataSchema": "数据架构",
+    "noAssets": "此 Widget 没有捆绑的资源。",
+    "assets": {
+      "title": "资源",
+      "icons": "图标",
+      "images": "图片",
+      "fonts": "字体",
+      "styles": "样式"
+    },
+    "spotify": {
+      "title": "Spotify 连接",
+      "connectButton": "连接到 Spotify",
+      "disconnectButton": "断开连接",
+      "connectDescription": "连接您的 Spotify 账户以在数字标牌上显示当前播放的曲目。",
+      "connected": "已连接",
+      "connectedSince": "自 {{date}} 起连接",
+      "connectionSuccess": "成功连接到 Spotify！",
+      "connectionFailed": "连接 Spotify 失败。请重试。",
+      "disconnectNotSupported": "暂不支持断开连接。请从 Spotify 账户设置中撤销访问权限。"
+    },
+    "integrations": {
+      "title": "集成",
+      "noIntegrations": "此 Widget 没有配置集成。",
+      "configure": "配置",
+      "configured": "已配置",
+      "notConfigured": "未配置",
+      "requiresAuth": "需要身份验证",
+      "authType": "身份验证类型",
+      "oauth2": "OAuth 2.0",
+      "apiKey": "API 密钥",
+      "credentials": "凭据",
+      "saveCredentials": "保存凭据",
+      "testConnection": "测试连接",
+      "testSuccess": "连接测试成功！",
+      "testFailed": "连接测试失败：{{error}}",
+      "credentialsSaved": "凭据保存成功！",
+      "credentialsSaveFailed": "保存凭据失败：{{error}}",
+      "credentialsConfigured": "API 凭据已配置",
+      "updateCredentials": "更新凭据",
+      "deleteCredentials": "删除凭据",
+      "connectWith": "使用 {{provider}} 连接",
+      "connectedTo": "已连接到 {{provider}}",
+      "disconnect": "断开连接",
+      "confirmDisconnect": "您确定要断开与 {{provider}} 的连接吗？您需要重新连接才能使用此集成。",
+      "disconnected": "已断开与 {{provider}} 的连接",
+      "disconnectFailed": "断开连接失败：{{error}}",
+      "reconnect": "重新连接",
+      "lastValidated": "上次验证：{{date}}",
+      "scopeOrganization": "组织范围",
+      "scopeWidget": "Widget 特定",
+      "pullMode": "数据获取",
+      "pushMode": "Webhook",
+      "pullInterval": "每 {{seconds}} 秒更新",
+      "fieldRequired": "{{field}} 是必需的",
+      "connectionStatus": "连接状态",
+      "valid": "有效",
+      "invalid": "无效",
+      "pending": "等待设置",
+      "enterClientCredentials": "在下方输入您的 {{provider}} API 凭据：",
+      "afterSavingCredentials": "保存凭据后，点击下方按钮以授权 {{provider}}：",
+      "networkCredentialsConfigured": "您的网络管理员已配置 {{provider}} 凭据。只需点击下方按钮即可连接您的账户。",
+      "noConfigurationRequired": "无需配置",
+      "optional": "可选"
+    },
+    "translations": "翻译"
   },
   "devices": {
     "setDeviceChannel": "设置设备频道",
     "selectChannel": "选择频道",
     "preview": {
-      "placeholder": "预览"
+      "placeholder": "预览",
+      "noChannels": "此设备未分配频道",
+      "noScheduledContent": "此时没有安排内容",
+      "errorLoadingPlaylist": "加载播放列表内容失败",
+      "errorInitializing": "初始化预览失败",
+      "currentlyPlaying": "当前从频道安排",
+      "note": "这显示设备现在根据频道时间表应该播放的内容，不一定是设备上实际显示的内容。"
     },
     "telemetry": {
-      "placeholder": "跟踪、日志、指标和连接性(WiFi质量等)"
+      "placeholder": "跟踪、日志、指标和连接性(WiFi质量等)",
+      "storage": "存储",
+      "memory": "内存",
+      "cpu": "CPU 使用率",
+      "cpuLoad": "CPU 平均负载",
+      "network": "网络",
+      "connectionType": "连接类型",
+      "wifiSignal": "WiFi 信号",
+      "temperature": "温度",
+      "fanSpeed": "风扇转速",
+      "battery": "电池",
+      "charging": "充电中",
+      "uptime": "运行时间",
+      "refresh": "刷新遥测数据",
+      "offlineWarning": "设备离线。遥测数据仅在设备连接时可用。",
+      "noData": "该设备没有可用的遥测数据。",
+      "daysShort": "天",
+      "hoursShort": "时",
+      "minutesShort": "分"
     },
     "maintenance": {
       "refresh": "刷新",
@@ -506,11 +969,57 @@
       "checkUpdatesDescription": "检查更新并安装它们。这不会重新启动设备",
       "updateFirmware": "更新固件",
       "updateFirmwareDescription": "更新设备的固件",
-      "offlineMessage": "设备处于离线状态,因此无法向其发送命令"
+      "offlineMessage": "设备处于离线状态,因此无法向其发送命令",
+      "autorecoveryUpdated": "自动恢复已更新",
+      "autorecoveryUpdateFailed": "自动恢复更新失败",
+      "edit": "编辑",
+      "enableForOneHour": "启用一小时",
+      "enableForever": "永久启用",
+      "disable": "禁用",
+      "recoverLostSettingsLabel": "恢复丢失设置",
+      "disabled": "已禁用",
+      "enabledMinutesRemaining": "已启用（剩余 {{minutes}} 分钟）",
+      "enabledForever": "永久启用"
+    },
+    "cache": {
+      "title": "设备缓存",
+      "items": "缓存项",
+      "dataTab": "数据",
+      "codeTab": "代码",
+      "mediaTab": "媒体",
+      "deleteSelected": "删除选定项",
+      "clearAll": "清除全部",
+      "confirmDelete": "删除缓存条目",
+      "confirmDeleteMessage": "确定要删除此缓存条目吗？URL：{{url}}",
+      "confirmDeleteMultiple": "删除多个条目",
+      "confirmDeleteMultipleMessage": "确定要删除 {{count}} 个缓存条目吗？",
+      "confirmClearAll": "清除所有缓存",
+      "confirmClearAllMessage": "确定要清除所有 {{type}} 缓存条目吗？此操作无法撤消。",
+      "deleteSuccess": "缓存条目删除成功",
+      "deleteMultipleSuccess": "成功删除 {{count}} 个缓存条目",
+      "clearAllSuccess": "成功清除所有缓存条目",
+      "deleteError": "删除缓存时出错：{{error}}",
+      "offlineWarning": "设备当前离线。在设备重新上线之前，无法获取缓存信息。"
+    },
+    "events": {
+      "title": "设备事件",
+      "items": "事件",
+      "filterError": "错误",
+      "filterWarning": "警告",
+      "filterInfo": "信息",
+      "filterOnline": "在线",
+      "filterOffline": "离线",
+      "clearAll": "清除所有事件",
+      "confirmClearAll": "清除所有事件",
+      "confirmClearAllMessage": "确定要删除此设备的所有事件吗？此操作无法撤消。",
+      "clearAllSuccess": "成功删除 {{count}} 个事件",
+      "deleteError": "删除事件时出错：{{error}}"
     },
     "errors": {
       "setChannelFailed": "设置设备频道失败:{{error}}",
-      "commandFailed": "处理您的请求时发生错误"
+      "commandFailed": "处理您的请求时发生错误",
+      "invalidPincode": "PIN码无效。请检查设备上显示的 PIN 码，然后重试。",
+      "pincodeExpired": "该 PIN 码已过期。请重新开始设备注册流程。"
     },
     "assignedChannels": "已分配的频道",
     "addChannel": "添加频道",
@@ -537,6 +1046,20 @@
     "errorRegisteringDevice": "注册设备时出错：{{error}}",
     "errorRemovingDevice": "删除设备{{name}}时出错：{{error}}",
     "errorRemovingDevices": "删除设备时出错：{{error}}",
+    "enterDescription": "输入描述",
+    "drawerTitle": "设备 \"{{name}}\"",
+    "info": {
+      "title": "信息",
+      "platform": "平台",
+      "playerVersion": "播放器版本",
+      "operatingSystem": "操作系统",
+      "hardware": "硬件",
+      "environmentVersion": "环境版本",
+      "chromiumVersion": "Chromium 版本",
+      "v8Version": "V8 版本",
+      "nodeVersion": "Node.js 版本",
+      "userAgent": "用户代理"
+    },
     "remoteControl": {
       "title": "远程控制",
       "status": "状态",
@@ -583,7 +1106,8 @@
   },
   "validation": {
     "fieldRequired": "此字段为必填项",
-    "minLength": "此字段必须至少包含 {{min}} 个字符"
+    "minLength": "此字段必须至少包含 {{min}} 个字符",
+    "invalidCoordinates": "此字段必须包含有效的坐标"
   },
   "plurals": {
     "items": {
@@ -607,12 +1131,16 @@
     "title": "注册",
     "continueWithPasskey": "使用密钥继续",
     "privacyPolicy": "隐私政策",
+    "privacyNotice": "我们重视您的隐私。请阅读我们的",
     "checkYourEmail": "检查您的电子邮件",
     "errors": {
       "couldNotCreateCredential": "无法创建凭据",
       "couldNotGetPublicKey": "无法获取公钥",
       "invalidCredential": "凭据无效",
       "signupFailed": "注册时出现问题，请联系支持。错误：{{error}}"
+    },
+    "success": {
+      "accountCreated": "账号创建成功！"
     }
   },
   "search": {
@@ -728,12 +1256,21 @@
   "filters": {
     "teamLabel": "团队",
     "teamPlaceholder": "选择团队",
-    "teamClear": "清除团队筛选"
+    "teamClear": "清除团队筛选",
+    "tagLabel": "标签",
+    "tagPlaceholder": "按标签筛选…",
+    "tagClear": "清除标签筛选",
+    "tagSearchPlaceholder": "搜索标签…",
+    "tagFilterModeAny": "任一",
+    "tagFilterModeAll": "全部",
+    "noMatches": "无匹配项",
+    "noItems": "无项目"
   },
   "shortcuts": {
     "showShortcutsLegend": "显示键盘快捷键",
     "closeDialog": "关闭对话框",
     "gotoPlaylists": "转到播放列表",
+    "gotoLayouts": "转到布局",
     "gotoMedias": "转到媒体",
     "gotoWidgets": "转到小部件",
     "gotoChannels": "转到频道",
@@ -755,5 +1292,179 @@
       "title": "键盘快捷键",
       "description": "使用这些快捷键更快地导航"
     }
+  },
+  "onboarding": {
+    "title": "欢迎使用 Castmill！",
+    "subtitle": "让我们从命名您的组织开始。",
+    "organizationNameLabel": "组织名称",
+    "organizationNamePlaceholder": "输入您的组织名称",
+    "helpText": "此名称将用于识别您的工作空间。您可以稍后在设置中更改它。",
+    "continueButton": "继续",
+    "success": "组织设置完成！",
+    "errors": {
+      "organizationNameRequired": "组织名称为必填项",
+      "organizationNameTooShort": "组织名称必须至少包含 2 个字符",
+      "organizationNameTooLong": "组织名称必须少于 50 个字符",
+      "organizationNameTaken": "此组织名称已被使用。请选择其他名称。",
+      "failed": "设置失败。请重试。"
+    }
+  },
+  "onboardingTour": {
+    "title": "入门指南",
+    "progressText": "已完成 {{current}}/{{total}} 步",
+    "markComplete": "标记为完成",
+    "stepCompleted": "步骤已完成！",
+    "stepCompletedBadge": "已完成",
+    "allStepsComplete": "恭喜！您已完成所有入门步骤！",
+    "dismissed": "入门指南已关闭。您可以随时从设置中重新启动。",
+    "dismissConfirmTitle": "关闭入门指南？",
+    "dismissConfirmMessage": "您可以随时通过顶部工具栏中的火箭图标重新打开。",
+    "skip": "跳过",
+    "finish": "完成指南",
+    "goToStep": "前往第 {{step}} 步",
+    "learnMore": "了解更多",
+    "steps": {
+      "findGuide": {
+        "title": "随时找到此指南",
+        "description": "在顶部导航栏中找到火箭图标。您可以随时点击它重新打开此入门指南，继续上次的进度。",
+        "action": "展示给我看"
+      },
+      "chooseLanguage": {
+        "title": "选择您的语言",
+        "description": "从顶部导航栏的下拉菜单中选择您喜欢的语言。这将翻译整个应用程序界面，使您更容易使用。",
+        "action": "选择语言"
+      },
+      "uploadMedia": {
+        "title": "上传您的第一个媒体",
+        "description": "首先上传您想在数字标牌屏幕上显示的图片、视频或其他内容。您可以拖放文件或使用上传按钮。",
+        "action": "前往媒体库"
+      },
+      "createPlaylist": {
+        "title": "创建您的第一个播放列表",
+        "description": "将您的内容组织到播放列表中。添加媒体文件和小部件以创建引人入胜的内容序列。您可以为每个项目设置显示持续时间和过渡效果。",
+        "action": "前往播放列表"
+      },
+      "createChannel": {
+        "title": "设置频道",
+        "description": "频道结合了播放列表和时间表。创建频道并分配默认播放列表以控制一天中不同时间播放的内容。",
+        "action": "前往频道"
+      },
+      "registerDevice": {
+        "title": "注册您的第一台设备",
+        "description": "先打开播放器获取注册码，然后在这里输入该代码来注册设备。提示：可在电脑上打开浏览器播放器进行测试—使用 {{playerUrl}}。",
+        "action": "前往设备"
+      },
+      "assignChannel": {
+        "title": "将频道分配给设备",
+        "description": "将频道链接到您的设备，使其知道要显示什么内容。每台设备一次只能分配一个频道，但您可以随时更改。",
+        "action": "管理设备"
+      },
+      "advancedPlaylist": {
+        "title": "使用布局创建高级播放列表",
+        "description": "通过使用布局同时显示多个项目，将您的内容提升到一个新的水平。将屏幕分成多个区域，在每个区域显示不同的内容。",
+        "action": "探索布局"
+      },
+      "createTagGroup": {
+        "title": "使用标签组进行整理",
+        "description": "前往标签页面，创建您的第一个标签组——例如“位置”或“活动”。标签组让您将标签归类为有意义的维度，为树状视图提供支持。",
+        "action": "前往标签"
+      },
+      "tagContent": {
+        "title": "为您的内容添加标签",
+        "description": "打开任意媒体项目并为其分配标签。标签使您的内容可搜索、可筛选和可组织。您还可以选择多个项目并一次性为它们添加标签。",
+        "action": "前往媒体库"
+      },
+      "exploreTreeView": {
+        "title": "探索树状视图",
+        "description": "切换到树状视图，查看按标签组整理的内容。展开标签以深入浏览，重新排列维度，发现全新的资源库导航方式。",
+        "action": "尝试树状视图"
+      }
+    },
+    "errors": {
+      "failedToCompleteStep": "标记步骤为完成失败。请重试。",
+      "failedToDismiss": "关闭指南失败。请重试。"
+    }
+  },
+  "medias": {
+    "upload": {
+      "fileTooLarge": "文件大小（{{fileSize}}）超过最大上传限制 {{maxSize}}",
+      "largeFileWarning": "大文件（{{fileSize}}）。上传可能需要一段时间。",
+      "noValidFiles": "没有有效的文件可上传。",
+      "uploadError": "上传文件时出错。",
+      "uploadFailed": "上传失败：{{error}}",
+      "serverError": "服务器错误（状态 {{status}}）",
+      "unknownError": "未知错误"
+    },
+    "thumbnail": {
+      "failedTitle": "转码失败",
+      "failedDefaultMessage": "无法自动生成预览。"
+    },
+    "drawerTitle": "媒体 \"{{name}}\"",
+    "mediaUpdated": "媒体 \"{{name}}\" 更新成功",
+    "errorUpdating": "更新媒体 {{name}} 时出错：{{error}}"
+  },
+  "dashboard": {
+    "noOrganizations": {
+      "title": "没有组织",
+      "description": "您尚未加入此网络中的任何组织。请联系您的网络管理员以获取访问权限。"
+    }
+  },
+  "aspectRatio": {
+    "custom": "自定义"
+  },
+  "deviceTimers": {
+    "title": "设备电源计时器",
+    "description": "配置设备何时自动打开和关闭",
+    "onTimers": "打开计时器",
+    "offTimers": "关闭计时器",
+    "addOnTimer": "添加打开计时器",
+    "addOffTimer": "添加关闭计时器",
+    "time": "时间",
+    "days": "天",
+    "deleteTimer": "删除计时器",
+    "saveTimers": "保存计时器",
+    "maxTimersReached": "已达到最多6个计时器",
+    "monday": "一",
+    "tuesday": "二",
+    "wednesday": "三",
+    "thursday": "四",
+    "friday": "五",
+    "saturday": "六",
+    "sunday": "日",
+    "mon": "一",
+    "tue": "二",
+    "wed": "三",
+    "thu": "四",
+    "fri": "五",
+    "sat": "六",
+    "sun": "日",
+    "allDays": "全天",
+    "noTimers": "未配置计时器",
+    "timersSaved": "计时器保存成功",
+    "timersLoadError": "加载计时器出错",
+    "timersSaveError": "保存计时器出错",
+    "playerOffByTimer": "播放已由计时器关闭",
+    "nextOnTime": "下次定时打开: {time}",
+    "notSupported": "此设备不支持计时器硬件控制。 使用软件备用方案。"
+  },
+  "deviceSchedule": {
+    "title": "设备排程",
+    "description": "定义设备应何时开启。在网格上点击并拖动以创建排程条目。在计划时间之外，设备将关闭。如果未设置条目，设备始终开启。",
+    "mon": "一",
+    "tue": "二",
+    "wed": "三",
+    "thu": "四",
+    "fri": "五",
+    "sat": "六",
+    "sun": "日",
+    "save": "保存排程",
+    "reset": "重置",
+    "delete": "删除条目",
+    "onLabel": "开启",
+    "noScheduleAlwaysOn": "未设置排程 — 设备始终开启",
+    "saved": "排程已保存并发送到设备",
+    "savedOffline": "排程已保存。设备离线 — 重新连接时将发送计时器。",
+    "loadError": "加载排程出错",
+    "saveError": "保存排程出错"
   }
 }

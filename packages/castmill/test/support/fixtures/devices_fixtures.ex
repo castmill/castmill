@@ -15,8 +15,8 @@ defmodule Castmill.DevicesFixtures do
       |> Enum.into(%{
         name: "Hangar 42",
         last_ip: "192.168.1.2",
-        hardware_id: "some device id",
-        token: "some token",
+        hardware_id: "hw-#{System.unique_integer([:positive])}",
+        token: "token-#{System.unique_integer([:positive])}",
         user_agent: "some user agent",
         timezone: "Europe/Amsterdam",
         version: "1.0.0"
@@ -35,7 +35,7 @@ defmodule Castmill.DevicesFixtures do
         %{
           version: "1.0.0",
           device_ip: "192.168.1.2",
-          hardware_id: "some device id",
+          hardware_id: "hw-reg-#{System.unique_integer([:positive])}",
           timezone: "Europe/Amsterdam",
           loc_lat: "52.370216",
           loc_long: "4.895168",

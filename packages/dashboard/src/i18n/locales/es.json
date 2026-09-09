@@ -1,8 +1,11 @@
 {
   "common": {
     "save": "Guardar",
+    "saving": "Guardando...",
     "cancel": "Cancelar",
     "delete": "Eliminar",
+    "deleting": "Eliminando...",
+    "blocking": "Bloqueando...",
     "edit": "Editar",
     "rename": "Renombrar",
     "add": "Añadir",
@@ -17,6 +20,7 @@
     "confirm": "Confirmar",
     "back": "Atrás",
     "next": "Siguiente",
+    "previous": "Anterior",
     "search": "Buscar...",
     "loading": "Cargando...",
     "error": "Error",
@@ -31,6 +35,9 @@
     "signup": "Registrarse",
     "language": "Idioma",
     "create": "Crear",
+    "creating": "Creando...",
+    "sending": "Enviando...",
+    "clear": "Limpiar",
     "view": "Ver",
     "status": "Estado",
     "created": "Creado",
@@ -48,6 +55,9 @@
     "requestedPath": "Ruta solicitada",
     "goToDashboard": "Ir al Panel",
     "copyright": "© 2011-2025 Castmill™",
+    "privacy": "Privacidad",
+    "terms": "Términos",
+    "contact": "Contacto",
     "invitedEmail": "Correo electrónico invitado:",
     "acceptInvitation": "Aceptar invitación",
     "loadingInvitation": "Cargando invitación...",
@@ -69,6 +79,8 @@
     "update": "Actualizar",
     "reset": "Restablecer",
     "apply": "Aplicar",
+    "change": "Cambiar",
+    "openInNewTab": "Abrir en nueva pestaña",
     "addedOn": "Agregado el",
     "lastUpdatedOn": "Última actualización el",
     "details": "Detalles",
@@ -78,6 +90,7 @@
     "maintainance": "Mantenimiento",
     "events": "Eventos",
     "telemetry": "Telemetría",
+    "timers": "Temporizadores",
     "youIndicator": "(tú)",
     "addonLoadingError": "Error al cargar complemento",
     "addonError": "Error de complemento",
@@ -86,11 +99,23 @@
     "selectImage": "Seleccionar una imagen",
     "selectVideo": "Seleccionar un video",
     "selectMedia": "Seleccionar un medio",
+    "selectPlaylist": "Seleccionar una lista de reproducción",
+    "searchLocation": "Buscar una ubicación...",
+    "coordinates": "Coordenadas",
+    "address": "Dirección",
+    "noAddressAvailable": "No hay dirección disponible",
+    "noConfigurationAvailable": "No hay configuración disponible",
+    "playlist": "Lista de reproducción",
+    "addPlaylist": "Añadir lista de reproducción",
+    "widget": "Widget",
+    "selectionHint": "Usa las casillas para seleccionar elementos y realizar acciones masivas",
+    "selectionCount": "{count} seleccionados",
     "no": "No"
   },
   "topbar": {
     "help": "Ayuda",
-    "notifications": "Notificaciones"
+    "notifications": "Notificaciones",
+    "gettingStarted": "Primeros pasos"
   },
   "settings": {
     "title": "Configuración",
@@ -115,6 +140,14 @@
     "failedLoadCredentials": "Error al cargar las credenciales. Por favor, intenta actualizar la página.",
     "languageSettings": "Configuración de idioma",
     "selectLanguage": "Selecciona tu idioma preferido",
+    "onboardingTour": "Tour de introducción",
+    "onboardingTourDescription": "Restablece el tour para poder recorrer los pasos de nuevo.",
+    "onboardingTourResetButton": "Restablecer tour",
+    "onboardingTourResetConfirmTitle": "¿Restablecer el tour de introducción?",
+    "onboardingTourResetConfirmDescription": "Esto borrará tu progreso del tour y lo mostrará de nuevo.",
+    "onboardingTourResetAction": "Restablecer tour",
+    "onboardingTourResetSuccess": "Tour de introducción restablecido. Puedes iniciarlo de nuevo ahora.",
+    "onboardingTourResetError": "No se pudo restablecer el tour de introducción. Por favor, inténtalo de nuevo.",
     "description": "Gestiona la información y preferencias de tu cuenta",
     "confirmDeletePasskey": "¿Estás seguro de que quieres eliminar esta llave de acceso?\n\nNota: Esto eliminará la llave de tu cuenta, pero es posible que necesites eliminarla manualmente de la configuración de tu dispositivo (como iCloud Keychain, Google Password Manager o Windows Hello).\n\nAsegúrate de haber probado que tu(s) otra(s) llave(s) funcionen antes de eliminar esta.",
     "fullName": "Nombre completo",
@@ -165,6 +198,166 @@
     "soleAdministratorError": "No se puede eliminar la cuenta. Usted es el único administrador de '{{orgName}}' que tiene otros miembros. Por favor, promocione a otro usuario a administrador primero.",
     "soleAdministratorErrorGeneric": "No se puede eliminar la cuenta. Usted es el único administrador de una o más organizaciones con otros miembros. Por favor, promocione a otro usuario a administrador primero."
   },
+  "network": {
+    "title": "Configuración de Red",
+    "adminBadge": "Admin de Red",
+    "saveSuccess": "Configuración de red guardada correctamente",
+    "saveError": "Error al guardar la configuración de red",
+    "errorHint": "Por favor, inténtalo de nuevo o contacta con soporte si el problema persiste.",
+    "accessDenied": "Acceso Denegado",
+    "accessDeniedMessage": "No tienes permiso para ver la configuración de red. Solo los administradores de red pueden acceder a esta página.",
+    "tabs": {
+      "settings": "Configuración",
+      "organizations": "Organizaciones",
+      "users": "Usuarios",
+      "invitations": "Invitaciones"
+    },
+    "stats": {
+      "organizations": "Organizaciones",
+      "users": "Usuarios",
+      "devices": "Dispositivos",
+      "teams": "Equipos",
+      "storage": "Almacenamiento Total"
+    },
+    "overview": {
+      "networkInfo": "Información de la Red"
+    },
+    "identity": {
+      "title": "Identidad de Red",
+      "description": "Configura la marca e identidad de tu red.",
+      "name": "Nombre de Red",
+      "namePlaceholder": "Ingresa el nombre de la red",
+      "nameHelp": "El nombre de tu red, mostrado en el encabezado del panel.",
+      "email": "Email de Soporte",
+      "emailPlaceholder": "soporte@ejemplo.com",
+      "emailHelp": "Este email se muestra a los usuarios para consultas de soporte.",
+      "logo": "URL del Logo",
+      "logoPlaceholder": "https://ejemplo.com/logo.png",
+      "logoHelp": "URL de la imagen del logo de la red.",
+      "copyright": "Texto de Copyright",
+      "copyrightPlaceholder": "© 2025 Tu Empresa",
+      "copyrightHelp": "Aviso de copyright mostrado en el pie de página del panel.",
+      "privacyPolicyUrl": "URL de Política de Privacidad",
+      "privacyPolicyUrlPlaceholder": "https://ejemplo.com/privacidad",
+      "privacyPolicyUrlHelp": "Enlace a tu política de privacidad, mostrado en las páginas de inicio de sesión y registro.",
+      "defaultLanguage": "Idioma Predeterminado",
+      "defaultLanguageHelp": "El idioma predeterminado para nuevos usuarios y la página de inicio de sesión/registro."
+    },
+    "socialLinks": {
+      "title": "Enlaces Sociales",
+      "description": "Configura los enlaces de redes sociales mostrados en el pie de página.",
+      "github": "URL de GitHub",
+      "githubPlaceholder": "https://github.com/tuempresa",
+      "twitter": "URL de X (Twitter)",
+      "twitterPlaceholder": "https://x.com/tuempresa",
+      "linkedin": "URL de LinkedIn",
+      "linkedinPlaceholder": "https://linkedin.com/company/tuempresa",
+      "facebook": "URL de Facebook",
+      "facebookPlaceholder": "https://facebook.com/tuempresa"
+    },
+    "domain": {
+      "title": "Configuración de Dominio",
+      "description": "El dominio se usa para identificar tu red. Los usuarios acceden al panel a través de este dominio.",
+      "label": "Dominio de Red",
+      "note": "Contacta con soporte para cambiar tu dominio."
+    },
+    "access": {
+      "title": "Control de Acceso",
+      "description": "Controla cómo los usuarios pueden unirse a tu red y crear organizaciones.",
+      "invitationOnly": "Solo por Invitación",
+      "invitationOnlyDescription": "Cuando está habilitado, los nuevos usuarios solo pueden unirse a la red mediante invitación. El registro público estará deshabilitado.",
+      "invitationOnlyOrgAdmins": "Restringir Creación de Organizaciones",
+      "invitationOnlyOrgAdminsDescription": "Cuando está habilitado, solo los administradores de red pueden crear nuevas organizaciones. Los usuarios regulares no pueden crear sus propias organizaciones."
+    },
+    "validation": {
+      "emailRequired": "El correo de soporte es requerido",
+      "emailInvalid": "Por favor ingrese una dirección de correo válida"
+    },
+    "organizations": {
+      "createTitle": "Crear Organización",
+      "createDescription": "Crea una nueva organización dentro de esta red.",
+      "name": "Nombre de la Organización",
+      "namePlaceholder": "Ingresa el nombre de la organización",
+      "nameRequired": "El nombre de la organización es requerido",
+      "listTitle": "Todas las Organizaciones",
+      "noOrganizations": "No hay organizaciones en esta red todavía.",
+      "noSearchResults": "No se encontraron organizaciones que coincidan con tu búsqueda.",
+      "searchPlaceholder": "Buscar organizaciones...",
+      "createSuccess": "Organización creada correctamente",
+      "createError": "Error al crear la organización",
+      "loadError": "Error al cargar las organizaciones",
+      "deleteTitle": "Eliminar Organización",
+      "deleteConfirmation": "¿Estás seguro de que deseas eliminar \"{{name}}\"? Esta acción no se puede deshacer y eliminará todos los datos asociados con esta organización.",
+      "deleteSuccess": "Organización eliminada correctamente",
+      "deleteError": "Error al eliminar la organización",
+      "showingOf": "Mostrando {{showing}} de {{total}} organizaciones",
+      "block": "Bloquear",
+      "unblock": "Desbloquear",
+      "blockTitle": "Bloquear Organización",
+      "blockConfirmation": "¿Estás seguro de que deseas bloquear \"{{name}}\"? Todos los usuarios de esta organización no podrán iniciar sesión.",
+      "blockSuccess": "Organización bloqueada correctamente",
+      "blockError": "Error al bloquear la organización",
+      "unblockTitle": "Desbloquear Organización",
+      "unblockConfirmation": "¿Estás seguro de que deseas desbloquear \"{{name}}\"? Los usuarios podrán iniciar sesión nuevamente.",
+      "unblockSuccess": "Organización desbloqueada correctamente",
+      "unblockError": "Error al desbloquear la organización"
+    },
+    "users": {
+      "listTitle": "Todos los Usuarios",
+      "name": "Nombre",
+      "email": "Correo Electrónico",
+      "noUsers": "No hay usuarios en esta red todavía.",
+      "searchPlaceholder": "Buscar por nombre o correo...",
+      "inviteTitle": "Invitar Usuario",
+      "inviteDescription": "Invita a un usuario a unirse a una organización en esta red.",
+      "inviteButton": "Invitar Usuario",
+      "inviteModalTitle": "Invitar Usuario a Organización",
+      "selectOrganization": "Organización",
+      "selectOrganizationPlaceholder": "Seleccionar una organización...",
+      "inviteEmailLabel": "Dirección de Correo",
+      "inviteEmailPlaceholder": "Ingresa dirección de correo",
+      "roleLabel": "Rol",
+      "roleAdmin": "Administrador",
+      "roleMember": "Miembro",
+      "sendInvite": "Enviar Invitación",
+      "inviteSuccess": "Invitación enviada exitosamente",
+      "inviteError": "Error al enviar invitación",
+      "inviteEmailRequired": "Se requiere dirección de correo",
+      "inviteEmailInvalid": "Ingresa una dirección de correo válida",
+      "block": "Bloquear",
+      "unblock": "Desbloquear",
+      "blockTitle": "Bloquear Usuario",
+      "blockConfirmation": "¿Estás seguro de que deseas bloquear \"{{name}}\"? Este usuario no podrá iniciar sesión.",
+      "blockSuccess": "Usuario bloqueado correctamente",
+      "blockError": "Error al bloquear el usuario",
+      "unblockTitle": "Desbloquear Usuario",
+      "unblockConfirmation": "¿Estás seguro de que deseas desbloquear \"{{name}}\"? Este usuario podrá iniciar sesión nuevamente.",
+      "unblockSuccess": "Usuario desbloqueado correctamente",
+      "unblockError": "Error al desbloquear el usuario",
+      "deleteTitle": "Eliminar Usuario",
+      "deleteConfirmation": "¿Estás seguro de que deseas eliminar \"{{name}}\"? Esta acción no se puede deshacer.",
+      "deleteSuccess": "Usuario eliminado correctamente",
+      "deleteError": "Error al eliminar el usuario"
+    },
+    "invitations": {
+      "title": "Invitaciones de Red",
+      "description": "Ver y gestionar invitaciones pendientes para nuevas organizaciones en esta red.",
+      "noInvitations": "No hay invitaciones pendientes.",
+      "organizationName": "Nombre de Organización",
+      "expires": "Expira",
+      "loadError": "Error al cargar invitaciones",
+      "deleteTitle": "Eliminar Invitación",
+      "deleteConfirmation": "¿Estás seguro de que deseas eliminar la invitación para \"{{email}}\"?",
+      "deleteSuccess": "Invitación eliminada correctamente",
+      "deleteError": "Error al eliminar la invitación"
+    },
+    "status": {
+      "active": "Activo",
+      "blocked": "Bloqueado"
+    },
+    "blockReason": "Razón (opcional)",
+    "blockReasonPlaceholder": "Ingresa la razón del bloqueo..."
+  },
   "usage": {
     "title": "Uso",
     "resourceUsage": "Uso de recursos",
@@ -178,6 +371,17 @@
     "approachingLimit": "Acercándose al límite",
     "noUsageData": "No hay datos de uso disponibles",
     "unableToLoad": "No se puede cargar la información de uso de recursos",
+    "resources": {
+      "medias": "Archivos multimedia",
+      "storage": "Almacenamiento",
+      "users": "Usuarios",
+      "devices": "Dispositivos",
+      "playlists": "Listas de reproducción",
+      "channels": "Canales",
+      "teams": "Equipos",
+      "widgets": "Widgets",
+      "layouts": "Diseños"
+    },
     "errors": {
       "fetchUsageData": "Error al obtener datos de uso: {{error}}"
     }
@@ -276,9 +480,76 @@
     },
     "memberSelection": {
       "selectUser": "Seleccionar usuario",
-      "searchUser": "Buscar un usuario..."
+      "searchUser": "Buscar un usuario...",
+      "noUsersAvailable": "No hay usuarios disponibles para invitar.",
+      "inviteToOrgFirst": "Los usuarios deben ser invitados primero a la organización antes de poder añadirlos a los equipos."
     },
     "teamsRemovedSuccessfully": "Equipos eliminados exitosamente"
+  },
+  "tags": {
+    "title": "Etiquetas",
+    "addTag": "Añadir etiqueta",
+    "createTag": "Crear etiqueta",
+    "editTag": "Editar etiqueta",
+    "deleteTag": "Eliminar etiqueta",
+    "newTag": "Nueva etiqueta",
+    "tagName": "Nombre de etiqueta",
+    "tagColor": "Color de etiqueta",
+    "tagGroup": "Grupo de etiquetas",
+    "assignedTags": "Etiquetas asignadas",
+    "availableTags": "Etiquetas disponibles",
+    "noTags": "Sin etiquetas",
+    "noTagsAvailable": "No hay etiquetas disponibles",
+    "noMatchingTags": "No hay etiquetas coincidentes",
+    "allTagsAssigned": "Todas las etiquetas asignadas",
+    "addToResource": "Añadir etiquetas",
+    "removeFromResource": "Quitar etiqueta",
+    "filterByTags": "Filtrar por etiquetas...",
+    "clearAll": "Limpiar todo",
+    "manageTags": "Gestionar etiquetas",
+    "colorPicker": "Elegir color",
+    "searchTags": "Buscar etiquetas...",
+    "filterMode": {
+      "any": "Cualquiera",
+      "all": "Todas",
+      "description": "Coincidir recursos con cualquiera o todas las etiquetas seleccionadas"
+    },
+    "confirmDelete": "¿Estás seguro de que deseas eliminar la etiqueta \"{{name}}\"?",
+    "confirmDeleteMultiple": "¿Estás seguro de que deseas eliminar las siguientes etiquetas?",
+    "confirmDeleteGroup": "¿Estás seguro de que deseas eliminar el grupo de etiquetas \"{{name}}\"? Todas las etiquetas de este grupo también se eliminarán permanentemente.",
+    "maxTagsReached": "Máximo de {{max}} etiquetas alcanzado",
+    "groups": {
+      "title": "Grupos de etiquetas",
+      "addGroup": "Añadir grupo",
+      "newGroup": "Nuevo grupo",
+      "editGroup": "Editar grupo",
+      "deleteGroup": "Eliminar grupo",
+      "noGroups": "Sin grupos de etiquetas",
+      "ungrouped": "Sin agrupar",
+      "untagged": "Sin etiqueta"
+    },
+    "messages": {
+      "tagCreated": "Etiqueta \"{{name}}\" creada exitosamente",
+      "tagUpdated": "Etiqueta \"{{name}}\" actualizada exitosamente",
+      "tagDeleted": "Etiqueta \"{{name}}\" eliminada exitosamente",
+      "tagAddedToResource": "Etiqueta añadida exitosamente",
+      "tagRemovedFromResource": "Etiqueta eliminada exitosamente",
+      "tagsUpdated": "Etiquetas actualizadas exitosamente",
+      "groupCreated": "Grupo de etiquetas \"{{name}}\" creado exitosamente",
+      "groupUpdated": "Grupo de etiquetas \"{{name}}\" actualizado exitosamente",
+      "groupDeleted": "Grupo de etiquetas \"{{name}}\" eliminado exitosamente"
+    },
+    "errors": {
+      "createTag": "Error al crear etiqueta: {{error}}",
+      "updateTag": "Error al actualizar etiqueta: {{error}}",
+      "deleteTag": "Error al eliminar etiqueta: {{error}}",
+      "tagResource": "Error al añadir etiqueta al recurso: {{error}}",
+      "untagResource": "Error al quitar etiqueta del recurso: {{error}}",
+      "createGroup": "Error al crear grupo de etiquetas: {{error}}",
+      "updateGroup": "Error al actualizar grupo de etiquetas: {{error}}",
+      "deleteGroup": "Error al eliminar grupo de etiquetas: {{error}}",
+      "loadFailed": "Error al cargar etiquetas"
+    }
   },
   "login": {
     "title": "Iniciar sesión",
@@ -290,12 +561,39 @@
     "loading": "Cargando...",
     "loginWithPasskey": "Iniciar sesión con llave de acceso",
     "privacyPolicy": "Política de privacidad",
-    "lostCredentials": "¿Perdiste tus credenciales?"
+    "privacyNotice": "Nos importa tu privacidad. Lee nuestra",
+    "lostCredentials": "¿Perdiste tus credenciales?",
+    "invitationOnlyNotice": "¿No tienes una cuenta? Este servicio requiere una invitación para registrarse.",
+    "passkeysNotSupported": "Tu navegador no soporta llaves de acceso. Por favor usa un navegador moderno para iniciar sesión.",
+    "errors": {
+      "authenticationFailed": "Error de autenticación. Por favor, inténtalo de nuevo.",
+      "userBlocked": "Tu cuenta ha sido bloqueada. Razón: {{reason}}",
+      "organizationBlocked": "Tu organización ha sido bloqueada. Razón: {{reason}}",
+      "signupFailed": "No se pudo iniciar el registro. Inténtalo más tarde."
+    }
   },
   "credentialRecovery": {
     "title": "Recupera tus credenciales",
     "checkYourEmail": "Revisa tu correo electrónico",
     "addNewPasskey": "Añadir nueva llave de acceso"
+  },
+  "setupPasskey": {
+    "title": "Configura tu clave de acceso",
+    "subtitle": "Crea una clave de acceso para {{domain}} para iniciar sesión directamente.",
+    "instructions": "¡Bienvenido/a, {{email}}! Haz clic en el botón para crear una clave de acceso para este dominio.",
+    "createButton": "Crear clave de acceso",
+    "passkeysNotSupported": "Tu navegador no soporta claves de acceso.",
+    "invalidLink": "Enlace de configuración inválido.",
+    "expiredLink": "Este enlace ha expirado. Solicita uno nuevo.",
+    "verificationFailed": "Error al verificar el enlace.",
+    "verifying": "Verificando enlace...",
+    "creatingPasskey": "Creando clave de acceso...",
+    "challengeFailed": "Error al iniciar la creación de la clave.",
+    "creationCancelled": "La creación fue cancelada.",
+    "noPublicKey": "No se pudo obtener la clave pública.",
+    "registrationFailed": "Error al registrar la clave de acceso.",
+    "success": "¡Clave creada! Iniciando sesión...",
+    "unexpectedError": "Algo salió mal. Inténtalo de nuevo."
   },
   "errors": {
     "generic": "Se ha producido un error. Por favor, inténtalo de nuevo.",
@@ -307,7 +605,8 @@
     "checkServerRunning": "Asegúrate de que el servidor Castmill esté en funcionamiento",
     "checkNetworkConnection": "Verifica tu conexión de red",
     "checkServerUrl": "Verifica la URL del servidor en tu configuración",
-    "retryConnection": "Reintentar Conexión"
+    "retryConnection": "Reintentar Conexión",
+    "authenticationError": "Error de autenticación: {{message}}"
   },
   "sidebar": {
     "organization": "Organización",
@@ -317,9 +616,16 @@
     "devices": "Dispositivos",
     "content": "Contenido",
     "playlists": "Listas de reproducción",
+    "layouts": "Diseños",
     "medias": "Medios",
     "widgets": "Widgets",
-    "members": "Miembros"
+    "members": "Miembros",
+    "network": "Red",
+    "networkOverview": "Resumen",
+    "networkSettings": "Configuración",
+    "networkOrganizations": "Organizaciones",
+    "networkUsers": "Usuarios e invitaciones",
+    "tags": "Etiquetas"
   },
   "channels": {
     "title": "Canales",
@@ -333,6 +639,7 @@
     "confirmRemoveChannels": "¿Estás seguro de que quieres eliminar los siguientes canales?",
     "enterChannelName": "Ingresa el nombre del canal",
     "defaultPlaylist": "Lista de reproducción predeterminada",
+    "currentPlaylist": "Lista de reproducción actual",
     "selectPlaylist": "Seleccionar lista de reproducción",
     "clearDefaultPlaylist": "Limpiar lista de reproducción predeterminada",
     "dragPlaylists": "Arrastra listas de reproducción",
@@ -341,8 +648,14 @@
     "removeChannelEntry": "Eliminar entrada del canal",
     "cannotDeleteChannel": "No se puede eliminar el canal",
     "success": {
+      "added": "Canal {{name}} añadido correctamente",
+      "created": "Canal {{name}} creado correctamente",
+      "updated": "Canal {{name}} actualizado correctamente",
       "updateDefaultPlaylist": "Lista de reproducción predeterminada actualizada correctamente",
       "clearDefaultPlaylist": "Lista de reproducción predeterminada eliminada correctamente"
+    },
+    "info": {
+      "contentRequired": "Para mostrar contenido, establece una lista de reproducción predeterminada o añade una entrada programada para este canal."
     },
     "errors": {
       "removeChannel": "Error al eliminar el canal {{name}}: {{error}}",
@@ -434,12 +747,16 @@
     "title": "Registrarse",
     "continueWithPasskey": "Continuar con llave de acceso",
     "privacyPolicy": "Política de privacidad",
+    "privacyNotice": "Nos importa tu privacidad. Lee nuestra",
     "checkYourEmail": "Revisa tu correo electrónico",
     "errors": {
       "couldNotCreateCredential": "No se pudo crear la credencial",
       "couldNotGetPublicKey": "No se pudo obtener la clave pública",
       "invalidCredential": "Credencial inválida",
       "signupFailed": "Algo salió mal al registrarse, contacta a soporte. ERROR: {{error}}"
+    },
+    "success": {
+      "accountCreated": "¡Cuenta creada exitosamente!"
     }
   },
   "search": {
@@ -461,7 +778,9 @@
     "buildPlaylist": "Construye tu lista de reproducción aquí",
     "renamePlaylist": "Renombrar lista de reproducción",
     "playlistUpdated": "Lista de reproducción \"{{name}}\" actualizada exitosamente",
+    "playlistCreated": "Lista de reproducción \"{{name}}\" creada exitosamente",
     "errorUpdating": "Error al actualizar la lista de reproducción {{name}}: {{error}}",
+    "errorCreating": "Error al crear la lista de reproducción: {{error}}",
     "removePlaylist": "Eliminar lista de reproducción",
     "removePlaylists": "Eliminar listas de reproducción",
     "confirmRemovePlaylist": "¿Estás seguro de que quieres eliminar la lista de reproducción \"{{name}}\"?",
@@ -470,6 +789,9 @@
     "errorRemovingPlaylists": "Error al eliminar listas de reproducción: {{error}}",
     "enterPlaylistName": "Ingresa el nombre de la lista de reproducción",
     "dragToAdd": "Arrastra para añadir",
+    "searchWidgets": "Buscar widgets...",
+    "dropHereToAddAtEnd": "Suelta aquí para añadir al final",
+    "duration": "Duración",
     "aspectRatio": "Relación de Aspecto",
     "aspectRatioWidth": "Ancho",
     "aspectRatioHeight": "Alto",
@@ -495,27 +817,172 @@
       "aspectRatioMax": "El valor debe ser 100 o menos",
       "aspectRatioExtreme": "La relación de aspecto es demasiado extrema (máximo 10:1)",
       "updateAspectRatio": "Error al actualizar la relación de aspecto: {{error}}"
-    }
+    },
+    "credentialsRequired": "Credenciales Requeridas",
+    "credentialsRequiredDescription": "El widget \"{{widget}}\" requiere que se configuren credenciales antes de poder añadirlo a una lista de reproducción.",
+    "missingIntegrations": "Integraciones faltantes",
+    "goToIntegrations": "Ir a Integraciones",
+    "widgetModalTitle": "Widget \"{{name}}\"",
+    "configureYourWidget": "Configura tu widget"
+  },
+  "layouts": {
+    "title": "Diseños",
+    "addLayout": "Añadir Diseño",
+    "createNewLayout": "Crear un nuevo diseño",
+    "layoutTitle": "Diseño \"{{name}}\"",
+    "layoutDetails": "Detalles del Diseño",
+    "deleteLayout": "Eliminar Diseño",
+    "deleteLayouts": "Eliminar Diseños",
+    "confirmDelete": "¿Estás seguro de que deseas eliminar \"{{name}}\"?",
+    "confirmDeleteMultiple": "¿Estás seguro de que deseas eliminar {{count}} diseño(s)?",
+    "deleteSuccess": "Diseño \"{{name}}\" eliminado correctamente",
+    "saveSuccess": "Diseño guardado correctamente",
+    "addSuccess": "Diseño creado correctamente",
+    "enterLayoutName": "Ingresa el nombre del diseño",
+    "searchPlaceholder": "Buscar diseños...",
+    "noLayouts": "No se encontraron diseños",
+    "aspectRatio": "Relación de Aspecto",
+    "customAspectRatio": "Relación de Aspecto Personalizada",
+    "invalidAspectRatio": "Formato inválido. Usa ancho:alto (ej., 16:9)",
+    "extremeAspectRatio": "La relación de aspecto es demasiado extrema",
+    "zones": "Zonas",
+    "addZone": "Añadir Zona",
+    "zoneProperties": "Propiedades de la Zona",
+    "templates": "Plantillas",
+    "bringForward": "Traer al Frente",
+    "sendBackward": "Enviar Atrás",
+    "selectLayout": "Seleccionar Diseño",
+    "searchLayouts": "Buscar diseños...",
+    "assignPlaylists": "Asignar Listas de Reproducción a Zonas",
+    "zonesCount": "{{count}} zonas"
   },
   "widgets": {
     "title": "Widgets",
     "uploadWidget": "Subir Widget",
     "uploadDescription": "Subir un archivo de definición de Widget JSON.",
+    "upload": {
+      "jsonDescription": "Sube un archivo JSON que contenga la definición de un widget.",
+      "requiredFields": "Campos obligatorios",
+      "and": "y",
+      "exampleFormat": "Formato de ejemplo",
+      "dragAndDropHint": "O arrastra y suelta archivos JSON o ZIP aquí...",
+      "ready": "Listo",
+      "invalidFileType": "Tipo de archivo no válido. Solo se admiten archivos JSON y ZIP.",
+      "invalidWidgetJson": "JSON de widget no válido: debe contener los campos \"name\" y \"template\"",
+      "validationFailed": "La validación falló",
+      "uploadFailed": "La carga falló",
+      "uploadedSuccessfully": "Cargado correctamente",
+      "uploadError": "Error de carga"
+    },
     "widgetDetails": "Detalles del Widget",
     "updateInterval": "Intervalo de actualización",
     "viewDetails": "Ver detalles",
+    "delete": "Eliminar",
+    "deleteConfirmTitle": "Eliminar Widget",
+    "deleteConfirmMessage": "¿Estás seguro de que deseas eliminar \"{{widget}}\"?",
+    "deleteConfirmUsageWarning": "El widget \"{{widget}}\" se está utilizando actualmente en {{count}} lista(s) de reproducción. Eliminarlo quitará todas las instancias de estas listas.",
+    "usedInPlaylists": "Utilizado en las siguientes listas de reproducción:",
+    "deleteCascadeNote": "Esta acción no se puede deshacer.",
     "template": "Plantilla",
     "optionsSchema": "Esquema de opciones",
-    "dataSchema": "Esquema de datos"
+    "dataSchema": "Esquema de datos",
+    "noAssets": "Este widget no tiene activos incluidos.",
+    "assets": {
+      "title": "Activos",
+      "icons": "Iconos",
+      "images": "Imágenes",
+      "fonts": "Fuentes",
+      "styles": "Estilos"
+    },
+    "spotify": {
+      "title": "Conexión de Spotify",
+      "connectButton": "Conectar a Spotify",
+      "disconnectButton": "Desconectar",
+      "connectDescription": "Conecta tu cuenta de Spotify para mostrar la canción en reproducción en tu señalización digital.",
+      "connected": "Conectado",
+      "connectedSince": "Conectado desde {{date}}",
+      "connectionSuccess": "¡Conectado a Spotify exitosamente!",
+      "connectionFailed": "Error al conectar con Spotify. Por favor, inténtalo de nuevo.",
+      "disconnectNotSupported": "Desconectar aún no está soportado. Por favor, revoca el acceso desde la configuración de tu cuenta de Spotify."
+    },
+    "integrations": {
+      "title": "Integraciones",
+      "noIntegrations": "Este widget no tiene integraciones configuradas.",
+      "configure": "Configurar",
+      "configured": "Configurado",
+      "notConfigured": "No configurado",
+      "requiresAuth": "Requiere autenticación",
+      "authType": "Tipo de autenticación",
+      "oauth2": "OAuth 2.0",
+      "apiKey": "Clave API",
+      "credentials": "Credenciales",
+      "saveCredentials": "Guardar credenciales",
+      "testConnection": "Probar conexión",
+      "testSuccess": "¡Prueba de conexión exitosa!",
+      "testFailed": "Prueba de conexión fallida: {{error}}",
+      "credentialsSaved": "¡Credenciales guardadas exitosamente!",
+      "credentialsSaveFailed": "Error al guardar credenciales: {{error}}",
+      "credentialsConfigured": "Las credenciales de API están configuradas",
+      "updateCredentials": "Actualizar credenciales",
+      "deleteCredentials": "Eliminar credenciales",
+      "connectWith": "Conectar con {{provider}}",
+      "connectedTo": "Conectado a {{provider}}",
+      "disconnect": "Desconectar",
+      "confirmDisconnect": "¿Está seguro de que desea desconectarse de {{provider}}? Necesitará volver a conectarse para usar esta integración.",
+      "disconnected": "Desconectado de {{provider}}",
+      "disconnectFailed": "Error al desconectar: {{error}}",
+      "reconnect": "Reconectar",
+      "lastValidated": "Última validación: {{date}}",
+      "scopeOrganization": "Toda la organización",
+      "scopeWidget": "Específico del widget",
+      "pullMode": "Obtención de datos",
+      "pushMode": "Webhook",
+      "pullInterval": "Actualiza cada {{seconds}} segundos",
+      "fieldRequired": "{{field}} es requerido",
+      "connectionStatus": "Estado de conexión",
+      "valid": "Válido",
+      "invalid": "Inválido",
+      "pending": "Configuración pendiente",
+      "enterClientCredentials": "Ingrese sus credenciales de API de {{provider}} a continuación:",
+      "afterSavingCredentials": "Después de guardar sus credenciales, haga clic abajo para autorizar con {{provider}}:",
+      "networkCredentialsConfigured": "Su administrador de red ya ha configurado las credenciales de {{provider}}. Simplemente haga clic en el botón de abajo para conectar su cuenta.",
+      "noConfigurationRequired": "No requiere configuración",
+      "optional": "Opcional"
+    },
+    "translations": "Traducciones"
   },
   "devices": {
     "setDeviceChannel": "Establecer canal del dispositivo",
     "selectChannel": "Seleccionar canal",
     "preview": {
-      "placeholder": "Vista previa"
+      "placeholder": "Vista previa",
+      "noChannels": "No hay canales asignados a este dispositivo",
+      "noScheduledContent": "No hay contenido programado en este momento",
+      "errorLoadingPlaylist": "Error al cargar el contenido de la lista de reproducción",
+      "errorInitializing": "Error al inicializar la vista previa",
+      "currentlyPlaying": "Actualmente programado desde el canal",
+      "note": "Esto muestra lo que el dispositivo debería estar reproduciendo ahora según los horarios del canal, no necesariamente lo que se muestra realmente en el dispositivo."
     },
     "telemetry": {
-      "placeholder": "Trazas, registros, métricas y conectividad (calidad WiFi, etc.)"
+      "placeholder": "Trazas, registros, métricas y conectividad (calidad WiFi, etc.)",
+      "storage": "Almacenamiento",
+      "memory": "Memoria",
+      "cpu": "Uso de CPU",
+      "cpuLoad": "Carga promedio de CPU",
+      "network": "Red",
+      "connectionType": "Conexión",
+      "wifiSignal": "Señal WiFi",
+      "temperature": "Temperatura",
+      "fanSpeed": "Velocidad del ventilador",
+      "battery": "Batería",
+      "charging": "Cargando",
+      "uptime": "Tiempo activo",
+      "refresh": "Actualizar telemetría",
+      "offlineWarning": "El dispositivo está desconectado. Los datos de telemetría solo están disponibles cuando el dispositivo está conectado.",
+      "noData": "No hay datos de telemetría disponibles para este dispositivo.",
+      "daysShort": "d",
+      "hoursShort": "h",
+      "minutesShort": "m"
     },
     "maintenance": {
       "refresh": "Actualizar",
@@ -530,11 +997,57 @@
       "checkUpdatesDescription": "Buscar actualizaciones e instalarlas. Esto no reiniciará el dispositivo",
       "updateFirmware": "Actualizar firmware",
       "updateFirmwareDescription": "Actualiza el firmware del dispositivo",
-      "offlineMessage": "El dispositivo está desconectado, por lo que no se le pueden enviar comandos"
+      "offlineMessage": "El dispositivo está desconectado, por lo que no se le pueden enviar comandos",
+      "autorecoveryUpdated": "La recuperación automática se actualizó",
+      "autorecoveryUpdateFailed": "No se pudo actualizar la recuperación automática",
+      "edit": "Editar",
+      "enableForOneHour": "Activar por una hora",
+      "enableForever": "Activar para siempre",
+      "disable": "Desactivar",
+      "recoverLostSettingsLabel": "Recuperar configuración perdida",
+      "disabled": "Desactivado",
+      "enabledMinutesRemaining": "Activado (quedan {{minutes}} minutos)",
+      "enabledForever": "Activado para siempre"
+    },
+    "cache": {
+      "title": "Caché del Dispositivo",
+      "items": "elementos de caché",
+      "dataTab": "Datos",
+      "codeTab": "Código",
+      "mediaTab": "Medios",
+      "deleteSelected": "Eliminar elementos seleccionados",
+      "clearAll": "Limpiar Todo",
+      "confirmDelete": "Eliminar Entrada de Caché",
+      "confirmDeleteMessage": "¿Está seguro de que desea eliminar esta entrada de caché? URL: {{url}}",
+      "confirmDeleteMultiple": "Eliminar Múltiples Entradas",
+      "confirmDeleteMultipleMessage": "¿Está seguro de que desea eliminar {{count}} entradas de caché?",
+      "confirmClearAll": "Limpiar Toda la Caché",
+      "confirmClearAllMessage": "¿Está seguro de que desea limpiar todas las entradas de caché de {{type}}? Esta acción no se puede deshacer.",
+      "deleteSuccess": "Entrada de caché eliminada exitosamente",
+      "deleteMultipleSuccess": "{{count}} entradas de caché eliminadas exitosamente",
+      "clearAllSuccess": "Todas las entradas de caché limpiadas exitosamente",
+      "deleteError": "Error al eliminar caché: {{error}}",
+      "offlineWarning": "El dispositivo está actualmente fuera de línea. La información de caché no se puede obtener hasta que el dispositivo vuelva a estar en línea."
+    },
+    "events": {
+      "title": "Eventos del Dispositivo",
+      "items": "eventos",
+      "filterError": "Errores",
+      "filterWarning": "Advertencias",
+      "filterInfo": "Información",
+      "filterOnline": "En línea",
+      "filterOffline": "Fuera de línea",
+      "clearAll": "Limpiar Todos los Eventos",
+      "confirmClearAll": "Limpiar Todos los Eventos",
+      "confirmClearAllMessage": "¿Está seguro de que desea eliminar todos los eventos de este dispositivo? Esta acción no se puede deshacer.",
+      "clearAllSuccess": "Se eliminaron {{count}} eventos exitosamente",
+      "deleteError": "Error al eliminar eventos: {{error}}"
     },
     "errors": {
       "setChannelFailed": "Error al establecer el canal del dispositivo: {{error}}",
-      "commandFailed": "Se produjo un error al procesar su solicitud"
+      "commandFailed": "Se produjo un error al procesar su solicitud",
+      "invalidPincode": "Código PIN no válido. Verifique el código PIN que se muestra en su dispositivo e inténtelo de nuevo.",
+      "pincodeExpired": "Este código PIN ha caducado. Reinicie el proceso de registro del dispositivo."
     },
     "assignedChannels": "Canales asignados",
     "addChannel": "Agregar canal",
@@ -561,6 +1074,20 @@
     "errorRegisteringDevice": "Error al registrar el dispositivo: {{error}}",
     "errorRemovingDevice": "Error al eliminar el dispositivo {{name}}: {{error}}",
     "errorRemovingDevices": "Error al eliminar los dispositivos: {{error}}",
+    "enterDescription": "Ingrese una descripción",
+    "drawerTitle": "Dispositivo \"{{name}}\"",
+    "info": {
+      "title": "Información",
+      "platform": "Plataforma",
+      "playerVersion": "Versión del reproductor",
+      "operatingSystem": "Sistema operativo",
+      "hardware": "Equipo",
+      "environmentVersion": "Versión del entorno",
+      "chromiumVersion": "Versión de Chromium",
+      "v8Version": "Versión de V8",
+      "nodeVersion": "Versión de Node.js",
+      "userAgent": "Agente de usuario"
+    },
     "remoteControl": {
       "title": "Control Remoto",
       "status": "Estado",
@@ -607,7 +1134,8 @@
   },
   "validation": {
     "fieldRequired": "Este campo es obligatorio",
-    "minLength": "Este campo debe tener al menos {{min}} caracteres"
+    "minLength": "Este campo debe tener al menos {{min}} caracteres",
+    "invalidCoordinates": "Este campo debe tener coordenadas válidas"
   },
   "plurals": {
     "items": {
@@ -729,7 +1257,15 @@
   "filters": {
     "teamLabel": "Equipo",
     "teamPlaceholder": "Seleccionar equipo",
-    "teamClear": "Limpiar filtro de equipo"
+    "teamClear": "Limpiar filtro de equipo",
+    "tagLabel": "Etiquetas",
+    "tagPlaceholder": "Filtrar por etiquetas…",
+    "tagClear": "Limpiar filtro de etiquetas",
+    "tagSearchPlaceholder": "Buscar etiquetas…",
+    "tagFilterModeAny": "Cualquiera",
+    "tagFilterModeAll": "Todas",
+    "noMatches": "Sin coincidencias",
+    "noItems": "Sin elementos"
   },
   "shortcuts": {
     "showShortcutsLegend": "Mostrar atajos de teclado",
@@ -741,6 +1277,7 @@
     "createResource": "Crear recurso",
     "deleteSelected": "Eliminar seleccionados",
     "gotoPlaylists": "Ir a Listas de reproducción",
+    "gotoLayouts": "Ir a Diseños",
     "gotoMedias": "Ir a Medios",
     "gotoWidgets": "Ir a Widgets",
     "gotoChannels": "Ir a Canales",
@@ -756,5 +1293,179 @@
       "title": "Atajos de teclado",
       "description": "Usa estos atajos para navegar más rápido"
     }
+  },
+  "onboarding": {
+    "title": "¡Bienvenido a Castmill!",
+    "subtitle": "Comencemos dándole un nombre a tu organización.",
+    "organizationNameLabel": "Nombre de la organización",
+    "organizationNamePlaceholder": "Ingresa el nombre de tu organización",
+    "helpText": "Este nombre se usará para identificar tu espacio de trabajo. Puedes cambiarlo más tarde en la configuración.",
+    "continueButton": "Continuar",
+    "success": "¡Configuración de la organización completada!",
+    "errors": {
+      "organizationNameRequired": "El nombre de la organización es obligatorio",
+      "organizationNameTooShort": "El nombre de la organización debe tener al menos 2 caracteres",
+      "organizationNameTooLong": "El nombre de la organización debe tener menos de 50 caracteres",
+      "organizationNameTaken": "Este nombre de organización ya está en uso. Por favor, elige un nombre diferente.",
+      "failed": "Error al completar la configuración. Por favor, inténtalo de nuevo."
+    }
+  },
+  "onboardingTour": {
+    "title": "Tour de Introducción",
+    "progressText": "{{current}} de {{total}} pasos completados",
+    "markComplete": "Marcar como Completado",
+    "stepCompleted": "¡Paso completado!",
+    "stepCompletedBadge": "Completado",
+    "allStepsComplete": "¡Felicitaciones! Has completado todos los pasos de introducción.",
+    "dismissed": "Tour de introducción descartado. Puedes reiniciarlo en cualquier momento desde la configuración.",
+    "dismissConfirmTitle": "¿Descartar el tour de introducción?",
+    "dismissConfirmMessage": "Puedes reabrirlo en cualquier momento desde el icono del cohete en la barra superior.",
+    "skip": "Omitir",
+    "finish": "Finalizar Tour",
+    "goToStep": "Ir al paso {{step}}",
+    "learnMore": "Más información",
+    "steps": {
+      "findGuide": {
+        "title": "Encuentra Esta Guía en Cualquier Momento",
+        "description": "Busca el icono del cohete en la barra de navegación superior. Puedes hacer clic en él en cualquier momento para volver a abrir esta guía de inicio y continuar donde lo dejaste.",
+        "action": "Mostrar"
+      },
+      "chooseLanguage": {
+        "title": "Elige tu Idioma",
+        "description": "Selecciona tu idioma preferido en el menú desplegable de la barra de navegación superior. Esto traducirá toda la interfaz de la aplicación para facilitarte su uso.",
+        "action": "Seleccionar Idioma"
+      },
+      "uploadMedia": {
+        "title": "Sube tu Primer Contenido",
+        "description": "Comienza subiendo imágenes, videos u otro contenido que desees mostrar en tus pantallas de señalización digital. Puedes arrastrar y soltar archivos o usar el botón de carga.",
+        "action": "Ir a la Biblioteca de Medios"
+      },
+      "createPlaylist": {
+        "title": "Crea tu Primera Lista de Reproducción",
+        "description": "Organiza tu contenido en listas de reproducción. Agrega archivos multimedia y widgets para crear secuencias de contenido atractivas. Puedes configurar duraciones de visualización y transiciones para cada elemento.",
+        "action": "Ir a Listas de Reproducción"
+      },
+      "createChannel": {
+        "title": "Configura un Canal",
+        "description": "Los canales combinan listas de reproducción y programaciones. Crea un canal y asigna una lista de reproducción predeterminada para controlar qué contenido se reproduce en diferentes momentos del día.",
+        "action": "Ir a Canales"
+      },
+      "registerDevice": {
+        "title": "Registra tu Primer Dispositivo",
+        "description": "Primero abre el reproductor para obtener un código de registro y luego introduce ese código aquí para registrar el dispositivo. Consejo: puedes abrir un reproductor en el navegador de tu computadora para pruebas—usa {{playerUrl}}.",
+        "action": "Ir a Dispositivos"
+      },
+      "assignChannel": {
+        "title": "Asigna un Canal al Dispositivo",
+        "description": "Vincula un canal a tu dispositivo para que sepa qué contenido mostrar. Cada dispositivo puede ser asignado a un canal a la vez, pero puedes cambiarlo en cualquier momento.",
+        "action": "Administrar Dispositivos"
+      },
+      "advancedPlaylist": {
+        "title": "Crea Listas de Reproducción Avanzadas con Diseños",
+        "description": "Lleva tu contenido al siguiente nivel usando diseños para mostrar múltiples elementos simultáneamente. Divide tu pantalla en zonas y muestra contenido diferente en cada área.",
+        "action": "Explorar Diseños"
+      },
+      "createTagGroup": {
+        "title": "Organiza con Grupos de Etiquetas",
+        "description": "Ve a la página de Etiquetas y crea tu primer grupo de etiquetas, como 'Ubicación' o 'Campaña'. Los grupos te permiten categorizar etiquetas en dimensiones significativas que alimentan la vista de árbol.",
+        "action": "Ir a Etiquetas"
+      },
+      "tagContent": {
+        "title": "Etiqueta tu Contenido",
+        "description": "Abre cualquier elemento multimedia y asígnale etiquetas. Las etiquetas hacen que tu contenido sea buscable, filtrable y organizable. También puedes seleccionar varios elementos y etiquetarlos todos a la vez.",
+        "action": "Ir a Mediateca"
+      },
+      "exploreTreeView": {
+        "title": "Explora la Vista de Árbol",
+        "description": "Cambia a la vista de árbol para ver tu contenido organizado por grupos de etiquetas. Expande las etiquetas para profundizar, reorganiza las dimensiones y descubre una nueva forma de navegar tu biblioteca.",
+        "action": "Probar Vista de Árbol"
+      }
+    },
+    "errors": {
+      "failedToCompleteStep": "No se pudo marcar el paso como completado. Por favor, inténtalo de nuevo.",
+      "failedToDismiss": "No se pudo descartar el tour. Por favor, inténtalo de nuevo."
+    }
+  },
+  "medias": {
+    "upload": {
+      "fileTooLarge": "El tamaño del archivo ({{fileSize}}) excede el límite máximo de carga de {{maxSize}}",
+      "largeFileWarning": "Archivo grande ({{fileSize}}). La carga puede tardar un poco.",
+      "noValidFiles": "No hay archivos válidos para cargar.",
+      "uploadError": "Error al cargar el archivo.",
+      "uploadFailed": "Error de carga: {{error}}",
+      "serverError": "Error del servidor (estado {{status}})",
+      "unknownError": "Error desconocido"
+    },
+    "thumbnail": {
+      "failedTitle": "La transcodificación falló",
+      "failedDefaultMessage": "No se pudo generar la vista previa automáticamente."
+    },
+    "drawerTitle": "Medio \"{{name}}\"",
+    "mediaUpdated": "Medio \"{{name}}\" actualizado correctamente",
+    "errorUpdating": "Error al actualizar medio {{name}}: {{error}}"
+  },
+  "dashboard": {
+    "noOrganizations": {
+      "title": "Sin organizaciones",
+      "description": "Aún no perteneces a ninguna organización en esta red. Contacta con el administrador de la red para obtener acceso."
+    }
+  },
+  "aspectRatio": {
+    "custom": "Personalizado"
+  },
+  "deviceTimers": {
+    "title": "Temporizadores de Energía del Dispositivo",
+    "description": "Configure cuándo el dispositivo se enciende y apaga automáticamente",
+    "onTimers": "Temporizadores de Encendido",
+    "offTimers": "Temporizadores de Apagado",
+    "addOnTimer": "Agregar Temporizador de Encendido",
+    "addOffTimer": "Agregar Temporizador de Apagado",
+    "time": "Hora",
+    "days": "Días",
+    "deleteTimer": "Eliminar Temporizador",
+    "saveTimers": "Guardar Temporizadores",
+    "maxTimersReached": "Máximo de 6 temporizadores alcanzado",
+    "monday": "Lun",
+    "tuesday": "Mar",
+    "wednesday": "Mié",
+    "thursday": "Jue",
+    "friday": "Vie",
+    "saturday": "Sab",
+    "sunday": "Dom",
+    "mon": "Lun",
+    "tue": "Mar",
+    "wed": "Mié",
+    "thu": "Jue",
+    "fri": "Vie",
+    "sat": "Sab",
+    "sun": "Dom",
+    "allDays": "Todos los Días",
+    "noTimers": "Sin temporizadores configurados",
+    "timersSaved": "Temporizadores guardados correctamente",
+    "timersLoadError": "Error al cargar los temporizadores",
+    "timersSaveError": "Error al guardar los temporizadores",
+    "playerOffByTimer": "Reproducción apagada por temporizador",
+    "nextOnTime": "Próximo encendido programado: {time}",
+    "notSupported": "Control de hardware de temporizador no soportado en este dispositivo. Usando reserva de software."
+  },
+  "deviceSchedule": {
+    "title": "Horario del Dispositivo",
+    "description": "Defina cuándo el dispositivo debe estar ENCENDIDO. Haga clic y arrastre en la cuadrícula para crear entradas de horario. Fuera de las horas programadas, el dispositivo se apagará. Si no se establecen entradas, el dispositivo está siempre encendido.",
+    "mon": "Lun",
+    "tue": "Mar",
+    "wed": "Mié",
+    "thu": "Jue",
+    "fri": "Vie",
+    "sat": "Sáb",
+    "sun": "Dom",
+    "save": "Guardar Horario",
+    "reset": "Restablecer",
+    "delete": "Eliminar entrada",
+    "onLabel": "ENCENDIDO",
+    "noScheduleAlwaysOn": "Sin horario establecido — el dispositivo está siempre encendido",
+    "saved": "Horario guardado y enviado al dispositivo",
+    "savedOffline": "Horario guardado. El dispositivo está sin conexión — los temporizadores se enviarán cuando se reconecte.",
+    "loadError": "Error al cargar el horario",
+    "saveError": "Error al guardar el horario"
   }
 }

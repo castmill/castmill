@@ -8,6 +8,7 @@ defmodule CastmillWeb.ResourceController do
   alias Castmill.Resources.Media
   alias Castmill.Resources.Channel
   alias Castmill.Resources.Playlist
+  alias Castmill.Resources.Layout
   alias Castmill.Resources.ChannelEntry
   alias Castmill.Devices.Device
   alias Castmill.Devices
@@ -97,6 +98,23 @@ defmodule CastmillWeb.ResourceController do
        end)}
   end
 
+  # Parse tag_ids from comma-separated string: "1,2,3" => [1, 2, 3]
+  def parse_tag_ids(nil), do: {:ok, []}
+  def parse_tag_ids(""), do: {:ok, []}
+
+  def parse_tag_ids(value) when is_binary(value) do
+    tag_ids =
+      value
+      |> String.split(",")
+      |> Enum.map(&String.trim/1)
+      |> Enum.filter(&(&1 != ""))
+      |> Enum.map(&String.to_integer/1)
+
+    {:ok, tag_ids}
+  rescue
+    _ -> {:error, "Invalid tag_ids format. Expected comma-separated integers."}
+  end
+
   @index_params_schema %{
     organization_id: [type: :string, required: true],
     resources: [type: :string, required: true],
@@ -104,10 +122,21 @@ defmodule CastmillWeb.ResourceController do
     page_size: [type: :integer, number: [min: 1, max: 100]],
     search: :string,
     team_id: :integer,
+    key: :string,
+    direction: :string,
     filters: [
       type: :string,
       cast_func: &CastmillWeb.ResourceController.parse_filters/1
-    ]
+    ],
+    # Tag filtering support
+    tag_ids: [
+      type: :string,
+      cast_func: &CastmillWeb.ResourceController.parse_tag_ids/1
+    ],
+    # Filter mode: "any" (OR) or "all" (AND)
+    tag_filter_mode: [type: :string, in: ["any", "all"]],
+    # Include only resources without tags in this tag group
+    missing_tag_group_id: :integer
   }
 
   # The only reason we have a specific index function for devices is that we need to
@@ -163,6 +192,32 @@ defmodule CastmillWeb.ResourceController do
     id: [type: :string, required: true],
     update: :map
   }
+
+  @update_playlist_params_schema %{
+    organization_id: [type: :string, required: true],
+    id: [type: :integer, required: true],
+    update: :map
+  }
+
+  @update_channel_params_schema %{
+    organization_id: [type: :string, required: true],
+    id: [type: :integer, required: true],
+    update: :map
+  }
+
+  @update_layout_params_schema %{
+    organization_id: [type: :string, required: true],
+    id: [type: :integer, required: true],
+    update: :map
+  }
+
+  @update_media_params_schema %{
+    organization_id: [type: :string, required: true],
+    resources: [type: :string, cast: :integer, required: true],
+    id: [type: :integer, required: true],
+    update: :map
+  }
+
   def update(
         conn,
         %{
@@ -172,22 +227,47 @@ defmodule CastmillWeb.ResourceController do
         } = params
       ) do
     with {:ok, params} <- Tarams.cast(params, @update_params_schema) do
-      device = %Device{
-        id: id,
-        organization_id: organization_id
-      }
+      case Devices.get_device(id) do
+        %Device{} = device ->
+          if device.organization_id != organization_id do
+            conn
+            |> put_status(:not_found)
+            |> Phoenix.Controller.json(%{errors: ["Device not found"]})
+            |> halt()
+          else
+            Devices.update_device(device, params.update)
+            |> case do
+              {:ok, device} ->
+                if Map.has_key?(params.update, "autorecover_until") ||
+                     Map.has_key?(params.update, :autorecover_until) do
+                  Phoenix.PubSub.broadcast(
+                    Castmill.PubSub,
+                    "devices:#{device.id}",
+                    %{
+                      update: "device",
+                      resource: "device",
+                      action: "update",
+                      data: %{autorecover_until: device.autorecover_until}
+                    }
+                  )
+                end
 
-      Devices.update_device(device, params.update)
-      |> case do
-        {:ok, device} ->
-          conn
-          |> put_status(:ok)
-          |> json(device)
+                conn
+                |> put_status(:ok)
+                |> json(device)
 
-        {:error, errors} ->
+              {:error, errors} ->
+                conn
+                |> put_status(:bad_request)
+                |> Phoenix.Controller.json(%{errors: errors})
+                |> halt()
+            end
+          end
+
+        nil ->
           conn
-          |> put_status(:bad_request)
-          |> Phoenix.Controller.json(%{errors: errors})
+          |> put_status(:not_found)
+          |> Phoenix.Controller.json(%{errors: ["Device not found"]})
           |> halt()
       end
     else
@@ -199,12 +279,6 @@ defmodule CastmillWeb.ResourceController do
     end
   end
 
-  @update_media_params_schema %{
-    organization_id: [type: :string, required: true],
-    resources: [type: :string, cast: :integer, required: true],
-    id: [type: :integer, required: true],
-    update: :map
-  }
   def update(
         conn,
         %{
@@ -241,12 +315,6 @@ defmodule CastmillWeb.ResourceController do
     end
   end
 
-  @update_playlist_params_schema %{
-    organization_id: [type: :string, required: true],
-    id: [type: :integer, required: true],
-    update: :map
-  }
-
   def update(
         conn,
         %{
@@ -279,12 +347,6 @@ defmodule CastmillWeb.ResourceController do
     end
   end
 
-  @update_channel_params_schema %{
-    organization_id: [type: :string, required: true],
-    id: [type: :integer, required: true],
-    update: :map
-  }
-
   def update(
         conn,
         %{
@@ -297,10 +359,53 @@ defmodule CastmillWeb.ResourceController do
 
       Castmill.Resources.update_channel(channel, params.update)
       |> case do
-        {:ok, channel} ->
+        {:ok, updated_channel} ->
+          # If default_playlist_id was updated and actually changed, notify all connected devices
+          # Note: params.update may have string keys ("default_playlist_id") so check both
+          has_default_playlist_key =
+            Map.has_key?(params.update, :default_playlist_id) or
+              Map.has_key?(params.update, "default_playlist_id")
+
+          if has_default_playlist_key and
+               channel.default_playlist_id != updated_channel.default_playlist_id do
+            notify_devices_of_channel_update(updated_channel.id, updated_channel)
+          end
+
           conn
           |> put_status(:ok)
-          |> json(channel)
+          |> json(updated_channel)
+
+        {:error, errors} ->
+          conn
+          |> put_status(:bad_request)
+          |> Phoenix.Controller.json(%{errors: errors})
+          |> halt()
+      end
+    else
+      {:error, errors} ->
+        conn
+        |> put_status(:bad_request)
+        |> Phoenix.Controller.json(%{errors: errors})
+        |> halt()
+    end
+  end
+
+  def update(
+        conn,
+        %{
+          "resources" => "layouts",
+          "id" => _id
+        } = params
+      ) do
+    with {:ok, params} <- Tarams.cast(params, @update_layout_params_schema) do
+      layout = Castmill.Resources.get_layout(params.id)
+
+      Castmill.Resources.update_layout(layout, params.update)
+      |> case do
+        {:ok, layout} ->
+          conn
+          |> put_status(:ok)
+          |> json(layout)
 
         {:error, errors} ->
           conn
@@ -322,6 +427,38 @@ defmodule CastmillWeb.ResourceController do
     |> put_status(:bad_request)
     |> Phoenix.Controller.json(%{errors: ["Resource not found"]})
     |> halt()
+  end
+
+  # Notify all devices assigned to a channel when its default playlist changes
+  # This is done asynchronously to avoid blocking the HTTP response
+  defp notify_devices_of_channel_update(channel_id, channel) do
+    notify_fn = fn ->
+      try do
+        devices = Castmill.Resources.get_devices_using_channel(channel_id)
+
+        Enum.each(devices, fn device ->
+          Phoenix.PubSub.broadcast(
+            Castmill.PubSub,
+            "devices:#{device.id}",
+            %{
+              event: "channel_updated",
+              channel_id: channel_id,
+              default_playlist_id: channel.default_playlist_id
+            }
+          )
+        end)
+      rescue
+        error ->
+          require Logger
+          Logger.error("Failed to notify devices of channel update: #{inspect(error)}")
+      end
+    end
+
+    if Application.get_env(:castmill, :async_background_tasks, true) do
+      Task.start(notify_fn)
+    else
+      notify_fn.()
+    end
   end
 
   def create(conn, %{
@@ -471,6 +608,59 @@ defmodule CastmillWeb.ResourceController do
         conn
         |> put_status(:forbidden)
         |> Phoenix.Controller.json(%{errors: %{quota: ["Team quota exceeded"]}})
+
+      {:error, changeset} ->
+        {:error, changeset}
+    end
+  end
+
+  def create(conn, %{
+        "resources" => "layouts",
+        "organization_id" => organization_id,
+        "layout" => layout_params
+      }) do
+    # Extract team_id from params if present
+    team_id = Map.get(layout_params, "team_id")
+
+    # Remove team_id from layout params as it's not a layout field
+    create_attrs =
+      layout_params
+      |> Map.delete("team_id")
+      |> Map.merge(%{"organization_id" => organization_id})
+
+    case Castmill.Resources.create_layout(create_attrs) do
+      {:ok, %Layout{} = layout} ->
+        # If team_id was provided, add the layout to the team
+        if team_id do
+          case Castmill.Teams.add_resource_to_team(team_id, "layouts", layout.id, [
+                 :read,
+                 :write,
+                 :delete
+               ]) do
+            {:ok, _} ->
+              :ok
+
+            {:error, reason} ->
+              require Logger
+
+              Logger.warning(
+                "Failed to add layout #{layout.id} to team #{team_id}: #{inspect(reason)}"
+              )
+          end
+        end
+
+        conn
+        |> put_status(:created)
+        |> put_resp_header(
+          "location",
+          ~p"/api/organizations/#{organization_id}/layouts/#{layout.id}"
+        )
+        |> render(:show, layout_data: layout)
+
+      {:error, :quota_exceeded} ->
+        conn
+        |> put_status(:forbidden)
+        |> Phoenix.Controller.json(%{errors: %{quota: ["Layout quota exceeded"]}})
 
       {:error, changeset} ->
         {:error, changeset}
@@ -637,6 +827,27 @@ defmodule CastmillWeb.ResourceController do
     end
   end
 
+  def delete(conn, %{
+        "resources" => "layouts",
+        "id" => id
+      }) do
+    case Castmill.Resources.get_layout(id) do
+      nil ->
+        conn
+        |> put_status(:not_found)
+        |> Phoenix.Controller.json(%{errors: ["Layout not found"]})
+        |> halt()
+
+      layout ->
+        with {:ok, %Layout{}} <- Castmill.Resources.delete_layout(layout) do
+          send_resp(conn, :no_content, "")
+        else
+          {:error, reason} ->
+            send_resp(conn, 500, "Error deleting layout: #{inspect(reason)}")
+        end
+    end
+  end
+
   def show(conn, %{"resources" => "medias", "id" => id}) do
     case Castmill.Resources.get_media(id) do
       nil ->
@@ -676,6 +887,20 @@ defmodule CastmillWeb.ResourceController do
       playlist ->
         conn
         |> render(:show, playlist: playlist)
+    end
+  end
+
+  def show(conn, %{"resources" => "layouts", "id" => id}) do
+    case Castmill.Resources.get_layout(id) do
+      nil ->
+        conn
+        |> put_status(:not_found)
+        |> Phoenix.Controller.json(%{message: "Layout not found"})
+        |> halt()
+
+      layout ->
+        conn
+        |> render(:show, layout_data: layout)
     end
   end
 

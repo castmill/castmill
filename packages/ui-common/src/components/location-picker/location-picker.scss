@@ -1,0 +1,139 @@
+.location-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+  width: 100%;
+  color: #e0e0e0;
+
+  &__search {
+    position: relative;
+    width: 100%;
+
+    // Make ComboBox take full width
+    > div {
+      width: 100%;
+    }
+  }
+
+  &__result-item {
+    padding: 0.25em 0;
+    color: #e0e0e0;
+    font-size: 0.9em;
+    line-height: 1.4;
+  }
+
+  &__map {
+    width: 100%;
+    height: 400px;
+    border: 1px solid #444;
+    border-radius: 4px;
+    z-index: 1;
+  }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75em;
+    padding: 1em;
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 4px;
+  }
+
+  &__coordinates {
+    font-size: 0.9em;
+    color: #aaa;
+
+    strong {
+      color: #e0e0e0;
+    }
+  }
+
+  &__address {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    font-size: 0.9em;
+    color: #aaa;
+
+    strong {
+      color: #e0e0e0;
+    }
+  }
+
+  &__edit-button,
+  &__save-button,
+  &__cancel-button {
+    padding: 0.25em 0.75em;
+    font-size: 0.85em;
+    border: 1px solid #555;
+    border-radius: 3px;
+    background-color: #3a3a3a;
+    color: #e0e0e0;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover:not(:disabled) {
+      background-color: #4a4a4a;
+      border-color: #666;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  &__save-button {
+    background-color: #4a90e2;
+    color: white;
+    border-color: #4a90e2;
+
+    &:hover:not(:disabled) {
+      background-color: #357abd;
+      border-color: #357abd;
+    }
+  }
+
+  &__cancel-button {
+    background-color: #d9534f;
+    color: white;
+    border-color: #d9534f;
+
+    &:hover:not(:disabled) {
+      background-color: #c9302c;
+      border-color: #c9302c;
+    }
+  }
+
+  &__address-editor {
+    display: flex;
+    gap: 0.5em;
+    align-items: center;
+  }
+
+  &__address-input {
+    flex: 1;
+    padding: 0.5em;
+    border: 1px solid #444;
+    border-radius: 3px;
+    font-size: 0.9em;
+    background-color: #2a2a2a;
+    color: #e0e0e0;
+
+    &::placeholder {
+      color: #888;
+    }
+
+    &:focus {
+      outline: none;
+      border-color: #4a90e2;
+      box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.3);
+    }
+  }
+}
+
+// Fix Leaflet marker icon issue
+.leaflet-default-icon-path {
+  background-image: url('https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png');
+}

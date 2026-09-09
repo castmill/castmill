@@ -6,6 +6,7 @@ import {
 } from '@castmill/player';
 
 import { SortOptions, HttpError } from '@castmill/ui-common';
+import { authFetch } from '../../common/services/auth-fetch';
 
 export interface FetchPlaylistsOptions {
   page: number;
@@ -14,6 +15,9 @@ export interface FetchPlaylistsOptions {
   search?: string;
   filters?: Record<string, string | boolean>;
   team_id?: number | null;
+  tag_ids?: number[];
+  tag_filter_mode?: 'any' | 'all';
+  missing_tag_group_id?: number;
 }
 type HandleResponseOptions = {
   parse?: boolean;
@@ -103,11 +107,10 @@ export const PlaylistsService = {
       };
     }
 
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/playlists`,
       {
         method: 'POST',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -133,6 +136,9 @@ export const PlaylistsService = {
       search,
       filters,
       team_id,
+      tag_ids,
+      tag_filter_mode,
+      missing_tag_group_id,
     }: FetchPlaylistsOptions
   ) {
     const filtersToString = (filters: Record<string, string | boolean>) => {
@@ -161,13 +167,24 @@ export const PlaylistsService = {
       query['team_id'] = team_id.toString();
     }
 
+    if (tag_ids && tag_ids.length > 0) {
+      query['tag_ids'] = tag_ids.join(',');
+    }
+
+    if (tag_filter_mode) {
+      query['tag_filter_mode'] = tag_filter_mode;
+    }
+
+    if (missing_tag_group_id !== undefined) {
+      query['missing_tag_group_id'] = missing_tag_group_id.toString();
+    }
+
     const queryString = new URLSearchParams(query).toString();
 
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/playlists?${queryString}`,
       {
         method: 'GET',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -184,11 +201,10 @@ export const PlaylistsService = {
     organizationId: string,
     playlistId: number
   ) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/playlists/${playlistId}`,
       {
         method: 'GET',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -210,11 +226,10 @@ export const PlaylistsService = {
     playlistId: number,
     item: PlaylistItemInsertPayload
   ) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/playlists/${playlistId}/items`,
       {
         method: 'POST',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -222,7 +237,9 @@ export const PlaylistsService = {
       }
     );
 
-    const { data } = await handleResponse<{ data: { id: number } }>(response, {
+    const { data } = await handleResponse<{
+      data: { id: number; widget_config_id: string };
+    }>(response, {
       parse: true,
     });
     return data;
@@ -234,11 +251,10 @@ export const PlaylistsService = {
     playlistId: number,
     itemId: number
   ) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/playlists/${playlistId}/items/${itemId}`,
       {
         method: 'DELETE',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -255,11 +271,10 @@ export const PlaylistsService = {
     itemId: number,
     options: Partial<JsonPlaylistItem>
   ) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/playlists/${playlistId}/items/${itemId}`,
       {
         method: 'PATCH',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -277,11 +292,10 @@ export const PlaylistsService = {
     itemId: number,
     config: Omit<JsonWidgetConfig, 'id' | 'widget_id'>
   ) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/playlists/${playlistId}/items/${itemId}/config`,
       {
         method: 'PATCH',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -299,11 +313,10 @@ export const PlaylistsService = {
     itemId: number,
     targetId: number | null
   ) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/playlists/${playlistId}/items/${itemId}`,
       {
         method: 'PUT',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -322,11 +335,10 @@ export const PlaylistsService = {
     organizationId: string,
     playlistId: number
   ) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/playlists/${playlistId}`,
       {
         method: 'DELETE',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -345,11 +357,10 @@ export const PlaylistsService = {
     playlistId: string,
     playlist: PlaylistUpdate
   ) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/playlists/${playlistId}`,
       {
         method: 'PATCH',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -370,9 +381,8 @@ export const PlaylistsService = {
     const queryString = new URLSearchParams(query).toString();
     const url = `${baseUrl}/dashboard/organizations/${organizationId}/widgets${queryString ? `?${queryString}` : ''}`;
 
-    const response = await fetch(url, {
+    const response = await authFetch(url, {
       method: 'GET',
-      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
       },
@@ -381,5 +391,128 @@ export const PlaylistsService = {
     return handleResponse<{ data: JsonWidget[]; count: number }>(response, {
       parse: true,
     });
+  },
+
+  /**
+   * Check if a widget's integration credentials are configured.
+   *
+   * @param baseUrl - The base URL of the server
+   * @param organizationId - The organization ID
+   * @param widgetId - The widget ID to check
+   * @returns Promise with credentials status
+   */
+  async checkWidgetCredentials(
+    baseUrl: string,
+    organizationId: string,
+    widgetId: number
+  ): Promise<{
+    configured: boolean;
+    missing_integrations: string[];
+  }> {
+    const url = `${baseUrl}/dashboard/organizations/${organizationId}/widgets/${widgetId}/credentials-status`;
+
+    const response = await authFetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const result = await handleResponse<{
+      data: {
+        configured: boolean;
+        missing_integrations: string[];
+      };
+    }>(response, { parse: true });
+
+    return result.data;
+  },
+
+  /**
+   * Prefetch integration data for a widget before it's added to a playlist.
+   * This warms up the cache so that when the widget is actually inserted,
+   * the data is already available, improving perceived performance.
+   *
+   * @param baseUrl - The base URL of the server
+   * @param organizationId - The organization ID
+   * @param widgetId - The widget ID to prefetch data for
+   * @param options - Optional widget options for discriminator calculation
+   * @param opts.preview - When true the fetch is ephemeral: the server caches
+   *   the data but does not create a background polling scheduler for these
+   *   options (used by the live preview while the user edits a widget).
+   * @returns Promise with prefetch result (data, status, etc.)
+   */
+  async prefetchWidgetData(
+    baseUrl: string,
+    organizationId: string,
+    widgetId: number,
+    options?: Record<string, any>,
+    opts?: { preview?: boolean }
+  ): Promise<{
+    data: Record<string, any> | null;
+    status:
+      | 'cached'
+      | 'fetched'
+      | 'error'
+      | 'credentials_required'
+      | 'no_integration';
+    message?: string;
+  }> {
+    try {
+      const url = `${baseUrl}/dashboard/organizations/${organizationId}/widgets/${widgetId}/prefetch-data`;
+      const response = await authFetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          options: options || {},
+          preview: opts?.preview === true,
+        }),
+      });
+
+      if (response.status === 204) {
+        // No integrations for this widget
+        return { data: null, status: 'no_integration' };
+      }
+
+      if (response.ok) {
+        return await response.json();
+      }
+
+      return { data: null, status: 'error', message: 'Failed to prefetch' };
+    } catch (error) {
+      console.warn('Failed to prefetch widget data:', error);
+      return { data: null, status: 'error', message: String(error) };
+    }
+  },
+
+  /**
+   * Fetch integration data for a widget config.
+   * This triggers an on-demand fetch if no cached data exists.
+   *
+   * @param baseUrl - The base URL of the server
+   * @param widgetConfigId - The widget config ID
+   * @returns Promise with the integration data or null if not available
+   */
+  async fetchWidgetConfigData(
+    baseUrl: string,
+    widgetConfigId: string
+  ): Promise<Record<string, any> | null> {
+    try {
+      const url = `${baseUrl}/dashboard/widget-configs/${widgetConfigId}/data`;
+      const response = await authFetch(url);
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.data) {
+          return result.data;
+        }
+      }
+      return null;
+    } catch (error) {
+      console.warn('Failed to fetch widget config data:', error);
+      return null;
+    }
   },
 };

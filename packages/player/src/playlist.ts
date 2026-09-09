@@ -46,10 +46,10 @@ export class Playlist extends EventEmitter {
     globals: PlayerGlobals = { target: 'preview' }
   ) {
     const playlist = new Playlist(json.name, resourceManager);
-    const layers = json.items || [];
+    const items = json.items || [];
 
-    for (let i = 0; i < layers.length; i++) {
-      const layer = Layer.fromJSON(json.items[i], resourceManager, globals);
+    for (let i = 0; i < items.length; i++) {
+      const layer = Layer.fromJSON(items[i], resourceManager, globals);
       playlist.add(layer);
     }
     return playlist;
@@ -198,7 +198,10 @@ export class Playlist extends EventEmitter {
 
   seek(_offset: number) {
     const duration = this.duration();
-    const offset = _offset % (duration + 1);
+    const offset =
+      Number.isFinite(duration) && duration > 0
+        ? ((_offset % duration) + duration) % duration
+        : 0;
     this.time = offset;
 
     let result: [number, number] = [offset, duration];

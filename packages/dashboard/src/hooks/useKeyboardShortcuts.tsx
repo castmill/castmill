@@ -164,15 +164,10 @@ export const KeyboardShortcutsProvider: Component<ParentProps> = (props) => {
       target.tagName === 'SELECT' ||
       target.isContentEditable;
 
-    // Allow ESC key even in input fields (to blur/exit)
-    // Allow Delete key even when checkbox is focused
-    // Block all other shortcuts when typing in input fields
-    const isAllowedKey =
-      event.key === 'Escape' ||
-      event.key === 'Delete' ||
-      event.key === 'Backspace';
-
-    if (isInInputField && !isAllowedKey) {
+    // Allow ESC key to work as a shortcut even in input fields (to blur/exit)
+    // But Delete/Backspace should NOT be processed as shortcuts when in input fields
+    // - they should just work normally for text editing
+    if (isInInputField && event.key !== 'Escape') {
       return;
     }
 

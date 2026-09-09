@@ -12,4 +12,7 @@ export interface JsonPlaylistItem {
   config: JsonWidgetConfig;
   inserted_at?: string;
   updated_at?: string;
+
+  // Error message if integration data fetch failed
+  integration_error?: string;
 }

@@ -1,5 +1,6 @@
 import { baseUrl } from '../env';
 
+import { authFetch } from '../components/auth';
 export interface ResourceQuota {
   used: number;
   total: number;
@@ -26,11 +27,10 @@ export const QuotasService = {
    * @returns {Promise<QuotaUsage>} A promise that resolves to quota usage data
    */
   async getQuotaUsage(organizationId: string): Promise<QuotaUsage> {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/usage`,
       {
         method: 'GET',
-        credentials: 'include',
       }
     );
 
