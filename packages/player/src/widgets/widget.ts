@@ -46,7 +46,8 @@ export abstract class Widget extends EventEmitter {
           JSON.stringify({
             counter: data.counter,
             result,
-          })
+          }),
+          '*'
         );
       });
 

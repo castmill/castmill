@@ -172,6 +172,12 @@ defmodule CastmillWeb.DevicesChannel do
   end
 
   @impl true
+  def handle_info(%{event: "playlist_updated"} = message, socket) do
+    push(socket, "playlist_updated", message)
+    {:noreply, socket}
+  end
+
+  @impl true
   def handle_info({:device_response, _data}, socket) do
     # Silently discard timer sync responses sent back to the channel process
     {:noreply, socket}

@@ -127,6 +127,11 @@ defmodule CastmillWeb.DeviceController do
     render(conn, :device, layout: false)
   end
 
+  def show(conn, _params) do
+    device = conn.assigns.current_actor
+    json(conn, %{data: %{id: device.id, name: device.name}})
+  end
+
   def info(conn, %{"info" => info}) when is_map(info) do
     device = conn.assigns.current_actor
 
@@ -434,7 +439,7 @@ defmodule CastmillWeb.DeviceController do
 
         conn
         |> put_status(:ok)
-        |> json(%{entries: entries})
+        |> json(%{entries: entries, timers: Devices.schedule_to_timers(entries)})
 
       {:error, :not_found} ->
         conn

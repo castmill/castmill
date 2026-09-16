@@ -17,9 +17,8 @@ config :castmill, Castmill.Repo,
 # watchers to your application. For example, we use it
 # with esbuild to bundle .js and .css sources.
 config :castmill, CastmillWeb.Endpoint,
-  # Binding to loopback ipv4 address prevents access from other machines.
-  # Change to `ip: {0, 0, 0, 0}` to allow access from other machines.
-  http: [ip: {127, 0, 0, 1}, port: 4000],
+  # Development players on the LAN need to reach the device API.
+  http: [ip: {0, 0, 0, 0}, port: 4000],
   check_origin: false,
   code_reloader: true,
   debug_errors: true,
@@ -29,6 +28,14 @@ config :castmill, CastmillWeb.Endpoint,
     tailwind: {Tailwind, :install_and_run, [:default, ~w(--watch)]},
     node: ["build.js", "--watch", cd: Path.expand("../assets", __DIR__)]
   ]
+
+# Browser players loaded from the local Phoenix server may fetch media through
+# its LAN address, which is a distinct origin to Chrome.
+config :castmill, :local_player_origins, [
+  "http://localhost:4000",
+  "http://127.0.0.1:4000",
+  "http://[::1]:4000"
+]
 
 # ## SSL Support
 #

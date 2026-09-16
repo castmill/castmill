@@ -31,6 +31,43 @@ if node_mode = System.get_env("CASTMILL_NODE_MODE") do
   config :castmill, :node_mode, node_mode
 end
 
+if android_remote_apk_path = System.get_env("ANDROID_REMOTE_APK_PATH") do
+  version_code =
+    case Integer.parse(System.get_env("ANDROID_REMOTE_VERSION_CODE") || "") do
+      {value, ""} when value > 0 -> value
+      _ -> raise "ANDROID_REMOTE_VERSION_CODE must be a positive integer"
+    end
+
+  config :castmill, :android_remote_release,
+    apk_path: android_remote_apk_path,
+    package_name:
+      System.get_env("ANDROID_REMOTE_PACKAGE_NAME") ||
+        "com.castmill.androidremote.managed",
+    version_code: version_code,
+    version_name: System.get_env("ANDROID_REMOTE_VERSION_NAME") || Integer.to_string(version_code)
+end
+
+if android_remote_download_base_url =
+     System.get_env("ANDROID_REMOTE_DOWNLOAD_BASE_URL") do
+  config :castmill,
+         :android_remote_release_download_base_url,
+         android_remote_download_base_url
+end
+
+case System.get_env("MEDIA_PUBLIC_BASE_URL") do
+  base_url when base_url in [nil, ""] ->
+    :ok
+
+  base_url ->
+    parsed_url = URI.parse(base_url)
+
+    unless parsed_url.scheme in ["http", "https"] && is_binary(parsed_url.host) do
+      raise "MEDIA_PUBLIC_BASE_URL must be an absolute HTTP(S) URL"
+    end
+
+    config :castmill, :media_public_base_url, String.trim_trailing(base_url, "/")
+end
+
 if config_env() == :prod do
   IO.puts("Loading production configuration...")
 

@@ -99,11 +99,22 @@ defmodule CastmillWeb.Router do
     get("/", DeviceController, :home)
   end
 
-  # The legacy adapter player is a standalone public application.
+  pipeline :legacy_device do
+    plug(:accepts, ["html", "json"])
+    plug(:put_secure_browser_headers)
+    plug(:allow_legacy_embedding)
+  end
+
+  # The legacy adapter player is a standalone public application. Its Android
+  # wrapper posts logs without a browser session or CSRF token.
   scope "/", CastmillWeb do
-    pipe_through(:device)
+    pipe_through(:legacy_device)
 
     get("/legacy", LegacyPlayerController, :index)
+  end
+
+  defp allow_legacy_embedding(conn, _opts) do
+    delete_resp_header(conn, "x-frame-options")
   end
 
   pipeline :register do
@@ -177,6 +188,7 @@ defmodule CastmillWeb.Router do
     get("/:device_id", DeviceController, :show)
     get("/:device_id/channels", DeviceController, :get_channels)
     get("/:device_id/playlists/:playlist_id", DeviceController, :get_playlist)
+    get("/:device_id/schedule", DeviceController, :get_schedule)
 
     put("/:device_id/channels/:channel_id", DeviceController, :add_channel)
     delete("/:device_id/channels/:channel_id", DeviceController, :remove_channel)

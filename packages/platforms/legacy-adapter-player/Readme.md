@@ -36,6 +36,8 @@ The Castmill Legacy Adapter enables old Castmill Electron and Android players to
 - **Seamless Transition**: Allows legacy embeds to function as expected without updates.
 - **Castmill Server Deployment**: Served at `/legacy` by the Castmill Phoenix server.
 - **Configurable Base URL**: Easily configure the default base URL using environment variables.
+- **Legacy Debug Overlay**: The Android and Electron shells' existing debug
+  menu toggles an adapter-owned diagnostics panel over playback.
 
 ---
 
@@ -81,6 +83,10 @@ through that domain as it does for `/legacy`.
 
 The adapter allows you to configure a default base URL by setting the `VITE_BASE_URL` environment variable in a `.env.local` file. This ensures flexibility when running the adapter in different environments.
 
+When Phoenix serves the adapter from `/legacy`, the adapter uses the page origin
+as its API URL. `VITE_BASE_URL` is used by the standalone Vite development
+server.
+
 1. Create a `.env.local` file in the project root if it doesn’t already exist.
 2. Add the following line to specify the base URL:
 
@@ -96,6 +102,37 @@ The adapter allows you to configure a default base URL by setting the `VITE_BASE
    ```
 
 This base URL will be used to adapt API calls and ensure the correct routing to the modern Castmill player.
+
+### Media URL Configuration
+
+The server must generate media URLs that players can reach. In particular,
+`localhost` and container-only hostnames are not reachable from an Android
+player. Set `MEDIA_PUBLIC_BASE_URL` on the Castmill server to its public origin:
+
+```env
+MEDIA_PUBLIC_BASE_URL="http://192.168.1.1:4000"
+```
+
+This setting applies when media is processed, so existing media with stored
+unreachable URLs must be reprocessed after changing it.
+
+The Android adapter gives every rewritten cached resource a new native filename.
+This changes its `content://` URI and prevents Crosswalk from reusing stale
+in-memory channel or playlist JSON after a refresh.
+
+### Debug overlay
+
+Legacy Android and Electron shells send the literal `console` message to the
+embedded player when their debug menu option is selected. The adapter accepts
+that exact message only from its parent window and toggles a lower-right
+diagnostics panel.
+
+The panel shows the registered player name and ID, resolved server URL, adapter
+platform, machine and application versions, network and server connection
+states, display dimensions, timezone, and user agent. It intentionally excludes
+credentials, authentication tokens, and native hardware identifiers.
+The registered player name is refreshed from the server whenever the panel is
+opened, so dashboard renames appear without restarting the player.
 
 ---
 

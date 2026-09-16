@@ -130,4 +130,36 @@ defmodule Castmill.Workers.HelpersTest do
       assert uri_a == "https://cdn.castmill.dev/path/file.jpg"
     end
   end
+
+  describe "get_media_base_url/0" do
+    setup do
+      previous = Application.get_env(:castmill, :media_public_base_url)
+
+      on_exit(fn ->
+        if previous do
+          Application.put_env(:castmill, :media_public_base_url, previous)
+        else
+          Application.delete_env(:castmill, :media_public_base_url)
+        end
+      end)
+
+      :ok
+    end
+
+    test "uses the configured public media origin" do
+      Application.put_env(
+        :castmill,
+        :media_public_base_url,
+        "http://192.168.68.57:4000/"
+      )
+
+      assert Helpers.get_media_base_url() == "http://192.168.68.57:4000"
+    end
+
+    test "falls back to the Phoenix endpoint URL" do
+      Application.delete_env(:castmill, :media_public_base_url)
+
+      assert Helpers.get_media_base_url() == Helpers.get_endpoint_url()
+    end
+  end
 end

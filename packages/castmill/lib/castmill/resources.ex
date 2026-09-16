@@ -592,11 +592,32 @@ defmodule Castmill.Resources do
           fetched_data = fetch_widget_reference(data, key, collection_name)
           Map.put(acc, key, fetched_data)
 
+        %{"type" => "layout-ref"} ->
+          Map.put(acc, key, resolve_layout_reference(Map.get(data, key)))
+
         _ ->
           acc
       end
     end)
   end
+
+  defp resolve_layout_reference(%{"zonePlaylistMap" => zone_playlist_map} = layout_ref)
+       when is_map(zone_playlist_map) do
+    resolved_zone_playlist_map =
+      Map.new(zone_playlist_map, fn {zone_id, assignment} ->
+        {zone_id, resolve_layout_zone_assignment(assignment)}
+      end)
+
+    Map.put(layout_ref, "zonePlaylistMap", resolved_zone_playlist_map)
+  end
+
+  defp resolve_layout_reference(layout_ref), do: layout_ref
+
+  defp resolve_layout_zone_assignment(%{"playlistId" => playlist_id} = assignment) do
+    Map.put(assignment, "playlist", get_playlist(playlist_id))
+  end
+
+  defp resolve_layout_zone_assignment(assignment), do: assignment
 
   defp fetch_widget_reference(data, key, "medias") do
     case Map.get(data, key) do

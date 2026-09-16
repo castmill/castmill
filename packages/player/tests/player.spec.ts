@@ -5,10 +5,58 @@ import { spy, stub, restore } from 'sinon';
 
 import {
   getImageBackgroundSize,
+  Layer,
   Player,
   Playlist,
+  Renderer,
   timer,
 } from '../dist/index.js';
+
+describe('Layer aspect ratio sizing', () => {
+  it('falls back to window resize events when ResizeObserver is unavailable', () => {
+    const originalDocument = globalThis.document;
+    const originalWindow = globalThis.window;
+    const originalResizeObserver = globalThis.ResizeObserver;
+    const widgetStyle: Record<string, string> = {};
+    let resizeListener: (() => void) | undefined;
+    let removedListener: (() => void) | undefined;
+
+    const layerElement = {
+      style: {},
+      dataset: {},
+      firstElementChild: { style: widgetStyle },
+      getBoundingClientRect: () => ({ width: 1920, height: 1080 }),
+    };
+
+    try {
+      (globalThis as any).document = {
+        createElement: () => layerElement,
+      };
+      (globalThis as any).window = {
+        addEventListener: (_event: string, listener: () => void) => {
+          resizeListener = listener;
+        },
+        removeEventListener: (_event: string, listener: () => void) => {
+          removedListener = listener;
+        },
+      };
+      (globalThis as any).ResizeObserver = undefined;
+
+      const layer = new Layer('layout', { widgetAspectRatio: '1:1' });
+
+      expect(resizeListener).to.be.a('function');
+      expect(widgetStyle.width).to.equal('1080px');
+      expect(widgetStyle.height).to.equal('1080px');
+
+      layer.unload();
+      expect(removedListener).to.equal(resizeListener);
+    } finally {
+      (globalThis as any).document = originalDocument;
+      (globalThis as any).window = originalWindow;
+      (globalThis as any).ResizeObserver = originalResizeObserver;
+    }
+  });
+});
 
 describe('Playlist.seek', () => {
   it('should wrap an end-of-playlist offset to the first layer', async () => {
@@ -88,6 +136,46 @@ describe('Player.play', () => {
     expect(play.calledOnce).to.equal(true);
 
     player.stop();
+  });
+});
+
+describe('Player.clear', () => {
+  it('stops playback and clears the rendered layer', () => {
+    const renderer = {
+      clear: spy(),
+      setViewport: () => {},
+    } as any;
+    const player = new Player({} as any, renderer);
+    const stopSpy = spy(player, 'stop');
+
+    player.clear();
+
+    expect(stopSpy.calledOnce).to.equal(true);
+    expect(renderer.clear.calledOnce).to.equal(true);
+  });
+});
+
+describe('Renderer.clear', () => {
+  it('unloads and removes the current layer', () => {
+    const removeChild = spy();
+    const unload = spy();
+    const reset = spy();
+    const renderer = new Renderer({} as HTMLElement);
+    const layer = {
+      el: { parentElement: { removeChild } },
+      unload,
+    };
+
+    (renderer as any).currentLayer = layer;
+    (renderer as any).currentTransition = { reset };
+
+    renderer.clear();
+
+    expect(reset.calledOnce).to.equal(true);
+    expect(unload.calledOnce).to.equal(true);
+    expect(removeChild.calledOnceWithExactly(layer.el)).to.equal(true);
+    expect((renderer as any).currentLayer).to.equal(undefined);
+    expect((renderer as any).currentTransition).to.equal(undefined);
   });
 });
 

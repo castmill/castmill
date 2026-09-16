@@ -42,7 +42,7 @@ export class ElectronLegacyMachine
     return {
       appType: 'Electron legacy adapter',
       appVersion: environment.versionStr,
-      os: 'Electrion',
+      os: 'Electron',
       hardware: environment.model,
       chromiumVersion,
       userAgent: navigator.userAgent,

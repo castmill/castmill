@@ -80,6 +80,7 @@ describe('Device', () => {
       getSetting: vi.fn(),
       getMachineGUID: vi.fn(),
       removeCredentials: vi.fn(),
+      storeCredentials: vi.fn(),
     };
 
     mockStorageIntegration = {
@@ -100,13 +101,129 @@ describe('Device', () => {
     expect(device['cache']).toBeDefined();
     expect(device['closing']).toBe(false);
     expect(device['channels']).toEqual([]);
+    expect(device.getServerConnectionStatus()).toBe('not-initialized');
   });
+
+  it.each([
+    [true, 'connected'],
+    [false, 'disconnected'],
+  ] as const)(
+    'should report the current server socket state',
+    (isConnected, expectedStatus) => {
+      device['socket'] = {
+        isConnected: vi.fn().mockReturnValue(isConnected),
+      } as any;
+
+      expect(device.getServerConnectionStatus()).toBe(expectedStatus);
+    }
+  );
 
   it('should initialize and get base URL', async () => {
     mockIntegration.getSetting.mockResolvedValue('http://localhost:3000');
     await device.init();
     expect(device['baseUrl']).toBe('http://localhost:3000');
     expect(mockIntegration.getSetting).toHaveBeenCalled();
+  });
+
+  it('should initialize with an explicit base URL', async () => {
+    await device.init('http://localhost:4000');
+
+    expect(device['baseUrl']).toBe('http://localhost:4000');
+    expect(mockIntegration.getSetting).not.toHaveBeenCalled();
+  });
+
+  it('should refresh and persist the current device identity', async () => {
+    const credentials = {
+      device: {
+        id: 'device-1',
+        name: 'Old name',
+        token: 'device-token',
+        organizationName: 'Organization',
+      },
+    };
+    mockIntegration.getCredentials.mockResolvedValue(
+      JSON.stringify(credentials)
+    );
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue({
+        data: {
+          id: 'device-1',
+          name: 'Renamed player',
+        },
+      }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    try {
+      await device.init('https://castmill.example');
+      const identity = await device.refreshIdentity();
+
+      expect(identity).toEqual({
+        id: 'device-1',
+        name: 'Renamed player',
+      });
+      expect(device.id).toBe('device-1');
+      expect(device.name).toBe('Renamed player');
+      expect(fetchMock).toHaveBeenCalledWith(
+        'https://castmill.example/devices/device-1',
+        {
+          headers: {
+            Accept: 'application/json',
+            Authorization: 'Bearer device-token',
+          },
+        }
+      );
+      expect(mockIntegration.storeCredentials).toHaveBeenCalledWith(
+        JSON.stringify({
+          device: {
+            ...credentials.device,
+            name: 'Renamed player',
+          },
+        })
+      );
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('should keep the refreshed identity when credential persistence fails', async () => {
+    mockIntegration.getCredentials.mockResolvedValue(
+      JSON.stringify({
+        device: {
+          id: 'device-1',
+          name: 'Old name',
+          token: 'device-token',
+        },
+      })
+    );
+    mockIntegration.storeCredentials.mockRejectedValue(
+      new Error('storage unavailable')
+    );
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          data: {
+            id: 'device-1',
+            name: 'Current name',
+          },
+        }),
+      })
+    );
+
+    try {
+      await device.init('https://castmill.example');
+
+      await expect(device.refreshIdentity()).rejects.toThrow(
+        'storage unavailable'
+      );
+      expect(device.id).toBe('device-1');
+      expect(device.name).toBe('Current name');
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it('should default to VITE_DEFAULT_BASE_URL if getBaseUrl returns null', async () => {
@@ -306,7 +423,8 @@ describe('Device - Channel Updates', () => {
     device['channels'] = [
       {
         attrs: {
-          id: '123',
+          // API responses contain numeric channel IDs.
+          id: 123,
           name: 'Test Channel',
           default_playlist_id: '100',
         },
@@ -354,12 +472,29 @@ describe('Device - Channel Updates', () => {
     device['channels'] = [
       {
         attrs: {
-          id: '123',
+          id: 123,
           name: 'Test Channel',
           default_playlist_id: '100',
         },
       } as any,
     ];
+    const queuedLayer = {};
+    const clear = vi.fn();
+    const layers = [queuedLayer];
+    const contentQueue = {
+      layers,
+      get length() {
+        return layers.length;
+      },
+      time: 5000,
+      remove: vi.fn((layer) => {
+        const index = layers.indexOf(layer);
+        layers.splice(index, 1);
+        return contentQueue;
+      }),
+    };
+    device['player'] = { clear } as any;
+    device['contentQueue'] = contentQueue as any;
 
     device['initListeners'](mockChannel as any);
 
@@ -378,6 +513,11 @@ describe('Device - Channel Updates', () => {
 
     // Verify that the channel's default_playlist_id was set to undefined
     expect(device['channels'][0].attrs.default_playlist_id).toBeUndefined();
+    expect(device['channelGeneration']).toBe(1);
+    expect(clear).toHaveBeenCalledOnce();
+    expect(contentQueue.remove).toHaveBeenCalledWith(queuedLayer);
+    expect(device['contentQueue']!.length).toBe(0);
+    expect(device['contentQueue']!.time).toBe(0);
   });
 
   it('should not update if channel is not found', async () => {
@@ -541,6 +681,48 @@ describe('Device - Channel Updates', () => {
     // Verify that the existing channel was not affected
     expect(device['channels'].length).toBe(1);
     expect(device['channels'][0].attrs.id).toBe('123');
+  });
+
+  it('should clear active playback when a playlist is updated', async () => {
+    const mockChannel = {
+      on: vi.fn(),
+      push: vi.fn(),
+      join: vi.fn(),
+    };
+    const queuedLayer = {};
+    const clear = vi.fn();
+    const layers = [queuedLayer];
+    const contentQueue = {
+      layers,
+      get length() {
+        return layers.length;
+      },
+      time: 5000,
+      remove: vi.fn((layer) => {
+        layers.splice(layers.indexOf(layer), 1);
+        return contentQueue;
+      }),
+    };
+    device['player'] = { clear } as any;
+    device['contentQueue'] = contentQueue as any;
+    device['initListeners'](mockChannel as any);
+
+    const playlistUpdatedHandler = mockChannel.on.mock.calls.find(
+      (call) => call[0] === 'playlist_updated'
+    )?.[1];
+
+    expect(playlistUpdatedHandler).toBeDefined();
+
+    await playlistUpdatedHandler({
+      event: 'playlist_updated',
+      playlist_id: 100,
+    });
+
+    expect(device['channelGeneration']).toBe(1);
+    expect(clear).toHaveBeenCalledOnce();
+    expect(contentQueue.remove).toHaveBeenCalledWith(queuedLayer);
+    expect(contentQueue.length).toBe(0);
+    expect(contentQueue.time).toBe(0);
   });
 });
 
@@ -1037,6 +1219,10 @@ describe('Device - loginOrRegister (non-blocking login)', () => {
       device: { id: 'device1', token: 'token123', name: 'Device 1' },
     };
     const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+    const csrfToken = document.createElement('meta');
+    csrfToken.name = 'csrf-token';
+    csrfToken.content = 'test-csrf-token';
+    document.head.append(csrfToken);
     vi.stubGlobal('fetch', fetchMock);
 
     try {
@@ -1046,6 +1232,11 @@ describe('Device - loginOrRegister (non-blocking login)', () => {
         'http://localhost:4000/devices/device1/info',
         expect.objectContaining({
           method: 'POST',
+          headers: expect.objectContaining({
+            Authorization: 'Bearer token123',
+            'Content-Type': 'application/json',
+            'x-csrf-token': 'test-csrf-token',
+          }),
           body: JSON.stringify({
             info: {
               appType: 'Electron',
@@ -1056,6 +1247,47 @@ describe('Device - loginOrRegister (non-blocking login)', () => {
             },
           }),
         })
+      );
+    } finally {
+      csrfToken.remove();
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('should replace stale local timers with the server schedule', async () => {
+    const credentials = {
+      device: { id: 'device1', token: 'token123', name: 'Device 1' },
+    };
+    const timers = { on: [], off: [] };
+    mockIntegration.getCredentials.mockResolvedValue(
+      JSON.stringify(credentials)
+    );
+    mockIntegration.getSetting.mockResolvedValue(null);
+    mockIntegration.setSetting = vi.fn().mockResolvedValue(undefined);
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ entries: [], timers }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    try {
+      await expect(device.syncSchedule()).resolves.toBe(true);
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        'http://localhost:4000/devices/device1/schedule',
+        {
+          headers: {
+            Authorization: 'Bearer token123',
+          },
+        }
+      );
+      expect(mockIntegration.setSetting).toHaveBeenCalledWith(
+        'TIMERS',
+        JSON.stringify(timers)
+      );
+      expect(mockIntegration.setSetting).toHaveBeenCalledWith(
+        'TIMER_OFF',
+        'false'
       );
     } finally {
       vi.unstubAllGlobals();

@@ -29,7 +29,11 @@ defmodule CastmillWeb.LegacyPlayerControllerTest do
   end
 
   test "serves the legacy player entry document", %{conn: conn} do
-    assert get(conn, "/legacy") |> response(200) == @index_html
+    conn = get(conn, "/legacy")
+
+    assert response(conn, 200) == @index_html
+    assert get_resp_header(conn, "x-frame-options") == []
+    assert get_resp_header(conn, "x-content-type-options") == ["nosniff"]
     assert get(conn, "/legacy/") |> response(200) == @index_html
   end
 

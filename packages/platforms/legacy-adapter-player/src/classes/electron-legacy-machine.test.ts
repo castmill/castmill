@@ -43,7 +43,7 @@ describe('ElectronLegacyMachine', () => {
     expect(info).toEqual({
       appType: 'Electron legacy adapter',
       appVersion: 'mocked_version_str',
-      os: 'Electrion',
+      os: 'Electron',
       hardware: 'mocked_model',
       chromiumVersion: undefined, // Since userAgent is not mocked in the test environment
       userAgent: navigator.userAgent,

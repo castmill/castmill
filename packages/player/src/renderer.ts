@@ -245,6 +245,17 @@ export class Renderer {
     return this.currentLayer?.seek(offset);
   }
 
+  clear() {
+    this.currentTransition?.reset();
+    delete this.currentTransition;
+
+    if (this.currentLayer) {
+      this.currentLayer.unload();
+      this.currentLayer.el.parentElement?.removeChild(this.currentLayer.el);
+      delete this.currentLayer;
+    }
+  }
+
   async clean() {
     // Note, what if we are playing when this is called?
     this.el.parentElement?.removeChild(this.el);

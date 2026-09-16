@@ -22,6 +22,12 @@ config :castmill, CastmillWeb.Endpoint,
   secret_key_base: "vQj/9DOCuLIfbd/SI7T2uxb0rVjBrP/eYAB33oWAjbIuhoJKgthj/+vt4Tr2XJKz",
   server: false
 
+config :castmill, :local_player_origins, [
+  "http://localhost:4000",
+  "http://127.0.0.1:4000",
+  "http://[::1]:4000"
+]
+
 # Encryption configuration for tests (deterministic key for reproducibility)
 # DO NOT use this key in production!
 config :castmill, :encryption, %{

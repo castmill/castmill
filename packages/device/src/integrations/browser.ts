@@ -102,20 +102,41 @@ export class BrowserMachine implements Machine {
   async getLocation(): Promise<
     undefined | { latitude: number; longitude: number }
   > {
-    try {
-      const location = await new Promise<GeolocationPosition>(
-        (resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject);
-        }
-      );
+    return new Promise((resolve) => {
+      let settled = false;
+      const timeoutId = window.setTimeout(() => {
+        settled = true;
+        resolve(undefined);
+      }, 5000);
 
-      return {
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
+      const complete = (
+        location?: Pick<GeolocationPosition, 'coords'>
+      ): void => {
+        if (settled) {
+          return;
+        }
+
+        settled = true;
+        window.clearTimeout(timeoutId);
+        resolve(
+          location
+            ? {
+                latitude: location.coords.latitude,
+                longitude: location.coords.longitude,
+              }
+            : undefined
+        );
       };
-    } catch (e) {
-      return undefined;
-    }
+
+      try {
+        navigator.geolocation.getCurrentPosition(
+          (location) => complete(location),
+          () => complete()
+        );
+      } catch {
+        complete();
+      }
+    });
   }
 
   async getTimezone(): Promise<string> {

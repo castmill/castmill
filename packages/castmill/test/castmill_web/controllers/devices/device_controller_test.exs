@@ -45,6 +45,31 @@ defmodule CastmillWeb.DeviceControllerTest do
     {:ok, conn: conn, user: user, organization: organization}
   end
 
+  describe "show as device" do
+    test "returns the device's current identity", %{organization: organization} do
+      {:ok, devices_registration} =
+        device_registration_fixture(%{hardware_id: "show-hw-id", pincode: "show1234"})
+
+      {:ok, {device, token}} =
+        Castmill.Devices.register_device(organization.id, devices_registration.pincode, %{
+          name: "Current Device Name"
+        })
+
+      conn =
+        build_conn()
+        |> put_req_header("accept", "application/json")
+        |> put_req_header("authorization", Enum.join(["Bearer", token], " "))
+        |> get("/devices/#{device.id}")
+
+      assert json_response(conn, 200) == %{
+               "data" => %{
+                 "id" => device.id,
+                 "name" => "Current Device Name"
+               }
+             }
+    end
+  end
+
   describe "info as device" do
     test "stores the player metadata", %{organization: organization} do
       {:ok, devices_registration} =
@@ -102,6 +127,33 @@ defmodule CastmillWeb.DeviceControllerTest do
       end
 
       assert Castmill.Devices.get_device(device.id).info == nil
+    end
+  end
+
+  describe "schedule as device" do
+    test "returns authoritative empty timers for an always-on schedule", %{
+      organization: organization
+    } do
+      {:ok, devices_registration} =
+        device_registration_fixture(%{hardware_id: "schedule-hw-id", pincode: "sched123"})
+
+      {:ok, {device, token}} =
+        Castmill.Devices.register_device(organization.id, devices_registration.pincode, %{
+          name: "Schedule Device"
+        })
+
+      {:ok, _device} = Castmill.Devices.set_device_schedule(device.id, [])
+
+      conn =
+        build_conn()
+        |> put_req_header("accept", "application/json")
+        |> put_req_header("authorization", Enum.join(["Bearer", token], " "))
+        |> get("/devices/#{device.id}/schedule")
+
+      assert %{
+               "entries" => [],
+               "timers" => %{"on" => [], "off" => []}
+             } = json_response(conn, 200)
     end
   end
 

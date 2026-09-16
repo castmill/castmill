@@ -264,12 +264,27 @@ defmodule Castmill.Workers.VideoTranscoder do
   end
 
   defp transcode_video(input_file, output_path, width, media_id, total_duration, acc_progress) do
-    # Build FFmpeg command
-    ffmpeg_args = [
+    run_ffmpeg_with_progress(
+      ffmpeg_args(input_file, output_path, width),
+      media_id,
+      total_duration,
+      acc_progress
+    )
+  end
+
+  @doc false
+  def ffmpeg_args(input_file, output_path, max_dimension) do
+    [
       "-i",
       input_file,
       "-c:v",
       "libx264",
+      "-profile:v",
+      "main",
+      "-level:v",
+      "4.0",
+      "-pix_fmt",
+      "yuv420p",
       "-preset",
       "fast",
       "-c:a",
@@ -277,15 +292,12 @@ defmodule Castmill.Workers.VideoTranscoder do
       "-b:a",
       "128k",
       "-vf",
-      "scale=#{width}:-2",
+      "scale=#{max_dimension}:#{max_dimension}:force_original_aspect_ratio=decrease:force_divisible_by=2",
       "-movflags",
       "+faststart",
       "-y",
       output_path
     ]
-
-    # Run FFmpeg command and capture progress
-    run_ffmpeg_with_progress(ffmpeg_args, media_id, total_duration, acc_progress)
   end
 
   @doc false
@@ -450,7 +462,7 @@ defmodule Castmill.Workers.VideoTranscoder do
 
         # Generate URI for the uploaded file
         uri =
-          "#{Helpers.get_endpoint_url()}/#{Path.join(["medias", "#{organization_id}", "#{media_id}", filename])}"
+          "#{Helpers.get_media_base_url()}/#{Path.join(["medias", "#{organization_id}", "#{media_id}", filename])}"
 
         {uri, size}
 

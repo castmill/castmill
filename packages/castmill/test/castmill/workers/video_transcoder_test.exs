@@ -14,6 +14,19 @@ defmodule Castmill.Workers.VideoTranscoderTest do
   # Tell ExUnit to verify mocks on exit
   setup :verify_on_exit!
 
+  describe "ffmpeg_args/3" do
+    test "produces legacy-compatible H.264 video within the target dimensions" do
+      args = VideoTranscoder.ffmpeg_args("input.mov", "output.mp4", 1920)
+
+      assert Enum.at(args, Enum.find_index(args, &(&1 == "-profile:v")) + 1) == "main"
+      assert Enum.at(args, Enum.find_index(args, &(&1 == "-level:v")) + 1) == "4.0"
+      assert Enum.at(args, Enum.find_index(args, &(&1 == "-pix_fmt")) + 1) == "yuv420p"
+
+      assert Enum.at(args, Enum.find_index(args, &(&1 == "-vf")) + 1) ==
+               "scale=1920:1920:force_original_aspect_ratio=decrease:force_divisible_by=2"
+    end
+  end
+
   describe "extract_thumbnail/2" do
     setup do
       # Create a temporary directory for test outputs

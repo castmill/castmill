@@ -8,6 +8,8 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
   import Castmill.OrganizationsFixtures
   import Castmill.TeamsFixtures
   import Castmill.PlaylistsFixtures
+  import Castmill.ChannelsFixtures
+  import Castmill.DevicesFixtures
 
   @moduletag :e2e
 
@@ -370,6 +372,58 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
     end
   end
 
+  describe "update playlist items" do
+    test "notifies assigned devices when an item is deleted", %{
+      conn: conn,
+      organization: organization
+    } do
+      playlist = playlist_fixture(%{organization_id: organization.id})
+      widget = widget_fixture()
+
+      {:ok, item} =
+        Castmill.Resources.insert_item_into_playlist(
+          playlist.id,
+          nil,
+          widget.id,
+          0,
+          10_000
+        )
+
+      channel =
+        channel_fixture(%{
+          organization_id: organization.id,
+          timezone: "UTC",
+          default_playlist_id: playlist.id
+        })
+
+      {:ok, registration} = device_registration_fixture()
+
+      {:ok, {device, _token}} =
+        Castmill.Devices.register_device(organization.id, registration.pincode, %{
+          name: "Playing Device"
+        })
+
+      {:ok, _} = Castmill.Devices.add_channel(device.id, channel.id)
+      Phoenix.PubSub.subscribe(Castmill.PubSub, "devices:#{device.id}")
+
+      conn =
+        delete(
+          conn,
+          "/api/organizations/#{organization.id}/playlists/#{playlist.id}/items/#{item.id}"
+        )
+
+      assert response(conn, 204)
+
+      assert_receive %{
+                       event: "playlist_updated",
+                       playlist_id: playlist_id
+                     },
+                     1000
+
+      assert playlist_id == playlist.id
+    end
+  end
+
   describe "full playlist lifecycle" do
     test "creates and retrieves a new playlist from the list", %{
       conn: conn,
@@ -727,6 +781,60 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
       # Should only return the parent once, not duplicated
       assert parent_playlist.id in ancestor_ids
       assert length(ancestor_ids) == 1
+    end
+
+    test "expands persisted layout playlist ids when loading a playlist", %{
+      organization: organization,
+      layout_widget: layout_widget
+    } do
+      parent_playlist =
+        playlist_fixture(%{
+          organization_id: organization.id,
+          name: "parent_playlist"
+        })
+
+      child_playlists =
+        for index <- 1..3 do
+          playlist_fixture(%{
+            organization_id: organization.id,
+            name: "child_playlist_#{index}"
+          })
+        end
+
+      zone_playlist_map =
+        child_playlists
+        |> Enum.with_index(1)
+        |> Map.new(fn {playlist, index} ->
+          {"zone-#{index}", %{"playlistId" => playlist.id}}
+        end)
+
+      {:ok, _item} =
+        Resources.insert_item_into_playlist(
+          parent_playlist.id,
+          nil,
+          layout_widget.id,
+          0,
+          10_000,
+          %{
+            "layoutRef" => %{
+              "layoutId" => 1,
+              "aspectRatio" => "9:16",
+              "zonePlaylistMap" => zone_playlist_map
+            }
+          }
+        )
+
+      [item] = Resources.get_playlist(parent_playlist.id).items
+      resolved_assignments = item.config.options["layoutRef"]["zonePlaylistMap"]
+
+      Enum.with_index(child_playlists, 1)
+      |> Enum.each(fn {playlist, index} ->
+        assignment = resolved_assignments["zone-#{index}"]
+        assert assignment["playlistId"] == playlist.id
+        assert assignment["playlist"].id == playlist.id
+        assert assignment["playlist"].name == playlist.name
+        assert assignment["playlist"].items == []
+      end)
     end
 
     test "does not include non-layout widget references", %{

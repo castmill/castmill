@@ -112,10 +112,15 @@ defmodule CastmillWeb.Endpoint do
     else
       # Domains are stored without protocol, but CORS needs full origins.
       # Return both http:// and https:// variants for each domain.
-      Castmill.Networks.list_network_domains()
-      |> Enum.flat_map(fn domain ->
-        ["http://" <> domain, "https://" <> domain]
-      end)
+      local_player_origins = Application.get_env(:castmill, :local_player_origins, [])
+
+      network_origins =
+        Castmill.Networks.list_network_domains()
+        |> Enum.flat_map(fn domain ->
+          ["http://" <> domain, "https://" <> domain]
+        end)
+
+      Enum.uniq(local_player_origins ++ network_origins)
     end
   end
 end

@@ -32,6 +32,7 @@ const TOTAL_STORAGE = 1e9; // 1GB
 export class AndroidLegacyFileStorage implements StorageIntegration {
   private storagePath: string;
   private fileMap = new Map<string, FileData>();
+  private fileRevision = Date.now();
 
   constructor(storagePath: string) {
     this.storagePath = storagePath;
@@ -86,7 +87,7 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
   ): Promise<StoreFileReturnValue> {
     const mappedUrl = this.mapLocalhostUrl(url);
 
-    const fileName = this.getFileName(mappedUrl);
+    const fileName = this.getFileName(mappedUrl, this.fileRevision++);
     const localPath = this.getLocalUrl(fileName);
 
     // Android legacy player does not support headers in the downloadFile API
@@ -101,7 +102,13 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
 
       const size = this.estimateSize(mappedUrl);
 
-      this.fileMap.set(mappedUrl, { url: localUrl, size });
+      // Keep the original URL as the key because that is the key used by Cache.
+      // Older versions keyed mapped localhost URLs, so remove that stale entry
+      // when it differs.
+      if (mappedUrl !== url) {
+        this.fileMap.delete(mappedUrl);
+      }
+      this.fileMap.set(url, { url: localUrl, size });
 
       await this.saveFileMap();
 
@@ -125,7 +132,7 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
    * Retrieve a file from the storage. Returns the file path if the file exists,
    */
   async retrieveFile(url: string): Promise<string | void> {
-    const file = this.fileMap.get(url);
+    const file = this.getFileEntry(url)?.file;
     if (!file) {
       return;
     }
@@ -137,16 +144,17 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
    * Delete a file from the storage
    */
   async deleteFile(url: string): Promise<void> {
-    const file = this.fileMap.get(url);
-    if (!file) {
-      return;
+    const entry = this.getFileEntry(url);
+
+    if (entry) {
+      await deleteFile(entry.file.url);
+      this.fileMap.delete(entry.key);
+      await this.saveFileMap();
+    } else {
+      // Cache replaces a source URL with a newly downloaded local URI before
+      // asking the integration to remove the superseded local URI.
+      await deleteFile(url);
     }
-
-    await deleteFile(file.url);
-
-    this.fileMap.delete(url);
-
-    await this.saveFileMap();
   }
 
   /*
@@ -168,15 +176,15 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
    * @param {string} url - The URL of the file
    * @returns {string} - The unique file name
    */
-  private getFileName(url: string): string {
+  private getFileName(url: string, revision: number): string {
     const pathName = new URL(url).pathname;
 
     const [, extension] = pathName.split('.');
 
     const hash = simpleHash(pathName);
-    // if extension is present, append it to the hash otherwise, just return the hash
-    // return extension ? `${hash}.${extension}` : hash;
-    return extension ? `${hash}.${extension}` : `${hash}`;
+    const versionedHash = `${hash}-${revision}`;
+
+    return extension ? `${versionedHash}.${extension}` : versionedHash;
   }
 
   private getLocalUrl(path: string): string {
@@ -217,5 +225,26 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
     }
 
     return url.replace('localhost', fileHost);
+  }
+
+  private getFileEntry(
+    url: string
+  ): { key: string; file: FileData } | undefined {
+    const directMatch = this.fileMap.get(url);
+    if (directMatch) {
+      return { key: url, file: directMatch };
+    }
+
+    const mappedUrl = this.mapLocalhostUrl(url);
+    const legacyMatch = this.fileMap.get(mappedUrl);
+    if (legacyMatch) {
+      return { key: mappedUrl, file: legacyMatch };
+    }
+
+    for (const [key, file] of this.fileMap.entries()) {
+      if (file.url === url) {
+        return { key, file };
+      }
+    }
   }
 }

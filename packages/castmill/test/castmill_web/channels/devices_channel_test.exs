@@ -135,4 +135,21 @@ defmodule CastmillWeb.DevicesChannelTest do
       }
     end
   end
+
+  describe "handle_info/2 - playlist_updated" do
+    test "pushes playlist_updated event to client", %{
+      socket: socket,
+      device: device,
+      token: token
+    } do
+      {:ok, _reply, socket} =
+        subscribe_and_join(socket, DevicesChannel, "devices:#{device.id}", %{"token" => token})
+
+      message = %{event: "playlist_updated", playlist_id: 123}
+
+      DevicesChannel.handle_info(message, socket)
+
+      assert_push "playlist_updated", %{event: "playlist_updated", playlist_id: 123}
+    end
+  end
 end
