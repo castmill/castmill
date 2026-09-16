@@ -329,6 +329,14 @@ export class Layer extends EventEmitter {
   }
 
   show(offset: number) {
+    if (
+      this.widgetAspectRatio !== null &&
+      !this.resizeObserver &&
+      !this.resizeListener
+    ) {
+      this.setupResizeObserver();
+    }
+
     if (this.widget) {
       return this.widget.show(this.el, offset).pipe(
         tap(() => this.updateWidgetDimensions()),

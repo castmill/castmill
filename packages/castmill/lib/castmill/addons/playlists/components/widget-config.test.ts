@@ -124,6 +124,37 @@ describe('WidgetConfig - URL Validation Logic', () => {
   });
 });
 
+describe('WidgetConfig - Layout Ref API normalization', () => {
+  it('preserves legacy numeric zone assignments when normalizing layout refs', () => {
+    expect(
+      normalizeWidgetOptionsForApi(
+        {
+          layoutRef: {
+            layoutId: 10,
+            aspectRatio: '16:9',
+            zones: { zones: [] },
+            zonePlaylistMap: {
+              zoneA: 123,
+              zoneB: { playlistId: 456, playlist: { id: 456 } },
+            },
+          },
+        },
+        [['layoutRef', { type: 'layout-ref' } as SchemaAttributeType]]
+      )
+    ).toEqual({
+      layoutRef: {
+        layoutId: 10,
+        aspectRatio: '16:9',
+        zones: { zones: [] },
+        zonePlaylistMap: {
+          zoneA: 123,
+          zoneB: { playlistId: 456 },
+        },
+      },
+    });
+  });
+});
+
 describe('WidgetConfig - Schema Entries Normalization', () => {
   it('normalizes map format and sorts by order', () => {
     const schema = {

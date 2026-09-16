@@ -12,7 +12,7 @@ import { mountDevice, Device, BrowserMachine } from '@castmill/device';
   const browserCache = new StorageBrowser('browser-cache', '/assets/');
   const device = new Device(browserMachine, browserCache);
 
-  await device.init(window.location.origin);
+  await device.init();
   await browserCache.init();
 
   mountDevice(document.getElementById('device'), device);

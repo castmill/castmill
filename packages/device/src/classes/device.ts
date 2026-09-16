@@ -32,6 +32,7 @@ import { TimerManager } from './timer-manager';
 const HEARTBEAT_INTERVAL = 1000 * 30; // 30 seconds
 const DEFAULT_MAX_LOGS = 100;
 const MAX_RECONNECT_DELAY_MS = 60_000; // 60 seconds max delay between reconnect attempts
+const DEFAULT_FETCH_TIMEOUT_MS = 5000;
 
 // Socket reconnection error types
 const AUTH_ERROR_INVALID_DEVICE = 'invalid_device';
@@ -889,11 +890,16 @@ export class Device extends EventEmitter {
 
   private resetPlaybackQueue() {
     this.channelGeneration++;
+    const currentLayer = this.player?.getCurrentLayer?.();
     this.player?.clear();
 
     if (this.contentQueue) {
       while (this.contentQueue.length > 0) {
-        this.contentQueue.remove(this.contentQueue.layers[0]);
+        const layer = this.contentQueue.layers[0];
+        this.contentQueue.remove(layer);
+        if (layer !== currentLayer) {
+          layer.unload?.();
+        }
       }
       this.contentQueue.time = 0;
     }
@@ -1388,7 +1394,7 @@ export class Device extends EventEmitter {
     }
 
     try {
-      const response = await fetch(
+      const response = await this.fetchWithTimeout(
         `${this.baseUrl}/devices/${credentials.device.id}/schedule`,
         {
           headers: {
@@ -1415,6 +1421,45 @@ export class Device extends EventEmitter {
       this.logger.error(`Unable to synchronize device schedule: ${error}`);
       return false;
     }
+  }
+
+  private fetchWithTimeout(
+    input: RequestInfo | URL,
+    init?: RequestInit,
+    timeoutMs: number = DEFAULT_FETCH_TIMEOUT_MS
+  ): Promise<Response> {
+    return new Promise((resolve, reject) => {
+      let settled = false;
+      const timeoutId = window.setTimeout(() => {
+        if (settled) {
+          return;
+        }
+
+        settled = true;
+        reject(new Error(`Request timed out after ${timeoutMs}ms`));
+      }, timeoutMs);
+
+      fetch(input, init).then(
+        (response) => {
+          if (settled) {
+            return;
+          }
+
+          settled = true;
+          window.clearTimeout(timeoutId);
+          resolve(response);
+        },
+        (error) => {
+          if (settled) {
+            return;
+          }
+
+          settled = true;
+          window.clearTimeout(timeoutId);
+          reject(error);
+        }
+      );
+    });
   }
 
   /**

@@ -63,4 +63,26 @@ describe('AndroidLegacyFileStorage', () => {
     expect(setItem).toHaveBeenLastCalledWith('FILE_MAP', '[]');
     expect(getItem).toHaveBeenCalledWith('FILE_MAP');
   });
+
+  it('deletes stale mapped localhost files before replacing their mapping', async () => {
+    (getItem as any).mockResolvedValueOnce(
+      JSON.stringify([
+        [
+          'https://192.168.1.10/media/image.png',
+          { url: 'content://stale-file', size: 123 },
+        ],
+      ])
+    );
+
+    vi.stubEnv('VITE_FILE_HOST', '192.168.1.10');
+    storage = new AndroidLegacyFileStorage('');
+    await storage.init();
+
+    try {
+      await storage.storeFile('https://localhost/media/image.png');
+      expect(deleteFile).toHaveBeenCalledWith('content://stale-file');
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
 });

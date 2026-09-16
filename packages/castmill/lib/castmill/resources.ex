@@ -614,10 +614,41 @@ defmodule Castmill.Resources do
   defp resolve_layout_reference(layout_ref), do: layout_ref
 
   defp resolve_layout_zone_assignment(%{"playlistId" => playlist_id} = assignment) do
-    Map.put(assignment, "playlist", get_playlist(playlist_id))
+    case parse_layout_playlist_id(playlist_id) do
+      {:ok, parsed_playlist_id} ->
+        Map.put(assignment, "playlist", get_playlist(parsed_playlist_id))
+
+      :error ->
+        assignment
+    end
+  end
+
+  defp resolve_layout_zone_assignment(playlist_id) when is_integer(playlist_id) do
+    %{"playlistId" => playlist_id, "playlist" => get_playlist(playlist_id)}
+  end
+
+  defp resolve_layout_zone_assignment(playlist_id) when is_binary(playlist_id) do
+    case parse_layout_playlist_id(playlist_id) do
+      {:ok, parsed_playlist_id} ->
+        %{"playlistId" => parsed_playlist_id, "playlist" => get_playlist(parsed_playlist_id)}
+
+      :error ->
+        playlist_id
+    end
   end
 
   defp resolve_layout_zone_assignment(assignment), do: assignment
+
+  defp parse_layout_playlist_id(playlist_id) when is_integer(playlist_id), do: {:ok, playlist_id}
+
+  defp parse_layout_playlist_id(playlist_id) when is_binary(playlist_id) do
+    case Integer.parse(playlist_id) do
+      {parsed_playlist_id, ""} -> {:ok, parsed_playlist_id}
+      _ -> :error
+    end
+  end
+
+  defp parse_layout_playlist_id(_playlist_id), do: :error
 
   defp fetch_widget_reference(data, key, "medias") do
     case Map.get(data, key) do
@@ -808,9 +839,9 @@ defmodule Castmill.Resources do
         where:
           w.slug == "layout-widget" and
             fragment(
-              "EXISTS (SELECT 1 FROM jsonb_each(?->'layoutRef'->'zonePlaylistMap') AS kv WHERE (kv.value->>'playlistId')::integer = ?)",
+              "EXISTS (SELECT 1 FROM jsonb_each(?->'layoutRef'->'zonePlaylistMap') AS kv WHERE COALESCE(kv.value->>'playlistId', trim(both '\"' from kv.value::text)) = ?)",
               wc.options,
-              ^playlist_id
+              ^Integer.to_string(playlist_id)
             ),
         select: pi.playlist_id,
         distinct: true

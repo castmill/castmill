@@ -34,7 +34,10 @@ config :castmill, CastmillWeb.Endpoint,
 config :castmill, :local_player_origins, [
   "http://localhost:4000",
   "http://127.0.0.1:4000",
-  "http://[::1]:4000"
+  "http://[::1]:4000",
+  "http://localhost:3003",
+  "http://127.0.0.1:3003",
+  "http://[::1]:3003"
 ]
 
 # ## SSL Support

@@ -56,6 +56,43 @@ describe('Layer aspect ratio sizing', () => {
       (globalThis as any).ResizeObserver = originalResizeObserver;
     }
   });
+
+  it('reattaches the resize fallback when a reused layer is shown again', () => {
+    const originalDocument = globalThis.document;
+    const originalWindow = globalThis.window;
+    const originalResizeObserver = globalThis.ResizeObserver;
+    const listeners: Array<() => void> = [];
+
+    const layerElement = {
+      style: {},
+      dataset: {},
+      firstElementChild: { style: {} },
+      getBoundingClientRect: () => ({ width: 1920, height: 1080 }),
+    };
+
+    try {
+      (globalThis as any).document = {
+        createElement: () => layerElement,
+      };
+      (globalThis as any).window = {
+        addEventListener: (_event: string, listener: () => void) => {
+          listeners.push(listener);
+        },
+        removeEventListener: () => {},
+      };
+      (globalThis as any).ResizeObserver = undefined;
+
+      const layer = new Layer('layout', { widgetAspectRatio: '1:1' });
+      layer.unload();
+      layer.show(0);
+
+      expect(listeners).to.have.length(2);
+    } finally {
+      (globalThis as any).document = originalDocument;
+      (globalThis as any).window = originalWindow;
+      (globalThis as any).ResizeObserver = originalResizeObserver;
+    }
+  });
 });
 
 describe('Playlist.seek', () => {
@@ -176,6 +213,35 @@ describe('Renderer.clear', () => {
     expect(removeChild.calledOnceWithExactly(layer.el)).to.equal(true);
     expect((renderer as any).currentLayer).to.equal(undefined);
     expect((renderer as any).currentTransition).to.equal(undefined);
+  });
+
+  it('also unloads and removes a pending layer', () => {
+    const currentRemoveChild = spy();
+    const pendingRemoveChild = spy();
+    const currentLayer = {
+      el: { parentElement: { removeChild: currentRemoveChild } },
+      unload: spy(),
+    };
+    const pendingLayer = {
+      el: { parentElement: { removeChild: pendingRemoveChild } },
+      unload: spy(),
+    };
+    const renderer = new Renderer({} as HTMLElement);
+
+    (renderer as any).currentLayer = currentLayer;
+    (renderer as any).pendingLayer = pendingLayer;
+
+    renderer.clear();
+
+    expect(currentLayer.unload.calledOnce).to.equal(true);
+    expect(pendingLayer.unload.calledOnce).to.equal(true);
+    expect(currentRemoveChild.calledOnceWithExactly(currentLayer.el)).to.equal(
+      true
+    );
+    expect(pendingRemoveChild.calledOnceWithExactly(pendingLayer.el)).to.equal(
+      true
+    );
+    expect((renderer as any).pendingLayer).to.equal(undefined);
   });
 });
 

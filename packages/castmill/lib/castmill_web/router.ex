@@ -22,6 +22,11 @@ defmodule CastmillWeb.Router do
     plug(:put_secure_browser_headers)
   end
 
+  pipeline :device_api do
+    plug(:accepts, ["json"])
+    plug(:put_secure_browser_headers)
+  end
+
   pipeline :api do
     plug(:accepts, ["json"])
     plug(:authenticate_with_token)
@@ -183,7 +188,7 @@ defmodule CastmillWeb.Router do
   end
 
   scope "/devices", CastmillWeb do
-    pipe_through([:device, :authenticate_device])
+    pipe_through([:device_api, :authenticate_device])
 
     get("/:device_id", DeviceController, :show)
     get("/:device_id/channels", DeviceController, :get_channels)

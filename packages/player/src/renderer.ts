@@ -39,6 +39,7 @@ export class Renderer {
   public volume: number = 0;
 
   private currentLayer?: Layer;
+  private pendingLayer?: Layer;
   private currentTransition?: Transition;
 
   private debugLayer?: HTMLElement;
@@ -154,10 +155,15 @@ export class Renderer {
 
     layer.el.style.zIndex = '0';
     layer.el.style.visibility = 'hidden';
+    this.pendingLayer = layer;
     this.el.appendChild(layer.el);
 
     return layer.show(offset).pipe(
       finalize(() => {
+        if (this.pendingLayer !== layer && this.currentLayer !== layer) {
+          return;
+        }
+
         layer.el.style.visibility = 'visible';
 
         // If we have a current transition and but a new one is requested
@@ -184,6 +190,9 @@ export class Renderer {
           prevLayer.el.parentElement?.removeChild(prevLayer.el);
         }
         this.currentLayer = layer;
+        if (this.pendingLayer === layer) {
+          delete this.pendingLayer;
+        }
       })
     );
   }
@@ -202,12 +211,19 @@ export class Renderer {
     }
     return observable$.pipe(
       tap(() => {
+        if (this.pendingLayer !== layer && this.currentLayer !== layer) {
+          return;
+        }
+
         if (prevLayer && prevLayer != layer) {
           prevLayer.unload();
           const prevEl = prevLayer.el;
           prevEl.parentElement?.removeChild(prevEl);
         }
         this.currentLayer = layer;
+        if (this.pendingLayer === layer) {
+          delete this.pendingLayer;
+        }
       })
     );
   }
@@ -227,6 +243,7 @@ export class Renderer {
     return layer.seek(offset).pipe(
       switchMap(() => {
         // We need to append BEFORE we show, so that Autofittext works properly.
+        this.pendingLayer = layer;
         this.el.appendChild(layer.el);
         return layer.show(offset).pipe(
           switchMap(() => {
@@ -249,11 +266,23 @@ export class Renderer {
     this.currentTransition?.reset();
     delete this.currentTransition;
 
-    if (this.currentLayer) {
-      this.currentLayer.unload();
-      this.currentLayer.el.parentElement?.removeChild(this.currentLayer.el);
+    const currentLayer = this.currentLayer;
+    if (currentLayer) {
+      currentLayer.unload();
+      currentLayer.el.parentElement?.removeChild(currentLayer.el);
       delete this.currentLayer;
     }
+
+    const pendingLayer = this.pendingLayer;
+    if (pendingLayer && pendingLayer !== currentLayer) {
+      pendingLayer.unload();
+      pendingLayer.el.parentElement?.removeChild(pendingLayer.el);
+    }
+    delete this.pendingLayer;
+  }
+
+  getCurrentLayer() {
+    return this.currentLayer;
   }
 
   async clean() {

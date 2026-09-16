@@ -1294,6 +1294,59 @@ describe('Device - loginOrRegister (non-blocking login)', () => {
     }
   });
 
+  it('should time out schedule synchronization so startup can fall back to local timers', async () => {
+    const credentials = {
+      device: { id: 'device1', token: 'token123', name: 'Device 1' },
+    };
+    mockIntegration.getCredentials.mockResolvedValue(
+      JSON.stringify(credentials)
+    );
+    const fetchMock = vi.fn(() => new Promise<Response>(() => {}));
+    vi.stubGlobal('fetch', fetchMock);
+    vi.useFakeTimers();
+
+    try {
+      const syncPromise = device.syncSchedule();
+
+      await vi.advanceTimersByTimeAsync(5000);
+
+      await expect(syncPromise).resolves.toBe(false);
+    } finally {
+      vi.useRealTimers();
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('should unload queued layers when resetting playback', () => {
+    const currentLayer = { unload: vi.fn() };
+    const queuedLayer = { unload: vi.fn() };
+    const removedLayers: unknown[] = [];
+
+    (device as any).player = {
+      clear: vi.fn(),
+      getCurrentLayer: vi.fn().mockReturnValue(currentLayer),
+    };
+    (device as any).contentQueue = {
+      layers: [currentLayer, queuedLayer],
+      get length() {
+        return this.layers.length;
+      },
+      remove(layer: unknown) {
+        removedLayers.push(layer);
+        this.layers.splice(this.layers.indexOf(layer as any), 1);
+      },
+      time: 99,
+    };
+
+    (device as any).resetPlaybackQueue();
+
+    expect((device as any).player.clear).toHaveBeenCalledOnce();
+    expect(currentLayer.unload).not.toHaveBeenCalled();
+    expect(queuedLayer.unload).toHaveBeenCalledOnce();
+    expect(removedLayers).toEqual([currentLayer, queuedLayer]);
+    expect((device as any).contentQueue.time).toBe(0);
+  });
+
   it('should handle invalid_device error by clearing credentials and reloading', async () => {
     const validCredentials = JSON.stringify({
       device: { id: 'device1', token: 'token123', name: 'Device 1' },

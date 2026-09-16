@@ -15,7 +15,7 @@ defmodule Castmill.Workers.VideoTranscoderTest do
   setup :verify_on_exit!
 
   describe "ffmpeg_args/3" do
-    test "produces legacy-compatible H.264 video within the target dimensions" do
+    test "produces legacy-compatible H.264 video within the target level 4.0 frame size" do
       args = VideoTranscoder.ffmpeg_args("input.mov", "output.mp4", 1920)
 
       assert Enum.at(args, Enum.find_index(args, &(&1 == "-profile:v")) + 1) == "main"
@@ -23,7 +23,7 @@ defmodule Castmill.Workers.VideoTranscoderTest do
       assert Enum.at(args, Enum.find_index(args, &(&1 == "-pix_fmt")) + 1) == "yuv420p"
 
       assert Enum.at(args, Enum.find_index(args, &(&1 == "-vf")) + 1) ==
-               "scale=1920:1920:force_original_aspect_ratio=decrease:force_divisible_by=2"
+               "scale=trunc(iw*min(1,min(min(1920/iw,1920/ih),sqrt(2097152/(iw*ih))))/2)*2:trunc(ih*min(1,min(min(1920/iw,1920/ih),sqrt(2097152/(iw*ih))))/2)*2"
     end
   end
 

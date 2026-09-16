@@ -274,6 +274,9 @@ defmodule Castmill.Workers.VideoTranscoder do
 
   @doc false
   def ffmpeg_args(input_file, output_path, max_dimension) do
+    scale_factor =
+      "min(1,min(min(#{max_dimension}/iw,#{max_dimension}/ih),sqrt(2097152/(iw*ih))))"
+
     [
       "-i",
       input_file,
@@ -292,7 +295,7 @@ defmodule Castmill.Workers.VideoTranscoder do
       "-b:a",
       "128k",
       "-vf",
-      "scale=#{max_dimension}:#{max_dimension}:force_original_aspect_ratio=decrease:force_divisible_by=2",
+      "scale=trunc(iw*#{scale_factor}/2)*2:trunc(ih*#{scale_factor}/2)*2",
       "-movflags",
       "+faststart",
       "-y",

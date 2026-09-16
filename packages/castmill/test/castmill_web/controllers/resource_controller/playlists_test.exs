@@ -571,6 +571,54 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
       assert length(ancestor_ids) == 1
     end
 
+    test "returns parent playlist when child is referenced with a legacy numeric zone assignment",
+         %{
+           conn: conn,
+           organization: organization,
+           team: team,
+           layout_widget: layout_widget
+         } do
+      parent_playlist =
+        playlist_fixture(%{
+          organization_id: organization.id,
+          name: "legacy_parent_playlist"
+        })
+
+      child_playlist =
+        playlist_fixture(%{
+          organization_id: organization.id,
+          name: "legacy_child_playlist"
+        })
+
+      {:ok, _item} =
+        Resources.insert_item_into_playlist(
+          parent_playlist.id,
+          nil,
+          layout_widget.id,
+          0,
+          10000,
+          %{
+            "layoutRef" => %{
+              "layoutId" => 1,
+              "aspectRatio" => "9:16",
+              "zonePlaylistMap" => %{"zone-1" => child_playlist.id}
+            }
+          }
+        )
+
+      {:ok, _result} =
+        Teams.add_resource_to_team(team.id, "playlists", child_playlist.id, [:read])
+
+      conn =
+        get(
+          conn,
+          "/api/organizations/#{organization.id}/playlists/#{child_playlist.id}/ancestors"
+        )
+
+      assert %{"ancestor_ids" => ancestor_ids} = json_response(conn, 200)
+      assert ancestor_ids == [parent_playlist.id]
+    end
+
     test "returns multiple ancestors in a chain (grandparent -> parent -> child)", %{
       conn: conn,
       organization: organization,
@@ -835,6 +883,47 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
         assert assignment["playlist"].name == playlist.name
         assert assignment["playlist"].items == []
       end)
+    end
+
+    test "expands legacy numeric layout zone assignments for the player", %{
+      organization: organization,
+      layout_widget: layout_widget
+    } do
+      parent_playlist =
+        playlist_fixture(%{
+          organization_id: organization.id,
+          name: "legacy_layout_parent"
+        })
+
+      child_playlist =
+        playlist_fixture(%{
+          organization_id: organization.id,
+          name: "legacy_layout_child"
+        })
+
+      {:ok, _item} =
+        Resources.insert_item_into_playlist(
+          parent_playlist.id,
+          nil,
+          layout_widget.id,
+          0,
+          10_000,
+          %{
+            "layoutRef" => %{
+              "layoutId" => 1,
+              "aspectRatio" => "9:16",
+              "zonePlaylistMap" => %{"zone-1" => child_playlist.id}
+            }
+          }
+        )
+
+      [item] = Resources.get_playlist(parent_playlist.id).items
+      assignment = item.config.options["layoutRef"]["zonePlaylistMap"]["zone-1"]
+
+      assert assignment["playlistId"] == child_playlist.id
+      assert assignment["playlist"].id == child_playlist.id
+      assert assignment["playlist"].name == child_playlist.name
+      assert assignment["playlist"].items == []
     end
 
     test "does not include non-layout widget references", %{

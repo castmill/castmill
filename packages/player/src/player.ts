@@ -123,6 +123,10 @@ export class Player extends EventEmitter {
     this.stop();
     this.renderer.clear();
   }
+
+  getCurrentLayer() {
+    return this.renderer.getCurrentLayer();
+  }
 }
 
 // Custom timer. Simpler than RxJS and more accurate.

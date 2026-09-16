@@ -106,6 +106,10 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
       // Older versions keyed mapped localhost URLs, so remove that stale entry
       // when it differs.
       if (mappedUrl !== url) {
+        const staleMappedFile = this.fileMap.get(mappedUrl);
+        if (staleMappedFile) {
+          await deleteFile(staleMappedFile.url);
+        }
         this.fileMap.delete(mappedUrl);
       }
       this.fileMap.set(url, { url: localUrl, size });
