@@ -602,7 +602,10 @@ defmodule Castmill.Resources do
     end)
   end
 
-  defp resolve_layout_reference(%{"zonePlaylistMap" => zone_playlist_map} = layout_ref, organization_id)
+  defp resolve_layout_reference(
+         %{"zonePlaylistMap" => zone_playlist_map} = layout_ref,
+         organization_id
+       )
        when is_map(zone_playlist_map) do
     resolved_zone_playlist_map =
       Map.new(zone_playlist_map, fn {zone_id, assignment} ->
@@ -614,7 +617,10 @@ defmodule Castmill.Resources do
 
   defp resolve_layout_reference(layout_ref, _organization_id), do: layout_ref
 
-  defp resolve_layout_zone_assignment(%{"playlistId" => playlist_id} = assignment, organization_id) do
+  defp resolve_layout_zone_assignment(
+         %{"playlistId" => playlist_id} = assignment,
+         organization_id
+       ) do
     case get_playlist_for_organization(playlist_id, organization_id) do
       {:ok, _parsed_playlist_id, playlist} ->
         Map.put(assignment, "playlist", playlist)
