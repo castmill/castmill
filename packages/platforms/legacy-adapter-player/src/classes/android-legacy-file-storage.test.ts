@@ -65,7 +65,7 @@ describe('AndroidLegacyFileStorage', () => {
   });
 
   it('deletes stale mapped localhost files before replacing their mapping', async () => {
-    (getItem as any).mockResolvedValueOnce(
+    vi.mocked(getItem).mockResolvedValueOnce(
       JSON.stringify([
         [
           'https://192.168.1.10/media/image.png',

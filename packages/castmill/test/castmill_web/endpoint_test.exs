@@ -37,7 +37,7 @@ defmodule CastmillWeb.EndpointTest do
       )
 
     assert Plug.Conn.get_resp_header(conn, "access-control-allow-origin") == [
-            "http://localhost:3003"
+             "http://localhost:3003"
            ]
   end
 end

@@ -32,6 +32,13 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
     {:ok, conn: conn, user: user, organization: organization, team: team}
   end
 
+  defp persist_legacy_widget_options(widget_config_id, options) do
+    Castmill.Widgets.WidgetConfig
+    |> Castmill.Repo.get!(widget_config_id)
+    |> Ecto.Changeset.change(options: options)
+    |> Castmill.Repo.update!()
+  end
+
   describe "list playlists" do
     test "lists all playlists", %{conn: conn, organization: organization, team: team} do
       playlist1 =
@@ -590,21 +597,31 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
           name: "legacy_child_playlist"
         })
 
-      {:ok, _item} =
+      valid_options = %{
+        "layoutRef" => %{
+          "layoutId" => 1,
+          "aspectRatio" => "9:16",
+          "zonePlaylistMap" => %{"zone-1" => %{"playlistId" => child_playlist.id}}
+        }
+      }
+
+      {:ok, item} =
         Resources.insert_item_into_playlist(
           parent_playlist.id,
           nil,
           layout_widget.id,
           0,
           10000,
-          %{
-            "layoutRef" => %{
-              "layoutId" => 1,
-              "aspectRatio" => "9:16",
-              "zonePlaylistMap" => %{"zone-1" => child_playlist.id}
-            }
-          }
+          valid_options
         )
+
+      persist_legacy_widget_options(item.widget_config_id, %{
+        "layoutRef" => %{
+          "layoutId" => 1,
+          "aspectRatio" => "9:16",
+          "zonePlaylistMap" => %{"zone-1" => child_playlist.id}
+        }
+      })
 
       {:ok, _result} =
         Teams.add_resource_to_team(team.id, "playlists", child_playlist.id, [:read])
@@ -901,21 +918,31 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
           name: "legacy_layout_child"
         })
 
-      {:ok, _item} =
+      valid_options = %{
+        "layoutRef" => %{
+          "layoutId" => 1,
+          "aspectRatio" => "9:16",
+          "zonePlaylistMap" => %{"zone-1" => %{"playlistId" => child_playlist.id}}
+        }
+      }
+
+      {:ok, item} =
         Resources.insert_item_into_playlist(
           parent_playlist.id,
           nil,
           layout_widget.id,
           0,
           10_000,
-          %{
-            "layoutRef" => %{
-              "layoutId" => 1,
-              "aspectRatio" => "9:16",
-              "zonePlaylistMap" => %{"zone-1" => child_playlist.id}
-            }
-          }
+          valid_options
         )
+
+      persist_legacy_widget_options(item.widget_config_id, %{
+        "layoutRef" => %{
+          "layoutId" => 1,
+          "aspectRatio" => "9:16",
+          "zonePlaylistMap" => %{"zone-1" => child_playlist.id}
+        }
+      })
 
       [item] = Resources.get_playlist(parent_playlist.id).items
       assignment = item.config.options["layoutRef"]["zonePlaylistMap"]["zone-1"]
