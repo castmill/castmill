@@ -1,0 +1,49 @@
+{
+  "legacyDebug": {
+    "ariaLabel": "Diagnostik för äldre spelare",
+    "title": "Diagnostik för äldre spelare",
+    "loading": "Läser in maskininformation...",
+    "values": {
+      "unavailable": "Inte tillgänglig"
+    },
+    "status": {
+      "connected": "Ansluten",
+      "disconnected": "Frånkopplad",
+      "notInitialized": "Inte initierad",
+      "online": "Online",
+      "offline": "Offline"
+    },
+    "platform": {
+      "android": "Android",
+      "browser": "Webbläsare",
+      "electron": "Electron",
+      "webos": "webOS"
+    },
+    "rows": {
+      "playerName": "Spelarnamn",
+      "deviceId": "Enhets-ID",
+      "server": "Server",
+      "adapterPlatform": "Adapterplattform",
+      "network": "Nätverk",
+      "serverConnection": "Serveranslutning",
+      "viewport": "Visningsyta",
+      "screen": "Skärm",
+      "devicePixelRatio": "Enhetens pixelkvot",
+      "timezone": "Tidszon",
+      "applicationType": "Applikationstyp",
+      "applicationVersion": "Applikationsversion",
+      "operatingSystem": "Operativsystem",
+      "hardware": "Hårdvara",
+      "environmentVersion": "Miljöversion",
+      "chromiumVersion": "Chromium-version",
+      "v8Version": "V8-version",
+      "nodeVersion": "Node.js-version",
+      "userAgent": "User agent"
+    },
+    "errors": {
+      "playerIdentity": "Spelaridentitet",
+      "deviceInformation": "Enhetsinformation",
+      "timezone": "Tidszon"
+    }
+  }
+}

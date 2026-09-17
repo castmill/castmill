@@ -69,7 +69,7 @@ describe('LegacyDebugOverlay', () => {
     expect(screen.getByText('Legacy player user agent')).toBeInTheDocument();
     expect(screen.getByText('Connected')).toBeInTheDocument();
     expect(screen.getByText('Online')).toBeInTheDocument();
-    expect(screen.getByText('android')).toBeInTheDocument();
+    expect(screen.getByText('Android')).toBeInTheDocument();
     expect(screen.getByText('1024 x 768')).toBeInTheDocument();
 
     setVisible(false);
@@ -139,5 +139,31 @@ describe('LegacyDebugOverlay', () => {
     await waitFor(() => {
       expect(device.refreshIdentity).toHaveBeenCalledTimes(2);
     });
+  });
+
+  it('renders localized strings for supported locales', async () => {
+    Object.defineProperty(window.navigator, 'language', {
+      configurable: true,
+      value: 'sv-SE',
+    });
+
+    render(() => (
+      <LegacyDebugOverlay
+        visible
+        device={createDevice()}
+        machine={createMachine()}
+        serverUrl="https://example.test"
+        platform="browser"
+      />
+    ));
+
+    await waitFor(() => {
+      expect(
+        screen.getByLabelText('Diagnostik för äldre spelare')
+      ).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('Spelarnamn')).toBeInTheDocument();
+    expect(screen.getByText('Webbläsare')).toBeInTheDocument();
   });
 });

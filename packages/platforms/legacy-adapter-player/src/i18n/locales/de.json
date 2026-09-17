@@ -1,0 +1,49 @@
+{
+  "legacyDebug": {
+    "ariaLabel": "Diagnose des Legacy-Players",
+    "title": "Diagnose des Legacy-Players",
+    "loading": "Geräteinformationen werden geladen...",
+    "values": {
+      "unavailable": "Nicht verfügbar"
+    },
+    "status": {
+      "connected": "Verbunden",
+      "disconnected": "Getrennt",
+      "notInitialized": "Nicht initialisiert",
+      "online": "Online",
+      "offline": "Offline"
+    },
+    "platform": {
+      "android": "Android",
+      "browser": "Browser",
+      "electron": "Electron",
+      "webos": "webOS"
+    },
+    "rows": {
+      "playerName": "Playername",
+      "deviceId": "Geräte-ID",
+      "server": "Server",
+      "adapterPlatform": "Adapterplattform",
+      "network": "Netzwerk",
+      "serverConnection": "Serververbindung",
+      "viewport": "Ansichtsfenster",
+      "screen": "Bildschirm",
+      "devicePixelRatio": "Geräte-Pixelverhältnis",
+      "timezone": "Zeitzone",
+      "applicationType": "Anwendungstyp",
+      "applicationVersion": "Anwendungsversion",
+      "operatingSystem": "Betriebssystem",
+      "hardware": "Hardware",
+      "environmentVersion": "Umgebungsversion",
+      "chromiumVersion": "Chromium-Version",
+      "v8Version": "V8-Version",
+      "nodeVersion": "Node.js-Version",
+      "userAgent": "User-Agent"
+    },
+    "errors": {
+      "playerIdentity": "Player-Identität",
+      "deviceInformation": "Geräteinformationen",
+      "timezone": "Zeitzone"
+    }
+  }
+}

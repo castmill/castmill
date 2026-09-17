@@ -125,7 +125,7 @@ describe('WidgetConfig - URL Validation Logic', () => {
 });
 
 describe('WidgetConfig - Layout Ref API normalization', () => {
-  it('preserves legacy numeric zone assignments when normalizing layout refs', () => {
+  it('converts legacy primitive zone assignments to canonical playlistId objects', () => {
     expect(
       normalizeWidgetOptionsForApi(
         {
@@ -135,6 +135,7 @@ describe('WidgetConfig - Layout Ref API normalization', () => {
             zones: { zones: [] },
             zonePlaylistMap: {
               zoneA: 123,
+              zoneAString: '789',
               zoneB: { playlistId: 456, playlist: { id: 456 } },
             },
           },
@@ -147,7 +148,8 @@ describe('WidgetConfig - Layout Ref API normalization', () => {
         aspectRatio: '16:9',
         zones: { zones: [] },
         zonePlaylistMap: {
-          zoneA: 123,
+          zoneA: { playlistId: 123 },
+          zoneAString: { playlistId: 789 },
           zoneB: { playlistId: 456 },
         },
       },

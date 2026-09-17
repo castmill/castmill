@@ -295,7 +295,7 @@ defmodule Castmill.Workers.VideoTranscoder do
       "-b:a",
       "128k",
       "-vf",
-      "scale=trunc(iw*#{scale_factor}/2)*2:trunc(ih*#{scale_factor}/2)*2",
+      "scale=trunc(iw*#{scale_factor}/16)*16:trunc(ih*#{scale_factor}/16)*16",
       "-movflags",
       "+faststart",
       "-y",

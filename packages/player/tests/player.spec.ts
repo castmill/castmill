@@ -243,6 +243,35 @@ describe('Renderer.clear', () => {
     );
     expect((renderer as any).pendingLayer).to.equal(undefined);
   });
+
+  it('unloads the previous pending layer before replacing it', () => {
+    const firstRemoveChild = spy();
+    const secondRemoveChild = spy();
+    const appendChild = spy();
+    const firstPendingLayer = {
+      el: { style: {}, parentElement: { removeChild: firstRemoveChild } },
+      unload: spy(),
+      show: () => NEVER,
+    };
+    const secondPendingLayer = {
+      el: { style: {}, parentElement: { removeChild: secondRemoveChild } },
+      unload: spy(),
+      show: () => NEVER,
+    };
+    const renderer = new Renderer({ appendChild } as any);
+
+    renderer.show(firstPendingLayer as any, 0);
+    renderer.show(secondPendingLayer as any, 0);
+
+    expect(firstPendingLayer.unload.calledOnce).to.equal(true);
+    expect(
+      firstRemoveChild.calledOnceWithExactly(firstPendingLayer.el)
+    ).to.equal(true);
+    expect(secondPendingLayer.unload.called).to.equal(false);
+    expect(secondRemoveChild.called).to.equal(false);
+    expect(appendChild.calledTwice).to.equal(true);
+    expect((renderer as any).pendingLayer).to.equal(secondPendingLayer);
+  });
 });
 
 describe('Image autozoom', () => {

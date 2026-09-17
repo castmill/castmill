@@ -182,7 +182,8 @@ defmodule Castmill.Resources do
     resolved_refs =
       resolve_widget_references(
         item.widget_config.widget.options_schema || %{},
-        original_options
+        original_options,
+        organization_id
       )
 
     merged_options = Map.merge(original_options, resolved_refs)
@@ -583,7 +584,7 @@ defmodule Castmill.Resources do
     )
   end
 
-  defp resolve_widget_references(schema, data) do
+  defp resolve_widget_references(schema, data, organization_id) do
     Enum.reduce(schema, %{}, fn {key, value}, acc ->
       case value do
         %{"type" => "ref", "collection" => collection} ->
@@ -593,7 +594,7 @@ defmodule Castmill.Resources do
           Map.put(acc, key, fetched_data)
 
         %{"type" => "layout-ref"} ->
-          Map.put(acc, key, resolve_layout_reference(Map.get(data, key)))
+          Map.put(acc, key, resolve_layout_reference(Map.get(data, key), organization_id))
 
         _ ->
           acc
@@ -601,43 +602,52 @@ defmodule Castmill.Resources do
     end)
   end
 
-  defp resolve_layout_reference(%{"zonePlaylistMap" => zone_playlist_map} = layout_ref)
+  defp resolve_layout_reference(%{"zonePlaylistMap" => zone_playlist_map} = layout_ref, organization_id)
        when is_map(zone_playlist_map) do
     resolved_zone_playlist_map =
       Map.new(zone_playlist_map, fn {zone_id, assignment} ->
-        {zone_id, resolve_layout_zone_assignment(assignment)}
+        {zone_id, resolve_layout_zone_assignment(assignment, organization_id)}
       end)
 
     Map.put(layout_ref, "zonePlaylistMap", resolved_zone_playlist_map)
   end
 
-  defp resolve_layout_reference(layout_ref), do: layout_ref
+  defp resolve_layout_reference(layout_ref, _organization_id), do: layout_ref
 
-  defp resolve_layout_zone_assignment(%{"playlistId" => playlist_id} = assignment) do
-    case parse_layout_playlist_id(playlist_id) do
-      {:ok, parsed_playlist_id} ->
-        Map.put(assignment, "playlist", get_playlist(parsed_playlist_id))
+  defp resolve_layout_zone_assignment(%{"playlistId" => playlist_id} = assignment, organization_id) do
+    case get_playlist_for_organization(playlist_id, organization_id) do
+      {:ok, _parsed_playlist_id, playlist} ->
+        Map.put(assignment, "playlist", playlist)
 
       :error ->
-        assignment
+        Map.delete(assignment, "playlist")
     end
   end
 
-  defp resolve_layout_zone_assignment(playlist_id) when is_integer(playlist_id) do
-    %{"playlistId" => playlist_id, "playlist" => get_playlist(playlist_id)}
-  end
-
-  defp resolve_layout_zone_assignment(playlist_id) when is_binary(playlist_id) do
-    case parse_layout_playlist_id(playlist_id) do
-      {:ok, parsed_playlist_id} ->
-        %{"playlistId" => parsed_playlist_id, "playlist" => get_playlist(parsed_playlist_id)}
+  defp resolve_layout_zone_assignment(playlist_id, organization_id) when is_integer(playlist_id) do
+    case get_playlist_for_organization(playlist_id, organization_id) do
+      {:ok, parsed_playlist_id, playlist} ->
+        %{"playlistId" => parsed_playlist_id, "playlist" => playlist}
 
       :error ->
-        playlist_id
+        %{"playlistId" => playlist_id}
     end
   end
 
-  defp resolve_layout_zone_assignment(assignment), do: assignment
+  defp resolve_layout_zone_assignment(playlist_id, organization_id) when is_binary(playlist_id) do
+    case get_playlist_for_organization(playlist_id, organization_id) do
+      {:ok, parsed_playlist_id, playlist} ->
+        %{"playlistId" => parsed_playlist_id, "playlist" => playlist}
+
+      :error ->
+        case parse_layout_playlist_id(playlist_id) do
+          {:ok, parsed_playlist_id} -> %{"playlistId" => parsed_playlist_id}
+          :error -> playlist_id
+        end
+    end
+  end
+
+  defp resolve_layout_zone_assignment(assignment, _organization_id), do: assignment
 
   defp parse_layout_playlist_id(playlist_id) when is_integer(playlist_id), do: {:ok, playlist_id}
 
@@ -673,6 +683,13 @@ defmodule Castmill.Resources do
   """
   def get_playlist_basic(id) do
     Repo.get(Playlist, id)
+  end
+
+  def get_playlist_basic(id, organization_id) do
+    from(p in Playlist,
+      where: p.id == ^id and p.organization_id == ^organization_id
+    )
+    |> Repo.one()
   end
 
   @doc """
@@ -884,6 +901,22 @@ defmodule Castmill.Resources do
     end
   end
 
+  @doc """
+  Validates that a referenced layout playlist exists in the same organization
+  and would not create a circular reference.
+  """
+  def validate_layout_playlist_reference(current_playlist_id, selected_playlist_id) do
+    current_id = to_integer(current_playlist_id)
+    selected_id = to_integer(selected_playlist_id)
+
+    with %Playlist{} = current_playlist <- get_playlist_basic(current_id),
+         %Playlist{} <- get_playlist_basic(selected_id, current_playlist.organization_id) do
+      validate_no_circular_reference(current_id, selected_id)
+    else
+      _ -> {:error, :invalid_playlist_reference}
+    end
+  end
+
   # Helper to convert string or integer to integer
   defp to_integer(id) when is_integer(id), do: id
 
@@ -891,6 +924,15 @@ defmodule Castmill.Resources do
     case Integer.parse(id) do
       {int_id, ""} -> int_id
       _ -> raise ArgumentError, "Invalid playlist ID: #{id}"
+    end
+  end
+
+  defp get_playlist_for_organization(playlist_id, organization_id) do
+    with {:ok, parsed_playlist_id} <- parse_layout_playlist_id(playlist_id),
+         %Playlist{} <- get_playlist_basic(parsed_playlist_id, organization_id) do
+      {:ok, parsed_playlist_id, get_playlist(parsed_playlist_id)}
+    else
+      _ -> :error
     end
   end
 

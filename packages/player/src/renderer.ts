@@ -136,6 +136,25 @@ export class Renderer {
     }
   }
 
+  private removeLayer(layer?: Layer) {
+    if (!layer) {
+      return;
+    }
+
+    layer.unload();
+    layer.el.parentElement?.removeChild(layer.el);
+  }
+
+  private setPendingLayer(layer: Layer) {
+    const previousPendingLayer = this.pendingLayer;
+
+    if (previousPendingLayer && previousPendingLayer !== layer) {
+      this.removeLayer(previousPendingLayer);
+    }
+
+    this.pendingLayer = layer;
+  }
+
   /**
    * Shows the layer, i.e. it displays it on the screen, performing an optional transition animation
    * between previous and this new layer.
@@ -155,7 +174,7 @@ export class Renderer {
 
     layer.el.style.zIndex = '0';
     layer.el.style.visibility = 'hidden';
-    this.pendingLayer = layer;
+    this.setPendingLayer(layer);
     this.el.appendChild(layer.el);
 
     return layer.show(offset).pipe(
@@ -186,8 +205,7 @@ export class Renderer {
             }
             transition.seek(transition.duration);
           }
-          prevLayer.unload();
-          prevLayer.el.parentElement?.removeChild(prevLayer.el);
+          this.removeLayer(prevLayer);
         }
         this.currentLayer = layer;
         if (this.pendingLayer === layer) {
@@ -216,9 +234,7 @@ export class Renderer {
         }
 
         if (prevLayer && prevLayer != layer) {
-          prevLayer.unload();
-          const prevEl = prevLayer.el;
-          prevEl.parentElement?.removeChild(prevEl);
+          this.removeLayer(prevLayer);
         }
         this.currentLayer = layer;
         if (this.pendingLayer === layer) {
@@ -243,7 +259,7 @@ export class Renderer {
     return layer.seek(offset).pipe(
       switchMap(() => {
         // We need to append BEFORE we show, so that Autofittext works properly.
-        this.pendingLayer = layer;
+        this.setPendingLayer(layer);
         this.el.appendChild(layer.el);
         return layer.show(offset).pipe(
           switchMap(() => {
@@ -268,15 +284,13 @@ export class Renderer {
 
     const currentLayer = this.currentLayer;
     if (currentLayer) {
-      currentLayer.unload();
-      currentLayer.el.parentElement?.removeChild(currentLayer.el);
+      this.removeLayer(currentLayer);
       delete this.currentLayer;
     }
 
     const pendingLayer = this.pendingLayer;
     if (pendingLayer && pendingLayer !== currentLayer) {
-      pendingLayer.unload();
-      pendingLayer.el.parentElement?.removeChild(pendingLayer.el);
+      this.removeLayer(pendingLayer);
     }
     delete this.pendingLayer;
   }

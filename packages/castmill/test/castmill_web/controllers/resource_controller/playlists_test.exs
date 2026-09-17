@@ -953,6 +953,102 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
       assert assignment["playlist"].items == []
     end
 
+    test "rejects cross-organization layout playlist references", %{
+      organization: organization,
+      layout_widget: layout_widget
+    } do
+      other_network = network_fixture()
+      other_organization = organization_fixture(%{network_id: other_network.id})
+
+      parent_playlist =
+        playlist_fixture(%{
+          organization_id: organization.id,
+          name: "same_org_parent"
+        })
+
+      foreign_playlist =
+        playlist_fixture(%{
+          organization_id: other_organization.id,
+          name: "foreign_child"
+        })
+
+      result =
+        Resources.insert_item_into_playlist(
+          parent_playlist.id,
+          nil,
+          layout_widget.id,
+          0,
+          10_000,
+          %{
+            "layoutRef" => %{
+              "layoutId" => 1,
+              "aspectRatio" => "9:16",
+              "zonePlaylistMap" => %{"zone-1" => %{"playlistId" => foreign_playlist.id}}
+            }
+          }
+        )
+
+      assert {:error, :invalid_playlist_reference} = result
+    end
+
+    test "does not expand cross-organization layout assignments when loading a playlist", %{
+      organization: organization,
+      layout_widget: layout_widget
+    } do
+      other_network = network_fixture()
+      other_organization = organization_fixture(%{network_id: other_network.id})
+
+      parent_playlist =
+        playlist_fixture(%{
+          organization_id: organization.id,
+          name: "cross_org_parent"
+        })
+
+      local_child =
+        playlist_fixture(%{
+          organization_id: organization.id,
+          name: "local_child"
+        })
+
+      foreign_child =
+        playlist_fixture(%{
+          organization_id: other_organization.id,
+          name: "foreign_child"
+        })
+
+      valid_options = %{
+        "layoutRef" => %{
+          "layoutId" => 1,
+          "aspectRatio" => "9:16",
+          "zonePlaylistMap" => %{"zone-1" => %{"playlistId" => local_child.id}}
+        }
+      }
+
+      {:ok, item} =
+        Resources.insert_item_into_playlist(
+          parent_playlist.id,
+          nil,
+          layout_widget.id,
+          0,
+          10_000,
+          valid_options
+        )
+
+      persist_legacy_widget_options(item.widget_config_id, %{
+        "layoutRef" => %{
+          "layoutId" => 1,
+          "aspectRatio" => "9:16",
+          "zonePlaylistMap" => %{"zone-1" => foreign_child.id}
+        }
+      })
+
+      [item] = Resources.get_playlist(parent_playlist.id).items
+      assignment = item.config.options["layoutRef"]["zonePlaylistMap"]["zone-1"]
+
+      assert assignment["playlistId"] == foreign_child.id
+      refute Map.has_key?(assignment, "playlist")
+    end
+
     test "does not include non-layout widget references", %{
       conn: conn,
       organization: organization,

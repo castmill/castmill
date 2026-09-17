@@ -181,9 +181,26 @@ export const normalizeWidgetOptionsForApi = (
             Object.entries(layoutRef.zonePlaylistMap || {}).map(
               ([zoneId, assignment]) => [
                 zoneId,
-                typeof assignment === 'number' || typeof assignment === 'string'
-                  ? assignment
-                  : { playlistId: assignment?.playlistId },
+                {
+                  playlistId:
+                    typeof assignment === 'number'
+                      ? assignment
+                      : typeof assignment === 'string' &&
+                          /^-?\d+$/.test(assignment.trim())
+                        ? Number.parseInt(assignment, 10)
+                        : typeof assignment === 'object' &&
+                            assignment !== null &&
+                            'playlistId' in assignment &&
+                            typeof assignment.playlistId === 'number'
+                          ? assignment.playlistId
+                          : typeof assignment === 'object' &&
+                              assignment !== null &&
+                              'playlistId' in assignment &&
+                              typeof assignment.playlistId === 'string' &&
+                              /^-?\d+$/.test(assignment.playlistId.trim())
+                            ? Number.parseInt(assignment.playlistId, 10)
+                            : undefined,
+                },
               ]
             )
           ),
