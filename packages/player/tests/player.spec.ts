@@ -10,6 +10,7 @@ import {
   Playlist,
   Renderer,
   timer,
+  Widget,
 } from '../dist/index.js';
 
 describe('Layer aspect ratio sizing', () => {
@@ -189,6 +190,89 @@ describe('Player.clear', () => {
 
     expect(stopSpy.calledOnce).to.equal(true);
     expect(renderer.clear.calledOnce).to.equal(true);
+  });
+});
+
+describe('Widget messaging', () => {
+  it('posts widget responses back to the parent origin from document.referrer', () => {
+    const originalDocument = globalThis.document;
+    const originalWindow = globalThis.window;
+    const parent = { postMessage: spy() };
+    let messageHandler: ((event: MessageEvent) => void) | undefined;
+
+    try {
+      (globalThis as any).document = {
+        referrer: 'https://parent.example/dashboard',
+      };
+      (globalThis as any).window = {
+        location: { origin: 'https://player.example' },
+        parent,
+        addEventListener: (
+          _event: string,
+          listener: (event: MessageEvent) => void
+        ) => {
+          messageHandler = listener;
+        },
+        removeEventListener: () => {},
+      };
+
+      class TestWidget extends Widget {}
+
+      new TestWidget({} as any);
+
+      messageHandler?.({
+        data: JSON.stringify({ counter: 1, method: 'show', args: [] }),
+        origin: 'https://parent.example',
+        source: parent,
+      } as unknown as MessageEvent);
+
+      expect(parent.postMessage.calledOnce).to.equal(true);
+      expect(parent.postMessage.firstCall.args[1]).to.equal(
+        'https://parent.example'
+      );
+    } finally {
+      (globalThis as any).document = originalDocument;
+      (globalThis as any).window = originalWindow;
+    }
+  });
+
+  it('ignores widget messages from unexpected origins', () => {
+    const originalDocument = globalThis.document;
+    const originalWindow = globalThis.window;
+    const parent = { postMessage: spy() };
+    let messageHandler: ((event: MessageEvent) => void) | undefined;
+
+    try {
+      (globalThis as any).document = {
+        referrer: 'https://parent.example/dashboard',
+      };
+      (globalThis as any).window = {
+        location: { origin: 'https://player.example' },
+        parent,
+        addEventListener: (
+          _event: string,
+          listener: (event: MessageEvent) => void
+        ) => {
+          messageHandler = listener;
+        },
+        removeEventListener: () => {},
+      };
+
+      class TestWidget extends Widget {}
+
+      new TestWidget({} as any);
+
+      messageHandler?.({
+        data: JSON.stringify({ counter: 1, method: 'show', args: [] }),
+        origin: 'https://other.example',
+        source: parent,
+      } as unknown as MessageEvent);
+
+      expect(parent.postMessage.called).to.equal(false);
+    } finally {
+      (globalThis as any).document = originalDocument;
+      (globalThis as any).window = originalWindow;
+    }
   });
 });
 

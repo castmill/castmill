@@ -8,6 +8,16 @@ interface ProxyMethodData {
   args: any[];
 }
 
+const getParentOrigin = (): string => {
+  try {
+    return document.referrer
+      ? new URL(document.referrer).origin
+      : window.location.origin;
+  } catch {
+    return window.location.origin;
+  }
+};
+
 export abstract class Widget extends EventEmitter {
   protected messageHandler?: (ev: MessageEvent) => void;
 
@@ -18,7 +28,12 @@ export abstract class Widget extends EventEmitter {
     super();
 
     if (window.parent) {
+      const parentOrigin = getParentOrigin();
       const messageHandler = (this.messageHandler = (ev: MessageEvent) => {
+        if (ev.origin !== parentOrigin) {
+          return;
+        }
+
         let data: ProxyMethodData;
 
         try {
@@ -47,7 +62,7 @@ export abstract class Widget extends EventEmitter {
             counter: data.counter,
             result,
           }),
-          '*'
+          parentOrigin
         );
       });
 
