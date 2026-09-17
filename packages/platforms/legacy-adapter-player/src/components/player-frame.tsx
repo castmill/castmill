@@ -103,9 +103,12 @@ export const PlayerFrame: Component = () => {
     });
 
     if (platform === 'android' || platform === 'electron') {
+      const allowedConsoleOrigin = new URL(
+        configuredServerUrl ?? window.location.origin
+      ).origin;
       const stopListening = listenForLegacyConsoleToggle(() => {
         setShowDebug((visible) => !visible);
-      });
+      }, allowedConsoleOrigin);
       onCleanup(stopListening);
     }
 
