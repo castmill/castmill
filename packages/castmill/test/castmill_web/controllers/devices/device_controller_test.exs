@@ -885,6 +885,29 @@ defmodule CastmillWeb.DeviceControllerTest do
       assert response["count"] == 0
     end
 
+    test "accepts table sorting parameters", %{conn: conn, organization: organization} do
+      {:ok, devices_registration} =
+        device_registration_fixture(%{hardware_id: "cache-hw-sort", pincode: "cache06"})
+
+      {:ok, {device, _token}} =
+        Castmill.Devices.register_device(organization.id, devices_registration.pincode, %{
+          name: "Cache Device Sort"
+        })
+
+      conn =
+        run_request_with_device_response(
+          fn ->
+            get(
+              conn,
+              "/dashboard/devices/#{device.id}/cache?type=data&page=1&page_size=10&key=name&direction=ascending"
+            )
+          end,
+          %{data: [], count: 0}
+        )
+
+      assert json_response(conn, 200) == %{"data" => [], "count" => 0}
+    end
+
     test "rejects an invalid cache type with a proper inclusion error", %{
       conn: conn,
       organization: organization
@@ -963,6 +986,31 @@ defmodule CastmillWeb.DeviceControllerTest do
       assert Map.has_key?(response, "errors")
       assert Map.has_key?(response["errors"], "type")
       refute response["errors"]["type"] == ["validate_allowed is not supported"]
+    end
+
+    test "rejects an empty URL list for a cache category", %{
+      conn: conn,
+      organization: organization
+    } do
+      {:ok, devices_registration} =
+        device_registration_fixture(%{
+          hardware_id: "cache-delete-empty-category",
+          pincode: "cache05"
+        })
+
+      {:ok, {device, _token}} =
+        Castmill.Devices.register_device(organization.id, devices_registration.pincode, %{
+          name: "Cache Delete Empty Category"
+        })
+
+      conn =
+        delete(conn, "/dashboard/devices/#{device.id}/cache", %{
+          "type" => "media",
+          "urls" => []
+        })
+
+      response = json_response(conn, 400)
+      assert response["errors"]["urls"] == ["must contain at least one URL unless type is all"]
     end
   end
 end

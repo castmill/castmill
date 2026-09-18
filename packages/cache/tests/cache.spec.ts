@@ -425,4 +425,47 @@ describe('Cache', () => {
     expect(items2).to.have.length(0);
     expect(storage.deleteFile).toHaveBeenCalledWith(url);
   });
+
+  it('should clear all metadata and platform files, including orphans', async () => {
+    const dataUrl = 'https://example.com/data.json';
+    const codeUrl = 'https://example.com/widget.js';
+    const mediaUrl = 'https://example.com/movie.mp4';
+    const storage = new StorageMockup({
+      [dataUrl]: '{}',
+      [codeUrl]: 'export {}',
+      [mediaUrl]: 'media',
+    });
+    const deleteAllFilesSpy = vi.spyOn(storage, 'deleteAllFiles');
+    const cache = new Cache(storage, 'test-clean-all', 10);
+    await cache.init();
+    await cache.set(dataUrl, ItemType.Data, 'application/json');
+    await cache.set(codeUrl, ItemType.Code, 'text/javascript');
+    await cache.set(mediaUrl, ItemType.Media, 'media/*');
+    storage.files['content://cache/orphan'] = {
+      url: 'content://cache/orphan',
+      size: 10,
+    };
+
+    await expect(cache.clean()).resolves.toBe(3);
+
+    expect(deleteAllFilesSpy).toHaveBeenCalledOnce();
+    expect(storage.files).toEqual({});
+    await expect(cache.count(ItemType.Data)).resolves.toBe(0);
+    await expect(cache.count(ItemType.Code)).resolves.toBe(0);
+    await expect(cache.count(ItemType.Media)).resolves.toBe(0);
+  });
+
+  it('should retain metadata when clearing platform storage fails', async () => {
+    const url = 'https://example.com/movie.mp4';
+    const storage = new StorageMockup({ [url]: 'media' });
+    const cache = new Cache(storage, 'test-clean-storage-failure', 10);
+    await cache.init();
+    await cache.set(url, ItemType.Media, 'media/*');
+    vi.spyOn(storage, 'deleteAllFiles').mockRejectedValue(
+      new Error('Storage unavailable')
+    );
+
+    await expect(cache.clean()).rejects.toThrow('Storage unavailable');
+    await expect(cache.get(url)).resolves.toMatchObject({ url });
+  });
 });

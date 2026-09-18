@@ -328,7 +328,7 @@ export const DevicesService = {
    * @param baseUrl API base URL
    * @param deviceId Device ID
    * @param type Cache type ('data', 'code', 'media', or 'all' to clear everything)
-   * @param urls Array of URLs to delete (empty array will delete all of the specified type)
+   * @param urls URLs to delete. An empty array is valid only with type 'all'.
    */
   async deleteDeviceCache(
     baseUrl: string,

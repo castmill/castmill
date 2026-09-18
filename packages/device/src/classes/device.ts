@@ -126,6 +126,7 @@ interface CachePage {
 interface CacheDeleteRequest {
   type: ItemType | 'all';
   urls: string[];
+  ref?: string;
 }
 
 interface DeviceRequest {
@@ -913,8 +914,9 @@ export class Device extends EventEmitter {
           location.reload();
           break;
         case 'clear_cache':
-          // Clear cache
-          this.cache.clean();
+          // Clear all cache storage and restart with fresh runtime references.
+          await this.cache.clean();
+          location.reload();
           break;
         case 'restart_app':
           this.restart();
@@ -996,7 +998,13 @@ export class Device extends EventEmitter {
       switch (resource) {
         case 'cache':
           const result = await this.deleteCache(opts);
-          channel.push('res:delete', { result, ref: opts.ref });
+          const response = channel.push('res:delete', {
+            result,
+            ref: opts.ref,
+          });
+          if (result.success && opts.type === 'all') {
+            this.reloadAfterAcknowledgement(response);
+          }
           break;
       }
     });
@@ -1111,30 +1119,47 @@ export class Device extends EventEmitter {
 
   private async deleteCache({ type, urls }: CacheDeleteRequest) {
     try {
-      let deleted = 0;
-
       if (type === 'all') {
-        // Clear all cache
-        await this.cache.clean();
-        const [dataCount, codeCount, mediaCount] = await Promise.all([
-          this.cache.count(ItemType.Data),
-          this.cache.count(ItemType.Code),
-          this.cache.count(ItemType.Media),
-        ]);
-        deleted = dataCount + codeCount + mediaCount;
-      } else if (urls && urls.length > 0) {
-        // Delete specific URLs
-        for (const url of urls) {
-          await this.cache.del(url);
-          deleted++;
-        }
+        return { success: true, deleted: await this.cache.clean() };
       }
 
-      return { success: true, deleted };
+      if (!urls?.length) {
+        return {
+          success: false,
+          error: 'At least one URL is required when clearing a cache category',
+        };
+      }
+
+      for (const url of urls) {
+        await this.cache.del(url);
+      }
+
+      return { success: true, deleted: urls.length };
     } catch (error) {
       console.error('Error deleting cache:', error);
       return { success: false, error: String(error) };
     }
+  }
+
+  private reloadAfterAcknowledgement(response: {
+    receive: (
+      status: 'ok' | 'error' | 'timeout',
+      callback: () => void
+    ) => unknown;
+  }) {
+    let reloaded = false;
+    const reload = () => {
+      if (!reloaded) {
+        reloaded = true;
+        location.reload();
+      }
+    };
+    const fallback = setTimeout(reload, 1_000);
+
+    response.receive('ok', () => {
+      clearTimeout(fallback);
+      reload();
+    });
   }
 
   private initHeartbeat(channel: PhoenixChannel) {

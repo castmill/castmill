@@ -212,7 +212,9 @@ defmodule CastmillWeb.DeviceController do
     device_id: [type: :string],
     type: [type: :string, in: ["code", "data", "media"], default: "data"],
     page: [type: :integer, number: [min: 1]],
-    page_size: [type: :integer, number: [min: 1, max: 100]]
+    page_size: [type: :integer, number: [min: 1, max: 100]],
+    key: [type: :string],
+    direction: [type: :string, in: ["ascending", "descending"]]
   }
 
   def get_cache(conn, %{"device_id" => device_id} = params) do
@@ -269,7 +271,8 @@ defmodule CastmillWeb.DeviceController do
   }
 
   def delete_cache(conn, %{"device_id" => device_id} = params) do
-    with {:ok, params} <- Tarams.cast(params, @delete_cache_schema) do
+    with {:ok, params} <- Tarams.cast(params, @delete_cache_schema),
+         :ok <- validate_cache_delete_params(params) do
       pid = self()
 
       # Serialize PID to a string and encode it to be used as a reference
@@ -298,12 +301,20 @@ defmodule CastmillWeb.DeviceController do
           |> put_status(:ok)
           |> json(data)
       after
-        5_000 ->
+        cache_delete_timeout(params.type) ->
           conn
           |> put_status(:bad_request)
           |> json(%{error: "No response from device"})
       end
     else
+      {:error, :empty_urls} ->
+        conn
+        |> put_status(:bad_request)
+        |> Phoenix.Controller.json(%{
+          errors: %{urls: ["must contain at least one URL unless type is all"]}
+        })
+        |> halt()
+
       {:error, errors} ->
         conn
         |> put_status(:bad_request)
@@ -311,6 +322,14 @@ defmodule CastmillWeb.DeviceController do
         |> halt()
     end
   end
+
+  defp validate_cache_delete_params(%{type: "all"}), do: :ok
+  defp validate_cache_delete_params(%{urls: [_ | _]}), do: :ok
+  defp validate_cache_delete_params(_), do: {:error, :empty_urls}
+
+  # Full native-storage cleanup can take longer than a regular per-entry deletion.
+  defp cache_delete_timeout("all"), do: 60_000
+  defp cache_delete_timeout(_type), do: 5_000
 
   def get_telemetry(conn, %{"device_id" => device_id}) do
     pid = self()

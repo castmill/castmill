@@ -152,4 +152,24 @@ defmodule CastmillWeb.DevicesChannelTest do
       assert_push "playlist_updated", %{event: "playlist_updated", playlist_id: 123}
     end
   end
+
+  describe "handle_in/3 - res:delete" do
+    test "forwards the response and acknowledges the device", %{socket: socket} do
+      ref =
+        self()
+        |> :erlang.term_to_binary()
+        |> Base.url_encode64()
+
+      result = %{success: true, deleted: 3}
+
+      assert {:reply, :ok, ^socket} =
+               DevicesChannel.handle_in(
+                 "res:delete",
+                 %{"ref" => ref, "result" => result},
+                 socket
+               )
+
+      assert_receive {:device_response, ^result}
+    end
+  end
 end

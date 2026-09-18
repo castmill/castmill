@@ -104,7 +104,7 @@ defmodule CastmillWeb.DevicesChannel do
     # Forward the response to the controller that made the request
     send(pid, {:device_response, result})
 
-    {:noreply, socket}
+    {:reply, :ok, socket}
   end
 
   # Not sure we should use the socket connection for getting stufff, seems conterintuitive

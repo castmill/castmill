@@ -144,6 +144,9 @@ recoverable indexes:
   cache to evict least-recently-used entries and retry. If no cached content can
   make enough room, media lookup returns no local URL instead of terminating the
   player loop.
+- A full cache clear deletes every IndexedDB entry and the complete native
+  storage path, including files orphaned by metadata corruption. It must reload
+  the player afterward so it cannot retain deleted media or code URLs in memory.
 - Reconciliation cleanup is best effort. A missing or concurrently deleted
   native file is logged but does not block player startup.
 

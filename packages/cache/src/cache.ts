@@ -432,15 +432,14 @@ export class Cache extends Dexie {
   }
 
   /**
-   * Clean all the cached items one by one.
-   *
-   * @param mimeType
+   * Clears every cached entry and all platform storage, including files that
+   * are no longer represented by IndexedDB metadata.
    */
-  async clean(mimeType?: string) {
-    const items = await this.items.toArray();
-    for (const item of items) {
-      await this.del(item.url!);
-    }
+  async clean(): Promise<number> {
+    const count = await this.items.count();
+    await this.integration.deleteAllFiles();
+    await this.items.clear();
+    return count;
   }
 
   /**

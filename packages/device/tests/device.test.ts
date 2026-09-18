@@ -386,6 +386,116 @@ describe('Device - Commands', () => {
     // Restore location
     window.location = originalLocation;
   });
+
+  it('clears all storage and reloads for the clear_cache command', async () => {
+    const originalLocation = window.location;
+    delete (window as any).location;
+    window.location = { reload: vi.fn() } as any;
+    const mockChannel = {
+      on: vi.fn(),
+      push: vi.fn(),
+      join: vi.fn(),
+    };
+
+    device['initListeners'](mockChannel as any);
+    const commandHandler = mockChannel.on.mock.calls.find(
+      (call) => call[0] === 'command'
+    )?.[1];
+
+    await commandHandler({ command: 'clear_cache' });
+
+    expect(mockCache.clean).toHaveBeenCalledOnce();
+    expect(window.location.reload).toHaveBeenCalledOnce();
+    window.location = originalLocation;
+  });
+
+  it('clears all cache storage, responds with the pre-clear count, then reloads after acknowledgement', async () => {
+    const originalLocation = window.location;
+    delete (window as any).location;
+    window.location = { reload: vi.fn() } as any;
+    const response = createMockPush();
+    const mockChannel = {
+      on: vi.fn(),
+      push: vi.fn().mockReturnValue(response),
+      join: vi.fn(),
+    };
+    mockCache.clean.mockResolvedValue(3);
+    device['initListeners'](mockChannel as any);
+    const deleteHandler = mockChannel.on.mock.calls.find(
+      (call) => call[0] === 'delete'
+    )?.[1];
+
+    await deleteHandler({
+      resource: 'cache',
+      opts: { type: 'all', urls: [], ref: 'cache-clear' },
+    });
+
+    expect(mockCache.clean).toHaveBeenCalledOnce();
+    expect(mockChannel.push).toHaveBeenCalledWith('res:delete', {
+      result: { success: true, deleted: 3 },
+      ref: 'cache-clear',
+    });
+    expect(window.location.reload).not.toHaveBeenCalled();
+
+    response._trigger('ok');
+
+    expect(window.location.reload).toHaveBeenCalledOnce();
+    window.location = originalLocation;
+  });
+
+  it('rejects an empty category clear without deleting or reloading', async () => {
+    const response = createMockPush();
+    const mockChannel = {
+      on: vi.fn(),
+      push: vi.fn().mockReturnValue(response),
+      join: vi.fn(),
+    };
+    device['initListeners'](mockChannel as any);
+    const deleteHandler = mockChannel.on.mock.calls.find(
+      (call) => call[0] === 'delete'
+    )?.[1];
+
+    await deleteHandler({
+      resource: 'cache',
+      opts: { type: 'media', urls: [], ref: 'invalid-clear' },
+    });
+
+    expect(mockCache.clean).not.toHaveBeenCalled();
+    expect(mockChannel.push).toHaveBeenCalledWith('res:delete', {
+      result: {
+        success: false,
+        error: 'At least one URL is required when clearing a cache category',
+      },
+      ref: 'invalid-clear',
+    });
+  });
+
+  it('reloads after a bounded timeout when the delete acknowledgement is lost', async () => {
+    vi.useFakeTimers();
+    const originalLocation = window.location;
+    delete (window as any).location;
+    window.location = { reload: vi.fn() } as any;
+    const mockChannel = {
+      on: vi.fn(),
+      push: vi.fn().mockReturnValue(createMockPush()),
+      join: vi.fn(),
+    };
+    mockCache.clean.mockResolvedValue(1);
+    device['initListeners'](mockChannel as any);
+    const deleteHandler = mockChannel.on.mock.calls.find(
+      (call) => call[0] === 'delete'
+    )?.[1];
+
+    await deleteHandler({
+      resource: 'cache',
+      opts: { type: 'all', urls: [], ref: 'cache-clear' },
+    });
+    await vi.advanceTimersByTimeAsync(1_000);
+
+    expect(window.location.reload).toHaveBeenCalledOnce();
+    window.location = originalLocation;
+    vi.useRealTimers();
+  });
 });
 
 describe('Device - Channel Updates', () => {
