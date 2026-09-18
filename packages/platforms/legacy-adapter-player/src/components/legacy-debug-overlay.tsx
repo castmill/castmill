@@ -17,6 +17,8 @@ export interface LegacyDebugDevice {
   name?: string;
   getServerConnectionStatus(): ServerConnectionStatus;
   refreshIdentity(): Promise<{ id: string; name: string }>;
+  getOrganizationName(): Promise<string | undefined>;
+  getCastmillNetworkName(): Promise<string | undefined>;
   on(event: 'ready', listener: () => void): unknown;
   off(event: 'ready', listener: () => void): unknown;
 }
@@ -31,8 +33,8 @@ interface LegacyDebugOverlayProps {
 
 interface RuntimeInfo {
   deviceId: string;
-  playerName: string;
-  network: string;
+  deviceName: string;
+  browserConnection: string;
   serverConnection: string;
   viewport: string;
   screen: string;
@@ -63,8 +65,8 @@ const getRuntimeInfo = (
   t: (key: string) => string
 ): RuntimeInfo => ({
   deviceId: device.id ?? t('legacyDebug.values.unavailable'),
-  playerName: device.name ?? t('legacyDebug.values.unavailable'),
-  network: navigator.onLine
+  deviceName: device.name ?? t('legacyDebug.values.unavailable'),
+  browserConnection: navigator.onLine
     ? t('legacyDebug.status.online')
     : t('legacyDebug.status.offline'),
   serverConnection: formatConnectionStatus(
@@ -86,6 +88,12 @@ export const LegacyDebugOverlay: Component<LegacyDebugOverlayProps> = (
   const [runtimeInfo, setRuntimeInfo] = createSignal<RuntimeInfo>(
     getRuntimeInfo(props.device, t)
   );
+  const [organization, setOrganization] = createSignal(
+    t('legacyDebug.values.unavailable')
+  );
+  const [network, setNetwork] = createSignal(
+    t('legacyDebug.values.unavailable')
+  );
   const [deviceInfo, setDeviceInfo] = createSignal<DeviceInfo>();
   const [identityError, setIdentityError] = createSignal<string>();
   const [deviceInfoError, setDeviceInfoError] = createSignal<string>();
@@ -102,6 +110,14 @@ export const LegacyDebugOverlay: Component<LegacyDebugOverlayProps> = (
 
     try {
       await props.device.refreshIdentity();
+      const [organizationName, networkName] = await Promise.all([
+        props.device.getOrganizationName(),
+        props.device.getCastmillNetworkName(),
+      ]);
+      setOrganization(
+        organizationName ?? t('legacyDebug.values.unavailable')
+      );
+      setNetwork(networkName ?? t('legacyDebug.values.unavailable'));
     } catch (error) {
       setIdentityError(getErrorMessage(error));
     } finally {
@@ -160,14 +176,19 @@ export const LegacyDebugOverlay: Component<LegacyDebugOverlayProps> = (
     const runtime = runtimeInfo();
     const info = deviceInfo();
     const result: DebugRow[] = [
-      { label: t('legacyDebug.rows.playerName'), value: runtime.playerName },
+      { label: t('legacyDebug.rows.playerName'), value: runtime.deviceName },
       { label: t('legacyDebug.rows.deviceId'), value: runtime.deviceId },
+      { label: t('legacyDebug.rows.organization'), value: organization() },
+      { label: t('legacyDebug.rows.castmillNetwork'), value: network() },
       { label: t('legacyDebug.rows.server'), value: props.serverUrl },
       {
         label: t('legacyDebug.rows.adapterPlatform'),
         value: t(`legacyDebug.platform.${props.platform}`),
       },
-      { label: t('legacyDebug.rows.network'), value: runtime.network },
+      {
+        label: t('legacyDebug.rows.browserConnection'),
+        value: runtime.browserConnection,
+      },
       {
         label: t('legacyDebug.rows.serverConnection'),
         value: runtime.serverConnection,

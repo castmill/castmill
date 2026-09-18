@@ -22,9 +22,12 @@
     "rows": {
       "playerName": "播放器名称",
       "deviceId": "设备 ID",
+      "organization": "组织",
+      "castmillNetwork": "Castmill 网络",
       "server": "服务器",
       "adapterPlatform": "适配器平台",
       "network": "网络",
+      "browserConnection": "浏览器连接",
       "serverConnection": "服务器连接",
       "viewport": "视口",
       "screen": "屏幕",

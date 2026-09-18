@@ -22,9 +22,12 @@
     "rows": {
       "playerName": "Player name",
       "deviceId": "Device ID",
+      "organization": "Organization",
+      "castmillNetwork": "Castmill network",
       "server": "Server",
       "adapterPlatform": "Adapter platform",
       "network": "Network",
+      "browserConnection": "Browser connection",
       "serverConnection": "Server connection",
       "viewport": "Viewport",
       "screen": "Screen",

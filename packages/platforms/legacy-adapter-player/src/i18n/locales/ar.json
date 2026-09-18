@@ -22,9 +22,12 @@
     "rows": {
       "playerName": "اسم المشغّل",
       "deviceId": "معرّف الجهاز",
+      "organization": "المؤسسة",
+      "castmillNetwork": "شبكة Castmill",
       "server": "الخادم",
       "adapterPlatform": "منصة المحوّل",
       "network": "الشبكة",
+      "browserConnection": "اتصال المتصفح",
       "serverConnection": "اتصال الخادم",
       "viewport": "منفذ العرض",
       "screen": "الشاشة",

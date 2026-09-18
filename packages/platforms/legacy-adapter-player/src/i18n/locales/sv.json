@@ -22,9 +22,12 @@
     "rows": {
       "playerName": "Spelarnamn",
       "deviceId": "Enhets-ID",
+      "organization": "Organisation",
+      "castmillNetwork": "Castmill-nätverk",
       "server": "Server",
       "adapterPlatform": "Adapterplattform",
       "network": "Nätverk",
+      "browserConnection": "Webbläsaranslutning",
       "serverConnection": "Serveranslutning",
       "viewport": "Visningsyta",
       "screen": "Skärm",

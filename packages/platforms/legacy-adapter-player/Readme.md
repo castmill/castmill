@@ -127,9 +127,9 @@ embedded player when their debug menu option is selected. The adapter accepts
 that exact message only from its parent window and toggles a lower-right
 diagnostics panel.
 
-The panel shows the registered player name and ID, resolved server URL, adapter
-platform, machine and application versions, network and server connection
-states, display dimensions, timezone, and user agent. It intentionally excludes
+The panel shows the registered device name and ID, organization and Castmill network,
+resolved server URL, adapter platform, machine and application versions, browser and
+server connection states, display dimensions, timezone, and user agent. It intentionally excludes
 credentials, authentication tokens, and native hardware identifiers.
 The registered player name is refreshed from the server whenever the panel is
 opened, so dashboard renames appear without restarting the player.

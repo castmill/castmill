@@ -13,6 +13,8 @@ const createDevice = (): LegacyDebugDevice => ({
   refreshIdentity: vi
     .fn()
     .mockResolvedValue({ id: 'device-42', name: 'Lobby Player' }),
+  getOrganizationName: vi.fn().mockResolvedValue('Castmill AB'),
+  getCastmillNetworkName: vi.fn().mockResolvedValue('Stockholm'),
   on: vi.fn(),
   off: vi.fn(),
 });
@@ -70,6 +72,8 @@ describe('LegacyDebugOverlay', () => {
     expect(screen.getByText('Connected')).toBeInTheDocument();
     expect(screen.getByText('Online')).toBeInTheDocument();
     expect(screen.getByText('Android')).toBeInTheDocument();
+    expect(screen.getByText('Castmill AB')).toBeInTheDocument();
+    expect(screen.getByText('Stockholm')).toBeInTheDocument();
     expect(screen.getByText('1024 x 768')).toBeInTheDocument();
 
     setVisible(false);

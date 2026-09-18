@@ -22,9 +22,12 @@
     "rows": {
       "playerName": "플레이어 이름",
       "deviceId": "장치 ID",
+      "organization": "조직",
+      "castmillNetwork": "Castmill 네트워크",
       "server": "서버",
       "adapterPlatform": "어댑터 플랫폼",
       "network": "네트워크",
+      "browserConnection": "브라우저 연결",
       "serverConnection": "서버 연결",
       "viewport": "뷰포트",
       "screen": "화면",

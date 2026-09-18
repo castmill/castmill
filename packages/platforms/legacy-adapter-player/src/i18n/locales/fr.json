@@ -22,9 +22,12 @@
     "rows": {
       "playerName": "Nom du lecteur",
       "deviceId": "ID de l’appareil",
+      "organization": "Organisation",
+      "castmillNetwork": "Réseau Castmill",
       "server": "Serveur",
-      "adapterPlatform": "Plateforme de l’adaptateur",
+      "adapterPlatform": "Plateforme de l'adaptateur",
       "network": "Réseau",
+      "browserConnection": "Connexion du navigateur",
       "serverConnection": "Connexion au serveur",
       "viewport": "Zone d’affichage",
       "screen": "Écran",

@@ -22,9 +22,12 @@
     "rows": {
       "playerName": "Nombre del reproductor",
       "deviceId": "ID del dispositivo",
+      "organization": "Organización",
+      "castmillNetwork": "Red de Castmill",
       "server": "Servidor",
       "adapterPlatform": "Plataforma del adaptador",
       "network": "Red",
+      "browserConnection": "Conexión del navegador",
       "serverConnection": "Conexión con el servidor",
       "viewport": "Área visible",
       "screen": "Pantalla",
