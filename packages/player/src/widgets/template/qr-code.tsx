@@ -623,6 +623,7 @@ export const QRCode: Component<QRCodeProps> = (props: QRCodeProps) => {
           }}
           viewBox={`0 0 ${gridSize} ${gridSize}`}
           preserveAspectRatio="xMidYMid meet"
+          shape-rendering="crispEdges"
         >
           <rect width={gridSize} height={gridSize} fill={backgroundColor} />
           <For each={flatMatrix}>
