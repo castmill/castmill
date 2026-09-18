@@ -86,6 +86,28 @@ cd packages/dashboard && yarn check-translations
 - Document complex logic and architectural decisions
 - Update `agents/` documentation when making architectural changes
 
+### Legacy Player Widget Compatibility
+
+**Core player widgets must remain compatible with the legacy Android player.** This
+applies to image, video, text, and layout widgets, as well as shared template
+components and utilities they use.
+
+- Treat the Android 5.1/Crosswalk player as a Chrome 38 target; do not validate only
+  in a current desktop browser.
+- Do not introduce unsupported CSS such as CSS Grid or `aspect-ratio`. Use
+  conservative flexbox sizing, explicit `flex-shrink` behavior, and SVG `viewBox`
+  sizing where appropriate.
+- Feature-detect browser APIs. Use native APIs when available and provide lightweight
+  fallbacks for legacy players; do not assume TypeScript transpilation polyfills Web
+  Platform APIs.
+- Test dynamic states, including empty content, long auto-fit text, media loading,
+  and size changes.
+- After changing `@castmill/player`, rebuild `@castmill/device` before building the
+  legacy adapter because the device package embeds the player bundle.
+
+Read `agents/packages/player/LEGACY-PLAYER-COMPATIBILITY.md` before changing these
+widgets or shared player-rendering code.
+
 ### Key Technologies
 - **Frontend**: SolidJS (Dashboard), React, TypeScript, Vite
 - **Backend**: Elixir/Phoenix, PostgreSQL, Oban
