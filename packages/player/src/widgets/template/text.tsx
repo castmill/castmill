@@ -101,8 +101,9 @@ export const Text: Component<TextProps> = (props) => {
   let timelineItem: TimelineItem;
   let scrollTimeline: gsap.core.Timeline;
   let cleanUpAnimations: () => void;
-  let resizeObserver: ResizeObserver | null = null;
+  let stopObservingResize: (() => void) | undefined;
   let contentObserver: MutationObserver | null = null;
+  let animationFrame: number | undefined;
 
   // Determine default sizing based on context:
   // 1. Positioned elements (absolute/fixed) - no default size, auto-size to content
@@ -133,8 +134,11 @@ export const Text: Component<TextProps> = (props) => {
     cleanUpAnimations && cleanUpAnimations();
     timelineItem && props.timeline.remove(timelineItem);
     scrollTimeline?.kill();
-    resizeObserver?.disconnect();
+    stopObservingResize?.();
     contentObserver?.disconnect();
+    if (animationFrame !== undefined) {
+      cancelAnimationFrame(animationFrame);
+    }
   });
 
   onMount(() => {
@@ -142,7 +146,10 @@ export const Text: Component<TextProps> = (props) => {
       return;
     }
     const size = autoFitText(textRef, props.opts?.autofit || {});
-    resizeObserver = observeTextContainerResize(textRef, () => {
+    animationFrame = requestAnimationFrame(() => {
+      autoFitText(textRef!, props.opts?.autofit || {});
+    });
+    stopObservingResize = observeTextContainerResize(textRef, () => {
       autoFitText(textRef!, props.opts?.autofit || {});
     });
     contentObserver = observeTextContentChanges(textRef, () => {
@@ -230,10 +237,11 @@ function autoFitText(div: HTMLDivElement, options: AutoFitOpts): number {
     textElement.style.fontSize = `${size}em`;
   };
 
-  const parentElement = div.parentElement!;
-
-  const containerRect = parentElement.getBoundingClientRect();
-  if (containerRect.width === 0 || containerRect.height === 0) {
+  const containerElement = div.parentElement!;
+  const containerRect = containerElement.getBoundingClientRect();
+  const maxHeight = containerRect.height;
+  const maxWidth = containerRect.width;
+  if (maxWidth === 0 || maxHeight === 0) {
     // Container not yet sized - use baseSize as fallback
     if (options.baseSize) {
       setSize(options.baseSize);
@@ -244,13 +252,14 @@ function autoFitText(div: HTMLDivElement, options: AutoFitOpts): number {
     return 1;
   }
 
-  const maxHeight = containerRect.height; // Math.ceil(containerRect.height);
-  const maxWidth = containerRect.width; //Math.ceil(containerRect.width);
+  const fits = () => {
+    const { height, width } = textElement.getBoundingClientRect();
+    return height <= maxHeight && width <= maxWidth;
+  };
 
   if (options.baseSize) {
     setSize(options.baseSize);
-    const { height, width } = textElement.getBoundingClientRect();
-    if (height <= maxHeight && width <= maxWidth) {
+    if (fits()) {
       return options.baseSize;
     }
   }
@@ -259,33 +268,17 @@ function autoFitText(div: HTMLDivElement, options: AutoFitOpts): number {
   let r = options.maxSize || limits.max;
 
   let count = 0;
-  let lastWidth = 0,
-    lastHeight = 0,
-    lastSize = 0,
-    lastSmallerSize = 0;
-  while (
-    (r - l > tolerance && count < maxNumIterations) ||
-    lastHeight > maxHeight ||
-    lastWidth > maxWidth
-  ) {
+  let lastSize = 0;
+  let lastSmallerSize = 0;
+  while (r - l > tolerance && count < maxNumIterations) {
     count++;
     const size = (l + r) / 2;
 
     lastSize = size;
 
     setSize(size);
-    const { height, width } = textElement.getBoundingClientRect();
 
-    // Break if we cannot do better.
-    if (height == maxHeight && width <= maxWidth) {
-      break;
-    }
-
-    if (height <= maxHeight && width == maxWidth) {
-      break;
-    }
-
-    if (height <= maxHeight && width <= maxWidth) {
+    if (fits()) {
       // Make the text larger
       l = size;
       lastSmallerSize = size;
@@ -293,13 +286,9 @@ function autoFitText(div: HTMLDivElement, options: AutoFitOpts): number {
       // Make the text smaller
       r = size;
     }
-
-    lastHeight = height;
-    lastWidth = width;
   }
 
-  const { height, width } = textElement.getBoundingClientRect();
-  if (height > maxHeight || width > maxWidth) {
+  if (!fits()) {
     lastSize = lastSmallerSize;
     setSize(lastSmallerSize);
   }
