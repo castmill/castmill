@@ -134,6 +134,15 @@ credentials, authentication tokens, and native hardware identifiers.
 The registered player name is refreshed from the server whenever the panel is
 opened, so dashboard renames appear without restarting the player.
 
+## Legacy Android compatibility
+
+The legacy Android player uses Crosswalk on Android 5.1 and must be treated as an
+old Chromium target. Before using browser APIs or CSS layout features in shared player
+code, consult
+[the legacy player compatibility guide](../../../agents/packages/player/LEGACY-PLAYER-COMPATIBILITY.md).
+It documents supported fallback patterns, unsupported CSS features, required build
+order, and ADB validation commands.
+
 ---
 
 ## Contributing

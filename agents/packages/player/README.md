@@ -93,3 +93,8 @@ Widgets that determine their own duration (RSS feeds, paginated lists) use:
 | Repeat with duration | Included (one loop cycle) | Scrollers, tickers with known duration |
 | Repeat without duration | Excluded from total | Indefinite background elements |
 
+## Legacy Android Compatibility
+
+For JavaScript, CSS, layout, SVG, auto-fit text, build-order, and ADB verification
+requirements for the Android 5.1/Crosswalk legacy player, see
+[LEGACY-PLAYER-COMPATIBILITY.md](./LEGACY-PLAYER-COMPATIBILITY.md).
