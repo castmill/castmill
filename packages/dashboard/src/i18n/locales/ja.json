@@ -969,6 +969,7 @@
       "checkUpdatesDescription": "更新を確認してインストールします。これによりデバイスは再起動されません",
       "updateFirmware": "ファームウェアを更新",
       "updateFirmwareDescription": "デバイスのファームウェアを更新します",
+      "actionNotSupported": "非対応です。",
       "offlineMessage": "デバイスがオフラインのため、コマンドを送信できません",
       "autorecoveryUpdated": "自動復旧が更新されました",
       "autorecoveryUpdateFailed": "自動復旧の更新に失敗しました",

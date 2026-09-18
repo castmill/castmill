@@ -1354,6 +1354,14 @@ describe('Device - loginOrRegister (non-blocking login)', () => {
               os: 'Linux',
               hardware: 'x86_64',
               userAgent: 'Castmill Player',
+              capabilities: {
+                restart: false,
+                quit: false,
+                reboot: false,
+                shutdown: false,
+                update: false,
+                updateFirmware: false,
+              },
             },
           }),
         })

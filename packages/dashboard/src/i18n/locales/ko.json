@@ -968,6 +968,7 @@
       "checkUpdatesDescription": "업데이트를 확인하고 설치합니다. 기기를 재시작하지 않습니다",
       "updateFirmware": "펌웨어 업데이트",
       "updateFirmwareDescription": "기기의 펌웨어를 업데이트합니다",
+      "actionNotSupported": "지원되지 않음.",
       "offlineMessage": "기기가 오프라인 상태이므로 명령을 보낼 수 없습니다",
       "autorecoveryUpdated": "자동 복구가 업데이트되었습니다",
       "autorecoveryUpdateFailed": "자동 복구 업데이트에 실패했습니다",

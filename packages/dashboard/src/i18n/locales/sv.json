@@ -963,6 +963,7 @@
       "checkUpdatesDescription": "Sök efter uppdateringar och installera dem. Detta kommer inte att starta om enheten",
       "updateFirmware": "Uppdatera firmware",
       "updateFirmwareDescription": "Uppdaterar enhetens firmware",
+      "actionNotSupported": "Stöds inte.",
       "offlineMessage": "Enheten är offline, så inga kommandon kan skickas till den",
       "autorecoveryUpdated": "Autoåterställning har uppdaterats",
       "autorecoveryUpdateFailed": "Misslyckades med att uppdatera autoåterställning",

@@ -968,6 +968,7 @@
       "checkUpdatesDescription": "检查更新并安装它们。这不会重新启动设备",
       "updateFirmware": "更新固件",
       "updateFirmwareDescription": "更新设备的固件",
+      "actionNotSupported": "不支持。",
       "offlineMessage": "设备处于离线状态,因此无法向其发送命令",
       "autorecoveryUpdated": "自动恢复已更新",
       "autorecoveryUpdateFailed": "自动恢复更新失败",

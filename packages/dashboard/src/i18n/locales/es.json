@@ -996,6 +996,7 @@
       "checkUpdatesDescription": "Buscar actualizaciones e instalarlas. Esto no reiniciará el dispositivo",
       "updateFirmware": "Actualizar firmware",
       "updateFirmwareDescription": "Actualiza el firmware del dispositivo",
+      "actionNotSupported": "No compatible.",
       "offlineMessage": "El dispositivo está desconectado, por lo que no se le pueden enviar comandos",
       "autorecoveryUpdated": "La recuperación automática se actualizó",
       "autorecoveryUpdateFailed": "No se pudo actualizar la recuperación automática",

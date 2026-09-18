@@ -1028,6 +1028,7 @@
       "checkUpdatesDescription": "Check for updates and install them. This will not restart the device",
       "updateFirmware": "Update Firmware",
       "updateFirmwareDescription": "Updates the firmware of the device",
+      "actionNotSupported": "Not supported.",
       "offlineMessage": "Device is offline, so no commands can be sent to it",
       "autorecoveryUpdated": "Autorecovery has been updated",
       "autorecoveryUpdateFailed": "Failed to update autorecovery",

@@ -23,6 +23,14 @@ defmodule CastmillWeb.DeviceController do
     nodeVersion
     userAgent
   )
+  @device_capability_keys ~w(
+    restart
+    quit
+    reboot
+    shutdown
+    update
+    updateFirmware
+  )
   @max_device_info_value_bytes 1024
 
   @impl CastmillWeb.AccessActorBehaviour
@@ -149,10 +157,19 @@ defmodule CastmillWeb.DeviceController do
 
   defp valid_device_info?(info) do
     Enum.all?(info, fn {key, value} ->
-      key in @device_info_keys and is_binary(value) and
-        byte_size(value) <= @max_device_info_value_bytes
+      (key in @device_info_keys and is_binary(value) and
+         byte_size(value) <= @max_device_info_value_bytes) or
+        (key == "capabilities" and valid_device_capabilities?(value))
     end)
   end
+
+  defp valid_device_capabilities?(capabilities) when is_map(capabilities) do
+    Enum.all?(capabilities, fn {key, value} ->
+      key in @device_capability_keys and is_boolean(value)
+    end)
+  end
+
+  defp valid_device_capabilities?(_capabilities), do: false
 
   def start_registration(conn, %{"hardware_id" => hardware_id, "timezone" => timezone} = params) do
     location = Map.get(params, "location")

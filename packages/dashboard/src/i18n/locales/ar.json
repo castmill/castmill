@@ -968,6 +968,7 @@
       "checkUpdatesDescription": "التحقق من التحديثات وتثبيتها. لن يؤدي هذا إلى إعادة تشغيل الجهاز",
       "updateFirmware": "تحديث البرنامج الثابت",
       "updateFirmwareDescription": "يحدث البرنامج الثابت للجهاز",
+      "actionNotSupported": "غير مدعوم.",
       "offlineMessage": "الجهاز غير متصل بالإنترنت، لذا لا يمكن إرسال أوامر إليه",
       "autorecoveryUpdated": "تم تحديث الاسترداد التلقائي",
       "autorecoveryUpdateFailed": "فشل تحديث الاسترداد التلقائي",

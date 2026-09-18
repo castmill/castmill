@@ -98,6 +98,44 @@ defmodule CastmillWeb.DeviceControllerTest do
       assert Castmill.Devices.get_device(device.id).info == info
     end
 
+    test "stores player capabilities", %{organization: organization} do
+      {:ok, devices_registration} =
+        device_registration_fixture(%{
+          hardware_id: "capabilities-hw-id",
+          pincode: "capabilities1234"
+        })
+
+      {:ok, {device, token}} =
+        Castmill.Devices.register_device(organization.id, devices_registration.pincode, %{
+          name: "Capabilities Device"
+        })
+
+      info = %{
+        "appType" => "WebOS",
+        "appVersion" => "1.2.3",
+        "os" => "WebOS",
+        "hardware" => "LG",
+        "userAgent" => "Castmill Player",
+        "capabilities" => %{
+          "restart" => true,
+          "quit" => false,
+          "reboot" => true,
+          "shutdown" => true,
+          "update" => true,
+          "updateFirmware" => true
+        }
+      }
+
+      conn =
+        build_conn()
+        |> put_req_header("accept", "application/json")
+        |> put_req_header("authorization", Enum.join(["Bearer", token], " "))
+        |> post("/devices/#{device.id}/info", %{"info" => info})
+
+      assert response(conn, 204)
+      assert Castmill.Devices.get_device(device.id).info == info
+    end
+
     test "rejects malformed, unknown, and oversized player metadata", %{
       organization: organization
     } do
@@ -113,6 +151,8 @@ defmodule CastmillWeb.DeviceControllerTest do
         "invalid",
         %{"unknown" => "value"},
         %{"appType" => %{"nested" => "value"}},
+        %{"capabilities" => %{"updateFirmware" => "true"}},
+        %{"capabilities" => %{"unknown" => true}},
         %{"userAgent" => String.duplicate("a", 1025)}
       ]
 

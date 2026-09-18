@@ -1245,7 +1245,10 @@ export class Device extends EventEmitter {
 
   private async updateDeviceInfo(credentials: Credentials) {
     try {
-      const info = await this.integration.getDeviceInfo();
+      const info = {
+        ...(await this.integration.getDeviceInfo()),
+        capabilities: this.getCapabilities(),
+      };
       const csrfToken = document
         .querySelector("meta[name='csrf-token']")
         ?.getAttribute('content');
