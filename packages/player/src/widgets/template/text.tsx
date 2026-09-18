@@ -41,7 +41,8 @@ export class TextComponent implements TemplateComponent {
     public opts: TextComponentOptions,
     public style: JSX.CSSProperties,
     public animations?: ComponentAnimation[],
-    public filter?: Record<string, any>
+    public filter?: Record<string, any>,
+    public $styles?: { filter: Record<string, any>; style: JSX.CSSProperties }[]
   ) {}
 
   resolveDuration(): number {
@@ -54,7 +55,8 @@ export class TextComponent implements TemplateComponent {
       json.opts,
       json.style,
       json.animations,
-      json.filter
+      json.filter,
+      json.$styles
     );
   }
 

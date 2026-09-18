@@ -35,6 +35,16 @@ defmodule Castmill.Repo.Migrations.AddQrCodeWidget do
           %{
             "type" => "group",
             "name" => "qr-container",
+            "$styles" => [
+              %{
+                "filter" => %{"options.caption" => ""},
+                "style" => %{
+                  "width" => "100%",
+                  "height" => "100%",
+                  "box-sizing" => "border-box"
+                }
+              }
+            ],
             "style" => %{
               "display" => "flex",
               "align-items" => "center",
@@ -68,6 +78,12 @@ defmodule Castmill.Repo.Migrations.AddQrCodeWidget do
           %{
             "type" => "text",
             "name" => "caption",
+            "$styles" => [
+              %{
+                "filter" => %{"options.caption" => ""},
+                "style" => %{"display" => "none"}
+              }
+            ],
             "opts" => %{
               "text" => %{"key" => "options.caption", "default" => ""}
             },
