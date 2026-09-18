@@ -125,6 +125,32 @@ channel/playlist metadata, `StorageBrowser` stores browser resources, and legacy
 Android uses `AndroidLegacyFileStorage` plus its persisted `FILE_MAP` for native
 media. Validate all layers during an offline restart.
 
+### Legacy Android content-cache recovery
+
+The legacy Android cache treats IndexedDB and native files as independently
+recoverable indexes:
+
+- A malformed or structurally invalid `FILE_MAP` is reset to an empty map. The
+  IndexedDB reconciliation then removes stale metadata so content can be
+  downloaded again.
+- Current Android wrappers expose `fileExists` through the iframe bridge.
+  `AndroidLegacyFileStorage.listFiles()` removes mappings for native files that
+  have disappeared. Older wrappers remain compatible but cannot perform this
+  proactive check.
+- If IndexedDB reports a database failure during initialization, the cache
+  deletes and recreates that database. Native files without rebuilt metadata are
+  treated as unreferenced and removed.
+- Native `CacheFull` errors are translated to `NOT_ENOUGH_SPACE`, causing the
+  cache to evict least-recently-used entries and retry. If no cached content can
+  make enough room, media lookup returns no local URL instead of terminating the
+  player loop.
+- Reconciliation cleanup is best effort. A missing or concurrently deleted
+  native file is logged but does not block player startup.
+
+Deploy the matching `android-app` wrapper when relying on native existence
+checks. Its storage bridge reserves 128 MB before each chunk, makes deletion
+idempotent, and removes partial downloads after terminal failures.
+
 With an Android player attached over ADB:
 
 ```bash

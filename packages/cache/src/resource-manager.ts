@@ -196,10 +196,15 @@ export class ResourceManager {
 
     let item = await this.cache.get(url);
     if (!item) {
-      item = await this.cache.set(url, ItemType.Media, 'media/*', {
-        headers: this.getAuthHeader(),
-        force: false,
-      });
+      try {
+        item = await this.cache.set(url, ItemType.Media, 'media/*', {
+          headers: this.getAuthHeader(),
+          force: false,
+        });
+      } catch (error) {
+        console.error('Unable to cache media', url, error);
+        return;
+      }
     }
     return item?.cachedUrl;
   }
@@ -224,10 +229,14 @@ export class ResourceManager {
       return;
     }
 
-    await this.cache.set(url, ItemType.Media, 'media/*', {
-      headers: this.getAuthHeader(),
-      force: false,
-    });
+    try {
+      await this.cache.set(url, ItemType.Media, 'media/*', {
+        headers: this.getAuthHeader(),
+        force: false,
+      });
+    } catch (error) {
+      console.error('Unable to cache media', url, error);
+    }
   }
 
   close() {

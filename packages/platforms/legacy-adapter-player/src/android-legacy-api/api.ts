@@ -50,6 +50,11 @@ export async function downloadFile(
   return outbound.downloadFile(path, localPath) as unknown as string;
 }
 
+export async function fileExists(path: string): Promise<boolean> {
+  logger.log('fileExists', path);
+  return Boolean(await outbound.fileExists(path));
+}
+
 export async function deleteFile(path: string): Promise<void> {
   logger.log('deleteFile', path);
   await outbound.deleteFile(path);
