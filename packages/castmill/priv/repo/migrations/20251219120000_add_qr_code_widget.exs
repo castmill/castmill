@@ -41,6 +41,7 @@ defmodule Castmill.Repo.Migrations.AddQrCodeWidget do
               "justify-content" => "center",
               "width" => "75%",
               "height" => "75%",
+              "flex-shrink" => "0",
               "background" => %{"key" => "options.qr_background"},
               "border-radius" => "0.5em",
               "box-shadow" => "0 0.25em 1em rgba(0, 0, 0, 0.1)",
@@ -73,13 +74,15 @@ defmodule Castmill.Repo.Migrations.AddQrCodeWidget do
             "style" => %{
               "margin-top" => "0.8em",
               "font-size" => %{"key" => "options.caption_size"},
+              "font-family" => "sans-serif",
               "font-weight" => "500",
               "color" => %{"key" => "options.text_color"},
               "text-align" => "center",
               "max-width" => "90%",
               "overflow" => "hidden",
               "text-overflow" => "ellipsis",
-              "white-space" => "nowrap"
+              "white-space" => "nowrap",
+              "height" => "15%"
             }
           }
         ]
