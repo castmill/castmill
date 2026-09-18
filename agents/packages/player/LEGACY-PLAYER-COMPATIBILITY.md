@@ -8,7 +8,7 @@ The legacy adapter Vite build targets Chrome 38:
 
 ```ts
 // packages/platforms/legacy-adapter-player/vite.config.ts
-legacy({ targets: { chrome: '38' } })
+legacy({ targets: { chrome: '38' } });
 ```
 
 Modern browser validation is not sufficient. Test affected changes on a connected
@@ -22,13 +22,13 @@ The legacy adapter's Vite legacy plugin transpiles supported JavaScript syntax a
 bundles configured ECMAScript polyfills. TypeScript compilation does **not** polyfill
 Web Platform APIs.
 
-| Category | Guidance |
-| --- | --- |
-| Language syntax and standard-library methods | Use the adapter's production build; do not rely on untranspiled syntax or methods outside its configured polyfills. |
-| `ResizeObserver` | Not available in Crosswalk. Feature-detect it, then use a small fallback such as `window.resize` plus an initial `requestAnimationFrame` measurement. |
-| Fetch, promises, maps, sets | Use the adapter's existing polyfill setup. Do not add per-component implementations. |
-| DOM layout measurements | Measure after layout has settled. A first `onMount` measurement can occur before a flex layout receives its final dimensions. |
-| Browser-only APIs | Feature-detect APIs such as storage, media, observers, and permissions. Provide an explicit fallback or surface a supported error; never silently assume availability. |
+| Category                                     | Guidance                                                                                                                                                               |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Language syntax and standard-library methods | Use the adapter's production build; do not rely on untranspiled syntax or methods outside its configured polyfills.                                                    |
+| `ResizeObserver`                             | Not available in Crosswalk. Feature-detect it, then use a small fallback such as `window.resize` plus an initial `requestAnimationFrame` measurement.                  |
+| Fetch, promises, maps, sets                  | Use the adapter's existing polyfill setup. Do not add per-component implementations.                                                                                   |
+| DOM layout measurements                      | Measure after layout has settled. A first `onMount` measurement can occur before a flex layout receives its final dimensions.                                          |
+| Browser-only APIs                            | Feature-detect APIs such as storage, media, observers, and permissions. Provide an explicit fallback or surface a supported error; never silently assume availability. |
 
 Avoid adding a large polyfill merely for a narrow use case. For example, a
 `ResizeObserver` polyfill may poll or use fragile mutation heuristics. Native
@@ -41,10 +41,10 @@ legacy bundle smaller.
 
 Avoid these for player rendering that must work on the legacy Android target:
 
-| Feature | Why | Compatible approach |
-| --- | --- | --- |
-| CSS Grid (`display: grid`, `grid-template-*`) | Not supported by the Crosswalk target. QR modules rendered as an empty-looking box. | SVG, flexbox, or explicit positioned elements. |
-| `aspect-ratio` | Not supported by the target. | Give the parent deterministic dimensions, or use an SVG `viewBox` with `preserveAspectRatio`. |
+| Feature                                            | Why                                                                                                        | Compatible approach                                                                                        |
+| -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| CSS Grid (`display: grid`, `grid-template-*`)      | Not supported by the Crosswalk target. QR modules rendered as an empty-looking box.                        | SVG, flexbox, or explicit positioned elements.                                                             |
+| `aspect-ratio`                                     | Not supported by the target.                                                                               | Give the parent deterministic dimensions, or use an SVG `viewBox` with `preserveAspectRatio`.              |
 | Percentage-sized flex children without constraints | Crosswalk can resolve percentage heights differently from current Chrome and shrink siblings unexpectedly. | Set intended `flex-shrink`, `box-sizing`, and explicit child sizing. Test both empty and populated states. |
 
 Flexbox is available, but use it conservatively:
@@ -106,6 +106,24 @@ yarn workspace @castmill/legacy-adapter-player build:server
 The final command writes the adapter served by Phoenix to
 `packages/castmill/priv/static/legacy/`. Rebuilding only `@castmill/player` leaves
 the stale player implementation embedded in `@castmill/device/dist`.
+
+The legacy adapter build also generates `/legacy/sw.js` from the final Vite
+output. The worker precaches one complete, content-addressed adapter release and
+activates it only after every required file is available. It controls both
+`/legacy` and `/legacy/` without reloading the currently running page. Do not
+maintain its hashed asset list manually.
+
+Offline cold startup requires:
+
+- an HTTPS adapter origin trusted by the legacy runtime;
+- one successful online load to install the shell and populate content caches;
+- the adapter shell and APIs to retain their origin; and
+- proxies to preserve `Service-Worker-Allowed: /legacy` on `/legacy/sw.js`.
+
+The shell worker does not replace the content caches. IndexedDB stores the
+channel/playlist metadata, `StorageBrowser` stores browser resources, and legacy
+Android uses `AndroidLegacyFileStorage` plus its persisted `FILE_MAP` for native
+media. Validate all layers during an offline restart.
 
 With an Android player attached over ADB:
 

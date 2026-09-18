@@ -38,6 +38,8 @@ The Castmill Legacy Adapter enables old Castmill Electron and Android players to
 - **Configurable Base URL**: Easily configure the default base URL using environment variables.
 - **Legacy Debug Overlay**: The Android and Electron shells' existing debug
   menu toggles an adapter-owned diagnostics panel over playback.
+- **Offline App Shell**: A service worker preserves the last complete adapter
+  release so an initialized player can start while the server is unavailable.
 
 ---
 
@@ -119,6 +121,58 @@ unreachable URLs must be reprocessed after changing it.
 The Android adapter gives every rewritten cached resource a new native filename.
 This changes its `content://` URI and prevents Crosswalk from reusing stale
 in-memory channel or playlist JSON after a refresh.
+
+### Offline startup
+
+Production offline startup requires the adapter to be served over HTTPS from a
+certificate trusted by the legacy runtime. Service workers do not register on
+plain HTTP origins other than browser-local development exceptions.
+
+The production build generates `/legacy/sw.js` from the exact Vite output. On a
+successful online load, the worker downloads the complete adapter shell before
+installing. A later reload uses that release's cached `index.html`, polyfills,
+JavaScript, and styles if the server cannot be reached. An incomplete update does
+not replace the last complete release. A complete update can activate without
+reloading or interrupting the currently running page and is used on its next reload.
+
+Offline startup has these operational requirements:
+
+- The player must complete at least one online adapter load before it can start
+  offline.
+- `/legacy`, `/legacy/index.html`, `/legacy/sw.js`, and `/legacy/assets/*` must
+  remain on the same HTTPS origin.
+- Reverse proxies and CDNs must preserve the
+  `Service-Worker-Allowed: /legacy` response header and revalidate `sw.js`.
+- Do not move an existing player between origins without migrating or re-priming
+  its state. Channel and playlist metadata and browser-backed resources are
+  origin-scoped.
+
+The service worker caches only the adapter application shell and browser-backed
+resources. Legacy Android continues to store media through its native file API;
+the existing IndexedDB and `FILE_MAP` metadata are both required to resolve those
+files after an offline restart.
+
+During development, a worker installed by an earlier build can keep controlling
+`/legacy`. If its manifest was incomplete, remove only the generated shell worker
+and shell caches while the server is online, then reload and wait for the new
+worker to finish installing:
+
+```js
+await Promise.all(
+  (await navigator.serviceWorker.getRegistrations())
+    .filter((registration) => registration.scope.endsWith('/legacy'))
+    .map((registration) => registration.unregister())
+);
+await Promise.all(
+  (await caches.keys())
+    .filter((name) => name.startsWith('castmill-legacy-shell-'))
+    .map((name) => caches.delete(name))
+);
+location.reload();
+```
+
+Do not delete `castmill:storage:*` caches when resetting the app shell; those
+contain player resources rather than the adapter release.
 
 ### Debug overlay
 

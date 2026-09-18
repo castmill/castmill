@@ -57,7 +57,7 @@ const getLegacyStorage = (platform: LegacyPlatform): StorageIntegration => {
   switch (platform) {
     // TODO: Investigate if we need to support webos
     case 'webos':
-      return new StorageBrowser('file-cache');
+      return new StorageBrowser('file-cache', '', false);
     case 'android':
       // TODO: Check if storagebrowser works on our Android hardware
       // return new StorageBrowser(); // Doesn't work when running non-https. Check if it works on prod endpoint
@@ -65,9 +65,9 @@ const getLegacyStorage = (platform: LegacyPlatform): StorageIntegration => {
     case 'electron':
       // Legacy electron player doesn't provide any APIs downloading files so
       // we use the browser storage implementation.
-      return new StorageBrowser('file-cache');
+      return new StorageBrowser('file-cache', '', false);
     case 'browser':
-      return new StorageBrowser('file-cache');
+      return new StorageBrowser('file-cache', '', false);
   }
 };
 

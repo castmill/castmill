@@ -53,12 +53,51 @@ defmodule CastmillWeb.Endpoint do
   #
   # You should set gzip to true if you are running phx.digest
   # when deploying your static files in production.
+  plug(:serve_legacy_app_shell_file)
+
   plug(Plug.Static,
     at: "/",
     from: :castmill,
     gzip: false,
     only: CastmillWeb.static_paths()
   )
+
+  defp serve_legacy_app_shell_file(conn, _opts) do
+    case {conn.method, conn.request_path} do
+      {"GET", "/legacy/sw.js"} ->
+        send_legacy_app_shell_file(conn, "sw.js", true)
+
+      {"GET", "/legacy/index.html"} ->
+        send_legacy_app_shell_file(conn, "index.html", false)
+
+      _ ->
+        conn
+    end
+  end
+
+  defp send_legacy_app_shell_file(conn, file_name, service_worker?) do
+    path = Application.app_dir(:castmill, "priv/static/legacy/#{file_name}")
+
+    if File.exists?(path) do
+      conn =
+        conn
+        |> Plug.Conn.put_resp_content_type(MIME.from_path(path))
+        |> Plug.Conn.put_resp_header("cache-control", "no-cache")
+
+      conn =
+        if service_worker? do
+          Plug.Conn.put_resp_header(conn, "service-worker-allowed", "/legacy")
+        else
+          conn
+        end
+
+      conn
+      |> Plug.Conn.send_file(200, path)
+      |> Plug.Conn.halt()
+    else
+      conn
+    end
+  end
 
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.
