@@ -340,6 +340,44 @@ defmodule Castmill.Widgets.IntegrationsTest do
       assert creds.client_secret == "network-secret"
     end
 
+    test "get_fetch_credentials/2 merges network-level credentials for the organization", %{
+      network: _network,
+      organization: organization,
+      integration: integration
+    } do
+      # No credentials configured yet: spotify requires credentials, so error.
+      assert {:error, :no_credentials} =
+               Integrations.get_fetch_credentials(organization.id, integration)
+
+      # Configure a network-level credential shared across the network.
+      {:ok, _} =
+        Integrations.upsert_network_credentials(
+          organization.network_id,
+          integration.id,
+          %{"apikey" => "network-shared-key"}
+        )
+
+      assert {:ok, creds} = Integrations.get_fetch_credentials(organization.id, integration)
+      assert creds["apikey"] == "network-shared-key"
+    end
+
+    test "get_fetch_credentials/2 returns empty map for optional integrations without credentials",
+         %{organization: organization, widget: widget} do
+      {:ok, optional_integration} =
+        Integrations.create_integration(%{
+          widget_id: widget.id,
+          name: "optional-#{System.unique_integer([:positive])}",
+          integration_type: "pull",
+          credential_scope: "organization",
+          pull_endpoint: "https://example.com/api",
+          pull_interval_seconds: 300,
+          credential_schema: %{"auth_type" => "optional"}
+        })
+
+      assert {:ok, %{}} =
+               Integrations.get_fetch_credentials(organization.id, optional_integration)
+    end
+
     test "list_system_integrations_requiring_credentials/0 returns system integrations with schemas",
          %{
            integration: integration
@@ -351,6 +389,53 @@ defmodule Castmill.Widgets.IntegrationsTest do
       found = Enum.find(integrations, fn i -> i.id == integration.id end)
       assert found.widget.is_system == true
       assert found.credential_schema != nil
+    end
+
+    test "list_system_integrations_requiring_credentials/0 excludes credential-free integrations" do
+      {:ok, widget} =
+        Widgets.create_widget(%{
+          name: "Auth-free Widget #{System.unique_integer([:positive])}",
+          slug: "authfree-#{System.unique_integer([:positive])}",
+          template: %{"html" => "<div>Weather</div>"},
+          is_system: true
+        })
+
+      {:ok, integration} =
+        Integrations.create_integration(%{
+          widget_id: widget.id,
+          name: "open-meteo",
+          description: "Credential-free weather",
+          integration_type: "pull",
+          credential_scope: "widget",
+          pull_endpoint: "https://api.open-meteo.com/v1/forecast",
+          pull_interval_seconds: 900,
+          credential_schema: %{"auth_type" => "none"}
+        })
+
+      integrations = Integrations.list_system_integrations_requiring_credentials()
+
+      refute Enum.any?(integrations, fn i -> i.id == integration.id end)
+    end
+
+    test "requires_network_credentials?/1 classifies schemas correctly" do
+      refute Integrations.requires_network_credentials?(nil)
+      refute Integrations.requires_network_credentials?(%{})
+      refute Integrations.requires_network_credentials?(%{"auth_type" => "none"})
+      refute Integrations.requires_network_credentials?(%{"auth_type" => "optional"})
+      refute Integrations.requires_network_credentials?(%{"fields" => %{}})
+      refute Integrations.requires_network_credentials?(%{"fields" => []})
+
+      assert Integrations.requires_network_credentials?(%{"auth_type" => "oauth2"})
+      assert Integrations.requires_network_credentials?(%{"auth_type" => "api_key"})
+      assert Integrations.requires_network_credentials?(%{"oauth2" => %{}})
+
+      assert Integrations.requires_network_credentials?(%{
+               "fields" => [%{"name" => "client_id"}]
+             })
+
+      assert Integrations.requires_network_credentials?(%{
+               "fields" => %{"api_key" => %{"required" => true}}
+             })
     end
   end
 
@@ -462,7 +547,7 @@ defmodule Castmill.Widgets.IntegrationsTest do
       assert {:ok, discriminator} =
                Integrations.compute_discriminator_id(integration, organization.id, nil, options)
 
-      assert discriminator == "opt:abc-123"
+      assert discriminator == "org:#{organization.id}|opt:abc-123"
     end
 
     test "compute_discriminator_id/4 for widget_option type with atom keys", %{
@@ -486,7 +571,150 @@ defmodule Castmill.Widgets.IntegrationsTest do
       assert {:ok, discriminator} =
                Integrations.compute_discriminator_id(integration, organization.id, nil, options)
 
-      assert discriminator == "opt:xyz-789"
+      assert discriminator == "org:#{organization.id}|opt:xyz-789"
+    end
+
+    test "compute_discriminator_id/4 for widget_option type preserves false values", %{
+      widget: widget,
+      organization: organization
+    } do
+      {:ok, integration} =
+        Integrations.create_integration(%{
+          widget_id: widget.id,
+          name: "opt-test-#{System.unique_integer([:positive])}",
+          integration_type: "pull",
+          credential_scope: "organization",
+          discriminator_type: "widget_option",
+          discriminator_key: "fahrenheit",
+          pull_endpoint: "https://api.example.com/data",
+          pull_interval_seconds: 300
+        })
+
+      options = %{"fahrenheit" => false}
+
+      assert {:ok, discriminator} =
+               Integrations.compute_discriminator_id(integration, organization.id, nil, options)
+
+      assert discriminator == "org:#{organization.id}|opt:false"
+    end
+
+    test "compute_discriminator_id/4 for composite widget_option keys includes the unit", %{
+      widget: widget,
+      organization: organization
+    } do
+      {:ok, integration} =
+        Integrations.create_integration(%{
+          widget_id: widget.id,
+          name: "opt-test-#{System.unique_integer([:positive])}",
+          integration_type: "pull",
+          credential_scope: "organization",
+          discriminator_type: "widget_option",
+          discriminator_key: "location,fahrenheit",
+          pull_endpoint: "https://api.example.com/data",
+          pull_interval_seconds: 300
+        })
+
+      celsius_options = %{"location" => %{"lat" => 55.666667, "lng" => 13.083333}}
+
+      fahrenheit_options = %{
+        "location" => %{"lat" => 55.666667, "lng" => 13.083333},
+        "fahrenheit" => true
+      }
+
+      assert {:ok, celsius_discriminator} =
+               Integrations.compute_discriminator_id(
+                 integration,
+                 organization.id,
+                 nil,
+                 celsius_options
+               )
+
+      assert {:ok, fahrenheit_discriminator} =
+               Integrations.compute_discriminator_id(
+                 integration,
+                 organization.id,
+                 nil,
+                 fahrenheit_options
+               )
+
+      refute celsius_discriminator == fahrenheit_discriminator
+      assert String.contains?(celsius_discriminator, "fahrenheit=default")
+      assert String.contains?(fahrenheit_discriminator, "fahrenheit=true")
+    end
+
+    test "build_discriminator_id/3 scopes widget_option discriminators by organization", %{
+      widget: widget,
+      organization: organization
+    } do
+      {:ok, integration} =
+        Integrations.create_integration(%{
+          widget_id: widget.id,
+          name: "opt-test-#{System.unique_integer([:positive])}",
+          integration_type: "pull",
+          credential_scope: "organization",
+          discriminator_type: "widget_option",
+          discriminator_key: "property_id",
+          pull_endpoint: "https://api.example.com/data",
+          pull_interval_seconds: 300
+        })
+
+      options = %{"property_id" => "abc-123"}
+
+      discriminator = Integrations.build_discriminator_id(integration, options, organization.id)
+
+      other_discriminator =
+        Integrations.build_discriminator_id(integration, options, "other-organization")
+
+      assert discriminator == "org:#{organization.id}|property_id:abc-123"
+      refute discriminator == other_discriminator
+    end
+
+    test "discriminators longer than the column are bounded with a digest", %{
+      widget: widget,
+      organization: organization
+    } do
+      {:ok, integration} =
+        Integrations.create_integration(%{
+          widget_id: widget.id,
+          name: "opt-test-#{System.unique_integer([:positive])}",
+          integration_type: "pull",
+          credential_scope: "organization",
+          discriminator_type: "widget_option",
+          discriminator_key: "location,fahrenheit",
+          pull_endpoint: "https://api.example.com/data",
+          pull_interval_seconds: 300
+        })
+
+      long_address = String.duplicate("Very Long Street Name 123, ", 20)
+
+      options = %{
+        "location" => %{"lat" => 55.666667, "lng" => 13.083333, "address" => long_address}
+      }
+
+      other_options = %{
+        "location" => %{"lat" => 55.666667, "lng" => 13.083333, "address" => long_address <> "b"}
+      }
+
+      built = Integrations.build_discriminator_id(integration, options, organization.id)
+
+      assert {:ok, computed} =
+               Integrations.compute_discriminator_id(integration, organization.id, nil, options)
+
+      assert {:ok, other_computed} =
+               Integrations.compute_discriminator_id(
+                 integration,
+                 organization.id,
+                 nil,
+                 other_options
+               )
+
+      for discriminator <- [built, computed, other_computed] do
+        assert byte_size(discriminator) <= 255
+        assert String.contains?(discriminator, "|sha256:")
+        assert String.valid?(discriminator)
+      end
+
+      refute computed == other_computed
     end
 
     test "compute_discriminator_id/4 for widget_option type missing option returns error", %{

@@ -5,6 +5,8 @@ vi.mock('../android-legacy-api', () => ({
     uuid: 'mocked_uuid',
     player_version: 'mocked_player_version',
     model: 'mocked_model',
+    platform: 'Android',
+    android_version: '5.1.1',
   }),
   getItem: vi.fn().mockResolvedValue('mocked_value'),
   setItem: vi.fn().mockResolvedValue(undefined),
@@ -80,18 +82,25 @@ describe('AndroidLegacyMachine', () => {
   it('should return device info', async () => {
     const info = await machine.getDeviceInfo();
     expect(info).toEqual({
-      appType: 'Legacy adapter',
+      appType: 'Legacy Android adapter',
       appVersion: 'mocked_player_version',
-      os: 'Legacy adapter',
+      os: 'Android 5.1.1',
       hardware: 'mocked_model',
       chromiumVersion: undefined, // No user agent mocking in test environment
       userAgent: navigator.userAgent,
     });
   });
 
-  it('should restart the device', async () => {
+  it('requests a native restart and schedules a browser reload fallback', async () => {
+    vi.useFakeTimers();
+
     await machine.restart();
+
     expect(restart).toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(1);
+
+    vi.clearAllTimers();
+    vi.useRealTimers();
   });
 
   // window.location.reload() can't be mocked in the test environment

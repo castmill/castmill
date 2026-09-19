@@ -15,7 +15,7 @@ import { CalendarEntryBox } from './calendar-entry-box';
 
 import styles from './calendar-view.module.scss';
 import { CalendarEntry } from './calendar-entry.interface';
-import { toZonedTime, fromZonedTime } from 'date-fns-tz';
+import { toZonedTime } from 'date-fns-tz';
 import { PlaylistChooser } from './playlist-chooser';
 import { baseUrl } from '../../env';
 import { store } from '../../store';
@@ -24,7 +24,13 @@ import {
   JsonChannel,
   JsonChannelEntry,
 } from '../../services/channels.service';
-import { timestampsToCalendarEntry } from './utils';
+import {
+  calendarEntryToTimestamps,
+  canMoveCalendarEntry,
+  getStartOfWeek,
+  getWeekRangeTimestamps,
+  timestampsToCalendarEntry,
+} from './utils';
 import { CalendarCell } from './calendar-cell';
 import { DefaultPlaylistComboBox } from './default-playlist-combobox';
 import { Modal, useToast } from '@castmill/ui-common';
@@ -48,7 +54,9 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
   const [showEntryModal, setShowEntryModal] = createSignal<CalendarEntry>();
 
   // Start date for a “week”
-  const [startDate, setStartDate] = createSignal(getStartOfWeek(new Date()));
+  const [startDate, setStartDate] = createSignal(
+    getStartOfWeek(toZonedTime(new Date(), props.timeZone))
+  );
 
   const [hoveredCells, setHoveredCells] = createSignal<string[]>([]);
   const hoveredSet = createMemo(() => new Set(hoveredCells()));
@@ -63,37 +71,6 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
     const endMinutes = entry.endHour * 60 + entry.endMinute;
     const totalMinutes = endMinutes - startMinutes;
     return Math.ceil(totalMinutes / 30);
-  }
-
-  // Weeks starts on Monday at 00:00
-  function getStartOfWeek(date: Date): Date {
-    // Make a copy so we don't modify the original date
-    const result = new Date(date);
-    // getDay() returns 0 for Sunday, 1 for Monday, etc.
-    const dayOfWeek = (result.getDay() - 1) % 7; // 0-indexed
-
-    // Subtract `dayOfWeek` days from the current date
-    result.setDate(result.getDate() - dayOfWeek);
-    result.setHours(0, 0, 0, 0); // Start of the day
-    return result;
-  }
-
-  function getEndOfWeek(date: Date): Date {
-    const start = getStartOfWeek(date);
-    const result = new Date(start);
-    result.setDate(result.getDate() + 6); // 6 more days
-    result.setHours(23, 59, 59, 999); // End of the day
-    return result;
-  }
-
-  function getDateByDayIndex(startOfWeek: Date, dayIndex: number): Date {
-    // Create a fresh copy of startOfWeek
-    const date = new Date(startOfWeek);
-
-    // Add dayIndex days to the start date
-    date.setDate(date.getDate() + dayIndex);
-
-    return date;
   }
 
   // Calculate the current day's index relative to startDate
@@ -173,10 +150,7 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
 
     // Compute new end time
     let endMinutes = startHour * 60 + startMinute + durationMinutes;
-    // Clamp end time to 23:59 (1439 minutes)
-    if (endMinutes >= 1440) {
-      endMinutes = 1439; // 23:59
-    }
+    endMinutes = Math.min(endMinutes, 1440);
     const endHour = Math.floor(endMinutes / 60);
     const endMinute = endMinutes % 60;
 
@@ -230,11 +204,13 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
   const [entries, setEntries] = createStore<CalendarEntry[]>([]);
 
   createEffect(async () => {
+    const range = getWeekRangeTimestamps(startDate(), props.timeZone);
+
     // Fetch entries
     const result = await channelsService.getChannelEntries(
       props.channel.id,
-      startDate().getTime(),
-      getEndOfWeek(startDate()).getTime()
+      range.start,
+      range.end
     );
 
     if (result) {
@@ -280,7 +256,7 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
     setStartDate(getStartOfWeek(curr));
   };
   const goToday = () => {
-    setStartDate(getStartOfWeek(new Date()));
+    setStartDate(getStartOfWeek(toZonedTime(new Date(), props.timeZone)));
   };
 
   // DnD setup for each cell in the body table
@@ -295,7 +271,26 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
       return false;
     }
 
+    if (
+      !canMoveCalendarEntry(
+        entryBeingDragged,
+        lastDropData.dayIndex,
+        lastDropData.hour,
+        lastDropData.minute
+      )
+    ) {
+      setHoveredCells([]);
+      return false;
+    }
+
     const newEntry = computeNewEntry(entryBeingDragged, lastDropData);
+
+    try {
+      calendarEntryToTimestamps(newEntry, startDate(), props.timeZone);
+    } catch {
+      setHoveredCells([]);
+      return false;
+    }
 
     // Check for overlaps with existing entries
     for (const existingEntry of entries) {
@@ -319,71 +314,51 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
 
       if (lastDropData) {
         const { dayIndex, hour, minute } = lastDropData;
+        lastDropData = undefined;
         const { entry } = source.data as { entry?: CalendarEntry };
 
-        if (!entry) {
+        if (!entry || !canMoveCalendarEntry(entry, dayIndex, hour, minute)) {
           return;
         }
 
-        const newEntry = computeNewEntry(entry, { dayIndex, hour, minute });
-        const start = getDateByDayIndex(startDate(), dayIndex);
-        const end = getDateByDayIndex(
-          startDate(),
-          dayIndex + entry.numDays - 1
-        );
-
-        const opts = {
-          start: fromZonedTime(
-            new Date(
-              start.getFullYear(),
-              start.getMonth(),
-              start.getDate(),
-              newEntry.startHour,
-              newEntry.startMinute
-            ),
+        try {
+          const newEntry = computeNewEntry(entry, { dayIndex, hour, minute });
+          const opts = calendarEntryToTimestamps(
+            newEntry,
+            startDate(),
             props.timeZone
-          ).getTime(),
-          end: fromZonedTime(
-            new Date(
-              end.getFullYear(),
-              end.getMonth(),
-              end.getDate(),
-              newEntry.endHour,
-              newEntry.endMinute
-            ),
-            props.timeZone
-          ).getTime(),
-        };
-
-        // Hackish
-        if (entry.isNewEntry) {
-          // Add the new entry
-          const addedEntry = await channelsService.addEntryToChannel(
-            props.channel.id,
-            {
-              playlist_id: newEntry.playlist.id,
-              ...opts,
-            }
           );
 
-          newEntry.id = addedEntry.id;
+          if (entry.isNewEntry) {
+            const addedEntry = await channelsService.addEntryToChannel(
+              props.channel.id,
+              {
+                playlist_id: newEntry.playlist.id,
+                ...opts,
+              }
+            );
 
-          setEntries([...entries, newEntry]);
-        } else {
-          await channelsService.updateChannelEntry(
-            props.channel.id,
-            entry.id,
-            opts
+            newEntry.id = addedEntry.id;
+            setEntries([...entries, newEntry]);
+          } else {
+            await channelsService.updateChannelEntry(
+              props.channel.id,
+              entry.id,
+              opts
+            );
+            setEntries((e) => e.id === entry.id, {
+              dayIndex: newEntry.dayIndex,
+              title: newEntry.title,
+              startHour: newEntry.startHour,
+              startMinute: newEntry.startMinute,
+              endHour: newEntry.endHour,
+              endMinute: newEntry.endMinute,
+            });
+          }
+        } catch (error) {
+          toast.error(
+            t('channels.errors.updateChannelEntry', { error: String(error) })
           );
-          // Update the store
-          setEntries((e) => e.id === entry.id, {
-            dayIndex: newEntry.dayIndex,
-            title: newEntry.title,
-            startHour: newEntry.startHour,
-            startMinute: newEntry.startMinute,
-            endHour: newEntry.endHour,
-            endMinute: newEntry.endMinute,
-          });
         }
       }
     };
@@ -457,37 +432,24 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
   };
 
   const onResizeComplete = async (updated: CalendarEntry) => {
-    // We must convert the entry to UTC before sending it to the server
-    const start = getDateByDayIndex(startDate(), updated.dayIndex);
-    const end = getDateByDayIndex(
-      startDate(),
-      updated.dayIndex + updated.numDays - 1
-    );
-
-    await channelsService.updateChannelEntry(props.channel.id, updated.id, {
-      start: fromZonedTime(
-        new Date(
-          start.getFullYear(),
-          start.getMonth(),
-          start.getDate(),
-          updated.startHour,
-          updated.startMinute
-        ),
+    try {
+      const update = calendarEntryToTimestamps(
+        updated,
+        startDate(),
         props.timeZone
-      ).getTime(),
-      end: fromZonedTime(
-        new Date(
-          end.getFullYear(),
-          end.getMonth(),
-          end.getDate(),
-          updated.endHour,
-          updated.endMinute
-        ),
-        props.timeZone
-      ).getTime(),
-    });
+      );
+      await channelsService.updateChannelEntry(
+        props.channel.id,
+        updated.id,
+        update
+      );
 
-    setEntries((all) => all.map((x) => (x.id === updated.id ? updated : x)));
+      setEntries((all) => all.map((x) => (x.id === updated.id ? updated : x)));
+    } catch (error) {
+      toast.error(
+        t('channels.errors.updateChannelEntry', { error: String(error) })
+      );
+    }
   };
 
   const getCellDimensions = () => {

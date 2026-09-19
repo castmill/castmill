@@ -45,6 +45,158 @@ defmodule CastmillWeb.DeviceControllerTest do
     {:ok, conn: conn, user: user, organization: organization}
   end
 
+  describe "show as device" do
+    test "returns the device's current identity", %{organization: organization} do
+      {:ok, devices_registration} =
+        device_registration_fixture(%{hardware_id: "show-hw-id", pincode: "show1234"})
+
+      {:ok, {device, token}} =
+        Castmill.Devices.register_device(organization.id, devices_registration.pincode, %{
+          name: "Current Device Name"
+        })
+
+      conn =
+        build_conn()
+        |> put_req_header("accept", "application/json")
+        |> put_req_header("authorization", Enum.join(["Bearer", token], " "))
+        |> get("/devices/#{device.id}")
+
+      assert json_response(conn, 200) == %{
+               "data" => %{
+                 "id" => device.id,
+                 "name" => "Current Device Name"
+               }
+             }
+    end
+  end
+
+  describe "info as device" do
+    test "stores the player metadata", %{organization: organization} do
+      {:ok, devices_registration} =
+        device_registration_fixture(%{hardware_id: "info-hw-id", pincode: "info1234"})
+
+      {:ok, {device, token}} =
+        Castmill.Devices.register_device(organization.id, devices_registration.pincode, %{
+          name: "Info Device"
+        })
+
+      info = %{
+        "appType" => "Electron",
+        "appVersion" => "1.2.3",
+        "os" => "Linux",
+        "hardware" => "x86_64",
+        "userAgent" => "Castmill Player"
+      }
+
+      conn =
+        build_conn()
+        |> put_req_header("accept", "application/json")
+        |> put_req_header("authorization", Enum.join(["Bearer", token], " "))
+        |> post("/devices/#{device.id}/info", %{"info" => info})
+
+      assert response(conn, 204)
+      assert Castmill.Devices.get_device(device.id).info == info
+    end
+
+    test "stores player capabilities", %{organization: organization} do
+      {:ok, devices_registration} =
+        device_registration_fixture(%{
+          hardware_id: "capabilities-hw-id",
+          pincode: "capabilities1234"
+        })
+
+      {:ok, {device, token}} =
+        Castmill.Devices.register_device(organization.id, devices_registration.pincode, %{
+          name: "Capabilities Device"
+        })
+
+      info = %{
+        "appType" => "WebOS",
+        "appVersion" => "1.2.3",
+        "os" => "WebOS",
+        "hardware" => "LG",
+        "userAgent" => "Castmill Player",
+        "capabilities" => %{
+          "restart" => true,
+          "quit" => false,
+          "reboot" => true,
+          "shutdown" => true,
+          "update" => true,
+          "updateFirmware" => true
+        }
+      }
+
+      conn =
+        build_conn()
+        |> put_req_header("accept", "application/json")
+        |> put_req_header("authorization", Enum.join(["Bearer", token], " "))
+        |> post("/devices/#{device.id}/info", %{"info" => info})
+
+      assert response(conn, 204)
+      assert Castmill.Devices.get_device(device.id).info == info
+    end
+
+    test "rejects malformed, unknown, and oversized player metadata", %{
+      organization: organization
+    } do
+      {:ok, devices_registration} =
+        device_registration_fixture(%{hardware_id: "invalid-info-hw-id", pincode: "info5678"})
+
+      {:ok, {device, token}} =
+        Castmill.Devices.register_device(organization.id, devices_registration.pincode, %{
+          name: "Invalid Info Device"
+        })
+
+      invalid_info_values = [
+        "invalid",
+        %{"unknown" => "value"},
+        %{"appType" => %{"nested" => "value"}},
+        %{"capabilities" => %{"updateFirmware" => "true"}},
+        %{"capabilities" => %{"unknown" => true}},
+        %{"userAgent" => String.duplicate("a", 1025)}
+      ]
+
+      for info <- invalid_info_values do
+        conn =
+          build_conn()
+          |> put_req_header("accept", "application/json")
+          |> put_req_header("authorization", Enum.join(["Bearer", token], " "))
+          |> post("/devices/#{device.id}/info", %{"info" => info})
+
+        assert response(conn, 400)
+      end
+
+      assert Castmill.Devices.get_device(device.id).info == nil
+    end
+  end
+
+  describe "schedule as device" do
+    test "returns authoritative empty timers for an always-on schedule", %{
+      organization: organization
+    } do
+      {:ok, devices_registration} =
+        device_registration_fixture(%{hardware_id: "schedule-hw-id", pincode: "sched123"})
+
+      {:ok, {device, token}} =
+        Castmill.Devices.register_device(organization.id, devices_registration.pincode, %{
+          name: "Schedule Device"
+        })
+
+      {:ok, _device} = Castmill.Devices.set_device_schedule(device.id, [])
+
+      conn =
+        build_conn()
+        |> put_req_header("accept", "application/json")
+        |> put_req_header("authorization", Enum.join(["Bearer", token], " "))
+        |> get("/devices/#{device.id}/schedule")
+
+      assert %{
+               "entries" => [],
+               "timers" => %{"on" => [], "off" => []}
+             } = json_response(conn, 200)
+    end
+  end
+
   describe "get_channels as admin" do
     @describetag device_controller: true
 
@@ -773,6 +925,29 @@ defmodule CastmillWeb.DeviceControllerTest do
       assert response["count"] == 0
     end
 
+    test "accepts table sorting parameters", %{conn: conn, organization: organization} do
+      {:ok, devices_registration} =
+        device_registration_fixture(%{hardware_id: "cache-hw-sort", pincode: "cache06"})
+
+      {:ok, {device, _token}} =
+        Castmill.Devices.register_device(organization.id, devices_registration.pincode, %{
+          name: "Cache Device Sort"
+        })
+
+      conn =
+        run_request_with_device_response(
+          fn ->
+            get(
+              conn,
+              "/dashboard/devices/#{device.id}/cache?type=data&page=1&page_size=10&key=name&direction=ascending"
+            )
+          end,
+          %{data: [], count: 0}
+        )
+
+      assert json_response(conn, 200) == %{"data" => [], "count" => 0}
+    end
+
     test "rejects an invalid cache type with a proper inclusion error", %{
       conn: conn,
       organization: organization
@@ -851,6 +1026,31 @@ defmodule CastmillWeb.DeviceControllerTest do
       assert Map.has_key?(response, "errors")
       assert Map.has_key?(response["errors"], "type")
       refute response["errors"]["type"] == ["validate_allowed is not supported"]
+    end
+
+    test "rejects an empty URL list for a cache category", %{
+      conn: conn,
+      organization: organization
+    } do
+      {:ok, devices_registration} =
+        device_registration_fixture(%{
+          hardware_id: "cache-delete-empty-category",
+          pincode: "cache05"
+        })
+
+      {:ok, {device, _token}} =
+        Castmill.Devices.register_device(organization.id, devices_registration.pincode, %{
+          name: "Cache Delete Empty Category"
+        })
+
+      conn =
+        delete(conn, "/dashboard/devices/#{device.id}/cache", %{
+          "type" => "media",
+          "urls" => []
+        })
+
+      response = json_response(conn, 400)
+      assert response["errors"]["urls"] == ["must contain at least one URL unless type is all"]
     end
   end
 end

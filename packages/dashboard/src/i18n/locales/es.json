@@ -638,6 +638,7 @@
     "confirmRemoveChannels": "¿Estás seguro de que quieres eliminar los siguientes canales?",
     "enterChannelName": "Ingresa el nombre del canal",
     "defaultPlaylist": "Lista de reproducción predeterminada",
+    "currentPlaylist": "Lista de reproducción actual",
     "selectPlaylist": "Seleccionar lista de reproducción",
     "clearDefaultPlaylist": "Limpiar lista de reproducción predeterminada",
     "dragPlaylists": "Arrastra listas de reproducción",
@@ -943,7 +944,9 @@
       "pending": "Configuración pendiente",
       "enterClientCredentials": "Ingrese sus credenciales de API de {{provider}} a continuación:",
       "afterSavingCredentials": "Después de guardar sus credenciales, haga clic abajo para autorizar con {{provider}}:",
-      "networkCredentialsConfigured": "Su administrador de red ya ha configurado las credenciales de {{provider}}. Simplemente haga clic en el botón de abajo para conectar su cuenta."
+      "networkCredentialsConfigured": "Su administrador de red ya ha configurado las credenciales de {{provider}}. Simplemente haga clic en el botón de abajo para conectar su cuenta.",
+      "noConfigurationRequired": "No requiere configuración",
+      "optional": "Opcional"
     },
     "translations": "Traducciones"
   },
@@ -993,6 +996,7 @@
       "checkUpdatesDescription": "Buscar actualizaciones e instalarlas. Esto no reiniciará el dispositivo",
       "updateFirmware": "Actualizar firmware",
       "updateFirmwareDescription": "Actualiza el firmware del dispositivo",
+      "actionNotSupported": "No compatible.",
       "offlineMessage": "El dispositivo está desconectado, por lo que no se le pueden enviar comandos",
       "autorecoveryUpdated": "La recuperación automática se actualizó",
       "autorecoveryUpdateFailed": "No se pudo actualizar la recuperación automática",
@@ -1012,13 +1016,13 @@
       "codeTab": "Código",
       "mediaTab": "Medios",
       "deleteSelected": "Eliminar elementos seleccionados",
-      "clearAll": "Limpiar Todo",
+      "clearAll": "Limpiar Toda la Caché",
       "confirmDelete": "Eliminar Entrada de Caché",
       "confirmDeleteMessage": "¿Está seguro de que desea eliminar esta entrada de caché? URL: {{url}}",
       "confirmDeleteMultiple": "Eliminar Múltiples Entradas",
       "confirmDeleteMultipleMessage": "¿Está seguro de que desea eliminar {{count}} entradas de caché?",
       "confirmClearAll": "Limpiar Toda la Caché",
-      "confirmClearAllMessage": "¿Está seguro de que desea limpiar todas las entradas de caché de {{type}}? Esta acción no se puede deshacer.",
+      "confirmClearAllMessage": "¿Está seguro de que desea limpiar todas las entradas de caché de datos, código y medios? El reproductor se recargará y esta acción no se puede deshacer.",
       "deleteSuccess": "Entrada de caché eliminada exitosamente",
       "deleteMultipleSuccess": "{{count}} entradas de caché eliminadas exitosamente",
       "clearAllSuccess": "Todas las entradas de caché limpiadas exitosamente",
@@ -1071,11 +1075,24 @@
     "errorRemovingDevice": "Error al eliminar el dispositivo {{name}}: {{error}}",
     "errorRemovingDevices": "Error al eliminar los dispositivos: {{error}}",
     "enterDescription": "Ingrese una descripción",
-    "drawerTitle": "Dispositivo \"{{name}}\""
+    "drawerTitle": "Dispositivo \"{{name}}\"",
+    "info": {
+      "title": "Información",
+      "platform": "Plataforma",
+      "playerVersion": "Versión del reproductor",
+      "operatingSystem": "Sistema operativo",
+      "hardware": "Equipo",
+      "environmentVersion": "Versión del entorno",
+      "chromiumVersion": "Versión de Chromium",
+      "v8Version": "Versión de V8",
+      "nodeVersion": "Versión de Node.js",
+      "userAgent": "Agente de usuario"
+    }
   },
   "validation": {
     "fieldRequired": "Este campo es obligatorio",
-    "minLength": "Este campo debe tener al menos {{min}} caracteres"
+    "minLength": "Este campo debe tener al menos {{min}} caracteres",
+    "invalidCoordinates": "Este campo debe tener coordenadas válidas"
   },
   "plurals": {
     "items": {

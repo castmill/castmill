@@ -22,7 +22,10 @@ export const ChannelView = (props: {
     <div style={style}>
       <div style="width: 100%;">
         <div class={styles.notice}>{t('channels.info.contentRequired')}</div>
-        <CalendarView timeZone="Europe/Stockholm" channel={props.channel} />
+        <CalendarView
+          timeZone={props.channel.timezone}
+          channel={props.channel}
+        />
       </div>
     </div>
   );

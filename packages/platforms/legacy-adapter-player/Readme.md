@@ -9,6 +9,8 @@ The **Castmill Legacy Adapter** is a bridge designed to support legacy Castmill 
 - [Overview](#overview)
 - [Features](#features)
 - [Usage](#usage)
+- [Serving from Castmill](#serving-from-castmill)
+- [Migration rollout](#migration-rollout)
 - [Configuration](#configuration)
 - [Contributing](#contributing)
 - [License](#license)
@@ -17,12 +19,13 @@ The **Castmill Legacy Adapter** is a bridge designed to support legacy Castmill 
 
 ## Overview
 
-The Castmill Legacy Adapter serves at the endpoint where the old Castmill application was hosted. It ensures that legacy players, which rely on the original APIs, continue to function without modification. Internally, it proxies or adapts these requests to the new Castmill player, enabling a seamless experience for both legacy and new clients.
+The Castmill Legacy Adapter enables old Castmill Electron and Android players to connect to a new Castmill server without changing those players. It preserves the legacy player APIs and adapts them to the modern Castmill player and server.
 
 ### Key Purpose:
 
-- Maintain compatibility with legacy Electron and Android Castmill players.
-- Integrate the modern Castmill player without disrupting existing workflows.
+- Allow existing legacy Castmill players to connect to new Castmill deployments.
+- Maintain compatibility with the Electron and Android legacy player APIs.
+- Enable migration to the modern player without disrupting existing workflows.
 
 ---
 
@@ -31,16 +34,48 @@ The Castmill Legacy Adapter serves at the endpoint where the old Castmill applic
 - **Legacy API Support**: Implements the APIs required by legacy players.
 - **Modern Player Integration**: Uses the new Castmill player internally.
 - **Seamless Transition**: Allows legacy embeds to function as expected without updates.
-- **Endpoint Compatibility**: Serves on the original Castmill hosting URL.
+- **Castmill Server Deployment**: Served at `/legacy` by the Castmill Phoenix server.
 - **Configurable Base URL**: Easily configure the default base URL using environment variables.
+- **Legacy Debug Overlay**: The Android and Electron shells' existing debug
+  menu toggles an adapter-owned diagnostics panel over playback.
+- **Offline App Shell**: A service worker preserves the last complete adapter
+  release so an initialized player can start while the server is unavailable.
 
 ---
 
 ## Usage
 
-1. Deploy the adapter to the same endpoint where the old Castmill was hosted.
-2. Verify that legacy players point to this endpoint for their API interactions.
+1. Build the Castmill server image or run `yarn build:server` from the repository root.
+2. Open the adapter at `https://<castmill-server>/legacy`.
 3. Test the functionality of legacy players to ensure smooth operation with the new Castmill player.
+
+---
+
+## Serving from Castmill
+
+The production Castmill build runs this workspace's `build:server` script. It generates
+the adapter in `packages/castmill/priv/static/legacy/`, which Phoenix serves as:
+
+| URL                | Purpose                                       |
+| ------------------ | --------------------------------------------- |
+| `/legacy`          | Legacy adapter entry page                     |
+| `/legacy/assets/*` | Adapter JavaScript and other generated assets |
+
+Use `yarn build` for a standalone workspace build, or `yarn build:server` to generate
+the files for the Castmill server. The server-targeted build uses `/legacy/` as its Vite
+base URL, so generated assets load from the same Castmill server.
+
+---
+
+## Migration rollout
+
+During migration, the old Castmill player server proxies migrated players to `/legacy`
+on the new Castmill Phoenix server. This allows individual legacy players to use the new
+server while the old player domain continues to serve players that have not migrated.
+
+After all players have migrated, point the old player domain at the new Phoenix server.
+The Phoenix server must then serve the same legacy adapter content for requests received
+through that domain as it does for `/legacy`.
 
 ---
 
@@ -49,6 +84,10 @@ The Castmill Legacy Adapter serves at the endpoint where the old Castmill applic
 ### Base URL Configuration
 
 The adapter allows you to configure a default base URL by setting the `VITE_BASE_URL` environment variable in a `.env.local` file. This ensures flexibility when running the adapter in different environments.
+
+When Phoenix serves the adapter from `/legacy`, the adapter uses the page origin
+as its API URL. `VITE_BASE_URL` is used by the standalone Vite development
+server.
 
 1. Create a `.env.local` file in the project root if it doesn’t already exist.
 2. Add the following line to specify the base URL:
@@ -65,6 +104,98 @@ The adapter allows you to configure a default base URL by setting the `VITE_BASE
    ```
 
 This base URL will be used to adapt API calls and ensure the correct routing to the modern Castmill player.
+
+### Media URL Configuration
+
+The server must generate media URLs that players can reach. In particular,
+`localhost` and container-only hostnames are not reachable from an Android
+player. Set `MEDIA_PUBLIC_BASE_URL` on the Castmill server to its public origin:
+
+```env
+MEDIA_PUBLIC_BASE_URL="http://192.168.1.1:4000"
+```
+
+This setting applies when media is processed, so existing media with stored
+unreachable URLs must be reprocessed after changing it.
+
+The Android adapter gives every rewritten cached resource a new native filename.
+This changes its `content://` URI and prevents Crosswalk from reusing stale
+in-memory channel or playlist JSON after a refresh.
+
+### Offline startup
+
+Production offline startup requires the adapter to be served over HTTPS from a
+certificate trusted by the legacy runtime. Service workers do not register on
+plain HTTP origins other than browser-local development exceptions.
+
+The production build generates `/legacy/sw.js` from the exact Vite output. On a
+successful online load, the worker downloads the complete adapter shell before
+installing. A later reload uses that release's cached `index.html`, polyfills,
+JavaScript, and styles if the server cannot be reached. An incomplete update does
+not replace the last complete release. A complete update can activate without
+reloading or interrupting the currently running page and is used on its next reload.
+
+Offline startup has these operational requirements:
+
+- The player must complete at least one online adapter load before it can start
+  offline.
+- `/legacy`, `/legacy/index.html`, `/legacy/sw.js`, and `/legacy/assets/*` must
+  remain on the same HTTPS origin.
+- Reverse proxies and CDNs must preserve the
+  `Service-Worker-Allowed: /legacy` response header and revalidate `sw.js`.
+- Do not move an existing player between origins without migrating or re-priming
+  its state. Channel and playlist metadata and browser-backed resources are
+  origin-scoped.
+
+The service worker caches only the adapter application shell and browser-backed
+resources. Legacy Android continues to store media through its native file API;
+the existing IndexedDB and `FILE_MAP` metadata are both required to resolve those
+files after an offline restart.
+
+During development, a worker installed by an earlier build can keep controlling
+`/legacy`. If its manifest was incomplete, remove only the generated shell worker
+and shell caches while the server is online, then reload and wait for the new
+worker to finish installing:
+
+```js
+await Promise.all(
+  (await navigator.serviceWorker.getRegistrations())
+    .filter((registration) => registration.scope.endsWith('/legacy'))
+    .map((registration) => registration.unregister())
+);
+await Promise.all(
+  (await caches.keys())
+    .filter((name) => name.startsWith('castmill-legacy-shell-'))
+    .map((name) => caches.delete(name))
+);
+location.reload();
+```
+
+Do not delete `castmill:storage:*` caches when resetting the app shell; those
+contain player resources rather than the adapter release.
+
+### Debug overlay
+
+Legacy Android and Electron shells send the literal `console` message to the
+embedded player when their debug menu option is selected. The adapter accepts
+that exact message only from its parent window and toggles a lower-right
+diagnostics panel.
+
+The panel shows the registered device name and ID, organization and Castmill network,
+resolved server URL, adapter platform, machine and application versions, browser and
+server connection states, display dimensions, timezone, and user agent. It intentionally excludes
+credentials, authentication tokens, and native hardware identifiers.
+The registered player name is refreshed from the server whenever the panel is
+opened, so dashboard renames appear without restarting the player.
+
+## Legacy Android compatibility
+
+The legacy Android player uses Crosswalk on Android 5.1 and must be treated as an
+old Chromium target. Before using browser APIs or CSS layout features in shared player
+code, consult
+[the legacy player compatibility guide](../../../agents/packages/player/LEGACY-PLAYER-COMPATIBILITY.md).
+It documents supported fallback patterns, unsupported CSS features, required build
+order, and ADB validation commands.
 
 ---
 

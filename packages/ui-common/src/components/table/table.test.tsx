@@ -139,6 +139,23 @@ describe('Table Component', () => {
     expect(actions[0].handler).toHaveBeenCalled();
   });
 
+  it('does not call onRowClick when the actions area is clicked', async () => {
+    const mockOnRowClick = vi.fn();
+    render(() => (
+      <Table
+        columns={columns}
+        data={data}
+        actions={actions}
+        onRowClick={mockOnRowClick}
+      />
+    ));
+
+    const actionButton = screen.getByLabelText(`Edit ${data[0].name}`);
+    fireEvent.click(actionButton.parentElement!);
+
+    expect(mockOnRowClick).not.toHaveBeenCalled();
+  });
+
   it('sets cursor to pointer when onRowClick is provided', () => {
     const mockOnRowClick = vi.fn();
     render(() => (

@@ -10,6 +10,7 @@ import styles from './calendar-entry-box.module.scss';
 import { CalendarEntry } from './calendar-entry.interface';
 import { ConfirmDialog } from '@castmill/ui-common';
 import { useI18n } from '../../i18n';
+import { canMoveCalendarEntry } from './utils';
 
 interface ResizeEdges {
   top?: boolean;
@@ -228,6 +229,11 @@ export const CalendarEntryBox: Component<{
     e.stopPropagation();
     e.preventDefault();
 
+    const measureCell = props.cellGrid.get('day-0-slot-0');
+    if (!measureCell) {
+      return;
+    }
+
     // Set global cursor.
     const cursor =
       (edges.top || edges.bottom) && (edges.left || edges.right)
@@ -243,11 +249,6 @@ export const CalendarEntryBox: Component<{
     const startX = e.clientX;
     const startY = e.clientY;
     const original = { ...props.entry };
-
-    const measureCell = props.cellGrid.get('day-0-slot-0');
-    if (!measureCell) {
-      return;
-    }
 
     const gridWidth = measureCell.offsetWidth;
     const gridHeight = measureCell.offsetHeight;
@@ -274,21 +275,21 @@ export const CalendarEntryBox: Component<{
       }
       if (edges.left) {
         // For left resizing, adjust left boundary and adjust span so that the right boundary remains fixed.
-        newDayIndex = original.dayIndex + cellDeltaX;
-        newNumDays = original.numDays - cellDeltaX;
+        const endDayIndex = original.dayIndex + original.numDays;
+        newDayIndex = Math.max(
+          0,
+          Math.min(endDayIndex - 1, original.dayIndex + cellDeltaX)
+        );
+        newNumDays = endDayIndex - newDayIndex;
       }
       if (edges.right) {
-        newNumDays = original.numDays + cellDeltaX;
-      }
-
-      if (newDayIndex < 0) {
-        newDayIndex = 0;
-      }
-      if (newDayIndex + newNumDays > totalNumDays) {
-        newNumDays = totalNumDays - newDayIndex;
-      }
-      if (newNumDays < 1) {
-        newNumDays = 1;
+        newNumDays = Math.max(
+          1,
+          Math.min(
+            totalNumDays - original.dayIndex,
+            original.numDays + cellDeltaX
+          )
+        );
       }
       if (newEndSlot <= newStartSlot) {
         newEndSlot = newStartSlot + 1;
@@ -317,6 +318,17 @@ export const CalendarEntryBox: Component<{
         dayIndex: newDayIndex,
         numDays: newNumDays,
       };
+
+      if (
+        !canMoveCalendarEntry(
+          candidate,
+          candidate.dayIndex,
+          candidate.startHour,
+          candidate.startMinute
+        )
+      ) {
+        return;
+      }
 
       // If hasOverlap is provided and returns true (i.e. candidate overlaps), do not update.
       if (props.hasOverlap) {

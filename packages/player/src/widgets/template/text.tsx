@@ -7,6 +7,10 @@ import { TimelineItem } from './timeline';
 import { ComponentAnimation, applyAnimations } from './animation';
 import { BaseComponentProps } from './interfaces/base-component-props';
 import { PlayerGlobals } from '../../interfaces/player-globals.interface';
+import {
+  observeTextContainerResize,
+  observeTextContentChanges,
+} from './text-autofit';
 interface AutoFitOpts {
   // Base size of the text (in em). Used if the text fits in the container.
   baseSize?: number;
@@ -37,7 +41,8 @@ export class TextComponent implements TemplateComponent {
     public opts: TextComponentOptions,
     public style: JSX.CSSProperties,
     public animations?: ComponentAnimation[],
-    public filter?: Record<string, any>
+    public filter?: Record<string, any>,
+    public $styles?: { filter: Record<string, any>; style: JSX.CSSProperties }[]
   ) {}
 
   resolveDuration(): number {
@@ -50,7 +55,8 @@ export class TextComponent implements TemplateComponent {
       json.opts,
       json.style,
       json.animations,
-      json.filter
+      json.filter,
+      json.$styles
     );
   }
 
@@ -94,9 +100,12 @@ interface TextProps extends BaseComponentProps {
 
 export const Text: Component<TextProps> = (props) => {
   let textRef: HTMLDivElement | undefined;
-  let timelineItem: TimelineItem;
-  let scrollTimeline: gsap.core.Timeline;
-  let cleanUpAnimations: () => void;
+  let timelineItem: TimelineItem | undefined;
+  let scrollTimeline: gsap.core.Timeline | undefined;
+  let cleanUpAnimations: (() => void) | undefined;
+  let stopObservingResize: (() => void) | undefined;
+  let contentObserver: MutationObserver | null = null;
+  let animationFrame: number | undefined;
 
   // Determine default sizing based on context:
   // 1. Positioned elements (absolute/fixed) - no default size, auto-size to content
@@ -125,15 +134,101 @@ export const Text: Component<TextProps> = (props) => {
 
   onCleanup(() => {
     cleanUpAnimations?.();
-    if (timelineItem) props.timeline.remove(timelineItem);
-    scrollTimeline?.kill();
+    resetScrollTimeline();
+    stopObservingResize?.();
+    contentObserver?.disconnect();
+    if (animationFrame !== undefined) {
+      cancelAnimationFrame(animationFrame);
+    }
   });
+
+  const resetScrollTimeline = () => {
+    if (timelineItem) {
+      props.timeline.remove(timelineItem);
+      timelineItem = undefined;
+    }
+
+    if (scrollTimeline) {
+      scrollTimeline.kill();
+      scrollTimeline = undefined;
+    }
+
+    const element = textRef;
+    if (!element) {
+      return;
+    }
+
+    gsap.set(element, { x: 0 });
+  };
+
+  const updateScrollTimeline = (size: number) => {
+    resetScrollTimeline();
+
+    const element = textRef;
+    if (
+      !element ||
+      !props.opts.autofit.minSize ||
+      props.opts.autofit.minSize <= size
+    ) {
+      return;
+    }
+
+    const containerRect = element.parentElement?.getBoundingClientRect();
+    const textRect = element.getBoundingClientRect();
+    if (!containerRect) {
+      return;
+    }
+
+    scrollTimeline = gsap.timeline({
+      repeat: -1,
+      paused: true,
+    });
+
+    // Duration should be proportional to the length in chars of the text
+    const duration = props.opts.text.length * 0.25;
+
+    const slack = textRect.width * 0.1;
+    scrollTimeline.to(
+      element,
+      {
+        duration,
+        x: -(textRect.width + slack),
+        ease: 'none',
+      },
+      1 // Wait 1 second before starting the animation
+    );
+
+    timelineItem = {
+      start: 0, // Text scroll animations should start immediately, not sequentially
+      repeat: true,
+      duration: scrollTimeline.duration() * 1000,
+      child: scrollTimeline,
+    };
+
+    props.timeline.add(timelineItem);
+  };
 
   onMount(() => {
     if (!textRef) {
       return;
     }
-    const size = autoFitText(textRef, props.opts?.autofit || {});
+
+    const fitText = () => {
+      const size = autoFitText(textRef!, props.opts?.autofit || {});
+      updateScrollTimeline(size);
+      return size;
+    };
+
+    fitText();
+    animationFrame = requestAnimationFrame(() => {
+      fitText();
+    });
+    stopObservingResize = observeTextContainerResize(textRef, () => {
+      fitText();
+    });
+    contentObserver = observeTextContentChanges(textRef, () => {
+      fitText();
+    });
 
     if (props.animations) {
       const splittedText = splitText(textRef, props.opts.chars);
@@ -148,41 +243,6 @@ export const Text: Component<TextProps> = (props) => {
         splittedText.chars || splittedText.words,
         props.timeline.duration()
       );
-    }
-
-    // If the height of the text is too small, we could enable scrolling (using GSAP for the animation)
-    if (props.opts.autofit.minSize && props.opts.autofit.minSize > size) {
-      const containerRect = textRef?.parentElement?.getBoundingClientRect();
-      const textRect = textRef?.getBoundingClientRect();
-      if (containerRect) {
-        scrollTimeline = gsap.timeline({
-          repeat: -1,
-          paused: true,
-        });
-
-        // Duration should be proportional to the length in chars of the text
-        const duration = props.opts.text.length * 0.25;
-
-        const slack = textRect.width * 0.1;
-        scrollTimeline.to(
-          textRef,
-          {
-            duration,
-            x: -(textRect.width + slack),
-            ease: 'none',
-          },
-          1 // Wait 1 second before starting the animation
-        );
-
-        timelineItem = {
-          start: 0, // Text scroll animations should start immediately, not sequentially
-          repeat: true,
-          duration: scrollTimeline.duration() * 1000,
-          child: scrollTimeline,
-        };
-
-        props.timeline.add(timelineItem);
-      }
     }
 
     props.onReady();
@@ -216,10 +276,17 @@ function autoFitText(div: HTMLDivElement, options: AutoFitOpts): number {
     textElement.style.fontSize = `${size}em`;
   };
 
-  const parentElement = div.parentElement!;
+  const containerElement = div.parentElement;
+  if (!containerElement) {
+    const fallbackSize = options.baseSize ?? 1;
+    setSize(fallbackSize);
+    return fallbackSize;
+  }
 
-  const containerRect = parentElement.getBoundingClientRect();
-  if (containerRect.width === 0 || containerRect.height === 0) {
+  const containerRect = containerElement.getBoundingClientRect();
+  const maxHeight = containerRect.height;
+  const maxWidth = containerRect.width;
+  if (maxWidth === 0 || maxHeight === 0) {
     // Container not yet sized - use baseSize as fallback
     if (options.baseSize) {
       setSize(options.baseSize);
@@ -230,13 +297,14 @@ function autoFitText(div: HTMLDivElement, options: AutoFitOpts): number {
     return 1;
   }
 
-  const maxHeight = containerRect.height; // Math.ceil(containerRect.height);
-  const maxWidth = containerRect.width; //Math.ceil(containerRect.width);
+  const fits = () => {
+    const { height, width } = textElement.getBoundingClientRect();
+    return height <= maxHeight && width <= maxWidth;
+  };
 
   if (options.baseSize) {
     setSize(options.baseSize);
-    const { height, width } = textElement.getBoundingClientRect();
-    if (height <= maxHeight && width <= maxWidth) {
+    if (fits()) {
       return options.baseSize;
     }
   }
@@ -245,33 +313,17 @@ function autoFitText(div: HTMLDivElement, options: AutoFitOpts): number {
   let r = options.maxSize || limits.max;
 
   let count = 0;
-  let lastWidth = 0,
-    lastHeight = 0,
-    lastSize = 0,
-    lastSmallerSize = 0;
-  while (
-    (r - l > tolerance && count < maxNumIterations) ||
-    lastHeight > maxHeight ||
-    lastWidth > maxWidth
-  ) {
+  let lastSize = 0;
+  let lastSmallerSize = 0;
+  while (r - l > tolerance && count < maxNumIterations) {
     count++;
     const size = (l + r) / 2;
 
     lastSize = size;
 
     setSize(size);
-    const { height, width } = textElement.getBoundingClientRect();
 
-    // Break if we cannot do better.
-    if (height == maxHeight && width <= maxWidth) {
-      break;
-    }
-
-    if (height <= maxHeight && width == maxWidth) {
-      break;
-    }
-
-    if (height <= maxHeight && width <= maxWidth) {
+    if (fits()) {
       // Make the text larger
       l = size;
       lastSmallerSize = size;
@@ -279,13 +331,9 @@ function autoFitText(div: HTMLDivElement, options: AutoFitOpts): number {
       // Make the text smaller
       r = size;
     }
-
-    lastHeight = height;
-    lastWidth = width;
   }
 
-  const { height, width } = textElement.getBoundingClientRect();
-  if (height > maxHeight || width > maxWidth) {
+  if (!fits()) {
     lastSize = lastSmallerSize;
     setSize(lastSmallerSize);
   }

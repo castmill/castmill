@@ -1,0 +1,53 @@
+{
+  "legacyDebug": {
+    "ariaLabel": "Diagnóstico del reproductor heredado",
+    "title": "Diagnóstico del reproductor heredado",
+    "loading": "Cargando información del dispositivo...",
+    "values": {
+      "unavailable": "No disponible",
+      "storedDeviceConfiguration": "Configuración del dispositivo almacenada"
+    },
+    "status": {
+      "connected": "Conectado",
+      "disconnected": "Desconectado",
+      "notInitialized": "Sin inicializar",
+      "online": "En línea",
+      "offline": "Sin conexión"
+    },
+    "platform": {
+      "android": "Android",
+      "browser": "Navegador",
+      "electron": "Electron",
+      "webos": "webOS"
+    },
+    "rows": {
+      "playerName": "Nombre del reproductor",
+      "deviceId": "ID del dispositivo",
+      "organization": "Organización",
+      "castmillNetwork": "Red de Castmill",
+      "server": "Servidor",
+      "adapterPlatform": "Plataforma del adaptador",
+      "network": "Red",
+      "browserConnection": "Conexión del navegador",
+      "serverConnection": "Conexión con el servidor",
+      "viewport": "Área visible",
+      "screen": "Pantalla",
+      "devicePixelRatio": "Relación de píxeles del dispositivo",
+      "timezone": "Zona horaria",
+      "applicationType": "Tipo de aplicación",
+      "applicationVersion": "Versión de la aplicación",
+      "operatingSystem": "Sistema operativo",
+      "hardware": "Hardware",
+      "environmentVersion": "Versión del entorno",
+      "chromiumVersion": "Versión de Chromium",
+      "v8Version": "Versión de V8",
+      "nodeVersion": "Versión de Node.js",
+      "userAgent": "Agente de usuario"
+    },
+    "errors": {
+      "playerIdentity": "Identidad del reproductor",
+      "deviceInformation": "Información del dispositivo",
+      "timezone": "Zona horaria"
+    }
+  }
+}

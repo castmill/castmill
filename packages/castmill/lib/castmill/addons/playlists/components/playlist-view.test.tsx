@@ -282,6 +282,7 @@ describe('PlaylistView Component', () => {
 
     // When loading, the Show component should not render its children
     expect(container.querySelector('.playlist-view')).not.toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('common.loading');
   });
 
   it.skip('handles errors when fetching playlist fails', async () => {

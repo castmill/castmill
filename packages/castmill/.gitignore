@@ -39,6 +39,9 @@ castmill-*.tar
 # Ignore built dashboard SPA (produced by vite build)
 /priv/static/dashboard/
 
+# Ignore built legacy adapter player SPA (produced by vite build:server)
+/priv/static/legacy/
+
 # Ignore runtime directories (user uploads, uploaded widget assets)
 /priv/static/medias/
 /priv/static/widget_assets/

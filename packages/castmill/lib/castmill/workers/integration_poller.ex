@@ -96,6 +96,14 @@ defmodule Castmill.Workers.IntegrationPoller do
 
         :ok
 
+      {:error, reason, _updated_credentials} ->
+        Logger.error(
+          "IntegrationPoller: Failed to poll integration #{integration_id}: #{inspect(reason)}"
+        )
+
+        # Return error to trigger retry
+        {:error, reason}
+
       {:error, reason} ->
         Logger.error(
           "IntegrationPoller: Failed to poll integration #{integration_id}: #{inspect(reason)}"
@@ -212,24 +220,14 @@ defmodule Castmill.Workers.IntegrationPoller do
   end
 
   defp get_credentials(organization_id, integration_id) do
-    case Integrations.get_organization_credentials(organization_id, integration_id) do
-      {:ok, credentials} ->
-        {:ok, credentials}
+    case Integrations.get_integration(integration_id) do
+      %WidgetIntegration{} = integration ->
+        # Merges network-level credentials (shared across the network, e.g. a
+        # commercial API key) with organization-level credentials.
+        Integrations.get_fetch_credentials(organization_id, integration)
 
-      {:error, _} ->
-        # Check if integration allows optional auth
-        # auth_type can be in pull_config or credential_schema
-        case Integrations.get_integration(integration_id) do
-          %{pull_config: %{"auth_type" => auth_type}} when auth_type in ["optional", "none"] ->
-            {:ok, %{}}
-
-          %{credential_schema: %{"auth_type" => auth_type}}
-          when auth_type in ["optional", "none"] ->
-            {:ok, %{}}
-
-          _ ->
-            {:error, :no_credentials}
-        end
+      _ ->
+        {:error, :no_credentials}
     end
   end
 

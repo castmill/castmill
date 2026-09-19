@@ -78,6 +78,16 @@ yarn test
 
 ## Common Patterns
 
+### Device maintenance capabilities
+
+The `Machine` integration exposes optional privileged commands (`restart`,
+`quit`, `reboot`, `shutdown`, `update`, and `updateFirmware`). `Device` derives
+these as boolean `DeviceCapabilities` and includes them in its authenticated
+device-info report. The dashboard must use the reported values rather than
+inferring support from the player type or version; missing capabilities are
+unsupported. Runtime-level `refresh` and `clear_cache` commands do not require
+an optional machine capability.
+
 ### Auto-Duration Widgets
 
 Widgets that determine their own duration (RSS feeds, paginated lists) use:
@@ -93,3 +103,8 @@ Widgets that determine their own duration (RSS feeds, paginated lists) use:
 | Repeat with duration | Included (one loop cycle) | Scrollers, tickers with known duration |
 | Repeat without duration | Excluded from total | Indefinite background elements |
 
+## Legacy Android Compatibility
+
+For JavaScript, CSS, layout, SVG, auto-fit text, build-order, and ADB verification
+requirements for the Android 5.1/Crosswalk legacy player, see
+[LEGACY-PLAYER-COMPATIBILITY.md](./LEGACY-PLAYER-COMPATIBILITY.md).

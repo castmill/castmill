@@ -118,6 +118,15 @@ export class Player extends EventEmitter {
     this.timerSubscription = void 0;
     this.playing = void 0;
   }
+
+  clear() {
+    this.stop();
+    this.renderer.clear();
+  }
+
+  getCurrentLayer() {
+    return this.renderer.getCurrentLayer();
+  }
 }
 
 // Custom timer. Simpler than RxJS and more accurate.

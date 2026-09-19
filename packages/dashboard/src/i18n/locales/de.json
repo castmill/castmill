@@ -575,6 +575,7 @@
     "confirmRemoveChannels": "Sind Sie sicher, dass Sie die folgenden Kanäle entfernen möchten?",
     "enterChannelName": "Kanalnamen eingeben",
     "defaultPlaylist": "Standard-Playlist",
+    "currentPlaylist": "Aktuelle Playlist",
     "selectPlaylist": "Playlist auswählen",
     "clearDefaultPlaylist": "Standard-Playlist löschen",
     "dragPlaylists": "Playlists ziehen",
@@ -937,7 +938,9 @@
       "pending": "Einrichtung ausstehend",
       "enterClientCredentials": "Geben Sie unten Ihre {{provider}} API-Anmeldedaten ein:",
       "afterSavingCredentials": "Nachdem Sie Ihre Anmeldedaten gespeichert haben, klicken Sie unten, um sich bei {{provider}} zu autorisieren:",
-      "networkCredentialsConfigured": "Die {{provider}}-Integration wurde von Ihrem Netzwerkadministrator konfiguriert. Klicken Sie unten, um Ihr Konto zu autorisieren:"
+      "networkCredentialsConfigured": "Die {{provider}}-Integration wurde von Ihrem Netzwerkadministrator konfiguriert. Klicken Sie unten, um Ihr Konto zu autorisieren:",
+      "noConfigurationRequired": "Keine Konfiguration erforderlich",
+      "optional": "Fakultativ"
     },
     "translations": "Übersetzungen"
   },
@@ -987,6 +990,7 @@
       "checkUpdatesDescription": "Nach Updates suchen und installieren. Dies startet das Gerät nicht neu",
       "updateFirmware": "Firmware aktualisieren",
       "updateFirmwareDescription": "Aktualisiert die Firmware des Geräts",
+      "actionNotSupported": "Nicht unterstützt.",
       "offlineMessage": "Gerät ist offline, daher können keine Befehle gesendet werden",
       "autorecoveryUpdated": "Automatische Wiederherstellung wurde aktualisiert",
       "autorecoveryUpdateFailed": "Automatische Wiederherstellung konnte nicht aktualisiert werden",
@@ -1006,13 +1010,13 @@
       "codeTab": "Code",
       "mediaTab": "Medien",
       "deleteSelected": "Ausgewählte Elemente löschen",
-      "clearAll": "Alles Löschen",
+      "clearAll": "Gesamten Cache Löschen",
       "confirmDelete": "Cache-Eintrag Löschen",
       "confirmDeleteMessage": "Möchten Sie diesen Cache-Eintrag wirklich löschen? URL: {{url}}",
       "confirmDeleteMultiple": "Mehrere Einträge Löschen",
       "confirmDeleteMultipleMessage": "Möchten Sie wirklich {{count}} Cache-Einträge löschen?",
       "confirmClearAll": "Gesamten Cache Löschen",
-      "confirmClearAllMessage": "Möchten Sie wirklich alle {{type}} Cache-Einträge löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+      "confirmClearAllMessage": "Möchten Sie wirklich alle Cache-Einträge für Daten, Code und Medien löschen? Der Player wird neu geladen und diese Aktion kann nicht rückgängig gemacht werden.",
       "deleteSuccess": "Cache-Eintrag erfolgreich gelöscht",
       "deleteMultipleSuccess": "{{count}} Cache-Einträge erfolgreich gelöscht",
       "clearAllSuccess": "Alle Cache-Einträge erfolgreich gelöscht",
@@ -1065,11 +1069,24 @@
     "errorRemovingDevice": "Fehler beim Entfernen des Geräts {{name}}: {{error}}",
     "errorRemovingDevices": "Fehler beim Entfernen der Geräte: {{error}}",
     "enterDescription": "Beschreibung eingeben",
-    "drawerTitle": "Gerät \"{{name}}\""
+    "drawerTitle": "Gerät \"{{name}}\"",
+    "info": {
+      "title": "Informationen",
+      "platform": "Plattform",
+      "playerVersion": "Player-Version",
+      "operatingSystem": "Betriebssystem",
+      "hardware": "Hardware-Ausstattung",
+      "environmentVersion": "Umgebungsversion",
+      "chromiumVersion": "Chromium-Version",
+      "v8Version": "V8-Version",
+      "nodeVersion": "Node.js-Version",
+      "userAgent": "User-Agent"
+    }
   },
   "validation": {
     "fieldRequired": "Dieses Feld ist erforderlich",
-    "minLength": "Dieses Feld muss mindestens {{min}} Zeichen lang sein"
+    "minLength": "Dieses Feld muss mindestens {{min}} Zeichen lang sein",
+    "invalidCoordinates": "Dieses Feld muss gültige Koordinaten enthalten"
   },
   "plurals": {
     "items": {

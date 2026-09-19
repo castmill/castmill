@@ -84,7 +84,7 @@ defmodule CastmillWeb.WidgetIntegrationControllerTest do
         widget_integration_id: integration.id,
         organization_id: organization.id,
         widget_config_id: widget_config.id,
-        discriminator_id: "feed_url:#{feed_url}",
+        discriminator_id: "org:#{organization.id}|feed_url:#{feed_url}",
         data: %{"items" => []},
         status: "active",
         version: 1,
@@ -156,7 +156,7 @@ defmodule CastmillWeb.WidgetIntegrationControllerTest do
 
       assert version > 0
 
-      discriminator = "feed_url:#{feed_url}"
+      discriminator = "org:#{organization.id}|feed_url:#{feed_url}"
 
       data =
         WidgetIntegrationData.base_query()
@@ -224,7 +224,7 @@ defmodule CastmillWeb.WidgetIntegrationControllerTest do
         widget_integration_id: integration.id,
         organization_id: organization.id,
         widget_config_id: widget_config.id,
-        discriminator_id: "feed_url:#{feed_url}",
+        discriminator_id: "org:#{organization.id}|feed_url:#{feed_url}",
         data: %{"items" => many_items},
         status: "active",
         version: 1,
@@ -296,7 +296,7 @@ defmodule CastmillWeb.WidgetIntegrationControllerTest do
         widget_integration_id: integration.id,
         organization_id: organization.id,
         widget_config_id: widget_config.id,
-        discriminator_id: "feed_url:#{feed_url}",
+        discriminator_id: "org:#{organization.id}|feed_url:#{feed_url}",
         data: %{"items" => many_items},
         status: "active",
         version: 1,
@@ -314,6 +314,42 @@ defmodule CastmillWeb.WidgetIntegrationControllerTest do
       # Should default to 10 items
       assert length(items) == 10
       # Test now runs in inline mode by default
+    end
+  end
+
+  describe "prefetch_widget_data/2" do
+    test "handles fetcher 3-tuple errors without crashing", %{
+      conn: conn,
+      organization: organization
+    } do
+      suffix = System.unique_integer([:positive])
+
+      widget =
+        widget_fixture(%{
+          name: "Weather #{suffix}",
+          slug: "weather-#{suffix}",
+          template: %{"type" => "group"}
+        })
+
+      widget_integration_fixture(%{
+        widget_id: widget.id,
+        name: "weather-integration-#{suffix}",
+        credential_scope: "widget",
+        discriminator_key: "location",
+        pull_config: %{
+          "auth_type" => "none",
+          "fetcher_module" => "Castmill.Widgets.Integrations.Fetchers.OpenMeteo"
+        }
+      })
+
+      conn =
+        post(
+          conn,
+          "/dashboard/organizations/#{organization.id}/widgets/#{widget.id}/prefetch-data"
+        )
+
+      assert %{"data" => nil, "status" => "error", "message" => "Failed to fetch data"} =
+               json_response(conn, 200)
     end
   end
 end

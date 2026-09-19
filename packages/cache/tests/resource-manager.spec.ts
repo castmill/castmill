@@ -167,7 +167,7 @@ describe('ResourceManager', () => {
       expect(content).to.be.eql('file:///tmp/movie.mp4');
     });
 
-    it('should rise an error if media not available', async () => {
+    it('should remain usable if media is not available', async () => {
       const storage = new StorageMockup({
         'https://example.com/movie.mp4': 'file:///tmp/movie.mp4',
       });
@@ -180,21 +180,9 @@ describe('ResourceManager', () => {
 
       const uri = 'file:///tmp/wrong-file.mp4';
 
-      // Trigger cache
-      try {
-        await manager.cacheMedia(uri);
-        expect.fail('Should not reach this point');
-      } catch (err) {
-        expect((err as Error).message).to.be.eql('File not found');
-      }
+      await expect(manager.cacheMedia(uri)).resolves.toBeUndefined();
 
-      // Get from cache
-      try {
-        await manager.getMedia(uri);
-        expect.fail('Should not reach this point');
-      } catch (err) {
-        expect((err as Error).message).to.be.eql('File not found');
-      }
+      await expect(manager.getMedia(uri)).resolves.toBeUndefined();
     });
 
     it('should free space and try to store file is storage is full', async () => {});

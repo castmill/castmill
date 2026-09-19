@@ -637,6 +637,7 @@
     "confirmRemoveChannels": "以下のチャンネルを削除してもよろしいですか？",
     "enterChannelName": "チャンネル名を入力してください",
     "defaultPlaylist": "デフォルトプレイリスト",
+    "currentPlaylist": "現在のプレイリスト",
     "selectPlaylist": "プレイリストを選択",
     "clearDefaultPlaylist": "デフォルトプレイリストをクリア",
     "dragPlaylists": "プレイリストをドラッグ",
@@ -916,7 +917,9 @@
       "pending": "設定待ち",
       "enterClientCredentials": "以下に{{provider}} APIの資格情報を入力してください：",
       "afterSavingCredentials": "資格情報を保存した後、下のボタンをクリックして{{provider}}で認証してください：",
-      "networkCredentialsConfigured": "ネットワーク管理者が{{provider}}の資格情報を既に設定しています。下のボタンをクリックするだけでアカウントを接続できます。"
+      "networkCredentialsConfigured": "ネットワーク管理者が{{provider}}の資格情報を既に設定しています。下のボタンをクリックするだけでアカウントを接続できます。",
+      "noConfigurationRequired": "設定不要",
+      "optional": "任意"
     },
     "translations": "翻訳"
   },
@@ -966,6 +969,7 @@
       "checkUpdatesDescription": "更新を確認してインストールします。これによりデバイスは再起動されません",
       "updateFirmware": "ファームウェアを更新",
       "updateFirmwareDescription": "デバイスのファームウェアを更新します",
+      "actionNotSupported": "非対応です。",
       "offlineMessage": "デバイスがオフラインのため、コマンドを送信できません",
       "autorecoveryUpdated": "自動復旧が更新されました",
       "autorecoveryUpdateFailed": "自動復旧の更新に失敗しました",
@@ -990,8 +994,8 @@
       "confirmDeleteMessage": "このキャッシュエントリを削除してもよろしいですか？URL: {{url}}",
       "confirmDeleteMultiple": "複数のエントリを削除",
       "confirmDeleteMultipleMessage": "{{count}}個のキャッシュエントリを削除してもよろしいですか？",
-      "confirmClearAll": "すべてのキャッシュをクリア",
-      "confirmClearAllMessage": "すべての{{type}}キャッシュエントリをクリアしてもよろしいですか？この操作は元に戻せません。",
+      "confirmClearAll": "キャッシュ全体をクリア",
+      "confirmClearAllMessage": "データ、コード、メディアのすべてのキャッシュエントリをクリアしてもよろしいですか？プレーヤーが再読み込みされ、この操作は元に戻せません。",
       "deleteSuccess": "キャッシュエントリが正常に削除されました",
       "deleteMultipleSuccess": "{{count}}個のキャッシュエントリが正常に削除されました",
       "clearAllSuccess": "すべてのキャッシュエントリが正常にクリアされました",
@@ -1044,11 +1048,24 @@
     "errorRemovingDevice": "デバイス{{name}}の削除エラー: {{error}}",
     "errorRemovingDevices": "デバイスの削除エラー: {{error}}",
     "enterDescription": "説明を入力してください",
-    "drawerTitle": "デバイス \"{{name}}\""
+    "drawerTitle": "デバイス \"{{name}}\"",
+    "info": {
+      "title": "情報",
+      "platform": "プラットフォーム",
+      "playerVersion": "プレーヤーのバージョン",
+      "operatingSystem": "オペレーティングシステム",
+      "hardware": "ハードウェア",
+      "environmentVersion": "環境のバージョン",
+      "chromiumVersion": "Chromium のバージョン",
+      "v8Version": "V8 のバージョン",
+      "nodeVersion": "Node.js のバージョン",
+      "userAgent": "ユーザーエージェント"
+    }
   },
   "validation": {
     "fieldRequired": "この項目は必須です",
-    "minLength": "この項目は最低{{min}}文字以上である必要があります"
+    "minLength": "この項目は最低{{min}}文字以上である必要があります",
+    "invalidCoordinates": "この項目には有効な座標を入力してください"
   },
   "plurals": {
     "items": {

@@ -8,6 +8,8 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
   import Castmill.OrganizationsFixtures
   import Castmill.TeamsFixtures
   import Castmill.PlaylistsFixtures
+  import Castmill.ChannelsFixtures
+  import Castmill.DevicesFixtures
 
   @moduletag :e2e
 
@@ -28,6 +30,13 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
       |> put_req_header("authorization", "Bearer #{access_token.secret}")
 
     {:ok, conn: conn, user: user, organization: organization, team: team}
+  end
+
+  defp persist_legacy_widget_options(widget_config_id, options) do
+    Castmill.Widgets.WidgetConfig
+    |> Castmill.Repo.get!(widget_config_id)
+    |> Ecto.Changeset.change(options: options)
+    |> Castmill.Repo.update!()
   end
 
   describe "list playlists" do
@@ -370,6 +379,58 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
     end
   end
 
+  describe "update playlist items" do
+    test "notifies assigned devices when an item is deleted", %{
+      conn: conn,
+      organization: organization
+    } do
+      playlist = playlist_fixture(%{organization_id: organization.id})
+      widget = widget_fixture()
+
+      {:ok, item} =
+        Castmill.Resources.insert_item_into_playlist(
+          playlist.id,
+          nil,
+          widget.id,
+          0,
+          10_000
+        )
+
+      channel =
+        channel_fixture(%{
+          organization_id: organization.id,
+          timezone: "UTC",
+          default_playlist_id: playlist.id
+        })
+
+      {:ok, registration} = device_registration_fixture()
+
+      {:ok, {device, _token}} =
+        Castmill.Devices.register_device(organization.id, registration.pincode, %{
+          name: "Playing Device"
+        })
+
+      {:ok, _} = Castmill.Devices.add_channel(device.id, channel.id)
+      Phoenix.PubSub.subscribe(Castmill.PubSub, "devices:#{device.id}")
+
+      conn =
+        delete(
+          conn,
+          "/api/organizations/#{organization.id}/playlists/#{playlist.id}/items/#{item.id}"
+        )
+
+      assert response(conn, 204)
+
+      assert_receive %{
+                       event: "playlist_updated",
+                       playlist_id: playlist_id
+                     },
+                     1000
+
+      assert playlist_id == playlist.id
+    end
+  end
+
   describe "full playlist lifecycle" do
     test "creates and retrieves a new playlist from the list", %{
       conn: conn,
@@ -515,6 +576,64 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
       assert %{"ancestor_ids" => ancestor_ids} = response
       assert parent_playlist.id in ancestor_ids
       assert length(ancestor_ids) == 1
+    end
+
+    test "returns parent playlist when child is referenced with a legacy numeric zone assignment",
+         %{
+           conn: conn,
+           organization: organization,
+           team: team,
+           layout_widget: layout_widget
+         } do
+      parent_playlist =
+        playlist_fixture(%{
+          organization_id: organization.id,
+          name: "legacy_parent_playlist"
+        })
+
+      child_playlist =
+        playlist_fixture(%{
+          organization_id: organization.id,
+          name: "legacy_child_playlist"
+        })
+
+      valid_options = %{
+        "layoutRef" => %{
+          "layoutId" => 1,
+          "aspectRatio" => "9:16",
+          "zonePlaylistMap" => %{"zone-1" => %{"playlistId" => child_playlist.id}}
+        }
+      }
+
+      {:ok, item} =
+        Resources.insert_item_into_playlist(
+          parent_playlist.id,
+          nil,
+          layout_widget.id,
+          0,
+          10000,
+          valid_options
+        )
+
+      persist_legacy_widget_options(item.widget_config_id, %{
+        "layoutRef" => %{
+          "layoutId" => 1,
+          "aspectRatio" => "9:16",
+          "zonePlaylistMap" => %{"zone-1" => child_playlist.id}
+        }
+      })
+
+      {:ok, _result} =
+        Teams.add_resource_to_team(team.id, "playlists", child_playlist.id, [:read])
+
+      conn =
+        get(
+          conn,
+          "/api/organizations/#{organization.id}/playlists/#{child_playlist.id}/ancestors"
+        )
+
+      assert %{"ancestor_ids" => ancestor_ids} = json_response(conn, 200)
+      assert ancestor_ids == [parent_playlist.id]
     end
 
     test "returns multiple ancestors in a chain (grandparent -> parent -> child)", %{
@@ -727,6 +846,207 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
       # Should only return the parent once, not duplicated
       assert parent_playlist.id in ancestor_ids
       assert length(ancestor_ids) == 1
+    end
+
+    test "expands persisted layout playlist ids when loading a playlist", %{
+      organization: organization,
+      layout_widget: layout_widget
+    } do
+      parent_playlist =
+        playlist_fixture(%{
+          organization_id: organization.id,
+          name: "parent_playlist"
+        })
+
+      child_playlists =
+        for index <- 1..3 do
+          playlist_fixture(%{
+            organization_id: organization.id,
+            name: "child_playlist_#{index}"
+          })
+        end
+
+      zone_playlist_map =
+        child_playlists
+        |> Enum.with_index(1)
+        |> Map.new(fn {playlist, index} ->
+          {"zone-#{index}", %{"playlistId" => playlist.id}}
+        end)
+
+      {:ok, _item} =
+        Resources.insert_item_into_playlist(
+          parent_playlist.id,
+          nil,
+          layout_widget.id,
+          0,
+          10_000,
+          %{
+            "layoutRef" => %{
+              "layoutId" => 1,
+              "aspectRatio" => "9:16",
+              "zonePlaylistMap" => zone_playlist_map
+            }
+          }
+        )
+
+      [item] = Resources.get_playlist(parent_playlist.id).items
+      resolved_assignments = item.config.options["layoutRef"]["zonePlaylistMap"]
+
+      Enum.with_index(child_playlists, 1)
+      |> Enum.each(fn {playlist, index} ->
+        assignment = resolved_assignments["zone-#{index}"]
+        assert assignment["playlistId"] == playlist.id
+        assert assignment["playlist"].id == playlist.id
+        assert assignment["playlist"].name == playlist.name
+        assert assignment["playlist"].items == []
+      end)
+    end
+
+    test "expands legacy numeric layout zone assignments for the player", %{
+      organization: organization,
+      layout_widget: layout_widget
+    } do
+      parent_playlist =
+        playlist_fixture(%{
+          organization_id: organization.id,
+          name: "legacy_layout_parent"
+        })
+
+      child_playlist =
+        playlist_fixture(%{
+          organization_id: organization.id,
+          name: "legacy_layout_child"
+        })
+
+      valid_options = %{
+        "layoutRef" => %{
+          "layoutId" => 1,
+          "aspectRatio" => "9:16",
+          "zonePlaylistMap" => %{"zone-1" => %{"playlistId" => child_playlist.id}}
+        }
+      }
+
+      {:ok, item} =
+        Resources.insert_item_into_playlist(
+          parent_playlist.id,
+          nil,
+          layout_widget.id,
+          0,
+          10_000,
+          valid_options
+        )
+
+      persist_legacy_widget_options(item.widget_config_id, %{
+        "layoutRef" => %{
+          "layoutId" => 1,
+          "aspectRatio" => "9:16",
+          "zonePlaylistMap" => %{"zone-1" => child_playlist.id}
+        }
+      })
+
+      [item] = Resources.get_playlist(parent_playlist.id).items
+      assignment = item.config.options["layoutRef"]["zonePlaylistMap"]["zone-1"]
+
+      assert assignment["playlistId"] == child_playlist.id
+      assert assignment["playlist"].id == child_playlist.id
+      assert assignment["playlist"].name == child_playlist.name
+      assert assignment["playlist"].items == []
+    end
+
+    test "rejects cross-organization layout playlist references", %{
+      organization: organization,
+      layout_widget: layout_widget
+    } do
+      other_network = network_fixture()
+      other_organization = organization_fixture(%{network_id: other_network.id})
+
+      parent_playlist =
+        playlist_fixture(%{
+          organization_id: organization.id,
+          name: "same_org_parent"
+        })
+
+      foreign_playlist =
+        playlist_fixture(%{
+          organization_id: other_organization.id,
+          name: "foreign_child"
+        })
+
+      result =
+        Resources.insert_item_into_playlist(
+          parent_playlist.id,
+          nil,
+          layout_widget.id,
+          0,
+          10_000,
+          %{
+            "layoutRef" => %{
+              "layoutId" => 1,
+              "aspectRatio" => "9:16",
+              "zonePlaylistMap" => %{"zone-1" => %{"playlistId" => foreign_playlist.id}}
+            }
+          }
+        )
+
+      assert {:error, :invalid_playlist_reference} = result
+    end
+
+    test "does not expand cross-organization layout assignments when loading a playlist", %{
+      organization: organization,
+      layout_widget: layout_widget
+    } do
+      other_network = network_fixture()
+      other_organization = organization_fixture(%{network_id: other_network.id})
+
+      parent_playlist =
+        playlist_fixture(%{
+          organization_id: organization.id,
+          name: "cross_org_parent"
+        })
+
+      local_child =
+        playlist_fixture(%{
+          organization_id: organization.id,
+          name: "local_child"
+        })
+
+      foreign_child =
+        playlist_fixture(%{
+          organization_id: other_organization.id,
+          name: "foreign_child"
+        })
+
+      valid_options = %{
+        "layoutRef" => %{
+          "layoutId" => 1,
+          "aspectRatio" => "9:16",
+          "zonePlaylistMap" => %{"zone-1" => %{"playlistId" => local_child.id}}
+        }
+      }
+
+      {:ok, item} =
+        Resources.insert_item_into_playlist(
+          parent_playlist.id,
+          nil,
+          layout_widget.id,
+          0,
+          10_000,
+          valid_options
+        )
+
+      persist_legacy_widget_options(item.widget_config_id, %{
+        "layoutRef" => %{
+          "layoutId" => 1,
+          "aspectRatio" => "9:16",
+          "zonePlaylistMap" => %{"zone-1" => foreign_child.id}
+        }
+      })
+
+      [item] = Resources.get_playlist(parent_playlist.id).items
+      assignment = item.config.options["layoutRef"]["zonePlaylistMap"]["zone-1"]
+
+      assert assignment["playlistId"] == foreign_child.id
+      refute Map.has_key?(assignment, "playlist")
     end
 
     test "does not include non-layout widget references", %{

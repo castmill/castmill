@@ -24,7 +24,8 @@ export class GroupComponent implements TemplateComponent {
     public style: JSX.CSSProperties,
     public components: TemplateComponentTypeUnion[] = [],
     public animations?: ComponentAnimation[],
-    public filter?: Record<string, any>
+    public filter?: Record<string, any>,
+    public $styles?: { filter: Record<string, any>; style: JSX.CSSProperties }[]
   ) {}
 
   static fromJSON(
@@ -43,7 +44,8 @@ export class GroupComponent implements TemplateComponent {
         TemplateComponent.fromJSON(component, resourceManager, globals)
       ),
       json.animations,
-      json.filter
+      json.filter,
+      json.$styles
     );
   }
 

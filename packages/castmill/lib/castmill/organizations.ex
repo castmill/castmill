@@ -1042,6 +1042,7 @@ defmodule Castmill.Organizations do
       Castmill.Resources.Channel,
       params
     )
+    |> Castmill.Resources.add_channel_playlist_names()
   end
 
   def list_resources(%{resources: "devices"} = params) do

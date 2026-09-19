@@ -104,7 +104,7 @@ defmodule CastmillWeb.DevicesChannel do
     # Forward the response to the controller that made the request
     send(pid, {:device_response, result})
 
-    {:noreply, socket}
+    {:reply, :ok, socket}
   end
 
   # Not sure we should use the socket connection for getting stufff, seems conterintuitive
@@ -168,6 +168,12 @@ defmodule CastmillWeb.DevicesChannel do
   @impl true
   def handle_info(%{event: "channel_removed"} = message, socket) do
     push(socket, "channel_removed", message)
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info(%{event: "playlist_updated"} = message, socket) do
+    push(socket, "playlist_updated", message)
     {:noreply, socket}
   end
 

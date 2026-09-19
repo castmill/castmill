@@ -1,6 +1,8 @@
 @use '../../colors.scss';
 
 .combo-box {
+  position: relative;
+
   .base-box {
     border: 1px solid #555;
     border-radius: 0.3em;
@@ -9,12 +11,12 @@
 
   .header {
     display: flex;
-    align-items: flex-end;
+    align-items: center;
     justify-content: space-between;
     flex-direction: row;
     user-select: none;
 
-    padding: 1em;
+    padding: 0.5em;
     cursor: pointer;
 
     .info {
@@ -29,7 +31,6 @@
       flex-direction: row;
       align-items: center;
       gap: 0.25em;
-      padding: 0 0 0.25em 0.25em;
     }
 
     button {
@@ -87,7 +88,13 @@
   }
 
   .dropdown {
-    margin-top: 0.25em;
+    position: absolute;
+    top: calc(100% + 0.25em);
+    left: 0;
+    z-index: 50;
+    width: 100%;
+    box-sizing: border-box;
+
     .search-box {
       display: flex;
       flex-direction: row;
@@ -123,15 +130,6 @@
       overflow-y: auto;
       max-height: 18em;
 
-      /*
-      min-height: 2em;
-      max-height: 18em;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      padding-top: 1em;
-      */
-
       .item {
         cursor: pointer;
         padding: 0.4em 1em;
@@ -147,7 +145,7 @@
       }
 
       .item:nth-child(even) {
-        background-color: #1e1f25; /* Lighter grey background for even items */
+        background-color: #1e1f25;
         padding: 0.4em 1em;
       }
     }

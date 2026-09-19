@@ -637,6 +637,7 @@
     "confirmRemoveChannels": "您确定要删除以下频道吗？",
     "enterChannelName": "输入频道名称",
     "defaultPlaylist": "默认播放列表",
+    "currentPlaylist": "当前播放列表",
     "selectPlaylist": "选择播放列表",
     "clearDefaultPlaylist": "清除默认播放列表",
     "dragPlaylists": "拖动播放列表",
@@ -915,7 +916,9 @@
       "pending": "等待设置",
       "enterClientCredentials": "在下方输入您的 {{provider}} API 凭据：",
       "afterSavingCredentials": "保存凭据后，点击下方按钮以授权 {{provider}}：",
-      "networkCredentialsConfigured": "您的网络管理员已配置 {{provider}} 凭据。只需点击下方按钮即可连接您的账户。"
+      "networkCredentialsConfigured": "您的网络管理员已配置 {{provider}} 凭据。只需点击下方按钮即可连接您的账户。",
+      "noConfigurationRequired": "无需配置",
+      "optional": "可选"
     },
     "translations": "翻译"
   },
@@ -965,6 +968,7 @@
       "checkUpdatesDescription": "检查更新并安装它们。这不会重新启动设备",
       "updateFirmware": "更新固件",
       "updateFirmwareDescription": "更新设备的固件",
+      "actionNotSupported": "不支持。",
       "offlineMessage": "设备处于离线状态,因此无法向其发送命令",
       "autorecoveryUpdated": "自动恢复已更新",
       "autorecoveryUpdateFailed": "自动恢复更新失败",
@@ -989,8 +993,8 @@
       "confirmDeleteMessage": "确定要删除此缓存条目吗？URL：{{url}}",
       "confirmDeleteMultiple": "删除多个条目",
       "confirmDeleteMultipleMessage": "确定要删除 {{count}} 个缓存条目吗？",
-      "confirmClearAll": "清除所有缓存",
-      "confirmClearAllMessage": "确定要清除所有 {{type}} 缓存条目吗？此操作无法撤消。",
+      "confirmClearAll": "清除整个缓存",
+      "confirmClearAllMessage": "确定要清除所有数据、代码和媒体缓存条目吗？播放器将重新加载，且此操作无法撤消。",
       "deleteSuccess": "缓存条目删除成功",
       "deleteMultipleSuccess": "成功删除 {{count}} 个缓存条目",
       "clearAllSuccess": "成功清除所有缓存条目",
@@ -1043,11 +1047,24 @@
     "errorRemovingDevice": "删除设备{{name}}时出错：{{error}}",
     "errorRemovingDevices": "删除设备时出错：{{error}}",
     "enterDescription": "输入描述",
-    "drawerTitle": "设备 \"{{name}}\""
+    "drawerTitle": "设备 \"{{name}}\"",
+    "info": {
+      "title": "信息",
+      "platform": "平台",
+      "playerVersion": "播放器版本",
+      "operatingSystem": "操作系统",
+      "hardware": "硬件",
+      "environmentVersion": "环境版本",
+      "chromiumVersion": "Chromium 版本",
+      "v8Version": "V8 版本",
+      "nodeVersion": "Node.js 版本",
+      "userAgent": "用户代理"
+    }
   },
   "validation": {
     "fieldRequired": "此字段为必填项",
-    "minLength": "此字段必须至少包含 {{min}} 个字符"
+    "minLength": "此字段必须至少包含 {{min}} 个字符",
+    "invalidCoordinates": "此字段必须包含有效的坐标"
   },
   "plurals": {
     "items": {

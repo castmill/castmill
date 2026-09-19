@@ -14,7 +14,7 @@ import {
   Widget,
 } from './widgets';
 import { of, Observable } from 'rxjs';
-import { catchError, last, map, takeUntil } from 'rxjs/operators';
+import { catchError, last, map, tap, takeUntil } from 'rxjs/operators';
 import { JsonLayer, JsonPlaylist } from './interfaces';
 import { Transition, fromJSON } from './transitions';
 import { applyCss, parseAspectRatio } from './utils';
@@ -58,6 +58,7 @@ export class Layer extends EventEmitter {
   private _duration = 0;
   private widgetAspectRatio: number | null = null;
   private resizeObserver: ResizeObserver | null = null;
+  private resizeListener: (() => void) | null = null;
 
   /**
    * Gets the effective aspect ratio for a widget.
@@ -235,40 +236,50 @@ export class Layer extends EventEmitter {
    * within the container (object-fit: contain behavior).
    */
   private setupResizeObserver() {
+    if (typeof ResizeObserver === 'undefined') {
+      this.resizeListener = () => this.updateWidgetDimensions();
+      window.addEventListener('resize', this.resizeListener);
+      this.updateWidgetDimensions();
+      return;
+    }
+
     this.resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
-        const { width, height } = entry.contentRect;
-        if (width === 0 || height === 0) continue;
-
-        const containerRatio = width / height;
-        const widgetRatio = this.widgetAspectRatio!;
-
-        // Find the widget element (first child of the layer)
-        const widgetEl = this.el.firstElementChild as HTMLElement;
-        if (!widgetEl) continue;
-
-        // Calculate dimensions to fit within container while maintaining aspect ratio
-        let computedWidth: number;
-        let computedHeight: number;
-
-        if (widgetRatio > containerRatio) {
-          // Widget is wider relative to container - width is the constraint
-          computedWidth = width;
-          computedHeight = width / widgetRatio;
-        } else {
-          // Widget is taller relative to container - height is the constraint
-          computedHeight = height;
-          computedWidth = height * widgetRatio;
-        }
-
-        // Apply computed dimensions
-        widgetEl.style.width = `${computedWidth}px`;
-        widgetEl.style.height = `${computedHeight}px`;
-        widgetEl.style.minWidth = `${computedWidth}px`;
+        this.updateWidgetDimensions(entry.contentRect);
       }
     });
 
     this.resizeObserver.observe(this.el);
+  }
+
+  private updateWidgetDimensions(
+    bounds: Pick<
+      DOMRectReadOnly,
+      'width' | 'height'
+    > = this.el.getBoundingClientRect()
+  ) {
+    const { width, height } = bounds;
+    if (width === 0 || height === 0 || this.widgetAspectRatio === null) return;
+
+    const widgetEl = this.el.firstElementChild as HTMLElement;
+    if (!widgetEl) return;
+
+    const containerRatio = width / height;
+    const widgetRatio = this.widgetAspectRatio;
+    let computedWidth: number;
+    let computedHeight: number;
+
+    if (widgetRatio > containerRatio) {
+      computedWidth = width;
+      computedHeight = width / widgetRatio;
+    } else {
+      computedHeight = height;
+      computedWidth = height * widgetRatio;
+    }
+
+    widgetEl.style.width = `${computedWidth}px`;
+    widgetEl.style.height = `${computedHeight}px`;
+    widgetEl.style.minWidth = `${computedWidth}px`;
   }
 
   toggleDebug() {
@@ -280,6 +291,10 @@ export class Layer extends EventEmitter {
     if (this.resizeObserver) {
       this.resizeObserver.disconnect();
       this.resizeObserver = null;
+    }
+    if (this.resizeListener) {
+      window.removeEventListener('resize', this.resizeListener);
+      this.resizeListener = null;
     }
 
     this.widget?.seek(0);
@@ -314,8 +329,17 @@ export class Layer extends EventEmitter {
   }
 
   show(offset: number) {
+    if (
+      this.widgetAspectRatio !== null &&
+      !this.resizeObserver &&
+      !this.resizeListener
+    ) {
+      this.setupResizeObserver();
+    }
+
     if (this.widget) {
       return this.widget.show(this.el, offset).pipe(
+        tap(() => this.updateWidgetDimensions()),
         catchError((err) => {
           // TODO: we should show more information about this error. Which widget? and which options?
           // for instance a common failure is a video or image that failed to be downloaded.

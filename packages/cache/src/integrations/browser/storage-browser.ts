@@ -13,7 +13,8 @@ export class StorageBrowser implements StorageIntegration {
 
   constructor(
     private name: string,
-    private serviceWorkerPath: string = ''
+    private serviceWorkerPath: string = '',
+    private registerServiceWorker: boolean = true
   ) {
     this.cacheName = `${this.prefix}:${this.name}`;
   }
@@ -37,21 +38,23 @@ export class StorageBrowser implements StorageIntegration {
         })
       );
 
-      try {
-        const registration = await navigator.serviceWorker.register(
-          `${this.serviceWorkerPath}sw.js`
-        );
-        console.log(
-          'ServiceWorker registration successful with scope: ',
-          registration.scope
-        );
-      } catch (err) {
-        console.log('ServiceWorker registration failed: ', err);
-      }
+      if (this.registerServiceWorker) {
+        try {
+          const registration = await navigator.serviceWorker.register(
+            `${this.serviceWorkerPath}sw.js`
+          );
+          console.log(
+            'ServiceWorker registration successful with scope: ',
+            registration.scope
+          );
+        } catch (err) {
+          console.log('ServiceWorker registration failed: ', err);
+        }
 
-      const registration = await navigator.serviceWorker.getRegistration('/');
-      if (registration) {
-        await registration.update();
+        const registration = await navigator.serviceWorker.getRegistration('/');
+        if (registration) {
+          await registration.update();
+        }
       }
     }
   }

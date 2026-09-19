@@ -33,6 +33,8 @@ export interface JsonChannel {
   timezone: string;
 
   default_playlist_id: number | null;
+  default_playlist_name: string | null;
+  current_playlist_name: string | null;
   entries: JsonChannelEntry[];
 }
 

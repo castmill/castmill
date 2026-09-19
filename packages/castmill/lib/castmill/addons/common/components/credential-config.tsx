@@ -48,7 +48,9 @@ export interface CredentialSchema {
     | 'oauth2_client_credentials'
     | 'api_key'
     | 'basic'
-    | 'custom';
+    | 'custom'
+    | 'optional'
+    | 'none';
   oauth2?: OAuth2Config;
   fields?: Record<string, CredentialField>;
 }

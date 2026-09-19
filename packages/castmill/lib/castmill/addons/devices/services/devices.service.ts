@@ -7,7 +7,7 @@ import {
 } from '@castmill/ui-common';
 import { authFetch } from '../../common/services/auth-fetch';
 import { DeviceCommand } from '../types/device-command.type';
-import { DeviceEvent as DeviceEvent } from '../interfaces/device-event.interface';
+import { DeviceEvent } from '../interfaces/device-event.interface';
 import { DeviceUpdate } from '../components/device-details';
 
 export interface FetchDevicesOptions {
@@ -302,7 +302,7 @@ export const DevicesService = {
     }: FetchDevicesOptions & { type: string }
   ) {
     const query = new URLSearchParams({
-      ...(sortOptions || {}),
+      ...sortOptions,
       page_size: page_size.toString(),
       page: page.toString(),
       type: type || 'data',
@@ -328,7 +328,7 @@ export const DevicesService = {
    * @param baseUrl API base URL
    * @param deviceId Device ID
    * @param type Cache type ('data', 'code', 'media', or 'all' to clear everything)
-   * @param urls Array of URLs to delete (empty array will delete all of the specified type)
+   * @param urls URLs to delete. An empty array is valid only with type 'all'.
    */
   async deleteDeviceCache(
     baseUrl: string,

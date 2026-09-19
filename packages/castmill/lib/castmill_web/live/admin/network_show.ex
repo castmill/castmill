@@ -518,21 +518,32 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
   end
 
   defp resources_for_network(network_id, "integrations") do
-    # List all system widget integrations that require credentials
-    integrations = Integrations.list_system_integrations_requiring_credentials()
+    # List all system widget integrations. Credential-free integrations (e.g.
+    # Open-Meteo) are still shown, but flagged as needing no configuration.
+    integrations = Integrations.list_system_integrations()
 
     # Enrich with network credential status
     rows =
       Enum.map(integrations, fn integration ->
+        requires_config = Integrations.requires_network_credentials?(integration)
+        optional = get_in(integration.credential_schema, ["auth_type"]) == "optional"
         has_credentials = Integrations.has_network_credentials?(network_id, integration.id)
+
+        status =
+          cond do
+            (requires_config or optional) and has_credentials -> "Configured"
+            requires_config -> "Not Configured"
+            optional -> "Optional"
+            true -> "No configuration required"
+          end
 
         %{
           id: integration.id,
           name: integration.name,
           widget_name: integration.widget.name,
           description: integration.description,
-          status: if(has_credentials, do: "Configured", else: "Not Configured"),
-          is_configured: has_credentials
+          status: status,
+          is_configured: not requires_config or has_credentials
         }
       end)
 
@@ -550,6 +561,31 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
          name: "Status",
          field: :status
        }
+     ]}
+  end
+
+  defp resources_for_network(_network_id, "widgets") do
+    # Widgets are global (not network-scoped), so list them all.
+    widgets = Castmill.Widgets.list_widgets()
+
+    rows =
+      Enum.map(widgets, fn widget ->
+        %{
+          id: widget.id,
+          name: widget.name,
+          slug: widget.slug,
+          description: widget.description,
+          is_system: if(widget.is_system, do: "Yes", else: "No")
+        }
+      end)
+
+    {rows,
+     [
+       %{name: "ID", field: :id},
+       %{name: "Name", field: :name},
+       %{name: "Slug", field: :slug},
+       %{name: "Description", field: :description},
+       %{name: "System", field: :is_system}
      ]}
   end
 
@@ -577,5 +613,12 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
          field: :expires_at
        }
      ]}
+  end
+
+  # Fallback for tabs that are present in the UI but not yet backed by a
+  # network-scoped listing (e.g. Channels, Playlists, Medias). Returns an empty
+  # result set so the admin page renders gracefully instead of crashing.
+  defp resources_for_network(_network_id, _tab) do
+    {[], [%{name: "Name", field: :name}]}
   end
 end

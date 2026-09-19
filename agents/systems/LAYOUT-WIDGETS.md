@@ -54,11 +54,27 @@ The `layoutRef` option stores:
   "aspectRatio": "9:16",
   "zones": [...],
   "zonePlaylistMap": {
-    "zone-1": 456,
-    "zone-2": 789
+    "zone-1": { "playlistId": 456 },
+    "zone-2": { "playlistId": 789 }
   }
 }
 ```
+
+Only playlist IDs are persisted. `Castmill.Resources.get_playlist/1` expands
+each assignment with a `playlist` object when serializing a playlist for the
+dashboard or player:
+
+```json
+{
+  "zone-1": {
+    "playlistId": 456,
+    "playlist": { "id": 456, "name": "Zone playlist", "items": [] }
+  }
+}
+```
+
+The dashboard may keep these expanded objects for previews, but API writes must
+strip them and send only `{ "playlistId": ... }`.
 
 ### System Layouts
 

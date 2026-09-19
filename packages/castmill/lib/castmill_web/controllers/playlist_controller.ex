@@ -32,6 +32,8 @@ defmodule CastmillWeb.PlaylistController do
 
     case result do
       {:ok, item} ->
+        notify_devices_of_playlist_update(playlist_id)
+
         conn
         |> put_status(:created)
         |> put_resp_header("location", ~p"/api/playlists/#{playlist_id}/items/#{item.id}")
@@ -57,6 +59,7 @@ defmodule CastmillWeb.PlaylistController do
       }) do
     with %PlaylistItem{} = item <- Resources.get_playlist_item(playlist_id, item_id) do
       {:ok, item} = Resources.update_playlist_item(item, options_params)
+      notify_devices_of_playlist_update(playlist_id)
 
       conn
       |> put_status(:ok)
@@ -76,6 +79,8 @@ defmodule CastmillWeb.PlaylistController do
            widget_config_params["data"]
          ) do
       {:ok, _} ->
+        notify_devices_of_playlist_update(playlist_id)
+
         conn
         |> send_resp(:no_content, "")
 
@@ -85,13 +90,34 @@ defmodule CastmillWeb.PlaylistController do
         |> json(%{error: "Cannot select this playlist as it would create a circular reference"})
         |> halt()
 
-      {:error, _} = error ->
+      {:error, %Ecto.Changeset{} = changeset} ->
         conn
-        |> put_status(:internal_server_error)
-        |> json(%{error: "Failed to update widget config due to #{inspect(error)}"})
+        |> put_status(:unprocessable_entity)
+        |> json(%{
+          error: "Invalid widget configuration",
+          errors: changeset_errors(changeset)
+        })
+        |> halt()
+
+      {:error, reason} ->
+        conn
+        |> put_status(:bad_request)
+        |> json(%{error: error_message(reason)})
         |> halt()
     end
   end
+
+  defp changeset_errors(changeset) do
+    Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
+      Regex.replace(~r"%{(\w+)}", msg, fn _, key ->
+        opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
+      end)
+    end)
+  end
+
+  defp error_message(reason) when is_binary(reason), do: reason
+  defp error_message(reason) when is_atom(reason), do: to_string(reason)
+  defp error_message(reason), do: inspect(reason)
 
   def move_item(conn, %{
         "playlist_id" => playlist_id,
@@ -102,7 +128,7 @@ defmodule CastmillWeb.PlaylistController do
     case target_id do
       nil ->
         # Proceed to move the item to the end of the playlist
-        perform_move_item(conn, item_id, nil)
+        perform_move_item(conn, playlist_id, item_id, nil)
 
       _ ->
         # Attempt to retrieve the target item
@@ -116,14 +142,16 @@ defmodule CastmillWeb.PlaylistController do
 
           _item ->
             # Proceed if item is found
-            perform_move_item(conn, item_id, target_id)
+            perform_move_item(conn, playlist_id, item_id, target_id)
         end
     end
   end
 
-  defp perform_move_item(conn, item_id, target_id) do
+  defp perform_move_item(conn, playlist_id, item_id, target_id) do
     case Resources.move_item_in_playlist(item_id, target_id) do
       {:ok, _} ->
+        notify_devices_of_playlist_update(playlist_id)
+
         # Successfully moved the item
         conn
         |> send_resp(:no_content, "")
@@ -145,11 +173,41 @@ defmodule CastmillWeb.PlaylistController do
     end
   end
 
-  def delete_item(conn, %{"playlist_id" => playlist_id, "item_id" => item_id}) do
+  def delete_item(conn, %{"playlist_id" => playlist_id} = params) do
+    item_id = params["item_id"] || params["id"]
     {:ok, _} = Resources.remove_item_from_playlist(playlist_id, item_id)
+    notify_devices_of_playlist_update(playlist_id)
 
     conn
     |> send_resp(:no_content, "")
+  end
+
+  defp notify_devices_of_playlist_update(playlist_id) when is_binary(playlist_id) do
+    notify_devices_of_playlist_update(String.to_integer(playlist_id))
+  end
+
+  defp notify_devices_of_playlist_update(playlist_id) do
+    notify_fn = fn ->
+      playlist_ids = [playlist_id | Resources.get_playlist_ancestors(playlist_id)]
+
+      playlist_ids
+      |> Enum.flat_map(&Resources.get_channels_using_playlist/1)
+      |> Enum.flat_map(&Resources.get_devices_using_channel(&1.id))
+      |> Enum.uniq_by(& &1.id)
+      |> Enum.each(fn device ->
+        Phoenix.PubSub.broadcast(
+          Castmill.PubSub,
+          "devices:#{device.id}",
+          %{event: "playlist_updated", playlist_id: playlist_id}
+        )
+      end)
+    end
+
+    if Application.get_env(:castmill, :async_background_tasks, true) do
+      Task.start(notify_fn)
+    else
+      notify_fn.()
+    end
   end
 
   @doc """
