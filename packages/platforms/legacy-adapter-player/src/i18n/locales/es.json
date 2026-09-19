@@ -4,7 +4,8 @@
     "title": "Diagnóstico del reproductor heredado",
     "loading": "Cargando información del dispositivo...",
     "values": {
-      "unavailable": "No disponible"
+      "unavailable": "No disponible",
+      "storedDeviceConfiguration": "Configuración del dispositivo almacenada"
     },
     "status": {
       "connected": "Conectado",

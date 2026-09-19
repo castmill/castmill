@@ -35,23 +35,12 @@ defmodule Castmill.Repo.Migrations.AddQrCodeWidget do
           %{
             "type" => "group",
             "name" => "qr-container",
-            "$styles" => [
-              %{
-                "filter" => %{"options.caption" => ""},
-                "style" => %{
-                  "width" => "100%",
-                  "height" => "100%",
-                  "box-sizing" => "border-box"
-                }
-              }
-            ],
             "style" => %{
               "display" => "flex",
               "align-items" => "center",
               "justify-content" => "center",
               "width" => "75%",
               "height" => "75%",
-              "flex-shrink" => "0",
               "background" => %{"key" => "options.qr_background"},
               "border-radius" => "0.5em",
               "box-shadow" => "0 0.25em 1em rgba(0, 0, 0, 0.1)",
@@ -78,27 +67,19 @@ defmodule Castmill.Repo.Migrations.AddQrCodeWidget do
           %{
             "type" => "text",
             "name" => "caption",
-            "$styles" => [
-              %{
-                "filter" => %{"options.caption" => ""},
-                "style" => %{"display" => "none"}
-              }
-            ],
             "opts" => %{
               "text" => %{"key" => "options.caption", "default" => ""}
             },
             "style" => %{
               "margin-top" => "0.8em",
               "font-size" => %{"key" => "options.caption_size"},
-              "font-family" => "sans-serif",
               "font-weight" => "500",
               "color" => %{"key" => "options.text_color"},
               "text-align" => "center",
               "max-width" => "90%",
               "overflow" => "hidden",
               "text-overflow" => "ellipsis",
-              "white-space" => "nowrap",
-              "height" => "15%"
+              "white-space" => "nowrap"
             }
           }
         ]

@@ -145,11 +145,25 @@ export class Renderer {
     layer.el.parentElement?.removeChild(layer.el);
   }
 
+  private clearPendingLayer(layer = this.pendingLayer) {
+    if (!layer) {
+      return;
+    }
+
+    if (this.pendingLayer === layer) {
+      delete this.pendingLayer;
+    }
+
+    if (layer !== this.currentLayer) {
+      this.removeLayer(layer);
+    }
+  }
+
   private setPendingLayer(layer: Layer) {
     const previousPendingLayer = this.pendingLayer;
 
     if (previousPendingLayer && previousPendingLayer !== layer) {
-      this.removeLayer(previousPendingLayer);
+      this.clearPendingLayer(previousPendingLayer);
     }
 
     this.pendingLayer = layer;
@@ -168,6 +182,9 @@ export class Renderer {
     if (prevLayer) {
       prevLayer.el.style.zIndex = '1000';
       if (prevLayer === layer) {
+        if (this.pendingLayer && this.pendingLayer !== layer) {
+          this.clearPendingLayer(this.pendingLayer);
+        }
         return of('layer:show:end');
       }
     }
@@ -290,7 +307,7 @@ export class Renderer {
 
     const pendingLayer = this.pendingLayer;
     if (pendingLayer && pendingLayer !== currentLayer) {
-      this.removeLayer(pendingLayer);
+      this.clearPendingLayer(pendingLayer);
     }
     delete this.pendingLayer;
   }

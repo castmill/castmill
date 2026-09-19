@@ -4,7 +4,8 @@
     "title": "レガシープレーヤー診断",
     "loading": "デバイス情報を読み込み中...",
     "values": {
-      "unavailable": "利用できません"
+      "unavailable": "利用できません",
+      "storedDeviceConfiguration": "保存済みのデバイス設定"
     },
     "status": {
       "connected": "接続済み",

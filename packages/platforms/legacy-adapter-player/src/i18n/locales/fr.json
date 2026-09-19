@@ -4,7 +4,8 @@
     "title": "Diagnostic du lecteur hérité",
     "loading": "Chargement des informations de l’appareil...",
     "values": {
-      "unavailable": "Non disponible"
+      "unavailable": "Non disponible",
+      "storedDeviceConfiguration": "Configuration de l’appareil enregistrée"
     },
     "status": {
       "connected": "Connecté",

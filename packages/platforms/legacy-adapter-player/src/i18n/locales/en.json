@@ -4,7 +4,8 @@
     "title": "Legacy player diagnostics",
     "loading": "Loading machine information...",
     "values": {
-      "unavailable": "Not available"
+      "unavailable": "Not available",
+      "storedDeviceConfiguration": "Stored device configuration"
     },
     "status": {
       "connected": "Connected",

@@ -14,12 +14,24 @@ import {
   LegacyMachine,
 } from '../classes';
 import { getLegacyBaseUrl } from '../utils/base-url';
+import { useLegacyI18n } from '../i18n';
 import {
   LegacyDebugOverlay,
   type LegacyDebugDevice,
   type LegacyPlatform,
 } from './legacy-debug-overlay';
 import { listenForLegacyConsoleToggle } from './legacy-debug-message';
+
+export const getLegacyParentOrigin = (
+  referrer = document.referrer,
+  fallbackOrigin = window.location.origin
+): string => {
+  try {
+    return referrer ? new URL(referrer).origin : fallbackOrigin;
+  } catch {
+    return fallbackOrigin;
+  }
+};
 
 const getLegacyPlatform = (): LegacyPlatform => {
   const userAgent = navigator.userAgent;
@@ -73,6 +85,7 @@ const getLegacyStorage = (platform: LegacyPlatform): StorageIntegration => {
 
 export const PlayerFrame: Component = () => {
   let ref: HTMLDivElement | undefined;
+  const { t } = useLegacyI18n();
   const [showDebug, setShowDebug] = createSignal(false);
   const [debugContext, setDebugContext] = createSignal<{
     device: LegacyDebugDevice;
@@ -98,14 +111,14 @@ export const PlayerFrame: Component = () => {
     setDebugContext({
       device,
       machine: legacyMachine,
-      serverUrl: configuredServerUrl ?? 'Stored device configuration',
+      serverUrl:
+        configuredServerUrl ??
+        t('legacyDebug.values.storedDeviceConfiguration'),
       platform,
     });
 
     if (platform === 'android' || platform === 'electron') {
-      const allowedConsoleOrigin = new URL(
-        configuredServerUrl ?? window.location.origin
-      ).origin;
+      const allowedConsoleOrigin = getLegacyParentOrigin();
       const stopListening = listenForLegacyConsoleToggle(() => {
         setShowDebug((visible) => !visible);
       }, allowedConsoleOrigin);

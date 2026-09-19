@@ -274,6 +274,46 @@ describe('Widget messaging', () => {
       (globalThis as any).window = originalWindow;
     }
   });
+
+  it('ignores widget messages that do not come from the parent window', () => {
+    const originalDocument = globalThis.document;
+    const originalWindow = globalThis.window;
+    const parent = { postMessage: spy() };
+    const otherWindow = {};
+    let messageHandler: ((event: MessageEvent) => void) | undefined;
+
+    try {
+      (globalThis as any).document = {
+        referrer: 'https://parent.example/dashboard',
+      };
+      (globalThis as any).window = {
+        location: { origin: 'https://player.example' },
+        parent,
+        addEventListener: (
+          _event: string,
+          listener: (event: MessageEvent) => void
+        ) => {
+          messageHandler = listener;
+        },
+        removeEventListener: () => {},
+      };
+
+      class TestWidget extends Widget {}
+
+      new TestWidget({} as any);
+
+      messageHandler?.({
+        data: JSON.stringify({ counter: 1, method: 'show', args: [] }),
+        origin: 'https://parent.example',
+        source: otherWindow,
+      } as unknown as MessageEvent);
+
+      expect(parent.postMessage.called).to.equal(false);
+    } finally {
+      (globalThis as any).document = originalDocument;
+      (globalThis as any).window = originalWindow;
+    }
+  });
 });
 
 describe('Renderer.clear', () => {
@@ -355,6 +395,31 @@ describe('Renderer.clear', () => {
     expect(secondRemoveChild.called).to.equal(false);
     expect(appendChild.calledTwice).to.equal(true);
     expect((renderer as any).pendingLayer).to.equal(secondPendingLayer);
+  });
+
+  it('clears a stale pending layer when showing the current layer again', async () => {
+    const pendingRemoveChild = spy();
+    const currentLayer = {
+      el: { style: {}, parentElement: { removeChild: spy() } },
+      unload: spy(),
+    };
+    const pendingLayer = {
+      el: { style: {}, parentElement: { removeChild: pendingRemoveChild } },
+      unload: spy(),
+      show: () => NEVER,
+    };
+    const renderer = new Renderer({ appendChild: spy() } as any);
+
+    (renderer as any).currentLayer = currentLayer;
+    (renderer as any).pendingLayer = pendingLayer;
+
+    await firstValueFrom(renderer.show(currentLayer as any, 0));
+
+    expect(pendingLayer.unload.calledOnce).to.equal(true);
+    expect(pendingRemoveChild.calledOnceWithExactly(pendingLayer.el)).to.equal(
+      true
+    );
+    expect((renderer as any).pendingLayer).to.equal(undefined);
   });
 });
 

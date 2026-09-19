@@ -4,7 +4,8 @@
     "title": "Diagnose des Legacy-Players",
     "loading": "Geräteinformationen werden geladen...",
     "values": {
-      "unavailable": "Nicht verfügbar"
+      "unavailable": "Nicht verfügbar",
+      "storedDeviceConfiguration": "Gespeicherte Gerätekonfiguration"
     },
     "status": {
       "connected": "Verbunden",

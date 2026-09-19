@@ -100,9 +100,9 @@ interface TextProps extends BaseComponentProps {
 
 export const Text: Component<TextProps> = (props) => {
   let textRef: HTMLDivElement | undefined;
-  let timelineItem: TimelineItem;
-  let scrollTimeline: gsap.core.Timeline;
-  let cleanUpAnimations: () => void;
+  let timelineItem: TimelineItem | undefined;
+  let scrollTimeline: gsap.core.Timeline | undefined;
+  let cleanUpAnimations: (() => void) | undefined;
   let stopObservingResize: (() => void) | undefined;
   let contentObserver: MutationObserver | null = null;
   let animationFrame: number | undefined;
@@ -134,8 +134,7 @@ export const Text: Component<TextProps> = (props) => {
 
   onCleanup(() => {
     cleanUpAnimations && cleanUpAnimations();
-    timelineItem && props.timeline.remove(timelineItem);
-    scrollTimeline?.kill();
+    resetScrollTimeline();
     stopObservingResize?.();
     contentObserver?.disconnect();
     if (animationFrame !== undefined) {
@@ -143,19 +142,88 @@ export const Text: Component<TextProps> = (props) => {
     }
   });
 
+  const resetScrollTimeline = () => {
+    if (timelineItem) {
+      props.timeline.remove(timelineItem);
+      timelineItem = undefined;
+    }
+
+    if (scrollTimeline) {
+      scrollTimeline.kill();
+      scrollTimeline = undefined;
+    }
+
+    if (textRef) {
+      gsap.set(textRef, { x: 0 });
+    }
+  };
+
+  const updateScrollTimeline = (size: number) => {
+    resetScrollTimeline();
+
+    if (
+      !textRef ||
+      !props.opts.autofit.minSize ||
+      props.opts.autofit.minSize <= size
+    ) {
+      return;
+    }
+
+    const containerRect = textRef.parentElement?.getBoundingClientRect();
+    const textRect = textRef.getBoundingClientRect();
+    if (!containerRect) {
+      return;
+    }
+
+    scrollTimeline = gsap.timeline({
+      repeat: -1,
+      paused: true,
+    });
+
+    // Duration should be proportional to the length in chars of the text
+    const duration = props.opts.text.length * 0.25;
+
+    const slack = textRect.width * 0.1;
+    scrollTimeline.to(
+      textRef,
+      {
+        duration,
+        x: -(textRect.width + slack),
+        ease: 'none',
+      },
+      1 // Wait 1 second before starting the animation
+    );
+
+    timelineItem = {
+      start: 0, // Text scroll animations should start immediately, not sequentially
+      repeat: true,
+      duration: scrollTimeline.duration() * 1000,
+      child: scrollTimeline,
+    };
+
+    props.timeline.add(timelineItem);
+  };
+
   onMount(() => {
     if (!textRef) {
       return;
     }
-    const size = autoFitText(textRef, props.opts?.autofit || {});
+
+    const fitText = () => {
+      const size = autoFitText(textRef!, props.opts?.autofit || {});
+      updateScrollTimeline(size);
+      return size;
+    };
+
+    fitText();
     animationFrame = requestAnimationFrame(() => {
-      autoFitText(textRef!, props.opts?.autofit || {});
+      fitText();
     });
     stopObservingResize = observeTextContainerResize(textRef, () => {
-      autoFitText(textRef!, props.opts?.autofit || {});
+      fitText();
     });
     contentObserver = observeTextContentChanges(textRef, () => {
-      autoFitText(textRef!, props.opts?.autofit || {});
+      fitText();
     });
 
     if (props.animations) {
@@ -171,41 +239,6 @@ export const Text: Component<TextProps> = (props) => {
         splittedText.chars || splittedText.words,
         props.timeline.duration()
       );
-    }
-
-    // If the height of the text is too small, we could enable scrolling (using GSAP for the animation)
-    if (props.opts.autofit.minSize && props.opts.autofit.minSize > size) {
-      const containerRect = textRef?.parentElement?.getBoundingClientRect();
-      const textRect = textRef?.getBoundingClientRect();
-      if (containerRect) {
-        scrollTimeline = gsap.timeline({
-          repeat: -1,
-          paused: true,
-        });
-
-        // Duration should be proportional to the length in chars of the text
-        const duration = props.opts.text.length * 0.25;
-
-        const slack = textRect.width * 0.1;
-        scrollTimeline.to(
-          textRef,
-          {
-            duration,
-            x: -(textRect.width + slack),
-            ease: 'none',
-          },
-          1 // Wait 1 second before starting the animation
-        );
-
-        timelineItem = {
-          start: 0, // Text scroll animations should start immediately, not sequentially
-          repeat: true,
-          duration: scrollTimeline.duration() * 1000,
-          child: scrollTimeline,
-        };
-
-        props.timeline.add(timelineItem);
-      }
     }
 
     props.onReady();

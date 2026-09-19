@@ -503,7 +503,7 @@
     "addToResource": "タグを追加",
     "removeFromResource": "タグを削除",
     "filterByTags": "タグでフィルター...",
-    "clearAll": "キャッシュ全体をクリア",
+    "clearAll": "すべてクリア",
     "manageTags": "タグを管理",
     "colorPicker": "色を選択",
     "searchTags": "タグを検索...",

@@ -4,7 +4,8 @@
     "title": "레거시 플레이어 진단",
     "loading": "장치 정보를 불러오는 중...",
     "values": {
-      "unavailable": "사용할 수 없음"
+      "unavailable": "사용할 수 없음",
+      "storedDeviceConfiguration": "저장된 디바이스 구성"
     },
     "status": {
       "connected": "연결됨",

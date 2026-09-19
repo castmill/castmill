@@ -30,7 +30,7 @@ export abstract class Widget extends EventEmitter {
     if (window.parent) {
       const parentOrigin = getParentOrigin();
       const messageHandler = (this.messageHandler = (ev: MessageEvent) => {
-        if (ev.origin !== parentOrigin) {
+        if (ev.source !== window.parent || ev.origin !== parentOrigin) {
           return;
         }
 

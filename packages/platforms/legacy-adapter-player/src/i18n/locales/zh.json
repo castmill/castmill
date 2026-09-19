@@ -4,7 +4,8 @@
     "title": "旧版播放器诊断",
     "loading": "正在加载设备信息...",
     "values": {
-      "unavailable": "不可用"
+      "unavailable": "不可用",
+      "storedDeviceConfiguration": "已保存的设备配置"
     },
     "status": {
       "connected": "已连接",

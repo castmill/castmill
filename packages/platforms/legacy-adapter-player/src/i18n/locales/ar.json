@@ -4,7 +4,8 @@
     "title": "تشخيص المشغّل القديم",
     "loading": "جارٍ تحميل معلومات الجهاز...",
     "values": {
-      "unavailable": "غير متاح"
+      "unavailable": "غير متاح",
+      "storedDeviceConfiguration": "إعدادات الجهاز المخزنة"
     },
     "status": {
       "connected": "متصل",
