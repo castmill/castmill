@@ -16,7 +16,7 @@ import {
 } from 'solid-js';
 import { RiArrowsArrowUpSLine, RiArrowsArrowDownSLine } from 'solid-icons/ri';
 import { AiOutlineSearch } from 'solid-icons/ai';
-import { ImCancelCircle } from 'solid-icons/im';
+import { IoClose } from 'solid-icons/io';
 
 import styles from './combobox.module.scss';
 import { IconWrapper } from '../icon-wrapper';
@@ -200,7 +200,25 @@ export const ComboBox = <T extends { id: string | number }>(
         </div>
 
         <div class={styles['actions']}>
-          <Show when={shouldShowClear()}>
+          <Show
+            when={shouldShowClear()}
+            fallback={
+              <Show
+                when={isOpen()}
+                fallback={
+                  <SimpleIconButton
+                    icon={RiArrowsArrowDownSLine}
+                    onClick={() => setIsOpen(true)}
+                  />
+                }
+              >
+                <SimpleIconButton
+                  icon={RiArrowsArrowUpSLine}
+                  onClick={() => setIsOpen(false)}
+                />
+              </Show>
+            }
+          >
             <button
               type="button"
               class={styles['clear-button']}
@@ -210,23 +228,8 @@ export const ComboBox = <T extends { id: string | number }>(
                 handleClear();
               }}
             >
-              <IconWrapper icon={ImCancelCircle} />
+              <IconWrapper icon={IoClose} />
             </button>
-          </Show>
-
-          <Show
-            when={isOpen()}
-            fallback={
-              <SimpleIconButton
-                icon={RiArrowsArrowDownSLine}
-                onClick={() => setIsOpen(true)}
-              />
-            }
-          >
-            <SimpleIconButton
-              icon={RiArrowsArrowUpSLine}
-              onClick={() => setIsOpen(false)}
-            />
           </Show>
         </div>
       </div>
