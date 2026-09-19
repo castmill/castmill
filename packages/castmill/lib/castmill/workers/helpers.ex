@@ -145,6 +145,19 @@ defmodule Castmill.Workers.Helpers do
     end
   end
 
+  @doc """
+  Returns the public origin used for media served by the Castmill endpoint.
+
+  `:media_public_base_url` allows players outside the server host or container
+  network to receive reachable media URLs.
+  """
+  def get_media_base_url do
+    case Application.get_env(:castmill, :media_public_base_url) do
+      nil -> get_endpoint_url()
+      base_url -> String.trim_trailing(base_url, "/")
+    end
+  end
+
   def get_endpoint_url do
     config = Application.get_env(:castmill, CastmillWeb.Endpoint)
     url_config = config[:url]

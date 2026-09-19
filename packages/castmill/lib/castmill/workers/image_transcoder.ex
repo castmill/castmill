@@ -202,7 +202,7 @@ defmodule Castmill.Workers.ImageTranscoder do
 
         %{size: size} = File.stat!(dst_file)
 
-        {"#{Helpers.get_endpoint_url()}/#{Path.join(["medias", dst_path, filename])}", size}
+        {"#{Helpers.get_media_base_url()}/#{Path.join(["medias", dst_path, filename])}", size}
 
       :s3 ->
         bucket = System.get_env("AWS_S3_BUCKET")

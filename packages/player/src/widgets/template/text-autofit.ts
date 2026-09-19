@@ -1,14 +1,15 @@
 export function observeTextContainerResize(
   textElement: HTMLDivElement,
   onResize: () => void
-): ResizeObserver | null {
+): () => void {
   if (typeof ResizeObserver === 'undefined') {
-    return null;
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
   }
 
   const parentElement = textElement.parentElement;
   if (!parentElement) {
-    return null;
+    return () => {};
   }
 
   const observer = new ResizeObserver(() => {
@@ -16,7 +17,7 @@ export function observeTextContainerResize(
   });
 
   observer.observe(parentElement);
-  return observer;
+  return () => observer.disconnect();
 }
 
 export function observeTextContentChanges(

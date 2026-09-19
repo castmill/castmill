@@ -32,6 +32,7 @@ import { TimerManager } from './timer-manager';
 const HEARTBEAT_INTERVAL = 1000 * 30; // 30 seconds
 const DEFAULT_MAX_LOGS = 100;
 const MAX_RECONNECT_DELAY_MS = 60_000; // 60 seconds max delay between reconnect attempts
+const DEFAULT_FETCH_TIMEOUT_MS = 5000;
 
 // Socket reconnection error types
 const AUTH_ERROR_INVALID_DEVICE = 'invalid_device';
@@ -52,6 +53,16 @@ export enum Status {
   Registering = 'registering',
   RecoveryBlocked = 'recovery_blocked',
   Ready = 'ready', // Player is ready to play content, but may be offline
+}
+
+export type ServerConnectionStatus =
+  | 'not-initialized'
+  | 'connected'
+  | 'disconnected';
+
+export interface DeviceIdentity {
+  id: string;
+  name: string;
 }
 
 class RecoveryBlockedError extends Error {
@@ -101,6 +112,11 @@ export interface ChannelRemovedMessage {
   channel_id: number;
 }
 
+export interface PlaylistUpdatedMessage {
+  event: string;
+  playlist_id: number;
+}
+
 interface CachePage {
   page: number;
   page_size: number;
@@ -110,6 +126,7 @@ interface CachePage {
 interface CacheDeleteRequest {
   type: ItemType | 'all';
   urls: string[];
+  ref?: string;
 }
 
 interface DeviceRequest {
@@ -218,8 +235,69 @@ export class Device extends EventEmitter {
     //this.contentQueue.add(intro);
   }
 
-  async init() {
-    this.baseUrl = await this.getBaseUrl();
+  async init(baseUrl?: string) {
+    this.baseUrl = baseUrl ?? (await this.getBaseUrl());
+  }
+
+  getServerConnectionStatus(): ServerConnectionStatus {
+    if (!this.socket) {
+      return 'not-initialized';
+    }
+
+    return this.socket.isConnected() ? 'connected' : 'disconnected';
+  }
+
+  async refreshIdentity(): Promise<DeviceIdentity> {
+    const credentials = await this.getCredentials();
+    if (!credentials) {
+      throw new Error('Cannot refresh identity without device credentials');
+    }
+
+    const response = await fetch(
+      `${this.baseUrl}/devices/${credentials.device.id}`,
+      {
+        headers: {
+          Accept: 'application/json',
+          Authorization: `Bearer ${credentials.device.token}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to refresh device identity: HTTP ${response.status}`
+      );
+    }
+
+    const body = await response.json();
+    const identity = body?.data;
+    if (
+      typeof identity?.id !== 'string' ||
+      identity.id !== credentials.device.id ||
+      typeof identity?.name !== 'string'
+    ) {
+      throw new Error('Invalid device identity response');
+    }
+
+    this.id = identity.id;
+    this.name = identity.name;
+
+    if (credentials.device.name !== identity.name) {
+      await this.integration.storeCredentials(
+        JSON.stringify({
+          ...credentials,
+          device: {
+            ...credentials.device,
+            name: identity.name,
+          },
+        })
+      );
+    }
+
+    return {
+      id: identity.id,
+      name: identity.name,
+    };
   }
 
   async start(el: HTMLElement, logDiv?: HTMLDivElement) {
@@ -811,6 +889,23 @@ export class Device extends EventEmitter {
     });
   }
 
+  private resetPlaybackQueue() {
+    this.channelGeneration++;
+    const currentLayer = this.player?.getCurrentLayer?.();
+    this.player?.clear();
+
+    if (this.contentQueue) {
+      while (this.contentQueue.length > 0) {
+        const layer = this.contentQueue.layers[0];
+        this.contentQueue.remove(layer);
+        if (layer !== currentLayer) {
+          layer.unload?.();
+        }
+      }
+      this.contentQueue.time = 0;
+    }
+  }
+
   private initListeners(channel: PhoenixChannel) {
     channel.on('command', async (payload: DeviceCommand) => {
       switch (payload.command) {
@@ -819,8 +914,9 @@ export class Device extends EventEmitter {
           location.reload();
           break;
         case 'clear_cache':
-          // Clear cache
-          this.cache.clean();
+          // Clear all cache storage and restart with fresh runtime references.
+          await this.cache.clean();
+          location.reload();
           break;
         case 'restart_app':
           this.restart();
@@ -902,7 +998,13 @@ export class Device extends EventEmitter {
       switch (resource) {
         case 'cache':
           const result = await this.deleteCache(opts);
-          channel.push('res:delete', { result, ref: opts.ref });
+          const response = channel.push('res:delete', {
+            result,
+            ref: opts.ref,
+          });
+          if (result.success && opts.type === 'all') {
+            this.reloadAfterAcknowledgement(response);
+          }
           break;
       }
     });
@@ -931,16 +1033,25 @@ export class Device extends EventEmitter {
       );
 
       // Find the channel that was updated
-      const updatedChannel = this.channels.find(
-        (ch) => ch.attrs.id === String(message.channel_id)
+      const updatedChannelIndex = this.channels.findIndex(
+        (ch) => String(ch.attrs.id) === String(message.channel_id)
       );
-      if (updatedChannel) {
-        // Update the channel's default playlist ID
-        updatedChannel.attrs.default_playlist_id = message.default_playlist_id
-          ? String(message.default_playlist_id)
-          : undefined;
+      if (updatedChannelIndex !== -1) {
+        const updatedChannel = this.channels[updatedChannelIndex];
+        const defaultPlaylistId =
+          message.default_playlist_id === null
+            ? undefined
+            : String(message.default_playlist_id);
+
+        if (updatedChannel.attrs.default_playlist_id === defaultPlaylistId) {
+          return;
+        }
+
+        updatedChannel.attrs.default_playlist_id = defaultPlaylistId;
+        this.channelIndex = updatedChannelIndex;
+        this.resetPlaybackQueue();
         this.logger.info(
-          'Channel default playlist updated, will take effect on next schedule check'
+          'Channel default playlist updated, playback queue reset'
         );
       }
     });
@@ -950,9 +1061,6 @@ export class Device extends EventEmitter {
       this.logger.info(
         `Channel ${message.channel.id} (${message.channel.name}) added to device`
       );
-
-      // Increment generation to invalidate any in-flight content loading
-      this.channelGeneration++;
 
       // Create a new Channel instance and add it to the channels list
       const newChannel = new Channel({
@@ -969,23 +1077,12 @@ export class Device extends EventEmitter {
       this.channels.push(newChannel);
       this.logger.info(`Device now has ${this.channels.length} channel(s)`);
 
-      // Stop player and clear content queue to force loading content from the updated channel list
-      if (this.player) {
-        this.player.stop();
-      }
-      if (this.contentQueue) {
-        while (this.contentQueue.length > 0) {
-          this.contentQueue.remove(this.contentQueue.layers[0]);
-        }
-      }
+      this.resetPlaybackQueue();
     });
 
     // Handle channel removed from device
     channel.on('channel_removed', async (message: ChannelRemovedMessage) => {
       this.logger.info(`Channel ${message.channel_id} removed from device`);
-
-      // Increment generation to invalidate any in-flight content loading
-      this.channelGeneration++;
 
       // Find and remove the channel from the channels list
       // Compare as strings to handle both string and number IDs
@@ -1003,17 +1100,13 @@ export class Device extends EventEmitter {
         }
 
         this.logger.info(`Device now has ${this.channels.length} channel(s)`);
-
-        // Stop player and clear content queue to force loading content from the updated channel list
-        if (this.player) {
-          this.player.stop();
-        }
-        if (this.contentQueue) {
-          while (this.contentQueue.length > 0) {
-            this.contentQueue.remove(this.contentQueue.layers[0]);
-          }
-        }
+        this.resetPlaybackQueue();
       }
+    });
+
+    channel.on('playlist_updated', async (message: PlaylistUpdatedMessage) => {
+      this.logger.info(`Playlist ${message.playlist_id} updated`);
+      this.resetPlaybackQueue();
     });
   }
 
@@ -1026,30 +1119,47 @@ export class Device extends EventEmitter {
 
   private async deleteCache({ type, urls }: CacheDeleteRequest) {
     try {
-      let deleted = 0;
-
       if (type === 'all') {
-        // Clear all cache
-        await this.cache.clean();
-        const [dataCount, codeCount, mediaCount] = await Promise.all([
-          this.cache.count(ItemType.Data),
-          this.cache.count(ItemType.Code),
-          this.cache.count(ItemType.Media),
-        ]);
-        deleted = dataCount + codeCount + mediaCount;
-      } else if (urls && urls.length > 0) {
-        // Delete specific URLs
-        for (const url of urls) {
-          await this.cache.del(url);
-          deleted++;
-        }
+        return { success: true, deleted: await this.cache.clean() };
       }
 
-      return { success: true, deleted };
+      if (!urls?.length) {
+        return {
+          success: false,
+          error: 'At least one URL is required when clearing a cache category',
+        };
+      }
+
+      for (const url of urls) {
+        await this.cache.del(url);
+      }
+
+      return { success: true, deleted: urls.length };
     } catch (error) {
       console.error('Error deleting cache:', error);
       return { success: false, error: String(error) };
     }
+  }
+
+  private reloadAfterAcknowledgement(response: {
+    receive: (
+      status: 'ok' | 'error' | 'timeout',
+      callback: () => void
+    ) => unknown;
+  }) {
+    let reloaded = false;
+    const reload = () => {
+      if (!reloaded) {
+        reloaded = true;
+        location.reload();
+      }
+    };
+    const fallback = setTimeout(reload, 1_000);
+
+    response.receive('ok', () => {
+      clearTimeout(fallback);
+      reload();
+    });
   }
 
   private initHeartbeat(channel: PhoenixChannel) {
@@ -1135,7 +1245,13 @@ export class Device extends EventEmitter {
 
   private async updateDeviceInfo(credentials: Credentials) {
     try {
-      const info = await this.integration.getDeviceInfo();
+      const info = {
+        ...(await this.integration.getDeviceInfo()),
+        capabilities: this.getCapabilities(),
+      };
+      const csrfToken = document
+        .querySelector("meta[name='csrf-token']")
+        ?.getAttribute('content');
       const response = await fetch(
         `${this.baseUrl}/devices/${credentials.device.id}/info`,
         {
@@ -1143,6 +1259,7 @@ export class Device extends EventEmitter {
           headers: {
             Authorization: ['Bearer', credentials.device.token].join(' '),
             'Content-Type': 'application/json',
+            ...(csrfToken ? { 'x-csrf-token': csrfToken } : {}),
           },
           body: JSON.stringify({ info }),
         }
@@ -1291,6 +1408,86 @@ export class Device extends EventEmitter {
    */
   async getTimers(): Promise<Timers> {
     return this.timerManager.getTimers();
+  }
+
+  /**
+   * Refresh locally persisted timers from the server-side device schedule.
+   * Local state remains available as an offline fallback when synchronization
+   * cannot be completed.
+   */
+  async syncSchedule(): Promise<boolean> {
+    const credentials = await this.getCredentials();
+    if (!credentials) {
+      return false;
+    }
+
+    try {
+      const response = await this.fetchWithTimeout(
+        `${this.baseUrl}/devices/${credentials.device.id}/schedule`,
+        {
+          headers: {
+            Authorization: `Bearer ${credentials.device.token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Invalid status ${response.status}`);
+      }
+
+      const payload = await response.json();
+      if (
+        !Array.isArray(payload?.timers?.on) ||
+        !Array.isArray(payload?.timers?.off)
+      ) {
+        throw new Error('Invalid schedule response');
+      }
+
+      await this.timerManager.setTimers(payload.timers);
+      return true;
+    } catch (error) {
+      this.logger.error(`Unable to synchronize device schedule: ${error}`);
+      return false;
+    }
+  }
+
+  private fetchWithTimeout(
+    input: RequestInfo | URL,
+    init?: RequestInit,
+    timeoutMs: number = DEFAULT_FETCH_TIMEOUT_MS
+  ): Promise<Response> {
+    return new Promise((resolve, reject) => {
+      let settled = false;
+      const timeoutId = window.setTimeout(() => {
+        if (settled) {
+          return;
+        }
+
+        settled = true;
+        reject(new Error(`Request timed out after ${timeoutMs}ms`));
+      }, timeoutMs);
+
+      fetch(input, init).then(
+        (response) => {
+          if (settled) {
+            return;
+          }
+
+          settled = true;
+          window.clearTimeout(timeoutId);
+          resolve(response);
+        },
+        (error) => {
+          if (settled) {
+            return;
+          }
+
+          settled = true;
+          window.clearTimeout(timeoutId);
+          reject(error);
+        }
+      );
+    });
   }
 
   /**

@@ -67,7 +67,42 @@ export class Cache extends Dexie {
 
   async init() {
     await this.integration.init();
-    await this.syncCache();
+    try {
+      await this.syncCache();
+    } catch (error) {
+      if (!this.isIndexedDbFailure(error)) {
+        throw error;
+      }
+
+      console.error(
+        `Cache: IndexedDB "${this.name}" is unusable; rebuilding metadata`,
+        error
+      );
+      this.close();
+      await Dexie.delete(this.name);
+      await this.open();
+      await this.syncCache();
+    }
+  }
+
+  private isIndexedDbFailure(error: unknown): boolean {
+    if (error instanceof Dexie.DexieError) {
+      return true;
+    }
+
+    if (error instanceof DOMException) {
+      return [
+        'AbortError',
+        'ConstraintError',
+        'DataError',
+        'InvalidStateError',
+        'NotFoundError',
+        'UnknownError',
+        'VersionError',
+      ].includes(error.name);
+    }
+
+    return false;
   }
 
   private async syncCache() {
@@ -78,7 +113,15 @@ export class Cache extends Dexie {
     for (const file of files) {
       const existsInCache = items.some((item) => item.cachedUrl === file.url);
       if (!existsInCache) {
-        await this.integration.deleteFile(file.url);
+        try {
+          await this.integration.deleteFile(file.url);
+        } catch (error) {
+          console.error(
+            'Cache: Failed to delete unreferenced file',
+            file.url,
+            error
+          );
+        }
       }
     }
 
@@ -88,6 +131,18 @@ export class Cache extends Dexie {
         (file) => file.url === item.cachedUrl
       );
       if (!existsInIntegration) {
+        // The integration may have lost only its index (for example a corrupt
+        // FILE_MAP) while the native file still exists. Delete by cached URL
+        // before dropping the last metadata reference.
+        try {
+          await this.integration.deleteFile(item.cachedUrl);
+        } catch (error) {
+          console.error(
+            'Cache: Failed to delete file with missing integration metadata',
+            item.cachedUrl,
+            error
+          );
+        }
         await this.items.delete(item.url);
       }
     }
@@ -199,7 +254,7 @@ export class Cache extends Dexie {
           .limit(count - this.maxItems + 1)
           .toArray();
         for (const item of items) {
-          await this.items.delete(item.url!);
+          await this.del(item.url!);
         }
       }
     }
@@ -377,15 +432,14 @@ export class Cache extends Dexie {
   }
 
   /**
-   * Clean all the cached items one by one.
-   *
-   * @param mimeType
+   * Clears every cached entry and all platform storage, including files that
+   * are no longer represented by IndexedDB metadata.
    */
-  async clean(mimeType?: string) {
-    const items = await this.items.toArray();
-    for (const item of items) {
-      await this.del(item.url!);
-    }
+  async clean(): Promise<number> {
+    const count = await this.items.count();
+    await this.integration.deleteAllFiles();
+    await this.items.clear();
+    return count;
   }
 
   /**

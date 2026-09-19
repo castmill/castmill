@@ -269,4 +269,26 @@ describe('DevicesService - Multiple Channel Assignment', () => {
       ).rejects.toThrow('Bad Request');
     });
   });
+
+  describe('deleteDeviceCache', () => {
+    it('sends the explicit all-cache deletion request', async () => {
+      const response = new Response(
+        JSON.stringify({ success: true, deleted: 3 }),
+        { status: 200 }
+      );
+      (global.fetch as any).mockResolvedValueOnce(response);
+
+      await expect(
+        DevicesService.deleteDeviceCache(baseUrl, deviceId, 'all', [])
+      ).resolves.toEqual({ success: true, deleted: 3 });
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        `${baseUrl}/dashboard/devices/${deviceId}/cache`,
+        expect.objectContaining({
+          method: 'DELETE',
+          body: JSON.stringify({ type: 'all', urls: [] }),
+        })
+      );
+    });
+  });
 });

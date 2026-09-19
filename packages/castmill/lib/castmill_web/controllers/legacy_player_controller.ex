@@ -7,6 +7,7 @@ defmodule CastmillWeb.LegacyPlayerController do
     if File.exists?(index_path) do
       conn
       |> put_resp_content_type("text/html")
+      |> put_resp_header("cache-control", "no-cache")
       |> send_file(200, index_path)
     else
       conn

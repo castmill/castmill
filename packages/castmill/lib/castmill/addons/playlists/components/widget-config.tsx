@@ -151,6 +151,69 @@ export const normalizeFormValue = (
   return '';
 };
 
+export const normalizeWidgetOptionsForApi = (
+  options: OptionsDict,
+  schemaEntries: [string, SchemaAttributeType][]
+): Record<string, any> =>
+  schemaEntries.reduce(
+    (normalizedOptions, [key, schema]) => {
+      const value = options[key];
+      const type =
+        typeof schema === 'string'
+          ? schema
+          : 'enum' in schema
+            ? 'select'
+            : schema.type;
+
+      if (type === 'ref') {
+        normalizedOptions[key] =
+          value && typeof value === 'object'
+            ? (value as { id?: unknown }).id
+            : value;
+        return normalizedOptions;
+      }
+
+      if (type === 'layout-ref' && value && typeof value === 'object') {
+        const layoutRef = value as LayoutRefValue;
+        normalizedOptions[key] = {
+          ...layoutRef,
+          zonePlaylistMap: Object.fromEntries(
+            Object.entries(layoutRef.zonePlaylistMap || {}).map(
+              ([zoneId, assignment]) => [
+                zoneId,
+                {
+                  playlistId:
+                    typeof assignment === 'number'
+                      ? assignment
+                      : typeof assignment === 'string' &&
+                          /^-?\d+$/.test(assignment.trim())
+                        ? Number.parseInt(assignment, 10)
+                        : typeof assignment === 'object' &&
+                            assignment !== null &&
+                            'playlistId' in assignment &&
+                            typeof assignment.playlistId === 'number'
+                          ? assignment.playlistId
+                          : typeof assignment === 'object' &&
+                              assignment !== null &&
+                              'playlistId' in assignment &&
+                              typeof assignment.playlistId === 'string' &&
+                              /^-?\d+$/.test(assignment.playlistId.trim())
+                            ? Number.parseInt(assignment.playlistId, 10)
+                            : undefined,
+                },
+              ]
+            )
+          ),
+        };
+        return normalizedOptions;
+      }
+
+      normalizedOptions[key] = value;
+      return normalizedOptions;
+    },
+    {} as Record<string, any>
+  );
+
 export function isValidURL(url: string): boolean {
   if (!url || url.trim() === '') {
     return true;
@@ -345,7 +408,10 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
 
   createEffect(() => {
     // Track option changes so the preview refetches when they change.
-    const options = { ...widgetOptions(), display_locale: locale() };
+    const options = {
+      ...normalizeWidgetOptionsForApi(widgetOptions(), schemaEntries),
+      display_locale: locale(),
+    };
     const widgetId = props.item.widget?.id;
 
     if (!widgetId || !props.baseUrl || !props.organizationId) {
@@ -918,22 +984,9 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
           onSubmit={async (e) => {
             e.preventDefault();
             if (isFormValid()) {
-              // For references we need to pick the ID, not the full expanded object
-              const options = schemaEntries.reduce(
-                (acc: Record<string, any>, [key, schema]) => {
-                  const type = getType(schema);
-                  if (type === 'ref') {
-                    const value = widgetOptions()[key];
-                    acc[key] =
-                      value && typeof value === 'object'
-                        ? (value as any).id
-                        : value;
-                  } else {
-                    acc[key] = widgetOptions()[key];
-                  }
-                  return acc;
-                },
-                {}
+              const options = normalizeWidgetOptionsForApi(
+                widgetOptions(),
+                schemaEntries
               );
 
               try {

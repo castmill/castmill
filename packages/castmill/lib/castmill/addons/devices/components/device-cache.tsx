@@ -171,12 +171,11 @@ export const DeviceCache: Component<{
       await DevicesService.deleteDeviceCache(
         props.baseUrl,
         props.device.id,
-        currentType(),
+        'all',
         []
       );
       toast.success(t('devices.cache.clearAllSuccess'));
       setSelectedItems(new Set<string>());
-      refreshData();
     } catch (error) {
       toast.error(t('devices.cache.deleteError', { error: String(error) }));
     } finally {
@@ -226,13 +225,6 @@ export const DeviceCache: Component<{
                 disabled={selectedItems().size === 0 || loadingDelete()}
                 title={t('devices.cache.deleteSelected')}
               />
-              <Button
-                onClick={() => setShowConfirmClearAll(true)}
-                icon={BsTrash}
-                label={t('devices.cache.clearAll')}
-                color="danger"
-                loading={loadingClearAll()}
-              />
             </div>
           ),
         }}
@@ -259,6 +251,15 @@ export const DeviceCache: Component<{
           </div>
         }
       >
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 1rem;">
+          <Button
+            onClick={() => setShowConfirmClearAll(true)}
+            icon={BsTrash}
+            label={t('devices.cache.clearAll')}
+            color="danger"
+            loading={loadingClearAll()}
+          />
+        </div>
         <Tabs tabs={tabs} />
       </Show>
 
@@ -290,9 +291,7 @@ export const DeviceCache: Component<{
         onConfirm={clearAllCache}
         onClose={() => setShowConfirmClearAll(false)}
         title={t('devices.cache.confirmClearAll')}
-        message={t('devices.cache.confirmClearAllMessage', {
-          type: currentType(),
-        })}
+        message={t('devices.cache.confirmClearAllMessage')}
       />
     </>
   );

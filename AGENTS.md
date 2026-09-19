@@ -23,19 +23,20 @@ agents/
 
 ### Key System Documentation
 
-| Topic | Location |
-|-------|----------|
-| Quotas & Plans | `agents/systems/QUOTAS.md` |
-| Widget Integrations | `agents/systems/WIDGET-INTEGRATIONS.md` |
-| Layout Widgets & Circular References | `agents/systems/LAYOUT-WIDGETS.md` |
-| Widget Assets | `agents/systems/WIDGET-ASSETS.md` |
-| Notifications | `agents/systems/notifications.md` |
+| Topic                                | Location                                |
+| ------------------------------------ | --------------------------------------- |
+| Quotas & Plans                       | `agents/systems/QUOTAS.md`              |
+| Widget Integrations                  | `agents/systems/WIDGET-INTEGRATIONS.md` |
+| Layout Widgets & Circular References | `agents/systems/LAYOUT-WIDGETS.md`      |
+| Widget Assets                        | `agents/systems/WIDGET-ASSETS.md`       |
+| Notifications                        | `agents/systems/notifications.md`       |
 
 ## 🏗️ Project Structure
 
 This is a Yarn workspace monorepo with the following key packages:
 
 ### Frontend Packages
+
 - `packages/website/` - Documentation site (Docusaurus)
 - `packages/dashboard/` - Management interface (SolidJS/TypeScript)
 - `packages/device/` - Device management interface
@@ -44,6 +45,7 @@ This is a Yarn workspace monorepo with the following key packages:
 - `packages/widged/` - Widget system
 
 ### Backend & Infrastructure
+
 - `packages/castmill/` - Main Elixir/Phoenix backend
 - `packages/cache/` - Caching layer
 - `packages/platforms/` - Platform implementations (Android, WebOS, Electron)
@@ -53,6 +55,7 @@ This is a Yarn workspace monorepo with the following key packages:
 **⚠️ CRITICAL**: All user-facing text must be localized.
 
 ### Quick Reference
+
 - **9 Languages**: English, Spanish, Swedish, German, French, Chinese, Arabic (RTL), Korean, Japanese
 - **100% Coverage Required**: CI validates all languages are complete
 
@@ -60,33 +63,60 @@ This is a Yarn workspace monorepo with the following key packages:
 
 ```tsx
 // ❌ NEVER hardcode strings
-<button>Save</button>
+<button>Save</button>;
 
 // ✅ ALWAYS use i18n
 const { t } = useI18n();
-<button>{t('common.save')}</button>
+<button>{t('common.save')}</button>;
 ```
 
 ### Before Every Commit
+
 ```bash
 cd packages/dashboard && yarn check-translations
 ```
 
 ### Detailed Documentation
+
 - **Full i18n guide**: `packages/dashboard/AGENTS.md`
 - **Implementation**: `packages/dashboard/src/i18n/README.md`
 - **Scripts**: `packages/dashboard/scripts/README.md`
+- **Legacy/player UI strings**: platform player UIs (including `packages/platforms/legacy-adapter-player`) use package-local locale JSON files via `useLegacyI18n()`, not the dashboard i18n system
 
 ## 💡 Development Guidelines
 
 ### Code Quality Standards
+
 - Use TypeScript for all new frontend code
 - Follow existing ESLint/Prettier configurations
 - Maintain >90% test coverage on new code
 - Document complex logic and architectural decisions
 - Update `agents/` documentation when making architectural changes
 
+### Legacy Player Widget Compatibility
+
+**Core player widgets must remain compatible with the legacy Android player.** This
+applies to image, video, text, and layout widgets, as well as shared template
+components and utilities they use.
+
+- Treat the Android 5.1/Crosswalk player as a Chrome 38 target; do not validate only
+  in a current desktop browser.
+- Do not introduce unsupported CSS such as CSS Grid or `aspect-ratio`. Use
+  conservative flexbox sizing, explicit `flex-shrink` behavior, and SVG `viewBox`
+  sizing where appropriate.
+- Feature-detect browser APIs. Use native APIs when available and provide lightweight
+  fallbacks for legacy players; do not assume TypeScript transpilation polyfills Web
+  Platform APIs.
+- Test dynamic states, including empty content, long auto-fit text, media loading,
+  and size changes.
+- After changing `@castmill/player`, rebuild `@castmill/device` before building the
+  legacy adapter because the device package embeds the player bundle.
+
+Read `agents/packages/player/LEGACY-PLAYER-COMPATIBILITY.md` before changing these
+widgets or shared player-rendering code.
+
 ### Key Technologies
+
 - **Frontend**: SolidJS (Dashboard), React, TypeScript, Vite
 - **Backend**: Elixir/Phoenix, PostgreSQL, Oban
 - **Testing**: Vitest, React Testing Library, ExUnit
@@ -95,6 +125,7 @@ cd packages/dashboard && yarn check-translations
 ## 🔧 Common Tasks
 
 ### Working with Packages
+
 ```bash
 # Install dependencies
 yarn install
@@ -111,7 +142,9 @@ yarn workspace website start
 ```
 
 ### Scripts Convention
+
 Utility scripts should be placed in `packages/[package-name]/scripts/`:
+
 - Use `.cjs` extension for Node.js CommonJS scripts
 - Document in `scripts/README.md` within the same directory
 - Add yarn aliases to `package.json`
@@ -125,6 +158,7 @@ The Dashboard uses URL-based routing with organization context:
 ```
 
 ### Key Rules
+
 ```tsx
 // ✅ Always include org ID
 navigate(`/org/${store.organizations.selectedId}/teams`);

@@ -1,0 +1,53 @@
+{
+  "legacyDebug": {
+    "ariaLabel": "レガシープレーヤー診断",
+    "title": "レガシープレーヤー診断",
+    "loading": "デバイス情報を読み込み中...",
+    "values": {
+      "unavailable": "利用できません",
+      "storedDeviceConfiguration": "保存済みのデバイス設定"
+    },
+    "status": {
+      "connected": "接続済み",
+      "disconnected": "未接続",
+      "notInitialized": "未初期化",
+      "online": "オンライン",
+      "offline": "オフライン"
+    },
+    "platform": {
+      "android": "Android",
+      "browser": "ブラウザー",
+      "electron": "Electron",
+      "webos": "webOS"
+    },
+    "rows": {
+      "playerName": "プレーヤー名",
+      "deviceId": "デバイス ID",
+      "organization": "組織",
+      "castmillNetwork": "Castmill ネットワーク",
+      "server": "サーバー",
+      "adapterPlatform": "アダプタープラットフォーム",
+      "network": "ネットワーク",
+      "browserConnection": "ブラウザー接続",
+      "serverConnection": "サーバー接続",
+      "viewport": "ビューポート",
+      "screen": "画面",
+      "devicePixelRatio": "デバイスピクセル比",
+      "timezone": "タイムゾーン",
+      "applicationType": "アプリケーション種別",
+      "applicationVersion": "アプリケーションバージョン",
+      "operatingSystem": "OS",
+      "hardware": "ハードウェア",
+      "environmentVersion": "環境バージョン",
+      "chromiumVersion": "Chromium バージョン",
+      "v8Version": "V8 バージョン",
+      "nodeVersion": "Node.js バージョン",
+      "userAgent": "ユーザーエージェント"
+    },
+    "errors": {
+      "playerIdentity": "プレーヤー識別情報",
+      "deviceInformation": "デバイス情報",
+      "timezone": "タイムゾーン"
+    }
+  }
+}

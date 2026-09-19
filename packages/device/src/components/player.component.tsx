@@ -6,6 +6,8 @@ export function PlayerComponent(props: { device: Device }) {
   let logElement: HTMLDivElement | undefined;
 
   onMount(async () => {
+    await props.device.syncSchedule();
+
     // Check if player is off due to timer
     const isOff = await props.device.isTimerOff();
     if (isOff) {

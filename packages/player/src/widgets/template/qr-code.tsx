@@ -598,9 +598,7 @@ export const QRCode: Component<QRCodeProps> = (props: QRCodeProps) => {
     props.onReady();
   });
 
-  // Render QR code using CSS Grid for resolution independence
-  // Each module is sized using percentage of the grid container
-  // Flatten the matrix manually for compatibility
+  // Flatten the matrix so each dark module can be positioned in the SVG view box.
   const flatMatrix: boolean[] = [];
   for (let y = 0; y < matrix.length; y++) {
     for (let x = 0; x < matrix[y].length; x++) {
@@ -616,29 +614,32 @@ export const QRCode: Component<QRCodeProps> = (props: QRCodeProps) => {
       style={merged}
     >
       {hasValidContent && gridSize > 0 && (
-        <div
+        <svg
           style={{
             width: '100%',
             height: '100%',
             'max-width': '100%',
             'max-height': '100%',
-            'aspect-ratio': '1 / 1',
-            display: 'grid',
-            'grid-template-columns': `repeat(${gridSize}, 1fr)`,
-            'grid-template-rows': `repeat(${gridSize}, 1fr)`,
-            'background-color': backgroundColor,
           }}
+          viewBox={`0 0 ${gridSize} ${gridSize}`}
+          preserveAspectRatio="xMidYMid meet"
+          shape-rendering="crispEdges"
         >
+          <rect width={gridSize} height={gridSize} fill={backgroundColor} />
           <For each={flatMatrix}>
-            {(isOn) => (
-              <div
-                style={{
-                  'background-color': isOn ? foregroundColor : backgroundColor,
-                }}
-              />
-            )}
+            {(isOn, index) =>
+              isOn && (
+                <rect
+                  x={index() % gridSize}
+                  y={Math.floor(index() / gridSize)}
+                  width="1"
+                  height="1"
+                  fill={foregroundColor}
+                />
+              )
+            }
           </For>
-        </div>
+        </svg>
       )}
     </div>
   );

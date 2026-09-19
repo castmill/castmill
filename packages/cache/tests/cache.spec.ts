@@ -5,7 +5,7 @@ import 'fake-indexeddb/auto';
 import { describe, it, expect, vi } from 'vitest';
 
 import { Cache, ItemType } from '../src/cache';
-import { StorageIntegration } from '../src/storage.integration';
+import { StorageIntegration, StorageItem } from '../src/storage.integration';
 import { StorageMockup } from './storage.mockup';
 
 describe('Cache', () => {
@@ -142,6 +142,7 @@ describe('Cache', () => {
     }
 
     const storage = new StorageMockup(filesFixture);
+    const deleteFileSpy = vi.spyOn(storage, 'deleteFile');
     const cache = new Cache(storage, 'test-max-items', 10);
 
     for (let i = 0; i < 10; i++) {
@@ -163,6 +164,7 @@ describe('Cache', () => {
       const isRemoved = removed.includes(url!);
       expect(isRemoved).to.be.false;
     }
+    expect(deleteFileSpy).toHaveBeenCalledTimes(3);
   });
   it('should preserve old cached data when force-refresh fails (stale fallback)', async () => {
     const url = 'https://example.com/data.json';
@@ -300,6 +302,98 @@ describe('Cache', () => {
     expect(storage.deleteFile).toHaveBeenCalledWith(url);
   });
 
+  it('should remove every unreferenced integration file during reconciliation', async () => {
+    const files = [
+      { url: 'content://cache/orphan-1', size: 12 },
+      { url: 'content://cache/orphan-2', size: 24 },
+    ];
+    const storage = {
+      init: vi.fn(),
+      listFiles: vi.fn().mockResolvedValue(files),
+      deleteFile: vi.fn().mockResolvedValue(undefined),
+    } as unknown as StorageIntegration;
+
+    const cache = new Cache(storage, 'test-remove-all-orphans', 10);
+    await cache.init();
+
+    expect(storage.deleteFile).toHaveBeenCalledTimes(2);
+    expect(storage.deleteFile).toHaveBeenCalledWith(files[0].url);
+    expect(storage.deleteFile).toHaveBeenCalledWith(files[1].url);
+  });
+
+  it('should start when an unreferenced native file cannot be deleted', async () => {
+    const orphan = { url: 'content://cache/already-gone', size: 12 };
+    const storage = {
+      init: vi.fn(),
+      listFiles: vi.fn().mockResolvedValue([orphan]),
+      deleteFile: vi.fn().mockRejectedValue(new Error('already absent')),
+    } as unknown as StorageIntegration;
+    const cache = new Cache(storage, 'test-failed-orphan-cleanup', 10);
+
+    await expect(cache.init()).resolves.toBeUndefined();
+    expect(storage.deleteFile).toHaveBeenCalledWith(orphan.url);
+  });
+
+  it('should rebuild corrupt IndexedDB metadata and clean native orphans', async () => {
+    const orphan = { url: 'content://cache/orphan', size: 12 };
+    const storage = {
+      init: vi.fn(),
+      listFiles: vi.fn().mockResolvedValue([orphan]),
+      deleteFile: vi.fn().mockResolvedValue(undefined),
+    } as unknown as StorageIntegration;
+    const cache = new Cache(storage, 'test-corrupt-indexed-db', 10);
+    vi.spyOn(cache.items, 'toArray').mockRejectedValueOnce(
+      new DOMException('Database is corrupt', 'UnknownError')
+    );
+
+    await expect(cache.init()).resolves.toBeUndefined();
+
+    expect(storage.deleteFile).toHaveBeenCalledWith(orphan.url);
+    expect(await cache.list(ItemType.Media)).toEqual([]);
+  });
+
+  it('should evict cached files and retry after native storage is full', async () => {
+    const oldUrl = 'https://example.com/old.mp4';
+    const newUrl = 'https://example.com/new.mp4';
+    let full = false;
+    const files = new Map<string, StorageItem>();
+    const storage = {
+      init: vi.fn(),
+      listFiles: vi.fn(async () => Array.from(files.values())),
+      storeFile: vi.fn(async (url: string) => {
+        if (url === newUrl && !full) {
+          full = true;
+          return {
+            result: {
+              code: 'FAILURE',
+              error: 'NOT_ENOUGH_SPACE',
+              errMsg: '12',
+            },
+          };
+        }
+        const item = {
+          url: `content://cache/${encodeURIComponent(url)}`,
+          size: 12,
+        };
+        files.set(url, item);
+        return { result: { code: 'SUCCESS' }, item };
+      }),
+      deleteFile: vi.fn(async (url: string) => {
+        files.delete(url);
+      }),
+    } as unknown as StorageIntegration;
+    const cache = new Cache(storage, 'test-native-full', 10);
+    await cache.init();
+    await cache.set(oldUrl, ItemType.Media, 'media/*');
+
+    const item = await cache.set(newUrl, ItemType.Media, 'media/*');
+
+    expect(item?.url).toBe(newUrl);
+    expect(storage.deleteFile).toHaveBeenCalledWith(oldUrl);
+    expect(storage.storeFile).toHaveBeenCalledTimes(3);
+    expect(await cache.get(oldUrl)).toBeUndefined();
+  });
+
   it('should remove items from cache that are not in the integration', async () => {
     const url = 'https://example.com/code.js';
     const storage = {
@@ -329,5 +423,49 @@ describe('Cache', () => {
     // The item should be removed from the cache
     const items2 = await cache.list(ItemType.Code);
     expect(items2).to.have.length(0);
+    expect(storage.deleteFile).toHaveBeenCalledWith(url);
+  });
+
+  it('should clear all metadata and platform files, including orphans', async () => {
+    const dataUrl = 'https://example.com/data.json';
+    const codeUrl = 'https://example.com/widget.js';
+    const mediaUrl = 'https://example.com/movie.mp4';
+    const storage = new StorageMockup({
+      [dataUrl]: '{}',
+      [codeUrl]: 'export {}',
+      [mediaUrl]: 'media',
+    });
+    const deleteAllFilesSpy = vi.spyOn(storage, 'deleteAllFiles');
+    const cache = new Cache(storage, 'test-clean-all', 10);
+    await cache.init();
+    await cache.set(dataUrl, ItemType.Data, 'application/json');
+    await cache.set(codeUrl, ItemType.Code, 'text/javascript');
+    await cache.set(mediaUrl, ItemType.Media, 'media/*');
+    storage.files['content://cache/orphan'] = {
+      url: 'content://cache/orphan',
+      size: 10,
+    };
+
+    await expect(cache.clean()).resolves.toBe(3);
+
+    expect(deleteAllFilesSpy).toHaveBeenCalledOnce();
+    expect(storage.files).toEqual({});
+    await expect(cache.count(ItemType.Data)).resolves.toBe(0);
+    await expect(cache.count(ItemType.Code)).resolves.toBe(0);
+    await expect(cache.count(ItemType.Media)).resolves.toBe(0);
+  });
+
+  it('should retain metadata when clearing platform storage fails', async () => {
+    const url = 'https://example.com/movie.mp4';
+    const storage = new StorageMockup({ [url]: 'media' });
+    const cache = new Cache(storage, 'test-clean-storage-failure', 10);
+    await cache.init();
+    await cache.set(url, ItemType.Media, 'media/*');
+    vi.spyOn(storage, 'deleteAllFiles').mockRejectedValue(
+      new Error('Storage unavailable')
+    );
+
+    await expect(cache.clean()).rejects.toThrow('Storage unavailable');
+    await expect(cache.get(url)).resolves.toMatchObject({ url });
   });
 });
