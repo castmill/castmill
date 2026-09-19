@@ -1,10 +1,18 @@
 import { expect } from 'chai';
-import { describe, it } from 'mocha';
+import { afterEach, describe, it } from 'mocha';
 
 import {
   observeTextContainerResize,
   observeTextContentChanges,
 } from '../src/widgets/template/text-autofit';
+
+const originalResizeObserver = globalThis.ResizeObserver;
+const originalMutationObserver = globalThis.MutationObserver;
+
+afterEach(() => {
+  globalThis.ResizeObserver = originalResizeObserver;
+  globalThis.MutationObserver = originalMutationObserver;
+});
 
 describe('observeTextContainerResize', () => {
   it('observes the text parent element and reruns the callback on resize', () => {
@@ -34,11 +42,11 @@ describe('observeTextContainerResize', () => {
     expect(observer).to.not.equal(null);
     expect(observedElement).to.equal(parentElement);
 
-    resizeCallback?.([], observer as ResizeObserver);
+    resizeCallback?.([], observer as unknown as ResizeObserver);
     expect(callbackCalls).to.equal(1);
   });
 
-  it('returns null when there is no parent element', () => {
+  it('returns a no-op cleanup when there is no parent element', () => {
     (globalThis as any).ResizeObserver = class {
       observe() {}
       disconnect() {}
@@ -46,8 +54,8 @@ describe('observeTextContainerResize', () => {
 
     const textElement = { parentElement: null } as unknown as HTMLDivElement;
 
-    expect(observeTextContainerResize(textElement, () => undefined)).to.equal(
-      null
+    expect(observeTextContainerResize(textElement, () => undefined)).to.be.a(
+      'function'
     );
   });
 });
@@ -84,7 +92,6 @@ describe('observeTextContentChanges', () => {
   });
 
   it('returns null when MutationObserver is unavailable', () => {
-    const previousMutationObserver = (globalThis as any).MutationObserver;
     (globalThis as any).MutationObserver = undefined;
 
     const textElement = { id: 'text' } as unknown as HTMLDivElement;
@@ -92,7 +99,5 @@ describe('observeTextContentChanges', () => {
     expect(observeTextContentChanges(textElement, () => undefined)).to.equal(
       null
     );
-
-    (globalThis as any).MutationObserver = previousMutationObserver;
   });
 });

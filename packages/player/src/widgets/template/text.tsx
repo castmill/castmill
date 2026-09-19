@@ -153,24 +153,28 @@ export const Text: Component<TextProps> = (props) => {
       scrollTimeline = undefined;
     }
 
-    if (textRef) {
-      gsap.set(textRef, { x: 0 });
+    const element = textRef;
+    if (!element) {
+      return;
     }
+
+    gsap.set(element, { x: 0 });
   };
 
   const updateScrollTimeline = (size: number) => {
     resetScrollTimeline();
 
+    const element = textRef;
     if (
-      !textRef ||
+      !element ||
       !props.opts.autofit.minSize ||
       props.opts.autofit.minSize <= size
     ) {
       return;
     }
 
-    const containerRect = textRef.parentElement?.getBoundingClientRect();
-    const textRect = textRef.getBoundingClientRect();
+    const containerRect = element.parentElement?.getBoundingClientRect();
+    const textRect = element.getBoundingClientRect();
     if (!containerRect) {
       return;
     }
@@ -185,7 +189,7 @@ export const Text: Component<TextProps> = (props) => {
 
     const slack = textRect.width * 0.1;
     scrollTimeline.to(
-      textRef,
+      element,
       {
         duration,
         x: -(textRect.width + slack),
@@ -272,7 +276,13 @@ function autoFitText(div: HTMLDivElement, options: AutoFitOpts): number {
     textElement.style.fontSize = `${size}em`;
   };
 
-  const containerElement = div.parentElement!;
+  const containerElement = div.parentElement;
+  if (!containerElement) {
+    const fallbackSize = options.baseSize ?? 1;
+    setSize(fallbackSize);
+    return fallbackSize;
+  }
+
   const containerRect = containerElement.getBoundingClientRect();
   const maxHeight = containerRect.height;
   const maxWidth = containerRect.width;
