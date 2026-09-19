@@ -114,9 +114,7 @@ export const LegacyDebugOverlay: Component<LegacyDebugOverlayProps> = (
         props.device.getOrganizationName(),
         props.device.getCastmillNetworkName(),
       ]);
-      setOrganization(
-        organizationName ?? t('legacyDebug.values.unavailable')
-      );
+      setOrganization(organizationName ?? t('legacyDebug.values.unavailable'));
       setNetwork(networkName ?? t('legacyDebug.values.unavailable'));
     } catch (error) {
       setIdentityError(getErrorMessage(error));

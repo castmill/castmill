@@ -630,7 +630,8 @@ defmodule Castmill.Resources do
     end
   end
 
-  defp resolve_layout_zone_assignment(playlist_id, organization_id) when is_integer(playlist_id) do
+  defp resolve_layout_zone_assignment(playlist_id, organization_id)
+       when is_integer(playlist_id) do
     case get_playlist_for_organization(playlist_id, organization_id) do
       {:ok, parsed_playlist_id, playlist} ->
         %{"playlistId" => parsed_playlist_id, "playlist" => playlist}
