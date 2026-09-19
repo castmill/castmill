@@ -36,7 +36,7 @@ const translations: Record<LegacyLocale, LegacyTranslations> = {
 };
 
 const getLegacyLocale = (
-  language = globalThis.navigator?.language
+  language = typeof navigator === 'undefined' ? undefined : navigator.language
 ): LegacyLocale => {
   const locale = language?.toLowerCase().split('-')[0] as
     | LegacyLocale
