@@ -34,7 +34,7 @@ const DeviceView: Component<{
 
     try {
       await Promise.all([
-        await DevicesService.updateDevice(
+        DevicesService.updateDevice(
           props.baseUrl,
           props.organization_id,
           props.device.id,

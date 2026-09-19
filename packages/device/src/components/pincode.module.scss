@@ -39,11 +39,7 @@ $castmill-darker-blue: #1f3b77;
   min-width: 0; // Allow shrinking
 
   // Use CSS clamp for better responsive scaling
-  font-size: clamp(
-    1.5rem,
-    8vw,
-    3rem
-  ); // Scale between 1.5rem and 3rem based on viewport
+  font-size: clamp(1.5rem, 8vw, 3rem); // Scale between 1.5rem and 3rem based on viewport
   letter-spacing: clamp(0.05em, 0.5vw, 0.25em); // Scale letter spacing too
 }
 

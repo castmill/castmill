@@ -2,11 +2,19 @@
   "name": "@castmill/device",
   "version": "1.0.0",
   "description": "",
+  "license": "AGPL-3.0-or-later",
+  "files": [
+    "dist"
+  ],
   "type": "module",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./dist/style.css": "./dist/style.css"
+  },
   "scripts": {
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt .",
     "start": "vite",
     "dev": "vite",
     "test": "vitest run",
@@ -15,16 +23,15 @@
     "build": "rimraf dist && vite build && yarn ts-types",
     "build:watch": "vite build --watch",
     "prepare": "yarn build",
-    "ts-types": "tsc --emitDeclarationOnly --outDir dist"
+    "ts-types": "tsc --emitDeclarationOnly --outDir dist",
+    "lint": "oxlint ."
   },
-  "files": [
-    "dist"
-  ],
-  "exports": {
-    ".": "./dist/index.js",
-    "./dist/style.css": "./dist/style.css"
+  "dependencies": {
+    "@castmill/cache": "*",
+    "@castmill/player": "*",
+    "phoenix": "^1.7.2",
+    "qrcode": "^1.5.4"
   },
-  "license": "AGPL-3.0-or-later",
   "devDependencies": {
     "@solidjs/testing-library": "^0.8.6",
     "@testing-library/jest-dom": "^6.4.1",
@@ -32,18 +39,11 @@
     "@types/phoenix": "^1.6.4",
     "@types/qrcode": "^1.5.5",
     "jsdom": "^24.0.0",
-    "prettier": "^3.2.5",
     "rimraf": "^6.0.1",
     "solid-js": "^1.9.4",
     "typescript": "^5.4.5",
     "vite": "^5.2.10",
     "vite-plugin-solid": "^2.10.2",
     "vitest": "^1.2.2"
-  },
-  "dependencies": {
-    "@castmill/cache": "*",
-    "@castmill/player": "*",
-    "phoenix": "^1.7.2",
-    "qrcode": "^1.5.4"
   }
 }

@@ -8,10 +8,10 @@ const path = require('path');
 module.exports = function socialCardsPlugin(context, options) {
   return {
     name: 'social-cards-plugin',
-    
+
     async postBuild({ siteConfig, outDir, routesPaths, plugins }) {
       console.log('🎨 Generating social media cards...');
-      
+
       // Create social cards directory
       const cardsDir = path.join(outDir, 'img', 'social');
       if (!fs.existsSync(cardsDir)) {
@@ -160,47 +160,56 @@ module.exports = function socialCardsPlugin(context, options) {
         {
           route: '/',
           title: 'Your Digital Signage Partner',
-          description: 'Open source solution for creating, managing and deploying digital signage content across any device or platform',
-          type: 'Homepage'
+          description:
+            'Open source solution for creating, managing and deploying digital signage content across any device or platform',
+          type: 'Homepage',
         },
         {
           route: '/docs/intro',
           title: 'Getting Started',
-          description: 'Complete guide to building digital signage solutions with Castmill',
-          type: 'Documentation'
+          description:
+            'Complete guide to building digital signage solutions with Castmill',
+          type: 'Documentation',
         },
         {
           route: '/docs/player',
           title: 'Player Documentation',
-          description: 'Learn how to set up and configure Castmill players across different platforms',
-          type: 'Player Guide'
+          description:
+            'Learn how to set up and configure Castmill players across different platforms',
+          type: 'Player Guide',
         },
         {
           route: '/docs/widgets',
           title: 'Widget Development',
-          description: 'Create custom widgets for your digital signage displays',
-          type: 'Developer Guide'
+          description:
+            'Create custom widgets for your digital signage displays',
+          type: 'Developer Guide',
         },
         {
           route: '/docs/api',
           title: 'API Reference',
-          description: 'Complete API documentation for integrating with Castmill',
-          type: 'API Docs'
-        }
+          description:
+            'Complete API documentation for integrating with Castmill',
+          type: 'API Docs',
+        },
       ];
 
       // Add dynamic routes if available
       if (routesPaths && routesPaths.length > 0) {
-        routesPaths.forEach(route => {
-          if (route.startsWith('/docs/') && !cards.some(card => card.route === route)) {
+        routesPaths.forEach((route) => {
+          if (
+            route.startsWith('/docs/') &&
+            !cards.some((card) => card.route === route)
+          ) {
             const routeName = route.replace('/docs/', '').replace(/[-_]/g, ' ');
-            const title = routeName.charAt(0).toUpperCase() + routeName.slice(1);
-            
+            const title =
+              routeName.charAt(0).toUpperCase() + routeName.slice(1);
+
             cards.push({
               route,
               title,
               description: `Learn about ${title.toLowerCase()} in the Castmill documentation`,
-              type: 'Documentation'
+              type: 'Documentation',
             });
           }
         });
@@ -208,12 +217,14 @@ module.exports = function socialCardsPlugin(context, options) {
 
       // Create HTML files for each card
       for (const card of cards) {
-        const fileName = card.route === '/' ? 'home.html' : 
-                        card.route.replace(/\//g, '-').replace(/^-/, '') + '.html';
-        
+        const fileName =
+          card.route === '/'
+            ? 'home.html'
+            : card.route.replace(/\//g, '-').replace(/^-/, '') + '.html';
+
         const filePath = path.join(cardsDir, fileName);
         const html = generateCardHTML(card.title, card.description, card.type);
-        
+
         fs.writeFileSync(filePath, html);
         console.log(`✅ Generated social card: ${fileName}`);
       }
@@ -224,11 +235,15 @@ module.exports = function socialCardsPlugin(context, options) {
 This directory contains HTML templates for generating social media cards.
 
 ## Generated Cards
-${cards.map(card => {
-        const fileName = card.route === '/' ? 'home.html' : 
-                        card.route.replace(/\//g, '-').replace(/^-/, '') + '.html';
-        return `- **${card.title}** (${card.route}): ${fileName}`;
-      }).join('\n')}
+${cards
+  .map((card) => {
+    const fileName =
+      card.route === '/'
+        ? 'home.html'
+        : card.route.replace(/\//g, '-').replace(/^-/, '') + '.html';
+    return `- **${card.title}** (${card.route}): ${fileName}`;
+  })
+  .join('\n')}
 
 ## Creating Images
 

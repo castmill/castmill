@@ -212,10 +212,6 @@ export class WebosMachine implements Machine {
 
     // Trigger the firmware upgrade.
     return storage.upgradeFirmware();
-
-    // Reboot the device to apply the update. The downloaded firmware will be
-    // deleted automatically after the reboot.
-    return this.reboot();
   }
 
   async getFirmwareDownloadUrl(): Promise<string> {

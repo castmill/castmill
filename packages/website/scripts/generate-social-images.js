@@ -4,7 +4,7 @@ const path = require('path');
 
 /**
  * Convert HTML social cards to JPG images
- * 
+ *
  * Usage:
  * node scripts/generate-social-images.js
  */
@@ -21,9 +21,10 @@ async function generateImages() {
   }
 
   // Get all HTML files
-  const htmlFiles = fs.readdirSync(buildSocialDir)
-    .filter(file => file.endsWith('.html'))
-    .filter(file => file !== 'README.md');
+  const htmlFiles = fs
+    .readdirSync(buildSocialDir)
+    .filter((file) => file.endsWith('.html'))
+    .filter((file) => file !== 'README.md');
 
   if (htmlFiles.length === 0) {
     console.log('❌ No HTML files found. Run `yarn build` first.');
@@ -38,23 +39,26 @@ async function generateImages() {
       width: 1200,
       height: 630,
       deviceScaleFactor: 2, // High DPI for better quality
-    }
+    },
   });
 
   try {
     for (const htmlFile of htmlFiles) {
       const htmlPath = path.join(buildSocialDir, htmlFile);
-      const outputPath = path.join(staticSocialDir, htmlFile.replace('.html', '.jpg'));
-      
+      const outputPath = path.join(
+        staticSocialDir,
+        htmlFile.replace('.html', '.jpg')
+      );
+
       console.log(`🎨 Processing ${htmlFile}...`);
 
       const page = await browser.newPage();
-      
+
       // Load the HTML file
       const fileUrl = `file://${htmlPath}`;
-      await page.goto(fileUrl, { 
+      await page.goto(fileUrl, {
         waitUntil: 'networkidle0',
-        timeout: 30000 
+        timeout: 30000,
       });
 
       // Take screenshot
@@ -67,8 +71,8 @@ async function generateImages() {
           x: 0,
           y: 0,
           width: 1200,
-          height: 630
-        }
+          height: 630,
+        },
       });
 
       await page.close();
@@ -84,7 +88,6 @@ async function generateImages() {
     console.log('   ---');
     console.log('   image: /img/social/home.jpg');
     console.log('   ---');
-
   } catch (error) {
     console.error('❌ Error generating images:', error);
   } finally {
@@ -101,7 +104,9 @@ try {
   console.log('📦 Install it with: npm install puppeteer');
   console.log('');
   console.log('Alternative options:');
-  console.log('1. Manual screenshots: Open HTML files and screenshot at 1200x630');
+  console.log(
+    '1. Manual screenshots: Open HTML files and screenshot at 1200x630'
+  );
   console.log('2. Online tools: Upload HTML to htmlcsstoimage.com');
   console.log('3. Browser DevTools: Set device emulation to 1200x630');
 }

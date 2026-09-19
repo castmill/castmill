@@ -133,7 +133,7 @@ export const Text: Component<TextProps> = (props) => {
   };
 
   onCleanup(() => {
-    cleanUpAnimations && cleanUpAnimations();
+    cleanUpAnimations?.();
     resetScrollTimeline();
     stopObservingResize?.();
     contentObserver?.disconnect();

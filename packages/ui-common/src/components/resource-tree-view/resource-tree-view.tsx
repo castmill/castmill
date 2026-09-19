@@ -136,7 +136,9 @@ export const ResourceTreeView: Component<ResourceTreeViewProps> = (props) => {
   // is the comma-joined index path (e.g. "0", "2,1").
   const [fallbackItems, setFallbackItems] = createSignal<
     Map<string, FallbackEntry>
-  >(new Map(), { equals: false });
+  >(new Map(), {
+    equals: false,
+  });
 
   // Build counter to cancel stale async builds
   let buildGeneration = 0;

@@ -53,10 +53,10 @@ $castmill-lightest-blue: #dcf2fd;
       ),
       // Restored higher opacity
       radial-gradient(
-          circle at 75% 75%,
-          rgba(255, 255, 255, 0.05) 0%,
-          transparent 50%
-        );
+        circle at 75% 75%,
+        rgba(255, 255, 255, 0.05) 0%,
+        transparent 50%
+      );
     animation: float 20s ease-in-out infinite; // Restored original speed
   }
 }

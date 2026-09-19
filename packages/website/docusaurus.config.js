@@ -95,14 +95,36 @@ const config = {
       // Replace with your project's social card
       image: 'img/social/home.jpg',
       metadata: [
-        { name: 'keywords', content: 'digital signage, open source, castmill, content management, media player, widgets' },
-        { name: 'description', content: 'Open source digital signage solution for creating, managing and deploying content across any device or platform' },
-        { property: 'og:title', content: 'Castmill - Your Digital Signage Partner' },
-        { property: 'og:description', content: 'Open source solution for creating, managing and deploying digital signage content across any device or platform' },
+        {
+          name: 'keywords',
+          content:
+            'digital signage, open source, castmill, content management, media player, widgets',
+        },
+        {
+          name: 'description',
+          content:
+            'Open source digital signage solution for creating, managing and deploying content across any device or platform',
+        },
+        {
+          property: 'og:title',
+          content: 'Castmill - Your Digital Signage Partner',
+        },
+        {
+          property: 'og:description',
+          content:
+            'Open source solution for creating, managing and deploying digital signage content across any device or platform',
+        },
         { property: 'og:type', content: 'website' },
         { name: 'twitter:card', content: 'summary_large_image' },
-        { name: 'twitter:title', content: 'Castmill - Your Digital Signage Partner' },
-        { name: 'twitter:description', content: 'Open source solution for creating, managing and deploying digital signage content across any device or platform' },
+        {
+          name: 'twitter:title',
+          content: 'Castmill - Your Digital Signage Partner',
+        },
+        {
+          name: 'twitter:description',
+          content:
+            'Open source solution for creating, managing and deploying digital signage content across any device or platform',
+        },
       ],
       navbar: {
         logo: {

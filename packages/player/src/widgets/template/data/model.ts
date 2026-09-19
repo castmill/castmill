@@ -132,13 +132,13 @@ export class Model {
 
 function getArrayIndexes(str: string) {
   let match;
-  const rePattern = /^([^\[]+)((?:\[\s*(?:[\d:]+|@\w+)\s*\])+)$/;
+  const rePattern = /^([^[]+)((?:\[\s*(?:[\d:]+|@\w+)\s*\])+)$/;
 
   if ((match = str.match(rePattern))) {
     const variable = match[1],
       indexes = [];
     // Updated regex to capture @index correctly
-    const re = /\[\s*([\d\:]+|@\w+)\s*\]/g;
+    const re = /\[\s*([\d:]+|@\w+)\s*\]/g;
 
     while ((match = re.exec(str))) {
       indexes.push(match[1]);

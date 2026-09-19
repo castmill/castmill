@@ -7,7 +7,7 @@ import {
 } from '@castmill/ui-common';
 import { authFetch } from '../../common/services/auth-fetch';
 import { DeviceCommand } from '../types/device-command.type';
-import { DeviceEvent as DeviceEvent } from '../interfaces/device-event.interface';
+import { DeviceEvent } from '../interfaces/device-event.interface';
 import { DeviceUpdate } from '../components/device-details';
 
 export interface FetchDevicesOptions {
@@ -302,7 +302,7 @@ export const DevicesService = {
     }: FetchDevicesOptions & { type: string }
   ) {
     const query = new URLSearchParams({
-      ...(sortOptions || {}),
+      ...sortOptions,
       page_size: page_size.toString(),
       page: page.toString(),
       type: type || 'data',

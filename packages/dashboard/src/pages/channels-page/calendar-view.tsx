@@ -499,7 +499,7 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
     <>
       <Show when={showEntryModal()}>
         <Modal
-          title={showEntryModal()?.playlist.name!}
+          title={showEntryModal()!.playlist.name}
           description={t('channels.calendarEntryDetails')}
           onClose={closeEntryModal}
         >

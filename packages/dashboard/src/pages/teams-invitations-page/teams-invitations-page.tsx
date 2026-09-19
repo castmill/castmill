@@ -53,7 +53,7 @@ const TeamsInvitationPage = () => {
   async function acceptInvitation() {
     setAccepting(true);
     try {
-      const email = invitation()?.email!;
+      const email = invitation()!.email;
       await TeamsService.acceptInvitation(email, token);
 
       toast.success('Invitation accepted successfully!');

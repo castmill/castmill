@@ -1,3 +1,4 @@
+/* oxlint-disable no-unused-expressions */
 import { expect } from 'chai';
 
 // Mock requestAnimationFrame and cancelAnimationFrame for Node.js environment

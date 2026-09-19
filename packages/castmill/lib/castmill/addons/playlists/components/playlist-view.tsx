@@ -560,7 +560,7 @@ export const PlaylistView: Component<{
       const updatedPlaylist = {
         ...currentPlaylist,
         settings: {
-          ...(currentPlaylist.settings || {}),
+          ...currentPlaylist.settings,
           aspect_ratio: nextAspectRatio,
         },
       };

@@ -56,7 +56,7 @@ export class Image extends TimelineWidget {
 
         return this.load(url || this.src);
 
-        /** 
+        /**
           // TODO: Allow specifying gsap timelines for any kind of effect.
           // For example, zoom-in-out animations, etc.
              const tl = (this.timeline = gsap.timeline({ paused: true }));
