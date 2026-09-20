@@ -112,7 +112,9 @@ const ProtectedRoute: Component<ProtectedRouteProps> = (
         const user = getUser();
         if (!user.id) {
           // User not properly loaded, redirect to login
-          navigate('/login', { replace: true });
+          navigate(buildRedirectUrl(location.pathname, location.search), {
+            replace: true,
+          });
           return;
         }
 
