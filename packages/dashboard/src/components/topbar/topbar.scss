@@ -22,6 +22,13 @@
     justify-content: flex-start;
     gap: 1em;
 
+    > a img {
+      display: block;
+      max-height: 3em;
+      max-width: 10em;
+      object-fit: contain;
+    }
+
     .org-logo-separator {
       width: 0.0625em;
       height: 2em;
@@ -118,6 +125,64 @@
 
       svg {
         font-size: 1.25rem;
+      }
+    }
+  }
+}
+
+@media (max-width: 48em) {
+  .castmill-header {
+    flex-wrap: wrap;
+    height: auto;
+    min-height: 4em;
+    gap: 0.5em;
+    padding: 0.5em 0.75em;
+
+    nav {
+      margin: 0;
+    }
+
+    .main {
+      flex: 1 1 auto;
+      min-width: 0;
+      gap: 0.5em;
+
+      > a img {
+        max-height: 2.25em;
+        max-width: 8em;
+      }
+
+      .org-logo-container {
+        max-height: 2.25em;
+        min-width: 0;
+
+        .org-logo {
+          max-height: 2.25em;
+          max-width: 7em;
+        }
+      }
+    }
+
+    .right {
+      flex: 1 1 100%;
+      justify-content: flex-start;
+      flex-wrap: wrap;
+      gap: 0.35em;
+      min-width: 0;
+    }
+
+    .topbar-dropdowns {
+      gap: 0.25em;
+    }
+  }
+}
+
+@media (max-width: 36em) {
+  .castmill-header {
+    .main {
+      .org-logo-separator,
+      .org-logo-container {
+        display: none;
       }
     }
   }

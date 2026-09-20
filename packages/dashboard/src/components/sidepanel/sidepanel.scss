@@ -53,3 +53,47 @@
     }
   }
 }
+
+@media (max-width: 48em) {
+  .castmill-sidepanel {
+    width: auto;
+    max-width: 100%;
+    flex: 0 0 auto;
+    padding: 0.5em;
+    border-right: 0;
+    border-bottom: 1px solid colors.$separator-color;
+    align-items: stretch;
+    overflow-x: hidden;
+
+    .castmill-panel-item {
+      flex: 0 0 auto;
+      margin: 0;
+    }
+
+    .links {
+      flex-direction: row;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 0.25em;
+      margin-top: 0.5em;
+      padding-bottom: 0.25em;
+      overflow-x: auto;
+      white-space: nowrap;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .network-admin-section {
+      flex: 0 0 auto;
+      flex-direction: row;
+      align-items: center;
+      margin-top: 0;
+
+      .section-divider {
+        flex: 0 0 auto;
+        width: 0.1em;
+        height: 2em;
+        margin: 0 0.5em;
+      }
+    }
+  }
+}

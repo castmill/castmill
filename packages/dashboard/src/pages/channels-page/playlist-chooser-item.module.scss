@@ -14,3 +14,10 @@
     margin-left: 0.5em;
   }
 }
+
+@media (max-width: 48em) {
+  .playlists-item {
+    width: 12em;
+    flex: 0 0 auto;
+  }
+}

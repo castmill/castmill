@@ -30,3 +30,22 @@
     }
   }
 }
+
+@media (max-width: 48em) {
+  .castmill-footer {
+    height: auto;
+    min-height: 3rem;
+    padding: 0.75em 0;
+
+    .footer-links {
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.5em;
+      margin: 0 0.75em;
+
+      a {
+        margin: 0 0.5em;
+      }
+    }
+  }
+}

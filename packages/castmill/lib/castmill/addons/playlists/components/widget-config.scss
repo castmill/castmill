@@ -175,3 +175,40 @@
     box-sizing: border-box;
   }
 }
+
+@media (max-width: 48em) {
+  .widget-config-dialog {
+    width: 100%;
+    height: 80dvh;
+    flex-direction: column;
+    gap: 1em;
+    overflow-y: auto;
+    padding-top: 0;
+
+    .widget-config {
+      width: 100%;
+      min-height: 24em;
+      overflow: visible;
+
+      form {
+        min-height: 24em;
+
+        .form-inputs {
+          padding-right: 0;
+          -webkit-overflow-scrolling: touch;
+        }
+
+        .form-actions {
+          flex-wrap: wrap;
+        }
+      }
+    }
+
+    .preview {
+      width: 100%;
+      min-height: 14em;
+      height: auto;
+      flex: 0 0 auto;
+    }
+  }
+}
