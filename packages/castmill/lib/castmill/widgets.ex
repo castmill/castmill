@@ -40,13 +40,16 @@ defmodule Castmill.Widgets do
   """
   def list_widgets(params \\ %{})
 
-  def list_widgets(%{
-        page: page,
-        page_size: page_size,
-        search: search,
-        key: sort_key,
-        direction: sort_direction
-      }) do
+  def list_widgets(
+        %{
+          page: page,
+          page_size: page_size,
+          search: search,
+          key: sort_key,
+          direction: sort_direction
+        } = params
+      ) do
+    organization_id = Map.get(params, :organization_id)
     offset = (page_size && max((page - 1) * page_size, 0)) || 0
 
     # Convert sort direction string to atom
@@ -67,6 +70,7 @@ defmodule Castmill.Widgets do
       end
 
     Widget.base_query()
+    |> scope_widgets(organization_id)
     |> QueryHelpers.where_name_like(search)
     |> order_by([w], [{^sort_dir, field(w, ^sort_field)}])
     |> limit(^page_size)
@@ -75,8 +79,9 @@ defmodule Castmill.Widgets do
     |> Enum.map(&sanitize_widget_assets/1)
   end
 
-  def list_widgets(_params) do
+  def list_widgets(params) do
     Widget.base_query()
+    |> scope_widgets(Map.get(params, :organization_id))
     |> Repo.all()
     |> Enum.map(&sanitize_widget_assets/1)
   end
@@ -94,15 +99,27 @@ defmodule Castmill.Widgets do
   """
   def count_widgets(params \\ %{})
 
-  def count_widgets(%{search: search}) do
+  def count_widgets(%{search: search} = params) do
     Widget.base_query()
+    |> scope_widgets(Map.get(params, :organization_id))
     |> QueryHelpers.where_name_like(search)
     |> Repo.aggregate(:count, :id)
   end
 
-  def count_widgets(_params) do
+  def count_widgets(params) do
     Widget.base_query()
+    |> scope_widgets(Map.get(params, :organization_id))
     |> Repo.aggregate(:count, :id)
+  end
+
+  defp scope_widgets(query, nil), do: query
+
+  defp scope_widgets(query, organization_id) do
+    where(
+      query,
+      [widget],
+      widget.is_system == true or widget.organization_id == ^organization_id
+    )
   end
 
   @doc """
@@ -117,6 +134,16 @@ defmodule Castmill.Widgets do
     Widget
     |> Repo.get(id)
     |> sanitize_widget_assets()
+  end
+
+  def get_widget_for_organization(id, organization_id) do
+    Widget.base_query()
+    |> where(
+      [widget],
+      widget.id == ^id and
+        (widget.is_system == true or widget.organization_id == ^organization_id)
+    )
+    |> Repo.one()
   end
 
   @doc """
@@ -309,18 +336,30 @@ defmodule Castmill.Widgets do
       iex> get_widget_usage(999)
       []
   """
-  def get_widget_usage(widget_id) do
-    from(wc in WidgetConfig,
-      join: pi in assoc(wc, :playlist_item),
-      join: p in assoc(pi, :playlist),
-      where: wc.widget_id == ^widget_id,
-      select: %{
-        playlist_id: p.id,
-        playlist_name: p.name,
-        playlist_item_id: pi.id,
-        widget_config_id: wc.id
-      }
-    )
+  def get_widget_usage(widget_id), do: get_widget_usage(widget_id, nil)
+
+  def get_widget_usage(widget_id, organization_id) do
+    query =
+      from(wc in WidgetConfig,
+        join: pi in assoc(wc, :playlist_item),
+        join: p in assoc(pi, :playlist),
+        where: wc.widget_id == ^widget_id,
+        select: %{
+          playlist_id: p.id,
+          playlist_name: p.name,
+          playlist_item_id: pi.id,
+          widget_config_id: wc.id
+        }
+      )
+
+    query =
+      if organization_id do
+        where(query, [_wc, _pi, playlist], playlist.organization_id == ^organization_id)
+      else
+        query
+      end
+
+    query
     |> Repo.all()
   end
 

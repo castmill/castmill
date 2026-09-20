@@ -75,6 +75,30 @@ defmodule CastmillWeb.OrganizationWidgetsControllerTest do
       assert json_response(conn, 404)["errors"]["detail"] == "Widget not found"
     end
 
+    test "does not return a widget owned by another organization", %{
+      conn: conn,
+      organization: org,
+      user: user,
+      network: network
+    } do
+      other_org = organization_fixture(%{network_id: network.id})
+
+      other_widget =
+        widget_fixture(%{
+          name: "Other Organization Widget",
+          slug: "other-org-widget-#{System.unique_integer([:positive])}",
+          organization_id: other_org.id,
+          template: %{"type" => "group", "name" => "root", "components" => []}
+        })
+
+      conn =
+        conn
+        |> assign(:current_user, user)
+        |> get("/dashboard/organizations/#{org.id}/widgets/#{other_widget.id}")
+
+      assert json_response(conn, 404)["errors"]["detail"] == "Widget not found"
+    end
+
     test "returns 401 for unauthenticated request", %{
       conn: conn,
       organization: org,
