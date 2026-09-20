@@ -344,6 +344,7 @@ export class Layer extends EventEmitter {
           // TODO: we should show more information about this error. Which widget? and which options?
           // for instance a common failure is a video or image that failed to be downloaded.
           console.error(`Layer: show widget error`, err);
+          this.emit('error', err);
           return of('error');
         })
       );

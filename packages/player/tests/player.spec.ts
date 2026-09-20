@@ -8,6 +8,7 @@ import {
   Layer,
   Player,
   Playlist,
+  playVideo,
   Renderer,
   timer,
   Widget,
@@ -190,6 +191,35 @@ describe('Player.clear', () => {
 
     expect(stopSpy.calledOnce).to.equal(true);
     expect(renderer.clear.calledOnce).to.equal(true);
+  });
+});
+
+describe('Template video playback', () => {
+  it('reports rejected autoplay promises without leaving them unhandled', async () => {
+    const rejection = new Error('User activation is required');
+    const reports: unknown[] = [];
+    const errorSpy = stub(console, 'error');
+    const video = {
+      play: () => Promise.reject(rejection),
+    };
+
+    try {
+      playVideo(video, (report) => reports.push(report));
+      await Promise.resolve();
+
+      expect(
+        errorSpy.calledWith('[Video] Failed to start playback', rejection)
+      ).to.equal(true);
+      expect(reports).to.deep.equal([
+        {
+          category: 'playback',
+          code: 'video-play-rejected',
+          error: rejection,
+        },
+      ]);
+    } finally {
+      errorSpy.restore();
+    }
   });
 });
 

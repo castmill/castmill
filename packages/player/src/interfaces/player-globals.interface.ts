@@ -1,3 +1,9 @@
+export interface PlayerRuntimeError {
+  category: 'playback' | 'media-load' | 'runtime';
+  code?: string;
+  error: unknown;
+}
+
 export interface PlayerGlobals {
   target: 'thumbnail' | 'preview' | 'poster';
   /**
@@ -6,4 +12,5 @@ export interface PlayerGlobals {
    * Default: false
    */
   muted?: boolean;
+  reportError?: (input: PlayerRuntimeError) => void;
 }

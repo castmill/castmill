@@ -26,7 +26,13 @@ import { getCastmillIntro } from './intro';
 import { Channel, JsonChannel } from './channel';
 import { Schema } from '../interfaces';
 import { JsonMedia } from '../interfaces/json-media';
-import { DivLogger, Logger, NullLogger, WebSocketLogger } from './logger';
+import {
+  DeviceErrorReporter,
+  DivLogger,
+  Logger,
+  NullLogger,
+  WebSocketLogger,
+} from './logger';
 import { TimerManager } from './timer-manager';
 
 const HEARTBEAT_INTERVAL = 1000 * 30; // 30 seconds
@@ -182,6 +188,7 @@ export class Device extends EventEmitter {
   private channelIndex = 0;
   private channelGeneration = 0; // Incremented when channels change, used to invalidate in-flight operations
   private logger: Logger = new Logger();
+  private errorReporter: DeviceErrorReporter;
   private logDiv?: HTMLDivElement;
   private socket?: Socket;
   private timerManager: TimerManager;
@@ -211,6 +218,7 @@ export class Device extends EventEmitter {
     super();
 
     this.logger.setLogger(new NullLogger());
+    this.errorReporter = new DeviceErrorReporter();
 
     this.timerManager = new TimerManager(this.integration, {
       onTurnOff: async () => {
@@ -308,6 +316,7 @@ export class Device extends EventEmitter {
     }
 
     const { device } = credentials;
+    await this.errorReporter.init(device.id);
 
     this.resourceManager = new ResourceManager(this.cache, {
       authToken: device.token,
@@ -335,7 +344,12 @@ export class Device extends EventEmitter {
     // TODO: Should be able to pass the logger to the renderer and the player.
     this.playerContainer = el;
     const renderer = new Renderer(el);
-    this.player = new Player(this.contentQueue, renderer, this.opts?.viewport);
+    this.player = new Player(
+      this.contentQueue,
+      renderer,
+      this.opts?.viewport,
+      this.errorReporter
+    );
 
     this.emitProgress(5, 5, 'Starting player');
 
@@ -393,6 +407,7 @@ export class Device extends EventEmitter {
                 this.resourceManager,
                 {
                   target: 'poster',
+                  reportError: (report) => this.errorReporter.report(report),
                 }
               );
 
@@ -402,6 +417,16 @@ export class Device extends EventEmitter {
               }
 
               this.contentQueue.add(layer);
+              layer.on('error', (error) => {
+                this.errorReporter.report({
+                  category: 'playback',
+                  error,
+                  context: {
+                    layerName: layer.name,
+                    playlistId: entry.playlist,
+                  },
+                });
+              });
 
               this.player.play({ loop: true });
 
@@ -427,6 +452,7 @@ export class Device extends EventEmitter {
     this.closing = true;
     await this.player?.stop();
     this.player = undefined;
+    await this.errorReporter.close();
   }
 
   /**
@@ -635,6 +661,7 @@ export class Device extends EventEmitter {
       // Set device id and name early so they're available even if start() isn't called (e.g. timer-off)
       this.id = credentials.device.id;
       this.name = credentials.device.name;
+      await this.errorReporter.init(credentials.device.id);
 
       // Start login in the background so the player can begin playing cached
       // content immediately, even when the device is offline.
@@ -642,6 +669,7 @@ export class Device extends EventEmitter {
         .then((phoenixChannel) => {
           this.initListeners(phoenixChannel);
           this.initHeartbeat(phoenixChannel);
+          this.errorReporter.attach(phoenixChannel);
           void this.updateDeviceInfo(credentials);
         })
         .catch(async (error) => {
@@ -654,6 +682,7 @@ export class Device extends EventEmitter {
             window.location.reload();
           } else {
             this.logger.error(`Unable to login ${error}`);
+            this.errorReporter.report({ category: 'network-sync', error });
           }
         });
 
@@ -1135,6 +1164,7 @@ export class Device extends EventEmitter {
       return { success: true, deleted: urls.length };
     } catch (error) {
       console.error('Error deleting cache:', error);
+      this.errorReporter.report({ category: 'cache', error });
       return { success: false, error: String(error) };
     }
   }
@@ -1268,6 +1298,7 @@ export class Device extends EventEmitter {
       }
     } catch (error) {
       this.logger.error(`Unable to update device info: ${error}`);
+      this.errorReporter.report({ category: 'network-sync', error });
     }
   }
 
@@ -1305,6 +1336,7 @@ export class Device extends EventEmitter {
       };
     } catch (error) {
       this.logger.error(`Unable to resolve channel metadata: ${error}`);
+      this.errorReporter.report({ category: 'network-sync', error });
       return {};
     }
   }

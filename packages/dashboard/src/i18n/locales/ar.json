@@ -1013,7 +1013,13 @@
       "confirmClearAll": "مسح جميع الأحداث",
       "confirmClearAllMessage": "هل أنت متأكد من أنك تريد حذف جميع الأحداث لهذا الجهاز؟ لا يمكن التراجع عن هذا الإجراء.",
       "clearAllSuccess": "تم حذف {{count}} من الأحداث بنجاح",
-      "deleteError": "خطأ في حذف الأحداث: {{error}}"
+      "deleteError": "خطأ في حذف الأحداث: {{error}}",
+      "occurrences": "مرات الحدوث",
+      "firstSeen": "أول ظهور",
+      "lastSeen": "آخر ظهور",
+      "details": "التفاصيل",
+      "detailsTitle": "تفاصيل الخطأ",
+      "errorDetails": "تفاصيل تشخيص منقحة"
     },
     "errors": {
       "setChannelFailed": "فشل تعيين قناة الجهاز: {{error}}",

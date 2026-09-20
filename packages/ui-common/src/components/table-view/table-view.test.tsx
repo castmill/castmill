@@ -68,6 +68,26 @@ describe('TableView Component - Default Row Action', () => {
     expect(dataRow).toHaveStyle('cursor: pointer');
   });
 
+  it('calls fetchData with an explicit initial sort order', async () => {
+    const fetchData = vi.fn().mockResolvedValue({ data: [], count: 0 });
+
+    render(() => (
+      <TableView
+        {...defaultProps}
+        fetchData={fetchData}
+        initialSortOptions={{ key: 'timestamp', direction: 'descending' }}
+      />
+    ));
+
+    await waitFor(() => {
+      expect(fetchData).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sortOptions: { key: 'timestamp', direction: 'descending' },
+        })
+      );
+    });
+  });
+
   it('calls defaultRowAction handler when row is clicked', async () => {
     const propsWithDefaultAction = {
       ...defaultProps,

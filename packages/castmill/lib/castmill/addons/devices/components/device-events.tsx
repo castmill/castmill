@@ -1,4 +1,4 @@
-import { Component, createSignal } from 'solid-js';
+import { Component, createSignal, Show } from 'solid-js';
 import { BsTrash } from 'solid-icons/bs';
 
 import {
@@ -8,6 +8,7 @@ import {
   Column,
   Filter,
   ConfirmDialog,
+  Modal,
   useToast,
   Button,
 } from '@castmill/ui-common';
@@ -22,6 +23,13 @@ interface DeviceTableLogItem {
   type: string;
   type_name: string;
   msg?: string;
+  category?: string;
+  code?: string;
+  stack?: string;
+  context?: Record<string, string | number>;
+  occurrence_count?: number;
+  first_occurred_at?: string;
+  last_occurred_at?: string;
 }
 
 export const DeviceLogs: Component<{
@@ -39,9 +47,20 @@ export const DeviceLogs: Component<{
     o: t('devices.events.filterOnline'),
     x: t('devices.events.filterOffline'),
   };
+  const [showConfirmClearAll, setShowConfirmClearAll] = createSignal(false);
+  const [selectedEvent, setSelectedEvent] = createSignal<DeviceTableLogItem>();
 
   const columns = [
-    { key: 'timestamp', title: t('common.time'), sortable: true },
+    {
+      key: 'timestamp',
+      title: t('devices.events.lastSeen'),
+      sortable: true,
+      render: (item: DeviceTableLogItem) => (
+        <span>
+          {new Date(item.last_occurred_at || item.timestamp).toLocaleString()}
+        </span>
+      ),
+    },
     {
       key: 'type',
       title: t('common.type'),
@@ -51,6 +70,25 @@ export const DeviceLogs: Component<{
       ),
     },
     { key: 'msg', title: t('common.message'), sortable: false },
+    {
+      key: 'occurrence_count',
+      title: t('devices.events.occurrences'),
+      sortable: false,
+      render: (item: DeviceTableLogItem) => (
+        <span>{item.occurrence_count || 1}</span>
+      ),
+    },
+    {
+      key: 'details',
+      title: t('devices.events.details'),
+      sortable: false,
+      render: (item: DeviceTableLogItem) =>
+        item.stack || item.context ? (
+          <button onClick={() => setSelectedEvent(item)}>
+            {t('devices.events.details')}
+          </button>
+        ) : null,
+    },
   ] as Column<DeviceTableLogItem>[];
 
   // Filters for event types
@@ -61,8 +99,6 @@ export const DeviceLogs: Component<{
     { key: 'o', name: t('devices.events.filterOnline'), isActive: true },
     { key: 'x', name: t('devices.events.filterOffline'), isActive: true },
   ];
-
-  const [showConfirmClearAll, setShowConfirmClearAll] = createSignal(false);
 
   const itemsPerPage = 10; // Number of items to show per page
 
@@ -127,6 +163,7 @@ export const DeviceLogs: Component<{
         resource={t('devices.events.items')}
         fetchData={fetchLogs}
         ref={setRef}
+        initialSortOptions={{ key: 'timestamp', direction: 'descending' }}
         table={{
           columns,
           hideCheckboxes: true,
@@ -157,6 +194,35 @@ export const DeviceLogs: Component<{
         title={t('devices.events.confirmClearAll')}
         message={t('devices.events.confirmClearAllMessage')}
       />
+
+      <Show when={selectedEvent()}>
+        {(event) => (
+          <Modal
+            title={t('devices.events.detailsTitle')}
+            description={event().category || t('devices.events.errorDetails')}
+            onClose={() => setSelectedEvent(undefined)}
+          >
+            <div style="max-width: 48em; overflow-wrap: anywhere;">
+              <Show when={event().first_occurred_at}>
+                <p>
+                  <strong>{t('devices.events.firstSeen')}:</strong>{' '}
+                  {new Date(event().first_occurred_at!).toLocaleString()}
+                </p>
+              </Show>
+              <Show
+                when={event().context && Object.keys(event().context!).length}
+              >
+                <pre style="white-space: pre-wrap;">
+                  {JSON.stringify(event().context, null, 2)}
+                </pre>
+              </Show>
+              <Show when={event().stack}>
+                <pre style="white-space: pre-wrap;">{event().stack}</pre>
+              </Show>
+            </div>
+          </Modal>
+        )}
+      </Show>
     </>
   );
 };

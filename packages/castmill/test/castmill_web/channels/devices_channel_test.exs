@@ -172,4 +172,77 @@ defmodule CastmillWeb.DevicesChannelTest do
       assert_receive {:device_response, ^result}
     end
   end
+
+  describe "handle_in/3 - errors:report" do
+    test "aggregates valid reports for the authenticated device", %{
+      socket: socket,
+      device: device,
+      token: token
+    } do
+      {:ok, _reply, socket} =
+        subscribe_and_join(socket, DevicesChannel, "devices:#{device.id}", %{"token" => token})
+
+      now = DateTime.utc_now() |> DateTime.to_iso8601()
+
+      payload = %{
+        "reports" => [
+          %{
+            "report_id" => "report-1",
+            "fingerprint" => "media-load-1",
+            "category" => "media-load",
+            "message" => "Unable to load media",
+            "count" => 3,
+            "first_occurred_at" => now,
+            "last_occurred_at" => now
+          }
+        ],
+        "dropped_count" => 0
+      }
+
+      assert {:reply, {:ok, %{accepted_report_ids: ["report-1"]}}, _socket} =
+               DevicesChannel.handle_in("errors:report", payload, socket)
+
+      events =
+        Castmill.Devices.list_devices_events(%{
+          device_id: device.id,
+          page: 1,
+          page_size: 10,
+          key: "timestamp",
+          direction: "descending"
+        })
+
+      event = Enum.find(events, &(&1.type == "e"))
+
+      assert event.type == "e"
+      assert event.occurrence_count == 3
+      assert event.category == "media-load"
+
+      assert {:reply, {:ok, %{accepted_report_ids: ["report-1"]}}, _socket} =
+               DevicesChannel.handle_in("errors:report", payload, socket)
+
+      event =
+        Castmill.Devices.list_devices_events(%{
+          device_id: device.id,
+          page: 1,
+          page_size: 10,
+          key: "timestamp",
+          direction: "descending"
+        })
+        |> Enum.find(&(&1.type == "e"))
+
+      assert event.occurrence_count == 3
+    end
+
+    test "rejects malformed reports", %{socket: socket} do
+      assert {:reply, {:error, %{reason: "invalid_error_report"}}, ^socket} =
+               DevicesChannel.handle_in(
+                 "errors:report",
+                 %{
+                   "reports" => [%{"message" => "missing required fields"}],
+                   "dropped_count" => 0
+                 },
+                 socket
+               )
+    end
+  end
 end

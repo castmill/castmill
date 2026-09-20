@@ -1014,7 +1014,13 @@
       "confirmClearAll": "すべてのイベントをクリア",
       "confirmClearAllMessage": "このデバイスのすべてのイベントを削除してもよろしいですか？この操作は元に戻せません。",
       "clearAllSuccess": "{{count}}件のイベントが正常に削除されました",
-      "deleteError": "イベントの削除中にエラーが発生しました: {{error}}"
+      "deleteError": "イベントの削除中にエラーが発生しました: {{error}}",
+      "occurrences": "発生回数",
+      "firstSeen": "初回検出",
+      "lastSeen": "最終検出",
+      "details": "詳細",
+      "detailsTitle": "エラーの詳細",
+      "errorDetails": "サニタイズ済み診断詳細"
     },
     "errors": {
       "setChannelFailed": "デバイスチャンネルの設定に失敗しました: {{error}}",

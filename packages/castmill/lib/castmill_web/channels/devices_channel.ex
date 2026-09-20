@@ -43,6 +43,27 @@ defmodule CastmillWeb.DevicesChannel do
   end
 
   @impl true
+  def handle_in(
+        "errors:report",
+        %{"reports" => reports, "dropped_count" => dropped_count},
+        socket
+      ) do
+    device_id = socket.assigns.device.device_id
+
+    with {:ok, reports, dropped_count} <- Devices.validate_error_reports(reports, dropped_count),
+         {:ok, :ok} <- Devices.upsert_error_reports(device_id, reports, dropped_count) do
+      {:reply, {:ok, %{accepted_report_ids: Enum.map(reports, & &1.report_id)}}, socket}
+    else
+      {:error, reason} ->
+        {:reply, {:error, %{reason: Atom.to_string(reason)}}, socket}
+    end
+  end
+
+  def handle_in("errors:report", _payload, socket) do
+    {:reply, {:error, %{reason: "invalid_error_report_batch"}}, socket}
+  end
+
+  @impl true
   def handle_in("res:get", %{"ref" => ref, "page" => page}, socket) do
     # Convert the PID ref string back to a PID
     pid =

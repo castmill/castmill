@@ -1013,7 +1013,13 @@
       "confirmClearAll": "모든 이벤트 지우기",
       "confirmClearAllMessage": "이 기기의 모든 이벤트를 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.",
       "clearAllSuccess": "{{count}}개의 이벤트가 성공적으로 삭제되었습니다",
-      "deleteError": "이벤트 삭제 중 오류 발생: {{error}}"
+      "deleteError": "이벤트 삭제 중 오류 발생: {{error}}",
+      "occurrences": "발생 횟수",
+      "firstSeen": "최초 발생",
+      "lastSeen": "최근 발생",
+      "details": "세부 정보",
+      "detailsTitle": "오류 세부 정보",
+      "errorDetails": "정제된 진단 세부 정보"
     },
     "errors": {
       "setChannelFailed": "기기 채널 설정 실패: {{error}}",

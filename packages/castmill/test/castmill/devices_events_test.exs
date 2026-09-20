@@ -132,6 +132,39 @@ defmodule Castmill.DevicesEventsTest do
              end)
     end
 
+    test "returns newest events first by default", %{device: device} do
+      base_time = DateTime.utc_now()
+
+      oldest =
+        %Castmill.Devices.DevicesEvents{}
+        |> Castmill.Devices.DevicesEvents.changeset(%{
+          device_id: device.id,
+          type: "i",
+          msg: "Oldest event",
+          timestamp: DateTime.add(base_time, -1, :second)
+        })
+        |> Repo.insert!()
+
+      newest =
+        %Castmill.Devices.DevicesEvents{}
+        |> Castmill.Devices.DevicesEvents.changeset(%{
+          device_id: device.id,
+          type: "i",
+          msg: "Newest event",
+          timestamp: base_time
+        })
+        |> Repo.insert!()
+
+      events =
+        Devices.list_devices_events(%{
+          device_id: device.id,
+          page: 1,
+          page_size: 10
+        })
+
+      assert Enum.map(events, & &1.id) == [newest.id, oldest.id]
+    end
+
     test "returns events that match the search pattern", %{device: device} do
       # Insert events with different messages
       Devices.insert_event(%{device_id: device.id, type: "o", msg: "Online event"}, @max_logs)
