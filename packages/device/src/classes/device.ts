@@ -219,6 +219,7 @@ export class Device extends EventEmitter {
 
     this.logger.setLogger(new NullLogger());
     this.errorReporter = new DeviceErrorReporter();
+    this.errorReporter.enableRuntimeCapture();
 
     this.timerManager = new TimerManager(this.integration, {
       onTurnOff: async () => {

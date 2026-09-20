@@ -84,7 +84,29 @@ interface InFlightBatch {
 type ErrorReportStorage = Pick<Storage, 'getItem' | 'setItem'>;
 
 function truncate(value: string, maxLength: number): string {
-  return value.length > maxLength ? `${value.slice(0, maxLength - 1)}…` : value;
+  if (value.length <= maxLength && stringByteLength(value) <= maxLength) {
+    return value;
+  }
+
+  const suffix = '…';
+  let end = Math.min(value.length, maxLength - suffix.length);
+
+  while (
+    end > 0 &&
+    stringByteLength(`${value.slice(0, end)}${suffix}`) > maxLength
+  ) {
+    end -= 1;
+  }
+
+  return `${value.slice(0, end)}${suffix}`;
+}
+
+function stringByteLength(value: string): number {
+  if (typeof TextEncoder !== 'undefined') {
+    return new TextEncoder().encode(value).length;
+  }
+
+  return unescape(encodeURIComponent(value)).length;
 }
 
 function sanitizeText(value: string, maxLength: number): string {
@@ -101,12 +123,7 @@ function errorDetails(error: unknown): { message: string; stack?: string } {
         error.message || error.name,
         ERROR_REPORT_LIMITS.maxMessageLength
       ),
-      stack: error.stack
-        ? truncate(
-            error.stack.replace(URL_SUFFIX, '$1[redacted]'),
-            ERROR_REPORT_LIMITS.maxStackLength
-          )
-        : undefined,
+      stack: error.stack ? sanitizeStack(error.stack) : undefined,
     };
   }
 
@@ -122,6 +139,13 @@ function errorDetails(error: unknown): { message: string; stack?: string } {
       ERROR_REPORT_LIMITS.maxMessageLength
     ),
   };
+}
+
+function sanitizeStack(value: string): string {
+  return truncate(
+    value.replace(URL_SUFFIX, '$1[redacted]'),
+    ERROR_REPORT_LIMITS.maxStackLength
+  );
 }
 
 function sanitizeContext(
@@ -162,10 +186,7 @@ function reportId(): string {
 
 function byteLength(value: unknown): number {
   const string = JSON.stringify(value);
-  if (typeof TextEncoder !== 'undefined') {
-    return new TextEncoder().encode(string).length;
-  }
-  return unescape(encodeURIComponent(string)).length;
+  return stringByteLength(string);
 }
 
 function isValidReport(report: unknown): report is PendingReport {
@@ -186,6 +207,17 @@ function isValidReport(report: unknown): report is PendingReport {
   );
 }
 
+function normalizeStoredReport(report: PendingReport): PendingReport {
+  return {
+    ...report,
+    report_id: truncate(report.report_id, 64),
+    fingerprint: truncate(report.fingerprint, 128),
+    message: sanitizeText(report.message, ERROR_REPORT_LIMITS.maxMessageLength),
+    stack: report.stack ? sanitizeStack(report.stack) : undefined,
+    context: sanitizeContext(report.context),
+  };
+}
+
 export class DeviceErrorReporter {
   private reports = new Map<string, PendingReport>();
   private droppedCount = 0;
@@ -201,20 +233,42 @@ export class DeviceErrorReporter {
   private recentReportTimes: number[] = [];
   private rateTokens: number = ERROR_REPORT_LIMITS.reportBurst;
   private lastRateRefillAt = Date.now();
+  private previousWindowOnError: OnErrorEventHandler | null = null;
+  private lastGlobalError?: { error: unknown; reportedAt: number };
   private reporting = false;
+  private runtimeCaptureEnabled = false;
   private initialized = false;
   private storageKey?: string;
   private readonly onWindowError = (event: ErrorEvent) => {
-    const error = event.error || event.message || 'Uncaught runtime error';
-    console.error('[DeviceErrorReporter] Uncaught runtime error', error);
-    this.report({
-      category: 'runtime',
-      error,
-    });
+    this.reportGlobalError(
+      event.error || event.message || 'Uncaught runtime error'
+    );
+  };
+  private readonly onWindowErrorFallback: OnErrorEventHandlerNonNull = (
+    message,
+    _source,
+    _line,
+    _column,
+    error
+  ) => {
+    this.reportGlobalError(
+      error ||
+        (typeof message === 'string' ? message : 'Uncaught runtime error')
+    );
+
+    return (
+      this.previousWindowOnError?.call(
+        window,
+        message,
+        _source,
+        _line,
+        _column,
+        error
+      ) || false
+    );
   };
   private readonly onUnhandledRejection = (event: PromiseRejectionEvent) => {
     const error = event.reason || 'Unhandled promise rejection';
-    console.error('[DeviceErrorReporter] Unhandled promise rejection', error);
     this.report({
       category: 'runtime',
       error,
@@ -225,6 +279,19 @@ export class DeviceErrorReporter {
   };
 
   constructor(private storage?: ErrorReportStorage) {}
+
+  enableRuntimeCapture(): void {
+    if (this.runtimeCaptureEnabled || typeof window === 'undefined') {
+      return;
+    }
+    this.runtimeCaptureEnabled = true;
+    this.runtimeCaptureEnabled = true;
+    this.previousWindowOnError = window.onerror;
+    window.onerror = this.onWindowErrorFallback;
+    window.addEventListener('error', this.onWindowError);
+    window.addEventListener('unhandledrejection', this.onUnhandledRejection);
+    window.addEventListener('pagehide', this.onPageHide);
+  }
 
   async init(deviceId: string): Promise<void> {
     const storageKey = `${STORAGE_KEY_PREFIX}${deviceId}`;
@@ -239,6 +306,7 @@ export class DeviceErrorReporter {
 
     this.initialized = true;
     this.storageKey = storageKey;
+    this.enableRuntimeCapture();
 
     try {
       const stored = this.getStorage()?.getItem(storageKey);
@@ -250,6 +318,7 @@ export class DeviceErrorReporter {
         ) {
           buffer.reports
             .filter(isValidReport)
+            .map(normalizeStoredReport)
             .forEach((report) => this.reports.set(report.fingerprint, report));
           this.droppedCount =
             typeof buffer.droppedCount === 'number' && buffer.droppedCount > 0
@@ -265,12 +334,6 @@ export class DeviceErrorReporter {
       );
       this.reports.clear();
       this.droppedCount = 0;
-    }
-
-    if (typeof window !== 'undefined') {
-      window.addEventListener('error', this.onWindowError);
-      window.addEventListener('unhandledrejection', this.onUnhandledRejection);
-      window.addEventListener('pagehide', this.onPageHide);
     }
   }
 
@@ -376,14 +439,7 @@ export class DeviceErrorReporter {
     await this.persist();
     this.detach();
     this.initialized = false;
-    if (typeof window !== 'undefined') {
-      window.removeEventListener('error', this.onWindowError);
-      window.removeEventListener(
-        'unhandledrejection',
-        this.onUnhandledRejection
-      );
-      window.removeEventListener('pagehide', this.onPageHide);
-    }
+    this.disableRuntimeCapture();
   }
 
   private enforceLimits(checkSerializedSize = true): void {
@@ -420,6 +476,21 @@ export class DeviceErrorReporter {
     }
   }
 
+  private disableRuntimeCapture(): void {
+    if (!this.runtimeCaptureEnabled || typeof window === 'undefined') {
+      return;
+    }
+
+    window.removeEventListener('error', this.onWindowError);
+    window.removeEventListener('unhandledrejection', this.onUnhandledRejection);
+    window.removeEventListener('pagehide', this.onPageHide);
+    if (window.onerror === this.onWindowErrorFallback) {
+      window.onerror = this.previousWindowOnError;
+    }
+    this.previousWindowOnError = null;
+    this.runtimeCaptureEnabled = false;
+  }
+
   private consumeRateToken(): boolean {
     const now = Date.now();
     const elapsed = Math.max(0, now - this.lastRateRefillAt);
@@ -442,6 +513,24 @@ export class DeviceErrorReporter {
     this.droppedCount = Math.min(MAX_OCCURRENCE_COUNT, this.droppedCount + 1);
     this.schedulePersist();
     this.scheduleAdaptiveFlush();
+  }
+
+  private reportGlobalError(error: unknown): void {
+    const now = Date.now();
+    const lastGlobalError = this.lastGlobalError;
+    if (
+      lastGlobalError &&
+      lastGlobalError.error === error &&
+      now - lastGlobalError.reportedAt < 100
+    ) {
+      return;
+    }
+
+    this.lastGlobalError = { error, reportedAt: now };
+    this.report({
+      category: 'runtime',
+      error,
+    });
   }
 
   private recordRecentReport(now: number): void {
@@ -559,17 +648,23 @@ export class DeviceErrorReporter {
   }
 
   private flushNow(force = false): void {
-    if (
-      !this.channel ||
-      this.inFlight ||
-      (this.reports.size === 0 && this.droppedCount === 0) ||
-      (!force && Date.now() < this.nextFlushAt)
-    ) {
+    if (!this.channel) {
+      return;
+    }
+
+    if (this.inFlight) {
+      return;
+    }
+
+    if (this.reports.size === 0 && this.droppedCount === 0) {
+      return;
+    }
+
+    if (!force && Date.now() < this.nextFlushAt) {
       return;
     }
 
     const reports: DeviceErrorReport[] = [];
-    let size = 0;
     const orderedReports = Array.from(this.reports.values()).sort(
       (left, right) => left.lastOccurredAtMs - right.lastOccurredAtMs
     );
@@ -591,15 +686,16 @@ export class DeviceErrorReporter {
         first_occurred_at: aggregate.first_occurred_at,
         last_occurred_at: aggregate.last_occurred_at,
       };
-      const reportSize = byteLength(snapshot);
       if (
         reports.length > 0 &&
-        size + reportSize > ERROR_REPORT_LIMITS.maxBatchBytes
+        byteLength({
+          reports: [...reports, snapshot],
+          dropped_count: this.droppedCount,
+        }) > ERROR_REPORT_LIMITS.maxBatchBytes
       ) {
         break;
       }
       reports.push(snapshot);
-      size += reportSize;
     }
 
     if (reports.length === 0 && this.droppedCount === 0) {

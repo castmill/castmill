@@ -7,9 +7,32 @@ runtime exceptions and unhandled promise rejections. The reporting system does
 not capture arbitrary `console.error` output because dependency and platform
 noise would make device diagnostics expensive and unreliable.
 
-Captured runtime errors and handled video playback rejections are also written
-to the local browser console. Diagnostics reporting augments normal local
-debugging; it does not hide failures from developers.
+Captured runtime errors retain the browser's native console output. The
+reporter listens through both `addEventListener("error")` and a preserved
+`window.onerror` fallback for legacy browser reliability, while deduplicating
+the paired callback. Handled video playback rejections are explicitly written
+to the local console because handling their promise would otherwise suppress
+it. Diagnostics reporting augments normal local debugging; it does not hide
+failures from developers or duplicate native browser errors.
+
+Runtime capture is installed when `Device` is constructed, before registration
+or login. Errors observed during startup remain in the in-memory aggregate and
+are persisted and delivered after device identity and an authenticated channel
+are available.
+
+When the reporter starts, it also normalizes persisted aggregates from older
+player builds to the current UTF-8 byte limits before attempting delivery.
+This lets upgraded players deliver a previously buffered offline queue instead
+of retrying a legacy oversized report indefinitely.
+
+The backend enforces the total 32 KiB batch cap before parsing reports, then
+also truncates valid legacy message and stack strings to the current field
+limits. This compatibility path allows already-created in-flight batches and
+service-worker-cached player versions to drain without weakening the bounded
+database representation. `devices_events.msg` is a text column because the
+error protocol permits sanitized messages up to 1 KiB; persistence failures
+return a safe channel error instead of terminating the channel before it can
+reply.
 
 The dashboard displays these reports in the existing device **Events** tab.
 Repeated matching errors are one grouped event with an occurrence count and

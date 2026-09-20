@@ -93,7 +93,64 @@ describe('DeviceErrorReporter', () => {
     expect(buffer.droppedCount).toBe(1);
   });
 
-  it('logs globally caught runtime errors before reporting them', async () => {
+  it('keeps Unicode error text within the backend byte limit', async () => {
+    const storage = new TestStorage();
+    const reporter = new DeviceErrorReporter(storage);
+    await reporter.init('device-1');
+
+    reporter.report({
+      category: 'runtime',
+      error: '🙂'.repeat(ERROR_REPORT_LIMITS.maxMessageLength),
+    });
+    await reporter.close();
+
+    const buffer = JSON.parse(
+      storage.getItem('castmill.device-error-buffer:device-1')!
+    );
+    expect(
+      new TextEncoder().encode(buffer.reports[0].message).length
+    ).toBeLessThanOrEqual(ERROR_REPORT_LIMITS.maxMessageLength);
+  });
+
+  it('normalizes legacy persisted Unicode text before delivery', async () => {
+    const storage = new TestStorage();
+    storage.setItem(
+      'castmill.device-error-buffer:device-1',
+      JSON.stringify({
+        version: 1,
+        reports: [
+          {
+            report_id: 'legacy-report',
+            fingerprint: 'legacy-runtime',
+            category: 'runtime',
+            message: 'bäckasiner '.repeat(150),
+            stack: 'bäckasiner '.repeat(600),
+            count: 1,
+            firstOccurredAtMs: Date.now(),
+            lastOccurredAtMs: Date.now(),
+            first_occurred_at: new Date().toISOString(),
+            last_occurred_at: new Date().toISOString(),
+          },
+        ],
+        droppedCount: 0,
+      })
+    );
+    const reporter = new DeviceErrorReporter(storage);
+    await reporter.init('device-1');
+    await reporter.close();
+
+    const buffer = JSON.parse(
+      storage.getItem('castmill.device-error-buffer:device-1')!
+    );
+    expect(
+      new TextEncoder().encode(buffer.reports[0].message).length
+    ).toBeLessThanOrEqual(ERROR_REPORT_LIMITS.maxMessageLength);
+    expect(
+      new TextEncoder().encode(buffer.reports[0].stack).length
+    ).toBeLessThanOrEqual(ERROR_REPORT_LIMITS.maxStackLength);
+  });
+
+  it('reports global runtime errors without duplicating browser console output', async () => {
     const storage = new TestStorage();
     const reporter = new DeviceErrorReporter(storage);
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -103,13 +160,58 @@ describe('DeviceErrorReporter', () => {
       await reporter.init('device-1');
       window.dispatchEvent(new ErrorEvent('error', { error }));
 
-      expect(errorSpy).toHaveBeenCalledWith(
-        '[DeviceErrorReporter] Uncaught runtime error',
+      expect(errorSpy).not.toHaveBeenCalled();
+    } finally {
+      await reporter.close();
+      errorSpy.mockRestore();
+    }
+  });
+
+  it('captures global runtime errors before device identity is initialized', async () => {
+    const storage = new TestStorage();
+    const reporter = new DeviceErrorReporter(storage);
+    const error = new Error('Early runtime failure');
+
+    reporter.enableRuntimeCapture();
+    window.dispatchEvent(new ErrorEvent('error', { error }));
+    await reporter.init('device-1');
+    await reporter.close();
+
+    const buffer = JSON.parse(
+      storage.getItem('castmill.device-error-buffer:device-1')!
+    );
+    expect(buffer.reports[0].message).toBe(error.message);
+  });
+
+  it('reports errors received through the legacy window.onerror fallback', async () => {
+    const storage = new TestStorage();
+    const reporter = new DeviceErrorReporter(storage);
+    const previousHandler = window.onerror;
+    const existingHandler = vi.fn(() => false);
+    const error = new Error('Fallback runtime failure');
+
+    window.onerror = existingHandler;
+
+    try {
+      await reporter.init('device-1');
+      window.onerror?.call(window, error.message, '', 0, 0, error);
+
+      expect(existingHandler).toHaveBeenCalledWith(
+        error.message,
+        '',
+        0,
+        0,
         error
       );
-    } finally {
-      errorSpy.mockRestore();
       await reporter.close();
+
+      const buffer = JSON.parse(
+        storage.getItem('castmill.device-error-buffer:device-1')!
+      );
+      expect(buffer.reports[0].message).toBe(error.message);
+      expect(window.onerror).toBe(existingHandler);
+    } finally {
+      window.onerror = previousHandler;
     }
   });
 

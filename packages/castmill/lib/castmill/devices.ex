@@ -4,6 +4,7 @@ defmodule Castmill.Devices do
   """
   import Ecto.Query, warn: false
   import Argon2
+  require Logger
 
   alias Castmill.Organizations.Organization
   alias Castmill.Repo
@@ -633,28 +634,45 @@ defmodule Castmill.Devices do
   Inserts or aggregates an acknowledged batch of device errors.
   """
   def upsert_error_reports(device_id, reports, dropped_count \\ 0) do
-    Repo.transaction(fn ->
-      Enum.each(reports, &upsert_error_report(device_id, &1))
+    try do
+      Repo.transaction(fn ->
+        Enum.each(reports, &persist_error_report(device_id, &1))
 
-      if dropped_count > 0 do
-        now = DateTime.utc_now()
+        if dropped_count > 0 do
+          now = DateTime.utc_now()
 
-        upsert_error_report(device_id, %{
-          report_id: "dropped-#{now |> DateTime.to_unix(:second)}",
-          fingerprint: "dropped-device-errors",
-          category: "overflow",
-          message: "Device discarded error reports because its diagnostic buffer was full",
-          stack: nil,
-          context: %{},
-          count: dropped_count,
-          first_occurred_at: now,
-          last_occurred_at: now
-        })
-      end
+          persist_error_report(device_id, %{
+            report_id: "dropped-#{now |> DateTime.to_unix(:second)}",
+            fingerprint: "dropped-device-errors",
+            category: "overflow",
+            message: "Device discarded error reports because its diagnostic buffer was full",
+            stack: nil,
+            context: %{},
+            count: dropped_count,
+            first_occurred_at: now,
+            last_occurred_at: now
+          })
+        end
 
-      prune_device_events(device_id, 100)
-      :ok
-    end)
+        prune_device_events(device_id, 100)
+        :ok
+      end)
+    rescue
+      error ->
+        Logger.error("Device error report persistence failed: #{Exception.message(error)}")
+        {:error, :error_report_persistence_failed}
+    end
+  end
+
+  defp persist_error_report(device_id, report) do
+    case upsert_error_report(device_id, report) do
+      {:ok, _result} ->
+        :ok
+
+      {:error, error} ->
+        Logger.error("Device error report persistence failed: #{inspect(error)}")
+        Repo.rollback(:error_report_persistence_failed)
+    end
   end
 
   defp validate_error_report_batch_size(reports, dropped_count) do
@@ -674,18 +692,14 @@ defmodule Castmill.Devices do
   end
 
   defp normalize_error_report(report) when is_map(report) do
-    with report_id when is_binary(report_id) and byte_size(report_id) <= 64 <-
-           report["report_id"],
-         fingerprint when is_binary(fingerprint) and byte_size(fingerprint) <= 128 <-
-           report["fingerprint"],
-         category when category in @valid_error_categories <- report["category"],
-         message when is_binary(message) and byte_size(message) <= @max_error_message_bytes <-
-           report["message"],
-         count when is_integer(count) and count > 0 and count <= @max_error_occurrences <-
-           report["count"],
+    with {:ok, report_id} <- validate_report_id(report["report_id"]),
+         {:ok, fingerprint} <- validate_fingerprint(report["fingerprint"]),
+         {:ok, category} <- validate_category(report["category"]),
+         {:ok, message} <- validate_message(report["message"]),
+         {:ok, count} <- validate_occurrence_count(report["count"]),
          {:ok, first_occurred_at} <- parse_occurrence_time(report["first_occurred_at"]),
          {:ok, last_occurred_at} <- parse_occurrence_time(report["last_occurred_at"]),
-         true <- DateTime.compare(first_occurred_at, last_occurred_at) != :gt,
+         :ok <- validate_occurrence_range(first_occurred_at, last_occurred_at),
          {:ok, stack} <- validate_stack(report["stack"]),
          {:ok, context} <- validate_error_context(report["context"]) do
       {:ok,
@@ -701,12 +715,42 @@ defmodule Castmill.Devices do
          first_occurred_at: first_occurred_at,
          last_occurred_at: last_occurred_at
        }}
-    else
-      _ -> {:error, :invalid_error_report}
     end
   end
 
   defp normalize_error_report(_), do: {:error, :invalid_error_report}
+
+  defp validate_report_id(value) when is_binary(value) and byte_size(value) <= 64,
+    do: {:ok, value}
+
+  defp validate_report_id(_), do: {:error, :invalid_error_report_id}
+
+  defp validate_fingerprint(value) when is_binary(value) and byte_size(value) <= 128,
+    do: {:ok, value}
+
+  defp validate_fingerprint(_), do: {:error, :invalid_error_fingerprint}
+
+  defp validate_category(value) when value in @valid_error_categories, do: {:ok, value}
+  defp validate_category(_), do: {:error, :invalid_error_category}
+
+  defp validate_message(value) when is_binary(value),
+    do: {:ok, truncate_utf8(value, @max_error_message_bytes)}
+
+  defp validate_message(_), do: {:error, :invalid_error_message}
+
+  defp validate_occurrence_count(value)
+       when is_integer(value) and value > 0 and value <= @max_error_occurrences,
+       do: {:ok, value}
+
+  defp validate_occurrence_count(_), do: {:error, :invalid_error_count}
+
+  defp validate_occurrence_range(first_occurred_at, last_occurred_at) do
+    if DateTime.compare(first_occurred_at, last_occurred_at) == :gt do
+      {:error, :invalid_error_occurrence_range}
+    else
+      :ok
+    end
+  end
 
   defp parse_occurrence_time(value) when is_binary(value) do
     case DateTime.from_iso8601(value) do
@@ -719,10 +763,26 @@ defmodule Castmill.Devices do
 
   defp validate_stack(nil), do: {:ok, nil}
 
-  defp validate_stack(stack) when is_binary(stack) and byte_size(stack) <= @max_error_stack_bytes,
-    do: {:ok, stack}
+  defp validate_stack(stack) when is_binary(stack),
+    do: {:ok, truncate_utf8(stack, @max_error_stack_bytes)}
 
   defp validate_stack(_), do: {:error, :invalid_error_stack}
+
+  defp truncate_utf8(value, max_bytes) when byte_size(value) <= max_bytes, do: value
+
+  defp truncate_utf8(value, max_bytes) do
+    prefix = binary_part(value, 0, max_bytes - 3)
+    valid_prefix = trim_invalid_utf8_suffix(prefix)
+    valid_prefix <> "…"
+  end
+
+  defp trim_invalid_utf8_suffix(value) do
+    if String.valid?(value) do
+      value
+    else
+      trim_invalid_utf8_suffix(binary_part(value, 0, byte_size(value) - 1))
+    end
+  end
 
   defp normalize_code(nil), do: nil
   defp normalize_code(code) when is_binary(code) and byte_size(code) <= 128, do: code
@@ -744,7 +804,7 @@ defmodule Castmill.Devices do
   defp validate_error_context(_), do: {:error, :invalid_error_context}
 
   defp upsert_error_report(device_id, report) do
-    Repo.query!(
+    Repo.query(
       """
       INSERT INTO devices_events (
         device_id, timestamp, type, msg, fingerprint, category, code, stack, context,

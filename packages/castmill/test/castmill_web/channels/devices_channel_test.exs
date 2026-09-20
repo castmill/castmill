@@ -234,7 +234,7 @@ defmodule CastmillWeb.DevicesChannelTest do
     end
 
     test "rejects malformed reports", %{socket: socket} do
-      assert {:reply, {:error, %{reason: "invalid_error_report"}}, ^socket} =
+      assert {:reply, {:error, %{reason: "invalid_error_report_id"}}, ^socket} =
                DevicesChannel.handle_in(
                  "errors:report",
                  %{
@@ -243,6 +243,46 @@ defmodule CastmillWeb.DevicesChannelTest do
                  },
                  socket
                )
+    end
+
+    test "accepts and truncates oversized legacy UTF-8 fields", %{
+      socket: socket,
+      device: device
+    } do
+      now = DateTime.utc_now() |> DateTime.to_iso8601()
+
+      payload = %{
+        "reports" => [
+          %{
+            "report_id" => "legacy-report",
+            "fingerprint" => "legacy-runtime",
+            "category" => "runtime",
+            "message" => String.duplicate("bäckasiner ", 150),
+            "stack" => String.duplicate("bäckasiner ", 600),
+            "count" => 2,
+            "first_occurred_at" => now,
+            "last_occurred_at" => now
+          }
+        ],
+        "dropped_count" => 0
+      }
+
+      assert {:reply, {:ok, %{accepted_report_ids: ["legacy-report"]}}, _socket} =
+               DevicesChannel.handle_in("errors:report", payload, socket)
+
+      event =
+        Castmill.Devices.list_devices_events(%{
+          device_id: device.id,
+          page: 1,
+          page_size: 10
+        })
+        |> Enum.find(&(&1.fingerprint == "legacy-runtime"))
+
+      assert byte_size(event.msg) <= 1024
+      assert byte_size(event.stack) <= 4096
+      assert String.ends_with?(event.msg, "…")
+      assert String.ends_with?(event.stack, "…")
+      assert event.occurrence_count == 2
     end
   end
 end

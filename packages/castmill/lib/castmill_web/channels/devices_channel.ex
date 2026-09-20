@@ -55,7 +55,7 @@ defmodule CastmillWeb.DevicesChannel do
       {:reply, {:ok, %{accepted_report_ids: Enum.map(reports, & &1.report_id)}}, socket}
     else
       {:error, reason} ->
-        {:reply, {:error, %{reason: Atom.to_string(reason)}}, socket}
+        {:reply, {:error, %{reason: error_report_failure_reason(reason)}}, socket}
     end
   end
 
@@ -305,4 +305,7 @@ defmodule CastmillWeb.DevicesChannel do
 
     Devices.mark_online(device_id, ip_string)
   end
+
+  defp error_report_failure_reason(reason) when is_atom(reason), do: Atom.to_string(reason)
+  defp error_report_failure_reason(_reason), do: "error_report_persistence_failed"
 end
