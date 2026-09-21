@@ -284,5 +284,45 @@ defmodule CastmillWeb.DevicesChannelTest do
       assert String.ends_with?(event.stack, "…")
       assert event.occurrence_count == 2
     end
+
+    test "stores diagnostic markup as bounded text", %{socket: socket, device: device} do
+      now = DateTime.utc_now() |> DateTime.to_iso8601()
+
+      message =
+        "<script>alert('device-controlled diagnostic')</script>" <> String.duplicate("x", 2_000)
+
+      payload = %{
+        "reports" => [
+          %{
+            "report_id" => "markup-report",
+            "fingerprint" => "markup-runtime",
+            "category" => "runtime",
+            "message" => message,
+            "count" => 1,
+            "first_occurred_at" => now,
+            "last_occurred_at" => now
+          }
+        ],
+        "dropped_count" => 0
+      }
+
+      assert {:reply, {:ok, %{accepted_report_ids: ["markup-report"]}}, _socket} =
+               DevicesChannel.handle_in("errors:report", payload, socket)
+
+      event =
+        Castmill.Devices.list_devices_events(%{
+          device_id: device.id,
+          page: 1,
+          page_size: 10
+        })
+        |> Enum.find(&(&1.fingerprint == "markup-runtime"))
+
+      assert String.starts_with?(
+               event.msg,
+               "<script>alert('device-controlled diagnostic')</script>"
+             )
+
+      assert byte_size(event.msg) <= 1024
+    end
   end
 end

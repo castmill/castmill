@@ -106,6 +106,11 @@ counting and pruning for every individual occurrence.
 Reports contain only a category, optional code, sanitized message, truncated
 stack, occurrence range, and a whitelisted context:
 
+- The backend enforces byte caps for every batch and diagnostic text field,
+  including malformed legacy reports.
+- Dashboard cells and detail views render all device-supplied values as text;
+  no diagnostic value is evaluated or inserted as HTML.
+
 - `playlistId`
 - `layerId` / `layerName`
 - `widgetId`

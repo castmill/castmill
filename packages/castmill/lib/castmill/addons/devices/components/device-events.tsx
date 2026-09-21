@@ -1,5 +1,5 @@
 import { Component, createSignal, Show } from 'solid-js';
-import { BsTrash } from 'solid-icons/bs';
+import { BsFileEarmarkText, BsTrash } from 'solid-icons/bs';
 
 import {
   TableView,
@@ -42,8 +42,6 @@ export const DeviceLogs: Component<{
 
   const typeNameMap: Record<string, string> = {
     e: t('devices.events.filterError'),
-    w: t('devices.events.filterWarning'),
-    i: t('devices.events.filterInfo'),
     o: t('devices.events.filterOnline'),
     x: t('devices.events.filterOffline'),
   };
@@ -53,7 +51,7 @@ export const DeviceLogs: Component<{
   const columns = [
     {
       key: 'timestamp',
-      title: t('devices.events.lastSeen'),
+      title: t('common.timestamp'),
       sortable: true,
       render: (item: DeviceTableLogItem) => (
         <span>
@@ -69,7 +67,25 @@ export const DeviceLogs: Component<{
         <span>{typeNameMap[item.type] || item.type}</span>
       ),
     },
-    { key: 'msg', title: t('common.message'), sortable: false },
+    {
+      key: 'msg',
+      title: t('common.message'),
+      sortable: false,
+      render: (item: DeviceTableLogItem) => (
+        <span
+          style={{
+            display: 'block',
+            'max-width': '36em',
+            overflow: 'hidden',
+            'text-align': 'left',
+            'text-overflow': 'ellipsis',
+            'white-space': 'nowrap',
+          }}
+        >
+          {item.msg}
+        </span>
+      ),
+    },
     {
       key: 'occurrence_count',
       title: t('devices.events.occurrences'),
@@ -83,9 +99,15 @@ export const DeviceLogs: Component<{
       title: t('devices.events.details'),
       sortable: false,
       render: (item: DeviceTableLogItem) =>
-        item.stack || item.context ? (
-          <button onClick={() => setSelectedEvent(item)}>
-            {t('devices.events.details')}
+        item.type === 'e' ||
+        item.stack ||
+        Object.keys(item.context || {}).length > 0 ? (
+          <button
+            aria-label={t('devices.events.details')}
+            title={t('devices.events.details')}
+            onClick={() => setSelectedEvent(item)}
+          >
+            <BsFileEarmarkText aria-hidden="true" />
           </button>
         ) : null,
     },
@@ -94,8 +116,6 @@ export const DeviceLogs: Component<{
   // Filters for event types
   const eventFilters: Filter[] = [
     { key: 'e', name: t('devices.events.filterError'), isActive: true },
-    { key: 'w', name: t('devices.events.filterWarning'), isActive: true },
-    { key: 'i', name: t('devices.events.filterInfo'), isActive: true },
     { key: 'o', name: t('devices.events.filterOnline'), isActive: true },
     { key: 'x', name: t('devices.events.filterOffline'), isActive: true },
   ];
@@ -209,6 +229,9 @@ export const DeviceLogs: Component<{
                   {new Date(event().first_occurred_at!).toLocaleString()}
                 </p>
               </Show>
+              <p style="white-space: pre-wrap; overflow-wrap: anywhere;">
+                <strong>{t('common.message')}:</strong> {event().msg}
+              </p>
               <Show
                 when={event().context && Object.keys(event().context!).length}
               >
