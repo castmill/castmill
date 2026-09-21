@@ -285,7 +285,6 @@ export class DeviceErrorReporter {
       return;
     }
     this.runtimeCaptureEnabled = true;
-    this.runtimeCaptureEnabled = true;
     this.previousWindowOnError = window.onerror;
     window.onerror = this.onWindowErrorFallback;
     window.addEventListener('error', this.onWindowError);
@@ -340,6 +339,17 @@ export class DeviceErrorReporter {
   attach(channel: Channel): void {
     this.channel = channel;
     this.retryAttempt = 0;
+
+    if (this.retryTimer) {
+      clearTimeout(this.retryTimer);
+      this.retryTimer = undefined;
+    }
+
+    if (this.inFlight) {
+      this.sendBatch(this.inFlight, true);
+      return;
+    }
+
     this.flushNow(true);
   }
 

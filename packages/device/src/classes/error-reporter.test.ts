@@ -244,6 +244,52 @@ describe('DeviceErrorReporter', () => {
     ).toEqual([]);
   });
 
+  it('resends an in-flight batch when attaching a replacement channel', async () => {
+    const storage = new TestStorage();
+    const reporter = new DeviceErrorReporter(storage);
+    await reporter.init('device-1');
+    reporter.report({ category: 'device', error: 'Delivery failure' });
+
+    const pendingResponse = {
+      receive: vi.fn(() => pendingResponse),
+    };
+    const initialChannel = {
+      push: vi.fn(() => pendingResponse),
+    };
+    const replacementResponse = {
+      receive: vi.fn((status: string, callback: () => void) => {
+        if (status === 'ok') {
+          callback();
+        }
+        return replacementResponse;
+      }),
+    };
+    const replacementChannel = {
+      push: vi.fn(() => replacementResponse),
+    };
+
+    reporter.attach(initialChannel as any);
+    reporter.attach(replacementChannel as any);
+    await reporter.close();
+
+    expect(initialChannel.push).toHaveBeenCalledOnce();
+    expect(replacementChannel.push).toHaveBeenCalledWith(
+      'errors:report',
+      expect.objectContaining({
+        reports: expect.arrayContaining([
+          expect.objectContaining({
+            report_id:
+              initialChannel.push.mock.calls[0][1].reports[0].report_id,
+          }),
+        ]),
+      })
+    );
+    expect(
+      JSON.parse(storage.getItem('castmill.device-error-buffer:device-1')!)
+        .reports
+    ).toEqual([]);
+  });
+
   it('sends the first error after an idle channel join immediately', async () => {
     const storage = new TestStorage();
     const reporter = new DeviceErrorReporter(storage);
