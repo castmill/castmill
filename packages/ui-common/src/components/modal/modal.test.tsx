@@ -1,6 +1,8 @@
 import { describe, it, expect, afterEach, vi, beforeEach } from 'vitest';
 import { render, fireEvent, cleanup, screen } from '@solidjs/testing-library';
+import { createSignal, Show } from 'solid-js';
 import { Modal } from './modal';
+import { Drawer } from '../drawer/drawer';
 
 describe('Modal Component', () => {
   beforeEach(() => {
@@ -47,6 +49,42 @@ describe('Modal Component', () => {
     fireEvent.keyDown(document, { key: 'Escape' });
     vi.runAllTimers();
     expect(mockOnClose).toHaveBeenCalled();
+  });
+
+  it('closes before its containing drawer on consecutive Escape presses', () => {
+    const onDrawerClose = vi.fn();
+    const onModalClose = vi.fn();
+
+    const NestedOverlays = () => {
+      const [showModal, setShowModal] = createSignal(true);
+
+      return (
+        <Drawer title="Device" onClose={onDrawerClose}>
+          <Show when={showModal()}>
+            <Modal
+              title="Error details"
+              onClose={() => {
+                setShowModal(false);
+                onModalClose();
+              }}
+            />
+          </Show>
+        </Drawer>
+      );
+    };
+
+    render(() => <NestedOverlays />);
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+    vi.runAllTimers();
+
+    expect(onModalClose).toHaveBeenCalledOnce();
+    expect(onDrawerClose).not.toHaveBeenCalled();
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+    vi.runAllTimers();
+
+    expect(onDrawerClose).toHaveBeenCalledOnce();
   });
 
   it('automatically closes after delay when success message is shown', () => {
