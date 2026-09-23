@@ -256,6 +256,85 @@ describe('DeviceErrorReporter', () => {
     ).toBeLessThanOrEqual(ERROR_REPORT_LIMITS.maxStackLength);
   });
 
+  it('discards malformed persisted reports instead of retrying them forever', async () => {
+    const storage = new TestStorage();
+    const seed = new DeviceErrorReporter(storage);
+    await seed.init('device-1');
+    seed.report({ category: 'runtime', error: 'Valid failure' });
+    await seed.close();
+
+    const key = 'castmill.device-error-buffer:device-1';
+    const buffer = JSON.parse(storage.getItem(key)!);
+    const valid = buffer.reports[0];
+    buffer.reports[0] = { ...valid, privateData: 'do not transmit' };
+    buffer.reports.push(
+      { ...valid, report_id: null, fingerprint: 'invalid-id' },
+      { ...valid, category: 'unknown', fingerprint: 'invalid-category' },
+      {
+        ...valid,
+        first_occurred_at: 'not-a-date',
+        fingerprint: 'invalid-time',
+      },
+      {
+        ...valid,
+        last_occurred_at: '2025-01-01T00:00:00.000Z',
+        fingerprint: 'mismatched-time',
+      }
+    );
+    storage.setItem(key, JSON.stringify(buffer));
+
+    const reporter = new DeviceErrorReporter(storage);
+    await reporter.init('device-1');
+    const response = {
+      receive: vi.fn((status: string, callback: () => void) => {
+        if (status === 'ok') callback();
+        return response;
+      }),
+    };
+    const channel = { push: vi.fn(() => response) };
+    reporter.attach(channel as any);
+    expect(channel.push.mock.calls[0][1].reports).toHaveLength(1);
+    expect(channel.push.mock.calls[0][1].reports[0].report_id).toBe(
+      valid.report_id
+    );
+    expect(channel.push.mock.calls[0][1].reports[0]).not.toHaveProperty(
+      'privateData'
+    );
+    await reporter.close();
+  });
+
+  it('discards an invalid persisted in-flight batch without blocking queued reports', async () => {
+    const storage = new TestStorage();
+    const key = 'castmill.device-error-buffer:device-1';
+    const seed = new DeviceErrorReporter(storage);
+    await seed.init('device-1');
+    seed.report({ category: 'device', error: 'Queued failure' });
+    await seed.close();
+
+    const buffer = JSON.parse(storage.getItem(key)!);
+    buffer.inFlight = {
+      reports: [{ ...buffer.reports[0], category: 'invalid' }],
+      droppedCount: 0,
+    };
+    storage.setItem(key, JSON.stringify(buffer));
+
+    const reporter = new DeviceErrorReporter(storage);
+    await reporter.init('device-1');
+    const response = {
+      receive: vi.fn((status: string, callback: () => void) => {
+        if (status === 'ok') callback();
+        return response;
+      }),
+    };
+    const channel = { push: vi.fn(() => response) };
+    reporter.attach(channel as any);
+    expect(channel.push).toHaveBeenCalledOnce();
+    expect(channel.push.mock.calls[0][1].reports[0].message).toBe(
+      'Queued failure'
+    );
+    await reporter.close();
+  });
+
   it('reports global runtime errors without duplicating browser console output', async () => {
     const storage = new TestStorage();
     const reporter = new DeviceErrorReporter(storage);
@@ -605,6 +684,83 @@ describe('DeviceErrorReporter', () => {
         persistedId
       );
       await reporter.close();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('persists in-flight snapshots separately from newer occurrences across reloads', async () => {
+    vi.useFakeTimers();
+    try {
+      const storage = new TestStorage();
+      const key = 'castmill.device-error-buffer:device-1';
+      const reporter = new DeviceErrorReporter(storage);
+      await reporter.init('device-1');
+      reporter.report({ category: 'device', error: 'Repeated failure' });
+      const unacknowledged = { receive: vi.fn(() => unacknowledged) };
+      const firstChannel = { push: vi.fn(() => unacknowledged) };
+      reporter.attach(firstChannel as any);
+      const sentId = firstChannel.push.mock.calls[0][1].reports[0].report_id;
+
+      reporter.report({ category: 'device', error: 'Repeated failure' });
+      await reporter.close();
+      const saved = JSON.parse(storage.getItem(key)!);
+      expect(saved.inFlight.reports[0]).toMatchObject({
+        report_id: sentId,
+        count: 1,
+      });
+      expect(saved.reports[0]).toMatchObject({ count: 1 });
+      expect(saved.reports[0].report_id).not.toBe(sentId);
+
+      const reloaded = new DeviceErrorReporter(storage);
+      await reloaded.init('device-1');
+      const response = {
+        receive: vi.fn((status: string, callback: () => void) => {
+          if (status === 'ok') callback();
+          return response;
+        }),
+      };
+      const channel = { push: vi.fn(() => response) };
+      reloaded.attach(channel as any);
+      vi.advanceTimersByTime(ERROR_REPORT_LIMITS.lowPressureFlushIntervalMs);
+
+      expect(channel.push).toHaveBeenCalledTimes(2);
+      expect(channel.push.mock.calls[0][1].reports[0]).toMatchObject({
+        report_id: sentId,
+        count: 1,
+      });
+      expect(channel.push.mock.calls[1][1].reports[0]).toMatchObject({
+        report_id: saved.reports[0].report_id,
+        count: 1,
+      });
+      await reloaded.close();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('preserves overflow occurrences added while a batch is in flight', async () => {
+    vi.useFakeTimers();
+    try {
+      const storage = new TestStorage();
+      const reporter = new DeviceErrorReporter(storage);
+      await reporter.init('device-1');
+      for (let index = 0; index <= ERROR_REPORT_LIMITS.reportBurst; index++) {
+        reporter.report({ category: 'runtime', error: 'Overflow failure' });
+      }
+      const response = { receive: vi.fn(() => response) };
+      const channel = { push: vi.fn(() => response) };
+      reporter.attach(channel as any);
+      const originalId = channel.push.mock.calls[0][1].dropped_report_id;
+
+      reporter.report({ category: 'runtime', error: 'Overflow failure' });
+      await reporter.close();
+      const saved = JSON.parse(
+        storage.getItem('castmill.device-error-buffer:device-1')!
+      );
+      expect(saved.inFlight.droppedReportId).toBe(originalId);
+      expect(saved.droppedCount).toBe(1);
+      expect(saved.droppedReportId).not.toBe(originalId);
     } finally {
       vi.useRealTimers();
     }

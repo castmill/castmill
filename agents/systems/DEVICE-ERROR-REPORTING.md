@@ -100,7 +100,10 @@ WebSocket/database writes.
 The backend validates the same batch/message/stack bounds, keeps at most 100
 event rows per device, accepts at most 120 error-report aggregates per device
 per minute, and prunes once after an insert batch rather than counting and
-pruning for every individual occurrence.
+pruning for every individual occurrence. Error event ordering and retention
+use server receipt time, not device-supplied occurrence times; the original
+first/last occurrence timestamps remain available for diagnostics. A retry
+with the same report ID does not move the event's receipt timestamp.
 
 ## Privacy and safe context
 
@@ -129,9 +132,12 @@ Delivery is best-effort and at-least-once. Each sent aggregate, including an
 overflow aggregate for discarded reports, receives an immutable report ID; the
 database stores the last accepted ID for each
 fingerprint, so a lost channel acknowledgement can be retried without
-incrementing its occurrence count twice. Reporting errors are deliberately
-isolated from playback and must never block player startup, playback,
-reconnect, or shutdown.
+incrementing its occurrence count twice. The reporter persists immutable
+in-flight snapshots separately from residual aggregates with distinct report
+IDs. After a reload, it retries the original snapshot until acknowledged
+without losing residual occurrences; malformed persisted wire reports are
+discarded. Reporting errors are deliberately isolated from playback and must
+never block player startup, playback, reconnect, or shutdown.
 
 ## Relevant files
 

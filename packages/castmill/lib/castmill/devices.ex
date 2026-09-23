@@ -648,23 +648,26 @@ defmodule Castmill.Devices do
   def upsert_error_reports(device_id, reports, dropped_count, dropped_report_id) do
     try do
       Repo.transaction(fn ->
-        Enum.each(reports, &persist_error_report(device_id, &1))
+        now = DateTime.utc_now()
+        Enum.each(reports, &persist_error_report(device_id, &1, now))
 
         if dropped_count > 0 do
-          now = DateTime.utc_now()
-
-          persist_error_report(device_id, %{
-            report_id: dropped_report_id || "dropped-#{now |> DateTime.to_unix(:second)}",
-            fingerprint: "dropped-device-errors",
-            category: "overflow",
-            code: nil,
-            message: "Device discarded error reports because its diagnostic buffer was full",
-            stack: nil,
-            context: %{},
-            count: dropped_count,
-            first_occurred_at: now,
-            last_occurred_at: now
-          })
+          persist_error_report(
+            device_id,
+            %{
+              report_id: dropped_report_id || "dropped-#{now |> DateTime.to_unix(:second)}",
+              fingerprint: "dropped-device-errors",
+              category: "overflow",
+              code: nil,
+              message: "Device discarded error reports because its diagnostic buffer was full",
+              stack: nil,
+              context: %{},
+              count: dropped_count,
+              first_occurred_at: now,
+              last_occurred_at: now
+            },
+            now
+          )
         end
 
         prune_device_events(device_id, 100)
@@ -677,8 +680,8 @@ defmodule Castmill.Devices do
     end
   end
 
-  defp persist_error_report(device_id, report) do
-    case upsert_error_report(device_id, report) do
+  defp persist_error_report(device_id, report, received_at) do
+    case upsert_error_report(device_id, report, received_at) do
       {:ok, _result} ->
         :ok
 
@@ -837,7 +840,7 @@ defmodule Castmill.Devices do
 
   defp validate_error_context(_), do: {:error, :invalid_error_context}
 
-  defp upsert_error_report(device_id, report) do
+  defp upsert_error_report(device_id, report, received_at) do
     Repo.query(
       """
       INSERT INTO devices_events (
@@ -871,7 +874,7 @@ defmodule Castmill.Devices do
       """,
       [
         Ecto.UUID.dump!(device_id),
-        report.last_occurred_at,
+        received_at,
         report.message,
         report.fingerprint,
         report.category,
