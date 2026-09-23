@@ -98,8 +98,9 @@ so a loop cannot turn successful acknowledgements into per-error
 WebSocket/database writes.
 
 The backend validates the same batch/message/stack bounds, keeps at most 100
-event rows per device, and prunes once after an insert batch rather than
-counting and pruning for every individual occurrence.
+event rows per device, accepts at most 120 error-report aggregates per device
+per minute, and prunes once after an insert batch rather than counting and
+pruning for every individual occurrence.
 
 ## Privacy and safe context
 

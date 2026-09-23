@@ -245,6 +245,48 @@ defmodule CastmillWeb.DevicesChannelTest do
                )
     end
 
+    test "rejects valid batches that exceed the device error-report rate limit", %{
+      socket: socket,
+      device: device
+    } do
+      now = DateTime.utc_now() |> DateTime.to_iso8601()
+
+      reports =
+        for index <- 1..20 do
+          %{
+            "report_id" => "rate-limit-#{index}",
+            "fingerprint" => "rate-limit-#{index}",
+            "category" => "runtime",
+            "message" => "Rate limit test",
+            "count" => 1,
+            "first_occurred_at" => now,
+            "last_occurred_at" => now
+          }
+        end
+
+      payload = %{"reports" => reports, "dropped_count" => 0}
+
+      for _ <- 1..6 do
+        assert {:reply, {:ok, _}, _socket} =
+                 DevicesChannel.handle_in("errors:report", payload, socket)
+      end
+
+      assert {:reply, {:error, %{reason: "error_report_rate_limited"}}, ^socket} =
+               DevicesChannel.handle_in("errors:report", payload, socket)
+
+      event_count =
+        Castmill.Devices.list_devices_events(%{
+          device_id: device.id,
+          page: 1,
+          page_size: 100,
+          key: "timestamp",
+          direction: "descending"
+        })
+        |> Enum.count(&(&1.type == "e"))
+
+      assert event_count <= 100
+    end
+
     test "deduplicates retried overflow reports using their client report ID", %{
       socket: socket,
       device: device

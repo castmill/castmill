@@ -131,6 +131,8 @@ defmodule Castmill.Application do
       Castmill.Repo,
       # Start the PubSub system
       {Phoenix.PubSub, name: Castmill.PubSub},
+      # Bound diagnostic ingestion from faulty or modified players.
+      Castmill.DeviceErrorRateLimiter,
       # Start Finch
       {Finch, name: Castmill.Finch}
     ]
