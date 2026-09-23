@@ -630,10 +630,22 @@ defmodule Castmill.Devices do
 
   def validate_error_reports(_reports, _dropped_count), do: {:error, :invalid_error_report_batch}
 
+  def validate_error_reports(reports, dropped_count, dropped_report_id) do
+    with {:ok, reports, dropped_count} <- validate_error_reports(reports, dropped_count),
+         {:ok, dropped_report_id} <- validate_dropped_report_id(dropped_report_id),
+         :ok <- validate_error_report_batch_size(reports, dropped_count, dropped_report_id) do
+      {:ok, reports, dropped_count, dropped_report_id}
+    end
+  end
+
   @doc """
   Inserts or aggregates an acknowledged batch of device errors.
   """
   def upsert_error_reports(device_id, reports, dropped_count \\ 0) do
+    upsert_error_reports(device_id, reports, dropped_count, nil)
+  end
+
+  def upsert_error_reports(device_id, reports, dropped_count, dropped_report_id) do
     try do
       Repo.transaction(fn ->
         Enum.each(reports, &persist_error_report(device_id, &1))
@@ -642,9 +654,10 @@ defmodule Castmill.Devices do
           now = DateTime.utc_now()
 
           persist_error_report(device_id, %{
-            report_id: "dropped-#{now |> DateTime.to_unix(:second)}",
+            report_id: dropped_report_id || "dropped-#{now |> DateTime.to_unix(:second)}",
             fingerprint: "dropped-device-errors",
             category: "overflow",
+            code: nil,
             message: "Device discarded error reports because its diagnostic buffer was full",
             stack: nil,
             context: %{},
@@ -678,6 +691,20 @@ defmodule Castmill.Devices do
   defp validate_error_report_batch_size(reports, dropped_count) do
     if byte_size(Jason.encode!(%{reports: reports, dropped_count: dropped_count})) <=
          @max_error_report_batch_bytes do
+      :ok
+    else
+      {:error, :error_report_batch_too_large}
+    end
+  end
+
+  defp validate_error_report_batch_size(reports, dropped_count, dropped_report_id) do
+    if byte_size(
+         Jason.encode!(%{
+           reports: reports,
+           dropped_count: dropped_count,
+           dropped_report_id: dropped_report_id
+         })
+       ) <= @max_error_report_batch_bytes do
       :ok
     else
       {:error, :error_report_batch_too_large}
@@ -724,6 +751,13 @@ defmodule Castmill.Devices do
     do: {:ok, value}
 
   defp validate_report_id(_), do: {:error, :invalid_error_report_id}
+
+  defp validate_dropped_report_id(nil), do: {:ok, nil}
+
+  defp validate_dropped_report_id(value) when is_binary(value) and byte_size(value) <= 64,
+    do: {:ok, value}
+
+  defp validate_dropped_report_id(_), do: {:error, :invalid_dropped_error_report_id}
 
   defp validate_fingerprint(value) when is_binary(value) and byte_size(value) <= 128,
     do: {:ok, value}

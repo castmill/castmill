@@ -418,16 +418,6 @@ export class Device extends EventEmitter {
               }
 
               this.contentQueue.add(layer);
-              layer.on('error', (error) => {
-                this.errorReporter.report({
-                  category: 'playback',
-                  error,
-                  context: {
-                    layerName: layer.name,
-                    playlistId: entry.playlist,
-                  },
-                });
-              });
 
               this.player.play({ loop: true });
 

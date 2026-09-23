@@ -15,6 +15,34 @@ import {
 } from '../dist/index.js';
 
 describe('Layer aspect ratio sizing', () => {
+  it('forwards layout layer errors through the global reporter', () => {
+    const originalDocument = globalThis.document;
+    const originalWindow = globalThis.window;
+    const reportError = spy();
+    const error = new Error('Nested widget failed');
+
+    try {
+      (globalThis as any).document = {
+        createElement: () => ({ style: {}, dataset: {} }),
+      };
+      (globalThis as any).window = {};
+      const layer = Layer.fromPlaylist(
+        { name: 'layout', items: [] } as any,
+        {} as any,
+        { target: 'poster', reportError }
+      );
+
+      layer.emit('error', error);
+
+      expect(
+        reportError.calledOnceWithExactly({ category: 'playback', error })
+      ).to.equal(true);
+    } finally {
+      (globalThis as any).document = originalDocument;
+      (globalThis as any).window = originalWindow;
+    }
+  });
+
   it('falls back to window resize events when ResizeObserver is unavailable', () => {
     const originalDocument = globalThis.document;
     const originalWindow = globalThis.window;

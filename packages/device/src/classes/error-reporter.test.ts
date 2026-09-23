@@ -47,6 +47,112 @@ describe('DeviceErrorReporter', () => {
     });
   });
 
+  it('strips URL queries and fragments from every stack frame', async () => {
+    const storage = new TestStorage();
+    const reporter = new DeviceErrorReporter(storage);
+    const error = new Error('Stack failure');
+    error.stack = [
+      'Error: Stack failure',
+      'at one (https://first.example/script.js?token=first#section)',
+      'at two (https://second.example/script.js?token=second#section)',
+    ].join('\n');
+
+    await reporter.init('device-1');
+    reporter.report({ category: 'runtime', error });
+    await reporter.close();
+
+    const [report] = JSON.parse(
+      storage.getItem('castmill.device-error-buffer:device-1')!
+    ).reports;
+    expect(report.stack).toContain(
+      'https://first.example/script.js?[redacted])'
+    );
+    expect(report.stack).toContain(
+      'https://second.example/script.js?[redacted])'
+    );
+    expect(report.stack).not.toContain('token=first');
+    expect(report.stack).not.toContain('token=second');
+  });
+
+  it('keeps only runtime-whitelisted context keys', async () => {
+    const storage = new TestStorage();
+    const reporter = new DeviceErrorReporter(storage);
+    await reporter.init('device-1');
+
+    reporter.report({
+      category: 'runtime',
+      error: 'Context failure',
+      context: {
+        playlistId: 1,
+        layerId: 'layer-1',
+        layerName: 'Layer',
+        widgetId: 2,
+        mediaId: 3,
+        appVersion: '1.0.0',
+        arbitrary: 'must not be included',
+        authorization: 'must not be included',
+      } as any,
+    });
+    await reporter.close();
+
+    const [report] = JSON.parse(
+      storage.getItem('castmill.device-error-buffer:device-1')!
+    ).reports;
+    expect(report.context).toEqual({
+      playlistId: '1',
+      layerId: 'layer-1',
+      layerName: 'Layer',
+      widgetId: '2',
+      mediaId: '3',
+      appVersion: '1.0.0',
+    });
+  });
+
+  it('merges matching persisted and pre-init reports without losing occurrences', async () => {
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(new Date('2025-01-01T00:00:02.000Z'));
+      const storage = new TestStorage();
+      const reporter = new DeviceErrorReporter(storage);
+      reporter.report({ category: 'runtime', error: 'Startup failure' });
+      const inMemory = Array.from((reporter as any).reports.values())[0];
+
+      storage.setItem(
+        'castmill.device-error-buffer:device-1',
+        JSON.stringify({
+          version: 1,
+          reports: [
+            {
+              ...inMemory,
+              report_id: 'persisted-report-id',
+              count: 2,
+              firstOccurredAtMs: Date.parse('2025-01-01T00:00:00.000Z'),
+              lastOccurredAtMs: Date.parse('2025-01-01T00:00:01.000Z'),
+              first_occurred_at: '2025-01-01T00:00:00.000Z',
+              last_occurred_at: '2025-01-01T00:00:01.000Z',
+            },
+          ],
+          droppedCount: 0,
+        })
+      );
+
+      await reporter.init('device-1');
+      await reporter.close();
+
+      const [report] = JSON.parse(
+        storage.getItem('castmill.device-error-buffer:device-1')!
+      ).reports;
+      expect(report).toMatchObject({
+        report_id: 'persisted-report-id',
+        count: 3,
+        first_occurred_at: '2025-01-01T00:00:00.000Z',
+        last_occurred_at: '2025-01-01T00:00:02.000Z',
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('evicts the least-recent reports and records their quantity at the hard cap', async () => {
     vi.useFakeTimers();
     try {
@@ -453,6 +559,100 @@ describe('DeviceErrorReporter', () => {
         channel.push.mock.calls[0][1].reports[0].report_id
       );
       await reporter.close();
+    } finally {
+      random.mockRestore();
+      vi.useRealTimers();
+    }
+  });
+
+  it('keeps aggregate IDs across reloads and rotates them for residual occurrences', async () => {
+    vi.useFakeTimers();
+    try {
+      const storage = new TestStorage();
+      const initialReporter = new DeviceErrorReporter(storage);
+      await initialReporter.init('device-1');
+      initialReporter.report({ category: 'device', error: 'Delivery failure' });
+      await initialReporter.close();
+
+      const persistedId = JSON.parse(
+        storage.getItem('castmill.device-error-buffer:device-1')!
+      ).reports[0].report_id;
+      const reporter = new DeviceErrorReporter(storage);
+      await reporter.init('device-1');
+      let acknowledge: (() => void) | undefined;
+      const response = {
+        receive: vi.fn((status: string, callback: () => void) => {
+          if (status === 'ok') {
+            acknowledge = callback;
+          }
+          return response;
+        }),
+      };
+      const channel = { push: vi.fn(() => response) };
+
+      reporter.attach(channel as any);
+      reporter.report({ category: 'device', error: 'Delivery failure' });
+      acknowledge?.();
+      vi.advanceTimersByTime(ERROR_REPORT_LIMITS.lowPressureFlushIntervalMs);
+
+      expect(channel.push.mock.calls[0][1].reports[0].report_id).toBe(
+        persistedId
+      );
+      expect(channel.push.mock.calls[1][1].reports[0]).toMatchObject({
+        count: 1,
+      });
+      expect(channel.push.mock.calls[1][1].reports[0].report_id).not.toBe(
+        persistedId
+      );
+      await reporter.close();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('keeps the overflow ID stable across retries and reloads', async () => {
+    vi.useFakeTimers();
+    const random = vi.spyOn(Math, 'random').mockReturnValue(0);
+    try {
+      const storage = new TestStorage();
+      const reporter = new DeviceErrorReporter(storage);
+      await reporter.init('device-1');
+      for (
+        let index = 0;
+        index <= ERROR_REPORT_LIMITS.reportBurst;
+        index += 1
+      ) {
+        reporter.report({ category: 'runtime', error: 'Overflow failure' });
+      }
+
+      let retry: (() => void) | undefined;
+      const response = {
+        receive: vi.fn((status: string, callback: () => void) => {
+          if (status === 'error') {
+            retry = callback;
+          }
+          return response;
+        }),
+      };
+      const channel = { push: vi.fn(() => response) };
+      reporter.attach(channel as any);
+      retry?.();
+      vi.advanceTimersByTime(ERROR_REPORT_LIMITS.retryBaseMs);
+
+      const overflowId = channel.push.mock.calls[0][1].dropped_report_id;
+      expect(overflowId).toEqual(expect.any(String));
+      expect(channel.push.mock.calls[1][1].dropped_report_id).toBe(overflowId);
+      await reporter.close();
+
+      const reloadedReporter = new DeviceErrorReporter(storage);
+      await reloadedReporter.init('device-1');
+      const reloadedChannel = { push: vi.fn(() => response) };
+      reloadedReporter.attach(reloadedChannel as any);
+
+      expect(reloadedChannel.push.mock.calls[0][1].dropped_report_id).toBe(
+        overflowId
+      );
+      await reloadedReporter.close();
     } finally {
       random.mockRestore();
       vi.useRealTimers();

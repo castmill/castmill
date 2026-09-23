@@ -124,8 +124,9 @@ contents, request bodies, screenshots, or arbitrary thrown objects.
 
 ## Delivery guarantees
 
-Delivery is best-effort and at-least-once. Each sent aggregate receives an
-immutable report ID; the database stores the last accepted ID for each
+Delivery is best-effort and at-least-once. Each sent aggregate, including an
+overflow aggregate for discarded reports, receives an immutable report ID; the
+database stores the last accepted ID for each
 fingerprint, so a lost channel acknowledgement can be retried without
 incrementing its occurrence count twice. Reporting errors are deliberately
 isolated from playback and must never block player startup, playback,

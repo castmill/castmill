@@ -245,6 +245,35 @@ defmodule CastmillWeb.DevicesChannelTest do
                )
     end
 
+    test "deduplicates retried overflow reports using their client report ID", %{
+      socket: socket,
+      device: device
+    } do
+      payload = %{
+        "reports" => [],
+        "dropped_count" => 3,
+        "dropped_report_id" => "overflow-report-1"
+      }
+
+      assert {:reply, {:ok, %{accepted_report_ids: []}}, _socket} =
+               DevicesChannel.handle_in("errors:report", payload, socket)
+
+      assert {:reply, {:ok, %{accepted_report_ids: []}}, _socket} =
+               DevicesChannel.handle_in("errors:report", payload, socket)
+
+      event =
+        Castmill.Devices.list_devices_events(%{
+          device_id: device.id,
+          page: 1,
+          page_size: 10,
+          key: "timestamp",
+          direction: "descending"
+        })
+        |> Enum.find(&(&1.category == "overflow"))
+
+      assert event.occurrence_count == 3
+    end
+
     test "accepts and truncates oversized legacy UTF-8 fields", %{
       socket: socket,
       device: device

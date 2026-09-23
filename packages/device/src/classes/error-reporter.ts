@@ -23,9 +23,15 @@ export const ERROR_REPORT_LIMITS = {
 const BUFFER_VERSION = 1;
 const MAX_OCCURRENCE_COUNT = 2_147_483_647;
 const STORAGE_KEY_PREFIX = 'castmill.device-error-buffer:';
-const SENSITIVE_KEY =
-  /(authorization|token|password|secret|credential|cookie)/i;
-const URL_SUFFIX = /([?#]).*$/;
+const URL_SUFFIX = /([?#])[^\s)]*/g;
+const CONTEXT_KEYS = [
+  'playlistId',
+  'layerId',
+  'layerName',
+  'widgetId',
+  'mediaId',
+  'appVersion',
+] as const;
 
 export type DeviceErrorCategory =
   | 'playback'
@@ -74,11 +80,13 @@ interface PersistedBuffer {
   version: number;
   reports: PendingReport[];
   droppedCount: number;
+  droppedReportId?: string;
 }
 
 interface InFlightBatch {
   reports: DeviceErrorReport[];
   droppedCount: number;
+  droppedReportId?: string;
 }
 
 type ErrorReportStorage = Pick<Storage, 'getItem' | 'setItem'>;
@@ -156,14 +164,10 @@ function sanitizeContext(
   }
 
   const result: DeviceErrorContext = {};
-  Object.keys(context).forEach((key) => {
-    if (SENSITIVE_KEY.test(key)) {
-      return;
-    }
-
-    const value = context[key as keyof DeviceErrorContext];
+  CONTEXT_KEYS.forEach((key) => {
+    const value = context[key];
     if (typeof value === 'string' || typeof value === 'number') {
-      result[key as keyof DeviceErrorContext] =
+      result[key] =
         typeof value === 'string' ? sanitizeText(value, 256) : String(value);
     }
   });
@@ -218,9 +222,38 @@ function normalizeStoredReport(report: PendingReport): PendingReport {
   };
 }
 
+function mergeReports(
+  persisted: PendingReport,
+  inMemory: PendingReport
+): { report: PendingReport; overflow: number } {
+  const count = persisted.count + inMemory.count;
+  const first =
+    persisted.firstOccurredAtMs <= inMemory.firstOccurredAtMs
+      ? persisted
+      : inMemory;
+  const last =
+    persisted.lastOccurredAtMs >= inMemory.lastOccurredAtMs
+      ? persisted
+      : inMemory;
+
+  return {
+    report: {
+      ...last,
+      report_id: persisted.report_id,
+      count: Math.min(MAX_OCCURRENCE_COUNT, count),
+      firstOccurredAtMs: first.firstOccurredAtMs,
+      first_occurred_at: first.first_occurred_at,
+      lastOccurredAtMs: last.lastOccurredAtMs,
+      last_occurred_at: last.last_occurred_at,
+    },
+    overflow: Math.max(0, count - MAX_OCCURRENCE_COUNT),
+  };
+}
+
 export class DeviceErrorReporter {
   private reports = new Map<string, PendingReport>();
   private droppedCount = 0;
+  private droppedReportId?: string;
   private channel?: Channel;
   private inFlight?: InFlightBatch;
   private persistTimer?: ReturnType<typeof setTimeout>;
@@ -301,6 +334,7 @@ export class DeviceErrorReporter {
     if (this.storageKey && this.storageKey !== storageKey) {
       this.reports.clear();
       this.droppedCount = 0;
+      this.droppedReportId = undefined;
     }
 
     this.initialized = true;
@@ -315,14 +349,34 @@ export class DeviceErrorReporter {
           buffer.version === BUFFER_VERSION &&
           Array.isArray(buffer.reports)
         ) {
+          let mergeOverflow = 0;
           buffer.reports
             .filter(isValidReport)
             .map(normalizeStoredReport)
-            .forEach((report) => this.reports.set(report.fingerprint, report));
-          this.droppedCount =
+            .forEach((report) => {
+              const inMemory = this.reports.get(report.fingerprint);
+              if (!inMemory) {
+                this.reports.set(report.fingerprint, report);
+                return;
+              }
+              const merged = mergeReports(report, inMemory);
+              mergeOverflow += merged.overflow;
+              this.reports.set(report.fingerprint, merged.report);
+            });
+          this.droppedCount +=
             typeof buffer.droppedCount === 'number' && buffer.droppedCount > 0
               ? Math.min(MAX_OCCURRENCE_COUNT, Math.floor(buffer.droppedCount))
               : 0;
+          this.droppedCount = Math.min(
+            MAX_OCCURRENCE_COUNT,
+            this.droppedCount + mergeOverflow
+          );
+          this.droppedReportId =
+            this.droppedCount > 0 && typeof buffer.droppedReportId === 'string'
+              ? truncate(buffer.droppedReportId, 64)
+              : this.droppedCount > 0
+                ? this.droppedReportId || reportId()
+                : undefined;
           this.enforceLimits();
         }
       }
@@ -333,6 +387,7 @@ export class DeviceErrorReporter {
       );
       this.reports.clear();
       this.droppedCount = 0;
+      this.droppedReportId = undefined;
     }
   }
 
@@ -391,10 +446,7 @@ export class DeviceErrorReporter {
         if (existing.count < MAX_OCCURRENCE_COUNT) {
           existing.count += 1;
         } else {
-          this.droppedCount = Math.min(
-            MAX_OCCURRENCE_COUNT,
-            this.droppedCount + 1
-          );
+          this.incrementDroppedCount();
         }
         existing.lastOccurredAtMs = now;
         existing.last_occurred_at = new Date(now).toISOString();
@@ -457,10 +509,7 @@ export class DeviceErrorReporter {
     this.reports.forEach((report, fingerprint) => {
       if (report.lastOccurredAtMs < cutoff) {
         this.reports.delete(fingerprint);
-        this.droppedCount = Math.min(
-          MAX_OCCURRENCE_COUNT,
-          this.droppedCount + report.count
-        );
+        this.incrementDroppedCount(report.count);
       }
     });
 
@@ -479,10 +528,7 @@ export class DeviceErrorReporter {
         return;
       }
       this.reports.delete(oldest.fingerprint);
-      this.droppedCount = Math.min(
-        MAX_OCCURRENCE_COUNT,
-        this.droppedCount + oldest.count
-      );
+      this.incrementDroppedCount(oldest.count);
     }
   }
 
@@ -520,9 +566,20 @@ export class DeviceErrorReporter {
   }
 
   private recordDroppedError(): void {
-    this.droppedCount = Math.min(MAX_OCCURRENCE_COUNT, this.droppedCount + 1);
+    this.incrementDroppedCount();
     this.schedulePersist();
     this.scheduleAdaptiveFlush();
+  }
+
+  private incrementDroppedCount(count = 1): void {
+    const previous = this.droppedCount;
+    this.droppedCount = Math.min(
+      MAX_OCCURRENCE_COUNT,
+      this.droppedCount + count
+    );
+    if (this.droppedCount > previous && !this.droppedReportId) {
+      this.droppedReportId = reportId();
+    }
   }
 
   private reportGlobalError(error: unknown): void {
@@ -583,6 +640,7 @@ export class DeviceErrorReporter {
       version: BUFFER_VERSION,
       reports: Array.from(this.reports.values()),
       droppedCount: this.droppedCount,
+      droppedReportId: this.droppedReportId,
     };
   }
 
@@ -685,7 +743,7 @@ export class DeviceErrorReporter {
       }
 
       const snapshot: DeviceErrorReport = {
-        report_id: reportId(),
+        report_id: aggregate.report_id,
         fingerprint: aggregate.fingerprint,
         category: aggregate.category,
         code: aggregate.code,
@@ -701,6 +759,7 @@ export class DeviceErrorReporter {
         byteLength({
           reports: [...reports, snapshot],
           dropped_count: this.droppedCount,
+          dropped_report_id: this.droppedReportId,
         }) > ERROR_REPORT_LIMITS.maxBatchBytes
       ) {
         break;
@@ -712,7 +771,11 @@ export class DeviceErrorReporter {
       return;
     }
 
-    const batch = { reports, droppedCount: this.droppedCount };
+    const batch = {
+      reports,
+      droppedCount: this.droppedCount,
+      droppedReportId: this.droppedReportId,
+    };
     this.lastFlushAt = Date.now();
     this.nextFlushAt = this.lastFlushAt + this.flushInterval(this.lastFlushAt);
     this.sendBatch(batch);
@@ -731,6 +794,7 @@ export class DeviceErrorReporter {
       .push('errors:report', {
         reports: batch.reports,
         dropped_count: batch.droppedCount,
+        dropped_report_id: batch.droppedReportId,
       })
       .receive('ok', () => {
         if (this.inFlight !== batch) {
@@ -744,9 +808,16 @@ export class DeviceErrorReporter {
           current.count -= sent.count;
           if (current.count <= 0) {
             this.reports.delete(sent.fingerprint);
+          } else {
+            current.report_id = reportId();
           }
         });
         this.droppedCount = Math.max(0, this.droppedCount - batch.droppedCount);
+        if (this.droppedCount === 0) {
+          this.droppedReportId = undefined;
+        } else if (batch.droppedCount > 0) {
+          this.droppedReportId = reportId();
+        }
         this.inFlight = undefined;
         if (this.retryTimer) {
           clearTimeout(this.retryTimer);

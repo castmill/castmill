@@ -36,6 +36,7 @@ vi.mock('@castmill/ui-common', () => ({
   Modal: (props: any) => (
     <section>
       <h2>{props.title}</h2>
+      <p>{props.description}</p>
       {props.children}
     </section>
   ),
@@ -109,6 +110,7 @@ describe('DeviceLogs', () => {
     expect(
       screen.getByRole('heading', { name: 'Error details' })
     ).toBeInTheDocument();
+    expect(screen.getByText('media-load')).toBeInTheDocument();
     expect(screen.getByText('Error: Media unavailable')).toBeInTheDocument();
     expect(screen.getByText(/"mediaId": 12/)).toBeInTheDocument();
     expect(screen.getAllByText('Media unavailable')).toHaveLength(2);
