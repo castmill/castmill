@@ -67,6 +67,61 @@ describe('listenForLegacyConsoleToggle', () => {
     expect(onToggle).not.toHaveBeenCalled();
   });
 
+  it.each(['null', 'file://'])(
+    'accepts the Android file wrapper origin serialization %s',
+    (origin) => {
+      const onToggle = vi.fn();
+      cleanups.push(listenForLegacyConsoleToggle(onToggle, 'null'));
+
+      window.dispatchEvent(
+        new MessageEvent('message', {
+          data: 'console',
+          origin,
+          source: window.parent,
+        })
+      );
+
+      expect(onToggle).toHaveBeenCalledOnce();
+    }
+  );
+
+  it('does not trust file origins when the expected parent has a network origin', () => {
+    const onToggle = vi.fn();
+    cleanups.push(
+      listenForLegacyConsoleToggle(onToggle, 'https://castmill.example')
+    );
+
+    window.dispatchEvent(
+      new MessageEvent('message', {
+        data: 'console',
+        origin: 'null',
+        source: window.parent,
+      })
+    );
+
+    expect(onToggle).not.toHaveBeenCalled();
+  });
+
+  it.each(['null', 'file://'])(
+    'accepts Android wrapper origin %s when Crosswalk omits the file referrer',
+    (origin) => {
+      const onToggle = vi.fn();
+      cleanups.push(
+        listenForLegacyConsoleToggle(onToggle, 'http://castmill.example', true)
+      );
+
+      window.dispatchEvent(
+        new MessageEvent('message', {
+          data: 'console',
+          origin,
+          source: window.parent,
+        })
+      );
+
+      expect(onToggle).toHaveBeenCalledOnce();
+    }
+  );
+
   it('removes the message listener during cleanup', () => {
     const onToggle = vi.fn();
     const stopListening = listenForLegacyConsoleToggle(

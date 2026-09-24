@@ -56,7 +56,7 @@ body {
   position: fixed;
   right: 1em;
   bottom: 1em;
-  z-index: 2147483647;
+  z-index: 10001;
   box-sizing: border-box;
   width: 38%;
   max-width: calc(100% - 2em);

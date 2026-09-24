@@ -136,9 +136,13 @@ export const PlayerFrame: Component = () => {
 
     if (platform === 'android' || platform === 'electron') {
       const allowedConsoleOrigin = getLegacyParentOrigin();
-      const stopListening = listenForLegacyConsoleToggle(() => {
-        setShowDebug((visible) => !visible);
-      }, allowedConsoleOrigin);
+      const stopListening = listenForLegacyConsoleToggle(
+        () => {
+          setShowDebug((visible) => !visible);
+        },
+        allowedConsoleOrigin,
+        platform === 'android'
+      );
       onCleanup(stopListening);
     }
 
