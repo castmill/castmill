@@ -1,4 +1,5 @@
 {
+  "legacyPlayer": { "initializing": "Startar spelaren..." },
   "legacyDebug": {
     "ariaLabel": "Diagnostik för äldre spelare",
     "title": "Diagnostik för äldre spelare",

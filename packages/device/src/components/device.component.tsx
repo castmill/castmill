@@ -14,22 +14,41 @@ import { ProgressBarComponent } from './progress-bar.component';
 import { RecoveryBlockedComponent } from './recovery-blocked.component';
 
 export function DeviceComponent(props: { device: Device }) {
-  const [loginOrRegister] = createResource(() =>
-    props.device.loginOrRegister()
+  const [loginOrRegister] = createResource<{
+    value?: Awaited<ReturnType<Device['loginOrRegister']>>;
+    error?: Error;
+  }>(() =>
+    props.device.loginOrRegister().then(
+      (value) => ({ value }),
+      (error: unknown) => {
+        const failure =
+          error instanceof Error ? error : new Error(String(error));
+        props.device.reportStartupError(failure);
+        return { error: failure };
+      }
+    )
   );
   const [ready, setReady] = createSignal(false);
+  const [startupError, setStartupError] = createSignal<Error>();
 
   // Listen for 'ready' event to hide progress bar (fired by start() or timer-off standby)
   onMount(() => {
     const onReady = () => setReady(true);
+    const onStartupError = (error: Error) => setStartupError(error);
     props.device.on('ready', onReady);
-    onCleanup(() => props.device.off('ready', onReady));
+    props.device.on('startup-error', onStartupError);
+    onCleanup(() => {
+      props.device.off('ready', onReady);
+      props.device.off('startup-error', onStartupError);
+    });
   });
 
   // Show progress bar while loading or while login's start() is still running
   const showProgress = () => {
     if (loginOrRegister.loading) return true;
-    if (loginOrRegister()?.status === Status.Ready && !ready()) return true;
+    if (startupError()) return false;
+    if (loginOrRegister()?.value?.status === Status.Ready && !ready())
+      return true;
     return false;
   };
 
@@ -43,19 +62,40 @@ export function DeviceComponent(props: { device: Device }) {
       {/* Main content — rendered after loginOrRegister resolves */}
       <Show when={!loginOrRegister.loading}>
         <Switch>
-          <Match when={loginOrRegister.error}>
-            <span>{String(loginOrRegister.error)}</span>
+          <Match when={startupError() || loginOrRegister()?.error}>
+            <div
+              role="alert"
+              style={{
+                position: 'fixed',
+                top: 0,
+                right: 0,
+                bottom: 0,
+                left: 0,
+                display: 'flex',
+                'align-items': 'center',
+                'justify-content': 'center',
+                'box-sizing': 'border-box',
+                padding: '2em',
+                background: 'black',
+                color: 'white',
+                'z-index': 9999,
+              }}
+            >
+              {startupError()?.message ?? String(loginOrRegister()?.error)}
+            </div>
           </Match>
-          <Match when={loginOrRegister()?.status === Status.Ready}>
+          <Match when={loginOrRegister()?.value?.status === Status.Ready}>
             <PlayerComponent device={props.device} />
           </Match>
-          <Match when={loginOrRegister()?.status === Status.Registering}>
+          <Match when={loginOrRegister()?.value?.status === Status.Registering}>
             <RegisterComponent
               device={props.device}
-              pincode={loginOrRegister()!.pincode!}
+              pincode={loginOrRegister()!.value!.pincode!}
             />
           </Match>
-          <Match when={loginOrRegister()?.status === Status.RecoveryBlocked}>
+          <Match
+            when={loginOrRegister()?.value?.status === Status.RecoveryBlocked}
+          >
             <RecoveryBlockedComponent />
           </Match>
         </Switch>

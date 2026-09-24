@@ -1,4 +1,5 @@
 {
+  "legacyPlayer": { "initializing": "Initialisation du lecteur..." },
   "legacyDebug": {
     "ariaLabel": "Diagnostic du lecteur hérité",
     "title": "Diagnostic du lecteur hérité",

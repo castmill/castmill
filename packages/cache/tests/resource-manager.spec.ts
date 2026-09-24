@@ -14,6 +14,24 @@ describe('ResourceManager', () => {
     vi.resetAllMocks();
   });
 
+  it('reconciles stored URLs before reading cached code resources', async () => {
+    const cache = new Cache(
+      new StorageMockup({}),
+      'test-resource-init-order',
+      10
+    );
+    const init = vi.spyOn(cache, 'init');
+    const list = vi.spyOn(cache, 'list');
+
+    await new ResourceManager(cache).init();
+
+    expect(init).toHaveBeenCalledOnce();
+    expect(init.mock.invocationCallOrder[0]).toBeLessThan(
+      list.mock.invocationCallOrder[0]
+    );
+    cache.close();
+  });
+
   describe('code resources', () => {
     it('should trigger refresh callback if code has been updated', async () => {
       const uri = 'https://app.castmill.com/static/js/doohv2/app.js';

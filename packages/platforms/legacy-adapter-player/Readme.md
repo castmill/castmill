@@ -39,7 +39,7 @@ The Castmill Legacy Adapter enables old Castmill Electron and Android players to
 - **Legacy Debug Overlay**: The Android and Electron shells' existing debug
   menu toggles an adapter-owned diagnostics panel over playback.
 - **Offline App Shell**: A service worker preserves the last complete adapter
-  release so an initialized player can start while the server is unavailable.
+  release; WebOS still needs an online server for channel data and code.
 
 ---
 
@@ -60,6 +60,14 @@ the adapter in `packages/castmill/priv/static/legacy/`, which Phoenix serves as:
 | ------------------ | --------------------------------------------- |
 | `/legacy`          | Legacy adapter entry page                     |
 | `/legacy/assets/*` | Adapter JavaScript and other generated assets |
+| `POST /legacy/log` | Legacy WebOS wrapper ping and batched logs (JSON `payload`) |
+
+The WebOS wrapper sends `{"payload":"Ping"}` for connectivity checks and
+`{"payload":{"logs":[...]}}` for diagnostics. The endpoint accepts up to 50
+entries and a 32 KiB encoded payload per batch without a browser session or CSRF token.
+WebOS does not use IndexedDB: it starts online to fetch channel and playlist
+data and code into memory. Eligible media persists through the wrapper's native
+file API. A cached app shell alone is not sufficient for offline WebOS startup.
 
 Use `yarn build` for a standalone workspace build, or `yarn build:server` to generate
 the files for the Castmill server. The server-targeted build uses `/legacy/` as its Vite
@@ -122,6 +130,55 @@ The Android adapter gives every rewritten cached resource a new native filename.
 This changes its `content://` URI and prevents Crosswalk from reusing stale
 in-memory channel or playlist JSON after a refresh.
 
+The WebOS adapter downloads public `/medias/` files and unsigned external media
+(including videos) through the legacy wrapper's native file API. It persists
+only source and local playback URLs, never auth tokens, for media restoration
+and deletion. Protected device resources, URLs with query parameters, and
+same-origin media outside this public static path use authenticated XHR and
+session-only blob URLs. Channel/playlist JSON and code are also held only in
+memory. WebOS requires a reachable server at startup even if the app shell and
+native media are cached; it never opens IndexedDB.
+
+### WebOS video playback
+
+The WebOS platform selects `src/classes/webos-video-playback.ts` through the
+optional `createVideoPlaybackController` Device/player hook. Each video gets its
+own controller, regardless of whether its source is a native cache URL, blob, or
+remote URL. The adapter handles metadata waits, decoder reloads on replay, and
+one retry for a recoverable seek failure. Metadata waits time out after 15 seconds;
+the widget also has a bounded fallback when WebOS never emits `canplaythrough`.
+The controller also recognizes `loadeddata`, `canplay`, and updated `readyState`
+if `loadedmetadata` is missing. A video whose decoder still times out retries
+after 30 seconds while it remains active; pause or disposal cancels the retry.
+Other videos and the layout continue independently.
+Failed native video loads invalidate their cache entry and retry the download
+once, so a deleted native file is not retained across future playback. Errors
+use the existing player error reporter. Protected resources use in-memory
+blob URLs instead of the wrapper's native downloader.
+
+Seek/play offsets are milliseconds. Immediate seek/play pairs are coalesced;
+seek-only requests never start playback. New requests, pause, and disposal cancel
+pending work so a late metadata event cannot resume obsolete playback. Shared
+player code retains rendering, loading, duration, and timeline ownership. Android,
+Electron, browser players, and dashboard previews do not receive this override.
+
+### Startup diagnostics
+
+The legacy page displays a loading indicator even before its JavaScript loads,
+then shows a localized initialization state until device storage is ready.
+Initialization errors are displayed instead of leaving a blank white screen.
+WebOS cache metadata is memory-backed, so initialization does not depend on
+Dexie or IndexedDB. Initialization failures log the failing step and original
+stack.
+The wrapper's `player_ready` message and server heartbeats indicate that the
+iframe and device connection are alive; they do not mean channel loading and
+player startup have completed. If startup fails, the progress overlay is
+replaced by the failure message. The device reports the original error and
+stack to the dashboard as a runtime error, and logs `Device player failed to
+start` with the stack. Use that stack to distinguish cache initialization,
+schedule loading, and channel/playlist failures from wrapper errors (including
+requests to the wrapper's separate remote-control port).
+
 ### Offline startup
 
 Production offline startup requires the adapter to be served over HTTPS from a
@@ -138,7 +195,7 @@ reloading or interrupting the currently running page and is used on its next rel
 Offline startup has these operational requirements:
 
 - The player must complete at least one online adapter load before it can start
-  offline.
+  offline (Android/Electron only; WebOS requires an online server on every start).
 - `/legacy`, `/legacy/index.html`, `/legacy/sw.js`, and `/legacy/assets/*` must
   remain on the same HTTPS origin.
 - Reverse proxies and CDNs must preserve the
@@ -147,8 +204,9 @@ Offline startup has these operational requirements:
   its state. Channel and playlist metadata and browser-backed resources are
   origin-scoped.
 
-The service worker caches only the adapter application shell and browser-backed
-resources. Legacy Android continues to store media through its native file API;
+The service worker caches only the adapter application shell. WebOS still
+needs an online connection for channel data and code, even if the app shell
+was cached. Legacy Android continues to store media through its native file API;
 the existing IndexedDB and `FILE_MAP` metadata are both required to resolve those
 files after an offline restart.
 

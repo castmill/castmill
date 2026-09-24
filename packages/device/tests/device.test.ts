@@ -3,6 +3,8 @@ import { EventEmitter } from 'eventemitter3';
 import { Device, Status } from '../src/classes/device';
 import { Cache, ResourceManager } from '@castmill/cache';
 import { Socket } from 'phoenix';
+import { Layer, Player } from '@castmill/player';
+import { Channel } from '../src/classes/channel';
 
 vi.mock('@castmill/cache', () => ({
   Cache: vi.fn().mockImplementation(() => ({
@@ -69,6 +71,48 @@ function installPhoenixMocks() {
   return { mockPhoenixChannel: ch, mockSocket: sock };
 }
 
+describe('Device socket transport', () => {
+  it('uses the configured transport for registration and device login', async () => {
+    class TestTransport {}
+
+    const integration = {
+      getLocation: vi.fn().mockResolvedValue(undefined),
+      getTimezone: vi.fn().mockResolvedValue('UTC'),
+    };
+    const device = new Device(integration as any, {} as any, {
+      transport: TestTransport,
+    });
+    device['baseUrl'] = 'http://localhost:4000';
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        status: 201,
+        json: async () => ({ data: { pincode: '123456' } }),
+      })
+    );
+    const { mockPhoenixChannel } = installPhoenixMocks();
+    vi.mocked(Socket).mockClear();
+
+    await device.register('hardware-id');
+    expect(Socket).toHaveBeenLastCalledWith(
+      'ws://localhost:4000/socket',
+      expect.objectContaining({ transport: TestTransport })
+    );
+
+    const login = device.login(
+      { device: { id: 'device-id', token: 'token', name: 'Device' } },
+      'hardware-id'
+    );
+    mockPhoenixChannel._joinPush._trigger('ok', {});
+    await login;
+    expect(Socket).toHaveBeenLastCalledWith(
+      'ws://localhost:4000/socket',
+      expect.objectContaining({ transport: TestTransport })
+    );
+    vi.unstubAllGlobals();
+  });
+});
+
 describe('Device', () => {
   let device: Device;
   let mockIntegration: any;
@@ -102,6 +146,100 @@ describe('Device', () => {
     expect(device['closing']).toBe(false);
     expect(device['channels']).toEqual([]);
     expect(device.getServerConnectionStatus()).toBe('not-initialized');
+  });
+
+  it('uses an injected cache backend instead of creating IndexedDB metadata', () => {
+    const backend = device['cache'];
+    vi.mocked(Cache).mockClear();
+    const webosDevice = new Device(mockIntegration, mockStorageIntegration, {
+      cacheBackend: backend,
+    });
+    expect(webosDevice['cache']).toBe(backend);
+    expect(Cache).not.toHaveBeenCalled();
+  });
+
+  it('reports startup failures with their original stack and notifies the UI', () => {
+    const failure = new Error('Decoder startup failed');
+    const log = vi
+      .spyOn(device['logger'], 'error')
+      .mockImplementation(() => {});
+    const report = vi
+      .spyOn(device['errorReporter'], 'report')
+      .mockImplementation(() => {});
+    const listener = vi.fn();
+    device.on('startup-error', listener);
+
+    device.reportStartupError(failure);
+
+    expect(log).toHaveBeenCalledWith(expect.stringContaining(failure.stack!));
+    expect(report).toHaveBeenCalledWith({
+      category: 'runtime',
+      error: failure,
+    });
+    expect(listener).toHaveBeenCalledWith(failure);
+  });
+
+  it('forwards the video controller factory into scheduled playlist globals', async () => {
+    vi.useFakeTimers();
+    const factory = vi.fn(() => ({
+      seek: vi.fn(),
+      play: vi.fn(),
+      pause: vi.fn(),
+      dispose: vi.fn(),
+    }));
+    device = new Device(mockIntegration, mockStorageIntegration, {
+      createVideoPlaybackController: factory,
+    });
+    mockIntegration.getCredentials.mockResolvedValue(
+      JSON.stringify({
+        device: { id: 'device-1', name: 'Test', token: 'test' },
+      })
+    );
+    mockIntegration.setTimers = vi.fn();
+    const init = vi
+      .spyOn(device['errorReporter'], 'init')
+      .mockResolvedValue(undefined);
+    const play = vi
+      .spyOn(Player.prototype, 'play')
+      .mockImplementation(() => {});
+    const fromPlaylist = vi.spyOn(Layer, 'fromPlaylist');
+    device.on('ready', () => {
+      device['channels'] = [
+        new Channel({
+          name: 'test',
+          description: undefined,
+          timezone: 'UTC',
+          default_playlist_id: '1',
+        }),
+      ];
+      vi.spyOn(device['resourceManager']!, 'getData').mockResolvedValue({
+        id: 1,
+        name: 'test',
+        status: 'live',
+        items: [],
+      });
+    });
+    play.mockImplementation(() => {
+      device['closing'] = true;
+    });
+    try {
+      const started = device.start(document.createElement('div'));
+      await vi.advanceTimersByTimeAsync(5000);
+      await started;
+      expect(fromPlaylist).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        expect.objectContaining({
+          createVideoPlaybackController: factory,
+          target: 'poster',
+        })
+      );
+    } finally {
+      init.mockRestore();
+      play.mockRestore();
+      fromPlaylist.mockRestore();
+      vi.useRealTimers();
+    }
   });
 
   it.each([

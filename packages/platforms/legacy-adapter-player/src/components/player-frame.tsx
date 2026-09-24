@@ -6,14 +6,22 @@ import {
   type Component,
 } from 'solid-js';
 import { mountDevice, Device, BrowserMachine } from '@castmill/device';
-import { StorageIntegration, StorageBrowser } from '@castmill/cache';
+import {
+  MemoryCache,
+  StorageIntegration,
+  StorageBrowser,
+} from '@castmill/cache';
 import {
   AndroidLegacyMachine,
   ElectronLegacyMachine,
+  WebosLegacyMachine,
   AndroidLegacyFileStorage,
+  WebosLegacyFileStorage,
   LegacyMachine,
 } from '../classes';
 import { getLegacyBaseUrl } from '../utils/base-url';
+import { WebosWebSocket } from '../webos-legacy-api';
+import { createWebosVideoPlayback } from '../classes/webos-video-playback';
 import { useLegacyI18n } from '../i18n';
 import {
   LegacyDebugOverlay,
@@ -33,10 +41,10 @@ export const getLegacyParentOrigin = (
   }
 };
 
-const getLegacyPlatform = (): LegacyPlatform => {
-  const userAgent = navigator.userAgent;
-
-  if (userAgent.includes('Web0S')) {
+export const getLegacyPlatform = (
+  userAgent: string = navigator.userAgent
+): LegacyPlatform => {
+  if (/web[0o]s/i.test(userAgent)) {
     return 'webos';
   }
 
@@ -53,9 +61,8 @@ const getLegacyPlatform = (): LegacyPlatform => {
 
 const getLegacyMachine = (platform: LegacyPlatform): LegacyMachine => {
   switch (platform) {
-    //TODO Investigate if we need to support webos
     case 'webos':
-      return new BrowserMachine();
+      return new WebosLegacyMachine();
     case 'android':
       return new AndroidLegacyMachine();
     case 'electron':
@@ -67,9 +74,8 @@ const getLegacyMachine = (platform: LegacyPlatform): LegacyMachine => {
 
 const getLegacyStorage = (platform: LegacyPlatform): StorageIntegration => {
   switch (platform) {
-    // TODO: Investigate if we need to support webos
     case 'webos':
-      return new StorageBrowser('file-cache', '', false);
+      return new WebosLegacyFileStorage();
     case 'android':
       // TODO: Check if storagebrowser works on our Android hardware
       // return new StorageBrowser(); // Doesn't work when running non-https. Check if it works on prod endpoint
@@ -85,8 +91,11 @@ const getLegacyStorage = (platform: LegacyPlatform): StorageIntegration => {
 
 export const PlayerFrame: Component = () => {
   let ref: HTMLDivElement | undefined;
-  const { t } = useLegacyI18n();
+  let startupOverlay: HTMLDivElement | undefined;
+  const { isRtl, t } = useLegacyI18n();
   const [showDebug, setShowDebug] = createSignal(false);
+  const [mounted, setMounted] = createSignal(false);
+  const [startupError, setStartupError] = createSignal<string>();
   const [debugContext, setDebugContext] = createSignal<{
     device: LegacyDebugDevice;
     machine: LegacyMachine;
@@ -102,7 +111,19 @@ export const PlayerFrame: Component = () => {
     const platform = getLegacyPlatform();
     const legacyMachine = getLegacyMachine(platform);
     const cache = getLegacyStorage(platform);
-    const device = new Device(legacyMachine, cache);
+    const memoryCache =
+      platform === 'webos' ? new MemoryCache(cache) : undefined;
+    const device = new Device(
+      legacyMachine,
+      cache,
+      platform === 'webos'
+        ? {
+            transport: WebosWebSocket,
+            createVideoPlaybackController: createWebosVideoPlayback,
+            cacheBackend: memoryCache,
+          }
+        : undefined
+    );
     const configuredServerUrl = getLegacyBaseUrl(
       window.location,
       import.meta.env.VITE_BASE_URL
@@ -125,18 +146,50 @@ export const PlayerFrame: Component = () => {
       onCleanup(stopListening);
     }
 
+    let startupStep = 'legacy bridge';
     void (async () => {
       legacyMachine.initLegacy?.();
+      startupStep = 'device configuration';
       await device.init(configuredServerUrl);
+      startupStep = 'cache initialization';
       await cache.init();
 
+      startupStep = 'device mount';
       mountDevice(ref, device);
-    })();
+      if (startupOverlay) startupOverlay.style.display = 'none';
+      setMounted(true);
+      if (platform === 'webos') {
+        startupStep = 'wrapper notification';
+        (legacyMachine as WebosLegacyMachine).notifyReady();
+      }
+    })().catch((error: unknown) => {
+      console.error(
+        `Legacy adapter initialization failed during ${startupStep}`,
+        error,
+        error instanceof Error ? error.stack : undefined
+      );
+      setStartupError(error instanceof Error ? error.message : String(error));
+    });
   });
 
   return (
     <>
       <div class="player-frame" ref={ref!} />
+      <Show when={!mounted()}>
+        <div
+          class="legacy-startup"
+          ref={startupOverlay!}
+          role={startupError() ? 'alert' : 'status'}
+          dir={isRtl ? 'rtl' : 'ltr'}
+        >
+          <Show when={!startupError()}>
+            <div class="legacy-startup__track">
+              <div class="legacy-startup__fill" />
+            </div>
+          </Show>
+          <span>{startupError() ?? t('legacyPlayer.initializing')}</span>
+        </div>
+      </Show>
       <Show when={debugContext()}>
         {(context) => (
           <LegacyDebugOverlay visible={showDebug()} {...context()} />

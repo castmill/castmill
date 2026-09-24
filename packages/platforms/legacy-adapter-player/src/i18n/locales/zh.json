@@ -1,4 +1,5 @@
 {
+  "legacyPlayer": { "initializing": "正在初始化播放器..." },
   "legacyDebug": {
     "ariaLabel": "旧版播放器诊断",
     "title": "旧版播放器诊断",

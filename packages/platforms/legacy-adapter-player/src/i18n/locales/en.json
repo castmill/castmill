@@ -1,4 +1,5 @@
 {
+  "legacyPlayer": { "initializing": "Initializing player..." },
   "legacyDebug": {
     "ariaLabel": "Legacy player diagnostics",
     "title": "Legacy player diagnostics",

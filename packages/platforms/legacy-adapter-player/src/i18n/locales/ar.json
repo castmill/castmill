@@ -1,4 +1,5 @@
 {
+  "legacyPlayer": { "initializing": "جارٍ تهيئة المشغّل..." },
   "legacyDebug": {
     "ariaLabel": "تشخيص المشغّل القديم",
     "title": "تشخيص المشغّل القديم",

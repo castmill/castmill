@@ -46,4 +46,23 @@ describe('StorageBrowser service worker registration', () => {
 
     expect(register).toHaveBeenCalledWith('/assets/sw.js');
   });
+
+  it('opens Cache Storage when service workers are unavailable', async () => {
+    vi.stubGlobal('navigator', {});
+    vi.stubGlobal('caches', {
+      open: vi.fn().mockResolvedValue({}),
+      keys: vi.fn().mockResolvedValue([]),
+      delete: vi.fn(),
+    });
+
+    await new StorageBrowser('file-cache', '', false).init();
+    expect(caches.open).toHaveBeenCalledWith('castmill:storage:file-cache');
+  });
+
+  it('reports when Cache Storage is unavailable', async () => {
+    vi.stubGlobal('caches', undefined);
+    await expect(
+      new StorageBrowser('file-cache', '', false).init()
+    ).rejects.toThrow('Cache Storage is unavailable');
+  });
 });

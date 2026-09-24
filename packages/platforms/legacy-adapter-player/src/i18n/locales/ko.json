@@ -1,4 +1,5 @@
 {
+  "legacyPlayer": { "initializing": "플레이어를 초기화하는 중..." },
   "legacyDebug": {
     "ariaLabel": "레거시 플레이어 진단",
     "title": "레거시 플레이어 진단",
