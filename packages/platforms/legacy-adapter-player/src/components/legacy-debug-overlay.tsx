@@ -5,6 +5,7 @@ import {
   createSignal,
   onCleanup,
   type Component,
+  type ParentComponent,
 } from 'solid-js';
 import { type DeviceInfo, type ServerConnectionStatus } from '@castmill/device';
 import type { LegacyMachine } from '../classes';
@@ -31,11 +32,30 @@ export interface LegacyDebugDevice {
 
 interface LegacyDebugOverlayProps {
   visible: boolean;
+  overlayRef?: (element: HTMLAsideElement) => void;
   device: LegacyDebugDevice;
   machine: Pick<LegacyMachine, 'getDeviceInfo' | 'getTimezone'>;
   serverUrl: string;
   platform: LegacyPlatform;
 }
+
+interface LegacyDebugShellProps {
+  visible: boolean;
+  overlayRef?: (element: HTMLAsideElement) => void;
+}
+
+export const LegacyDebugShell: ParentComponent<LegacyDebugShellProps> = (
+  props
+) => (
+  <aside
+    ref={(element) => props.overlayRef?.(element)}
+    class="legacy-debug-overlay"
+    aria-label="Player diagnostics"
+    style={{ display: props.visible ? 'block' : 'none' }}
+  >
+    {props.children}
+  </aside>
+);
 
 interface RuntimeInfo {
   deviceId: string;
@@ -52,7 +72,9 @@ interface DebugRow {
   value: string;
 }
 
-const formatConnectionStatus = (status: ServerConnectionStatus): string => {
+export const formatLegacyConnectionStatus = (
+  status: ServerConnectionStatus
+): string => {
   switch (status) {
     case 'connected':
       return 'Connected';
@@ -67,7 +89,9 @@ const getRuntimeInfo = (device: LegacyDebugDevice): RuntimeInfo => ({
   deviceId: device.id ?? 'Not available',
   deviceName: device.name ?? 'Not available',
   browserConnection: navigator.onLine ? 'Online' : 'Offline',
-  serverConnection: formatConnectionStatus(device.getServerConnectionStatus()),
+  serverConnection: formatLegacyConnectionStatus(
+    device.getServerConnectionStatus()
+  ),
   viewport: `${window.innerWidth} x ${window.innerHeight}`,
   screen: `${window.screen.width} x ${window.screen.height}`,
   devicePixelRatio: String(window.devicePixelRatio || 1),
@@ -226,41 +250,36 @@ export const LegacyDebugOverlay: Component<LegacyDebugOverlayProps> = (
   };
 
   return (
-    <Show when={props.visible}>
-      <aside
-        class="legacy-debug-overlay"
-        aria-label="Legacy player diagnostics"
-      >
-        <div class="legacy-debug-overlay__title">Legacy player diagnostics</div>
-        <Show when={loading() && !deviceInfo()}>
-          <div class="legacy-debug-overlay__status">
-            Loading machine information...
+    <LegacyDebugShell visible={props.visible} overlayRef={props.overlayRef}>
+      <div class="legacy-debug-overlay__title">Player diagnostics</div>
+      <Show when={loading() && !deviceInfo()}>
+        <div class="legacy-debug-overlay__status">
+          Loading machine information...
+        </div>
+      </Show>
+      <For each={rows()}>
+        {(row) => (
+          <div class="legacy-debug-overlay__row">
+            <span class="legacy-debug-overlay__label">{row.label}</span>
+            <span class="legacy-debug-overlay__value">{row.value}</span>
           </div>
-        </Show>
-        <For each={rows()}>
-          {(row) => (
-            <div class="legacy-debug-overlay__row">
-              <span class="legacy-debug-overlay__label">{row.label}</span>
-              <span class="legacy-debug-overlay__value">{row.value}</span>
-            </div>
-          )}
-        </For>
-        <Show when={identityError()}>
-          <div class="legacy-debug-overlay__error">
-            Player identity: {identityError()}
-          </div>
-        </Show>
-        <Show when={deviceInfoError()}>
-          <div class="legacy-debug-overlay__error">
-            Device information: {deviceInfoError()}
-          </div>
-        </Show>
-        <Show when={timezoneError()}>
-          <div class="legacy-debug-overlay__error">
-            Timezone: {timezoneError()}
-          </div>
-        </Show>
-      </aside>
-    </Show>
+        )}
+      </For>
+      <Show when={identityError()}>
+        <div class="legacy-debug-overlay__error">
+          Player identity: {identityError()}
+        </div>
+      </Show>
+      <Show when={deviceInfoError()}>
+        <div class="legacy-debug-overlay__error">
+          Device information: {deviceInfoError()}
+        </div>
+      </Show>
+      <Show when={timezoneError()}>
+        <div class="legacy-debug-overlay__error">
+          Timezone: {timezoneError()}
+        </div>
+      </Show>
+    </LegacyDebugShell>
   );
 };

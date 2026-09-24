@@ -36,7 +36,7 @@ The Castmill Legacy Adapter enables old Castmill Electron and Android players to
 - **Seamless Transition**: Allows legacy embeds to function as expected without updates.
 - **Castmill Server Deployment**: Served at `/legacy` by the Castmill Phoenix server.
 - **Configurable Base URL**: Easily configure the default base URL using environment variables.
-- **Legacy Debug Overlay**: The Android and Electron shells' existing debug
+- **Legacy Debug Overlay**: The Android, WebOS, and Electron shells' existing debug
   menu toggles an adapter-owned diagnostics panel over playback.
 - **Offline App Shell**: A service worker preserves the last complete adapter
   release; WebOS still needs an online server for channel data and code.
@@ -68,6 +68,11 @@ entries and a 32 KiB encoded payload per batch without a browser session or CSRF
 WebOS does not use IndexedDB: it starts online to fetch channel and playlist
 data and code into memory. Eligible media persists through the wrapper's native
 file API. A cached app shell alone is not sufficient for offline WebOS startup.
+The legacy WebOS browser also has nonstandard file-wrapper message origins,
+intermittent media readiness events, and unreliable post-mount reactive DOM
+updates. Keep WebOS-specific compatibility behavior in this adapter; see
+`agents/packages/player/LEGACY-PLAYER-COMPATIBILITY.md` for the complete
+limitations and required fallbacks.
 
 Use `yarn build` for a standalone workspace build, or `yarn build:server` to generate
 the files for the Castmill server. The server-targeted build uses `/legacy/` as its Vite
@@ -234,10 +239,13 @@ contain player resources rather than the adapter release.
 
 ### Debug overlay
 
-Legacy Android and Electron shells send the literal `console` message to the
+Legacy Android, WebOS, and Electron shells send the literal `console` message to the
 embedded player when their debug menu option is selected. The adapter accepts
 that exact message only from its parent window and toggles a lower-right
-diagnostics panel.
+diagnostics panel. Android and WebOS file wrappers may serialize their origin
+as either `null` or `file://`; those origins are accepted only for those
+platforms. WebOS additionally accepts `file:` variants when its legacy engine
+does not preserve the parent window identity for the message.
 
 The panel shows the registered device name and ID, organization and Castmill network,
 resolved server URL, adapter platform, machine and application versions, browser and

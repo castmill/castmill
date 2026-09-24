@@ -55,9 +55,9 @@ describe('LegacyDebugOverlay', () => {
       />
     ));
 
-    expect(
-      screen.queryByLabelText('Legacy player diagnostics')
-    ).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Player diagnostics')).toHaveStyle({
+      display: 'none',
+    });
 
     setVisible(true);
 
@@ -79,9 +79,9 @@ describe('LegacyDebugOverlay', () => {
 
     setVisible(false);
 
-    expect(
-      screen.queryByLabelText('Legacy player diagnostics')
-    ).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Player diagnostics')).toHaveStyle({
+      display: 'none',
+    });
     expect(device.off).toHaveBeenCalledWith('ready', expect.any(Function));
   });
 
@@ -161,7 +161,7 @@ describe('LegacyDebugOverlay', () => {
         />
       ));
 
-      const overlay = screen.getByLabelText('Legacy player diagnostics');
+      const overlay = screen.getByLabelText('Player diagnostics');
       expect(overlay).not.toHaveAttribute('dir', 'rtl');
 
       await waitFor(() => {

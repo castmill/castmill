@@ -103,7 +103,7 @@ describe('listenForLegacyConsoleToggle', () => {
   });
 
   it.each(['null', 'file://'])(
-    'accepts Android wrapper origin %s when Crosswalk omits the file referrer',
+    'accepts a file wrapper origin %s when the runtime omits the referrer',
     (origin) => {
       const onToggle = vi.fn();
       cleanups.push(
@@ -121,6 +121,47 @@ describe('listenForLegacyConsoleToggle', () => {
       expect(onToggle).toHaveBeenCalledOnce();
     }
   );
+
+  it('accepts a WebOS file-wrapper message when WindowProxy identity is unavailable', () => {
+    const onToggle = vi.fn();
+    cleanups.push(
+      listenForLegacyConsoleToggle(onToggle, 'http://castmill.example', true)
+    );
+
+    const iframe = document.createElement('iframe');
+    document.body.append(iframe);
+    window.dispatchEvent(
+      new MessageEvent('message', {
+        data: 'console',
+        origin:
+          'file:///media/developer/apps/usr/palm/applications/com.castmill.player/',
+        source: iframe.contentWindow,
+      })
+    );
+    iframe.remove();
+
+    expect(onToggle).toHaveBeenCalledOnce();
+  });
+
+  it('does not accept a non-parent file message without local-wrapper support', () => {
+    const onToggle = vi.fn();
+    cleanups.push(
+      listenForLegacyConsoleToggle(onToggle, 'https://castmill.example')
+    );
+
+    const iframe = document.createElement('iframe');
+    document.body.append(iframe);
+    window.dispatchEvent(
+      new MessageEvent('message', {
+        data: 'console',
+        origin: 'file://',
+        source: iframe.contentWindow,
+      })
+    );
+    iframe.remove();
+
+    expect(onToggle).not.toHaveBeenCalled();
+  });
 
   it('removes the message listener during cleanup', () => {
     const onToggle = vi.fn();

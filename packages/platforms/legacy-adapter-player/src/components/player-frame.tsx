@@ -24,6 +24,8 @@ import { WebosWebSocket } from '../webos-legacy-api';
 import { createWebosVideoPlayback } from '../classes/webos-video-playback';
 import {
   LegacyDebugOverlay,
+  LegacyDebugShell,
+  formatLegacyConnectionStatus,
   type LegacyDebugDevice,
   type LegacyPlatform,
 } from './legacy-debug-overlay';
@@ -91,6 +93,10 @@ const getLegacyStorage = (platform: LegacyPlatform): StorageIntegration => {
 export const PlayerFrame: Component = () => {
   let ref: HTMLDivElement | undefined;
   let startupOverlay: HTMLDivElement | undefined;
+  let debugOverlay: HTMLAsideElement | undefined;
+  let webosDebugDetails: HTMLDivElement | undefined;
+  let refreshWebosDebugDetails: (() => void) | undefined;
+  const usesWebosDebugShell = getLegacyPlatform() === 'webos';
   const [showDebug, setShowDebug] = createSignal(false);
   const [mounted, setMounted] = createSignal(false);
   const [startupError, setStartupError] = createSignal<string>();
@@ -100,6 +106,24 @@ export const PlayerFrame: Component = () => {
     serverUrl: string;
     platform: LegacyPlatform;
   }>();
+
+  const toggleDebugOverlay = () => {
+    const visible = !showDebug();
+    setShowDebug(visible);
+
+    // Old WebOS fails to apply some reactive DOM updates after player mount.
+    if (debugOverlay) {
+      debugOverlay.style.display = visible ? 'block' : 'none';
+    }
+    if (visible) {
+      refreshWebosDebugDetails?.();
+    }
+    console.log(
+      `[legacy debug] Overlay toggled visible=${String(
+        visible
+      )}, elementMounted=${String(Boolean(debugOverlay))}`
+    );
+  };
 
   onMount(() => {
     if (!ref) {
@@ -133,15 +157,110 @@ export const PlayerFrame: Component = () => {
       serverUrl: configuredServerUrl ?? 'Stored device configuration',
       platform,
     });
+    if (platform === 'webos') {
+      const serverUrl = configuredServerUrl ?? 'Stored device configuration';
+      const updateWebosDebugDetails = async () => {
+        if (!webosDebugDetails) {
+          return;
+        }
 
-    if (platform === 'android' || platform === 'electron') {
+        const rows: Array<[string, string]> = [
+          ['Player name', device.name ?? 'Not available'],
+          ['Device ID', device.id ?? 'Not available'],
+          ['Organization', 'Loading...'],
+          ['Castmill network', 'Loading...'],
+          ['Server', serverUrl],
+          ['Adapter platform', 'webOS'],
+          ['Browser connection', navigator.onLine ? 'Online' : 'Offline'],
+          [
+            'Server connection',
+            formatLegacyConnectionStatus(device.getServerConnectionStatus()),
+          ],
+          ['Viewport', `${window.innerWidth} x ${window.innerHeight}`],
+          ['Screen', `${window.screen.width} x ${window.screen.height}`],
+          ['Device pixel ratio', String(window.devicePixelRatio || 1)],
+        ];
+        webosDebugDetails.textContent = rows
+          .map(([label, value]) => `${label}: ${value}`)
+          .join('\n');
+
+        try {
+          await device.refreshIdentity();
+          const [organization, network] = await Promise.all([
+            device.getOrganizationName(),
+            device.getCastmillNetworkName(),
+          ]);
+          rows[0][1] = device.name ?? 'Not available';
+          rows[1][1] = device.id ?? 'Not available';
+          rows[2][1] = organization ?? 'Not available';
+          rows[3][1] = network ?? 'Not available';
+        } catch (error) {
+          rows.push([
+            'Player identity',
+            error instanceof Error ? error.message : String(error),
+          ]);
+        }
+
+        try {
+          const timezone = legacyMachine.getTimezone
+            ? await legacyMachine.getTimezone()
+            : Intl.DateTimeFormat().resolvedOptions().timeZone;
+          rows.push(['Timezone', timezone || 'Not available']);
+        } catch (error) {
+          rows.push([
+            'Timezone',
+            error instanceof Error ? error.message : String(error),
+          ]);
+        }
+
+        try {
+          const info = await legacyMachine.getDeviceInfo();
+          rows.push(
+            ['Application type', info.appType],
+            ['Application version', info.appVersion],
+            ['Operating system', info.os],
+            ['Hardware', info.hardware]
+          );
+          [
+            ['Environment version', info.environmentVersion],
+            ['Chromium version', info.chromiumVersion],
+            ['V8 version', info.v8Version],
+            ['Node.js version', info.nodeVersion],
+            ['User agent', info.userAgent],
+          ].forEach(([label, value]) => {
+            if (value) {
+              rows.push([label, value]);
+            }
+          });
+        } catch (error) {
+          rows.push([
+            'Device information',
+            error instanceof Error ? error.message : String(error),
+          ]);
+        }
+
+        if (webosDebugDetails) {
+          webosDebugDetails.textContent = rows
+            .map(([label, value]) => `${label}: ${value}`)
+            .join('\n');
+        }
+      };
+
+      refreshWebosDebugDetails = () => {
+        void updateWebosDebugDetails();
+      };
+    }
+
+    if (
+      platform === 'android' ||
+      platform === 'webos' ||
+      platform === 'electron'
+    ) {
       const allowedConsoleOrigin = getLegacyParentOrigin();
       const stopListening = listenForLegacyConsoleToggle(
-        () => {
-          setShowDebug((visible) => !visible);
-        },
+        toggleDebugOverlay,
         allowedConsoleOrigin,
-        platform === 'android'
+        platform === 'android' || platform === 'webos'
       );
       onCleanup(stopListening);
     }
@@ -189,10 +308,33 @@ export const PlayerFrame: Component = () => {
           <span>{startupError() ?? 'Initializing player...'}</span>
         </div>
       </Show>
-      <Show when={debugContext()}>
-        {(context) => (
-          <LegacyDebugOverlay visible={showDebug()} {...context()} />
-        )}
+      <Show
+        when={usesWebosDebugShell}
+        fallback={
+          <Show when={debugContext()}>
+            {(context) => (
+              <LegacyDebugOverlay
+                overlayRef={(element) => {
+                  debugOverlay = element;
+                }}
+                visible={showDebug()}
+                {...context()}
+              />
+            )}
+          </Show>
+        }
+      >
+        <LegacyDebugShell
+          visible={false}
+          overlayRef={(element) => {
+            debugOverlay = element;
+          }}
+        >
+          <div class="legacy-debug-overlay__title">Player diagnostics</div>
+          <div ref={webosDebugDetails!} class="legacy-debug-overlay__status">
+            WebOS debug console is open.
+          </div>
+        </LegacyDebugShell>
       </Show>
     </>
   );

@@ -19,9 +19,36 @@ Electron. Keep startup and diagnostics strings in English; do not add locale
 files or language selection to `packages/platforms/legacy-adapter-player/`.
 Dashboard localization remains separate.
 
+The Android, WebOS, and Electron debug menus send the literal `console`
+message to the adapter. The Android and WebOS wrappers use file origins that
+can be serialized as either `null` or `file://`, including when the referrer
+is omitted. On WebOS, old engines can also lose `WindowProxy` identity for a
+local `file:` message; accept that bounded fallback only for WebOS file
+origins. All network-hosted parents must still match `window.parent`.
+Because those same engines can miss post-mount Solid updates, mount the WebOS
+debug shell during the initial render and toggle its DOM display directly. Use
+the shared `LegacyDebugShell` for all adapter platforms so their diagnostics
+have the same Chrome 38-compatible layout, stacking behavior, and field set.
+
 ## JavaScript Rules
 
 ### Legacy WebOS wrapper
+
+#### Observed runtime limitations
+
+Treat the legacy WebOS engine as a distinct Chrome 38-era runtime, not as a
+modern Chromium browser. The following behavior has been observed on deployed
+signage hardware and must be preserved by compatibility changes:
+
+| Limitation | Required handling |
+| --- | --- |
+| IndexedDB/Dexie can fail to open or report unsupported schema/key-path behavior. | Do not open IndexedDB on WebOS. Use `MemoryCache`; persist only eligible public media through the native wrapper. |
+| The player needs live channel data, code, and protected resources at startup. | Start online. A service-worker app shell and native media files are not enough to start offline. |
+| Native wrapper downloads cannot attach authorization headers and log their input URLs. | Send only unsigned public `/medias/` or unsigned external media to `fetchFile`; load protected, query-bearing, and code/data resources through authenticated XHR into session-only blob URLs. |
+| Video decoders can omit readiness events or stall after source/seek changes. | Use `WebosVideoPlayback` and bounded metadata/seek recovery; report a final error without taking down the containing layout. |
+| Local-wrapper `postMessage` events can use `null`, `file:`, or `file://` origins and lose parent `WindowProxy` identity. | Accept the exact `console` payload through the narrowly scoped WebOS file-origin exception only; keep network-parent validation strict. |
+| Solid may not apply DOM created or changed after player mount. | Mount essential startup/debug DOM during initial render and set its visibility directly when the wrapper invokes it. |
+| Passing an undefined WebSocket protocol can send an unwanted `Sec-WebSocket-Protocol` header. | Use the WebOS one-argument socket constructor when there is no configured subprotocol. |
 
 The WebOS wrapper loads `/legacy` in an iframe. The adapter identifies both
 `Web0S` and `WebOS` user agents, requests the existing hashed MAC identifier

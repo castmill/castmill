@@ -21,6 +21,14 @@ vi.mock('@castmill/device', () => ({
 vi.mock('../classes', () => {
   class Machine {
     initLegacy() {}
+    getDeviceInfo = vi.fn().mockResolvedValue({
+      appType: 'Legacy player',
+      appVersion: '1.0.0',
+      os: 'webOS',
+      hardware: 'LG signage',
+      chromiumVersion: '38.0.2125.122',
+    });
+    getTimezone = vi.fn().mockResolvedValue('Europe/Stockholm');
   }
   class Storage {
     init = initCache;
@@ -45,11 +53,19 @@ vi.mock('@castmill/cache', () => ({
     async init() {}
   },
 }));
-vi.mock('./legacy-debug-overlay', () => ({ LegacyDebugOverlay: () => null }));
-
 beforeEach(() => {
   makeDevice.mockImplementation(() => ({
     init: vi.fn().mockResolvedValue(undefined),
+    id: 'device-42',
+    name: 'Lobby Player',
+    getServerConnectionStatus: () => 'connected',
+    refreshIdentity: vi
+      .fn()
+      .mockResolvedValue({ id: 'device-42', name: 'Lobby Player' }),
+    getOrganizationName: vi.fn().mockResolvedValue('Castmill AB'),
+    getCastmillNetworkName: vi.fn().mockResolvedValue('Stockholm'),
+    on: vi.fn(),
+    off: vi.fn(),
   }));
 });
 
@@ -80,6 +96,30 @@ describe('PlayerFrame playback controller selection', () => {
           }
         : undefined
     );
+  });
+
+  it('mounts and toggles the WebOS debug shell before post-mount state updates', async () => {
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('webOS');
+    render(() => <PlayerFrame />);
+
+    const overlay = screen.getByLabelText('Player diagnostics');
+    expect(overlay).toHaveStyle({ display: 'none' });
+
+    window.dispatchEvent(
+      new MessageEvent('message', {
+        data: 'console',
+        origin: 'file://com.lg.app.signage',
+        source: window.parent,
+      })
+    );
+
+    expect(overlay).toHaveStyle({ display: 'block' });
+    await waitFor(() => expect(notifyWebos).toHaveBeenCalledOnce());
+    await waitFor(() => {
+      expect(overlay).toHaveTextContent('Organization: Castmill AB');
+      expect(overlay).toHaveTextContent('Operating system: webOS');
+      expect(overlay).toHaveTextContent('Chromium version: 38.0.2125.122');
+    });
   });
 
   it('starts WebOS notifications before cache initialization and signals readiness after mount', async () => {

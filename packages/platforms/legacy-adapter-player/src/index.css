@@ -103,6 +103,7 @@ body {
 .legacy-debug-overlay__status {
   padding: 0.3em 0;
   color: #d9d9d9;
+  white-space: pre-wrap;
 }
 
 .legacy-debug-overlay__error {
