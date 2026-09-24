@@ -20,6 +20,12 @@ const outbound = {
   }): Promise<void> {
     throw new Error('WebOS bridge is not initialized');
   },
+  restart: async function (): Promise<void> {
+    throw new Error('WebOS bridge is not initialized');
+  },
+  reboot: async function (): Promise<void> {
+    throw new Error('WebOS bridge is not initialized');
+  },
 };
 
 let initialized = false;
@@ -51,4 +57,14 @@ export async function removeWebosFile(file: string): Promise<void> {
 export async function clearWebosFiles(): Promise<void> {
   initWebosLegacyApi();
   await outbound.clearFiles();
+}
+
+export async function restartWebosApp(): Promise<void> {
+  initWebosLegacyApi();
+  await outbound.restart();
+}
+
+export async function rebootWebosDevice(): Promise<void> {
+  initWebosLegacyApi();
+  await outbound.reboot();
 }

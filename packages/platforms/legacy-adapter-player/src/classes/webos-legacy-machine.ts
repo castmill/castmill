@@ -2,6 +2,8 @@ import { BrowserMachine } from '@castmill/device';
 import {
   getWebosMachineGUID,
   initWebosLegacyApi,
+  rebootWebosDevice,
+  restartWebosApp,
   sendHeartbeat,
   sendPlayerReady,
 } from '../webos-legacy-api';
@@ -24,5 +26,13 @@ export class WebosLegacyMachine extends BrowserMachine {
       throw new Error('WebOS wrapper returned an invalid machine ID');
     }
     return id;
+  }
+
+  async restart(): Promise<void> {
+    await restartWebosApp();
+  }
+
+  async reboot(): Promise<void> {
+    await rebootWebosDevice();
   }
 }

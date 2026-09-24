@@ -4,7 +4,9 @@ import {
   fetchWebosFile,
   getWebosMachineGUID,
   initWebosLegacyApi,
+  rebootWebosDevice,
   removeWebosFile,
+  restartWebosApp,
 } from './api';
 
 describe('WebOS wrapper bridge', () => {
@@ -74,6 +76,8 @@ describe('WebOS wrapper bridge', () => {
       const file = 'file://internal/castmill-cache/abc.mp4';
       await call(() => removeWebosFile(file), 'storage_removeFile', [{ file }]);
       await call(() => clearWebosFiles(), 'clearFiles', []);
+      await call(() => restartWebosApp(), 'restart', []);
+      await call(() => rebootWebosDevice(), 'reboot', []);
     } finally {
       postMessage.mockRestore();
     }
