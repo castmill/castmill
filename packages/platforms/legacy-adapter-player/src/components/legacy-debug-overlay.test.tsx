@@ -36,6 +36,7 @@ const createMachine = () => ({
 
 afterEach(() => {
   cleanup();
+  vi.restoreAllMocks();
 });
 
 describe('LegacyDebugOverlay', () => {
@@ -145,29 +146,28 @@ describe('LegacyDebugOverlay', () => {
     });
   });
 
-  it('renders localized strings for supported locales', async () => {
-    Object.defineProperty(window.navigator, 'language', {
-      configurable: true,
-      value: 'sv-SE',
-    });
+  it.each(['sv-SE', 'ar-SA'])(
+    'renders English when the browser language is %s',
+    async (language) => {
+      vi.spyOn(navigator, 'language', 'get').mockReturnValue(language);
 
-    render(() => (
-      <LegacyDebugOverlay
-        visible
-        device={createDevice()}
-        machine={createMachine()}
-        serverUrl="https://example.test"
-        platform="browser"
-      />
-    ));
+      render(() => (
+        <LegacyDebugOverlay
+          visible
+          device={createDevice()}
+          machine={createMachine()}
+          serverUrl="https://example.test"
+          platform="browser"
+        />
+      ));
 
-    await waitFor(() => {
-      expect(
-        screen.getByLabelText('Diagnostik för äldre spelare')
-      ).toBeInTheDocument();
-    });
+      const overlay = screen.getByLabelText('Legacy player diagnostics');
+      expect(overlay).not.toHaveAttribute('dir', 'rtl');
 
-    expect(screen.getByText('Spelarnamn')).toBeInTheDocument();
-    expect(screen.getByText('Webbläsare')).toBeInTheDocument();
-  });
+      await waitFor(() => {
+        expect(screen.getByText('Player name')).toBeInTheDocument();
+      });
+      expect(screen.getByText('Browser')).toBeInTheDocument();
+    }
+  );
 });

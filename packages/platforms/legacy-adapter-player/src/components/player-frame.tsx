@@ -22,7 +22,6 @@ import {
 import { getLegacyBaseUrl } from '../utils/base-url';
 import { WebosWebSocket } from '../webos-legacy-api';
 import { createWebosVideoPlayback } from '../classes/webos-video-playback';
-import { useLegacyI18n } from '../i18n';
 import {
   LegacyDebugOverlay,
   type LegacyDebugDevice,
@@ -92,7 +91,6 @@ const getLegacyStorage = (platform: LegacyPlatform): StorageIntegration => {
 export const PlayerFrame: Component = () => {
   let ref: HTMLDivElement | undefined;
   let startupOverlay: HTMLDivElement | undefined;
-  const { isRtl, t } = useLegacyI18n();
   const [showDebug, setShowDebug] = createSignal(false);
   const [mounted, setMounted] = createSignal(false);
   const [startupError, setStartupError] = createSignal<string>();
@@ -132,9 +130,7 @@ export const PlayerFrame: Component = () => {
     setDebugContext({
       device,
       machine: legacyMachine,
-      serverUrl:
-        configuredServerUrl ??
-        t('legacyDebug.values.storedDeviceConfiguration'),
+      serverUrl: configuredServerUrl ?? 'Stored device configuration',
       platform,
     });
 
@@ -180,14 +176,13 @@ export const PlayerFrame: Component = () => {
           class="legacy-startup"
           ref={startupOverlay!}
           role={startupError() ? 'alert' : 'status'}
-          dir={isRtl ? 'rtl' : 'ltr'}
         >
           <Show when={!startupError()}>
             <div class="legacy-startup__track">
               <div class="legacy-startup__fill" />
             </div>
           </Show>
-          <span>{startupError() ?? t('legacyPlayer.initializing')}</span>
+          <span>{startupError() ?? 'Initializing player...'}</span>
         </div>
       </Show>
       <Show when={debugContext()}>

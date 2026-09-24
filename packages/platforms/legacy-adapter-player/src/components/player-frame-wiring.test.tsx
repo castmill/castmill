@@ -46,9 +46,6 @@ vi.mock('@castmill/cache', () => ({
   },
 }));
 vi.mock('./legacy-debug-overlay', () => ({ LegacyDebugOverlay: () => null }));
-vi.mock('../i18n', () => ({
-  useLegacyI18n: () => ({ isRtl: false, t: (key: string) => key }),
-}));
 
 beforeEach(() => {
   makeDevice.mockImplementation(() => ({
@@ -87,6 +84,7 @@ describe('PlayerFrame playback controller selection', () => {
 
   it('starts WebOS notifications before cache initialization and signals readiness after mount', async () => {
     vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('webOS');
+    vi.spyOn(navigator, 'language', 'get').mockReturnValue('sv-SE');
     let resolveCache!: () => void;
     initCache.mockReturnValueOnce(
       new Promise<void>((resolve) => {
@@ -95,7 +93,7 @@ describe('PlayerFrame playback controller selection', () => {
     );
     render(() => <PlayerFrame />);
     expect(screen.getByRole('status')).toHaveTextContent(
-      'legacyPlayer.initializing'
+      'Initializing player...'
     );
     await waitFor(() => expect(initCache).toHaveBeenCalledOnce());
     expect(initWebos).toHaveBeenCalledOnce();

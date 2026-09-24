@@ -8,9 +8,15 @@ import {
 } from 'solid-js';
 import { type DeviceInfo, type ServerConnectionStatus } from '@castmill/device';
 import type { LegacyMachine } from '../classes';
-import { useLegacyI18n } from '../i18n';
 
 export type LegacyPlatform = 'webos' | 'android' | 'electron' | 'browser';
+
+const PLATFORM_NAMES: Record<LegacyPlatform, string> = {
+  webos: 'webOS',
+  android: 'Android',
+  electron: 'Electron',
+  browser: 'Browser',
+};
 
 export interface LegacyDebugDevice {
   id?: string;
@@ -46,33 +52,22 @@ interface DebugRow {
   value: string;
 }
 
-const formatConnectionStatus = (
-  status: ServerConnectionStatus,
-  t: (key: string) => string
-): string => {
+const formatConnectionStatus = (status: ServerConnectionStatus): string => {
   switch (status) {
     case 'connected':
-      return t('legacyDebug.status.connected');
+      return 'Connected';
     case 'disconnected':
-      return t('legacyDebug.status.disconnected');
+      return 'Disconnected';
     case 'not-initialized':
-      return t('legacyDebug.status.notInitialized');
+      return 'Not initialized';
   }
 };
 
-const getRuntimeInfo = (
-  device: LegacyDebugDevice,
-  t: (key: string) => string
-): RuntimeInfo => ({
-  deviceId: device.id ?? t('legacyDebug.values.unavailable'),
-  deviceName: device.name ?? t('legacyDebug.values.unavailable'),
-  browserConnection: navigator.onLine
-    ? t('legacyDebug.status.online')
-    : t('legacyDebug.status.offline'),
-  serverConnection: formatConnectionStatus(
-    device.getServerConnectionStatus(),
-    t
-  ),
+const getRuntimeInfo = (device: LegacyDebugDevice): RuntimeInfo => ({
+  deviceId: device.id ?? 'Not available',
+  deviceName: device.name ?? 'Not available',
+  browserConnection: navigator.onLine ? 'Online' : 'Offline',
+  serverConnection: formatConnectionStatus(device.getServerConnectionStatus()),
   viewport: `${window.innerWidth} x ${window.innerHeight}`,
   screen: `${window.screen.width} x ${window.screen.height}`,
   devicePixelRatio: String(window.devicePixelRatio || 1),
@@ -84,16 +79,11 @@ const getErrorMessage = (error: unknown): string =>
 export const LegacyDebugOverlay: Component<LegacyDebugOverlayProps> = (
   props
 ) => {
-  const { isRtl, t } = useLegacyI18n();
   const [runtimeInfo, setRuntimeInfo] = createSignal<RuntimeInfo>(
-    getRuntimeInfo(props.device, t)
+    getRuntimeInfo(props.device)
   );
-  const [organization, setOrganization] = createSignal(
-    t('legacyDebug.values.unavailable')
-  );
-  const [network, setNetwork] = createSignal(
-    t('legacyDebug.values.unavailable')
-  );
+  const [organization, setOrganization] = createSignal('Not available');
+  const [network, setNetwork] = createSignal('Not available');
   const [deviceInfo, setDeviceInfo] = createSignal<DeviceInfo>();
   const [identityError, setIdentityError] = createSignal<string>();
   const [deviceInfoError, setDeviceInfoError] = createSignal<string>();
@@ -102,7 +92,7 @@ export const LegacyDebugOverlay: Component<LegacyDebugOverlayProps> = (
   const [loading, setLoading] = createSignal(false);
 
   const updateRuntimeInfo = () => {
-    setRuntimeInfo(getRuntimeInfo(props.device, t));
+    setRuntimeInfo(getRuntimeInfo(props.device));
   };
 
   const loadIdentity = async () => {
@@ -114,8 +104,8 @@ export const LegacyDebugOverlay: Component<LegacyDebugOverlayProps> = (
         props.device.getOrganizationName(),
         props.device.getCastmillNetworkName(),
       ]);
-      setOrganization(organizationName ?? t('legacyDebug.values.unavailable'));
-      setNetwork(networkName ?? t('legacyDebug.values.unavailable'));
+      setOrganization(organizationName ?? 'Not available');
+      setNetwork(networkName ?? 'Not available');
     } catch (error) {
       setIdentityError(getErrorMessage(error));
     } finally {
@@ -138,7 +128,7 @@ export const LegacyDebugOverlay: Component<LegacyDebugOverlayProps> = (
       const resolvedTimezone = props.machine.getTimezone
         ? await props.machine.getTimezone()
         : Intl.DateTimeFormat().resolvedOptions().timeZone;
-      setTimezone(resolvedTimezone || t('legacyDebug.values.unavailable'));
+      setTimezone(resolvedTimezone || 'Not available');
     } catch (error) {
       setTimezoneError(getErrorMessage(error));
     } finally {
@@ -174,55 +164,55 @@ export const LegacyDebugOverlay: Component<LegacyDebugOverlayProps> = (
     const runtime = runtimeInfo();
     const info = deviceInfo();
     const result: DebugRow[] = [
-      { label: t('legacyDebug.rows.playerName'), value: runtime.deviceName },
-      { label: t('legacyDebug.rows.deviceId'), value: runtime.deviceId },
-      { label: t('legacyDebug.rows.organization'), value: organization() },
-      { label: t('legacyDebug.rows.castmillNetwork'), value: network() },
-      { label: t('legacyDebug.rows.server'), value: props.serverUrl },
+      { label: 'Player name', value: runtime.deviceName },
+      { label: 'Device ID', value: runtime.deviceId },
+      { label: 'Organization', value: organization() },
+      { label: 'Castmill network', value: network() },
+      { label: 'Server', value: props.serverUrl },
       {
-        label: t('legacyDebug.rows.adapterPlatform'),
-        value: t(`legacyDebug.platform.${props.platform}`),
+        label: 'Adapter platform',
+        value: PLATFORM_NAMES[props.platform],
       },
       {
-        label: t('legacyDebug.rows.browserConnection'),
+        label: 'Browser connection',
         value: runtime.browserConnection,
       },
       {
-        label: t('legacyDebug.rows.serverConnection'),
+        label: 'Server connection',
         value: runtime.serverConnection,
       },
-      { label: t('legacyDebug.rows.viewport'), value: runtime.viewport },
-      { label: t('legacyDebug.rows.screen'), value: runtime.screen },
+      { label: 'Viewport', value: runtime.viewport },
+      { label: 'Screen', value: runtime.screen },
       {
-        label: t('legacyDebug.rows.devicePixelRatio'),
+        label: 'Device pixel ratio',
         value: runtime.devicePixelRatio,
       },
     ];
 
     if (timezone()) {
       result.push({
-        label: t('legacyDebug.rows.timezone'),
+        label: 'Timezone',
         value: timezone()!,
       });
     }
 
     if (info) {
       result.push(
-        { label: t('legacyDebug.rows.applicationType'), value: info.appType },
+        { label: 'Application type', value: info.appType },
         {
-          label: t('legacyDebug.rows.applicationVersion'),
+          label: 'Application version',
           value: info.appVersion,
         },
-        { label: t('legacyDebug.rows.operatingSystem'), value: info.os },
-        { label: t('legacyDebug.rows.hardware'), value: info.hardware }
+        { label: 'Operating system', value: info.os },
+        { label: 'Hardware', value: info.hardware }
       );
 
       const optionalInfo: Array<[string, string | undefined]> = [
-        [t('legacyDebug.rows.environmentVersion'), info.environmentVersion],
-        [t('legacyDebug.rows.chromiumVersion'), info.chromiumVersion],
-        [t('legacyDebug.rows.v8Version'), info.v8Version],
-        [t('legacyDebug.rows.nodeVersion'), info.nodeVersion],
-        [t('legacyDebug.rows.userAgent'), info.userAgent],
+        ['Environment version', info.environmentVersion],
+        ['Chromium version', info.chromiumVersion],
+        ['V8 version', info.v8Version],
+        ['Node.js version', info.nodeVersion],
+        ['User agent', info.userAgent],
       ];
 
       optionalInfo.forEach(([label, value]) => {
@@ -239,13 +229,12 @@ export const LegacyDebugOverlay: Component<LegacyDebugOverlayProps> = (
     <Show when={props.visible}>
       <aside
         class="legacy-debug-overlay"
-        aria-label={t('legacyDebug.ariaLabel')}
-        dir={isRtl ? 'rtl' : 'ltr'}
+        aria-label="Legacy player diagnostics"
       >
-        <div class="legacy-debug-overlay__title">{t('legacyDebug.title')}</div>
+        <div class="legacy-debug-overlay__title">Legacy player diagnostics</div>
         <Show when={loading() && !deviceInfo()}>
           <div class="legacy-debug-overlay__status">
-            {t('legacyDebug.loading')}
+            Loading machine information...
           </div>
         </Show>
         <For each={rows()}>
@@ -258,17 +247,17 @@ export const LegacyDebugOverlay: Component<LegacyDebugOverlayProps> = (
         </For>
         <Show when={identityError()}>
           <div class="legacy-debug-overlay__error">
-            {t('legacyDebug.errors.playerIdentity')}: {identityError()}
+            Player identity: {identityError()}
           </div>
         </Show>
         <Show when={deviceInfoError()}>
           <div class="legacy-debug-overlay__error">
-            {t('legacyDebug.errors.deviceInformation')}: {deviceInfoError()}
+            Device information: {deviceInfoError()}
           </div>
         </Show>
         <Show when={timezoneError()}>
           <div class="legacy-debug-overlay__error">
-            {t('legacyDebug.errors.timezone')}: {timezoneError()}
+            Timezone: {timezoneError()}
           </div>
         </Show>
       </aside>

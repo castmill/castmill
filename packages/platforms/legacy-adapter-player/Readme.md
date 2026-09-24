@@ -165,7 +165,7 @@ Electron, browser players, and dashboard previews do not receive this override.
 ### Startup diagnostics
 
 The legacy page displays a loading indicator even before its JavaScript loads,
-then shows a localized initialization state until device storage is ready.
+then shows an English initialization state until device storage is ready.
 Initialization errors are displayed instead of leaving a blank white screen.
 WebOS cache metadata is memory-backed, so initialization does not depend on
 Dexie or IndexedDB. Initialization failures log the failing step and original

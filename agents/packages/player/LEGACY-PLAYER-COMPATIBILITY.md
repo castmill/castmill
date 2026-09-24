@@ -14,6 +14,11 @@ legacy({ targets: { chrome: '38' } });
 Modern browser validation is not sufficient. Test affected changes on a connected
 legacy Android player before considering them compatible.
 
+The legacy adapter player displays English-only UI on Android, WebOS, and
+Electron. Keep startup and diagnostics strings in English; do not add locale
+files or language selection to `packages/platforms/legacy-adapter-player/`.
+Dashboard localization remains separate.
+
 ## JavaScript Rules
 
 ### Legacy WebOS wrapper
