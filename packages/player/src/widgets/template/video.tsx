@@ -105,6 +105,29 @@ interface VideoProps extends BaseComponentProps {
   globals: PlayerGlobals;
 }
 
+export function playVideo(
+  video: Pick<HTMLVideoElement, 'play'>,
+  reportError?: PlayerGlobals['reportError']
+): void {
+  const handleError = (error: unknown) => {
+    console.error('[Video] Failed to start playback', error);
+    reportError?.({
+      category: 'playback',
+      code: 'video-play-rejected',
+      error,
+    });
+  };
+
+  try {
+    const playPromise = video.play();
+    if (playPromise) {
+      void playPromise.catch(handleError);
+    }
+  } catch (error) {
+    handleError(error);
+  }
+}
+
 export const Video: Component<VideoProps> = (props) => {
   let videoRef: HTMLVideoElement | undefined;
 
@@ -205,7 +228,7 @@ export const Video: Component<VideoProps> = (props) => {
               const targetTime = offset / 1000;
               videoRef!.currentTime = targetTime;
             }
-            videoRef!.play();
+            playVideo(videoRef!, props.globals.reportError);
           },
           pause: () => {
             videoRef!.pause();

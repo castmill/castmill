@@ -1041,7 +1041,13 @@
       "confirmClearAll": "Limpiar Todos los Eventos",
       "confirmClearAllMessage": "¿Está seguro de que desea eliminar todos los eventos de este dispositivo? Esta acción no se puede deshacer.",
       "clearAllSuccess": "Se eliminaron {{count}} eventos exitosamente",
-      "deleteError": "Error al eliminar eventos: {{error}}"
+      "deleteError": "Error al eliminar eventos: {{error}}",
+      "occurrences": "Ocurrencias",
+      "firstSeen": "Visto por primera vez",
+      "lastSeen": "Visto por última vez",
+      "details": "Detalles",
+      "detailsTitle": "Detalles del error",
+      "errorDetails": "Detalles de diagnóstico sanitizados"
     },
     "errors": {
       "setChannelFailed": "Error al establecer el canal del dispositivo: {{error}}",

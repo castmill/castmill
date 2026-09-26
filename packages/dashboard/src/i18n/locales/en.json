@@ -1073,7 +1073,13 @@
       "confirmClearAll": "Clear All Events",
       "confirmClearAllMessage": "Are you sure you want to delete all events for this device? This action cannot be undone.",
       "clearAllSuccess": "Successfully deleted {{count}} events",
-      "deleteError": "Error deleting events: {{error}}"
+      "deleteError": "Error deleting events: {{error}}",
+      "occurrences": "Occurrences",
+      "firstSeen": "First seen",
+      "lastSeen": "Last seen",
+      "details": "Details",
+      "detailsTitle": "Error details",
+      "errorDetails": "Sanitized diagnostic details"
     },
     "errors": {
       "setChannelFailed": "Failed to set device channel: {{error}}",

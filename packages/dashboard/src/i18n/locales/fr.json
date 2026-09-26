@@ -1025,7 +1025,13 @@
       "confirmClearAll": "Effacer tous les événements",
       "confirmClearAllMessage": "Êtes-vous sûr de vouloir supprimer tous les événements pour cet appareil ? Cette action ne peut pas être annulée.",
       "clearAllSuccess": "{{count}} événements supprimés avec succès",
-      "deleteError": "Erreur lors de la suppression des événements : {{error}}"
+      "deleteError": "Erreur lors de la suppression des événements : {{error}}",
+      "occurrences": "Nombre d’occurrences",
+      "firstSeen": "Première occurrence",
+      "lastSeen": "Dernière occurrence",
+      "details": "Détails",
+      "detailsTitle": "Détails de l’erreur",
+      "errorDetails": "Détails de diagnostic nettoyés"
     },
     "errors": {
       "setChannelFailed": "Échec de la définition du canal de l'appareil : {{error}}",

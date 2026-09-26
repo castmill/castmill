@@ -1008,7 +1008,13 @@
       "confirmClearAll": "Rensa alla händelser",
       "confirmClearAllMessage": "Är du säker på att du vill ta bort alla händelser för denna enhet? Denna åtgärd kan inte ångras.",
       "clearAllSuccess": "{{count}} händelser har tagits bort",
-      "deleteError": "Fel vid borttagning av händelser: {{error}}"
+      "deleteError": "Fel vid borttagning av händelser: {{error}}",
+      "occurrences": "Förekomster",
+      "firstSeen": "Först sedd",
+      "lastSeen": "Senast sedd",
+      "details": "Detaljer",
+      "detailsTitle": "Feldetaljer",
+      "errorDetails": "Sanerade diagnostikdetaljer"
     },
     "errors": {
       "setChannelFailed": "Misslyckades att ställa in enhetskanal: {{error}}",

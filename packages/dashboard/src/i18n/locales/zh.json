@@ -1013,7 +1013,13 @@
       "confirmClearAll": "清除所有事件",
       "confirmClearAllMessage": "确定要删除此设备的所有事件吗？此操作无法撤消。",
       "clearAllSuccess": "成功删除 {{count}} 个事件",
-      "deleteError": "删除事件时出错：{{error}}"
+      "deleteError": "删除事件时出错：{{error}}",
+      "occurrences": "发生次数",
+      "firstSeen": "首次出现",
+      "lastSeen": "最近出现",
+      "details": "详情",
+      "detailsTitle": "错误详情",
+      "errorDetails": "已清理的诊断详情"
     },
     "errors": {
       "setChannelFailed": "设置设备频道失败:{{error}}",

@@ -6,6 +6,15 @@ import { Renderer, Viewport } from './renderer';
 
 const TIMER_RESOLUTION = 50;
 
+export interface PlayerErrorReporter {
+  report(input: {
+    category: 'playback' | 'media-load' | 'runtime';
+    error: unknown;
+    code?: string;
+    context?: { layerName?: string };
+  }): void;
+}
+
 /**
  * Viewport
  *
@@ -19,7 +28,8 @@ export class Player extends EventEmitter {
   constructor(
     private playlist: Playlist,
     private renderer: Renderer,
-    viewport?: Viewport
+    viewport?: Viewport,
+    private errorReporter?: PlayerErrorReporter
   ) {
     super();
 
@@ -83,6 +93,7 @@ export class Player extends EventEmitter {
       next: (time) => this.emit('time', time),
       error: (err) => {
         console.log('Timer error', err);
+        this.errorReporter?.report({ category: 'playback', error: err });
       },
     });
 
@@ -103,6 +114,7 @@ export class Player extends EventEmitter {
       .subscribe({
         error: (err) => {
           console.log('Playing error', err);
+          this.errorReporter?.report({ category: 'playback', error: err });
         },
         complete: () => {
           this.timerSubscription?.unsubscribe();

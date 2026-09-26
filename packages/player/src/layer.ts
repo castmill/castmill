@@ -121,6 +121,7 @@ export class Layer extends EventEmitter {
       widget,
       widgetAspectRatio: effectiveAspectRatio,
     });
+    layer.forwardErrors(globals);
 
     return layer;
   }
@@ -183,9 +184,11 @@ export class Layer extends EventEmitter {
 
     // Don't pass explicit duration - let Layer.duration() use widget.duration()
     // which will calculate based on the actual content
-    return new Layer(playlist.name, {
+    const layer = new Layer(playlist.name, {
       widget,
     });
+    layer.forwardErrors(globals);
+    return layer;
   }
 
   constructor(
@@ -228,6 +231,12 @@ export class Layer extends EventEmitter {
     if (this.widgetAspectRatio !== null) {
       this.setupResizeObserver();
     }
+  }
+
+  private forwardErrors(globals: PlayerGlobals): void {
+    this.on('error', (error) => {
+      globals.reportError?.({ category: 'playback', error });
+    });
   }
 
   /**
@@ -344,6 +353,7 @@ export class Layer extends EventEmitter {
           // TODO: we should show more information about this error. Which widget? and which options?
           // for instance a common failure is a video or image that failed to be downloaded.
           console.error(`Layer: show widget error`, err);
+          this.emit('error', err);
           return of('error');
         })
       );

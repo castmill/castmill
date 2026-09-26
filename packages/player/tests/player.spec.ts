@@ -8,12 +8,41 @@ import {
   Layer,
   Player,
   Playlist,
+  playVideo,
   Renderer,
   timer,
   Widget,
 } from '../dist/index.js';
 
 describe('Layer aspect ratio sizing', () => {
+  it('forwards layout layer errors through the global reporter', () => {
+    const originalDocument = globalThis.document;
+    const originalWindow = globalThis.window;
+    const reportError = spy();
+    const error = new Error('Nested widget failed');
+
+    try {
+      (globalThis as any).document = {
+        createElement: () => ({ style: {}, dataset: {} }),
+      };
+      (globalThis as any).window = {};
+      const layer = Layer.fromPlaylist(
+        { name: 'layout', items: [] } as any,
+        {} as any,
+        { target: 'poster', reportError }
+      );
+
+      layer.emit('error', error);
+
+      expect(
+        reportError.calledOnceWithExactly({ category: 'playback', error })
+      ).to.equal(true);
+    } finally {
+      (globalThis as any).document = originalDocument;
+      (globalThis as any).window = originalWindow;
+    }
+  });
+
   it('falls back to window resize events when ResizeObserver is unavailable', () => {
     const originalDocument = globalThis.document;
     const originalWindow = globalThis.window;
@@ -190,6 +219,35 @@ describe('Player.clear', () => {
 
     expect(stopSpy.calledOnce).to.equal(true);
     expect(renderer.clear.calledOnce).to.equal(true);
+  });
+});
+
+describe('Template video playback', () => {
+  it('reports rejected autoplay promises without leaving them unhandled', async () => {
+    const rejection = new Error('User activation is required');
+    const reports: unknown[] = [];
+    const errorSpy = stub(console, 'error');
+    const video = {
+      play: () => Promise.reject(rejection),
+    };
+
+    try {
+      playVideo(video, (report) => reports.push(report));
+      await Promise.resolve();
+
+      expect(
+        errorSpy.calledWith('[Video] Failed to start playback', rejection)
+      ).to.equal(true);
+      expect(reports).to.deep.equal([
+        {
+          category: 'playback',
+          code: 'video-play-rejected',
+          error: rejection,
+        },
+      ]);
+    } finally {
+      errorSpy.restore();
+    }
   });
 });
 

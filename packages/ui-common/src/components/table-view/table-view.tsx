@@ -50,6 +50,7 @@ interface TableViewProps<
   title?: string | (() => string);
   resource: string;
   params?: [Params, (params: SetParams, options?: any) => void]; // typeof useSearchParams;
+  initialSortOptions?: SortOptions;
   ref?: (ref: TableViewRef<IdType, Item>) => void;
   fetchData: (params: {
     page: { num: number; size: number };
@@ -146,10 +147,12 @@ export const TableView = <
   // If props.params is defined, it’s `[searchParams, setSearchParams]` from useSearchParams
   // Otherwise use reactive signals (or store) as a fallback
   // Track current sort options
-  const [sortOptions, setSortOptions] = createSignal<SortOptions>({
-    key: 'name',
-    direction: 'ascending',
-  });
+  const [sortOptions, setSortOptions] = createSignal<SortOptions>(
+    props.initialSortOptions || {
+      key: 'name',
+      direction: 'ascending',
+    }
+  );
 
   const [fallbackParams, setFallbackParams] = createSignal<{
     page?: number;
