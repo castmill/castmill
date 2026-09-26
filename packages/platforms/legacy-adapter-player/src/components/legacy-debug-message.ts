@@ -1,7 +1,8 @@
 export const listenForLegacyConsoleToggle = (
   onToggle: () => void,
   allowedOrigin = window.location.origin,
-  allowFileWrapper = false
+  allowFileWrapper = false,
+  allowMissingParentForFileWrapper = false
 ): (() => void) => {
   const report = (message: string) => {
     console.log(`[legacy debug] ${message}`);
@@ -27,7 +28,9 @@ export const listenForLegacyConsoleToggle = (
       event.source === window.parent ||
       // Legacy WebOS does not always preserve WindowProxy identity for local
       // file-wrapper messages, despite delivering the message to its iframe.
-      (allowFileWrapper && isFileWrapperOrigin);
+      (allowMissingParentForFileWrapper &&
+        isFileWrapper &&
+        isFileWrapperOrigin);
     const isExpectedOrigin = origin === allowedOrigin || isFileWrapper;
     if (isExpectedParent && isExpectedOrigin) {
       report(
@@ -50,7 +53,7 @@ export const listenForLegacyConsoleToggle = (
   report(
     `Listener registered (allowedOrigin=${allowedOrigin}, allowFileWrapper=${String(
       allowFileWrapper
-    )})`
+    )}, allowMissingParentForFileWrapper=${String(allowMissingParentForFileWrapper)})`
   );
 
   return () => {

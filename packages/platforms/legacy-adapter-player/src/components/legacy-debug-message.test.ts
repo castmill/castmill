@@ -125,7 +125,12 @@ describe('listenForLegacyConsoleToggle', () => {
   it('accepts a WebOS file-wrapper message when WindowProxy identity is unavailable', () => {
     const onToggle = vi.fn();
     cleanups.push(
-      listenForLegacyConsoleToggle(onToggle, 'http://castmill.example', true)
+      listenForLegacyConsoleToggle(
+        onToggle,
+        'http://castmill.example',
+        true,
+        true
+      )
     );
 
     const iframe = document.createElement('iframe');
@@ -141,6 +146,52 @@ describe('listenForLegacyConsoleToggle', () => {
     iframe.remove();
 
     expect(onToggle).toHaveBeenCalledOnce();
+  });
+
+  it.each(['null', 'file://com.castmill.wrapper'])(
+    'rejects an Android file-wrapper message from a different frame (%s)',
+    (origin) => {
+      const onToggle = vi.fn();
+      cleanups.push(
+        listenForLegacyConsoleToggle(onToggle, 'http://castmill.example', true)
+      );
+      const iframe = document.createElement('iframe');
+      document.body.append(iframe);
+      window.dispatchEvent(
+        new MessageEvent('message', {
+          data: 'console',
+          origin,
+          source: iframe.contentWindow,
+        })
+      );
+      iframe.remove();
+
+      expect(onToggle).not.toHaveBeenCalled();
+    }
+  );
+
+  it('keeps parent identity mandatory for WebOS network-origin messages', () => {
+    const onToggle = vi.fn();
+    cleanups.push(
+      listenForLegacyConsoleToggle(
+        onToggle,
+        'https://castmill.example',
+        true,
+        true
+      )
+    );
+    const iframe = document.createElement('iframe');
+    document.body.append(iframe);
+    window.dispatchEvent(
+      new MessageEvent('message', {
+        data: 'console',
+        origin: 'https://castmill.example',
+        source: iframe.contentWindow,
+      })
+    );
+    iframe.remove();
+
+    expect(onToggle).not.toHaveBeenCalled();
   });
 
   it('does not accept a non-parent file message without local-wrapper support', () => {

@@ -260,7 +260,8 @@ export const PlayerFrame: Component = () => {
       const stopListening = listenForLegacyConsoleToggle(
         toggleDebugOverlay,
         allowedConsoleOrigin,
-        platform === 'android' || platform === 'webos'
+        platform === 'android' || platform === 'webos',
+        platform === 'webos'
       );
       onCleanup(stopListening);
     }

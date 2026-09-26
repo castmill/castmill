@@ -123,6 +123,54 @@ describe('PlayerFrame playback controller selection', () => {
     });
   });
 
+  it('allows the WebOS file-wrapper identity fallback', async () => {
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('webOS');
+    render(() => <PlayerFrame />);
+    const overlay = screen.getByLabelText('Player diagnostics');
+    const iframe = document.createElement('iframe');
+    document.body.append(iframe);
+
+    window.dispatchEvent(
+      new MessageEvent('message', {
+        data: 'console',
+        origin: 'file://com.lg.app.signage',
+        source: iframe.contentWindow,
+      })
+    );
+    iframe.remove();
+
+    expect(overlay).toHaveStyle({ display: 'block' });
+    await waitFor(() => expect(mountDevice).toHaveBeenCalledOnce());
+  });
+
+  it('requires parent identity for Android file-wrapper messages', async () => {
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('Android 5.1');
+    render(() => <PlayerFrame />);
+    const overlay = await screen.findByLabelText('Player diagnostics');
+    const iframe = document.createElement('iframe');
+    document.body.append(iframe);
+
+    window.dispatchEvent(
+      new MessageEvent('message', {
+        data: 'console',
+        origin: 'file://com.castmill.wrapper',
+        source: iframe.contentWindow,
+      })
+    );
+    iframe.remove();
+    expect(overlay).toHaveStyle({ display: 'none' });
+
+    window.dispatchEvent(
+      new MessageEvent('message', {
+        data: 'console',
+        origin: 'file://com.castmill.wrapper',
+        source: window.parent,
+      })
+    );
+    expect(overlay).toHaveStyle({ display: 'block' });
+    await waitFor(() => expect(mountDevice).toHaveBeenCalledOnce());
+  });
+
   it('starts WebOS notifications before cache initialization and signals readiness after mount', async () => {
     vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('webOS');
     vi.spyOn(navigator, 'language', 'get').mockReturnValue('sv-SE');
