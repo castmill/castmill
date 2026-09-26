@@ -273,6 +273,11 @@ export const Video: Component<VideoProps> = (props) => {
       let loading$: Observable<string>;
       if (videoRef.readyState < ReadyState.HAVE_ENOUGH_DATA) {
         loading$ = new Observable<string>((subscriber) => {
+          const video = videoRef;
+          if (!video) {
+            subscriber.error(new Error('Video element is not available'));
+            return;
+          }
           let readinessTimer: number | undefined;
           let metadataTimer: number | undefined;
           let recovering = false;
@@ -313,7 +318,7 @@ export const Video: Component<VideoProps> = (props) => {
                     );
                     return;
                   }
-                  videoRef!.src = url;
+                  video.src = url;
                   clearTimeout(readinessTimer);
                   readinessTimer = window.setTimeout(
                     () =>
@@ -322,33 +327,31 @@ export const Video: Component<VideoProps> = (props) => {
                       ),
                     15000
                   );
-                  videoRef!.load();
+                  video.load();
                 })
                 .catch((error: unknown) => subscriber.error(error));
               return;
             }
-            subscriber.error(
-              videoRef!.error ?? new Error('Video failed to load')
-            );
+            subscriber.error(video.error ?? new Error('Video failed to load'));
           };
 
-          videoRef!.addEventListener('loadedmetadata', metadataHandler);
-          videoRef!.addEventListener('canplaythrough', handler);
+          video.addEventListener('loadedmetadata', metadataHandler);
+          video.addEventListener('canplaythrough', handler);
           if (playbackController) {
-            videoRef!.addEventListener('loadeddata', metadataHandler);
-            videoRef!.addEventListener('canplay', handler);
+            video.addEventListener('loadeddata', metadataHandler);
+            video.addEventListener('canplay', handler);
             readinessTimer = window.setTimeout(() => {
-              if (videoRef!.readyState >= ReadyState.HAVE_METADATA) {
+              if (video.readyState >= ReadyState.HAVE_METADATA) {
                 handler();
               } else {
                 subscriber.error(new Error('Timed out loading video metadata'));
               }
             }, 15000);
           }
-          videoRef!.addEventListener('error', errorHandler);
+          video.addEventListener('error', errorHandler);
 
           try {
-            videoRef!.load();
+            video.load();
           } catch (error) {
             subscriber.error(error);
           }
@@ -356,13 +359,13 @@ export const Video: Component<VideoProps> = (props) => {
           return () => {
             clearTimeout(readinessTimer);
             clearTimeout(metadataTimer);
-            videoRef!.removeEventListener('loadedmetadata', metadataHandler);
-            videoRef!.removeEventListener('canplaythrough', handler);
+            video.removeEventListener('loadedmetadata', metadataHandler);
+            video.removeEventListener('canplaythrough', handler);
             if (playbackController) {
-              videoRef!.removeEventListener('loadeddata', metadataHandler);
-              videoRef!.removeEventListener('canplay', handler);
+              video.removeEventListener('loadeddata', metadataHandler);
+              video.removeEventListener('canplay', handler);
             }
-            videoRef!.removeEventListener('error', errorHandler);
+            video.removeEventListener('error', errorHandler);
           };
         });
       } else {
@@ -410,7 +413,9 @@ export const Video: Component<VideoProps> = (props) => {
         </div>
       </Show>
       <video
-        ref={videoRef}
+        ref={(element) => {
+          videoRef = element;
+        }}
         data-component="video"
         data-name={props.name}
         style={{

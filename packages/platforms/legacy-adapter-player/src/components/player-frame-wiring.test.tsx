@@ -56,6 +56,7 @@ vi.mock('@castmill/cache', () => ({
 beforeEach(() => {
   makeDevice.mockImplementation(() => ({
     init: vi.fn().mockResolvedValue(undefined),
+    reportStartupError: vi.fn(),
     id: 'device-42',
     name: 'Lobby Player',
     getServerConnectionStatus: () => 'connected',
@@ -156,7 +157,8 @@ describe('PlayerFrame playback controller selection', () => {
 
   it('shows cache initialization failures instead of a blank screen', async () => {
     vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('webOS');
-    initCache.mockRejectedValueOnce(new Error('Cache unavailable'));
+    const failure = new Error('Cache unavailable');
+    initCache.mockRejectedValueOnce(failure);
     const consoleError = vi
       .spyOn(console, 'error')
       .mockImplementation(() => {});
@@ -167,10 +169,32 @@ describe('PlayerFrame playback controller selection', () => {
       'Cache unavailable'
     );
     expect(mountDevice).not.toHaveBeenCalled();
+    expect(
+      vi.mocked(Device).mock.results[0].value.reportStartupError
+    ).toHaveBeenCalledWith(failure);
     expect(consoleError).toHaveBeenCalledWith(
       'Legacy adapter initialization failed during cache initialization',
       expect.any(Error),
       expect.any(String)
     );
+  });
+
+  it('reports bridge failures before mounting the device', async () => {
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('webOS');
+    const failure = new Error('Wrapper unavailable');
+    initWebos.mockImplementationOnce(() => {
+      throw failure;
+    });
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    render(() => <PlayerFrame />);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Wrapper unavailable'
+    );
+    expect(
+      vi.mocked(Device).mock.results[0].value.reportStartupError
+    ).toHaveBeenCalledWith(failure);
+    expect(mountDevice).not.toHaveBeenCalled();
   });
 });

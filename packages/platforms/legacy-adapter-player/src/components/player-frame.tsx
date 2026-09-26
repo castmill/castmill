@@ -93,7 +93,7 @@ const getLegacyStorage = (platform: LegacyPlatform): StorageIntegration => {
 export const PlayerFrame: Component = () => {
   let ref: HTMLDivElement | undefined;
   let startupOverlay: HTMLDivElement | undefined;
-  let debugOverlay: HTMLAsideElement | undefined;
+  let debugOverlay: HTMLElement | undefined;
   let webosDebugDetails: HTMLDivElement | undefined;
   let refreshWebosDebugDetails: (() => void) | undefined;
   const usesWebosDebugShell = getLegacyPlatform() === 'webos';
@@ -160,7 +160,8 @@ export const PlayerFrame: Component = () => {
     if (platform === 'webos') {
       const serverUrl = configuredServerUrl ?? 'Stored device configuration';
       const updateWebosDebugDetails = async () => {
-        if (!webosDebugDetails) {
+        const detailsElement = webosDebugDetails;
+        if (!detailsElement) {
           return;
         }
 
@@ -180,7 +181,7 @@ export const PlayerFrame: Component = () => {
           ['Screen', `${window.screen.width} x ${window.screen.height}`],
           ['Device pixel ratio', String(window.devicePixelRatio || 1)],
         ];
-        webosDebugDetails.textContent = rows
+        detailsElement.textContent = rows
           .map(([label, value]) => `${label}: ${value}`)
           .join('\n');
 
@@ -221,13 +222,14 @@ export const PlayerFrame: Component = () => {
             ['Operating system', info.os],
             ['Hardware', info.hardware]
           );
-          [
+          const optionalRows: Array<[string, string | undefined]> = [
             ['Environment version', info.environmentVersion],
             ['Chromium version', info.chromiumVersion],
             ['V8 version', info.v8Version],
             ['Node.js version', info.nodeVersion],
             ['User agent', info.userAgent],
-          ].forEach(([label, value]) => {
+          ];
+          optionalRows.forEach(([label, value]) => {
             if (value) {
               rows.push([label, value]);
             }
@@ -239,11 +241,9 @@ export const PlayerFrame: Component = () => {
           ]);
         }
 
-        if (webosDebugDetails) {
-          webosDebugDetails.textContent = rows
-            .map(([label, value]) => `${label}: ${value}`)
-            .join('\n');
-        }
+        detailsElement.textContent = rows
+          .map(([label, value]) => `${label}: ${value}`)
+          .join('\n');
       };
 
       refreshWebosDebugDetails = () => {
@@ -282,6 +282,7 @@ export const PlayerFrame: Component = () => {
         (legacyMachine as WebosLegacyMachine).notifyReady();
       }
     })().catch((error: unknown) => {
+      device.reportStartupError(error);
       console.error(
         `Legacy adapter initialization failed during ${startupStep}`,
         error,
@@ -331,7 +332,12 @@ export const PlayerFrame: Component = () => {
           }}
         >
           <div class="legacy-debug-overlay__title">Player diagnostics</div>
-          <div ref={webosDebugDetails!} class="legacy-debug-overlay__status">
+          <div
+            ref={(element) => {
+              webosDebugDetails = element;
+            }}
+            class="legacy-debug-overlay__status"
+          >
             WebOS debug console is open.
           </div>
         </LegacyDebugShell>

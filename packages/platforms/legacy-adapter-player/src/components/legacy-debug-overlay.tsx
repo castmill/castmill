@@ -32,7 +32,7 @@ export interface LegacyDebugDevice {
 
 interface LegacyDebugOverlayProps {
   visible: boolean;
-  overlayRef?: (element: HTMLAsideElement) => void;
+  overlayRef?: (element: HTMLElement) => void;
   device: LegacyDebugDevice;
   machine: Pick<LegacyMachine, 'getDeviceInfo' | 'getTimezone'>;
   serverUrl: string;
@@ -41,7 +41,7 @@ interface LegacyDebugOverlayProps {
 
 interface LegacyDebugShellProps {
   visible: boolean;
-  overlayRef?: (element: HTMLAsideElement) => void;
+  overlayRef?: (element: HTMLElement) => void;
 }
 
 export const LegacyDebugShell: ParentComponent<LegacyDebugShellProps> = (

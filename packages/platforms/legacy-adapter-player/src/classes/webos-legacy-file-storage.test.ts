@@ -124,10 +124,20 @@ describe('WebosLegacyFileStorage', () => {
       { url, headers: { Authorization: 'Bearer private-token' } },
       { url: signedMedia, headers: { Authorization: 'Bearer private-token' } },
     ]);
+    const localMedia = 'file:///internal/private/movie.mp4';
+    const ftpMedia = 'ftp://cdn.castmill.test/movie.mp4';
+    await storage.storeFile(localMedia, { type: ItemType.Media });
+    await storage.storeFile(ftpMedia, { type: ItemType.Media });
+    expect(requests.slice(2)).toEqual([
+      { url: localMedia, headers: {} },
+      { url: ftpMedia, headers: {} },
+    ]);
     expect(fetchWebosFile).not.toHaveBeenCalled();
     expect(localStorage.getItem('castmill-webos-file-map')).toBeNull();
     await storage.deleteFile(url);
     await storage.deleteFile(signedMedia);
+    await storage.deleteFile(localMedia);
+    await storage.deleteFile(ftpMedia);
     expect(await storage.listFiles()).toEqual([]);
   });
 

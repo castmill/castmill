@@ -323,6 +323,65 @@ describe('WebosVideoPlayback', () => {
     expect(video.play).toHaveBeenCalledOnce();
   });
 
+  it('ignores a late decoder error after playback is paused', async () => {
+    video.src = `http://127.0.0.1:9080/castmill-cache/${'a'.repeat(64)}.mp4`;
+    const refresh = vi
+      .fn()
+      .mockResolvedValue(
+        `http://127.0.0.1:9080/castmill-cache/${'b'.repeat(64)}.mp4`
+      );
+    controller.dispose();
+    controller = new WebosVideoPlayback(video, report, refresh);
+    controller.play(4000);
+    await flush();
+    controller.pause();
+    video.dispatchEvent(new Event('error'));
+    await flush();
+    expect(refresh).not.toHaveBeenCalled();
+    expect(video.play).toHaveBeenCalledOnce();
+    expect(report).not.toHaveBeenCalled();
+  });
+
+  it('does not turn a paused seek into playback after a decoder error', async () => {
+    video.src = `http://127.0.0.1:9080/castmill-cache/${'a'.repeat(64)}.mp4`;
+    const refresh = vi
+      .fn()
+      .mockResolvedValue(
+        `http://127.0.0.1:9080/castmill-cache/${'b'.repeat(64)}.mp4`
+      );
+    controller.dispose();
+    controller = new WebosVideoPlayback(video, report, refresh);
+    controller.play(4000);
+    await flush();
+    controller.pause();
+    controller.seek(6000);
+    await flush();
+    video.dispatchEvent(new Event('error'));
+    await flush();
+    expect(refresh).not.toHaveBeenCalled();
+    expect(video.play).toHaveBeenCalledOnce();
+    expect(report).not.toHaveBeenCalled();
+  });
+
+  it('ignores a failed recovery after playback is paused', async () => {
+    video.src = `http://127.0.0.1:9080/castmill-cache/${'a'.repeat(64)}.mp4`;
+    let reject!: (error: Error) => void;
+    const refresh = vi.fn().mockReturnValue(
+      new Promise<string>((_resolve, fail) => {
+        reject = fail;
+      })
+    );
+    controller.dispose();
+    controller = new WebosVideoPlayback(video, report, refresh);
+    controller.play(4000);
+    await flush();
+    video.dispatchEvent(new Event('error'));
+    controller.pause();
+    reject(new Error('Download failed'));
+    await flush();
+    expect(report).not.toHaveBeenCalled();
+  });
+
   it('reports synchronous load failures', async () => {
     video.readyState = 0;
     video.load.mockImplementation(() => {

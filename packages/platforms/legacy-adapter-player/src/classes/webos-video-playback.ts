@@ -52,7 +52,7 @@ export class WebosVideoPlayback implements VideoPlaybackController {
   }
 
   private handlePlaybackError = (): void => {
-    if (!this.hasPlayed || this.disposed) return;
+    if (!this.hasPlayed || !this.request?.play || this.disposed) return;
     if (
       this.recovered ||
       !isWebosNativeUrl(this.video.src) ||
@@ -72,12 +72,13 @@ export class WebosVideoPlayback implements VideoPlaybackController {
     const request = this.request;
     void this.recoverMedia()
       .then((url) => {
-        if (this.disposed || this.request !== request) return;
+        if (this.disposed || !request || this.request !== request) return;
         if (!url) throw new Error('Failed to refresh WebOS video media');
         this.video.src = url;
         this.schedule(offset, true);
       })
       .catch((error: unknown) => {
+        if (this.disposed || this.request !== request) return;
         console.error('[WebOS Video] Failed to recover media', error);
         this.reportError?.({
           category: 'media-load',

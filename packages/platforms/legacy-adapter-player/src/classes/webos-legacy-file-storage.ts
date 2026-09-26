@@ -160,6 +160,9 @@ export class WebosLegacyFileStorage implements StorageIntegration {
 
   private canDownloadNatively(url: string): boolean {
     const parsed = new URL(url);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return false;
+    }
     // The wrapper cannot send headers and logs the input URL. Keep signed or
     // token-bearing URLs in the browser store instead of exposing credentials.
     if (parsed.search || parsed.username || parsed.password || parsed.hash) {
