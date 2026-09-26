@@ -275,7 +275,7 @@ export const PlayerFrame: Component = () => {
 
       startupStep = 'device mount';
       mountDevice(ref, device);
-      if (startupOverlay) startupOverlay.style.display = 'none';
+      startupOverlay?.style.setProperty('display', 'none');
       setMounted(true);
       if (platform === 'webos') {
         startupStep = 'wrapper notification';
@@ -298,7 +298,9 @@ export const PlayerFrame: Component = () => {
       <Show when={!mounted()}>
         <div
           class="legacy-startup"
-          ref={startupOverlay!}
+          ref={(element) => {
+            startupOverlay = element;
+          }}
           role={startupError() ? 'alert' : 'status'}
         >
           <Show when={!startupError()}>
