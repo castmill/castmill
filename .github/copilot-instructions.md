@@ -57,13 +57,19 @@ agents/
 
 ## 🌍 Internationalization (i18n)
 
-**CRITICAL**: All user-facing text must be localized.
+**CRITICAL**: Localize user-facing text except in the English-only legacy
+adapter player.
 
-- **9 Languages**: English, Spanish, Swedish, German, French, Chinese, Arabic (RTL), Korean, Japanese
-- **100% Coverage Required**: CI validates all languages are complete
+- **Dashboard: 9 Languages**: English, Spanish, Swedish, German, French, Chinese, Arabic (RTL), Korean, Japanese
+- **Dashboard: 100% Coverage Required**: CI validates all languages are complete
 - **Before Commit**: Run `cd packages/dashboard && yarn check-translations`
 
 See `packages/dashboard/AGENTS.md` for complete i18n guide.
+
+**Legacy adapter exception**: UI strings in
+`packages/platforms/legacy-adapter-player/` must be English only. Do not add
+locale files, translation keys, or an i18n hook to that package. This exception
+does not change dashboard localization requirements.
 
 ## 🔀 URL-Based Routing
 
@@ -104,8 +110,8 @@ yarn workspace website start
 - Write comprehensive tests (>90% coverage target)
 - Follow existing ESLint/Prettier configurations
 - Update `agents/` docs when making architectural changes
-- Localize all user-facing strings using the i18n system
-- Add translation keys to all 9 language files
+- Localize user-facing strings in localized packages using their i18n systems
+- Add dashboard translation keys to all 9 language files
 
 ### DON'T:
 - Modify `yarn.lock` manually
@@ -114,7 +120,7 @@ yarn workspace website start
 - Make changes without understanding cross-package impacts
 - Skip writing tests
 - Create unnecessary files in the root directory
-- Commit hardcoded user-facing strings
+- Commit hardcoded user-facing strings in localized packages
 
 ## 🎯 Focus Areas
 
@@ -122,7 +128,7 @@ When providing assistance, prioritize:
 
 1. **Code correctness** - TypeScript compliance and proper error handling
 2. **Test coverage** - Comprehensive tests with >90% coverage target
-3. **Internationalization** - Always localize user-facing text
+3. **Internationalization** - Localize dashboard UI; keep the legacy adapter in English
 4. **URL-based routing** - Maintain organization context in URLs
 5. **Architecture consistency** - Maintain existing patterns
 6. **Performance** - Consider build times and runtime efficiency

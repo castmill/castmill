@@ -141,7 +141,8 @@ defmodule CastmillWeb.Endpoint do
 
   # The endpoints used exclusively by the player apps
   @player_endpoints [
-    "/registrations"
+    "/registrations",
+    "/legacy/log"
   ]
 
   def getAllowedOrigins(conn) do

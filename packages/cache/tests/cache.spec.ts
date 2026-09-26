@@ -36,6 +36,24 @@ describe('Cache', () => {
     expect(item).to.have.property('size', 12);
   });
 
+  it.each([ItemType.Media, ItemType.Code, ItemType.Data])(
+    'forwards download options to storage: %s',
+    async (type) => {
+      const url = 'https://example.com/resource';
+      const storage = new StorageMockup({ [url]: 'content' });
+      const store = vi.spyOn(storage, 'storeFile');
+      const cache = new Cache(storage, `test-options-${type}`, 10);
+      await cache.set(url, type, 'application/octet-stream', {
+        force: false,
+        headers: { Authorization: 'Bearer test-token' },
+      });
+      expect(store).toHaveBeenCalledWith(url, {
+        force: false,
+        headers: { Authorization: 'Bearer test-token' },
+      });
+    }
+  );
+
   it('should list cached items', async () => {
     const url = 'https://example.com/code.js';
 
@@ -92,6 +110,32 @@ describe('Cache', () => {
       expect(item).to.have.property('accessed', 0);
       expect(item).to.have.property('mimeType', 'application/json');
       expect(item).to.have.property('size', 17);
+    }
+  });
+
+  it('forgets invalid media even if removing its missing native file fails', async () => {
+    const url = 'https://example.com/video.mp4';
+    const storage = new StorageMockup({ [url]: 'video' });
+    const cache = new Cache(storage, 'test-invalid-media', 10);
+    await cache.init();
+    await cache.set(url, ItemType.Media, 'video/mp4');
+    const remove = vi
+      .spyOn(storage, 'deleteFile')
+      .mockRejectedValueOnce(new Error('Native file not found'));
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      await cache.invalidate(url);
+      expect(await cache.get(url)).toBeUndefined();
+      expect(remove).toHaveBeenCalledWith(url);
+      expect(log).toHaveBeenCalledWith(
+        'Cache: Failed to remove invalid file',
+        url,
+        expect.any(Error)
+      );
+      expect(await cache.set(url, ItemType.Media, 'video/mp4')).toBeDefined();
+    } finally {
+      log.mockRestore();
+      cache.close();
     }
   });
 

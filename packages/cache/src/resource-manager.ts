@@ -6,7 +6,8 @@
  */
 // import "whatwg-fetch";
 
-import { Cache, ItemType } from './cache';
+import { ItemType } from './cache';
+import type { CacheBackend } from './cache-backend';
 
 let resourceManager: ResourceManager;
 
@@ -52,7 +53,7 @@ export class ResourceManager {
    * @returns
    */
   static createResourceManager(
-    cache: Cache,
+    cache: CacheBackend,
     opts: ResourceManagerOpts
   ): ResourceManager {
     resourceManager = resourceManager || new ResourceManager(cache, opts);
@@ -60,13 +61,15 @@ export class ResourceManager {
   }
 
   constructor(
-    private cache: Cache,
+    private cache: CacheBackend,
     private opts: ResourceManagerOpts = {}
   ) {
     this.authHeader = opts.authToken ? `Bearer ${opts.authToken}` : undefined;
   }
 
   async init() {
+    await this.cache.init();
+
     // Get all the code resources
     const codeResources = await this.cache.list(ItemType.Code);
 
@@ -97,8 +100,6 @@ export class ResourceManager {
     if (needRefresh && this.opts.needsRefresh) {
       await this.opts.needsRefresh();
     }
-
-    await this.cache.init();
   }
 
   /**
@@ -210,6 +211,11 @@ export class ResourceManager {
       }
     }
     return item?.cachedUrl;
+  }
+
+  async refreshMedia(url: string): Promise<string | void> {
+    await this.cache.invalidate(url);
+    return this.getMedia(url);
   }
 
   /**

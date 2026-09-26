@@ -23,38 +23,40 @@ export class StorageBrowser implements StorageIntegration {
    * Perform any initialization required by the cache.
    */
   async init() {
-    if (navigator.serviceWorker !== undefined) {
-      this.cache = await caches.open(this.cacheName);
+    if (typeof caches === 'undefined') {
+      throw new Error('Cache Storage is unavailable on this browser or origin');
+    }
 
-      // Delete all caches that are not the current cache.
-      // Uses a prefix to avoid deleting unintended caches.
-      const keyList = await caches.keys();
-      await Promise.all(
-        keyList.map((key) => {
-          if (key.startsWith(this.prefix) && key !== this.cacheName) {
-            return caches.delete(key);
-          }
-          return null;
-        })
-      );
+    this.cache = await caches.open(this.cacheName);
 
-      if (this.registerServiceWorker) {
-        try {
-          const registration = await navigator.serviceWorker.register(
-            `${this.serviceWorkerPath}sw.js`
-          );
-          console.log(
-            'ServiceWorker registration successful with scope: ',
-            registration.scope
-          );
-        } catch (err) {
-          console.log('ServiceWorker registration failed: ', err);
+    // Delete all caches that are not the current cache.
+    // Uses a prefix to avoid deleting unintended caches.
+    const keyList = await caches.keys();
+    await Promise.all(
+      keyList.map((key) => {
+        if (key.startsWith(this.prefix) && key !== this.cacheName) {
+          return caches.delete(key);
         }
+        return null;
+      })
+    );
 
-        const registration = await navigator.serviceWorker.getRegistration('/');
-        if (registration) {
-          await registration.update();
-        }
+    if (this.registerServiceWorker && navigator.serviceWorker !== undefined) {
+      try {
+        const registration = await navigator.serviceWorker.register(
+          `${this.serviceWorkerPath}sw.js`
+        );
+        console.log(
+          'ServiceWorker registration successful with scope: ',
+          registration.scope
+        );
+      } catch (err) {
+        console.log('ServiceWorker registration failed: ', err);
+      }
+
+      const registration = await navigator.serviceWorker.getRegistration('/');
+      if (registration) {
+        await registration.update();
       }
     }
   }

@@ -67,6 +67,102 @@ describe('listenForLegacyConsoleToggle', () => {
     expect(onToggle).not.toHaveBeenCalled();
   });
 
+  it.each(['null', 'file://'])(
+    'accepts the Android file wrapper origin serialization %s',
+    (origin) => {
+      const onToggle = vi.fn();
+      cleanups.push(listenForLegacyConsoleToggle(onToggle, 'null'));
+
+      window.dispatchEvent(
+        new MessageEvent('message', {
+          data: 'console',
+          origin,
+          source: window.parent,
+        })
+      );
+
+      expect(onToggle).toHaveBeenCalledOnce();
+    }
+  );
+
+  it('does not trust file origins when the expected parent has a network origin', () => {
+    const onToggle = vi.fn();
+    cleanups.push(
+      listenForLegacyConsoleToggle(onToggle, 'https://castmill.example')
+    );
+
+    window.dispatchEvent(
+      new MessageEvent('message', {
+        data: 'console',
+        origin: 'null',
+        source: window.parent,
+      })
+    );
+
+    expect(onToggle).not.toHaveBeenCalled();
+  });
+
+  it.each(['null', 'file://'])(
+    'accepts a file wrapper origin %s when the runtime omits the referrer',
+    (origin) => {
+      const onToggle = vi.fn();
+      cleanups.push(
+        listenForLegacyConsoleToggle(onToggle, 'http://castmill.example', true)
+      );
+
+      window.dispatchEvent(
+        new MessageEvent('message', {
+          data: 'console',
+          origin,
+          source: window.parent,
+        })
+      );
+
+      expect(onToggle).toHaveBeenCalledOnce();
+    }
+  );
+
+  it('accepts a WebOS file-wrapper message when WindowProxy identity is unavailable', () => {
+    const onToggle = vi.fn();
+    cleanups.push(
+      listenForLegacyConsoleToggle(onToggle, 'http://castmill.example', true)
+    );
+
+    const iframe = document.createElement('iframe');
+    document.body.append(iframe);
+    window.dispatchEvent(
+      new MessageEvent('message', {
+        data: 'console',
+        origin:
+          'file:///media/developer/apps/usr/palm/applications/com.castmill.player/',
+        source: iframe.contentWindow,
+      })
+    );
+    iframe.remove();
+
+    expect(onToggle).toHaveBeenCalledOnce();
+  });
+
+  it('does not accept a non-parent file message without local-wrapper support', () => {
+    const onToggle = vi.fn();
+    cleanups.push(
+      listenForLegacyConsoleToggle(onToggle, 'https://castmill.example')
+    );
+
+    const iframe = document.createElement('iframe');
+    document.body.append(iframe);
+    window.dispatchEvent(
+      new MessageEvent('message', {
+        data: 'console',
+        origin: 'file://',
+        source: iframe.contentWindow,
+      })
+    );
+    iframe.remove();
+
+    expect(onToggle).not.toHaveBeenCalled();
+  });
+
   it('removes the message listener during cleanup', () => {
     const onToggle = vi.fn();
     const stopListening = listenForLegacyConsoleToggle(

@@ -8,10 +8,12 @@ import {
   Layer,
   JsonPlaylist,
   JsonPlaylistItem,
+  VideoPlaybackControllerFactory,
 } from '@castmill/player';
 import {
   ResourceManager,
   Cache,
+  type CacheBackend,
   StorageIntegration,
   ItemType,
 } from '@castmill/cache';
@@ -180,7 +182,7 @@ export interface ProgressEvent {
  */
 export class Device extends EventEmitter {
   private closing = false;
-  private cache: Cache;
+  private cache: CacheBackend;
   private resourceManager?: ResourceManager;
   private contentQueue?: Playlist;
   private player?: Player;
@@ -212,7 +214,10 @@ export class Device extends EventEmitter {
       cache?: {
         maxItems?: number;
       };
+      cacheBackend?: CacheBackend;
       viewport?: Viewport;
+      transport?: new (endpoint: string) => object;
+      createVideoPlaybackController?: VideoPlaybackControllerFactory;
     }
   ) {
     super();
@@ -234,11 +239,13 @@ export class Device extends EventEmitter {
       },
     });
 
-    this.cache = new Cache(
-      this.storageIntegration,
-      'castmill-device',
-      opts?.cache?.maxItems || 1000
-    );
+    this.cache =
+      opts?.cacheBackend ??
+      new Cache(
+        this.storageIntegration,
+        'castmill-device',
+        opts?.cache?.maxItems || 1000
+      );
 
     //const intro = getCastmillIntro(this.resourceManager);
     //this.contentQueue.add(intro);
@@ -409,6 +416,8 @@ export class Device extends EventEmitter {
                 {
                   target: 'poster',
                   reportError: (report) => this.errorReporter.report(report),
+                  createVideoPlaybackController:
+                    this.opts?.createVideoPlaybackController,
                 }
               );
 
@@ -437,6 +446,15 @@ export class Device extends EventEmitter {
       }
       await new Promise((resolve) => setTimeout(resolve, 5000));
     }
+  }
+
+  reportStartupError(error: unknown): void {
+    const failure = error instanceof Error ? error : new Error(String(error));
+    this.logger.error(
+      `Device player failed to start: ${failure.stack || failure.message}`
+    );
+    this.errorReporter.report({ category: 'runtime', error: failure });
+    this.emit('startup-error', failure);
   }
 
   async stop() {
@@ -768,6 +786,7 @@ export class Device extends EventEmitter {
 
     let socket = new Socket(this.socketEndpoint, {
       params: { token: pincode },
+      transport: this.opts?.transport,
       reconnectAfterMs: getReconnectDelay,
       rejoinAfterMs: getReconnectDelay,
     });
@@ -825,6 +844,7 @@ export class Device extends EventEmitter {
 
     const socket = (this.socket = new Socket(this.socketEndpoint, {
       params: { device_id: device.id, hardware_id: hardwareId },
+      transport: this.opts?.transport,
       reconnectAfterMs: getReconnectDelay,
       rejoinAfterMs: getReconnectDelay,
     }));

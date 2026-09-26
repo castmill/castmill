@@ -31,7 +31,7 @@ export enum ItemType {
   Media = 'media',
 }
 
-interface ItemMetadata {
+export interface ItemMetadata {
   cachedUrl: string;
   url: string;
   timestamp: number;
@@ -425,6 +425,15 @@ export class Cache extends Dexie {
   async del(key: string) {
     await this.integration.deleteFile(key);
     return this.items.delete(key);
+  }
+
+  async invalidate(key: string): Promise<void> {
+    await this.items.delete(key);
+    try {
+      await this.integration.deleteFile(key);
+    } catch (error) {
+      console.error('Cache: Failed to remove invalid file', key, error);
+    }
   }
 
   /**

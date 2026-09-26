@@ -1,6 +1,7 @@
 import { DeviceInfo, SettingKey } from '@castmill/device';
 import { LegacyMachine, PING_INTERVAL } from './legacy-machine';
 import {
+  initAndroidLegacyApi,
   getPlayerData,
   getItem,
   setItem,
@@ -19,6 +20,7 @@ export const UNSET_VALUE = 'YES';
 
 export class AndroidLegacyMachine implements LegacyMachine {
   initLegacy(): void {
+    initAndroidLegacyApi();
     setInterval(() => {
       logger.log('Sending heartbeat');
       sendHeartbeat();

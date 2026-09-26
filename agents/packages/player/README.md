@@ -53,6 +53,30 @@ This design allows:
 Template components (`layout.tsx`, `text.tsx`, `animation.tsx`, `image-carousel.tsx`) create
 timeline items with `start: 0` to allow parallel playback rather than sequential stacking.
 
+### Optional Video Playback Controller
+
+`PlayerGlobals.createVideoPlaybackController(video, { reportError })` creates a
+separate `VideoPlaybackController` for each resolved video element. Device options
+forward the same factory through scheduled playlists, including nested layouts.
+Without a factory, the shared component uses its normal HTML video behavior.
+
+Controllers implement synchronous `seek(offsetMs)`, `play(offsetMs)`, `pause()`,
+and `dispose()` entry points. Offsets are milliseconds. A controller owns any
+asynchronous preparation, must report failures and handle rejections, and must
+cancel stale seeks/playback on a newer request, pause, or disposal. Seek alone
+must not start playback. The shared component still owns cache resolution, initial
+readiness, duration, muting, DOM rendering, and timeline registration. The
+factory context provides `refreshMedia()` for controllers that can identify a
+stale local source; the optional `recoverMedia()` method allows the component
+to retry an initial load once. A WebOS-specific metadata fallback prevents
+readiness from waiting indefinitely for `canplaythrough`.
+
+Platform selection and decoder workarounds belong in the integrating platform
+package, not in shared URL checks or rendering-target branches. The legacy WebOS
+adapter is one such integration. Rendered hook/default-behavior tests run in
+`legacy-adapter-player/src/components/video-playback.test.tsx` using its existing
+Solid/Vitest harness; controller tests live alongside the adapter implementation.
+
 ### Playlist Priming
 
 The `primeAllLayers` function in playlist-preview.tsx ensures all auto-duration widgets
