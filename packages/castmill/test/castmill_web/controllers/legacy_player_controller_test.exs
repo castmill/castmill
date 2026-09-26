@@ -86,6 +86,42 @@ defmodule CastmillWeb.LegacyPlayerControllerTest do
            |> json_response(413) == %{"error" => "Log payload too large"}
   end
 
+  test "rate limits valid logs per remote IP, ignoring forwarded IP headers", %{conn: conn} do
+    conn = %{conn | remote_ip: {203, 0, 113, 104}}
+
+    for index <- 1..60 do
+      assert post_legacy_log(conn, %{"payload" => "Ping #{index}"})
+             |> json_response(200) == %{"ok" => true}
+    end
+
+    conn = put_req_header(conn, "x-forwarded-for", "198.51.100.1")
+
+    logged =
+      ExUnit.CaptureLog.capture_log([level: :info], fn ->
+        assert post_legacy_log(conn, %{"payload" => "Another log"})
+               |> json_response(429) == %{"error" => "Log rate limit exceeded"}
+      end)
+
+    refute logged =~ "Another log"
+
+    assert post_legacy_log(%{conn | remote_ip: {203, 0, 113, 105}}, %{"payload" => "Ping"})
+           |> json_response(200) == %{"ok" => true}
+  end
+
+  test "invalid and oversized payloads do not consume the source's log quota", %{conn: conn} do
+    conn = %{conn | remote_ip: {203, 0, 113, 106}}
+
+    for _ <- 1..60 do
+      assert post_legacy_log(conn, %{}) |> json_response(400)
+    end
+
+    assert post_legacy_log(conn, %{"payload" => String.duplicate("x", 32_769)})
+           |> json_response(413)
+
+    assert post_legacy_log(conn, %{"payload" => "Ping"})
+           |> json_response(200) == %{"ok" => true}
+  end
+
   defp post_legacy_log(conn, payload) do
     conn
     |> put_req_header("content-type", "application/json")

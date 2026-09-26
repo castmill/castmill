@@ -5,7 +5,10 @@ import { ResourceManager } from '../src/resource-manager';
 import { StorageMockup } from './storage.mockup';
 
 describe('MemoryCache', () => {
-  afterEach(() => vi.unstubAllGlobals());
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
 
   it('starts and caches resources without opening IndexedDB', async () => {
     vi.stubGlobal('indexedDB', undefined);
@@ -114,5 +117,131 @@ describe('MemoryCache', () => {
     await cache.invalidate(second);
     expect(await cache.get(second)).toBeUndefined();
     expect(await storage.listFiles()).toEqual([]);
+  });
+
+  it('evicts and retries when the native write rejects because storage is full', async () => {
+    const first = 'https://castmill.test/medias/first';
+    const second = 'https://castmill.test/medias/second';
+    const third = 'https://castmill.test/medias/third';
+    const storage = new StorageMockup({
+      [first]: 'aaa',
+      [second]: 'bbb',
+      [third]: 'ccc',
+    });
+    const originalStore = storage.storeFile.bind(storage);
+    const store = vi
+      .spyOn(storage, 'storeFile')
+      .mockImplementation(async (url) => {
+        if (
+          Object.values(storage.files).reduce(
+            (sum, file) => sum + file.size,
+            0
+          ) +
+            3 >
+          6
+        ) {
+          throw { message: 'disk full' };
+        }
+        return originalStore(url);
+      });
+    const cache = new MemoryCache(storage, 2);
+    await cache.init();
+    await cache.set(first, ItemType.Media, 'video/mp4');
+    await cache.set(second, ItemType.Media, 'video/mp4');
+
+    const item = await cache.set(third, ItemType.Media, 'video/mp4');
+    expect(item?.cachedUrl).toMatch(/^blob:/);
+    expect(store.mock.calls.filter(([url]) => url === third)).toHaveLength(2);
+    expect(await cache.get(first)).toBeUndefined();
+    expect(await cache.get(second)).toBeDefined();
+    expect(await cache.get(third)).toBeDefined();
+    expect(await storage.listFiles()).toHaveLength(2);
+  });
+
+  it('bounds NOT_ENOUGH_SPACE retries to the number of evictable items', async () => {
+    const first = 'https://castmill.test/first';
+    const second = 'https://castmill.test/second';
+    const third = 'https://castmill.test/third';
+    const storage = new StorageMockup({ [first]: 'a', [second]: 'b' });
+    const cache = new MemoryCache(storage);
+    await cache.init();
+    await cache.set(first, ItemType.Media, 'video/mp4');
+    await cache.set(second, ItemType.Media, 'video/mp4');
+    const store = vi.spyOn(storage, 'storeFile').mockResolvedValue({
+      result: { code: 'FAILURE', error: 'NOT_ENOUGH_SPACE' },
+    });
+
+    await expect(cache.set(third, ItemType.Media, 'video/mp4')).rejects.toThrow(
+      'NOT_ENOUGH_SPACE'
+    );
+    expect(store).toHaveBeenCalledTimes(3);
+    expect(await cache.count(ItemType.Media)).toBe(0);
+    expect(await storage.listFiles()).toHaveLength(0);
+  });
+
+  it('does not evict for unrelated write errors or unknown failure results', async () => {
+    const first = 'https://castmill.test/first';
+    const storage = new StorageMockup({ [first]: 'a' });
+    const cache = new MemoryCache(storage);
+    await cache.init();
+    const previous = await cache.set(first, ItemType.Media, 'video/mp4');
+    const deleteFile = vi.spyOn(storage, 'deleteFile');
+    const store = vi
+      .spyOn(storage, 'storeFile')
+      .mockRejectedValueOnce(new Error('Network unavailable'))
+      .mockResolvedValueOnce({
+        result: { code: 'FAILURE', error: 'UNKNOWN', errMsg: 'disk full' },
+      });
+
+    await expect(
+      cache.set('https://castmill.test/other', ItemType.Media, 'video/mp4')
+    ).rejects.toThrow('Network unavailable');
+    await expect(
+      cache.set('https://castmill.test/other', ItemType.Media, 'video/mp4')
+    ).rejects.toThrow('UNKNOWN');
+    expect(store).toHaveBeenCalledTimes(2);
+    expect(deleteFile).not.toHaveBeenCalled();
+    expect((await cache.get(first))?.cachedUrl).toBe(previous?.cachedUrl);
+  });
+
+  it('preserves the previous file when a forced refresh cannot make room', async () => {
+    const url = 'https://castmill.test/medias/video';
+    const storage = new StorageMockup({ [url]: 'old' });
+    const cache = new MemoryCache(storage);
+    await cache.init();
+    const previous = await cache.set(url, ItemType.Media, 'video/mp4');
+    const store = vi
+      .spyOn(storage, 'storeFile')
+      .mockRejectedValue(
+        Object.assign(new Error('No space left on device'), { code: 'ENOSPC' })
+      );
+    const deleteFile = vi.spyOn(storage, 'deleteFile');
+
+    await expect(
+      cache.set(url, ItemType.Media, 'video/mp4', { force: true })
+    ).rejects.toThrow('No space left on device');
+    expect(store).toHaveBeenCalledTimes(1);
+    expect(deleteFile).not.toHaveBeenCalled();
+    expect((await cache.get(url))?.cachedUrl).toBe(previous?.cachedUrl);
+  });
+
+  it('stops retrying when an eviction fails', async () => {
+    const first = 'https://castmill.test/first';
+    const storage = new StorageMockup({ [first]: 'a' });
+    const cache = new MemoryCache(storage);
+    await cache.init();
+    await cache.set(first, ItemType.Media, 'video/mp4');
+    const store = vi.spyOn(storage, 'storeFile').mockResolvedValue({
+      result: { code: 'FAILURE', error: 'NOT_ENOUGH_SPACE' },
+    });
+    vi.spyOn(storage, 'deleteFile').mockRejectedValue(
+      new Error('Native remove failed')
+    );
+
+    await expect(
+      cache.set('https://castmill.test/second', ItemType.Media, 'video/mp4')
+    ).rejects.toThrow('Native remove failed');
+    expect(store).toHaveBeenCalledTimes(1);
+    expect(await cache.get(first)).toBeDefined();
   });
 });

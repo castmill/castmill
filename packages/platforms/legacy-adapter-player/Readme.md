@@ -65,6 +65,8 @@ the adapter in `packages/castmill/priv/static/legacy/`, which Phoenix serves as:
 The WebOS wrapper sends `{"payload":"Ping"}` for connectivity checks and
 `{"payload":{"logs":[...]}}` for diagnostics. The endpoint accepts up to 50
 entries and a 32 KiB encoded payload per batch without a browser session or CSRF token.
+The server accepts at most 60 valid log submissions per minute per connection IP;
+additional requests receive HTTP 429.
 WebOS does not use IndexedDB: it starts online to fetch channel and playlist
 data and code into memory. Eligible media persists through the wrapper's native
 file API. A cached app shell alone is not sufficient for offline WebOS startup.

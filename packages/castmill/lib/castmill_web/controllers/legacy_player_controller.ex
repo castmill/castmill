@@ -27,13 +27,11 @@ defmodule CastmillWeb.LegacyPlayerController do
         conn |> put_status(:request_entity_too_large) |> json(%{error: "Log payload too large"})
 
       is_binary(payload) ->
-        Logger.info("Legacy player log: #{inspect(payload)}")
-        json(conn, %{ok: true})
+        write_log(conn, "Legacy player log: ", payload)
 
       is_map(payload) and is_list(payload["logs"]) and
           length(payload["logs"]) <= @max_log_entries ->
-        Logger.info("Legacy player logs: #{inspect(payload["logs"])}")
-        json(conn, %{ok: true})
+        write_log(conn, "Legacy player logs: ", payload["logs"])
 
       true ->
         conn |> put_status(:bad_request) |> json(%{error: "Invalid log payload"})
@@ -42,5 +40,17 @@ defmodule CastmillWeb.LegacyPlayerController do
 
   def log(conn, _params) do
     conn |> put_status(:bad_request) |> json(%{error: "Invalid log payload"})
+  end
+
+  defp write_log(conn, prefix, payload) do
+    # Do not use untrusted forwarding headers as a rate-limit identity.
+    case Castmill.LegacyPlayerLogRateLimiter.allow(conn.remote_ip) do
+      :ok ->
+        Logger.info("#{prefix}#{inspect(payload)}")
+        json(conn, %{ok: true})
+
+      {:error, :rate_limited} ->
+        conn |> put_status(:too_many_requests) |> json(%{error: "Log rate limit exceeded"})
+    end
   end
 end

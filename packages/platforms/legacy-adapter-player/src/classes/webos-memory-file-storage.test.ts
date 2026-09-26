@@ -11,6 +11,7 @@ class MockXHR {
   status = 200;
   response: Blob | undefined;
   responseType = '';
+  timeout = 0;
   onload?: () => void;
   onerror?: () => void;
   ontimeout?: () => void;
@@ -90,6 +91,17 @@ describe('WebosMemoryFileStorage', () => {
     requests[0].xhr.onerror?.();
     await expect(download).rejects.toThrow(
       'Failed to download resource: network error'
+    );
+    expect(await storage.listFiles()).toEqual([]);
+    expect(createObjectURL).not.toHaveBeenCalled();
+  });
+
+  it('times out stalled downloads without retaining a cache entry', async () => {
+    const download = storage.storeFile('https://castmill.test/data');
+    expect(requests[0].xhr.timeout).toBe(30_000);
+    requests[0].xhr.ontimeout?.();
+    await expect(download).rejects.toThrow(
+      'Failed to download resource: request timed out'
     );
     expect(await storage.listFiles()).toEqual([]);
     expect(createObjectURL).not.toHaveBeenCalled();

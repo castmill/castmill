@@ -41,6 +41,7 @@ describe('Video playback integration', () => {
     timeline.pause();
     dispose?.();
     container.remove();
+    vi.useRealTimers();
     vi.restoreAllMocks();
   });
 
@@ -197,6 +198,95 @@ describe('Video playback integration', () => {
     await vi.waitFor(() => expect(ready).toHaveBeenCalledOnce(), {
       timeout: 2000,
     });
+    expect(timeline.items).toHaveLength(1);
+    timeline.items[0].child.play(2000);
+    expect(integration.play).toHaveBeenCalledWith(2000);
+  });
+
+  it('registers WebOS videos when loadeddata is the only readiness event', async () => {
+    let readyState = 0;
+    vi.spyOn(
+      HTMLMediaElement.prototype,
+      'readyState',
+      'get'
+    ).mockImplementation(() => readyState);
+    vi.spyOn(HTMLMediaElement.prototype, 'load').mockImplementation(
+      function (this: HTMLMediaElement) {
+        readyState = 2;
+        this.dispatchEvent(new Event('loadeddata'));
+      }
+    );
+    const resources = new ResourceManager(
+      new Cache(new StorageDummy('test'), 'test', 10)
+    );
+    vi.spyOn(resources, 'getMedia').mockResolvedValue('blob:video');
+    const ready = vi.fn();
+    const integration = controller();
+    dispose = render(
+      () => (
+        <Video
+          name="webos"
+          opts={{ url: 'https://media.test/video.mp4', size: 'contain' }}
+          style={{}}
+          timeline={timeline}
+          resourceManager={resources}
+          globals={{
+            target: 'poster',
+            createVideoPlaybackController: () => integration,
+          }}
+          onReady={ready}
+        />
+      ),
+      container
+    );
+    await vi.waitFor(() => expect(ready).toHaveBeenCalledOnce(), {
+      timeout: 2000,
+    });
+    expect(timeline.items).toHaveLength(1);
+    timeline.items[0].child.play(2000);
+    expect(integration.play).toHaveBeenCalledWith(2000);
+  });
+
+  it('registers WebOS videos when readyState advances without events', async () => {
+    let readyState = 0;
+    vi.spyOn(
+      HTMLMediaElement.prototype,
+      'readyState',
+      'get'
+    ).mockImplementation(() => readyState);
+    const load = vi
+      .spyOn(HTMLMediaElement.prototype, 'load')
+      .mockImplementation(() => {
+        readyState = 1;
+      });
+    const resources = new ResourceManager(
+      new Cache(new StorageDummy('test'), 'test', 10)
+    );
+    vi.spyOn(resources, 'getMedia').mockResolvedValue('blob:video');
+    const ready = vi.fn();
+    const integration = controller();
+    vi.useFakeTimers();
+    dispose = render(
+      () => (
+        <Video
+          name="webos"
+          opts={{ url: 'https://media.test/video.mp4', size: 'contain' }}
+          style={{}}
+          timeline={timeline}
+          resourceManager={resources}
+          globals={{
+            target: 'poster',
+            createVideoPlaybackController: () => integration,
+          }}
+          onReady={ready}
+        />
+      ),
+      container
+    );
+    await vi.waitFor(() => expect(load).toHaveBeenCalledOnce());
+    expect(ready).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(15_000);
+    expect(ready).toHaveBeenCalledOnce();
     expect(timeline.items).toHaveLength(1);
     timeline.items[0].child.play(2000);
     expect(integration.play).toHaveBeenCalledWith(2000);

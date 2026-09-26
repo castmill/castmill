@@ -76,7 +76,9 @@ non-static or query-bearing media with `XMLHttpRequest` into session-only blob
 URLs. Authorization headers and signed URLs are never sent to the wrapper's
 URL-logging file API. Native media metadata is restored from the persisted
 source-to-local map; channel/playlist data and code must be fetched again on
-every startup.
+every startup. Session-only XHR downloads fail after 30 seconds if the request
+stalls. On a recognized native storage-full error, `MemoryCache` evicts older
+entries and retries the write; unrelated errors do not evict cached files.
 If a previously mapped native video fails to load, the adapter invalidates its
 cache entry and retries the download once, even if removing the missing native
 file fails. WebOS must start online even if the app shell was cached; it does
@@ -92,9 +94,10 @@ Metadata readiness also accepts `loadeddata`, `canplay`, or an updated
 after 15 seconds reports a playback error and retries after 30 seconds while
 its video is still active; pause or disposal cancels the retry. Other videos
 and the layout continue independently.
-The video widget waits for `canplay` or `canplaythrough`, but a bounded
-metadata fallback allows WebOS videos without either event to start. Final
-failures use the existing player error reporter.
+The video widget waits for `canplay` or `canplaythrough`, but accepts
+`loadedmetadata`, `loadeddata`, or metadata visible in `readyState` at the
+bounded readiness deadline to register and start WebOS videos without either
+playability event. Final failures use the existing player error reporter.
 
 The shared player exposes only the optional per-element
 `createVideoPlaybackController` factory, passed through Device globals and nested

@@ -5,6 +5,8 @@ import type {
   StoreOptions,
 } from '@castmill/cache';
 
+const DOWNLOAD_TIMEOUT_MS = 30_000;
+
 export class WebosMemoryFileStorage {
   private readonly files = new Map<string, StorageItem>();
   private readonly urls = new Map<string, string>();
@@ -31,6 +33,7 @@ export class WebosMemoryFileStorage {
       const xhr = new XMLHttpRequest();
       xhr.open('GET', url);
       xhr.responseType = 'blob';
+      xhr.timeout = DOWNLOAD_TIMEOUT_MS;
       for (const [key, value] of Object.entries(opts?.headers ?? {})) {
         xhr.setRequestHeader(key, value);
       }

@@ -276,7 +276,7 @@ export const Video: Component<VideoProps> = (props) => {
           let readinessTimer: number | undefined;
           let metadataTimer: number | undefined;
           let recovering = false;
-          const metadataHandler = (ev: Event) => {
+          const metadataHandler = () => {
             addTimelineItem();
             if (playbackController) {
               clearTimeout(metadataTimer);
@@ -284,7 +284,7 @@ export const Video: Component<VideoProps> = (props) => {
             }
           };
 
-          const handler = (ev: Event) => {
+          const handler = () => {
             // Ensure timeline is added (in case canplaythrough fires before/without metadata)
             addTimelineItem();
             subscriber.next('video:loaded');
@@ -335,12 +335,15 @@ export const Video: Component<VideoProps> = (props) => {
           videoRef!.addEventListener('loadedmetadata', metadataHandler);
           videoRef!.addEventListener('canplaythrough', handler);
           if (playbackController) {
+            videoRef!.addEventListener('loadeddata', metadataHandler);
             videoRef!.addEventListener('canplay', handler);
-            readinessTimer = window.setTimeout(
-              () =>
-                subscriber.error(new Error('Timed out loading video metadata')),
-              15000
-            );
+            readinessTimer = window.setTimeout(() => {
+              if (videoRef!.readyState >= ReadyState.HAVE_METADATA) {
+                handler();
+              } else {
+                subscriber.error(new Error('Timed out loading video metadata'));
+              }
+            }, 15000);
           }
           videoRef!.addEventListener('error', errorHandler);
 
@@ -356,6 +359,7 @@ export const Video: Component<VideoProps> = (props) => {
             videoRef!.removeEventListener('loadedmetadata', metadataHandler);
             videoRef!.removeEventListener('canplaythrough', handler);
             if (playbackController) {
+              videoRef!.removeEventListener('loadeddata', metadataHandler);
               videoRef!.removeEventListener('canplay', handler);
             }
             videoRef!.removeEventListener('error', errorHandler);

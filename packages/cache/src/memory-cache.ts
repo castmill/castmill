@@ -1,6 +1,9 @@
 import { ItemMetadata, ItemType, SetItemCacheOptions } from './cache';
 import type { CacheBackend } from './cache-backend';
-import type { StorageIntegration } from './storage.integration';
+import type {
+  StorageIntegration,
+  StoreFileReturnValue,
+} from './storage.integration';
 
 export class MemoryCache implements CacheBackend {
   private readonly items = new Map<string, ItemMetadata>();
@@ -94,10 +97,11 @@ export class MemoryCache implements CacheBackend {
     opts: SetItemCacheOptions,
     previous?: ItemMetadata
   ): Promise<ItemMetadata> {
-    const { result, item: file } = await this.integration.storeFile(url, {
-      ...opts,
+    const { result, item: file } = await this.storeWithCapacityRetry(
+      url,
       type,
-    });
+      opts
+    );
     if (result.code !== 'SUCCESS' || !file?.url) {
       throw new Error(
         `Unable to cache resource: ${result.error ?? result.code}`
@@ -128,6 +132,61 @@ export class MemoryCache implements CacheBackend {
       await this.del(oldest.url);
     }
     return item;
+  }
+
+  private async storeWithCapacityRetry(
+    url: string,
+    type: ItemType,
+    opts: SetItemCacheOptions
+  ): Promise<StoreFileReturnValue> {
+    // Keep a forced refresh's previous file as a fallback if the new write fails.
+    const candidates = Array.from(this.items.values())
+      .filter((item) => item.url !== url)
+      .sort((a, b) => a.timestamp - b.timestamp);
+    let next = 0;
+    const evictNext = async (): Promise<boolean> => {
+      const candidate = candidates[next++];
+      if (!candidate) return false;
+      await this.del(candidate.url);
+      return true;
+    };
+
+    while (true) {
+      let response: StoreFileReturnValue;
+      try {
+        response = await this.integration.storeFile(url, { ...opts, type });
+      } catch (error) {
+        if (!this.isCapacityError(error) || !(await evictNext())) {
+          throw error;
+        }
+        continue;
+      }
+
+      if (
+        response.result.code !== 'FAILURE' ||
+        response.result.error !== 'NOT_ENOUGH_SPACE' ||
+        !(await evictNext())
+      ) {
+        return response;
+      }
+    }
+  }
+
+  private isCapacityError(error: unknown): boolean {
+    if (!error || typeof error !== 'object') return false;
+    const { code, name, message } = error as {
+      code?: unknown;
+      name?: unknown;
+      message?: unknown;
+    };
+    return (
+      code === 'ENOSPC' ||
+      name === 'QuotaExceededError' ||
+      (typeof message === 'string' &&
+        /^(?:CacheFull|disk full|storage full|no space left on device|ENOSPC(?::.*)?)$/i.test(
+          message.trim()
+        ))
+    );
   }
 
   async del(url: string): Promise<void> {
