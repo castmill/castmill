@@ -9,6 +9,7 @@ import {
   initWebosLegacyApi,
   rebootWebosDevice,
   restartWebosApp,
+  updateWebosPlayer,
 } from '../webos-legacy-api';
 
 vi.mock('../webos-legacy-api', () => ({
@@ -18,6 +19,7 @@ vi.mock('../webos-legacy-api', () => ({
   sendPlayerReady: vi.fn(),
   restartWebosApp: vi.fn(),
   rebootWebosDevice: vi.fn(),
+  updateWebosPlayer: vi.fn(),
 }));
 
 describe('WebosLegacyMachine', () => {
@@ -58,17 +60,19 @@ describe('WebosLegacyMachine', () => {
     expect(sendHeartbeat).toHaveBeenCalledTimes(2);
   });
 
-  it('forwards restart and reboot commands to the WebOS wrapper', async () => {
+  it('forwards maintenance commands to the WebOS wrapper', async () => {
     const machine = new WebosLegacyMachine();
 
     await machine.restart();
     await machine.reboot();
+    await machine.update();
 
     expect(restartWebosApp).toHaveBeenCalledOnce();
     expect(rebootWebosDevice).toHaveBeenCalledOnce();
+    expect(updateWebosPlayer).toHaveBeenCalledOnce();
   });
 
-  it('reports wrapper-backed restart and reboot capabilities', () => {
+  it('reports wrapper-backed maintenance capabilities', () => {
     const device = new Device(new WebosLegacyMachine(), {} as any);
 
     expect(device.getCapabilities()).toEqual({
@@ -76,7 +80,7 @@ describe('WebosLegacyMachine', () => {
       quit: false,
       reboot: true,
       shutdown: false,
-      update: false,
+      update: true,
       updateFirmware: false,
     });
   });

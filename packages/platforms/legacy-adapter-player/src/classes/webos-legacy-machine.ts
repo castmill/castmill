@@ -6,6 +6,7 @@ import {
   restartWebosApp,
   sendHeartbeat,
   sendPlayerReady,
+  updateWebosPlayer,
 } from '../webos-legacy-api';
 import { PING_INTERVAL } from './legacy-machine';
 
@@ -34,5 +35,9 @@ export class WebosLegacyMachine extends BrowserMachine {
 
   async reboot(): Promise<void> {
     await rebootWebosDevice();
+  }
+
+  async update(): Promise<void> {
+    await updateWebosPlayer();
   }
 }

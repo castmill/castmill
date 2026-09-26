@@ -26,6 +26,9 @@ const outbound = {
   reboot: async function (): Promise<void> {
     throw new Error('WebOS bridge is not initialized');
   },
+  updatePlayer: async function (): Promise<void> {
+    throw new Error('WebOS bridge is not initialized');
+  },
 };
 
 let initialized = false;
@@ -67,4 +70,9 @@ export async function restartWebosApp(): Promise<void> {
 export async function rebootWebosDevice(): Promise<void> {
   initWebosLegacyApi();
   await outbound.reboot();
+}
+
+export async function updateWebosPlayer(): Promise<void> {
+  initWebosLegacyApi();
+  await outbound.updatePlayer();
 }

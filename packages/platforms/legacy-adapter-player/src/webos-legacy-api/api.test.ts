@@ -7,6 +7,7 @@ import {
   rebootWebosDevice,
   removeWebosFile,
   restartWebosApp,
+  updateWebosPlayer,
 } from './api';
 
 describe('WebOS wrapper bridge', () => {
@@ -78,6 +79,7 @@ describe('WebOS wrapper bridge', () => {
       await call(() => clearWebosFiles(), 'clearFiles', []);
       await call(() => restartWebosApp(), 'restart', []);
       await call(() => rebootWebosDevice(), 'reboot', []);
+      await call(() => updateWebosPlayer(), 'updatePlayer', []);
     } finally {
       postMessage.mockRestore();
     }
