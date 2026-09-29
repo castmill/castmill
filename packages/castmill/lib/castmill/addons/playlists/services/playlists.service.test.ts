@@ -185,6 +185,70 @@ describe('PlaylistsService', () => {
       );
     });
 
+    it('should fetch widgets with pagination parameters', async () => {
+      const mockWidgets = {
+        data: [
+          {
+            id: 1,
+            name: 'Image Widget',
+            description: 'Display an image',
+            icon: '📦',
+          },
+        ],
+        count: 42,
+      };
+
+      const mockResponse = new Response(JSON.stringify(mockWidgets), {
+        status: 200,
+      });
+
+      (global.fetch as any).mockResolvedValueOnce(mockResponse);
+
+      const result = await PlaylistsService.getWidgets(
+        baseUrl,
+        organizationId,
+        '',
+        2,
+        20
+      );
+
+      expect(result).toEqual(mockWidgets);
+      expect(global.fetch).toHaveBeenCalledWith(
+        `${baseUrl}/dashboard/organizations/${organizationId}/widgets?page=2&page_size=20`,
+        expect.objectContaining({
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+      );
+    });
+
+    it('should fetch widgets with search and pagination parameters', async () => {
+      const mockWidgets = { data: [], count: 0 };
+
+      const mockResponse = new Response(JSON.stringify(mockWidgets), {
+        status: 200,
+      });
+
+      (global.fetch as any).mockResolvedValueOnce(mockResponse);
+
+      await PlaylistsService.getWidgets(
+        baseUrl,
+        organizationId,
+        'video',
+        1,
+        20
+      );
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        `${baseUrl}/dashboard/organizations/${organizationId}/widgets?search=video&page=1&page_size=20`,
+        expect.objectContaining({
+          method: 'GET',
+        })
+      );
+    });
+
     it('should throw an error when fetching widgets fails', async () => {
       const mockResponse = new Response(
         JSON.stringify({ errors: { detail: 'Failed to fetch widgets' } }),

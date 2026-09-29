@@ -55,6 +55,10 @@ export const PlaylistView: Component<{
   const t = props.t || ((key: string) => key);
   const locale = () => props.store.i18n?.locale() || 'en';
   const [widgets, setWidgets] = createSignal<JsonWidget[]>([]);
+  const [widgetPage, setWidgetPage] = createSignal(1);
+  const [widgetSearch, setWidgetSearch] = createSignal('');
+  const [widgetCount, setWidgetCount] = createSignal(0);
+  const [loadingWidgets, setLoadingWidgets] = createSignal(false);
   const [loading, setLoading] = createSignal(true);
   const [items, setItems] = createSignal<JsonPlaylistItem[]>([]);
   const [playlist, setPlaylist] = createSignal<JsonPlaylist>();
@@ -144,6 +148,45 @@ export const PlaylistView: Component<{
     });
   });
 
+  // Number of widgets fetched per page for the infinite-scrolling widget chooser
+  const WIDGETS_PAGE_SIZE = 20;
+
+  // Fetch a page of widgets, optionally appending to the existing list (used
+  // for infinite scrolling) or replacing it (used on initial load and search).
+  const fetchWidgets = async (page: number, search: string, append: boolean) => {
+    if (loadingWidgets()) return;
+    setLoadingWidgets(true);
+
+    try {
+      const result = await PlaylistsService.getWidgets(
+        props.baseUrl,
+        props.organizationId,
+        search,
+        page,
+        WIDGETS_PAGE_SIZE
+      );
+
+      setWidgets((current) =>
+        append ? [...current, ...result.data] : result.data
+      );
+      setWidgetCount(result.count);
+      setWidgetPage(page);
+    } catch (err) {
+      toast.error(`Error loading widgets: ${err}`);
+    } finally {
+      setLoadingWidgets(false);
+    }
+  };
+
+  // Load the next page of widgets when the user scrolls near the bottom of the
+  // widget chooser, unless all widgets have already been loaded.
+  const handleLoadMoreWidgets = () => {
+    if (loadingWidgets() || widgets().length >= widgetCount()) {
+      return;
+    }
+    fetchWidgets(widgetPage() + 1, widgetSearch(), true);
+  };
+
   createEffect(() => {
     (async () => {
       const playlist: JsonPlaylist = await PlaylistsService.getPlaylist(
@@ -154,23 +197,15 @@ export const PlaylistView: Component<{
       setPlaylist(playlist);
       setItems(playlist.items);
 
-      const result = await PlaylistsService.getWidgets(
-        props.baseUrl,
-        props.organizationId
-      );
-      setWidgets(result.data);
+      await fetchWidgets(1, '', false);
 
       setLoading(false);
     })();
   });
 
   const handleWidgetSearch = async (searchText: string) => {
-    const result = await PlaylistsService.getWidgets(
-      props.baseUrl,
-      props.organizationId,
-      searchText
-    );
-    setWidgets(result.data);
+    setWidgetSearch(searchText);
+    await fetchWidgets(1, searchText, false);
   };
 
   const handleLayerOffsets = (offsets: LayerOffset[]) => {
@@ -647,6 +682,8 @@ export const PlaylistView: Component<{
               locale={locale()}
               t={t}
               onSearch={handleWidgetSearch}
+              onLoadMore={handleLoadMoreWidgets}
+              loading={loadingWidgets()}
             />
             <div class="drag-indicator">
               <div class="arrow-container">
