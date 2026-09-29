@@ -20,11 +20,10 @@ Widgets need bundled static assets:
 - **Images**: Backgrounds, decorative elements, logos  
 - **Styles**: CSS for advanced layouts (optional)
 
-Current system lacks:
-- Standardized asset bundling mechanism
-- Secure upload and validation
-- Schema-driven asset definitions
-- Runtime URL resolution
+Widget packages provide standardized bundling, upload validation, manifests,
+and runtime URL resolution. The widget editor exposes the asset manifest and
+runtime font list directly so both fields are preserved when creating or
+editing a widget.
 
 ## ⚠️ Widget Schema Validation Rules
 
@@ -135,6 +134,11 @@ When creating custom widgets, the `options_schema` and `data_schema` fields are 
 ### Asset Manifest Structure
 
 The `assets` field in the widget definition contains a manifest with **relative paths**. The system constructs absolute URLs at runtime based on the configured storage backend.
+
+Templates reference manifest entries with `{{asset:category.name}}`. The player
+resolves these references recursively in component options and styles. Absolute
+HTTP(S), data, and root-relative URLs are preserved; package-relative paths are
+served from `/widget_assets/{widget-slug}/`.
 
 ```json
 {

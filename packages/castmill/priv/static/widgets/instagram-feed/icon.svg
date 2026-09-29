@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Gradient definitions -->
+  <defs>
+    <linearGradient id="ig-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#f09433;stop-opacity:1" />
+      <stop offset="25%" style="stop-color:#e6683c;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#dc2743;stop-opacity:1" />
+      <stop offset="75%" style="stop-color:#cc2366;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#bc1888;stop-opacity:1" />
+    </linearGradient>
+    <clipPath id="rounded">
+      <rect x="2" y="2" width="60" height="60" rx="14" ry="14"/>
+    </clipPath>
+  </defs>
+  <!-- Background -->
+  <rect x="2" y="2" width="60" height="60" rx="14" ry="14" fill="url(#ig-grad)"/>
+  <!-- Camera outline -->
+  <rect x="17" y="17" width="30" height="30" rx="8" ry="8" fill="none" stroke="#ffffff" stroke-width="3"/>
+  <!-- Lens circle -->
+  <circle cx="32" cy="32" r="8" fill="none" stroke="#ffffff" stroke-width="3"/>
+  <!-- Viewfinder dot -->
+  <circle cx="43" cy="21" r="2.5" fill="#ffffff"/>
+</svg>

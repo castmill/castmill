@@ -29,6 +29,7 @@ export interface TableAction<Item> {
   icon: Component | string;
   label: string | (() => string);
   props?: (item: Item) => Record<string, any>;
+  hidden?: (item: Item) => boolean;
   handler: (item: Item) => void;
 }
 
@@ -246,7 +247,11 @@ export const Table = <
                 {actions() && (
                   <td>
                     <div class={style['table-actions']}>
-                      <For each={actions()}>
+                      <For
+                        each={actions()!.filter(
+                          (action) => !action.hidden?.(item)
+                        )}
+                      >
                         {(action) => (
                           <button
                             aria-label={`${getActionLabel(action)} ${item.name}`} // Providing an aria-label for accessibility and testing

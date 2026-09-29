@@ -11,6 +11,7 @@ import { TemplateConfig } from './binding';
 import { JsonWidget } from '../../interfaces';
 import { JsonWidgetConfig } from '../../interfaces/json-widget-config.interface';
 import { PlayerGlobals } from '../../interfaces/player-globals.interface';
+import { resolveWidgetAssets } from './assets';
 
 /**
  * Template Widget
@@ -51,7 +52,11 @@ export class TemplateWidget extends TimelineWidget {
     super(resourceManager, opts);
 
     this.template = TemplateComponent.fromJSON(
-      opts.widget.template,
+      resolveWidgetAssets(
+        opts.widget.template,
+        opts.widget.assets,
+        opts.widget.slug
+      ),
       resourceManager,
       opts.globals
     );

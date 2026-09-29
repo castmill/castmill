@@ -19,6 +19,33 @@ export interface WidgetsUpdate {
   description: string;
 }
 
+export interface WidgetFullUpdate {
+  name?: string;
+  description?: string;
+  template?: Record<string, any>;
+  options_schema?: Record<string, any>;
+  data_schema?: Record<string, any>;
+  aspect_ratio?: string;
+  update_interval_seconds?: number;
+  fonts?: { url: string; name: string }[];
+  assets?: JsonWidget['assets'];
+  slug?: string;
+}
+
+export interface WidgetCreateFromJson {
+  name: string;
+  description?: string;
+  template: Record<string, any>;
+  options_schema?: Record<string, any>;
+  data_schema?: Record<string, any>;
+  aspect_ratio?: string;
+  update_interval_seconds?: number;
+  fonts?: { url: string; name: string }[];
+  assets?: JsonWidget['assets'];
+  slug?: string;
+  is_system?: boolean;
+}
+
 export interface WidgetUsage {
   playlist_id: number;
   playlist_name: string;
@@ -45,8 +72,13 @@ async function handleResponse<T = any>(
   } else {
     let errMsg = '';
     try {
-      const { errors } = await response.json();
-      errMsg = `${errors.detail || response.statusText}`;
+      const body = await response.json();
+      const errorDetails = body.errors || body.error;
+      errMsg =
+        typeof errorDetails === 'string'
+          ? errorDetails
+          : errorDetails?.detail ||
+            (errorDetails ? JSON.stringify(errorDetails) : response.statusText);
     } catch (error) {
       errMsg = `${response.statusText}`;
     }
@@ -285,5 +317,160 @@ export const WidgetsService = {
       console.error('Failed to fetch widget integrations:', error);
       return [];
     }
+  },
+
+  /**
+   * Create a widget from a JSON body (used by the widget editor).
+   *
+   * @param baseUrl - The base URL of the server
+   * @param organizationId - The organization ID
+   * @param widgetData - The widget definition to create
+   * @returns Promise resolving to the created widget
+   */
+  async createFromJson(
+    baseUrl: string,
+    organizationId: string,
+    widgetData: WidgetCreateFromJson
+  ): Promise<JsonWidget> {
+    const response = await authFetch(
+      `${baseUrl}/dashboard/organizations/${organizationId}/widgets/from-json`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(widgetData),
+      }
+    );
+
+    return handleResponse<JsonWidget>(response, { parse: true });
+  },
+
+  /**
+   * Fully update a widget – including template and schemas.
+   *
+   * @param baseUrl - The base URL of the server
+   * @param organizationId - The organization ID
+   * @param widgetId - The widget ID to update
+   * @param updates - Full set of fields to update
+   * @returns Promise resolving to the updated widget
+   */
+  async fullUpdateWidget(
+    baseUrl: string,
+    organizationId: string,
+    widgetId: string,
+    updates: WidgetFullUpdate
+  ): Promise<JsonWidget> {
+    const response = await authFetch(
+      `${baseUrl}/dashboard/organizations/${organizationId}/widgets/${widgetId}`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updates),
+      }
+    );
+
+    return handleResponse<JsonWidget>(response, { parse: true });
+  },
+
+  /**
+   * Upload a single asset file (image, icon, font or stylesheet) for a widget.
+   *
+   * @param baseUrl - The base URL of the server
+   * @param organizationId - The organization ID
+   * @param widgetId - The widget the asset belongs to
+   * @param category - Asset category (images, icons, fonts, styles)
+   * @param name - Name used to reference the asset in the template
+   * @param file - The file to upload
+   * @returns Promise resolving to the updated widget
+   */
+  async uploadWidgetAsset(
+    baseUrl: string,
+    organizationId: string,
+    widgetId: number,
+    category: string,
+    name: string,
+    file: File
+  ): Promise<JsonWidget> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('category', category);
+    formData.append('name', name);
+
+    const response = await authFetch(
+      `${baseUrl}/dashboard/organizations/${organizationId}/widgets/${widgetId}/assets`,
+      {
+        method: 'POST',
+        body: formData,
+      }
+    );
+
+    return handleResponse<JsonWidget>(response, { parse: true });
+  },
+
+  /**
+   * Delete an uploaded widget asset.
+   *
+   * @param baseUrl - The base URL of the server
+   * @param organizationId - The organization ID
+   * @param widgetId - The widget the asset belongs to
+   * @param category - Asset category (images, icons, fonts, styles)
+   * @param name - Name of the asset to delete
+   * @returns Promise resolving to the updated widget
+   */
+  async deleteWidgetAsset(
+    baseUrl: string,
+    organizationId: string,
+    widgetId: number,
+    category: string,
+    name: string
+  ): Promise<JsonWidget> {
+    const response = await authFetch(
+      `${baseUrl}/dashboard/organizations/${organizationId}/widgets/${widgetId}/assets/${encodeURIComponent(
+        category
+      )}/${encodeURIComponent(name)}`,
+      {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    return handleResponse<JsonWidget>(response, { parse: true });
+  },
+
+  /**
+   * Clone a widget, optionally with a new name.
+   *
+   * @param baseUrl - The base URL of the server
+   * @param organizationId - The organization ID
+   * @param widgetId - The widget ID to clone
+   * @param name - Optional new name for the clone
+   * @returns Promise resolving to the cloned widget
+   */
+  async cloneWidget(
+    baseUrl: string,
+    organizationId: string,
+    widgetId: number,
+    name?: string
+  ): Promise<JsonWidget> {
+    const body: Record<string, string> = {};
+    if (name) body['name'] = name;
+
+    const response = await authFetch(
+      `${baseUrl}/dashboard/organizations/${organizationId}/widgets/${widgetId}/clone`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      }
+    );
+
+    return handleResponse<JsonWidget>(response, { parse: true });
   },
 };
