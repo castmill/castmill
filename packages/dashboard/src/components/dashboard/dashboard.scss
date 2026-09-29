@@ -15,5 +15,20 @@
 
   .content {
     flex-grow: 1;
+    min-width: 0;
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 48em) {
+  .castmill-dashboard {
+    flex-direction: column;
+    height: auto;
+    min-height: 0;
+
+    .content {
+      width: 100%;
+      -webkit-overflow-scrolling: touch;
+    }
   }
 }

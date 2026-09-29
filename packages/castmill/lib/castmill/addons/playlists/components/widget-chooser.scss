@@ -166,3 +166,15 @@
     text-overflow: ellipsis;
   }
 }
+
+@media (max-width: 48em) {
+  .widget-chooser {
+    width: auto;
+    max-height: 16em;
+    margin: 0;
+
+    .items-container {
+      -webkit-overflow-scrolling: touch;
+    }
+  }
+}
