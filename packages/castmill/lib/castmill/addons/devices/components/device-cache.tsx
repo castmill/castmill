@@ -201,6 +201,7 @@ export const DeviceCache: Component<{
         resource={t('devices.cache.items')}
         fetchData={(opts: any) => fetchCachePage(type, opts)}
         ref={setTableViewRef}
+        initialSortOptions={{ key: 'timestamp', direction: 'descending' }}
         table={{
           columns,
           actions,
