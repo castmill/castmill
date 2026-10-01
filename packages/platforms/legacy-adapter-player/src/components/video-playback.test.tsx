@@ -521,4 +521,78 @@ describe('Video playback integration', () => {
     await vi.waitFor(() => expect(factory).toHaveBeenCalledOnce());
     expect(factory.mock.calls[0][0]).toBe(container.querySelector('video'));
   });
+
+  const renderGated = (
+    resources: ResourceManager,
+    integration: VideoPlaybackController,
+    ready: () => void
+  ) =>
+    render(
+      () => (
+        <Video
+          name="gated"
+          opts={{ url: 'https://media.test/video.mp4', size: 'contain' }}
+          style={{}}
+          timeline={timeline}
+          resourceManager={resources}
+          globals={{
+            target: 'poster',
+            createVideoPlaybackController: () => integration,
+          }}
+          onReady={ready}
+        />
+      ),
+      container
+    );
+
+  it('assigns the source only once the controller allows loading', async () => {
+    const resources = new ResourceManager(
+      new Cache(new StorageDummy('test'), 'test', 10)
+    );
+    vi.spyOn(resources, 'getMedia').mockResolvedValue('blob:video');
+    let allowLoading!: () => void;
+    const integration: VideoPlaybackController = {
+      ...controller(),
+      whenLoadable: vi.fn(
+        () =>
+          new Promise<void>((resolve) => {
+            allowLoading = resolve;
+          })
+      ),
+    };
+    const ready = vi.fn();
+    dispose = renderGated(resources, integration, ready);
+    const video = container.querySelector('video')!;
+    await vi.waitFor(() => expect(integration.whenLoadable).toHaveBeenCalled());
+    expect(video.getAttribute('src')).toBeNull();
+    expect(timeline.items).toHaveLength(0);
+
+    allowLoading();
+    await vi.waitFor(() => expect(ready).toHaveBeenCalledOnce());
+    expect(video.src).toBe('blob:video');
+    expect(timeline.items).toHaveLength(1);
+  });
+
+  it('does not assign a source after disposal while waiting for a decoder', async () => {
+    const resources = new ResourceManager(
+      new Cache(new StorageDummy('test'), 'test', 10)
+    );
+    vi.spyOn(resources, 'getMedia').mockResolvedValue('blob:video');
+    let allowLoading!: () => void;
+    const integration: VideoPlaybackController = {
+      ...controller(),
+      whenLoadable: () =>
+        new Promise<void>((resolve) => {
+          allowLoading = resolve;
+        }),
+    };
+    dispose = renderGated(resources, integration, () => {});
+    const video = container.querySelector('video')!;
+    await vi.waitFor(() => expect(allowLoading).toBeDefined());
+    dispose();
+    allowLoading();
+    await Promise.resolve();
+    expect(video.getAttribute('src')).toBeNull();
+    expect(timeline.items).toHaveLength(0);
+  });
 });

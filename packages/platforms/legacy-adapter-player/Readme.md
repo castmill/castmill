@@ -158,6 +158,10 @@ The controller also recognizes `loadeddata`, `canplay`, and updated `readyState`
 if `loadedmetadata` is missing. A video whose decoder still times out retries
 after 30 seconds while it remains active; pause or disposal cancels the retry.
 Other videos and the layout continue independently.
+The dashboard stores each video item's length when it is inserted or its video
+changes. Items without a stored duration use a 10 s slot until their metadata
+loads, and the shared player then refreshes durations at the next loop. See `agents/packages/player/README.md`
+("Loop Duration Refresh").
 Failed native video loads invalidate their cache entry and retry the download
 once, so a deleted native file is not retained across future playback. Errors
 use the existing player error reporter. Protected resources use in-memory
@@ -168,6 +172,152 @@ seek-only requests never start playback. New requests, pause, and disposal cance
 pending work so a late metadata event cannot resume obsolete playback. Shared
 player code retains rendering, loading, duration, and timeline ownership. Android,
 Electron, browser players, and dashboard previews do not receive this override.
+WebOS skips a paused seek to zero when its decoder is already unready and at zero;
+loading that inactive video during a handoff can occupy the native decoder while
+the next video plays. A later play still reloads the video normally. A play
+request that jumps a visible, decoded video back by at least 1 s to an offset
+under 1 s waits 250 ms before reloading or seeking: a widget timeline can
+wrap just before its playlist slot ends, and an immediate reload would blank the
+outgoing layer while the next video starts. Reused videos at their first frame
+reload immediately: WebOS reloads a detached video by itself, but playing that
+element without another `load()` can leave `currentTime` stuck at zero.
+While a video plays, a watchdog checks its position every 500 ms. If it stops
+advancing for 2 s before the last 0.5 s of the video, the controller reloads it
+once and resumes at the position the playlist expects (last position plus stall
+time). WebOS can keep reporting `playing` after other videos reload and take its
+decoder. A second stall in the same slot is only logged; the next play request
+allows a new recovery.
+
+LG webOS Signage supports gapless playback with at most two loaded video tags,
+but the player keeps one `<video>` per playlist item, and the device queues two
+copies of the channel playlist. The controllers therefore share a decoder
+budget (`WebosDecoderBudget`, `MAX_LOADED_VIDEOS = 2` for all WebOS models for
+now) so that at most two videos hold a media source:
+
+- A new video does not get its `src` until it holds a decoder: the widget waits
+  for the controller's `whenLoadable()` before assigning the source. Otherwise
+  its first metadata load would use a third decoder alongside the two current
+  videos and stall the videos on screen.
+- A video that has played and is seeked while its layer is detached from the
+  document (the playlist rewinds an unloaded layer) releases its source: the
+  controller removes the `src` attribute and calls `load()`. Otherwise WebOS
+  reloads the detached video by itself and competes with the video on screen.
+- A video that needs to load, seek, or play claims the budget. If both decoders
+  are taken, the controller releases paused videos, detached ones first and
+  then the least recently claimed. Playing videos, videos preparing a seek or
+  play, and new videos still loading their first metadata (up to 15 s) are
+  never released. A loaded video that has not received a request yet is only
+  released for a play request.
+- If no decoder can be released, the video waits in a queue
+  (`waiting for decoder`) and is marked as blocked for the player (see
+  below). When a
+  holder pauses or finishes loading, the decoder goes to queued play requests
+  first, then to the largest waiting video, then in arrival order
+  (`decoder granted`). Pausing a waiting video removes its play request.
+  The hand-off runs after the pausing call returns, so a renderer that pauses
+  a layer and then removes it does not grant a decoder to that layer.
+- Waiting videos whose layer is no longer in the document (for example after
+  a channel change, or a skipped playlist item) are skipped. The budget checks them again every second
+  and grants them a decoder once their layer is shown again. A loaded,
+  unrequested video whose layer was removed can be released for any load.
+- A released video restores its source on its next play or non-zero seek
+  (`calling load reason=released`). Its reload costs the same as the restart
+  reload of a reused video.
+- Disposing a controller releases its source.
+
+This avoids decoder contention but does not preload the next video, so a short
+load gap between videos remains.
+
+A waiting video signals the block through the player's `setBlocked` controller
+hook; nothing is drawn over the video, and no widget template or database
+changes are needed. The playlist that plays the video's item (a layout zone
+or the channel playlist) then:
+
+- Holds its clock while the item is blocked, so a short wait, such as a
+  handoff while the previous video pauses, only delays the item instead of
+  cutting it short.
+- Skips the item once it has been blocked for `BLOCKED_ITEM_SKIP_MS` (1 s)
+  and starts the next item at once, with its full duration. The previous item
+  stays on screen during that second. The skipped video keeps its place in the
+  decoder queue and is tried again on its next turn.
+- If every item of the playlist has been skipped in a row (for example a zone
+  with a single video, or with only blocked videos), stops skipping: the area
+  is left empty and the item plays as soon as a decoder is free.
+
+Each skip, and each switch to waiting, is reported through the player error
+reporter, so it appears in the dashboard's device events tab. The report has
+category `playback` and code `video-decoder-limit`. Its message says that the
+player tried to play more simultaneous videos than the device supports, that
+the blocked video was skipped or delayed, and that the number of simultaneous
+videos should be reduced. Reporting does not stop playback. Skipping and
+waiting shift a playlist off its schedule until it restarts (for example on
+the next layout loop), so synchronized playback between devices can drift
+meanwhile.
+
+#### Regression tests
+
+`yarn workspace @castmill/legacy-adapter-player test` runs two suites that
+guard the decoder budget:
+
+- `src/components/webos-layout-playback.test.tsx` renders real content (the
+  player, layouts with video playlists, the video widget, and the WebOS
+  controller) against a simulated media stack with fake timers. Every 100 ms
+  it asserts that at most `MAX_LOADED_VIDEOS` video tags hold a source or
+  play. It also checks that the number of video tags stays the same from loop
+  to loop, that videos play their full duration in order, that layout loops
+  keep their period, that crowded layouts report `video-decoder-limit` without
+  stopping playback, that blocked videos are skipped in zone and channel
+  playlists (or waited for with an empty area when nothing else can play),
+  that short handoff waits are not skipped, and that a cleared or replaced
+  channel frees every decoder.
+- The `WebosDecoderBudget invariants` tests in
+  `src/classes/webos-video-playback.test.ts` run seeded random sequences of
+  loads, seeks, plays, pauses, layer removals, and disposals. After every step
+  they check the limits, then check that requested videos still get to play.
+
+Add a scenario to these suites whenever playback, rendering, or layer handling
+changes in a way that could create, load, or keep video tags.
+
+To trace WebOS video playback, build the adapter with `VITE_LOGGING=true` and
+inspect the browser console for `[WebOS Video]` messages. Logs are compact and
+event-driven, and include the source type only for non-native media, never the
+full media URL, which may contain credentials. Each line has the form:
+
+```text
+[WebOS Video] 17:21:52.537 #2 event=playing duration=20.8 videos=1/1 | rs=4 ns=2 pos=0 play=44ms
+```
+
+- `17:21:52.537` is UTC time and `#2` is the controller ID.
+- After `|`: `rs` is `readyState`, `ns` is `networkState`, `pos` is
+  `currentTime`, then `paused`/`ended` flags when set, then milliseconds since
+  the latest play request (`play=`) and decoder load (`load=`) when active.
+- Logged events: play/seek requests (near-identical repeated timeline seeks are
+  omitted), `pause`, `calling load reason=…` (`restart`, `released`,
+  `stalled`, `ended`, `unready`, `seek-rejected`), `released decoder reason=…`
+  (`detached`, `budget`, `dispose`), `waiting for decoder decoders=N waiting=N`,
+  `decoder granted`, `calling play`, `loadstart`,
+  `loadedmetadata` with decoded `dims`, `playing`, `waiting`, `seeked`, `ended`, `error`, timeouts, retries,
+  and native media recovery. Routine `stalled`, `canplay*`, and `timeupdate`
+  events are not logged.
+- Progress transitions: `progress started` on the first advance after play,
+  `no progress forMs=2000` when a playing video's position stops advancing, and
+  `progress resumed`. A `no progress` line right after `playing` identifies a
+  video that reports playback but shows no frames. It is followed by
+  `recovering stalled playback offsetMs=…` when the watchdog reloads the video.
+- `playing` and `no progress` lines include the media duration and
+  `videos=playing/total decoders=N` (videos holding a source, plus `waiting=N`
+  when videos are queued for a decoder), and only report deviations from a visible,
+  full-screen, topmost video: `detached`, `rect=…`, `hiddenBy=…` (the ancestor
+  hiding the video, with its z-index), and `coveredBy=…`.
+
+Compare the outgoing video's `pause` with the incoming video's `progress started`
+to measure a handoff. Media events alone do not confirm when a frame actually
+appeared on the display.
+
+The same build logs `[WebOS Storage]` lines for native and in-memory media
+downloads (start, completion time, size, and the first characters of the cached
+file name) and native deletions, without media URLs. Correlate them with
+`no progress` lines to see whether caching I/O coincides with a playback stall.
 
 ### Startup diagnostics
 
@@ -240,6 +390,17 @@ Do not delete `castmill:storage:*` caches when resetting the app shell; those
 contain player resources rather than the adapter release.
 
 ### Debug overlay
+
+Selecting the debug menu option also toggles the player's playback debug
+overlay. A single box in the upper right corner of each playlist or layout
+area shows the playlist of that area and the playing item, each with a
+progress bar and a countdown, and the next item. Build with
+`VITE_DEBUG_OVERLAY=true` to enable the playback overlay at startup. For
+example, `VITE_LOGGING=true VITE_DEBUG_OVERLAY=true yarn workspace
+@castmill/legacy-adapter-player build:server`. From the console, call
+`castmillDebugOverlay(true)` or `castmillDebugOverlay(false)`. The same
+`VITE_DEBUG_OVERLAY` flag works for the Android, WebOS, Electron, and browser
+players. See `agents/packages/player/README.md` for details.
 
 Legacy Android, WebOS, and Electron shells send the literal `console` message to the
 embedded player when their debug menu option is selected. The adapter accepts

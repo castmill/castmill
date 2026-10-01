@@ -1,8 +1,16 @@
 import { JSX } from 'solid-js';
 
 import { ResourceManager } from '@castmill/cache';
-import { Observable, forkJoin, from, merge, of } from 'rxjs';
-import { mergeMap, map, switchMap } from 'rxjs/operators';
+import {
+  BehaviorSubject,
+  Observable,
+  ReplaySubject,
+  forkJoin,
+  from,
+  merge,
+  of,
+} from 'rxjs';
+import { mergeMap, map, switchMap, take } from 'rxjs/operators';
 import { TimelineWidget } from '../timeline-widget';
 
 import { render } from 'solid-js/web';
@@ -10,7 +18,10 @@ import { Template, TemplateComponent } from './template';
 import { TemplateConfig } from './binding';
 import { JsonWidget } from '../../interfaces';
 import { JsonWidgetConfig } from '../../interfaces/json-widget-config.interface';
-import { PlayerGlobals } from '../../interfaces/player-globals.interface';
+import {
+  PlayerGlobals,
+  PlayerRuntimeError,
+} from '../../interfaces/player-globals.interface';
 
 /**
  * Template Widget
@@ -43,6 +54,18 @@ export class TemplateWidget extends TimelineWidget {
   private medias: { [key: string]: string } = {};
   private template: TemplateComponent;
   private displayDuration?: number;
+  // Emits once the rendered template is ready, e.g. its videos have loaded.
+  private ready$?: ReplaySubject<void>;
+  // Globals for the rendered components; blocked videos report to this
+  // widget. Nested template widgets override the hook again, so a block
+  // reaches the nearest playlist item.
+  private globals: PlayerGlobals;
+  private blocks = new Map<object, PlayerRuntimeError>();
+  private blocked = new BehaviorSubject<PlayerRuntimeError | undefined>(
+    undefined
+  );
+  private blockedSince?: number;
+  private blockedTotal = 0;
 
   constructor(
     resourceManager: ResourceManager,
@@ -50,10 +73,16 @@ export class TemplateWidget extends TimelineWidget {
   ) {
     super(resourceManager, opts);
 
+    this.globals = Object.assign({}, opts.globals, {
+      setPlaybackBlocked: (source: object, block?: PlayerRuntimeError) =>
+        this.setBlocked(source, block),
+    });
+
     this.template = TemplateComponent.fromJSON(
       opts.widget.template,
       resourceManager,
-      opts.globals
+      this.globals,
+      opts.config
     );
 
     // Check for display_duration or duration option and set timeline duration
@@ -64,6 +93,37 @@ export class TemplateWidget extends TimelineWidget {
       this.displayDuration = durationOption * 1000; // Convert seconds to ms
       this.timeline.setDuration(this.displayDuration);
     }
+  }
+
+  blocked$(): Observable<PlayerRuntimeError | undefined> {
+    return this.blocked;
+  }
+
+  private setBlocked(source: object, block?: PlayerRuntimeError): void {
+    if (block) {
+      this.blocks.set(source, block);
+    } else {
+      this.blocks.delete(source);
+    }
+    let current: PlayerRuntimeError | undefined;
+    this.blocks.forEach((value) => {
+      current = current || value;
+    });
+    if (current && this.blockedSince === undefined) {
+      this.blockedSince = Date.now();
+    } else if (!current && this.blockedSince !== undefined) {
+      this.blockedTotal += Date.now() - this.blockedSince;
+      this.blockedSince = undefined;
+    }
+    if (current !== this.blocked.getValue()) this.blocked.next(current);
+  }
+
+  // Total time any rendered component has been blocked.
+  private blockedTime(): number {
+    return (
+      this.blockedTotal +
+      (this.blockedSince === undefined ? 0 : Date.now() - this.blockedSince)
+    );
   }
 
   /**
@@ -146,36 +206,44 @@ export class TemplateWidget extends TimelineWidget {
   show(el: HTMLElement, offset: number) {
     // Note: we need to think how data is refreshed when the model changes.
     const basetime = Date.now();
+    const blockedAtBase = this.blockedTime();
 
     return this.load().pipe(
-      switchMap((x) => {
-        if (el.children.length === 0) {
-          // Create observable that will emit when the template is ready.
-          return new Observable<string>((subscriber) => {
-            render(
-              () =>
-                Template({
-                  name: this.opts.widget.name,
-                  root: this.template,
-                  config: this.opts.config,
-                  style: this.opts?.style,
-                  timeline: this.timeline,
-                  globals: this.opts.globals,
-                  resourceManager: this.resourceManager,
-                  onReady: () => {
-                    this.seek(offset + (Date.now() - basetime));
-                    subscriber.next('template-widget:shown');
-                    subscriber.complete();
-                  },
-                }),
-              el
-            );
-          });
+      switchMap(() => {
+        if (el.children.length === 0 || !this.ready$) {
+          const ready$ = new ReplaySubject<void>(1);
+          this.ready$ = ready$;
+          render(
+            () =>
+              Template({
+                name: this.opts.widget.name,
+                root: this.template,
+                config: this.opts.config,
+                style: this.opts?.style,
+                timeline: this.timeline,
+                globals: this.globals,
+                resourceManager: this.resourceManager,
+                onReady: () => ready$.next(),
+              }),
+            el
+          );
         }
 
-        // Seek to compensate for the time spent loading the assets.
-        this.seek(offset + (Date.now() - basetime));
-        return of('template-widget:shown');
+        // A show that arrives while the template is still getting ready (for
+        // example a seek of a layout area while its first video loads) must
+        // wait as well. Otherwise playback starts with default durations,
+        // such as 10s for a video whose metadata hasn't loaded yet.
+        return this.ready$.pipe(
+          take(1),
+          map(() => {
+            // Seek to compensate for the time spent loading the assets. Time
+            // spent waiting for a decoder is excluded: playlists hold their
+            // clock while an item is blocked.
+            const blocked = this.blockedTime() - blockedAtBase;
+            this.seek(offset + Math.max(0, Date.now() - basetime - blocked));
+            return 'template-widget:shown';
+          })
+        );
       })
     );
   }

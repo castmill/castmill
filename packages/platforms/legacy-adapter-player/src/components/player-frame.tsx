@@ -22,6 +22,7 @@ import {
 import { getLegacyBaseUrl } from '../utils/base-url';
 import { WebosWebSocket } from '../webos-legacy-api';
 import { createWebosVideoPlayback } from '../classes/webos-video-playback';
+import { enableDebugOverlayFromEnv, setDebugOverlay } from '@castmill/player';
 import {
   LegacyDebugOverlay,
   LegacyDebugShell,
@@ -110,6 +111,7 @@ export const PlayerFrame: Component = () => {
   const toggleDebugOverlay = () => {
     const visible = !showDebug();
     setShowDebug(visible);
+    setDebugOverlay(visible);
 
     // Old WebOS fails to apply some reactive DOM updates after player mount.
     if (debugOverlay) {
@@ -129,6 +131,8 @@ export const PlayerFrame: Component = () => {
     if (!ref) {
       return;
     }
+
+    enableDebugOverlayFromEnv(import.meta.env.VITE_DEBUG_OVERLAY);
 
     const platform = getLegacyPlatform();
     const legacyMachine = getLegacyMachine(platform);

@@ -149,10 +149,12 @@ export const Video: Component<VideoProps> = (props) => {
   let seekingVideoSubscription: Subscription;
   let playbackController: VideoPlaybackController | undefined;
   let disposed = false;
+  const blockSource = {};
 
   onCleanup(() => {
     disposed = true;
     playbackController?.dispose();
+    props.globals.setPlaybackBlocked?.(blockSource);
     seekingVideoSubscription?.unsubscribe();
     loadingSubscription?.unsubscribe();
     if (timelineItem) {
@@ -178,15 +180,22 @@ export const Video: Component<VideoProps> = (props) => {
         return;
       }
 
-      videoRef.src = videoUrl;
       playbackController = props.globals.createVideoPlaybackController?.(
         videoRef,
         {
           reportError: props.globals.reportError,
           refreshMedia: () =>
             props.resourceManager.refreshMedia(props.opts.url),
+          setBlocked: (block) =>
+            props.globals.setPlaybackBlocked?.(blockSource, block),
         }
       );
+
+      if (playbackController?.whenLoadable) {
+        await playbackController.whenLoadable();
+        if (disposed || !videoRef) return;
+      }
+      videoRef.src = videoUrl;
 
       seekingVideoSubscription?.unsubscribe();
 

@@ -6,6 +6,11 @@
  */
 import { StorageBrowser } from '@castmill/cache';
 import { mountDevice, Device, BrowserMachine } from '@castmill/device';
+import { enableDebugOverlayFromEnv } from '@castmill/player';
+
+// Inlined by esbuild from the VITE_DEBUG_OVERLAY environment variable, see
+// config/config.exs.
+enableDebugOverlayFromEnv(import.meta.env.VITE_DEBUG_OVERLAY);
 
 (async () => {
   const browserMachine = new BrowserMachine();

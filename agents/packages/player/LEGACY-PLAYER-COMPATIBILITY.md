@@ -96,6 +96,25 @@ Metadata readiness also accepts `loadeddata`, `canplay`, or an updated
 after 15 seconds reports a playback error and retries after 30 seconds while
 its video is still active; pause or disposal cancels the retry. Other videos
 and the layout continue independently.
+Following LG's two-video-tag guidance, controllers share a decoder budget: at
+most two videos keep a media source. New videos get their `src` only after the
+controller's `whenLoadable()` grants a decoder. Played videos seeked while
+detached, the least recently claimed paused videos beyond the budget, and
+disposed videos remove their `src` and call `load()`. They restore it on their
+next play. Playing, preparing, and first-loading videos are never released;
+videos that cannot get a decoder wait in a queue (play requests first, then
+larger videos) and signal the block through the controller context's
+`setBlocked` hook. The nearest `TemplateWidget` exposes it as
+`Layer.blocked$()`, and the playlist playing the item holds its clock while
+the item is blocked, skips it after `BLOCKED_ITEM_SKIP_MS` (1 s), and, once
+every item was skipped in a row, leaves the area empty and waits for the
+decoder instead. Each skip or wait is reported as a non-fatal `playback`
+error (`video-decoder-limit`) shown in the device events tab; nothing is drawn
+over the video. Waiting videos of layers that were removed from the document
+(for example after a channel change or a skip) are not granted a decoder
+until shown again. End-to-end
+(`webos-layout-playback.test.tsx`) and seeded invariant tests guard these
+limits; see the adapter README for details.
 The video widget waits for `canplay` or `canplaythrough`, but accepts
 `loadedmetadata`, `loadeddata`, or metadata visible in `readyState` at the
 bounded readiness deadline to register and start WebOS videos without either

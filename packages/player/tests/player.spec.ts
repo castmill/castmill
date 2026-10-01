@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { describe, it, afterEach } from 'mocha';
 import { firstValueFrom, NEVER, of, Subscription } from 'rxjs';
-import { spy, stub, restore } from 'sinon';
+import { spy, stub, restore, useFakeTimers } from 'sinon';
 
 import {
   getImageBackgroundSize,
@@ -203,6 +203,80 @@ describe('Player.play', () => {
     expect(play.calledOnce).to.equal(true);
 
     player.stop();
+  });
+});
+
+describe('Player loop duration refresh', () => {
+  const setup = (durations: () => number) => {
+    const seek = spy((offset: number) => of([offset, 1000]));
+    const play = spy((_: any, timer$: any) => timer$);
+    const playlist = {
+      time: 0,
+      seek,
+      play,
+      duration: durations,
+      toggleDebug: () => {},
+    } as any;
+    const renderer = {
+      toggleDebug: () => {},
+      setViewport: () => {},
+    } as any;
+    return { player: new Player(playlist, renderer), playlist, seek, play };
+  };
+
+  it('restarts looping playback with fresh offsets once item durations change', () => {
+    const clock = useFakeTimers({ now: 1_000_000 });
+    let duration = 1000;
+    const { player, playlist, seek, play } = setup(() => duration);
+    try {
+      player.play({ loop: true });
+      clock.tick(500);
+      // A video item finished loading and reported its real length.
+      duration = 1500;
+      playlist.time = 900;
+      clock.tick(600);
+
+      expect(play.calledTwice).to.equal(true);
+      expect(seek.lastCall.args[0]).to.equal(0);
+    } finally {
+      player.stop();
+      clock.restore();
+    }
+  });
+
+  it('keeps the timer running across loops when durations are unchanged', () => {
+    const clock = useFakeTimers({ now: 1_000_000 });
+    const { player, play } = setup(() => 1000);
+    const times: number[] = [];
+    player.on('time', (time: number) => times.push(time));
+    try {
+      player.play({ loop: true });
+      clock.tick(2600);
+
+      expect(play.calledOnce).to.equal(true);
+      expect(times.some((time, i) => i > 0 && time < times[i - 1])).to.equal(
+        true
+      );
+    } finally {
+      player.stop();
+      clock.restore();
+    }
+  });
+
+  it('does not restart synced playback, whose position is shared', () => {
+    const clock = useFakeTimers({ now: 1_000_000 });
+    let duration = 1000;
+    const { player, play } = setup(() => duration);
+    try {
+      player.play({ loop: true, synced: true, baseline: 1_000_000 });
+      duration = 1500;
+      clock.tick(1100);
+
+      expect(play.calledOnce).to.equal(true);
+    } finally {
+      player.stop();
+      clock.restore();
+    }
   });
 });
 

@@ -38,6 +38,28 @@ describe('WebosLegacyFileStorage', () => {
     vi.unstubAllGlobals();
   });
 
+  it('logs native download timing and deletions without media URLs', async () => {
+    vi.stubEnv('VITE_LOGGING', 'true');
+    const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+    try {
+      await storage.storeFile(video, { type: ItemType.Media });
+      await storage.deleteFile(video);
+    } finally {
+      vi.unstubAllEnvs();
+    }
+
+    const messages = log.mock.calls.map(([message]) => String(message));
+    log.mockRestore();
+    expect(messages).toEqual([
+      expect.stringMatching(/store #\d+ native download start$/),
+      expect.stringMatching(
+        /store #\d+ native download done afterMs=\d+ size=12000000 file=aaaaaaaaaaaa$/
+      ),
+      expect.stringContaining('delete native file=aaaaaaaaaaaa'),
+    ]);
+    expect(messages.join(' ')).not.toContain('/medias/');
+  });
+
   it('stores video through native files and restores its URL across restarts', async () => {
     const cache = new MemoryCache(storage, 100);
     await cache.init();

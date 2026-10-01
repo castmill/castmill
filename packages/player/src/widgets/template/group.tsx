@@ -31,7 +31,8 @@ export class GroupComponent implements TemplateComponent {
   static fromJSON(
     json: any,
     resourceManager: ResourceManager,
-    globals: PlayerGlobals
+    globals: PlayerGlobals,
+    config?: TemplateConfig
   ): GroupComponent {
     const components = json.components || [];
     return new GroupComponent(
@@ -41,7 +42,7 @@ export class GroupComponent implements TemplateComponent {
       json.opts,
       json.style,
       components.map((component: any) =>
-        TemplateComponent.fromJSON(component, resourceManager, globals)
+        TemplateComponent.fromJSON(component, resourceManager, globals, config)
       ),
       json.animations,
       json.filter,

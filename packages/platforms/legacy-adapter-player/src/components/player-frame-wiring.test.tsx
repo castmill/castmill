@@ -5,6 +5,7 @@ import { MemoryCache } from '@castmill/cache';
 import { PlayerFrame } from './player-frame';
 import { WebosWebSocket } from '../webos-legacy-api';
 import { createWebosVideoPlayback } from '../classes/webos-video-playback';
+import { isDebugOverlayEnabled, setDebugOverlay } from '@castmill/player';
 
 const { makeDevice, initWebos, notifyWebos, initCache } = vi.hoisted(() => ({
   makeDevice: vi.fn(),
@@ -72,6 +73,8 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+  setDebugOverlay(false);
+  vi.unstubAllEnvs();
   vi.restoreAllMocks();
   vi.clearAllMocks();
   initCache.mockResolvedValue(undefined);
@@ -121,6 +124,33 @@ describe('PlayerFrame playback controller selection', () => {
       expect(overlay).toHaveTextContent('Operating system: webOS');
       expect(overlay).toHaveTextContent('Chromium version: 38.0.2125.122');
     });
+  });
+
+  it('toggles the playback debug overlay with the diagnostics overlay', async () => {
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('webOS');
+    render(() => <PlayerFrame />);
+    const toggle = () =>
+      window.dispatchEvent(
+        new MessageEvent('message', {
+          data: 'console',
+          origin: 'file://com.lg.app.signage',
+          source: window.parent,
+        })
+      );
+
+    expect(isDebugOverlayEnabled()).toBe(false);
+    toggle();
+    expect(isDebugOverlayEnabled()).toBe(true);
+    toggle();
+    expect(isDebugOverlayEnabled()).toBe(false);
+    await waitFor(() => expect(mountDevice).toHaveBeenCalledOnce());
+  });
+
+  it('enables the playback debug overlay with VITE_DEBUG_OVERLAY', async () => {
+    vi.stubEnv('VITE_DEBUG_OVERLAY', 'true');
+    render(() => <PlayerFrame />);
+    expect(isDebugOverlayEnabled()).toBe(true);
+    await waitFor(() => expect(mountDevice).toHaveBeenCalledOnce());
   });
 
   it('allows the WebOS file-wrapper identity fallback', async () => {

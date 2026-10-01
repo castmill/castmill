@@ -37,11 +37,17 @@ config :castmill, Castmill.Mailer, adapter: Swoosh.Adapters.Local
 config :castmill, :mailer_from, {"Castmill", "no-reply@castmill.com"}
 
 # Configure esbuild (the version is required)
+# VITE_DEBUG_OVERLAY=true enables the player's playback debug overlay at
+# startup in the browser player (js/device.js), like in the Vite-built players.
+debug_overlay =
+  if System.get_env("VITE_DEBUG_OVERLAY") in ["true", "1"], do: "true", else: ""
+
 config :esbuild,
   version: "0.17.11",
   default: [
     args:
-      ~w(js/app.js js/device.js js/sw.js --bundle --target=es2017 --outdir=../priv/static/assets --external:/fonts/* --external:/images/*),
+      ~w(js/app.js js/device.js js/sw.js --bundle --target=es2017 --outdir=../priv/static/assets --external:/fonts/* --external:/images/*) ++
+        [~s(--define:import.meta.env.VITE_DEBUG_OVERLAY="#{debug_overlay}")],
     cd: Path.expand("../assets", __DIR__),
     env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
   ]

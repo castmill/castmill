@@ -15,6 +15,11 @@ export interface VideoPlaybackController {
   pause(): void;
   dispose(): void;
   recoverMedia?(): Promise<string | void>;
+  /**
+   * Resolves when the element may load its source. Platforms with a limited
+   * number of hardware decoders delay loading until one is free.
+   */
+  whenLoadable?(): Promise<void>;
 }
 
 export type VideoPlaybackControllerFactory = (
@@ -22,6 +27,12 @@ export type VideoPlaybackControllerFactory = (
   context: {
     reportError?: (input: PlayerRuntimeError) => void;
     refreshMedia: () => Promise<string | void>;
+    /**
+     * Signals that the video cannot play right now (e.g. no free hardware
+     * decoder), or that it can again when called without a block. Playlists
+     * skip an item that stays blocked and report the block.
+     */
+    setBlocked?: (block?: PlayerRuntimeError) => void;
   }
 ) => VideoPlaybackController;
 
@@ -36,4 +47,10 @@ export interface PlayerGlobals {
   reportError?: (input: PlayerRuntimeError) => void;
   /** Optional per-element integration; omitted to use the default HTML video behavior. */
   createVideoPlaybackController?: VideoPlaybackControllerFactory;
+  /**
+   * Set by each template widget for the components it renders, so a blocked
+   * video marks the nearest playlist item as blocked. Not meant to be
+   * provided by the player host.
+   */
+  setPlaybackBlocked?: (source: object, block?: PlayerRuntimeError) => void;
 }

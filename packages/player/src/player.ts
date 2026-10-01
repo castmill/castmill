@@ -1,10 +1,16 @@
 import EventEmitter from 'eventemitter3';
 import { Observable, Subscription } from 'rxjs';
-import { finalize, share, tap, first, concatMap } from 'rxjs/operators';
+import { finalize, filter, share, tap, first, concatMap } from 'rxjs/operators';
 import { Playlist } from './playlist';
 import { Renderer, Viewport } from './renderer';
 
 const TIMER_RESOLUTION = 50;
+
+function durationChanged(previous: number, current: number): boolean {
+  return (
+    Number.isFinite(current) && current > 0 && Math.abs(current - previous) >= 1
+  );
+}
 
 export interface PlayerErrorReporter {
   report(input: {
@@ -72,6 +78,7 @@ export class Player extends EventEmitter {
 
     // Do we really need to seek here, since we also seek when doing "show"?
     const startTime = opts.synced ? baseline : this.playlist.time || 0;
+    let restartScheduled = false;
     const timer$ = this.playlist.seek(startTime).pipe(
       first(),
       concatMap(([time, duration]) => {
@@ -82,20 +89,45 @@ export class Player extends EventEmitter {
             if (value < currTime) {
               this.emit('end');
             }
+          }),
+          filter((value) => {
+            const wrapped = value < currTime;
             currTime = value;
+            if (restartScheduled) return false;
+            // Item offsets are computed when playback starts. Items without
+            // an explicit duration (e.g. videos) use a 10 s fallback until
+            // their media has loaded, so refresh the offsets at each loop
+            // once the real durations are known.
+            if (
+              wrapped &&
+              opts.loop &&
+              !opts.synced &&
+              durationChanged(duration, this.playlist.duration())
+            ) {
+              restartScheduled = true;
+              // Restart outside of the timer callback that is emitting.
+              setTimeout(() => {
+                if (this.timerSubscription !== subscription) return;
+                this.stop();
+                this.playlist.time = 0;
+                this.play({ loop: true });
+              }, 0);
+              return false;
+            }
+            return true;
           })
         );
       }),
       share()
     );
 
-    this.timerSubscription = timer$.subscribe({
+    const subscription = (this.timerSubscription = timer$.subscribe({
       next: (time) => this.emit('time', time),
       error: (err) => {
         console.log('Timer error', err);
         this.errorReporter?.report({ category: 'playback', error: err });
       },
-    });
+    }));
 
     this.playing = this.playlist
       .play(this.renderer, timer$, {

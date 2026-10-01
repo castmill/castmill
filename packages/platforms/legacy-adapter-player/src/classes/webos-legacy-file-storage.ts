@@ -12,10 +12,24 @@ import {
   removeWebosFile,
 } from '../webos-legacy-api';
 import { WebosMemoryFileStorage } from './webos-memory-file-storage';
+import { Logger } from '../utils/log';
 
 interface NativeFile {
   url: string;
   size: number;
+}
+
+let nextStoreId = 0;
+
+// Media URLs may contain identifiers; log only the cached file name.
+function fileName(url: string): string {
+  return url.slice(url.lastIndexOf('/') + 1, url.lastIndexOf('/') + 13);
+}
+
+function logStorage(message: string): void {
+  new Logger('WebOS Storage').log(
+    `${new Date().toISOString().slice(11, 23)} ${message}`
+  );
 }
 
 const FILE_MAP_KEY = 'castmill-webos-file-map';
@@ -96,10 +110,35 @@ export class WebosLegacyFileStorage implements StorageIntegration {
     opts?: StoreOptions
   ): Promise<StoreFileReturnValue> {
     if (opts?.type !== ItemType.Media || !this.canDownloadNatively(url)) {
-      return this.browser.storeFile(url, opts);
+      const id = ++nextStoreId;
+      const startedAt = Date.now();
+      logStorage(
+        `store #${id} memory download start type=${opts?.type ?? '-'}`
+      );
+      try {
+        return await this.browser.storeFile(url, opts);
+      } finally {
+        logStorage(
+          `store #${id} memory download end afterMs=${Date.now() - startedAt}`
+        );
+      }
     }
 
-    const file = await fetchWebosFile(url);
+    const id = ++nextStoreId;
+    const startedAt = Date.now();
+    logStorage(`store #${id} native download start`);
+    let file: Awaited<ReturnType<typeof fetchWebosFile>>;
+    try {
+      file = await fetchWebosFile(url);
+    } catch (error) {
+      logStorage(
+        `store #${id} native download failed afterMs=${Date.now() - startedAt}`
+      );
+      throw error;
+    }
+    logStorage(
+      `store #${id} native download done afterMs=${Date.now() - startedAt} size=${file?.size} file=${typeof file?.url === 'string' ? fileName(file.url) : '-'}`
+    );
     const path = typeof file?.url === 'string' && nativePath(file.url);
     if (
       !path ||
@@ -140,6 +179,7 @@ export class WebosLegacyFileStorage implements StorageIntegration {
       await this.browser.deleteFile(url);
       return;
     }
+    logStorage(`delete native file=${fileName(path)}`);
     await removeWebosFile(path);
     if (entry) {
       const updated = new Map(this.files);
@@ -150,6 +190,7 @@ export class WebosLegacyFileStorage implements StorageIntegration {
   }
 
   async deleteAllFiles(): Promise<void> {
+    logStorage('delete all native files');
     await this.resetNativeFiles();
     await this.browser.deleteAllFiles();
   }

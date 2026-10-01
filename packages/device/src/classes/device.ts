@@ -8,6 +8,7 @@ import {
   Layer,
   JsonPlaylist,
   JsonPlaylistItem,
+  PlayerGlobals,
   VideoPlaybackControllerFactory,
 } from '@castmill/player';
 import {
@@ -255,6 +256,17 @@ export class Device extends EventEmitter {
     this.baseUrl = baseUrl ?? (await this.getBaseUrl());
   }
 
+  // Every content layer must receive the platform's video playback
+  // controller, e.g. the WebOS decoder budget only covers videos created
+  // through it.
+  getPlayerGlobals(): PlayerGlobals {
+    return {
+      target: 'poster',
+      reportError: (report) => this.errorReporter.report(report),
+      createVideoPlaybackController: this.opts?.createVideoPlaybackController,
+    };
+  }
+
   getServerConnectionStatus(): ServerConnectionStatus {
     if (!this.socket) {
       return 'not-initialized';
@@ -413,12 +425,7 @@ export class Device extends EventEmitter {
               const layer = await Layer.fromPlaylist(
                 jsonPlaylist,
                 this.resourceManager,
-                {
-                  target: 'poster',
-                  reportError: (report) => this.errorReporter.report(report),
-                  createVideoPlaybackController:
-                    this.opts?.createVideoPlaybackController,
-                }
+                this.getPlayerGlobals()
               );
 
               // Final check before adding to queue

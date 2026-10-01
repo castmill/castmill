@@ -19,6 +19,7 @@
  *
  */
 import { Layer } from './layer';
+import { DebugOverlay } from './debug';
 import { Transition } from './transitions/transition';
 import { combineLatest, Observable, of } from 'rxjs';
 import { finalize, switchMap, tap, map } from 'rxjs/operators';
@@ -44,8 +45,11 @@ export class Renderer {
 
   private debugLayer?: HTMLElement;
 
+  readonly debugOverlay: DebugOverlay;
+
   constructor(el: HTMLElement) {
     this.el = el;
+    this.debugOverlay = new DebugOverlay(el);
   }
 
   setViewport(viewport: Viewport) {
@@ -304,6 +308,21 @@ export class Renderer {
       this.clearPendingLayer(pendingLayer);
     }
     delete this.pendingLayer;
+  }
+
+  /**
+   * Removes the visible layer, unless it is `keep`, leaving the area empty
+   * until the next layer is shown.
+   */
+  blank(keep?: Layer) {
+    const currentLayer = this.currentLayer;
+    if (!currentLayer || currentLayer === keep) {
+      return;
+    }
+    this.currentTransition?.reset();
+    delete this.currentTransition;
+    this.removeLayer(currentLayer);
+    delete this.currentLayer;
   }
 
   getCurrentLayer() {
