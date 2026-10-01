@@ -21,7 +21,11 @@ vi.mock('@castmill/ui-common', () => ({
     props.ref?.({ reloadData });
 
     return (
-      <section>
+      <section
+        data-testid="table-view"
+        data-initial-sort-key={props.initialSortOptions?.key}
+        data-initial-sort-direction={props.initialSortOptions?.direction}
+      >
         {props.toolbar.actions()}
         <button
           onClick={() =>
@@ -59,6 +63,26 @@ describe('DeviceCache', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     reloadData.mockClear();
+  });
+
+  it('sorts cache entries newest first by default', () => {
+    render(() => (
+      <DeviceCache
+        baseUrl="/api"
+        device={{ id: 'device-1', online: true } as any}
+        t={t}
+      />
+    ));
+
+    const tableViews = screen.getAllByTestId('table-view');
+    expect(tableViews).toHaveLength(3);
+    tableViews.forEach((tableView) => {
+      expect(tableView).toHaveAttribute('data-initial-sort-key', 'timestamp');
+      expect(tableView).toHaveAttribute(
+        'data-initial-sort-direction',
+        'descending'
+      );
+    });
   });
 
   it('renders one global clear action and sends the all-cache request after confirmation', async () => {

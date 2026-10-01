@@ -327,8 +327,8 @@ describe('TableView Component - Sorting Functionality', () => {
     // Check that fetchData was called with default sort options
     const callArgs = mockFetchData.mock.calls[0][0];
     expect(callArgs.sortOptions).toEqual({
-      key: 'name',
-      direction: 'ascending',
+      key: 'inserted_at',
+      direction: 'descending',
     });
   });
 
