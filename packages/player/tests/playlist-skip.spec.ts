@@ -238,6 +238,26 @@ describe('Playlist skipping of blocked items', () => {
     expect(played[0].elapsed[0]).to.be.at.most(TICK_MS);
   });
 
+  it('keeps the start offset of an item blocked before the first tick', () => {
+    const a = fakeLayer('a', 5000);
+    const b = fakeLayer('b', 5000);
+    b.blocked.next(BLOCK);
+    const playlist = new Playlist('zone', {} as any);
+    [a, b].forEach((layer) => playlist.add(layer as unknown as Layer));
+    playlist.time = 7000;
+    value = 7000;
+    subscription = playlist.play(renderer, timer$, { loop: true }).subscribe();
+    timer$.next(value);
+
+    run(3 * TICK_MS);
+    b.blocked.next(undefined);
+    run(3 * TICK_MS);
+
+    expect(names()).to.deep.equal(['b']);
+    expect(played[0].elapsed[0]).to.be.at.least(2000);
+    expect(playlist.time).to.be.at.least(7000);
+  });
+
   it('restarts from the original schedule on a new play call', () => {
     const a = fakeLayer('a', 3000);
     const b = fakeLayer('b', 3000);

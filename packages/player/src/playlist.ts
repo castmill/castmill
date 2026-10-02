@@ -39,7 +39,14 @@ class PlaylistClock {
   private held?: number;
   private last = 0;
 
-  constructor(private readonly duration: number) {}
+  // `start` is the playlist time playback starts at, so an item that is
+  // already blocked before the first tick is held at its start offset.
+  constructor(
+    private readonly duration: number,
+    start = 0
+  ) {
+    this.last = this.wrap(start);
+  }
 
   map(value: number): number {
     if (this.held !== undefined) {
@@ -188,7 +195,7 @@ export class Playlist extends EventEmitter {
         (acc, item) => acc + item.duration,
         0
       );
-      const clock = new PlaylistClock(duration);
+      const clock = new PlaylistClock(duration, this.time);
       const skips = { count: 0 };
       const playlistTimer$ = timer$.pipe(
         map((value) => clock.map(value)),
