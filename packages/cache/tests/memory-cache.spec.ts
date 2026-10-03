@@ -70,6 +70,87 @@ describe('MemoryCache', () => {
     expect(store).toHaveBeenCalledTimes(1);
   });
 
+  it('keeps the download time on reads so stale data is refreshed', async () => {
+    const url = 'https://castmill.test/playlists/1';
+    const fixture: Record<string, string> = { [url]: '{"version":1}' };
+    const cache = new MemoryCache(new StorageMockup(fixture));
+    const resources = new ResourceManager(cache);
+    await resources.init();
+    const now = vi.spyOn(Date, 'now').mockReturnValue(1_000);
+
+    expect(await resources.getData(url, 100)).toEqual({ version: 1 });
+    now.mockReturnValue(1_050);
+    expect((await cache.get(url))?.storedAt).toBe(1_000);
+    expect((await cache.get(url))?.timestamp).toBe(1_050);
+    expect(await resources.getData(url, 100)).toEqual({ version: 1 });
+
+    fixture[url] = '{"version":2}';
+    now.mockReturnValue(1_150);
+    expect(await resources.getData(url, 100)).toEqual({ version: 2 });
+  });
+
+  it('resets the download time and recency on a forced refresh', async () => {
+    const first = 'https://castmill.test/one';
+    const second = 'https://castmill.test/two';
+    const third = 'https://castmill.test/three';
+    const storage = new StorageMockup({
+      [first]: 'one',
+      [second]: 'two',
+      [third]: 'three',
+    });
+    const cache = new MemoryCache(storage, 2);
+    await cache.init();
+    const now = vi.spyOn(Date, 'now').mockReturnValue(1_000);
+    await cache.set(first, ItemType.Data, 'text/plain');
+    await cache.set(second, ItemType.Data, 'text/plain');
+    now.mockReturnValue(2_000);
+    await cache.set(first, ItemType.Data, 'text/plain', { force: true });
+
+    expect((await cache.get(first))?.storedAt).toBe(2_000);
+    await cache.set(third, ItemType.Data, 'text/plain');
+    expect(await cache.get(second)).toBeUndefined();
+    expect(await cache.get(first)).toBeDefined();
+  });
+
+  it('returns a snapshot that later reads do not mutate', async () => {
+    const url = 'https://castmill.test/data';
+    const cache = new MemoryCache(new StorageMockup({ [url]: 'data' }));
+    await cache.init();
+    const now = vi.spyOn(Date, 'now').mockReturnValue(1_000);
+    await cache.set(url, ItemType.Data, 'text/plain');
+    const read = await cache.get(url);
+    now.mockReturnValue(2_000);
+    await cache.get(url);
+
+    expect(read).toMatchObject({ timestamp: 1_000, accessed: 0 });
+    expect(await cache.get(url)).toMatchObject({
+      timestamp: 2_000,
+      storedAt: 1_000,
+      accessed: 2,
+    });
+  });
+
+  it('evicts the least recently read resource first', async () => {
+    const first = 'https://castmill.test/one';
+    const second = 'https://castmill.test/two';
+    const third = 'https://castmill.test/three';
+    const storage = new StorageMockup({
+      [first]: 'one',
+      [second]: 'two',
+      [third]: 'three',
+    });
+    const cache = new MemoryCache(storage, 2);
+    await cache.init();
+    await cache.set(first, ItemType.Media, 'text/plain');
+    await cache.set(second, ItemType.Media, 'text/plain');
+    expect(await cache.get(first)).toBeDefined();
+
+    await cache.set(third, ItemType.Media, 'text/plain');
+    expect(await cache.get(first)).toBeDefined();
+    expect(await cache.get(second)).toBeUndefined();
+    expect(await cache.get(third)).toBeDefined();
+  });
+
   it('fetches channel JSON and widget code through memory-backed resources', async () => {
     vi.stubGlobal('indexedDB', undefined);
     const dataUrl = 'https://castmill.test/channels';

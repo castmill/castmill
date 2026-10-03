@@ -6,6 +6,7 @@ import type {
 } from './storage.integration';
 
 export class MemoryCache implements CacheBackend {
+  // Map order tracks recency (least recently used first) for eviction.
   private readonly items = new Map<string, ItemMetadata>();
   private readonly caching = new Map<
     string,
@@ -59,11 +60,13 @@ export class MemoryCache implements CacheBackend {
   async get(url: string): Promise<ItemMetadata | null | undefined> {
     if (this.caching.has(url)) return null;
     const item = this.items.get(url);
-    if (item) {
-      item.timestamp = Date.now();
-      item.accessed++;
-    }
-    return item;
+    if (!item) return item;
+    // Return the pre-access snapshot, matching Cache.get().
+    const snapshot = { ...item };
+    item.timestamp = Date.now();
+    item.accessed++;
+    this.touch(item);
+    return snapshot;
   }
 
   async hasUrl(url: string): Promise<boolean> {
@@ -107,16 +110,18 @@ export class MemoryCache implements CacheBackend {
         `Unable to cache resource: ${result.error ?? result.code}`
       );
     }
+    const now = Date.now();
     const item: ItemMetadata = {
       url,
       cachedUrl: file.url,
       size: file.size,
       type,
       mimeType,
-      timestamp: Date.now(),
+      timestamp: now,
+      storedAt: now,
       accessed: 0,
     };
-    this.items.set(url, item);
+    this.touch(item);
     if (previous && previous.cachedUrl !== item.cachedUrl) {
       try {
         await this.integration.deleteFile(previous.cachedUrl);
@@ -125,13 +130,16 @@ export class MemoryCache implements CacheBackend {
       }
     }
     while (this.maxItems && this.items.size > this.maxItems) {
-      const oldest = Array.from(this.items.values()).sort(
-        (a, b) => a.timestamp - b.timestamp
-      )[0];
+      const oldest = this.items.values().next().value;
       if (!oldest) throw new Error('MemoryCache: No item to evict');
       await this.del(oldest.url);
     }
     return item;
+  }
+
+  private touch(item: ItemMetadata): void {
+    this.items.delete(item.url);
+    this.items.set(item.url, item);
   }
 
   private async storeWithCapacityRetry(
@@ -140,9 +148,9 @@ export class MemoryCache implements CacheBackend {
     opts: SetItemCacheOptions
   ): Promise<StoreFileReturnValue> {
     // Keep a forced refresh's previous file as a fallback if the new write fails.
-    const candidates = Array.from(this.items.values())
-      .filter((item) => item.url !== url)
-      .sort((a, b) => a.timestamp - b.timestamp);
+    const candidates = Array.from(this.items.values()).filter(
+      (item) => item.url !== url
+    );
     let next = 0;
     const evictNext = async (): Promise<boolean> => {
       const candidate = candidates[next++];

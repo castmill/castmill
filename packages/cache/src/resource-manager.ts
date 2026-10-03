@@ -149,7 +149,10 @@ export class ResourceManager {
    */
   async getData<T = any>(url: string, freshness: number): Promise<T | void> {
     let item = await this.cache.get(url);
-    const age = item ? Date.now() - item.timestamp : Infinity;
+    // Entries without storedAt predate download-time tracking; their
+    // timestamp is the last access time, so treat them as stale.
+    const age =
+      item?.storedAt !== undefined ? Date.now() - item.storedAt : Infinity;
 
     if (!item || age >= freshness) {
       try {

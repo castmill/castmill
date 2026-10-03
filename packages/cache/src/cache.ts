@@ -34,7 +34,13 @@ export enum ItemType {
 export interface ItemMetadata {
   cachedUrl: string;
   url: string;
+  /** Last store or access time; used for least-recently-used eviction. */
   timestamp: number;
+  /**
+   * When the resource was downloaded; used for freshness. Reads must not
+   * change it. Entries created before this field existed lack it.
+   */
+  storedAt?: number;
   size: number;
   accessed: number;
   type: ItemType;
@@ -316,8 +322,10 @@ export class Cache extends Dexie {
             }
             this.totalSize += size;
 
+            const now = Date.now();
             const item: ItemMetadata = {
-              timestamp: Date.now(),
+              timestamp: now,
+              storedAt: now,
               size,
               accessed: 0,
               type,

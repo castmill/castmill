@@ -179,6 +179,34 @@ describe('Cache', () => {
     }
   });
 
+  it('updates the access time on reads but keeps the download time', async () => {
+    const url = 'https://example.com/data.json';
+    const storage = new StorageMockup({ [url]: '{}' });
+    const cache = new Cache(storage, 'test-stored-at', 10);
+    const now = vi.spyOn(Date, 'now');
+
+    try {
+      now.mockReturnValue(1_000);
+      await cache.set(url, ItemType.Data, 'application/json');
+      now.mockReturnValue(2_000);
+      const read = await cache.get(url);
+      expect(read).toMatchObject({ timestamp: 1_000, storedAt: 1_000 });
+      expect(await cache.items.get(url)).toMatchObject({
+        timestamp: 2_000,
+        storedAt: 1_000,
+      });
+
+      now.mockReturnValue(3_000);
+      await cache.set(url, ItemType.Data, 'application/json', { force: true });
+      expect(await cache.items.get(url)).toMatchObject({
+        timestamp: 3_000,
+        storedAt: 3_000,
+      });
+    } finally {
+      now.mockRestore();
+    }
+  });
+
   it('should remove older cached items if the cache is full (maxItems)', async () => {
     const url = 'https://example.com/code.js';
     const filesFixture: { [index: string]: string } = {};

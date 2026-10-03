@@ -469,6 +469,10 @@ export class Playlist extends EventEmitter {
     }
   }
 
+  layerDurations(): number[] {
+    return this.layers.map((layer) => layer.duration());
+  }
+
   duration(): number {
     return this.layers.reduce((acc, entry) => acc + entry.duration(), 0);
   }

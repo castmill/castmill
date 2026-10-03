@@ -6,9 +6,12 @@ import { Renderer, Viewport } from './renderer';
 
 const TIMER_RESOLUTION = 50;
 
-function durationChanged(previous: number, current: number): boolean {
-  return (
-    Number.isFinite(current) && current > 0 && Math.abs(current - previous) >= 1
+function timingChanged(previous: number[], current: number[]): boolean {
+  const total = current.reduce((acc, duration) => acc + duration, 0);
+  if (!Number.isFinite(total) || total <= 0) return false;
+  if (previous.length !== current.length) return true;
+  return current.some(
+    (duration, index) => Math.abs(duration - previous[index]) >= 1
   );
 }
 
@@ -78,6 +81,10 @@ export class Player extends EventEmitter {
 
     // Do we really need to seek here, since we also seek when doing "show"?
     const startTime = opts.synced ? baseline : this.playlist.time || 0;
+    // Layer offsets are snapshotted when playback starts, so compare each
+    // layer's duration: offsets can shift even when the total is unchanged.
+    const refreshOffsets = Boolean(opts.loop && !opts.synced);
+    const layerDurations = refreshOffsets ? this.playlist.layerDurations() : [];
     let restartScheduled = false;
     const timer$ = this.playlist.seek(startTime).pipe(
       first(),
@@ -100,9 +107,8 @@ export class Player extends EventEmitter {
             // once the real durations are known.
             if (
               wrapped &&
-              opts.loop &&
-              !opts.synced &&
-              durationChanged(duration, this.playlist.duration())
+              refreshOffsets &&
+              timingChanged(layerDurations, this.playlist.layerDurations())
             ) {
               restartScheduled = true;
               // Restart outside of the timer callback that is emitting.

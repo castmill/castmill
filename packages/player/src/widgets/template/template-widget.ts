@@ -7,7 +7,6 @@ import {
   ReplaySubject,
   forkJoin,
   from,
-  merge,
   of,
 } from 'rxjs';
 import { mergeMap, map, switchMap, take } from 'rxjs/operators';
