@@ -1668,66 +1668,62 @@ defmodule Castmill.Resources do
     end
   end
 
-  defp delete_file_from_storage(%Castmill.Files.File{uri: uri}) do
+  defp delete_file_from_storage(%Castmill.Files.File{uri: uri, organization_id: organization_id}) do
     case Application.get_env(:castmill, :file_storage) do
       :local ->
-        case get_local_file_path(uri) do
+        case get_local_file_path(uri, organization_id) do
           {:ok, file_path} -> File.rm(file_path)
           {:error, _reason} -> {:error, :invalid_path}
         end
 
       :s3 ->
-        {bucket, object_path} = get_s3_file_path(uri)
+        {bucket, object_path} = get_s3_file_path(uri, organization_id)
 
         ExAws.S3.delete_object(bucket, object_path)
         |> ExAws.request()
     end
   end
 
-  defp get_local_file_path(uri) do
-    # Assuming your URIs are built like "http://localhost:4000/medias/dst_path/filename"
-    # Strip off the "http://localhost:4000" and return the path that starts with "medias/..."
-
+  defp get_local_file_path(uri, organization_id) do
     base_directory = Path.join([Application.app_dir(:castmill), "priv", "static"])
+    path = URI.parse(uri).path || ""
 
-    uri
-    |> URI.parse()
-    |> then(fn %URI{path: path} ->
-      String.trim_leading(path, "/")
-    end)
-    |> (fn relative_path ->
-          full_path = Path.expand(relative_path, base_directory)
+    case String.split(path, "/medias/#{organization_id}/", parts: 2) do
+      [_, suffix] when suffix != "" ->
+        full_path = Path.expand("medias/#{organization_id}/#{suffix}", base_directory)
 
-          if String.starts_with?(full_path, base_directory) do
-            {:ok, full_path}
-          else
-            {:error, "Path traversal detected"}
-          end
-        end).()
+        if String.starts_with?(full_path, base_directory <> "/") do
+          {:ok, full_path}
+        else
+          {:error, "Path traversal detected"}
+        end
+
+      _ ->
+        {:error, "Invalid media path"}
+    end
   end
 
   @doc false
   def get_s3_file_path(uri) do
-    # Extract bucket and object path from a stored URI.
-    #
-    # Two modes:
-    # - Production (media_public_base_url set): CDN URL like "https://cdn.castmill.dev/org/media/file"
-    #   → bucket from AWS_S3_BUCKET env var, full path is the object key
-    # - Local dev (no base URL): S3/MinIO URL like "http://localhost:9000/bucket/org/media/file"
-    #   → bucket is the first path segment
     parsed = URI.parse(uri)
+    path = String.trim_leading(parsed.path, "/")
 
-    case Application.get_env(:castmill, :media_public_base_url) do
+    case System.get_env("AWS_S3_BUCKET") do
       nil ->
-        # Local dev: bucket is in the URL path
-        [_slash, bucket | object_parts] = String.split(parsed.path, "/", parts: 3)
-        {bucket, Enum.join(object_parts, "/")}
-
-      _base_url ->
-        # Production: bucket from env var, entire path is the object key
-        bucket = System.get_env("AWS_S3_BUCKET")
-        object_path = String.trim_leading(parsed.path, "/")
+        [bucket, object_path] = String.split(path, "/", parts: 2)
         {bucket, object_path}
+
+      bucket ->
+        {bucket, String.replace_prefix(path, "#{bucket}/", "")}
+    end
+  end
+
+  def get_s3_file_path(uri, organization_id) do
+    {bucket, path} = get_s3_file_path(uri)
+
+    case String.split("/#{path}", "/#{organization_id}/", parts: 2) do
+      [_, suffix] when suffix != "" -> {bucket, "#{organization_id}/#{suffix}"}
+      _ -> {bucket, path}
     end
   end
 

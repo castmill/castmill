@@ -14,7 +14,8 @@ export class StorageBrowser implements StorageIntegration {
   constructor(
     private name: string,
     private serviceWorkerPath: string = '',
-    private registerServiceWorker: boolean = true
+    private registerServiceWorker: boolean = true,
+    private serviceWorkerScope?: string
   ) {
     this.cacheName = `${this.prefix}:${this.name}`;
   }
@@ -42,10 +43,17 @@ export class StorageBrowser implements StorageIntegration {
     );
 
     if (this.registerServiceWorker && navigator.serviceWorker !== undefined) {
+      const scriptUrl = `${this.serviceWorkerPath}sw.js`;
       try {
-        const registration = await navigator.serviceWorker.register(
-          `${this.serviceWorkerPath}sw.js`
-        );
+        // A worker only controls pages inside its scope, which defaults to the
+        // script directory. Players served outside that directory must pass an
+        // explicit scope (and the server must allow it), otherwise an older
+        // worker registered for the page keeps answering requests.
+        const registration = this.serviceWorkerScope
+          ? await navigator.serviceWorker.register(scriptUrl, {
+              scope: this.serviceWorkerScope,
+            })
+          : await navigator.serviceWorker.register(scriptUrl);
         console.log(
           'ServiceWorker registration successful with scope: ',
           registration.scope
@@ -54,9 +62,15 @@ export class StorageBrowser implements StorageIntegration {
         console.log('ServiceWorker registration failed: ', err);
       }
 
-      const registration = await navigator.serviceWorker.getRegistration('/');
-      if (registration) {
-        await registration.update();
+      try {
+        const registration = await navigator.serviceWorker.getRegistration(
+          this.serviceWorkerScope || '/'
+        );
+        if (registration) {
+          await registration.update();
+        }
+      } catch (err) {
+        console.log('ServiceWorker update failed: ', err);
       }
     }
   }
@@ -108,9 +122,15 @@ export class StorageBrowser implements StorageIntegration {
     }
 
     try {
+      // `no-cache` makes the request revalidate with the server and signals the
+      // player service workers to bypass Cache Storage; otherwise a forced
+      // refresh would just re-store the stale cached response. Cache.add is
+      // used rather than window.fetch because players may replace fetch with
+      // a limited polyfill (see the legacy adapter).
       const request = new Request(url, {
         mode: 'cors',
         method: 'GET',
+        cache: 'no-cache',
         headers: opts?.headers,
       });
       await this.cache.add(request);

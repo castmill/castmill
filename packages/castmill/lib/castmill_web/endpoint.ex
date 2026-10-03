@@ -54,6 +54,7 @@ defmodule CastmillWeb.Endpoint do
   # You should set gzip to true if you are running phx.digest
   # when deploying your static files in production.
   plug(:serve_legacy_app_shell_file)
+  plug(:allow_device_service_worker_scope)
 
   plug(Plug.Static,
     at: "/",
@@ -61,6 +62,17 @@ defmodule CastmillWeb.Endpoint do
     gzip: false,
     only: CastmillWeb.static_paths()
   )
+
+  # The browser player at "/" registers /assets/sw.js. Without this header the
+  # worker scope is limited to /assets/ and can never control the player page.
+  defp allow_device_service_worker_scope(
+         %Plug.Conn{method: "GET", request_path: "/assets/sw.js"} = conn,
+         _opts
+       ) do
+    Plug.Conn.put_resp_header(conn, "service-worker-allowed", "/")
+  end
+
+  defp allow_device_service_worker_scope(conn, _opts), do: conn
 
   defp serve_legacy_app_shell_file(conn, _opts) do
     case {conn.method, conn.request_path} do

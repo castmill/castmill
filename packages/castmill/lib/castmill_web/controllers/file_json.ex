@@ -1,5 +1,6 @@
 defmodule CastmillWeb.FileJSON do
   alias Castmill.Files.File
+  alias Castmill.Workers.Helpers
 
   @doc """
   Renders a list of files.
@@ -19,7 +20,7 @@ defmodule CastmillWeb.FileJSON do
     %{
       id: file.id,
       name: file.name,
-      uri: file.uri,
+      uri: Helpers.resolve_media_uri(file.uri, file.organization_id),
       size: file.size,
       mimetype: file.mimetype
     }

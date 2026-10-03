@@ -14,7 +14,14 @@ enableDebugOverlayFromEnv(import.meta.env.VITE_DEBUG_OVERLAY);
 
 (async () => {
   const browserMachine = new BrowserMachine();
-  const browserCache = new StorageBrowser('browser-cache', '/assets/');
+  // The worker lives in /assets/ but must control the player page at "/".
+  // The endpoint allows this scope with a Service-Worker-Allowed header.
+  const browserCache = new StorageBrowser(
+    'browser-cache',
+    '/assets/',
+    true,
+    '/'
+  );
   const device = new Device(browserMachine, browserCache);
 
   await device.init();

@@ -156,6 +156,28 @@ self.addEventListener('fetch', function (event) {
     return;
   }
 
+  // StorageBrowser refreshes resources with cache: 'no-cache' so they must
+  // prefer the network over the stale cached copy. Fall back to the cache when
+  // offline because browsers (e.g. DevTools "Disable cache") may also mark
+  // regular reads this way.
+  if (
+    request.cache === 'no-cache' ||
+    request.cache === 'reload' ||
+    request.cache === 'no-store'
+  ) {
+    event.respondWith(
+      fetch(request).catch(function (error) {
+        return caches.match(request).then(function (response) {
+          if (response) {
+            return response;
+          }
+          throw error;
+        });
+      })
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(request).then(function (response) {
       return response || fetch(request);

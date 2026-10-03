@@ -174,6 +174,29 @@ export interface ProgressEvent {
   label: string;
 }
 
+const optionalId = (value: unknown) =>
+  value === undefined || value === null ? null : String(value);
+
+/**
+ * Serializes the channel fields that affect scheduling. IDs are normalized to
+ * strings because websocket events store them as strings while the REST API
+ * returns numbers.
+ */
+const getChannelsSnapshot = (channels: Channel[]) =>
+  JSON.stringify(
+    channels.map(({ attrs }) => ({
+      id: optionalId(attrs.id),
+      timezone: attrs.timezone,
+      default_playlist_id: optionalId(attrs.default_playlist_id),
+      entries: (attrs.entries || []).map((entry) => ({
+        start: entry.start,
+        end: entry.end,
+        playlist_id: optionalId(entry.playlist_id),
+        repeat_weekly_until: entry.repeat_weekly_until ?? null,
+      })),
+    }))
+  );
+
 /**
  * Castmill Device
  *
@@ -190,6 +213,7 @@ export class Device extends EventEmitter {
   private channels: Channel[] = [];
   private channelIndex = 0;
   private channelGeneration = 0; // Incremented when channels change, used to invalidate in-flight operations
+  private initialChannelsLoad?: Promise<void>;
   private logger: Logger = new Logger();
   private errorReporter: DeviceErrorReporter;
   private logDiv?: HTMLDivElement;
@@ -346,14 +370,12 @@ export class Device extends EventEmitter {
 
     this.contentQueue = new Playlist('content-queue', this.resourceManager);
 
-    const rawChannels = await this.resourceManager.getData(
-      `${this.baseUrl}/devices/${device.id}/channels`,
-      1000
+    this.initialChannelsLoad = this.fetchChannels(device.id, 1000).then(
+      (channels) => {
+        this.channels = channels || [];
+      }
     );
-
-    this.channels = (rawChannels?.data || []).map(
-      (channel: JsonChannel) => new Channel(channel)
-    );
+    await this.initialChannelsLoad;
 
     this.emitProgress(4, 5, 'Loading channels');
 
@@ -452,6 +474,62 @@ export class Device extends EventEmitter {
         }
       }
       await new Promise((resolve) => setTimeout(resolve, 5000));
+    }
+  }
+
+  private async fetchChannels(
+    deviceId: string,
+    freshness: number
+  ): Promise<Channel[] | undefined> {
+    const rawChannels = await this.resourceManager?.getData(
+      `${this.baseUrl}/devices/${deviceId}/channels`,
+      freshness
+    );
+
+    if (!Array.isArray(rawChannels?.data)) {
+      return;
+    }
+
+    return rawChannels.data.map((channel: JsonChannel) => new Channel(channel));
+  }
+
+  /**
+   * Reloads the channels from the server after the device channel (re)joins.
+   * Channel events sent while the device was offline are lost, so playback
+   * would otherwise keep using the channels loaded at startup (possibly from
+   * the offline cache) until the next page reload.
+   */
+  private async syncChannels(deviceId: string) {
+    if (!this.initialChannelsLoad) {
+      return;
+    }
+
+    try {
+      await this.initialChannelsLoad;
+      const generation = this.channelGeneration;
+      const channels = await this.fetchChannels(deviceId, 0);
+
+      // Skip when there is no fresh data, or a channel event already changed
+      // playback while we were fetching.
+      if (!channels || generation !== this.channelGeneration) {
+        return;
+      }
+
+      if (
+        getChannelsSnapshot(channels) === getChannelsSnapshot(this.channels)
+      ) {
+        return;
+      }
+
+      this.channels = channels;
+      if (this.channelIndex >= this.channels.length) {
+        this.channelIndex = 0;
+      }
+      this.resetPlaybackQueue();
+      this.logger.info('Channels changed on server, playback queue reset');
+    } catch (error) {
+      this.logger.error(`Unable to synchronize channels: ${error}`);
+      this.errorReporter.report({ category: 'network-sync', error });
     }
   }
 
@@ -896,6 +974,9 @@ export class Device extends EventEmitter {
       channel
         .join()
         .receive('ok', () => {
+          // Phoenix re-runs join hooks on every rejoin, so this also catches
+          // channel changes made while the device was disconnected.
+          void this.syncChannels(device.id);
           safeResolve(channel);
         })
         .receive('error', (resp) => {

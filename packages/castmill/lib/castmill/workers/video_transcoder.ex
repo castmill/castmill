@@ -483,7 +483,7 @@ defmodule Castmill.Workers.VideoTranscoder do
 
         # Generate URI for the uploaded file
         uri =
-          "#{Helpers.get_media_base_url()}/#{Path.join(["medias", "#{organization_id}", "#{media_id}", filename])}"
+          "#{Helpers.get_endpoint_url()}/#{Path.join(["medias", "#{organization_id}", "#{media_id}", filename])}"
 
         {uri, size}
 

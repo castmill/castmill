@@ -68,4 +68,19 @@ defmodule CastmillWeb.EndpointTest do
                       |> hd()
                       |> String.split(","))
   end
+
+  test "lets the browser player service worker control the root page", %{conn: conn} do
+    worker_path = Application.app_dir(:castmill, "priv/static/assets/sw.js")
+
+    unless File.exists?(worker_path) do
+      File.mkdir_p!(Path.dirname(worker_path))
+      File.write!(worker_path, "self.addEventListener('fetch', function () {});")
+      on_exit(fn -> File.rm(worker_path) end)
+    end
+
+    conn = get(conn, "/assets/sw.js")
+
+    assert response(conn, 200)
+    assert get_resp_header(conn, "service-worker-allowed") == ["/"]
+  end
 end

@@ -8,11 +8,14 @@
 /// <reference lib="webworker" />
 
 // Version number - update this to force cache refresh
-const SW_VERSION = '1.0.1';
+const SW_VERSION = '1.0.3';
 const APP_CACHE_NAME = `castmill-app-${SW_VERSION}`;
 
 // File patterns that should use network-first strategy (app code that may be updated)
 const NETWORK_FIRST_PATTERNS = [/\.js$/, /\.html$/, /\.css$/];
+
+// Request cache modes that explicitly ask for a network response.
+const BYPASS_CACHE_MODES = ['no-cache', 'reload', 'no-store'];
 
 // Check if a URL should use network-first strategy
 function shouldUseNetworkFirst(url) {
@@ -77,6 +80,24 @@ self.addEventListener('fetch', function (event) {
             'Network failed, falling back to cache for:',
             url.pathname
           );
+          const cachedResponse = await caches.match(request);
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+          throw err;
+        }
+      })()
+    );
+  } else if (BYPASS_CACHE_MODES.indexOf(request.cache) !== -1) {
+    // StorageBrowser refreshes cached data (channels, playlists) with
+    // `cache: 'no-cache'`, so prefer the network over the stale copy. Fall back
+    // to Cache Storage when offline because browsers (e.g. DevTools "Disable
+    // cache") may also mark regular reads this way.
+    event.respondWith(
+      (async () => {
+        try {
+          return await fetch(request.clone());
+        } catch (err) {
           const cachedResponse = await caches.match(request);
           if (cachedResponse) {
             return cachedResponse;

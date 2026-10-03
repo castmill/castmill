@@ -1949,3 +1949,136 @@ describe('Device - Progress Events', () => {
     vi.restoreAllMocks();
   });
 });
+
+describe('Device - Channel resynchronization on (re)join', () => {
+  let device: Device;
+  let mockPhoenixChannel: ReturnType<typeof createMockPhoenixChannel>;
+  const credentials = { device: { id: 'd1', token: 't1', name: 'D1' } };
+
+  const staleChannels = [
+    {
+      id: 1,
+      name: 'Lobby',
+      timezone: 'UTC',
+      default_playlist_id: 10,
+      entries: [],
+    },
+  ];
+
+  beforeEach(() => {
+    mockPhoenixChannel = installPhoenixMocks().mockPhoenixChannel;
+    device = new Device({} as any, {} as any, { cache: { maxItems: 100 } });
+    device['baseUrl'] = 'http://localhost:4000';
+    device['resourceManager'] = { getData: vi.fn() } as any;
+    device['channels'] = staleChannels.map((c) => new Channel({ ...c } as any));
+    device['initialChannelsLoad'] = Promise.resolve();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('refetches channels bypassing freshness when the device channel joins', async () => {
+    const getData = vi
+      .mocked(device['resourceManager']!.getData)
+      .mockResolvedValue({
+        data: [{ ...staleChannels[0], default_playlist_id: 20 }],
+      });
+    const resetSpy = vi.spyOn(device as any, 'resetPlaybackQueue');
+
+    const login = device.login(credentials as any, 'hw1');
+    mockPhoenixChannel._joinPush._trigger('ok');
+    await login;
+
+    await vi.waitFor(() => expect(resetSpy).toHaveBeenCalledOnce());
+    expect(getData).toHaveBeenCalledWith(
+      'http://localhost:4000/devices/d1/channels',
+      0
+    );
+    expect(device['channels'][0].attrs.default_playlist_id).toBe(20);
+  });
+
+  it('resynchronizes again after every rejoin', async () => {
+    const getData = vi
+      .mocked(device['resourceManager']!.getData)
+      .mockResolvedValue({ data: staleChannels });
+
+    const login = device.login(credentials as any, 'hw1');
+    mockPhoenixChannel._joinPush._trigger('ok');
+    await login;
+    mockPhoenixChannel._joinPush._trigger('ok');
+
+    await vi.waitFor(() => expect(getData).toHaveBeenCalledTimes(2));
+  });
+
+  it('keeps playback untouched when channels did not change', async () => {
+    vi.mocked(device['resourceManager']!.getData).mockResolvedValue({
+      // Websocket updates store ids as strings; REST returns numbers.
+      data: staleChannels,
+    });
+    device['channels'][0].attrs.default_playlist_id = '10';
+    const resetSpy = vi.spyOn(device as any, 'resetPlaybackQueue');
+
+    await device['syncChannels']('d1');
+
+    expect(resetSpy).not.toHaveBeenCalled();
+  });
+
+  it('applies schedule entry changes', async () => {
+    vi.mocked(device['resourceManager']!.getData).mockResolvedValue({
+      data: [
+        {
+          ...staleChannels[0],
+          entries: [{ start: 1, end: 2, playlist_id: 30, channel_id: 1 }],
+        },
+      ],
+    });
+    const resetSpy = vi.spyOn(device as any, 'resetPlaybackQueue');
+
+    await device['syncChannels']('d1');
+
+    expect(resetSpy).toHaveBeenCalledOnce();
+    expect(device['channels'][0].sortedEntries).toHaveLength(1);
+  });
+
+  it('keeps cached channels when no channel data could be loaded', async () => {
+    vi.mocked(device['resourceManager']!.getData).mockResolvedValue(undefined);
+    const resetSpy = vi.spyOn(device as any, 'resetPlaybackQueue');
+
+    await device['syncChannels']('d1');
+
+    expect(resetSpy).not.toHaveBeenCalled();
+    expect(device['channels'][0].attrs.default_playlist_id).toBe(10);
+  });
+
+  it('discards the result when a channel event changed playback meanwhile', async () => {
+    vi.mocked(device['resourceManager']!.getData).mockImplementation(
+      async () => {
+        device['channelGeneration']++;
+        return { data: [{ ...staleChannels[0], default_playlist_id: 20 }] };
+      }
+    );
+
+    await device['syncChannels']('d1');
+
+    expect(device['channels'][0].attrs.default_playlist_id).toBe(10);
+  });
+
+  it('does nothing before the player has started', async () => {
+    device['initialChannelsLoad'] = undefined;
+
+    await device['syncChannels']('d1');
+
+    expect(device['resourceManager']!.getData).not.toHaveBeenCalled();
+  });
+
+  it('reports synchronization failures without throwing', async () => {
+    const error = new Error('boom');
+    vi.mocked(device['resourceManager']!.getData).mockRejectedValue(error);
+    const reportSpy = vi.spyOn(device['errorReporter'], 'report');
+
+    await expect(device['syncChannels']('d1')).resolves.toBeUndefined();
+
+    expect(reportSpy).toHaveBeenCalledWith({ category: 'network-sync', error });
+  });
+});
