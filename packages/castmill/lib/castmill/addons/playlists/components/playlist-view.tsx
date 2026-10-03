@@ -34,6 +34,7 @@ import {
 import { AddonStore } from '../../common/interfaces/addon-store';
 import { getDefaultDataFromSchema } from '../utils/schema-utils';
 import { containsDynamicDurationComponent } from '../utils/duration-utils';
+import { resolveVideoWidgetDuration } from '../utils/video-duration';
 import { ASPECT_RATIO_OPTIONS } from '../constants';
 import {
   validateCustomRatioField,
@@ -212,7 +213,10 @@ export const PlaylistView: Component<{
   ) => {
     try {
       // Recalculate duration based on updated options
-      const newDuration = resolveWidgetDuration(item.widget, expandedOptions);
+      const newDuration = await resolveWidgetDuration(
+        item.widget,
+        expandedOptions
+      );
 
       await PlaylistsService.updateWidgetConfig(
         props.baseUrl,
@@ -266,7 +270,10 @@ export const PlaylistView: Component<{
     }
   };
 
-  const resolveWidgetDuration = (widget: JsonWidget, config: OptionsDict) => {
+  const resolveWidgetDuration = async (
+    widget: JsonWidget,
+    config: OptionsDict
+  ): Promise<number> => {
     // Check for explicit duration settings in config options
     // Common duration option names: duration, display_duration
     const durationFromConfig =
@@ -278,6 +285,16 @@ export const PlaylistView: Component<{
 
     if (widget.template.type === 'image') {
       return 10000;
+    }
+
+    // Store the video length so players can schedule the item before the
+    // video's metadata has loaded.
+    const videoDuration = await resolveVideoWidgetDuration(
+      widget.template,
+      config
+    );
+    if (videoDuration) {
+      return videoDuration;
     }
 
     // For widgets containing video or scroller components, use duration 0
@@ -303,7 +320,7 @@ export const PlaylistView: Component<{
   ) => {
     const prevItem = items()[index - 1];
     // Use expandedOptions which includes default values from the schema
-    const duration = resolveWidgetDuration(widget, expandedOptions);
+    const duration = await resolveWidgetDuration(widget, expandedOptions);
 
     try {
       const newItem = await PlaylistsService.insertWidgetIntoPlaylist(

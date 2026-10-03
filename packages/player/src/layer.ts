@@ -18,7 +18,10 @@ import { catchError, last, map, tap, takeUntil } from 'rxjs/operators';
 import { JsonLayer, JsonPlaylist } from './interfaces';
 import { Transition, fromJSON } from './transitions';
 import { applyCss, parseAspectRatio } from './utils';
-import { PlayerGlobals } from './interfaces/player-globals.interface';
+import {
+  PlayerGlobals,
+  PlayerRuntimeError,
+} from './interfaces/player-globals.interface';
 
 /**
  * Computes style for a widget based on its aspect ratio.
@@ -48,8 +51,31 @@ function computeWidgetStyle(
   };
 }
 
+export interface LayerDebugInfo {
+  widget?: string;
+  type?: string;
+  media?: string;
+}
+
+function findMediaName(options?: Record<string, unknown>): string | undefined {
+  if (!options) return;
+  const keys = Object.keys(options);
+  for (let i = 0; i < keys.length; i++) {
+    const value = options[keys[i]] as { name?: unknown; files?: unknown };
+    if (
+      value &&
+      typeof value === 'object' &&
+      value.files &&
+      typeof value.name === 'string'
+    ) {
+      return value.name;
+    }
+  }
+}
+
 export class Layer extends EventEmitter {
   el: HTMLElement;
+  debugInfo: LayerDebugInfo = {};
   offset = 0;
   transition?: Transition;
   slack: number = 0;
@@ -59,6 +85,7 @@ export class Layer extends EventEmitter {
   private widgetAspectRatio: number | null = null;
   private resizeObserver: ResizeObserver | null = null;
   private resizeListener: (() => void) | null = null;
+  private globals?: PlayerGlobals;
 
   /**
    * Gets the effective aspect ratio for a widget.
@@ -121,6 +148,11 @@ export class Layer extends EventEmitter {
       widget,
       widgetAspectRatio: effectiveAspectRatio,
     });
+    layer.debugInfo = {
+      widget: json.widget.name,
+      type: json.widget.template?.type,
+      media: findMediaName(json.config?.options),
+    };
     layer.forwardErrors(globals);
 
     return layer;
@@ -187,6 +219,10 @@ export class Layer extends EventEmitter {
     const layer = new Layer(playlist.name, {
       widget,
     });
+    layer.debugInfo = {
+      widget: 'playlist',
+      type: TemplateComponentType.Layout,
+    };
     layer.forwardErrors(globals);
     return layer;
   }
@@ -234,6 +270,7 @@ export class Layer extends EventEmitter {
   }
 
   private forwardErrors(globals: PlayerGlobals): void {
+    this.globals = globals;
     this.on('error', (error) => {
       globals.reportError?.({ category: 'playback', error });
     });
@@ -293,6 +330,18 @@ export class Layer extends EventEmitter {
 
   toggleDebug() {
     this.widget?.toggleDebug();
+  }
+
+  /**
+   * Emits why the layer cannot play right now, e.g. a video waiting for a
+   * hardware decoder, or undefined when it can.
+   */
+  blocked$(): Observable<PlayerRuntimeError | undefined> {
+    return this.widget ? this.widget.blocked$() : of(undefined);
+  }
+
+  reportError(input: PlayerRuntimeError): void {
+    this.globals?.reportError?.(input);
   }
 
   public unload() {

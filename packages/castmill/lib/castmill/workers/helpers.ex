@@ -106,13 +106,12 @@ defmodule Castmill.Workers.Helpers do
     |> ExAws.S3.upload(bucket, dst_path, part_size: @chunk_size)
     |> ExAws.request!()
 
-    uri = get_public_uri(bucket, dst_path)
+    uri = get_s3_uri(bucket, dst_path)
     {uri, size}
   end
 
   @doc """
-  Generates the internal S3 API URI for a file. Used for S3 API operations.
-  For URIs stored in the DB (served to browsers), use `get_public_uri/2` instead.
+  Generates the S3 endpoint URI for a file, including the bucket in the path.
   """
   def get_s3_uri(bucket, dst_path) do
     # Generate URI dynamically based on the ExAws configuration
@@ -142,6 +141,41 @@ defmodule Castmill.Workers.Helpers do
 
       base_url ->
         "#{String.trim_trailing(base_url, "/")}/#{dst_path}"
+    end
+  end
+
+  @doc """
+  Resolves a stored media URI using the current public base URL. Stored local
+  and S3 URLs, including URLs created before the base was changed, retain their
+  object paths. Unrelated file URLs are left unchanged.
+  """
+  def resolve_media_uri(uri, organization_id)
+      when is_binary(uri) and is_binary(organization_id) do
+    path = URI.parse(uri).path || ""
+
+    case Application.get_env(:castmill, :file_storage) do
+      :local ->
+        case String.split(path, "/medias/#{organization_id}/", parts: 2) do
+          [_, suffix] when suffix != "" ->
+            "#{get_media_base_url()}/medias/#{organization_id}/#{suffix}"
+
+          _ ->
+            uri
+        end
+
+      :s3 ->
+        bucket = System.get_env("AWS_S3_BUCKET")
+
+        case String.split(path, "/#{organization_id}/", parts: 2) do
+          [_, suffix] when is_binary(bucket) and suffix != "" ->
+            get_public_uri(bucket, "#{organization_id}/#{suffix}")
+
+          _ ->
+            uri
+        end
+
+      _ ->
+        uri
     end
   end
 

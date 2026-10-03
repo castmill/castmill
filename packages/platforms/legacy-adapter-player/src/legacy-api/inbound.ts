@@ -2,7 +2,7 @@ import { Logger } from '../utils';
 
 const logger = new Logger('Inbound');
 
-// inbound interface
+// Events sent by legacy wrappers to the player iframe.
 export const inbound = {
   command: function (cmd: string) {
     logger.log('command: ' + cmd);

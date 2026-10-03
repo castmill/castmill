@@ -111,6 +111,14 @@ adb shell pm clear com.castmill.android.app
 This also removes the device's stored Castmill credentials and requires it to
 be registered again.
 
+### Playback debug overlay
+
+Build with `VITE_DEBUG_OVERLAY=true` to show the playback debug overlay at
+startup. It shows the playing playlist and item of each playlist or layout
+area with progress bars and countdowns. From the browser console, call
+`castmillDebugOverlay(true|false)`. See `agents/packages/player/README.md` for
+details.
+
 ### Capacitor and Android settings
 
 The main package settings are split between these files:

@@ -1,6 +1,7 @@
 import { ResourceManager } from '@castmill/cache';
 import { EventEmitter } from 'eventemitter3';
 import { NEVER, Observable, of } from 'rxjs';
+import { PlayerRuntimeError } from '../interfaces/player-globals.interface';
 
 interface ProxyMethodData {
   counter: number;
@@ -102,6 +103,14 @@ export abstract class Widget extends EventEmitter {
 
   seek(offset: number): Observable<[number, number]> {
     return of([offset, 0]);
+  }
+
+  /**
+   * Emits the reason the widget cannot play right now, or undefined when it
+   * can, e.g. while one of its videos waits for a hardware decoder.
+   */
+  blocked$(): Observable<PlayerRuntimeError | undefined> {
+    return of(undefined);
   }
 
   duration_old(): Observable<number> {

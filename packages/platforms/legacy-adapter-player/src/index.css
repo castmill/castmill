@@ -1,12 +1,45 @@
 @import '@castmill/device/dist/style.css';
 
 body {
-  background: white;
+  background: black;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
   user-select: none;
+}
+
+.legacy-startup {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 2em;
+  background: #000;
+  color: #d9d9d9;
+  font-family: sans-serif;
+  text-align: center;
+}
+
+.legacy-startup__track {
+  width: 20em;
+  max-width: 80vw;
+  height: 0.375em;
+  margin-bottom: 1em;
+  background: #222;
+}
+
+.legacy-startup__fill {
+  width: 35%;
+  height: 100%;
+  background: #4a7cff;
 }
 
 .player-frame {
@@ -23,7 +56,7 @@ body {
   position: fixed;
   right: 1em;
   bottom: 1em;
-  z-index: 2147483647;
+  z-index: 10001;
   box-sizing: border-box;
   width: 38%;
   max-width: calc(100% - 2em);
@@ -70,6 +103,7 @@ body {
 .legacy-debug-overlay__status {
   padding: 0.3em 0;
   color: #d9d9d9;
+  white-space: pre-wrap;
 }
 
 .legacy-debug-overlay__error {

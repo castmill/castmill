@@ -36,6 +36,24 @@ describe('Cache', () => {
     expect(item).to.have.property('size', 12);
   });
 
+  it.each([ItemType.Media, ItemType.Code, ItemType.Data])(
+    'forwards download options to storage: %s',
+    async (type) => {
+      const url = 'https://example.com/resource';
+      const storage = new StorageMockup({ [url]: 'content' });
+      const store = vi.spyOn(storage, 'storeFile');
+      const cache = new Cache(storage, `test-options-${type}`, 10);
+      await cache.set(url, type, 'application/octet-stream', {
+        force: false,
+        headers: { Authorization: 'Bearer test-token' },
+      });
+      expect(store).toHaveBeenCalledWith(url, {
+        force: false,
+        headers: { Authorization: 'Bearer test-token' },
+      });
+    }
+  );
+
   it('should list cached items', async () => {
     const url = 'https://example.com/code.js';
 
@@ -95,6 +113,32 @@ describe('Cache', () => {
     }
   });
 
+  it('forgets invalid media even if removing its missing native file fails', async () => {
+    const url = 'https://example.com/video.mp4';
+    const storage = new StorageMockup({ [url]: 'video' });
+    const cache = new Cache(storage, 'test-invalid-media', 10);
+    await cache.init();
+    await cache.set(url, ItemType.Media, 'video/mp4');
+    const remove = vi
+      .spyOn(storage, 'deleteFile')
+      .mockRejectedValueOnce(new Error('Native file not found'));
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      await cache.invalidate(url);
+      expect(await cache.get(url)).toBeUndefined();
+      expect(remove).toHaveBeenCalledWith(url);
+      expect(log).toHaveBeenCalledWith(
+        'Cache: Failed to remove invalid file',
+        url,
+        expect.any(Error)
+      );
+      expect(await cache.set(url, ItemType.Media, 'video/mp4')).toBeDefined();
+    } finally {
+      log.mockRestore();
+      cache.close();
+    }
+  });
+
   /*
   it("should ignore update item if setting existing item", async () => {
     const url = "https://example.com/code.js";
@@ -132,6 +176,34 @@ describe('Cache', () => {
       const item = await cache.get(url);
       expect(item).to.have.property('accessed', i);
       // expect(item).to.have.property("timestamp", 1); // we need fake timers to test for timestamps
+    }
+  });
+
+  it('updates the access time on reads but keeps the download time', async () => {
+    const url = 'https://example.com/data.json';
+    const storage = new StorageMockup({ [url]: '{}' });
+    const cache = new Cache(storage, 'test-stored-at', 10);
+    const now = vi.spyOn(Date, 'now');
+
+    try {
+      now.mockReturnValue(1_000);
+      await cache.set(url, ItemType.Data, 'application/json');
+      now.mockReturnValue(2_000);
+      const read = await cache.get(url);
+      expect(read).toMatchObject({ timestamp: 1_000, storedAt: 1_000 });
+      expect(await cache.items.get(url)).toMatchObject({
+        timestamp: 2_000,
+        storedAt: 1_000,
+      });
+
+      now.mockReturnValue(3_000);
+      await cache.set(url, ItemType.Data, 'application/json', { force: true });
+      expect(await cache.items.get(url)).toMatchObject({
+        timestamp: 3_000,
+        storedAt: 3_000,
+      });
+    } finally {
+      now.mockRestore();
     }
   });
 

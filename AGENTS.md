@@ -52,14 +52,15 @@ This is a Yarn workspace monorepo with the following key packages:
 
 ## 🌍 Internationalization (i18n)
 
-**⚠️ CRITICAL**: All user-facing text must be localized.
+**⚠️ CRITICAL**: Localize user-facing text except in the English-only legacy
+adapter player.
 
 ### Quick Reference
 
-- **9 Languages**: English, Spanish, Swedish, German, French, Chinese, Arabic (RTL), Korean, Japanese
-- **100% Coverage Required**: CI validates all languages are complete
+- **Dashboard: 9 Languages**: English, Spanish, Swedish, German, French, Chinese, Arabic (RTL), Korean, Japanese
+- **Dashboard: 100% Coverage Required**: CI validates all languages are complete
 
-### Essential Rules
+### Dashboard Rules
 
 ```tsx
 // ❌ NEVER hardcode strings
@@ -81,7 +82,7 @@ cd packages/dashboard && yarn check-translations
 - **Full i18n guide**: `packages/dashboard/AGENTS.md`
 - **Implementation**: `packages/dashboard/src/i18n/README.md`
 - **Scripts**: `packages/dashboard/scripts/README.md`
-- **Legacy/player UI strings**: platform player UIs (including `packages/platforms/legacy-adapter-player`) use package-local locale JSON files via `useLegacyI18n()`, not the dashboard i18n system
+- **Legacy adapter player**: keep UI strings in `packages/platforms/legacy-adapter-player/` in English. Do not add locale JSON files, translation keys, or an i18n hook there; this does not change dashboard localization.
 
 ## 💡 Development Guidelines
 

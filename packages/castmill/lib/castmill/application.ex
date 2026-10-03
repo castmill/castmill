@@ -133,6 +133,7 @@ defmodule Castmill.Application do
       {Phoenix.PubSub, name: Castmill.PubSub},
       # Bound diagnostic ingestion from faulty or modified players.
       Castmill.DeviceErrorRateLimiter,
+      Castmill.LegacyPlayerLogRateLimiter,
       # Start Finch
       {Finch, name: Castmill.Finch}
     ]

@@ -14,3 +14,4 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
 void registerLegacyAppShell();
 
 render(() => <PlayerFrame />, root!);
+document.getElementById('legacy-boot')?.remove();

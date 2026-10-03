@@ -194,4 +194,58 @@ describe('createAppShellWorker', () => {
 
     await expect(response).resolves.toBe(previousRelease);
   });
+
+  it('answers cache refresh requests from the network first', async () => {
+    const { listeners, resourceEntries } = loadWorker();
+    const request = new Request('https://api.example.com/devices/1/channels', {
+      cache: 'no-cache',
+    });
+    resourceEntries.set(request.url, new Response('stale channels'));
+    let response: Promise<Response> | undefined;
+
+    listeners.fetch({
+      request,
+      respondWith: (promise: Promise<Response>) => {
+        response = promise;
+      },
+    });
+
+    await expect((await response!).text()).resolves.toBe(request.url);
+  });
+
+  it('falls back to cached data for refresh requests while offline', async () => {
+    const { fetch, listeners, resourceEntries } = loadWorker();
+    const request = new Request('https://api.example.com/devices/1/channels', {
+      cache: 'no-cache',
+    });
+    const cached = new Response('cached channels');
+    resourceEntries.set(request.url, cached);
+    fetch.mockRejectedValueOnce(new TypeError('Failed to fetch'));
+    let response: Promise<Response> | undefined;
+
+    listeners.fetch({
+      request,
+      respondWith: (promise: Promise<Response>) => {
+        response = promise;
+      },
+    });
+
+    await expect(response).resolves.toBe(cached);
+  });
+
+  it('propagates network errors for uncached refresh requests', async () => {
+    const { fetch, listeners } = loadWorker();
+    const error = new TypeError('Failed to fetch');
+    fetch.mockRejectedValueOnce(error);
+    let response: Promise<Response> | undefined;
+
+    listeners.fetch({
+      request: new Request('https://api.example.com/x', { cache: 'no-cache' }),
+      respondWith: (promise: Promise<Response>) => {
+        response = promise;
+      },
+    });
+
+    await expect(response).rejects.toBe(error);
+  });
 });

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /**
- * This is a helper class that allows for easy communication between iframes.
+ * This is a helper class that allows legacy wrappers to communicate with their iframes.
  * Copied from legacy codebase and ported to typescript
  */
 
