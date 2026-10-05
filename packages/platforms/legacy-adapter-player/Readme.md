@@ -37,7 +37,12 @@ The Castmill Legacy Adapter enables old Castmill Electron and Android players to
 - **Castmill Server Deployment**: Served at `/legacy` by the Castmill Phoenix server.
 - **Configurable Base URL**: Easily configure the default base URL using environment variables.
 - **Legacy Debug Overlay**: The Android, WebOS, and Electron shells' existing debug
-  menu toggles an adapter-owned diagnostics panel over playback.
+  menu toggles an adapter-owned diagnostics panel over playback. Local wrappers
+  may send the literal `console` message with a `null` or `file:` origin even
+  when the iframe referrer is omitted. Electron and Android messages must still
+  come from the iframe's parent window.
+  Electron also accepts the exact `app://` and `app://.` local-wrapper origins,
+  with parent-window validation still required.
 - **Offline App Shell**: A service worker preserves the last complete adapter
   release; WebOS still needs an online server for channel data and code.
 

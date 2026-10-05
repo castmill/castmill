@@ -20,7 +20,7 @@ files or language selection to `packages/platforms/legacy-adapter-player/`.
 Dashboard localization remains separate.
 
 The Android, WebOS, and Electron debug menus send the literal `console`
-message to the adapter. The Android and WebOS wrappers use file origins that
+message to the adapter. The Android, WebOS, and Electron wrappers use file origins that
 can be serialized as either `null` or `file://`, including when the referrer
 is omitted. On WebOS, old engines can also lose `WindowProxy` identity for a
 local `file:` message; accept that bounded fallback only for WebOS file
@@ -29,6 +29,11 @@ Because those same engines can miss post-mount Solid updates, mount the WebOS
 debug shell during the initial render and toggle its DOM display directly. Use
 the shared `LegacyDebugShell` for all adapter platforms so their diagnostics
 have the same Chrome 38-compatible layout, stacking behavior, and field set.
+
+Electron wrappers can also send `console` from `app://` or `app://.` origins
+(the latter includes a literal dot). Accept these exact origins only on
+Electron and only from `window.parent`; do not
+extend the WebOS missing-parent exception to Electron app messages.
 
 ## JavaScript Rules
 

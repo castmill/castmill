@@ -201,6 +201,67 @@ describe('PlayerFrame playback controller selection', () => {
     await waitFor(() => expect(mountDevice).toHaveBeenCalledOnce());
   });
 
+  it.each([
+    'null',
+    'file://',
+    'file:///opt/castmill/index.html',
+    'app://',
+    'app://.',
+  ])(
+    'toggles Electron diagnostics from its local parent without a referrer (%s)',
+    async (origin) => {
+      vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('Electron/29');
+      vi.spyOn(document, 'referrer', 'get').mockReturnValue('');
+      render(() => <PlayerFrame />);
+      const overlay = await screen.findByLabelText('Player diagnostics');
+      const toggle = () =>
+        window.dispatchEvent(
+          new MessageEvent('message', {
+            data: 'console',
+            origin,
+            source: window.parent,
+          })
+        );
+
+      expect(overlay).toHaveStyle({ display: 'none' });
+      toggle();
+      expect(overlay).toHaveStyle({ display: 'block' });
+      expect(isDebugOverlayEnabled()).toBe(true);
+      toggle();
+      expect(overlay).toHaveStyle({ display: 'none' });
+      expect(isDebugOverlayEnabled()).toBe(false);
+      await waitFor(() => expect(mountDevice).toHaveBeenCalledOnce());
+    }
+  );
+
+  it('rejects Electron console messages from other frames and unexpected network origins', async () => {
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('Electron/29');
+    vi.spyOn(document, 'referrer', 'get').mockReturnValue('');
+    render(() => <PlayerFrame />);
+    const overlay = await screen.findByLabelText('Player diagnostics');
+    const iframe = document.createElement('iframe');
+    document.body.append(iframe);
+    try {
+      for (const [origin, source] of [
+        ['null', iframe.contentWindow],
+        ['file://', iframe.contentWindow],
+        ['app://', iframe.contentWindow],
+        ['app://.', iframe.contentWindow],
+        ['app://unexpected', window.parent],
+        ['https://unexpected.example', window.parent],
+      ] as const) {
+        window.dispatchEvent(
+          new MessageEvent('message', { data: 'console', origin, source })
+        );
+      }
+      expect(overlay).toHaveStyle({ display: 'none' });
+      expect(isDebugOverlayEnabled()).toBe(false);
+    } finally {
+      iframe.remove();
+    }
+    await waitFor(() => expect(mountDevice).toHaveBeenCalledOnce());
+  });
+
   it('starts WebOS notifications before cache initialization and signals readiness after mount', async () => {
     vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('webOS');
     vi.spyOn(navigator, 'language', 'get').mockReturnValue('sv-SE');

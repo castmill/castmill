@@ -260,12 +260,16 @@ export const PlayerFrame: Component = () => {
       platform === 'webos' ||
       platform === 'electron'
     ) {
+      console.log(
+        `[legacy debug] Adapter platform=${platform}, userAgent=${navigator.userAgent}`
+      );
       const allowedConsoleOrigin = getLegacyParentOrigin();
       const stopListening = listenForLegacyConsoleToggle(
         toggleDebugOverlay,
         allowedConsoleOrigin,
-        platform === 'android' || platform === 'webos',
-        platform === 'webos'
+        true,
+        platform === 'webos',
+        platform === 'electron'
       );
       onCleanup(stopListening);
     }

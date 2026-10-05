@@ -2,7 +2,8 @@ export const listenForLegacyConsoleToggle = (
   onToggle: () => void,
   allowedOrigin = window.location.origin,
   allowFileWrapper = false,
-  allowMissingParentForFileWrapper = false
+  allowMissingParentForFileWrapper = false,
+  allowElectronAppWrapper = false
 ): (() => void) => {
   const report = (message: string) => {
     console.log(`[legacy debug] ${message}`);
@@ -31,7 +32,11 @@ export const listenForLegacyConsoleToggle = (
       (allowMissingParentForFileWrapper &&
         isFileWrapper &&
         isFileWrapperOrigin);
-    const isExpectedOrigin = origin === allowedOrigin || isFileWrapper;
+    const isExpectedOrigin =
+      origin === allowedOrigin ||
+      isFileWrapper ||
+      (allowElectronAppWrapper &&
+        (origin === 'app://' || origin === 'app://.'));
     if (isExpectedParent && isExpectedOrigin) {
       report(
         `Accepted console message (origin=${origin || 'missing'}, sourceIsParent=${String(
@@ -43,9 +48,11 @@ export const listenForLegacyConsoleToggle = (
     }
 
     report(
-      `Ignored console message (origin=${origin || 'missing'}, sourceIsParent=${String(
+      `Ignored console message (origin=${JSON.stringify(origin)}, sourceIsParent=${String(
         event.source === window.parent
-      )}, expectedOrigin=${allowedOrigin})`
+      )}, expectedOrigin=${allowedOrigin}, allowElectronAppWrapper=${String(
+        allowElectronAppWrapper
+      )})`
     );
   };
 
@@ -53,7 +60,9 @@ export const listenForLegacyConsoleToggle = (
   report(
     `Listener registered (allowedOrigin=${allowedOrigin}, allowFileWrapper=${String(
       allowFileWrapper
-    )}, allowMissingParentForFileWrapper=${String(allowMissingParentForFileWrapper)})`
+    )}, allowMissingParentForFileWrapper=${String(
+      allowMissingParentForFileWrapper
+    )}, allowElectronAppWrapper=${String(allowElectronAppWrapper)})`
   );
 
   return () => {

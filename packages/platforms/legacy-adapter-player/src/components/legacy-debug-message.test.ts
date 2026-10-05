@@ -232,4 +232,26 @@ describe('listenForLegacyConsoleToggle', () => {
 
     expect(onToggle).not.toHaveBeenCalled();
   });
+
+  it('does not accept the Electron app origin unless explicitly enabled', () => {
+    const onToggle = vi.fn();
+    cleanups.push(
+      listenForLegacyConsoleToggle(
+        onToggle,
+        'https://castmill.example',
+        true,
+        true
+      )
+    );
+    for (const origin of ['app://', 'app://.']) {
+      window.dispatchEvent(
+        new MessageEvent('message', {
+          data: 'console',
+          origin,
+          source: window.parent,
+        })
+      );
+    }
+    expect(onToggle).not.toHaveBeenCalled();
+  });
 });
