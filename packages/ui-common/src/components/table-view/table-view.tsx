@@ -149,7 +149,7 @@ export const TableView = <
   // Track current sort options
   const [sortOptions, setSortOptions] = createSignal<SortOptions>(
     props.initialSortOptions || {
-      key: 'inserted_at',
+      key: 'updated_at',
       direction: 'descending',
     }
   );
