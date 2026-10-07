@@ -140,6 +140,18 @@ describe('Maintainance', () => {
       expect(firmwareButton).toBeEnabled();
     });
 
+    fireEvent.click(screen.getByRole('button', { name: 'Check updates' }));
+    await vi.waitFor(() => {
+      expect(DevicesService.sendCommand).toHaveBeenCalledWith(
+        '/api',
+        'device-1',
+        'update_app'
+      );
+    });
+    await vi.waitFor(() => {
+      expect(firmwareButton).toBeEnabled();
+    });
+
     fireEvent.click(firmwareButton);
     await vi.waitFor(() => {
       expect(DevicesService.sendCommand).toHaveBeenCalledWith(
@@ -159,7 +171,7 @@ describe('Maintainance', () => {
           {
             id: 'device-1',
             online: false,
-            info: { capabilities: { updateFirmware: true } },
+            info: { capabilities: { update: true, updateFirmware: true } },
           } as any
         }
         t={t}
@@ -168,6 +180,9 @@ describe('Maintainance', () => {
 
     expect(
       screen.getByRole('button', { name: 'Update firmware' })
+    ).toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: 'Check updates' })
     ).toBeDisabled();
   });
 });

@@ -9,6 +9,7 @@ vi.mock('../electron-legacy-api', () => ({
   }),
   reboot: vi.fn().mockResolvedValue(undefined),
   restart: vi.fn().mockResolvedValue(undefined),
+  updatePlayer: vi.fn(),
   sendHeartbeat: vi.fn(),
   sendPlayerReady: vi.fn(),
 }));
@@ -23,6 +24,7 @@ import {
   restart,
   sendHeartbeat,
   sendPlayerReady,
+  updatePlayer,
 } from '../electron-legacy-api';
 
 describe('ElectronLegacyMachine', () => {
@@ -54,6 +56,11 @@ describe('ElectronLegacyMachine', () => {
   it('should restart the application', async () => {
     await machine.restart();
     expect(restart).toHaveBeenCalled();
+  });
+
+  it('should request an application update from the wrapper', async () => {
+    await machine.update();
+    expect(updatePlayer).toHaveBeenCalledOnce();
   });
 
   // window.location.reload() can't be mocked in the test environment

@@ -101,6 +101,26 @@ through that domain as it does for `/legacy`.
 
 ## Configuration
 
+### Legacy Electron application updates
+
+After the updated adapter loads and the device reports its capabilities, the
+dashboard's device Maintenance tab enables **Check updates** for legacy Electron.
+The existing `update_app` command calls `ElectronLegacyMachine.update()`, which
+sends the literal `updatePlayer` message to the parent wrapper.
+
+The wrapper checks its configured release feed, downloads an available update,
+and quits to install it. Installation interrupts playback. Sending the command
+does not confirm that an update was available or installed; the legacy bridge
+has no update-result acknowledgement. This updates the native Electron app,
+not just the embedded adapter. Other legacy platforms remain unchanged.
+
+If **Check updates** remains disabled, verify the player is online and its
+reported `info.capabilities.update` is `true`. Reload the adapter after deploying
+it, then refresh the dashboard to discard previously loaded device metadata.
+The Electron environment bridge ignores unrelated messages while waiting for
+the parent wrapper's environment response and times out after 10 seconds;
+failed environment requests prevent device-info reporting.
+
 ### Base URL Configuration
 
 The adapter allows you to configure a default base URL by setting the `VITE_BASE_URL` environment variable in a `.env.local` file. This ensures flexibility when running the adapter in different environments.

@@ -6,6 +6,7 @@ import {
   restart,
   sendHeartbeat,
   sendPlayerReady,
+  updatePlayer,
 } from '../electron-legacy-api';
 
 export class ElectronLegacyMachine
@@ -55,6 +56,10 @@ export class ElectronLegacyMachine
   async restart(): Promise<void> {
     console.log('legacy:restart');
     return restart();
+  }
+
+  async update(): Promise<void> {
+    updatePlayer();
   }
 
   /**
