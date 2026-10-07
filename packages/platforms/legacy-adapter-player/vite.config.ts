@@ -197,9 +197,8 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     // setupFiles: ['node_modules/@testing-library/jest-dom/vitest'],
-    // if you have few tests, try commenting this
-    // out to improve performance:
-    isolate: false,
+    // WebOS tests disable IndexedDB; Android cache tests need a fresh environment.
+    isolate: true,
   },
   build: {
     minify: false,

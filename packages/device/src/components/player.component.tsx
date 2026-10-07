@@ -5,22 +5,28 @@ export function PlayerComponent(props: { device: Device }) {
   let playerElement: HTMLDivElement | undefined;
   let logElement: HTMLDivElement | undefined;
 
-  onMount(async () => {
-    await props.device.syncSchedule();
+  onMount(() => {
+    const start = async () => {
+      await props.device.syncSchedule();
 
-    // Check if player is off due to timer
-    const isOff = await props.device.isTimerOff();
-    if (isOff) {
-      // Signal that device is ready (just in standby) so the progress bar hides
-      props.device.emit('ready', {
-        id: props.device.id,
-        name: props.device.name,
-      });
-      // Start timer monitoring so the ON timer can trigger a reload
-      props.device.startTimerMonitoring();
-    } else {
-      props.device.start(playerElement!, logElement!);
-    }
+      // Check if player is off due to timer
+      const isOff = await props.device.isTimerOff();
+      if (isOff) {
+        // Signal that device is ready (just in standby) so the progress bar hides
+        props.device.emit('ready', {
+          id: props.device.id,
+          name: props.device.name,
+        });
+        // Start timer monitoring so the ON timer can trigger a reload
+        props.device.startTimerMonitoring();
+      } else {
+        await props.device.start(playerElement!, logElement!);
+      }
+    };
+
+    void start().catch((error: unknown) =>
+      props.device.reportStartupError(error)
+    );
   });
 
   return (

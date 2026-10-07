@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getLegacyParentOrigin } from './player-frame';
+import { getLegacyParentOrigin, getLegacyPlatform } from './player-frame';
 
 describe('getLegacyParentOrigin', () => {
   it('uses the parent window origin from document.referrer', () => {
@@ -9,6 +9,22 @@ describe('getLegacyParentOrigin', () => {
         'https://server.castmill.test'
       )
     ).toBe('https://wrapper.castmill.test');
+  });
+
+  describe('getLegacyPlatform', () => {
+    it('identifies both spellings used by WebOS user agents', () => {
+      expect(getLegacyPlatform('Mozilla/5.0 (Web0S; Linux/SmartTV)')).toBe(
+        'webos'
+      );
+      expect(getLegacyPlatform('Mozilla/5.0 (webOS; Linux/SmartTV)')).toBe(
+        'webos'
+      );
+    });
+
+    it('preserves the existing Android and Electron integrations', () => {
+      expect(getLegacyPlatform('Mozilla/5.0 (Android 5.1)')).toBe('android');
+      expect(getLegacyPlatform('Mozilla/5.0 Electron/29')).toBe('electron');
+    });
   });
 
   it('accepts opaque file origins reported as null', () => {

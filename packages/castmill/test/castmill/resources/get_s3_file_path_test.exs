@@ -133,5 +133,27 @@ defmodule Castmill.Resources.GetS3FilePathTest do
       assert bucket_cdn == bucket_other
       assert path_cdn == path_other
     end
+
+    test "handles stored S3 endpoint URLs even when a public base is configured" do
+      uri = "http://localhost:9000/castmill-media-stage/org123/media456/file.jpg"
+
+      assert Resources.get_s3_file_path(uri) ==
+               {"castmill-media-stage", "org123/media456/file.jpg"}
+    end
+
+    test "handles legacy CDN URLs after the public base is removed" do
+      Application.delete_env(:castmill, :media_public_base_url)
+      uri = "https://old-cdn.example.com/org123/media456/file.jpg"
+
+      assert Resources.get_s3_file_path(uri) ==
+               {"castmill-media-stage", "org123/media456/file.jpg"}
+    end
+
+    test "extracts the object key from a legacy CDN URL with a path prefix" do
+      uri = "https://old-cdn.example.com/old-root/org123/media456/file.jpg"
+
+      assert Resources.get_s3_file_path(uri, "org123") ==
+               {"castmill-media-stage", "org123/media456/file.jpg"}
+    end
   end
 end

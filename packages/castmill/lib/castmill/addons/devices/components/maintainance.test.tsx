@@ -96,7 +96,7 @@ describe('Maintainance', () => {
     expect(screen.getAllByText('Not supported.')).toHaveLength(4);
   });
 
-  it('enables each optional action the player supports', async () => {
+  it('enables and sends each optional action the player supports', async () => {
     renderMaintenance({
       restart: true,
       reboot: true,
@@ -114,8 +114,45 @@ describe('Maintainance', () => {
     expect(screen.getByRole('button', { name: 'Check updates' })).toBeEnabled();
     expect(firmwareButton).toBeEnabled();
 
-    fireEvent.click(firmwareButton);
+    fireEvent.click(screen.getByRole('button', { name: 'Restart app' }));
+    await vi.waitFor(() => {
+      expect(DevicesService.sendCommand).toHaveBeenCalledWith(
+        '/api',
+        'device-1',
+        'restart_app'
+      );
+    });
+    await vi.waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: 'Restart device' })
+      ).toBeEnabled();
+    });
 
+    fireEvent.click(screen.getByRole('button', { name: 'Restart device' }));
+    await vi.waitFor(() => {
+      expect(DevicesService.sendCommand).toHaveBeenCalledWith(
+        '/api',
+        'device-1',
+        'restart_device'
+      );
+    });
+    await vi.waitFor(() => {
+      expect(firmwareButton).toBeEnabled();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Check updates' }));
+    await vi.waitFor(() => {
+      expect(DevicesService.sendCommand).toHaveBeenCalledWith(
+        '/api',
+        'device-1',
+        'update_app'
+      );
+    });
+    await vi.waitFor(() => {
+      expect(firmwareButton).toBeEnabled();
+    });
+
+    fireEvent.click(firmwareButton);
     await vi.waitFor(() => {
       expect(DevicesService.sendCommand).toHaveBeenCalledWith(
         '/api',
@@ -134,7 +171,7 @@ describe('Maintainance', () => {
           {
             id: 'device-1',
             online: false,
-            info: { capabilities: { updateFirmware: true } },
+            info: { capabilities: { update: true, updateFirmware: true } },
           } as any
         }
         t={t}
@@ -143,6 +180,9 @@ describe('Maintainance', () => {
 
     expect(
       screen.getByRole('button', { name: 'Update firmware' })
+    ).toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: 'Check updates' })
     ).toBeDisabled();
   });
 });

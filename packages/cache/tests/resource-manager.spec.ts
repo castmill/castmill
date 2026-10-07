@@ -14,6 +14,24 @@ describe('ResourceManager', () => {
     vi.resetAllMocks();
   });
 
+  it('reconciles stored URLs before reading cached code resources', async () => {
+    const cache = new Cache(
+      new StorageMockup({}),
+      'test-resource-init-order',
+      10
+    );
+    const init = vi.spyOn(cache, 'init');
+    const list = vi.spyOn(cache, 'list');
+
+    await new ResourceManager(cache).init();
+
+    expect(init).toHaveBeenCalledOnce();
+    expect(init.mock.invocationCallOrder[0]).toBeLessThan(
+      list.mock.invocationCallOrder[0]
+    );
+    cache.close();
+  });
+
   describe('code resources', () => {
     it('should trigger refresh callback if code has been updated', async () => {
       const uri = 'https://app.castmill.com/static/js/doohv2/app.js';
@@ -122,6 +140,49 @@ describe('ResourceManager', () => {
       // Get fresh data
       const data3 = await manager.getData(uri, 0); // 0 milliseconds to simulate expired freshness
       expect(data3).to.be.eql(JSON.parse(updatedData));
+    });
+
+    it('refreshes data by download time even when it is read frequently', async () => {
+      const uri = 'https://example.com/frequent.json';
+      const filesFixture = { [uri]: '{"version":1}' };
+      const cache = new Cache(
+        new StorageMockup(filesFixture),
+        'test-data-freshness',
+        10
+      );
+      const manager = new ResourceManager(cache);
+      await manager.init();
+      const now = vi.spyOn(Date, 'now');
+
+      try {
+        now.mockReturnValue(1_000);
+        expect(await manager.getData(uri, 100)).to.eql({ version: 1 });
+        filesFixture[uri] = '{"version":2}';
+        now.mockReturnValue(1_060);
+        expect(await manager.getData(uri, 100)).to.eql({ version: 1 });
+        // Reads keep updating the access time, but not the download time.
+        now.mockReturnValue(1_120);
+        expect(await manager.getData(uri, 100)).to.eql({ version: 2 });
+      } finally {
+        now.mockRestore();
+      }
+    });
+
+    it('treats data cached before download times were tracked as stale', async () => {
+      const uri = 'https://example.com/legacy.json';
+      const filesFixture = { [uri]: '{"version":1}' };
+      const cache = new Cache(
+        new StorageMockup(filesFixture),
+        'test-data-legacy-freshness',
+        10
+      );
+      const manager = new ResourceManager(cache);
+      await manager.init();
+      await manager.getData(uri, 5000);
+      await cache.items.update(uri, { storedAt: undefined });
+      filesFixture[uri] = '{"version":2}';
+
+      expect(await manager.getData(uri, 5000)).to.eql({ version: 2 });
     });
 
     it('should cache data resources', async () => {
@@ -241,6 +302,26 @@ describe('ResourceManager', () => {
       // then fall back to the stale cached data
       const data2 = await manager.getData(uri, 0);
       expect(data2).to.be.eql(JSON.parse(cachedData));
+    });
+
+    it('serves data cached before download times were tracked when offline', async () => {
+      const uri = 'https://example.com/api/legacy-offline.json';
+      const filesFixture: { [index: string]: string } = {
+        [uri]: '{"status":"cached"}',
+      };
+      const cache = new Cache(
+        new StorageMockup(filesFixture),
+        'test-legacy-offline-fallback',
+        10
+      );
+      const manager = new ResourceManager(cache);
+      await manager.init();
+      await manager.getData(uri, 5000);
+      await cache.items.update(uri, { storedAt: undefined });
+      delete filesFixture[uri];
+
+      expect(await manager.getData(uri, 5000)).to.eql({ status: 'cached' });
+      expect((await cache.items.get(uri))?.storedAt).to.be.undefined;
     });
 
     it('should return undefined when network fails and no cached data exists', async () => {

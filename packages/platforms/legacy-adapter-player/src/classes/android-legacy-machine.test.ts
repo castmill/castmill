@@ -1,6 +1,7 @@
 import { vi, describe, it, beforeEach, expect } from 'vitest';
 import { AndroidLegacyMachine, UNSET_VALUE } from './android-legacy-machine';
 vi.mock('../android-legacy-api', () => ({
+  initAndroidLegacyApi: vi.fn(),
   getPlayerData: vi.fn().mockResolvedValue({
     uuid: 'mocked_uuid',
     player_version: 'mocked_player_version',
@@ -17,6 +18,7 @@ vi.mock('../android-legacy-api', () => ({
 }));
 
 import {
+  initAndroidLegacyApi,
   getPlayerData,
   setItem,
   reboot,
@@ -37,6 +39,7 @@ describe('AndroidLegacyMachine', () => {
     const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
     machine.initLegacy();
 
+    expect(initAndroidLegacyApi).toHaveBeenCalled();
     expect(setIntervalSpy).toHaveBeenCalled();
     expect(setTimeoutSpy).toHaveBeenCalled();
 

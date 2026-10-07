@@ -7,6 +7,10 @@ export class Logger {
 
   constructor(private readonly prefix: string) {}
 
+  get enabled(): boolean {
+    return this.active;
+  }
+
   log(...args: unknown[]): void {
     if (!this.active) {
       return;

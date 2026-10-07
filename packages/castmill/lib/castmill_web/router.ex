@@ -116,6 +116,7 @@ defmodule CastmillWeb.Router do
     pipe_through(:legacy_device)
 
     get("/legacy", LegacyPlayerController, :index)
+    post("/legacy/log", LegacyPlayerController, :log)
   end
 
   defp allow_legacy_embedding(conn, _opts) do

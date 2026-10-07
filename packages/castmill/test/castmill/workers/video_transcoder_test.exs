@@ -23,7 +23,7 @@ defmodule Castmill.Workers.VideoTranscoderTest do
       assert Enum.at(args, Enum.find_index(args, &(&1 == "-pix_fmt")) + 1) == "yuv420p"
 
       assert Enum.at(args, Enum.find_index(args, &(&1 == "-vf")) + 1) ==
-               "scale=trunc(iw*min(1,min(min(1920/iw,1920/ih),sqrt(2097152/(iw*ih))))/16)*16:trunc(ih*min(1,min(min(1920/iw,1920/ih),sqrt(2097152/(iw*ih))))/16)*16"
+               "scale=trunc(iw*min(1\\,min(min(1920/iw\\,1920/ih)\\,sqrt(2097152/(iw*ih))))/16)*16:trunc(ih*min(1\\,min(min(1920/iw\\,1920/ih)\\,sqrt(2097152/(iw*ih))))/16)*16"
     end
   end
 
@@ -309,6 +309,29 @@ defmodule Castmill.Workers.VideoTranscoderTest do
         status: :failed,
         status_message: "Could not determine video duration"
       }
+    end
+
+    test "stores the probed video duration in media meta", %{media: media} do
+      stub(SystemCmdMock, :cmd, fn
+        "ffprobe", _args, _opts -> {"12.3456\n", 0}
+        _command, _args, _opts -> {"thumbnail failed", 1}
+      end)
+
+      job =
+        BullMQ.Job.new("video_transcoder", "video_transcode", %{
+          "media" => %{
+            "id" => media.id,
+            "organization_id" => media.organization_id,
+            "name" => media.name,
+            "mimetype" => media.mimetype,
+            "status" => media.status
+          },
+          "filepath" => "/tmp/nonexistent-input.mp4"
+        })
+
+      assert {:error, _reason} = VideoTranscoder.process(job)
+
+      assert Repo.get!(Media, media.id).meta == %{"duration" => 12_346}
     end
 
     test "marks media as failed when ffprobe command crashes", %{media: media} do

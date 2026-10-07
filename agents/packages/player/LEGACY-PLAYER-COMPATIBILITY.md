@@ -14,7 +14,127 @@ legacy({ targets: { chrome: '38' } });
 Modern browser validation is not sufficient. Test affected changes on a connected
 legacy Android player before considering them compatible.
 
+The legacy adapter player displays English-only UI on Android, WebOS, and
+Electron. Keep startup and diagnostics strings in English; do not add locale
+files or language selection to `packages/platforms/legacy-adapter-player/`.
+Dashboard localization remains separate.
+
+The Android, WebOS, and Electron debug menus send the literal `console`
+message to the adapter. The Android, WebOS, and Electron wrappers use file origins that
+can be serialized as either `null` or `file://`, including when the referrer
+is omitted. On WebOS, old engines can also lose `WindowProxy` identity for a
+local `file:` message; accept that bounded fallback only for WebOS file
+origins. All network-hosted parents must still match `window.parent`.
+Because those same engines can miss post-mount Solid updates, mount the WebOS
+debug shell during the initial render and toggle its DOM display directly. Use
+the shared `LegacyDebugShell` for all adapter platforms so their diagnostics
+have the same Chrome 38-compatible layout, stacking behavior, and field set.
+
+Electron wrappers can also send `console` from `app://` or `app://.` origins
+(the latter includes a literal dot). Accept these exact origins only on
+Electron and only from `window.parent`; do not
+extend the WebOS missing-parent exception to Electron app messages.
+
 ## JavaScript Rules
+
+### Legacy WebOS wrapper
+
+#### Observed runtime limitations
+
+Treat the legacy WebOS engine as a distinct Chrome 38-era runtime, not as a
+modern Chromium browser. The following behavior has been observed on deployed
+signage hardware and must be preserved by compatibility changes:
+
+| Limitation | Required handling |
+| --- | --- |
+| IndexedDB/Dexie can fail to open or report unsupported schema/key-path behavior. | Do not open IndexedDB on WebOS. Use `MemoryCache`; persist only eligible public media through the native wrapper. |
+| The player needs live channel data, code, and protected resources at startup. | Start online. A service-worker app shell and native media files are not enough to start offline. |
+| Native wrapper downloads cannot attach authorization headers and log their input URLs. | Send only unsigned public `/medias/` or unsigned external media to `fetchFile`; load protected, query-bearing, and code/data resources through authenticated XHR into session-only blob URLs. |
+| Video decoders can omit readiness events or stall after source/seek changes. | Use `WebosVideoPlayback` and bounded metadata/seek recovery; report a final error without taking down the containing layout. |
+| Local-wrapper `postMessage` events can use `null`, `file:`, or `file://` origins and lose parent `WindowProxy` identity. | Accept the exact `console` payload through the narrowly scoped WebOS file-origin exception only; keep network-parent validation strict. |
+| Solid may not apply DOM created or changed after player mount. | Mount essential startup/debug DOM during initial render and set its visibility directly when the wrapper invokes it. |
+| Passing an undefined WebSocket protocol can send an unwanted `Sec-WebSocket-Protocol` header. | Use the WebOS one-argument socket constructor when there is no configured subprotocol. |
+
+The WebOS wrapper loads `/legacy` in an iframe. The adapter identifies both
+`Web0S` and `WebOS` user agents, requests the existing hashed MAC identifier
+through the wrapper's `getUUid` message bridge, and sends `player_ready` shortly
+after mounting plus an immediate `alive` and another `alive` every 20 seconds.
+Heartbeats start before cache initialization so a slow or failed cache does not
+trigger the wrapper watchdog. The wrapper reloads the iframe when it does not
+receive these messages. Browser-only platforms use
+`crypto.getRandomValues` to generate a persistent device ID if `randomUUID`
+is unavailable on an older browser or an HTTP origin.
+
+`src/webos-legacy-api/` owns WebOS-specific bridge calls;
+`src/android-legacy-api/` owns Android-specific calls. Both use the
+`src/legacy-api/` iframe message transport and wrapper notifications. Each
+bridge is initialized only on its corresponding platform, so a WebOS message
+cannot also be handled by the Android bridge.
+
+WebOS stores public `/medias/` files and unsigned external media through the wrapper's
+native `fetchFile` API, avoiding browser storage for videos. The
+source-to-local URL map is persisted without credentials; native files are
+removed through `storage_removeFile` using their local path because the
+wrapper's `deleteFile` hashes its input download URL. WebOS injects `MemoryCache`
+instead of Dexie metadata and downloads protected code/data and same-origin
+non-static or query-bearing media with `XMLHttpRequest` into session-only blob
+URLs. Only unsigned HTTP(S) media may enter the native downloader; other URL
+schemes stay on the browser path. Authorization headers and signed URLs are
+never sent to the wrapper's URL-logging file API. Native media metadata is
+restored from the persisted source-to-local map; channel/playlist data and
+code must be fetched again on every startup. Session-only XHR downloads fail
+after 30 seconds if the request stalls. On a recognized native storage-full
+error, `MemoryCache` evicts older entries and retries the write; unrelated
+errors do not evict cached files.
+If a previously mapped native video fails to load, the adapter invalidates its
+cache entry and retries the download once, even if removing the missing native
+file fails. WebOS must start online even if the app shell was cached; it does
+not open IndexedDB.
+
+`PlayerFrame` injects the adapter-local `WebosVideoPlayback` controller for every
+WebOS video, including blob and remote sources. The controller owns decoder
+reloads, metadata waits, bounded seek recovery, and cancellation. Immediate
+timeline seek/play calls are coalesced; a paused seek preserves its offset without
+starting playback. Pause, a newer request, or disposal cancels pending work.
+Metadata readiness also accepts `loadeddata`, `canplay`, or an updated
+`readyState` when WebOS omits `loadedmetadata`. A decoder that remains unready
+after 15 seconds reports a playback error and retries after 30 seconds while
+its video is still active; pause or disposal cancels the retry. Other videos
+and the layout continue independently.
+Following LG's two-video-tag guidance, controllers share a decoder budget: at
+most two videos keep a media source. New videos get their `src` only after the
+controller's `whenLoadable()` grants a decoder. Played videos seeked while
+detached, the least recently claimed paused videos beyond the budget, and
+disposed videos remove their `src` and call `load()`. They restore it on their
+next play. Playing, preparing, and first-loading videos are never released;
+videos that cannot get a decoder wait in a queue (play requests first, then
+larger videos) and signal the block through the controller context's
+`setBlocked` hook. The nearest `TemplateWidget` exposes it as
+`Layer.blocked$()`, and the playlist playing the item holds its clock while
+the item is blocked, skips it after `BLOCKED_ITEM_SKIP_MS` (1 s), and, once
+every item was skipped in a row, leaves the area empty and waits for the
+decoder instead. Each skip or wait is reported as a non-fatal `playback`
+error (`video-decoder-limit`) shown in the device events tab; nothing is drawn
+over the video. Waiting videos of layers that were removed from the document
+(for example after a channel change or a skip) are not granted a decoder
+until shown again. End-to-end
+(`webos-layout-playback.test.tsx`) and seeded invariant tests guard these
+limits; see the adapter README for details.
+The video widget waits for `canplay` or `canplaythrough`, but accepts
+`loadedmetadata`, `loadeddata`, or metadata visible in `readyState` at the
+bounded readiness deadline to register and start WebOS videos without either
+playability event. Final failures use the existing player error reporter.
+
+The shared player exposes only the optional per-element
+`createVideoPlaybackController` factory, passed through Device globals and nested
+playlists. It does not detect cache URLs or apply compatibility policy to the
+`poster` target. Android, Electron, browser players, and dashboard previews use
+the unchanged default video behavior when no factory is supplied.
+
+Phoenix constructs its socket transport with a second, undefined argument
+when no subprotocol is configured. The WebOS transport uses a one-argument
+native `WebSocket` constructor instead, since older WebOS browsers can send
+an unintended `Sec-WebSocket-Protocol` request header otherwise.
 
 ### Use transpiled syntax, but do not assume browser APIs
 

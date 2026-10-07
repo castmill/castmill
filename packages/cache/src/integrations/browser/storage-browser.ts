@@ -14,7 +14,8 @@ export class StorageBrowser implements StorageIntegration {
   constructor(
     private name: string,
     private serviceWorkerPath: string = '',
-    private registerServiceWorker: boolean = true
+    private registerServiceWorker: boolean = true,
+    private serviceWorkerScope?: string
   ) {
     this.cacheName = `${this.prefix}:${this.name}`;
   }
@@ -23,38 +24,53 @@ export class StorageBrowser implements StorageIntegration {
    * Perform any initialization required by the cache.
    */
   async init() {
-    if (navigator.serviceWorker !== undefined) {
-      this.cache = await caches.open(this.cacheName);
+    if (typeof caches === 'undefined') {
+      throw new Error('Cache Storage is unavailable on this browser or origin');
+    }
 
-      // Delete all caches that are not the current cache.
-      // Uses a prefix to avoid deleting unintended caches.
-      const keyList = await caches.keys();
-      await Promise.all(
-        keyList.map((key) => {
-          if (key.startsWith(this.prefix) && key !== this.cacheName) {
-            return caches.delete(key);
-          }
-          return null;
-        })
-      );
+    this.cache = await caches.open(this.cacheName);
 
-      if (this.registerServiceWorker) {
-        try {
-          const registration = await navigator.serviceWorker.register(
-            `${this.serviceWorkerPath}sw.js`
-          );
-          console.log(
-            'ServiceWorker registration successful with scope: ',
-            registration.scope
-          );
-        } catch (err) {
-          console.log('ServiceWorker registration failed: ', err);
+    // Delete all caches that are not the current cache.
+    // Uses a prefix to avoid deleting unintended caches.
+    const keyList = await caches.keys();
+    await Promise.all(
+      keyList.map((key) => {
+        if (key.startsWith(this.prefix) && key !== this.cacheName) {
+          return caches.delete(key);
         }
+        return null;
+      })
+    );
 
-        const registration = await navigator.serviceWorker.getRegistration('/');
+    if (this.registerServiceWorker && navigator.serviceWorker !== undefined) {
+      const scriptUrl = `${this.serviceWorkerPath}sw.js`;
+      try {
+        // A worker only controls pages inside its scope, which defaults to the
+        // script directory. Players served outside that directory must pass an
+        // explicit scope (and the server must allow it), otherwise an older
+        // worker registered for the page keeps answering requests.
+        const registration = this.serviceWorkerScope
+          ? await navigator.serviceWorker.register(scriptUrl, {
+              scope: this.serviceWorkerScope,
+            })
+          : await navigator.serviceWorker.register(scriptUrl);
+        console.log(
+          'ServiceWorker registration successful with scope: ',
+          registration.scope
+        );
+      } catch (err) {
+        console.log('ServiceWorker registration failed: ', err);
+      }
+
+      try {
+        const registration = await navigator.serviceWorker.getRegistration(
+          this.serviceWorkerScope || '/'
+        );
         if (registration) {
           await registration.update();
         }
+      } catch (err) {
+        console.log('ServiceWorker update failed: ', err);
       }
     }
   }
@@ -106,9 +122,15 @@ export class StorageBrowser implements StorageIntegration {
     }
 
     try {
+      // `no-cache` makes the request revalidate with the server and signals the
+      // player service workers to bypass Cache Storage; otherwise a forced
+      // refresh would just re-store the stale cached response. Cache.add is
+      // used rather than window.fetch because players may replace fetch with
+      // a limited polyfill (see the legacy adapter).
       const request = new Request(url, {
         mode: 'cors',
         method: 'GET',
+        cache: 'no-cache',
         headers: opts?.headers,
       });
       await this.cache.add(request);

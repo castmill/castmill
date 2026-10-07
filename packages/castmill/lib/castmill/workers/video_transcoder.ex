@@ -61,12 +61,30 @@ defmodule Castmill.Workers.VideoTranscoder do
 
   defp do_process(input_file, media_id, organization_id) do
     with {:ok, total_duration} <- get_video_duration(input_file),
+         :ok <- store_video_duration(media_id, total_duration),
          {:ok, transcoded_files_metadata, total_size} <-
            transcode_assets(input_file, media_id, organization_id, total_duration),
          {:ok, media_file_records} <-
            persist_transcoded_files(transcoded_files_metadata, media_id, organization_id) do
       notify_media_progress(media_id, 100.0, media_file_records, total_size, true)
       {:ok, media_file_records, total_size}
+    end
+  end
+
+  # Playlists store video items with this duration (ms), so players can
+  # schedule them before the video metadata has loaded.
+  defp store_video_duration(media_id, duration_seconds) do
+    duration_ms = round(duration_seconds * 1000)
+
+    with %Media{} = media <- Repo.get(Media, media_id),
+         {:ok, _media} <-
+           media
+           |> Ecto.Changeset.change(meta: Map.put(media.meta || %{}, "duration", duration_ms))
+           |> Repo.update() do
+      :ok
+    else
+      nil -> {:error, "Media not found"}
+      {:error, _changeset} -> {:error, "Could not store video duration"}
     end
   end
 
@@ -275,7 +293,7 @@ defmodule Castmill.Workers.VideoTranscoder do
   @doc false
   def ffmpeg_args(input_file, output_path, max_dimension) do
     scale_factor =
-      "min(1,min(min(#{max_dimension}/iw,#{max_dimension}/ih),sqrt(2097152/(iw*ih))))"
+      "min(1\\,min(min(#{max_dimension}/iw\\,#{max_dimension}/ih)\\,sqrt(2097152/(iw*ih))))"
 
     [
       "-i",
@@ -465,7 +483,7 @@ defmodule Castmill.Workers.VideoTranscoder do
 
         # Generate URI for the uploaded file
         uri =
-          "#{Helpers.get_media_base_url()}/#{Path.join(["medias", "#{organization_id}", "#{media_id}", filename])}"
+          "#{Helpers.get_endpoint_url()}/#{Path.join(["medias", "#{organization_id}", "#{media_id}", filename])}"
 
         {uri, size}
 

@@ -220,6 +220,8 @@ describe('DeviceErrorReporter', () => {
 
   it('normalizes legacy persisted Unicode text before delivery', async () => {
     const storage = new TestStorage();
+    const occurredAt = Date.now();
+    const occurredAtIso = new Date(occurredAt).toISOString();
     storage.setItem(
       'castmill.device-error-buffer:device-1',
       JSON.stringify({
@@ -232,10 +234,10 @@ describe('DeviceErrorReporter', () => {
             message: 'bäckasiner '.repeat(150),
             stack: 'bäckasiner '.repeat(600),
             count: 1,
-            firstOccurredAtMs: Date.now(),
-            lastOccurredAtMs: Date.now(),
-            first_occurred_at: new Date().toISOString(),
-            last_occurred_at: new Date().toISOString(),
+            firstOccurredAtMs: occurredAt,
+            lastOccurredAtMs: occurredAt,
+            first_occurred_at: occurredAtIso,
+            last_occurred_at: occurredAtIso,
           },
         ],
         droppedCount: 0,
@@ -248,6 +250,7 @@ describe('DeviceErrorReporter', () => {
     const buffer = JSON.parse(
       storage.getItem('castmill.device-error-buffer:device-1')!
     );
+    expect(buffer.reports).toHaveLength(1);
     expect(
       new TextEncoder().encode(buffer.reports[0].message).length
     ).toBeLessThanOrEqual(ERROR_REPORT_LIMITS.maxMessageLength);

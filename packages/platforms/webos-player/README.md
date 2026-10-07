@@ -185,6 +185,14 @@ application's data when a test display must return to the build default. This
 also requires the display to be registered with Castmill again if all
 application data is cleared.
 
+### Playback debug overlay
+
+Build with `VITE_DEBUG_OVERLAY=true` to show the playback debug overlay at
+startup. It shows the playing playlist and item of each playlist or layout
+area with progress bars and countdowns. From the browser console, call
+`castmillDebugOverlay(true|false)`. See `agents/packages/player/README.md` for
+details.
+
 ### Application update URL
 
 The player can ask SCAP to download an IPK, install it to local storage, and
