@@ -40,6 +40,42 @@ defmodule Castmill.OrganizationsUsersTest do
       assert result == expected_result
     end
 
+    test "list_users/1 sorts by membership update time before pagination" do
+      organization = organization_fixture()
+      recently_edited = user_fixture(%{name: "Zebra"})
+      recently_created = user_fixture(%{name: "Alpha"})
+
+      for {user, inserted_at, updated_at} <- [
+            {recently_edited, ~U[2024-01-01 00:00:00Z], ~U[2024-03-01 00:00:00Z]},
+            {recently_created, ~U[2024-02-01 00:00:00Z], ~U[2024-02-01 00:00:00Z]}
+          ] do
+        {:ok, membership} = Organizations.add_user(organization.id, user.id, :member)
+
+        membership
+        |> change(inserted_at: inserted_at, updated_at: updated_at)
+        |> Repo.update!()
+      end
+
+      params = %{
+        organization_id: organization.id,
+        key: "updated_at",
+        direction: "descending",
+        page: 1,
+        page_size: 1
+      }
+
+      assert [%{user_id: first_id}] = Organizations.list_users(params)
+      assert first_id == recently_edited.id
+
+      assert [%{user_id: second_id}] = Organizations.list_users(%{params | page: 2})
+      assert second_id == recently_created.id
+
+      assert [%{user_id: ascending_id}] =
+               Organizations.list_users(%{params | direction: "ascending"})
+
+      assert ascending_id == recently_created.id
+    end
+
     test "remove_user/2 removes the user from the organization when they have multiple organizations" do
       network = network_fixture()
       organization_one = organization_fixture(%{network_id: network.id})

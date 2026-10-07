@@ -11,6 +11,16 @@ defmodule Castmill.QueryHelpers do
     )
   end
 
+  def maybe_sort_by_updated_at(query, %{key: "updated_at"} = params) do
+    direction = if params[:direction] == "descending", do: :desc, else: :asc
+
+    query
+    |> exclude(:order_by)
+    |> order_by([item], [{^direction, item.updated_at}])
+  end
+
+  def maybe_sort_by_updated_at(query, _params), do: query
+
   # Applies combined filters to a query based on provided filter tuples.
   # This assumes that each filter is processed by an implementation of Filterable behavior
   # to return a dynamic expression.

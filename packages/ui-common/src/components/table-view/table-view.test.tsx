@@ -317,18 +317,37 @@ describe('TableView Component - Sorting Functionality', () => {
     },
   };
 
-  it('calls fetchData with initial sort options', async () => {
-    render(() => <TableView {...defaultProps} />);
+  it('requests the most recently updated items first by default', async () => {
+    const fetchData = vi.fn().mockResolvedValue({ data: mockData, count: 2 });
+    render(() => <TableView {...defaultProps} fetchData={fetchData} />);
 
     await waitFor(() => {
-      expect(mockFetchData).toHaveBeenCalled();
+      expect(fetchData).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sortOptions: { key: 'updated_at', direction: 'descending' },
+        })
+      );
     });
+  });
 
-    // Check that fetchData was called with default sort options
-    const callArgs = mockFetchData.mock.calls[0][0];
-    expect(callArgs.sortOptions).toEqual({
-      key: 'name',
-      direction: 'ascending',
+  it('preserves a sort selected in URL parameters over the default and initial sort', async () => {
+    const fetchData = vi.fn().mockResolvedValue({ data: mockData, count: 2 });
+
+    render(() => (
+      <TableView
+        {...defaultProps}
+        fetchData={fetchData}
+        initialSortOptions={{ key: 'timestamp', direction: 'descending' }}
+        params={[{ sortKey: 'name', sortDirection: 'ascending' }, vi.fn()]}
+      />
+    ));
+
+    await waitFor(() => {
+      expect(fetchData).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sortOptions: { key: 'name', direction: 'ascending' },
+        })
+      );
     });
   });
 
