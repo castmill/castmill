@@ -116,6 +116,29 @@ components and utilities they use.
 Read `agents/packages/player/LEGACY-PLAYER-COMPATIBILITY.md` before changing these
 widgets or shared player-rendering code.
 
+### WebOS Player Compatibility
+
+- Native and legacy WebOS players share runtime code in
+  `packages/platforms/webos-player/src/shared`, exported as
+  `@castmill/webos-player/shared`. Do not create a separate webos-common package.
+- Keep that entry point free of SCAP/native APIs, app startup, CSS, and legacy
+  bridge imports. The legacy adapter imports the source subpath; no native
+  player build is required. Native-to-legacy runtime dependencies are forbidden.
+- Preserve the two-loaded-video decoder budget, WebOS playback recovery,
+  one-argument WebSocket transport, and `MemoryCache` (no IndexedDB on WebOS).
+  Persist only eligible public media; protected/code/data resources use XHR
+  session blobs. Cold startup requires a reachable server.
+- Run the legacy suite before moving shared functionality. After changes, run
+  `yarn workspace @castmill/legacy-adapter-player test:webos-coverage` and
+  `yarn workspace @castmill/webos-player test:webos-coverage`, plus both
+  workspaces' typecheck and builds. Keep import-boundary and no-SCAP smoke tests.
+- Validate actual visible playback on old signage hardware before release;
+  modern-browser tests and media events alone are insufficient.
+
+See `packages/platforms/webos-player/README.md` and
+`agents/packages/player/LEGACY-PLAYER-COMPATIBILITY.md` for storage, startup,
+decoder-blocking behavior, and test details.
+
 ### Key Technologies
 
 - **Frontend**: SolidJS (Dashboard), React, TypeScript, Vite

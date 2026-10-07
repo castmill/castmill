@@ -97,6 +97,7 @@ export const storage = {
   copyFile: promisifyNoRet(scapStorage.copyFile.bind(scapStorage)),
   fsync: promisifyNoRet(scapStorage.fsync.bind(scapStorage)),
   mkdir: promisifyNoRet(scapStorage.mkdir.bind(scapStorage)),
+  exists: promisify(scapStorage.exists.bind(scapStorage)),
   listFiles: promisify(scapStorage.listFiles.bind(scapStorage)),
   getStorageInfo: promisifyNoOpt(scapStorage.getStorageInfo.bind(scapStorage)),
 };

@@ -1,1 +1,1 @@
-export * from './log';
+export { Logger } from '@castmill/webos-player/shared';

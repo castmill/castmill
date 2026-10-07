@@ -95,6 +95,7 @@
     "typescript": "^5.0.0"
   },
   "resolutions": {
+    "test-exclude": "^7.0.1",
     "@castmill/android-player/**/signal-exit": "3.0.7",
     "@castmill/electron-player/**/string-width": "4.2.3",
     "@castmill/electron-player/**/strip-ansi": "6.0.1",

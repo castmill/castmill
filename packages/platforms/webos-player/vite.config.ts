@@ -143,7 +143,21 @@ export default defineConfig({
     // setupFiles: ['node_modules/@testing-library/jest-dom/vitest'],
     // if you have few tests, try commenting this
     // out to improve performance:
-    isolate: false,
+    isolate: true,
+    include: [
+      'src/**/*.test.{ts,tsx}',
+      '../legacy-adapter-player/src/components/webos-layout-playback.test.tsx',
+    ],
+    coverage: {
+      include: [
+        'src/shared/**/*.ts',
+        'src/classes/file-storage.ts',
+        'src/components/player-frame.tsx',
+        'src/polyfills/fetch.ts',
+      ],
+      reporter: ['text', 'json-summary'],
+      thresholds: { statements: 90, lines: 90, functions: 90, branches: 90 },
+    },
   },
   build: {
     minify: false,

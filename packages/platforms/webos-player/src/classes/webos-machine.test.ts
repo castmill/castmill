@@ -11,6 +11,7 @@ vi.mock('../native', () => ({
     upgradeApplication: vi.fn(() => Promise.resolve()),
     downloadFirmware: vi.fn(() => Promise.resolve()),
     upgradeFirmware: vi.fn(() => Promise.resolve()),
+    getStorageInfo: vi.fn(),
   },
   deviceInfo: {
     getNetworkMacInfo: vi.fn(() =>
@@ -38,6 +39,14 @@ vi.mock('../native', () => ({
 
 vi.mock('./utils', () => ({
   simpleHash: vi.fn((text: string) => 'hashed_' + text),
+}));
+
+vi.mock('./system-monitor', () => ({
+  systemMonitor: {
+    isMonitoring: () => true,
+    getTemperature: () => null,
+    getFanStatus: () => null,
+  },
 }));
 
 vi.mock('../../package.json', () => ({
@@ -109,6 +118,18 @@ describe('WebosMachine', () => {
       userAgent: navigator.userAgent,
     });
     expect(deviceInfo.getPlatformInfo).toHaveBeenCalledOnce();
+  });
+
+  it('reports SCAP storage telemetry using the same fields as the native cache', async () => {
+    vi.mocked(storage.getStorageInfo).mockResolvedValueOnce({
+      total: 10000,
+      used: 2000,
+      free: 8000,
+    });
+    expect((await machine.getTelemetry()).storage).toEqual({
+      totalBytes: 10000,
+      usedBytes: 2000,
+    });
   });
 
   it('should restart the application', async () => {

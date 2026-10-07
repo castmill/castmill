@@ -6,7 +6,7 @@ import { Timeline } from '../../../../player/src/widgets/template/timeline';
 import { Layout } from '../../../../player/src/widgets/template/layout';
 import { TemplateComponentType } from '../../../../player/src/widgets/template/template';
 import type { JsonPlaylist } from '../../../../player/src/interfaces/json-playlist.interface';
-import { createWebosVideoPlayback } from '../classes/webos-video-playback';
+import { createWebosVideoPlayback } from '@castmill/webos-player/shared';
 import type {
   VideoPlaybackController,
   VideoPlaybackControllerFactory,

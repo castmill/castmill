@@ -11,7 +11,7 @@ import {
   WebosVideoPlayback,
   createWebosVideoPlayback,
   webosDecoderBudget,
-} from '../classes/webos-video-playback';
+} from '@castmill/webos-player/shared';
 
 // End-to-end guard for WebOS playback: the real Player renders layouts with
 // real video widgets and the WebOS playback controller, while a simulated

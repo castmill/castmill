@@ -4,8 +4,8 @@ import {
   type VideoPlaybackController,
   type VideoPlaybackControllerFactory,
 } from '@castmill/player';
-import { Logger } from '../utils/log';
-import { isWebosNativeUrl } from './webos-legacy-file-storage';
+import { Logger } from './log';
+import { isWebosNativeUrl } from './native-url';
 
 type VideoElement = Pick<
   HTMLVideoElement,
@@ -271,7 +271,8 @@ export class WebosVideoPlayback implements VideoPlaybackController {
     private reportError?: (input: PlayerRuntimeError) => void,
     private refreshMedia?: () => Promise<string | void>,
     private readonly budget: WebosDecoderBudget = webosDecoderBudget,
-    private readonly setBlocked?: (block?: PlayerRuntimeError) => void
+    private readonly setBlocked?: (block?: PlayerRuntimeError) => void,
+    private readonly isNativeUrl: (url: string) => boolean = isWebosNativeUrl
   ) {
     this.video.addEventListener('error', this.handlePlaybackError);
     MEDIA_EVENTS.forEach((event) =>
@@ -281,7 +282,7 @@ export class WebosVideoPlayback implements VideoPlaybackController {
   }
 
   async recoverMedia(): Promise<string | void> {
-    if (!isWebosNativeUrl(this.source()) || !this.refreshMedia) return;
+    if (!this.isNativeUrl(this.source()) || !this.refreshMedia) return;
     this.log('refreshing native media');
     return this.refreshMedia();
   }
@@ -448,7 +449,7 @@ export class WebosVideoPlayback implements VideoPlaybackController {
     const source =
       this.releasedSrc !== undefined
         ? ' src=released'
-        : isWebosNativeUrl(src)
+        : this.isNativeUrl(src)
           ? ''
           : src.indexOf('blob:') === 0
             ? ' src=blob'
@@ -621,7 +622,7 @@ export class WebosVideoPlayback implements VideoPlaybackController {
     if (!this.hasPlayed || !this.request?.play || this.disposed) return;
     if (
       this.recovered ||
-      !isWebosNativeUrl(this.video.src) ||
+      !this.isNativeUrl(this.video.src) ||
       !this.refreshMedia
     ) {
       this.log('reporting decoder error');
@@ -961,14 +962,21 @@ export class WebosVideoPlayback implements VideoPlaybackController {
   }
 }
 
-export const createWebosVideoPlayback: VideoPlaybackControllerFactory = (
-  video,
-  { reportError, refreshMedia, setBlocked }
-) =>
-  new WebosVideoPlayback(
-    video,
-    reportError,
-    refreshMedia,
-    webosDecoderBudget,
-    setBlocked
-  );
+export const createWebosVideoPlaybackFactory =
+  (
+    options: {
+      isNativeUrl?: (url: string) => boolean;
+      budget?: WebosDecoderBudget;
+    } = {}
+  ): VideoPlaybackControllerFactory =>
+  (video, { reportError, refreshMedia, setBlocked }) =>
+    new WebosVideoPlayback(
+      video,
+      reportError,
+      refreshMedia,
+      options.budget ?? webosDecoderBudget,
+      setBlocked,
+      options.isNativeUrl ?? isWebosNativeUrl
+    );
+
+export const createWebosVideoPlayback = createWebosVideoPlaybackFactory();

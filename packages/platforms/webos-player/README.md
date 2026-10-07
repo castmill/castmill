@@ -23,6 +23,7 @@ The application ID is `com.lg.app.signage`, the launcher title is
 | `src/classes/webos-machine.ts` | SCAP-backed device identity, settings, lifecycle actions, updates, timers, and telemetry   |
 | `src/classes/file-storage.ts`  | SCAP internal-storage media cache                                                          |
 | `src/native/`                  | Typed Promise wrappers around the callback-based SCAP APIs                                 |
+| `src/shared/`                  | SCAP-free WebOS playback, decoder budget, transport, memory storage, routing, and logging shared with the legacy adapter |
 | `public/appinfo.json`          | webOS application ID, version, title, icons, orientations, and security settings           |
 | `public/lib/`                  | SCAP loader, TypeScript declarations, and locally supplied LG SCAP libraries               |
 | `vite.config.ts`               | Legacy Chromium-compatible Vite build configuration                                        |
@@ -192,6 +193,36 @@ startup. It shows the playing playlist and item of each playlist or layout
 area with progress bars and countdowns. From the browser console, call
 `castmillDebugOverlay(true|false)`. See `agents/packages/player/README.md` for
 details.
+
+### WebOS compatibility and logging
+
+Both this IPK player and the legacy WebOS adapter use the runtime in
+`src/shared/`. The adapter imports its TypeScript source through
+`@castmill/webos-player/shared`; it does not need this player's `dist/`, SCAP
+libraries, or an IPK build. Keep that entry point independent of native APIs,
+app startup, CSS, and the legacy iframe bridge. Native APIs remain in this
+player; bridge APIs remain in the legacy adapter. The shared factory also
+accepts an `isNativeUrl` predicate and decoder budget for integrations and tests.
+
+All WebOS models currently have a **two-loaded-video limit**, not a limit of
+two DOM elements. `WebosDecoderBudget` gates initial source assignment, releases
+paused/detached sources, and queues videos that cannot get a decoder. Blocked
+playlist items hold their clock, then skip after 1 s; a playlist whose items
+are all blocked waits with an empty area instead. These events are reported as
+`playback` / `video-decoder-limit`. Do not increase this limit without testing
+the supported hardware.
+
+The shared controller handles missing readiness events, decoder reloads on
+replay, coalesced seek/play, cancellation, one seek recovery, 15 s metadata
+timeouts with a 30 s retry, and a stall watchdog. A missing native media file
+is invalidated and downloaded once again. Blob and remote videos also use the
+controller, but are not treated as native cached files.
+
+Build with `VITE_LOGGING=true` for `[WebOS Video]` and `[WebOS Storage]` traces.
+They log playback state, decoder handoffs, and download timing without complete
+media URLs or authorization headers. `VITE_DEBUG_OVERLAY=true` still controls
+the shared playback overlay. The iframe wrapper diagnostics panel is specific
+to the legacy adapter and is not installed in the native app.
 
 ### Application update URL
 
@@ -409,6 +440,43 @@ integration detects optional timer methods and treats unsupported telemetry as
 unavailable rather than requiring every display generation to expose the same
 capabilities.
 
+### Storage and startup
+
+Older WebOS engines cannot reliably open IndexedDB/Dexie. The player injects
+`MemoryCache` and never opens IndexedDB for its content cache. **A reachable
+Castmill server is required on every cold start**, even though the IPK app
+shell and public native media survive restarts. Channel/playlist data, widget
+code, and protected resources are session-only.
+
+`FileStorage` routes unsigned public `/medias/` media on the configured API
+origin, and unsigned external HTTP(S) media, through SCAP `copyFile` without
+authorization headers. Same-origin non-public media, query-bearing or
+credential-bearing URLs, code, and data use authenticated XHR into blob URLs
+with a 30 s deadline. Blob URLs are released on deletion or close.
+
+Native filenames use a Chrome 38-compatible SHA-256 implementation and a safe
+final extension. The source-to-local map is persisted under
+`castmill-webos-native-file-map` in localStorage, without tokens or headers.
+Initialization is idempotent, recreates an absent cache directory, prunes
+missing-file mappings, and removes orphan cache files. Invalid metadata clears
+only `file://internal/castmill-cache/`, then recreates it. Existing old
+pathname-hashed native files without a map cannot be restored and are removed
+as orphans; media is downloaded again after upgrading.
+
+Recognized SCAP no-space errors trigger MemoryCache eviction and bounded
+retries. Other download failures are surfaced, and incomplete temporary files
+are removed. Clearing the content cache recreates its directory so subsequent
+downloads work. Credentials and machine identity are not changed by these
+cache operations.
+
+The app uses the shared one-argument `WebosWebSocket` transport to avoid an
+unintended subprotocol header on old WebOS. It displays a black boot indicator
+and a pre-mounted startup overlay. Initialization failures show the original
+error, log the failing stage, and call the device startup-error reporter when
+the device has been constructed. Later login/channel startup-error events
+restore the same pre-mounted overlay by direct DOM updates rather than relying
+on old WebOS applying reactive DOM changes.
+
 ## Sign an IPK
 
 The current `yarn package` command creates an **unsigned** IPK. No official
@@ -482,13 +550,39 @@ Run the TypeScript tests and checks from this package:
 
 ```bash
 yarn test
+yarn test:webos-coverage
 yarn lint
+yarn typecheck
 yarn format:check
 ```
 
 These tests mock SCAP behavior. Validate native storage, timers, telemetry,
 power, installation, and update behavior on representative physical displays
 before releasing.
+
+The native suite runs the shared controller's seeded decoder-budget invariants
+and reuses the legacy adapter's real-player layout/media simulation. The legacy
+suite also discovers `webos-player/src/shared/**/*.test.ts`. Run both suites
+when changing shared code:
+
+```bash
+yarn workspace @castmill/legacy-adapter-player test:webos-coverage
+yarn workspace @castmill/webos-player test:webos-coverage
+```
+
+Coverage commands enforce 90% statements, lines, branches, and functions on the
+selected shared/new integration files. The legacy command first runs its full
+suite and then measures shared coverage in the owning workspace. Coverage uses
+V8; the root `test-exclude` resolution is compatible with the monorepo's glob
+10 resolution. Import-boundary tests reject dependencies from shared code to
+SCAP or application modules and smoke-test the public export without SCAP
+globals.
+
+On the oldest supported physical display, verify consecutive video loops, two
+video zones, a crowded three-video layout, blocked-item reporting, channel
+replacement, native-file deletion/recovery, and restart while offline. Check
+actual visible frames and progress, not only `playing` events. Offline restart
+must present a recoverable connection failure rather than depend on IndexedDB.
 
 ## Troubleshooting
 

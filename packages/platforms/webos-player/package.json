@@ -4,27 +4,35 @@
   "description": "",
   "license": "AGPL-3.0-or-later",
   "type": "module",
+  "exports": {
+    "./shared": "./src/shared/index.ts"
+  },
   "scripts": {
     "format": "oxfmt --write .",
     "format:check": "oxfmt .",
     "lint": "oxlint .",
+    "typecheck": "tsc --noEmit",
     "start": "vite",
     "dev": "vite",
     "build": "VITE_UPDATE_URL=${VITE_UPDATE_URL:-https://updates.castmill.io/webos/player.ipk} vite build",
     "serve": "vite preview",
     "copy-assets": "cp -r appinfo/* dist && cp -r lib dist",
     "package": "ares-package --no-minify -o build -e \"*.test.js\" dist",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:webos-coverage": "vitest run --coverage",
+    "test:shared-coverage": "vitest run src/shared --coverage --coverage.include='src/shared/**/*.ts'"
   },
   "dependencies": {
     "@castmill/cache": "*",
     "@castmill/device": "*",
     "@castmill/player": "*",
+    "js-sha256": "^0.11.1",
     "solid-js": "^1.8.11"
   },
   "devDependencies": {
     "@solidjs/testing-library": "^0.8.5",
     "@vitejs/plugin-legacy": "^5.4.1",
+    "@vitest/coverage-v8": "1.6.1",
     "express": "^4.19.2",
     "jsdom": "^23.2.0",
     "on-finished": "^2.4.1",

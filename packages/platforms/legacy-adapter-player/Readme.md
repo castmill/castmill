@@ -77,7 +77,8 @@ data and code into memory. Eligible media persists through the wrapper's native
 file API. A cached app shell alone is not sufficient for offline WebOS startup.
 The legacy WebOS browser also has nonstandard file-wrapper message origins,
 intermittent media readiness events, and unreliable post-mount reactive DOM
-updates. Keep WebOS-specific compatibility behavior in this adapter; see
+updates. Keep iframe bridge behavior in this adapter and reusable WebOS runtime
+behavior in `webos-player/src/shared`; see
 `agents/packages/player/LEGACY-PLAYER-COMPATIBILITY.md` for the complete
 limitations and required fallbacks.
 
@@ -173,7 +174,9 @@ native media are cached; it never opens IndexedDB.
 
 ### WebOS video playback
 
-The WebOS platform selects `src/classes/webos-video-playback.ts` through the
+The WebOS platform selects the shared
+`webos-player/src/shared/webos-video-playback.ts` implementation through
+`@castmill/webos-player/shared` and the
 optional `createVideoPlaybackController` Device/player hook. Each video gets its
 own controller, regardless of whether its source is a native cache URL, blob, or
 remote URL. The adapter handles metadata waits, decoder reloads on replay, and
@@ -296,12 +299,27 @@ guard the decoder budget:
   that short handoff waits are not skipped, and that a cleared or replaced
   channel frees every decoder.
 - The `WebosDecoderBudget invariants` tests in
-  `src/classes/webos-video-playback.test.ts` run seeded random sequences of
+  `webos-player/src/shared/webos-video-playback.test.ts` run seeded random sequences of
   loads, seeks, plays, pauses, layer removals, and disposals. After every step
   they check the limits, then check that requested videos still get to play.
 
 Add a scenario to these suites whenever playback, rendering, or layer handling
 changes in a way that could create, load, or keep video tags.
+
+The adapter's Vitest configuration includes the shared WebOS unit tests from
+the native-player workspace. `yarn test:webos-coverage` runs the complete adapter
+suite and then the owning workspace's shared coverage checks (90% minimum
+statements, lines, branches, and functions). Run the native player's
+`test:webos-coverage` as well after changes; it reuses the layout playback
+harness and verifies native storage and startup wiring.
+
+Only the explicit `@castmill/webos-player/shared` source subpath may be imported
+by this adapter. It requires no native player build or SCAP libraries. Do not
+import native storage, machine classes, or app bootstrap: SCAP globals are
+instantiated at module import time. Keep the one-way dependency; the native
+player must not import the legacy app at runtime. Shared URL routing, memory
+storage, logging, transport, and controller behavior live in `src/shared`;
+`fetchFile`, file deletion, and heartbeat messages remain adapter-specific.
 
 To trace WebOS video playback, build the adapter with `VITE_LOGGING=true` and
 inspect the browser console for `[WebOS Video]` messages. Logs are compact and

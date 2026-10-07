@@ -242,10 +242,10 @@ export class WebosMachine implements Machine {
     try {
       const storageInfo = await storage.getStorageInfo();
       if (storageInfo) {
-        // getStorageInfo returns { totalSize, usedSize } in bytes or KB depending on firmware
+        // SCAP uses total/used/free, also consumed by FileStorage.
         telemetry.storage = {
-          totalBytes: storageInfo.totalSize,
-          usedBytes: storageInfo.usedSize,
+          totalBytes: storageInfo.total,
+          usedBytes: storageInfo.used,
         };
       }
     } catch (error) {

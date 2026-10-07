@@ -55,6 +55,31 @@ agents/
 - **Testing**: Vitest, React Testing Library, ExUnit
 - **Build**: Vite for frontend, Mix for backend
 
+### WebOS Native and Legacy Players
+
+Reusable WebOS runtime code belongs in
+`packages/platforms/webos-player/src/shared` and is exported through
+`@castmill/webos-player/shared`. The legacy adapter depends on that source
+subpath, never on the native app bundle. Do not introduce a webos-common package
+or a native-to-legacy runtime dependency. Keep shared imports independent of
+SCAP/native globals, app bootstrap, CSS, and legacy iframe bridge APIs; retain
+the import-boundary and no-SCAP import tests.
+
+Both players target Chrome 38 and must keep the two-loaded-video decoder budget,
+WebOS seek/readiness/stall recovery, one-argument WebSocket constructor, and
+MemoryCache instead of IndexedDB. Native persistence is for eligible public
+media only; protected resources, widget code, and channel data use authenticated
+XHR session blobs. Cold startup needs an online server. Never log auth headers,
+response bodies, or full credential-bearing media URLs.
+
+Before moving functionality, run the legacy regression suite. After changing
+shared code, run both players' `test:webos-coverage`, `typecheck`, lint, and
+build scripts. Coverage enforces 90% on shared/new integration code. Validate
+visible frames, decoder contention, loops, and channel changes on old physical
+WebOS hardware before release. Consult
+`agents/packages/player/LEGACY-PLAYER-COMPATIBILITY.md` and
+`packages/platforms/webos-player/README.md`.
+
 ## 🌍 Internationalization (i18n)
 
 **CRITICAL**: Localize user-facing text except in the English-only legacy

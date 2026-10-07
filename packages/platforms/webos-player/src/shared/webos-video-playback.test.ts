@@ -4,6 +4,7 @@ import {
   WebosDecoderBudget,
   WebosVideoPlayback,
   webosDecoderBudget,
+  createWebosVideoPlaybackFactory,
 } from './webos-video-playback';
 
 class TestVideo extends EventTarget {
@@ -659,6 +660,68 @@ describe('WebosVideoPlayback', () => {
     expect(video.src).toBe(replacement);
     expect(video.play).toHaveBeenCalledTimes(2);
     expect(video.currentTime).toBe(4);
+  });
+
+  it.each([undefined, new Error('Download failed')])(
+    'reports a failed native refresh without restarting playback (%s)',
+    async (failure) => {
+      controller.dispose();
+      video.src = `http://127.0.0.1:9080/castmill-cache/${'a'.repeat(64)}.mp4`;
+      const refresh = failure
+        ? vi.fn().mockRejectedValue(failure)
+        : vi.fn().mockResolvedValue(undefined);
+      controller = new WebosVideoPlayback(video, report, refresh);
+      controller.play(4000);
+      await flush();
+      video.dispatchEvent(new Event('error'));
+      await flush();
+      expect(refresh).toHaveBeenCalledOnce();
+      expect(video.play).toHaveBeenCalledOnce();
+      expect(report).toHaveBeenCalledWith(
+        expect.objectContaining({
+          category: 'media-load',
+          code: 'video-load-failed',
+        })
+      );
+      video.dispatchEvent(new Event('error'));
+      await flush();
+      expect(refresh).toHaveBeenCalledOnce();
+    }
+  );
+
+  it.each(['blob:video', 'https://media.test/movie.mp4'])(
+    'does not redownload non-native media on decoder errors (%s)',
+    async (src) => {
+      controller.dispose();
+      video.src = src;
+      const refresh = vi.fn();
+      controller = new WebosVideoPlayback(video, report, refresh);
+      expect(await controller.recoverMedia()).toBeUndefined();
+      controller.play(1000);
+      await flush();
+      video.dispatchEvent(new Event('error'));
+      await flush();
+      expect(refresh).not.toHaveBeenCalled();
+      expect(report).toHaveBeenCalledOnce();
+    }
+  );
+
+  it('supports storage-specific native recognition through the shared factory', async () => {
+    video.src = 'file://custom-cache/movie.mp4';
+    const refresh = vi.fn().mockResolvedValue('file://custom-cache/new.mp4');
+    const isNativeUrl = vi.fn((url: string) =>
+      url.startsWith('file://custom-cache/')
+    );
+    const factory = createWebosVideoPlaybackFactory({
+      isNativeUrl,
+      budget: new WebosDecoderBudget(2),
+    });
+    const playback = factory(video as HTMLVideoElement, {
+      refreshMedia: refresh,
+    });
+    expect(await playback.recoverMedia?.()).toBe('file://custom-cache/new.mp4');
+    expect(isNativeUrl).toHaveBeenCalledWith(video.src);
+    playback.dispose();
   });
 
   it('does not restart a failed video after it is paused during recovery', async () => {

@@ -37,7 +37,37 @@ extend the WebOS missing-parent exception to Electron app messages.
 
 ## JavaScript Rules
 
-### Legacy WebOS wrapper
+### WebOS runtime shared by native and legacy players
+
+The native IPK app (`packages/platforms/webos-player`) and the legacy WebOS
+adapter run on the same hardware. Their reusable compatibility code lives in
+`webos-player/src/shared` and is exported as `@castmill/webos-player/shared`.
+This is a TypeScript source subpath, not an app bundle or a separate package.
+Both Vite apps compile it to Chrome 38; importing it needs no native player
+build or installed SCAP libraries.
+
+Keep shared code independent of SCAP globals, `src/native`, native machine or
+storage classes, app components, CSS, and bootstrap. Shared import-boundary
+tests and a no-SCAP import smoke test enforce this separation. The native
+player must not depend on the legacy adapter at runtime. Preserve the tested
+WebOS behavior before moving functionality: run the legacy suite first, then
+both suites and their coverage checks after changes.
+
+Both PlayerFrames inject `WebosWebSocket`, `createWebosVideoPlayback`, and
+`MemoryCache`. The shared controller's default native URL predicate recognizes
+64-hex names under `http://127.0.0.1:9080/castmill-cache/`; the factory supports
+injecting another predicate and budget without importing platform storage.
+The native player uses SCAP directly for eligible media and a validated
+`castmill-webos-native-file-map` in localStorage. It reconciles missing files,
+removes orphan cache files, uses atomic temporary-file downloads and SHA-256
+filenames, translates recognized storage-full errors, and serves protected
+resources from session XHR blobs. Both WebOS players require an online server
+at cold startup; neither opens IndexedDB for content caching.
+
+The iframe bridge, wrapper heartbeat/watchdog, `console` origin handling, and
+`/legacy/sw.js` are legacy-only. The native player ships its shell in the IPK,
+shows a pre-mounted startup overlay, and surfaces initialization failures
+through the device error reporter when available.
 
 #### Observed runtime limitations
 
@@ -91,7 +121,7 @@ cache entry and retries the download once, even if removing the missing native
 file fails. WebOS must start online even if the app shell was cached; it does
 not open IndexedDB.
 
-`PlayerFrame` injects the adapter-local `WebosVideoPlayback` controller for every
+Both `PlayerFrame` implementations inject the shared `WebosVideoPlayback` controller for every
 WebOS video, including blob and remote sources. The controller owns decoder
 reloads, metadata waits, bounded seek recovery, and cancellation. Immediate
 timeline seek/play calls are coalesced; a paused seek preserves its offset without
@@ -120,6 +150,19 @@ over the video. Waiting videos of layers that were removed from the document
 until shown again. End-to-end
 (`webos-layout-playback.test.tsx`) and seeded invariant tests guard these
 limits; see the adapter README for details.
+The native player's suite reuses that layout harness; shared unit/invariant
+tests now live in `webos-player/src/shared`. Keep Vitest test files isolated
+because WebOS tests disable IndexedDB while other platform tests require it.
+
+```bash
+yarn workspace @castmill/legacy-adapter-player test:webos-coverage
+yarn workspace @castmill/webos-player test:webos-coverage
+yarn workspace @castmill/legacy-adapter-player typecheck
+yarn workspace @castmill/webos-player typecheck
+```
+
+Coverage commands enforce 90% statements, lines, branches, and functions for
+shared/new WebOS integration files. Rebuild both apps after shared changes.
 The video widget waits for `canplay` or `canplaythrough`, but accepts
 `loadedmetadata`, `loadeddata`, or metadata visible in `readyState` at the
 bounded readiness deadline to register and start WebOS videos without either

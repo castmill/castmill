@@ -12,13 +12,10 @@ const fetchPolyfill = (
   const headers = (init?.headers as Record<string, string> | undefined) ?? {};
   const body = init?.body as string | undefined;
 
-  console.log('fetchUrl', url, headers, body);
   return new Promise(function (resolve, reject) {
     const xhr = new XMLHttpRequest();
 
     xhr.onload = function () {
-      console.log('onLoad', xhr.status);
-      console.log('onLoad', xhr.responseText);
       if (xhr.status >= 200 && xhr.status < 300) {
         resolve({
           status: xhr.status,

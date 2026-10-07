@@ -21,7 +21,7 @@ import {
 } from '../classes';
 import { getLegacyBaseUrl } from '../utils/base-url';
 import { WebosWebSocket } from '../webos-legacy-api';
-import { createWebosVideoPlayback } from '../classes/webos-video-playback';
+import { createWebosVideoPlayback } from '@castmill/webos-player/shared';
 import { enableDebugOverlayFromEnv, setDebugOverlay } from '@castmill/player';
 import {
   LegacyDebugOverlay,
