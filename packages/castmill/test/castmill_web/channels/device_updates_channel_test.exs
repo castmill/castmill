@@ -98,5 +98,21 @@ defmodule CastmillWeb.DeviceUpdatesChannelTest do
 
       assert_push("device:status", ^expected_payload)
     end
+
+    test "broadcasts that the device has been disabled", %{socket: socket, device: device} do
+      DeviceUpdatesChannel.handle_info(%{enabled: false}, socket)
+
+      expected_payload = %{device_id: device.id, enabled: false}
+
+      assert_push("device:status", ^expected_payload)
+    end
+
+    test "broadcasts that the device has been enabled", %{socket: socket, device: device} do
+      DeviceUpdatesChannel.handle_info(%{enabled: true}, socket)
+
+      expected_payload = %{device_id: device.id, enabled: true}
+
+      assert_push("device:status", ^expected_payload)
+    end
   end
 end

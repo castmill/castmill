@@ -443,6 +443,56 @@ defmodule CastmillWeb.ResourceController.DevicesTest do
       assert %Castmill.Devices.Device{autorecover_until: nil} =
                Castmill.Devices.get_device(device_id)
     end
+
+    test "disables and re-enables a device and broadcasts the change", %{
+      conn: conn,
+      organization: organization
+    } do
+      device_registration_fixture(%{hardware_id: "hardware-enable-1", pincode: "ENABDEAD"})
+      device_params = %{"name" => "device-enable-1", "pincode" => "ENABDEAD"}
+
+      create_conn = post(conn, "/api/organizations/#{organization.id}/devices", device_params)
+      %{"data" => %{"id" => device_id}} = json_response(create_conn, 201)
+
+      # Devices are enabled by default
+      assert %Castmill.Devices.Device{enabled: true} =
+               Castmill.Devices.get_device(device_id)
+
+      # Subscribe to both device-facing and dashboard-facing topics
+      Phoenix.PubSub.subscribe(Castmill.PubSub, "devices:#{device_id}")
+      Phoenix.PubSub.subscribe(Castmill.PubSub, "device_updates:#{device_id}")
+
+      conn =
+        patch(
+          conn,
+          "/api/organizations/#{organization.id}/devices/#{device_id}",
+          %{"update" => %{"enabled" => false}}
+        )
+
+      assert json_response(conn, 200)
+
+      assert %Castmill.Devices.Device{enabled: false} =
+               Castmill.Devices.get_device(device_id)
+
+      # The change is broadcast to the device and to the dashboard
+      assert_receive %{update: "device", data: %{enabled: false}}
+      assert_receive %{enabled: false}
+
+      conn =
+        patch(
+          conn,
+          "/api/organizations/#{organization.id}/devices/#{device_id}",
+          %{"update" => %{"enabled" => true}}
+        )
+
+      assert json_response(conn, 200)
+
+      assert %Castmill.Devices.Device{enabled: true} =
+               Castmill.Devices.get_device(device_id)
+
+      assert_receive %{update: "device", data: %{enabled: true}}
+      assert_receive %{enabled: true}
+    end
   end
 
   describe "delete device" do

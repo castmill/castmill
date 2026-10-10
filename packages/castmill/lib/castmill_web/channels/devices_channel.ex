@@ -14,7 +14,7 @@ defmodule CastmillWeb.DevicesChannel do
     # so only devices with a certain IP address (or address range)
     # can connect to the socket.
     case Devices.verify_device_token(device_id, token) do
-      {:ok, _device} ->
+      {:ok, device} ->
         {:ok, _device} = mark_online(socket)
 
         Devices.insert_event(%{device_id: device_id, type: "o", msg: "Device connected"})
@@ -25,7 +25,7 @@ defmodule CastmillWeb.DevicesChannel do
         # Push saved schedule timers to device after a short delay
         Process.send_after(self(), :sync_schedule, 1_000)
 
-        {:ok, socket}
+        {:ok, %{enabled: device.enabled}, socket}
 
       {:error, reason} ->
         {:error, reason}
@@ -195,6 +195,19 @@ defmodule CastmillWeb.DevicesChannel do
   @impl true
   def handle_info(%{command: _command} = params, socket) do
     push(socket, "command", params)
+    {:noreply, socket}
+  end
+
+  # Relay generic resource "update" broadcasts (e.g. device enabled/disabled,
+  # autorecover_until) to the device so it can react in realtime.
+  @impl true
+  def handle_info(%{update: "device"} = message, socket) do
+    push(socket, "update", %{
+      resource: Map.get(message, :resource, "device"),
+      action: Map.get(message, :action, "update"),
+      data: Map.get(message, :data, %{})
+    })
+
     {:noreply, socket}
   end
 

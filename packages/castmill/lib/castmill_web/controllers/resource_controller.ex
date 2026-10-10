@@ -252,6 +252,30 @@ defmodule CastmillWeb.ResourceController do
                   )
                 end
 
+                if Map.has_key?(params.update, "enabled") ||
+                     Map.has_key?(params.update, :enabled) do
+                  # Notify the device itself so it can react in realtime
+                  # (e.g. show a blank screen when disabled).
+                  Phoenix.PubSub.broadcast(
+                    Castmill.PubSub,
+                    "devices:#{device.id}",
+                    %{
+                      update: "device",
+                      resource: "device",
+                      action: "update",
+                      data: %{enabled: device.enabled}
+                    }
+                  )
+
+                  # Notify dashboard observers so the enabled/disabled state
+                  # updates in realtime in the devices table.
+                  Phoenix.PubSub.broadcast(
+                    Castmill.PubSub,
+                    "device_updates:#{device.id}",
+                    %{enabled: device.enabled}
+                  )
+                end
+
                 conn
                 |> put_status(:ok)
                 |> json(device)

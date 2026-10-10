@@ -141,6 +141,74 @@ defmodule Castmill.DevicesTest do
       assert device.name == "some updated name"
     end
 
+    test "devices are enabled by default and can be disabled/enabled via update_device/2" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+
+      {:ok, devices_registration} =
+        device_registration_fixture(%{hardware_id: "some hardware id", pincode: "some pincode"})
+
+      assert {:ok, {device, _token}} =
+               Devices.register_device(organization.id, devices_registration.pincode, %{
+                 name: "some device"
+               })
+
+      # Devices are enabled by default
+      assert device.enabled == true
+
+      # Disable the device
+      assert {:ok, device} = Devices.update_device(device, %{enabled: false})
+      assert device.enabled == false
+      assert [disabled_device] =
+               Resources.list_resources(Castmill.Devices.Device, %{
+                 organization_id: organization.id,
+                 filters: [{"disabled", true}]
+               })
+
+      assert disabled_device.id == device.id
+
+      assert Resources.count_resources(Castmill.Devices.Device, %{
+               organization_id: organization.id,
+               filters: [{"disabled", true}]
+             }) == 1
+
+      assert Resources.list_resources(Castmill.Devices.Device, %{
+               organization_id: organization.id,
+               filters: [{"enabled", true}]
+             }) == []
+
+      assert Resources.count_resources(Castmill.Devices.Device, %{
+               organization_id: organization.id,
+               filters: [{"enabled", true}]
+             }) == 0
+
+      # Re-enable the device
+      assert {:ok, device} = Devices.update_device(device, %{enabled: true})
+      assert device.enabled == true
+      assert [enabled_device] =
+               Resources.list_resources(Castmill.Devices.Device, %{
+                 organization_id: organization.id,
+                 filters: [{"enabled", true}]
+               })
+
+      assert enabled_device.id == device.id
+
+      assert Resources.count_resources(Castmill.Devices.Device, %{
+               organization_id: organization.id,
+               filters: [{"enabled", true}]
+             }) == 1
+
+      assert Resources.list_resources(Castmill.Devices.Device, %{
+               organization_id: organization.id,
+               filters: [{"disabled", true}]
+             }) == []
+
+      assert Resources.count_resources(Castmill.Devices.Device, %{
+               organization_id: organization.id,
+               filters: [{"disabled", true}]
+             }) == 0
+    end
+
     test "delete_device/1 deletes the device and broadcasts removal notification" do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})

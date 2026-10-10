@@ -136,6 +136,56 @@ defmodule CastmillWeb.DevicesChannelTest do
     end
   end
 
+  describe "handle_info/2 - device update (enabled)" do
+    test "pushes update event to client when device is disabled", %{
+      socket: socket,
+      device: device,
+      token: token
+    } do
+      {:ok, _reply, socket} =
+        subscribe_and_join(socket, DevicesChannel, "devices:#{device.id}", %{"token" => token})
+
+      message = %{
+        update: "device",
+        resource: "device",
+        action: "update",
+        data: %{enabled: false}
+      }
+
+      DevicesChannel.handle_info(message, socket)
+
+      assert_push "update", %{
+        resource: "device",
+        action: "update",
+        data: %{enabled: false}
+      }
+    end
+
+    test "pushes update event to client when device is enabled", %{
+      socket: socket,
+      device: device,
+      token: token
+    } do
+      {:ok, _reply, socket} =
+        subscribe_and_join(socket, DevicesChannel, "devices:#{device.id}", %{"token" => token})
+
+      message = %{
+        update: "device",
+        resource: "device",
+        action: "update",
+        data: %{enabled: true}
+      }
+
+      DevicesChannel.handle_info(message, socket)
+
+      assert_push "update", %{
+        resource: "device",
+        action: "update",
+        data: %{enabled: true}
+      }
+    end
+  end
+
   describe "handle_info/2 - playlist_updated" do
     test "pushes playlist_updated event to client", %{
       socket: socket,
@@ -394,6 +444,21 @@ defmodule CastmillWeb.DevicesChannelTest do
              )
 
       assert byte_size(event.msg) <= 1024
+    end
+  end
+
+  describe "join/3" do
+    test "returns the persisted enabled state in the join reply", %{
+      socket: socket,
+      device: device,
+      token: token
+    } do
+      assert {:ok, device} = Castmill.Devices.update_device(device, %{enabled: false})
+
+      {:ok, reply, _socket} =
+        subscribe_and_join(socket, DevicesChannel, "devices:#{device.id}", %{"token" => token})
+
+      assert reply == %{enabled: false}
     end
   end
 end

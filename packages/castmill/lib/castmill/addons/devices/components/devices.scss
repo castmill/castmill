@@ -122,3 +122,36 @@
     }
   }
 }
+
+.device-enabled-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375em;
+  padding: 0.25em 0.5em;
+  border: none;
+  border-radius: 0.25em;
+  background: transparent;
+  cursor: pointer;
+  font-size: inherit;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
+
+  svg {
+    width: 1.25em;
+    height: 1.25em;
+    flex-shrink: 0;
+  }
+
+  &.enabled {
+    color: var(--success-color, #22c55e);
+  }
+
+  &.disabled {
+    color: var(--text-tertiary, #6b7280);
+  }
+
+  &:hover {
+    background: rgba(87, 146, 238, 0.1);
+  }
+}

@@ -221,7 +221,9 @@ export class Device extends EventEmitter {
   private timerManager: TimerManager;
   private playerContainer?: HTMLElement;
   private timerOffOverlay?: HTMLDivElement;
+  private disabledOverlay?: HTMLDivElement;
   private recoveryWatcherRunning = false;
+  private enabled = true;
 
   // The base url is the url of the Castmill API. By default it is assumed that the API is
   // hosted at the same domain as this device and accessible through a relative path.
@@ -414,6 +416,11 @@ export class Device extends EventEmitter {
 
     // Main loop. This loop will run until the device is stopped.
     while (!this.closing) {
+      if (!this.enabled) {
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+        continue;
+      }
+
       // Add next batch of items from the next calendar.
       // Play until only one item remains in the playlist or the device is stopped.
       if (this.contentQueue.length < 2) {
@@ -436,11 +443,19 @@ export class Device extends EventEmitter {
             }
 
             if (jsonPlaylist) {
+              if (!this.enabled || this.closing) {
+                continue;
+              }
+
               const medias = this.getPlaylistMedias(jsonPlaylist);
               await this.cacheMedias(medias);
 
               // Check again after caching
-              if (this.channelGeneration !== currentGeneration) {
+              if (
+                this.channelGeneration !== currentGeneration ||
+                !this.enabled ||
+                this.closing
+              ) {
                 continue;
               }
 
@@ -451,11 +466,19 @@ export class Device extends EventEmitter {
               );
 
               // Final check before adding to queue
-              if (this.channelGeneration !== currentGeneration) {
+              if (
+                this.channelGeneration !== currentGeneration ||
+                !this.enabled ||
+                this.closing
+              ) {
                 continue;
               }
 
               this.contentQueue.add(layer);
+              if (!this.enabled || this.closing || !this.player) {
+                this.contentQueue.remove(layer);
+                continue;
+              }
 
               this.player.play({ loop: true });
 
@@ -973,7 +996,10 @@ export class Device extends EventEmitter {
       // Handle initial join attempt and rejoins after reconnection
       channel
         .join()
-        .receive('ok', () => {
+        .receive('ok', async (resp?: { enabled?: boolean }) => {
+          if (typeof resp?.enabled === 'boolean') {
+            await this.setEnabled(resp.enabled);
+          }
           // Phoenix re-runs join hooks on every rejoin, so this also catches
           // channel changes made while the device was disconnected.
           void this.syncChannels(device.id);
@@ -1138,6 +1164,12 @@ export class Device extends EventEmitter {
     channel.on('update', async (data: DeviceMessage) => {
       switch (data.resource) {
         case 'device':
+          // React in realtime to device-level changes. When a device is
+          // disabled it must stop showing content and display a blank screen;
+          // when re-enabled it should resume playing content.
+          if (data.data && typeof data.data.enabled === 'boolean') {
+            await this.setEnabled(data.data.enabled);
+          }
           break;
         case 'channel':
           // We could just mark the channel as dirty (in the resource manager), as we do not know
@@ -1529,6 +1561,70 @@ export class Device extends EventEmitter {
     if (this.timerOffOverlay) {
       this.timerOffOverlay.remove();
       this.timerOffOverlay = undefined;
+    }
+  }
+
+  /**
+   * Apply the enabled/disabled state received from the server.
+   *
+   * A disabled device must not show any content: the player is stopped and a
+   * full-screen black overlay is shown. When the device is re-enabled it
+   * reloads so it resumes playing content from scratch.
+   *
+   * This is safe to call repeatedly (e.g. on reconnect) as it is idempotent.
+   */
+  async setEnabled(enabled: boolean): Promise<void> {
+    if (this.enabled === enabled) {
+      // Ensure the overlay reflects the current state even if it got out of
+      // sync (e.g. overlay was never shown while already disabled).
+      if (!enabled) {
+        this.showDisabledOverlay();
+      }
+      return;
+    }
+
+    this.enabled = enabled;
+
+    if (!enabled) {
+      this.logger.info('Device has been disabled, showing blank screen');
+      await this.player?.stop();
+      this.showDisabledOverlay();
+    } else {
+      this.logger.info('Device has been enabled, resuming content');
+      this.hideDisabledOverlay();
+      // Reload so the player restarts and content is loaded from scratch.
+      location.reload();
+    }
+  }
+
+  /**
+   * Show a full-screen black overlay to blank the screen while disabled.
+   */
+  private showDisabledOverlay() {
+    if (this.disabledOverlay) return; // already showing
+
+    const overlay = document.createElement('div');
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100%';
+    overlay.style.height = '100%';
+    overlay.style.background = 'black';
+    // Must be above the player but below the menu (z-index: 1000000 in basemenu.module.css)
+    overlay.style.zIndex = '999999';
+    overlay.setAttribute('data-disabled-overlay', 'true');
+
+    document.body.appendChild(overlay);
+    this.disabledOverlay = overlay;
+  }
+
+  /**
+   * Remove the black disabled overlay (if any).
+   */
+  private hideDisabledOverlay() {
+    if (this.disabledOverlay) {
+      this.disabledOverlay.remove();
+      this.disabledOverlay = undefined;
     }
   }
 
