@@ -64,7 +64,7 @@ export const styledTextWidget = {
 
 export const autoScrollTextWidget = {
   name: 'Auto-Scroll Text',
-  description: 'Text that scrolls horizontally when it doesn\'t fit',
+  description: "Text that scrolls horizontally when it doesn't fit",
   template: {
     type: 'text',
     name: 'scrolling-news',

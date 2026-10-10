@@ -1,0 +1,18 @@
+{
+  "trailingComma": "es5",
+  "tabWidth": 2,
+  "singleQuote": true,
+  "printWidth": 80,
+  "sortPackageJson": false,
+  "ignorePatterns": [
+    "node_modules",
+    "dist",
+    "build",
+    "out",
+    "android",
+    "public/lib",
+    "packages/castmill/assets/vendor",
+    "**/*.md",
+    "**/*.mdx"
+  ]
+}

@@ -110,7 +110,7 @@ export const Table = <
       } else {
         newSet.delete(id);
       }
-      props.onRowSelect && props.onRowSelect(newSet);
+      props.onRowSelect?.(newSet);
       return newSet;
     });
   };
@@ -124,7 +124,7 @@ export const Table = <
       }
     }
     setSelectedRows(newSet);
-    props.onRowSelect && props.onRowSelect(newSet);
+    props.onRowSelect?.(newSet);
   };
 
   const getItemId = (item: Item): IdType => item[props.itemIdKey || 'id'];
@@ -204,7 +204,9 @@ export const Table = <
                     !(e.target as Element)?.closest(
                       `.${style['checkbox-touch-target']}`
                     ) &&
-                    !(e.target as Element)?.closest('.table-actions')
+                    !(e.target as Element)?.closest(
+                      `.${style['table-actions']}`
+                    )
                   ) {
                     props.onRowClick(item);
                   }

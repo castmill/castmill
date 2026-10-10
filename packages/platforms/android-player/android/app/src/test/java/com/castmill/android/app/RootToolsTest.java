@@ -193,6 +193,8 @@ public class RootToolsTest {
             mockedSu.when(() -> SuRoot.sudo(anyString())).thenReturn("result");
 
             assertTrue(RootTools.restartApp());
+            mockedSu.verify(() -> SuRoot.sudo(
+                    "am start -S -W -n com.castmill.android.app/.MainActivity"));
         }
     }
 

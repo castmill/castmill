@@ -169,6 +169,36 @@ describe('Drawer Component', () => {
     modalOverlay.remove();
   });
 
+  it('does not close when clicking inside a drawer from another stack', () => {
+    const onClose = vi.fn();
+
+    const otherDrawerPanel = document.createElement('div');
+    otherDrawerPanel.setAttribute('data-drawer-panel', '');
+    const otherDrawerContent = document.createElement('button');
+    otherDrawerContent.textContent = 'Other drawer action';
+    otherDrawerPanel.appendChild(otherDrawerContent);
+    document.body.appendChild(otherDrawerPanel);
+
+    render(() => (
+      <Drawer
+        title="Parent drawer"
+        onClose={onClose}
+        showBackdrop={false}
+        closeOnOutsideClick
+      >
+        <div>Parent drawer content</div>
+      </Drawer>
+    ));
+
+    vi.runAllTimers();
+    fireEvent.click(otherDrawerContent);
+    vi.runAllTimers();
+
+    expect(onClose).not.toHaveBeenCalled();
+
+    otherDrawerPanel.remove();
+  });
+
   it('closes on outside click when click is not inside a modal overlay', () => {
     const onClose = vi.fn();
 

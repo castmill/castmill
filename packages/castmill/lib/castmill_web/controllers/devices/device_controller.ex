@@ -12,6 +12,27 @@ defmodule CastmillWeb.DeviceController do
 
   action_fallback(CastmillWeb.FallbackController)
 
+  @device_info_keys ~w(
+    appType
+    appVersion
+    os
+    hardware
+    environmentVersion
+    chromiumVersion
+    v8Version
+    nodeVersion
+    userAgent
+  )
+  @device_capability_keys ~w(
+    restart
+    quit
+    reboot
+    shutdown
+    update
+    updateFirmware
+  )
+  @max_device_info_value_bytes 1024
+
   @impl CastmillWeb.AccessActorBehaviour
 
   def check_access(actor_id, action, %{"device_id" => device_id})
@@ -114,6 +135,42 @@ defmodule CastmillWeb.DeviceController do
     render(conn, :device, layout: false)
   end
 
+  def show(conn, _params) do
+    device = conn.assigns.current_actor
+    json(conn, %{data: %{id: device.id, name: device.name}})
+  end
+
+  def info(conn, %{"info" => info}) when is_map(info) do
+    device = conn.assigns.current_actor
+
+    if valid_device_info?(info) do
+      case Devices.update_device(device, %{info: info}) do
+        {:ok, _device} -> send_resp(conn, :no_content, "")
+        {:error, changeset} -> {:error, changeset}
+      end
+    else
+      send_resp(conn, :bad_request, "")
+    end
+  end
+
+  def info(conn, _params), do: send_resp(conn, :bad_request, "")
+
+  defp valid_device_info?(info) do
+    Enum.all?(info, fn {key, value} ->
+      (key in @device_info_keys and is_binary(value) and
+         byte_size(value) <= @max_device_info_value_bytes) or
+        (key == "capabilities" and valid_device_capabilities?(value))
+    end)
+  end
+
+  defp valid_device_capabilities?(capabilities) when is_map(capabilities) do
+    Enum.all?(capabilities, fn {key, value} ->
+      key in @device_capability_keys and is_boolean(value)
+    end)
+  end
+
+  defp valid_device_capabilities?(_capabilities), do: false
+
   def start_registration(conn, %{"hardware_id" => hardware_id, "timezone" => timezone} = params) do
     location = Map.get(params, "location")
 
@@ -172,7 +229,9 @@ defmodule CastmillWeb.DeviceController do
     device_id: [type: :string],
     type: [type: :string, in: ["code", "data", "media"], default: "data"],
     page: [type: :integer, number: [min: 1]],
-    page_size: [type: :integer, number: [min: 1, max: 100]]
+    page_size: [type: :integer, number: [min: 1, max: 100]],
+    key: [type: :string],
+    direction: [type: :string, in: ["ascending", "descending"]]
   }
 
   def get_cache(conn, %{"device_id" => device_id} = params) do
@@ -229,7 +288,8 @@ defmodule CastmillWeb.DeviceController do
   }
 
   def delete_cache(conn, %{"device_id" => device_id} = params) do
-    with {:ok, params} <- Tarams.cast(params, @delete_cache_schema) do
+    with {:ok, params} <- Tarams.cast(params, @delete_cache_schema),
+         :ok <- validate_cache_delete_params(params) do
       pid = self()
 
       # Serialize PID to a string and encode it to be used as a reference
@@ -258,12 +318,20 @@ defmodule CastmillWeb.DeviceController do
           |> put_status(:ok)
           |> json(data)
       after
-        5_000 ->
+        cache_delete_timeout(params.type) ->
           conn
           |> put_status(:bad_request)
           |> json(%{error: "No response from device"})
       end
     else
+      {:error, :empty_urls} ->
+        conn
+        |> put_status(:bad_request)
+        |> Phoenix.Controller.json(%{
+          errors: %{urls: ["must contain at least one URL unless type is all"]}
+        })
+        |> halt()
+
       {:error, errors} ->
         conn
         |> put_status(:bad_request)
@@ -271,6 +339,14 @@ defmodule CastmillWeb.DeviceController do
         |> halt()
     end
   end
+
+  defp validate_cache_delete_params(%{type: "all"}), do: :ok
+  defp validate_cache_delete_params(%{urls: [_ | _]}), do: :ok
+  defp validate_cache_delete_params(_), do: {:error, :empty_urls}
+
+  # Full native-storage cleanup can take longer than a regular per-entry deletion.
+  defp cache_delete_timeout("all"), do: 60_000
+  defp cache_delete_timeout(_type), do: 5_000
 
   def get_telemetry(conn, %{"device_id" => device_id}) do
     pid = self()
@@ -399,7 +475,7 @@ defmodule CastmillWeb.DeviceController do
 
         conn
         |> put_status(:ok)
-        |> json(%{entries: entries})
+        |> json(%{entries: entries, timers: Devices.schedule_to_timers(entries)})
 
       {:error, :not_found} ->
         conn

@@ -152,6 +152,8 @@ defmodule CastmillWeb.ResourceJSON do
       name: channel.name,
       timezone: channel.timezone,
       default_playlist_id: channel.default_playlist_id,
+      default_playlist_name: channel.default_playlist_name,
+      current_playlist_name: channel.current_playlist_name,
       entries: []
     }
   end
@@ -162,6 +164,8 @@ defmodule CastmillWeb.ResourceJSON do
       name: channel.name,
       timezone: channel.timezone,
       default_playlist_id: channel.default_playlist_id,
+      default_playlist_name: channel.default_playlist_name,
+      current_playlist_name: channel.current_playlist_name,
       entries: channel.entries
     }
   end

@@ -281,7 +281,7 @@ export const PlaylistItems: Component<{
         style={{ 'background-color': isDraggedOver() ? 'lightblue' : '#555' }}
         class="playlist-items"
       >
-        {/* Animates an empty space when dragging over an item 
+        {/* Animates an empty space when dragging over an item
         <TransitionGroup name="item-fade">
         */}
         <For each={props.items}>

@@ -22,7 +22,10 @@ import { Timeline, TimelineItem } from './timeline';
 import { ComponentAnimation } from './animation';
 import { BaseComponentProps } from './interfaces/base-component-props';
 import { ResourceManager } from '@castmill/cache';
-import { PlayerGlobals } from '../../interfaces/player-globals.interface';
+import {
+  PlayerGlobals,
+  VideoPlaybackController,
+} from '../../interfaces/player-globals.interface';
 
 enum ReadyState {
   HAVE_NOTHING = 0, // No information is available about the media resource.
@@ -105,6 +108,29 @@ interface VideoProps extends BaseComponentProps {
   globals: PlayerGlobals;
 }
 
+export function playVideo(
+  video: Pick<HTMLVideoElement, 'play'>,
+  reportError?: PlayerGlobals['reportError']
+): void {
+  const handleError = (error: unknown) => {
+    console.error('[Video] Failed to start playback', error);
+    reportError?.({
+      category: 'playback',
+      code: 'video-play-rejected',
+      error,
+    });
+  };
+
+  try {
+    const playPromise = video.play();
+    if (playPromise) {
+      void playPromise.catch(handleError);
+    }
+  } catch (error) {
+    handleError(error);
+  }
+}
+
 export const Video: Component<VideoProps> = (props) => {
   let videoRef: HTMLVideoElement | undefined;
 
@@ -121,8 +147,14 @@ export const Video: Component<VideoProps> = (props) => {
 
   let loadingSubscription: Subscription;
   let seekingVideoSubscription: Subscription;
+  let playbackController: VideoPlaybackController | undefined;
+  let disposed = false;
+  const blockSource = {};
 
   onCleanup(() => {
+    disposed = true;
+    playbackController?.dispose();
+    props.globals.setPlaybackBlocked?.(blockSource);
     seekingVideoSubscription?.unsubscribe();
     loadingSubscription?.unsubscribe();
     if (timelineItem) {
@@ -141,12 +173,28 @@ export const Video: Component<VideoProps> = (props) => {
       }
 
       const videoUrl = await props.resourceManager.getMedia(props.opts.url);
+      if (disposed) return;
       if (!videoUrl) {
         console.warn(`[Video] Video ${props.opts.url} not found in cache`);
         props.onReady();
         return;
       }
 
+      playbackController = props.globals.createVideoPlaybackController?.(
+        videoRef,
+        {
+          reportError: props.globals.reportError,
+          refreshMedia: () =>
+            props.resourceManager.refreshMedia(props.opts.url),
+          setBlocked: (block) =>
+            props.globals.setPlaybackBlocked?.(blockSource, block),
+        }
+      );
+
+      if (playbackController?.whenLoadable) {
+        await playbackController.whenLoadable();
+        if (disposed || !videoRef) return;
+      }
       videoRef.src = videoUrl;
 
       seekingVideoSubscription?.unsubscribe();
@@ -176,12 +224,8 @@ export const Video: Component<VideoProps> = (props) => {
 
       loadingSubscription?.unsubscribe();
 
-      // We need to handle two events:
-      // 1. loadedmetadata - provides duration info (fast)
-      // 2. canplaythrough - video is ready to play without buffering (slow)
-      //
-      // We add the timeline item on loadedmetadata so duration queries work,
-      // but only call onReady after canplaythrough to ensure smooth playback.
+      // The WebOS controller can start playback once metadata is available,
+      // even when its decoder never reports canplaythrough.
 
       let timelineAdded = false;
 
@@ -193,21 +237,33 @@ export const Video: Component<VideoProps> = (props) => {
 
         const child = {
           seek: (time: number) => {
+            if (playbackController) {
+              playbackController.seek(time);
+              return;
+            }
             seekingVideoSubscription?.unsubscribe();
             seekingVideoSubscription = seekVideo(time).subscribe(
               (evt) => void 0
             );
           },
           play: (offset: number = 0) => {
+            if (playbackController) {
+              playbackController.play(offset);
+              return;
+            }
             // Always seek to the offset before playing (offset is in milliseconds)
             // This is important for looping - when offset is 0, we need to reset to start
             if (videoRef!.readyState >= ReadyState.HAVE_METADATA) {
               const targetTime = offset / 1000;
               videoRef!.currentTime = targetTime;
             }
-            videoRef!.play();
+            playVideo(videoRef!, props.globals.reportError);
           },
           pause: () => {
+            if (playbackController) {
+              playbackController.pause();
+              return;
+            }
             videoRef!.pause();
           },
           duration: () => {
@@ -226,34 +282,101 @@ export const Video: Component<VideoProps> = (props) => {
       let loading$: Observable<string>;
       if (videoRef.readyState < ReadyState.HAVE_ENOUGH_DATA) {
         loading$ = new Observable<string>((subscriber) => {
-          const metadataHandler = (ev: Event) => {
-            // Add timeline item as soon as metadata is available
-            // This allows duration queries to return the real value
+          const video = videoRef;
+          if (!video) {
+            subscriber.error(new Error('Video element is not available'));
+            return;
+          }
+          let readinessTimer: number | undefined;
+          let metadataTimer: number | undefined;
+          let recovering = false;
+          const metadataHandler = () => {
             addTimelineItem();
+            if (playbackController) {
+              clearTimeout(metadataTimer);
+              metadataTimer = window.setTimeout(handler, 1000);
+            }
           };
 
-          const handler = (ev: Event) => {
+          const handler = () => {
             // Ensure timeline is added (in case canplaythrough fires before/without metadata)
             addTimelineItem();
             subscriber.next('video:loaded');
             subscriber.complete();
           };
 
-          const errorHandler = (ev: Event) => {
-            subscriber.error('error');
+          const errorHandler = () => {
+            clearTimeout(metadataTimer);
+            if (playbackController?.recoverMedia && !recovering) {
+              recovering = true;
+              clearTimeout(readinessTimer);
+              readinessTimer = window.setTimeout(
+                () =>
+                  subscriber.error(
+                    new Error('Timed out recovering video media')
+                  ),
+                30000
+              );
+              void playbackController
+                .recoverMedia()
+                .then((url) => {
+                  if (disposed || subscriber.closed) return;
+                  if (!url) {
+                    subscriber.error(
+                      new Error('Failed to recover video media')
+                    );
+                    return;
+                  }
+                  video.src = url;
+                  clearTimeout(readinessTimer);
+                  readinessTimer = window.setTimeout(
+                    () =>
+                      subscriber.error(
+                        new Error('Timed out loading recovered video metadata')
+                      ),
+                    15000
+                  );
+                  video.load();
+                })
+                .catch((error: unknown) => subscriber.error(error));
+              return;
+            }
+            subscriber.error(video.error ?? new Error('Video failed to load'));
           };
 
-          videoRef!.addEventListener('loadedmetadata', metadataHandler);
-          videoRef!.addEventListener('canplaythrough', handler);
-          videoRef!.addEventListener('error', errorHandler);
+          video.addEventListener('loadedmetadata', metadataHandler);
+          video.addEventListener('canplaythrough', handler);
+          if (playbackController) {
+            video.addEventListener('loadeddata', metadataHandler);
+            video.addEventListener('canplay', handler);
+            readinessTimer = window.setTimeout(() => {
+              if (video.readyState >= ReadyState.HAVE_METADATA) {
+                handler();
+              } else {
+                subscriber.error(new Error('Timed out loading video metadata'));
+              }
+            }, 15000);
+          }
+          video.addEventListener('error', errorHandler);
+
+          try {
+            video.load();
+          } catch (error) {
+            subscriber.error(error);
+          }
 
           return () => {
-            videoRef!.removeEventListener('loadedmetadata', metadataHandler);
-            videoRef!.removeEventListener('canplaythrough', handler);
-            videoRef!.removeEventListener('error', errorHandler);
+            clearTimeout(readinessTimer);
+            clearTimeout(metadataTimer);
+            video.removeEventListener('loadedmetadata', metadataHandler);
+            video.removeEventListener('canplaythrough', handler);
+            if (playbackController) {
+              video.removeEventListener('loadeddata', metadataHandler);
+              video.removeEventListener('canplay', handler);
+            }
+            video.removeEventListener('error', errorHandler);
           };
         });
-        videoRef.load();
       } else {
         // Video is already loaded, add timeline immediately
         addTimelineItem();
@@ -266,6 +389,13 @@ export const Video: Component<VideoProps> = (props) => {
         },
         error: (err) => {
           console.error('[Video] Error loading video:', err);
+          if (playbackController) {
+            props.globals.reportError?.({
+              category: 'media-load',
+              code: 'video-load-failed',
+              error: err,
+            });
+          }
           props.onReady();
         },
       });
@@ -292,7 +422,9 @@ export const Video: Component<VideoProps> = (props) => {
         </div>
       </Show>
       <video
-        ref={videoRef}
+        ref={(element) => {
+          videoRef = element;
+        }}
         data-component="video"
         data-name={props.name}
         style={{

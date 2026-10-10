@@ -131,6 +131,9 @@ defmodule Castmill.Application do
       Castmill.Repo,
       # Start the PubSub system
       {Phoenix.PubSub, name: Castmill.PubSub},
+      # Bound diagnostic ingestion from faulty or modified players.
+      Castmill.DeviceErrorRateLimiter,
+      Castmill.LegacyPlayerLogRateLimiter,
       # Start Finch
       {Finch, name: Castmill.Finch}
     ]
@@ -344,7 +347,7 @@ defmodule Castmill.Application do
     # compatible with environments whose database does not require encryption.
     ssl_opts =
       case Keyword.get(bullmq_pg_config, :ssl) do
-        nil -> []
+        ssl when ssl in [nil, false] -> []
         ssl -> [ssl: ssl]
       end
 

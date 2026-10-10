@@ -178,10 +178,8 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 
     // Grid pattern for visual guidance
-    background-image: linear-gradient(
-        rgba(255, 255, 255, 0.05) 1px,
-        transparent 1px
-      ),
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
       linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
     background-size: 10% 10%;
   }
@@ -201,45 +199,55 @@
     }
 
     &.selected {
-      box-shadow: inset 0 0 0 2px var(--cm-primary, #0066cc),
+      box-shadow:
+        inset 0 0 0 2px var(--cm-primary, #0066cc),
         0 0 0 2px rgba(var(--cm-primary-rgb, 0, 102, 204), 0.3);
     }
 
     &.aspect-locked {
       // Dashed effect using gradient for inset border
-      background-image: repeating-linear-gradient(
-        0deg,
-        var(--cm-primary, #0066cc),
-        var(--cm-primary, #0066cc) 4px,
-        transparent 4px,
-        transparent 8px
-      ),
-      repeating-linear-gradient(
-        90deg,
-        var(--cm-primary, #0066cc),
-        var(--cm-primary, #0066cc) 4px,
-        transparent 4px,
-        transparent 8px
-      ),
-      repeating-linear-gradient(
-        180deg,
-        var(--cm-primary, #0066cc),
-        var(--cm-primary, #0066cc) 4px,
-        transparent 4px,
-        transparent 8px
-      ),
-      repeating-linear-gradient(
-        270deg,
-        var(--cm-primary, #0066cc),
-        var(--cm-primary, #0066cc) 4px,
-        transparent 4px,
-        transparent 8px
-      );
-      background-size: 2px 100%, 100% 2px, 2px 100%, 100% 2px;
-      background-position: 0 0, 0 0, 100% 0, 0 100%;
+      background-image:
+        repeating-linear-gradient(
+          0deg,
+          var(--cm-primary, #0066cc),
+          var(--cm-primary, #0066cc) 4px,
+          transparent 4px,
+          transparent 8px
+        ),
+        repeating-linear-gradient(
+          90deg,
+          var(--cm-primary, #0066cc),
+          var(--cm-primary, #0066cc) 4px,
+          transparent 4px,
+          transparent 8px
+        ),
+        repeating-linear-gradient(
+          180deg,
+          var(--cm-primary, #0066cc),
+          var(--cm-primary, #0066cc) 4px,
+          transparent 4px,
+          transparent 8px
+        ),
+        repeating-linear-gradient(
+          270deg,
+          var(--cm-primary, #0066cc),
+          var(--cm-primary, #0066cc) 4px,
+          transparent 4px,
+          transparent 8px
+        );
+      background-size:
+        2px 100%,
+        100% 2px,
+        2px 100%,
+        100% 2px;
+      background-position:
+        0 0,
+        0 0,
+        100% 0,
+        0 100%;
       background-repeat: no-repeat;
       box-shadow: none;
-      
+
       &.selected {
         box-shadow: 0 0 0 2px rgba(var(--cm-primary-rgb, 0, 102, 204), 0.3);
       }
@@ -611,7 +619,9 @@
     border-radius: 0.25em;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     border-left: 2px solid var(--cm-primary, #0066cc);
-    transition: opacity 0.15s, border-color 0.15s;
+    transition:
+      opacity 0.15s,
+      border-color 0.15s;
 
     &.disabled {
       opacity: 0.5;

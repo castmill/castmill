@@ -632,6 +632,7 @@
     "confirmRemoveChannels": "Är du säker på att du vill ta bort följande kanaler?",
     "enterChannelName": "Ange kanalnamn",
     "defaultPlaylist": "Standardspellista",
+    "currentPlaylist": "Aktuell spellista",
     "selectPlaylist": "Välj spellista",
     "clearDefaultPlaylist": "Rensa standardspellista",
     "dragPlaylists": "Dra spellistor",
@@ -910,7 +911,9 @@
       "pending": "Väntar på konfiguration",
       "enterClientCredentials": "Ange dina {{provider}} API-uppgifter nedan:",
       "afterSavingCredentials": "Efter att du sparat dina uppgifter, klicka nedan för att auktorisera med {{provider}}:",
-      "networkCredentialsConfigured": "Din nätverksadministratör har redan konfigurerat {{provider}}-uppgifter. Klicka bara på knappen nedan för att ansluta ditt konto."
+      "networkCredentialsConfigured": "Din nätverksadministratör har redan konfigurerat {{provider}}-uppgifter. Klicka bara på knappen nedan för att ansluta ditt konto.",
+      "noConfigurationRequired": "Ingen konfiguration krävs",
+      "optional": "Valfritt"
     },
     "translations": "Översättningar"
   },
@@ -960,6 +963,7 @@
       "checkUpdatesDescription": "Sök efter uppdateringar och installera dem. Detta kommer inte att starta om enheten",
       "updateFirmware": "Uppdatera firmware",
       "updateFirmwareDescription": "Uppdaterar enhetens firmware",
+      "actionNotSupported": "Stöds inte.",
       "offlineMessage": "Enheten är offline, så inga kommandon kan skickas till den",
       "autorecoveryUpdated": "Autoåterställning har uppdaterats",
       "autorecoveryUpdateFailed": "Misslyckades med att uppdatera autoåterställning",
@@ -979,13 +983,13 @@
       "codeTab": "Kod",
       "mediaTab": "Media",
       "deleteSelected": "Ta bort valda objekt",
-      "clearAll": "Rensa Allt",
+      "clearAll": "Rensa Hela Cachen",
       "confirmDelete": "Ta bort Cachepost",
       "confirmDeleteMessage": "Är du säker på att du vill ta bort denna cachepost? URL: {{url}}",
       "confirmDeleteMultiple": "Ta bort Flera Poster",
       "confirmDeleteMultipleMessage": "Är du säker på att du vill ta bort {{count}} cacheposter?",
-      "confirmClearAll": "Rensa All Cache",
-      "confirmClearAllMessage": "Är du säker på att du vill rensa alla {{type}} cacheposter? Denna åtgärd kan inte ångras.",
+      "confirmClearAll": "Rensa Hela Cachen",
+      "confirmClearAllMessage": "Är du säker på att du vill rensa alla cacheposter för data, kod och media? Spelaren kommer att laddas om och åtgärden kan inte ångras.",
       "deleteSuccess": "Cachepost borttagen framgångsrikt",
       "deleteMultipleSuccess": "{{count}} cacheposter borttagna framgångsrikt",
       "clearAllSuccess": "Alla cacheposter rensade framgångsrikt",
@@ -1004,7 +1008,13 @@
       "confirmClearAll": "Rensa alla händelser",
       "confirmClearAllMessage": "Är du säker på att du vill ta bort alla händelser för denna enhet? Denna åtgärd kan inte ångras.",
       "clearAllSuccess": "{{count}} händelser har tagits bort",
-      "deleteError": "Fel vid borttagning av händelser: {{error}}"
+      "deleteError": "Fel vid borttagning av händelser: {{error}}",
+      "occurrences": "Förekomster",
+      "firstSeen": "Först sedd",
+      "lastSeen": "Senast sedd",
+      "details": "Detaljer",
+      "detailsTitle": "Feldetaljer",
+      "errorDetails": "Sanerade diagnostikdetaljer"
     },
     "errors": {
       "setChannelFailed": "Misslyckades att ställa in enhetskanal: {{error}}",
@@ -1045,11 +1055,24 @@
     "deviceDisabledSuccess": "Enheten \"{{name}}\" inaktiverades framgångsrikt",
     "errorUpdatingDevice": "Fel vid uppdatering av enheten {{name}}: {{error}}",
     "enterDescription": "Ange en beskrivning",
-    "drawerTitle": "Enhet \"{{name}}\""
+    "drawerTitle": "Enhet \"{{name}}\"",
+    "info": {
+      "title": "Information",
+      "platform": "Plattform",
+      "playerVersion": "Spelarversion",
+      "operatingSystem": "Operativsystem",
+      "hardware": "Maskinvara",
+      "environmentVersion": "Miljöversion",
+      "chromiumVersion": "Chromium-version",
+      "v8Version": "V8-version",
+      "nodeVersion": "Node.js-version",
+      "userAgent": "Användaragent"
+    }
   },
   "validation": {
     "fieldRequired": "Detta fält är obligatoriskt",
-    "minLength": "Detta fält måste vara minst {{min}} tecken långt"
+    "minLength": "Detta fält måste vara minst {{min}} tecken långt",
+    "invalidCoordinates": "Detta fält måste ha giltiga koordinater"
   },
   "plurals": {
     "items": {

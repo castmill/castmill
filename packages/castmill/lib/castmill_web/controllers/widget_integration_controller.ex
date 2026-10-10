@@ -179,9 +179,10 @@ defmodule CastmillWeb.WidgetIntegrationController do
       credential_schema == %{} ->
         false
 
-      # "optional" auth_type means credentials are not required upfront
-      # (e.g., RSS feeds that work without auth but optionally support Basic Auth)
-      Map.get(credential_schema, "auth_type") == "optional" ->
+      # "optional" or "none" auth_type means credentials are not required
+      # upfront (e.g., RSS feeds that work without auth but optionally support
+      # Basic Auth, or credential-free APIs like Open-Meteo).
+      Map.get(credential_schema, "auth_type") in ["optional", "none"] ->
         false
 
       # Has required auth_type (e.g., "oauth2", "api_key", "basic")
@@ -471,6 +472,9 @@ defmodule CastmillWeb.WidgetIntegrationController do
 
   Request body (optional):
     - options: Widget options to use for discriminator calculation (for widget_option type)
+    - preview: When true the fetch is ephemeral (used by the dashboard live
+      preview): data is cached but no background polling scheduler is created,
+      since the options being previewed may never be saved.
 
   Returns:
     - 200 with data if successfully fetched
@@ -495,11 +499,12 @@ defmodule CastmillWeb.WidgetIntegrationController do
 
       id ->
         widget_options = Map.get(params, "options", %{})
-        do_prefetch_widget_data(conn, organization_id, id, widget_options)
+        preview? = Map.get(params, "preview", false) in [true, "true"]
+        do_prefetch_widget_data(conn, organization_id, id, widget_options, preview?)
     end
   end
 
-  defp do_prefetch_widget_data(conn, organization_id, widget_id, widget_options) do
+  defp do_prefetch_widget_data(conn, organization_id, widget_id, widget_options, preview?) do
     # Get the widget's integrations
     case Integrations.list_integrations(widget_id: widget_id) do
       [] ->
@@ -511,7 +516,14 @@ defmodule CastmillWeb.WidgetIntegrationController do
       [integration | _] ->
         # Only handle PULL integrations with fetcher modules
         if integration.integration_type == "pull" do
-          prefetch_pull_integration(conn, organization_id, widget_id, integration, widget_options)
+          prefetch_pull_integration(
+            conn,
+            organization_id,
+            widget_id,
+            integration,
+            widget_options,
+            preview?
+          )
         else
           # PUSH integrations don't support prefetching
           conn
@@ -521,7 +533,15 @@ defmodule CastmillWeb.WidgetIntegrationController do
     end
   end
 
-  defp prefetch_pull_integration(conn, organization_id, widget_id, integration, widget_options) do
+  defp prefetch_pull_integration(
+         conn,
+         organization_id,
+         widget_id,
+         integration,
+         widget_options,
+         preview?
+       ) do
+    widget_options = Integrations.with_display_locale(organization_id, widget_options)
     pull_config = integration.pull_config || %{}
     credential_schema = integration.credential_schema || %{}
     fetcher_module_name = Map.get(pull_config, "fetcher_module")
@@ -532,7 +552,7 @@ defmodule CastmillWeb.WidgetIntegrationController do
       |> text("")
     else
       # Check if we already have cached data for this discriminator
-      discriminator_id = build_discriminator_id(integration, widget_options)
+      discriminator_id = build_discriminator_id(integration, widget_options, organization_id)
 
       case Integrations.get_integration_data_by_discriminator(integration.id, discriminator_id) do
         %Integrations.WidgetIntegrationData{} = data ->
@@ -558,7 +578,8 @@ defmodule CastmillWeb.WidgetIntegrationController do
             widget_options,
             fetcher_module_name,
             pull_config,
-            credential_schema
+            credential_schema,
+            preview?
           )
       end
     end
@@ -572,24 +593,15 @@ defmodule CastmillWeb.WidgetIntegrationController do
          widget_options,
          fetcher_module_name,
          pull_config,
-         credential_schema
+         _credential_schema,
+         preview?
        ) do
-    # Get credentials or use empty map for optional auth
-    auth_type =
-      Map.get(pull_config, "auth_type") ||
-        Map.get(credential_schema, "auth_type") ||
-        "required"
-
+    # Resolve credentials, merging network-level credentials (shared across the
+    # network, e.g. a commercial API key) with any organization-level ones.
     credentials =
-      case Integrations.get_organization_credentials(organization_id, integration.id) do
-        {:ok, creds} ->
-          creds
-
-        {:error, _reason} when auth_type in ["optional", "none"] ->
-          %{}
-
-        {:error, _reason} ->
-          nil
+      case Integrations.get_fetch_credentials(organization_id, integration) do
+        {:ok, creds} -> creds
+        {:error, _reason} -> nil
       end
 
     if is_nil(credentials) do
@@ -607,18 +619,21 @@ defmodule CastmillWeb.WidgetIntegrationController do
       case fetch_with_module(fetcher_module_name, credentials, merged_options) do
         {:ok, data, _creds} ->
           # Store the data
-          discriminator_id = build_discriminator_id(integration, widget_options)
+          discriminator_id = build_discriminator_id(integration, widget_options, organization_id)
 
           case store_fetched_data(organization_id, widget_id, integration, discriminator_id, data) do
             {:ok, integration_data} ->
-              # Schedule background polling for future updates
-              schedule_polling(
-                organization_id,
-                widget_id,
-                integration,
-                discriminator_id,
-                widget_options
-              )
+              # Schedule background polling for future updates, unless this is
+              # an ephemeral preview fetch whose options may never be saved.
+              unless preview? do
+                schedule_polling(
+                  organization_id,
+                  widget_id,
+                  integration,
+                  discriminator_id,
+                  widget_options
+                )
+              end
 
               filtered_data = apply_max_items_filter(integration_data.data, widget_options)
 
@@ -638,6 +653,13 @@ defmodule CastmillWeb.WidgetIntegrationController do
               |> put_status(:ok)
               |> json(%{data: nil, status: "error", message: "Failed to cache data"})
           end
+
+        {:error, reason, _creds} ->
+          Logger.warning("Prefetch failed for widget #{widget_id}: #{inspect(reason)}")
+
+          conn
+          |> put_status(:ok)
+          |> json(%{data: nil, status: "error", message: "Failed to fetch data"})
 
         {:error, reason} ->
           Logger.warning("Prefetch failed for widget #{widget_id}: #{inspect(reason)}")
@@ -696,7 +718,12 @@ defmodule CastmillWeb.WidgetIntegrationController do
 
     # Get the widget config to access its options for discriminator-based lookup
     widget_config = Widgets.get_widget_config_by_id(widget_config_id)
-    widget_options = (widget_config && widget_config.options) || %{}
+
+    widget_options =
+      Integrations.with_display_locale(
+        organization_id,
+        (widget_config && widget_config.options) || %{}
+      )
 
     widget_id =
       cond do
@@ -727,7 +754,12 @@ defmodule CastmillWeb.WidgetIntegrationController do
                    ) do
                 nil ->
                   # No cached data - try on-demand fetch for PULL integrations
-                  try_on_demand_fetch(organization_id, widget_config_id, widget_id)
+                  try_on_demand_fetch(
+                    organization_id,
+                    widget_config_id,
+                    widget_id,
+                    widget_options
+                  )
 
                 data ->
                   data
@@ -804,7 +836,7 @@ defmodule CastmillWeb.WidgetIntegrationController do
   defp apply_max_items_filter(data, _widget_options), do: data
 
   # Attempts to fetch data on-demand for PULL integrations when no cached data exists
-  defp try_on_demand_fetch(organization_id, widget_config_id, widget_id) do
+  defp try_on_demand_fetch(organization_id, widget_config_id, widget_id, widget_options) do
     alias Castmill.Widgets
 
     # Get the widget's integration
@@ -816,27 +848,16 @@ defmodule CastmillWeb.WidgetIntegrationController do
         # Only handle PULL integrations with fetcher modules
         if integration.integration_type == "pull" do
           pull_config = integration.pull_config || %{}
-          credential_schema = integration.credential_schema || %{}
           fetcher_module_name = Map.get(pull_config, "fetcher_module")
 
           if fetcher_module_name do
-            # Get credentials (already decrypted) or use empty map for optional auth
-            # auth_type can be in pull_config or credential_schema
-            auth_type =
-              Map.get(pull_config, "auth_type") ||
-                Map.get(credential_schema, "auth_type") ||
-                "required"
-
+            # Resolve credentials, merging network-level credentials (shared
+            # across the network, e.g. a commercial API key) with any
+            # organization-level ones. Optional/none auth yields an empty map.
             credentials =
-              case Integrations.get_organization_credentials(organization_id, integration.id) do
-                {:ok, creds} ->
-                  creds
-
-                {:error, _reason} when auth_type in ["optional", "none"] ->
-                  %{}
-
-                {:error, _reason} ->
-                  nil
+              case Integrations.get_fetch_credentials(organization_id, integration) do
+                {:ok, creds} -> creds
+                {:error, _reason} -> nil
               end
 
             if credentials do
@@ -845,11 +866,11 @@ defmodule CastmillWeb.WidgetIntegrationController do
                 nil ->
                   nil
 
-                widget_config ->
+                _widget_config ->
                   # Merge pull_config with widget_options so fetcher has access to both
                   # pull_config contains integration-level settings (like feed_url for RSS)
                   # widget_options contains widget instance settings (like max_items)
-                  merged_options = Map.merge(pull_config, widget_config.options || %{})
+                  merged_options = Map.merge(pull_config, widget_options || %{})
 
                   # Try to fetch data using the fetcher
                   case fetch_with_module(
@@ -860,7 +881,11 @@ defmodule CastmillWeb.WidgetIntegrationController do
                     {:ok, data, _creds} ->
                       # Store the data and return it
                       discriminator_id =
-                        build_discriminator_id(integration, widget_config.options || %{})
+                        build_discriminator_id(
+                          integration,
+                          widget_options || %{},
+                          organization_id
+                        )
 
                       case store_fetched_data(
                              organization_id,
@@ -876,7 +901,7 @@ defmodule CastmillWeb.WidgetIntegrationController do
                             widget_id,
                             integration,
                             discriminator_id,
-                            widget_config.options || %{}
+                            widget_options || %{}
                           )
 
                           integration_data
@@ -884,6 +909,9 @@ defmodule CastmillWeb.WidgetIntegrationController do
                         {:error, _reason} ->
                           nil
                       end
+
+                    {:error, _reason, _creds} ->
+                      nil
 
                     {:error, _reason} ->
                       nil
@@ -930,28 +958,8 @@ defmodule CastmillWeb.WidgetIntegrationController do
     end
   end
 
-  defp build_discriminator_id(integration, options) do
-    # For widget_option discriminators, also check pull_config for hardcoded values
-    # (e.g., RSS widgets have feed_url in pull_config, not in widget_options)
-    pull_config = integration.pull_config || %{}
-    merged_options = Map.merge(pull_config, options || %{})
-
-    case integration.discriminator_type do
-      "widget_option" ->
-        key = integration.discriminator_key || "id"
-
-        value =
-          Map.get(merged_options, key) || Map.get(merged_options, String.to_atom(key)) ||
-            "default"
-
-        "#{key}:#{value}"
-
-      "organization" ->
-        "org"
-
-      _ ->
-        "default"
-    end
+  defp build_discriminator_id(integration, options, organization_id) do
+    Integrations.build_discriminator_id(integration, options, organization_id)
   end
 
   defp store_fetched_data(organization_id, widget_id, integration, discriminator_id, data) do
@@ -1037,7 +1045,8 @@ defmodule CastmillWeb.WidgetIntegrationController do
       end
 
     if refresh_due do
-      discriminator_id = build_discriminator_id(integration, widget_options || %{})
+      discriminator_id =
+        build_discriminator_id(integration, widget_options || %{}, organization_id)
 
       schedule_polling(
         organization_id,

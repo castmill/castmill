@@ -20,7 +20,27 @@ defmodule CastmillWeb.Live.Admin.NetworkIntegrationForm do
         </p>
       </div>
 
+      <div
+        :if={@optional and @has_config_form}
+        class="mt-4 p-3 bg-blue-50 rounded-md border border-blue-200"
+      >
+        <p class="text-sm text-blue-800">
+          <span class="font-semibold">Optional</span>
+          - this integration can run without configured credentials. Configure credentials
+          below only if you want to use an authenticated mode. They are stored once for
+          the whole network and shared by all organizations.
+        </p>
+      </div>
+
+      <div :if={not @has_config_form} class="mt-4 p-3 bg-blue-50 rounded-md border border-blue-200">
+        <p class="text-sm text-blue-800">
+          <span class="font-semibold">No configuration required</span>
+          - this integration works without any credentials, so there is nothing to set up here.
+        </p>
+      </div>
+
       <.simple_form
+        :if={@has_config_form}
         for={@form}
         id="network-integration-form"
         phx-target={@myself}
@@ -63,10 +83,14 @@ defmodule CastmillWeb.Live.Admin.NetworkIntegrationForm do
         </:actions>
       </.simple_form>
 
-      <div :if={@has_existing} class="mt-4 p-3 bg-green-50 rounded-md border border-green-200">
+      <div
+        :if={@has_config_form && @has_existing}
+        class="mt-4 p-3 bg-green-50 rounded-md border border-green-200"
+      >
         <p class="text-sm text-green-800">
           <span class="font-semibold">✓ Configured</span>
-          - Credentials are stored and encrypted for this network.
+          - Credentials are stored and encrypted for this network. Leave secret fields
+          blank to keep the stored values, or use Delete Credentials to remove them.
         </p>
       </div>
     </div>
@@ -103,6 +127,9 @@ defmodule CastmillWeb.Live.Admin.NetworkIntegrationForm do
      |> assign(:credential_fields, credential_fields)
      |> assign(:has_existing, has_existing)
      |> assign(:is_enabled, is_enabled)
+     |> assign(:requires_config, Integrations.requires_network_credentials?(integration))
+     |> assign(:optional, get_in(integration.credential_schema, ["auth_type"]) == "optional")
+     |> assign(:has_config_form, credential_fields != [])
      |> assign_form(form_data)}
   end
 
@@ -127,7 +154,10 @@ defmodule CastmillWeb.Live.Admin.NetworkIntegrationForm do
     is_enabled = Map.has_key?(params, "is_enabled")
 
     # Extract only the credential fields (not is_enabled)
-    credentials = extract_credential_values(params, credential_fields)
+    credentials =
+      params
+      |> extract_credential_values(credential_fields)
+      |> preserve_stored_secrets(credential_fields, network_id, integration_id)
 
     # Validate required fields
     case validate_credentials(credentials, credential_fields) do
@@ -195,6 +225,45 @@ defmodule CastmillWeb.Live.Admin.NetworkIntegrationForm do
          |> put_flash(:error, "Failed to save credentials: #{inspect(reason)}")}
     end
   end
+
+  # Password inputs are always rendered blank, so a blank submitted value means
+  # "keep the stored secret" rather than "clear it". Use the Delete Credentials
+  # action to explicitly remove stored credentials.
+  defp preserve_stored_secrets(credentials, credential_fields, network_id, integration_id) do
+    blank_password_keys =
+      credential_fields
+      |> Enum.filter(fn field ->
+        field.type == :password and blank?(Map.get(credentials, field.key))
+      end)
+      |> Enum.map(& &1.key)
+
+    if blank_password_keys == [] do
+      credentials
+    else
+      stored = stored_network_credentials(network_id, integration_id)
+
+      Enum.reduce(blank_password_keys, credentials, fn key, acc ->
+        case Map.get(stored, to_string(key)) do
+          value when is_binary(value) and value != "" -> Map.put(acc, key, value)
+          _ -> acc
+        end
+      end)
+    end
+  end
+
+  defp stored_network_credentials(network_id, integration_id) do
+    with %{} = credential <- Integrations.get_network_credentials(network_id, integration_id),
+         {:ok, creds} when is_map(creds) <-
+           Integrations.NetworkIntegrationCredential.decrypt_credentials(credential) do
+      creds
+    else
+      _ -> %{}
+    end
+  end
+
+  defp blank?(nil), do: true
+  defp blank?(value) when is_binary(value), do: String.trim(value) == ""
+  defp blank?(_), do: false
 
   defp validate_credentials(credentials, credential_fields) do
     errors =

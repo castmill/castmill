@@ -44,7 +44,7 @@ defmodule Castmill.Widgets.WidgetConfig do
 
   def validate_data(changeset, field, schema_field) when is_atom(field) do
     validate_change(changeset, field, fn field, data ->
-      widget_id = changeset.changes.widget_id || changeset.data.widget_id
+      widget_id = Map.get(changeset.changes, :widget_id) || changeset.data.widget_id
 
       widget = Castmill.Widgets.get_widget(widget_id)
 

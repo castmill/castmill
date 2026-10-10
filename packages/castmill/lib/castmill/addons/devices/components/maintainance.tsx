@@ -115,6 +115,28 @@ export const Maintainance: Component<{
     return !props.device.online || handlingRequest();
   };
 
+  const isCommandSupported = (command: DeviceCommand) => {
+    const capabilities = props.device.info?.capabilities;
+
+    switch (command) {
+      case 'restart_app':
+        return capabilities?.restart === true;
+      case 'restart_device':
+        return capabilities?.reboot === true;
+      case 'update_app':
+        return capabilities?.update === true;
+      case 'update_firmware':
+        return capabilities?.updateFirmware === true;
+      case 'refresh':
+      case 'clear_cache':
+        return true;
+    }
+  };
+
+  const isCommandDisabled = (command: DeviceCommand) => {
+    return isDisabled() || !isCommandSupported(command);
+  };
+
   return (
     <div class="maintainance">
       <div class="maintainance-row autorecovery-row">
@@ -154,7 +176,7 @@ export const Maintainance: Component<{
       <div class="maintainance-row">
         <div class="button-wrapper">
           <Button
-            disabled={isDisabled()}
+            disabled={isCommandDisabled('refresh')}
             color="primary"
             label={t('devices.maintenance.refresh')}
             onClick={() => handleRequest('refresh')}
@@ -166,7 +188,7 @@ export const Maintainance: Component<{
       <div class="maintainance-row">
         <div class="button-wrapper">
           <Button
-            disabled={isDisabled()}
+            disabled={isCommandDisabled('clear_cache')}
             color="primary"
             label={t('devices.maintenance.clearCache')}
             onClick={() => handleRequest('clear_cache')}
@@ -178,47 +200,75 @@ export const Maintainance: Component<{
       <div class="maintainance-row">
         <div class="button-wrapper">
           <Button
-            disabled={isDisabled()}
+            disabled={isCommandDisabled('restart_app')}
             color="primary"
             label={t('devices.maintenance.restartApp')}
             onClick={() => handleRequest('restart_app')}
           />
         </div>
 
-        <p>{t('devices.maintenance.restartAppDescription')}</p>
+        <p>
+          {t('devices.maintenance.restartAppDescription')}
+          <Show when={!isCommandSupported('restart_app')}>
+            <span class="unsupported-message">
+              {t('devices.maintenance.actionNotSupported')}
+            </span>
+          </Show>
+        </p>
       </div>
       <div class="maintainance-row">
         <div class="button-wrapper">
           <Button
-            disabled={isDisabled()}
+            disabled={isCommandDisabled('restart_device')}
             color="primary"
             label={t('devices.maintenance.restartDevice')}
             onClick={() => handleRequest('restart_device')}
           />
         </div>
-        <p>{t('devices.maintenance.restartDeviceDescription')}</p>
+        <p>
+          {t('devices.maintenance.restartDeviceDescription')}
+          <Show when={!isCommandSupported('restart_device')}>
+            <span class="unsupported-message">
+              {t('devices.maintenance.actionNotSupported')}
+            </span>
+          </Show>
+        </p>
       </div>
       <div class="maintainance-row">
         <div class="button-wrapper">
           <Button
-            disabled={isDisabled()}
+            disabled={isCommandDisabled('update_app')}
             color="primary"
             label={t('devices.maintenance.checkUpdates')}
             onClick={() => handleRequest('update_app')}
           />
         </div>
-        <p>{t('devices.maintenance.checkUpdatesDescription')}</p>
+        <p>
+          {t('devices.maintenance.checkUpdatesDescription')}
+          <Show when={!isCommandSupported('update_app')}>
+            <span class="unsupported-message">
+              {t('devices.maintenance.actionNotSupported')}
+            </span>
+          </Show>
+        </p>
       </div>
       <div class="maintainance-row">
         <div class="button-wrapper">
           <Button
-            disabled={isDisabled()}
+            disabled={isCommandDisabled('update_firmware')}
             color="primary"
             label={t('devices.maintenance.updateFirmware')}
             onClick={() => handleRequest('update_firmware')}
           />
         </div>
-        <p>{t('devices.maintenance.updateFirmwareDescription')}</p>
+        <p>
+          {t('devices.maintenance.updateFirmwareDescription')}
+          <Show when={!isCommandSupported('update_firmware')}>
+            <span class="unsupported-message">
+              {t('devices.maintenance.actionNotSupported')}
+            </span>
+          </Show>
+        </p>
       </div>
 
       <Show when={!props.device.online}>

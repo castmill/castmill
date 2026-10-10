@@ -1,10 +1,28 @@
 import EventEmitter from 'eventemitter3';
 import { Observable, Subscription } from 'rxjs';
-import { finalize, share, tap, first, concatMap } from 'rxjs/operators';
+import { finalize, filter, share, tap, first, concatMap } from 'rxjs/operators';
 import { Playlist } from './playlist';
 import { Renderer, Viewport } from './renderer';
 
 const TIMER_RESOLUTION = 50;
+
+function timingChanged(previous: number[], current: number[]): boolean {
+  const total = current.reduce((acc, duration) => acc + duration, 0);
+  if (!Number.isFinite(total) || total <= 0) return false;
+  if (previous.length !== current.length) return true;
+  return current.some(
+    (duration, index) => Math.abs(duration - previous[index]) >= 1
+  );
+}
+
+export interface PlayerErrorReporter {
+  report(input: {
+    category: 'playback' | 'media-load' | 'runtime';
+    error: unknown;
+    code?: string;
+    context?: { layerName?: string };
+  }): void;
+}
 
 /**
  * Viewport
@@ -19,7 +37,8 @@ export class Player extends EventEmitter {
   constructor(
     private playlist: Playlist,
     private renderer: Renderer,
-    viewport?: Viewport
+    viewport?: Viewport,
+    private errorReporter?: PlayerErrorReporter
   ) {
     super();
 
@@ -62,6 +81,11 @@ export class Player extends EventEmitter {
 
     // Do we really need to seek here, since we also seek when doing "show"?
     const startTime = opts.synced ? baseline : this.playlist.time || 0;
+    // Layer offsets are snapshotted when playback starts, so compare each
+    // layer's duration: offsets can shift even when the total is unchanged.
+    const refreshOffsets = Boolean(opts.loop && !opts.synced);
+    const layerDurations = refreshOffsets ? this.playlist.layerDurations() : [];
+    let restartScheduled = false;
     const timer$ = this.playlist.seek(startTime).pipe(
       first(),
       concatMap(([time, duration]) => {
@@ -72,19 +96,44 @@ export class Player extends EventEmitter {
             if (value < currTime) {
               this.emit('end');
             }
+          }),
+          filter((value) => {
+            const wrapped = value < currTime;
             currTime = value;
+            if (restartScheduled) return false;
+            // Item offsets are computed when playback starts. Items without
+            // an explicit duration (e.g. videos) use a 10 s fallback until
+            // their media has loaded, so refresh the offsets at each loop
+            // once the real durations are known.
+            if (
+              wrapped &&
+              refreshOffsets &&
+              timingChanged(layerDurations, this.playlist.layerDurations())
+            ) {
+              restartScheduled = true;
+              // Restart outside of the timer callback that is emitting.
+              setTimeout(() => {
+                if (this.timerSubscription !== subscription) return;
+                this.stop();
+                this.playlist.time = 0;
+                this.play({ loop: true });
+              }, 0);
+              return false;
+            }
+            return true;
           })
         );
       }),
       share()
     );
 
-    this.timerSubscription = timer$.subscribe({
+    const subscription = (this.timerSubscription = timer$.subscribe({
       next: (time) => this.emit('time', time),
       error: (err) => {
         console.log('Timer error', err);
+        this.errorReporter?.report({ category: 'playback', error: err });
       },
-    });
+    }));
 
     this.playing = this.playlist
       .play(this.renderer, timer$, {
@@ -103,6 +152,7 @@ export class Player extends EventEmitter {
       .subscribe({
         error: (err) => {
           console.log('Playing error', err);
+          this.errorReporter?.report({ category: 'playback', error: err });
         },
         complete: () => {
           this.timerSubscription?.unsubscribe();
@@ -117,6 +167,15 @@ export class Player extends EventEmitter {
 
     this.timerSubscription = void 0;
     this.playing = void 0;
+  }
+
+  clear() {
+    this.stop();
+    this.renderer.clear();
+  }
+
+  getCurrentLayer() {
+    return this.renderer.getCurrentLayer();
   }
 }
 

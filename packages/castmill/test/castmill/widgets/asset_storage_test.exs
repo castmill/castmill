@@ -116,4 +116,19 @@ defmodule Castmill.Widgets.AssetStorageTest do
       assert Enum.at(fonts, 0)["name"] == "Valid Font"
     end
   end
+
+  describe "sanitize_public_icon/1" do
+    test "keeps existing static widget icon paths" do
+      assert AssetStorage.sanitize_public_icon("/widgets/weather/icon.svg") ==
+               "/widgets/weather/icon.svg"
+    end
+
+    test "returns nil for missing static widget icon paths" do
+      assert AssetStorage.sanitize_public_icon("/widgets/instagram-feed/icon.svg") == nil
+    end
+
+    test "keeps non-path icon glyphs" do
+      assert AssetStorage.sanitize_public_icon("🌤️") == "🌤️"
+    end
+  end
 end

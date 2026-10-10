@@ -1,3 +1,7 @@
+import type { DeviceInfo } from '@castmill/device';
+
+type DeviceCapabilities = NonNullable<DeviceInfo['capabilities']>;
+
 export interface Device {
   id: string;
   name: string;
@@ -12,5 +16,11 @@ export interface Device {
   updated_at: Date;
   autorecover_until?: string | null;
   enabled: boolean;
+  info?:
+    | (Partial<DeviceInfo> & { capabilities?: Partial<DeviceCapabilities> })
+    | null;
+  timezone?: string;
+  user_agent?: string;
+  version?: string;
   log_level: 'info' | 'warning' | 'error' | 'debug' | 'critical' | 'trace';
 }

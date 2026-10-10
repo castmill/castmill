@@ -8,6 +8,16 @@ export interface DeviceInfo {
   v8Version?: string; // The version of the V8 engine if available e.g. 9.8.0
   nodeVersion?: string; // The version of the Node.js if available e.g. 16.13.0
   userAgent: string; // The user agent string
+  capabilities?: DeviceCapabilities;
+}
+
+export interface DeviceCapabilities {
+  restart: boolean;
+  quit: boolean;
+  reboot: boolean;
+  shutdown: boolean;
+  update: boolean;
+  updateFirmware: boolean;
 }
 
 /**

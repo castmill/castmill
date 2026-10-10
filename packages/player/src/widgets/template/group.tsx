@@ -24,13 +24,15 @@ export class GroupComponent implements TemplateComponent {
     public style: JSX.CSSProperties,
     public components: TemplateComponentTypeUnion[] = [],
     public animations?: ComponentAnimation[],
-    public filter?: Record<string, any>
+    public filter?: Record<string, any>,
+    public $styles?: { filter: Record<string, any>; style: JSX.CSSProperties }[]
   ) {}
 
   static fromJSON(
     json: any,
     resourceManager: ResourceManager,
-    globals: PlayerGlobals
+    globals: PlayerGlobals,
+    config?: TemplateConfig
   ): GroupComponent {
     const components = json.components || [];
     return new GroupComponent(
@@ -40,10 +42,11 @@ export class GroupComponent implements TemplateComponent {
       json.opts,
       json.style,
       components.map((component: any) =>
-        TemplateComponent.fromJSON(component, resourceManager, globals)
+        TemplateComponent.fromJSON(component, resourceManager, globals, config)
       ),
       json.animations,
-      json.filter
+      json.filter,
+      json.$styles
     );
   }
 
@@ -77,7 +80,7 @@ export const Group: Component<GroupProps> = (props) => {
   };
 
   onCleanup(() => {
-    cleanUpAnimations && cleanUpAnimations();
+    cleanUpAnimations?.();
   });
 
   onMount(() => {

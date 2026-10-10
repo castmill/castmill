@@ -26,6 +26,7 @@ export const outbound = {
 
   // download API
   downloadFile: async function (path: string, localPath: string) {}, // localUrl: string
+  fileExists: async function (path: string) {},
   deleteFile: async function (path: string) {},
   deletePath: async function (path: string) {},
 

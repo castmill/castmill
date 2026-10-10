@@ -1,0 +1,13 @@
+{
+  "plugins": ["typescript", "unicorn", "oxc"],
+  "categories": {
+    "correctness": "error"
+  },
+  "rules": {
+    "no-unassigned-vars": "off"
+  },
+  "env": {
+    "builtin": true
+  },
+  "ignorePatterns": ["node_modules", "out", "dist", "build"]
+}

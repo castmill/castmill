@@ -72,16 +72,18 @@ export default function WidgetPreview({
     import('@castmill/cache')
       .then((cacheModule) => {
         const ResourceManager = cacheModule.ResourceManager;
-        
+
         // Create a simple pass-through resource manager for preview
         // Mock the cache to return URLs as-is
         const mockCache = {
           get: async (key: string) => ({ cachedUrl: key }),
-          set: async (key: string, type: any, mime: any, opts: any) => ({ cachedUrl: key }),
+          set: async (key: string, type: any, mime: any, opts: any) => ({
+            cachedUrl: key,
+          }),
           remove: async (key: string) => {},
           clear: async () => {},
         };
-        
+
         const resourceManager = new ResourceManager({
           storage: {
             get: async (key: string) => null,
@@ -90,7 +92,7 @@ export default function WidgetPreview({
           },
           target: 'web',
         });
-        
+
         // Override cache and getMedia to return URLs directly (pass-through)
         (resourceManager as any).cache = mockCache;
         resourceManager.getMedia = async (url: string) => url;
@@ -121,29 +123,35 @@ export default function WidgetPreview({
                 // Check if widget still exists and should play
                 if (isPlaying && widgetInstanceRef.current) {
                   // Import Observable from rxjs
-                  import('rxjs').then((rxjs) => {
-                    // Check again after async import
-                    if (!widgetInstanceRef.current) return;
-                    
-                    // Create a simple timer observable
-                    const timer$ = new rxjs.Observable<number>((subscriber) => {
-                      let frame = 0;
-                      const interval = setInterval(() => {
-                        subscriber.next(frame++);
-                      }, 16); // ~60fps
+                  import('rxjs')
+                    .then((rxjs) => {
+                      // Check again after async import
+                      if (!widgetInstanceRef.current) return;
 
-                      return () => clearInterval(interval);
-                    });
+                      // Create a simple timer observable
+                      const timer$ = new rxjs.Observable<number>(
+                        (subscriber) => {
+                          let frame = 0;
+                          const interval = setInterval(() => {
+                            subscriber.next(frame++);
+                          }, 16); // ~60fps
 
-                    // Store the subscription so we can unsubscribe later
-                    playSubscriptionRef.current = widgetInstanceRef.current.play(timer$).subscribe({
-                      error: (err: Error) => {
-                        console.error('Widget play error:', err);
-                      },
+                          return () => clearInterval(interval);
+                        }
+                      );
+
+                      // Store the subscription so we can unsubscribe later
+                      playSubscriptionRef.current = widgetInstanceRef.current
+                        .play(timer$)
+                        .subscribe({
+                          error: (err: Error) => {
+                            console.error('Widget play error:', err);
+                          },
+                        });
+                    })
+                    .catch((err) => {
+                      console.error('Failed to load rxjs:', err);
                     });
-                  }).catch((err) => {
-                    console.error('Failed to load rxjs:', err);
-                  });
                 }
                 setError(null);
               },
@@ -155,7 +163,9 @@ export default function WidgetPreview({
           }
         } catch (err) {
           console.error('Widget creation error:', err);
-          setError(`Failed to create widget: ${err instanceof Error ? err.message : String(err)}`);
+          setError(
+            `Failed to create widget: ${err instanceof Error ? err.message : String(err)}`
+          );
         }
       })
       .catch((err) => {
@@ -173,7 +183,7 @@ export default function WidgetPreview({
           console.warn('Unsubscribe error:', e);
         }
       }
-      
+
       // Clean up widget
       if (widgetInstanceRef.current) {
         try {
@@ -198,26 +208,30 @@ export default function WidgetPreview({
       setIsPlaying(false);
     } else {
       // Restart playing
-      import('rxjs').then((rxjs) => {
-        // Check if widget still exists after async import
-        if (!widgetInstanceRef.current) return;
-        
-        const timer$ = new rxjs.Observable<number>((subscriber) => {
-          let frame = 0;
-          const interval = setInterval(() => {
-            subscriber.next(frame++);
-          }, 16);
-          return () => clearInterval(interval);
-        });
+      import('rxjs')
+        .then((rxjs) => {
+          // Check if widget still exists after async import
+          if (!widgetInstanceRef.current) return;
 
-        playSubscriptionRef.current = widgetInstanceRef.current.play(timer$).subscribe({
-          error: (err: Error) => {
-            console.error('Widget play error:', err);
-          },
+          const timer$ = new rxjs.Observable<number>((subscriber) => {
+            let frame = 0;
+            const interval = setInterval(() => {
+              subscriber.next(frame++);
+            }, 16);
+            return () => clearInterval(interval);
+          });
+
+          playSubscriptionRef.current = widgetInstanceRef.current
+            .play(timer$)
+            .subscribe({
+              error: (err: Error) => {
+                console.error('Widget play error:', err);
+              },
+            });
+        })
+        .catch((err) => {
+          console.error('Failed to load rxjs:', err);
         });
-      }).catch((err) => {
-        console.error('Failed to load rxjs:', err);
-      });
       setIsPlaying(true);
     }
   };
@@ -226,7 +240,7 @@ export default function WidgetPreview({
     if (!widgetInstanceRef.current) return;
 
     widgetInstanceRef.current.seek(0).subscribe();
-    
+
     if (!isPlaying) {
       handlePlayPause();
     }
@@ -243,12 +257,15 @@ export default function WidgetPreview({
           >
             {isPlaying ? '⏸' : '▶️'}
           </button>
-          <button 
-            onClick={handleRestart} 
-            className={styles.controlButton} 
+          <button
+            onClick={handleRestart}
+            className={styles.controlButton}
             title="Restart"
             disabled={!isPlaying}
-            style={{ opacity: isPlaying ? 1 : 0.5, cursor: isPlaying ? 'pointer' : 'not-allowed' }}
+            style={{
+              opacity: isPlaying ? 1 : 0.5,
+              cursor: isPlaying ? 'pointer' : 'not-allowed',
+            }}
           >
             ↻
           </button>
@@ -261,10 +278,16 @@ export default function WidgetPreview({
         </div>
       ) : !TemplateWidget ? (
         <div className={styles.widgetContainer} style={{ height }}>
-          <div style={{ padding: '2rem', textAlign: 'center' }}>Loading widget player...</div>
+          <div style={{ padding: '2rem', textAlign: 'center' }}>
+            Loading widget player...
+          </div>
         </div>
       ) : (
-        <div ref={containerRef} className={styles.widgetContainer} style={{ height }} />
+        <div
+          ref={containerRef}
+          className={styles.widgetContainer}
+          style={{ height }}
+        />
       )}
     </div>
   );

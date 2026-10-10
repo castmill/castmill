@@ -14,11 +14,14 @@ import {
   Widget,
 } from './widgets';
 import { of, Observable } from 'rxjs';
-import { catchError, last, map, takeUntil } from 'rxjs/operators';
+import { catchError, last, map, tap, takeUntil } from 'rxjs/operators';
 import { JsonLayer, JsonPlaylist } from './interfaces';
 import { Transition, fromJSON } from './transitions';
 import { applyCss, parseAspectRatio } from './utils';
-import { PlayerGlobals } from './interfaces/player-globals.interface';
+import {
+  PlayerGlobals,
+  PlayerRuntimeError,
+} from './interfaces/player-globals.interface';
 
 /**
  * Computes style for a widget based on its aspect ratio.
@@ -48,8 +51,31 @@ function computeWidgetStyle(
   };
 }
 
+export interface LayerDebugInfo {
+  widget?: string;
+  type?: string;
+  media?: string;
+}
+
+function findMediaName(options?: Record<string, unknown>): string | undefined {
+  if (!options) return;
+  const keys = Object.keys(options);
+  for (let i = 0; i < keys.length; i++) {
+    const value = options[keys[i]] as { name?: unknown; files?: unknown };
+    if (
+      value &&
+      typeof value === 'object' &&
+      value.files &&
+      typeof value.name === 'string'
+    ) {
+      return value.name;
+    }
+  }
+}
+
 export class Layer extends EventEmitter {
   el: HTMLElement;
+  debugInfo: LayerDebugInfo = {};
   offset = 0;
   transition?: Transition;
   slack: number = 0;
@@ -58,6 +84,8 @@ export class Layer extends EventEmitter {
   private _duration = 0;
   private widgetAspectRatio: number | null = null;
   private resizeObserver: ResizeObserver | null = null;
+  private resizeListener: (() => void) | null = null;
+  private globals?: PlayerGlobals;
 
   /**
    * Gets the effective aspect ratio for a widget.
@@ -120,6 +148,12 @@ export class Layer extends EventEmitter {
       widget,
       widgetAspectRatio: effectiveAspectRatio,
     });
+    layer.debugInfo = {
+      widget: json.widget.name,
+      type: json.widget.template?.type,
+      media: findMediaName(json.config?.options),
+    };
+    layer.forwardErrors(globals);
 
     return layer;
   }
@@ -182,9 +216,15 @@ export class Layer extends EventEmitter {
 
     // Don't pass explicit duration - let Layer.duration() use widget.duration()
     // which will calculate based on the actual content
-    return new Layer(playlist.name, {
+    const layer = new Layer(playlist.name, {
       widget,
     });
+    layer.debugInfo = {
+      widget: 'playlist',
+      type: TemplateComponentType.Layout,
+    };
+    layer.forwardErrors(globals);
+    return layer;
   }
 
   constructor(
@@ -229,50 +269,79 @@ export class Layer extends EventEmitter {
     }
   }
 
+  private forwardErrors(globals: PlayerGlobals): void {
+    this.globals = globals;
+    this.on('error', (error) => {
+      globals.reportError?.({ category: 'playback', error });
+    });
+  }
+
   /**
    * Sets up a ResizeObserver to dynamically compute widget dimensions based on container size.
    * Computes actual width/height values that maintain the widget's aspect ratio while fitting
    * within the container (object-fit: contain behavior).
    */
   private setupResizeObserver() {
+    if (typeof ResizeObserver === 'undefined') {
+      this.resizeListener = () => this.updateWidgetDimensions();
+      window.addEventListener('resize', this.resizeListener);
+      this.updateWidgetDimensions();
+      return;
+    }
+
     this.resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
-        const { width, height } = entry.contentRect;
-        if (width === 0 || height === 0) continue;
-
-        const containerRatio = width / height;
-        const widgetRatio = this.widgetAspectRatio!;
-
-        // Find the widget element (first child of the layer)
-        const widgetEl = this.el.firstElementChild as HTMLElement;
-        if (!widgetEl) continue;
-
-        // Calculate dimensions to fit within container while maintaining aspect ratio
-        let computedWidth: number;
-        let computedHeight: number;
-
-        if (widgetRatio > containerRatio) {
-          // Widget is wider relative to container - width is the constraint
-          computedWidth = width;
-          computedHeight = width / widgetRatio;
-        } else {
-          // Widget is taller relative to container - height is the constraint
-          computedHeight = height;
-          computedWidth = height * widgetRatio;
-        }
-
-        // Apply computed dimensions
-        widgetEl.style.width = `${computedWidth}px`;
-        widgetEl.style.height = `${computedHeight}px`;
-        widgetEl.style.minWidth = `${computedWidth}px`;
+        this.updateWidgetDimensions(entry.contentRect);
       }
     });
 
     this.resizeObserver.observe(this.el);
   }
 
+  private updateWidgetDimensions(
+    bounds: Pick<
+      DOMRectReadOnly,
+      'width' | 'height'
+    > = this.el.getBoundingClientRect()
+  ) {
+    const { width, height } = bounds;
+    if (width === 0 || height === 0 || this.widgetAspectRatio === null) return;
+
+    const widgetEl = this.el.firstElementChild as HTMLElement;
+    if (!widgetEl) return;
+
+    const containerRatio = width / height;
+    const widgetRatio = this.widgetAspectRatio;
+    let computedWidth: number;
+    let computedHeight: number;
+
+    if (widgetRatio > containerRatio) {
+      computedWidth = width;
+      computedHeight = width / widgetRatio;
+    } else {
+      computedHeight = height;
+      computedWidth = height * widgetRatio;
+    }
+
+    widgetEl.style.width = `${computedWidth}px`;
+    widgetEl.style.height = `${computedHeight}px`;
+    widgetEl.style.minWidth = `${computedWidth}px`;
+  }
+
   toggleDebug() {
     this.widget?.toggleDebug();
+  }
+
+  /**
+   * Emits why the layer cannot play right now, e.g. a video waiting for a
+   * hardware decoder, or undefined when it can.
+   */
+  blocked$(): Observable<PlayerRuntimeError | undefined> {
+    return this.widget ? this.widget.blocked$() : of(undefined);
+  }
+
+  reportError(input: PlayerRuntimeError): void {
+    this.globals?.reportError?.(input);
   }
 
   public unload() {
@@ -280,6 +349,10 @@ export class Layer extends EventEmitter {
     if (this.resizeObserver) {
       this.resizeObserver.disconnect();
       this.resizeObserver = null;
+    }
+    if (this.resizeListener) {
+      window.removeEventListener('resize', this.resizeListener);
+      this.resizeListener = null;
     }
 
     this.widget?.seek(0);
@@ -314,12 +387,22 @@ export class Layer extends EventEmitter {
   }
 
   show(offset: number) {
+    if (
+      this.widgetAspectRatio !== null &&
+      !this.resizeObserver &&
+      !this.resizeListener
+    ) {
+      this.setupResizeObserver();
+    }
+
     if (this.widget) {
       return this.widget.show(this.el, offset).pipe(
+        tap(() => this.updateWidgetDimensions()),
         catchError((err) => {
           // TODO: we should show more information about this error. Which widget? and which options?
           // for instance a common failure is a video or image that failed to be downloaded.
           console.error(`Layer: show widget error`, err);
+          this.emit('error', err);
           return of('error');
         })
       );

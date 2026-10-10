@@ -1,3 +1,4 @@
+/* oxlint-disable no-unused-expressions */
 import { describe, expect, it } from 'vitest';
 import { Channel } from '../src/classes/channel';
 

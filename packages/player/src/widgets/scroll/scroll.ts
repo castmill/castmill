@@ -219,7 +219,6 @@ export class Scroll {
       );
     }
 
-    this.text = text;
     this.headChunk = 0;
     this.tailChunk = 1;
     this.index = { str: 0, char: 0 };

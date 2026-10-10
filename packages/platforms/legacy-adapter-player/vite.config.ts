@@ -1,12 +1,63 @@
 /// <reference types="vitest" />
 /// <reference types="vite/client" />
 
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
 import solidPlugin from 'vite-plugin-solid';
 import legacy from '@vitejs/plugin-legacy';
+import { readdir, readFile, writeFile } from 'node:fs/promises';
+import { join, relative, resolve } from 'node:path';
+import { createAppShellWorker } from './build/app-shell-worker';
+
+const collectOutputFiles = async (
+  outputDirectory: string,
+  directory: string = outputDirectory
+): Promise<Array<{ fileName: string; contents: Uint8Array }>> => {
+  const entries = await readdir(directory, { withFileTypes: true });
+  const files = await Promise.all(
+    entries.map(async (entry) => {
+      const path = join(directory, entry.name);
+      if (entry.isDirectory()) {
+        return collectOutputFiles(outputDirectory, path);
+      }
+
+      return [
+        {
+          fileName: relative(outputDirectory, path).replaceAll('\\', '/'),
+          contents: await readFile(path),
+        },
+      ];
+    })
+  );
+
+  return files.flat();
+};
+
+const legacyAppShellWorker = (): Plugin => {
+  let outputDirectory: string;
+  let base: string;
+
+  return {
+    name: 'legacy-app-shell-worker',
+    apply: 'build',
+    enforce: 'post',
+    configResolved(config) {
+      outputDirectory = resolve(config.root, config.build.outDir);
+      base = config.base;
+    },
+    async closeBundle() {
+      const files = await collectOutputFiles(outputDirectory);
+
+      await writeFile(
+        join(outputDirectory, 'sw.js'),
+        createAppShellWorker({ base, files })
+      );
+    },
+  };
+};
 
 export default defineConfig({
   plugins: [
+    legacyAppShellWorker(),
     legacy({
       targets: {
         chrome: '38',
@@ -125,7 +176,7 @@ export default defineConfig({
         'es.string.trim',
       ],
     }),
-    /* 
+    /*
     Uncomment the following line to enable solid-devtools.
     For more info see https://github.com/thetarnav/solid-devtools/tree/main/packages/extension#readme
     */
@@ -146,9 +197,8 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     // setupFiles: ['node_modules/@testing-library/jest-dom/vitest'],
-    // if you have few tests, try commenting this
-    // out to improve performance:
-    isolate: false,
+    // WebOS tests disable IndexedDB; Android cache tests need a fresh environment.
+    isolate: true,
   },
   build: {
     minify: false,

@@ -178,8 +178,15 @@ export const IntegrationsList: Component<IntegrationsListProps> = (props) => {
     if (integration.credential?.is_valid) {
       return t('widgets.integrations.configured');
     }
-    if (integration.credential_schema?.auth_type) {
-      return t('widgets.integrations.notConfigured');
+    // Optionally-authenticated integrations (e.g. Open-Meteo, free for
+    // non-commercial use, API key only needed for commercial use) work without
+    // credentials, so surface them as optional rather than "not configured".
+    if (integration.credential_schema?.auth_type === 'optional') {
+      return t('widgets.integrations.optional');
+    }
+    // Auth-free integrations don't require any credentials.
+    if (!requiresConfiguration(integration)) {
+      return t('widgets.integrations.noConfigurationRequired');
     }
     return t('widgets.integrations.notConfigured');
   };
@@ -193,6 +200,14 @@ export const IntegrationsList: Component<IntegrationsListProps> = (props) => {
     if (integration.credential?.is_valid) {
       return 'configured';
     }
+    const authType = integration.credential_schema?.auth_type;
+    if (
+      authType === 'optional' ||
+      authType === 'none' ||
+      !requiresConfiguration(integration)
+    ) {
+      return 'configured';
+    }
     return 'not-configured';
   };
 
@@ -204,6 +219,13 @@ export const IntegrationsList: Component<IntegrationsListProps> = (props) => {
   ): boolean => {
     const schema = integration.credential_schema;
     if (!schema) return false;
+
+    // Optional/credential-free integrations are not configured per widget or
+    // organization. Optional commercial credentials (e.g. an Open-Meteo API key)
+    // are managed once at the network level by an administrator.
+    if (schema.auth_type === 'optional' || schema.auth_type === 'none') {
+      return false;
+    }
 
     // Has OAuth config or credential fields
     return (

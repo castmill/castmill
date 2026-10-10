@@ -19,6 +19,7 @@
  *
  */
 import { Layer } from './layer';
+import { DebugOverlay } from './debug';
 import { Transition } from './transitions/transition';
 import { combineLatest, Observable, of } from 'rxjs';
 import { finalize, switchMap, tap, map } from 'rxjs/operators';
@@ -39,12 +40,16 @@ export class Renderer {
   public volume: number = 0;
 
   private currentLayer?: Layer;
+  private pendingLayer?: Layer;
   private currentTransition?: Transition;
 
   private debugLayer?: HTMLElement;
 
+  readonly debugOverlay: DebugOverlay;
+
   constructor(el: HTMLElement) {
     this.el = el;
+    this.debugOverlay = new DebugOverlay(el);
   }
 
   setViewport(viewport: Viewport) {
@@ -57,15 +62,9 @@ export class Renderer {
         25 - viewport.left
       }%, ${25 - viewport.top}%)`;
 
-      this.el.style.clip = `rect(0px, ${width / scale}px, ${
-        height / scale
-      }px, 0px)`;
-      this.el.style.webkitMaskClip = `rect(0px, ${width / scale}px, ${
-        height / scale
-      }px, 0px)`;
-      this.el.style.clipPath = `inset(0px ${width / scale}px ${
-        height / scale
-      }px 0px)`;
+      this.el.style.clip = `rect(0px, ${width / scale}px, ${height / scale}px, 0px)`;
+      this.el.style.webkitMaskClip = `rect(0px, ${width / scale}px, ${height / scale}px, 0px)`;
+      this.el.style.clipPath = `inset(0px ${width / scale}px ${height / scale}px 0px)`;
     } else {
       const newWidth = 100 * (100 / viewport.width);
       const newHeight = 100 * (100 / viewport.height);
@@ -135,6 +134,39 @@ export class Renderer {
     }
   }
 
+  private removeLayer(layer?: Layer) {
+    if (!layer) {
+      return;
+    }
+
+    layer.unload();
+    layer.el.parentElement?.removeChild(layer.el);
+  }
+
+  private clearPendingLayer(layer = this.pendingLayer) {
+    if (!layer) {
+      return;
+    }
+
+    if (this.pendingLayer === layer) {
+      delete this.pendingLayer;
+    }
+
+    if (layer !== this.currentLayer) {
+      this.removeLayer(layer);
+    }
+  }
+
+  private setPendingLayer(layer: Layer) {
+    const previousPendingLayer = this.pendingLayer;
+
+    if (previousPendingLayer && previousPendingLayer !== layer) {
+      this.clearPendingLayer(previousPendingLayer);
+    }
+
+    this.pendingLayer = layer;
+  }
+
   /**
    * Shows the layer, i.e. it displays it on the screen, performing an optional transition animation
    * between previous and this new layer.
@@ -148,16 +180,24 @@ export class Renderer {
     if (prevLayer) {
       prevLayer.el.style.zIndex = '1000';
       if (prevLayer === layer) {
+        if (this.pendingLayer && this.pendingLayer !== layer) {
+          this.clearPendingLayer(this.pendingLayer);
+        }
         return of('layer:show:end');
       }
     }
 
     layer.el.style.zIndex = '0';
     layer.el.style.visibility = 'hidden';
+    this.setPendingLayer(layer);
     this.el.appendChild(layer.el);
 
     return layer.show(offset).pipe(
       finalize(() => {
+        if (this.pendingLayer !== layer && this.currentLayer !== layer) {
+          return;
+        }
+
         layer.el.style.visibility = 'visible';
 
         // If we have a current transition and but a new one is requested
@@ -180,10 +220,12 @@ export class Renderer {
             }
             transition.seek(transition.duration);
           }
-          prevLayer.unload();
-          prevLayer.el.parentElement?.removeChild(prevLayer.el);
+          this.removeLayer(prevLayer);
         }
         this.currentLayer = layer;
+        if (this.pendingLayer === layer) {
+          delete this.pendingLayer;
+        }
       })
     );
   }
@@ -202,12 +244,17 @@ export class Renderer {
     }
     return observable$.pipe(
       tap(() => {
+        if (this.pendingLayer !== layer && this.currentLayer !== layer) {
+          return;
+        }
+
         if (prevLayer && prevLayer != layer) {
-          prevLayer.unload();
-          const prevEl = prevLayer.el;
-          prevEl.parentElement?.removeChild(prevEl);
+          this.removeLayer(prevLayer);
         }
         this.currentLayer = layer;
+        if (this.pendingLayer === layer) {
+          delete this.pendingLayer;
+        }
       })
     );
   }
@@ -227,6 +274,7 @@ export class Renderer {
     return layer.seek(offset).pipe(
       switchMap(() => {
         // We need to append BEFORE we show, so that Autofittext works properly.
+        this.setPendingLayer(layer);
         this.el.appendChild(layer.el);
         return layer.show(offset).pipe(
           switchMap(() => {
@@ -243,6 +291,42 @@ export class Renderer {
 
   seek(offset: number) {
     return this.currentLayer?.seek(offset);
+  }
+
+  clear() {
+    this.currentTransition?.reset();
+    delete this.currentTransition;
+
+    const currentLayer = this.currentLayer;
+    if (currentLayer) {
+      this.removeLayer(currentLayer);
+      delete this.currentLayer;
+    }
+
+    const pendingLayer = this.pendingLayer;
+    if (pendingLayer && pendingLayer !== currentLayer) {
+      this.clearPendingLayer(pendingLayer);
+    }
+    delete this.pendingLayer;
+  }
+
+  /**
+   * Removes the visible layer, unless it is `keep`, leaving the area empty
+   * until the next layer is shown.
+   */
+  blank(keep?: Layer) {
+    const currentLayer = this.currentLayer;
+    if (!currentLayer || currentLayer === keep) {
+      return;
+    }
+    this.currentTransition?.reset();
+    delete this.currentTransition;
+    this.removeLayer(currentLayer);
+    delete this.currentLayer;
+  }
+
+  getCurrentLayer() {
+    return this.currentLayer;
   }
 
   async clean() {

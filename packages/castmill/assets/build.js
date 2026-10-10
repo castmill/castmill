@@ -37,7 +37,11 @@ let baseOpts = {
   logLevel: 'debug',
   target: 'es2017',
   format: 'esm', // Use ES Module format
-  external: ['/fonts/*', '/images/*'],
+  external: [
+    '/fonts/*',
+    '/images/*',
+    /*'solid-js', 'solid-js/web',  */ '@solidjs/router',
+  ], // Mark fonts, images, and SolidJS router as external
   // packages: 'external',
   platform: 'browser',
   loader: {
@@ -55,8 +59,6 @@ let baseOpts = {
     inlineCSSPlugin,
     solidPlugin(),
   ],
-  // TODO: It would be important to be able to mark SolidJS as external as it takes a lot of Kb per component otherwise
-  external: [/*'solid-js', 'solid-js/web',  */ '@solidjs/router'], // Mark SolidJS and its modules as external
 };
 
 // Add minify option for deployment

@@ -3,8 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt .",
     "docusaurus": "docusaurus",
     "start": "docusaurus start",
     "build": "docusaurus build",
@@ -16,7 +16,8 @@
     "write-heading-ids": "docusaurus write-heading-ids",
     "typecheck": "tsc",
     "social-cards": "node scripts/generate-social-images.js",
-    "build:full": "yarn build && yarn social-cards"
+    "build:full": "yarn build && yarn social-cards",
+    "lint": "oxlint ."
   },
   "dependencies": {
     "@castmill/cache": "*",
@@ -38,7 +39,6 @@
   "devDependencies": {
     "@docusaurus/module-type-aliases": "^3.9.0",
     "@tsconfig/docusaurus": "^1.0.5",
-    "prettier": "^3.2.5",
     "puppeteer": "^24.22.3",
     "typescript": "^5.4.5"
   },

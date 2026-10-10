@@ -70,6 +70,7 @@ import {
   AddonComponentProps,
 } from '../../common/interfaces/addon-store';
 import { useTeamFilter, useModalFromUrl } from '../../common/hooks';
+import { getThumbnailProgress } from './thumbnail-status';
 
 const MediasPage: Component<AddonComponentProps> = (props) => {
   // Get i18n functions from store
@@ -685,9 +686,9 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
   };
 
   const renderThumbnailFallback = (item: JsonMedia) => {
-    const progress = Number.parseFloat(item.status_message || '');
+    const progress = getThumbnailProgress(item);
 
-    if (item.status === 'transcoding' && Number.isFinite(progress)) {
+    if (progress !== null) {
       return <CircularProgress progress={progress} />;
     }
 

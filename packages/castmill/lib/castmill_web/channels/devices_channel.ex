@@ -43,6 +43,51 @@ defmodule CastmillWeb.DevicesChannel do
   end
 
   @impl true
+  def handle_in(
+        "errors:report",
+        %{
+          "reports" => reports,
+          "dropped_count" => dropped_count,
+          "dropped_report_id" => dropped_report_id
+        },
+        socket
+      ) do
+    device_id = socket.assigns.device.device_id
+
+    with {:ok, reports, dropped_count, dropped_report_id} <-
+           Devices.validate_error_reports(reports, dropped_count, dropped_report_id),
+         :ok <- allow_error_reports(socket, reports, dropped_count),
+         {:ok, :ok} <-
+           Devices.upsert_error_reports(device_id, reports, dropped_count, dropped_report_id) do
+      {:reply, {:ok, %{accepted_report_ids: Enum.map(reports, & &1.report_id)}}, socket}
+    else
+      {:error, reason} ->
+        {:reply, {:error, %{reason: error_report_failure_reason(reason)}}, socket}
+    end
+  end
+
+  def handle_in(
+        "errors:report",
+        %{"reports" => reports, "dropped_count" => dropped_count},
+        socket
+      ) do
+    device_id = socket.assigns.device.device_id
+
+    with {:ok, reports, dropped_count} <- Devices.validate_error_reports(reports, dropped_count),
+         :ok <- allow_error_reports(socket, reports, dropped_count),
+         {:ok, :ok} <- Devices.upsert_error_reports(device_id, reports, dropped_count) do
+      {:reply, {:ok, %{accepted_report_ids: Enum.map(reports, & &1.report_id)}}, socket}
+    else
+      {:error, reason} ->
+        {:reply, {:error, %{reason: error_report_failure_reason(reason)}}, socket}
+    end
+  end
+
+  def handle_in("errors:report", _payload, socket) do
+    {:reply, {:error, %{reason: "invalid_error_report_batch"}}, socket}
+  end
+
+  @impl true
   def handle_in("res:get", %{"ref" => ref, "page" => page}, socket) do
     # Convert the PID ref string back to a PID
     pid =
@@ -104,7 +149,7 @@ defmodule CastmillWeb.DevicesChannel do
     # Forward the response to the controller that made the request
     send(pid, {:device_response, result})
 
-    {:noreply, socket}
+    {:reply, :ok, socket}
   end
 
   # Not sure we should use the socket connection for getting stufff, seems conterintuitive
@@ -181,6 +226,12 @@ defmodule CastmillWeb.DevicesChannel do
   @impl true
   def handle_info(%{event: "channel_removed"} = message, socket) do
     push(socket, "channel_removed", message)
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info(%{event: "playlist_updated"} = message, socket) do
+    push(socket, "playlist_updated", message)
     {:noreply, socket}
   end
 
@@ -290,5 +341,13 @@ defmodule CastmillWeb.DevicesChannel do
     Phoenix.PubSub.broadcast(Castmill.PubSub, "device_updates:#{device_id}", %{online: true})
 
     Devices.mark_online(device_id, ip_string)
+  end
+
+  defp error_report_failure_reason(reason) when is_atom(reason), do: Atom.to_string(reason)
+  defp error_report_failure_reason(_reason), do: "error_report_persistence_failed"
+
+  defp allow_error_reports(socket, reports, dropped_count) do
+    report_count = max(length(reports) + if(dropped_count > 0, do: 1, else: 0), 1)
+    Castmill.DeviceErrorRateLimiter.allow(socket.assigns.device.device_id, report_count)
   end
 end

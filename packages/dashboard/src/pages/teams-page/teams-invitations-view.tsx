@@ -159,7 +159,7 @@ export const TeamInvitationsView = (props: {
 
   createEffect(() => {
     // Trigger refresh when team changes
-    props.teamId;
+    void props.teamId;
     refreshData();
   });
 
