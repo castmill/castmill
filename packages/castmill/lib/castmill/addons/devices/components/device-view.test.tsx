@@ -21,6 +21,8 @@ vi.mock('./device-details', () => ({
     </button>
   ),
 }));
+// The preview tab pulls in the built player bundle, which this suite does not need.
+vi.mock('./device-preview', () => ({ DevicePreview: () => null }));
 vi.mock('../services/devices.service', () => ({
   DevicesService: { updateDevice: vi.fn() },
 }));

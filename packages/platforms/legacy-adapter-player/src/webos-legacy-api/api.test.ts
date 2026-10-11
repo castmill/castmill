@@ -77,7 +77,7 @@ describe('WebOS wrapper bridge', () => {
   });
 
   it('cleans up the deadline when posting to the wrapper fails', async () => {
-    vi.useFakeTimers();
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
     const post = vi
       .spyOn(window.parent, 'postMessage')
       .mockImplementation(() => {
@@ -93,7 +93,7 @@ describe('WebOS wrapper bridge', () => {
   });
 
   it('rejects an unresponsive wrapper and ignores its late acknowledgement', async () => {
-    vi.useFakeTimers();
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
     const post = vi
       .spyOn(window.parent, 'postMessage')
       .mockImplementation(() => {});

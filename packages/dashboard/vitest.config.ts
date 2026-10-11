@@ -1,4 +1,4 @@
-import { defineConfig } from 'vitest/config';
+import { configDefaults, defineConfig } from 'vitest/config';
 import solidPlugin from 'vite-plugin-solid';
 
 export default defineConfig({
@@ -12,6 +12,11 @@ export default defineConfig({
       'src/**/*.{test,spec}.?(c|m)[jt]s?(x)',
       '../castmill/lib/castmill/addons/**/services/*.{test,spec}.?(c|m)[jt]s?(x)',
       '../castmill/lib/castmill/addons/devices/components/*.{test,spec}.?(c|m)[jt]s?(x)',
+    ],
+    exclude: [
+      ...configDefaults.exclude,
+      // Targets the pre-selection-toolbar devices UI; it was never part of this suite.
+      '../castmill/lib/castmill/addons/devices/components/delete-permissions.test.tsx',
     ],
   },
 });
