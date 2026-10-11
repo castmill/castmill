@@ -128,6 +128,12 @@ widgets or shared player-rendering code.
   one-argument WebSocket transport, and `MemoryCache` (no IndexedDB on WebOS).
   Persist only eligible public media; protected/code/data resources use XHR
   session blobs. Cold startup requires a reachable server.
+- Native-only rules: import SCAP-backed modules (`src/native`, `src/classes`)
+  only after `window.castmillScapReady` resolves; the boot gate loads them in a
+  dynamic app chunk. The hardware ID must stay `sha256(wired || wifi MAC)` to
+  match the legacy wrapper. SCAP storage sizes are KB. The player disables
+  automatic standby at boot and does not schedule reboots (timers come from the
+  dashboard).
 - Run the legacy suite before moving shared functionality. After changes, run
   `yarn workspace @castmill/legacy-adapter-player test:webos-coverage` and
   `yarn workspace @castmill/webos-player test:webos-coverage`, plus both

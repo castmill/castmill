@@ -69,6 +69,27 @@ The iframe bridge, wrapper heartbeat/watchdog, `console` origin handling, and
 shows a pre-mounted startup overlay, and surfaces initialization failures
 through the device error reporter when available.
 
+Native-only startup and maintenance (`webos-player/src/boot`,
+`src/classes/display-maintenance.ts`):
+
+- `scap-loader.js` loads SCAP scripts in order and exposes
+  `window.castmillScapReady`. `src/native/native-api.ts` constructs SCAP
+  objects at import time, so the entry point imports the app chunk only after
+  that promise resolves (30 s timeout). Never import `src/native` or
+  `src/classes` statically from `src/index.tsx` or `src/boot`.
+- Boot or initialization failures are displayed and retried by reloading after
+  1-9 minutes of linear back-off (sessionStorage counter, reset on success).
+- Each start calls `Signage.setPowerSaveMode` to disable automatic standby, DPM
+  and 15-minute off. A 10-minute watchdog toggles wired/Wi-Fi adapters after two
+  consecutive SCAP `isInternetConnectionAvailable === false` checks, when
+  `DeviceInfo.setNetworkInfo` exists. No player-scheduled reboots.
+- The hardware ID is `sha256(wired || wifi MAC)`, identical to the legacy
+  wrapper's `getUUid`, so migrating displays keep their registration.
+- SCAP `getStorageInfo` values are KB; convert to bytes for telemetry and cache
+  accounting.
+- The webOS 3.x fetch fallback resolves every HTTP status (`ok` reflects 2xx)
+  so callers can read error bodies such as `recovery_blocked`.
+
 #### Device content orientation
 
 Dashboard device Details stores numeric clockwise orientations `0 | 90 | 180 |

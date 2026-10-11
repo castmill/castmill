@@ -13,19 +13,20 @@ import {
 } from '../shared/orientation';
 import { getNativePortraitApi } from '../native/orientation';
 import { configuration, deviceInfo, power, storage } from '../native';
-import { simpleHash, getTimers, setTimers } from './utils';
+import { sha256 } from 'js-sha256';
+import { getTimers, setTimers } from './utils';
 import { version } from '../../package.json';
 import { systemMonitor } from './system-monitor';
 
-// Network Information API types (not in standard TypeScript DOM types)
-interface NetworkInformation {
-  type?: string;
-  effectiveType?: string;
-}
+const KIB = 1024;
+const LOCATION_TIMEOUT_MS = 10_000;
+// Matches the old WebOS player's 1 GB requirement for firmware downloads.
+export const REQUIRED_FIRMWARE_FREE_KB = 1024 * 1024;
+export const FIRMWARE_STATUS_POLL_MS = 5_000;
+export const FIRMWARE_DOWNLOAD_TIMEOUT_MS = 60 * 60 * 1000;
 
-interface NavigatorWithConnection extends Navigator {
-  connection?: NetworkInformation;
-}
+const sleep = (ms: number) =>
+  new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 // The update config is used to update the application on the device. We set this
 // to make sure the application updates from the correct source.
@@ -79,9 +80,9 @@ export class WebosMachine implements Machine {
       throw new Error('No mac address found');
     }
 
-    const hash = simpleHash(macAddress);
-
-    return hash;
+    // Same identifier as the old WebOS wrapper used by the legacy adapter, so
+    // displays migrating to this app keep their Castmill registration.
+    return sha256(macAddress);
   }
 
   async storeCredentials(credentials: string): Promise<void> {
@@ -106,7 +107,7 @@ export class WebosMachine implements Machine {
 
   async removeCredentials(): Promise<void> {
     return storage.removeFile({
-      file: CREDENTIALS_FILE_PATH,
+      file: getFilePath(CREDENTIALS_FILE_PATH),
     });
   }
 
@@ -114,9 +115,24 @@ export class WebosMachine implements Machine {
     undefined | { latitude: number; longitude: number }
   > {
     try {
+      // Registration waits for this, so never let geolocation hang.
       const location = await new Promise<GeolocationPosition>(
         (resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject);
+          const timer = setTimeout(
+            () => reject(new Error('Geolocation timed out')),
+            LOCATION_TIMEOUT_MS
+          );
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              clearTimeout(timer);
+              resolve(position);
+            },
+            (error) => {
+              clearTimeout(timer);
+              reject(error);
+            },
+            { timeout: LOCATION_TIMEOUT_MS, maximumAge: Infinity }
+          );
         }
       );
 
@@ -131,7 +147,18 @@ export class WebosMachine implements Machine {
   }
 
   async getTimezone(): Promise<string> {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone;
+    // Chrome 38 (webOS 3.x) may not resolve the default time zone.
+    const intlTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (intlTimezone) return intlTimezone;
+    try {
+      const { timeZone } = await configuration.getTimeZone();
+      if (timeZone?.continent && timeZone.city) {
+        return `${timeZone.continent}/${timeZone.city}`.replace(/ /g, '_');
+      }
+    } catch (error) {
+      console.error('Failed to get WebOS time zone', error);
+    }
+    return 'UTC';
   }
 
   async getDeviceInfo(): Promise<DeviceInfo> {
@@ -155,13 +182,6 @@ export class WebosMachine implements Machine {
    */
   async restart(): Promise<void> {
     return configuration.restartApplication();
-  }
-
-  /**
-   * Quit the device application.
-   */
-  async quit(): Promise<void> {
-    console.error('Not supported on webOS.');
   }
 
   /**
@@ -219,14 +239,38 @@ export class WebosMachine implements Machine {
   async updateFirmware(): Promise<void> {
     const url = await this.getFirmwareDownloadUrl();
 
+    const { free } = await storage.getStorageInfo();
+    if (!(free >= REQUIRED_FIRMWARE_FREE_KB)) {
+      throw new Error('Not enough free space for firmware upgrade');
+    }
+
     // The firmware is downloaded to the device's temporary storage. It will be
     // deleted automatically after the device reboots.
     await storage.downloadFirmware({
       uri: url,
     });
+    await this.waitForFirmwareDownload();
 
-    // Trigger the firmware upgrade.
+    // Trigger the firmware upgrade. The display reboots when it completes.
     return storage.upgradeFirmware();
+  }
+
+  private async waitForFirmwareDownload(): Promise<void> {
+    const deadline = Date.now() + FIRMWARE_DOWNLOAD_TIMEOUT_MS;
+    for (;;) {
+      const { status } = await storage.getFirmwareUpgradeStatus();
+      if (status === 'ready') return;
+      if (status === 'fail') {
+        throw new Error('Firmware download failed');
+      }
+      if (status !== 'downloading') {
+        throw new Error(`Unexpected firmware status: ${status}`);
+      }
+      if (Date.now() >= deadline) {
+        throw new Error('Firmware download timed out');
+      }
+      await sleep(FIRMWARE_STATUS_POLL_MS);
+    }
   }
 
   async getFirmwareDownloadUrl(): Promise<string> {
@@ -257,10 +301,10 @@ export class WebosMachine implements Machine {
     try {
       const storageInfo = await storage.getStorageInfo();
       if (storageInfo) {
-        // SCAP uses total/used/free, also consumed by FileStorage.
+        // SCAP reports total/used/free in KB.
         telemetry.storage = {
-          totalBytes: storageInfo.total,
-          usedBytes: storageInfo.used,
+          totalBytes: storageInfo.total * KIB,
+          usedBytes: storageInfo.used * KIB,
         };
       }
     } catch (error) {
@@ -281,26 +325,28 @@ export class WebosMachine implements Machine {
         ];
       }
 
-      const fanInfo = systemMonitor.getFanStatus();
-      if (fanInfo && Array.isArray(fanInfo.fanStatus)) {
-        telemetry.fanSpeeds = fanInfo.fanStatus.map(
-          (fan: { name?: string; rpm?: number }, index: number) => ({
-            label: fan.name || `Fan ${index + 1}`,
-            rpm: fan.rpm || 0,
-          })
+      // SCAP may report only a fan status; never present that as 0 RPM.
+      const fanSpeeds = (systemMonitor.getFanStatus()?.fanStatus ?? [])
+        .map((fan, index) => ({
+          label: fan.name || `Fan ${index + 1}`,
+          rpm: fan.rpm,
+        }))
+        .filter((fan): fan is { label: string; rpm: number } =>
+          Number.isFinite(fan.rpm)
         );
+      if (fanSpeeds.length > 0) {
+        telemetry.fanSpeeds = fanSpeeds;
       }
     } catch (error) {
       console.error('Error getting system monitor data:', error);
     }
 
-    // Network info via Navigator API
     try {
-      const connection = (navigator as NavigatorWithConnection).connection;
-      if (connection) {
-        telemetry.network = {
-          type: connection.type || connection.effectiveType || undefined,
-        };
+      const { wired, wifi } = await deviceInfo.getNetworkInfo();
+      if (wired?.state === 'connected') {
+        telemetry.network = { type: 'ethernet', ipAddress: wired.ipAddress };
+      } else if (wifi?.state === 'connected') {
+        telemetry.network = { type: 'wifi', ipAddress: wifi.ipAddress };
       }
     } catch (error) {
       console.error('Error getting network info:', error);

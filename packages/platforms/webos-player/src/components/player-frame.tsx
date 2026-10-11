@@ -2,7 +2,8 @@ import { type Component, onCleanup, onMount } from 'solid-js';
 import { mountDevice, Device } from '@castmill/device';
 import { enableDebugOverlayFromEnv } from '@castmill/player';
 import { MemoryCache } from '@castmill/cache';
-import { WebosMachine, FileStorage } from '../classes';
+import { WebosMachine, FileStorage, startDisplayMaintenance } from '../classes';
+import { resetStartupRetry, scheduleStartupRetry } from '../boot/startup-retry';
 import { createWebosVideoPlayback, WebosWebSocket } from '../shared';
 
 export const PlayerFrame: Component = () => {
@@ -20,6 +21,7 @@ export const PlayerFrame: Component = () => {
         error instanceof Error ? error.message : String(error);
     };
     onCleanup(() => device?.off('startup-error', showStartupError));
+    onCleanup(startDisplayMaintenance());
     void (async () => {
       const storage = new FileStorage();
       const cacheBackend = new MemoryCache(storage);
@@ -37,6 +39,7 @@ export const PlayerFrame: Component = () => {
       startupStep = 'device mount';
       mountDevice(ref!, device);
       startup!.style.display = 'none';
+      resetStartupRetry();
     })().catch((error: unknown) => {
       device?.reportStartupError(error);
       console.error(
@@ -44,6 +47,7 @@ export const PlayerFrame: Component = () => {
         error
       );
       showStartupError(error);
+      scheduleStartupRetry();
     });
   });
 

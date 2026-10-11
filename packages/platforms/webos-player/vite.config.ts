@@ -152,7 +152,10 @@ export default defineConfig({
       include: [
         'src/shared/**/*.ts',
         'src/native/orientation.ts',
+        'src/boot/**/*.ts',
+        'src/classes/display-maintenance.ts',
         'src/classes/file-storage.ts',
+        'src/classes/webos-machine.ts',
         'src/components/player-frame.tsx',
         'src/polyfills/fetch.ts',
       ],

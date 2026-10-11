@@ -137,7 +137,8 @@ export class FileStorage implements StorageIntegration {
     const native = await storage.getStorageInfo();
     const memory = await this.browser.info();
     return {
-      total: native.total,
+      // SCAP reports storage in KB; cache accounting uses bytes.
+      total: native.total * 1024,
       used: Array.from(this.files.values()).reduce(
         (sum, file) => sum + file.size,
         memory.used

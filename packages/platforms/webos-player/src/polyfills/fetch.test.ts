@@ -9,6 +9,10 @@ class MockXHR {
   onerror?: () => void;
   ontimeout?: () => void;
   onabort?: () => void;
+  headers: Record<string, string> = { 'content-type': 'application/json' };
+  getResponseHeader = vi.fn(
+    (name: string) => this.headers[name.toLowerCase()] ?? null
+  );
   open = vi.fn();
   setRequestHeader = vi.fn();
   send = vi.fn();
@@ -73,12 +77,41 @@ describe('Legacy WebOS fetch fallback', () => {
     expect((await result).status).toBe(200);
   });
 
-  it.each([199, 300])('rejects HTTP %s', async (status) => {
+  it.each([199, 300, 403, 500])(
+    'resolves HTTP %s with ok=false like fetch',
+    async (status) => {
+      await install();
+      const result = fetch('https://api.test/data');
+      MockXHR.last.status = status;
+      MockXHR.last.responseText = '{"error":"recovery_blocked"}';
+      MockXHR.last.onload?.();
+      const response = await result;
+      expect(response.ok).toBe(false);
+      expect(response.status).toBe(status);
+      expect(await response.json()).toEqual({ error: 'recovery_blocked' });
+    }
+  );
+
+  it('exposes response headers', async () => {
     await install();
     const result = fetch('https://api.test/data');
-    MockXHR.last.status = status;
     MockXHR.last.onload?.();
-    await expect(result).rejects.toThrow(`HTTP request failed: ${status}`);
+    const response = await result;
+    expect(response.headers.get('Content-Type')).toBe('application/json');
+    expect(response.headers.has('etag')).toBe(false);
+    expect(response.url).toBe('https://api.test/data');
+  });
+
+  it.each([
+    ['Headers', () => new Headers({ 'X-Test': 'one' })],
+    ['pairs', () => [['X-Test', 'one']] as [string, string][]],
+  ])('sends %s headers', async (_name, headers) => {
+    await install();
+    void fetch('https://api.test/data', { headers: headers() });
+    expect(MockXHR.last.setRequestHeader).toHaveBeenCalledWith(
+      expect.stringMatching(/^x-test$/i),
+      'one'
+    );
   });
 
   it.each([
@@ -92,10 +125,19 @@ describe('Legacy WebOS fetch fallback', () => {
     await expect(result).rejects.toThrow(message);
   });
 
-  it('explicitly rejects unsupported URL objects', async () => {
+  it('accepts URL objects', async () => {
     await install();
-    expect(() => fetch(new URL('https://api.test'))).toThrow(
-      'input is not a string'
+    void fetch(new URL('https://api.test/data'));
+    expect(MockXHR.last.open).toHaveBeenCalledWith(
+      'GET',
+      'https://api.test/data'
+    );
+  });
+
+  it('rejects Request objects asynchronously', async () => {
+    await install();
+    await expect(fetch(new Request('https://api.test/data'))).rejects.toThrow(
+      'Request objects are unsupported'
     );
   });
 });

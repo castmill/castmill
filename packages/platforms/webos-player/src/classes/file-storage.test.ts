@@ -119,7 +119,8 @@ describe('WebOS native storage routing', () => {
     expect(localStorage.getItem(MAP_KEY)).not.toContain('private-token');
     expect(await storage.retrieveFile(video)).toBe(localUrl(video));
     expect(await storage.listFiles()).toEqual([result.item]);
-    expect(await storage.info()).toEqual({ total: 10000, used: 500 });
+    // SCAP total is KB; cached file sizes are bytes.
+    expect(await storage.info()).toEqual({ total: 10000 * 1024, used: 500 });
   });
 
   it.each([

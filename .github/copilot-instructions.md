@@ -72,6 +72,13 @@ media only; protected resources, widget code, and channel data use authenticated
 XHR session blobs. Cold startup needs an online server. Never log auth headers,
 response bodies, or full credential-bearing media URLs.
 
+In the native player, only import SCAP-backed modules (`src/native`,
+`src/classes`) from code loaded after `window.castmillScapReady` resolves (the
+boot gate's dynamic app chunk). Keep the hardware ID as
+`sha256(wired || wifi MAC)` so it matches the legacy wrapper's registration.
+SCAP storage sizes are KB. Do not add player-scheduled reboots; on/off timers
+are managed from the dashboard.
+
 Before moving functionality, run the legacy regression suite. After changing
 shared code, run both players' `test:webos-coverage`, `typecheck`, lint, and
 build scripts. Coverage enforces 90% on shared/new integration code. Validate

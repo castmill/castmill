@@ -15,6 +15,10 @@ const mocks = vi.hoisted(() => ({
   setServerOrigin: vi.fn(),
   storage: vi.fn(),
   enableDebug: vi.fn(),
+  stopMaintenance: vi.fn(),
+  startMaintenance: vi.fn(),
+  scheduleRetry: vi.fn(),
+  resetRetry: vi.fn(),
 }));
 vi.mock('@castmill/device', () => ({
   Device: mocks.device,
@@ -39,6 +43,11 @@ vi.mock('../classes', () => ({
     }
     setServerOrigin = mocks.setServerOrigin;
   },
+  startDisplayMaintenance: mocks.startMaintenance,
+}));
+vi.mock('../boot/startup-retry', () => ({
+  scheduleStartupRetry: mocks.scheduleRetry,
+  resetStartupRetry: mocks.resetRetry,
 }));
 
 beforeEach(() => {
@@ -47,6 +56,7 @@ beforeEach(() => {
   mocks.getBaseUrl.mockResolvedValue('https://api.test');
   mocks.cacheInit.mockResolvedValue(undefined);
   mocks.storage.mockImplementation(() => {});
+  mocks.startMaintenance.mockReturnValue(mocks.stopMaintenance);
   mocks.device.mockImplementation(() => ({
     init: mocks.init,
     getBaseUrl: mocks.getBaseUrl,
@@ -78,6 +88,16 @@ describe('Native WebOS startup', () => {
     expect(options.cacheBackend.storage).toBe(storage);
     expect(mocks.setServerOrigin).toHaveBeenCalledWith('https://api.test');
     expect(mocks.cacheInit).toHaveBeenCalledOnce();
+    expect(mocks.resetRetry).toHaveBeenCalledOnce();
+    expect(mocks.scheduleRetry).not.toHaveBeenCalled();
+  });
+
+  it('runs display maintenance for the lifetime of the player', async () => {
+    render(() => <PlayerFrame />);
+    expect(mocks.startMaintenance).toHaveBeenCalledOnce();
+    await waitFor(() => expect(mountDevice).toHaveBeenCalledOnce());
+    cleanup();
+    expect(mocks.stopMaintenance).toHaveBeenCalledOnce();
   });
 
   it.each(['configuration', 'cache', 'mount', 'baseUrl'])(
@@ -100,6 +120,8 @@ describe('Native WebOS startup', () => {
         error
       );
       if (step !== 'mount') expect(mountDevice).not.toHaveBeenCalled();
+      expect(mocks.scheduleRetry).toHaveBeenCalledOnce();
+      expect(mocks.resetRetry).not.toHaveBeenCalled();
     }
   );
 

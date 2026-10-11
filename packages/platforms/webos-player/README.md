@@ -139,32 +139,44 @@ versions in release packages when supporting both display generations.
 
 ### Castmill server URLs
 
-Server settings are Vite environment variables and are embedded in the web
-bundle at build time. Copy the tracked template to the ignored local
-configuration file, then customize it:
+The server options and default server are compiled into `@castmill/device`,
+which this app consumes from its prebuilt `dist/`. Setting
+`VITE_*_BASE_URL` in this package has no effect. Configure them for the device
+package instead, then rebuild it before building this player:
+
+```dotenv
+# packages/device/.env.local
+VITE_PRODUCTION_BASE_URL=https://api.example.com
+VITE_DEV_BASE_URL=https://api.stage.example.com
+VITE_LOCAL_BASE_URL=http://192.168.1.10:4000
+VITE_DEFAULT_BASE_URL=https://api.example.com
+```
+
+```bash
+yarn workspace @castmill/device build
+yarn workspace @castmill/webos-player build
+```
+
+| Variable (in `packages/device`) | Purpose                                                              |
+| ------------------------------- | -------------------------------------------------------------------- |
+| `VITE_PRODUCTION_BASE_URL`      | Adds a **Production** server option to the player                    |
+| `VITE_DEV_BASE_URL`             | Adds a **Stage** server option to the player                         |
+| `VITE_LOCAL_BASE_URL`           | Adds a **Local** server option for development                       |
+| `VITE_DEFAULT_BASE_URL`         | Server used initially when the display has no saved server selection |
+
+This player's own build settings go in `.env.local`, created from the tracked
+template (files ending in `.local` are ignored by Git):
 
 ```bash
 cp .env.example .env.local
 ```
 
-```dotenv
-VITE_PRODUCTION_BASE_URL=https://api.example.com
-VITE_DEV_BASE_URL=https://api.stage.example.com
-VITE_LOCAL_BASE_URL=http://192.168.1.10:4000
-VITE_DEFAULT_BASE_URL=https://api.example.com
-VITE_FILE_HOST=192.168.1.10
-```
-
-Files ending in `.local` are ignored by Git. Keep shareable placeholders in
-`.env.example`; do not commit local addresses or environment-specific values.
-
-| Variable                   | Purpose                                                              |
-| -------------------------- | -------------------------------------------------------------------- |
-| `VITE_PRODUCTION_BASE_URL` | Adds a **Production** server option to the player                    |
-| `VITE_DEV_BASE_URL`        | Adds a **Stage** server option to the player                         |
-| `VITE_LOCAL_BASE_URL`      | Adds a **Local** server option for development                       |
-| `VITE_DEFAULT_BASE_URL`    | Server used initially when the display has no saved server selection |
-| `VITE_FILE_HOST`           | Replaces `localhost` in media URLs before SCAP downloads them        |
+| Variable (in this package)  | Purpose                                                       |
+| --------------------------- | ------------------------------------------------------------- |
+| `VITE_FILE_HOST`            | Replaces `localhost` in media URLs before SCAP downloads them |
+| `VITE_KEEP_SERVER_SETTINGS` | See [Application update URL](#application-update-url)         |
+| `VITE_LOGGING`              | See [WebOS compatibility and logging](#webos-compatibility-and-logging) |
+| `VITE_DEBUG_OVERLAY`        | See [Playback debug overlay](#playback-debug-overlay)         |
 
 Use complete origins without a trailing slash. `VITE_FILE_HOST` is useful when
 the Castmill backend returns URLs containing `localhost`: on the display,
@@ -185,6 +197,38 @@ replace an existing selection. Remove that internal file or clear the
 application's data when a test display must return to the build default. This
 also requires the display to be registered with Castmill again if all
 application data is cleared.
+
+### Display identity, startup, and maintenance
+
+- **Hardware ID:** the player registers with the SHA-256 hex digest of the
+  wired MAC address (or Wi-Fi MAC when there is no wired adapter). This is the
+  same identifier used by the legacy WebOS wrapper, so a display that moves
+  from the legacy adapter to this app keeps its Castmill registration.
+- **SCAP boot gate:** `public/lib/scap-loader.js` loads the SCAP libraries in
+  order and exposes `window.castmillScapReady`. `src/index.tsx` only imports
+  the app chunk (which constructs SCAP objects) after that promise resolves,
+  with a 30 s timeout.
+- **Startup retry:** when SCAP loading or player initialization fails, the
+  error is shown and the app reloads after a back-off of one minute per
+  consecutive failure, up to nine minutes. The counter resets after a
+  successful start.
+- **Power saving:** every start disables automatic standby, DPM and 15-minute
+  off, which would otherwise turn the display off (for example after four
+  hours without remote-control input).
+- **Network watchdog:** every 10 minutes the player checks SCAP's
+  `isInternetConnectionAvailable`. After two consecutive failed checks it
+  disables the wired and Wi-Fi adapters, waits 10 s, and re-enables them.
+  This requires a SCAP version that provides `DeviceInfo.setNetworkInfo`.
+- **On/off timers** are managed from the dashboard; the player does not
+  schedule its own reboots.
+- **Remote control:** the LG Back key (key code 461) closes the device menu,
+  like Escape.
+- **Telemetry:** SCAP storage values are reported in KB and converted to bytes.
+  Network type and IP address come from SCAP network info. Fans that only
+  report a status, without RPM, are omitted.
+- **Firmware updates** require at least 1 GB of free internal storage. The
+  player waits until SCAP reports the downloaded firmware as `ready` before
+  starting the upgrade.
 
 ### Playback debug overlay
 
@@ -267,7 +311,7 @@ The `yarn build` script supplies this default when the shell variable is not
 set:
 
 ```text
-https://updates.castmill.io/webos/player.ipk
+https://update.castmill.io/webos/player.ipk
 ```
 
 Set `VITE_UPDATE_URL` in the shell as shown above when overriding it. The

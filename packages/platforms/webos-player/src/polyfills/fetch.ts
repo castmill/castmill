@@ -1,70 +1,67 @@
+type HeaderSource = RequestInit['headers'];
+
+function forEachHeader(
+  headers: HeaderSource,
+  set: (name: string, value: string) => void
+): void {
+  if (!headers) return;
+  if (Array.isArray(headers)) {
+    headers.forEach(([name, value]) => set(name, value));
+  } else if (typeof (headers as Headers).forEach === 'function') {
+    (headers as Headers).forEach((value, name) => set(name, value));
+  } else {
+    const record = headers as Record<string, string>;
+    Object.keys(record).forEach((name) => set(name, record[name]));
+  }
+}
+
+/**
+ * Minimal XHR-based fetch for webOS 3.x (Chrome 38), which has no fetch.
+ * Like fetch, every HTTP status resolves; callers inspect `ok`/`status`.
+ * Never logs URLs, headers or bodies because they can contain credentials.
+ */
 const fetchPolyfill = (
   input: RequestInfo | URL,
-  init?: RequestInit | undefined
-): Promise<Response> => {
-  // Check the input. We only support a subset of the fetch API
-  if (typeof input !== 'string') {
-    throw new Error('fetchPolyfill: input is not a string');
-  }
-
-  const url = input as string;
-  const method = init?.method ?? 'GET';
-  const headers = (init?.headers as Record<string, string> | undefined) ?? {};
-  const body = init?.body as string | undefined;
-
-  return new Promise(function (resolve, reject) {
-    const xhr = new XMLHttpRequest();
-
-    xhr.onload = function () {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        resolve({
-          status: xhr.status,
-          statusText: xhr.statusText,
-          text: async (): Promise<string> => await xhr.responseText,
-          json: async (): Promise<string> => {
-            return JSON.parse(xhr.responseText);
-          },
-          ok: true,
-        } as Response);
-      } else {
-        reject(Error('HTTP request failed: ' + xhr.status));
-      }
-    };
-
-    xhr.onerror = function () {
-      setTimeout(function () {
-        reject(new TypeError('Network request failed'));
-      }, 0);
-    };
-
-    xhr.ontimeout = function () {
-      setTimeout(function () {
-        reject(new TypeError('Network request timed out'));
-      }, 0);
-    };
-
-    xhr.onabort = function () {
-      setTimeout(function () {
-        reject(new DOMException('Aborted', 'AbortError'));
-      }, 0);
-    };
-
-    xhr.open(method ?? 'GET', url);
-
-    if (headers) {
-      Object.keys(headers).forEach((key) => {
-        const value = headers[key];
-        xhr.setRequestHeader(key, value);
-      });
+  init?: RequestInit
+): Promise<Response> =>
+  new Promise((resolve, reject) => {
+    if (typeof input !== 'string' && !(input instanceof URL)) {
+      reject(new TypeError('fetchPolyfill: Request objects are unsupported'));
+      return;
     }
+    const xhr = new XMLHttpRequest();
+    const fail = (error: Error) => setTimeout(() => reject(error), 0);
 
-    if (body) {
+    xhr.onload = () => {
+      const text = () => Promise.resolve(xhr.responseText);
+      resolve({
+        status: xhr.status,
+        statusText: xhr.statusText,
+        ok: xhr.status >= 200 && xhr.status < 300,
+        url: String(input),
+        headers: {
+          get: (name: string) => xhr.getResponseHeader(name),
+          has: (name: string) => xhr.getResponseHeader(name) !== null,
+        },
+        text,
+        json: () => text().then((body) => JSON.parse(body)),
+      } as unknown as Response);
+    };
+    xhr.onerror = () => fail(new TypeError('Network request failed'));
+    xhr.ontimeout = () => fail(new TypeError('Network request timed out'));
+    xhr.onabort = () => fail(new DOMException('Aborted', 'AbortError'));
+
+    xhr.open(init?.method ?? 'GET', String(input));
+    forEachHeader(init?.headers, (name, value) =>
+      xhr.setRequestHeader(name, value)
+    );
+    const body = init?.body as XMLHttpRequestBodyInit | null | undefined;
+    if (body !== undefined && body !== null) {
       xhr.send(body);
     } else {
       xhr.send();
     }
   });
-};
 
 if (!window.fetch) {
   window.fetch = fetchPolyfill;
