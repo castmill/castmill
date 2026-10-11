@@ -7,6 +7,45 @@ New devices can be added by implementing the `Machine` interface. This interface
 that are required by the device to work. You can check the integrations folder for examples on how to implement the
 interface for different platforms.
 
+## Playback orientation
+
+The dashboard device **Details** form saves clockwise orientations of **0, 90,
+180, or 270 degrees**. The server persists desired orientation, accepts offline
+edits, sends it on every device-channel join/rejoin, and broadcasts live changes.
+Players cache their last successfully applied value under the Machine setting
+`ORIENTATION`; cached/default orientation is used until the server connects.
+Saving is not an application acknowledgement. The Details form shows pending
+or error feedback for connected players and next-connection feedback for offline
+players; successful application needs no persistent status message.
+
+Deploy the backend orientation migration before enabling the updated dashboard
+and players. Existing devices default to 0 degrees; older players remain
+identifiable through their missing orientation capability.
+
+`Machine.setOrientation?(orientation)` can return `{ mode: 'native' }` after a
+verified native content-rotation operation or `{ mode: 'css' }` for unsupported
+native rotation. An absent hook uses CSS. Unexpected native failures reject;
+they must not be hidden as successful fallback. Native mode must not also rotate
+the DOM. No automatic application restart or display reboot is performed.
+
+`OrientationManager` rotates only the playback subtree, keeping menus and
+registration outside it. Its separate wrapper swaps logical width/height for
+90/270 degrees without overwriting Renderer viewport clipping or remounting media.
+Resizes are observed where supported, with a Chrome 38-compatible fallback.
+Player text fitting, pagination, and scrolling use logical dimensions beneath
+`data-castmill-orientation`, rather than treating rotated DOM axes as layout axes.
+Stopping releases wrapper observers/listeners. Deregistration resets the cached
+orientation.
+
+Native WebOS uses `Custom.Configuration.getNativePortraitMode` /
+`setNativePortraitMode`, mapping 0 to `"off"` and other angles to degree strings.
+Legacy WebOS delegates numeric angles to its embedding player's existing
+`setRotation` bridge operation. Native mode rotates the application/display
+(including shell UI) and uses the native viewport without extra CSS rotation.
+Only a missing native Custom API selects CSS; native/bridge failures and
+10-second timeouts are reported as errors. The shared selection/mapping policy
+is in `@castmill/webos-player/shared`; do not introduce SCAP globals into it.
+
 ## Learn more
 
 - Official website: https://castmill.com/

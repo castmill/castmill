@@ -1,0 +1,68 @@
+.device-orientation {
+  .form-item1:focus-within {
+    border-color: #4a90e2;
+  }
+
+  .device-orientation-label {
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+  }
+
+  select {
+    width: 100%;
+    box-sizing: border-box;
+    border: none;
+    padding: 0.3em 0;
+    background: #151320;
+    color: #b1b1b1;
+    font-size: 1em;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:focus {
+      outline: none;
+    }
+
+    &:disabled {
+      color: #ccc;
+      cursor: not-allowed;
+    }
+  }
+
+  .device-orientation-help {
+    position: relative;
+    display: flex;
+
+    button {
+      display: flex;
+      border: none;
+      padding: 0.2em;
+      background: transparent;
+      color: #577cbb;
+      cursor: help;
+    }
+
+    [role='tooltip'] {
+      position: absolute;
+      inset-inline-start: 0;
+      top: 100%;
+      z-index: 1;
+      width: 18em;
+      max-width: 60vw;
+      padding: 0.6em 0.8em;
+      border: 1px solid #555;
+      border-radius: 0.3em;
+      background: #151320;
+      color: #ccc;
+      font-size: 0.8em;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    &:hover [role='tooltip'],
+    &:focus-within [role='tooltip'] {
+      visibility: visible;
+    }
+  }
+}

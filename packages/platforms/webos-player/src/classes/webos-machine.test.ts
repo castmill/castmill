@@ -233,4 +233,13 @@ describe('WebosMachine', () => {
     const timezone = await machine.getTimezone();
     expect(timezone).toBe(Intl.DateTimeFormat().resolvedOptions().timeZone);
   });
+
+  it.each([0, 90, 180, 270] as const)(
+    'selects shared CSS rotation for %i without a verified native API',
+    async (angle) => {
+      expect(await new WebosMachine().setOrientation(angle)).toEqual({
+        mode: 'css',
+      });
+    }
+  );
 });

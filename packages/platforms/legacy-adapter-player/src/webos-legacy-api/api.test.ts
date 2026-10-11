@@ -8,9 +8,113 @@ import {
   removeWebosFile,
   restartWebosApp,
   updateWebosPlayer,
+  setWebosOrientation,
 } from './api';
 
 describe('WebOS wrapper bridge', () => {
+  it.each([0, 90, 180, 270] as const)(
+    'sends numeric %i to the existing setRotation operation',
+    async (angle) => {
+      const post = vi
+        .spyOn(window.parent, 'postMessage')
+        .mockImplementation(() => {});
+      try {
+        const pending = setWebosOrientation(angle);
+        const request = JSON.parse(post.mock.calls[0][0] as string);
+        expect(request.fn).toBe('setRotation');
+        expect(request.args).toEqual([angle]);
+        window.dispatchEvent(
+          new MessageEvent('message', {
+            data: JSON.stringify({ ack: true, guid: request.guid }),
+          })
+        );
+        await pending;
+      } finally {
+        post.mockRestore();
+      }
+    }
+  );
+
+  it('rejects a wrapper error', async () => {
+    const post = vi
+      .spyOn(window.parent, 'postMessage')
+      .mockImplementation(() => {});
+    try {
+      const pending = setWebosOrientation(90);
+      const request = JSON.parse(post.mock.calls[0][0] as string);
+      window.dispatchEvent(
+        new MessageEvent('message', {
+          data: JSON.stringify({
+            ack: true,
+            guid: request.guid,
+            err: { message: 'native denied' },
+          }),
+        })
+      );
+      await expect(pending).rejects.toEqual({ message: 'native denied' });
+    } finally {
+      post.mockRestore();
+    }
+  });
+
+  it('reports an old wrapper missing setRotation instead of claiming CSS success', async () => {
+    const post = vi
+      .spyOn(window.parent, 'postMessage')
+      .mockImplementation(() => {});
+    try {
+      const pending = setWebosOrientation(270);
+      const request = JSON.parse(post.mock.calls[0][0] as string);
+      const error = { message: 'MSG: function "setRotation" not implemented' };
+      window.dispatchEvent(
+        new MessageEvent('message', {
+          data: JSON.stringify({ ack: true, guid: request.guid, err: error }),
+        })
+      );
+      await expect(pending).rejects.toEqual(error);
+    } finally {
+      post.mockRestore();
+    }
+  });
+
+  it('cleans up the deadline when posting to the wrapper fails', async () => {
+    vi.useFakeTimers();
+    const post = vi
+      .spyOn(window.parent, 'postMessage')
+      .mockImplementation(() => {
+        throw new Error('post failed');
+      });
+    try {
+      await expect(setWebosOrientation(90)).rejects.toThrow('post failed');
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      post.mockRestore();
+      vi.useRealTimers();
+    }
+  });
+
+  it('rejects an unresponsive wrapper and ignores its late acknowledgement', async () => {
+    vi.useFakeTimers();
+    const post = vi
+      .spyOn(window.parent, 'postMessage')
+      .mockImplementation(() => {});
+    try {
+      const pending = expect(setWebosOrientation(180)).rejects.toThrow(
+        'setRotation timed out'
+      );
+      const request = JSON.parse(post.mock.calls[0][0] as string);
+      await vi.advanceTimersByTimeAsync(10_000);
+      await pending;
+      window.dispatchEvent(
+        new MessageEvent('message', {
+          data: JSON.stringify({ ack: true, guid: request.guid }),
+        })
+      );
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      post.mockRestore();
+      vi.useRealTimers();
+    }
+  });
   it('requests the hardware ID using the wrapper protocol', async () => {
     const postMessage = vi
       .spyOn(window.parent, 'postMessage')

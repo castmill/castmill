@@ -96,6 +96,23 @@ See `packages/dashboard/AGENTS.md` for complete i18n guide.
 locale files, translation keys, or an i18n hook to that package. This exception
 does not change dashboard localization requirements.
 
+## Device Orientation
+
+- Device Details saves numeric clockwise `0 | 90 | 180 | 270` orientations,
+  including offline changes; reconcile the server preference on player reconnect.
+- Add native rotation through Machine's hook; otherwise use the shared Device
+  CSS playback wrapper. Never double-rotate or remount video elements.
+- Native WebOS uses Custom.Configuration.get/setNativePortraitMode, with 0 as
+  "off" and other angles as degree strings. Legacy WebOS sends numeric angles
+  through the embedding player's existing setRotation bridge. Native mode also
+  rotates shell UI; use its viewport without CSS rotation/dimension swapping.
+  Native/bridge errors and 10-second deadlines reject; do not silently fall back
+  after a native change or auto-reboot. OSD portrait mode is a different API.
+- Keep viewport clipping separate from orientation and use logical dimensions
+  for text fitting, pagination, and scrollers. Preserve Chrome 38 fallbacks.
+- All new dashboard orientation labels/status/errors must exist in all nine
+  locales. Saving desired orientation is not an application acknowledgement.
+
 ## 🔀 URL-Based Routing
 
 The Dashboard uses URL-based routing with organization context:

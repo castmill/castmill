@@ -33,7 +33,7 @@ const DeviceView: Component<{
     setLoading(true);
 
     try {
-      await Promise.all([
+      const [updatedDevice] = await Promise.all([
         DevicesService.updateDevice(
           props.baseUrl,
           props.organization_id,
@@ -42,16 +42,21 @@ const DeviceView: Component<{
         ),
         new Promise((resolve) => setTimeout(resolve, 300)),
       ]);
-      toast.success('Device updated successfully');
+      const report = props.device.orientation_status;
+      props.onChange?.({
+        ...updatedDevice,
+        ...(report?.orientation === updatedDevice.orientation
+          ? { orientation_status: report }
+          : {}),
+      });
+      toast.success(t('devices.orientation.saved'));
       return true;
     } catch (err) {
-      toast.error(`Error updating device: ${err}`);
+      toast.error(t('devices.orientation.saveError'));
+      console.error('Error updating device:', err);
       return false;
     } finally {
       setLoading(false);
-      if (props.onChange) {
-        props.onChange({ ...props.device, ...device });
-      }
     }
   };
 
@@ -59,7 +64,12 @@ const DeviceView: Component<{
     {
       title: t('common.details'),
       content: () => (
-        <DeviceDetails device={props.device} onSubmit={updateDevice} t={t} />
+        <DeviceDetails
+          device={props.device}
+          store={props.store}
+          onSubmit={updateDevice}
+          t={t}
+        />
       ),
     },
     {

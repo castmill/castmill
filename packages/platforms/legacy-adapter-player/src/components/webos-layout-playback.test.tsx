@@ -3,6 +3,8 @@ import { Layer } from '../../../../player/src/layer';
 import { Player } from '../../../../player/src/player';
 import { Playlist } from '../../../../player/src/playlist';
 import { Renderer } from '../../../../player/src/renderer';
+import { OrientationManager } from '../../../../device/src/classes/orientation';
+import type { Machine } from '@castmill/device';
 import type { PlayerRuntimeError } from '../../../../player/src/interfaces/player-globals.interface';
 import { BLOCKED_ITEM_SKIP_MS } from '../../../../player/src/playlist';
 import {
@@ -19,6 +21,7 @@ import {
 // that no more than MAX_LOADED_VIDEOS video tags hold a source or play.
 
 const LOAD_MS = 300;
+let orientationManager: OrientationManager | undefined;
 const TICK_MS = 100;
 
 interface MediaState {
@@ -323,6 +326,8 @@ describe('WebOS layout playback with the decoder budget', () => {
     player?.clear();
     player = undefined;
     holders.forEach((holder) => holder.dispose());
+    orientationManager?.dispose();
+    orientationManager = undefined;
     // Let the controllers settle the pauses and seeks of the removed layers
     // while the media simulation is still installed.
     await vi.advanceTimersByTimeAsync(1000);
@@ -368,7 +373,10 @@ describe('WebOS layout playback with the decoder budget', () => {
         createVideoPlaybackController: createWebosVideoPlayback,
       })
     );
-    player = new Player(queue, new Renderer(root));
+    player = new Player(
+      queue,
+      new Renderer(orientationManager ? orientationManager.attach(root) : root)
+    );
     player.play({ loop: true });
   };
 
@@ -500,6 +508,39 @@ describe('WebOS layout playback with the decoder budget', () => {
     expectLoopPeriod('a', 18_000);
     expectLoopPeriod('c', 18_000);
     expect(reports).toEqual([]);
+  });
+
+  it('rotates a playing two-video layout without remounting media or exceeding the decoder budget', async () => {
+    vi.spyOn(root, 'getBoundingClientRect').mockReturnValue({
+      width: 1920,
+      height: 1080,
+    } as DOMRect);
+    orientationManager = new OrientationManager({
+      getSetting: async () => null,
+      setSetting: async () => {},
+    } as Machine);
+    start([
+      layoutItem('rotating', [[videoItem('a', 30)], [videoItem('b', 30)]]),
+    ]);
+    await run(1000);
+    const mountedVideos = videos();
+    const firstPosition = mountedVideos[0].currentTime;
+
+    for (const angle of [90, 180, 270, 0] as const) {
+      await orientationManager.apply(angle);
+      await run(1000);
+      expect(videos()).toEqual(mountedVideos);
+      const wrapper = root.querySelector<HTMLElement>(
+        '[data-castmill-orientation]'
+      )!;
+      expect(wrapper.dataset.castmillOrientation).toBe(String(angle));
+      expect(wrapper.style.width).toBe(
+        angle === 90 || angle === 270 ? '1080px' : '1920px'
+      );
+      expect(mountedVideos[0].currentTime).toBeGreaterThan(firstPosition);
+    }
+    expect(stats.maxPlaying).toBe(2);
+    expectNoDecoderReports();
   });
 
   it('hands the decoders over between consecutive video layouts', async () => {

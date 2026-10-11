@@ -958,6 +958,17 @@
     "translations": "Translations"
   },
   "devices": {
+    "orientation": {
+      "label": "Orientation",
+      "help": "Rotate playback content clockwise from its normal orientation.",
+      "offline": "Saved orientation applies when the player next connects.",
+      "pending": "Orientation saved. Waiting for the player to confirm.",
+      "applied": "Orientation applied.",
+      "applyError": "The player could not apply this orientation. Check device events.",
+      "unsupported": "Update this player to enable orientation settings.",
+      "saved": "Device settings saved.",
+      "saveError": "Could not save device settings."
+    },
     "title": "Devices",
     "addDevice": "Add Device",
     "registerDevice": "Register device",

@@ -51,6 +51,91 @@ defmodule CastmillWeb.ResourceController.DevicesTest do
              } = response
     end
 
+    test "persists an offline device setting and broadcasts the saved orientation", %{
+      conn: conn,
+      organization: organization
+    } do
+      device = device_fixture(%{organization_id: organization.id, online: false})
+      Phoenix.PubSub.subscribe(Castmill.PubSub, "devices:#{device.id}")
+
+      response =
+        conn
+        |> patch("/api/organizations/#{organization.id}/devices/#{device.id}", %{
+          "update" => %{"orientation" => 90}
+        })
+        |> json_response(200)
+
+      assert response["orientation"] == 90
+      assert Castmill.Devices.get_device(device.id).orientation == 90
+      assert_receive %{event: "orientation_updated", orientation: 90}
+    end
+
+    test "rejects invalid orientation without changing the saved value", %{
+      conn: conn,
+      organization: organization
+    } do
+      device = device_fixture(%{organization_id: organization.id, orientation: 270})
+
+      response =
+        conn
+        |> patch("/api/organizations/#{organization.id}/devices/#{device.id}", %{
+          "update" => %{"orientation" => "90"}
+        })
+        |> json_response(422)
+
+      assert response["errors"]["orientation"]
+      assert Castmill.Devices.get_device(device.id).orientation == 270
+    end
+
+    test "does not broadcast an unchanged orientation", %{conn: conn, organization: organization} do
+      device = device_fixture(%{organization_id: organization.id})
+      Phoenix.PubSub.subscribe(Castmill.PubSub, "devices:#{device.id}")
+
+      conn
+      |> patch("/api/organizations/#{organization.id}/devices/#{device.id}", %{
+        "update" => %{"orientation" => 0}
+      })
+      |> json_response(200)
+
+      refute_receive %{event: "orientation_updated"}
+    end
+
+    test "cannot rotate a device in another organization", %{
+      conn: conn,
+      organization: organization
+    } do
+      other =
+        organization_fixture(%{network_id: organization.network_id, name: "Other organization"})
+
+      device = device_fixture(%{organization_id: other.id})
+
+      conn
+      |> patch("/api/organizations/#{organization.id}/devices/#{device.id}", %{
+        "update" => %{"orientation" => 90}
+      })
+      |> json_response(404)
+
+      assert Castmill.Devices.get_device(device.id).orientation == 0
+    end
+
+    test "guests cannot save orientation", %{conn: conn, organization: organization, user: user} do
+      Castmill.Organizations.update_role(organization.id, user.id, :guest)
+
+      token =
+        access_token_fixture(%{secret: "orientation:guest", user_id: user.id, is_root: false})
+
+      conn = put_req_header(conn, "authorization", "Bearer " <> token.secret)
+      device = device_fixture(%{organization_id: organization.id})
+
+      conn
+      |> patch("/api/organizations/#{organization.id}/devices/#{device.id}", %{
+        "update" => %{"orientation" => 90}
+      })
+      |> json_response(403)
+
+      assert Castmill.Devices.get_device(device.id).orientation == 0
+    end
+
     test "registers a new device with an api-requested pincode", %{
       conn: conn,
       organization: organization

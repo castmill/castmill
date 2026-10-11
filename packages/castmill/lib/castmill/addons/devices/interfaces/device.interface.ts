@@ -1,4 +1,4 @@
-import type { DeviceInfo } from '@castmill/device';
+import type { DeviceInfo, Orientation } from '@castmill/device';
 
 type DeviceCapabilities = NonNullable<DeviceInfo['capabilities']>;
 
@@ -6,6 +6,12 @@ export interface Device {
   id: string;
   name: string;
   description: string;
+  orientation?: Orientation;
+  orientation_status?: {
+    orientation: Orientation;
+    status: 'applied' | 'error';
+    mode: 'native' | 'css' | 'unknown';
+  };
   online: boolean;
   last_online: Date;
   location: string;

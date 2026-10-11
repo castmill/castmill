@@ -11,6 +11,7 @@ export default defineConfig({
     include: [
       'src/**/*.{test,spec}.?(c|m)[jt]s?(x)',
       '../castmill/lib/castmill/addons/**/services/*.{test,spec}.?(c|m)[jt]s?(x)',
+      '../castmill/lib/castmill/addons/devices/components/*.{test,spec}.?(c|m)[jt]s?(x)',
     ],
   },
 });

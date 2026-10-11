@@ -918,6 +918,17 @@
     "translations": "Översättningar"
   },
   "devices": {
+    "orientation": {
+      "label": "Orientering",
+      "help": "Rotera innehållet medurs från dess normala orientering.",
+      "offline": "Den sparade orienteringen tillämpas nästa gång spelaren ansluter.",
+      "pending": "Orienteringen har sparats. Väntar på bekräftelse från spelaren.",
+      "applied": "Orienteringen har tillämpats.",
+      "applyError": "Spelaren kunde inte tillämpa orienteringen. Kontrollera enhetens händelser.",
+      "unsupported": "Uppdatera spelaren för att aktivera orienteringsinställningar.",
+      "saved": "Enhetens inställningar har sparats.",
+      "saveError": "Det gick inte att spara enhetens inställningar."
+    },
     "setDeviceChannel": "Ställ in enhetskanal",
     "selectChannel": "Välj kanal",
     "preview": {

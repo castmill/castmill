@@ -24,6 +24,7 @@ import {
   Timers,
   TimerEntry,
   WeekDay,
+  isOrientation,
 } from '../interfaces/machine';
 import { getCastmillIntro } from './intro';
 import { Channel, JsonChannel } from './channel';
@@ -37,6 +38,7 @@ import {
   WebSocketLogger,
 } from './logger';
 import { TimerManager } from './timer-manager';
+import { OrientationManager } from './orientation';
 
 const HEARTBEAT_INTERVAL = 1000 * 30; // 30 seconds
 const DEFAULT_MAX_LOGS = 100;
@@ -222,6 +224,8 @@ export class Device extends EventEmitter {
   private playerContainer?: HTMLElement;
   private timerOffOverlay?: HTMLDivElement;
   private recoveryWatcherRunning = false;
+  private orientationManager: OrientationManager;
+  private renderer?: Renderer;
 
   // The base url is the url of the Castmill API. By default it is assumed that the API is
   // hosted at the same domain as this device and accessible through a relative path.
@@ -250,6 +254,9 @@ export class Device extends EventEmitter {
     this.logger.setLogger(new NullLogger());
     this.errorReporter = new DeviceErrorReporter();
     this.errorReporter.enableRuntimeCapture();
+    this.orientationManager = new OrientationManager(this.integration, () => {
+      if (this.opts?.viewport) this.renderer?.setViewport(this.opts.viewport);
+    });
 
     this.timerManager = new TimerManager(this.integration, {
       onTurnOff: async () => {
@@ -278,6 +285,12 @@ export class Device extends EventEmitter {
 
   async init(baseUrl?: string) {
     this.baseUrl = baseUrl ?? (await this.getBaseUrl());
+    try {
+      await this.orientationManager.restore();
+    } catch (error) {
+      this.logger.error(`Unable to restore device orientation: ${error}`);
+      this.errorReporter.report({ category: 'runtime', error });
+    }
   }
 
   // Every content layer must receive the platform's video playback
@@ -385,7 +398,10 @@ export class Device extends EventEmitter {
 
     // TODO: Should be able to pass the logger to the renderer and the player.
     this.playerContainer = el;
-    const renderer = new Renderer(el);
+    await this.orientationManager.ready();
+    const content = this.orientationManager.attach(el);
+    const renderer = new Renderer(content);
+    this.renderer = renderer;
     this.player = new Player(
       this.contentQueue,
       renderer,
@@ -544,7 +560,15 @@ export class Device extends EventEmitter {
 
   async stop() {
     this.closing = true;
+    if (this.orientationChannel && this.orientationListenerRef !== undefined) {
+      this.orientationChannel.off(
+        'orientation_updated',
+        this.orientationListenerRef
+      );
+    }
     await this.player?.stop();
+    await this.orientationManager.ready();
+    this.orientationManager.dispose();
     this.player = undefined;
     await this.errorReporter.close();
   }
@@ -772,7 +796,10 @@ export class Device extends EventEmitter {
             error === AUTH_ERROR_UNAUTHORIZED
           ) {
             // Clean all app data and refresh the page.
+            this.closing = true;
             await this.integration.removeCredentials();
+            await this.orientationManager.ready();
+            await this.integration.setSetting('ORIENTATION', '0');
             window.location.reload();
           } else {
             this.logger.error(`Unable to login ${error}`);
@@ -973,7 +1000,12 @@ export class Device extends EventEmitter {
       // Handle initial join attempt and rejoins after reconnection
       channel
         .join()
-        .receive('ok', () => {
+        .receive('ok', (response: { orientation?: unknown } = {}) => {
+          if (this.closing) return;
+          this.initOrientationListener(channel);
+          if (response.orientation !== undefined) {
+            void this.applyOrientation(response.orientation, channel);
+          }
           // Phoenix re-runs join hooks on every rejoin, so this also catches
           // channel changes made while the device was disconnected.
           void this.syncChannels(device.id);
@@ -1033,6 +1065,7 @@ export class Device extends EventEmitter {
   }
 
   private initListeners(channel: PhoenixChannel) {
+    this.initOrientationListener(channel);
     channel.on('command', async (payload: DeviceCommand) => {
       switch (payload.command) {
         case 'refresh':
@@ -1062,7 +1095,10 @@ export class Device extends EventEmitter {
         case 'device_removed':
           // Device has been deleted from the dashboard
           // Clear credentials and cached data, then reload to show registration page
+          this.closing = true;
           await this.integration.removeCredentials();
+          await this.orientationManager.ready();
+          await this.integration.setSetting('ORIENTATION', '0');
           await this.cache.clean();
           location.reload();
           break;
@@ -1307,7 +1343,59 @@ export class Device extends EventEmitter {
       shutdown: !!this.integration.shutdown,
       update: !!this.integration.update,
       updateFirmware: !!this.integration.updateFirmware,
+      orientation: true,
     };
+  }
+
+  private orientationChannel?: PhoenixChannel;
+  private orientationListenerRef?: number;
+
+  private initOrientationListener(channel: PhoenixChannel): void {
+    if (this.orientationChannel === channel) return;
+    if (this.orientationChannel && this.orientationListenerRef !== undefined) {
+      this.orientationChannel.off(
+        'orientation_updated',
+        this.orientationListenerRef
+      );
+    }
+    this.orientationChannel = channel;
+    this.orientationListenerRef = channel.on(
+      'orientation_updated',
+      (payload: { orientation: unknown }) => {
+        if (this.closing) return;
+        void this.applyOrientation(payload.orientation, channel);
+      }
+    );
+  }
+
+  private async applyOrientation(
+    value: unknown,
+    channel: PhoenixChannel
+  ): Promise<void> {
+    if (!isOrientation(value)) {
+      const error = new Error('Invalid remote device orientation');
+      this.logger.error(error.message);
+      this.errorReporter.report({ category: 'network-sync', error });
+      return;
+    }
+    try {
+      const result = await this.orientationManager.apply(value);
+      if (this.closing) return;
+      channel.push('orientation:report', {
+        orientation: value,
+        status: 'applied',
+        mode: result.mode,
+      });
+    } catch (error) {
+      if (this.closing) return;
+      this.logger.error(`Unable to apply device orientation: ${error}`);
+      this.errorReporter.report({ category: 'runtime', error });
+      channel.push('orientation:report', {
+        orientation: value,
+        status: 'error',
+        mode: 'unknown',
+      });
+    }
   }
 
   async getAvailableBaseUrls(): Promise<{ name: string; url: string }[]> {

@@ -139,6 +139,23 @@ See `packages/platforms/webos-player/README.md` and
 `agents/packages/player/LEGACY-PLAYER-COMPATIBILITY.md` for storage, startup,
 decoder-blocking behavior, and test details.
 
+### Device Orientation
+
+- Device Details supports numeric clockwise `0 | 90 | 180 | 270`, persisted
+  server-side and reconciled on startup/reconnect. Offline saves are allowed.
+- Keep native rotation in the Machine hook and CSS rotation in the shared Device
+  playback wrapper; never apply both. Native WebOS uses Custom.Configuration's
+  get/setNativePortraitMode (0 -> "off", others -> degree strings). Legacy WebOS
+  sends numeric angles to the embedding player's existing setRotation operation.
+  Native mode uses the native viewport and also rotates shell UI. Native/bridge
+  errors and 10-second timeouts must reject, not silently fall back to CSS.
+- Do not confuse LG OSD portrait mode with content rotation, guess native API
+  constants, or automatically reboot a display to apply orientation.
+- Preserve renderer viewport clipping and use logical layout measurements for
+  rotated text fitting, pagination, and scrolling. Do not remount video layers.
+- Localize Details labels/status in all nine dashboard languages. Keep save
+  success separate from player application; old capability flags remain unsupported.
+
 ### Key Technologies
 
 - **Frontend**: SolidJS (Dashboard), React, TypeScript, Vite

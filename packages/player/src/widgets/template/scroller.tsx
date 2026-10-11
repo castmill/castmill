@@ -6,6 +6,7 @@ import {
   onCleanup,
   onMount,
 } from 'solid-js';
+import { getLogicalSize } from '../../utils/logical-size';
 import { Item } from './item';
 import { resolveOption, TemplateConfig } from './binding';
 import {
@@ -176,6 +177,13 @@ class ScrollAnimation {
     this.initialized = true;
   }
 
+  resize(scrollDistance: number): void {
+    if (scrollDistance <= 0 || !isFinite(scrollDistance)) return;
+    this.config.scrollDistance = scrollDistance;
+    this.position %= scrollDistance;
+    this.updateTransform();
+  }
+
   play(): void {
     if (!this._paused) return;
     this._paused = false;
@@ -265,7 +273,7 @@ function parseGap(gap: string, referenceElement: HTMLElement): number {
 
   // Append to the reference element's parent to inherit font-size for em units
   referenceElement.parentElement?.appendChild(temp);
-  const width = temp.getBoundingClientRect().width;
+  const width = getLogicalSize(temp).width;
   temp.remove();
 
   return width;
@@ -316,19 +324,12 @@ export const Scroller: Component<ScrollerProps> = (props) => {
     }
   };
 
-  const initializeScroll = () => {
-    if (!containerRef || !contentRef) {
-      props.onReady();
-      return;
-    }
-
+  const measureScrollDistance = () => {
+    if (!contentRef) return 0;
     const isHorizontal =
       props.opts.direction === 'left' || props.opts.direction === 'right';
-    const isReverse =
-      props.opts.direction === 'right' || props.opts.direction === 'down';
-
     // Get the size of one set of items (half of duplicated content)
-    const contentRect = contentRef.getBoundingClientRect();
+    const contentRect = getLogicalSize(contentRef);
 
     // The content has 2n items with (2n-1) gaps between them.
     // Half the content gives us n items but only (n - 0.5) gaps worth.
@@ -338,7 +339,19 @@ export const Scroller: Component<ScrollerProps> = (props) => {
     const halfContentSize = isHorizontal
       ? contentRect.width / 2
       : contentRect.height / 2;
-    const oneSetSize = halfContentSize + gapPx / 2;
+    return halfContentSize + gapPx / 2;
+  };
+
+  const initializeScroll = () => {
+    if (!containerRef || !contentRef) {
+      props.onReady();
+      return;
+    }
+    const isHorizontal =
+      props.opts.direction === 'left' || props.opts.direction === 'right';
+    const isReverse =
+      props.opts.direction === 'right' || props.opts.direction === 'down';
+    const oneSetSize = measureScrollDistance();
 
     const pixelsPerSecond = props.opts.speed || 100;
 
@@ -383,7 +396,18 @@ export const Scroller: Component<ScrollerProps> = (props) => {
     props.onReady();
   };
 
+  const resizeScroll = () => {
+    if (!scrollAnimation || !timelineItem) return;
+    const distance = measureScrollDistance();
+    if (distance <= 0) return;
+    scrollAnimation.resize(distance);
+    timelineItem.duration = scrollAnimation.duration * 1000;
+  };
+
+  onMount(() => window.addEventListener('resize', resizeScroll));
+
   onCleanup(() => {
+    window.removeEventListener('resize', resizeScroll);
     if (timelineItem) props.timeline.remove(timelineItem);
     scrollAnimation?.destroy();
   });

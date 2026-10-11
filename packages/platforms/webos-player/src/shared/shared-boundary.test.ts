@@ -56,6 +56,8 @@ describe('WebOS shared entry point', () => {
         };
         const visit = (node: ts.Node) => {
           if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) {
+            if (ts.isImportDeclaration(node) && node.importClause?.isTypeOnly)
+              return;
             if (
               node.moduleSpecifier &&
               ts.isStringLiteral(node.moduleSpecifier)

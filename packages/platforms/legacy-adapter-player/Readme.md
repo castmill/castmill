@@ -321,6 +321,26 @@ player must not import the legacy app at runtime. Shared URL routing, memory
 storage, logging, transport, and controller behavior live in `src/shared`;
 `fetchFile`, file deletion, and heartbeat messages remain adapter-specific.
 
+Dashboard device **Details** saves clockwise **0, 90, 180, and 270 degrees**,
+including changes while a device is offline. Android/Electron use the shared
+Device CSS playback wrapper; registration and diagnostics stay outside that
+wrapper. WebOS uses native rotation through its embedding player.
+Orientation changes do not remount video elements or reset the WebOS
+decoder budget. Successful orientation is cached locally and the server preference
+is reconciled on reconnect.
+
+Legacy WebOS and the native IPK player share `applyWebosOrientation` from
+`webos-player/src/shared`. The adapter sends `{ fn: "setRotation", args: [angle] }`
+through the existing request/acknowledgement bridge. The old WebOS wrapper already
+exports this operation: it reads `Custom.Configuration.getNativePortraitMode()`
+and changes it with `setNativePortraitMode`, mapping 0 to `"off"` and the remaining
+angles to degree strings. No wrapper change is needed for that version.
+The adapter waits for success before reporting native application; no CSS rotation
+or logical-dimension swap is applied on top. Native rotation also affects shell UI.
+Missing operations, native failures, and a 10-second bridge timeout are surfaced
+as application errors, not success or silent CSS fallback. Keep SCAP imports out
+of the adapter/shared entry point. No automatic reboot is performed.
+
 To trace WebOS video playback, build the adapter with `VITE_LOGGING=true` and
 inspect the browser console for `[WebOS Video]` messages. Logs are compact and
 event-driven, and include the source type only for non-native media, never the

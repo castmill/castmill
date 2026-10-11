@@ -151,6 +151,7 @@ export default defineConfig({
     coverage: {
       include: [
         'src/shared/**/*.ts',
+        'src/native/orientation.ts',
         'src/classes/file-storage.ts',
         'src/components/player-frame.tsx',
         'src/polyfills/fetch.ts',

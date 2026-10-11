@@ -4,7 +4,14 @@ import {
   SettingKey,
   Timers,
   TelemetryData,
+  Orientation,
+  OrientationResult,
 } from '@castmill/device';
+import {
+  applyWebosOrientation,
+  setWebosNativeOrientation,
+} from '../shared/orientation';
+import { getNativePortraitApi } from '../native/orientation';
 import { configuration, deviceInfo, power, storage } from '../native';
 import { simpleHash, getTimers, setTimers } from './utils';
 import { version } from '../../package.json';
@@ -38,6 +45,14 @@ const CREDENTIALS_FILE_PATH = 'credentials.txt';
 const getFilePath = (path: string) => `file://internal/${path}`;
 
 export class WebosMachine implements Machine {
+  async setOrientation(orientation: Orientation): Promise<OrientationResult> {
+    const api = getNativePortraitApi();
+    return applyWebosOrientation(
+      orientation,
+      api ? (angle) => setWebosNativeOrientation(angle, api) : undefined
+    );
+  }
+
   async setSetting(key: SettingKey, value: string): Promise<void> {
     await storage.writeFile({
       path: getFilePath(`castmill-${key}.txt`),

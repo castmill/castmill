@@ -224,6 +224,35 @@ media URLs or authorization headers. `VITE_DEBUG_OVERLAY=true` still controls
 the shared playback overlay. The iframe wrapper diagnostics panel is specific
 to the legacy adapter and is not installed in the native app.
 
+### Playback orientation
+
+Device **Details** in the dashboard supports clockwise 0/90/180/270-degree
+orientation, including offline saves that apply on reconnect. Both native and
+legacy WebOS use the shared `applyWebosOrientation` policy. The native player
+uses the same **Custom API** as the old WebOS wrapper:
+`Custom.Configuration.getNativePortraitMode()` followed, only when necessary,
+by `setNativePortraitMode({ nativePortrait })`. Zero maps to `"off"`; other
+angles map to `"90"`, `"180"`, and `"270"`. The existing `public/lib/custom.js`
+implements these methods: webOS 3.0 uses `commercial.siAppOrientation`, and
+webOS 3.2+ uses `option.screenRotation`. Do not substitute the unrelated
+`Signage.setPortraitMode` or removed fullscreen-video rotation API.
+
+Calls are bound in `src/native/orientation.ts`, with 10-second deadlines.
+Only an absent Custom getter/setter selects CSS; API errors and timeouts reject,
+without silently falling back after a possible native change. Native success
+disables CSS rotation and dimension swapping: the native viewport supplies the
+logical size. The legacy adapter sends the numeric angle through the wrapper's
+existing `setRotation` operation instead of importing SCAP.
+
+Native rotation changes the application/display orientation, including shell
+UI; unlike CSS it is not limited to the playback subtree. There is no automatic
+reboot. Rotation does not recreate video elements or change the two-loaded-source
+budget.
+
+See `packages/device/README.md` for persistence, application feedback, and logical
+viewport sizing. Validate live rotation and mixed-content/video layouts on actual
+older LG hardware before release.
+
 ### Application update URL
 
 The player can ask SCAP to download an IPK, install it to local storage, and

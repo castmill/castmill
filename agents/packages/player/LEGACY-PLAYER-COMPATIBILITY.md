@@ -69,6 +69,37 @@ The iframe bridge, wrapper heartbeat/watchdog, `console` origin handling, and
 shows a pre-mounted startup overlay, and surfaces initialization failures
 through the device error reporter when available.
 
+#### Device content orientation
+
+Dashboard device Details stores numeric clockwise orientations `0 | 90 | 180 |
+270` on the device record. Socket join/rejoin synchronizes desired state and
+players cache successful application through Machine's `ORIENTATION` setting.
+Offline saves remain pending until connection. Do not equate a saved database
+value with an applied-player acknowledgement.
+
+The Device playback stage owns an independent orientation wrapper. For CSS
+90/270 rotation its logical dimensions are swapped; Renderer viewport clipping
+must stay on the inner content element. Use `getLogicalSize` for widget algorithms
+that require unrotated axes, preserving scale and existing local transforms.
+Live rotation/resize must recalculate auto-fit text, pages and scroll distance
+without rebuilding video layers. Keep direct DOM styles and the no-ResizeObserver
+fallback compatible with Chrome 38.
+
+Both WebOS machine integrations use the shared `applyWebosOrientation` policy.
+Native WebOS binds the old player's `Custom.Configuration.getNativePortraitMode`
+and `setNativePortraitMode`: 0 maps to `"off"`, others to degree strings, and
+unchanged native settings are not rewritten. The shipped Custom library handles
+webOS 3.0 `commercial.siAppOrientation` and 3.2+ `option.screenRotation`.
+Legacy WebOS sends numeric angles through the embedding player's existing
+`setRotation` bridge. Native mode leaves CSS neutral and uses the native viewport;
+it also rotates application/display shell UI, not just playback.
+Only absent native Custom methods select CSS. Native/bridge errors and 10-second
+deadlines reject; never hide a possible native change behind CSS fallback.
+Do not substitute OSD portrait mode or the removed fullscreen-video rotation API.
+Shared code may use type-only Machine imports, but must not import the Device
+app or SCAP at runtime.
+See `packages/device/README.md` and both platform READMEs.
+
 #### Observed runtime limitations
 
 Treat the legacy WebOS engine as a distinct Chrome 38-era runtime, not as a

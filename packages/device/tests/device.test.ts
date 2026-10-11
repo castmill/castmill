@@ -5,6 +5,8 @@ import { Cache, ResourceManager } from '@castmill/cache';
 import { Socket } from 'phoenix';
 import { Layer, Player } from '@castmill/player';
 import { Channel } from '../src/classes/channel';
+import type { Channel as PhoenixChannel } from 'phoenix';
+import type { Machine } from '../src/interfaces/machine';
 
 vi.mock('@castmill/cache', () => ({
   Cache: vi.fn().mockImplementation(() => ({
@@ -82,6 +84,7 @@ describe('Device socket transport', () => {
     const device = new Device(integration as any, {} as any, {
       transport: TestTransport,
     });
+
     device['baseUrl'] = 'http://localhost:4000';
     vi.stubGlobal(
       'fetch',
@@ -113,6 +116,114 @@ describe('Device socket transport', () => {
   });
 });
 
+describe('Device orientation synchronization', () => {
+  const create = () => {
+    const machine = {
+      getSetting: vi.fn().mockResolvedValue(null),
+      setSetting: vi.fn().mockResolvedValue(undefined),
+    };
+    const device = new Device(machine as Machine, {} as never);
+    const channel = createMockPhoenixChannel();
+    device['initListeners'](channel as unknown as PhoenixChannel);
+    const handler = channel.on.mock.calls.find(
+      ([name]) => name === 'orientation_updated'
+    )![1];
+    return { device, machine, channel, handler };
+  };
+
+  it('applies live changes and acknowledges successful persistence', async () => {
+    const { machine, channel, handler } = create();
+    handler({ orientation: 270 });
+    await vi.waitFor(() =>
+      expect(channel.push).toHaveBeenCalledWith('orientation:report', {
+        orientation: 270,
+        status: 'applied',
+        mode: 'css',
+      })
+    );
+    expect(machine.setSetting).toHaveBeenCalledWith('ORIENTATION', '270');
+  });
+
+  it('does not apply invalid remote orientation', async () => {
+    const { machine, channel, handler } = create();
+    handler({ orientation: '90' });
+    await Promise.resolve();
+    expect(machine.setSetting).not.toHaveBeenCalled();
+    expect(channel.push).not.toHaveBeenCalled();
+  });
+
+  it('reports storage failure rather than acknowledging success', async () => {
+    const { machine, channel, handler } = create();
+    machine.setSetting.mockRejectedValue(new Error('write failed'));
+    handler({ orientation: 90 });
+    await vi.waitFor(() =>
+      expect(channel.push).toHaveBeenCalledWith('orientation:report', {
+        orientation: 90,
+        status: 'error',
+        mode: 'unknown',
+      })
+    );
+  });
+
+  it('ignores new orientation events after stopping', async () => {
+    const { device, machine, handler } = create();
+    await device.stop();
+    handler({ orientation: 90 });
+    expect(machine.setSetting).not.toHaveBeenCalled();
+  });
+
+  it('waits for in-flight persistence on stop without sending a late acknowledgement', async () => {
+    const { device, machine, channel, handler } = create();
+    let complete!: () => void;
+    machine.setSetting.mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          complete = resolve;
+        })
+    );
+    handler({ orientation: 90 });
+    await vi.waitFor(() => expect(machine.setSetting).toHaveBeenCalled());
+    let stopped = false;
+    const stop = device.stop().then(() => {
+      stopped = true;
+    });
+    await Promise.resolve();
+    expect(stopped).toBe(false);
+    complete();
+    await stop;
+    expect(channel.push).not.toHaveBeenCalled();
+  });
+
+  it('reconciles the server preference again on every successful rejoin', async () => {
+    const machine = {
+      getSetting: vi.fn().mockResolvedValue(null),
+      setSetting: vi.fn().mockResolvedValue(undefined),
+    };
+    const device = new Device(machine as Machine, {} as never);
+    vi.spyOn(device, 'syncChannels').mockResolvedValue(undefined);
+    const { mockPhoenixChannel } = installPhoenixMocks();
+    const login = device.login(
+      { device: { id: 'device-id', name: 'Device', token: 'test-token' } },
+      'hardware-id'
+    );
+    mockPhoenixChannel._joinPush._trigger('ok', { orientation: 90 });
+    await login;
+    await vi.waitFor(() =>
+      expect(machine.setSetting).toHaveBeenCalledWith('ORIENTATION', '90')
+    );
+    mockPhoenixChannel._joinPush._trigger('ok', { orientation: 180 });
+    await vi.waitFor(() =>
+      expect(machine.setSetting).toHaveBeenCalledWith('ORIENTATION', '180')
+    );
+    expect(
+      mockPhoenixChannel.on.mock.calls.filter(
+        ([name]) => name === 'orientation_updated'
+      )
+    ).toHaveLength(1);
+    await device.stop();
+  });
+});
+
 describe('Device', () => {
   let device: Device;
   let mockIntegration: any;
@@ -122,6 +233,7 @@ describe('Device', () => {
     mockIntegration = {
       getCredentials: vi.fn(),
       getSetting: vi.fn(),
+      setSetting: vi.fn().mockResolvedValue(undefined),
       getMachineGUID: vi.fn(),
       removeCredentials: vi.fn(),
       storeCredentials: vi.fn(),
@@ -267,7 +379,7 @@ describe('Device', () => {
     await device.init('http://localhost:4000');
 
     expect(device['baseUrl']).toBe('http://localhost:4000');
-    expect(mockIntegration.getSetting).not.toHaveBeenCalled();
+    expect(mockIntegration.getSetting).not.toHaveBeenCalledWith('BASE_URL');
   });
 
   it('should refresh and persist the current device identity', async () => {
@@ -467,6 +579,7 @@ describe('Device - Commands', () => {
       getCredentials: vi.fn(),
       getMachineGUID: vi.fn(),
       removeCredentials: vi.fn().mockResolvedValue(undefined),
+      setSetting: vi.fn().mockResolvedValue(undefined),
     };
 
     mockStorageIntegration = {
@@ -1369,6 +1482,7 @@ describe('Device - loginOrRegister (non-blocking login)', () => {
     mockIntegration = {
       getCredentials: vi.fn(),
       getSetting: vi.fn(),
+      setSetting: vi.fn().mockResolvedValue(undefined),
       getMachineGUID: vi.fn().mockResolvedValue('test-hardware-id'),
       removeCredentials: vi.fn().mockResolvedValue(undefined),
       storeCredentials: vi.fn(),
@@ -1499,6 +1613,7 @@ describe('Device - loginOrRegister (non-blocking login)', () => {
                 shutdown: false,
                 update: false,
                 updateFirmware: false,
+                orientation: true,
               },
             },
           }),

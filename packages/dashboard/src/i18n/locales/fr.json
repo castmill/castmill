@@ -935,6 +935,17 @@
     "translations": "Traductions"
   },
   "devices": {
+    "orientation": {
+      "label": "Orientation du contenu",
+      "help": "Faites pivoter le contenu dans le sens horaire depuis son orientation normale.",
+      "offline": "L’orientation enregistrée sera appliquée à la prochaine connexion du lecteur.",
+      "pending": "Orientation enregistrée. En attente de confirmation du lecteur.",
+      "applied": "Orientation appliquée.",
+      "applyError": "Le lecteur n’a pas pu appliquer cette orientation. Consultez les événements de l’appareil.",
+      "unsupported": "Mettez à jour ce lecteur pour activer les réglages d’orientation.",
+      "saved": "Réglages de l’appareil enregistrés.",
+      "saveError": "Impossible d’enregistrer les réglages de l’appareil."
+    },
     "setDeviceChannel": "Définir le canal de l'appareil",
     "selectChannel": "Sélectionner un canal",
     "preview": {
