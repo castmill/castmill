@@ -230,6 +230,7 @@ When providing assistance, prioritize:
 ## ⚠️ Common Pitfalls to Avoid
 
 - Don't modify `yarn.lock` manually
+- Don't remove the root `**/cliui/*` resolutions: Yarn 1 merges `@isaacs/cliui`'s `*-cjs` aliases with the real CommonJS packages, so `cliui` can otherwise receive ESM `strip-ansi`/`string-width`/`wrap-ansi` and break `yarn install` (electron-builder postinstall)
 - Don't ignore TypeScript errors
 - Don't skip writing tests
 - Don't hardcode user-facing strings

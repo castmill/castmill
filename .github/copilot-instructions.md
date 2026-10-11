@@ -164,6 +164,7 @@ yarn workspace website start
 
 ### DON'T:
 - Modify `yarn.lock` manually
+- Remove the root `**/cliui/*` resolutions: Yarn 1 merges `@isaacs/cliui`'s `*-cjs` aliases with the real CommonJS packages, so `cliui` can otherwise receive ESM dependencies and break `yarn install`
 - Install packages without checking workspace compatibility
 - Ignore TypeScript errors
 - Make changes without understanding cross-package impacts

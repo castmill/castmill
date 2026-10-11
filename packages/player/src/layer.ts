@@ -18,6 +18,7 @@ import { catchError, last, map, tap, takeUntil } from 'rxjs/operators';
 import { JsonLayer, JsonPlaylist } from './interfaces';
 import { Transition, fromJSON } from './transitions';
 import { applyCss, parseAspectRatio } from './utils';
+import { getLogicalSize } from './utils/logical-size';
 import {
   PlayerGlobals,
   PlayerRuntimeError,
@@ -299,10 +300,7 @@ export class Layer extends EventEmitter {
   }
 
   private updateWidgetDimensions(
-    bounds: Pick<
-      DOMRectReadOnly,
-      'width' | 'height'
-    > = this.el.getBoundingClientRect()
+    bounds: Pick<DOMRectReadOnly, 'width' | 'height'> = getLogicalSize(this.el)
   ) {
     const { width, height } = bounds;
     if (width === 0 || height === 0 || this.widgetAspectRatio === null) return;

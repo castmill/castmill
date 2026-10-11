@@ -56,6 +56,8 @@ describe('Layer aspect ratio sizing', () => {
       dataset: {},
       firstElementChild: { style: widgetStyle },
       getBoundingClientRect: () => ({ width: 1920, height: 1080 }),
+      getAttribute: () => null,
+      parentElement: null,
     };
 
     try {
@@ -98,6 +100,8 @@ describe('Layer aspect ratio sizing', () => {
       dataset: {},
       firstElementChild: { style: {} },
       getBoundingClientRect: () => ({ width: 1920, height: 1080 }),
+      getAttribute: () => null,
+      parentElement: null,
     };
 
     try {

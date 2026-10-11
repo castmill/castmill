@@ -102,6 +102,8 @@ The Device playback stage owns an independent orientation wrapper. For CSS
 90/270 rotation its logical dimensions are swapped; Renderer viewport clipping
 must stay on the inner content element. Use `getLogicalSize` for widget algorithms
 that require unrotated axes, preserving scale and existing local transforms.
+This includes Layer aspect-ratio sizing whenever it measures without a
+ResizeObserver entry (the Chrome 38 resize fallback and post-show refresh).
 Live rotation/resize must recalculate auto-fit text, pages and scroll distance
 without rebuilding video layers. Keep direct DOM styles and the no-ResizeObserver
 fallback compatible with Chrome 38.

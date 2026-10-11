@@ -15,9 +15,10 @@ export const PlayerFrame: Component = () => {
     let device: Device | undefined;
     let startupStep = 'device construction';
     const showStartupError = (error: unknown) => {
-      startup!.style.display = 'flex';
-      startup!.setAttribute('role', 'alert');
-      startup!.textContent =
+      if (!startup) return;
+      startup.style.display = 'flex';
+      startup.setAttribute('role', 'alert');
+      startup.textContent =
         error instanceof Error ? error.message : String(error);
     };
     onCleanup(() => device?.off('startup-error', showStartupError));
@@ -37,8 +38,9 @@ export const PlayerFrame: Component = () => {
       startupStep = 'cache initialization';
       await cacheBackend.init();
       startupStep = 'device mount';
-      mountDevice(ref!, device);
-      startup!.style.display = 'none';
+      if (!ref) throw new Error('Player mount element is unavailable');
+      mountDevice(ref, device);
+      if (startup) startup.style.display = 'none';
       resetStartupRetry();
     })().catch((error: unknown) => {
       device?.reportStartupError(error);
