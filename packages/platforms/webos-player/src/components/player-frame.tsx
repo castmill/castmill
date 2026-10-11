@@ -55,8 +55,8 @@ export const PlayerFrame: Component = () => {
 
   return (
     <>
-      <div class="player-frame" ref={ref!} />
-      <div class="webos-startup" ref={startup!} role="status">
+      <div class="player-frame" ref={(el) => (ref = el)} />
+      <div class="webos-startup" ref={(el) => (startup = el)} role="status">
         <div class="webos-startup__track">
           <div />
         </div>

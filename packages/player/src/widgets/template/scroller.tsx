@@ -451,12 +451,12 @@ export const Scroller: Component<ScrollerProps> = (props) => {
 
   return (
     <div
-      ref={containerRef}
+      ref={(el) => (containerRef = el)}
       data-component="scroller"
       data-name={props.name}
       style={containerStyle}
     >
-      <div ref={contentRef} style={contentStyle}>
+      <div ref={(el) => (contentRef = el)} style={contentStyle}>
         <For each={duplicatedItems}>
           {(item, i) => (
             <div
