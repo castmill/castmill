@@ -4,7 +4,7 @@ import { Device, mountDevice } from '@castmill/device';
 import { MemoryCache } from '@castmill/cache';
 import { PlayerFrame } from './player-frame';
 import { WebosWebSocket } from '../webos-legacy-api';
-import { createWebosVideoPlayback } from '../classes/webos-video-playback';
+import { createWebosVideoPlayback } from '@castmill/webos-player/shared';
 import { isDebugOverlayEnabled, setDebugOverlay } from '@castmill/player';
 
 const { makeDevice, initWebos, notifyWebos, initCache } = vi.hoisted(() => ({

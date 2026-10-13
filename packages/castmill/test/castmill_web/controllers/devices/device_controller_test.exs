@@ -122,9 +122,12 @@ defmodule CastmillWeb.DeviceControllerTest do
           "reboot" => true,
           "shutdown" => true,
           "update" => true,
-          "updateFirmware" => true
+          "updateFirmware" => true,
+          "orientation" => true
         }
       }
+
+      Phoenix.PubSub.subscribe(Castmill.PubSub, "device_updates:#{device.id}")
 
       conn =
         build_conn()
@@ -134,6 +137,7 @@ defmodule CastmillWeb.DeviceControllerTest do
 
       assert response(conn, 204)
       assert Castmill.Devices.get_device(device.id).info == info
+      assert_receive %{info: ^info}
     end
 
     test "rejects malformed, unknown, and oversized player metadata", %{

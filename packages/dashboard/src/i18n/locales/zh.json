@@ -923,6 +923,17 @@
     "translations": "翻译"
   },
   "devices": {
+    "orientation": {
+      "label": "方向",
+      "help": "从正常方向顺时针旋转播放内容。",
+      "offline": "播放器下次连接时将应用已保存的方向。",
+      "pending": "方向已保存，正在等待播放器确认。",
+      "applied": "方向已应用。",
+      "applyError": "播放器无法应用此方向，请查看设备事件。",
+      "unsupported": "请更新此播放器以启用方向设置。",
+      "saved": "设备设置已保存。",
+      "saveError": "无法保存设备设置。"
+    },
     "setDeviceChannel": "设置设备频道",
     "selectChannel": "选择频道",
     "preview": {

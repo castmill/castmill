@@ -45,6 +45,29 @@ defmodule CastmillWeb.DeviceUpdatesChannel do
   end
 
   # We need to verify if the user is authorized to access this device.
+  def handle_info(%{orientation: orientation}, socket) do
+    push(socket, "device:status", %{
+      device_id: socket.assigns.device_id,
+      orientation: orientation
+    })
+
+    {:noreply, socket}
+  end
+
+  def handle_info(%{orientation_status: report}, socket) do
+    push(socket, "device:status", %{
+      device_id: socket.assigns.device_id,
+      orientation_status: report
+    })
+
+    {:noreply, socket}
+  end
+
+  def handle_info(%{info: info}, socket) do
+    push(socket, "device:status", %{device_id: socket.assigns.device_id, info: info})
+    {:noreply, socket}
+  end
+
   defp authorized?(actor_id, device_id) do
     device = Devices.get_device(device_id)
 

@@ -235,9 +235,22 @@ defmodule CastmillWeb.ResourceController do
             |> Phoenix.Controller.json(%{errors: ["Device not found"]})
             |> halt()
           else
+            previous_orientation = device.orientation
+
             Devices.update_device(device, params.update)
             |> case do
               {:ok, device} ->
+                if device.orientation != previous_orientation do
+                  Phoenix.PubSub.broadcast(Castmill.PubSub, "devices:#{device.id}", %{
+                    event: "orientation_updated",
+                    orientation: device.orientation
+                  })
+
+                  Phoenix.PubSub.broadcast(Castmill.PubSub, "device_updates:#{device.id}", %{
+                    orientation: device.orientation
+                  })
+                end
+
                 if Map.has_key?(params.update, "autorecover_until") ||
                      Map.has_key?(params.update, :autorecover_until) do
                   Phoenix.PubSub.broadcast(
@@ -256,11 +269,8 @@ defmodule CastmillWeb.ResourceController do
                 |> put_status(:ok)
                 |> json(device)
 
-              {:error, errors} ->
-                conn
-                |> put_status(:bad_request)
-                |> Phoenix.Controller.json(%{errors: errors})
-                |> halt()
+              {:error, %Ecto.Changeset{} = changeset} ->
+                {:error, changeset}
             end
           end
 

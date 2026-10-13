@@ -95,6 +95,7 @@
     "typescript": "^5.0.0"
   },
   "resolutions": {
+    "test-exclude": "^7.0.1",
     "@castmill/android-player/**/signal-exit": "3.0.7",
     "@castmill/electron-player/**/string-width": "4.2.3",
     "@castmill/electron-player/**/strip-ansi": "6.0.1",
@@ -106,7 +107,13 @@
     "npmlog": "^7.0.1",
     "request": "^2.88.2",
     "rimraf": "^5.0.5",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "**/cliui/strip-ansi": "6.0.0",
+    "**/cliui/string-width": "4.2.2",
+    "**/cliui/wrap-ansi": "6.2.0",
+    "**/cliui/**/strip-ansi": "6.0.0",
+    "**/cliui/**/string-width": "4.2.2",
+    "**/cliui/**/wrap-ansi": "6.2.0"
   },
   "lint-staged": {
     "packages/**/*.{js,jsx,ts,tsx}": [

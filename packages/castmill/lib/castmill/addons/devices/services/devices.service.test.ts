@@ -17,6 +17,25 @@ describe('DevicesService - Multiple Channel Assignment', () => {
     vi.clearAllMocks();
   });
 
+  it('saves orientation in the organization-scoped update and returns the server device', async () => {
+    const device = { id: deviceId, orientation: 270 };
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(JSON.stringify(device), { status: 200 })
+    );
+    expect(
+      await DevicesService.updateDevice(baseUrl, organizationId, deviceId, {
+        orientation: 270,
+      })
+    ).toEqual(device);
+    expect(fetch).toHaveBeenCalledWith(
+      `${baseUrl}/dashboard/organizations/${organizationId}/devices/${deviceId}`,
+      expect.objectContaining({
+        method: 'PATCH',
+        body: JSON.stringify({ update: { orientation: 270 } }),
+      })
+    );
+  });
+
   describe('addChannelToDevice', () => {
     it('should successfully add a channel to a device', async () => {
       const channelId = 1;

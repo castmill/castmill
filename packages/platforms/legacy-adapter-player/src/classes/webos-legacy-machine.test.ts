@@ -10,6 +10,7 @@ import {
   rebootWebosDevice,
   restartWebosApp,
   updateWebosPlayer,
+  setWebosOrientation,
 } from '../webos-legacy-api';
 
 vi.mock('../webos-legacy-api', () => ({
@@ -20,6 +21,7 @@ vi.mock('../webos-legacy-api', () => ({
   restartWebosApp: vi.fn(),
   rebootWebosDevice: vi.fn(),
   updateWebosPlayer: vi.fn(),
+  setWebosOrientation: vi.fn(),
 }));
 
 describe('WebosLegacyMachine', () => {
@@ -82,6 +84,25 @@ describe('WebosLegacyMachine', () => {
       shutdown: false,
       update: true,
       updateFirmware: false,
+      orientation: true,
     });
+  });
+
+  it.each([0, 90, 180, 270] as const)(
+    'uses shared content rotation policy for %i degrees',
+    async (angle) => {
+      expect(await new WebosLegacyMachine().setOrientation(angle)).toEqual({
+        mode: 'native',
+      });
+      expect(setWebosOrientation).toHaveBeenCalledWith(angle);
+    }
+  );
+  it('reports wrapper orientation errors without double CSS rotation', async () => {
+    vi.mocked(setWebosOrientation).mockRejectedValueOnce(
+      new Error('native denied')
+    );
+    await expect(new WebosLegacyMachine().setOrientation(90)).rejects.toThrow(
+      'native denied'
+    );
   });
 });

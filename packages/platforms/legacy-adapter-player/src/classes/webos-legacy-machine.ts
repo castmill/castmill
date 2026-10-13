@@ -1,4 +1,9 @@
-import { BrowserMachine } from '@castmill/device';
+import {
+  BrowserMachine,
+  type Orientation,
+  type OrientationResult,
+} from '@castmill/device';
+import { applyWebosOrientation } from '@castmill/webos-player/shared';
 import {
   getWebosMachineGUID,
   initWebosLegacyApi,
@@ -7,10 +12,15 @@ import {
   sendHeartbeat,
   sendPlayerReady,
   updateWebosPlayer,
+  setWebosOrientation,
 } from '../webos-legacy-api';
 import { PING_INTERVAL } from './legacy-machine';
 
 export class WebosLegacyMachine extends BrowserMachine {
+  async setOrientation(orientation: Orientation): Promise<OrientationResult> {
+    return applyWebosOrientation(orientation, setWebosOrientation);
+  }
+
   initLegacy(): void {
     initWebosLegacyApi();
     sendHeartbeat();

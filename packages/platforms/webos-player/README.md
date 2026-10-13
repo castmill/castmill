@@ -23,6 +23,7 @@ The application ID is `com.lg.app.signage`, the launcher title is
 | `src/classes/webos-machine.ts` | SCAP-backed device identity, settings, lifecycle actions, updates, timers, and telemetry   |
 | `src/classes/file-storage.ts`  | SCAP internal-storage media cache                                                          |
 | `src/native/`                  | Typed Promise wrappers around the callback-based SCAP APIs                                 |
+| `src/shared/`                  | SCAP-free WebOS playback, decoder budget, transport, memory storage, routing, and logging shared with the legacy adapter |
 | `public/appinfo.json`          | webOS application ID, version, title, icons, orientations, and security settings           |
 | `public/lib/`                  | SCAP loader, TypeScript declarations, and locally supplied LG SCAP libraries               |
 | `vite.config.ts`               | Legacy Chromium-compatible Vite build configuration                                        |
@@ -138,32 +139,44 @@ versions in release packages when supporting both display generations.
 
 ### Castmill server URLs
 
-Server settings are Vite environment variables and are embedded in the web
-bundle at build time. Copy the tracked template to the ignored local
-configuration file, then customize it:
+The server options and default server are compiled into `@castmill/device`,
+which this app consumes from its prebuilt `dist/`. Setting
+`VITE_*_BASE_URL` in this package has no effect. Configure them for the device
+package instead, then rebuild it before building this player:
+
+```dotenv
+# packages/device/.env.local
+VITE_PRODUCTION_BASE_URL=https://api.example.com
+VITE_DEV_BASE_URL=https://api.stage.example.com
+VITE_LOCAL_BASE_URL=http://192.168.1.10:4000
+VITE_DEFAULT_BASE_URL=https://api.example.com
+```
+
+```bash
+yarn workspace @castmill/device build
+yarn workspace @castmill/webos-player build
+```
+
+| Variable (in `packages/device`) | Purpose                                                              |
+| ------------------------------- | -------------------------------------------------------------------- |
+| `VITE_PRODUCTION_BASE_URL`      | Adds a **Production** server option to the player                    |
+| `VITE_DEV_BASE_URL`             | Adds a **Stage** server option to the player                         |
+| `VITE_LOCAL_BASE_URL`           | Adds a **Local** server option for development                       |
+| `VITE_DEFAULT_BASE_URL`         | Server used initially when the display has no saved server selection |
+
+This player's own build settings go in `.env.local`, created from the tracked
+template (files ending in `.local` are ignored by Git):
 
 ```bash
 cp .env.example .env.local
 ```
 
-```dotenv
-VITE_PRODUCTION_BASE_URL=https://api.example.com
-VITE_DEV_BASE_URL=https://api.stage.example.com
-VITE_LOCAL_BASE_URL=http://192.168.1.10:4000
-VITE_DEFAULT_BASE_URL=https://api.example.com
-VITE_FILE_HOST=192.168.1.10
-```
-
-Files ending in `.local` are ignored by Git. Keep shareable placeholders in
-`.env.example`; do not commit local addresses or environment-specific values.
-
-| Variable                   | Purpose                                                              |
-| -------------------------- | -------------------------------------------------------------------- |
-| `VITE_PRODUCTION_BASE_URL` | Adds a **Production** server option to the player                    |
-| `VITE_DEV_BASE_URL`        | Adds a **Stage** server option to the player                         |
-| `VITE_LOCAL_BASE_URL`      | Adds a **Local** server option for development                       |
-| `VITE_DEFAULT_BASE_URL`    | Server used initially when the display has no saved server selection |
-| `VITE_FILE_HOST`           | Replaces `localhost` in media URLs before SCAP downloads them        |
+| Variable (in this package)  | Purpose                                                       |
+| --------------------------- | ------------------------------------------------------------- |
+| `VITE_FILE_HOST`            | Replaces `localhost` in media URLs before SCAP downloads them |
+| `VITE_KEEP_SERVER_SETTINGS` | See [Application update URL](#application-update-url)         |
+| `VITE_LOGGING`              | See [WebOS compatibility and logging](#webos-compatibility-and-logging) |
+| `VITE_DEBUG_OVERLAY`        | See [Playback debug overlay](#playback-debug-overlay)         |
 
 Use complete origins without a trailing slash. `VITE_FILE_HOST` is useful when
 the Castmill backend returns URLs containing `localhost`: on the display,
@@ -185,6 +198,38 @@ application's data when a test display must return to the build default. This
 also requires the display to be registered with Castmill again if all
 application data is cleared.
 
+### Display identity, startup, and maintenance
+
+- **Hardware ID:** the player registers with the SHA-256 hex digest of the
+  wired MAC address (or Wi-Fi MAC when there is no wired adapter). This is the
+  same identifier used by the legacy WebOS wrapper, so a display that moves
+  from the legacy adapter to this app keeps its Castmill registration.
+- **SCAP boot gate:** `public/lib/scap-loader.js` loads the SCAP libraries in
+  order and exposes `window.castmillScapReady`. `src/index.tsx` only imports
+  the app chunk (which constructs SCAP objects) after that promise resolves,
+  with a 30 s timeout.
+- **Startup retry:** when SCAP loading or player initialization fails, the
+  error is shown and the app reloads after a back-off of one minute per
+  consecutive failure, up to nine minutes. The counter resets after a
+  successful start.
+- **Power saving:** every start disables automatic standby, DPM and 15-minute
+  off, which would otherwise turn the display off (for example after four
+  hours without remote-control input).
+- **Network watchdog:** every 10 minutes the player checks SCAP's
+  `isInternetConnectionAvailable`. After two consecutive failed checks it
+  disables the wired and Wi-Fi adapters, waits 10 s, and re-enables them.
+  This requires a SCAP version that provides `DeviceInfo.setNetworkInfo`.
+- **On/off timers** are managed from the dashboard; the player does not
+  schedule its own reboots.
+- **Remote control:** the LG Back key (key code 461) closes the device menu,
+  like Escape.
+- **Telemetry:** SCAP storage values are reported in KB and converted to bytes.
+  Network type and IP address come from SCAP network info. Fans that only
+  report a status, without RPM, are omitted.
+- **Firmware updates** require at least 1 GB of free internal storage. The
+  player waits until SCAP reports the downloaded firmware as `ready` before
+  starting the upgrade.
+
 ### Playback debug overlay
 
 Build with `VITE_DEBUG_OVERLAY=true` to show the playback debug overlay at
@@ -192,6 +237,65 @@ startup. It shows the playing playlist and item of each playlist or layout
 area with progress bars and countdowns. From the browser console, call
 `castmillDebugOverlay(true|false)`. See `agents/packages/player/README.md` for
 details.
+
+### WebOS compatibility and logging
+
+Both this IPK player and the legacy WebOS adapter use the runtime in
+`src/shared/`. The adapter imports its TypeScript source through
+`@castmill/webos-player/shared`; it does not need this player's `dist/`, SCAP
+libraries, or an IPK build. Keep that entry point independent of native APIs,
+app startup, CSS, and the legacy iframe bridge. Native APIs remain in this
+player; bridge APIs remain in the legacy adapter. The shared factory also
+accepts an `isNativeUrl` predicate and decoder budget for integrations and tests.
+
+All WebOS models currently have a **two-loaded-video limit**, not a limit of
+two DOM elements. `WebosDecoderBudget` gates initial source assignment, releases
+paused/detached sources, and queues videos that cannot get a decoder. Blocked
+playlist items hold their clock, then skip after 1 s; a playlist whose items
+are all blocked waits with an empty area instead. These events are reported as
+`playback` / `video-decoder-limit`. Do not increase this limit without testing
+the supported hardware.
+
+The shared controller handles missing readiness events, decoder reloads on
+replay, coalesced seek/play, cancellation, one seek recovery, 15 s metadata
+timeouts with a 30 s retry, and a stall watchdog. A missing native media file
+is invalidated and downloaded once again. Blob and remote videos also use the
+controller, but are not treated as native cached files.
+
+Build with `VITE_LOGGING=true` for `[WebOS Video]` and `[WebOS Storage]` traces.
+They log playback state, decoder handoffs, and download timing without complete
+media URLs or authorization headers. `VITE_DEBUG_OVERLAY=true` still controls
+the shared playback overlay. The iframe wrapper diagnostics panel is specific
+to the legacy adapter and is not installed in the native app.
+
+### Playback orientation
+
+Device **Details** in the dashboard supports clockwise 0/90/180/270-degree
+orientation, including offline saves that apply on reconnect. Both native and
+legacy WebOS use the shared `applyWebosOrientation` policy. The native player
+uses the same **Custom API** as the old WebOS wrapper:
+`Custom.Configuration.getNativePortraitMode()` followed, only when necessary,
+by `setNativePortraitMode({ nativePortrait })`. Zero maps to `"off"`; other
+angles map to `"90"`, `"180"`, and `"270"`. The existing `public/lib/custom.js`
+implements these methods: webOS 3.0 uses `commercial.siAppOrientation`, and
+webOS 3.2+ uses `option.screenRotation`. Do not substitute the unrelated
+`Signage.setPortraitMode` or removed fullscreen-video rotation API.
+
+Calls are bound in `src/native/orientation.ts`, with 10-second deadlines.
+Only an absent Custom getter/setter selects CSS; API errors and timeouts reject,
+without silently falling back after a possible native change. Native success
+disables CSS rotation and dimension swapping: the native viewport supplies the
+logical size. The legacy adapter sends the numeric angle through the wrapper's
+existing `setRotation` operation instead of importing SCAP.
+
+Native rotation changes the application/display orientation, including shell
+UI; unlike CSS it is not limited to the playback subtree. There is no automatic
+reboot. Rotation does not recreate video elements or change the two-loaded-source
+budget.
+
+See `packages/device/README.md` for persistence, application feedback, and logical
+viewport sizing. Validate live rotation and mixed-content/video layouts on actual
+older LG hardware before release.
 
 ### Application update URL
 
@@ -207,7 +311,7 @@ The `yarn build` script supplies this default when the shell variable is not
 set:
 
 ```text
-https://updates.castmill.io/webos/player.ipk
+https://update.castmill.io/webos/player.ipk
 ```
 
 Set `VITE_UPDATE_URL` in the shell as shown above when overriding it. The
@@ -409,6 +513,43 @@ integration detects optional timer methods and treats unsupported telemetry as
 unavailable rather than requiring every display generation to expose the same
 capabilities.
 
+### Storage and startup
+
+Older WebOS engines cannot reliably open IndexedDB/Dexie. The player injects
+`MemoryCache` and never opens IndexedDB for its content cache. **A reachable
+Castmill server is required on every cold start**, even though the IPK app
+shell and public native media survive restarts. Channel/playlist data, widget
+code, and protected resources are session-only.
+
+`FileStorage` routes unsigned public `/medias/` media on the configured API
+origin, and unsigned external HTTP(S) media, through SCAP `copyFile` without
+authorization headers. Same-origin non-public media, query-bearing or
+credential-bearing URLs, code, and data use authenticated XHR into blob URLs
+with a 30 s deadline. Blob URLs are released on deletion or close.
+
+Native filenames use a Chrome 38-compatible SHA-256 implementation and a safe
+final extension. The source-to-local map is persisted under
+`castmill-webos-native-file-map` in localStorage, without tokens or headers.
+Initialization is idempotent, recreates an absent cache directory, prunes
+missing-file mappings, and removes orphan cache files. Invalid metadata clears
+only `file://internal/castmill-cache/`, then recreates it. Existing old
+pathname-hashed native files without a map cannot be restored and are removed
+as orphans; media is downloaded again after upgrading.
+
+Recognized SCAP no-space errors trigger MemoryCache eviction and bounded
+retries. Other download failures are surfaced, and incomplete temporary files
+are removed. Clearing the content cache recreates its directory so subsequent
+downloads work. Credentials and machine identity are not changed by these
+cache operations.
+
+The app uses the shared one-argument `WebosWebSocket` transport to avoid an
+unintended subprotocol header on old WebOS. It displays a black boot indicator
+and a pre-mounted startup overlay. Initialization failures show the original
+error, log the failing stage, and call the device startup-error reporter when
+the device has been constructed. Later login/channel startup-error events
+restore the same pre-mounted overlay by direct DOM updates rather than relying
+on old WebOS applying reactive DOM changes.
+
 ## Sign an IPK
 
 The current `yarn package` command creates an **unsigned** IPK. No official
@@ -482,13 +623,39 @@ Run the TypeScript tests and checks from this package:
 
 ```bash
 yarn test
+yarn test:webos-coverage
 yarn lint
+yarn typecheck
 yarn format:check
 ```
 
 These tests mock SCAP behavior. Validate native storage, timers, telemetry,
 power, installation, and update behavior on representative physical displays
 before releasing.
+
+The native suite runs the shared controller's seeded decoder-budget invariants
+and reuses the legacy adapter's real-player layout/media simulation. The legacy
+suite also discovers `webos-player/src/shared/**/*.test.ts`. Run both suites
+when changing shared code:
+
+```bash
+yarn workspace @castmill/legacy-adapter-player test:webos-coverage
+yarn workspace @castmill/webos-player test:webos-coverage
+```
+
+Coverage commands enforce 90% statements, lines, branches, and functions on the
+selected shared/new integration files. The legacy command first runs its full
+suite and then measures shared coverage in the owning workspace. Coverage uses
+V8; the root `test-exclude` resolution is compatible with the monorepo's glob
+10 resolution. Import-boundary tests reject dependencies from shared code to
+SCAP or application modules and smoke-test the public export without SCAP
+globals.
+
+On the oldest supported physical display, verify consecutive video loops, two
+video zones, a crowded three-video layout, blocked-item reporting, channel
+replacement, native-file deletion/recovery, and restart while offline. Check
+actual visible frames and progress, not only `playing` events. Offline restart
+must present a recoverable connection failure rather than depend on IndexedDB.
 
 ## Troubleshooting
 

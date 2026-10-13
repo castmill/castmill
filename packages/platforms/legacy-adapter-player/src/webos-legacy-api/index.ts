@@ -1,2 +1,2 @@
 export * from './api';
-export * from './websocket';
+export { WebosWebSocket } from '@castmill/webos-player/shared';

@@ -923,6 +923,17 @@
     "translations": "번역"
   },
   "devices": {
+    "orientation": {
+      "label": "방향",
+      "help": "기본 방향에서 재생 콘텐츠를 시계 방향으로 회전합니다.",
+      "offline": "플레이어가 다음에 연결되면 저장된 방향이 적용됩니다.",
+      "pending": "방향이 저장되었습니다. 플레이어의 확인을 기다리는 중입니다.",
+      "applied": "방향이 적용되었습니다.",
+      "applyError": "플레이어가 이 방향을 적용하지 못했습니다. 기기 이벤트를 확인하세요.",
+      "unsupported": "방향 설정을 사용하려면 이 플레이어를 업데이트하세요.",
+      "saved": "기기 설정이 저장되었습니다.",
+      "saveError": "기기 설정을 저장하지 못했습니다."
+    },
     "setDeviceChannel": "기기 채널 설정",
     "selectChannel": "채널 선택",
     "preview": {

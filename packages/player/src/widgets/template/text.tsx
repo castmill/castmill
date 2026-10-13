@@ -1,4 +1,5 @@
 import gsap from 'gsap';
+import { getLogicalSize } from '../../utils/logical-size';
 
 import { Component, JSX, mergeProps, onCleanup, onMount } from 'solid-js';
 import { TemplateConfig, resolveOption } from './binding';
@@ -173,8 +174,10 @@ export const Text: Component<TextProps> = (props) => {
       return;
     }
 
-    const containerRect = element.parentElement?.getBoundingClientRect();
-    const textRect = element.getBoundingClientRect();
+    const containerRect = element.parentElement
+      ? getLogicalSize(element.parentElement)
+      : undefined;
+    const textRect = getLogicalSize(element);
     if (!containerRect) {
       return;
     }
@@ -283,7 +286,7 @@ function autoFitText(div: HTMLDivElement, options: AutoFitOpts): number {
     return fallbackSize;
   }
 
-  const containerRect = containerElement.getBoundingClientRect();
+  const containerRect = getLogicalSize(containerElement);
   const maxHeight = containerRect.height;
   const maxWidth = containerRect.width;
   if (maxWidth === 0 || maxHeight === 0) {
@@ -298,7 +301,7 @@ function autoFitText(div: HTMLDivElement, options: AutoFitOpts): number {
   }
 
   const fits = () => {
-    const { height, width } = textElement.getBoundingClientRect();
+    const { height, width } = getLogicalSize(textElement);
     return height <= maxHeight && width <= maxWidth;
   };
 

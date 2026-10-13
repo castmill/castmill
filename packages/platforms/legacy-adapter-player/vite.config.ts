@@ -199,6 +199,11 @@ export default defineConfig({
     // setupFiles: ['node_modules/@testing-library/jest-dom/vitest'],
     // WebOS tests disable IndexedDB; Android cache tests need a fresh environment.
     isolate: true,
+    include: [
+      'src/**/*.test.{ts,tsx}',
+      'build/**/*.test.ts',
+      '../webos-player/src/shared/**/*.test.ts',
+    ],
   },
   build: {
     minify: false,

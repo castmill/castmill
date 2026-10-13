@@ -1,14 +1,19 @@
-import { createSignal, createEffect, on } from 'solid-js';
+import { createSignal, createEffect, on, Show } from 'solid-js';
+import type { Orientation } from '@castmill/device';
 
 import { Device } from '../interfaces/device.interface';
 import { Button, FormItem } from '@castmill/ui-common';
 import { AddonStore } from '../../common/interfaces/addon-store';
 
-import { BsCheckLg, BsX } from 'solid-icons/bs';
+import { BsCheckLg, BsInfoCircle, BsX } from 'solid-icons/bs';
+import './device-details.scss';
+
+const ORIENTATIONS: readonly Orientation[] = [0, 90, 180, 270];
 
 export interface DeviceUpdate {
   name?: string;
   description?: string;
+  orientation?: Orientation;
   autorecover_until?: string | null;
 }
 
@@ -27,20 +32,52 @@ export const DeviceDetails = (props: {
 
   const [name, setName] = createSignal(props.device.name);
   const [description, setDescription] = createSignal(props.device.description);
+  const [orientation, setOrientation] = createSignal<Orientation>(
+    props.device.orientation ?? 0
+  );
   const [isFormModified, setIsFormModified] = createSignal(false);
   const [errors, setErrors] = createSignal(new Map());
 
   const [onlineStatus, setOnlineStatus] = createSignal('');
+  let initializedDeviceId = props.device.id;
+  const canEdit = () =>
+    !props.store?.permissions ||
+    props.store.permissions.matrix.devices.includes('update');
+  const supportsOrientation = () =>
+    props.device.info?.capabilities?.orientation === true;
+  const orientationStatus = () => {
+    if (!props.device.online) return t('devices.orientation.offline');
+    const report = props.device.orientation_status;
+    if (report?.orientation === (props.device.orientation ?? 0)) {
+      return report.status === 'applied'
+        ? ''
+        : t('devices.orientation.applyError');
+    }
+    return t('devices.orientation.pending');
+  };
 
   createEffect(
     on(
       () => props.device.id,
-      () => {
+      (id) => {
+        if (id === initializedDeviceId) return;
+        initializedDeviceId = id;
         setName(props.device.name);
         setDescription(props.device.description);
+        setOrientation(props.device.orientation ?? 0);
         setIsFormModified(false);
         setErrors(new Map());
       }
+    )
+  );
+
+  createEffect(
+    on(
+      () => props.device.orientation,
+      (next, previous) => {
+        if (orientation() === (previous ?? 0)) setOrientation(next ?? 0);
+      },
+      { defer: true }
     )
   );
 
@@ -71,7 +108,11 @@ export const DeviceDetails = (props: {
     // We need to check both fields or create effect will not detect the dependencies.
     const hasModifiedName = name() !== props.device.name;
     const hasModifiedDescription = description() !== props.device.description;
-    setIsFormModified(hasModifiedName || hasModifiedDescription);
+    const hasModifiedOrientation =
+      orientation() !== (props.device.orientation ?? 0);
+    setIsFormModified(
+      hasModifiedName || hasModifiedDescription || hasModifiedOrientation
+    );
 
     setOnlineStatus(
       props.device.online
@@ -81,7 +122,9 @@ export const DeviceDetails = (props: {
   });
 
   const isFormValid = () => {
-    return ![...errors().values()].some((e) => e) && isFormModified();
+    return (
+      canEdit() && ![...errors().values()].some((e) => e) && isFormModified()
+    );
   };
 
   return (
@@ -97,7 +140,13 @@ export const DeviceDetails = (props: {
           e.preventDefault();
           if (isFormValid()) {
             if (
-              await props.onSubmit({ name: name(), description: description() })
+              await props.onSubmit({
+                name: name(),
+                description: description(),
+                ...(supportsOrientation()
+                  ? { orientation: orientation() }
+                  : {}),
+              })
             ) {
               setIsFormModified(false);
             }
@@ -118,6 +167,61 @@ export const DeviceDetails = (props: {
           >
             <div class="error">{errors().get('name')}</div>
           </FormItem>
+
+          <div class="form-item-wrapper device-orientation">
+            <div class="form-item1">
+              <div class="device-orientation-label">
+                <label for={`orientation-${props.device.id}`}>
+                  {t('devices.orientation.label')}
+                </label>
+                <div class="device-orientation-help">
+                  <button
+                    type="button"
+                    aria-label={t('devices.orientation.help')}
+                    aria-describedby={`orientation-help-${props.device.id}`}
+                  >
+                    <BsInfoCircle />
+                  </button>
+                  <span
+                    id={`orientation-help-${props.device.id}`}
+                    role="tooltip"
+                  >
+                    {t('devices.orientation.help')}
+                  </span>
+                </div>
+              </div>
+              <select
+                id={`orientation-${props.device.id}`}
+                aria-describedby={`orientation-help-${props.device.id}`}
+                value={orientation()}
+                disabled={!canEdit() || !supportsOrientation()}
+                onChange={(event) => {
+                  const value = Number(event.currentTarget.value);
+                  if (ORIENTATIONS.includes(value as Orientation))
+                    setOrientation(value as Orientation);
+                }}
+              >
+                <option value={0}>0°</option>
+                <option value={90}>90°</option>
+                <option value={180}>180°</option>
+                <option value={270}>270°</option>
+              </select>
+            </div>
+            <Show
+              when={supportsOrientation()}
+              fallback={
+                <div class="description">
+                  {t('devices.orientation.unsupported')}
+                </div>
+              }
+            >
+              <Show when={orientationStatus()}>
+                <div class="description" role="status">
+                  {orientationStatus()}
+                </div>
+              </Show>
+            </Show>
+          </div>
 
           <FormItem
             label={t('common.description')}
@@ -170,6 +274,8 @@ export const DeviceDetails = (props: {
             onClick={() => {
               setName(props.device.name);
               setDescription(props.device.description);
+              setOrientation(props.device.orientation ?? 0);
+              setErrors(new Map());
               setIsFormModified(false);
             }}
             icon={BsX}

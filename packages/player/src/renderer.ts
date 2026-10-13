@@ -23,6 +23,7 @@ import { DebugOverlay } from './debug';
 import { Transition } from './transitions/transition';
 import { combineLatest, Observable, of } from 'rxjs';
 import { finalize, switchMap, tap, map } from 'rxjs/operators';
+import { getLogicalSize } from './utils/logical-size';
 
 /**
  * Viewport
@@ -53,7 +54,10 @@ export class Renderer {
   }
 
   setViewport(viewport: Viewport) {
-    const { width, height } = this.el.getBoundingClientRect();
+    const parent = this.el.parentElement;
+    const { width, height } = getLogicalSize(
+      parent?.hasAttribute('data-castmill-orientation') ? parent : this.el
+    );
 
     const useTransform = false;
     if (useTransform) {

@@ -13,6 +13,7 @@ defmodule Castmill.Devices.Device do
              :id,
              :name,
              :description,
+             :orientation,
              :autorecover_until,
              :last_ip,
              :last_online,
@@ -41,6 +42,7 @@ defmodule Castmill.Devices.Device do
     field(:meta, :map)
     field(:name, :string)
     field(:description, :string)
+    field(:orientation, :integer, default: 0)
     field(:settings, :map)
     field(:timezone, :string)
     field(:user_agent, :string)
@@ -73,6 +75,7 @@ defmodule Castmill.Devices.Device do
     |> cast(attrs, [
       :name,
       :description,
+      :orientation,
       :last_ip,
       :token,
       :meta,
@@ -89,6 +92,7 @@ defmodule Castmill.Devices.Device do
       :organization_id,
       :autorecover_until
     ])
+    |> validate_orientation(attrs)
     |> put_pass_hash()
     |> validate_required([
       :name,
@@ -108,6 +112,7 @@ defmodule Castmill.Devices.Device do
     |> cast(attrs, [
       :name,
       :description,
+      :orientation,
       :last_ip,
       :token,
       :meta,
@@ -126,7 +131,24 @@ defmodule Castmill.Devices.Device do
       :schedule,
       :autorecover_until
     ])
+    |> validate_orientation(attrs)
     |> put_pass_hash()
+  end
+
+  defp validate_orientation(changeset, attrs) do
+    value = Map.get(attrs, "orientation", Map.get(attrs, :orientation, :absent))
+
+    changeset =
+      if value != :absent and (not is_integer(value) or value not in [0, 90, 180, 270]) do
+        add_error(changeset, :orientation, "must be 0, 90, 180 or 270 degrees")
+      else
+        changeset
+      end
+
+    changeset
+    |> validate_required([:orientation])
+    |> validate_inclusion(:orientation, [0, 90, 180, 270])
+    |> check_constraint(:orientation, name: :devices_orientation_degrees)
   end
 
   defp put_pass_hash(%Ecto.Changeset{valid?: true, changes: %{token: token}} = changeset) do

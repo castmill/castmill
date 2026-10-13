@@ -21,6 +21,12 @@ interface NetworkInfo {
   wifi: WirelessNetworkInfo;
 }
 
+interface SetNetworkInfoOptions {
+  [key: string]: unknown;
+  wired?: Partial<WiredNetworkInfo> & { enabled?: boolean };
+  wifi?: Partial<WirelessNetworkInfo> & { enabled?: boolean };
+}
+
 interface WiredNetworkInfo {
   state: 'connected' | 'disconnected';
   interfaceName?: string;
@@ -168,6 +174,11 @@ interface DeviceInfo {
   getNetworkInfo(
     successCallback: (cbObject: NetworkInfo) => void,
     errorCallback: (cbObject: { errorCode: number; errorText: string }) => void
+  ): void;
+  setNetworkInfo?(
+    successCallback: () => void,
+    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
+    options: SetNetworkInfoOptions
   ): void;
   getNetworkMacInfo(
     successCallback: (cbObject: NetworkMacInfo) => void,

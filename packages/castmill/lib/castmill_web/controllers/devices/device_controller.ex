@@ -30,6 +30,7 @@ defmodule CastmillWeb.DeviceController do
     shutdown
     update
     updateFirmware
+    orientation
   )
   @max_device_info_value_bytes 1024
 
@@ -145,8 +146,16 @@ defmodule CastmillWeb.DeviceController do
 
     if valid_device_info?(info) do
       case Devices.update_device(device, %{info: info}) do
-        {:ok, _device} -> send_resp(conn, :no_content, "")
-        {:error, changeset} -> {:error, changeset}
+        {:ok, device} ->
+          # Let open dashboards refresh capabilities without a page reload.
+          Phoenix.PubSub.broadcast(Castmill.PubSub, "device_updates:#{device.id}", %{
+            info: device.info
+          })
+
+          send_resp(conn, :no_content, "")
+
+        {:error, changeset} ->
+          {:error, changeset}
       end
     else
       send_resp(conn, :bad_request, "")

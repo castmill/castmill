@@ -8,17 +8,20 @@
     "format": "oxfmt --write .",
     "format:check": "oxfmt .",
     "lint": "oxlint .",
+    "typecheck": "tsc --noEmit",
     "start": "vite",
     "dev": "vite -d",
     "build": "vite build",
     "build:server": "vite build --base=/legacy/ --outDir=../../castmill/priv/static/legacy --emptyOutDir",
     "serve": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:webos-coverage": "vitest run && yarn workspace @castmill/webos-player test:shared-coverage"
   },
   "dependencies": {
     "@castmill/cache": "*",
     "@castmill/device": "*",
     "@castmill/player": "*",
+    "@castmill/webos-player": "*",
     "solid-js": "^1.8.11"
   },
   "devDependencies": {

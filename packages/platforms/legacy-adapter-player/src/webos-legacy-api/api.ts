@@ -1,9 +1,13 @@
 import { inbound } from '../legacy-api/inbound';
 import { Msg } from '../legacy-api/msg';
+import type { Orientation } from '@castmill/device';
 
 export { sendHeartbeat, sendPlayerReady } from '../legacy-api/notifications';
 
 const outbound = {
+  setRotation: async function (_orientation: Orientation): Promise<void> {
+    throw new Error('WebOS bridge is not initialized');
+  },
   getUUid: async function (): Promise<string> {
     throw new Error('WebOS bridge is not initialized');
   },
@@ -35,9 +39,16 @@ let initialized = false;
 
 export function initWebosLegacyApi(): void {
   if (!initialized) {
-    new Msg(window.parent, inbound, outbound);
+    new Msg(window.parent, inbound, outbound, { setRotation: 10_000 });
     initialized = true;
   }
+}
+
+export async function setWebosOrientation(
+  orientation: Orientation
+): Promise<void> {
+  initWebosLegacyApi();
+  await outbound.setRotation(orientation);
 }
 
 export async function getWebosMachineGUID(): Promise<string> {

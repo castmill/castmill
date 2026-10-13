@@ -118,4 +118,33 @@ describe('WebosMemoryFileStorage', () => {
     );
     expect(await storage.listFiles()).toEqual([]);
   });
+
+  it('counts blob sizes and removes files by source URL or cached URL', async () => {
+    const download = storage.storeFile('https://castmill.test/data');
+    requests[0].xhr.response = new Blob(['hello']);
+    requests[0].xhr.onload?.();
+    await download;
+    expect(await storage.info()).toEqual({ total: 0, used: 5 });
+    await storage.deleteFile('unknown');
+    expect(await storage.retrieveFile('https://castmill.test/data')).toBe(
+      'blob:first'
+    );
+    await storage.deleteFile('https://castmill.test/data');
+    expect(
+      await storage.retrieveFile('https://castmill.test/data')
+    ).toBeUndefined();
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:first');
+    expect(await storage.info()).toEqual({ total: 0, used: 0 });
+  });
+
+  it.each([0, 299, 300])(
+    'rejects HTTP %s without a Blob response',
+    async (status) => {
+      const download = storage.storeFile('https://castmill.test/data');
+      requests[0].xhr.status = status;
+      requests[0].xhr.onload?.();
+      await expect(download).rejects.toThrow(`HTTP ${status}`);
+      expect(await storage.listFiles()).toEqual([]);
+    }
+  );
 });

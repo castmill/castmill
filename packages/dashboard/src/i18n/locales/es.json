@@ -951,6 +951,17 @@
     "translations": "Traducciones"
   },
   "devices": {
+    "orientation": {
+      "label": "Orientación",
+      "help": "Gira el contenido en sentido horario desde su orientación normal.",
+      "offline": "La orientación guardada se aplicará cuando el reproductor vuelva a conectarse.",
+      "pending": "Orientación guardada. Esperando la confirmación del reproductor.",
+      "applied": "Orientación aplicada.",
+      "applyError": "El reproductor no pudo aplicar esta orientación. Consulta los eventos del dispositivo.",
+      "unsupported": "Actualiza este reproductor para habilitar la configuración de orientación.",
+      "saved": "Configuración del dispositivo guardada.",
+      "saveError": "No se pudo guardar la configuración del dispositivo."
+    },
     "setDeviceChannel": "Establecer canal del dispositivo",
     "selectChannel": "Seleccionar canal",
     "preview": {

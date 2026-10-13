@@ -945,6 +945,17 @@
     "translations": "Übersetzungen"
   },
   "devices": {
+    "orientation": {
+      "label": "Ausrichtung",
+      "help": "Wiedergabeinhalte im Uhrzeigersinn aus ihrer normalen Ausrichtung drehen.",
+      "offline": "Die gespeicherte Ausrichtung wird bei der nächsten Verbindung des Players angewendet.",
+      "pending": "Ausrichtung gespeichert. Warten auf die Bestätigung des Players.",
+      "applied": "Ausrichtung angewendet.",
+      "applyError": "Der Player konnte diese Ausrichtung nicht anwenden. Prüfen Sie die Geräteereignisse.",
+      "unsupported": "Aktualisieren Sie diesen Player, um die Ausrichtung einzustellen.",
+      "saved": "Geräteeinstellungen gespeichert.",
+      "saveError": "Geräteeinstellungen konnten nicht gespeichert werden."
+    },
     "setDeviceChannel": "Gerätekanal festlegen",
     "selectChannel": "Kanal auswählen",
     "preview": {

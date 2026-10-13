@@ -37,7 +37,91 @@ extend the WebOS missing-parent exception to Electron app messages.
 
 ## JavaScript Rules
 
-### Legacy WebOS wrapper
+### WebOS runtime shared by native and legacy players
+
+The native IPK app (`packages/platforms/webos-player`) and the legacy WebOS
+adapter run on the same hardware. Their reusable compatibility code lives in
+`webos-player/src/shared` and is exported as `@castmill/webos-player/shared`.
+This is a TypeScript source subpath, not an app bundle or a separate package.
+Both Vite apps compile it to Chrome 38; importing it needs no native player
+build or installed SCAP libraries.
+
+Keep shared code independent of SCAP globals, `src/native`, native machine or
+storage classes, app components, CSS, and bootstrap. Shared import-boundary
+tests and a no-SCAP import smoke test enforce this separation. The native
+player must not depend on the legacy adapter at runtime. Preserve the tested
+WebOS behavior before moving functionality: run the legacy suite first, then
+both suites and their coverage checks after changes.
+
+Both PlayerFrames inject `WebosWebSocket`, `createWebosVideoPlayback`, and
+`MemoryCache`. The shared controller's default native URL predicate recognizes
+64-hex names under `http://127.0.0.1:9080/castmill-cache/`; the factory supports
+injecting another predicate and budget without importing platform storage.
+The native player uses SCAP directly for eligible media and a validated
+`castmill-webos-native-file-map` in localStorage. It reconciles missing files,
+removes orphan cache files, uses atomic temporary-file downloads and SHA-256
+filenames, translates recognized storage-full errors, and serves protected
+resources from session XHR blobs. Both WebOS players require an online server
+at cold startup; neither opens IndexedDB for content caching.
+
+The iframe bridge, wrapper heartbeat/watchdog, `console` origin handling, and
+`/legacy/sw.js` are legacy-only. The native player ships its shell in the IPK,
+shows a pre-mounted startup overlay, and surfaces initialization failures
+through the device error reporter when available.
+
+Native-only startup and maintenance (`webos-player/src/boot`,
+`src/classes/display-maintenance.ts`):
+
+- `scap-loader.js` loads SCAP scripts in order and exposes
+  `window.castmillScapReady`. `src/native/native-api.ts` constructs SCAP
+  objects at import time, so the entry point imports the app chunk only after
+  that promise resolves (30 s timeout). Never import `src/native` or
+  `src/classes` statically from `src/index.tsx` or `src/boot`.
+- Boot or initialization failures are displayed and retried by reloading after
+  1-9 minutes of linear back-off (sessionStorage counter, reset on success).
+- Each start calls `Signage.setPowerSaveMode` to disable automatic standby, DPM
+  and 15-minute off. A 10-minute watchdog toggles wired/Wi-Fi adapters after two
+  consecutive SCAP `isInternetConnectionAvailable === false` checks, when
+  `DeviceInfo.setNetworkInfo` exists. No player-scheduled reboots.
+- The hardware ID is `sha256(wired || wifi MAC)`, identical to the legacy
+  wrapper's `getUUid`, so migrating displays keep their registration.
+- SCAP `getStorageInfo` values are KB; convert to bytes for telemetry and cache
+  accounting.
+- The webOS 3.x fetch fallback resolves every HTTP status (`ok` reflects 2xx)
+  so callers can read error bodies such as `recovery_blocked`.
+
+#### Device content orientation
+
+Dashboard device Details stores numeric clockwise orientations `0 | 90 | 180 |
+270` on the device record. Socket join/rejoin synchronizes desired state and
+players cache successful application through Machine's `ORIENTATION` setting.
+Offline saves remain pending until connection. Do not equate a saved database
+value with an applied-player acknowledgement.
+
+The Device playback stage owns an independent orientation wrapper. For CSS
+90/270 rotation its logical dimensions are swapped; Renderer viewport clipping
+must stay on the inner content element. Use `getLogicalSize` for widget algorithms
+that require unrotated axes, preserving scale and existing local transforms.
+This includes Layer aspect-ratio sizing whenever it measures without a
+ResizeObserver entry (the Chrome 38 resize fallback and post-show refresh).
+Live rotation/resize must recalculate auto-fit text, pages and scroll distance
+without rebuilding video layers. Keep direct DOM styles and the no-ResizeObserver
+fallback compatible with Chrome 38.
+
+Both WebOS machine integrations use the shared `applyWebosOrientation` policy.
+Native WebOS binds the old player's `Custom.Configuration.getNativePortraitMode`
+and `setNativePortraitMode`: 0 maps to `"off"`, others to degree strings, and
+unchanged native settings are not rewritten. The shipped Custom library handles
+webOS 3.0 `commercial.siAppOrientation` and 3.2+ `option.screenRotation`.
+Legacy WebOS sends numeric angles through the embedding player's existing
+`setRotation` bridge. Native mode leaves CSS neutral and uses the native viewport;
+it also rotates application/display shell UI, not just playback.
+Only absent native Custom methods select CSS. Native/bridge errors and 10-second
+deadlines reject; never hide a possible native change behind CSS fallback.
+Do not substitute OSD portrait mode or the removed fullscreen-video rotation API.
+Shared code may use type-only Machine imports, but must not import the Device
+app or SCAP at runtime.
+See `packages/device/README.md` and both platform READMEs.
 
 #### Observed runtime limitations
 
@@ -91,7 +175,7 @@ cache entry and retries the download once, even if removing the missing native
 file fails. WebOS must start online even if the app shell was cached; it does
 not open IndexedDB.
 
-`PlayerFrame` injects the adapter-local `WebosVideoPlayback` controller for every
+Both `PlayerFrame` implementations inject the shared `WebosVideoPlayback` controller for every
 WebOS video, including blob and remote sources. The controller owns decoder
 reloads, metadata waits, bounded seek recovery, and cancellation. Immediate
 timeline seek/play calls are coalesced; a paused seek preserves its offset without
@@ -120,6 +204,19 @@ over the video. Waiting videos of layers that were removed from the document
 until shown again. End-to-end
 (`webos-layout-playback.test.tsx`) and seeded invariant tests guard these
 limits; see the adapter README for details.
+The native player's suite reuses that layout harness; shared unit/invariant
+tests now live in `webos-player/src/shared`. Keep Vitest test files isolated
+because WebOS tests disable IndexedDB while other platform tests require it.
+
+```bash
+yarn workspace @castmill/legacy-adapter-player test:webos-coverage
+yarn workspace @castmill/webos-player test:webos-coverage
+yarn workspace @castmill/legacy-adapter-player typecheck
+yarn workspace @castmill/webos-player typecheck
+```
+
+Coverage commands enforce 90% statements, lines, branches, and functions for
+shared/new WebOS integration files. Rebuild both apps after shared changes.
 The video widget waits for `canplay` or `canplaythrough`, but accepts
 `loadedmetadata`, `loadeddata`, or metadata visible in `readyState` at the
 bounded readiness deadline to register and start WebOS videos without either

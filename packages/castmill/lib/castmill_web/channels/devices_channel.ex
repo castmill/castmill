@@ -14,7 +14,7 @@ defmodule CastmillWeb.DevicesChannel do
     # so only devices with a certain IP address (or address range)
     # can connect to the socket.
     case Devices.verify_device_token(device_id, token) do
-      {:ok, _device} ->
+      {:ok, device} ->
         {:ok, _device} = mark_online(socket)
 
         Devices.insert_event(%{device_id: device_id, type: "o", msg: "Device connected"})
@@ -25,11 +25,37 @@ defmodule CastmillWeb.DevicesChannel do
         # Push saved schedule timers to device after a short delay
         Process.send_after(self(), :sync_schedule, 1_000)
 
-        {:ok, socket}
+        {:ok, %{orientation: device.orientation}, socket}
 
       {:error, reason} ->
         {:error, reason}
     end
+  end
+
+  @impl true
+  def handle_in(
+        "orientation:report",
+        %{"orientation" => orientation, "status" => status, "mode" => mode},
+        socket
+      )
+      when orientation in [0, 90, 180, 270] and status in ["applied", "error"] and
+             (mode in ["native", "css"] or (status == "error" and mode == "unknown")) do
+    device_id = socket.assigns.device.device_id
+    device = Devices.get_device(device_id)
+
+    if device && device.orientation == orientation do
+      report = %{orientation: orientation, status: status, mode: mode}
+
+      Phoenix.PubSub.broadcast(Castmill.PubSub, "device_updates:#{device_id}", %{
+        orientation_status: report
+      })
+    end
+
+    {:reply, :ok, socket}
+  end
+
+  def handle_in("orientation:report", _payload, socket) do
+    {:reply, {:error, %{reason: "invalid_orientation_report"}}, socket}
   end
 
   @impl true
@@ -195,6 +221,12 @@ defmodule CastmillWeb.DevicesChannel do
   @impl true
   def handle_info(%{command: _command} = params, socket) do
     push(socket, "command", params)
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info(%{event: "orientation_updated", orientation: orientation}, socket) do
+    push(socket, "orientation_updated", %{orientation: orientation})
     {:noreply, socket}
   end
 

@@ -116,6 +116,52 @@ components and utilities they use.
 Read `agents/packages/player/LEGACY-PLAYER-COMPATIBILITY.md` before changing these
 widgets or shared player-rendering code.
 
+### WebOS Player Compatibility
+
+- Native and legacy WebOS players share runtime code in
+  `packages/platforms/webos-player/src/shared`, exported as
+  `@castmill/webos-player/shared`. Do not create a separate webos-common package.
+- Keep that entry point free of SCAP/native APIs, app startup, CSS, and legacy
+  bridge imports. The legacy adapter imports the source subpath; no native
+  player build is required. Native-to-legacy runtime dependencies are forbidden.
+- Preserve the two-loaded-video decoder budget, WebOS playback recovery,
+  one-argument WebSocket transport, and `MemoryCache` (no IndexedDB on WebOS).
+  Persist only eligible public media; protected/code/data resources use XHR
+  session blobs. Cold startup requires a reachable server.
+- Native-only rules: import SCAP-backed modules (`src/native`, `src/classes`)
+  only after `window.castmillScapReady` resolves; the boot gate loads them in a
+  dynamic app chunk. The hardware ID must stay `sha256(wired || wifi MAC)` to
+  match the legacy wrapper. SCAP storage sizes are KB. The player disables
+  automatic standby at boot and does not schedule reboots (timers come from the
+  dashboard).
+- Run the legacy suite before moving shared functionality. After changes, run
+  `yarn workspace @castmill/legacy-adapter-player test:webos-coverage` and
+  `yarn workspace @castmill/webos-player test:webos-coverage`, plus both
+  workspaces' typecheck and builds. Keep import-boundary and no-SCAP smoke tests.
+- Validate actual visible playback on old signage hardware before release;
+  modern-browser tests and media events alone are insufficient.
+
+See `packages/platforms/webos-player/README.md` and
+`agents/packages/player/LEGACY-PLAYER-COMPATIBILITY.md` for storage, startup,
+decoder-blocking behavior, and test details.
+
+### Device Orientation
+
+- Device Details supports numeric clockwise `0 | 90 | 180 | 270`, persisted
+  server-side and reconciled on startup/reconnect. Offline saves are allowed.
+- Keep native rotation in the Machine hook and CSS rotation in the shared Device
+  playback wrapper; never apply both. Native WebOS uses Custom.Configuration's
+  get/setNativePortraitMode (0 -> "off", others -> degree strings). Legacy WebOS
+  sends numeric angles to the embedding player's existing setRotation operation.
+  Native mode uses the native viewport and also rotates shell UI. Native/bridge
+  errors and 10-second timeouts must reject, not silently fall back to CSS.
+- Do not confuse LG OSD portrait mode with content rotation, guess native API
+  constants, or automatically reboot a display to apply orientation.
+- Preserve renderer viewport clipping and use logical layout measurements for
+  rotated text fitting, pagination, and scrolling. Do not remount video layers.
+- Localize Details labels/status in all nine dashboard languages. Keep save
+  success separate from player application; old capability flags remain unsupported.
+
 ### Key Technologies
 
 - **Frontend**: SolidJS (Dashboard), React, TypeScript, Vite
@@ -184,6 +230,7 @@ When providing assistance, prioritize:
 ## ⚠️ Common Pitfalls to Avoid
 
 - Don't modify `yarn.lock` manually
+- Don't remove the root `**/cliui/*` resolutions: Yarn 1 merges `@isaacs/cliui`'s `*-cjs` aliases with the real CommonJS packages, so `cliui` can otherwise receive ESM `strip-ansi`/`string-width`/`wrap-ansi` and break `yarn install` (electron-builder postinstall)
 - Don't ignore TypeScript errors
 - Don't skip writing tests
 - Don't hardcode user-facing strings

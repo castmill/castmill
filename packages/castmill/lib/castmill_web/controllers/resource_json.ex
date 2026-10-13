@@ -183,6 +183,7 @@ defmodule CastmillWeb.ResourceJSON do
     %{
       id: device.id,
       name: device.name,
+      orientation: device.orientation,
       timezone: device.timezone,
       hardware_id: device.hardware_id,
       last_ip: device.last_ip

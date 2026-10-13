@@ -96,6 +96,18 @@ describe('BaseMenu component', () => {
     expect(queryByRole('menu')).not.toBeInTheDocument();
   });
 
+  it('hides the menu with the LG webOS remote Back key', () => {
+    const { queryByRole } = render(() => (
+      <BaseMenu header={<div>Menu Header</div>} entries={mockEntries} />
+    ));
+
+    fireEvent.keyDown(window, { keyCode: 13 });
+    expect(queryByRole('menu')).toBeVisible();
+
+    fireEvent.keyDown(window, { keyCode: 461 });
+    expect(queryByRole('menu')).not.toBeInTheDocument();
+  });
+
   it('renders with provided header and entries', () => {
     const { queryByText } = render(() => (
       <BaseMenu header={<div>Menu Header</div>} entries={mockEntries} />

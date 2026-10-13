@@ -9,6 +9,7 @@
 /// <reference path="./time.d.ts" />
 /// <reference path="./utility.d.ts" />
 /// <reference path="./video.d.ts" />
+/// <reference path="./custom.d.ts" />
 
 interface Window {
   Configuration: Configuration;

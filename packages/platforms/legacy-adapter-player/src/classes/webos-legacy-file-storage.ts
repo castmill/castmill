@@ -11,8 +11,14 @@ import {
   fetchWebosFile,
   removeWebosFile,
 } from '../webos-legacy-api';
-import { WebosMemoryFileStorage } from './webos-memory-file-storage';
-import { Logger } from '../utils/log';
+import {
+  WebosMemoryFileStorage,
+  Logger,
+  canDownloadNatively,
+  webosNativePath as nativePath,
+} from '@castmill/webos-player/shared';
+
+export { isWebosNativeUrl } from '@castmill/webos-player/shared';
 
 interface NativeFile {
   url: string;
@@ -33,18 +39,6 @@ function logStorage(message: string): void {
 }
 
 const FILE_MAP_KEY = 'castmill-webos-file-map';
-const NATIVE_URL =
-  /^http:\/\/127\.0\.0\.1:9080\/castmill-cache\/([a-f0-9]{64}(?:\.[a-z0-9_-]+)?)$/i;
-
-function nativePath(url: string): string | undefined {
-  const match = NATIVE_URL.exec(url);
-  return match ? `file://internal/castmill-cache/${match[1]}` : undefined;
-}
-
-export function isWebosNativeUrl(url: string): boolean {
-  return nativePath(url) !== undefined;
-}
-
 export class WebosLegacyFileStorage implements StorageIntegration {
   private readonly browser = new WebosMemoryFileStorage();
   private files = new Map<string, NativeFile>();
@@ -109,7 +103,7 @@ export class WebosLegacyFileStorage implements StorageIntegration {
     url: string,
     opts?: StoreOptions
   ): Promise<StoreFileReturnValue> {
-    if (opts?.type !== ItemType.Media || !this.canDownloadNatively(url)) {
+    if (opts?.type !== ItemType.Media || !canDownloadNatively(url)) {
       const id = ++nextStoreId;
       const startedAt = Date.now();
       logStorage(
@@ -197,22 +191,6 @@ export class WebosLegacyFileStorage implements StorageIntegration {
 
   async close(): Promise<void> {
     await this.browser.close();
-  }
-
-  private canDownloadNatively(url: string): boolean {
-    const parsed = new URL(url);
-    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-      return false;
-    }
-    // The wrapper cannot send headers and logs the input URL. Keep signed or
-    // token-bearing URLs in the browser store instead of exposing credentials.
-    if (parsed.search || parsed.username || parsed.password || parsed.hash) {
-      return false;
-    }
-    return (
-      parsed.pathname.startsWith('/medias/') ||
-      parsed.origin !== window.location.origin
-    );
   }
 
   private async resetNativeFiles(): Promise<void> {

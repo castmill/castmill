@@ -44,7 +44,8 @@ export class Msg {
   constructor(
     target: Window,
     inbound: InboundFunctions,
-    outbound: OutboundFunctions
+    outbound: OutboundFunctions,
+    private timeouts: Record<string, number> = {}
   ) {
     this._target = target;
     this._inbound = inbound;
@@ -107,12 +108,35 @@ export class Msg {
   private _post(msg: Omit<Action, 'guid'>): Promise<any> {
     const guid = newGuid();
     return new Promise((resolve, reject) => {
-      this._resolvers[guid] = { resolve, reject };
+      const timeout = msg.fn ? this.timeouts[msg.fn] : undefined;
+      const timer =
+        timeout === undefined
+          ? undefined
+          : setTimeout(() => {
+              delete this._resolvers[guid];
+              reject(new Error(`WebOS bridge ${msg.fn} timed out`));
+            }, timeout);
+      this._resolvers[guid] = {
+        resolve: (value) => {
+          if (timer !== undefined) clearTimeout(timer);
+          resolve(value);
+        },
+        reject: (error) => {
+          if (timer !== undefined) clearTimeout(timer);
+          reject(error);
+        },
+      };
       const newMsg = {
         ...msg,
         guid: guid,
       };
-      this._target.postMessage(JSON.stringify(newMsg), '*');
+      try {
+        this._target.postMessage(JSON.stringify(newMsg), '*');
+      } catch (error) {
+        delete this._resolvers[guid];
+        if (timer !== undefined) clearTimeout(timer);
+        reject(error);
+      }
     });
   }
 

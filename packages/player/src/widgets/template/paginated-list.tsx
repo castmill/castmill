@@ -1,4 +1,5 @@
 import gsap from 'gsap';
+import { getLogicalSize } from '../../utils/logical-size';
 import {
   Component,
   createSignal,
@@ -152,6 +153,9 @@ export const PaginatedList: Component<PaginatedListProps> = (props) => {
   let timelineItem: TimelineItem | null = null;
   let readyCount = 0;
   let expectedPages = 0;
+  let disposed = false;
+  let measuredWidth = 0;
+  let measuredHeight = 0;
 
   const resetTimeline = () => {
     if (timelineItem) {
@@ -181,10 +185,6 @@ export const PaginatedList: Component<PaginatedListProps> = (props) => {
     containerWidth?: number,
     containerHeight?: number
   ) => {
-    expectedPages = pagesArray.length;
-    readyCount = 0;
-    resetTimeline();
-
     // Pages need both width and height for absolute positioning
     if (
       typeof containerWidth === 'number' &&
@@ -197,6 +197,21 @@ export const PaginatedList: Component<PaginatedListProps> = (props) => {
       setPageStyle('position: absolute; width: 100%; height: 100%;');
     }
 
+    const currentPages = pages();
+    if (
+      currentPages.length > 0 &&
+      currentPages.length === pagesArray.length &&
+      currentPages.every(
+        (page, index) =>
+          page.length === pagesArray[index].length &&
+          page.every((item, itemIndex) => item === pagesArray[index][itemIndex])
+      )
+    ) {
+      return;
+    }
+    expectedPages = pagesArray.length;
+    readyCount = 0;
+    resetTimeline();
     setPages(pagesArray);
 
     if (expectedPages === 0) {
@@ -240,6 +255,8 @@ export const PaginatedList: Component<PaginatedListProps> = (props) => {
   };
 
   onCleanup(() => {
+    disposed = true;
+    window.removeEventListener('resize', measureAndSetupPages);
     if (timelineItem) {
       props.timeline.remove(timelineItem);
     }
@@ -260,6 +277,7 @@ export const PaginatedList: Component<PaginatedListProps> = (props) => {
   };
 
   onMount(() => {
+    window.addEventListener('resize', measureAndSetupPages);
     // Defer measurement to ensure layout is computed
     // This is critical for proper autofit text sizing
     requestAnimationFrame(() => {
@@ -270,18 +288,26 @@ export const PaginatedList: Component<PaginatedListProps> = (props) => {
   });
 
   const measureAndSetupPages = () => {
+    if (disposed) return;
     if (!containerRef) {
       const itemsPerPage = props.opts.pageSize || props.opts.items.length || 1;
       setupPages(itemsPerPage);
       return;
     }
 
-    const containerRect = containerRef.getBoundingClientRect();
+    const containerRect = getLogicalSize(containerRef);
     if (containerRect.width === 0 || containerRect.height === 0) {
       // Container still not sized, try again on next frame
       requestAnimationFrame(() => measureAndSetupPages());
       return;
     }
+    if (
+      containerRect.width === measuredWidth &&
+      containerRect.height === measuredHeight
+    )
+      return;
+    measuredWidth = containerRect.width;
+    measuredHeight = containerRect.height;
 
     let itemsPerPage: number;
     if (props.opts.pageSize) {
@@ -422,13 +448,13 @@ const Page: Component<{
  * Calculates how many items can fit in the container based on height
  */
 function calcNumItemsPerPage(div: HTMLDivElement, numItems: number): number {
-  const containerRect = div.parentElement!.getBoundingClientRect();
+  const containerRect = getLogicalSize(div.parentElement!);
   if (containerRect.width === 0 || containerRect.height === 0) {
     return 0;
   }
 
   const maxHeight = Math.ceil(containerRect.height);
-  const { height } = div.getBoundingClientRect();
+  const { height } = getLogicalSize(div);
   const itemHeight = height / numItems;
 
   return Math.floor(maxHeight / itemHeight);
