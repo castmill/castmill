@@ -583,6 +583,17 @@ export class Device extends EventEmitter {
     }
   }
 
+  /**
+   * Channel events only patch the in-memory channels. Refetch the channel list
+   * so the cached copy (used for offline startup) matches the server, and pick
+   * up details the event does not carry, such as a new channel's entries.
+   */
+  private refreshCachedChannels() {
+    if (this.id) {
+      void this.syncChannels(this.id);
+    }
+  }
+
   reportStartupError(error: unknown): void {
     const failure = error instanceof Error ? error : new Error(String(error));
     this.logger.error(
@@ -1254,6 +1265,7 @@ export class Device extends EventEmitter {
         this.logger.info(
           'Channel default playlist updated, playback queue reset'
         );
+        this.refreshCachedChannels();
       }
     });
 
@@ -1279,6 +1291,7 @@ export class Device extends EventEmitter {
       this.logger.info(`Device now has ${this.channels.length} channel(s)`);
 
       this.resetPlaybackQueue();
+      this.refreshCachedChannels();
     });
 
     // Handle channel removed from device
@@ -1302,6 +1315,7 @@ export class Device extends EventEmitter {
 
         this.logger.info(`Device now has ${this.channels.length} channel(s)`);
         this.resetPlaybackQueue();
+        this.refreshCachedChannels();
       }
     });
 

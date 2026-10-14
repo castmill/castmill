@@ -961,6 +961,36 @@ describe('Device - Channel Updates', () => {
     expect(device['channels'][1].attrs.default_playlist_id).toBe('200');
   });
 
+  it('refetches channels after channel events so the offline cache stays current', async () => {
+    const mockChannel = { on: vi.fn(), push: vi.fn(), join: vi.fn() };
+    const sync = vi
+      .spyOn(device as any, 'syncChannels')
+      .mockResolvedValue(undefined);
+    device['channels'] = [
+      { attrs: { id: 1, name: 'A', default_playlist_id: '100' } } as any,
+      { attrs: { id: 2, name: 'B', default_playlist_id: '200' } } as any,
+    ];
+    device['initListeners'](mockChannel as any);
+    const handler = (event: string) =>
+      mockChannel.on.mock.calls.find((call) => call[0] === event)![1];
+
+    // Without a started device there is no channel list to refresh yet.
+    await handler('channel_updated')({ channel_id: 1, default_playlist_id: 5 });
+    expect(sync).not.toHaveBeenCalled();
+
+    device['id'] = 'd1';
+    await handler('channel_updated')({ channel_id: 1, default_playlist_id: 6 });
+    // An unchanged default playlist needs no refresh.
+    await handler('channel_updated')({ channel_id: 1, default_playlist_id: 6 });
+    await handler('channel_added')({
+      channel: { id: 3, name: 'C', timezone: 'UTC', default_playlist_id: 7 },
+    });
+    await handler('channel_removed')({ channel_id: 2 });
+
+    expect(sync).toHaveBeenCalledTimes(3);
+    expect(sync).toHaveBeenCalledWith('d1');
+  });
+
   it('should handle channel_updated event with null default_playlist_id', async () => {
     const mockChannel = {
       on: vi.fn(),
