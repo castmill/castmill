@@ -39,11 +39,44 @@ import {
 } from './logger';
 import { TimerManager } from './timer-manager';
 import { OrientationManager } from './orientation';
+import { showDeviceToast } from './device-toast';
 
 const HEARTBEAT_INTERVAL = 1000 * 30; // 30 seconds
 const DEFAULT_MAX_LOGS = 100;
 const MAX_RECONNECT_DELAY_MS = 60_000; // 60 seconds max delay between reconnect attempts
 const DEFAULT_FETCH_TIMEOUT_MS = 5000;
+
+/** Time a maintenance toast is visible before the action may reload the page. */
+export const MAINTENANCE_TOAST_DELAY_MS = 1000;
+
+/**
+ * On-screen feedback for every maintenance action, whether it is triggered
+ * from the device menu or the dashboard. Device-side text is English only.
+ * New maintenance actions must add an entry here and run through
+ * `runMaintenanceAction`.
+ */
+export const MAINTENANCE_TOASTS = {
+  refresh: { start: 'Refreshing', failure: 'Refresh failed' },
+  clearCache: { start: 'Clearing cache', failure: 'Clearing cache failed' },
+  restart: { start: 'Restarting app', failure: 'Restart failed' },
+  quit: { start: 'Quitting app', failure: 'Quit failed' },
+  reboot: { start: 'Rebooting', failure: 'Reboot failed' },
+  shutdown: { start: 'Shutting down', failure: 'Shutdown failed' },
+  update: {
+    start: 'Checking for app updates',
+    failure: 'App update failed',
+  },
+  updateFirmware: {
+    start: 'Checking for firmware updates',
+    failure: 'Firmware update failed',
+  },
+  deviceRemoved: {
+    start: 'Device removed, resetting',
+    failure: 'Device reset failed',
+  },
+} as const;
+
+export type MaintenanceAction = keyof typeof MAINTENANCE_TOASTS;
 
 // Socket reconnection error types
 const AUTH_ERROR_INVALID_DEVICE = 'invalid_device';
@@ -208,6 +241,7 @@ const getChannelsSnapshot = (channels: Channel[]) =>
  */
 export class Device extends EventEmitter {
   private closing = false;
+  private maintenanceToastDelayMs = MAINTENANCE_TOAST_DELAY_MS;
   private cache: CacheBackend;
   private resourceManager?: ResourceManager;
   private contentQueue?: Playlist;
@@ -1069,38 +1103,37 @@ export class Device extends EventEmitter {
     channel.on('command', async (payload: DeviceCommand) => {
       switch (payload.command) {
         case 'refresh':
-          // Refresh browser
-          location.reload();
+          await this.refresh();
           break;
         case 'clear_cache':
-          // Clear all cache storage and restart with fresh runtime references.
-          await this.cache.clean();
-          location.reload();
+          await this.clearCache();
           break;
         case 'restart_app':
-          this.restart();
+          void this.restart();
           break;
         case 'restart_device':
-          this.reboot();
+          void this.reboot();
           break;
         case 'update_app':
-          this.update();
+          void this.update();
           break;
         case 'update_firmware':
-          this.updateFirmware();
+          void this.updateFirmware();
           break;
         case 'shutdown':
-          this.shutdown();
+          void this.shutdown();
           break;
         case 'device_removed':
           // Device has been deleted from the dashboard
           // Clear credentials and cached data, then reload to show registration page
           this.closing = true;
-          await this.integration.removeCredentials();
-          await this.orientationManager.ready();
-          await this.integration.setSetting('ORIENTATION', '0');
-          await this.cache.clean();
-          location.reload();
+          await this.runMaintenanceAction('deviceRemoved', async () => {
+            await this.integration.removeCredentials();
+            await this.orientationManager.ready();
+            await this.integration.setSetting('ORIENTATION', '0');
+            await this.cache.clean();
+            location.reload();
+          });
           break;
       }
     });
@@ -1159,7 +1192,13 @@ export class Device extends EventEmitter {
       const { resource, opts } = payload;
       switch (resource) {
         case 'cache':
+          if (opts.type === 'all') {
+            showDeviceToast(MAINTENANCE_TOASTS.clearCache.start);
+          }
           const result = await this.deleteCache(opts);
+          if (!result.success && opts.type === 'all') {
+            showDeviceToast(MAINTENANCE_TOASTS.clearCache.failure);
+          }
           const response = channel.push('res:delete', {
             result,
             ref: opts.ref,
@@ -1564,28 +1603,86 @@ export class Device extends EventEmitter {
     return;
   }
 
+  /**
+   * Shows the action's toast, gives it time to render, then runs the action.
+   * Failures are logged, reported, and shown on screen instead of rejecting,
+   * because menu and dashboard commands do not await the result.
+   */
+  private async runMaintenanceAction(
+    action: MaintenanceAction,
+    run: () => unknown
+  ): Promise<void> {
+    const toast = MAINTENANCE_TOASTS[action];
+    showDeviceToast(toast.start);
+    await new Promise((resolve) =>
+      setTimeout(resolve, this.maintenanceToastDelayMs)
+    );
+    try {
+      await run();
+    } catch (error) {
+      this.logger.error(`Maintenance action ${action} failed: ${error}`);
+      this.errorReporter.report({ category: 'device', error });
+      showDeviceToast(toast.failure);
+    }
+  }
+
+  refresh() {
+    return this.runMaintenanceAction('refresh', () => location.reload());
+  }
+
+  /** Clears content and platform caches, then reloads with fresh state. */
+  clearCache() {
+    return this.runMaintenanceAction('clearCache', async () => {
+      await this.cache.clean();
+      try {
+        await this.integration.clearCache?.();
+      } catch (error) {
+        this.logger.error(`Unable to clear platform cache: ${error}`);
+      }
+      location.reload();
+    });
+  }
+
   restart() {
-    return this.integration.restart?.();
+    const restart = this.integration.restart?.bind(this.integration);
+    return restart
+      ? this.runMaintenanceAction('restart', restart)
+      : Promise.resolve();
   }
 
   quit() {
-    return this.integration.quit?.();
+    const quit = this.integration.quit?.bind(this.integration);
+    return quit ? this.runMaintenanceAction('quit', quit) : Promise.resolve();
   }
 
   reboot() {
-    return this.integration.reboot?.();
+    const reboot = this.integration.reboot?.bind(this.integration);
+    return reboot
+      ? this.runMaintenanceAction('reboot', reboot)
+      : Promise.resolve();
   }
 
   shutdown() {
-    return this.integration.shutdown?.();
+    const shutdown = this.integration.shutdown?.bind(this.integration);
+    return shutdown
+      ? this.runMaintenanceAction('shutdown', shutdown)
+      : Promise.resolve();
   }
 
   update() {
-    return this.integration.update?.();
+    const update = this.integration.update?.bind(this.integration);
+    return update
+      ? this.runMaintenanceAction('update', update)
+      : Promise.resolve();
   }
 
   updateFirmware() {
-    return this.integration.updateFirmware?.();
+    const updateFirmware = this.integration.updateFirmware?.bind(
+      this.integration
+    );
+    return updateFirmware
+      ? this.runMaintenanceAction('updateFirmware', updateFirmware)
+      : Promise.resolve();
   }
 
   /**

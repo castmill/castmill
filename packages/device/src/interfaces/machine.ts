@@ -260,4 +260,12 @@ export interface Machine {
    * Availability of data varies by platform.
    */
   getTelemetry?(): Promise<TelemetryData>;
+
+  /**
+   * Clears platform-level caches (e.g. the embedded browser's HTTP cache) when
+   * the dashboard sends a clear-cache command. Castmill's content cache is
+   * cleared by the device before this is called; failures are logged and the
+   * player still reloads.
+   */
+  clearCache?(): Promise<void>;
 }

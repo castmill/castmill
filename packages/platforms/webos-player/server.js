@@ -1,77 +1,66 @@
 /**
- * THis is a simple server that serves the built ipk file. It is used to deploy the
- * app to the LG TV while in development mode.
+ * Simple development server that serves a built IPK so it can be installed on
+ * an LG display through SCAP's application update. Usage:
+ *
+ *   node server.js [build|latest|tpd|test]
+ *
+ * Set PORT to change the default port (3232).
  */
-var express = require('express');
-var onFinished = require('on-finished');
-var app = express();
+import { existsSync, readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import express from 'express';
+import onFinished from 'on-finished';
 
-const { version } = require('./public/appinfo.json');
+const here = dirname(fileURLToPath(import.meta.url));
+const { version } = JSON.parse(
+  readFileSync(join(here, 'public/appinfo.json'), 'utf8')
+);
+const versionedIpk = `com.lg.app.signage_${version}_all.ipk`;
 
-// LATEST BUILD
-const CURRENT_BUILD = {
-  file: `com.lg.app.signage_${version}_all.ipk`,
-  root: './build',
+const SOURCES = {
+  build: { file: versionedIpk, root: join(here, 'build') },
+  latest: { file: 'player.ipk', root: join(here, 'releases/latest') },
+  tpd: { file: versionedIpk, root: join(here, 'releases/tpd') },
+  test: { file: versionedIpk, root: join(here, 'releases/test') },
 };
 
-// LATEST RELEASE
-const CURRENT_RELEASE = {
-  file: `player.ipk`,
-  root: './releases/latest',
-};
-
-// LATEST TPD
-const CURRENT_TPD = {
-  file: `com.lg.app.signage_${version}_all.ipk`,
-  root: './releases/tpd',
-};
-
-// LATEST Test
-const CURRENT_TEST = {
-  file: `com.lg.app.signage_${version}_all.ipk`,
-  root: './releases/test',
-};
-
-let path;
-const args = process.argv.slice(2);
-console.log('args: ', args);
-
-switch ((args[0] || '').toLowerCase()) {
-  case 'tpd':
-    path = CURRENT_TPD;
-    break;
-  case 'latest':
-    path = CURRENT_RELEASE;
-    break;
-  case 'build':
-    path = CURRENT_BUILD;
-    break;
-  case 'test':
-    path = CURRENT_TEST;
-    break;
-  default:
-    path = CURRENT_BUILD;
-    break;
+const name = (process.argv[2] || 'build').toLowerCase();
+const source = SOURCES[name];
+if (!source) {
+  console.error(
+    `Unknown source "${name}". Use one of: ${Object.keys(SOURCES).join(', ')}`
+  );
+  process.exit(1);
 }
 
-console.log('Server publishing ipk', path);
+const ipkPath = join(source.root, source.file);
+if (!existsSync(ipkPath)) {
+  console.warn(
+    `Warning: ${ipkPath} does not exist yet. Run "yarn build && yarn package".`
+  );
+}
+
+const port = Number(process.env.PORT) || 3232;
+const app = express();
 
 app.use((req, res, next) => {
-  console.log('got request', req.originalUrl);
-  onFinished(res, (err, res) => {
-    console.log('finished downloading');
-  });
+  console.log('Request', req.originalUrl);
+  onFinished(res, () => console.log('Finished', req.originalUrl));
   next();
 });
 
-app.use('/application/com.lg.app.signage.ipk', (req, res, next) => {
-  console.log('got request for com.lg.app.signage.ipk');
-  console.log(`Sending file ${path.root}/${path.file}`);
-  res.contentType('application/octet-stream; charset=UTF-8');
-  res.sendFile(path.file, { root: path.root });
+app.use('/application/com.lg.app.signage.ipk', (req, res) => {
+  console.log(`Sending ${ipkPath}`);
+  res.contentType('application/octet-stream');
+  res.sendFile(source.file, { root: source.root });
 });
 
-// static serve of the dist folder
-app.use('/', express.static('dist'));
+app.use('/', express.static(join(here, 'dist')));
 
-app.listen(3232);
+app.listen(port, () => {
+  console.log(`Serving ${ipkPath}`);
+  console.log(
+    `IPK URL: http://<this-machine-ip>:${port}/application/com.lg.app.signage.ipk`
+  );
+});

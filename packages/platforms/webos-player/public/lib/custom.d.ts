@@ -12,4 +12,10 @@ declare class Custom {
       options: { nativePortrait: NativePortraitMode }
     ) => void;
   };
+  Signage?: {
+    getwebOSVersion?: (
+      success: (result: { webOSVersion?: unknown }) => void,
+      failure: (error: unknown) => void
+    ) => void;
+  };
 }

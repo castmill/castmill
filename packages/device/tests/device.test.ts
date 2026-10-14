@@ -1,6 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { EventEmitter } from 'eventemitter3';
-import { Device, Status } from '../src/classes/device';
+import {
+  Device,
+  MAINTENANCE_TOAST_DELAY_MS,
+  Status,
+} from '../src/classes/device';
+import { DEVICE_TOAST_ID } from '../src/classes/device-toast';
 import { Cache, ResourceManager } from '@castmill/cache';
 import { Socket } from 'phoenix';
 import { Layer, Player } from '@castmill/player';
@@ -597,6 +602,7 @@ describe('Device - Commands', () => {
       clean: vi.fn().mockResolvedValue(undefined),
     };
     device['cache'] = mockCache;
+    device['maintenanceToastDelayMs'] = 0;
   });
 
   it('should handle device_removed command by clearing credentials and cache', async () => {
@@ -656,6 +662,46 @@ describe('Device - Commands', () => {
     await commandHandler({ command: 'clear_cache' });
 
     expect(mockCache.clean).toHaveBeenCalledOnce();
+    expect(window.location.reload).toHaveBeenCalledOnce();
+    window.location = originalLocation;
+  });
+
+  it('clears platform caches after the content cache for clear_cache', async () => {
+    const originalLocation = window.location;
+    delete (window as any).location;
+    window.location = { reload: vi.fn() } as any;
+    const order: string[] = [];
+    mockCache.clean.mockImplementation(async () => order.push('content'));
+    mockIntegration.clearCache = vi.fn(async () => order.push('platform'));
+    const mockChannel = { on: vi.fn(), push: vi.fn(), join: vi.fn() };
+
+    device['initListeners'](mockChannel as any);
+    const commandHandler = mockChannel.on.mock.calls.find(
+      (call) => call[0] === 'command'
+    )?.[1];
+    await commandHandler({ command: 'clear_cache' });
+
+    expect(order).toEqual(['content', 'platform']);
+    expect(window.location.reload).toHaveBeenCalledOnce();
+    window.location = originalLocation;
+  });
+
+  it('still reloads when clearing platform caches fails', async () => {
+    const originalLocation = window.location;
+    delete (window as any).location;
+    window.location = { reload: vi.fn() } as any;
+    mockIntegration.clearCache = vi
+      .fn()
+      .mockRejectedValue(new Error('unsupported'));
+    const mockChannel = { on: vi.fn(), push: vi.fn(), join: vi.fn() };
+
+    device['initListeners'](mockChannel as any);
+    const commandHandler = mockChannel.on.mock.calls.find(
+      (call) => call[0] === 'command'
+    )?.[1];
+    await commandHandler({ command: 'clear_cache' });
+
+    expect(mockIntegration.clearCache).toHaveBeenCalledOnce();
     expect(window.location.reload).toHaveBeenCalledOnce();
     window.location = originalLocation;
   });
@@ -746,6 +792,98 @@ describe('Device - Commands', () => {
     expect(window.location.reload).toHaveBeenCalledOnce();
     window.location = originalLocation;
     vi.useRealTimers();
+  });
+
+  const toastText = () => document.getElementById(DEVICE_TOAST_ID)?.textContent;
+
+  it.each([
+    ['restart_app', 'restart', 'Restarting app'],
+    ['restart_device', 'reboot', 'Rebooting'],
+    ['update_app', 'update', 'Checking for app updates'],
+    ['update_firmware', 'updateFirmware', 'Checking for firmware updates'],
+    ['shutdown', 'shutdown', 'Shutting down'],
+  ])(
+    'shows a toast before running the %s command',
+    async (command, method, message) => {
+      vi.useFakeTimers();
+      device['maintenanceToastDelayMs'] = MAINTENANCE_TOAST_DELAY_MS;
+      mockIntegration[method] = vi.fn().mockResolvedValue(undefined);
+      const mockChannel = { on: vi.fn(), push: vi.fn(), join: vi.fn() };
+      device['initListeners'](mockChannel as any);
+      const commandHandler = mockChannel.on.mock.calls.find(
+        (call) => call[0] === 'command'
+      )?.[1];
+
+      await commandHandler({ command });
+
+      expect(toastText()).toBe(message);
+      expect(mockIntegration[method]).not.toHaveBeenCalled();
+      await vi.advanceTimersByTimeAsync(MAINTENANCE_TOAST_DELAY_MS);
+      expect(mockIntegration[method]).toHaveBeenCalledOnce();
+      vi.useRealTimers();
+    }
+  );
+
+  it.each([
+    ['refresh', 'Refreshing'],
+    ['clear_cache', 'Clearing cache'],
+    ['device_removed', 'Device removed, resetting'],
+  ])('shows a toast for the %s command', async (command, message) => {
+    const originalLocation = window.location;
+    delete (window as any).location;
+    window.location = { reload: vi.fn() } as any;
+    const mockChannel = { on: vi.fn(), push: vi.fn(), join: vi.fn() };
+    device['initListeners'](mockChannel as any);
+    const commandHandler = mockChannel.on.mock.calls.find(
+      (call) => call[0] === 'command'
+    )?.[1];
+
+    await commandHandler({ command });
+
+    expect(toastText()).toBe(message);
+    expect(window.location.reload).toHaveBeenCalledOnce();
+    window.location = originalLocation;
+  });
+
+  it('shows a failure toast and reports instead of rejecting when an action fails', async () => {
+    mockIntegration.reboot = vi.fn().mockRejectedValue(new Error('denied'));
+    const report = vi.spyOn(device['errorReporter'], 'report');
+
+    await expect(device.reboot()).resolves.toBeUndefined();
+
+    expect(toastText()).toBe('Reboot failed');
+    expect(report).toHaveBeenCalledWith(
+      expect.objectContaining({ category: 'device' })
+    );
+  });
+
+  it('shows no toast for actions the platform does not support', async () => {
+    document.getElementById(DEVICE_TOAST_ID)?.remove();
+    delete mockIntegration.shutdown;
+
+    await device.shutdown();
+
+    expect(document.getElementById(DEVICE_TOAST_ID)).toBeNull();
+  });
+
+  it('shows clearing toasts for a dashboard clear-all cache request', async () => {
+    const mockChannel = {
+      on: vi.fn(),
+      push: vi.fn().mockReturnValue(createMockPush()),
+      join: vi.fn(),
+    };
+    mockCache.clean.mockRejectedValue(new Error('locked'));
+    device['initListeners'](mockChannel as any);
+    const deleteHandler = mockChannel.on.mock.calls.find(
+      (call) => call[0] === 'delete'
+    )?.[1];
+
+    await deleteHandler({
+      resource: 'cache',
+      opts: { type: 'all', urls: [], ref: 'cache-clear-failed' },
+    });
+
+    expect(toastText()).toBe('Clearing cache failed');
   });
 });
 
