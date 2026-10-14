@@ -232,6 +232,14 @@ const getChannelsSnapshot = (channels: Channel[]) =>
     }))
   );
 
+const toChannels = (rawChannels: unknown): Channel[] | undefined => {
+  const data = (rawChannels as { data?: unknown } | undefined)?.data;
+  if (!Array.isArray(data)) {
+    return;
+  }
+  return data.map((channel: JsonChannel) => new Channel(channel));
+};
+
 /**
  * Castmill Device
  *
@@ -250,6 +258,8 @@ export class Device extends EventEmitter {
   private channelIndex = 0;
   private channelGeneration = 0; // Incremented when channels change, used to invalidate in-flight operations
   private initialChannelsLoad?: Promise<void>;
+  private channelSync?: Promise<void>;
+  private channelSyncQueued = false;
   private logger: Logger = new Logger();
   private errorReporter: DeviceErrorReporter;
   private logDiv?: HTMLDivElement;
@@ -532,15 +542,14 @@ export class Device extends EventEmitter {
     freshness: number
   ): Promise<Channel[] | undefined> {
     const rawChannels = await this.resourceManager?.getData(
-      `${this.baseUrl}/devices/${deviceId}/channels`,
+      this.channelsUrl(deviceId),
       freshness
     );
+    return toChannels(rawChannels);
+  }
 
-    if (!Array.isArray(rawChannels?.data)) {
-      return;
-    }
-
-    return rawChannels.data.map((channel: JsonChannel) => new Channel(channel));
+  private channelsUrl(deviceId: string) {
+    return `${this.baseUrl}/devices/${deviceId}/channels`;
   }
 
   /**
@@ -548,20 +557,52 @@ export class Device extends EventEmitter {
    * Channel events sent while the device was offline are lost, so playback
    * would otherwise keep using the channels loaded at startup (possibly from
    * the offline cache) until the next page reload.
+   *
+   * Synchronizations run one at a time. A request made while one is in flight
+   * queues another fresh download once it finishes, so an older response can
+   * never overwrite state applied by a newer channel event.
    */
-  private async syncChannels(deviceId: string) {
+  private syncChannels(deviceId: string): Promise<void> {
     if (!this.initialChannelsLoad) {
-      return;
+      return Promise.resolve();
     }
 
+    this.channelSyncQueued = true;
+    if (!this.channelSync) {
+      this.channelSync = this.runChannelSyncs(deviceId);
+    }
+    return this.channelSync;
+  }
+
+  private async runChannelSyncs(deviceId: string) {
+    try {
+      while (this.channelSyncQueued) {
+        this.channelSyncQueued = false;
+        await this.syncChannelsOnce(deviceId);
+      }
+    } finally {
+      this.channelSync = undefined;
+    }
+  }
+
+  private async syncChannelsOnce(deviceId: string) {
     try {
       await this.initialChannelsLoad;
       const generation = this.channelGeneration;
-      const channels = await this.fetchChannels(deviceId, 0);
+      // Only a verified fresh response may replace the current channels; a
+      // cached fallback could undo a change applied by a channel event.
+      const channels = toChannels(
+        await this.resourceManager?.getFreshData(this.channelsUrl(deviceId))
+      );
 
-      // Skip when there is no fresh data, or a channel event already changed
-      // playback while we were fetching.
-      if (!channels || generation !== this.channelGeneration) {
+      if (!channels) {
+        return;
+      }
+
+      // A channel event changed playback while we were fetching, so this
+      // response may predate it. Fetch again instead of applying it.
+      if (generation !== this.channelGeneration) {
+        this.channelSyncQueued = true;
         return;
       }
 

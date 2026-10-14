@@ -363,4 +363,46 @@ describe('ResourceManager', () => {
       expect(data2).to.be.eql({ version: 2 });
     });
   });
+
+  describe('getFreshData', () => {
+    it('downloads fresh data even when a cached copy is still fresh', async () => {
+      const uri = 'https://example.com/api/fresh.json';
+      const filesFixture: { [index: string]: string } = {
+        [uri]: '{"version":1}',
+      };
+      const cache = new Cache(
+        new StorageMockup(filesFixture),
+        'test-fresh-data',
+        10
+      );
+      const manager = new ResourceManager(cache);
+      await manager.init();
+
+      expect(await manager.getData(uri, 60_000)).to.eql({ version: 1 });
+      filesFixture[uri] = '{"version":2}';
+
+      expect(await manager.getFreshData(uri)).to.eql({ version: 2 });
+      expect(await manager.getData(uri, 60_000)).to.eql({ version: 2 });
+    });
+
+    it('returns undefined instead of stale cached data when the download fails', async () => {
+      const uri = 'https://example.com/api/fresh-offline.json';
+      const filesFixture: { [index: string]: string } = {
+        [uri]: '{"version":1}',
+      };
+      const cache = new Cache(
+        new StorageMockup(filesFixture),
+        'test-fresh-data-offline',
+        10
+      );
+      const manager = new ResourceManager(cache);
+      await manager.init();
+      await manager.getData(uri, 60_000);
+      delete filesFixture[uri];
+
+      expect(await manager.getFreshData(uri)).to.be.undefined;
+      // The cached copy remains available for offline startup.
+      expect(await manager.getData(uri, 0)).to.eql({ version: 1 });
+    });
+  });
 });

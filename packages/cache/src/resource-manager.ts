@@ -179,6 +179,28 @@ export class ResourceManager {
   }
 
   /**
+   * getFreshData
+   *
+   * Downloads and caches data for a given URL, ignoring any cached copy. Unlike
+   * getData it never falls back to stale cached data: it returns undefined when
+   * the download fails.
+   *
+   * @param url
+   * @returns
+   */
+  async getFreshData<T = any>(url: string): Promise<T | void> {
+    const item = await this.cache
+      .set(url, ItemType.Data, 'application/json', {
+        headers: this.getAuthHeader(),
+        force: true,
+      })
+      .catch(() => undefined);
+    if (item) {
+      return this.fetchJson(item.cachedUrl) as Promise<T>;
+    }
+  }
+
+  /**
    *
    * getMedia
    *
