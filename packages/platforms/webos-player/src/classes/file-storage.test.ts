@@ -219,6 +219,12 @@ describe('WebOS native storage routing', () => {
       [video, { url: 'file://internal/credentials.txt', size: 1 }],
     ]),
     JSON.stringify([[video, { url: localUrl(video), size: -1 }]]),
+    JSON.stringify([
+      [
+        'https://api.test/devices/1/channels?token=secret',
+        { url: localUrl(video), size: 1, type: ItemType.Data, storedAt: 1 },
+      ],
+    ]),
   ])('resets corrupt metadata and scoped native files (%s)', async (saved) => {
     localStorage.setItem(MAP_KEY, saved);
     storage = new FileStorage();
@@ -618,6 +624,18 @@ describe('WebOS native storage routing', () => {
       expect(result.result.code).toBe('SUCCESS');
       expect(api.moveFile).not.toHaveBeenCalled();
       expect(localStorage.getItem(MAP_KEY)).toBeNull();
+    });
+
+    it.each([
+      `${channels}?token=secret`,
+      `${channels}#secret`,
+      'https://user:secret@api.test/devices/1/channels',
+    ])('keeps credential-bearing data session-only (%s)', async (url) => {
+      const result = await storage.storeFile(url, { type: ItemType.Data });
+
+      expect(result.result.code).toBe('SUCCESS');
+      expect(api.writeFile).not.toHaveBeenCalled();
+      expect(localStorage.getItem(MAP_KEY) ?? '').not.toContain('secret');
     });
 
     it('does not persist empty responses', async () => {

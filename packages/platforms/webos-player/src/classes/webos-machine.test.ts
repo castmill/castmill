@@ -158,8 +158,8 @@ describe('WebosMachine', () => {
       modelName: '55XS2E-BH',
       firmwareVersion: '4.2.1',
     });
-    version.getWebosVersion.mockResolvedValueOnce('4.1.0');
-    expect((await machine.getDeviceInfo()).os).toBe('LG WebOS 4.1.0');
+    version.getWebosVersion.mockResolvedValueOnce('4.1');
+    expect((await machine.getDeviceInfo()).os).toBe('LG WebOS 4.1');
   });
 
   it('falls back to a generic OS name when the version lookup fails', async () => {

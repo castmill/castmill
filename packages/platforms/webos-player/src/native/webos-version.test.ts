@@ -33,11 +33,11 @@ describe('getWebosVersion', () => {
 
   it('caches a successful lookup', async () => {
     const get = vi.fn((success: (value: unknown) => void) =>
-      success({ webOSVersion: '4.1.0' })
+      success({ webOSVersion: '4.1' })
     );
     stubCustom(get);
-    await expect(getWebosVersion()).resolves.toBe('4.1.0');
-    await expect(getWebosVersion()).resolves.toBe('4.1.0');
+    await expect(getWebosVersion()).resolves.toBe('4.1');
+    await expect(getWebosVersion()).resolves.toBe('4.1');
     expect(get).toHaveBeenCalledOnce();
   });
 

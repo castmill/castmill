@@ -43,8 +43,23 @@ function isTextType(type: unknown): type is TextType {
   return type === ItemType.Code || type === ItemType.Data;
 }
 
-function isHttpUrl(url: string): boolean {
-  return /^https?:\/\//i.test(url);
+/**
+ * Persisted data/code keep their source URL in localStorage, so only plain
+ * http(s) URLs without query strings, fragments, or credentials are eligible.
+ */
+function isPersistableTextUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return (
+      (parsed.protocol === 'http:' || parsed.protocol === 'https:') &&
+      !parsed.search &&
+      !parsed.hash &&
+      !parsed.username &&
+      !parsed.password
+    );
+  } catch {
+    return false;
+  }
 }
 
 function isFileMap(value: unknown): value is Array<[string, NativeFile]> {
@@ -58,7 +73,7 @@ function isFileMap(value: unknown): value is Array<[string, NativeFile]> {
         (entry[1]?.type === undefined
           ? canDownloadNatively(entry[0], 'null')
           : isTextType(entry[1].type) &&
-            isHttpUrl(entry[0]) &&
+            isPersistableTextUrl(entry[0]) &&
             typeof entry[1].storedAt === 'number' &&
             Number.isFinite(entry[1].storedAt)) &&
         typeof entry[1]?.url === 'string' &&
@@ -355,7 +370,7 @@ export class FileStorage implements StorageIntegration {
     type: TextType,
     item: StorageItem | undefined
   ): Promise<void> {
-    if (!item?.url || !isHttpUrl(url)) return;
+    if (!item?.url || !isPersistableTextUrl(url)) return;
     const previous = this.files.get(url);
     const previousUrl = this.textUrls.get(url);
     if (item.size === 0 || item.size > MAX_PERSISTED_TEXT_BYTES) {

@@ -244,7 +244,7 @@ application data is cleared.
   when telemetry is requested. Fans that only report a status, without RPM,
   are omitted. Each part is optional; unsupported APIs are skipped.
 - **OS version:** the reported OS includes the webOS Signage version from
-  `custom.js` (`Signage.getwebOSVersion`), for example `LG WebOS 4.1.0`.
+  `custom.js` (`Signage.getwebOSVersion`), for example `LG WebOS 4.1`.
 - **Clear cache:** the dashboard's clear-cache command clears Castmill's
   content cache and then SCAP `Configuration.clearCache` (the display's
   browser cache) before reloading. Credentials and settings in

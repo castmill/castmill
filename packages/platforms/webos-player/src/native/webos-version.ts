@@ -3,7 +3,7 @@ import { scapRequest } from './request';
 let cachedVersion: Promise<string | undefined> | undefined;
 
 /**
- * Returns the webOS Signage version (e.g. "4.1.0") via LG's custom.js, or
+ * Returns the webOS Signage version (e.g. "4.1") via LG's custom.js, or
  * undefined when the firmware does not expose it. Successful lookups are
  * cached for the app lifetime.
  */
