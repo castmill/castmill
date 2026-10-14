@@ -4,6 +4,7 @@ import {
   CPU_SAMPLE_INTERVAL_MS,
   FIRMWARE_DOWNLOAD_TIMEOUT_MS,
   FIRMWARE_STATUS_POLL_MS,
+  TELEMETRY_BUDGET_MS,
   WebosMachine,
 } from './webos-machine';
 
@@ -241,6 +242,25 @@ describe('WebosMachine', () => {
       expect((await pending).cpuUsagePercent).toBeUndefined();
     });
 
+    it('returns other fields when a system usage call never answers', async () => {
+      vi.useFakeTimers();
+      vi.mocked(deviceInfo.getSystemUsageInfo!).mockReturnValueOnce(
+        new Promise(() => {}) as never
+      );
+      vi.mocked(deviceInfo.getNetworkInfo).mockResolvedValueOnce({
+        wired: { state: 'connected', ipAddress: '10.0.0.2' },
+      } as never);
+      const pending = machine.getTelemetry();
+      await vi.advanceTimersByTimeAsync(TELEMETRY_BUDGET_MS);
+      const telemetry = await pending;
+      expect(TELEMETRY_BUDGET_MS).toBeLessThan(5_000);
+      expect(telemetry.memory).toBeUndefined();
+      expect(telemetry.network).toEqual({
+        type: 'ethernet',
+        ipAddress: '10.0.0.2',
+      });
+    });
+
     it('keeps telemetry when system usage fails', async () => {
       vi.mocked(deviceInfo.getSystemUsageInfo!).mockRejectedValueOnce(
         new Error('unsupported')
@@ -309,6 +329,26 @@ describe('WebosMachine', () => {
         type: 'wifi',
         ipAddress: '10.0.0.3',
       });
+    });
+
+    it('returns collected fields when the Wi-Fi scan exceeds the budget', async () => {
+      vi.useFakeTimers();
+      connectWifi();
+      vi.mocked(deviceInfo.getWifiList!).mockReturnValueOnce(
+        new Promise(() => {})
+      );
+      vi.mocked(storage.getStorageInfo).mockResolvedValueOnce({
+        total: 1,
+        used: 1,
+      } as never);
+      const pending = machine.getTelemetry();
+      await vi.advanceTimersByTimeAsync(TELEMETRY_BUDGET_MS);
+      const telemetry = await pending;
+      expect(telemetry.network).toEqual({
+        type: 'wifi',
+        ipAddress: '10.0.0.3',
+      });
+      expect(telemetry.storage).toEqual({ totalBytes: 1024, usedBytes: 1024 });
     });
 
     it('keeps the network type when the Wi-Fi scan fails', async () => {

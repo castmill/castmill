@@ -23,6 +23,8 @@ const KIB = 1024;
 /** Interval between the two CPU samples taken when no earlier sample exists. */
 export const CPU_SAMPLE_INTERVAL_MS = 1_000;
 const LOCATION_TIMEOUT_MS = 10_000;
+/** Total telemetry budget; the dashboard request times out after 5 s. */
+export const TELEMETRY_BUDGET_MS = 4_000;
 // Matches the old WebOS player's 1 GB requirement for firmware downloads.
 export const REQUIRED_FIRMWARE_FREE_KB = 1024 * 1024;
 export const FIRMWARE_STATUS_POLL_MS = 5_000;
@@ -317,12 +319,32 @@ export class WebosMachine implements Machine {
 
   /**
    * Returns telemetry data from the WebOS signage display.
-   * Uses SCAP APIs for storage, temperature, and fan status.
+   * Uses SCAP APIs for storage, temperature, and fan status. Sections are
+   * collected concurrently within TELEMETRY_BUDGET_MS so a stalled SCAP call,
+   * the CPU resample, or a slow Wi-Fi scan cannot outlast the dashboard
+   * request; whatever was collected by then is returned.
    */
   async getTelemetry(): Promise<TelemetryData> {
     const telemetry: TelemetryData = {};
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const deadline = new Promise<void>((resolve) => {
+      timer = setTimeout(resolve, TELEMETRY_BUDGET_MS);
+    });
+    await Promise.race([
+      Promise.all([
+        this.collectStorage(telemetry),
+        this.collectSystemMonitor(telemetry),
+        this.collectSystemUsage(telemetry),
+        this.collectNetwork(telemetry),
+      ]),
+      deadline,
+    ]);
+    clearTimeout(timer);
+    // Late results must not change the returned snapshot.
+    return { ...telemetry };
+  }
 
-    // Storage info via SCAP Storage API
+  private async collectStorage(telemetry: TelemetryData): Promise<void> {
     try {
       const storageInfo = await storage.getStorageInfo();
       if (storageInfo) {
@@ -335,8 +357,9 @@ export class WebosMachine implements Machine {
     } catch (error) {
       console.error('Error getting storage info:', error);
     }
+  }
 
-    // Temperature and fan status via System Monitor
+  private async collectSystemMonitor(telemetry: TelemetryData): Promise<void> {
     try {
       // Ensure system monitor is running
       if (!systemMonitor.isMonitoring()) {
@@ -365,7 +388,9 @@ export class WebosMachine implements Machine {
     } catch (error) {
       console.error('Error getting system monitor data:', error);
     }
+  }
 
+  private async collectSystemUsage(telemetry: TelemetryData): Promise<void> {
     try {
       const usage = await this.getSystemUsage();
       const memory = usage?.memory;
@@ -388,23 +413,25 @@ export class WebosMachine implements Machine {
     } catch (error) {
       console.error('Error getting system usage:', error);
     }
+  }
 
+  private async collectNetwork(telemetry: TelemetryData): Promise<void> {
     try {
       const { wired, wifi } = await deviceInfo.getNetworkInfo();
       if (wired?.state === 'connected') {
         telemetry.network = { type: 'ethernet', ipAddress: wired.ipAddress };
       } else if (wifi?.state === 'connected') {
+        // Report the connection now; the scan may not finish within budget.
+        const network = { type: 'wifi' as const, ipAddress: wifi.ipAddress };
+        telemetry.network = network;
         telemetry.network = {
-          type: 'wifi',
-          ipAddress: wifi.ipAddress,
+          ...network,
           ...(await this.getConnectedWifi(wifi)),
         };
       }
     } catch (error) {
       console.error('Error getting network info:', error);
     }
-
-    return telemetry;
   }
 
   private async getSystemUsage(): Promise<SystemUsageInfo | undefined> {

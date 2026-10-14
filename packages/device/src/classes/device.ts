@@ -1243,22 +1243,28 @@ export class Device extends EventEmitter {
     channel.on('delete', async (payload: DeviceDeleteRequest) => {
       const { resource, opts } = payload;
       switch (resource) {
-        case 'cache':
-          if (opts.type === 'all') {
-            showDeviceToast(MAINTENANCE_TOASTS.clearCache.start);
-          }
-          const result = await this.deleteCache(opts);
-          if (!result.success && opts.type === 'all') {
-            showDeviceToast(MAINTENANCE_TOASTS.clearCache.failure);
-          }
-          const response = channel.push('res:delete', {
-            result,
-            ref: opts.ref,
-          });
-          if (result.success && opts.type === 'all') {
-            this.reloadAfterAcknowledgement(response);
+        case 'cache': {
+          const clearAll = opts.type === 'all';
+          const deleteAndRespond = async () => {
+            const result = await this.deleteCache(opts);
+            if (!result.success && clearAll) {
+              showDeviceToast(MAINTENANCE_TOASTS.clearCache.failure);
+            }
+            const response = channel.push('res:delete', {
+              result,
+              ref: opts.ref,
+            });
+            if (result.success && clearAll) {
+              this.reloadAfterAcknowledgement(response);
+            }
+          };
+          if (clearAll) {
+            await this.runMaintenanceAction('clearCache', deleteAndRespond);
+          } else {
+            await deleteAndRespond();
           }
           break;
+        }
       }
     });
 

@@ -436,13 +436,22 @@ export class FileStorage implements StorageIntegration {
     if (file?.type) await this.removeNative(sourceUrl, file);
   }
 
+  /**
+   * Best-effort removal: if the metadata write fails, the stale mapping is
+   * still discarded in memory and startup reconciliation drops it later.
+   */
   private async removeNative(
     sourceUrl: string,
     file: NativeFile
   ): Promise<void> {
     const updated = new Map(this.files);
     updated.delete(sourceUrl);
-    this.save(updated);
+    try {
+      this.save(updated);
+    } catch (error) {
+      console.error('WebOS Storage: unable to record cache removal', error);
+      this.files = updated;
+    }
     await this.removeNativeFile(file);
   }
 

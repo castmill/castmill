@@ -722,6 +722,28 @@ describe('WebOS native storage routing', () => {
       expect(localStorage.getItem(MAP_KEY)).toBeNull();
     });
 
+    it('returns the fresh copy of a refreshed entry when metadata writes keep failing', async () => {
+      await storage.storeFile(channels, { type: ItemType.Data });
+      const first = writtenPath();
+      const saved = localStorage.getItem(MAP_KEY);
+      vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+        throw new DOMException('full', 'QuotaExceededError');
+      });
+
+      const result = await storage.storeFile(channels, {
+        type: ItemType.Data,
+        force: true,
+      });
+
+      expect(result.result.code).toBe('SUCCESS');
+      expect(result.item?.url).toBe('blob:resource-2');
+      expect(api.removeFile).toHaveBeenCalledWith({ file: first });
+      expect(api.removeFile).toHaveBeenCalledWith({ file: writtenPath(1) });
+      expect(revoke).toHaveBeenCalledWith('blob:resource-1');
+      expect(await storage.retrieveFile(channels)).toBe('blob:resource-2');
+      expect(localStorage.getItem(MAP_KEY)).toBe(saved);
+    });
+
     it('deletes persisted data by its session URL', async () => {
       await storage.storeFile(widget, { type: ItemType.Code });
       const path = writtenPath();

@@ -783,10 +783,12 @@ describe('Device - Commands', () => {
       (call) => call[0] === 'delete'
     )?.[1];
 
-    await deleteHandler({
+    const handled = deleteHandler({
       resource: 'cache',
       opts: { type: 'all', urls: [], ref: 'cache-clear' },
     });
+    await vi.advanceTimersByTimeAsync(0);
+    await handled;
     await vi.advanceTimersByTimeAsync(1_000);
 
     expect(window.location.reload).toHaveBeenCalledOnce();
@@ -884,6 +886,38 @@ describe('Device - Commands', () => {
     });
 
     expect(toastText()).toBe('Clearing cache failed');
+  });
+
+  it('delays a dashboard clear-all cache request until the toast has shown', async () => {
+    vi.useFakeTimers();
+    device['maintenanceToastDelayMs'] = MAINTENANCE_TOAST_DELAY_MS;
+    const mockChannel = {
+      on: vi.fn(),
+      push: vi.fn().mockReturnValue(createMockPush()),
+      join: vi.fn(),
+    };
+    mockCache.clean.mockResolvedValue(2);
+    device['initListeners'](mockChannel as any);
+    const deleteHandler = mockChannel.on.mock.calls.find(
+      (call) => call[0] === 'delete'
+    )?.[1];
+
+    const handled = deleteHandler({
+      resource: 'cache',
+      opts: { type: 'all', urls: [], ref: 'cache-clear-delayed' },
+    });
+
+    expect(toastText()).toBe('Clearing cache');
+    expect(mockCache.clean).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(MAINTENANCE_TOAST_DELAY_MS);
+    await handled;
+    expect(mockCache.clean).toHaveBeenCalledOnce();
+    expect(mockChannel.push).toHaveBeenCalledWith('res:delete', {
+      result: { success: true, deleted: 2 },
+      ref: 'cache-clear-delayed',
+    });
+    vi.clearAllTimers();
+    vi.useRealTimers();
   });
 });
 
