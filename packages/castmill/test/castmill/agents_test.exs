@@ -87,6 +87,36 @@ defmodule Castmill.AgentsTest do
     end
   end
 
+  describe "deleting human users" do
+    test "agent admins do not count as administrators", %{
+      organization: organization,
+      admin: admin
+    } do
+      {:ok, _agent, _} =
+        Agents.create_agent(organization.id, %{"name" => "Admin bot", "role" => "admin"})
+
+      other = user_fixture(%{network_id: organization.network_id})
+      {:ok, _} = Organizations.set_user_role(organization.id, other.id, :member)
+
+      assert {:error, message} = Accounts.delete_user(admin.id)
+      assert message =~ "sole administrator"
+    end
+
+    test "deleting the last human member removes the organization and its agents", %{
+      organization: organization,
+      admin: admin
+    } do
+      {:ok, agent, _} =
+        Agents.create_agent(organization.id, %{"name" => "Admin bot", "role" => "admin"})
+
+      assert {:ok, _} = Accounts.delete_user(admin.id)
+
+      assert Organizations.get_organization(organization.id) == nil
+      assert Accounts.get_user(agent.user_id) == nil
+      assert Repo.get(Agent, agent.id) == nil
+    end
+  end
+
   describe "listing and fetching" do
     test "list_agents/1 and get_agent/2 are scoped to the organization", %{
       organization: organization
