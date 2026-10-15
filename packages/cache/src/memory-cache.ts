@@ -5,6 +5,12 @@ import type {
   StoreFileReturnValue,
 } from './storage.integration';
 
+const RESTORED_MIME_TYPES: Record<ItemType, string> = {
+  [ItemType.Code]: 'text/javascript',
+  [ItemType.Data]: 'application/json',
+  [ItemType.Media]: 'media/*',
+};
+
 export class MemoryCache implements CacheBackend {
   // Map order tracks recency (least recently used first) for eviction.
   private readonly items = new Map<string, ItemMetadata>();
@@ -34,15 +40,18 @@ export class MemoryCache implements CacheBackend {
     const files = await this.integration.listFiles();
     for (const file of files) {
       if (file.sourceUrl) {
-        this.items.set(file.sourceUrl, {
+        const type = file.type ?? ItemType.Media;
+        const item: ItemMetadata = {
           url: file.sourceUrl,
           cachedUrl: file.url,
           size: file.size,
-          type: ItemType.Media,
-          mimeType: 'media/*',
+          type,
+          mimeType: RESTORED_MIME_TYPES[type],
           timestamp: Date.now(),
           accessed: 0,
-        });
+        };
+        if (file.storedAt !== undefined) item.storedAt = file.storedAt;
+        this.items.set(file.sourceUrl, item);
       }
     }
   }

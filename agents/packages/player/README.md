@@ -160,7 +160,17 @@ these as boolean `DeviceCapabilities` and includes them in its authenticated
 device-info report. The dashboard must use the reported values rather than
 inferring support from the player type or version; missing capabilities are
 unsupported. Runtime-level `refresh` and `clear_cache` commands do not require
-an optional machine capability.
+an optional machine capability. `clear_cache` additionally calls the optional
+`Machine.clearCache()` hook (WebOS: SCAP `Configuration.clearCache`) after
+cleaning the content cache; failures are logged and the player still reloads.
+
+Every maintenance action shows an English on-device toast (for example
+"Rebooting") through `showDeviceToast` before it runs, whether it comes from
+the device menu or a dashboard command. `Device.runMaintenanceAction` waits
+`MAINTENANCE_TOAST_DELAY_MS` so the toast paints before a reload or reboot,
+then catches failures, reports them, and shows a failure toast. Unsupported
+actions show nothing. The toast uses direct DOM updates because old WebOS can
+miss Solid updates after mount. Add new actions to `MAINTENANCE_TOASTS`.
 
 ### Auto-Duration Widgets
 

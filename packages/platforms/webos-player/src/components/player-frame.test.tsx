@@ -19,6 +19,9 @@ const mocks = vi.hoisted(() => ({
   startMaintenance: vi.fn(),
   scheduleRetry: vi.fn(),
   resetRetry: vi.fn(),
+  startWatchdog: vi.fn(),
+  stopWatchdog: vi.fn(),
+  reportError: vi.fn(),
 }));
 vi.mock('@castmill/device', () => ({
   Device: mocks.device,
@@ -44,6 +47,8 @@ vi.mock('../classes', () => ({
     setServerOrigin = mocks.setServerOrigin;
   },
   startDisplayMaintenance: mocks.startMaintenance,
+  startStallWatchdog: mocks.startWatchdog,
+  STARTUP_TIMEOUT_MS: 180_000,
 }));
 vi.mock('../boot/startup-retry', () => ({
   scheduleStartupRetry: mocks.scheduleRetry,
@@ -57,10 +62,12 @@ beforeEach(() => {
   mocks.cacheInit.mockResolvedValue(undefined);
   mocks.storage.mockImplementation(() => {});
   mocks.startMaintenance.mockReturnValue(mocks.stopMaintenance);
+  mocks.startWatchdog.mockReturnValue(mocks.stopWatchdog);
   mocks.device.mockImplementation(() => ({
     init: mocks.init,
     getBaseUrl: mocks.getBaseUrl,
     reportStartupError: mocks.reportStartupError,
+    getPlayerGlobals: () => ({ reportError: mocks.reportError }),
     on: mocks.on,
     off: mocks.off,
   }));
@@ -156,5 +163,50 @@ describe('Native WebOS startup', () => {
     expect(overlay.style.display).toBe('flex');
     cleanup();
     expect(mocks.off).toHaveBeenCalledWith('startup-error', listener);
+  });
+
+  it('reloads after reporting a main-thread stall', async () => {
+    const reload = vi.fn();
+    vi.stubGlobal('location', { ...window.location, reload });
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    render(() => <PlayerFrame />);
+    await waitFor(() => expect(mountDevice).toHaveBeenCalledOnce());
+    const [{ onStall }] = mocks.startWatchdog.mock.calls[0];
+    onStall(75_000);
+    expect(mocks.reportError).toHaveBeenCalledWith({
+      category: 'runtime',
+      error: expect.objectContaining({
+        message: expect.stringContaining('stalled for 75 s'),
+      }),
+    });
+    expect(reload).toHaveBeenCalledOnce();
+    cleanup();
+    expect(mocks.stopWatchdog).toHaveBeenCalledOnce();
+    vi.unstubAllGlobals();
+  });
+
+  it('retries startup when a step never completes', async () => {
+    vi.useFakeTimers();
+    try {
+      let finishCache!: () => void;
+      mocks.cacheInit.mockReturnValueOnce(
+        new Promise<void>((resolve) => (finishCache = resolve))
+      );
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      render(() => <PlayerFrame />);
+      await vi.advanceTimersByTimeAsync(180_000);
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'startup timed out during cache initialization'
+      );
+      expect(mocks.reportStartupError).toHaveBeenCalledOnce();
+      expect(mocks.scheduleRetry).toHaveBeenCalledOnce();
+
+      finishCache();
+      await vi.advanceTimersByTimeAsync(0);
+      expect(mountDevice).not.toHaveBeenCalled();
+      expect(mocks.resetRetry).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

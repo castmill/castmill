@@ -47,7 +47,7 @@
     "build:website": "yarn run build:cache && yarn run build:player && cd packages/website && yarn build",
     "dev:website": "cd packages/website && yarn start",
     "build:platforms:android": "cd packages/platforms/android-player && yarn build",
-    "build:platforms:webos": "cd packages/platforms/webos-player && yarn build",
+    "build:platforms:webos": "cd packages/platforms/webos-player && WEBOS_ALLOW_MISSING_SCAP=1 yarn build",
     "build:platforms:electron": "cd packages/platforms/electron-player && yarn build",
     "build:platforms:legacy": "cd packages/platforms/legacy-adapter-player && yarn build",
     "build:platforms:legacy:server": "cd packages/platforms/legacy-adapter-player && yarn build:server",

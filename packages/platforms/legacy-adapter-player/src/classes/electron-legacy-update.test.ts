@@ -80,9 +80,10 @@ describe('Legacy Electron dashboard updates', () => {
       update: true,
       updateFirmware: false,
     });
+    device.maintenanceToastDelayMs = 0;
     await handlers.get('command')!({ command: 'update_app' });
 
-    expect(postMessage).toHaveBeenCalledOnce();
+    await vi.waitFor(() => expect(postMessage).toHaveBeenCalledOnce());
     expect(postMessage).toHaveBeenCalledWith('updatePlayer', '*');
   });
 
