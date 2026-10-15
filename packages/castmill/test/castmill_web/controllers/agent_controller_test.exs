@@ -157,7 +157,9 @@ defmodule CastmillWeb.AgentControllerTest do
 
       assert conn1.status == 403
 
-      conn2 = build_conn() |> as(users.manager) |> delete(base_path(organization) <> "/#{agent.id}")
+      conn2 =
+        build_conn() |> as(users.manager) |> delete(base_path(organization) <> "/#{agent.id}")
+
       assert conn2.status == 403
       assert Agents.get_agent(organization.id, agent.id).name == "Bot"
     end

@@ -10,7 +10,7 @@ defmodule CastmillWeb.MCPControllerTest do
   setup do
     network = network_fixture()
     organization = organization_fixture(%{network_id: network.id})
-    {:ok, _} = Castmill.Quotas.add_quota_to_organization(organization.id, :playlists, 10)
+    Castmill.Quotas.add_quota_to_organization(organization.id, :playlists, 10)
 
     {:ok, agent, secret} =
       Agents.create_agent(organization.id, %{"name" => "Test agent", "role" => "editor"})
@@ -112,7 +112,9 @@ defmodule CastmillWeb.MCPControllerTest do
       assert resp["result"]["capabilities"]["tools"]
       assert resp["result"]["instructions"] =~ "get_context"
 
-      resp = secret |> rpc("initialize", %{"protocolVersion" => "1999-01-01"}) |> json_response(200)
+      resp =
+        secret |> rpc("initialize", %{"protocolVersion" => "1999-01-01"}) |> json_response(200)
+
       assert resp["result"]["protocolVersion"] == "2025-06-18"
     end
 
@@ -161,7 +163,9 @@ defmodule CastmillWeb.MCPControllerTest do
       assert content["text"] =~ "Castmill agent guide"
 
       assert %{"error" => _} =
-               secret |> rpc("resources/read", %{"uri" => "castmill://nope"}) |> json_response(200)
+               secret
+               |> rpc("resources/read", %{"uri" => "castmill://nope"})
+               |> json_response(200)
     end
 
     test "unknown tools return an invalid params error", %{secret: secret} do
@@ -287,7 +291,7 @@ defmodule CastmillWeb.MCPControllerTest do
 
       assert result["isError"]
 
-      result = call_tool(secret, "api_request", %{"method" => "GET", "path" => "/tags"})
+      result = call_tool(secret, "api_request", %{"method" => "GET", "path" => "/playlists"})
       refute result["isError"]
     end
   end

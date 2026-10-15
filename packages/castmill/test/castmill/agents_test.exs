@@ -81,6 +81,7 @@ defmodule Castmill.AgentsTest do
         |> Enum.map(fn entry -> entry.user.id end)
 
       refute agent.user_id in member_ids
+
       assert Organizations.count_users(%{organization_id: organization.id, search: nil}) ==
                length(member_ids)
     end

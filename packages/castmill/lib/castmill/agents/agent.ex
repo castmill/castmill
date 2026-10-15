@@ -62,11 +62,14 @@ defmodule Castmill.Agents.Agent do
   def changeset(agent, attrs) do
     agent
     |> cast(attrs, [:name, :description])
-    |> update_change(:name, &String.trim/1)
+    |> update_change(:name, &trim/1)
     |> validate_required([:name])
     |> validate_length(:name, min: 2, max: 50)
     |> validate_length(:description, max: 1000)
   end
+
+  defp trim(value) when is_binary(value), do: String.trim(value)
+  defp trim(value), do: value
 
   @doc false
   def create_changeset(agent, attrs) do
