@@ -144,6 +144,27 @@ describe('Device orientation synchronization', () => {
     expect(machine.setSetting).toHaveBeenCalledWith('ORIENTATION', '270');
   });
 
+  it('replays confirmation without reapplying an already-applied orientation', async () => {
+    const { device, machine, channel, handler } = create();
+    const setOrientation = vi.fn().mockResolvedValue({ mode: 'native' });
+    device['integration'].setOrientation = setOrientation;
+
+    handler({ orientation: 90 });
+    await vi.waitFor(() => expect(channel.push).toHaveBeenCalledTimes(1));
+    channel.push.mockClear();
+    handler({ orientation: 90 });
+    await vi.waitFor(() =>
+      expect(channel.push).toHaveBeenCalledWith('orientation:report', {
+        orientation: 90,
+        status: 'applied',
+        mode: 'native',
+      })
+    );
+    expect(setOrientation).toHaveBeenCalledTimes(1);
+    expect(machine.setSetting).toHaveBeenCalledTimes(1);
+    await device.stop();
+  });
+
   it('does not apply invalid remote orientation', async () => {
     const { machine, channel, handler } = create();
     handler({ orientation: '90' });

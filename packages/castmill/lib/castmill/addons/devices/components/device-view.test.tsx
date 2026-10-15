@@ -7,10 +7,19 @@ import { DevicesService } from '../services/devices.service';
 
 const toast = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }));
 vi.mock('@castmill/ui-common', () => ({
-  Tabs: (props: { tabs: Array<{ content: () => unknown }> }) =>
-    props.tabs[0].content(),
   LoadingOverlay: () => null,
   useToast: () => toast,
+  formatRelativeTimeLocalized: () => '5 minutes ago',
+  formatTimestamp: (value: string) => value,
+}));
+vi.mock('./device-info', () => ({ DeviceInfo: () => null }));
+vi.mock('./channels', () => ({ Channels: () => <p>Channels panel</p> }));
+vi.mock('./maintainance', () => ({ Maintainance: () => null }));
+vi.mock('./device-telemetry', () => ({ DeviceTelemetry: () => null }));
+vi.mock('./device-events', () => ({ DeviceLogs: () => null }));
+vi.mock('./device-cache', () => ({ DeviceCache: () => null }));
+vi.mock('./device-schedule', () => ({
+  DeviceSchedule: () => <p>Schedule panel</p>,
 }));
 vi.mock('./device-details', () => ({
   DeviceDetails: (props: {
@@ -98,5 +107,63 @@ describe('Details save results', () => {
     await vi.waitFor(() => expect(toast.error).toHaveBeenCalled());
     expect(onChange).not.toHaveBeenCalled();
     log.mockRestore();
+  });
+});
+
+describe('Device view layout', () => {
+  const renderView = (device: Partial<Device>) =>
+    render(() => (
+      <DeviceView
+        baseUrl="/api"
+        organization_id="org-1"
+        device={{ id: 'device-1', online: true, ...device } as Device}
+        t={(key, params) => (params ? `${key}:${params.time}` : key)}
+      />
+    ));
+
+  it('summarizes connectivity and when an offline player was last seen', () => {
+    renderView({ online: false, last_online: new Date() });
+    expect(screen.getByText('common.offline')).toBeInTheDocument();
+    expect(
+      screen.getByText('devices.details.lastSeen:5 minutes ago')
+    ).toBeInTheDocument();
+  });
+
+  it('switches sections by click and arrow keys with tab semantics', () => {
+    renderView({});
+    const tabs = screen.getAllByRole('tab');
+    expect(tabs[0]).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByText('Save orientation')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('tab', { name: 'common.channels' }));
+    expect(screen.getByText('Channels panel')).toBeInTheDocument();
+    expect(screen.queryByText('Save orientation')).not.toBeInTheDocument();
+
+    fireEvent.keyDown(tabs[1], { key: 'ArrowRight' });
+    expect(tabs[2]).toHaveAttribute('aria-selected', 'true');
+    expect(tabs[2]).toHaveFocus();
+    expect(screen.getByRole('tabpanel')).toHaveAttribute(
+      'aria-labelledby',
+      tabs[2].id
+    );
+    expect(screen.getByText('Schedule panel')).toBeInTheDocument();
+
+    fireEvent.keyDown(tabs[2], { key: 'Home' });
+    expect(tabs[0]).toHaveFocus();
+    fireEvent.keyDown(tabs[0], { key: 'ArrowLeft' });
+    expect(tabs[tabs.length - 1]).toHaveAttribute('aria-selected', 'true');
+  });
+
+  it('copies the device id and confirms it accessibly', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.assign(navigator, { clipboard: { writeText } });
+    renderView({});
+    fireEvent.click(
+      screen.getByRole('button', { name: 'devices.details.copyId' })
+    );
+    expect(writeText).toHaveBeenCalledWith('device-1');
+    expect(
+      await screen.findByText('devices.details.copied')
+    ).toBeInTheDocument();
   });
 });

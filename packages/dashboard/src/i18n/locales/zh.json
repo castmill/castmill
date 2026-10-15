@@ -932,7 +932,15 @@
       "applyError": "播放器无法应用此方向，请查看设备事件。",
       "unsupported": "请更新此播放器以启用方向设置。",
       "saved": "设备设置已保存。",
-      "saveError": "无法保存设备设置。"
+      "saveError": "无法保存设备设置。",
+      "options": {
+        "deg0": "横向",
+        "deg90": "纵向",
+        "deg180": "横向（翻转）",
+        "deg270": "纵向（翻转）"
+      },
+      "change": "更改",
+      "done": "完成"
     },
     "setDeviceChannel": "设置设备频道",
     "selectChannel": "选择频道",
@@ -964,7 +972,8 @@
       "noData": "该设备没有可用的遥测数据。",
       "daysShort": "天",
       "hoursShort": "时",
-      "minutesShort": "分"
+      "minutesShort": "分",
+      "description": "播放器报告的实时运行状况数据。"
     },
     "maintenance": {
       "refresh": "刷新",
@@ -990,7 +999,15 @@
       "recoverLostSettingsLabel": "恢复丢失设置",
       "disabled": "已禁用",
       "enabledMinutesRemaining": "已启用（剩余 {{minutes}} 分钟）",
-      "enabledForever": "永久启用"
+      "enabledForever": "永久启用",
+      "run": "执行",
+      "commandSent": "命令已发送到设备",
+      "commandFailed": "无法发送命令：{{error}}",
+      "contentGroup": "播放",
+      "contentGroupDescription": "无需重启硬件即可恢复播放。",
+      "systemGroup": "系统",
+      "systemGroupDescription": "更新和重启。屏幕可能会暂时黑屏。",
+      "recoverLostSettingsDescription": "允许此播放器在丢失凭据时从其他 IP 地址重新连接。"
     },
     "cache": {
       "title": "设备缓存",
@@ -1010,7 +1027,8 @@
       "deleteMultipleSuccess": "成功删除 {{count}} 个缓存条目",
       "clearAllSuccess": "成功清除所有缓存条目",
       "deleteError": "删除缓存时出错：{{error}}",
-      "offlineWarning": "设备当前离线。在设备重新上线之前，无法获取缓存信息。"
+      "offlineWarning": "设备当前离线。在设备重新上线之前，无法获取缓存信息。",
+      "description": "播放器在本地存储的文件，以便离线时继续播放。"
     },
     "events": {
       "title": "设备事件",
@@ -1030,7 +1048,8 @@
       "lastSeen": "最近出现",
       "details": "详情",
       "detailsTitle": "错误详情",
-      "errorDetails": "已清理的诊断详情"
+      "errorDetails": "已清理的诊断详情",
+      "description": "播放器报告的连接变化和错误。"
     },
     "errors": {
       "setChannelFailed": "设置设备频道失败:{{error}}",
@@ -1076,6 +1095,31 @@
       "v8Version": "V8 版本",
       "nodeVersion": "Node.js 版本",
       "userAgent": "用户代理"
+    },
+    "details": {
+      "settings": "设置",
+      "overview": "概览",
+      "schedule": "日程",
+      "sections": "设备分区",
+      "lastSeen": "最后在线 {{time}}",
+      "neverSeen": "从未连接",
+      "copyId": "复制设备 ID",
+      "copied": "设备 ID 已复制",
+      "copyFailed": "无法复制设备 ID。",
+      "unsavedChanges": "有未保存的更改",
+      "nameRequired": "名称为必填项",
+      "nameTooShort": "名称至少需要 5 个字符",
+      "descriptionTooShort": "描述至少需要 5 个字符"
+    },
+    "channelList": {
+      "description": "播放器会按照这些频道的排期播放内容。",
+      "empty": "尚未分配任何频道。",
+      "loadError": "无法获取设备频道",
+      "alreadyAssigned": "该频道已分配给此设备。",
+      "added": "已添加频道“{{name}}”",
+      "removed": "已移除频道“{{name}}”",
+      "addError": "添加频道失败：{{error}}",
+      "removeError": "移除频道失败：{{error}}"
     }
   },
   "validation": {
@@ -1423,7 +1467,7 @@
   },
   "deviceSchedule": {
     "title": "设备排程",
-    "description": "定义设备应何时开启。在网格上点击并拖动以创建排程条目。在计划时间之外，设备将关闭。如果未设置条目，设备始终开启。",
+    "description": "设置设备何时处于开启状态。在网格上拖动以创建条目，或轻触空白时段添加条目。点击或轻触条目可编辑其日期和时间。在计划时间之外，设备将关闭。如果未设置任何条目，设备将始终开启。",
     "mon": "一",
     "tue": "二",
     "wed": "三",
@@ -1439,6 +1483,19 @@
     "saved": "排程已保存并发送到设备",
     "savedOffline": "排程已保存。设备离线 — 重新连接时将发送计时器。",
     "loadError": "加载排程出错",
-    "saveError": "保存排程出错"
+    "saveError": "保存排程出错",
+    "editor": {
+      "title": "编辑时间段",
+      "newTitle": "新时间段",
+      "editSlot": "编辑时间段 {{slot}}",
+      "startDay": "开始日",
+      "endDay": "结束日",
+      "startTime": "开始时间",
+      "endTime": "结束时间",
+      "midnightHint": "将结束时间设为 00:00 可保持开启至午夜。",
+      "invalidTime": "结束时间必须晚于开始时间。",
+      "overlap": "此时间段与另一个条目重叠。",
+      "done": "完成"
+    }
   }
 }

@@ -1,0 +1,70 @@
+.device-event-type {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.15em 0.6em;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #cfcde0;
+  font-size: 0.8em;
+  font-weight: 600;
+  white-space: nowrap;
+
+  &::before {
+    content: '';
+    width: 0.5em;
+    height: 0.5em;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  &.type-e {
+    background: rgba(239, 123, 111, 0.12);
+    color: #ef7b6f;
+  }
+
+  &.type-w {
+    background: rgba(240, 183, 90, 0.12);
+    color: #f0b75a;
+  }
+
+  &.type-o {
+    background: rgba(46, 204, 113, 0.12);
+    color: #4cd68a;
+  }
+
+  &.type-x {
+    color: #a4a3b7;
+  }
+
+  &.type-i {
+    background: rgba(87, 146, 238, 0.12);
+    color: #8fb5f5;
+  }
+}
+
+.device-events .device-icon-button {
+  width: 1.9em;
+  height: 1.9em;
+}
+
+.device-event-details {
+  max-width: 48em;
+  overflow-wrap: anywhere;
+
+  .device-event-message {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  pre {
+    max-height: 20em;
+    overflow: auto;
+    padding: 0.8em 1em;
+    border: 1px solid #36324a;
+    border-radius: 0.4em;
+    background: #151320;
+    font-size: 0.8em;
+    white-space: pre-wrap;
+  }
+}

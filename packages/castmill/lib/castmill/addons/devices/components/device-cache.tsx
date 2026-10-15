@@ -1,24 +1,34 @@
-import { Component, createSignal, Show } from 'solid-js';
+import { Component, createSignal, For, Show } from 'solid-js';
 import { AiOutlineDelete } from 'solid-icons/ai';
-import { BsTrash } from 'solid-icons/bs';
-import { IoReload } from 'solid-icons/io';
+import {
+  BsArrowClockwise,
+  BsDatabase,
+  BsTrash3,
+  BsXCircle,
+} from 'solid-icons/bs';
 
 import {
-  Tabs,
   TableView,
   TableViewRef,
   SortOptions,
   Column,
-  IconButton,
   ConfirmDialog,
   useToast,
-  Button,
   formatBytes,
 } from '@castmill/ui-common';
 
 import { Device } from '../interfaces/device.interface';
 
 import { DevicesService } from '../services/devices.service';
+import {
+  DeviceCardHeader,
+  DeviceIconButton,
+  DeviceNotice,
+} from './device-section';
+import './device-cache.scss';
+
+type CacheType = 'data' | 'code' | 'media';
+const CACHE_TYPES: readonly CacheType[] = ['data', 'code', 'media'];
 
 interface DeviceTableCacheItem {
   timestamp: string;
@@ -50,7 +60,16 @@ export const DeviceCache: Component<{
         <span>{formatTimestamp(item.timestamp)}</span>
       ),
     },
-    { key: 'url', title: t('common.url'), sortable: true },
+    {
+      key: 'url',
+      title: t('common.url'),
+      sortable: true,
+      render: (item: DeviceTableCacheItem) => (
+        <span class="device-cache-url" title={item.url}>
+          {item.url}
+        </span>
+      ),
+    },
     {
       key: 'size',
       title: t('common.size'),
@@ -64,9 +83,7 @@ export const DeviceCache: Component<{
   ] as Column<DeviceTableCacheItem>[];
 
   const [selectedItems, setSelectedItems] = createSignal(new Set<string>());
-  const [currentType, setCurrentType] = createSignal<'data' | 'code' | 'media'>(
-    'data'
-  );
+  const [currentType, setCurrentType] = createSignal<CacheType>('data');
   const [showConfirmDialog, setShowConfirmDialog] = createSignal<
     DeviceTableCacheItem | undefined
   >();
@@ -80,7 +97,7 @@ export const DeviceCache: Component<{
   const itemsPerPage = 10; // Number of items to show per page
 
   const fetchCachePage = async (
-    type: 'data' | 'code' | 'media',
+    type: CacheType,
     {
       page,
       sortOptions,
@@ -93,7 +110,6 @@ export const DeviceCache: Component<{
       filters?: Record<string, string | boolean>;
     }
   ) => {
-    setCurrentType(type);
     return DevicesService.getDeviceCache(props.baseUrl, props.device.id, {
       type,
       page: page.num,
@@ -193,75 +209,108 @@ export const DeviceCache: Component<{
     },
   ];
 
-  const createTab = (type: 'data' | 'code' | 'media', title: string) => ({
-    title,
-    content: () => (
-      <TableView
-        title={t('devices.cache.title')}
-        resource={t('devices.cache.items')}
-        fetchData={(opts: any) => fetchCachePage(type, opts)}
-        ref={setTableViewRef}
-        initialSortOptions={{ key: 'timestamp', direction: 'descending' }}
-        table={{
-          columns,
-          actions,
-          onRowSelect,
-        }}
-        toolbar={{
-          hideTitle: true,
-          hideSearch: true,
-          actions: () => (
-            <div style="display: flex; gap: 1rem; align-items: center;">
-              <IconButton
-                onClick={refreshData}
-                icon={IoReload}
-                color="primary"
-                title={t('common.refresh')}
-                loading={loadingRefresh()}
-              />
-              <IconButton
-                onClick={() => setShowConfirmDialogMultiple(true)}
-                icon={AiOutlineDelete}
-                color="primary"
-                disabled={selectedItems().size === 0 || loadingDelete()}
-                title={t('devices.cache.deleteSelected')}
-              />
-            </div>
-          ),
-        }}
-        pagination={{ itemsPerPage }}
-      ></TableView>
-    ),
-  });
+  const selectType = (type: CacheType) => {
+    if (type === currentType()) return;
+    setSelectedItems(new Set<string>());
+    setCurrentType(type);
+  };
 
-  const tabs = [
-    createTab('data', t('devices.cache.dataTab')),
-    createTab('code', t('devices.cache.codeTab')),
-    createTab('media', t('devices.cache.mediaTab')),
-  ];
+  const typeLabel = (type: CacheType) => t(`devices.cache.${type}Tab`);
+  const tabId = (type: CacheType) => `device-cache-${props.device.id}-${type}`;
 
   return (
     <>
       <Show
         when={props.device.online}
         fallback={
-          <div style="background-color: #3d3d3d; border-left: 4px solid #f0ad4e; padding: 0.8em 1em; border-radius: 4px;">
-            <p style="margin: 0; color: #f0ad4e;">
-              {t('devices.cache.offlineWarning')}
-            </p>
-          </div>
+          <DeviceNotice tone="offline">
+            <p>{t('devices.cache.offlineWarning')}</p>
+          </DeviceNotice>
         }
       >
-        <div style="display: flex; justify-content: flex-end; margin-bottom: 1rem;">
-          <Button
-            onClick={() => setShowConfirmClearAll(true)}
-            icon={BsTrash}
-            label={t('devices.cache.clearAll')}
-            color="danger"
-            loading={loadingClearAll()}
+        <section class="device-card device-cache">
+          <DeviceCardHeader
+            icon={BsDatabase}
+            title={t('devices.cache.title')}
+            description={t('devices.cache.description')}
+            actions={
+              <button
+                type="button"
+                class="device-text-button danger"
+                disabled={loadingClearAll()}
+                onClick={() => setShowConfirmClearAll(true)}
+              >
+                <BsXCircle aria-hidden="true" />
+                {t('devices.cache.clearAll')}
+              </button>
+            }
           />
-        </div>
-        <Tabs tabs={tabs} />
+
+          <div class="device-cache-toolbar">
+            <div
+              class="device-segmented"
+              role="tablist"
+              aria-label={t('devices.cache.title')}
+            >
+              <For each={CACHE_TYPES}>
+                {(type) => (
+                  <button
+                    type="button"
+                    role="tab"
+                    id={tabId(type)}
+                    aria-selected={currentType() === type}
+                    onClick={() => selectType(type)}
+                  >
+                    {typeLabel(type)}
+                  </button>
+                )}
+              </For>
+            </div>
+            <div class="device-card-actions">
+              <DeviceIconButton
+                icon={BsArrowClockwise}
+                label={t('common.refresh')}
+                disabled={loadingRefresh()}
+                onClick={refreshData}
+              />
+              <DeviceIconButton
+                icon={BsTrash3}
+                tone="danger"
+                label={t('devices.cache.deleteSelected')}
+                disabled={selectedItems().size === 0 || loadingDelete()}
+                onClick={() => setShowConfirmDialogMultiple(true)}
+              />
+            </div>
+          </div>
+
+          <div
+            class="device-table-scroll"
+            role="tabpanel"
+            aria-labelledby={tabId(currentType())}
+          >
+            <Show when={currentType()} keyed>
+              {(type) => (
+                <TableView
+                  title={typeLabel(type)}
+                  resource={t('devices.cache.items')}
+                  itemIdKey="url"
+                  fetchData={(opts: any) => fetchCachePage(type, opts)}
+                  ref={setTableViewRef}
+                  initialSortOptions={{
+                    key: 'timestamp',
+                    direction: 'descending',
+                  }}
+                  table={{
+                    columns,
+                    actions,
+                    onRowSelect,
+                  }}
+                  pagination={{ itemsPerPage }}
+                />
+              )}
+            </Show>
+          </div>
+        </section>
       </Show>
 
       {/* Confirm dialog for single item deletion */}

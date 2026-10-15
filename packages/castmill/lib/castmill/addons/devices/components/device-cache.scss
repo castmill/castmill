@@ -1,0 +1,25 @@
+.device-cache-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6em;
+  margin-bottom: 0.9em;
+}
+
+.device-cache-url {
+  display: inline-block;
+  max-width: 28em;
+  overflow: hidden;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85em;
+  text-overflow: ellipsis;
+  vertical-align: bottom;
+  white-space: nowrap;
+}
+
+@media (max-width: 36em) {
+  .device-cache-url {
+    max-width: 14em;
+  }
+}

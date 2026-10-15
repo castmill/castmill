@@ -1,6 +1,24 @@
-import { Component, createSignal } from 'solid-js';
+import { Component, For, JSX, Show, createSignal, onCleanup } from 'solid-js';
+import { Dynamic } from 'solid-js/web';
+import type { IconTypes } from 'solid-icons';
+import {
+  BsActivity,
+  BsCalendar3,
+  BsCheck2,
+  BsClipboard,
+  BsCollectionPlay,
+  BsEye,
+  BsGrid1x2,
+  BsHddStack,
+  BsListUl,
+  BsTools,
+} from 'solid-icons/bs';
+import {
+  LoadingOverlay,
+  formatRelativeTimeLocalized,
+  useToast,
+} from '@castmill/ui-common';
 import { Device } from '../interfaces/device.interface';
-import { Tabs, LoadingOverlay, useToast } from '@castmill/ui-common';
 import { Channels } from './channels';
 import { Maintainance } from './maintainance';
 import { DeviceLogs } from './device-events';
@@ -12,11 +30,17 @@ import { DeviceTelemetry } from './device-telemetry';
 import { DeviceSchedule } from './device-schedule';
 import { DeviceInfo } from './device-info';
 import { AddonStore } from '../../common/interfaces/addon-store';
+import './device-view.scss';
 
-// Optionally we should allow using protonmaps
-// https://protomaps.com/
+interface DeviceSection {
+  id: string;
+  title: () => string;
+  icon: IconTypes;
+  content: () => JSX.Element;
+}
 
-// Modal component that will be used to display the device details and allow the user to edit the device
+const COPY_FEEDBACK_MS = 2000;
+
 const DeviceView: Component<{
   baseUrl: string;
   device: Device;
@@ -29,6 +53,11 @@ const DeviceView: Component<{
 
   const toast = useToast();
   const [loading, setLoading] = createSignal(false);
+  const [activeIndex, setActiveIndex] = createSignal(0);
+  const [copied, setCopied] = createSignal(false);
+  let copyTimer: ReturnType<typeof setTimeout> | undefined;
+  onCleanup(() => clearTimeout(copyTimer));
+
   const updateDevice = async (device: DeviceUpdate) => {
     setLoading(true);
 
@@ -60,103 +89,237 @@ const DeviceView: Component<{
     }
   };
 
-  const tabs = [
+  const lastSeen = () => {
+    if (props.device.online) return '';
+    if (!props.device.last_online) return t('devices.details.neverSeen');
+    return t('devices.details.lastSeen', {
+      time: formatRelativeTimeLocalized(
+        props.device.last_online,
+        props.store?.i18n?.locale()
+      ),
+    });
+  };
+
+  const summaryChips = () =>
+    [
+      props.device.info?.appType,
+      props.device.info?.appVersion || props.device.version,
+      props.device.info?.capabilities?.orientation
+        ? `${props.device.orientation ?? 0}°`
+        : undefined,
+    ].filter(Boolean) as string[];
+
+  const copyId = async () => {
+    try {
+      await navigator.clipboard.writeText(props.device.id);
+      setCopied(true);
+      clearTimeout(copyTimer);
+      copyTimer = setTimeout(() => setCopied(false), COPY_FEEDBACK_MS);
+    } catch {
+      toast.error(t('devices.details.copyFailed'));
+    }
+  };
+
+  const sections: DeviceSection[] = [
     {
-      title: t('common.details'),
+      id: 'overview',
+      title: () => t('devices.details.overview'),
+      icon: BsGrid1x2,
       content: () => (
-        <DeviceDetails
+        <div class="device-overview">
+          <DeviceDetails
+            device={props.device}
+            store={props.store}
+            onSubmit={updateDevice}
+            t={t}
+          />
+          <DeviceInfo device={props.device} t={t} />
+        </div>
+      ),
+    },
+    {
+      id: 'channels',
+      title: () => t('common.channels'),
+      icon: BsCollectionPlay,
+      content: () => (
+        <Channels
+          baseUrl={props.baseUrl}
+          organizationId={props.organization_id}
           device={props.device}
           store={props.store}
-          onSubmit={updateDevice}
           t={t}
         />
       ),
     },
     {
-      title: t('devices.info.title'),
-      content: () => <DeviceInfo device={props.device} t={t} />,
-    },
-    {
-      title: t('common.channels'),
+      id: 'schedule',
+      title: () => t('devices.details.schedule'),
+      icon: BsCalendar3,
       content: () => (
-        <div>
-          <Channels
-            baseUrl={props.baseUrl}
-            organizationId={props.organization_id}
-            device={props.device}
-            store={props.store}
-            t={t}
-          />
-        </div>
+        <DeviceSchedule baseUrl={props.baseUrl} device={props.device} t={t} />
       ),
     },
     {
-      title: t('common.preview'),
+      id: 'preview',
+      title: () => t('common.preview'),
+      icon: BsEye,
       content: () => (
-        <div>
-          <DevicePreview baseUrl={props.baseUrl} device={props.device} t={t} />
-        </div>
+        <DevicePreview baseUrl={props.baseUrl} device={props.device} t={t} />
       ),
     },
     {
-      title: t('common.cache'),
-      content: () => (
-        <div>
-          <DeviceCache
-            baseUrl={props.baseUrl}
-            device={props.device}
-            t={props.t}
-          />
-        </div>
-      ),
-    },
-    {
-      title: t('common.maintainance'),
-      content: () => (
-        <div>
-          <Maintainance
-            baseUrl={props.baseUrl}
-            organizationId={props.organization_id}
-            device={props.device}
-            onDeviceUpdated={(device) => {
-              props.onChange?.({ ...props.device, ...device });
-            }}
-            t={t}
-          />
-        </div>
-      ),
-    },
-    {
-      title: t('common.events'),
-      content: () => (
-        <div>
-          <DeviceLogs
-            baseUrl={props.baseUrl}
-            device={props.device}
-            t={props.t}
-          />
-        </div>
-      ),
-    },
-    {
-      title: t('common.telemetry'),
+      id: 'telemetry',
+      title: () => t('common.telemetry'),
+      icon: BsActivity,
       content: () => (
         <DeviceTelemetry baseUrl={props.baseUrl} device={props.device} t={t} />
       ),
     },
     {
-      title: t('deviceSchedule.title'),
+      id: 'events',
+      title: () => t('common.events'),
+      icon: BsListUl,
       content: () => (
-        <div>
-          <DeviceSchedule baseUrl={props.baseUrl} device={props.device} t={t} />
-        </div>
+        <DeviceLogs baseUrl={props.baseUrl} device={props.device} t={props.t} />
+      ),
+    },
+    {
+      id: 'cache',
+      title: () => t('common.cache'),
+      icon: BsHddStack,
+      content: () => (
+        <DeviceCache
+          baseUrl={props.baseUrl}
+          device={props.device}
+          t={props.t}
+        />
+      ),
+    },
+    {
+      id: 'maintenance',
+      title: () => t('common.maintainance'),
+      icon: BsTools,
+      content: () => (
+        <Maintainance
+          baseUrl={props.baseUrl}
+          organizationId={props.organization_id}
+          device={props.device}
+          onDeviceUpdated={(device) => {
+            props.onChange?.({ ...props.device, ...device });
+          }}
+          t={t}
+        />
       ),
     },
   ];
 
+  const tabId = (index: number) => `device-${props.device.id}-tab-${index}`;
+  const panelId = () => `device-${props.device.id}-panel`;
+  const tabRefs: HTMLButtonElement[] = [];
+
+  const selectSection = (index: number, focus = false) => {
+    setActiveIndex(index);
+    const tab = tabRefs[index];
+    if (focus) tab?.focus();
+    tab?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+  };
+
+  const onTabKeyDown = (event: KeyboardEvent) => {
+    const last = sections.length - 1;
+    const rtl =
+      (event.currentTarget as HTMLElement).closest('[dir="rtl"]') !== null;
+    const step = { ArrowRight: rtl ? -1 : 1, ArrowLeft: rtl ? 1 : -1 }[
+      event.key as 'ArrowRight' | 'ArrowLeft'
+    ];
+    let next: number | undefined;
+    if (step) next = (activeIndex() + step + sections.length) % sections.length;
+    else if (event.key === 'Home') next = 0;
+    else if (event.key === 'End') next = last;
+    if (next === undefined) return;
+    event.preventDefault();
+    selectSection(next, true);
+  };
+
   return (
-    <div style="width: 100%; min-height: 28em;">
-      <Tabs tabs={tabs} />
+    <div class="device-view">
+      <section class="device-summary" aria-label={t('common.status')}>
+        <div class="device-summary-status">
+          <span
+            class="device-status-pill"
+            classList={{
+              online: props.device.online,
+              offline: !props.device.online,
+            }}
+          >
+            <span class="device-status-dot" aria-hidden="true" />
+            {props.device.online ? t('common.online') : t('common.offline')}
+          </span>
+          <Show when={lastSeen()}>
+            <span class="device-summary-seen">{lastSeen()}</span>
+          </Show>
+        </div>
+
+        <div class="device-summary-meta">
+          <For each={summaryChips()}>
+            {(chip) => <span class="device-summary-chip">{chip}</span>}
+          </For>
+          <button
+            type="button"
+            class="device-summary-id"
+            onClick={copyId}
+            title={t('devices.details.copyId')}
+            aria-label={t('devices.details.copyId')}
+          >
+            <span class="device-summary-id-label">{t('common.id')}</span>
+            <code>{props.device.id}</code>
+            <Show when={copied()} fallback={<BsClipboard aria-hidden="true" />}>
+              <BsCheck2 aria-hidden="true" />
+            </Show>
+          </button>
+          <span class="visually-hidden" aria-live="polite">
+            {copied() ? t('devices.details.copied') : ''}
+          </span>
+        </div>
+      </section>
+
+      <nav class="device-sections">
+        <div
+          class="device-sections-list"
+          role="tablist"
+          aria-label={t('devices.details.sections')}
+        >
+          <For each={sections}>
+            {(section, index) => (
+              <button
+                ref={(el) => (tabRefs[index()] = el)}
+                type="button"
+                role="tab"
+                id={tabId(index())}
+                class="device-section-tab"
+                classList={{ active: activeIndex() === index() }}
+                aria-selected={activeIndex() === index()}
+                aria-controls={panelId()}
+                tabIndex={activeIndex() === index() ? 0 : -1}
+                title={section.title()}
+                onClick={() => selectSection(index())}
+                onKeyDown={onTabKeyDown}
+              >
+                <Dynamic component={section.icon} aria-hidden="true" />
+                <span class="device-section-label">{section.title()}</span>
+              </button>
+            )}
+          </For>
+        </div>
+      </nav>
+
+      <div
+        class="device-section-panel"
+        role="tabpanel"
+        id={panelId()}
+        aria-labelledby={tabId(activeIndex())}
+      >
+        {sections[activeIndex()].content()}
+      </div>
       <LoadingOverlay show={loading()} />
     </div>
   );

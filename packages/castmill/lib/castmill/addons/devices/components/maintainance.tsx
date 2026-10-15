@@ -1,12 +1,31 @@
-import { Component, createEffect, createSignal, Show } from 'solid-js';
-import { Button, MenuButton, useToast } from '@castmill/ui-common';
+import { Component, createEffect, createSignal, For, Show } from 'solid-js';
+import { Dynamic } from 'solid-js/web';
+import type { IconTypes } from 'solid-icons';
+import { useToast } from '@castmill/ui-common';
+import {
+  BsArrowClockwise,
+  BsArrowRepeat,
+  BsCloudDownload,
+  BsCpu,
+  BsEraser,
+  BsPower,
+  BsShieldCheck,
+  BsTools,
+} from 'solid-icons/bs';
 import { Device } from '../interfaces/device.interface';
 import { DevicesService } from '../services/devices.service';
+import { DeviceCardHeader, DeviceNotice } from './device-section';
 
 import './maintainance.scss';
 import { DeviceCommand } from '../types/device-command.type';
 
-// Modal component that will be used to display the device details and allow the user to edit the device
+interface MaintenanceAction {
+  command: DeviceCommand;
+  icon: IconTypes;
+  label: string;
+  description: string;
+}
+
 export const Maintainance: Component<{
   baseUrl: string;
   organizationId: string;
@@ -78,10 +97,12 @@ export const Maintainance: Component<{
 
     try {
       await DevicesService.sendCommand(props.baseUrl, props.device.id, command);
-      toast.success(`Command "${command}" sent successfully`);
+      toast.success(t('devices.maintenance.commandSent'));
     } catch (error) {
       console.error(error);
-      toast.error(`An error occurred while processing your request: ${error}`);
+      toast.error(
+        t('devices.maintenance.commandFailed', { error: String(error) })
+      );
     } finally {
       setHandlingRequest(false);
     }
@@ -137,147 +158,173 @@ export const Maintainance: Component<{
     return isDisabled() || !isCommandSupported(command);
   };
 
+  const autorecoveryMode = () => {
+    if (!autoRecoverIsActive()) return 'disabled';
+    return autoRecoverIsForever() ? 'forever' : 'timed';
+  };
+
+  const contentActions = (): MaintenanceAction[] => [
+    {
+      command: 'refresh',
+      icon: BsArrowClockwise,
+      label: t('devices.maintenance.refresh'),
+      description: t('devices.maintenance.refreshDescription'),
+    },
+    {
+      command: 'clear_cache',
+      icon: BsEraser,
+      label: t('devices.maintenance.clearCache'),
+      description: t('devices.maintenance.clearCacheDescription'),
+    },
+    {
+      command: 'restart_app',
+      icon: BsArrowRepeat,
+      label: t('devices.maintenance.restartApp'),
+      description: t('devices.maintenance.restartAppDescription'),
+    },
+  ];
+
+  const systemActions = (): MaintenanceAction[] => [
+    {
+      command: 'update_app',
+      icon: BsCloudDownload,
+      label: t('devices.maintenance.checkUpdates'),
+      description: t('devices.maintenance.checkUpdatesDescription'),
+    },
+    {
+      command: 'restart_device',
+      icon: BsPower,
+      label: t('devices.maintenance.restartDevice'),
+      description: t('devices.maintenance.restartDeviceDescription'),
+    },
+    {
+      command: 'update_firmware',
+      icon: BsCpu,
+      label: t('devices.maintenance.updateFirmware'),
+      description: t('devices.maintenance.updateFirmwareDescription'),
+    },
+  ];
+
+  const actionId = (command: DeviceCommand, part: string) =>
+    `maintenance-${props.device.id}-${command}-${part}`;
+
+  const ActionList = (listProps: { actions: MaintenanceAction[] }) => (
+    <ul class="maintenance-actions">
+      <For each={listProps.actions}>
+        {(action) => (
+          <li
+            class="maintenance-action"
+            classList={{ unsupported: !isCommandSupported(action.command) }}
+          >
+            <span class="maintenance-action-icon" aria-hidden="true">
+              <Dynamic component={action.icon} />
+            </span>
+            <div class="maintenance-action-text">
+              <span class="maintenance-action-title">
+                <span id={actionId(action.command, 'title')}>
+                  {action.label}
+                </span>
+                <Show when={!isCommandSupported(action.command)}>
+                  <span class="maintenance-badge">
+                    {t('devices.maintenance.actionNotSupported')}
+                  </span>
+                </Show>
+              </span>
+              <span class="maintenance-action-description">
+                {action.description}
+              </span>
+            </div>
+            <button
+              type="button"
+              id={actionId(action.command, 'run')}
+              class="device-text-button"
+              aria-labelledby={`${actionId(action.command, 'run')} ${actionId(action.command, 'title')}`}
+              disabled={isCommandDisabled(action.command)}
+              onClick={() => handleRequest(action.command)}
+            >
+              {t('devices.maintenance.run')}
+            </button>
+          </li>
+        )}
+      </For>
+    </ul>
+  );
+
   return (
-    <div class="maintainance">
-      <div class="maintainance-row autorecovery-row">
-        <p class="autorecovery-status">
-          {t('devices.maintenance.recoverLostSettingsLabel')}:{' '}
-          {autoRecoverStatusText()}
-        </p>
-
-        <div class="button-wrapper">
-          <MenuButton
-            label={t('devices.maintenance.edit')}
-            disabled={handlingRequest()}
-            items={[
-              {
-                key: 'one-hour',
-                label: t('devices.maintenance.enableForOneHour'),
-                onClick: () =>
-                  setAutorecovery(
-                    new Date(Date.now() + 60 * 60 * 1000).toISOString()
-                  ),
-              },
-              {
-                key: 'forever',
-                label: t('devices.maintenance.enableForever'),
-                onClick: () => setAutorecovery(foreverAutoRecoverUntil),
-              },
-              {
-                key: 'disable',
-                label: t('devices.maintenance.disable'),
-                onClick: () => setAutorecovery(null),
-              },
-            ]}
-          />
-        </div>
-      </div>
-
-      <div class="maintainance-row">
-        <div class="button-wrapper">
-          <Button
-            disabled={isCommandDisabled('refresh')}
-            color="primary"
-            label={t('devices.maintenance.refresh')}
-            onClick={() => handleRequest('refresh')}
-          />
-        </div>
-
-        <p>{t('devices.maintenance.refreshDescription')}</p>
-      </div>
-      <div class="maintainance-row">
-        <div class="button-wrapper">
-          <Button
-            disabled={isCommandDisabled('clear_cache')}
-            color="primary"
-            label={t('devices.maintenance.clearCache')}
-            onClick={() => handleRequest('clear_cache')}
-          />
-        </div>
-
-        <p>{t('devices.maintenance.clearCacheDescription')}</p>
-      </div>
-      <div class="maintainance-row">
-        <div class="button-wrapper">
-          <Button
-            disabled={isCommandDisabled('restart_app')}
-            color="primary"
-            label={t('devices.maintenance.restartApp')}
-            onClick={() => handleRequest('restart_app')}
-          />
-        </div>
-
-        <p>
-          {t('devices.maintenance.restartAppDescription')}
-          <Show when={!isCommandSupported('restart_app')}>
-            <span class="unsupported-message">
-              {t('devices.maintenance.actionNotSupported')}
-            </span>
-          </Show>
-        </p>
-      </div>
-      <div class="maintainance-row">
-        <div class="button-wrapper">
-          <Button
-            disabled={isCommandDisabled('restart_device')}
-            color="primary"
-            label={t('devices.maintenance.restartDevice')}
-            onClick={() => handleRequest('restart_device')}
-          />
-        </div>
-        <p>
-          {t('devices.maintenance.restartDeviceDescription')}
-          <Show when={!isCommandSupported('restart_device')}>
-            <span class="unsupported-message">
-              {t('devices.maintenance.actionNotSupported')}
-            </span>
-          </Show>
-        </p>
-      </div>
-      <div class="maintainance-row">
-        <div class="button-wrapper">
-          <Button
-            disabled={isCommandDisabled('update_app')}
-            color="primary"
-            label={t('devices.maintenance.checkUpdates')}
-            onClick={() => handleRequest('update_app')}
-          />
-        </div>
-        <p>
-          {t('devices.maintenance.checkUpdatesDescription')}
-          <Show when={!isCommandSupported('update_app')}>
-            <span class="unsupported-message">
-              {t('devices.maintenance.actionNotSupported')}
-            </span>
-          </Show>
-        </p>
-      </div>
-      <div class="maintainance-row">
-        <div class="button-wrapper">
-          <Button
-            disabled={isCommandDisabled('update_firmware')}
-            color="primary"
-            label={t('devices.maintenance.updateFirmware')}
-            onClick={() => handleRequest('update_firmware')}
-          />
-        </div>
-        <p>
-          {t('devices.maintenance.updateFirmwareDescription')}
-          <Show when={!isCommandSupported('update_firmware')}>
-            <span class="unsupported-message">
-              {t('devices.maintenance.actionNotSupported')}
-            </span>
-          </Show>
-        </p>
-      </div>
-
+    <div class="maintainance device-panel-stack">
       <Show when={!props.device.online}>
-        <div>
-          <p class="offline-message">
-            {t('devices.maintenance.offlineMessage')}
-          </p>
-        </div>
+        <DeviceNotice tone="offline">
+          <p>{t('devices.maintenance.offlineMessage')}</p>
+        </DeviceNotice>
       </Show>
+
+      <section class="device-card">
+        <DeviceCardHeader
+          icon={BsTools}
+          title={t('devices.maintenance.contentGroup')}
+          description={t('devices.maintenance.contentGroupDescription')}
+        />
+        <ActionList actions={contentActions()} />
+      </section>
+
+      <section class="device-card">
+        <DeviceCardHeader
+          icon={BsPower}
+          title={t('devices.maintenance.systemGroup')}
+          description={t('devices.maintenance.systemGroupDescription')}
+        />
+        <ActionList actions={systemActions()} />
+      </section>
+
+      <section class="device-card maintenance-autorecovery">
+        <DeviceCardHeader
+          icon={BsShieldCheck}
+          title={t('devices.maintenance.recoverLostSettingsLabel')}
+          description={t('devices.maintenance.recoverLostSettingsDescription')}
+          actions={
+            <span
+              class="maintenance-status"
+              classList={{ active: autoRecoverIsActive() }}
+            >
+              {autoRecoverStatusText()}
+            </span>
+          }
+        />
+        <div
+          class="device-segmented"
+          role="group"
+          aria-label={t('devices.maintenance.recoverLostSettingsLabel')}
+        >
+          <button
+            type="button"
+            aria-pressed={autorecoveryMode() === 'timed'}
+            disabled={handlingRequest()}
+            onClick={() =>
+              setAutorecovery(
+                new Date(Date.now() + 60 * 60 * 1000).toISOString()
+              )
+            }
+          >
+            {t('devices.maintenance.enableForOneHour')}
+          </button>
+          <button
+            type="button"
+            aria-pressed={autorecoveryMode() === 'forever'}
+            disabled={handlingRequest()}
+            onClick={() => setAutorecovery(foreverAutoRecoverUntil)}
+          >
+            {t('devices.maintenance.enableForever')}
+          </button>
+          <button
+            type="button"
+            aria-pressed={autorecoveryMode() === 'disabled'}
+            disabled={handlingRequest()}
+            onClick={() => setAutorecovery(null)}
+          >
+            {t('devices.maintenance.disable')}
+          </button>
+        </div>
+      </section>
     </div>
   );
 };

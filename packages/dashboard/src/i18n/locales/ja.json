@@ -933,7 +933,15 @@
       "applyError": "プレーヤーはこの向きを適用できませんでした。デバイスのイベントを確認してください。",
       "unsupported": "向きの設定を有効にするには、このプレーヤーを更新してください。",
       "saved": "デバイスの設定を保存しました。",
-      "saveError": "デバイスの設定を保存できませんでした。"
+      "saveError": "デバイスの設定を保存できませんでした。",
+      "options": {
+        "deg0": "横向き",
+        "deg90": "縦向き",
+        "deg180": "横向き（反転）",
+        "deg270": "縦向き（反転）"
+      },
+      "change": "変更",
+      "done": "完了"
     },
     "setDeviceChannel": "デバイスチャンネルを設定",
     "selectChannel": "チャンネルを選択",
@@ -965,7 +973,8 @@
       "noData": "このデバイスからのテレメトリデータはありません。",
       "daysShort": "日",
       "hoursShort": "時",
-      "minutesShort": "分"
+      "minutesShort": "分",
+      "description": "プレーヤーから報告されたリアルタイムの状態情報です。"
     },
     "maintenance": {
       "refresh": "更新",
@@ -991,7 +1000,15 @@
       "recoverLostSettingsLabel": "失われた設定を復元",
       "disabled": "無効",
       "enabledMinutesRemaining": "有効（残り {{minutes}} 分）",
-      "enabledForever": "無期限で有効"
+      "enabledForever": "無期限で有効",
+      "run": "実行",
+      "commandSent": "デバイスにコマンドを送信しました",
+      "commandFailed": "コマンドを送信できませんでした: {{error}}",
+      "contentGroup": "再生",
+      "contentGroupDescription": "ハードウェアを再起動せずに再生を復旧します。",
+      "systemGroup": "システム",
+      "systemGroupDescription": "更新と再起動。しばらく画面が暗くなる場合があります。",
+      "recoverLostSettingsDescription": "認証情報を失った場合に、このプレーヤーが別の IP アドレスから再接続できるようにします。"
     },
     "cache": {
       "title": "デバイスキャッシュ",
@@ -1011,7 +1028,8 @@
       "deleteMultipleSuccess": "{{count}}個のキャッシュエントリが正常に削除されました",
       "clearAllSuccess": "すべてのキャッシュエントリが正常にクリアされました",
       "deleteError": "キャッシュの削除中にエラーが発生しました: {{error}}",
-      "offlineWarning": "デバイスは現在オフラインです。デバイスがオンラインに戻るまで、キャッシュ情報を取得できません。"
+      "offlineWarning": "デバイスは現在オフラインです。デバイスがオンラインに戻るまで、キャッシュ情報を取得できません。",
+      "description": "オフラインでも再生を続けられるよう、プレーヤーがローカルに保存しているファイルです。"
     },
     "events": {
       "title": "デバイスイベント",
@@ -1031,7 +1049,8 @@
       "lastSeen": "最終検出",
       "details": "詳細",
       "detailsTitle": "エラーの詳細",
-      "errorDetails": "サニタイズ済み診断詳細"
+      "errorDetails": "サニタイズ済み診断詳細",
+      "description": "プレーヤーから報告された接続の変化とエラーです。"
     },
     "errors": {
       "setChannelFailed": "デバイスチャンネルの設定に失敗しました: {{error}}",
@@ -1077,6 +1096,31 @@
       "v8Version": "V8 のバージョン",
       "nodeVersion": "Node.js のバージョン",
       "userAgent": "ユーザーエージェント"
+    },
+    "details": {
+      "settings": "設定",
+      "overview": "概要",
+      "schedule": "スケジュール",
+      "sections": "デバイスのセクション",
+      "lastSeen": "最終確認 {{time}}",
+      "neverSeen": "未接続",
+      "copyId": "デバイス ID をコピー",
+      "copied": "デバイス ID をコピーしました",
+      "copyFailed": "デバイス ID をコピーできませんでした。",
+      "unsavedChanges": "未保存の変更があります",
+      "nameRequired": "名前は必須です",
+      "nameTooShort": "名前は5文字以上で入力してください",
+      "descriptionTooShort": "説明は5文字以上で入力してください"
+    },
+    "channelList": {
+      "description": "プレーヤーはこれらのチャンネルのスケジュールに従ってコンテンツを再生します。",
+      "empty": "まだチャンネルが割り当てられていません。",
+      "loadError": "デバイスのチャンネルを取得できませんでした",
+      "alreadyAssigned": "このチャンネルはすでにデバイスに割り当てられています。",
+      "added": "チャンネル「{{name}}」を追加しました",
+      "removed": "チャンネル「{{name}}」を削除しました",
+      "addError": "チャンネルを追加できませんでした: {{error}}",
+      "removeError": "チャンネルを削除できませんでした: {{error}}"
     }
   },
   "validation": {
@@ -1424,7 +1468,7 @@
   },
   "deviceSchedule": {
     "title": "デバイススケジュール",
-    "description": "デバイスがオンになる時間を定義します。グリッド上でクリックしてドラッグしてスケジュールエントリを作成します。スケジュールされた時間外はデバイスがオフになります。エントリが設定されていない場合、デバイスは常にオンです。",
+    "description": "デバイスをオンにする時間を設定します。グリッド上をドラッグしてエントリを作成するか、空いている枠をタップして追加します。エントリをクリックまたはタップすると、曜日と時間を編集できます。予定時間外はデバイスがオフになります。エントリがない場合、デバイスは常にオンです。",
     "mon": "月",
     "tue": "火",
     "wed": "水",
@@ -1440,6 +1484,19 @@
     "saved": "スケジュールを保存しデバイスに送信しました",
     "savedOffline": "スケジュールを保存しました。デバイスはオフラインです — 再接続時にタイマーが送信されます。",
     "loadError": "スケジュールの読み込みエラー",
-    "saveError": "スケジュールの保存エラー"
+    "saveError": "スケジュールの保存エラー",
+    "editor": {
+      "title": "時間枠を編集",
+      "newTitle": "新しい時間枠",
+      "editSlot": "時間枠 {{slot}} を編集",
+      "startDay": "開始曜日",
+      "endDay": "終了曜日",
+      "startTime": "開始時刻",
+      "endTime": "終了時刻",
+      "midnightHint": "深夜0時までオンにするには、終了時刻を 00:00 に設定します。",
+      "invalidTime": "終了時刻は開始時刻より後にしてください。",
+      "overlap": "この時間枠は他のエントリと重なっています。",
+      "done": "完了"
+    }
   }
 }
