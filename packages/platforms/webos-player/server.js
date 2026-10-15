@@ -92,7 +92,13 @@ function distPath(pathname) {
 }
 
 const server = createServer((req, res) => {
-  const { pathname } = new URL(req.url || '/', 'http://localhost');
+  let pathname;
+  try {
+    ({ pathname } = new URL(req.url || '/', 'http://localhost'));
+  } catch {
+    res.writeHead(400).end('Bad request');
+    return;
+  }
   console.log('Request', pathname);
   res.on('finish', () => console.log('Finished', pathname));
 

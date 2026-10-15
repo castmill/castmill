@@ -108,6 +108,37 @@ describe('ResourceManager', () => {
       const { a } = await manager.import(uri);
       expect(a).to.be.eql(1);
     });
+
+    it('starts with cached code when the server never responds', async () => {
+      const uri = 'https://example.com/hanging-code.js';
+      const storage = new StorageMockup({ [uri]: 'export const a = 1;' });
+      const cache = new Cache(storage, 'test-hanging-code-resource', 10);
+      const warmup = new ResourceManager(cache);
+      await warmup.init();
+      await warmup.import(uri);
+
+      const originalFetch = global.fetch;
+      global.fetch = vi.fn((url: string) =>
+        url === uri ? new Promise<Response>(() => {}) : originalFetch(url)
+      ) as unknown as typeof fetch;
+      const needsRefresh = vi.fn();
+
+      try {
+        const manager = new ResourceManager(cache, {
+          needsRefresh,
+          codeRevalidationTimeoutMs: 20,
+        });
+        await manager.init();
+
+        expect(global.fetch).toHaveBeenCalledWith(uri, expect.anything());
+        const { a } = await manager.import(uri);
+        expect(a).to.be.eql(1);
+        expect(needsRefresh).not.toHaveBeenCalled();
+      } finally {
+        global.fetch = originalFetch;
+        cache.close();
+      }
+    });
   });
 
   describe('data resources', () => {
