@@ -7,19 +7,93 @@
   margin-bottom: 0.9em;
 }
 
-.device-cache-url {
-  display: inline-block;
-  max-width: 28em;
+.device-cache-url,
+.device-cache-mime {
+  display: block;
   overflow: hidden;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.85em;
   text-overflow: ellipsis;
-  vertical-align: bottom;
   white-space: nowrap;
 }
 
-@media (max-width: 36em) {
-  .device-cache-url {
-    max-width: 14em;
+.device-cache-url {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85em;
+  text-align: left;
+}
+
+/*
+ * Columns: select, timestamp, URL, size, accessed, MIME type, actions.
+ * The URL absorbs the remaining width; selection and delete stay visible,
+ * while the least important columns are dropped on narrow cards.
+ */
+.device-cache-table {
+  th:nth-child(1) {
+    width: 2.5em;
+  }
+
+  th:nth-child(2) {
+    width: 11.5em;
+  }
+
+  th:nth-child(4) {
+    width: 6em;
+  }
+
+  th:nth-child(5) {
+    width: 6em;
+  }
+
+  th:nth-child(6) {
+    width: 9em;
+  }
+
+  th:nth-child(7) {
+    width: 4.5em;
+  }
+
+  @container (max-width: 48em) {
+    th:nth-child(6),
+    td:nth-child(6) {
+      display: none;
+    }
+  }
+
+  @container (max-width: 40em) {
+    th:nth-child(2) {
+      width: 6em;
+    }
+
+    th:nth-child(4) {
+      width: 4.5em;
+    }
+
+    th:nth-child(5) {
+      width: 4em;
+    }
+
+    th:nth-child(7) {
+      width: 3em;
+    }
+  }
+
+  @container (max-width: 30em) {
+    th:nth-child(5),
+    td:nth-child(5) {
+      display: none;
+    }
+  }
+
+  @container (max-width: 24em) {
+    th:nth-child(2) {
+      width: 5.5em;
+    }
+
+    th:nth-child(4) {
+      width: 4em;
+    }
+
+    th:nth-child(7) {
+      width: 2.5em;
+    }
   }
 }

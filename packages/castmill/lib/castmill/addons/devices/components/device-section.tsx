@@ -83,3 +83,14 @@ export const DeviceIconButton = (props: {
     <Dynamic component={props.icon} />
   </button>
 );
+
+/** Table timestamp whose date and time wrap onto separate lines when narrow */
+export const DeviceTableTime = (props: { value: string | number | Date }) => {
+  const date = () => new Date(props.value);
+  return (
+    <time class="device-table-time" dateTime={date().toISOString()}>
+      <span>{date().toLocaleDateString()}</span>{' '}
+      <span>{date().toLocaleTimeString()}</span>
+    </time>
+  );
+};

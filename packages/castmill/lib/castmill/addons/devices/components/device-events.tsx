@@ -15,7 +15,7 @@ import {
 import { Device } from '../interfaces/device.interface';
 
 import { DevicesService } from '../services/devices.service';
-import { DeviceCardHeader } from './device-section';
+import { DeviceCardHeader, DeviceTableTime } from './device-section';
 import './device-events.scss';
 
 interface DeviceTableLogItem {
@@ -57,9 +57,7 @@ export const DeviceLogs: Component<{
       title: t('common.timestamp'),
       sortable: true,
       render: (item: DeviceTableLogItem) => (
-        <span>
-          {new Date(item.last_occurred_at || item.timestamp).toLocaleString()}
-        </span>
+        <DeviceTableTime value={item.last_occurred_at || item.timestamp} />
       ),
     },
     {
@@ -67,8 +65,13 @@ export const DeviceLogs: Component<{
       title: t('common.type'),
       sortable: true,
       render: (item: DeviceTableLogItem) => (
-        <span class={`device-event-type type-${item.type}`}>
-          {typeNameMap[item.type] || item.type}
+        <span
+          class={`device-event-type type-${item.type}`}
+          title={typeNameMap[item.type] || item.type}
+        >
+          <span class="device-event-type-label">
+            {typeNameMap[item.type] || item.type}
+          </span>
         </span>
       ),
     },
@@ -77,16 +80,7 @@ export const DeviceLogs: Component<{
       title: t('common.message'),
       sortable: false,
       render: (item: DeviceTableLogItem) => (
-        <span
-          style={{
-            display: 'block',
-            'max-width': '36em',
-            overflow: 'hidden',
-            'text-align': 'left',
-            'text-overflow': 'ellipsis',
-            'white-space': 'nowrap',
-          }}
-        >
+        <span class="device-event-msg" title={item.msg}>
           {item.msg}
         </span>
       ),
@@ -201,7 +195,7 @@ export const DeviceLogs: Component<{
             </button>
           }
         />
-        <div class="device-table-scroll">
+        <div class="device-table-scroll device-table-fit device-events-table">
           <TableView
             title={t('devices.events.title')}
             resource={t('devices.events.items')}

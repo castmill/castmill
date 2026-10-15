@@ -24,6 +24,7 @@ import {
   DeviceCardHeader,
   DeviceIconButton,
   DeviceNotice,
+  DeviceTableTime,
 } from './device-section';
 import './device-cache.scss';
 
@@ -46,18 +47,13 @@ export const DeviceCache: Component<{
   const t = props.t || ((key: string) => key);
   const toast = useToast();
 
-  // Helper function to format timestamp to local timezone
-  const formatTimestamp = (timestamp: number): string => {
-    return new Date(timestamp).toLocaleString();
-  };
-
   const columns = [
     {
       key: 'timestamp',
       title: t('common.timestamp'),
       sortable: true,
       render: (item: DeviceTableCacheItem) => (
-        <span>{formatTimestamp(item.timestamp)}</span>
+        <DeviceTableTime value={item.timestamp} />
       ),
     },
     {
@@ -79,7 +75,16 @@ export const DeviceCache: Component<{
       ),
     },
     { key: 'accessed', title: t('common.accessed'), sortable: false },
-    { key: 'mimeType', title: t('common.mimeType'), sortable: false },
+    {
+      key: 'mimeType',
+      title: t('common.mimeType'),
+      sortable: false,
+      render: (item: DeviceTableCacheItem) => (
+        <span class="device-cache-mime" title={item.mimeType}>
+          {item.mimeType}
+        </span>
+      ),
+    },
   ] as Column<DeviceTableCacheItem>[];
 
   const [selectedItems, setSelectedItems] = createSignal(new Set<string>());
@@ -284,7 +289,7 @@ export const DeviceCache: Component<{
           </div>
 
           <div
-            class="device-table-scroll"
+            class="device-table-scroll device-table-fit device-cache-table"
             role="tabpanel"
             aria-labelledby={tabId(currentType())}
           >

@@ -2,6 +2,8 @@
   display: inline-flex;
   align-items: center;
   gap: 0.4em;
+  max-width: 100%;
+  box-sizing: border-box;
   padding: 0.15em 0.6em;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.06);
@@ -12,6 +14,7 @@
 
   &::before {
     content: '';
+    flex: none;
     width: 0.5em;
     height: 0.5em;
     border-radius: 50%;
@@ -40,6 +43,101 @@
   &.type-i {
     background: rgba(87, 146, 238, 0.12);
     color: #8fb5f5;
+  }
+}
+
+.device-event-type-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.device-event-msg {
+  display: block;
+  overflow: hidden;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/*
+ * The table always fits its card: fixed column widths keep occurrences and
+ * details visible while the message column absorbs the remaining space.
+ * Columns: timestamp, type, message, occurrences, details.
+ */
+.device-events-table {
+  th:nth-child(1) {
+    width: 11.5em;
+  }
+
+  th:nth-child(2) {
+    width: 7.5em;
+  }
+
+  th:nth-child(4) {
+    width: 6.5em;
+  }
+
+  th:nth-child(5) {
+    width: 4.5em;
+  }
+
+  @container (max-width: 40em) {
+    th:nth-child(1) {
+      width: 6em;
+    }
+
+    th:nth-child(2) {
+      width: 5.5em;
+    }
+
+    th:nth-child(4) {
+      width: 4em;
+    }
+
+    th:nth-child(5) {
+      width: 3.25em;
+    }
+
+    .device-event-msg {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  /* Very narrow: the type pill shows only its colored dot */
+  @container (max-width: 24em) {
+    th:nth-child(1) {
+      width: 5.5em;
+    }
+
+    th:nth-child(2) {
+      width: 2em;
+    }
+
+    th:nth-child(4) {
+      width: 3.25em;
+    }
+
+    th:nth-child(5) {
+      width: 2.75em;
+    }
+
+    .device-event-type {
+      padding: 0.3em;
+    }
+
+    .device-event-type-label {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
   }
 }
 

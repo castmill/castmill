@@ -141,12 +141,20 @@
   gap: 0.25em;
   overflow-x: auto;
   scroll-snap-type: x proximity;
-  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 2em), transparent);
+  -webkit-mask-image: linear-gradient(
+    to right,
+    #000 calc(100% - 2em),
+    transparent
+  );
   mask-image: linear-gradient(to right, #000 calc(100% - 2em), transparent);
   padding-inline-end: 2em;
 
   [dir='rtl'] & {
-    -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 2em), transparent);
+    -webkit-mask-image: linear-gradient(
+      to left,
+      #000 calc(100% - 2em),
+      transparent
+    );
     mask-image: linear-gradient(to left, #000 calc(100% - 2em), transparent);
   }
   scrollbar-width: none;
@@ -479,6 +487,53 @@
   min-width: 0;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+}
+
+// Tables that always fit their card: give the important columns fixed
+// widths (per table) and let one flexible column absorb the rest.
+.device-table-fit {
+  container-type: inline-size;
+
+  table {
+    table-layout: fixed;
+  }
+
+  th,
+  td {
+    padding: 0.25em 0.5em;
+    overflow: hidden;
+  }
+
+  // Long translated headings are truncated instead of widening the table
+  table thead th > div[class] {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .device-table-time span {
+    display: inline-block;
+    white-space: nowrap;
+  }
+
+  @container (max-width: 40em) {
+    th,
+    td {
+      padding: 0.25em 0.3em;
+    }
+
+    .device-table-time {
+      font-size: 0.85em;
+    }
+  }
+
+  @container (max-width: 24em) {
+    th,
+    td {
+      padding: 0.25em 0.2em;
+    }
+  }
 }
 
 .device-info-list {
