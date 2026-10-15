@@ -623,7 +623,8 @@
     "networkSettings": "الإعدادات",
     "networkOrganizations": "المنظمات",
     "networkUsers": "المستخدمون والدعوات",
-    "tags": "العلامات"
+    "tags": "العلامات",
+    "agents": "الوكلاء"
   },
   "channels": {
     "title": "القنوات",
@@ -1440,5 +1441,84 @@
     "savedOffline": "تم حفظ الجدول. الجهاز غير متصل — سيتم إرسال المؤقتات عند إعادة الاتصال.",
     "loadError": "خطأ في تحميل الجدول",
     "saveError": "خطأ في حفظ الجدول"
+  },
+  "agents": {
+    "title": "وكلاء الذكاء الاصطناعي",
+    "description": "وكلاء الذكاء الاصطناعي هم أعضاء في المؤسسة يتحكمون في Castmill عبر خادم MCP. لديهم نفس صلاحيات المستخدم الذي يحمل دورهم، ويتم تسجيل جميع إجراءاتهم.",
+    "newAgent": "وكيل جديد",
+    "editAgent": "تعديل الوكيل",
+    "formDescription": "يحدد الدور ما يُسمح للوكيل بفعله في هذه المؤسسة.",
+    "namePlaceholder": "مثال: مساعد المحتوى",
+    "descriptionPlaceholder": "لأي غرض يُستخدم هذا الوكيل؟",
+    "empty": "لا يوجد وكلاء بعد. أنشئ وكيلاً لربط مساعد ذكاء اصطناعي بـ Castmill.",
+    "noAccess": "يمكن لمسؤولي المؤسسة ومديريها فقط عرض الوكلاء.",
+    "credentials": "بيانات الاعتماد",
+    "credentialsRevoked": "ملغاة",
+    "lastUsed": "آخر استخدام",
+    "neverUsed": "أبدًا",
+    "rotate": "تدوير بيانات الاعتماد",
+    "revoke": "إلغاء بيانات الاعتماد",
+    "created": "تم إنشاء الوكيل",
+    "updated": "تم تحديث الوكيل",
+    "deleted": "تم حذف الوكيل",
+    "rotated": "تم تدوير بيانات الاعتماد",
+    "revoked": "تم إلغاء بيانات الاعتماد",
+    "copied": "تم النسخ إلى الحافظة",
+    "copy": "نسخ",
+    "secretTitle": "بيانات اعتماد {name}",
+    "secretWarning": "انسخ هذا السر الآن. لأسباب أمنية لن يتم عرضه مرة أخرى.",
+    "secretDone": "لقد حفظت السر",
+    "tabs": {
+      "agents": "الوكلاء",
+      "activity": "سجل النشاط",
+      "setup": "تعليمات الإعداد"
+    },
+    "confirm": {
+      "rotateTitle": "تدوير بيانات الاعتماد",
+      "rotateMessage": "سيتم إنشاء سر جديد لـ {name}. سيتوقف السر الحالي عن العمل فورًا.",
+      "revokeTitle": "إلغاء بيانات الاعتماد",
+      "revokeMessage": "لن يتمكن {name} من الاتصال حتى يتم إنشاء بيانات اعتماد جديدة.",
+      "deleteTitle": "حذف الوكيل",
+      "deleteMessage": "حذف {name}؟ ستتم إزالة بيانات اعتماده وسجل نشاطه نهائيًا."
+    },
+    "errors": {
+      "loadFailed": "فشل تحميل الوكلاء",
+      "saveFailed": "فشل حفظ الوكيل: {error}",
+      "actionFailed": "فشل الإجراء: {error}",
+      "copyFailed": "تعذر النسخ إلى الحافظة",
+      "loadActionsFailed": "فشل تحميل سجل النشاط"
+    },
+    "activity": {
+      "agent": "الوكيل",
+      "allAgents": "جميع الوكلاء",
+      "status": "الحالة",
+      "allStatuses": "جميع الحالات",
+      "success": "نجاح",
+      "error": "خطأ",
+      "empty": "لا يوجد نشاط للوكلاء بعد.",
+      "tool": "الأداة",
+      "request": "الطلب",
+      "duration": "المدة",
+      "arguments": "الوسائط"
+    },
+    "integration": {
+      "intro": "يتصل الوكلاء بـ Castmill باستخدام أي عميل MCP يدعم الخوادم البعيدة عبر Streamable HTTP. استخدم سر الوكيل كرمز Bearer في ترويسة Authorization.",
+      "serverUrl": "عنوان URL لخادم MCP",
+      "securityNote": "تعامل مع أسرار الوكلاء ككلمات المرور: لا تضفها إلى نظام التحكم بالمصدر. قم بتدوير بيانات الاعتماد إذا تم كشف السر.",
+      "clients": {
+        "claudeDesktop": "Claude Desktop",
+        "claudeCode": "Claude Code",
+        "vscode": "VS Code",
+        "cursor": "Cursor",
+        "other": "عملاء آخرون"
+      },
+      "steps": {
+        "claudeDesktop": "افتح الإعدادات ← المطور ← تعديل الإعداد، وأضف هذا إلى claude_desktop_config.json ثم أعد تشغيل Claude Desktop. يتطلب Node.js (يستخدم mcp-remote).",
+        "claudeCode": "شغّل هذا الأمر في الطرفية.",
+        "vscode": "أضف هذا إلى ‎.vscode/mcp.json في مساحة العمل (أو إلى إعداد MCP الخاص بالمستخدم).",
+        "cursor": "أضف هذا إلى ‎~/.cursor/mcp.json (أو ‎.cursor/mcp.json في مشروعك).",
+        "other": "قم بإعداد خادم MCP بعيد باستخدام هذه الإعدادات."
+      }
+    }
   }
 }

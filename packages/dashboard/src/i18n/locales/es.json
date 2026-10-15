@@ -624,7 +624,8 @@
     "networkSettings": "Configuración",
     "networkOrganizations": "Organizaciones",
     "networkUsers": "Usuarios e invitaciones",
-    "tags": "Etiquetas"
+    "tags": "Etiquetas",
+    "agents": "Agentes"
   },
   "channels": {
     "title": "Canales",
@@ -1441,5 +1442,84 @@
     "savedOffline": "Horario guardado. El dispositivo está sin conexión — los temporizadores se enviarán cuando se reconecte.",
     "loadError": "Error al cargar el horario",
     "saveError": "Error al guardar el horario"
+  },
+  "agents": {
+    "title": "Agentes de IA",
+    "description": "Los agentes de IA son miembros de la organización que controlan Castmill a través del servidor MCP. Tienen los mismos permisos que un usuario con su rol y todas sus acciones quedan registradas.",
+    "newAgent": "Nuevo agente",
+    "editAgent": "Editar agente",
+    "formDescription": "El rol determina lo que el agente puede hacer en esta organización.",
+    "namePlaceholder": "p. ej. Asistente de contenido",
+    "descriptionPlaceholder": "¿Para qué se usa este agente?",
+    "empty": "Todavía no hay agentes. Crea uno para conectar un asistente de IA a Castmill.",
+    "noAccess": "Solo los administradores y gestores de la organización pueden ver los agentes.",
+    "credentials": "Credenciales",
+    "credentialsRevoked": "Revocadas",
+    "lastUsed": "Último uso",
+    "neverUsed": "Nunca",
+    "rotate": "Rotar credenciales",
+    "revoke": "Revocar credenciales",
+    "created": "Agente creado",
+    "updated": "Agente actualizado",
+    "deleted": "Agente eliminado",
+    "rotated": "Credenciales rotadas",
+    "revoked": "Credenciales revocadas",
+    "copied": "Copiado al portapapeles",
+    "copy": "Copiar",
+    "secretTitle": "Credenciales de {name}",
+    "secretWarning": "Copia este secreto ahora. Por motivos de seguridad no se volverá a mostrar.",
+    "secretDone": "He guardado el secreto",
+    "tabs": {
+      "agents": "Agentes",
+      "activity": "Registro de actividad",
+      "setup": "Instrucciones de configuración"
+    },
+    "confirm": {
+      "rotateTitle": "Rotar credenciales",
+      "rotateMessage": "Se generará un nuevo secreto para {name}. El secreto actual dejará de funcionar inmediatamente.",
+      "revokeTitle": "Revocar credenciales",
+      "revokeMessage": "{name} no podrá conectarse hasta que se generen nuevas credenciales.",
+      "deleteTitle": "Eliminar agente",
+      "deleteMessage": "¿Eliminar {name}? Sus credenciales y su registro de actividad se eliminarán de forma permanente."
+    },
+    "errors": {
+      "loadFailed": "Error al cargar los agentes",
+      "saveFailed": "Error al guardar el agente: {error}",
+      "actionFailed": "La acción falló: {error}",
+      "copyFailed": "No se pudo copiar al portapapeles",
+      "loadActionsFailed": "Error al cargar el registro de actividad"
+    },
+    "activity": {
+      "agent": "Agente",
+      "allAgents": "Todos los agentes",
+      "status": "Estado",
+      "allStatuses": "Todos los estados",
+      "success": "Éxito",
+      "error": "Error",
+      "empty": "Todavía no hay actividad de agentes.",
+      "tool": "Herramienta",
+      "request": "Solicitud",
+      "duration": "Duración",
+      "arguments": "Argumentos"
+    },
+    "integration": {
+      "intro": "Los agentes se conectan a Castmill con cualquier cliente MCP que admita servidores remotos mediante Streamable HTTP. Usa el secreto del agente como token Bearer en la cabecera Authorization.",
+      "serverUrl": "URL del servidor MCP",
+      "securityNote": "Trata los secretos de los agentes como contraseñas: no los subas al control de versiones. Rota las credenciales si un secreto queda expuesto.",
+      "clients": {
+        "claudeDesktop": "Claude Desktop",
+        "claudeCode": "Claude Code",
+        "vscode": "VS Code",
+        "cursor": "Cursor",
+        "other": "Otros clientes"
+      },
+      "steps": {
+        "claudeDesktop": "Abre Configuración → Desarrollador → Editar configuración, añade esto a claude_desktop_config.json y reinicia Claude Desktop. Requiere Node.js (usa mcp-remote).",
+        "claudeCode": "Ejecuta este comando en tu terminal.",
+        "vscode": "Añade esto a .vscode/mcp.json en tu espacio de trabajo (o a tu configuración MCP de usuario).",
+        "cursor": "Añade esto a ~/.cursor/mcp.json (o a .cursor/mcp.json en tu proyecto).",
+        "other": "Configura un servidor MCP remoto con estos ajustes."
+      }
+    }
   }
 }

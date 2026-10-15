@@ -14,6 +14,7 @@ defmodule Castmill.Accounts.User do
              :role,
              :blocked_at,
              :blocked_reason,
+             :is_agent,
              :inserted_at,
              :updated_at
            ]}
@@ -30,6 +31,11 @@ defmodule Castmill.Accounts.User do
     field(:blocked_reason, :string)
 
     field(:meta, :map)
+
+    # AI agents are backed by a user so they share every authorization path
+    # with regular users. Agent users can only authenticate through the MCP
+    # endpoint using agent credentials (see Castmill.Agents).
+    field(:is_agent, :boolean, default: false)
 
     many_to_many(
       :organizations,
@@ -62,6 +68,15 @@ defmodule Castmill.Accounts.User do
     )
     |> validate_format(:email, ~r/@/)
     |> unique_constraint(:email, name: :users_email_index)
+  end
+
+  @doc """
+  Changeset used to create the user record backing an AI agent.
+  """
+  def agent_changeset(user, attrs) do
+    user
+    |> changeset(attrs)
+    |> put_change(:is_agent, true)
   end
 
   @doc """

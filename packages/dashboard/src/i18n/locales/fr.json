@@ -635,7 +635,8 @@
     "networkSettings": "Paramètres",
     "networkOrganizations": "Organisations",
     "networkUsers": "Utilisateurs et invitations",
-    "tags": "Étiquettes"
+    "tags": "Étiquettes",
+    "agents": "Agents"
   },
   "channels": {
     "title": "Canaux",
@@ -1452,5 +1453,84 @@
     "savedOffline": "Horaire enregistré. L'appareil est hors ligne — les minuteurs seront envoyés lors de la reconnexion.",
     "loadError": "Erreur lors du chargement de l'horaire",
     "saveError": "Erreur lors de l'enregistrement de l'horaire"
+  },
+  "agents": {
+    "title": "Agents IA",
+    "description": "Les agents IA sont des membres de l'organisation qui pilotent Castmill via le serveur MCP. Ils disposent des mêmes autorisations qu'un utilisateur ayant leur rôle, et toutes leurs actions sont journalisées.",
+    "newAgent": "Nouvel agent",
+    "editAgent": "Modifier l'agent",
+    "formDescription": "Le rôle détermine ce que l'agent est autorisé à faire dans cette organisation.",
+    "namePlaceholder": "ex. Assistant de contenu",
+    "descriptionPlaceholder": "À quoi sert cet agent ?",
+    "empty": "Aucun agent pour le moment. Créez-en un pour connecter un assistant IA à Castmill.",
+    "noAccess": "Seuls les administrateurs et gestionnaires de l'organisation peuvent voir les agents.",
+    "credentials": "Identifiants",
+    "credentialsRevoked": "Révoqués",
+    "lastUsed": "Dernière utilisation",
+    "neverUsed": "Jamais",
+    "rotate": "Renouveler les identifiants",
+    "revoke": "Révoquer les identifiants",
+    "created": "Agent créé",
+    "updated": "Agent mis à jour",
+    "deleted": "Agent supprimé",
+    "rotated": "Identifiants renouvelés",
+    "revoked": "Identifiants révoqués",
+    "copied": "Copié dans le presse-papiers",
+    "copy": "Copier",
+    "secretTitle": "Identifiants de {name}",
+    "secretWarning": "Copiez ce secret maintenant. Pour des raisons de sécurité, il ne sera plus affiché.",
+    "secretDone": "J'ai enregistré le secret",
+    "tabs": {
+      "agents": "Agents",
+      "activity": "Journal d'activité",
+      "setup": "Instructions de configuration"
+    },
+    "confirm": {
+      "rotateTitle": "Renouveler les identifiants",
+      "rotateMessage": "Un nouveau secret sera généré pour {name}. Le secret actuel cessera de fonctionner immédiatement.",
+      "revokeTitle": "Révoquer les identifiants",
+      "revokeMessage": "{name} ne pourra plus se connecter tant que de nouveaux identifiants n'auront pas été générés.",
+      "deleteTitle": "Supprimer l'agent",
+      "deleteMessage": "Supprimer {name} ? Ses identifiants et son journal d'activité seront définitivement supprimés."
+    },
+    "errors": {
+      "loadFailed": "Échec du chargement des agents",
+      "saveFailed": "Échec de l'enregistrement de l'agent : {error}",
+      "actionFailed": "L'action a échoué : {error}",
+      "copyFailed": "Impossible de copier dans le presse-papiers",
+      "loadActionsFailed": "Échec du chargement du journal d'activité"
+    },
+    "activity": {
+      "agent": "Agent",
+      "allAgents": "Tous les agents",
+      "status": "Statut",
+      "allStatuses": "Tous les statuts",
+      "success": "Succès",
+      "error": "Erreur",
+      "empty": "Aucune activité d'agent pour le moment.",
+      "tool": "Outil",
+      "request": "Requête",
+      "duration": "Durée",
+      "arguments": "Arguments"
+    },
+    "integration": {
+      "intro": "Les agents se connectent à Castmill avec tout client MCP prenant en charge les serveurs distants via Streamable HTTP. Utilisez le secret de l'agent comme jeton Bearer dans l'en-tête Authorization.",
+      "serverUrl": "URL du serveur MCP",
+      "securityNote": "Traitez les secrets des agents comme des mots de passe : ne les versionnez pas. Renouvelez les identifiants si un secret est exposé.",
+      "clients": {
+        "claudeDesktop": "Claude Desktop",
+        "claudeCode": "Claude Code",
+        "vscode": "VS Code",
+        "cursor": "Cursor",
+        "other": "Autres clients"
+      },
+      "steps": {
+        "claudeDesktop": "Ouvrez Paramètres → Développeur → Modifier la configuration, ajoutez ceci à claude_desktop_config.json puis redémarrez Claude Desktop. Nécessite Node.js (utilise mcp-remote).",
+        "claudeCode": "Exécutez cette commande dans votre terminal.",
+        "vscode": "Ajoutez ceci à .vscode/mcp.json dans votre espace de travail (ou à votre configuration MCP utilisateur).",
+        "cursor": "Ajoutez ceci à ~/.cursor/mcp.json (ou .cursor/mcp.json dans votre projet).",
+        "other": "Configurez un serveur MCP distant avec ces paramètres."
+      }
+    }
   }
 }
