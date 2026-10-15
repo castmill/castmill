@@ -6,12 +6,16 @@ import DeviceView from './device-view';
 import { DevicesService } from '../services/devices.service';
 
 const toast = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }));
-vi.mock('@castmill/ui-common', () => ({
-  LoadingOverlay: () => null,
-  useToast: () => toast,
-  formatRelativeTimeLocalized: () => '5 minutes ago',
-  formatTimestamp: (value: string) => value,
-}));
+vi.mock('@castmill/ui-common', async (importOriginal) => {
+  const { formatRelativeTimeLocalized } =
+    await importOriginal<typeof import('@castmill/ui-common')>();
+  return {
+    LoadingOverlay: () => null,
+    useToast: () => toast,
+    formatRelativeTimeLocalized,
+    formatTimestamp: (value: string) => value,
+  };
+});
 vi.mock('./device-info', () => ({ DeviceInfo: () => null }));
 vi.mock('./channels', () => ({ Channels: () => <p>Channels panel</p> }));
 vi.mock('./maintainance', () => ({ Maintainance: () => null }));
@@ -36,7 +40,10 @@ vi.mock('../services/devices.service', () => ({
   DevicesService: { updateDevice: vi.fn() },
 }));
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.useRealTimers();
+});
 beforeEach(() => vi.clearAllMocks());
 
 describe('Details save results', () => {
@@ -122,11 +129,35 @@ describe('Device view layout', () => {
     ));
 
   it('summarizes connectivity and when an offline player was last seen', () => {
-    renderView({ online: false, last_online: new Date() });
+    renderView({
+      online: false,
+      last_online: new Date(Date.now() - 5 * 60_000),
+    });
     expect(screen.getByText('common.offline')).toBeInTheDocument();
     expect(
       screen.getByText('devices.details.lastSeen:5 minutes ago')
     ).toBeInTheDocument();
+  });
+
+  it('refreshes last seen without device updates and stops its clock on disposal', () => {
+    vi.useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval'] });
+    vi.setSystemTime(new Date('2026-10-15T12:00:00Z'));
+    const timerCount = vi.getTimerCount();
+    const { unmount } = renderView({
+      online: false,
+      last_online: new Date('2026-10-15T11:55:00Z'),
+    });
+    expect(
+      screen.getByText('devices.details.lastSeen:5 minutes ago')
+    ).toBeInTheDocument();
+
+    vi.advanceTimersByTime(60_000);
+    expect(
+      screen.getByText('devices.details.lastSeen:6 minutes ago')
+    ).toBeInTheDocument();
+
+    unmount();
+    expect(vi.getTimerCount()).toBe(timerCount);
   });
 
   it('switches sections by click and arrow keys with tab semantics', () => {

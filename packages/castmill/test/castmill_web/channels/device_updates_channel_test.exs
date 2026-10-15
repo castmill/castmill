@@ -110,7 +110,7 @@ defmodule CastmillWeb.DeviceUpdatesChannelTest do
     test "broadcasts that the device is offline", %{socket: socket, device: device} do
       DeviceUpdatesChannel.handle_info(%{online: false}, socket)
 
-      expected_payload = %{device_id: device.id, online: false}
+      expected_payload = %{device_id: device.id, online: false, orientation_status: nil}
 
       assert_push("device:status", ^expected_payload)
     end
@@ -152,6 +152,40 @@ defmodule CastmillWeb.DeviceUpdatesChannelTest do
       assert {:noreply, _} = DeviceUpdatesChannel.handle_info(%{online: true}, socket)
       assert_receive %{event: "orientation_updated", orientation: 270}
       assert_push "device:status", %{online: true}
+    end
+
+    test "clears matching reports on disconnect and requests fresh confirmation at the same angle",
+         %{
+           socket: socket,
+           device: device
+         } do
+      for status <- ["applied", "error"] do
+        report = %{orientation: 90, status: status, mode: "css"}
+
+        {:noreply, confirmed} =
+          DeviceUpdatesChannel.handle_info(%{orientation_status: report}, socket)
+
+        assert_push "device:status", %{orientation_status: ^report}
+
+        {:noreply, offline} = DeviceUpdatesChannel.handle_info(%{online: false}, confirmed)
+        device_id = device.id
+
+        assert_push "device:status", %{
+          device_id: ^device_id,
+          online: false,
+          orientation_status: nil
+        }
+
+        assert offline.assigns.orientation_status == nil
+        {:noreply, reconnected} = DeviceUpdatesChannel.handle_info(%{online: true}, offline)
+        assert_push "device:status", %{online: true}
+        assert reconnected.assigns.orientation_status == nil
+        assert_receive %{event: "orientation_updated", orientation: 90}
+
+        fresh_report = %{report | status: "applied"}
+        DeviceUpdatesChannel.handle_info(%{orientation_status: fresh_report}, reconnected)
+        assert_push "device:status", %{orientation_status: ^fresh_report}
+      end
     end
 
     test "delivers the reconnect acknowledgement through both live channels", %{device: device} do

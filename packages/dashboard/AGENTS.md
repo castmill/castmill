@@ -57,6 +57,9 @@ Keep saved desired state distinct from application feedback. The device observer
 `device:status` payload can carry `orientation` or `orientation_status` without an
 `online` property. Merge only present fields, ignore acknowledgements for a
 different angle, and preserve unsaved form edits when status updates arrive.
+Offline updates explicitly set `orientation_status` to `null` to clear stale
+application or error reports. Preserve that null when merging partial updates,
+and wait for a fresh report after reconnecting, even at the same angle.
 Update parent state only after successful saves using the server response.
 Match the Details form card styling for orientation. Keep its explanatory text
 in a hover/focus tooltip; omit successful application text while retaining

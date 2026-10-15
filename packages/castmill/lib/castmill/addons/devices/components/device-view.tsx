@@ -40,6 +40,7 @@ interface DeviceSection {
 }
 
 const COPY_FEEDBACK_MS = 2000;
+const LAST_SEEN_REFRESH_MS = 30_000;
 
 const DeviceView: Component<{
   baseUrl: string;
@@ -55,8 +56,16 @@ const DeviceView: Component<{
   const [loading, setLoading] = createSignal(false);
   const [activeIndex, setActiveIndex] = createSignal(0);
   const [copied, setCopied] = createSignal(false);
+  const [now, setNow] = createSignal(Date.now());
+  const lastSeenTimer = setInterval(
+    () => setNow(Date.now()),
+    LAST_SEEN_REFRESH_MS
+  );
   let copyTimer: ReturnType<typeof setTimeout> | undefined;
-  onCleanup(() => clearTimeout(copyTimer));
+  onCleanup(() => {
+    clearTimeout(copyTimer);
+    clearInterval(lastSeenTimer);
+  });
 
   const updateDevice = async (device: DeviceUpdate) => {
     setLoading(true);
@@ -92,6 +101,7 @@ const DeviceView: Component<{
   const lastSeen = () => {
     if (props.device.online) return '';
     if (!props.device.last_online) return t('devices.details.neverSeen');
+    now();
     return t('devices.details.lastSeen', {
       time: formatRelativeTimeLocalized(
         props.device.last_online,

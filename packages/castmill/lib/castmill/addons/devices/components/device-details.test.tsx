@@ -217,6 +217,44 @@ describe('Details orientation', () => {
     });
   });
 
+  it.each(['applied', 'error'] as const)(
+    'clears a matching %s report on disconnect and waits for fresh confirmation at the same angle',
+    (status) => {
+      const report = { orientation: 0, status, mode: 'css' } as const;
+      const [device, setDevice] = createSignal<Device>({
+        ...fixture,
+        orientation_status: report,
+      });
+      render(() => <DeviceDetails device={device()} onSubmit={vi.fn()} />);
+      if (status === 'applied') {
+        expect(screen.queryByRole('status')).not.toBeInTheDocument();
+      } else {
+        expect(screen.getByRole('status')).toHaveTextContent(
+          'devices.orientation.applyError'
+        );
+      }
+
+      setDevice({ ...device(), online: false, orientation_status: null });
+      expect(screen.getByRole('status')).toHaveTextContent(
+        'devices.orientation.offline'
+      );
+
+      setDevice({ ...device(), online: true });
+      expect(screen.getByRole('status')).toHaveTextContent(
+        'devices.orientation.pending'
+      );
+      expect(
+        screen.queryByText('devices.orientation.applyError')
+      ).not.toBeInTheDocument();
+
+      setDevice({
+        ...device(),
+        orientation_status: { ...report, status: 'applied' },
+      });
+      expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    }
+  );
+
   it('synchronizes untouched orientation while preserving an unsaved choice', () => {
     const [device, setDevice] = createSignal(fixture);
     render(() => <DeviceDetails device={device()} onSubmit={vi.fn()} />);
