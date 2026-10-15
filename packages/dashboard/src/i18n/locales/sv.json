@@ -1501,17 +1501,9 @@
       "serverUrl": "MCP-serverns URL",
       "securityNote": "Behandla agenthemligheter som lösenord: checka inte in dem i versionshantering. Rotera inloggningsuppgifterna om en hemlighet har läckt.",
       "clients": {
-        "claudeDesktop": "Claude Desktop",
-        "claudeCode": "Claude Code",
-        "vscode": "VS Code",
-        "cursor": "Cursor",
         "other": "Andra klienter"
       },
       "steps": {
-        "claudeDesktop": "Öppna Inställningar → Utvecklare → Redigera konfiguration, lägg till detta i claude_desktop_config.json och starta om Claude Desktop. Kräver Node.js (använder mcp-remote).",
-        "claudeCode": "Kör det här kommandot i terminalen.",
-        "vscode": "Lägg till detta i .vscode/mcp.json i din arbetsyta (eller i din användares MCP-konfiguration).",
-        "cursor": "Lägg till detta i ~/.cursor/mcp.json (eller .cursor/mcp.json i ditt projekt).",
         "other": "Konfigurera en fjärr-MCP-server med dessa inställningar."
       }
     }

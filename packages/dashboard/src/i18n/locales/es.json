@@ -1507,17 +1507,9 @@
       "serverUrl": "URL del servidor MCP",
       "securityNote": "Trata los secretos de los agentes como contraseñas: no los subas al control de versiones. Rota las credenciales si un secreto queda expuesto.",
       "clients": {
-        "claudeDesktop": "Claude Desktop",
-        "claudeCode": "Claude Code",
-        "vscode": "VS Code",
-        "cursor": "Cursor",
         "other": "Otros clientes"
       },
       "steps": {
-        "claudeDesktop": "Abre Configuración → Desarrollador → Editar configuración, añade esto a claude_desktop_config.json y reinicia Claude Desktop. Requiere Node.js (usa mcp-remote).",
-        "claudeCode": "Ejecuta este comando en tu terminal.",
-        "vscode": "Añade esto a .vscode/mcp.json en tu espacio de trabajo (o a tu configuración MCP de usuario).",
-        "cursor": "Añade esto a ~/.cursor/mcp.json (o a .cursor/mcp.json en tu proyecto).",
         "other": "Configura un servidor MCP remoto con estos ajustes."
       }
     }

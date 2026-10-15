@@ -1506,17 +1506,9 @@
       "serverUrl": "MCP 서버 URL",
       "securityNote": "에이전트 시크릿은 비밀번호처럼 취급하세요. 소스 제어에 커밋하지 마세요. 시크릿이 노출되면 자격 증명을 교체하세요.",
       "clients": {
-        "claudeDesktop": "Claude Desktop",
-        "claudeCode": "Claude Code",
-        "vscode": "VS Code",
-        "cursor": "Cursor",
         "other": "기타 클라이언트"
       },
       "steps": {
-        "claudeDesktop": "설정 → 개발자 → 구성 편집을 열고 claude_desktop_config.json에 다음을 추가한 후 Claude Desktop을 다시 시작하세요. Node.js가 필요합니다(mcp-remote 사용).",
-        "claudeCode": "터미널에서 이 명령을 실행하세요.",
-        "vscode": "작업 공간의 .vscode/mcp.json(또는 사용자 MCP 구성)에 다음을 추가하세요.",
-        "cursor": "~/.cursor/mcp.json(또는 프로젝트의 .cursor/mcp.json)에 다음을 추가하세요.",
         "other": "다음 설정으로 원격 MCP 서버를 구성하세요."
       }
     }

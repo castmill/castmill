@@ -1506,17 +1506,9 @@
       "serverUrl": "MCP 服务器 URL",
       "securityNote": "请像对待密码一样对待智能体密钥：不要将其提交到源代码管理。如果密钥泄露，请轮换凭据。",
       "clients": {
-        "claudeDesktop": "Claude Desktop",
-        "claudeCode": "Claude Code",
-        "vscode": "VS Code",
-        "cursor": "Cursor",
         "other": "其他客户端"
       },
       "steps": {
-        "claudeDesktop": "打开 设置 → 开发者 → 编辑配置，将以下内容添加到 claude_desktop_config.json，然后重启 Claude Desktop。需要 Node.js（使用 mcp-remote）。",
-        "claudeCode": "在终端中运行此命令。",
-        "vscode": "将以下内容添加到工作区的 .vscode/mcp.json（或用户 MCP 配置）中。",
-        "cursor": "将以下内容添加到 ~/.cursor/mcp.json（或项目中的 .cursor/mcp.json）。",
         "other": "使用以下设置配置远程 MCP 服务器。"
       }
     }

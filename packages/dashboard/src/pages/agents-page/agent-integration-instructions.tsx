@@ -16,6 +16,14 @@ export type IntegrationClient =
   | 'cursor'
   | 'other';
 
+// Product names are proper nouns and are therefore not translated.
+const CLIENT_PRODUCT_NAMES: Partial<Record<IntegrationClient, string>> = {
+  claudeDesktop: 'Claude Desktop',
+  claudeCode: 'Claude Code',
+  vscode: 'VS Code',
+  cursor: 'Cursor',
+};
+
 export const INTEGRATION_CLIENTS: IntegrationClient[] = [
   'claudeDesktop',
   'claudeCode',
@@ -138,7 +146,8 @@ export const AgentIntegrationInstructions: Component<{ secret?: string }> = (
               class={`${styles.clientTab} ${client() === item ? styles.clientTabActive : ''}`}
               onClick={() => setClient(item)}
             >
-              {t(`agents.integration.clients.${item}`)}
+              {CLIENT_PRODUCT_NAMES[item] ??
+                t('agents.integration.clients.other')}
             </button>
           )}
         </For>

@@ -1506,17 +1506,9 @@
       "serverUrl": "عنوان URL لخادم MCP",
       "securityNote": "تعامل مع أسرار الوكلاء ككلمات المرور: لا تضفها إلى نظام التحكم بالمصدر. قم بتدوير بيانات الاعتماد إذا تم كشف السر.",
       "clients": {
-        "claudeDesktop": "Claude Desktop",
-        "claudeCode": "Claude Code",
-        "vscode": "VS Code",
-        "cursor": "Cursor",
         "other": "عملاء آخرون"
       },
       "steps": {
-        "claudeDesktop": "افتح الإعدادات ← المطور ← تعديل الإعداد، وأضف هذا إلى claude_desktop_config.json ثم أعد تشغيل Claude Desktop. يتطلب Node.js (يستخدم mcp-remote).",
-        "claudeCode": "شغّل هذا الأمر في الطرفية.",
-        "vscode": "أضف هذا إلى ‎.vscode/mcp.json في مساحة العمل (أو إلى إعداد MCP الخاص بالمستخدم).",
-        "cursor": "أضف هذا إلى ‎~/.cursor/mcp.json (أو ‎.cursor/mcp.json في مشروعك).",
         "other": "قم بإعداد خادم MCP بعيد باستخدام هذه الإعدادات."
       }
     }

@@ -1507,17 +1507,9 @@
       "serverUrl": "MCPサーバーURL",
       "securityNote": "エージェントのシークレットはパスワードと同様に扱い、ソース管理にコミットしないでください。シークレットが漏洩した場合は認証情報をローテーションしてください。",
       "clients": {
-        "claudeDesktop": "Claude Desktop",
-        "claudeCode": "Claude Code",
-        "vscode": "VS Code",
-        "cursor": "Cursor",
         "other": "その他のクライアント"
       },
       "steps": {
-        "claudeDesktop": "設定 → 開発者 → 設定を編集 を開き、claude_desktop_config.json に以下を追加してから Claude Desktop を再起動してください。Node.js が必要です（mcp-remote を使用）。",
-        "claudeCode": "ターミナルでこのコマンドを実行してください。",
-        "vscode": "ワークスペースの .vscode/mcp.json（またはユーザーのMCP設定）に以下を追加してください。",
-        "cursor": "~/.cursor/mcp.json（またはプロジェクトの .cursor/mcp.json）に以下を追加してください。",
         "other": "以下の設定でリモートMCPサーバーを構成してください。"
       }
     }
