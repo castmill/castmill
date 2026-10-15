@@ -72,7 +72,9 @@ in the path.
 
 - Store only the SHA-256 hash of a secret; show the secret once on create or rotate.
 - Never log secrets, `Authorization` headers or response bodies in
-  `agent_actions`. Logged arguments are capped at 8 KB.
+  `agent_actions`. Values of argument keys that look like secrets (`credentials`,
+  `password`, `token`, `api_key`, ...) are stored as `[REDACTED]`. Logged
+  arguments are capped at 8 KB.
 - Tool results are capped at 100 KB and truncated on a UTF-8 boundary.
 - An agent's org membership defines all access. Do not add bypasses in tools.
 

@@ -141,7 +141,7 @@ Castmill stores only a hash of the secret, so a lost secret cannot be recovered.
 
 The **Activity** tab lists every tool call made by the organization's agents: when it happened, which agent made it, the tool, the underlying API request, the result and how long it took. Filter by agent or by status (success or error), and click a row to see the arguments, the error message and the client IP address.
 
-Secrets and `Authorization` headers are never written to the log.
+Agent secrets and `Authorization` headers are never written to the log. Argument values that look like secrets (credentials, passwords, tokens, API keys) are shown as `[REDACTED]`.
 
 ## Security notes
 
