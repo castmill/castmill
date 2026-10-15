@@ -249,6 +249,39 @@ defmodule CastmillWeb.MCPControllerTest do
              ]
     end
 
+    test "secrets in arguments are never stored in the activity log", %{
+      secret: secret,
+      agent: agent,
+      organization: organization
+    } do
+      call_tool(secret, "api_request", %{
+        "method" => "PUT",
+        "path" => "/widget-integrations/1/credentials",
+        "body" => %{"credentials" => %{"api_key" => "very-secret"}, "note" => "kept"}
+      })
+
+      assert %{data: [action]} = Agents.list_actions(organization.id, %{"agent_id" => agent.id})
+      assert action.arguments["body"]["credentials"] == "[REDACTED]"
+      assert action.arguments["body"]["note"] == "kept"
+      refute Jason.encode!(action.arguments) =~ "very-secret"
+    end
+
+    test "malformed query parameters are tool errors", %{secret: secret} do
+      result =
+        call_tool(secret, "api_request", %{
+          "method" => "GET",
+          "path" => "/playlists",
+          "query" => %{"ids" => [%{"a" => [1, %{"b" => [[]]}]}]}
+        })
+
+      assert is_map(result)
+
+      result =
+        call_tool(secret, "list_resources", %{"resource_type" => "playlists", "search" => [%{}]})
+
+      assert is_map(result)
+    end
+
     test "argument validation errors are tool errors", %{secret: secret} do
       result = call_tool(secret, "create_resource", %{"resource_type" => "users"})
       assert result["isError"]

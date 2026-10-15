@@ -30,8 +30,16 @@ defmodule CastmillWeb.MCP.Dispatcher do
   """
   @spec request(struct(), String.t(), String.t(), keyword()) :: response()
   def request(%Agent{user_id: user_id}, method, path, opts \\ []) do
-    method = String.upcase(method)
-    uri = path <> encode_query(Keyword.get(opts, :query))
+    case encode_query(Keyword.get(opts, :query)) do
+      {:ok, query_string} ->
+        do_request(user_id, String.upcase(method), path <> query_string, opts)
+
+      :error ->
+        %{status: 400, body: %{"error" => "Invalid query parameters"}}
+    end
+  end
+
+  defp do_request(user_id, method, uri, opts) do
     body = Keyword.get(opts, :body)
 
     conn =
@@ -75,8 +83,8 @@ defmodule CastmillWeb.MCP.Dispatcher do
   defp body_params(_method, body) when is_map(body), do: body
   defp body_params(_method, body), do: %{"_json" => body}
 
-  defp encode_query(nil), do: ""
-  defp encode_query(query) when query == %{}, do: ""
+  defp encode_query(nil), do: {:ok, ""}
+  defp encode_query(query) when query == %{}, do: {:ok, ""}
 
   defp encode_query(query) when is_map(query) do
     query =
@@ -84,12 +92,21 @@ defmodule CastmillWeb.MCP.Dispatcher do
       |> Enum.reject(fn {_key, value} -> is_nil(value) end)
       |> Map.new(fn {key, value} -> {to_string(key), query_value(value)} end)
 
-    if query == %{}, do: "", else: "?" <> Plug.Conn.Query.encode(query)
+    if query == %{}, do: {:ok, ""}, else: {:ok, "?" <> Plug.Conn.Query.encode(query)}
+  rescue
+    _ -> :error
   end
 
-  defp query_value(value) when is_list(value), do: Enum.map_join(value, ",", &to_string/1)
+  defp encode_query(_query), do: :error
+
+  defp query_value(value) when is_list(value) do
+    if Enum.all?(value, &scalar?/1), do: Enum.map_join(value, ",", &to_string/1), else: value
+  end
+
   defp query_value(value) when is_map(value), do: value
   defp query_value(value), do: to_string(value)
+
+  defp scalar?(value), do: is_binary(value) or is_number(value) or is_boolean(value)
 
   defp propagate_origin(conn, %Plug.Conn{} = origin) do
     conn = %{

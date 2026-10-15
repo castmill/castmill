@@ -214,9 +214,9 @@ defmodule CastmillWeb.MCP.Server do
   end
 
   defp loggable_arguments(args) do
-    case Jason.encode(args) do
+    case args |> redact() |> Jason.encode() do
       {:ok, json} when byte_size(json) <= @max_logged_arguments_bytes ->
-        args
+        redact(args)
 
       {:ok, json} ->
         %{
@@ -227,6 +227,26 @@ defmodule CastmillWeb.MCP.Server do
       {:error, _} ->
         %{"_unserializable" => true}
     end
+  end
+
+  # Argument values whose keys may hold secrets (e.g. widget integration
+  # credentials sent through `api_request`) are never stored in the log.
+  defp redact(map) when is_map(map) do
+    Map.new(map, fn {key, value} ->
+      if sensitive_key?(key),
+        do: {key, "[REDACTED]"},
+        else: {key, redact(value)}
+    end)
+  end
+
+  defp redact(list) when is_list(list), do: Enum.map(list, &redact/1)
+  defp redact(value), do: value
+
+  defp sensitive_key?(key) do
+    Regex.match?(
+      ~r/credential|password|secret|token|api_?key|authorization|private_?key/i,
+      to_string(key)
+    )
   end
 
   defp error_text(%{"content" => [%{"text" => text} | _]}), do: String.slice(text, 0, 2_000)
