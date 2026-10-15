@@ -126,11 +126,9 @@ describe('DeviceLogs', () => {
     ).toBeInTheDocument();
     expect(screen.queryByText('Warnings')).not.toBeInTheDocument();
     expect(screen.queryByText('Info')).not.toBeInTheDocument();
-    expect(screen.getByText('Media unavailable')).toHaveStyle({
-      'text-align': 'left',
-      'text-overflow': 'ellipsis',
-      'white-space': 'nowrap',
-    });
+    const message = screen.getByText('Media unavailable');
+    expect(message).toHaveClass('device-event-msg');
+    expect(message).toHaveAttribute('title', 'Media unavailable');
   });
 
   it('renders diagnostic markup as inert text in the details modal', () => {
@@ -191,6 +189,19 @@ describe('DeviceLogs', () => {
       tableEvent.stack = originalStack;
       tableEvent.context = originalContext;
     }
+  });
+
+  it('renders date and time separately so narrow tables can wrap them', () => {
+    render(() => (
+      <DeviceLogs baseUrl="/api" device={{ id: 'device-1' } as any} t={t} />
+    ));
+
+    const time = document.querySelector('time.device-table-time')!;
+    expect(time).toHaveAttribute('datetime', '2026-09-20T12:00:00.000Z');
+    const date = new Date('2026-09-20T12:00:00Z');
+    expect(time.children[0]).toHaveTextContent(date.toLocaleDateString());
+    expect(time.children[1]).toHaveTextContent(date.toLocaleTimeString());
+    expect(screen.getByTitle('Errors')).toHaveClass('device-event-type');
   });
 
   it('requests the newest events first', () => {

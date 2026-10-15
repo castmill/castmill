@@ -53,8 +53,22 @@ describe('DeviceInfo', () => {
       'Europe/Stockholm',
       'Castmill Player',
     ]) {
-      expect(screen.getByDisplayValue(value)).toBeInTheDocument();
+      expect(screen.getByText(value)).toBeInTheDocument();
     }
+  });
+
+  it('hides unavailable runtime-only versions', () => {
+    render(() => (
+      <DeviceInfo
+        device={{ ...device, info: { appType: 'WebOS' } } as Device}
+        t={t}
+      />
+    ));
+
+    expect(screen.getByText('WebOS')).toBeInTheDocument();
+    expect(screen.queryByText('Chromium version')).not.toBeInTheDocument();
+    expect(screen.queryByText('Node.js version')).not.toBeInTheDocument();
+    expect(screen.getByText('Hardware')).toBeInTheDocument();
   });
 
   it('falls back to legacy metadata and translated missing values', () => {
@@ -73,8 +87,8 @@ describe('DeviceInfo', () => {
       />
     ));
 
-    expect(screen.getByDisplayValue('0.0.1')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('Legacy player')).toBeInTheDocument();
-    expect(screen.getAllByDisplayValue('N/A')).toHaveLength(8);
+    expect(screen.getByText('0.0.1')).toBeInTheDocument();
+    expect(screen.getByText('Legacy player')).toBeInTheDocument();
+    expect(screen.getAllByText('N/A')).toHaveLength(7);
   });
 });

@@ -9,7 +9,9 @@ import {
 } from 'solid-js';
 import { Device } from '../interfaces/device.interface';
 import { Button, useToast } from '@castmill/ui-common';
+import { BsCalendar3, BsCheckLg, BsTrash, BsX } from 'solid-icons/bs';
 import { DevicesService } from '../services/devices.service';
+import { DeviceCardHeader } from './device-section';
 import './device-schedule.scss';
 
 // ── Types ──────────────────────────────────────────────────
@@ -39,6 +41,22 @@ interface DragState {
   // For move: offset from top of entry
   offsetHour?: number;
   originalEntry?: ScheduleEntry;
+  // True once the pointer has left the starting cell; otherwise it is a click.
+  moved?: boolean;
+}
+
+interface EditorDraft {
+  startDay: number;
+  endDay: number;
+  startTime: string;
+  endTime: string;
+}
+
+interface TapCandidate {
+  pointerId: number;
+  x: number;
+  y: number;
+  target: HTMLElement;
 }
 
 // ── Constants ──────────────────────────────────────────────
@@ -54,6 +72,47 @@ const DAY_KEYS = [
   'deviceSchedule.sun',
 ];
 const CELL_HEIGHT_PX = 20; // px — matches CSS
+const NOW_REFRESH_MS = 30_000;
+const INTL_WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+/**
+ * Current weekday (0 = Monday) and minutes since midnight. Players evaluate
+ * schedules on their local clock, so prefer the device's time zone.
+ */
+export const getScheduleNow = (
+  timeZone?: string,
+  date: Date = new Date()
+): { day: number; minutes: number } => {
+  if (timeZone) {
+    try {
+      const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone,
+        weekday: 'short',
+        hour: 'numeric',
+        minute: 'numeric',
+        hourCycle: 'h23',
+      }).formatToParts(date);
+      const part = (type: Intl.DateTimeFormatPartTypes) =>
+        parts.find((p) => p.type === type)?.value ?? '';
+      const day = INTL_WEEKDAYS.indexOf(part('weekday'));
+      const hour = Number(part('hour')) % 24;
+      const minute = Number(part('minute'));
+      if (day >= 0 && Number.isFinite(hour) && Number.isFinite(minute)) {
+        return { day, minutes: hour * 60 + minute };
+      }
+    } catch {
+      // Unknown time zone: fall back to the browser clock
+    }
+  }
+  return {
+    day: (date.getDay() + 6) % 7,
+    minutes: date.getHours() * 60 + date.getMinutes(),
+  };
+};
+// Movement allowed before a touch is treated as a scroll instead of a tap
+const TAP_SLOP_PX = 10;
+// Keep in sync with the compact breakpoint in device-schedule.scss
+const COMPACT_LAYOUT_QUERY = '(max-width: 48em), (pointer: coarse)';
 
 let idCounter = 0;
 const genId = () => `entry-${++idCounter}`;
@@ -67,11 +126,27 @@ const toMinutes = (h: number, m: number) => h * 60 + m;
 const fmtTime = (h: number, m: number) =>
   `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 
-/** Format as HH:MM value for <input type="time"> (clamp 24:00 to 23:59 for HTML input) */
-const toTimeInputValue = (h: number, m: number) =>
-  h >= 24
-    ? '23:59'
-    : `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+/** Parse an <input type="time"> value into minutes since midnight */
+export const parseTimeInput = (value: string): number | null => {
+  const match = /^(\d{1,2}):(\d{2})/.exec(value);
+  if (!match) return null;
+  const h = Number(match[1]);
+  const m = Number(match[2]);
+  if (h > 23 || m > 59) return null;
+  return toMinutes(h, m);
+};
+
+/**
+ * Time inputs cannot represent 24:00, so an end time of 00:00 means the
+ * slot runs until midnight at the end of the day.
+ */
+const toEndTimeInputValue = (h: number, m: number) =>
+  h >= 24 ? '00:00' : fmtTime(h, m);
+
+const isCompactLayout = () =>
+  typeof window !== 'undefined' &&
+  typeof window.matchMedia === 'function' &&
+  window.matchMedia(COMPACT_LAYOUT_QUERY).matches;
 
 /** Check if two entries overlap */
 function entriesOverlap(a: ScheduleEntry, b: ScheduleEntry): boolean {
@@ -193,14 +268,21 @@ export const DeviceSchedule: Component<{
   const [savedEntries, setSavedEntries] = createSignal<ScheduleEntry[]>([]);
   const [selectedId, setSelectedId] = createSignal<string | null>(null);
   const [dragState, setDragState] = createSignal<DragState | null>(null);
-  const [editingTime, setEditingTime] = createSignal<{
+  const [editor, setEditor] = createSignal<{
     entryId: string;
-    field: 'start' | 'end';
+    isNew: boolean;
+    original: ScheduleEntry;
   } | null>(null);
+  const [draft, setDraft] = createSignal<EditorDraft | null>(null);
+  const [editorError, setEditorError] = createSignal<string | null>(null);
 
   const isModified = createMemo(() => !entriesEqual(entries(), savedEntries()));
+  const dayLabels = () => DAY_KEYS.map((key) => t(key));
+  const editorTitleId = `schedule-editor-title-${props.device.id}`;
 
   let gridRef: HTMLDivElement | undefined;
+  let editorRef: HTMLDivElement | undefined;
+  let tapCandidate: TapCandidate | null = null;
 
   // ── Load / Save ─────────────────────────────────────────
 
@@ -265,51 +347,193 @@ export const DeviceSchedule: Component<{
   };
 
   const resetSchedule = () => {
+    closeEditor();
     setEntries(
       savedEntries().map((e) => ({ ...e, id: genId(), days: [...e.days] }))
     );
     setSelectedId(null);
   };
 
-  // ── Time input editing ──────────────────────────────────
+  // ── Slot editor ────────────────────────────────────────
 
-  const handleTimeChange = (
-    entryId: string,
-    field: 'start' | 'end',
-    value: string
-  ) => {
-    const [hStr, mStr] = value.split(':');
-    const h = parseInt(hStr, 10);
-    const m = parseInt(mStr, 10);
-    if (isNaN(h) || isNaN(m)) return;
+  const draftFromEntry = (entry: ScheduleEntry): EditorDraft => ({
+    startDay: Math.min(...entry.days),
+    endDay: Math.max(...entry.days),
+    startTime: fmtTime(entry.startHour, entry.startMinute),
+    endTime: toEndTimeInputValue(entry.endHour, entry.endMinute),
+  });
 
+  const openEditor = (entryId: string, isNew = false) => {
+    const previous = editor();
+    if (previous?.entryId === entryId) {
+      isNew = isNew || previous.isNew;
+    } else if (previous?.isNew) {
+      // Opening another slot discards an unconfirmed tapped slot
+      deleteEntry(previous.entryId);
+    }
     const entry = entries().find((e) => e.id === entryId);
     if (!entry) return;
+    setSelectedId(entryId);
+    setEditor({
+      entryId,
+      isNew,
+      original:
+        previous?.entryId === entryId
+          ? previous.original
+          : { ...entry, days: [...entry.days] },
+    });
+    setEditorError(null);
+    setDraft(draftFromEntry(entry));
+    // Wait for the editor to render before moving focus into it
+    setTimeout(() => {
+      editorRef?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
+      editorRef?.querySelector<HTMLElement>('select, input')?.focus({
+        preventScroll: true,
+      });
+    }, 0);
+  };
 
-    let updates: Partial<ScheduleEntry>;
-    if (field === 'start') {
-      // Start must be before end
-      const newStartMins = toMinutes(h, m);
-      const endMins = toMinutes(entry.endHour, entry.endMinute);
-      if (newStartMins >= endMins) return;
-      updates = { startHour: h, startMinute: m };
+  const closeEditor = () => {
+    setEditor(null);
+    setDraft(null);
+    setEditorError(null);
+  };
+
+  const updateDraft = (updates: Partial<EditorDraft>) => {
+    const current = draft();
+    if (!current) return;
+    const next = { ...current, ...updates };
+    if (next.endDay < next.startDay) next.endDay = next.startDay;
+    keepStartBeforeEnd(current, next, updates);
+    setDraft(next);
+    setEditorError(null);
+  };
+
+  // Pushes the other time when an edit would end the slot before it starts,
+  // keeping the previous duration where the day allows it
+  const keepStartBeforeEnd = (
+    previous: EditorDraft,
+    next: EditorDraft,
+    updates: Partial<EditorDraft>
+  ) => {
+    const start = parseTimeInput(next.startTime);
+    const parsedEnd = parseTimeInput(next.endTime);
+    if (start === null || parsedEnd === null) return;
+    const end = parsedEnd === 0 ? 24 * 60 : parsedEnd;
+    if (start < end) return;
+
+    const prevStart = parseTimeInput(previous.startTime);
+    const prevEnd = parseTimeInput(previous.endTime);
+    const duration =
+      prevStart !== null && prevEnd !== null
+        ? (prevEnd === 0 ? 24 * 60 : prevEnd) - prevStart
+        : 60;
+    const span = duration > 0 ? duration : 60;
+
+    if (updates.endTime !== undefined) {
+      const newStart = Math.max(0, end - span);
+      next.startTime = fmtTime(Math.floor(newStart / 60), newStart % 60);
     } else {
-      // End must be after start
-      const startMins = toMinutes(entry.startHour, entry.startMinute);
-      const newEndMins = toMinutes(h, m);
-      if (newEndMins <= startMins) return;
-      updates = { endHour: h, endMinute: m };
+      const newEnd = Math.min(24 * 60, start + span);
+      next.endTime = toEndTimeInputValue(Math.floor(newEnd / 60), newEnd % 60);
+    }
+  };
+
+  const draftToUpdates = (values: EditorDraft) => {
+    const start = parseTimeInput(values.startTime);
+    const parsedEnd = parseTimeInput(values.endTime);
+    if (start === null || parsedEnd === null) return null;
+    const end = parsedEnd === 0 ? 24 * 60 : parsedEnd;
+    if (end <= start) return null;
+
+    const days: number[] = [];
+    for (let d = values.startDay; d <= values.endDay; d++) days.push(d);
+    return {
+      startHour: Math.floor(start / 60),
+      startMinute: start % 60,
+      endHour: Math.floor(end / 60),
+      endMinute: end % 60,
+      days,
+    };
+  };
+
+  const overlapsOthers = (candidate: ScheduleEntry) =>
+    entries().some(
+      (existing) =>
+        existing.id !== candidate.id && entriesOverlap(candidate, existing)
+    );
+
+  // Live preview of the slot being edited; null while the draft is invalid
+  const editorPreview = createMemo(() => {
+    const current = editor();
+    const values = draft();
+    if (!current || !values) return null;
+    const updates = draftToUpdates(values);
+    if (!updates) return null;
+    const entry: ScheduleEntry = { id: current.entryId, ...updates };
+    return { entry, conflict: overlapsOthers(entry) };
+  });
+
+  const displayEntry = (entry: ScheduleEntry) => {
+    // A mouse drag of the edited slot takes over until it ends
+    if (dragState()?.entryId === entry.id) return entry;
+    const preview = editorPreview();
+    return preview?.entry.id === entry.id ? preview.entry : entry;
+  };
+
+  const applyEditor = () => {
+    const current = editor();
+    const values = draft();
+    if (!current || !values) return;
+
+    const updates = draftToUpdates(values);
+    if (!updates) {
+      setEditorError(t('deviceSchedule.editor.invalidTime'));
+      return;
+    }
+    if (overlapsOthers({ id: current.entryId, ...updates })) {
+      setEditorError(t('deviceSchedule.editor.overlap'));
+      return;
     }
 
-    const candidate: ScheduleEntry = { ...entry, ...updates };
-    const hasOverlap = entries().some(
-      (existing) =>
-        existing.id !== entryId && entriesOverlap(candidate, existing)
-    );
-    if (!hasOverlap) {
-      updateEntry(entryId, updates);
+    updateEntry(current.entryId, updates);
+    closeEditor();
+  };
+
+  const cancelEditor = () => {
+    const current = editor();
+    // A slot created by tapping is only kept once the user confirms it
+    if (current?.isNew) {
+      deleteEntry(current.entryId);
+    } else if (current) {
+      // Drags made while editing already changed the slot, so restore it
+      const stored = entries().find((e) => e.id === current.entryId);
+      if (stored && !entriesEqual([stored], [current.original])) {
+        const { id: _id, ...original } = current.original;
+        updateEntry(current.entryId, original);
+      }
     }
-    setEditingTime(null);
+    closeEditor();
+  };
+
+  const deleteFromEditor = () => {
+    const current = editor();
+    if (current) deleteEntry(current.entryId);
+    closeEditor();
+  };
+
+  const describeEntry = (entry: ScheduleEntry) => {
+    const minDay = Math.min(...entry.days);
+    const maxDay = Math.max(...entry.days);
+    const labels = dayLabels();
+    const days =
+      minDay === maxDay
+        ? labels[minDay]
+        : `${labels[minDay]}–${labels[maxDay]}`;
+    return `${days} ${fmtTime(entry.startHour, entry.startMinute)}–${fmtTime(
+      entry.endHour,
+      entry.endMinute
+    )}`;
   };
 
   // ── Entry CRUD ─────────────────────────────────────────
@@ -332,6 +556,7 @@ export const DeviceSchedule: Component<{
   const deleteEntry = (id: string) => {
     setEntries(entries().filter((e) => e.id !== id));
     if (selectedId() === id) setSelectedId(null);
+    if (editor()?.entryId === id) closeEditor();
   };
 
   // ── Grid coordinate helpers ────────────────────────────
@@ -342,8 +567,8 @@ export const DeviceSchedule: Component<{
   ): { day: number; hour: number } | null => {
     if (!gridRef) return null;
     const rect = gridRef.getBoundingClientRect();
-    const x = clientX - rect.left + gridRef.scrollLeft;
-    const y = clientY - rect.top + gridRef.scrollTop;
+    const x = clientX - rect.left - gridRef.clientLeft + gridRef.scrollLeft;
+    const y = clientY - rect.top - gridRef.clientTop + gridRef.scrollTop;
 
     // Read the actual header row height from the DOM
     const headerEl = gridRef.querySelector(
@@ -360,16 +585,53 @@ export const DeviceSchedule: Component<{
       : 3.5 * parseFloat(getComputedStyle(gridRef).fontSize);
 
     const hour = Math.floor((y - headerH) / CELL_HEIGHT_PX);
-    const dayWidth = (rect.width - timeLabelWidth) / 7;
+    const dayWidth = (gridRef.clientWidth - timeLabelWidth) / 7;
     const day = Math.floor((x - timeLabelWidth) / dayWidth);
 
     if (hour < 0 || hour > 23 || day < 0 || day > 6) return null;
     return { day, hour };
   };
 
-  // ── Mouse handlers ─────────────────────────────────────
+  // ── Pointer handlers ───────────────────────────────────
 
-  const handleGridMouseDown = (e: MouseEvent) => {
+  /**
+   * Touch and pen input cannot resize slots precisely and must keep native
+   * scrolling, so a tap opens the slot editor (creating a slot if needed).
+   */
+  const handleTap = (clientX: number, clientY: number, target: HTMLElement) => {
+    const entryEl = target.closest('.schedule-entry') as HTMLElement | null;
+    if (entryEl?.dataset.entryId) {
+      openEditor(entryEl.dataset.entryId);
+      return;
+    }
+
+    const cell = getCellFromPoint(clientX, clientY);
+    if (!cell) return;
+    const newEntry: ScheduleEntry = {
+      id: genId(),
+      startHour: cell.hour,
+      startMinute: 0,
+      endHour: cell.hour + 1,
+      endMinute: 0,
+      days: [cell.day],
+    };
+    if (addEntry(newEntry)) openEditor(newEntry.id, true);
+  };
+
+  const handleGridPointerDown = (e: PointerEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('button, input, select')) return;
+
+    if (e.pointerType !== 'mouse') {
+      tapCandidate = {
+        pointerId: e.pointerId,
+        x: e.clientX,
+        y: e.clientY,
+        target,
+      };
+      return;
+    }
+
     // Only handle left clicks
     if (e.button !== 0) return;
 
@@ -377,12 +639,18 @@ export const DeviceSchedule: Component<{
     if (!cell) return;
 
     // Check if we clicked on an entry
-    const target = e.target as HTMLElement;
     const entryEl = target.closest('.schedule-entry') as HTMLElement | null;
 
     if (entryEl) {
       const entryId = entryEl.dataset.entryId;
       if (!entryId) return;
+
+      // Start dragging from the previewed position the user sees
+      const preview = editorPreview();
+      if (preview?.entry.id === entryId && !preview.conflict) {
+        const { id: _id, ...updates } = preview.entry;
+        updateEntry(entryId, updates);
+      }
 
       // Check if clicking a resize handle
       if (target.classList.contains('schedule-entry-resize-top')) {
@@ -487,14 +755,33 @@ export const DeviceSchedule: Component<{
     e.preventDefault();
   };
 
-  const handleMouseMove = (e: MouseEvent) => {
+  const isTapPointer = (e: PointerEvent) =>
+    tapCandidate !== null && tapCandidate.pointerId === e.pointerId;
+
+  const handlePointerMove = (e: PointerEvent) => {
+    const tap = tapCandidate;
+    if (
+      tap &&
+      isTapPointer(e) &&
+      Math.hypot(e.clientX - tap.x, e.clientY - tap.y) > TAP_SLOP_PX
+    ) {
+      tapCandidate = null;
+    }
+
     const ds = dragState();
     if (!ds) return;
 
     const cell = getCellFromPoint(e.clientX, e.clientY);
     if (!cell) return;
 
-    setDragState({ ...ds, currentDay: cell.day, currentHour: cell.hour });
+    const moved =
+      ds.moved || cell.day !== ds.startDay || cell.hour !== ds.startHour;
+    setDragState({
+      ...ds,
+      currentDay: cell.day,
+      currentHour: cell.hour,
+      moved,
+    });
 
     // For move and resize, update in real-time
     if (ds.mode === 'move' && ds.entryId && ds.originalEntry) {
@@ -615,7 +902,14 @@ export const DeviceSchedule: Component<{
     }
   };
 
-  const handleMouseUp = (_e: MouseEvent) => {
+  const handlePointerUp = (e: PointerEvent) => {
+    const tap = tapCandidate;
+    if (tap && isTapPointer(e)) {
+      tapCandidate = null;
+      handleTap(e.clientX, e.clientY, tap.target);
+      return;
+    }
+
     const ds = dragState();
     if (!ds) return;
 
@@ -638,26 +932,59 @@ export const DeviceSchedule: Component<{
       };
 
       if (addEntry(newEntry)) {
-        setSelectedId(newEntry.id);
+        // Resize handles are impractical on small screens, so edit directly
+        if (isCompactLayout()) {
+          openEditor(newEntry.id, true);
+        } else {
+          setSelectedId(newEntry.id);
+        }
       }
+    } else if (ds.entryId && !ds.moved) {
+      // A click without dragging opens the same editor used on touch devices
+      openEditor(ds.entryId);
+    } else if (ds.entryId && editor()?.entryId === ds.entryId) {
+      const entry = entries().find((item) => item.id === ds.entryId);
+      if (entry) setDraft(draftFromEntry(entry));
+      setEditorError(null);
     }
 
     // For move/resize, the updates were already applied in real-time
     setDragState(null);
   };
 
-  // Global mouse event listeners
+  const handlePointerCancel = (e: PointerEvent) => {
+    if (isTapPointer(e)) tapCandidate = null;
+  };
+
+  // Global pointer event listeners
   onMount(() => {
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('pointermove', handlePointerMove);
+    document.addEventListener('pointerup', handlePointerUp);
+    document.addEventListener('pointercancel', handlePointerCancel);
   });
 
+  const [now, setNow] = createSignal(getScheduleNow(props.device.timezone));
+  const nowTimer = setInterval(
+    () => setNow(getScheduleNow(props.device.timezone)),
+    NOW_REFRESH_MS
+  );
+
   onCleanup(() => {
-    document.removeEventListener('mousemove', handleMouseMove);
-    document.removeEventListener('mouseup', handleMouseUp);
+    clearInterval(nowTimer);
+    document.removeEventListener('pointermove', handlePointerMove);
+    document.removeEventListener('pointerup', handlePointerUp);
+    document.removeEventListener('pointercancel', handlePointerCancel);
   });
 
   // ── Compute entry positions ────────────────────────────
+
+  const getNowLineTop = () => {
+    const headerEl = gridRef?.querySelector(
+      '.schedule-grid-day-header'
+    ) as HTMLElement | null;
+    const headerH = headerEl?.offsetHeight || CELL_HEIGHT_PX;
+    return `${(now().minutes / 60) * CELL_HEIGHT_PX + headerH}px`;
+  };
 
   const getEntryStyle = (entry: ScheduleEntry): Record<string, string> => {
     if (!gridRef) return {};
@@ -665,15 +992,6 @@ export const DeviceSchedule: Component<{
       '.schedule-grid-day-header'
     ) as HTMLElement | null;
     const headerH = headerEl ? headerEl.offsetHeight : CELL_HEIGHT_PX;
-    const timeLabelEl = gridRef.querySelector(
-      '.schedule-grid-time-label'
-    ) as HTMLElement | null;
-    const timeLabelWidth = timeLabelEl
-      ? timeLabelEl.offsetWidth
-      : 3.5 * parseFloat(getComputedStyle(gridRef).fontSize);
-    const gridWidth = gridRef.getBoundingClientRect().width;
-    const dayWidth = (gridWidth - timeLabelWidth) / 7;
-
     const minDay = Math.min(...entry.days);
     const maxDay = Math.max(...entry.days);
 
@@ -682,8 +1000,8 @@ export const DeviceSchedule: Component<{
 
     return {
       top: `${startFrac * CELL_HEIGHT_PX + headerH}px`,
-      left: `${timeLabelWidth + minDay * dayWidth + 1}px`,
-      width: `${(maxDay - minDay + 1) * dayWidth - 2}px`,
+      left: `calc(${(minDay / 7) * 100}% + 1px)`,
+      width: `calc(${((maxDay - minDay + 1) / 7) * 100}% - 2px)`,
       height: `${(endFrac - startFrac) * CELL_HEIGHT_PX - 1}px`,
     };
   };
@@ -697,15 +1015,6 @@ export const DeviceSchedule: Component<{
       '.schedule-grid-day-header'
     ) as HTMLElement | null;
     const headerH = headerEl ? headerEl.offsetHeight : CELL_HEIGHT_PX;
-    const timeLabelEl = gridRef.querySelector(
-      '.schedule-grid-time-label'
-    ) as HTMLElement | null;
-    const timeLabelWidth = timeLabelEl
-      ? timeLabelEl.offsetWidth
-      : 3.5 * parseFloat(getComputedStyle(gridRef).fontSize);
-    const gridWidth = gridRef.getBoundingClientRect().width;
-    const dayWidth = (gridWidth - timeLabelWidth) / 7;
-
     const dayMin = Math.min(ds.startDay, ds.currentDay);
     const dayMax = Math.max(ds.startDay, ds.currentDay);
     const hourMin = Math.min(ds.startHour, ds.currentHour);
@@ -713,8 +1022,8 @@ export const DeviceSchedule: Component<{
 
     return {
       top: `${hourMin * CELL_HEIGHT_PX + headerH}px`,
-      left: `${timeLabelWidth + dayMin * dayWidth + 1}px`,
-      width: `${(dayMax - dayMin + 1) * dayWidth - 2}px`,
+      left: `calc(${(dayMin / 7) * 100}% + 1px)`,
+      width: `calc(${((dayMax - dayMin + 1) / 7) * 100}% - 2px)`,
       height: `${(hourMax - hourMin) * CELL_HEIGHT_PX - 1}px`,
     };
   };
@@ -726,12 +1035,16 @@ export const DeviceSchedule: Component<{
   // ── Render ─────────────────────────────────────────────
 
   return (
-    <div class="schedule-grid-container">
-      <p class="schedule-grid-description">{t('deviceSchedule.description')}</p>
+    <section class="device-card schedule-grid-container">
+      <DeviceCardHeader
+        icon={BsCalendar3}
+        title={t('deviceSchedule.title')}
+        description={t('deviceSchedule.description')}
+      />
 
       <div
         class="schedule-grid-wrapper"
-        onMouseDown={handleGridMouseDown}
+        onPointerDown={handleGridPointerDown}
         ref={gridRef}
       >
         <div class="schedule-grid">
@@ -740,8 +1053,16 @@ export const DeviceSchedule: Component<{
 
           {/* Day headers */}
           <For each={DAY_KEYS}>
-            {(dayKey) => (
-              <div class="schedule-grid-day-header">{t(dayKey)}</div>
+            {(dayKey, day) => (
+              <div
+                class={`schedule-grid-day-header${
+                  now().day === day() ? ' today' : ''
+                }`}
+                title={t(dayKey)}
+                aria-current={now().day === day() ? 'date' : undefined}
+              >
+                {t(dayKey)}
+              </div>
             )}
           </For>
 
@@ -754,7 +1075,13 @@ export const DeviceSchedule: Component<{
 
                 {/* Day cells for this hour */}
                 <For each={[0, 1, 2, 3, 4, 5, 6]}>
-                  {(_day) => <div class="schedule-grid-cell" />}
+                  {(day) => (
+                    <div
+                      class={`schedule-grid-cell${
+                        now().day === day ? ' today' : ''
+                      }`}
+                    />
+                  )}
                 </For>
               </>
             )}
@@ -768,112 +1095,45 @@ export const DeviceSchedule: Component<{
               <div
                 class={`schedule-entry${selectedId() === entry.id ? ' selected' : ''}${
                   dragState()?.entryId === entry.id ? ' dragging' : ''
+                }${editorPreview()?.entry.id === entry.id ? ' previewing' : ''}${
+                  editorPreview()?.entry.id === entry.id &&
+                  editorPreview()?.conflict
+                    ? ' conflict'
+                    : ''
                 }`}
                 data-entry-id={entry.id}
-                style={getEntryStyle(entry)}
+                style={getEntryStyle(displayEntry(entry))}
+                role="button"
+                tabIndex={0}
+                aria-label={t('deviceSchedule.editor.editSlot', {
+                  slot: describeEntry(displayEntry(entry)),
+                })}
+                aria-pressed={editor()?.entryId === entry.id}
+                onKeyDown={(e) => {
+                  if (e.target !== e.currentTarget) return;
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    openEditor(entry.id);
+                  }
+                }}
               >
                 <div class="schedule-entry-resize-top" />
                 <div class="schedule-entry-resize-left" />
-                <span class="schedule-entry-label">
-                  <Show
-                    when={
-                      editingTime()?.entryId === entry.id &&
-                      editingTime()?.field === 'start'
-                    }
-                    fallback={
-                      <span
-                        class="schedule-entry-time-clickable"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setEditingTime({ entryId: entry.id, field: 'start' });
-                        }}
-                      >
-                        {fmtTime(entry.startHour, entry.startMinute)}
-                      </span>
-                    }
-                  >
-                    <input
-                      type="time"
-                      class="schedule-entry-time-input"
-                      value={toTimeInputValue(
-                        entry.startHour,
-                        entry.startMinute
-                      )}
-                      onClick={(e) => e.stopPropagation()}
-                      onMouseDown={(e) => e.stopPropagation()}
-                      onBlur={(e) => {
-                        handleTimeChange(
-                          entry.id,
-                          'start',
-                          e.currentTarget.value
-                        );
-                        setEditingTime(null);
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          handleTimeChange(
-                            entry.id,
-                            'start',
-                            e.currentTarget.value
-                          );
-                          setEditingTime(null);
-                        } else if (e.key === 'Escape') {
-                          setEditingTime(null);
-                        }
-                      }}
-                      ref={(el) => setTimeout(() => el.focus(), 0)}
-                    />
-                  </Show>
-                  <span>–</span>
-                  <Show
-                    when={
-                      editingTime()?.entryId === entry.id &&
-                      editingTime()?.field === 'end'
-                    }
-                    fallback={
-                      <span
-                        class="schedule-entry-time-clickable"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setEditingTime({ entryId: entry.id, field: 'end' });
-                        }}
-                      >
-                        {fmtTime(entry.endHour, entry.endMinute)}
-                      </span>
-                    }
-                  >
-                    <input
-                      type="time"
-                      class="schedule-entry-time-input"
-                      value={toTimeInputValue(entry.endHour, entry.endMinute)}
-                      onClick={(e) => e.stopPropagation()}
-                      onMouseDown={(e) => e.stopPropagation()}
-                      onBlur={(e) => {
-                        handleTimeChange(
-                          entry.id,
-                          'end',
-                          e.currentTarget.value
-                        );
-                        setEditingTime(null);
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          handleTimeChange(
-                            entry.id,
-                            'end',
-                            e.currentTarget.value
-                          );
-                          setEditingTime(null);
-                        } else if (e.key === 'Escape') {
-                          setEditingTime(null);
-                        }
-                      }}
-                      ref={(el) => setTimeout(() => el.focus(), 0)}
-                    />
-                  </Show>
+                <span class="schedule-entry-label" aria-hidden="true">
+                  {fmtTime(
+                    displayEntry(entry).startHour,
+                    displayEntry(entry).startMinute
+                  )}
+                  –
+                  {fmtTime(
+                    displayEntry(entry).endHour,
+                    displayEntry(entry).endMinute
+                  )}
                 </span>
                 <button
+                  type="button"
                   class="schedule-entry-delete"
+                  aria-label={t('deviceSchedule.delete')}
                   onClick={(e) => {
                     e.stopPropagation();
                     deleteEntry(entry.id);
@@ -888,6 +1148,21 @@ export const DeviceSchedule: Component<{
             )}
           </For>
 
+          {/* Current time, emphasised in today's column */}
+          <div
+            class="schedule-now-line"
+            style={{ top: getNowLineTop() }}
+            aria-hidden="true"
+          >
+            <div
+              class="schedule-now-marker"
+              style={{
+                left: `${(now().day / 7) * 100}%`,
+                width: `${100 / 7}%`,
+              }}
+            />
+          </div>
+
           {/* Create drag preview */}
           <Show when={getDragPreviewStyle()}>
             {(style) => <div class="schedule-drag-preview" style={style()} />}
@@ -895,38 +1170,161 @@ export const DeviceSchedule: Component<{
         </div>
       </div>
 
-      {/* Schedule summary */}
-      <div class="schedule-summary">
-        <Show
-          when={entries().length > 0}
-          fallback={
-            <span class="schedule-summary-always-on">
-              {t('deviceSchedule.noScheduleAlwaysOn')}
-            </span>
-          }
-        >
-          {summary()}
-        </Show>
-      </div>
-
-      {/* Actions */}
-      <div class="schedule-actions">
-        <Button
-          onClick={saveSchedule}
-          color="primary"
-          label={t('common.save')}
-          disabled={!isModified() || loading()}
-        />
-        <Button
-          onClick={resetSchedule}
-          label={t('deviceSchedule.reset')}
-          disabled={!isModified() || loading()}
-        />
-      </div>
-
-      <Show when={loading()}>
-        <div class="schedule-loading">{t('common.loading')}</div>
+      <Show when={draft()}>
+        {(values) => (
+          <div
+            class="schedule-editor"
+            role="group"
+            aria-labelledby={editorTitleId}
+            ref={editorRef}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                e.preventDefault();
+                cancelEditor();
+              } else if (
+                e.key === 'Enter' &&
+                (e.target as HTMLElement).tagName !== 'BUTTON'
+              ) {
+                e.preventDefault();
+                applyEditor();
+              }
+            }}
+          >
+            <h4 id={editorTitleId} class="schedule-editor-title">
+              {editor()?.isNew
+                ? t('deviceSchedule.editor.newTitle')
+                : t('deviceSchedule.editor.title')}
+            </h4>
+            <div class="schedule-editor-fields">
+              <label class="schedule-editor-field">
+                <span>{t('deviceSchedule.editor.startDay')}</span>
+                <select
+                  value={values().startDay}
+                  onChange={(e) =>
+                    updateDraft({ startDay: Number(e.currentTarget.value) })
+                  }
+                >
+                  <For each={dayLabels()}>
+                    {(label, i) => (
+                      <option value={i()} selected={i() === values().startDay}>
+                        {label}
+                      </option>
+                    )}
+                  </For>
+                </select>
+              </label>
+              <label class="schedule-editor-field">
+                <span>{t('deviceSchedule.editor.endDay')}</span>
+                <select
+                  value={values().endDay}
+                  onChange={(e) =>
+                    updateDraft({ endDay: Number(e.currentTarget.value) })
+                  }
+                >
+                  <For each={dayLabels()}>
+                    {(label, i) => (
+                      <option
+                        value={i()}
+                        selected={i() === values().endDay}
+                        disabled={i() < values().startDay}
+                      >
+                        {label}
+                      </option>
+                    )}
+                  </For>
+                </select>
+              </label>
+              <label class="schedule-editor-field">
+                <span>{t('deviceSchedule.editor.startTime')}</span>
+                <input
+                  type="time"
+                  step="60"
+                  value={values().startTime}
+                  onInput={(e) =>
+                    updateDraft({ startTime: e.currentTarget.value })
+                  }
+                />
+              </label>
+              <label class="schedule-editor-field">
+                <span>{t('deviceSchedule.editor.endTime')}</span>
+                <input
+                  type="time"
+                  step="60"
+                  value={values().endTime}
+                  onInput={(e) =>
+                    updateDraft({ endTime: e.currentTarget.value })
+                  }
+                />
+              </label>
+            </div>
+            <p class="schedule-editor-hint">
+              {t('deviceSchedule.editor.midnightHint')}
+            </p>
+            <Show when={editorError()}>
+              {(error) => (
+                <p class="schedule-editor-error" role="alert">
+                  {error()}
+                </p>
+              )}
+            </Show>
+            <div class="schedule-editor-actions">
+              <Button
+                onClick={deleteFromEditor}
+                label={t('deviceSchedule.delete')}
+                icon={BsTrash}
+                color="danger"
+              />
+              <div class="schedule-editor-actions-end">
+                <Button
+                  onClick={cancelEditor}
+                  label={t('common.cancel')}
+                  color="secondary"
+                />
+                <Button
+                  onClick={applyEditor}
+                  label={t('deviceSchedule.editor.done')}
+                  icon={BsCheckLg}
+                  color="primary"
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </Show>
-    </div>
+
+      <footer class="device-card-footer schedule-footer">
+        <p class="schedule-summary" aria-live="polite">
+          <Show
+            when={entries().length > 0}
+            fallback={
+              <span class="schedule-summary-always-on">
+                {t('deviceSchedule.noScheduleAlwaysOn')}
+              </span>
+            }
+          >
+            {summary()}
+          </Show>
+        </p>
+        <div class="schedule-actions">
+          <Show when={loading()}>
+            <span class="schedule-loading">{t('common.loading')}</span>
+          </Show>
+          <Button
+            onClick={resetSchedule}
+            label={t('deviceSchedule.reset')}
+            icon={BsX}
+            color="secondary"
+            disabled={!isModified() || loading()}
+          />
+          <Button
+            onClick={saveSchedule}
+            color="success"
+            icon={BsCheckLg}
+            label={t('common.save')}
+            disabled={!isModified() || loading()}
+          />
+        </div>
+      </footer>
+    </section>
   );
 };

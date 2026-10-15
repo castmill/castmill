@@ -1,5 +1,5 @@
 import { Component, createSignal, Show } from 'solid-js';
-import { BsFileEarmarkText, BsTrash } from 'solid-icons/bs';
+import { BsFileEarmarkText, BsListUl, BsXCircle } from 'solid-icons/bs';
 
 import {
   TableView,
@@ -10,12 +10,13 @@ import {
   ConfirmDialog,
   Modal,
   useToast,
-  Button,
 } from '@castmill/ui-common';
 
 import { Device } from '../interfaces/device.interface';
 
 import { DevicesService } from '../services/devices.service';
+import { DeviceCardHeader, DeviceTableTime } from './device-section';
+import './device-events.scss';
 
 interface DeviceTableLogItem {
   id: string;
@@ -44,6 +45,8 @@ export const DeviceLogs: Component<{
     e: t('devices.events.filterError'),
     o: t('devices.events.filterOnline'),
     x: t('devices.events.filterOffline'),
+    w: t('devices.events.filterWarning'),
+    i: t('devices.events.filterInfo'),
   };
   const [showConfirmClearAll, setShowConfirmClearAll] = createSignal(false);
   const [selectedEvent, setSelectedEvent] = createSignal<DeviceTableLogItem>();
@@ -54,9 +57,7 @@ export const DeviceLogs: Component<{
       title: t('common.timestamp'),
       sortable: true,
       render: (item: DeviceTableLogItem) => (
-        <span>
-          {new Date(item.last_occurred_at || item.timestamp).toLocaleString()}
-        </span>
+        <DeviceTableTime value={item.last_occurred_at || item.timestamp} />
       ),
     },
     {
@@ -64,7 +65,14 @@ export const DeviceLogs: Component<{
       title: t('common.type'),
       sortable: true,
       render: (item: DeviceTableLogItem) => (
-        <span>{typeNameMap[item.type] || item.type}</span>
+        <span
+          class={`device-event-type type-${item.type}`}
+          title={typeNameMap[item.type] || item.type}
+        >
+          <span class="device-event-type-label">
+            {typeNameMap[item.type] || item.type}
+          </span>
+        </span>
       ),
     },
     {
@@ -72,16 +80,7 @@ export const DeviceLogs: Component<{
       title: t('common.message'),
       sortable: false,
       render: (item: DeviceTableLogItem) => (
-        <span
-          style={{
-            display: 'block',
-            'max-width': '36em',
-            overflow: 'hidden',
-            'text-align': 'left',
-            'text-overflow': 'ellipsis',
-            'white-space': 'nowrap',
-          }}
-        >
+        <span class="device-event-msg" title={item.msg}>
           {item.msg}
         </span>
       ),
@@ -103,6 +102,8 @@ export const DeviceLogs: Component<{
         item.stack ||
         Object.keys(item.context || {}).length > 0 ? (
           <button
+            type="button"
+            class="device-icon-button"
             aria-label={t('devices.events.details')}
             title={t('devices.events.details')}
             onClick={() => setSelectedEvent(item)}
@@ -178,33 +179,43 @@ export const DeviceLogs: Component<{
 
   return (
     <>
-      <TableView
-        title={t('devices.events.title')}
-        resource={t('devices.events.items')}
-        fetchData={fetchLogs}
-        ref={setRef}
-        initialSortOptions={{ key: 'timestamp', direction: 'descending' }}
-        table={{
-          columns,
-          hideCheckboxes: true,
-        }}
-        toolbar={{
-          filters: eventFilters,
-          requireOneActiveFilter: false,
-          hideSearch: true,
-          hideTitle: true,
-        }}
-        pagination={{ itemsPerPage }}
-      ></TableView>
-
-      <div style="display: flex; justify-content: flex-end; margin-top: 1em;">
-        <Button
-          onClick={() => setShowConfirmClearAll(true)}
-          icon={BsTrash}
-          label={t('devices.events.clearAll')}
-          color="danger"
+      <section class="device-card device-events">
+        <DeviceCardHeader
+          icon={BsListUl}
+          title={t('devices.events.title')}
+          description={t('devices.events.description')}
+          actions={
+            <button
+              type="button"
+              class="device-text-button danger"
+              onClick={() => setShowConfirmClearAll(true)}
+            >
+              <BsXCircle aria-hidden="true" />
+              {t('devices.events.clearAll')}
+            </button>
+          }
         />
-      </div>
+        <div class="device-table-scroll device-table-fit device-events-table">
+          <TableView
+            title={t('devices.events.title')}
+            resource={t('devices.events.items')}
+            fetchData={fetchLogs}
+            ref={setRef}
+            initialSortOptions={{ key: 'timestamp', direction: 'descending' }}
+            table={{
+              columns,
+              hideCheckboxes: true,
+            }}
+            toolbar={{
+              filters: eventFilters,
+              requireOneActiveFilter: false,
+              hideSearch: true,
+              hideTitle: true,
+            }}
+            pagination={{ itemsPerPage }}
+          ></TableView>
+        </div>
+      </section>
 
       {/* Confirm dialog for clearing all events */}
       <ConfirmDialog
@@ -222,25 +233,23 @@ export const DeviceLogs: Component<{
             description={event().category || t('devices.events.errorDetails')}
             onClose={() => setSelectedEvent(undefined)}
           >
-            <div style="max-width: 48em; overflow-wrap: anywhere;">
+            <div class="device-event-details">
               <Show when={event().first_occurred_at}>
                 <p>
                   <strong>{t('devices.events.firstSeen')}:</strong>{' '}
                   {new Date(event().first_occurred_at!).toLocaleString()}
                 </p>
               </Show>
-              <p style="white-space: pre-wrap; overflow-wrap: anywhere;">
+              <p class="device-event-message">
                 <strong>{t('common.message')}:</strong> {event().msg}
               </p>
               <Show
                 when={event().context && Object.keys(event().context!).length}
               >
-                <pre style="white-space: pre-wrap;">
-                  {JSON.stringify(event().context, null, 2)}
-                </pre>
+                <pre>{JSON.stringify(event().context, null, 2)}</pre>
               </Show>
               <Show when={event().stack}>
-                <pre style="white-space: pre-wrap;">{event().stack}</pre>
+                <pre>{event().stack}</pre>
               </Show>
             </div>
           </Modal>

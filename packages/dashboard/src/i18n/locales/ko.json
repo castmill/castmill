@@ -932,7 +932,15 @@
       "applyError": "플레이어가 이 방향을 적용하지 못했습니다. 기기 이벤트를 확인하세요.",
       "unsupported": "방향 설정을 사용하려면 이 플레이어를 업데이트하세요.",
       "saved": "기기 설정이 저장되었습니다.",
-      "saveError": "기기 설정을 저장하지 못했습니다."
+      "saveError": "기기 설정을 저장하지 못했습니다.",
+      "options": {
+        "deg0": "가로",
+        "deg90": "세로",
+        "deg180": "가로(반전)",
+        "deg270": "세로(반전)"
+      },
+      "change": "변경",
+      "done": "완료"
     },
     "setDeviceChannel": "기기 채널 설정",
     "selectChannel": "채널 선택",
@@ -964,7 +972,8 @@
       "noData": "이 장치에서 사용 가능한 원격 측정 데이터가 없습니다.",
       "daysShort": "일",
       "hoursShort": "시",
-      "minutesShort": "분"
+      "minutesShort": "분",
+      "description": "플레이어가 보고한 실시간 상태 정보입니다."
     },
     "maintenance": {
       "refresh": "새로고침",
@@ -990,7 +999,15 @@
       "recoverLostSettingsLabel": "분실 설정 복구",
       "disabled": "비활성화됨",
       "enabledMinutesRemaining": "활성화됨 ({{minutes}}분 남음)",
-      "enabledForever": "영구 활성화됨"
+      "enabledForever": "영구 활성화됨",
+      "run": "실행",
+      "commandSent": "기기에 명령을 보냈습니다",
+      "commandFailed": "명령을 보내지 못했습니다: {{error}}",
+      "contentGroup": "재생",
+      "contentGroupDescription": "하드웨어를 재시작하지 않고 재생을 복구합니다.",
+      "systemGroup": "시스템",
+      "systemGroupDescription": "업데이트 및 재시작. 화면이 잠시 꺼질 수 있습니다.",
+      "recoverLostSettingsDescription": "자격 증명을 잃은 경우 이 플레이어가 다른 IP 주소에서 다시 연결할 수 있도록 허용합니다."
     },
     "cache": {
       "title": "기기 캐시",
@@ -1010,7 +1027,8 @@
       "deleteMultipleSuccess": "{{count}}개의 캐시 항목이 성공적으로 삭제되었습니다",
       "clearAllSuccess": "모든 캐시 항목이 성공적으로 지워졌습니다",
       "deleteError": "캠시 삭제 중 오류 발생: {{error}}",
-      "offlineWarning": "기기가 현재 오프라인 상태입니다. 기기가 다시 온라인 상태가 될 때까지 캠시 정보를 가져올 수 없습니다."
+      "offlineWarning": "기기가 현재 오프라인 상태입니다. 기기가 다시 온라인 상태가 될 때까지 캠시 정보를 가져올 수 없습니다.",
+      "description": "오프라인에서도 재생을 계속할 수 있도록 플레이어가 로컬에 저장하는 파일입니다."
     },
     "events": {
       "title": "기기 이벤트",
@@ -1030,7 +1048,8 @@
       "lastSeen": "최근 발생",
       "details": "세부 정보",
       "detailsTitle": "오류 세부 정보",
-      "errorDetails": "정제된 진단 세부 정보"
+      "errorDetails": "정제된 진단 세부 정보",
+      "description": "플레이어가 보고한 연결 변경 및 오류입니다."
     },
     "errors": {
       "setChannelFailed": "기기 채널 설정 실패: {{error}}",
@@ -1076,6 +1095,31 @@
       "v8Version": "V8 버전",
       "nodeVersion": "Node.js 버전",
       "userAgent": "사용자 에이전트"
+    },
+    "details": {
+      "settings": "설정",
+      "overview": "개요",
+      "schedule": "일정",
+      "sections": "디바이스 섹션",
+      "lastSeen": "마지막 확인 {{time}}",
+      "neverSeen": "연결된 적 없음",
+      "copyId": "디바이스 ID 복사",
+      "copied": "디바이스 ID가 복사되었습니다",
+      "copyFailed": "디바이스 ID를 복사할 수 없습니다.",
+      "unsavedChanges": "저장되지 않은 변경 사항",
+      "nameRequired": "이름은 필수입니다",
+      "nameTooShort": "이름은 5자 이상이어야 합니다",
+      "descriptionTooShort": "설명은 5자 이상이어야 합니다"
+    },
+    "channelList": {
+      "description": "플레이어는 이 채널들의 일정에 따라 콘텐츠를 재생합니다.",
+      "empty": "아직 할당된 채널이 없습니다.",
+      "loadError": "기기 채널을 가져오지 못했습니다",
+      "alreadyAssigned": "이 채널은 이미 기기에 할당되어 있습니다.",
+      "added": "채널 \"{{name}}\"이(가) 추가되었습니다",
+      "removed": "채널 \"{{name}}\"이(가) 제거되었습니다",
+      "addError": "채널을 추가하지 못했습니다: {{error}}",
+      "removeError": "채널을 제거하지 못했습니다: {{error}}"
     }
   },
   "validation": {
@@ -1423,7 +1467,7 @@
   },
   "deviceSchedule": {
     "title": "기기 스케줄",
-    "description": "기기가 켜져야 하는 시간을 정의합니다. 그리드에서 클릭하고 드래그하여 스케줄 항목을 만듭니다. 예약된 시간 외에는 기기가 꺼집니다. 항목이 설정되지 않으면 기기는 항상 켜져 있습니다.",
+    "description": "기기가 켜져 있어야 하는 시간을 설정합니다. 그리드를 드래그하여 항목을 만들거나 빈 칸을 탭하여 추가하세요. 항목을 클릭하거나 탭하면 요일과 시간을 편집할 수 있습니다. 예약된 시간 외에는 기기가 꺼집니다. 항목이 없으면 기기는 항상 켜져 있습니다.",
     "mon": "월",
     "tue": "화",
     "wed": "수",
@@ -1439,6 +1483,19 @@
     "saved": "스케줄이 저장되고 기기로 전송되었습니다",
     "savedOffline": "스케줄이 저장되었습니다. 기기가 오프라인입니다 — 재연결 시 타이머가 전송됩니다.",
     "loadError": "스케줄 로드 오류",
-    "saveError": "스케줄 저장 오류"
+    "saveError": "스케줄 저장 오류",
+    "editor": {
+      "title": "시간대 편집",
+      "newTitle": "새 시간대",
+      "editSlot": "시간대 편집 {{slot}}",
+      "startDay": "시작 요일",
+      "endDay": "종료 요일",
+      "startTime": "시작 시간",
+      "endTime": "종료 시간",
+      "midnightHint": "자정까지 켜 두려면 종료 시간을 00:00으로 설정하세요.",
+      "invalidTime": "종료 시간은 시작 시간보다 늦어야 합니다.",
+      "overlap": "이 시간대가 다른 항목과 겹칩니다.",
+      "done": "완료"
+    }
   }
 }

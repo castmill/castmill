@@ -50,11 +50,38 @@ const fixture = {
 
 afterEach(cleanup);
 
+const orientationGroup = () =>
+  screen.getByRole('radiogroup', { name: 'devices.orientation.label' });
+const orientationOption = (value: string) =>
+  screen.getByRole('radio', { name: new RegExp(`^${value}°`) });
+const changeButton = () =>
+  screen.queryByRole('button', { name: 'devices.orientation.change' });
+const openPicker = () => {
+  if (!screen.queryByRole('radiogroup')) fireEvent.click(changeButton()!);
+};
+const chooseOrientation = (value: string) => {
+  openPicker();
+  fireEvent.click(orientationOption(value));
+};
+const selectedOrientation = () =>
+  document
+    .querySelector('.device-orientation-value')
+    ?.getAttribute('data-value');
+
 describe('Details orientation', () => {
-  it('uses the existing form card styling and puts help in an accessible tooltip', () => {
+  it('offers a visual picker with help in an accessible tooltip', () => {
     render(() => <DeviceDetails device={fixture} onSubmit={vi.fn()} />);
-    const select = screen.getByLabelText('devices.orientation.label');
-    expect(select.closest('.form-item1')).not.toBeNull();
+    expect(screen.queryByRole('radio')).not.toBeInTheDocument();
+    const toggle = changeButton()!;
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    const group = orientationGroup();
+    expect(toggle).toHaveAttribute('aria-controls', group.id);
+    expect(screen.getAllByRole('radio')).toHaveLength(4);
+    expect(orientationOption('90')).toHaveAccessibleName(
+      /devices\.orientation\.options\.deg90/
+    );
     const help = screen.getByRole('button', {
       name: 'devices.orientation.help',
     });
@@ -62,12 +89,12 @@ describe('Details orientation', () => {
     expect(
       document.getElementById(help.getAttribute('aria-describedby')!)
     ).toHaveTextContent('devices.orientation.help');
-    expect(select).toHaveAttribute(
+    expect(group).toHaveAttribute(
       'aria-describedby',
       help.getAttribute('aria-describedby')
     );
   });
-  it('disables orientation and submission for a read-only role', () => {
+  it('locks fields and hides save actions for a read-only role', () => {
     const onSubmit = vi.fn();
     const store = {
       permissions: { role: 'guest', matrix: { devices: ['show'] } },
@@ -80,12 +107,15 @@ describe('Details orientation', () => {
         onSubmit={onSubmit}
       />
     ));
-    expect(screen.getByLabelText('devices.orientation.label')).toBeDisabled();
+    expect(changeButton()).not.toBeInTheDocument();
+    expect(screen.queryByRole('radio')).not.toBeInTheDocument();
+    expect(selectedOrientation()).toBe('0');
     fireEvent.input(screen.getByLabelText('common.name'), {
       target: { value: 'Changed player' },
     });
-    expect(screen.getByText('common.save')).toBeDisabled();
-    fireEvent.submit(screen.getByText('common.save').closest('form')!);
+    expect(screen.getByLabelText('common.name')).toBeDisabled();
+    expect(screen.queryByText('common.save')).not.toBeInTheDocument();
+    fireEvent.submit(screen.getByLabelText('common.name').closest('form')!);
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
@@ -99,9 +129,7 @@ describe('Details orientation', () => {
           onSubmit={onSubmit}
         />
       ));
-      fireEvent.change(screen.getByLabelText('devices.orientation.label'), {
-        target: { value },
-      });
+      chooseOrientation(value);
       fireEvent.click(screen.getByText('common.save'));
       expect(onSubmit).toHaveBeenCalledWith({
         name: fixture.name,
@@ -114,26 +142,21 @@ describe('Details orientation', () => {
   it('resets orientation and leaves Save disabled when unchanged', () => {
     render(() => <DeviceDetails device={fixture} onSubmit={vi.fn()} />);
     expect(screen.getByText('common.save')).toBeDisabled();
-    fireEvent.change(screen.getByLabelText('devices.orientation.label'), {
-      target: { value: '270' },
-    });
+    chooseOrientation('270');
     expect(screen.getByText('common.save')).not.toBeDisabled();
     fireEvent.click(screen.getByText('common.reset'));
-    expect(screen.getByLabelText('devices.orientation.label')).toHaveValue('0');
+    expect(selectedOrientation()).toBe('0');
+    expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument();
     expect(screen.getByText('common.save')).toBeDisabled();
   });
 
   it('retains edits when saving fails', async () => {
     const onSubmit = vi.fn().mockResolvedValue(false);
     render(() => <DeviceDetails device={fixture} onSubmit={onSubmit} />);
-    fireEvent.change(screen.getByLabelText('devices.orientation.label'), {
-      target: { value: '90' },
-    });
+    chooseOrientation('90');
     fireEvent.click(screen.getByText('common.save'));
     await Promise.resolve();
-    expect(screen.getByLabelText('devices.orientation.label')).toHaveValue(
-      '90'
-    );
+    expect(selectedOrientation()).toBe('90');
     expect(screen.getByText('common.save')).not.toBeDisabled();
   });
 
@@ -144,12 +167,34 @@ describe('Details orientation', () => {
         onSubmit={vi.fn()}
       />
     ));
-    expect(
-      screen.getByLabelText('devices.orientation.label')
-    ).not.toBeDisabled();
+    openPicker();
+    expect(orientationOption('90')).not.toBeDisabled();
     expect(screen.getByRole('status')).toHaveTextContent(
       'devices.orientation.offline'
     );
+  });
+
+  it('clears offline-change pending feedback only after a matching reconnect acknowledgement', () => {
+    const [device, setDevice] = createSignal<Device>({
+      ...fixture,
+      online: false,
+      orientation: 270,
+      orientation_status: { orientation: 0, status: 'applied', mode: 'css' },
+    });
+    render(() => <DeviceDetails device={device()} onSubmit={vi.fn()} />);
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'devices.orientation.offline'
+    );
+
+    setDevice({ ...device(), online: true });
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'devices.orientation.pending'
+    );
+    setDevice({
+      ...device(),
+      orientation_status: { orientation: 270, status: 'applied', mode: 'css' },
+    });
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 
   it('gates old players without breaking name edits', () => {
@@ -160,7 +205,8 @@ describe('Details orientation', () => {
         onSubmit={onSubmit}
       />
     ));
-    expect(screen.getByLabelText('devices.orientation.label')).toBeDisabled();
+    expect(changeButton()).not.toBeInTheDocument();
+    expect(screen.queryByRole('radio')).not.toBeInTheDocument();
     fireEvent.input(screen.getByLabelText('common.name'), {
       target: { value: 'New player' },
     });
@@ -171,24 +217,54 @@ describe('Details orientation', () => {
     });
   });
 
+  it.each(['applied', 'error'] as const)(
+    'clears a matching %s report on disconnect and waits for fresh confirmation at the same angle',
+    (status) => {
+      const report = { orientation: 0, status, mode: 'css' } as const;
+      const [device, setDevice] = createSignal<Device>({
+        ...fixture,
+        orientation_status: report,
+      });
+      render(() => <DeviceDetails device={device()} onSubmit={vi.fn()} />);
+      if (status === 'applied') {
+        expect(screen.queryByRole('status')).not.toBeInTheDocument();
+      } else {
+        expect(screen.getByRole('status')).toHaveTextContent(
+          'devices.orientation.applyError'
+        );
+      }
+
+      setDevice({ ...device(), online: false, orientation_status: null });
+      expect(screen.getByRole('status')).toHaveTextContent(
+        'devices.orientation.offline'
+      );
+
+      setDevice({ ...device(), online: true });
+      expect(screen.getByRole('status')).toHaveTextContent(
+        'devices.orientation.pending'
+      );
+      expect(
+        screen.queryByText('devices.orientation.applyError')
+      ).not.toBeInTheDocument();
+
+      setDevice({
+        ...device(),
+        orientation_status: { ...report, status: 'applied' },
+      });
+      expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    }
+  );
+
   it('synchronizes untouched orientation while preserving an unsaved choice', () => {
     const [device, setDevice] = createSignal(fixture);
     render(() => <DeviceDetails device={device()} onSubmit={vi.fn()} />);
     setDevice({ ...fixture, orientation: 90 });
-    expect(screen.getByLabelText('devices.orientation.label')).toHaveValue(
-      '90'
-    );
-    fireEvent.change(screen.getByLabelText('devices.orientation.label'), {
-      target: { value: '270' },
-    });
+    expect(selectedOrientation()).toBe('90');
+    chooseOrientation('270');
     setDevice({ ...fixture, orientation: 180 });
-    expect(screen.getByLabelText('devices.orientation.label')).toHaveValue(
-      '270'
-    );
+    expect(selectedOrientation()).toBe('270');
     setDevice({ ...fixture, id: 'device-2', orientation: 180 });
-    expect(screen.getByLabelText('devices.orientation.label')).toHaveValue(
-      '180'
-    );
+    expect(selectedOrientation()).toBe('180');
   });
 
   it.each(['applied', 'error'] as const)(

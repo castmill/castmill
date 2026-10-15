@@ -1,60 +1,106 @@
-.maintainance {
-  max-width: 30em;
+.maintenance-actions {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
 
-  .maintainance-row {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: flex-start;
-    font-size: 0.8em;
-    gap: 1em;
-    min-height: 4.5em;
-    margin-bottom: 0.6em;
+.maintenance-action {
+  display: flex;
+  align-items: center;
+  gap: 0.8em;
+  padding: 0.75em 0;
+  border-top: 1px solid #2a2639;
 
-    .button-wrapper {
-      width: 50%;
-      button {
-        width: 100%;
-      }
-    }
+  &:first-child {
+    border-top: none;
+    padding-top: 0;
+  }
 
-    p {
-      width: 50%;
-      margin: 0.4em 0 0;
-    }
+  &:last-child {
+    padding-bottom: 0;
+  }
 
-    &.autorecovery-row {
-      align-items: center;
-      justify-content: flex-start;
-      gap: 0.6em;
-
-      .autorecovery-status {
-        width: auto;
-        flex: 0 1 auto;
-        margin: 0;
-      }
-
-      .button-wrapper {
-        width: auto;
-
-        button {
-          width: auto;
-        }
-      }
+  &.unsupported {
+    .maintenance-action-icon,
+    .maintenance-action-title {
+      opacity: 0.6;
     }
   }
 
-  .offline-message {
-    display: flex;
-    flex-direction: row;
+  > .device-text-button {
+    flex-shrink: 0;
+    min-width: 5em;
     justify-content: center;
-    align-items: center;
-    color: red;
+  }
+}
+
+.maintenance-action-icon {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 2.2em;
+  height: 2.2em;
+  border-radius: 0.45em;
+  background: rgba(87, 146, 238, 0.12);
+  color: #5792ee;
+}
+
+.maintenance-action-text {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 0.2em;
+  min-width: 0;
+}
+
+.maintenance-action-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5em;
+  color: #fff;
+  font-size: 0.92em;
+  font-weight: 600;
+}
+
+.maintenance-action-description {
+  color: #a4a3b7;
+  font-size: 0.8em;
+  line-height: 1.4;
+}
+
+.maintenance-badge {
+  padding: 0.1em 0.5em;
+  border: 1px solid rgba(240, 183, 90, 0.4);
+  border-radius: 999px;
+  color: #f0b75a;
+  font-size: 0.75em;
+  font-weight: 600;
+}
+
+.maintenance-status {
+  padding: 0.25em 0.7em;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #a4a3b7;
+  font-size: 0.78em;
+  font-weight: 700;
+
+  &.active {
+    background: rgba(46, 204, 113, 0.15);
+    color: #4cd68a;
+  }
+}
+
+@media (max-width: 30em) {
+  .maintenance-action > .device-text-button {
+    min-width: 0;
   }
 
-  .unsupported-message {
-    display: block;
-    margin-top: 0.4em;
-    color: var(--color-warning, #9a6700);
+  .maintenance-autorecovery .device-segmented {
+    display: flex;
   }
 }
