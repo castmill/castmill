@@ -1465,7 +1465,7 @@
     "revoked": "凭据已撤销",
     "copied": "已复制到剪贴板",
     "copy": "复制",
-    "secretTitle": "{name} 的凭据",
+    "secretTitle": "{{name}} 的凭据",
     "secretWarning": "请立即复制此密钥。出于安全原因，它将不会再次显示。",
     "secretDone": "我已保存密钥",
     "tabs": {
@@ -1475,16 +1475,16 @@
     },
     "confirm": {
       "rotateTitle": "轮换凭据",
-      "rotateMessage": "将为 {name} 生成新密钥。当前密钥将立即失效。",
+      "rotateMessage": "将为 {{name}} 生成新密钥。当前密钥将立即失效。",
       "revokeTitle": "撤销凭据",
-      "revokeMessage": "在生成新凭据之前，{name} 将无法连接。",
+      "revokeMessage": "在生成新凭据之前，{{name}} 将无法连接。",
       "deleteTitle": "删除智能体",
-      "deleteMessage": "删除 {name}？其凭据和活动日志将被永久删除。"
+      "deleteMessage": "删除 {{name}}？其凭据和活动日志将被永久删除。"
     },
     "errors": {
       "loadFailed": "加载智能体失败",
-      "saveFailed": "保存智能体失败：{error}",
-      "actionFailed": "操作失败：{error}",
+      "saveFailed": "保存智能体失败：{{error}}",
+      "actionFailed": "操作失败：{{error}}",
       "copyFailed": "无法复制到剪贴板",
       "loadActionsFailed": "加载活动日志失败"
     },

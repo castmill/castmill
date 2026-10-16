@@ -1477,7 +1477,7 @@
     "revoked": "Identifiants révoqués",
     "copied": "Copié dans le presse-papiers",
     "copy": "Copier",
-    "secretTitle": "Identifiants de {name}",
+    "secretTitle": "Identifiants de {{name}}",
     "secretWarning": "Copiez ce secret maintenant. Pour des raisons de sécurité, il ne sera plus affiché.",
     "secretDone": "J'ai enregistré le secret",
     "tabs": {
@@ -1487,16 +1487,16 @@
     },
     "confirm": {
       "rotateTitle": "Renouveler les identifiants",
-      "rotateMessage": "Un nouveau secret sera généré pour {name}. Le secret actuel cessera de fonctionner immédiatement.",
+      "rotateMessage": "Un nouveau secret sera généré pour {{name}}. Le secret actuel cessera de fonctionner immédiatement.",
       "revokeTitle": "Révoquer les identifiants",
-      "revokeMessage": "{name} ne pourra plus se connecter tant que de nouveaux identifiants n'auront pas été générés.",
+      "revokeMessage": "{{name}} ne pourra plus se connecter tant que de nouveaux identifiants n'auront pas été générés.",
       "deleteTitle": "Supprimer l'agent",
-      "deleteMessage": "Supprimer {name} ? Ses identifiants et son journal d'activité seront définitivement supprimés."
+      "deleteMessage": "Supprimer {{name}} ? Ses identifiants et son journal d'activité seront définitivement supprimés."
     },
     "errors": {
       "loadFailed": "Échec du chargement des agents",
-      "saveFailed": "Échec de l'enregistrement de l'agent : {error}",
-      "actionFailed": "L'action a échoué : {error}",
+      "saveFailed": "Échec de l'enregistrement de l'agent : {{error}}",
+      "actionFailed": "L'action a échoué : {{error}}",
       "copyFailed": "Impossible de copier dans le presse-papiers",
       "loadActionsFailed": "Échec du chargement du journal d'activité"
     },

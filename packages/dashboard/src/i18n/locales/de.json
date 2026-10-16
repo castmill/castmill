@@ -1460,7 +1460,7 @@
     "revoked": "Zugangsdaten widerrufen",
     "copied": "In die Zwischenablage kopiert",
     "copy": "Kopieren",
-    "secretTitle": "Zugangsdaten für {name}",
+    "secretTitle": "Zugangsdaten für {{name}}",
     "secretWarning": "Kopieren Sie dieses Geheimnis jetzt. Aus Sicherheitsgründen wird es nicht erneut angezeigt.",
     "secretDone": "Ich habe das Geheimnis gespeichert",
     "tabs": {
@@ -1470,16 +1470,16 @@
     },
     "confirm": {
       "rotateTitle": "Zugangsdaten erneuern",
-      "rotateMessage": "Für {name} wird ein neues Geheimnis erzeugt. Das aktuelle Geheimnis funktioniert sofort nicht mehr.",
+      "rotateMessage": "Für {{name}} wird ein neues Geheimnis erzeugt. Das aktuelle Geheimnis funktioniert sofort nicht mehr.",
       "revokeTitle": "Zugangsdaten widerrufen",
-      "revokeMessage": "{name} kann sich erst wieder verbinden, wenn neue Zugangsdaten erzeugt wurden.",
+      "revokeMessage": "{{name}} kann sich erst wieder verbinden, wenn neue Zugangsdaten erzeugt wurden.",
       "deleteTitle": "Agent löschen",
-      "deleteMessage": "{name} löschen? Zugangsdaten und Aktivitätsprotokoll werden dauerhaft entfernt."
+      "deleteMessage": "{{name}} löschen? Zugangsdaten und Aktivitätsprotokoll werden dauerhaft entfernt."
     },
     "errors": {
       "loadFailed": "Agenten konnten nicht geladen werden",
-      "saveFailed": "Agent konnte nicht gespeichert werden: {error}",
-      "actionFailed": "Aktion fehlgeschlagen: {error}",
+      "saveFailed": "Agent konnte nicht gespeichert werden: {{error}}",
+      "actionFailed": "Aktion fehlgeschlagen: {{error}}",
       "copyFailed": "Kopieren in die Zwischenablage fehlgeschlagen",
       "loadActionsFailed": "Aktivitätsprotokoll konnte nicht geladen werden"
     },

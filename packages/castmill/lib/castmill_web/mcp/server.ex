@@ -199,7 +199,7 @@ defmodule CastmillWeb.MCP.Server do
       path: log.path,
       http_status: log.http_status,
       status: if(is_error, do: "error", else: "success"),
-      error: if(is_error, do: error_text(result)),
+      error: if(is_error, do: error_text(result, args)),
       duration_ms: duration_ms,
       ip: client_ip(ctx[:conn])
     }
@@ -249,8 +249,33 @@ defmodule CastmillWeb.MCP.Server do
     )
   end
 
-  defp error_text(%{"content" => [%{"text" => text} | _]}), do: String.slice(text, 0, 2_000)
-  defp error_text(_), do: nil
+  defp error_text(%{"content" => [%{"text" => text} | _]}, args),
+    do: args |> sensitive_values() |> redact_text(text) |> String.slice(0, 2_000)
+
+  defp error_text(_, _args), do: nil
+
+  defp sensitive_values(map) when is_map(map) do
+    Enum.flat_map(map, fn {key, value} ->
+      if sensitive_key?(key), do: value_strings(value), else: sensitive_values(value)
+    end)
+  end
+
+  defp sensitive_values(list) when is_list(list), do: Enum.flat_map(list, &sensitive_values/1)
+  defp sensitive_values(_), do: []
+
+  defp value_strings(value) when is_binary(value) and value != "", do: [value]
+  defp value_strings(value) when is_number(value), do: [to_string(value)]
+  defp value_strings(value) when is_map(value),
+    do: Enum.flat_map(value, fn {_key, v} -> value_strings(v) end)
+
+  defp value_strings(value) when is_list(value), do: Enum.flat_map(value, &value_strings/1)
+  defp value_strings(_), do: []
+
+  defp redact_text(values, text) do
+    Enum.reduce(values, text, fn value, text ->
+      String.replace(text, value, "[REDACTED]")
+    end)
+  end
 
   defp client_ip(%Plug.Conn{} = conn), do: Utils.RemoteIp.get(conn)
   defp client_ip(_), do: nil

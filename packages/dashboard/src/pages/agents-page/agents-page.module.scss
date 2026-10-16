@@ -74,13 +74,19 @@
   color: var(--danger-color, #ef4444);
 }
 
+.toolDisclosure {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
 .errorText {
   color: var(--danger-color, #ef4444);
   white-space: pre-wrap;
-}
-
-.clickableRow {
-  cursor: pointer;
 }
 
 .requestCell {

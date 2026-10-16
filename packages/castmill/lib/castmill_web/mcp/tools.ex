@@ -223,7 +223,12 @@ defmodule CastmillWeb.MCP.Tools do
 
   def build_request("list_channel_entries", args, agent) do
     with {:ok, channel_id} <- id_arg(args, "channel_id") do
-      query = Map.take(args, ["start_date", "end_date"])
+      query =
+        args
+        |> Map.take(["start_date", "end_date"])
+        |> Map.put_new("start_date", 0)
+        |> Map.put_new("end_date", 253_402_300_799)
+
       {:ok, "GET", org_path(agent, "/channels/#{channel_id}/entries"), [query: query]}
     end
   end

@@ -1,4 +1,4 @@
-import { Component, createEffect, createSignal, For, Show } from 'solid-js';
+import { Component, createEffect, createSignal, For, on, Show } from 'solid-js';
 import { BsPlus, BsPencil, BsKey } from 'solid-icons/bs';
 import { AiOutlineDelete, AiOutlineStop } from 'solid-icons/ai';
 import {
@@ -91,26 +91,59 @@ const AgentsPage: Component = () => {
   } | null>(null);
   const [pendingConfirm, setPendingConfirm] =
     createSignal<PendingConfirm>(null);
+  let agentsRequestSequence = 0;
 
-  const loadAgents = async () => {
-    const organizationId = orgId();
-    if (!organizationId || !canView()) return;
+  const loadAgents = async (organizationId = orgId()) => {
+    const requestSequence = ++agentsRequestSequence;
+    if (!organizationId || !canView()) {
+      setAgents([]);
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
     try {
-      setAgents(await AgentsService.list(organizationId));
+      const result = await AgentsService.list(organizationId);
+      if (
+        requestSequence === agentsRequestSequence &&
+        organizationId === orgId() &&
+        canView()
+      ) {
+        setAgents(result);
+      }
     } catch (error) {
-      toast.error(t('agents.errors.loadFailed'));
+      if (
+        requestSequence === agentsRequestSequence &&
+        organizationId === orgId() &&
+        canView()
+      ) {
+        toast.error(t('agents.errors.loadFailed'));
+      }
     } finally {
-      setLoading(false);
+      if (
+        requestSequence === agentsRequestSequence &&
+        organizationId === orgId() &&
+        canView()
+      ) {
+        setLoading(false);
+      }
     }
   };
 
-  createEffect(() => {
-    if (orgId() && canView()) {
-      loadAgents();
-    }
-  });
+  createEffect(
+    on(
+      () => [orgId(), canView()] as const,
+      ([organizationId, permitted]) => {
+        setAgents([]);
+        if (permitted) {
+          loadAgents(organizationId);
+        } else {
+          agentsRequestSequence += 1;
+          setLoading(false);
+        }
+      }
+    )
+  );
 
   const roleLabel = (role: OrganizationRole) =>
     ROLE_LABEL_KEYS[role] ? t(ROLE_LABEL_KEYS[role]) : role;

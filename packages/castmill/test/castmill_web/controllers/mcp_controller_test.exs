@@ -3,6 +3,8 @@ defmodule CastmillWeb.MCPControllerTest do
 
   import Castmill.NetworksFixtures
   import Castmill.OrganizationsFixtures
+  import Castmill.PlaylistsFixtures
+  import Castmill.ChannelsFixtures
 
   alias Castmill.Agents
   alias Castmill.Organizations
@@ -249,6 +251,96 @@ defmodule CastmillWeb.MCPControllerTest do
              ]
     end
 
+    test "playlist item changes require update access to an owned playlist", %{
+      organization: organization
+    } do
+      playlist = playlist_fixture(%{organization_id: organization.id})
+
+      {:ok, _guest, guest_secret} =
+        Agents.create_agent(organization.id, %{"name" => "Guest", "role" => "guest"})
+
+      denied =
+        call_tool(guest_secret, "add_playlist_item", %{
+          "playlist_id" => playlist.id,
+          "widget_id" => 1,
+          "duration" => 10
+        })
+
+      assert denied["isError"]
+      assert hd(denied["content"])["text"] =~ "403"
+
+      other = organization_fixture()
+      Castmill.Quotas.add_quota_to_organization(other.id, :playlists, 10)
+      foreign_playlist = playlist_fixture(%{organization_id: other.id})
+      {:ok, _admin, admin_secret} =
+        Agents.create_agent(organization.id, %{"name" => "Admin agent", "role" => "admin"})
+
+      denied =
+        call_tool(admin_secret, "add_playlist_item", %{
+          "playlist_id" => foreign_playlist.id,
+          "widget_id" => 1,
+          "duration" => 10
+        })
+
+      assert denied["isError"]
+      assert hd(denied["content"])["text"] =~ "403"
+
+      denied =
+        call_tool(admin_secret, "api_request", %{
+          "method" => "POST",
+          "path" => "/playlists/#{foreign_playlist.id}/items",
+          "body" => %{}
+        })
+
+      assert denied["isError"]
+      assert hd(denied["content"])["text"] =~ "403"
+    end
+
+    test "resource IDs must belong to the organization in the dashboard URL", %{
+      organization: organization
+    } do
+      other = organization_fixture()
+      Castmill.Quotas.add_quota_to_organization(other.id, :playlists, 10)
+      foreign_playlist = playlist_fixture(%{organization_id: other.id})
+      {:ok, _admin, admin_secret} =
+        Agents.create_agent(organization.id, %{"name" => "Admin agent", "role" => "admin"})
+
+      result =
+        call_tool(admin_secret, "get_resource", %{
+          "resource_type" => "playlists",
+          "id" => foreign_playlist.id
+        })
+
+      assert result["isError"]
+      assert hd(result["content"])["text"] =~ "403"
+
+      result =
+        call_tool(admin_secret, "api_request", %{
+          "method" => "PUT",
+          "path" => "/playlists/#{foreign_playlist.id}",
+          "body" => %{"update" => %{"name" => "Changed"}}
+        })
+
+      assert result["isError"]
+      assert hd(result["content"])["text"] =~ "403"
+      assert Castmill.Resources.get_playlist_basic(foreign_playlist.id).organization_id == other.id
+      assert organization.id != other.id
+    end
+
+    test "listing channel entries without date bounds uses defaults", %{
+      organization: organization
+    } do
+      channel = channel_fixture(%{organization_id: organization.id})
+
+      {:ok, _guest, guest_secret} =
+        Agents.create_agent(organization.id, %{"name" => "Guest", "role" => "guest"})
+
+      result =
+        call_tool(guest_secret, "list_channel_entries", %{"channel_id" => channel.id})
+
+      refute result["isError"]
+    end
+
     test "secrets in arguments are never stored in the activity log", %{
       secret: secret,
       agent: agent,
@@ -264,6 +356,7 @@ defmodule CastmillWeb.MCPControllerTest do
       assert action.arguments["body"]["credentials"] == "[REDACTED]"
       assert action.arguments["body"]["note"] == "kept"
       refute Jason.encode!(action.arguments) =~ "very-secret"
+      refute (action.error || "") =~ "very-secret"
     end
 
     test "malformed query parameters are tool errors", %{secret: secret} do

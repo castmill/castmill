@@ -1465,7 +1465,7 @@
     "revoked": "자격 증명이 취소되었습니다",
     "copied": "클립보드에 복사됨",
     "copy": "복사",
-    "secretTitle": "{name}의 자격 증명",
+    "secretTitle": "{{name}}의 자격 증명",
     "secretWarning": "지금 이 시크릿을 복사하세요. 보안상의 이유로 다시 표시되지 않습니다.",
     "secretDone": "시크릿을 저장했습니다",
     "tabs": {
@@ -1475,16 +1475,16 @@
     },
     "confirm": {
       "rotateTitle": "자격 증명 교체",
-      "rotateMessage": "{name}에 대한 새 시크릿이 생성됩니다. 현재 시크릿은 즉시 작동을 멈춥니다.",
+      "rotateMessage": "{{name}}에 대한 새 시크릿이 생성됩니다. 현재 시크릿은 즉시 작동을 멈춥니다.",
       "revokeTitle": "자격 증명 취소",
-      "revokeMessage": "새 자격 증명이 생성될 때까지 {name}은(는) 연결할 수 없습니다.",
+      "revokeMessage": "새 자격 증명이 생성될 때까지 {{name}}은(는) 연결할 수 없습니다.",
       "deleteTitle": "에이전트 삭제",
-      "deleteMessage": "{name}을(를) 삭제하시겠습니까? 자격 증명과 활동 로그가 영구적으로 삭제됩니다."
+      "deleteMessage": "{{name}}을(를) 삭제하시겠습니까? 자격 증명과 활동 로그가 영구적으로 삭제됩니다."
     },
     "errors": {
       "loadFailed": "에이전트를 불러오지 못했습니다",
-      "saveFailed": "에이전트를 저장하지 못했습니다: {error}",
-      "actionFailed": "작업 실패: {error}",
+      "saveFailed": "에이전트를 저장하지 못했습니다: {{error}}",
+      "actionFailed": "작업 실패: {{error}}",
       "copyFailed": "클립보드에 복사할 수 없습니다",
       "loadActionsFailed": "활동 로그를 불러오지 못했습니다"
     },

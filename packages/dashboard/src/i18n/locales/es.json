@@ -1466,7 +1466,7 @@
     "revoked": "Credenciales revocadas",
     "copied": "Copiado al portapapeles",
     "copy": "Copiar",
-    "secretTitle": "Credenciales de {name}",
+    "secretTitle": "Credenciales de {{name}}",
     "secretWarning": "Copia este secreto ahora. Por motivos de seguridad no se volverá a mostrar.",
     "secretDone": "He guardado el secreto",
     "tabs": {
@@ -1476,16 +1476,16 @@
     },
     "confirm": {
       "rotateTitle": "Rotar credenciales",
-      "rotateMessage": "Se generará un nuevo secreto para {name}. El secreto actual dejará de funcionar inmediatamente.",
+      "rotateMessage": "Se generará un nuevo secreto para {{name}}. El secreto actual dejará de funcionar inmediatamente.",
       "revokeTitle": "Revocar credenciales",
-      "revokeMessage": "{name} no podrá conectarse hasta que se generen nuevas credenciales.",
+      "revokeMessage": "{{name}} no podrá conectarse hasta que se generen nuevas credenciales.",
       "deleteTitle": "Eliminar agente",
-      "deleteMessage": "¿Eliminar {name}? Sus credenciales y su registro de actividad se eliminarán de forma permanente."
+      "deleteMessage": "¿Eliminar {{name}}? Sus credenciales y su registro de actividad se eliminarán de forma permanente."
     },
     "errors": {
       "loadFailed": "Error al cargar los agentes",
-      "saveFailed": "Error al guardar el agente: {error}",
-      "actionFailed": "La acción falló: {error}",
+      "saveFailed": "Error al guardar el agente: {{error}}",
+      "actionFailed": "La acción falló: {{error}}",
       "copyFailed": "No se pudo copiar al portapapeles",
       "loadActionsFailed": "Error al cargar el registro de actividad"
     },

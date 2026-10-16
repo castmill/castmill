@@ -1460,7 +1460,7 @@
     "revoked": "Credentials revoked",
     "copied": "Copied to clipboard",
     "copy": "Copy",
-    "secretTitle": "Credentials for {name}",
+    "secretTitle": "Credentials for {{name}}",
     "secretWarning": "Copy this secret now. For security reasons it will not be shown again.",
     "secretDone": "I have saved the secret",
     "tabs": {
@@ -1470,16 +1470,16 @@
     },
     "confirm": {
       "rotateTitle": "Rotate credentials",
-      "rotateMessage": "A new secret will be generated for {name}. The current secret stops working immediately.",
+      "rotateMessage": "A new secret will be generated for {{name}}. The current secret stops working immediately.",
       "revokeTitle": "Revoke credentials",
-      "revokeMessage": "{name} will no longer be able to connect until new credentials are generated.",
+      "revokeMessage": "{{name}} will no longer be able to connect until new credentials are generated.",
       "deleteTitle": "Delete agent",
-      "deleteMessage": "Delete {name}? Its credentials and activity log will be removed permanently."
+      "deleteMessage": "Delete {{name}}? Its credentials and activity log will be removed permanently."
     },
     "errors": {
       "loadFailed": "Failed to load agents",
-      "saveFailed": "Failed to save agent: {error}",
-      "actionFailed": "Action failed: {error}",
+      "saveFailed": "Failed to save agent: {{error}}",
+      "actionFailed": "Action failed: {{error}}",
       "copyFailed": "Could not copy to clipboard",
       "loadActionsFailed": "Failed to load the activity log"
     },

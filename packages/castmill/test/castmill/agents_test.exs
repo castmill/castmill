@@ -154,6 +154,7 @@ defmodule Castmill.AgentsTest do
       {:ok, agent, _} = Agents.create_agent(organization.id, %{"name" => "Bot"})
 
       assert {:error, %Ecto.Changeset{}} = Agents.update_agent(agent, %{"name" => ""})
+      assert {:error, %Ecto.Changeset{}} = Agents.update_agent(agent, %{"name" => nil})
       assert {:error, :invalid_role} = Agents.update_agent(agent, %{"role" => "owner"})
     end
   end

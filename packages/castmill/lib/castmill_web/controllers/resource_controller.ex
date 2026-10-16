@@ -38,6 +38,26 @@ defmodule CastmillWeb.ResourceController do
   end
 
   def check_access(actor_id, action, %{
+        "id" => id,
+        "organization_id" => organization_id,
+        "resources" => resource_type
+      })
+      when action in [:show, :update, :delete] and
+             resource_type in ["medias", "playlists", "channels", "layouts"] do
+    resource =
+      case resource_type do
+        "medias" -> Castmill.Resources.get_media(id)
+        "playlists" -> Castmill.Resources.get_playlist_basic(id)
+        "channels" -> Castmill.Resources.get_channel(id)
+        "layouts" -> Castmill.Resources.get_layout(id)
+      end
+
+    {:ok,
+     not is_nil(resource) and resource.organization_id == organization_id and
+       Organizations.has_access(organization_id, actor_id, resource_type, action)}
+  end
+
+  def check_access(actor_id, action, %{
         "organization_id" => organization_id,
         "channel_id" => channel_id
       })
@@ -56,9 +76,14 @@ defmodule CastmillWeb.ResourceController do
   end
 
   def check_access(actor_id, :list_channel_entries, %{
-        "organization_id" => organization_id
+        "organization_id" => organization_id,
+        "channel_id" => channel_id
       }) do
-    {:ok, Organizations.has_any_role?(organization_id, actor_id, [:admin, :member, :guest])}
+    channel = Castmill.Resources.get_channel(channel_id)
+
+    {:ok,
+     not is_nil(channel) and channel.organization_id == organization_id and
+       Organizations.has_any_role?(organization_id, actor_id, [:admin, :member, :guest])}
   end
 
   def check_access(actor_id, action, %{

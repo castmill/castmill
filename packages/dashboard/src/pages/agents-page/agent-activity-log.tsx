@@ -28,23 +28,51 @@ export const AgentActivityLog: Component<{
   const [status, setStatus] = createSignal<'success' | 'error' | null>(null);
   const [loading, setLoading] = createSignal(false);
   const [expanded, setExpanded] = createSignal<number | null>(null);
+  let requestSequence = 0;
+  let lastQueryKey = '';
 
   const load = async () => {
-    if (!props.organizationId) return;
+    const organizationId = props.organizationId;
+    const query = {
+      agentId: agentId() ?? undefined,
+      status: status() ?? undefined,
+      page: page(),
+      pageSize: PAGE_SIZE,
+    };
+    const queryKey = JSON.stringify([
+      organizationId,
+      query.agentId,
+      query.status,
+      query.page,
+    ]);
+    const requestId = ++requestSequence;
+
+    if (queryKey !== lastQueryKey) {
+      lastQueryKey = queryKey;
+      setActions([]);
+      setCount(0);
+      setExpanded(null);
+    }
+
+    if (!organizationId) {
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     try {
-      const result = await AgentsService.listActions(props.organizationId, {
-        agentId: agentId() ?? undefined,
-        status: status() ?? undefined,
-        page: page(),
-        pageSize: PAGE_SIZE,
-      });
+      const result = await AgentsService.listActions(organizationId, query);
+      if (requestId !== requestSequence) return;
       setActions(result.data);
       setCount(result.count);
     } catch (error) {
-      toast.error(t('agents.errors.loadActionsFailed'));
+      if (requestId === requestSequence) {
+        toast.error(t('agents.errors.loadActionsFailed'));
+      }
     } finally {
-      setLoading(false);
+      if (requestId === requestSequence) {
+        setLoading(false);
+      }
     }
   };
 
@@ -122,16 +150,22 @@ export const AgentActivityLog: Component<{
             <For each={actions()}>
               {(action) => (
                 <>
-                  <tr
-                    class={styles.clickableRow}
-                    onClick={() =>
-                      setExpanded(expanded() === action.id ? null : action.id)
-                    }
-                  >
+                  <tr>
                     <td>{formatTime(action.inserted_at)}</td>
                     <td>{action.agent_name}</td>
                     <td>
-                      <code>{action.tool}</code>
+                      <button
+                        type="button"
+                        class={styles.toolDisclosure}
+                        aria-expanded={expanded() === action.id}
+                        onClick={() =>
+                          setExpanded(
+                            expanded() === action.id ? null : action.id
+                          )
+                        }
+                      >
+                        <code>{action.tool}</code>
+                      </button>
                     </td>
                     <td class={styles.requestCell}>
                       <Show when={action.method}>

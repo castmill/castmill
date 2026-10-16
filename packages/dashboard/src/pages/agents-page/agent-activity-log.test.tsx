@@ -106,8 +106,12 @@ describe('AgentActivityLog', () => {
     });
     renderLog();
 
-    const cell = await screen.findByText('delete_resource');
-    fireEvent.click(cell);
+    const disclosure = await screen.findByRole('button', {
+      name: 'delete_resource',
+    });
+    expect(disclosure.getAttribute('aria-expanded')).toBe('false');
+    fireEvent.click(disclosure);
+    expect(disclosure.getAttribute('aria-expanded')).toBe('true');
 
     await waitFor(() =>
       expect(
@@ -151,5 +155,34 @@ describe('AgentActivityLog', () => {
         'Failed to load the activity log'
       )
     );
+  });
+
+  it('ignores results from an earlier filter request', async () => {
+    let resolveFirst!: (result: { data: typeof actions; count: number }) => void;
+    vi.mocked(AgentsService.listActions)
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveFirst = resolve;
+          })
+      )
+      .mockResolvedValueOnce({ data: [], count: 0 });
+    renderLog();
+
+    await waitFor(() =>
+      expect(AgentsService.listActions).toHaveBeenCalledTimes(1)
+    );
+    fireEvent.change(document.querySelectorAll('select')[1], {
+      target: { value: 'error' },
+    });
+    await waitFor(() =>
+      expect(AgentsService.listActions).toHaveBeenCalledTimes(2)
+    );
+    resolveFirst({ data: actions, count: actions.length });
+
+    await waitFor(() =>
+      expect(screen.getByText('No agent activity yet.')).toBeTruthy()
+    );
+    expect(screen.queryByText('delete_resource')).toBeNull();
   });
 });

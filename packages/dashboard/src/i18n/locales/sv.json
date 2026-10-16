@@ -1460,7 +1460,7 @@
     "revoked": "Inloggningsuppgifter återkallade",
     "copied": "Kopierat till urklipp",
     "copy": "Kopiera",
-    "secretTitle": "Inloggningsuppgifter för {name}",
+    "secretTitle": "Inloggningsuppgifter för {{name}}",
     "secretWarning": "Kopiera hemligheten nu. Av säkerhetsskäl visas den inte igen.",
     "secretDone": "Jag har sparat hemligheten",
     "tabs": {
@@ -1470,16 +1470,16 @@
     },
     "confirm": {
       "rotateTitle": "Rotera inloggningsuppgifter",
-      "rotateMessage": "En ny hemlighet genereras för {name}. Den nuvarande hemligheten slutar fungera omedelbart.",
+      "rotateMessage": "En ny hemlighet genereras för {{name}}. Den nuvarande hemligheten slutar fungera omedelbart.",
       "revokeTitle": "Återkalla inloggningsuppgifter",
-      "revokeMessage": "{name} kan inte ansluta förrän nya inloggningsuppgifter har genererats.",
+      "revokeMessage": "{{name}} kan inte ansluta förrän nya inloggningsuppgifter har genererats.",
       "deleteTitle": "Ta bort agent",
-      "deleteMessage": "Ta bort {name}? Dess inloggningsuppgifter och aktivitetslogg tas bort permanent."
+      "deleteMessage": "Ta bort {{name}}? Dess inloggningsuppgifter och aktivitetslogg tas bort permanent."
     },
     "errors": {
       "loadFailed": "Det gick inte att läsa in agenter",
-      "saveFailed": "Det gick inte att spara agenten: {error}",
-      "actionFailed": "Åtgärden misslyckades: {error}",
+      "saveFailed": "Det gick inte att spara agenten: {{error}}",
+      "actionFailed": "Åtgärden misslyckades: {{error}}",
       "copyFailed": "Det gick inte att kopiera till urklipp",
       "loadActionsFailed": "Det gick inte att läsa in aktivitetsloggen"
     },
