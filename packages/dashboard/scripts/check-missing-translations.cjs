@@ -86,6 +86,9 @@ const ALLOWED_IDENTICAL_STRINGS = new Set([
   'Contact', // Cognate in French
   'Administrator', // Cognate in German
   'Timers', // Cognate in Swedish
+  'Agent', // Cognate in Swedish, German, French
+  'Agents', // Cognate in French
+  'Arguments', // Cognate in French
   // Widget names that are internationally recognized / same across languages
   'Video', // Universal loanword in Spanish, Swedish, German, French
   'Web', // Universal technical term in Spanish, German, French

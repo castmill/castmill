@@ -144,6 +144,20 @@ defmodule CastmillWeb.Router do
     plug(:accepts, ["json"])
   end
 
+  # Model Context Protocol (MCP) server for AI agents.
+  # Authenticated with agent credentials (see CastmillWeb.MCPController).
+  pipeline :mcp do
+    plug(:put_secure_browser_headers)
+  end
+
+  scope "/mcp", CastmillWeb do
+    pipe_through(:mcp)
+
+    post("/", MCPController, :message)
+    get("/", MCPController, :method_not_allowed)
+    delete("/", MCPController, :method_not_allowed)
+  end
+
   # Public API endpoints (no auth, no pipeline): /api/health for load balancer probes and /api/version for version/diagnostic info
   scope "/api", CastmillWeb do
     get("/health", HealthController, :check)
@@ -445,6 +459,29 @@ defmodule CastmillWeb.Router do
       OrganizationController,
       :update_widget
     )
+
+    # AI agents of the organization (MCP access) and their activity log.
+    # Must be declared before the generic organization resources routes.
+    get("/organizations/:organization_id/agents", AgentController, :index)
+    post("/organizations/:organization_id/agents", AgentController, :create)
+    get("/organizations/:organization_id/agents/:id", AgentController, :show)
+    patch("/organizations/:organization_id/agents/:id", AgentController, :update)
+    put("/organizations/:organization_id/agents/:id", AgentController, :update)
+    delete("/organizations/:organization_id/agents/:id", AgentController, :delete)
+
+    post(
+      "/organizations/:organization_id/agents/:agent_id/credentials",
+      AgentController,
+      :rotate_credentials
+    )
+
+    delete(
+      "/organizations/:organization_id/agents/:agent_id/credentials",
+      AgentController,
+      :revoke_credentials
+    )
+
+    get("/organizations/:organization_id/agent-actions", AgentController, :list_actions)
 
     # List all the users in the organization
     get("/organizations/:organization_id/members", OrganizationController, :list_members)

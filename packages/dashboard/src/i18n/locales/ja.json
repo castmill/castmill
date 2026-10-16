@@ -623,7 +623,8 @@
     "networkSettings": "設定",
     "networkOrganizations": "組織",
     "networkUsers": "ユーザーと招待",
-    "tags": "タグ"
+    "tags": "タグ",
+    "agents": "エージェント"
   },
   "channels": {
     "title": "チャンネル",
@@ -1441,5 +1442,76 @@
     "savedOffline": "スケジュールを保存しました。デバイスはオフラインです — 再接続時にタイマーが送信されます。",
     "loadError": "スケジュールの読み込みエラー",
     "saveError": "スケジュールの保存エラー"
+  },
+  "agents": {
+    "title": "AIエージェント",
+    "description": "AIエージェントは、MCPサーバーを通じてCastmillを操作する組織メンバーです。同じロールのユーザーと同じ権限を持ち、すべての操作が記録されます。",
+    "newAgent": "新しいエージェント",
+    "editAgent": "エージェントを編集",
+    "formDescription": "ロールによって、エージェントがこの組織で実行できる操作が決まります。",
+    "namePlaceholder": "例：コンテンツアシスタント",
+    "descriptionPlaceholder": "このエージェントの用途は何ですか？",
+    "empty": "エージェントはまだありません。AIアシスタントをCastmillに接続するには作成してください。",
+    "noAccess": "エージェントを表示できるのは組織の管理者とマネージャーのみです。",
+    "credentials": "認証情報",
+    "credentialsRevoked": "取り消し済み",
+    "lastUsed": "最終使用",
+    "neverUsed": "なし",
+    "rotate": "認証情報をローテーション",
+    "revoke": "認証情報を取り消す",
+    "created": "エージェントを作成しました",
+    "updated": "エージェントを更新しました",
+    "deleted": "エージェントを削除しました",
+    "rotated": "認証情報をローテーションしました",
+    "revoked": "認証情報を取り消しました",
+    "copied": "クリップボードにコピーしました",
+    "copy": "コピー",
+    "secretTitle": "{{name}} の認証情報",
+    "secretWarning": "今すぐこのシークレットをコピーしてください。セキュリティ上の理由から再表示されません。",
+    "secretDone": "シークレットを保存しました",
+    "tabs": {
+      "agents": "エージェント",
+      "activity": "アクティビティログ",
+      "setup": "セットアップ手順"
+    },
+    "confirm": {
+      "rotateTitle": "認証情報をローテーション",
+      "rotateMessage": "{{name}} の新しいシークレットが生成されます。現在のシークレットは直ちに無効になります。",
+      "revokeTitle": "認証情報を取り消す",
+      "revokeMessage": "新しい認証情報が生成されるまで、{{name}} は接続できなくなります。",
+      "deleteTitle": "エージェントを削除",
+      "deleteMessage": "{{name}} を削除しますか？認証情報とアクティビティログは完全に削除されます。"
+    },
+    "errors": {
+      "loadFailed": "エージェントの読み込みに失敗しました",
+      "saveFailed": "エージェントの保存に失敗しました：{{error}}",
+      "actionFailed": "操作に失敗しました：{{error}}",
+      "copyFailed": "クリップボードにコピーできませんでした",
+      "loadActionsFailed": "アクティビティログの読み込みに失敗しました"
+    },
+    "activity": {
+      "agent": "エージェント",
+      "allAgents": "すべてのエージェント",
+      "status": "ステータス",
+      "allStatuses": "すべてのステータス",
+      "success": "成功",
+      "error": "エラー",
+      "empty": "エージェントのアクティビティはまだありません。",
+      "tool": "ツール",
+      "request": "リクエスト",
+      "duration": "所要時間",
+      "arguments": "引数"
+    },
+    "integration": {
+      "intro": "エージェントは、Streamable HTTP経由のリモートサーバーに対応した任意のMCPクライアントでCastmillに接続できます。AuthorizationヘッダーでエージェントのシークレットをBearerトークンとして使用してください。",
+      "serverUrl": "MCPサーバーURL",
+      "securityNote": "エージェントのシークレットはパスワードと同様に扱い、ソース管理にコミットしないでください。シークレットが漏洩した場合は認証情報をローテーションしてください。",
+      "clients": {
+        "other": "その他のクライアント"
+      },
+      "steps": {
+        "other": "以下の設定でリモートMCPサーバーを構成してください。"
+      }
+    }
   }
 }

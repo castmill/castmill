@@ -122,7 +122,8 @@
     "networkSettings": "Einstellungen",
     "networkOrganizations": "Organisationen",
     "networkUsers": "Benutzer & Einladungen",
-    "tags": "Tags"
+    "tags": "Tags",
+    "agents": "Agenten"
   },
   "topbar": {
     "help": "Hilfe",
@@ -1435,5 +1436,76 @@
     "savedOffline": "Zeitplan gespeichert. Gerät ist offline — Timer werden bei Wiederverbindung gesendet.",
     "loadError": "Fehler beim Laden des Zeitplans",
     "saveError": "Fehler beim Speichern des Zeitplans"
+  },
+  "agents": {
+    "title": "KI-Agenten",
+    "description": "KI-Agenten sind Organisationsmitglieder, die Castmill über den MCP-Server steuern. Sie haben dieselben Berechtigungen wie ein Benutzer mit ihrer Rolle, und alle ihre Aktionen werden protokolliert.",
+    "newAgent": "Neuer Agent",
+    "editAgent": "Agent bearbeiten",
+    "formDescription": "Die Rolle bestimmt, was der Agent in dieser Organisation tun darf.",
+    "namePlaceholder": "z. B. Inhaltsassistent",
+    "descriptionPlaceholder": "Wofür wird dieser Agent verwendet?",
+    "empty": "Noch keine Agenten. Erstellen Sie einen, um einen KI-Assistenten mit Castmill zu verbinden.",
+    "noAccess": "Nur Administratoren und Manager der Organisation können Agenten sehen.",
+    "credentials": "Zugangsdaten",
+    "credentialsRevoked": "Widerrufen",
+    "lastUsed": "Zuletzt verwendet",
+    "neverUsed": "Nie",
+    "rotate": "Zugangsdaten erneuern",
+    "revoke": "Zugangsdaten widerrufen",
+    "created": "Agent erstellt",
+    "updated": "Agent aktualisiert",
+    "deleted": "Agent gelöscht",
+    "rotated": "Zugangsdaten erneuert",
+    "revoked": "Zugangsdaten widerrufen",
+    "copied": "In die Zwischenablage kopiert",
+    "copy": "Kopieren",
+    "secretTitle": "Zugangsdaten für {{name}}",
+    "secretWarning": "Kopieren Sie dieses Geheimnis jetzt. Aus Sicherheitsgründen wird es nicht erneut angezeigt.",
+    "secretDone": "Ich habe das Geheimnis gespeichert",
+    "tabs": {
+      "agents": "Agenten",
+      "activity": "Aktivitätsprotokoll",
+      "setup": "Einrichtungsanleitung"
+    },
+    "confirm": {
+      "rotateTitle": "Zugangsdaten erneuern",
+      "rotateMessage": "Für {{name}} wird ein neues Geheimnis erzeugt. Das aktuelle Geheimnis funktioniert sofort nicht mehr.",
+      "revokeTitle": "Zugangsdaten widerrufen",
+      "revokeMessage": "{{name}} kann sich erst wieder verbinden, wenn neue Zugangsdaten erzeugt wurden.",
+      "deleteTitle": "Agent löschen",
+      "deleteMessage": "{{name}} löschen? Zugangsdaten und Aktivitätsprotokoll werden dauerhaft entfernt."
+    },
+    "errors": {
+      "loadFailed": "Agenten konnten nicht geladen werden",
+      "saveFailed": "Agent konnte nicht gespeichert werden: {{error}}",
+      "actionFailed": "Aktion fehlgeschlagen: {{error}}",
+      "copyFailed": "Kopieren in die Zwischenablage fehlgeschlagen",
+      "loadActionsFailed": "Aktivitätsprotokoll konnte nicht geladen werden"
+    },
+    "activity": {
+      "agent": "Agent",
+      "allAgents": "Alle Agenten",
+      "status": "Status",
+      "allStatuses": "Alle Status",
+      "success": "Erfolgreich",
+      "error": "Fehler",
+      "empty": "Noch keine Agentenaktivität.",
+      "tool": "Werkzeug",
+      "request": "Anfrage",
+      "duration": "Dauer",
+      "arguments": "Argumente"
+    },
+    "integration": {
+      "intro": "Agenten verbinden sich mit Castmill über jeden MCP-Client, der Remote-Server über Streamable HTTP unterstützt. Verwenden Sie das Agentengeheimnis als Bearer-Token im Authorization-Header.",
+      "serverUrl": "MCP-Server-URL",
+      "securityNote": "Behandeln Sie Agentengeheimnisse wie Passwörter: Committen Sie sie nicht in die Versionsverwaltung. Erneuern Sie die Zugangsdaten, wenn ein Geheimnis offengelegt wurde.",
+      "clients": {
+        "other": "Andere Clients"
+      },
+      "steps": {
+        "other": "Konfigurieren Sie einen Remote-MCP-Server mit diesen Einstellungen."
+      }
+    }
   }
 }

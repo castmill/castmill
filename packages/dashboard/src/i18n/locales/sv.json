@@ -618,7 +618,8 @@
     "networkSettings": "Inställningar",
     "networkOrganizations": "Organisationer",
     "networkUsers": "Användare & inbjudningar",
-    "tags": "Taggar"
+    "tags": "Taggar",
+    "agents": "Agenter"
   },
   "channels": {
     "title": "Kanaler",
@@ -1435,5 +1436,76 @@
     "savedOffline": "Schema sparat. Enheten är offline — timers skickas när den återansluter.",
     "loadError": "Fel vid inläsning av schema",
     "saveError": "Fel vid sparande av schema"
+  },
+  "agents": {
+    "title": "AI-agenter",
+    "description": "AI-agenter är organisationsmedlemmar som styr Castmill via MCP-servern. De har samma behörigheter som en användare med deras roll, och alla deras åtgärder loggas.",
+    "newAgent": "Ny agent",
+    "editAgent": "Redigera agent",
+    "formDescription": "Rollen avgör vad agenten får göra i den här organisationen.",
+    "namePlaceholder": "t.ex. Innehållsassistent",
+    "descriptionPlaceholder": "Vad används den här agenten till?",
+    "empty": "Inga agenter ännu. Skapa en för att ansluta en AI-assistent till Castmill.",
+    "noAccess": "Endast organisationens administratörer och chefer kan se agenter.",
+    "credentials": "Inloggningsuppgifter",
+    "credentialsRevoked": "Återkallade",
+    "lastUsed": "Senast använd",
+    "neverUsed": "Aldrig",
+    "rotate": "Rotera inloggningsuppgifter",
+    "revoke": "Återkalla inloggningsuppgifter",
+    "created": "Agent skapad",
+    "updated": "Agent uppdaterad",
+    "deleted": "Agent borttagen",
+    "rotated": "Inloggningsuppgifter roterade",
+    "revoked": "Inloggningsuppgifter återkallade",
+    "copied": "Kopierat till urklipp",
+    "copy": "Kopiera",
+    "secretTitle": "Inloggningsuppgifter för {{name}}",
+    "secretWarning": "Kopiera hemligheten nu. Av säkerhetsskäl visas den inte igen.",
+    "secretDone": "Jag har sparat hemligheten",
+    "tabs": {
+      "agents": "Agenter",
+      "activity": "Aktivitetslogg",
+      "setup": "Installationsinstruktioner"
+    },
+    "confirm": {
+      "rotateTitle": "Rotera inloggningsuppgifter",
+      "rotateMessage": "En ny hemlighet genereras för {{name}}. Den nuvarande hemligheten slutar fungera omedelbart.",
+      "revokeTitle": "Återkalla inloggningsuppgifter",
+      "revokeMessage": "{{name}} kan inte ansluta förrän nya inloggningsuppgifter har genererats.",
+      "deleteTitle": "Ta bort agent",
+      "deleteMessage": "Ta bort {{name}}? Dess inloggningsuppgifter och aktivitetslogg tas bort permanent."
+    },
+    "errors": {
+      "loadFailed": "Det gick inte att läsa in agenter",
+      "saveFailed": "Det gick inte att spara agenten: {{error}}",
+      "actionFailed": "Åtgärden misslyckades: {{error}}",
+      "copyFailed": "Det gick inte att kopiera till urklipp",
+      "loadActionsFailed": "Det gick inte att läsa in aktivitetsloggen"
+    },
+    "activity": {
+      "agent": "Agent",
+      "allAgents": "Alla agenter",
+      "status": "Status",
+      "allStatuses": "Alla statusar",
+      "success": "Lyckades",
+      "error": "Fel",
+      "empty": "Ingen agentaktivitet ännu.",
+      "tool": "Verktyg",
+      "request": "Begäran",
+      "duration": "Varaktighet",
+      "arguments": "Argument"
+    },
+    "integration": {
+      "intro": "Agenter ansluter till Castmill med valfri MCP-klient som stöder fjärrservrar via Streamable HTTP. Använd agentens hemlighet som Bearer-token i Authorization-huvudet.",
+      "serverUrl": "MCP-serverns URL",
+      "securityNote": "Behandla agenthemligheter som lösenord: checka inte in dem i versionshantering. Rotera inloggningsuppgifterna om en hemlighet har läckt.",
+      "clients": {
+        "other": "Andra klienter"
+      },
+      "steps": {
+        "other": "Konfigurera en fjärr-MCP-server med dessa inställningar."
+      }
+    }
   }
 }

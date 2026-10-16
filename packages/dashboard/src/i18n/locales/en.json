@@ -135,7 +135,8 @@
     "networkSettings": "Settings",
     "networkOrganizations": "Organizations",
     "networkUsers": "Users & Invitations",
-    "tags": "Tags"
+    "tags": "Tags",
+    "agents": "Agents"
   },
   "topbar": {
     "help": "Help",
@@ -1435,5 +1436,76 @@
     "savedOffline": "Schedule saved. Device is offline — timers will be sent when it reconnects.",
     "loadError": "Error loading schedule",
     "saveError": "Error saving schedule"
+  },
+  "agents": {
+    "title": "AI Agents",
+    "description": "AI agents are organization members that control Castmill through the MCP server. They have the same permissions as a user with their role, and all their actions are logged.",
+    "newAgent": "New agent",
+    "editAgent": "Edit agent",
+    "formDescription": "The role determines what the agent is allowed to do in this organization.",
+    "namePlaceholder": "e.g. Content assistant",
+    "descriptionPlaceholder": "What is this agent used for?",
+    "empty": "No agents yet. Create one to connect an AI assistant to Castmill.",
+    "noAccess": "Only organization admins and managers can view agents.",
+    "credentials": "Credentials",
+    "credentialsRevoked": "Revoked",
+    "lastUsed": "Last used",
+    "neverUsed": "Never",
+    "rotate": "Rotate credentials",
+    "revoke": "Revoke credentials",
+    "created": "Agent created",
+    "updated": "Agent updated",
+    "deleted": "Agent deleted",
+    "rotated": "Credentials rotated",
+    "revoked": "Credentials revoked",
+    "copied": "Copied to clipboard",
+    "copy": "Copy",
+    "secretTitle": "Credentials for {{name}}",
+    "secretWarning": "Copy this secret now. For security reasons it will not be shown again.",
+    "secretDone": "I have saved the secret",
+    "tabs": {
+      "agents": "Agents",
+      "activity": "Activity log",
+      "setup": "Setup instructions"
+    },
+    "confirm": {
+      "rotateTitle": "Rotate credentials",
+      "rotateMessage": "A new secret will be generated for {{name}}. The current secret stops working immediately.",
+      "revokeTitle": "Revoke credentials",
+      "revokeMessage": "{{name}} will no longer be able to connect until new credentials are generated.",
+      "deleteTitle": "Delete agent",
+      "deleteMessage": "Delete {{name}}? Its credentials and activity log will be removed permanently."
+    },
+    "errors": {
+      "loadFailed": "Failed to load agents",
+      "saveFailed": "Failed to save agent: {{error}}",
+      "actionFailed": "Action failed: {{error}}",
+      "copyFailed": "Could not copy to clipboard",
+      "loadActionsFailed": "Failed to load the activity log"
+    },
+    "activity": {
+      "agent": "Agent",
+      "allAgents": "All agents",
+      "status": "Status",
+      "allStatuses": "All statuses",
+      "success": "Success",
+      "error": "Error",
+      "empty": "No agent activity yet.",
+      "tool": "Tool",
+      "request": "Request",
+      "duration": "Duration",
+      "arguments": "Arguments"
+    },
+    "integration": {
+      "intro": "Agents connect to Castmill with any MCP client that supports remote servers over Streamable HTTP. Use the agent secret as a Bearer token in the Authorization header.",
+      "serverUrl": "MCP server URL",
+      "securityNote": "Treat agent secrets like passwords: do not commit them to source control. Rotate the credentials if a secret is exposed.",
+      "clients": {
+        "other": "Other clients"
+      },
+      "steps": {
+        "other": "Configure a remote MCP server with these settings."
+      }
+    }
   }
 }

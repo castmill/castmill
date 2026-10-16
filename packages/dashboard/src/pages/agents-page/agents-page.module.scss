@@ -1,0 +1,205 @@
+.agentsPage {
+  padding: 2em;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1em;
+  margin-bottom: 1.5em;
+
+  h1 {
+    margin: 0 0 0.25em;
+    font-size: 1.5em;
+    font-weight: 700;
+    color: var(--text-primary, #e5e7eb);
+  }
+}
+
+.muted {
+  color: var(--text-secondary, #9ca3af);
+  font-size: 0.9em;
+}
+
+.label {
+  font-weight: 600;
+  margin-right: 0.5em;
+}
+
+.empty {
+  text-align: center;
+  padding: 3em;
+  color: var(--text-secondary, #9ca3af);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9em;
+
+  th,
+  td {
+    text-align: start;
+    padding: 0.6em 0.75em;
+    border-bottom: 0.0625em solid var(--border-color, rgba(255, 255, 255, 0.1));
+    vertical-align: top;
+  }
+
+  th {
+    font-weight: 600;
+    color: var(--text-secondary, #9ca3af);
+  }
+
+  code {
+    font-size: 0.9em;
+  }
+}
+
+.agentName {
+  font-weight: 600;
+}
+
+.rowActions {
+  display: flex;
+  gap: 0.25em;
+}
+
+.statusSuccess {
+  color: var(--success-color, #22c55e);
+}
+
+.statusError {
+  color: var(--danger-color, #ef4444);
+}
+
+.toolDisclosure {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.errorText {
+  color: var(--danger-color, #ef4444);
+  white-space: pre-wrap;
+}
+
+.requestCell {
+  max-width: 24em;
+  overflow-wrap: anywhere;
+}
+
+.detailsRow pre {
+  max-height: 20em;
+  overflow: auto;
+  margin: 0.5em 0;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1em;
+  margin-bottom: 1em;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75em;
+  min-width: 28em;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75em;
+  margin-top: 1em;
+}
+
+.secretBox {
+  display: flex;
+  align-items: center;
+  gap: 0.75em;
+  margin-bottom: 1em;
+  padding: 0.75em;
+  border-radius: 0.5em;
+  background: var(--surface-secondary, rgba(255, 255, 255, 0.05));
+
+  code {
+    flex: 1;
+    overflow-wrap: anywhere;
+    user-select: all;
+  }
+}
+
+.instructions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75em;
+  max-width: 56em;
+}
+
+.urlRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5em;
+}
+
+.clientTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em;
+}
+
+.clientTab {
+  padding: 0.35em 0.85em;
+  border-radius: 1em;
+  border: 0.0625em solid var(--border-color, rgba(255, 255, 255, 0.2));
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.clientTabActive {
+  background: var(--primary-color, #3b82f6);
+  border-color: var(--primary-color, #3b82f6);
+  color: #fff;
+}
+
+.snippet {
+  position: relative;
+
+  pre {
+    margin: 0;
+    padding: 1em;
+    border-radius: 0.5em;
+    overflow: auto;
+    background: var(--surface-secondary, rgba(0, 0, 0, 0.3));
+    font-size: 0.85em;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+}
+
+.copyButton {
+  position: absolute;
+  top: 0.5em;
+  inset-inline-end: 0.5em;
+  padding: 0.25em 0.75em;
+  border-radius: 0.375em;
+  border: none;
+  cursor: pointer;
+  background: var(--primary-color, #3b82f6);
+  color: #fff;
+}
+
+.activityLog {
+  display: flex;
+  flex-direction: column;
+}
