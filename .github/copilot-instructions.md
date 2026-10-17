@@ -55,15 +55,70 @@ agents/
 - **Testing**: Vitest, React Testing Library, ExUnit
 - **Build**: Vite for frontend, Mix for backend
 
+### WebOS Native and Legacy Players
+
+Reusable WebOS runtime code belongs in
+`packages/platforms/webos-player/src/shared` and is exported through
+`@castmill/webos-player/shared`. The legacy adapter depends on that source
+subpath, never on the native app bundle. Do not introduce a webos-common package
+or a native-to-legacy runtime dependency. Keep shared imports independent of
+SCAP/native globals, app bootstrap, CSS, and legacy iframe bridge APIs; retain
+the import-boundary and no-SCAP import tests.
+
+Both players target Chrome 38 and must keep the two-loaded-video decoder budget,
+WebOS seek/readiness/stall recovery, one-argument WebSocket constructor, and
+MemoryCache instead of IndexedDB. Native persistence is for eligible public
+media only; protected resources, widget code, and channel data use authenticated
+XHR session blobs. Cold startup needs an online server. Never log auth headers,
+response bodies, or full credential-bearing media URLs.
+
+In the native player, only import SCAP-backed modules (`src/native`,
+`src/classes`) from code loaded after `window.castmillScapReady` resolves (the
+boot gate's dynamic app chunk). Keep the hardware ID as
+`sha256(wired || wifi MAC)` so it matches the legacy wrapper's registration.
+SCAP storage sizes are KB. Do not add player-scheduled reboots; on/off timers
+are managed from the dashboard.
+
+Before moving functionality, run the legacy regression suite. After changing
+shared code, run both players' `test:webos-coverage`, `typecheck`, lint, and
+build scripts. Coverage enforces 90% on shared/new integration code. Validate
+visible frames, decoder contention, loops, and channel changes on old physical
+WebOS hardware before release. Consult
+`agents/packages/player/LEGACY-PLAYER-COMPATIBILITY.md` and
+`packages/platforms/webos-player/README.md`.
+
 ## 🌍 Internationalization (i18n)
 
-**CRITICAL**: All user-facing text must be localized.
+**CRITICAL**: Localize user-facing text except in the English-only legacy
+adapter player.
 
-- **9 Languages**: English, Spanish, Swedish, German, French, Chinese, Arabic (RTL), Korean, Japanese
-- **100% Coverage Required**: CI validates all languages are complete
+- **Dashboard: 9 Languages**: English, Spanish, Swedish, German, French, Chinese, Arabic (RTL), Korean, Japanese
+- **Dashboard: 100% Coverage Required**: CI validates all languages are complete
 - **Before Commit**: Run `cd packages/dashboard && yarn check-translations`
 
 See `packages/dashboard/AGENTS.md` for complete i18n guide.
+
+**Legacy adapter exception**: UI strings in
+`packages/platforms/legacy-adapter-player/` must be English only. Do not add
+locale files, translation keys, or an i18n hook to that package. This exception
+does not change dashboard localization requirements.
+
+## Device Orientation
+
+- Device Details saves numeric clockwise `0 | 90 | 180 | 270` orientations,
+  including offline changes; reconcile the server preference on player reconnect.
+- Add native rotation through Machine's hook; otherwise use the shared Device
+  CSS playback wrapper. Never double-rotate or remount video elements.
+- Native WebOS uses Custom.Configuration.get/setNativePortraitMode, with 0 as
+  "off" and other angles as degree strings. Legacy WebOS sends numeric angles
+  through the embedding player's existing setRotation bridge. Native mode also
+  rotates shell UI; use its viewport without CSS rotation/dimension swapping.
+  Native/bridge errors and 10-second deadlines reject; do not silently fall back
+  after a native change or auto-reboot. OSD portrait mode is a different API.
+- Keep viewport clipping separate from orientation and use logical dimensions
+  for text fitting, pagination, and scrollers. Preserve Chrome 38 fallbacks.
+- All new dashboard orientation labels/status/errors must exist in all nine
+  locales. Saving desired orientation is not an application acknowledgement.
 
 ## 🔀 URL-Based Routing
 
@@ -104,17 +159,18 @@ yarn workspace website start
 - Write comprehensive tests (>90% coverage target)
 - Follow existing ESLint/Prettier configurations
 - Update `agents/` docs when making architectural changes
-- Localize all user-facing strings using the i18n system
-- Add translation keys to all 9 language files
+- Localize user-facing strings in localized packages using their i18n systems
+- Add dashboard translation keys to all 9 language files
 
 ### DON'T:
 - Modify `yarn.lock` manually
+- Remove the root `**/cliui/*` resolutions: Yarn 1 merges `@isaacs/cliui`'s `*-cjs` aliases with the real CommonJS packages, so `cliui` can otherwise receive ESM dependencies and break `yarn install`
 - Install packages without checking workspace compatibility
 - Ignore TypeScript errors
 - Make changes without understanding cross-package impacts
 - Skip writing tests
 - Create unnecessary files in the root directory
-- Commit hardcoded user-facing strings
+- Commit hardcoded user-facing strings in localized packages
 
 ## 🎯 Focus Areas
 
@@ -122,7 +178,7 @@ When providing assistance, prioritize:
 
 1. **Code correctness** - TypeScript compliance and proper error handling
 2. **Test coverage** - Comprehensive tests with >90% coverage target
-3. **Internationalization** - Always localize user-facing text
+3. **Internationalization** - Localize dashboard UI; keep the legacy adapter in English
 4. **URL-based routing** - Maintain organization context in URLs
 5. **Architecture consistency** - Maintain existing patterns
 6. **Performance** - Consider build times and runtime efficiency

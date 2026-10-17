@@ -1,3 +1,4 @@
+/* oxlint-disable no-unused-expressions */
 import { expect } from 'chai';
 import { describe, it } from 'mocha';
 import { Model } from '../src/widgets/template/data/model'; // Adjust this import based on your actual file structure

@@ -15,6 +15,15 @@ The server is implemented in [Elixir](https://elixir-lang.org/) using the [Phoen
 Now you can visit [`localhost:4000`](http://localhost:4000) from your browser to access the Device server, or
 [`localhost:4000`](http://localhost:4000/admin) to access the admin interface.
 
+Media files retain their storage URL in the database. When the server returns media
+information, it generates player-facing URLs using `MEDIA_PUBLIC_BASE_URL` if set,
+or the current Phoenix endpoint (local storage) or S3 endpoint (S3 storage) otherwise.
+Changing this setting or the endpoint host does not require re-uploading media; restart
+the server with the new configuration and reconnect players to refresh their media
+information. The selected URL must be reachable from the players' network. For S3,
+the public base URL must serve objects from the bucket root (without the bucket name
+in the path).
+
 ## Learn more
 
   * Official website: https://castmill.com/

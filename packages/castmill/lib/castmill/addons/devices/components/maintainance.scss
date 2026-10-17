@@ -51,4 +51,10 @@
     align-items: center;
     color: red;
   }
+
+  .unsupported-message {
+    display: block;
+    margin-top: 0.4em;
+    color: var(--color-warning, #9a6700);
+  }
 }

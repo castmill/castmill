@@ -7,6 +7,24 @@ on:
     branches: [main, next]
 
 jobs:
+  lint_workspaces:
+    runs-on: ubuntu-latest
+
+    name: Lint all workspaces with node@24
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Use Node.js current
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: 'yarn'
+      - name: Install workspace dependencies
+        run: yarn install --ignore-engines --frozen-lockfile --non-interactive
+      - name: Lint all workspaces
+        run: yarn lint:all
+
   test_castmill:
     runs-on: ubuntu-latest
 
@@ -269,15 +287,11 @@ jobs:
       - name: Check formatting
         run: yarn format:check
 
-      # Step 8: Lint
-      - name: Lint code
-        run: yarn lint
-
-      # Step 9: Run unit tests
+      # Step 8: Run unit tests
       - name: Run unit tests
         run: yarn test
 
-      # Step 10: Run Android Java unit tests
+      # Step 9: Run Android Java unit tests
       - name: Run Android Java unit tests
         if: matrix.platform.name == 'android-player'
         run: |

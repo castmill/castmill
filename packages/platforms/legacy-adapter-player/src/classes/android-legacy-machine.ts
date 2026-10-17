@@ -1,6 +1,7 @@
 import { DeviceInfo, SettingKey } from '@castmill/device';
 import { LegacyMachine, PING_INTERVAL } from './legacy-machine';
 import {
+  initAndroidLegacyApi,
   getPlayerData,
   getItem,
   setItem,
@@ -19,6 +20,7 @@ export const UNSET_VALUE = 'YES';
 
 export class AndroidLegacyMachine implements LegacyMachine {
   initLegacy(): void {
+    initAndroidLegacyApi();
     setInterval(() => {
       logger.log('Sending heartbeat');
       sendHeartbeat();
@@ -88,7 +90,6 @@ export class AndroidLegacyMachine implements LegacyMachine {
     undefined | { latitude: number; longitude: number }
   > {
     logger.log('getLocation');
-    return undefined;
     try {
       const location = await new Promise<GeolocationPosition>(
         (resolve, reject) => {
@@ -118,11 +119,15 @@ export class AndroidLegacyMachine implements LegacyMachine {
       navigator.userAgent.match(/Chrome\/([0-9.]+)/)?.[1] ?? undefined;
 
     const playerData = await getPlayerData();
+    const platform = playerData.platform || 'Android';
+    const os = playerData.android_version
+      ? `${platform} ${playerData.android_version}`
+      : platform;
 
     return {
-      appType: 'Legacy adapter',
+      appType: 'Legacy Android adapter',
       appVersion: playerData.player_version,
-      os: 'Legacy adapter',
+      os,
       hardware: playerData.model,
       chromiumVersion,
       userAgent: navigator.userAgent,
@@ -134,7 +139,14 @@ export class AndroidLegacyMachine implements LegacyMachine {
    */
   async restart(): Promise<void> {
     logger.log('restart');
-    return restart();
+    const restartRequest = restart();
+
+    // Legacy firmware acknowledges its failed privileged restart attempt.
+    window.setTimeout(() => {
+      window.location.reload();
+    }, 1000);
+
+    return restartRequest;
   }
 
   /**

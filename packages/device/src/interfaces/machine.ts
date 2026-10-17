@@ -8,6 +8,27 @@ export interface DeviceInfo {
   v8Version?: string; // The version of the V8 engine if available e.g. 9.8.0
   nodeVersion?: string; // The version of the Node.js if available e.g. 16.13.0
   userAgent: string; // The user agent string
+  capabilities?: DeviceCapabilities;
+}
+
+export interface DeviceCapabilities {
+  restart: boolean;
+  quit: boolean;
+  reboot: boolean;
+  shutdown: boolean;
+  update: boolean;
+  updateFirmware: boolean;
+  orientation?: boolean;
+}
+
+export type Orientation = 0 | 90 | 180 | 270;
+
+export interface OrientationResult {
+  mode: 'native' | 'css';
+}
+
+export function isOrientation(value: unknown): value is Orientation {
+  return value === 0 || value === 90 || value === 180 || value === 270;
 }
 
 /**
@@ -105,9 +126,15 @@ export interface TelemetryData {
 
 // The keys of the settings that the machine can store. For type safety defined
 // as a union type.
-export type SettingKey = 'BASE_URL' | 'TIMERS' | 'TIMER_OFF'; // Add more keys as needed
+export type SettingKey = 'BASE_URL' | 'TIMERS' | 'TIMER_OFF' | 'ORIENTATION';
 
 export interface Machine {
+  /**
+   * Apply native content rotation, or explicitly select the device CSS path
+   * when native rotation is unsupported. Unexpected native failures reject.
+   */
+  setOrientation?(orientation: Orientation): Promise<OrientationResult>;
+
   /**
    * Get the the value of the setting with the given key.
    */

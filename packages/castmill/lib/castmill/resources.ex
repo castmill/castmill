@@ -182,7 +182,8 @@ defmodule Castmill.Resources do
     resolved_refs =
       resolve_widget_references(
         item.widget_config.widget.options_schema || %{},
-        original_options
+        original_options,
+        organization_id
       )
 
     merged_options = Map.merge(original_options, resolved_refs)
@@ -583,7 +584,7 @@ defmodule Castmill.Resources do
     )
   end
 
-  defp resolve_widget_references(schema, data) do
+  defp resolve_widget_references(schema, data, organization_id) do
     Enum.reduce(schema, %{}, fn {key, value}, acc ->
       case value do
         %{"type" => "ref", "collection" => collection} ->
@@ -592,11 +593,79 @@ defmodule Castmill.Resources do
           fetched_data = fetch_widget_reference(data, key, collection_name)
           Map.put(acc, key, fetched_data)
 
+        %{"type" => "layout-ref"} ->
+          Map.put(acc, key, resolve_layout_reference(Map.get(data, key), organization_id))
+
         _ ->
           acc
       end
     end)
   end
+
+  defp resolve_layout_reference(
+         %{"zonePlaylistMap" => zone_playlist_map} = layout_ref,
+         organization_id
+       )
+       when is_map(zone_playlist_map) do
+    resolved_zone_playlist_map =
+      Map.new(zone_playlist_map, fn {zone_id, assignment} ->
+        {zone_id, resolve_layout_zone_assignment(assignment, organization_id)}
+      end)
+
+    Map.put(layout_ref, "zonePlaylistMap", resolved_zone_playlist_map)
+  end
+
+  defp resolve_layout_reference(layout_ref, _organization_id), do: layout_ref
+
+  defp resolve_layout_zone_assignment(
+         %{"playlistId" => playlist_id} = assignment,
+         organization_id
+       ) do
+    case get_playlist_for_organization(playlist_id, organization_id) do
+      {:ok, _parsed_playlist_id, playlist} ->
+        Map.put(assignment, "playlist", playlist)
+
+      :error ->
+        Map.delete(assignment, "playlist")
+    end
+  end
+
+  defp resolve_layout_zone_assignment(playlist_id, organization_id)
+       when is_integer(playlist_id) do
+    case get_playlist_for_organization(playlist_id, organization_id) do
+      {:ok, parsed_playlist_id, playlist} ->
+        %{"playlistId" => parsed_playlist_id, "playlist" => playlist}
+
+      :error ->
+        %{"playlistId" => playlist_id}
+    end
+  end
+
+  defp resolve_layout_zone_assignment(playlist_id, organization_id) when is_binary(playlist_id) do
+    case get_playlist_for_organization(playlist_id, organization_id) do
+      {:ok, parsed_playlist_id, playlist} ->
+        %{"playlistId" => parsed_playlist_id, "playlist" => playlist}
+
+      :error ->
+        case parse_layout_playlist_id(playlist_id) do
+          {:ok, parsed_playlist_id} -> %{"playlistId" => parsed_playlist_id}
+          :error -> playlist_id
+        end
+    end
+  end
+
+  defp resolve_layout_zone_assignment(assignment, _organization_id), do: assignment
+
+  defp parse_layout_playlist_id(playlist_id) when is_integer(playlist_id), do: {:ok, playlist_id}
+
+  defp parse_layout_playlist_id(playlist_id) when is_binary(playlist_id) do
+    case Integer.parse(playlist_id) do
+      {parsed_playlist_id, ""} -> {:ok, parsed_playlist_id}
+      _ -> :error
+    end
+  end
+
+  defp parse_layout_playlist_id(_playlist_id), do: :error
 
   defp fetch_widget_reference(data, key, "medias") do
     case Map.get(data, key) do
@@ -621,6 +690,13 @@ defmodule Castmill.Resources do
   """
   def get_playlist_basic(id) do
     Repo.get(Playlist, id)
+  end
+
+  def get_playlist_basic(id, organization_id) do
+    from(p in Playlist,
+      where: p.id == ^id and p.organization_id == ^organization_id
+    )
+    |> Repo.one()
   end
 
   @doc """
@@ -787,9 +863,9 @@ defmodule Castmill.Resources do
         where:
           w.slug == "layout-widget" and
             fragment(
-              "EXISTS (SELECT 1 FROM jsonb_each(?->'layoutRef'->'zonePlaylistMap') AS kv WHERE (kv.value->>'playlistId')::integer = ?)",
+              "EXISTS (SELECT 1 FROM jsonb_each(?->'layoutRef'->'zonePlaylistMap') AS kv WHERE COALESCE(kv.value->>'playlistId', trim(both '\"' from kv.value::text)) = ?)",
               wc.options,
-              ^playlist_id
+              ^Integer.to_string(playlist_id)
             ),
         select: pi.playlist_id,
         distinct: true
@@ -832,6 +908,22 @@ defmodule Castmill.Resources do
     end
   end
 
+  @doc """
+  Validates that a referenced layout playlist exists in the same organization
+  and would not create a circular reference.
+  """
+  def validate_layout_playlist_reference(current_playlist_id, selected_playlist_id) do
+    current_id = to_integer(current_playlist_id)
+    selected_id = to_integer(selected_playlist_id)
+
+    with %Playlist{} = current_playlist <- get_playlist_basic(current_id),
+         %Playlist{} <- get_playlist_basic(selected_id, current_playlist.organization_id) do
+      validate_no_circular_reference(current_id, selected_id)
+    else
+      _ -> {:error, :invalid_playlist_reference}
+    end
+  end
+
   # Helper to convert string or integer to integer
   defp to_integer(id) when is_integer(id), do: id
 
@@ -839,6 +931,15 @@ defmodule Castmill.Resources do
     case Integer.parse(id) do
       {int_id, ""} -> int_id
       _ -> raise ArgumentError, "Invalid playlist ID: #{id}"
+    end
+  end
+
+  defp get_playlist_for_organization(playlist_id, organization_id) do
+    with {:ok, parsed_playlist_id} <- parse_layout_playlist_id(playlist_id),
+         %Playlist{} <- get_playlist_basic(parsed_playlist_id, organization_id) do
+      {:ok, parsed_playlist_id, get_playlist(parsed_playlist_id)}
+    else
+      _ -> :error
     end
   end
 
@@ -1567,66 +1668,62 @@ defmodule Castmill.Resources do
     end
   end
 
-  defp delete_file_from_storage(%Castmill.Files.File{uri: uri}) do
+  defp delete_file_from_storage(%Castmill.Files.File{uri: uri, organization_id: organization_id}) do
     case Application.get_env(:castmill, :file_storage) do
       :local ->
-        case get_local_file_path(uri) do
+        case get_local_file_path(uri, organization_id) do
           {:ok, file_path} -> File.rm(file_path)
           {:error, _reason} -> {:error, :invalid_path}
         end
 
       :s3 ->
-        {bucket, object_path} = get_s3_file_path(uri)
+        {bucket, object_path} = get_s3_file_path(uri, organization_id)
 
         ExAws.S3.delete_object(bucket, object_path)
         |> ExAws.request()
     end
   end
 
-  defp get_local_file_path(uri) do
-    # Assuming your URIs are built like "http://localhost:4000/medias/dst_path/filename"
-    # Strip off the "http://localhost:4000" and return the path that starts with "medias/..."
-
+  defp get_local_file_path(uri, organization_id) do
     base_directory = Path.join([Application.app_dir(:castmill), "priv", "static"])
+    path = URI.parse(uri).path || ""
 
-    uri
-    |> URI.parse()
-    |> then(fn %URI{path: path} ->
-      String.trim_leading(path, "/")
-    end)
-    |> (fn relative_path ->
-          full_path = Path.expand(relative_path, base_directory)
+    case String.split(path, "/medias/#{organization_id}/", parts: 2) do
+      [_, suffix] when suffix != "" ->
+        full_path = Path.expand("medias/#{organization_id}/#{suffix}", base_directory)
 
-          if String.starts_with?(full_path, base_directory) do
-            {:ok, full_path}
-          else
-            {:error, "Path traversal detected"}
-          end
-        end).()
+        if String.starts_with?(full_path, base_directory <> "/") do
+          {:ok, full_path}
+        else
+          {:error, "Path traversal detected"}
+        end
+
+      _ ->
+        {:error, "Invalid media path"}
+    end
   end
 
   @doc false
   def get_s3_file_path(uri) do
-    # Extract bucket and object path from a stored URI.
-    #
-    # Two modes:
-    # - Production (media_public_base_url set): CDN URL like "https://cdn.castmill.dev/org/media/file"
-    #   → bucket from AWS_S3_BUCKET env var, full path is the object key
-    # - Local dev (no base URL): S3/MinIO URL like "http://localhost:9000/bucket/org/media/file"
-    #   → bucket is the first path segment
     parsed = URI.parse(uri)
+    path = String.trim_leading(parsed.path, "/")
 
-    case Application.get_env(:castmill, :media_public_base_url) do
+    case System.get_env("AWS_S3_BUCKET") do
       nil ->
-        # Local dev: bucket is in the URL path
-        [_slash, bucket | object_parts] = String.split(parsed.path, "/", parts: 3)
-        {bucket, Enum.join(object_parts, "/")}
-
-      _base_url ->
-        # Production: bucket from env var, entire path is the object key
-        bucket = System.get_env("AWS_S3_BUCKET")
-        object_path = String.trim_leading(parsed.path, "/")
+        [bucket, object_path] = String.split(path, "/", parts: 2)
         {bucket, object_path}
+
+      bucket ->
+        {bucket, String.replace_prefix(path, "#{bucket}/", "")}
+    end
+  end
+
+  def get_s3_file_path(uri, organization_id) do
+    {bucket, path} = get_s3_file_path(uri)
+
+    case String.split("/#{path}", "/#{organization_id}/", parts: 2) do
+      [_, suffix] when suffix != "" -> {bucket, "#{organization_id}/#{suffix}"}
+      _ -> {bucket, path}
     end
   end
 

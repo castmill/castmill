@@ -924,6 +924,17 @@
     "translations": "翻訳"
   },
   "devices": {
+    "orientation": {
+      "label": "向き",
+      "help": "通常の向きから再生コンテンツを時計回りに回転します。",
+      "offline": "保存した向きは、プレーヤーの次回接続時に適用されます。",
+      "pending": "向きを保存しました。プレーヤーの確認を待っています。",
+      "applied": "向きを適用しました。",
+      "applyError": "プレーヤーはこの向きを適用できませんでした。デバイスのイベントを確認してください。",
+      "unsupported": "向きの設定を有効にするには、このプレーヤーを更新してください。",
+      "saved": "デバイスの設定を保存しました。",
+      "saveError": "デバイスの設定を保存できませんでした。"
+    },
     "setDeviceChannel": "デバイスチャンネルを設定",
     "selectChannel": "チャンネルを選択",
     "preview": {
@@ -969,6 +980,7 @@
       "checkUpdatesDescription": "更新を確認してインストールします。これによりデバイスは再起動されません",
       "updateFirmware": "ファームウェアを更新",
       "updateFirmwareDescription": "デバイスのファームウェアを更新します",
+      "actionNotSupported": "非対応です。",
       "offlineMessage": "デバイスがオフラインのため、コマンドを送信できません",
       "autorecoveryUpdated": "自動復旧が更新されました",
       "autorecoveryUpdateFailed": "自動復旧の更新に失敗しました",
@@ -993,8 +1005,8 @@
       "confirmDeleteMessage": "このキャッシュエントリを削除してもよろしいですか？URL: {{url}}",
       "confirmDeleteMultiple": "複数のエントリを削除",
       "confirmDeleteMultipleMessage": "{{count}}個のキャッシュエントリを削除してもよろしいですか？",
-      "confirmClearAll": "すべてのキャッシュをクリア",
-      "confirmClearAllMessage": "すべての{{type}}キャッシュエントリをクリアしてもよろしいですか？この操作は元に戻せません。",
+      "confirmClearAll": "キャッシュ全体をクリア",
+      "confirmClearAllMessage": "データ、コード、メディアのすべてのキャッシュエントリをクリアしてもよろしいですか？プレーヤーが再読み込みされ、この操作は元に戻せません。",
       "deleteSuccess": "キャッシュエントリが正常に削除されました",
       "deleteMultipleSuccess": "{{count}}個のキャッシュエントリが正常に削除されました",
       "clearAllSuccess": "すべてのキャッシュエントリが正常にクリアされました",
@@ -1013,7 +1025,13 @@
       "confirmClearAll": "すべてのイベントをクリア",
       "confirmClearAllMessage": "このデバイスのすべてのイベントを削除してもよろしいですか？この操作は元に戻せません。",
       "clearAllSuccess": "{{count}}件のイベントが正常に削除されました",
-      "deleteError": "イベントの削除中にエラーが発生しました: {{error}}"
+      "deleteError": "イベントの削除中にエラーが発生しました: {{error}}",
+      "occurrences": "発生回数",
+      "firstSeen": "初回検出",
+      "lastSeen": "最終検出",
+      "details": "詳細",
+      "detailsTitle": "エラーの詳細",
+      "errorDetails": "サニタイズ済み診断詳細"
     },
     "errors": {
       "setChannelFailed": "デバイスチャンネルの設定に失敗しました: {{error}}",

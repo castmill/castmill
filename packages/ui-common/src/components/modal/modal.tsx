@@ -125,8 +125,15 @@ export const Modal: Component<ModalProps> = (props) => {
 
   const [isVisible, setIsVisible] = createSignal(false);
   const [isActive, setIsActive] = createSignal(false);
+  let isClosing = false;
 
   const closeModal = () => {
+    if (isClosing) {
+      return;
+    }
+
+    isClosing = true;
+
     // First, trigger the transition
     setIsActive(false);
 
@@ -140,6 +147,7 @@ export const Modal: Component<ModalProps> = (props) => {
 
   const handleKeyDown = (event: KeyboardEvent) => {
     if (event.key === 'Escape' && isTopModal(modalId)) {
+      event.stopPropagation();
       closeModal();
     }
   };
@@ -157,12 +165,12 @@ export const Modal: Component<ModalProps> = (props) => {
     }, 0); // A minimal delay
 
     modalStack.push(modalId);
-    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keydown', handleKeyDown, true);
   });
 
   onCleanup(() => {
     closeModal();
-    document.removeEventListener('keydown', handleKeyDown);
+    document.removeEventListener('keydown', handleKeyDown, true);
     removeModal(modalId);
   });
 

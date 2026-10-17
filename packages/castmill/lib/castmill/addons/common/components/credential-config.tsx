@@ -523,7 +523,7 @@ export const CredentialConfig: Component<CredentialConfigProps> = (props) => {
         {/* OAuth flow */}
         <Show when={isOAuth()}>
           <div class="oauth-section">
-            {/* 
+            {/*
               Show client credential fields (client_id, client_secret) ONLY if:
               - Network credentials are NOT configured (has_network_credentials is false/undefined)
               - There are fields defined in the credential_schema

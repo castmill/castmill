@@ -1,5 +1,6 @@
 import { type Component, onMount } from 'solid-js';
 import { mountDevice, Device } from '@castmill/device';
+import { enableDebugOverlayFromEnv } from '@castmill/player';
 import { AndroidMachine, AndroidStorage } from '../classes';
 
 export const PlayerFrame: Component = () => {
@@ -9,6 +10,8 @@ export const PlayerFrame: Component = () => {
     if (!ref) {
       return;
     }
+
+    enableDebugOverlayFromEnv(import.meta.env.VITE_DEBUG_OVERLAY);
 
     const androidMachine = new AndroidMachine();
     const cache = new AndroidStorage('file-cache');

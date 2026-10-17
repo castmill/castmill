@@ -109,6 +109,107 @@ defmodule Castmill.DevicesEventsTest do
     end
   end
 
+  describe "upsert_error_reports/3" do
+    test "uses receipt time for retention rather than device-controlled future time", %{
+      device: device
+    } do
+      future =
+        DateTime.utc_now()
+        |> DateTime.truncate(:second)
+        |> DateTime.add(10 * 365 * 24 * 60 * 60, :second)
+
+      future_iso = DateTime.to_iso8601(future)
+
+      {:ok, [report], 0} =
+        Devices.validate_error_reports([
+          %{
+            "report_id" => "future-report",
+            "fingerprint" => "future-error",
+            "category" => "runtime",
+            "message" => "Device clock is wrong",
+            "count" => 1,
+            "first_occurred_at" => future_iso,
+            "last_occurred_at" => future_iso
+          }
+        ])
+
+      before_receipt = DateTime.utc_now()
+      assert {:ok, :ok} = Devices.upsert_error_reports(device.id, [report])
+      after_receipt = DateTime.utc_now()
+
+      event = Repo.get_by!(DevicesEvents, device_id: device.id, fingerprint: "future-error")
+      assert DateTime.compare(event.timestamp, DateTime.add(before_receipt, -1, :second)) != :lt
+      assert DateTime.compare(event.timestamp, DateTime.add(after_receipt, 1, :second)) != :gt
+      assert event.first_occurred_at == future
+      assert event.last_occurred_at == future
+
+      later_event_time = after_receipt |> DateTime.truncate(:second) |> DateTime.add(2, :second)
+
+      {100, _} =
+        Repo.insert_all(
+          DevicesEvents,
+          for n <- 1..100 do
+            %{
+              device_id: device.id,
+              timestamp: later_event_time,
+              type: "i",
+              msg: "Later event #{n}",
+              first_occurred_at: later_event_time,
+              last_occurred_at: later_event_time
+            }
+          end
+        )
+
+      assert {:ok, :ok} = Devices.upsert_error_reports(device.id, [])
+      assert Repo.aggregate(DevicesEvents, :count, :id) == 100
+      assert Repo.get_by(DevicesEvents, device_id: device.id, fingerprint: "future-error") == nil
+    end
+
+    test "keeps receipt time on retry and refreshes it for a new aggregate", %{device: device} do
+      future =
+        DateTime.utc_now()
+        |> DateTime.truncate(:second)
+        |> DateTime.add(10 * 365 * 24 * 60 * 60, :second)
+        |> DateTime.to_iso8601()
+
+      base_report = %{
+        "fingerprint" => "repeated-error",
+        "category" => "runtime",
+        "message" => "Repeated error",
+        "count" => 2,
+        "first_occurred_at" => future,
+        "last_occurred_at" => future
+      }
+
+      {:ok, [first], 0} =
+        Devices.validate_error_reports([Map.put(base_report, "report_id", "first")])
+
+      assert {:ok, :ok} = Devices.upsert_error_reports(device.id, [first])
+      initial = Repo.get_by!(DevicesEvents, device_id: device.id, fingerprint: "repeated-error")
+      old_receipt = ~U[2000-01-01 00:00:00Z]
+      initial |> Ecto.Changeset.change(timestamp: old_receipt) |> Repo.update!()
+
+      assert {:ok, :ok} = Devices.upsert_error_reports(device.id, [first])
+      retry = Repo.get_by!(DevicesEvents, device_id: device.id, fingerprint: "repeated-error")
+      assert retry.timestamp == old_receipt
+      assert retry.occurrence_count == 2
+
+      {:ok, [second], 0} =
+        Devices.validate_error_reports([Map.put(base_report, "report_id", "second")])
+
+      before_receipt = DateTime.utc_now()
+      assert {:ok, :ok} = Devices.upsert_error_reports(device.id, [second])
+      after_receipt = DateTime.utc_now()
+      updated = Repo.get_by!(DevicesEvents, device_id: device.id, fingerprint: "repeated-error")
+
+      assert DateTime.compare(updated.timestamp, DateTime.add(before_receipt, -1, :second)) != :lt
+
+      assert DateTime.compare(updated.timestamp, DateTime.add(after_receipt, 1, :second)) != :gt
+      assert updated.last_occurred_at == initial.last_occurred_at
+      assert updated.occurrence_count == 4
+    end
+  end
+
   describe "list_devices_events/1" do
     test "returns events with pagination", %{device: device} do
       # Insert 30 events
@@ -130,6 +231,39 @@ defmodule Castmill.DevicesEventsTest do
       refute Enum.any?(logs_page_1, fn l1 ->
                Enum.any?(logs_page_2, fn l2 -> l1.id == l2.id end)
              end)
+    end
+
+    test "returns newest events first by default", %{device: device} do
+      base_time = DateTime.utc_now()
+
+      oldest =
+        %Castmill.Devices.DevicesEvents{}
+        |> Castmill.Devices.DevicesEvents.changeset(%{
+          device_id: device.id,
+          type: "i",
+          msg: "Oldest event",
+          timestamp: DateTime.add(base_time, -1, :second)
+        })
+        |> Repo.insert!()
+
+      newest =
+        %Castmill.Devices.DevicesEvents{}
+        |> Castmill.Devices.DevicesEvents.changeset(%{
+          device_id: device.id,
+          type: "i",
+          msg: "Newest event",
+          timestamp: base_time
+        })
+        |> Repo.insert!()
+
+      events =
+        Devices.list_devices_events(%{
+          device_id: device.id,
+          page: 1,
+          page_size: 10
+        })
+
+      assert Enum.map(events, & &1.id) == [newest.id, oldest.id]
     end
 
     test "returns events that match the search pattern", %{device: device} do

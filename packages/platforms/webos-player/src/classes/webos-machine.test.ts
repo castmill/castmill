@@ -1,7 +1,12 @@
-import { vi, describe, it, beforeEach, expect } from 'vitest';
-import { WebosMachine } from './webos-machine';
+import { vi, describe, it, beforeEach, afterEach, expect } from 'vitest';
+import { sha256 } from 'js-sha256';
+import {
+  FIRMWARE_DOWNLOAD_TIMEOUT_MS,
+  FIRMWARE_STATUS_POLL_MS,
+  WebosMachine,
+} from './webos-machine';
 
-vi.stubEnv('VITE_UPDATE_URL', 'https://updates.castmill.io/webos/player.ipk');
+vi.stubEnv('VITE_UPDATE_URL', 'https://update.castmill.io/webos/player.ipk');
 
 vi.mock('../native', () => ({
   storage: {
@@ -11,6 +16,8 @@ vi.mock('../native', () => ({
     upgradeApplication: vi.fn(() => Promise.resolve()),
     downloadFirmware: vi.fn(() => Promise.resolve()),
     upgradeFirmware: vi.fn(() => Promise.resolve()),
+    getStorageInfo: vi.fn(),
+    getFirmwareUpgradeStatus: vi.fn(),
   },
   deviceInfo: {
     getNetworkMacInfo: vi.fn(() =>
@@ -19,6 +26,7 @@ vi.mock('../native', () => ({
         wifiInfo: { macAddress: undefined },
       })
     ),
+    getNetworkInfo: vi.fn(),
     getPlatformInfo: vi.fn(() =>
       Promise.resolve({
         manufacturer: 'LG',
@@ -30,14 +38,23 @@ vi.mock('../native', () => ({
   configuration: {
     restartApplication: vi.fn(() => Promise.resolve()),
     setServerProperty: vi.fn(() => Promise.resolve()),
+    getTimeZone: vi.fn(),
   },
   power: {
     executePowerCommand: vi.fn(() => Promise.resolve()),
   },
 }));
 
-vi.mock('./utils', () => ({
-  simpleHash: vi.fn((text: string) => 'hashed_' + text),
+const monitor = vi.hoisted(() => ({
+  getFanStatus: vi.fn(),
+}));
+
+vi.mock('./system-monitor', () => ({
+  systemMonitor: {
+    isMonitoring: () => true,
+    getTemperature: () => null,
+    getFanStatus: monitor.getFanStatus,
+  },
 }));
 
 vi.mock('../../package.json', () => ({
@@ -45,24 +62,44 @@ vi.mock('../../package.json', () => ({
 }));
 
 import { deviceInfo, storage, configuration, power } from '../native';
-import { simpleHash } from './utils';
 
 describe('WebosMachine', () => {
   let machine: WebosMachine;
 
   beforeEach(() => {
     machine = new WebosMachine();
+    vi.mocked(deviceInfo.getNetworkInfo).mockResolvedValue({} as never);
   });
 
   afterEach(() => {
     vi.resetAllMocks();
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
   });
 
-  it('should return machine GUID', async () => {
+  it('uses the same SHA-256 MAC identifier as the legacy WebOS player', async () => {
     const guid = await machine.getMachineGUID();
-    expect(guid).toBe('hashed_00:11:22:33:44:55');
+    expect(guid).toBe(sha256('00:11:22:33:44:55'));
+    expect(guid).toMatch(/^[0-9a-f]{64}$/);
     expect(deviceInfo.getNetworkMacInfo).toHaveBeenCalledOnce();
-    expect(simpleHash).toHaveBeenCalledWith('00:11:22:33:44:55');
+  });
+
+  it('falls back to the Wi-Fi MAC address for the identifier', async () => {
+    vi.mocked(deviceInfo.getNetworkMacInfo).mockResolvedValueOnce({
+      wiredInfo: { macAddress: '' },
+      wifiInfo: { macAddress: 'aa:bb:cc:dd:ee:ff' },
+    });
+    expect(await machine.getMachineGUID()).toBe(sha256('aa:bb:cc:dd:ee:ff'));
+  });
+
+  it('refuses to derive an identifier without a MAC address', async () => {
+    vi.mocked(deviceInfo.getNetworkMacInfo).mockResolvedValueOnce({
+      wiredInfo: { macAddress: '' },
+      wifiInfo: { macAddress: '' },
+    });
+    await expect(machine.getMachineGUID()).rejects.toThrow(
+      'No mac address found'
+    );
   });
 
   it('should store credentials', async () => {
@@ -88,7 +125,7 @@ describe('WebosMachine', () => {
   it('should remove stored credentials', async () => {
     await machine.removeCredentials();
     expect(storage.removeFile).toHaveBeenCalledWith({
-      file: 'credentials.txt',
+      file: 'file://internal/credentials.txt',
     });
   });
 
@@ -109,6 +146,65 @@ describe('WebosMachine', () => {
       userAgent: navigator.userAgent,
     });
     expect(deviceInfo.getPlatformInfo).toHaveBeenCalledOnce();
+  });
+
+  it('converts SCAP storage telemetry from KB to bytes', async () => {
+    vi.mocked(storage.getStorageInfo).mockResolvedValueOnce({
+      total: 10000,
+      used: 2000,
+      free: 8000,
+    });
+    expect((await machine.getTelemetry()).storage).toEqual({
+      totalBytes: 10000 * 1024,
+      usedBytes: 2000 * 1024,
+    });
+  });
+
+  it.each([
+    [
+      { state: 'connected', ipAddress: '10.0.0.2' },
+      { state: 'disconnected' },
+      { type: 'ethernet', ipAddress: '10.0.0.2' },
+    ],
+    [
+      { state: 'disconnected' },
+      { state: 'connected', ipAddress: '10.0.0.3' },
+      { type: 'wifi', ipAddress: '10.0.0.3' },
+    ],
+    [{ state: 'disconnected' }, { state: 'disconnected' }, undefined],
+  ])('reports the connected network %#', async (wired, wifi, expected) => {
+    vi.mocked(deviceInfo.getNetworkInfo).mockResolvedValueOnce({
+      wired,
+      wifi,
+    } as never);
+    expect((await machine.getTelemetry()).network).toEqual(expected);
+  });
+
+  it('keeps telemetry when network info fails', async () => {
+    vi.mocked(deviceInfo.getNetworkInfo).mockRejectedValueOnce(
+      new Error('no network api')
+    );
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    expect((await machine.getTelemetry()).network).toBeUndefined();
+  });
+
+  it('reports only fans with a measured RPM', async () => {
+    monitor.getFanStatus.mockReturnValueOnce({
+      fanStatus: [{ name: 'Main', rpm: 1200 }, { status: 'ok' }, { rpm: 900 }],
+    });
+    expect((await machine.getTelemetry()).fanSpeeds).toEqual([
+      { label: 'Main', rpm: 1200 },
+      { label: 'Fan 3', rpm: 900 },
+    ]);
+  });
+
+  it('omits fan speeds when only fan status is available', async () => {
+    monitor.getFanStatus.mockReturnValueOnce({ fanStatus: [{ status: 'ok' }] });
+    expect((await machine.getTelemetry()).fanSpeeds).toBeUndefined();
+  });
+
+  it('does not advertise a quit capability', async () => {
+    expect('quit' in machine).toBe(false);
   });
 
   it('should restart the application', async () => {
@@ -141,7 +237,7 @@ describe('WebosMachine', () => {
       appLaunchMode: 'local',
       appType: 'ipk',
       fqdnMode: true,
-      fqdnAddr: 'https://updates.castmill.io/webos/player.ipk',
+      fqdnAddr: 'https://update.castmill.io/webos/player.ipk',
     });
     expect(storage.upgradeApplication).toHaveBeenCalledOnce();
     expect(rebootSpy).toHaveBeenCalledOnce();
@@ -165,16 +261,70 @@ describe('WebosMachine', () => {
     expect(rebootSpy).toHaveBeenCalledOnce();
   });
 
-  it('should update the firmware', async () => {
+  describe('firmware update', () => {
     const url = 'https://update.castmill.io/webos/firmware/LG-55XS2E-BH.epk';
-    const urlSpy = vi
-      .spyOn(machine, 'getFirmwareDownloadUrl')
-      .mockResolvedValueOnce(url);
+    beforeEach(() => {
+      vi.spyOn(machine, 'getFirmwareDownloadUrl').mockResolvedValue(url);
+      vi.mocked(storage.getStorageInfo).mockResolvedValue({
+        total: 8 * 1024 * 1024,
+        used: 0,
+        free: 2 * 1024 * 1024,
+      });
+      vi.mocked(storage.downloadFirmware).mockResolvedValue(undefined);
+      vi.mocked(storage.upgradeFirmware).mockResolvedValue(undefined);
+    });
 
-    await machine.updateFirmware();
-    expect(urlSpy).toHaveBeenCalledOnce();
-    expect(storage.downloadFirmware).toHaveBeenCalledWith({ uri: url });
-    expect(storage.upgradeFirmware).toHaveBeenCalledOnce();
+    it('waits for the download before upgrading', async () => {
+      vi.useFakeTimers();
+      vi.mocked(storage.getFirmwareUpgradeStatus)
+        .mockResolvedValueOnce({ status: 'downloading' } as never)
+        .mockResolvedValueOnce({ status: 'ready' } as never);
+
+      const update = machine.updateFirmware();
+      await vi.advanceTimersByTimeAsync(FIRMWARE_STATUS_POLL_MS);
+      await update;
+
+      expect(storage.downloadFirmware).toHaveBeenCalledWith({ uri: url });
+      expect(storage.getFirmwareUpgradeStatus).toHaveBeenCalledTimes(2);
+      expect(storage.upgradeFirmware).toHaveBeenCalledOnce();
+    });
+
+    it('requires 1 GB of free storage', async () => {
+      vi.mocked(storage.getStorageInfo).mockResolvedValue({
+        total: 8 * 1024 * 1024,
+        used: 0,
+        free: 1024 * 1024 - 1,
+      });
+      await expect(machine.updateFirmware()).rejects.toThrow(
+        'Not enough free space'
+      );
+      expect(storage.downloadFirmware).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ['fail', 'Firmware download failed'],
+      ['idle', 'Unexpected firmware status: idle'],
+    ])('stops on %s status', async (status, message) => {
+      vi.mocked(storage.getFirmwareUpgradeStatus).mockResolvedValue({
+        status,
+      } as never);
+      await expect(machine.updateFirmware()).rejects.toThrow(message);
+      expect(storage.upgradeFirmware).not.toHaveBeenCalled();
+    });
+
+    it('times out a download that never completes', async () => {
+      vi.useFakeTimers();
+      vi.mocked(storage.getFirmwareUpgradeStatus).mockResolvedValue({
+        status: 'downloading',
+      } as never);
+      const update = machine.updateFirmware();
+      const assertion = expect(update).rejects.toThrow('timed out');
+      await vi.advanceTimersByTimeAsync(
+        FIRMWARE_DOWNLOAD_TIMEOUT_MS + FIRMWARE_STATUS_POLL_MS
+      );
+      await assertion;
+      expect(storage.upgradeFirmware).not.toHaveBeenCalled();
+    });
   });
 
   it('should get the firmware download URL', async () => {
@@ -208,8 +358,62 @@ describe('WebosMachine', () => {
     expect(location).toBeUndefined();
   });
 
+  it('passes a timeout to geolocation and resolves coordinates', async () => {
+    const getCurrentPosition = vi.fn((success) =>
+      success({ coords: { latitude: 1, longitude: 2 } })
+    );
+    vi.stubGlobal('navigator', { geolocation: { getCurrentPosition } });
+    expect(await machine.getLocation()).toEqual({ latitude: 1, longitude: 2 });
+    expect(getCurrentPosition.mock.calls[0][2]).toMatchObject({
+      timeout: 10_000,
+    });
+  });
+
+  it('does not wait forever for geolocation', async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal('navigator', {
+      geolocation: { getCurrentPosition: vi.fn() },
+    });
+    const location = machine.getLocation();
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(await location).toBeUndefined();
+  });
+
   it('should return timezone', async () => {
     const timezone = await machine.getTimezone();
     expect(timezone).toBe(Intl.DateTimeFormat().resolvedOptions().timeZone);
   });
+
+  describe('without an Intl time zone', () => {
+    beforeEach(() => {
+      vi.spyOn(Intl, 'DateTimeFormat').mockReturnValue({
+        resolvedOptions: () => ({ timeZone: undefined }),
+      } as never);
+    });
+    afterEach(() => vi.restoreAllMocks());
+
+    it('uses the SCAP time zone', async () => {
+      vi.mocked(configuration.getTimeZone).mockResolvedValueOnce({
+        timeZone: { continent: 'America', country: 'US', city: 'New York' },
+      });
+      expect(await machine.getTimezone()).toBe('America/New_York');
+    });
+
+    it('falls back to UTC', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      vi.mocked(configuration.getTimeZone).mockRejectedValueOnce(
+        new Error('unsupported')
+      );
+      expect(await machine.getTimezone()).toBe('UTC');
+    });
+  });
+
+  it.each([0, 90, 180, 270] as const)(
+    'selects shared CSS rotation for %i without a verified native API',
+    async (angle) => {
+      expect(await new WebosMachine().setOrientation(angle)).toEqual({
+        mode: 'css',
+      });
+    }
+  );
 });

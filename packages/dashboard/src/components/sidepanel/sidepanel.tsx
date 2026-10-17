@@ -126,7 +126,7 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
             if (location.pathname.startsWith('/org/')) {
               // Preserve current sub-path within the new organization
               const currentPath =
-                location.pathname.replace(/^\/org\/[^\/]+/, '') || '/';
+                location.pathname.replace(/^\/org\/[^/]+/, '') || '/';
               navigate(`/org/${value}${currentPath}`);
             } else if (location.pathname === '/settings') {
               // Settings is a global route and should not be org-prefixed

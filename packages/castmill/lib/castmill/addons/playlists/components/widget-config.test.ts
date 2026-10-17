@@ -10,6 +10,8 @@ import {
   isLayoutRefValid,
   isLocationValueValid,
   normalizeFormValue,
+  normalizeWidgetOptionsForApi,
+  type SchemaAttributeType,
 } from './widget-config';
 
 describe('WidgetConfig - Collection Parsing', () => {
@@ -122,6 +124,39 @@ describe('WidgetConfig - URL Validation Logic', () => {
   });
 });
 
+describe('WidgetConfig - Layout Ref API normalization', () => {
+  it('converts legacy primitive zone assignments to canonical playlistId objects', () => {
+    expect(
+      normalizeWidgetOptionsForApi(
+        {
+          layoutRef: {
+            layoutId: 10,
+            aspectRatio: '16:9',
+            zones: { zones: [] },
+            zonePlaylistMap: {
+              zoneA: 123,
+              zoneAString: '789',
+              zoneB: { playlistId: 456, playlist: { id: 456 } },
+            },
+          },
+        },
+        [['layoutRef', { type: 'layout-ref' } as SchemaAttributeType]]
+      )
+    ).toEqual({
+      layoutRef: {
+        layoutId: 10,
+        aspectRatio: '16:9',
+        zones: { zones: [] },
+        zonePlaylistMap: {
+          zoneA: { playlistId: 123 },
+          zoneAString: { playlistId: 789 },
+          zoneB: { playlistId: 456 },
+        },
+      },
+    });
+  });
+});
+
 describe('WidgetConfig - Schema Entries Normalization', () => {
   it('normalizes map format and sorts by order', () => {
     const schema = {
@@ -189,9 +224,9 @@ describe('WidgetConfig - Location Validation Logic', () => {
 
   it('returns false for missing or non-numeric coordinates', () => {
     expect(isLocationValueValid(undefined)).toBe(false);
-    expect(isLocationValueValid({ lat: '51.505' as any, lng: -0.09 } as any)).toBe(
-      false
-    );
+    expect(
+      isLocationValueValid({ lat: '51.505' as any, lng: -0.09 } as any)
+    ).toBe(false);
     expect(isLocationValueValid({ lat: 51.505, lng: NaN } as any)).toBe(false);
   });
 
@@ -209,5 +244,62 @@ describe('WidgetConfig - Form Value Normalization', () => {
 
   it('falls back to an empty string for object values', () => {
     expect(normalizeFormValue({ value: true })).toBe('');
+  });
+});
+
+describe('WidgetConfig - API Option Normalization', () => {
+  it('removes expanded playlists from layout references', () => {
+    const circularPlaylist: Record<string, unknown> = {
+      id: 11,
+      name: 'Zone playlist',
+    };
+    circularPlaylist._prev = circularPlaylist;
+
+    const options = {
+      layoutRef: {
+        layoutId: 3,
+        aspectRatio: '16:9',
+        zones: {
+          zones: [
+            {
+              id: 'zone-1',
+              name: 'Left',
+              rect: { x: 0, y: 0, width: 50, height: 100 },
+              zIndex: 1,
+            },
+          ],
+        },
+        zonePlaylistMap: {
+          'zone-1': {
+            playlistId: 11,
+            playlist: circularPlaylist,
+          },
+        },
+      },
+    };
+    const schemaEntries: [string, SchemaAttributeType][] = [
+      ['layoutRef', { type: 'layout-ref' }],
+    ];
+
+    const normalized = normalizeWidgetOptionsForApi(options, schemaEntries);
+
+    expect(normalized.layoutRef.zonePlaylistMap).toEqual({
+      'zone-1': { playlistId: 11 },
+    });
+    expect(() => JSON.stringify(normalized)).not.toThrow();
+  });
+
+  it('converts standard reference objects to ids', () => {
+    const normalized = normalizeWidgetOptionsForApi(
+      { media: { id: 42, name: 'Image' } },
+      [
+        [
+          'media',
+          { type: 'ref', collection: 'medias' } satisfies SchemaAttributeType,
+        ],
+      ]
+    );
+
+    expect(normalized).toEqual({ media: 42 });
   });
 });

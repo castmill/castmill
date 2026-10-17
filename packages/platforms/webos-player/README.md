@@ -1,9 +1,91 @@
-# webOS Player
+# Castmill webOS Signage Player
 
-## SCAP API libraries
+The webOS player is the Castmill digital signage client for LG commercial
+displays running webOS Signage. It combines:
 
-The SCAP API libraries are required to build and package the player for LG webOS
-Signage displays, but are not distributed in this repository.
+- a SolidJS and Vite web application;
+- the shared `@castmill/device`, `@castmill/player`, and `@castmill/cache`
+  packages;
+- LG's Signage Control API (SCAP) for storage, power, timers, telemetry,
+  application updates, and firmware updates; and
+- the current `@webos-tools/cli` commands for IPK packaging, installation, and
+  debugging.
+
+This package targets **webOS Signage**, not the consumer LG webOS TV platform.
+The application ID is `com.lg.app.signage`, the launcher title is
+**Castmill Player**, and the current application version is `2.0.0`.
+
+## Project layout
+
+| Path                           | Purpose                                                                                    |
+| ------------------------------ | ------------------------------------------------------------------------------------------ |
+| `src/`                         | SolidJS application and webOS implementations of the Castmill machine and cache interfaces |
+| `src/classes/webos-machine.ts` | SCAP-backed device identity, settings, lifecycle actions, updates, timers, and telemetry   |
+| `src/classes/file-storage.ts`  | SCAP internal-storage media cache                                                          |
+| `src/native/`                  | Typed Promise wrappers around the callback-based SCAP APIs                                 |
+| `src/shared/`                  | SCAP-free WebOS playback, decoder budget, transport, memory storage, routing, and logging shared with the legacy adapter |
+| `public/appinfo.json`          | webOS application ID, version, title, icons, orientations, and security settings           |
+| `public/lib/`                  | SCAP loader, TypeScript declarations, and locally supplied LG SCAP libraries               |
+| `vite.config.ts`               | Legacy Chromium-compatible Vite build configuration                                        |
+| `build/`                       | Generated IPK output                                                                       |
+
+## Prerequisites
+
+- Dependencies installed from the monorepo root with `yarn install`
+- Node.js and Yarn versions compatible with the root workspace for Vite,
+  TypeScript, and tests
+- The current `@webos-tools/cli` package
+- `ares-package`, `ares-setup-device`, `ares-install`, `ares-launch`,
+  `ares-inspect`, `ares-novacom`, and `ares-config` available on `PATH`
+- SCAP 1.5 and 1.7 libraries downloaded from LG
+- An LG webOS Signage display with development access enabled, or a compatible
+  LG webOS Signage emulator
+
+Install the current CLI globally with the same supported Node.js environment
+used by the repository:
+
+```bash
+npm install --global @webos-tools/cli
+```
+
+The CLI requires Node.js 14.15.1 or newer and is tested upstream with Node.js 24. Confirm that the commands resolve to the new package:
+
+```bash
+ares-package --version
+npm list --global @webos-tools/cli
+```
+
+The unified CLI defaults to the consumer TV profile. Select the Signage profile
+before configuring displays or deploying the player:
+
+```bash
+ares-config --profile signage
+ares-config --profile-details
+```
+
+The profile is stored by the CLI and remains active for later commands. If you
+also develop consumer TV or webOS OSE applications, check the active profile
+before deploying this package.
+
+## Install dependencies
+
+Install workspace dependencies from the repository root:
+
+```bash
+yarn install
+```
+
+The commands in the following sections are run from
+`packages/platforms/webos-player` unless stated otherwise:
+
+```bash
+cd packages/platforms/webos-player
+```
+
+## Install the SCAP API libraries
+
+The SCAP libraries are required on the display but are not distributed in this
+repository.
 
 1. Download the SCAP API libraries for versions 1.5 and 1.7 from the
    [LG webOS Signage Developer site](https://webossignage.developer.lge.com/).
@@ -48,3 +130,593 @@ Signage displays, but are not distributed in this repository.
 
 `public/lib/.gitignore` excludes all `scap_*` directories, so these local
 libraries remain available for builds without being committed.
+
+At runtime, `public/lib/scap-loader.js` selects SCAP 1.5 for webOS Signage 3.0
+and 3.2. It selects SCAP 1.7 for webOS Signage 4.0 and newer. Keep both
+versions in release packages when supporting both display generations.
+
+## Configure the player
+
+### Castmill server URLs
+
+The server options and default server are compiled into `@castmill/device`,
+which this app consumes from its prebuilt `dist/`. Setting
+`VITE_*_BASE_URL` in this package has no effect. Configure them for the device
+package instead, then rebuild it before building this player:
+
+```dotenv
+# packages/device/.env.local
+VITE_PRODUCTION_BASE_URL=https://api.example.com
+VITE_DEV_BASE_URL=https://api.stage.example.com
+VITE_LOCAL_BASE_URL=http://192.168.1.10:4000
+VITE_DEFAULT_BASE_URL=https://api.example.com
+```
+
+```bash
+yarn workspace @castmill/device build
+yarn workspace @castmill/webos-player build
+```
+
+| Variable (in `packages/device`) | Purpose                                                              |
+| ------------------------------- | -------------------------------------------------------------------- |
+| `VITE_PRODUCTION_BASE_URL`      | Adds a **Production** server option to the player                    |
+| `VITE_DEV_BASE_URL`             | Adds a **Stage** server option to the player                         |
+| `VITE_LOCAL_BASE_URL`           | Adds a **Local** server option for development                       |
+| `VITE_DEFAULT_BASE_URL`         | Server used initially when the display has no saved server selection |
+
+This player's own build settings go in `.env.local`, created from the tracked
+template (files ending in `.local` are ignored by Git):
+
+```bash
+cp .env.example .env.local
+```
+
+| Variable (in this package)  | Purpose                                                       |
+| --------------------------- | ------------------------------------------------------------- |
+| `VITE_FILE_HOST`            | Replaces `localhost` in media URLs before SCAP downloads them |
+| `VITE_KEEP_SERVER_SETTINGS` | See [Application update URL](#application-update-url)         |
+| `VITE_LOGGING`              | See [WebOS compatibility and logging](#webos-compatibility-and-logging) |
+| `VITE_DEBUG_OVERLAY`        | See [Playback debug overlay](#playback-debug-overlay)         |
+
+Use complete origins without a trailing slash. `VITE_FILE_HOST` is useful when
+the Castmill backend returns URLs containing `localhost`: on the display,
+`localhost` means the display itself, so use the hostname or LAN IP address of
+the development computer instead.
+
+The effective Castmill server URL is selected in this order:
+
+1. The server previously selected in the player's settings
+2. `VITE_DEFAULT_BASE_URL`
+3. `VITE_DEV_BASE_URL`
+4. `VITE_PRODUCTION_BASE_URL`
+5. The first configured server option
+
+The player persists its selected server in
+`file://internal/castmill-BASE_URL.txt`. Changing a build-time default does not
+replace an existing selection. Remove that internal file or clear the
+application's data when a test display must return to the build default. This
+also requires the display to be registered with Castmill again if all
+application data is cleared.
+
+### Display identity, startup, and maintenance
+
+- **Hardware ID:** the player registers with the SHA-256 hex digest of the
+  wired MAC address (or Wi-Fi MAC when there is no wired adapter). This is the
+  same identifier used by the legacy WebOS wrapper, so a display that moves
+  from the legacy adapter to this app keeps its Castmill registration.
+- **SCAP boot gate:** `public/lib/scap-loader.js` loads the SCAP libraries in
+  order and exposes `window.castmillScapReady`. `src/index.tsx` only imports
+  the app chunk (which constructs SCAP objects) after that promise resolves,
+  with a 30 s timeout.
+- **Startup retry:** when SCAP loading or player initialization fails, the
+  error is shown and the app reloads after a back-off of one minute per
+  consecutive failure, up to nine minutes. The counter resets after a
+  successful start.
+- **Power saving:** every start disables automatic standby, DPM and 15-minute
+  off, which would otherwise turn the display off (for example after four
+  hours without remote-control input).
+- **Network watchdog:** every 10 minutes the player checks SCAP's
+  `isInternetConnectionAvailable`. After two consecutive failed checks it
+  disables the wired and Wi-Fi adapters, waits 10 s, and re-enables them.
+  This requires a SCAP version that provides `DeviceInfo.setNetworkInfo`.
+- **On/off timers** are managed from the dashboard; the player does not
+  schedule its own reboots.
+- **Remote control:** the LG Back key (key code 461) closes the device menu,
+  like Escape.
+- **Telemetry:** SCAP storage values are reported in KB and converted to bytes.
+  Network type and IP address come from SCAP network info. Fans that only
+  report a status, without RPM, are omitted.
+- **Firmware updates** require at least 1 GB of free internal storage. The
+  player waits until SCAP reports the downloaded firmware as `ready` before
+  starting the upgrade.
+
+### Playback debug overlay
+
+Build with `VITE_DEBUG_OVERLAY=true` to show the playback debug overlay at
+startup. It shows the playing playlist and item of each playlist or layout
+area with progress bars and countdowns. From the browser console, call
+`castmillDebugOverlay(true|false)`. See `agents/packages/player/README.md` for
+details.
+
+### WebOS compatibility and logging
+
+Both this IPK player and the legacy WebOS adapter use the runtime in
+`src/shared/`. The adapter imports its TypeScript source through
+`@castmill/webos-player/shared`; it does not need this player's `dist/`, SCAP
+libraries, or an IPK build. Keep that entry point independent of native APIs,
+app startup, CSS, and the legacy iframe bridge. Native APIs remain in this
+player; bridge APIs remain in the legacy adapter. The shared factory also
+accepts an `isNativeUrl` predicate and decoder budget for integrations and tests.
+
+All WebOS models currently have a **two-loaded-video limit**, not a limit of
+two DOM elements. `WebosDecoderBudget` gates initial source assignment, releases
+paused/detached sources, and queues videos that cannot get a decoder. Blocked
+playlist items hold their clock, then skip after 1 s; a playlist whose items
+are all blocked waits with an empty area instead. These events are reported as
+`playback` / `video-decoder-limit`. Do not increase this limit without testing
+the supported hardware.
+
+The shared controller handles missing readiness events, decoder reloads on
+replay, coalesced seek/play, cancellation, one seek recovery, 15 s metadata
+timeouts with a 30 s retry, and a stall watchdog. A missing native media file
+is invalidated and downloaded once again. Blob and remote videos also use the
+controller, but are not treated as native cached files.
+
+Build with `VITE_LOGGING=true` for `[WebOS Video]` and `[WebOS Storage]` traces.
+They log playback state, decoder handoffs, and download timing without complete
+media URLs or authorization headers. `VITE_DEBUG_OVERLAY=true` still controls
+the shared playback overlay. The iframe wrapper diagnostics panel is specific
+to the legacy adapter and is not installed in the native app.
+
+### Playback orientation
+
+Device **Details** in the dashboard supports clockwise 0/90/180/270-degree
+orientation, including offline saves that apply on reconnect. Both native and
+legacy WebOS use the shared `applyWebosOrientation` policy. The native player
+uses the same **Custom API** as the old WebOS wrapper:
+`Custom.Configuration.getNativePortraitMode()` followed, only when necessary,
+by `setNativePortraitMode({ nativePortrait })`. Zero maps to `"off"`; other
+angles map to `"90"`, `"180"`, and `"270"`. The existing `public/lib/custom.js`
+implements these methods: webOS 3.0 uses `commercial.siAppOrientation`, and
+webOS 3.2+ uses `option.screenRotation`. Do not substitute the unrelated
+`Signage.setPortraitMode` or removed fullscreen-video rotation API.
+
+Calls are bound in `src/native/orientation.ts`, with 10-second deadlines.
+Only an absent Custom getter/setter selects CSS; API errors and timeouts reject,
+without silently falling back after a possible native change. Native success
+disables CSS rotation and dimension swapping: the native viewport supplies the
+logical size. The legacy adapter sends the numeric angle through the wrapper's
+existing `setRotation` operation instead of importing SCAP.
+
+Native rotation changes the application/display orientation, including shell
+UI; unlike CSS it is not limited to the playback subtree. There is no automatic
+reboot. Rotation does not recreate video elements or change the two-loaded-source
+budget.
+
+See `packages/device/README.md` for persistence, application feedback, and logical
+viewport sizing. Validate live rotation and mixed-content/video layouts on actual
+older LG hardware before release.
+
+### Application update URL
+
+The player can ask SCAP to download an IPK, install it to local storage, and
+reboot the display. Configure the full HTTPS URL of that IPK with
+`VITE_UPDATE_URL`:
+
+```bash
+VITE_UPDATE_URL=https://updates.example.com/webos/player.ipk yarn build
+```
+
+The `yarn build` script supplies this default when the shell variable is not
+set:
+
+```text
+https://update.castmill.io/webos/player.ipk
+```
+
+Set `VITE_UPDATE_URL` in the shell as shown above when overriding it. The
+package script sets its default before Vite loads `.env.local`, so defining
+only `VITE_UPDATE_URL` in `.env.local` does not override the default.
+
+By default, `VITE_KEEP_SERVER_SETTINGS` is unset or `false`, so an update writes
+the configured URL into the display's SCAP server properties before requesting
+the download. Set this when a managed display already has server properties
+that the player must preserve:
+
+```dotenv
+VITE_KEEP_SERVER_SETTINGS=true
+```
+
+With `VITE_KEEP_SERVER_SETTINGS=true`, the update uses the display's existing
+SCAP server settings instead of replacing them. Ensure those settings point to
+the intended IPK before triggering an update.
+
+### Application metadata
+
+`public/appinfo.json` controls the generated IPK identity and webOS behavior:
+
+| Field                 | Current value        |
+| --------------------- | -------------------- |
+| `id`                  | `com.lg.app.signage` |
+| `version`             | `2.0.0`              |
+| `vendor`              | `Castmill AB`        |
+| `type`                | `web`                |
+| `main`                | `index.html`         |
+| `title`               | `Castmill Player`    |
+| `inspectable`         | `true`               |
+| `crossDomainSecurity` | `disable`            |
+
+Keep the version in `public/appinfo.json` synchronized with the version in
+`package.json`. The IPK filename and installed update ordering use the
+`appinfo.json` version, while the player reports the `package.json` version in
+device information. Increase the version before publishing an update.
+
+`crossDomainSecurity: "disable"` permits the player to contact Castmill and
+media origins, and `inspectable: true` permits remote inspection. Both are
+development-friendly settings that should be reviewed against the target
+fleet's production security requirements.
+
+## Web development
+
+Start the Vite development server on port 3001:
+
+```bash
+yarn dev
+```
+
+Create or preview a web build with:
+
+```bash
+yarn build
+yarn serve
+```
+
+A desktop browser does not provide SCAP. It can be used for limited web UI
+work, but storage, power, timers, telemetry, application updates, and other
+native behavior must be tested on a Signage display or compatible emulator.
+
+The Vite build targets Chrome 38 and emits legacy polyfills because older webOS
+Signage generations use old Chromium versions. Do not remove this compatibility
+configuration without testing every supported display generation.
+
+## Build the web application
+
+Build the application with the repository's normal Node.js version:
+
+```bash
+yarn build
+```
+
+Vite writes the application to `dist/` and copies `public/appinfo.json`, icons,
+the SCAP loader, and the locally installed SCAP libraries into that directory.
+Confirm that both SCAP directories are present before packaging:
+
+```bash
+test -d dist/lib/scap_1.5
+test -d dist/lib/scap_1.7
+```
+
+## Package an IPK
+
+After building `dist/`, package it with:
+
+```bash
+yarn package
+```
+
+The script runs the current `ares-package` directly, disables a second
+minification pass, excludes generated test files, and writes the IPK to
+`build/`.
+
+With the current metadata, the output is:
+
+```text
+build/com.lg.app.signage_2.0.0_all.ipk
+```
+
+The complete unsigned build flow is:
+
+```bash
+yarn build
+yarn package
+```
+
+## Configure a target display
+
+Development access differs by webOS Signage model and firmware. Enable the
+display's development or debugging access using LG's instructions, place the
+computer and display on reachable networks, and note the display's IP address,
+SSH port, username, and authentication method.
+
+Add a named target to the LG CLI:
+
+```bash
+ares-setup-device \
+  --add castmill-display \
+  --info "host=<display-ip>" \
+  --info "port=9922" \
+  --info "username=prisoner"
+```
+
+Port `9922` and user `prisoner` are the Signage profile defaults. Change them
+only when the target display is configured differently. Add `password` or
+`privatekey` settings when required by the display. Do not put reusable
+credentials in this repository.
+
+List and inspect configured targets:
+
+```bash
+ares-setup-device --listfull
+```
+
+If the display uses LG's Secure Developer Mode key server, enable its key
+server and retrieve the SSH key:
+
+```bash
+ares-novacom --getkey --device castmill-display
+```
+
+## Install, launch, and debug
+
+Install the generated IPK:
+
+```bash
+ares-install \
+  build/com.lg.app.signage_2.0.0_all.ipk \
+  --device castmill-display
+```
+
+Launch or close the player:
+
+```bash
+ares-launch com.lg.app.signage --device castmill-display
+
+ares-launch --close com.lg.app.signage --device castmill-display
+```
+
+Because `inspectable` is enabled, obtain a remote Web Inspector URL with:
+
+```bash
+ares-inspect com.lg.app.signage --device castmill-display
+```
+
+Pass `--open` to ask the CLI to open the inspector URL in a browser.
+
+Useful target checks are:
+
+```bash
+ares-install --list --device castmill-display
+
+ares-launch --running --device castmill-display
+```
+
+## Runtime behavior
+
+On first launch, the shared device application connects to the configured
+Castmill server and guides the user through display registration. The webOS
+integration:
+
+- derives a stable machine identifier from the wired or Wi-Fi MAC address;
+- stores credentials, selected server, and timer state in SCAP internal
+  storage;
+- caches downloaded media under `file://internal/castmill-cache/`;
+- reports model, firmware, Chromium, storage, temperature, fan, and network
+  telemetry when supported by the display;
+- restarts the application and reboots or powers off the display through SCAP;
+- configures on/off timers using the API available on the display's SCAP
+  version;
+- downloads and installs player updates from `VITE_UPDATE_URL`; and
+- downloads model-specific firmware from the Castmill firmware update service.
+
+Some telemetry and timer APIs do not exist on every SCAP version. The
+integration detects optional timer methods and treats unsupported telemetry as
+unavailable rather than requiring every display generation to expose the same
+capabilities.
+
+### Storage and startup
+
+Older WebOS engines cannot reliably open IndexedDB/Dexie. The player injects
+`MemoryCache` and never opens IndexedDB for its content cache. **A reachable
+Castmill server is required on every cold start**, even though the IPK app
+shell and public native media survive restarts. Channel/playlist data, widget
+code, and protected resources are session-only.
+
+`FileStorage` routes unsigned public `/medias/` media on the configured API
+origin, and unsigned external HTTP(S) media, through SCAP `copyFile` without
+authorization headers. Same-origin non-public media, query-bearing or
+credential-bearing URLs, code, and data use authenticated XHR into blob URLs
+with a 30 s deadline. Blob URLs are released on deletion or close.
+
+Native filenames use a Chrome 38-compatible SHA-256 implementation and a safe
+final extension. The source-to-local map is persisted under
+`castmill-webos-native-file-map` in localStorage, without tokens or headers.
+Initialization is idempotent, recreates an absent cache directory, prunes
+missing-file mappings, and removes orphan cache files. Invalid metadata clears
+only `file://internal/castmill-cache/`, then recreates it. Existing old
+pathname-hashed native files without a map cannot be restored and are removed
+as orphans; media is downloaded again after upgrading.
+
+Recognized SCAP no-space errors trigger MemoryCache eviction and bounded
+retries. Other download failures are surfaced, and incomplete temporary files
+are removed. Clearing the content cache recreates its directory so subsequent
+downloads work. Credentials and machine identity are not changed by these
+cache operations.
+
+The app uses the shared one-argument `WebosWebSocket` transport to avoid an
+unintended subprotocol header on old WebOS. It displays a black boot indicator
+and a pre-mounted startup overlay. Initialization failures show the original
+error, log the failing stage, and call the device startup-error reporter when
+the device has been constructed. Later login/channel startup-error events
+restore the same pre-mounted overlay by direct DOM updates rather than relying
+on old WebOS applying reactive DOM changes.
+
+## Sign an IPK
+
+The current `yarn package` command creates an **unsigned** IPK. No official
+Castmill webOS private key, certificate, or signing automation is included in
+this repository.
+
+The current `@webos-tools/cli` packager supports signing with a PEM private key
+and certificate. These options are available in version 3.2.5 even though they
+are omitted from its abbreviated `ares-package --help` output:
+
+```bash
+ares-package \
+  --no-minify \
+  --outdir build \
+  --app-exclude "*.test.js" \
+  --sign /absolute/path/to/private-key.pem \
+  --certificate /absolute/path/to/certificate.crt \
+  dist
+```
+
+The private key and certificate options must be supplied together. The
+packager signs the application payload with SHA-256 and includes the
+certificate in the IPK.
+
+### Generate a local test key and certificate
+
+To exercise packaging locally, create a self-signed test identity outside the
+repository:
+
+```bash
+mkdir -p "$HOME/.webos-signing"
+
+openssl req -x509 -newkey rsa:2048 -nodes \
+  -keyout "$HOME/.webos-signing/castmill-local.pem" \
+  -out "$HOME/.webos-signing/castmill-local.crt" \
+  -days 3650 \
+  -subj "/CN=Castmill Local webOS Test/"
+```
+
+Then use those two files with `ares-package --sign` and
+`--certificate`. A self-signed package is only for validating the local build
+flow; acceptance depends on the target display's firmware and provisioning.
+Do not treat it as an official release identity.
+
+For a future production pipeline, obtain a certificate trusted by the target
+LG Signage fleet or required LG distribution process. Keep its private key in
+restricted secret storage, inject it only into the packaging job, and maintain
+an encrypted backup. Never commit private keys or certificates containing
+private material.
+
+## Host an IPK for SCAP updates
+
+The URL embedded as `VITE_UPDATE_URL` must remain reachable by the display and
+return the complete IPK. Use HTTPS with a certificate trusted by the display.
+The published filename can remain stable, such as `player.ipk`, while the
+version inside `appinfo.json` increases for each release.
+
+Before triggering a remote update, verify:
+
+- the IPK was built from the intended commit and environment;
+- `package.json` and `public/appinfo.json` have the same version;
+- the published URL downloads the new IPK without authentication redirects;
+- the display trusts the HTTPS certificate;
+- the package uses the expected signing identity, when signing is required;
+  and
+- rollback artifacts remain available for the target display generation.
+
+## Tests and quality checks
+
+Run the TypeScript tests and checks from this package:
+
+```bash
+yarn test
+yarn test:webos-coverage
+yarn lint
+yarn typecheck
+yarn format:check
+```
+
+These tests mock SCAP behavior. Validate native storage, timers, telemetry,
+power, installation, and update behavior on representative physical displays
+before releasing.
+
+The native suite runs the shared controller's seeded decoder-budget invariants
+and reuses the legacy adapter's real-player layout/media simulation. The legacy
+suite also discovers `webos-player/src/shared/**/*.test.ts`. Run both suites
+when changing shared code:
+
+```bash
+yarn workspace @castmill/legacy-adapter-player test:webos-coverage
+yarn workspace @castmill/webos-player test:webos-coverage
+```
+
+Coverage commands enforce 90% statements, lines, branches, and functions on the
+selected shared/new integration files. The legacy command first runs its full
+suite and then measures shared coverage in the owning workspace. Coverage uses
+V8; the root `test-exclude` resolution is compatible with the monorepo's glob
+10 resolution. Import-boundary tests reject dependencies from shared code to
+SCAP or application modules and smoke-test the public export without SCAP
+globals.
+
+On the oldest supported physical display, verify consecutive video loops, two
+video zones, a crowded three-video layout, blocked-item reporting, channel
+replacement, native-file deletion/recovery, and restart while offline. Check
+actual visible frames and progress, not only `playing` events. Offline restart
+must present a recoverable connection failure rather than depend on IndexedDB.
+
+## Troubleshooting
+
+### The CLI uses the wrong platform profile
+
+The unified CLI defaults to the consumer TV profile. Select and verify the
+Signage profile:
+
+```bash
+ares-config --profile signage
+ares-config --profile-details
+```
+
+### `ares-package` or another `ares-*` command resolves to an old SDK
+
+Confirm the active command and version, then remove the old SDK's CLI directory
+from `PATH`:
+
+```bash
+command -v ares-package
+ares-package --version
+npm list --global @webos-tools/cli
+```
+
+The packaging script expects the current globally installed
+`@webos-tools/cli` on the active Node.js runtime.
+
+### SCAP constructors or APIs are missing
+
+Confirm the required files exist under `public/lib/scap_1.5` and
+`public/lib/scap_1.7`, rebuild, and inspect the same directories in `dist/lib`.
+Use Web Inspector console logs to confirm which webOS and SCAP version the
+loader selected.
+
+### The CLI cannot connect to a display
+
+Verify development access is still enabled, the configured IP address and SSH
+port match the display, and the host can reach that port. Refresh the Secure
+Developer Mode key with `ares-novacom --getkey` when that mode is in use.
+
+### The display cannot reach a local Castmill server
+
+Use the development computer's LAN address rather than `localhost`, ensure the
+server listens on a non-loopback interface, and allow the port through the host
+firewall. Configure `VITE_LOCAL_BASE_URL` and, when returned media URLs contain
+`localhost`, `VITE_FILE_HOST`.
+
+### A changed Castmill server URL is not being used
+
+Vite variables are embedded at build time, so rebuild, repackage, and reinstall
+the IPK. If the display previously selected another server, remove its saved
+setting or clear the application's internal data.
+
+### An update downloads the wrong package
+
+Confirm the build-time `VITE_UPDATE_URL`, the display's current SCAP server
+properties, and `VITE_KEEP_SERVER_SETTINGS`. When that variable is `true`, the
+player deliberately preserves the display's existing update server settings.
+
+### The installed version does not change
+
+Increase `version` in both `public/appinfo.json` and `package.json`, rebuild the
+web application, and create a new IPK. Check the installed applications with
+`ares-install --list`.

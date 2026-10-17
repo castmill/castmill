@@ -10,6 +10,8 @@ The cache is implemented using the [IndexedDB](https://developer.mozilla.org/en-
 
 To have a working cache, you must implement the (`StorageIntegration`)[./src/storage.integration.ts] interface. This interface provides the methods necessary for the cache to store the binary data on the device. Check in the (`integrations`)[./src/integrations] folder for examples of how to implement the interface for different platforms.
 
+`MemoryCache` restores files with `sourceUrl` from native storage without IndexedDB. When a write reports `NOT_ENOUGH_SPACE` or the native API rejects with a recognized disk-full error, it evicts the oldest cached file and retries, at most once per evictable entry. Other write failures do not trigger eviction. During a forced refresh, the previous version of that URL is retained if the new write cannot be completed.
+
 ## Learn more
 
 - Official website: https://castmill.com/

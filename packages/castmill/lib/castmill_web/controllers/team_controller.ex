@@ -110,7 +110,9 @@ defmodule CastmillWeb.TeamController do
     team_id: [type: :string, required: true],
     page: [type: :integer, number: [min: 1]],
     page_size: [type: :integer, number: [min: 1, max: 100]],
-    search: :string
+    search: :string,
+    key: :string,
+    direction: :string
   }
 
   def update_team(conn, %{"team_id" => team_id, "name" => name}) do

@@ -43,6 +43,26 @@ The Dashboard is **fully internationalized** with support for 9 languages. Every
 
 ---
 
+## Device Details Orientation
+
+The device addon Details form supports clockwise `0`, `90`, `180`, and `270`
+degrees. Translations live under `devices.orientation` in all nine locales.
+Offline edits persist on the server and apply at the next player connection.
+The device's `info.capabilities.orientation` flag must explicitly be true to
+enable the selector; absent flags identify older players. When a player posts
+`/devices/:id/info`, the backend forwards the new `info` through
+`device:status`, so an upgraded player unlocks the selector without a reload.
+
+Keep saved desired state distinct from application feedback. The device observer's
+`device:status` payload can carry `orientation` or `orientation_status` without an
+`online` property. Merge only present fields, ignore acknowledgements for a
+different angle, and preserve unsaved form edits when status updates arrive.
+Update parent state only after successful saves using the server response.
+Match the Details form card styling for orientation. Keep its explanatory text
+in a hover/focus tooltip; omit successful application text while retaining
+pending, offline, unsupported-player, and error feedback.
+Registration and diagnostics are not part of the playback rotation subtree.
+
 ## Critical Rules
 
 ### ⚠️ MANDATORY: All User-Facing Text Must Be Localized

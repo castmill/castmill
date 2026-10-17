@@ -29,6 +29,22 @@ defmodule CastmillWeb.DeviceUpdatesChannelTest do
   end
 
   describe "join/3" do
+    test "forwards desired and applied orientation without changing online status", %{
+      socket: socket
+    } do
+      DeviceUpdatesChannel.handle_info(%{orientation: 90}, socket)
+      assert_push "device:status", %{orientation: 90}
+      report = %{orientation: 90, status: "applied", mode: "css"}
+      DeviceUpdatesChannel.handle_info(%{orientation_status: report}, socket)
+      assert_push "device:status", %{orientation_status: ^report}
+    end
+
+    test "forwards updated player info and capabilities", %{socket: socket} do
+      info = %{"capabilities" => %{"orientation" => true}}
+      DeviceUpdatesChannel.handle_info(%{info: info}, socket)
+      assert_push "device:status", %{info: ^info}
+    end
+
     test "authorizes user by role and joins the channel", %{
       socket: socket,
       device: device

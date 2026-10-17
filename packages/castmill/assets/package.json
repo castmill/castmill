@@ -2,17 +2,21 @@
   "name": "@castmill/castmill",
   "version": "1.0.0",
   "description": "Castmill - Open Digital Signage Platform",
+  "license": "AGPL",
+  "author": "",
   "scripts": {
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
-    "build": "echo \"@castmill/castmill build. Noop but needed to make build-all work\""
+    "build": "echo \"@castmill/castmill build. Noop but needed to make build-all work\"",
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt .",
+    "lint": "oxlint ."
   },
-  "author": "",
-  "license": "AGPL",
   "dependencies": {
     "@castmill/cache": "*",
     "@castmill/device": "*",
+    "@castmill/player": "*",
     "@castmill/ui-common": "*",
     "@thisbeyond/solid-dnd": "^0.7.5",
     "lodash": "^4.17.21"

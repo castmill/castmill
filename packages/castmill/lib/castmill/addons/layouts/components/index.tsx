@@ -416,7 +416,7 @@ const LayoutsPage: Component<AddonComponentProps> = (props) => {
       },
       {
         key: 'updated_at',
-        title: t('common.modified'),
+        title: t('common.updated'),
         sortable: true,
         render: (item: JsonLayout) =>
           item.updated_at ? (

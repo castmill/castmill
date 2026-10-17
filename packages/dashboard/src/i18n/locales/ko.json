@@ -923,6 +923,17 @@
     "translations": "번역"
   },
   "devices": {
+    "orientation": {
+      "label": "방향",
+      "help": "기본 방향에서 재생 콘텐츠를 시계 방향으로 회전합니다.",
+      "offline": "플레이어가 다음에 연결되면 저장된 방향이 적용됩니다.",
+      "pending": "방향이 저장되었습니다. 플레이어의 확인을 기다리는 중입니다.",
+      "applied": "방향이 적용되었습니다.",
+      "applyError": "플레이어가 이 방향을 적용하지 못했습니다. 기기 이벤트를 확인하세요.",
+      "unsupported": "방향 설정을 사용하려면 이 플레이어를 업데이트하세요.",
+      "saved": "기기 설정이 저장되었습니다.",
+      "saveError": "기기 설정을 저장하지 못했습니다."
+    },
     "setDeviceChannel": "기기 채널 설정",
     "selectChannel": "채널 선택",
     "preview": {
@@ -968,6 +979,7 @@
       "checkUpdatesDescription": "업데이트를 확인하고 설치합니다. 기기를 재시작하지 않습니다",
       "updateFirmware": "펌웨어 업데이트",
       "updateFirmwareDescription": "기기의 펌웨어를 업데이트합니다",
+      "actionNotSupported": "지원되지 않음.",
       "offlineMessage": "기기가 오프라인 상태이므로 명령을 보낼 수 없습니다",
       "autorecoveryUpdated": "자동 복구가 업데이트되었습니다",
       "autorecoveryUpdateFailed": "자동 복구 업데이트에 실패했습니다",
@@ -992,8 +1004,8 @@
       "confirmDeleteMessage": "이 캐시 항목을 삭제하시겠습니까? URL: {{url}}",
       "confirmDeleteMultiple": "여러 항목 삭제",
       "confirmDeleteMultipleMessage": "{{count}}개의 캐시 항목을 삭제하시겠습니까?",
-      "confirmClearAll": "모든 캐시 지우기",
-      "confirmClearAllMessage": "모든 {{type}} 캐시 항목을 지우시겠습니까? 이 작업은 취소할 수 없습니다.",
+      "confirmClearAll": "전체 캐시 지우기",
+      "confirmClearAllMessage": "모든 데이터, 코드 및 미디어 캐시 항목을 지우시겠습니까? 플레이어가 다시 로드되며 이 작업은 취소할 수 없습니다.",
       "deleteSuccess": "캐시 항목이 성공적으로 삭제되었습니다",
       "deleteMultipleSuccess": "{{count}}개의 캐시 항목이 성공적으로 삭제되었습니다",
       "clearAllSuccess": "모든 캐시 항목이 성공적으로 지워졌습니다",
@@ -1012,7 +1024,13 @@
       "confirmClearAll": "모든 이벤트 지우기",
       "confirmClearAllMessage": "이 기기의 모든 이벤트를 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.",
       "clearAllSuccess": "{{count}}개의 이벤트가 성공적으로 삭제되었습니다",
-      "deleteError": "이벤트 삭제 중 오류 발생: {{error}}"
+      "deleteError": "이벤트 삭제 중 오류 발생: {{error}}",
+      "occurrences": "발생 횟수",
+      "firstSeen": "최초 발생",
+      "lastSeen": "최근 발생",
+      "details": "세부 정보",
+      "detailsTitle": "오류 세부 정보",
+      "errorDetails": "정제된 진단 세부 정보"
     },
     "errors": {
       "setChannelFailed": "기기 채널 설정 실패: {{error}}",

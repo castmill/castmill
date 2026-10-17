@@ -21,56 +21,56 @@
 
   <body id="body">
     <script type="module">
-		import { Castmill } from '<%= widgetSrc %>';
+      import { Castmill } from '<%= widgetSrc %>';
 
-       console.log('Loading widget...');
-       document.addEventListener("DOMContentLoaded", function () {
-       	console.log('Loaded');
-       	var parent, origin;
+           console.log('Loading widget...');
+           document.addEventListener("DOMContentLoaded", function () {
+           	console.log('Loaded');
+           	var parent, origin;
 
-       	const messageHandler = function (event) {
-			let data;
-			console.log('About to decode a message', event.data);
-			try {
-				data = JSON.parse(event.data);
-			} catch(errr){
-				console.error("Could not parse message data");
-				return;
-			}
-       		console.log('Message received', data);
+           	const messageHandler = function (event) {
+      	let data;
+      	console.log('About to decode a message', event.data);
+      	try {
+      		data = JSON.parse(event.data);
+      	} catch(errr){
+      		console.error("Could not parse message data");
+      		return;
+      	}
+           		console.log('Message received', data);
 
-       		parent = event.source;
-       		origin = event.origin;
+           		parent = event.source;
+           		origin = event.origin;
 
-       		loading.then(function (widget) {
-       			switch (data.method) {
-       				case 'play':
-       				case 'stop':
-       				case 'seek':
-       				case 'duration':
-       					return widget[data.method].apply(widget, data.args ||  []).then(function (result) {
-       						event.source.postMessage(JSON.stringify({
-       							counter: data.counter,
-       							result: result
-       						}), event.origin);
-       					});
-       				default:
-       				parent.postMessage(JSON.stringify({ counter: counter, result: 'Error: Unknown method' }), origin);
-       			}
-       		});
-       	};
-       	window.addEventListener('message', messageHandler);
+           		loading.then(function (widget) {
+           			switch (data.method) {
+           				case 'play':
+           				case 'stop':
+           				case 'seek':
+           				case 'duration':
+           					return widget[data.method].apply(widget, data.args ||  []).then(function (result) {
+           						event.source.postMessage(JSON.stringify({
+           							counter: data.counter,
+           							result: result
+           						}), event.origin);
+           					});
+           				default:
+           				parent.postMessage(JSON.stringify({ counter: data.counter, result: 'Error: Unknown method' }), origin);
+           			}
+           		});
+           	};
+           	window.addEventListener('message', messageHandler);
 
-       	const loading = $.get('<%= baseUrl %>/<%= widgetId %>').then(function (json) {
-			const bodyEl = document.getElementById('body');
-       		return new <%= widgetConstructor %> (bodyEl, json);
-       	}).then(function (widget) {
-       		widget.on('offset', function (offset) {
-       			parent.postMessage(JSON.stringify({ offset: offset }), origin);
-       		});
-       		return widget;
-       	})
-       });
+           	const loading = $.get('<%= baseUrl %>/<%= widgetId %>').then(function (json) {
+      	const bodyEl = document.getElementById('body');
+           		return new <%= widgetConstructor %> (bodyEl, json);
+           	}).then(function (widget) {
+           		widget.on('offset', function (offset) {
+           			parent.postMessage(JSON.stringify({ offset: offset }), origin);
+           		});
+           		return widget;
+           	})
+           });
     </script>
   </body>
 </html>

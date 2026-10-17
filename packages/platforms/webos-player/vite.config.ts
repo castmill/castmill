@@ -125,7 +125,7 @@ export default defineConfig({
         'es.string.trim',
       ],
     }),
-    /* 
+    /*
     Uncomment the following line to enable solid-devtools.
     For more info see https://github.com/thetarnav/solid-devtools/tree/main/packages/extension#readme
     */
@@ -143,7 +143,25 @@ export default defineConfig({
     // setupFiles: ['node_modules/@testing-library/jest-dom/vitest'],
     // if you have few tests, try commenting this
     // out to improve performance:
-    isolate: false,
+    isolate: true,
+    include: [
+      'src/**/*.test.{ts,tsx}',
+      '../legacy-adapter-player/src/components/webos-layout-playback.test.tsx',
+    ],
+    coverage: {
+      include: [
+        'src/shared/**/*.ts',
+        'src/native/orientation.ts',
+        'src/boot/**/*.ts',
+        'src/classes/display-maintenance.ts',
+        'src/classes/file-storage.ts',
+        'src/classes/webos-machine.ts',
+        'src/components/player-frame.tsx',
+        'src/polyfills/fetch.ts',
+      ],
+      reporter: ['text', 'json-summary'],
+      thresholds: { statements: 90, lines: 90, functions: 90, branches: 90 },
+    },
   },
   build: {
     minify: false,

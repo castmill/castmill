@@ -951,6 +951,17 @@
     "translations": "Traducciones"
   },
   "devices": {
+    "orientation": {
+      "label": "Orientación",
+      "help": "Gira el contenido en sentido horario desde su orientación normal.",
+      "offline": "La orientación guardada se aplicará cuando el reproductor vuelva a conectarse.",
+      "pending": "Orientación guardada. Esperando la confirmación del reproductor.",
+      "applied": "Orientación aplicada.",
+      "applyError": "El reproductor no pudo aplicar esta orientación. Consulta los eventos del dispositivo.",
+      "unsupported": "Actualiza este reproductor para habilitar la configuración de orientación.",
+      "saved": "Configuración del dispositivo guardada.",
+      "saveError": "No se pudo guardar la configuración del dispositivo."
+    },
     "setDeviceChannel": "Establecer canal del dispositivo",
     "selectChannel": "Seleccionar canal",
     "preview": {
@@ -996,6 +1007,7 @@
       "checkUpdatesDescription": "Buscar actualizaciones e instalarlas. Esto no reiniciará el dispositivo",
       "updateFirmware": "Actualizar firmware",
       "updateFirmwareDescription": "Actualiza el firmware del dispositivo",
+      "actionNotSupported": "No compatible.",
       "offlineMessage": "El dispositivo está desconectado, por lo que no se le pueden enviar comandos",
       "autorecoveryUpdated": "La recuperación automática se actualizó",
       "autorecoveryUpdateFailed": "No se pudo actualizar la recuperación automática",
@@ -1015,13 +1027,13 @@
       "codeTab": "Código",
       "mediaTab": "Medios",
       "deleteSelected": "Eliminar elementos seleccionados",
-      "clearAll": "Limpiar Todo",
+      "clearAll": "Limpiar Toda la Caché",
       "confirmDelete": "Eliminar Entrada de Caché",
       "confirmDeleteMessage": "¿Está seguro de que desea eliminar esta entrada de caché? URL: {{url}}",
       "confirmDeleteMultiple": "Eliminar Múltiples Entradas",
       "confirmDeleteMultipleMessage": "¿Está seguro de que desea eliminar {{count}} entradas de caché?",
       "confirmClearAll": "Limpiar Toda la Caché",
-      "confirmClearAllMessage": "¿Está seguro de que desea limpiar todas las entradas de caché de {{type}}? Esta acción no se puede deshacer.",
+      "confirmClearAllMessage": "¿Está seguro de que desea limpiar todas las entradas de caché de datos, código y medios? El reproductor se recargará y esta acción no se puede deshacer.",
       "deleteSuccess": "Entrada de caché eliminada exitosamente",
       "deleteMultipleSuccess": "{{count}} entradas de caché eliminadas exitosamente",
       "clearAllSuccess": "Todas las entradas de caché limpiadas exitosamente",
@@ -1040,7 +1052,13 @@
       "confirmClearAll": "Limpiar Todos los Eventos",
       "confirmClearAllMessage": "¿Está seguro de que desea eliminar todos los eventos de este dispositivo? Esta acción no se puede deshacer.",
       "clearAllSuccess": "Se eliminaron {{count}} eventos exitosamente",
-      "deleteError": "Error al eliminar eventos: {{error}}"
+      "deleteError": "Error al eliminar eventos: {{error}}",
+      "occurrences": "Ocurrencias",
+      "firstSeen": "Visto por primera vez",
+      "lastSeen": "Visto por última vez",
+      "details": "Detalles",
+      "detailsTitle": "Detalles del error",
+      "errorDetails": "Detalles de diagnóstico sanitizados"
     },
     "errors": {
       "setChannelFailed": "Error al establecer el canal del dispositivo: {{error}}",

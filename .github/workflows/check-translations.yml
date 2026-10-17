@@ -46,7 +46,7 @@ jobs:
         run: |
           echo "## Translation Coverage Report" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           # Run the check and capture output
           if node scripts/check-missing-translations.cjs > translation_report.txt 2>&1; then
             echo "✅ All languages fully translated!" >> $GITHUB_STEP_SUMMARY
@@ -83,32 +83,32 @@ jobs:
             const fs = require('fs');
             const reportPath = './packages/dashboard/translation_report.txt';
             let report = 'Translation coverage check failed.';
-            
+
             try {
               report = fs.readFileSync(reportPath, 'utf8');
             } catch (error) {
               console.log('Could not read report file:', error.message);
             }
-            
+
             const body = `## ⚠️ Translation Coverage Check Failed
-            
+
             Some strings are not translated in all languages. Please review and translate the missing strings.
-            
+
             <details>
             <summary>📊 Translation Report</summary>
-            
+
             \`\`\`
             ${report}
             \`\`\`
-            
+
             </details>
-            
+
             ### 📝 How to fix:
             1. Run \`cd packages/dashboard && node scripts/check-missing-translations.cjs [language]\` to see details
             2. Update the translation files in \`packages/dashboard/src/i18n/locales/\`
             3. Ensure all strings are translated (not just copied from English)
             4. Re-run the check locally before pushing
-            
+
             ### 🔍 Check specific language:
             \`\`\`bash
             cd packages/dashboard
@@ -117,7 +117,7 @@ jobs:
             node scripts/check-missing-translations.cjs de  # German
             \`\`\`
             `;
-            
+
             try {
               await github.rest.issues.createComment({
                 issue_number: context.issue.number,

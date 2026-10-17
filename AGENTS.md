@@ -23,19 +23,20 @@ agents/
 
 ### Key System Documentation
 
-| Topic | Location |
-|-------|----------|
-| Quotas & Plans | `agents/systems/QUOTAS.md` |
-| Widget Integrations | `agents/systems/WIDGET-INTEGRATIONS.md` |
-| Layout Widgets & Circular References | `agents/systems/LAYOUT-WIDGETS.md` |
-| Widget Assets | `agents/systems/WIDGET-ASSETS.md` |
-| Notifications | `agents/systems/notifications.md` |
+| Topic                                | Location                                |
+| ------------------------------------ | --------------------------------------- |
+| Quotas & Plans                       | `agents/systems/QUOTAS.md`              |
+| Widget Integrations                  | `agents/systems/WIDGET-INTEGRATIONS.md` |
+| Layout Widgets & Circular References | `agents/systems/LAYOUT-WIDGETS.md`      |
+| Widget Assets                        | `agents/systems/WIDGET-ASSETS.md`       |
+| Notifications                        | `agents/systems/notifications.md`       |
 
 ## 🏗️ Project Structure
 
 This is a Yarn workspace monorepo with the following key packages:
 
 ### Frontend Packages
+
 - `packages/website/` - Documentation site (Docusaurus)
 - `packages/dashboard/` - Management interface (SolidJS/TypeScript)
 - `packages/device/` - Device management interface
@@ -44,49 +45,125 @@ This is a Yarn workspace monorepo with the following key packages:
 - `packages/widged/` - Widget system
 
 ### Backend & Infrastructure
+
 - `packages/castmill/` - Main Elixir/Phoenix backend
 - `packages/cache/` - Caching layer
 - `packages/platforms/` - Platform implementations (Android, WebOS, Electron)
 
 ## 🌍 Internationalization (i18n)
 
-**⚠️ CRITICAL**: All user-facing text must be localized.
+**⚠️ CRITICAL**: Localize user-facing text except in the English-only legacy
+adapter player.
 
 ### Quick Reference
-- **9 Languages**: English, Spanish, Swedish, German, French, Chinese, Arabic (RTL), Korean, Japanese
-- **100% Coverage Required**: CI validates all languages are complete
 
-### Essential Rules
+- **Dashboard: 9 Languages**: English, Spanish, Swedish, German, French, Chinese, Arabic (RTL), Korean, Japanese
+- **Dashboard: 100% Coverage Required**: CI validates all languages are complete
+
+### Dashboard Rules
 
 ```tsx
 // ❌ NEVER hardcode strings
-<button>Save</button>
+<button>Save</button>;
 
 // ✅ ALWAYS use i18n
 const { t } = useI18n();
-<button>{t('common.save')}</button>
+<button>{t('common.save')}</button>;
 ```
 
 ### Before Every Commit
+
 ```bash
 cd packages/dashboard && yarn check-translations
 ```
 
 ### Detailed Documentation
+
 - **Full i18n guide**: `packages/dashboard/AGENTS.md`
 - **Implementation**: `packages/dashboard/src/i18n/README.md`
 - **Scripts**: `packages/dashboard/scripts/README.md`
+- **Legacy adapter player**: keep UI strings in `packages/platforms/legacy-adapter-player/` in English. Do not add locale JSON files, translation keys, or an i18n hook there; this does not change dashboard localization.
 
 ## 💡 Development Guidelines
 
 ### Code Quality Standards
+
 - Use TypeScript for all new frontend code
 - Follow existing ESLint/Prettier configurations
 - Maintain >90% test coverage on new code
 - Document complex logic and architectural decisions
 - Update `agents/` documentation when making architectural changes
 
+### Legacy Player Widget Compatibility
+
+**Core player widgets must remain compatible with the legacy Android player.** This
+applies to image, video, text, and layout widgets, as well as shared template
+components and utilities they use.
+
+- Treat the Android 5.1/Crosswalk player as a Chrome 38 target; do not validate only
+  in a current desktop browser.
+- Do not introduce unsupported CSS such as CSS Grid or `aspect-ratio`. Use
+  conservative flexbox sizing, explicit `flex-shrink` behavior, and SVG `viewBox`
+  sizing where appropriate.
+- Feature-detect browser APIs. Use native APIs when available and provide lightweight
+  fallbacks for legacy players; do not assume TypeScript transpilation polyfills Web
+  Platform APIs.
+- Test dynamic states, including empty content, long auto-fit text, media loading,
+  and size changes.
+- After changing `@castmill/player`, rebuild `@castmill/device` before building the
+  legacy adapter because the device package embeds the player bundle.
+
+Read `agents/packages/player/LEGACY-PLAYER-COMPATIBILITY.md` before changing these
+widgets or shared player-rendering code.
+
+### WebOS Player Compatibility
+
+- Native and legacy WebOS players share runtime code in
+  `packages/platforms/webos-player/src/shared`, exported as
+  `@castmill/webos-player/shared`. Do not create a separate webos-common package.
+- Keep that entry point free of SCAP/native APIs, app startup, CSS, and legacy
+  bridge imports. The legacy adapter imports the source subpath; no native
+  player build is required. Native-to-legacy runtime dependencies are forbidden.
+- Preserve the two-loaded-video decoder budget, WebOS playback recovery,
+  one-argument WebSocket transport, and `MemoryCache` (no IndexedDB on WebOS).
+  Persist only eligible public media; protected/code/data resources use XHR
+  session blobs. Cold startup requires a reachable server.
+- Native-only rules: import SCAP-backed modules (`src/native`, `src/classes`)
+  only after `window.castmillScapReady` resolves; the boot gate loads them in a
+  dynamic app chunk. The hardware ID must stay `sha256(wired || wifi MAC)` to
+  match the legacy wrapper. SCAP storage sizes are KB. The player disables
+  automatic standby at boot and does not schedule reboots (timers come from the
+  dashboard).
+- Run the legacy suite before moving shared functionality. After changes, run
+  `yarn workspace @castmill/legacy-adapter-player test:webos-coverage` and
+  `yarn workspace @castmill/webos-player test:webos-coverage`, plus both
+  workspaces' typecheck and builds. Keep import-boundary and no-SCAP smoke tests.
+- Validate actual visible playback on old signage hardware before release;
+  modern-browser tests and media events alone are insufficient.
+
+See `packages/platforms/webos-player/README.md` and
+`agents/packages/player/LEGACY-PLAYER-COMPATIBILITY.md` for storage, startup,
+decoder-blocking behavior, and test details.
+
+### Device Orientation
+
+- Device Details supports numeric clockwise `0 | 90 | 180 | 270`, persisted
+  server-side and reconciled on startup/reconnect. Offline saves are allowed.
+- Keep native rotation in the Machine hook and CSS rotation in the shared Device
+  playback wrapper; never apply both. Native WebOS uses Custom.Configuration's
+  get/setNativePortraitMode (0 -> "off", others -> degree strings). Legacy WebOS
+  sends numeric angles to the embedding player's existing setRotation operation.
+  Native mode uses the native viewport and also rotates shell UI. Native/bridge
+  errors and 10-second timeouts must reject, not silently fall back to CSS.
+- Do not confuse LG OSD portrait mode with content rotation, guess native API
+  constants, or automatically reboot a display to apply orientation.
+- Preserve renderer viewport clipping and use logical layout measurements for
+  rotated text fitting, pagination, and scrolling. Do not remount video layers.
+- Localize Details labels/status in all nine dashboard languages. Keep save
+  success separate from player application; old capability flags remain unsupported.
+
 ### Key Technologies
+
 - **Frontend**: SolidJS (Dashboard), React, TypeScript, Vite
 - **Backend**: Elixir/Phoenix, PostgreSQL, Oban
 - **Testing**: Vitest, React Testing Library, ExUnit
@@ -95,6 +172,7 @@ cd packages/dashboard && yarn check-translations
 ## 🔧 Common Tasks
 
 ### Working with Packages
+
 ```bash
 # Install dependencies
 yarn install
@@ -111,7 +189,9 @@ yarn workspace website start
 ```
 
 ### Scripts Convention
+
 Utility scripts should be placed in `packages/[package-name]/scripts/`:
+
 - Use `.cjs` extension for Node.js CommonJS scripts
 - Document in `scripts/README.md` within the same directory
 - Add yarn aliases to `package.json`
@@ -125,6 +205,7 @@ The Dashboard uses URL-based routing with organization context:
 ```
 
 ### Key Rules
+
 ```tsx
 // ✅ Always include org ID
 navigate(`/org/${store.organizations.selectedId}/teams`);
@@ -149,6 +230,7 @@ When providing assistance, prioritize:
 ## ⚠️ Common Pitfalls to Avoid
 
 - Don't modify `yarn.lock` manually
+- Don't remove the root `**/cliui/*` resolutions: Yarn 1 merges `@isaacs/cliui`'s `*-cjs` aliases with the real CommonJS packages, so `cliui` can otherwise receive ESM `strip-ansi`/`string-width`/`wrap-ansi` and break `yarn install` (electron-builder postinstall)
 - Don't ignore TypeScript errors
 - Don't skip writing tests
 - Don't hardcode user-facing strings

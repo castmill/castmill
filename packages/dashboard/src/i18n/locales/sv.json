@@ -918,6 +918,17 @@
     "translations": "Översättningar"
   },
   "devices": {
+    "orientation": {
+      "label": "Orientering",
+      "help": "Rotera innehållet medurs från dess normala orientering.",
+      "offline": "Den sparade orienteringen tillämpas nästa gång spelaren ansluter.",
+      "pending": "Orienteringen har sparats. Väntar på bekräftelse från spelaren.",
+      "applied": "Orienteringen har tillämpats.",
+      "applyError": "Spelaren kunde inte tillämpa orienteringen. Kontrollera enhetens händelser.",
+      "unsupported": "Uppdatera spelaren för att aktivera orienteringsinställningar.",
+      "saved": "Enhetens inställningar har sparats.",
+      "saveError": "Det gick inte att spara enhetens inställningar."
+    },
     "setDeviceChannel": "Ställ in enhetskanal",
     "selectChannel": "Välj kanal",
     "preview": {
@@ -963,6 +974,7 @@
       "checkUpdatesDescription": "Sök efter uppdateringar och installera dem. Detta kommer inte att starta om enheten",
       "updateFirmware": "Uppdatera firmware",
       "updateFirmwareDescription": "Uppdaterar enhetens firmware",
+      "actionNotSupported": "Stöds inte.",
       "offlineMessage": "Enheten är offline, så inga kommandon kan skickas till den",
       "autorecoveryUpdated": "Autoåterställning har uppdaterats",
       "autorecoveryUpdateFailed": "Misslyckades med att uppdatera autoåterställning",
@@ -982,13 +994,13 @@
       "codeTab": "Kod",
       "mediaTab": "Media",
       "deleteSelected": "Ta bort valda objekt",
-      "clearAll": "Rensa Allt",
+      "clearAll": "Rensa Hela Cachen",
       "confirmDelete": "Ta bort Cachepost",
       "confirmDeleteMessage": "Är du säker på att du vill ta bort denna cachepost? URL: {{url}}",
       "confirmDeleteMultiple": "Ta bort Flera Poster",
       "confirmDeleteMultipleMessage": "Är du säker på att du vill ta bort {{count}} cacheposter?",
-      "confirmClearAll": "Rensa All Cache",
-      "confirmClearAllMessage": "Är du säker på att du vill rensa alla {{type}} cacheposter? Denna åtgärd kan inte ångras.",
+      "confirmClearAll": "Rensa Hela Cachen",
+      "confirmClearAllMessage": "Är du säker på att du vill rensa alla cacheposter för data, kod och media? Spelaren kommer att laddas om och åtgärden kan inte ångras.",
       "deleteSuccess": "Cachepost borttagen framgångsrikt",
       "deleteMultipleSuccess": "{{count}} cacheposter borttagna framgångsrikt",
       "clearAllSuccess": "Alla cacheposter rensade framgångsrikt",
@@ -1007,7 +1019,13 @@
       "confirmClearAll": "Rensa alla händelser",
       "confirmClearAllMessage": "Är du säker på att du vill ta bort alla händelser för denna enhet? Denna åtgärd kan inte ångras.",
       "clearAllSuccess": "{{count}} händelser har tagits bort",
-      "deleteError": "Fel vid borttagning av händelser: {{error}}"
+      "deleteError": "Fel vid borttagning av händelser: {{error}}",
+      "occurrences": "Förekomster",
+      "firstSeen": "Först sedd",
+      "lastSeen": "Senast sedd",
+      "details": "Detaljer",
+      "detailsTitle": "Feldetaljer",
+      "errorDetails": "Sanerade diagnostikdetaljer"
     },
     "errors": {
       "setChannelFailed": "Misslyckades att ställa in enhetskanal: {{error}}",

@@ -63,7 +63,7 @@ public class RootTools {
         // detects that the app is dead.
         // Any alarm managers and broadcast receivers are killed with the app so we
         // can't use that either
-        return execCmdB("am start -S -W -n com.castmill.app/.MainActivity");
+        return execCmdB("am start -S -W -n com.castmill.android.app/.MainActivity");
     }
 
     // clear core dumps from /data/core

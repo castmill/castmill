@@ -19,9 +19,7 @@ export const WidgetDetails: Component<WidgetDetailsProps> = (props) => {
   return (
     <div class="widget-details">
       <div class="widget-header">
-        <div class="widget-icon">
-          {widget.icon || '📦'}
-        </div>
+        <div class="widget-icon">{widget.icon || '📦'}</div>
         <div class="widget-info">
           <h2>{widget.name}</h2>
           {widget.description && (
@@ -37,9 +35,7 @@ export const WidgetDetails: Component<WidgetDetailsProps> = (props) => {
             {widget.template?.type && (
               <div class="template-type">{widget.template.type}</div>
             )}
-            <div class="json-code">
-              {formatJson(widget.template)}
-            </div>
+            <div class="json-code">{formatJson(widget.template)}</div>
           </div>
         </div>
 
@@ -82,7 +78,9 @@ export const WidgetDetails: Component<WidgetDetailsProps> = (props) => {
               {widget.update_interval_seconds && (
                 <div class="meta-item">
                   <span class="meta-label">Update Interval</span>
-                  <span class="meta-value">{widget.update_interval_seconds}s</span>
+                  <span class="meta-value">
+                    {widget.update_interval_seconds}s
+                  </span>
                 </div>
               )}
               {widget.small_icon && (

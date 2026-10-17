@@ -528,9 +528,9 @@ defmodule Castmill.Widgets do
 
       # Validate each playlist reference
       Enum.reduce_while(playlist_refs, :ok, fn ref_playlist_id, _acc ->
-        case Castmill.Resources.validate_no_circular_reference(playlist_id, ref_playlist_id) do
+        case Castmill.Resources.validate_layout_playlist_reference(playlist_id, ref_playlist_id) do
           :ok -> {:cont, :ok}
-          {:error, :circular_reference} -> {:halt, {:error, :circular_reference}}
+          {:error, reason} -> {:halt, {:error, reason}}
         end
       end)
     else
@@ -636,9 +636,9 @@ defmodule Castmill.Widgets do
 
       # Validate each playlist reference
       Enum.reduce_while(playlist_refs, :ok, fn ref_playlist_id, _acc ->
-        case Castmill.Resources.validate_no_circular_reference(playlist_id, ref_playlist_id) do
+        case Castmill.Resources.validate_layout_playlist_reference(playlist_id, ref_playlist_id) do
           :ok -> {:cont, :ok}
-          {:error, :circular_reference} -> {:halt, {:error, :circular_reference}}
+          {:error, reason} -> {:halt, {:error, reason}}
         end
       end)
     else

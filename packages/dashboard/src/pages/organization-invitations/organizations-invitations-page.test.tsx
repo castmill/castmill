@@ -81,9 +81,8 @@ describe('OrganizationsInvitationPage', () => {
 
   describe('Loading and Preview', () => {
     it('shows loading state initially', async () => {
-      const { OrganizationsService } = await import(
-        '../../services/organizations.service'
-      );
+      const { OrganizationsService } =
+        await import('../../services/organizations.service');
       vi.mocked(OrganizationsService.previewInvitation).mockImplementation(
         () => new Promise(() => {}) // Never resolves
       );
@@ -94,9 +93,8 @@ describe('OrganizationsInvitationPage', () => {
     });
 
     it('displays invitation details for new user', async () => {
-      const { OrganizationsService } = await import(
-        '../../services/organizations.service'
-      );
+      const { OrganizationsService } =
+        await import('../../services/organizations.service');
       vi.mocked(OrganizationsService.previewInvitation).mockResolvedValue(
         mockInvitation
       );
@@ -117,9 +115,8 @@ describe('OrganizationsInvitationPage', () => {
     });
 
     it('displays invitation details for existing user', async () => {
-      const { OrganizationsService } = await import(
-        '../../services/organizations.service'
-      );
+      const { OrganizationsService } =
+        await import('../../services/organizations.service');
       vi.mocked(OrganizationsService.previewInvitation).mockResolvedValue(
         mockExistingUserInvitation
       );
@@ -135,9 +132,8 @@ describe('OrganizationsInvitationPage', () => {
     });
 
     it('shows error message when invitation is invalid', async () => {
-      const { OrganizationsService } = await import(
-        '../../services/organizations.service'
-      );
+      const { OrganizationsService } =
+        await import('../../services/organizations.service');
       vi.mocked(OrganizationsService.previewInvitation).mockRejectedValue(
         new Error('Invalid invitation')
       );
@@ -151,9 +147,8 @@ describe('OrganizationsInvitationPage', () => {
     });
 
     it('shows expired state when invitation is expired', async () => {
-      const { OrganizationsService } = await import(
-        '../../services/organizations.service'
-      );
+      const { OrganizationsService } =
+        await import('../../services/organizations.service');
       vi.mocked(OrganizationsService.previewInvitation).mockResolvedValue({
         ...mockInvitation,
         expired: true,
@@ -169,9 +164,8 @@ describe('OrganizationsInvitationPage', () => {
     });
 
     it('shows already accepted state when invitation status is not invited', async () => {
-      const { OrganizationsService } = await import(
-        '../../services/organizations.service'
-      );
+      const { OrganizationsService } =
+        await import('../../services/organizations.service');
       vi.mocked(OrganizationsService.previewInvitation).mockResolvedValue({
         ...mockInvitation,
         status: 'accepted',
@@ -189,9 +183,8 @@ describe('OrganizationsInvitationPage', () => {
 
   describe('Signup Flow', () => {
     it('initiates signup with passkey when clicking Sign Up button', async () => {
-      const { OrganizationsService } = await import(
-        '../../services/organizations.service'
-      );
+      const { OrganizationsService } =
+        await import('../../services/organizations.service');
       vi.mocked(OrganizationsService.previewInvitation).mockResolvedValue(
         mockInvitation
       );
@@ -259,9 +252,8 @@ describe('OrganizationsInvitationPage', () => {
     });
 
     it('shows error when signup challenge request fails', async () => {
-      const { OrganizationsService } = await import(
-        '../../services/organizations.service'
-      );
+      const { OrganizationsService } =
+        await import('../../services/organizations.service');
       vi.mocked(OrganizationsService.previewInvitation).mockResolvedValue(
         mockInvitation
       );
@@ -292,9 +284,8 @@ describe('OrganizationsInvitationPage', () => {
     });
 
     it('disables signup button while signing up', async () => {
-      const { OrganizationsService } = await import(
-        '../../services/organizations.service'
-      );
+      const { OrganizationsService } =
+        await import('../../services/organizations.service');
       vi.mocked(OrganizationsService.previewInvitation).mockResolvedValue(
         mockInvitation
       );
@@ -322,9 +313,8 @@ describe('OrganizationsInvitationPage', () => {
 
   describe('Login Flow', () => {
     it('authenticates existing users with passkey directly', async () => {
-      const { OrganizationsService } = await import(
-        '../../services/organizations.service'
-      );
+      const { OrganizationsService } =
+        await import('../../services/organizations.service');
       const { loginUser } = await import('../../components/auth');
 
       vi.mocked(OrganizationsService.previewInvitation).mockResolvedValue(
@@ -405,9 +395,8 @@ describe('OrganizationsInvitationPage', () => {
   describe('Authenticated User Flow', () => {
     it('shows accept button for authenticated user', async () => {
       const { checkAuth, getUser } = await import('../../components/auth');
-      const { OrganizationsService } = await import(
-        '../../services/organizations.service'
-      );
+      const { OrganizationsService } =
+        await import('../../services/organizations.service');
 
       vi.mocked(checkAuth).mockReturnValue(true);
       vi.mocked(getUser).mockReturnValue({
@@ -430,9 +419,8 @@ describe('OrganizationsInvitationPage', () => {
 
     it('calls acceptInvitation when authenticated user clicks accept', async () => {
       const { checkAuth, getUser } = await import('../../components/auth');
-      const { OrganizationsService } = await import(
-        '../../services/organizations.service'
-      );
+      const { OrganizationsService } =
+        await import('../../services/organizations.service');
 
       vi.mocked(checkAuth).mockReturnValue(true);
       vi.mocked(getUser).mockReturnValue({
@@ -470,9 +458,8 @@ describe('OrganizationsInvitationPage', () => {
 
   describe('Email Display', () => {
     it('displays email address in styled box', async () => {
-      const { OrganizationsService } = await import(
-        '../../services/organizations.service'
-      );
+      const { OrganizationsService } =
+        await import('../../services/organizations.service');
       vi.mocked(OrganizationsService.previewInvitation).mockResolvedValue(
         mockInvitation
       );
@@ -494,9 +481,8 @@ describe('OrganizationsInvitationPage', () => {
 
   describe('Organization Information', () => {
     it('displays organization name prominently', async () => {
-      const { OrganizationsService } = await import(
-        '../../services/organizations.service'
-      );
+      const { OrganizationsService } =
+        await import('../../services/organizations.service');
       vi.mocked(OrganizationsService.previewInvitation).mockResolvedValue(
         mockInvitation
       );

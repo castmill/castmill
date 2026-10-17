@@ -274,6 +274,8 @@ export const BaseMenu: Component<BaseMenuProps> = (props) => {
     Up = 38,
     Enter = 13,
     Escape = 27,
+    // LG webOS remote Back button.
+    WebosBack = 461,
   }
 
   // register event listeners. We may need more generic key events in the future to
@@ -300,6 +302,7 @@ export const BaseMenu: Component<BaseMenuProps> = (props) => {
           }
           break;
         case Key.Escape:
+        case Key.WebosBack:
           hideMenu();
           break;
       }
