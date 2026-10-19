@@ -1509,6 +1509,10 @@
         "other": "عملاء آخرون"
       },
       "steps": {
+        "claudeDesktop": "في Claude Desktop، افتح الإعدادات > المطوّر > تعديل الإعدادات، وأضف هذا الخادم إلى claude_desktop_config.json ثم أعد تشغيل التطبيق. يتصل Claude Desktop عبر جسر mcp-remote، لذا يجب تثبيت Node.js (مع npx) على هذا الكمبيوتر.",
+        "claudeCode": "شغّل هذا الأمر في الطرفية لتسجيل الخادم في Claude Code، ثم تحقّق منه باستخدام \"claude mcp list\".",
+        "vscode": "أضف هذه الإعدادات إلى .vscode/mcp.json في مساحة العمل (أو شغّل \"MCP: Add Server\" من لوحة الأوامر)، ثم ابدأ تشغيل الخادم واستخدمه من Copilot Chat في وضع الوكيل.",
+        "cursor": "أضف هذه الإعدادات إلى ~/.cursor/mcp.json لجميع المشاريع، أو إلى .cursor/mcp.json داخل مشروع، ثم فعّل الخادم من Cursor Settings > MCP.",
         "other": "قم بإعداد خادم MCP بعيد باستخدام هذه الإعدادات."
       }
     }

@@ -93,6 +93,22 @@ describe('AgentIntegrationInstructions', () => {
     expect(screen.getAllByRole('tab')).toHaveLength(INTEGRATION_CLIENTS.length);
   });
 
+  it('shows localized setup steps for every client', () => {
+    render(() => (
+      <I18nProvider>
+        <AgentIntegrationInstructions />
+      </I18nProvider>
+    ));
+
+    const container = screen.getByTestId('agent-integration');
+    for (const tab of screen.getAllByRole('tab')) {
+      fireEvent.click(tab);
+      expect(container.textContent).not.toContain('agents.integration.steps');
+    }
+    fireEvent.click(screen.getByText('Claude Desktop'));
+    expect(container.textContent).toContain('mcp-remote');
+  });
+
   it('switches clients and copies the snippet', async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.assign(navigator, { clipboard: { writeText } });

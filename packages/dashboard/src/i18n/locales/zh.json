@@ -1509,6 +1509,10 @@
         "other": "其他客户端"
       },
       "steps": {
+        "claudeDesktop": "在 Claude Desktop 中打开“设置 > 开发者 > 编辑配置”，将此服务器添加到 claude_desktop_config.json 并重启应用。Claude Desktop 通过 mcp-remote 桥接连接，因此此计算机上必须安装 Node.js（含 npx）。",
+        "claudeCode": "在终端中运行此命令，将服务器注册到 Claude Code，然后使用 \"claude mcp list\" 进行验证。",
+        "vscode": "将此配置添加到工作区的 .vscode/mcp.json（或在命令面板中运行 \"MCP: Add Server\"），然后启动服务器，并在 Copilot Chat 的代理模式中使用。",
+        "cursor": "将此配置添加到 ~/.cursor/mcp.json（适用于所有项目）或项目中的 .cursor/mcp.json，然后在 Cursor Settings > MCP 中启用该服务器。",
         "other": "使用以下设置配置远程 MCP 服务器。"
       }
     }

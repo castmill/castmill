@@ -5,6 +5,8 @@ defmodule CastmillWeb.MCPControllerTest do
   import Castmill.OrganizationsFixtures
   import Castmill.PlaylistsFixtures
   import Castmill.ChannelsFixtures
+  import Castmill.DevicesFixtures
+  import Castmill.TeamsFixtures
 
   alias Castmill.Agents
   alias Castmill.Organizations
@@ -272,6 +274,7 @@ defmodule CastmillWeb.MCPControllerTest do
       other = organization_fixture()
       Castmill.Quotas.add_quota_to_organization(other.id, :playlists, 10)
       foreign_playlist = playlist_fixture(%{organization_id: other.id})
+
       {:ok, _admin, admin_secret} =
         Agents.create_agent(organization.id, %{"name" => "Admin agent", "role" => "admin"})
 
@@ -302,6 +305,7 @@ defmodule CastmillWeb.MCPControllerTest do
       other = organization_fixture()
       Castmill.Quotas.add_quota_to_organization(other.id, :playlists, 10)
       foreign_playlist = playlist_fixture(%{organization_id: other.id})
+
       {:ok, _admin, admin_secret} =
         Agents.create_agent(organization.id, %{"name" => "Admin agent", "role" => "admin"})
 
@@ -323,22 +327,214 @@ defmodule CastmillWeb.MCPControllerTest do
 
       assert result["isError"]
       assert hd(result["content"])["text"] =~ "403"
-      assert Castmill.Resources.get_playlist_basic(foreign_playlist.id).organization_id == other.id
+
+      assert Castmill.Resources.get_playlist_basic(foreign_playlist.id).organization_id ==
+               other.id
+
       assert organization.id != other.id
     end
 
     test "listing channel entries without date bounds uses defaults", %{
       organization: organization
     } do
-      channel = channel_fixture(%{organization_id: organization.id})
+      channel = channel_fixture(%{organization_id: organization.id, timezone: "UTC"})
 
       {:ok, _guest, guest_secret} =
         Agents.create_agent(organization.id, %{"name" => "Guest", "role" => "guest"})
+
+      playlist = playlist_fixture(%{organization_id: organization.id})
+
+      entry =
+        channel_entry_fixture(channel.id, %{
+          playlist_id: playlist.id,
+          start: ~U[2020-01-01 00:00:00Z],
+          end: ~U[2020-01-01 05:00:00Z]
+        })
 
       result =
         call_tool(guest_secret, "list_channel_entries", %{"channel_id" => channel.id})
 
       refute result["isError"]
+      assert [%{"id" => entry_id}] = Jason.decode!(hd(result["content"])["text"])
+      assert entry_id == entry.id
+    end
+
+    test "devices and teams of other organizations cannot be deleted", %{
+      organization: organization
+    } do
+      other = organization_fixture()
+      Castmill.Quotas.add_quota_to_organization(other.id, :devices, 10)
+      Castmill.Quotas.add_quota_to_organization(other.id, :teams, 10)
+      foreign_device = device_fixture(%{organization_id: other.id})
+      foreign_team = team_fixture(%{organization_id: other.id})
+
+      {:ok, _admin, admin_secret} =
+        Agents.create_agent(organization.id, %{"name" => "Admin agent", "role" => "admin"})
+
+      result =
+        call_tool(admin_secret, "delete_resource", %{
+          "resource_type" => "devices",
+          "id" => foreign_device.id
+        })
+
+      assert result["isError"]
+      assert hd(result["content"])["text"] =~ "403"
+      assert Castmill.Devices.get_device(foreign_device.id)
+
+      result =
+        call_tool(admin_secret, "api_request", %{
+          "method" => "DELETE",
+          "path" => "/teams/#{foreign_team.id}"
+        })
+
+      assert result["isError"]
+      assert hd(result["content"])["text"] =~ "403"
+      assert Castmill.Teams.get_team(foreign_team.id)
+    end
+
+    test "channel entries cannot reference foreign playlists or entries", %{
+      organization: organization
+    } do
+      channel = channel_fixture(%{organization_id: organization.id, timezone: "UTC"})
+      playlist = playlist_fixture(%{organization_id: organization.id})
+
+      entry =
+        channel_entry_fixture(channel.id, %{
+          playlist_id: playlist.id,
+          start: ~U[2020-01-01 00:00:00Z],
+          end: ~U[2020-01-01 05:00:00Z]
+        })
+
+      other = organization_fixture()
+      Castmill.Quotas.add_quota_to_organization(other.id, :playlists, 10)
+      foreign_playlist = playlist_fixture(%{organization_id: other.id})
+      foreign_channel = channel_fixture(%{organization_id: other.id, timezone: "UTC"})
+
+      foreign_entry =
+        channel_entry_fixture(foreign_channel.id, %{
+          playlist_id: foreign_playlist.id,
+          start: ~U[2020-01-01 00:00:00Z],
+          end: ~U[2020-01-01 05:00:00Z]
+        })
+
+      {:ok, _admin, admin_secret} =
+        Agents.create_agent(organization.id, %{"name" => "Admin agent", "role" => "admin"})
+
+      result =
+        call_tool(admin_secret, "add_channel_entry", %{
+          "channel_id" => channel.id,
+          "playlist_id" => foreign_playlist.id,
+          "start" => DateTime.to_unix(~U[2020-01-02 00:00:00Z], :millisecond),
+          "end" => DateTime.to_unix(~U[2020-01-02 05:00:00Z], :millisecond)
+        })
+
+      assert result["isError"]
+      assert hd(result["content"])["text"] =~ "403"
+
+      result =
+        call_tool(admin_secret, "api_request", %{
+          "method" => "PATCH",
+          "path" => "/channels/#{channel.id}/entries/#{entry.id}",
+          "body" => %{"playlist_id" => foreign_playlist.id}
+        })
+
+      assert result["isError"]
+      assert hd(result["content"])["text"] =~ "403"
+      assert Castmill.Resources.get_channel_entry(entry.id).playlist_id == playlist.id
+
+      result =
+        call_tool(admin_secret, "delete_channel_entry", %{
+          "channel_id" => channel.id,
+          "entry_id" => foreign_entry.id
+        })
+
+      assert result["isError"]
+      assert hd(result["content"])["text"] =~ "403"
+
+      result =
+        call_tool(admin_secret, "api_request", %{
+          "method" => "PATCH",
+          "path" => "/channels/#{channel.id}/entries/#{foreign_entry.id}",
+          "body" => %{"repeat_weekly_until" => nil}
+        })
+
+      assert result["isError"]
+      assert hd(result["content"])["text"] =~ "403"
+      assert Castmill.Resources.get_channel_entry(foreign_entry.id)
+
+      refute call_tool(admin_secret, "delete_channel_entry", %{
+               "channel_id" => channel.id,
+               "entry_id" => entry.id
+             })["isError"]
+
+      refute Castmill.Resources.get_channel_entry(entry.id)
+    end
+
+    test "foreign channels cannot be assigned to devices", %{organization: organization} do
+      Castmill.Quotas.add_quota_to_organization(organization.id, :devices, 10)
+      device = device_fixture(%{organization_id: organization.id})
+      channel = channel_fixture(%{organization_id: organization.id, timezone: "UTC"})
+
+      foreign_channel =
+        channel_fixture(%{organization_id: organization_fixture().id, timezone: "UTC"})
+
+      {:ok, _admin, admin_secret} =
+        Agents.create_agent(organization.id, %{"name" => "Admin agent", "role" => "admin"})
+
+      result =
+        call_tool(admin_secret, "add_device_channel", %{
+          "device_id" => device.id,
+          "channel_id" => foreign_channel.id
+        })
+
+      assert result["isError"]
+      assert hd(result["content"])["text"] =~ "403"
+
+      result =
+        call_tool(admin_secret, "api_request", %{
+          "method" => "POST",
+          "path" => "/devices/#{device.id}/channels",
+          "body" => %{"channel_id" => foreign_channel.id}
+        })
+
+      assert result["isError"]
+      assert hd(result["content"])["text"] =~ "403"
+      assert Castmill.Devices.list_channels(device.id) == []
+
+      refute call_tool(admin_secret, "add_device_channel", %{
+               "device_id" => device.id,
+               "channel_id" => channel.id
+             })["isError"]
+    end
+
+    test "api_request keeps DELETE bodies and rejects non-string methods", %{
+      secret: secret,
+      agent: agent
+    } do
+      assert {:ok, "DELETE", _path, opts} =
+               CastmillWeb.MCP.Tools.build_request(
+                 "api_request",
+                 %{"method" => "DELETE", "path" => "/playlists/1", "body" => %{"a" => 1}},
+                 agent
+               )
+
+      assert opts[:body] == %{"a" => 1}
+
+      assert {:ok, "GET", _path, opts} =
+               CastmillWeb.MCP.Tools.build_request(
+                 "api_request",
+                 %{"method" => "get", "path" => "/playlists", "body" => %{"a" => 1}},
+                 agent
+               )
+
+      refute Keyword.has_key?(opts, :body)
+
+      result = call_tool(secret, "api_request", %{"method" => %{}, "path" => "/playlists"})
+      assert result["isError"]
+      assert hd(result["content"])["text"] =~ "Invalid 'method'"
+
+      result = call_tool(secret, "api_request", %{"method" => 1, "path" => "/playlists"})
+      assert result["isError"]
     end
 
     test "secrets in arguments are never stored in the activity log", %{

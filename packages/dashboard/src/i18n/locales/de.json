@@ -1504,6 +1504,10 @@
         "other": "Andere Clients"
       },
       "steps": {
+        "claudeDesktop": "Öffnen Sie in Claude Desktop Einstellungen > Entwickler > Konfiguration bearbeiten, fügen Sie diesen Server zu claude_desktop_config.json hinzu und starten Sie die App neu. Claude Desktop verbindet sich über die Brücke mcp-remote, daher muss Node.js (mit npx) auf diesem Computer installiert sein.",
+        "claudeCode": "Führen Sie diesen Befehl in einem Terminal aus, um den Server in Claude Code zu registrieren, und prüfen Sie ihn anschließend mit \"claude mcp list\".",
+        "vscode": "Fügen Sie diese Konfiguration zu .vscode/mcp.json in Ihrem Arbeitsbereich hinzu (oder führen Sie \"MCP: Add Server\" über die Befehlspalette aus), starten Sie dann den Server und verwenden Sie ihn im Agentenmodus von Copilot Chat.",
+        "cursor": "Fügen Sie diese Konfiguration zu ~/.cursor/mcp.json für alle Projekte oder zu .cursor/mcp.json in einem Projekt hinzu und aktivieren Sie den Server unter Cursor Settings > MCP.",
         "other": "Konfigurieren Sie einen Remote-MCP-Server mit diesen Einstellungen."
       }
     }

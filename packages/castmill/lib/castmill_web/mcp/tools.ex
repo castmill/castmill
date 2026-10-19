@@ -227,7 +227,7 @@ defmodule CastmillWeb.MCP.Tools do
         args
         |> Map.take(["start_date", "end_date"])
         |> Map.put_new("start_date", 0)
-        |> Map.put_new("end_date", 253_402_300_799)
+        |> Map.put_new("end_date", 253_402_300_799_000)
 
       {:ok, "GET", org_path(agent, "/channels/#{channel_id}/entries"), [query: query]}
     end
@@ -287,7 +287,7 @@ defmodule CastmillWeb.MCP.Tools do
          {:ok, query} <- optional_map_arg(args, "query"),
          {:ok, body} <- optional_map_arg(args, "body") do
       opts = [query: query]
-      opts = if method in ["GET", "DELETE"], do: opts, else: Keyword.put(opts, :body, body)
+      opts = if method == "GET", do: opts, else: Keyword.put(opts, :body, body)
       {:ok, method, path, opts}
     end
   end
@@ -519,13 +519,23 @@ defmodule CastmillWeb.MCP.Tools do
   end
 
   defp method_arg(args) do
-    method = args |> Map.get("method", "GET") |> to_string() |> String.upcase()
+    case Map.get(args, "method", "GET") do
+      method when is_binary(method) ->
+        method = String.upcase(method)
 
-    if method in @http_methods do
-      {:ok, method}
-    else
-      {:error, "Invalid 'method'. Allowed values: #{Enum.join(@http_methods, ", ")}."}
+        if method in @http_methods do
+          {:ok, method}
+        else
+          invalid_method_error()
+        end
+
+      _ ->
+        invalid_method_error()
     end
+  end
+
+  defp invalid_method_error do
+    {:error, "Invalid 'method'. Allowed values: #{Enum.join(@http_methods, ", ")}."}
   end
 
   defp maybe_put(map, _key, nil), do: map

@@ -1504,6 +1504,10 @@
         "other": "Andra klienter"
       },
       "steps": {
+        "claudeDesktop": "Öppna Inställningar > Utvecklare > Redigera konfiguration i Claude Desktop, lägg till servern i claude_desktop_config.json och starta om appen. Claude Desktop ansluter via bryggan mcp-remote, så Node.js (med npx) måste vara installerat på datorn.",
+        "claudeCode": "Kör kommandot i en terminal för att registrera servern i Claude Code och kontrollera den sedan med \"claude mcp list\".",
+        "vscode": "Lägg till konfigurationen i .vscode/mcp.json i din arbetsyta (eller kör \"MCP: Add Server\" från kommandopaletten), starta sedan servern och använd den från Copilot Chat i agentläge.",
+        "cursor": "Lägg till konfigurationen i ~/.cursor/mcp.json för alla projekt eller i .cursor/mcp.json i ett projekt och aktivera sedan servern under Cursor Settings > MCP.",
         "other": "Konfigurera en fjärr-MCP-server med dessa inställningar."
       }
     }

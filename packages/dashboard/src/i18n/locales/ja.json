@@ -1510,6 +1510,10 @@
         "other": "その他のクライアント"
       },
       "steps": {
+        "claudeDesktop": "Claude Desktop で 設定 > 開発者 > 構成を編集 を開き、claude_desktop_config.json にこのサーバーを追加してアプリを再起動してください。Claude Desktop は mcp-remote ブリッジ経由で接続するため、このコンピューターに Node.js（npx を含む）がインストールされている必要があります。",
+        "claudeCode": "ターミナルでこのコマンドを実行して Claude Code にサーバーを登録し、\"claude mcp list\" で確認してください。",
+        "vscode": "ワークスペースの .vscode/mcp.json にこの構成を追加する（またはコマンドパレットから \"MCP: Add Server\" を実行する）と、サーバーを起動して Copilot Chat のエージェントモードで使用できます。",
+        "cursor": "すべてのプロジェクトでは ~/.cursor/mcp.json、特定のプロジェクトでは .cursor/mcp.json にこの構成を追加し、Cursor Settings > MCP でサーバーを有効にしてください。",
         "other": "以下の設定でリモートMCPサーバーを構成してください。"
       }
     }

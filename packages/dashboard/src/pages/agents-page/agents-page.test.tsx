@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@solidjs/testing-library';
 import { I18nProvider } from '../../i18n';
 import AgentsPage from './agents-page';
 import { AgentsService } from '../../services/agents.service';
+import { setStore } from '../../store/store';
 
 const toastSpies = { success: vi.fn(), error: vi.fn(), info: vi.fn() };
 let role = 'admin';
@@ -33,10 +34,13 @@ vi.mock('../../hooks/usePermissions', () => ({
   }),
 }));
 
-vi.mock('../../store/store', () => ({
-  store: { organizations: { selectedId: 'org-1' } },
-  setStore: vi.fn(),
-}));
+vi.mock('../../store/store', async () => {
+  const { createStore } = await import('solid-js/store');
+  const [store, setStore] = createStore({
+    organizations: { selectedId: 'org-1' },
+  });
+  return { store, setStore };
+});
 
 vi.mock('@castmill/ui-common', async () => {
   const actual = await vi.importActual('@castmill/ui-common');
@@ -69,6 +73,7 @@ describe('AgentsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     role = 'admin';
+    setStore('organizations', 'selectedId', 'org-1');
     vi.mocked(AgentsService.list).mockResolvedValue([agent]);
     vi.mocked(AgentsService.listActions).mockResolvedValue({
       data: [],
@@ -85,6 +90,44 @@ describe('AgentsPage', () => {
     expect(screen.getByText('Editor')).toBeTruthy();
     expect(screen.getByText('cmagt_abcd…')).toBeTruthy();
     expect(screen.getByText('Never')).toBeTruthy();
+  });
+
+  it('resets the activity log filters when the organization changes', async () => {
+    renderPage();
+    await waitFor(() => expect(screen.getByText('Menu bot')).toBeTruthy());
+
+    fireEvent.click(screen.getByText('Activity log'));
+    await waitFor(() =>
+      expect(AgentsService.listActions).toHaveBeenCalledWith(
+        'org-1',
+        expect.objectContaining({ status: undefined })
+      )
+    );
+
+    fireEvent.change(document.querySelectorAll('select')[1], {
+      target: { value: 'error' },
+    });
+    await waitFor(() =>
+      expect(AgentsService.listActions).toHaveBeenLastCalledWith(
+        'org-1',
+        expect.objectContaining({ status: 'error' })
+      )
+    );
+
+    setStore('organizations', 'selectedId', 'org-2');
+
+    await waitFor(() =>
+      expect(AgentsService.listActions).toHaveBeenLastCalledWith('org-2', {
+        agentId: undefined,
+        status: undefined,
+        page: 1,
+        pageSize: 25,
+      })
+    );
+    expect(AgentsService.listActions).not.toHaveBeenCalledWith(
+      'org-2',
+      expect.objectContaining({ status: 'error' })
+    );
   });
 
   it('shows an empty state', async () => {

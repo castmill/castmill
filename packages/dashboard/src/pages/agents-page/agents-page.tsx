@@ -389,12 +389,17 @@ const AgentsPage: Component = () => {
             { title: () => t('agents.tabs.agents'), content: agentsTable },
             {
               title: () => t('agents.tabs.activity'),
+              // Keyed on the organization so filters and page reset on switch.
               content: () => (
-                <AgentActivityLog
-                  organizationId={orgId() || ''}
-                  agents={agents()}
-                  refreshKey={refreshKey()}
-                />
+                <Show when={orgId()} keyed>
+                  {(organizationId) => (
+                    <AgentActivityLog
+                      organizationId={organizationId}
+                      agents={agents()}
+                      refreshKey={refreshKey()}
+                    />
+                  )}
+                </Show>
               ),
             },
             {
