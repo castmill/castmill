@@ -61,8 +61,16 @@ The native player uses SCAP directly for eligible media and a validated
 `castmill-webos-native-file-map` in localStorage. It reconciles missing files,
 removes orphan cache files, uses atomic temporary-file downloads and SHA-256
 filenames, translates recognized storage-full errors, and serves protected
-resources from session XHR blobs. Both WebOS players require an online server
-at cold startup; neither opens IndexedDB for content caching.
+resources from session XHR blobs. After an authenticated XHR download, the
+native player also writes channel/playlist data and widget code (up to 5 MiB
+each) to `file://internal/castmill-cache` with SCAP `writeFile` (binary
+10 KB chunks, because SCAP reads and writes at most 10 KB per call and
+silently truncates larger writes; the size is checked before the file is
+moved into place), records the
+type and download time in the file map, and restores them as blob URLs on
+startup, so it can cold-start offline with the last known content. The legacy
+adapter still requires an online server at cold startup. Neither player opens
+IndexedDB for content caching.
 
 The iframe bridge, wrapper heartbeat/watchdog, `console` origin handling, and
 `/legacy/sw.js` are legacy-only. The native player ships its shell in the IPK,
@@ -79,6 +87,18 @@ Native-only startup and maintenance (`webos-player/src/boot`,
   `src/classes` statically from `src/index.tsx` or `src/boot`.
 - Boot or initialization failures are displayed and retried by reloading after
   1-9 minutes of linear back-off (sessionStorage counter, reset on success).
+  Startup that has not mounted the player after 3 minutes counts as a failure.
+- `src/classes/runtime-watchdog.ts` replaces the wrapper heartbeat: a 5 s
+  interval with a monotonic clock reports a `runtime` error and reloads after a
+  visible gap of 60 s or more. Hidden time is ignored.
+- Telemetry adds memory (`getSystemUsageInfo`, bytes), CPU usage from deltas of
+  cumulative CPU times, Wi-Fi SSID/signal (`getWifiList`, scans on demand), and
+  the webOS version via `custom.js`. All optional and feature-detected.
+- `Machine.clearCache` calls SCAP `Configuration.clearCache` after the content
+  cache is cleaned; the reload happens even if it fails.
+- Firmware images are fetched from
+  `https://update.castmill.io/webos/firmware/{manufacturer}-{modelName}.epk`
+  (old wrapper convention, documented in the webos-player README).
 - Each start calls `Signage.setPowerSaveMode` to disable automatic standby, DPM
   and 15-minute off. A 10-minute watchdog toggles wired/Wi-Fi adapters after two
   consecutive SCAP `isInternetConnectionAvailable === false` checks, when
@@ -132,7 +152,7 @@ signage hardware and must be preserved by compatibility changes:
 | Limitation | Required handling |
 | --- | --- |
 | IndexedDB/Dexie can fail to open or report unsupported schema/key-path behavior. | Do not open IndexedDB on WebOS. Use `MemoryCache`; persist only eligible public media through the native wrapper. |
-| The player needs live channel data, code, and protected resources at startup. | Start online. A service-worker app shell and native media files are not enough to start offline. |
+| The player needs live channel data, code, and protected resources at startup. | Legacy adapter: start online; a service-worker app shell and native media files are not enough to start offline. Native player: data/code saved with SCAP `writeFile` allow an offline cold start. |
 | Native wrapper downloads cannot attach authorization headers and log their input URLs. | Send only unsigned public `/medias/` or unsigned external media to `fetchFile`; load protected, query-bearing, and code/data resources through authenticated XHR into session-only blob URLs. |
 | Video decoders can omit readiness events or stall after source/seek changes. | Use `WebosVideoPlayback` and bounded metadata/seek recovery; report a final error without taking down the containing layout. |
 | Local-wrapper `postMessage` events can use `null`, `file:`, or `file://` origins and lose parent `WindowProxy` identity. | Accept the exact `console` payload through the narrowly scoped WebOS file-origin exception only; keep network-parent validation strict. |
@@ -172,8 +192,8 @@ error, `MemoryCache` evicts older entries and retries the write; unrelated
 errors do not evict cached files.
 If a previously mapped native video fails to load, the adapter invalidates its
 cache entry and retries the download once, even if removing the missing native
-file fails. WebOS must start online even if the app shell was cached; it does
-not open IndexedDB.
+file fails. The legacy WebOS adapter must start online even if the app shell was cached;
+it does not open IndexedDB.
 
 Both `PlayerFrame` implementations inject the shared `WebosVideoPlayback` controller for every
 WebOS video, including blob and remote sources. The controller owns decoder

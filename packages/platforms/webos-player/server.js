@@ -1,77 +1,125 @@
 /**
- * THis is a simple server that serves the built ipk file. It is used to deploy the
- * app to the LG TV while in development mode.
+ * Simple development server that serves a built IPK so it can be installed on
+ * an LG display through SCAP's application update. Usage:
+ *
+ *   node server.js [build|latest|tpd|test]
+ *
+ * Set PORT to change the default port (3232).
  */
-var express = require('express');
-var onFinished = require('on-finished');
-var app = express();
+import { createReadStream, existsSync, readFileSync, statSync } from 'node:fs';
+import { createServer } from 'node:http';
+import { dirname, extname, join, resolve, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const { version } = require('./public/appinfo.json');
+const here = dirname(fileURLToPath(import.meta.url));
+const { version } = JSON.parse(
+  readFileSync(join(here, 'public/appinfo.json'), 'utf8')
+);
+const versionedIpk = `com.lg.app.signage_${version}_all.ipk`;
 
-// LATEST BUILD
-const CURRENT_BUILD = {
-  file: `com.lg.app.signage_${version}_all.ipk`,
-  root: './build',
+const SOURCES = {
+  build: { file: versionedIpk, root: join(here, 'build') },
+  latest: { file: 'player.ipk', root: join(here, 'releases/latest') },
+  tpd: { file: versionedIpk, root: join(here, 'releases/tpd') },
+  test: { file: versionedIpk, root: join(here, 'releases/test') },
 };
 
-// LATEST RELEASE
-const CURRENT_RELEASE = {
-  file: `player.ipk`,
-  root: './releases/latest',
-};
-
-// LATEST TPD
-const CURRENT_TPD = {
-  file: `com.lg.app.signage_${version}_all.ipk`,
-  root: './releases/tpd',
-};
-
-// LATEST Test
-const CURRENT_TEST = {
-  file: `com.lg.app.signage_${version}_all.ipk`,
-  root: './releases/test',
-};
-
-let path;
-const args = process.argv.slice(2);
-console.log('args: ', args);
-
-switch ((args[0] || '').toLowerCase()) {
-  case 'tpd':
-    path = CURRENT_TPD;
-    break;
-  case 'latest':
-    path = CURRENT_RELEASE;
-    break;
-  case 'build':
-    path = CURRENT_BUILD;
-    break;
-  case 'test':
-    path = CURRENT_TEST;
-    break;
-  default:
-    path = CURRENT_BUILD;
-    break;
+const name = (process.argv[2] || 'build').toLowerCase();
+const source = SOURCES[name];
+if (!source) {
+  console.error(
+    `Unknown source "${name}". Use one of: ${Object.keys(SOURCES).join(', ')}`
+  );
+  process.exit(1);
 }
 
-console.log('Server publishing ipk', path);
+const ipkPath = join(source.root, source.file);
+if (!existsSync(ipkPath)) {
+  console.warn(
+    `Warning: ${ipkPath} does not exist yet. Run "yarn build && yarn package".`
+  );
+}
 
-app.use((req, res, next) => {
-  console.log('got request', req.originalUrl);
-  onFinished(res, (err, res) => {
-    console.log('finished downloading');
+const port = Number(process.env.PORT) || 3232;
+const distRoot = resolve(here, 'dist');
+const IPK_ROUTE = '/application/com.lg.app.signage.ipk';
+const MIME_TYPES = {
+  '.html': 'text/html; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.json': 'application/json',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.svg': 'image/svg+xml',
+  '.ipk': 'application/octet-stream',
+};
+
+function sendFile(req, res, path, contentType) {
+  let size;
+  try {
+    const stat = statSync(path);
+    if (!stat.isFile()) throw new Error('Not a file');
+    size = stat.size;
+  } catch {
+    res.writeHead(404).end('Not found');
+    return;
+  }
+  res.writeHead(200, {
+    'Content-Type':
+      contentType || MIME_TYPES[extname(path)] || 'application/octet-stream',
+    'Content-Length': size,
   });
-  next();
+  if (req.method === 'HEAD') {
+    res.end();
+    return;
+  }
+  createReadStream(path).pipe(res);
+}
+
+// Resolves a request path inside dist, rejecting traversal outside it.
+function distPath(pathname) {
+  let decoded;
+  try {
+    decoded = decodeURIComponent(pathname);
+  } catch {
+    return undefined;
+  }
+  const path = resolve(distRoot, `.${decoded}`);
+  if (path !== distRoot && !path.startsWith(distRoot + sep)) return undefined;
+  return path === distRoot || decoded.endsWith('/')
+    ? join(path, 'index.html')
+    : path;
+}
+
+const server = createServer((req, res) => {
+  let pathname;
+  try {
+    ({ pathname } = new URL(req.url || '/', 'http://localhost'));
+  } catch {
+    res.writeHead(400).end('Bad request');
+    return;
+  }
+  console.log('Request', pathname);
+  res.on('finish', () => console.log('Finished', pathname));
+
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    res.writeHead(405).end();
+    return;
+  }
+  if (pathname === IPK_ROUTE) {
+    console.log(`Sending ${ipkPath}`);
+    sendFile(req, res, ipkPath, 'application/octet-stream');
+    return;
+  }
+  const path = distPath(pathname);
+  if (!path) {
+    res.writeHead(404).end('Not found');
+    return;
+  }
+  sendFile(req, res, path);
 });
 
-app.use('/application/com.lg.app.signage.ipk', (req, res, next) => {
-  console.log('got request for com.lg.app.signage.ipk');
-  console.log(`Sending file ${path.root}/${path.file}`);
-  res.contentType('application/octet-stream; charset=UTF-8');
-  res.sendFile(path.file, { root: path.root });
+server.listen(port, () => {
+  console.log(`Serving ${ipkPath}`);
+  console.log(`IPK URL: http://<this-machine-ip>:${port}${IPK_ROUTE}`);
 });
-
-// static serve of the dist folder
-app.use('/', express.static('dist'));
-
-app.listen(3232);

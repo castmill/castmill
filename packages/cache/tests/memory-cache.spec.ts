@@ -53,6 +53,41 @@ describe('MemoryCache', () => {
     expect(await restored.get(data)).toBeUndefined();
   });
 
+  it('restores typed data and code entries with their download time', async () => {
+    const data = 'https://castmill.test/channels';
+    const code = 'https://castmill.test/widget.js';
+    const storage = new StorageMockup({});
+    storage.files[data] = {
+      url: 'blob:data',
+      size: 2,
+      sourceUrl: data,
+      type: ItemType.Data,
+      storedAt: 1234,
+    };
+    storage.files[code] = {
+      url: 'blob:code',
+      size: 3,
+      sourceUrl: code,
+      type: ItemType.Code,
+    };
+    const cache = new MemoryCache(storage);
+    await cache.init();
+
+    expect(await cache.get(data)).toMatchObject({
+      cachedUrl: 'blob:data',
+      type: ItemType.Data,
+      mimeType: 'application/json',
+      storedAt: 1234,
+    });
+    const restoredCode = await cache.get(code);
+    expect(restoredCode).toMatchObject({
+      type: ItemType.Code,
+      mimeType: 'text/javascript',
+    });
+    expect(restoredCode).not.toHaveProperty('storedAt');
+    expect(await cache.count(ItemType.Code)).toBe(1);
+  });
+
   it('keeps a previous entry when a forced refresh fails', async () => {
     const url = 'https://castmill.test/data';
     const storage = new StorageMockup({ [url]: 'old' });

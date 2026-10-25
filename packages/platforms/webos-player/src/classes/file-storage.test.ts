@@ -1,7 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ItemType, MemoryCache, ResourceManager } from '@castmill/cache';
 import { sha256 } from 'js-sha256';
-import { FileStorage } from './file-storage';
+import {
+  FileStorage,
+  MAX_PERSISTED_TEXT_BYTES,
+  SCAP_IO_CHUNK_BYTES,
+} from './file-storage';
 import { storage as api } from '../native';
 
 vi.mock('../native', () => ({
@@ -14,6 +18,8 @@ vi.mock('../native', () => ({
     statFile: vi.fn(),
     copyFile: vi.fn(),
     getStorageInfo: vi.fn(),
+    writeFile: vi.fn(),
+    readFile: vi.fn(),
   },
 }));
 
@@ -29,6 +35,8 @@ const stat: StatFileResponse = {
   mtime: '',
   ctime: '',
 };
+
+const RealFileReader = FileReader;
 
 class MockXHR {
   static requests: MockXHR[] = [];
@@ -47,6 +55,16 @@ class MockXHR {
   }
   send() {
     MockXHR.requests.push(this);
+    const body = this.response;
+    if (this.responseType === 'arraybuffer' && body instanceof Blob) {
+      const reader = new RealFileReader();
+      reader.onload = () => {
+        this.response = reader.result as unknown as Blob;
+        this.onload?.();
+      };
+      reader.readAsArrayBuffer(body);
+      return;
+    }
     this.onload?.();
   }
 }
@@ -67,6 +85,7 @@ describe('WebOS native storage routing', () => {
     vi.mocked(api.moveFile).mockResolvedValue(undefined);
     vi.mocked(api.removeFile).mockResolvedValue(undefined);
     vi.mocked(api.copyFile).mockResolvedValue(undefined);
+    vi.mocked(api.writeFile).mockResolvedValue({} as WriteFileResponse);
     vi.mocked(api.statFile).mockResolvedValue(stat);
     vi.mocked(api.getStorageInfo).mockResolvedValue({
       total: 10000,
@@ -124,8 +143,6 @@ describe('WebOS native storage routing', () => {
   });
 
   it.each([
-    ['https://api.test/devices/123', ItemType.Data],
-    ['https://cdn.test/widget.js', ItemType.Code],
     ['https://api.test/protected.mp4', ItemType.Media],
     [`${video}?token=secret`, ItemType.Media],
     [`${video}#secret`, ItemType.Media],
@@ -202,6 +219,12 @@ describe('WebOS native storage routing', () => {
       [video, { url: 'file://internal/credentials.txt', size: 1 }],
     ]),
     JSON.stringify([[video, { url: localUrl(video), size: -1 }]]),
+    JSON.stringify([
+      [
+        'https://api.test/devices/1/channels?token=secret',
+        { url: localUrl(video), size: 1, type: ItemType.Data, storedAt: 1 },
+      ],
+    ]),
   ])('resets corrupt metadata and scoped native files (%s)', async (saved) => {
     localStorage.setItem(MAP_KEY, saved);
     storage = new FileStorage();
@@ -409,5 +432,350 @@ describe('WebOS native storage routing', () => {
     });
     expect(log.mock.calls.flat().join(' ')).not.toContain('token=secret');
     expect(log.mock.calls.flat().join(' ')).not.toContain('/medias/');
+  });
+  describe('offline data and code', () => {
+    const channels = 'https://api.test/devices/1/channels';
+    const widget = 'https://cdn.test/widget.js';
+    const writtenPath = (call = 0) =>
+      vi.mocked(api.moveFile).mock.calls[call][0].newPath;
+    let disk: Map<string, Uint8Array>;
+
+    // In-memory SCAP filesystem enforcing the 10 KB per-call IO limit.
+    beforeEach(() => {
+      disk = new Map();
+      vi.mocked(api.writeFile).mockImplementation(async (options) => {
+        const data = new Uint8Array(options.data as ArrayBuffer);
+        expect(options.encoding).toBe('binary');
+        expect(data.byteLength).toBeLessThanOrEqual(SCAP_IO_CHUNK_BYTES);
+        const previous =
+          options.mode === 'append'
+            ? (disk.get(options.path) ?? new Uint8Array())
+            : new Uint8Array();
+        const next = new Uint8Array(previous.length + data.length);
+        next.set(previous);
+        next.set(data, previous.length);
+        disk.set(options.path, next);
+        return { written: data.length } as WriteFileResponse;
+      });
+      vi.mocked(api.moveFile).mockImplementation(
+        async ({ oldPath, newPath }) => {
+          const data = disk.get(oldPath);
+          if (data) disk.set(newPath, data);
+          disk.delete(oldPath);
+        }
+      );
+      vi.mocked(api.statFile).mockImplementation(async ({ path }) => ({
+        ...stat,
+        size: disk.get(path)?.length ?? 0,
+      }));
+      vi.mocked(api.readFile).mockImplementation(async (options) => {
+        expect(options.length).toBeLessThanOrEqual(SCAP_IO_CHUNK_BYTES);
+        const data = disk.get(options.path);
+        if (!data || options.position! >= data.length) {
+          throw { errorCode: 'IO_ERROR', errorText: 'out of range' };
+        }
+        const chunk = data.slice(
+          options.position,
+          options.position! + options.length!
+        );
+        return { data: chunk.buffer };
+      });
+    });
+    const restartWith = async (paths: string[]) => {
+      vi.mocked(api.listFiles).mockResolvedValue({
+        files: paths.map((path) => ({
+          name: path.slice(path.lastIndexOf('/') + 1),
+          size: 9,
+        })),
+        totalCount: paths.length,
+      });
+      const restarted = new FileStorage();
+      const cache = new MemoryCache(restarted);
+      await cache.init();
+      return { restarted, cache };
+    };
+
+    it.each([
+      [channels, ItemType.Data, 'json'],
+      [widget, ItemType.Code, 'js'],
+    ])(
+      'persists %s after an authenticated download',
+      async (url, type, extension) => {
+        const result = await storage.storeFile(url, {
+          type,
+          headers: { Authorization: 'private-token' },
+        });
+
+        expect(result.item?.url).toBe('blob:resource-1');
+        expect(MockXHR.requests[0].headers).toEqual({
+          Authorization: 'private-token',
+        });
+        expect(MockXHR.requests[1].url).toBe('blob:resource-1');
+        expect(api.copyFile).not.toHaveBeenCalled();
+        expect(vi.mocked(api.writeFile).mock.calls[0][0]).toMatchObject({
+          path: expect.stringMatching(/\.tmp$/),
+          encoding: 'binary',
+          mode: 'truncate',
+        });
+        expect(writtenPath()).toMatch(
+          new RegExp(`^${ROOT}/[a-f0-9]{64}\\.${extension}$`)
+        );
+        expect(localStorage.getItem(MAP_KEY)).not.toContain('private-token');
+        expect(await storage.retrieveFile(url)).toBe('blob:resource-1');
+        expect(await storage.listFiles()).toEqual([
+          expect.objectContaining({
+            sourceUrl: url,
+            url: 'blob:resource-1',
+            type,
+            storedAt: expect.any(Number),
+          }),
+        ]);
+        expect((await storage.info()).used).toBe(9);
+      }
+    );
+
+    it('restores persisted data for an offline cold start', async () => {
+      vi.spyOn(Date, 'now').mockReturnValue(1234);
+      const cache = new MemoryCache(storage);
+      await cache.init();
+      await cache.set(channels, ItemType.Data, 'application/json');
+      const path = writtenPath();
+
+      const { restarted, cache: restartedCache } = await restartWith([path]);
+      const restored = await restartedCache.get(channels);
+
+      expect(api.readFile).toHaveBeenCalledWith({
+        path,
+        position: 0,
+        length: 9,
+        encoding: 'binary',
+      });
+      expect(restored).toMatchObject({
+        type: ItemType.Data,
+        mimeType: 'application/json',
+        storedAt: 1234,
+        cachedUrl: expect.stringMatching(/^blob:/),
+      });
+      await restarted.close();
+      expect(revoke).toHaveBeenCalledWith(restored?.cachedUrl);
+    });
+
+    it('writes and restores content larger than one SCAP IO chunk', async () => {
+      const text = `{"data":"${'é'.repeat(SCAP_IO_CHUNK_BYTES)}"}`;
+      const send = MockXHR.prototype.send;
+      vi.spyOn(MockXHR.prototype, 'send').mockImplementation(
+        function (this: MockXHR) {
+          this.response = new Blob([text]);
+          send.call(this);
+        }
+      );
+      await storage.storeFile(channels, { type: ItemType.Data });
+      const path = writtenPath();
+      const bytes = new Blob([text]).size;
+      expect(api.writeFile).toHaveBeenCalledTimes(
+        Math.ceil(bytes / SCAP_IO_CHUNK_BYTES)
+      );
+      expect(vi.mocked(api.writeFile).mock.calls[1][0].mode).toBe('append');
+
+      let restoredBlob: Blob | undefined;
+      vi.mocked(URL.createObjectURL).mockImplementation((blob) => {
+        restoredBlob = blob as Blob;
+        return 'blob:restored';
+      });
+      const { restarted, cache } = await restartWith([path]);
+
+      expect((await cache.get(channels))?.cachedUrl).toBe('blob:restored');
+      expect(api.readFile).toHaveBeenCalledTimes(
+        Math.ceil(bytes / SCAP_IO_CHUNK_BYTES)
+      );
+      const restoredText = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result));
+        reader.readAsText(restoredBlob!);
+      });
+      expect(restoredText).toBe(text);
+      await restarted.close();
+    });
+
+    it('persists without FileReader.readAsArrayBuffer (cordova shim)', async () => {
+      // Cordova's webOS FileReader only implements readAsText.
+      vi.stubGlobal(
+        'FileReader',
+        class {
+          readAsText() {
+            throw new Error('cordova FileReader used');
+          }
+        }
+      );
+
+      await storage.storeFile(channels, { type: ItemType.Data });
+
+      expect(console.error).not.toHaveBeenCalled();
+      expect(api.moveFile).toHaveBeenCalledTimes(1);
+    });
+
+    it('rejects a write whose stored size does not match', async () => {
+      vi.mocked(api.statFile).mockResolvedValueOnce({ ...stat, size: 1 });
+
+      const result = await storage.storeFile(channels, {
+        type: ItemType.Data,
+      });
+
+      expect(result.result.code).toBe('SUCCESS');
+      expect(api.moveFile).not.toHaveBeenCalled();
+      expect(localStorage.getItem(MAP_KEY)).toBeNull();
+    });
+
+    it.each([
+      `${channels}?token=secret`,
+      `${channels}#secret`,
+      'https://user:secret@api.test/devices/1/channels',
+    ])('keeps credential-bearing data session-only (%s)', async (url) => {
+      const result = await storage.storeFile(url, { type: ItemType.Data });
+
+      expect(result.result.code).toBe('SUCCESS');
+      expect(api.writeFile).not.toHaveBeenCalled();
+      expect(localStorage.getItem(MAP_KEY) ?? '').not.toContain('secret');
+    });
+
+    it('does not persist empty responses', async () => {
+      const send = MockXHR.prototype.send;
+      vi.spyOn(MockXHR.prototype, 'send').mockImplementationOnce(
+        function (this: MockXHR) {
+          this.response = new Blob([]);
+          send.call(this);
+        }
+      );
+
+      await storage.storeFile(channels, { type: ItemType.Data });
+
+      expect(api.writeFile).not.toHaveBeenCalled();
+    });
+
+    it('drops truncated persisted data on restart', async () => {
+      await storage.storeFile(channels, { type: ItemType.Data });
+      const path = writtenPath();
+      disk.set(path, new Uint8Array(3));
+
+      const { restarted, cache } = await restartWith([path]);
+
+      expect(await cache.get(channels)).toBeUndefined();
+      expect(api.removeFile).toHaveBeenCalledWith({ file: path });
+      expect(localStorage.getItem(MAP_KEY)).toBe('[]');
+      await restarted.close();
+    });
+
+    it('replaces the previous persisted copy after a refresh', async () => {
+      await storage.storeFile(channels, { type: ItemType.Data });
+      const first = writtenPath();
+      await storage.storeFile(channels, { type: ItemType.Data, force: true });
+
+      expect(writtenPath(1)).not.toBe(first);
+      expect(api.removeFile).toHaveBeenCalledWith({ file: first });
+      expect(revoke).toHaveBeenCalledWith('blob:resource-1');
+      expect(await storage.retrieveFile(channels)).toBe('blob:resource-2');
+      expect(await storage.listFiles()).toHaveLength(1);
+    });
+
+    it.each(['write', 'oversize'])(
+      'keeps the fresh session copy and forgets the older one on %s failure',
+      async (failure) => {
+        await storage.storeFile(channels, { type: ItemType.Data });
+        const first = writtenPath();
+        if (failure === 'write') {
+          vi.mocked(api.writeFile).mockRejectedValueOnce(new Error('full'));
+        } else {
+          const send = MockXHR.prototype.send;
+          vi.spyOn(MockXHR.prototype, 'send').mockImplementationOnce(
+            function (this: MockXHR) {
+              this.response = new Blob([
+                'x'.repeat(MAX_PERSISTED_TEXT_BYTES + 1),
+              ]);
+              send.call(this);
+            }
+          );
+        }
+        const result = await storage.storeFile(channels, {
+          type: ItemType.Data,
+          force: true,
+        });
+        expect(result.result.code).toBe('SUCCESS');
+
+        expect(api.removeFile).toHaveBeenCalledWith({ file: first });
+        expect(await storage.retrieveFile(channels)).toBe('blob:resource-2');
+        expect(localStorage.getItem(MAP_KEY)).toBe('[]');
+      }
+    );
+
+    it('keeps the session copy when the file map cannot be saved', async () => {
+      vi.spyOn(Storage.prototype, 'setItem').mockImplementationOnce(() => {
+        throw new DOMException('full', 'QuotaExceededError');
+      });
+
+      const result = await storage.storeFile(channels, {
+        type: ItemType.Data,
+      });
+
+      expect(result.result.code).toBe('SUCCESS');
+      expect(api.removeFile).toHaveBeenCalledWith({ file: writtenPath() });
+      expect(await storage.retrieveFile(channels)).toBe('blob:resource-1');
+      expect(localStorage.getItem(MAP_KEY)).toBeNull();
+    });
+
+    it('returns the fresh copy of a refreshed entry when metadata writes keep failing', async () => {
+      await storage.storeFile(channels, { type: ItemType.Data });
+      const first = writtenPath();
+      const saved = localStorage.getItem(MAP_KEY);
+      vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+        throw new DOMException('full', 'QuotaExceededError');
+      });
+
+      const result = await storage.storeFile(channels, {
+        type: ItemType.Data,
+        force: true,
+      });
+
+      expect(result.result.code).toBe('SUCCESS');
+      expect(result.item?.url).toBe('blob:resource-2');
+      expect(api.removeFile).toHaveBeenCalledWith({ file: first });
+      expect(api.removeFile).toHaveBeenCalledWith({ file: writtenPath(1) });
+      expect(revoke).toHaveBeenCalledWith('blob:resource-1');
+      expect(await storage.retrieveFile(channels)).toBe('blob:resource-2');
+      expect(localStorage.getItem(MAP_KEY)).toBe(saved);
+    });
+
+    it('deletes persisted data by its session URL', async () => {
+      await storage.storeFile(widget, { type: ItemType.Code });
+      const path = writtenPath();
+
+      await storage.deleteFile('blob:resource-1');
+
+      expect(api.removeFile).toHaveBeenCalledWith({ file: path });
+      expect(revoke).toHaveBeenCalledWith('blob:resource-1');
+      expect(await storage.retrieveFile(widget)).toBeUndefined();
+      expect(await storage.listFiles()).toEqual([]);
+    });
+
+    it('rejects persisted data entries without a valid type or source', async () => {
+      const file = `http://127.0.0.1:9080/castmill-cache/${sha256('x')}.json`;
+      localStorage.setItem(
+        MAP_KEY,
+        JSON.stringify([
+          [
+            'file:///etc/passwd',
+            { url: file, size: 1, type: 'data', storedAt: 1 },
+          ],
+        ])
+      );
+      const restarted = new FileStorage();
+      await restarted.init();
+
+      expect(api.removeFile).toHaveBeenCalledWith({
+        file: ROOT,
+        recursive: true,
+      });
+      expect(api.readFile).not.toHaveBeenCalled();
+      await restarted.close();
+    });
   });
 });

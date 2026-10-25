@@ -125,6 +125,38 @@ interface NetworkCheckupInfo {
   url?: string;
 }
 
+interface SystemUsageOptions {
+  cpus?: boolean;
+  memory?: boolean;
+}
+
+/** SCAP reports memory in bytes and CPU times as cumulative milliseconds. */
+interface SystemUsageInfo {
+  memory?: { total: number; free: number };
+  cpus?: Array<{
+    model?: string;
+    times: {
+      user: number;
+      nice: number;
+      sys: number;
+      idle: number;
+      irq: number;
+    };
+  }>;
+}
+
+interface WifiListEntry {
+  ssid?: string;
+  /** Signal level from 0 to 100. */
+  signalLevel?: number;
+  /** Not documented by SCAP 1.5, but reported by some firmware. */
+  connected?: boolean;
+}
+
+interface WifiList {
+  networkInfo?: WifiListEntry[];
+}
+
 interface DeviceInfo {
   addBlockedPortList(
     successCallback: () => void,
@@ -199,6 +231,15 @@ interface DeviceInfo {
   ): void;
   getSensorValues(
     successCallback: (cbObject: SensorValues) => void,
+    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void
+  ): void;
+  getSystemUsageInfo?(
+    successCallback: (cbObject: SystemUsageInfo) => void,
+    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
+    options: SystemUsageOptions
+  ): void;
+  getWifiList?(
+    successCallback: (cbObject: WifiList) => void,
     errorCallback: (cbObject: { errorCode: number; errorText: string }) => void
   ): void;
 }

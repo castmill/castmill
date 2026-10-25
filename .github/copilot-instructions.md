@@ -67,9 +67,12 @@ the import-boundary and no-SCAP import tests.
 
 Both players target Chrome 38 and must keep the two-loaded-video decoder budget,
 WebOS seek/readiness/stall recovery, one-argument WebSocket constructor, and
-MemoryCache instead of IndexedDB. Native persistence is for eligible public
-media only; protected resources, widget code, and channel data use authenticated
-XHR session blobs. Cold startup needs an online server. Never log auth headers,
+MemoryCache instead of IndexedDB. Only eligible public media goes through SCAP
+`copyFile`; protected resources, widget code, and channel data are downloaded
+with authenticated XHR into session blobs. The native player also writes
+downloaded data/code (≤5 MiB) to internal storage via SCAP `writeFile` so it can
+cold-start offline; the legacy adapter still needs an online server at cold
+startup. Never log auth headers,
 response bodies, or full credential-bearing media URLs.
 
 In the native player, only import SCAP-backed modules (`src/native`,
@@ -119,6 +122,15 @@ does not change dashboard localization requirements.
   for text fitting, pagination, and scrollers. Preserve Chrome 38 fallbacks.
 - All new dashboard orientation labels/status/errors must exist in all nine
   locales. Saving desired orientation is not an application acknowledgement.
+
+## Device Maintenance Actions
+
+- Every device maintenance action (refresh, clear cache, restart, reboot,
+  shutdown, app/firmware update, and any new one) must show an on-device
+  toast such as "Rebooting" before it runs, on all device types. Add the
+  messages to `MAINTENANCE_TOASTS` in `packages/device/src/classes/device.ts`
+  and run the action through `Device.runMaintenanceAction` so menu and
+  dashboard triggers share it. Toast text is English only (no i18n).
 
 ## 🔀 URL-Based Routing
 

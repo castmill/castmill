@@ -1,12 +1,12 @@
 import { vi, describe, it, beforeEach, afterEach, expect } from 'vitest';
 import { sha256 } from 'js-sha256';
 import {
+  CPU_SAMPLE_INTERVAL_MS,
   FIRMWARE_DOWNLOAD_TIMEOUT_MS,
   FIRMWARE_STATUS_POLL_MS,
+  TELEMETRY_BUDGET_MS,
   WebosMachine,
 } from './webos-machine';
-
-vi.stubEnv('VITE_UPDATE_URL', 'https://update.castmill.io/webos/player.ipk');
 
 vi.mock('../native', () => ({
   storage: {
@@ -27,6 +27,8 @@ vi.mock('../native', () => ({
       })
     ),
     getNetworkInfo: vi.fn(),
+    getSystemUsageInfo: vi.fn(),
+    getWifiList: vi.fn(),
     getPlatformInfo: vi.fn(() =>
       Promise.resolve({
         manufacturer: 'LG',
@@ -37,13 +39,16 @@ vi.mock('../native', () => ({
   },
   configuration: {
     restartApplication: vi.fn(() => Promise.resolve()),
-    setServerProperty: vi.fn(() => Promise.resolve()),
     getTimeZone: vi.fn(),
+    clearCache: vi.fn(() => Promise.resolve()),
   },
   power: {
     executePowerCommand: vi.fn(() => Promise.resolve()),
   },
 }));
+
+const version = vi.hoisted(() => ({ getWebosVersion: vi.fn() }));
+vi.mock('../native/webos-version', () => version);
 
 const monitor = vi.hoisted(() => ({
   getFanStatus: vi.fn(),
@@ -148,6 +153,217 @@ describe('WebosMachine', () => {
     expect(deviceInfo.getPlatformInfo).toHaveBeenCalledOnce();
   });
 
+  it('includes the webOS version in the reported OS', async () => {
+    vi.mocked(deviceInfo.getPlatformInfo).mockResolvedValueOnce({
+      manufacturer: 'LG',
+      modelName: '55XS2E-BH',
+      firmwareVersion: '4.2.1',
+    });
+    version.getWebosVersion.mockResolvedValueOnce('4.1');
+    expect((await machine.getDeviceInfo()).os).toBe('LG WebOS 4.1');
+  });
+
+  it('falls back to a generic OS name when the version lookup fails', async () => {
+    vi.mocked(deviceInfo.getPlatformInfo).mockResolvedValueOnce({
+      manufacturer: 'LG',
+      modelName: '55XS2E-BH',
+      firmwareVersion: '4.2.1',
+    });
+    version.getWebosVersion.mockRejectedValueOnce(new Error('no custom.js'));
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    expect((await machine.getDeviceInfo()).os).toBe('LG WebOS');
+  });
+
+  it('clears the platform cache through SCAP', async () => {
+    vi.mocked(configuration.clearCache).mockResolvedValueOnce();
+    await machine.clearCache();
+    expect(configuration.clearCache).toHaveBeenCalledOnce();
+  });
+
+  describe('system usage telemetry', () => {
+    const cpu = (busy: number, idle: number) => ({
+      model: 'arm',
+      speed: 1000,
+      times: { user: busy, nice: 0, sys: 0, idle, irq: 0 },
+    });
+    const usage = (busy: number, idle: number) => ({
+      memory: { total: 2_000, free: 500 },
+      cpus: [cpu(busy, idle), cpu(busy, idle)],
+    });
+
+    it('reports memory in bytes and CPU usage from two samples', async () => {
+      vi.useFakeTimers();
+      vi.mocked(deviceInfo.getSystemUsageInfo!)
+        .mockResolvedValueOnce(usage(100, 900) as never)
+        .mockResolvedValueOnce(usage(130, 970) as never)
+        .mockResolvedValueOnce(usage(230, 1070) as never);
+      const first = machine.getTelemetry();
+      await vi.advanceTimersByTimeAsync(CPU_SAMPLE_INTERVAL_MS);
+      const telemetry = await first;
+      expect(telemetry.memory).toEqual({ totalBytes: 2_000, usedBytes: 1_500 });
+      expect(telemetry.cpuUsagePercent).toBe(30);
+      expect(deviceInfo.getSystemUsageInfo).toHaveBeenCalledWith({
+        cpus: true,
+        memory: true,
+      });
+
+      // Later calls reuse the previous sample instead of waiting.
+      expect((await machine.getTelemetry()).cpuUsagePercent).toBe(50);
+      expect(deviceInfo.getSystemUsageInfo).toHaveBeenCalledTimes(3);
+    });
+
+    it('omits CPU usage when no CPU times are reported', async () => {
+      vi.mocked(deviceInfo.getSystemUsageInfo!).mockResolvedValueOnce({
+        memory: { total: 0, free: 0 },
+        cpus: [],
+      } as never);
+      const telemetry = await machine.getTelemetry();
+      expect(telemetry.cpuUsagePercent).toBeUndefined();
+      expect(telemetry.memory).toBeUndefined();
+    });
+
+    it('omits CPU usage when the second sample is unavailable', async () => {
+      vi.useFakeTimers();
+      vi.mocked(deviceInfo.getSystemUsageInfo!)
+        .mockResolvedValueOnce(usage(100, 900) as never)
+        .mockResolvedValueOnce({ memory: undefined } as never);
+      const pending = machine.getTelemetry();
+      await vi.advanceTimersByTimeAsync(CPU_SAMPLE_INTERVAL_MS);
+      expect((await pending).cpuUsagePercent).toBeUndefined();
+    });
+
+    it('omits CPU usage when the counters did not advance', async () => {
+      vi.useFakeTimers();
+      vi.mocked(deviceInfo.getSystemUsageInfo!)
+        .mockResolvedValueOnce(usage(100, 900) as never)
+        .mockResolvedValueOnce(usage(100, 900) as never);
+      const pending = machine.getTelemetry();
+      await vi.advanceTimersByTimeAsync(CPU_SAMPLE_INTERVAL_MS);
+      expect((await pending).cpuUsagePercent).toBeUndefined();
+    });
+
+    it('returns other fields when a system usage call never answers', async () => {
+      vi.useFakeTimers();
+      vi.mocked(deviceInfo.getSystemUsageInfo!).mockReturnValueOnce(
+        new Promise(() => {}) as never
+      );
+      vi.mocked(deviceInfo.getNetworkInfo).mockResolvedValueOnce({
+        wired: { state: 'connected', ipAddress: '10.0.0.2' },
+      } as never);
+      const pending = machine.getTelemetry();
+      await vi.advanceTimersByTimeAsync(TELEMETRY_BUDGET_MS);
+      const telemetry = await pending;
+      expect(TELEMETRY_BUDGET_MS).toBeLessThan(5_000);
+      expect(telemetry.memory).toBeUndefined();
+      expect(telemetry.network).toEqual({
+        type: 'ethernet',
+        ipAddress: '10.0.0.2',
+      });
+    });
+
+    it('keeps telemetry when system usage fails', async () => {
+      vi.mocked(deviceInfo.getSystemUsageInfo!).mockRejectedValueOnce(
+        new Error('unsupported')
+      );
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      const telemetry = await machine.getTelemetry();
+      expect(telemetry.memory).toBeUndefined();
+      expect(telemetry.cpuUsagePercent).toBeUndefined();
+    });
+  });
+
+  describe('Wi-Fi telemetry', () => {
+    const connectWifi = (wifi: Record<string, unknown> = {}) =>
+      vi.mocked(deviceInfo.getNetworkInfo).mockResolvedValueOnce({
+        wired: { state: 'disconnected' },
+        wifi: { state: 'connected', ipAddress: '10.0.0.3', ...wifi },
+      } as never);
+
+    it('reports the SSID and signal of the connected network', async () => {
+      connectWifi();
+      vi.mocked(deviceInfo.getWifiList!).mockResolvedValueOnce({
+        networkInfo: [
+          { ssid: 'Other', signalLevel: 90 },
+          { ssid: 'Office', signalLevel: 72, connected: true },
+        ],
+      });
+      expect((await machine.getTelemetry()).network).toEqual({
+        type: 'wifi',
+        ipAddress: '10.0.0.3',
+        ssid: 'Office',
+        wifiSignalStrengthPercent: 72,
+      });
+    });
+
+    it('matches the network by SSID when firmware reports one', async () => {
+      connectWifi({ ssid: 'Office' });
+      vi.mocked(deviceInfo.getWifiList!).mockResolvedValueOnce({
+        networkInfo: [
+          { ssid: 'Other', signalLevel: 90 },
+          { ssid: 'Office', signalLevel: 140 },
+        ],
+      });
+      expect((await machine.getTelemetry()).network).toMatchObject({
+        ssid: 'Office',
+        wifiSignalStrengthPercent: 100,
+      });
+    });
+
+    it('omits the signal when the network cannot be identified', async () => {
+      connectWifi();
+      vi.mocked(deviceInfo.getWifiList!).mockResolvedValueOnce({
+        networkInfo: [{ ssid: 'Other', signalLevel: 90 }],
+      });
+      expect((await machine.getTelemetry()).network).toEqual({
+        type: 'wifi',
+        ipAddress: '10.0.0.3',
+      });
+    });
+
+    it('omits missing SSIDs and invalid signal levels', async () => {
+      connectWifi();
+      vi.mocked(deviceInfo.getWifiList!).mockResolvedValueOnce({
+        networkInfo: [{ connected: true, signalLevel: Number.NaN }],
+      });
+      expect((await machine.getTelemetry()).network).toEqual({
+        type: 'wifi',
+        ipAddress: '10.0.0.3',
+      });
+    });
+
+    it('returns collected fields when the Wi-Fi scan exceeds the budget', async () => {
+      vi.useFakeTimers();
+      connectWifi();
+      vi.mocked(deviceInfo.getWifiList!).mockReturnValueOnce(
+        new Promise(() => {})
+      );
+      vi.mocked(storage.getStorageInfo).mockResolvedValueOnce({
+        total: 1,
+        used: 1,
+      } as never);
+      const pending = machine.getTelemetry();
+      await vi.advanceTimersByTimeAsync(TELEMETRY_BUDGET_MS);
+      const telemetry = await pending;
+      expect(telemetry.network).toEqual({
+        type: 'wifi',
+        ipAddress: '10.0.0.3',
+      });
+      expect(telemetry.storage).toEqual({ totalBytes: 1024, usedBytes: 1024 });
+    });
+
+    it('keeps the network type when the Wi-Fi scan fails', async () => {
+      connectWifi();
+      vi.mocked(deviceInfo.getWifiList!).mockRejectedValueOnce(
+        new Error('scan failed')
+      );
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      expect((await machine.getTelemetry()).network).toEqual({
+        type: 'wifi',
+        ipAddress: '10.0.0.3',
+      });
+    });
+  });
+
   it('converts SCAP storage telemetry from KB to bytes', async () => {
     vi.mocked(storage.getStorageInfo).mockResolvedValueOnce({
       total: 10000,
@@ -226,38 +442,14 @@ describe('WebosMachine', () => {
     });
   });
 
-  it('should update the application and reboot', async () => {
+  it('updates from the configured server without changing it', async () => {
     const rebootSpy = vi.spyOn(machine, 'reboot');
-    vi.stubEnv('VITE_KEEP_SERVER_SETTINGS', 'false');
     await machine.update();
-    expect(configuration.setServerProperty).toHaveBeenCalledWith({
-      serverIp: '0.0.0.0',
-      serverPort: 0,
-      secureConnection: true,
-      appLaunchMode: 'local',
-      appType: 'ipk',
-      fqdnMode: true,
-      fqdnAddr: 'https://update.castmill.io/webos/player.ipk',
+    expect(storage.upgradeApplication).toHaveBeenCalledWith({
+      type: 'ipk',
+      to: 'local',
+      recovery: true,
     });
-    expect(storage.upgradeApplication).toHaveBeenCalledOnce();
-    expect(rebootSpy).toHaveBeenCalledOnce();
-  });
-
-  it('should not overwrite server settings if VITE_KEEP_SERVER_SETTINGS is true', async () => {
-    const rebootSpy = vi.spyOn(machine, 'reboot');
-    vi.stubEnv('VITE_KEEP_SERVER_SETTINGS', 'true');
-    await machine.update();
-    expect(configuration.setServerProperty).not.toHaveBeenCalled();
-    expect(storage.upgradeApplication).toHaveBeenCalledOnce();
-    expect(rebootSpy).toHaveBeenCalledOnce();
-  });
-
-  it('should overwrite server settings if VITE_KEEP_SERVER_SETTINGS is unset', async () => {
-    const rebootSpy = vi.spyOn(machine, 'reboot');
-    vi.stubEnv('VITE_KEEP_SERVER_SETTINGS', undefined);
-    await machine.update();
-    expect(configuration.setServerProperty).toHaveBeenCalledOnce();
-    expect(storage.upgradeApplication).toHaveBeenCalledOnce();
     expect(rebootSpy).toHaveBeenCalledOnce();
   });
 

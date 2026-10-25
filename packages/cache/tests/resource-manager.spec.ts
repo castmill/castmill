@@ -108,6 +108,37 @@ describe('ResourceManager', () => {
       const { a } = await manager.import(uri);
       expect(a).to.be.eql(1);
     });
+
+    it('starts with cached code when the server never responds', async () => {
+      const uri = 'https://example.com/hanging-code.js';
+      const storage = new StorageMockup({ [uri]: 'export const a = 1;' });
+      const cache = new Cache(storage, 'test-hanging-code-resource', 10);
+      const warmup = new ResourceManager(cache);
+      await warmup.init();
+      await warmup.import(uri);
+
+      const originalFetch = global.fetch;
+      global.fetch = vi.fn((url: string) =>
+        url === uri ? new Promise<Response>(() => {}) : originalFetch(url)
+      ) as unknown as typeof fetch;
+      const needsRefresh = vi.fn();
+
+      try {
+        const manager = new ResourceManager(cache, {
+          needsRefresh,
+          codeRevalidationTimeoutMs: 20,
+        });
+        await manager.init();
+
+        expect(global.fetch).toHaveBeenCalledWith(uri, expect.anything());
+        const { a } = await manager.import(uri);
+        expect(a).to.be.eql(1);
+        expect(needsRefresh).not.toHaveBeenCalled();
+      } finally {
+        global.fetch = originalFetch;
+        cache.close();
+      }
+    });
   });
 
   describe('data resources', () => {
@@ -361,6 +392,48 @@ describe('ResourceManager', () => {
       // With 0 freshness, should fetch fresh data
       const data2 = await manager.getData(uri, 0);
       expect(data2).to.be.eql({ version: 2 });
+    });
+  });
+
+  describe('getFreshData', () => {
+    it('downloads fresh data even when a cached copy is still fresh', async () => {
+      const uri = 'https://example.com/api/fresh.json';
+      const filesFixture: { [index: string]: string } = {
+        [uri]: '{"version":1}',
+      };
+      const cache = new Cache(
+        new StorageMockup(filesFixture),
+        'test-fresh-data',
+        10
+      );
+      const manager = new ResourceManager(cache);
+      await manager.init();
+
+      expect(await manager.getData(uri, 60_000)).to.eql({ version: 1 });
+      filesFixture[uri] = '{"version":2}';
+
+      expect(await manager.getFreshData(uri)).to.eql({ version: 2 });
+      expect(await manager.getData(uri, 60_000)).to.eql({ version: 2 });
+    });
+
+    it('returns undefined instead of stale cached data when the download fails', async () => {
+      const uri = 'https://example.com/api/fresh-offline.json';
+      const filesFixture: { [index: string]: string } = {
+        [uri]: '{"version":1}',
+      };
+      const cache = new Cache(
+        new StorageMockup(filesFixture),
+        'test-fresh-data-offline',
+        10
+      );
+      const manager = new ResourceManager(cache);
+      await manager.init();
+      await manager.getData(uri, 60_000);
+      delete filesFixture[uri];
+
+      expect(await manager.getFreshData(uri)).to.be.undefined;
+      // The cached copy remains available for offline startup.
+      expect(await manager.getData(uri, 0)).to.eql({ version: 1 });
     });
   });
 });

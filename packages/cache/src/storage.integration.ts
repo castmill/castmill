@@ -1,3 +1,4 @@
+import type { ItemType } from './cache';
 /**
  * File Integration Interface.
  *
@@ -12,6 +13,8 @@ export interface StorageItem {
   size: number; // Size in bytes of the item.
   sourceUrl?: string; // Original URL when a stored file gets a new local URL after restart.
   headers?: Record<string, string>; // Optional headers required to get the stored item.
+  type?: ItemType; // Restored item type; defaults to media when omitted.
+  storedAt?: number; // Download time of a restored item (ms since epoch).
 }
 
 export interface StorageInfo {

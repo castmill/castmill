@@ -14,10 +14,11 @@
     "typecheck": "tsc --noEmit",
     "start": "vite",
     "dev": "vite",
-    "build": "VITE_UPDATE_URL=${VITE_UPDATE_URL:-https://update.castmill.io/webos/player.ipk} vite build",
+    "build": "node scripts/check-scap-libs.cjs public && vite build",
     "serve": "vite preview",
     "copy-assets": "cp -r appinfo/* dist && cp -r lib dist",
-    "package": "ares-package --no-minify -o build -e \"*.test.js\" dist",
+    "check-scap-libs": "node scripts/check-scap-libs.cjs public",
+    "package": "node scripts/check-scap-libs.cjs dist && ares-package --no-minify -o build -e \"*.test.js\" dist",
     "test": "vitest run",
     "test:webos-coverage": "vitest run --coverage",
     "test:shared-coverage": "vitest run src/shared --coverage --coverage.include='src/shared/**/*.ts'"
