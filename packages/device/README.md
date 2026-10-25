@@ -25,6 +25,15 @@ Saving is not an application acknowledgement. The Details form shows pending
 or error feedback for connected players and next-connection feedback for offline
 players; successful application needs no persistent status message.
 
+Dashboard subscriptions request a fresh player acknowledgement on join and when
+the player comes online. If a report is missed, online heartbeats retry the
+request until a matching applied/error report arrives. Changed preferences and
+offline transitions invalidate the subscription's previous confirmation. These
+requests reuse the normal orientation apply/report path; already-applied angles
+are acknowledged without repeating native rotation or rewriting the cached
+setting. No saved preference or online notification is treated as proof of
+application.
+
 Deploy the backend orientation migration before enabling the updated dashboard
 and players. Existing devices default to 0 degrees; older players remain
 identifiable through their missing orientation capability.

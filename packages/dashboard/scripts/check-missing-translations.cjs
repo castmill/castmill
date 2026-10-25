@@ -120,6 +120,8 @@ const ALLOWED_IDENTICAL_KEYS = {
   'playlists.widgetModalTitle': ['es', 'sv', 'de', 'fr'],
   // Product wording intentionally uses the English term "Team"
   'filters.teamLabel': ['sv', 'de'],
+  'devices.orientation.options.deg90': ['fr'],
+  'devices.maintenance.systemGroup': ['sv', 'de'],
 };
 
 class TranslationChecker {
