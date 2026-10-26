@@ -143,3 +143,36 @@ body {
 .left-panel {
   margin: 1em 1em 0 0;
 }
+
+@media (max-width: 48em) {
+  .calendar-layout {
+    flex-direction: column;
+    gap: 0.75em;
+  }
+
+  .left-panel {
+    width: 100%;
+    margin: 0;
+  }
+
+  .calendar-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .calendar-header {
+    min-width: 42em;
+    flex-wrap: wrap;
+    gap: 0.5em;
+    padding: 0.5em;
+  }
+
+  .header-table,
+  .body-table {
+    min-width: 42em;
+  }
+
+  .body-table-container {
+    max-height: 65vh;
+  }
+}
