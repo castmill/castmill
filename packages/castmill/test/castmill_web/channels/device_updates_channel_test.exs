@@ -110,9 +110,180 @@ defmodule CastmillWeb.DeviceUpdatesChannelTest do
     test "broadcasts that the device is offline", %{socket: socket, device: device} do
       DeviceUpdatesChannel.handle_info(%{online: false}, socket)
 
-      expected_payload = %{device_id: device.id, online: false}
+      expected_payload = %{device_id: device.id, online: false, orientation_status: nil}
 
       assert_push("device:status", ^expected_payload)
+    end
+  end
+
+  describe "orientation confirmation recovery" do
+    setup %{device: device} do
+      {:ok, device} =
+        Castmill.Devices.update_device(device, %{
+          orientation: 90,
+          info: %{"capabilities" => %{"orientation" => true}}
+        })
+
+      Phoenix.PubSub.subscribe(Castmill.PubSub, "devices:#{device.id}")
+      %{device: device}
+    end
+
+    test "requests a fresh acknowledgement when a dashboard joins an online player", %{
+      socket: socket,
+      device: device
+    } do
+      {:ok, _} = Castmill.Devices.mark_online(device.id, "127.0.0.1")
+      {:ok, joined} = DeviceUpdatesChannel.join("device_updates:#{device.id}", %{}, socket)
+
+      assert_receive :sync_orientation
+      assert {:noreply, _} = DeviceUpdatesChannel.handle_info(:sync_orientation, joined)
+      assert_receive %{event: "orientation_updated", orientation: 90}
+      refute_push "device:status", %{orientation_status: %{status: "applied"}}
+    end
+
+    test "requests the saved offline orientation when the player comes online", %{
+      socket: socket,
+      device: device
+    } do
+      {:noreply, socket} = DeviceUpdatesChannel.handle_info(%{online: false}, socket)
+      {:ok, _} = Castmill.Devices.update_device(device, %{orientation: 270})
+
+      # The online broadcast can arrive before mark_online finishes its database update.
+      assert {:noreply, _} = DeviceUpdatesChannel.handle_info(%{online: true}, socket)
+      assert_receive %{event: "orientation_updated", orientation: 270}
+      assert_push "device:status", %{online: true}
+    end
+
+    test "clears matching reports on disconnect and requests fresh confirmation at the same angle",
+         %{
+           socket: socket,
+           device: device
+         } do
+      for status <- ["applied", "error"] do
+        report = %{orientation: 90, status: status, mode: "css"}
+
+        {:noreply, confirmed} =
+          DeviceUpdatesChannel.handle_info(%{orientation_status: report}, socket)
+
+        assert_push "device:status", %{orientation_status: ^report}
+
+        {:noreply, offline} = DeviceUpdatesChannel.handle_info(%{online: false}, confirmed)
+        device_id = device.id
+
+        assert_push "device:status", %{
+          device_id: ^device_id,
+          online: false,
+          orientation_status: nil
+        }
+
+        assert offline.assigns.orientation_status == nil
+        {:noreply, reconnected} = DeviceUpdatesChannel.handle_info(%{online: true}, offline)
+        assert_push "device:status", %{online: true}
+        assert reconnected.assigns.orientation_status == nil
+        assert_receive %{event: "orientation_updated", orientation: 90}
+
+        fresh_report = %{report | status: "applied"}
+        DeviceUpdatesChannel.handle_info(%{orientation_status: fresh_report}, reconnected)
+        assert_push "device:status", %{orientation_status: ^fresh_report}
+      end
+    end
+
+    test "delivers the reconnect acknowledgement through both live channels", %{device: device} do
+      {:ok, _} = Castmill.Devices.update_device(device, %{orientation: 270})
+
+      {:ok, %{orientation: 270}, player_socket} =
+        CastmillWeb.DeviceSocket
+        |> socket(device.id, %{
+          device: %{
+            device_id: device.id,
+            hardware_id: device.hardware_id,
+            device_ip: {127, 0, 0, 1}
+          }
+        })
+        |> subscribe_and_join(CastmillWeb.DevicesChannel, "devices:#{device.id}", %{
+          "token" => device.token
+        })
+
+      # A request sent during player join can precede its PubSub subscription.
+      push(player_socket, "heartbeat", %{})
+      assert_push "orientation_updated", %{orientation: 270}
+
+      ref =
+        push(player_socket, "orientation:report", %{
+          "orientation" => 270,
+          "status" => "applied",
+          "mode" => "css"
+        })
+
+      assert_reply ref, :ok
+
+      assert_push "device:status", %{
+        orientation_status: %{orientation: 270, status: "applied", mode: "css"}
+      }
+    end
+
+    test "retries missed reports, but stops after matching applied or error reports", %{
+      socket: socket
+    } do
+      for status <- ["applied", "error"] do
+        {:noreply, socket} = DeviceUpdatesChannel.handle_info(%{online: false}, socket)
+        {:noreply, socket} = DeviceUpdatesChannel.handle_info(%{online: true}, socket)
+        assert_receive %{event: "orientation_updated", orientation: 90}
+
+        {:noreply, socket} = DeviceUpdatesChannel.handle_info(%{online: true}, socket)
+        assert_receive %{event: "orientation_updated", orientation: 90}
+
+        obsolete = %{orientation: 0, status: "applied", mode: "css"}
+
+        {:noreply, socket} =
+          DeviceUpdatesChannel.handle_info(%{orientation_status: obsolete}, socket)
+
+        {:noreply, socket} = DeviceUpdatesChannel.handle_info(%{online: true}, socket)
+        assert_receive %{event: "orientation_updated", orientation: 90}
+
+        report = %{orientation: 90, status: status, mode: "css"}
+
+        {:noreply, socket} =
+          DeviceUpdatesChannel.handle_info(%{orientation_status: report}, socket)
+
+        assert_push "device:status", %{orientation_status: ^report}
+        DeviceUpdatesChannel.handle_info(%{online: true}, socket)
+        refute_receive %{event: "orientation_updated"}
+      end
+    end
+
+    test "requests confirmation again after the desired orientation changes", %{
+      socket: socket,
+      device: device
+    } do
+      {:noreply, socket} = DeviceUpdatesChannel.handle_info(%{online: true}, socket)
+      assert_receive %{event: "orientation_updated", orientation: 90}
+      report = %{orientation: 90, status: "applied", mode: "css"}
+
+      {:noreply, socket} =
+        DeviceUpdatesChannel.handle_info(%{orientation_status: report}, socket)
+
+      {:ok, _} = Castmill.Devices.update_device(device, %{orientation: 180})
+      {:noreply, socket} = DeviceUpdatesChannel.handle_info(%{orientation: 180}, socket)
+      DeviceUpdatesChannel.handle_info(%{online: true}, socket)
+      assert_receive %{event: "orientation_updated", orientation: 180}
+    end
+
+    test "does not request application from offline or unsupported players", %{
+      socket: socket,
+      device: device
+    } do
+      DeviceUpdatesChannel.handle_info(:sync_orientation, socket)
+      refute_receive %{event: "orientation_updated"}
+
+      {:ok, device} = Castmill.Devices.update_device(device, %{info: %{}})
+      {:noreply, socket} = DeviceUpdatesChannel.handle_info(%{online: true}, socket)
+      refute_receive %{event: "orientation_updated"}
+
+      info = %{"capabilities" => %{"orientation" => true}}
+      {:ok, _} = Castmill.Devices.update_device(device, %{info: info})
+      DeviceUpdatesChannel.handle_info(%{info: info}, socket)
+      assert_receive %{event: "orientation_updated", orientation: 90}
     end
   end
 end

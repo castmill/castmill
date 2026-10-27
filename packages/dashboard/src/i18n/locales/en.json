@@ -968,7 +968,15 @@
       "applyError": "The player could not apply this orientation. Check device events.",
       "unsupported": "Update this player to enable orientation settings.",
       "saved": "Device settings saved.",
-      "saveError": "Could not save device settings."
+      "saveError": "Could not save device settings.",
+      "options": {
+        "deg0": "Landscape",
+        "deg90": "Portrait",
+        "deg180": "Landscape (flipped)",
+        "deg270": "Portrait (flipped)"
+      },
+      "change": "Change",
+      "done": "Done"
     },
     "title": "Devices",
     "addDevice": "Add Device",
@@ -1025,7 +1033,8 @@
       "noData": "No telemetry data available from this device.",
       "daysShort": "d",
       "hoursShort": "h",
-      "minutesShort": "m"
+      "minutesShort": "m",
+      "description": "Live health readings reported by the player."
     },
     "maintenance": {
       "refresh": "Refresh",
@@ -1051,7 +1060,15 @@
       "recoverLostSettingsLabel": "Recover lost settings",
       "disabled": "Disabled",
       "enabledMinutesRemaining": "Enabled ({{minutes}} minutes remaining)",
-      "enabledForever": "Enabled forever"
+      "enabledForever": "Enabled forever",
+      "run": "Run",
+      "commandSent": "Command sent to the device",
+      "commandFailed": "Could not send the command: {{error}}",
+      "contentGroup": "Playback",
+      "contentGroupDescription": "Recover playback without restarting the hardware.",
+      "systemGroup": "System",
+      "systemGroupDescription": "Updates and restarts. The screen may be blank for a while.",
+      "recoverLostSettingsDescription": "Allows this player to reconnect from a different IP address if it loses its credentials."
     },
     "cache": {
       "title": "Device Cache",
@@ -1071,7 +1088,8 @@
       "deleteMultipleSuccess": "{{count}} cache entries deleted successfully",
       "clearAllSuccess": "All cache entries cleared successfully",
       "deleteError": "Error deleting cache: {{error}}",
-      "offlineWarning": "The device is currently offline. Cache information cannot be retrieved until the device comes back online."
+      "offlineWarning": "The device is currently offline. Cache information cannot be retrieved until the device comes back online.",
+      "description": "Files the player stores locally so it can keep playing offline."
     },
     "events": {
       "title": "Device Events",
@@ -1091,7 +1109,8 @@
       "lastSeen": "Last seen",
       "details": "Details",
       "detailsTitle": "Error details",
-      "errorDetails": "Sanitized diagnostic details"
+      "errorDetails": "Sanitized diagnostic details",
+      "description": "Connection changes and errors reported by the player."
     },
     "errors": {
       "setChannelFailed": "Failed to set device channel: {{error}}",
@@ -1112,6 +1131,31 @@
       "v8Version": "V8 version",
       "nodeVersion": "Node.js version",
       "userAgent": "User agent"
+    },
+    "details": {
+      "settings": "Settings",
+      "overview": "Overview",
+      "schedule": "Schedule",
+      "sections": "Device sections",
+      "lastSeen": "Last seen {{time}}",
+      "neverSeen": "Never connected",
+      "copyId": "Copy device ID",
+      "copied": "Device ID copied",
+      "copyFailed": "Could not copy the device ID.",
+      "unsavedChanges": "Unsaved changes",
+      "nameRequired": "Name is required",
+      "nameTooShort": "Name must be at least 5 characters",
+      "descriptionTooShort": "Description must be at least 5 characters"
+    },
+    "channelList": {
+      "description": "The player plays content from these channels according to their schedules.",
+      "empty": "No channels assigned yet.",
+      "loadError": "Failed to fetch device channels",
+      "alreadyAssigned": "This channel is already assigned to the device.",
+      "added": "Channel \"{{name}}\" added",
+      "removed": "Channel \"{{name}}\" removed",
+      "addError": "Failed to add channel: {{error}}",
+      "removeError": "Failed to remove channel: {{error}}"
     }
   },
   "validation": {
@@ -1419,7 +1463,7 @@
   },
   "deviceSchedule": {
     "title": "Device Schedule",
-    "description": "Define when the device should be ON. Click and drag on the grid to create schedule entries. Outside scheduled hours, the device will turn off. If no entries are set, the device is always on.",
+    "description": "Define when the device should be ON. Drag on the grid to create entries, or tap an empty slot to add one. Click or tap an entry to edit its days and times. Outside scheduled hours, the device will turn off. If no entries are set, the device is always on.",
     "mon": "Mon",
     "tue": "Tue",
     "wed": "Wed",
@@ -1435,7 +1479,20 @@
     "saved": "Schedule saved and sent to device",
     "savedOffline": "Schedule saved. Device is offline — timers will be sent when it reconnects.",
     "loadError": "Error loading schedule",
-    "saveError": "Error saving schedule"
+    "saveError": "Error saving schedule",
+    "editor": {
+      "title": "Edit time slot",
+      "newTitle": "New time slot",
+      "editSlot": "Edit time slot {{slot}}",
+      "startDay": "Start day",
+      "endDay": "End day",
+      "startTime": "Start time",
+      "endTime": "End time",
+      "midnightHint": "Set the end time to 00:00 to stay on until midnight.",
+      "invalidTime": "The end time must be later than the start time.",
+      "overlap": "This time slot overlaps another entry.",
+      "done": "Done"
+    }
   },
   "agents": {
     "title": "AI Agents",

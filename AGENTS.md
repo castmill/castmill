@@ -127,8 +127,10 @@ widgets or shared player-rendering code.
   player build is required. Native-to-legacy runtime dependencies are forbidden.
 - Preserve the two-loaded-video decoder budget, WebOS playback recovery,
   one-argument WebSocket transport, and `MemoryCache` (no IndexedDB on WebOS).
-  Persist only eligible public media; protected/code/data resources use XHR
-  session blobs. Cold startup requires a reachable server.
+  Only eligible public media uses native downloads; protected/code/data
+  resources are fetched with authenticated XHR into session blobs. The native
+  player also saves fetched data/code (≤5 MiB) with SCAP `writeFile` so it can
+  cold-start offline; the legacy adapter still needs a reachable server.
 - Native-only rules: import SCAP-backed modules (`src/native`, `src/classes`)
   only after `window.castmillScapReady` resolves; the boot gate loads them in a
   dynamic app chunk. The hardware ID must stay `sha256(wired || wifi MAC)` to
@@ -162,6 +164,15 @@ decoder-blocking behavior, and test details.
   rotated text fitting, pagination, and scrolling. Do not remount video layers.
 - Localize Details labels/status in all nine dashboard languages. Keep save
   success separate from player application; old capability flags remain unsupported.
+
+### Device Maintenance Actions
+
+- Every device maintenance action (refresh, clear cache, restart, reboot,
+  shutdown, app/firmware update, and any new one) must show an on-device
+  toast such as "Rebooting" before it runs, on all device types. Add the
+  messages to `MAINTENANCE_TOASTS` in `packages/device/src/classes/device.ts`
+  and run the action through `Device.runMaintenanceAction` so menu and
+  dashboard triggers share it. Toast text is English only (no i18n).
 
 ### Key Technologies
 

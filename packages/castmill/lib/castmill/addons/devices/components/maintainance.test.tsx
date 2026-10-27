@@ -4,16 +4,6 @@ import { Maintainance } from './maintainance';
 import { DevicesService } from '../services/devices.service';
 
 vi.mock('@castmill/ui-common', () => ({
-  Button: (props: any) => (
-    <button disabled={props.disabled} onClick={props.onClick}>
-      {props.label}
-    </button>
-  ),
-  MenuButton: (props: any) => (
-    <button disabled={props.disabled} onClick={() => props.items[0]?.onClick()}>
-      {props.label}
-    </button>
-  ),
   useToast: () => ({ error: vi.fn(), success: vi.fn() }),
 }));
 
@@ -27,6 +17,7 @@ vi.mock('../services/devices.service', () => ({
 const t = (key: string) =>
   (
     ({
+      'devices.maintenance.run': 'Run',
       'devices.maintenance.edit': 'Edit',
       'devices.maintenance.enableForOneHour': 'Enable for one hour',
       'devices.maintenance.enableForever': 'Enable forever',
@@ -81,17 +72,21 @@ describe('Maintainance', () => {
   it('disables optional actions until the player reports support', () => {
     renderMaintenance();
 
-    expect(screen.getByRole('button', { name: 'Refresh' })).toBeEnabled();
-    expect(screen.getByRole('button', { name: 'Clear cache' })).toBeEnabled();
-    expect(screen.getByRole('button', { name: 'Restart app' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Run Refresh' })).toBeEnabled();
     expect(
-      screen.getByRole('button', { name: 'Restart device' })
+      screen.getByRole('button', { name: 'Run Clear cache' })
+    ).toBeEnabled();
+    expect(
+      screen.getByRole('button', { name: 'Run Restart app' })
     ).toBeDisabled();
     expect(
-      screen.getByRole('button', { name: 'Check updates' })
+      screen.getByRole('button', { name: 'Run Restart device' })
     ).toBeDisabled();
     expect(
-      screen.getByRole('button', { name: 'Update firmware' })
+      screen.getByRole('button', { name: 'Run Check updates' })
+    ).toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: 'Run Update firmware' })
     ).toBeDisabled();
     expect(screen.getAllByText('Not supported.')).toHaveLength(4);
   });
@@ -105,16 +100,20 @@ describe('Maintainance', () => {
     });
 
     const firmwareButton = screen.getByRole('button', {
-      name: 'Update firmware',
+      name: 'Run Update firmware',
     });
-    expect(screen.getByRole('button', { name: 'Restart app' })).toBeEnabled();
     expect(
-      screen.getByRole('button', { name: 'Restart device' })
+      screen.getByRole('button', { name: 'Run Restart app' })
     ).toBeEnabled();
-    expect(screen.getByRole('button', { name: 'Check updates' })).toBeEnabled();
+    expect(
+      screen.getByRole('button', { name: 'Run Restart device' })
+    ).toBeEnabled();
+    expect(
+      screen.getByRole('button', { name: 'Run Check updates' })
+    ).toBeEnabled();
     expect(firmwareButton).toBeEnabled();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Restart app' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Run Restart app' }));
     await vi.waitFor(() => {
       expect(DevicesService.sendCommand).toHaveBeenCalledWith(
         '/api',
@@ -124,11 +123,11 @@ describe('Maintainance', () => {
     });
     await vi.waitFor(() => {
       expect(
-        screen.getByRole('button', { name: 'Restart device' })
+        screen.getByRole('button', { name: 'Run Restart device' })
       ).toBeEnabled();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Restart device' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Run Restart device' }));
     await vi.waitFor(() => {
       expect(DevicesService.sendCommand).toHaveBeenCalledWith(
         '/api',
@@ -140,7 +139,7 @@ describe('Maintainance', () => {
       expect(firmwareButton).toBeEnabled();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Check updates' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Run Check updates' }));
     await vi.waitFor(() => {
       expect(DevicesService.sendCommand).toHaveBeenCalledWith(
         '/api',
@@ -179,10 +178,42 @@ describe('Maintainance', () => {
     ));
 
     expect(
-      screen.getByRole('button', { name: 'Update firmware' })
+      screen.getByRole('button', { name: 'Run Update firmware' })
     ).toBeDisabled();
     expect(
-      screen.getByRole('button', { name: 'Check updates' })
+      screen.getByRole('button', { name: 'Run Check updates' })
     ).toBeDisabled();
+  });
+
+  it('marks the active autorecovery mode and updates it', async () => {
+    const onDeviceUpdated = vi.fn();
+    render(() => (
+      <Maintainance
+        baseUrl="/api"
+        organizationId="organization-1"
+        device={{ id: 'device-1', online: true } as any}
+        onDeviceUpdated={onDeviceUpdated}
+        t={t}
+      />
+    ));
+
+    const disable = screen.getByRole('button', { name: 'Disable' });
+    const forever = screen.getByRole('button', { name: 'Enable forever' });
+    expect(disable).toHaveAttribute('aria-pressed', 'true');
+    expect(forever).toHaveAttribute('aria-pressed', 'false');
+
+    fireEvent.click(forever);
+    await vi.waitFor(() =>
+      expect(forever).toHaveAttribute('aria-pressed', 'true')
+    );
+    expect(DevicesService.updateDevice).toHaveBeenCalledWith(
+      '/api',
+      'organization-1',
+      'device-1',
+      { autorecover_until: '9999-12-31T23:59:59Z' }
+    );
+    expect(onDeviceUpdated).toHaveBeenCalledWith({
+      autorecover_until: '9999-12-31T23:59:59Z',
+    });
   });
 });

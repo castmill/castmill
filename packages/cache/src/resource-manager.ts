@@ -11,10 +11,17 @@ import type { CacheBackend } from './cache-backend';
 
 let resourceManager: ResourceManager;
 
+/**
+ * Maximum time init() waits for cached code revalidation before letting the
+ * player start with the cached code. Revalidation continues in the background.
+ */
+export const CODE_REVALIDATION_TIMEOUT_MS = 10000;
+
 interface ResourceManagerOpts {
   authToken?: string;
   isOnline?: () => boolean;
   needsRefresh?: () => void;
+  codeRevalidationTimeoutMs?: number;
 }
 
 /**
@@ -72,7 +79,32 @@ export class ResourceManager {
 
     // Get all the code resources
     const codeResources = await this.cache.list(ItemType.Code);
+    if (!codeResources.length) {
+      return;
+    }
 
+    // Revalidation must not block startup: an unresponsive server would
+    // otherwise prevent playback of the cached code. Cached code is kept on
+    // failure, and a late change still triggers needsRefresh.
+    const revalidation = this.revalidateCode(codeResources).catch((err) =>
+      console.error('Code revalidation failed', err)
+    );
+    const timeoutMs =
+      this.opts.codeRevalidationTimeoutMs ?? CODE_REVALIDATION_TIMEOUT_MS;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const deadline = new Promise<void>((resolve) => {
+      timer = setTimeout(() => {
+        console.warn('Code revalidation timed out; using cached code');
+        resolve();
+      }, timeoutMs);
+    });
+    await Promise.race([revalidation, deadline]);
+    clearTimeout(timer);
+  }
+
+  private async revalidateCode(
+    codeResources: { url: string; cachedUrl: string }[]
+  ) {
     // re-fetch all the code resources
     let needRefresh = false;
     for (const codeResource of codeResources) {
@@ -173,6 +205,28 @@ export class ResourceManager {
         // cache.set preserves the old entry on failure, so `item` is still valid.
       }
     }
+    if (item) {
+      return this.fetchJson(item.cachedUrl) as Promise<T>;
+    }
+  }
+
+  /**
+   * getFreshData
+   *
+   * Downloads and caches data for a given URL, ignoring any cached copy. Unlike
+   * getData it never falls back to stale cached data: it returns undefined when
+   * the download fails.
+   *
+   * @param url
+   * @returns
+   */
+  async getFreshData<T = any>(url: string): Promise<T | void> {
+    const item = await this.cache
+      .set(url, ItemType.Data, 'application/json', {
+        headers: this.getAuthHeader(),
+        force: true,
+      })
+      .catch(() => undefined);
     if (item) {
       return this.fetchJson(item.cachedUrl) as Promise<T>;
     }

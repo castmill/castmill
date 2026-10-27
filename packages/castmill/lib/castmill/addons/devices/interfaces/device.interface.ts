@@ -11,7 +11,7 @@ export interface Device {
     orientation: Orientation;
     status: 'applied' | 'error';
     mode: 'native' | 'css' | 'unknown';
-  };
+  } | null;
   online: boolean;
   last_online: Date;
   location: string;

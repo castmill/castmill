@@ -928,7 +928,15 @@
       "applyError": "Spelaren kunde inte tillämpa orienteringen. Kontrollera enhetens händelser.",
       "unsupported": "Uppdatera spelaren för att aktivera orienteringsinställningar.",
       "saved": "Enhetens inställningar har sparats.",
-      "saveError": "Det gick inte att spara enhetens inställningar."
+      "saveError": "Det gick inte att spara enhetens inställningar.",
+      "options": {
+        "deg0": "Liggande",
+        "deg90": "Stående",
+        "deg180": "Liggande (vänd)",
+        "deg270": "Stående (vänd)"
+      },
+      "change": "Ändra",
+      "done": "Klar"
     },
     "setDeviceChannel": "Ställ in enhetskanal",
     "selectChannel": "Välj kanal",
@@ -960,7 +968,8 @@
       "noData": "Ingen telemetridata tillgänglig från denna enhet.",
       "daysShort": "d",
       "hoursShort": "t",
-      "minutesShort": "m"
+      "minutesShort": "m",
+      "description": "Aktuella hälsovärden som rapporterats av spelaren."
     },
     "maintenance": {
       "refresh": "Uppdatera",
@@ -986,7 +995,15 @@
       "recoverLostSettingsLabel": "Återställ förlorade inställningar",
       "disabled": "Inaktiverad",
       "enabledMinutesRemaining": "Aktiverad ({{minutes}} minuter kvar)",
-      "enabledForever": "Aktiverad för alltid"
+      "enabledForever": "Aktiverad för alltid",
+      "run": "Kör",
+      "commandSent": "Kommandot har skickats till enheten",
+      "commandFailed": "Kunde inte skicka kommandot: {{error}}",
+      "contentGroup": "Uppspelning",
+      "contentGroupDescription": "Återställ uppspelningen utan att starta om hårdvaran.",
+      "systemGroup": "System",
+      "systemGroupDescription": "Uppdateringar och omstarter. Skärmen kan vara svart en stund.",
+      "recoverLostSettingsDescription": "Låter spelaren återansluta från en annan IP-adress om den tappar sina inloggningsuppgifter."
     },
     "cache": {
       "title": "Enhetscache",
@@ -1006,7 +1023,8 @@
       "deleteMultipleSuccess": "{{count}} cacheposter borttagna framgångsrikt",
       "clearAllSuccess": "Alla cacheposter rensade framgångsrikt",
       "deleteError": "Fel vid borttagning av cache: {{error}}",
-      "offlineWarning": "Enheten är för närvarande offline. Cacheinformation kan inte hämtas förrän enheten kommer tillbaka online."
+      "offlineWarning": "Enheten är för närvarande offline. Cacheinformation kan inte hämtas förrän enheten kommer tillbaka online.",
+      "description": "Filer som spelaren lagrar lokalt så att den kan fortsätta spela offline."
     },
     "events": {
       "title": "Enhetshändelser",
@@ -1026,7 +1044,8 @@
       "lastSeen": "Senast sedd",
       "details": "Detaljer",
       "detailsTitle": "Feldetaljer",
-      "errorDetails": "Sanerade diagnostikdetaljer"
+      "errorDetails": "Sanerade diagnostikdetaljer",
+      "description": "Anslutningsändringar och fel som rapporterats av spelaren."
     },
     "errors": {
       "setChannelFailed": "Misslyckades att ställa in enhetskanal: {{error}}",
@@ -1072,6 +1091,31 @@
       "v8Version": "V8-version",
       "nodeVersion": "Node.js-version",
       "userAgent": "Användaragent"
+    },
+    "details": {
+      "settings": "Inställningar",
+      "overview": "Översikt",
+      "schedule": "Schema",
+      "sections": "Enhetssektioner",
+      "lastSeen": "Senast sedd {{time}}",
+      "neverSeen": "Aldrig ansluten",
+      "copyId": "Kopiera enhets-ID",
+      "copied": "Enhets-ID kopierat",
+      "copyFailed": "Kunde inte kopiera enhets-ID.",
+      "unsavedChanges": "Osparade ändringar",
+      "nameRequired": "Namn krävs",
+      "nameTooShort": "Namnet måste vara minst 5 tecken",
+      "descriptionTooShort": "Beskrivningen måste vara minst 5 tecken"
+    },
+    "channelList": {
+      "description": "Spelaren spelar innehåll från dessa kanaler enligt deras scheman.",
+      "empty": "Inga kanaler tilldelade ännu.",
+      "loadError": "Kunde inte hämta enhetens kanaler",
+      "alreadyAssigned": "Kanalen är redan tilldelad enheten.",
+      "added": "Kanalen \"{{name}}\" har lagts till",
+      "removed": "Kanalen \"{{name}}\" har tagits bort",
+      "addError": "Kunde inte lägga till kanalen: {{error}}",
+      "removeError": "Kunde inte ta bort kanalen: {{error}}"
     }
   },
   "validation": {
@@ -1419,7 +1463,7 @@
   },
   "deviceSchedule": {
     "title": "Enhetsschema",
-    "description": "Definiera när enheten ska vara PÅ. Klicka och dra på rutnätet för att skapa schemaposter. Utanför schemalagda timmar stängs enheten av. Om inga poster är inställda är enheten alltid på.",
+    "description": "Ange när enheten ska vara PÅ. Dra i rutnätet för att skapa poster, eller tryck på en tom ruta för att lägga till en. Klicka eller tryck på en post för att ändra dess dagar och tider. Utanför schemalagda tider stängs enheten av. Om inga poster finns är enheten alltid på.",
     "mon": "Mån",
     "tue": "Tis",
     "wed": "Ons",
@@ -1435,7 +1479,20 @@
     "saved": "Schema sparat och skickat till enheten",
     "savedOffline": "Schema sparat. Enheten är offline — timers skickas när den återansluter.",
     "loadError": "Fel vid inläsning av schema",
-    "saveError": "Fel vid sparande av schema"
+    "saveError": "Fel vid sparande av schema",
+    "editor": {
+      "title": "Redigera tidsintervall",
+      "newTitle": "Nytt tidsintervall",
+      "editSlot": "Redigera tidsintervall {{slot}}",
+      "startDay": "Startdag",
+      "endDay": "Slutdag",
+      "startTime": "Starttid",
+      "endTime": "Sluttid",
+      "midnightHint": "Ange sluttiden 00:00 för att vara på till midnatt.",
+      "invalidTime": "Sluttiden måste vara senare än starttiden.",
+      "overlap": "Tidsintervallet överlappar en annan post.",
+      "done": "Klar"
+    }
   },
   "agents": {
     "title": "AI-agenter",

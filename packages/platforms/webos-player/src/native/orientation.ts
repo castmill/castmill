@@ -1,35 +1,8 @@
 import type { NativePortraitApi } from '../shared/orientation';
+import { scapRequest } from './request';
 
-const NATIVE_ORIENTATION_TIMEOUT_MS = 10_000;
-
-function request<T>(
-  invoke: (
-    resolve: (value: T) => void,
-    reject: (error: unknown) => void
-  ) => void
-): Promise<T> {
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(
-      () => reject(new Error('WebOS native orientation request timed out')),
-      NATIVE_ORIENTATION_TIMEOUT_MS
-    );
-    try {
-      invoke(
-        (value) => {
-          clearTimeout(timer);
-          resolve(value);
-        },
-        (error) => {
-          clearTimeout(timer);
-          reject(error);
-        }
-      );
-    } catch (error) {
-      clearTimeout(timer);
-      reject(error);
-    }
-  });
-}
+const request = <T>(invoke: Parameters<typeof scapRequest<T>>[1]) =>
+  scapRequest<T>('native orientation', invoke);
 
 export function getNativePortraitApi(): NativePortraitApi | undefined {
   if (typeof Custom === 'undefined') return;

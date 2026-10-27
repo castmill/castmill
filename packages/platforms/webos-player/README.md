@@ -131,6 +131,11 @@ repository.
 `public/lib/.gitignore` excludes all `scap_*` directories, so these local
 libraries remain available for builds without being committed.
 
+`yarn build` and `yarn package` fail when these files are missing, because the
+app would otherwise fail on the display with `DeviceInfo is not defined`. Set
+`WEBOS_ALLOW_MISSING_SCAP=1` to downgrade the failure to a warning for builds
+that are not deployed (the monorepo `yarn build:all` does this).
+
 At runtime, `public/lib/scap-loader.js` selects SCAP 1.5 for webOS Signage 3.0
 and 3.2. It selects SCAP 1.7 for webOS Signage 4.0 and newer. Keep both
 versions in release packages when supporting both display generations.
@@ -174,7 +179,6 @@ cp .env.example .env.local
 | Variable (in this package)  | Purpose                                                       |
 | --------------------------- | ------------------------------------------------------------- |
 | `VITE_FILE_HOST`            | Replaces `localhost` in media URLs before SCAP downloads them |
-| `VITE_KEEP_SERVER_SETTINGS` | See [Application update URL](#application-update-url)         |
 | `VITE_LOGGING`              | See [WebOS compatibility and logging](#webos-compatibility-and-logging) |
 | `VITE_DEBUG_OVERLAY`        | See [Playback debug overlay](#playback-debug-overlay)         |
 
@@ -223,12 +227,62 @@ application data is cleared.
   schedule its own reboots.
 - **Remote control:** the LG Back key (key code 461) closes the device menu,
   like Escape.
+- **Startup timeout:** if the player is not mounted within 3 minutes (for
+  example because a SCAP call never answers), startup is reported as failed
+  and retried with the back-off above. Waiting for registration happens after
+  mounting and is not limited.
+- **Main-thread watchdog:** replaces the old wrapper's iframe heartbeat. A
+  5-second interval measures its own gaps with a monotonic clock; a gap of
+  60 seconds or more while the page is visible is reported as a `runtime`
+  error and the app reloads. Time spent hidden is ignored.
 - **Telemetry:** SCAP storage values are reported in KB and converted to bytes.
-  Network type and IP address come from SCAP network info. Fans that only
-  report a status, without RPM, are omitted.
-- **Firmware updates** require at least 1 GB of free internal storage. The
-  player waits until SCAP reports the downloaded firmware as `ready` before
-  starting the upgrade.
+  Memory comes from `DeviceInfo.getSystemUsageInfo` (already in bytes). CPU
+  usage is the busy share of the cumulative CPU times between two samples; the
+  first request takes a second sample after one second. Network type and IP
+  address come from SCAP network info. On Wi-Fi the SSID and signal level
+  (0–100) come from `DeviceInfo.getWifiList`, which scans, so it only runs
+  when telemetry is requested. Fans that only report a status, without RPM,
+  are omitted. Each part is optional; unsupported APIs are skipped.
+- **OS version:** the reported OS includes the webOS Signage version from
+  `custom.js` (`Signage.getwebOSVersion`), for example `LG WebOS 4.1`.
+- **Clear cache:** the dashboard's clear-cache command clears Castmill's
+  content cache and then SCAP `Configuration.clearCache` (the display's
+  browser cache) before reloading. Credentials and settings in
+  `file://internal` are kept. A failing SCAP call is logged and the reload
+  still happens.
+- **Firmware updates:** see [Firmware updates](#firmware-updates).
+
+### Firmware updates
+
+The dashboard's firmware update command downloads an LG firmware image (EPK)
+from a fixed URL derived from the display's model, using the same convention as
+the old WebOS wrapper:
+
+```text
+https://update.castmill.io/webos/firmware/{manufacturer}-{modelName}.epk
+```
+
+`manufacturer` and `modelName` are the values reported by SCAP
+`DeviceInfo.getPlatformInfo`, unchanged. For example, an LG 55XS2E-BH requests
+`https://update.castmill.io/webos/firmware/LG-55XS2E-BH.epk`. To support a model,
+publish its EPK under exactly that name (case-sensitive). The URL is not
+configurable at build time and is independent of the display's application
+update server.
+
+The update:
+
+1. requires at least 1 GB of free internal storage (from SCAP
+   `getStorageInfo`), otherwise it fails before downloading;
+2. asks SCAP `Storage.downloadFirmware` to download the EPK to temporary
+   storage;
+3. polls `getFirmwareUpgradeStatus` every 5 seconds until it is `ready`,
+   failing on `fail`, an unexpected status, or after one hour; and
+4. calls `Storage.upgradeFirmware`. The display installs the image and
+   reboots.
+
+Failures are returned to the dashboard as a failed command. Because images are
+published per exact model name, sizes such as 49XS2E and 55XS2E need separate
+files even when they share firmware.
 
 ### Playback debug overlay
 
@@ -297,39 +351,21 @@ See `packages/device/README.md` for persistence, application feedback, and logic
 viewport sizing. Validate live rotation and mixed-content/video layouts on actual
 older LG hardware before release.
 
-### Application update URL
+### Application updates
 
-The player can ask SCAP to download an IPK, install it to local storage, and
-reboot the display. Configure the full HTTPS URL of that IPK with
-`VITE_UPDATE_URL`:
-
-```bash
-VITE_UPDATE_URL=https://updates.example.com/webos/player.ipk yarn build
-```
-
-The `yarn build` script supplies this default when the shell variable is not
-set:
+The dashboard's update command and the device menu's **Update App** ask SCAP
+to download an IPK from the update server already configured on the display,
+install it to local storage, and reboot. The player never changes that
+setting. Configure it on the display (installer menu, SuperSign, or
+`Configuration.setServerProperty`), for example with FQDN mode pointing to:
 
 ```text
 https://update.castmill.io/webos/player.ipk
 ```
 
-Set `VITE_UPDATE_URL` in the shell as shown above when overriding it. The
-package script sets its default before Vite loads `.env.local`, so defining
-only `VITE_UPDATE_URL` in `.env.local` does not override the default.
-
-By default, `VITE_KEEP_SERVER_SETTINGS` is unset or `false`, so an update writes
-the configured URL into the display's SCAP server properties before requesting
-the download. Set this when a managed display already has server properties
-that the player must preserve:
-
-```dotenv
-VITE_KEEP_SERVER_SETTINGS=true
-```
-
-With `VITE_KEEP_SERVER_SETTINGS=true`, the update uses the display's existing
-SCAP server settings instead of replacing them. Ensure those settings point to
-the intended IPK before triggering an update.
+For development, point it at `node server.js` (see
+[Package an IPK](#package-an-ipk)); use a non-secure connection setting for
+plain HTTP.
 
 ### Application metadata
 
@@ -404,9 +440,14 @@ After building `dist/`, package it with:
 yarn package
 ```
 
-The script runs the current `ares-package` directly, disables a second
-minification pass, excludes generated test files, and writes the IPK to
-`build/`.
+The script first checks that the SCAP libraries are in `dist/lib`. It then
+runs the current `ares-package` directly, disables a second minification pass,
+excludes generated test files, and writes the IPK to `build/`.
+
+For development installs through SCAP application update, `node server.js
+[build|latest|tpd|test]` serves the packaged IPK at
+`http://<host>:3232/application/com.lg.app.signage.ipk` (set `PORT` to change
+the port).
 
 With the current metadata, the output is:
 
@@ -500,13 +541,17 @@ integration:
 - stores credentials, selected server, and timer state in SCAP internal
   storage;
 - caches downloaded media under `file://internal/castmill-cache/`;
-- reports model, firmware, Chromium, storage, temperature, fan, and network
-  telemetry when supported by the display;
+- reports model, webOS version, firmware, Chromium, storage, memory, CPU,
+  temperature, fan, and network (including Wi-Fi SSID and signal) telemetry
+  when supported by the display;
 - restarts the application and reboots or powers off the display through SCAP;
 - configures on/off timers using the API available on the display's SCAP
   version;
-- downloads and installs player updates from `VITE_UPDATE_URL`; and
-- downloads model-specific firmware from the Castmill firmware update service.
+- downloads and installs player updates from the display's configured update
+  server;
+- downloads model-specific firmware from the Castmill firmware update service
+  (see [Firmware updates](#firmware-updates)); and
+- reloads itself when startup hangs or the main thread stalls.
 
 Some telemetry and timer APIs do not exist on every SCAP version. The
 integration detects optional timer methods and treats unsupported telemetry as
@@ -516,10 +561,22 @@ capabilities.
 ### Storage and startup
 
 Older WebOS engines cannot reliably open IndexedDB/Dexie. The player injects
-`MemoryCache` and never opens IndexedDB for its content cache. **A reachable
-Castmill server is required on every cold start**, even though the IPK app
-shell and public native media survive restarts. Channel/playlist data, widget
-code, and protected resources are session-only.
+`MemoryCache` and never opens IndexedDB for its content cache. It can
+**cold-start offline** with the last content it downloaded: public native media
+survives restarts, and channel/playlist data and widget code are saved too.
+Each data/code response is downloaded with authenticated XHR, then its bytes are
+written to `file://internal/castmill-cache` with SCAP `writeFile` (temporary
+file plus move). SCAP `readFile`/`writeFile` handle at most 10 KB per call and
+silently truncate larger writes, so the player uses binary 10 KB chunks
+(truncate, then append), checks the temporary file size before moving it, and
+reads the file back in chunks of the same size. Blob bytes are read with XHR
+(`responseType = 'arraybuffer'`), never `FileReader`: Cordova's webOS plugin
+replaces `window.FileReader` with a `readAsText`-only shim. The file map records its type and download time. On startup
+the files are read back into blob URLs and restored into `MemoryCache`, so
+`ResourceManager.getData` can fall back to them when the server is unreachable.
+Responses over 5 MiB, protected media, and widget data that was never fetched
+online stay session-only. Unreadable files are dropped on startup; a refresh
+replaces the previous file. Clearing the cache removes them all.
 
 `FileStorage` routes unsigned public `/medias/` media on the configured API
 origin, and unsigned external HTTP(S) media, through SCAP `copyFile` without
@@ -602,8 +659,8 @@ private material.
 
 ## Host an IPK for SCAP updates
 
-The URL embedded as `VITE_UPDATE_URL` must remain reachable by the display and
-return the complete IPK. Use HTTPS with a certificate trusted by the display.
+The update URL configured on the display must remain reachable and return the
+complete IPK. Use HTTPS with a certificate trusted by the display.
 The published filename can remain stable, such as `player.ipk`, while the
 version inside `appinfo.json` increases for each release.
 
@@ -654,8 +711,9 @@ globals.
 On the oldest supported physical display, verify consecutive video loops, two
 video zones, a crowded three-video layout, blocked-item reporting, channel
 replacement, native-file deletion/recovery, and restart while offline. Check
-actual visible frames and progress, not only `playing` events. Offline restart
-must present a recoverable connection failure rather than depend on IndexedDB.
+actual visible frames and progress, not only `playing` events. After one
+online run, an offline restart must resume the last channels, playlists,
+widgets, and native media without IndexedDB, and resynchronize on reconnect.
 
 ## Troubleshooting
 
@@ -711,9 +769,8 @@ setting or clear the application's internal data.
 
 ### An update downloads the wrong package
 
-Confirm the build-time `VITE_UPDATE_URL`, the display's current SCAP server
-properties, and `VITE_KEEP_SERVER_SETTINGS`. When that variable is `true`, the
-player deliberately preserves the display's existing update server settings.
+Check the update server configured on the display (SCAP server properties).
+The player always uses it unchanged.
 
 ### The installed version does not change
 

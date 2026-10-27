@@ -2,7 +2,13 @@ import { type Component, onCleanup, onMount } from 'solid-js';
 import { mountDevice, Device } from '@castmill/device';
 import { enableDebugOverlayFromEnv } from '@castmill/player';
 import { MemoryCache } from '@castmill/cache';
-import { WebosMachine, FileStorage, startDisplayMaintenance } from '../classes';
+import {
+  WebosMachine,
+  FileStorage,
+  startDisplayMaintenance,
+  startStallWatchdog,
+  STARTUP_TIMEOUT_MS,
+} from '../classes';
 import { resetStartupRetry, scheduleStartupRetry } from '../boot/startup-retry';
 import { createWebosVideoPlayback, WebosWebSocket } from '../shared';
 
@@ -23,7 +29,36 @@ export const PlayerFrame: Component = () => {
     };
     onCleanup(() => device?.off('startup-error', showStartupError));
     onCleanup(startDisplayMaintenance());
-    void (async () => {
+    onCleanup(
+      startStallWatchdog({
+        onStall: (stalledMs) => {
+          const error = new Error(
+            `WebOS player main thread stalled for ${Math.round(stalledMs / 1000)} s; reloading`
+          );
+          console.error(error.message);
+          device?.getPlayerGlobals?.().reportError?.({
+            category: 'runtime',
+            error,
+          });
+          window.location.reload();
+        },
+      })
+    );
+    // SCAP calls during startup can hang without failing; treat that like a
+    // startup failure so the retry back-off reloads the app.
+    let startupTimer: ReturnType<typeof setTimeout> | undefined;
+    const startupTimeout = new Promise<never>((_, reject) => {
+      startupTimer = setTimeout(
+        () =>
+          reject(
+            new Error(`WebOS player startup timed out during ${startupStep}`)
+          ),
+        STARTUP_TIMEOUT_MS
+      );
+    });
+    onCleanup(() => clearTimeout(startupTimer));
+    let abandoned = false;
+    const start = (async () => {
       const storage = new FileStorage();
       const cacheBackend = new MemoryCache(storage);
       device = new Device(new WebosMachine(), storage, {
@@ -37,20 +72,26 @@ export const PlayerFrame: Component = () => {
       storage.setServerOrigin(await device.getBaseUrl());
       startupStep = 'cache initialization';
       await cacheBackend.init();
+      if (abandoned) return;
       startupStep = 'device mount';
       if (!ref) throw new Error('Player mount element is unavailable');
       mountDevice(ref, device);
       if (startup) startup.style.display = 'none';
       resetStartupRetry();
-    })().catch((error: unknown) => {
-      device?.reportStartupError(error);
-      console.error(
-        `WebOS player initialization failed during ${startupStep}`,
-        error
-      );
-      showStartupError(error);
-      scheduleStartupRetry();
-    });
+    })();
+    void Promise.race([start, startupTimeout])
+      .then(() => clearTimeout(startupTimer))
+      .catch((error: unknown) => {
+        abandoned = true;
+        clearTimeout(startupTimer);
+        device?.reportStartupError(error);
+        console.error(
+          `WebOS player initialization failed during ${startupStep}`,
+          error
+        );
+        showStartupError(error);
+        scheduleStartupRetry();
+      });
   });
 
   return (

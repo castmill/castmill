@@ -955,7 +955,15 @@
       "applyError": "Der Player konnte diese Ausrichtung nicht anwenden. Prüfen Sie die Geräteereignisse.",
       "unsupported": "Aktualisieren Sie diesen Player, um die Ausrichtung einzustellen.",
       "saved": "Geräteeinstellungen gespeichert.",
-      "saveError": "Geräteeinstellungen konnten nicht gespeichert werden."
+      "saveError": "Geräteeinstellungen konnten nicht gespeichert werden.",
+      "options": {
+        "deg0": "Querformat",
+        "deg90": "Hochformat",
+        "deg180": "Querformat (gedreht)",
+        "deg270": "Hochformat (gedreht)"
+      },
+      "change": "Ändern",
+      "done": "Fertig"
     },
     "setDeviceChannel": "Gerätekanal festlegen",
     "selectChannel": "Kanal auswählen",
@@ -987,7 +995,8 @@
       "noData": "Keine Telemetriedaten von diesem Gerät verfügbar.",
       "daysShort": "T",
       "hoursShort": "Std",
-      "minutesShort": "Min"
+      "minutesShort": "Min",
+      "description": "Aktuelle Zustandswerte, die der Player meldet."
     },
     "maintenance": {
       "refresh": "Aktualisieren",
@@ -1013,7 +1022,15 @@
       "recoverLostSettingsLabel": "Verlorene Einstellungen wiederherstellen",
       "disabled": "Deaktiviert",
       "enabledMinutesRemaining": "Aktiviert (noch {{minutes}} Minuten)",
-      "enabledForever": "Für immer aktiviert"
+      "enabledForever": "Für immer aktiviert",
+      "run": "Ausführen",
+      "commandSent": "Befehl an das Gerät gesendet",
+      "commandFailed": "Befehl konnte nicht gesendet werden: {{error}}",
+      "contentGroup": "Wiedergabe",
+      "contentGroupDescription": "Wiedergabe wiederherstellen, ohne die Hardware neu zu starten.",
+      "systemGroup": "System",
+      "systemGroupDescription": "Updates und Neustarts. Der Bildschirm kann eine Weile schwarz bleiben.",
+      "recoverLostSettingsDescription": "Erlaubt diesem Player, sich von einer anderen IP-Adresse erneut zu verbinden, wenn er seine Zugangsdaten verliert."
     },
     "cache": {
       "title": "Geräte-Cache",
@@ -1033,7 +1050,8 @@
       "deleteMultipleSuccess": "{{count}} Cache-Einträge erfolgreich gelöscht",
       "clearAllSuccess": "Alle Cache-Einträge erfolgreich gelöscht",
       "deleteError": "Fehler beim Löschen des Cache: {{error}}",
-      "offlineWarning": "Das Gerät ist derzeit offline. Cache-Informationen können nicht abgerufen werden, bis das Gerät wieder online ist."
+      "offlineWarning": "Das Gerät ist derzeit offline. Cache-Informationen können nicht abgerufen werden, bis das Gerät wieder online ist.",
+      "description": "Dateien, die der Player lokal speichert, um offline weiterspielen zu können."
     },
     "events": {
       "title": "Geräteereignisse",
@@ -1053,7 +1071,8 @@
       "lastSeen": "Zuletzt gesehen",
       "details": "Details",
       "detailsTitle": "Fehlerdetails",
-      "errorDetails": "Bereinigte Diagnosedetails"
+      "errorDetails": "Bereinigte Diagnosedetails",
+      "description": "Verbindungsänderungen und Fehler, die der Player gemeldet hat."
     },
     "errors": {
       "setChannelFailed": "Fehler beim Festlegen des Gerätekanals: {{error}}",
@@ -1099,6 +1118,31 @@
       "v8Version": "V8-Version",
       "nodeVersion": "Node.js-Version",
       "userAgent": "User-Agent"
+    },
+    "details": {
+      "settings": "Einstellungen",
+      "overview": "Übersicht",
+      "schedule": "Zeitplan",
+      "sections": "Gerätebereiche",
+      "lastSeen": "Zuletzt gesehen {{time}}",
+      "neverSeen": "Nie verbunden",
+      "copyId": "Geräte-ID kopieren",
+      "copied": "Geräte-ID kopiert",
+      "copyFailed": "Geräte-ID konnte nicht kopiert werden.",
+      "unsavedChanges": "Ungespeicherte Änderungen",
+      "nameRequired": "Name ist erforderlich",
+      "nameTooShort": "Der Name muss mindestens 5 Zeichen lang sein",
+      "descriptionTooShort": "Die Beschreibung muss mindestens 5 Zeichen lang sein"
+    },
+    "channelList": {
+      "description": "Der Player spielt Inhalte dieser Kanäle gemäß ihren Zeitplänen ab.",
+      "empty": "Noch keine Kanäle zugewiesen.",
+      "loadError": "Kanäle des Geräts konnten nicht geladen werden",
+      "alreadyAssigned": "Dieser Kanal ist dem Gerät bereits zugewiesen.",
+      "added": "Kanal \"{{name}}\" hinzugefügt",
+      "removed": "Kanal \"{{name}}\" entfernt",
+      "addError": "Kanal konnte nicht hinzugefügt werden: {{error}}",
+      "removeError": "Kanal konnte nicht entfernt werden: {{error}}"
     }
   },
   "validation": {
@@ -1419,7 +1463,7 @@
   },
   "deviceSchedule": {
     "title": "Gerätezeitplan",
-    "description": "Legen Sie fest, wann das Gerät EIN sein soll. Klicken und ziehen Sie auf dem Raster, um Zeitplaneinträge zu erstellen. Außerhalb der geplanten Zeiten wird das Gerät ausgeschaltet. Wenn keine Einträge gesetzt sind, ist das Gerät immer eingeschaltet.",
+    "description": "Legen Sie fest, wann das Gerät EIN sein soll. Ziehen Sie im Raster, um Einträge zu erstellen, oder tippen Sie auf ein leeres Feld, um einen hinzuzufügen. Klicken oder tippen Sie auf einen Eintrag, um Tage und Uhrzeiten zu bearbeiten. Außerhalb der geplanten Zeiten wird das Gerät ausgeschaltet. Ohne Einträge ist das Gerät immer eingeschaltet.",
     "mon": "Mo",
     "tue": "Di",
     "wed": "Mi",
@@ -1435,7 +1479,20 @@
     "saved": "Zeitplan gespeichert und an das Gerät gesendet",
     "savedOffline": "Zeitplan gespeichert. Gerät ist offline — Timer werden bei Wiederverbindung gesendet.",
     "loadError": "Fehler beim Laden des Zeitplans",
-    "saveError": "Fehler beim Speichern des Zeitplans"
+    "saveError": "Fehler beim Speichern des Zeitplans",
+    "editor": {
+      "title": "Zeitfenster bearbeiten",
+      "newTitle": "Neues Zeitfenster",
+      "editSlot": "Zeitfenster {{slot}} bearbeiten",
+      "startDay": "Starttag",
+      "endDay": "Endtag",
+      "startTime": "Startzeit",
+      "endTime": "Endzeit",
+      "midnightHint": "Setzen Sie die Endzeit auf 00:00, damit das Gerät bis Mitternacht eingeschaltet bleibt.",
+      "invalidTime": "Die Endzeit muss nach der Startzeit liegen.",
+      "overlap": "Dieses Zeitfenster überschneidet sich mit einem anderen Eintrag.",
+      "done": "Fertig"
+    }
   },
   "agents": {
     "title": "KI-Agenten",

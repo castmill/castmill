@@ -7,6 +7,13 @@ New devices can be added by implementing the `Machine` interface. This interface
 that are required by the device to work. You can check the integrations folder for examples on how to implement the
 interface for different platforms.
 
+## Device registration
+
+The registration QR code opens the dashboard and carries the pincode through login
+to the device registration form. Set `VITE_DASHBOARD_URL` when building the device
+package to use a custom dashboard URL (for example, `http://localhost:3000`).
+When unset, it uses the current origin.
+
 ## Playback orientation
 
 The dashboard device **Details** form saves clockwise orientations of **0, 90,
@@ -17,6 +24,15 @@ Players cache their last successfully applied value under the Machine setting
 Saving is not an application acknowledgement. The Details form shows pending
 or error feedback for connected players and next-connection feedback for offline
 players; successful application needs no persistent status message.
+
+Dashboard subscriptions request a fresh player acknowledgement on join and when
+the player comes online. If a report is missed, online heartbeats retry the
+request until a matching applied/error report arrives. Changed preferences and
+offline transitions invalidate the subscription's previous confirmation. These
+requests reuse the normal orientation apply/report path; already-applied angles
+are acknowledged without repeating native rotation or rewriting the cached
+setting. No saved preference or online notification is treated as proof of
+application.
 
 Deploy the backend orientation migration before enabling the updated dashboard
 and players. Existing devices default to 0 degrees; older players remain

@@ -945,7 +945,15 @@
       "applyError": "Le lecteur n’a pas pu appliquer cette orientation. Consultez les événements de l’appareil.",
       "unsupported": "Mettez à jour ce lecteur pour activer les réglages d’orientation.",
       "saved": "Réglages de l’appareil enregistrés.",
-      "saveError": "Impossible d’enregistrer les réglages de l’appareil."
+      "saveError": "Impossible d’enregistrer les réglages de l’appareil.",
+      "options": {
+        "deg0": "Paysage",
+        "deg90": "Portrait",
+        "deg180": "Paysage (inversé)",
+        "deg270": "Portrait (inversé)"
+      },
+      "change": "Modifier",
+      "done": "Terminé"
     },
     "setDeviceChannel": "Définir le canal de l'appareil",
     "selectChannel": "Sélectionner un canal",
@@ -977,7 +985,8 @@
       "noData": "Aucune donnée de télémétrie disponible pour cet appareil.",
       "daysShort": "j",
       "hoursShort": "h",
-      "minutesShort": "m"
+      "minutesShort": "m",
+      "description": "Indicateurs de santé en temps réel signalés par le lecteur."
     },
     "maintenance": {
       "refresh": "Actualiser",
@@ -1003,7 +1012,15 @@
       "recoverLostSettingsLabel": "Récupérer les paramètres perdus",
       "disabled": "Désactivé",
       "enabledMinutesRemaining": "Activé ({{minutes}} minutes restantes)",
-      "enabledForever": "Activé pour toujours"
+      "enabledForever": "Activé pour toujours",
+      "run": "Exécuter",
+      "commandSent": "Commande envoyée à l’appareil",
+      "commandFailed": "Impossible d’envoyer la commande : {{error}}",
+      "contentGroup": "Lecture",
+      "contentGroupDescription": "Rétablir la lecture sans redémarrer le matériel.",
+      "systemGroup": "Système",
+      "systemGroupDescription": "Mises à jour et redémarrages. L’écran peut rester noir un moment.",
+      "recoverLostSettingsDescription": "Permet à ce lecteur de se reconnecter depuis une autre adresse IP s’il perd ses identifiants."
     },
     "cache": {
       "title": "Cache de l'Appareil",
@@ -1023,7 +1040,8 @@
       "deleteMultipleSuccess": "{{count}} entrées du cache supprimées avec succès",
       "clearAllSuccess": "Toutes les entrées du cache effacées avec succès",
       "deleteError": "Erreur lors de la suppression du cache : {{error}}",
-      "offlineWarning": "L'appareil est actuellement hors ligne. Les informations du cache ne peuvent pas être récupérées tant que l'appareil n'est pas de retour en ligne."
+      "offlineWarning": "L'appareil est actuellement hors ligne. Les informations du cache ne peuvent pas être récupérées tant que l'appareil n'est pas de retour en ligne.",
+      "description": "Fichiers stockés localement par le lecteur pour continuer la lecture hors ligne."
     },
     "events": {
       "title": "Événements de l'appareil",
@@ -1043,7 +1061,8 @@
       "lastSeen": "Dernière occurrence",
       "details": "Détails",
       "detailsTitle": "Détails de l’erreur",
-      "errorDetails": "Détails de diagnostic nettoyés"
+      "errorDetails": "Détails de diagnostic nettoyés",
+      "description": "Changements de connexion et erreurs signalés par le lecteur."
     },
     "errors": {
       "setChannelFailed": "Échec de la définition du canal de l'appareil : {{error}}",
@@ -1089,6 +1108,31 @@
       "v8Version": "Version de V8",
       "nodeVersion": "Version de Node.js",
       "userAgent": "Agent utilisateur"
+    },
+    "details": {
+      "settings": "Paramètres",
+      "overview": "Aperçu",
+      "schedule": "Planification",
+      "sections": "Sections de l'appareil",
+      "lastSeen": "Vu pour la dernière fois {{time}}",
+      "neverSeen": "Jamais connecté",
+      "copyId": "Copier l'ID de l'appareil",
+      "copied": "ID de l'appareil copié",
+      "copyFailed": "Impossible de copier l'ID de l'appareil.",
+      "unsavedChanges": "Modifications non enregistrées",
+      "nameRequired": "Le nom est obligatoire",
+      "nameTooShort": "Le nom doit contenir au moins 5 caractères",
+      "descriptionTooShort": "La description doit contenir au moins 5 caractères"
+    },
+    "channelList": {
+      "description": "Le lecteur diffuse le contenu de ces chaînes selon leurs programmations.",
+      "empty": "Aucune chaîne attribuée pour le moment.",
+      "loadError": "Impossible de récupérer les chaînes de l’appareil",
+      "alreadyAssigned": "Cette chaîne est déjà attribuée à l’appareil.",
+      "added": "Chaîne « {{name}} » ajoutée",
+      "removed": "Chaîne « {{name}} » retirée",
+      "addError": "Impossible d’ajouter la chaîne : {{error}}",
+      "removeError": "Impossible de retirer la chaîne : {{error}}"
     }
   },
   "validation": {
@@ -1436,7 +1480,7 @@
   },
   "deviceSchedule": {
     "title": "Horaire de l'Appareil",
-    "description": "Définissez quand l'appareil doit être ALLUMÉ. Cliquez et faites glisser sur la grille pour créer des entrées d'horaire. En dehors des heures programmées, l'appareil s'éteindra. Si aucune entrée n'est définie, l'appareil est toujours allumé.",
+    "description": "Définissez quand l’appareil doit être ALLUMÉ. Faites glisser sur la grille pour créer des plages, ou touchez une case vide pour en ajouter une. Cliquez ou touchez une plage pour modifier ses jours et horaires. En dehors des heures programmées, l’appareil s’éteindra. Sans plage définie, l’appareil reste toujours allumé.",
     "mon": "Lun",
     "tue": "Mar",
     "wed": "Mer",
@@ -1452,7 +1496,20 @@
     "saved": "Horaire enregistré et envoyé à l'appareil",
     "savedOffline": "Horaire enregistré. L'appareil est hors ligne — les minuteurs seront envoyés lors de la reconnexion.",
     "loadError": "Erreur lors du chargement de l'horaire",
-    "saveError": "Erreur lors de l'enregistrement de l'horaire"
+    "saveError": "Erreur lors de l'enregistrement de l'horaire",
+    "editor": {
+      "title": "Modifier la plage horaire",
+      "newTitle": "Nouvelle plage horaire",
+      "editSlot": "Modifier la plage horaire {{slot}}",
+      "startDay": "Jour de début",
+      "endDay": "Jour de fin",
+      "startTime": "Heure de début",
+      "endTime": "Heure de fin",
+      "midnightHint": "Indiquez 00:00 comme heure de fin pour rester allumé jusqu’à minuit.",
+      "invalidTime": "L’heure de fin doit être postérieure à l’heure de début.",
+      "overlap": "Cette plage horaire chevauche une autre plage.",
+      "done": "Terminé"
+    }
   },
   "agents": {
     "title": "Agents IA",

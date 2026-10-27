@@ -4,6 +4,7 @@ import {
   promisifyNoRet,
   promisifyNoOptNoRet,
 } from './promisify';
+import { scapRequest } from './request';
 
 const scapDeviceInfo = new DeviceInfo();
 const scapUtility = new Utility();
@@ -26,6 +27,19 @@ export const deviceInfo = {
   // Not declared by every SCAP version; feature-detect before use.
   setNetworkInfo: scapDeviceInfo.setNetworkInfo
     ? promisifyNoRet(scapDeviceInfo.setNetworkInfo.bind(scapDeviceInfo))
+    : undefined,
+  // SCAP 1.2+/1.3+; these calls can stall on some firmware, so they time out.
+  getSystemUsageInfo: scapDeviceInfo.getSystemUsageInfo
+    ? (options: SystemUsageOptions) =>
+        scapRequest<SystemUsageInfo>('system usage', (resolve, reject) =>
+          scapDeviceInfo.getSystemUsageInfo!(resolve, reject, options)
+        )
+    : undefined,
+  getWifiList: scapDeviceInfo.getWifiList
+    ? () =>
+        scapRequest<WifiList>('Wi-Fi list', (resolve, reject) =>
+          scapDeviceInfo.getWifiList!(resolve, reject)
+        )
     : undefined,
 };
 
@@ -84,10 +98,11 @@ export const configuration = {
   getServerProperty: promisifyNoOpt(
     scapConfig.getServerProperty.bind(scapConfig)
   ),
-  setServerProperty: promisifyNoRet(
-    scapConfig.setServerProperty.bind(scapConfig)
-  ),
   getTimeZone: promisifyNoOpt(scapConfig.getTimeZone.bind(scapConfig)),
+  clearCache: () =>
+    scapRequest<void>('clear cache', (resolve, reject) =>
+      scapConfig.clearCache(() => resolve(), reject)
+    ),
 };
 
 export const storage = {

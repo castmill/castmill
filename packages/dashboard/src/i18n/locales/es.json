@@ -961,7 +961,15 @@
       "applyError": "El reproductor no pudo aplicar esta orientación. Consulta los eventos del dispositivo.",
       "unsupported": "Actualiza este reproductor para habilitar la configuración de orientación.",
       "saved": "Configuración del dispositivo guardada.",
-      "saveError": "No se pudo guardar la configuración del dispositivo."
+      "saveError": "No se pudo guardar la configuración del dispositivo.",
+      "options": {
+        "deg0": "Horizontal",
+        "deg90": "Vertical",
+        "deg180": "Horizontal (invertida)",
+        "deg270": "Vertical (invertida)"
+      },
+      "change": "Cambiar",
+      "done": "Listo"
     },
     "setDeviceChannel": "Establecer canal del dispositivo",
     "selectChannel": "Seleccionar canal",
@@ -993,7 +1001,8 @@
       "noData": "No hay datos de telemetría disponibles para este dispositivo.",
       "daysShort": "d",
       "hoursShort": "h",
-      "minutesShort": "m"
+      "minutesShort": "m",
+      "description": "Lecturas de estado en tiempo real enviadas por el reproductor."
     },
     "maintenance": {
       "refresh": "Actualizar",
@@ -1019,7 +1028,15 @@
       "recoverLostSettingsLabel": "Recuperar configuración perdida",
       "disabled": "Desactivado",
       "enabledMinutesRemaining": "Activado (quedan {{minutes}} minutos)",
-      "enabledForever": "Activado para siempre"
+      "enabledForever": "Activado para siempre",
+      "run": "Ejecutar",
+      "commandSent": "Comando enviado al dispositivo",
+      "commandFailed": "No se pudo enviar el comando: {{error}}",
+      "contentGroup": "Reproducción",
+      "contentGroupDescription": "Recupera la reproducción sin reiniciar el hardware.",
+      "systemGroup": "Sistema",
+      "systemGroupDescription": "Actualizaciones y reinicios. La pantalla puede quedarse en negro durante un tiempo.",
+      "recoverLostSettingsDescription": "Permite que este reproductor se vuelva a conectar desde otra dirección IP si pierde sus credenciales."
     },
     "cache": {
       "title": "Caché del Dispositivo",
@@ -1039,7 +1056,8 @@
       "deleteMultipleSuccess": "{{count}} entradas de caché eliminadas exitosamente",
       "clearAllSuccess": "Todas las entradas de caché limpiadas exitosamente",
       "deleteError": "Error al eliminar caché: {{error}}",
-      "offlineWarning": "El dispositivo está actualmente fuera de línea. La información de caché no se puede obtener hasta que el dispositivo vuelva a estar en línea."
+      "offlineWarning": "El dispositivo está actualmente fuera de línea. La información de caché no se puede obtener hasta que el dispositivo vuelva a estar en línea.",
+      "description": "Archivos que el reproductor guarda localmente para seguir reproduciendo sin conexión."
     },
     "events": {
       "title": "Eventos del Dispositivo",
@@ -1059,7 +1077,8 @@
       "lastSeen": "Visto por última vez",
       "details": "Detalles",
       "detailsTitle": "Detalles del error",
-      "errorDetails": "Detalles de diagnóstico sanitizados"
+      "errorDetails": "Detalles de diagnóstico sanitizados",
+      "description": "Cambios de conexión y errores notificados por el reproductor."
     },
     "errors": {
       "setChannelFailed": "Error al establecer el canal del dispositivo: {{error}}",
@@ -1105,6 +1124,31 @@
       "v8Version": "Versión de V8",
       "nodeVersion": "Versión de Node.js",
       "userAgent": "Agente de usuario"
+    },
+    "details": {
+      "settings": "Configuración",
+      "overview": "Resumen",
+      "schedule": "Programación",
+      "sections": "Secciones del dispositivo",
+      "lastSeen": "Visto por última vez {{time}}",
+      "neverSeen": "Nunca conectado",
+      "copyId": "Copiar ID del dispositivo",
+      "copied": "ID del dispositivo copiado",
+      "copyFailed": "No se pudo copiar el ID del dispositivo.",
+      "unsavedChanges": "Cambios sin guardar",
+      "nameRequired": "El nombre es obligatorio",
+      "nameTooShort": "El nombre debe tener al menos 5 caracteres",
+      "descriptionTooShort": "La descripción debe tener al menos 5 caracteres"
+    },
+    "channelList": {
+      "description": "El reproductor muestra el contenido de estos canales según sus programaciones.",
+      "empty": "Aún no hay canales asignados.",
+      "loadError": "No se pudieron obtener los canales del dispositivo",
+      "alreadyAssigned": "Este canal ya está asignado al dispositivo.",
+      "added": "Canal \"{{name}}\" añadido",
+      "removed": "Canal \"{{name}}\" eliminado",
+      "addError": "No se pudo añadir el canal: {{error}}",
+      "removeError": "No se pudo eliminar el canal: {{error}}"
     }
   },
   "validation": {
@@ -1425,7 +1469,7 @@
   },
   "deviceSchedule": {
     "title": "Horario del Dispositivo",
-    "description": "Defina cuándo el dispositivo debe estar ENCENDIDO. Haga clic y arrastre en la cuadrícula para crear entradas de horario. Fuera de las horas programadas, el dispositivo se apagará. Si no se establecen entradas, el dispositivo está siempre encendido.",
+    "description": "Define cuándo debe estar ENCENDIDO el dispositivo. Arrastra sobre la cuadrícula para crear entradas o toca un hueco vacío para añadir una. Haz clic o toca una entrada para editar sus días y horas. Fuera del horario programado, el dispositivo se apagará. Si no hay entradas, el dispositivo estará siempre encendido.",
     "mon": "Lun",
     "tue": "Mar",
     "wed": "Mié",
@@ -1441,7 +1485,20 @@
     "saved": "Horario guardado y enviado al dispositivo",
     "savedOffline": "Horario guardado. El dispositivo está sin conexión — los temporizadores se enviarán cuando se reconecte.",
     "loadError": "Error al cargar el horario",
-    "saveError": "Error al guardar el horario"
+    "saveError": "Error al guardar el horario",
+    "editor": {
+      "title": "Editar franja horaria",
+      "newTitle": "Nueva franja horaria",
+      "editSlot": "Editar franja horaria {{slot}}",
+      "startDay": "Día de inicio",
+      "endDay": "Día de fin",
+      "startTime": "Hora de inicio",
+      "endTime": "Hora de fin",
+      "midnightHint": "Establece la hora de fin en 00:00 para mantenerlo encendido hasta medianoche.",
+      "invalidTime": "La hora de fin debe ser posterior a la hora de inicio.",
+      "overlap": "Esta franja horaria se solapa con otra entrada.",
+      "done": "Listo"
+    }
   },
   "agents": {
     "title": "Agentes de IA",
