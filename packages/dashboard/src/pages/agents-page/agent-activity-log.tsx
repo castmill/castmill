@@ -1,5 +1,6 @@
 import { Component, createEffect, createSignal, For, on, Show } from 'solid-js';
 import { Dropdown, Pagination, useToast } from '@castmill/ui-common';
+import { BsChevronRight } from 'solid-icons/bs';
 
 import { useI18n } from '../../i18n';
 import {
@@ -130,12 +131,14 @@ export const AgentActivityLog: Component<{
       <Show
         when={actions().length > 0}
         fallback={
-          <p class={styles.empty}>
-            {loading() ? t('common.loading') : t('agents.activity.empty')}
-          </p>
+          <div class={styles.emptyState}>
+            <p>
+              {loading() ? t('common.loading') : t('agents.activity.empty')}
+            </p>
+          </div>
         }
       >
-        <table class={styles.table}>
+        <table class={styles.logTable}>
           <thead>
             <tr>
               <th>{t('common.time')}</th>
@@ -148,10 +151,16 @@ export const AgentActivityLog: Component<{
           </thead>
           <tbody>
             <For each={actions()}>
-              {(action) => (
+              {(action, index) => (
                 <>
-                  <tr>
-                    <td>{formatTime(action.inserted_at)}</td>
+                  <tr
+                    class={
+                      index() % 2 === 0 ? styles.stripeOdd : styles.stripeEven
+                    }
+                  >
+                    <td class={styles.nowrap}>
+                      {formatTime(action.inserted_at)}
+                    </td>
                     <td>{action.agent_name}</td>
                     <td>
                       <button
@@ -164,6 +173,12 @@ export const AgentActivityLog: Component<{
                           )
                         }
                       >
+                        <BsChevronRight
+                          aria-hidden="true"
+                          class={`${styles.chevron} ${
+                            expanded() === action.id ? styles.chevronOpen : ''
+                          }`}
+                        />
                         <code>{action.tool}</code>
                       </button>
                     </td>
@@ -176,11 +191,11 @@ export const AgentActivityLog: Component<{
                     </td>
                     <td>
                       <span
-                        class={
+                        class={`${styles.statusBadge} ${
                           action.status === 'success'
                             ? styles.statusSuccess
                             : styles.statusError
-                        }
+                        }`}
                       >
                         {action.status === 'success'
                           ? t('agents.activity.success')
@@ -190,7 +205,7 @@ export const AgentActivityLog: Component<{
                         </Show>
                       </span>
                     </td>
-                    <td>
+                    <td class={styles.nowrap}>
                       <Show
                         when={
                           action.duration_ms !== null &&
@@ -202,22 +217,28 @@ export const AgentActivityLog: Component<{
                     </td>
                   </tr>
                   <Show when={expanded() === action.id}>
-                    <tr class={styles.detailsRow}>
+                    <tr
+                      class={`${styles.detailsRow} ${
+                        index() % 2 === 0 ? styles.stripeOdd : styles.stripeEven
+                      }`}
+                    >
                       <td colSpan={6}>
-                        <Show when={action.error}>
-                          <p class={styles.errorText}>{action.error}</p>
-                        </Show>
-                        <div class={styles.label}>
-                          {t('agents.activity.arguments')}
-                        </div>
-                        <pre>
-                          {JSON.stringify(action.arguments ?? {}, null, 2)}
-                        </pre>
-                        <Show when={action.ip}>
-                          <div class={styles.muted}>
-                            {t('common.ip')}: {action.ip}
+                        <div class={styles.details}>
+                          <Show when={action.error}>
+                            <p class={styles.errorText}>{action.error}</p>
+                          </Show>
+                          <div class={styles.label}>
+                            {t('agents.activity.arguments')}
                           </div>
-                        </Show>
+                          <pre>
+                            {JSON.stringify(action.arguments ?? {}, null, 2)}
+                          </pre>
+                          <Show when={action.ip}>
+                            <div class={styles.muted}>
+                              {t('common.ip')}: {action.ip}
+                            </div>
+                          </Show>
+                        </div>
                       </td>
                     </tr>
                   </Show>

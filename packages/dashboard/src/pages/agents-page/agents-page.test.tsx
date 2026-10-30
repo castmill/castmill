@@ -130,11 +130,46 @@ describe('AgentsPage', () => {
     );
   });
 
-  it('shows an empty state', async () => {
+  it('shows an empty state with a create action for admins', async () => {
     vi.mocked(AgentsService.list).mockResolvedValue([]);
     renderPage();
 
     await waitFor(() => expect(screen.getByText(/No agents yet/)).toBeTruthy());
+    const createButtons = screen.getAllByText('New agent');
+    expect(createButtons).toHaveLength(2);
+
+    fireEvent.click(createButtons[1]);
+    expect(document.getElementById('agent-name')).toBeTruthy();
+  });
+
+  it('hides the empty state create action from managers', async () => {
+    role = 'manager';
+    vi.mocked(AgentsService.list).mockResolvedValue([]);
+    renderPage();
+
+    await waitFor(() => expect(screen.getByText(/No agents yet/)).toBeTruthy());
+    expect(screen.queryByText('New agent')).toBeNull();
+  });
+
+  it('marks revoked credentials and hides the revoke action', async () => {
+    vi.mocked(AgentsService.list).mockResolvedValue([
+      { ...agent, has_credentials: false, secret_prefix: null },
+    ]);
+    renderPage();
+
+    await waitFor(() => expect(screen.getByText('Revoked')).toBeTruthy());
+    expect(screen.queryByTitle('Revoke credentials')).toBeNull();
+    expect(screen.getByTitle('Rotate credentials')).toBeTruthy();
+  });
+
+  it('shows when and from where an agent was last used', async () => {
+    vi.mocked(AgentsService.list).mockResolvedValue([
+      { ...agent, last_used_at: '2026-01-02T10:00:00Z', last_ip: '10.1.2.3' },
+    ]);
+    renderPage();
+
+    await waitFor(() => expect(screen.getByText('10.1.2.3')).toBeTruthy());
+    expect(screen.queryByText('Never')).toBeNull();
   });
 
   it('denies access to roles other than admin and manager', () => {

@@ -1,21 +1,35 @@
+// The dashboard shell centers text, so every agents view resets alignment.
 .agentsPage {
-  padding: 2em;
-  margin: 0 auto;
+  margin: 2em;
+  text-align: start;
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 1em;
-  margin-bottom: 1.5em;
+  gap: 1.5em;
 
   h1 {
-    margin: 0 0 0.25em;
-    font-size: 1.5em;
-    font-weight: 700;
-    color: var(--text-primary, #e5e7eb);
+    margin: 0 0 0.35em;
   }
+}
+
+.headerText {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.headerAction {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.description {
+  max-width: 48em;
+  margin: 0;
+  line-height: 1.5;
+  color: var(--text-secondary, #9ca3af);
 }
 
 .muted {
@@ -25,93 +39,246 @@
 
 .label {
   font-weight: 600;
-  margin-right: 0.5em;
+  margin-inline-end: 0.5em;
 }
 
-.empty {
+.tabPanel {
+  padding-top: 0.5em;
+  text-align: start;
+}
+
+/* ---- Empty states ---- */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1em;
+  padding: 3.5em 2em;
+  border: 0.0625em dashed var(--castmill-divider, rgba(255, 255, 255, 0.15));
+  border-radius: 0.75em;
   text-align: center;
-  padding: 3em;
   color: var(--text-secondary, #9ca3af);
+
+  p {
+    margin: 0;
+    max-width: 32em;
+    line-height: 1.5;
+  }
 }
 
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.9em;
+.emptyIcon {
+  font-size: 2.5em;
+  opacity: 0.6;
+}
 
-  th,
-  td {
-    text-align: start;
-    padding: 0.6em 0.75em;
-    border-bottom: 0.0625em solid var(--border-color, rgba(255, 255, 255, 0.1));
-    vertical-align: top;
-  }
-
-  th {
-    font-weight: 600;
-    color: var(--text-secondary, #9ca3af);
-  }
-
-  code {
-    font-size: 0.9em;
-  }
+/* ---- Agents table cells (rendered inside the shared ui-common Table) ---- */
+.nameCell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2em;
+  padding: 0.5em 0;
 }
 
 .agentName {
   font-weight: 600;
 }
 
+.agentDescription {
+  font-size: 0.85em;
+  color: var(--text-secondary, #9ca3af);
+}
+
+.secretChip {
+  display: inline-block;
+  padding: 0.15em 0.55em;
+  border-radius: 0.375em;
+  background: rgba(255, 255, 255, 0.06);
+  font-family: monospace;
+  font-size: 0.9em;
+}
+
+.badgeRevoked {
+  display: inline-block;
+  padding: 0.15em 0.6em;
+  border-radius: 1em;
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--danger-color, #ef4444);
+  font-size: 0.85em;
+  font-weight: 600;
+}
+
+.lastUsed {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15em;
+}
+
+.ip {
+  font-size: 0.8em;
+  color: var(--text-secondary, #9ca3af);
+}
+
+// Same layout as the shared Table's built-in actions cell.
 .rowActions {
   display: flex;
-  gap: 0.25em;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5em;
 }
 
-.statusSuccess {
-  color: var(--success-color, #22c55e);
-}
-
-.statusError {
-  color: var(--danger-color, #ef4444);
-}
-
-.toolDisclosure {
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  text-align: start;
-  cursor: pointer;
-}
-
-.errorText {
-  color: var(--danger-color, #ef4444);
-  white-space: pre-wrap;
-}
-
-.requestCell {
-  max-width: 24em;
-  overflow-wrap: anywhere;
-}
-
-.detailsRow pre {
-  max-height: 20em;
-  overflow: auto;
-  margin: 0.5em 0;
+/* ---- Activity log ---- */
+.activityLog {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
 }
 
 .filters {
   display: flex;
   flex-wrap: wrap;
+  align-items: flex-end;
   gap: 1em;
-  margin-bottom: 1em;
+
+  > * {
+    flex: 0 1 16em;
+    min-width: 12em;
+  }
 }
 
+// Mirrors the look of the shared ui-common Table, which cannot render
+// expandable detail rows.
+.logTable {
+  width: 100%;
+  font-size: 0.9em;
+  border-collapse: collapse;
+  border-style: hidden;
+  border-radius: 0.5em;
+  overflow: hidden;
+  box-shadow: 0 0 0 0.0625em #666;
+
+  th,
+  td {
+    padding: 0.75em;
+    text-align: start;
+    vertical-align: middle;
+  }
+
+  thead {
+    background-color: #1e1f25;
+    color: #5a5a5e;
+
+    th {
+      font-weight: 600;
+      white-space: nowrap;
+    }
+  }
+
+  // Striped per log entry so an expanded details row matches its entry.
+  tbody tr.stripeOdd td {
+    background-color: #18191e;
+  }
+
+  tbody tr.stripeEven td {
+    background-color: #1e1f25;
+  }
+
+  code {
+    font-size: 0.95em;
+  }
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.toolDisclosure {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.2em 0.5em;
+  border: 0.0625em solid transparent;
+  border-radius: 0.375em;
+  background: rgba(255, 255, 255, 0.06);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+
+  &:hover,
+  &[aria-expanded='true'] {
+    border-color: var(--primary-color, #5792ee);
+  }
+}
+
+.chevron {
+  font-size: 0.75em;
+  transition: transform 0.15s ease;
+}
+
+.chevronOpen {
+  transform: rotate(90deg);
+}
+
+.requestCell {
+  max-width: 28em;
+  overflow-wrap: anywhere;
+  color: var(--text-secondary, #9ca3af);
+}
+
+.statusBadge {
+  display: inline-block;
+  padding: 0.15em 0.6em;
+  border-radius: 1em;
+  font-size: 0.85em;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.statusSuccess {
+  background: rgba(34, 197, 94, 0.12);
+  color: var(--success-color, #22c55e);
+}
+
+.statusError {
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--danger-color, #ef4444);
+}
+
+.detailsRow td {
+  padding-top: 0;
+}
+
+.details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  padding: 0.75em 1em;
+  border-inline-start: 0.2em solid var(--primary-color, #5792ee);
+  border-radius: 0.25em;
+  background: rgba(0, 0, 0, 0.2);
+
+  pre {
+    max-height: 20em;
+    margin: 0;
+    overflow: auto;
+    text-align: start;
+    white-space: pre;
+  }
+}
+
+.errorText {
+  margin: 0;
+  color: var(--danger-color, #ef4444);
+  white-space: pre-wrap;
+}
+
+/* ---- Forms & modals ---- */
 .form {
   display: flex;
   flex-direction: column;
   gap: 0.75em;
-  min-width: 28em;
+  min-width: min(28em, 80vw);
+  text-align: start;
 }
 
 .formActions {
@@ -125,10 +292,12 @@
   display: flex;
   align-items: center;
   gap: 0.75em;
-  margin-bottom: 1em;
-  padding: 0.75em;
+  margin-bottom: 1.5em;
+  padding: 0.75em 1em;
+  border: 0.0625em solid rgba(234, 179, 8, 0.35);
   border-radius: 0.5em;
-  background: var(--surface-secondary, rgba(255, 255, 255, 0.05));
+  background: rgba(234, 179, 8, 0.08);
+  text-align: start;
 
   code {
     flex: 1;
@@ -137,18 +306,49 @@
   }
 }
 
+/* ---- Setup instructions ---- */
 .instructions {
   display: flex;
   flex-direction: column;
-  gap: 0.75em;
-  max-width: 56em;
+  gap: 1.25em;
+  max-width: 60em;
+  text-align: start;
+
+  p {
+    margin: 0;
+    line-height: 1.5;
+  }
 }
 
-.urlRow {
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6em;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 0.8em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary, #9ca3af);
+}
+
+.urlField {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 0.5em;
+  gap: 0.75em;
+  padding: 0.6em 0.6em 0.6em 1em;
+  border: 0.0625em solid var(--castmill-divider, rgba(255, 255, 255, 0.12));
+  border-radius: 0.5em;
+  background: rgba(0, 0, 0, 0.25);
+
+  code {
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
 }
 
 .clientTabs {
@@ -158,48 +358,79 @@
 }
 
 .clientTab {
-  padding: 0.35em 0.85em;
+  padding: 0.4em 1em;
   border-radius: 1em;
-  border: 0.0625em solid var(--border-color, rgba(255, 255, 255, 0.2));
+  border: 0.0625em solid var(--castmill-divider, rgba(255, 255, 255, 0.2));
   background: transparent;
   color: inherit;
+  font: inherit;
+  font-size: 0.9em;
   cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+
+  &:hover {
+    border-color: var(--primary-color, #5792ee);
+  }
 }
 
 .clientTabActive {
-  background: var(--primary-color, #3b82f6);
-  border-color: var(--primary-color, #3b82f6);
+  background: var(--primary-color, #5792ee);
+  border-color: var(--primary-color, #5792ee);
   color: #fff;
 }
 
 .snippet {
-  position: relative;
+  border: 0.0625em solid var(--castmill-divider, rgba(255, 255, 255, 0.12));
+  border-radius: 0.5em;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.3);
 
   pre {
     margin: 0;
     padding: 1em;
-    border-radius: 0.5em;
     overflow: auto;
-    background: var(--surface-secondary, rgba(0, 0, 0, 0.3));
     font-size: 0.85em;
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
+    line-height: 1.5;
+    text-align: start;
+    white-space: pre;
   }
 }
 
+.snippetHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4em 0.6em 0.4em 1em;
+  border-bottom: 0.0625em solid
+    var(--castmill-divider, rgba(255, 255, 255, 0.12));
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 0.85em;
+  color: var(--text-secondary, #9ca3af);
+}
+
 .copyButton {
-  position: absolute;
-  top: 0.5em;
-  inset-inline-end: 0.5em;
-  padding: 0.25em 0.75em;
+  flex-shrink: 0;
+  padding: 0.3em 0.85em;
   border-radius: 0.375em;
   border: none;
   cursor: pointer;
-  background: var(--primary-color, #3b82f6);
+  background: var(--primary-color, #5792ee);
   color: #fff;
+  font: inherit;
+  font-size: 0.85em;
+
+  &:hover {
+    filter: brightness(1.1);
+  }
 }
 
-.activityLog {
-  display: flex;
-  flex-direction: column;
+.securityNote {
+  padding: 0.75em 1em;
+  border: 0.0625em solid rgba(234, 179, 8, 0.3);
+  border-radius: 0.5em;
+  background: rgba(234, 179, 8, 0.08);
+  color: var(--castmill-warning-text, #eab308);
+  font-size: 0.9em;
 }

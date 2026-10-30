@@ -109,6 +109,20 @@ describe('AgentIntegrationInstructions', () => {
     expect(container.textContent).toContain('mcp-remote');
   });
 
+  it('labels the snippet with the config file of the client', () => {
+    render(() => (
+      <I18nProvider>
+        <AgentIntegrationInstructions />
+      </I18nProvider>
+    ));
+
+    expect(screen.getByText('claude_desktop_config.json')).toBeTruthy();
+    fireEvent.click(screen.getByText('VS Code'));
+    expect(screen.getByText('.vscode/mcp.json')).toBeTruthy();
+    fireEvent.click(screen.getByText('Claude Code'));
+    expect(screen.queryByText(/mcp\.json$/)).toBeNull();
+  });
+
   it('switches clients and copies the snippet', async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.assign(navigator, { clipboard: { writeText } });

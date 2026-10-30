@@ -1,13 +1,20 @@
-import { Component, createEffect, createSignal, For, on, Show } from 'solid-js';
-import { BsPlus, BsPencil, BsKey } from 'solid-icons/bs';
-import { AiOutlineDelete, AiOutlineStop } from 'solid-icons/ai';
+import { Component, createEffect, createSignal, on, Show } from 'solid-js';
+import { BsPlus } from 'solid-icons/bs';
+import {
+  AiOutlineDelete,
+  AiOutlineEdit,
+  AiOutlineKey,
+  AiOutlineStop,
+} from 'solid-icons/ai';
+import { TbRobot } from 'solid-icons/tb';
 import {
   Button,
+  Column,
   ConfirmDialog,
   Dropdown,
   FormItem,
-  IconButton,
   Modal,
+  Table,
   Tabs,
   useToast,
 } from '@castmill/ui-common';
@@ -261,102 +268,141 @@ const AgentsPage: Component = () => {
     }
   };
 
-  const agentsTable = () => (
-    <Show
-      when={agents().length > 0}
-      fallback={
-        <div class={styles.empty}>
-          {loading() ? t('common.loading') : t('agents.empty')}
-        </div>
-      }
-    >
-      <table class={styles.table} data-testid="agents-table">
-        <thead>
-          <tr>
-            <th>{t('common.name')}</th>
-            <th>{t('common.role')}</th>
-            <th>{t('agents.credentials')}</th>
-            <th>{t('agents.lastUsed')}</th>
-            <Show when={canManage()}>
-              <th>{t('common.actions')}</th>
+  const columns = (): Column<string, Agent>[] => {
+    const base: Column<string, Agent>[] = [
+      {
+        key: 'name',
+        title: () => t('common.name'),
+        render: (agent) => (
+          <div class={styles.nameCell}>
+            <span class={styles.agentName}>{agent.name}</span>
+            <Show when={agent.description}>
+              <span class={styles.agentDescription}>{agent.description}</span>
             </Show>
-          </tr>
-        </thead>
-        <tbody>
-          <For each={agents()}>
-            {(agent) => (
-              <tr data-testid={`agent-row-${agent.id}`}>
-                <td>
-                  <div class={styles.agentName}>{agent.name}</div>
-                  <Show when={agent.description}>
-                    <div class={styles.muted}>{agent.description}</div>
-                  </Show>
-                </td>
-                <td>{roleLabel(agent.role)}</td>
-                <td>
-                  <Show
-                    when={agent.has_credentials}
-                    fallback={
-                      <span class={styles.statusError}>
-                        {t('agents.credentialsRevoked')}
-                      </span>
-                    }
-                  >
-                    <code>{`${agent.secret_prefix ?? ''}…`}</code>
-                  </Show>
-                </td>
-                <td>
-                  {agent.last_used_at
-                    ? formatDate(parseServerDate(agent.last_used_at), 'Pp')
-                    : t('agents.neverUsed')}
-                  <Show when={agent.last_ip}>
-                    <div class={styles.muted}>{agent.last_ip}</div>
-                  </Show>
-                </td>
-                <Show when={canManage()}>
-                  <td>
-                    <div class={styles.rowActions}>
-                      <IconButton
-                        icon={BsPencil}
-                        onClick={() => openEdit(agent)}
-                        color="primary"
-                        title={t('common.edit')}
-                      />
-                      <IconButton
-                        icon={BsKey}
-                        onClick={() =>
-                          setPendingConfirm({ kind: 'rotate', agent })
-                        }
-                        color="primary"
-                        title={t('agents.rotate')}
-                      />
-                      <Show when={agent.has_credentials}>
-                        <IconButton
-                          icon={AiOutlineStop}
-                          onClick={() =>
-                            setPendingConfirm({ kind: 'revoke', agent })
-                          }
-                          color="danger"
-                          title={t('agents.revoke')}
-                        />
-                      </Show>
-                      <IconButton
-                        icon={AiOutlineDelete}
-                        onClick={() =>
-                          setPendingConfirm({ kind: 'delete', agent })
-                        }
-                        color="danger"
-                        title={t('common.delete')}
-                      />
-                    </div>
-                  </td>
-                </Show>
-              </tr>
-            )}
-          </For>
-        </tbody>
-      </table>
-    </Show>
+          </div>
+        ),
+      },
+      {
+        key: 'role',
+        title: () => t('common.role'),
+        render: (agent) => <>{roleLabel(agent.role)}</>,
+      },
+      {
+        key: 'credentials',
+        title: () => t('agents.credentials'),
+        render: (agent) => (
+          <Show
+            when={agent.has_credentials}
+            fallback={
+              <span class={styles.badgeRevoked}>
+                {t('agents.credentialsRevoked')}
+              </span>
+            }
+          >
+            <code class={styles.secretChip}>
+              {`${agent.secret_prefix ?? ''}…`}
+            </code>
+          </Show>
+        ),
+      },
+      {
+        key: 'last_used_at',
+        title: () => t('agents.lastUsed'),
+        render: (agent) => (
+          <div class={styles.lastUsed}>
+            <span>
+              {agent.last_used_at
+                ? formatDate(parseServerDate(agent.last_used_at), 'Pp')
+                : t('agents.neverUsed')}
+            </span>
+            <Show when={agent.last_ip}>
+              <span class={styles.ip}>{agent.last_ip}</span>
+            </Show>
+          </div>
+        ),
+      },
+    ];
+
+    if (!canManage()) return base;
+
+    // Rendered as a column (not Table actions) because revoke is conditional.
+    return [
+      ...base,
+      {
+        key: 'actions',
+        title: () => t('common.actions'),
+        render: (agent) => (
+          <div class={styles.rowActions}>
+            <button
+              type="button"
+              title={t('common.edit')}
+              aria-label={`${t('common.edit')} ${agent.name}`}
+              onClick={() => openEdit(agent)}
+            >
+              <AiOutlineEdit />
+            </button>
+            <button
+              type="button"
+              title={t('agents.rotate')}
+              aria-label={`${t('agents.rotate')} ${agent.name}`}
+              onClick={() => setPendingConfirm({ kind: 'rotate', agent })}
+            >
+              <AiOutlineKey />
+            </button>
+            <Show when={agent.has_credentials}>
+              <button
+                type="button"
+                title={t('agents.revoke')}
+                aria-label={`${t('agents.revoke')} ${agent.name}`}
+                onClick={() => setPendingConfirm({ kind: 'revoke', agent })}
+              >
+                <AiOutlineStop />
+              </button>
+            </Show>
+            <button
+              type="button"
+              title={t('common.delete')}
+              aria-label={`${t('common.delete')} ${agent.name}`}
+              onClick={() => setPendingConfirm({ kind: 'delete', agent })}
+            >
+              <AiOutlineDelete />
+            </button>
+          </div>
+        ),
+      },
+    ];
+  };
+
+  const agentsTable = () => (
+    <div class={styles.tabPanel}>
+      <Show
+        when={agents().length > 0}
+        fallback={
+          <div class={styles.emptyState}>
+            <Show when={!loading()} fallback={<p>{t('common.loading')}</p>}>
+              <TbRobot class={styles.emptyIcon} />
+              <p>{t('agents.empty')}</p>
+              <Show when={canManage()}>
+                <Button
+                  label={t('agents.newAgent')}
+                  icon={BsPlus}
+                  color="primary"
+                  onClick={openCreate}
+                />
+              </Show>
+            </Show>
+          </div>
+        }
+      >
+        <div data-testid="agents-table">
+          <Table<string, Agent>
+            columns={columns}
+            data={agents()}
+            hideCheckboxes
+          />
+        </div>
+      </Show>
+    </div>
   );
 
   return (
@@ -364,23 +410,25 @@ const AgentsPage: Component = () => {
       <Show
         when={canView()}
         fallback={
-          <div class={styles.empty} data-testid="agents-no-access">
-            {t('agents.noAccess')}
+          <div class={styles.emptyState} data-testid="agents-no-access">
+            <p>{t('agents.noAccess')}</p>
           </div>
         }
       >
         <div class={styles.header}>
-          <div>
+          <div class={styles.headerText}>
             <h1>{t('agents.title')}</h1>
-            <p class={styles.muted}>{t('agents.description')}</p>
+            <p class={styles.description}>{t('agents.description')}</p>
           </div>
           <Show when={canManage()}>
-            <Button
-              label={t('agents.newAgent')}
-              icon={BsPlus}
-              color="primary"
-              onClick={openCreate}
-            />
+            <div class={styles.headerAction}>
+              <Button
+                label={t('agents.newAgent')}
+                icon={BsPlus}
+                color="primary"
+                onClick={openCreate}
+              />
+            </div>
           </Show>
         </div>
 
@@ -391,20 +439,26 @@ const AgentsPage: Component = () => {
               title: () => t('agents.tabs.activity'),
               // Keyed on the organization so filters and page reset on switch.
               content: () => (
-                <Show when={orgId()} keyed>
-                  {(organizationId) => (
-                    <AgentActivityLog
-                      organizationId={organizationId}
-                      agents={agents()}
-                      refreshKey={refreshKey()}
-                    />
-                  )}
-                </Show>
+                <div class={styles.tabPanel}>
+                  <Show when={orgId()} keyed>
+                    {(organizationId) => (
+                      <AgentActivityLog
+                        organizationId={organizationId}
+                        agents={agents()}
+                        refreshKey={refreshKey()}
+                      />
+                    )}
+                  </Show>
+                </div>
               ),
             },
             {
               title: () => t('agents.tabs.setup'),
-              content: () => <AgentIntegrationInstructions />,
+              content: () => (
+                <div class={styles.tabPanel}>
+                  <AgentIntegrationInstructions />
+                </div>
+              ),
             },
           ]}
         />

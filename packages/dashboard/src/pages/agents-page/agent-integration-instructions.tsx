@@ -24,6 +24,13 @@ const CLIENT_PRODUCT_NAMES: Partial<Record<IntegrationClient, string>> = {
   cursor: 'Cursor',
 };
 
+// Config file names shown above the snippet; also proper nouns.
+const CLIENT_CONFIG_FILES: Partial<Record<IntegrationClient, string>> = {
+  claudeDesktop: 'claude_desktop_config.json',
+  vscode: '.vscode/mcp.json',
+  cursor: '.cursor/mcp.json',
+};
+
 export const INTEGRATION_CLIENTS: IntegrationClient[] = [
   'claudeDesktop',
   'claudeCode',
@@ -129,42 +136,54 @@ export const AgentIntegrationInstructions: Component<{ secret?: string }> = (
     }
   };
 
+  const clientLabel = (item: IntegrationClient) =>
+    CLIENT_PRODUCT_NAMES[item] ?? t('agents.integration.clients.other');
+
   return (
     <div class={styles.instructions} data-testid="agent-integration">
       <p class={styles.muted}>{t('agents.integration.intro')}</p>
-      <div class={styles.urlRow}>
-        <span class={styles.label}>{t('agents.integration.serverUrl')}</span>
-        <code data-testid="mcp-url">{url()}</code>
-      </div>
-      <div class={styles.clientTabs} role="tablist">
-        <For each={INTEGRATION_CLIENTS}>
-          {(item) => (
+
+      <section class={styles.section}>
+        <h3 class={styles.sectionTitle}>{t('agents.integration.serverUrl')}</h3>
+        <div class={styles.urlField}>
+          <code data-testid="mcp-url">{url()}</code>
+        </div>
+      </section>
+
+      <section class={styles.section}>
+        <div class={styles.clientTabs} role="tablist">
+          <For each={INTEGRATION_CLIENTS}>
+            {(item) => (
+              <button
+                type="button"
+                role="tab"
+                aria-selected={client() === item}
+                class={`${styles.clientTab} ${client() === item ? styles.clientTabActive : ''}`}
+                onClick={() => setClient(item)}
+              >
+                {clientLabel(item)}
+              </button>
+            )}
+          </For>
+        </div>
+        <p class={styles.muted}>{t(`agents.integration.steps.${client()}`)}</p>
+        <div class={styles.snippet}>
+          <div class={styles.snippetHeader}>
+            <code>{CLIENT_CONFIG_FILES[client()] ?? ''}</code>
             <button
               type="button"
-              role="tab"
-              aria-selected={client() === item}
-              class={`${styles.clientTab} ${client() === item ? styles.clientTabActive : ''}`}
-              onClick={() => setClient(item)}
+              class={styles.copyButton}
+              onClick={copySnippet}
+              aria-label={t('agents.copy')}
             >
-              {CLIENT_PRODUCT_NAMES[item] ??
-                t('agents.integration.clients.other')}
+              {t('agents.copy')}
             </button>
-          )}
-        </For>
-      </div>
-      <p class={styles.muted}>{t(`agents.integration.steps.${client()}`)}</p>
-      <div class={styles.snippet}>
-        <pre data-testid="integration-snippet">{snippet()}</pre>
-        <button
-          type="button"
-          class={styles.copyButton}
-          onClick={copySnippet}
-          aria-label={t('agents.copy')}
-        >
-          {t('agents.copy')}
-        </button>
-      </div>
-      <p class={styles.muted}>{t('agents.integration.securityNote')}</p>
+          </div>
+          <pre data-testid="integration-snippet">{snippet()}</pre>
+        </div>
+      </section>
+
+      <p class={styles.securityNote}>{t('agents.integration.securityNote')}</p>
     </div>
   );
 };
