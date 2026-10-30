@@ -122,7 +122,8 @@
     "networkSettings": "Einstellungen",
     "networkOrganizations": "Organisationen",
     "networkUsers": "Benutzer & Einladungen",
-    "tags": "Tags"
+    "tags": "Tags",
+    "agents": "Agenten"
   },
   "topbar": {
     "help": "Hilfe",
@@ -1491,6 +1492,81 @@
       "invalidTime": "Die Endzeit muss nach der Startzeit liegen.",
       "overlap": "Dieses Zeitfenster überschneidet sich mit einem anderen Eintrag.",
       "done": "Fertig"
+    }
+  },
+  "agents": {
+    "title": "KI-Agenten",
+    "description": "KI-Agenten sind Organisationsmitglieder, die Castmill über den MCP-Server steuern. Sie haben dieselben Berechtigungen wie ein Benutzer mit ihrer Rolle, und alle ihre Aktionen werden protokolliert.",
+    "newAgent": "Neuer Agent",
+    "editAgent": "Agent bearbeiten",
+    "formDescription": "Die Rolle bestimmt, was der Agent in dieser Organisation tun darf.",
+    "namePlaceholder": "z. B. Inhaltsassistent",
+    "descriptionPlaceholder": "Wofür wird dieser Agent verwendet?",
+    "empty": "Noch keine Agenten. Erstellen Sie einen, um einen KI-Assistenten mit Castmill zu verbinden.",
+    "noAccess": "Nur Administratoren und Manager der Organisation können Agenten sehen.",
+    "credentials": "Zugangsdaten",
+    "credentialsRevoked": "Widerrufen",
+    "lastUsed": "Zuletzt verwendet",
+    "neverUsed": "Nie",
+    "rotate": "Zugangsdaten erneuern",
+    "revoke": "Zugangsdaten widerrufen",
+    "created": "Agent erstellt",
+    "updated": "Agent aktualisiert",
+    "deleted": "Agent gelöscht",
+    "rotated": "Zugangsdaten erneuert",
+    "revoked": "Zugangsdaten widerrufen",
+    "copied": "In die Zwischenablage kopiert",
+    "copy": "Kopieren",
+    "secretTitle": "Zugangsdaten für {{name}}",
+    "secretWarning": "Kopieren Sie dieses Geheimnis jetzt. Aus Sicherheitsgründen wird es nicht erneut angezeigt.",
+    "secretDone": "Ich habe das Geheimnis gespeichert",
+    "tabs": {
+      "agents": "Agenten",
+      "activity": "Aktivitätsprotokoll",
+      "setup": "Einrichtungsanleitung"
+    },
+    "confirm": {
+      "rotateTitle": "Zugangsdaten erneuern",
+      "rotateMessage": "Für {{name}} wird ein neues Geheimnis erzeugt. Das aktuelle Geheimnis funktioniert sofort nicht mehr.",
+      "revokeTitle": "Zugangsdaten widerrufen",
+      "revokeMessage": "{{name}} kann sich erst wieder verbinden, wenn neue Zugangsdaten erzeugt wurden.",
+      "deleteTitle": "Agent löschen",
+      "deleteMessage": "{{name}} löschen? Zugangsdaten und Aktivitätsprotokoll werden dauerhaft entfernt."
+    },
+    "errors": {
+      "loadFailed": "Agenten konnten nicht geladen werden",
+      "saveFailed": "Agent konnte nicht gespeichert werden: {{error}}",
+      "actionFailed": "Aktion fehlgeschlagen: {{error}}",
+      "copyFailed": "Kopieren in die Zwischenablage fehlgeschlagen",
+      "loadActionsFailed": "Aktivitätsprotokoll konnte nicht geladen werden"
+    },
+    "activity": {
+      "agent": "Agent",
+      "allAgents": "Alle Agenten",
+      "status": "Status",
+      "allStatuses": "Alle Status",
+      "success": "Erfolgreich",
+      "error": "Fehler",
+      "empty": "Noch keine Agentenaktivität.",
+      "tool": "Werkzeug",
+      "request": "Anfrage",
+      "duration": "Dauer",
+      "arguments": "Argumente"
+    },
+    "integration": {
+      "intro": "Agenten verbinden sich mit Castmill über jeden MCP-Client, der Remote-Server über Streamable HTTP unterstützt. Verwenden Sie das Agentengeheimnis als Bearer-Token im Authorization-Header.",
+      "serverUrl": "MCP-Server-URL",
+      "securityNote": "Behandeln Sie Agentengeheimnisse wie Passwörter: Committen Sie sie nicht in die Versionsverwaltung. Erneuern Sie die Zugangsdaten, wenn ein Geheimnis offengelegt wurde.",
+      "clients": {
+        "other": "Andere Clients"
+      },
+      "steps": {
+        "claudeDesktop": "Öffnen Sie in Claude Desktop Einstellungen > Entwickler > Konfiguration bearbeiten, fügen Sie diesen Server zu claude_desktop_config.json hinzu und starten Sie die App neu. Claude Desktop verbindet sich über die Brücke mcp-remote, daher muss Node.js (mit npx) auf diesem Computer installiert sein.",
+        "claudeCode": "Führen Sie diesen Befehl in einem Terminal aus, um den Server in Claude Code zu registrieren, und prüfen Sie ihn anschließend mit \"claude mcp list\".",
+        "vscode": "Fügen Sie diese Konfiguration zu .vscode/mcp.json in Ihrem Arbeitsbereich hinzu (oder führen Sie \"MCP: Add Server\" über die Befehlspalette aus), starten Sie dann den Server und verwenden Sie ihn im Agentenmodus von Copilot Chat.",
+        "cursor": "Fügen Sie diese Konfiguration zu ~/.cursor/mcp.json für alle Projekte oder zu .cursor/mcp.json in einem Projekt hinzu und aktivieren Sie den Server unter Cursor Settings > MCP.",
+        "other": "Konfigurieren Sie einen Remote-MCP-Server mit diesen Einstellungen."
+      }
     }
   }
 }

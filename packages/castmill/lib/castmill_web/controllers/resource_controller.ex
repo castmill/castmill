@@ -37,28 +37,79 @@ defmodule CastmillWeb.ResourceController do
     end
   end
 
-  def check_access(actor_id, action, %{
+  def check_access(actor_id, :update, %{
+        "id" => channel_id,
         "organization_id" => organization_id,
-        "channel_id" => channel_id
+        "resources" => "channels"
+      } = params) do
+    channel = Castmill.Resources.get_channel(channel_id)
+
+    {:ok,
+     not is_nil(channel) and channel.organization_id == organization_id and
+       default_playlist_in_organization?(Map.get(params, "update", %{}), organization_id) and
+       Organizations.has_access(organization_id, actor_id, "channels", :update)}
+  end
+
+  def check_access(actor_id, :create, %{
+        "organization_id" => organization_id,
+        "resources" => "channels"
+      } = params) do
+    {:ok,
+     default_playlist_in_organization?(Map.get(params, "channel", %{}), organization_id) and
+       Organizations.has_access(organization_id, actor_id, "channels", :create)}
+  end
+
+  def check_access(actor_id, action, %{
+        "id" => id,
+        "organization_id" => organization_id,
+        "resources" => resource_type
       })
+      when action in [:show, :update, :delete] and
+             resource_type in ["medias", "playlists", "channels", "layouts", "devices", "teams"] do
+    resource =
+      case resource_type do
+        "medias" -> Castmill.Resources.get_media(id)
+        "playlists" -> Castmill.Resources.get_playlist_basic(id)
+        "channels" -> Castmill.Resources.get_channel(id)
+        "layouts" -> Castmill.Resources.get_layout(id)
+        "devices" -> Devices.get_device(id)
+        "teams" -> Teams.get_team(id)
+      end
+
+    {:ok,
+     not is_nil(resource) and
+       (resource.organization_id == organization_id or
+          (resource_type == "layouts" and action == :show and resource.is_system)) and
+       Organizations.has_access(organization_id, actor_id, resource_type, action)}
+  end
+
+  def check_access(
+        actor_id,
+        action,
+        %{
+          "organization_id" => organization_id,
+          "channel_id" => channel_id
+        } = params
+      )
       when action in [:add_channel_entry, :delete_channel_entry, :update_channel_entry] do
     channel = Castmill.Resources.get_channel(channel_id)
 
-    if channel == nil do
-      {:ok, false}
-    else
-      if channel.organization_id != organization_id do
-        {:ok, false}
-      else
-        {:ok, Organizations.has_any_role?(organization_id, actor_id, [:admin, :member])}
-      end
-    end
+    {:ok,
+     not is_nil(channel) and channel.organization_id == organization_id and
+       channel_entry_in_channel?(action, params, channel) and
+       playlist_in_organization?(params, organization_id) and
+       Organizations.has_any_role?(organization_id, actor_id, [:admin, :member])}
   end
 
   def check_access(actor_id, :list_channel_entries, %{
-        "organization_id" => organization_id
+        "organization_id" => organization_id,
+        "channel_id" => channel_id
       }) do
-    {:ok, Organizations.has_any_role?(organization_id, actor_id, [:admin, :member, :guest])}
+    channel = Castmill.Resources.get_channel(channel_id)
+
+    {:ok,
+     not is_nil(channel) and channel.organization_id == organization_id and
+       Organizations.has_any_role?(organization_id, actor_id, [:admin, :member, :guest])}
   end
 
   def check_access(actor_id, action, %{
@@ -76,6 +127,70 @@ defmodule CastmillWeb.ResourceController do
   def check_access(_actor_id, _action, _params) do
     # Default to false or implement your own logic based on other conditions
     {:ok, false}
+  end
+
+  # Entries can only be updated or deleted through the channel they belong to.
+  defp channel_entry_in_channel?(:add_channel_entry, _params, _channel), do: true
+
+  defp channel_entry_in_channel?(_action, %{"id" => id}, channel) do
+    case Castmill.Resources.get_channel_entry(id) do
+      nil -> false
+      entry -> entry.channel_id == channel.id
+    end
+  end
+
+  defp channel_entry_in_channel?(_action, _params, _channel), do: false
+
+  # A referenced playlist must belong to the organization of the channel.
+  defp playlist_in_organization?(params, organization_id) do
+    case Map.get(params, "playlist_id") do
+      nil ->
+        true
+
+      playlist_id ->
+        case Castmill.Resources.get_playlist_basic(playlist_id) do
+          nil -> false
+          playlist -> playlist.organization_id == organization_id
+        end
+    end
+  end
+
+  defp default_playlist_in_organization?(attributes, organization_id) when is_map(attributes) do
+    case Map.get(attributes, "default_playlist_id", Map.get(attributes, :default_playlist_id)) do
+      nil ->
+        true
+
+      id when is_integer(id) ->
+        playlist_belongs_to_organization?(id, organization_id)
+
+      id when is_binary(id) ->
+        case Integer.parse(id) do
+          {parsed_id, ""} -> playlist_belongs_to_organization?(parsed_id, organization_id)
+          _ -> false
+        end
+
+      _ ->
+        false
+    end
+  end
+
+  defp default_playlist_in_organization?(_attributes, _organization_id), do: false
+
+  defp layout_attrs_for_actor(attrs, conn) do
+    actor = conn.assigns[:current_actor] || conn.assigns[:current_user]
+
+    if actor && Map.get(actor, :is_root, false) do
+      attrs
+    else
+      Map.drop(attrs, ["is_system", :is_system])
+    end
+  end
+
+  defp playlist_belongs_to_organization?(playlist_id, organization_id) do
+    case Castmill.Resources.get_playlist_basic(playlist_id) do
+      nil -> false
+      playlist -> playlist.organization_id == organization_id
+    end
   end
 
   plug(AuthorizeDash)
@@ -409,8 +524,9 @@ defmodule CastmillWeb.ResourceController do
       ) do
     with {:ok, params} <- Tarams.cast(params, @update_layout_params_schema) do
       layout = Castmill.Resources.get_layout(params.id)
+      update_attrs = layout_attrs_for_actor(params.update, conn)
 
-      Castmill.Resources.update_layout(layout, params.update)
+      Castmill.Resources.update_layout(layout, update_attrs)
       |> case do
         {:ok, layout} ->
           conn
@@ -637,6 +753,7 @@ defmodule CastmillWeb.ResourceController do
       layout_params
       |> Map.delete("team_id")
       |> Map.merge(%{"organization_id" => organization_id})
+      |> layout_attrs_for_actor(conn)
 
     case Castmill.Resources.create_layout(create_attrs) do
       {:ok, %Layout{} = layout} ->
@@ -973,7 +1090,10 @@ defmodule CastmillWeb.ResourceController do
 
       channel ->
         with {:ok, %ChannelEntry{} = entry} <-
-               Castmill.Resources.add_channel_entry(channel_id, body_params) do
+               Castmill.Resources.add_channel_entry(
+                 channel_id,
+                 Map.delete(body_params, "channel_id")
+               ) do
           conn
           |> put_status(:created)
           |> put_resp_header(
@@ -1044,7 +1164,10 @@ defmodule CastmillWeb.ResourceController do
 
           entry ->
             with {:ok, %ChannelEntry{} = entry} <-
-                   Castmill.Resources.update_channel_entry(entry, body_params) do
+                   Castmill.Resources.update_channel_entry(
+                     entry,
+                     Map.delete(body_params, "channel_id")
+                   ) do
               conn
               |> put_status(:ok)
               |> render(:show, entry: entry)

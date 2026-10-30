@@ -623,7 +623,8 @@
     "networkSettings": "设置",
     "networkOrganizations": "组织",
     "networkUsers": "用户与邀请",
-    "tags": "标签"
+    "tags": "标签",
+    "agents": "智能体"
   },
   "channels": {
     "title": "频道",
@@ -1496,6 +1497,81 @@
       "invalidTime": "结束时间必须晚于开始时间。",
       "overlap": "此时间段与另一个条目重叠。",
       "done": "完成"
+    }
+  },
+  "agents": {
+    "title": "AI 智能体",
+    "description": "AI 智能体是通过 MCP 服务器控制 Castmill 的组织成员。它们拥有与相同角色用户一样的权限，并且所有操作都会被记录。",
+    "newAgent": "新建智能体",
+    "editAgent": "编辑智能体",
+    "formDescription": "角色决定智能体在此组织中可以执行的操作。",
+    "namePlaceholder": "例如：内容助手",
+    "descriptionPlaceholder": "此智能体的用途是什么？",
+    "empty": "暂无智能体。创建一个以将 AI 助手连接到 Castmill。",
+    "noAccess": "只有组织管理员和经理可以查看智能体。",
+    "credentials": "凭据",
+    "credentialsRevoked": "已撤销",
+    "lastUsed": "上次使用",
+    "neverUsed": "从未",
+    "rotate": "轮换凭据",
+    "revoke": "撤销凭据",
+    "created": "智能体已创建",
+    "updated": "智能体已更新",
+    "deleted": "智能体已删除",
+    "rotated": "凭据已轮换",
+    "revoked": "凭据已撤销",
+    "copied": "已复制到剪贴板",
+    "copy": "复制",
+    "secretTitle": "{{name}} 的凭据",
+    "secretWarning": "请立即复制此密钥。出于安全原因，它将不会再次显示。",
+    "secretDone": "我已保存密钥",
+    "tabs": {
+      "agents": "智能体",
+      "activity": "活动日志",
+      "setup": "设置说明"
+    },
+    "confirm": {
+      "rotateTitle": "轮换凭据",
+      "rotateMessage": "将为 {{name}} 生成新密钥。当前密钥将立即失效。",
+      "revokeTitle": "撤销凭据",
+      "revokeMessage": "在生成新凭据之前，{{name}} 将无法连接。",
+      "deleteTitle": "删除智能体",
+      "deleteMessage": "删除 {{name}}？其凭据和活动日志将被永久删除。"
+    },
+    "errors": {
+      "loadFailed": "加载智能体失败",
+      "saveFailed": "保存智能体失败：{{error}}",
+      "actionFailed": "操作失败：{{error}}",
+      "copyFailed": "无法复制到剪贴板",
+      "loadActionsFailed": "加载活动日志失败"
+    },
+    "activity": {
+      "agent": "智能体",
+      "allAgents": "所有智能体",
+      "status": "状态",
+      "allStatuses": "所有状态",
+      "success": "成功",
+      "error": "错误",
+      "empty": "暂无智能体活动。",
+      "tool": "工具",
+      "request": "请求",
+      "duration": "耗时",
+      "arguments": "参数"
+    },
+    "integration": {
+      "intro": "智能体可以使用任何支持通过 Streamable HTTP 连接远程服务器的 MCP 客户端连接到 Castmill。在 Authorization 请求头中将智能体密钥用作 Bearer 令牌。",
+      "serverUrl": "MCP 服务器 URL",
+      "securityNote": "请像对待密码一样对待智能体密钥：不要将其提交到源代码管理。如果密钥泄露，请轮换凭据。",
+      "clients": {
+        "other": "其他客户端"
+      },
+      "steps": {
+        "claudeDesktop": "在 Claude Desktop 中打开“设置 > 开发者 > 编辑配置”，将此服务器添加到 claude_desktop_config.json 并重启应用。Claude Desktop 通过 mcp-remote 桥接连接，因此此计算机上必须安装 Node.js（含 npx）。",
+        "claudeCode": "在终端中运行此命令，将服务器注册到 Claude Code，然后使用 \"claude mcp list\" 进行验证。",
+        "vscode": "将此配置添加到工作区的 .vscode/mcp.json（或在命令面板中运行 \"MCP: Add Server\"），然后启动服务器，并在 Copilot Chat 的代理模式中使用。",
+        "cursor": "将此配置添加到 ~/.cursor/mcp.json（适用于所有项目）或项目中的 .cursor/mcp.json，然后在 Cursor Settings > MCP 中启用该服务器。",
+        "other": "使用以下设置配置远程 MCP 服务器。"
+      }
     }
   }
 }

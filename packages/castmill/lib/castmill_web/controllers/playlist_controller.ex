@@ -1,11 +1,53 @@
 defmodule CastmillWeb.PlaylistController do
   use CastmillWeb, :controller
+  use CastmillWeb.AccessActorBehaviour
 
   alias Castmill.Resources
   alias Castmill.Resources.PlaylistItem
   alias Castmill.Widgets
+  alias Castmill.Organizations
+  alias Castmill.Plug.AuthorizeDash
 
   action_fallback(CastmillWeb.FallbackController)
+
+  @impl CastmillWeb.AccessActorBehaviour
+  def check_access(
+        actor_id,
+        action,
+        %{
+          "organization_id" => organization_id,
+          "playlist_id" => playlist_id
+        } = params
+      )
+      when action in [
+             :add_item,
+             :update_item,
+             :update_widget_config,
+             :move_item,
+             :delete_item,
+             :show_item,
+             :get_ancestors
+           ] do
+    with {:ok, playlist_id} <- parse_id(playlist_id),
+         %{} = playlist <- Resources.get_playlist_basic(playlist_id),
+         true <- playlist.organization_id == organization_id,
+         true <-
+           Organizations.has_access(
+             organization_id,
+             actor_id,
+             "playlists",
+             if(action in [:show_item, :get_ancestors], do: :show, else: :update)
+           ),
+         true <- related_items_belong_to_playlist?(action, playlist_id, params) do
+      {:ok, true}
+    else
+      _ -> {:ok, false}
+    end
+  end
+
+  def check_access(_actor_id, _action, _params), do: {:ok, false}
+
+  plug(AuthorizeDash)
 
   # TODO: It would be better to handle the missing or invalid fields in the changeset
   def add_item(
@@ -58,7 +100,10 @@ defmodule CastmillWeb.PlaylistController do
         "options" => options_params
       }) do
     with %PlaylistItem{} = item <- Resources.get_playlist_item(playlist_id, item_id) do
-      {:ok, item} = Resources.update_playlist_item(item, options_params)
+      {:ok, item} =
+        Resources.update_playlist_item(item, Map.take(options_params, ["duration", "offset"]))
+
+      item = Castmill.Repo.preload(item, :widget_config)
       notify_devices_of_playlist_update(playlist_id)
 
       conn
@@ -223,4 +268,55 @@ defmodule CastmillWeb.PlaylistController do
     |> put_status(:ok)
     |> json(%{ancestor_ids: ancestor_ids})
   end
+
+  defp related_items_belong_to_playlist?(action, playlist_id, params)
+       when action in [
+              :update_item,
+              :update_widget_config,
+              :move_item,
+              :delete_item,
+              :show_item
+            ] do
+    item_id = params["item_id"] || params["id"]
+
+    with {:ok, item_id} <- parse_id(item_id),
+         %PlaylistItem{} <- Resources.get_playlist_item(playlist_id, item_id),
+         true <- target_item_belongs_to_playlist?(action, playlist_id, params) do
+      true
+    else
+      _ -> false
+    end
+  end
+
+  defp related_items_belong_to_playlist?(:add_item, playlist_id, params),
+    do: optional_item_belongs_to_playlist?(playlist_id, params["prev_item_id"])
+
+  defp related_items_belong_to_playlist?(_action, _playlist_id, _params), do: true
+
+  defp target_item_belongs_to_playlist?(:move_item, playlist_id, %{"target_id" => target_id}),
+    do: optional_item_belongs_to_playlist?(playlist_id, target_id)
+
+  defp target_item_belongs_to_playlist?(_action, _playlist_id, _params), do: true
+
+  defp optional_item_belongs_to_playlist?(_playlist_id, nil), do: true
+
+  defp optional_item_belongs_to_playlist?(playlist_id, item_id) do
+    with {:ok, item_id} <- parse_id(item_id),
+         %PlaylistItem{} <- Resources.get_playlist_item(playlist_id, item_id) do
+      true
+    else
+      _ -> false
+    end
+  end
+
+  defp parse_id(id) when is_integer(id) and id > 0, do: {:ok, id}
+
+  defp parse_id(id) when is_binary(id) do
+    case Integer.parse(id) do
+      {parsed, ""} when parsed > 0 -> {:ok, parsed}
+      _ -> :error
+    end
+  end
+
+  defp parse_id(_id), do: :error
 end

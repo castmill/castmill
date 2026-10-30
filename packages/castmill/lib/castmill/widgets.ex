@@ -368,7 +368,7 @@ defmodule Castmill.Widgets do
                 playlist_id,
                 widget_config.widget_id,
                 previous_options,
-                options || %{}
+                options || previous_options
               )
 
               ok
@@ -476,14 +476,17 @@ defmodule Castmill.Widgets do
   defp do_update_widget_config(%WidgetConfig{} = widget_config, options, data, attempts_left) do
     current_timestamp = DateTime.utc_now()
 
+    # Fields that are not sent (nil) keep their current value, so that clients
+    # can update the options or the data alone.
+    attrs =
+      %{last_request_at: current_timestamp}
+      |> put_if_present(:options, options)
+      |> put_if_present(:data, data)
+
     changeset =
       widget_config
       |> Ecto.Changeset.optimistic_lock(:version)
-      |> WidgetConfig.changeset(%{
-        options: options,
-        data: data,
-        last_request_at: current_timestamp
-      })
+      |> WidgetConfig.changeset(attrs)
 
     try do
       # `force: true` guarantees the update (and therefore the optimistic lock
@@ -512,6 +515,9 @@ defmodule Castmill.Widgets do
         end
     end
   end
+
+  defp put_if_present(attrs, _key, nil), do: attrs
+  defp put_if_present(attrs, key, value), do: Map.put(attrs, key, value)
 
   @doc """
   Validates that playlist references in layout widgets don't create circular references.

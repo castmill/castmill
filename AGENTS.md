@@ -30,6 +30,7 @@ agents/
 | Layout Widgets & Circular References | `agents/systems/LAYOUT-WIDGETS.md`      |
 | Widget Assets                        | `agents/systems/WIDGET-ASSETS.md`       |
 | Notifications                        | `agents/systems/notifications.md`       |
+| AI Agents & MCP Server               | `agents/systems/AI-AGENTS-MCP.md`       |
 
 ## 🏗️ Project Structure
 

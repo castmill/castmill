@@ -437,6 +437,7 @@ defmodule Castmill.Organizations do
         "devices" -> :devices
         "teams" -> :teams
         "widgets" -> :widgets
+        "layouts" -> :layouts
         _ -> nil
       end
 
@@ -557,6 +558,7 @@ defmodule Castmill.Organizations do
       OrganizationsUsers.base_query()
       |> OrganizationsUsers.where_organization_id(organization_id)
       |> join(:inner, [ou], u in assoc(ou, :user), as: :user)
+      |> exclude_agent_users()
       |> maybe_search_by_user_name(search)
       |> apply_users_sorting(params)
       |> Ecto.Query.limit(^page_size)
@@ -584,8 +586,15 @@ defmodule Castmill.Organizations do
     OrganizationsUsers.base_query()
     |> OrganizationsUsers.where_organization_id(organization_id)
     |> join(:inner, [ou], u in assoc(ou, :user), as: :user)
+    |> exclude_agent_users()
     |> maybe_search_by_user_name(search)
     |> Repo.aggregate(:count, :user_id)
+  end
+
+  # AI agents are organization members too, but they are managed from the
+  # Agents page (see Castmill.Agents) and are not listed as regular members.
+  defp exclude_agent_users(query) do
+    from([user: u] in query, where: u.is_agent == false)
   end
 
   defp maybe_search_by_user_name(query, nil), do: query
@@ -1600,6 +1609,8 @@ defmodule Castmill.Organizations do
     OrganizationsUsers.base_query()
     |> OrganizationsUsers.where_organization_id(organization_id)
     |> where([organizations_users: ou], ou.role == :admin)
+    |> join(:inner, [ou], u in assoc(ou, :user), as: :user)
+    |> exclude_agent_users()
     |> Repo.aggregate(:count, :user_id)
   end
 end

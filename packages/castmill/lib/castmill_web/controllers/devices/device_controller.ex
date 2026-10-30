@@ -36,6 +36,21 @@ defmodule CastmillWeb.DeviceController do
 
   @impl CastmillWeb.AccessActorBehaviour
 
+  # Channels can only be assigned to devices of the same organization.
+  def check_access(actor_id, :add_channel, %{
+        "device_id" => device_id,
+        "channel_id" => channel_id
+      }) do
+    device = Devices.get_device(device_id)
+    channel = Resources.get_channel(channel_id)
+
+    {:ok,
+     not is_nil(device) and not is_nil(channel) and
+       device.organization_id == channel.organization_id and
+       (actor_id == device_id or
+          Organizations.has_access(device.organization_id, actor_id, "devices", :add_channel))}
+  end
+
   def check_access(actor_id, action, %{"device_id" => device_id})
       when action in [
              :send_command,

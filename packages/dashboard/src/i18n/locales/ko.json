@@ -623,7 +623,8 @@
     "networkSettings": "설정",
     "networkOrganizations": "조직",
     "networkUsers": "사용자 및 초대",
-    "tags": "태그"
+    "tags": "태그",
+    "agents": "에이전트"
   },
   "channels": {
     "title": "채널",
@@ -1496,6 +1497,81 @@
       "invalidTime": "종료 시간은 시작 시간보다 늦어야 합니다.",
       "overlap": "이 시간대가 다른 항목과 겹칩니다.",
       "done": "완료"
+    }
+  },
+  "agents": {
+    "title": "AI 에이전트",
+    "description": "AI 에이전트는 MCP 서버를 통해 Castmill을 제어하는 조직 구성원입니다. 해당 역할을 가진 사용자와 동일한 권한을 가지며 모든 작업이 기록됩니다.",
+    "newAgent": "새 에이전트",
+    "editAgent": "에이전트 편집",
+    "formDescription": "역할에 따라 에이전트가 이 조직에서 수행할 수 있는 작업이 결정됩니다.",
+    "namePlaceholder": "예: 콘텐츠 도우미",
+    "descriptionPlaceholder": "이 에이전트는 어떤 용도로 사용되나요?",
+    "empty": "아직 에이전트가 없습니다. AI 도우미를 Castmill에 연결하려면 에이전트를 만드세요.",
+    "noAccess": "조직 관리자와 매니저만 에이전트를 볼 수 있습니다.",
+    "credentials": "자격 증명",
+    "credentialsRevoked": "취소됨",
+    "lastUsed": "마지막 사용",
+    "neverUsed": "사용 안 함",
+    "rotate": "자격 증명 교체",
+    "revoke": "자격 증명 취소",
+    "created": "에이전트가 생성되었습니다",
+    "updated": "에이전트가 업데이트되었습니다",
+    "deleted": "에이전트가 삭제되었습니다",
+    "rotated": "자격 증명이 교체되었습니다",
+    "revoked": "자격 증명이 취소되었습니다",
+    "copied": "클립보드에 복사됨",
+    "copy": "복사",
+    "secretTitle": "{{name}}의 자격 증명",
+    "secretWarning": "지금 이 시크릿을 복사하세요. 보안상의 이유로 다시 표시되지 않습니다.",
+    "secretDone": "시크릿을 저장했습니다",
+    "tabs": {
+      "agents": "에이전트",
+      "activity": "활동 로그",
+      "setup": "설정 안내"
+    },
+    "confirm": {
+      "rotateTitle": "자격 증명 교체",
+      "rotateMessage": "{{name}}에 대한 새 시크릿이 생성됩니다. 현재 시크릿은 즉시 작동을 멈춥니다.",
+      "revokeTitle": "자격 증명 취소",
+      "revokeMessage": "새 자격 증명이 생성될 때까지 {{name}}은(는) 연결할 수 없습니다.",
+      "deleteTitle": "에이전트 삭제",
+      "deleteMessage": "{{name}}을(를) 삭제하시겠습니까? 자격 증명과 활동 로그가 영구적으로 삭제됩니다."
+    },
+    "errors": {
+      "loadFailed": "에이전트를 불러오지 못했습니다",
+      "saveFailed": "에이전트를 저장하지 못했습니다: {{error}}",
+      "actionFailed": "작업 실패: {{error}}",
+      "copyFailed": "클립보드에 복사할 수 없습니다",
+      "loadActionsFailed": "활동 로그를 불러오지 못했습니다"
+    },
+    "activity": {
+      "agent": "에이전트",
+      "allAgents": "모든 에이전트",
+      "status": "상태",
+      "allStatuses": "모든 상태",
+      "success": "성공",
+      "error": "오류",
+      "empty": "아직 에이전트 활동이 없습니다.",
+      "tool": "도구",
+      "request": "요청",
+      "duration": "소요 시간",
+      "arguments": "인수"
+    },
+    "integration": {
+      "intro": "에이전트는 Streamable HTTP를 통한 원격 서버를 지원하는 모든 MCP 클라이언트로 Castmill에 연결할 수 있습니다. Authorization 헤더에 에이전트 시크릿을 Bearer 토큰으로 사용하세요.",
+      "serverUrl": "MCP 서버 URL",
+      "securityNote": "에이전트 시크릿은 비밀번호처럼 취급하세요. 소스 제어에 커밋하지 마세요. 시크릿이 노출되면 자격 증명을 교체하세요.",
+      "clients": {
+        "other": "기타 클라이언트"
+      },
+      "steps": {
+        "claudeDesktop": "Claude Desktop에서 설정 > 개발자 > 구성 편집을 열고 claude_desktop_config.json에 이 서버를 추가한 후 앱을 다시 시작하세요. Claude Desktop은 mcp-remote 브리지를 통해 연결되므로 이 컴퓨터에 Node.js(npx 포함)가 설치되어 있어야 합니다.",
+        "claudeCode": "터미널에서 이 명령을 실행하여 Claude Code에 서버를 등록한 다음 \"claude mcp list\"로 확인하세요.",
+        "vscode": "작업 영역의 .vscode/mcp.json에 이 구성을 추가하거나 명령 팔레트에서 \"MCP: Add Server\"를 실행한 다음, 서버를 시작하고 Copilot Chat 에이전트 모드에서 사용하세요.",
+        "cursor": "모든 프로젝트에는 ~/.cursor/mcp.json, 특정 프로젝트에는 .cursor/mcp.json에 이 구성을 추가한 다음 Cursor Settings > MCP에서 서버를 활성화하세요.",
+        "other": "다음 설정으로 원격 MCP 서버를 구성하세요."
+      }
     }
   }
 }

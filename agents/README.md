@@ -55,6 +55,7 @@ agents/
 
 #### Cross-Package Systems (`systems/`)
 - **[notifications.md](./systems/notifications.md)** - Real-time notification system with WebSocket and REST API
+- **[AI-AGENTS-MCP.md](./systems/AI-AGENTS-MCP.md)** - AI agents as organization members and the MCP server (`/mcp`)
 - **[WIDGET-INTEGRATIONS.md](./systems/WIDGET-INTEGRATIONS.md)** - Widget third-party integration system architecture
 - **[WIDGET-INTEGRATION-API.md](./systems/WIDGET-INTEGRATION-API.md)** - Widget integration API reference
 - **[WIDGET-INTEGRATION-GUIDE.md](./systems/WIDGET-INTEGRATION-GUIDE.md)** - Developer guide for creating integrations
