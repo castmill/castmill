@@ -37,6 +37,28 @@ defmodule CastmillWeb.ResourceController do
     end
   end
 
+  def check_access(actor_id, :update, %{
+        "id" => channel_id,
+        "organization_id" => organization_id,
+        "resources" => "channels"
+      } = params) do
+    channel = Castmill.Resources.get_channel(channel_id)
+
+    {:ok,
+     not is_nil(channel) and channel.organization_id == organization_id and
+       default_playlist_in_organization?(Map.get(params, "update", %{}), organization_id) and
+       Organizations.has_access(organization_id, actor_id, "channels", :update)}
+  end
+
+  def check_access(actor_id, :create, %{
+        "organization_id" => organization_id,
+        "resources" => "channels"
+      } = params) do
+    {:ok,
+     default_playlist_in_organization?(Map.get(params, "channel", %{}), organization_id) and
+       Organizations.has_access(organization_id, actor_id, "channels", :create)}
+  end
+
   def check_access(actor_id, action, %{
         "id" => id,
         "organization_id" => organization_id,
@@ -55,7 +77,9 @@ defmodule CastmillWeb.ResourceController do
       end
 
     {:ok,
-     not is_nil(resource) and resource.organization_id == organization_id and
+     not is_nil(resource) and
+       (resource.organization_id == organization_id or
+          (resource_type == "layouts" and action == :show and resource.is_system)) and
        Organizations.has_access(organization_id, actor_id, resource_type, action)}
   end
 
@@ -128,6 +152,44 @@ defmodule CastmillWeb.ResourceController do
           nil -> false
           playlist -> playlist.organization_id == organization_id
         end
+    end
+  end
+
+  defp default_playlist_in_organization?(attributes, organization_id) when is_map(attributes) do
+    case Map.get(attributes, "default_playlist_id", Map.get(attributes, :default_playlist_id)) do
+      nil ->
+        true
+
+      id when is_integer(id) ->
+        playlist_belongs_to_organization?(id, organization_id)
+
+      id when is_binary(id) ->
+        case Integer.parse(id) do
+          {parsed_id, ""} -> playlist_belongs_to_organization?(parsed_id, organization_id)
+          _ -> false
+        end
+
+      _ ->
+        false
+    end
+  end
+
+  defp default_playlist_in_organization?(_attributes, _organization_id), do: false
+
+  defp layout_attrs_for_actor(attrs, conn) do
+    actor = conn.assigns[:current_actor] || conn.assigns[:current_user]
+
+    if actor && Map.get(actor, :is_root, false) do
+      attrs
+    else
+      Map.drop(attrs, ["is_system", :is_system])
+    end
+  end
+
+  defp playlist_belongs_to_organization?(playlist_id, organization_id) do
+    case Castmill.Resources.get_playlist_basic(playlist_id) do
+      nil -> false
+      playlist -> playlist.organization_id == organization_id
     end
   end
 
@@ -462,8 +524,9 @@ defmodule CastmillWeb.ResourceController do
       ) do
     with {:ok, params} <- Tarams.cast(params, @update_layout_params_schema) do
       layout = Castmill.Resources.get_layout(params.id)
+      update_attrs = layout_attrs_for_actor(params.update, conn)
 
-      Castmill.Resources.update_layout(layout, params.update)
+      Castmill.Resources.update_layout(layout, update_attrs)
       |> case do
         {:ok, layout} ->
           conn
@@ -690,6 +753,7 @@ defmodule CastmillWeb.ResourceController do
       layout_params
       |> Map.delete("team_id")
       |> Map.merge(%{"organization_id" => organization_id})
+      |> layout_attrs_for_actor(conn)
 
     case Castmill.Resources.create_layout(create_attrs) do
       {:ok, %Layout{} = layout} ->

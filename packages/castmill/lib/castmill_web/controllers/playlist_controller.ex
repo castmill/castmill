@@ -100,7 +100,9 @@ defmodule CastmillWeb.PlaylistController do
         "options" => options_params
       }) do
     with %PlaylistItem{} = item <- Resources.get_playlist_item(playlist_id, item_id) do
-      {:ok, item} = Resources.update_playlist_item(item, options_params)
+      {:ok, item} =
+        Resources.update_playlist_item(item, Map.take(options_params, ["duration", "offset"]))
+
       item = Castmill.Repo.preload(item, :widget_config)
       notify_devices_of_playlist_update(playlist_id)
 

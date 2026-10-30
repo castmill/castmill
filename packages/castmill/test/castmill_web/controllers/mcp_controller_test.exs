@@ -357,6 +357,140 @@ defmodule CastmillWeb.MCPControllerTest do
       assert organization.id != other.id
     end
 
+    test "tenant layout writes cannot set the system flag", %{
+      secret: secret,
+      organization: organization
+    } do
+      Castmill.Quotas.add_quota_to_organization(organization.id, :layouts, 10)
+
+      result =
+        call_tool(secret, "create_resource", %{
+          "resource_type" => "layouts",
+          "attributes" => %{"name" => "Tenant layout", "is_system" => true}
+        })
+
+      refute result["isError"]
+      layout_id = decode(result)["data"]["id"]
+      assert Castmill.Resources.get_layout(layout_id).is_system == false
+
+      result =
+        call_tool(secret, "api_request", %{
+          "method" => "PUT",
+          "path" => "/layouts/#{layout_id}",
+          "body" => %{"update" => %{"is_system" => true}}
+        })
+
+      refute result["isError"]
+      assert Castmill.Resources.get_layout(layout_id).is_system == false
+    end
+
+    test "agents can read system layouts but cannot update or delete them", %{secret: secret} do
+      {:ok, layout} =
+        %Castmill.Resources.Layout{}
+        |> Castmill.Resources.Layout.changeset(%{"name" => "System layout", "is_system" => true})
+        |> Castmill.Repo.insert()
+
+      result =
+        call_tool(secret, "get_resource", %{
+          "resource_type" => "layouts",
+          "id" => layout.id
+        })
+
+      refute result["isError"]
+      assert decode(result)["data"]["is_system"] == true
+
+      result =
+        call_tool(secret, "api_request", %{
+          "method" => "PUT",
+          "path" => "/layouts/#{layout.id}",
+          "body" => %{"update" => %{"name" => "Changed system layout"}}
+        })
+
+      assert result["isError"]
+      assert hd(result["content"])["text"] =~ "403"
+
+      result =
+        call_tool(secret, "delete_resource", %{"resource_type" => "layouts", "id" => layout.id})
+
+      assert result["isError"]
+      assert Castmill.Resources.get_layout(layout.id).name == "System layout"
+      assert is_nil(layout.organization_id)
+    end
+
+    test "channel default playlists must belong to the channel organization", %{
+      organization: organization
+    } do
+      other = organization_fixture()
+      foreign_playlist = foreign_playlist_fixture(other)
+      channel = channel_fixture(%{organization_id: organization.id, timezone: "UTC"})
+
+      {:ok, _admin, admin_secret} =
+        Agents.create_agent(organization.id, %{"name" => "Admin agent", "role" => "admin"})
+
+      result =
+        call_tool(admin_secret, "create_resource", %{
+          "resource_type" => "channels",
+          "attributes" => %{
+            "name" => "Foreign playlist channel",
+            "timezone" => "UTC",
+            "default_playlist_id" => foreign_playlist.id
+          }
+        })
+
+      assert result["isError"]
+      assert hd(result["content"])["text"] =~ "403"
+
+      result =
+        call_tool(admin_secret, "api_request", %{
+          "method" => "POST",
+          "path" => "/channels",
+          "body" => %{
+            "channel" => %{
+              "name" => "Foreign playlist channel",
+              "timezone" => "UTC",
+              "default_playlist_id" => foreign_playlist.id
+            }
+          }
+        })
+
+      assert result["isError"]
+      assert hd(result["content"])["text"] =~ "403"
+
+      result =
+        call_tool(admin_secret, "update_resource", %{
+          "resource_type" => "channels",
+          "id" => channel.id,
+          "attributes" => %{"default_playlist_id" => foreign_playlist.id}
+        })
+
+      assert result["isError"]
+      assert hd(result["content"])["text"] =~ "403"
+
+      result =
+        call_tool(admin_secret, "api_request", %{
+          "method" => "PUT",
+          "path" => "/channels/#{channel.id}",
+          "body" => %{"update" => %{"default_playlist_id" => foreign_playlist.id}}
+        })
+
+      assert result["isError"]
+      assert hd(result["content"])["text"] =~ "403"
+      assert Castmill.Resources.get_channel(channel.id).default_playlist_id == nil
+      assert foreign_playlist.organization_id == other.id
+
+      owned_playlist = playlist_fixture(%{organization_id: organization.id})
+
+      result =
+        call_tool(admin_secret, "update_resource", %{
+          "resource_type" => "channels",
+          "id" => channel.id,
+          "attributes" => %{"default_playlist_id" => owned_playlist.id}
+        })
+
+      refute result["isError"]
+      assert Castmill.Resources.get_channel(channel.id).default_playlist_id == owned_playlist.id
+    end
+
     test "listing channel entries without date bounds uses defaults", %{
       organization: organization
     } do
@@ -848,6 +982,61 @@ defmodule CastmillWeb.MCPControllerTest do
         |> Enum.find(&(&1["id"] == playlist.id))
 
       assert listed["item_count"] == 2
+    end
+
+    test "ordinary playlist item updates ignore playlist and link changes", %{
+      secret: secret,
+      organization: organization
+    } do
+      playlist = playlist_fixture(%{organization_id: organization.id})
+      other = organization_fixture()
+      foreign_playlist = foreign_playlist_fixture(other)
+      widget = widget_fixture()
+
+      add_item = fn ->
+        call_tool(secret, "add_playlist_item", %{
+          "playlist_id" => playlist.id,
+          "widget_id" => widget.id,
+          "duration" => 1000
+        })
+        |> decode()
+        |> get_in(["data", "id"])
+      end
+
+      item_id = add_item.()
+      other_item_id = add_item.()
+      foreign_item =
+        %Castmill.Resources.PlaylistItem{}
+        |> Castmill.Resources.PlaylistItem.changeset(%{
+          "duration" => 1000,
+          "offset" => 0,
+          "playlist_id" => foreign_playlist.id
+        })
+        |> Castmill.Repo.insert!()
+
+      item_before = Castmill.Repo.get!(Castmill.Resources.PlaylistItem, item_id)
+      assert other_item_id in [item_before.prev_item_id, item_before.next_item_id]
+
+      result =
+        call_tool(secret, "update_playlist_item", %{
+          "playlist_id" => playlist.id,
+          "item_id" => item_id,
+          "attributes" => %{
+            "duration" => 2000,
+            "offset" => 10,
+            "playlist_id" => foreign_playlist.id,
+            "prev_item_id" => foreign_item.id,
+            "next_item_id" => foreign_item.id
+          }
+        })
+
+      refute result["isError"]
+      updated = Castmill.Repo.get!(Castmill.Resources.PlaylistItem, item_id)
+      assert updated.duration == 2000
+      assert updated.offset == 10
+      assert updated.playlist_id == playlist.id
+      assert updated.prev_item_id == item_before.prev_item_id
+      assert updated.next_item_id == item_before.next_item_id
     end
 
     test "playlist items embed a compact widget", %{
