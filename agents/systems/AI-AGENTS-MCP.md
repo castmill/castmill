@@ -76,6 +76,17 @@ in the path.
   `password`, `token`, `api_key`, ...) are stored as `[REDACTED]`. Logged
   arguments are capped at 8 KB.
 - Tool results are capped at 100 KB and truncated on a UTF-8 boundary.
+- Results are text content only (no `structuredContent`; tools declare no
+  `outputSchema`). Result shaping keeps context small: lists drop unloaded
+  associations (`items`, `entries`, org/network names), playlists get an
+  `item_count` (one grouped query over the ids the API returned), `list_widgets`
+  returns a summary and playlist items embed a compact `{id, slug, name}` widget.
+- `tools/list` and the generic resource tools are filtered by the agent's
+  current role via `Castmill.Authorization.Permissions` (read per request).
+  This only improves discoverability and error messages; the dashboard API
+  remains the authority.
+- A 403 hint must not claim a role problem: missing and foreign ids also
+  return 403 so their existence is not disclosed.
 - An agent's org membership defines all access. Do not add bypasses in tools.
 
 ## Adding a tool

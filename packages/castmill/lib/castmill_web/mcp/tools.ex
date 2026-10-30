@@ -12,6 +12,8 @@ defmodule CastmillWeb.MCP.Tools do
   endpoints are never reachable from the MCP server.
   """
 
+  import Ecto.Query, only: [from: 2]
+
   alias CastmillWeb.MCP.Dispatcher
 
   @list_types ["medias", "playlists", "channels", "devices", "teams", "layouts"]
@@ -51,9 +53,17 @@ defmodule CastmillWeb.MCP.Tools do
 
   @doc """
   Returns the list of tools in the MCP `tools/list` format.
+
+  When an agent is given, the `resource_type` of the generic resource tools only
+  advertises the types that the agent's current role allows, and tools without
+  any allowed type are omitted.
   """
-  def list do
-    Enum.map(definitions(), fn tool ->
+  def list(agent \\ nil) do
+    role = agent && agent_role(agent)
+
+    definitions()
+    |> Enum.flat_map(fn tool -> restrict_to_role(tool, role, agent) end)
+    |> Enum.map(fn tool ->
       Map.take(tool, ["name", "title", "description", "inputSchema", "annotations"])
     end)
   end
@@ -76,16 +86,16 @@ defmodule CastmillWeb.MCP.Tools do
     if name in names() do
       args = if is_map(args), do: args, else: %{}
 
-      case build_request(name, args, ctx.agent) do
-        {:ok, method, path, opts} ->
-          response =
-            Dispatcher.request(ctx.agent, method, path, Keyword.put(opts, :conn, ctx[:conn]))
+      with :ok <- check_role(name, args, ctx.agent),
+           {:ok, method, path, opts} <- build_request(name, args, ctx.agent) do
+        response =
+          Dispatcher.request(ctx.agent, method, path, Keyword.put(opts, :conn, ctx[:conn]))
 
-          body = transform(name, response.status, response.body, ctx)
+        body = transform(name, response.status, response.body, Map.put(ctx, :args, args))
 
-          {:ok, to_result(response.status, body),
-           %{method: method, path: path, http_status: response.status}}
-
+        {:ok, to_result(response.status, body),
+         %{method: method, path: path, http_status: response.status}}
+      else
         {:error, message} ->
           {:ok, error_result(message), %{method: nil, path: nil, http_status: nil}}
       end
@@ -96,6 +106,81 @@ defmodule CastmillWeb.MCP.Tools do
 
   def call(_name, _args, _ctx), do: {:error, :unknown_tool}
 
+  # ---------------------------------------------------------------------------
+  # Role restrictions
+  # ---------------------------------------------------------------------------
+
+  # Generic resource tools and the permission matrix action they need.
+  @resource_tool_actions %{
+    "list_resources" => :list,
+    "get_resource" => :show,
+    "create_resource" => :create,
+    "update_resource" => :update,
+    "delete_resource" => :delete
+  }
+
+  # The role is read on every request so that role changes apply immediately.
+  defp agent_role(agent) do
+    Castmill.Organizations.get_user_role(agent.organization_id, agent.user_id)
+  end
+
+  defp role_allows?(nil, _type, _action), do: false
+
+  defp role_allows?(role, type, action) do
+    Castmill.Authorization.Permissions.can?(role, String.to_existing_atom(type), action)
+  end
+
+  defp allowed_types(role, tool_name) do
+    action = Map.fetch!(@resource_tool_actions, tool_name)
+    Enum.filter(resource_types(tool_name), &role_allows?(role, &1, action))
+  end
+
+  defp resource_types("list_resources"), do: @list_types
+  defp resource_types("get_resource"), do: @show_types
+  defp resource_types("create_resource"), do: Map.keys(@create_types)
+  defp resource_types("update_resource"), do: @update_types
+  defp resource_types("delete_resource"), do: @delete_types
+
+  defp restrict_to_role(tool, _role, nil), do: [tool]
+
+  defp restrict_to_role(%{"name" => name} = tool, role, _agent)
+       when is_map_key(@resource_tool_actions, name) do
+    case allowed_types(role, name) do
+      [] ->
+        []
+
+      types ->
+        [put_in(tool, ["inputSchema", "properties", "resource_type", "enum"], types)]
+    end
+  end
+
+  defp restrict_to_role(tool, _role, _agent), do: [tool]
+
+  defp check_role(name, args, agent) when is_map_key(@resource_tool_actions, name) do
+    type = Map.get(args, "resource_type")
+
+    if type in resource_types(name) do
+      role = agent_role(agent)
+      action = Map.fetch!(@resource_tool_actions, name)
+
+      if role_allows?(role, type, action) do
+        :ok
+      else
+        allowed = allowed_types(role, name)
+
+        {:error,
+         "The agent role '#{role}' does not allow the '#{action}' action on '#{type}'. " <>
+           "Allowed resource types for this tool: " <>
+           if(allowed == [], do: "none", else: Enum.join(allowed, ", ")) <>
+           ". Call get_context to see all permissions."}
+      end
+    else
+      # Invalid types are reported by the request builder.
+      :ok
+    end
+  end
+
+  defp check_role(_name, _args, _agent), do: :ok
   # ---------------------------------------------------------------------------
   # Request builders
   # ---------------------------------------------------------------------------
@@ -380,8 +465,77 @@ defmodule CastmillWeb.MCP.Tools do
     })
   end
 
+  defp transform("list_resources", status, %{"data" => items} = body, ctx)
+       when status in 200..299 and is_list(items) do
+    # Lists do not load these associations, so they are always empty or null
+    # here and would mislead the agent. Use get_resource / list_channel_entries.
+    items = Enum.map(items, &drop_unloaded_fields/1)
+
+    items =
+      if get_in(ctx, [:args, "resource_type"]) == "playlists",
+        do: put_item_counts(items),
+        else: items
+
+    %{body | "data" => items}
+  end
+
+  defp transform("list_widgets", status, %{"data" => widgets} = body, _ctx)
+       when status in 200..299 and is_list(widgets) do
+    %{body | "data" => Enum.map(widgets, &widget_summary/1)}
+  end
+
+  defp transform("get_resource", status, %{"data" => %{"items" => items} = playlist} = body, _ctx)
+       when status in 200..299 and is_list(items) do
+    %{body | "data" => %{playlist | "items" => Enum.map(items, &compact_item_widget/1)}}
+  end
+
   defp transform(_name, _status, body, _ctx), do: body
 
+  defp drop_unloaded_fields(item) when is_map(item) do
+    Map.drop(item, ["items", "entries", "organization_name", "network_name"])
+  end
+
+  defp drop_unloaded_fields(item), do: item
+
+  # The playlists in `items` were already authorized by the dashboard API.
+  defp put_item_counts(items) do
+    ids = for %{"id" => id} <- items, is_integer(id), do: id
+
+    counts =
+      if ids == [] do
+        %{}
+      else
+        from(item in Castmill.Resources.PlaylistItem,
+          where: item.playlist_id in ^ids,
+          group_by: item.playlist_id,
+          select: {item.playlist_id, count(item.id)}
+        )
+        |> Castmill.Repo.all()
+        |> Map.new()
+      end
+
+    Enum.map(items, fn
+      %{"id" => id} = item -> Map.put(item, "item_count", Map.get(counts, id, 0))
+      item -> item
+    end)
+  end
+
+  # Templates and translations are large and only needed by the players.
+  # get_widget returns the full widget, including its schemas.
+  defp widget_summary(widget) when is_map(widget) do
+    Map.take(widget, ["id", "slug", "name", "description", "aspect_ratio"])
+  end
+
+  defp widget_summary(widget), do: widget
+
+  defp compact_item_widget(%{"widget" => widget} = item) when is_map(widget) do
+    %{item | "widget" => Map.take(widget, ["id", "slug", "name"])}
+  end
+
+  defp compact_item_widget(item), do: item
+
+  # Results only carry text content: no tool declares an output schema, and
+  # duplicating the body as structuredContent doubles the context agents use.
   defp to_result(status, body) when status in 200..299 do
     text =
       case body do
@@ -389,13 +543,7 @@ defmodule CastmillWeb.MCP.Tools do
         body -> encode_text(body)
       end
 
-    result = %{"content" => [%{"type" => "text", "text" => text}], "isError" => false}
-
-    if is_map(body) and byte_size(text) <= @max_text_length do
-      Map.put(result, "structuredContent", body)
-    else
-      result
-    end
+    %{"content" => [%{"type" => "text", "text" => text}], "isError" => false}
   end
 
   defp to_result(status, body) do
@@ -414,7 +562,13 @@ defmodule CastmillWeb.MCP.Tools do
 
   defp status_hint(400), do: "bad request, check the arguments"
   defp status_hint(401), do: "not authenticated"
-  defp status_hint(403), do: "the agent role does not allow this action"
+  # Resources of other organizations and missing ids are also reported as 403
+  # so that their existence is not disclosed.
+  defp status_hint(403),
+    do:
+      "forbidden: the resource does not exist in this organization or the agent role " <>
+        "does not allow this action"
+
   defp status_hint(404), do: "not found"
   defp status_hint(409), do: "conflict"
   defp status_hint(413), do: "payload too large"
@@ -589,7 +743,9 @@ defmodule CastmillWeb.MCP.Tools do
         "title" => "List resources",
         "description" =>
           "Lists resources of the organization (paginated). Returns {data: [...], count}. " <>
-            "Devices include their online status.",
+            "Devices include their online status. Playlists include 'item_count' but not their " <>
+            "items, and channels do not include their entries; use get_resource and " <>
+            "list_channel_entries for them.",
         "inputSchema" =>
           object(
             Map.merge(pagination(), %{
@@ -610,7 +766,8 @@ defmodule CastmillWeb.MCP.Tools do
         "name" => "get_resource",
         "title" => "Get resource",
         "description" =>
-          "Gets a single media, playlist, channel or layout by id. Use list_resources with " <>
+          "Gets a single media, playlist, channel or layout by id. Playlists include their " <>
+            "items (each with a compact {id, slug, name} widget). Use list_resources with " <>
             "'search' to find devices and teams.",
         "inputSchema" =>
           object(
@@ -670,7 +827,8 @@ defmodule CastmillWeb.MCP.Tools do
         "title" => "List widgets",
         "description" =>
           "Lists the widgets (image, video, text, web page, layouts, integrations, ...) that " <>
-            "can be added to playlists.",
+            "can be added to playlists. Returns a summary {id, slug, name, description, " <>
+            "aspect_ratio}; use get_widget for the options and data schemas.",
         "inputSchema" => object(pagination()),
         "annotations" => read_only()
       },
@@ -728,7 +886,10 @@ defmodule CastmillWeb.MCP.Tools do
       %{
         "name" => "update_playlist_item_config",
         "title" => "Update playlist item widget config",
-        "description" => "Updates the widget options and/or data of a playlist item.",
+        "description" =>
+          "Updates the widget options and/or data of a playlist item. Each of 'options' and " <>
+            "'data' replaces the stored value as a whole (send the complete object); an " <>
+            "omitted field keeps its current value.",
         "inputSchema" =>
           object(
             %{
@@ -745,7 +906,9 @@ defmodule CastmillWeb.MCP.Tools do
         "name" => "move_playlist_item",
         "title" => "Move playlist item",
         "description" =>
-          "Moves an item after 'target_id'. Omit 'target_id' (or use null) to move it to the end.",
+          "Moves an item right after the item 'target_id'. Omit 'target_id' (or use null) to " <>
+            "move it to the beginning of the playlist. To move it to the end, use the id of " <>
+            "the last item as 'target_id'.",
         "inputSchema" =>
           object(
             %{

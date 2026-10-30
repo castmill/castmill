@@ -27,9 +27,13 @@ Content flows **media → playlist items → playlists → channels → devices*
 ## Roles
 
 Your role is chosen by the organization admins: `admin`, `manager`, `member`,
-`editor`, `publisher`, `device_manager` or `guest`. When an action is not
-allowed the tool returns an error result with HTTP status 403. Do not retry; ask
-the human to change your role if the action is required.
+`editor`, `publisher`, `device_manager` or `guest`. The generic resource tools
+only advertise the resource types your role allows, and calling them with
+another type returns an error naming the allowed types. When the API refuses
+an action, the tool returns an error result with HTTP status 403. A 403 is also
+returned for ids that do not exist in your organization, so check the id
+(e.g. with `list_resources`) before assuming a permission problem. Do not retry
+a permission error; ask the human to change your role if the action is required.
 
 ## Tools
 
@@ -41,10 +45,10 @@ the human to change your role if the action is required.
 | `create_resource`             | Create a playlist, channel, team or layout.                                                   |
 | `update_resource`             | Update a media, playlist, channel, device or layout.                                          |
 | `delete_resource`             | Delete a media, playlist, channel, device, team or layout.                                    |
-| `list_widgets` / `get_widget` | Discover widgets and their `options_schema` / `data_schema`.                                  |
+| `list_widgets` / `get_widget` | Discover widgets (`list_widgets` is a summary) and their `options_schema` / `data_schema`.     |
 | `add_playlist_item`           | Append or insert a widget item in a playlist.                                                 |
 | `update_playlist_item`        | Change item attributes such as `duration` or `name`.                                          |
-| `update_playlist_item_config` | Change the widget options/data of an item.                                                    |
+| `update_playlist_item_config` | Replace the widget `options` and/or `data` of an item (an omitted field is left unchanged).   |
 | `move_playlist_item`          | Reorder an item (`target_id` = item it should follow, `null` = first).                        |
 | `remove_playlist_item`        | Remove an item from a playlist.                                                               |
 | `list_channel_entries`        | Scheduled entries of a channel.                                                               |
@@ -112,6 +116,13 @@ Useful endpoints:
 | `GET /devices/:id/cache`                                   | Device cache content                           |
 | `GET /devices/:id/timers`, `POST /devices/:id/timers`      | On/off timers                                  |
 | `GET /devices/:id/schedule`, `PUT /devices/:id/schedule`   | Device power schedule                          |
+
+`GET /usage` returns `{resource: {used, total}}`. A `total` of `0` means no quota
+is assigned, so new resources of that type cannot be created. Exceptions:
+widgets are not limited (their `total` is always `0` and `used` counts widget
+instances in playlists), and `layouts.used` only counts the organization's own
+layouts, not the built-in ones (`is_system: true`) that `list_resources` also
+returns.
 
 ## Limitations
 

@@ -122,7 +122,8 @@ defmodule CastmillWeb.MCP.Server do
 
   defp dispatch(_id, "ping", _params, _ctx), do: {:ok, %{}}
 
-  defp dispatch(_id, "tools/list", _params, _ctx), do: {:ok, %{"tools" => Tools.list()}}
+  defp dispatch(_id, "tools/list", _params, ctx),
+    do: {:ok, %{"tools" => Tools.list(ctx[:agent])}}
 
   defp dispatch(_id, "tools/call", %{"name" => name} = params, ctx) when is_binary(name) do
     args = Map.get(params, "arguments") || %{}
@@ -265,6 +266,7 @@ defmodule CastmillWeb.MCP.Server do
 
   defp value_strings(value) when is_binary(value) and value != "", do: [value]
   defp value_strings(value) when is_number(value), do: [to_string(value)]
+
   defp value_strings(value) when is_map(value),
     do: Enum.flat_map(value, fn {_key, v} -> value_strings(v) end)
 

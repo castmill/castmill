@@ -437,6 +437,7 @@ defmodule Castmill.Organizations do
         "devices" -> :devices
         "teams" -> :teams
         "widgets" -> :widgets
+        "layouts" -> :layouts
         _ -> nil
       end
 

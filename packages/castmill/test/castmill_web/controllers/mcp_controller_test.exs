@@ -40,6 +40,27 @@ defmodule CastmillWeb.MCPControllerTest do
     result
   end
 
+  defp decode(result) do
+    refute Map.has_key?(result, "structuredContent")
+    result |> Map.fetch!("content") |> hd() |> Map.fetch!("text") |> Jason.decode!()
+  end
+
+  # Inserted without a quota check: `quotas_organizations` is keyed by
+  # `resource` only, so a second organization cannot get a playlists quota.
+  defp foreign_playlist_fixture(organization) do
+    %Castmill.Resources.Playlist{}
+    |> Castmill.Resources.Playlist.changeset(%{
+      name: "Foreign playlist",
+      organization_id: organization.id
+    })
+    |> Castmill.Repo.insert!()
+  end
+
+  defp tool_names(secret) do
+    %{"result" => %{"tools" => tools}} = secret |> rpc("tools/list") |> json_response(200)
+    Map.new(tools, &{&1["name"], &1})
+  end
+
   describe "authentication" do
     test "rejects missing or invalid credentials" do
       conn =
@@ -189,7 +210,7 @@ defmodule CastmillWeb.MCPControllerTest do
       result = call_tool(secret, "get_context", %{})
 
       refute result["isError"]
-      content = result["structuredContent"]
+      content = decode(result)
       assert content["agent"]["id"] == agent.id
       assert content["organization"]["id"] == organization.id
       assert content["role"] == "editor"
@@ -207,16 +228,18 @@ defmodule CastmillWeb.MCPControllerTest do
         })
 
       refute result["isError"]
-      assert result["structuredContent"]["data"]["name"] == "Agent playlist"
+      assert decode(result)["data"]["name"] == "Agent playlist"
 
-      playlist_id = result["structuredContent"]["data"]["id"]
+      playlist_id = decode(result)["data"]["id"]
       assert Castmill.Resources.get_playlist(playlist_id).organization_id == organization.id
 
       result =
         call_tool(secret, "list_resources", %{"resource_type" => "playlists", "search" => "Agent"})
 
       refute result["isError"]
-      assert result["structuredContent"]["count"] == 1
+      assert %{"count" => 1, "data" => [listed]} = decode(result)
+      refute Map.has_key?(listed, "items")
+      assert listed["item_count"] == 0
 
       %{data: actions} = Agents.list_actions(organization.id, %{"agent_id" => agent.id})
       assert Enum.map(actions, & &1.tool) == ["list_resources", "create_resource"]
@@ -242,11 +265,13 @@ defmodule CastmillWeb.MCPControllerTest do
         })
 
       assert result["isError"]
-      assert hd(result["content"])["text"] =~ "403"
+      text = hd(result["content"])["text"]
+      assert text =~ "role 'guest' does not allow the 'create' action on 'playlists'"
+      assert text =~ "Allowed resource types for this tool: none"
 
       assert %{data: [action]} = Agents.list_actions(organization.id, %{"agent_id" => guest.id})
       assert action.status == "error"
-      assert action.http_status == 403
+      assert action.http_status == nil
 
       refute call_tool(guest_secret, "list_resources", %{"resource_type" => "playlists"})[
                "isError"
@@ -272,8 +297,7 @@ defmodule CastmillWeb.MCPControllerTest do
       assert hd(denied["content"])["text"] =~ "403"
 
       other = organization_fixture()
-      Castmill.Quotas.add_quota_to_organization(other.id, :playlists, 10)
-      foreign_playlist = playlist_fixture(%{organization_id: other.id})
+      foreign_playlist = foreign_playlist_fixture(other)
 
       {:ok, _admin, admin_secret} =
         Agents.create_agent(organization.id, %{"name" => "Admin agent", "role" => "admin"})
@@ -303,8 +327,7 @@ defmodule CastmillWeb.MCPControllerTest do
       organization: organization
     } do
       other = organization_fixture()
-      Castmill.Quotas.add_quota_to_organization(other.id, :playlists, 10)
-      foreign_playlist = playlist_fixture(%{organization_id: other.id})
+      foreign_playlist = foreign_playlist_fixture(other)
 
       {:ok, _admin, admin_secret} =
         Agents.create_agent(organization.id, %{"name" => "Admin agent", "role" => "admin"})
@@ -406,8 +429,7 @@ defmodule CastmillWeb.MCPControllerTest do
         })
 
       other = organization_fixture()
-      Castmill.Quotas.add_quota_to_organization(other.id, :playlists, 10)
-      foreign_playlist = playlist_fixture(%{organization_id: other.id})
+      foreign_playlist = foreign_playlist_fixture(other)
       foreign_channel = channel_fixture(%{organization_id: other.id, timezone: "UTC"})
 
       foreign_entry =
@@ -615,6 +637,241 @@ defmodule CastmillWeb.MCPControllerTest do
 
       result = call_tool(secret, "api_request", %{"method" => "GET", "path" => "/playlists"})
       refute result["isError"]
+    end
+  end
+
+  describe "role-aware tools" do
+    test "tools/list only advertises resource types allowed by the role", %{
+      secret: secret,
+      organization: organization
+    } do
+      tools = tool_names(secret)
+
+      assert tools["create_resource"]["inputSchema"]["properties"]["resource_type"]["enum"] ==
+               ["layouts", "playlists"]
+
+      update_types =
+        tools["update_resource"]["inputSchema"]["properties"]["resource_type"]["enum"]
+
+      assert "channels" in update_types
+
+      {:ok, _guest, guest_secret} =
+        Agents.create_agent(organization.id, %{"name" => "Guest", "role" => "guest"})
+
+      guest_tools = tool_names(guest_secret)
+      assert Map.has_key?(guest_tools, "list_resources")
+      refute Map.has_key?(guest_tools, "create_resource")
+      refute Map.has_key?(guest_tools, "update_resource")
+      refute Map.has_key?(guest_tools, "delete_resource")
+
+      {:ok, _admin, admin_secret} =
+        Agents.create_agent(organization.id, %{"name" => "Admin", "role" => "admin"})
+
+      assert tool_names(admin_secret)["create_resource"]["inputSchema"]["properties"][
+               "resource_type"
+             ]["enum"] == ["channels", "layouts", "playlists", "teams"]
+    end
+
+    test "role changes apply to the next request", %{
+      secret: secret,
+      agent: agent,
+      organization: organization
+    } do
+      {:ok, _} = Organizations.set_user_role(organization.id, agent.user_id, :admin)
+
+      assert "channels" in tool_names(secret)["create_resource"]["inputSchema"]["properties"][
+               "resource_type"
+             ]["enum"]
+    end
+
+    test "disallowed resource types name the allowed ones without dispatching", %{
+      secret: secret,
+      organization: organization,
+      agent: agent
+    } do
+      result =
+        call_tool(secret, "create_resource", %{
+          "resource_type" => "channels",
+          "attributes" => %{"name" => "Lobby", "timezone" => "Europe/Stockholm"}
+        })
+
+      assert result["isError"]
+      text = hd(result["content"])["text"]
+      assert text =~ "role 'editor' does not allow the 'create' action on 'channels'"
+      assert text =~ "Allowed resource types for this tool: layouts, playlists"
+
+      assert %{data: [action]} = Agents.list_actions(organization.id, %{"agent_id" => agent.id})
+      assert action.method == nil
+    end
+
+    test "layouts are available to roles that the matrix allows", %{secret: secret} do
+      result = call_tool(secret, "list_resources", %{"resource_type" => "layouts"})
+
+      refute result["isError"]
+      assert %{"count" => count, "data" => layouts} = decode(result)
+      assert is_integer(count) and is_list(layouts)
+    end
+
+    test "403 errors do not blame the role for missing ids", %{secret: secret} do
+      result = call_tool(secret, "get_resource", %{"resource_type" => "playlists", "id" => 0})
+
+      assert result["isError"]
+      text = hd(result["content"])["text"]
+      assert text =~ "403"
+      assert text =~ "does not exist in this organization"
+    end
+  end
+
+  describe "result shaping" do
+    test "channel lists omit associations that are not loaded", %{
+      secret: secret,
+      organization: organization
+    } do
+      channel_fixture(%{organization_id: organization.id, timezone: "Europe/Stockholm"})
+
+      result = call_tool(secret, "list_resources", %{"resource_type" => "channels"})
+
+      assert %{"data" => [channel]} = decode(result)
+      assert channel["name"] == "Hangar 42"
+
+      for key <- ["entries", "organization_name", "network_name"] do
+        refute Map.has_key?(channel, key)
+      end
+    end
+
+    test "list_widgets returns a summary and get_widget the full widget", %{secret: secret} do
+      widget =
+        widget_fixture(%{
+          name: "Agent widget",
+          description: "For agents",
+          options_schema: %{"title" => "string"}
+        })
+
+      result = call_tool(secret, "list_widgets", %{"search" => "Agent widget"})
+
+      assert %{"data" => [summary]} = decode(result)
+      assert summary["id"] == widget.id
+      assert summary["description"] == "For agents"
+
+      assert Map.keys(summary) |> Enum.sort() ==
+               Enum.sort(["id", "slug", "name", "description", "aspect_ratio"])
+
+      full = decode(call_tool(secret, "get_widget", %{"widget_id" => widget.id}))
+      assert full["data"]["options_schema"] == %{"title" => "string"}
+      assert Map.has_key?(full["data"], "template")
+    end
+
+    test "editing and moving playlist items keeps the playlist consistent", %{
+      secret: secret,
+      organization: organization
+    } do
+      playlist = playlist_fixture(%{organization_id: organization.id})
+
+      widget =
+        widget_fixture(%{
+          options_schema: %{"title" => %{"type" => "string"}},
+          data_schema: %{"foo" => %{"type" => "number"}}
+        })
+
+      add = fn ->
+        call_tool(secret, "add_playlist_item", %{
+          "playlist_id" => playlist.id,
+          "widget_id" => widget.id,
+          "duration" => 1000,
+          "options" => %{"title" => "Hello"}
+        })
+        |> decode()
+        |> get_in(["data", "id"])
+      end
+
+      item_ids = fn ->
+        call_tool(secret, "get_resource", %{"resource_type" => "playlists", "id" => playlist.id})
+        |> decode()
+        |> get_in(["data", "items"])
+        |> Enum.map(& &1["id"])
+      end
+
+      first = add.()
+
+      updated =
+        call_tool(secret, "update_playlist_item", %{
+          "playlist_id" => playlist.id,
+          "item_id" => first,
+          "attributes" => %{"duration" => 2000}
+        })
+        |> decode()
+
+      assert updated["data"]["duration"] == 2000
+      assert is_binary(updated["data"]["widget_config_id"])
+
+      refute call_tool(secret, "update_playlist_item_config", %{
+               "playlist_id" => playlist.id,
+               "item_id" => first,
+               "data" => %{"foo" => 1}
+             })["isError"]
+
+      config = Castmill.Widgets.get_widget_config(playlist.id, first)
+      assert config.options == %{"title" => "Hello"}
+      assert config.data == %{"foo" => 1}
+
+      # Moving the only item to the beginning must not unlink it.
+      refute call_tool(secret, "move_playlist_item", %{
+               "playlist_id" => playlist.id,
+               "item_id" => first
+             })["isError"]
+
+      assert item_ids.() == [first]
+
+      second = add.()
+      assert item_ids.() == [second, first]
+
+      # Without a target the item goes to the beginning.
+      refute call_tool(secret, "move_playlist_item", %{
+               "playlist_id" => playlist.id,
+               "item_id" => first
+             })["isError"]
+
+      assert item_ids.() == [first, second]
+
+      refute call_tool(secret, "move_playlist_item", %{
+               "playlist_id" => playlist.id,
+               "item_id" => first,
+               "target_id" => second
+             })["isError"]
+
+      assert item_ids.() == [second, first]
+
+      listed =
+        call_tool(secret, "list_resources", %{"resource_type" => "playlists"})
+        |> decode()
+        |> Map.fetch!("data")
+        |> Enum.find(&(&1["id"] == playlist.id))
+
+      assert listed["item_count"] == 2
+    end
+
+    test "playlist items embed a compact widget", %{
+      secret: secret,
+      organization: organization
+    } do
+      playlist = playlist_fixture(%{organization_id: organization.id})
+      widget = widget_fixture(%{name: "Compact widget"})
+
+      added =
+        call_tool(secret, "add_playlist_item", %{
+          "playlist_id" => playlist.id,
+          "widget_id" => widget.id,
+          "duration" => 1000
+        })
+
+      refute added["isError"]
+
+      result =
+        call_tool(secret, "get_resource", %{"resource_type" => "playlists", "id" => playlist.id})
+
+      assert %{"data" => %{"items" => [item]}} = decode(result)
+      assert item["widget"] == %{"id" => widget.id, "slug" => widget.slug, "name" => widget.name}
+      assert Map.has_key?(item, "config")
     end
   end
 end
