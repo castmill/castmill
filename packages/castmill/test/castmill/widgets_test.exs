@@ -653,6 +653,34 @@ defmodule Castmill.WidgetsTest do
       assert updated_widget_config.data == data
     end
 
+    test "omitted options or data keep their current value", %{
+      playlist: playlist,
+      playlist_item: playlist_item,
+      options: options,
+      data: data
+    } do
+      assert {:ok, _} = Widgets.update_widget_config(playlist.id, playlist_item.id, options, data)
+
+      assert {:ok, _} =
+               Widgets.update_widget_config(playlist.id, playlist_item.id, nil, %{"size" => "s"})
+
+      config = Widgets.get_widget_config(playlist.id, playlist_item.id)
+      assert config.options == options
+      assert config.data == %{"size" => "s"}
+
+      assert {:ok, _} =
+               Widgets.update_widget_config(
+                 playlist.id,
+                 playlist_item.id,
+                 %{"color" => "red"},
+                 nil
+               )
+
+      config = Widgets.get_widget_config(playlist.id, playlist_item.id)
+      assert config.options == %{"color" => "red"}
+      assert config.data == %{"size" => "s"}
+    end
+
     test "advances the version on every successful update", %{
       playlist: playlist,
       playlist_item: playlist_item,

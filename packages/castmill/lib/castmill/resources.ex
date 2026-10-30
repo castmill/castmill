@@ -1188,6 +1188,9 @@ defmodule Castmill.Resources do
     5) the item that was after the item to be moved's new position
   """
   def move_item_in_playlist(item_id, target_item_id \\ nil) do
+    item_id = normalize_item_id(item_id)
+    target_item_id = normalize_item_id(target_item_id)
+
     if item_id == target_item_id do
       {:ok, nil}
     else
@@ -1195,49 +1198,83 @@ defmodule Castmill.Resources do
       Repo.transaction(fn ->
         item = from(item in PlaylistItem, where: item.id == ^item_id, select: item) |> Repo.one()
 
-        # Move the item out of its current position in the list
-        if item.prev_item_id do
-          from(prev_item in PlaylistItem, where: prev_item.id == ^item.prev_item_id)
-          |> Repo.update_all(set: [next_item_id: item.next_item_id])
-        end
+        cond do
+          is_nil(item) ->
+            Repo.rollback(:not_found)
 
-        if item.next_item_id do
-          from(next_item in PlaylistItem, where: next_item.id == ^item.next_item_id)
-          |> Repo.update_all(set: [prev_item_id: item.prev_item_id])
-        end
+          # Already at the requested position. Relinking would make the item
+          # point to itself (e.g. moving the head, or the only item, to the
+          # head), which removes it from the playlist order.
+          item.prev_item_id == target_item_id ->
+            nil
 
-        # Move the item to its new position in the list
-        if target_item_id do
-          target_item =
-            from(item in PlaylistItem, where: item.id == ^target_item_id, select: item)
-            |> Repo.one()
-
-          update_playlist_item(target_item, %{next_item_id: item_id})
-
-          update_playlist_item(item, %{
-            next_item_id: target_item.next_item_id,
-            prev_item_id: target_item_id
-          })
-
-          if target_item.next_item_id do
-            from(next_target_item in PlaylistItem,
-              where: next_target_item.id == ^target_item.next_item_id
-            )
-            |> Repo.update_all(set: [prev_item_id: item_id])
-          end
-        else
-          # Move the item to the head of the list
-          head_item =
-            from(item in PlaylistItem,
-              where: is_nil(item.prev_item_id) and item.playlist_id == ^item.playlist_id,
-              select: item
-            )
-            |> Repo.one()
-
-          update_playlist_item(item, %{next_item_id: head_item.id, prev_item_id: nil})
-          update_playlist_item(head_item, %{prev_item_id: item.id})
+          true ->
+            relink_playlist_item(item, target_item_id)
         end
       end)
+    end
+  end
+
+  # Ids come from URL segments (strings) or JSON bodies (integers or strings).
+  defp normalize_item_id(nil), do: nil
+  defp normalize_item_id(id) when is_integer(id), do: id
+
+  defp normalize_item_id(id) when is_binary(id) do
+    case Integer.parse(id) do
+      {int, ""} -> int
+      _ -> id
+    end
+  end
+
+  defp normalize_item_id(id), do: id
+
+  defp relink_playlist_item(item, target_item_id) do
+    item_id = item.id
+
+    # Move the item out of its current position in the list
+    if item.prev_item_id do
+      from(prev_item in PlaylistItem, where: prev_item.id == ^item.prev_item_id)
+      |> Repo.update_all(set: [next_item_id: item.next_item_id])
+    end
+
+    if item.next_item_id do
+      from(next_item in PlaylistItem, where: next_item.id == ^item.next_item_id)
+      |> Repo.update_all(set: [prev_item_id: item.prev_item_id])
+    end
+
+    # Move the item to its new position in the list
+    if target_item_id do
+      target_item =
+        from(item in PlaylistItem, where: item.id == ^target_item_id, select: item)
+        |> Repo.one()
+
+      update_playlist_item(target_item, %{next_item_id: item_id})
+
+      update_playlist_item(item, %{
+        next_item_id: target_item.next_item_id,
+        prev_item_id: target_item_id
+      })
+
+      if target_item.next_item_id do
+        from(next_target_item in PlaylistItem,
+          where: next_target_item.id == ^target_item.next_item_id
+        )
+        |> Repo.update_all(set: [prev_item_id: item_id])
+      end
+    else
+      # Move the item to the head of the list. The item itself is excluded
+      # because its own links have not been updated yet.
+      head_item =
+        from(head in PlaylistItem,
+          where:
+            is_nil(head.prev_item_id) and head.playlist_id == ^item.playlist_id and
+              head.id != ^item_id,
+          select: head
+        )
+        |> Repo.one()
+
+      update_playlist_item(item, %{next_item_id: head_item.id, prev_item_id: nil})
+      update_playlist_item(head_item, %{prev_item_id: item_id})
     end
   end
 

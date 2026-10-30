@@ -11,10 +11,14 @@ defmodule CastmillWeb.PlaylistController do
   action_fallback(CastmillWeb.FallbackController)
 
   @impl CastmillWeb.AccessActorBehaviour
-  def check_access(actor_id, action, %{
-        "organization_id" => organization_id,
-        "playlist_id" => playlist_id
-      } = params)
+  def check_access(
+        actor_id,
+        action,
+        %{
+          "organization_id" => organization_id,
+          "playlist_id" => playlist_id
+        } = params
+      )
       when action in [
              :add_item,
              :update_item,
@@ -97,6 +101,7 @@ defmodule CastmillWeb.PlaylistController do
       }) do
     with %PlaylistItem{} = item <- Resources.get_playlist_item(playlist_id, item_id) do
       {:ok, item} = Resources.update_playlist_item(item, options_params)
+      item = Castmill.Repo.preload(item, :widget_config)
       notify_devices_of_playlist_update(playlist_id)
 
       conn
