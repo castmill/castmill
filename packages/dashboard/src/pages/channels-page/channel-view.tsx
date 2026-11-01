@@ -12,15 +12,9 @@ export const ChannelView = (props: {
   ) => Promise<JsonChannel | void>;
 }) => {
   const { t } = useI18n();
-  const style = `
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: flex-start;`;
-
   return (
-    <div style={style}>
-      <div style="width: 100%;">
+    <div class={styles.channelView}>
+      <div class={styles.channelContent}>
         <div class={styles.notice}>{t('channels.info.contentRequired')}</div>
         <CalendarView
           timeZone={props.channel.timezone}
