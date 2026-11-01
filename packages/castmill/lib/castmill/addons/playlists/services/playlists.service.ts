@@ -371,11 +371,25 @@ export const PlaylistsService = {
     await handleResponse(response);
   },
 
-  async getWidgets(baseUrl: string, organizationId: string, search?: string) {
+  async getWidgets(
+    baseUrl: string,
+    organizationId: string,
+    search?: string,
+    page?: number,
+    pageSize?: number
+  ) {
     const query: Record<string, string> = {};
 
     if (search) {
       query['search'] = search;
+    }
+
+    if (page !== undefined) {
+      query['page'] = String(page);
+    }
+
+    if (pageSize !== undefined) {
+      query['page_size'] = String(pageSize);
     }
 
     const queryString = new URLSearchParams(query).toString();

@@ -3,6 +3,7 @@ import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import {
   Component,
   For,
+  Show,
   createEffect,
   createSignal,
   onCleanup,
@@ -83,6 +84,7 @@ const WidgetItem: Component<{
 };
 
 const SEARCH_DEBOUNCE_PERIOD = 300;
+const SCROLL_THRESHOLD = 100;
 
 export const WidgetChooser: Component<{
   widgets: JsonWidget[];
@@ -90,6 +92,8 @@ export const WidgetChooser: Component<{
   locale?: string;
   t?: (key: string, params?: Record<string, any>) => string;
   onSearch?: (searchText: string) => void;
+  onLoadMore?: () => void;
+  loading?: boolean;
 }> = (props) => {
   const [searchText, setSearchText] = createSignal('');
   const [debounceTimeout, setDebounceTimeout] = createSignal<any | undefined>(
@@ -109,6 +113,19 @@ export const WidgetChooser: Component<{
         props.onSearch?.(target.value);
       }, SEARCH_DEBOUNCE_PERIOD)
     );
+  };
+
+  // Trigger loading of additional widgets when the user scrolls near the
+  // bottom of the list (infinite scrolling).
+  const handleScroll = (e: Event) => {
+    const target = e.target as HTMLDivElement;
+
+    if (
+      target.scrollTop + target.clientHeight >=
+      target.scrollHeight - SCROLL_THRESHOLD
+    ) {
+      props.onLoadMore?.();
+    }
   };
 
   // Cleanup to clear the timeout when the component unmounts
@@ -132,7 +149,7 @@ export const WidgetChooser: Component<{
           />
         </div>
       </div>
-      <div class="items-container">
+      <div class="items-container" onScroll={handleScroll}>
         <For each={props.widgets}>
           {(widget) => (
             <WidgetItem
@@ -142,6 +159,11 @@ export const WidgetChooser: Component<{
             />
           )}
         </For>
+        <Show when={props.loading}>
+          <div class="widget-chooser-loading">
+            {props.t?.('common.loading') || 'Loading...'}
+          </div>
+        </Show>
       </div>
     </div>
   );
