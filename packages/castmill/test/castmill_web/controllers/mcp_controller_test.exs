@@ -1005,6 +1005,7 @@ defmodule CastmillWeb.MCPControllerTest do
 
       item_id = add_item.()
       other_item_id = add_item.()
+
       foreign_item =
         %Castmill.Resources.PlaylistItem{}
         |> Castmill.Resources.PlaylistItem.changeset(%{
