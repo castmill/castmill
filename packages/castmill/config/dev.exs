@@ -105,6 +105,9 @@ config :castmill, :encryption, %{
 # widgets json files
 config :castmill, CastmillWeb.Widgets.WidgetsLoader, json_dir: "../widged/dist/widgets"
 
+# Allow the RSS fetcher to read feeds served from localhost/private networks in dev.
+config :castmill, Castmill.Widgets.Integrations.Rss.Http, allow_private_hosts: true
+
 # BullMQ uses PostgreSQL backend in dev.
 # Local Postgres normally doesn't use SSL. If you point dev at a managed DB that
 # enforces SSL, add `ssl: [verify: :verify_none]` here (prod uses BULLMQ_DB_SSL).

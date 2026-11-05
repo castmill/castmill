@@ -349,6 +349,25 @@ defmodule Castmill.Resources do
   defp format_integration_error(:no_credentials), do: "Credentials not configured"
   defp format_integration_error(:storage_failed), do: "Failed to store fetched data"
   defp format_integration_error(:timeout), do: "Request timed out"
+  defp format_integration_error(:missing_feed_url), do: "Feed URL is required"
+
+  defp format_integration_error(:blocked_host),
+    do: "Feed URL points to a private or reserved network address"
+
+  defp format_integration_error(:host_not_found), do: "Feed host could not be resolved"
+  defp format_integration_error(:connection_refused), do: "Connection to the feed was refused"
+  defp format_integration_error(:network_error), do: "Network error while fetching the feed"
+  defp format_integration_error(:too_many_redirects), do: "Feed URL redirects too many times"
+
+  defp format_integration_error(:redirect_without_location),
+    do: "Feed URL returned an invalid redirect"
+
+  defp format_integration_error(:feed_too_large), do: "Feed is too large"
+  defp format_integration_error(:rate_limited), do: "Feed server is rate limiting requests (429)"
+  defp format_integration_error(:server_error), do: "Feed server error (5xx)"
+  defp format_integration_error(:http_error), do: "Feed server returned an unexpected response"
+  defp format_integration_error(:xml_parse_error), do: "Feed contains malformed XML"
+  defp format_integration_error(:unsupported_encoding), do: "Feed uses an unsupported encoding"
   defp format_integration_error(reason) when is_atom(reason), do: "Fetch failed: #{reason}"
   defp format_integration_error(reason) when is_binary(reason), do: reason
   defp format_integration_error(_reason), do: "Unknown error"
