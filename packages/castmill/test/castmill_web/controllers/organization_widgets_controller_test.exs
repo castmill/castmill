@@ -75,6 +75,30 @@ defmodule CastmillWeb.OrganizationWidgetsControllerTest do
       assert json_response(conn, 404)["errors"]["detail"] == "Widget not found"
     end
 
+    test "does not return a widget owned by another organization", %{
+      conn: conn,
+      organization: org,
+      user: user,
+      network: network
+    } do
+      other_org = organization_fixture(%{network_id: network.id})
+
+      other_widget =
+        widget_fixture(%{
+          name: "Other Organization Widget",
+          slug: "other-org-widget-#{System.unique_integer([:positive])}",
+          organization_id: other_org.id,
+          template: %{"type" => "group", "name" => "root", "components" => []}
+        })
+
+      conn =
+        conn
+        |> assign(:current_user, user)
+        |> get("/dashboard/organizations/#{org.id}/widgets/#{other_widget.id}")
+
+      assert json_response(conn, 404)["errors"]["detail"] == "Widget not found"
+    end
+
     test "returns 401 for unauthenticated request", %{
       conn: conn,
       organization: org,
@@ -128,6 +152,86 @@ defmodule CastmillWeb.OrganizationWidgetsControllerTest do
       conn = get(conn, "/dashboard/organizations/#{org.id}/widgets")
 
       assert json_response(conn, 401)
+    end
+  end
+
+  describe "widget asset endpoints" do
+    setup do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+
+      user_with_role = fn role ->
+        {:ok, user} =
+          Accounts.create_user(%{
+            email: "assets-#{role}-#{System.unique_integer([:positive])}@test.com",
+            name: "Assets #{role}",
+            network_id: network.id
+          })
+
+        {:ok, _} = Organizations.set_user_role(organization.id, user.id, role)
+        user
+      end
+
+      widget =
+        widget_fixture(%{
+          organization_id: organization.id,
+          is_system: false,
+          assets: %{"images" => %{}}
+        })
+
+      %{organization: organization, widget: widget, user_with_role: user_with_role}
+    end
+
+    test "users with widget update permission can delete assets", %{
+      conn: conn,
+      organization: org,
+      widget: widget,
+      user_with_role: user_with_role
+    } do
+      conn =
+        conn
+        |> assign(:current_user, user_with_role.(:editor))
+        |> delete("/dashboard/organizations/#{org.id}/widgets/#{widget.id}/assets/images/logo")
+
+      assert %{"id" => id} = json_response(conn, 200)
+      assert id == widget.id
+    end
+
+    test "users with widget update permission reach the upload action", %{
+      conn: conn,
+      organization: org,
+      widget: widget,
+      user_with_role: user_with_role
+    } do
+      conn =
+        conn
+        |> assign(:current_user, user_with_role.(:editor))
+        |> post("/dashboard/organizations/#{org.id}/widgets/#{widget.id}/assets", %{})
+
+      assert json_response(conn, 400)["error"] == "A file and a category are required"
+    end
+
+    test "users without widget update permission are forbidden", %{
+      conn: conn,
+      organization: org,
+      widget: widget,
+      user_with_role: user_with_role
+    } do
+      member = user_with_role.(:member)
+
+      upload_conn =
+        conn
+        |> assign(:current_user, member)
+        |> post("/dashboard/organizations/#{org.id}/widgets/#{widget.id}/assets", %{})
+
+      assert upload_conn.status == 403
+
+      delete_conn =
+        build_conn()
+        |> assign(:current_user, member)
+        |> delete("/dashboard/organizations/#{org.id}/widgets/#{widget.id}/assets/images/logo")
+
+      assert delete_conn.status == 403
     end
   end
 end

@@ -8,6 +8,7 @@ defmodule CastmillWeb.WidgetIntegrationControllerTest do
   import Castmill.PlaylistsFixtures
 
   alias Castmill.{Organizations, Repo}
+  alias Castmill.Widgets.Integrations
   alias Castmill.Widgets.Integrations.WidgetIntegrationData
 
   setup %{conn: conn} do
@@ -33,6 +34,107 @@ defmodule CastmillWeb.WidgetIntegrationControllerTest do
       |> put_req_header("authorization", "Bearer #{access_token.secret}")
 
     {:ok, conn: conn, organization: organization, user: user}
+  end
+
+  describe "get_widget_data/2 with widget-scoped credentials" do
+    setup %{organization: organization} do
+      suffix = System.unique_integer([:positive])
+
+      widget =
+        widget_fixture(%{
+          name: "Feed #{suffix}",
+          slug: "feed-#{suffix}",
+          template: %{"type" => "group"}
+        })
+
+      integration =
+        widget_integration_fixture(%{
+          widget_id: widget.id,
+          credential_scope: "widget",
+          discriminator_type: "widget_config",
+          discriminator_key: nil,
+          credential_schema: %{"auth_type" => "oauth2"},
+          pull_config: %{
+            "fetcher_module" => "Castmill.Widgets.Integrations.Fetchers.CredentialEchoStub"
+          }
+        })
+
+      playlist = playlist_fixture(%{organization_id: organization.id})
+
+      widget_config_for = fn ->
+        playlist_item =
+          playlist_item_fixture(%{playlist_id: playlist.id, duration: 10, offset: 0})
+
+        widget_config_fixture(%{widget_id: widget.id, playlist_item_id: playlist_item.id})
+      end
+
+      %{integration: integration, widget_config_for: widget_config_for}
+    end
+
+    test "fetches with each widget config's own credentials and persists refreshed ones", %{
+      conn: conn,
+      organization: organization,
+      integration: integration,
+      widget_config_for: widget_config_for
+    } do
+      config_a = widget_config_for.()
+      config_b = widget_config_for.()
+
+      {:ok, _} =
+        Integrations.upsert_widget_credentials(config_a.id, integration.id, %{
+          "access_token" => "token-a"
+        })
+
+      {:ok, _} =
+        Integrations.upsert_widget_credentials(config_b.id, integration.id, %{
+          "access_token" => "token-b"
+        })
+
+      conn_a = get(conn, "/dashboard/widget-configs/#{config_a.id}/data")
+      assert %{"data" => %{"token_used" => "token-a"}} = json_response(conn_a, 200)
+
+      conn_b = get(conn, "/dashboard/widget-configs/#{config_b.id}/data")
+      assert %{"data" => %{"token_used" => "token-b"}} = json_response(conn_b, 200)
+
+      # Data is stored per widget config, never shared between instances
+      assert %WidgetIntegrationData{discriminator_id: discriminator_a} =
+               Integrations.get_integration_data_by_config(config_a.id)
+
+      assert discriminator_a == "cfg:#{config_a.id}"
+
+      # Refreshed credentials returned by the fetcher are persisted per widget
+      assert {:ok, %{"access_token" => "token-a-rotated" <> _}} =
+               Integrations.get_widget_credentials(config_a.id, integration.id)
+
+      assert {:ok, %{"access_token" => "token-b-rotated" <> _}} =
+               Integrations.get_widget_credentials(config_b.id, integration.id)
+
+      # Organization-level credentials are never created for widget-scoped integrations
+      assert {:error, :not_found} =
+               Integrations.get_organization_credentials(organization.id, integration.id)
+    end
+
+    test "does not fall back to another widget config's data", %{
+      conn: conn,
+      integration: integration,
+      widget_config_for: widget_config_for
+    } do
+      connected = widget_config_for.()
+      unconnected = widget_config_for.()
+
+      {:ok, _} =
+        Integrations.upsert_widget_credentials(connected.id, integration.id, %{
+          "access_token" => "token-connected"
+        })
+
+      conn
+      |> get("/dashboard/widget-configs/#{connected.id}/data")
+      |> json_response(200)
+
+      conn = get(conn, "/dashboard/widget-configs/#{unconnected.id}/data")
+
+      assert %{"data" => nil, "status" => "no_integration"} = json_response(conn, 200)
+    end
   end
 
   describe "get_widget_data/2" do

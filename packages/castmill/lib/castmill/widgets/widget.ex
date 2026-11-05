@@ -19,6 +19,8 @@ defmodule Castmill.Widgets.Widget do
              :update_interval_seconds,
              :fonts,
              :assets,
+             :is_system,
+             :organization_id,
              :translations
            ]}
   schema "widgets" do
@@ -38,9 +40,9 @@ defmodule Castmill.Widgets.Widget do
     # Preferred aspect ratio for the widget (e.g., "16:9", "9:16", "4:3", "1:1", or "liquid" for any)
     field(:aspect_ratio, :string)
 
-    # Not sure we need this field. Widgets should be either global, per network or per organization, not sure which
-    # would be the best way to model this.
+    # System widgets are global; user-created widgets belong to an organization.
     field(:is_system, :boolean)
+    belongs_to(:organization, Castmill.Organizations.Organization, type: Ecto.UUID)
 
     # The endpoint in which the widget should ask the server for data updates.
     field(:webhook_url, :string)
@@ -80,6 +82,7 @@ defmodule Castmill.Widgets.Widget do
       :webhook_url,
       :fonts,
       :assets,
+      :organization_id,
       :translations
     ])
     |> validate_required([:name, :template])
@@ -87,6 +90,10 @@ defmodule Castmill.Widgets.Widget do
     |> unique_constraint(:slug)
     |> validate_schema(:options_schema)
     |> validate_schema(:data_schema)
+    |> validate_number(:update_interval_seconds,
+      greater_than_or_equal_to: 5,
+      less_than_or_equal_to: 3600
+    )
   end
 
   def base_query() do
@@ -95,12 +102,16 @@ defmodule Castmill.Widgets.Widget do
 
   def validate_schema(changeset, field) when is_atom(field) do
     validate_change(changeset, field, fn field, schema ->
-      case Castmill.Widgets.Schema.validate_schema(schema) do
-        {:ok, nil} ->
-          []
+      if schema == %{} do
+        []
+      else
+        case Castmill.Widgets.Schema.validate_schema(schema) do
+          {:ok, nil} ->
+            []
 
-        {:error, message} ->
-          [{field, message}]
+          {:error, message} ->
+            [{field, message}]
+        end
       end
     end)
   end

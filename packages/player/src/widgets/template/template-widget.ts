@@ -21,6 +21,7 @@ import {
   PlayerGlobals,
   PlayerRuntimeError,
 } from '../../interfaces/player-globals.interface';
+import { resolveWidgetAssets } from './assets';
 
 /**
  * Template Widget
@@ -78,7 +79,11 @@ export class TemplateWidget extends TimelineWidget {
     });
 
     this.template = TemplateComponent.fromJSON(
-      opts.widget.template,
+      resolveWidgetAssets(
+        opts.widget.template,
+        opts.widget.assets,
+        opts.widget.slug
+      ),
       resourceManager,
       this.globals,
       opts.config

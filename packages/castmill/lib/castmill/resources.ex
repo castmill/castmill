@@ -267,7 +267,8 @@ defmodule Castmill.Resources do
             data,
             organization_id,
             item.widget_config.widget.id,
-            widget_options_for_filtering
+            widget_options_for_filtering,
+            item.widget_config.id
           )
 
           # Merge integration data into the existing data field (overrides defaults)
@@ -373,7 +374,7 @@ defmodule Castmill.Resources do
 
   # Attempts to fetch data on-demand for PULL integrations when no cached data exists
   # This is called from transform_item to ensure widgets show real data on first load
-  defp try_on_demand_fetch_for_item(organization_id, _widget_config_id, widget_id, widget_options) do
+  defp try_on_demand_fetch_for_item(organization_id, widget_config_id, widget_id, widget_options) do
     alias Castmill.Widgets.Integrations
 
     # Get the widget's integration
@@ -397,7 +398,11 @@ defmodule Castmill.Resources do
                 "required"
 
             credentials =
-              case Integrations.get_fetch_credentials(organization_id, integration) do
+              case Integrations.get_scoped_credentials(
+                     integration,
+                     organization_id,
+                     widget_config_id
+                   ) do
                 {:ok, creds} -> creds
                 {:error, _} when auth_type in ["optional", "none"] -> %{}
                 {:error, _} -> nil
@@ -406,24 +411,46 @@ defmodule Castmill.Resources do
             if credentials do
               # Try to fetch data using the fetcher
               case fetch_with_module(fetcher_module_name, credentials, widget_options) do
-                {:ok, data, _creds} ->
+                {:ok, data, updated_credentials} ->
+                  Integrations.persist_refreshed_credentials(
+                    integration,
+                    organization_id,
+                    widget_config_id,
+                    credentials,
+                    updated_credentials
+                  )
+
                   # Store the data and return it
                   discriminator_id =
-                    build_discriminator_id(integration, widget_options, organization_id)
+                    build_discriminator_id(
+                      integration,
+                      widget_options,
+                      organization_id,
+                      widget_config_id
+                    )
 
                   now = DateTime.utc_now()
                   interval = integration.pull_interval_seconds || 300
 
-                  case Integrations.upsert_integration_data(%{
-                         widget_integration_id: integration.id,
-                         organization_id: organization_id,
-                         discriminator_id: discriminator_id,
-                         data: data,
-                         status: "active",
-                         fetched_at: now,
-                         refresh_at: DateTime.add(now, interval, :second),
-                         version: :os.system_time(:second)
-                       }) do
+                  attrs = %{
+                    widget_integration_id: integration.id,
+                    organization_id: organization_id,
+                    discriminator_id: discriminator_id,
+                    data: data,
+                    status: "active",
+                    fetched_at: now,
+                    refresh_at: DateTime.add(now, interval, :second),
+                    version: :os.system_time(:second)
+                  }
+
+                  # Widget-scoped data belongs to a single widget config and is
+                  # never shared with other widget instances.
+                  attrs =
+                    if Integrations.widget_scoped?(integration),
+                      do: Map.put(attrs, :widget_config_id, widget_config_id),
+                      else: attrs
+
+                  case Integrations.upsert_integration_data(attrs) do
                     {:ok, integration_data} ->
                       # Keep the data fresh from now on
                       schedule_integration_polling(
@@ -431,7 +458,8 @@ defmodule Castmill.Resources do
                         widget_id,
                         integration,
                         discriminator_id,
-                        widget_options
+                        widget_options,
+                        widget_config_id: widget_config_id
                       )
 
                       {:ok, integration_data}
@@ -468,7 +496,8 @@ defmodule Castmill.Resources do
          %Castmill.Widgets.Integrations.WidgetIntegrationData{} = data,
          organization_id,
          widget_id,
-         widget_options
+         widget_options,
+         widget_config_id
        )
        when not is_nil(organization_id) and not is_nil(widget_id) do
     alias Castmill.Widgets.Integrations
@@ -477,7 +506,12 @@ defmodule Castmill.Resources do
       [%{integration_type: "pull"} = integration | _] ->
         if pollable_integration?(integration) and refresh_due?(data, integration) do
           discriminator_id =
-            build_discriminator_id(integration, widget_options || %{}, organization_id)
+            build_discriminator_id(
+              integration,
+              widget_options || %{},
+              organization_id,
+              widget_config_id
+            )
 
           schedule_integration_polling(
             organization_id,
@@ -485,7 +519,8 @@ defmodule Castmill.Resources do
             integration,
             discriminator_id,
             widget_options || %{},
-            delay: 0
+            delay: 0,
+            widget_config_id: widget_config_id
           )
         end
 
@@ -494,7 +529,14 @@ defmodule Castmill.Resources do
     end
   end
 
-  defp maybe_schedule_refresh(_data, _organization_id, _widget_id, _widget_options), do: :ok
+  defp maybe_schedule_refresh(
+         _data,
+         _organization_id,
+         _widget_id,
+         _widget_options,
+         _widget_config_id
+       ),
+       do: :ok
 
   defp pollable_integration?(integration) do
     is_binary(Map.get(integration.pull_config || %{}, "fetcher_module"))
@@ -521,6 +563,11 @@ defmodule Castmill.Resources do
        ) do
     delay = Keyword.get(opts, :delay, integration.pull_interval_seconds || 30)
 
+    # Widget-scoped integrations poll with the widget config's own credentials
+    widget_config_id =
+      if Castmill.Widgets.Integrations.widget_scoped?(integration),
+        do: Keyword.get(opts, :widget_config_id)
+
     schedule_fn = fn ->
       try do
         Castmill.Workers.IntegrationPoller.schedule_poll(
@@ -529,7 +576,8 @@ defmodule Castmill.Resources do
             widget_id: widget_id,
             integration_id: integration.id,
             discriminator_id: discriminator_id,
-            widget_options: widget_options
+            widget_options: widget_options,
+            widget_config_id: widget_config_id
           },
           delay: delay
         )
@@ -576,7 +624,19 @@ defmodule Castmill.Resources do
     end
   end
 
-  defp build_discriminator_id(integration, options, organization_id) do
+  # Widget-scoped integrations fetch a different account per widget instance,
+  # so their data must never be shared between widget configs.
+  defp build_discriminator_id(
+         %{credential_scope: "widget"},
+         _options,
+         _organization_id,
+         widget_config_id
+       )
+       when not is_nil(widget_config_id) do
+    "cfg:#{widget_config_id}"
+  end
+
+  defp build_discriminator_id(integration, options, organization_id, _widget_config_id) do
     Castmill.Widgets.Integrations.build_discriminator_id(
       integration,
       options,

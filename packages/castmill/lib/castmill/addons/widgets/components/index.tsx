@@ -1,5 +1,9 @@
-import { BsEye, BsTrash } from 'solid-icons/bs';
-import { AiOutlineUpload } from 'solid-icons/ai';
+import { BsEye, BsTrash, BsPencil } from 'solid-icons/bs';
+import {
+  AiOutlineUpload,
+  AiOutlinePlusCircle,
+  AiOutlineCopy,
+} from 'solid-icons/ai';
 import {
   Component,
   createSignal,
@@ -23,6 +27,8 @@ import {
   ModalRef,
   Tabs,
   ConfirmDialog,
+  ToastProvider,
+  useToast,
 } from '@castmill/ui-common';
 import { JsonWidget } from '@castmill/player';
 import { WidgetsService, WidgetUsage } from '../services/widgets.service';
@@ -30,6 +36,7 @@ import { UploadComponent } from './upload';
 import { JsonHighlight } from './json-highlight';
 import { AssetsList } from './assets-list';
 import { IntegrationsList } from '../../common/components/integrations-list';
+import { WidgetEditor } from './widget-editor';
 
 import { DEFAULT_WIDGET_ICON } from '../../common/constants';
 import './widgets.scss';
@@ -46,6 +53,7 @@ const WidgetsPage: Component<{
   store: AddonStore;
   params: any;
 }> = (props) => {
+  const toast = useToast();
   // Get i18n functions from store
   const t = (key: string, params?: Record<string, any>) =>
     props.store.i18n?.t(key, params) || key;
@@ -75,6 +83,12 @@ const WidgetsPage: Component<{
   >();
   const [initialTabIndex, setInitialTabIndex] = createSignal(0);
   const [widgetHasIntegrations, setWidgetHasIntegrations] = createSignal(false);
+
+  // Widget editor state
+  const [showEditor, setShowEditor] = createSignal(false);
+  const [editorWidget, setEditorWidget] = createSignal<
+    WidgetWithId | undefined
+  >();
 
   // Delete confirmation state
   const [showDeleteConfirm, setShowDeleteConfirm] = createSignal(false);
@@ -374,6 +388,56 @@ const WidgetsPage: Component<{
     setShowUploadModal(true);
   };
 
+  // Widget editor handlers
+  const openEditorForNew = () => {
+    batch(() => {
+      setEditorWidget(undefined);
+      setShowEditor(true);
+    });
+  };
+
+  const openEditorForWidget = (widget: WidgetWithId) => {
+    batch(() => {
+      setEditorWidget(widget);
+      setShowEditor(true);
+    });
+  };
+
+  const closeEditor = () => {
+    batch(() => {
+      setShowEditor(false);
+      setEditorWidget(undefined);
+    });
+  };
+
+  const handleEditorSave = (_savedWidget: JsonWidget) => {
+    refreshData();
+    closeEditor();
+  };
+
+  const handleCloneWidget = async (widget: WidgetWithId) => {
+    try {
+      const clonedWidget = await WidgetsService.cloneWidget(
+        props.store.env.baseUrl,
+        props.store.organizations.selectedId,
+        widget.id
+      );
+      refreshData();
+      batch(() => {
+        setEditorWidget(clonedWidget as WidgetWithId);
+        setShowEditor(true);
+      });
+      toast.success(t('widgets.editor.clonedSuccess'), 3000);
+    } catch (error) {
+      toast.error(
+        t('widgets.editor.cloneError', {
+          error: error instanceof Error ? error.message : String(error),
+        }),
+        5000
+      );
+    }
+  };
+
   // Delete handlers
   const openDeleteConfirm = async (widget: WidgetWithId) => {
     setWidgetToDelete(widget);
@@ -548,12 +612,38 @@ const WidgetsPage: Component<{
       icon: BsEye,
       handler: (widget: WidgetWithId) => openWidgetDrawer(widget),
     },
+    // Edit action if user has update permission
+    ...(canPerformAction('widgets', 'update')
+      ? [
+          {
+            label: t('widgets.editor.editWidget'),
+            icon: BsPencil,
+            hidden: (widget: WidgetWithId) =>
+              !!widget.is_system ||
+              widget.organization_id !== props.store.organizations.selectedId,
+            handler: (widget: WidgetWithId) => openEditorForWidget(widget),
+          },
+        ]
+      : []),
+    // Clone action if user has create permission
+    ...(canPerformAction('widgets', 'create')
+      ? [
+          {
+            label: t('widgets.editor.cloneWidget'),
+            icon: AiOutlineCopy,
+            handler: (widget: WidgetWithId) => handleCloneWidget(widget),
+          },
+        ]
+      : []),
     // Only include delete action if user has delete permission
     ...(canPerformAction('widgets', 'delete')
       ? [
           {
             label: t('widgets.delete'),
             icon: BsTrash,
+            hidden: (widget: WidgetWithId) =>
+              !!widget.is_system ||
+              widget.organization_id !== props.store.organizations.selectedId,
             handler: (widget: WidgetWithId) => openDeleteConfirm(widget),
           },
         ]
@@ -562,6 +652,16 @@ const WidgetsPage: Component<{
 
   return (
     <div class="widgets-page">
+      {/* Widget Editor overlay */}
+      <Show when={showEditor()}>
+        <WidgetEditor
+          store={props.store}
+          widget={editorWidget()}
+          onSave={handleEditorSave}
+          onCancel={closeEditor}
+        />
+      </Show>
+
       {/* Delete confirmation dialog */}
       <ConfirmDialog
         show={showDeleteConfirm()}
@@ -667,13 +767,22 @@ const WidgetsPage: Component<{
         toolbar={{
           searchPlaceholder: t('common.search'),
           mainAction: (
-            <Button
-              label={t('widgets.uploadWidget')}
-              onClick={openUploadModal}
-              icon={AiOutlineUpload}
-              color="primary"
-              disabled={!canPerformAction('widgets', 'create')}
-            />
+            <div style={{ display: 'flex', gap: '0.5em' }}>
+              <Button
+                label={t('widgets.editor.newWidget')}
+                onClick={openEditorForNew}
+                icon={AiOutlinePlusCircle}
+                color="primary"
+                disabled={!canPerformAction('widgets', 'create')}
+              />
+              <Button
+                label={t('widgets.uploadWidget')}
+                onClick={openUploadModal}
+                icon={AiOutlineUpload}
+                color="secondary"
+                disabled={!canPerformAction('widgets', 'create')}
+              />
+            </div>
           ),
         }}
         table={{
@@ -692,4 +801,16 @@ const WidgetsPage: Component<{
   );
 };
 
-export default WidgetsPage;
+// Wrap the component with ToastProvider so WidgetEditor can call useToast()
+const WidgetsPageWithToast: Component<{
+  store: AddonStore;
+  params: any;
+}> = (props) => {
+  return (
+    <ToastProvider>
+      <WidgetsPage {...props} />
+    </ToastProvider>
+  );
+};
+
+export default WidgetsPageWithToast;
