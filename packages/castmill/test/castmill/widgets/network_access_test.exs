@@ -145,6 +145,23 @@ defmodule Castmill.Widgets.NetworkAccessTest do
       assert available?(ctx.org_a, ctx.system)
       assert hd(list(ctx, %{kind: "system"}).entries).in_use_count == 1
     end
+
+    test "validates usage only in the network whose policy changes", ctx do
+      use_widget(ctx.org_x, ctx.system)
+
+      Castmill.Repo.insert!(%Castmill.Widgets.NetworkWidgetPolicy{
+        network_id: ctx.other_network.id,
+        widget_id: ctx.system.id,
+        mode: "hidden"
+      })
+
+      refute available?(ctx.org_x, ctx.system)
+
+      assert {:ok, %{access: "hidden"}} =
+               NetworkAccess.set_access(ctx.network.id, ctx.system.id, "hidden")
+
+      refute available?(ctx.org_a, ctx.system)
+    end
   end
 
   describe "selected organizations" do

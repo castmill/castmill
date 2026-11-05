@@ -49,14 +49,21 @@ export const WidgetOrganizations: Component<{
   const [total, setTotal] = createSignal(0);
   const [counts, setCounts] = createSignal({ total: 0, enabled: 0 });
   const [loading, setLoading] = createSignal(true);
+  const [resultsReady, setResultsReady] = createSignal(false);
   const [saving, setSaving] = createSignal<Set<string>>(new Set());
   const [selected, setSelected] = createSignal<Set<string>>(new Set());
-  const [bulkAction, setBulkAction] = createSignal<BulkAction | null>(null);
+  const [bulkAction, setBulkAction] = createSignal<{
+    action: BulkAction;
+    search: string;
+    count: number;
+  } | null>(null);
   const [bulkSaving, setBulkSaving] = createSignal(false);
   let clearTableSelection: (() => void) | undefined;
   let debounce: ReturnType<typeof setTimeout> | undefined;
   let generation = 0;
-  let latestUpdate = 0;
+  const mutationPending = () => saving().size > 0 || bulkSaving();
+  const resultsPending = () =>
+    loading() || !resultsReady() || searchInput().trim() !== search();
 
   onCleanup(() => clearTimeout(debounce));
 
@@ -68,6 +75,7 @@ export const WidgetOrganizations: Component<{
   const load = async () => {
     const current = ++generation;
     setLoading(true);
+    setResultsReady(false);
     try {
       const result = await NetworkService.listWidgetOrganizations(
         props.widget.id,
@@ -82,9 +90,18 @@ export const WidgetOrganizations: Component<{
         }
       );
       if (current !== generation) return;
+      const lastPage = Math.max(
+        1,
+        Math.ceil(result.pagination.total_count / ORGANIZATIONS_PAGE_SIZE)
+      );
+      if (page() > lastPage) {
+        setPage(lastPage);
+        return;
+      }
       setRows(result.data);
       setTotal(result.pagination.total_count);
       setCounts(result.counts);
+      setResultsReady(true);
       clearSelection();
     } catch {
       if (current === generation) {
@@ -132,10 +149,8 @@ export const WidgetOrganizations: Component<{
     organization.enabled && organization.in_use;
 
   const toggle = async (organization: NetworkWidgetOrganization) => {
-    if (saving().has(organization.id) || bulkSaving() || locked(organization))
-      return;
+    if (mutationPending() || resultsPending() || locked(organization)) return;
     const enabled = !organization.enabled;
-    const request = ++latestUpdate;
 
     markSaving(organization.id, true);
     setRowEnabled(organization.id, enabled);
@@ -149,7 +164,8 @@ export const WidgetOrganizations: Component<{
         props.widget.id,
         enabled ? { enable: [organization.id] } : { disable: [organization.id] }
       );
-      if (request === latestUpdate) props.onWidgetChange(updated);
+      props.onWidgetChange(updated);
+      await load();
     } catch (error) {
       setRowEnabled(organization.id, !enabled);
       setCounts((current) => ({
@@ -165,8 +181,8 @@ export const WidgetOrganizations: Component<{
   const applyChanges = async (
     changes: Parameters<typeof NetworkService.updateWidgetOrganizations>[1]
   ) => {
+    if (mutationPending()) return;
     setBulkSaving(true);
-    latestUpdate++;
     try {
       const updated = await NetworkService.updateWidgetOrganizations(
         props.widget.id,
@@ -182,6 +198,7 @@ export const WidgetOrganizations: Component<{
   };
 
   const applySelected = (action: BulkAction) => {
+    if (mutationPending() || resultsPending()) return;
     const ids = [...selected()];
     const pending = rows().filter(
       (org) => ids.includes(org.id) && org.enabled !== (action === 'enable')
@@ -202,13 +219,18 @@ export const WidgetOrganizations: Component<{
     if (!action) return;
     void applyChanges({
       all_matching: true,
-      enabled: action === 'enable',
-      search: search() || undefined,
+      enabled: action.action === 'enable',
+      search: action.search || undefined,
     });
   };
 
   const matchingCount = (action: BulkAction) =>
     action === 'enable' ? counts().total - counts().enabled : counts().enabled;
+
+  const confirmMatching = (action: BulkAction) => {
+    if (mutationPending() || resultsPending()) return;
+    setBulkAction({ action, search: search(), count: matchingCount(action) });
+  };
 
   const statusOptions = (): {
     value: StatusFilter;
@@ -282,9 +304,7 @@ export const WidgetOrganizations: Component<{
               : undefined
           }
           disabled={
-            locked(organization) ||
-            saving().has(organization.id) ||
-            bulkSaving()
+            locked(organization) || mutationPending() || resultsPending()
           }
           onClick={() => void toggle(organization)}
         >
@@ -352,8 +372,12 @@ export const WidgetOrganizations: Component<{
           <button
             type="button"
             class={styles['text-button']}
-            disabled={bulkSaving() || matchingCount('enable') === 0}
-            onClick={() => setBulkAction('enable')}
+            disabled={
+              mutationPending() ||
+              resultsPending() ||
+              matchingCount('enable') === 0
+            }
+            onClick={() => confirmMatching('enable')}
           >
             {t('network.widgets.organizations.enableAll', {
               count: matchingCount('enable'),
@@ -362,8 +386,12 @@ export const WidgetOrganizations: Component<{
           <button
             type="button"
             class={`${styles['text-button']} ${styles['text-button-danger']}`}
-            disabled={bulkSaving() || matchingCount('disable') === 0}
-            onClick={() => setBulkAction('disable')}
+            disabled={
+              mutationPending() ||
+              resultsPending() ||
+              matchingCount('disable') === 0
+            }
+            onClick={() => confirmMatching('disable')}
           >
             {t('network.widgets.organizations.disableAll', {
               count: matchingCount('disable'),
@@ -426,7 +454,7 @@ export const WidgetOrganizations: Component<{
         <button
           type="button"
           class={styles['text-button']}
-          disabled={bulkSaving()}
+          disabled={mutationPending() || resultsPending()}
           onClick={() => applySelected('enable')}
         >
           {t('network.widgets.organizations.enableSelected')}
@@ -434,35 +462,35 @@ export const WidgetOrganizations: Component<{
         <button
           type="button"
           class={`${styles['text-button']} ${styles['text-button-danger']}`}
-          disabled={bulkSaving()}
+          disabled={mutationPending() || resultsPending()}
           onClick={() => applySelected('disable')}
         >
           {t('network.widgets.organizations.disableSelected')}
         </button>
       </SelectionActionBar>
 
-      <Show when={bulkAction()}>
+      <Show when={bulkAction()} keyed>
         {(action) => (
           <ConfirmAccessChange
             title={t(
-              action() === 'enable'
+              action.action === 'enable'
                 ? 'network.widgets.confirm.enableAllTitle'
                 : 'network.widgets.confirm.disableAllTitle',
-              { count: matchingCount(action()) }
+              { count: action.count }
             )}
             message={t(
-              action() === 'enable'
+              action.action === 'enable'
                 ? 'network.widgets.confirm.enableAllMessage'
                 : 'network.widgets.confirm.disableAllMessage',
               { widget: props.widgetLabel }
             )}
             confirmLabel={t(
-              action() === 'enable'
+              action.action === 'enable'
                 ? 'network.widgets.confirm.enableAction'
                 : 'network.widgets.confirm.disableAction'
             )}
             cancelLabel={t('common.cancel')}
-            danger={action() === 'disable'}
+            danger={action.action === 'disable'}
             onConfirm={applyMatching}
             onClose={() => setBulkAction(null)}
           />

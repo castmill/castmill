@@ -372,7 +372,8 @@ defmodule Castmill.Devices do
     # Add a default entry to the playlist (we will add the Intro widget)
     widget = Castmill.Widgets.get_widget_by_slug("intro")
 
-    if widget != nil do
+    if widget != nil and
+         Castmill.Widgets.available?(organization_id, widget.id, lock: true) do
       {:ok, _item} =
         Castmill.Resources.insert_item_into_playlist(
           playlist.id,

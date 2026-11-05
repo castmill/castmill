@@ -195,6 +195,105 @@ defmodule Castmill.Widgets.ScopeTest do
   end
 
   describe "scope changes" do
+    test "reloads scope after locking when the caller has a stale struct", ctx do
+      assert {:ok, %Widget{restricted: true}} =
+               Widgets.set_widget_scope(ctx.system, %{restricted: true})
+
+      assert {:ok, %Widget{restricted: false}} =
+               Widgets.set_widget_scope(ctx.system, %{restricted: false})
+
+      refute Repo.get!(Widget, ctx.system.id).restricted
+      assert Widgets.available?(ctx.org_a.id, ctx.system.id)
+    end
+
+    test "validates all organizations using a widget in one query", ctx do
+      organizations =
+        [ctx.org_a, ctx.org_b, ctx.org_x] ++
+          for index <- 1..10 do
+            organization_fixture(%{network_id: ctx.network.id, name: "User #{index}"})
+          end
+
+      for organization <- organizations do
+        assert {:ok, _} = add_to_playlist(organization, ctx.system)
+      end
+
+      assert {:ok, _} = add_to_playlist(ctx.org_a, ctx.system)
+
+      widget = ctx.system |> Ecto.Changeset.change(restricted: true) |> Repo.update!()
+      ref = make_ref()
+      handler_id = {__MODULE__, ref}
+
+      :ok =
+        :telemetry.attach(
+          handler_id,
+          [:castmill, :repo, :query],
+          fn _event, _measurements, _metadata, pid ->
+            if self() == pid, do: send(pid, {:availability_query, ref})
+          end,
+          self()
+        )
+
+      on_exit(fn -> :telemetry.detach(handler_id) end)
+
+      assert {:error, {:in_use, in_use}} = Widgets.ensure_users_keep_access(widget)
+      assert Enum.sort(in_use) == Enum.sort(Enum.map(organizations, & &1.id))
+      assert_receive {:availability_query, ^ref}
+      refute_receive {:availability_query, ^ref}
+    end
+
+    test "set-based validation matches availability across platform grants and network policies",
+         ctx do
+      organizations = [ctx.org_a, ctx.org_b, ctx.org_x]
+
+      cases = [
+        {false, nil, []},
+        {false, "selected", [ctx.org_b.id]},
+        {false, "except", [ctx.org_a.id]},
+        {false, "hidden", [ctx.org_a.id, ctx.org_b.id]},
+        {true, nil, [ctx.org_b.id]},
+        {true, "selected", [ctx.org_b.id]},
+        {true, "except", [ctx.org_a.id, ctx.org_b.id]},
+        {true, "hidden", [ctx.org_a.id, ctx.org_b.id]}
+      ]
+
+      for {restricted, mode, unavailable_ids} <- cases do
+        widget = widget_fixture()
+
+        for organization <- organizations do
+          assert {:ok, _} = add_to_playlist(organization, widget)
+        end
+
+        for organization <- [ctx.org_a, ctx.org_x] do
+          {:ok, _} = Widgets.enable_widget_for_organization(widget, organization.id)
+        end
+
+        if mode do
+          Repo.insert!(%Castmill.Widgets.NetworkWidgetPolicy{
+            network_id: ctx.network.id,
+            widget_id: widget.id,
+            mode: mode
+          })
+
+          Repo.insert!(%Castmill.Widgets.NetworkWidgetOrganization{
+            widget_id: widget.id,
+            organization_id: ctx.org_a.id
+          })
+        end
+
+        widget = widget |> Ecto.Changeset.change(restricted: restricted) |> Repo.update!()
+
+        for organization <- organizations do
+          expected_available = organization.id not in unavailable_ids
+          assert Widgets.available?(organization.id, widget.id) == expected_available
+        end
+
+        case Widgets.ensure_users_keep_access(widget) do
+          :ok -> assert unavailable_ids == []
+          {:error, {:in_use, ids}} -> assert Enum.sort(ids) == Enum.sort(unavailable_ids)
+        end
+      end
+    end
+
     test "are refused while organizations using the widget would lose access", ctx do
       {:ok, _} = add_to_playlist(ctx.org_a, ctx.network_widget)
       {:ok, _} = add_to_playlist(ctx.org_b, ctx.network_widget)

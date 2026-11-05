@@ -113,7 +113,7 @@ const NetworkWidgets: Component = () => {
     widgets.setItems((items) =>
       items.map((widget) => (widget.id === updated.id ? updated : widget))
     );
-    setSelected(updated);
+    if (selected()?.id === updated.id) setSelected(updated);
   };
 
   const onListKeyDown = (event: KeyboardEvent) => {
@@ -151,7 +151,7 @@ const NetworkWidgets: Component = () => {
   };
 
   const isFocusable = (widget: NetworkWidgetAccess) =>
-    selected()
+    widgets.items().some((item) => item.id === selected()?.id)
       ? selected()!.id === widget.id
       : widgets.items()[0]?.id === widget.id;
 

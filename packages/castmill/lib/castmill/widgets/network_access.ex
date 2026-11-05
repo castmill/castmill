@@ -216,8 +216,7 @@ defmodule Castmill.Widgets.NetworkAccess do
           write_policy(network_id, widget, mode, enabled_ids(network_id, widget, state))
 
         mode == "except" ->
-          excluded =
-            eligible_ids(network_id, widget) -- enabled_ids(network_id, widget, state)
+          excluded = eligible_ids(network_id, widget) -- enabled_ids(network_id, widget, state)
 
           write_policy(network_id, widget, mode, excluded)
       end
@@ -272,7 +271,8 @@ defmodule Castmill.Widgets.NetworkAccess do
            _ <- lock(id),
            %Widget{} = widget <- get_managed_widget(network_id, id),
            :ok <- change.(widget),
-           :ok <- Widgets.ensure_users_keep_access(Repo.get!(Widget, id)) do
+           :ok <-
+             Widgets.ensure_users_keep_access(Repo.get!(Widget, id), network_id: network_id) do
         get_widget(network_id, id)
       else
         {:error, reason} -> Repo.rollback(reason)
@@ -383,8 +383,7 @@ defmodule Castmill.Widgets.NetworkAccess do
 
   # Network widgets restricted through `widgets_organizations` (owner restriction).
   defp state(_network_id, %Widget{is_system: false, restricted: true} = widget) do
-    selected? =
-      Repo.exists?(from(wo in WidgetOrganization, where: wo.widget_id == ^widget.id))
+    selected? = Repo.exists?(from(wo in WidgetOrganization, where: wo.widget_id == ^widget.id))
 
     %{mode: if(selected?, do: "selected", else: "hidden"), owner_restricted: true}
   end

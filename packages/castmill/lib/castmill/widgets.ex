@@ -318,40 +318,35 @@ defmodule Castmill.Widgets do
   or unknown organization ids yield an empty query.
   """
   def available_query(organization_id) do
-    with {:ok, organization_id} <- Ecto.UUID.cast(organization_id),
-         network_id when not is_nil(network_id) <- organization_network_id(organization_id) do
-      enabled =
-        from(wo in WidgetOrganization,
-          where: wo.organization_id == ^organization_id,
-          select: wo.widget_id
-        )
-
-      policy = fn mode ->
-        from(p in Castmill.Widgets.NetworkWidgetPolicy,
-          where: p.network_id == ^network_id and p.mode == ^mode,
-          select: p.widget_id
-        )
-      end
-
-      listed =
-        from(nwo in Castmill.Widgets.NetworkWidgetOrganization,
-          where: nwo.organization_id == ^organization_id,
-          select: nwo.widget_id
-        )
-
-      from(w in Widget,
-        as: :widget,
-        where:
-          w.organization_id == ^organization_id or
-            ((w.is_system == true or w.network_id == ^network_id) and
-               (w.restricted == false or w.id in subquery(enabled)) and
-               w.id not in subquery(policy.("hidden")) and
-               (w.id not in subquery(policy.("selected")) or w.id in subquery(listed)) and
-               (w.id not in subquery(policy.("except")) or w.id not in subquery(listed)))
-      )
+    with {:ok, organization_id} <- Ecto.UUID.cast(organization_id) do
+      available_to_organizations_query()
+      |> where([organization: o], o.id == ^organization_id)
     else
       _ -> from(w in Widget, as: :widget, where: false)
     end
+  end
+
+  defp available_to_organizations_query do
+    from(w in Widget,
+      as: :widget,
+      join: o in Castmill.Organizations.Organization,
+      as: :organization,
+      on: true,
+      left_join: wo in WidgetOrganization,
+      on: wo.widget_id == w.id and wo.organization_id == o.id,
+      left_join: policy in Castmill.Widgets.NetworkWidgetPolicy,
+      on: policy.widget_id == w.id and policy.network_id == o.network_id,
+      left_join: listed in Castmill.Widgets.NetworkWidgetOrganization,
+      on: listed.widget_id == w.id and listed.organization_id == o.id,
+      where: not is_nil(o.network_id),
+      where:
+        w.organization_id == o.id or
+          ((w.is_system == true or w.network_id == o.network_id) and
+             (w.restricted == false or not is_nil(wo.widget_id)) and
+             (is_nil(policy.mode) or policy.mode != "hidden") and
+             (is_nil(policy.mode) or policy.mode != "selected" or not is_nil(listed.widget_id)) and
+             (is_nil(policy.mode) or policy.mode != "except" or is_nil(listed.widget_id)))
+    )
   end
 
   defp organization_network_id(organization_id) do
@@ -506,6 +501,7 @@ defmodule Castmill.Widgets do
   def set_widget_scope(%Widget{} = widget, attrs) do
     Repo.transaction(fn ->
       lock_widget!(widget.id)
+      widget = Repo.get!(Widget, widget.id)
 
       with {:ok, updated} <- widget |> Widget.scope_changeset(attrs) |> Repo.update(),
            :ok <- ensure_users_keep_access(updated) do
@@ -596,12 +592,37 @@ defmodule Castmill.Widgets do
   @doc false
   # Fails with {:error, {:in_use, organization_ids}} when organizations whose playlists
   # use the widget can no longer use it. Call inside the transaction that changed access.
-  def ensure_users_keep_access(%Widget{} = widget) do
-    case Enum.reject(organizations_using_widget(widget.id), &available?(&1, widget.id)) do
+  def ensure_users_keep_access(%Widget{} = widget, opts \\ []) do
+    network_id = Keyword.get(opts, :network_id)
+
+    available_organizations =
+      available_to_organizations_query()
+      |> where([widget: w], w.id == ^widget.id)
+      |> where_organization_network(network_id)
+      |> select([organization: o], o.id)
+
+    users =
+      from(wc in WidgetConfig,
+        join: pi in assoc(wc, :playlist_item),
+        join: p in assoc(pi, :playlist),
+        join: o in Castmill.Organizations.Organization,
+        as: :organization,
+        on: o.id == p.organization_id,
+        where: wc.widget_id == ^widget.id and o.id not in subquery(available_organizations),
+        distinct: true,
+        select: o.id
+      )
+
+    case users |> where_organization_network(network_id) |> Repo.all() do
       [] -> :ok
       organization_ids -> {:error, {:in_use, organization_ids}}
     end
   end
+
+  defp where_organization_network(query, nil), do: query
+
+  defp where_organization_network(query, network_id),
+    do: where(query, [organization: o], o.network_id == ^network_id)
 
   @doc false
   def lock_widget!(widget_id) do

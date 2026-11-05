@@ -499,6 +499,217 @@ describe('NetworkWidgets', () => {
     );
   });
 
+  it('does not reselect a widget when its save finishes after selection changes', async () => {
+    let finish!: (value: NetworkWidgetAccess) => void;
+    vi.mocked(NetworkService.setWidgetAccess).mockReturnValue(
+      new Promise((resolve) => (finish = resolve))
+    );
+    renderPage();
+    fireEvent.click(await screen.findByRole('radio', { name: /^All except/ }));
+    await selectWidget(/Realty/);
+
+    finish({ ...weather, access: 'except' });
+
+    await waitFor(() =>
+      expect(screen.getByRole('option', { name: /Weather/ })).toHaveTextContent(
+        'All except'
+      )
+    );
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'Realty' })
+    ).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: /Realty/ })).toHaveAttribute(
+      'aria-selected',
+      'true'
+    );
+  });
+
+  it('keeps the first filtered widget keyboard-focusable when selection is absent', async () => {
+    renderPage();
+    await screen.findByRole('heading', { level: 2, name: 'Weather' });
+    vi.mocked(NetworkService.listWidgetAccess).mockResolvedValue(
+      widgetPage([realty, spotify])
+    );
+    fireEvent.input(screen.getByPlaceholderText('Search widgets'), {
+      target: { value: 'real' },
+    });
+
+    await waitFor(() =>
+      expect(screen.queryByRole('option', { name: /Weather/ })).toBeNull()
+    );
+    expect(screen.getByRole('option', { name: /Realty/ })).toHaveAttribute(
+      'tabindex',
+      '0'
+    );
+    expect(screen.getByRole('option', { name: /Spotify/ })).toHaveAttribute(
+      'tabindex',
+      '-1'
+    );
+  });
+
+  it('blocks bulk actions until the debounced organization results finish loading', async () => {
+    let finish!: (value: NetworkWidgetOrganizationList) => void;
+    renderPage();
+    await accessSwitch('Beta');
+    vi.mocked(NetworkService.listWidgetOrganizations).mockReturnValue(
+      new Promise((resolve) => (finish = resolve))
+    );
+    fireEvent.input(screen.getByPlaceholderText('Search organizations'), {
+      target: { value: 'Beta' },
+    });
+    const disable = screen.getByRole('button', { name: 'Disable all (3)' });
+    expect(disable).toBeDisabled();
+    await waitFor(() =>
+      expect(NetworkService.listWidgetOrganizations).toHaveBeenLastCalledWith(
+        1,
+        expect.objectContaining({ search: 'Beta' })
+      )
+    );
+    expect(disable).toBeDisabled();
+    finish({
+      ...organizationPage([beta]),
+      counts: { total: 1, enabled: 1 },
+    });
+    expect(
+      await screen.findByRole('button', { name: 'Disable all (1)' })
+    ).toBeEnabled();
+  });
+
+  it('keeps the confirmed organization search and count when results change', async () => {
+    renderPage();
+    await accessSwitch('Beta');
+    vi.mocked(NetworkService.listWidgetOrganizations).mockResolvedValue({
+      ...organizationPage([beta]),
+      counts: { total: 1, enabled: 1 },
+    });
+    const search = screen.getByPlaceholderText('Search organizations');
+    fireEvent.input(search, { target: { value: 'Beta' } });
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'Disable all (1)' })
+    );
+    vi.mocked(NetworkService.listWidgetOrganizations).mockResolvedValue(
+      organizationPage([alpha, beta, gamma])
+    );
+    fireEvent.input(search, { target: { value: '' } });
+    await waitFor(() =>
+      expect(NetworkService.listWidgetOrganizations).toHaveBeenLastCalledWith(
+        1,
+        expect.objectContaining({ search: undefined })
+      )
+    );
+    expect(screen.getByText('Disable 1 organizations?')).toBeInTheDocument();
+    vi.mocked(NetworkService.updateWidgetOrganizations).mockResolvedValue(
+      weather
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Disable' }));
+    await waitFor(() =>
+      expect(NetworkService.updateWidgetOrganizations).toHaveBeenCalledWith(1, {
+        all_matching: true,
+        enabled: false,
+        search: 'Beta',
+      })
+    );
+  });
+
+  it('does not allow bulk actions on stale results after a search fails', async () => {
+    renderPage();
+    await accessSwitch('Beta');
+    vi.mocked(NetworkService.listWidgetOrganizations).mockRejectedValue(
+      new Error('offline')
+    );
+    fireEvent.input(screen.getByPlaceholderText('Search organizations'), {
+      target: { value: 'Beta' },
+    });
+    await waitFor(() =>
+      expect(toastSpies.error).toHaveBeenCalledWith(
+        'Failed to load organizations.'
+      )
+    );
+    expect(
+      screen.getByRole('button', { name: 'Disable all (3)' })
+    ).toBeDisabled();
+    expect(NetworkService.updateWidgetOrganizations).not.toHaveBeenCalled();
+  });
+
+  it('serializes row and bulk saves and allows another save after a failure', async () => {
+    let fail!: (reason: Error) => void;
+    vi.mocked(NetworkService.updateWidgetOrganizations).mockReturnValueOnce(
+      new Promise((_, reject) => (fail = reject))
+    );
+    renderPage();
+    fireEvent.click(await accessSwitch('Beta'));
+    expect(await accessSwitch('Gamma')).toBeDisabled();
+    expect(screen.getByRole('button', { name: /^Disable all/ })).toBeDisabled();
+    fireEvent.click(await accessSwitch('Gamma'));
+    expect(NetworkService.updateWidgetOrganizations).toHaveBeenCalledTimes(1);
+
+    fail(new Error('offline'));
+    await waitFor(async () =>
+      expect(await accessSwitch('Gamma')).toBeEnabled()
+    );
+    expect(await accessSwitch('Beta')).toHaveAttribute('aria-checked', 'true');
+    vi.mocked(NetworkService.updateWidgetOrganizations).mockResolvedValue({
+      ...weather,
+      access: 'except',
+      enabled_count: 2,
+    });
+    vi.mocked(NetworkService.listWidgetOrganizations).mockResolvedValue({
+      ...organizationPage([alpha, beta, { ...gamma, enabled: false }]),
+      counts: { total: 3, enabled: 2 },
+    });
+    fireEvent.click(await accessSwitch('Gamma'));
+    await waitFor(() =>
+      expect(
+        screen.getByRole('radio', { name: /^All except/ })
+      ).toHaveAttribute('aria-checked', 'true')
+    );
+    expect(await accessSwitch('Gamma')).toHaveAttribute(
+      'aria-checked',
+      'false'
+    );
+  });
+
+  it('refetches the last valid page when a save removes the final filtered row', async () => {
+    vi.mocked(NetworkService.listWidgetOrganizations).mockResolvedValue(
+      organizationPage([beta], 21)
+    );
+    renderPage();
+    await accessSwitch('Beta');
+    fireEvent.click(screen.getByRole('button', { name: /^Can use/ }));
+    await waitFor(() =>
+      expect(NetworkService.listWidgetOrganizations).toHaveBeenLastCalledWith(
+        1,
+        expect.objectContaining({ page: 1, status: 'enabled' })
+      )
+    );
+    fireEvent.click(screen.getByRole('button', { name: '2' }));
+    await waitFor(() =>
+      expect(NetworkService.listWidgetOrganizations).toHaveBeenLastCalledWith(
+        1,
+        expect.objectContaining({ page: 2 })
+      )
+    );
+    vi.mocked(NetworkService.updateWidgetOrganizations).mockResolvedValue({
+      ...weather,
+      access: 'except',
+    });
+    vi.mocked(NetworkService.listWidgetOrganizations).mockImplementation(
+      async (_, options) =>
+        organizationPage(options?.page === 2 ? [] : [gamma], 20)
+    );
+    await waitFor(async () => expect(await accessSwitch('Beta')).toBeEnabled());
+    fireEvent.click(await accessSwitch('Beta'));
+
+    await waitFor(() =>
+      expect(NetworkService.listWidgetOrganizations).toHaveBeenLastCalledWith(
+        1,
+        expect.objectContaining({ page: 1, status: 'enabled' })
+      )
+    );
+    expect(await accessSwitch('Gamma')).toBeInTheDocument();
+    expect(screen.getByText('1–20 of 20')).toBeInTheDocument();
+  });
+
   it('reports load failures', async () => {
     vi.mocked(NetworkService.listWidgetAccess).mockRejectedValue(
       new Error('offline')
