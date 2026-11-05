@@ -64,8 +64,16 @@ function zonesToContainers(
   });
 }
 
+const maxDuration = (playlists: Playlist[]) =>
+  playlists.reduce((acc, playlist) => {
+    const duration = playlist.duration();
+    return Number.isFinite(duration) ? Math.max(acc, duration) : acc;
+  }, 0);
+
 export class LayoutComponent implements TemplateComponent {
   private playlists: Playlist[] = [];
+  private renderedPlaylists = new Set<Playlist>();
+  private lastRenderedDuration = 0;
 
   readonly type = TemplateComponentType.Layout;
 
@@ -78,10 +86,25 @@ export class LayoutComponent implements TemplateComponent {
   ) {}
 
   resolveDuration(medias: { [index: string]: string }): number {
-    return this.playlists.reduce(
-      (acc: number, playlist: Playlist) => Math.max(acc, playlist.duration()),
-      0
-    );
+    // Only rendered playlists learn their items' real durations (e.g. video
+    // lengths after metadata loads); the JSON copies keep default durations.
+    const rendered = maxDuration([...this.renderedPlaylists]);
+    if (rendered > 0) {
+      this.lastRenderedDuration = rendered;
+      return rendered;
+    }
+    return this.lastRenderedDuration || maxDuration(this.playlists);
+  }
+
+  /**
+   * Registers a playlist rendered by a layout container so its live duration
+   * is used. Returns a function that unregisters it.
+   */
+  attachRenderedPlaylist(playlist: Playlist): () => void {
+    this.renderedPlaylists.add(playlist);
+    return () => {
+      this.renderedPlaylists.delete(playlist);
+    };
   }
 
   static fromJSON(
@@ -93,7 +116,8 @@ export class LayoutComponent implements TemplateComponent {
       filter?: Record<string, any>;
     },
     resourceManager: ResourceManager,
-    globals: PlayerGlobals
+    globals: PlayerGlobals,
+    config?: TemplateConfig
   ): LayoutComponent {
     const layout = new LayoutComponent(
       json.name,
@@ -102,12 +126,40 @@ export class LayoutComponent implements TemplateComponent {
       json.animations,
       json.filter
     );
-    const containers = json.opts?.containers || [];
-    layout.playlists = containers.map((container: LayoutContainer) =>
-      Playlist.fromJSON(container.playlist, resourceManager, globals)
+    // Resolve the containers now so the layout's duration is known before it
+    // renders. Layout widgets bind their playlists through the config (e.g.
+    // `layoutRef`), so the raw template options contain no playlists; the
+    // player would otherwise schedule the layout with a 10s default duration.
+    const containers = LayoutComponent.resolveContainers(
+      json.opts,
+      config,
+      globals
     );
+    layout.playlists = containers
+      .filter((container) => container?.playlist)
+      .map((container) =>
+        Playlist.fromJSON(container.playlist, resourceManager, globals)
+      );
 
     return layout;
+  }
+
+  private static resolveContainers(
+    opts: LayoutComponentOptions,
+    config: TemplateConfig | undefined,
+    globals: PlayerGlobals
+  ): LayoutContainer[] {
+    if (config) {
+      try {
+        return (
+          LayoutComponent.resolveOptions(opts, config, null, globals)
+            .containers || []
+        );
+      } catch (error) {
+        console.warn('[Layout] Failed to resolve containers', error);
+      }
+    }
+    return opts?.containers || [];
   }
 
   static resolveOptions(
@@ -198,6 +250,7 @@ export class LayoutComponent implements TemplateComponent {
 }
 interface LayoutProps extends BaseComponentProps {
   opts: LayoutComponentOptions;
+  component?: LayoutComponent;
   resourceManager: ResourceManager;
   globals: PlayerGlobals;
 }
@@ -254,6 +307,7 @@ export const Layout: Component<LayoutProps> = (props) => {
             timeline={timeline}
             resourceManager={props.resourceManager}
             globals={props.globals}
+            component={props.component}
           />
         )}
       </For>
@@ -292,6 +346,7 @@ const LayoutContainer: Component<{
   globals: PlayerGlobals;
   style: JSX.CSSProperties;
   timeline: Timeline;
+  component?: LayoutComponent;
   // onReady: () => void;
 }> = (props) => {
   // If no playlist is selected or playlist has no items, render a placeholder
@@ -316,11 +371,13 @@ const LayoutContainer: Component<{
     props.resourceManager,
     props.globals
   );
+  const detachPlaylist = props.component?.attachRenderedPlaylist(playlist);
 
   onCleanup(() => {
+    detachPlaylist?.();
     showingSubscription?.unsubscribe();
     seekingSubscription?.unsubscribe();
-    timelineItem && props.timeline.remove(timelineItem);
+    if (timelineItem) props.timeline.remove(timelineItem);
     playlist.layers.forEach((item) => item.unload());
     renderer?.clean();
   });

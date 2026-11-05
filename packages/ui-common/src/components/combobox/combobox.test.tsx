@@ -1,4 +1,6 @@
 /** @jsxImportSource solid-js */
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import {
   render,
@@ -9,6 +11,11 @@ import {
 } from '@solidjs/testing-library';
 
 import { ComboBox } from './combobox';
+
+const comboBoxCss = readFileSync(
+  resolve('src/components/combobox/combobox.module.scss'),
+  'utf8'
+);
 
 describe('ComboBox Component', () => {
   afterEach(cleanup);
@@ -59,6 +66,15 @@ describe('ComboBox Component', () => {
     await waitFor(() =>
       expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
     );
+  });
+
+  it('positions the dropdown as an overlay', () => {
+    expect(comboBoxCss).toMatch(/\.combo-box\s*{[^}]*position:\s*relative/s);
+    expect(comboBoxCss).toMatch(/\.dropdown\s*{[^}]*position:\s*absolute/s);
+  });
+
+  it('uses compact padding on the trigger', () => {
+    expect(comboBoxCss).toMatch(/\.header\s*{[^}]*padding:\s*0\.5em/s);
   });
 
   it('opens and closes dropdown when clicking toggle icon button', async () => {
@@ -142,10 +158,13 @@ describe('ComboBox Component', () => {
     ));
 
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Toggle Dropdown')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Clear selection')).toBeInTheDocument();
 
     await fireEvent.click(screen.getByLabelText('Clear selection'));
 
     expect(onClear).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Toggle Dropdown')).toBeInTheDocument();
   });
 });

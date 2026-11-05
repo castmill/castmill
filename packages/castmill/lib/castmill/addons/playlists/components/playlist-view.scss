@@ -9,6 +9,41 @@
   box-sizing: border-box;
 }
 
+.playlist-view-loading {
+  display: flex;
+  flex: 1;
+  min-height: 16em;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1em;
+  color: rgba(255, 255, 255, 0.82);
+
+  &__spinner {
+    width: 2.5em;
+    height: 2.5em;
+    border: 0.2em solid rgba(255, 255, 255, 0.16);
+    border-top-color: rgba(255, 255, 255, 0.92);
+    border-radius: 50%;
+    animation: playlist-view-spin 0.9s linear infinite;
+  }
+
+  &__text {
+    font-size: 0.95em;
+    letter-spacing: 0.01em;
+  }
+}
+
+@keyframes playlist-view-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .playlist-view {
   display: flex;
   flex-direction: row; // Always use row layout

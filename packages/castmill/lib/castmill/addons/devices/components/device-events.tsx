@@ -1,5 +1,5 @@
-import { Component, createSignal } from 'solid-js';
-import { BsTrash } from 'solid-icons/bs';
+import { Component, createSignal, Show } from 'solid-js';
+import { BsFileEarmarkText, BsListUl, BsXCircle } from 'solid-icons/bs';
 
 import {
   TableView,
@@ -8,13 +8,15 @@ import {
   Column,
   Filter,
   ConfirmDialog,
+  Modal,
   useToast,
-  Button,
 } from '@castmill/ui-common';
 
 import { Device } from '../interfaces/device.interface';
 
 import { DevicesService } from '../services/devices.service';
+import { DeviceCardHeader, DeviceTableTime } from './device-section';
+import './device-events.scss';
 
 interface DeviceTableLogItem {
   id: string;
@@ -22,6 +24,13 @@ interface DeviceTableLogItem {
   type: string;
   type_name: string;
   msg?: string;
+  category?: string;
+  code?: string;
+  stack?: string;
+  context?: Record<string, string | number>;
+  occurrence_count?: number;
+  first_occurred_at?: string;
+  last_occurred_at?: string;
 }
 
 export const DeviceLogs: Component<{
@@ -34,35 +43,83 @@ export const DeviceLogs: Component<{
 
   const typeNameMap: Record<string, string> = {
     e: t('devices.events.filterError'),
-    w: t('devices.events.filterWarning'),
-    i: t('devices.events.filterInfo'),
     o: t('devices.events.filterOnline'),
     x: t('devices.events.filterOffline'),
+    w: t('devices.events.filterWarning'),
+    i: t('devices.events.filterInfo'),
   };
+  const [showConfirmClearAll, setShowConfirmClearAll] = createSignal(false);
+  const [selectedEvent, setSelectedEvent] = createSignal<DeviceTableLogItem>();
 
   const columns = [
-    { key: 'timestamp', title: t('common.time'), sortable: true },
+    {
+      key: 'timestamp',
+      title: t('common.timestamp'),
+      sortable: true,
+      render: (item: DeviceTableLogItem) => (
+        <DeviceTableTime value={item.last_occurred_at || item.timestamp} />
+      ),
+    },
     {
       key: 'type',
       title: t('common.type'),
       sortable: true,
       render: (item: DeviceTableLogItem) => (
-        <span>{typeNameMap[item.type] || item.type}</span>
+        <span
+          class={`device-event-type type-${item.type}`}
+          title={typeNameMap[item.type] || item.type}
+        >
+          <span class="device-event-type-label">
+            {typeNameMap[item.type] || item.type}
+          </span>
+        </span>
       ),
     },
-    { key: 'msg', title: t('common.message'), sortable: false },
+    {
+      key: 'msg',
+      title: t('common.message'),
+      sortable: false,
+      render: (item: DeviceTableLogItem) => (
+        <span class="device-event-msg" title={item.msg}>
+          {item.msg}
+        </span>
+      ),
+    },
+    {
+      key: 'occurrence_count',
+      title: t('devices.events.occurrences'),
+      sortable: false,
+      render: (item: DeviceTableLogItem) => (
+        <span>{item.occurrence_count || 1}</span>
+      ),
+    },
+    {
+      key: 'details',
+      title: t('devices.events.details'),
+      sortable: false,
+      render: (item: DeviceTableLogItem) =>
+        item.type === 'e' ||
+        item.stack ||
+        Object.keys(item.context || {}).length > 0 ? (
+          <button
+            type="button"
+            class="device-icon-button"
+            aria-label={t('devices.events.details')}
+            title={t('devices.events.details')}
+            onClick={() => setSelectedEvent(item)}
+          >
+            <BsFileEarmarkText aria-hidden="true" />
+          </button>
+        ) : null,
+    },
   ] as Column<DeviceTableLogItem>[];
 
   // Filters for event types
   const eventFilters: Filter[] = [
     { key: 'e', name: t('devices.events.filterError'), isActive: true },
-    { key: 'w', name: t('devices.events.filterWarning'), isActive: true },
-    { key: 'i', name: t('devices.events.filterInfo'), isActive: true },
     { key: 'o', name: t('devices.events.filterOnline'), isActive: true },
     { key: 'x', name: t('devices.events.filterOffline'), isActive: true },
   ];
-
-  const [showConfirmClearAll, setShowConfirmClearAll] = createSignal(false);
 
   const itemsPerPage = 10; // Number of items to show per page
 
@@ -122,32 +179,43 @@ export const DeviceLogs: Component<{
 
   return (
     <>
-      <TableView
-        title={t('devices.events.title')}
-        resource={t('devices.events.items')}
-        fetchData={fetchLogs}
-        ref={setRef}
-        table={{
-          columns,
-          hideCheckboxes: true,
-        }}
-        toolbar={{
-          filters: eventFilters,
-          requireOneActiveFilter: false,
-          hideSearch: true,
-          hideTitle: true,
-        }}
-        pagination={{ itemsPerPage }}
-      ></TableView>
-
-      <div style="display: flex; justify-content: flex-end; margin-top: 1em;">
-        <Button
-          onClick={() => setShowConfirmClearAll(true)}
-          icon={BsTrash}
-          label={t('devices.events.clearAll')}
-          color="danger"
+      <section class="device-card device-events">
+        <DeviceCardHeader
+          icon={BsListUl}
+          title={t('devices.events.title')}
+          description={t('devices.events.description')}
+          actions={
+            <button
+              type="button"
+              class="device-text-button danger"
+              onClick={() => setShowConfirmClearAll(true)}
+            >
+              <BsXCircle aria-hidden="true" />
+              {t('devices.events.clearAll')}
+            </button>
+          }
         />
-      </div>
+        <div class="device-table-scroll device-table-fit device-events-table">
+          <TableView
+            title={t('devices.events.title')}
+            resource={t('devices.events.items')}
+            fetchData={fetchLogs}
+            ref={setRef}
+            initialSortOptions={{ key: 'timestamp', direction: 'descending' }}
+            table={{
+              columns,
+              hideCheckboxes: true,
+            }}
+            toolbar={{
+              filters: eventFilters,
+              requireOneActiveFilter: false,
+              hideSearch: true,
+              hideTitle: true,
+            }}
+            pagination={{ itemsPerPage }}
+          ></TableView>
+        </div>
+      </section>
 
       {/* Confirm dialog for clearing all events */}
       <ConfirmDialog
@@ -157,6 +225,36 @@ export const DeviceLogs: Component<{
         title={t('devices.events.confirmClearAll')}
         message={t('devices.events.confirmClearAllMessage')}
       />
+
+      <Show when={selectedEvent()}>
+        {(event) => (
+          <Modal
+            title={t('devices.events.detailsTitle')}
+            description={event().category || t('devices.events.errorDetails')}
+            onClose={() => setSelectedEvent(undefined)}
+          >
+            <div class="device-event-details">
+              <Show when={event().first_occurred_at}>
+                <p>
+                  <strong>{t('devices.events.firstSeen')}:</strong>{' '}
+                  {new Date(event().first_occurred_at!).toLocaleString()}
+                </p>
+              </Show>
+              <p class="device-event-message">
+                <strong>{t('common.message')}:</strong> {event().msg}
+              </p>
+              <Show
+                when={event().context && Object.keys(event().context!).length}
+              >
+                <pre>{JSON.stringify(event().context, null, 2)}</pre>
+              </Show>
+              <Show when={event().stack}>
+                <pre>{event().stack}</pre>
+              </Show>
+            </div>
+          </Modal>
+        )}
+      </Show>
     </>
   );
 };

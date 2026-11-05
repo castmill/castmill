@@ -17,7 +17,9 @@ import {
   JsonPlaylist,
 } from '@castmill/player';
 import { ResourceManager, Cache, StorageDummy } from '@castmill/cache';
-import styles from './devices.module.scss';
+import { BsEye } from 'solid-icons/bs';
+import { DeviceCardHeader, DeviceNotice } from './device-section';
+import './device-preview.scss';
 
 /**
  * DevicePreview Component
@@ -407,33 +409,44 @@ export const DevicePreview: Component<{
     cleanupPlayer();
   });
 
+  const isPortrait = () =>
+    props.device.orientation === 90 || props.device.orientation === 270;
+
   return (
-    <div class={styles.devicePreview}>
+    <section class="device-card device-preview">
+      <DeviceCardHeader
+        icon={BsEye}
+        title={t('common.preview')}
+        description={t('devices.preview.note')}
+      />
+
       <Show when={loading()}>
-        <div class={styles.previewLoading}>
-          <p>{t('common.loading')}</p>
-        </div>
+        <p class="device-empty">{t('common.loading')}</p>
       </Show>
 
       <Show when={!loading() && error()}>
-        <div class={styles.previewError}>
+        <DeviceNotice tone="info">
           <p>{error()}</p>
-        </div>
+        </DeviceNotice>
       </Show>
 
       <Show when={!loading() && !error() && currentPlaylistId()}>
-        <div class={styles.previewInfo}>
-          <p>
-            <strong>{t('devices.preview.currentlyPlaying')}:</strong>{' '}
-            {currentChannelName()}
-          </p>
-          <p>
-            <strong>{t('common.playlist')}:</strong> {currentPlaylistName()}
-          </p>
-          <p class={styles.previewNote}>{t('devices.preview.note')}</p>
-        </div>
-        <div class={styles.previewContainer} ref={playerContainer}></div>
+        <dl class="device-preview-facts">
+          <div>
+            <dt>{t('devices.preview.currentlyPlaying')}</dt>
+            <dd>{currentChannelName()}</dd>
+          </div>
+          <div>
+            <dt>{t('common.playlist')}</dt>
+            <dd>{currentPlaylistName()}</dd>
+          </div>
+        </dl>
+        <div
+          class="device-preview-stage"
+          classList={{ portrait: isPortrait() }}
+          ref={playerContainer}
+        ></div>
       </Show>
-    </div>
+    </section>
   );
 };

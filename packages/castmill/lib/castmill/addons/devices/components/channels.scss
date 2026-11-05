@@ -1,0 +1,75 @@
+.device-channel-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.device-channel-item {
+  display: flex;
+  align-items: center;
+  gap: 0.8em;
+  min-width: 0;
+  padding: 0.7em 0.8em;
+  border: 1px solid #2f2b42;
+  border-radius: 0.5em;
+  background: #151320;
+  transition: border-color 0.15s ease;
+
+  &:hover {
+    border-color: #3d3a52;
+  }
+}
+
+.device-channel-icon {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 2.2em;
+  height: 2.2em;
+  border-radius: 0.45em;
+  background: rgba(87, 146, 238, 0.12);
+  color: #5792ee;
+}
+
+.device-channel-text {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 0.15em;
+  min-width: 0;
+}
+
+.device-channel-name {
+  overflow: hidden;
+  color: #fff;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.device-channel-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  color: #8f8bb0;
+  font-size: 0.8em;
+}
+
+.device-channel-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 0.4em;
+}
+
+.device-channel-add .combo-box,
+.device-channel-add > * {
+  width: 100%;
+}
+
+.device-channel-option {
+  padding: 0.5em 0 0.5em 1em;
+}

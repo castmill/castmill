@@ -15,11 +15,7 @@
  * this is a separate case from the general case.
  */
 import { Dexie } from 'dexie';
-import {
-  StorageIntegration,
-  StorageItem,
-  StoreOptions,
-} from './storage.integration';
+import { StorageIntegration, StoreOptions } from './storage.integration';
 
 /*
 if ("storage" in navigator && "estimate" in navigator.storage) {
@@ -35,10 +31,16 @@ export enum ItemType {
   Media = 'media',
 }
 
-interface ItemMetadata {
+export interface ItemMetadata {
   cachedUrl: string;
   url: string;
+  /** Last store or access time; used for least-recently-used eviction. */
   timestamp: number;
+  /**
+   * When the resource was downloaded; used for freshness. Reads must not
+   * change it. Entries created before this field existed lack it.
+   */
+  storedAt?: number;
   size: number;
   accessed: number;
   type: ItemType;
@@ -67,7 +69,42 @@ export class Cache extends Dexie {
 
   async init() {
     await this.integration.init();
-    await this.syncCache();
+    try {
+      await this.syncCache();
+    } catch (error) {
+      if (!this.isIndexedDbFailure(error)) {
+        throw error;
+      }
+
+      console.error(
+        `Cache: IndexedDB "${this.name}" is unusable; rebuilding metadata`,
+        error
+      );
+      this.close();
+      await Dexie.delete(this.name);
+      await this.open();
+      await this.syncCache();
+    }
+  }
+
+  private isIndexedDbFailure(error: unknown): boolean {
+    if (error instanceof Dexie.DexieError) {
+      return true;
+    }
+
+    if (error instanceof DOMException) {
+      return [
+        'AbortError',
+        'ConstraintError',
+        'DataError',
+        'InvalidStateError',
+        'NotFoundError',
+        'UnknownError',
+        'VersionError',
+      ].includes(error.name);
+    }
+
+    return false;
   }
 
   private async syncCache() {
@@ -78,7 +115,15 @@ export class Cache extends Dexie {
     for (const file of files) {
       const existsInCache = items.some((item) => item.cachedUrl === file.url);
       if (!existsInCache) {
-        await this.integration.deleteFile(file.url);
+        try {
+          await this.integration.deleteFile(file.url);
+        } catch (error) {
+          console.error(
+            'Cache: Failed to delete unreferenced file',
+            file.url,
+            error
+          );
+        }
       }
     }
 
@@ -88,6 +133,18 @@ export class Cache extends Dexie {
         (file) => file.url === item.cachedUrl
       );
       if (!existsInIntegration) {
+        // The integration may have lost only its index (for example a corrupt
+        // FILE_MAP) while the native file still exists. Delete by cached URL
+        // before dropping the last metadata reference.
+        try {
+          await this.integration.deleteFile(item.cachedUrl);
+        } catch (error) {
+          console.error(
+            'Cache: Failed to delete file with missing integration metadata',
+            item.cachedUrl,
+            error
+          );
+        }
         await this.items.delete(item.url);
       }
     }
@@ -155,7 +212,7 @@ export class Cache extends Dexie {
 
   async hasUrl(url: string) {
     // Check if we are caching the item.
-    if (!!this.caching[url]) {
+    if (this.caching[url]) {
       return true;
     }
 
@@ -175,7 +232,7 @@ export class Cache extends Dexie {
     opts: SetItemCacheOptions = { force: false }
   ) {
     // Check if we are already caching the item - if so, return that promise
-    if (!!this.caching[url]) {
+    if (this.caching[url]) {
       return this.caching[url];
     }
 
@@ -199,7 +256,7 @@ export class Cache extends Dexie {
           .limit(count - this.maxItems + 1)
           .toArray();
         for (const item of items) {
-          await this.items.delete(item.url!);
+          await this.del(item.url!);
         }
       }
     }
@@ -265,8 +322,10 @@ export class Cache extends Dexie {
             }
             this.totalSize += size;
 
+            const now = Date.now();
             const item: ItemMetadata = {
-              timestamp: Date.now(),
+              timestamp: now,
+              storedAt: now,
               size,
               accessed: 0,
               type,
@@ -376,16 +435,24 @@ export class Cache extends Dexie {
     return this.items.delete(key);
   }
 
-  /**
-   * Clean all the cached items one by one.
-   *
-   * @param mimeType
-   */
-  async clean(mimeType?: string) {
-    const items = await this.items.toArray();
-    for (const item of items) {
-      await this.del(item.url!);
+  async invalidate(key: string): Promise<void> {
+    await this.items.delete(key);
+    try {
+      await this.integration.deleteFile(key);
+    } catch (error) {
+      console.error('Cache: Failed to remove invalid file', key, error);
     }
+  }
+
+  /**
+   * Clears every cached entry and all platform storage, including files that
+   * are no longer represented by IndexedDB metadata.
+   */
+  async clean(): Promise<number> {
+    const count = await this.items.count();
+    await this.integration.deleteAllFiles();
+    await this.items.clear();
+    return count;
   }
 
   /**

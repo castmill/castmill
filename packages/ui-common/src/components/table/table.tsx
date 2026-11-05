@@ -111,7 +111,7 @@ export const Table = <
       } else {
         newSet.delete(id);
       }
-      props.onRowSelect && props.onRowSelect(newSet);
+      props.onRowSelect?.(newSet);
       return newSet;
     });
   };
@@ -125,7 +125,7 @@ export const Table = <
       }
     }
     setSelectedRows(newSet);
-    props.onRowSelect && props.onRowSelect(newSet);
+    props.onRowSelect?.(newSet);
   };
 
   const getItemId = (item: Item): IdType => item[props.itemIdKey || 'id'];

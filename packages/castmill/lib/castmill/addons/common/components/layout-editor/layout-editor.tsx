@@ -1569,9 +1569,7 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
           >
             {(zone) => (
               <div
-                class={`layout-editor__zone-item ${
-                  selectedZoneId() === zone.id ? 'selected' : ''
-                }`}
+                class={`layout-editor__zone-item ${selectedZoneId() === zone.id ? 'selected' : ''}`}
                 onClick={() => setSelectedZoneId(zone.id)}
               >
                 <span class="zone-name">{zone.name}</span>

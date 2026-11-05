@@ -81,7 +81,21 @@ export class BrowserMachine implements Machine {
   async getMachineGUID(): Promise<string> {
     let machineId = localStorage.getItem('machineId');
     if (!machineId) {
-      machineId = crypto.randomUUID();
+      if (typeof window.crypto?.randomUUID === 'function') {
+        machineId = window.crypto.randomUUID();
+      } else if (typeof window.crypto?.getRandomValues === 'function') {
+        const bytes = window.crypto.getRandomValues(new Uint8Array(16));
+        bytes[6] = (bytes[6] & 0x0f) | 0x40;
+        bytes[8] = (bytes[8] & 0x3f) | 0x80;
+        let hex = '';
+        for (let i = 0; i < bytes.length; i++) {
+          const value = bytes[i].toString(16);
+          hex += value.length === 1 ? `0${value}` : value;
+        }
+        machineId = `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+      } else {
+        throw new Error('Secure random number generation is unavailable');
+      }
       localStorage.setItem('machineId', machineId);
     }
     return machineId;
@@ -102,20 +116,41 @@ export class BrowserMachine implements Machine {
   async getLocation(): Promise<
     undefined | { latitude: number; longitude: number }
   > {
-    try {
-      const location = await new Promise<GeolocationPosition>(
-        (resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject);
-        }
-      );
+    return new Promise((resolve) => {
+      let settled = false;
+      const timeoutId = window.setTimeout(() => {
+        settled = true;
+        resolve(undefined);
+      }, 5000);
 
-      return {
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
+      const complete = (
+        location?: Pick<GeolocationPosition, 'coords'>
+      ): void => {
+        if (settled) {
+          return;
+        }
+
+        settled = true;
+        window.clearTimeout(timeoutId);
+        resolve(
+          location
+            ? {
+                latitude: location.coords.latitude,
+                longitude: location.coords.longitude,
+              }
+            : undefined
+        );
       };
-    } catch (e) {
-      return undefined;
-    }
+
+      try {
+        navigator.geolocation.getCurrentPosition(
+          (location) => complete(location),
+          () => complete()
+        );
+      } catch {
+        complete();
+      }
+    });
   }
 
   async getTimezone(): Promise<string> {

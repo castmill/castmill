@@ -1,0 +1,37 @@
+/**
+ * Super simple logger class that logs messages to the console
+ * if the VITE_LOGGING environment variable is set to true.
+ */
+export class Logger {
+  private active = import.meta.env.VITE_LOGGING === 'true';
+
+  constructor(private readonly prefix: string) {}
+
+  get enabled(): boolean {
+    return this.active;
+  }
+
+  log(...args: unknown[]): void {
+    if (!this.active) {
+      return;
+    }
+
+    console.log(`[${this.prefix}] ${args.join(' ')}`);
+  }
+
+  error(...args: unknown[]): void {
+    if (!this.active) {
+      return;
+    }
+
+    console.error(`[${this.prefix}] ${args.join(' ')}`);
+  }
+
+  warn(...args: unknown[]): void {
+    if (!this.active) {
+      return;
+    }
+
+    console.warn(`[${this.prefix}] ${args.join(' ')}`);
+  }
+}

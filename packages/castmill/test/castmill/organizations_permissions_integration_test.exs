@@ -7,7 +7,7 @@ defmodule Castmill.OrganizationsPermissionsIntegrationTest do
   alias Castmill.Accounts
   alias Castmill.Authorization.Permissions
 
-  @resource_types ["playlists", "medias", "channels", "devices", "teams", "widgets"]
+  @resource_types ["playlists", "medias", "channels", "devices", "teams", "widgets", "layouts"]
   @controller_actions [:index, :show, :create, :update, :delete]
 
   describe "has_access/4 with permission matrix integration" do
@@ -233,6 +233,7 @@ defmodule Castmill.OrganizationsPermissionsIntegrationTest do
   defp resource_to_atom("devices"), do: :devices
   defp resource_to_atom("teams"), do: :teams
   defp resource_to_atom("widgets"), do: :widgets
+  defp resource_to_atom("layouts"), do: :layouts
 
   defp controller_action_to_matrix(:index), do: :list
   defp controller_action_to_matrix("index"), do: :list

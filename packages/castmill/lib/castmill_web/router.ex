@@ -22,6 +22,11 @@ defmodule CastmillWeb.Router do
     plug(:put_secure_browser_headers)
   end
 
+  pipeline :device_api do
+    plug(:accepts, ["json"])
+    plug(:put_secure_browser_headers)
+  end
+
   pipeline :api do
     plug(:accepts, ["json"])
     plug(:authenticate_with_token)
@@ -99,11 +104,23 @@ defmodule CastmillWeb.Router do
     get("/", DeviceController, :home)
   end
 
-  # The legacy adapter player is a standalone public application.
+  pipeline :legacy_device do
+    plug(:accepts, ["html", "json"])
+    plug(:put_secure_browser_headers)
+    plug(:allow_legacy_embedding)
+  end
+
+  # The legacy adapter player is a standalone public application. Its Android
+  # wrapper posts logs without a browser session or CSRF token.
   scope "/", CastmillWeb do
-    pipe_through(:device)
+    pipe_through(:legacy_device)
 
     get("/legacy", LegacyPlayerController, :index)
+    post("/legacy/log", LegacyPlayerController, :log)
+  end
+
+  defp allow_legacy_embedding(conn, _opts) do
+    delete_resp_header(conn, "x-frame-options")
   end
 
   pipeline :register do
@@ -125,6 +142,20 @@ defmodule CastmillWeb.Router do
   # Public webhook endpoints for third-party integrations
   pipeline :webhooks do
     plug(:accepts, ["json"])
+  end
+
+  # Model Context Protocol (MCP) server for AI agents.
+  # Authenticated with agent credentials (see CastmillWeb.MCPController).
+  pipeline :mcp do
+    plug(:put_secure_browser_headers)
+  end
+
+  scope "/mcp", CastmillWeb do
+    pipe_through(:mcp)
+
+    post("/", MCPController, :message)
+    get("/", MCPController, :method_not_allowed)
+    delete("/", MCPController, :method_not_allowed)
   end
 
   # Public API endpoints (no auth, no pipeline): /api/health for load balancer probes and /api/version for version/diagnostic info
@@ -172,11 +203,12 @@ defmodule CastmillWeb.Router do
   end
 
   scope "/devices", CastmillWeb do
-    pipe_through([:device, :authenticate_device])
+    pipe_through([:device_api, :authenticate_device])
 
     get("/:device_id", DeviceController, :show)
     get("/:device_id/channels", DeviceController, :get_channels)
     get("/:device_id/playlists/:playlist_id", DeviceController, :get_playlist)
+    get("/:device_id/schedule", DeviceController, :get_schedule)
 
     put("/:device_id/channels/:channel_id", DeviceController, :add_channel)
     delete("/:device_id/channels/:channel_id", DeviceController, :remove_channel)
@@ -454,6 +486,29 @@ defmodule CastmillWeb.Router do
       OrganizationController,
       :update_widget
     )
+
+    # AI agents of the organization (MCP access) and their activity log.
+    # Must be declared before the generic organization resources routes.
+    get("/organizations/:organization_id/agents", AgentController, :index)
+    post("/organizations/:organization_id/agents", AgentController, :create)
+    get("/organizations/:organization_id/agents/:id", AgentController, :show)
+    patch("/organizations/:organization_id/agents/:id", AgentController, :update)
+    put("/organizations/:organization_id/agents/:id", AgentController, :update)
+    delete("/organizations/:organization_id/agents/:id", AgentController, :delete)
+
+    post(
+      "/organizations/:organization_id/agents/:agent_id/credentials",
+      AgentController,
+      :rotate_credentials
+    )
+
+    delete(
+      "/organizations/:organization_id/agents/:agent_id/credentials",
+      AgentController,
+      :revoke_credentials
+    )
+
+    get("/organizations/:organization_id/agent-actions", AgentController, :list_actions)
 
     # List all the users in the organization
     get("/organizations/:organization_id/members", OrganizationController, :list_members)
@@ -757,10 +812,38 @@ defmodule CastmillWeb.Router do
     auth_header = List.first(get_req_header(conn, "authorization"))
     auth_param = conn.params["auth"]
 
-    case String.split(auth_header || auth_param || "", " ") do
-      ["Bearer", token] -> {:ok, token}
-      [] -> {:error, "No token provided"}
-      _ -> {:error, "Invalid token format"}
+    raw =
+      Enum.find([auth_header, auth_param], fn value ->
+        is_binary(value) and String.trim(value) != ""
+      end)
+
+    case extract_bearer_token(raw) do
+      token when is_binary(token) -> {:ok, token}
+      nil when is_nil(raw) -> {:error, "No token provided"}
+      nil -> {:error, "Invalid token format"}
+    end
+  end
+
+  # Extracts the token from an `Authorization` header containing a `Bearer`
+  # value (or the equivalent `auth` query param). Tolerant of the formatting so that
+  # otherwise-valid tokens are not rejected: the scheme match is
+  # case-insensitive and surrounding/duplicate whitespace is ignored.
+  # Returns the token string, or nil when the value is not a bearer token.
+  defp extract_bearer_token(nil), do: nil
+
+  defp extract_bearer_token(value) when is_binary(value) do
+    case String.split(value, " ", parts: 2, trim: true) do
+      [scheme, token] ->
+        trimmed = String.trim(token)
+
+        if String.downcase(scheme) == "bearer" and trimmed != "" do
+          trimmed
+        else
+          nil
+        end
+
+      _ ->
+        nil
     end
   end
 
@@ -810,7 +893,8 @@ defmodule CastmillWeb.Router do
   # Cookies are NOT used for dashboard auth (they are blocked cross-origin
   # by Safari ITP and future browser privacy defaults).
   defp fetch_dashboard_user(conn, _opts) do
-    with ["Bearer " <> token] <- get_req_header(conn, "authorization"),
+    with token when is_binary(token) <-
+           extract_bearer_token(List.first(get_req_header(conn, "authorization"))),
          {:ok, user_id} <-
            Phoenix.Token.verify(
              CastmillWeb.Endpoint,

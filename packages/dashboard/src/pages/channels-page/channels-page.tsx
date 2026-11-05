@@ -379,6 +379,7 @@ const ChannelsPage: Component = () => {
 
   const closeChannelDrawer = () => {
     setSearchParams({ itemId: undefined });
+    refreshData();
   };
 
   // Sync modal state with URL itemId parameter
@@ -404,6 +405,20 @@ const ChannelsPage: Component = () => {
     [
       { key: 'id', title: t('common.id'), sortable: true },
       { key: 'name', title: t('common.name'), sortable: true },
+      {
+        key: 'default_playlist_name',
+        title: t('channels.defaultPlaylist'),
+        sortable: false,
+        render: (item: JsonChannel) =>
+          item.default_playlist_name || t('common.notAvailable'),
+      },
+      {
+        key: 'current_playlist_name',
+        title: t('channels.currentPlaylist'),
+        sortable: false,
+        render: (item: JsonChannel) =>
+          item.current_playlist_name || t('common.notAvailable'),
+      },
       {
         key: 'tags',
         title: t('tags.title'),

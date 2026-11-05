@@ -24,6 +24,7 @@ Copy the relevant `.env.*` file and configure the variables. The following envir
 | `VITE_KIOSK`          | Enable kiosk mode (`true`/`false`)                            | Yes      |
 | `VITE_FULLSCREEN`     | Enable fullscreen mode (`true`/`false`)                       | Yes      |
 | `VITE_GOOGLE_API_KEY` | Google API key for geolocation services                       | No\*     |
+| `VITE_DEBUG_OVERLAY`  | Show the playback debug overlay at startup (`true`/`false`)   | No       |
 | `CASTMILL_UPDATE_URL` | Electron auto-update feed URL used at build time              | Yes\*\*  |
 
 #### Auto-update URL (build-time)

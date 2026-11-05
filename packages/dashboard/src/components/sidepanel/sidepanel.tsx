@@ -8,7 +8,7 @@ import { AddOnTree } from '../../classes/addon-tree';
 import { AddOnNode } from '../../interfaces/addon-node.interface';
 import { store, setStore } from '../../store/store';
 import { baseUrl } from '../../env';
-import { TbChartHistogram } from 'solid-icons/tb';
+import { TbChartHistogram, TbRobot } from 'solid-icons/tb';
 import { AiOutlineTeam, AiOutlineTags } from 'solid-icons/ai';
 import { RiEditorOrganizationChart } from 'solid-icons/ri';
 import { BsCalendarWeek, BsBuilding } from 'solid-icons/bs';
@@ -126,7 +126,7 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
             if (location.pathname.startsWith('/org/')) {
               // Preserve current sub-path within the new organization
               const currentPath =
-                location.pathname.replace(/^\/org\/[^\/]+/, '') || '/';
+                location.pathname.replace(/^\/org\/[^/]+/, '') || '/';
               navigate(`/org/${value}${currentPath}`);
             } else if (location.pathname === '/settings') {
               // Settings is a global route and should not be org-prefixed
@@ -172,6 +172,19 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
           level={0}
           icon={AiOutlineTags}
         />
+        <Show
+          when={
+            store.permissions?.role === 'admin' ||
+            store.permissions?.role === 'manager'
+          }
+        >
+          <PanelItem
+            to={`/org/${store.organizations.selectedId}/agents`}
+            text={t('sidebar.agents')}
+            level={0}
+            icon={TbRobot}
+          />
+        </Show>
         <PanelItem
           to={`/org/${store.organizations.selectedId}/usage`}
           text={t('sidebar.usage')}

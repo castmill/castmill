@@ -282,6 +282,63 @@ defmodule Castmill.PlaylistsTest do
       assert playlist_items == Enum.map([item1, item2], fn item -> item.id end)
     end
 
+    test "move_item_in_playlist/2 keeps the only item when moving it to the beginning" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+      playlist = playlist_fixture(%{organization_id: organization.id})
+      widget = Castmill.Widgets.get_widget_by_slug("image")
+
+      {:ok, item} = Resources.insert_item_into_playlist(playlist.id, nil, widget.id, 0, 1000)
+
+      assert {:ok, _} = Resources.move_item_in_playlist(item.id)
+      assert Enum.map(Resources.get_playlist_items(playlist.id), & &1.id) == [item.id]
+
+      reloaded = Castmill.Repo.get!(Castmill.Resources.PlaylistItem, item.id)
+      assert reloaded.prev_item_id == nil
+      assert reloaded.next_item_id == nil
+    end
+
+    test "move_item_in_playlist/2 moving the first item to the beginning is a no-op" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+      playlist = playlist_fixture(%{organization_id: organization.id})
+      widget = Castmill.Widgets.get_widget_by_slug("image")
+
+      {:ok, item3} = Resources.insert_item_into_playlist(playlist.id, nil, widget.id, 0, 1000)
+      {:ok, item2} = Resources.insert_item_into_playlist(playlist.id, nil, widget.id, 0, 1000)
+      {:ok, item1} = Resources.insert_item_into_playlist(playlist.id, nil, widget.id, 0, 1000)
+
+      assert {:ok, _} = Resources.move_item_in_playlist(item1.id, nil)
+
+      assert Enum.map(Resources.get_playlist_items(playlist.id), & &1.id) ==
+               Enum.map([item1, item2, item3], & &1.id)
+    end
+
+    test "move_item_in_playlist/2 accepts string ids and no-ops when already in place" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+      playlist = playlist_fixture(%{organization_id: organization.id})
+      widget = Castmill.Widgets.get_widget_by_slug("image")
+
+      {:ok, item3} = Resources.insert_item_into_playlist(playlist.id, nil, widget.id, 0, 1000)
+      {:ok, item2} = Resources.insert_item_into_playlist(playlist.id, nil, widget.id, 0, 1000)
+      {:ok, item1} = Resources.insert_item_into_playlist(playlist.id, nil, widget.id, 0, 1000)
+
+      assert {:ok, _} =
+               Resources.move_item_in_playlist(to_string(item2.id), to_string(item1.id))
+
+      assert {:ok, nil} = Resources.move_item_in_playlist(to_string(item2.id), item2.id)
+
+      assert Enum.map(Resources.get_playlist_items(playlist.id), & &1.id) ==
+               Enum.map([item1, item2, item3], & &1.id)
+
+      assert {:ok, _} =
+               Resources.move_item_in_playlist(to_string(item1.id), to_string(item3.id))
+
+      assert Enum.map(Resources.get_playlist_items(playlist.id), & &1.id) ==
+               Enum.map([item2, item3, item1], & &1.id)
+    end
+
     test "delete_playlist/1 deletes a playlist" do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})

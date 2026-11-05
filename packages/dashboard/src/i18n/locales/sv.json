@@ -618,7 +618,8 @@
     "networkSettings": "Inställningar",
     "networkOrganizations": "Organisationer",
     "networkUsers": "Användare & inbjudningar",
-    "tags": "Taggar"
+    "tags": "Taggar",
+    "agents": "Agenter"
   },
   "channels": {
     "title": "Kanaler",
@@ -632,6 +633,7 @@
     "confirmRemoveChannels": "Är du säker på att du vill ta bort följande kanaler?",
     "enterChannelName": "Ange kanalnamn",
     "defaultPlaylist": "Standardspellista",
+    "currentPlaylist": "Aktuell spellista",
     "selectPlaylist": "Välj spellista",
     "clearDefaultPlaylist": "Rensa standardspellista",
     "dragPlaylists": "Dra spellistor",
@@ -910,7 +912,9 @@
       "pending": "Väntar på konfiguration",
       "enterClientCredentials": "Ange dina {{provider}} API-uppgifter nedan:",
       "afterSavingCredentials": "Efter att du sparat dina uppgifter, klicka nedan för att auktorisera med {{provider}}:",
-      "networkCredentialsConfigured": "Din nätverksadministratör har redan konfigurerat {{provider}}-uppgifter. Klicka bara på knappen nedan för att ansluta ditt konto."
+      "networkCredentialsConfigured": "Din nätverksadministratör har redan konfigurerat {{provider}}-uppgifter. Klicka bara på knappen nedan för att ansluta ditt konto.",
+      "noConfigurationRequired": "Ingen konfiguration krävs",
+      "optional": "Valfritt"
     },
     "editor": {
       "newWidget": "Ny widget",
@@ -1044,6 +1048,25 @@
     "translations": "Översättningar"
   },
   "devices": {
+    "orientation": {
+      "label": "Orientering",
+      "help": "Rotera innehållet medurs från dess normala orientering.",
+      "offline": "Den sparade orienteringen tillämpas nästa gång spelaren ansluter.",
+      "pending": "Orienteringen har sparats. Väntar på bekräftelse från spelaren.",
+      "applied": "Orienteringen har tillämpats.",
+      "applyError": "Spelaren kunde inte tillämpa orienteringen. Kontrollera enhetens händelser.",
+      "unsupported": "Uppdatera spelaren för att aktivera orienteringsinställningar.",
+      "saved": "Enhetens inställningar har sparats.",
+      "saveError": "Det gick inte att spara enhetens inställningar.",
+      "options": {
+        "deg0": "Liggande",
+        "deg90": "Stående",
+        "deg180": "Liggande (vänd)",
+        "deg270": "Stående (vänd)"
+      },
+      "change": "Ändra",
+      "done": "Klar"
+    },
     "setDeviceChannel": "Ställ in enhetskanal",
     "selectChannel": "Välj kanal",
     "preview": {
@@ -1074,7 +1097,8 @@
       "noData": "Ingen telemetridata tillgänglig från denna enhet.",
       "daysShort": "d",
       "hoursShort": "t",
-      "minutesShort": "m"
+      "minutesShort": "m",
+      "description": "Aktuella hälsovärden som rapporterats av spelaren."
     },
     "maintenance": {
       "refresh": "Uppdatera",
@@ -1089,6 +1113,7 @@
       "checkUpdatesDescription": "Sök efter uppdateringar och installera dem. Detta kommer inte att starta om enheten",
       "updateFirmware": "Uppdatera firmware",
       "updateFirmwareDescription": "Uppdaterar enhetens firmware",
+      "actionNotSupported": "Stöds inte.",
       "offlineMessage": "Enheten är offline, så inga kommandon kan skickas till den",
       "autorecoveryUpdated": "Autoåterställning har uppdaterats",
       "autorecoveryUpdateFailed": "Misslyckades med att uppdatera autoåterställning",
@@ -1099,7 +1124,15 @@
       "recoverLostSettingsLabel": "Återställ förlorade inställningar",
       "disabled": "Inaktiverad",
       "enabledMinutesRemaining": "Aktiverad ({{minutes}} minuter kvar)",
-      "enabledForever": "Aktiverad för alltid"
+      "enabledForever": "Aktiverad för alltid",
+      "run": "Kör",
+      "commandSent": "Kommandot har skickats till enheten",
+      "commandFailed": "Kunde inte skicka kommandot: {{error}}",
+      "contentGroup": "Uppspelning",
+      "contentGroupDescription": "Återställ uppspelningen utan att starta om hårdvaran.",
+      "systemGroup": "System",
+      "systemGroupDescription": "Uppdateringar och omstarter. Skärmen kan vara svart en stund.",
+      "recoverLostSettingsDescription": "Låter spelaren återansluta från en annan IP-adress om den tappar sina inloggningsuppgifter."
     },
     "cache": {
       "title": "Enhetscache",
@@ -1108,18 +1141,19 @@
       "codeTab": "Kod",
       "mediaTab": "Media",
       "deleteSelected": "Ta bort valda objekt",
-      "clearAll": "Rensa Allt",
+      "clearAll": "Rensa Hela Cachen",
       "confirmDelete": "Ta bort Cachepost",
       "confirmDeleteMessage": "Är du säker på att du vill ta bort denna cachepost? URL: {{url}}",
       "confirmDeleteMultiple": "Ta bort Flera Poster",
       "confirmDeleteMultipleMessage": "Är du säker på att du vill ta bort {{count}} cacheposter?",
-      "confirmClearAll": "Rensa All Cache",
-      "confirmClearAllMessage": "Är du säker på att du vill rensa alla {{type}} cacheposter? Denna åtgärd kan inte ångras.",
+      "confirmClearAll": "Rensa Hela Cachen",
+      "confirmClearAllMessage": "Är du säker på att du vill rensa alla cacheposter för data, kod och media? Spelaren kommer att laddas om och åtgärden kan inte ångras.",
       "deleteSuccess": "Cachepost borttagen framgångsrikt",
       "deleteMultipleSuccess": "{{count}} cacheposter borttagna framgångsrikt",
       "clearAllSuccess": "Alla cacheposter rensade framgångsrikt",
       "deleteError": "Fel vid borttagning av cache: {{error}}",
-      "offlineWarning": "Enheten är för närvarande offline. Cacheinformation kan inte hämtas förrän enheten kommer tillbaka online."
+      "offlineWarning": "Enheten är för närvarande offline. Cacheinformation kan inte hämtas förrän enheten kommer tillbaka online.",
+      "description": "Filer som spelaren lagrar lokalt så att den kan fortsätta spela offline."
     },
     "events": {
       "title": "Enhetshändelser",
@@ -1133,7 +1167,14 @@
       "confirmClearAll": "Rensa alla händelser",
       "confirmClearAllMessage": "Är du säker på att du vill ta bort alla händelser för denna enhet? Denna åtgärd kan inte ångras.",
       "clearAllSuccess": "{{count}} händelser har tagits bort",
-      "deleteError": "Fel vid borttagning av händelser: {{error}}"
+      "deleteError": "Fel vid borttagning av händelser: {{error}}",
+      "occurrences": "Förekomster",
+      "firstSeen": "Först sedd",
+      "lastSeen": "Senast sedd",
+      "details": "Detaljer",
+      "detailsTitle": "Feldetaljer",
+      "errorDetails": "Sanerade diagnostikdetaljer",
+      "description": "Anslutningsändringar och fel som rapporterats av spelaren."
     },
     "errors": {
       "setChannelFailed": "Misslyckades att ställa in enhetskanal: {{error}}",
@@ -1167,11 +1208,49 @@
     "errorRemovingDevice": "Fel vid borttagning av enhet {{name}}: {{error}}",
     "errorRemovingDevices": "Fel vid borttagning av enheter: {{error}}",
     "enterDescription": "Ange en beskrivning",
-    "drawerTitle": "Enhet \"{{name}}\""
+    "drawerTitle": "Enhet \"{{name}}\"",
+    "info": {
+      "title": "Information",
+      "platform": "Plattform",
+      "playerVersion": "Spelarversion",
+      "operatingSystem": "Operativsystem",
+      "hardware": "Maskinvara",
+      "environmentVersion": "Miljöversion",
+      "chromiumVersion": "Chromium-version",
+      "v8Version": "V8-version",
+      "nodeVersion": "Node.js-version",
+      "userAgent": "Användaragent"
+    },
+    "details": {
+      "settings": "Inställningar",
+      "overview": "Översikt",
+      "schedule": "Schema",
+      "sections": "Enhetssektioner",
+      "lastSeen": "Senast sedd {{time}}",
+      "neverSeen": "Aldrig ansluten",
+      "copyId": "Kopiera enhets-ID",
+      "copied": "Enhets-ID kopierat",
+      "copyFailed": "Kunde inte kopiera enhets-ID.",
+      "unsavedChanges": "Osparade ändringar",
+      "nameRequired": "Namn krävs",
+      "nameTooShort": "Namnet måste vara minst 5 tecken",
+      "descriptionTooShort": "Beskrivningen måste vara minst 5 tecken"
+    },
+    "channelList": {
+      "description": "Spelaren spelar innehåll från dessa kanaler enligt deras scheman.",
+      "empty": "Inga kanaler tilldelade ännu.",
+      "loadError": "Kunde inte hämta enhetens kanaler",
+      "alreadyAssigned": "Kanalen är redan tilldelad enheten.",
+      "added": "Kanalen \"{{name}}\" har lagts till",
+      "removed": "Kanalen \"{{name}}\" har tagits bort",
+      "addError": "Kunde inte lägga till kanalen: {{error}}",
+      "removeError": "Kunde inte ta bort kanalen: {{error}}"
+    }
   },
   "validation": {
     "fieldRequired": "Detta fält är obligatoriskt",
-    "minLength": "Detta fält måste vara minst {{min}} tecken långt"
+    "minLength": "Detta fält måste vara minst {{min}} tecken långt",
+    "invalidCoordinates": "Detta fält måste ha giltiga koordinater"
   },
   "plurals": {
     "items": {
@@ -1513,7 +1592,7 @@
   },
   "deviceSchedule": {
     "title": "Enhetsschema",
-    "description": "Definiera när enheten ska vara PÅ. Klicka och dra på rutnätet för att skapa schemaposter. Utanför schemalagda timmar stängs enheten av. Om inga poster är inställda är enheten alltid på.",
+    "description": "Ange när enheten ska vara PÅ. Dra i rutnätet för att skapa poster, eller tryck på en tom ruta för att lägga till en. Klicka eller tryck på en post för att ändra dess dagar och tider. Utanför schemalagda tider stängs enheten av. Om inga poster finns är enheten alltid på.",
     "mon": "Mån",
     "tue": "Tis",
     "wed": "Ons",
@@ -1529,6 +1608,94 @@
     "saved": "Schema sparat och skickat till enheten",
     "savedOffline": "Schema sparat. Enheten är offline — timers skickas när den återansluter.",
     "loadError": "Fel vid inläsning av schema",
-    "saveError": "Fel vid sparande av schema"
+    "saveError": "Fel vid sparande av schema",
+    "editor": {
+      "title": "Redigera tidsintervall",
+      "newTitle": "Nytt tidsintervall",
+      "editSlot": "Redigera tidsintervall {{slot}}",
+      "startDay": "Startdag",
+      "endDay": "Slutdag",
+      "startTime": "Starttid",
+      "endTime": "Sluttid",
+      "midnightHint": "Ange sluttiden 00:00 för att vara på till midnatt.",
+      "invalidTime": "Sluttiden måste vara senare än starttiden.",
+      "overlap": "Tidsintervallet överlappar en annan post.",
+      "done": "Klar"
+    }
+  },
+  "agents": {
+    "title": "AI-agenter",
+    "description": "AI-agenter är organisationsmedlemmar som styr Castmill via MCP-servern. De har samma behörigheter som en användare med deras roll, och alla deras åtgärder loggas.",
+    "newAgent": "Ny agent",
+    "editAgent": "Redigera agent",
+    "formDescription": "Rollen avgör vad agenten får göra i den här organisationen.",
+    "namePlaceholder": "t.ex. Innehållsassistent",
+    "descriptionPlaceholder": "Vad används den här agenten till?",
+    "empty": "Inga agenter ännu. Skapa en för att ansluta en AI-assistent till Castmill.",
+    "noAccess": "Endast organisationens administratörer och chefer kan se agenter.",
+    "credentials": "Inloggningsuppgifter",
+    "credentialsRevoked": "Återkallade",
+    "lastUsed": "Senast använd",
+    "neverUsed": "Aldrig",
+    "rotate": "Rotera inloggningsuppgifter",
+    "revoke": "Återkalla inloggningsuppgifter",
+    "created": "Agent skapad",
+    "updated": "Agent uppdaterad",
+    "deleted": "Agent borttagen",
+    "rotated": "Inloggningsuppgifter roterade",
+    "revoked": "Inloggningsuppgifter återkallade",
+    "copied": "Kopierat till urklipp",
+    "copy": "Kopiera",
+    "secretTitle": "Inloggningsuppgifter för {{name}}",
+    "secretWarning": "Kopiera hemligheten nu. Av säkerhetsskäl visas den inte igen.",
+    "secretDone": "Jag har sparat hemligheten",
+    "tabs": {
+      "agents": "Agenter",
+      "activity": "Aktivitetslogg",
+      "setup": "Installationsinstruktioner"
+    },
+    "confirm": {
+      "rotateTitle": "Rotera inloggningsuppgifter",
+      "rotateMessage": "En ny hemlighet genereras för {{name}}. Den nuvarande hemligheten slutar fungera omedelbart.",
+      "revokeTitle": "Återkalla inloggningsuppgifter",
+      "revokeMessage": "{{name}} kan inte ansluta förrän nya inloggningsuppgifter har genererats.",
+      "deleteTitle": "Ta bort agent",
+      "deleteMessage": "Ta bort {{name}}? Dess inloggningsuppgifter och aktivitetslogg tas bort permanent."
+    },
+    "errors": {
+      "loadFailed": "Det gick inte att läsa in agenter",
+      "saveFailed": "Det gick inte att spara agenten: {{error}}",
+      "actionFailed": "Åtgärden misslyckades: {{error}}",
+      "copyFailed": "Det gick inte att kopiera till urklipp",
+      "loadActionsFailed": "Det gick inte att läsa in aktivitetsloggen"
+    },
+    "activity": {
+      "agent": "Agent",
+      "allAgents": "Alla agenter",
+      "status": "Status",
+      "allStatuses": "Alla statusar",
+      "success": "Lyckades",
+      "error": "Fel",
+      "empty": "Ingen agentaktivitet ännu.",
+      "tool": "Verktyg",
+      "request": "Begäran",
+      "duration": "Varaktighet",
+      "arguments": "Argument"
+    },
+    "integration": {
+      "intro": "Agenter ansluter till Castmill med valfri MCP-klient som stöder fjärrservrar via Streamable HTTP. Använd agentens hemlighet som Bearer-token i Authorization-huvudet.",
+      "serverUrl": "MCP-serverns URL",
+      "securityNote": "Behandla agenthemligheter som lösenord: checka inte in dem i versionshantering. Rotera inloggningsuppgifterna om en hemlighet har läckt.",
+      "clients": {
+        "other": "Andra klienter"
+      },
+      "steps": {
+        "claudeDesktop": "Öppna Inställningar > Utvecklare > Redigera konfiguration i Claude Desktop, lägg till servern i claude_desktop_config.json och starta om appen. Claude Desktop ansluter via bryggan mcp-remote, så Node.js (med npx) måste vara installerat på datorn.",
+        "claudeCode": "Kör kommandot i en terminal för att registrera servern i Claude Code och kontrollera den sedan med \"claude mcp list\".",
+        "vscode": "Lägg till konfigurationen i .vscode/mcp.json i din arbetsyta (eller kör \"MCP: Add Server\" från kommandopaletten), starta sedan servern och använd den från Copilot Chat i agentläge.",
+        "cursor": "Lägg till konfigurationen i ~/.cursor/mcp.json för alla projekt eller i .cursor/mcp.json i ett projekt och aktivera sedan servern under Cursor Settings > MCP.",
+        "other": "Konfigurera en fjärr-MCP-server med dessa inställningar."
+      }
+    }
   }
 }

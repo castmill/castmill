@@ -3,8 +3,6 @@ defmodule Castmill.Files.File do
   import Ecto.Changeset
   import Ecto.Query, warn: false
 
-  @derive {Jason.Encoder,
-           only: [:id, :name, :size, :uri, :mimetype, :meta, :inserted_at, :updated_at]}
   schema "files" do
     field :name, :string
     field :size, :integer
@@ -18,6 +16,20 @@ defmodule Castmill.Files.File do
       type: Ecto.UUID
 
     timestamps()
+  end
+
+  defimpl Jason.Encoder, for: Castmill.Files.File do
+    def encode(file, opts) do
+      map =
+        file
+        |> Map.take([:id, :name, :size, :uri, :mimetype, :meta, :inserted_at, :updated_at])
+        |> Map.put(
+          :uri,
+          Castmill.Workers.Helpers.resolve_media_uri(file.uri, file.organization_id)
+        )
+
+      Jason.Encode.map(map, opts)
+    end
   end
 
   @doc false

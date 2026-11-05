@@ -461,8 +461,13 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
       return `device_updates:${resource.id}`;
     },
     /* onUpdate */
-    (resource: DeviceTableItem, { online }: { online: boolean }) => {
-      updateDeviceStatus(resource.id, online);
+    (
+      resource: DeviceTableItem,
+      update: Partial<
+        Pick<Device, 'online' | 'orientation' | 'orientation_status' | 'info'>
+      >
+    ) => {
+      updateItem(resource.id, update);
     }
   );
 
@@ -635,10 +640,6 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
       label: t('common.remove'),
     },
   ];
-
-  const updateDeviceStatus = (deviceId: string, newOnlineStatus: boolean) => {
-    updateItem(deviceId, { online: newOnlineStatus } as DeviceTableItem);
-  };
 
   const fetchData = async ({
     page,
@@ -820,9 +821,25 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
   };
 
   const updateItem = (itemId: string, item: Partial<DeviceTableItem>) => {
+    const previous =
+      data().find((entry) => entry.id === itemId) ||
+      (currentDevice()?.id === itemId ? currentDevice() : undefined);
+    const update =
+      item.orientation !== undefined &&
+      item.orientation !== previous?.orientation
+        ? { ...item, orientation_status: item.orientation_status }
+        : item;
     if (tableViewRef) {
-      tableViewRef.updateItem(itemId, item);
+      tableViewRef.updateItem(itemId, update);
     }
+    setData((items) =>
+      items.map((entry) =>
+        entry.id === itemId ? { ...entry, ...update } : entry
+      )
+    );
+    setCurrentDevice((device) =>
+      device?.id === itemId ? { ...device, ...update } : device
+    );
   };
 
   return (
@@ -855,19 +872,18 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
           closeOnOutsideClick
           outsideClickIgnoreSelector="tbody tr, .device-tree-item"
         >
-          <Show when={currentDevice()} keyed>
-            {(device) => (
-              <DeviceView
-                baseUrl={props.store.env.baseUrl}
-                organization_id={props.store.organizations.selectedId}
-                device={device}
-                store={props.store}
-                onChange={(updatedDevice) => {
-                  updateItem(updatedDevice.id, updatedDevice);
-                }}
-                t={t}
-              />
-            )}
+          {/* Remount per device so tabs reload; status merges keep the same id. */}
+          <Show when={currentDevice()?.id} keyed>
+            <DeviceView
+              baseUrl={props.store.env.baseUrl}
+              organization_id={props.store.organizations.selectedId}
+              device={currentDevice()!}
+              store={props.store}
+              onChange={(updatedDevice) => {
+                updateItem(updatedDevice.id, updatedDevice);
+              }}
+              t={t}
+            />
           </Show>
         </Drawer>
       </Show>

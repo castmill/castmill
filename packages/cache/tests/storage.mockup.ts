@@ -8,7 +8,9 @@ function byteLength(str: string) {
 }
 
 export class StorageMockup implements StorageIntegration {
-  files: { [index: string]: { url: string; size: number } } = {};
+  files: {
+    [index: string]: { url: string; size: number; sourceUrl?: string };
+  } = {};
 
   constructor(private filesFixture: { [url: string]: string }) {}
 
@@ -55,16 +57,13 @@ export class StorageMockup implements StorageIntegration {
     }
 
     const size = byteLength(data || '');
-    this.files[url] = {
-      url,
-      size,
-    };
-
     const blob = new Blob([data], { type: 'text/javascript' });
+    const cachedUrl = URL.createObjectURL(blob);
+    this.files[url] = { url: cachedUrl, size };
 
     return {
       item: {
-        url: URL.createObjectURL(blob),
+        url: cachedUrl,
         size,
       },
       result: {
@@ -88,7 +87,9 @@ export class StorageMockup implements StorageIntegration {
    *
    */
   async deleteFile(key: string) {
-    delete this.files[key];
+    const sourceUrl =
+      Object.keys(this.files).find((url) => this.files[url].url === key) ?? key;
+    delete this.files[sourceUrl];
   }
 
   /**

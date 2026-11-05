@@ -168,8 +168,9 @@ export const Drawer: Component<DrawerProps> = (_props) => {
       return;
     }
 
-    // Don't close if clicking inside a modal/dialog that is layered on top
-    if (target.closest('[data-modal-overlay]')) {
+    // Layered overlays can come from a separately bundled UI context and may
+    // not share this module's drawer stack.
+    if (target.closest('[data-modal-overlay], [data-drawer-panel]')) {
       return;
     }
 
@@ -282,6 +283,7 @@ export const Drawer: Component<DrawerProps> = (_props) => {
             role="dialog"
             aria-modal={hasBackdrop()}
             aria-label={props.title}
+            data-drawer-panel
             class={panelClass()}
             style={{
               height: '100dvh',

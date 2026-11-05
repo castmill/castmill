@@ -8,10 +8,13 @@ import {
   Layer,
   JsonPlaylist,
   JsonPlaylistItem,
+  PlayerGlobals,
+  VideoPlaybackControllerFactory,
 } from '@castmill/player';
 import {
   ResourceManager,
   Cache,
+  type CacheBackend,
   StorageIntegration,
   ItemType,
 } from '@castmill/cache';
@@ -21,17 +24,59 @@ import {
   Timers,
   TimerEntry,
   WeekDay,
+  isOrientation,
 } from '../interfaces/machine';
 import { getCastmillIntro } from './intro';
 import { Channel, JsonChannel } from './channel';
 import { Schema } from '../interfaces';
 import { JsonMedia } from '../interfaces/json-media';
-import { DivLogger, Logger, NullLogger, WebSocketLogger } from './logger';
+import {
+  DeviceErrorReporter,
+  DivLogger,
+  Logger,
+  NullLogger,
+  WebSocketLogger,
+} from './logger';
 import { TimerManager } from './timer-manager';
+import { OrientationManager } from './orientation';
+import { showDeviceToast } from './device-toast';
 
 const HEARTBEAT_INTERVAL = 1000 * 30; // 30 seconds
 const DEFAULT_MAX_LOGS = 100;
 const MAX_RECONNECT_DELAY_MS = 60_000; // 60 seconds max delay between reconnect attempts
+const DEFAULT_FETCH_TIMEOUT_MS = 5000;
+
+/** Time a maintenance toast is visible before the action may reload the page. */
+export const MAINTENANCE_TOAST_DELAY_MS = 1000;
+
+/**
+ * On-screen feedback for every maintenance action, whether it is triggered
+ * from the device menu or the dashboard. Device-side text is English only.
+ * New maintenance actions must add an entry here and run through
+ * `runMaintenanceAction`.
+ */
+export const MAINTENANCE_TOASTS = {
+  refresh: { start: 'Refreshing', failure: 'Refresh failed' },
+  clearCache: { start: 'Clearing cache', failure: 'Clearing cache failed' },
+  restart: { start: 'Restarting app', failure: 'Restart failed' },
+  quit: { start: 'Quitting app', failure: 'Quit failed' },
+  reboot: { start: 'Rebooting', failure: 'Reboot failed' },
+  shutdown: { start: 'Shutting down', failure: 'Shutdown failed' },
+  update: {
+    start: 'Checking for app updates',
+    failure: 'App update failed',
+  },
+  updateFirmware: {
+    start: 'Checking for firmware updates',
+    failure: 'Firmware update failed',
+  },
+  deviceRemoved: {
+    start: 'Device removed, resetting',
+    failure: 'Device reset failed',
+  },
+} as const;
+
+export type MaintenanceAction = keyof typeof MAINTENANCE_TOASTS;
 
 // Socket reconnection error types
 const AUTH_ERROR_INVALID_DEVICE = 'invalid_device';
@@ -52,6 +97,16 @@ export enum Status {
   Registering = 'registering',
   RecoveryBlocked = 'recovery_blocked',
   Ready = 'ready', // Player is ready to play content, but may be offline
+}
+
+export type ServerConnectionStatus =
+  | 'not-initialized'
+  | 'connected'
+  | 'disconnected';
+
+export interface DeviceIdentity {
+  id: string;
+  name: string;
 }
 
 class RecoveryBlockedError extends Error {
@@ -101,6 +156,11 @@ export interface ChannelRemovedMessage {
   channel_id: number;
 }
 
+export interface PlaylistUpdatedMessage {
+  event: string;
+  playlist_id: number;
+}
+
 interface CachePage {
   page: number;
   page_size: number;
@@ -110,6 +170,7 @@ interface CachePage {
 interface CacheDeleteRequest {
   type: ItemType | 'all';
   urls: string[];
+  ref?: string;
 }
 
 interface DeviceRequest {
@@ -148,6 +209,37 @@ export interface ProgressEvent {
   label: string;
 }
 
+const optionalId = (value: unknown) =>
+  value === undefined || value === null ? null : String(value);
+
+/**
+ * Serializes the channel fields that affect scheduling. IDs are normalized to
+ * strings because websocket events store them as strings while the REST API
+ * returns numbers.
+ */
+const getChannelsSnapshot = (channels: Channel[]) =>
+  JSON.stringify(
+    channels.map(({ attrs }) => ({
+      id: optionalId(attrs.id),
+      timezone: attrs.timezone,
+      default_playlist_id: optionalId(attrs.default_playlist_id),
+      entries: (attrs.entries || []).map((entry) => ({
+        start: entry.start,
+        end: entry.end,
+        playlist_id: optionalId(entry.playlist_id),
+        repeat_weekly_until: entry.repeat_weekly_until ?? null,
+      })),
+    }))
+  );
+
+const toChannels = (rawChannels: unknown): Channel[] | undefined => {
+  const data = (rawChannels as { data?: unknown } | undefined)?.data;
+  if (!Array.isArray(data)) {
+    return;
+  }
+  return data.map((channel: JsonChannel) => new Channel(channel));
+};
+
 /**
  * Castmill Device
  *
@@ -157,20 +249,27 @@ export interface ProgressEvent {
  */
 export class Device extends EventEmitter {
   private closing = false;
-  private cache: Cache;
+  private maintenanceToastDelayMs = MAINTENANCE_TOAST_DELAY_MS;
+  private cache: CacheBackend;
   private resourceManager?: ResourceManager;
   private contentQueue?: Playlist;
   private player?: Player;
   private channels: Channel[] = [];
   private channelIndex = 0;
   private channelGeneration = 0; // Incremented when channels change, used to invalidate in-flight operations
+  private initialChannelsLoad?: Promise<void>;
+  private channelSync?: Promise<void>;
+  private channelSyncQueued = false;
   private logger: Logger = new Logger();
+  private errorReporter: DeviceErrorReporter;
   private logDiv?: HTMLDivElement;
   private socket?: Socket;
   private timerManager: TimerManager;
   private playerContainer?: HTMLElement;
   private timerOffOverlay?: HTMLDivElement;
   private recoveryWatcherRunning = false;
+  private orientationManager: OrientationManager;
+  private renderer?: Renderer;
 
   // The base url is the url of the Castmill API. By default it is assumed that the API is
   // hosted at the same domain as this device and accessible through a relative path.
@@ -188,12 +287,20 @@ export class Device extends EventEmitter {
       cache?: {
         maxItems?: number;
       };
+      cacheBackend?: CacheBackend;
       viewport?: Viewport;
+      transport?: new (endpoint: string) => object;
+      createVideoPlaybackController?: VideoPlaybackControllerFactory;
     }
   ) {
     super();
 
     this.logger.setLogger(new NullLogger());
+    this.errorReporter = new DeviceErrorReporter();
+    this.errorReporter.enableRuntimeCapture();
+    this.orientationManager = new OrientationManager(this.integration, () => {
+      if (this.opts?.viewport) this.renderer?.setViewport(this.opts.viewport);
+    });
 
     this.timerManager = new TimerManager(this.integration, {
       onTurnOff: async () => {
@@ -208,18 +315,98 @@ export class Device extends EventEmitter {
       },
     });
 
-    this.cache = new Cache(
-      this.storageIntegration,
-      'castmill-device',
-      opts?.cache?.maxItems || 1000
-    );
+    this.cache =
+      opts?.cacheBackend ??
+      new Cache(
+        this.storageIntegration,
+        'castmill-device',
+        opts?.cache?.maxItems || 1000
+      );
 
     //const intro = getCastmillIntro(this.resourceManager);
     //this.contentQueue.add(intro);
   }
 
-  async init() {
-    this.baseUrl = await this.getBaseUrl();
+  async init(baseUrl?: string) {
+    this.baseUrl = baseUrl ?? (await this.getBaseUrl());
+    try {
+      await this.orientationManager.restore();
+    } catch (error) {
+      this.logger.error(`Unable to restore device orientation: ${error}`);
+      this.errorReporter.report({ category: 'runtime', error });
+    }
+  }
+
+  // Every content layer must receive the platform's video playback
+  // controller, e.g. the WebOS decoder budget only covers videos created
+  // through it.
+  getPlayerGlobals(): PlayerGlobals {
+    return {
+      target: 'poster',
+      reportError: (report) => this.errorReporter.report(report),
+      createVideoPlaybackController: this.opts?.createVideoPlaybackController,
+    };
+  }
+
+  getServerConnectionStatus(): ServerConnectionStatus {
+    if (!this.socket) {
+      return 'not-initialized';
+    }
+
+    return this.socket.isConnected() ? 'connected' : 'disconnected';
+  }
+
+  async refreshIdentity(): Promise<DeviceIdentity> {
+    const credentials = await this.getCredentials();
+    if (!credentials) {
+      throw new Error('Cannot refresh identity without device credentials');
+    }
+
+    const response = await fetch(
+      `${this.baseUrl}/devices/${credentials.device.id}`,
+      {
+        headers: {
+          Accept: 'application/json',
+          Authorization: `Bearer ${credentials.device.token}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to refresh device identity: HTTP ${response.status}`
+      );
+    }
+
+    const body = await response.json();
+    const identity = body?.data;
+    if (
+      typeof identity?.id !== 'string' ||
+      identity.id !== credentials.device.id ||
+      typeof identity?.name !== 'string'
+    ) {
+      throw new Error('Invalid device identity response');
+    }
+
+    this.id = identity.id;
+    this.name = identity.name;
+
+    if (credentials.device.name !== identity.name) {
+      await this.integration.storeCredentials(
+        JSON.stringify({
+          ...credentials,
+          device: {
+            ...credentials.device,
+            name: identity.name,
+          },
+        })
+      );
+    }
+
+    return {
+      id: identity.id,
+      name: identity.name,
+    };
   }
 
   async start(el: HTMLElement, logDiv?: HTMLDivElement) {
@@ -230,6 +417,7 @@ export class Device extends EventEmitter {
     }
 
     const { device } = credentials;
+    await this.errorReporter.init(device.id);
 
     this.resourceManager = new ResourceManager(this.cache, {
       authToken: device.token,
@@ -239,14 +427,12 @@ export class Device extends EventEmitter {
 
     this.contentQueue = new Playlist('content-queue', this.resourceManager);
 
-    const rawChannels = await this.resourceManager.getData(
-      `${this.baseUrl}/devices/${device.id}/channels`,
-      1000
+    this.initialChannelsLoad = this.fetchChannels(device.id, 1000).then(
+      (channels) => {
+        this.channels = channels || [];
+      }
     );
-
-    this.channels = (rawChannels?.data || []).map(
-      (channel: JsonChannel) => new Channel(channel)
-    );
+    await this.initialChannelsLoad;
 
     this.emitProgress(4, 5, 'Loading channels');
 
@@ -256,8 +442,16 @@ export class Device extends EventEmitter {
 
     // TODO: Should be able to pass the logger to the renderer and the player.
     this.playerContainer = el;
-    const renderer = new Renderer(el);
-    this.player = new Player(this.contentQueue, renderer, this.opts?.viewport);
+    await this.orientationManager.ready();
+    const content = this.orientationManager.attach(el);
+    const renderer = new Renderer(content);
+    this.renderer = renderer;
+    this.player = new Player(
+      this.contentQueue,
+      renderer,
+      this.opts?.viewport,
+      this.errorReporter
+    );
 
     this.emitProgress(5, 5, 'Starting player');
 
@@ -292,9 +486,7 @@ export class Device extends EventEmitter {
           if (entry) {
             const jsonPlaylist: JsonPlaylist | void =
               await this.resourceManager.getData(
-                `${this.baseUrl}/devices/${device.id}/playlists/${
-                  entry.playlist
-                }`,
+                `${this.baseUrl}/devices/${device.id}/playlists/${entry.playlist}`,
                 1000
               );
 
@@ -315,9 +507,7 @@ export class Device extends EventEmitter {
               const layer = await Layer.fromPlaylist(
                 jsonPlaylist,
                 this.resourceManager,
-                {
-                  target: 'poster',
-                }
+                this.getPlayerGlobals()
               );
 
               // Final check before adding to queue
@@ -347,10 +537,126 @@ export class Device extends EventEmitter {
     }
   }
 
+  private async fetchChannels(
+    deviceId: string,
+    freshness: number
+  ): Promise<Channel[] | undefined> {
+    const rawChannels = await this.resourceManager?.getData(
+      this.channelsUrl(deviceId),
+      freshness
+    );
+    return toChannels(rawChannels);
+  }
+
+  private channelsUrl(deviceId: string) {
+    return `${this.baseUrl}/devices/${deviceId}/channels`;
+  }
+
+  /**
+   * Reloads the channels from the server after the device channel (re)joins.
+   * Channel events sent while the device was offline are lost, so playback
+   * would otherwise keep using the channels loaded at startup (possibly from
+   * the offline cache) until the next page reload.
+   *
+   * Synchronizations run one at a time. A request made while one is in flight
+   * queues another fresh download once it finishes, so an older response can
+   * never overwrite state applied by a newer channel event.
+   */
+  private syncChannels(deviceId: string): Promise<void> {
+    if (!this.initialChannelsLoad) {
+      return Promise.resolve();
+    }
+
+    this.channelSyncQueued = true;
+    if (!this.channelSync) {
+      this.channelSync = this.runChannelSyncs(deviceId);
+    }
+    return this.channelSync;
+  }
+
+  private async runChannelSyncs(deviceId: string) {
+    try {
+      while (this.channelSyncQueued) {
+        this.channelSyncQueued = false;
+        await this.syncChannelsOnce(deviceId);
+      }
+    } finally {
+      this.channelSync = undefined;
+    }
+  }
+
+  private async syncChannelsOnce(deviceId: string) {
+    try {
+      await this.initialChannelsLoad;
+      const generation = this.channelGeneration;
+      // Only a verified fresh response may replace the current channels; a
+      // cached fallback could undo a change applied by a channel event.
+      const channels = toChannels(
+        await this.resourceManager?.getFreshData(this.channelsUrl(deviceId))
+      );
+
+      if (!channels) {
+        return;
+      }
+
+      // A channel event changed playback while we were fetching, so this
+      // response may predate it. Fetch again instead of applying it.
+      if (generation !== this.channelGeneration) {
+        this.channelSyncQueued = true;
+        return;
+      }
+
+      if (
+        getChannelsSnapshot(channels) === getChannelsSnapshot(this.channels)
+      ) {
+        return;
+      }
+
+      this.channels = channels;
+      if (this.channelIndex >= this.channels.length) {
+        this.channelIndex = 0;
+      }
+      this.resetPlaybackQueue();
+      this.logger.info('Channels changed on server, playback queue reset');
+    } catch (error) {
+      this.logger.error(`Unable to synchronize channels: ${error}`);
+      this.errorReporter.report({ category: 'network-sync', error });
+    }
+  }
+
+  /**
+   * Channel events only patch the in-memory channels. Refetch the channel list
+   * so the cached copy (used for offline startup) matches the server, and pick
+   * up details the event does not carry, such as a new channel's entries.
+   */
+  private refreshCachedChannels() {
+    if (this.id) {
+      void this.syncChannels(this.id);
+    }
+  }
+
+  reportStartupError(error: unknown): void {
+    const failure = error instanceof Error ? error : new Error(String(error));
+    this.logger.error(
+      `Device player failed to start: ${failure.stack || failure.message}`
+    );
+    this.errorReporter.report({ category: 'runtime', error: failure });
+    this.emit('startup-error', failure);
+  }
+
   async stop() {
     this.closing = true;
+    if (this.orientationChannel && this.orientationListenerRef !== undefined) {
+      this.orientationChannel.off(
+        'orientation_updated',
+        this.orientationListenerRef
+      );
+    }
     await this.player?.stop();
+    await this.orientationManager.ready();
+    this.orientationManager.dispose();
     this.player = undefined;
+    await this.errorReporter.close();
   }
 
   /**
@@ -559,6 +865,7 @@ export class Device extends EventEmitter {
       // Set device id and name early so they're available even if start() isn't called (e.g. timer-off)
       this.id = credentials.device.id;
       this.name = credentials.device.name;
+      await this.errorReporter.init(credentials.device.id);
 
       // Start login in the background so the player can begin playing cached
       // content immediately, even when the device is offline.
@@ -566,6 +873,8 @@ export class Device extends EventEmitter {
         .then((phoenixChannel) => {
           this.initListeners(phoenixChannel);
           this.initHeartbeat(phoenixChannel);
+          this.errorReporter.attach(phoenixChannel);
+          void this.updateDeviceInfo(credentials);
         })
         .catch(async (error) => {
           if (
@@ -573,10 +882,14 @@ export class Device extends EventEmitter {
             error === AUTH_ERROR_UNAUTHORIZED
           ) {
             // Clean all app data and refresh the page.
+            this.closing = true;
             await this.integration.removeCredentials();
+            await this.orientationManager.ready();
+            await this.integration.setSetting('ORIENTATION', '0');
             window.location.reload();
           } else {
             this.logger.error(`Unable to login ${error}`);
+            this.errorReporter.report({ category: 'network-sync', error });
           }
         });
 
@@ -671,6 +984,7 @@ export class Device extends EventEmitter {
 
     let socket = new Socket(this.socketEndpoint, {
       params: { token: pincode },
+      transport: this.opts?.transport,
       reconnectAfterMs: getReconnectDelay,
       rejoinAfterMs: getReconnectDelay,
     });
@@ -728,6 +1042,7 @@ export class Device extends EventEmitter {
 
     const socket = (this.socket = new Socket(this.socketEndpoint, {
       params: { device_id: device.id, hardware_id: hardwareId },
+      transport: this.opts?.transport,
       reconnectAfterMs: getReconnectDelay,
       rejoinAfterMs: getReconnectDelay,
     }));
@@ -771,7 +1086,15 @@ export class Device extends EventEmitter {
       // Handle initial join attempt and rejoins after reconnection
       channel
         .join()
-        .receive('ok', () => {
+        .receive('ok', (response: { orientation?: unknown } = {}) => {
+          if (this.closing) return;
+          this.initOrientationListener(channel);
+          if (response.orientation !== undefined) {
+            void this.applyOrientation(response.orientation, channel);
+          }
+          // Phoenix re-runs join hooks on every rejoin, so this also catches
+          // channel changes made while the device was disconnected.
+          void this.syncChannels(device.id);
           safeResolve(channel);
         })
         .receive('error', (resp) => {
@@ -810,38 +1133,59 @@ export class Device extends EventEmitter {
     });
   }
 
+  private resetPlaybackQueue() {
+    this.channelGeneration++;
+    const currentLayer = this.player?.getCurrentLayer?.();
+    this.player?.clear();
+
+    if (this.contentQueue) {
+      while (this.contentQueue.length > 0) {
+        const layer = this.contentQueue.layers[0];
+        this.contentQueue.remove(layer);
+        if (layer !== currentLayer) {
+          layer.unload?.();
+        }
+      }
+      this.contentQueue.time = 0;
+    }
+  }
+
   private initListeners(channel: PhoenixChannel) {
+    this.initOrientationListener(channel);
     channel.on('command', async (payload: DeviceCommand) => {
       switch (payload.command) {
         case 'refresh':
-          // Refresh browser
-          location.reload();
+          await this.refresh();
           break;
         case 'clear_cache':
-          // Clear cache
-          this.cache.clean();
+          await this.clearCache();
           break;
         case 'restart_app':
-          this.restart();
+          void this.restart();
           break;
         case 'restart_device':
-          this.reboot();
+          void this.reboot();
           break;
         case 'update_app':
-          this.update();
+          void this.update();
           break;
         case 'update_firmware':
-          this.updateFirmware();
+          void this.updateFirmware();
           break;
         case 'shutdown':
-          this.shutdown();
+          void this.shutdown();
           break;
         case 'device_removed':
           // Device has been deleted from the dashboard
           // Clear credentials and cached data, then reload to show registration page
-          await this.integration.removeCredentials();
-          await this.cache.clean();
-          location.reload();
+          this.closing = true;
+          await this.runMaintenanceAction('deviceRemoved', async () => {
+            await this.integration.removeCredentials();
+            await this.orientationManager.ready();
+            await this.integration.setSetting('ORIENTATION', '0');
+            await this.cache.clean();
+            location.reload();
+          });
           break;
       }
     });
@@ -899,10 +1243,28 @@ export class Device extends EventEmitter {
     channel.on('delete', async (payload: DeviceDeleteRequest) => {
       const { resource, opts } = payload;
       switch (resource) {
-        case 'cache':
-          const result = await this.deleteCache(opts);
-          channel.push('res:delete', { result, ref: opts.ref });
+        case 'cache': {
+          const clearAll = opts.type === 'all';
+          const deleteAndRespond = async () => {
+            const result = await this.deleteCache(opts);
+            if (!result.success && clearAll) {
+              showDeviceToast(MAINTENANCE_TOASTS.clearCache.failure);
+            }
+            const response = channel.push('res:delete', {
+              result,
+              ref: opts.ref,
+            });
+            if (result.success && clearAll) {
+              this.reloadAfterAcknowledgement(response);
+            }
+          };
+          if (clearAll) {
+            await this.runMaintenanceAction('clearCache', deleteAndRespond);
+          } else {
+            await deleteAndRespond();
+          }
           break;
+        }
       }
     });
 
@@ -930,17 +1292,27 @@ export class Device extends EventEmitter {
       );
 
       // Find the channel that was updated
-      const updatedChannel = this.channels.find(
-        (ch) => ch.attrs.id === String(message.channel_id)
+      const updatedChannelIndex = this.channels.findIndex(
+        (ch) => String(ch.attrs.id) === String(message.channel_id)
       );
-      if (updatedChannel) {
-        // Update the channel's default playlist ID
-        updatedChannel.attrs.default_playlist_id = message.default_playlist_id
-          ? String(message.default_playlist_id)
-          : undefined;
+      if (updatedChannelIndex !== -1) {
+        const updatedChannel = this.channels[updatedChannelIndex];
+        const defaultPlaylistId =
+          message.default_playlist_id === null
+            ? undefined
+            : String(message.default_playlist_id);
+
+        if (updatedChannel.attrs.default_playlist_id === defaultPlaylistId) {
+          return;
+        }
+
+        updatedChannel.attrs.default_playlist_id = defaultPlaylistId;
+        this.channelIndex = updatedChannelIndex;
+        this.resetPlaybackQueue();
         this.logger.info(
-          'Channel default playlist updated, will take effect on next schedule check'
+          'Channel default playlist updated, playback queue reset'
         );
+        this.refreshCachedChannels();
       }
     });
 
@@ -949,9 +1321,6 @@ export class Device extends EventEmitter {
       this.logger.info(
         `Channel ${message.channel.id} (${message.channel.name}) added to device`
       );
-
-      // Increment generation to invalidate any in-flight content loading
-      this.channelGeneration++;
 
       // Create a new Channel instance and add it to the channels list
       const newChannel = new Channel({
@@ -968,23 +1337,13 @@ export class Device extends EventEmitter {
       this.channels.push(newChannel);
       this.logger.info(`Device now has ${this.channels.length} channel(s)`);
 
-      // Stop player and clear content queue to force loading content from the updated channel list
-      if (this.player) {
-        this.player.stop();
-      }
-      if (this.contentQueue) {
-        while (this.contentQueue.length > 0) {
-          this.contentQueue.remove(this.contentQueue.layers[0]);
-        }
-      }
+      this.resetPlaybackQueue();
+      this.refreshCachedChannels();
     });
 
     // Handle channel removed from device
     channel.on('channel_removed', async (message: ChannelRemovedMessage) => {
       this.logger.info(`Channel ${message.channel_id} removed from device`);
-
-      // Increment generation to invalidate any in-flight content loading
-      this.channelGeneration++;
 
       // Find and remove the channel from the channels list
       // Compare as strings to handle both string and number IDs
@@ -1002,17 +1361,14 @@ export class Device extends EventEmitter {
         }
 
         this.logger.info(`Device now has ${this.channels.length} channel(s)`);
-
-        // Stop player and clear content queue to force loading content from the updated channel list
-        if (this.player) {
-          this.player.stop();
-        }
-        if (this.contentQueue) {
-          while (this.contentQueue.length > 0) {
-            this.contentQueue.remove(this.contentQueue.layers[0]);
-          }
-        }
+        this.resetPlaybackQueue();
+        this.refreshCachedChannels();
       }
+    });
+
+    channel.on('playlist_updated', async (message: PlaylistUpdatedMessage) => {
+      this.logger.info(`Playlist ${message.playlist_id} updated`);
+      this.resetPlaybackQueue();
     });
   }
 
@@ -1025,30 +1381,48 @@ export class Device extends EventEmitter {
 
   private async deleteCache({ type, urls }: CacheDeleteRequest) {
     try {
-      let deleted = 0;
-
       if (type === 'all') {
-        // Clear all cache
-        await this.cache.clean();
-        const [dataCount, codeCount, mediaCount] = await Promise.all([
-          this.cache.count(ItemType.Data),
-          this.cache.count(ItemType.Code),
-          this.cache.count(ItemType.Media),
-        ]);
-        deleted = dataCount + codeCount + mediaCount;
-      } else if (urls && urls.length > 0) {
-        // Delete specific URLs
-        for (const url of urls) {
-          await this.cache.del(url);
-          deleted++;
-        }
+        return { success: true, deleted: await this.cache.clean() };
       }
 
-      return { success: true, deleted };
+      if (!urls?.length) {
+        return {
+          success: false,
+          error: 'At least one URL is required when clearing a cache category',
+        };
+      }
+
+      for (const url of urls) {
+        await this.cache.del(url);
+      }
+
+      return { success: true, deleted: urls.length };
     } catch (error) {
       console.error('Error deleting cache:', error);
+      this.errorReporter.report({ category: 'cache', error });
       return { success: false, error: String(error) };
     }
+  }
+
+  private reloadAfterAcknowledgement(response: {
+    receive: (
+      status: 'ok' | 'error' | 'timeout',
+      callback: () => void
+    ) => unknown;
+  }) {
+    let reloaded = false;
+    const reload = () => {
+      if (!reloaded) {
+        reloaded = true;
+        location.reload();
+      }
+    };
+    const fallback = setTimeout(reload, 1_000);
+
+    response.receive('ok', () => {
+      clearTimeout(fallback);
+      reload();
+    });
   }
 
   private initHeartbeat(channel: PhoenixChannel) {
@@ -1069,7 +1443,59 @@ export class Device extends EventEmitter {
       shutdown: !!this.integration.shutdown,
       update: !!this.integration.update,
       updateFirmware: !!this.integration.updateFirmware,
+      orientation: true,
     };
+  }
+
+  private orientationChannel?: PhoenixChannel;
+  private orientationListenerRef?: number;
+
+  private initOrientationListener(channel: PhoenixChannel): void {
+    if (this.orientationChannel === channel) return;
+    if (this.orientationChannel && this.orientationListenerRef !== undefined) {
+      this.orientationChannel.off(
+        'orientation_updated',
+        this.orientationListenerRef
+      );
+    }
+    this.orientationChannel = channel;
+    this.orientationListenerRef = channel.on(
+      'orientation_updated',
+      (payload: { orientation: unknown }) => {
+        if (this.closing) return;
+        void this.applyOrientation(payload.orientation, channel);
+      }
+    );
+  }
+
+  private async applyOrientation(
+    value: unknown,
+    channel: PhoenixChannel
+  ): Promise<void> {
+    if (!isOrientation(value)) {
+      const error = new Error('Invalid remote device orientation');
+      this.logger.error(error.message);
+      this.errorReporter.report({ category: 'network-sync', error });
+      return;
+    }
+    try {
+      const result = await this.orientationManager.apply(value);
+      if (this.closing) return;
+      channel.push('orientation:report', {
+        orientation: value,
+        status: 'applied',
+        mode: result.mode,
+      });
+    } catch (error) {
+      if (this.closing) return;
+      this.logger.error(`Unable to apply device orientation: ${error}`);
+      this.errorReporter.report({ category: 'runtime', error });
+      channel.push('orientation:report', {
+        orientation: value,
+        status: 'error',
+        mode: 'unknown',
+      });
+    }
   }
 
   async getAvailableBaseUrls(): Promise<{ name: string; url: string }[]> {
@@ -1132,6 +1558,37 @@ export class Device extends EventEmitter {
     return this.integration.getDeviceInfo();
   }
 
+  private async updateDeviceInfo(credentials: Credentials) {
+    try {
+      const info = {
+        ...(await this.integration.getDeviceInfo()),
+        capabilities: this.getCapabilities(),
+      };
+      const csrfToken = document
+        .querySelector("meta[name='csrf-token']")
+        ?.getAttribute('content');
+      const response = await fetch(
+        `${this.baseUrl}/devices/${credentials.device.id}/info`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: ['Bearer', credentials.device.token].join(' '),
+            'Content-Type': 'application/json',
+            ...(csrfToken ? { 'x-csrf-token': csrfToken } : {}),
+          },
+          body: JSON.stringify({ info }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Invalid status ${response.status}`);
+      }
+    } catch (error) {
+      this.logger.error(`Unable to update device info: ${error}`);
+      this.errorReporter.report({ category: 'network-sync', error });
+    }
+  }
+
   private async getChannelMetadata(credentials: Credentials): Promise<{
     organizationName?: string;
     networkName?: string;
@@ -1166,6 +1623,7 @@ export class Device extends EventEmitter {
       };
     } catch (error) {
       this.logger.error(`Unable to resolve channel metadata: ${error}`);
+      this.errorReporter.report({ category: 'network-sync', error });
       return {};
     }
   }
@@ -1206,28 +1664,86 @@ export class Device extends EventEmitter {
     return;
   }
 
+  /**
+   * Shows the action's toast, gives it time to render, then runs the action.
+   * Failures are logged, reported, and shown on screen instead of rejecting,
+   * because menu and dashboard commands do not await the result.
+   */
+  private async runMaintenanceAction(
+    action: MaintenanceAction,
+    run: () => unknown
+  ): Promise<void> {
+    const toast = MAINTENANCE_TOASTS[action];
+    showDeviceToast(toast.start);
+    await new Promise((resolve) =>
+      setTimeout(resolve, this.maintenanceToastDelayMs)
+    );
+    try {
+      await run();
+    } catch (error) {
+      this.logger.error(`Maintenance action ${action} failed: ${error}`);
+      this.errorReporter.report({ category: 'device', error });
+      showDeviceToast(toast.failure);
+    }
+  }
+
+  refresh() {
+    return this.runMaintenanceAction('refresh', () => location.reload());
+  }
+
+  /** Clears content and platform caches, then reloads with fresh state. */
+  clearCache() {
+    return this.runMaintenanceAction('clearCache', async () => {
+      await this.cache.clean();
+      try {
+        await this.integration.clearCache?.();
+      } catch (error) {
+        this.logger.error(`Unable to clear platform cache: ${error}`);
+      }
+      location.reload();
+    });
+  }
+
   restart() {
-    return this.integration.restart?.();
+    const restart = this.integration.restart?.bind(this.integration);
+    return restart
+      ? this.runMaintenanceAction('restart', restart)
+      : Promise.resolve();
   }
 
   quit() {
-    return this.integration.quit?.();
+    const quit = this.integration.quit?.bind(this.integration);
+    return quit ? this.runMaintenanceAction('quit', quit) : Promise.resolve();
   }
 
   reboot() {
-    return this.integration.reboot?.();
+    const reboot = this.integration.reboot?.bind(this.integration);
+    return reboot
+      ? this.runMaintenanceAction('reboot', reboot)
+      : Promise.resolve();
   }
 
   shutdown() {
-    return this.integration.shutdown?.();
+    const shutdown = this.integration.shutdown?.bind(this.integration);
+    return shutdown
+      ? this.runMaintenanceAction('shutdown', shutdown)
+      : Promise.resolve();
   }
 
   update() {
-    return this.integration.update?.();
+    const update = this.integration.update?.bind(this.integration);
+    return update
+      ? this.runMaintenanceAction('update', update)
+      : Promise.resolve();
   }
 
   updateFirmware() {
-    return this.integration.updateFirmware?.();
+    const updateFirmware = this.integration.updateFirmware?.bind(
+      this.integration
+    );
+    return updateFirmware
+      ? this.runMaintenanceAction('updateFirmware', updateFirmware)
+      : Promise.resolve();
   }
 
   /**
@@ -1267,6 +1783,86 @@ export class Device extends EventEmitter {
    */
   async getTimers(): Promise<Timers> {
     return this.timerManager.getTimers();
+  }
+
+  /**
+   * Refresh locally persisted timers from the server-side device schedule.
+   * Local state remains available as an offline fallback when synchronization
+   * cannot be completed.
+   */
+  async syncSchedule(): Promise<boolean> {
+    const credentials = await this.getCredentials();
+    if (!credentials) {
+      return false;
+    }
+
+    try {
+      const response = await this.fetchWithTimeout(
+        `${this.baseUrl}/devices/${credentials.device.id}/schedule`,
+        {
+          headers: {
+            Authorization: `Bearer ${credentials.device.token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Invalid status ${response.status}`);
+      }
+
+      const payload = await response.json();
+      if (
+        !Array.isArray(payload?.timers?.on) ||
+        !Array.isArray(payload?.timers?.off)
+      ) {
+        throw new Error('Invalid schedule response');
+      }
+
+      await this.timerManager.setTimers(payload.timers);
+      return true;
+    } catch (error) {
+      this.logger.error(`Unable to synchronize device schedule: ${error}`);
+      return false;
+    }
+  }
+
+  private fetchWithTimeout(
+    input: RequestInfo | URL,
+    init?: RequestInit,
+    timeoutMs: number = DEFAULT_FETCH_TIMEOUT_MS
+  ): Promise<Response> {
+    return new Promise((resolve, reject) => {
+      let settled = false;
+      const timeoutId = window.setTimeout(() => {
+        if (settled) {
+          return;
+        }
+
+        settled = true;
+        reject(new Error(`Request timed out after ${timeoutMs}ms`));
+      }, timeoutMs);
+
+      fetch(input, init).then(
+        (response) => {
+          if (settled) {
+            return;
+          }
+
+          settled = true;
+          window.clearTimeout(timeoutId);
+          resolve(response);
+        },
+        (error) => {
+          if (settled) {
+            return;
+          }
+
+          settled = true;
+          window.clearTimeout(timeoutId);
+          reject(error);
+        }
+      );
+    });
   }
 
   /**

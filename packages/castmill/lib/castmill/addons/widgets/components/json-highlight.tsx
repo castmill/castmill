@@ -6,7 +6,7 @@ import { JSX } from 'solid-js';
  */
 export function JsonHighlight(props: { json: any }): JSX.Element {
   const jsonString = JSON.stringify(props.json, null, 2);
-  
+
   // Simple regex-based syntax highlighting
   const highlighted = jsonString
     .replace(/("(?:\\.|[^"\\])*")(\s*:)?/g, (match, p1, p2) => {

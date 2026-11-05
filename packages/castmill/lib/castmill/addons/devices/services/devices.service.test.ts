@@ -17,6 +17,25 @@ describe('DevicesService - Multiple Channel Assignment', () => {
     vi.clearAllMocks();
   });
 
+  it('saves orientation in the organization-scoped update and returns the server device', async () => {
+    const device = { id: deviceId, orientation: 270 };
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(JSON.stringify(device), { status: 200 })
+    );
+    expect(
+      await DevicesService.updateDevice(baseUrl, organizationId, deviceId, {
+        orientation: 270,
+      })
+    ).toEqual(device);
+    expect(fetch).toHaveBeenCalledWith(
+      `${baseUrl}/dashboard/organizations/${organizationId}/devices/${deviceId}`,
+      expect.objectContaining({
+        method: 'PATCH',
+        body: JSON.stringify({ update: { orientation: 270 } }),
+      })
+    );
+  });
+
   describe('addChannelToDevice', () => {
     it('should successfully add a channel to a device', async () => {
       const channelId = 1;
@@ -267,6 +286,28 @@ describe('DevicesService - Multiple Channel Assignment', () => {
       await expect(
         DevicesService.addChannelToDevice(baseUrl, deviceId, channelId)
       ).rejects.toThrow('Bad Request');
+    });
+  });
+
+  describe('deleteDeviceCache', () => {
+    it('sends the explicit all-cache deletion request', async () => {
+      const response = new Response(
+        JSON.stringify({ success: true, deleted: 3 }),
+        { status: 200 }
+      );
+      (global.fetch as any).mockResolvedValueOnce(response);
+
+      await expect(
+        DevicesService.deleteDeviceCache(baseUrl, deviceId, 'all', [])
+      ).resolves.toEqual({ success: true, deleted: 3 });
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        `${baseUrl}/dashboard/devices/${deviceId}/cache`,
+        expect.objectContaining({
+          method: 'DELETE',
+          body: JSON.stringify({ type: 'all', urls: [] }),
+        })
+      );
     });
   });
 });

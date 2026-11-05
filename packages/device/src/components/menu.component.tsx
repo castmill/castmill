@@ -202,75 +202,71 @@ export const MenuComponent: Component<MenuProps> = (props) => {
       ...(capabilities.updateFirmware
         ? [createAction('Update Firmware', () => props.device.updateFirmware())]
         : []),
-      ...[
-        createSubmenu('Settings', [
-          createSubmenu('Server', [
-            ...createRadioButtons(
-              availableUrls().map(({ name, url }) => ({
-                name,
-                id: url,
-                description: url,
-              })),
-              'base-url-group',
-              selectedUrl(),
-              (state: string) => {
-                props.device.setBaseUrl(state);
-              }
-            ),
-          ]),
+      createSubmenu('Settings', [
+        createSubmenu('Server', [
+          ...createRadioButtons(
+            availableUrls().map(({ name, url }) => ({
+              name,
+              id: url,
+              description: url,
+            })),
+            'base-url-group',
+            selectedUrl(),
+            (state: string) => {
+              props.device.setBaseUrl(state);
+            }
+          ),
         ]),
-        createSubmenu(
-          'Status',
-          [
-            createInfo(
-              'timer-status',
-              <>
-                <div style={{ display: 'flex', 'flex-direction': 'column' }}>
-                  <Show
-                    when={playing()}
-                    fallback={
-                      <>
-                        <span
-                          style={{ color: '#ff9900', 'font-weight': 'bold' }}
-                        >
-                          Playback turned off by timer
-                        </span>
-                        <Show when={nextOnTime()}>
-                          <span
-                            style={{
-                              color: '#ccc',
-                              'font-size': '0.9em',
-                              'margin-top': '0.3em',
-                            }}
-                          >
-                            Next on: {nextOnTime()}
-                          </span>
-                        </Show>
-                      </>
-                    }
-                  >
-                    <span style={{ color: '#4caf50', 'font-weight': 'bold' }}>
-                      Playing
-                    </span>
-                    <Show when={nextOffTime()}>
-                      <span
-                        style={{
-                          color: '#ccc',
-                          'font-size': '0.9em',
-                          'margin-top': '0.3em',
-                        }}
-                      >
-                        Next off: {nextOffTime()}
+      ]),
+      createSubmenu(
+        'Status',
+        [
+          createInfo(
+            'timer-status',
+            <>
+              <div style={{ display: 'flex', 'flex-direction': 'column' }}>
+                <Show
+                  when={playing()}
+                  fallback={
+                    <>
+                      <span style={{ color: '#ff9900', 'font-weight': 'bold' }}>
+                        Playback turned off by timer
                       </span>
-                    </Show>
+                      <Show when={nextOnTime()}>
+                        <span
+                          style={{
+                            color: '#ccc',
+                            'font-size': '0.9em',
+                            'margin-top': '0.3em',
+                          }}
+                        >
+                          Next on: {nextOnTime()}
+                        </span>
+                      </Show>
+                    </>
+                  }
+                >
+                  <span style={{ color: '#4caf50', 'font-weight': 'bold' }}>
+                    Playing
+                  </span>
+                  <Show when={nextOffTime()}>
+                    <span
+                      style={{
+                        color: '#ccc',
+                        'font-size': '0.9em',
+                        'margin-top': '0.3em',
+                      }}
+                    >
+                      Next off: {nextOffTime()}
+                    </span>
                   </Show>
-                </div>
-              </>
-            ),
-          ],
-          timerOff() ? '#ff9900' : '#4caf50'
-        ),
-      ],
+                </Show>
+              </div>
+            </>
+          ),
+        ],
+        timerOff() ? '#ff9900' : '#4caf50'
+      ),
     ];
   });
 

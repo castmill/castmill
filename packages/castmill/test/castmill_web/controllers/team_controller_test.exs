@@ -388,6 +388,12 @@ defmodule CastmillWeb.TeamControllerTest do
       {:ok, _token1} = create_invitation_for_user_email(team, "someone1@example.com")
       {:ok, _token2} = create_invitation_for_user_email(team, "someone2@example.com")
 
+      invitation = Teams.get_invitation_by_email("someone2@example.com")
+
+      invitation
+      |> Ecto.Changeset.change(updated_at: ~U[2024-01-01 00:00:00Z])
+      |> Castmill.Repo.update!()
+
       conn =
         get(
           conn,
@@ -396,7 +402,9 @@ defmodule CastmillWeb.TeamControllerTest do
             "team_id" => "#{team.id}",
             "organization_id" => "#{organization.id}",
             "page" => "1",
-            "page_size" => "10"
+            "page_size" => "10",
+            "key" => "updated_at",
+            "direction" => "descending"
           }
         )
 
@@ -404,6 +412,11 @@ defmodule CastmillWeb.TeamControllerTest do
       response = json_response(conn, 200)
       assert response["count"] == 2
       assert length(response["data"]) == 2
+
+      assert Enum.map(response["data"], & &1["email"]) == [
+               "someone1@example.com",
+               "someone2@example.com"
+             ]
     end
   end
 

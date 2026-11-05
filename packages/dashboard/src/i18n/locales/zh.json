@@ -623,7 +623,8 @@
     "networkSettings": "设置",
     "networkOrganizations": "组织",
     "networkUsers": "用户与邀请",
-    "tags": "标签"
+    "tags": "标签",
+    "agents": "智能体"
   },
   "channels": {
     "title": "频道",
@@ -637,6 +638,7 @@
     "confirmRemoveChannels": "您确定要删除以下频道吗？",
     "enterChannelName": "输入频道名称",
     "defaultPlaylist": "默认播放列表",
+    "currentPlaylist": "当前播放列表",
     "selectPlaylist": "选择播放列表",
     "clearDefaultPlaylist": "清除默认播放列表",
     "dragPlaylists": "拖动播放列表",
@@ -915,7 +917,9 @@
       "pending": "等待设置",
       "enterClientCredentials": "在下方输入您的 {{provider}} API 凭据：",
       "afterSavingCredentials": "保存凭据后，点击下方按钮以授权 {{provider}}：",
-      "networkCredentialsConfigured": "您的网络管理员已配置 {{provider}} 凭据。只需点击下方按钮即可连接您的账户。"
+      "networkCredentialsConfigured": "您的网络管理员已配置 {{provider}} 凭据。只需点击下方按钮即可连接您的账户。",
+      "noConfigurationRequired": "无需配置",
+      "optional": "可选"
     },
     "editor": {
       "newWidget": "新建 Widget",
@@ -1049,6 +1053,25 @@
     "translations": "翻译"
   },
   "devices": {
+    "orientation": {
+      "label": "方向",
+      "help": "从正常方向顺时针旋转播放内容。",
+      "offline": "播放器下次连接时将应用已保存的方向。",
+      "pending": "方向已保存，正在等待播放器确认。",
+      "applied": "方向已应用。",
+      "applyError": "播放器无法应用此方向，请查看设备事件。",
+      "unsupported": "请更新此播放器以启用方向设置。",
+      "saved": "设备设置已保存。",
+      "saveError": "无法保存设备设置。",
+      "options": {
+        "deg0": "横向",
+        "deg90": "纵向",
+        "deg180": "横向（翻转）",
+        "deg270": "纵向（翻转）"
+      },
+      "change": "更改",
+      "done": "完成"
+    },
     "setDeviceChannel": "设置设备频道",
     "selectChannel": "选择频道",
     "preview": {
@@ -1079,7 +1102,8 @@
       "noData": "该设备没有可用的遥测数据。",
       "daysShort": "天",
       "hoursShort": "时",
-      "minutesShort": "分"
+      "minutesShort": "分",
+      "description": "播放器报告的实时运行状况数据。"
     },
     "maintenance": {
       "refresh": "刷新",
@@ -1094,6 +1118,7 @@
       "checkUpdatesDescription": "检查更新并安装它们。这不会重新启动设备",
       "updateFirmware": "更新固件",
       "updateFirmwareDescription": "更新设备的固件",
+      "actionNotSupported": "不支持。",
       "offlineMessage": "设备处于离线状态,因此无法向其发送命令",
       "autorecoveryUpdated": "自动恢复已更新",
       "autorecoveryUpdateFailed": "自动恢复更新失败",
@@ -1104,7 +1129,15 @@
       "recoverLostSettingsLabel": "恢复丢失设置",
       "disabled": "已禁用",
       "enabledMinutesRemaining": "已启用（剩余 {{minutes}} 分钟）",
-      "enabledForever": "永久启用"
+      "enabledForever": "永久启用",
+      "run": "执行",
+      "commandSent": "命令已发送到设备",
+      "commandFailed": "无法发送命令：{{error}}",
+      "contentGroup": "播放",
+      "contentGroupDescription": "无需重启硬件即可恢复播放。",
+      "systemGroup": "系统",
+      "systemGroupDescription": "更新和重启。屏幕可能会暂时黑屏。",
+      "recoverLostSettingsDescription": "允许此播放器在丢失凭据时从其他 IP 地址重新连接。"
     },
     "cache": {
       "title": "设备缓存",
@@ -1118,13 +1151,14 @@
       "confirmDeleteMessage": "确定要删除此缓存条目吗？URL：{{url}}",
       "confirmDeleteMultiple": "删除多个条目",
       "confirmDeleteMultipleMessage": "确定要删除 {{count}} 个缓存条目吗？",
-      "confirmClearAll": "清除所有缓存",
-      "confirmClearAllMessage": "确定要清除所有 {{type}} 缓存条目吗？此操作无法撤消。",
+      "confirmClearAll": "清除整个缓存",
+      "confirmClearAllMessage": "确定要清除所有数据、代码和媒体缓存条目吗？播放器将重新加载，且此操作无法撤消。",
       "deleteSuccess": "缓存条目删除成功",
       "deleteMultipleSuccess": "成功删除 {{count}} 个缓存条目",
       "clearAllSuccess": "成功清除所有缓存条目",
       "deleteError": "删除缓存时出错：{{error}}",
-      "offlineWarning": "设备当前离线。在设备重新上线之前，无法获取缓存信息。"
+      "offlineWarning": "设备当前离线。在设备重新上线之前，无法获取缓存信息。",
+      "description": "播放器在本地存储的文件，以便离线时继续播放。"
     },
     "events": {
       "title": "设备事件",
@@ -1138,7 +1172,14 @@
       "confirmClearAll": "清除所有事件",
       "confirmClearAllMessage": "确定要删除此设备的所有事件吗？此操作无法撤消。",
       "clearAllSuccess": "成功删除 {{count}} 个事件",
-      "deleteError": "删除事件时出错：{{error}}"
+      "deleteError": "删除事件时出错：{{error}}",
+      "occurrences": "发生次数",
+      "firstSeen": "首次出现",
+      "lastSeen": "最近出现",
+      "details": "详情",
+      "detailsTitle": "错误详情",
+      "errorDetails": "已清理的诊断详情",
+      "description": "播放器报告的连接变化和错误。"
     },
     "errors": {
       "setChannelFailed": "设置设备频道失败:{{error}}",
@@ -1172,11 +1213,49 @@
     "errorRemovingDevice": "删除设备{{name}}时出错：{{error}}",
     "errorRemovingDevices": "删除设备时出错：{{error}}",
     "enterDescription": "输入描述",
-    "drawerTitle": "设备 \"{{name}}\""
+    "drawerTitle": "设备 \"{{name}}\"",
+    "info": {
+      "title": "信息",
+      "platform": "平台",
+      "playerVersion": "播放器版本",
+      "operatingSystem": "操作系统",
+      "hardware": "硬件",
+      "environmentVersion": "环境版本",
+      "chromiumVersion": "Chromium 版本",
+      "v8Version": "V8 版本",
+      "nodeVersion": "Node.js 版本",
+      "userAgent": "用户代理"
+    },
+    "details": {
+      "settings": "设置",
+      "overview": "概览",
+      "schedule": "日程",
+      "sections": "设备分区",
+      "lastSeen": "最后在线 {{time}}",
+      "neverSeen": "从未连接",
+      "copyId": "复制设备 ID",
+      "copied": "设备 ID 已复制",
+      "copyFailed": "无法复制设备 ID。",
+      "unsavedChanges": "有未保存的更改",
+      "nameRequired": "名称为必填项",
+      "nameTooShort": "名称至少需要 5 个字符",
+      "descriptionTooShort": "描述至少需要 5 个字符"
+    },
+    "channelList": {
+      "description": "播放器会按照这些频道的排期播放内容。",
+      "empty": "尚未分配任何频道。",
+      "loadError": "无法获取设备频道",
+      "alreadyAssigned": "该频道已分配给此设备。",
+      "added": "已添加频道“{{name}}”",
+      "removed": "已移除频道“{{name}}”",
+      "addError": "添加频道失败：{{error}}",
+      "removeError": "移除频道失败：{{error}}"
+    }
   },
   "validation": {
     "fieldRequired": "此字段为必填项",
-    "minLength": "此字段必须至少包含 {{min}} 个字符"
+    "minLength": "此字段必须至少包含 {{min}} 个字符",
+    "invalidCoordinates": "此字段必须包含有效的坐标"
   },
   "plurals": {
     "items": {
@@ -1518,7 +1597,7 @@
   },
   "deviceSchedule": {
     "title": "设备排程",
-    "description": "定义设备应何时开启。在网格上点击并拖动以创建排程条目。在计划时间之外，设备将关闭。如果未设置条目，设备始终开启。",
+    "description": "设置设备何时处于开启状态。在网格上拖动以创建条目，或轻触空白时段添加条目。点击或轻触条目可编辑其日期和时间。在计划时间之外，设备将关闭。如果未设置任何条目，设备将始终开启。",
     "mon": "一",
     "tue": "二",
     "wed": "三",
@@ -1534,6 +1613,94 @@
     "saved": "排程已保存并发送到设备",
     "savedOffline": "排程已保存。设备离线 — 重新连接时将发送计时器。",
     "loadError": "加载排程出错",
-    "saveError": "保存排程出错"
+    "saveError": "保存排程出错",
+    "editor": {
+      "title": "编辑时间段",
+      "newTitle": "新时间段",
+      "editSlot": "编辑时间段 {{slot}}",
+      "startDay": "开始日",
+      "endDay": "结束日",
+      "startTime": "开始时间",
+      "endTime": "结束时间",
+      "midnightHint": "将结束时间设为 00:00 可保持开启至午夜。",
+      "invalidTime": "结束时间必须晚于开始时间。",
+      "overlap": "此时间段与另一个条目重叠。",
+      "done": "完成"
+    }
+  },
+  "agents": {
+    "title": "AI 智能体",
+    "description": "AI 智能体是通过 MCP 服务器控制 Castmill 的组织成员。它们拥有与相同角色用户一样的权限，并且所有操作都会被记录。",
+    "newAgent": "新建智能体",
+    "editAgent": "编辑智能体",
+    "formDescription": "角色决定智能体在此组织中可以执行的操作。",
+    "namePlaceholder": "例如：内容助手",
+    "descriptionPlaceholder": "此智能体的用途是什么？",
+    "empty": "暂无智能体。创建一个以将 AI 助手连接到 Castmill。",
+    "noAccess": "只有组织管理员和经理可以查看智能体。",
+    "credentials": "凭据",
+    "credentialsRevoked": "已撤销",
+    "lastUsed": "上次使用",
+    "neverUsed": "从未",
+    "rotate": "轮换凭据",
+    "revoke": "撤销凭据",
+    "created": "智能体已创建",
+    "updated": "智能体已更新",
+    "deleted": "智能体已删除",
+    "rotated": "凭据已轮换",
+    "revoked": "凭据已撤销",
+    "copied": "已复制到剪贴板",
+    "copy": "复制",
+    "secretTitle": "{{name}} 的凭据",
+    "secretWarning": "请立即复制此密钥。出于安全原因，它将不会再次显示。",
+    "secretDone": "我已保存密钥",
+    "tabs": {
+      "agents": "智能体",
+      "activity": "活动日志",
+      "setup": "设置说明"
+    },
+    "confirm": {
+      "rotateTitle": "轮换凭据",
+      "rotateMessage": "将为 {{name}} 生成新密钥。当前密钥将立即失效。",
+      "revokeTitle": "撤销凭据",
+      "revokeMessage": "在生成新凭据之前，{{name}} 将无法连接。",
+      "deleteTitle": "删除智能体",
+      "deleteMessage": "删除 {{name}}？其凭据和活动日志将被永久删除。"
+    },
+    "errors": {
+      "loadFailed": "加载智能体失败",
+      "saveFailed": "保存智能体失败：{{error}}",
+      "actionFailed": "操作失败：{{error}}",
+      "copyFailed": "无法复制到剪贴板",
+      "loadActionsFailed": "加载活动日志失败"
+    },
+    "activity": {
+      "agent": "智能体",
+      "allAgents": "所有智能体",
+      "status": "状态",
+      "allStatuses": "所有状态",
+      "success": "成功",
+      "error": "错误",
+      "empty": "暂无智能体活动。",
+      "tool": "工具",
+      "request": "请求",
+      "duration": "耗时",
+      "arguments": "参数"
+    },
+    "integration": {
+      "intro": "智能体可以使用任何支持通过 Streamable HTTP 连接远程服务器的 MCP 客户端连接到 Castmill。在 Authorization 请求头中将智能体密钥用作 Bearer 令牌。",
+      "serverUrl": "MCP 服务器 URL",
+      "securityNote": "请像对待密码一样对待智能体密钥：不要将其提交到源代码管理。如果密钥泄露，请轮换凭据。",
+      "clients": {
+        "other": "其他客户端"
+      },
+      "steps": {
+        "claudeDesktop": "在 Claude Desktop 中打开“设置 > 开发者 > 编辑配置”，将此服务器添加到 claude_desktop_config.json 并重启应用。Claude Desktop 通过 mcp-remote 桥接连接，因此此计算机上必须安装 Node.js（含 npx）。",
+        "claudeCode": "在终端中运行此命令，将服务器注册到 Claude Code，然后使用 \"claude mcp list\" 进行验证。",
+        "vscode": "将此配置添加到工作区的 .vscode/mcp.json（或在命令面板中运行 \"MCP: Add Server\"），然后启动服务器，并在 Copilot Chat 的代理模式中使用。",
+        "cursor": "将此配置添加到 ~/.cursor/mcp.json（适用于所有项目）或项目中的 .cursor/mcp.json，然后在 Cursor Settings > MCP 中启用该服务器。",
+        "other": "使用以下设置配置远程 MCP 服务器。"
+      }
+    }
   }
 }

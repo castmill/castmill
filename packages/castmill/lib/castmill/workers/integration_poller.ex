@@ -120,6 +120,14 @@ defmodule Castmill.Workers.IntegrationPoller do
 
         :ok
 
+      {:error, reason, _updated_credentials} ->
+        Logger.error(
+          "IntegrationPoller: Failed to poll integration #{integration_id}: #{inspect(reason)}"
+        )
+
+        # Return error to trigger retry
+        {:error, reason}
+
       {:error, reason} ->
         Logger.error(
           "IntegrationPoller: Failed to poll integration #{integration_id}: #{inspect(reason)}"
@@ -242,25 +250,23 @@ defmodule Castmill.Workers.IntegrationPoller do
   end
 
   defp get_credentials(%WidgetIntegration{} = integration, organization_id, widget_config_id) do
+    # Widget-scoped integrations read the widget config's credentials; others
+    # merge network-level credentials with organization-level credentials.
     case Integrations.get_scoped_credentials(integration, organization_id, widget_config_id) do
       {:ok, credentials} ->
         {:ok, credentials}
 
       {:error, _} ->
-        # Check if integration allows optional auth
-        # auth_type can be in pull_config or credential_schema
-        case integration do
-          %{pull_config: %{"auth_type" => auth_type}} when auth_type in ["optional", "none"] ->
-            {:ok, %{}}
-
-          %{credential_schema: %{"auth_type" => auth_type}}
-          when auth_type in ["optional", "none"] ->
-            {:ok, %{}}
-
-          _ ->
-            {:error, :no_credentials}
-        end
+        if optional_auth?(integration), do: {:ok, %{}}, else: {:error, :no_credentials}
     end
+  end
+
+  defp optional_auth?(%WidgetIntegration{} = integration) do
+    auth_type =
+      get_in(integration.pull_config || %{}, ["auth_type"]) ||
+        get_in(integration.credential_schema || %{}, ["auth_type"])
+
+    auth_type in ["optional", "none"]
   end
 
   defp fetch_data(%WidgetIntegration{} = integration, credentials, widget_options) do

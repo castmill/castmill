@@ -4,6 +4,7 @@ defmodule Castmill.Devices do
   """
   import Ecto.Query, warn: false
   import Argon2
+  require Logger
 
   alias Castmill.Organizations.Organization
   alias Castmill.Repo
@@ -584,31 +585,324 @@ defmodule Castmill.Devices do
 
     If the number of event exceeds the limit, the oldest entries are deleted.
   """
+  @max_error_reports_per_batch 20
+  @max_error_report_batch_bytes 32 * 1024
+  @max_error_message_bytes 1024
+  @max_error_stack_bytes 4096
+  @max_error_occurrences 2_147_483_647
+  @valid_error_categories ~w(playback media-load cache schedule network-sync runtime device overflow)
+  @valid_error_context_keys ~w(playlistId layerId layerName widgetId mediaId appVersion)
+
   def insert_event(%{device_id: device_id} = attrs, max_logs \\ 100) do
     Repo.transaction(fn ->
-      # Count the current number of logs for this device
-      current_count =
-        from(l in DevicesEvents, where: l.device_id == ^device_id)
-        |> Repo.aggregate(:count, :id)
+      now = DateTime.utc_now()
 
-      # Identify and delete the oldest log IDs if the count exceeds the limit
-      if current_count >= max_logs do
-        oldest_ids =
-          from(l in DevicesEvents, where: l.device_id == ^device_id)
-          |> order_by([l], asc: l.id)
-          |> limit(^max(current_count - max_logs + 1, 0))
-          |> select([l], l.id)
-          |> Repo.all()
+      event =
+        %DevicesEvents{}
+        |> DevicesEvents.changeset(
+          attrs
+          |> Map.put(:timestamp, now)
+          |> Map.put(:first_occurred_at, now)
+          |> Map.put(:last_occurred_at, now)
+        )
+        |> Repo.insert!()
 
-        from(l in DevicesEvents, where: l.id in ^oldest_ids)
-        |> Repo.delete_all()
-      end
-
-      # Insert the new event entry with the current UTC timestamp
-      %DevicesEvents{}
-      |> DevicesEvents.changeset(Map.put(attrs, :timestamp, DateTime.utc_now()))
-      |> Repo.insert!()
+      prune_device_events(device_id, max_logs)
+      event
     end)
+  end
+
+  @doc """
+  Validates device-supplied error aggregates before they reach persistence.
+  """
+  def validate_error_reports(reports, dropped_count \\ 0)
+
+  def validate_error_reports(reports, dropped_count)
+      when is_list(reports) and length(reports) <= @max_error_reports_per_batch and
+             is_integer(dropped_count) and dropped_count >= 0 and
+             dropped_count <= @max_error_occurrences do
+    with :ok <- validate_error_report_batch_size(reports, dropped_count),
+         {:ok, reports} <-
+           reports |> Enum.map(&normalize_error_report/1) |> collect_validation_results() do
+      {:ok, reports, dropped_count}
+    end
+  end
+
+  def validate_error_reports(_reports, _dropped_count), do: {:error, :invalid_error_report_batch}
+
+  def validate_error_reports(reports, dropped_count, dropped_report_id) do
+    with {:ok, reports, dropped_count} <- validate_error_reports(reports, dropped_count),
+         {:ok, dropped_report_id} <- validate_dropped_report_id(dropped_report_id),
+         :ok <- validate_error_report_batch_size(reports, dropped_count, dropped_report_id) do
+      {:ok, reports, dropped_count, dropped_report_id}
+    end
+  end
+
+  @doc """
+  Inserts or aggregates an acknowledged batch of device errors.
+  """
+  def upsert_error_reports(device_id, reports, dropped_count \\ 0) do
+    upsert_error_reports(device_id, reports, dropped_count, nil)
+  end
+
+  def upsert_error_reports(device_id, reports, dropped_count, dropped_report_id) do
+    try do
+      Repo.transaction(fn ->
+        now = DateTime.utc_now()
+        Enum.each(reports, &persist_error_report(device_id, &1, now))
+
+        if dropped_count > 0 do
+          persist_error_report(
+            device_id,
+            %{
+              report_id: dropped_report_id || "dropped-#{now |> DateTime.to_unix(:second)}",
+              fingerprint: "dropped-device-errors",
+              category: "overflow",
+              code: nil,
+              message: "Device discarded error reports because its diagnostic buffer was full",
+              stack: nil,
+              context: %{},
+              count: dropped_count,
+              first_occurred_at: now,
+              last_occurred_at: now
+            },
+            now
+          )
+        end
+
+        prune_device_events(device_id, 100)
+        :ok
+      end)
+    rescue
+      error ->
+        Logger.error("Device error report persistence failed: #{Exception.message(error)}")
+        {:error, :error_report_persistence_failed}
+    end
+  end
+
+  defp persist_error_report(device_id, report, received_at) do
+    case upsert_error_report(device_id, report, received_at) do
+      {:ok, _result} ->
+        :ok
+
+      {:error, error} ->
+        Logger.error("Device error report persistence failed: #{inspect(error)}")
+        Repo.rollback(:error_report_persistence_failed)
+    end
+  end
+
+  defp validate_error_report_batch_size(reports, dropped_count) do
+    if byte_size(Jason.encode!(%{reports: reports, dropped_count: dropped_count})) <=
+         @max_error_report_batch_bytes do
+      :ok
+    else
+      {:error, :error_report_batch_too_large}
+    end
+  end
+
+  defp validate_error_report_batch_size(reports, dropped_count, dropped_report_id) do
+    if byte_size(
+         Jason.encode!(%{
+           reports: reports,
+           dropped_count: dropped_count,
+           dropped_report_id: dropped_report_id
+         })
+       ) <= @max_error_report_batch_bytes do
+      :ok
+    else
+      {:error, :error_report_batch_too_large}
+    end
+  end
+
+  defp collect_validation_results(results) do
+    case Enum.find(results, &match?({:error, _}, &1)) do
+      nil -> {:ok, Enum.map(results, fn {:ok, report} -> report end)}
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  defp normalize_error_report(report) when is_map(report) do
+    with {:ok, report_id} <- validate_report_id(report["report_id"]),
+         {:ok, fingerprint} <- validate_fingerprint(report["fingerprint"]),
+         {:ok, category} <- validate_category(report["category"]),
+         {:ok, message} <- validate_message(report["message"]),
+         {:ok, count} <- validate_occurrence_count(report["count"]),
+         {:ok, first_occurred_at} <- parse_occurrence_time(report["first_occurred_at"]),
+         {:ok, last_occurred_at} <- parse_occurrence_time(report["last_occurred_at"]),
+         :ok <- validate_occurrence_range(first_occurred_at, last_occurred_at),
+         {:ok, stack} <- validate_stack(report["stack"]),
+         {:ok, context} <- validate_error_context(report["context"]) do
+      {:ok,
+       %{
+         report_id: report_id,
+         fingerprint: fingerprint,
+         category: category,
+         code: normalize_code(report["code"]),
+         message: message,
+         stack: stack,
+         context: context,
+         count: count,
+         first_occurred_at: first_occurred_at,
+         last_occurred_at: last_occurred_at
+       }}
+    end
+  end
+
+  defp normalize_error_report(_), do: {:error, :invalid_error_report}
+
+  defp validate_report_id(value) when is_binary(value) and byte_size(value) <= 64,
+    do: {:ok, value}
+
+  defp validate_report_id(_), do: {:error, :invalid_error_report_id}
+
+  defp validate_dropped_report_id(nil), do: {:ok, nil}
+
+  defp validate_dropped_report_id(value) when is_binary(value) and byte_size(value) <= 64,
+    do: {:ok, value}
+
+  defp validate_dropped_report_id(_), do: {:error, :invalid_dropped_error_report_id}
+
+  defp validate_fingerprint(value) when is_binary(value) and byte_size(value) <= 128,
+    do: {:ok, value}
+
+  defp validate_fingerprint(_), do: {:error, :invalid_error_fingerprint}
+
+  defp validate_category(value) when value in @valid_error_categories, do: {:ok, value}
+  defp validate_category(_), do: {:error, :invalid_error_category}
+
+  defp validate_message(value) when is_binary(value),
+    do: {:ok, truncate_utf8(value, @max_error_message_bytes)}
+
+  defp validate_message(_), do: {:error, :invalid_error_message}
+
+  defp validate_occurrence_count(value)
+       when is_integer(value) and value > 0 and value <= @max_error_occurrences,
+       do: {:ok, value}
+
+  defp validate_occurrence_count(_), do: {:error, :invalid_error_count}
+
+  defp validate_occurrence_range(first_occurred_at, last_occurred_at) do
+    if DateTime.compare(first_occurred_at, last_occurred_at) == :gt do
+      {:error, :invalid_error_occurrence_range}
+    else
+      :ok
+    end
+  end
+
+  defp parse_occurrence_time(value) when is_binary(value) do
+    case DateTime.from_iso8601(value) do
+      {:ok, datetime, _offset} -> {:ok, datetime}
+      _ -> {:error, :invalid_error_timestamp}
+    end
+  end
+
+  defp parse_occurrence_time(_), do: {:error, :invalid_error_timestamp}
+
+  defp validate_stack(nil), do: {:ok, nil}
+
+  defp validate_stack(stack) when is_binary(stack),
+    do: {:ok, truncate_utf8(stack, @max_error_stack_bytes)}
+
+  defp validate_stack(_), do: {:error, :invalid_error_stack}
+
+  defp truncate_utf8(value, max_bytes) when byte_size(value) <= max_bytes, do: value
+
+  defp truncate_utf8(value, max_bytes) do
+    prefix = binary_part(value, 0, max_bytes - 3)
+    valid_prefix = trim_invalid_utf8_suffix(prefix)
+    valid_prefix <> "…"
+  end
+
+  defp trim_invalid_utf8_suffix(value) do
+    if String.valid?(value) do
+      value
+    else
+      trim_invalid_utf8_suffix(binary_part(value, 0, byte_size(value) - 1))
+    end
+  end
+
+  defp normalize_code(nil), do: nil
+  defp normalize_code(code) when is_binary(code) and byte_size(code) <= 128, do: code
+  defp normalize_code(_), do: nil
+
+  defp validate_error_context(nil), do: {:ok, %{}}
+
+  defp validate_error_context(context) when is_map(context) do
+    if Enum.all?(context, fn {key, value} ->
+         key in @valid_error_context_keys and
+           ((is_binary(value) and byte_size(value) <= 256) or is_integer(value))
+       end) do
+      {:ok, context}
+    else
+      {:error, :invalid_error_context}
+    end
+  end
+
+  defp validate_error_context(_), do: {:error, :invalid_error_context}
+
+  defp upsert_error_report(device_id, report, received_at) do
+    Repo.query(
+      """
+      INSERT INTO devices_events (
+        device_id, timestamp, type, msg, fingerprint, category, code, stack, context,
+        occurrence_count, first_occurred_at, last_occurred_at, last_report_id
+      )
+      VALUES ($1, $2, 'e', $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      ON CONFLICT (device_id, fingerprint) WHERE type = 'e' AND fingerprint IS NOT NULL
+      DO UPDATE SET
+        timestamp = CASE WHEN devices_events.last_report_id = EXCLUDED.last_report_id
+          THEN devices_events.timestamp ELSE EXCLUDED.timestamp END,
+        msg = CASE WHEN devices_events.last_report_id = EXCLUDED.last_report_id
+          THEN devices_events.msg ELSE EXCLUDED.msg END,
+        category = CASE WHEN devices_events.last_report_id = EXCLUDED.last_report_id
+          THEN devices_events.category ELSE EXCLUDED.category END,
+        code = CASE WHEN devices_events.last_report_id = EXCLUDED.last_report_id
+          THEN devices_events.code ELSE EXCLUDED.code END,
+        stack = CASE WHEN devices_events.last_report_id = EXCLUDED.last_report_id
+          THEN devices_events.stack ELSE EXCLUDED.stack END,
+        context = CASE WHEN devices_events.last_report_id = EXCLUDED.last_report_id
+          THEN devices_events.context ELSE EXCLUDED.context END,
+        occurrence_count = CASE WHEN devices_events.last_report_id = EXCLUDED.last_report_id
+          THEN devices_events.occurrence_count
+          ELSE LEAST(
+            2147483647::bigint,
+            devices_events.occurrence_count::bigint + EXCLUDED.occurrence_count::bigint
+          )::integer END,
+        first_occurred_at = LEAST(devices_events.first_occurred_at, EXCLUDED.first_occurred_at),
+        last_occurred_at = GREATEST(devices_events.last_occurred_at, EXCLUDED.last_occurred_at),
+        last_report_id = EXCLUDED.last_report_id
+      """,
+      [
+        Ecto.UUID.dump!(device_id),
+        received_at,
+        report.message,
+        report.fingerprint,
+        report.category,
+        report.code,
+        report.stack,
+        report.context,
+        report.count,
+        report.first_occurred_at,
+        report.last_occurred_at,
+        report.report_id
+      ]
+    )
+  end
+
+  defp prune_device_events(device_id, max_logs) do
+    stale_ids =
+      from(event in DevicesEvents,
+        where: event.device_id == ^device_id,
+        order_by: [desc: event.timestamp, desc: event.id],
+        offset: ^max_logs,
+        select: event.id
+      )
+      |> Repo.all()
+
+    if stale_ids != [] do
+      from(event in DevicesEvents, where: event.id in ^stale_ids)
+      |> Repo.delete_all()
+    end
   end
 
   @doc """

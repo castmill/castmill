@@ -16,35 +16,57 @@ interface EnvironmentData {
  * - model: string
  */
 export async function getEnvironment(): Promise<EnvironmentData> {
-  if (parent === window) {
+  const wrapper = parent;
+  if (wrapper === window) {
     throw new Error('getEnvironment can only be called from an iframe');
   }
 
   return new Promise((resolve, reject) => {
+    const cleanup = () => {
+      clearTimeout(timeout);
+      window.removeEventListener('message', responseHandler);
+    };
     const responseHandler = (event: MessageEvent) => {
+      if (event.source !== wrapper || typeof event.data !== 'string') {
+        return;
+      }
       try {
         const data = JSON.parse(event.data);
-        const deviceId = data.deviceId;
-        const versionStr = data.versionStr;
-        const model = data.model;
+        const deviceId = data?.deviceId;
+        const versionStr = data?.versionStr;
+        const model = data?.model;
 
-        if (!deviceId || !versionStr || !model) {
-          throw new Error('Invalid environment data: ' + event.data);
+        if (
+          ![deviceId, versionStr, model].every(
+            (value) => typeof value === 'string' && value.length > 0
+          )
+        ) {
+          return;
         }
 
+        cleanup();
         resolve({
           deviceId,
           versionStr,
           model,
         });
-      } catch (err) {
-        reject(err);
+      } catch {
+        // Console toggles and other wrapper messages share this transport.
       }
     };
+    const timeout = setTimeout(() => {
+      cleanup();
+      reject(new Error('Electron environment request timed out'));
+    }, 10_000);
 
-    window.addEventListener('message', responseHandler, { once: true });
+    window.addEventListener('message', responseHandler);
 
-    parent.postMessage('getEnvironment', '*');
+    try {
+      wrapper.postMessage('getEnvironment', '*');
+    } catch (error) {
+      cleanup();
+      reject(error);
+    }
   });
 }
 

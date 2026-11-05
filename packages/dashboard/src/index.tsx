@@ -24,6 +24,7 @@ import {
   Show,
 } from 'solid-js';
 import ProtectedRoute from './components/protected-route';
+import RootRedirect from './components/root-redirect';
 import Topbar from './components/topbar/topbar';
 import SettingsPage from './pages/settings-page/settings-page';
 import Footer from './components/footer/footer';
@@ -40,6 +41,7 @@ import OrganizationPage from './pages/organization-page/organization-page';
 import OrganizationsInvitationPage from './pages/organization-invitations/organizations-invitations-page';
 import ChannelsPage from './pages/channels-page/channels-page';
 import TagsPage from './pages/tags-page/tags-page';
+import AgentsPage from './pages/agents-page/agents-page';
 import {
   NetworkProvider,
   NetworkOverview,
@@ -74,42 +76,6 @@ const EmptyComponent: Component = () => {
 
 const LoadingFallback: Component = () => {
   return <div style="min-height: 10em;"></div>;
-};
-
-const RootRedirect: Component = () => {
-  const navigate = useNavigate();
-  const { t } = useI18n();
-
-  // Use createEffect to reactively watch for organizations to load
-  createEffect(() => {
-    if (store.organizations.data.length > 0) {
-      navigate(`/org/${store.organizations.data[0].id}/`, { replace: true });
-    }
-  });
-
-  return (
-    <Show
-      when={store.organizations.loaded && store.organizations.data.length === 0}
-      fallback={<LoadingFallback />}
-    >
-      <div
-        style={{
-          display: 'flex',
-          'flex-direction': 'column',
-          'align-items': 'center',
-          'justify-content': 'center',
-          flex: '1',
-          padding: '2em',
-          'text-align': 'center',
-        }}
-      >
-        <h2>{t('dashboard.noOrganizations.title')}</h2>
-        <p style={{ 'max-width': '30em', color: '#666' }}>
-          {t('dashboard.noOrganizations.description')}
-        </p>
-      </div>
-    </Show>
-  );
 };
 
 const App: Component<RouteSectionProps<unknown>> = (props) => {
@@ -300,6 +266,7 @@ render(() => {
                 <Route path="usage" component={UsagePage} />
                 <Route path="teams" component={TeamsPage} />
                 <Route path="tags" component={TagsPage} />
+                <Route path="agents" component={AgentsPage} />
                 <Route path="organization" component={OrganizationPage} />
                 <Route path="channels" component={ChannelsPage} />
                 <Route path="invite" component={TeamsInvitationPage} />

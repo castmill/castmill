@@ -135,7 +135,8 @@
     "networkSettings": "Settings",
     "networkOrganizations": "Organizations",
     "networkUsers": "Users & Invitations",
-    "tags": "Tags"
+    "tags": "Tags",
+    "agents": "Agents"
   },
   "topbar": {
     "help": "Help",
@@ -588,6 +589,7 @@
     "confirmRemoveChannels": "Are you sure you want to remove the following channels?",
     "enterChannelName": "Enter Channel name",
     "defaultPlaylist": "Default playlist",
+    "currentPlaylist": "Current playlist",
     "selectPlaylist": "Select Playlist",
     "clearDefaultPlaylist": "Clear default playlist",
     "dragPlaylists": "Drag playlists",
@@ -950,7 +952,9 @@
       "pending": "Pending Setup",
       "enterClientCredentials": "Enter your {{provider}} API credentials below:",
       "afterSavingCredentials": "After saving your credentials, click below to authorize with {{provider}}:",
-      "networkCredentialsConfigured": "Your network administrator has already configured {{provider}} credentials. Simply click the button below to connect your account."
+      "networkCredentialsConfigured": "Your network administrator has already configured {{provider}} credentials. Simply click the button below to connect your account.",
+      "noConfigurationRequired": "No Configuration Required",
+      "optional": "Optional"
     },
     "editor": {
       "newWidget": "New Widget",
@@ -1084,6 +1088,25 @@
     "translations": "Translations"
   },
   "devices": {
+    "orientation": {
+      "label": "Orientation",
+      "help": "Rotate playback content clockwise from its normal orientation.",
+      "offline": "Saved orientation applies when the player next connects.",
+      "pending": "Orientation saved. Waiting for the player to confirm.",
+      "applied": "Orientation applied.",
+      "applyError": "The player could not apply this orientation. Check device events.",
+      "unsupported": "Update this player to enable orientation settings.",
+      "saved": "Device settings saved.",
+      "saveError": "Could not save device settings.",
+      "options": {
+        "deg0": "Landscape",
+        "deg90": "Portrait",
+        "deg180": "Landscape (flipped)",
+        "deg270": "Portrait (flipped)"
+      },
+      "change": "Change",
+      "done": "Done"
+    },
     "title": "Devices",
     "addDevice": "Add Device",
     "registerDevice": "Register device",
@@ -1139,7 +1162,8 @@
       "noData": "No telemetry data available from this device.",
       "daysShort": "d",
       "hoursShort": "h",
-      "minutesShort": "m"
+      "minutesShort": "m",
+      "description": "Live health readings reported by the player."
     },
     "maintenance": {
       "refresh": "Refresh",
@@ -1154,6 +1178,7 @@
       "checkUpdatesDescription": "Check for updates and install them. This will not restart the device",
       "updateFirmware": "Update Firmware",
       "updateFirmwareDescription": "Updates the firmware of the device",
+      "actionNotSupported": "Not supported.",
       "offlineMessage": "Device is offline, so no commands can be sent to it",
       "autorecoveryUpdated": "Autorecovery has been updated",
       "autorecoveryUpdateFailed": "Failed to update autorecovery",
@@ -1164,7 +1189,15 @@
       "recoverLostSettingsLabel": "Recover lost settings",
       "disabled": "Disabled",
       "enabledMinutesRemaining": "Enabled ({{minutes}} minutes remaining)",
-      "enabledForever": "Enabled forever"
+      "enabledForever": "Enabled forever",
+      "run": "Run",
+      "commandSent": "Command sent to the device",
+      "commandFailed": "Could not send the command: {{error}}",
+      "contentGroup": "Playback",
+      "contentGroupDescription": "Recover playback without restarting the hardware.",
+      "systemGroup": "System",
+      "systemGroupDescription": "Updates and restarts. The screen may be blank for a while.",
+      "recoverLostSettingsDescription": "Allows this player to reconnect from a different IP address if it loses its credentials."
     },
     "cache": {
       "title": "Device Cache",
@@ -1173,18 +1206,19 @@
       "codeTab": "Code",
       "mediaTab": "Media",
       "deleteSelected": "Delete selected items",
-      "clearAll": "Clear All",
+      "clearAll": "Clear Entire Cache",
       "confirmDelete": "Delete Cache Entry",
       "confirmDeleteMessage": "Are you sure you want to delete this cache entry? URL: {{url}}",
       "confirmDeleteMultiple": "Delete Multiple Entries",
       "confirmDeleteMultipleMessage": "Are you sure you want to delete {{count}} cache entries?",
-      "confirmClearAll": "Clear All Cache",
-      "confirmClearAllMessage": "Are you sure you want to clear all {{type}} cache entries? This action cannot be undone.",
+      "confirmClearAll": "Clear Entire Cache",
+      "confirmClearAllMessage": "Are you sure you want to clear all data, code, and media cache entries? The player will reload and this action cannot be undone.",
       "deleteSuccess": "Cache entry deleted successfully",
       "deleteMultipleSuccess": "{{count}} cache entries deleted successfully",
       "clearAllSuccess": "All cache entries cleared successfully",
       "deleteError": "Error deleting cache: {{error}}",
-      "offlineWarning": "The device is currently offline. Cache information cannot be retrieved until the device comes back online."
+      "offlineWarning": "The device is currently offline. Cache information cannot be retrieved until the device comes back online.",
+      "description": "Files the player stores locally so it can keep playing offline."
     },
     "events": {
       "title": "Device Events",
@@ -1198,7 +1232,14 @@
       "confirmClearAll": "Clear All Events",
       "confirmClearAllMessage": "Are you sure you want to delete all events for this device? This action cannot be undone.",
       "clearAllSuccess": "Successfully deleted {{count}} events",
-      "deleteError": "Error deleting events: {{error}}"
+      "deleteError": "Error deleting events: {{error}}",
+      "occurrences": "Occurrences",
+      "firstSeen": "First seen",
+      "lastSeen": "Last seen",
+      "details": "Details",
+      "detailsTitle": "Error details",
+      "errorDetails": "Sanitized diagnostic details",
+      "description": "Connection changes and errors reported by the player."
     },
     "errors": {
       "setChannelFailed": "Failed to set device channel: {{error}}",
@@ -1207,11 +1248,49 @@
       "pincodeExpired": "This pincode has expired. Please restart the device registration process."
     },
     "enterDescription": "Enter a description",
-    "drawerTitle": "Device \"{{name}}\""
+    "drawerTitle": "Device \"{{name}}\"",
+    "info": {
+      "title": "Info",
+      "platform": "Platform",
+      "playerVersion": "Player version",
+      "operatingSystem": "Operating system",
+      "hardware": "Hardware",
+      "environmentVersion": "Environment version",
+      "chromiumVersion": "Chromium version",
+      "v8Version": "V8 version",
+      "nodeVersion": "Node.js version",
+      "userAgent": "User agent"
+    },
+    "details": {
+      "settings": "Settings",
+      "overview": "Overview",
+      "schedule": "Schedule",
+      "sections": "Device sections",
+      "lastSeen": "Last seen {{time}}",
+      "neverSeen": "Never connected",
+      "copyId": "Copy device ID",
+      "copied": "Device ID copied",
+      "copyFailed": "Could not copy the device ID.",
+      "unsavedChanges": "Unsaved changes",
+      "nameRequired": "Name is required",
+      "nameTooShort": "Name must be at least 5 characters",
+      "descriptionTooShort": "Description must be at least 5 characters"
+    },
+    "channelList": {
+      "description": "The player plays content from these channels according to their schedules.",
+      "empty": "No channels assigned yet.",
+      "loadError": "Failed to fetch device channels",
+      "alreadyAssigned": "This channel is already assigned to the device.",
+      "added": "Channel \"{{name}}\" added",
+      "removed": "Channel \"{{name}}\" removed",
+      "addError": "Failed to add channel: {{error}}",
+      "removeError": "Failed to remove channel: {{error}}"
+    }
   },
   "validation": {
     "fieldRequired": "This field is required",
-    "minLength": "This field must be at least {{min}} characters long"
+    "minLength": "This field must be at least {{min}} characters long",
+    "invalidCoordinates": "This field must have valid coordinates"
   },
   "plurals": {
     "items": {
@@ -1513,7 +1592,7 @@
   },
   "deviceSchedule": {
     "title": "Device Schedule",
-    "description": "Define when the device should be ON. Click and drag on the grid to create schedule entries. Outside scheduled hours, the device will turn off. If no entries are set, the device is always on.",
+    "description": "Define when the device should be ON. Drag on the grid to create entries, or tap an empty slot to add one. Click or tap an entry to edit its days and times. Outside scheduled hours, the device will turn off. If no entries are set, the device is always on.",
     "mon": "Mon",
     "tue": "Tue",
     "wed": "Wed",
@@ -1529,6 +1608,94 @@
     "saved": "Schedule saved and sent to device",
     "savedOffline": "Schedule saved. Device is offline — timers will be sent when it reconnects.",
     "loadError": "Error loading schedule",
-    "saveError": "Error saving schedule"
+    "saveError": "Error saving schedule",
+    "editor": {
+      "title": "Edit time slot",
+      "newTitle": "New time slot",
+      "editSlot": "Edit time slot {{slot}}",
+      "startDay": "Start day",
+      "endDay": "End day",
+      "startTime": "Start time",
+      "endTime": "End time",
+      "midnightHint": "Set the end time to 00:00 to stay on until midnight.",
+      "invalidTime": "The end time must be later than the start time.",
+      "overlap": "This time slot overlaps another entry.",
+      "done": "Done"
+    }
+  },
+  "agents": {
+    "title": "AI Agents",
+    "description": "AI agents are organization members that control Castmill through the MCP server. They have the same permissions as a user with their role, and all their actions are logged.",
+    "newAgent": "New agent",
+    "editAgent": "Edit agent",
+    "formDescription": "The role determines what the agent is allowed to do in this organization.",
+    "namePlaceholder": "e.g. Content assistant",
+    "descriptionPlaceholder": "What is this agent used for?",
+    "empty": "No agents yet. Create one to connect an AI assistant to Castmill.",
+    "noAccess": "Only organization admins and managers can view agents.",
+    "credentials": "Credentials",
+    "credentialsRevoked": "Revoked",
+    "lastUsed": "Last used",
+    "neverUsed": "Never",
+    "rotate": "Rotate credentials",
+    "revoke": "Revoke credentials",
+    "created": "Agent created",
+    "updated": "Agent updated",
+    "deleted": "Agent deleted",
+    "rotated": "Credentials rotated",
+    "revoked": "Credentials revoked",
+    "copied": "Copied to clipboard",
+    "copy": "Copy",
+    "secretTitle": "Credentials for {{name}}",
+    "secretWarning": "Copy this secret now. For security reasons it will not be shown again.",
+    "secretDone": "I have saved the secret",
+    "tabs": {
+      "agents": "Agents",
+      "activity": "Activity log",
+      "setup": "Setup instructions"
+    },
+    "confirm": {
+      "rotateTitle": "Rotate credentials",
+      "rotateMessage": "A new secret will be generated for {{name}}. The current secret stops working immediately.",
+      "revokeTitle": "Revoke credentials",
+      "revokeMessage": "{{name}} will no longer be able to connect until new credentials are generated.",
+      "deleteTitle": "Delete agent",
+      "deleteMessage": "Delete {{name}}? Its credentials and activity log will be removed permanently."
+    },
+    "errors": {
+      "loadFailed": "Failed to load agents",
+      "saveFailed": "Failed to save agent: {{error}}",
+      "actionFailed": "Action failed: {{error}}",
+      "copyFailed": "Could not copy to clipboard",
+      "loadActionsFailed": "Failed to load the activity log"
+    },
+    "activity": {
+      "agent": "Agent",
+      "allAgents": "All agents",
+      "status": "Status",
+      "allStatuses": "All statuses",
+      "success": "Success",
+      "error": "Error",
+      "empty": "No agent activity yet.",
+      "tool": "Tool",
+      "request": "Request",
+      "duration": "Duration",
+      "arguments": "Arguments"
+    },
+    "integration": {
+      "intro": "Agents connect to Castmill with any MCP client that supports remote servers over Streamable HTTP. Use the agent secret as a Bearer token in the Authorization header.",
+      "serverUrl": "MCP server URL",
+      "securityNote": "Treat agent secrets like passwords: do not commit them to source control. Rotate the credentials if a secret is exposed.",
+      "clients": {
+        "other": "Other clients"
+      },
+      "steps": {
+        "claudeDesktop": "In Claude Desktop, open Settings > Developer > Edit Config, add this server to claude_desktop_config.json and restart the app. Claude Desktop connects through the mcp-remote bridge, so Node.js (with npx) must be installed on this computer.",
+        "claudeCode": "Run this command in a terminal to register the server with Claude Code, then verify it with \"claude mcp list\".",
+        "vscode": "Add this configuration to .vscode/mcp.json in your workspace (or run \"MCP: Add Server\" from the Command Palette), then start the server and use it from Copilot Chat in agent mode.",
+        "cursor": "Add this configuration to ~/.cursor/mcp.json for all projects, or to .cursor/mcp.json in a project, then enable the server under Cursor Settings > MCP.",
+        "other": "Configure a remote MCP server with these settings."
+      }
+    }
   }
 }

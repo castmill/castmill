@@ -58,14 +58,19 @@ export class TemplateComponent {
     return 0;
   }
 
+  /**
+   * @param config The widget config. Components such as layouts use it to
+   * resolve their bindings before rendering, e.g. to know their duration.
+   */
   static fromJSON(
     json: any,
     resourceManager: ResourceManager,
-    globals: PlayerGlobals
+    globals: PlayerGlobals,
+    config?: TemplateConfig
   ): TemplateComponent {
     switch (json.type) {
       case TemplateComponentType.Group:
-        return GroupComponent.fromJSON(json, resourceManager, globals);
+        return GroupComponent.fromJSON(json, resourceManager, globals, config);
       // Support both 'list' (deprecated) and 'paginated-list'
       case TemplateComponentType.List:
       case TemplateComponentType.PaginatedList:
@@ -73,7 +78,7 @@ export class TemplateComponent {
       case TemplateComponentType.Scroller:
         return ScrollerComponent.fromJSON(json, resourceManager, globals);
       case TemplateComponentType.Layout:
-        return LayoutComponent.fromJSON(json, resourceManager, globals);
+        return LayoutComponent.fromJSON(json, resourceManager, globals, config);
       case TemplateComponentType.Text:
         return TextComponent.fromJSON(json);
       case TemplateComponentType.Image:

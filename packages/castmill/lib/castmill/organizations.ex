@@ -437,6 +437,7 @@ defmodule Castmill.Organizations do
         "devices" -> :devices
         "teams" -> :teams
         "widgets" -> :widgets
+        "layouts" -> :layouts
         _ -> nil
       end
 
@@ -557,6 +558,7 @@ defmodule Castmill.Organizations do
       OrganizationsUsers.base_query()
       |> OrganizationsUsers.where_organization_id(organization_id)
       |> join(:inner, [ou], u in assoc(ou, :user), as: :user)
+      |> exclude_agent_users()
       |> maybe_search_by_user_name(search)
       |> apply_users_sorting(params)
       |> Ecto.Query.limit(^page_size)
@@ -584,8 +586,15 @@ defmodule Castmill.Organizations do
     OrganizationsUsers.base_query()
     |> OrganizationsUsers.where_organization_id(organization_id)
     |> join(:inner, [ou], u in assoc(ou, :user), as: :user)
+    |> exclude_agent_users()
     |> maybe_search_by_user_name(search)
     |> Repo.aggregate(:count, :user_id)
+  end
+
+  # AI agents are organization members too, but they are managed from the
+  # Agents page (see Castmill.Agents) and are not listed as regular members.
+  defp exclude_agent_users(query) do
+    from([user: u] in query, where: u.is_agent == false)
   end
 
   defp maybe_search_by_user_name(query, nil), do: query
@@ -618,6 +627,11 @@ defmodule Castmill.Organizations do
       "inserted_at" ->
         Ecto.Query.order_by(query, [organizations_users: ou, user: _u], [
           {^sort_dir, ou.inserted_at}
+        ])
+
+      "updated_at" ->
+        Ecto.Query.order_by(query, [organizations_users: ou, user: _u], [
+          {^sort_dir, ou.updated_at}
         ])
 
       _ ->
@@ -795,12 +809,14 @@ defmodule Castmill.Organizations do
     do_list_invitations(merged_params)
   end
 
-  def do_list_invitations(%{
-        organization_id: organization_id,
-        search: search,
-        page: page,
-        page_size: page_size
-      }) do
+  def do_list_invitations(
+        %{
+          organization_id: organization_id,
+          search: search,
+          page: page,
+          page_size: page_size
+        } = params
+      ) do
     offset = if page_size == nil, do: 0, else: max((page - 1) * page_size, 0)
 
     invitations =
@@ -808,6 +824,7 @@ defmodule Castmill.Organizations do
       |> OrganizationsInvitation.where_organization_id(organization_id)
       |> maybe_search_by_email(search)
       |> Ecto.Query.order_by([d], asc: d.email)
+      |> QueryHelpers.maybe_sort_by_updated_at(params)
       |> Ecto.Query.limit(^page_size)
       |> Ecto.Query.offset(^offset)
       |> Repo.all()
@@ -1042,6 +1059,7 @@ defmodule Castmill.Organizations do
       Castmill.Resources.Channel,
       params
     )
+    |> Castmill.Resources.add_channel_playlist_names()
   end
 
   def list_resources(%{resources: "devices"} = params) do
@@ -1591,6 +1609,8 @@ defmodule Castmill.Organizations do
     OrganizationsUsers.base_query()
     |> OrganizationsUsers.where_organization_id(organization_id)
     |> where([organizations_users: ou], ou.role == :admin)
+    |> join(:inner, [ou], u in assoc(ou, :user), as: :user)
+    |> exclude_agent_users()
     |> Repo.aggregate(:count, :user_id)
   end
 end

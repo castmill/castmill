@@ -46,7 +46,9 @@ $highlight-color: #5792ee;
 
   &__progress {
     height: 100%;
-    transition: width 0.3s ease, background-color 0.3s ease;
+    transition:
+      width 0.3s ease,
+      background-color 0.3s ease;
     border-radius: 0.25rem;
   }
 
@@ -118,7 +120,8 @@ $highlight-color: #5792ee;
 }
 
 @keyframes quota-pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {

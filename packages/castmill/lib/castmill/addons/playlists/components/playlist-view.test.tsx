@@ -43,8 +43,13 @@ vi.mock('./playlist-preview', () => ({
   PlaylistPreview: () => <div data-testid="playlist-preview">Preview</div>,
 }));
 
+const playlistItemsProps = vi.hoisted(() => ({ current: null as any }));
+
 vi.mock('./playlist-items', () => ({
-  PlaylistItems: () => <div data-testid="playlist-items">Items</div>,
+  PlaylistItems: (props: any) => {
+    playlistItemsProps.current = props;
+    return <div data-testid="playlist-items">Items</div>;
+  },
 }));
 
 vi.mock('./widget-chooser', () => ({
@@ -282,6 +287,7 @@ describe('PlaylistView Component', () => {
 
     // When loading, the Show component should not render its children
     expect(container.querySelector('.playlist-view')).not.toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('common.loading');
   });
 
   it.skip('handles errors when fetching playlist fails', async () => {
@@ -567,7 +573,9 @@ describe('PlaylistView Component', () => {
         ...mockPlaylist,
         settings: { aspect_ratio: { width: 16, height: 9 } },
       };
-      vi.mocked(PlaylistsService.getPlaylist).mockResolvedValue(playlistWith16x9);
+      vi.mocked(PlaylistsService.getPlaylist).mockResolvedValue(
+        playlistWith16x9
+      );
 
       render(() => (
         <PlaylistView
@@ -675,6 +683,87 @@ describe('PlaylistView Component', () => {
       });
 
       expect(PlaylistsService.updatePlaylist).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Video item durations', () => {
+    const videoWidget = {
+      id: 2,
+      name: 'Video',
+      template: {
+        type: 'video',
+        name: 'video',
+        opts: { url: { key: 'options.video.files[@target].uri' } },
+      },
+      options_schema: {},
+    } as any;
+    const video = (duration: number) => ({
+      id: duration,
+      name: 'clip.mp4',
+      mimetype: 'video/mp4',
+      meta: { duration },
+      files: {},
+    });
+
+    const renderView = async () => {
+      render(() => (
+        <PlaylistView
+          playlistId={playlistId}
+          organizationId={organizationId}
+          baseUrl={baseUrl}
+        />
+      ));
+      await waitFor(() => expect(playlistItemsProps.current).toBeTruthy());
+      return playlistItemsProps.current;
+    };
+
+    it('stores the video duration when inserting a video item', async () => {
+      vi.mocked(PlaylistsService.insertWidgetIntoPlaylist).mockResolvedValue({
+        id: 10,
+        widget_config_id: 'config-1',
+      } as any);
+      (PlaylistsService as any).fetchWidgetConfigData = vi
+        .fn()
+        .mockResolvedValue(null);
+      const props = await renderView();
+
+      await props.onInsertItem(videoWidget, 0, {
+        config: { options: { video: 12000 } },
+        expandedOptions: { video: video(12000) },
+      });
+
+      expect(PlaylistsService.insertWidgetIntoPlaylist).toHaveBeenCalledWith(
+        baseUrl,
+        organizationId,
+        playlistId,
+        expect.objectContaining({ duration: 12000 })
+      );
+    });
+
+    it('updates the stored duration when the video of an item changes', async () => {
+      (PlaylistsService as any).fetchWidgetConfigData = vi
+        .fn()
+        .mockResolvedValue(null);
+      const props = await renderView();
+      const item = {
+        id: 10,
+        duration: 12000,
+        widget: videoWidget,
+        config: { id: 'config-1', options: { video: 12000 }, data: {} },
+      };
+
+      await props.onEditItem(item, {
+        config: { options: { video: 13967 }, data: {} },
+        expandedOptions: { video: video(13967) },
+      });
+
+      expect(PlaylistsService.updateItemInPlaylist).toHaveBeenCalledWith(
+        baseUrl,
+        organizationId,
+        playlistId,
+        10,
+        { duration: 13967 }
+      );
     });
   });
 });

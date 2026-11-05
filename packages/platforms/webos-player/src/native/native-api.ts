@@ -4,6 +4,7 @@ import {
   promisifyNoRet,
   promisifyNoOptNoRet,
 } from './promisify';
+import { scapRequest } from './request';
 
 const scapDeviceInfo = new DeviceInfo();
 const scapUtility = new Utility();
@@ -18,8 +19,28 @@ export const deviceInfo = {
     scapDeviceInfo.getPlatformInfo.bind(scapDeviceInfo)
   ),
   getNetworkMacInfo: promisifyNoOpt(
-    scapDeviceInfo.getNetworkMacInfo.bind(scapConfig)
+    scapDeviceInfo.getNetworkMacInfo.bind(scapDeviceInfo)
   ),
+  getNetworkInfo: promisifyNoOpt(
+    scapDeviceInfo.getNetworkInfo.bind(scapDeviceInfo)
+  ),
+  // Not declared by every SCAP version; feature-detect before use.
+  setNetworkInfo: scapDeviceInfo.setNetworkInfo
+    ? promisifyNoRet(scapDeviceInfo.setNetworkInfo.bind(scapDeviceInfo))
+    : undefined,
+  // SCAP 1.2+/1.3+; these calls can stall on some firmware, so they time out.
+  getSystemUsageInfo: scapDeviceInfo.getSystemUsageInfo
+    ? (options: SystemUsageOptions) =>
+        scapRequest<SystemUsageInfo>('system usage', (resolve, reject) =>
+          scapDeviceInfo.getSystemUsageInfo!(resolve, reject, options)
+        )
+    : undefined,
+  getWifiList: scapDeviceInfo.getWifiList
+    ? () =>
+        scapRequest<WifiList>('Wi-Fi list', (resolve, reject) =>
+          scapDeviceInfo.getWifiList!(resolve, reject)
+        )
+    : undefined,
 };
 
 export const utility = {
@@ -32,6 +53,9 @@ export const signage = {
   ),
   unregisterSystemMonitor: promisifyNoOptNoRet(
     scapSignage.unregisterSystemMonitor.bind(scapSignage)
+  ),
+  setPowerSaveMode: promisifyNoRet(
+    scapSignage.setPowerSaveMode.bind(scapSignage)
   ),
 };
 
@@ -74,9 +98,11 @@ export const configuration = {
   getServerProperty: promisifyNoOpt(
     scapConfig.getServerProperty.bind(scapConfig)
   ),
-  setServerProperty: promisifyNoRet(
-    scapConfig.setServerProperty.bind(scapConfig)
-  ),
+  getTimeZone: promisifyNoOpt(scapConfig.getTimeZone.bind(scapConfig)),
+  clearCache: () =>
+    scapRequest<void>('clear cache', (resolve, reject) =>
+      scapConfig.clearCache(() => resolve(), reject)
+    ),
 };
 
 export const storage = {
@@ -89,6 +115,9 @@ export const storage = {
   upgradeFirmware: promisifyNoOptNoRet(
     scapStorage.upgradeFirmware.bind(scapStorage)
   ),
+  getFirmwareUpgradeStatus: promisifyNoOpt(
+    scapStorage.getFirmwareUpgradeStatus.bind(scapStorage)
+  ),
   writeFile: promisify(scapStorage.writeFile.bind(scapStorage)),
   readFile: promisify(scapStorage.readFile.bind(scapStorage)),
   moveFile: promisifyNoRet(scapStorage.moveFile.bind(scapStorage)),
@@ -97,6 +126,7 @@ export const storage = {
   copyFile: promisifyNoRet(scapStorage.copyFile.bind(scapStorage)),
   fsync: promisifyNoRet(scapStorage.fsync.bind(scapStorage)),
   mkdir: promisifyNoRet(scapStorage.mkdir.bind(scapStorage)),
+  exists: promisify(scapStorage.exists.bind(scapStorage)),
   listFiles: promisify(scapStorage.listFiles.bind(scapStorage)),
   getStorageInfo: promisifyNoOpt(scapStorage.getStorageInfo.bind(scapStorage)),
 };

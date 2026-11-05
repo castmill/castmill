@@ -1,19 +1,16 @@
-import { Component, createSignal } from 'solid-js';
-import {
-  Button,
-  ComboBox,
-  TableView,
-  TableViewRef,
-  Column,
-  TableAction,
-  useToast,
-} from '@castmill/ui-common';
+import { Component, createSignal, For, onMount, Show } from 'solid-js';
+import { ComboBox, useToast } from '@castmill/ui-common';
 import { Device } from '../interfaces/device.interface';
-import { AiOutlineDelete } from 'solid-icons/ai';
-import { BsEye } from 'solid-icons/bs';
-import styles from './devices.module.scss';
+import {
+  BsBoxArrowUpRight,
+  BsCollectionPlay,
+  BsGlobe2,
+  BsTrash3,
+} from 'solid-icons/bs';
 import { DevicesService, JsonChannel } from '../services/devices.service';
 import { AddonStore } from '../../common/interfaces/addon-store';
+import { DeviceCardHeader, DeviceIconButton } from './device-section';
+import './channels.scss';
 
 export const Channels: Component<{
   baseUrl: string;
@@ -25,210 +22,157 @@ export const Channels: Component<{
   const t = props.t || ((key: string) => key);
   const toast = useToast();
 
-  // Store channels in a local state
   const [channels, setChannels] = createSignal<JsonChannel[]>([]);
-  const [selectedChannels, setSelectedChannels] = createSignal(
-    new Set<number>()
-  );
+  const [loading, setLoading] = createSignal(true);
+  const [busyId, setBusyId] = createSignal<number | null>(null);
 
-  const itemsPerPage = 5; // Number of items to show per page
+  const canRemove = () => channels().length > 1;
 
-  // Setup table reference
-  let tableViewRef: TableViewRef<number, JsonChannel>;
-
-  const setRef = (ref: TableViewRef<number, JsonChannel>) => {
-    tableViewRef = ref;
-  };
-
-  const refreshData = () => {
-    if (tableViewRef) {
-      tableViewRef.reloadData();
-    }
-  };
-
-  // Define table columns with i18n
-  const columns = [
-    { key: 'id', title: t('common.id'), sortable: false },
-    { key: 'name', title: t('common.name'), sortable: false },
-    { key: 'timezone', title: t('common.timezone'), sortable: false },
-  ] as Column<JsonChannel>[];
-
-  // Define table actions with i18n
-  const actions: TableAction<JsonChannel>[] = [
-    {
-      icon: BsEye,
-      handler: (item: JsonChannel) => {
-        props.store?.router?.navigate(
-          `/org/${props.organizationId}/channels?itemId=${item.id}`
-        );
-      },
-      label: t('common.view'),
-    },
-    {
-      icon: AiOutlineDelete,
-      handler: async (item: JsonChannel) => {
-        await removeChannel(item.id);
-      },
-      label: t('common.remove'),
-      props: (item: JsonChannel) => ({
-        // Disable the delete button if this is the only channel
-        disabled: channels().length <= 1,
-        title:
-          channels().length <= 1
-            ? t('devices.cannotDeleteLastChannel')
-            : undefined,
-      }),
-    },
-  ];
-
-  // Handle row selection
-  const onRowSelect = (rowsSelected: Set<number>) => {
-    setSelectedChannels(rowsSelected);
-  };
-
-  // Fetch channels data for the TableView
-  const fetchChannelsData = async ({
-    page,
-    sortOptions,
-    search,
-    filters,
-  }: {
-    page: { num: number; size: number };
-    sortOptions: any;
-    search?: string;
-    filters?: Record<string, string | boolean>;
-  }) => {
+  const loadChannels = async () => {
     try {
-      // First fetch the device's assigned channels
       const deviceChannels = await DevicesService.fetchChannelByDeviceId(
         props.baseUrl,
         props.device.id
       );
-
-      // Update the local channels state
-      setChannels(deviceChannels.data);
-
-      // Return in the format expected by TableView
-      return {
-        data: deviceChannels.data,
-        count: deviceChannels.data.length,
-      };
+      setChannels(deviceChannels.data || []);
     } catch (error) {
       console.error('Failed to fetch device channels:', error);
-      toast.error('Failed to fetch device channels');
-      return { data: [], count: 0 };
+      toast.error(t('devices.channelList.loadError'));
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Add a channel to the device
-  const addChannel = async (selectedChannel: JsonChannel) => {
-    try {
-      // Check if this channel is already assigned
-      const isAlreadyAssigned = channels().some(
-        (ch) => ch.id === selectedChannel.id
-      );
-      if (isAlreadyAssigned) {
-        toast.error('This channel is already assigned to the device.');
-        return;
-      }
+  onMount(loadChannels);
 
-      // Using the existing API function to add a channel
+  const viewChannel = (channel: JsonChannel) =>
+    props.store?.router?.navigate(
+      `/org/${props.organizationId}/channels?itemId=${channel.id}`
+    );
+
+  const addChannel = async (selectedChannel: JsonChannel) => {
+    if (channels().some((ch) => ch.id === selectedChannel.id)) {
+      toast.error(t('devices.channelList.alreadyAssigned'));
+      return;
+    }
+
+    try {
       await DevicesService.addChannelToDevice(
         props.baseUrl,
         props.device.id,
         selectedChannel.id
       );
-
-      // Refresh the table to show the updated list
-      refreshData();
-      toast.success(`Channel "${selectedChannel.name}" added successfully`);
-
-      // Complete the onboarding step for assigning a channel to a device
+      await loadChannels();
+      toast.success(
+        t('devices.channelList.added', { name: selectedChannel.name })
+      );
       props.store?.onboarding?.completeStep?.('assign_channel');
     } catch (e) {
-      toast.error(`Failed to add channel: ${e}`);
+      toast.error(t('devices.channelList.addError', { error: String(e) }));
     }
   };
 
-  // Remove a channel from the device
-  const removeChannel = async (channelId: number) => {
-    // Only allow removal if there will still be at least one channel remaining
-    if (channels().length <= 1) {
-      toast.error('At least one channel must be assigned to the device.');
+  const removeChannel = async (channel: JsonChannel) => {
+    if (!canRemove()) {
+      toast.error(t('devices.cannotDeleteLastChannel'));
       return;
     }
 
+    setBusyId(channel.id);
     try {
       await DevicesService.removeChannelFromDevice(
         props.baseUrl,
         props.device.id,
-        channelId
+        channel.id
       );
-
-      // Refresh the table to show the updated list
-      refreshData();
-      toast.success('Channel removed successfully');
+      await loadChannels();
+      toast.success(t('devices.channelList.removed', { name: channel.name }));
     } catch (e) {
-      toast.error(`Failed to remove channel: ${e}`);
+      toast.error(t('devices.channelList.removeError', { error: String(e) }));
+    } finally {
+      setBusyId(null);
     }
   };
 
   return (
-    <div class={styles.deviceDetails}>
-      {/* Channel table */}
-      <h3>{t('devices.assignedChannels')}</h3>
-      <TableView
+    <section class="device-card device-channels">
+      <DeviceCardHeader
+        icon={BsCollectionPlay}
         title={t('devices.assignedChannels')}
-        resource="channels"
-        fetchData={fetchChannelsData}
-        ref={setRef}
-        table={{
-          columns,
-          actions,
-          onRowSelect,
-        }}
-        pagination={{ itemsPerPage }}
+        count={loading() ? undefined : channels().length}
+        description={t('devices.channelList.description')}
       />
 
-      {/* Channel selector */}
-      <div class={styles.addChannel}>
-        <h3>{t('devices.addChannel')}</h3>
+      <Show
+        when={!loading()}
+        fallback={<p class="device-empty">{t('common.loading')}</p>}
+      >
+        <Show
+          when={channels().length > 0}
+          fallback={
+            <p class="device-empty">{t('devices.channelList.empty')}</p>
+          }
+        >
+          <ul class="device-channel-list">
+            <For each={channels()}>
+              {(channel) => (
+                <li class="device-channel-item">
+                  <span class="device-channel-icon" aria-hidden="true">
+                    <BsCollectionPlay />
+                  </span>
+                  <div class="device-channel-text">
+                    <span class="device-channel-name">{channel.name}</span>
+                    <span class="device-channel-meta">
+                      <BsGlobe2 aria-hidden="true" />
+                      {channel.timezone || t('common.notAvailable')}
+                    </span>
+                  </div>
+                  <div class="device-channel-actions">
+                    <DeviceIconButton
+                      icon={BsBoxArrowUpRight}
+                      label={t('common.view')}
+                      onClick={() => viewChannel(channel)}
+                    />
+                    <DeviceIconButton
+                      icon={BsTrash3}
+                      tone="danger"
+                      label={t('common.remove')}
+                      title={
+                        canRemove()
+                          ? t('common.remove')
+                          : t('devices.cannotDeleteLastChannel')
+                      }
+                      disabled={!canRemove() || busyId() === channel.id}
+                      onClick={() => removeChannel(channel)}
+                    />
+                  </div>
+                </li>
+              )}
+            </For>
+          </ul>
+        </Show>
+      </Show>
+
+      <div class="device-card-footer device-channel-add">
         <ComboBox<JsonChannel>
           id="channel-selector"
-          label={t('devices.selectChannelToAdd')}
-          placeholder={t('devices.selectChannel')}
+          label={t('devices.addChannel')}
+          placeholder={t('devices.selectChannelToAdd')}
           renderItem={(item: JsonChannel) => (
-            <div class={styles.channelCombobox}>
-              <div>{item.name}</div>
-            </div>
+            <div class="device-channel-option">{item.name}</div>
           )}
-          fetchItems={async (
-            page: number,
-            pageSize: number,
-            search: string
-          ) => {
-            const channels = await DevicesService.fetchChannels(
-              props.baseUrl,
-              props.organizationId,
-              {
-                page: {
-                  num: page,
-                  size: pageSize,
-                },
-                sortOptions: {
-                  key: 'name',
-                  direction: 'ascending',
-                },
-                search,
-              }
-            );
-            return channels;
-          }}
+          fetchItems={async (page: number, pageSize: number, search: string) =>
+            DevicesService.fetchChannels(props.baseUrl, props.organizationId, {
+              page: { num: page, size: pageSize },
+              sortOptions: { key: 'name', direction: 'ascending' },
+              search,
+            })
+          }
           onSelect={async (selectedChannel: JsonChannel) => {
             await addChannel(selectedChannel);
           }}
         />
       </div>
-    </div>
+    </section>
   );
 };

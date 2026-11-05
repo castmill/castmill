@@ -1,3 +1,4 @@
+/* oxlint-disable no-unused-expressions */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, fireEvent } from '@solidjs/testing-library';
 import '@testing-library/jest-dom';
@@ -92,6 +93,18 @@ describe('BaseMenu component', () => {
       charCode: 27,
       keyCode: 27,
     });
+    expect(queryByRole('menu')).not.toBeInTheDocument();
+  });
+
+  it('hides the menu with the LG webOS remote Back key', () => {
+    const { queryByRole } = render(() => (
+      <BaseMenu header={<div>Menu Header</div>} entries={mockEntries} />
+    ));
+
+    fireEvent.keyDown(window, { keyCode: 13 });
+    expect(queryByRole('menu')).toBeVisible();
+
+    fireEvent.keyDown(window, { keyCode: 461 });
     expect(queryByRole('menu')).not.toBeInTheDocument();
   });
 

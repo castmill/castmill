@@ -389,12 +389,14 @@ defmodule Castmill.Teams do
     do_list_users(merged_params)
   end
 
-  def do_list_users(%{
-        team_id: team_id,
-        search: search,
-        page: page,
-        page_size: page_size
-      }) do
+  def do_list_users(
+        %{
+          team_id: team_id,
+          search: search,
+          page: page,
+          page_size: page_size
+        } = params
+      ) do
     offset = if page_size == nil, do: 0, else: max((page - 1) * page_size, 0)
 
     users =
@@ -403,6 +405,7 @@ defmodule Castmill.Teams do
       |> join(:inner, [tu], u in assoc(tu, :user), as: :user)
       |> maybe_search_by_user_name(search)
       |> order_by([teams_users: _tu, user: u], asc: u.name)
+      |> QueryHelpers.maybe_sort_by_updated_at(params)
       |> Ecto.Query.limit(^page_size)
       |> Ecto.Query.offset(^offset)
       |> select([teams_users: tu, user: u], %{
@@ -819,12 +822,14 @@ defmodule Castmill.Teams do
   end
 
   # List invitations for a given team, we need to support pagination, and search
-  def list_invitations(%{
-        team_id: team_id,
-        search: search,
-        page: page,
-        page_size: page_size
-      }) do
+  def list_invitations(
+        %{
+          team_id: team_id,
+          search: search,
+          page: page,
+          page_size: page_size
+        } = params
+      ) do
     offset = if page_size == nil, do: 0, else: max((page - 1) * page_size, 0)
 
     from(i in Invitation,
@@ -834,6 +839,7 @@ defmodule Castmill.Teams do
       limit: ^page_size,
       offset: ^offset
     )
+    |> QueryHelpers.maybe_sort_by_updated_at(params)
     |> Repo.all()
   end
 

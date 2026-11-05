@@ -23,7 +23,9 @@ export default function WidgetExample({
   showControls = true,
 }: WidgetExampleProps): React.JSX.Element {
   const [mainTab, setMainTab] = useState<'code' | 'preview'>('preview');
-  const [codeTab, setCodeTab] = useState<'widget' | 'data' | 'options'>('widget');
+  const [codeTab, setCodeTab] = useState<'widget' | 'data' | 'options'>(
+    'widget'
+  );
 
   // Serialize the template immediately on mount, before any mutations
   const widgetJSON = useMemo(() => {
@@ -43,16 +45,20 @@ export default function WidgetExample({
       const template = widget.template || widget;
       return {
         ...widget,
-        template: JSON.parse(JSON.stringify(template))
+        template: JSON.parse(JSON.stringify(template)),
       };
     } catch (error) {
       // If cloning fails, pass the original (better than nothing)
       return widget;
     }
   }, [widget]);
-  
-  const dataJSON = data && Object.keys(data).length > 0 ? JSON.stringify(data, null, 2) : null;
-  const optionsJSON = options && Object.keys(options).length > 0 ? JSON.stringify(options, null, 2) : null;
+
+  const dataJSON =
+    data && Object.keys(data).length > 0 ? JSON.stringify(data, null, 2) : null;
+  const optionsJSON =
+    options && Object.keys(options).length > 0
+      ? JSON.stringify(options, null, 2)
+      : null;
 
   return (
     <div className={styles.widgetExample}>

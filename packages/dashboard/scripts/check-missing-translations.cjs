@@ -86,6 +86,9 @@ const ALLOWED_IDENTICAL_STRINGS = new Set([
   'Contact', // Cognate in French
   'Administrator', // Cognate in German
   'Timers', // Cognate in Swedish
+  'Agent', // Cognate in Swedish, German, French
+  'Agents', // Cognate in French
+  'Arguments', // Cognate in French
   // Widget names that are internationally recognized / same across languages
   'Video', // Universal loanword in Spanish, Swedish, German, French
   'Web', // Universal technical term in Spanish, German, French
@@ -124,6 +127,8 @@ const ALLOWED_IDENTICAL_KEYS = {
   'playlists.widgetModalTitle': ['es', 'sv', 'de', 'fr'],
   // Product wording intentionally uses the English term "Team"
   'filters.teamLabel': ['sv', 'de'],
+  'devices.orientation.options.deg90': ['fr'],
+  'devices.maintenance.systemGroup': ['sv', 'de'],
 };
 
 class TranslationChecker {

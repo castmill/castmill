@@ -1,0 +1,40 @@
+.device-preview-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6em 2em;
+  margin: 0 0 1em;
+
+  > div {
+    min-width: 0;
+  }
+
+  dt {
+    margin-bottom: 0.15em;
+    color: #577cbb;
+    font-size: 0.75em;
+  }
+
+  dd {
+    margin: 0;
+    color: #fff;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+}
+
+.device-preview-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 1px solid #36324a;
+  border-radius: 0.5em;
+  background: #000;
+  box-shadow: 0 0.4em 1.2em rgba(0, 0, 0, 0.35);
+
+  &.portrait {
+    width: min(100%, calc(min(36em, 70vh) * 9 / 16));
+    aspect-ratio: 9 / 16;
+    margin: 0 auto;
+  }
+}

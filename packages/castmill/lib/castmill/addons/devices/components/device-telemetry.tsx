@@ -10,11 +10,18 @@ import {
   BsBatteryFull,
   BsClock,
   BsLightningFill,
+  BsActivity,
+  BsArrowClockwise,
 } from 'solid-icons/bs';
 import { LoadingOverlay, formatBytes } from '@castmill/ui-common';
 import { Device } from '../interfaces/device.interface';
 import { DevicesService } from '../services/devices.service';
 import styles from './device-telemetry.module.scss';
+import {
+  DeviceCardHeader,
+  DeviceIconButton,
+  DeviceNotice,
+} from './device-section';
 
 interface TelemetryData {
   storage?: { totalBytes: number; usedBytes: number };
@@ -184,13 +191,31 @@ export const DeviceTelemetry: Component<{
       <Show
         when={props.device.online}
         fallback={
-          <div class={styles.offlineWarning}>
+          <DeviceNotice tone="offline">
             <p>{t('devices.telemetry.offlineWarning')}</p>
-          </div>
+          </DeviceNotice>
         }
       >
+        <div class={styles.header}>
+          <DeviceCardHeader
+            icon={BsActivity}
+            title={t('common.telemetry')}
+            description={t('devices.telemetry.description')}
+            actions={
+              <DeviceIconButton
+                icon={BsArrowClockwise}
+                label={t('devices.telemetry.refresh')}
+                disabled={loading()}
+                onClick={fetchTelemetry}
+              />
+            }
+          />
+        </div>
+
         <Show when={error()}>
-          <div class={styles.errorMessage}>{error()}</div>
+          <DeviceNotice tone="error">
+            <p>{error()}</p>
+          </DeviceNotice>
         </Show>
 
         <Show

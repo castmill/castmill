@@ -75,7 +75,7 @@
 
 .architectureItem:hover {
   transform: translateY(-2px);
-  box-shadow: 
+  box-shadow:
     0 10px 25px rgba(0, 0, 0, 0.05),
     0 4px 6px rgba(0, 0, 0, 0.1);
   border-color: var(--ifm-color-primary-lighter);
@@ -89,7 +89,7 @@
 [data-theme='dark'] .architectureItem:hover {
   background: rgba(255, 255, 255, 0.04);
   border-color: rgba(255, 255, 255, 0.12);
-  box-shadow: 
+  box-shadow:
     0 10px 25px rgba(0, 0, 0, 0.2),
     0 4px 6px rgba(0, 0, 0, 0.15);
 }
@@ -163,7 +163,7 @@
 
 .quickStartStep:hover {
   transform: translateY(-2px);
-  box-shadow: 
+  box-shadow:
     0 10px 25px rgba(0, 0, 0, 0.05),
     0 4px 6px rgba(0, 0, 0, 0.1);
   border-color: var(--ifm-color-primary-lighter);
@@ -177,7 +177,7 @@
 [data-theme='dark'] .quickStartStep:hover {
   background: rgba(255, 255, 255, 0.04);
   border-color: rgba(255, 255, 255, 0.12);
-  box-shadow: 
+  box-shadow:
     0 10px 25px rgba(0, 0, 0, 0.2),
     0 4px 6px rgba(0, 0, 0, 0.15);
 }
@@ -229,28 +229,28 @@
   .features {
     padding: 80px 0;
   }
-  
+
   .architectureSection {
     padding: 80px 0;
   }
-  
+
   .quickStartSection {
     padding: 80px 0;
   }
-  
+
   .architectureItem {
     padding: 30px 20px;
     margin-bottom: 1.5rem;
   }
-  
+
   .quickStartStep {
     padding: 30px 20px;
   }
-  
+
   .quickStartSection h2 {
     font-size: 2rem;
   }
-  
+
   .featureSvg {
     height: 120px;
     width: 120px;
@@ -261,7 +261,6 @@
 .features .col {
   margin-bottom: 2rem;
 }
-
 
 .features h3 {
   color: var(--ifm-heading-color);
@@ -293,7 +292,12 @@
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, var(--ifm-color-primary), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--ifm-color-primary),
+    transparent
+  );
 }
 
 .architectureItem {
@@ -315,7 +319,11 @@
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, var(--ifm-color-primary), var(--ifm-color-secondary));
+  background: linear-gradient(
+    90deg,
+    var(--ifm-color-primary),
+    var(--ifm-color-secondary)
+  );
 }
 
 .architectureItem:hover {
@@ -347,7 +355,11 @@
 }
 
 .quickStartSection h2 {
-  background: linear-gradient(135deg, var(--ifm-color-primary), var(--ifm-color-secondary));
+  background: linear-gradient(
+    135deg,
+    var(--ifm-color-primary),
+    var(--ifm-color-secondary)
+  );
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -380,7 +392,11 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(90deg, var(--ifm-color-primary), var(--ifm-color-secondary));
+  background: linear-gradient(
+    90deg,
+    var(--ifm-color-primary),
+    var(--ifm-color-secondary)
+  );
 }
 
 .quickStartStep:hover {
@@ -404,7 +420,11 @@
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--ifm-color-primary), var(--ifm-color-secondary));
+  background: linear-gradient(
+    135deg,
+    var(--ifm-color-primary),
+    var(--ifm-color-secondary)
+  );
   color: white;
   font-weight: bold;
   font-size: 1.4rem;
@@ -447,24 +467,24 @@
   .features {
     padding: 4rem 0;
   }
-  
+
   .architectureSection {
     padding: 4rem 0;
   }
-  
+
   .quickStartSection {
     padding: 4rem 0;
   }
-  
+
   .architectureItem {
     padding: 1.5rem;
     margin-bottom: 1.5rem;
   }
-  
+
   .quickStartStep {
     padding: 2rem 1.5rem;
   }
-  
+
   .quickStartSection h2 {
     font-size: 2rem;
   }
@@ -474,7 +494,6 @@
 .features .col {
   margin-bottom: 2rem;
 }
-
 
 .features .col > div {
   height: 100%;

@@ -200,6 +200,7 @@ export const Item: Component<{
               props.context,
               props.globals
             )}
+            component={props.component as LayoutComponent}
             style={style}
             timeline={props.timeline}
             resourceManager={props.resourceManager}

@@ -162,15 +162,18 @@ defmodule Castmill.Resources do
     if is_nil(playlist) do
       nil
     else
+      display_locale =
+        Castmill.Widgets.Integrations.display_locale_for_organization(playlist.organization_id)
+
       items =
         get_playlist_items(id)
-        |> Enum.map(&transform_item(&1, playlist.organization_id))
+        |> Enum.map(&transform_item(&1, playlist.organization_id, display_locale))
 
       %{playlist | items: items}
     end
   end
 
-  defp transform_item(item, organization_id) do
+  defp transform_item(item, organization_id, display_locale) do
     # Resolve widget references (media, playlist refs, etc.) and merge them into options
     # resolve_widget_references only returns the resolved ref fields, so we merge them
     # back into the original options to preserve all other option values
@@ -179,12 +182,15 @@ defmodule Castmill.Resources do
     resolved_refs =
       resolve_widget_references(
         item.widget_config.widget.options_schema || %{},
-        original_options
+        original_options,
+        organization_id
       )
 
     merged_options = Map.merge(original_options, resolved_refs)
 
     # Drop the :widget key from widget_config
+    sanitized_widget = Castmill.Widgets.sanitize_widget_assets(item.widget_config.widget)
+
     modified_widget_config = Map.drop(item.widget_config, [:widget])
 
     # Put the merged options into modified_widget_config
@@ -215,7 +221,12 @@ defmodule Castmill.Resources do
     #
     # Extract widget_options here so it can be used both for looking up integration data
     # and for filtering max_items when serving data to each widget instance
-    widget_options_for_filtering = modified_widget_config_with_defaults.options || %{}
+    widget_options_for_filtering =
+      Castmill.Widgets.Integrations.with_display_locale(
+        organization_id,
+        modified_widget_config_with_defaults.options || %{},
+        display_locale
+      )
 
     integration_data =
       case Castmill.Widgets.Integrations.get_integration_data_by_config(item.widget_config.id) do
@@ -249,6 +260,17 @@ defmodule Castmill.Resources do
     {modified_widget_config_with_integration, integration_error} =
       case integration_data do
         {:ok, %Castmill.Widgets.Integrations.WidgetIntegrationData{} = data} ->
+          # Make sure background polling is scheduled for this discriminator so
+          # that pre-existing widget configs (created before polling existed, or
+          # whose scheduler was lost) keep receiving fresh data.
+          maybe_schedule_refresh(
+            data,
+            organization_id,
+            item.widget_config.widget.id,
+            widget_options_for_filtering,
+            item.widget_config.id
+          )
+
           # Merge integration data into the existing data field (overrides defaults)
           existing_data = Map.get(modified_widget_config_with_defaults, :data, %{}) || %{}
           merged_data = Map.merge(existing_data, data.data || %{})
@@ -273,7 +295,7 @@ defmodule Castmill.Resources do
       |> Map.take([:id, :duration, :offset, :inserted_at, :updated_at])
       |> Map.merge(%{
         config: modified_widget_config_with_integration,
-        widget: item.widget_config.widget
+        widget: sanitized_widget
       })
 
     # Add integration_error field if there was an error fetching data
@@ -399,30 +421,47 @@ defmodule Castmill.Resources do
                   )
 
                   # Store the data and return it
+                  discriminator_id =
+                    build_discriminator_id(
+                      integration,
+                      widget_options,
+                      organization_id,
+                      widget_config_id
+                    )
+
+                  now = DateTime.utc_now()
+                  interval = integration.pull_interval_seconds || 300
+
                   attrs = %{
                     widget_integration_id: integration.id,
                     organization_id: organization_id,
-                    discriminator_id: build_discriminator_id(integration, widget_options),
+                    discriminator_id: discriminator_id,
                     data: data,
                     status: "active",
-                    fetched_at: DateTime.utc_now(),
+                    fetched_at: now,
+                    refresh_at: DateTime.add(now, interval, :second),
                     version: :os.system_time(:second)
                   }
 
                   # Widget-scoped data belongs to a single widget config and is
                   # never shared with other widget instances.
                   attrs =
-                    if Integrations.widget_scoped?(integration) do
-                      Map.merge(attrs, %{
-                        discriminator_id: "cfg:#{widget_config_id}",
-                        widget_config_id: widget_config_id
-                      })
-                    else
-                      attrs
-                    end
+                    if Integrations.widget_scoped?(integration),
+                      do: Map.put(attrs, :widget_config_id, widget_config_id),
+                      else: attrs
 
                   case Integrations.upsert_integration_data(attrs) do
                     {:ok, integration_data} ->
+                      # Keep the data fresh from now on
+                      schedule_integration_polling(
+                        organization_id,
+                        widget_id,
+                        integration,
+                        discriminator_id,
+                        widget_options,
+                        widget_config_id: widget_config_id
+                      )
+
                       {:ok, integration_data}
 
                     {:error, _reason} ->
@@ -447,6 +486,116 @@ defmodule Castmill.Resources do
           nil
         end
     end
+  end
+
+  # Ensures that background polling exists for cached integration data that is
+  # due for a refresh. Widget configs created before polling was introduced (or
+  # whose scheduler was removed) would otherwise keep serving the very first
+  # fetched payload forever.
+  defp maybe_schedule_refresh(
+         %Castmill.Widgets.Integrations.WidgetIntegrationData{} = data,
+         organization_id,
+         widget_id,
+         widget_options,
+         widget_config_id
+       )
+       when not is_nil(organization_id) and not is_nil(widget_id) do
+    alias Castmill.Widgets.Integrations
+
+    case Integrations.list_integrations(widget_id: widget_id) do
+      [%{integration_type: "pull"} = integration | _] ->
+        if pollable_integration?(integration) and refresh_due?(data, integration) do
+          discriminator_id =
+            build_discriminator_id(
+              integration,
+              widget_options || %{},
+              organization_id,
+              widget_config_id
+            )
+
+          schedule_integration_polling(
+            organization_id,
+            widget_id,
+            integration,
+            discriminator_id,
+            widget_options || %{},
+            delay: 0,
+            widget_config_id: widget_config_id
+          )
+        end
+
+      _ ->
+        :ok
+    end
+  end
+
+  defp maybe_schedule_refresh(
+         _data,
+         _organization_id,
+         _widget_id,
+         _widget_options,
+         _widget_config_id
+       ),
+       do: :ok
+
+  defp pollable_integration?(integration) do
+    is_binary(Map.get(integration.pull_config || %{}, "fetcher_module"))
+  end
+
+  defp refresh_due?(data, integration) do
+    now = DateTime.utc_now()
+    interval = integration.pull_interval_seconds || 300
+
+    cond do
+      data.refresh_at -> DateTime.compare(data.refresh_at, now) != :gt
+      data.fetched_at -> DateTime.diff(now, data.fetched_at) >= interval
+      true -> true
+    end
+  end
+
+  defp schedule_integration_polling(
+         organization_id,
+         widget_id,
+         integration,
+         discriminator_id,
+         widget_options,
+         opts \\ []
+       ) do
+    delay = Keyword.get(opts, :delay, integration.pull_interval_seconds || 30)
+
+    # Widget-scoped integrations poll with the widget config's own credentials
+    widget_config_id =
+      if Castmill.Widgets.Integrations.widget_scoped?(integration),
+        do: Keyword.get(opts, :widget_config_id)
+
+    schedule_fn = fn ->
+      try do
+        Castmill.Workers.IntegrationPoller.schedule_poll(
+          %{
+            organization_id: organization_id,
+            widget_id: widget_id,
+            integration_id: integration.id,
+            discriminator_id: discriminator_id,
+            widget_options: widget_options,
+            widget_config_id: widget_config_id
+          },
+          delay: delay
+        )
+      rescue
+        _e -> :error
+      catch
+        :exit, _reason -> :error
+      end
+    end
+
+    if Application.get_env(:castmill, :async_poll_scheduling, true) do
+      # Don't block (or crash) playlist serialization if the queue is unavailable
+      Task.start(schedule_fn)
+    else
+      schedule_fn.()
+    end
+
+    :ok
   end
 
   defp fetch_with_module(module_name, credentials, options) when is_binary(module_name) do
@@ -475,31 +624,27 @@ defmodule Castmill.Resources do
     end
   end
 
-  defp build_discriminator_id(integration, options) do
-    # For widget_option discriminators, also check pull_config for hardcoded values
-    # (e.g., RSS widgets have feed_url in pull_config, not in widget_options)
-    pull_config = integration.pull_config || %{}
-    merged_options = Map.merge(pull_config, options || %{})
-
-    case integration.discriminator_type do
-      "widget_option" ->
-        key = integration.discriminator_key || "id"
-
-        value =
-          Map.get(merged_options, key) || Map.get(merged_options, String.to_atom(key)) ||
-            "default"
-
-        "#{key}:#{value}"
-
-      "organization" ->
-        "org"
-
-      _ ->
-        "default"
-    end
+  # Widget-scoped integrations fetch a different account per widget instance,
+  # so their data must never be shared between widget configs.
+  defp build_discriminator_id(
+         %{credential_scope: "widget"},
+         _options,
+         _organization_id,
+         widget_config_id
+       )
+       when not is_nil(widget_config_id) do
+    "cfg:#{widget_config_id}"
   end
 
-  defp resolve_widget_references(schema, data) do
+  defp build_discriminator_id(integration, options, organization_id, _widget_config_id) do
+    Castmill.Widgets.Integrations.build_discriminator_id(
+      integration,
+      options,
+      organization_id
+    )
+  end
+
+  defp resolve_widget_references(schema, data, organization_id) do
     Enum.reduce(schema, %{}, fn {key, value}, acc ->
       case value do
         %{"type" => "ref", "collection" => collection} ->
@@ -508,11 +653,79 @@ defmodule Castmill.Resources do
           fetched_data = fetch_widget_reference(data, key, collection_name)
           Map.put(acc, key, fetched_data)
 
+        %{"type" => "layout-ref"} ->
+          Map.put(acc, key, resolve_layout_reference(Map.get(data, key), organization_id))
+
         _ ->
           acc
       end
     end)
   end
+
+  defp resolve_layout_reference(
+         %{"zonePlaylistMap" => zone_playlist_map} = layout_ref,
+         organization_id
+       )
+       when is_map(zone_playlist_map) do
+    resolved_zone_playlist_map =
+      Map.new(zone_playlist_map, fn {zone_id, assignment} ->
+        {zone_id, resolve_layout_zone_assignment(assignment, organization_id)}
+      end)
+
+    Map.put(layout_ref, "zonePlaylistMap", resolved_zone_playlist_map)
+  end
+
+  defp resolve_layout_reference(layout_ref, _organization_id), do: layout_ref
+
+  defp resolve_layout_zone_assignment(
+         %{"playlistId" => playlist_id} = assignment,
+         organization_id
+       ) do
+    case get_playlist_for_organization(playlist_id, organization_id) do
+      {:ok, _parsed_playlist_id, playlist} ->
+        Map.put(assignment, "playlist", playlist)
+
+      :error ->
+        Map.delete(assignment, "playlist")
+    end
+  end
+
+  defp resolve_layout_zone_assignment(playlist_id, organization_id)
+       when is_integer(playlist_id) do
+    case get_playlist_for_organization(playlist_id, organization_id) do
+      {:ok, parsed_playlist_id, playlist} ->
+        %{"playlistId" => parsed_playlist_id, "playlist" => playlist}
+
+      :error ->
+        %{"playlistId" => playlist_id}
+    end
+  end
+
+  defp resolve_layout_zone_assignment(playlist_id, organization_id) when is_binary(playlist_id) do
+    case get_playlist_for_organization(playlist_id, organization_id) do
+      {:ok, parsed_playlist_id, playlist} ->
+        %{"playlistId" => parsed_playlist_id, "playlist" => playlist}
+
+      :error ->
+        case parse_layout_playlist_id(playlist_id) do
+          {:ok, parsed_playlist_id} -> %{"playlistId" => parsed_playlist_id}
+          :error -> playlist_id
+        end
+    end
+  end
+
+  defp resolve_layout_zone_assignment(assignment, _organization_id), do: assignment
+
+  defp parse_layout_playlist_id(playlist_id) when is_integer(playlist_id), do: {:ok, playlist_id}
+
+  defp parse_layout_playlist_id(playlist_id) when is_binary(playlist_id) do
+    case Integer.parse(playlist_id) do
+      {parsed_playlist_id, ""} -> {:ok, parsed_playlist_id}
+      _ -> :error
+    end
+  end
+
+  defp parse_layout_playlist_id(_playlist_id), do: :error
 
   defp fetch_widget_reference(data, key, "medias") do
     case Map.get(data, key) do
@@ -537,6 +750,13 @@ defmodule Castmill.Resources do
   """
   def get_playlist_basic(id) do
     Repo.get(Playlist, id)
+  end
+
+  def get_playlist_basic(id, organization_id) do
+    from(p in Playlist,
+      where: p.id == ^id and p.organization_id == ^organization_id
+    )
+    |> Repo.one()
   end
 
   @doc """
@@ -703,9 +923,9 @@ defmodule Castmill.Resources do
         where:
           w.slug == "layout-widget" and
             fragment(
-              "EXISTS (SELECT 1 FROM jsonb_each(?->'layoutRef'->'zonePlaylistMap') AS kv WHERE (kv.value->>'playlistId')::integer = ?)",
+              "EXISTS (SELECT 1 FROM jsonb_each(?->'layoutRef'->'zonePlaylistMap') AS kv WHERE COALESCE(kv.value->>'playlistId', trim(both '\"' from kv.value::text)) = ?)",
               wc.options,
-              ^playlist_id
+              ^Integer.to_string(playlist_id)
             ),
         select: pi.playlist_id,
         distinct: true
@@ -748,6 +968,22 @@ defmodule Castmill.Resources do
     end
   end
 
+  @doc """
+  Validates that a referenced layout playlist exists in the same organization
+  and would not create a circular reference.
+  """
+  def validate_layout_playlist_reference(current_playlist_id, selected_playlist_id) do
+    current_id = to_integer(current_playlist_id)
+    selected_id = to_integer(selected_playlist_id)
+
+    with %Playlist{} = current_playlist <- get_playlist_basic(current_id),
+         %Playlist{} <- get_playlist_basic(selected_id, current_playlist.organization_id) do
+      validate_no_circular_reference(current_id, selected_id)
+    else
+      _ -> {:error, :invalid_playlist_reference}
+    end
+  end
+
   # Helper to convert string or integer to integer
   defp to_integer(id) when is_integer(id), do: id
 
@@ -755,6 +991,15 @@ defmodule Castmill.Resources do
     case Integer.parse(id) do
       {int_id, ""} -> int_id
       _ -> raise ArgumentError, "Invalid playlist ID: #{id}"
+    end
+  end
+
+  defp get_playlist_for_organization(playlist_id, organization_id) do
+    with {:ok, parsed_playlist_id} <- parse_layout_playlist_id(playlist_id),
+         %Playlist{} <- get_playlist_basic(parsed_playlist_id, organization_id) do
+      {:ok, parsed_playlist_id, get_playlist(parsed_playlist_id)}
+    else
+      _ -> :error
     end
   end
 
@@ -1003,6 +1248,9 @@ defmodule Castmill.Resources do
     5) the item that was after the item to be moved's new position
   """
   def move_item_in_playlist(item_id, target_item_id \\ nil) do
+    item_id = normalize_item_id(item_id)
+    target_item_id = normalize_item_id(target_item_id)
+
     if item_id == target_item_id do
       {:ok, nil}
     else
@@ -1010,49 +1258,83 @@ defmodule Castmill.Resources do
       Repo.transaction(fn ->
         item = from(item in PlaylistItem, where: item.id == ^item_id, select: item) |> Repo.one()
 
-        # Move the item out of its current position in the list
-        if item.prev_item_id do
-          from(prev_item in PlaylistItem, where: prev_item.id == ^item.prev_item_id)
-          |> Repo.update_all(set: [next_item_id: item.next_item_id])
-        end
+        cond do
+          is_nil(item) ->
+            Repo.rollback(:not_found)
 
-        if item.next_item_id do
-          from(next_item in PlaylistItem, where: next_item.id == ^item.next_item_id)
-          |> Repo.update_all(set: [prev_item_id: item.prev_item_id])
-        end
+          # Already at the requested position. Relinking would make the item
+          # point to itself (e.g. moving the head, or the only item, to the
+          # head), which removes it from the playlist order.
+          item.prev_item_id == target_item_id ->
+            nil
 
-        # Move the item to its new position in the list
-        if target_item_id do
-          target_item =
-            from(item in PlaylistItem, where: item.id == ^target_item_id, select: item)
-            |> Repo.one()
-
-          update_playlist_item(target_item, %{next_item_id: item_id})
-
-          update_playlist_item(item, %{
-            next_item_id: target_item.next_item_id,
-            prev_item_id: target_item_id
-          })
-
-          if target_item.next_item_id do
-            from(next_target_item in PlaylistItem,
-              where: next_target_item.id == ^target_item.next_item_id
-            )
-            |> Repo.update_all(set: [prev_item_id: item_id])
-          end
-        else
-          # Move the item to the head of the list
-          head_item =
-            from(item in PlaylistItem,
-              where: is_nil(item.prev_item_id) and item.playlist_id == ^item.playlist_id,
-              select: item
-            )
-            |> Repo.one()
-
-          update_playlist_item(item, %{next_item_id: head_item.id, prev_item_id: nil})
-          update_playlist_item(head_item, %{prev_item_id: item.id})
+          true ->
+            relink_playlist_item(item, target_item_id)
         end
       end)
+    end
+  end
+
+  # Ids come from URL segments (strings) or JSON bodies (integers or strings).
+  defp normalize_item_id(nil), do: nil
+  defp normalize_item_id(id) when is_integer(id), do: id
+
+  defp normalize_item_id(id) when is_binary(id) do
+    case Integer.parse(id) do
+      {int, ""} -> int
+      _ -> id
+    end
+  end
+
+  defp normalize_item_id(id), do: id
+
+  defp relink_playlist_item(item, target_item_id) do
+    item_id = item.id
+
+    # Move the item out of its current position in the list
+    if item.prev_item_id do
+      from(prev_item in PlaylistItem, where: prev_item.id == ^item.prev_item_id)
+      |> Repo.update_all(set: [next_item_id: item.next_item_id])
+    end
+
+    if item.next_item_id do
+      from(next_item in PlaylistItem, where: next_item.id == ^item.next_item_id)
+      |> Repo.update_all(set: [prev_item_id: item.prev_item_id])
+    end
+
+    # Move the item to its new position in the list
+    if target_item_id do
+      target_item =
+        from(item in PlaylistItem, where: item.id == ^target_item_id, select: item)
+        |> Repo.one()
+
+      update_playlist_item(target_item, %{next_item_id: item_id})
+
+      update_playlist_item(item, %{
+        next_item_id: target_item.next_item_id,
+        prev_item_id: target_item_id
+      })
+
+      if target_item.next_item_id do
+        from(next_target_item in PlaylistItem,
+          where: next_target_item.id == ^target_item.next_item_id
+        )
+        |> Repo.update_all(set: [prev_item_id: item_id])
+      end
+    else
+      # Move the item to the head of the list. The item itself is excluded
+      # because its own links have not been updated yet.
+      head_item =
+        from(head in PlaylistItem,
+          where:
+            is_nil(head.prev_item_id) and head.playlist_id == ^item.playlist_id and
+              head.id != ^item_id,
+          select: head
+        )
+        |> Repo.one()
+
+      update_playlist_item(item, %{next_item_id: head_item.id, prev_item_id: nil})
+      update_playlist_item(head_item, %{prev_item_id: item_id})
     end
   end
 
@@ -1483,66 +1765,62 @@ defmodule Castmill.Resources do
     end
   end
 
-  defp delete_file_from_storage(%Castmill.Files.File{uri: uri}) do
+  defp delete_file_from_storage(%Castmill.Files.File{uri: uri, organization_id: organization_id}) do
     case Application.get_env(:castmill, :file_storage) do
       :local ->
-        case get_local_file_path(uri) do
+        case get_local_file_path(uri, organization_id) do
           {:ok, file_path} -> File.rm(file_path)
           {:error, _reason} -> {:error, :invalid_path}
         end
 
       :s3 ->
-        {bucket, object_path} = get_s3_file_path(uri)
+        {bucket, object_path} = get_s3_file_path(uri, organization_id)
 
         ExAws.S3.delete_object(bucket, object_path)
         |> ExAws.request()
     end
   end
 
-  defp get_local_file_path(uri) do
-    # Assuming your URIs are built like "http://localhost:4000/medias/dst_path/filename"
-    # Strip off the "http://localhost:4000" and return the path that starts with "medias/..."
-
+  defp get_local_file_path(uri, organization_id) do
     base_directory = Path.join([Application.app_dir(:castmill), "priv", "static"])
+    path = URI.parse(uri).path || ""
 
-    uri
-    |> URI.parse()
-    |> then(fn %URI{path: path} ->
-      String.trim_leading(path, "/")
-    end)
-    |> (fn relative_path ->
-          full_path = Path.expand(relative_path, base_directory)
+    case String.split(path, "/medias/#{organization_id}/", parts: 2) do
+      [_, suffix] when suffix != "" ->
+        full_path = Path.expand("medias/#{organization_id}/#{suffix}", base_directory)
 
-          if String.starts_with?(full_path, base_directory) do
-            {:ok, full_path}
-          else
-            {:error, "Path traversal detected"}
-          end
-        end).()
+        if String.starts_with?(full_path, base_directory <> "/") do
+          {:ok, full_path}
+        else
+          {:error, "Path traversal detected"}
+        end
+
+      _ ->
+        {:error, "Invalid media path"}
+    end
   end
 
   @doc false
   def get_s3_file_path(uri) do
-    # Extract bucket and object path from a stored URI.
-    #
-    # Two modes:
-    # - Production (media_public_base_url set): CDN URL like "https://cdn.castmill.dev/org/media/file"
-    #   → bucket from AWS_S3_BUCKET env var, full path is the object key
-    # - Local dev (no base URL): S3/MinIO URL like "http://localhost:9000/bucket/org/media/file"
-    #   → bucket is the first path segment
     parsed = URI.parse(uri)
+    path = String.trim_leading(parsed.path, "/")
 
-    case Application.get_env(:castmill, :media_public_base_url) do
+    case System.get_env("AWS_S3_BUCKET") do
       nil ->
-        # Local dev: bucket is in the URL path
-        [_slash, bucket | object_parts] = String.split(parsed.path, "/", parts: 3)
-        {bucket, Enum.join(object_parts, "/")}
-
-      _base_url ->
-        # Production: bucket from env var, entire path is the object key
-        bucket = System.get_env("AWS_S3_BUCKET")
-        object_path = String.trim_leading(parsed.path, "/")
+        [bucket, object_path] = String.split(path, "/", parts: 2)
         {bucket, object_path}
+
+      bucket ->
+        {bucket, String.replace_prefix(path, "#{bucket}/", "")}
+    end
+  end
+
+  def get_s3_file_path(uri, organization_id) do
+    {bucket, path} = get_s3_file_path(uri)
+
+    case String.split("/#{path}", "/#{organization_id}/", parts: 2) do
+      [_, suffix] when suffix != "" -> {bucket, "#{organization_id}/#{suffix}"}
+      _ -> {bucket, path}
     end
   end
 
@@ -1571,6 +1849,54 @@ defmodule Castmill.Resources do
     |> where(id: ^id)
     |> Repo.one()
     |> Repo.preload(:entries)
+  end
+
+  def add_channel_playlist_names(channels, now \\ DateTime.utc_now())
+  def add_channel_playlist_names([], _now), do: []
+
+  def add_channel_playlist_names(channels, now) do
+    channels = Repo.preload(channels, :playlist)
+    channel_ids = Enum.map(channels, & &1.id)
+    today = DateTime.to_date(now)
+
+    current_playlist_names =
+      from(entry in ChannelEntry,
+        join: playlist in assoc(entry, :playlist),
+        where:
+          entry.channel_id in ^channel_ids and entry.start <= ^now and
+            (entry.end > ^now or
+               (not is_nil(entry.repeat_weekly_until) and
+                  entry.repeat_weekly_until >= ^today)),
+        order_by: [asc: entry.start],
+        select: {entry, playlist.name}
+      )
+      |> Repo.all()
+      |> Enum.reduce(%{}, fn {entry, playlist_name}, names ->
+        if channel_entry_active_at?(entry, now) do
+          Map.put(names, entry.channel_id, playlist_name)
+        else
+          names
+        end
+      end)
+
+    Enum.map(channels, fn channel ->
+      default_playlist_name = channel.playlist && channel.playlist.name
+
+      channel
+      |> Map.put(:default_playlist_name, default_playlist_name)
+      |> Map.put(
+        :current_playlist_name,
+        Map.get(current_playlist_names, channel.id, default_playlist_name)
+      )
+    end)
+  end
+
+  defp channel_entry_active_at?(entry, now) do
+    weekday = fn datetime -> rem(Date.day_of_week(DateTime.to_date(datetime)), 7) end
+    minute = fn datetime -> datetime.hour * 60 + datetime.minute end
+
+    weekday.(now) >= weekday.(entry.start) and weekday.(now) <= weekday.(entry.end) and
+      minute.(now) >= minute.(entry.start) and minute.(now) <= minute.(entry.end)
   end
 
   @doc """

@@ -635,7 +635,8 @@
     "networkSettings": "Paramètres",
     "networkOrganizations": "Organisations",
     "networkUsers": "Utilisateurs et invitations",
-    "tags": "Étiquettes"
+    "tags": "Étiquettes",
+    "agents": "Agents"
   },
   "channels": {
     "title": "Canaux",
@@ -649,6 +650,7 @@
     "confirmRemoveChannels": "Êtes-vous sûr de vouloir supprimer les canaux suivants ?",
     "enterChannelName": "Entrez le nom du canal",
     "defaultPlaylist": "Playlist par défaut",
+    "currentPlaylist": "Playlist actuelle",
     "selectPlaylist": "Sélectionner une playlist",
     "clearDefaultPlaylist": "Effacer la playlist par défaut",
     "dragPlaylists": "Glisser les playlists",
@@ -927,7 +929,9 @@
       "pending": "Configuration en attente",
       "enterClientCredentials": "Entrez vos identifiants API {{provider}} ci-dessous :",
       "afterSavingCredentials": "Après avoir enregistré vos identifiants, cliquez ci-dessous pour autoriser avec {{provider}} :",
-      "networkCredentialsConfigured": "Votre administrateur réseau a déjà configuré les identifiants {{provider}}. Cliquez simplement sur le bouton ci-dessous pour connecter votre compte."
+      "networkCredentialsConfigured": "Votre administrateur réseau a déjà configuré les identifiants {{provider}}. Cliquez simplement sur le bouton ci-dessous pour connecter votre compte.",
+      "noConfigurationRequired": "Aucune configuration requise",
+      "optional": "Facultatif"
     },
     "editor": {
       "newWidget": "Nouveau widget",
@@ -1061,6 +1065,25 @@
     "translations": "Traductions"
   },
   "devices": {
+    "orientation": {
+      "label": "Orientation du contenu",
+      "help": "Faites pivoter le contenu dans le sens horaire depuis son orientation normale.",
+      "offline": "L’orientation enregistrée sera appliquée à la prochaine connexion du lecteur.",
+      "pending": "Orientation enregistrée. En attente de confirmation du lecteur.",
+      "applied": "Orientation appliquée.",
+      "applyError": "Le lecteur n’a pas pu appliquer cette orientation. Consultez les événements de l’appareil.",
+      "unsupported": "Mettez à jour ce lecteur pour activer les réglages d’orientation.",
+      "saved": "Réglages de l’appareil enregistrés.",
+      "saveError": "Impossible d’enregistrer les réglages de l’appareil.",
+      "options": {
+        "deg0": "Paysage",
+        "deg90": "Portrait",
+        "deg180": "Paysage (inversé)",
+        "deg270": "Portrait (inversé)"
+      },
+      "change": "Modifier",
+      "done": "Terminé"
+    },
     "setDeviceChannel": "Définir le canal de l'appareil",
     "selectChannel": "Sélectionner un canal",
     "preview": {
@@ -1091,7 +1114,8 @@
       "noData": "Aucune donnée de télémétrie disponible pour cet appareil.",
       "daysShort": "j",
       "hoursShort": "h",
-      "minutesShort": "m"
+      "minutesShort": "m",
+      "description": "Indicateurs de santé en temps réel signalés par le lecteur."
     },
     "maintenance": {
       "refresh": "Actualiser",
@@ -1106,6 +1130,7 @@
       "checkUpdatesDescription": "Rechercher les mises à jour et les installer. Cela ne redémarrera pas l'appareil",
       "updateFirmware": "Mettre à jour le firmware",
       "updateFirmwareDescription": "Met à jour le firmware de l'appareil",
+      "actionNotSupported": "Non pris en charge.",
       "offlineMessage": "L'appareil est hors ligne, aucune commande ne peut donc lui être envoyée",
       "autorecoveryUpdated": "La récupération automatique a été mise à jour",
       "autorecoveryUpdateFailed": "Échec de la mise à jour de la récupération automatique",
@@ -1116,7 +1141,15 @@
       "recoverLostSettingsLabel": "Récupérer les paramètres perdus",
       "disabled": "Désactivé",
       "enabledMinutesRemaining": "Activé ({{minutes}} minutes restantes)",
-      "enabledForever": "Activé pour toujours"
+      "enabledForever": "Activé pour toujours",
+      "run": "Exécuter",
+      "commandSent": "Commande envoyée à l’appareil",
+      "commandFailed": "Impossible d’envoyer la commande : {{error}}",
+      "contentGroup": "Lecture",
+      "contentGroupDescription": "Rétablir la lecture sans redémarrer le matériel.",
+      "systemGroup": "Système",
+      "systemGroupDescription": "Mises à jour et redémarrages. L’écran peut rester noir un moment.",
+      "recoverLostSettingsDescription": "Permet à ce lecteur de se reconnecter depuis une autre adresse IP s’il perd ses identifiants."
     },
     "cache": {
       "title": "Cache de l'Appareil",
@@ -1125,18 +1158,19 @@
       "codeTab": "Code",
       "mediaTab": "Médias",
       "deleteSelected": "Supprimer les éléments sélectionnés",
-      "clearAll": "Tout Effacer",
+      "clearAll": "Effacer Tout le Cache",
       "confirmDelete": "Supprimer l'Entrée du Cache",
       "confirmDeleteMessage": "Êtes-vous sûr de vouloir supprimer cette entrée du cache ? URL: {{url}}",
       "confirmDeleteMultiple": "Supprimer Plusieurs Entrées",
       "confirmDeleteMultipleMessage": "Êtes-vous sûr de vouloir supprimer {{count}} entrées du cache ?",
       "confirmClearAll": "Effacer Tout le Cache",
-      "confirmClearAllMessage": "Êtes-vous sûr de vouloir effacer toutes les entrées du cache {{type}} ? Cette action ne peut pas être annulée.",
+      "confirmClearAllMessage": "Êtes-vous sûr de vouloir effacer toutes les entrées de cache de données, de code et de médias ? Le lecteur sera rechargé et cette action ne peut pas être annulée.",
       "deleteSuccess": "Entrée du cache supprimée avec succès",
       "deleteMultipleSuccess": "{{count}} entrées du cache supprimées avec succès",
       "clearAllSuccess": "Toutes les entrées du cache effacées avec succès",
       "deleteError": "Erreur lors de la suppression du cache : {{error}}",
-      "offlineWarning": "L'appareil est actuellement hors ligne. Les informations du cache ne peuvent pas être récupérées tant que l'appareil n'est pas de retour en ligne."
+      "offlineWarning": "L'appareil est actuellement hors ligne. Les informations du cache ne peuvent pas être récupérées tant que l'appareil n'est pas de retour en ligne.",
+      "description": "Fichiers stockés localement par le lecteur pour continuer la lecture hors ligne."
     },
     "events": {
       "title": "Événements de l'appareil",
@@ -1150,7 +1184,14 @@
       "confirmClearAll": "Effacer tous les événements",
       "confirmClearAllMessage": "Êtes-vous sûr de vouloir supprimer tous les événements pour cet appareil ? Cette action ne peut pas être annulée.",
       "clearAllSuccess": "{{count}} événements supprimés avec succès",
-      "deleteError": "Erreur lors de la suppression des événements : {{error}}"
+      "deleteError": "Erreur lors de la suppression des événements : {{error}}",
+      "occurrences": "Nombre d’occurrences",
+      "firstSeen": "Première occurrence",
+      "lastSeen": "Dernière occurrence",
+      "details": "Détails",
+      "detailsTitle": "Détails de l’erreur",
+      "errorDetails": "Détails de diagnostic nettoyés",
+      "description": "Changements de connexion et erreurs signalés par le lecteur."
     },
     "errors": {
       "setChannelFailed": "Échec de la définition du canal de l'appareil : {{error}}",
@@ -1184,11 +1225,49 @@
     "errorRemovingDevice": "Erreur lors de la suppression de l'appareil {{name}} : {{error}}",
     "errorRemovingDevices": "Erreur lors de la suppression des appareils : {{error}}",
     "enterDescription": "Entrez une description",
-    "drawerTitle": "Appareil \"{{name}}\""
+    "drawerTitle": "Appareil \"{{name}}\"",
+    "info": {
+      "title": "Informations",
+      "platform": "Plateforme",
+      "playerVersion": "Version du lecteur",
+      "operatingSystem": "Système d'exploitation",
+      "hardware": "Matériel",
+      "environmentVersion": "Version de l'environnement",
+      "chromiumVersion": "Version de Chromium",
+      "v8Version": "Version de V8",
+      "nodeVersion": "Version de Node.js",
+      "userAgent": "Agent utilisateur"
+    },
+    "details": {
+      "settings": "Paramètres",
+      "overview": "Aperçu",
+      "schedule": "Planification",
+      "sections": "Sections de l'appareil",
+      "lastSeen": "Vu pour la dernière fois {{time}}",
+      "neverSeen": "Jamais connecté",
+      "copyId": "Copier l'ID de l'appareil",
+      "copied": "ID de l'appareil copié",
+      "copyFailed": "Impossible de copier l'ID de l'appareil.",
+      "unsavedChanges": "Modifications non enregistrées",
+      "nameRequired": "Le nom est obligatoire",
+      "nameTooShort": "Le nom doit contenir au moins 5 caractères",
+      "descriptionTooShort": "La description doit contenir au moins 5 caractères"
+    },
+    "channelList": {
+      "description": "Le lecteur diffuse le contenu de ces chaînes selon leurs programmations.",
+      "empty": "Aucune chaîne attribuée pour le moment.",
+      "loadError": "Impossible de récupérer les chaînes de l’appareil",
+      "alreadyAssigned": "Cette chaîne est déjà attribuée à l’appareil.",
+      "added": "Chaîne « {{name}} » ajoutée",
+      "removed": "Chaîne « {{name}} » retirée",
+      "addError": "Impossible d’ajouter la chaîne : {{error}}",
+      "removeError": "Impossible de retirer la chaîne : {{error}}"
+    }
   },
   "validation": {
     "fieldRequired": "Ce champ est requis",
-    "minLength": "Ce champ doit contenir au moins {{min}} caractères"
+    "minLength": "Ce champ doit contenir au moins {{min}} caractères",
+    "invalidCoordinates": "Ce champ doit contenir des coordonnées valides"
   },
   "plurals": {
     "items": {
@@ -1530,7 +1609,7 @@
   },
   "deviceSchedule": {
     "title": "Horaire de l'Appareil",
-    "description": "Définissez quand l'appareil doit être ALLUMÉ. Cliquez et faites glisser sur la grille pour créer des entrées d'horaire. En dehors des heures programmées, l'appareil s'éteindra. Si aucune entrée n'est définie, l'appareil est toujours allumé.",
+    "description": "Définissez quand l’appareil doit être ALLUMÉ. Faites glisser sur la grille pour créer des plages, ou touchez une case vide pour en ajouter une. Cliquez ou touchez une plage pour modifier ses jours et horaires. En dehors des heures programmées, l’appareil s’éteindra. Sans plage définie, l’appareil reste toujours allumé.",
     "mon": "Lun",
     "tue": "Mar",
     "wed": "Mer",
@@ -1546,6 +1625,94 @@
     "saved": "Horaire enregistré et envoyé à l'appareil",
     "savedOffline": "Horaire enregistré. L'appareil est hors ligne — les minuteurs seront envoyés lors de la reconnexion.",
     "loadError": "Erreur lors du chargement de l'horaire",
-    "saveError": "Erreur lors de l'enregistrement de l'horaire"
+    "saveError": "Erreur lors de l'enregistrement de l'horaire",
+    "editor": {
+      "title": "Modifier la plage horaire",
+      "newTitle": "Nouvelle plage horaire",
+      "editSlot": "Modifier la plage horaire {{slot}}",
+      "startDay": "Jour de début",
+      "endDay": "Jour de fin",
+      "startTime": "Heure de début",
+      "endTime": "Heure de fin",
+      "midnightHint": "Indiquez 00:00 comme heure de fin pour rester allumé jusqu’à minuit.",
+      "invalidTime": "L’heure de fin doit être postérieure à l’heure de début.",
+      "overlap": "Cette plage horaire chevauche une autre plage.",
+      "done": "Terminé"
+    }
+  },
+  "agents": {
+    "title": "Agents IA",
+    "description": "Les agents IA sont des membres de l'organisation qui pilotent Castmill via le serveur MCP. Ils disposent des mêmes autorisations qu'un utilisateur ayant leur rôle, et toutes leurs actions sont journalisées.",
+    "newAgent": "Nouvel agent",
+    "editAgent": "Modifier l'agent",
+    "formDescription": "Le rôle détermine ce que l'agent est autorisé à faire dans cette organisation.",
+    "namePlaceholder": "ex. Assistant de contenu",
+    "descriptionPlaceholder": "À quoi sert cet agent ?",
+    "empty": "Aucun agent pour le moment. Créez-en un pour connecter un assistant IA à Castmill.",
+    "noAccess": "Seuls les administrateurs et gestionnaires de l'organisation peuvent voir les agents.",
+    "credentials": "Identifiants",
+    "credentialsRevoked": "Révoqués",
+    "lastUsed": "Dernière utilisation",
+    "neverUsed": "Jamais",
+    "rotate": "Renouveler les identifiants",
+    "revoke": "Révoquer les identifiants",
+    "created": "Agent créé",
+    "updated": "Agent mis à jour",
+    "deleted": "Agent supprimé",
+    "rotated": "Identifiants renouvelés",
+    "revoked": "Identifiants révoqués",
+    "copied": "Copié dans le presse-papiers",
+    "copy": "Copier",
+    "secretTitle": "Identifiants de {{name}}",
+    "secretWarning": "Copiez ce secret maintenant. Pour des raisons de sécurité, il ne sera plus affiché.",
+    "secretDone": "J'ai enregistré le secret",
+    "tabs": {
+      "agents": "Agents",
+      "activity": "Journal d'activité",
+      "setup": "Instructions de configuration"
+    },
+    "confirm": {
+      "rotateTitle": "Renouveler les identifiants",
+      "rotateMessage": "Un nouveau secret sera généré pour {{name}}. Le secret actuel cessera de fonctionner immédiatement.",
+      "revokeTitle": "Révoquer les identifiants",
+      "revokeMessage": "{{name}} ne pourra plus se connecter tant que de nouveaux identifiants n'auront pas été générés.",
+      "deleteTitle": "Supprimer l'agent",
+      "deleteMessage": "Supprimer {{name}} ? Ses identifiants et son journal d'activité seront définitivement supprimés."
+    },
+    "errors": {
+      "loadFailed": "Échec du chargement des agents",
+      "saveFailed": "Échec de l'enregistrement de l'agent : {{error}}",
+      "actionFailed": "L'action a échoué : {{error}}",
+      "copyFailed": "Impossible de copier dans le presse-papiers",
+      "loadActionsFailed": "Échec du chargement du journal d'activité"
+    },
+    "activity": {
+      "agent": "Agent",
+      "allAgents": "Tous les agents",
+      "status": "Statut",
+      "allStatuses": "Tous les statuts",
+      "success": "Succès",
+      "error": "Erreur",
+      "empty": "Aucune activité d'agent pour le moment.",
+      "tool": "Outil",
+      "request": "Requête",
+      "duration": "Durée",
+      "arguments": "Arguments"
+    },
+    "integration": {
+      "intro": "Les agents se connectent à Castmill avec tout client MCP prenant en charge les serveurs distants via Streamable HTTP. Utilisez le secret de l'agent comme jeton Bearer dans l'en-tête Authorization.",
+      "serverUrl": "URL du serveur MCP",
+      "securityNote": "Traitez les secrets des agents comme des mots de passe : ne les versionnez pas. Renouvelez les identifiants si un secret est exposé.",
+      "clients": {
+        "other": "Autres clients"
+      },
+      "steps": {
+        "claudeDesktop": "Dans Claude Desktop, ouvrez Paramètres > Développeur > Modifier la configuration, ajoutez ce serveur à claude_desktop_config.json et redémarrez l'application. Claude Desktop se connecte via la passerelle mcp-remote : Node.js (avec npx) doit donc être installé sur cet ordinateur.",
+        "claudeCode": "Exécutez cette commande dans un terminal pour enregistrer le serveur dans Claude Code, puis vérifiez-le avec \"claude mcp list\".",
+        "vscode": "Ajoutez cette configuration à .vscode/mcp.json dans votre espace de travail (ou exécutez \"MCP: Add Server\" depuis la palette de commandes), puis démarrez le serveur et utilisez-le dans Copilot Chat en mode agent.",
+        "cursor": "Ajoutez cette configuration à ~/.cursor/mcp.json pour tous les projets, ou à .cursor/mcp.json dans un projet, puis activez le serveur dans Cursor Settings > MCP.",
+        "other": "Configurez un serveur MCP distant avec ces paramètres."
+      }
+    }
   }
 }

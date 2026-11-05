@@ -67,26 +67,31 @@ function getWebOSVersion() {
 }
 
 // Depending on the webOS platform, the SCAP library is automatically loaded.
+// Scripts keep insertion order and the promise settles only after every file
+// has loaded, so application code can safely construct SCAP objects.
 function loadScripts(webOSVersion) {
   console.log('loading scap API...');
-  new Promise(function (resolve, reject) {
+  return new Promise(function (resolve, reject) {
     var path = getScapPath(webOSVersion);
     var files = getScapFiles(webOSVersion);
-    files.forEach(function (file, i) {
+    var remaining = files.length;
+    files.forEach(function (file) {
       var jsPath = path + file;
       var script = document.createElement('script');
 
+      script.async = false;
+      script.onload = function () {
+        remaining -= 1;
+        if (remaining === 0) {
+          console.log('SCAP API loaded');
+          resolve();
+        }
+      };
+      script.onerror = function () {
+        reject(new Error('Failed to load SCAP library ' + jsPath));
+      };
       script.src = jsPath;
       document.head.appendChild(script);
-
-      console.log('SCAP API "' + jsPath + '" added!!');
-      if (i === files.length - 1) {
-        // after the last script is loaded, resolve the promise
-        script.onload = function () {
-          console.log('Done');
-          resolve();
-        };
-      }
     });
   });
 }
@@ -99,8 +104,5 @@ function load() {
   });
 }
 
-load();
-
-console.log('scap-loader.js loaded');
-
-// window.loadScap = load;
+// The application waits for this promise before importing SCAP-backed modules.
+window.castmillScapReady = load();

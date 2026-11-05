@@ -31,6 +31,23 @@ if node_mode = System.get_env("CASTMILL_NODE_MODE") do
   config :castmill, :node_mode, node_mode
 end
 
+case System.get_env("MEDIA_PUBLIC_BASE_URL") do
+  base_url when base_url in [nil, ""] ->
+    :ok
+
+  base_url ->
+    parsed_url = URI.parse(base_url)
+
+    unless parsed_url.scheme in ["http", "https"] &&
+             is_binary(parsed_url.host) &&
+             parsed_url.query in [nil, ""] &&
+             parsed_url.fragment in [nil, ""] do
+      raise "MEDIA_PUBLIC_BASE_URL must be an absolute HTTP(S) URL"
+    end
+
+    config :castmill, :media_public_base_url, String.trim_trailing(base_url, "/")
+end
+
 if config_env() == :prod do
   IO.puts("Loading production configuration...")
 

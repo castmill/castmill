@@ -237,9 +237,13 @@ defmodule Castmill.Accounts do
       # Check each organization and handle accordingly
       Enum.each(user_orgs, fn %{org_id: org_id, role: role} ->
         # Count total users in this organization
+        # AI agent members do not count: an organization left with only
+        # agents is deleted together with its last human member.
         total_users =
           from(ou in OrganizationsUsers,
-            where: ou.organization_id == ^org_id,
+            join: u in Castmill.Accounts.User,
+            on: u.id == ou.user_id,
+            where: ou.organization_id == ^org_id and u.is_agent == false,
             select: count(ou.user_id)
           )
           |> Repo.one()
@@ -252,6 +256,14 @@ defmodule Castmill.Accounts do
                 :ok
 
               org ->
+                # Agent users belong to exactly one organization, remove them too
+                from(u in Castmill.Accounts.User,
+                  join: a in Castmill.Agents.Agent,
+                  on: a.user_id == u.id,
+                  where: a.organization_id == ^org_id
+                )
+                |> Repo.delete_all()
+
                 # Delete the organization (will cascade delete org_user relationships)
                 case Repo.delete(org) do
                   {:ok, _} ->
@@ -266,7 +278,11 @@ defmodule Castmill.Accounts do
           role == :admin ->
             admin_count =
               from(ou in OrganizationsUsers,
-                where: ou.organization_id == ^org_id and ou.role == :admin,
+                join: u in Castmill.Accounts.User,
+                on: u.id == ou.user_id,
+                where:
+                  ou.organization_id == ^org_id and ou.role == :admin and
+                    u.is_agent == false,
                 select: count(ou.user_id)
               )
               |> Repo.one()
