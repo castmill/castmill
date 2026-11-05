@@ -124,7 +124,8 @@ defmodule CastmillWeb.OrganizationController do
     end
   end
 
-  def check_access(actor_id, :update_widget, %{"organization_id" => organization_id}) do
+  def check_access(actor_id, action, %{"organization_id" => organization_id})
+      when action in [:update_widget, :upload_widget_asset, :delete_widget_asset] do
     {:ok, Organizations.has_access(organization_id, actor_id, "widgets", :update)}
   end
 
