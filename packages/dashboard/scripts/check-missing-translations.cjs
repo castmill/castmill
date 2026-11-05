@@ -125,6 +125,8 @@ const ALLOWED_IDENTICAL_KEYS = {
   'filters.teamLabel': ['sv', 'de'],
   'devices.orientation.options.deg90': ['fr'],
   'devices.maintenance.systemGroup': ['sv', 'de'],
+  'widgets.scope.system': ['sv', 'de'],
+  'network.widgets.kind.system': ['sv', 'de'],
 };
 
 class TranslationChecker {

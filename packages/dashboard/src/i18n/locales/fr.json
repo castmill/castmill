@@ -197,6 +197,98 @@
     "deleteAccountPasskeyInfoWithSignalAPI": "Après la suppression, les clés d'accès seront automatiquement supprimées de votre appareil. Si vous essayez de vous connecter plus tard, vous devrez créer un nouveau compte."
   },
   "network": {
+    "widgets": {
+      "title": "Accès aux widgets",
+      "description": "Choisissez les widgets que les organisations de votre réseau peuvent utiliser. Masquez ceux que vous ne proposez pas, par exemple des services indisponibles dans votre région ou qui nécessitent un abonnement que vous n'avez pas.",
+      "searchWidgets": "Rechercher des widgets",
+      "loadMore": "Charger plus",
+      "showing": "{{shown}} sur {{total}} affichés",
+      "noWidgets": "Aucun widget ne correspond à vos filtres.",
+      "clearFilters": "Effacer les filtres",
+      "selectWidget": "Sélectionnez un widget pour gérer qui peut l'utiliser.",
+      "core": "Essentiel",
+      "usedBy": "Organisations qui l'utilisent : {{count}}",
+      "kind": {
+        "system": "Système",
+        "network": "Réseau"
+      },
+      "filters": {
+        "any": "Tous",
+        "all": "Pour toutes",
+        "selected": "Sélection",
+        "hidden": "Masqués",
+        "accessLabel": "Filtrer par accès",
+        "anyKind": "Tous les types",
+        "kindLabel": "Filtrer par type",
+        "except": "Avec exclusions"
+      },
+      "summary": {
+        "all": "Toutes les organisations",
+        "selected": "{{count}} sur {{total}} organisations",
+        "hidden": "Masqué",
+        "except": "Toutes sauf {{count}}"
+      },
+      "access": {
+        "title": "Qui peut utiliser ce widget",
+        "all": "Toutes les organisations",
+        "allDescription": "Toutes les organisations, y compris celles créées plus tard.",
+        "except": "Toutes sauf…",
+        "exceptDescription": "Toutes sauf les organisations que vous excluez. Les nouvelles sont incluses.",
+        "selected": "Seulement certaines…",
+        "selectedDescription": "Uniquement les organisations que vous ajoutez. Les nouvelles ne sont pas incluses.",
+        "hidden": "Masqué",
+        "hiddenDescription": "Proposé nulle part dans votre réseau."
+      },
+      "notices": {
+        "core": "Widget essentiel : toujours disponible, car les playlists et les médias en dépendent.",
+        "all": "Toutes les organisations peuvent utiliser ce widget, y compris celles créées plus tard. Désactiver une organisation ci-dessous l'exclut.",
+        "except": "Les organisations créées plus tard obtiennent ce widget automatiquement.",
+        "selected": "Les organisations créées plus tard n'obtiennent pas ce widget.",
+        "hidden": "Aucune organisation de votre réseau ne peut ajouter ce widget à ses playlists.",
+        "platform": "La plateforme propose ce widget à {{count}} des {{total}} organisations de votre réseau."
+      },
+      "organizations": {
+        "title": "Organisations",
+        "search": "Rechercher des organisations",
+        "statusAll": "Toutes",
+        "statusEnabled": "Autorisées",
+        "statusDisabled": "Non autorisées",
+        "enabledOf": "{{count}} sur {{total}} peuvent utiliser ce widget",
+        "matching": "{{count}} organisations correspondantes",
+        "enableAll": "Tout activer ({{count}})",
+        "disableAll": "Tout désactiver ({{count}})",
+        "inUse": "Utilisé",
+        "inUseHint": "Utilisé dans les playlists de cette organisation. Retirez-le de celles-ci avant de désactiver l'accès.",
+        "none": "Aucune organisation ne correspond à vos filtres.",
+        "noOrganizations": "Votre réseau ne compte encore aucune organisation.",
+        "columnName": "Organisation",
+        "columnUsage": "Dans les playlists",
+        "columnAccess": "Accès",
+        "accessFor": "Accès pour {{name}}",
+        "range": "{{from}}–{{to}} sur {{total}}",
+        "selectedCount": "{{count}} sélectionnées",
+        "enableSelected": "Activer l'accès",
+        "disableSelected": "Désactiver l'accès"
+      },
+      "confirm": {
+        "hideTitle": "Masquer {{widget}} ?",
+        "hideMessage": "Les organisations de votre réseau ne pourront plus ajouter ce widget à leurs playlists.",
+        "hideAction": "Masquer le widget",
+        "enableAllTitle": "Activer {{count}} organisations ?",
+        "enableAllMessage": "Elles pourront ajouter {{widget}} à leurs playlists.",
+        "enableAction": "Activer",
+        "disableAllTitle": "Désactiver {{count}} organisations ?",
+        "disableAllMessage": "Elles ne pourront plus ajouter {{widget}} à leurs playlists.",
+        "disableAction": "Désactiver"
+      },
+      "errors": {
+        "load": "Impossible de charger les widgets.",
+        "loadOrganizations": "Impossible de charger les organisations.",
+        "save": "Impossible de mettre à jour l'accès au widget.",
+        "inUse": "Impossible de retirer l'accès tant que ces organisations utilisent le widget dans des playlists : {{organizations}}",
+        "moreOrganizations": "{{names}} et {{count}} de plus"
+      }
+    },
     "title": "Paramètres Réseau",
     "adminBadge": "Admin Réseau",
     "saveSuccess": "Paramètres réseau enregistrés",
@@ -635,6 +727,7 @@
     "networkSettings": "Paramètres",
     "networkOrganizations": "Organisations",
     "networkUsers": "Utilisateurs et invitations",
+    "networkWidgets": "Accès aux widgets",
     "tags": "Étiquettes",
     "agents": "Agents"
   },
@@ -841,6 +934,13 @@
     "zonesCount": "{{count}} zone(s)"
   },
   "widgets": {
+    "scope": {
+      "title": "Disponibilité",
+      "system": "Système",
+      "network": "Réseau",
+      "organization": "Cette organisation",
+      "unassigned": "Non attribué"
+    },
     "title": "Widgets",
     "uploadWidget": "Télécharger un widget",
     "uploadDescription": "Télécharger un fichier de définition de widget JSON.",

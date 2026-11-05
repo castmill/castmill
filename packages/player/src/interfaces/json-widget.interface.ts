@@ -21,6 +21,10 @@ export interface JsonWidget {
   small_icon?: string;
   aspect_ratio?: string;
   update_interval_seconds?: number;
+  // Availability for the requesting organization (dashboard API only)
+  scope?: 'system' | 'network' | 'organization' | 'unassigned';
+  // Whether the requesting organization owns (and may change or delete) the widget
+  can_manage?: boolean;
   // Custom fonts included with the widget
   fonts?: { url: string; name: string }[];
   // Original assets definition from widget.json

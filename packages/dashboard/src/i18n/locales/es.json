@@ -198,6 +198,98 @@
     "soleAdministratorErrorGeneric": "No se puede eliminar la cuenta. Usted es el único administrador de una o más organizaciones con otros miembros. Por favor, promocione a otro usuario a administrador primero."
   },
   "network": {
+    "widgets": {
+      "title": "Acceso a widgets",
+      "description": "Elige qué widgets pueden usar las organizaciones de tu red. Oculta los widgets que no ofreces, por ejemplo servicios que no están disponibles en tu región o que requieren una suscripción que no tienes.",
+      "searchWidgets": "Buscar widgets",
+      "loadMore": "Cargar más",
+      "showing": "Mostrando {{shown}} de {{total}}",
+      "noWidgets": "Ningún widget coincide con los filtros.",
+      "clearFilters": "Borrar filtros",
+      "selectWidget": "Selecciona un widget para gestionar quién puede usarlo.",
+      "core": "Esencial",
+      "usedBy": "Organizaciones que lo usan: {{count}}",
+      "kind": {
+        "system": "Sistema",
+        "network": "Red"
+      },
+      "filters": {
+        "any": "Todos",
+        "all": "Para todas",
+        "selected": "Selección",
+        "hidden": "Ocultos",
+        "accessLabel": "Filtrar por acceso",
+        "anyKind": "Todos los tipos",
+        "kindLabel": "Filtrar por tipo",
+        "except": "Con exclusiones"
+      },
+      "summary": {
+        "all": "Todas las organizaciones",
+        "selected": "{{count}} de {{total}} organizaciones",
+        "hidden": "Oculto",
+        "except": "Todas excepto {{count}}"
+      },
+      "access": {
+        "title": "Quién puede usar este widget",
+        "all": "Todas las organizaciones",
+        "allDescription": "Todas las organizaciones, incluidas las que se creen más adelante.",
+        "except": "Todas excepto…",
+        "exceptDescription": "Todas salvo las organizaciones que excluyas. Incluye las nuevas.",
+        "selected": "Solo seleccionadas…",
+        "selectedDescription": "Solo las organizaciones que añadas. Las nuevas no se incluyen.",
+        "hidden": "Oculto",
+        "hiddenDescription": "No se ofrece en ninguna parte de tu red."
+      },
+      "notices": {
+        "core": "Widget esencial: siempre disponible, porque las listas de reproducción y los medios dependen de él.",
+        "all": "Todas las organizaciones pueden usar este widget, incluidas las que se creen más adelante. Si desactivas una abajo, quedará excluida.",
+        "except": "Las organizaciones que se creen más adelante recibirán este widget automáticamente.",
+        "selected": "Las organizaciones que se creen más adelante no recibirán este widget.",
+        "hidden": "Ninguna organización de tu red puede añadir este widget a sus listas de reproducción.",
+        "platform": "La plataforma ofrece este widget a {{count}} de {{total}} organizaciones de tu red."
+      },
+      "organizations": {
+        "title": "Organizaciones",
+        "search": "Buscar organizaciones",
+        "statusAll": "Todas",
+        "statusEnabled": "Pueden usarlo",
+        "statusDisabled": "No pueden usarlo",
+        "enabledOf": "{{count}} de {{total}} pueden usar este widget",
+        "matching": "{{count}} organizaciones coinciden",
+        "enableAll": "Habilitar todas ({{count}})",
+        "disableAll": "Deshabilitar todas ({{count}})",
+        "inUse": "En uso",
+        "inUseHint": "Se usa en las listas de reproducción de esta organización. Quítalo de ellas antes de deshabilitar el acceso.",
+        "none": "Ninguna organización coincide con los filtros.",
+        "noOrganizations": "Todavía no hay organizaciones en tu red.",
+        "columnName": "Organización",
+        "columnUsage": "En listas de reproducción",
+        "columnAccess": "Acceso",
+        "accessFor": "Acceso para {{name}}",
+        "range": "{{from}}–{{to}} de {{total}}",
+        "selectedCount": "{{count}} seleccionadas",
+        "enableSelected": "Habilitar acceso",
+        "disableSelected": "Deshabilitar acceso"
+      },
+      "confirm": {
+        "hideTitle": "¿Ocultar {{widget}}?",
+        "hideMessage": "Las organizaciones de tu red ya no podrán añadir este widget a sus listas de reproducción.",
+        "hideAction": "Ocultar widget",
+        "enableAllTitle": "¿Habilitar {{count}} organizaciones?",
+        "enableAllMessage": "Podrán añadir {{widget}} a sus listas de reproducción.",
+        "enableAction": "Habilitar",
+        "disableAllTitle": "¿Deshabilitar {{count}} organizaciones?",
+        "disableAllMessage": "Ya no podrán añadir {{widget}} a sus listas de reproducción.",
+        "disableAction": "Deshabilitar"
+      },
+      "errors": {
+        "load": "No se pudieron cargar los widgets.",
+        "loadOrganizations": "No se pudieron cargar las organizaciones.",
+        "save": "No se pudo actualizar el acceso al widget.",
+        "inUse": "No se puede retirar el acceso mientras estas organizaciones usen el widget en sus listas de reproducción: {{organizations}}",
+        "moreOrganizations": "{{names}} y {{count}} más"
+      }
+    },
     "title": "Configuración de Red",
     "adminBadge": "Admin de Red",
     "saveSuccess": "Configuración de red guardada correctamente",
@@ -624,6 +716,7 @@
     "networkSettings": "Configuración",
     "networkOrganizations": "Organizaciones",
     "networkUsers": "Usuarios e invitaciones",
+    "networkWidgets": "Acceso a widgets",
     "tags": "Etiquetas",
     "agents": "Agentes"
   },
@@ -857,6 +950,13 @@
     "zonesCount": "{{count}} zonas"
   },
   "widgets": {
+    "scope": {
+      "title": "Disponibilidad",
+      "system": "Sistema",
+      "network": "Red",
+      "organization": "Esta organización",
+      "unassigned": "Sin asignar"
+    },
     "title": "Widgets",
     "uploadWidget": "Subir Widget",
     "uploadDescription": "Subir un archivo de definición de Widget JSON.",

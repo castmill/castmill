@@ -192,6 +192,98 @@
     "deleteAccountPasskeyInfoWithSignalAPI": "Efter borttagning kommer nycklar automatiskt att tas bort från din enhet. Om du försöker logga in senare måste du skapa ett nytt konto."
   },
   "network": {
+    "widgets": {
+      "title": "Widgetåtkomst",
+      "description": "Välj vilka widgetar organisationerna i ditt nätverk får använda. Dölj widgetar som du inte erbjuder, till exempel tjänster som inte finns i din region eller som kräver en prenumeration du inte har.",
+      "searchWidgets": "Sök widgetar",
+      "loadMore": "Läs in fler",
+      "showing": "Visar {{shown}} av {{total}}",
+      "noWidgets": "Inga widgetar matchar filtren.",
+      "clearFilters": "Rensa filter",
+      "selectWidget": "Välj en widget för att hantera vem som får använda den.",
+      "core": "Kärna",
+      "usedBy": "Organisationer som använder den: {{count}}",
+      "kind": {
+        "system": "System",
+        "network": "Nätverk"
+      },
+      "filters": {
+        "any": "Alla",
+        "all": "För alla",
+        "selected": "Urval",
+        "hidden": "Dolda",
+        "accessLabel": "Filtrera efter åtkomst",
+        "anyKind": "Alla typer",
+        "kindLabel": "Filtrera efter typ",
+        "except": "Med undantag"
+      },
+      "summary": {
+        "all": "Alla organisationer",
+        "selected": "{{count}} av {{total}} organisationer",
+        "hidden": "Dold",
+        "except": "Alla utom {{count}}"
+      },
+      "access": {
+        "title": "Vem får använda widgeten",
+        "all": "Alla organisationer",
+        "allDescription": "Alla organisationer, även de som skapas senare.",
+        "except": "Alla utom…",
+        "exceptDescription": "Alla utom de organisationer du undantar. Nya organisationer ingår.",
+        "selected": "Endast utvalda…",
+        "selectedDescription": "Endast de organisationer du lägger till. Nya organisationer ingår inte.",
+        "hidden": "Dold",
+        "hiddenDescription": "Erbjuds inte någonstans i ditt nätverk."
+      },
+      "notices": {
+        "core": "Kärnwidget: alltid tillgänglig eftersom spellistor och media är beroende av den.",
+        "all": "Alla organisationer kan använda widgeten, även de som skapas senare. Om du stänger av en nedan undantas den.",
+        "except": "Organisationer som skapas senare får widgeten automatiskt.",
+        "selected": "Organisationer som skapas senare får inte widgeten.",
+        "hidden": "Ingen organisation i ditt nätverk kan lägga till widgeten i spellistor.",
+        "platform": "Plattformen erbjuder widgeten till {{count}} av {{total}} organisationer i ditt nätverk."
+      },
+      "organizations": {
+        "title": "Organisationer",
+        "search": "Sök organisationer",
+        "statusAll": "Alla",
+        "statusEnabled": "Har åtkomst",
+        "statusDisabled": "Saknar åtkomst",
+        "enabledOf": "{{count}} av {{total}} kan använda widgeten",
+        "matching": "{{count}} matchande organisationer",
+        "enableAll": "Aktivera alla ({{count}})",
+        "disableAll": "Inaktivera alla ({{count}})",
+        "inUse": "Används",
+        "inUseHint": "Används i organisationens spellistor. Ta bort den där innan du tar bort åtkomsten.",
+        "none": "Inga organisationer matchar filtren.",
+        "noOrganizations": "Det finns inga organisationer i ditt nätverk ännu.",
+        "columnName": "Organisation",
+        "columnUsage": "I spellistor",
+        "columnAccess": "Åtkomst",
+        "accessFor": "Åtkomst för {{name}}",
+        "range": "{{from}}–{{to}} av {{total}}",
+        "selectedCount": "{{count}} valda",
+        "enableSelected": "Aktivera åtkomst",
+        "disableSelected": "Inaktivera åtkomst"
+      },
+      "confirm": {
+        "hideTitle": "Dölja {{widget}}?",
+        "hideMessage": "Organisationerna i ditt nätverk kan inte längre lägga till widgeten i spellistor.",
+        "hideAction": "Dölj widget",
+        "enableAllTitle": "Aktivera {{count}} organisationer?",
+        "enableAllMessage": "De kommer att kunna lägga till {{widget}} i sina spellistor.",
+        "enableAction": "Aktivera",
+        "disableAllTitle": "Inaktivera {{count}} organisationer?",
+        "disableAllMessage": "De kommer inte längre att kunna lägga till {{widget}} i sina spellistor.",
+        "disableAction": "Inaktivera"
+      },
+      "errors": {
+        "load": "Det gick inte att läsa in widgetar.",
+        "loadOrganizations": "Det gick inte att läsa in organisationer.",
+        "save": "Det gick inte att uppdatera widgetåtkomsten.",
+        "inUse": "Åtkomsten kan inte tas bort medan dessa organisationer använder widgeten i spellistor: {{organizations}}",
+        "moreOrganizations": "{{names}} och {{count}} till"
+      }
+    },
     "title": "Nätverksinställningar",
     "adminBadge": "Nätverksadmin",
     "saveSuccess": "Nätverksinställningar sparade",
@@ -618,6 +710,7 @@
     "networkSettings": "Inställningar",
     "networkOrganizations": "Organisationer",
     "networkUsers": "Användare & inbjudningar",
+    "networkWidgets": "Widgetåtkomst",
     "tags": "Taggar",
     "agents": "Agenter"
   },
@@ -824,6 +917,13 @@
     "zonesCount": "{{count}} zoner"
   },
   "widgets": {
+    "scope": {
+      "title": "Tillgänglighet",
+      "system": "System",
+      "network": "Nätverk",
+      "organization": "Den här organisationen",
+      "unassigned": "Ej tilldelad"
+    },
     "title": "Widgets",
     "uploadWidget": "Ladda upp Widget",
     "uploadDescription": "Ladda upp en Widget JSON-definitionsfil.",

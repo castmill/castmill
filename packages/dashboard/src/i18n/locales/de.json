@@ -122,6 +122,7 @@
     "networkSettings": "Einstellungen",
     "networkOrganizations": "Organisationen",
     "networkUsers": "Benutzer & Einladungen",
+    "networkWidgets": "Widget-Zugriff",
     "tags": "Tags",
     "agents": "Agenten"
   },
@@ -212,6 +213,98 @@
     "soleAdministratorErrorGeneric": "Konto kann nicht gelöscht werden. Sie sind der einzige Administrator einer oder mehrerer Organisationen mit anderen Mitgliedern. Bitte befördern Sie zuerst einen anderen Benutzer zum Administrator."
   },
   "network": {
+    "widgets": {
+      "title": "Widget-Zugriff",
+      "description": "Legen Sie fest, welche Widgets die Organisationen in Ihrem Netzwerk verwenden können. Blenden Sie Widgets aus, die Sie nicht anbieten, etwa Dienste, die in Ihrer Region nicht verfügbar sind oder ein Abonnement erfordern, das Sie nicht haben.",
+      "searchWidgets": "Widgets suchen",
+      "loadMore": "Mehr laden",
+      "showing": "{{shown}} von {{total}} angezeigt",
+      "noWidgets": "Keine Widgets entsprechen Ihren Filtern.",
+      "clearFilters": "Filter zurücksetzen",
+      "selectWidget": "Wählen Sie ein Widget aus, um festzulegen, wer es verwenden kann.",
+      "core": "Kern",
+      "usedBy": "Organisationen, die es verwenden: {{count}}",
+      "kind": {
+        "system": "System",
+        "network": "Netzwerk"
+      },
+      "filters": {
+        "any": "Alle",
+        "all": "Für alle",
+        "selected": "Auswahl",
+        "hidden": "Ausgeblendet",
+        "accessLabel": "Nach Zugriff filtern",
+        "anyKind": "Alle Typen",
+        "kindLabel": "Nach Typ filtern",
+        "except": "Mit Ausnahmen"
+      },
+      "summary": {
+        "all": "Alle Organisationen",
+        "selected": "{{count}} von {{total}} Organisationen",
+        "hidden": "Ausgeblendet",
+        "except": "Alle außer {{count}}"
+      },
+      "access": {
+        "title": "Wer dieses Widget verwenden kann",
+        "all": "Alle Organisationen",
+        "allDescription": "Jede Organisation, auch später erstellte.",
+        "except": "Alle außer…",
+        "exceptDescription": "Alle außer den Organisationen, die Sie ausschließen. Neue Organisationen sind enthalten.",
+        "selected": "Nur ausgewählte…",
+        "selectedDescription": "Nur die Organisationen, die Sie hinzufügen. Neue Organisationen sind nicht enthalten.",
+        "hidden": "Ausgeblendet",
+        "hiddenDescription": "Wird nirgends in Ihrem Netzwerk angeboten."
+      },
+      "notices": {
+        "core": "Kern-Widget: immer verfügbar, da Playlists und Medien darauf angewiesen sind.",
+        "all": "Jede Organisation kann dieses Widget verwenden, auch später erstellte. Wenn Sie unten eine deaktivieren, wird sie ausgeschlossen.",
+        "except": "Später erstellte Organisationen erhalten dieses Widget automatisch.",
+        "selected": "Später erstellte Organisationen erhalten dieses Widget nicht.",
+        "hidden": "Keine Organisation in Ihrem Netzwerk kann dieses Widget zu Playlists hinzufügen.",
+        "platform": "Die Plattform bietet dieses Widget {{count}} von {{total}} Organisationen in Ihrem Netzwerk an."
+      },
+      "organizations": {
+        "title": "Organisationen",
+        "search": "Organisationen suchen",
+        "statusAll": "Alle",
+        "statusEnabled": "Mit Zugriff",
+        "statusDisabled": "Ohne Zugriff",
+        "enabledOf": "{{count}} von {{total}} können dieses Widget verwenden",
+        "matching": "{{count}} passende Organisationen",
+        "enableAll": "Alle aktivieren ({{count}})",
+        "disableAll": "Alle deaktivieren ({{count}})",
+        "inUse": "In Verwendung",
+        "inUseHint": "Wird in den Playlists dieser Organisation verwendet. Entfernen Sie es dort, bevor Sie den Zugriff deaktivieren.",
+        "none": "Keine Organisationen entsprechen Ihren Filtern.",
+        "noOrganizations": "In Ihrem Netzwerk gibt es noch keine Organisationen.",
+        "columnName": "Organisation",
+        "columnUsage": "In Playlists",
+        "columnAccess": "Zugriff",
+        "accessFor": "Zugriff für {{name}}",
+        "range": "{{from}}–{{to}} von {{total}}",
+        "selectedCount": "{{count}} ausgewählt",
+        "enableSelected": "Zugriff aktivieren",
+        "disableSelected": "Zugriff deaktivieren"
+      },
+      "confirm": {
+        "hideTitle": "{{widget}} ausblenden?",
+        "hideMessage": "Organisationen in Ihrem Netzwerk können dieses Widget nicht mehr zu Playlists hinzufügen.",
+        "hideAction": "Widget ausblenden",
+        "enableAllTitle": "{{count}} Organisationen aktivieren?",
+        "enableAllMessage": "Sie können {{widget}} dann zu ihren Playlists hinzufügen.",
+        "enableAction": "Aktivieren",
+        "disableAllTitle": "{{count}} Organisationen deaktivieren?",
+        "disableAllMessage": "Sie können {{widget}} dann nicht mehr zu ihren Playlists hinzufügen.",
+        "disableAction": "Deaktivieren"
+      },
+      "errors": {
+        "load": "Widgets konnten nicht geladen werden.",
+        "loadOrganizations": "Organisationen konnten nicht geladen werden.",
+        "save": "Der Widget-Zugriff konnte nicht aktualisiert werden.",
+        "inUse": "Der Zugriff kann nicht entfernt werden, solange diese Organisationen das Widget in Playlists verwenden: {{organizations}}",
+        "moreOrganizations": "{{names}} und {{count}} weitere"
+      }
+    },
     "title": "Netzwerkeinstellungen",
     "adminBadge": "Netzwerkadmin",
     "saveSuccess": "Netzwerkeinstellungen gespeichert",
@@ -851,6 +944,13 @@
     "zonesCount": "{{count}} Zonen"
   },
   "widgets": {
+    "scope": {
+      "title": "Verfügbarkeit",
+      "system": "System",
+      "network": "Netzwerk",
+      "organization": "Diese Organisation",
+      "unassigned": "Nicht zugewiesen"
+    },
     "title": "Widgets",
     "uploadWidget": "Widget hochladen",
     "uploadDescription": "Laden Sie eine JSON Widget-Definitionsdatei hoch.",

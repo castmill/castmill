@@ -197,6 +197,98 @@
     "deleteAccountPasskeyInfoWithSignalAPI": "削除後、パスキーは自動的にデバイスから削除されます。後でログインする場合は、新しいアカウントを作成する必要があります。"
   },
   "network": {
+    "widgets": {
+      "title": "ウィジェットのアクセス",
+      "description": "ネットワーク内の組織が使用できるウィジェットを選択します。地域で利用できないサービスや、契約していないサブスクリプションが必要なウィジェットなど、提供しないウィジェットは非表示にできます。",
+      "searchWidgets": "ウィジェットを検索",
+      "loadMore": "さらに読み込む",
+      "showing": "{{total}} 件中 {{shown}} 件を表示",
+      "noWidgets": "フィルターに一致するウィジェットはありません。",
+      "clearFilters": "フィルターをクリア",
+      "selectWidget": "ウィジェットを選択して、使用できる組織を管理します。",
+      "core": "コア",
+      "usedBy": "使用中の組織: {{count}}",
+      "kind": {
+        "system": "システム",
+        "network": "ネットワーク"
+      },
+      "filters": {
+        "any": "すべて",
+        "all": "全組織",
+        "selected": "選択した組織",
+        "hidden": "非表示",
+        "accessLabel": "アクセスで絞り込む",
+        "anyKind": "すべての種類",
+        "kindLabel": "種類で絞り込む",
+        "except": "除外あり"
+      },
+      "summary": {
+        "all": "すべての組織",
+        "selected": "{{total}} 組織中 {{count}} 組織",
+        "hidden": "非表示",
+        "except": "{{count}} 組織を除くすべて"
+      },
+      "access": {
+        "title": "このウィジェットを使用できる組織",
+        "all": "すべての組織",
+        "allDescription": "今後作成される組織を含むすべての組織。",
+        "except": "一部を除くすべて…",
+        "exceptDescription": "除外した組織以外のすべて。新しい組織も含まれます。",
+        "selected": "選択した組織のみ…",
+        "selectedDescription": "追加した組織のみ。新しい組織は含まれません。",
+        "hidden": "非表示",
+        "hiddenDescription": "ネットワーク内のどこにも提供しません。"
+      },
+      "notices": {
+        "core": "コアウィジェット: プレイリストとメディアが依存しているため、常に利用できます。",
+        "all": "今後作成される組織を含むすべての組織がこのウィジェットを使用できます。下で組織をオフにすると除外されます。",
+        "except": "今後作成される組織には、このウィジェットが自動で提供されます。",
+        "selected": "今後作成される組織には、このウィジェットは提供されません。",
+        "hidden": "ネットワーク内のどの組織もこのウィジェットをプレイリストに追加できません。",
+        "platform": "プラットフォームは、ネットワーク内の {{total}} 組織中 {{count}} 組織にこのウィジェットを提供しています。"
+      },
+      "organizations": {
+        "title": "組織",
+        "search": "組織を検索",
+        "statusAll": "すべて",
+        "statusEnabled": "使用可",
+        "statusDisabled": "使用不可",
+        "enabledOf": "{{total}} 組織中 {{count}} 組織がこのウィジェットを使用できます",
+        "matching": "一致する組織: {{count}}",
+        "enableAll": "すべて有効化（{{count}}）",
+        "disableAll": "すべて無効化（{{count}}）",
+        "inUse": "使用中",
+        "inUseHint": "この組織のプレイリストで使用中です。アクセスを無効にする前にプレイリストから削除してください。",
+        "none": "フィルターに一致する組織はありません。",
+        "noOrganizations": "ネットワークにはまだ組織がありません。",
+        "columnName": "組織",
+        "columnUsage": "プレイリストで使用",
+        "columnAccess": "アクセス",
+        "accessFor": "{{name}} のアクセス",
+        "range": "{{total}} 件中 {{from}}–{{to}} 件",
+        "selectedCount": "{{count}} 件選択",
+        "enableSelected": "アクセスを有効化",
+        "disableSelected": "アクセスを無効化"
+      },
+      "confirm": {
+        "hideTitle": "{{widget}} を非表示にしますか？",
+        "hideMessage": "ネットワーク内の組織は、このウィジェットをプレイリストに追加できなくなります。",
+        "hideAction": "ウィジェットを非表示",
+        "enableAllTitle": "{{count}} 組織を有効にしますか？",
+        "enableAllMessage": "これらの組織は {{widget}} をプレイリストに追加できるようになります。",
+        "enableAction": "有効にする",
+        "disableAllTitle": "{{count}} 組織を無効にしますか？",
+        "disableAllMessage": "これらの組織は {{widget}} をプレイリストに追加できなくなります。",
+        "disableAction": "無効にする"
+      },
+      "errors": {
+        "load": "ウィジェットを読み込めませんでした。",
+        "loadOrganizations": "組織を読み込めませんでした。",
+        "save": "ウィジェットのアクセスを更新できませんでした。",
+        "inUse": "次の組織がプレイリストでウィジェットを使用しているため、アクセスを削除できません: {{organizations}}",
+        "moreOrganizations": "{{names}} ほか {{count}} 件"
+      }
+    },
     "title": "ネットワーク設定",
     "adminBadge": "ネットワーク管理者",
     "saveSuccess": "ネットワーク設定が保存されました",
@@ -623,6 +715,7 @@
     "networkSettings": "設定",
     "networkOrganizations": "組織",
     "networkUsers": "ユーザーと招待",
+    "networkWidgets": "ウィジェットのアクセス",
     "tags": "タグ",
     "agents": "エージェント"
   },
@@ -830,6 +923,13 @@
     "zonesCount": "{{count}}個のゾーン"
   },
   "widgets": {
+    "scope": {
+      "title": "利用範囲",
+      "system": "システム",
+      "network": "ネットワーク",
+      "organization": "この組織",
+      "unassigned": "未割り当て"
+    },
     "title": "Widgets",
     "uploadWidget": "Widgetをアップロード",
     "uploadDescription": "Widget JSON定義ファイルをアップロードします。",
