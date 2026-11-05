@@ -255,7 +255,8 @@ defmodule Castmill.DevicesTest do
                  name: "some device"
                })
 
-      assert {:ok, recovered_device} = Devices.recover_device(device.hardware_id, device.last_ip)
+      assert {:ok, recovered_device} =
+               Devices.recover_device(device.hardware_id, device.last_ip)
 
       # The recovered device MUST carry a plain-text token so the controller can
       # include it in the HTTP response and the player can authenticate with it.
