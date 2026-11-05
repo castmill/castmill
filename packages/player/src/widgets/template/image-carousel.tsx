@@ -8,9 +8,63 @@ import { BaseComponentProps } from './interfaces/base-component-props';
 import { ResourceManager } from '@castmill/cache';
 import { PlayerGlobals } from '../../interfaces/player-globals.interface';
 
+export type ImageCarouselTransition = 'slide' | 'fade';
+
 export interface ImageCarouselComponentOptions {
   images: string[];
   imageDuration: number;
+  transition?: ImageCarouselTransition;
+}
+
+const TRANSITION_SECONDS = 1;
+
+/**
+ * Tween vars for an image entering (start) and leaving (end) the carousel.
+ * "slide" (default) slides and zooms; "fade" cross-fades in place.
+ */
+export function carouselTransitionArgs(transition?: string): {
+  startArgs: GSAPTweenVars;
+  endArgs: GSAPTweenVars;
+} {
+  if (transition === 'fade') {
+    return {
+      startArgs: { duration: TRANSITION_SECONDS, autoAlpha: 0 },
+      endArgs: { duration: TRANSITION_SECONDS, autoAlpha: 0 },
+    };
+  }
+  return {
+    startArgs: {
+      duration: TRANSITION_SECONDS,
+      x: -100,
+      autoAlpha: 0,
+      scale: 1.5,
+    },
+    endArgs: { duration: TRANSITION_SECONDS, x: 100, autoAlpha: 0, scale: 1.5 },
+  };
+}
+
+/**
+ * Resolves the cached URL of every image, in order. When an image cannot be
+ * cached (e.g. its host sends no CORS headers or storage is full) the original
+ * URL is used so it still displays while online.
+ */
+export function resolveCarouselImageUrls(
+  resourceManager: Pick<ResourceManager, 'getMedia'>,
+  urls: string[]
+): Promise<string[]> {
+  return Promise.all(
+    urls.map((url) =>
+      resourceManager.getMedia(url).then(
+        (cachedUrl) => cachedUrl || fallbackUrl(url),
+        () => fallbackUrl(url)
+      )
+    )
+  );
+}
+
+function fallbackUrl(url: string): string {
+  console.warn(`Image ${url} not found in cached medias, using original URL`);
+  return url;
 }
 
 export class ImageCarouselComponent implements TemplateComponent {
@@ -25,7 +79,8 @@ export class ImageCarouselComponent implements TemplateComponent {
   ) {}
 
   resolveDuration(medias: { [index: string]: string }): number {
-    return this.opts.imageDuration * this.opts.images.length;
+    const images = Array.isArray(this.opts.images) ? this.opts.images : [];
+    return this.opts.imageDuration * images.length;
   }
 
   static fromJSON(json: any): ImageCarouselComponent {
@@ -44,14 +99,16 @@ export class ImageCarouselComponent implements TemplateComponent {
     context: any,
     globals: PlayerGlobals
   ): ImageCarouselComponentOptions {
+    const images = resolveOption(opts.images, config, context, globals);
     return {
-      images: resolveOption(opts.images, config, context, globals),
+      images: Array.isArray(images) ? images : [],
       imageDuration: resolveOption(
         opts.imageDuration,
         config,
         context,
         globals
       ),
+      transition: resolveOption(opts.transition, config, context, globals),
     };
   }
 }
@@ -78,23 +135,7 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
 
   props.timeline.add(timelineItem);
 
-  props = mergeProps(
-    {
-      startArgs: {
-        duration: 1,
-        x: -100,
-        autoAlpha: 0,
-        scale: 1.5,
-      },
-      endArgs: {
-        duration: 1,
-        x: 100,
-        autoAlpha: 0,
-        scale: 1.5,
-      },
-    },
-    props
-  );
+  props = mergeProps(carouselTransitionArgs(props.opts.transition), props);
 
   const style = Object.assign(
     {
@@ -121,42 +162,44 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
 
     const images = parentRef.children;
     const targetArgs = {
-      duration: 1,
+      duration: TRANSITION_SECONDS,
       x: 0,
       y: 0,
       autoAlpha: 1,
       scale: 1,
     };
 
-    if (images && images.length == 1) {
-      const imageUrl = await props.resourceManager.getMedia(
-        props.opts.images[0]
-      );
+    // Resolve all URLs first so the timeline is built in image order no
+    // matter which download finishes first.
+    const urls = await resolveCarouselImageUrls(
+      props.resourceManager,
+      props.opts.images.slice(0, images.length)
+    );
+
+    if (urls.length == 1) {
       timeline.set(
         images[0],
         {
-          backgroundImage: `url(${imageUrl})`,
+          backgroundImage: `url(${urls[0]})`,
         },
         '<'
       );
       timeline.duration(props.opts.imageDuration);
     }
 
-    if (images && images.length > 1) {
-      Array.from(images || []).forEach(async (image, index) => {
-        const imageUrl = await props.resourceManager.getMedia(
-          props.opts.images[index]
-        );
+    if (urls.length > 1) {
+      for (let index = 0; index < urls.length; index++) {
+        const image = images[index];
         timeline.set(
           image,
           {
-            backgroundImage: `url(${imageUrl})`,
+            backgroundImage: `url(${urls[index]})`,
           },
           '<'
         );
 
         if (index === 0) {
-          timeline.set(images[images.length - 1], {
+          timeline.set(images[urls.length - 1], {
             visibility: 'hidden',
             backgroundImage: 'none',
           });
@@ -170,13 +213,9 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
         }
         // When the last image fades out we need to cross-fade the first image
         let position = `>+=${props.opts.imageDuration}`;
-        if (index === images.length - 1) {
-          const imageUrl = await props.resourceManager.getMedia(
-            props.opts.images[0]
-          );
-
+        if (index === urls.length - 1) {
           timeline.set(images[0], {
-            backgroundImage: `url(${imageUrl})`,
+            backgroundImage: `url(${urls[0]})`,
           });
           timeline.from(
             images[0],
@@ -186,7 +225,7 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
           position = `<`;
         }
         timeline.to(image, Object.assign({}, props.endArgs), position);
-      });
+      }
     }
 
     props.onReady();
