@@ -76,7 +76,7 @@
 }
 
 .msf-placeholder {
-  color: colors.$component-color;
+  color: var(--cm-text-placeholder);
   font-style: italic;
   white-space: nowrap;
   overflow: hidden;
@@ -132,7 +132,7 @@
 
 .msf-overflow {
   font-size: 0.75em;
-  color: colors.$component-color;
+  color: var(--cm-text-placeholder);
   background: colors.$component-background-color;
   padding: 0.15em 0.5em;
   border-radius: 9999px;
@@ -154,7 +154,7 @@
   justify-content: center;
   padding: 0.15em;
   border-radius: 0.25em;
-  color: colors.$component-color;
+  color: var(--cm-text-placeholder);
   cursor: pointer;
   transition:
     color 0.15s ease,
@@ -169,7 +169,7 @@
 .msf-arrow {
   display: flex;
   align-items: center;
-  color: colors.$component-color;
+  color: var(--cm-text-placeholder);
   transition: transform 0.2s ease;
 
   &.rotated {
@@ -220,7 +220,7 @@
   border-bottom: 1px solid colors.$separator-color;
 
   .msf-search-icon {
-    color: colors.$component-color;
+    color: var(--cm-text-placeholder);
     font-size: 0.95em;
     display: flex;
     align-items: center;
@@ -237,7 +237,7 @@
     outline: none;
 
     &::placeholder {
-      color: colors.$component-color;
+      color: var(--cm-text-placeholder);
     }
   }
 }
@@ -257,7 +257,7 @@
   border: 1px solid colors.$separator-color;
   border-radius: 0.3em;
   background: transparent;
-  color: colors.$component-color;
+  color: var(--cm-text-placeholder);
   font: inherit;
   font-size: 0.8em;
   font-weight: 500;
@@ -341,7 +341,7 @@
 .msf-empty {
   padding: 1em;
   text-align: center;
-  color: colors.$component-color;
+  color: var(--cm-text-placeholder);
   font-size: 0.85em;
   font-style: italic;
 }

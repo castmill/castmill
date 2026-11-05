@@ -980,7 +980,7 @@ view is a bug.
 | Dialogs, menus, popover | `--cm-bg-elevated`, `--cm-bg-elevated-secondary`, `--cm-bg-overlay` (backdrop)                                                |
 | Inputs                  | `--cm-bg-input`, `--cm-border-color`, `--cm-focus-ring`                                                                       |
 | Interaction             | `--cm-bg-hover`, `--cm-bg-hover-strong`, `--cm-bg-active`, `--cm-bg-selected`                                                  |
-| Text                    | `--cm-text-primary`, `--cm-text-secondary`, `--cm-text-tertiary`, `--cm-text-disabled`, `--cm-text-inverse`, `--cm-text-on-primary` |
+| Text                    | `--cm-text-primary`, `--cm-text-secondary`, `--cm-text-tertiary`, `--cm-text-disabled`, `--cm-text-placeholder`, `--cm-text-inverse`, `--cm-text-on-primary` |
 | Borders                 | `--cm-border-color`, `--cm-border-subtle`, `--cm-border-strong`                                                                |
 | Accent                  | `--cm-primary`, `--cm-primary-hover`, `--cm-primary-active`, `--cm-primary-bg`, `--cm-link`, `--cm-primary-rgb`                |
 | Status                  | `--cm-success`, `--cm-error`, `--cm-warning`, `--cm-info` (+ `-bg` and `-rgb` variants)                                        |

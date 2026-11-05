@@ -95,6 +95,10 @@ vi.mock('../../assets/castmill-logo-topbar.png', () => ({
   default: 'logo.png',
 }));
 
+vi.mock('../../assets/castmill-logo-topbar-light.png', () => ({
+  default: 'logo-light.png',
+}));
+
 const renderTopbar = () =>
   render(() => (
     <ThemeProvider>
@@ -140,5 +144,14 @@ describe('Topbar Component', () => {
     expect(document.documentElement.dataset.theme).toBe('light');
     expect(toggle).toHaveAttribute('aria-label', 'topbar.switchToDarkMode');
     expect(localStorage.getItem('castmill_theme')).toBe('light');
+  });
+
+  it('uses the logo variant matching the theme', () => {
+    renderTopbar();
+    const logo = screen.getByAltText('Castmill');
+    expect(logo).toHaveAttribute('src', 'logo.png');
+
+    fireEvent.click(screen.getByTestId('theme-toggle'));
+    expect(logo).toHaveAttribute('src', 'logo-light.png');
   });
 });
