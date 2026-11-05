@@ -3,6 +3,7 @@ defmodule Castmill.Widgets.IntegrationsTest do
 
   import Castmill.NetworksFixtures
   import Castmill.OrganizationsFixtures
+  import Castmill.PlaylistsFixtures
 
   alias Castmill.Widgets
   alias Castmill.Widgets.Integrations
@@ -558,6 +559,98 @@ defmodule Castmill.Widgets.IntegrationsTest do
     end
   end
 
+  describe "get_scoped_credentials/3" do
+    setup do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+      widget = widget_fixture()
+
+      playlist = playlist_fixture(%{organization_id: organization.id})
+      playlist_item = playlist_item_fixture(%{playlist_id: playlist.id, duration: 10, offset: 0})
+
+      widget_config =
+        widget_config_fixture(%{widget_id: widget.id, playlist_item_id: playlist_item.id})
+
+      %{organization: organization, widget: widget, widget_config: widget_config}
+    end
+
+    test "reads widget-config credentials for widget-scoped integrations", %{
+      organization: organization,
+      widget: widget,
+      widget_config: widget_config
+    } do
+      integration = widget_integration_fixture(%{widget: widget, credential_scope: "widget"})
+
+      {:ok, _} =
+        Integrations.upsert_organization_credentials(organization.id, integration.id, %{
+          "access_token" => "org-token"
+        })
+
+      {:ok, _} =
+        Integrations.upsert_widget_credentials(widget_config.id, integration.id, %{
+          "access_token" => "widget-token"
+        })
+
+      assert {:ok, %{"access_token" => "widget-token"}} =
+               Integrations.get_scoped_credentials(integration, organization.id, widget_config.id)
+
+      assert {:error, :not_found} =
+               Integrations.get_scoped_credentials(integration, organization.id, nil)
+    end
+
+    test "reads organization credentials for organization-scoped integrations", %{
+      organization: organization,
+      widget: widget,
+      widget_config: widget_config
+    } do
+      integration = widget_integration_fixture(%{widget: widget})
+
+      {:ok, _} =
+        Integrations.upsert_organization_credentials(organization.id, integration.id, %{
+          "access_token" => "org-token"
+        })
+
+      assert {:ok, %{"access_token" => "org-token"}} =
+               Integrations.get_scoped_credentials(integration, organization.id, widget_config.id)
+    end
+
+    test "persist_refreshed_credentials/5 stores only changed, non-empty credentials", %{
+      organization: organization,
+      widget: widget,
+      widget_config: widget_config
+    } do
+      integration = widget_integration_fixture(%{widget: widget, credential_scope: "widget"})
+      previous = %{"access_token" => "old"}
+
+      {:ok, _} =
+        Integrations.upsert_widget_credentials(widget_config.id, integration.id, previous)
+
+      assert :ok =
+               Integrations.persist_refreshed_credentials(
+                 integration,
+                 organization.id,
+                 widget_config.id,
+                 previous,
+                 %{}
+               )
+
+      assert {:ok, ^previous} =
+               Integrations.get_widget_credentials(widget_config.id, integration.id)
+
+      assert {:ok, _} =
+               Integrations.persist_refreshed_credentials(
+                 integration,
+                 organization.id,
+                 widget_config.id,
+                 previous,
+                 %{"access_token" => "new"}
+               )
+
+      assert {:ok, %{"access_token" => "new"}} =
+               Integrations.get_widget_credentials(widget_config.id, integration.id)
+    end
+  end
+
   describe "validate_integration_credentials_for_widget/2" do
     setup do
       network = network_fixture()
@@ -631,6 +724,25 @@ defmodule Castmill.Widgets.IntegrationsTest do
           widget_integration_id: integration.id,
           organization_id: organization.id,
           encrypted_credentials: "test_encrypted_data"
+        })
+
+      assert :ok = Widgets.validate_integration_credentials_for_widget(widget.id, organization.id)
+    end
+
+    test "returns :ok for widget-scoped integrations connected per widget instance", %{
+      widget_without_integration: widget,
+      organization: organization
+    } do
+      {:ok, _integration} =
+        Integrations.create_integration(%{
+          widget_id: widget.id,
+          name: "instagram",
+          description: "Per-widget OAuth integration",
+          integration_type: "pull",
+          credential_scope: "widget",
+          pull_endpoint: "https://graph.example.com/me/media",
+          pull_interval_seconds: 1800,
+          credential_schema: %{"auth_type" => "oauth2"}
         })
 
       assert :ok = Widgets.validate_integration_credentials_for_widget(widget.id, organization.id)

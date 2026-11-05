@@ -2,18 +2,22 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Instagram do
   @moduledoc """
   Instagram Graph API fetcher for the Instagram Feed widget.
 
-  Fetches a user's recent media posts (images and videos) using a long-lived
-  access token obtained via the Instagram Basic Display API OAuth flow.
+  Fetches a user's recent media posts (images and videos) using an access
+  token obtained via the generic widget OAuth flow.
 
-  Long-lived tokens last 60 days and can be refreshed before expiry by calling
-  the refresh endpoint.  The fetcher automatically refreshes the token when it
-  has less than 7 days remaining.
+  The OAuth code exchange yields a short-lived (1 hour) token, which the
+  fetcher exchanges for a long-lived (60 day) token on first use.  Long-lived
+  tokens are refreshed when they have less than 7 days remaining.  Updated
+  credentials are returned so callers can persist them.
 
   ## Credentials
 
-  - `access_token`   – Long-lived Instagram access token.
-  - `token_expires_at` – Unix timestamp (seconds) when the token expires.
-                         Stored so that the fetcher can schedule refreshes.
+  - `access_token`  – Instagram access token.
+  - `expires_at`    – Unix timestamp (seconds) when the token expires, as stored
+                      by the generic OAuth flow.  The legacy `token_expires_at`
+                      key is still honoured.
+  - `long_lived`    – `true` once the token has been exchanged for a long-lived one.
+  - `client_secret` – Instagram App Secret, required for the long-lived exchange.
 
   ## Options
 
@@ -51,17 +55,21 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Instagram do
   @media_fields "id,caption,media_type,media_url,thumbnail_url,timestamp,permalink"
   # Refresh threshold: refresh token if it expires within 7 days
   @refresh_threshold_seconds 7 * 24 * 60 * 60
+  # Short-lived tokens last 1 hour; anything valid for longer than a day is long-lived
+  @long_lived_min_seconds 24 * 60 * 60
   @default_max_posts 10
   @max_allowed_posts 30
 
   @doc """
   Fetches recent media from the authenticated user's Instagram account.
 
-  Automatically refreshes the long-lived token if it expires within 7 days.
+  Exchanges short-lived tokens for long-lived ones and refreshes long-lived
+  tokens that expire within 7 days.
 
   ## Parameters
 
-    - `credentials` – Map with `access_token` and optionally `token_expires_at`.
+    - `credentials` – Map with `access_token` and optionally `expires_at`,
+                      `long_lived` and `client_secret`.
     - `options`     – Map with `max_posts` (integer, default: 10).
 
   ## Returns
@@ -76,7 +84,7 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Instagram do
     if !access_token || access_token == "" do
       {:error, :missing_access_token, credentials}
     else
-      credentials = maybe_refresh_token(credentials)
+      credentials = maybe_renew_token(credentials)
       max_posts = parse_max_posts(Map.get(options, "max_posts", @default_max_posts))
 
       case fetch_media(credentials["access_token"], max_posts) do
@@ -100,61 +108,130 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Instagram do
   # Token refresh
   # ---------------------------------------------------------------------------
 
-  defp maybe_refresh_token(credentials) do
-    expires_at = Map.get(credentials, "token_expires_at")
-    access_token = Map.get(credentials, "access_token")
+  @doc false
+  # Decides how the access token must be renewed before fetching:
+  #   * `:exchange` – short-lived OAuth token, exchange it for a long-lived one
+  #   * `:refresh`  – long-lived token expiring within the refresh threshold
+  #   * `:none`     – token is fine (or its expiry is unknown)
+  def token_action(credentials, now \\ System.system_time(:second)) do
+    expires_at = token_expires_at(credentials)
 
-    should_refresh =
-      case expires_at do
-        nil ->
-          false
+    cond do
+      is_nil(expires_at) ->
+        :none
 
-        ts when is_number(ts) ->
-          System.system_time(:second) >= ts - @refresh_threshold_seconds
-      end
+      not long_lived?(credentials, expires_at, now) ->
+        if present?(Map.get(credentials, "client_secret")), do: :exchange, else: :none
 
-    if should_refresh do
-      case refresh_token(access_token) do
-        {:ok, new_token, new_expires_at} ->
-          Logger.info("Instagram: long-lived token refreshed successfully")
+      now >= expires_at - @refresh_threshold_seconds ->
+        :refresh
 
-          Map.merge(credentials, %{
-            "access_token" => new_token,
-            "token_expires_at" => new_expires_at
-          })
-
-        {:error, reason} ->
-          Logger.error("Instagram: token refresh failed: #{inspect(reason)}")
-          credentials
-      end
-    else
-      credentials
+      true ->
+        :none
     end
   end
 
-  defp refresh_token(access_token) do
-    url =
-      "#{@graph_base}/refresh_access_token" <>
-        "?grant_type=ig_refresh_token&access_token=#{URI.encode(access_token)}"
+  defp token_expires_at(credentials) do
+    case Map.get(credentials, "expires_at") || Map.get(credentials, "token_expires_at") do
+      ts when is_integer(ts) ->
+        ts
 
+      ts when is_float(ts) ->
+        trunc(ts)
+
+      ts when is_binary(ts) ->
+        case Integer.parse(ts) do
+          {value, _} -> value
+          :error -> nil
+        end
+
+      _ ->
+        nil
+    end
+  end
+
+  # Tokens stored under the legacy `token_expires_at` key were always long-lived.
+  defp long_lived?(credentials, expires_at, now) do
+    Map.get(credentials, "long_lived") == true or
+      Map.has_key?(credentials, "token_expires_at") or
+      expires_at - now > @long_lived_min_seconds
+  end
+
+  defp present?(value), do: is_binary(value) and value != ""
+
+  defp maybe_renew_token(credentials) do
+    access_token = Map.get(credentials, "access_token")
+
+    result =
+      case token_action(credentials) do
+        :exchange -> exchange_token(access_token, Map.get(credentials, "client_secret"))
+        :refresh -> refresh_token(access_token)
+        :none -> :unchanged
+      end
+
+    case result do
+      {:ok, new_token, new_expires_at} ->
+        Logger.info("Instagram: long-lived access token renewed successfully")
+
+        credentials
+        |> Map.delete("token_expires_at")
+        |> Map.merge(%{
+          "access_token" => new_token,
+          "expires_at" => new_expires_at,
+          "long_lived" => true
+        })
+
+      {:error, reason} ->
+        Logger.error("Instagram: token renewal failed: #{inspect(reason)}")
+        credentials
+
+      :unchanged ->
+        credentials
+    end
+  end
+
+  # Exchanges a short-lived token for a long-lived (60 day) token
+  defp exchange_token(access_token, client_secret) do
+    query =
+      URI.encode_query(%{
+        "grant_type" => "ig_exchange_token",
+        "client_secret" => client_secret,
+        "access_token" => access_token
+      })
+
+    request_token("#{@graph_base}/access_token?#{query}")
+  end
+
+  # Refreshes a long-lived token, extending it by another 60 days
+  defp refresh_token(access_token) do
+    query =
+      URI.encode_query(%{
+        "grant_type" => "ig_refresh_token",
+        "access_token" => access_token
+      })
+
+    request_token("#{@graph_base}/refresh_access_token?#{query}")
+  end
+
+  defp request_token(url) do
     headers = [{"Accept", "application/json"}, {"User-Agent", "Castmill/1.0"}]
 
     case HTTPoison.get(url, headers, recv_timeout: 15_000) do
       {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
         case Jason.decode(body) do
-          {:ok, %{"access_token" => new_token, "expires_in" => expires_in}} ->
-            new_expires_at = System.system_time(:second) + expires_in
-            {:ok, new_token, new_expires_at}
+          {:ok, %{"access_token" => new_token, "expires_in" => expires_in}}
+          when is_integer(expires_in) ->
+            {:ok, new_token, System.system_time(:second) + expires_in}
 
-          {:ok, response} ->
-            {:error, "Unexpected refresh response: #{inspect(response)}"}
+          {:ok, _response} ->
+            {:error, "Unexpected token response"}
 
           {:error, reason} ->
             {:error, "JSON decode error: #{inspect(reason)}"}
         end
 
-      {:ok, %HTTPoison.Response{status_code: status, body: body}} ->
-        {:error, "Token refresh HTTP #{status}: #{body}"}
+      {:ok, %HTTPoison.Response{status_code: status}} ->
+        {:error, "Token request HTTP #{status}"}
 
       {:error, %HTTPoison.Error{reason: reason}} ->
         {:error, "Network error: #{inspect(reason)}"}

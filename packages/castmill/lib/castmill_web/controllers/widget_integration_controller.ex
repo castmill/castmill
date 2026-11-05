@@ -145,6 +145,7 @@ defmodule CastmillWeb.WidgetIntegrationController do
             missing_integrations =
               integrations
               |> Enum.filter(&integration_requires_credentials?/1)
+              |> Enum.reject(&Integrations.widget_scoped?/1)
               |> Enum.filter(fn integration ->
                 is_nil(
                   Integrations.get_credentials_by_scope(integration.id,
@@ -509,8 +510,9 @@ defmodule CastmillWeb.WidgetIntegrationController do
         |> text("")
 
       [integration | _] ->
-        # Only handle PULL integrations with fetcher modules
-        if integration.integration_type == "pull" do
+        # Only handle PULL integrations with fetcher modules. Widget-scoped
+        # integrations have no credentials until the widget instance is connected.
+        if integration.integration_type == "pull" and not Integrations.widget_scoped?(integration) do
           prefetch_pull_integration(conn, organization_id, widget_id, integration, widget_options)
         else
           # PUSH integrations don't support prefetching
@@ -740,7 +742,8 @@ defmodule CastmillWeb.WidgetIntegrationController do
       integration,
       widget_options,
       organization_id,
-      widget_id
+      widget_id,
+      widget_config_id
     )
 
     case integration_data do
@@ -828,7 +831,11 @@ defmodule CastmillWeb.WidgetIntegrationController do
                 "required"
 
             credentials =
-              case Integrations.get_organization_credentials(organization_id, integration.id) do
+              case Integrations.get_scoped_credentials(
+                     integration,
+                     organization_id,
+                     widget_config_id
+                   ) do
                 {:ok, creds} ->
                   creds
 
@@ -857,17 +864,30 @@ defmodule CastmillWeb.WidgetIntegrationController do
                          credentials,
                          merged_options
                        ) do
-                    {:ok, data, _creds} ->
+                    {:ok, data, updated_credentials} ->
+                      Integrations.persist_refreshed_credentials(
+                        integration,
+                        organization_id,
+                        widget_config_id,
+                        credentials,
+                        updated_credentials
+                      )
+
                       # Store the data and return it
                       discriminator_id =
-                        build_discriminator_id(integration, widget_config.options || %{})
+                        build_discriminator_id(
+                          integration,
+                          widget_config.options || %{},
+                          widget_config_id
+                        )
 
                       case store_fetched_data(
                              organization_id,
                              widget_id,
                              integration,
                              discriminator_id,
-                             data
+                             data,
+                             widget_config_id
                            ) do
                         {:ok, integration_data} ->
                           # Schedule background polling for future updates
@@ -876,7 +896,8 @@ defmodule CastmillWeb.WidgetIntegrationController do
                             widget_id,
                             integration,
                             discriminator_id,
-                            widget_config.options || %{}
+                            widget_config.options || %{},
+                            widget_config_id: widget_config_id
                           )
 
                           integration_data
@@ -884,6 +905,9 @@ defmodule CastmillWeb.WidgetIntegrationController do
                         {:error, _reason} ->
                           nil
                       end
+
+                    {:error, _reason, _creds} ->
+                      nil
 
                     {:error, _reason} ->
                       nil
@@ -919,7 +943,7 @@ defmodule CastmillWeb.WidgetIntegrationController do
 
         module = String.to_existing_atom(full_module_name)
 
-        # Credentials are already decrypted by get_organization_credentials
+        # Credentials are already decrypted by get_scoped_credentials
         module.fetch(credentials, options)
       rescue
         ArgumentError ->
@@ -930,7 +954,16 @@ defmodule CastmillWeb.WidgetIntegrationController do
     end
   end
 
-  defp build_discriminator_id(integration, options) do
+  defp build_discriminator_id(integration, options, widget_config_id \\ nil)
+
+  # Widget-scoped integrations fetch a different account per widget instance,
+  # so their data must never be shared between widget configs.
+  defp build_discriminator_id(%{credential_scope: "widget"}, _options, widget_config_id)
+       when not is_nil(widget_config_id) do
+    "cfg:#{widget_config_id}"
+  end
+
+  defp build_discriminator_id(integration, options, _widget_config_id) do
     # For widget_option discriminators, also check pull_config for hardcoded values
     # (e.g., RSS widgets have feed_url in pull_config, not in widget_options)
     pull_config = integration.pull_config || %{}
@@ -954,12 +987,19 @@ defmodule CastmillWeb.WidgetIntegrationController do
     end
   end
 
-  defp store_fetched_data(organization_id, widget_id, integration, discriminator_id, data) do
+  defp store_fetched_data(
+         organization_id,
+         widget_id,
+         integration,
+         discriminator_id,
+         data,
+         widget_config_id \\ nil
+       ) do
     now = DateTime.utc_now()
     interval = integration.pull_interval_seconds || 300
     refresh_at = DateTime.add(now, interval, :second)
 
-    Integrations.upsert_integration_data(%{
+    attrs = %{
       widget_integration_id: integration.id,
       organization_id: organization_id,
       widget_id: widget_id,
@@ -970,7 +1010,15 @@ defmodule CastmillWeb.WidgetIntegrationController do
       last_used_at: now,
       refresh_at: refresh_at,
       version: System.system_time(:second)
-    })
+    }
+
+    # Widget-scoped data is tied to its widget config (see build_discriminator_id/3)
+    attrs =
+      if widget_config_id && Integrations.widget_scoped?(integration),
+        do: Map.put(attrs, :widget_config_id, widget_config_id),
+        else: attrs
+
+    Integrations.upsert_integration_data(attrs)
   end
 
   defp schedule_polling(
@@ -983,6 +1031,7 @@ defmodule CastmillWeb.WidgetIntegrationController do
        ) do
     # Only schedule if not already running (the unique constraint in the worker will handle this)
     delay = Keyword.get(opts, :delay, integration.pull_interval_seconds || 30)
+    widget_config_id = Keyword.get(opts, :widget_config_id)
 
     schedule_fn = fn ->
       try do
@@ -992,7 +1041,8 @@ defmodule CastmillWeb.WidgetIntegrationController do
             widget_id: widget_id,
             integration_id: integration.id,
             discriminator_id: discriminator_id,
-            widget_options: widget_options
+            widget_options: widget_options,
+            widget_config_id: widget_config_id
           },
           delay: delay
         )
@@ -1023,7 +1073,8 @@ defmodule CastmillWeb.WidgetIntegrationController do
          integration,
          widget_options,
          organization_id,
-         widget_id
+         widget_id,
+         widget_config_id
        )
        when not is_nil(integration) and not is_nil(widget_id) do
     now = DateTime.utc_now()
@@ -1037,7 +1088,8 @@ defmodule CastmillWeb.WidgetIntegrationController do
       end
 
     if refresh_due do
-      discriminator_id = build_discriminator_id(integration, widget_options || %{})
+      discriminator_id =
+        build_discriminator_id(integration, widget_options || %{}, widget_config_id)
 
       schedule_polling(
         organization_id,
@@ -1045,13 +1097,21 @@ defmodule CastmillWeb.WidgetIntegrationController do
         integration,
         discriminator_id,
         widget_options || %{},
-        delay: 0
+        delay: 0,
+        widget_config_id: widget_config_id
       )
     end
   end
 
-  defp maybe_schedule_refresh(_data, _integration, _options, _organization_id, _widget_id),
-    do: :ok
+  defp maybe_schedule_refresh(
+         _data,
+         _integration,
+         _options,
+         _organization_id,
+         _widget_id,
+         _widget_config_id
+       ),
+       do: :ok
 
   defp get_widget_integration(nil), do: nil
 

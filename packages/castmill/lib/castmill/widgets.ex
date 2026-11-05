@@ -458,9 +458,12 @@ defmodule Castmill.Widgets do
     # Get all integrations for this widget
     integrations = Integrations.list_integrations(widget_id: widget_id)
 
-    # Check each integration that requires credentials
+    # Check each integration that requires organization credentials.
+    # Widget-scoped integrations are connected per widget instance after the
+    # widget has been added, so they cannot be validated up front.
     Enum.reduce_while(integrations, :ok, fn integration, _acc ->
-      if integration_requires_credentials?(integration) do
+      if integration_requires_credentials?(integration) and
+           not Integrations.widget_scoped?(integration) do
         # Check if credentials exist for this organization
         case Integrations.get_credentials_by_scope(integration.id,
                organization_id: organization_id

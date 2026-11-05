@@ -24,6 +24,8 @@ defmodule Castmill.Workers.IntegrationPoller do
   - `integration_id`: The integration configuration ID
   - `discriminator_id`: Unique ID for shared data (e.g., "symbols:AAPL,GOOGL")
   - `widget_options`: Options from widget config needed for data fetching
+  - `widget_config_id`: (optional) Widget config whose credentials are used by
+    widget-scoped integrations (`credential_scope: "widget"`)
 
   ## Example
 
@@ -57,16 +59,33 @@ defmodule Castmill.Workers.IntegrationPoller do
       "widget_options" => widget_options
     } = args
 
+    widget_config_id = Map.get(args, "widget_config_id")
+
     Logger.info(
       "IntegrationPoller: Polling integration #{integration_id} for org #{organization_id}, discriminator: #{discriminator_id}"
     )
 
     with {:ok, integration} <- get_integration(integration_id),
-         {:ok, credentials} <- get_credentials(organization_id, integration_id),
-         {:ok, data, _updated_credentials} <-
+         {:ok, credentials} <- get_credentials(integration, organization_id, widget_config_id),
+         {:ok, data, updated_credentials} <-
            fetch_data(integration, credentials, widget_options),
+         _ <-
+           persist_credentials(
+             integration,
+             organization_id,
+             widget_config_id,
+             credentials,
+             updated_credentials
+           ),
          {:ok, _integration_data} <-
-           store_data(organization_id, widget_id, integration, discriminator_id, data) do
+           store_data(
+             organization_id,
+             widget_id,
+             integration,
+             discriminator_id,
+             widget_config_id,
+             data
+           ) do
       # Broadcast the update to connected clients
       broadcast_update(widget_id, integration_id, discriminator_id, data)
 
@@ -79,7 +98,12 @@ defmodule Castmill.Workers.IntegrationPoller do
         )
 
         # Remove the repeatable job since credentials are gone
-        cancel_polling(organization_id, integration_id)
+        if widget_config_id do
+          cancel_polling(organization_id, integration_id, discriminator_id)
+        else
+          cancel_polling(organization_id, integration_id)
+        end
+
         :ok
 
       {:error, :integration_not_found} ->
@@ -138,6 +162,12 @@ defmodule Castmill.Workers.IntegrationPoller do
         "discriminator_id" => normalize_param(params, :discriminator_id),
         "widget_options" => normalize_param(params, :widget_options, %{})
       }
+
+      job_data =
+        case normalize_param(params, :widget_config_id) do
+          nil -> job_data
+          widget_config_id -> Map.put(job_data, "widget_config_id", widget_config_id)
+        end
 
       # Create a unique scheduler ID based on the integration parameters
       # NOTE: Using underscores as separators to avoid having 5+ colon-separated parts,
@@ -211,15 +241,15 @@ defmodule Castmill.Workers.IntegrationPoller do
     end
   end
 
-  defp get_credentials(organization_id, integration_id) do
-    case Integrations.get_organization_credentials(organization_id, integration_id) do
+  defp get_credentials(%WidgetIntegration{} = integration, organization_id, widget_config_id) do
+    case Integrations.get_scoped_credentials(integration, organization_id, widget_config_id) do
       {:ok, credentials} ->
         {:ok, credentials}
 
       {:error, _} ->
         # Check if integration allows optional auth
         # auth_type can be in pull_config or credential_schema
-        case Integrations.get_integration(integration_id) do
+        case integration do
           %{pull_config: %{"auth_type" => auth_type}} when auth_type in ["optional", "none"] ->
             {:ok, %{}}
 
@@ -246,7 +276,7 @@ defmodule Castmill.Workers.IntegrationPoller do
       # Use custom fetcher module
       case get_fetcher_module(fetcher_module_name) do
         {:ok, module} ->
-          # Credentials are already decrypted by get_organization_credentials
+          # Credentials are already decrypted by get_scoped_credentials
           module.fetch(credentials, merged_options)
 
         {:error, reason} ->
@@ -293,11 +323,32 @@ defmodule Castmill.Workers.IntegrationPoller do
     end
   end
 
+  # Fetchers may return refreshed credentials (e.g. rotated OAuth tokens);
+  # persist them so the next poll does not reuse an expired token.
+  defp persist_credentials(integration, organization_id, widget_config_id, previous, updated) do
+    case Integrations.persist_refreshed_credentials(
+           integration,
+           organization_id,
+           widget_config_id,
+           previous,
+           updated
+         ) do
+      {:error, reason} ->
+        Logger.error(
+          "IntegrationPoller: Failed to persist refreshed credentials for integration #{integration.id}: #{inspect(reason)}"
+        )
+
+      _ ->
+        :ok
+    end
+  end
+
   defp store_data(
          organization_id,
          widget_id,
          %WidgetIntegration{} = integration,
          discriminator_id,
+         widget_config_id,
          data
        ) do
     now = DateTime.utc_now()
@@ -316,6 +367,13 @@ defmodule Castmill.Workers.IntegrationPoller do
       refresh_at: refresh_at,
       version: System.system_time(:second)
     }
+
+    # Widget-scoped data is tied to its widget config so the player lookup by
+    # config finds it and it is never shared with other widget instances.
+    attrs =
+      if widget_config_id && Integrations.widget_scoped?(integration),
+        do: Map.put(attrs, :widget_config_id, widget_config_id),
+        else: attrs
 
     Integrations.upsert_integration_data(attrs)
   end

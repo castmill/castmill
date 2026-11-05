@@ -352,7 +352,7 @@ defmodule Castmill.Resources do
 
   # Attempts to fetch data on-demand for PULL integrations when no cached data exists
   # This is called from transform_item to ensure widgets show real data on first load
-  defp try_on_demand_fetch_for_item(organization_id, _widget_config_id, widget_id, widget_options) do
+  defp try_on_demand_fetch_for_item(organization_id, widget_config_id, widget_id, widget_options) do
     alias Castmill.Widgets.Integrations
 
     # Get the widget's integration
@@ -376,7 +376,11 @@ defmodule Castmill.Resources do
                 "required"
 
             credentials =
-              case Integrations.get_organization_credentials(organization_id, integration.id) do
+              case Integrations.get_scoped_credentials(
+                     integration,
+                     organization_id,
+                     widget_config_id
+                   ) do
                 {:ok, creds} -> creds
                 {:error, _} when auth_type in ["optional", "none"] -> %{}
                 {:error, _} -> nil
@@ -385,19 +389,39 @@ defmodule Castmill.Resources do
             if credentials do
               # Try to fetch data using the fetcher
               case fetch_with_module(fetcher_module_name, credentials, widget_options) do
-                {:ok, data, _creds} ->
-                  # Store the data and return it
-                  discriminator_id = build_discriminator_id(integration, widget_options)
+                {:ok, data, updated_credentials} ->
+                  Integrations.persist_refreshed_credentials(
+                    integration,
+                    organization_id,
+                    widget_config_id,
+                    credentials,
+                    updated_credentials
+                  )
 
-                  case Integrations.upsert_integration_data(%{
-                         widget_integration_id: integration.id,
-                         organization_id: organization_id,
-                         discriminator_id: discriminator_id,
-                         data: data,
-                         status: "active",
-                         fetched_at: DateTime.utc_now(),
-                         version: :os.system_time(:second)
-                       }) do
+                  # Store the data and return it
+                  attrs = %{
+                    widget_integration_id: integration.id,
+                    organization_id: organization_id,
+                    discriminator_id: build_discriminator_id(integration, widget_options),
+                    data: data,
+                    status: "active",
+                    fetched_at: DateTime.utc_now(),
+                    version: :os.system_time(:second)
+                  }
+
+                  # Widget-scoped data belongs to a single widget config and is
+                  # never shared with other widget instances.
+                  attrs =
+                    if Integrations.widget_scoped?(integration) do
+                      Map.merge(attrs, %{
+                        discriminator_id: "cfg:#{widget_config_id}",
+                        widget_config_id: widget_config_id
+                      })
+                    else
+                      attrs
+                    end
+
+                  case Integrations.upsert_integration_data(attrs) do
                     {:ok, integration_data} ->
                       {:ok, integration_data}
 

@@ -73,6 +73,7 @@ defmodule CastmillWeb.WidgetOAuthController do
     # Validate required parameters and user authorization
     with :ok <- validate_required_params(organization_id, "organization_id"),
          :ok <- authorize_user_for_organization(conn, organization_id),
+         :ok <- authorize_widget_config_for_organization(widget_config_id, organization_id),
          {:ok, integration} <- get_integration(integration_id),
          {:ok, oauth_config} <- get_oauth_config(integration),
          {:ok, client_credentials} <- get_client_credentials(integration, organization_id) do
@@ -365,12 +366,36 @@ defmodule CastmillWeb.WidgetOAuthController do
           _ ->
             Logger.warning("OAuth completed but no scheduling target for #{integration.name}")
         end
+      else
+        maybe_schedule_fetcher_polling(integration, context)
       end
     end
   rescue
     ArgumentError ->
       # Module doesn't exist - this is fine, just log a warning
       Logger.warning("Poller module #{integration.pull_config["poller_module"]} not found")
+  end
+
+  # Widget-scoped integrations that rely on a fetcher module (e.g. Instagram)
+  # are polled by the generic IntegrationPoller using the widget's credentials.
+  defp maybe_schedule_fetcher_polling(integration, context) do
+    pull_config = integration.pull_config || %{}
+
+    with true <- Integrations.widget_scoped?(integration),
+         true <- is_binary(pull_config["fetcher_module"]),
+         widget_config_id when not is_nil(widget_config_id) <- context.widget_config_id,
+         %{} = widget_config <- Castmill.Widgets.get_widget_config_by_id(widget_config_id) do
+      Castmill.Workers.IntegrationPoller.schedule_poll(%{
+        organization_id: context.organization_id,
+        widget_id: widget_config.widget_id,
+        integration_id: integration.id,
+        discriminator_id: "cfg:#{widget_config_id}",
+        widget_options: widget_config.options || %{},
+        widget_config_id: widget_config_id
+      })
+    else
+      _ -> :ok
+    end
   end
 
   defp generate_redirect_uri(conn) do
@@ -412,6 +437,20 @@ defmodule CastmillWeb.WidgetOAuthController do
           nil -> {:error, :not_authorized}
           _role -> :ok
         end
+    end
+  end
+
+  # Widget-scoped credentials must only be attached to widget configs owned by
+  # the organization the user is authorized for.
+  defp authorize_widget_config_for_organization(nil, _organization_id), do: :ok
+  defp authorize_widget_config_for_organization("", _organization_id), do: :ok
+
+  defp authorize_widget_config_for_organization(widget_config_id, organization_id) do
+    if Castmill.Widgets.get_organization_id_for_widget_config(widget_config_id) ==
+         organization_id do
+      :ok
+    else
+      {:error, :not_authorized}
     end
   end
 

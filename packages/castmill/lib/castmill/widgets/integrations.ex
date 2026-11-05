@@ -442,17 +442,67 @@ defmodule Castmill.Widgets.Integrations do
   end
 
   defp get_organization_for_widget_config(widget_config_id) do
-    # Widget configs are linked to medias, which belong to organizations
-    query =
-      from wc in Castmill.Widgets.WidgetConfig,
-        join: m in Castmill.Resources.Media,
-        on: m.id == wc.media_id,
-        where: wc.id == ^widget_config_id,
-        select: m.organization_id
-
-    case Repo.one(query) do
+    # Widget configs belong to organizations through their playlist
+    case Castmill.Widgets.get_organization_id_for_widget_config(widget_config_id) do
       nil -> {:error, :widget_config_not_found}
       organization_id -> {:ok, organization_id}
+    end
+  end
+
+  @doc """
+  Returns true when each widget instance stores its own credentials.
+  """
+  def widget_scoped?(%WidgetIntegration{credential_scope: "widget"}), do: true
+  def widget_scoped?(_integration), do: false
+
+  @doc """
+  Gets decrypted credentials honouring the integration's `credential_scope`.
+
+  Widget-scoped integrations read the credentials stored for `widget_config_id`;
+  all other integrations read the organization's credentials.
+  """
+  def get_scoped_credentials(
+        %WidgetIntegration{} = integration,
+        organization_id,
+        widget_config_id
+      ) do
+    cond do
+      not widget_scoped?(integration) ->
+        get_organization_credentials(organization_id, integration.id)
+
+      Ecto.UUID.cast(widget_config_id) == :error ->
+        # Missing or legacy (non-UUID) widget config IDs cannot own credentials
+        {:error, :not_found}
+
+      true ->
+        get_widget_credentials(widget_config_id, integration.id)
+    end
+  end
+
+  @doc """
+  Persists credentials returned by a fetcher (e.g. after a token refresh) using
+  the integration's `credential_scope`. Unchanged credentials are not rewritten.
+  """
+  def persist_refreshed_credentials(
+        %WidgetIntegration{} = integration,
+        organization_id,
+        widget_config_id,
+        previous_credentials,
+        updated_credentials
+      ) do
+    cond do
+      not is_map(updated_credentials) or map_size(updated_credentials) == 0 or
+          updated_credentials == previous_credentials ->
+        :ok
+
+      widget_scoped?(integration) and not is_nil(widget_config_id) ->
+        upsert_widget_credentials(widget_config_id, integration.id, updated_credentials)
+
+      widget_scoped?(integration) ->
+        :ok
+
+      true ->
+        upsert_organization_credentials(organization_id, integration.id, updated_credentials)
     end
   end
 
@@ -612,8 +662,8 @@ defmodule Castmill.Widgets.Integrations do
         discriminator_id,
         widget_config_id
       ) do
-    # Get credentials for the fetch
-    credentials_result = get_organization_credentials(organization_id, integration.id)
+    # Get credentials for the fetch (organization or widget scoped)
+    credentials_result = get_scoped_credentials(integration, organization_id, widget_config_id)
 
     case credentials_result do
       {:ok, credentials} ->
@@ -853,6 +903,11 @@ defmodule Castmill.Widgets.Integrations do
 
     case integration do
       nil ->
+        nil
+
+      %WidgetIntegration{credential_scope: "widget"} ->
+        # Widget-scoped data belongs to a single widget config (each instance has
+        # its own account) and is only served via get_integration_data_by_config/1.
         nil
 
       %WidgetIntegration{} = wi ->
@@ -1321,12 +1376,12 @@ defmodule Castmill.Widgets.Integrations do
       nil ->
         {:error, :not_found}
 
-      %WidgetIntegrationCredential{
-        encrypted_credentials: encrypted,
-        organization_id: organization_id
-      }
+      %WidgetIntegrationCredential{encrypted_credentials: encrypted}
       when is_binary(encrypted) ->
-        with {:ok, organization} <- fetch_organization(organization_id),
+        # Widget-scoped credentials are encrypted with the key of the
+        # organization that owns the widget config's playlist.
+        with {:ok, organization_id} <- get_organization_for_widget_config(widget_config_id),
+             {:ok, organization} <- fetch_organization(organization_id),
              {:ok, encryption_key} <- get_or_create_encryption_key(organization),
              {:ok, credentials} <- Castmill.Crypto.decrypt(encrypted, encryption_key) do
           {:ok, credentials}

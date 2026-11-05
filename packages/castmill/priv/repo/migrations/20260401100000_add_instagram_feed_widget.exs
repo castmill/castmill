@@ -12,7 +12,7 @@ defmodule Castmill.Repo.Migrations.AddInstagramFeedWidget do
   - Paginated slideshow of up to 30 recent Instagram posts
   - Supports IMAGE, VIDEO, and CAROUSEL_ALBUM media types
   - Optional caption and username display
-  - Configurable post duration and page transitions
+  - Configurable post duration
   - Per-widget credentials (each widget instance shows a different account)
   - Long-lived access token support with automatic refresh
 
@@ -79,7 +79,7 @@ defmodule Castmill.Repo.Migrations.AddInstagramFeedWidget do
           "scopes" => ["instagram_business_basic", "instagram_business_manage_messages"],
           "pkce" => false,
           "token_placement" => "query",
-          "client_auth" => "form"
+          "client_auth" => "post"
         },
         "fields" => %{
           "client_id" => %{
@@ -126,38 +126,34 @@ defmodule Castmill.Repo.Migrations.AddInstagramFeedWidget do
   # TEMPLATE
   # ============================================================================
 
+  # The template follows the player's template format: styles live in the
+  # top-level `style` key, groups nest children under `components`, and the
+  # paginated list renders `component` once per item (bound via `$.field`).
   defp build_template do
     %{
       "type" => "group",
       "name" => "instagram-feed-widget",
-      "opts" => %{
-        "style" => %{
-          "width" => "100%",
-          "height" => "100%",
-          "background-color" => %{"type" => "opt", "key" => "bg_color"},
-          "overflow" => "hidden",
-          "position" => "relative"
-        }
+      "style" => %{
+        "width" => "100%",
+        "height" => "100%",
+        "background-color" => %{"key" => "options.bg_color", "default" => "#000000"},
+        "overflow" => "hidden",
+        "position" => "relative"
       },
-      "children" => [
+      "components" => [
         %{
           "type" => "paginated-list",
           "name" => "posts-list",
           "opts" => %{
-            "data" => %{"type" => "ctx", "key" => "posts"},
-            "page_size" => 1,
-            "page_duration" => %{"type" => "opt", "key" => "post_duration"},
-            "style" => %{
-              "width" => "100%",
-              "height" => "100%"
-            },
-            "transition" => %{
-              "type" => %{"type" => "opt", "key" => "transition_type"},
-              "duration" => %{"type" => "opt", "key" => "transition_duration"},
-              "easing" => %{"type" => "opt", "key" => "transition_easing"}
-            }
+            "items" => %{"key" => "data.posts", "default" => []},
+            "pageSize" => 1,
+            "pageDuration" => %{"key" => "options.post_duration", "default" => 8}
           },
-          "item_template" => build_post_card()
+          "style" => %{
+            "width" => "100%",
+            "height" => "100%"
+          },
+          "component" => build_post_card()
         }
       ]
     }
@@ -167,130 +163,105 @@ defmodule Castmill.Repo.Migrations.AddInstagramFeedWidget do
     %{
       "type" => "group",
       "name" => "post-card",
-      "opts" => %{
-        "style" => %{
-          "width" => "100%",
-          "height" => "100%",
-          "position" => "relative",
-          "overflow" => "hidden",
-          "display" => "flex",
-          "flex-direction" => "column"
-        }
+      "style" => %{
+        "width" => "100%",
+        "height" => "100%",
+        "position" => "relative",
+        "overflow" => "hidden"
       },
-      "children" => [
-        # Media layer – image or video thumbnail
+      "components" => [
+        # Media layer – video thumbnail when available, otherwise the image itself
         %{
           "type" => "image",
           "name" => "post-media",
           "opts" => %{
-            "src" => %{
-              "type" => "coalesce",
-              "values" => [
-                %{"type" => "item", "key" => "thumbnail_url"},
-                %{"type" => "item", "key" => "media_url"}
-              ]
-            },
-            "style" => %{
-              "width" => "100%",
-              "height" => "100%",
-              "object-fit" => %{"type" => "opt", "key" => "media_fit"},
-              "position" => "absolute",
-              "top" => "0",
-              "left" => "0"
-            }
+            "url" => %{"key" => "$.thumbnail_url"},
+            "src" => %{"key" => "$.media_url"},
+            "size" => %{"key" => "options.media_fit", "default" => "cover"}
+          },
+          "style" => %{
+            "width" => "100%",
+            "height" => "100%",
+            "position" => "absolute",
+            "top" => "0",
+            "left" => "0"
           }
         },
-        # Gradient overlay for readability
+        # Gradient overlay for caption readability
         %{
           "type" => "group",
           "name" => "gradient-overlay",
-          "opts" => %{
-            "style" => %{
-              "position" => "absolute",
-              "bottom" => "0",
-              "left" => "0",
-              "width" => "100%",
-              "height" => "50%",
-              "background" => "linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 100%)",
-              "pointer-events" => "none"
+          "style" => %{
+            "position" => "absolute",
+            "bottom" => "0",
+            "left" => "0",
+            "width" => "100%",
+            "height" => "50%",
+            "background" => "linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 100%)",
+            "pointer-events" => "none",
+            "display" => %{
+              "cond" => %{
+                "key" => "options.show_caption",
+                "eq" => false,
+                "then" => "none",
+                "else" => "block"
+              }
             }
           },
-          "children" => []
+          "components" => []
         },
         # Header: username + date (top-left)
         %{
           "type" => "group",
           "name" => "post-header",
-          "opts" => %{
-            "filter" => %{
-              "type" => "condition",
-              "if" => %{
-                "type" => "comparison",
-                "left" => %{"type" => "opt", "key" => "show_username"},
-                "operator" => "==",
-                "right" => true
-              },
-              "then" => false,
-              "else" => true
-            },
-            "style" => %{
-              "position" => "absolute",
-              "top" => "0",
-              "left" => "0",
-              "width" => "100%",
-              "display" => "flex",
-              "flex-direction" => "row",
-              "align-items" => "center",
-              "padding" => "0.75em 1em",
-              "box-sizing" => "border-box",
-              "background" => "linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, transparent 100%)",
-              "gap" => "0.4em"
-            }
-          },
-          "children" => [
-            %{
-              "type" => "text",
-              "name" => "at-prefix",
-              "opts" => %{
-                "text" => "@",
-                "style" => %{
-                  "color" => "#ffffff",
-                  "font-size" => "1.1em",
-                  "font-weight" => "600",
-                  "opacity" => "0.9",
-                  "height" => "auto",
-                  "width" => "auto"
-                }
+          "style" => %{
+            "position" => "absolute",
+            "top" => "0",
+            "left" => "0",
+            "width" => "100%",
+            "display" => %{
+              "cond" => %{
+                "key" => "options.show_username",
+                "eq" => false,
+                "then" => "none",
+                "else" => "flex"
               }
             },
+            "flex-direction" => "row",
+            "align-items" => "center",
+            "padding" => "0.75em 1em",
+            "box-sizing" => "border-box",
+            "background" => "linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, transparent 100%)",
+            "gap" => "0.5em"
+          },
+          "components" => [
             %{
               "type" => "text",
               "name" => "username",
               "opts" => %{
-                "text" => %{"type" => "item", "key" => "username"},
-                "style" => %{
-                  "color" => "#ffffff",
-                  "font-size" => "1.1em",
-                  "font-weight" => "600",
-                  "opacity" => "0.9",
-                  "height" => "auto",
-                  "width" => "auto"
-                }
+                "text" => %{"concat" => ["@", %{"key" => "$.username", "default" => ""}]}
+              },
+              "style" => %{
+                "color" => "#ffffff",
+                "font-size" => "1.1em",
+                "font-weight" => "600",
+                "opacity" => "0.9",
+                "height" => "auto",
+                "width" => "auto"
               }
             },
             %{
               "type" => "text",
               "name" => "post-date",
               "opts" => %{
-                "text" => %{"type" => "item", "key" => "timestamp_formatted"},
-                "style" => %{
-                  "color" => "#ffffff",
-                  "font-size" => "0.9em",
-                  "opacity" => "0.75",
-                  "margin-left" => "0.5em",
-                  "height" => "auto",
-                  "width" => "auto"
-                }
+                "text" => %{"key" => "$.timestamp_formatted", "default" => ""}
+              },
+              "style" => %{
+                "color" => "#ffffff",
+                "font-size" => "0.9em",
+                "opacity" => "0.75",
+                "height" => "auto",
+                "width" => "auto"
               }
             }
           ]
@@ -299,44 +270,39 @@ defmodule Castmill.Repo.Migrations.AddInstagramFeedWidget do
         %{
           "type" => "group",
           "name" => "post-footer",
-          "opts" => %{
-            "filter" => %{
-              "type" => "condition",
-              "if" => %{
-                "type" => "comparison",
-                "left" => %{"type" => "opt", "key" => "show_caption"},
-                "operator" => "==",
-                "right" => true
-              },
-              "then" => false,
-              "else" => true
-            },
-            "style" => %{
-              "position" => "absolute",
-              "bottom" => "0",
-              "left" => "0",
-              "width" => "100%",
-              "padding" => "0.75em 1em",
-              "box-sizing" => "border-box"
+          "style" => %{
+            "position" => "absolute",
+            "bottom" => "0",
+            "left" => "0",
+            "width" => "100%",
+            "padding" => "0.75em 1em",
+            "box-sizing" => "border-box",
+            "display" => %{
+              "cond" => %{
+                "key" => "options.show_caption",
+                "eq" => false,
+                "then" => "none",
+                "else" => "block"
+              }
             }
           },
-          "children" => [
+          "components" => [
             %{
               "type" => "text",
               "name" => "caption",
               "opts" => %{
-                "text" => %{"type" => "item", "key" => "caption"},
-                "style" => %{
-                  "color" => %{"type" => "opt", "key" => "caption_color"},
-                  "font-size" => "1em",
-                  "line-height" => "1.4",
-                  "overflow" => "hidden",
-                  "display" => "-webkit-box",
-                  "-webkit-line-clamp" => "3",
-                  "-webkit-box-orient" => "vertical",
-                  "height" => "auto",
-                  "width" => "100%"
-                }
+                "text" => %{"key" => "$.caption", "default" => ""}
+              },
+              "style" => %{
+                "color" => %{"key" => "options.caption_color", "default" => "#ffffff"},
+                "font-size" => "1em",
+                "line-height" => "1.4",
+                "overflow" => "hidden",
+                "display" => "-webkit-box",
+                "-webkit-line-clamp" => "3",
+                "-webkit-box-orient" => "vertical",
+                "height" => "auto",
+                "width" => "100%"
               }
             }
           ]
@@ -387,48 +353,23 @@ defmodule Castmill.Repo.Migrations.AddInstagramFeedWidget do
         "type" => "string",
         "required" => false,
         "default" => "cover",
-        "enum" => ["cover", "contain", "fill"],
+        "enum" => ["cover", "contain"],
         "description" => "How post images/videos are scaled to fill the widget",
         "order" => 5
-      },
-      "transition_type" => %{
-        "type" => "string",
-        "required" => false,
-        "default" => "fade",
-        "enum" => ["fade", "slide-left", "slide-right", "slide-up", "slide-down", "none"],
-        "description" => "Animation between posts",
-        "order" => 6
-      },
-      "transition_duration" => %{
-        "type" => "number",
-        "required" => false,
-        "default" => 0.6,
-        "min" => 0.1,
-        "max" => 2.0,
-        "description" => "Duration of the transition animation (seconds)",
-        "order" => 7
-      },
-      "transition_easing" => %{
-        "type" => "string",
-        "required" => false,
-        "default" => "ease-in-out",
-        "enum" => ["ease", "ease-in", "ease-out", "ease-in-out", "linear"],
-        "description" => "Easing function for the transition",
-        "order" => 8
       },
       "bg_color" => %{
         "type" => "color",
         "required" => false,
         "default" => "#000000",
         "description" => "Background colour shown behind contained images",
-        "order" => 9
+        "order" => 6
       },
       "caption_color" => %{
         "type" => "color",
         "required" => false,
         "default" => "#ffffff",
         "description" => "Text colour for captions",
-        "order" => 10
+        "order" => 7
       }
     }
   end
@@ -443,7 +384,8 @@ defmodule Castmill.Repo.Migrations.AddInstagramFeedWidget do
             "media_type" => "IMAGE",
             "media_url" => "https://placehold.co/1280x720/E1306C/FFFFFF/png?text=Instagram",
             "thumbnail_url" => "https://placehold.co/1280x720/E1306C/FFFFFF/png?text=Instagram",
-            "caption" => "Welcome to the Instagram Feed widget! Connect your account to show your latest posts here.",
+            "caption" =>
+              "Welcome to the Instagram Feed widget! Connect your account to show your latest posts here.",
             "timestamp" => "2024-01-01T00:00:00+0000",
             "timestamp_formatted" => "Jan 1, 2024",
             "permalink" => "https://www.instagram.com/",

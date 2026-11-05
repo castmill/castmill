@@ -392,10 +392,10 @@ defmodule CastmillWeb.OrganizationController do
          # Store integration definition in meta for later use
          widget_data <- store_integration_in_meta(widget_data),
          widget_data <-
-          Map.merge(widget_data, %{
-            "organization_id" => organization_id,
-            "is_system" => false
-          }),
+           Map.merge(widget_data, %{
+             "organization_id" => organization_id,
+             "is_system" => false
+           }),
          {:ok, widget} <- Castmill.Widgets.create_widget(widget_data) do
       # Clean up temporary asset files
       PackageProcessor.cleanup_assets(assets)
@@ -664,6 +664,7 @@ defmodule CastmillWeb.OrganizationController do
               |> put_status(:internal_server_error)
               |> json(%{error: "Failed to copy widget assets: #{inspect(reason)}"})
           end
+
         {:error, %Ecto.Changeset{} = changeset} ->
           conn
           |> put_status(:unprocessable_entity)
@@ -674,7 +675,6 @@ defmodule CastmillWeb.OrganizationController do
           |> put_status(:bad_request)
           |> json(%{error: inspect(reason)})
       end
-
     else
       nil ->
         conn
@@ -905,8 +905,10 @@ defmodule CastmillWeb.OrganizationController do
 
   # Generates a slug from name if slug is not provided
   defp maybe_generate_slug(%{"slug" => slug} = data) when is_binary(slug) and slug != "", do: data
+
   defp maybe_generate_slug(%{"name" => name} = data) when is_binary(name),
     do: Map.put(data, "slug", slugify(name))
+
   defp maybe_generate_slug(data), do: data
 
   def list_members(conn, params) do
