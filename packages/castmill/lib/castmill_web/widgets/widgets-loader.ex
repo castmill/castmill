@@ -76,6 +76,15 @@ defmodule CastmillWeb.Widgets.WidgetsLoader do
             Widget.changeset(widget, Map.put(widget_data_with_icons, "slug", slug))
         end
 
+      # Widgets shipped with the platform are system widgets, available everywhere.
+      changeset =
+        Widget.scope_changeset(changeset, %{
+          is_system: true,
+          network_id: nil,
+          organization_id: nil,
+          restricted: false
+        })
+
       case Repo.insert_or_update(changeset) do
         {:ok, _widget} ->
           :ok

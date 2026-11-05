@@ -10,6 +10,7 @@ defmodule Castmill.Widgets do
   alias Castmill.Widgets.AssetStorage
   alias Castmill.Widgets.Widget
   alias Castmill.Widgets.WidgetConfig
+  alias Castmill.Widgets.WidgetOrganization
   alias Castmill.QueryHelpers
 
   defimpl Access, for: Widget do
@@ -28,7 +29,10 @@ defmodule Castmill.Widgets do
   end
 
   @doc """
-  Returns the list of widgets with optional pagination, search, and sorting.
+  Returns all widgets (any scope) with optional pagination, search, and sorting.
+
+  For internal and root-admin use. Organization-facing code must use
+  `list_available_widgets/2`.
 
   ## Examples
 
@@ -38,18 +42,38 @@ defmodule Castmill.Widgets do
       iex> list_widgets(%{page: 1, page_size: 10, search: "text"})
       [%Widget{}, ...]
   """
-  def list_widgets(params \\ %{})
+  def list_widgets(params \\ %{}), do: list_from(Widget.base_query(), params)
 
-  def list_widgets(%{
-        page: page,
-        page_size: page_size,
-        search: search,
-        key: sort_key,
-        direction: sort_direction
-      }) do
+  @doc """
+  Returns the count of widgets (any scope) matching the search criteria.
+  """
+  def count_widgets(params \\ %{}), do: count_from(Widget.base_query(), params)
+
+  @doc """
+  Lists the widgets available to an organization (see `available_query/1`).
+  """
+  def list_available_widgets(organization_id, params \\ %{}) do
+    organization_id
+    |> available_query()
+    |> list_from(params)
+    |> Enum.map(&put_access(&1, organization_id))
+  end
+
+  @doc """
+  Counts the widgets available to an organization.
+  """
+  def count_available_widgets(organization_id, params \\ %{}),
+    do: organization_id |> available_query() |> count_from(params)
+
+  defp list_from(query, %{
+         page: page,
+         page_size: page_size,
+         search: search,
+         key: sort_key,
+         direction: sort_direction
+       }) do
     offset = (page_size && max((page - 1) * page_size, 0)) || 0
 
-    # Convert sort direction string to atom
     sort_dir =
       case sort_direction do
         "ascending" -> :asc
@@ -57,7 +81,6 @@ defmodule Castmill.Widgets do
         _ -> :asc
       end
 
-    # Convert sort key string to atom, default to :name
     sort_field =
       case sort_key do
         "name" -> :name
@@ -66,7 +89,7 @@ defmodule Castmill.Widgets do
         _ -> :name
       end
 
-    Widget.base_query()
+    query
     |> QueryHelpers.where_name_like(search)
     |> order_by([w], [{^sort_dir, field(w, ^sort_field)}])
     |> limit(^page_size)
@@ -75,35 +98,19 @@ defmodule Castmill.Widgets do
     |> Enum.map(&sanitize_widget_assets/1)
   end
 
-  def list_widgets(_params) do
-    Widget.base_query()
+  defp list_from(query, _params) do
+    query
     |> Repo.all()
     |> Enum.map(&sanitize_widget_assets/1)
   end
 
-  @doc """
-  Returns the count of widgets matching the search criteria.
-
-  ## Examples
-
-      iex> count_widgets()
-      5
-
-      iex> count_widgets(%{search: "text"})
-      2
-  """
-  def count_widgets(params \\ %{})
-
-  def count_widgets(%{search: search}) do
-    Widget.base_query()
+  defp count_from(query, %{search: search}) do
+    query
     |> QueryHelpers.where_name_like(search)
     |> Repo.aggregate(:count, :id)
   end
 
-  def count_widgets(_params) do
-    Widget.base_query()
-    |> Repo.aggregate(:count, :id)
-  end
+  defp count_from(query, _params), do: Repo.aggregate(query, :count, :id)
 
   @doc """
   Gets a widget by its id.
@@ -292,6 +299,316 @@ defmodule Castmill.Widgets do
     |> Repo.one()
   end
 
+  # ===========================================================================
+  # Scope & availability
+  # ===========================================================================
+
+  @doc """
+  Query of the widgets available to an organization:
+
+    * its own widgets,
+    * system widgets and its network's widgets, unless they are restricted and not
+      enabled for the organization.
+
+  System and network widgets are also subject to the network's policy
+  (`Castmill.Widgets.NetworkAccess`): hidden from the whole network, offered only to
+  selected organizations, or to all organizations except some.
+
+  Unassigned widgets (non-system, no owner) are available to no organization. Invalid
+  or unknown organization ids yield an empty query.
+  """
+  def available_query(organization_id) do
+    with {:ok, organization_id} <- Ecto.UUID.cast(organization_id),
+         network_id when not is_nil(network_id) <- organization_network_id(organization_id) do
+      enabled =
+        from(wo in WidgetOrganization,
+          where: wo.organization_id == ^organization_id,
+          select: wo.widget_id
+        )
+
+      policy = fn mode ->
+        from(p in Castmill.Widgets.NetworkWidgetPolicy,
+          where: p.network_id == ^network_id and p.mode == ^mode,
+          select: p.widget_id
+        )
+      end
+
+      listed =
+        from(nwo in Castmill.Widgets.NetworkWidgetOrganization,
+          where: nwo.organization_id == ^organization_id,
+          select: nwo.widget_id
+        )
+
+      from(w in Widget,
+        as: :widget,
+        where:
+          w.organization_id == ^organization_id or
+            ((w.is_system == true or w.network_id == ^network_id) and
+               (w.restricted == false or w.id in subquery(enabled)) and
+               w.id not in subquery(policy.("hidden")) and
+               (w.id not in subquery(policy.("selected")) or w.id in subquery(listed)) and
+               (w.id not in subquery(policy.("except")) or w.id not in subquery(listed)))
+      )
+    else
+      _ -> from(w in Widget, as: :widget, where: false)
+    end
+  end
+
+  defp organization_network_id(organization_id) do
+    from(o in Castmill.Organizations.Organization,
+      where: o.id == ^organization_id,
+      select: o.network_id
+    )
+    |> Repo.one()
+  end
+
+  @doc """
+  Gets a widget by id if it is available to the organization, otherwise nil.
+  """
+  def get_available_widget(organization_id, widget_id) do
+    with {:ok, id} <- cast_widget_id(widget_id),
+         %Widget{} = widget <-
+           organization_id |> available_query() |> where([w], w.id == ^id) |> Repo.one() do
+      widget |> sanitize_widget_assets() |> put_access(organization_id)
+    else
+      _ -> nil
+    end
+  end
+
+  @doc """
+  Gets a widget by slug if it is available to the organization, otherwise nil.
+  """
+  def get_available_widget_by_slug(organization_id, slug) when is_binary(slug) do
+    organization_id
+    |> available_query()
+    |> where([w], w.slug == ^slug)
+    |> Repo.one()
+    |> case do
+      nil -> nil
+      widget -> widget |> sanitize_widget_assets() |> put_access(organization_id)
+    end
+  end
+
+  def get_available_widget_by_slug(_organization_id, _slug), do: nil
+
+  @doc """
+  Whether a widget is available to an organization.
+
+  Pass `lock: true` inside a transaction to hold a share lock on the widget row, so a
+  concurrent scope change cannot revoke it before dependent rows are written.
+  """
+  def available?(organization_id, widget_id, opts \\ []) do
+    case cast_widget_id(widget_id) do
+      {:ok, id} ->
+        # Lock first, in its own statement: a scope change holds the row FOR UPDATE, and
+        # the availability check below then runs with a fresh snapshot that includes it.
+        if Keyword.get(opts, :lock) do
+          from(w in Widget, where: w.id == ^id, lock: "FOR SHARE", select: w.id) |> Repo.one()
+        end
+
+        query =
+          organization_id |> available_query() |> where([w], w.id == ^id) |> select([w], w.id)
+
+        Repo.one(query) != nil
+
+      :error ->
+        false
+    end
+  end
+
+  @doc """
+  Gets a widget owned by the organization (organization scope), otherwise nil.
+  """
+  def get_organization_widget(organization_id, widget_id) do
+    with {:ok, id} <- cast_widget_id(widget_id),
+         {:ok, organization_id} <- Ecto.UUID.cast(organization_id),
+         %Widget{} = widget <-
+           Repo.one(
+             from(w in Widget, where: w.id == ^id and w.organization_id == ^organization_id)
+           ) do
+      widget |> sanitize_widget_assets() |> put_access(organization_id)
+    else
+      _ -> nil
+    end
+  end
+
+  @doc """
+  Fills the virtual `scope` and `can_manage` fields for the requesting organization.
+  """
+  def put_access(%Widget{} = widget, organization_id) do
+    %{widget | scope: scope(widget), can_manage: widget.organization_id == organization_id}
+  end
+
+  def put_access(widget, _organization_id), do: widget
+
+  @doc """
+  The widget's scope: "system", "network", "organization" or "unassigned".
+  """
+  def scope(%Widget{is_system: true}), do: "system"
+  def scope(%Widget{network_id: network_id}) when not is_nil(network_id), do: "network"
+
+  def scope(%Widget{organization_id: organization_id}) when not is_nil(organization_id),
+    do: "organization"
+
+  def scope(%Widget{}), do: "unassigned"
+
+  defp cast_widget_id(id) when is_integer(id), do: {:ok, id}
+
+  defp cast_widget_id(id) when is_binary(id) do
+    case Integer.parse(id) do
+      {int, ""} -> {:ok, int}
+      _ -> :error
+    end
+  end
+
+  defp cast_widget_id(_), do: :error
+
+  @doc """
+  Creates a widget owned by an organization. Scope fields in `attrs` are ignored, so
+  an uploaded package cannot declare itself a system or network widget.
+  """
+  def create_organization_widget(organization_id, attrs) do
+    attrs =
+      Map.drop(
+        attrs,
+        ["is_system", "network_id", "organization_id", "restricted"] ++
+          [:is_system, :network_id, :organization_id, :restricted]
+      )
+
+    %Widget{}
+    |> Widget.changeset(attrs)
+    |> Widget.scope_changeset(%{
+      is_system: false,
+      network_id: nil,
+      organization_id: organization_id,
+      restricted: false
+    })
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates the fields an organization may change on a widget it owns.
+  """
+  def update_organization_widget(%Widget{} = widget, attrs) do
+    widget
+    |> Widget.organization_update_changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Changes a widget's scope (trusted callers only: root admin, network admin tooling,
+  SaaS addons). Accepts `is_system`, `network_id`, `organization_id` and `restricted`.
+
+  Fails with `{:error, {:in_use, organization_ids}}` if organizations that use the
+  widget in their playlists would lose access, so existing playlists never reference
+  widgets their organization cannot use.
+  """
+  def set_widget_scope(%Widget{} = widget, attrs) do
+    Repo.transaction(fn ->
+      lock_widget!(widget.id)
+
+      with {:ok, updated} <- widget |> Widget.scope_changeset(attrs) |> Repo.update(),
+           :ok <- ensure_users_keep_access(updated) do
+        updated
+      else
+        {:error, reason} -> Repo.rollback(reason)
+      end
+    end)
+  end
+
+  @doc """
+  Enables a restricted system or network widget for an organization. Network widgets
+  can only be enabled for organizations of their network.
+  """
+  def enable_widget_for_organization(%Widget{} = widget, organization_id) do
+    cond do
+      not is_nil(widget.organization_id) ->
+        {:error, :organization_widget}
+
+      not widget.is_system and is_nil(widget.network_id) ->
+        {:error, :unassigned_widget}
+
+      not is_nil(widget.network_id) and
+          organization_network_id(organization_id) != widget.network_id ->
+        {:error, :organization_not_in_network}
+
+      true ->
+        %WidgetOrganization{}
+        |> WidgetOrganization.changeset(%{widget_id: widget.id, organization_id: organization_id})
+        |> Repo.insert(on_conflict: :nothing)
+    end
+  end
+
+  @doc """
+  Disables a widget for an organization. Fails with `{:error, {:in_use, ids}}` if the
+  widget is restricted and the organization still uses it.
+  """
+  def disable_widget_for_organization(%Widget{} = widget, organization_id) do
+    Repo.transaction(fn ->
+      lock_widget!(widget.id)
+
+      from(wo in WidgetOrganization,
+        where: wo.widget_id == ^widget.id and wo.organization_id == ^organization_id
+      )
+      |> Repo.delete_all()
+
+      case ensure_users_keep_access(Repo.get!(Widget, widget.id)) do
+        :ok -> :ok
+        {:error, reason} -> Repo.rollback(reason)
+      end
+    end)
+  end
+
+  @doc """
+  Widgets relevant to a network's administration: system widgets, the network's own
+  widgets and the widgets of its organizations.
+  """
+  def list_network_widgets(network_id) do
+    organization_ids =
+      from(o in Castmill.Organizations.Organization,
+        where: o.network_id == ^network_id,
+        select: o.id
+      )
+
+    from(w in Widget,
+      where:
+        w.is_system == true or w.network_id == ^network_id or
+          w.organization_id in subquery(organization_ids),
+      order_by: [asc: w.name]
+    )
+    |> Repo.all()
+  end
+
+  @doc """
+  Organizations whose playlists use the widget.
+  """
+  def organizations_using_widget(widget_id) do
+    from(wc in WidgetConfig,
+      join: pi in assoc(wc, :playlist_item),
+      join: p in assoc(pi, :playlist),
+      where: wc.widget_id == ^widget_id,
+      distinct: true,
+      select: p.organization_id
+    )
+    |> Repo.all()
+  end
+
+  @doc false
+  # Fails with {:error, {:in_use, organization_ids}} when organizations whose playlists
+  # use the widget can no longer use it. Call inside the transaction that changed access.
+  def ensure_users_keep_access(%Widget{} = widget) do
+    case Enum.reject(organizations_using_widget(widget.id), &available?(&1, widget.id)) do
+      [] -> :ok
+      organization_ids -> {:error, {:in_use, organization_ids}}
+    end
+  end
+
+  @doc false
+  def lock_widget!(widget_id) do
+    from(w in Widget, where: w.id == ^widget_id, lock: "FOR UPDATE", select: w.id)
+    |> Repo.one!()
+  end
+
   @doc """
   Gets the usage information for a widget, including all playlists where it is used.
 
@@ -309,19 +626,26 @@ defmodule Castmill.Widgets do
       iex> get_widget_usage(999)
       []
   """
-  def get_widget_usage(widget_id) do
-    from(wc in WidgetConfig,
-      join: pi in assoc(wc, :playlist_item),
-      join: p in assoc(pi, :playlist),
-      where: wc.widget_id == ^widget_id,
-      select: %{
-        playlist_id: p.id,
-        playlist_name: p.name,
-        playlist_item_id: pi.id,
-        widget_config_id: wc.id
-      }
-    )
-    |> Repo.all()
+  def get_widget_usage(widget_id, organization_id \\ nil) do
+    query =
+      from(wc in WidgetConfig,
+        join: pi in assoc(wc, :playlist_item),
+        join: p in assoc(pi, :playlist),
+        where: wc.widget_id == ^widget_id,
+        select: %{
+          playlist_id: p.id,
+          playlist_name: p.name,
+          playlist_item_id: pi.id,
+          widget_config_id: wc.id
+        }
+      )
+
+    query =
+      if organization_id,
+        do: where(query, [_wc, _pi, p], p.organization_id == ^organization_id),
+        else: query
+
+    Repo.all(query)
   end
 
   @doc """
@@ -340,9 +664,22 @@ defmodule Castmill.Widgets do
   """
   def delete_widget_with_cascade(%Widget{} = widget) do
     Repo.transaction(fn ->
-      # First, delete all widget_configs referencing this widget
-      from(wc in WidgetConfig, where: wc.widget_id == ^widget.id)
-      |> Repo.delete_all()
+      lock_widget!(widget.id)
+
+      # Remove the playlist items using the widget (their configs cascade), repairing
+      # each playlist's linked list. Deleting only the configs would leave orphaned items.
+      from(wc in WidgetConfig,
+        join: pi in assoc(wc, :playlist_item),
+        where: wc.widget_id == ^widget.id,
+        select: {pi.playlist_id, pi.id}
+      )
+      |> Repo.all()
+      |> Enum.each(fn {playlist_id, item_id} ->
+        case Castmill.Resources.remove_item_from_playlist(playlist_id, item_id) do
+          {:ok, _} -> :ok
+          {:error, reason} -> Repo.rollback(reason)
+        end
+      end)
 
       # Then delete the widget itself
       case Repo.delete(widget) do

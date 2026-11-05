@@ -1462,6 +1462,7 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
         Widgets.create_widget(%{
           name: "Spotify Test Widget #{System.unique_integer([:positive])}",
           slug: "spotify-test-#{System.unique_integer([:positive])}",
+          is_system: true,
           template: %{"html" => "<div>Spotify Test</div>"}
         })
 
@@ -1556,6 +1557,7 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
         Widgets.create_widget(%{
           name: "Simple Widget #{System.unique_integer([:positive])}",
           slug: "simple-#{System.unique_integer([:positive])}",
+          is_system: true,
           template: %{"html" => "<div>Simple</div>"}
         })
 

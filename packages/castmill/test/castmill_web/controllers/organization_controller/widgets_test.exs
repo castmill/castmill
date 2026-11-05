@@ -24,7 +24,7 @@ defmodule CastmillWeb.OrganizationController.WidgetsTest do
 
     # Create test widgets
     {:ok, widget1} =
-      Widgets.create_widget(%{
+      Widgets.create_organization_widget(organization.id, %{
         name: "Alpha Widget",
         slug: "alpha-widget",
         description: "First test widget",
@@ -34,7 +34,7 @@ defmodule CastmillWeb.OrganizationController.WidgetsTest do
       })
 
     {:ok, widget2} =
-      Widgets.create_widget(%{
+      Widgets.create_organization_widget(organization.id, %{
         name: "Beta Widget",
         slug: "beta-widget",
         description: "Second test widget",
@@ -44,7 +44,7 @@ defmodule CastmillWeb.OrganizationController.WidgetsTest do
       })
 
     {:ok, widget3} =
-      Widgets.create_widget(%{
+      Widgets.create_organization_widget(organization.id, %{
         name: "Gamma Widget",
         slug: "gamma-widget",
         description: "Third test widget",

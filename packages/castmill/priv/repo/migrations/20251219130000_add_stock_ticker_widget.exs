@@ -28,7 +28,6 @@ defmodule Castmill.Repo.Migrations.AddStockTickerWidget do
   import Ecto.Query
 
   alias Castmill.Repo
-  alias Castmill.Widgets.Widget
   alias Castmill.Widgets.Integrations.WidgetIntegration
 
   def up do
@@ -107,9 +106,10 @@ defmodule Castmill.Repo.Migrations.AddStockTickerWidget do
   end
 
   def down do
-    # Get the widget by slug
+    # Get the widget by slug (schemaless, so later Widget schema fields do not break
+    # this migration on databases that do not have those columns yet)
     widget =
-      from(w in Widget, where: w.slug == "stock-ticker")
+      from(w in "widgets", where: w.slug == "stock-ticker", select: %{id: w.id})
       |> Repo.one()
 
     if widget do
@@ -118,7 +118,7 @@ defmodule Castmill.Repo.Migrations.AddStockTickerWidget do
       |> Repo.delete_all()
 
       # Delete the widget
-      Repo.delete(widget)
+      from(w in "widgets", where: w.id == ^widget.id) |> Repo.delete_all()
     end
   end
 

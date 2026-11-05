@@ -47,7 +47,7 @@ defmodule Castmill.Repo.Migrations.ImplementWeatherWidget do
   }
 
   def up do
-    weather = Repo.one!(from(w in Widget, where: w.slug == "weather"))
+    weather = Repo.one!(weather_query())
 
     from(w in Widget, where: w.id == ^weather.id)
     |> Repo.update_all(
@@ -115,8 +115,17 @@ defmodule Castmill.Repo.Migrations.ImplementWeatherWidget do
     )
   end
 
+  # Schemaless, so later Widget schema fields do not break this migration on databases
+  # that do not have those columns yet.
+  defp weather_query do
+    from(w in "widgets",
+      where: w.slug == "weather",
+      select: %{id: w.id, translations: w.translations}
+    )
+  end
+
   def down do
-    weather = Repo.one(from(w in Widget, where: w.slug == "weather"))
+    weather = Repo.one(weather_query())
 
     if weather do
       from(i in WidgetIntegration,
