@@ -70,12 +70,13 @@ export const PlaylistNameField = (props: {
       class="playlist-name-field"
       aria-busy={saving()}
       onFocusOut={() => void commit()}
-      onKeyDown={(event) => {
+      on:keydown={(event) => {
         const input = event.target as HTMLInputElement;
         if (event.key === 'Enter') {
           event.preventDefault();
           input.blur();
         } else if (event.key === 'Escape') {
+          event.stopPropagation();
           revert();
           input.blur();
         }
@@ -86,6 +87,7 @@ export const PlaylistNameField = (props: {
         id={`playlist-${props.playlist.id}-name`}
         value={name()}
         placeholder={t('playlists.enterPlaylistName')}
+        disabled={saving()}
         onInput={(value: string | number | boolean) => {
           const next = String(value);
           setName(next);

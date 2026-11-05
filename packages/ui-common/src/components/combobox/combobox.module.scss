@@ -196,7 +196,8 @@
   width: 100%;
   max-width: 40em;
   max-height: 85vh;
-  max-height: 85dvh;
+  max-height: min(85vh, 100%);
+  max-height: min(85dvh, 100%);
   padding-bottom: env(safe-area-inset-bottom);
   overflow: hidden;
   border: 1px solid #36324a;

@@ -8,6 +8,14 @@ import { WidgetChooser } from './widget-chooser';
 import type { JsonWidget, JsonWidgetTemplate } from '@castmill/player';
 import { createSignal } from 'solid-js';
 
+const mockDraggable = vi.hoisted(() =>
+  vi.fn((_options: { element: HTMLElement }) => () => {})
+);
+
+vi.mock('@atlaskit/pragmatic-drag-and-drop/element/adapter', () => ({
+  draggable: mockDraggable,
+}));
+
 const mockTemplate = {
   type: 'image',
   name: 'image',
@@ -92,6 +100,15 @@ describe('WidgetChooser Component', () => {
     expect(screen.getByText('Display a video')).toBeInTheDocument();
     expect(screen.getByText('Weather Widget')).toBeInTheDocument();
     expect(screen.getByText('Display weather information')).toBeInTheDocument();
+  });
+
+  it('registers draggable elements after their refs are assigned', () => {
+    render(() => <WidgetChooser baseUrl="" widgets={mockWidgets} />);
+
+    expect(mockDraggable).toHaveBeenCalledTimes(mockWidgets.length);
+    for (const [options] of mockDraggable.mock.calls) {
+      expect(options.element).toBeInstanceOf(HTMLElement);
+    }
   });
 
   it('renders search input with correct placeholder', () => {
