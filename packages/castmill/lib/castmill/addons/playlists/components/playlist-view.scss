@@ -1,14 +1,3 @@
-.playlist-view-container {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  flex: 1; // Fill available vertical space inside modal body
-  padding-top: 1em;
-  min-height: 0; // Allow shrinking inside flex chain
-  gap: 0;
-  box-sizing: border-box;
-}
-
 .playlist-view-loading {
   display: flex;
   flex: 1;
@@ -45,35 +34,468 @@
 }
 
 .playlist-view {
+  position: relative;
   display: flex;
-  flex-direction: row; // Always use row layout
+  flex-direction: column;
+  gap: 1em;
   width: 100%;
-  flex: 1; // Take remaining space after header
-  height: 100%;
-  min-height: 0; // Allow shrinking to fit container
-  overflow: hidden; // Prevent overflow
-  justify-content: flex-start;
-  align-items: stretch;
+  min-height: 28em;
+  color: #e8e8e8;
+
+  &.wide {
+    height: 100%;
+  }
+
+  // Narrow widget picker: fill the drawer body so only the widget list
+  // scrolls (no second scrollbar on the drawer itself).
+  &.narrow.picking {
+    height: 100%;
+    min-height: 0;
+
+    .playlist-editor {
+      flex: 1;
+      grid-template-rows: minmax(0, 1fr);
+      min-height: 0;
+    }
+
+    .playlist-widgets-card {
+      max-height: none;
+      min-height: 16em;
+    }
+
+    // Too short for a useful inner list (e.g. phone landscape): let the
+    // drawer body be the only scroller instead.
+    @media (max-height: 32em) {
+      height: auto;
+
+      .playlist-widgets-card {
+        min-height: 0;
+      }
+
+      .widget-chooser,
+      .widget-chooser .items-container {
+        overflow: visible;
+      }
+    }
+  }
+
+  .is-hidden {
+    display: none !important;
+  }
+}
+
+/* Summary */
+
+.playlist-summary {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75em 1em;
+  padding: 0.9em 1em;
+  border: 1px solid #36324a;
+  border-radius: 0.6em;
+  background: linear-gradient(135deg, #2a2541 0%, #1d1a2c 100%);
+}
+
+.playlist-summary-stats,
+.playlist-summary-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4em 0.6em;
+  min-width: 0;
+}
+
+.playlist-summary-stat {
+  padding: 0.3em 0.75em;
+  border-radius: 999px;
+  background: rgba(87, 146, 238, 0.15);
+  color: #8fb5f5;
+  font-size: 0.85em;
+  font-weight: 600;
+  white-space: nowrap;
+
+  strong {
+    font-weight: 700;
+  }
+}
+
+.playlist-summary-seen {
+  color: #a4a3b7;
+  font-size: 0.85em;
+}
+
+.playlist-summary-chip {
+  padding: 0.25em 0.6em;
+  border: 1px solid #3d3a52;
+  border-radius: 0.35em;
+  background: rgba(0, 0, 0, 0.2);
+  color: #cfcde0;
+  font-size: 0.78em;
+}
+
+// Touch devices and phones: a slim inline strip instead of a boxed card.
+@media (pointer: coarse), (max-width: 36em) {
+  .playlist-view {
+    gap: 0.6em;
+  }
+
+  .playlist-summary {
+    gap: 0.4em 0.6em;
+    padding: 0.1em 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+  }
+
+  .playlist-summary-stats,
+  .playlist-summary-meta {
+    gap: 0.3em 0.4em;
+  }
+
+  .playlist-summary-stat {
+    padding: 0.15em 0.6em;
+    font-size: 0.78em;
+  }
+
+  .playlist-summary-chip {
+    padding: 0.1em 0.45em;
+    font-size: 0.72em;
+  }
+}
+
+/* Section tabs */
+
+.playlist-sections {
+  position: sticky;
+  top: -1em;
+  z-index: 3;
+  flex-shrink: 0;
+  margin: 0 -1.2em;
+  padding: 0 1.2em;
+  border-bottom: 1px solid #36324a;
+  background: #211d32;
+}
+
+.playlist-sections-list {
+  display: flex;
+  gap: 0.25em;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  -webkit-mask-image: linear-gradient(
+    to right,
+    #000 calc(100% - 2em),
+    transparent
+  );
+  mask-image: linear-gradient(to right, #000 calc(100% - 2em), transparent);
+  padding-inline-end: 2em;
+  scrollbar-width: none;
+
+  [dir='rtl'] & {
+    -webkit-mask-image: linear-gradient(
+      to left,
+      #000 calc(100% - 2em),
+      transparent
+    );
+    mask-image: linear-gradient(to left, #000 calc(100% - 2em), transparent);
+  }
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.playlist-section-tab {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
   gap: 0.5em;
+  padding: 0.75em 0.9em;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: #a4a3b7;
+  font-size: 0.9em;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  scroll-snap-align: start;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+
+  svg {
+    flex-shrink: 0;
+    font-size: 1.1em;
+  }
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.04);
+    color: #fff;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #4a90e2;
+    outline-offset: -2px;
+  }
+
+  &.active {
+    border-bottom-color: #5792ee;
+    color: #5792ee;
+  }
+}
+
+/* Cards */
+
+.playlist-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  box-sizing: border-box;
+  padding: 1.2em;
+  border: 1px solid #36324a;
+  border-radius: 0.6em;
+  background: #1b1829;
+
+  .playlist-card-header {
+    display: flex;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6em 1em;
+    margin-bottom: 1em;
+
+    h3 {
+      display: flex;
+      align-items: center;
+      gap: 0.5em;
+      margin: 0;
+      color: #fff;
+      font-size: 1em;
+      font-weight: 700;
+    }
+  }
+
+  .playlist-card-heading {
+    flex: 1 1 12em;
+    min-width: 0;
+  }
+
+  .playlist-card-count {
+    padding: 0.1em 0.55em;
+    border-radius: 999px;
+    background: rgba(87, 146, 238, 0.15);
+    color: #8fb5f5;
+    font-size: 0.75em;
+    font-weight: 700;
+  }
+
+  .playlist-card-description {
+    margin: 0.35em 0 0;
+    color: #a4a3b7;
+    font-size: 0.82em;
+    line-height: 1.45;
+  }
+}
+
+.playlist-add-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45em;
+  padding: 0.55em 0.95em;
+  border: 1px solid rgba(87, 146, 238, 0.55);
+  border-radius: 0.45em;
+  background: rgba(87, 146, 238, 0.12);
+  color: #cfe0fb;
+  font: inherit;
+  font-size: 0.85em;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+
+  &:hover {
+    border-color: #5792ee;
+    background: rgba(87, 146, 238, 0.22);
+    color: #fff;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #4a90e2;
+    outline-offset: 2px;
+  }
+
+  &.primary {
+    border-color: #5792ee;
+    background: #5792ee;
+    color: #fff;
+
+    &:hover {
+      background: #4a84dd;
+    }
+  }
+}
+
+/* Editor: widgets | items | preview */
+
+.playlist-editor {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1em;
+  min-width: 0;
+
+  .playlist-view.wide & {
+    flex: 1;
+    grid-template-columns: minmax(15em, 0.8fr) minmax(21em, 1fr) minmax(
+        18em,
+        1.25fr
+      );
+    grid-template-rows: minmax(0, 1fr);
+    min-height: 26em;
+  }
+}
+
+.playlist-widgets-card {
+  .widget-chooser {
+    flex: 1;
+  }
+
+  .playlist-view.narrow & {
+    max-height: calc(100vh - 14em);
+    max-height: calc(100dvh - 14em);
+    min-height: 20em;
+  }
+}
+
+.playlist-items-card {
+  .playlist-items {
+    container-type: inline-size;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 0.2em;
+    min-height: 6em;
+    margin: 0 -0.4em;
+    padding: 0.2em 0.4em 0.4em;
+    border: 1px dashed transparent;
+    border-radius: 0.5em;
+    transition:
+      background-color 0.15s ease,
+      border-color 0.15s ease;
+
+    &.drag-over {
+      border-color: rgba(87, 146, 238, 0.6);
+      background: rgba(87, 146, 238, 0.06);
+    }
+
+    .playlist-view.wide & {
+      min-height: 0;
+      overflow-x: hidden;
+      overflow-y: auto;
+      scrollbar-gutter: stable;
+      scrollbar-width: thin;
+      scrollbar-color: #3d3a52 transparent;
+    }
+
+    .playlist-end-drop-zone {
+      position: relative;
+      flex: 1;
+      min-height: 3em;
+      border: 2px dashed transparent;
+      border-radius: 0.4em;
+      transition:
+        background-color 0.15s ease,
+        border-color 0.15s ease;
+
+      .playlist-end-drop-zone-label {
+        display: none;
+      }
+
+      &.hovered {
+        border-color: rgba(87, 146, 238, 0.6);
+        background: rgba(87, 146, 238, 0.08);
+
+        .playlist-end-drop-zone-label {
+          display: block;
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          color: #8fb5f5;
+          font-size: 0.75em;
+          font-weight: 600;
+          letter-spacing: 0.05em;
+          text-transform: uppercase;
+          white-space: nowrap;
+          pointer-events: none;
+        }
+      }
+    }
+  }
+
+  .playlist-items-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5em;
+    padding: 2em 1em 1em;
+    text-align: center;
+
+    p {
+      margin: 0;
+    }
+
+    .playlist-empty-title {
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .playlist-empty-description {
+      max-width: 22em;
+      margin-bottom: 0.5em;
+      color: #8f8bb0;
+      font-size: 0.85em;
+      line-height: 1.45;
+    }
+  }
+}
+
+.playlist-preview-card {
+  padding: 0.8em;
+
+  .playlist-view.narrow & {
+    height: calc(100vh - 16em);
+    height: calc(100dvh - 16em);
+    min-height: 16em;
+  }
 
   .playlist-preview-wrapper {
     display: flex;
-    justify-content: center;
+    flex: 1 1 auto;
     align-items: center;
-    flex: 1 1 auto; // Grow and shrink to fill remaining space
-    height: 100%;
+    justify-content: center;
     min-width: 0;
     min-height: 0;
-    align-self: stretch;
 
     .playlist-preview {
+      position: relative;
       display: flex;
-      background: black;
+      overflow: hidden;
       max-width: 100%;
       max-height: 100%;
-      height: 100%;
       width: auto;
-      position: relative; // Create positioning context for absolute children
+      height: 100%;
+      border-radius: 0.35em;
+      background: black;
+      box-shadow: 0 0.5em 1.5em rgba(0, 0, 0, 0.35);
     }
 
     // When container is narrower than target aspect ratio, constrain by width instead
@@ -82,199 +504,96 @@
       height: auto;
     }
   }
+}
 
-  .playlist-preview-panel {
+/* Settings */
+
+.playlist-settings {
+  display: flex;
+}
+
+// One card with stacked fields, like Device Details settings.
+.playlist-settings-card {
+  gap: 1.1em;
+  width: 100%;
+
+  .form-item-wrapper {
+    margin: 0;
+  }
+
+  .playlist-settings-hint {
+    margin: 0;
+    color: #8f8ca6;
+    font-size: 0.8em;
+    line-height: 1.4;
+  }
+
+  .playlist-settings-meta {
+    margin: 0 -1.2em -1.2em;
+    padding: 0.8em 1.2em;
+    border-top: 1px solid #36324a;
+    color: #8f8ca6;
+    font-size: 0.8em;
+  }
+}
+
+.playlist-aspect-ratio-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6em;
+
+  .custom-aspect-ratio {
     display: flex;
-    flex: 1 1 auto;
-    flex-direction: column;
-    min-width: 0;
-    min-height: 0;
-    gap: 0.75em;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.5em;
 
-    .playlist-preview-wrapper {
-      flex: 1 1 auto;
-      height: auto;
+    > div {
+      flex: 1 1 6em;
+      min-width: 0;
     }
 
-    .playlist-aspect-ratio-form {
-      display: flex;
-      flex-direction: column;
-      gap: 0.6em;
-      padding: 0.75em;
-      border-radius: 0.5em;
-      background: rgba(255, 255, 255, 0.04);
-
-      .custom-aspect-ratio {
-        display: flex;
-        align-items: center;
-        gap: 0.5em;
-
-        > div {
-          flex: 1;
-        }
-
-        .separator {
-          font-size: 1.2em;
-          font-weight: bold;
-        }
-
-        .save-custom-aspect-ratio {
-          margin-bottom: 0.2em;
-        }
-      }
-
-      .aspect-ratio-error {
-        margin-top: 0.2em;
-      }
+    .separator {
+      padding-bottom: 1.2em;
+      font-size: 1.2em;
+      font-weight: bold;
     }
   }
 
-  .playlist-items-wrapper {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: stretch;
-    width: auto;
-    flex: 0 0 auto; // Don't grow or shrink
-    align-self: stretch; // Stretch to fill parent height
-    min-height: 0; // Allow shrinking
+  .error:empty {
+    display: none;
+  }
 
-    .drag-indicator {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5em;
-      opacity: 0.7;
-      transition: opacity 0.3s ease;
+  .aspect-ratio-error {
+    margin-top: 0.2em;
+  }
+}
 
-      &:hover {
-        opacity: 1;
-      }
+@media (max-width: 36em) {
+  .playlist-section-tab {
+    padding: 0.75em 0.7em;
 
-      .arrow-container {
-        display: flex;
-        align-items: center;
-        position: relative;
-        height: 3em;
-      }
-
-      .arrow-line {
-        width: 3em;
-        height: 0.125em;
-        background: linear-gradient(
-          to right,
-          rgba(255, 255, 255, 0.3),
-          rgba(255, 255, 255, 0.6)
-        );
-        position: relative;
-        animation: pulse 2s ease-in-out infinite;
-      }
-
-      .arrow-head {
-        width: 0;
-        height: 0;
-        border-top: 0.5em solid transparent;
-        border-bottom: 0.5em solid transparent;
-        border-left: 0.75em solid rgba(255, 255, 255, 0.6);
-        margin-left: -0.125em;
-        animation: pulse 2s ease-in-out infinite;
-      }
-
-      .drag-hint {
-        font-size: 0.75em;
-        color: rgba(255, 255, 255, 0.6);
-        white-space: nowrap;
-        writing-mode: vertical-rl;
-        text-orientation: mixed;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        font-weight: 500;
-      }
+    &:not(.active) .playlist-section-label {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
     }
   }
 
-  @keyframes pulse {
-    0%,
-    100% {
-      opacity: 0.6;
-    }
-    50% {
-      opacity: 1;
+  .playlist-card {
+    padding: 1em;
+
+    .playlist-settings-meta {
+      margin: 0 -1em -1em;
+      padding: 0.75em 1em;
     }
   }
 
-  .playlist-items {
-    transition: background-color 0.3s ease;
-    padding: 0;
-    overflow-x: hidden;
-    overflow-y: auto;
-    scrollbar-gutter: stable; // Reserve space for scrollbar always
-    flex: 1; // Grow to fill available space
-    min-height: 0; // Allow shrinking below content size
-    min-width: 24em;
-    background: darkgray;
-    margin: 0em 0.7em;
-    border-radius: 0.5em;
-    flex-direction: column;
-    display: flex;
-    justify-content: flex-start;
-    align-items: stretch;
-    gap: 0.4em;
-
-    // Apply padding to first and last children instead of container
-    > :first-child {
-      margin-top: 0.5em;
-    }
-
-    > :last-child {
-      margin-bottom: 1em;
-    }
-
-    // Apply side margins to all direct children
-    > * {
-      margin-left: 1em;
-      margin-right: 1em; // Equal margins since scrollbar-gutter reserves space
-    }
-
-    .playlist-end-drop-zone {
-      width: calc(100% - 2em); // Account for left and right margins
-      flex: 1; // Fill all remaining space
-      background: transparent;
-      border-radius: 0.25em;
-      transition: all 0.3s ease;
-      position: relative;
-      min-height: 3em; // Minimum height to ensure it's visible
-
-      .playlist-end-drop-zone-label {
-        display: none;
-      }
-
-      &.hovered {
-        background: linear-gradient(
-          180deg,
-          rgba(255, 255, 255, 0.05) 0%,
-          rgba(255, 255, 255, 0.15) 50%,
-          rgba(255, 255, 255, 0.05) 100%
-        );
-        border: 2px dashed rgba(255, 255, 255, 0.4);
-
-        .playlist-end-drop-zone-label {
-          display: block;
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          font-size: 0.75em;
-          color: rgba(255, 255, 255, 0.7);
-          white-space: nowrap;
-          pointer-events: none;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          font-weight: 500;
-        }
-      }
-    }
+  .playlist-items-card .playlist-card-header .playlist-add-button {
+    flex: 1 1 100%;
   }
 }
 

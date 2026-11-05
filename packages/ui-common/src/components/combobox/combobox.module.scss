@@ -94,72 +94,242 @@
     z-index: 50;
     width: 100%;
     box-sizing: border-box;
+  }
 
-    .search-box {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      justify-content: center;
-      border-radius: 0.3em 0.3em 0 0;
-      border-bottom: 1px solid #555;
+  .dropdown-up {
+    top: auto;
+    bottom: calc(100% + 0.25em);
+  }
+}
 
-      height: 2.5em;
-      background-color: #221e34;
+// List content shared by the dropdown and the mobile sheet.
+.dropdown,
+.sheet {
+  .search-box {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.3em 0.3em 0 0;
+    border-bottom: 1px solid #555;
 
-      .search-icon {
-        color: #b1b1b1;
-        padding: 0 0.5em;
-      }
+    height: 2.5em;
+    background-color: #221e34;
 
-      input {
-        width: 100%;
-        height: 100%;
-        padding: 0;
-        margin: 0;
-        font-size: 1em;
-        border: none;
-        color: #b1b1b1;
-        background: none;
-
-        &:focus {
-          outline: none;
-        }
-      }
-    }
-    .items-list {
-      overflow-y: auto;
-      max-height: 18em;
-
-      .item {
-        cursor: pointer;
-        padding: 0.4em 1em;
-      }
-
-      .item:hover {
-        background-color: #1e1f25;
-      }
-
-      .item:nth-child(odd) {
-        background-color: #18191e;
-        padding: 0.4em 1em;
-      }
-
-      .item:nth-child(even) {
-        background-color: #1e1f25;
-        padding: 0.4em 1em;
-      }
-    }
-
-    .footer {
-      display: flex;
-      flex-direction: row;
-      justify-content: center;
-      align-items: center;
-      font-size: 0.7em;
-      padding: 0.8em;
-      font-style: italic;
-      border-top: 1px solid #555;
+    .search-icon {
       color: #b1b1b1;
+      padding: 0 0.5em;
     }
+
+    input {
+      width: 100%;
+      height: 100%;
+      padding: 0;
+      margin: 0;
+      font-size: 1em;
+      border: none;
+      color: #b1b1b1;
+      background: none;
+
+      &:focus {
+        outline: none;
+      }
+    }
+  }
+  .items-list {
+    overflow-y: auto;
+    max-height: 18em;
+
+    .item {
+      cursor: pointer;
+      padding: 0.4em 1em;
+    }
+
+    .item:hover {
+      background-color: #1e1f25;
+    }
+
+    .item:nth-child(odd) {
+      background-color: #18191e;
+      padding: 0.4em 1em;
+    }
+
+    .item:nth-child(even) {
+      background-color: #1e1f25;
+      padding: 0.4em 1em;
+    }
+  }
+
+  .footer {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.7em;
+    padding: 0.8em;
+    font-style: italic;
+    border-top: 1px solid #555;
+    color: #b1b1b1;
+  }
+
+  .items-list .item.selected {
+    box-shadow: inset 3px 0 0 #5792ee;
+    background-color: rgba(87, 146, 238, 0.12);
+  }
+}
+
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+  animation: sheet-fade 0.2s ease;
+}
+
+.sheet {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 40em;
+  max-height: 85vh;
+  max-height: 85dvh;
+  padding-bottom: env(safe-area-inset-bottom);
+  overflow: hidden;
+  border: 1px solid #36324a;
+  border-bottom: none;
+  border-radius: 0.9em 0.9em 0 0;
+  background: #211d32;
+  color: #fff;
+  box-shadow: 0 -1em 3em rgba(0, 0, 0, 0.45);
+  animation: sheet-slide-up 0.25s ease;
+
+  &:focus {
+    outline: none;
+  }
+
+  .sheet-handle {
+    flex-shrink: 0;
+    width: 2.5em;
+    height: 0.25em;
+    margin: 0.6em auto 0;
+    border-radius: 999px;
+    background: #4d4968;
+  }
+
+  .sheet-header {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1em;
+    padding: 0.6em 0.6em 0.6em 1.2em;
+    border-bottom: 1px solid #36324a;
+
+    h2 {
+      margin: 0;
+      overflow: hidden;
+      font-size: 1.05em;
+      font-weight: 700;
+      text-overflow: ellipsis;
+      text-transform: capitalize;
+      white-space: nowrap;
+    }
+  }
+
+  .sheet-close {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 2.75em;
+    height: 2.75em;
+    border: none;
+    border-radius: 0.5em;
+    background: transparent;
+    color: #cfcde0;
+    font-size: 1.1em;
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: 2px solid #4a90e2;
+      outline-offset: -2px;
+    }
+  }
+
+  .search-box {
+    flex-shrink: 0;
+    height: 3em;
+    margin: 0.8em 1em 0.4em;
+    border: 1px solid #555;
+    border-radius: 0.5em;
+    background-color: #151320;
+
+    input {
+      // 16px keeps iOS from zooming into the field.
+      font-size: 16px;
+    }
+  }
+
+  .items-list {
+    flex: 1 1 auto;
+    min-height: 6em;
+    max-height: none;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+
+    .item,
+    .item:nth-child(odd),
+    .item:nth-child(even) {
+      display: flex;
+      align-items: center;
+      min-height: 3em;
+      padding: 0.5em 1.2em;
+      border-bottom: 1px solid #2a2640;
+      background-color: transparent;
+    }
+
+    .item:active {
+      background-color: rgba(87, 146, 238, 0.12);
+    }
+
+    .item.selected {
+      background-color: rgba(87, 146, 238, 0.12);
+    }
+  }
+
+  .footer {
+    flex-shrink: 0;
+    border-top-color: #36324a;
+  }
+}
+
+@keyframes sheet-slide-up {
+  from {
+    transform: translateY(100%);
+  }
+
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes sheet-fade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet,
+  .sheet-backdrop {
+    animation: none;
   }
 }

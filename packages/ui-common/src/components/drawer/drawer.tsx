@@ -13,6 +13,7 @@ import {
 import { Portal } from 'solid-js/web';
 import { VsClose } from 'solid-icons/vs';
 import { IconButton } from '../icon-button/icon-button';
+import { useVisualViewportBox } from '../../hooks/useVisualViewportBox';
 
 import styles from './drawer.module.scss';
 
@@ -51,6 +52,7 @@ function removeDrawer(drawerId: string) {
 }
 
 export const Drawer: Component<DrawerProps> = (_props) => {
+  const viewportBox = useVisualViewportBox();
   const props = mergeProps(
     {
       size: 'xl' as DrawerSize,
@@ -170,7 +172,11 @@ export const Drawer: Component<DrawerProps> = (_props) => {
 
     // Layered overlays can come from a separately bundled UI context and may
     // not share this module's drawer stack.
-    if (target.closest('[data-modal-overlay], [data-drawer-panel]')) {
+    if (
+      target.closest(
+        '[data-modal-overlay], [data-drawer-panel], [data-combobox-sheet]'
+      )
+    ) {
       return;
     }
 
@@ -277,6 +283,7 @@ export const Drawer: Component<DrawerProps> = (_props) => {
           data-testid="drawer-root"
           data-has-backdrop={hasBackdrop() ? 'true' : 'false'}
           class={`${styles.drawerRoot} ${hasBackdrop() ? styles.withBackdrop : styles.withoutBackdrop}`}
+          style={viewportBox()}
           onClick={closeOnOverlayClick}
         >
           <div
@@ -285,11 +292,12 @@ export const Drawer: Component<DrawerProps> = (_props) => {
             aria-label={props.title}
             data-drawer-panel
             class={panelClass()}
-            style={{
-              height: '100dvh',
-              'min-height': '100dvh',
-              'max-height': '100dvh',
-            }}
+            style={(() => {
+              // When pinned to the visual viewport the root already has the
+              // visible height; dvh would refer to the enlarged layout one.
+              const h = viewportBox() ? '100%' : '100dvh';
+              return { height: h, 'min-height': h, 'max-height': h };
+            })()}
             ref={panelRef}
             tabIndex={-1}
             onClick={(event) => event.stopPropagation()}

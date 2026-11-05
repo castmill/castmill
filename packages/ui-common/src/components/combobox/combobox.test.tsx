@@ -167,4 +167,117 @@ describe('ComboBox Component', () => {
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
     expect(screen.getByLabelText('Toggle Dropdown')).toBeInTheDocument();
   });
+
+  describe('placement', () => {
+    const originalMatchMedia = window.matchMedia;
+
+    const mockSheetQuery = (matches: boolean) => {
+      window.matchMedia = vi.fn((query: string) => ({
+        matches,
+        media: query,
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      })) as unknown as typeof window.matchMedia;
+    };
+
+    afterEach(() => {
+      window.matchMedia = originalMatchMedia;
+      vi.restoreAllMocks();
+    });
+
+    it('opens a bottom sheet on small or touch screens', async () => {
+      mockSheetQuery(true);
+      const onSelect = vi.fn();
+      render(() => (
+        <ComboBox
+          id="sheet-combo"
+          label="Media"
+          closeLabel="Close picker"
+          fetchItems={async () => ({ count: 2, data: mockItems })}
+          renderItem={(item) => <div>{item.name}</div>}
+          onSelect={onSelect}
+        />
+      ));
+
+      await fireEvent.click(screen.getByText('Media'));
+
+      const sheet = await screen.findByRole('dialog', { name: 'Media' });
+      expect(sheet.closest('[data-combobox-sheet]')).not.toBeNull();
+      expect(document.body.style.overflow).toBe('hidden');
+      expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+
+      await fireEvent.click(await screen.findByText('Item 2'));
+
+      expect(onSelect).toHaveBeenCalledWith({ id: '2', name: 'Item 2' });
+      await waitFor(() =>
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+      );
+      expect(document.body.style.overflow).toBe('');
+    });
+
+    it('closes the sheet with Escape before outer layers see it', async () => {
+      mockSheetQuery(true);
+      const outerKeydown = vi.fn();
+      document.addEventListener('keydown', outerKeydown, true);
+      renderComboBox();
+
+      await fireEvent.click(screen.getByText('Test ComboBox'));
+      await screen.findByRole('dialog');
+
+      await fireEvent.keyDown(document.body, { key: 'Escape' });
+
+      await waitFor(() =>
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+      );
+      expect(outerKeydown).not.toHaveBeenCalled();
+      document.removeEventListener('keydown', outerKeydown, true);
+    });
+
+    it('closes the sheet from the backdrop and close button', async () => {
+      mockSheetQuery(true);
+      renderComboBox();
+
+      await fireEvent.click(screen.getByText('Test ComboBox'));
+      const sheet = await screen.findByRole('dialog');
+      await fireEvent.click(sheet.parentElement!);
+      await waitFor(() =>
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+      );
+
+      await fireEvent.click(screen.getByText('Test ComboBox'));
+      await screen.findByRole('dialog');
+      await fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+      await waitFor(() =>
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+      );
+    });
+
+    it('opens upwards when there is no room below the trigger', async () => {
+      mockSheetQuery(false);
+      renderComboBox();
+      const trigger = screen.getByRole('button', { name: /test combobox/i });
+      vi.spyOn(trigger.parentElement!, 'getBoundingClientRect').mockReturnValue(
+        {
+          top: window.innerHeight - 60,
+          bottom: window.innerHeight - 10,
+          left: 0,
+          right: 300,
+          width: 300,
+          height: 50,
+          x: 0,
+          y: window.innerHeight - 60,
+          toJSON: () => ({}),
+        }
+      );
+
+      await fireEvent.click(screen.getByText('Test ComboBox'));
+
+      const listbox = await screen.findByRole('listbox');
+      expect(listbox.className).toMatch(/dropdown-up/);
+    });
+  });
 });

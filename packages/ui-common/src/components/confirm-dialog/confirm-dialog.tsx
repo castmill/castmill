@@ -12,6 +12,9 @@ type ConfirmDialogProps = {
   onConfirm: () => void;
   onClose: () => void;
   children?: JSX.Element;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  closeLabel?: string;
 };
 
 export const ConfirmDialog = (props: ConfirmDialogProps): JSX.Element => {
@@ -29,13 +32,18 @@ export const ConfirmDialog = (props: ConfirmDialogProps): JSX.Element => {
         title={props.title}
         description={props.message}
         onClose={handleClose}
+        closeLabel={props.closeLabel}
       >
         {props.children && (
           <div class="confirm-dialog-content">{props.children}</div>
         )}
         <div class="confirm-dialog-actions">
-          <Button label="Confirm" color="danger" onClick={handleConfirm} />
-          <Button label="Cancel" onClick={handleClose} />
+          <Button
+            label={props.confirmLabel ?? 'Confirm'}
+            color="danger"
+            onClick={handleConfirm}
+          />
+          <Button label={props.cancelLabel ?? 'Cancel'} onClick={handleClose} />
         </div>
       </Modal>
     </Show>

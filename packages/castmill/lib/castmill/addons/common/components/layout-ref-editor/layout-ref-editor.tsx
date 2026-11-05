@@ -202,6 +202,7 @@ export const LayoutRefEditor: Component<LayoutRefEditorProps> = (props) => {
           when={selectedLayout()}
           fallback={
             <ComboBox<JsonLayout>
+              closeLabel={t('common.close')}
               id="layout-selector"
               label={t('layouts.selectLayout') || 'Select Layout'}
               placeholder={t('layouts.searchLayouts') || 'Search layouts...'}
@@ -313,6 +314,7 @@ export const LayoutRefEditor: Component<LayoutRefEditorProps> = (props) => {
                             when={zoneAssignment()}
                             fallback={
                               <ComboBox<JsonPlaylist>
+                                closeLabel={t('common.close')}
                                 id={`zone-${zone.id}-playlist`}
                                 label=""
                                 placeholder={

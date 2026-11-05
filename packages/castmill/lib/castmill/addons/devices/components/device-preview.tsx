@@ -174,10 +174,8 @@ export const DevicePreview: Component<{
     // Start new initialization
     resourceManagerPromise = (async () => {
       const storage = new StorageDummy('preview');
-      const cache = new Cache(storage);
-      const manager = ResourceManager.createResourceManager(cache, {
-        baseUrl: props.baseUrl,
-      });
+      const cache = new Cache(storage, 'device-preview-cache', 100);
+      const manager = ResourceManager.createResourceManager(cache, {});
       await manager.init();
       resourceManager = manager;
       resourceManagerPromise = null; // Clear the promise after completion
