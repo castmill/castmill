@@ -570,6 +570,46 @@ defmodule Castmill.Accounts do
     end
   end
 
+  @themes ["light", "dark"]
+
+  @doc """
+  Returns the dashboard UI preferences stored in the user's meta map.
+
+  Currently only `"theme"` (`"light"` or `"dark"`) is supported. Missing
+  preferences are omitted so the client can fall back to its own defaults.
+  """
+  def get_user_preferences(%User{} = user) do
+    (user.meta || %{})
+    |> Map.get("preferences", %{})
+    |> Map.take(["theme"])
+  end
+
+  @doc """
+  Updates the dashboard UI preferences stored in the user's meta map.
+
+  Unknown keys are ignored. Returns `{:error, :invalid_preferences}` when a
+  known key has an invalid value.
+  """
+  def update_user_preferences(%User{} = user, attrs) when is_map(attrs) do
+    case Map.fetch(attrs, "theme") do
+      {:ok, theme} when theme in @themes ->
+        meta = user.meta || %{}
+        preferences = meta |> Map.get("preferences", %{}) |> Map.put("theme", theme)
+
+        user
+        |> Ecto.Changeset.change(meta: Map.put(meta, "preferences", preferences))
+        |> Repo.update()
+
+      {:ok, _invalid} ->
+        {:error, :invalid_preferences}
+
+      :error ->
+        {:ok, user}
+    end
+  end
+
+  def update_user_preferences(%User{}, _attrs), do: {:error, :invalid_preferences}
+
   @doc """
   Add a friendly name to a credential by storing it in user meta
   """

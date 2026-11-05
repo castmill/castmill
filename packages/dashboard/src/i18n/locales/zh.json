@@ -113,7 +113,9 @@
   "topbar": {
     "help": "帮助",
     "notifications": "通知",
-    "gettingStarted": "快速入门"
+    "gettingStarted": "快速入门",
+    "switchToLightMode": "切换到浅色模式",
+    "switchToDarkMode": "切换到深色模式"
   },
   "settings": {
     "title": "设置",

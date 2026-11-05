@@ -45,36 +45,36 @@ interface TelemetryData {
  * Green when plenty of free space, yellow when getting low, red when critical.
  */
 const getUsageColor = (usedPercent: number): string => {
-  if (usedPercent >= 90) return '#e74c3c'; // red — critical
-  if (usedPercent >= 70) return '#f0ad4e'; // yellow — warning
-  return '#4caf50'; // green — healthy
+  if (usedPercent >= 90) return 'var(--cm-error)'; // red — critical
+  if (usedPercent >= 70) return 'var(--cm-warning)'; // yellow — warning
+  return 'var(--cm-success)'; // green — healthy
 };
 
 /**
  * Returns a color for CPU load (higher = worse).
  */
 const getCpuColor = (percent: number): string => {
-  if (percent >= 80) return '#e74c3c';
-  if (percent >= 50) return '#f0ad4e';
-  return '#4caf50';
+  if (percent >= 80) return 'var(--cm-error)';
+  if (percent >= 50) return 'var(--cm-warning)';
+  return 'var(--cm-success)';
 };
 
 /**
  * Returns a color for temperature readings.
  */
 const getTempColor = (celsius: number): string => {
-  if (celsius >= 80) return '#e74c3c';
-  if (celsius >= 60) return '#f0ad4e';
-  return '#4caf50';
+  if (celsius >= 80) return 'var(--cm-error)';
+  if (celsius >= 60) return 'var(--cm-warning)';
+  return 'var(--cm-success)';
 };
 
 /**
  * Returns a color for WiFi signal strength.
  */
 const getSignalColor = (percent: number): string => {
-  if (percent < 40) return '#e74c3c';
-  if (percent < 70) return '#f0ad4e';
-  return '#4caf50';
+  if (percent < 40) return 'var(--cm-error)';
+  if (percent < 70) return 'var(--cm-warning)';
+  return 'var(--cm-success)';
 };
 
 /**

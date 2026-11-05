@@ -1,0 +1,185 @@
+/*
+ * Castmill dashboard theme tokens.
+ *
+ * Every view, dialog and addon must take its colors from these `--cm-*`
+ * custom properties so it responds to the light/dark theme toggle. The active
+ * theme is set as `data-theme="light" | "dark"` on the <html> element by the
+ * ThemeProvider (see ./theme-context.tsx). Dark is the default.
+ *
+ * Brand/status colors that read well on both backgrounds (e.g. white text on
+ * a solid primary button) may stay literal, but surfaces, text, borders,
+ * hovers, overlays and shadows must always use tokens.
+ */
+
+:root,
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  /* Surfaces */
+  --cm-bg-app: #151925;
+  --cm-bg-primary: #151925;
+  --cm-bg-secondary: #2c303b;
+  --cm-bg-tertiary: #363a45;
+  --cm-bg-elevated: #211d32;
+  --cm-bg-elevated-secondary: #2a2a3a;
+  --cm-bg-sunken: #1a1c1f;
+  --cm-bg-input: #2c303b;
+  --cm-bg-hover: rgba(255, 255, 255, 0.06);
+  --cm-bg-hover-strong: rgba(255, 255, 255, 0.1);
+  --cm-bg-active: rgba(255, 255, 255, 0.15);
+  --cm-bg-selected: #1c263a;
+  --cm-bg-overlay: rgba(0, 0, 0, 0.5);
+  --cm-bg-skeleton: rgba(255, 255, 255, 0.08);
+
+  /* Borders */
+  --cm-border-color: #363a45;
+  --cm-border-subtle: rgba(255, 255, 255, 0.08);
+  --cm-border-strong: #585d67;
+
+  /* Text */
+  --cm-text-primary: #ffffff;
+  --cm-text-secondary: #a4a3b7;
+  --cm-text-tertiary: #6b7280;
+  --cm-text-disabled: #585d67;
+  --cm-text-inverse: #151925;
+  --cm-text-on-primary: #ffffff;
+
+  /* Accent */
+  --cm-primary: #5792ee;
+  --cm-primary-rgb: 87, 146, 238;
+  --cm-primary-hover: #6ea2f1;
+  --cm-primary-active: #4a7fd4;
+  --cm-primary-bg: #1c263a;
+  --cm-link: #5792ee;
+  --cm-focus-ring: rgba(87, 146, 238, 0.5);
+
+  /* Status */
+  --cm-success: #22c55e;
+  --cm-success-rgb: 34, 197, 94;
+  --cm-success-bg: rgba(34, 197, 94, 0.15);
+  --cm-error: #ef4444;
+  --cm-error-rgb: 239, 68, 68;
+  --cm-error-bg: rgba(239, 68, 68, 0.15);
+  --cm-warning: #f59e0b;
+  --cm-warning-rgb: 245, 158, 11;
+  --cm-warning-bg: rgba(245, 158, 11, 0.15);
+  --cm-info: #3b82f6;
+  --cm-info-rgb: 59, 130, 246;
+  --cm-info-bg: rgba(59, 130, 246, 0.15);
+
+  /* Shadows */
+  --cm-shadow-color: rgba(0, 0, 0, 0.3);
+  --cm-shadow-sm: 0 0.0625em 0.125em rgba(0, 0, 0, 0.3);
+  --cm-shadow-md: 0 0.25em 0.75em rgba(0, 0, 0, 0.35);
+  --cm-shadow-lg: 0 0.625em 1.875em rgba(0, 0, 0, 0.5);
+
+  /* Scrollbars */
+  --cm-scrollbar-thumb: #585d67;
+  --cm-scrollbar-track: transparent;
+
+  /* Aliases kept for existing addon styles */
+  --cm-primary-color: var(--cm-primary);
+  --cm-success-color: var(--cm-success);
+  --cm-error-color: var(--cm-error);
+  --cm-warning-color: var(--cm-warning);
+  --cm-info-color: var(--cm-info);
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  /* Surfaces */
+  --cm-bg-app: #f4f6fa;
+  --cm-bg-primary: #f4f6fa;
+  --cm-bg-secondary: #ffffff;
+  --cm-bg-tertiary: #eceff4;
+  --cm-bg-elevated: #ffffff;
+  --cm-bg-elevated-secondary: #f6f7fb;
+  --cm-bg-sunken: #eef1f5;
+  --cm-bg-input: #ffffff;
+  --cm-bg-hover: rgba(15, 23, 42, 0.05);
+  --cm-bg-hover-strong: rgba(15, 23, 42, 0.08);
+  --cm-bg-active: rgba(15, 23, 42, 0.12);
+  --cm-bg-selected: #e6efff;
+  --cm-bg-overlay: rgba(15, 23, 42, 0.35);
+  --cm-bg-skeleton: rgba(15, 23, 42, 0.08);
+
+  /* Borders */
+  --cm-border-color: #dde2ea;
+  --cm-border-subtle: rgba(15, 23, 42, 0.08);
+  --cm-border-strong: #b8c0cc;
+
+  /* Text */
+  --cm-text-primary: #1a1f2e;
+  --cm-text-secondary: #4b5565;
+  --cm-text-tertiary: #6b7280;
+  --cm-text-disabled: #a0a8b5;
+  --cm-text-inverse: #ffffff;
+  --cm-text-on-primary: #ffffff;
+
+  /* Accent */
+  --cm-primary: #2f6fdb;
+  --cm-primary-rgb: 47, 111, 219;
+  --cm-primary-hover: #255fc0;
+  --cm-primary-active: #1f51a6;
+  --cm-primary-bg: #e6efff;
+  --cm-link: #2563c9;
+  --cm-focus-ring: rgba(47, 111, 219, 0.4);
+
+  /* Status */
+  --cm-success: #15803d;
+  --cm-success-rgb: 21, 128, 61;
+  --cm-success-bg: #dcfce7;
+  --cm-error: #dc2626;
+  --cm-error-rgb: 220, 38, 38;
+  --cm-error-bg: #fee2e2;
+  --cm-warning: #b45309;
+  --cm-warning-rgb: 180, 83, 9;
+  --cm-warning-bg: #fef3c7;
+  --cm-info: #2563eb;
+  --cm-info-rgb: 37, 99, 235;
+  --cm-info-bg: #dbeafe;
+
+  /* Shadows */
+  --cm-shadow-color: rgba(15, 23, 42, 0.12);
+  --cm-shadow-sm: 0 0.0625em 0.125em rgba(15, 23, 42, 0.08);
+  --cm-shadow-md: 0 0.25em 0.75em rgba(15, 23, 42, 0.12);
+  --cm-shadow-lg: 0 0.625em 1.875em rgba(15, 23, 42, 0.18);
+
+  /* Scrollbars */
+  --cm-scrollbar-thumb: #c3c9d3;
+  --cm-scrollbar-track: transparent;
+}
+
+/*
+ * Animated theme switch.
+ *
+ * Browsers with the View Transitions API cross-fade a snapshot of the old
+ * theme into the new one. Other browsers get a short color transition on
+ * every element while `theme-transitioning` is set on <html>.
+ */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.45s;
+  animation-timing-function: ease-in-out;
+}
+
+html.theme-transitioning,
+html.theme-transitioning *,
+html.theme-transitioning *::before,
+html.theme-transitioning *::after {
+  transition:
+    background-color 0.4s ease-in-out,
+    border-color 0.4s ease-in-out,
+    color 0.4s ease-in-out,
+    fill 0.4s ease-in-out,
+    stroke 0.4s ease-in-out,
+    box-shadow 0.4s ease-in-out !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+}

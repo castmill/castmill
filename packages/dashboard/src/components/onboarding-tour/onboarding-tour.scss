@@ -1,19 +1,19 @@
-// Dark theme colors matching the application's visual language
-$modal-background: #211d32;
-$input-background: #151320;
-$text-color: #ffffff;
-$text-secondary: #a4a3b7;
-$label-color: #577cbb;
-$border-color: #555;
-$border-hover: #b0b0b0;
-$border-focus: #4a90e2;
+// Theme colors (tokens follow the active light/dark theme)
+$modal-background: var(--cm-bg-elevated);
+$input-background: var(--cm-bg-input);
+$text-color: var(--cm-text-primary);
+$text-secondary: var(--cm-text-secondary);
+$label-color: var(--cm-link);
+$border-color: var(--cm-border-strong);
+$border-hover: var(--cm-text-secondary);
+$border-focus: var(--cm-primary);
 $primary-color: #007bff;
 $primary-hover: #0056b3;
 $secondary-color: #6c757d;
 $secondary-hover: #5a6268;
 $success-color: #28a745;
 $error-color: #ff4200;
-$overlay-color: rgba(0, 0, 0, 0.6);
+$overlay-color: var(--cm-bg-overlay);
 
 $animation-duration: 0.3s;
 
@@ -50,7 +50,7 @@ $animation-duration: 0.3s;
   padding: 2em;
   max-width: 42em;
   width: 90%;
-  box-shadow: 0 0.5em 2em rgba(0, 0, 0, 0.5);
+  box-shadow: var(--cm-shadow-lg);
   transform: translateY(-1.25em);
   opacity: 0;
   animation: slideUp $animation-duration ease forwards;
@@ -75,7 +75,7 @@ $animation-duration: 0.3s;
   align-items: flex-start;
   margin-bottom: 1.5em;
   padding-bottom: 1em;
-  border-bottom: 1px solid #3d3d3d;
+  border-bottom: 1px solid var(--cm-border-color);
 
   h2 {
     margin: 0 0 0.5em 0;
@@ -245,7 +245,7 @@ $animation-duration: 0.3s;
   }
 
   &:disabled {
-    background-color: #444;
+    background-color: var(--cm-text-disabled);
     cursor: not-allowed;
     opacity: 0.6;
   }
@@ -281,7 +281,7 @@ $animation-duration: 0.3s;
   align-items: center;
   margin-top: 2em;
   padding-top: 1.5em;
-  border-top: 1px solid #3d3d3d;
+  border-top: 1px solid var(--cm-border-color);
   gap: 1em;
 }
 

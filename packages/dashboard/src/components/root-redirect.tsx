@@ -43,7 +43,7 @@ const RootRedirect: Component = () => {
         }}
       >
         <h2>{t('dashboard.noOrganizations.title')}</h2>
-        <p style={{ 'max-width': '30em', color: '#666' }}>
+        <p style={{ 'max-width': '30em', color: 'var(--cm-text-tertiary)' }}>
           {t('dashboard.noOrganizations.description')}
         </p>
       </div>

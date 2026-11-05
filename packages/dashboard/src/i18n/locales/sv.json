@@ -108,7 +108,9 @@
   "topbar": {
     "help": "Hjälp",
     "notifications": "Notiser",
-    "gettingStarted": "Kom igång"
+    "gettingStarted": "Kom igång",
+    "switchToLightMode": "Byt till ljust läge",
+    "switchToDarkMode": "Byt till mörkt läge"
   },
   "settings": {
     "title": "Inställningar",

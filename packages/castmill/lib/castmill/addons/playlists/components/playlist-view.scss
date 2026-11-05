@@ -17,13 +17,13 @@
   align-items: center;
   justify-content: center;
   gap: 1em;
-  color: rgba(255, 255, 255, 0.82);
+  color: var(--cm-text-primary);
 
   &__spinner {
     width: 2.5em;
     height: 2.5em;
-    border: 0.2em solid rgba(255, 255, 255, 0.16);
-    border-top-color: rgba(255, 255, 255, 0.92);
+    border: 0.2em solid var(--cm-bg-active);
+    border-top-color: var(--cm-text-primary);
     border-radius: 50%;
     animation: playlist-view-spin 0.9s linear infinite;
   }
@@ -102,7 +102,7 @@
       gap: 0.6em;
       padding: 0.75em;
       border-radius: 0.5em;
-      background: rgba(255, 255, 255, 0.04);
+      background: var(--cm-bg-hover);
 
       .custom-aspect-ratio {
         display: flex;
@@ -164,8 +164,8 @@
         height: 0.125em;
         background: linear-gradient(
           to right,
-          rgba(255, 255, 255, 0.3),
-          rgba(255, 255, 255, 0.6)
+          var(--cm-text-tertiary),
+          var(--cm-text-secondary)
         );
         position: relative;
         animation: pulse 2s ease-in-out infinite;
@@ -176,14 +176,14 @@
         height: 0;
         border-top: 0.5em solid transparent;
         border-bottom: 0.5em solid transparent;
-        border-left: 0.75em solid rgba(255, 255, 255, 0.6);
+        border-left: 0.75em solid var(--cm-text-secondary);
         margin-left: -0.125em;
         animation: pulse 2s ease-in-out infinite;
       }
 
       .drag-hint {
         font-size: 0.75em;
-        color: rgba(255, 255, 255, 0.6);
+        color: var(--cm-text-secondary);
         white-space: nowrap;
         writing-mode: vertical-rl;
         text-orientation: mixed;
@@ -213,7 +213,7 @@
     flex: 1; // Grow to fill available space
     min-height: 0; // Allow shrinking below content size
     min-width: 24em;
-    background: darkgray;
+    background: var(--playlist-items-bg);
     margin: 0em 0.7em;
     border-radius: 0.5em;
     flex-direction: column;
@@ -253,11 +253,11 @@
       &.hovered {
         background: linear-gradient(
           180deg,
-          rgba(255, 255, 255, 0.05) 0%,
-          rgba(255, 255, 255, 0.15) 50%,
-          rgba(255, 255, 255, 0.05) 100%
+          var(--cm-bg-hover) 0%,
+          var(--cm-bg-active) 50%,
+          var(--cm-bg-hover) 100%
         );
-        border: 2px dashed rgba(255, 255, 255, 0.4);
+        border: 2px dashed rgba(var(--cm-primary-rgb), 0.6);
 
         .playlist-end-drop-zone-label {
           display: block;
@@ -266,7 +266,7 @@
           left: 50%;
           transform: translate(-50%, -50%);
           font-size: 0.75em;
-          color: rgba(255, 255, 255, 0.7);
+          color: var(--cm-text-primary);
           white-space: nowrap;
           pointer-events: none;
           text-transform: uppercase;
@@ -308,6 +308,18 @@
 }
 
 .item[selected*='yes'] {
-  background: #f0f0f0;
+  background: var(--cm-bg-selected);
   transition: none;
+}
+
+// Playlist items list background (applied inline, switches while dragging).
+// Dark keeps its neutral grey; light uses light surfaces.
+.playlist-items {
+  --playlist-items-bg: #555;
+  --playlist-items-drag-bg: lightblue;
+}
+
+:root[data-theme='light'] .playlist-items {
+  --playlist-items-bg: var(--cm-bg-tertiary);
+  --playlist-items-drag-bg: var(--cm-primary-bg);
 }

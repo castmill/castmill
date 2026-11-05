@@ -21,12 +21,12 @@
   font-size: 2.5rem;
   font-weight: 700;
   margin-bottom: 0.5rem;
-  color: rgba(255, 255, 255, 0.95);
+  color: var(--cm-text-primary);
 }
 
 .subtitle {
   font-size: 1.125rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--cm-text-secondary);
   font-weight: 400;
 }
 
@@ -53,7 +53,7 @@
 .card {
   background: rgba(30, 41, 59, 0.8);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--cm-border-subtle);
   border-radius: 1rem;
   padding: 1.5rem;
   position: relative;
@@ -114,7 +114,7 @@
 .icon {
   width: 1.75rem;
   height: 1.75rem;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--cm-text-primary);
 
   svg {
     width: 100%;
@@ -132,7 +132,7 @@
     font-size: 1.25rem;
     font-weight: 600;
     margin: 0;
-    color: rgba(255, 255, 255, 0.95);
+    color: var(--cm-text-primary);
   }
 }
 
@@ -186,19 +186,19 @@
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--cm-text-tertiary);
   font-weight: 600;
 }
 
 .stat-value {
   font-size: 1.5rem;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.95);
+  color: var(--cm-text-primary);
 }
 
 .stat-divider {
   font-size: 1.5rem;
-  color: rgba(255, 255, 255, 0.2);
+  color: var(--cm-text-disabled);
   font-weight: 300;
 }
 
@@ -209,7 +209,7 @@
   border-radius: 9999px;
   overflow: hidden;
   position: relative;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+  box-shadow: inset 0 2px 4px var(--cm-shadow-color);
 }
 
 .progress-fill {
@@ -262,15 +262,15 @@
   border-radius: 0.5rem;
   font-size: 0.875rem;
   font-weight: 500;
-  background: rgba(251, 191, 36, 0.1);
-  border: 1px solid rgba(251, 191, 36, 0.3);
-  color: #fbbf24;
+  background: rgba(var(--cm-warning-rgb), 0.1);
+  border: 1px solid rgba(var(--cm-warning-rgb), 0.3);
+  color: var(--cm-warning);
   animation: slideIn 0.3s ease-out;
 
   .card.full & {
-    background: rgba(239, 68, 68, 0.1);
-    border-color: rgba(239, 68, 68, 0.3);
-    color: #ef4444;
+    background: rgba(var(--cm-error-rgb), 0.1);
+    border-color: rgba(var(--cm-error-rgb), 0.3);
+    color: var(--cm-error);
   }
 }
 
@@ -297,7 +297,7 @@
   justify-content: center;
   gap: 1.5rem;
   padding: 4rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--cm-text-secondary);
 
   p {
     font-size: 1.125rem;
@@ -307,8 +307,8 @@
 .spinner {
   width: 3rem;
   height: 3rem;
-  border: 4px solid rgba(96, 165, 250, 0.2);
-  border-top-color: #60a5fa;
+  border: 4px solid rgba(var(--cm-primary-rgb), 0.2);
+  border-top-color: var(--cm-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -323,12 +323,12 @@
 .empty-state {
   text-align: center;
   padding: 4rem 2rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--cm-text-secondary);
 
   h3 {
     font-size: 1.5rem;
     margin: 1rem 0 0.5rem;
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--cm-text-primary);
   }
 
   p {
@@ -339,6 +339,45 @@
 .empty-icon {
   font-size: 4rem;
   opacity: 0.5;
+}
+
+// Light theme: the slate surfaces and pastel text gradients are dark-only
+:global(:root[data-theme='light']) {
+  .usage-page {
+    background: var(--cm-bg-app);
+  }
+
+  .card {
+    background: var(--cm-bg-secondary);
+    box-shadow: var(--cm-shadow-sm);
+  }
+
+  .stats {
+    background: var(--cm-bg-sunken);
+  }
+
+  .progress-bar {
+    background: var(--cm-bg-tertiary);
+    box-shadow: inset 0 0.125em 0.25em var(--cm-shadow-color);
+  }
+
+  .percentage {
+    background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+
+  .card.warning .percentage {
+    background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+
+  .card.full .percentage {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
 }
 
 // Responsive design

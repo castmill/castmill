@@ -1,12 +1,15 @@
 @use '../../colors.scss';
 
 .combo-box {
+  --combo-item-odd-bg: #18191e;
+  --combo-item-even-bg: #1e1f25;
+
   position: relative;
 
   .base-box {
-    border: 1px solid #555;
+    border: 1px solid var(--cm-border-strong);
     border-radius: 0.3em;
-    background-color: #151320;
+    background-color: var(--cm-bg-primary);
   }
 
   .header {
@@ -37,7 +40,7 @@
       margin: 0;
       border: none;
       background: none;
-      color: white;
+      color: var(--cm-text-primary);
       width: 2em;
       height: 2em;
       cursor: pointer;
@@ -47,22 +50,22 @@
     }
 
     .clear-button {
-      color: #888;
+      color: var(--cm-text-tertiary);
       transition: color 0.2s ease;
 
       &:hover {
-        color: #e74c3c;
+        color: var(--cm-error);
       }
     }
 
     &:hover {
-      border-color: #b0b0b0;
+      border-color: var(--cm-text-secondary);
     }
 
     .label {
       font-size: 0.8em;
       padding: 0 0 0.2em 3px;
-      color: #577cbb;
+      color: var(--cm-link);
       text-transform: capitalize;
     }
 
@@ -72,8 +75,8 @@
       margin: 0;
       font-size: 1em;
       border: none;
-      color: #b1b1b1;
-      background-color: #151320;
+      color: var(--cm-text-secondary);
+      background-color: var(--cm-bg-primary);
 
       &:focus {
         outline: none;
@@ -101,13 +104,13 @@
       align-items: center;
       justify-content: center;
       border-radius: 0.3em 0.3em 0 0;
-      border-bottom: 1px solid #555;
+      border-bottom: 1px solid var(--cm-border-strong);
 
       height: 2.5em;
-      background-color: #221e34;
+      background-color: var(--cm-bg-elevated);
 
       .search-icon {
-        color: #b1b1b1;
+        color: var(--cm-text-secondary);
         padding: 0 0.5em;
       }
 
@@ -118,7 +121,7 @@
         margin: 0;
         font-size: 1em;
         border: none;
-        color: #b1b1b1;
+        color: var(--cm-text-secondary);
         background: none;
 
         &:focus {
@@ -136,16 +139,16 @@
       }
 
       .item:hover {
-        background-color: #1e1f25;
+        background-color: var(--combo-item-even-bg);
       }
 
       .item:nth-child(odd) {
-        background-color: #18191e;
+        background-color: var(--combo-item-odd-bg);
         padding: 0.4em 1em;
       }
 
       .item:nth-child(even) {
-        background-color: #1e1f25;
+        background-color: var(--combo-item-even-bg);
         padding: 0.4em 1em;
       }
     }
@@ -158,8 +161,13 @@
       font-size: 0.7em;
       padding: 0.8em;
       font-style: italic;
-      border-top: 1px solid #555;
-      color: #b1b1b1;
+      border-top: 1px solid var(--cm-border-strong);
+      color: var(--cm-text-secondary);
     }
   }
+}
+
+:global(:root[data-theme='light']) .combo-box {
+  --combo-item-odd-bg: var(--cm-bg-elevated);
+  --combo-item-even-bg: var(--cm-bg-elevated-secondary);
 }

@@ -7,9 +7,9 @@
 
 .spotify-connect {
   padding: 1em;
-  border: 1px solid var(--color-border, #e0e0e0);
+  border: 1px solid var(--cm-border-color);
   border-radius: 0.5em;
-  background: var(--color-bg-secondary, #f8f9fa);
+  background: var(--cm-bg-secondary);
   margin-bottom: 1em;
 
   .spotify-header {
@@ -26,20 +26,20 @@
       margin: 0;
       font-size: 1.125em;
       font-weight: 600;
-      color: var(--color-text-primary, #212529);
+      color: var(--cm-text-primary);
     }
   }
 
   .spotify-loading {
     padding: 1em;
     text-align: center;
-    color: var(--color-text-secondary, #6c757d);
+    color: var(--cm-text-secondary);
     font-style: italic;
   }
 
   .spotify-description {
     margin: 0 0 1em 0;
-    color: var(--color-text-secondary, #6c757d);
+    color: var(--cm-text-secondary);
     font-size: 0.875em;
     line-height: 1.5;
   }
@@ -99,42 +99,21 @@
 
       .connected-date {
         font-size: 0.8125em;
-        color: var(--color-text-muted, #adb5bd);
+        color: var(--cm-text-tertiary);
       }
     }
 
     .spotify-disconnect-button {
       align-self: flex-start;
       background: transparent;
-      border: 1px solid var(--color-border, #dee2e6);
-      color: var(--color-text-secondary, #6c757d);
+      border: 1px solid var(--cm-border-color);
+      color: var(--cm-text-secondary);
 
       &:hover {
-        background: rgba(220, 53, 69, 0.1);
-        border-color: #dc3545;
-        color: #dc3545;
+        background: rgba(var(--cm-error-rgb), 0.1);
+        border-color: var(--cm-error);
+        color: var(--cm-error);
       }
-    }
-  }
-}
-
-// Dark mode support
-@media (prefers-color-scheme: dark) {
-  .spotify-connect {
-    border-color: var(--color-border-dark, #3d4450);
-    background: var(--color-bg-secondary-dark, #2a2d35);
-
-    .spotify-header .spotify-title {
-      color: var(--color-text-primary-dark, #f8f9fa);
-    }
-
-    .spotify-description,
-    .spotify-loading {
-      color: var(--color-text-secondary-dark, #adb5bd);
-    }
-
-    .spotify-status .connected-date {
-      color: var(--color-text-muted-dark, #868e96);
     }
   }
 }

@@ -14,7 +14,7 @@
 .errorCode {
   font-size: 6em;
   font-weight: bold;
-  color: var(--primary-color);
+  color: var(--cm-primary);
   margin: 0 0 0.2em 0;
   line-height: 1;
 }
@@ -22,26 +22,26 @@
 .errorTitle {
   font-size: 2em;
   font-weight: 600;
-  color: var(--text-color);
+  color: var(--cm-text-primary);
   margin: 0 0 0.5em 0;
 }
 
 .errorMessage {
   font-size: 1.2em;
-  color: var(--text-secondary);
+  color: var(--cm-text-secondary);
   margin: 0 0 1em 0;
 }
 
 .errorPath {
   font-size: 0.9em;
-  color: var(--text-secondary);
+  color: var(--cm-text-secondary);
   margin: 0 0 2em 0;
 
   code {
-    background-color: var(--background-secondary);
+    background-color: var(--cm-bg-secondary);
     padding: 0.2em 0.5em;
     border-radius: 4px;
     font-family: monospace;
-    color: var(--text-color);
+    color: var(--cm-text-primary);
   }
 }

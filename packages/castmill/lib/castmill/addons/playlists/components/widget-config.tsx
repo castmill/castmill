@@ -965,7 +965,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
     <div class="widget-config-dialog">
       <div class="widget-config">
         <Show when={props.item.inserted_at}>
-          <div style="font-size: 0.8em; color: darkgray;">
+          <div style="font-size: 0.8em; color: var(--cm-text-secondary);">
             <span>{t('common.addedOn')} </span>{' '}
             <Timestamp
               value={props.item.inserted_at!}

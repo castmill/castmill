@@ -21,6 +21,7 @@ import DropdownMenu from '../dropdown-menu/dropdown-menu';
 import LanguageSelector from '../language-selector/language-selector';
 import { LoadingProgressBar } from '../loading-progress-bar/loading-progress-bar';
 import NotificationBell from '../notification-bell/notification-bell';
+import { ThemeToggle } from '../../theme';
 
 import { baseUrl } from '../../env';
 import { useI18n } from '../../i18n';
@@ -175,6 +176,9 @@ const Topbar: Component = () => {
                 <TbRocket />
               </div>
             </div>
+
+            {/* Light/dark mode toggle */}
+            <ThemeToggle />
 
             {/* Notification Bell */}
             <NotificationBell />

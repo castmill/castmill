@@ -113,7 +113,9 @@
   "topbar": {
     "help": "مساعدة",
     "notifications": "الإشعارات",
-    "gettingStarted": "البدء"
+    "gettingStarted": "البدء",
+    "switchToLightMode": "التبديل إلى الوضع الفاتح",
+    "switchToDarkMode": "التبديل إلى الوضع الداكن"
   },
   "settings": {
     "title": "الإعدادات",

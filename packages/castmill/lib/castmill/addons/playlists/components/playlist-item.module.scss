@@ -52,14 +52,14 @@
 
         .auto-duration-label {
           font-size: 0.7em;
-          color: #888;
+          color: var(--cm-text-secondary);
           text-transform: uppercase;
           letter-spacing: 0.05em;
         }
 
         .auto-duration-value {
           font-size: 0.85em;
-          color: #aaa;
+          color: var(--cm-text-secondary);
           font-style: italic;
         }
       }
@@ -84,11 +84,11 @@
         justify-content: center;
         border-radius: 0.375em;
         transition: all 0.2s ease;
-        color: #999;
+        color: var(--cm-text-secondary);
 
         &:hover {
-          background-color: rgba(255, 255, 255, 0.1);
-          color: #fff;
+          background-color: var(--cm-bg-hover-strong);
+          color: var(--cm-text-primary);
         }
 
         &:active {
@@ -98,8 +98,8 @@
     }
 
     .playlist-item-remove-icon button:hover {
-      background-color: rgba(239, 68, 68, 0.15);
-      color: #ef4444;
+      background-color: rgba(var(--cm-error-rgb), 0.15);
+      color: var(--cm-error);
     }
   }
 
@@ -128,7 +128,7 @@
     height: 3em;
     object-fit: cover;
     border-radius: 0.375em;
-    box-shadow: 0 0.125em 0.25em rgba(0, 0, 0, 0.3);
+    box-shadow: 0 0.125em 0.25em var(--cm-shadow-color);
   }
 
   .widget-icon-container {
@@ -140,7 +140,7 @@
     background-color: #5a5a5a;
     border-radius: 0.375em;
     flex-shrink: 0;
-    box-shadow: 0 0.125em 0.25em rgba(0, 0, 0, 0.3);
+    box-shadow: 0 0.125em 0.25em var(--cm-shadow-color);
 
     .icon-symbol {
       font-size: 1.5em;
@@ -168,7 +168,7 @@
   .widget-title {
     font-size: 0.85em;
     font-weight: 600;
-    color: #ffffff;
+    color: var(--cm-text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -177,7 +177,7 @@
 
   .widget-subtitle {
     font-size: 0.7em;
-    color: #b0b0b0;
+    color: var(--cm-text-secondary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -190,7 +190,7 @@
     align-items: center;
     gap: 0.3em;
     font-size: 0.7em;
-    color: #ff9800;
+    color: var(--cm-warning);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -202,5 +202,18 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
+  }
+}
+
+// Light theme: cards keep their neutral grey look in dark mode and switch to
+// light surfaces in light mode.
+:global(:root[data-theme='light']) .playlist-item-wrapper {
+  .playlist-item {
+    background-color: var(--cm-bg-secondary);
+    border-color: var(--cm-border-color);
+  }
+
+  .widget-icon-container {
+    background-color: var(--cm-bg-tertiary);
   }
 }

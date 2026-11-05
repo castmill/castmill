@@ -317,7 +317,7 @@ const NetworkUsers: Component = () => {
                 'font-weight': 'normal',
                 'font-size': '0.85em',
                 'margin-left': '0.5em',
-                color: 'var(--text-secondary, #666)',
+                color: 'var(--cm-text-secondary)',
               }}
             >
               ({usersTotalCount()})

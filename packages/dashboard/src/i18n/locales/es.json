@@ -114,7 +114,9 @@
   "topbar": {
     "help": "Ayuda",
     "notifications": "Notificaciones",
-    "gettingStarted": "Primeros pasos"
+    "gettingStarted": "Primeros pasos",
+    "switchToLightMode": "Cambiar a modo claro",
+    "switchToDarkMode": "Cambiar a modo oscuro"
   },
   "settings": {
     "title": "Configuración",

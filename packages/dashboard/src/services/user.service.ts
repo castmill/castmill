@@ -1,4 +1,4 @@
-import { User } from '../interfaces/user.interface';
+import { User, UserPreferences } from '../interfaces/user.interface';
 import { baseUrl } from '../env';
 import { HttpError } from '@castmill/ui-common';
 import { handleResponse } from './util';
@@ -28,6 +28,42 @@ export const UserService = {
     });
 
     return handleResponse<User>(response, { parse: true });
+  },
+
+  /**
+   * Get the current user's dashboard UI preferences (e.g. theme)
+   */
+  async getPreferences(userId: string) {
+    const response = await authFetch(
+      `${baseUrl}/dashboard/users/${userId}/preferences`,
+      { method: 'GET' }
+    );
+
+    const json = await handleResponse<{ data: UserPreferences }>(response, {
+      parse: true,
+    });
+    return json.data;
+  },
+
+  /**
+   * Update the current user's dashboard UI preferences (e.g. theme)
+   */
+  async updatePreferences(userId: string, preferences: UserPreferences) {
+    const response = await authFetch(
+      `${baseUrl}/dashboard/users/${userId}/preferences`,
+      {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ preferences }),
+      }
+    );
+
+    const json = await handleResponse<{ data: UserPreferences }>(response, {
+      parse: true,
+    });
+    return json.data;
   },
 
   /**

@@ -68,7 +68,7 @@
     }
 
     &:hover {
-      background-color: rgba(255, 255, 255, 0.1);
+      background-color: var(--cm-bg-hover-strong);
     }
   }
 
@@ -85,7 +85,7 @@
     transition: background-color 0.2s;
 
     &:hover {
-      background-color: rgba(255, 255, 255, 0.1);
+      background-color: var(--cm-bg-hover-strong);
     }
 
     &.animate-pulse {
@@ -100,7 +100,7 @@
       transform: rotate(-90deg);
 
       &__background {
-        stroke: rgba(255, 255, 255, 0.15);
+        stroke: var(--cm-bg-active);
       }
 
       &__progress {

@@ -1,6 +1,6 @@
 .castmill-view-mode-toggle {
   display: inline-flex;
-  border: 1px solid var(--border-color, #363a45);
+  border: 1px solid var(--cm-border-color);
   border-radius: 0.375em;
   overflow: hidden;
 
@@ -15,8 +15,8 @@
   align-items: center;
   justify-content: center;
   padding: 0.375em 0.625em;
-  background: var(--background-secondary, #1c263a);
-  color: var(--text-secondary, #9ca3af);
+  background: var(--cm-bg-secondary);
+  color: var(--cm-text-secondary);
   border: none;
   cursor: pointer;
   transition:
@@ -26,17 +26,17 @@
   line-height: 1;
 
   &:hover:not(:disabled) {
-    background: var(--castmill-layer, #2c303b);
-    color: var(--text-primary, #e5e7eb);
+    background: var(--cm-bg-tertiary);
+    color: var(--cm-text-primary);
   }
 
   &.active {
-    background: var(--primary-color, #5792ee);
-    color: #fff;
+    background: var(--cm-primary);
+    color: var(--cm-text-on-primary);
   }
 
   &:first-child {
-    border-right: 1px solid var(--border-color, #363a45);
+    border-right: 1px solid var(--cm-border-color);
   }
 
   &:disabled {

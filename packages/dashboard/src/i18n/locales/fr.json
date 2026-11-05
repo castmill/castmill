@@ -113,7 +113,9 @@
   "topbar": {
     "help": "Aide",
     "notifications": "Notifications",
-    "gettingStarted": "Prise en main"
+    "gettingStarted": "Prise en main",
+    "switchToLightMode": "Passer en mode clair",
+    "switchToDarkMode": "Passer en mode sombre"
   },
   "settings": {
     "title": "Paramètres",

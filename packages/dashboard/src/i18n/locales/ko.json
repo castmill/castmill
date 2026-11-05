@@ -113,7 +113,9 @@
   "topbar": {
     "help": "도움말",
     "notifications": "알림",
-    "gettingStarted": "시작하기"
+    "gettingStarted": "시작하기",
+    "switchToLightMode": "라이트 모드로 전환",
+    "switchToDarkMode": "다크 모드로 전환"
   },
   "settings": {
     "title": "설정",

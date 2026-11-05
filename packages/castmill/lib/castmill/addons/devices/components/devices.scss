@@ -12,7 +12,7 @@
   transition: background 0.15s ease;
 
   &:hover {
-    background: var(--hover-bg, rgba(0, 0, 0, 0.04));
+    background: var(--cm-bg-hover);
 
     .device-tree-tag-btn {
       opacity: 1;
@@ -30,7 +30,7 @@
   border: none;
   border-radius: 0.25em;
   background: transparent;
-  color: var(--text-tertiary, #6b7280);
+  color: var(--cm-text-tertiary);
   cursor: pointer;
   flex-shrink: 0;
   opacity: 0;
@@ -45,8 +45,8 @@
   }
 
   &:hover {
-    color: var(--primary-color, #5792ee);
-    background: rgba(87, 146, 238, 0.1);
+    color: var(--cm-primary);
+    background: rgba(var(--cm-primary-rgb), 0.1);
   }
 }
 
@@ -67,17 +67,7 @@
 
 .device-tree-meta {
   font-size: 0.75em;
-  color: var(--text-secondary, #888);
-}
-
-@media (prefers-color-scheme: dark) {
-  .device-tree-item:hover {
-    background: var(--hover-bg, rgba(255, 255, 255, 0.06));
-  }
-
-  .device-tree-meta {
-    color: var(--text-secondary, #999);
-  }
+  color: var(--cm-text-secondary);
 }
 
 .tags-cell {
@@ -89,7 +79,7 @@
 
   .tags-overflow {
     font-size: 0.75em;
-    color: var(--text-tertiary, #6b7280);
+    color: var(--cm-text-tertiary);
     white-space: nowrap;
     flex-shrink: 0;
   }
@@ -104,7 +94,7 @@
     border: none;
     border-radius: 0.25em;
     background: transparent;
-    color: var(--text-tertiary, #6b7280);
+    color: var(--cm-text-tertiary);
     cursor: pointer;
     flex-shrink: 0;
     transition:
@@ -117,8 +107,8 @@
     }
 
     &:hover {
-      color: var(--primary-color, #5792ee);
-      background: rgba(87, 146, 238, 0.1);
+      color: var(--cm-primary);
+      background: rgba(var(--cm-primary-rgb), 0.1);
     }
   }
 }

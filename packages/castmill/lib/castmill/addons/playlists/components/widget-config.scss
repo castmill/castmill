@@ -39,23 +39,23 @@
         }
 
         &::-webkit-scrollbar-track {
-          background: #1a1a2e;
+          background: var(--cm-bg-sunken);
           border-radius: 0.25em;
         }
 
         &::-webkit-scrollbar-thumb {
-          background: #444;
+          background: var(--cm-scrollbar-thumb);
           border-radius: 0.25em;
 
           &:hover {
-            background: #555;
+            background: var(--cm-text-tertiary);
           }
         }
       }
 
       .error {
         font-size: 0.8em;
-        color: #a10000;
+        color: var(--cm-error);
       }
 
       // Styling for select dropdowns (enum fields)
@@ -63,46 +63,46 @@
         margin: 0.75em 0;
 
         .form-item1 {
-          border: 1px solid #555;
+          border: 1px solid var(--cm-border-strong);
           border-radius: 0.3em;
           margin-bottom: 0.3em;
           padding: 0.5em 1.1em;
-          background-color: #151320;
+          background-color: var(--cm-bg-primary);
 
           label {
             font-size: 0.8em;
-            color: #577cbb;
+            color: var(--cm-link);
             text-transform: capitalize;
             text-align: left;
             display: block;
           }
 
           &:hover {
-            border-color: #b0b0b0;
+            border-color: var(--cm-text-secondary);
           }
 
           &:focus-within {
-            border-color: #4a90e2;
+            border-color: var(--cm-primary);
           }
 
           .styled-select {
             width: 100%;
             padding: 0.5em 0;
             font-size: 1em;
-            color: #ffffff;
+            color: var(--cm-text-primary);
             background-color: transparent;
             border: none;
             outline: none;
             cursor: pointer;
 
             option {
-              background-color: #151320;
-              color: #ffffff;
+              background-color: var(--cm-bg-primary);
+              color: var(--cm-text-primary);
             }
           }
 
           .error {
-            color: #e74c3c;
+            color: var(--cm-error);
             font-size: 0.85em;
             margin-top: 0.3em;
           }
@@ -165,7 +165,7 @@
 
   .preview {
     display: flex;
-    background-color: #333;
+    background-color: var(--cm-bg-tertiary);
     width: 50%;
     height: 100%;
     justify-content: center;

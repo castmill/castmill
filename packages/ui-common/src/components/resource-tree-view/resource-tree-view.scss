@@ -9,15 +9,15 @@
   gap: 0.75em;
   padding: 0.75em 1em;
   margin-bottom: 0.5em;
-  background: var(--castmill-layer, #2c303b);
-  border: 1px solid var(--castmill-divider, rgba(54, 58, 69, 0.85));
+  background: var(--cm-bg-secondary);
+  border: 1px solid var(--cm-border-color);
   border-radius: 0.5em;
 }
 
 .dimension-label {
   font-size: 0.85em;
   font-weight: 500;
-  color: var(--text-secondary, #9ca3af);
+  color: var(--cm-text-secondary);
   white-space: nowrap;
 }
 
@@ -37,7 +37,7 @@
   &:not(:last-child)::after {
     content: '›';
     margin-left: 0.5em;
-    color: var(--text-secondary, #9ca3af);
+    color: var(--cm-text-secondary);
     font-size: 1.1em;
     font-weight: 300;
   }
@@ -50,7 +50,7 @@
   width: 1.25em;
   height: 1.25em;
   background: transparent;
-  color: var(--text-secondary, #9ca3af);
+  color: var(--cm-text-secondary);
   border: none;
   border-radius: 50%;
   cursor: pointer;
@@ -61,8 +61,8 @@
     color 0.15s;
 
   &:hover {
-    background: rgba(239, 68, 68, 0.15);
-    color: #ef4444;
+    background: var(--cm-error-bg);
+    color: var(--cm-error);
   }
 }
 
@@ -73,8 +73,8 @@
   width: 1.75em;
   height: 1.75em;
   background: transparent;
-  color: var(--primary-color, #5792ee);
-  border: 1px dashed var(--border-color, #363a45);
+  color: var(--cm-primary);
+  border: 1px dashed var(--cm-border-color);
   border-radius: 0.375em;
   cursor: pointer;
   font-size: 1em;
@@ -83,8 +83,8 @@
     border-color 0.15s;
 
   &:hover {
-    background: rgba(87, 146, 238, 0.08);
-    border-color: var(--primary-color, #5792ee);
+    background: rgba(var(--cm-primary-rgb), 0.08);
+    border-color: var(--cm-primary);
   }
 }
 
@@ -96,7 +96,7 @@
 .tree-loading {
   padding: 1.5em;
   text-align: center;
-  color: var(--text-secondary, #9ca3af);
+  color: var(--cm-text-secondary);
   font-size: 0.9em;
 }
 
@@ -148,9 +148,9 @@
   border-radius: 0.25em;
   background: linear-gradient(
     90deg,
-    var(--castmill-divider, rgba(54, 58, 69, 0.5)) 25%,
-    rgba(87, 146, 238, 0.08) 50%,
-    var(--castmill-divider, rgba(54, 58, 69, 0.5)) 75%
+    var(--cm-bg-skeleton) 25%,
+    rgba(var(--cm-primary-rgb), 0.08) 50%,
+    var(--cm-bg-skeleton) 75%
   );
   background-size: 40em 1em;
   animation: tree-shimmer 1.8s ease-in-out infinite;
@@ -198,7 +198,7 @@
 .tree-empty {
   padding: 2em;
   text-align: center;
-  color: var(--text-secondary, #9ca3af);
+  color: var(--cm-text-secondary);
   font-size: 0.95em;
 }
 
@@ -219,11 +219,11 @@
   user-select: none;
 
   &:hover {
-    background: rgba(87, 146, 238, 0.06);
+    background: rgba(var(--cm-primary-rgb), 0.06);
   }
 
   &.expanded {
-    background: rgba(87, 146, 238, 0.04);
+    background: rgba(var(--cm-primary-rgb), 0.04);
   }
 }
 
@@ -234,12 +234,12 @@
   width: 1.25em;
   height: 1.25em;
   flex-shrink: 0;
-  color: var(--text-secondary, #9ca3af);
+  color: var(--cm-text-secondary);
   font-size: 0.85em;
   transition: color 0.15s;
 
   .tree-node-header:hover & {
-    color: var(--text-primary, #e5e7eb);
+    color: var(--cm-text-primary);
   }
 }
 
@@ -252,18 +252,18 @@
 
 .tree-node-label {
   font-size: 0.9em;
-  color: var(--text-primary, #e5e7eb);
+  color: var(--cm-text-primary);
 
   &.untagged {
     font-style: italic;
-    color: var(--text-secondary, #9ca3af);
+    color: var(--cm-text-secondary);
   }
 }
 
 .tree-node-count {
   font-size: 0.75em;
   font-weight: 500;
-  color: var(--text-tertiary, #6b7280);
+  color: var(--cm-text-tertiary);
   font-variant-numeric: tabular-nums;
 }
 
@@ -277,7 +277,7 @@
 }
 
 .tree-node-children {
-  border-left: 1px solid var(--castmill-divider, rgba(54, 58, 69, 0.85));
+  border-left: 1px solid var(--cm-border-color);
   margin-left: calc(1em + var(--indent));
 }
 
@@ -295,7 +295,7 @@
   transition: background 0.12s ease;
 
   &:hover {
-    background: rgba(87, 146, 238, 0.08);
+    background: rgba(var(--cm-primary-rgb), 0.08);
   }
 }
 
@@ -304,14 +304,14 @@
   padding-left: calc(1em + var(--indent) + 1.5em);
   font-size: 0.85em;
   font-style: italic;
-  color: var(--text-secondary, #9ca3af);
+  color: var(--cm-text-secondary);
 }
 
 .tree-more {
   padding: 0.375em 0.75em;
   padding-left: calc(0.75em + var(--indent) + 1.5em);
   font-size: 0.8em;
-  color: var(--primary-color, #5792ee);
+  color: var(--cm-primary);
   cursor: pointer;
 
   &:hover {
@@ -332,7 +332,7 @@
   border-radius: 0.25em;
   object-fit: cover;
   flex-shrink: 0;
-  background: var(--background-secondary, #1c263a);
+  background: var(--cm-bg-selected);
 }
 
 .resource-icon {
@@ -343,14 +343,14 @@
   height: 2.5em;
   border-radius: 0.25em;
   flex-shrink: 0;
-  background: var(--background-secondary, #1c263a);
-  color: var(--text-secondary, #9ca3af);
+  background: var(--cm-bg-selected);
+  color: var(--cm-text-secondary);
   font-size: 1.1em;
 }
 
 .resource-name {
   font-size: 0.9em;
-  color: var(--text-primary, #e5e7eb);
+  color: var(--cm-text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
