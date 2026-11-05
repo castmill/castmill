@@ -421,6 +421,7 @@ export class Device extends EventEmitter {
 
     this.resourceManager = new ResourceManager(this.cache, {
       authToken: device.token,
+      authOrigins: [this.baseUrl],
     });
 
     await this.resourceManager.init();

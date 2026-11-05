@@ -17,8 +17,29 @@ let resourceManager: ResourceManager;
  */
 export const CODE_REVALIDATION_TIMEOUT_MS = 10000;
 
+/**
+ * Returns the origin of a (possibly relative) URL, or undefined when it has
+ * no usable origin. Relative URLs resolve against the current document.
+ */
+export function urlOrigin(url: string): string | undefined {
+  try {
+    const base = typeof location !== 'undefined' ? location.href : undefined;
+    const origin = new URL(url, base).origin;
+    return origin && origin !== 'null' ? origin : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 interface ResourceManagerOpts {
   authToken?: string;
+  /**
+   * URLs or origins of the servers that may receive the auth token, usually
+   * the Castmill API base URL. Requests to any other origin, such as external
+   * media hosts, are sent without credentials. Defaults to the document's
+   * own origin.
+   */
+  authOrigins?: string[];
   isOnline?: () => boolean;
   needsRefresh?: () => void;
   codeRevalidationTimeoutMs?: number;
@@ -52,6 +73,7 @@ interface ResourceManagerOpts {
  */
 export class ResourceManager {
   private authHeader?: string;
+  private authOrigins: string[];
 
   /**
    * Singleton factory method
@@ -72,6 +94,12 @@ export class ResourceManager {
     private opts: ResourceManagerOpts = {}
   ) {
     this.authHeader = opts.authToken ? `Bearer ${opts.authToken}` : undefined;
+    const origins =
+      opts.authOrigins ??
+      (typeof location !== 'undefined' ? [location.href] : []);
+    this.authOrigins = origins
+      .map((origin) => urlOrigin(origin))
+      .filter((origin): origin is string => !!origin);
   }
 
   async init() {
@@ -119,7 +147,7 @@ export class ResourceManager {
             'text/javascript',
             {
               force: true,
-              headers: this.getAuthHeader(),
+              headers: this.getAuthHeader(codeResource.url),
             }
           );
           needRefresh = true;
@@ -144,7 +172,7 @@ export class ResourceManager {
 
     if (!item) {
       item = await this.cache.set(url, ItemType.Code, 'text/javascript', {
-        headers: this.getAuthHeader(),
+        headers: this.getAuthHeader(url),
         force: false,
       });
     }
@@ -193,7 +221,7 @@ export class ResourceManager {
           ItemType.Data,
           'application/json',
           {
-            headers: this.getAuthHeader(),
+            headers: this.getAuthHeader(url),
             force: true,
           }
         );
@@ -223,7 +251,7 @@ export class ResourceManager {
   async getFreshData<T = any>(url: string): Promise<T | void> {
     const item = await this.cache
       .set(url, ItemType.Data, 'application/json', {
-        headers: this.getAuthHeader(),
+        headers: this.getAuthHeader(url),
         force: true,
       })
       .catch(() => undefined);
@@ -259,7 +287,7 @@ export class ResourceManager {
     if (!item) {
       try {
         item = await this.cache.set(url, ItemType.Media, 'media/*', {
-          headers: this.getAuthHeader(),
+          headers: this.getAuthHeader(url),
           force: false,
         });
       } catch (error) {
@@ -297,7 +325,7 @@ export class ResourceManager {
 
     try {
       await this.cache.set(url, ItemType.Media, 'media/*', {
-        headers: this.getAuthHeader(),
+        headers: this.getAuthHeader(url),
         force: false,
       });
     } catch (error) {
@@ -319,7 +347,7 @@ export class ResourceManager {
         headers: {
           Accept: 'application/json',
           'Content-Type': 'application/json',
-          ...this.getAuthHeader(),
+          ...this.getAuthHeader(url),
         },
       });
 
@@ -337,7 +365,7 @@ export class ResourceManager {
       const response = await fetch(url, {
         headers: {
           Accept: 'application/json',
-          ...this.getAuthHeader(),
+          ...this.getAuthHeader(url),
         },
       });
 
@@ -349,11 +377,11 @@ export class ResourceManager {
     }
   }
 
-  private getAuthHeader(): { Authorization: string } | {} {
-    if (this.authHeader) {
-      return { Authorization: this.authHeader };
-    } else {
-      return {};
+  private getAuthHeader(url: string): { Authorization: string } | {} {
+    const origin = this.authHeader ? urlOrigin(url) : undefined;
+    if (origin && this.authOrigins.indexOf(origin) !== -1) {
+      return { Authorization: this.authHeader! };
     }
+    return {};
   }
 }
