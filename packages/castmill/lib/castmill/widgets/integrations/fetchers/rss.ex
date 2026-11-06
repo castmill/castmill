@@ -82,6 +82,7 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Rss do
   @cache_max_items 100
   @title_max_length 300
   @description_max_length 500
+  @source_max_length 300
   @max_categories 10
 
   @feed_link_types ~w(application/rss+xml application/atom+xml application/rdf+xml
@@ -249,7 +250,11 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Rss do
       |> absolute_url(ctx.base_url)
 
     ctx = %{ctx | base_url: ctx.base_url || feed_link}
-    title = Html.to_text(Xml.child_text(channel, ["title", "dc:title"]))
+    title =
+      channel
+      |> Xml.child_text(["title", "dc:title"])
+      |> Html.to_text()
+      |> Html.truncate(@title_max_length)
 
     feed = %{
       "feedTitle" => title,
@@ -268,8 +273,15 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Rss do
 
   defp rss_feed_image(channel, root, ctx) do
     image = Xml.child(channel, "image") || Xml.child(root, "image")
+    resource = Xml.attr(image, "rdf:resource")
+
+    referenced_image =
+      root
+      |> Xml.children("image")
+      |> Enum.find(&(Xml.attr(&1, "rdf:about") == resource and present?(resource)))
 
     [
+      Xml.child_text(referenced_image, "url"),
       Xml.child_text(image, "url"),
       Xml.attr(image, "rdf:resource"),
       Xml.attr(Xml.child(channel, "itunes:image"), "href"),
@@ -358,8 +370,18 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Rss do
 
   defp parse_atom(feed, ctx) do
     feed_link = atom_link(feed, "alternate") |> absolute_url(ctx.base_url)
-    ctx = %{ctx | base_url: ctx.base_url || feed_link}
-    title = Html.to_text(Xml.child_text(feed, ["atom:title", "title"]))
+    feed_base = effective_base(feed, ctx.base_url)
+    feed_link = atom_link_url(feed, "alternate", feed_base) || feed_link
+    ctx =
+      ctx
+      |> Map.put(:base_url, feed_base || feed_link)
+      |> Map.put(:atom_xml_base?, present?(Xml.attr(feed, "xml:base")))
+
+    title =
+      feed
+      |> Xml.child_text(["atom:title", "title"])
+      |> Html.to_text()
+      |> Html.truncate(@title_max_length)
 
     feed_data = %{
       "feedTitle" => title,
@@ -370,11 +392,11 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Rss do
       "feedLink" => feed_link || "",
       "feedImage" =>
         [
-          Xml.child_text(feed, ["atom:logo", "logo"]),
-          Xml.child_text(feed, ["atom:icon", "icon"]),
-          Xml.attr(Xml.child(feed, "itunes:image"), "href")
+          atom_child_url(feed, ["atom:logo", "logo"], ctx.base_url),
+          atom_child_url(feed, ["atom:icon", "icon"], ctx.base_url),
+          atom_attribute_url(Xml.child(feed, "itunes:image"), "href", ctx.base_url)
         ]
-        |> Enum.find_value(&absolute_url(&1, ctx.base_url)),
+        |> Enum.find(&present?/1),
       "feedLanguage" => Xml.attr(feed, "xml:lang") || "",
       "feedFormat" => "atom"
     }
@@ -388,10 +410,16 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Rss do
   end
 
   defp atom_entry(entry, ctx) do
-    link = atom_link(entry, "alternate") |> absolute_url(ctx.base_url)
+    entry_base = effective_base(entry, ctx.base_url)
+    entry_ctx = %{ctx | base_url: entry_base}
+    link = atom_link_url(entry, "alternate", entry_base)
     summary = Xml.child(entry, ["atom:summary", "summary"])
     content = Xml.child(entry, ["atom:content", "content"])
     source = Xml.child(entry, ["atom:source", "source"])
+    image_base =
+      if ctx[:atom_xml_base?] or present?(Xml.attr(entry, "xml:base")),
+        do: entry_base,
+        else: link || entry_base
 
     %{
       id: first_present([Xml.child_text(entry, ["atom:id", "id"]), link]),
@@ -400,9 +428,10 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Rss do
       raw_content: xhtml_text(content),
       link: link,
       image_candidates:
-        media_images(entry) ++
-          atom_enclosure_images(entry) ++
-          embedded_images(content) ++ embedded_images(summary),
+        media_images(entry, entry_base) ++
+          atom_enclosure_images(entry, entry_base) ++
+          embedded_images(content, image_base) ++ embedded_images(summary, image_base),
+      image_base: image_base,
       html_sources: [xhtml_text(content), xhtml_text(summary)],
       date:
         Xml.child_text(entry, [
@@ -423,10 +452,30 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Rss do
           Enum.map(Xml.children(entry, "dc:subject"), &Xml.text/1),
       source: Xml.child_text(source, ["atom:title", "title"])
     }
-    |> build_item(ctx)
+    |> build_item(entry_ctx)
   end
 
   defp atom_link(element, rel) do
+    element
+    |> atom_link_element(rel)
+    |> then(&Xml.attr(&1, "href"))
+  end
+
+  defp atom_link_url(element, rel, base) do
+    link = atom_link_element(element, rel)
+    absolute_url(Xml.attr(link, "href"), effective_base(link, base))
+  end
+
+  defp atom_child_url(element, names, base) do
+    child = Xml.child(element, names)
+    absolute_url(Xml.text(child), effective_base(child, base))
+  end
+
+  defp atom_attribute_url(element, attr, base) do
+    absolute_url(Xml.attr(element, attr), effective_base(element, base))
+  end
+
+  defp atom_link_element(element, rel) do
     links = Xml.children(element, ["atom:link", "link"])
 
     matching =
@@ -438,7 +487,7 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Rss do
       Enum.find(matching, &String.contains?(Xml.attr(&1, "type") || "text/html", "html")) ||
         List.first(matching)
 
-    Xml.attr(preferred, "href")
+    preferred
   end
 
   defp atom_author(element) do
@@ -452,29 +501,31 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Rss do
     first_present([Xml.attr(category, "label"), Xml.attr(category, "term"), Xml.text(category)])
   end
 
-  defp atom_enclosure_images(element) do
+  defp atom_enclosure_images(element, base \\ nil) do
     element
     |> Xml.children(["atom:link", "link"])
     |> Enum.filter(fn link ->
       Xml.attr(link, "rel") == "enclosure" and
         image_reference?(Xml.attr(link, "type"), nil, Xml.attr(link, "href"), false)
     end)
-    |> Enum.map(&Xml.attr(&1, "href"))
+    |> Enum.map(&absolute_url(Xml.attr(&1, "href"), effective_base(&1, base)))
   end
 
   # Images embedded in XHTML content (type="xhtml") are parsed as elements.
-  defp embedded_images(nil), do: []
+  defp embedded_images(nil, _base), do: []
 
-  defp embedded_images({name, attrs, children}) do
+  defp embedded_images({name, attrs, children}, base) do
+    base = effective_base({name, attrs, children}, base)
+
     own =
       if (name == "img" or String.ends_with?(name, ":img")) and
            not tracking_pixel?(attrs["width"], attrs["height"]) do
-        [Map.get(attrs, "src")]
+        [absolute_url(Map.get(attrs, "src"), base)]
       else
         []
       end
 
-    own ++ Enum.flat_map(Enum.filter(children, &is_tuple/1), &embedded_images/1)
+    own ++ Enum.flat_map(Enum.filter(children, &is_tuple/1), &embedded_images(&1, base))
   end
 
   defp xhtml_text(nil), do: ""
@@ -516,7 +567,7 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Rss do
   # Media RSS (shared by RSS and Atom)
   # --------------------------------------------------------------------------
 
-  defp media_images(element) do
+  defp media_images(element, base \\ nil) do
     groups = Xml.children(element, "media:group")
 
     contents =
@@ -542,7 +593,10 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Rss do
       |> Enum.reject(&tracking_pixel?(Xml.attr(&1, "width"), Xml.attr(&1, "height")))
       |> largest_first()
 
-    Enum.map(images ++ thumbnails, &Xml.attr(&1, "url"))
+    Enum.map(images ++ thumbnails, fn image ->
+      url = Xml.attr(image, "url")
+      if is_binary(base), do: absolute_url(url, effective_base(image, base)) || url, else: url
+    end)
   end
 
   defp largest_first(elements) do
@@ -597,7 +651,7 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Rss do
     with {:ok, %{"version" => version} = json} when is_binary(version) <- Jason.decode(document),
          true <- String.contains?(version, "jsonfeed.org") do
       feed_link = string(json["home_page_url"]) |> absolute_url(ctx.base_url)
-      title = Html.to_text(string(json["title"]))
+      title = json["title"] |> string() |> Html.to_text() |> Html.truncate(@title_max_length)
       ctx = %{ctx | base_url: ctx.base_url || feed_link}
 
       feed = %{
@@ -685,7 +739,7 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Rss do
 
     image =
       (fields.image_candidates ++ Enum.flat_map(fields.html_sources, &Html.image_urls/1))
-      |> Enum.find_value("", &absolute_url(&1, fields.link || ctx.base_url))
+      |> Enum.find_value("", &absolute_url(&1, fields[:image_base] || fields.link || ctx.base_url))
 
     {datetime, pub_date, pub_date_formatted} =
       case DateParser.parse(fields.date) do
@@ -706,7 +760,9 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Rss do
       "imageUrl" => image,
       "author" => clean_author(fields.author),
       "categories" => clean_categories(fields.categories),
-      "source" => first_present([Html.to_text(fields.source), ctx[:feed_title]]) || "",
+      "source" =>
+        first_present([Html.to_text(fields.source), ctx[:feed_title]])
+        |> then(&Html.truncate(&1 || "", @source_max_length)),
       "pubDate" => pub_date,
       "pubDateFormatted" => pub_date_formatted
     }
@@ -718,23 +774,43 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Rss do
     items =
       items
       |> Enum.reject(fn {item, _} -> item["title"] == "" and item["description"] == "" end)
-      |> Enum.uniq_by(fn {item, _} -> dedupe_key(item) end)
       |> Enum.sort_by(fn
         {_item, nil} -> {1, 0}
         {_item, datetime} -> {0, -DateTime.to_unix(datetime)}
       end)
+      |> deduplicate_items()
       |> Enum.take(ctx.max_items)
       |> Enum.map(fn {item, _datetime} -> item end)
 
     {:ok, Map.put(feed, "items", items)}
   end
 
-  defp dedupe_key(item) do
-    cond do
-      present?(item["id"]) -> {:id, item["id"]}
-      present?(item["link"]) -> {:link, item["link"]}
-      true -> {:content, item["title"], item["description"], item["pubDate"]}
-    end
+  defp deduplicate_items(items) do
+    {items, _seen} =
+      Enum.reduce(items, {[], MapSet.new()}, fn {item, _datetime} = entry, {kept, seen} ->
+        keys = dedupe_keys(item)
+
+        if Enum.any?(keys, &MapSet.member?(seen, &1)) do
+          {kept, seen}
+        else
+          {[entry | kept], Enum.reduce(keys, seen, &MapSet.put(&2, &1))}
+        end
+      end)
+
+    Enum.reverse(items)
+  end
+
+  defp dedupe_keys(item) do
+    keys =
+      [
+        if(present?(item["id"]), do: {:id, item["id"]}),
+        if(present?(item["link"]), do: {:link, item["link"]})
+      ]
+      |> Enum.reject(&is_nil/1)
+
+    if keys == [],
+      do: [{:content, item["title"], item["description"], item["pubDate"]}],
+      else: keys
   end
 
   defp clean_author(nil), do: ""
@@ -778,6 +854,15 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Rss do
   end
 
   defp absolute_url(_url, _base), do: nil
+
+  defp effective_base(nil, base), do: base
+
+  defp effective_base(element, base) do
+    case Xml.attr(element, "xml:base") do
+      value when is_binary(value) and value != "" -> absolute_url(value, base) || base
+      _ -> base
+    end
+  end
 
   defp first_present(values), do: Enum.find(values, &present?/1)
 

@@ -10,8 +10,8 @@ defmodule Castmill.Widgets.Integrations.Rss.Http do
     addresses are rejected to prevent server-side request forgery (SSRF).
   - Redirects are followed manually (at most five) and every hop is validated
     with the same rules.
-  - Response bodies are limited in size, including after gzip/deflate
-    decompression, which protects against decompression bombs.
+  - Response bodies are streamed and canceled once the compressed transfer
+    exceeds the configured limit; decompressed bodies are bounded too.
 
   ## Configuration
 
@@ -80,23 +80,19 @@ defmodule Castmill.Widgets.Integrations.Rss.Http do
       follow_redirect: false,
       recv_timeout: @recv_timeout,
       timeout: @connect_timeout,
-      max_body_length: max_body_bytes() + 1
+      stream_to: self(),
+      async: :once
     ]
 
     case client().get(url, @headers, options) do
-      {:ok, %{status_code: status, headers: headers, body: body}} when status in 200..299 ->
-        with {:ok, body} <- decode_body(body || "", header(headers, "content-encoding")) do
-          {:ok, %{body: body, url: url, content_type: header(headers, "content-type") || ""}}
+      {:ok, %{__struct__: HTTPoison.AsyncResponse, id: ref}} ->
+        case collect_response(ref, %{status: nil, headers: [], chunks: [], size: 0}) do
+          {:ok, response} -> handle_response(response, url, redirects)
+          error -> error
         end
 
-      {:ok, %{status_code: status, headers: headers}} when status in [301, 302, 303, 307, 308] ->
-        case header(headers, "location") do
-          nil -> {:error, :redirect_without_location}
-          location -> get(resolve(url, location), redirects + 1)
-        end
-
-      {:ok, %{status_code: status}} ->
-        {:error, status_error(status)}
+      {:ok, response} ->
+        handle_response(response, url, redirects)
 
       {:error, %{reason: reason}} ->
         {:error, network_error(reason)}
@@ -105,6 +101,66 @@ defmodule Castmill.Widgets.Integrations.Rss.Http do
         {:error, network_error(reason)}
     end
   end
+
+  defp collect_response(ref, state) do
+    receive do
+      %{__struct__: HTTPoison.AsyncStatus, id: ^ref, code: status} ->
+        collect_response(ref, %{state | status: status})
+
+      %{__struct__: HTTPoison.AsyncHeaders, id: ^ref, headers: headers} ->
+        collect_response(ref, %{state | headers: headers})
+
+      %{__struct__: HTTPoison.AsyncChunk, id: ^ref, chunk: chunk} ->
+        size = state.size + byte_size(chunk)
+
+        if size > max_body_bytes() do
+          cancel_request(ref)
+          {:error, :feed_too_large}
+        else
+          client().stream_next(%HTTPoison.AsyncResponse{id: ref})
+          collect_response(ref, %{state | chunks: [chunk | state.chunks], size: size})
+        end
+
+      %{__struct__: HTTPoison.AsyncEnd, id: ^ref} ->
+        {:ok,
+         %{
+           status_code: state.status,
+           headers: state.headers,
+           body: state.chunks |> Enum.reverse() |> IO.iodata_to_binary()
+         }}
+
+      %{__struct__: HTTPoison.Error, id: ^ref, reason: reason} ->
+        {:error, network_error(reason)}
+    after
+      @recv_timeout ->
+        cancel_request(ref)
+        {:error, :timeout}
+    end
+  end
+
+  defp cancel_request(ref) do
+    if function_exported?(client(), :cancel_request, 1),
+      do: client().cancel_request(ref),
+      else: :hackney.cancel_request(ref)
+  end
+
+  defp handle_response(%{status_code: status, headers: headers, body: body}, url, _redirects)
+       when status in 200..299 do
+    with {:ok, body} <- decode_body(body || "", header(headers, "content-encoding")) do
+      {:ok, %{body: body, url: url, content_type: header(headers, "content-type") || ""}}
+    end
+  end
+
+  defp handle_response(%{status_code: status, headers: headers}, url, redirects)
+       when status in [301, 302, 303, 307, 308] do
+    case header(headers, "location") do
+      nil -> {:error, :redirect_without_location}
+      location -> get(resolve(url, location), redirects + 1)
+    end
+  end
+
+  defp handle_response(%{status_code: status}, _url, _redirects),
+    do: {:error, status_error(status)}
 
   @doc """
   Validates that `url` is an absolute http(s) URL with a host.

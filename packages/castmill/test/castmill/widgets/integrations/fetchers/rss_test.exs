@@ -289,9 +289,12 @@ defmodule Castmill.Widgets.Integrations.Fetchers.RssTest do
           <title>RDF News</title>
           <link>https://rdf.example.com/</link>
           <description>RDF description</description>
-          <image rdf:resource="https://rdf.example.com/logo.gif"/>
+          <image rdf:resource="https://rdf.example.com/#logo"/>
           <dc:language>de</dc:language>
         </channel>
+        <image rdf:about="https://rdf.example.com/#logo">
+           <title>Logo</title><url>https://rdf.example.com/logo.png</url>
+        </image>
         <item rdf:about="https://rdf.example.com/1">
           <title>RDF item</title>
           <link>https://rdf.example.com/1</link>
@@ -305,7 +308,7 @@ defmodule Castmill.Widgets.Integrations.Fetchers.RssTest do
 
       assert {:ok, data} = Rss.parse(rdf)
       assert data["feedTitle"] == "RDF News"
-      assert data["feedImage"] == "https://rdf.example.com/logo.gif"
+      assert data["feedImage"] == "https://rdf.example.com/logo.png"
       assert data["feedLanguage"] == "de"
       assert data["feedFormat"] == "rdf"
 
@@ -434,6 +437,29 @@ defmodule Castmill.Widgets.Integrations.Fetchers.RssTest do
       assert item["image"] == "https://example.com/photo.jpg"
     end
 
+    test "honors inherited xml:base when resolving Atom links and images" do
+      atom = """
+      <feed xmlns="http://www.w3.org/2005/Atom" xml:base="https://example.com/feeds/">
+        <title>News</title>
+        <logo xml:base="assets/">logo.png</logo>
+        <entry xml:base="../articles/">
+          <title>Story</title>
+          <link xml:base="pages/" href="story.html"/>
+          <content type="xhtml"><div xmlns="http://www.w3.org/1999/xhtml">
+            <p>Article body</p><img src="photo.jpg"/>
+          </div></content>
+        </entry>
+      </feed>
+      """
+
+      assert {:ok, %{"feedImage" => feed_image, "items" => [item]}} =
+               Rss.parse(atom, base_url: "https://example.com/feed.xml")
+
+      assert feed_image == "https://example.com/feeds/assets/logo.png"
+      assert item["image"] == "https://example.com/articles/photo.jpg"
+      assert item["link"] == "https://example.com/articles/pages/story.html"
+    end
+
     test "skips tracking pixels in both Media RSS image lists" do
       rss = """
       <rss xmlns:media="http://search.yahoo.com/mrss/"><channel><title>News</title>
@@ -526,6 +552,33 @@ defmodule Castmill.Widgets.Integrations.Fetchers.RssTest do
 
       assert {:ok, %{"items" => [item]}} = Rss.parse(rss)
       assert item["source"] == "Origin News"
+    end
+
+    test "caps feed and source titles before storing them" do
+      title = String.duplicate("News ", 1_000)
+
+      rss =
+        "<rss><channel><title>#{title}</title><item><title>Story</title>" <>
+          "<source>#{title}</source></item></channel></rss>"
+
+      assert {:ok, %{"feedTitle" => feed_title, "items" => [item]}} = Rss.parse(rss)
+
+      assert String.length(feed_title) <= 300
+      assert String.length(item["source"]) <= 300
+    end
+
+    test "deduplicates items by either ID or article link" do
+      rss = """
+      <rss><channel><title>News</title>
+        <item><title>Old ID match</title><guid>shared-id</guid><link>https://example.com/old</link><pubDate>Tue, 31 Dec 2024 10:00:00 GMT</pubDate></item>
+        <item><title>New ID match</title><guid>shared-id</guid><link>https://example.com/new</link><pubDate>Wed, 01 Jan 2025 10:00:00 GMT</pubDate></item>
+        <item><title>Old link match</title><guid>old-id</guid><link>https://example.com/shared</link><pubDate>Tue, 31 Dec 2024 10:00:00 GMT</pubDate></item>
+        <item><title>New link match</title><guid>new-id</guid><link>https://example.com/shared</link><pubDate>Wed, 01 Jan 2025 09:00:00 GMT</pubDate></item>
+      </channel></rss>
+      """
+
+      assert {:ok, %{"items" => items}} = Rss.parse(rss)
+      assert Enum.map(items, & &1["title"]) == ["New ID match", "New link match"]
     end
   end
 end

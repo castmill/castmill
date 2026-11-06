@@ -113,6 +113,7 @@ defmodule Castmill.Widgets.Integrations.Rss.HttpTest do
 
       FakeHttpClient.stub(@url, FakeHttpClient.ok(String.duplicate("a", 1_001)))
       assert {:error, :feed_too_large} = Http.get(@url)
+      assert_received {:rss_http_cancel, _ref}
 
       bomb = :zlib.gzip(String.duplicate("a", 500_000))
       assert byte_size(bomb) < 1_000
@@ -121,7 +122,8 @@ defmodule Castmill.Widgets.Integrations.Rss.HttpTest do
       assert {:error, :feed_too_large} = Http.get(@url)
 
       assert_received {:rss_http_get, @url, _headers, options}
-      assert options[:max_body_length] == 1_001
+      assert options[:stream_to] == self()
+      refute Keyword.has_key?(options, :max_body_length)
     end
 
     test "rejects non http(s) URLs" do
