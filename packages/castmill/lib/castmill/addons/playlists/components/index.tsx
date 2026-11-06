@@ -1014,9 +1014,9 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
               <div
                 class="error"
                 style={{
-                  color: '#ef4444',
+                  color: 'var(--cm-error)',
                   padding: '0.5em',
-                  background: 'rgba(239, 68, 68, 0.1)',
+                  background: 'rgba(var(--cm-error-rgb), 0.1)',
                   'border-radius': '0.25em',
                 }}
               >

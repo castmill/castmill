@@ -51,6 +51,9 @@ import {
 } from './pages/network';
 import { I18nProvider, useI18n } from './i18n';
 import { KeyboardShortcutsProvider, useKeyboardShortcuts } from './hooks';
+import { ThemeProvider, ThemePreferencesApi } from './theme';
+import { getUser } from './components/auth';
+import { UserService } from './services/user.service';
 
 const Login = lazy(() => import('./components/login/login'));
 const SignUp = lazy(() => import('./components/signup/signup'));
@@ -61,6 +64,11 @@ const SetupPasskey = lazy(() => import('./components/login/setup-passkey'));
 const NotFound = lazy(() => import('./components/not-found'));
 
 const root = document.getElementById('root');
+
+const themePreferences: ThemePreferencesApi = {
+  load: (userId) => UserService.getPreferences(userId),
+  save: (userId, theme) => UserService.updatePreferences(userId, { theme }),
+};
 
 const addOnBasePath = `${baseUrl}/assets/addons`;
 
@@ -222,195 +230,214 @@ render(() => {
 
   return (
     <I18nProvider>
-      <KeyboardShortcutsProvider>
-        <ToastProvider>
-          <Router>
-            {/* Routes without App wrapper (no Topbar/Footer) */}
-            <Route path="/login" component={Login} />
-            <Route path="/signup" component={SignUp} />
-            <Route path="/recover-credentials" component={CompleteRecovery} />
-            <Route path="/setup-passkey" component={SetupPasskey} />
-            <Route
-              path="/invite-organization"
-              component={OrganizationsInvitationPage}
-            />
-            <Route path="/invite" component={TeamsInvitationPage} />
-
-            {/* Routes with App wrapper (Topbar + Footer) */}
-            <Route path="/" component={App}>
+      <ThemeProvider
+        userId={() => getUser().id}
+        preferences={themePreferences}
+        onChange={(theme) => setStore('theme', theme)}
+      >
+        <KeyboardShortcutsProvider>
+          <ToastProvider>
+            <Router>
+              {/* Routes without App wrapper (no Topbar/Footer) */}
+              <Route path="/login" component={Login} />
+              <Route path="/signup" component={SignUp} />
+              <Route path="/recover-credentials" component={CompleteRecovery} />
+              <Route path="/setup-passkey" component={SetupPasskey} />
               <Route
-                path="/"
-                component={(props: any) => (
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ProtectedRoute>
-                      {(addons) => <RootRedirect />}
-                    </ProtectedRoute>
-                  </Suspense>
-                )}
+                path="/invite-organization"
+                component={OrganizationsInvitationPage}
               />
+              <Route path="/invite" component={TeamsInvitationPage} />
 
-              <Route
-                path="/org/:orgId"
-                component={(props: any) => (
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ProtectedRoute>
-                      {(addons) => (
-                        <Dashboard {...props} addons={new AddOnTree(addons)} />
-                      )}
-                    </ProtectedRoute>
-                  </Suspense>
-                )}
-              >
-                <Route path="/" component={EmptyComponent} />
-                <Route path="search" component={SearchPage} />
-                <Route path="usage" component={UsagePage} />
-                <Route path="teams" component={TeamsPage} />
-                <Route path="tags" component={TagsPage} />
-                <Route path="agents" component={AgentsPage} />
-                <Route path="organization" component={OrganizationPage} />
-                <Route path="channels" component={ChannelsPage} />
-                <Route path="invite" component={TeamsInvitationPage} />
-
-                {/* Dynamically generate routes for AddOns */}
-                <For each={store.addons}>
-                  {(addon) => {
-                    if (!addon.mount_path) {
-                      return null;
-                    }
-                    // Wrap component to force remount when orgId changes
-                    const KeyedComponent = (props: any) => {
-                      const routeParams = useParams();
-                      return (
-                        <Show when={routeParams.orgId} keyed>
-                          {(orgId) => {
-                            const Component = wrapLazyComponent(addon);
-                            // Pass routeParams from this context where wildcard is available
-                            return (
-                              <Component
-                                {...props}
-                                key={orgId}
-                                routeParams={routeParams}
-                              />
-                            );
-                          }}
-                        </Show>
-                      );
-                    };
-
-                    return (
-                      <Route
-                        path={addon.mount_path}
-                        component={KeyedComponent}
-                      />
-                    );
-                  }}
-                </For>
-
-                <Route path="/*404" component={NotFound} />
-              </Route>
-
-              <Route
-                path="/settings"
-                component={(props: any) => (
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ProtectedRoute>
-                      {(addons) => (
-                        <Dashboard {...props} addons={new AddOnTree(addons)} />
-                      )}
-                    </ProtectedRoute>
-                  </Suspense>
-                )}
-              >
-                <Route path="/" component={SettingsPage} />
-              </Route>
-
-              {/* Network admin routes (top-level, not scoped to org) */}
-              <Route
-                path="/network"
-                component={(props: any) => (
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ProtectedRoute>
-                      {(addons) => (
-                        <Dashboard {...props} addons={new AddOnTree(addons)} />
-                      )}
-                    </ProtectedRoute>
-                  </Suspense>
-                )}
-              >
+              {/* Routes with App wrapper (Topbar + Footer) */}
+              <Route path="/" component={App}>
                 <Route
                   path="/"
-                  component={() => (
-                    <NetworkProvider>
-                      <NetworkOverview />
-                    </NetworkProvider>
-                  )}
-                />
-                <Route
-                  path="/settings"
-                  component={() => (
-                    <NetworkProvider>
-                      <NetworkSettings />
-                    </NetworkProvider>
-                  )}
-                />
-                <Route
-                  path="/organizations"
-                  component={() => (
-                    <NetworkProvider>
-                      <NetworkOrganizations />
-                    </NetworkProvider>
-                  )}
-                />
-                <Route
-                  path="/users"
-                  component={() => (
-                    <NetworkProvider>
-                      <NetworkUsers />
-                    </NetworkProvider>
+                  component={(props: any) => (
+                    <Suspense fallback={<LoadingFallback />}>
+                      <ProtectedRoute>
+                        {(addons) => <RootRedirect />}
+                      </ProtectedRoute>
+                    </Suspense>
                   )}
                 />
 
-                {/* Dynamically generate routes for network AddOns */}
-                <For
-                  each={store.addons.filter((a) =>
-                    a.mount_point?.startsWith('network.')
+                <Route
+                  path="/org/:orgId"
+                  component={(props: any) => (
+                    <Suspense fallback={<LoadingFallback />}>
+                      <ProtectedRoute>
+                        {(addons) => (
+                          <Dashboard
+                            {...props}
+                            addons={new AddOnTree(addons)}
+                          />
+                        )}
+                      </ProtectedRoute>
+                    </Suspense>
                   )}
                 >
-                  {(addon) => {
-                    if (!addon.mount_path) {
-                      return null;
-                    }
-                    const NetworkAddonComponent = (props: any) => {
-                      const routeParams = useParams();
-                      const Component = wrapLazyComponent(addon);
-                      return <Component {...props} routeParams={routeParams} />;
-                    };
+                  <Route path="/" component={EmptyComponent} />
+                  <Route path="search" component={SearchPage} />
+                  <Route path="usage" component={UsagePage} />
+                  <Route path="teams" component={TeamsPage} />
+                  <Route path="tags" component={TagsPage} />
+                  <Route path="agents" component={AgentsPage} />
+                  <Route path="organization" component={OrganizationPage} />
+                  <Route path="channels" component={ChannelsPage} />
+                  <Route path="invite" component={TeamsInvitationPage} />
 
-                    return (
-                      <Route
-                        path={addon.mount_path}
-                        component={NetworkAddonComponent}
-                      />
-                    );
-                  }}
-                </For>
+                  {/* Dynamically generate routes for AddOns */}
+                  <For each={store.addons}>
+                    {(addon) => {
+                      if (!addon.mount_path) {
+                        return null;
+                      }
+                      // Wrap component to force remount when orgId changes
+                      const KeyedComponent = (props: any) => {
+                        const routeParams = useParams();
+                        return (
+                          <Show when={routeParams.orgId} keyed>
+                            {(orgId) => {
+                              const Component = wrapLazyComponent(addon);
+                              // Pass routeParams from this context where wildcard is available
+                              return (
+                                <Component
+                                  {...props}
+                                  key={orgId}
+                                  routeParams={routeParams}
+                                />
+                              );
+                            }}
+                          </Show>
+                        );
+                      };
 
-                <Route path="/*404" component={NotFound} />
+                      return (
+                        <Route
+                          path={addon.mount_path}
+                          component={KeyedComponent}
+                        />
+                      );
+                    }}
+                  </For>
+
+                  <Route path="/*404" component={NotFound} />
+                </Route>
+
+                <Route
+                  path="/settings"
+                  component={(props: any) => (
+                    <Suspense fallback={<LoadingFallback />}>
+                      <ProtectedRoute>
+                        {(addons) => (
+                          <Dashboard
+                            {...props}
+                            addons={new AddOnTree(addons)}
+                          />
+                        )}
+                      </ProtectedRoute>
+                    </Suspense>
+                  )}
+                >
+                  <Route path="/" component={SettingsPage} />
+                </Route>
+
+                {/* Network admin routes (top-level, not scoped to org) */}
+                <Route
+                  path="/network"
+                  component={(props: any) => (
+                    <Suspense fallback={<LoadingFallback />}>
+                      <ProtectedRoute>
+                        {(addons) => (
+                          <Dashboard
+                            {...props}
+                            addons={new AddOnTree(addons)}
+                          />
+                        )}
+                      </ProtectedRoute>
+                    </Suspense>
+                  )}
+                >
+                  <Route
+                    path="/"
+                    component={() => (
+                      <NetworkProvider>
+                        <NetworkOverview />
+                      </NetworkProvider>
+                    )}
+                  />
+                  <Route
+                    path="/settings"
+                    component={() => (
+                      <NetworkProvider>
+                        <NetworkSettings />
+                      </NetworkProvider>
+                    )}
+                  />
+                  <Route
+                    path="/organizations"
+                    component={() => (
+                      <NetworkProvider>
+                        <NetworkOrganizations />
+                      </NetworkProvider>
+                    )}
+                  />
+                  <Route
+                    path="/users"
+                    component={() => (
+                      <NetworkProvider>
+                        <NetworkUsers />
+                      </NetworkProvider>
+                    )}
+                  />
+
+                  {/* Dynamically generate routes for network AddOns */}
+                  <For
+                    each={store.addons.filter((a) =>
+                      a.mount_point?.startsWith('network.')
+                    )}
+                  >
+                    {(addon) => {
+                      if (!addon.mount_path) {
+                        return null;
+                      }
+                      const NetworkAddonComponent = (props: any) => {
+                        const routeParams = useParams();
+                        const Component = wrapLazyComponent(addon);
+                        return (
+                          <Component {...props} routeParams={routeParams} />
+                        );
+                      };
+
+                      return (
+                        <Route
+                          path={addon.mount_path}
+                          component={NetworkAddonComponent}
+                        />
+                      );
+                    }}
+                  </For>
+
+                  <Route path="/*404" component={NotFound} />
+                </Route>
+
+                {/* Catch-all for any unmatched routes at root level */}
+                <Route
+                  path="/*404"
+                  component={(props: any) => (
+                    <Suspense fallback={<LoadingFallback />}>
+                      <ProtectedRoute>
+                        {(addons) => <NotFound />}
+                      </ProtectedRoute>
+                    </Suspense>
+                  )}
+                />
               </Route>
-
-              {/* Catch-all for any unmatched routes at root level */}
-              <Route
-                path="/*404"
-                component={(props: any) => (
-                  <Suspense fallback={<LoadingFallback />}>
-                    <ProtectedRoute>{(addons) => <NotFound />}</ProtectedRoute>
-                  </Suspense>
-                )}
-              />
-            </Route>
-          </Router>
-        </ToastProvider>
-      </KeyboardShortcutsProvider>
+            </Router>
+          </ToastProvider>
+        </KeyboardShortcutsProvider>
+      </ThemeProvider>
     </I18nProvider>
   );
 }, root!);

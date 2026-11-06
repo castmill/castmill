@@ -34,12 +34,12 @@
   }
 
   &-danger {
-    border: 1px solid #555;
-    background-color: #00000000;
-    color: #a2a0a0;
+    border: 1px solid var(--cm-border-strong);
+    background-color: transparent;
+    color: var(--cm-text-secondary);
   }
   &-danger:active {
-    background-color: #3b3b3b; /* Darker shade */
+    background-color: var(--cm-bg-active);
   }
 
   &-danger:hover {
@@ -80,7 +80,7 @@
   }
 
   &:not(.button-disabled):hover {
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--cm-shadow-sm);
   }
 
   &.button-disabled {

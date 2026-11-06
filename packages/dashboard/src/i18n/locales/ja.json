@@ -113,7 +113,9 @@
   "topbar": {
     "help": "ヘルプ",
     "notifications": "通知",
-    "gettingStarted": "はじめに"
+    "gettingStarted": "はじめに",
+    "switchToLightMode": "ライトモードに切り替え",
+    "switchToDarkMode": "ダークモードに切り替え"
   },
   "settings": {
     "title": "設定",

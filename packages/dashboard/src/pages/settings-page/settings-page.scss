@@ -21,7 +21,7 @@
 
     p {
       margin: 0;
-      color: colors.$component-color;
+      color: var(--cm-text-tertiary);
       font-size: 1rem;
     }
   }
@@ -39,7 +39,7 @@
     padding: 1.5rem;
 
     &.danger-zone {
-      border-color: #e74c3c;
+      border-color: var(--cm-error);
     }
 
     h2 {
@@ -73,7 +73,7 @@
 
       p:last-of-type {
         margin-bottom: 0.75em;
-        color: colors.$component-color;
+        color: var(--cm-text-tertiary);
       }
     }
 
@@ -90,13 +90,13 @@
       margin-top: 1rem;
 
       .success-message {
-        color: #27ae60;
+        color: var(--cm-success);
         font-size: 0.875rem;
         font-weight: 500;
       }
 
       .error-message {
-        color: #e74c3c;
+        color: var(--cm-error);
         font-size: 0.875rem;
         font-weight: 500;
       }
@@ -105,7 +105,7 @@
     .passkey-info {
       p {
         margin: 0 0 1rem 0;
-        color: colors.$component-color;
+        color: var(--cm-text-tertiary);
         line-height: 1.5;
       }
 
@@ -125,7 +125,7 @@
           padding: 1rem;
 
           .error-message {
-            color: #e74c3c;
+            color: var(--cm-error);
             font-size: 0.875rem;
             font-weight: 500;
           }
@@ -155,7 +155,7 @@
             }
 
             .passkey-date {
-              color: colors.$component-color;
+              color: var(--cm-text-tertiary);
               font-size: 0.875rem;
               text-align: left;
             }
@@ -186,7 +186,7 @@
         gap: 0.5rem;
 
         small {
-          color: colors.$component-color;
+          color: var(--cm-text-tertiary);
           font-size: 0.75rem;
         }
       }
@@ -204,7 +204,7 @@
 
           &:last-child {
             margin-bottom: 0;
-            color: colors.$component-color;
+            color: var(--cm-text-tertiary);
           }
         }
       }
@@ -212,12 +212,12 @@
 
     .danger-actions {
       h3 {
-        color: #e74c3c;
+        color: var(--cm-error);
       }
 
       p {
         margin: 0 0 1rem 0;
-        color: colors.$component-color;
+        color: var(--cm-text-tertiary);
         line-height: 1.5;
       }
 
@@ -226,18 +226,18 @@
         padding: 1rem;
         background: colors.$highlight-background-color;
         border-radius: 4px;
-        border: 1px solid #e74c3c;
+        border: 1px solid var(--cm-error);
 
         p {
           margin: 0 0 1rem 0;
-          color: #e74c3c;
+          color: var(--cm-error);
         }
 
         .passkey-warning {
           margin: 1rem 0;
           padding: 0.75rem;
           background: colors.$background;
-          border-left: 3px solid #f39c12;
+          border-left: 3px solid var(--cm-warning);
           color: colors.$base-color;
           font-size: 0.9rem;
           line-height: 1.5;
@@ -276,25 +276,24 @@
         &.active {
           border-color: colors.$highlight-color;
           background: colors.$component-background-color;
-          box-shadow: 0 0 0 3px rgba(colors.$highlight-color, 0.1);
+          box-shadow: 0 0 0 3px rgba(var(--cm-primary-rgb), 0.1);
         }
 
         .language-code {
           font-weight: 600;
           font-size: 0.875rem;
-          color: colors.$component-color;
           min-width: 28px;
-          color: lightgray;
+          color: var(--cm-text-secondary);
         }
 
         .language-name {
-          color: gray;
+          color: var(--cm-text-tertiary);
           flex: 1;
           font-size: 0.95rem;
         }
 
         .language-check {
-          color: #27ae60;
+          color: var(--cm-success);
           font-weight: bold;
           font-size: 1.2rem;
         }

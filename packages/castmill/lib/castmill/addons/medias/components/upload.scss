@@ -11,7 +11,7 @@
     justify-content: center;
     align-items: center;
 
-    border: 2px dashed #ccc;
+    border: 2px dashed var(--cm-border-strong);
     margin-top: 1em;
   }
 
@@ -21,9 +21,9 @@
   }
 
   progress::-webkit-progress-bar {
-    background-color: #f3f3f3;
+    background-color: var(--cm-bg-tertiary);
     border-radius: 5px;
-    box-shadow: 0 0 3px rgba(0, 0, 0, 0.2) inset;
+    box-shadow: 0 0 3px var(--cm-shadow-color) inset;
   }
 
   progress::-webkit-progress-value {
@@ -95,14 +95,14 @@
           white-space: normal;
 
           .error {
-            color: #d32f2f;
+            color: var(--cm-error);
             display: flex;
             align-items: center;
             gap: 0.25em;
           }
 
           .warning {
-            color: #f57c00;
+            color: var(--cm-warning);
             display: flex;
             align-items: center;
             gap: 0.25em;
@@ -111,11 +111,11 @@
       }
 
       .file-error {
-        background-color: rgba(211, 47, 47, 0.1);
+        background-color: rgba(var(--cm-error-rgb), 0.1);
       }
 
       .file-warning {
-        background-color: rgba(245, 124, 0, 0.1);
+        background-color: rgba(var(--cm-warning-rgb), 0.1);
       }
 
       .actions {

@@ -141,7 +141,9 @@
   "topbar": {
     "help": "Help",
     "notifications": "Notifications",
-    "gettingStarted": "Getting Started"
+    "gettingStarted": "Getting Started",
+    "switchToLightMode": "Switch to light mode",
+    "switchToDarkMode": "Switch to dark mode"
   },
   "settings": {
     "title": "Settings",

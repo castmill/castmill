@@ -70,13 +70,13 @@
   }
 
   .error {
-    color: #ef4444;
+    color: var(--cm-error);
     font-size: 0.85em;
     margin-top: 0.25em;
 
     &.aspect-ratio-error {
       padding: 0.5em;
-      background: rgba(239, 68, 68, 0.1);
+      background: rgba(var(--cm-error-rgb), 0.1);
       border-radius: 0.25em;
     }
   }

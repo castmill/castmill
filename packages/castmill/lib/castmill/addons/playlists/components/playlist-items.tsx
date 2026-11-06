@@ -278,7 +278,11 @@ export const PlaylistItems: Component<{
     <>
       <div
         ref={droppableRef}
-        style={{ 'background-color': isDraggedOver() ? 'lightblue' : '#555' }}
+        style={{
+          'background-color': isDraggedOver()
+            ? 'var(--playlist-items-drag-bg, lightblue)'
+            : 'var(--playlist-items-bg, #555)',
+        }}
         class="playlist-items"
       >
         {/* Animates an empty space when dragging over an item

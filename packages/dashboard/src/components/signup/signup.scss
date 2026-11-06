@@ -17,7 +17,7 @@
     color: colors.$base-color;
     background: colors.$component-background-color;
     border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 8px var(--cm-shadow-color);
     text-align: center;
     width: 30rem;
     height: 35rem;
@@ -36,11 +36,11 @@
     width: 20em;
     padding: 10px 20px;
     margin: 10px 0;
-    border: 1px solid #ccc;
+    border: 1px solid var(--cm-border-strong);
     border-radius: 3px;
     box-sizing: border-box;
     font-size: 16px;
-    color: #bababa;
+    color: var(--cm-text-secondary);
   }
 
   .login-box h2 {
@@ -71,7 +71,7 @@
 
   .status {
     margin-top: 15px;
-    color: #666;
+    color: var(--cm-text-tertiary);
     font-size: 14px;
   }
 

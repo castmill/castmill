@@ -360,6 +360,10 @@ defmodule CastmillWeb.Router do
     put("/users/:id", UserController, :update)
     delete("/users/:id", UserController, :delete)
 
+    # Dashboard UI preferences (e.g. light/dark theme)
+    get("/users/:user_id/preferences", UserPreferencesController, :show)
+    put("/users/:user_id/preferences", UserPreferencesController, :update)
+
     # Onboarding progress
     get("/users/:user_id/onboarding-progress", OnboardingProgressController, :show)
     put("/users/:user_id/onboarding-progress", OnboardingProgressController, :update)

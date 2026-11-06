@@ -350,7 +350,9 @@ export const UploadComponent = (props: UploadComponentProps) => {
         ref={setDropZoneElement}
         class="drop-zone"
         style={{
-          'background-color': isDraggedOver() ? 'lightblue' : '#555',
+          'background-color': isDraggedOver()
+            ? 'rgba(var(--cm-primary-rgb), 0.25)'
+            : 'var(--cm-bg-tertiary)',
         }}
         onDragOver={(e) => e.preventDefault()} // This is crucial for making the drop event work
       >

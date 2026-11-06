@@ -24,7 +24,7 @@ export const CircularProgress: Component<CircularProgressProps> = (props) => {
           r={radius}
           stroke-width={strokeWidth}
           fill="none"
-          stroke="#999"
+          style={{ stroke: 'var(--cm-border-strong)' }}
         />
         <circle
           cx={radius + strokeWidth}
@@ -32,7 +32,7 @@ export const CircularProgress: Component<CircularProgressProps> = (props) => {
           r={radius}
           stroke-width={strokeWidth}
           fill="none"
-          stroke="#5792ee"
+          style={{ stroke: 'var(--cm-primary)' }}
           stroke-dasharray={circumference.toString()}
           stroke-dashoffset={offset}
           transform={`rotate(-90 ${radius + strokeWidth} ${radius + strokeWidth})`}

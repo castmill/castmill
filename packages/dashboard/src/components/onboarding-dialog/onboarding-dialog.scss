@@ -1,16 +1,16 @@
-// Dark theme colors matching the application's visual language
-$modal-background: #211d32;
-$input-background: #151320;
-$text-color: #ffffff;
-$text-secondary: #a4a3b7;
-$label-color: #577cbb;
-$border-color: #555;
-$border-hover: #b0b0b0;
-$border-focus: #4a90e2;
+// Theme colors (tokens follow the active light/dark theme)
+$modal-background: var(--cm-bg-elevated);
+$input-background: var(--cm-bg-input);
+$text-color: var(--cm-text-primary);
+$text-secondary: var(--cm-text-secondary);
+$label-color: var(--cm-link);
+$border-color: var(--cm-border-strong);
+$border-hover: var(--cm-text-secondary);
+$border-focus: var(--cm-primary);
 $primary-color: #007bff;
 $primary-hover: #0056b3;
 $error-color: #ff4200;
-$overlay-color: rgba(0, 0, 0, 0.4);
+$overlay-color: var(--cm-bg-overlay);
 
 $animation-duration: 0.3s;
 
@@ -47,7 +47,7 @@ $animation-duration: 0.3s;
   padding: 1.6em;
   max-width: 28em;
   width: 90%;
-  box-shadow: 0 0.5em 2em rgba(0, 0, 0, 0.5);
+  box-shadow: var(--cm-shadow-lg);
   transform: translateY(-1.25em);
   opacity: 0;
   animation: slideUp $animation-duration ease forwards;
@@ -66,7 +66,7 @@ $animation-duration: 0.3s;
 
 .onboarding-dialog-header {
   margin-bottom: 1.5em;
-  border-bottom: 1px solid #3d3d3d;
+  border-bottom: 1px solid var(--cm-border-color);
   padding-bottom: 1em;
 }
 
@@ -128,19 +128,19 @@ $animation-duration: 0.3s;
   outline: none;
   box-sizing: border-box;
   background-color: transparent;
-  color: #b1b1b1;
+  color: var(--cm-text-secondary);
   font-weight: 600;
   border: none;
   padding: 0.3em 0;
   -webkit-font-smoothing: antialiased;
 
   &::placeholder {
-    color: #666666;
+    color: var(--cm-text-tertiary);
     font-weight: 300;
   }
 
   &:disabled {
-    color: #666;
+    color: var(--cm-text-tertiary);
     cursor: not-allowed;
   }
 }
@@ -190,7 +190,7 @@ $animation-duration: 0.3s;
 
   &:hover:not(:disabled) {
     background-color: $primary-hover;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 4px var(--cm-shadow-color);
   }
 
   &:disabled {

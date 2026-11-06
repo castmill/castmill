@@ -375,7 +375,7 @@ export const TeamMembersView = (props: {
               renderItem={(user: User) => (
                 <div>
                   <div style="font-weight: 500;">{user.name}</div>
-                  <div style="font-size: 0.875rem; color: #666;">
+                  <div style="font-size: 0.875rem; color: var(--cm-text-tertiary);">
                     {user.email}
                   </div>
                 </div>

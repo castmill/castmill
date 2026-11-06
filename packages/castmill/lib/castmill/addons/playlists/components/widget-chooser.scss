@@ -17,7 +17,7 @@
       rgba(34, 30, 52, 0.95) 0%,
       rgba(34, 30, 52, 0.8) 100%
     );
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--cm-border-subtle);
     backdrop-filter: blur(10px);
   }
 
@@ -28,27 +28,27 @@
     justify-content: flex-start;
     flex-direction: row;
     align-items: center;
-    background-color: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: var(--cm-bg-hover);
+    border: 1px solid var(--cm-border-subtle);
     height: 2.5em;
     transition: all 0.2s ease-in-out;
 
     &:focus-within {
-      background-color: rgba(255, 255, 255, 0.08);
-      border-color: rgba(255, 255, 255, 0.2);
-      box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.05);
+      background-color: var(--cm-bg-hover-strong);
+      border-color: var(--cm-border-strong);
+      box-shadow: 0 0 0 3px var(--cm-bg-hover);
     }
 
     svg {
       margin-right: 0.75em;
       font-size: 1.1em;
-      color: rgba(255, 255, 255, 0.6);
+      color: var(--cm-text-secondary);
       flex-shrink: 0;
       transition: color 0.2s ease-in-out;
     }
 
     &:focus-within svg {
-      color: rgba(255, 255, 255, 0.9);
+      color: var(--cm-text-primary);
     }
 
     input {
@@ -57,10 +57,10 @@
       border: 0;
       outline: none;
       font-size: 0.95em;
-      color: rgba(255, 255, 255, 0.95);
+      color: var(--cm-text-primary);
 
       &::placeholder {
-        color: rgba(255, 255, 255, 0.4);
+        color: var(--cm-text-tertiary);
       }
     }
   }
@@ -150,7 +150,7 @@
   }
 
   .name {
-    color: #fff;
+    color: var(--cm-text-primary);
     font-size: 0.9em;
     font-weight: 600;
     white-space: nowrap;
@@ -159,10 +159,46 @@
   }
 
   .description {
-    color: #b3b3b3;
+    color: var(--cm-text-secondary);
     font-size: 0.75em;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+}
+
+// Light theme: the chooser panel and its cards keep their neutral grey look in
+// dark mode; in light mode they switch to light surfaces.
+:root[data-theme='light'] {
+  .widget-chooser {
+    background: var(--cm-bg-tertiary);
+
+    .widget-chooser-header {
+      background: var(--cm-bg-elevated);
+    }
+
+    .items-container {
+      &::-webkit-scrollbar-track {
+        background: var(--cm-bg-hover);
+      }
+
+      &::-webkit-scrollbar-thumb {
+        background: var(--cm-scrollbar-thumb);
+
+        &:hover {
+          background: var(--cm-border-strong);
+        }
+      }
+    }
+  }
+
+  .widget-item {
+    background-color: var(--cm-bg-secondary);
+    border-color: var(--cm-border-color);
+
+    &:hover {
+      background-color: var(--cm-bg-elevated-secondary);
+      border-color: var(--cm-border-strong);
+    }
   }
 }

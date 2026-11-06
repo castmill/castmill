@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@solidjs/testing-library';
+import { fireEvent, render, screen } from '@solidjs/testing-library';
 import Topbar from './topbar';
+import { ThemeProvider } from '../../theme';
 
 // Mock the auth module
 vi.mock('../auth', () => ({
@@ -94,14 +95,27 @@ vi.mock('../../assets/castmill-logo-topbar.png', () => ({
   default: 'logo.png',
 }));
 
+vi.mock('../../assets/castmill-logo-topbar-light.png', () => ({
+  default: 'logo-light.png',
+}));
+
+const renderTopbar = () =>
+  render(() => (
+    <ThemeProvider>
+      <Topbar />
+    </ThemeProvider>
+  ));
+
 describe('Topbar Component', () => {
   beforeEach(() => {
+    localStorage.clear();
+    delete document.documentElement.dataset.theme;
     // Mock fetch for logout
     global.fetch = vi.fn();
   });
 
   it('renders the Help button with correct attributes', () => {
-    render(() => <Topbar />);
+    renderTopbar();
 
     // Find the Help link
     const helpLink = screen.getByText('Help').closest('a');
@@ -117,5 +131,27 @@ describe('Topbar Component', () => {
 
     // Verify it has security attributes
     expect(helpLink?.getAttribute('rel')).toBe('noopener noreferrer');
+  });
+
+  it('renders a theme toggle that switches between dark and light', () => {
+    renderTopbar();
+
+    const toggle = screen.getByTestId('theme-toggle');
+    expect(document.documentElement.dataset.theme).toBe('dark');
+    expect(toggle).toHaveAttribute('aria-label', 'topbar.switchToLightMode');
+
+    fireEvent.click(toggle);
+    expect(document.documentElement.dataset.theme).toBe('light');
+    expect(toggle).toHaveAttribute('aria-label', 'topbar.switchToDarkMode');
+    expect(localStorage.getItem('castmill_theme')).toBe('light');
+  });
+
+  it('uses the logo variant matching the theme', () => {
+    renderTopbar();
+    const logo = screen.getByAltText('Castmill');
+    expect(logo).toHaveAttribute('src', 'logo.png');
+
+    fireEvent.click(screen.getByTestId('theme-toggle'));
+    expect(logo).toHaveAttribute('src', 'logo-light.png');
   });
 });

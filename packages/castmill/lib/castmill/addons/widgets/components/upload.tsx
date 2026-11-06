@@ -152,7 +152,7 @@ export const UploadComponent = (props: UploadComponentProps) => {
       setProgress(file.name, 100);
       setMessage(
         file.name,
-        <div style="display: flex; align-items: center; gap: 0.5rem; color: #22c55e;">
+        <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--cm-success);">
           <AiOutlineCheck />
           <span>{t('widgets.upload.uploadedSuccessfully')}</span>
         </div>
@@ -164,7 +164,7 @@ export const UploadComponent = (props: UploadComponentProps) => {
       console.error('Upload error:', error);
       setMessage(
         file.name,
-        <div style="color: #ef4444; font-size: 0.9em; line-height: 1.4;">
+        <div style="color: var(--cm-error); font-size: 0.9em; line-height: 1.4;">
           {error.message || t('widgets.upload.uploadError')}
         </div>
       );
@@ -224,14 +224,14 @@ export const UploadComponent = (props: UploadComponentProps) => {
       <div class="upload-description">
         <p>{t('widgets.upload.jsonDescription')}</p>
 
-        <div style="background: #1e3a5f; border-left: 3px solid #3b82f6; padding: 0.75rem 1rem; margin: 1rem 0; border-radius: 4px;">
-          <p style="margin: 0; font-size: 0.9em; color: #93c5fd;">
+        <div style="background: var(--cm-info-bg); border-left: 3px solid var(--cm-info); padding: 0.75rem 1rem; margin: 1rem 0; border-radius: 4px;">
+          <p style="margin: 0; font-size: 0.9em; color: var(--cm-text-primary);">
             <strong>{t('widgets.upload.requiredFields')}:</strong>{' '}
-            <code style="background: #2d4a6e; color: #93c5fd; padding: 2px 6px; border-radius: 3px;">
+            <code style="background: rgba(var(--cm-info-rgb), 0.2); color: var(--cm-link); padding: 2px 6px; border-radius: 3px;">
               name
             </code>{' '}
             {t('widgets.upload.and')}{' '}
-            <code style="background: #2d4a6e; color: #93c5fd; padding: 2px 6px; border-radius: 3px;">
+            <code style="background: rgba(var(--cm-info-rgb), 0.2); color: var(--cm-link); padding: 2px 6px; border-radius: 3px;">
               template
             </code>
           </p>
@@ -314,7 +314,7 @@ export const UploadComponent = (props: UploadComponentProps) => {
                       <Show
                         when={progresses()[file.name] > 0}
                         fallback={
-                          <span style="color: #6b7280;">
+                          <span style="color: var(--cm-text-tertiary);">
                             {t('widgets.upload.ready')}
                           </span>
                         }
@@ -327,7 +327,7 @@ export const UploadComponent = (props: UploadComponentProps) => {
                           >
                             {progresses()[file.name]}%
                           </progress>
-                          <span style="font-size: 0.85em; color: #6b7280;">
+                          <span style="font-size: 0.85em; color: var(--cm-text-tertiary);">
                             {progresses()[file.name]}%
                           </span>
                         </div>

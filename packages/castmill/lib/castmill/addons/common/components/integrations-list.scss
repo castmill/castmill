@@ -2,22 +2,12 @@
  * IntegrationsList Component Styles
  *
  * Styles for displaying widget integrations with expandable configuration panels.
- * Dashboard is dark mode by default.
+ * Colours come from the dashboard --cm-* theme tokens (light and dark).
  */
 
 .integrations-list {
   --il-gap: 1em;
-  --il-border-color: #363a45;
-  --il-hover-bg: #1c263a;
-  --il-card-bg: #2c303b;
-  --il-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-  --il-shadow-hover: 0 4px 6px rgba(0, 0, 0, 0.3);
   --il-radius: 0.5em;
-  --il-text-primary: #f1f5f9;
-  --il-text-secondary: #94a3b8;
-  --il-configured: #22c55e;
-  --il-not-configured: #94a3b8;
-  --il-error: #ef4444;
 
   display: flex;
   flex-direction: column;
@@ -28,7 +18,7 @@
 .integrations-title {
   font-size: 1.125em;
   font-weight: 600;
-  color: var(--il-text-primary);
+  color: var(--cm-text-primary);
   margin: 0 0 0.5em 0;
 }
 
@@ -38,16 +28,16 @@
 .no-integrations {
   padding: 1.5em;
   text-align: center;
-  color: var(--il-text-secondary);
+  color: var(--cm-text-secondary);
   border-radius: var(--il-radius);
-  background: var(--il-card-bg);
-  border: 1px dashed var(--il-border-color);
+  background: var(--cm-bg-secondary);
+  border: 1px dashed var(--cm-border-color);
 }
 
 .error {
-  color: var(--il-error);
-  border-color: var(--il-error);
-  background: #450a0a;
+  color: var(--cm-error);
+  border-color: var(--cm-error);
+  background: var(--cm-error-bg);
 }
 
 /* Integrations container */
@@ -59,8 +49,8 @@
 
 /* Individual integration item */
 .integration-item {
-  background: var(--il-card-bg);
-  border: 1px solid var(--il-border-color);
+  background: var(--cm-bg-secondary);
+  border: 1px solid var(--cm-border-color);
   border-radius: var(--il-radius);
   overflow: hidden;
   transition:
@@ -69,12 +59,12 @@
 }
 
 .integration-item:hover {
-  box-shadow: var(--il-shadow);
+  box-shadow: var(--cm-shadow-sm);
 }
 
 .integration-item.expanded {
-  box-shadow: var(--il-shadow-hover);
-  border-color: #4a5568;
+  box-shadow: var(--cm-shadow-md);
+  border-color: var(--cm-border-strong);
 }
 
 /* Integration header (clickable) */
@@ -88,7 +78,7 @@
 }
 
 .integration-header:hover {
-  background: var(--il-hover-bg);
+  background: var(--cm-bg-selected);
 }
 
 .integration-info {
@@ -100,12 +90,12 @@
 .integration-name {
   font-size: 1em;
   font-weight: 500;
-  color: var(--il-text-primary);
+  color: var(--cm-text-primary);
 }
 
 .integration-description {
   font-size: 0.875em;
-  color: var(--il-text-secondary);
+  color: var(--cm-text-secondary);
 }
 
 /* Status section */
@@ -127,18 +117,18 @@
 }
 
 .status-badge.configured {
-  background: #166534;
-  color: #dcfce7;
+  background: var(--cm-success-bg);
+  color: var(--cm-success);
 }
 
 .status-badge.not-configured {
-  background: #363a45;
-  color: #94a3b8;
+  background: var(--cm-bg-tertiary);
+  color: var(--cm-text-secondary);
 }
 
 .expand-icon {
   font-size: 0.75em;
-  color: var(--il-text-secondary);
+  color: var(--cm-text-secondary);
   transition: transform 0.2s ease;
 }
 
@@ -149,8 +139,8 @@
 /* Expanded content area */
 .integration-content {
   padding: 1.25em;
-  border-top: 1px solid var(--il-border-color);
-  background: var(--il-hover-bg);
+  border-top: 1px solid var(--cm-border-color);
+  background: var(--cm-bg-selected);
   animation: slideDown 0.2s ease-out;
 }
 

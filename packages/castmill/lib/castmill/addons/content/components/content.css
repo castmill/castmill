@@ -2,7 +2,7 @@
   min-height: 100vh;
   background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
   padding: 2rem;
-  color: #ffffff;
+  color: var(--cm-text-primary);
 }
 
 .content-container {
@@ -19,12 +19,12 @@
   font-size: 2.5rem;
   font-weight: 700;
   margin-bottom: 0.5rem;
-  color: rgba(255, 255, 255, 0.95);
+  color: var(--cm-text-primary);
 }
 
 .content-subtitle {
   font-size: 1.125rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--cm-text-secondary);
   font-weight: 400;
 }
 
@@ -51,7 +51,7 @@
 .content-card {
   background: rgba(30, 41, 59, 0.8);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--cm-border-subtle);
   border-radius: 1rem;
   padding: 1.5rem;
   position: relative;
@@ -71,7 +71,7 @@
 
 /* State variants */
 .content-card--warning {
-  border-color: rgba(251, 191, 36, 0.3);
+  border-color: rgba(var(--cm-warning-rgb), 0.3);
 }
 
 .content-card--warning::before {
@@ -80,7 +80,7 @@
 }
 
 .content-card--full {
-  border-color: rgba(239, 68, 68, 0.3);
+  border-color: rgba(var(--cm-error-rgb), 0.3);
 }
 
 .content-card--full::before {
@@ -110,7 +110,7 @@
 }
 
 .content-icon-wrapper svg {
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--cm-text-primary);
 }
 
 .content-card-title {
@@ -124,7 +124,7 @@
   font-size: 1.25rem;
   font-weight: 600;
   margin: 0;
-  color: rgba(255, 255, 255, 0.95);
+  color: var(--cm-text-primary);
 }
 
 .content-percentage {
@@ -177,19 +177,19 @@
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--cm-text-secondary);
   font-weight: 600;
 }
 
 .content-stat-value {
   font-size: 1.5rem;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.95);
+  color: var(--cm-text-primary);
 }
 
 .content-stat-divider {
   font-size: 1.5rem;
-  color: rgba(255, 255, 255, 0.2);
+  color: var(--cm-border-strong);
   font-weight: 300;
 }
 
@@ -200,7 +200,7 @@
   border-radius: 9999px;
   overflow: hidden;
   position: relative;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+  box-shadow: inset 0 2px 4px var(--cm-shadow-color);
 }
 
 .content-progress-fill {
@@ -257,15 +257,15 @@
 }
 
 .content-alert--warning {
-  background: rgba(251, 191, 36, 0.1);
-  border: 1px solid rgba(251, 191, 36, 0.3);
-  color: #fbbf24;
+  background: rgba(var(--cm-warning-rgb), 0.1);
+  border: 1px solid rgba(var(--cm-warning-rgb), 0.3);
+  color: var(--cm-warning);
 }
 
 .content-alert--error {
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  color: #ef4444;
+  background: rgba(var(--cm-error-rgb), 0.1);
+  border: 1px solid rgba(var(--cm-error-rgb), 0.3);
+  color: var(--cm-error);
 }
 
 @keyframes slideIn {
@@ -291,7 +291,7 @@
   justify-content: center;
   gap: 1.5rem;
   padding: 4rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--cm-text-secondary);
 }
 
 .content-loading-state p {
@@ -317,13 +317,13 @@
 .content-empty-state {
   text-align: center;
   padding: 4rem 2rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--cm-text-secondary);
 }
 
 .content-empty-state h3 {
   font-size: 1.5rem;
   margin: 1rem 0 0.5rem;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--cm-text-primary);
 }
 
 .content-empty-state p {
@@ -333,6 +333,36 @@
 .content-empty-icon {
   font-size: 4rem;
   opacity: 0.5;
+}
+
+/* Light theme: the slate surfaces and pale accent text above are dark-only */
+:root[data-theme='light'] .content-page {
+  background: var(--cm-bg-primary);
+}
+
+:root[data-theme='light'] .content-card {
+  background: var(--cm-bg-secondary);
+  box-shadow: var(--cm-shadow-sm);
+}
+
+:root[data-theme='light'] .content-stats {
+  background: var(--cm-bg-sunken);
+}
+
+:root[data-theme='light'] .content-progress-bar {
+  background: var(--cm-bg-tertiary);
+}
+
+:root[data-theme='light'] .content-percentage {
+  background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+:root[data-theme='light'] .content-card--warning .content-percentage {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
 }
 
 /* Responsive design */

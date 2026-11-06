@@ -496,7 +496,7 @@ const WidgetsPage: Component<{
                 const desc = getWidgetDescription(widget);
                 return (
                   desc && (
-                    <div style="font-size: 0.85em; color: #666; margin-top: 2px;">
+                    <div style="font-size: 0.85em; color: var(--cm-text-tertiary); margin-top: 2px;">
                       {desc}
                     </div>
                   )

@@ -1,8 +1,12 @@
-$base-color: #ffffff;
-$background: #151925;
-$component-background-color: #2c303b;
-$component-background-color-light: #585d67;
-$component-color: #585d67;
-$separator-color: #363a45;
-$highlight-background-color: #1c263a;
-$highlight-color: #5792ee;
+// SCSS aliases for the theme tokens defined in ./theme/theme.scss.
+// These resolve to CSS custom properties, so they follow the active
+// light/dark theme. Do not pass them to Sass color functions
+// (rgba(), color.adjust(), ...); use the `--cm-*-rgb` tokens instead.
+$base-color: var(--cm-text-primary);
+$background: var(--cm-bg-app);
+$component-background-color: var(--cm-bg-secondary);
+$component-background-color-light: var(--cm-border-strong);
+$component-color: var(--cm-border-strong);
+$separator-color: var(--cm-border-color);
+$highlight-background-color: var(--cm-bg-selected);
+$highlight-color: var(--cm-primary);

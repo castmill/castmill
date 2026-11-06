@@ -2,17 +2,17 @@
 
 html,
 body {
-  background-color: #1a1c1f;
+  background-color: var(--cm-bg-sunken);
   margin: 0;
   padding: 0;
-  color: #e6e6e6; /* Default text color */
+  color: var(--cm-text-primary); /* Default text color */
   font-family: 'Helvetica Neue', Arial, sans-serif;
 }
 
 .calendar-wrapper {
   width: 100%;
-  background: #1a1c1f; /* main dark background */
-  border: 1px solid #2f3136;
+  background: var(--cm-bg-sunken); /* main dark background */
+  border: 1px solid var(--cm-border-color);
   margin-top: 1em;
 }
 
@@ -27,30 +27,30 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #2a2d31; /* slightly lighter dark */
-  border-bottom: 1px solid #2f3136;
+  background: var(--cm-bg-elevated-secondary); /* slightly lighter dark */
+  border-bottom: 1px solid var(--cm-border-color);
   padding: 8px 10px;
   margin-bottom: 0;
 }
 
 .calendar-header button {
-  background: #3b3e42;
-  color: #e6e6e6;
-  border: 1px solid #444;
+  background: var(--cm-bg-tertiary);
+  color: var(--cm-text-primary);
+  border: 1px solid var(--cm-border-strong);
   padding: 4px 8px;
   border-radius: 3px;
   cursor: pointer;
 }
 
 .calendar-header button:hover {
-  background: #4a4d51;
+  background: var(--cm-border-strong);
 }
 
 /* The pinned header table (days of the week) */
 .header-table-container {
   overflow: hidden;
-  border: 1px solid #2f3136;
-  background: #2a2d31;
+  border: 1px solid var(--cm-border-color);
+  background: var(--cm-bg-elevated-secondary);
   margin-bottom: 0;
 }
 
@@ -62,20 +62,20 @@ body {
 }
 
 .header-table th {
-  border-right: 1px solid #2f3136;
-  border-bottom: 1px solid #2f3136;
+  border-right: 1px solid var(--cm-border-color);
+  border-bottom: 1px solid var(--cm-border-color);
   text-align: center;
   height: 2em;
   font-size: 13px;
-  color: #e6e6e6;
+  color: var(--cm-text-primary);
   padding: 0;
-  background: #2a2d31;
+  background: var(--cm-bg-elevated-secondary);
 }
 
 .header-time-col {
   width: 10%;
-  background: #2a2d31;
-  border-right: 1px solid #2f3136;
+  background: var(--cm-bg-elevated-secondary);
+  border-right: 1px solid var(--cm-border-color);
   font-size: 0.5em !important;
 }
 
@@ -84,8 +84,8 @@ body {
   position: relative;
   max-height: 600px;
   overflow-y: auto;
-  border: 1px solid #2f3136;
-  background: #1a1c1f;
+  border: 1px solid var(--cm-border-color);
+  background: var(--cm-bg-sunken);
 }
 
 .body-table {
@@ -96,23 +96,23 @@ body {
 }
 
 .body-table td {
-  border-right: 1px solid #2f3136;
-  border-bottom: 1px solid #2f3136;
+  border-right: 1px solid var(--cm-border-color);
+  border-bottom: 1px solid var(--cm-border-color);
   height: 1.5em; /* or your rowHeight */
   text-align: center;
   position: relative;
-  background: #1a1c1f;
+  background: var(--cm-bg-sunken);
 }
 
 .body-time-col {
   width: 10%;
-  background: #2a2d31;
-  border-right: 1px solid #2f3136;
+  background: var(--cm-bg-elevated-secondary);
+  border-right: 1px solid var(--cm-border-color);
   font-size: 12px;
   text-align: right;
   padding: 0;
   font-weight: bold;
-  color: #bcbcbc;
+  color: var(--cm-text-secondary);
 }
 
 /* The absolutely positioned event layer */
@@ -127,7 +127,7 @@ body {
 
 /* Hover effect for an event if you like */
 .calendar-event:hover {
-  border-color: #777;
+  border-color: var(--cm-text-tertiary);
 }
 
 /* Example hovered cell styling if you want a highlight on drag/resize */
@@ -142,4 +142,8 @@ body {
 
 .left-panel {
   margin: 1em 1em 0 0;
+}
+
+:global(:root[data-theme='light']) .current-day {
+  background-color: #fdf1cc !important;
 }

@@ -651,6 +651,7 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
                   width: '4em',
                   height: '1em',
                   background: '#007bff',
+                  color: 'var(--cm-text-on-primary)',
                   'border-radius': '30%',
                   'font-size': '0.8em',
                   'text-align': 'center',

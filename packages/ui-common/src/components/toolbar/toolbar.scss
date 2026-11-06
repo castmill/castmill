@@ -49,7 +49,7 @@
       align-items: center;
 
       background-color: colors.$component-background-color;
-      color: colors.$component-color;
+      color: var(--cm-text-placeholder);
 
       svg {
         margin-right: 0.5em;

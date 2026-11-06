@@ -1,21 +1,21 @@
 .logo-settings {
   margin-top: 1.5em;
   padding: 1em;
-  border: 1px solid #363a45;
+  border: 1px solid var(--cm-border-color);
   border-radius: 0.5em;
-  background-color: #2c303b;
+  background-color: var(--cm-bg-secondary);
 
   h3 {
     margin-top: 0;
     margin-bottom: 0.5em;
     font-size: 1.1em;
     font-weight: 600;
-    color: #ffffff;
+    color: var(--cm-text-primary);
   }
 
   .logo-description {
     margin-bottom: 1em;
-    color: #999;
+    color: var(--cm-text-secondary);
     font-size: 0.85em;
   }
 
@@ -30,7 +30,7 @@
       max-width: 100%;
       max-height: 5em;
       border-radius: 0.25em;
-      box-shadow: 0 0.125em 0.25em rgba(0, 0, 0, 0.3);
+      box-shadow: 0 0.125em 0.25em var(--cm-shadow-color);
     }
 
     .logo-placeholder {
@@ -39,9 +39,9 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      border: 0.125em dashed #585d67;
+      border: 0.125em dashed var(--cm-border-strong);
       border-radius: 0.25em;
-      color: #999;
+      color: var(--cm-text-secondary);
       font-size: 0.85em;
     }
   }
