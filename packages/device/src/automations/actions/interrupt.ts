@@ -72,12 +72,16 @@ export class InterruptAction implements Action {
     const playlist = await host.preparePlaylist(parsed.playlistId);
     if (signal.aborted) return;
 
+    let resumeAtCurrent = false;
     if (parsed.start === 'after_current_item') {
-      await host.waitForItemBoundary(parsed.maxWaitMs, signal);
+      resumeAtCurrent = await host.waitForItemBoundary(
+        parsed.maxWaitMs,
+        signal
+      );
       if (signal.aborted) return;
     }
 
     const plays = context.kind === 'state' ? Infinity : parsed.plays;
-    await host.playInterruption(playlist, plays, signal);
+    await host.playInterruption(playlist, plays, signal, resumeAtCurrent);
   }
 }

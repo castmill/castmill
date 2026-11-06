@@ -118,12 +118,13 @@ export interface PlaybackHost {
   preparePlaylist(playlistId: number | string): Promise<unknown>;
   /**
    * Resolves at the next item boundary of normal programming, after
-   * `timeoutMs`, or when `signal` is aborted, whichever comes first.
+   * `timeoutMs`, or when `signal` is aborted, whichever comes first. Returns
+   * true only when the boundary was reached.
    */
   waitForItemBoundary(
     timeoutMs: number,
     signal: AbortSignalLike
-  ): Promise<void>;
+  ): Promise<boolean>;
   /**
    * Plays a prepared playlist `plays` times (forever when `plays` is
    * `Infinity`) instead of normal programming. Resolves when done or when
@@ -132,7 +133,8 @@ export interface PlaybackHost {
   playInterruption(
     playlist: unknown,
     plays: number,
-    signal: AbortSignalLike
+    signal: AbortSignalLike,
+    resumeAtCurrent?: boolean
   ): Promise<void>;
   /** Continues normal programming after the last playback action. */
   resumeProgramming(): void;

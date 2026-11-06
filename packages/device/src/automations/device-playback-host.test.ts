@@ -89,11 +89,11 @@ describe('DevicePlaybackHost', () => {
     expect(deps.clearPlayback).toHaveBeenCalledTimes(1);
     expect(queue.add).toHaveBeenCalledWith(layers[0]);
     expect(queue.time).toBe(0);
-    expect(player.play).toHaveBeenCalledWith({ loop: true });
+    expect(player.play).toHaveBeenCalledWith({ loop: false });
 
     // Programming boundaries during the interruption do not move the resume point.
     globals.onItemStart!({ playlistId: 10, index: 2, count: 3 });
-    player.emit('end');
+    player.emit('completed');
     await done;
 
     host.resumeProgramming();
@@ -111,7 +111,7 @@ describe('DevicePlaybackHost', () => {
     const { host, deps, player } = setup();
     const done = host.playInterruption(playlist(5, 1), 1, new AbortFlag());
     await settle();
-    player.emit('end');
+    player.emit('completed');
     await done;
     host.resumeProgramming();
     expect(deps.enqueueProgramming).not.toHaveBeenCalled();
@@ -128,7 +128,7 @@ describe('DevicePlaybackHost', () => {
     });
     const done = host.playInterruption(playlist(5, 1), 1, new AbortFlag());
     await settle();
-    player.emit('end');
+    player.emit('completed');
     await done;
     host.resumeProgramming();
     await settle();
@@ -144,7 +144,7 @@ describe('DevicePlaybackHost', () => {
       .then(() => (finished = true));
     await settle();
     expect(itemIds(layers[0].json)).toEqual([1, 2]);
-    player.emit('end');
+    player.emit('completed');
     await Promise.resolve();
     expect(finished).toBe(false);
     signal.abort();
@@ -162,7 +162,7 @@ describe('DevicePlaybackHost', () => {
     for (const id of [5, 6]) {
       const done = host.playInterruption(playlist(id, 1), 1, new AbortFlag());
       await settle();
-      player.emit('end');
+      player.emit('completed');
       await done;
     }
     host.resumeProgramming();
@@ -181,7 +181,7 @@ describe('DevicePlaybackHost', () => {
     const done = host.playInterruption(playlist(5, 1), 1, new AbortFlag());
     await settle();
     host.invalidateResume();
-    player.emit('end');
+    player.emit('completed');
     await done;
     host.resumeProgramming();
     expect(deps.enqueueProgramming).not.toHaveBeenCalled();
@@ -213,11 +213,14 @@ describe('DevicePlaybackHost', () => {
     let waited = false;
     const wait = host
       .waitForItemBoundary(30000, new AbortFlag())
-      .then(() => (waited = true));
+      .then((atBoundary) => {
+        waited = true;
+        return atBoundary;
+      });
     await Promise.resolve();
     expect(waited).toBe(false);
     globals.onItemStart!({ playlistId: 10, index: 1, count: 3 });
-    await wait;
+    await expect(wait).resolves.toBe(true);
     expect(waited).toBe(true);
   });
 
@@ -225,12 +228,12 @@ describe('DevicePlaybackHost', () => {
     const { host } = setup();
     const timeout = host.waitForItemBoundary(1000, new AbortFlag());
     vi.advanceTimersByTime(1000);
-    await timeout;
+    await expect(timeout).resolves.toBe(false);
 
     const signal = new AbortFlag();
     const aborted = host.waitForItemBoundary(1000, signal);
     signal.abort();
-    await aborted;
+    await expect(aborted).resolves.toBe(false);
 
     const disposed = host.waitForItemBoundary(1000, new AbortFlag());
     host.dispose();
@@ -242,5 +245,92 @@ describe('DevicePlaybackHost', () => {
     queue.length = 0;
     await host.waitForItemBoundary(1000, new AbortFlag());
     expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('resumes with the item that started at the boundary', async () => {
+    const { host, deps, player } = setup();
+    const channel = playlist(10, 3);
+    const globals = host.programmingGlobals(channel);
+    globals.onItemStart!({ playlistId: 10, index: 0, count: 3 });
+
+    const boundary = host.waitForItemBoundary(30000, new AbortFlag());
+    globals.onItemStart!({ playlistId: 10, index: 1, count: 3 });
+    await expect(boundary).resolves.toBe(true);
+
+    const done = host.playInterruption(
+      playlist(5, 1),
+      1,
+      new AbortFlag(),
+      true
+    );
+    await settle();
+    player.emit('completed');
+    await done;
+    host.resumeProgramming();
+
+    expect(itemIds(deps.enqueueProgramming.mock.calls[0][0])).toEqual([
+      2, 3, 1,
+    ]);
+  });
+
+  it('keeps next-item resume behavior when the boundary wait times out', async () => {
+    const { host, deps, player } = setup();
+    const channel = playlist(10, 3);
+    host.programmingGlobals(channel).onItemStart!({
+      playlistId: 10,
+      index: 0,
+      count: 3,
+    });
+
+    const boundary = host.waitForItemBoundary(1000, new AbortFlag());
+    vi.advanceTimersByTime(1000);
+    await expect(boundary).resolves.toBe(false);
+
+    const done = host.playInterruption(
+      playlist(5, 1),
+      1,
+      new AbortFlag(),
+      false
+    );
+    await settle();
+    player.emit('completed');
+    await done;
+    host.resumeProgramming();
+
+    expect(itemIds(deps.enqueueProgramming.mock.calls[0][0])).toEqual([
+      2, 3, 1,
+    ]);
+  });
+
+  it('does not finish finite interruptions on the player timer end event', async () => {
+    const { host, player } = setup();
+    let finished = false;
+    const done = host
+      .playInterruption(playlist(5, 1), 1, new AbortFlag())
+      .then(() => (finished = true));
+    await settle();
+
+    player.emit('end');
+    await settle();
+    expect(finished).toBe(false);
+
+    player.emit('completed');
+    await done;
+    expect(finished).toBe(true);
+  });
+
+  it('clears interruption playback when disposed', async () => {
+    const { host, deps, player } = setup();
+    const signal = new AbortFlag();
+    const done = host.playInterruption(playlist(5, 1), 1, signal);
+    await settle();
+    expect(deps.clearPlayback).toHaveBeenCalledTimes(1);
+
+    signal.abort();
+    host.dispose();
+    await done;
+
+    expect(deps.clearPlayback).toHaveBeenCalledTimes(2);
+    expect(host.interrupted).toBe(false);
   });
 });

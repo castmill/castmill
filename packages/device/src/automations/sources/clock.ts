@@ -65,6 +65,8 @@ export class ClockSource implements EventSource {
     if (!scheduler || !emit) return;
 
     const now = scheduler.now();
+    if (now >= this.validUntil) return;
+
     let due = false;
     while (this.cursor < this.occurrences.length) {
       const at = this.occurrences[this.cursor];

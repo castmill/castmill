@@ -58,7 +58,8 @@ export class DevicePlaybackHost implements PlaybackHost {
   private interruptionActive = false;
   private resume?: { json: JsonPlaylist; nextIndex: number };
   private current?: ItemPosition;
-  private boundaryListeners: Array<() => void> = [];
+  private boundaryResume?: ItemPosition;
+  private boundaryListeners: Array<(atBoundary?: boolean) => void> = [];
 
   constructor(private readonly deps: DevicePlaybackDeps) {}
 
@@ -80,7 +81,7 @@ export class DevicePlaybackHost implements PlaybackHost {
         this.current = { json, index: info.index, count: info.count };
         const listeners = this.boundaryListeners;
         this.boundaryListeners = [];
-        listeners.forEach((listener) => listener());
+        listeners.forEach((listener) => listener(true));
       },
     };
   }
@@ -92,6 +93,7 @@ export class DevicePlaybackHost implements PlaybackHost {
   invalidateResume() {
     this.resume = undefined;
     this.current = undefined;
+    this.boundaryResume = undefined;
   }
 
   async preparePlaylist(playlistId: number | string): Promise<JsonPlaylist> {
@@ -103,31 +105,34 @@ export class DevicePlaybackHost implements PlaybackHost {
   waitForItemBoundary(
     timeoutMs: number,
     signal: AbortSignalLike
-  ): Promise<void> {
+  ): Promise<boolean> {
     const queue = this.deps.queue();
     if (this.interruptionActive || !queue || queue.length === 0) {
-      return Promise.resolve();
+      return Promise.resolve(false);
     }
-    return new Promise<void>((resolve) => {
+    this.boundaryResume = undefined;
+    return new Promise<boolean>((resolve) => {
       let done = false;
-      const finish = () => {
+      const finish = (atBoundary = false) => {
         if (done) return;
         done = true;
         clearTimeout(timer);
         const index = this.boundaryListeners.indexOf(finish);
         if (index !== -1) this.boundaryListeners.splice(index, 1);
-        resolve();
+        if (atBoundary) this.boundaryResume = this.current;
+        resolve(atBoundary);
       };
       const timer = setTimeout(finish, Math.max(0, timeoutMs));
       this.boundaryListeners.push(finish);
-      signal.onAbort(finish);
+      signal.onAbort(() => finish());
     });
   }
 
   async playInterruption(
     playlist: unknown,
     plays: number,
-    signal: AbortSignalLike
+    signal: AbortSignalLike,
+    resumeAtCurrent = false
   ): Promise<void> {
     const json = playlist as JsonPlaylist;
     const player = this.deps.player();
@@ -146,11 +151,17 @@ export class DevicePlaybackHost implements PlaybackHost {
 
     if (!this.interruptionActive) {
       this.interruptionActive = true;
-      const current = this.current;
+      const current = resumeAtCurrent ? this.boundaryResume : this.current;
       this.resume = current
-        ? { json: current.json, nextIndex: (current.index + 1) % current.count }
+        ? {
+            json: current.json,
+            nextIndex: resumeAtCurrent
+              ? current.index
+              : (current.index + 1) % current.count,
+          }
         : undefined;
     }
+    this.boundaryResume = undefined;
 
     this.deps.clearPlayback();
     queue.add(layer);
@@ -161,20 +172,23 @@ export class DevicePlaybackHost implements PlaybackHost {
       const finish = () => {
         if (done) return;
         done = true;
-        player.off('end', onEnd);
+        player.off('completed', onCompleted);
         resolve();
       };
-      const onEnd = () => {
+      const onCompleted = () => {
         if (!looping) finish();
       };
-      player.on('end', onEnd);
+      player.on('completed', onCompleted);
       signal.onAbort(finish);
-      player.play({ loop: true });
+      player.play({ loop: looping });
     });
   }
 
   resumeProgramming(): void {
-    if (!this.interruptionActive) return;
+    if (!this.interruptionActive) {
+      this.boundaryResume = undefined;
+      return;
+    }
     const resume = this.resume;
     this.interruptionActive = false;
     this.resume = undefined;
@@ -191,10 +205,12 @@ export class DevicePlaybackHost implements PlaybackHost {
 
   /** Stops interruptions without resuming (e.g. before a reload). */
   dispose() {
+    if (this.interruptionActive) this.deps.clearPlayback();
     this.interruptionActive = false;
     this.resume = undefined;
+    this.boundaryResume = undefined;
     const listeners = this.boundaryListeners;
     this.boundaryListeners = [];
-    listeners.forEach((listener) => listener());
+    listeners.forEach((listener) => listener(false));
   }
 }

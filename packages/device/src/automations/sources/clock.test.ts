@@ -106,6 +106,17 @@ describe('ClockSource', () => {
     expect(vi.getTimerCount()).toBe(0);
   });
 
+  it('does not emit a due occurrence after the payload has expired', () => {
+    const validUntil = 2 * MINUTE;
+    const { emit } = start([MINUTE], validUntil);
+
+    vi.setSystemTime(validUntil + 30 * 1000);
+    vi.advanceTimersByTime(MINUTE);
+
+    expect(emit).not.toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
   it('does not fire once stopped, also when stopped by its own emission', () => {
     const source = new ClockSource();
     const emit = vi.fn(() => source.stop());

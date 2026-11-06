@@ -147,7 +147,7 @@ const fakeHost = (): PlaybackHost & { resumes: number } => {
   const host = {
     resumes: 0,
     preparePlaylist: vi.fn(async (id: number | string) => ({ id })),
-    waitForItemBoundary: vi.fn(async () => undefined),
+    waitForItemBoundary: vi.fn(async () => false),
     playInterruption: vi.fn(async () => undefined),
     resumeProgramming: vi.fn(() => {
       host.resumes++;
@@ -581,7 +581,8 @@ describe('clock to interrupt, end to end', () => {
     expect(host.playInterruption).toHaveBeenCalledWith(
       { id: 12 },
       2,
-      expect.anything()
+      expect.anything(),
+      false
     );
     expect(host.resumeProgramming).toHaveBeenCalledTimes(1);
   });

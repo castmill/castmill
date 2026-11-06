@@ -4,7 +4,7 @@ import { AbortFlag, defaultScheduler, type ActionContext } from '../types';
 
 const host = () => ({
   preparePlaylist: vi.fn(async (id: number | string) => ({ id, items: [] })),
-  waitForItemBoundary: vi.fn(async () => undefined),
+  waitForItemBoundary: vi.fn(async () => false),
   playInterruption: vi.fn(async () => undefined),
   resumeProgramming: vi.fn(),
 });
@@ -87,12 +87,14 @@ describe('InterruptAction', () => {
     expect(playback.playInterruption).toHaveBeenCalledWith(
       { id: 4, items: [] },
       2,
-      expect.any(AbortFlag)
+      expect.any(AbortFlag),
+      false
     );
   });
 
   it('waits for the current item, up to the maximum wait', async () => {
     const playback = host();
+    playback.waitForItemBoundary.mockResolvedValueOnce(true);
     await action.run(
       { playlist_id: 4, start: 'after_current_item', max_wait_seconds: 30 },
       context(playback)
@@ -101,7 +103,12 @@ describe('InterruptAction', () => {
       30000,
       expect.any(AbortFlag)
     );
-    expect(playback.playInterruption).toHaveBeenCalled();
+    expect(playback.playInterruption).toHaveBeenCalledWith(
+      { id: 4, items: [] },
+      1,
+      expect.any(AbortFlag),
+      true
+    );
   });
 
   it('loops while a state condition is active', async () => {
@@ -122,7 +129,10 @@ describe('InterruptAction', () => {
 
     const waiting = host();
     const aborted = new AbortFlag();
-    waiting.waitForItemBoundary.mockImplementation(async () => aborted.abort());
+    waiting.waitForItemBoundary.mockImplementation(async () => {
+      aborted.abort();
+      return false;
+    });
     await action.run(
       { playlist_id: 4, start: 'after_current_item' },
       context(waiting, 'event', aborted)
