@@ -397,7 +397,7 @@ defmodule CastmillWeb.MCPControllerTest do
         })
 
       refute result["isError"]
-      assert decode(result)["data"]["is_system"] == true
+      assert decode(result)["data"]["id"] == layout.id
 
       result =
         call_tool(secret, "api_request", %{

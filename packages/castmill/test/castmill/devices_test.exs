@@ -33,8 +33,10 @@ defmodule Castmill.DevicesTest do
     end
 
     for availability <- [:available, :restricted, :hidden, :missing] do
-      test "register_device/1 creates a default playlist when intro is #{availability}" do
-        availability = unquote(availability)
+      @tag availability: availability
+      test "register_device/1 creates a default playlist when intro is #{availability}", %{
+        availability: availability
+      } do
         network = network_fixture()
         organization = organization_fixture(%{network_id: network.id})
 
@@ -59,9 +61,12 @@ defmodule Castmill.DevicesTest do
         {:ok, registration} = device_registration_fixture()
 
         assert {:ok, {device, _token}} =
-                 Devices.register_device(organization.id, registration.pincode, %{
-                   name: "Intro availability device"
-                 })
+                 Devices.register_device(
+                   organization.id,
+                   registration.pincode,
+                   %{name: "Intro availability device"},
+                   %{add_default_channel: true}
+                 )
 
         channel = Castmill.Repo.get_by!(Resources.Channel, organization_id: organization.id)
         assert channel.default_playlist_id

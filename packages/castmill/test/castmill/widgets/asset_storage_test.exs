@@ -141,7 +141,7 @@ defmodule Castmill.Widgets.AssetStorageTest do
     end
 
     test "store_assets/2 refuses invalid slugs without touching the filesystem" do
-      outside = Path.join(AssetStorage.assets_base_dir(), "..")
+      outside = Path.dirname(AssetStorage.assets_base_dir())
       before = File.ls!(outside)
 
       assets = %{dir: System.tmp_dir!(), files: %{"icon.svg" => %{path: "/nonexistent"}}}
@@ -151,7 +151,7 @@ defmodule Castmill.Widgets.AssetStorageTest do
 
     test "delete_assets/1 and get_asset_path/2 ignore invalid slugs" do
       assert AssetStorage.delete_assets("..") == :ok
-      assert File.dir?(Path.join(AssetStorage.assets_base_dir(), ".."))
+      assert File.dir?(Path.dirname(AssetStorage.assets_base_dir()))
       assert AssetStorage.get_asset_path("..", "index.html") == {:error, :invalid_path}
     end
   end
