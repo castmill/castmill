@@ -470,7 +470,8 @@
       "channels": "频道",
       "teams": "团队",
       "widgets": "小部件",
-      "layouts": "布局"
+      "layouts": "布局",
+      "feeds": "数据源"
     },
     "errors": {
       "fetchUsageData": "获取使用数据失败：{{error}}"
@@ -717,7 +718,8 @@
     "networkUsers": "用户与邀请",
     "networkWidgets": "组件访问权限",
     "tags": "标签",
-    "agents": "智能体"
+    "agents": "智能体",
+    "feeds": "数据源"
   },
   "channels": {
     "title": "频道",
@@ -1707,6 +1709,110 @@
         "cursor": "将此配置添加到 ~/.cursor/mcp.json（适用于所有项目）或项目中的 .cursor/mcp.json，然后在 Cursor Settings > MCP 中启用该服务器。",
         "other": "使用以下设置配置远程 MCP 服务器。"
       }
+    }
+  },
+  "feeds": {
+    "title": "数据源",
+    "description": "数据源从其他系统（例如 Make、Zapier 或您自己的脚本）接收数据。显示数据源的 Widget 会在数据变化时在所有屏幕上更新。",
+    "newFeed": "新建数据源",
+    "empty": "还没有数据源。请创建一个，并连接向其发送数据的系统。",
+    "notFound": "此数据源不存在或已被删除。",
+    "mode": "类型",
+    "modes": {
+      "list": "列表",
+      "document": "文档"
+    },
+    "modeHelp": {
+      "list": "保留最新的条目，最新的在前。系统逐条添加条目。",
+      "document": "保存一个文档，系统每次更新时替换它。"
+    },
+    "keep": "保留的条目数",
+    "keepHelp": "收到新条目时会删除较旧的条目（1–100）。",
+    "schema": "条目结构（可选）",
+    "schemaHelp": "描述条目字段的 JSON，与 Widget 的数据结构相同。不匹配的写入会被拒绝。",
+    "schemaInvalid": "结构必须是有效的 JSON 对象。",
+    "mediaFields": "媒体字段",
+    "mediaFieldsHelp": "条目中包含图片或视频 URL 的路径，例如 image 或 photos[].url。",
+    "mediaPath": "路径",
+    "mediaMode": "处理方式",
+    "mediaModes": {
+      "copy": "复制到存储",
+      "link": "保留链接"
+    },
+    "addMediaField": "添加媒体字段",
+    "entries": "条目",
+    "lastUpdate": "最近更新",
+    "usedBy": "使用的播放列表",
+    "never": "从未",
+    "created": "数据源已创建",
+    "saved": "数据源已保存",
+    "deleted": "数据源已删除",
+    "deleteTitle": "删除数据源？",
+    "deleteMessage": "删除“{{name}}”会移除其条目和令牌。显示它的 Widget 将变为空。",
+    "back": "所有数据源",
+    "tabs": {
+      "entries": "条目",
+      "connect": "连接",
+      "settings": "设置"
+    },
+    "noEntries": "还没有条目。请发送测试条目或连接系统。",
+    "noDocument": "还没有文档。",
+    "receivedAt": "接收于 {{time}}",
+    "updatedAt": "最近更新：{{time}}",
+    "externalId": "外部 ID",
+    "deleteEntry": "删除条目",
+    "deleteEntryMessage": "该条目将从所有显示此数据源的屏幕上移除。",
+    "clear": "全部清除",
+    "clearTitle": "清空数据源？",
+    "clearMessage": "这将移除“{{name}}”的所有数据。",
+    "refresh": "刷新",
+    "test": {
+      "title": "发送测试条目",
+      "titleDocument": "发送测试文档",
+      "help": "粘贴一个 JSON 对象。它会像已连接系统发送的数据一样被保存。",
+      "send": "发送",
+      "sent": "测试数据已保存",
+      "invalidJson": "请输入有效的 JSON 对象。"
+    },
+    "connect": {
+      "endpoints": "端点",
+      "append": "添加条目",
+      "replace": "替换所有数据",
+      "read": "读取数据",
+      "copy": "复制",
+      "copied": "已复制到剪贴板",
+      "copyFailed": "无法复制到剪贴板"
+    },
+    "tokens": {
+      "title": "令牌",
+      "help": "令牌只能写入此数据源。请在 Authorization 标头中以 Bearer 加令牌的形式发送。",
+      "new": "新建令牌",
+      "namePlaceholder": "例如：Make 场景",
+      "empty": "还没有令牌。",
+      "lastUsed": "上次使用",
+      "revoke": "撤销",
+      "revoked": "已撤销",
+      "revokeTitle": "撤销令牌？",
+      "revokeMessage": "使用“{{name}}”的系统将无法再写入此数据源。",
+      "secretTitle": "复制您的令牌",
+      "secretWarning": "令牌只会显示这一次。请将其保存在发送数据的系统中。",
+      "done": "完成",
+      "memberHint": "组织成员和 AI 代理的令牌也可以写入数据源，包括同时写入多个数据源。"
+    },
+    "examples": {
+      "curl": "通过脚本（curl）",
+      "make": "通过 Make",
+      "makeStep1": "添加 HTTP › Make a request 模块。",
+      "makeStep2": "将 URL 设为“添加条目”端点，方法设为 POST。",
+      "makeStep3": "添加 Authorization 标头，其值为 Bearer 加您的令牌。",
+      "makeStep4": "选择包含要显示字段的原始 JSON 正文。请包含 external_id，使编辑后的项目替换原有条目而不是新增一条。"
+    },
+    "errors": {
+      "load": "无法加载数据源。",
+      "loadFeed": "无法加载数据源。",
+      "save": "无法保存数据源：{{message}}",
+      "quota": "您的组织已达到数据源数量上限。",
+      "action": "操作失败：{{message}}"
     }
   }
 }

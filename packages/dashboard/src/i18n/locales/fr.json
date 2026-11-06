@@ -470,7 +470,8 @@
       "channels": "Chaînes",
       "teams": "Équipes",
       "widgets": "Widgets",
-      "layouts": "Mises en page"
+      "layouts": "Mises en page",
+      "feeds": "Flux"
     },
     "errors": {
       "fetchUsageData": "Échec de la récupération des données d'utilisation : {{error}}"
@@ -729,7 +730,8 @@
     "networkUsers": "Utilisateurs et invitations",
     "networkWidgets": "Accès aux widgets",
     "tags": "Étiquettes",
-    "agents": "Agents"
+    "agents": "Agents",
+    "feeds": "Flux"
   },
   "channels": {
     "title": "Canaux",
@@ -1719,6 +1721,110 @@
         "cursor": "Ajoutez cette configuration à ~/.cursor/mcp.json pour tous les projets, ou à .cursor/mcp.json dans un projet, puis activez le serveur dans Cursor Settings > MCP.",
         "other": "Configurez un serveur MCP distant avec ces paramètres."
       }
+    }
+  },
+  "feeds": {
+    "title": "Flux de données",
+    "description": "Les flux reçoivent des données d'autres systèmes, comme Make, Zapier ou vos propres scripts. Les widgets qui affichent un flux se mettent à jour sur tous les écrans lorsqu'il change.",
+    "newFeed": "Nouveau flux",
+    "empty": "Aucun flux pour l'instant. Créez-en un et connectez un système qui lui envoie des données.",
+    "notFound": "Ce flux n'existe pas ou a été supprimé.",
+    "mode": "Type",
+    "modes": {
+      "list": "Liste",
+      "document": "Document"
+    },
+    "modeHelp": {
+      "list": "Conserve les dernières entrées, les plus récentes en premier. Les systèmes ajoutent les entrées une par une.",
+      "document": "Contient un document que les systèmes remplacent à chaque mise à jour."
+    },
+    "keep": "Entrées à conserver",
+    "keepHelp": "Les entrées les plus anciennes sont supprimées à l'arrivée des nouvelles (1–100).",
+    "schema": "Schéma d'entrée (facultatif)",
+    "schemaHelp": "JSON décrivant les champs d'une entrée, comme le schéma de données d'un widget. Les écritures non conformes sont refusées.",
+    "schemaInvalid": "Le schéma doit être un objet JSON valide.",
+    "mediaFields": "Champs média",
+    "mediaFieldsHelp": "Chemins d'une entrée contenant des URL d'images ou de vidéos, par exemple image ou photos[].url.",
+    "mediaPath": "Chemin",
+    "mediaMode": "Traitement",
+    "mediaModes": {
+      "copy": "Copier dans le stockage",
+      "link": "Conserver le lien"
+    },
+    "addMediaField": "Ajouter un champ média",
+    "entries": "Entrées",
+    "lastUpdate": "Dernière mise à jour",
+    "usedBy": "Utilisé dans les playlists",
+    "never": "Jamais",
+    "created": "Flux créé",
+    "saved": "Flux enregistré",
+    "deleted": "Flux supprimé",
+    "deleteTitle": "Supprimer le flux ?",
+    "deleteMessage": "Supprimer « {{name}} » efface ses entrées et ses jetons. Les widgets qui l'affichent seront vides.",
+    "back": "Tous les flux",
+    "tabs": {
+      "entries": "Entrées",
+      "connect": "Connexion",
+      "settings": "Paramètres"
+    },
+    "noEntries": "Aucune entrée pour l'instant. Envoyez une entrée de test ou connectez un système.",
+    "noDocument": "Aucun document pour l'instant.",
+    "receivedAt": "Reçue {{time}}",
+    "updatedAt": "Dernière mise à jour : {{time}}",
+    "externalId": "ID externe",
+    "deleteEntry": "Supprimer l'entrée",
+    "deleteEntryMessage": "L'entrée est retirée de tous les écrans qui affichent le flux.",
+    "clear": "Tout effacer",
+    "clearTitle": "Vider le flux ?",
+    "clearMessage": "Toutes les données de « {{name}} » seront supprimées.",
+    "refresh": "Actualiser",
+    "test": {
+      "title": "Envoyer une entrée de test",
+      "titleDocument": "Envoyer un document de test",
+      "help": "Collez un objet JSON. Il est enregistré comme des données envoyées par un système connecté.",
+      "send": "Envoyer",
+      "sent": "Données de test enregistrées",
+      "invalidJson": "Saisissez un objet JSON valide."
+    },
+    "connect": {
+      "endpoints": "Points de terminaison",
+      "append": "Ajouter des entrées",
+      "replace": "Remplacer toutes les données",
+      "read": "Lire les données",
+      "copy": "Copier",
+      "copied": "Copié dans le presse-papiers",
+      "copyFailed": "Impossible de copier dans le presse-papiers"
+    },
+    "tokens": {
+      "title": "Jetons",
+      "help": "Un jeton ne peut écrire que dans ce flux. Envoyez-le dans l'en-tête Authorization sous la forme Bearer suivi du jeton.",
+      "new": "Nouveau jeton",
+      "namePlaceholder": "Par exemple : scénario Make",
+      "empty": "Aucun jeton pour l'instant.",
+      "lastUsed": "Dernière utilisation",
+      "revoke": "Révoquer",
+      "revoked": "Révoqué",
+      "revokeTitle": "Révoquer le jeton ?",
+      "revokeMessage": "Les systèmes qui utilisent « {{name}} » ne pourront plus écrire dans le flux.",
+      "secretTitle": "Copiez votre jeton",
+      "secretWarning": "C'est la seule fois que le jeton est affiché. Enregistrez-le dans le système qui envoie les données.",
+      "done": "Terminé",
+      "memberHint": "Les jetons des membres de l'organisation et des agents IA peuvent aussi écrire dans les flux, y compris dans plusieurs flux à la fois."
+    },
+    "examples": {
+      "curl": "Depuis un script (curl)",
+      "make": "Depuis Make",
+      "makeStep1": "Ajoutez un module HTTP › Make a request.",
+      "makeStep2": "Indiquez le point de terminaison « Ajouter des entrées » comme URL et POST comme méthode.",
+      "makeStep3": "Ajoutez un en-tête Authorization dont la valeur est Bearer suivi de votre jeton.",
+      "makeStep4": "Choisissez un corps JSON brut avec les champs à afficher. Incluez un external_id pour que les éléments modifiés remplacent leur entrée au lieu d'en ajouter une nouvelle."
+    },
+    "errors": {
+      "load": "Impossible de charger les flux.",
+      "loadFeed": "Impossible de charger le flux.",
+      "save": "Impossible d'enregistrer le flux : {{message}}",
+      "quota": "Votre organisation a atteint sa limite de flux.",
+      "action": "L'action a échoué : {{message}}"
     }
   }
 }

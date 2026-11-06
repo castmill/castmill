@@ -737,7 +737,11 @@ top-level `string` field, or to a `list` field of strings:
 | `depends_on` | Fields whose values the integration needs; the field stays disabled until they are set. |
 
 The widget's integration fetcher must implement the optional `choices/3` callback, or the
-widget is rejected on upload. The stored values are plain identifiers from the source, so
+widget is rejected on upload. The built-in `feeds` list needs no integration: it lets users pick one of
+the organization's data feeds, and the widget then receives the feed's data as `data.entries` (list
+feeds, newest first) or `data.document` (document feeds), plus `data.updated_at`. External systems such
+as Make or Zapier write to feeds through `/api/v1/feeds`; see the feed's **Connect** tab in the
+dashboard. The stored values are plain identifiers from the source, so
 templates and fetchers read them like any typed value. Use the field's `placeholder`
 translation for the hint shown when a multiple selection is empty.
 

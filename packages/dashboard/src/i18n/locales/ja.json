@@ -470,7 +470,8 @@
       "channels": "チャンネル",
       "teams": "チーム",
       "widgets": "ウィジェット",
-      "layouts": "レイアウト"
+      "layouts": "レイアウト",
+      "feeds": "フィード"
     },
     "errors": {
       "fetchUsageData": "使用量データの取得に失敗しました：{{error}}"
@@ -717,7 +718,8 @@
     "networkUsers": "ユーザーと招待",
     "networkWidgets": "ウィジェットのアクセス",
     "tags": "タグ",
-    "agents": "エージェント"
+    "agents": "エージェント",
+    "feeds": "フィード"
   },
   "channels": {
     "title": "チャンネル",
@@ -1708,6 +1710,110 @@
         "cursor": "すべてのプロジェクトでは ~/.cursor/mcp.json、特定のプロジェクトでは .cursor/mcp.json にこの構成を追加し、Cursor Settings > MCP でサーバーを有効にしてください。",
         "other": "以下の設定でリモートMCPサーバーを構成してください。"
       }
+    }
+  },
+  "feeds": {
+    "title": "データフィード",
+    "description": "フィードは Make、Zapier、独自のスクリプトなど他のシステムからデータを受け取ります。フィードを表示する Widget は、フィードが変わるとすべての画面で更新されます。",
+    "newFeed": "新しいフィード",
+    "empty": "フィードはまだありません。作成して、データを送るシステムを接続してください。",
+    "notFound": "このフィードは存在しないか、削除されました。",
+    "mode": "種類",
+    "modes": {
+      "list": "リスト",
+      "document": "ドキュメント"
+    },
+    "modeHelp": {
+      "list": "最新のエントリーを新しい順に保持します。システムはエントリーを1件ずつ追加します。",
+      "document": "更新のたびにシステムが置き換えるドキュメントを1つ保持します。"
+    },
+    "keep": "保持するエントリー数",
+    "keepHelp": "新しいエントリーが届くと古いエントリーは削除されます（1–100）。",
+    "schema": "エントリースキーマ（任意）",
+    "schemaHelp": "Widget のデータスキーマと同様に、エントリーのフィールドを記述する JSON です。一致しない書き込みは拒否されます。",
+    "schemaInvalid": "スキーマは有効な JSON オブジェクトである必要があります。",
+    "mediaFields": "メディアフィールド",
+    "mediaFieldsHelp": "画像または動画の URL を含むエントリー内のパス（例: image、photos[].url）。",
+    "mediaPath": "パス",
+    "mediaMode": "処理方法",
+    "mediaModes": {
+      "copy": "ストレージにコピー",
+      "link": "リンクを保持"
+    },
+    "addMediaField": "メディアフィールドを追加",
+    "entries": "エントリー",
+    "lastUpdate": "最終更新",
+    "usedBy": "使用しているプレイリスト",
+    "never": "なし",
+    "created": "フィードを作成しました",
+    "saved": "フィードを保存しました",
+    "deleted": "フィードを削除しました",
+    "deleteTitle": "フィードを削除しますか？",
+    "deleteMessage": "「{{name}}」を削除すると、エントリーとトークンも削除されます。表示している Widget は空になります。",
+    "back": "すべてのフィード",
+    "tabs": {
+      "entries": "エントリー",
+      "connect": "接続",
+      "settings": "設定"
+    },
+    "noEntries": "エントリーはまだありません。テストエントリーを送るか、システムを接続してください。",
+    "noDocument": "ドキュメントはまだありません。",
+    "receivedAt": "{{time}}に受信",
+    "updatedAt": "最終更新: {{time}}",
+    "externalId": "外部 ID",
+    "deleteEntry": "エントリーを削除",
+    "deleteEntryMessage": "このフィードを表示しているすべての画面からエントリーが削除されます。",
+    "clear": "すべて消去",
+    "clearTitle": "フィードを空にしますか？",
+    "clearMessage": "「{{name}}」のすべてのデータが削除されます。",
+    "refresh": "更新",
+    "test": {
+      "title": "テストエントリーを送信",
+      "titleDocument": "テストドキュメントを送信",
+      "help": "JSON オブジェクトを貼り付けてください。接続されたシステムから送られたデータと同様に保存されます。",
+      "send": "送信",
+      "sent": "テストデータを保存しました",
+      "invalidJson": "有効な JSON オブジェクトを入力してください。"
+    },
+    "connect": {
+      "endpoints": "エンドポイント",
+      "append": "エントリーを追加",
+      "replace": "すべてのデータを置換",
+      "read": "データを読み取る",
+      "copy": "コピー",
+      "copied": "クリップボードにコピーしました",
+      "copyFailed": "クリップボードにコピーできませんでした"
+    },
+    "tokens": {
+      "title": "トークン",
+      "help": "トークンはこのフィードにのみ書き込めます。Authorization ヘッダーで Bearer の後にトークンを付けて送信してください。",
+      "new": "新しいトークン",
+      "namePlaceholder": "例: Make シナリオ",
+      "empty": "トークンはまだありません。",
+      "lastUsed": "最終使用",
+      "revoke": "取り消す",
+      "revoked": "取り消し済み",
+      "revokeTitle": "トークンを取り消しますか？",
+      "revokeMessage": "「{{name}}」を使用しているシステムはフィードに書き込めなくなります。",
+      "secretTitle": "トークンをコピー",
+      "secretWarning": "トークンが表示されるのはこの一度だけです。データを送るシステムに保存してください。",
+      "done": "完了",
+      "memberHint": "組織のメンバーや AI エージェントのトークンもフィードに書き込めます。複数のフィードへの同時書き込みも可能です。"
+    },
+    "examples": {
+      "curl": "スクリプトから（curl）",
+      "make": "Make から",
+      "makeStep1": "HTTP › Make a request モジュールを追加します。",
+      "makeStep2": "URL に「エントリーを追加」エンドポイントを、メソッドに POST を設定します。",
+      "makeStep3": "値が Bearer とトークンの Authorization ヘッダーを追加します。",
+      "makeStep4": "表示するフィールドを含む Raw の JSON ボディを選びます。編集された項目が新しいエントリーを追加せず既存のエントリーを置き換えるよう、external_id を含めてください。"
+    },
+    "errors": {
+      "load": "フィードを読み込めませんでした。",
+      "loadFeed": "フィードを読み込めませんでした。",
+      "save": "フィードを保存できませんでした: {{message}}",
+      "quota": "組織のフィード上限に達しました。",
+      "action": "操作に失敗しました: {{message}}"
     }
   }
 }

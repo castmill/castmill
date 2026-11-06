@@ -92,6 +92,12 @@ Rules enforced by `Castmill.Widgets.Schema`:
 On install or upload, a widget that declares `choices` must have an integration whose
 fetcher implements choices (see below); otherwise it is rejected.
 
+### Built-in lists
+
+Castmill provides some lists itself, without an integration: `feeds` lists the organization's data
+feeds (see [DATA-FEEDS.md](./DATA-FEEDS.md)). Widgets whose choice fields only use built-in lists need no
+fetcher.
+
 ## Provider contract (fetchers)
 
 An optional callback on `Castmill.Widgets.Integrations.Fetcher`:

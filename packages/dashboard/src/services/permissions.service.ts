@@ -18,6 +18,7 @@ export type ResourceType =
   | 'teams'
   | 'widgets'
   | 'layouts'
+  | 'feeds'
   | 'tags'
   | 'organizations';
 

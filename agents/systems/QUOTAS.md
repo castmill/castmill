@@ -167,6 +167,7 @@ The full list of allowed values (defined identically in `PlansQuotas`, `QuotasNe
 | users | `:users` | Number of users | count |
 | teams | `:teams` | Number of teams | count |
 | layouts | `:layouts` | Number of layouts | count |
+| feeds | `:feeds` | Number of data feeds (default 20 per plan) | count |
 | storage | `:storage` | Total file storage quota | **MB** |
 | max_upload_size | `:max_upload_size` | Max upload size per file | **MB** |
 
