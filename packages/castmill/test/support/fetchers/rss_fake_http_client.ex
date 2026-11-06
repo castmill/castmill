@@ -50,11 +50,11 @@ defmodule Castmill.Widgets.Integrations.Rss.FakeHttpClient do
 
           case Enum.map(chunks, &struct(HTTPoison.AsyncChunk, id: ref, chunk: &1)) ++
                  [struct(HTTPoison.AsyncEnd, id: ref)] do
-            [end_event] ->
-              send(target, end_event)
+            [first_event | remaining] ->
+              send(target, first_event)
 
-            events ->
-              Process.put({__MODULE__, ref}, {target, events})
+              if remaining != [],
+                do: Process.put({__MODULE__, ref}, {target, remaining})
           end
 
           {:ok, struct(HTTPoison.AsyncResponse, id: ref)}

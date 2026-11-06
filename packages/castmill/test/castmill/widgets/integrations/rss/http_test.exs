@@ -22,6 +22,18 @@ defmodule Castmill.Widgets.Integrations.Rss.HttpTest do
       assert options[:follow_redirect] == false
     end
 
+    test "returns an empty streamed body" do
+      FakeHttpClient.stub(@url, FakeHttpClient.ok(""))
+      assert {:ok, %{body: ""}} = Http.get(@url)
+    end
+
+    test "collects multiple streamed chunks in order" do
+      body = String.duplicate("a", 1_024) <> String.duplicate("b", 1_024) <> "tail"
+      FakeHttpClient.stub(@url, FakeHttpClient.ok(body))
+
+      assert {:ok, %{body: ^body}} = Http.get(@url)
+    end
+
     test "follows relative and absolute redirects" do
       FakeHttpClient.stub(
         @url,
