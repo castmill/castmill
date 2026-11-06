@@ -1749,6 +1749,8 @@ defmodule Castmill.Widgets.Integrations do
           300,
       pull_config: build_pull_config(fetcher, fetcher_config),
       credential_schema: build_credential_schema(fetcher, config),
+      refresh_mode:
+        Map.get(config, "refresh_mode") || Map.get(config, :refresh_mode) || "scheduled",
       is_active: true
     }
 

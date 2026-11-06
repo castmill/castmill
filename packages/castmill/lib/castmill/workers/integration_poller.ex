@@ -39,7 +39,7 @@ defmodule Castmill.Workers.IntegrationPoller do
   require Logger
 
   alias Castmill.Widgets.Integrations
-  alias Castmill.Widgets.Integrations.WidgetIntegration
+  alias Castmill.Widgets.Integrations.{Refresh, WidgetIntegration}
   alias Castmill.Workers.BullMQHelper
 
   @queue "integrations"
@@ -64,9 +64,10 @@ defmodule Castmill.Workers.IntegrationPoller do
     with {:ok, integration} <- get_integration(integration_id),
          {:ok, credentials} <- get_credentials(organization_id, integration_id),
          {:ok, data, _updated_credentials} <-
-           fetch_data(integration, credentials, widget_options),
+           fetch_data(integration, credentials, widget_options)
+           |> record_on_demand_failure(integration, discriminator_id),
          {:ok, _integration_data} <-
-           store_data(organization_id, widget_id, integration, discriminator_id, data) do
+           Refresh.store(integration, organization_id, discriminator_id, data) do
       # Broadcast the update to connected clients
       broadcast_update(widget_id, integration_id, discriminator_id, data)
 
@@ -87,6 +88,10 @@ defmodule Castmill.Workers.IntegrationPoller do
           "IntegrationPoller: Integration #{integration_id} not found. Stopping polling."
         )
 
+        :ok
+
+      {:error, :on_demand_refresh_failed} ->
+        # The failure was recorded and the next refresh backs off.
         :ok
 
       {:error, :missing_api_key} ->
@@ -134,7 +139,8 @@ defmodule Castmill.Workers.IntegrationPoller do
     # Get the integration to determine the polling interval
     integration_id = normalize_param(params, :integration_id)
 
-    with {:ok, integration} <- get_integration(integration_id) do
+    with {:ok, integration} <- get_integration(integration_id),
+         false <- Refresh.on_demand?(integration) do
       interval_seconds =
         Keyword.get(opts, :interval) ||
           integration.pull_interval_seconds || 30
@@ -168,9 +174,97 @@ defmodule Castmill.Workers.IntegrationPoller do
         attempts: 3
       )
     else
+      # On-demand integrations are refreshed when their data is read, never by
+      # repeatable jobs (see Castmill.Widgets.Integrations.Refresh).
+      true ->
+        {:ok, :on_demand}
+
       {:error, reason} ->
         Logger.error("IntegrationPoller: Failed to schedule poll: #{inspect(reason)}")
         {:error, reason}
+    end
+  end
+
+  @doc """
+  Removes every polling scheduler of an integration (all organizations and
+  discriminators), e.g. after switching it to on-demand refresh. Returns
+  `{:ok, removed_count}`.
+  """
+  def remove_schedulers(integration_id) do
+    pattern = ~r/^int_poll_[0-9a-fA-F-]+_#{integration_id}_/
+
+    with {:ok, ids} <- BullMQHelper.list_scheduler_ids(@queue) do
+      removed =
+        ids
+        |> Enum.filter(&(is_binary(&1) and Regex.match?(pattern, &1)))
+        |> Enum.count(&match?({:ok, true}, BullMQHelper.remove_scheduler(@queue, &1)))
+
+      {:ok, removed}
+    end
+  end
+
+  @doc """
+  Queues a single refresh of on-demand integration data. The job ID is derived
+  from the organization, integration and discriminator, so while a refresh is
+  queued or running, further requests for the same data are ignored.
+  """
+  def enqueue_refresh(params) do
+    job_data = %{
+      "organization_id" => normalize_param(params, :organization_id),
+      "widget_id" => normalize_param(params, :widget_id),
+      "integration_id" => normalize_param(params, :integration_id),
+      "discriminator_id" => normalize_param(params, :discriminator_id),
+      "widget_options" => normalize_param(params, :widget_options, %{})
+    }
+
+    job_id =
+      "int_refresh_#{job_data["organization_id"]}_#{job_data["integration_id"]}_" <>
+        String.replace(job_data["discriminator_id"] || "", ":", "_")
+
+    enqueue = fn ->
+      try do
+        BullMQHelper.add_job(@queue, job_id, job_data,
+          job_id: job_id,
+          attempts: 1,
+          remove_on_complete: true,
+          remove_on_fail: true
+        )
+      rescue
+        error -> {:error, error}
+      catch
+        :exit, reason -> {:error, reason}
+      end
+    end
+
+    if Application.get_env(:castmill, :async_poll_scheduling, true) do
+      # Never block (or crash) the read that triggered the refresh.
+      Task.start(enqueue)
+      :ok
+    else
+      enqueue.()
+    end
+  end
+
+  # On-demand integrations keep their last good data and back off instead of
+  # retrying through BullMQ.
+  defp record_on_demand_failure(
+         {:error, reason, _credentials} = error,
+         integration,
+         discriminator_id
+       ),
+       do: on_demand_failure(error, reason, integration, discriminator_id)
+
+  defp record_on_demand_failure({:error, reason} = error, integration, discriminator_id),
+    do: on_demand_failure(error, reason, integration, discriminator_id)
+
+  defp record_on_demand_failure(result, _integration, _discriminator_id), do: result
+
+  defp on_demand_failure(error, reason, integration, discriminator_id) do
+    if Refresh.on_demand?(integration) do
+      Refresh.record_failure(integration, discriminator_id, reason)
+      {:error, :on_demand_refresh_failed}
+    else
+      error
     end
   end
 
@@ -235,10 +329,9 @@ defmodule Castmill.Workers.IntegrationPoller do
     pull_config = integration.pull_config || %{}
     fetcher_module_name = Map.get(pull_config, "fetcher_module")
 
-    # Merge pull_config with widget_options so fetcher has access to both
-    # pull_config contains integration-level settings (like feed_url for RSS)
-    # widget_options contains widget instance settings (like max_items)
-    merged_options = Map.merge(pull_config, widget_options || %{})
+    # Item options may only override pull_config keys the widget declares as
+    # options (see Refresh.fetch_options/3).
+    merged_options = Refresh.fetch_options(integration, widget_options)
 
     if fetcher_module_name do
       # Use custom fetcher module
@@ -289,33 +382,6 @@ defmodule Castmill.Workers.IntegrationPoller do
       {:ok, data} -> {:ok, data, credentials}
       {:error, reason} -> {:error, reason}
     end
-  end
-
-  defp store_data(
-         organization_id,
-         widget_id,
-         %WidgetIntegration{} = integration,
-         discriminator_id,
-         data
-       ) do
-    now = DateTime.utc_now()
-    interval = integration.pull_interval_seconds || 300
-    refresh_at = DateTime.add(now, interval, :second)
-
-    attrs = %{
-      widget_integration_id: integration.id,
-      organization_id: organization_id,
-      widget_id: widget_id,
-      discriminator_id: discriminator_id,
-      data: data,
-      status: "active",
-      fetched_at: now,
-      last_used_at: now,
-      refresh_at: refresh_at,
-      version: System.system_time(:second)
-    }
-
-    Integrations.upsert_integration_data(attrs)
   end
 
   defp broadcast_update(widget_id, integration_id, discriminator_id, data) do

@@ -145,6 +145,24 @@ end
   last known data to avoid empty screens.
 ```
 
+### Refresh Modes
+
+Pull integrations have a `refresh_mode`:
+
+- `scheduled` (default): the behavior described above, with repeatable polling every
+  `pull_interval_seconds`.
+- `on_demand`: no repeatable jobs. Data is refreshed only when it is read (device playlists, the
+  widget data endpoint, dashboard previews) and older than `pull_interval_seconds`. Missing data is
+  fetched synchronously, stale data is served while one deduplicated refresh is queued, and failing
+  sources back off. Use it for sources with per-call costs or many rarely shown configurations
+  (e.g. property listings). Widget packages set it with `"refresh_mode": "on_demand"` in their
+  integration definition. See [INTEGRATION-ON-DEMAND-REFRESH.md](./INTEGRATION-ON-DEMAND-REFRESH.md).
+
+All fetch paths build fetcher options with `Castmill.Widgets.Integrations.Refresh.fetch_options/3`:
+item options may override only the `pull_config` keys that the widget declares in its
+`options_schema` (e.g. a default `feed_url`), so integration settings such as service URLs can never
+be redirected by a playlist item.
+
 ### Serve-Time Filtering (max_items)
 
 Widget integrations support **serve-time filtering** to allow multiple widget instances
