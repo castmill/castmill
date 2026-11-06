@@ -261,6 +261,25 @@ defmodule CastmillWeb.WidgetScopeControllerTest do
 
       assert %{"errors" => %{"slug" => ["has invalid format"]}} = json_response(conn, 422)
     end
+
+    test "extracted package assets are cleaned up when an upload is rejected", ctx do
+      extracted = fn -> Path.wildcard(Path.join(System.tmp_dir!(), "widget_assets_*")) end
+      before = extracted.()
+
+      for slug <- [ctx.system.slug, "../../x"] do
+        conn =
+          upload_zip(
+            ctx.conn,
+            ctx.org_a,
+            %{"name" => "Rejected", "slug" => slug, "template" => %{}},
+            [{"assets/icon.svg", "<svg>rejected</svg>"}]
+          )
+
+        assert json_response(conn, 422)
+      end
+
+      assert extracted.() -- before == []
+    end
   end
 
   test "playlists cannot use widgets that are not available to the organization", ctx do

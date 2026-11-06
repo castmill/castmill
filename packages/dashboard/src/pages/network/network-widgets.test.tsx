@@ -234,7 +234,9 @@ describe('NetworkWidgets', () => {
         expect.stringContaining('Beta')
       )
     );
-    expect(await accessSwitch('Beta')).toHaveAttribute('aria-checked', 'true');
+    await waitFor(async () =>
+      expect(await accessSwitch('Beta')).toHaveAttribute('aria-checked', 'true')
+    );
   });
 
   it('searches and filters widgets on the server', async () => {
@@ -708,6 +710,158 @@ describe('NetworkWidgets', () => {
     );
     expect(await accessSwitch('Gamma')).toBeInTheDocument();
     expect(screen.getByText('1–20 of 20')).toBeInTheDocument();
+  });
+
+  it('stops loading more pages after a failed filter reload', async () => {
+    vi.mocked(NetworkService.listWidgetAccess).mockResolvedValueOnce(
+      widgetPage([weather], {
+        pagination: { page: 1, page_size: 50, total_count: 2, total_pages: 2 },
+      })
+    );
+    renderPage();
+    expect(
+      await screen.findByRole('button', { name: 'Load more' })
+    ).toBeInTheDocument();
+    vi.mocked(NetworkService.listWidgetAccess).mockRejectedValue(
+      new Error('offline')
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /^Excluding/ }));
+
+    await waitFor(() =>
+      expect(toastSpies.error).toHaveBeenCalledWith('Failed to load widgets.')
+    );
+    expect(screen.queryByRole('button', { name: 'Load more' })).toBeNull();
+    expect(NetworkService.listWidgetAccess).not.toHaveBeenCalledWith(
+      expect.objectContaining({ page: 2 })
+    );
+  });
+
+  it('reloads the filtered widgets from the first page when access changes', async () => {
+    vi.mocked(NetworkService.setWidgetAccess).mockResolvedValue({
+      ...weather,
+      access: 'except',
+    });
+    renderPage();
+    await screen.findByRole('heading', { level: 2, name: 'Weather' });
+    fireEvent.click(screen.getByRole('button', { name: /^Everyone/ }));
+    await waitFor(() =>
+      expect(NetworkService.listWidgetAccess).toHaveBeenLastCalledWith(
+        expect.objectContaining({ access: 'all' })
+      )
+    );
+    await waitFor(() =>
+      expect(NetworkService.listWidgetOrganizations).toHaveBeenCalled()
+    );
+    vi.mocked(NetworkService.listWidgetAccess).mockClear();
+
+    fireEvent.click(screen.getByRole('radio', { name: /^All except/ }));
+
+    await waitFor(() =>
+      expect(NetworkService.listWidgetAccess).toHaveBeenCalledWith(
+        expect.objectContaining({ page: 1, access: 'all' })
+      )
+    );
+  });
+
+  it('blocks organization changes while the access mode is saving', async () => {
+    let finish!: (value: NetworkWidgetAccess) => void;
+    vi.mocked(NetworkService.setWidgetAccess).mockReturnValue(
+      new Promise((resolve) => (finish = resolve))
+    );
+    renderPage();
+    expect(await accessSwitch('Beta')).toBeEnabled();
+
+    fireEvent.click(screen.getByRole('radio', { name: /^All except/ }));
+
+    expect(await accessSwitch('Beta')).toBeDisabled();
+    expect(screen.getByRole('button', { name: /^Disable all/ })).toBeDisabled();
+    fireEvent.click(await accessSwitch('Beta'));
+    expect(NetworkService.updateWidgetOrganizations).not.toHaveBeenCalled();
+
+    finish({ ...weather, access: 'except' });
+    await waitFor(async () => expect(await accessSwitch('Beta')).toBeEnabled());
+  });
+
+  it('reloads the current organization results after a failed save', async () => {
+    let fail!: (reason: Error) => void;
+    vi.mocked(NetworkService.updateWidgetOrganizations).mockReturnValue(
+      new Promise((_, reject) => (fail = reject))
+    );
+    renderPage();
+    fireEvent.click(await accessSwitch('Beta'));
+    vi.mocked(NetworkService.listWidgetOrganizations).mockResolvedValue({
+      ...organizationPage([gamma]),
+      counts: { total: 1, enabled: 1 },
+    });
+    fireEvent.input(screen.getByPlaceholderText('Search organizations'), {
+      target: { value: 'Gamma' },
+    });
+    await waitFor(() =>
+      expect(NetworkService.listWidgetOrganizations).toHaveBeenLastCalledWith(
+        1,
+        expect.objectContaining({ search: 'Gamma' })
+      )
+    );
+    const calls = vi.mocked(NetworkService.listWidgetOrganizations).mock.calls
+      .length;
+
+    fail(new Error('offline'));
+
+    await waitFor(() =>
+      expect(
+        vi.mocked(NetworkService.listWidgetOrganizations).mock.calls.length
+      ).toBe(calls + 1)
+    );
+    expect(NetworkService.listWidgetOrganizations).toHaveBeenLastCalledWith(
+      1,
+      expect.objectContaining({ search: 'Gamma' })
+    );
+    expect(
+      await screen.findByText('1 matching organizations')
+    ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        screen.getByRole('button', { name: 'Disable all (1)' })
+      ).toBeEnabled()
+    );
+  });
+
+  it('requests the organization list once after an organization save', async () => {
+    vi.mocked(NetworkService.updateWidgetOrganizations).mockResolvedValue({
+      ...weather,
+      access: 'except',
+    });
+    renderPage();
+    fireEvent.click(await accessSwitch('Beta'));
+    const before = vi.mocked(NetworkService.listWidgetOrganizations).mock.calls
+      .length;
+
+    await waitFor(() =>
+      expect(NetworkService.updateWidgetOrganizations).toHaveBeenCalled()
+    );
+    await waitFor(async () => expect(await accessSwitch('Beta')).toBeEnabled());
+
+    expect(
+      vi.mocked(NetworkService.listWidgetOrganizations).mock.calls.length
+    ).toBe(before + 1);
+  });
+
+  it('moves focus between access modes with the arrow keys', async () => {
+    renderPage();
+    const group = await screen.findByRole('radiogroup');
+    const radios = within(group).getAllByRole('radio');
+    expect(radios.map((radio) => radio.tabIndex)).toEqual([0, -1, -1, -1]);
+
+    radios[0].focus();
+    fireEvent.keyDown(group, { key: 'ArrowRight' });
+    expect(document.activeElement).toBe(radios[1]);
+    fireEvent.keyDown(group, { key: 'ArrowLeft' });
+    fireEvent.keyDown(group, { key: 'ArrowLeft' });
+    expect(document.activeElement).toBe(radios[3]);
+    fireEvent.keyDown(group, { key: 'Home' });
+    expect(document.activeElement).toBe(radios[0]);
+    expect(NetworkService.setWidgetAccess).not.toHaveBeenCalled();
   });
 
   it('reports load failures', async () => {

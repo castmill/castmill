@@ -36,6 +36,10 @@ export function createPagedList<T, Extra>(
     setLoading(true);
     setLoadingMore(false);
     setError(null);
+    // Old page offsets belong to the previous query: no incremental loading until
+    // the new first page arrives.
+    setPage(0);
+    setTotalPages(0);
     try {
       const result = await fetchPage(1);
       if (current !== generation) return;

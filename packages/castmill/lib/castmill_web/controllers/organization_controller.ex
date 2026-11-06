@@ -375,23 +375,40 @@ defmodule CastmillWeb.OrganizationController do
   def create_widget(conn, %{"organization_id" => organization_id, "widget" => widget_file}) do
     alias Castmill.Widgets.PackageProcessor
 
-    with {:ok, widget_data, assets} <- PackageProcessor.process_upload(widget_file),
-         # Get the slug from widget data (or generate one from name)
-         widget_slug <- widget_data["slug"] || slugify(widget_data["name"]),
-         # Store integration definition in meta for later use
-         widget_data <-
-           widget_data |> Map.put("slug", widget_slug) |> store_integration_in_meta(),
-         # Early, friendly check; the insert below is what actually reserves the slug.
-         :ok <- ensure_slug_available(widget_slug),
+    case PackageProcessor.process_upload(widget_file) do
+      {:ok, widget_data, assets} ->
+        # Extracted assets are temporary: remove them whether the upload succeeds or not.
+        try do
+          create_widget_from_package(conn, organization_id, widget_data, assets)
+        after
+          PackageProcessor.cleanup_assets(assets)
+        end
+
+      error ->
+        render_create_widget_error(conn, error)
+    end
+  end
+
+  defp create_widget_from_package(conn, organization_id, widget_data, assets) do
+    # Get the slug from widget data (or generate one from name)
+    widget_slug = widget_data["slug"] || slugify(widget_data["name"])
+    # Store integration definition in meta for later use
+    widget_data = widget_data |> Map.put("slug", widget_slug) |> store_integration_in_meta()
+
+    # Early, friendly check; the insert below is what actually reserves the slug.
+    with :ok <- ensure_slug_available(widget_slug),
          {:ok, widget} <-
            create_widget_with_assets(organization_id, widget_data, widget_slug, assets) do
-      # Clean up temporary asset files
-      PackageProcessor.cleanup_assets(assets)
-
       conn
       |> put_status(:created)
       |> json(Castmill.Widgets.put_access(widget, organization_id))
     else
+      error -> render_create_widget_error(conn, error)
+    end
+  end
+
+  defp render_create_widget_error(conn, error) do
+    case error do
       {:error, :slug_taken} ->
         conn
         |> put_status(:unprocessable_entity)

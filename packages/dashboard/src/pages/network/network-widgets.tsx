@@ -114,6 +114,12 @@ const NetworkWidgets: Component = () => {
       items.map((widget) => (widget.id === updated.id ? updated : widget))
     );
     if (selected()?.id === updated.id) setSelected(updated);
+
+    // The widget may have left (or joined) the access filter: restart pagination so
+    // rows, totals and page offsets match the server again.
+    if (access() !== 'any' && previous?.access !== updated.access) {
+      void widgets.reload();
+    }
   };
 
   const onListKeyDown = (event: KeyboardEvent) => {

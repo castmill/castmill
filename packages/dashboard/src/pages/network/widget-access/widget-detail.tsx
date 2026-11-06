@@ -36,7 +36,8 @@ export const WidgetDetail: Component<{
   const [organizationsSaving, setOrganizationsSaving] = createSignal(false);
   const [confirmHide, setConfirmHide] = createSignal(false);
   const [status, setStatus] = createSignal<StatusFilter>('all');
-  // Bumped after mode changes so the table reloads.
+  // Bumped after mode changes so the table reloads; organization changes reload it
+  // themselves.
   const [version, setVersion] = createSignal(0);
 
   const name = () => widgetName(props.widget, locale());
@@ -61,6 +62,45 @@ export const WidgetDetail: Component<{
     if (saving() || mode === props.widget.access) return;
     if (mode === 'hidden') setConfirmHide(true);
     else void applyMode(mode);
+  };
+
+  // Roving tab stop: only the checked mode (or the first) is in the tab order.
+  const isTabStop = (mode: WidgetAccessMode) =>
+    MODES.some((option) => option.mode === props.widget.access)
+      ? props.widget.access === mode
+      : MODES[0].mode === mode;
+
+  // Arrow keys move focus between modes; Space/Enter selects one, since selecting
+  // saves immediately (and "hidden" asks for confirmation).
+  const onModeKeyDown = (event: KeyboardEvent) => {
+    const radios = Array.from(
+      (event.currentTarget as HTMLElement).querySelectorAll<HTMLButtonElement>(
+        '[role="radio"]:not(:disabled)'
+      )
+    );
+    if (radios.length === 0) return;
+    const index = radios.indexOf(document.activeElement as HTMLButtonElement);
+    let next: number;
+    switch (event.key) {
+      case 'ArrowRight':
+      case 'ArrowDown':
+        next = (index + 1) % radios.length;
+        break;
+      case 'ArrowLeft':
+      case 'ArrowUp':
+        next = (index - 1 + radios.length) % radios.length;
+        break;
+      case 'Home':
+        next = 0;
+        break;
+      case 'End':
+        next = radios.length - 1;
+        break;
+      default:
+        return;
+    }
+    event.preventDefault();
+    radios[next].focus();
   };
 
   return (
@@ -105,6 +145,7 @@ export const WidgetDetail: Component<{
           class={styles['mode-cards']}
           role="radiogroup"
           aria-label={t('network.widgets.access.title')}
+          onKeyDown={onModeKeyDown}
         >
           <For each={MODES}>
             {({ mode, icon: Icon }) => (
@@ -112,6 +153,7 @@ export const WidgetDetail: Component<{
                 type="button"
                 role="radio"
                 aria-checked={props.widget.access === mode}
+                tabIndex={isTabStop(mode) ? 0 : -1}
                 class={styles['mode-card']}
                 classList={{
                   [styles['mode-card-active']]: props.widget.access === mode,
@@ -166,8 +208,9 @@ export const WidgetDetail: Component<{
             reloadKey={version()}
             status={status()}
             onStatusChange={setStatus}
-            onWidgetChange={onChange}
+            onWidgetChange={props.onWidgetChange}
             onSavingChange={setOrganizationsSaving}
+            blocked={modeSaving()}
           />
         </section>
       </Show>

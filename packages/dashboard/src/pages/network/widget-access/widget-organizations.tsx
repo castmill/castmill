@@ -37,6 +37,8 @@ export const WidgetOrganizations: Component<{
   onStatusChange: (status: StatusFilter) => void;
   onWidgetChange: (widget: NetworkWidgetAccess) => void;
   onSavingChange: (saving: boolean) => void;
+  /** Blocks changes while the parent saves the widget's access mode. */
+  blocked?: boolean;
   ref?: (search: HTMLInputElement) => void;
 }> = (props) => {
   const { t } = useI18n();
@@ -61,7 +63,8 @@ export const WidgetOrganizations: Component<{
   let clearTableSelection: (() => void) | undefined;
   let debounce: ReturnType<typeof setTimeout> | undefined;
   let generation = 0;
-  const mutationPending = () => saving().size > 0 || bulkSaving();
+  const mutationPending = () =>
+    saving().size > 0 || bulkSaving() || !!props.blocked;
   const resultsPending = () =>
     loading() || !resultsReady() || searchInput().trim() !== search();
 
@@ -167,12 +170,10 @@ export const WidgetOrganizations: Component<{
       props.onWidgetChange(updated);
       await load();
     } catch (error) {
-      setRowEnabled(organization.id, !enabled);
-      setCounts((current) => ({
-        ...current,
-        enabled: current.enabled + (enabled ? -1 : 1),
-      }));
       toast.error(accessErrorMessage(error, t));
+      // Results may have been replaced by another query meanwhile: reload the
+      // current one rather than reverting the optimistic change against it.
+      await load();
     } finally {
       markSaving(organization.id, false);
     }
