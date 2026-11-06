@@ -155,13 +155,19 @@ export const ComboBox = <T extends { id: string | number }>(
       return;
     }
 
-    const rect = comboBoxRef?.getBoundingClientRect();
-    if (!rect || rect.height === 0) {
+    const comboBox = comboBoxRef;
+    if (!comboBox) {
       setPlacement('down');
       setListMaxHeight(undefined);
       return;
     }
-    const comboBox = comboBoxRef!;
+
+    const rect = comboBox.getBoundingClientRect();
+    if (rect.height === 0) {
+      setPlacement('down');
+      setListMaxHeight(undefined);
+      return;
+    }
 
     let top = 0;
     let bottom = window.innerHeight;
@@ -226,10 +232,10 @@ export const ComboBox = <T extends { id: string | number }>(
       const last = focusable?.[focusable.length - 1];
       const active = document.activeElement;
 
-      if (!sheetRef || !first || !last) {
+      if (!first || !last) {
         event.preventDefault();
         sheetRef?.focus();
-      } else if (!sheetRef.contains(active)) {
+      } else if (!sheetRef?.contains(active)) {
         event.preventDefault();
         (event.shiftKey ? last : first).focus();
       } else if (event.shiftKey && (active === first || active === sheetRef)) {
