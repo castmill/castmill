@@ -48,6 +48,16 @@ This design allows:
 - Paginated content to define the actual duration
 - Proper calculation of playlist total runtime
 
+### Template Value Formatting
+
+Bindings `fmt`, `list` and `first` (`widgets/template/binding.ts`, formatters in `widgets/template/format/`)
+format raw integration data on the player: numbers, dates (bundled locale tables for the nine dashboard
+languages; ISO strings parsed by hand for Chrome 38), list filtering/sorting/limiting. `@now` is a reactive
+clock that re-evaluates dependent options every minute. The playlist JSON carries `locale` (organization
+display locale), copied into `PlayerGlobals.locale`. The server validates the same grammar
+(`Castmill.Widgets.TemplateBindings`); both suites share `packages/player/tests/fixtures/fmt-grammar.json`.
+See `agents/systems/TEMPLATE-VALUE-FORMATTING.md`.
+
 ### Template Components
 
 Template components (`layout.tsx`, `text.tsx`, `animation.tsx`, `image-carousel.tsx`) create

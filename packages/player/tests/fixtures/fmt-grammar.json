@@ -1,0 +1,38 @@
+{
+  "description": "Shared fmt grammar fixtures: the player (tests/format.spec.ts) and the server validator (Castmill.Widgets.TemplateBindings) must agree on which texts are valid.",
+  "valid": [
+    "",
+    "plain text",
+    "{data.price}",
+    "{data.price | number} kr",
+    "{data.price | number:0:'.'}",
+    "{data.price|number:auto:' ':','}",
+    "{$.start | date:'D/M'} kl.{$.start | date:'HH'}-{$.end | date:'HH'}",
+    "{$.start | date:'dddd DD/MM':sv | capitalize}",
+    "{$.start | timed | date:'D/M [kl.]HH'}",
+    "{$ | upper}",
+    "{@now | date:'HH:mm'}",
+    "{data.text | truncate:20}",
+    "{data.fee | default:'ENLIGT ÖK'}",
+    "{data.name | lower | trim}",
+    "{{literal braces}} and {data.x}",
+    "{data.x | default:'it''s'}",
+    "{data.x | date:'D/M | HH'}"
+  ],
+  "invalid": [
+    "{data.price",
+    "data.price}",
+    "{}",
+    "{ | number}",
+    "{data.price | }",
+    "{data.price | money}",
+    "{data.price | upper:1}",
+    "{data.date | date}",
+    "{data.date | date:'D':sv:extra}",
+    "{data.x | truncate}",
+    "{data.x | default:'unclosed}",
+    "{data.x | default:'a'b}",
+    "{data.{x}}",
+    "{data.x | number:1:2:3:4}"
+  ]
+}

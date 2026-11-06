@@ -102,6 +102,7 @@ defmodule Castmill.Widgets.Widget do
     |> validate_required([:name, :template])
     |> unique_constraint(:name)
     |> unique_constraint(:slug)
+    |> validate_template_bindings()
     |> validate_schema(:options_schema)
     |> validate_schema(:data_schema)
   end
@@ -127,6 +128,16 @@ defmodule Castmill.Widgets.Widget do
     |> cast(attrs, [:name, :description])
     |> validate_required([:name])
     |> unique_constraint(:name)
+  end
+
+  # Rejects malformed fmt/list/first bindings (see Castmill.Widgets.TemplateBindings).
+  defp validate_template_bindings(changeset) do
+    validate_change(changeset, :template, fn :template, template ->
+      case Castmill.Widgets.TemplateBindings.validate(template) do
+        :ok -> []
+        {:error, messages} -> Enum.map(messages, &{:template, &1})
+      end
+    end)
   end
 
   def base_query() do

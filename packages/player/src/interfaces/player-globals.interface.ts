@@ -53,4 +53,9 @@ export interface PlayerGlobals {
    * provided by the player host.
    */
   setPlaybackBlocked?: (source: object, block?: PlayerRuntimeError) => void;
+  /**
+   * Locale for template formatters (day/month names, number separators), e.g.
+   * the organization's display locale sent with each playlist. Defaults to "en".
+   */
+  locale?: string;
 }

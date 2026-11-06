@@ -83,16 +83,6 @@ export class TextComponent implements TemplateComponent {
   }
 }
 
-// TODO: We must support formatters and templates. For example:
-export interface formatter {
-  fn: string;
-  args: (string | number)[];
-}
-
-export type pipeline = formatter[];
-
-// pipeline: [{fn: "formatNumber", args: ["$val"]}, {fn: "format", args: ["$val SEK"]}]
-// Initial formatters must include the most important ones, such as formating numbers suitable for prices and quantities.
 // TODO: rename text to value (all components that need a value should have value as prop)
 
 interface TextProps extends BaseComponentProps {

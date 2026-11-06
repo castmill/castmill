@@ -401,7 +401,7 @@ defmodule CastmillWeb.OrganizationController do
            create_widget_with_assets(organization_id, widget_data, widget_slug, assets) do
       conn
       |> put_status(:created)
-      |> json(Castmill.Widgets.put_access(widget, organization_id))
+      |> json(with_template_warnings(Castmill.Widgets.put_access(widget, organization_id)))
     else
       error -> render_create_widget_error(conn, error)
     end
@@ -487,6 +487,24 @@ defmodule CastmillWeb.OrganizationController do
       widget
       |> Ecto.Changeset.change(icon: resolved["icon"], fonts: resolved["fonts"] || widget.fonts)
       |> Castmill.Repo.update()
+    end
+  end
+
+  # Likely template mistakes that are not errors, e.g. a format text missing its
+  # {"fmt": …} wrapper, are returned to the uploader as "template_warnings".
+  defp with_template_warnings(widget) do
+    case Castmill.Widgets.TemplateBindings.check(widget.template) do
+      {_errors, []} ->
+        widget
+
+      {_errors, warnings} ->
+        widget
+        |> Jason.encode!()
+        |> Jason.decode!()
+        |> Map.put(
+          "template_warnings",
+          Enum.map(warnings, &Castmill.Widgets.TemplateBindings.describe/1)
+        )
     end
   end
 

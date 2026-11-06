@@ -647,6 +647,54 @@ Each media item in Castmill has a `files` array containing multiple `File` objec
 
 This pattern works identically for both images and videos, ensuring optimal media delivery across all Castmill contexts.
 
+### Formatting Values
+
+Integrations deliver raw values; templates format them on the player, so time-based content (such as "upcoming
+viewings") stays correct even on a screen that is offline. Three bindings do this:
+
+**`fmt`** – a text with placeholders `{path | formatter:arg}`. If any placeholder is empty, the whole text is
+empty, so `kr/mån` never appears without a fee:
+
+```json
+{ "type": "text", "name": "price", "opts": { "text": { "fmt": "{data.price | number} kr" }, "autofit": {} } }
+```
+
+| Formatter | Example | Result (sv) |
+|-----------|---------|-------------|
+| `number[:decimals[:group[:decimal]]]` | `{data.price \| number}` | `4 950 000` |
+| `date:pattern[:locale]` | `{data.start \| date:'ddd D/M [kl.] HH:mm'}` | `tor 12/11 kl. 17:00` |
+| `timed` | `{data.start \| timed \| date:'HH'}` | empty at midnight |
+| `upper`, `lower`, `capitalize`, `trim` | `{data.day \| capitalize}` | `Torsdag` |
+| `truncate:n` | `{data.title \| truncate:20}` | at most 20 characters + `…` |
+| `default:'x'` | `{data.fee \| default:'—'}` | `—` when missing |
+
+Day/month names and number separators follow the organization's display locale (or the template's
+`options.locale`). Use `@now` for the current time; it re-evaluates every minute.
+
+**`list`** – filter, sort, map, limit and join an array:
+
+```json
+{
+  "list": {
+    "key": "data.viewings",
+    "where": [{ "key": "$.end", "gte": "@now" }],
+    "sort": "$.start",
+    "limit": 2,
+    "item": { "fmt": "{$.start | date:'D/M'} kl.{$.start | date:'HH'}" },
+    "join": ", "
+  }
+}
+```
+
+**`first`** – the first non-empty value, for fallbacks and optional parts:
+
+```json
+{ "first": [{ "key": "options.overrides.price" }, { "fmt": "{data.price | number} kr" }, "On request"] }
+```
+
+Always wrap format texts as `{ "fmt": … }`; plain strings are shown as-is. Invalid bindings are rejected when the
+widget is uploaded.
+
 ---
 
 ## Schemas

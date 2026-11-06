@@ -174,6 +174,9 @@ export class Layer extends EventEmitter {
     resourceManager: ResourceManager,
     globals: PlayerGlobals
   ): Layer {
+    if (playlist.locale && !globals.locale) {
+      globals = { ...globals, locale: playlist.locale };
+    }
     const widget: TemplateWidget = new TemplateWidget(resourceManager, {
       name: 'layout',
       // Don't set a fixed duration - let the widget calculate it dynamically
