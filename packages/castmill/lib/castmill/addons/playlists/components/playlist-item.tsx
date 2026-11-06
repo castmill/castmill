@@ -10,7 +10,7 @@ import { debounce } from 'lodash';
 import { IconWrapper, Slider, formatDuration } from '@castmill/ui-common';
 import { RiEditorDraggable } from 'solid-icons/ri';
 import { AiOutlineEdit, AiOutlineWarning } from 'solid-icons/ai';
-import { BsTrash3 } from 'solid-icons/bs';
+import { BsChevronDown, BsChevronUp, BsTrash3 } from 'solid-icons/bs';
 
 import { DEFAULT_WIDGET_ICON } from '../../common/constants';
 import { isImageIcon, getIconUrl } from '../utils/icon-utils';
@@ -21,7 +21,15 @@ import {
 } from '../../common/utils/widget-catalog-utils';
 import styles from './playlist-item.module.scss';
 
-import { Component, onMount, createSignal, onCleanup, Show } from 'solid-js';
+import {
+  Component,
+  onMount,
+  createSignal,
+  createEffect,
+  on,
+  onCleanup,
+  Show,
+} from 'solid-js';
 import { JsonPlaylistItem } from '@castmill/player';
 
 // get thumbnail uri from playlist item
@@ -252,6 +260,18 @@ export const PlaylistItem: Component<{
   onChangeDuration: (item: JsonPlaylistItem, duration: number) => void;
   onDragStart: () => void;
   onClick?: () => void;
+  /** Touch/keyboard alternative to dragging; buttons render when provided. */
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
+  isFirst?: boolean;
+  isLast?: boolean;
+  /** 1-based position and list length shown in the reorder stepper. */
+  position?: number;
+  total?: number;
+  /** False on touch devices: native drag conflicts with scrolling. */
+  dragEnabled?: boolean;
+  /** Briefly highlights the item after it has been moved. */
+  highlighted?: boolean;
   animate: boolean;
 }> = (props) => {
   const t = (key: string, params?: Record<string, any>) =>
@@ -260,6 +280,11 @@ export const PlaylistItem: Component<{
   let itemRef: HTMLDivElement | undefined = undefined;
   let draggingRef: HTMLDivElement | undefined = undefined;
   let handleRef: HTMLDivElement | undefined = undefined;
+  let moveUpRef!: HTMLButtonElement;
+  let moveDownRef!: HTMLButtonElement;
+
+  const dragEnabled = () => props.dragEnabled !== false;
+  const hasReorderButtons = () => !!(props.onMoveUp || props.onMoveDown);
 
   const [isDragging, setIsDragging] = createSignal(false);
   const [animationEnabled, setAnimationEnabled] = createSignal(true);
@@ -294,6 +319,7 @@ export const PlaylistItem: Component<{
       const cleanupDrag = draggable({
         element: draggingRef,
         dragHandle: handleRef,
+        canDrag: dragEnabled,
         getInitialData: () => ({
           item: props.item,
           index: props.index,
@@ -311,6 +337,34 @@ export const PlaylistItem: Component<{
       });
     }
   });
+
+  // Keep keyboard focus on the stepper when an edge disables the used button.
+  createEffect(
+    on(
+      () => [props.isFirst, props.isLast],
+      () => {
+        const active = document.activeElement;
+        if (props.isFirst && active === moveUpRef) moveDownRef?.focus();
+        if (props.isLast && active === moveDownRef) moveUpRef?.focus();
+      },
+      { defer: true }
+    )
+  );
+
+  createEffect(
+    on(
+      () => props.highlighted,
+      (highlighted) => {
+        if (highlighted) {
+          (draggingRef as HTMLDivElement | undefined)?.scrollIntoView?.({
+            block: 'nearest',
+            behavior: 'smooth',
+          });
+        }
+      },
+      { defer: true }
+    )
+  );
 
   const handleRemove = () => {
     props.onRemove(props.item);
@@ -360,10 +414,59 @@ export const PlaylistItem: Component<{
         class={`item-placeholder ${animationEnabled() && props.animate ? 'animate' : ''}`}
         style={{ height: isDraggedOver() ? '6em' : '1em' }}
       ></div>
-      <div ref={draggingRef} class={styles.playlistItem}>
-        <div ref={handleRef} class={styles.playlistItemDragHandle}>
-          <IconWrapper icon={RiEditorDraggable} />
+      <div
+        ref={draggingRef}
+        class={styles.playlistItem}
+        classList={{
+          [styles.highlighted]: !!props.highlighted,
+          [styles.withStepper]: hasReorderButtons(),
+        }}
+      >
+        <Show when={hasReorderButtons()}>
           <div
+            class={styles.reorderStepper}
+            role="group"
+            aria-label={t('playlists.editor.itemPosition', {
+              position: props.position ?? props.index + 1,
+              total: props.total ?? '',
+            })}
+          >
+            <button
+              ref={moveUpRef}
+              type="button"
+              class={styles.reorderButton}
+              disabled={props.isFirst}
+              onClick={() => props.onMoveUp?.()}
+              title={t('playlists.editor.moveUp')}
+              aria-label={t('playlists.editor.moveUp')}
+            >
+              <IconWrapper icon={BsChevronUp} />
+            </button>
+            <button
+              ref={moveDownRef}
+              type="button"
+              class={styles.reorderButton}
+              disabled={props.isLast}
+              onClick={() => props.onMoveDown?.()}
+              title={t('playlists.editor.moveDown')}
+              aria-label={t('playlists.editor.moveDown')}
+            >
+              <IconWrapper icon={BsChevronDown} />
+            </button>
+          </div>
+        </Show>
+        <div
+          ref={handleRef}
+          class={styles.playlistItemDragHandle}
+          classList={{ [styles.dragDisabled]: !dragEnabled() }}
+        >
+          <Show when={dragEnabled() && !hasReorderButtons()}>
+            <span class={styles.playlistItemGrip} aria-hidden="true">
+              <IconWrapper icon={RiEditorDraggable} />
+            </span>
+          </Show>
+          <div
+            class={styles.playlistItemMain}
             onClick={(e) => {
               // Only trigger onClick if not dragging
               if (!isDragging()) {
@@ -380,39 +483,49 @@ export const PlaylistItem: Component<{
             />
           </div>
         </div>
-        <div class={styles.playlistItemDuration}>
-          <Show
-            when={!isDynamicDuration()}
-            fallback={
-              <div class={styles.autoDuration}>
-                <span class={styles.autoDurationLabel}>
-                  {t('playlists.duration')}
-                </span>
-                <span class={styles.autoDurationValue}>
-                  {readableDuration()}
-                </span>
-              </div>
-            }
-          >
-            <Slider
-              name={t('playlists.duration')}
-              value={props.item.duration || 10000}
-              min={1000}
-              max={Math.max(60000, props.item.duration || 10000)}
-              step={1000}
-              onSlideStop={handleDurationChange}
-              formatValue={formatDuration}
-            />
-          </Show>
-        </div>
-        <div class={styles.playlistItemActions}>
-          <div class={styles.playlistItemEditIcon}>
-            <button onClick={() => props.onEdit()}>
+        <div class={styles.playlistItemControls}>
+          <div class={styles.playlistItemDuration}>
+            <Show
+              when={!isDynamicDuration()}
+              fallback={
+                <div class={styles.autoDuration}>
+                  <span class={styles.autoDurationLabel}>
+                    {t('playlists.duration')}
+                  </span>
+                  <span class={styles.autoDurationValue}>
+                    {readableDuration()}
+                  </span>
+                </div>
+              }
+            >
+              <Slider
+                name={t('playlists.duration')}
+                value={props.item.duration || 10000}
+                min={1000}
+                max={Math.max(60000, props.item.duration || 10000)}
+                step={1000}
+                onSlideStop={handleDurationChange}
+                formatValue={formatDuration}
+              />
+            </Show>
+          </div>
+          <div class={styles.playlistItemActions}>
+            <button
+              type="button"
+              class={styles.playlistItemAction}
+              onClick={() => props.onEdit()}
+              title={t('playlists.editor.editItem')}
+              aria-label={t('playlists.editor.editItem')}
+            >
               <IconWrapper icon={AiOutlineEdit} />
             </button>
-          </div>
-          <div class={styles.playlistItemRemoveIcon}>
-            <button onClick={handleRemove}>
+            <button
+              type="button"
+              class={`${styles.playlistItemAction} ${styles.danger}`}
+              onClick={handleRemove}
+              title={t('playlists.editor.removeItem')}
+              aria-label={t('playlists.editor.removeItem')}
+            >
               <IconWrapper icon={BsTrash3} />
             </button>
           </div>

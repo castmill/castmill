@@ -3,6 +3,7 @@ import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element
 import {
   Component,
   For,
+  JSX,
   createEffect,
   createSignal,
   onCleanup,
@@ -14,12 +15,13 @@ import {
   JsonWidgetConfig,
   OptionsDict,
 } from '@castmill/player';
-import { Modal } from '@castmill/ui-common';
+import { ConfirmDialog, Modal, ModalRef } from '@castmill/ui-common';
 
 import { PlaylistItem } from './playlist-item';
 import { WidgetConfig } from './widget-config';
 import { AddonStore } from '../../common/interfaces/addon-store';
 import { PlaylistsService } from '../services/playlists.service';
+import { createMediaQuery } from '../utils/media-query';
 import {
   getTranslatedWidgetName,
   getTranslatedWidgetDescription,
@@ -61,12 +63,37 @@ export const PlaylistItems: Component<{
   onChangeDuration: (item: JsonPlaylistItem, duration: number) => Promise<void>;
   onCredentialsError?: (error: CredentialsError) => void;
   onSeekToItem?: (index: number) => void;
+  /** Receives the add function used by click/tap widget adding. */
+  onAddWidgetReady?: (
+    addWidget: (widget: JsonWidget, index?: number) => Promise<void>
+  ) => void;
+  reorderButtons?: boolean;
+  /** Disable drag-and-drop reordering, e.g. on touch devices. */
+  dragEnabled?: boolean;
+  /** Tapping a row opens its editor (narrow layouts without a visible preview). */
+  tapToEdit?: boolean;
+  emptyContent?: JSX.Element;
 }> = (props) => {
   const t = (key: string, params?: Record<string, any>) =>
     props.store.i18n?.t(key, params) || key;
   const locale = () => props.store.i18n?.locale() || 'en';
 
   const [showModal, setShowModal] = createSignal<JsonPlaylistItem>();
+  const [configDirty, setConfigDirty] = createSignal(false);
+  const [confirmDiscard, setConfirmDiscard] = createSignal(false);
+  const [itemToRemove, setItemToRemove] = createSignal<JsonPlaylistItem>();
+  // The config modal is full screen on phones, where a back arrow is expected.
+  const isPhone = createMediaQuery('(max-width: 36em)', false);
+  let configModal: ModalRef | undefined;
+
+  /** Close request from the header, Escape, backdrop or Cancel. */
+  const requestCloseConfig = () => {
+    if (configDirty()) {
+      setConfirmDiscard(true);
+      return false;
+    }
+    return true;
+  };
   const [promiseResolve, setPromiseResolve] = createSignal<{
     resolve: (
       value:
@@ -84,6 +111,8 @@ export const PlaylistItems: Component<{
     expandedOptions: OptionsDict;
   }) => {
     setShowModal();
+    setConfigDirty(false);
+    setConfirmDiscard(false);
     promiseResolve()?.resolve(value);
   };
 
@@ -113,12 +142,21 @@ export const PlaylistItems: Component<{
     await props.onEditItem(item, { config, expandedOptions });
   };
 
+  const [movedItem, setMovedItem] = createSignal<JsonPlaylistItem>();
+  let movedTimer: ReturnType<typeof setTimeout> | undefined;
+  onCleanup(() => clearTimeout(movedTimer));
+
   const moveItem = async (
     item: JsonPlaylistItem,
     currentIndex: number,
     newIndex: number | undefined
   ) => {
     await props.onMoveItem(item, currentIndex, newIndex);
+    if (props.reorderButtons) {
+      setMovedItem(() => item);
+      clearTimeout(movedTimer);
+      movedTimer = setTimeout(() => setMovedItem(undefined), 1200);
+    }
   };
 
   const insertItem = async (widget: JsonWidget, index: number) => {
@@ -200,8 +238,18 @@ export const PlaylistItems: Component<{
     }
   };
 
-  const removeItem = async (itemToRemove: JsonPlaylistItem) => {
-    await props.onRemoveItem(itemToRemove);
+  props.onAddWidgetReady?.((widget, index) =>
+    insertItem(widget, index ?? props.items.length)
+  );
+
+  const removeItem = async (item: JsonPlaylistItem) => {
+    setItemToRemove(item);
+  };
+
+  const confirmRemove = async () => {
+    const item = itemToRemove();
+    setItemToRemove(undefined);
+    if (item) await props.onRemoveItem(item);
   };
 
   const changeDuration = async (item: JsonPlaylistItem, duration: number) => {
@@ -278,9 +326,12 @@ export const PlaylistItems: Component<{
     <>
       <div
         ref={droppableRef}
-        style={{ 'background-color': isDraggedOver() ? 'lightblue' : '#555' }}
         class="playlist-items"
+        classList={{ 'drag-over': isDraggedOver() }}
       >
+        <Show when={props.items.length === 0 && props.emptyContent}>
+          <div class="playlist-items-empty">{props.emptyContent}</div>
+        </Show>
         {/* Animates an empty space when dragging over an item
         <TransitionGroup name="item-fade">
         */}
@@ -299,8 +350,34 @@ export const PlaylistItems: Component<{
               onRemove={removeItem}
               onChangeDuration={changeDuration}
               onEdit={() => editItem(item)}
-              onClick={() => props.onSeekToItem?.(index())}
+              onClick={() =>
+                props.tapToEdit ? editItem(item) : props.onSeekToItem?.(index())
+              }
               index={index()}
+              position={index() + 1}
+              total={props.items.length}
+              dragEnabled={props.dragEnabled}
+              highlighted={movedItem() === item}
+              isFirst={index() === 0}
+              isLast={index() === props.items.length - 1}
+              onMoveUp={
+                props.reorderButtons
+                  ? () => moveItem(item, index(), index() - 1)
+                  : undefined
+              }
+              onMoveDown={
+                props.reorderButtons
+                  ? () =>
+                      moveItem(
+                        item,
+                        index(),
+                        // Drop semantics: insert before index + 2, or append.
+                        index() + 2 < props.items.length
+                          ? index() + 2
+                          : undefined
+                      )
+                  : undefined
+              }
               onDragStart={() => {
                 setAnimationEnabled(false);
                 // We use this to disable animations when starting to drag
@@ -333,6 +410,11 @@ export const PlaylistItems: Component<{
             t('playlists.configureYourWidget')
           }
           onClose={() => closeDialog()}
+          onCloseRequest={requestCloseConfig}
+          closeVariant={isPhone() ? 'back' : 'close'}
+          closeLabel={isPhone() ? t('common.back') : t('common.close')}
+          ref={(ref) => (configModal = ref)}
+          contentClass="widget-config-modal"
         >
           <WidgetConfig
             store={props.store}
@@ -341,11 +423,42 @@ export const PlaylistItems: Component<{
             onSubmit={async ({ config, expandedOptions }) => {
               closeDialog({ config, expandedOptions });
             }}
+            onCancel={() => {
+              if (requestCloseConfig()) configModal?.close();
+            }}
+            onDirtyChange={setConfigDirty}
             organizationId={props.organizationId}
             playlistId={props.playlistId}
           />
         </Modal>
       </Show>
+      <ConfirmDialog
+        show={confirmDiscard()}
+        title={t('playlists.editor.discardChangesTitle')}
+        message={t('playlists.editor.discardChangesMessage')}
+        confirmLabel={t('playlists.editor.discard')}
+        cancelLabel={t('playlists.editor.keepEditing')}
+        closeLabel={t('common.close')}
+        onClose={() => setConfirmDiscard(false)}
+        onConfirm={() => {
+          setConfirmDiscard(false);
+          configModal?.close();
+        }}
+      />
+      <ConfirmDialog
+        show={!!itemToRemove()}
+        title={t('playlists.editor.removeItemTitle')}
+        message={t('playlists.editor.removeItemMessage', {
+          name: itemToRemove()
+            ? getTranslatedWidgetName(itemToRemove()!.widget, locale())
+            : '',
+        })}
+        confirmLabel={t('common.remove')}
+        cancelLabel={t('common.cancel')}
+        closeLabel={t('common.close')}
+        onClose={() => setItemToRemove(undefined)}
+        onConfirm={confirmRemove}
+      />
     </>
   );
 };

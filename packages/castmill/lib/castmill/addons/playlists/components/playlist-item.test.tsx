@@ -6,9 +6,10 @@
  * and src attribute queries instead of direct class name selectors.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@solidjs/testing-library';
+import { render, screen, fireEvent } from '@solidjs/testing-library';
 import { PlaylistItem } from './playlist-item';
 import type { JsonPlaylistItem } from '@castmill/player';
+import { createSignal } from 'solid-js';
 
 // Mock the draggable and dropTarget functions
 vi.mock('@atlaskit/pragmatic-drag-and-drop/element/adapter', () => ({
@@ -16,29 +17,37 @@ vi.mock('@atlaskit/pragmatic-drag-and-drop/element/adapter', () => ({
   dropTargetForElements: vi.fn(() => () => {}),
 }));
 
+// Fixtures only define the fields PlaylistItem reads, so overrides are loose.
+type MockItemOverrides = Omit<
+  Partial<JsonPlaylistItem>,
+  'config' | 'widget'
+> & {
+  config?: { options: Record<string, unknown> };
+  widget?: Record<string, unknown>;
+};
+
 // Base mock item structure
-const createMockItem = (
-  overrides: Partial<JsonPlaylistItem> = {}
-): JsonPlaylistItem => ({
-  id: 1,
-  duration: 10000,
-  offset: 0,
-  config: {
-    options: {},
-  },
-  widget: {
+const createMockItem = (overrides: MockItemOverrides = {}): JsonPlaylistItem =>
+  ({
     id: 1,
-    name: 'Test Widget',
-    slug: 'test-widget',
-    description: 'A test widget',
-    icon: undefined,
-    template: {},
-    options_schema: {},
-    default_config: {},
-    ...overrides.widget,
-  },
-  ...overrides,
-});
+    duration: 10000,
+    offset: 0,
+    config: {
+      options: {},
+    },
+    widget: {
+      id: 1,
+      name: 'Test Widget',
+      slug: 'test-widget',
+      description: 'A test widget',
+      icon: undefined,
+      template: {},
+      options_schema: {},
+      default_config: {},
+      ...overrides.widget,
+    },
+    ...overrides,
+  }) as unknown as JsonPlaylistItem;
 
 describe('PlaylistItem Icon URL Resolution', () => {
   const baseUrl = 'http://localhost:4000';
@@ -409,5 +418,163 @@ describe('PlaylistItem Click Behavior', () => {
 
     const widgetName = screen.getByText('Test Widget');
     widgetName.click(); // Should not throw
+  });
+});
+
+describe('PlaylistItem actions', () => {
+  const props = () => ({
+    index: 1,
+    baseUrl: 'http://localhost:4000',
+    onEdit: vi.fn(),
+    onRemove: vi.fn(),
+    onChangeDuration: vi.fn(),
+    onDragStart: vi.fn(),
+    animate: false,
+  });
+
+  it('hides move buttons unless reorder handlers are provided', () => {
+    render(() => <PlaylistItem item={createMockItem()} {...props()} />);
+
+    expect(
+      screen.queryByRole('button', { name: 'playlists.editor.moveUp' })
+    ).toBeNull();
+    expect(
+      screen.getByRole('button', { name: 'playlists.editor.editItem' })
+    ).toBeInTheDocument();
+  });
+
+  it('moves, edits and removes the item from its action buttons', () => {
+    const p = props();
+    const onMoveUp = vi.fn();
+    const onMoveDown = vi.fn();
+    const item = createMockItem();
+    render(() => (
+      <PlaylistItem
+        item={item}
+        {...p}
+        onMoveUp={onMoveUp}
+        onMoveDown={onMoveDown}
+      />
+    ));
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'playlists.editor.moveUp' })
+    );
+    fireEvent.click(
+      screen.getByRole('button', { name: 'playlists.editor.moveDown' })
+    );
+    fireEvent.click(
+      screen.getByRole('button', { name: 'playlists.editor.editItem' })
+    );
+    fireEvent.click(
+      screen.getByRole('button', { name: 'playlists.editor.removeItem' })
+    );
+
+    expect(onMoveUp).toHaveBeenCalledTimes(1);
+    expect(onMoveDown).toHaveBeenCalledTimes(1);
+    expect(p.onEdit).toHaveBeenCalledTimes(1);
+    expect(p.onRemove).toHaveBeenCalledWith(item);
+  });
+
+  it('disables moving past the start or end of the playlist', () => {
+    render(() => (
+      <PlaylistItem
+        item={createMockItem()}
+        {...props()}
+        onMoveUp={vi.fn()}
+        onMoveDown={vi.fn()}
+        isFirst
+        isLast
+      />
+    ));
+
+    expect(
+      screen.getByRole('button', { name: 'playlists.editor.moveUp' })
+    ).toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: 'playlists.editor.moveDown' })
+    ).toBeDisabled();
+  });
+
+  it('shows a reorder stepper instead of the drag grip', () => {
+    const { container } = render(() => (
+      <PlaylistItem
+        item={createMockItem()}
+        {...props()}
+        index={1}
+        position={2}
+        total={5}
+        onMoveUp={vi.fn()}
+        onMoveDown={vi.fn()}
+      />
+    ));
+
+    const stepper = screen.getByRole('group', {
+      name: 'playlists.editor.itemPosition',
+    });
+    expect(stepper.querySelectorAll('button')).toHaveLength(2);
+    expect(container.querySelector('[aria-hidden="true"] svg')).toBeNull();
+  });
+
+  it('disables dragging and hides the grip when drag is off', async () => {
+    const { draggable } =
+      await import('@atlaskit/pragmatic-drag-and-drop/element/adapter');
+    const { container, unmount } = render(() => (
+      <PlaylistItem item={createMockItem()} {...props()} />
+    ));
+    expect(container.querySelector('span[aria-hidden="true"]')).not.toBeNull();
+    unmount();
+
+    vi.mocked(draggable).mockClear();
+    const touch = render(() => (
+      <PlaylistItem item={createMockItem()} {...props()} dragEnabled={false} />
+    ));
+
+    expect(
+      touch.container.querySelector('span[aria-hidden="true"]')
+    ).toBeNull();
+    const args = vi.mocked(draggable).mock.calls[0][0];
+    expect(args.canDrag?.({} as any)).toBe(false);
+  });
+
+  it('keeps focus in the stepper when the item reaches an edge', () => {
+    const [isFirst, setIsFirst] = createSignal(false);
+    render(() => (
+      <PlaylistItem
+        item={createMockItem()}
+        {...props()}
+        onMoveUp={vi.fn()}
+        onMoveDown={vi.fn()}
+        isFirst={isFirst()}
+      />
+    ));
+    const up = screen.getByRole('button', { name: 'playlists.editor.moveUp' });
+    up.focus();
+
+    setIsFirst(true);
+
+    expect(document.activeElement).toBe(
+      screen.getByRole('button', { name: 'playlists.editor.moveDown' })
+    );
+  });
+
+  it('scrolls into view when highlighted after a move', () => {
+    const scroll = vi.fn();
+    Element.prototype.scrollIntoView = scroll;
+    const [highlighted, setHighlighted] = createSignal(false);
+    render(() => (
+      <PlaylistItem
+        item={createMockItem()}
+        {...props()}
+        highlighted={highlighted()}
+      />
+    ));
+
+    setHighlighted(true);
+
+    expect(scroll).toHaveBeenCalledWith({
+      block: 'nearest',
+      behavior: 'smooth',
+    });
   });
 });

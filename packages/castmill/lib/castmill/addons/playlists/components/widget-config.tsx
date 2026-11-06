@@ -24,8 +24,7 @@ import {
   LocationValue,
   LocationFieldAttributes,
 } from '@castmill/player';
-import { BsCheckLg } from 'solid-icons/bs';
-import { BsX } from 'solid-icons/bs';
+import { BsCheckLg, BsPlusLg } from 'solid-icons/bs';
 import {
   FormItem,
   Button,
@@ -62,6 +61,9 @@ interface WidgetConfigProps {
     config: Partial<JsonWidgetConfig>;
     expandedOptions: OptionsDict;
   }) => Promise<void>;
+  /** Shows a Cancel button; the parent decides whether to confirm discarding. */
+  onCancel?: () => void;
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
 type FormTypes =
@@ -178,31 +180,32 @@ export const normalizeWidgetOptionsForApi = (
         normalizedOptions[key] = {
           ...layoutRef,
           zonePlaylistMap: Object.fromEntries(
-            Object.entries(layoutRef.zonePlaylistMap || {}).map(
-              ([zoneId, assignment]) => [
-                zoneId,
-                {
-                  playlistId:
-                    typeof assignment === 'number'
-                      ? assignment
-                      : typeof assignment === 'string' &&
-                          /^-?\d+$/.test(assignment.trim())
-                        ? Number.parseInt(assignment, 10)
+            // Older saves may store raw IDs or string IDs instead of objects.
+            Object.entries(
+              (layoutRef.zonePlaylistMap || {}) as Record<string, unknown>
+            ).map(([zoneId, assignment]) => [
+              zoneId,
+              {
+                playlistId:
+                  typeof assignment === 'number'
+                    ? assignment
+                    : typeof assignment === 'string' &&
+                        /^-?\d+$/.test(assignment.trim())
+                      ? Number.parseInt(assignment, 10)
+                      : typeof assignment === 'object' &&
+                          assignment !== null &&
+                          'playlistId' in assignment &&
+                          typeof assignment.playlistId === 'number'
+                        ? assignment.playlistId
                         : typeof assignment === 'object' &&
                             assignment !== null &&
                             'playlistId' in assignment &&
-                            typeof assignment.playlistId === 'number'
-                          ? assignment.playlistId
-                          : typeof assignment === 'object' &&
-                              assignment !== null &&
-                              'playlistId' in assignment &&
-                              typeof assignment.playlistId === 'string' &&
-                              /^-?\d+$/.test(assignment.playlistId.trim())
-                            ? Number.parseInt(assignment.playlistId, 10)
-                            : undefined,
-                },
-              ]
-            )
+                            typeof assignment.playlistId === 'string' &&
+                            /^-?\d+$/.test(assignment.playlistId.trim())
+                          ? Number.parseInt(assignment.playlistId, 10)
+                          : undefined,
+              },
+            ])
           ),
         };
         return normalizedOptions;
@@ -273,6 +276,9 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
   const toast = useToast();
   const [widgetConfig, setWidgetConfig] = createSignal(props.item.config);
   const [isFormModified, setIsFormModified] = createSignal(false);
+  // Items that are not yet in the playlist are added rather than saved.
+  const isNewItem = () => props.item.id === undefined || props.item.id === null;
+  createEffect(() => props.onDirtyChange?.(isFormModified()));
   const [isFormValid, setIsFormValid] = createSignal(false);
   const [errors, setErrors] = createSignal(new Map());
   // Initialize with current playlist ID to prevent self-selection immediately
@@ -514,7 +520,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
 
   const validateField = (
     type: FormTypes,
-    schema: FieldAttributes | SimpleType,
+    schema: FieldAttributes | SimpleType | LocationFieldAttributes,
     key: string,
     value: any
   ) => {
@@ -724,6 +730,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
             return (
               <>
                 <ComboBox<JsonMedia>
+                  closeLabel={t('common.close')}
                   id={key}
                   label={translateWidgetOptionLabel(key, key)}
                   placeholder={placeholderText}
@@ -772,6 +779,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
             return (
               <>
                 <ComboBox<JsonPlaylist>
+                  closeLabel={t('common.close')}
                   id={key}
                   label={translateWidgetOptionLabel(key, key)}
                   placeholder={t('common.selectPlaylist')}
@@ -945,6 +953,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
               editLabel={t('common.edit')}
               saveLabel={t('common.save')}
               cancelLabel={t('common.cancel')}
+              closeLabel={t('common.close')}
             />
             <div class="error">{errors().get(key)}</div>
           </div>
@@ -956,16 +965,11 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
     }
   }
 
-  const resetForm = () => {
-    setIsFormModified(false);
-    setWidgetOptions(originalOptions);
-  };
-
   return (
     <div class="widget-config-dialog">
       <div class="widget-config">
         <Show when={props.item.inserted_at}>
-          <div style="font-size: 0.8em; color: darkgray;">
+          <div class="widget-config-meta">
             <span>{t('common.addedOn')} </span>{' '}
             <Timestamp
               value={props.item.inserted_at!}
@@ -1016,37 +1020,49 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
               }}
             </For>
           </div>
-          <div class="form-actions">
+          <footer class="form-actions">
+            <span class="form-actions-dirty" aria-live="polite">
+              {!isNewItem() && isFormModified()
+                ? t('playlists.editor.unsavedChanges')
+                : ''}
+            </span>
+            <Show when={props.onCancel}>
+              <Button
+                label={t('common.cancel')}
+                onClick={() => props.onCancel?.()}
+                color="secondary"
+              />
+            </Show>
             <Button
-              label={t('common.save')}
+              label={
+                isNewItem()
+                  ? t('playlists.editor.addToPlaylist')
+                  : t('common.save')
+              }
               type="submit"
-              disabled={!isFormValid()}
-              icon={BsCheckLg}
+              // Saving an unchanged item would be a no-op, so require edits.
+              disabled={!isFormValid() || (!isNewItem() && !isFormModified())}
+              icon={isNewItem() ? BsPlusLg : BsCheckLg}
               color="success"
             />
-            <Button
-              label={t('common.reset')}
-              disabled={!isFormModified()}
-              onClick={() => {
-                resetForm();
-                setIsFormModified(false);
-              }}
-              icon={BsX}
-              color="danger"
-            />
-          </div>
+          </footer>
         </form>
       </div>
-      <div class="preview">
-        <WidgetView
-          widget={props.item.widget}
-          config={widgetConfig()}
-          options={widgetOptions()}
-          previewData={previewData()}
-          baseUrl={props.baseUrl}
-          socket={props.store.socket}
-        />
-      </div>
+      <section class="preview" aria-label={t('common.preview')}>
+        <header class="preview-header" aria-hidden="true">
+          <h3>{t('common.preview')}</h3>
+        </header>
+        <div class="preview-stage">
+          <WidgetView
+            widget={props.item.widget}
+            config={widgetConfig()}
+            options={widgetOptions()}
+            previewData={previewData()}
+            baseUrl={props.baseUrl}
+            socket={props.store.socket}
+          />
+        </div>
+      </section>
     </div>
   );
 };

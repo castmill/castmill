@@ -2,6 +2,7 @@
  * Tests for WidgetConfig collection parsing logic
  */
 import { describe, it, expect } from 'vitest';
+import type { LayoutRefValue } from '@castmill/player';
 import {
   parseCollectionFilters,
   getMediaPlaceholderText,
@@ -194,7 +195,7 @@ describe('WidgetConfig - Layout Ref Validation Logic', () => {
       },
     };
 
-    expect(isLayoutRefValid(value)).toBe(true);
+    expect(isLayoutRefValid(value as unknown as LayoutRefValue)).toBe(true);
   });
 
   it('returns false when one zone is missing playlist assignment', () => {
@@ -206,14 +207,17 @@ describe('WidgetConfig - Layout Ref Validation Logic', () => {
       },
     };
 
-    expect(isLayoutRefValid(value)).toBe(false);
+    expect(isLayoutRefValid(value as unknown as LayoutRefValue)).toBe(false);
   });
 
   it('returns false for missing layout id or empty zones', () => {
-    expect(isLayoutRefValid({})).toBe(false);
-    expect(isLayoutRefValid({ layoutId: 10, zones: { zones: [] } })).toBe(
-      false
-    );
+    expect(isLayoutRefValid({} as LayoutRefValue)).toBe(false);
+    expect(
+      isLayoutRefValid({
+        layoutId: 10,
+        zones: { zones: [] },
+      } as unknown as LayoutRefValue)
+    ).toBe(false);
   });
 });
 

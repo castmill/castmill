@@ -66,6 +66,70 @@ in a hover/focus tooltip; omit successful application text while retaining
 pending, offline, unsupported-player, and error feedback.
 Registration and diagnostics are not part of the playback rotation subtree.
 
+## Playlist Editor Drawer
+
+`addons/playlists/components/playlist-view.tsx` follows the Device Details
+drawer design: a summary bar, sticky section tabs and dark cards.
+`WIDE_LAYOUT_QUERY` (`createMediaQuery`, 64em) chooses the layout, but only
+if a ResizeObserver also measures the editor at `WIDE_LAYOUT_MIN_EM` (57em) or
+more. This keeps tablets with an enlarged layout viewport on tabs. Wide screens
+show Widgets | Items | Preview side by side, with Content and Settings tabs.
+Narrow screens use Content, Preview and Settings tabs, and "Add widget" opens a
+tap-to-add widget picker. While it's open (`.playlist-view.picking`), the
+picker fills the drawer body so only its list scrolls; below 32em of height,
+only the drawer body scrolls. Every add (drop, `+` or tap) goes through the
+function `PlaylistItems` registers with `onAddWidgetReady`, which keeps
+credential checks and the config modal in one place. On narrow or
+coarse-pointer layouts each item gets an up/down reorder stepper on its
+leading edge instead of the drag grip. It uses the same index
+semantics as drag-and-drop, then highlights the moved item and scrolls it into
+view. Drag-and-drop and the grip are disabled on coarse pointers.
+In the narrow layout (`tapToEdit`), tapping a row opens its config, because the
+preview isn't visible there; wide layouts seek the preview instead. If the
+config for a picked widget is cancelled, the picker stays open. Removing an
+item asks for confirmation.
+Settings is a single full-width card with no Save or Reset buttons: name,
+aspect ratio (with its hint) and a created/updated footer. The name (`PlaylistNameField`)
+saves on blur or Enter. Escape, or leaving with an invalid name, reverts it.
+Custom ratios save when focus leaves the width/height pair or on Enter. Renames
+call `onChange` so the drawer title and table refresh. Toggle the editor cards with `is-hidden` instead of
+unmounting them, so the preview player is mounted only once, and don't add more
+ResizeObservers to the view (the preview fit tests rely on a single observer).
+
+The widget config modal (`WidgetConfig`, opened with
+`contentClass="widget-config-modal"`) uses the same card style. Above 56em, it
+shows the form and preview cards side by side. Up to 56em, it stacks the preview
+above a scrolling form. Up to 36em, it becomes a full-screen sheet with a
+leading back arrow (`closeVariant="back"`) instead of ✕. The pinned footer has
+Cancel plus one primary action. New items get "Add to playlist", which is
+enabled while the form is valid. Existing items get "Save", which also requires
+an edit. There is no Reset button. When the form is dirty, every dismissal
+(✕/back, Escape, backdrop or Cancel) goes through the Modal `onCloseRequest`
+guard and asks before discarding. Modal overrides target the CSS-module
+classes with `[class*='modalHeader']`/`[class*='modalBody']` so the shared
+ui-common Modal stays untouched. Form fields keep the default `FormItem`
+palette, and the header, tabs and save bars match Device Details.
+
+Shared mobile behaviour (ui-common):
+
+- `Modal` accepts `closeLabel` (localized close/back tooltip and accessible
+  name), `closeVariant` and `onCloseRequest` (return false to veto a user
+  dismissal; `ref.close()` bypasses it). `ConfirmDialog` takes
+  `confirmLabel`/`cancelLabel`/`closeLabel`; always pass localized labels.
+- `Drawer` is always full screen below 50em. The panel has `max-width: 100%`,
+  so `vw`-based widths can't push it past the pinned root on tablets. The `.drawerRoot .drawerPanel`
+  rule beats any `contentClass` width.
+- `ComboBox` opens a bottom sheet (Portal, `[data-combobox-sheet]`) when
+  `COMBOBOX_SHEET_QUERY` matches (phones and touch tablets). Otherwise it flips
+  upward when there is no room below. Pass `closeLabel={t('common.close')}`.
+- The Modal overlay, Drawer root and ComboBox sheet backdrop use
+  `useVisualViewportBox()` to pin themselves to `window.visualViewport`. When
+  the page overflows horizontally, mobile browsers enlarge the layout viewport
+  and plain `position: fixed; inset: 0` layers end up off-screen. Size
+  full-screen modal content with `100%` of the overlay (and
+  `box-sizing: border-box`), not `100vw`/`100dvh`.
+  Drawers ignore outside clicks inside the sheet.
+
 ## Critical Rules
 
 ### ⚠️ MANDATORY: All User-Facing Text Must Be Localized

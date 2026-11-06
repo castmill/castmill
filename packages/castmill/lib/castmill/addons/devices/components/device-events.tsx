@@ -112,7 +112,7 @@ export const DeviceLogs: Component<{
           </button>
         ) : null,
     },
-  ] as Column<DeviceTableLogItem>[];
+  ] as Column<string, DeviceTableLogItem>[];
 
   // Filters for event types
   const eventFilters: Filter[] = [

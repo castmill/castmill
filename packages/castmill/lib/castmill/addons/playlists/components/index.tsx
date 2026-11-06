@@ -1092,30 +1092,35 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
           />
         </Modal>
       </Show>
-      <Show when={showDrawer()}>
-        <Drawer
-          title={t('playlists.playlistTitle', {
-            name: currentPlaylist()?.name,
-          })}
-          onClose={closePlaylistDrawer}
-          placement="right"
-          size="xl"
-          closeOnOutsideClick
-          outsideClickIgnoreSelector="tbody tr, .playlist-tree-item"
-          contentClass="playlist-modal"
-        >
-          <PlaylistView
-            store={props.store}
-            baseUrl={props.store.env.baseUrl}
-            organizationId={props.store.organizations.selectedId}
-            playlistId={currentPlaylist()?.id!}
-            t={t}
-            onChange={() => {
-              // Playlist changed
-            }}
-            onNavigateAway={closePlaylistDrawer}
-          />
-        </Drawer>
+      <Show when={showDrawer() && currentPlaylist()}>
+        {(playlist) => (
+          <Drawer
+            title={t('playlists.playlistTitle', {
+              name: playlist().name,
+            })}
+            onClose={closePlaylistDrawer}
+            placement="right"
+            size="xl"
+            closeOnOutsideClick
+            outsideClickIgnoreSelector="tbody tr, .playlist-tree-item"
+            contentClass="playlist-modal"
+          >
+            <PlaylistView
+              store={props.store}
+              baseUrl={props.store.env.baseUrl}
+              organizationId={props.store.organizations.selectedId}
+              playlistId={playlist().id}
+              t={t}
+              onChange={(playlist) => {
+                setCurrentPlaylist((prev) =>
+                  prev ? { ...prev, name: playlist.name } : prev
+                );
+                refreshData();
+              }}
+              onNavigateAway={closePlaylistDrawer}
+            />
+          </Drawer>
+        )}
       </Show>
 
       <Show when={showRenameModal()}>

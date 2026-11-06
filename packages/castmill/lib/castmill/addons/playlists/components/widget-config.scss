@@ -1,177 +1,355 @@
+// Widget config modal: preview card + form card, matching the playlist
+// drawer cards. Wide screens show them side by side, narrower screens stack
+// the preview above a scrolling form and go full screen on phones.
+body [data-modal-overlay] .widget-config-modal {
+  width: min(94vw, 82em);
+  height: min(88vh, 56em);
+  padding: 1.4em 1.6em 1.6em;
+  border: 1px solid #36324a;
+  border-radius: 0.8em;
+  box-shadow: 0 1.5em 4em rgba(0, 0, 0, 0.45);
+
+  > [class*='modalHeader'] {
+    align-items: flex-start;
+    gap: 1em;
+    border-bottom-color: #36324a;
+
+    h2 {
+      font-size: 1.2em;
+      font-weight: 700;
+      overflow-wrap: anywhere;
+    }
+
+    h3 {
+      margin-top: 0.35em;
+      font-size: 0.95em;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  > [class*='modalBody'] {
+    min-height: 0;
+  }
+}
+
 .widget-config-dialog {
-  width: 90vw;
-  height: 80vh;
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding-top: 1em;
+  display: grid;
+  grid-template-columns: minmax(20em, 2fr) minmax(0, 3fr);
+  grid-template-areas: 'form preview';
+  gap: 1.2em;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding-top: 1.2em;
   overflow: hidden;
 
   .widget-config {
+    grid-area: form;
     display: flex;
-    height: 100%;
-    width: 40%;
-    justify-content: flex-start;
     flex-direction: column;
-    align-items: flex-start;
+    min-width: 0;
     min-height: 0;
     overflow: hidden;
+    border: 1px solid #36324a;
+    border-radius: 0.6em;
+    background: #1b1829;
+  }
 
-    form {
-      height: 100%;
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
+  .widget-config-meta {
+    padding: 0.8em 1.2em;
+    border-bottom: 1px solid #36324a;
+    color: #a4a3b7;
+    font-size: 0.82em;
+    line-height: 1.45;
+  }
+
+  form {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    width: 100%;
+    min-height: 0;
+    margin: 0;
+
+    .form-inputs {
+      flex: 1 1 auto;
       min-height: 0;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      padding: 0.4em 1.2em 1em;
 
-      .form-inputs {
-        flex: 1;
-        overflow-y: auto;
-        padding-right: 0.5em;
-        min-height: 0;
-        padding-bottom: 1em;
-
-        // Custom scrollbar styling
-        &::-webkit-scrollbar {
-          width: 0.5em;
-        }
-
-        &::-webkit-scrollbar-track {
-          background: #1a1a2e;
-          border-radius: 0.25em;
-        }
-
-        &::-webkit-scrollbar-thumb {
-          background: #444;
-          border-radius: 0.25em;
-
-          &:hover {
-            background: #555;
-          }
-        }
+      &::-webkit-scrollbar {
+        width: 0.5em;
       }
 
-      .error {
-        font-size: 0.8em;
-        color: #a10000;
+      &::-webkit-scrollbar-track {
+        background: transparent;
       }
 
-      // Styling for select dropdowns (enum fields)
-      .form-item-wrapper {
-        margin: 0.75em 0;
+      &::-webkit-scrollbar-thumb {
+        background: #3d3a52;
+        border-radius: 0.25em;
 
-        .form-item1 {
-          border: 1px solid #555;
-          border-radius: 0.3em;
-          margin-bottom: 0.3em;
-          padding: 0.5em 1.1em;
-          background-color: #151320;
-
-          label {
-            font-size: 0.8em;
-            color: #577cbb;
-            text-transform: capitalize;
-            text-align: left;
-            display: block;
-          }
-
-          &:hover {
-            border-color: #b0b0b0;
-          }
-
-          &:focus-within {
-            border-color: #4a90e2;
-          }
-
-          .styled-select {
-            width: 100%;
-            padding: 0.5em 0;
-            font-size: 1em;
-            color: #ffffff;
-            background-color: transparent;
-            border: none;
-            outline: none;
-            cursor: pointer;
-
-            option {
-              background-color: #151320;
-              color: #ffffff;
-            }
-          }
-
-          .error {
-            color: #e74c3c;
-            font-size: 0.85em;
-            margin-top: 0.3em;
-          }
+        &:hover {
+          background: #4d4968;
         }
+      }
+    }
 
-        .description {
-          padding-top: 0.2em;
-          margin-bottom: 0.75em;
-          color: #6a5da2;
+    .error {
+      font-size: 0.8em;
+      color: #a10000;
+    }
+
+    // Styling for select dropdowns (enum fields)
+    .form-item-wrapper {
+      margin: 0.75em 0;
+
+      .form-item1 {
+        border: 1px solid #555;
+        border-radius: 0.3em;
+        margin-bottom: 0.3em;
+        padding: 0.5em 1.1em;
+        background-color: #151320;
+
+        label {
           font-size: 0.8em;
+          color: #577cbb;
+          text-transform: capitalize;
+          text-align: left;
+          display: block;
+        }
+
+        &:hover {
+          border-color: #b0b0b0;
+        }
+
+        &:focus-within {
+          border-color: #4a90e2;
+        }
+
+        .styled-select {
+          width: 100%;
+          padding: 0.5em 0;
+          font-size: 1em;
+          color: #ffffff;
+          background-color: transparent;
+          border: none;
+          outline: none;
+          cursor: pointer;
+
+          option {
+            background-color: #151320;
+            color: #ffffff;
+          }
+        }
+
+        .error {
+          color: #e74c3c;
+          font-size: 0.85em;
+          margin-top: 0.3em;
         }
       }
 
-      .media-item {
+      .description {
+        padding-top: 0.2em;
+        margin-bottom: 0.75em;
+        color: #6a5da2;
+        font-size: 0.8em;
+      }
+    }
+
+    .media-item {
+      display: flex;
+      flex-direction: row;
+      justify-content: flex-start;
+      align-items: center;
+
+      padding: 0.2em;
+
+      width: 100%;
+
+      gap: 1em;
+
+      .thumbnail {
+        width: 3em;
+        height: 3em;
+        background-size: cover;
+        background-position: center;
         display: flex;
-        flex-direction: row;
-        justify-content: flex-start;
+        justify-content: center;
         align-items: center;
+        overflow: hidden;
+      }
+    }
 
-        padding: 0.2em;
+    .playlist-item {
+      display: flex;
+      flex-direction: row;
+      justify-content: flex-start;
+      align-items: center;
+      padding: 0.3em;
+      width: 100%;
+    }
 
-        width: 100%;
+    .media-item .thumbnail {
+      flex-shrink: 0;
+      border-radius: 0.4em;
+      background-color: #100e1a;
+    }
 
-        gap: 1em;
+    .form-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 0.5em;
+      padding: 0.8em 1.2em;
+      border-top: 1px solid #36324a;
+      background: rgba(0, 0, 0, 0.12);
 
-        .thumbnail {
-          width: 3em;
-          height: 3em;
-          background-size: cover;
-          background-position: center;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          overflow: hidden;
-        }
+      .form-actions-dirty {
+        flex: 1 1 auto;
+        color: #f0b75a;
+        font-size: 0.8em;
       }
 
-      .playlist-item {
-        display: flex;
-        flex-direction: row;
-        justify-content: flex-start;
-        align-items: center;
-        padding: 0.3em;
-        width: 100%;
-      }
-
-      .form-actions {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        justify-content: flex-start;
-        gap: 1em;
-        position: sticky;
-        bottom: 0;
-        z-index: 1;
-        padding: 0.75em 0 0.25em;
+      > button:disabled {
+        background-color: transparent;
+        box-shadow: inset 0 0 0 1px #3d3a52;
+        color: #6b6790;
       }
     }
   }
 
   .preview {
+    grid-area: preview;
+    position: relative;
     display: flex;
-    background-color: #333;
-    width: 50%;
-    height: 100%;
-    justify-content: center;
-    align-items: center;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
     overflow: hidden;
+    border: 1px solid #36324a;
+    border-radius: 0.6em;
+    background:
+      radial-gradient(
+        circle at 50% 0%,
+        rgba(87, 146, 238, 0.08),
+        transparent 60%
+      ),
+      #100e1a;
+  }
+
+  .preview-header {
+    flex-shrink: 0;
+    padding: 0.8em 1.2em;
+    border-bottom: 1px solid #36324a;
+
+    h3 {
+      margin: 0;
+      color: #fff;
+      font-size: 1em;
+      font-weight: 700;
+    }
+  }
+
+  .preview-stage {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
     padding: 1em;
+    overflow: hidden;
+  }
+}
+
+// Tablet: stack the preview above the form.
+@media (max-width: 56em) {
+  body [data-modal-overlay] .widget-config-modal {
+    width: min(96vw, 46em);
+    height: min(92dvh, 60em);
+    padding: 1.1em 1.2em 1.2em;
+  }
+
+  .widget-config-dialog {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: clamp(9em, 30dvh, 18em) minmax(0, 1fr);
+    grid-template-areas:
+      'preview'
+      'form';
+    gap: 0.9em;
+    padding-top: 0.9em;
+  }
+}
+
+// Phones (incl. landscape): the widget description costs too much height.
+@media (max-width: 36em), (pointer: coarse) and (max-height: 32em) {
+  body [data-modal-overlay] .widget-config-modal > [class*='modalHeader'] h3 {
+    display: none;
+  }
+}
+
+// Phone: full-screen sheet with full-width actions.
+@media (max-width: 36em) {
+  body [data-modal-overlay] .widget-config-modal {
     box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    max-height: 100%;
+    padding: 0.9em 0.9em calc(0.9em + env(safe-area-inset-bottom));
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+
+    > [class*='modalHeader'] {
+      padding-bottom: 0.7em;
+    }
+  }
+
+  .widget-config-dialog {
+    grid-template-rows: clamp(8em, 26dvh, 14em) minmax(0, 1fr);
+    gap: 0.7em;
+    padding-top: 0.7em;
+
+    .widget-config-meta,
+    .preview-header {
+      padding: 0.6em 1em;
+    }
+
+    form {
+      .form-inputs {
+        padding: 0.2em 1em 0.8em;
+      }
+
+      .form-actions {
+        padding: 0.7em 1em;
+      }
+    }
+
+    .preview-stage {
+      padding: 0.6em;
+    }
+  }
+}
+
+@media (max-width: 30em) {
+  .widget-config-dialog form .form-actions {
+    > button {
+      flex: 1 1 0;
+      justify-content: center;
+    }
+
+    .form-actions-dirty {
+      flex-basis: 100%;
+      text-align: center;
+
+      &:empty {
+        display: none;
+      }
+    }
   }
 }

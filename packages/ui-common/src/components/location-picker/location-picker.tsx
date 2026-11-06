@@ -53,6 +53,7 @@ interface LocationPickerProps {
   manualAddressPlaceholder?: string;
   saveLabel?: string;
   cancelLabel?: string;
+  closeLabel?: string;
 }
 
 // Leaflet types (minimal interface to avoid `any`)
@@ -344,6 +345,7 @@ export const LocationPicker: Component<LocationPickerProps> = (props) => {
       <div class="location-picker__search">
         <ComboBox<LocationSearchResult>
           id="location-search"
+          closeLabel={props.closeLabel}
           label={props.searchLabel ?? 'Search Location'}
           placeholder={props.placeholder ?? 'Search for a location...'}
           fetchItems={fetchLocations}

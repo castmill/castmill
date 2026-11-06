@@ -55,6 +55,7 @@ export const DefaultPlaylistComboBox: Component<{
 
   return (
     <ComboBox<JsonPlaylist>
+      closeLabel={t('common.close')}
       id={123}
       label={t('channels.defaultPlaylist')}
       placeholder={t('channels.selectPlaylist')}
