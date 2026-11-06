@@ -150,7 +150,16 @@ defmodule Castmill.Widgets.Widget do
   defp validate_choices_provider(changeset) do
     options_schema = get_field(changeset, :options_schema)
 
-    if Castmill.Widgets.Schema.has_choices?(options_schema) and
+    needs_provider? =
+      Enum.any?(options_schema || %{}, fn
+        {_key, %{"choices" => %{"list" => list}}} ->
+          not Castmill.Widgets.Integrations.Choices.builtin_list?(list)
+
+        _ ->
+          false
+      end)
+
+    if needs_provider? and
          not Castmill.Widgets.Integrations.Choices.provider_for_meta?(get_field(changeset, :meta)) do
       add_error(
         changeset,

@@ -438,6 +438,7 @@ defmodule Castmill.Organizations do
         "teams" -> :teams
         "widgets" -> :widgets
         "layouts" -> :layouts
+        "feeds" -> :feeds
         _ -> nil
       end
 

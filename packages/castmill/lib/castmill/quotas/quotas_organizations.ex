@@ -20,6 +20,7 @@ defmodule Castmill.Quotas.QuotasOrganizations do
         :teams,
         :storage,
         :layouts,
+        :feeds,
         :max_upload_size
       ],
       primary_key: true

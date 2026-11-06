@@ -1,16 +1,15 @@
 defmodule Castmill.Widgets.Integrations.ChoicesStore do
   @moduledoc """
-  Short-lived cache and per-actor rate limit for widget option choice lookups.
+  Short-lived cache for widget option choice lookups.
 
-  Both live in public ETS tables owned by this process, so reads and counter
-  updates never go through the GenServer. If the tables do not exist (the
-  process is not running), lookups miss and requests are allowed.
+  The cache is a public ETS table owned by this process, so reads never go
+  through the GenServer. If the table does not exist (the process is not
+  running), lookups miss.
   """
 
   use GenServer
 
   @cache __MODULE__.Cache
-  @rate __MODULE__.Rate
   @prune_ms 60_000
 
   def start_link(_opts) do
@@ -40,24 +39,15 @@ defmodule Castmill.Widgets.Integrations.ChoicesStore do
   def put(_key, _value, _ttl_ms), do: :ok
 
   @doc """
-  Counts a request for `actor_id` and returns `:ok` while at most `limit`
-  requests were made in the current fixed window of `window_ms` milliseconds.
+  Counts a choices request for `actor_id` (see `Castmill.RateLimiter.allow/3`).
   """
-  def allow(actor_id, limit, window_ms \\ 60_000)
-      when is_integer(limit) and is_integer(window_ms) and window_ms > 0 do
-    key = {actor_id, div(now_ms(), window_ms), window_ms}
-    count = :ets.update_counter(@rate, key, {2, 1}, {key, 0})
-
-    if count <= limit, do: :ok, else: {:error, :rate_limited}
-  rescue
-    ArgumentError -> :ok
-  end
+  def allow(actor_id, limit, window_ms \\ 60_000),
+    do: Castmill.RateLimiter.allow({:choices, actor_id}, limit, window_ms)
 
   @doc false
   def clear do
     :ets.delete_all_objects(@cache)
-    :ets.delete_all_objects(@rate)
-    :ok
+    Castmill.RateLimiter.clear()
   rescue
     ArgumentError -> :ok
   end
@@ -65,7 +55,6 @@ defmodule Castmill.Widgets.Integrations.ChoicesStore do
   @impl true
   def init(:ok) do
     :ets.new(@cache, [:named_table, :set, :public, read_concurrency: true])
-    :ets.new(@rate, [:named_table, :set, :public, write_concurrency: true])
     schedule_prune()
     {:ok, nil}
   end
@@ -80,12 +69,6 @@ defmodule Castmill.Widgets.Integrations.ChoicesStore do
   @doc false
   def prune(now) do
     :ets.select_delete(@cache, [{{:_, :"$1", :_}, [{:"=<", :"$1", now}], [true]}])
-
-    # Rate keys are {actor, window_index, window_ms}; drop windows that have ended.
-    :ets.select_delete(@rate, [
-      {{{:_, :"$1", :"$2"}, :_}, [{:"=<", {:*, {:+, :"$1", 1}, :"$2"}, now}], [true]}
-    ])
-
     :ok
   end
 

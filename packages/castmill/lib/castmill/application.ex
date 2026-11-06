@@ -134,7 +134,9 @@ defmodule Castmill.Application do
       # Bound diagnostic ingestion from faulty or modified players.
       Castmill.DeviceErrorRateLimiter,
       Castmill.LegacyPlayerLogRateLimiter,
-      # Cache and rate limits for widget option choice lookups.
+      # Request rate limits (widget choices, data feeds).
+      Castmill.RateLimiter,
+      # Cache for widget option choice lookups.
       Castmill.Widgets.Integrations.ChoicesStore,
       # Start Finch
       {Finch, name: Castmill.Finch}

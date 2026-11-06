@@ -56,6 +56,23 @@ export const resolveEffectiveWidgetData = (
   return previewData ?? (integrationData || configData || defaultData);
 };
 
+/**
+ * The feed shown by a widget whose options pick a data feed
+ * (`"choices": {"list": "feeds"}`), or undefined.
+ */
+export const getWidgetFeedId = (
+  widget: JsonWidget,
+  options?: OptionsDict
+): string | undefined => {
+  const schema = (widget.options_schema || {}) as Record<string, any>;
+  if (Array.isArray(schema) || !options) return undefined;
+  const key = Object.keys(schema).find(
+    (field) => schema[field]?.choices?.list === 'feeds'
+  );
+  const value = key ? options[key] : undefined;
+  return typeof value === 'string' && value !== '' ? value : undefined;
+};
+
 export const getWidgetViewAspectRatio = (
   widget: JsonWidget,
   options?: OptionsDict
@@ -156,6 +173,12 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
     string,
     any
   > | null>(null);
+  // Latest data pushed for the feed this widget shows. It wins over fetched or
+  // parent-provided data until the selected feed changes.
+  const [feedData, setFeedData] = createSignal<{
+    feedId: string;
+    data: Record<string, any>;
+  } | null>(null);
   // Start with dataLoaded=true so preview renders immediately with defaults
   // The fetch effect will set it to false only when actually fetching
   const [dataLoaded, setDataLoaded] = createSignal(true);
@@ -213,7 +236,16 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
         discriminator_id: string;
         data: Record<string, any>;
         updated_at: string;
+        feed_id?: string;
       }) => {
+        if (payload.feed_id) {
+          if (
+            payload.feed_id === getWidgetFeedId(props.widget, props.options)
+          ) {
+            setFeedData({ feedId: payload.feed_id, data: payload.data });
+          }
+          return;
+        }
         // Check if this update is for our widget type
         // widget_id in payload is a string, props.widget.id is a number
         if (payload.widget_id === String(props.widget.id)) {
@@ -284,12 +316,16 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
       currentConfig.data && Object.keys(currentConfig.data).length > 0
         ? currentConfig.data
         : null;
-    const effectiveData = resolveEffectiveWidgetData(
-      props.previewData,
-      integration,
-      configData,
-      defaultData
-    );
+    const pushed = feedData();
+    const effectiveData =
+      pushed && pushed.feedId === getWidgetFeedId(currentWidget, currentOptions)
+        ? pushed.data
+        : resolveEffectiveWidgetData(
+            props.previewData,
+            integration,
+            configData,
+            defaultData
+          );
 
     // Calculate duration from options (supports 'duration' or 'display_duration')
     // Convert from seconds to milliseconds, default to 10 seconds
