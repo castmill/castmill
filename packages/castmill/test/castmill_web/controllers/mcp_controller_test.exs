@@ -1064,4 +1064,77 @@ defmodule CastmillWeb.MCPControllerTest do
       assert Map.has_key?(item, "config")
     end
   end
+
+  describe "automation tools" do
+    test "managers list, create, update, assign and delete automations", %{
+      organization: organization
+    } do
+      {:ok, _agent, secret} =
+        Agents.create_agent(organization.id, %{"name" => "Scheduler", "role" => "manager"})
+
+      playlist = playlist_fixture(%{organization_id: organization.id, name: "Offer"})
+      channel = channel_fixture(%{organization_id: organization.id, timezone: "Europe/Stockholm"})
+      device = device_fixture(%{organization_id: organization.id})
+
+      created =
+        secret
+        |> call_tool("create_automation", %{
+          "attributes" => %{
+            "name" => "Hourly offer",
+            "rules" => [
+              %{
+                "when" => %{
+                  "source" => "clock",
+                  "config" => %{"schedule" => %{"type" => "hourly", "minute" => 8}}
+                },
+                "then" => %{"action" => "interrupt", "config" => %{"playlist_id" => playlist.id}}
+              }
+            ]
+          }
+        })
+        |> decode()
+
+      id = created["data"]["id"]
+      assert created["data"]["name"] == "Hourly offer"
+
+      assert %{"data" => [%{"id" => ^id}], "count" => 1} =
+               secret |> call_tool("list_automations", %{"search" => "hourly"}) |> decode()
+
+      assert %{"data" => %{"id" => ^id}} =
+               secret |> call_tool("get_automation", %{"automation_id" => id}) |> decode()
+
+      assert %{"data" => %{"enabled" => false}} =
+               secret
+               |> call_tool("update_automation", %{
+                 "automation_id" => id,
+                 "attributes" => %{"enabled" => false}
+               })
+               |> decode()
+
+      assigned =
+        secret
+        |> call_tool("assign_automation", %{
+          "automation_id" => id,
+          "devices" => [device.id],
+          "channels" => [channel.id]
+        })
+        |> decode()
+
+      assert [%{"id" => _}] = assigned["data"]["devices"]
+      assert [%{"id" => _}] = assigned["data"]["channels"]
+
+      result = call_tool(secret, "assign_automation", %{"automation_id" => id, "devices" => "x"})
+      assert result["isError"]
+
+      result = call_tool(secret, "delete_automation", %{"automation_id" => id})
+      refute result["isError"]
+      assert Castmill.Automations.get_automation(organization.id, id) == nil
+    end
+
+    test "editors cannot create automations", %{secret: secret} do
+      result = call_tool(secret, "create_automation", %{"attributes" => %{"name" => "X"}})
+      assert result["isError"]
+      assert hd(result["content"])["text"] =~ "403"
+    end
+  end
 end

@@ -1837,6 +1837,8 @@ describe('Device - loginOrRegister (non-blocking login)', () => {
                 update: false,
                 updateFirmware: false,
                 orientation: true,
+                automation_sources: ['clock'],
+                automation_actions: ['interrupt'],
               },
             },
           }),

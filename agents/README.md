@@ -63,6 +63,7 @@ agents/
 - **[WIDGET-ASSETS.md](./systems/WIDGET-ASSETS.md)** - Widget asset management architecture (icons, fonts, images)
 - **[WIDGET-SCOPES.md](./systems/WIDGET-SCOPES.md)** - Widget availability per system, network and organization
 - **[LAYOUT-WIDGETS.md](./systems/LAYOUT-WIDGETS.md)** - Layout widgets with circular reference prevention
+- **[AUTOMATIONS.md](./systems/AUTOMATIONS.md)** - Automations: pluggable event sources and actions (clock → interrupt)
 - **[DEVICE-ERROR-REPORTING.md](./systems/DEVICE-ERROR-REPORTING.md)** - Bounded offline-capable player error diagnostics
 - **[SPOTIFY-WIDGET-POC.md](./systems/SPOTIFY-WIDGET-POC.md)** - Spotify "Now Playing" widget proof of concept
 - *Coming soon: Authentication, media pipeline, real-time synchronization*

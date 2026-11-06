@@ -209,6 +209,7 @@ defmodule CastmillWeb.Router do
     get("/:device_id/channels", DeviceController, :get_channels)
     get("/:device_id/playlists/:playlist_id", DeviceController, :get_playlist)
     get("/:device_id/schedule", DeviceController, :get_schedule)
+    get("/:device_id/automations", DeviceController, :get_automations)
 
     put("/:device_id/channels/:channel_id", DeviceController, :add_channel)
     delete("/:device_id/channels/:channel_id", DeviceController, :remove_channel)
@@ -476,6 +477,46 @@ defmodule CastmillWeb.Router do
       :update_widget
     )
 
+    # Automations of the organization (event-driven actions on displays).
+    # Must be declared before the generic organization resources routes.
+    get("/organizations/:organization_id/automations", AutomationController, :index)
+    post("/organizations/:organization_id/automations", AutomationController, :create)
+
+    get(
+      "/organizations/:organization_id/automations/registry",
+      AutomationController,
+      :registry
+    )
+
+    post(
+      "/organizations/:organization_id/automations/preview",
+      AutomationController,
+      :preview
+    )
+
+    get("/organizations/:organization_id/automations/:id", AutomationController, :show)
+    patch("/organizations/:organization_id/automations/:id", AutomationController, :update)
+    put("/organizations/:organization_id/automations/:id", AutomationController, :update)
+    delete("/organizations/:organization_id/automations/:id", AutomationController, :delete)
+
+    put(
+      "/organizations/:organization_id/automations/:automation_id/assignments",
+      AutomationController,
+      :assign
+    )
+
+    post(
+      "/organizations/:organization_id/automations/:automation_id/rules/:rule_id/run",
+      AutomationController,
+      :run_rule
+    )
+
+    get(
+      "/organizations/:organization_id/channels/:channel_id/automations",
+      AutomationController,
+      :channel_automations
+    )
+
     # AI agents of the organization (MCP access) and their activity log.
     # Must be declared before the generic organization resources routes.
     get("/organizations/:organization_id/agents", AgentController, :index)
@@ -653,6 +694,9 @@ defmodule CastmillWeb.Router do
 
     # Endpoint to get a playlist for device preview in the dashboard scope
     get("/devices/:device_id/playlists/:playlist_id", DeviceController, :get_playlist)
+
+    # Effective automations of a device (same payload the device receives)
+    get("/devices/:device_id/automations", DeviceController, :get_automations)
 
     # Notification routes
     get("/notifications", NotificationController, :index)

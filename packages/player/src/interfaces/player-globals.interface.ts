@@ -53,4 +53,16 @@ export interface PlayerGlobals {
    * provided by the player host.
    */
   setPlaybackBlocked?: (source: object, block?: PlayerRuntimeError) => void;
+  /**
+   * Called when an item of a playlist created with these globals starts
+   * playing. The device uses it to resume programming at the next item after
+   * an automation interruption. Errors thrown by the callback are ignored.
+   */
+  onItemStart?: (info: PlaylistItemStart) => void;
+}
+
+export interface PlaylistItemStart {
+  playlistId?: number | string;
+  index: number;
+  count: number;
 }

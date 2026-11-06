@@ -701,6 +701,7 @@
   "sidebar": {
     "organization": "組織",
     "channels": "チャンネル",
+    "automations": "オートメーション",
     "teams": "チーム",
     "usage": "使用量",
     "devices": "デバイス",
@@ -1673,6 +1674,227 @@
         "cursor": "すべてのプロジェクトでは ~/.cursor/mcp.json、特定のプロジェクトでは .cursor/mcp.json にこの構成を追加し、Cursor Settings > MCP でサーバーを有効にしてください。",
         "other": "以下の設定でリモートMCPサーバーを構成してください。"
       }
+    }
+  },
+  "automations": {
+    "title": "オートメーション",
+    "description": "特定の時刻に別のコンテンツで再生を割り込ませるなど、ディスプレイがイベントに反応するようにします。",
+    "new": "新しいオートメーション",
+    "newDescription": "オートメーションに名前を付けてください。ルールの追加やディスプレイの割り当ては後から行えます。",
+    "namePlaceholder": "例：毎時の春のセール",
+    "created": "オートメーション「{{name}}」を作成しました",
+    "deleted": "オートメーション「{{name}}」を削除しました",
+    "saved": "オートメーションを保存しました",
+    "enabled": "有効",
+    "disabled": "無効",
+    "disabledHint": "無効なオートメーションはディスプレイで実行されません。",
+    "toggleEnabled": "「{{name}}」を有効または無効にする",
+    "noUpcoming": "予定されている実行はありません",
+    "noRules": "ルールはまだありません",
+    "moreRules": "ほか {{count}} 件",
+    "assignmentsDetail": "デバイス {{devices}} 台、チャンネル {{channels}} 件",
+    "noAccess": "オートメーションを表示する権限がありません。",
+    "deleteTitle": "オートメーションを削除",
+    "deleteMessage": "「{{name}}」を削除してもよろしいですか？割り当てられたディスプレイでは直ちに実行が停止されます。",
+    "editorDescription": "ルールは上から順に評価されます。複数のルールが同時に実行される場合は最初のルールが優先されます。",
+    "columns": {
+      "rules": "ルール",
+      "assignments": "割り当て先",
+      "nextFiring": "次回の実行"
+    },
+    "tabs": {
+      "rules": "ルール（{{count}}）",
+      "assignments": "割り当て（{{count}}）"
+    },
+    "errors": {
+      "loadFailed": "オートメーションを読み込めませんでした",
+      "saveFailed": "オートメーションを保存できませんでした：{{error}}",
+      "deleteFailed": "オートメーションを削除できませんでした：{{error}}",
+      "runFailed": "ルールを実行できませんでした：{{error}}"
+    },
+    "rules": {
+      "title": "ルール",
+      "empty": "このオートメーションにはまだルールがありません。ルールを追加して、いつ何が起きてディスプレイが何をするかを決めましょう。",
+      "add": "ルールを追加",
+      "edit": "ルールを編集",
+      "save": "ルールを保存",
+      "saved": "ルールを保存しました",
+      "when": "条件",
+      "then": "実行内容",
+      "options": "オプション",
+      "chooseSource": "ルールのトリガーを選択",
+      "chooseAction": "ディスプレイの動作を選択",
+      "cooldown": "クールダウン（秒）",
+      "cooldownHint": "同じディスプレイでこのルールを再度実行するまでの最短時間。0 でクールダウンなし。",
+      "moveUp": "上へ移動",
+      "moveDown": "下へ移動",
+      "moveUpN": "ルール {{n}} を上へ移動",
+      "moveDownN": "ルール {{n}} を下へ移動",
+      "runNow": "今すぐ実行",
+      "runNowN": "ルール {{n}} を今すぐ実行",
+      "editN": "ルール {{n}} を編集",
+      "deleteN": "ルール {{n}} を削除",
+      "deleteTitle": "ルールを削除",
+      "deleteMessage": "このルールを削除してもよろしいですか？",
+      "moved": "ルールを {{from}} 番目から {{to}} 番目に移動しました",
+      "runSuccess": "ルールを {{count}} 台のディスプレイに送信しました"
+    },
+    "summary": {
+      "hourly": "毎時 {{minute}} 分",
+      "interval": "{{minutes}} 分ごと",
+      "times": "毎日 {{times}}",
+      "once": "1 回のみ：{{date}} {{time}}",
+      "unknown": "不明なスケジュール",
+      "dateRange": "{{start}}〜{{end}}",
+      "dateFrom": "{{date}} から",
+      "dateUntil": "{{date}} まで",
+      "noPlaylist": "プレイリストが選択されていません",
+      "playlistFallback": "プレイリスト #{{id}}",
+      "interruptImmediately": "「{{playlist}}」ですぐに割り込む",
+      "interruptAfterItem": "現在のアイテムの後に「{{playlist}}」で割り込む",
+      "plays": "{{count}} 回再生",
+      "highPriority": "優先度：高",
+      "cooldown": "クールダウン：{{seconds}} 秒",
+      "unknownType": "サポートされていない種類「{{type}}」"
+    },
+    "validation": {
+      "minute": "0〜59 の分を入力してください。",
+      "interval": "間隔は 5〜1440 の整数（分）で指定してください。",
+      "timesCount": "時刻を 1〜48 個追加してください。",
+      "time": "時刻は HH:MM 形式で入力してください。",
+      "timesDuplicate": "同じ時刻は 1 回しか指定できません。",
+      "date": "有効な日付を入力してください。",
+      "schedule": "スケジュールを選択してください。",
+      "weekdays": "曜日を 1 つ以上選択してください。",
+      "window": "毎日の時間帯は開始が終了より前である必要があります。",
+      "dates": "開始日は終了日以前である必要があります。",
+      "timezone": "有効なタイムゾーン（例：Europe/Stockholm）を入力するか、空欄にしてください。",
+      "playlist": "プレイリストを選択してください。",
+      "start": "割り込みの開始方法を選択してください。",
+      "maxWait": "最大待機時間は 0〜3600 秒で指定してください。",
+      "plays": "再生回数は 1〜100 で指定してください。",
+      "priority": "優先度を選択してください。",
+      "cooldown": "クールダウンは 0 以上の整数（秒）で指定してください。",
+      "source": "トリガーを選択してください。",
+      "action": "アクションを選択してください。"
+    },
+    "sources": {
+      "clock": {
+        "label": "時計",
+        "description": "特定の時刻に：毎時、数分ごと、決まった時刻、または 1 回のみ。"
+      }
+    },
+    "actions": {
+      "interrupt": {
+        "label": "コンテンツで割り込む",
+        "description": "一時的にプレイリストを再生し、その後通常のスケジュールに戻ります。"
+      }
+    },
+    "clock": {
+      "repeat": "繰り返し",
+      "types": {
+        "hourly": "毎時",
+        "interval": "N 分ごと",
+        "times": "指定時刻",
+        "once": "1 回のみ"
+      },
+      "minute": "毎時の分",
+      "everyMinutes": "間隔（分）",
+      "intervalHint": "最小 {{min}} 分。時間帯の開始（または午前 0 時）から数えます。",
+      "times": "時刻",
+      "timeN": "時刻 {{n}}",
+      "removeTime": "時刻を削除",
+      "removeTimeN": "時刻 {{time}} を削除",
+      "addTime": "時刻を追加",
+      "date": "日付",
+      "time": "時刻",
+      "weekdays": "曜日",
+      "window": "毎日の時間帯のみ",
+      "from": "開始",
+      "to": "終了",
+      "dates": "期間内のみ",
+      "startDate": "開始日",
+      "endDate": "終了日",
+      "timezone": "タイムゾーン",
+      "timezonePlaceholder": "ディスプレイのタイムゾーン",
+      "timezoneHint": "空欄にすると各ディスプレイのタイムゾーンを使用します。",
+      "previewTitle": "次回以降の実行",
+      "previewTimezone": "{{timezone}} で表示しています。",
+      "previewDeviceTimezone": "各ディスプレイは独自のタイムゾーンを使用します。ここでは {{timezone}} で表示しています。",
+      "previewFailed": "次回以降の実行を計算できませんでした。",
+      "previewEmpty": "このスケジュールは今後数日間実行されません。"
+    },
+    "interrupt": {
+      "playlist": "プレイリスト",
+      "choosePlaylist": "プレイリストを検索…",
+      "createPlaylist": "プレイリストを作成",
+      "start": "開始",
+      "startModes": {
+        "immediately": "すぐに",
+        "after_current_item": "現在のアイテムの後"
+      },
+      "startHints": {
+        "immediately": "現在のアイテムをすぐに停止します。その後は次のアイテムから再生を続けます。",
+        "after_current_item": "現在のアイテムが終わるまで待つため、途中で切れません。"
+      },
+      "maxWait": "最大待機時間（秒）",
+      "maxWaitHint": "現在のアイテムがこれより長い場合でも割り込みます。",
+      "plays": "再生回数",
+      "playsHint": "元に戻る前にプレイリストを再生する回数。",
+      "priority": "優先度",
+      "priorities": {
+        "normal": "通常",
+        "high": "高"
+      },
+      "priorityHints": {
+        "normal": "通常の割り込みです。",
+        "high": "通常優先度の割り込みより優先されます。"
+      }
+    },
+    "assignments": {
+      "description": "このオートメーションを実行するディスプレイを、直接またはチャンネル経由で選択します。",
+      "devices": "デバイス",
+      "channels": "チャンネル",
+      "none": {
+        "devices": "割り当てられたデバイスはありません",
+        "channels": "割り当てられたチャンネルはありません"
+      },
+      "search": {
+        "devices": "デバイスを検索…",
+        "channels": "チャンネルを検索…"
+      },
+      "remove": "{{name}} を削除",
+      "loadFailed": "リストを読み込めませんでした",
+      "noResults": "一致する項目はありません",
+      "save": "割り当てを保存",
+      "saved": "割り当てを保存しました"
+    },
+    "warnings": {
+      "missing": "{{device}} は {{capability}} に対応していません",
+      "unsupported": "{{capability}} に非対応",
+      "viaChannels": "チャンネル経由のディスプレイ"
+    },
+    "channel": {
+      "title": "オートメーション",
+      "manage": "オートメーションを管理",
+      "empty": "このチャンネルに割り当てられたオートメーションはありません。",
+      "loadFailed": "このチャンネルのオートメーションを読み込めませんでした。",
+      "showMarkers": "カレンダーに実行時刻を表示",
+      "firingsThisWeek": "（今週 {{count}} 回）",
+      "upcoming": "今週の実行",
+      "markerLabel": "{{name}}（{{time}}）"
+    },
+    "device": {
+      "title": "オートメーション",
+      "description": "このデバイスが実行するオートメーション（直接またはチャンネル経由で割り当て）。",
+      "refresh": "オートメーションを更新",
+      "empty": "このデバイスに適用されるオートメーションはありません。",
+      "loadFailed": "このデバイスのオートメーションを読み込めませんでした。",
+      "viaDevice": "直接割り当て",
+      "viaChannel": "チャンネル {{name}} 経由",
+      "upcoming": "今後の実行",
+      "noUpcoming": "今後数日間の実行はありません。",
+      "timezoneNote": "時刻はデバイスのタイムゾーン（{{timezone}}）で表示しています。"
     }
   }
 }

@@ -58,6 +58,12 @@ a permission error; ask the human to change your role if the action is required.
 | `add_device_channel`          | Assign a channel to a device.                                                                 |
 | `remove_device_channel`       | Unassign a channel from a device.                                                             |
 | `send_device_command`         | `refresh`, `restart_app`, `restart_device`, `clear_cache`, `update_app`, `update_firmware`.   |
+| `list_automations`            | Automations ("when clock … then interrupt with playlist …") with assignments and next firing. |
+| `get_automation`              | Fetch one automation with its rules.                                                          |
+| `create_automation`           | Create an automation (`attributes: {name, enabled, rules}`).                                  |
+| `update_automation`           | Change name, enabled state or the full ordered rules list.                                    |
+| `assign_automation`           | Replace the devices and channels an automation is assigned to.                                |
+| `delete_automation`           | Delete an automation.                                                                         |
 | `api_request`                 | Generic access to the rest of the dashboard API (see below).                                  |
 
 Tool results contain the JSON returned by the API. Failed calls are returned
@@ -84,6 +90,16 @@ failed)` with the validation errors.
 
 Use `add_channel_entry` with `start`/`end` timestamps in milliseconds. Pass
 `repeat_weekly_until` (milliseconds) to repeat the entry every week.
+
+### Interrupt programming on a schedule (automations)
+
+1. Create or find the playlist to show (e.g. "Spring offer").
+2. `create_automation` with `attributes`:
+   `{"name": "Spring offer", "rules": [{"when": {"source": "clock", "condition": "at", "config": {"schedule": {"type": "hourly", "minute": 8}, "weekdays": [1, 2, 3, 4, 5], "window": {"start": "08:00", "end": "18:00"}}}, "then": {"action": "interrupt", "config": {"playlist_id": <id>, "start": "after_current_item"}}}]}`.
+   Times are local to the device (or the rule `timezone`). `interval` needs at
+   least 5 minutes; `once` takes a `date` and `time` and no weekdays/window.
+3. `assign_automation` with `devices` and/or `channels`. Devices also run the
+   automations of their channels.
 
 ## `api_request`
 

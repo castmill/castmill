@@ -22,6 +22,7 @@ defmodule Castmill.Teams do
     TeamsChannels,
     TeamsDevices,
     TeamsLayouts,
+    TeamsAutomations,
     Invitation
   }
 
@@ -560,6 +561,12 @@ defmodule Castmill.Teams do
         :layout_id,
         Layout,
         :layout
+      },
+      "automations" => {
+        TeamsAutomations,
+        :automation_id,
+        Castmill.Automations.Automation,
+        :automation
       }
     }
   end

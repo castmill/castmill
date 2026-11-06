@@ -111,6 +111,11 @@ export class Playlist extends EventEmitter {
 
   private debugLayer?: HTMLElement;
 
+  /** Id of the JSON playlist this playlist was created from, if any. */
+  public id?: number | string;
+
+  private globals?: PlayerGlobals;
+
   constructor(
     public name: string,
     private resourceManager: ResourceManager
@@ -131,6 +136,8 @@ export class Playlist extends EventEmitter {
     globals: PlayerGlobals = { target: 'preview' }
   ) {
     const playlist = new Playlist(json.name, resourceManager);
+    playlist.id = json.id;
+    playlist.globals = globals;
     const items = json.items || [];
 
     for (let i = 0; i < items.length; i++) {
@@ -210,6 +217,10 @@ export class Playlist extends EventEmitter {
           const layerOffset = first ? offset : 0;
           current = element.layer;
           first = 0;
+          this.notifyItemStart(
+            layersWithOffsets.indexOf(element),
+            layersWithOffsets.length
+          );
           const next =
             i + 1 < elements.length
               ? elements[i + 1]
@@ -248,6 +259,16 @@ export class Playlist extends EventEmitter {
       }
     } else {
       return of('end');
+    }
+  }
+
+  private notifyItemStart(index: number, count: number) {
+    const onItemStart = this.globals?.onItemStart;
+    if (!onItemStart) return;
+    try {
+      onItemStart({ playlistId: this.id, index, count });
+    } catch {
+      // A host callback must never break playback.
     }
   }
 
