@@ -250,6 +250,7 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Rss do
       |> absolute_url(ctx.base_url)
 
     ctx = %{ctx | base_url: ctx.base_url || feed_link}
+
     title =
       channel
       |> Xml.child_text(["title", "dc:title"])
@@ -372,6 +373,7 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Rss do
     feed_link = atom_link(feed, "alternate") |> absolute_url(ctx.base_url)
     feed_base = effective_base(feed, ctx.base_url)
     feed_link = atom_link_url(feed, "alternate", feed_base) || feed_link
+
     ctx =
       ctx
       |> Map.put(:base_url, feed_base || feed_link)
@@ -416,6 +418,7 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Rss do
     summary = Xml.child(entry, ["atom:summary", "summary"])
     content = Xml.child(entry, ["atom:content", "content"])
     source = Xml.child(entry, ["atom:source", "source"])
+
     image_base =
       if ctx[:atom_xml_base?] or present?(Xml.attr(entry, "xml:base")),
         do: entry_base,
@@ -446,7 +449,11 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Rss do
           "dc:date"
         ]),
       author:
-        first_present([atom_author(entry), Xml.child_text(entry, "dc:creator"), ctx[:feed_author]]),
+        first_present([
+          atom_author(entry),
+          Xml.child_text(entry, "dc:creator"),
+          ctx[:feed_author]
+        ]),
       categories:
         Enum.map(Xml.children(entry, ["atom:category", "category"]), &atom_category/1) ++
           Enum.map(Xml.children(entry, "dc:subject"), &Xml.text/1),
@@ -739,7 +746,10 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Rss do
 
     image =
       (fields.image_candidates ++ Enum.flat_map(fields.html_sources, &Html.image_urls/1))
-      |> Enum.find_value("", &absolute_url(&1, fields[:image_base] || fields.link || ctx.base_url))
+      |> Enum.find_value(
+        "",
+        &absolute_url(&1, fields[:image_base] || fields.link || ctx.base_url)
+      )
 
     {datetime, pub_date, pub_date_formatted} =
       case DateParser.parse(fields.date) do

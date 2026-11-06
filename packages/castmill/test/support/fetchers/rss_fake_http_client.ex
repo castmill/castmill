@@ -33,8 +33,12 @@ defmodule Castmill.Widgets.Integrations.Rss.FakeHttpClient do
     send(self(), {:rss_http_get, url, headers, options})
 
     case Process.get({__MODULE__, url}) do
-      nil -> {:error, %{reason: :nxdomain}}
-      response when is_function(response, 0) -> response.()
+      nil ->
+        {:error, %{reason: :nxdomain}}
+
+      response when is_function(response, 0) ->
+        response.()
+
       {:ok, %{status_code: status, headers: response_headers, body: body}} = response ->
         if options[:stream_to] do
           ref = make_ref()
@@ -58,7 +62,8 @@ defmodule Castmill.Widgets.Integrations.Rss.FakeHttpClient do
           response
         end
 
-      response -> response
+      response ->
+        response
     end
   end
 
@@ -83,6 +88,8 @@ defmodule Castmill.Widgets.Integrations.Rss.FakeHttpClient do
     send(self(), {:rss_http_cancel, ref})
     :ok
   end
+
+  defp chunks(body), do: chunks(body, [])
 
   defp chunks(<<chunk::binary-size(1024), rest::binary>>, acc),
     do: chunks(rest, [chunk | acc])
