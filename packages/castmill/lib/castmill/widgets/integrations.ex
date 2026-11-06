@@ -1814,6 +1814,11 @@ defmodule Castmill.Widgets.Integrations do
     Map.merge(base_config, fetcher_config)
   end
 
+  @doc """
+  Returns the fetcher module name for a widget meta integration `fetcher` value.
+  """
+  def resolve_fetcher_module_name(fetcher), do: resolve_fetcher_module(fetcher)
+
   defp resolve_fetcher_module(fetcher) when is_binary(fetcher) do
     # Map short fetcher names to full module names
     case String.downcase(fetcher) do
@@ -1828,8 +1833,8 @@ defmodule Castmill.Widgets.Integrations do
 
       # If it already looks like a module name, use it as-is
       name when byte_size(name) > 0 ->
-        if String.starts_with?(name, "Castmill.") or String.starts_with?(name, "Elixir.") do
-          name
+        if String.starts_with?(fetcher, "Castmill.") or String.starts_with?(fetcher, "Elixir.") do
+          fetcher
         else
           # Try to construct a module name from the fetcher name
           "Castmill.Widgets.Integrations.Fetchers.#{Macro.camelize(name)}"

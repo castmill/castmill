@@ -698,6 +698,49 @@ Defines configurable parameters for your widget:
 | `map` | Nested object | `schema`, `required` |
 | `list` | Array of items | `items`, `required` |
 
+### Choices from Integrations
+
+Widgets with an integration can let users pick values that only the integration knows
+(listings, photos, calendars, accounts) instead of typing identifiers. Add `choices` to a
+top-level `string` field, or to a `list` field of strings:
+
+```json
+{
+  "listing": {
+    "type": "string",
+    "required": true,
+    "choices": { "list": "listings", "display": "cards", "search": true }
+  },
+  "photos": {
+    "type": "list",
+    "items": { "type": "string" },
+    "choices": {
+      "list": "images",
+      "display": "grid",
+      "multiple": true,
+      "ordered": true,
+      "max": 30,
+      "depends_on": ["listing"]
+    }
+  }
+}
+```
+
+| Attribute | Meaning |
+|-----------|---------|
+| `list` | Name of the choice list the integration provides (required). |
+| `display` | `list` (default), `cards` (thumbnail and text) or `grid` (thumbnail tiles). |
+| `search` | Shows a search box. |
+| `multiple` | Several values; required on `list` fields and only allowed there. |
+| `ordered` | With `multiple`: the user can reorder the selection. |
+| `min`, `max` | Selection bounds for `multiple`. |
+| `depends_on` | Fields whose values the integration needs; the field stays disabled until they are set. |
+
+The widget's integration fetcher must implement the optional `choices/3` callback, or the
+widget is rejected on upload. The stored values are plain identifiers from the source, so
+templates and fetchers read them like any typed value. Use the field's `placeholder`
+translation for the hint shown when a multiple selection is empty.
+
 ### Data Schema
 
 Defines the structure of dynamic data:

@@ -1033,7 +1033,42 @@
       "noConfigurationRequired": "Aucune configuration requise",
       "optional": "Facultatif"
     },
-    "translations": "Traductions"
+    "translations": "Traductions",
+    "choices": {
+      "choose": "Choisir",
+      "moveBefore": "Déplacer avant",
+      "moveAfter": "Déplacer après",
+      "search": "Rechercher…",
+      "loadMore": "Charger plus",
+      "retry": "Réessayer",
+      "noResults": "Aucun élément correspondant",
+      "noSelection": "Aucune sélection",
+      "unavailable": "N'est plus disponible",
+      "selectAll": "Tout sélectionner",
+      "selectNone": "Tout désélectionner",
+      "selectedCount": "Sélectionnés : {{count}}",
+      "selectedCountMax": "Sélectionnés : {{count}} / {{max}}",
+      "done": "Terminé",
+      "play": "Lire l'aperçu",
+      "stop": "Arrêter l'aperçu",
+      "enlarge": "Agrandir",
+      "dialogDescription": "Sélectionnez parmi les éléments fournis par l'intégration.",
+      "dependencyRequired": "Renseignez d'abord {{fields}}.",
+      "confirmClearTitle": "Effacer les sélections dépendantes ?",
+      "confirmClearMessage": "Modifier {{field}} efface {{fields}}.",
+      "minSelection": "Sélectionnez au moins {{min}}.",
+      "maxSelection": "Sélectionnez au plus {{max}}.",
+      "errors": {
+        "widgetNotFound": "Ce widget n'est plus disponible.",
+        "notAChoiceField": "Ce champ ne peut pas proposer de choix.",
+        "missingDependency": "Renseignez d'abord les champs dont celui-ci dépend.",
+        "missingCredentials": "L'intégration n'est pas configurée pour cette organisation.",
+        "rateLimited": "Trop de requêtes. Patientez un instant et réessayez.",
+        "providerError": "L'intégration n'a pas pu fournir les éléments. Réessayez plus tard.",
+        "networkError": "Impossible de joindre le serveur. Vérifiez votre connexion.",
+        "unknown": "Impossible de charger les éléments."
+      }
+    }
   },
   "devices": {
     "orientation": {

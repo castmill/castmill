@@ -84,9 +84,28 @@ defmodule Castmill.Widgets.Schema do
     # Location type for geographic coordinates (value is a map with lat, lng, and optional address fields)
     "location" => &is_map/1
   }
-  def validate_schema(schema) when map_size(schema) > 0 do
+  @choice_displays ["list", "cards", "grid"]
+  @choice_keys ["list", "display", "search", "multiple", "ordered", "min", "max", "depends_on"]
+
+  @doc """
+  Validates a schema. Pass `choices: true` to allow the `choices` attribute on
+  top-level string and list-of-string fields (only in a widget's options_schema).
+  """
+  def validate_schema(schema, opts \\ [])
+
+  def validate_schema(schema, opts) when is_map(schema) and map_size(schema) > 0 do
+    allow_choices? = Keyword.get(opts, :choices, false)
+
     schema
     |> Enum.reduce_while({:ok, nil}, fn
+      {field, %{"choices" => choices} = value}, _acc ->
+        with :ok <- if(allow_choices?, do: :ok, else: {:error, choices_not_allowed(field)}),
+             :ok <- validate_choices(choices, value, field) do
+          validate_field(Map.delete(value, "choices"), field)
+        else
+          {:error, message} -> {:halt, {:error, message}}
+        end
+
       {field, value}, _acc when is_map(value) ->
         validate_field(value, field)
 
@@ -96,9 +115,143 @@ defmodule Castmill.Widgets.Schema do
           _ -> {:cont, {:ok, nil}}
         end
     end)
+    |> case do
+      {:ok, nil} -> validate_choice_dependencies(schema)
+      error -> error
+    end
   end
 
-  def validate_schema(_schema), do: {:error, "Schema is not a non-empty map"}
+  def validate_schema(_schema, _opts), do: {:error, "Schema is not a non-empty map"}
+
+  @doc """
+  Returns the `choices` attribute of a top-level schema field, or nil.
+  """
+  def field_choices(schema, field) when is_map(schema) and is_binary(field) do
+    case Map.get(schema, field) do
+      %{"choices" => choices} when is_map(choices) -> choices
+      _ -> nil
+    end
+  end
+
+  def field_choices(_schema, _field), do: nil
+
+  @doc """
+  True when any top-level field of the schema takes its values from choices.
+  """
+  def has_choices?(schema) when is_map(schema) do
+    Enum.any?(schema, fn
+      {_field, %{"choices" => _}} -> true
+      _ -> false
+    end)
+  end
+
+  def has_choices?(_schema), do: false
+
+  defp choices_not_allowed(field) do
+    "Field #{inspect(field)}: 'choices' is only supported on top-level options_schema fields"
+  end
+
+  defp validate_choices(choices, field_schema, field) when is_map(choices) do
+    list_field? = field_schema["type"] == "list"
+
+    cond do
+      not choice_value_field?(field_schema) ->
+        {:error, "Field #{inspect(field)}: 'choices' requires a string or list of strings"}
+
+      (invalid = Enum.find(Map.keys(choices), &(&1 not in @choice_keys))) != nil ->
+        {:error, "Field #{inspect(field)}: unexpected key #{inspect(invalid)} in choices"}
+
+      not (is_binary(choices["list"]) and choices["list"] != "") ->
+        {:error, "Field #{inspect(field)}: choices.list must be a non-empty string"}
+
+      Map.has_key?(choices, "display") and choices["display"] not in @choice_displays ->
+        {:error,
+         "Field #{inspect(field)}: choices.display must be one of #{Enum.join(@choice_displays, ", ")}"}
+
+      (bad = Enum.find(["search", "multiple", "ordered"], &non_boolean?(choices, &1))) != nil ->
+        {:error, "Field #{inspect(field)}: choices.#{bad} must be a boolean"}
+
+      choices["multiple"] == true and not list_field? ->
+        {:error, "Field #{inspect(field)}: choices.multiple is only allowed on list fields"}
+
+      list_field? and choices["multiple"] != true ->
+        {:error, "Field #{inspect(field)}: list fields with choices require choices.multiple"}
+
+      choices["ordered"] == true and choices["multiple"] != true ->
+        {:error, "Field #{inspect(field)}: choices.ordered requires choices.multiple"}
+
+      (bad = Enum.find(["min", "max"], &invalid_bound?(choices, &1))) != nil ->
+        {:error, "Field #{inspect(field)}: choices.#{bad} must be a non-negative integer"}
+
+      (Map.has_key?(choices, "min") or Map.has_key?(choices, "max")) and
+          choices["multiple"] != true ->
+        {:error, "Field #{inspect(field)}: choices.min and choices.max require choices.multiple"}
+
+      is_integer(choices["min"]) and is_integer(choices["max"]) and
+          choices["min"] > choices["max"] ->
+        {:error, "Field #{inspect(field)}: choices.min must not exceed choices.max"}
+
+      Map.has_key?(choices, "depends_on") and
+          not (is_list(choices["depends_on"]) and
+                   Enum.all?(choices["depends_on"], &(is_binary(&1) and &1 != ""))) ->
+        {:error, "Field #{inspect(field)}: choices.depends_on must be a list of field keys"}
+
+      true ->
+        :ok
+    end
+  end
+
+  defp validate_choices(_choices, _field_schema, field) do
+    {:error, "Field #{inspect(field)}: choices must be a map"}
+  end
+
+  defp choice_value_field?(%{"type" => "string"}), do: true
+  defp choice_value_field?(%{"type" => "list", "items" => "string"}), do: true
+  defp choice_value_field?(%{"type" => "list", "items" => %{"type" => "string"}}), do: true
+  defp choice_value_field?(_), do: false
+
+  defp non_boolean?(map, key), do: Map.has_key?(map, key) and not is_boolean(map[key])
+
+  defp invalid_bound?(map, key),
+    do: Map.has_key?(map, key) and not (is_integer(map[key]) and map[key] >= 0)
+
+  defp validate_choice_dependencies(schema) do
+    graph =
+      for {field, %{"choices" => choices}} <- schema, into: %{} do
+        {field, Map.get(choices, "depends_on", [])}
+      end
+
+    missing =
+      Enum.find_value(graph, fn {field, deps} ->
+        Enum.find_value(deps, fn dep ->
+          cond do
+            dep == field -> {field, dep}
+            not Map.has_key?(schema, dep) -> {field, dep}
+            true -> nil
+          end
+        end)
+      end)
+
+    cond do
+      missing != nil ->
+        {field, dep} = missing
+
+        {:error,
+         "Field #{inspect(field)}: choices.depends_on references invalid field #{inspect(dep)}"}
+
+      (cycle_field = Enum.find(Map.keys(graph), &cyclic?(graph, &1, [&1]))) != nil ->
+        {:error, "Field #{inspect(cycle_field)}: choices.depends_on forms a cycle"}
+
+      true ->
+        {:ok, nil}
+    end
+  end
+
+  defp cyclic?(graph, field, path) do
+    Enum.any?(Map.get(graph, field, []), fn dep ->
+      dep in path or cyclic?(graph, dep, [dep | path])
+    end)
+  end
 
   defp validate_field(%{"type" => type} = map, field) do
     validator = @type_validations[type]

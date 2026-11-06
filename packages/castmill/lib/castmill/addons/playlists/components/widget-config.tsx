@@ -23,6 +23,8 @@ import {
   LayoutRefValue,
   LocationValue,
   LocationFieldAttributes,
+  ChoicesAttributes,
+  ListFieldAttributes,
 } from '@castmill/player';
 import { BsCheckLg } from 'solid-icons/bs';
 import { BsX } from 'solid-icons/bs';
@@ -33,9 +35,15 @@ import {
   useToast,
   Timestamp,
   LocationPicker,
+  ChoicesField,
+  ChoicesFieldLabels,
+  ConfirmDialog,
 } from '@castmill/ui-common';
 import { ResourcesService } from '../services/resources.service';
-import { PlaylistsService } from '../services/playlists.service';
+import {
+  PlaylistsService,
+  WidgetChoicesError,
+} from '../services/playlists.service';
 import { AddonStore } from '../../common/interfaces/addon-store';
 import { getTranslatedWidgetOption } from '../../common/utils/widget-catalog-utils';
 
@@ -76,7 +84,8 @@ type FormTypes =
   | 'layout-ref'
   | 'location'
   | 'map'
-  | 'list';
+  | 'list'
+  | 'choices';
 
 export type SchemaAttributeType =
   | SimpleType
@@ -85,7 +94,8 @@ export type SchemaAttributeType =
   | ReferenceAttributes
   | LayoutFieldAttributes
   | LayoutRefFieldAttributes
-  | LocationFieldAttributes;
+  | LocationFieldAttributes
+  | ListFieldAttributes;
 
 export const normalizeSchemaEntries = (
   rawOptionsSchema: unknown
@@ -213,6 +223,148 @@ export const normalizeWidgetOptionsForApi = (
     },
     {} as Record<string, any>
   );
+
+/**
+ * Returns the `choices` attribute of a schema field, if it takes its values
+ * from an integration-provided list.
+ */
+export const getFieldChoices = (
+  schema: unknown
+): ChoicesAttributes | undefined => {
+  const choices =
+    schema && typeof schema === 'object'
+      ? (schema as { choices?: ChoicesAttributes }).choices
+      : undefined;
+  return choices && typeof choices.list === 'string' ? choices : undefined;
+};
+
+const isEmptyOption = (value: unknown) =>
+  value === undefined ||
+  value === null ||
+  value === '' ||
+  (Array.isArray(value) && value.length === 0);
+
+/**
+ * Splits a choice field's dependencies into the values to send to the
+ * provider and the dependencies that are still missing.
+ */
+export const choiceDependencies = (
+  choices: ChoicesAttributes,
+  options: Record<string, unknown>
+): { values: Record<string, unknown>; missing: string[] } => {
+  const values: Record<string, unknown> = {};
+  const missing: string[] = [];
+  for (const key of choices.depends_on || []) {
+    if (isEmptyOption(options[key])) {
+      missing.push(key);
+    } else {
+      values[key] = options[key];
+    }
+  }
+  return { values, missing };
+};
+
+/**
+ * Keys of choice fields that depend on `key` and currently have a value.
+ */
+export const dependentChoiceFields = (
+  entries: [string, SchemaAttributeType][],
+  key: string,
+  options: Record<string, unknown>
+): string[] =>
+  entries
+    .filter(
+      ([fieldKey, schema]) =>
+        getFieldChoices(schema)?.depends_on?.includes(key) &&
+        !isEmptyOption(options[fieldKey])
+    )
+    .map(([fieldKey]) => fieldKey);
+
+/**
+ * Validates a choice field value. Returns an error message, or '' when valid.
+ */
+export const validateChoicesValue = (
+  choices: ChoicesAttributes,
+  required: boolean | undefined,
+  value: unknown,
+  t: (key: string, params?: Record<string, any>) => string
+): string => {
+  const values = Array.isArray(value)
+    ? value
+    : isEmptyOption(value)
+      ? []
+      : [value];
+
+  if (required && values.length === 0) {
+    return t('validation.fieldRequired');
+  }
+  if (choices.multiple && typeof choices.min === 'number') {
+    if (values.length < choices.min) {
+      return t('widgets.choices.minSelection', { min: choices.min });
+    }
+  }
+  if (choices.multiple && typeof choices.max === 'number') {
+    if (values.length > choices.max) {
+      return t('widgets.choices.maxSelection', { max: choices.max });
+    }
+  }
+  return '';
+};
+
+const CHOICES_ERROR_KEYS: Record<string, string> = {
+  widget_not_found: 'widgetNotFound',
+  not_a_choice_field: 'notAChoiceField',
+  missing_dependency: 'missingDependency',
+  missing_credentials: 'missingCredentials',
+  rate_limited: 'rateLimited',
+  provider_error: 'providerError',
+  network_error: 'networkError',
+};
+
+/**
+ * Localized message for an error from the widget choices endpoint.
+ */
+export const choicesErrorMessage = (
+  error: unknown,
+  t: (key: string, params?: Record<string, any>) => string
+): string => {
+  const code = error instanceof WidgetChoicesError ? error.code : '';
+  return t(`widgets.choices.errors.${CHOICES_ERROR_KEYS[code] || 'unknown'}`);
+};
+
+/**
+ * Labels for the ChoicesField component.
+ */
+export const choicesFieldLabels = (
+  t: (key: string, params?: Record<string, any>) => string
+): ChoicesFieldLabels => ({
+  choose: t('widgets.choices.choose'),
+  change: t('common.change'),
+  add: t('common.add'),
+  clear: t('common.clear'),
+  remove: t('common.remove'),
+  moveBefore: t('widgets.choices.moveBefore'),
+  moveAfter: t('widgets.choices.moveAfter'),
+  search: t('widgets.choices.search'),
+  loadMore: t('widgets.choices.loadMore'),
+  retry: t('widgets.choices.retry'),
+  noResults: t('widgets.choices.noResults'),
+  noSelection: t('widgets.choices.noSelection'),
+  unavailable: t('widgets.choices.unavailable'),
+  selectAll: t('widgets.choices.selectAll'),
+  selectNone: t('widgets.choices.selectNone'),
+  selected: (count, max) =>
+    typeof max === 'number'
+      ? t('widgets.choices.selectedCountMax', { count, max })
+      : t('widgets.choices.selectedCount', { count }),
+  done: t('widgets.choices.done'),
+  cancel: t('common.cancel'),
+  play: t('widgets.choices.play'),
+  stop: t('widgets.choices.stop'),
+  enlarge: t('widgets.choices.enlarge'),
+  close: t('common.close'),
+  dialogDescription: t('widgets.choices.dialogDescription'),
+});
 
 export function isValidURL(url: string): boolean {
   if (!url || url.trim() === '') {
@@ -457,6 +609,9 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
    * Gets the form type for a schema entry.
    */
   const getFormType = (schema: any): FormTypes => {
+    if (getFieldChoices(schema)) {
+      return 'choices';
+    }
     // If it's an object schema with enum, render as select
     if (schema && typeof schema === 'object' && schema.enum) {
       return 'select';
@@ -494,6 +649,19 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
         if (!isLocationValueValid(locationValue)) {
           return false;
         }
+      }
+
+      if (fieldType === 'choices') {
+        const message = validateChoicesValue(
+          getFieldChoices(schema)!,
+          (schema as FieldAttributes).required,
+          options[key],
+          t
+        );
+        if (message) {
+          return false;
+        }
+        continue;
       }
 
       if (
@@ -553,6 +721,8 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
         break;
       case 'list':
         break;
+      case 'choices':
+        break;
       case 'location':
         if (!isLocationValueValid(value as LocationValue | null | undefined)) {
           errorMessage = t('validation.invalidCoordinates');
@@ -596,6 +766,9 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
    * Also handles special cases like enums (which render as select dropdowns).
    */
   const getType = (value: any): FormTypes => {
+    if (getFieldChoices(value)) {
+      return 'choices';
+    }
     // If it's an object schema with enum, render as select
     if (value && typeof value === 'object' && value.enum) {
       return 'select';
@@ -625,6 +798,73 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
     setIsFormValid(checkFormValidity());
   });
 
+  // A change of a choice field that other choice fields depend on waits for
+  // confirmation, because it clears their values.
+  const [pendingChoice, setPendingChoice] = createSignal<{
+    key: string;
+    value: string | string[] | undefined;
+    dependents: string[];
+  } | null>(null);
+
+  const applyChoice = (
+    key: string,
+    value: string | string[] | undefined,
+    clear: string[]
+  ) => {
+    const next: OptionsDict = { ...widgetOptions(), [key]: value as any };
+    const errorUpdates = new Map(errors());
+
+    for (const fieldKey of [key, ...clear]) {
+      const fieldSchema = schemaEntries.find(([k]) => k === fieldKey)?.[1];
+      const choices = getFieldChoices(fieldSchema);
+      if (!choices) continue;
+      if (fieldKey !== key) {
+        if (choices.multiple) {
+          next[fieldKey] = [] as any;
+        } else {
+          delete next[fieldKey];
+        }
+      }
+      errorUpdates.set(
+        fieldKey,
+        validateChoicesValue(
+          choices,
+          (fieldSchema as FieldAttributes).required,
+          next[fieldKey],
+          t
+        )
+      );
+    }
+
+    if (value === undefined) {
+      delete next[key];
+    }
+
+    setWidgetOptions(next);
+    setErrors(errorUpdates);
+    setIsFormModified(true);
+  };
+
+  const changeChoice = (key: string, value: string | string[] | undefined) => {
+    const dependents = dependentChoiceFields(
+      schemaEntries,
+      key,
+      widgetOptions()
+    );
+    const changed =
+      JSON.stringify(widgetOptions()[key] ?? null) !==
+      JSON.stringify(value ?? null);
+
+    if (dependents.length > 0 && changed) {
+      setPendingChoice({ key, value, dependents });
+    } else {
+      applyChoice(key, value, []);
+    }
+  };
+
+  const fieldLabels = (keys: string[]) =>
+    keys.map((k) => translateWidgetOptionLabel(k, k)).join(', ');
+
   function componentForItem(
     key: string,
     schema:
@@ -635,6 +875,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
       | LayoutFieldAttributes
       | LayoutRefFieldAttributes
       | LocationFieldAttributes
+      | ListFieldAttributes
   ) {
     const type = getType(schema);
     switch (type) {
@@ -949,6 +1190,67 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
             <div class="error">{errors().get(key)}</div>
           </div>
         );
+      case 'choices': {
+        const choicesSchema = schema as (
+          | FieldAttributes
+          | ListFieldAttributes
+        ) & {
+          title?: string;
+          placeholder?: string;
+        };
+        const choices = getFieldChoices(schema)!;
+        const dependencies = () =>
+          choiceDependencies(
+            choices,
+            widgetOptions() as Record<string, unknown>
+          );
+
+        return (
+          <div class="form-item-wrapper">
+            <ChoicesField
+              id={key}
+              label={translateWidgetOptionLabel(
+                key,
+                choicesSchema.title || key
+              )}
+              description={translateWidgetOptionDescription(
+                key,
+                choicesSchema.description
+              )}
+              value={widgetOptions()[key] as string | string[] | undefined}
+              multiple={!!choices.multiple}
+              ordered={!!choices.ordered}
+              min={choices.min}
+              max={choices.max}
+              display={choices.display}
+              search={!!choices.search}
+              required={!!choicesSchema.required}
+              disabled={dependencies().missing.length > 0}
+              disabledHint={t('widgets.choices.dependencyRequired', {
+                fields: fieldLabels(dependencies().missing),
+              })}
+              emptyHint={translateWidgetOptionPlaceholder(
+                key,
+                choicesSchema.placeholder
+              )}
+              reloadKey={JSON.stringify(dependencies().values)}
+              labels={choicesFieldLabels(t)}
+              loadChoices={(request) =>
+                PlaylistsService.listWidgetChoices(
+                  props.baseUrl,
+                  props.organizationId,
+                  props.item.widget.id!,
+                  key,
+                  { ...request, options: dependencies().values }
+                )
+              }
+              errorMessage={(error) => choicesErrorMessage(error, t)}
+              onChange={(value) => changeChoice(key, value)}
+            />
+            <div class="error">{errors().get(key)}</div>
+          </div>
+        );
+      }
       case 'map':
         return <div>Map type not implemented yet</div>;
       default:
@@ -1016,6 +1318,24 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
               }}
             </For>
           </div>
+          <ConfirmDialog
+            show={!!pendingChoice()}
+            title={t('widgets.choices.confirmClearTitle')}
+            message={t('widgets.choices.confirmClearMessage', {
+              field: fieldLabels(pendingChoice() ? [pendingChoice()!.key] : []),
+              fields: fieldLabels(pendingChoice()?.dependents || []),
+            })}
+            confirmLabel={t('common.clear')}
+            cancelLabel={t('common.cancel')}
+            onConfirm={() => {
+              const pending = pendingChoice();
+              setPendingChoice(null);
+              if (pending) {
+                applyChoice(pending.key, pending.value, pending.dependents);
+              }
+            }}
+            onClose={() => setPendingChoice(null)}
+          />
           <div class="form-actions">
             <Button
               label={t('common.save')}
