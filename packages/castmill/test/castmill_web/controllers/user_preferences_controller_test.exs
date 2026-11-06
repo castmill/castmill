@@ -48,6 +48,15 @@ defmodule CastmillWeb.UserPreferencesControllerTest do
   end
 
   describe "PUT /dashboard/users/:user_id/preferences" do
+    test "does not overwrite metadata updated since the user was loaded", %{user: user} do
+      {:ok, _} = Accounts.update_credential_name(user.id, "cred-1", "Laptop")
+      {:ok, _} = Accounts.update_user_preferences(user, %{"theme" => "light"})
+
+      reloaded = Accounts.get_user(user.id)
+      assert reloaded.meta["preferences"] == %{"theme" => "light"}
+      assert reloaded.meta["credential_names"] == %{"cred-1" => "Laptop"}
+    end
+
     test "stores the theme and preserves other meta", %{conn: conn, user: user} do
       {:ok, _} = Accounts.update_credential_name(user.id, "cred-1", "Laptop")
 

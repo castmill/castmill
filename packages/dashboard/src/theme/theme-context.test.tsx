@@ -106,6 +106,20 @@ describe('theme-context', () => {
       expect(document.documentElement.dataset.theme).toBe('light');
     });
 
+    it('invalidates a queued transition when a later request matches the current theme', () => {
+      const callbacks: (() => void)[] = [];
+      (document as any).startViewTransition = (callback: () => void) => {
+        callbacks.push(callback);
+      };
+      applyTheme('dark');
+
+      applyTheme('light', true);
+      applyTheme('dark', true);
+      callbacks[0]();
+
+      expect(document.documentElement.dataset.theme).toBe('dark');
+    });
+
     it('falls back to a temporary CSS transition class', () => {
       vi.useFakeTimers();
       applyTheme('light', true);
@@ -182,6 +196,36 @@ describe('theme-context', () => {
       expect(preferences.save).toHaveBeenLastCalledWith('user-1', 'dark');
     });
 
+    it('serializes preference saves so the latest theme is saved last', async () => {
+      const preferences = createPreferences();
+      let resolveFirstSave!: () => void;
+      preferences.save
+        .mockImplementationOnce(
+          () =>
+            new Promise<void>((resolve) => {
+              resolveFirstSave = resolve;
+            })
+        )
+        .mockResolvedValueOnce({});
+
+      render(() => (
+        <ThemeProvider userId={() => 'user-1'} preferences={preferences}>
+          <Capture />
+        </ThemeProvider>
+      ));
+
+      api.setTheme('light');
+      api.setTheme('dark');
+
+      await waitFor(() => expect(preferences.save).toHaveBeenCalledTimes(1));
+      expect(preferences.save).toHaveBeenCalledTimes(1);
+      expect(preferences.save).toHaveBeenNthCalledWith(1, 'user-1', 'light');
+
+      resolveFirstSave();
+      await waitFor(() => expect(preferences.save).toHaveBeenCalledTimes(2));
+      expect(preferences.save).toHaveBeenNthCalledWith(2, 'user-1', 'dark');
+    });
+
     it('does not save to the server when signed out', () => {
       const preferences = createPreferences();
 
@@ -215,6 +259,35 @@ describe('theme-context', () => {
       expect(localStorage.getItem(THEME_STORAGE_KEY)).toBe('light');
       // Loading the server preference must not write it back.
       expect(preferences.save).not.toHaveBeenCalled();
+    });
+
+    it('ignores a preference load that resolves after an explicit theme change', async () => {
+      let resolveLoad!: (preferences: { theme: string }) => void;
+      const preferences = createPreferences();
+      preferences.load.mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            resolveLoad = resolve;
+          })
+      );
+
+      render(() => (
+        <ThemeProvider userId={() => 'user-1'} preferences={preferences}>
+          <Capture />
+        </ThemeProvider>
+      ));
+
+      await waitFor(() =>
+        expect(preferences.load).toHaveBeenCalledWith('user-1')
+      );
+
+      api.setTheme('light');
+      resolveLoad({ theme: 'dark' });
+      await Promise.resolve();
+
+      expect(api.theme()).toBe('light');
+      expect(localStorage.getItem(THEME_STORAGE_KEY)).toBe('light');
+      expect(document.documentElement.dataset.theme).toBe('light');
     });
 
     it('keeps the local theme when the server has no preference', async () => {

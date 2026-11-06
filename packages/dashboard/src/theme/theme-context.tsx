@@ -71,18 +71,22 @@ const prefersReducedMotion = () =>
   window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 let transitionTimer: ReturnType<typeof setTimeout> | undefined;
+let themeApplicationRevision = 0;
 
 /**
  * Applies a theme to the document, optionally with a fade animation.
  */
 export function applyTheme(theme: Theme, animate = false) {
+  const revision = ++themeApplicationRevision;
   const root = document.documentElement;
   if (root.dataset.theme === theme) {
     return;
   }
 
   const update = () => {
-    root.dataset.theme = theme;
+    if (revision === themeApplicationRevision) {
+      root.dataset.theme = theme;
+    }
   };
 
   if (!animate || prefersReducedMotion()) {
@@ -134,10 +138,17 @@ export function ThemeProvider(props: {
   applyTheme(theme());
   props.onChange?.(theme());
 
+  let themeChangeRevision = 0;
+  let preferenceSaveQueue: Promise<unknown> = Promise.resolve();
+
   const set = (next: Theme, { animate = true, persist = true } = {}) => {
     if (!isTheme(next)) {
       return;
     }
+    if (persist) {
+      themeChangeRevision += 1;
+    }
+
     storeTheme(next);
     if (next !== theme()) {
       setThemeSignal(next);
@@ -147,9 +158,13 @@ export function ThemeProvider(props: {
 
     const userId = props.userId?.();
     if (persist && userId && props.preferences) {
-      props.preferences.save(userId, next).catch((error) => {
-        console.warn('Failed to save theme preference', error);
-      });
+      const preferences = props.preferences;
+      preferenceSaveQueue = preferenceSaveQueue
+        .catch(() => undefined)
+        .then(() => preferences.save(userId, next))
+        .catch((error) => {
+          console.warn('Failed to save theme preference', error);
+        });
     }
   };
 
@@ -161,10 +176,14 @@ export function ThemeProvider(props: {
         if (!userId || !props.preferences) {
           return;
         }
+        const revision = themeChangeRevision;
         props.preferences
           .load(userId)
           .then((preferences) => {
-            if (props.userId?.() !== userId) {
+            if (
+              props.userId?.() !== userId ||
+              themeChangeRevision !== revision
+            ) {
               return;
             }
             if (isTheme(preferences?.theme)) {

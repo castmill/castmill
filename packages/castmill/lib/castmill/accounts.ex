@@ -593,12 +593,25 @@ defmodule Castmill.Accounts do
   def update_user_preferences(%User{} = user, attrs) when is_map(attrs) do
     case Map.fetch(attrs, "theme") do
       {:ok, theme} when theme in @themes ->
-        meta = user.meta || %{}
-        preferences = meta |> Map.get("preferences", %{}) |> Map.put("theme", theme)
+        query =
+          from u in User,
+            where: u.id == ^user.id,
+            update: [
+              set: [
+                meta:
+                  fragment(
+                    "jsonb_set(COALESCE(?, '{}'::jsonb), '{preferences}', COALESCE(?->'preferences', '{}'::jsonb) || jsonb_build_object('theme', ?::text), true)",
+                    u.meta,
+                    u.meta,
+                    ^theme
+                  )
+              ]
+            ]
 
-        user
-        |> Ecto.Changeset.change(meta: Map.put(meta, "preferences", preferences))
-        |> Repo.update()
+        case Repo.update_all(query, []) do
+          {1, _} -> {:ok, Repo.get!(User, user.id)}
+          {0, _} -> {:error, :user_not_found}
+        end
 
       {:ok, _invalid} ->
         {:error, :invalid_preferences}
