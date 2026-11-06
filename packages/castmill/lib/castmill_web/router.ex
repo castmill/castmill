@@ -321,6 +321,22 @@ defmodule CastmillWeb.Router do
     get("/network/settings", NetworkDashboardController, :show_settings)
     put("/network/settings", NetworkDashboardController, :update_settings)
     get("/network/stats", NetworkDashboardController, :show_stats)
+    get("/network/widgets", NetworkDashboardController, :list_widgets)
+
+    get(
+      "/network/widgets/:widget_id/organizations",
+      NetworkDashboardController,
+      :list_widget_organizations
+    )
+
+    put("/network/widgets/:widget_id/access", NetworkDashboardController, :update_widget_access)
+
+    patch(
+      "/network/widgets/:widget_id/organizations",
+      NetworkDashboardController,
+      :update_widget_organizations
+    )
+
     get("/network/organizations", NetworkDashboardController, :list_organizations)
     post("/network/organizations", NetworkDashboardController, :create_organization)
     delete("/network/organizations/:id", NetworkDashboardController, :delete_organization)

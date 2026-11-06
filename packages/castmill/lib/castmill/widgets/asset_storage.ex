@@ -10,6 +10,16 @@ defmodule Castmill.Widgets.AssetStorage do
 
   @assets_dir "priv/static/widget_assets"
 
+  # Slugs become directory names: no dots or separators, so they cannot escape the
+  # assets directory.
+  @slug_format ~r/^[A-Za-z0-9][A-Za-z0-9_-]*$/
+
+  @doc """
+  Whether a slug is safe to use as an assets directory name.
+  """
+  def valid_slug?(slug) when is_binary(slug), do: Regex.match?(@slug_format, slug)
+  def valid_slug?(_slug), do: false
+
   @doc """
   Returns the base directory for widget assets.
   """
@@ -37,6 +47,14 @@ defmodule Castmill.Widgets.AssetStorage do
   Returns {:ok, stored_assets} with updated paths, or {:error, reason}
   """
   def store_assets(widget_slug, %{dir: _temp_dir, files: files}) when map_size(files) > 0 do
+    if valid_slug?(widget_slug),
+      do: do_store_assets(widget_slug, files),
+      else: {:error, "Invalid widget slug"}
+  end
+
+  def store_assets(_widget_slug, _assets), do: {:ok, %{files: %{}}}
+
+  defp do_store_assets(widget_slug, files) do
     target_dir = widget_assets_dir(widget_slug)
 
     # Clean up existing assets for this widget
@@ -75,8 +93,6 @@ defmodule Castmill.Widgets.AssetStorage do
         {:ok, %{dir: target_dir, files: files_map, base_url: widget_assets_url(widget_slug)}}
     end
   end
-
-  def store_assets(_widget_slug, _assets), do: {:ok, %{files: %{}}}
 
   @doc """
   Resolves the icon field to a full URL if it's a relative asset path.
@@ -193,7 +209,7 @@ defmodule Castmill.Widgets.AssetStorage do
   def delete_assets(widget_slug) do
     target_dir = widget_assets_dir(widget_slug)
 
-    if File.exists?(target_dir) do
+    if valid_slug?(widget_slug) and File.exists?(target_dir) do
       File.rm_rf!(target_dir)
     end
 
@@ -206,7 +222,7 @@ defmodule Castmill.Widgets.AssetStorage do
   """
   def get_asset_path(widget_slug, asset_path) do
     # Prevent directory traversal attacks
-    if String.contains?(asset_path, "..") do
+    if String.contains?(asset_path, "..") or not valid_slug?(widget_slug) do
       {:error, :invalid_path}
     else
       full_path = Path.join(widget_assets_dir(widget_slug), asset_path)

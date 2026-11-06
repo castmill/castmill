@@ -16,6 +16,7 @@ defmodule CastmillWeb.NetworkDashboardController do
   alias Castmill.Organizations.Organization
   alias Castmill.Accounts.User
   alias Castmill.Repo
+  alias Castmill.Widgets.NetworkAccess
 
   action_fallback(CastmillWeb.FallbackController)
 
@@ -104,6 +105,179 @@ defmodule CastmillWeb.NetworkDashboardController do
         |> put_status(:forbidden)
         |> json(%{error: "You must be a network admin to access this resource"})
     end
+  end
+
+  @doc """
+  List the widgets the network admin curates (system and network widgets) with their
+  access summary. Supports `page`, `page_size`, `search`, `kind` and `access`.
+  """
+  def list_widgets(conn, params) do
+    with {:ok, network_id} <- get_admin_network_id(conn) do
+      result = NetworkAccess.list_widgets(network_id, widget_list_params(params))
+
+      conn
+      |> put_status(:ok)
+      |> json(%{
+        data: Enum.map(result.entries, &widget_access_to_json/1),
+        summary: result.summary,
+        organizations_count: result.organizations_count,
+        pagination: pagination_json(result)
+      })
+    else
+      {:error, :not_admin} -> not_admin(conn)
+    end
+  end
+
+  @doc """
+  List the organizations eligible to use a curated widget and whether each can use it.
+  Supports `page`, `page_size`, `search` and `status` (`enabled` or `disabled`).
+  """
+  def list_widget_organizations(conn, %{"widget_id" => widget_id} = params) do
+    with {:ok, network_id} <- get_admin_network_id(conn),
+         {:ok, result} <-
+           NetworkAccess.list_organizations(network_id, widget_id, widget_list_params(params)) do
+      conn
+      |> put_status(:ok)
+      |> json(%{
+        data: result.entries,
+        counts: result.counts,
+        pagination: pagination_json(result)
+      })
+    else
+      error -> widget_access_error(conn, error)
+    end
+  end
+
+  @doc """
+  Set a curated widget's access mode: `all`, `except`, `selected` or `hidden`.
+  """
+  def update_widget_access(conn, %{"widget_id" => widget_id} = params) do
+    with {:ok, network_id} <- get_admin_network_id(conn),
+         {:ok, widget} <- NetworkAccess.set_access(network_id, widget_id, params["access"]) do
+      conn |> put_status(:ok) |> json(widget_access_to_json(widget))
+    else
+      error -> widget_access_error(conn, error)
+    end
+  end
+
+  @doc """
+  Enable or disable organizations for a curated widget, either by id
+  (`enable`/`disable` lists) or every organization matching `search` (`all_matching`
+  with `enabled`).
+  """
+  def update_widget_organizations(conn, %{"widget_id" => widget_id} = params) do
+    with {:ok, network_id} <- get_admin_network_id(conn),
+         {:ok, changes} <- organization_changes(params),
+         {:ok, widget} <- NetworkAccess.update_organizations(network_id, widget_id, changes) do
+      conn |> put_status(:ok) |> json(widget_access_to_json(widget))
+    else
+      error -> widget_access_error(conn, error)
+    end
+  end
+
+  defp organization_changes(%{"all_matching" => true, "enabled" => enabled} = params)
+       when is_boolean(enabled) do
+    {:ok, %{search: params["search"], enabled: enabled}}
+  end
+
+  defp organization_changes(params) do
+    enable = Map.get(params, "enable", [])
+    disable = Map.get(params, "disable", [])
+
+    if is_list(enable) and is_list(disable) do
+      {:ok, %{enable: enable, disable: disable}}
+    else
+      {:error, :invalid_organization_id}
+    end
+  end
+
+  defp widget_list_params(params) do
+    %{
+      page: params["page"],
+      page_size: params["page_size"],
+      search: params["search"],
+      kind: params["kind"],
+      access: params["access"],
+      status: params["status"]
+    }
+  end
+
+  defp pagination_json(result) do
+    %{
+      page: result.page,
+      page_size: result.page_size,
+      total_count: result.total,
+      total_pages: ceil(result.total / result.page_size)
+    }
+  end
+
+  defp widget_access_to_json(summary) do
+    widget = summary.widget
+
+    %{
+      id: widget.id,
+      name: widget.name,
+      description: widget.description,
+      slug: widget.slug,
+      icon: widget.icon,
+      small_icon: widget.small_icon,
+      translations: widget.translations,
+      kind: summary.kind,
+      access: summary.access,
+      listed_count: summary.listed_count,
+      enabled_count: summary.enabled_count,
+      eligible_count: summary.eligible_count,
+      organizations_count: summary.organizations_count,
+      in_use_count: summary.in_use_count,
+      core: summary.core,
+      platform_restricted: summary.platform_restricted
+    }
+  end
+
+  defp widget_access_error(conn, {:error, :not_admin}), do: not_admin(conn)
+
+  defp widget_access_error(conn, {:error, :not_found}) do
+    conn |> put_status(:not_found) |> json(%{error: "Widget not found"})
+  end
+
+  defp widget_access_error(conn, {:error, {:in_use, organization_ids}}) do
+    conn
+    |> put_status(:conflict)
+    |> json(%{
+      error: "Organizations still use this widget in their playlists",
+      code: "in_use",
+      organizations: NetworkAccess.organization_names(organization_ids)
+    })
+  end
+
+  defp widget_access_error(conn, {:error, :core_widget}) do
+    conn
+    |> put_status(:unprocessable_entity)
+    |> json(%{error: "Core widgets are always available", code: "core_widget"})
+  end
+
+  defp widget_access_error(conn, {:error, {:invalid_widget, changeset}}) do
+    conn
+    |> put_status(:unprocessable_entity)
+    |> json(%{errors: format_changeset_errors(changeset)})
+  end
+
+  defp widget_access_error(conn, {:error, reason}) do
+    message =
+      case reason do
+        :invalid_access -> "access must be one of: all, except, selected, hidden"
+        :organization_not_in_network -> "All organizations must belong to your network"
+        :conflicting_changes -> "An organization cannot be enabled and disabled at once"
+        _ -> "One or more organization IDs are invalid"
+      end
+
+    conn |> put_status(:unprocessable_entity) |> json(%{error: message})
+  end
+
+  defp not_admin(conn) do
+    conn
+    |> put_status(:forbidden)
+    |> json(%{error: "You must be a network admin to access this resource"})
   end
 
   @doc """

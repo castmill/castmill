@@ -135,6 +135,7 @@
     "networkSettings": "Settings",
     "networkOrganizations": "Organizations",
     "networkUsers": "Users & Invitations",
+    "networkWidgets": "Widget Access",
     "tags": "Tags",
     "agents": "Agents"
   },
@@ -225,6 +226,98 @@
     }
   },
   "network": {
+    "widgets": {
+      "title": "Widget Access",
+      "description": "Choose which widgets the organizations in your network can use. Hide widgets you don't offer, for example services that aren't available in your region or that need a subscription you don't have.",
+      "searchWidgets": "Search widgets",
+      "loadMore": "Load more",
+      "showing": "Showing {{shown}} of {{total}}",
+      "noWidgets": "No widgets match your filters.",
+      "clearFilters": "Clear filters",
+      "selectWidget": "Select a widget to manage who can use it.",
+      "core": "Core",
+      "usedBy": "Organizations using it: {{count}}",
+      "kind": {
+        "system": "System",
+        "network": "Network"
+      },
+      "filters": {
+        "any": "All",
+        "all": "Everyone",
+        "selected": "Selected",
+        "hidden": "Hidden",
+        "accessLabel": "Filter by access",
+        "anyKind": "All types",
+        "kindLabel": "Filter by type",
+        "except": "Excluding"
+      },
+      "summary": {
+        "all": "All organizations",
+        "selected": "{{count}} of {{total}} organizations",
+        "hidden": "Hidden",
+        "except": "All except {{count}}"
+      },
+      "access": {
+        "title": "Who can use this widget",
+        "all": "All organizations",
+        "allDescription": "Every organization, including ones created later.",
+        "except": "All except…",
+        "exceptDescription": "Everyone except the organizations you exclude. New organizations included.",
+        "selected": "Only selected…",
+        "selectedDescription": "Only the organizations you add. New organizations aren't included.",
+        "hidden": "Hidden",
+        "hiddenDescription": "Not offered anywhere in your network."
+      },
+      "notices": {
+        "core": "Core widget: always available, because playlists and media depend on it.",
+        "all": "Every organization can use this widget, including ones created later. Turning one off below excludes it.",
+        "except": "Organizations created later get this widget automatically.",
+        "selected": "Organizations created later don't get this widget.",
+        "hidden": "No organization in your network can add this widget to playlists.",
+        "platform": "The platform offers this widget to {{count}} of {{total}} organizations in your network."
+      },
+      "organizations": {
+        "title": "Organizations",
+        "search": "Search organizations",
+        "statusAll": "All",
+        "statusEnabled": "Can use",
+        "statusDisabled": "Can't use",
+        "enabledOf": "{{count}} of {{total}} can use this widget",
+        "matching": "{{count}} matching organizations",
+        "enableAll": "Enable all ({{count}})",
+        "disableAll": "Disable all ({{count}})",
+        "inUse": "In use",
+        "inUseHint": "Used in this organization's playlists. Remove it there before disabling access.",
+        "none": "No organizations match your filters.",
+        "noOrganizations": "There are no organizations in your network yet.",
+        "columnName": "Organization",
+        "columnUsage": "In playlists",
+        "columnAccess": "Access",
+        "accessFor": "Access for {{name}}",
+        "range": "{{from}}–{{to}} of {{total}}",
+        "selectedCount": "{{count}} selected",
+        "enableSelected": "Enable access",
+        "disableSelected": "Disable access"
+      },
+      "confirm": {
+        "hideTitle": "Hide {{widget}}?",
+        "hideMessage": "Organizations in your network will no longer be able to add this widget to playlists.",
+        "hideAction": "Hide widget",
+        "enableAllTitle": "Enable {{count}} organizations?",
+        "enableAllMessage": "They will be able to add {{widget}} to their playlists.",
+        "enableAction": "Enable",
+        "disableAllTitle": "Disable {{count}} organizations?",
+        "disableAllMessage": "They will no longer be able to add {{widget}} to their playlists.",
+        "disableAction": "Disable"
+      },
+      "errors": {
+        "load": "Failed to load widgets.",
+        "loadOrganizations": "Failed to load organizations.",
+        "save": "Failed to update widget access.",
+        "inUse": "Access can't be removed while these organizations use the widget in playlists: {{organizations}}",
+        "moreOrganizations": "{{names}} and {{count}} more"
+      }
+    },
     "title": "Network Settings",
     "adminBadge": "Network Admin",
     "saveSuccess": "Network settings saved successfully",
@@ -864,6 +957,13 @@
     "zonesCount": "{{count}} zones"
   },
   "widgets": {
+    "scope": {
+      "title": "Availability",
+      "system": "System",
+      "network": "Network",
+      "organization": "This organization",
+      "unassigned": "Unassigned"
+    },
     "title": "Widgets",
     "uploadWidget": "Upload Widget",
     "uploadDescription": "Upload a JSON widget definition file.",

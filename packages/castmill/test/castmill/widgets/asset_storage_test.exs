@@ -131,4 +131,28 @@ defmodule Castmill.Widgets.AssetStorageTest do
       assert AssetStorage.sanitize_public_icon("🌤️") == "🌤️"
     end
   end
+
+  describe "slug safety" do
+    test "valid_slug?/1 rejects anything that could leave the assets directory" do
+      assert AssetStorage.valid_slug?("fb-landscape_2")
+
+      for slug <- ["../x", "..", "a/b", ".hidden", "", "a b", nil],
+          do: refute(AssetStorage.valid_slug?(slug))
+    end
+
+    test "store_assets/2 refuses invalid slugs without touching the filesystem" do
+      outside = Path.dirname(AssetStorage.assets_base_dir())
+      before = File.ls!(outside)
+
+      assets = %{dir: System.tmp_dir!(), files: %{"icon.svg" => %{path: "/nonexistent"}}}
+      assert {:error, "Invalid widget slug"} = AssetStorage.store_assets("..", assets)
+      assert File.ls!(outside) == before
+    end
+
+    test "delete_assets/1 and get_asset_path/2 ignore invalid slugs" do
+      assert AssetStorage.delete_assets("..") == :ok
+      assert File.dir?(Path.dirname(AssetStorage.assets_base_dir()))
+      assert AssetStorage.get_asset_path("..", "index.html") == {:error, :invalid_path}
+    end
+  end
 end

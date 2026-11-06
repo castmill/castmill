@@ -74,6 +74,7 @@ defmodule CastmillWeb.WidgetOAuthController do
     with :ok <- validate_required_params(organization_id, "organization_id"),
          :ok <- authorize_user_for_organization(conn, organization_id),
          {:ok, integration} <- get_integration(integration_id),
+         :ok <- ensure_widget_available(organization_id, integration),
          {:ok, oauth_config} <- get_oauth_config(integration),
          {:ok, client_credentials} <- get_client_credentials(integration, organization_id) do
       {client_id, _client_secret} = client_credentials
@@ -142,6 +143,13 @@ defmodule CastmillWeb.WidgetOAuthController do
         |> put_status(:internal_server_error)
         |> json(%{error: "Failed to initiate OAuth flow"})
     end
+  end
+
+  # Integrations of widgets the organization cannot use are reported as not found.
+  defp ensure_widget_available(organization_id, integration) do
+    if Castmill.Widgets.available?(organization_id, integration.widget_id),
+      do: :ok,
+      else: {:error, :integration_not_found}
   end
 
   @doc """

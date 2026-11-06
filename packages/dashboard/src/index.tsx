@@ -48,6 +48,7 @@ import {
   NetworkSettings,
   NetworkOrganizations,
   NetworkUsers,
+  NetworkWidgets,
 } from './pages/network';
 import { I18nProvider, useI18n } from './i18n';
 import { KeyboardShortcutsProvider, useKeyboardShortcuts } from './hooks';
@@ -366,6 +367,14 @@ render(() => {
                   component={() => (
                     <NetworkProvider>
                       <NetworkUsers />
+                    </NetworkProvider>
+                  )}
+                />
+                <Route
+                  path="/widgets"
+                  component={() => (
+                    <NetworkProvider>
+                      <NetworkWidgets />
                     </NetworkProvider>
                   )}
                 />

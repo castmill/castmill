@@ -32,6 +32,57 @@ defmodule Castmill.DevicesTest do
       assert Devices.list_devices(%{organization_id: organization.id}) == [device]
     end
 
+    for availability <- [:available, :restricted, :hidden, :missing] do
+      @tag availability: availability
+      test "register_device/1 creates a default playlist when intro is #{availability}", %{
+        availability: availability
+      } do
+        network = network_fixture()
+        organization = organization_fixture(%{network_id: network.id})
+
+        intro =
+          Castmill.Widgets.get_widget_by_slug("intro") ||
+            widget_fixture(%{name: "Intro", slug: "intro"})
+
+        case availability do
+          :restricted ->
+            {:ok, _} = Castmill.Widgets.set_widget_scope(intro, %{restricted: true})
+
+          :hidden ->
+            {:ok, _} = Castmill.Widgets.NetworkAccess.set_access(network.id, intro.id, "hidden")
+
+          :missing ->
+            Castmill.Repo.delete!(intro)
+
+          :available ->
+            :ok
+        end
+
+        {:ok, registration} = device_registration_fixture()
+
+        assert {:ok, {device, _token}} =
+                 Devices.register_device(
+                   organization.id,
+                   registration.pincode,
+                   %{name: "Intro availability device"},
+                   %{add_default_channel: true}
+                 )
+
+        channel = Castmill.Repo.get_by!(Resources.Channel, organization_id: organization.id)
+        assert channel.default_playlist_id
+        items = Resources.get_playlist_items(channel.default_playlist_id)
+
+        if availability == :available do
+          assert [%{widget_config: %{widget_id: widget_id}}] = items
+          assert widget_id == intro.id
+        else
+          assert items == []
+        end
+
+        assert Devices.get_device(device.id)
+      end
+    end
+
     test "register_device/1 broadcasts flat organization and network names" do
       network = network_fixture(%{name: "Main Network"})
       organization = organization_fixture(%{network_id: network.id, name: "Main Organization"})

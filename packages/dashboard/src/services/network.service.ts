@@ -1,4 +1,5 @@
 import { baseUrl } from '../env';
+import { HttpError } from '@castmill/ui-common';
 import { handleResponse } from './util';
 
 import { authFetch } from '../components/auth';
@@ -75,6 +76,90 @@ export interface NetworkInvitation {
   inserted_at: string;
   expires_at: string;
 }
+
+export type WidgetAccessMode = 'all' | 'except' | 'selected' | 'hidden';
+export type WidgetKind = 'system' | 'network';
+
+export interface NetworkWidgetAccess {
+  id: number;
+  name: string;
+  description: string | null;
+  slug: string;
+  icon: string | null;
+  small_icon: string | null;
+  translations?: Record<string, { name?: string; description?: string }>;
+  kind: WidgetKind;
+  access: WidgetAccessMode;
+  /** Excluded (`except`) or included (`selected`) organizations. */
+  listed_count: number;
+  enabled_count: number;
+  eligible_count: number;
+  organizations_count: number;
+  in_use_count: number;
+  core: boolean;
+  platform_restricted: boolean;
+}
+
+export interface PageInfo {
+  page: number;
+  page_size: number;
+  total_count: number;
+  total_pages: number;
+}
+
+export interface NetworkWidgetAccessList {
+  data: NetworkWidgetAccess[];
+  summary: Record<WidgetAccessMode | 'total', number>;
+  organizations_count: number;
+  pagination: PageInfo;
+}
+
+export interface NetworkWidgetOrganization {
+  id: string;
+  name: string;
+  enabled: boolean;
+  in_use: boolean;
+}
+
+export interface NetworkWidgetOrganizationList {
+  data: NetworkWidgetOrganization[];
+  counts: { total: number; enabled: number };
+  pagination: PageInfo;
+}
+
+export type WidgetOrganizationChanges =
+  | { enable?: string[]; disable?: string[] }
+  | { all_matching: true; enabled: boolean; search?: string };
+
+/** Details of a 409 response: organizations that still use the widget. */
+export interface WidgetInUseDetails {
+  organizations: { id: string; name: string }[];
+}
+
+const toQueryString = (params: Record<string, string | number | undefined>) => {
+  const query = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== '') query.set(key, String(value));
+  });
+  const queryString = query.toString();
+  return queryString ? `?${queryString}` : '';
+};
+
+const handleWidgetAccessResponse = async <T>(
+  response: Response
+): Promise<T> => {
+  if (response.status === 409) {
+    const body = await response.json().catch(() => ({}));
+    throw new HttpError<WidgetInUseDetails>(
+      body.error ?? response.statusText,
+      409,
+      {
+        organizations: body.organizations ?? [],
+      }
+    );
+  }
+  return handleResponse<T>(response, { parse: true });
+};
 
 export interface PaginatedOrganizations {
   data: Organization[];
@@ -191,6 +276,102 @@ export const NetworkService = {
     });
 
     return handleResponse<NetworkStats>(response, { parse: true });
+  },
+
+  /**
+   * List the widgets the network admin curates with their access summary.
+   * Only available to network admins.
+   */
+  async listWidgetAccess(options?: {
+    page?: number;
+    pageSize?: number;
+    search?: string;
+    kind?: WidgetKind;
+    access?: WidgetAccessMode;
+  }): Promise<NetworkWidgetAccessList> {
+    const query = toQueryString({
+      page: options?.page,
+      page_size: options?.pageSize,
+      search: options?.search,
+      kind: options?.kind,
+      access: options?.access,
+    });
+    const response = await authFetch(
+      `${baseUrl}/dashboard/network/widgets${query}`,
+      { method: 'GET' }
+    );
+
+    return handleResponse<NetworkWidgetAccessList>(response, { parse: true });
+  },
+
+  /**
+   * List the organizations eligible to use a widget and whether each can use it.
+   * Only available to network admins.
+   */
+  async listWidgetOrganizations(
+    widgetId: number,
+    options?: {
+      page?: number;
+      pageSize?: number;
+      search?: string;
+      status?: 'enabled' | 'disabled';
+    }
+  ): Promise<NetworkWidgetOrganizationList> {
+    const query = toQueryString({
+      page: options?.page,
+      page_size: options?.pageSize,
+      search: options?.search,
+      status: options?.status,
+    });
+    const response = await authFetch(
+      `${baseUrl}/dashboard/network/widgets/${widgetId}/organizations${query}`,
+      { method: 'GET' }
+    );
+
+    return handleResponse<NetworkWidgetOrganizationList>(response, {
+      parse: true,
+    });
+  },
+
+  /**
+   * Set who can use a widget: all organizations, all except some, selected ones,
+   * or nobody.
+   * Rejects with an HttpError (status 409) if organizations still use it.
+   */
+  async setWidgetAccess(
+    widgetId: number,
+    access: WidgetAccessMode
+  ): Promise<NetworkWidgetAccess> {
+    const response = await authFetch(
+      `${baseUrl}/dashboard/network/widgets/${widgetId}/access`,
+      {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ access }),
+      }
+    );
+
+    return handleWidgetAccessResponse<NetworkWidgetAccess>(response);
+  },
+
+  /**
+   * Enable or disable organizations for a widget, by id or by search.
+   * Rejects with an HttpError (status 409) if organizations still use it.
+   */
+  async updateWidgetOrganizations(
+    widgetId: number,
+    changes: WidgetOrganizationChanges
+  ): Promise<NetworkWidgetAccess> {
+    const response = await authFetch(
+      `${baseUrl}/dashboard/network/widgets/${widgetId}/organizations`,
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(changes),
+      }
+    );
+
+    return handleWidgetAccessResponse<NetworkWidgetAccess>(response);
   },
 
   /**

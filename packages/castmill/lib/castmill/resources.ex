@@ -1049,7 +1049,8 @@ defmodule Castmill.Resources do
       if is_nil(playlist) do
         Repo.rollback("Playlist not found")
       else
-        with {:ok, prev_item, next_item_id} <- get_prev_and_next_items(playlist_id, prev_item_id),
+        with :ok <- ensure_widget_available(playlist.organization_id, widget_id),
+             {:ok, prev_item, next_item_id} <- get_prev_and_next_items(playlist_id, prev_item_id),
              # Validate circular references BEFORE creating the playlist item
              :ok <-
                Castmill.Widgets.validate_playlist_references_for_widget(
@@ -1145,6 +1146,13 @@ defmodule Castmill.Resources do
       {:ok, updated_item} -> {:ok, updated_item}
       {:error, reason} -> {:error, reason}
     end
+  end
+
+  # Share-locks the widget so its scope cannot change before the item is committed.
+  defp ensure_widget_available(organization_id, widget_id) do
+    if Castmill.Widgets.available?(organization_id, widget_id, lock: true),
+      do: :ok,
+      else: {:error, :not_found}
   end
 
   @doc """

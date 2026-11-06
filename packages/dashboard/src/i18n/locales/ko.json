@@ -197,6 +197,98 @@
     "deleteAccountPasskeyInfoWithSignalAPI": "삭제 후 패스키가 기기에서 자동으로 삭제됩니다. 나중에 로그인하려면 새 계정을 만들어야 합니다."
   },
   "network": {
+    "widgets": {
+      "title": "위젯 액세스",
+      "description": "네트워크의 조직이 사용할 수 있는 위젯을 선택하세요. 해당 지역에서 이용할 수 없는 서비스나 구독하지 않은 서비스가 필요한 위젯처럼 제공하지 않는 위젯은 숨길 수 있습니다.",
+      "searchWidgets": "위젯 검색",
+      "loadMore": "더 보기",
+      "showing": "{{total}}개 중 {{shown}}개 표시",
+      "noWidgets": "필터와 일치하는 위젯이 없습니다.",
+      "clearFilters": "필터 지우기",
+      "selectWidget": "위젯을 선택해 사용할 수 있는 조직을 관리하세요.",
+      "core": "핵심",
+      "usedBy": "사용 중인 조직: {{count}}",
+      "kind": {
+        "system": "시스템",
+        "network": "네트워크"
+      },
+      "filters": {
+        "any": "전체",
+        "all": "모두 허용",
+        "selected": "선택 허용",
+        "hidden": "숨김",
+        "accessLabel": "액세스별 필터",
+        "anyKind": "모든 유형",
+        "kindLabel": "유형별 필터",
+        "except": "제외 있음"
+      },
+      "summary": {
+        "all": "모든 조직",
+        "selected": "{{total}}개 조직 중 {{count}}개",
+        "hidden": "숨김",
+        "except": "{{count}}개 제외 전체"
+      },
+      "access": {
+        "title": "이 위젯을 사용할 수 있는 조직",
+        "all": "모든 조직",
+        "allDescription": "나중에 생성되는 조직을 포함한 모든 조직.",
+        "except": "일부 제외…",
+        "exceptDescription": "제외한 조직을 뺀 모든 조직. 새 조직도 포함됩니다.",
+        "selected": "선택한 조직만…",
+        "selectedDescription": "추가한 조직만. 새 조직은 포함되지 않습니다.",
+        "hidden": "숨김",
+        "hiddenDescription": "네트워크 어디에서도 제공되지 않습니다."
+      },
+      "notices": {
+        "core": "핵심 위젯: 재생목록과 미디어가 의존하므로 항상 사용할 수 있습니다.",
+        "all": "나중에 생성되는 조직을 포함한 모든 조직이 이 위젯을 사용할 수 있습니다. 아래에서 조직을 끄면 제외됩니다.",
+        "except": "나중에 생성되는 조직은 이 위젯을 자동으로 받습니다.",
+        "selected": "나중에 생성되는 조직은 이 위젯을 받지 않습니다.",
+        "hidden": "네트워크의 어떤 조직도 이 위젯을 재생목록에 추가할 수 없습니다.",
+        "platform": "플랫폼이 네트워크의 {{total}}개 조직 중 {{count}}개에 이 위젯을 제공합니다."
+      },
+      "organizations": {
+        "title": "조직",
+        "search": "조직 검색",
+        "statusAll": "전체",
+        "statusEnabled": "사용 가능",
+        "statusDisabled": "사용 불가",
+        "enabledOf": "{{total}}개 중 {{count}}개 조직이 이 위젯을 사용할 수 있습니다",
+        "matching": "일치하는 조직 {{count}}개",
+        "enableAll": "모두 사용 설정({{count}})",
+        "disableAll": "모두 사용 해제({{count}})",
+        "inUse": "사용 중",
+        "inUseHint": "이 조직의 재생목록에서 사용 중입니다. 액세스를 해제하기 전에 재생목록에서 제거하세요.",
+        "none": "필터와 일치하는 조직이 없습니다.",
+        "noOrganizations": "아직 네트워크에 조직이 없습니다.",
+        "columnName": "조직",
+        "columnUsage": "재생목록 사용",
+        "columnAccess": "액세스",
+        "accessFor": "{{name}} 액세스",
+        "range": "{{total}}개 중 {{from}}–{{to}}",
+        "selectedCount": "{{count}}개 선택됨",
+        "enableSelected": "액세스 사용",
+        "disableSelected": "액세스 해제"
+      },
+      "confirm": {
+        "hideTitle": "{{widget}}을(를) 숨길까요?",
+        "hideMessage": "네트워크의 조직이 더 이상 이 위젯을 재생목록에 추가할 수 없습니다.",
+        "hideAction": "위젯 숨기기",
+        "enableAllTitle": "{{count}}개 조직을 사용 설정할까요?",
+        "enableAllMessage": "이 조직들이 {{widget}}을(를) 재생목록에 추가할 수 있게 됩니다.",
+        "enableAction": "사용 설정",
+        "disableAllTitle": "{{count}}개 조직을 사용 해제할까요?",
+        "disableAllMessage": "이 조직들은 더 이상 {{widget}}을(를) 재생목록에 추가할 수 없습니다.",
+        "disableAction": "사용 해제"
+      },
+      "errors": {
+        "load": "위젯을 불러오지 못했습니다.",
+        "loadOrganizations": "조직을 불러오지 못했습니다.",
+        "save": "위젯 액세스를 업데이트하지 못했습니다.",
+        "inUse": "다음 조직이 재생목록에서 위젯을 사용 중이므로 액세스를 제거할 수 없습니다: {{organizations}}",
+        "moreOrganizations": "{{names}} 외 {{count}}개"
+      }
+    },
     "title": "네트워크 설정",
     "adminBadge": "네트워크 관리자",
     "saveSuccess": "네트워크 설정이 저장되었습니다",
@@ -623,6 +715,7 @@
     "networkSettings": "설정",
     "networkOrganizations": "조직",
     "networkUsers": "사용자 및 초대",
+    "networkWidgets": "위젯 액세스",
     "tags": "태그",
     "agents": "에이전트"
   },
@@ -829,6 +922,13 @@
     "zonesCount": "{{count}}개 영역"
   },
   "widgets": {
+    "scope": {
+      "title": "사용 범위",
+      "system": "시스템",
+      "network": "네트워크",
+      "organization": "이 조직",
+      "unassigned": "할당되지 않음"
+    },
     "title": "Widgets",
     "uploadWidget": "Widget 업로드",
     "uploadDescription": "Widget JSON 정의 파일을 업로드합니다.",

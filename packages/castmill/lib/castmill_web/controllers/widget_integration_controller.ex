@@ -32,7 +32,11 @@ defmodule CastmillWeb.WidgetIntegrationController do
     when action in [
            :upsert_organization_credentials,
            :delete_organization_credentials,
-           :test_integration
+           :test_integration,
+           :list_integrations,
+           :get_integration,
+           :check_widget_credentials,
+           :prefetch_widget_data
          ]
   )
 
@@ -53,7 +57,18 @@ defmodule CastmillWeb.WidgetIntegrationController do
     end
   end
 
-  # Default: allow other actions (list/show are public for authenticated users)
+  # Reading a widget's integrations requires access to the organization's widgets;
+  # the widget itself must also be available to the organization (checked per action).
+  def check_access(actor_id, action, %{"organization_id" => organization_id})
+      when action in [
+             :list_integrations,
+             :get_integration,
+             :check_widget_credentials,
+             :prefetch_widget_data
+           ] do
+    {:ok, Organizations.has_access(organization_id, actor_id, "widgets", :show)}
+  end
+
   def check_access(_actor_id, _action, _params), do: {:ok, true}
 
   # ============================================================================
@@ -74,7 +89,7 @@ defmodule CastmillWeb.WidgetIntegrationController do
         "widget_id" => widget_id_or_slug
       }) do
     # Try to parse as integer (widget_id), otherwise treat as slug
-    widget_id = resolve_widget_id(widget_id_or_slug)
+    widget_id = resolve_widget_id(organization_id, widget_id_or_slug)
 
     case widget_id do
       nil ->
@@ -117,7 +132,7 @@ defmodule CastmillWeb.WidgetIntegrationController do
         "organization_id" => organization_id,
         "widget_id" => widget_id_or_slug
       }) do
-    widget_id = resolve_widget_id(widget_id_or_slug)
+    widget_id = resolve_widget_id(organization_id, widget_id_or_slug)
 
     case widget_id do
       nil ->
@@ -210,19 +225,15 @@ defmodule CastmillWeb.WidgetIntegrationController do
     end)
   end
 
-  # Resolves a widget ID from either a numeric ID string or a slug
-  defp resolve_widget_id(id_or_slug) do
-    case Integer.parse(id_or_slug) do
-      {id, ""} ->
-        id
+  # Resolves a numeric ID or slug to the ID of a widget available to the organization.
+  defp resolve_widget_id(organization_id, id_or_slug) do
+    widget =
+      case Integer.parse(id_or_slug) do
+        {_id, ""} -> Widgets.get_available_widget(organization_id, id_or_slug)
+        _ -> Widgets.get_available_widget_by_slug(organization_id, id_or_slug)
+      end
 
-      _ ->
-        # Not an integer, try to find by slug
-        case Widgets.get_widget_by_slug(id_or_slug) do
-          nil -> nil
-          widget -> widget.id
-        end
-    end
+    widget && widget.id
   end
 
   @doc """
@@ -238,13 +249,13 @@ defmodule CastmillWeb.WidgetIntegrationController do
         "organization_id" => organization_id,
         "integration_id" => integration_id
       }) do
-    case Integrations.get_integration(integration_id) do
-      nil ->
+    case get_available_integration(organization_id, integration_id) do
+      {:error, :not_found} ->
         conn
         |> put_status(:not_found)
         |> json(%{error: "Integration not found"})
 
-      integration ->
+      {:ok, integration} ->
         # Check if network credentials are configured
         has_network_credentials = check_network_credentials(organization_id, integration.id)
 
@@ -282,7 +293,7 @@ defmodule CastmillWeb.WidgetIntegrationController do
           "credentials" => credentials
         }
       ) do
-    with {:ok, integration} <- get_integration_or_error(integration_id),
+    with {:ok, integration} <- get_available_integration(organization_id, integration_id),
          :ok <- validate_credential_scope(integration, "organization"),
          {:ok, organization} <- get_organization_or_error(organization_id),
          {:ok, encryption_key} <- get_or_create_encryption_key(organization),
@@ -344,6 +355,8 @@ defmodule CastmillWeb.WidgetIntegrationController do
     with {:ok, integration} <- get_integration_or_error(integration_id),
          :ok <- validate_credential_scope(integration, "widget"),
          {:ok, widget_config} <- get_widget_config_or_error(widget_config_id),
+         # The credentials must be for an integration of the configured widget.
+         :ok <- ensure_integration_of_widget(integration, widget_config),
          {:ok, organization} <- get_organization_from_widget_config(widget_config),
          :ok <- authorize_credential_management(current_user, organization),
          {:ok, encryption_key} <- get_or_create_encryption_key(organization),
@@ -430,7 +443,7 @@ defmodule CastmillWeb.WidgetIntegrationController do
       }) do
     # This is a placeholder - actual implementation would depend on integration type
     # For now, just verify credentials exist and are valid
-    with {:ok, integration} <- get_integration_or_error(integration_id),
+    with {:ok, integration} <- get_available_integration(organization_id, integration_id),
          {:ok, credentials} <-
            get_credentials_for_integration(integration, organization_id: organization_id) do
       conn
@@ -489,7 +502,7 @@ defmodule CastmillWeb.WidgetIntegrationController do
           "widget_id" => widget_id_or_slug
         } = params
       ) do
-    widget_id = resolve_widget_id(widget_id_or_slug)
+    widget_id = resolve_widget_id(organization_id, widget_id_or_slug)
 
     case widget_id do
       nil ->
@@ -1143,6 +1156,20 @@ defmodule CastmillWeb.WidgetIntegrationController do
   # Helper Functions
   # ============================================================================
 
+  # The integration, if its widget is available to the organization.
+  defp get_available_integration(organization_id, integration_id) do
+    with {:ok, integration} <- get_integration_or_error(integration_id),
+         true <- Widgets.available?(organization_id, integration.widget_id) do
+      {:ok, integration}
+    else
+      _ -> {:error, :not_found}
+    end
+  end
+
+  defp ensure_integration_of_widget(integration, widget_config) do
+    if integration.widget_id == widget_config.widget_id, do: :ok, else: {:error, :not_found}
+  end
+
   defp get_integration_or_error(integration_id) do
     case Integrations.get_integration(integration_id) do
       nil -> {:error, :not_found}
@@ -1158,9 +1185,11 @@ defmodule CastmillWeb.WidgetIntegrationController do
   end
 
   defp get_widget_config_or_error(widget_config_id) do
-    case Widgets.get_widget_config(nil, widget_config_id) do
-      nil -> {:error, :not_found}
-      widget_config -> {:ok, widget_config}
+    with {:ok, id} <- Ecto.UUID.cast(widget_config_id),
+         %Castmill.Widgets.WidgetConfig{} = widget_config <- Widgets.get_widget_config_by_id(id) do
+      {:ok, widget_config}
+    else
+      _ -> {:error, :not_found}
     end
   end
 

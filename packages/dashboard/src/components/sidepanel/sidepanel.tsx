@@ -12,6 +12,7 @@ import { TbChartHistogram, TbRobot } from 'solid-icons/tb';
 import { AiOutlineTeam, AiOutlineTags } from 'solid-icons/ai';
 import { RiEditorOrganizationChart } from 'solid-icons/ri';
 import { BsCalendarWeek, BsBuilding } from 'solid-icons/bs';
+import { FiGrid } from 'solid-icons/fi';
 import { useI18n } from '../../i18n';
 import { useNavigate, useLocation } from '@solidjs/router';
 
@@ -229,6 +230,12 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
               text={t('sidebar.networkUsers')}
               level={1}
               icon={IoPersonOutline}
+            />
+            <PanelItem
+              to="/network/widgets"
+              text={t('sidebar.networkWidgets')}
+              level={1}
+              icon={FiGrid}
             />
             <Show when={addonsNetworkTree}>
               <SidePanelTree

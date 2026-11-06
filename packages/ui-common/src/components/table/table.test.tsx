@@ -78,6 +78,34 @@ describe('Table Component', () => {
     expect(actions[0].handler).toHaveBeenCalled();
   });
 
+  it('disables actions for rows they do not apply to', async () => {
+    const handler = vi.fn();
+    render(() => (
+      <Table
+        columns={columns}
+        data={data}
+        actions={[
+          {
+            icon: 'Delete',
+            label: 'Delete',
+            handler,
+            disabled: (item: { id: string }) => item.id === '1',
+          },
+        ]}
+      />
+    ));
+
+    const disabled = screen.getByLabelText(`Delete ${data[0].name}`);
+    const enabled = screen.getByLabelText(`Delete ${data[1].name}`);
+    expect((disabled as HTMLButtonElement).disabled).toBe(true);
+    expect((enabled as HTMLButtonElement).disabled).toBe(false);
+
+    fireEvent.click(disabled);
+    expect(handler).not.toHaveBeenCalled();
+    fireEvent.click(enabled);
+    expect(handler).toHaveBeenCalledWith(data[1]);
+  });
+
   it('calls onRowClick when a row is clicked', async () => {
     const mockOnRowClick = vi.fn();
     render(() => (

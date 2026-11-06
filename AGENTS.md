@@ -29,6 +29,7 @@ agents/
 | Widget Integrations                  | `agents/systems/WIDGET-INTEGRATIONS.md` |
 | Layout Widgets & Circular References | `agents/systems/LAYOUT-WIDGETS.md`      |
 | Widget Assets                        | `agents/systems/WIDGET-ASSETS.md`       |
+| Widget Scopes (tenant isolation)     | `agents/systems/WIDGET-SCOPES.md`       |
 | Notifications                        | `agents/systems/notifications.md`       |
 | AI Agents & MCP Server               | `agents/systems/AI-AGENTS-MCP.md`       |
 

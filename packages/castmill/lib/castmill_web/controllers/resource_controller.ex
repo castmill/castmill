@@ -37,11 +37,15 @@ defmodule CastmillWeb.ResourceController do
     end
   end
 
-  def check_access(actor_id, :update, %{
-        "id" => channel_id,
-        "organization_id" => organization_id,
-        "resources" => "channels"
-      } = params) do
+  def check_access(
+        actor_id,
+        :update,
+        %{
+          "id" => channel_id,
+          "organization_id" => organization_id,
+          "resources" => "channels"
+        } = params
+      ) do
     channel = Castmill.Resources.get_channel(channel_id)
 
     {:ok,
@@ -50,10 +54,14 @@ defmodule CastmillWeb.ResourceController do
        Organizations.has_access(organization_id, actor_id, "channels", :update)}
   end
 
-  def check_access(actor_id, :create, %{
-        "organization_id" => organization_id,
-        "resources" => "channels"
-      } = params) do
+  def check_access(
+        actor_id,
+        :create,
+        %{
+          "organization_id" => organization_id,
+          "resources" => "channels"
+        } = params
+      ) do
     {:ok,
      default_playlist_in_organization?(Map.get(params, "channel", %{}), organization_id) and
        Organizations.has_access(organization_id, actor_id, "channels", :create)}
