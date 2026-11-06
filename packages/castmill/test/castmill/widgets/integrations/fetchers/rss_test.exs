@@ -419,6 +419,9 @@ defmodule Castmill.Widgets.Integrations.Fetchers.RssTest do
         <entry><title>Story</title>
           <content type="xhtml"><div xmlns="http://www.w3.org/1999/xhtml">
             <p>First paragraph</p><p>Second <em>paragraph</em></p>
+            <script>script text</script><style>style text</style>
+            <noscript>fallback text</noscript><iframe>frame text</iframe>
+            <template>template text</template>
             <img src="https://example.com/pixel.gif" width="1" height="1"/>
             <img src="https://example.com/photo.jpg" width="640" height="480"/>
           </div></content>

@@ -479,15 +479,26 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Rss do
 
   defp xhtml_text(nil), do: ""
 
-  defp xhtml_text({_name, _attrs, children}) do
-    Enum.map_join(children, "", fn
-      {name, _attrs, _children} = element ->
-        text = xhtml_text(element)
-        if block_element?(name), do: " " <> text <> " ", else: text
+  defp xhtml_text({name, _attrs, children}) do
+    if excluded_element?(name) do
+      ""
+    else
+      Enum.map_join(children, "", fn
+        {name, _attrs, _children} = element ->
+          text = xhtml_text(element)
+          if block_element?(name), do: " " <> text <> " ", else: text
 
-      text when is_binary(text) ->
-        text
-    end)
+        text when is_binary(text) ->
+          text
+      end)
+    end
+  end
+
+  defp excluded_element?(name) do
+    name
+    |> String.split(":")
+    |> List.last()
+    |> then(&(&1 in ~w(iframe noscript script style template)))
   end
 
   defp block_element?(name) do
