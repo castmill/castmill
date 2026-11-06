@@ -17,6 +17,27 @@ describe('DevicesService - Multiple Channel Assignment', () => {
     vi.clearAllMocks();
   });
 
+  it('fetches the effective automations of a device', async () => {
+    const payload = {
+      data: {
+        generated_at: 1,
+        valid_until: 2,
+        timezone: 'UTC',
+        automations: [],
+      },
+    };
+    vi.mocked(fetch).mockResolvedValueOnce(
+      new Response(JSON.stringify(payload), { status: 200 })
+    );
+    expect(
+      await DevicesService.getDeviceAutomations(baseUrl, deviceId)
+    ).toEqual(payload);
+    expect(fetch).toHaveBeenCalledWith(
+      `${baseUrl}/dashboard/devices/${deviceId}/automations`,
+      expect.objectContaining({ method: 'GET' })
+    );
+  });
+
   it('saves orientation in the organization-scoped update and returns the server device', async () => {
     const device = { id: deviceId, orientation: 270 };
     vi.mocked(fetch).mockResolvedValueOnce(

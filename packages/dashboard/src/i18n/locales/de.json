@@ -108,6 +108,7 @@
   "sidebar": {
     "organization": "Organisation",
     "channels": "Kanäle",
+    "automations": "Automatisierungen",
     "teams": "Teams",
     "usage": "Nutzung",
     "devices": "Geräte",
@@ -1567,6 +1568,227 @@
         "cursor": "Fügen Sie diese Konfiguration zu ~/.cursor/mcp.json für alle Projekte oder zu .cursor/mcp.json in einem Projekt hinzu und aktivieren Sie den Server unter Cursor Settings > MCP.",
         "other": "Konfigurieren Sie einen Remote-MCP-Server mit diesen Einstellungen."
       }
+    }
+  },
+  "automations": {
+    "title": "Automatisierungen",
+    "description": "Lassen Sie Bildschirme auf Ereignisse reagieren, zum Beispiel indem die Wiedergabe zu bestimmten Zeiten durch andere Inhalte unterbrochen wird.",
+    "new": "Neue Automatisierung",
+    "newDescription": "Geben Sie der Automatisierung einen Namen. Regeln und Bildschirme können Sie danach hinzufügen.",
+    "namePlaceholder": "z. B. Stündliches Frühlingsangebot",
+    "created": "Automatisierung „{{name}}“ erstellt",
+    "deleted": "Automatisierung „{{name}}“ gelöscht",
+    "saved": "Automatisierung gespeichert",
+    "enabled": "Aktiviert",
+    "disabled": "Deaktiviert",
+    "disabledHint": "Deaktivierte Automatisierungen werden auf den Bildschirmen nie ausgelöst.",
+    "toggleEnabled": "„{{name}}“ aktivieren oder deaktivieren",
+    "noUpcoming": "Keine anstehenden Auslösungen",
+    "noRules": "Noch keine Regeln",
+    "moreRules": "+{{count}} weitere",
+    "assignmentsDetail": "{{devices}} Geräte und {{channels}} Kanäle",
+    "noAccess": "Sie haben keine Berechtigung, Automatisierungen anzuzeigen.",
+    "deleteTitle": "Automatisierung löschen",
+    "deleteMessage": "Möchten Sie „{{name}}“ wirklich löschen? Zugewiesene Bildschirme führen sie sofort nicht mehr aus.",
+    "editorDescription": "Regeln werden von oben nach unten ausgewertet; lösen mehrere gleichzeitig aus, gewinnt die erste.",
+    "columns": {
+      "rules": "Regeln",
+      "assignments": "Zugewiesen an",
+      "nextFiring": "Nächste Auslösung"
+    },
+    "tabs": {
+      "rules": "Regeln ({{count}})",
+      "assignments": "Zuweisungen ({{count}})"
+    },
+    "errors": {
+      "loadFailed": "Automatisierungen konnten nicht geladen werden",
+      "saveFailed": "Die Automatisierung konnte nicht gespeichert werden: {{error}}",
+      "deleteFailed": "Die Automatisierung konnte nicht gelöscht werden: {{error}}",
+      "runFailed": "Die Regel konnte nicht ausgeführt werden: {{error}}"
+    },
+    "rules": {
+      "title": "Regeln",
+      "empty": "Diese Automatisierung hat noch keine Regeln. Fügen Sie eine Regel hinzu, um festzulegen, wann etwas passiert und was die Bildschirme tun.",
+      "add": "Regel hinzufügen",
+      "edit": "Regel bearbeiten",
+      "save": "Regel speichern",
+      "saved": "Regeln gespeichert",
+      "when": "Wenn",
+      "then": "Dann",
+      "options": "Optionen",
+      "chooseSource": "Wählen Sie den Auslöser der Regel",
+      "chooseAction": "Wählen Sie, was die Bildschirme tun",
+      "cooldown": "Sperrzeit (Sekunden)",
+      "cooldownHint": "Mindestzeit zwischen zwei Ausführungen dieser Regel auf demselben Bildschirm. 0 bedeutet keine Sperrzeit.",
+      "moveUp": "Nach oben",
+      "moveDown": "Nach unten",
+      "moveUpN": "Regel {{n}} nach oben verschieben",
+      "moveDownN": "Regel {{n}} nach unten verschieben",
+      "runNow": "Jetzt ausführen",
+      "runNowN": "Regel {{n}} jetzt ausführen",
+      "editN": "Regel {{n}} bearbeiten",
+      "deleteN": "Regel {{n}} löschen",
+      "deleteTitle": "Regel löschen",
+      "deleteMessage": "Möchten Sie diese Regel wirklich löschen?",
+      "moved": "Regel von Position {{from}} nach {{to}} verschoben",
+      "runSuccess": "Regel an {{count}} Bildschirme gesendet"
+    },
+    "summary": {
+      "hourly": "Jede Stunde um :{{minute}}",
+      "interval": "Alle {{minutes}} Minuten",
+      "times": "Täglich um {{times}}",
+      "once": "Einmalig am {{date}} um {{time}}",
+      "unknown": "Unbekannter Zeitplan",
+      "dateRange": "vom {{start}} bis {{end}}",
+      "dateFrom": "ab {{date}}",
+      "dateUntil": "bis {{date}}",
+      "noPlaylist": "Keine Playlist ausgewählt",
+      "playlistFallback": "Playlist Nr. {{id}}",
+      "interruptImmediately": "Sofort mit „{{playlist}}“ unterbrechen",
+      "interruptAfterItem": "Nach dem aktuellen Element mit „{{playlist}}“ unterbrechen",
+      "plays": "{{count}}-mal abspielen",
+      "highPriority": "hohe Priorität",
+      "cooldown": "Sperrzeit: {{seconds}} s",
+      "unknownType": "Nicht unterstützter Typ „{{type}}“"
+    },
+    "validation": {
+      "minute": "Geben Sie eine Minute zwischen 0 und 59 ein.",
+      "interval": "Das Intervall muss eine ganze Zahl von Minuten zwischen 5 und 1440 sein.",
+      "timesCount": "Fügen Sie zwischen 1 und 48 Uhrzeiten hinzu.",
+      "time": "Geben Sie Uhrzeiten als HH:MM ein.",
+      "timesDuplicate": "Jede Uhrzeit darf nur einmal vorkommen.",
+      "date": "Geben Sie ein gültiges Datum ein.",
+      "schedule": "Wählen Sie einen Zeitplan.",
+      "weekdays": "Wählen Sie mindestens einen Wochentag.",
+      "window": "Das tägliche Zeitfenster muss beginnen, bevor es endet.",
+      "dates": "Das Startdatum muss am oder vor dem Enddatum liegen.",
+      "timezone": "Geben Sie eine gültige Zeitzone ein, z. B. Europe/Stockholm, oder lassen Sie das Feld leer.",
+      "playlist": "Wählen Sie eine Playlist.",
+      "start": "Wählen Sie, wann die Unterbrechung beginnt.",
+      "maxWait": "Die maximale Wartezeit muss zwischen 0 und 3600 Sekunden liegen.",
+      "plays": "Die Anzahl der Wiedergaben muss zwischen 1 und 100 liegen.",
+      "priority": "Wählen Sie eine Priorität.",
+      "cooldown": "Die Sperrzeit muss eine ganze Zahl von Sekunden sein (0 oder mehr).",
+      "source": "Wählen Sie einen Auslöser.",
+      "action": "Wählen Sie eine Aktion."
+    },
+    "sources": {
+      "clock": {
+        "label": "Uhr",
+        "description": "Zu bestimmten Zeiten: stündlich, alle paar Minuten, zu festen Uhrzeiten oder einmalig."
+      }
+    },
+    "actions": {
+      "interrupt": {
+        "label": "Mit Inhalt unterbrechen",
+        "description": "Spielt vorübergehend eine Playlist ab und kehrt dann zum regulären Zeitplan zurück."
+      }
+    },
+    "clock": {
+      "repeat": "Wiederholung",
+      "types": {
+        "hourly": "Stündlich",
+        "interval": "Alle N Minuten",
+        "times": "Zu Uhrzeiten",
+        "once": "Einmalig"
+      },
+      "minute": "Minute nach der vollen Stunde",
+      "everyMinutes": "Alle (Minuten)",
+      "intervalHint": "Mindestens {{min}} Minuten, gezählt ab Beginn des Zeitfensters (oder Mitternacht).",
+      "times": "Uhrzeiten",
+      "timeN": "Uhrzeit {{n}}",
+      "removeTime": "Uhrzeit entfernen",
+      "removeTimeN": "Uhrzeit {{time}} entfernen",
+      "addTime": "Uhrzeit hinzufügen",
+      "date": "Datum",
+      "time": "Uhrzeit",
+      "weekdays": "Wochentage",
+      "window": "Nur in einem täglichen Zeitfenster",
+      "from": "Von",
+      "to": "Bis",
+      "dates": "Nur innerhalb eines Datumsbereichs",
+      "startDate": "Startdatum",
+      "endDate": "Enddatum",
+      "timezone": "Zeitzone",
+      "timezonePlaceholder": "Zeitzone des Bildschirms",
+      "timezoneHint": "Leer lassen, um die Zeitzone des jeweiligen Bildschirms zu verwenden.",
+      "previewTitle": "Nächste Auslösungen",
+      "previewTimezone": "Angezeigt in {{timezone}}.",
+      "previewDeviceTimezone": "Jeder Bildschirm verwendet seine eigene Zeitzone; hier angezeigt in {{timezone}}.",
+      "previewFailed": "Die nächsten Auslösungen konnten nicht berechnet werden.",
+      "previewEmpty": "Dieser Zeitplan löst in den kommenden Tagen nie aus."
+    },
+    "interrupt": {
+      "playlist": "Wiedergabeliste",
+      "choosePlaylist": "Playlist suchen…",
+      "createPlaylist": "Playlist erstellen",
+      "start": "Beginn",
+      "startModes": {
+        "immediately": "Sofort",
+        "after_current_item": "Nach dem aktuellen Element"
+      },
+      "startHints": {
+        "immediately": "Stoppt das aktuelle Element sofort; danach geht die Wiedergabe mit dem nächsten Element weiter.",
+        "after_current_item": "Wartet, bis das aktuelle Element fertig ist, damit nichts abgeschnitten wird."
+      },
+      "maxWait": "Maximale Wartezeit (Sekunden)",
+      "maxWaitHint": "Ist das aktuelle Element länger, wird trotzdem unterbrochen.",
+      "plays": "Wiedergaben",
+      "playsHint": "Wie oft die Playlist abgespielt wird, bevor es zurückgeht.",
+      "priority": "Priorität",
+      "priorities": {
+        "normal": "Standard",
+        "high": "Hoch"
+      },
+      "priorityHints": {
+        "normal": "Eine reguläre Unterbrechung.",
+        "high": "Hat Vorrang vor Unterbrechungen mit normaler Priorität."
+      }
+    },
+    "assignments": {
+      "description": "Wählen Sie die Bildschirme, die diese Automatisierung ausführen – direkt oder über ihre Kanäle.",
+      "devices": "Geräte",
+      "channels": "Kanäle",
+      "none": {
+        "devices": "Keine Geräte zugewiesen",
+        "channels": "Keine Kanäle zugewiesen"
+      },
+      "search": {
+        "devices": "Geräte suchen…",
+        "channels": "Kanäle suchen…"
+      },
+      "remove": "{{name}} entfernen",
+      "loadFailed": "Die Liste konnte nicht geladen werden",
+      "noResults": "Keine Treffer",
+      "save": "Zuweisungen speichern",
+      "saved": "Zuweisungen gespeichert"
+    },
+    "warnings": {
+      "missing": "{{device}} unterstützt {{capability}} nicht",
+      "unsupported": "Unterstützt {{capability}} nicht",
+      "viaChannels": "Über Kanäle erreichte Bildschirme"
+    },
+    "channel": {
+      "title": "Automatisierungen",
+      "manage": "Automatisierungen verwalten",
+      "empty": "Diesem Kanal sind keine Automatisierungen zugewiesen.",
+      "loadFailed": "Die Automatisierungen dieses Kanals konnten nicht geladen werden.",
+      "showMarkers": "Auslösungen im Kalender anzeigen",
+      "firingsThisWeek": "({{count}} in dieser Woche)",
+      "upcoming": "Auslösungen in dieser Woche",
+      "markerLabel": "{{name}} um {{time}}"
+    },
+    "device": {
+      "title": "Automatisierungen",
+      "description": "Automatisierungen, die dieses Gerät ausführt – direkt oder über seine Kanäle zugewiesen.",
+      "refresh": "Automatisierungen aktualisieren",
+      "empty": "Für dieses Gerät gelten keine Automatisierungen.",
+      "loadFailed": "Die Automatisierungen dieses Geräts konnten nicht geladen werden.",
+      "viaDevice": "Direkt zugewiesen",
+      "viaChannel": "Über Kanal {{name}}",
+      "upcoming": "Anstehende Auslösungen",
+      "noUpcoming": "Keine Auslösungen in den nächsten Tagen.",
+      "timezoneNote": "Zeiten werden in der Zeitzone des Geräts angezeigt ({{timezone}})."
     }
   }
 }

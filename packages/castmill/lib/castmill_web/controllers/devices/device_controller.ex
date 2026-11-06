@@ -32,6 +32,9 @@ defmodule CastmillWeb.DeviceController do
     updateFirmware
     orientation
   )
+  # Automation capabilities are lists of supported source/action types.
+  @device_capability_list_keys ~w(automation_sources automation_actions)
+  @max_device_capability_list_length 32
   @max_device_info_value_bytes 1024
 
   @impl CastmillWeb.AccessActorBehaviour
@@ -65,7 +68,8 @@ defmodule CastmillWeb.DeviceController do
              :get_timers,
              :set_timers,
              :get_schedule,
-             :set_schedule
+             :set_schedule,
+             :get_automations
            ] do
     # Device can access its own resources for these actions
     if actor_id == device_id do
@@ -143,7 +147,8 @@ defmodule CastmillWeb.DeviceController do
            :get_timers,
            :set_timers,
            :get_schedule,
-           :set_schedule
+           :set_schedule,
+           :get_automations
          ]
   )
 
@@ -189,11 +194,19 @@ defmodule CastmillWeb.DeviceController do
 
   defp valid_device_capabilities?(capabilities) when is_map(capabilities) do
     Enum.all?(capabilities, fn {key, value} ->
-      key in @device_capability_keys and is_boolean(value)
+      (key in @device_capability_keys and is_boolean(value)) or
+        (key in @device_capability_list_keys and valid_capability_list?(value))
     end)
   end
 
   defp valid_device_capabilities?(_capabilities), do: false
+
+  defp valid_capability_list?(value) when is_list(value) do
+    length(value) <= @max_device_capability_list_length and
+      Enum.all?(value, &(is_binary(&1) and byte_size(&1) <= 64))
+  end
+
+  defp valid_capability_list?(_value), do: false
 
   def start_registration(conn, %{"hardware_id" => hardware_id, "timezone" => timezone} = params) do
     location = Map.get(params, "location")
@@ -614,6 +627,22 @@ defmodule CastmillWeb.DeviceController do
   end
 
   @doc """
+    Returns the payload the device needs to evaluate its effective
+    automations (see `Castmill.Automations.device_payload/2`).
+  """
+  def get_automations(conn, %{"device_id" => device_id}) do
+    case Devices.get_device(device_id) do
+      nil ->
+        conn
+        |> put_status(:not_found)
+        |> json(%{error: "Device not found"})
+
+      device ->
+        json(conn, %{data: Castmill.Automations.device_payload(device)})
+    end
+  end
+
+  @doc """
     Adds a channel to a device
   """
   def add_channel(conn, %{"device_id" => device_id, "channel_id" => channel_id}) do
@@ -637,6 +666,8 @@ defmodule CastmillWeb.DeviceController do
         }
       )
 
+      Castmill.Automations.notify_channel_membership_changed(device_id, channel_id)
+
       conn
       |> put_status(:ok)
       |> send_resp(200, "")
@@ -657,6 +688,8 @@ defmodule CastmillWeb.DeviceController do
           channel_id: String.to_integer(channel_id)
         }
       )
+
+      Castmill.Automations.notify_channel_membership_changed(device_id, channel_id)
 
       conn
       |> put_status(:ok)

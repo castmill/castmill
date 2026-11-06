@@ -556,7 +556,8 @@ defmodule Castmill.Devices do
     Checks if a device has access to a playlist.
     A playlist is accessible if:
     - It is used by a channel entry in a channel assigned to the device, OR
-    - It is set as the default_playlist_id of a channel assigned to the device
+    - It is set as the default_playlist_id of a channel assigned to the device, OR
+    - It is referenced by one of the device's effective automations
   """
   def has_access_to_playlist(device_id, playlist_id) do
     # Check if playlist is in a channel entry
@@ -577,7 +578,8 @@ defmodule Castmill.Devices do
         where: dc.device_id == ^device_id and c.default_playlist_id == ^playlist_id
       )
 
-    Repo.one(channel_entry_query) !== nil or Repo.one(default_playlist_query) !== nil
+    Repo.exists?(channel_entry_query) or Repo.exists?(default_playlist_query) or
+      Castmill.Automations.device_references_playlist?(device_id, playlist_id)
   end
 
   @doc """

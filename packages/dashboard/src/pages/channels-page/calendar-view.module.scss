@@ -143,3 +143,24 @@ body {
 .left-panel {
   margin: 1em 1em 0 0;
 }
+
+/* Point-in-time markers (automation firings) */
+.marker-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 9;
+}
+
+.automation-marker {
+  position: absolute;
+  height: 0.2em;
+  margin-top: -0.1em;
+  background: var(--castmill-warning-text, #f5a623);
+  border-radius: 0.1em;
+  box-shadow: 0 0 0.25em rgba(0, 0, 0, 0.6);
+  pointer-events: auto;
+}

@@ -42,6 +42,7 @@ import OrganizationsInvitationPage from './pages/organization-invitations/organi
 import ChannelsPage from './pages/channels-page/channels-page';
 import TagsPage from './pages/tags-page/tags-page';
 import AgentsPage from './pages/agents-page/agents-page';
+import AutomationsPage from './pages/automations-page/automations-page';
 import {
   NetworkProvider,
   NetworkOverview,
@@ -269,6 +270,7 @@ render(() => {
                 <Route path="agents" component={AgentsPage} />
                 <Route path="organization" component={OrganizationPage} />
                 <Route path="channels" component={ChannelsPage} />
+                <Route path="automations" component={AutomationsPage} />
                 <Route path="invite" component={TeamsInvitationPage} />
 
                 {/* Dynamically generate routes for AddOns */}

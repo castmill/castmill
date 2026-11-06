@@ -609,6 +609,7 @@
   "sidebar": {
     "organization": "조직",
     "channels": "채널",
+    "automations": "자동화",
     "teams": "팀",
     "usage": "사용량",
     "devices": "장치",
@@ -1572,6 +1573,227 @@
         "cursor": "모든 프로젝트에는 ~/.cursor/mcp.json, 특정 프로젝트에는 .cursor/mcp.json에 이 구성을 추가한 다음 Cursor Settings > MCP에서 서버를 활성화하세요.",
         "other": "다음 설정으로 원격 MCP 서버를 구성하세요."
       }
+    }
+  },
+  "automations": {
+    "title": "자동화",
+    "description": "특정 시간에 다른 콘텐츠로 재생을 중단하는 등 디스플레이가 이벤트에 반응하도록 합니다.",
+    "new": "새 자동화",
+    "newDescription": "자동화의 이름을 입력하세요. 규칙 추가와 디스플레이 할당은 나중에 할 수 있습니다.",
+    "namePlaceholder": "예: 매시간 봄 할인",
+    "created": "자동화 \"{{name}}\"을(를) 만들었습니다",
+    "deleted": "자동화 \"{{name}}\"을(를) 삭제했습니다",
+    "saved": "자동화를 저장했습니다",
+    "enabled": "사용",
+    "disabled": "사용 안 함",
+    "disabledHint": "사용하지 않는 자동화는 디스플레이에서 실행되지 않습니다.",
+    "toggleEnabled": "\"{{name}}\" 사용 또는 사용 안 함",
+    "noUpcoming": "예정된 실행 없음",
+    "noRules": "아직 규칙이 없습니다",
+    "moreRules": "외 {{count}}개",
+    "assignmentsDetail": "장치 {{devices}}대, 채널 {{channels}}개",
+    "noAccess": "자동화를 볼 권한이 없습니다.",
+    "deleteTitle": "자동화 삭제",
+    "deleteMessage": "\"{{name}}\"을(를) 삭제하시겠습니까? 할당된 디스플레이에서 즉시 실행이 중지됩니다.",
+    "editorDescription": "규칙은 위에서 아래로 평가되며, 여러 규칙이 동시에 실행되면 첫 번째 규칙이 우선합니다.",
+    "columns": {
+      "rules": "규칙",
+      "assignments": "할당 대상",
+      "nextFiring": "다음 실행"
+    },
+    "tabs": {
+      "rules": "규칙 ({{count}})",
+      "assignments": "할당 ({{count}})"
+    },
+    "errors": {
+      "loadFailed": "자동화를 불러올 수 없습니다",
+      "saveFailed": "자동화를 저장할 수 없습니다: {{error}}",
+      "deleteFailed": "자동화를 삭제할 수 없습니다: {{error}}",
+      "runFailed": "규칙을 실행할 수 없습니다: {{error}}"
+    },
+    "rules": {
+      "title": "규칙",
+      "empty": "이 자동화에는 아직 규칙이 없습니다. 언제 무엇이 일어나고 디스플레이가 무엇을 할지 정하려면 규칙을 추가하세요.",
+      "add": "규칙 추가",
+      "edit": "규칙 편집",
+      "save": "규칙 저장",
+      "saved": "규칙을 저장했습니다",
+      "when": "조건",
+      "then": "실행",
+      "options": "옵션",
+      "chooseSource": "규칙을 실행할 트리거 선택",
+      "chooseAction": "디스플레이가 수행할 동작 선택",
+      "cooldown": "재실행 대기 시간(초)",
+      "cooldownHint": "같은 디스플레이에서 이 규칙이 다시 실행되기까지의 최소 시간입니다. 0이면 대기 없음.",
+      "moveUp": "위로 이동",
+      "moveDown": "아래로 이동",
+      "moveUpN": "규칙 {{n}} 위로 이동",
+      "moveDownN": "규칙 {{n}} 아래로 이동",
+      "runNow": "지금 실행",
+      "runNowN": "규칙 {{n}} 지금 실행",
+      "editN": "규칙 {{n}} 편집",
+      "deleteN": "규칙 {{n}} 삭제",
+      "deleteTitle": "규칙 삭제",
+      "deleteMessage": "이 규칙을 삭제하시겠습니까?",
+      "moved": "규칙을 {{from}}번에서 {{to}}번으로 이동했습니다",
+      "runSuccess": "규칙을 디스플레이 {{count}}대에 보냈습니다"
+    },
+    "summary": {
+      "hourly": "매시간 {{minute}}분",
+      "interval": "{{minutes}}분마다",
+      "times": "매일 {{times}}",
+      "once": "한 번: {{date}} {{time}}",
+      "unknown": "알 수 없는 일정",
+      "dateRange": "{{start}}부터 {{end}}까지",
+      "dateFrom": "{{date}}부터",
+      "dateUntil": "{{date}}까지",
+      "noPlaylist": "선택한 재생 목록 없음",
+      "playlistFallback": "재생 목록 #{{id}}",
+      "interruptImmediately": "\"{{playlist}}\"(으)로 즉시 중단",
+      "interruptAfterItem": "현재 항목 후 \"{{playlist}}\"(으)로 중단",
+      "plays": "{{count}}회 재생",
+      "highPriority": "높은 우선순위",
+      "cooldown": "대기 시간: {{seconds}}초",
+      "unknownType": "지원되지 않는 유형 \"{{type}}\""
+    },
+    "validation": {
+      "minute": "0에서 59 사이의 분을 입력하세요.",
+      "interval": "간격은 5에서 1440 사이의 정수(분)여야 합니다.",
+      "timesCount": "시간을 1개에서 48개까지 추가하세요.",
+      "time": "시간을 HH:MM 형식으로 입력하세요.",
+      "timesDuplicate": "같은 시간은 한 번만 입력할 수 있습니다.",
+      "date": "올바른 날짜를 입력하세요.",
+      "schedule": "일정을 선택하세요.",
+      "weekdays": "요일을 하나 이상 선택하세요.",
+      "window": "일일 시간대는 시작 시간이 종료 시간보다 빨라야 합니다.",
+      "dates": "시작 날짜는 종료 날짜와 같거나 이전이어야 합니다.",
+      "timezone": "올바른 시간대(예: Europe/Stockholm)를 입력하거나 비워 두세요.",
+      "playlist": "재생 목록을 선택하세요.",
+      "start": "중단 시작 방식을 선택하세요.",
+      "maxWait": "최대 대기 시간은 0에서 3600초 사이여야 합니다.",
+      "plays": "재생 횟수는 1에서 100 사이여야 합니다.",
+      "priority": "우선순위를 선택하세요.",
+      "cooldown": "대기 시간은 0 이상의 정수(초)여야 합니다.",
+      "source": "트리거를 선택하세요.",
+      "action": "동작을 선택하세요."
+    },
+    "sources": {
+      "clock": {
+        "label": "시계",
+        "description": "특정 시간에: 매시간, 몇 분마다, 고정된 시간 또는 한 번."
+      }
+    },
+    "actions": {
+      "interrupt": {
+        "label": "콘텐츠로 중단",
+        "description": "재생 목록을 일시적으로 재생한 후 일반 일정으로 돌아갑니다."
+      }
+    },
+    "clock": {
+      "repeat": "반복",
+      "types": {
+        "hourly": "매시간",
+        "interval": "N분마다",
+        "times": "지정 시간",
+        "once": "한 번"
+      },
+      "minute": "매시간의 분",
+      "everyMinutes": "간격(분)",
+      "intervalHint": "최소 {{min}}분이며, 시간대 시작(또는 자정)부터 계산합니다.",
+      "times": "하루 중 시간",
+      "timeN": "시간 {{n}}",
+      "removeTime": "시간 제거",
+      "removeTimeN": "{{time}} 시간 제거",
+      "addTime": "시간 추가",
+      "date": "날짜",
+      "time": "시간",
+      "weekdays": "요일",
+      "window": "일일 시간대에만",
+      "from": "시작",
+      "to": "종료",
+      "dates": "기간 내에만",
+      "startDate": "시작 날짜",
+      "endDate": "종료 날짜",
+      "timezone": "시간대",
+      "timezonePlaceholder": "디스플레이 시간대",
+      "timezoneHint": "비워 두면 각 디스플레이의 시간대를 사용합니다.",
+      "previewTitle": "다음 실행",
+      "previewTimezone": "{{timezone}} 기준으로 표시됩니다.",
+      "previewDeviceTimezone": "각 디스플레이는 자체 시간대를 사용합니다. 여기서는 {{timezone}} 기준으로 표시됩니다.",
+      "previewFailed": "다음 실행을 계산할 수 없습니다.",
+      "previewEmpty": "이 일정은 앞으로 며칠 동안 실행되지 않습니다."
+    },
+    "interrupt": {
+      "playlist": "재생 목록",
+      "choosePlaylist": "재생 목록 검색…",
+      "createPlaylist": "재생 목록 만들기",
+      "start": "시작",
+      "startModes": {
+        "immediately": "즉시",
+        "after_current_item": "현재 항목 후"
+      },
+      "startHints": {
+        "immediately": "현재 항목을 즉시 중지하고, 이후 다음 항목부터 재생을 계속합니다.",
+        "after_current_item": "현재 항목이 끝날 때까지 기다리므로 잘리는 내용이 없습니다."
+      },
+      "maxWait": "최대 대기 시간(초)",
+      "maxWaitHint": "현재 항목이 이보다 길면 그래도 중단합니다.",
+      "plays": "재생 횟수",
+      "playsHint": "돌아가기 전에 재생 목록을 재생하는 횟수입니다.",
+      "priority": "우선순위",
+      "priorities": {
+        "normal": "보통",
+        "high": "높음"
+      },
+      "priorityHints": {
+        "normal": "일반적인 중단입니다.",
+        "high": "보통 우선순위의 중단보다 우선합니다."
+      }
+    },
+    "assignments": {
+      "description": "이 자동화를 실행할 디스플레이를 직접 또는 채널을 통해 선택하세요.",
+      "devices": "장치",
+      "channels": "채널",
+      "none": {
+        "devices": "할당된 장치 없음",
+        "channels": "할당된 채널 없음"
+      },
+      "search": {
+        "devices": "장치 검색…",
+        "channels": "채널 검색…"
+      },
+      "remove": "{{name}} 제거",
+      "loadFailed": "목록을 불러올 수 없습니다",
+      "noResults": "일치하는 항목 없음",
+      "save": "할당 저장",
+      "saved": "할당을 저장했습니다"
+    },
+    "warnings": {
+      "missing": "{{device}}에서 {{capability}}을(를) 지원하지 않습니다",
+      "unsupported": "{{capability}} 미지원",
+      "viaChannels": "채널을 통해 연결된 디스플레이"
+    },
+    "channel": {
+      "title": "자동화",
+      "manage": "자동화 관리",
+      "empty": "이 채널에 할당된 자동화가 없습니다.",
+      "loadFailed": "이 채널의 자동화를 불러올 수 없습니다.",
+      "showMarkers": "캘린더에 실행 시간 표시",
+      "firingsThisWeek": "(이번 주 {{count}}회)",
+      "upcoming": "이번 주 실행",
+      "markerLabel": "{{name}}, {{time}}"
+    },
+    "device": {
+      "title": "자동화",
+      "description": "이 장치에서 실행되는 자동화(직접 또는 채널을 통해 할당됨)입니다.",
+      "refresh": "자동화 새로 고침",
+      "empty": "이 장치에 적용되는 자동화가 없습니다.",
+      "loadFailed": "이 장치의 자동화를 불러올 수 없습니다.",
+      "viaDevice": "직접 할당됨",
+      "viaChannel": "채널 {{name}} 경유",
+      "upcoming": "예정된 실행",
+      "noUpcoming": "앞으로 며칠 동안 실행이 없습니다.",
+      "timezoneNote": "시간은 장치 시간대({{timezone}}) 기준으로 표시됩니다."
     }
   }
 }

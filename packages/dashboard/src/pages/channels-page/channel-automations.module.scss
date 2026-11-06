@@ -1,0 +1,89 @@
+.panel {
+  margin: 0 0 1em 0;
+  padding: 0.75em 1em;
+  border: 1px solid var(--castmill-divider, rgba(255, 255, 255, 0.12));
+  border-radius: 0.5em;
+  background: var(--background-secondary, rgba(255, 255, 255, 0.03));
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1em;
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  margin: 0;
+  font-size: 1em;
+}
+
+.manage {
+  font-size: 0.875em;
+  color: var(--primary-color, #4a90e2);
+}
+
+.list {
+  list-style: none;
+  margin: 0.5em 0 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+}
+
+.item {
+  padding: 0.5em 0.75em;
+  border-radius: 0.375em;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.itemHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.badge {
+  font-size: 0.75em;
+  padding: 0.1em 0.5em;
+  border-radius: 1em;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary, #aaa);
+}
+
+.rules {
+  margin: 0.25em 0 0 0;
+  padding-left: 1.25em;
+  font-size: 0.875em;
+  color: var(--text-secondary, #bbb);
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5em;
+  margin-top: 0.75em;
+  font-size: 0.875em;
+}
+
+.firings {
+  margin: 0.5em 0 0 0;
+  padding-left: 1.5em;
+  font-size: 0.8125em;
+  color: var(--text-secondary, #bbb);
+}
+
+.muted {
+  color: var(--text-secondary, #999);
+  font-size: 0.875em;
+}
+
+.error {
+  color: var(--danger-color, #e5534b);
+  font-size: 0.875em;
+}
