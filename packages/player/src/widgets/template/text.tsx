@@ -23,9 +23,99 @@ interface AutoFitOpts {
   minSize?: number;
 }
 
+/**
+ * Declares a text that users can replace per playlist item (in-place editing).
+ * See agents/systems/IN-PLACE-TEXT-EDITING.md.
+ */
+export interface EditableAttributes {
+  /** Override key: a string, or a binding (e.g. for texts inside lists). */
+  key: any;
+  /** Label shown in the editor: a string or a binding. */
+  label?: any;
+  multiline?: boolean;
+  max_length?: number;
+}
+
+/** A stored override in the item's `options.overrides`. */
+export interface TextOverride {
+  text?: string;
+  hidden?: boolean;
+}
+
+export interface ResolvedEditable {
+  key: string;
+  label?: string;
+  multiline: boolean;
+  maxLength: number;
+  /** How the current text is overridden, if it is. */
+  overridden?: 'text' | 'hidden';
+}
+
+const DEFAULT_MAX_LENGTH = 500;
+
+const toText = (value: unknown): string | undefined =>
+  typeof value === 'string'
+    ? value
+    : typeof value === 'number' && isFinite(value)
+      ? String(value)
+      : undefined;
+
+/** Resolves an editable attribute; undefined when its key is not a text. */
+export const resolveEditable = (
+  editable: EditableAttributes | undefined,
+  config: TemplateConfig,
+  context: any,
+  globals: PlayerGlobals
+): ResolvedEditable | undefined => {
+  if (!editable || typeof editable !== 'object') {
+    return undefined;
+  }
+  const key = toText(resolveOption(editable.key, config, context, globals));
+  if (!key) {
+    return undefined;
+  }
+  const label = toText(resolveOption(editable.label, config, context, globals));
+  const maxLength = editable.max_length;
+  return {
+    key,
+    label: label || undefined,
+    multiline: editable.multiline === true,
+    maxLength:
+      typeof maxLength === 'number' && maxLength > 0
+        ? maxLength
+        : DEFAULT_MAX_LENGTH,
+  };
+};
+
+/** The stored override for a key, if it is a valid one. */
+export const getTextOverride = (
+  config: TemplateConfig,
+  key: string
+): TextOverride | undefined => {
+  const overrides = config && config.options && config.options.overrides;
+  if (
+    !overrides ||
+    typeof overrides !== 'object' ||
+    !Object.prototype.hasOwnProperty.call(overrides, key)
+  ) {
+    return undefined;
+  }
+  const override = overrides[key];
+  if (override && override.hidden === true) {
+    return { hidden: true };
+  }
+  if (override && typeof override.text === 'string') {
+    return { text: override.text };
+  }
+  return undefined;
+};
+
 export interface TextComponentOptions {
   text: string;
   autofit: AutoFitOpts;
+
+  /** Set when the text is editable (resolved key and label). */
+  editable?: ResolvedEditable;
 
   // Break text in chars when animating.
   chars?: boolean;
@@ -43,7 +133,11 @@ export class TextComponent implements TemplateComponent {
     public style: JSX.CSSProperties,
     public animations?: ComponentAnimation[],
     public filter?: Record<string, any>,
-    public $styles?: { filter: Record<string, any>; style: JSX.CSSProperties }[]
+    public $styles?: {
+      filter: Record<string, any>;
+      style: JSX.CSSProperties;
+    }[],
+    public editable?: EditableAttributes
   ) {}
 
   resolveDuration(): number {
@@ -57,18 +151,40 @@ export class TextComponent implements TemplateComponent {
       json.style,
       json.animations,
       json.filter,
-      json.$styles
+      json.$styles,
+      json.editable
     );
   }
 
+  /**
+   * An override of an editable text replaces its whole binding: it is shown as
+   * typed, without fmt, formatters, surrounding literals or first fallbacks.
+   */
   static resolveOptions(
     opts: TextComponentOptions,
     config: TemplateConfig,
     context: any,
-    globals: PlayerGlobals
+    globals: PlayerGlobals,
+    editableAttrs?: EditableAttributes
   ): TextComponentOptions {
+    const editable = resolveEditable(editableAttrs, config, context, globals);
+    const override = editable
+      ? getTextOverride(config, editable.key)
+      : undefined;
+    let text: string;
+    if (override && override.hidden) {
+      text = '';
+      editable!.overridden = 'hidden';
+    } else if (override) {
+      text = override.text!;
+      editable!.overridden = 'text';
+    } else {
+      text = resolveOption(opts.text, config, context, globals);
+    }
+
     return {
-      text: resolveOption(opts.text, config, context, globals),
+      text,
+      editable,
       autofit: {
         maxSize: resolveOption(opts.autofit?.maxSize, config, context, globals),
         minSize: resolveOption(opts.autofit?.minSize, config, context, globals),
@@ -158,6 +274,7 @@ export const Text: Component<TextProps> = (props) => {
     const element = textRef;
     if (
       !element ||
+      !props.opts.text ||
       !props.opts.autofit.minSize ||
       props.opts.autofit.minSize <= size
     ) {
@@ -241,9 +358,27 @@ export const Text: Component<TextProps> = (props) => {
     props.onReady();
   });
 
+  // Line breaks typed into multiline overrides are kept.
+  const textStyle = () =>
+    props.opts.editable?.multiline && props.opts.editable.overridden
+      ? { ...spanStyle, 'white-space': 'pre-line' }
+      : spanStyle;
+
+  // The data-editable-* attributes are hooks for the dashboard editor only.
   return (
-    <div data-component="text" data-name={props.name} style={merged}>
-      <span ref={textRef} style={spanStyle}>
+    <div
+      data-component="text"
+      data-name={props.name}
+      data-editable-key={props.opts.editable?.key}
+      data-editable-label={props.opts.editable?.label}
+      data-editable-multiline={
+        props.opts.editable?.multiline ? 'true' : undefined
+      }
+      data-editable-max-length={props.opts.editable?.maxLength}
+      data-editable-overridden={props.opts.editable?.overridden}
+      style={merged}
+    >
+      <span ref={textRef} style={textStyle()}>
         {props.opts.text}
       </span>
     </div>

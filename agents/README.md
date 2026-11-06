@@ -66,6 +66,7 @@ agents/
 - **[DEVICE-ERROR-REPORTING.md](./systems/DEVICE-ERROR-REPORTING.md)** - Bounded offline-capable player error diagnostics
 - **[SPOTIFY-WIDGET-POC.md](./systems/SPOTIFY-WIDGET-POC.md)** - Spotify "Now Playing" widget proof of concept
 - **[TEMPLATE-VALUE-FORMATTING.md](./systems/TEMPLATE-VALUE-FORMATTING.md)** - Number, date and list formatting in widget templates (`fmt`, `list`, `first`)
+- **[IN-PLACE-TEXT-EDITING.md](./systems/IN-PLACE-TEXT-EDITING.md)** - Editable template texts and per-item text overrides
 - *Coming soon: Authentication, media pipeline, real-time synchronization*
 
 #### Infrastructure (`infrastructure/`)

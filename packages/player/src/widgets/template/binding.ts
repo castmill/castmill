@@ -165,7 +165,7 @@ export interface ListBinding {
  *
  * @example
  * ```json
- * { "first": [{ "key": "options.overrides.price" }, { "fmt": "{data.price | number} kr" }] }
+ * { "first": [{ "key": "options.price_text" }, { "fmt": "{data.price | number} kr" }] }
  * ```
  */
 export interface FirstBinding {

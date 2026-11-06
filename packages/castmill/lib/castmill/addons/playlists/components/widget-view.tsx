@@ -5,6 +5,7 @@ import {
   onCleanup,
   createSignal,
   createMemo,
+  untrack,
 } from 'solid-js';
 import { Socket, Channel } from 'phoenix';
 import { authFetch } from '../../common/services/auth-fetch';
@@ -40,6 +41,8 @@ interface WidgetViewProps {
    * changes such as switching temperature units.
    */
   previewData?: Record<string, any> | null;
+  /** Stops playback, e.g. while texts are edited in the preview. */
+  paused?: boolean;
 }
 
 /**
@@ -350,6 +353,9 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
     });
 
     // After seek completes, clean up old instances
+    if (untrack(() => props.paused)) {
+      playerUI.stop();
+    }
     playerUI.seek(initialPosition).subscribe({
       complete: () => {
         previousPlayerUI?.destroy();
@@ -360,6 +366,12 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
         previousControls?.destroy();
       },
     });
+  });
+
+  createEffect(() => {
+    if (props.paused) {
+      playerUI?.stop();
+    }
   });
 
   onCleanup(() => {

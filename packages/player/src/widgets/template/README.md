@@ -196,10 +196,10 @@ Because empty results are dropped before `limit`, `items` + `where: [{ "key": "$
 
 ### First Binding (`first`)
 
-The first value that is not empty. Use it for fallbacks, per-item overrides and optional parts:
+The first value that is not empty. Use it for fallbacks and optional parts:
 
 ```json
-{ "first": [{ "key": "options.overrides.price" }, { "fmt": "{data.price | number} kr" }, "PÅ BEGÄRAN"] }
+{ "first": [{ "key": "options.price_text" }, { "fmt": "{data.price | number} kr" }, "PÅ BEGÄRAN"] }
 ```
 
 ### Nested Bindings
@@ -233,6 +233,22 @@ Container for organizing multiple components with shared styling.
 ### Text
 
 Displays text content with support for autofit sizing.
+
+An `editable` attribute lets users replace the text per playlist item from the dashboard preview:
+
+```json
+{
+  "type": "text",
+  "name": "price",
+  "opts": { "text": { "fmt": "{data.price | number} kr" } },
+  "editable": { "key": "price", "label": "Price", "max_length": 40 }
+}
+```
+
+The item's `options.overrides[key]` is `{ "text": "…" }` (shown exactly as typed: no `fmt`, formatters,
+literals or `first` fallbacks apply, while styles and autofit still do) or `{ "hidden": true }` (empty
+text that keeps its box). `key` and `label` can be bindings, e.g. `{ "fmt": "fact.{$.id}" }` for texts
+inside lists. See `agents/systems/IN-PLACE-TEXT-EDITING.md`.
 
 ### Image
 

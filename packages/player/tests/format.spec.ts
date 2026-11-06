@@ -270,7 +270,7 @@ describe('Template formatting', () => {
     it('returns the first value that is not empty', () => {
       const price = {
         first: [
-          { key: 'options.overrides.price' },
+          { key: 'options.price_text' },
           { fmt: '{data.price | number} kr' },
           'PÅ BEGÄRAN',
         ],
@@ -278,12 +278,7 @@ describe('Template formatting', () => {
       expect(resolve(price, { price: 100 })).to.equal('100 kr');
       expect(resolve(price, {})).to.equal('PÅ BEGÄRAN');
       expect(
-        resolve(
-          price,
-          { price: 100 },
-          { locale: 'sv' },
-          { overrides: { price: 'Bud' } }
-        )
+        resolve(price, { price: 100 }, { locale: 'sv' }, { price_text: 'Bud' })
       ).to.equal('Bud');
       expect(resolve({ first: [{ key: 'data.none' }, []] }, {})).to.equal(
         undefined

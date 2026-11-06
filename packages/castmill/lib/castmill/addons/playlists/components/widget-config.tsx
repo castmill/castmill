@@ -41,6 +41,20 @@ import { getTranslatedWidgetOption } from '../../common/utils/widget-catalog-uti
 
 import './widget-config.scss';
 import { WidgetView } from './widget-view';
+import { EditableTextStage, EditableTextLabels } from './editable-text-stage';
+import {
+  TextOverridesList,
+  TextOverridesListLabels,
+} from './text-overrides-list';
+import {
+  TextOverride,
+  describeOverrides,
+  getOverrides,
+  setOverride,
+  supportsTextOverrides,
+  templateEditables,
+  translateEditableLabel,
+} from './text-overrides';
 import { LayoutEditor } from '../../common/components/layout-editor';
 import { LayoutRefEditor } from '../../common/components/layout-ref-editor';
 
@@ -152,6 +166,22 @@ export const normalizeFormValue = (
 };
 
 export const normalizeWidgetOptionsForApi = (
+  options: OptionsDict,
+  schemaEntries: [string, SchemaAttributeType][]
+): Record<string, any> => {
+  const normalized = normalizeSchemaOptions(options, schemaEntries);
+  // Edited texts are stored in the reserved `overrides` option, which is not
+  // part of the options schema.
+  if (
+    options.overrides !== undefined &&
+    !schemaEntries.some(([key]) => key === 'overrides')
+  ) {
+    normalized.overrides = options.overrides;
+  }
+  return normalized;
+};
+
+const normalizeSchemaOptions = (
   options: OptionsDict,
   schemaEntries: [string, SchemaAttributeType][]
 ): Record<string, any> =>
@@ -347,8 +377,12 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
   const rawOptionsSchema = props.item.widget.options_schema || {};
 
   const schemaEntries = normalizeSchemaEntries(rawOptionsSchema);
+  const textOverridesEnabled = supportsTextOverrides(props.item.widget);
 
-  if (!rawOptionsSchema || schemaEntries.length === 0) {
+  if (
+    (!rawOptionsSchema || schemaEntries.length === 0) &&
+    !textOverridesEnabled
+  ) {
     return <div>{t('common.noConfigurationAvailable')}</div>;
   }
 
@@ -408,10 +442,10 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
 
   createEffect(() => {
     // Track option changes so the preview refetches when they change.
-    const options = {
-      ...normalizeWidgetOptionsForApi(widgetOptions(), schemaEntries),
-      display_locale: locale(),
-    };
+    // Edited texts don't affect integration data.
+    const { overrides: _overrides, ...fetchOptions } =
+      normalizeWidgetOptionsForApi(widgetOptions(), schemaEntries);
+    const options = { ...fetchOptions, display_locale: locale() };
     const widgetId = props.item.widget?.id;
 
     if (!widgetId || !props.baseUrl || !props.organizationId) {
@@ -956,6 +990,48 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
     }
   }
 
+  // In-place text editing (see agents/systems/IN-PLACE-TEXT-EDITING.md)
+  const [editingTexts, setEditingTexts] = createSignal(false);
+  const [seenLabels, setSeenLabels] = createSignal(
+    new Map<string, string | undefined>()
+  );
+  const editables = templateEditables(props.item.widget.template);
+  const translateLabel = (label: string | undefined) =>
+    translateEditableLabel(props.item.widget, label, locale());
+  const overrides = () => getOverrides(widgetOptions());
+
+  const updateOverrides = (next: Record<string, TextOverride>) => {
+    setWidgetOptions({ ...widgetOptions(), overrides: next as any });
+    setIsFormModified(true);
+  };
+
+  const changeTextOverride = (key: string, value: TextOverride | undefined) =>
+    updateOverrides(setOverride(overrides(), key, value));
+
+  const overrideEntries = () =>
+    describeOverrides(overrides(), editables, seenLabels(), translateLabel);
+
+  const editableTextLabels = (): EditableTextLabels => ({
+    editAria: (label) => t('widgets.editableTexts.editAria', { label }),
+    save: t('common.save'),
+    cancel: t('common.cancel'),
+    hide: t('widgets.editableTexts.hide'),
+    reset: t('widgets.editableTexts.reset'),
+    counter: (length, max) =>
+      t('widgets.editableTexts.counter', { length, max }),
+  });
+
+  const textOverridesListLabels = (): TextOverridesListLabels => ({
+    title: (count) => t('widgets.editableTexts.listTitle', { count }),
+    hidden: t('widgets.editableTexts.hidden'),
+    empty: t('widgets.editableTexts.empty'),
+    reset: t('widgets.editableTexts.reset'),
+    resetAll: t('widgets.editableTexts.resetAll'),
+    unusedTitle: t('widgets.editableTexts.unusedTitle'),
+    unusedHint: t('widgets.editableTexts.unusedHint'),
+    remove: t('common.remove'),
+  });
+
   const resetForm = () => {
     setIsFormModified(false);
     setWidgetOptions(originalOptions);
@@ -1015,6 +1091,15 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
                 return componentForItem(key, schema);
               }}
             </For>
+            <Show when={textOverridesEnabled}>
+              <TextOverridesList
+                used={overrideEntries().used}
+                unused={overrideEntries().unused}
+                labels={textOverridesListLabels()}
+                onReset={(key) => changeTextOverride(key, undefined)}
+                onResetAll={() => updateOverrides({})}
+              />
+            </Show>
           </div>
           <div class="form-actions">
             <Button
@@ -1038,14 +1123,43 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
         </form>
       </div>
       <div class="preview">
-        <WidgetView
-          widget={props.item.widget}
-          config={widgetConfig()}
-          options={widgetOptions()}
-          previewData={previewData()}
-          baseUrl={props.baseUrl}
-          socket={props.store.socket}
-        />
+        <Show when={textOverridesEnabled}>
+          <div class="preview-toolbar">
+            <Button
+              label={
+                editingTexts()
+                  ? t('widgets.editableTexts.doneEditing')
+                  : t('widgets.editableTexts.editTexts')
+              }
+              color={editingTexts() ? 'success' : 'secondary'}
+              aria-pressed={editingTexts()}
+              onClick={() => setEditingTexts(!editingTexts())}
+            />
+            <Show when={editingTexts()}>
+              <span>{t('widgets.editableTexts.hint')}</span>
+            </Show>
+          </div>
+        </Show>
+        <div class="preview-stage">
+          <EditableTextStage
+            active={editingTexts()}
+            overrides={overrides()}
+            labels={editableTextLabels()}
+            translateLabel={translateLabel}
+            onChange={changeTextOverride}
+            onDiscover={setSeenLabels}
+          >
+            <WidgetView
+              widget={props.item.widget}
+              config={widgetConfig()}
+              options={widgetOptions()}
+              previewData={previewData()}
+              baseUrl={props.baseUrl}
+              socket={props.store.socket}
+              paused={editingTexts()}
+            />
+          </EditableTextStage>
+        </div>
       </div>
     </div>
   );

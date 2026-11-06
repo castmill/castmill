@@ -22,6 +22,11 @@ defmodule Castmill.Widgets.TemplateBindings do
   }
 
   @list_keys ~w(key items where sort desc item limit join)
+  @editable_keys ~w(key label multiline max_length)
+
+  @doc "Default and largest `max_length` of an editable text."
+  def default_max_length, do: 500
+  def max_max_length, do: 5_000
   @operators ~w(eq neq gt gte lt lte present)
 
   # A plain string that looks like a placeholder, e.g. "{data.price | number} kr":
@@ -88,6 +93,7 @@ defmodule Castmill.Widgets.TemplateBindings do
 
   defp walk(map, path, acc) when is_map(map) do
     segment = fn key -> if is_binary(map["name"]), do: "#{map["name"]}.#{key}", else: key end
+    acc = check_editable(map, path, segment, acc)
 
     map
     |> Enum.sort_by(fn {key, _} -> key end)
@@ -111,6 +117,112 @@ defmodule Castmill.Widgets.TemplateBindings do
   end
 
   defp walk(_value, _path, acc), do: acc
+
+  # --- editable texts (see agents/systems/IN-PLACE-TEXT-EDITING.md) -------------
+
+  defp check_editable(%{"editable" => editable} = component, path, segment, acc) do
+    path = path ++ [segment.("editable")]
+
+    cond do
+      component["type"] != "text" ->
+        error(acc, path, "editable is only supported on text components")
+
+      not is_map(editable) ->
+        error(acc, path, "editable must be an object")
+
+      true ->
+        acc
+        |> check_editable_keys(editable, path)
+        |> check_editable_key(editable["key"], path)
+        |> check_type(
+          editable,
+          "label",
+          path,
+          &(is_binary(&1) or is_map(&1)),
+          "a string or a binding"
+        )
+        |> check_type(editable, "multiline", path, &is_boolean/1, "a boolean")
+        |> check_type(
+          editable,
+          "max_length",
+          path,
+          &(is_integer(&1) and &1 > 0 and &1 <= max_max_length()),
+          "an integer from 1 to #{max_max_length()}"
+        )
+        |> check_text_transform(component, path)
+    end
+  end
+
+  defp check_editable(_component, _path, _segment, acc), do: acc
+
+  defp check_editable_keys(acc, editable, path) do
+    case Map.keys(editable) -- @editable_keys do
+      [] -> acc
+      unknown -> error(acc, path, "unknown editable keys #{Enum.join(Enum.sort(unknown), ", ")}")
+    end
+  end
+
+  defp check_editable_key(acc, key, path) do
+    cond do
+      is_binary(key) and String.trim(key) != "" and String.length(key) <= 200 ->
+        acc
+
+      is_map(key) and map_size(key) > 0 ->
+        acc
+
+      true ->
+        error(acc, path, "editable needs a key (a string of up to 200 characters, or a binding)")
+    end
+  end
+
+  # Overrides are shown exactly as typed, but text-transform still changes their case.
+  defp check_text_transform(acc, component, path) do
+    styles =
+      [
+        component["style"]
+        | Enum.map(List.wrap(component["$styles"]), &(is_map(&1) && &1["style"]))
+      ]
+
+    if Enum.any?(styles, &(is_map(&1) and Map.has_key?(&1, "text-transform"))) do
+      warning(
+        acc,
+        path,
+        "an editable text uses text-transform, which also changes edited texts; use the upper/lower formatters instead"
+      )
+    else
+      acc
+    end
+  end
+
+  @doc """
+  Lists the editable texts of a template as `%{key: key, max_length: n, multiline: bool}`.
+  `key` is the override key, or `nil` when it comes from a binding (e.g. texts in lists).
+  """
+  def editables(template), do: template |> collect_editables([]) |> Enum.reverse()
+
+  defp collect_editables(%{"type" => "text", "editable" => %{} = editable} = map, acc) do
+    key = editable["key"]
+
+    entry = %{
+      key: if(is_binary(key), do: key),
+      max_length:
+        case editable["max_length"] do
+          n when is_integer(n) and n > 0 -> min(n, max_max_length())
+          _ -> default_max_length()
+        end,
+      multiline: editable["multiline"] == true
+    }
+
+    map |> Map.delete("editable") |> collect_editables([entry | acc])
+  end
+
+  defp collect_editables(map, acc) when is_map(map),
+    do: Enum.reduce(map, acc, fn {_key, value}, acc -> collect_editables(value, acc) end)
+
+  defp collect_editables(list, acc) when is_list(list),
+    do: Enum.reduce(list, acc, &collect_editables/2)
+
+  defp collect_editables(_value, acc), do: acc
 
   defp walk_list(list, path, acc) do
     acc =

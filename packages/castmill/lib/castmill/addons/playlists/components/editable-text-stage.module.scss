@@ -1,0 +1,85 @@
+.stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+
+  // Keeps the player's z-indexed layers below the editor.
+  > :first-child {
+    isolation: isolate;
+  }
+}
+
+.editing :global([data-editable-key]) {
+  outline: 0.125em dashed var(--primary-color, #5792ee);
+  outline-offset: 0.0625em;
+  cursor: text;
+
+  &:hover,
+  &:focus,
+  &:focus-visible {
+    outline-style: solid;
+    background-color: rgba(87, 146, 238, 0.18);
+  }
+}
+
+// Playback is paused while editing: the play button overlay would cover the texts.
+.editing :global(#play-controls-widget) {
+  display: none !important;
+}
+
+.editing :global([data-editable-overridden]) {
+  outline-color: #f0a030;
+}
+
+.editor {
+  position: absolute;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  margin-top: 0.25em;
+  padding: 0.75em;
+  border: 1px solid #555;
+  border-radius: 0.375em;
+  background: #151320;
+  box-shadow: 0 0.5em 1.5em rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: 0.9rem;
+  text-transform: none;
+}
+
+.editorLabel {
+  font-size: 0.8em;
+  color: #577cbb;
+}
+
+.input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.4em 0.6em;
+  border: 1px solid #555;
+  border-radius: 0.3em;
+  background: #1c1a2a;
+  color: #fff;
+  font: inherit;
+  resize: vertical;
+
+  &:focus {
+    outline: 0.125em solid var(--primary-color, #5792ee);
+  }
+}
+
+.counter {
+  align-self: flex-end;
+  font-size: 0.75em;
+  color: var(--text-secondary, #999);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375em;
+}

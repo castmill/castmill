@@ -1021,7 +1021,23 @@
       "noConfigurationRequired": "无需配置",
       "optional": "可选"
     },
-    "translations": "翻译"
+    "translations": "翻译",
+    "editableTexts": {
+      "editTexts": "编辑文本",
+      "doneEditing": "完成编辑",
+      "hint": "点击突出显示的文本进行修改。",
+      "editAria": "编辑文本：{{label}}",
+      "hide": "隐藏此文本",
+      "reset": "恢复原始文本",
+      "counter": "{{length}} / {{max}} 个字符",
+      "listTitle": "已编辑的文本：{{count}}",
+      "hidden": "已隐藏",
+      "empty": "（空）",
+      "resetAll": "全部恢复",
+      "unusedTitle": "Widget 未使用",
+      "unusedHint": "这些编辑已不再对应 Widget 中的任何文本。",
+      "editedIndicator": "包含已编辑的文本"
+    }
   },
   "devices": {
     "orientation": {

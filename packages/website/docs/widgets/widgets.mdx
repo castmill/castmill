@@ -689,11 +689,36 @@ Day/month names and number separators follow the organization's display locale (
 **`first`** – the first non-empty value, for fallbacks and optional parts:
 
 ```json
-{ "first": [{ "key": "options.overrides.price" }, { "fmt": "{data.price | number} kr" }, "On request"] }
+{ "first": [{ "key": "options.price_text" }, { "fmt": "{data.price | number} kr" }, "On request"] }
 ```
 
 Always wrap format texts as `{ "fmt": … }`; plain strings are shown as-is. Invalid bindings are rejected when the
 widget is uploaded.
+
+### Editable Texts
+
+Mark a `text` component as `editable` so users can replace it for one playlist item, directly in the
+widget preview (**Edit texts**):
+
+```json
+{
+  "type": "text",
+  "name": "price",
+  "opts": { "text": { "fmt": "{data.price | number} kr" } },
+  "editable": { "key": "price", "label": "Price", "max_length": 40 }
+}
+```
+
+| Attribute | Meaning |
+|-----------|---------|
+| `key` | Override key: a string, or a binding such as `{ "fmt": "fact.{$.id}" }` for texts inside lists. |
+| `label` | Shown in the editor (a string or a binding). Translate it in `translations.<locale>.editable`. |
+| `multiline` | Allow line breaks (default `false`). |
+| `max_length` | Maximum length, 1 to 5000 (default 500). |
+
+Edited texts are shown exactly as typed: formatting does not apply to them, but styles and autofit do.
+Avoid `text-transform` on editable texts (use the `upper`/`lower` formatters instead), since it would also
+change the case of edited texts. Users can also hide a text for an item.
 
 ---
 

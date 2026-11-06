@@ -149,11 +149,12 @@ with `.filter(info => info.value).slice(0, 5)`.
 ## `first` binding
 
 ```json
-{ "first": [{ "key": "options.overrides.price" }, { "fmt": "{data.price | number} kr" }, "PÅ BEGÄRAN"] }
+{ "first": [{ "key": "options.price_text" }, { "fmt": "{data.price | number} kr" }, "PÅ BEGÄRAN"] }
 ```
 
 Returns the first element that resolves to a non-empty value. It is used for fallbacks
-and for per-item override texts.
+and optional parts. (Texts users edit per playlist item are editable texts instead, see
+[IN-PLACE-TEXT-EDITING.md](./IN-PLACE-TEXT-EDITING.md).)
 
 ## Locale and time zone
 
@@ -243,8 +244,9 @@ Fetchers return normalized, unformatted data: numbers as numbers, dates as ISO 8
 strings, units as codes, and lists as arrays of objects. The property listing fetcher
 in castmill-saas will be changed accordingly.
 
-Item override texts become `options.overrides.<field>` with flat field names (for
-example `price`, `rooms`). The migration maps the legacy key paths to these names.
+Item override texts become editable texts stored in `options.overrides` (see
+[IN-PLACE-TEXT-EDITING.md](./IN-PLACE-TEXT-EDITING.md)). The migration maps the legacy
+key paths to the templates' editable keys.
 
 ## Testing
 
