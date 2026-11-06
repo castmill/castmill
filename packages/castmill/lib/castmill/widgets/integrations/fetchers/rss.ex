@@ -126,7 +126,9 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Rss do
       max_items: Keyword.get(opts, :max_items, @cache_max_items)
     }
 
-    case skip_whitespace(document) do
+    document = skip_whitespace(document)
+
+    case document do
       "{" <> _ ->
         parse_json_feed(document, ctx)
 
@@ -246,7 +248,7 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Rss do
       ])
       |> absolute_url(ctx.base_url)
 
-    ctx = %{ctx | base_url: feed_link || ctx.base_url}
+    ctx = %{ctx | base_url: ctx.base_url || feed_link}
     title = Html.to_text(Xml.child_text(channel, ["title", "dc:title"]))
 
     feed = %{
@@ -356,7 +358,7 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Rss do
 
   defp parse_atom(feed, ctx) do
     feed_link = atom_link(feed, "alternate") |> absolute_url(ctx.base_url)
-    ctx = %{ctx | base_url: feed_link || ctx.base_url}
+    ctx = %{ctx | base_url: ctx.base_url || feed_link}
     title = Html.to_text(Xml.child_text(feed, ["atom:title", "title"]))
 
     feed_data = %{
@@ -394,14 +396,14 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Rss do
     %{
       id: first_present([Xml.child_text(entry, ["atom:id", "id"]), link]),
       title: Xml.child_text(entry, ["atom:title", "title"]),
-      raw_description: Xml.text(summary),
-      raw_content: Xml.text(content),
+      raw_description: xhtml_text(summary),
+      raw_content: xhtml_text(content),
       link: link,
       image_candidates:
         media_images(entry) ++
           atom_enclosure_images(entry) ++
           embedded_images(content) ++ embedded_images(summary),
-      html_sources: [Xml.text(content), Xml.text(summary)],
+      html_sources: [xhtml_text(content), xhtml_text(summary)],
       date:
         Xml.child_text(entry, [
           "atom:published",
@@ -465,12 +467,39 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Rss do
 
   defp embedded_images({name, attrs, children}) do
     own =
-      if name == "img" or String.ends_with?(name, ":img"),
-        do: [Map.get(attrs, "src")],
-        else: []
+      if (name == "img" or String.ends_with?(name, ":img")) and
+           not tracking_pixel?(attrs["width"], attrs["height"]) do
+        [Map.get(attrs, "src")]
+      else
+        []
+      end
 
     own ++ Enum.flat_map(Enum.filter(children, &is_tuple/1), &embedded_images/1)
   end
+
+  defp xhtml_text(nil), do: ""
+
+  defp xhtml_text({_name, _attrs, children}) do
+    Enum.map_join(children, "", fn
+      {name, _attrs, _children} = element ->
+        text = xhtml_text(element)
+        if block_element?(name), do: " " <> text <> " ", else: text
+
+      text when is_binary(text) ->
+        text
+    end)
+  end
+
+  defp block_element?(name) do
+    name
+    |> String.split(":")
+    |> List.last()
+    |> then(&(&1 in ~w(address article aside blockquote br dd div dl dt figcaption figure footer
+                        h1 h2 h3 h4 h5 h6 header hr li main nav ol p pre section table tbody td
+                        tfoot th thead tr ul)))
+  end
+
+  defp tracking_pixel?(width, height), do: width in ["0", "1"] or height in ["0", "1"]
 
   # --------------------------------------------------------------------------
   # Media RSS (shared by RSS and Atom)
@@ -493,11 +522,13 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Rss do
           true
         )
       end)
+      |> Enum.reject(&tracking_pixel?(Xml.attr(&1, "width"), Xml.attr(&1, "height")))
       |> largest_first()
 
     thumbnails =
       ([element | groups] ++ contents)
       |> Enum.flat_map(&Xml.children(&1, "media:thumbnail"))
+      |> Enum.reject(&tracking_pixel?(Xml.attr(&1, "width"), Xml.attr(&1, "height")))
       |> largest_first()
 
     Enum.map(images ++ thumbnails, &Xml.attr(&1, "url"))

@@ -372,6 +372,82 @@ defmodule Castmill.Widgets.Integrations.Fetchers.RssTest do
       assert first["categories"] == ["a", "b"]
     end
 
+    test "parses JSON Feed documents with a UTF-8 BOM" do
+      json =
+        Jason.encode!(%{
+          "version" => "https://jsonfeed.org/version/1.1",
+          "title" => "BOM News",
+          "items" => [%{"id" => "1", "title" => "BOM item"}]
+        })
+
+      assert {:ok, %{"feedTitle" => "BOM News", "items" => [%{"title" => "BOM item"}]}} =
+               Rss.parse("\uFEFF" <> json)
+    end
+
+    test "keeps the fetched document URL as the relative link base" do
+      rss = """
+      <rss><channel><title>News</title><link>https://example.com/</link>
+        <item><title>RSS story</title><link>story.html</link></item>
+      </channel></rss>
+      """
+
+      atom = """
+      <feed xmlns="http://www.w3.org/2005/Atom">
+        <title>News</title><link rel="alternate" href="https://example.com/"/>
+        <entry><title>Atom story</title><link href="story.html"/></entry>
+      </feed>
+      """
+
+      base_url = "https://example.com/news/feed.xml"
+
+      assert {:ok, %{"items" => [%{"link" => "https://example.com/news/story.html"}]}} =
+               Rss.parse(rss, base_url: base_url)
+
+      assert {:ok, %{"items" => [%{"link" => "https://example.com/news/story.html"}]}} =
+               Rss.parse(atom, base_url: base_url)
+
+      assert {:ok, %{"items" => [%{"link" => "https://example.com/story.html"}]}} = Rss.parse(rss)
+
+      assert {:ok, %{"items" => [%{"link" => "https://example.com/story.html"}]}} =
+               Rss.parse(atom)
+    end
+
+    test "preserves XHTML block boundaries and skips tracking images" do
+      atom = """
+      <feed xmlns="http://www.w3.org/2005/Atom">
+        <title>News</title>
+        <entry><title>Story</title>
+          <content type="xhtml"><div xmlns="http://www.w3.org/1999/xhtml">
+            <p>First paragraph</p><p>Second <em>paragraph</em></p>
+            <img src="https://example.com/pixel.gif" width="1" height="1"/>
+            <img src="https://example.com/photo.jpg" width="640" height="480"/>
+          </div></content>
+        </entry>
+      </feed>
+      """
+
+      assert {:ok, %{"items" => [item]}} = Rss.parse(atom)
+      assert item["description"] == "First paragraph Second paragraph"
+      assert item["image"] == "https://example.com/photo.jpg"
+    end
+
+    test "skips tracking pixels in both Media RSS image lists" do
+      rss = """
+      <rss xmlns:media="http://search.yahoo.com/mrss/"><channel><title>News</title>
+        <item><title>Story</title>
+          <media:content url="https://example.com/content-pixel.jpg" medium="image" width="1" height="1"/>
+          <media:thumbnail url="https://example.com/thumbnail-pixel.jpg" width="1" height="1"/>
+          <content:encoded xmlns:content="http://purl.org/rss/1.0/modules/content/">
+            <![CDATA[<img src="https://example.com/article.jpg">]]>
+          </content:encoded>
+        </item>
+      </channel></rss>
+      """
+
+      assert {:ok, %{"items" => [%{"image" => "https://example.com/article.jpg"}]}} =
+               Rss.parse(rss)
+    end
+
     test "rejects JSON documents that are not JSON Feeds" do
       assert {:error, :unknown_feed_format} = Rss.parse(~s({"hello": "world"}))
       assert {:error, :unknown_feed_format} = Rss.parse("{not json")

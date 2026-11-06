@@ -75,6 +75,12 @@ defmodule Castmill.Widgets.Integrations.Rss.HtmlTest do
       assert Html.image_urls(html) == []
     end
 
+    test "falls back to a real lazy-loaded source when src is a data URI" do
+      html = ~s(<img src="data:image/gif;base64,AAA" data-src="https://example.com/photo.jpg">)
+
+      assert Html.image_urls(html) == ["https://example.com/photo.jpg"]
+    end
+
     test "supports srcset and escaped HTML" do
       assert Html.image_urls(~s(<img srcset="https://a.test/s.jpg 1x, https://a.test/l.jpg 2x">)) ==
                ["https://a.test/s.jpg"]

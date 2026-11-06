@@ -190,6 +190,7 @@ defmodule Castmill.Widgets.Integrations.Rss.Http do
   def public_address?({first, second, _, _, _, _, _, _}) do
     not ((first &&& 0xFE00) == 0xFC00 or
            (first &&& 0xFFC0) == 0xFE80 or
+           (first &&& 0xFFC0) == 0xFEC0 or
            (first &&& 0xFF00) == 0xFF00 or
            (first == 0x2001 and second == 0x0DB8) or
            (first == 0x2001 and second < 0x0200) or

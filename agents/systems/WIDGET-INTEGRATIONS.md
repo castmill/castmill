@@ -538,7 +538,7 @@ The server-side fetcher used by news widgets (`fetcher: "rss"`, discriminator
 - **Robustness**: handles BOMs, UTF-16, ISO-8859-1/Windows-1252, HTML entities
   in XML, CDATA HTML, double-escaped HTML, RFC 822/ISO 8601 dates with zones.
 - **Security** (`Rss.Http`): http(s) only; every request and redirect hop
-  (max 5) is checked against private/loopback/link-local/reserved IPv4/IPv6
+  (max 5) is checked against private/loopback/link-local/site-local/reserved IPv4/IPv6
   ranges (`:blocked_host`); 5 MB body limit including gzip/deflate bomb
   protection (`:feed_too_large`); XML is parsed with a SAX parser after DOCTYPE
   removal (no DTD/entity expansion, no atom creation). Logs contain only the host.

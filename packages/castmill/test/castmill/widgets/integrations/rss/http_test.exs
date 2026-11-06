@@ -151,6 +151,7 @@ defmodule Castmill.Widgets.Integrations.Rss.HttpTest do
             "http://[::1]/feed",
             "http://[fd00::1]/feed",
             "http://[fe80::1]/feed",
+            "http://[fec0::1]/feed",
             "http://[::ffff:127.0.0.1]/feed"
           ] do
         assert {:error, :blocked_host} = Http.get(url), "expected #{url} to be blocked"
@@ -188,6 +189,7 @@ defmodule Castmill.Widgets.Integrations.Rss.HttpTest do
       refute Http.public_address?({255, 255, 255, 255})
       refute Http.public_address?({0, 0, 0, 0, 0, 0, 0, 0})
       refute Http.public_address?({0xFF02, 0, 0, 0, 0, 0, 0, 1})
+      refute Http.public_address?({0xFEC0, 0, 0, 0, 0, 0, 0, 1})
       refute Http.public_address?({0x64, 0xFF9B, 0, 0, 0, 0, 0x0A00, 0x0001})
     end
   end

@@ -219,12 +219,13 @@ defmodule Castmill.Widgets.Integrations.Rss.Html do
     |> Enum.map(fn [tag] -> attributes(tag) end)
     |> Enum.reject(&tracking_pixel?/1)
     |> Enum.map(fn attrs ->
-      attrs["src"] || attrs["data-src"] || attrs["data-lazy-src"] ||
-        first_srcset_url(attrs["srcset"])
+      [attrs["src"], attrs["data-src"], attrs["data-lazy-src"], first_srcset_url(attrs["srcset"])]
+      |> Enum.map(fn source ->
+        if is_binary(source), do: source |> decode_entities() |> String.trim()
+      end)
+      |> Enum.find(&valid_image_source?/1)
     end)
     |> Enum.reject(&is_nil/1)
-    |> Enum.map(&(&1 |> decode_entities() |> String.trim()))
-    |> Enum.reject(&(&1 == "" or String.starts_with?(String.downcase(&1), "data:")))
   end
 
   @doc """
@@ -242,6 +243,11 @@ defmodule Castmill.Widgets.Integrations.Rss.Html do
   end
 
   defp tracking_pixel?(attrs), do: attrs["width"] in ["0", "1"] or attrs["height"] in ["0", "1"]
+
+  defp valid_image_source?(source),
+    do:
+      is_binary(source) and source != "" and
+        not String.starts_with?(String.downcase(source), "data:")
 
   defp first_srcset_url(nil), do: nil
 
