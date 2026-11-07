@@ -508,7 +508,7 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Rss do
     first_present([Xml.attr(category, "label"), Xml.attr(category, "term"), Xml.text(category)])
   end
 
-  defp atom_enclosure_images(element, base \\ nil) do
+  defp atom_enclosure_images(element, base) do
     element
     |> Xml.children(["atom:link", "link"])
     |> Enum.filter(fn link ->
