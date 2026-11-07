@@ -513,6 +513,52 @@ Body: <integration-specific payload>
 }
 ```
 
+#### RSS Fetcher (`Castmill.Widgets.Integrations.Fetchers.Rss`)
+
+The server-side fetcher used by news widgets (`fetcher: "rss"`, discriminator
+`feed_url`). Helper modules live in `lib/castmill/widgets/integrations/rss/`.
+
+- **Formats**: RSS 2.0/0.9x, RSS 1.0 (RDF), Atom 1.0/0.3 and JSON Feed 1.x.
+  If `feed_url` points to an HTML page, the advertised
+  `<link rel="alternate" type="application/rss+xml|atom+xml|feed+json">` feed is
+  followed (one level). URLs without a scheme get `https://`; `feed://` is accepted.
+- **Normalized output** (stored as integration data):
+  - Feed: `feedTitle`, `feedDescription`, `feedLink`, `feedImage`,
+    `feedLanguage`, `feedFormat` (`rss | rdf | atom | json`), `lastUpdated`, `items`.
+  - Item: `id`, `title` (plain text, ≤300 chars), `description` (plain text,
+    ≤500 chars; falls back to full content), `link`, `image` (also `imageUrl`),
+    `author`, `categories` (≤10), `source`, `pubDate` (ISO 8601 UTC),
+    `pubDateFormatted` (e.g. `Jan 1, 2025`). Missing values are empty strings.
+  - Images are chosen from Media RSS (largest), thumbnails, image enclosures,
+    `itunes:image`, Atom enclosure links, JSON Feed images and finally inline
+    `<img>` tags (tracking pixels skipped). Relative URLs are made absolute and
+    only `http(s)` URLs are kept.
+  - Items are de-duplicated (guid/id/link), sorted newest first (undated last)
+    and capped at 100 so `max_items` can be applied per widget.
+- **Robustness**: handles BOMs, UTF-16, ISO-8859-1/Windows-1252, HTML entities
+  in XML, CDATA HTML, double-escaped HTML, RFC 822/ISO 8601 dates with zones.
+  `Rss.Html` parses HTML fields with Floki (runtime dependency, mochiweb
+  backend) for HTML-to-text, `<img>` extraction and `<link>` autodiscovery, and
+  decodes the full HTML5 named-entity set (including multi-code-point entities)
+  in text and XML. Non-rendered content (comments, `script`, `style`,
+  `noscript`, `iframe`, `template`) yields neither text nor images.
+- **Security** (`Castmill.SafeHttp`, shared hardened HTTP client for
+  user-supplied URLs, reusable for other untrusted downloads): http(s) only;
+  every request and redirect hop (max 5) is checked against private/loopback/link-local/site-local/reserved IPv4/IPv6
+  ranges (`:blocked_host`); responses are streamed and canceled at the 5 MB
+  transfer limit, with an additional decompressed-body limit for gzip/deflate
+  bomb protection (`:feed_too_large`); XML is parsed with a SAX parser after DOCTYPE
+  removal (no DTD/entity expansion, no atom creation). Logs contain only the host.
+  Dev sets `allow_private_hosts: true` in `config/dev.exs`.
+- **Errors**: `{:error, reason, credentials}` with reasons such as
+  `:missing_feed_url`, `:invalid_url`, `:blocked_host`, `:host_not_found`,
+  `:not_found`, `:rate_limited`, `:server_error`, `:feed_too_large`,
+  `:xml_parse_error`, `:unknown_feed_format`; `Castmill.Resources` turns these
+  into user-facing messages.
+- **Tests**: `test/castmill/widgets/integrations/fetchers/rss_test.exs`,
+  `test/castmill/widgets/integrations/rss/` and `test/castmill/safe_http_test.exs`,
+  using `Castmill.SafeHttp.FakeClient` (no network).
+
 ## Implementation Phases
 
 ### Phase 1: Core Infrastructure
