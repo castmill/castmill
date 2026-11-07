@@ -1,349 +1,880 @@
 defmodule Castmill.Widgets.Integrations.Fetchers.Rss do
   @moduledoc """
-  RSS/Atom feed fetcher for News widget integrations.
+  Feed fetcher for news widget integrations.
 
-  Fetches and parses RSS 2.0 and Atom feeds, extracting news items with their
-  titles, descriptions, images, publication dates, and links.
+  Downloads a syndication feed and normalises it into a widget friendly
+  structure with plain-text titles and descriptions, images, links, authors,
+  categories and dates, sorted newest first.
 
-  Uses the SweetXml library for clean, maintainable XML parsing.
+  ## Supported formats
+
+  - RSS 2.0, 0.91 and 0.92
+  - RSS 1.0 (RDF)
+  - Atom 1.0 and 0.3
+  - JSON Feed 1.0 and 1.1
+  - HTML pages that advertise a feed with `<link rel="alternate">`
+    (feed autodiscovery), so users can paste a website address
 
   ## Features
 
-  - Supports RSS 2.0 and Atom feed formats
-  - Extracts media:content images (RSS) and enclosures
-  - Parses multiple date formats (RFC822, ISO8601)
-  - Configurable item limit
-  - HTML stripping from descriptions
+  - Images from Media RSS (`media:content`, `media:group`, `media:thumbnail`,
+    choosing the largest), image enclosures, `itunes:image`, Atom enclosure
+    links, JSON Feed images/attachments and, as a fallback, the first `<img>`
+    in the item content. Relative URLs are resolved and tracking pixels are
+    ignored.
+  - HTML is converted to clean, single-line text with entities decoded;
+    descriptions fall back to the full content (`content:encoded`, Atom
+    content) and are truncated at a word boundary.
+  - RFC 822 dates with numeric offsets or named time zones and ISO 8601 dates
+    are normalised to UTC.
+  - Duplicate items (same id/link) are removed.
+  - Safe by design: SSRF protection, redirect validation, size limits,
+    decompression bomb protection and an XML parser that never loads DTDs,
+    expands entities or creates atoms. See `Castmill.SafeHttp` and
+    `Castmill.Widgets.Integrations.Rss.Xml`.
 
   ## Options
 
-  - `feed_url`: URL of the RSS/Atom feed (required)
-  - `max_items`: Maximum number of items to fetch (default: 10)
+  - `feed_url` (required): URL of the feed or of a web page advertising one.
+    URLs without a scheme default to `https://`, `feed://` URLs are accepted.
+
+  The fetched data is shared by every widget using the same feed, so it always
+  contains up to 100 items; each widget instance limits the list with its
+  own `max_items` option when the data is served.
+
+  ## Data
+
+      %{
+        "feedTitle" => "Example News",
+        "feedDescription" => "Latest headlines",
+        "feedLink" => "https://example.com/",
+        "feedImage" => "https://example.com/logo.png" | nil,
+        "feedLanguage" => "en",
+        "feedFormat" => "rss" | "rdf" | "atom" | "json",
+        "lastUpdated" => 1735732800,
+        "items" => [
+          %{
+            "id" => "https://example.com/story",
+            "title" => "Headline",
+            "description" => "Plain text summary…",
+            "link" => "https://example.com/story",
+            "image" => "https://example.com/story.jpg",
+            "imageUrl" => "https://example.com/story.jpg",
+            "author" => "Jane Doe",
+            "categories" => ["World"],
+            "source" => "Example News",
+            "pubDate" => "2025-01-01T12:00:00Z",
+            "pubDateFormatted" => "Jan 1, 2025"
+          }
+        ]
+      }
+
+  String fields are always present (empty when unknown).
   """
   @behaviour Castmill.Widgets.Integrations.Fetcher
 
-  import SweetXml
+  alias Castmill.SafeHttp
+  alias Castmill.Widgets.Integrations.Rss.{DateParser, Html, Xml}
 
   require Logger
 
   # Cache a reasonable number of items - individual widget instances
-  # can filter to their own max_items setting when serving data
+  # filter to their own max_items setting when the data is served.
   @cache_max_items 100
-  @default_timeout 15_000
+  @title_max_length 300
+  @description_max_length 500
+  @source_max_length 300
+  @max_categories 10
+
+  @feed_link_types ~w(application/rss+xml application/atom+xml application/rdf+xml
+                      application/feed+json application/json text/xml application/xml)
+
+  @image_extensions ~w(.jpg .jpeg .png .gif .webp .avif .bmp .svg)
+  @non_image_extensions ~w(.mp4 .m4v .mov .webm .mkv .avi .m3u8 .mpd .mp3 .m4a .aac .ogg .oga
+                           .wav .flac .pdf)
 
   @impl true
   def fetch(credentials, options) do
-    feed_url = Map.get(options, "feed_url", "")
-    # Always fetch up to @cache_max_items for caching
-    # The backend will filter to each widget's max_items when serving
-    max_items = @cache_max_items
+    case normalize_feed_url(Map.get(options, "feed_url")) do
+      nil ->
+        {:error, :missing_feed_url, credentials}
 
-    if feed_url == "" do
-      {:error, :missing_feed_url, credentials}
-    else
-      case fetch_feed(feed_url) do
-        {:ok, xml_content} ->
-          case parse_feed(xml_content, max_items) do
-            {:ok, feed_data} ->
-              data = Map.put(feed_data, "lastUpdated", System.system_time(:second))
-              {:ok, data, credentials}
+      feed_url ->
+        case fetch_feed(feed_url, true) do
+          {:ok, feed} ->
+            {:ok, Map.put(feed, "lastUpdated", System.system_time(:second)), credentials}
 
-            {:error, reason} ->
-              Logger.error("RSS parse error for #{feed_url}: #{inspect(reason)}")
-              {:error, reason, credentials}
-          end
+          {:error, reason} ->
+            # Only the host is logged; feed URLs may contain private tokens.
+            Logger.warning("RSS fetch failed for host #{host(feed_url)}: #{inspect(reason)}")
+            {:error, reason, credentials}
+        end
+    end
+  end
+
+  @doc """
+  Parses a feed document (RSS, RDF, Atom or JSON Feed).
+
+  ## Options
+
+  - `:base_url` - URL the document was fetched from, used to resolve relative
+    links and images.
+  - `:max_items` - maximum number of items to return (default: #{@cache_max_items}).
+  """
+  @spec parse(binary(), keyword()) :: {:ok, map()} | {:error, atom()}
+  def parse(document, opts \\ []) when is_binary(document) do
+    ctx = %{
+      base_url: Keyword.get(opts, :base_url),
+      max_items: Keyword.get(opts, :max_items, @cache_max_items)
+    }
+
+    document = skip_whitespace(document)
+
+    case document do
+      "{" <> _ ->
+        parse_json_feed(document, ctx)
+
+      "" ->
+        {:error, :unknown_feed_format}
+
+      _ ->
+        with {:ok, root} <- Xml.parse(document) do
+          parse_xml_feed(root, ctx)
+        end
+    end
+  end
+
+  # ==========================================================================
+  # Fetching
+  # ==========================================================================
+
+  defp fetch_feed(url, discover?) do
+    with {:ok, %{body: body, url: final_url}} <- SafeHttp.get(url) do
+      case parse(body, base_url: final_url) do
+        {:ok, feed} ->
+          {:ok, feed}
 
         {:error, reason} ->
-          Logger.error("RSS fetch error for #{feed_url}: #{inspect(reason)}")
-          {:error, reason, credentials}
+          discovered = if discover? and html?(body), do: discover_feed_url(body, final_url)
+
+          if discovered && discovered != final_url do
+            fetch_feed(discovered, false)
+          else
+            {:error, reason}
+          end
       end
     end
   end
 
-  # ============================================================================
-  # HTTP FETCHING
-  # ============================================================================
+  defp normalize_feed_url(url) when is_binary(url) do
+    url = url |> String.trim() |> String.replace(~r/^feed:(\/\/)?/i, "")
 
-  defp fetch_feed(url) do
-    headers = [
-      {"Accept", "application/rss+xml, application/atom+xml, application/xml, text/xml"},
-      {"User-Agent", "Castmill/1.0 RSS Reader"}
-    ]
-
-    case HTTPoison.get(url, headers, recv_timeout: @default_timeout, follow_redirect: true) do
-      {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
-        {:ok, body}
-
-      {:ok, %HTTPoison.Response{status_code: 301, headers: resp_headers}} ->
-        handle_redirect(resp_headers)
-
-      {:ok, %HTTPoison.Response{status_code: 302, headers: resp_headers}} ->
-        handle_redirect(resp_headers)
-
-      {:ok, %HTTPoison.Response{status_code: status}} ->
-        {:error, {:http_error, status}}
-
-      {:error, %HTTPoison.Error{reason: reason}} ->
-        {:error, {:network_error, reason}}
-    end
-  end
-
-  defp handle_redirect(headers) do
-    case List.keyfind(headers, "Location", 0) || List.keyfind(headers, "location", 0) do
-      {_, location} -> fetch_feed(location)
-      nil -> {:error, :redirect_without_location}
-    end
-  end
-
-  # ============================================================================
-  # XML PARSING WITH SWEETXML
-  # ============================================================================
-
-  defp parse_feed(xml_content, max_items) do
-    try do
-      cond do
-        is_rss_feed?(xml_content) -> parse_rss(xml_content, max_items)
-        is_atom_feed?(xml_content) -> parse_atom(xml_content, max_items)
-        true -> {:error, :unknown_feed_format}
-      end
-    rescue
-      e ->
-        Logger.error("XML parsing error: #{inspect(e)}")
-        {:error, :xml_parse_error}
-    catch
-      :exit, reason ->
-        Logger.error("XML parsing exit: #{inspect(reason)}")
-        {:error, :xml_parse_error}
-    end
-  end
-
-  defp is_rss_feed?(xml), do: String.contains?(xml, "<rss")
-  defp is_atom_feed?(xml), do: String.contains?(xml, "<feed")
-
-  # ============================================================================
-  # RSS 2.0 PARSING
-  # ============================================================================
-
-  defp parse_rss(xml_content, max_items) do
-    feed_info =
-      xml_content
-      |> xpath(
-        ~x"//channel"e,
-        title: ~x"./title/text()"s,
-        description: ~x"./description/text()"s,
-        image: ~x"./image/url/text()"s
-      )
-
-    items =
-      xml_content
-      |> xpath(
-        ~x"//channel/item"el,
-        title: ~x"./title/text()"s,
-        description: ~x"./description/text()"s,
-        link: ~x"./link/text()"s,
-        pub_date: ~x"./pubDate/text()"s,
-        author: ~x"./author/text()"s,
-        dc_creator: ~x"./*[local-name()='creator']/text()"s,
-        # media:content is used by some feeds (e.g., NPR)
-        media_content_url: ~x"./*[local-name()='content']/@url"s,
-        # media:thumbnail is used by BBC and many other feeds
-        media_thumbnail_url: ~x"./*[local-name()='thumbnail']/@url"s,
-        enclosure_url: ~x"./enclosure/@url"s
-      )
-      |> Enum.take(max_items)
-      |> Enum.map(&format_rss_item/1)
-
-    {:ok,
-     %{
-       "items" => items,
-       "feedTitle" => feed_info[:title] || "",
-       "feedDescription" => strip_html(feed_info[:description] || ""),
-       "feedImage" => feed_info[:image]
-     }}
-  end
-
-  defp format_rss_item(item) do
-    {pub_date, pub_date_formatted} = parse_pub_date(item[:pub_date])
-    author = if item[:author] != "", do: item[:author], else: item[:dc_creator]
-    # Try media:content first, then media:thumbnail (BBC), then enclosure
-    image_url =
-      cond do
-        item[:media_content_url] != "" -> item[:media_content_url]
-        item[:media_thumbnail_url] != "" -> item[:media_thumbnail_url]
-        item[:enclosure_url] != "" -> item[:enclosure_url]
-        true -> ""
-      end
-
-    %{
-      "title" => item[:title] || "",
-      "description" => strip_html(item[:description] || ""),
-      "link" => item[:link] || "",
-      "imageUrl" => image_url || "",
-      "pubDate" => pub_date,
-      "pubDateFormatted" => pub_date_formatted,
-      "author" => author || ""
-    }
-  end
-
-  # ============================================================================
-  # ATOM PARSING
-  # ============================================================================
-
-  defp parse_atom(xml_content, max_items) do
-    feed_info =
-      xml_content
-      |> xpath(
-        ~x"//*[local-name()='feed']"e,
-        title: ~x"./*[local-name()='title']/text()"s,
-        subtitle: ~x"./*[local-name()='subtitle']/text()"s
-      )
-
-    items =
-      xml_content
-      |> xpath(
-        ~x"//*[local-name()='feed']/*[local-name()='entry']"el,
-        title: ~x"./*[local-name()='title']/text()"s,
-        summary: ~x"./*[local-name()='summary']/text()"s,
-        content: ~x"./*[local-name()='content']/text()"s,
-        link_alternate: ~x"./*[local-name()='link'][@rel='alternate']/@href"s,
-        link_default: ~x"./*[local-name()='link']/@href"s,
-        published: ~x"./*[local-name()='published']/text()"s,
-        updated: ~x"./*[local-name()='updated']/text()"s,
-        author_name: ~x"./*[local-name()='author']/*[local-name()='name']/text()"s
-      )
-      |> Enum.take(max_items)
-      |> Enum.map(&format_atom_entry/1)
-
-    {:ok,
-     %{
-       "items" => items,
-       "feedTitle" => feed_info[:title] || "",
-       "feedDescription" => strip_html(feed_info[:subtitle] || ""),
-       "feedImage" => nil
-     }}
-  end
-
-  defp format_atom_entry(entry) do
-    date_str = if entry[:published] != "", do: entry[:published], else: entry[:updated]
-    {pub_date, pub_date_formatted} = parse_pub_date(date_str)
-    link = if entry[:link_alternate] != "", do: entry[:link_alternate], else: entry[:link_default]
-    description = if entry[:summary] != "", do: entry[:summary], else: entry[:content]
-
-    %{
-      "title" => entry[:title] || "",
-      "description" => strip_html(description || ""),
-      "link" => link || "",
-      "imageUrl" => "",
-      "pubDate" => pub_date,
-      "pubDateFormatted" => pub_date_formatted,
-      "author" => entry[:author_name] || ""
-    }
-  end
-
-  # ============================================================================
-  # DATE PARSING
-  # ============================================================================
-
-  defp parse_pub_date(nil), do: {"", ""}
-  defp parse_pub_date(""), do: {"", ""}
-
-  defp parse_pub_date(date_string) do
     cond do
-      # ISO 8601 format (Atom feeds)
-      String.match?(date_string, ~r/^\d{4}-\d{2}-\d{2}/) ->
-        parse_iso8601(date_string)
-
-      # RFC 822 format (RSS feeds)
-      String.match?(date_string, ~r/^\w{3},?\s+\d{1,2}\s+\w{3}\s+\d{4}/) ->
-        parse_rfc822(date_string)
-
-      true ->
-        {date_string, date_string}
+      url == "" -> nil
+      Regex.match?(~r/^[a-z][a-z0-9+.\-]*:\/\//i, url) -> url
+      true -> "https://" <> url
     end
   end
 
-  defp parse_iso8601(date_string) do
-    case DateTime.from_iso8601(date_string) do
-      {:ok, datetime, _} ->
-        iso = DateTime.to_iso8601(datetime)
-        formatted = Calendar.strftime(datetime, "%b %-d, %Y")
-        {iso, formatted}
+  defp normalize_feed_url(_), do: nil
+
+  defp host(url) do
+    case URI.parse(url) do
+      %URI{host: host} when is_binary(host) -> host
+      _ -> "unknown"
+    end
+  end
+
+  defp html?(body) do
+    head = binary_part(body, 0, min(byte_size(body), 4096))
+    Regex.match?(~r/<!doctype\s+html|<html[\s>]|<head[\s>]/i, head)
+  end
+
+  defp discover_feed_url(html, base_url) do
+    html
+    |> Html.tag_attributes("link")
+    |> Enum.find(fn attrs ->
+      rels = attrs |> Map.get("rel", "") |> String.downcase() |> String.split()
+
+      "alternate" in rels and
+        String.downcase(Map.get(attrs, "type", "")) in @feed_link_types and
+        Map.get(attrs, "href", "") != ""
+    end)
+    |> case do
+      nil -> nil
+      attrs -> absolute_url(attrs["href"], base_url)
+    end
+  end
+
+  defp skip_whitespace(<<0xEF, 0xBB, 0xBF, rest::binary>>), do: skip_whitespace(rest)
+
+  defp skip_whitespace(<<c, rest::binary>>) when c in [?\s, ?\t, ?\r, ?\n],
+    do: skip_whitespace(rest)
+
+  defp skip_whitespace(rest), do: rest
+
+  # ==========================================================================
+  # XML feeds
+  # ==========================================================================
+
+  defp parse_xml_feed(root, ctx) do
+    case Xml.name(root) do
+      "rss" ->
+        channel = Xml.child(root, "channel")
+        parse_rss(channel, root, Xml.children(channel, "item"), "rss", ctx)
+
+      "rdf:RDF" ->
+        channel = Xml.child(root, "channel")
+        parse_rss(channel, root, Xml.children(root, "item"), "rdf", ctx)
+
+      name when name in ["atom:feed", "feed"] ->
+        parse_atom(root, ctx)
 
       _ ->
-        # Try parsing just the date part
-        case Date.from_iso8601(String.slice(date_string, 0, 10)) do
-          {:ok, date} ->
-            formatted = Calendar.strftime(date, "%b %-d, %Y")
-            {date_string, formatted}
-
-          _ ->
-            {date_string, date_string}
-        end
+        {:error, :unknown_feed_format}
     end
   end
 
-  defp parse_rfc822(date_string) do
-    # Parse RFC 822 date format: "Wed, 01 Jan 2025 12:00:00 +0000"
-    months = %{
-      "Jan" => 1,
-      "Feb" => 2,
-      "Mar" => 3,
-      "Apr" => 4,
-      "May" => 5,
-      "Jun" => 6,
-      "Jul" => 7,
-      "Aug" => 8,
-      "Sep" => 9,
-      "Oct" => 10,
-      "Nov" => 11,
-      "Dec" => 12
+  # --------------------------------------------------------------------------
+  # RSS 0.9x / 2.0 / 1.0
+  # --------------------------------------------------------------------------
+
+  defp parse_rss(nil, _root, _items, _format, _ctx), do: {:error, :unknown_feed_format}
+
+  defp parse_rss(channel, root, items, format, ctx) do
+    feed_link =
+      first_present([
+        Xml.child_text(channel, "link"),
+        atom_link(channel, "alternate")
+      ])
+      |> absolute_url(ctx.base_url)
+
+    ctx = %{ctx | base_url: ctx.base_url || feed_link}
+
+    title =
+      channel
+      |> Xml.child_text(["title", "dc:title"])
+      |> Html.to_text()
+      |> Html.truncate(@title_max_length)
+
+    feed = %{
+      "feedTitle" => title,
+      "feedDescription" =>
+        Html.to_text(Xml.child_text(channel, ["description", "dc:description", "itunes:summary"])),
+      "feedLink" => feed_link || "",
+      "feedImage" => rss_feed_image(channel, root, ctx),
+      "feedLanguage" => Xml.child_text(channel, ["language", "dc:language"]),
+      "feedFormat" => format
     }
 
-    regex = ~r/(\d{1,2})\s+(\w{3})\s+(\d{4})\s+(\d{2}):(\d{2}):(\d{2})/
+    items
+    |> Enum.map(&rss_item(&1, Map.put(ctx, :feed_title, title)))
+    |> finalize(feed, ctx)
+  end
 
-    case Regex.run(regex, date_string) do
-      [_, day, month_str, year, hour, minute, second] ->
-        month = months[month_str] || 1
+  defp rss_feed_image(channel, root, ctx) do
+    image = Xml.child(channel, "image") || Xml.child(root, "image")
+    resource = Xml.attr(image, "rdf:resource")
 
-        case NaiveDateTime.new(
-               String.to_integer(year),
-               month,
-               String.to_integer(day),
-               String.to_integer(hour),
-               String.to_integer(minute),
-               String.to_integer(second)
-             ) do
-          {:ok, naive_dt} ->
-            datetime = DateTime.from_naive!(naive_dt, "Etc/UTC")
-            iso = DateTime.to_iso8601(datetime)
-            formatted = Calendar.strftime(datetime, "%b %-d, %Y")
-            {iso, formatted}
+    referenced_image =
+      root
+      |> Xml.children("image")
+      |> Enum.find(&(Xml.attr(&1, "rdf:about") == resource and present?(resource)))
 
-          _ ->
-            {date_string, date_string}
-        end
+    [
+      Xml.child_text(referenced_image, "url"),
+      Xml.child_text(image, "url"),
+      Xml.attr(image, "rdf:resource"),
+      Xml.attr(Xml.child(channel, "itunes:image"), "href"),
+      Xml.child_text(channel, ["atom:logo", "atom:icon"])
+    ]
+    |> Enum.find_value(&absolute_url(&1, ctx.base_url))
+  end
 
-      _ ->
-        {date_string, date_string}
+  defp rss_item(item, ctx) do
+    link =
+      first_present([
+        Xml.child_text(item, "link"),
+        atom_link(item, "alternate"),
+        permalink_guid(item),
+        Xml.attr(item, "rdf:about")
+      ])
+      |> absolute_url(ctx.base_url)
+
+    raw_description =
+      Xml.child_text(item, ["description", "dc:description", "itunes:summary", "atom:summary"])
+
+    raw_content = Xml.child_text(item, ["content:encoded", "atom:content"])
+
+    %{
+      id: first_present([Xml.child_text(item, ["guid", "atom:id"]), link]),
+      title: Xml.child_text(item, ["title", "dc:title"]),
+      raw_description: raw_description,
+      raw_content: raw_content,
+      link: link,
+      image_candidates:
+        media_images(item) ++
+          enclosure_images(item) ++
+          atom_enclosure_images(item, effective_base(item, ctx.base_url)) ++
+          [Xml.attr(Xml.child(item, "itunes:image"), "href"), item_image_element(item)],
+      html_sources: [raw_content, raw_description],
+      date:
+        Xml.child_text(item, [
+          "pubDate",
+          "dc:date",
+          "atom:published",
+          "atom:updated",
+          "dcterms:created",
+          "dcterms:modified"
+        ]),
+      author:
+        Xml.child_text(item, ["dc:creator", "author", "itunes:author"])
+        |> then(&first_present([&1, atom_author(item)])),
+      categories:
+        Enum.map(Xml.children(item, ["category", "dc:subject"]), &Xml.text/1) ++
+          Enum.map(Xml.children(item, "atom:category"), &atom_category/1),
+      source: Xml.child_text(item, "source")
+    }
+    |> build_item(ctx)
+  end
+
+  defp permalink_guid(item) do
+    case Xml.child(item, "guid") do
+      nil ->
+        nil
+
+      guid ->
+        text = Xml.text(guid)
+
+        if Xml.attr(guid, "isPermaLink") != "false" and String.match?(text, ~r/^https?:\/\//i),
+          do: text
     end
   end
 
-  # ============================================================================
-  # HTML STRIPPING
-  # ============================================================================
-
-  defp strip_html(nil), do: ""
-
-  defp strip_html(text) when is_binary(text) do
-    text
-    |> String.replace(~r/<[^>]+>/, " ")
-    |> String.replace(~r/&amp;/, "&")
-    |> String.replace(~r/&lt;/, "<")
-    |> String.replace(~r/&gt;/, ">")
-    |> String.replace(~r/&quot;/, "\"")
-    |> String.replace(~r/&#39;/, "'")
-    |> String.replace(~r/&nbsp;/, " ")
-    |> String.replace(~r/\s+/, " ")
-    |> String.trim()
+  defp item_image_element(item) do
+    case Xml.child(item, "image") do
+      nil -> nil
+      image -> first_present([Xml.child_text(image, "url"), Xml.text(image)])
+    end
   end
+
+  defp enclosure_images(item) do
+    item
+    |> Xml.children("enclosure")
+    |> Enum.filter(&image_reference?(Xml.attr(&1, "type"), nil, Xml.attr(&1, "url"), false))
+    |> Enum.map(&Xml.attr(&1, "url"))
+  end
+
+  # --------------------------------------------------------------------------
+  # Atom
+  # --------------------------------------------------------------------------
+
+  defp parse_atom(feed, ctx) do
+    feed_link = atom_link(feed, "alternate") |> absolute_url(ctx.base_url)
+    feed_base = effective_base(feed, ctx.base_url)
+    feed_link = atom_link_url(feed, "alternate", feed_base) || feed_link
+
+    ctx =
+      ctx
+      |> Map.put(:base_url, feed_base || feed_link)
+      |> Map.put(:atom_xml_base?, present?(Xml.attr(feed, "xml:base")))
+
+    title =
+      feed
+      |> Xml.child_text(["atom:title", "title"])
+      |> Html.to_text()
+      |> Html.truncate(@title_max_length)
+
+    feed_data = %{
+      "feedTitle" => title,
+      "feedDescription" =>
+        Html.to_text(
+          Xml.child_text(feed, ["atom:subtitle", "subtitle", "atom:tagline", "tagline"])
+        ),
+      "feedLink" => feed_link || "",
+      "feedImage" =>
+        [
+          atom_child_url(feed, ["atom:logo", "logo"], ctx.base_url),
+          atom_child_url(feed, ["atom:icon", "icon"], ctx.base_url),
+          atom_attribute_url(Xml.child(feed, "itunes:image"), "href", ctx.base_url)
+        ]
+        |> Enum.find(&present?/1),
+      "feedLanguage" => Xml.attr(feed, "xml:lang") || "",
+      "feedFormat" => "atom"
+    }
+
+    ctx = Map.merge(ctx, %{feed_title: title, feed_author: atom_author(feed)})
+
+    feed
+    |> Xml.children(["atom:entry", "entry"])
+    |> Enum.map(&atom_entry(&1, ctx))
+    |> finalize(feed_data, ctx)
+  end
+
+  defp atom_entry(entry, ctx) do
+    entry_base = effective_base(entry, ctx.base_url)
+    entry_ctx = %{ctx | base_url: entry_base}
+    link = atom_link_url(entry, "alternate", entry_base)
+    summary = Xml.child(entry, ["atom:summary", "summary"])
+    content = Xml.child(entry, ["atom:content", "content"])
+    source = Xml.child(entry, ["atom:source", "source"])
+
+    image_base =
+      if ctx[:atom_xml_base?] or present?(Xml.attr(entry, "xml:base")),
+        do: entry_base,
+        else: link || entry_base
+
+    %{
+      id: first_present([Xml.child_text(entry, ["atom:id", "id"]), link]),
+      title: Xml.child_text(entry, ["atom:title", "title"]),
+      raw_description: xhtml_text(summary),
+      raw_content: xhtml_text(content),
+      link: link,
+      image_candidates:
+        media_images(entry, entry_base) ++
+          atom_enclosure_images(entry, entry_base) ++
+          embedded_images(content, image_base) ++ embedded_images(summary, image_base),
+      image_base: image_base,
+      html_sources: [xhtml_text(content), xhtml_text(summary)],
+      date:
+        Xml.child_text(entry, [
+          "atom:published",
+          "published",
+          "atom:issued",
+          "issued",
+          "atom:updated",
+          "updated",
+          "atom:modified",
+          "modified",
+          "dc:date"
+        ]),
+      author:
+        first_present([
+          atom_author(entry),
+          Xml.child_text(entry, "dc:creator"),
+          ctx[:feed_author]
+        ]),
+      categories:
+        Enum.map(Xml.children(entry, ["atom:category", "category"]), &atom_category/1) ++
+          Enum.map(Xml.children(entry, "dc:subject"), &Xml.text/1),
+      source: Xml.child_text(source, ["atom:title", "title"])
+    }
+    |> build_item(entry_ctx)
+  end
+
+  defp atom_link(element, rel) do
+    element
+    |> atom_link_element(rel)
+    |> then(&Xml.attr(&1, "href"))
+  end
+
+  defp atom_link_url(element, rel, base) do
+    link = atom_link_element(element, rel)
+    absolute_url(Xml.attr(link, "href"), effective_base(link, base))
+  end
+
+  defp atom_child_url(element, names, base) do
+    child = Xml.child(element, names)
+    absolute_url(Xml.text(child), effective_base(child, base))
+  end
+
+  defp atom_attribute_url(element, attr, base) do
+    absolute_url(Xml.attr(element, attr), effective_base(element, base))
+  end
+
+  defp atom_link_element(element, rel) do
+    links = Xml.children(element, ["atom:link", "link"])
+
+    matching =
+      Enum.filter(links, fn link ->
+        (Xml.attr(link, "rel") || "alternate") == rel and present?(Xml.attr(link, "href"))
+      end)
+
+    preferred =
+      Enum.find(matching, &String.contains?(Xml.attr(&1, "type") || "text/html", "html")) ||
+        List.first(matching)
+
+    preferred
+  end
+
+  defp atom_author(element) do
+    element
+    |> Xml.children(["atom:author", "author"])
+    |> Enum.map(&Xml.child_text(&1, ["atom:name", "name"]))
+    |> Enum.find(&present?/1)
+  end
+
+  defp atom_category(category) do
+    first_present([Xml.attr(category, "label"), Xml.attr(category, "term"), Xml.text(category)])
+  end
+
+  defp atom_enclosure_images(element, base) do
+    element
+    |> Xml.children(["atom:link", "link"])
+    |> Enum.filter(fn link ->
+      Xml.attr(link, "rel") == "enclosure" and
+        image_reference?(Xml.attr(link, "type"), nil, Xml.attr(link, "href"), false)
+    end)
+    |> Enum.map(&absolute_url(Xml.attr(&1, "href"), effective_base(&1, base)))
+  end
+
+  # Images embedded in XHTML content (type="xhtml") are parsed as elements.
+  defp embedded_images(nil, _base), do: []
+
+  defp embedded_images({name, attrs, children}, base) do
+    base = effective_base({name, attrs, children}, base)
+
+    own =
+      if (name == "img" or String.ends_with?(name, ":img")) and
+           not tracking_pixel?(attrs["width"], attrs["height"]) do
+        [absolute_url(Map.get(attrs, "src"), base)]
+      else
+        []
+      end
+
+    own ++ Enum.flat_map(Enum.filter(children, &is_tuple/1), &embedded_images(&1, base))
+  end
+
+  defp xhtml_text(nil), do: ""
+
+  defp xhtml_text({name, _attrs, children}) do
+    if excluded_element?(name) do
+      ""
+    else
+      Enum.map_join(children, "", fn
+        {name, _attrs, _children} = element ->
+          text = xhtml_text(element)
+          if block_element?(name), do: " " <> text <> " ", else: text
+
+        text when is_binary(text) ->
+          text
+      end)
+    end
+  end
+
+  defp excluded_element?(name) do
+    name
+    |> String.split(":")
+    |> List.last()
+    |> then(&(&1 in ~w(iframe noscript script style template)))
+  end
+
+  defp block_element?(name) do
+    name
+    |> String.split(":")
+    |> List.last()
+    |> then(&(&1 in ~w(address article aside blockquote br dd div dl dt figcaption figure footer
+                        h1 h2 h3 h4 h5 h6 header hr li main nav ol p pre section table tbody td
+                        tfoot th thead tr ul)))
+  end
+
+  defp tracking_pixel?(width, height), do: width in ["0", "1"] or height in ["0", "1"]
+
+  # --------------------------------------------------------------------------
+  # Media RSS (shared by RSS and Atom)
+  # --------------------------------------------------------------------------
+
+  defp media_images(element, base \\ nil) do
+    groups = Xml.children(element, "media:group")
+
+    contents =
+      Xml.children(element, "media:content") ++
+        Enum.flat_map(groups, &Xml.children(&1, "media:content"))
+
+    images =
+      contents
+      |> Enum.filter(fn content ->
+        image_reference?(
+          Xml.attr(content, "type"),
+          Xml.attr(content, "medium"),
+          Xml.attr(content, "url"),
+          true
+        )
+      end)
+      |> Enum.reject(&tracking_pixel?(Xml.attr(&1, "width"), Xml.attr(&1, "height")))
+      |> largest_first()
+
+    thumbnails =
+      ([element | groups] ++ contents)
+      |> Enum.flat_map(&Xml.children(&1, "media:thumbnail"))
+      |> Enum.reject(&tracking_pixel?(Xml.attr(&1, "width"), Xml.attr(&1, "height")))
+      |> largest_first()
+
+    Enum.map(images ++ thumbnails, fn image ->
+      url = Xml.attr(image, "url")
+      if is_binary(base), do: absolute_url(url, effective_base(image, base)) || url, else: url
+    end)
+  end
+
+  defp largest_first(elements) do
+    Enum.sort_by(elements, &(-dimension(Xml.attr(&1, "width"))))
+  end
+
+  defp dimension(nil), do: 0
+
+  defp dimension(value) do
+    case Integer.parse(value) do
+      {number, _} -> number
+      :error -> 0
+    end
+  end
+
+  # Decides whether a media reference points to an image. `lenient` treats
+  # references without type information as images unless the URL has a
+  # known non-image extension (Media RSS content often omits the type).
+  defp image_reference?(type, medium, url, lenient) do
+    type = String.downcase(type || "")
+    medium = String.downcase(medium || "")
+    extension = url_extension(url)
+
+    cond do
+      not present?(url) -> false
+      medium == "image" -> true
+      medium != "" -> false
+      String.starts_with?(type, "image/") -> true
+      type != "" -> false
+      extension in @image_extensions -> true
+      extension in @non_image_extensions -> false
+      true -> lenient
+    end
+  end
+
+  defp url_extension(nil), do: ""
+
+  defp url_extension(url) do
+    case URI.parse(url) do
+      %URI{path: path} when is_binary(path) -> path |> Path.extname() |> String.downcase()
+      _ -> ""
+    end
+  rescue
+    _ -> ""
+  end
+
+  # ==========================================================================
+  # JSON Feed
+  # ==========================================================================
+
+  defp parse_json_feed(document, ctx) do
+    with {:ok, %{"version" => version} = json} when is_binary(version) <- Jason.decode(document),
+         true <- String.contains?(version, "jsonfeed.org") do
+      feed_link = string(json["home_page_url"]) |> absolute_url(ctx.base_url)
+      title = json["title"] |> string() |> Html.to_text() |> Html.truncate(@title_max_length)
+      ctx = %{ctx | base_url: ctx.base_url || feed_link}
+
+      feed = %{
+        "feedTitle" => title,
+        "feedDescription" => Html.to_text(string(json["description"])),
+        "feedLink" => feed_link || "",
+        "feedImage" =>
+          Enum.find_value(
+            [string(json["icon"]), string(json["favicon"])],
+            &absolute_url(&1, ctx.base_url)
+          ),
+        "feedLanguage" => string(json["language"]),
+        "feedFormat" => "json"
+      }
+
+      ctx = Map.merge(ctx, %{feed_title: title, feed_author: json_author(json)})
+
+      json["items"]
+      |> List.wrap()
+      |> Enum.filter(&is_map/1)
+      |> Enum.map(&json_item(&1, ctx))
+      |> finalize(feed, ctx)
+    else
+      _ -> {:error, :unknown_feed_format}
+    end
+  end
+
+  defp json_item(item, ctx) do
+    link =
+      first_present([string(item["url"]), string(item["external_url"])])
+      |> absolute_url(ctx.base_url)
+
+    content = first_present([string(item["content_html"]), string(item["content_text"])]) || ""
+
+    attachments =
+      item["attachments"]
+      |> List.wrap()
+      |> Enum.filter(
+        &(is_map(&1) and image_reference?(string(&1["mime_type"]), nil, string(&1["url"]), false))
+      )
+      |> Enum.map(&string(&1["url"]))
+
+    %{
+      id: first_present([string(item["id"]), link]),
+      title: string(item["title"]),
+      raw_description: string(item["summary"]),
+      raw_content: content,
+      link: link,
+      image_candidates: [string(item["image"]), string(item["banner_image"])] ++ attachments,
+      html_sources: [string(item["content_html"])],
+      date: first_present([string(item["date_published"]), string(item["date_modified"])]),
+      author: first_present([json_author(item), ctx[:feed_author]]),
+      categories: item["tags"] |> List.wrap() |> Enum.map(&string/1),
+      source: ""
+    }
+    |> build_item(ctx)
+  end
+
+  defp json_author(map) do
+    authors = List.wrap(map["authors"]) ++ List.wrap(map["author"])
+
+    authors
+    |> Enum.filter(&is_map/1)
+    |> Enum.map(&string(&1["name"]))
+    |> Enum.find(&present?/1)
+  end
+
+  defp string(value) when is_binary(value), do: value
+  defp string(value) when is_integer(value) or is_float(value), do: to_string(value)
+  defp string(_), do: ""
+
+  # ==========================================================================
+  # Normalisation
+  # ==========================================================================
+
+  defp build_item(fields, ctx) do
+    title = fields.title |> Html.to_text() |> Html.truncate(@title_max_length)
+
+    description =
+      [fields.raw_description, fields.raw_content]
+      |> Enum.map(&Html.to_text/1)
+      |> Enum.find("", &present?/1)
+      |> then(fn text -> if text == title, do: "", else: text end)
+      |> Html.truncate(@description_max_length)
+
+    image =
+      (fields.image_candidates ++ Enum.flat_map(fields.html_sources, &Html.image_urls/1))
+      |> Enum.find_value(
+        "",
+        &absolute_url(&1, fields[:image_base] || fields.link || ctx.base_url)
+      )
+
+    {datetime, pub_date, pub_date_formatted} =
+      case DateParser.parse(fields.date) do
+        {:ok, datetime} ->
+          {datetime, DateTime.to_iso8601(datetime), DateParser.format(datetime)}
+
+        :error ->
+          raw = String.trim(fields.date || "")
+          {nil, raw, raw}
+      end
+
+    item = %{
+      "id" => fields.id || "",
+      "title" => title,
+      "description" => description,
+      "link" => fields.link || "",
+      "image" => image,
+      "imageUrl" => image,
+      "author" => clean_author(fields.author),
+      "categories" => clean_categories(fields.categories),
+      "source" =>
+        first_present([Html.to_text(fields.source), ctx[:feed_title]])
+        |> then(&Html.truncate(&1 || "", @source_max_length)),
+      "pubDate" => pub_date,
+      "pubDateFormatted" => pub_date_formatted
+    }
+
+    {item, datetime}
+  end
+
+  defp finalize(items, feed, ctx) do
+    items =
+      items
+      |> Enum.reject(fn {item, _} -> item["title"] == "" and item["description"] == "" end)
+      |> Enum.sort_by(fn
+        {_item, nil} -> {1, 0}
+        {_item, datetime} -> {0, -DateTime.to_unix(datetime)}
+      end)
+      |> deduplicate_items()
+      |> Enum.take(ctx.max_items)
+      |> Enum.map(fn {item, _datetime} -> item end)
+
+    {:ok, Map.put(feed, "items", items)}
+  end
+
+  defp deduplicate_items(items) do
+    {items, _seen} =
+      Enum.reduce(items, {[], MapSet.new()}, fn {item, _datetime} = entry, {kept, seen} ->
+        keys = dedupe_keys(item)
+
+        if Enum.any?(keys, &MapSet.member?(seen, &1)) do
+          {kept, seen}
+        else
+          {[entry | kept], Enum.reduce(keys, seen, &MapSet.put(&2, &1))}
+        end
+      end)
+
+    Enum.reverse(items)
+  end
+
+  defp dedupe_keys(item) do
+    keys =
+      [
+        if(present?(item["id"]), do: {:id, item["id"]}),
+        if(present?(item["link"]), do: {:link, item["link"]})
+      ]
+      |> Enum.reject(&is_nil/1)
+
+    if keys == [],
+      do: [{:content, item["title"], item["description"], item["pubDate"]}],
+      else: keys
+  end
+
+  defp clean_author(nil), do: ""
+
+  defp clean_author(author) do
+    text = Html.to_text(author)
+
+    cond do
+      match = Regex.run(~r/^\S+@\S+\s*\((.+)\)$/, text) -> match |> List.last() |> String.trim()
+      Regex.match?(~r/^\S+@\S+\.\S+$/, text) -> ""
+      true -> text
+    end
+  end
+
+  defp clean_categories(categories) do
+    categories
+    |> Enum.map(&Html.to_text/1)
+    |> Enum.filter(&present?/1)
+    |> Enum.uniq()
+    |> Enum.take(@max_categories)
+  end
+
+  # Resolves `url` against `base` and only accepts http(s) results.
+  defp absolute_url(url, base) when is_binary(url) do
+    url = url |> Html.decode_entities() |> String.trim()
+
+    resolved =
+      cond do
+        url == "" -> nil
+        Regex.match?(~r/^https?:\/\//i, url) -> url
+        is_binary(base) and base != "" -> SafeHttp.resolve(base, url)
+        true -> nil
+      end
+
+    with resolved when is_binary(resolved) <- resolved,
+         {:ok, _uri} <- SafeHttp.validate_url(resolved) do
+      resolved
+    else
+      _ -> nil
+    end
+  end
+
+  defp absolute_url(_url, _base), do: nil
+
+  defp effective_base(nil, base), do: base
+
+  defp effective_base(element, base) do
+    case Xml.attr(element, "xml:base") do
+      value when is_binary(value) and value != "" -> absolute_url(value, base) || base
+      _ -> base
+    end
+  end
+
+  defp first_present(values), do: Enum.find(values, &present?/1)
+
+  defp present?(value), do: is_binary(value) and String.trim(value) != ""
 end
