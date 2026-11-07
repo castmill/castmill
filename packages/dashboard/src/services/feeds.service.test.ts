@@ -103,6 +103,27 @@ describe('FeedsService', () => {
     expect(lastCall()[0]).toBe(`${base}/f1/tokens/t2`);
   });
 
+  it('lists and retries feed media', async () => {
+    (global.fetch as any).mockResolvedValueOnce(
+      reply({ data: [{ id: 'm1' }], storage: 10 })
+    );
+    expect(await FeedsService.media('org-1', 'f1')).toEqual({
+      data: [{ id: 'm1' }],
+      storage: 10,
+    });
+    expect(lastCall()[0]).toBe(`${base}/f1/media`);
+
+    (global.fetch as any).mockResolvedValueOnce(
+      reply({ data: { id: 'm1', status: 'pending' } })
+    );
+    expect(await FeedsService.retryMedia('org-1', 'f1', 'm1')).toEqual({
+      id: 'm1',
+      status: 'pending',
+    });
+    expect(lastCall()[0]).toBe(`${base}/f1/media/m1/retry`);
+    expect(lastCall()[1].method).toBe('POST');
+  });
+
   it('reports server errors', async () => {
     (global.fetch as any).mockResolvedValueOnce(
       reply({ error: 'quota_exceeded', message: 'Quota used up' }, 403)

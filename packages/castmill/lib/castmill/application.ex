@@ -46,6 +46,7 @@ defmodule Castmill.Application do
           # Give BullMQ workers a moment to fully initialize
           Process.sleep(5_000)
           Castmill.Workers.JobRecovery.recover_all()
+          Castmill.Workers.FeedMediaCleanup.ensure_scheduled()
         end)
       end
 
@@ -439,6 +440,12 @@ defmodule Castmill.Application do
 
         {:maintenance, "encryption_rotation"} ->
           Castmill.Workers.EncryptionRotation
+
+        {:maintenance, "feed_media_cleanup"} ->
+          Castmill.Workers.FeedMediaCleanup
+
+        {:feed_media, _} ->
+          Castmill.Workers.FeedMediaDownloader
 
         # Email queue
         {:email, _} ->

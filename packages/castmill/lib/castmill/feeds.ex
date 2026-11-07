@@ -14,7 +14,7 @@ defmodule Castmill.Feeds do
   import Ecto.Query
 
   alias Castmill.Repo
-  alias Castmill.Feeds.{Feed, FeedEntry, FeedToken}
+  alias Castmill.Feeds.{Feed, FeedEntry, FeedToken, Media}
   alias Castmill.Widgets.Schema
 
   @max_entry_bytes 64 * 1024
@@ -127,28 +127,41 @@ defmodule Castmill.Feeds do
   """
   def update_feed(%Feed{} = feed, attrs) do
     Repo.transaction(fn ->
-      changeset = Feed.changeset(lock(feed), attrs)
-      data_changed? = Enum.any?([:mode, :keep], &Map.has_key?(changeset.changes, &1))
+      current = lock(feed)
+      changeset = Feed.changeset(current, attrs)
+
+      data_changed? =
+        Enum.any?([:mode, :keep, :media_fields], &Map.has_key?(changeset.changes, &1))
 
       case Repo.update(changeset) do
         {:ok, updated} when data_changed? ->
           if updated.mode == "list", do: trim(updated)
-          {bump_version(updated), true}
+
+          # Originals come back at paths that are no longer copied.
+          updated = Media.restore(updated, Media.copy_paths(current) -- Media.copy_paths(updated))
+          {updated, actions} = Media.sync(updated)
+          {touch(updated), actions}
 
         {:ok, updated} ->
-          {updated, false}
+          {updated, nil}
 
         {:error, changeset} ->
           Repo.rollback(changeset)
       end
     end)
     |> case do
-      {:ok, {feed, changed?}} -> notify_if_changed({:ok, feed}, changed?)
-      error -> error
+      {:ok, {feed, nil}} -> {:ok, feed}
+      result -> feed_write_result(result)
     end
   end
 
-  def delete_feed(%Feed{} = feed), do: Repo.delete(feed)
+  @doc "Deletes a feed with its entries, tokens and media (files are removed right away)."
+  def delete_feed(%Feed{} = feed) do
+    with {:ok, deleted} <- Repo.delete(feed) do
+      Media.purge_orphans(deleted.organization_id)
+      {:ok, deleted}
+    end
+  end
 
   def change_feed(%Feed{} = feed, attrs \\ %{}), do: Feed.changeset(feed, attrs)
 
@@ -281,17 +294,10 @@ defmodule Castmill.Feeds do
         feed = lock(feed)
         stored = insert_entries(feed, normalized)
         trim(feed)
-        kept = kept_entries(stored)
-        {bump_version(feed), kept}
+        {feed, actions} = Media.sync(feed)
+        {touch(feed), kept_entries(stored), actions}
       end)
-      |> case do
-        {:ok, {feed, kept}} ->
-          notify(feed)
-          {:ok, %{entries: Enum.map(kept, &FeedEntry.to_map/1), version: feed.version}}
-
-        error ->
-          error
-      end
+      |> list_write_result()
     end
   end
 
@@ -315,18 +321,23 @@ defmodule Castmill.Feeds do
           feed = lock(feed)
           stored = insert_entries(feed, entries)
           trim(feed)
-          {bump_version(feed), kept_entries(stored)}
+          {feed, actions} = Media.sync(feed)
+          {touch(feed), kept_entries(stored), actions}
         end)
       end)
       |> case do
         {:ok, results} ->
-          Enum.each(results, fn {feed, _} -> notify(feed) end)
+          Enum.each(results, fn {feed, _, actions} ->
+            broadcast(feed)
+            Media.after_commit(actions)
+          end)
 
           {:ok,
-           Enum.map(results, fn {feed, kept} ->
+           Enum.map(results, fn {feed, kept, _} ->
              %{
                feed_id: feed.id,
                entries: Enum.map(kept, &FeedEntry.to_map/1),
+               media: Media.statuses(feed, Enum.map(kept, & &1.data)),
                version: feed.version
              }
            end)}
@@ -357,17 +368,29 @@ defmodule Castmill.Feeds do
     with :ok <- check_size(document, @max_document_bytes, :document_too_large),
          :ok <- document_schema(feed, document) do
       Repo.transaction(fn ->
-        feed = lock(feed)
+        feed =
+          feed
+          |> lock()
+          |> Ecto.Changeset.change(document: document)
+          |> Repo.update!()
 
-        feed
-        |> Ecto.Changeset.change(document: document)
-        |> Repo.update!()
-        |> bump_version()
+        {feed, actions} = Media.sync(feed)
+        {touch(feed), actions}
       end)
-      |> notify_if_changed(true)
       |> case do
-        {:ok, feed} -> {:ok, %{document: feed.document, version: feed.version}}
-        error -> error
+        {:ok, {feed, actions}} ->
+          broadcast(feed)
+          Media.after_commit(actions)
+
+          {:ok,
+           %{
+             document: feed.document,
+             media: Media.statuses(feed, [feed.document]),
+             version: feed.version
+           }}
+
+        error ->
+          error
       end
     end
   end
@@ -380,16 +403,10 @@ defmodule Castmill.Feeds do
         Repo.delete_all(from(e in FeedEntry, where: e.feed_id == ^feed.id))
         stored = insert_entries(feed, normalized)
         trim(feed)
-        {bump_version(feed), kept_entries(stored)}
+        {feed, actions} = Media.sync(feed)
+        {touch(feed), kept_entries(stored), actions}
       end)
-      |> case do
-        {:ok, {feed, kept}} ->
-          notify(feed)
-          {:ok, %{entries: Enum.map(kept, &FeedEntry.to_map/1), version: feed.version}}
-
-        error ->
-          error
-      end
+      |> list_write_result()
     end
   end
 
@@ -406,11 +423,15 @@ defmodule Castmill.Feeds do
         feed = lock(feed)
 
         case Repo.delete_all(from(e in FeedEntry, where: e.feed_id == ^feed.id and e.id == ^uuid)) do
-          {0, _} -> Repo.rollback(:not_found)
-          _ -> bump_version(feed)
+          {0, _} ->
+            Repo.rollback(:not_found)
+
+          _ ->
+            {feed, actions} = Media.sync(feed)
+            {touch(feed), actions}
         end
       end)
-      |> notify_if_changed(true)
+      |> feed_write_result()
     else
       :error -> {:error, :not_found}
     end
@@ -422,13 +443,38 @@ defmodule Castmill.Feeds do
       feed = lock(feed)
       Repo.delete_all(from(e in FeedEntry, where: e.feed_id == ^feed.id))
 
-      feed
-      |> Ecto.Changeset.change(document: nil)
-      |> Repo.update!()
-      |> bump_version()
+      {feed, actions} =
+        feed
+        |> Ecto.Changeset.change(document: nil)
+        |> Repo.update!()
+        |> Media.sync()
+
+      {touch(feed), actions}
     end)
-    |> notify_if_changed(true)
+    |> feed_write_result()
   end
+
+  defp list_write_result({:ok, {feed, kept, actions}}) do
+    broadcast(feed)
+    Media.after_commit(actions)
+
+    {:ok,
+     %{
+       entries: Enum.map(kept, &FeedEntry.to_map/1),
+       media: Media.statuses(feed, Enum.map(kept, & &1.data)),
+       version: feed.version
+     }}
+  end
+
+  defp list_write_result(error), do: error
+
+  defp feed_write_result({:ok, {feed, actions}}) do
+    broadcast(feed)
+    Media.after_commit(actions)
+    {:ok, feed}
+  end
+
+  defp feed_write_result(error), do: error
 
   defp check_batch(entries) do
     cond do
@@ -568,21 +614,17 @@ defmodule Castmill.Feeds do
     stored |> Enum.filter(&MapSet.member?(present, &1.id)) |> Enum.reverse()
   end
 
-  defp bump_version(%Feed{} = feed) do
+  @doc false
+  # Increments the data version; call with the feed row locked.
+  def touch(%Feed{} = feed) do
     feed
     |> Ecto.Changeset.change(version: feed.version + 1, data_updated_at: DateTime.utc_now())
     |> Repo.update!()
   end
 
-  defp notify_if_changed({:ok, %Feed{} = feed} = result, true) do
-    notify(feed)
-    result
-  end
-
-  defp notify_if_changed(result, _changed), do: result
-
+  @doc false
   # Dashboard previews showing this feed update immediately (see WidgetView).
-  defp notify(%Feed{} = feed) do
+  def broadcast(%Feed{} = feed) do
     Phoenix.PubSub.broadcast(
       Castmill.PubSub,
       "organization:#{feed.organization_id}",

@@ -134,6 +134,8 @@ const ALLOWED_IDENTICAL_KEYS = {
   'feeds.tokens.title': ['es', 'sv', 'de'],
   'feeds.mode': ['fr'],
   'feeds.modes.document': ['fr'],
+  // The SI unit symbol "s" is the same in these languages.
+  'feeds.media.seconds': ['es', 'sv', 'de', 'fr'],
 };
 
 class TranslationChecker {

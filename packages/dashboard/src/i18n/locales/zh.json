@@ -1753,7 +1753,8 @@
     "tabs": {
       "entries": "条目",
       "connect": "连接",
-      "settings": "设置"
+      "settings": "设置",
+      "media": "媒体"
     },
     "noEntries": "还没有条目。请发送测试条目或连接系统。",
     "noDocument": "还没有文档。",
@@ -1813,6 +1814,35 @@
       "save": "无法保存数据源：{{message}}",
       "quota": "您的组织已达到数据源数量上限。",
       "action": "操作失败：{{message}}"
+    },
+    "media": {
+      "help": "数据源中复制的媒体字段里的图片和视频会存储在 Castmill 中，即使原始链接过期，屏幕也能继续显示。",
+      "storage": "已存储：{{size}}",
+      "empty": "暂无媒体。",
+      "noFields": "此数据源不复制媒体。请在设置中添加媒体字段。",
+      "retry": "重试",
+      "retried": "正在重新复制媒体。",
+      "entries": "条目：{{count}}",
+      "seconds": "{{seconds}} 秒",
+      "status": {
+        "pending": "正在复制",
+        "ready": "已存储",
+        "failed": "失败"
+      },
+      "failures": {
+        "not_found": "未找到原始文件。",
+        "forbidden": "来源拒绝访问。",
+        "unauthorized": "来源需要身份验证。",
+        "too_large": "文件过大。",
+        "unsupported_type": "该文件不是受支持的图片或视频。",
+        "quota_exceeded": "组织的存储空间已满。",
+        "timeout": "来源未及时响应。",
+        "blocked_host": "该 URL 指向私有网络。",
+        "other": "无法复制该文件。"
+      },
+      "errors": {
+        "load": "无法加载数据源的媒体。"
+      }
     }
   }
 }

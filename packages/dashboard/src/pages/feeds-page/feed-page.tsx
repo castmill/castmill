@@ -16,6 +16,7 @@ import {
   FeedsService,
 } from '../../services/feeds.service';
 import { FeedConnect } from './feed-connect';
+import { FeedMedia } from './feed-media';
 import { FeedForm, FeedFormValues } from './feed-form';
 
 import styles from './feeds-page.module.scss';
@@ -375,6 +376,18 @@ const FeedPage: Component = () => {
                         organizationId={orgId()}
                         feed={current()}
                         canManage={canUpdate()}
+                      />
+                    </div>
+                  ),
+                },
+                {
+                  title: () => t('feeds.tabs.media'),
+                  content: () => (
+                    <div class={styles.tabPanel}>
+                      <FeedMedia
+                        organizationId={orgId()}
+                        feed={current()}
+                        canRetry={canUpdate()}
                       />
                     </div>
                   ),

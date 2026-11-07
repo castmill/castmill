@@ -29,6 +29,29 @@ export interface Feed {
 export interface FeedDetails extends Feed {
   used_by: { id: number; name: string; items: number }[];
   endpoints: { append: string; replace: string; read: string };
+  /** Bytes of copied media. */
+  media_storage?: number;
+}
+
+export type FeedMediaStatus = 'pending' | 'ready' | 'failed';
+
+/** A copy of an image or video referenced by a feed's entries. */
+export interface FeedMedia {
+  id: string;
+  status: FeedMediaStatus;
+  failure_reason?: string | null;
+  /** The stored copy, once ready. */
+  url?: string | null;
+  /** Only the original URL's host is exposed. */
+  original_host: string | null;
+  content_type?: string | null;
+  size?: number | null;
+  width?: number | null;
+  height?: number | null;
+  duration?: number | null;
+  entries: number;
+  inserted_at: string;
+  updated_at: string;
 }
 
 export interface FeedEntry {
@@ -188,6 +211,30 @@ export const FeedsService = {
     return request(feedsUrl(organizationId, `/${feedId}/entries`), {
       method: 'DELETE',
     });
+  },
+
+  /** The feed's copied media and the bytes they use. */
+  media(
+    organizationId: string,
+    feedId: string
+  ): Promise<{ data: FeedMedia[]; storage: number }> {
+    return request(feedsUrl(organizationId, `/${feedId}/media`), {
+      method: 'GET',
+    });
+  },
+
+  /** Queues a failed media for another download. */
+  async retryMedia(
+    organizationId: string,
+    feedId: string,
+    mediaId: string
+  ): Promise<{ id: string; status: FeedMediaStatus }> {
+    const result = await request<{
+      data: { id: string; status: FeedMediaStatus };
+    }>(feedsUrl(organizationId, `/${feedId}/media/${mediaId}/retry`), {
+      method: 'POST',
+    });
+    return result.data;
   },
 
   async tokens(organizationId: string, feedId: string): Promise<FeedToken[]> {

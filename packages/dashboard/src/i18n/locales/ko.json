@@ -1753,7 +1753,8 @@
     "tabs": {
       "entries": "항목",
       "connect": "연결",
-      "settings": "설정"
+      "settings": "설정",
+      "media": "미디어"
     },
     "noEntries": "아직 항목이 없습니다. 테스트 항목을 보내거나 시스템을 연결하세요.",
     "noDocument": "아직 문서가 없습니다.",
@@ -1813,6 +1814,35 @@
       "save": "피드를 저장할 수 없습니다: {{message}}",
       "quota": "조직이 피드 한도에 도달했습니다.",
       "action": "작업에 실패했습니다: {{message}}"
+    },
+    "media": {
+      "help": "피드의 복사된 미디어 필드에 있는 이미지와 동영상은 Castmill에 저장되므로 원본 링크가 만료된 후에도 화면에 계속 표시됩니다.",
+      "storage": "저장됨: {{size}}",
+      "empty": "아직 미디어가 없습니다.",
+      "noFields": "이 피드는 미디어를 복사하지 않습니다. 설정에서 미디어 필드를 추가하세요.",
+      "retry": "다시 시도",
+      "retried": "미디어를 다시 복사하는 중입니다.",
+      "entries": "항목: {{count}}",
+      "seconds": "{{seconds}}초",
+      "status": {
+        "pending": "복사 중",
+        "ready": "저장됨",
+        "failed": "실패"
+      },
+      "failures": {
+        "not_found": "원본 파일을 찾을 수 없습니다.",
+        "forbidden": "소스에서 액세스를 거부했습니다.",
+        "unauthorized": "소스에 인증이 필요합니다.",
+        "too_large": "파일이 너무 큽니다.",
+        "unsupported_type": "지원되는 이미지나 동영상이 아닙니다.",
+        "quota_exceeded": "조직의 저장 공간이 가득 찼습니다.",
+        "timeout": "소스가 제때 응답하지 않았습니다.",
+        "blocked_host": "URL이 사설 네트워크를 가리킵니다.",
+        "other": "파일을 복사할 수 없습니다."
+      },
+      "errors": {
+        "load": "피드의 미디어를 불러올 수 없습니다."
+      }
     }
   }
 }

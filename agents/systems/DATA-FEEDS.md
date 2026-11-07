@@ -1,10 +1,9 @@
 # Data Feeds
 
-> **Status: Implemented, except feed media and the legacy migration.**
-> Server: `Castmill.Feeds` (feeds, entries, tokens, widget data), `CastmillWeb.FeedApiController`
-> (`/api/v1/feeds`) and `CastmillWeb.FeedController` (dashboard API). Dashboard: `pages/feeds-page`.
-> Copying media on receipt ("Media in entries") waits for the hardened HTTP client of PR #502;
-> `media_fields` can already be configured. See "Implementation notes" at the end.
+> **Status: Implemented, except the legacy migration.**
+> Server: `Castmill.Feeds` (feeds, entries, tokens, widget data), `Castmill.Feeds.Media` (feed media),
+> `CastmillWeb.FeedApiController` (`/api/v1/feeds`) and `CastmillWeb.FeedController` (dashboard API).
+> Dashboard: `pages/feeds-page`. See "Implementation notes" at the end.
 
 ## Problem
 
@@ -166,8 +165,9 @@ feed's `media_fields`:
 | `content_hash` | SHA-256 of the downloaded file |
 | `storage_key`, `url` | Where the copy is stored in the organization's storage (R2), and its public URL |
 | `content_type`, `size`, `width`, `height`, `duration` | Metadata read from the file |
-| `status` | `pending`, `ready` or `failed` (with the reason) |
-| `entries` | The entries that reference it |
+| `status` | `pending`, `ready`, `failed` (with the reason) or `deleting` (unreferenced, file being removed) |
+
+Which entries use a media is not stored: it is computed from the entries' data when needed.
 
 - **Deduplication:** within a feed, the same original URL, or the same content, is stored **once** and
   shared by every entry that references it. A post that is re-sent or edited doesn't duplicate its photo.
@@ -186,10 +186,13 @@ feed's `media_fields`:
   kept in `<field>_original`. The feed's version changes, so screens pick it up.
 - **Hardened downloads:** downloads use the hardened HTTP client from the RSS fetcher (PR #502):
   - SSRF checks on every request and redirect;
-  - a size limit (e.g. 20 MB per file, configurable per network);
-  - only image and video content types, checked against the file's actual bytes, not only the header.
-- **Retries:** a failed download is retried a few times with backoff. If it still fails, the entry keeps
-  the original URL and the media is shown as `failed` in the dashboard.
+  - a size limit: 20 MB per file (`config :castmill, Castmill.Feeds.Media, max_file_bytes:`), or the
+    organization's `max_upload_size` quota if it is lower;
+  - only JPEG, PNG, GIF, WebP, MP4, MOV and WebM, detected from the file's bytes; a `Content-Type`
+    header that says otherwise (e.g. an HTML login page) is rejected too. SVG and HEIF are rejected.
+- **Retries:** timeouts, network and server errors (5xx, 429) and storage errors are retried (4 attempts,
+  exponential backoff from 30 seconds). Other errors (404, 403, wrong type, too large, quota) fail at
+  once. A failed media keeps the original URL in its entries, and can be retried from the dashboard.
 - **Per-field choice:** each path in `media_fields` is `copy` (default) or `link`, for sources whose URLs
   are permanent and shouldn't use quota.
 
@@ -253,8 +256,27 @@ For legacy widgets fed through `PUT /dev/medias/:ids/data` (the Länsförsäkrin
 - **Dashboard API** (`/dashboard/organizations/:org/feeds`): CRUD with entry and usage counts, `entries`,
   `test-entry`, entry deletion, `clear`, and tokens (`POST` returns the secret once; `DELETE` revokes).
 - **Usage** ("used by") counts playlist items whose options hold the feed's id as a top-level value.
-- **Pending:** feed media (copy on receipt, `feed_media` records, quota, cleanup) after PR #502 merges;
-  the legacy migration; team scoping; MCP tools for feeds (agents can already use the REST API).
+- **Feed media** (`Castmill.Feeds.Media`):
+  - After every write, `sync/1` runs with the feed row locked. It scans the entries (or the document)
+    at the `copy` paths, at most 20 URLs per entry, and reconciles the `feed_media` records: it creates
+    `pending` records, marks unreferenced ones `deleting`, and swaps stored URLs in
+    (`Castmill.Feeds.MediaPaths`). Originals always win when reading data, so data can be swapped and
+    restored repeatedly; turning a field to `link` restores its originals.
+  - Downloads run in the `feed_media` BullMQ queue (`Castmill.Workers.FeedMediaDownloader`) through
+    `Castmill.SafeHttp`. A finished download locks the feed again, swaps the URL in and increases the
+    version, so screens and previews update.
+  - Files are stored like other media (`:file_storage` local or S3) under
+    `<organization>/feeds/<feed>/<media>.<ext>`. Downloads with the same content share the first stored
+    file; a file is deleted when no record uses it.
+  - Purging happens right after the write; the daily `feed_media_cleanup` job (maintenance queue)
+    purges leftovers, media of deleted feeds (`feed_id` is nilified, not cascaded, so files can be
+    removed) and re-queues downloads pending for more than an hour.
+  - Stored bytes count in `Quotas.get_quota_used_for_organization(org, :storage)`.
+  - Write responses include `media: [{id, original_url, status}]` for the media of the returned data.
+    The dashboard API adds `GET /feeds/:id/media` (original host only, entry counts, total bytes) and
+    `POST /feeds/:id/media/:media_id/retry`; feed details include `media_storage`.
+- **Pending:** the legacy migration; team scoping; MCP tools for feeds (agents can already use the REST
+  API).
 
 ## Open questions
 

@@ -1765,7 +1765,8 @@
     "tabs": {
       "entries": "Entrées",
       "connect": "Connexion",
-      "settings": "Paramètres"
+      "settings": "Paramètres",
+      "media": "Médias"
     },
     "noEntries": "Aucune entrée pour l'instant. Envoyez une entrée de test ou connectez un système.",
     "noDocument": "Aucun document pour l'instant.",
@@ -1825,6 +1826,35 @@
       "save": "Impossible d'enregistrer le flux : {{message}}",
       "quota": "Votre organisation a atteint sa limite de flux.",
       "action": "L'action a échoué : {{message}}"
+    },
+    "media": {
+      "help": "Les images et vidéos des champs médias copiés du flux sont stockées dans Castmill, pour que les écrans continuent de les afficher après l'expiration des liens d'origine.",
+      "storage": "Stocké : {{size}}",
+      "empty": "Aucun média pour l'instant.",
+      "noFields": "Ce flux ne copie pas de médias. Ajoutez des champs médias dans Paramètres.",
+      "retry": "Réessayer",
+      "retried": "Nouvelle copie du média en cours.",
+      "entries": "Entrées : {{count}}",
+      "seconds": "{{seconds}} s",
+      "status": {
+        "pending": "Copie en cours",
+        "ready": "Stocké",
+        "failed": "Échec"
+      },
+      "failures": {
+        "not_found": "Le fichier d'origine est introuvable.",
+        "forbidden": "La source a refusé l'accès.",
+        "unauthorized": "La source exige une authentification.",
+        "too_large": "Le fichier est trop volumineux.",
+        "unsupported_type": "Le fichier n'est pas une image ou une vidéo prise en charge.",
+        "quota_exceeded": "Le stockage de l'organisation est plein.",
+        "timeout": "La source n'a pas répondu à temps.",
+        "blocked_host": "L'URL pointe vers un réseau privé.",
+        "other": "Le fichier n'a pas pu être copié."
+      },
+      "errors": {
+        "load": "Impossible de charger les médias du flux."
+      }
     }
   }
 }

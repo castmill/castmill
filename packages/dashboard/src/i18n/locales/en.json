@@ -1748,7 +1748,8 @@
     "tabs": {
       "entries": "Entries",
       "connect": "Connect",
-      "settings": "Settings"
+      "settings": "Settings",
+      "media": "Media"
     },
     "noEntries": "No entries yet. Send a test entry or connect a system.",
     "noDocument": "No document yet.",
@@ -1808,6 +1809,35 @@
       "save": "Couldn't save the feed: {{message}}",
       "quota": "Your organization has reached its feed limit.",
       "action": "The action failed: {{message}}"
+    },
+    "media": {
+      "help": "Images and videos at the feed's copied media fields are stored in Castmill, so screens keep showing them after the original links expire.",
+      "storage": "Stored: {{size}}",
+      "empty": "No media yet.",
+      "noFields": "This feed doesn't copy media. Add media fields in Settings.",
+      "retry": "Retry",
+      "retried": "Copying the media again.",
+      "entries": "Entries: {{count}}",
+      "seconds": "{{seconds}} s",
+      "status": {
+        "pending": "Copying",
+        "ready": "Stored",
+        "failed": "Failed"
+      },
+      "failures": {
+        "not_found": "The original file was not found.",
+        "forbidden": "The source denied access.",
+        "unauthorized": "The source requires authentication.",
+        "too_large": "The file is too large.",
+        "unsupported_type": "The file is not a supported image or video.",
+        "quota_exceeded": "The organization's storage is full.",
+        "timeout": "The source didn't answer in time.",
+        "blocked_host": "The URL points to a private network.",
+        "other": "The file couldn't be copied."
+      },
+      "errors": {
+        "load": "Couldn't load the feed's media."
+      }
     }
   }
 }

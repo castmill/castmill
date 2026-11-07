@@ -137,6 +137,50 @@ defmodule CastmillWeb.FeedControllerTest do
            |> json_response(404)
   end
 
+  test "lists feed media and retries failed copies", %{conn: conn, organization: organization} do
+    Castmill.SafeHttp.FakeClient.install()
+    Castmill.Feeds.MediaStorage.Fake.install()
+    Castmill.Quotas.add_quota_to_organization(organization.id, :storage, 10)
+    url = "https://cdn.example.com/photo.jpg"
+    Castmill.SafeHttp.FakeClient.stub(url, {:ok, %{status_code: 404, headers: [], body: ""}})
+
+    {:ok, feed} =
+      Feeds.create_feed(organization.id, %{name: "Posts", media_fields: [%{"path" => "image"}]})
+
+    ExUnit.CaptureLog.capture_log(fn ->
+      {:ok, _} = Feeds.append_entries(feed, [%{"image" => url}])
+    end)
+
+    conn = authenticate(conn, organization, :editor)
+
+    assert %{"data" => [media], "storage" => 0} =
+             conn |> get(feeds_path(organization, "/#{feed.id}/media")) |> json_response(200)
+
+    assert media["status"] == "failed"
+    assert media["failure_reason"] == "not_found"
+    assert media["original_host"] == "cdn.example.com"
+    assert media["entries"] == 1
+    refute Map.has_key?(media, "original_url")
+
+    Castmill.SafeHttp.FakeClient.stub(
+      url,
+      Castmill.SafeHttp.FakeClient.ok(<<0xFF, 0xD8, 0xFF, 0xE0, 1, 2>>, [])
+    )
+
+    # Downloads run inline in tests.
+    assert %{"data" => %{"status" => "ready"}} =
+             conn
+             |> post(feeds_path(organization, "/#{feed.id}/media/#{media["id"]}/retry"))
+             |> json_response(200)
+
+    assert %{"data" => %{"media_storage" => 6}} =
+             conn |> get(feeds_path(organization, "/#{feed.id}")) |> json_response(200)
+
+    assert conn
+           |> post(feeds_path(organization, "/#{feed.id}/media/#{media["id"]}/retry"))
+           |> json_response(404)
+  end
+
   test "checks roles and organizations", %{conn: conn, organization: organization} do
     {:ok, feed} = Feeds.create_feed(organization.id, %{name: "Posts"})
     guest = authenticate(conn, organization, :guest)

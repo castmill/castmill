@@ -90,7 +90,8 @@ Castmill.Quotas.has_organization_enough_quota?(organization_id, resource, amount
 # Check if network has enough quota
 Castmill.Quotas.has_network_enough_quota?(network_id, resource, amount)
 
-# Get current usage for a resource (count for most resources, bytes for :storage)
+# Get current usage for a resource (count for most resources, bytes for :storage;
+# storage includes media files and copied data feed media)
 Castmill.Quotas.get_quota_used_for_organization(organization_id, schema_module)
 Castmill.Quotas.get_quota_used_for_organization(organization_id, :storage)
 ```

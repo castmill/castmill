@@ -7,6 +7,7 @@ defmodule CastmillWeb.FeedController do
   use CastmillWeb.AccessActorBehaviour
 
   alias Castmill.{Feeds, Organizations}
+  alias Castmill.Feeds.Media
   alias Castmill.Plug.AuthorizeDash
 
   action_fallback(CastmillWeb.FallbackController)
@@ -22,6 +23,8 @@ defmodule CastmillWeb.FeedController do
     test_entry: :update,
     delete_entry: :update,
     clear: :update,
+    media: :show,
+    retry_media: :update,
     tokens: :update,
     create_token: :update,
     revoke_token: :update,
@@ -140,6 +143,23 @@ defmodule CastmillWeb.FeedController do
     end
   end
 
+  def media(conn, %{"organization_id" => organization_id, "id" => id}) do
+    with {:ok, feed} <- fetch_feed(organization_id, id) do
+      json(conn, %{data: Media.list_media(feed), storage: Media.feed_storage(feed.id)})
+    end
+  end
+
+  def retry_media(conn, %{
+        "organization_id" => organization_id,
+        "id" => id,
+        "media_id" => media_id
+      }) do
+    with {:ok, feed} <- fetch_feed(organization_id, id),
+         {:ok, media} <- Media.retry(feed, media_id) do
+      json(conn, %{data: %{id: media.id, status: media.status}})
+    end
+  end
+
   def revoke_token(conn, %{
         "organization_id" => organization_id,
         "id" => id,
@@ -163,6 +183,7 @@ defmodule CastmillWeb.FeedController do
     |> Feeds.feed_summary(Feeds.count_entries(feed))
     |> Map.put("used_by", Feeds.used_by(organization_id, feed))
     |> Map.put("endpoints", endpoints(feed))
+    |> Map.put("media_storage", Media.feed_storage(feed.id))
   end
 
   defp endpoints(feed) do

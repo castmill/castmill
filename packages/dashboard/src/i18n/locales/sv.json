@@ -1748,7 +1748,8 @@
     "tabs": {
       "entries": "Poster",
       "connect": "Anslut",
-      "settings": "Inställningar"
+      "settings": "Inställningar",
+      "media": "Media"
     },
     "noEntries": "Inga poster ännu. Skicka en testpost eller anslut ett system.",
     "noDocument": "Inget dokument ännu.",
@@ -1808,6 +1809,35 @@
       "save": "Det gick inte att spara flödet: {{message}}",
       "quota": "Organisationen har nått sin gräns för flöden.",
       "action": "Åtgärden misslyckades: {{message}}"
+    },
+    "media": {
+      "help": "Bilder och videor i flödets kopierade mediefält lagras i Castmill, så att skärmarna fortsätter visa dem även när originallänkarna slutar gälla.",
+      "storage": "Lagrat: {{size}}",
+      "empty": "Inga media än.",
+      "noFields": "Det här flödet kopierar inga media. Lägg till mediefält under Inställningar.",
+      "retry": "Försök igen",
+      "retried": "Kopierar mediet igen.",
+      "entries": "Poster: {{count}}",
+      "seconds": "{{seconds}} s",
+      "status": {
+        "pending": "Kopierar",
+        "ready": "Lagrad",
+        "failed": "Misslyckades"
+      },
+      "failures": {
+        "not_found": "Originalfilen hittades inte.",
+        "forbidden": "Källan nekade åtkomst.",
+        "unauthorized": "Källan kräver inloggning.",
+        "too_large": "Filen är för stor.",
+        "unsupported_type": "Filen är inte en bild eller video som stöds.",
+        "quota_exceeded": "Organisationens lagring är full.",
+        "timeout": "Källan svarade inte i tid.",
+        "blocked_host": "URL:en pekar på ett privat nätverk.",
+        "other": "Filen kunde inte kopieras."
+      },
+      "errors": {
+        "load": "Det gick inte att läsa in flödets media."
+      }
     }
   }
 }

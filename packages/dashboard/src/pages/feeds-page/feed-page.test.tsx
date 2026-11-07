@@ -26,6 +26,8 @@ vi.mock('../../services/feeds.service', async (importOriginal) => {
       tokens: vi.fn(),
       createToken: vi.fn(),
       revokeToken: vi.fn(),
+      media: vi.fn(),
+      retryMedia: vi.fn(),
     },
   };
 });
@@ -440,6 +442,157 @@ describe('FeedPage', () => {
         expect(toastSpies.error).toHaveBeenCalledWith('The action failed: nope')
       );
     });
+  });
+});
+
+describe('Media tab', () => {
+  const ready = {
+    id: 'm1',
+    status: 'ready' as const,
+    url: 'https://cdn.example.com/org-1/feeds/feed-1/m1.jpg',
+    original_host: 'scontent.xx.fbcdn.net',
+    content_type: 'image/jpeg',
+    size: 2048,
+    width: 1200,
+    height: 800,
+    entries: 2,
+    inserted_at: '2026-01-01T10:00:00Z',
+    updated_at: '2026-01-01T10:00:00Z',
+  };
+  const failed = {
+    ...ready,
+    id: 'm2',
+    status: 'failed' as const,
+    url: null,
+    original_host: 'video.example.com',
+    content_type: null,
+    size: null,
+    width: null,
+    height: null,
+    failure_reason: 'not_found',
+  };
+  const video = {
+    ...ready,
+    id: 'm3',
+    original_host: 'videos.example.com',
+    url: 'https://cdn.example.com/m3.mp4',
+    content_type: 'video/mp4',
+    duration: 12.4,
+    width: null,
+    height: null,
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    allowed = ['list', 'show', 'create', 'update', 'delete'];
+    vi.mocked(FeedsService.get).mockResolvedValue(feed);
+    vi.mocked(FeedsService.data).mockResolvedValue({
+      data: { entries: [entry], updated_at: '2026-01-01T10:00:00Z' },
+      version: 3,
+    });
+    vi.mocked(FeedsService.media).mockResolvedValue({
+      data: [ready, failed, video],
+      storage: 2048,
+    });
+  });
+
+  it('lists copied media and retries failed ones', async () => {
+    renderPage();
+    await openTab('Media');
+
+    await waitFor(() =>
+      expect(screen.getByText('scontent.xx.fbcdn.net')).toBeTruthy()
+    );
+    expect(FeedsService.media).toHaveBeenCalledWith('org-1', 'feed-1');
+    expect(screen.getByTestId('feed-media-storage').textContent).toBe(
+      'Stored: 2 KB'
+    );
+    expect(screen.getByText(/1200 × 800/)).toBeTruthy();
+    expect(screen.getByText(/12 s/)).toBeTruthy();
+    expect(screen.getByText('The original file was not found.')).toBeTruthy();
+    expect(screen.getAllByText('Stored')).toHaveLength(2);
+    expect(screen.getByText('Failed')).toBeTruthy();
+    const image = document.querySelector('[data-testid="feed-media"] img');
+    expect(image?.getAttribute('src')).toBe(ready.url);
+
+    vi.mocked(FeedsService.retryMedia).mockResolvedValueOnce({
+      id: 'm2',
+      status: 'pending',
+    });
+    fireEvent.click(screen.getByText('Retry'));
+    await waitFor(() =>
+      expect(FeedsService.retryMedia).toHaveBeenCalledWith(
+        'org-1',
+        'feed-1',
+        'm2'
+      )
+    );
+    await waitFor(() =>
+      expect(toastSpies.success).toHaveBeenCalledWith(
+        'Copying the media again.'
+      )
+    );
+    expect(FeedsService.media).toHaveBeenCalledTimes(2);
+
+    vi.mocked(FeedsService.retryMedia).mockRejectedValueOnce(
+      new FeedsError('gone', 404)
+    );
+    fireEvent.click(screen.getByText('Retry'));
+    await waitFor(() =>
+      expect(toastSpies.error).toHaveBeenCalledWith('The action failed: gone')
+    );
+
+    fireEvent.click(screen.getByText('Refresh'));
+    await waitFor(() => expect(FeedsService.media).toHaveBeenCalledTimes(3));
+  });
+
+  it('explains unknown failures and empty lists', async () => {
+    vi.mocked(FeedsService.media).mockResolvedValueOnce({
+      data: [{ ...failed, failure_reason: 'weird' }],
+      storage: 0,
+    });
+    allowed = ['list', 'show'];
+    renderPage();
+    await openTab('Media');
+    await waitFor(() =>
+      expect(screen.getByText("The file couldn't be copied.")).toBeTruthy()
+    );
+    expect(screen.queryByText('Retry')).toBeNull();
+  });
+
+  it('says when a feed copies no media', async () => {
+    vi.mocked(FeedsService.get).mockResolvedValue({
+      ...feed,
+      media_fields: [{ path: 'image', mode: 'link' as const }],
+    });
+    vi.mocked(FeedsService.media).mockResolvedValue({ data: [], storage: 0 });
+    renderPage();
+    await openTab('Media');
+    await waitFor(() =>
+      expect(
+        screen.getByText(
+          "This feed doesn't copy media. Add media fields in Settings."
+        )
+      ).toBeTruthy()
+    );
+  });
+
+  it('says when no media were copied yet, and reports errors', async () => {
+    vi.mocked(FeedsService.media).mockResolvedValueOnce({
+      data: [],
+      storage: 0,
+    });
+    renderPage();
+    await openTab('Media');
+    await waitFor(() => expect(screen.getByText('No media yet.')).toBeTruthy());
+
+    vi.mocked(FeedsService.media).mockRejectedValueOnce(new Error('x'));
+    fireEvent.click(screen.getAllByText('Refresh').at(-1)!);
+    await waitFor(() =>
+      expect(toastSpies.error).toHaveBeenCalledWith(
+        "Couldn't load the feed's media."
+      )
+    );
   });
 });
 

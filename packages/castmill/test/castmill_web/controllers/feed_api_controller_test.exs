@@ -184,6 +184,26 @@ defmodule CastmillWeb.FeedApiControllerTest do
                |> json_response(200)
     end
 
+    test "lists the media of written entries", %{conn: conn, feed: feed, secret: secret} do
+      Castmill.SafeHttp.FakeClient.install()
+      Castmill.Feeds.MediaStorage.Fake.install()
+      {:ok, feed} = Feeds.update_feed(feed, %{media_fields: [%{"path" => "image"}]})
+      url = "https://cdn.example.com/photo.jpg"
+
+      log =
+        ExUnit.CaptureLog.capture_log(fn ->
+          send(
+            self(),
+            bearer(conn, secret)
+            |> post(feed_path(feed, "/entries"), %{"image" => url})
+            |> json_response(201)
+          )
+        end)
+
+      assert log =~ "cdn.example.com"
+      assert_received %{"media" => [%{"original_url" => ^url, "status" => "failed"}]}
+    end
+
     test "rate limits each token", %{conn: conn, feed: feed, secret: secret} do
       Application.put_env(:castmill, CastmillWeb.FeedApiController, token_limit_per_minute: 1)
       conn = bearer(conn, secret)

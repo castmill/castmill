@@ -1748,7 +1748,8 @@
     "tabs": {
       "entries": "Einträge",
       "connect": "Verbinden",
-      "settings": "Einstellungen"
+      "settings": "Einstellungen",
+      "media": "Medien"
     },
     "noEntries": "Noch keine Einträge. Senden Sie einen Testeintrag oder verbinden Sie ein System.",
     "noDocument": "Noch kein Dokument.",
@@ -1808,6 +1809,35 @@
       "save": "Der Feed konnte nicht gespeichert werden: {{message}}",
       "quota": "Ihre Organisation hat ihr Feed-Limit erreicht.",
       "action": "Die Aktion ist fehlgeschlagen: {{message}}"
+    },
+    "media": {
+      "help": "Bilder und Videos in den kopierten Medienfeldern des Feeds werden in Castmill gespeichert, damit Bildschirme sie auch nach Ablauf der Originallinks anzeigen.",
+      "storage": "Gespeichert: {{size}}",
+      "empty": "Noch keine Medien.",
+      "noFields": "Dieser Feed kopiert keine Medien. Füge Medienfelder in den Einstellungen hinzu.",
+      "retry": "Erneut versuchen",
+      "retried": "Das Medium wird erneut kopiert.",
+      "entries": "Einträge: {{count}}",
+      "seconds": "{{seconds}} s",
+      "status": {
+        "pending": "Wird kopiert",
+        "ready": "Gespeichert",
+        "failed": "Fehlgeschlagen"
+      },
+      "failures": {
+        "not_found": "Die Originaldatei wurde nicht gefunden.",
+        "forbidden": "Die Quelle hat den Zugriff verweigert.",
+        "unauthorized": "Die Quelle erfordert eine Anmeldung.",
+        "too_large": "Die Datei ist zu groß.",
+        "unsupported_type": "Die Datei ist kein unterstütztes Bild oder Video.",
+        "quota_exceeded": "Der Speicher der Organisation ist voll.",
+        "timeout": "Die Quelle hat nicht rechtzeitig geantwortet.",
+        "blocked_host": "Die URL verweist auf ein privates Netzwerk.",
+        "other": "Die Datei konnte nicht kopiert werden."
+      },
+      "errors": {
+        "load": "Die Medien des Feeds konnten nicht geladen werden."
+      }
     }
   }
 }

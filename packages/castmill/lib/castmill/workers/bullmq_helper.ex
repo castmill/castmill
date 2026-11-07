@@ -175,6 +175,8 @@ defmodule Castmill.Workers.BullMQHelper do
       Castmill.Workers.IntegrationDataCleanup -> "maintenance"
       Castmill.Workers.EncryptionRotation -> "maintenance"
       Castmill.Workers.EmailWorker -> "email"
+      Castmill.Workers.FeedMediaDownloader -> "feed_media"
+      Castmill.Workers.FeedMediaCleanup -> "maintenance"
       _ -> "default"
     end
   end
@@ -217,6 +219,8 @@ defmodule Castmill.Workers.BullMQHelper do
       {"maintenance", "integration_data_cleanup"} -> Castmill.Workers.IntegrationDataCleanup
       {"maintenance", "encryption_rotation"} -> Castmill.Workers.EncryptionRotation
       {"email", _} -> Castmill.Workers.EmailWorker
+      {"feed_media", _} -> Castmill.Workers.FeedMediaDownloader
+      {"maintenance", "feed_media_cleanup"} -> Castmill.Workers.FeedMediaCleanup
       _ -> raise "Unknown queue/job combination: queue=#{queue_str}, job_name=#{job_name}"
     end
   end
@@ -241,6 +245,9 @@ defmodule Castmill.Workers.BullMQHelper do
 
       {:job_id, job_id}, acc ->
         [{:job_id, job_id} | acc]
+
+      {:backoff, backoff}, acc ->
+        [{:backoff, backoff} | acc]
 
       {_key, _value}, acc ->
         # Skip unknown options (including :repeat - use upsert_scheduler for repeatable jobs)

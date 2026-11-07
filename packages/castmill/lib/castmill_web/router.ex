@@ -434,6 +434,13 @@ defmodule CastmillWeb.Router do
 
     get("/organizations/:organization_id/feeds/:id/tokens", FeedController, :tokens)
     post("/organizations/:organization_id/feeds/:id/tokens", FeedController, :create_token)
+    get("/organizations/:organization_id/feeds/:id/media", FeedController, :media)
+
+    post(
+      "/organizations/:organization_id/feeds/:id/media/:media_id/retry",
+      FeedController,
+      :retry_media
+    )
 
     delete(
       "/organizations/:organization_id/feeds/:id/tokens/:token_id",
