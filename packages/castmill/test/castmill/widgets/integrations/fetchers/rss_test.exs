@@ -436,6 +436,21 @@ defmodule Castmill.Widgets.Integrations.Fetchers.RssTest do
                Rss.parse(atom)
     end
 
+    test "resolves RSS Atom enclosure URLs against the feed URL" do
+      rss = """
+      <rss xmlns:atom="http://www.w3.org/2005/Atom">
+        <channel><title>News</title>
+          <item><title>Story</title>
+            <atom:link rel="enclosure" type="image/jpeg" href="/photo.jpg"/>
+          </item>
+        </channel>
+      </rss>
+      """
+
+      assert {:ok, %{"items" => [%{"image" => "https://example.com/photo.jpg"}]}} =
+               Rss.parse(rss, base_url: "https://example.com/news/feed.xml")
+    end
+
     test "preserves XHTML block boundaries and skips tracking images" do
       atom = """
       <feed xmlns="http://www.w3.org/2005/Atom">

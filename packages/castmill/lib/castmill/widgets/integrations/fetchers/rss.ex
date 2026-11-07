@@ -315,7 +315,7 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Rss do
       image_candidates:
         media_images(item) ++
           enclosure_images(item) ++
-          atom_enclosure_images(item) ++
+          atom_enclosure_images(item, effective_base(item, ctx.base_url)) ++
           [Xml.attr(Xml.child(item, "itunes:image"), "href"), item_image_element(item)],
       html_sources: [raw_content, raw_description],
       date:
