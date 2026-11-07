@@ -16,6 +16,28 @@ defmodule Castmill.Widgets.Integrations.Rss.HtmlTest do
     test "handles nil" do
       assert Html.decode_entities(nil) == ""
     end
+
+    test "decodes the full HTML5 entity set, including multi-code-point entities" do
+      assert Html.decode_entities("&bopf; &Afr; &rarrw; &NotEqualTilde; &fjlig; &ThickSpace;") ==
+               "𝕓 𝔄 ↝ ≂̸ fj \u205F\u200A"
+    end
+
+    test "does not decode references twice" do
+      assert Html.decode_entities("&amp;lt;b&amp;gt;") == "&lt;b&gt;"
+    end
+  end
+
+  describe "entity_codepoints/1" do
+    test "returns the code points of named references" do
+      assert Html.entity_codepoints("eacute") == [233]
+      assert Html.entity_codepoints("NotEqualTilde") == [8770, 824]
+    end
+
+    test "returns nil for unknown or numeric names" do
+      assert Html.entity_codepoints("bogus") == nil
+      assert Html.entity_codepoints("#38") == nil
+      assert Html.entity_codepoints("") == nil
+    end
   end
 
   describe "to_text/1" do
@@ -38,6 +60,37 @@ defmodule Castmill.Widgets.Integrations.Rss.HtmlTest do
 
     test "removes zero-width characters" do
       assert Html.to_text("A\u200Bb\uFEFFc") == "A bc"
+    end
+
+    test "removes non-rendered elements" do
+      html =
+        "<noscript>No JS</noscript><template><p>T</p></template>" <>
+          "<iframe>Frame</iframe><SCRIPT type='x'>var a = '<p>x</p>';</SCRIPT>Visible"
+
+      assert Html.to_text(html) == "Visible"
+    end
+
+    test "keeps quoted > characters inside attribute values" do
+      assert Html.to_text(~s(<a title="a > b" href='/x?y>z'>Link</a> text)) == "Link text"
+    end
+
+    test "tolerates malformed markup" do
+      assert Html.to_text("<div><p>Unclosed <b>bold</div>tail") == "Unclosed bold tail"
+      assert Html.to_text("Before<!-- unterminated comment") == "Before"
+      assert Html.to_text("5 < 6 and 7 > 3") == "5 < 6 and 7 > 3"
+    end
+
+    test "decodes HTML5 entities beyond the common set" do
+      assert Html.to_text("<p>&bopf; &NotEqualTilde; &fjlig;&period;</p>") == "𝕓 ≂̸ fj."
+    end
+
+    test "keeps unknown entities and does not over-decode plain text" do
+      assert Html.to_text("&bogus; &amp;amp;") == "&bogus; &amp;"
+    end
+
+    test "handles empty input and nil" do
+      assert Html.to_text("") == ""
+      assert Html.to_text(nil) == ""
     end
   end
 
@@ -87,6 +140,54 @@ defmodule Castmill.Widgets.Integrations.Rss.HtmlTest do
 
       assert Html.image_urls("&lt;img src=&quot;https://a.test/e.jpg&quot;&gt;") ==
                ["https://a.test/e.jpg"]
+    end
+
+    test "decodes escaped attribute values exactly once" do
+      html = "&lt;img src=&quot;https://a.test/e.jpg?a=1&amp;amp;b=2&quot;&gt;"
+
+      assert Html.image_urls(html) == ["https://a.test/e.jpg?a=1&b=2"]
+    end
+
+    test "skips images that are not rendered" do
+      html = """
+      <!-- <img src="https://a.test/comment.jpg"> -->
+      <script>document.write('<img src="https://a.test/script.jpg">')</script>
+      <noscript><img src="https://a.test/noscript.jpg"></noscript>
+      <template><img src="https://a.test/template.jpg"></template>
+      <img alt="a > b" src="https://a.test/visible.jpg">
+      """
+
+      assert Html.image_urls(html) == ["https://a.test/visible.jpg"]
+    end
+
+    test "uses the first occurrence of repeated attributes" do
+      assert Html.image_urls(~s(<IMG SRC="https://a.test/1.jpg" src="https://a.test/2.jpg">)) ==
+               ["https://a.test/1.jpg"]
+    end
+
+    test "skips zero-sized tracking images" do
+      assert Html.image_urls(~s(<img src="https://t.test/p.gif" width="0">)) == []
+    end
+
+    test "handles malformed markup and nil" do
+      assert Html.image_urls(~s(<p><img src="https://a.test/u.jpg")) == ["https://a.test/u.jpg"]
+      assert Html.image_urls(nil) == []
+    end
+  end
+
+  describe "tag_attributes/2" do
+    test "returns decoded attributes of matching elements in document order" do
+      html = """
+      <head>
+        <link rel="stylesheet" href="/style.css">
+        <LINK Title="News > Latest" rel="alternate" href="/feed?a=1&amp;b=2" href="/ignored">
+      </head>
+      """
+
+      assert Html.tag_attributes(html, "link") == [
+               %{"rel" => "stylesheet", "href" => "/style.css"},
+               %{"title" => "News > Latest", "rel" => "alternate", "href" => "/feed?a=1&b=2"}
+             ]
     end
   end
 end

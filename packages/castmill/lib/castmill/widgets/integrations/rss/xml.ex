@@ -303,9 +303,9 @@ defmodule Castmill.Widgets.Integrations.Rss.Xml do
   defp fix_reference(whole, name) when name in @xml_entities, do: whole
 
   defp fix_reference(_whole, name) do
-    case Html.entity_codepoint(name) do
+    case Html.entity_codepoints(name) do
       nil -> "&amp;#{name};"
-      codepoint -> "&##{codepoint};"
+      codepoints -> Enum.map_join(codepoints, &"&##{&1};")
     end
   end
 

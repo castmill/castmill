@@ -30,8 +30,8 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Rss do
   - Duplicate items (same id/link) are removed.
   - Safe by design: SSRF protection, redirect validation, size limits,
     decompression bomb protection and an XML parser that never loads DTDs,
-    expands entities or creates atoms. See `Castmill.Widgets.Integrations.Rss.Http`
-    and `Castmill.Widgets.Integrations.Rss.Xml`.
+    expands entities or creates atoms. See `Castmill.SafeHttp` and
+    `Castmill.Widgets.Integrations.Rss.Xml`.
 
   ## Options
 
@@ -73,7 +73,8 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Rss do
   """
   @behaviour Castmill.Widgets.Integrations.Fetcher
 
-  alias Castmill.Widgets.Integrations.Rss.{DateParser, Html, Http, Xml}
+  alias Castmill.SafeHttp
+  alias Castmill.Widgets.Integrations.Rss.{DateParser, Html, Xml}
 
   require Logger
 
@@ -148,7 +149,7 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Rss do
   # ==========================================================================
 
   defp fetch_feed(url, discover?) do
-    with {:ok, %{body: body, url: final_url}} <- Http.get(url) do
+    with {:ok, %{body: body, url: final_url}} <- SafeHttp.get(url) do
       case parse(body, base_url: final_url) do
         {:ok, feed} ->
           {:ok, feed}
@@ -190,9 +191,8 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Rss do
   end
 
   defp discover_feed_url(html, base_url) do
-    ~r/<link\b[^>]*>/i
-    |> Regex.scan(html)
-    |> Enum.map(fn [tag] -> Html.attributes(tag) end)
+    html
+    |> Html.tag_attributes("link")
     |> Enum.find(fn attrs ->
       rels = attrs |> Map.get("rel", "") |> String.downcase() |> String.split()
 
@@ -202,7 +202,7 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Rss do
     end)
     |> case do
       nil -> nil
-      attrs -> absolute_url(Html.decode_entities(attrs["href"]), base_url)
+      attrs -> absolute_url(attrs["href"], base_url)
     end
   end
 
@@ -851,12 +851,12 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Rss do
       cond do
         url == "" -> nil
         Regex.match?(~r/^https?:\/\//i, url) -> url
-        is_binary(base) and base != "" -> Http.resolve(base, url)
+        is_binary(base) and base != "" -> SafeHttp.resolve(base, url)
         true -> nil
       end
 
     with resolved when is_binary(resolved) <- resolved,
-         {:ok, _uri} <- Http.validate_url(resolved) do
+         {:ok, _uri} <- SafeHttp.validate_url(resolved) do
       resolved
     else
       _ -> nil

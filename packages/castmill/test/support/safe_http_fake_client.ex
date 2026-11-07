@@ -1,24 +1,25 @@
-defmodule Castmill.Widgets.Integrations.Rss.FakeHttpClient do
+defmodule Castmill.SafeHttp.FakeClient do
   @moduledoc false
-  # HTTPoison compatible fake used by the RSS fetcher tests. Responses are
-  # stored in the calling test process, so tests using it must not be async
-  # (the client is configured through the application environment).
+  # HTTPoison compatible fake used by `Castmill.SafeHttp` tests and its callers
+  # (e.g. the RSS fetcher). Responses are stored in the calling test process,
+  # so tests using it must not be async (the client is configured through the
+  # application environment).
 
-  alias Castmill.Widgets.Integrations.Rss.Http
+  alias Castmill.SafeHttp
 
   def install(config \\ []) do
-    previous = Application.get_env(:castmill, Http)
+    previous = Application.get_env(:castmill, SafeHttp)
 
     Application.put_env(
       :castmill,
-      Http,
+      SafeHttp,
       Keyword.merge([client: __MODULE__, allow_private_hosts: true], config)
     )
 
     ExUnit.Callbacks.on_exit(fn ->
       if previous,
-        do: Application.put_env(:castmill, Http, previous),
-        else: Application.delete_env(:castmill, Http)
+        do: Application.put_env(:castmill, SafeHttp, previous),
+        else: Application.delete_env(:castmill, SafeHttp)
     end)
 
     :ok
@@ -30,7 +31,7 @@ defmodule Castmill.Widgets.Integrations.Rss.FakeHttpClient do
     do: {:ok, %{status_code: 200, headers: headers, body: body}}
 
   def get(url, headers, options) do
-    send(self(), {:rss_http_get, url, headers, options})
+    send(self(), {:safe_http_get, url, headers, options})
 
     case Process.get({__MODULE__, url}) do
       nil ->
@@ -85,7 +86,7 @@ defmodule Castmill.Widgets.Integrations.Rss.FakeHttpClient do
 
   def cancel_request(ref) do
     Process.delete({__MODULE__, ref})
-    send(self(), {:rss_http_cancel, ref})
+    send(self(), {:safe_http_cancel, ref})
     :ok
   end
 

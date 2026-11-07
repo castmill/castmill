@@ -49,6 +49,14 @@ defmodule Castmill.Widgets.Integrations.Rss.XmlTest do
       assert Xml.text(root) == "Café — AT&T © &bogus;"
     end
 
+    test "expands HTML5 entities, including multi-code-point ones, in text and attributes" do
+      assert {:ok, root} =
+               Xml.parse(~s(<a title="&bopf;&fjlig;">&NotEqualTilde; &rarrw; &Afr;</a>))
+
+      assert Xml.text(root) == "≂̸ ↝ 𝔄"
+      assert Xml.attr(root, "title") == "𝕓fj"
+    end
+
     test "tolerates leading whitespace before the XML declaration" do
       assert {:ok, root} = Xml.parse("\n\n  <?xml version=\"1.0\"?><a>ok</a>")
       assert Xml.text(root) == "ok"

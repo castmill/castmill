@@ -1,8 +1,9 @@
-defmodule Castmill.Widgets.Integrations.Rss.Http do
+defmodule Castmill.SafeHttp do
   @moduledoc """
-  Hardened HTTP client used to download syndication feeds.
+  Hardened HTTP client for downloading user-supplied URLs (e.g. syndication
+  feeds fetched by the RSS widget integration).
 
-  Feed URLs are supplied by users, so every request is treated as untrusted:
+  URLs are supplied by users, so every request is treated as untrusted:
 
   - Only `http` and `https` URLs are accepted.
   - Hosts that resolve to loopback, private, link-local (including cloud
@@ -15,10 +16,10 @@ defmodule Castmill.Widgets.Integrations.Rss.Http do
 
   ## Configuration
 
-      config :castmill, Castmill.Widgets.Integrations.Rss.Http,
-        # Allow feeds hosted on private networks (e.g. in development)
+      config :castmill, Castmill.SafeHttp,
+        # Allow hosts on private networks (e.g. in development)
         allow_private_hosts: false,
-        # Maximum (decompressed) feed size in bytes
+        # Maximum (decompressed) body size in bytes
         max_body_bytes: 5_242_880,
         # HTTP client module implementing `get(url, headers, options)` with
         # HTTPoison-compatible return values

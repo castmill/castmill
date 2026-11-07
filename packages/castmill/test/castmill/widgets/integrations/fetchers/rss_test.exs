@@ -5,7 +5,7 @@ defmodule Castmill.Widgets.Integrations.Fetchers.RssTest do
   import ExUnit.CaptureLog
 
   alias Castmill.Widgets.Integrations.Fetchers.Rss
-  alias Castmill.Widgets.Integrations.Rss.FakeHttpClient
+  alias Castmill.SafeHttp.FakeClient
 
   @feed_url "https://news.example.com/feed.xml"
 
@@ -79,7 +79,7 @@ defmodule Castmill.Widgets.Integrations.Fetchers.RssTest do
   """
 
   setup do
-    FakeHttpClient.install()
+    FakeClient.install()
   end
 
   describe "fetch/2" do
@@ -101,7 +101,7 @@ defmodule Castmill.Widgets.Integrations.Fetchers.RssTest do
     end
 
     test "fetches and normalises an RSS 2.0 feed" do
-      FakeHttpClient.stub(@feed_url, FakeHttpClient.ok(@rss))
+      FakeClient.stub(@feed_url, FakeClient.ok(@rss))
       credentials = %{"unused" => true}
 
       assert {:ok, data, ^credentials} = Rss.fetch(credentials, %{"feed_url" => @feed_url})
@@ -157,7 +157,7 @@ defmodule Castmill.Widgets.Integrations.Fetchers.RssTest do
     end
 
     test "normalises feed URLs without a scheme and feed:// URLs" do
-      FakeHttpClient.stub(@feed_url, FakeHttpClient.ok(@rss))
+      FakeClient.stub(@feed_url, FakeClient.ok(@rss))
 
       assert {:ok, _data, _} = Rss.fetch(%{}, %{"feed_url" => " news.example.com/feed.xml "})
       assert {:ok, _data, _} = Rss.fetch(%{}, %{"feed_url" => "feed://news.example.com/feed.xml"})
@@ -174,15 +174,36 @@ defmodule Castmill.Widgets.Integrations.Fetchers.RssTest do
       </head><body>Hello</body></html>
       """
 
-      FakeHttpClient.stub(page, FakeHttpClient.ok(html, [{"Content-Type", "text/html"}]))
-      FakeHttpClient.stub(@feed_url, FakeHttpClient.ok(@rss))
+      FakeClient.stub(page, FakeClient.ok(html, [{"Content-Type", "text/html"}]))
+      FakeClient.stub(@feed_url, FakeClient.ok(@rss))
 
       assert {:ok, data, _} = Rss.fetch(%{}, %{"feed_url" => page})
       assert data["feedTitle"] == "Example & News"
     end
 
+    test "discovers feeds whose link attributes contain quoted > and entities" do
+      page = "https://news.example.com/"
+      feed = "https://news.example.com/feed.xml?format=rss&lang=en"
+
+      html = """
+      <!DOCTYPE html>
+      <html><head>
+        <!-- <link rel="alternate" type="application/rss+xml" href="/commented.xml"> -->
+        <link title="News > Latest" rel="alternate" type="application/rss+xml"
+              href="/feed.xml?format=rss&amp;lang=en" href="/ignored.xml">
+      </head><body>Hello</body></html>
+      """
+
+      FakeClient.stub(page, FakeClient.ok(html, [{"Content-Type", "text/html"}]))
+      FakeClient.stub(feed, FakeClient.ok(@rss))
+
+      assert {:ok, data, _} = Rss.fetch(%{}, %{"feed_url" => page})
+      assert data["feedTitle"] == "Example & News"
+      assert_received {:safe_http_get, ^feed, _headers, _options}
+    end
+
     test "returns unknown_feed_format for pages without feeds" do
-      FakeHttpClient.stub(@feed_url, FakeHttpClient.ok("<html><body>No feed</body></html>"))
+      FakeClient.stub(@feed_url, FakeClient.ok("<html><body>No feed</body></html>"))
 
       capture_log(fn ->
         assert {:error, :unknown_feed_format, %{}} = Rss.fetch(%{}, %{"feed_url" => @feed_url})
@@ -190,7 +211,7 @@ defmodule Castmill.Widgets.Integrations.Fetchers.RssTest do
     end
 
     test "propagates HTTP errors with credentials" do
-      FakeHttpClient.stub(
+      FakeClient.stub(
         @feed_url <> "?token=secret",
         {:ok, %{status_code: 404, headers: [], body: ""}}
       )
@@ -208,7 +229,7 @@ defmodule Castmill.Widgets.Integrations.Fetchers.RssTest do
     end
 
     test "rejects feeds hosted on private networks" do
-      FakeHttpClient.install(allow_private_hosts: false)
+      FakeClient.install(allow_private_hosts: false)
 
       capture_log(fn ->
         assert {:error, :blocked_host, %{}} =

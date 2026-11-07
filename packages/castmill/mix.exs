@@ -41,7 +41,7 @@ defmodule Castmill.MixProject do
       {:ffmpex, "~> 0.11.0"},
       {:file_type, "~> 0.1.0"},
       {:finch, "~> 0.13"},
-      {:floki, ">= 0.30.0", only: :test},
+      {:floki, "~> 0.37"},
       {:gettext, "~> 0.20"},
       {:hackney, "~> 1.9"},
       {:httpoison, "~> 2.0"},
