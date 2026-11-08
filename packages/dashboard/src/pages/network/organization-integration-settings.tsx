@@ -51,7 +51,7 @@ export const toSettings = (
       settings[name] = value === true;
     } else if (field.type === 'list') {
       settings[name] = String(value ?? '')
-        .split(/[\n,]/)
+        .split(/\r\n?|\n/)
         .map((item) => item.trim())
         .filter(Boolean);
     } else if (field.type === 'number') {
@@ -218,6 +218,7 @@ export const OrganizationIntegrationSettings: Component<
           <input
             id={id}
             type={field.type === 'number' ? 'number' : 'text'}
+            step={field.type === 'number' ? 'any' : undefined}
             class={styles['settings-input']}
             placeholder={field.placeholder}
             value={String(value() ?? '')}

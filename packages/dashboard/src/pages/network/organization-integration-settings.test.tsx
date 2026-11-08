@@ -91,10 +91,11 @@ describe('OrganizationIntegrationSettings', () => {
     ).toBeTruthy();
 
     fireEvent.input(agency, { target: { value: 'lff' } });
-    fireEvent.input(offices, { target: { value: 'M3, M4\n' } });
+    fireEvent.input(offices, { target: { value: 'M3\nM4\n' } });
     fireEvent.input(screen.getByLabelText('Limit'), {
-      target: { value: '5' },
+      target: { value: '2.5' },
     });
+    expect(screen.getByLabelText('Limit').getAttribute('step')).toBe('any');
     fireEvent.change(screen.getByLabelText('Enabled'), {
       target: { checked: true },
     });
@@ -102,7 +103,7 @@ describe('OrganizationIntegrationSettings', () => {
     vi.mocked(NetworkService.updateIntegrationSettings).mockResolvedValueOnce({
       agency: 'lff',
       office_ids: ['M3', 'M4'],
-      limit: 5,
+      limit: 2.5,
       enabled: true,
     });
     fireEvent.click(screen.getByText('Save'));
@@ -111,7 +112,7 @@ describe('OrganizationIntegrationSettings', () => {
       expect(NetworkService.updateIntegrationSettings).toHaveBeenCalledWith(
         'org-1',
         'property-listing',
-        { agency: 'lff', office_ids: ['M3', 'M4'], limit: 5, enabled: true }
+        { agency: 'lff', office_ids: ['M3', 'M4'], limit: 2.5, enabled: true }
       )
     );
     await waitFor(() =>
@@ -231,7 +232,7 @@ describe('integration settings helpers', () => {
     expect(
       toSettings(listing.schema, {
         agency: 'fb',
-        office_ids: 'a,\n b',
+        office_ids: 'a\n b',
         limit: 'ten',
         enabled: false,
       })
@@ -241,6 +242,14 @@ describe('integration settings helpers', () => {
       limit: 'ten',
       enabled: false,
     });
+
+    const commaValues = ['North, East', 'South'];
+    const commaForm = toFormValues({
+      ...listing,
+      settings: { ...listing.settings, office_ids: commaValues },
+    });
+    expect(commaForm.office_ids).toBe(commaValues.join('\n'));
+    expect(toSettings(listing.schema, commaForm).office_ids).toEqual(commaValues);
 
     expect(toSettings(listing.schema, {})).toEqual({
       agency: '',

@@ -342,14 +342,18 @@ defmodule Castmill.Widgets.Integrations do
         _ -> %{}
       end
 
-    merged =
+    credential_values =
       network_creds
       |> Map.merge(org_creds)
+      |> Map.delete("organization_settings")
+
+    merged =
+      credential_values
       |> put_organization_settings(organization_id, integration)
 
     cond do
-      merged != %{} -> {:ok, merged}
-      optional_or_none_auth?(integration) -> {:ok, %{}}
+      credential_values != %{} -> {:ok, merged}
+      optional_or_none_auth?(integration) -> {:ok, merged}
       true -> {:error, :no_credentials}
     end
   end

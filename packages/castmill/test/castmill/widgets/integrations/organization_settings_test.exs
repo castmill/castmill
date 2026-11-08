@@ -156,4 +156,41 @@ defmodule Castmill.Widgets.Integrations.OrganizationSettingsTest do
     assert OrganizationSettings.key_of(integration) == "property-listing"
     assert OrganizationSettings.key_of(%{integration | pull_config: %{}}) == nil
   end
+
+  test "organization credentials cannot provide or satisfy organization settings", %{
+    organization: org,
+    integration: integration
+  } do
+    required_integration = %{
+      integration
+      | pull_config: Map.put(integration.pull_config, "auth_type", "required")
+    }
+
+    {:ok, _} = OrganizationSettings.store(org.id, "property-listing", %{"agency" => "fb"})
+
+    assert Integrations.get_fetch_credentials(org.id, required_integration) ==
+             {:error, :no_credentials}
+
+    {:ok, _} =
+      Integrations.upsert_organization_credentials(org.id, integration.id, %{
+        "organization_settings" => %{"agency" => "injected"}
+      })
+
+    assert Integrations.get_fetch_credentials(org.id, required_integration) ==
+             {:error, :no_credentials}
+
+    {:ok, _} =
+      Integrations.upsert_organization_credentials(org.id, integration.id, %{
+        "api_key" => "secret",
+        "organization_settings" => %{"agency" => "injected"}
+      })
+
+    assert Integrations.get_fetch_credentials(org.id, required_integration) ==
+             {:ok, %{"api_key" => "secret", "organization_settings" => %{"agency" => "fb"}}}
+
+    :ok = OrganizationSettings.delete(org.id, "property-listing")
+
+    assert Integrations.get_fetch_credentials(org.id, required_integration) ==
+             {:ok, %{"api_key" => "secret"}}
+  end
 end
