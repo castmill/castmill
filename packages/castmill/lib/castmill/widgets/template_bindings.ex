@@ -59,19 +59,29 @@ defmodule Castmill.Widgets.TemplateBindings do
 
   # --- traversal --------------------------------------------------------------
 
-  defp walk(%{"fmt" => fmt} = map, path, acc) when map_size(map) == 1 do
-    if is_binary(fmt) do
-      case parse(fmt) do
-        :ok -> acc
-        {:error, message} -> error(acc, path, "invalid fmt #{inspect(fmt)}: #{message}")
+  defp walk(%{"fmt" => fmt} = map, path, acc) do
+    acc =
+      if is_binary(fmt) do
+        case parse(fmt) do
+          :ok -> acc
+          {:error, message} -> error(acc, path, "invalid fmt #{inspect(fmt)}: #{message}")
+        end
+      else
+        error(acc, path, "fmt must be a string")
       end
-    else
-      error(acc, path, "fmt must be a string")
-    end
+
+    map |> Map.delete("fmt") |> walk(path, acc)
   end
 
-  defp walk(%{"list" => list} = map, path, acc) when map_size(map) == 1 and is_map(list) do
-    walk_list(list, path ++ ["list"], acc)
+  defp walk(%{"list" => list} = map, path, acc) do
+    acc =
+      if is_map(list) do
+        walk_list(list, path ++ ["list"], acc)
+      else
+        error(acc, path ++ ["list"], "list must be an object")
+      end
+
+    map |> Map.delete("list") |> walk(path, acc)
   end
 
   defp walk(%{"first" => first} = map, path, acc) when map_size(map) == 1 do

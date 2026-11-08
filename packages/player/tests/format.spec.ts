@@ -101,8 +101,13 @@ describe('Template formatting', () => {
       expect(parseDate(date.getTime())!.getTime()).to.equal(date.getTime());
       for (const bad of [
         'tomorrow',
+        '2026-00-12',
         '2026-13-01',
+        '2026-02-30',
+        '2026-11-12T12:00:99',
         '2026-11-12T25:00',
+        '2026-11-12T12:00+01:99',
+        '2026-11-12T12:00+99:00',
         null,
         undefined,
         NaN,
@@ -111,6 +116,8 @@ describe('Template formatting', () => {
       ]) {
         expect(parseDate(bad), String(bad)).to.equal(undefined);
       }
+      expect(parseDate('2026-02-29')).to.equal(undefined);
+      expect(parseDate('2024-02-29')).not.to.equal(undefined);
     });
   });
 

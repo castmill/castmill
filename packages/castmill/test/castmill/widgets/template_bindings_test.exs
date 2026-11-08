@@ -119,6 +119,20 @@ defmodule Castmill.Widgets.TemplateBindingsTest do
                TemplateBindings.check(%{"first" => []})
     end
 
+    test "validates fmt bindings with additional keys" do
+      assert {[{_, message}], []} =
+               TemplateBindings.check(%{"fmt" => "{data.price | money}", "default" => "—"})
+
+      assert message =~ ~s(unknown formatter "money")
+    end
+
+    test "rejects list wrappers whose values are not objects" do
+      for malformed <- [[], "data.viewings", nil] do
+        assert {[{_, "list must be an object"}], []} =
+                 TemplateBindings.check(%{"list" => malformed})
+      end
+    end
+
     test "warns about plain strings that look like a format text" do
       template = %{
         "type" => "text",

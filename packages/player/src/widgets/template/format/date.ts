@@ -29,7 +29,7 @@ export function parseDate(value: unknown): Date | undefined {
   }
 
   const year = +match[1];
-  const month = +match[2] - 1;
+  const month = +match[2];
   const day = +match[3];
   const hours = match[4] ? +match[4] : 0;
   const minutes = match[5] ? +match[5] : 0;
@@ -37,7 +37,31 @@ export function parseDate(value: unknown): Date | undefined {
   const millis = match[7] ? +(match[7] + '00').slice(0, 3) : 0;
   const zone = match[8];
 
-  if (month > 11 || day < 1 || day > 31 || hours > 23 || minutes > 59) {
+  const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  const daysInMonth = [
+    31,
+    leapYear ? 29 : 28,
+    31,
+    30,
+    31,
+    30,
+    31,
+    31,
+    30,
+    31,
+    30,
+    31,
+  ];
+
+  if (
+    month < 1 ||
+    month > 12 ||
+    day < 1 ||
+    day > daysInMonth[month - 1] ||
+    hours > 23 ||
+    minutes > 59 ||
+    seconds > 59
+  ) {
     return undefined;
   }
 
@@ -47,14 +71,19 @@ export function parseDate(value: unknown): Date | undefined {
     if (zone !== 'Z') {
       const sign = zone.charAt(0) === '-' ? -1 : 1;
       const digits = zone.replace(/[^\d]/g, '');
-      offset = sign * (+digits.slice(0, 2) * 60 + +digits.slice(2, 4));
+      const offsetHours = +digits.slice(0, 2);
+      const offsetMinutes = +digits.slice(2, 4);
+      if (offsetHours > 23 || offsetMinutes > 59) {
+        return undefined;
+      }
+      offset = sign * (offsetHours * 60 + offsetMinutes);
     }
     date = new Date(
-      Date.UTC(year, month, day, hours, minutes, seconds, millis) -
+      Date.UTC(year, month - 1, day, hours, minutes, seconds, millis) -
         offset * 60000
     );
   } else {
-    date = new Date(year, month, day, hours, minutes, seconds, millis);
+    date = new Date(year, month - 1, day, hours, minutes, seconds, millis);
   }
 
   return isNaN(date.getTime()) ? undefined : date;

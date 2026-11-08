@@ -32,6 +32,7 @@ interface WidgetViewProps {
   options: OptionsDict;
   baseUrl?: string;
   socket?: Socket;
+  locale?: string;
   /**
    * When provided, the parent controls the integration data shown in the
    * preview (e.g. the widget config dialog fetches data based on the live,
@@ -317,6 +318,7 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
       name: 'widget-playlist', // Dummy name
       items: [dummyJsonPlaylistItem],
       status: 'live',
+      locale: props.locale,
     };
 
     const playlist = Playlist.fromJSON(jsonPlaylist, resourceManager);

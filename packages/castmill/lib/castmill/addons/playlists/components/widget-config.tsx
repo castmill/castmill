@@ -1043,6 +1043,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
           config={widgetConfig()}
           options={widgetOptions()}
           previewData={previewData()}
+          locale={locale()}
           baseUrl={props.baseUrl}
           socket={props.store.socket}
         />
