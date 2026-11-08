@@ -28,7 +28,6 @@ defmodule Castmill.Repo.Migrations.AddStockTickerWidget do
   import Ecto.Query
 
   alias Castmill.Repo
-  alias Castmill.Widgets.Integrations.WidgetIntegration
 
   def up do
     # Insert the Stock Ticker widget
@@ -98,11 +97,7 @@ defmodule Castmill.Repo.Migrations.AddStockTickerWidget do
       discriminator_key: "symbols"
     }
 
-    %WidgetIntegration{}
-    |> WidgetIntegration.changeset(integration_attrs)
-    |> Ecto.Changeset.put_change(:inserted_at, now)
-    |> Ecto.Changeset.put_change(:updated_at, now)
-    |> Repo.insert!()
+    insert_integration(integration_attrs, now_naive)
   end
 
   def down do
@@ -114,7 +109,7 @@ defmodule Castmill.Repo.Migrations.AddStockTickerWidget do
 
     if widget do
       # Delete integration first (foreign key constraint)
-      from(i in WidgetIntegration, where: i.widget_id == ^widget.id)
+      from(i in "widget_integrations", where: i.widget_id == ^widget.id)
       |> Repo.delete_all()
 
       # Delete the widget
@@ -520,5 +515,22 @@ defmodule Castmill.Repo.Migrations.AddStockTickerWidget do
         "default" => "closed"
       }
     }
+  end
+
+  # Schemaless, so later WidgetIntegration schema fields do not break this
+  # migration on databases that do not have those columns yet.
+  defp insert_integration(attrs, now, opts \\ []) do
+    defaults = %{
+      discriminator_type: "widget_config",
+      config_schema: %{},
+      credential_schema: %{},
+      pull_config: %{},
+      push_config: %{},
+      is_active: true,
+      inserted_at: now,
+      updated_at: now
+    }
+
+    Repo.insert_all("widget_integrations", [Map.merge(defaults, attrs)], opts)
   end
 end

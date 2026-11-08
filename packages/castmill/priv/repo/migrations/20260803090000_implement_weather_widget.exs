@@ -5,7 +5,6 @@ defmodule Castmill.Repo.Migrations.ImplementWeatherWidget do
 
   alias Castmill.Repo
   alias Castmill.Widgets.Widget
-  alias Castmill.Widgets.Integrations.WidgetIntegration
 
   @weather_option_translations %{
     "en" => %{
@@ -93,9 +92,9 @@ defmodule Castmill.Repo.Migrations.ImplementWeatherWidget do
       is_active: true
     }
 
-    %WidgetIntegration{}
-    |> WidgetIntegration.changeset(integration_attrs)
-    |> Repo.insert!(
+    now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+
+    insert_integration(integration_attrs, now,
       on_conflict:
         {:replace,
          [
@@ -128,7 +127,7 @@ defmodule Castmill.Repo.Migrations.ImplementWeatherWidget do
     weather = Repo.one(weather_query())
 
     if weather do
-      from(i in WidgetIntegration,
+      from(i in "widget_integrations",
         where: i.widget_id == ^weather.id and i.name == "open-meteo"
       )
       |> Repo.delete_all()
@@ -545,5 +544,22 @@ defmodule Castmill.Repo.Migrations.ImplementWeatherWidget do
       },
       "last_updated" => %{"type" => "number", "default" => 0}
     }
+  end
+
+  # Schemaless, so later WidgetIntegration schema fields do not break this
+  # migration on databases that do not have those columns yet.
+  defp insert_integration(attrs, now, opts \\ []) do
+    defaults = %{
+      discriminator_type: "widget_config",
+      config_schema: %{},
+      credential_schema: %{},
+      pull_config: %{},
+      push_config: %{},
+      is_active: true,
+      inserted_at: now,
+      updated_at: now
+    }
+
+    Repo.insert_all("widget_integrations", [Map.merge(defaults, attrs)], opts)
   end
 end
