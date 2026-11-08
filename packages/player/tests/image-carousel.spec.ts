@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, it } from 'mocha';
 // @ts-ignore jsdom is hoisted from other workspaces without type declarations.
 import { JSDOM } from 'jsdom';
 import { firstValueFrom } from 'rxjs';
+import { useFakeTimers } from 'sinon';
 
 import {
   ImageCarouselComponent,
@@ -73,6 +74,29 @@ describe('ImageCarousel', () => {
       expect(warnings[0]).to.contain('b');
       expect(warnings[1]).to.contain('c');
     });
+
+    it('falls back when a cache lookup never settles', async () => {
+      const clock = useFakeTimers();
+      try {
+        const resourceManager = {
+          getMedia: (url: string) =>
+            url === 'stalled'
+              ? new Promise<string>(() => {})
+              : Promise.resolve(`cached:${url}`),
+        };
+        const urlsPromise = silenceWarnings(() =>
+          resolveCarouselImageUrls(resourceManager as any, ['stalled', 'ready'])
+        );
+
+        await clock.tickAsync(5000);
+        const { result, warnings } = await urlsPromise;
+        expect(result).to.deep.equal(['stalled', 'cached:ready']);
+        expect(warnings).to.have.length(1);
+        expect(warnings[0]).to.contain('stalled');
+      } finally {
+        clock.restore();
+      }
+    });
   });
 
   describe('ImageCarouselComponent.resolveOptions', () => {
@@ -139,14 +163,16 @@ describe('ImageCarousel', () => {
       const delays: Record<string, number> = {
         'https://img/1': 15,
         'https://img/2': 0,
-        'https://img/3': 5,
+        'https://img/3(1).jpg': 5,
       };
       const resourceManager = {
         getMedia: (url: string) =>
           new Promise<string | void>((resolve) =>
             setTimeout(
               () =>
-                resolve(url === 'https://img/3' ? undefined : `blob:${url}`),
+                resolve(
+                  url === 'https://img/3(1).jpg' ? undefined : `blob:${url}`
+                ),
               delays[url]
             )
           ),
@@ -167,7 +193,7 @@ describe('ImageCarousel', () => {
         config: {
           options: {},
           data: {
-            images: ['https://img/1', 'https://img/2', 'https://img/3'],
+            images: ['https://img/1', 'https://img/2', 'https://img/3(1).jpg'],
           },
         } as any,
         globals: { target: 'poster' },
@@ -197,7 +223,9 @@ describe('ImageCarousel', () => {
 
       // The image that could not be cached plays from its original URL.
       await firstValueFrom(widget.seek(13000));
-      expect(images[2].style.backgroundImage).to.contain('https://img/3');
+      expect(images[2].style.backgroundImage).to.contain(
+        'url("https://img/3(1).jpg")'
+      );
       expect(images[2].style.backgroundImage).to.not.contain('blob:');
 
       // Halfway through the loop back to the first image both are visible.

@@ -17,6 +17,7 @@ export interface ImageCarouselComponentOptions {
 }
 
 const TRANSITION_SECONDS = 1;
+const MEDIA_CACHE_TIMEOUT_MS = 5000;
 
 /**
  * Tween vars for an image entering (start) and leaving (end) the carousel.
@@ -54,7 +55,7 @@ export function resolveCarouselImageUrls(
 ): Promise<string[]> {
   return Promise.all(
     urls.map((url) =>
-      resourceManager.getMedia(url).then(
+      getMediaWithTimeout(resourceManager, url).then(
         (cachedUrl) => cachedUrl || fallbackUrl(url),
         () => fallbackUrl(url)
       )
@@ -62,9 +63,42 @@ export function resolveCarouselImageUrls(
   );
 }
 
+function getMediaWithTimeout(
+  resourceManager: Pick<ResourceManager, 'getMedia'>,
+  url: string
+): Promise<string | void> {
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const timeout = setTimeout(() => {
+      settled = true;
+      resolve(undefined);
+    }, MEDIA_CACHE_TIMEOUT_MS);
+
+    Promise.resolve()
+      .then(() => resourceManager.getMedia(url))
+      .then(
+        (cachedUrl) => {
+          if (settled) return;
+          clearTimeout(timeout);
+          resolve(cachedUrl);
+        },
+        (error) => {
+          if (settled) return;
+          clearTimeout(timeout);
+          reject(error);
+        }
+      );
+  });
+}
+
 function fallbackUrl(url: string): string {
   console.warn(`Image ${url} not found in cached medias, using original URL`);
   return url;
+}
+
+function backgroundImageUrl(url: string): string {
+  const escapedUrl = url.replace(/["\\()]/g, (character) => `\\${character}`);
+  return `url("${escapedUrl}")`;
 }
 
 export class ImageCarouselComponent implements TemplateComponent {
@@ -180,7 +214,7 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
       timeline.set(
         images[0],
         {
-          backgroundImage: `url(${urls[0]})`,
+          backgroundImage: backgroundImageUrl(urls[0]),
         },
         '<'
       );
@@ -193,7 +227,7 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
         timeline.set(
           image,
           {
-            backgroundImage: `url(${urls[index]})`,
+            backgroundImage: backgroundImageUrl(urls[index]),
           },
           '<'
         );
@@ -215,7 +249,7 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
         let position = `>+=${props.opts.imageDuration}`;
         if (index === urls.length - 1) {
           timeline.set(images[0], {
-            backgroundImage: `url(${urls[0]})`,
+            backgroundImage: backgroundImageUrl(urls[0]),
           });
           timeline.from(
             images[0],
