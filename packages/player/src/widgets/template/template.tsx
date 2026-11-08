@@ -1,4 +1,4 @@
-import { Component, JSX } from 'solid-js';
+import { Component, JSX, onCleanup, onMount } from 'solid-js';
 import { ResourceManager } from '@castmill/cache';
 
 import { Item } from './item';
@@ -13,6 +13,7 @@ import { ImageCarouselComponent } from './image-carousel';
 import { LayoutComponent } from './layout';
 import { QRCodeComponent } from './qr-code';
 import { Timeline } from './timeline';
+import { observeElementResize } from './text-autofit';
 import { ComponentAnimation } from './animation';
 import { PlayerGlobals } from '../../interfaces/player-globals.interface';
 
@@ -114,6 +115,22 @@ export class TemplateComponent {
   }
 }
 
+/**
+ * Templates are designed in `em` of a base font size that follows the widget's
+ * rendered size, like legacy templates: 10px for a 1920×1080 widget, scaled by
+ * the smaller of the width and height ratios ("contain"), so a 1080×1920
+ * portrait widget gets 5.625px. A design then looks the same in any zone,
+ * region or preview.
+ */
+export const BASE_FONT = { width: 1920, height: 1080, size: 10 };
+
+/** The base font size in px for a widget of `width` × `height` px, or null. */
+export const baseFontSize = (width: number, height: number): number | null =>
+  width > 0 && height > 0
+    ? BASE_FONT.size *
+      Math.min(width / BASE_FONT.width, height / BASE_FONT.height)
+    : null;
+
 export const Template: Component<{
   name: string;
   root: TemplateComponentTypeUnion;
@@ -127,8 +144,39 @@ export const Template: Component<{
 
   onReady: () => void;
 }> = (props) => {
+  let rootRef: HTMLDivElement | undefined;
+  let stopObserving: (() => void) | undefined;
+  let retry: ReturnType<typeof setTimeout> | undefined;
+
+  const applyBaseFont = () => {
+    const size = rootRef
+      ? baseFontSize(rootRef.clientWidth, rootRef.clientHeight)
+      : null;
+    if (size !== null) rootRef!.style.fontSize = size + 'px';
+    return size !== null;
+  };
+
+  // Templates are often rendered before they are attached or shown, so keep
+  // measuring until the widget has a size; resizes are observed afterwards.
+  const applyWhenSized = (delay: number) => {
+    if (!applyBaseFont()) {
+      retry = setTimeout(() => applyWhenSized(500), delay);
+    }
+  };
+
+  onMount(() => {
+    applyWhenSized(0);
+    stopObserving = observeElementResize(rootRef!, applyBaseFont);
+  });
+
+  onCleanup(() => {
+    stopObserving?.();
+    clearTimeout(retry);
+  });
+
   return (
     <div
+      ref={rootRef}
       data-component="template"
       data-name={props.name}
       style={props.style || { width: '100%', height: '100%' }}

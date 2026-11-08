@@ -4,7 +4,7 @@ import { describe, it } from 'mocha';
 import { JSDOM } from 'jsdom';
 import { firstValueFrom } from 'rxjs';
 
-import { TemplateWidget, scaledFontSize } from '../dist/index.js';
+import { TemplateWidget, baseFontSize } from '../dist/index.js';
 
 const withDom = async (fn: (root: HTMLElement) => Promise<void>) => {
   const keys = [
@@ -213,21 +213,41 @@ describe('Group context, when and limit', () => {
     });
   });
 
-  it('computes scaled font sizes', () => {
-    expect(scaledFontSize({ height: 1080, size: 10 }, 960, 540)).to.equal(5);
-    expect(scaledFontSize({ width: 1920, size: 10 }, 960, 540)).to.equal(5);
-    // With both, the smaller ratio wins (the design fits); zero sizes are ignored.
-    expect(
-      scaledFontSize({ width: 1920, height: 1080, size: 10 }, 960, 1080)
-    ).to.equal(5);
-    expect(
-      scaledFontSize({ width: 1920, height: 1080, size: 10 }, 3840, 540)
-    ).to.equal(5);
-    expect(
-      scaledFontSize({ width: 1920, height: 1080, size: 10 }, 960, 0)
-    ).to.equal(5);
-    expect(scaledFontSize({ height: 1080, size: 10 }, 960, 0)).to.equal(null);
-    expect(scaledFontSize({ height: 1080, size: 0 }, 960, 540)).to.equal(null);
-    expect(scaledFontSize(undefined, 960, 540)).to.equal(null);
+  it('computes the base font size from the widget size', () => {
+    expect(baseFontSize(1920, 1080)).to.equal(10);
+    expect(baseFontSize(960, 540)).to.equal(5);
+    // The smaller ratio wins, so the design fits ("contain").
+    expect(baseFontSize(1080, 1920)).to.equal(5.625);
+    expect(baseFontSize(3840, 540)).to.equal(5);
+    expect(baseFontSize(960, 0)).to.equal(null);
+    expect(baseFontSize(0, 540)).to.equal(null);
+  });
+
+  it('sets the base font size on the template root', async () => {
+    await withDom(async (root) => {
+      await show(root, { type: 'group', name: 'root', components: [] }, {});
+      const el = root.querySelector(
+        '[data-component="template"]'
+      ) as HTMLElement;
+
+      // Not laid out yet (jsdom sizes are 0): no base until it has a size.
+      expect(el.style.fontSize).to.equal('');
+
+      const size = { width: 960, height: 540 };
+      Object.defineProperty(el, 'clientWidth', { get: () => size.width });
+      Object.defineProperty(el, 'clientHeight', { get: () => size.height });
+
+      // Measuring is retried every 500ms until the widget has a size.
+      await new Promise((resolve) => setTimeout(resolve, 1100));
+      expect(el.style.fontSize).to.equal('5px');
+
+      // Resizes are followed (jsdom has no ResizeObserver: window resize).
+      size.width = 1080;
+      size.height = 1920;
+      (globalThis as any).window.dispatchEvent(
+        new (globalThis as any).window.Event('resize')
+      );
+      expect(el.style.fontSize).to.equal('5.625px');
+    });
   });
 });

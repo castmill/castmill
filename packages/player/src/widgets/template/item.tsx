@@ -168,7 +168,6 @@ export const Item: Component<{
               props.context,
               props.globals
             )}
-            fontScale={(props.component as GroupComponent).opts?.fontScale}
             components={(props.component as GroupComponent).components}
             style={style}
             animations={(props.component as GroupComponent).animations}

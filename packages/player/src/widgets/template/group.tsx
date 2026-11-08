@@ -2,7 +2,6 @@ import { Component, For, JSX, createMemo, onCleanup, onMount } from 'solid-js';
 import { Item } from './item';
 import { TemplateConfig, resolveOption } from './binding';
 import { isVisible } from './visibility';
-import { observeElementResize } from './text-autofit';
 import {
   TemplateComponent,
   TemplateComponentType,
@@ -16,35 +15,7 @@ import { PlayerGlobals } from '../../interfaces/player-globals.interface';
 export interface GroupComponentOptions {
   /** Renders only the first `limit` visible children (see `when`). */
   limit?: number | Record<string, any>;
-  /**
-   * Scales the group's font size with its rendered size, so designs in `em`
-   * look the same at any size: `{ height: 1080, size: 10 }` gives 10px when the
-   * group is 1080px high. With `width` and `height`, the smaller ratio wins.
-   */
-  fontScale?: FontScale;
 }
-
-export interface FontScale {
-  width?: number;
-  height?: number;
-  size: number;
-}
-
-/**
- * The font size in px for a group of `width` × `height` px, or null. With both
- * a width and a height the smaller ratio wins, so the design fits ("contain").
- */
-export const scaledFontSize = (
-  scale: FontScale | undefined,
-  width: number,
-  height: number
-): number | null => {
-  if (!scale || !(scale.size > 0)) return null;
-  const ratios: number[] = [];
-  if (scale.height! > 0 && height > 0) ratios.push(height / scale.height!);
-  if (scale.width! > 0 && width > 0) ratios.push(width / scale.width!);
-  return ratios.length ? scale.size * Math.min.apply(Math, ratios) : null;
-};
 
 export class GroupComponent implements TemplateComponent {
   readonly type = TemplateComponentType.Group;
@@ -111,7 +82,6 @@ interface GroupProps extends BaseComponentProps {
   config: TemplateConfig;
   context: any;
   limit?: number;
-  fontScale?: FontScale;
   components: TemplateComponentTypeUnion[];
   globals: PlayerGlobals;
   resourceManager: ResourceManager;
@@ -147,41 +117,11 @@ export const Group: Component<GroupProps> = (props) => {
     }
   };
 
-  let stopScaling: (() => void) | undefined;
-  let retry: ReturnType<typeof setTimeout> | undefined;
-
   onCleanup(() => {
     cleanUpAnimations?.();
-    stopScaling?.();
-    clearTimeout(retry);
   });
 
-  // Like legacy templates, the base font size follows the group's size.
-  const applyFontScale = () => {
-    if (!groupRef) return false;
-    const size = scaledFontSize(
-      props.fontScale,
-      groupRef.clientWidth,
-      groupRef.clientHeight
-    );
-    if (size !== null) groupRef.style.fontSize = size + 'px';
-    return size !== null;
-  };
-
-  // Templates are often rendered before they are attached or shown, so keep
-  // measuring until the group has a size; resizes are observed afterwards.
-  const scaleWhenSized = (delay: number) => {
-    if (!applyFontScale()) {
-      retry = setTimeout(() => scaleWhenSized(500), delay);
-    }
-  };
-
   onMount(() => {
-    if (groupRef && props.fontScale) {
-      scaleWhenSized(0);
-      stopScaling = observeElementResize(groupRef, applyFontScale);
-    }
-
     if (groupRef && props.animations) {
       cleanUpAnimations = applyAnimations(
         props.timeline,

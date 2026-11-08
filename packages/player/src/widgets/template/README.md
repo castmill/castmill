@@ -196,11 +196,14 @@ value":
 }
 ```
 
-A group can scale its font size with its rendered size with `opts.fontScale`, so a design written in
-`em` looks the same in any player region or preview: `{ "height": 1080, "size": 10 }` sets the group's
-font size to 10px when it is 1080px high (5px at 540px), and follows resizes. Use `width` to scale with the
-width; with both (`{ "width": 1920, "height": 1080, "size": 10 }`) the smaller ratio wins, so the design
-always fits. Unlike `vmin`, this measures the widget, not the window.
+### Sizes: use `em`
+
+Every template widget gets a base font size that follows its rendered size: 10px for a
+1920×1080 widget, scaled by the smaller of the width and height ratios (a 960×540 zone gets
+5px, a 1080×1920 portrait widget 5.625px), and updated on resize. Size fonts, boxes, paddings
+and borders in `em` (or `%` of the parent) so a design looks the same in any player region,
+layout zone or dashboard preview. Avoid `px`, `rem` and viewport units (`vw`, `vh`, `vmin`):
+they don't follow the widget's size.
 
 ### Visibility: `filter` and `when`
 
