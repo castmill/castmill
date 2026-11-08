@@ -419,7 +419,26 @@
       "unblockTitle": "Unblock Organization",
       "unblockConfirmation": "Are you sure you want to unblock \"{{name}}\"? Users will be able to log in again.",
       "unblockSuccess": "Organization unblocked successfully",
-      "unblockError": "Failed to unblock organization"
+      "unblockError": "Failed to unblock organization",
+      "integrationSettings": {
+        "action": "Integration settings",
+        "title": "Integration settings – {{name}}",
+        "description": "Values that this network's widgets use for this organization, such as office IDs. Only network admins can change them.",
+        "empty": "No widget in this network uses organization settings.",
+        "listHelp": "One value per line.",
+        "remove": "Remove settings",
+        "saved": "Settings saved.",
+        "removed": "Settings removed.",
+        "invalid": "Check the highlighted fields.",
+        "loadError": "Couldn't load the integration settings.",
+        "saveError": "Couldn't save the settings: {{message}}",
+        "errors": {
+          "required": "Required.",
+          "invalid": "Invalid value.",
+          "too_long": "Too long.",
+          "too_many": "Too many values."
+        }
+      }
     },
     "users": {
       "listTitle": "All Users",

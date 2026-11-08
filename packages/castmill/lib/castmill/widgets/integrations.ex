@@ -342,7 +342,10 @@ defmodule Castmill.Widgets.Integrations do
         _ -> %{}
       end
 
-    merged = Map.merge(network_creds, org_creds)
+    merged =
+      network_creds
+      |> Map.merge(org_creds)
+      |> put_organization_settings(organization_id, integration)
 
     cond do
       merged != %{} -> {:ok, merged}
@@ -363,6 +366,19 @@ defmodule Castmill.Widgets.Integrations do
       creds
     else
       _ -> %{}
+    end
+  end
+
+  # Organization-level settings (e.g. office IDs) reach fetchers next to the
+  # credentials, so playlist items can never override them.
+  defp put_organization_settings(credentials, organization_id, integration) do
+    alias Castmill.Widgets.Integrations.OrganizationSettings
+
+    with key when is_binary(key) <- OrganizationSettings.key_of(integration),
+         %{} = settings <- OrganizationSettings.get(organization_id, key) do
+      Map.put(credentials, "organization_settings", settings)
+    else
+      _ -> credentials
     end
   end
 
