@@ -60,8 +60,26 @@ export function parseDate(value: unknown): Date | undefined {
   return isNaN(date.getTime()) ? undefined : date;
 }
 
-const TOKENS =
-  /\[([^\]]*)\]|YYYY|YY|MMMM|MMM|MM|M|DD|D|dddd|ddd|d|HH|H|hh|h|mm|m|A/g;
+const TOKENS = [
+  'YYYY',
+  'MMMM',
+  'dddd',
+  'MMM',
+  'ddd',
+  'YY',
+  'MM',
+  'DD',
+  'HH',
+  'hh',
+  'mm',
+  'M',
+  'D',
+  'd',
+  'H',
+  'h',
+  'm',
+  'A',
+];
 
 const pad = (value: number) => (value < 10 ? '0' : '') + value;
 
@@ -74,50 +92,95 @@ export function formatDate(
   pattern: string,
   locale: LocaleData
 ): string {
-  return pattern.replace(TOKENS, (token: string, literal?: string) => {
-    if (literal !== undefined) {
-      return literal;
+  const lastClosingBracket = pattern.lastIndexOf(']');
+  const hours = date.getHours();
+  const result: string[] = [];
+  let index = 0;
+
+  while (index < pattern.length) {
+    if (pattern.charAt(index) === '[' && index <= lastClosingBracket) {
+      const closingBracket = pattern.indexOf(']', index + 1);
+      if (closingBracket !== -1) {
+        result.push(pattern.slice(index + 1, closingBracket));
+        index = closingBracket + 1;
+        continue;
+      }
     }
-    const hours = date.getHours();
+
+    let token: string | undefined;
+    for (let i = 0; i < TOKENS.length; i++) {
+      const candidate = TOKENS[i];
+      if (pattern.substr(index, candidate.length) === candidate) {
+        token = candidate;
+        break;
+      }
+    }
+
+    if (!token) {
+      result.push(pattern.charAt(index));
+      index++;
+      continue;
+    }
+
     switch (token) {
       case 'YYYY':
-        return String(date.getFullYear());
+        result.push(String(date.getFullYear()));
+        break;
       case 'YY':
-        return String(date.getFullYear()).slice(-2);
+        result.push(String(date.getFullYear()).slice(-2));
+        break;
       case 'MMMM':
-        return locale.months[date.getMonth()];
+        result.push(locale.months[date.getMonth()]);
+        break;
       case 'MMM':
-        return locale.monthsShort[date.getMonth()];
+        result.push(locale.monthsShort[date.getMonth()]);
+        break;
       case 'MM':
-        return pad(date.getMonth() + 1);
+        result.push(pad(date.getMonth() + 1));
+        break;
       case 'M':
-        return String(date.getMonth() + 1);
+        result.push(String(date.getMonth() + 1));
+        break;
       case 'DD':
-        return pad(date.getDate());
+        result.push(pad(date.getDate()));
+        break;
       case 'D':
-        return String(date.getDate());
+        result.push(String(date.getDate()));
+        break;
       case 'dddd':
-        return locale.weekdays[date.getDay()];
+        result.push(locale.weekdays[date.getDay()]);
+        break;
       case 'ddd':
-        return locale.weekdaysShort[date.getDay()];
+        result.push(locale.weekdaysShort[date.getDay()]);
+        break;
       case 'd':
-        return String(date.getDay());
+        result.push(String(date.getDay()));
+        break;
       case 'HH':
-        return pad(hours);
+        result.push(pad(hours));
+        break;
       case 'H':
-        return String(hours);
+        result.push(String(hours));
+        break;
       case 'hh':
-        return pad(hours % 12 || 12);
+        result.push(pad(hours % 12 || 12));
+        break;
       case 'h':
-        return String(hours % 12 || 12);
+        result.push(String(hours % 12 || 12));
+        break;
       case 'mm':
-        return pad(date.getMinutes());
+        result.push(pad(date.getMinutes()));
+        break;
       case 'm':
-        return String(date.getMinutes());
+        result.push(String(date.getMinutes()));
+        break;
       case 'A':
-        return locale.meridiem[hours < 12 ? 0 : 1];
-      default:
-        return token;
+        result.push(locale.meridiem[hours < 12 ? 0 : 1]);
+        break;
     }
-  });
+
+    index += token.length;
+  }
+
+  return result.join('');
 }

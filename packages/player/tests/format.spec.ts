@@ -141,6 +141,14 @@ describe('Template formatting', () => {
       );
       expect(formatDate(date, 'dddd', localeData('ja'))).to.equal('金曜日');
     });
+
+    it('handles long unmatched brackets and still formats following tokens', () => {
+      const unmatchedBrackets = '['.repeat(10000);
+      expect(formatDate(date, unmatchedBrackets, localeData('en'))).to.equal(
+        unmatchedBrackets
+      );
+      expect(formatDate(date, '[YYYY', localeData('en'))).to.equal('[2026');
+    });
   });
 
   describe('formatNumber', () => {
