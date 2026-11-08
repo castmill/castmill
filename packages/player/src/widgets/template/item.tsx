@@ -2,7 +2,7 @@ import { Component, Switch, Match, Show } from 'solid-js';
 
 import { ResourceManager } from '@castmill/cache';
 
-import { Group, GroupComponent } from './group';
+import { Group, GroupComponent, resolveGroupContext } from './group';
 import { Image, ImageComponent } from './image';
 import {
   PaginatedList,
@@ -181,7 +181,12 @@ export const Item: Component<{
           <Group
             name={props.component.name}
             config={props.config}
-            context={props.context}
+            context={resolveGroupContext(
+              props.component as GroupComponent,
+              props.config,
+              props.context,
+              props.globals
+            )}
             components={(props.component as GroupComponent).components}
             style={style}
             animations={(props.component as GroupComponent).animations}

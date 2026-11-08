@@ -167,6 +167,20 @@ Iterates over data arrays to create repeated elements (menus, schedules, feeds).
 
 Container for organizing multiple components with shared styling.
 
+A group can set the context of its children with `context`, any binding. Its children then bind to
+that value with `$.` paths, the same way list items bind to their item. This lets one layout be
+rendered both on its own and as the item of a list:
+
+```json
+{
+  "type": "group",
+  "context": { "key": "data.listing" },
+  "components": [{ "type": "text", "opts": { "text": { "key": "$.address.street" } } }]
+}
+```
+
+The group's own `filter` and `$styles` are still resolved with the outer context.
+
 ### Text
 
 Displays text content with support for autofit sizing.

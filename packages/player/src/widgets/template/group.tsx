@@ -1,6 +1,6 @@
 import { Component, For, JSX, onCleanup, onMount } from 'solid-js';
 import { Item } from './item';
-import { TemplateConfig } from './binding';
+import { TemplateConfig, resolveOption } from './binding';
 import {
   TemplateComponent,
   TemplateComponentType,
@@ -58,6 +58,21 @@ export class GroupComponent implements TemplateComponent {
     );
   }
 }
+
+/**
+ * The context of a group's children. A group may declare `context` (any
+ * binding, e.g. `{ "key": "data.listing" }`) so its children bind to that
+ * value with `$.` paths; otherwise they keep the group's own context.
+ */
+export const resolveGroupContext = (
+  component: GroupComponent,
+  config: TemplateConfig,
+  context: any,
+  globals: PlayerGlobals
+) =>
+  component.context === undefined || component.context === null
+    ? context
+    : resolveOption(component.context, config, context, globals);
 
 interface GroupProps extends BaseComponentProps {
   config: TemplateConfig;
