@@ -9,7 +9,7 @@ defmodule Castmill.Feeds.MediaTest do
 
   alias Castmill.Feeds
   alias Castmill.Feeds.{Feed, FeedMedia, Media}
-  alias Castmill.Feeds.MediaStorage.Fake, as: Storage
+  alias Castmill.PublicStorage.Fake, as: Storage
   alias Castmill.Repo
   alias Castmill.SafeHttp.FakeClient
   alias Castmill.Workers.{FeedMediaCleanup, FeedMediaDownloader}
@@ -435,15 +435,15 @@ defmodule Castmill.Feeds.MediaTest do
       path = Path.join([Castmill.Workers.Helpers.static_dir(), "medias", key])
       on_exit(fn -> File.rm_rf!(Path.dirname(Path.dirname(Path.dirname(path)))) end)
 
-      Application.delete_env(:castmill, :feed_media_storage)
+      Application.delete_env(:castmill, :public_storage)
 
-      assert {:ok, url} = Castmill.Feeds.MediaStorage.put(key, "data", "image/png")
+      assert {:ok, url} = Castmill.PublicStorage.put(key, "data", "image/png")
       assert String.ends_with?(url, "/medias/" <> key)
       assert File.read!(path) == "data"
 
-      assert Castmill.Feeds.MediaStorage.delete(key) == :ok
+      assert Castmill.PublicStorage.delete(key) == :ok
       refute File.exists?(path)
-      assert Castmill.Feeds.MediaStorage.delete(key) == :ok
+      assert Castmill.PublicStorage.delete(key) == :ok
     end
   end
 
@@ -468,7 +468,7 @@ defmodule Castmill.Feeds.MediaTest do
         bucket: System.get_env("AWS_S3_BUCKET")
       }
 
-      Application.delete_env(:castmill, :feed_media_storage)
+      Application.delete_env(:castmill, :public_storage)
       Application.put_env(:castmill, :file_storage, :s3)
       Application.put_env(:ex_aws, :http_client, FakeAws)
 
@@ -497,16 +497,16 @@ defmodule Castmill.Feeds.MediaTest do
     test "puts and deletes objects in the media bucket" do
       key = "org/feeds/f/m.png"
 
-      assert {:ok, url} = Castmill.Feeds.MediaStorage.put(key, "data", "image/png")
+      assert {:ok, url} = Castmill.PublicStorage.put(key, "data", "image/png")
       assert url =~ "media-bucket/" <> key
       assert_received {:aws, :put, "/media-bucket/" <> ^key}
 
-      assert Castmill.Feeds.MediaStorage.delete(key) == :ok
+      assert Castmill.PublicStorage.delete(key) == :ok
       assert_received {:aws, :delete, "/media-bucket/" <> ^key}
 
       Process.put(:aws_status, 403)
-      assert {:error, _} = Castmill.Feeds.MediaStorage.put(key, "data", "image/png")
-      assert {:error, _} = Castmill.Feeds.MediaStorage.delete(key)
+      assert {:error, _} = Castmill.PublicStorage.put(key, "data", "image/png")
+      assert {:error, _} = Castmill.PublicStorage.delete(key)
     end
   end
 end

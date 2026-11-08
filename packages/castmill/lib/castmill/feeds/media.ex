@@ -22,7 +22,8 @@ defmodule Castmill.Feeds.Media do
   require Logger
 
   alias Castmill.Feeds
-  alias Castmill.Feeds.{Feed, FeedEntry, FeedMedia, MediaPaths, MediaStorage, MediaType}
+  alias Castmill.Feeds.{Feed, FeedEntry, FeedMedia, MediaPaths, MediaType}
+  alias Castmill.PublicStorage
   alias Castmill.{Quotas, Repo, SafeHttp}
   alias Castmill.Workers.FeedMediaDownloader
 
@@ -261,7 +262,7 @@ defmodule Castmill.Feeds.Media do
   end
 
   defp put(key, body, content_type) do
-    case MediaStorage.put(key, body, content_type) do
+    case PublicStorage.put(key, body, content_type) do
       {:ok, url} ->
         {:ok, url}
 
@@ -438,7 +439,7 @@ defmodule Castmill.Feeds.Media do
   end
 
   defp delete_file(key) do
-    case MediaStorage.delete(key) do
+    case PublicStorage.delete(key) do
       :ok -> :ok
       {:error, reason} -> Logger.error("[FeedMedia] Deleting #{key} failed: #{inspect(reason)}")
     end

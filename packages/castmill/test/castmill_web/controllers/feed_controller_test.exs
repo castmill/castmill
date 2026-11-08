@@ -139,7 +139,7 @@ defmodule CastmillWeb.FeedControllerTest do
 
   test "lists feed media and retries failed copies", %{conn: conn, organization: organization} do
     Castmill.SafeHttp.FakeClient.install()
-    Castmill.Feeds.MediaStorage.Fake.install()
+    Castmill.PublicStorage.Fake.install()
     Castmill.Quotas.add_quota_to_organization(organization.id, :storage, 10)
     url = "https://cdn.example.com/photo.jpg"
     Castmill.SafeHttp.FakeClient.stub(url, {:ok, %{status_code: 404, headers: [], body: ""}})

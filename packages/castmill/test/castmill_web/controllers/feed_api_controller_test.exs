@@ -186,7 +186,7 @@ defmodule CastmillWeb.FeedApiControllerTest do
 
     test "lists the media of written entries", %{conn: conn, feed: feed, secret: secret} do
       Castmill.SafeHttp.FakeClient.install()
-      Castmill.Feeds.MediaStorage.Fake.install()
+      Castmill.PublicStorage.Fake.install()
       {:ok, feed} = Feeds.update_feed(feed, %{media_fields: [%{"path" => "image"}]})
       url = "https://cdn.example.com/photo.jpg"
 

@@ -1,7 +1,10 @@
-defmodule Castmill.Feeds.MediaStorage do
+defmodule Castmill.PublicStorage do
   @moduledoc """
-  Stores feed media files where organization media are stored (`:file_storage`
-  is `:local` or `:s3`), so that their URLs resolve like other media.
+  Stores public files (copied feed media, bundled widget assets) where
+  organization media are stored (`:file_storage` is `:local` or `:s3`), so that
+  their URLs are absolute and resolve like other media.
+
+  Tests replace the implementation with `config :castmill, :public_storage`.
   """
 
   @callback put(String.t(), binary(), String.t()) :: {:ok, String.t()} | {:error, term()}
@@ -13,11 +16,11 @@ defmodule Castmill.Feeds.MediaStorage do
   @doc "Deletes the file stored under `key`. Missing files are not an error."
   def delete(key), do: impl().delete(key)
 
-  defp impl, do: Application.get_env(:castmill, :feed_media_storage, __MODULE__.Default)
+  defp impl, do: Application.get_env(:castmill, :public_storage, __MODULE__.Default)
 
   defmodule Default do
     @moduledoc false
-    @behaviour Castmill.Feeds.MediaStorage
+    @behaviour Castmill.PublicStorage
 
     alias Castmill.Workers.Helpers
 

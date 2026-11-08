@@ -1,18 +1,18 @@
-defmodule Castmill.Feeds.MediaStorage.Fake do
+defmodule Castmill.PublicStorage.Fake do
   @moduledoc false
-  # In-memory `Castmill.Feeds.MediaStorage` used by tests. Files are kept in the
+  # In-memory `Castmill.PublicStorage` used by tests. Files are kept in the
   # calling test process (downloads run inline in tests), so tests using it
   # must not be async.
-  @behaviour Castmill.Feeds.MediaStorage
+  @behaviour Castmill.PublicStorage
 
   def install do
-    previous = Application.get_env(:castmill, :feed_media_storage)
-    Application.put_env(:castmill, :feed_media_storage, __MODULE__)
+    previous = Application.get_env(:castmill, :public_storage)
+    Application.put_env(:castmill, :public_storage, __MODULE__)
 
     ExUnit.Callbacks.on_exit(fn ->
       if previous,
-        do: Application.put_env(:castmill, :feed_media_storage, previous),
-        else: Application.delete_env(:castmill, :feed_media_storage)
+        do: Application.put_env(:castmill, :public_storage, previous),
+        else: Application.delete_env(:castmill, :public_storage)
     end)
 
     :ok
