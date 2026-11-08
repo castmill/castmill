@@ -21,7 +21,7 @@ defmodule Castmill.Widgets.TemplateBindings do
     "default" => {1, 1}
   }
 
-  @list_keys ~w(key items where sort desc item limit join)
+  @list_keys ~w(key items where sort desc item skip limit join)
   @operators ~w(eq neq gt gte lt lte present)
 
   # A plain string that looks like a placeholder, e.g. "{data.price | number} kr":
@@ -143,6 +143,7 @@ defmodule Castmill.Widgets.TemplateBindings do
     acc
     |> check_type(list, "sort", path, &is_binary/1, "a key path")
     |> check_type(list, "desc", path, &is_boolean/1, "a boolean")
+    |> check_type(list, "skip", path, &(is_integer(&1) and &1 >= 0), "a non-negative integer")
     |> check_type(list, "limit", path, &(is_integer(&1) and &1 >= 0), "a non-negative integer")
     |> check_type(list, "join", path, &is_binary/1, "a string")
   end

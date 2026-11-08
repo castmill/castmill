@@ -139,7 +139,7 @@ export interface ListCondition {
 
 /**
  * List binding - builds a list from an array: where → sort → item → drop
- * empty results → limit → join.
+ * empty results → skip → limit → join.
  *
  * @example
  * ```json
@@ -155,6 +155,8 @@ export interface ListBinding {
     sort?: string;
     desc?: boolean;
     item?: any;
+    /** Leaves out the first `skip` results (e.g. photos already shown elsewhere). */
+    skip?: number;
     limit?: number;
     join?: string;
   };
@@ -608,6 +610,10 @@ export const resolveListBinding = (
           resolveOption(spec.item, config, element, globals)
         );
   results = results.filter((value) => !isEmptyValue(value));
+
+  if (typeof spec.skip === 'number' && spec.skip > 0) {
+    results = results.slice(spec.skip);
+  }
 
   if (typeof spec.limit === 'number' && spec.limit >= 0) {
     results = results.slice(0, spec.limit);

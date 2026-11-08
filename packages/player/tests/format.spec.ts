@@ -377,6 +377,25 @@ describe('Template formatting', () => {
       ]);
     });
 
+    it('skips the first results before the limit', () => {
+      const images = ['a', '', 'b', 'c', 'd'];
+      expect(
+        resolve({ list: { key: 'data.images', skip: 2 } }, { images })
+      ).to.deep.equal(['c', 'd']);
+      expect(
+        resolve({ list: { key: 'data.images', skip: 1, limit: 2 } }, { images })
+      ).to.deep.equal(['b', 'c']);
+      expect(
+        resolve({ list: { key: 'data.images', skip: 9 } }, { images })
+      ).to.deep.equal([]);
+      expect(
+        resolve(
+          { list: { key: 'data.images', skip: 0, join: ',' } },
+          { images }
+        )
+      ).to.equal('a,b,c,d');
+    });
+
     it('supports every condition operator', () => {
       const rows = [{ n: 1 }, { n: 2 }, { n: 3 }, { n: '2' }, {}];
       const ids = (condition: any) =>

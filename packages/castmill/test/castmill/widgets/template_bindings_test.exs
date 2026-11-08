@@ -58,6 +58,7 @@ defmodule Castmill.Widgets.TemplateBindingsTest do
                   "where" => [%{"key" => "$.end", "gte" => "@now", "lt" => 3}],
                   "item" => %{"first" => [%{"fmt" => "{$.start | date}"}]},
                   "limit" => -1,
+                  "skip" => "two",
                   "colour" => "red"
                 }
               }
@@ -75,6 +76,7 @@ defmodule Castmill.Widgets.TemplateBindingsTest do
       assert Enum.any?(messages, &(&1 =~ "takes exactly one of"))
       assert Enum.any?(messages, &(&1 =~ "first[0]: invalid fmt"))
       assert Enum.any?(messages, &(&1 =~ "limit must be a non-negative integer"))
+      assert Enum.any?(messages, &(&1 =~ "skip must be a non-negative integer"))
     end
 
     test "validates list sources and conditions" do

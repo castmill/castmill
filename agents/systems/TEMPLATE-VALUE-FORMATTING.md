@@ -52,7 +52,7 @@ work in every component option and in style values:
 | Binding | Purpose |
 |---|---|
 | `fmt` | A text with placeholders: `{path \| formatter \| …}` |
-| `list` | Build a list from an array: filter, sort, map, limit, join |
+| `list` | Build a list from an array: filter, sort, map, skip, limit, join |
 | `first` | The first non-empty of several values (fallbacks, overrides) |
 
 ```json
@@ -138,10 +138,11 @@ bundled with the player.
 | `where` | Conditions on each element; all must hold. Uses the `cond` operators (`eq`, `neq`, `gt`, `gte`, `lt`, `lte`) plus `present: true`. `@now` compares dates as instants. |
 | `sort` | Path to sort by, with optional `"desc": true`. |
 | `item` | Binding evaluated per element with `$` = the element. Default: the element itself. |
+| `skip` | Leaves out the first elements (after dropping empty results), e.g. the photos a layout already shows in fixed slots. |
 | `limit` | Maximum number of elements. |
 | `join` | If given, the result is a string; otherwise an array. Arrays can feed `paginated-list`, `image-carousel.images`, and so on. |
 
-**Order:** resolve `items` → `where` → `sort` → `item` → drop empty results → `limit` →
+**Order:** resolve `items` → `where` → `sort` → `item` → drop empty results → `skip` → `limit` →
 `join`. Because empty results are dropped *before* `limit`, a list of facts naturally
 shows "the first five facts that have a value". That is what the legacy templates did
 with `.filter(info => info.value).slice(0, 5)`.
