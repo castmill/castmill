@@ -105,10 +105,14 @@ defmodule Castmill.SafeHttp do
 
   defp collect_response(ref, state) do
     receive do
+      # With `async: :once` every message, including the status and the
+      # headers, must be followed by `stream_next/1` to get the next one.
       %{__struct__: HTTPoison.AsyncStatus, id: ^ref, code: status} ->
+        client().stream_next(%HTTPoison.AsyncResponse{id: ref})
         collect_response(ref, %{state | status: status})
 
       %{__struct__: HTTPoison.AsyncHeaders, id: ^ref, headers: headers} ->
+        client().stream_next(%HTTPoison.AsyncResponse{id: ref})
         collect_response(ref, %{state | headers: headers})
 
       %{__struct__: HTTPoison.AsyncChunk, id: ^ref, chunk: chunk} ->
