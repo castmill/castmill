@@ -236,7 +236,8 @@ defmodule Castmill.Resources do
             Castmill.Widgets.Integrations.Refresh.stored(
               integration,
               organization_id,
-              widget_options_for_filtering
+              widget_options_for_filtering,
+              item.widget_config.id
             )
 
           Castmill.Widgets.Integrations.Refresh.read(
@@ -244,7 +245,8 @@ defmodule Castmill.Resources do
             existing,
             organization_id,
             item.widget_config.widget.id,
-            widget_options_for_filtering
+            widget_options_for_filtering,
+            item.widget_config.id
           )
 
         nil ->
@@ -307,7 +309,8 @@ defmodule Castmill.Resources do
   # The widget's pull integration when it refreshes on demand, otherwise nil.
   defp on_demand_integration(widget_id) do
     case Castmill.Widgets.Integrations.list_integrations(widget_id: widget_id) do
-      [%{integration_type: "pull"} = integration | _] ->
+      [%{integration_type: integration_type} = integration | _]
+      when integration_type in ["pull", "both"] ->
         if Castmill.Widgets.Integrations.Refresh.on_demand?(integration), do: integration
 
       _ ->
@@ -538,7 +541,8 @@ defmodule Castmill.Resources do
     alias Castmill.Widgets.Integrations
 
     case Integrations.list_integrations(widget_id: widget_id) do
-      [%{integration_type: "pull"} = integration | _] ->
+      [%{integration_type: integration_type} = integration | _]
+      when integration_type in ["pull", "both"] ->
         if pollable_integration?(integration) and
              not Integrations.Refresh.on_demand?(integration) and
              refresh_due?(data, integration) do
@@ -1743,9 +1747,10 @@ defmodule Castmill.Resources do
     # Check if the media is being used as an organization logo
     org_using_logo =
       Repo.one(
-        from o in Organization,
+        from(o in Organization,
           where: o.logo_media_id == ^media.id,
           limit: 1
+        )
       )
 
     if org_using_logo do

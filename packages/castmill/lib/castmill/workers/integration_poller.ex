@@ -21,6 +21,7 @@ defmodule Castmill.Workers.IntegrationPoller do
 
   - `organization_id`: The organization owning the credentials
   - `widget_id`: The widget type ID
+  - `widget_config_id`: The widget configuration ID, when data is config-scoped
   - `integration_id`: The integration configuration ID
   - `discriminator_id`: Unique ID for shared data (e.g., "symbols:AAPL,GOOGL")
   - `widget_options`: Options from widget config needed for data fetching
@@ -61,11 +62,47 @@ defmodule Castmill.Workers.IntegrationPoller do
       "IntegrationPoller: Polling integration #{integration_id} for org #{organization_id}, discriminator: #{discriminator_id}"
     )
 
-    with {:ok, integration} <- get_integration(integration_id),
-         {:ok, credentials} <- get_credentials(organization_id, integration_id),
+    with {:ok, integration} <- get_integration(integration_id) do
+      if Refresh.on_demand?(integration) do
+        process_on_demand(
+          integration,
+          organization_id,
+          widget_id,
+          discriminator_id,
+          Map.get(args, "widget_config_id"),
+          widget_options
+        )
+      else
+        process_scheduled(
+          integration,
+          organization_id,
+          widget_id,
+          integration_id,
+          discriminator_id,
+          widget_options
+        )
+      end
+    else
+      {:error, :integration_not_found} ->
+        Logger.warning(
+          "IntegrationPoller: Integration #{integration_id} not found. Stopping polling."
+        )
+
+        :ok
+    end
+  end
+
+  defp process_scheduled(
+         integration,
+         organization_id,
+         widget_id,
+         integration_id,
+         discriminator_id,
+         widget_options
+       ) do
+    with {:ok, credentials} <- get_credentials(organization_id, integration_id),
          {:ok, data, _updated_credentials} <-
-           fetch_data(integration, credentials, widget_options)
-           |> record_on_demand_failure(integration, discriminator_id),
+           fetch_data(integration, credentials, widget_options),
          {:ok, _integration_data} <-
            Refresh.store(integration, organization_id, discriminator_id, data) do
       # Broadcast the update to connected clients
@@ -81,17 +118,6 @@ defmodule Castmill.Workers.IntegrationPoller do
 
         # Remove the repeatable job since credentials are gone
         cancel_polling(organization_id, integration_id)
-        :ok
-
-      {:error, :integration_not_found} ->
-        Logger.warning(
-          "IntegrationPoller: Integration #{integration_id} not found. Stopping polling."
-        )
-
-        :ok
-
-      {:error, :on_demand_refresh_failed} ->
-        # The failure was recorded and the next refresh backs off.
         :ok
 
       {:error, :missing_api_key} ->
@@ -115,6 +141,41 @@ defmodule Castmill.Workers.IntegrationPoller do
         )
 
         # Return error to trigger retry
+        {:error, reason}
+    end
+  end
+
+  defp process_on_demand(
+         integration,
+         organization_id,
+         widget_id,
+         discriminator_id,
+         widget_config_id,
+         widget_options
+       ) do
+    case Refresh.refresh_if_needed(
+           integration,
+           organization_id,
+           widget_options,
+           discriminator_id,
+           widget_config_id
+         ) do
+      {:ok, :refreshed, data} ->
+        Integrations.broadcast_widget_config_data_update(
+          organization_id,
+          to_string(widget_id),
+          integration.id,
+          data.data,
+          discriminator_id
+        )
+
+      {:ok, _status, _data} ->
+        :ok
+
+      {:error, :on_demand_refresh_failed} ->
+        :ok
+
+      {:error, reason} ->
         {:error, reason}
     end
   end
@@ -148,6 +209,7 @@ defmodule Castmill.Workers.IntegrationPoller do
       job_data = %{
         "organization_id" => normalize_param(params, :organization_id),
         "widget_id" => normalize_param(params, :widget_id),
+        "widget_config_id" => normalize_param(params, :widget_config_id),
         "integration_id" => normalize_param(params, :integration_id),
         "discriminator_id" => normalize_param(params, :discriminator_id),
         "widget_options" => normalize_param(params, :widget_options, %{})
@@ -212,14 +274,18 @@ defmodule Castmill.Workers.IntegrationPoller do
     job_data = %{
       "organization_id" => normalize_param(params, :organization_id),
       "widget_id" => normalize_param(params, :widget_id),
+      "widget_config_id" => normalize_param(params, :widget_config_id),
       "integration_id" => normalize_param(params, :integration_id),
       "discriminator_id" => normalize_param(params, :discriminator_id),
       "widget_options" => normalize_param(params, :widget_options, %{})
     }
 
     job_id =
-      "int_refresh_#{job_data["organization_id"]}_#{job_data["integration_id"]}_" <>
-        String.replace(job_data["discriminator_id"] || "", ":", "_")
+      refresh_job_id(
+        job_data["organization_id"],
+        job_data["integration_id"],
+        job_data["discriminator_id"]
+      )
 
     enqueue = fn ->
       try do
@@ -245,27 +311,14 @@ defmodule Castmill.Workers.IntegrationPoller do
     end
   end
 
-  # On-demand integrations keep their last good data and back off instead of
-  # retrying through BullMQ.
-  defp record_on_demand_failure(
-         {:error, reason, _credentials} = error,
-         integration,
-         discriminator_id
-       ),
-       do: on_demand_failure(error, reason, integration, discriminator_id)
+  @doc false
+  def refresh_job_id(organization_id, integration_id, discriminator_id) do
+    discriminator_hash =
+      :sha256
+      |> :crypto.hash(discriminator_id || "")
+      |> Base.encode16(case: :lower)
 
-  defp record_on_demand_failure({:error, reason} = error, integration, discriminator_id),
-    do: on_demand_failure(error, reason, integration, discriminator_id)
-
-  defp record_on_demand_failure(result, _integration, _discriminator_id), do: result
-
-  defp on_demand_failure(error, reason, integration, discriminator_id) do
-    if Refresh.on_demand?(integration) do
-      Refresh.record_failure(integration, discriminator_id, reason)
-      {:error, :on_demand_refresh_failed}
-    else
-      error
-    end
+    "int_refresh_#{organization_id}_#{integration_id}_#{discriminator_hash}"
   end
 
   @doc """

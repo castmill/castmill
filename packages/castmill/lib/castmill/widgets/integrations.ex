@@ -502,11 +502,12 @@ defmodule Castmill.Widgets.Integrations do
   defp get_organization_for_widget_config(widget_config_id) do
     # Widget configs are linked to medias, which belong to organizations
     query =
-      from wc in Castmill.Widgets.WidgetConfig,
+      from(wc in Castmill.Widgets.WidgetConfig,
         join: m in Castmill.Resources.Media,
         on: m.id == wc.media_id,
         where: wc.id == ^widget_config_id,
         select: m.organization_id
+      )
 
     case Repo.one(query) do
       nil -> {:error, :widget_config_not_found}
@@ -1045,7 +1046,12 @@ defmodule Castmill.Widgets.Integrations do
   the same options would share a single cache row, and could therefore be
   served data fetched with another network's credentials.
   """
-  def build_discriminator_id(%WidgetIntegration{} = integration, options, organization_id) do
+  def build_discriminator_id(
+        %WidgetIntegration{} = integration,
+        options,
+        organization_id,
+        widget_config_id \\ nil
+      ) do
     # For widget_option discriminators, also check pull_config for hardcoded values
     # (e.g., RSS widgets have feed_url in pull_config, not in widget_options)
     pull_config = integration.pull_config || %{}
@@ -1071,10 +1077,16 @@ defmodule Castmill.Widgets.Integrations do
         |> bound_discriminator_id()
 
       "organization" ->
-        "org"
+        "org:#{organization_id}"
+
+      "widget_config" when not is_nil(widget_config_id) ->
+        "cfg:#{widget_config_id}"
+
+      "widget_config" ->
+        "org:#{organization_id}|cfg:missing"
 
       _ ->
-        "default"
+        "org:#{organization_id}|default"
     end
   end
 

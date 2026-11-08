@@ -513,11 +513,27 @@ defmodule CastmillWeb.WidgetIntegrationController do
       id ->
         widget_options = Map.get(params, "options", %{})
         preview? = Map.get(params, "preview", false) in [true, "true"]
-        do_prefetch_widget_data(conn, organization_id, id, widget_options, preview?)
+        widget_config_id = Map.get(params, "widget_config_id")
+
+        do_prefetch_widget_data(
+          conn,
+          organization_id,
+          id,
+          widget_options,
+          preview?,
+          widget_config_id
+        )
     end
   end
 
-  defp do_prefetch_widget_data(conn, organization_id, widget_id, widget_options, preview?) do
+  defp do_prefetch_widget_data(
+         conn,
+         organization_id,
+         widget_id,
+         widget_options,
+         preview?,
+         widget_config_id
+       ) do
     # Get the widget's integrations
     case Integrations.list_integrations(widget_id: widget_id) do
       [] ->
@@ -528,14 +544,15 @@ defmodule CastmillWeb.WidgetIntegrationController do
 
       [integration | _] ->
         # Only handle PULL integrations with fetcher modules
-        if integration.integration_type == "pull" do
+        if integration.integration_type in ["pull", "both"] do
           prefetch_pull_integration(
             conn,
             organization_id,
             widget_id,
             integration,
             widget_options,
-            preview?
+            preview?,
+            widget_config_id
           )
         else
           # PUSH integrations don't support prefetching
@@ -552,7 +569,8 @@ defmodule CastmillWeb.WidgetIntegrationController do
          widget_id,
          integration,
          widget_options,
-         preview?
+         preview?,
+         widget_config_id
        ) do
     widget_options = Integrations.with_display_locale(organization_id, widget_options)
     pull_config = integration.pull_config || %{}
@@ -560,13 +578,27 @@ defmodule CastmillWeb.WidgetIntegrationController do
     fetcher_module_name = Map.get(pull_config, "fetcher_module")
 
     cond do
-      is_nil(fetcher_module_name) ->
+      integration.discriminator_type == "widget_config" and is_nil(widget_config_id) ->
+        conn
+        |> put_status(:no_content)
+        |> text("")
+
+      is_nil(fetcher_module_name) and
+          not (Integrations.Refresh.on_demand?(integration) and
+                   is_binary(integration.pull_endpoint)) ->
         conn
         |> put_status(:no_content)
         |> text("")
 
       Integrations.Refresh.on_demand?(integration) ->
-        prefetch_on_demand(conn, organization_id, widget_id, integration, widget_options)
+        prefetch_on_demand(
+          conn,
+          organization_id,
+          widget_id,
+          integration,
+          widget_options,
+          widget_config_id
+        )
 
       true ->
         prefetch_scheduled(
@@ -583,8 +615,16 @@ defmodule CastmillWeb.WidgetIntegrationController do
     end
   end
 
-  defp prefetch_on_demand(conn, organization_id, widget_id, integration, widget_options) do
-    discriminator_id = build_discriminator_id(integration, widget_options, organization_id)
+  defp prefetch_on_demand(
+         conn,
+         organization_id,
+         widget_id,
+         integration,
+         widget_options,
+         widget_config_id
+       ) do
+    discriminator_id =
+      build_discriminator_id(integration, widget_options, organization_id, widget_config_id)
 
     existing =
       Integrations.get_integration_data_by_discriminator(integration.id, discriminator_id)
@@ -594,7 +634,8 @@ defmodule CastmillWeb.WidgetIntegrationController do
            existing,
            organization_id,
            widget_id,
-           widget_options
+           widget_options,
+           widget_config_id
          ) do
       {:ok, data} ->
         conn
@@ -806,9 +847,15 @@ defmodule CastmillWeb.WidgetIntegrationController do
     integration = get_widget_integration(widget_id)
 
     integration_data =
-      if integration && integration.integration_type == "pull" &&
+      if integration && integration.integration_type in ["pull", "both"] &&
            Integrations.Refresh.on_demand?(integration) do
-        on_demand_widget_data(integration, organization_id, widget_id, widget_options)
+        on_demand_widget_data(
+          integration,
+          organization_id,
+          widget_id,
+          widget_options,
+          widget_config_id
+        )
       else
         scheduled_widget_data(widget_config_id, organization_id, widget_id, widget_options)
       end
@@ -825,8 +872,20 @@ defmodule CastmillWeb.WidgetIntegrationController do
   end
 
   # On-demand integrations refresh when read (see Integrations.Refresh).
-  defp on_demand_widget_data(integration, organization_id, widget_id, widget_options) do
-    existing = Integrations.Refresh.stored(integration, organization_id, widget_options)
+  defp on_demand_widget_data(
+         integration,
+         organization_id,
+         widget_id,
+         widget_options,
+         widget_config_id
+       ) do
+    existing =
+      Integrations.Refresh.stored(
+        integration,
+        organization_id,
+        widget_options,
+        widget_config_id
+      )
 
     case Integrations.Refresh.read(
            integration,
@@ -1058,8 +1117,8 @@ defmodule CastmillWeb.WidgetIntegrationController do
     end
   end
 
-  defp build_discriminator_id(integration, options, organization_id) do
-    Integrations.build_discriminator_id(integration, options, organization_id)
+  defp build_discriminator_id(integration, options, organization_id, widget_config_id \\ nil) do
+    Integrations.build_discriminator_id(integration, options, organization_id, widget_config_id)
   end
 
   defp store_fetched_data(organization_id, widget_id, integration, discriminator_id, data) do

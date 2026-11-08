@@ -9,7 +9,7 @@ defmodule Castmill.Widgets.Integrations.RefreshTest do
   alias Castmill.Repo
   alias Castmill.Resources
   alias Castmill.Widgets.Integrations
-  alias Castmill.Widgets.Integrations.{Refresh, WidgetIntegrationData}
+  alias Castmill.Widgets.Integrations.{Refresh, WidgetIntegration, WidgetIntegrationData}
   alias Castmill.Widgets.Integrations.Fetchers.TestOnDemand
   alias Castmill.Workers.IntegrationPoller
 
@@ -114,6 +114,36 @@ defmodule Castmill.Widgets.Integrations.RefreshTest do
       assert {:error, :no_fetcher_module} =
                Refresh.fetcher_module(%{integration | pull_config: %{}})
     end
+  end
+
+  test "builds organization and widget-config scoped discriminators", %{
+    integration: integration,
+    organization: organization
+  } do
+    organization_integration = %{integration | discriminator_type: "organization"}
+    widget_config_integration = %{integration | discriminator_type: "widget_config"}
+
+    assert Integrations.build_discriminator_id(organization_integration, %{}, organization.id) ==
+             "org:#{organization.id}"
+
+    first =
+      Integrations.build_discriminator_id(
+        widget_config_integration,
+        %{},
+        organization.id,
+        "config-a"
+      )
+
+    second =
+      Integrations.build_discriminator_id(
+        widget_config_integration,
+        %{},
+        organization.id,
+        "config-b"
+      )
+
+    refute first == second
+    assert first == "cfg:config-a"
   end
 
   describe "state/3 and backoff" do
@@ -279,7 +309,15 @@ defmodule Castmill.Widgets.Integrations.RefreshTest do
       assert {:error, :not_found} =
                Refresh.read(integration, nil, organization.id, widget.id, options("villa"))
 
-      assert Refresh.stored(integration, organization.id, options("villa")) == nil
+      failed = Refresh.stored(integration, organization.id, options("villa"))
+      assert failed.data == %{}
+      assert failed.refresh_failures == 1
+      assert Refresh.state(failed, integration, DateTime.utc_now()) == :missing_backoff
+
+      assert Refresh.read(integration, failed, organization.id, widget.id, options("villa")) ==
+               nil
+
+      assert length(TestOnDemand.calls()) == 1
     end
 
     test "never serves data stored for other options", %{
@@ -384,7 +422,27 @@ defmodule Castmill.Widgets.Integrations.RefreshTest do
              ) == 500
 
       # Nothing stored yet: nothing to record.
-      assert :ok = Refresh.record_failure(integration, "unknown", :boom)
+      assert {:ok, _data} =
+               Refresh.record_failure(integration, organization.id, "unknown", :boom)
+    end
+
+    test "uses generic HTTP fetching when no custom fetcher is configured", %{
+      integration: integration,
+      organization: organization
+    } do
+      generic = %{integration | pull_config: %{"auth_type" => "none"}, pull_endpoint: nil}
+
+      assert {:error, :no_pull_endpoint} = Refresh.fetch(generic, organization.id, %{})
+    end
+
+    test "converts fetcher exceptions into error results", %{
+      integration: integration,
+      organization: organization
+    } do
+      TestOnDemand.raise_with("invalid upstream response")
+
+      assert {:error, %RuntimeError{message: "invalid upstream response"}} =
+               Refresh.fetch(integration, organization.id, options("villa"))
     end
 
     test "options schemas may use atom keys or be missing", %{integration: integration} do
@@ -441,6 +499,64 @@ defmodule Castmill.Widgets.Integrations.RefreshTest do
       assert Refresh.stored(integration, organization.id, options("villa")).refresh_failures == 1
     end
 
+    test "on-demand jobs skip data refreshed before the worker acquires the lock", %{
+      integration: integration,
+      organization: organization,
+      widget: widget
+    } do
+      discriminator_id = discriminator(integration, organization, "villa")
+      store!(integration, organization, "villa", %{})
+
+      job =
+        BullMQ.Job.new("integrations", "refresh", %{
+          "organization_id" => organization.id,
+          "widget_id" => widget.id,
+          "integration_id" => integration.id,
+          "discriminator_id" => discriminator_id,
+          "widget_options" => options("villa")
+        })
+
+      assert :ok = IntegrationPoller.process(job)
+      assert TestOnDemand.calls() == []
+    end
+
+    test "broadcasts refreshed on-demand data to organization previews", %{
+      integration: integration,
+      organization: organization,
+      widget: widget
+    } do
+      Phoenix.PubSub.subscribe(Castmill.PubSub, "organization:#{organization.id}")
+      discriminator_id = discriminator(integration, organization, "villa")
+
+      job =
+        BullMQ.Job.new("integrations", "refresh", %{
+          "organization_id" => organization.id,
+          "widget_id" => widget.id,
+          "integration_id" => integration.id,
+          "discriminator_id" => discriminator_id,
+          "widget_options" => options("villa")
+        })
+
+      assert :ok = IntegrationPoller.process(job)
+
+      assert_receive {:widget_config_data_update,
+                      %{
+                        widget_id: widget_id,
+                        discriminator_id: ^discriminator_id,
+                        data: %{"value" => 1}
+                      }}
+
+      assert widget_id == to_string(widget.id)
+    end
+
+    test "uses collision-safe refresh job IDs" do
+      colon_id = IntegrationPoller.refresh_job_id("org", 1, "a:b")
+      underscore_id = IntegrationPoller.refresh_job_id("org", 1, "a_b")
+
+      refute colon_id == underscore_id
+      assert colon_id == IntegrationPoller.refresh_job_id("org", 1, "a:b")
+    end
+
     test "widget.json integrations may declare their refresh mode", %{widget: widget} do
       {:ok, integration} =
         Integrations.create_integration_from_meta(widget.id, "feed", %{
@@ -465,8 +581,14 @@ defmodule Castmill.Widgets.Integrations.RefreshTest do
   describe "device playlists" do
     test "load on-demand data on first use, with the integration's settings", %{
       organization: organization,
-      widget: widget
+      widget: widget,
+      integration: integration
     } do
+      {:ok, _integration} =
+        integration
+        |> WidgetIntegration.changeset(%{integration_type: "both"})
+        |> Repo.update()
+
       playlist = playlist_fixture(%{organization_id: organization.id})
 
       {:ok, _item} =
