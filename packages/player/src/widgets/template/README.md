@@ -196,6 +196,12 @@ value":
 }
 ```
 
+A group can scale its font size with its rendered size with `opts.fontScale`, so a design written in
+`em` looks the same in any player region or preview: `{ "height": 1080, "size": 10 }` sets the group's
+font size to 10px when it is 1080px high (5px at 540px), and follows resizes. Use `width` to scale with the
+width; with both (`{ "width": 1920, "height": 1080, "size": 10 }`) the smaller ratio wins, so the design
+always fits. Unlike `vmin`, this measures the widget, not the window.
+
 ### Visibility: `filter` and `when`
 
 Any component can declare:

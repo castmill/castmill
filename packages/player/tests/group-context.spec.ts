@@ -4,7 +4,7 @@ import { describe, it } from 'mocha';
 import { JSDOM } from 'jsdom';
 import { firstValueFrom } from 'rxjs';
 
-import { TemplateWidget } from '../dist/index.js';
+import { TemplateWidget, scaledFontSize } from '../dist/index.js';
 
 const withDom = async (fn: (root: HTMLElement) => Promise<void>) => {
   const keys = [
@@ -211,5 +211,23 @@ describe('Group context, when and limit', () => {
       expect(textOf(root, 'a')).to.equal('A');
       expect(textOf(root, 'b')).to.equal('B');
     });
+  });
+
+  it('computes scaled font sizes', () => {
+    expect(scaledFontSize({ height: 1080, size: 10 }, 960, 540)).to.equal(5);
+    expect(scaledFontSize({ width: 1920, size: 10 }, 960, 540)).to.equal(5);
+    // With both, the smaller ratio wins (the design fits); zero sizes are ignored.
+    expect(
+      scaledFontSize({ width: 1920, height: 1080, size: 10 }, 960, 1080)
+    ).to.equal(5);
+    expect(
+      scaledFontSize({ width: 1920, height: 1080, size: 10 }, 3840, 540)
+    ).to.equal(5);
+    expect(
+      scaledFontSize({ width: 1920, height: 1080, size: 10 }, 960, 0)
+    ).to.equal(5);
+    expect(scaledFontSize({ height: 1080, size: 10 }, 960, 0)).to.equal(null);
+    expect(scaledFontSize({ height: 1080, size: 0 }, 960, 540)).to.equal(null);
+    expect(scaledFontSize(undefined, 960, 540)).to.equal(null);
   });
 });
