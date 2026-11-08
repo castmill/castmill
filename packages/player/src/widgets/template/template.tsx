@@ -68,6 +68,25 @@ export class TemplateComponent {
     globals: PlayerGlobals,
     config?: TemplateConfig
   ): TemplateComponent {
+    const component = TemplateComponent.build(
+      json,
+      resourceManager,
+      globals,
+      config
+    );
+    // `when` (see visibility.ts) applies to every component type.
+    if (json.when !== undefined) {
+      (component as any).when = json.when;
+    }
+    return component;
+  }
+
+  private static build(
+    json: any,
+    resourceManager: ResourceManager,
+    globals: PlayerGlobals,
+    config?: TemplateConfig
+  ): TemplateComponent {
     switch (json.type) {
       case TemplateComponentType.Group:
         return GroupComponent.fromJSON(json, resourceManager, globals, config);

@@ -181,6 +181,31 @@ rendered both on its own and as the item of a list:
 
 The group's own `filter` and `$styles` are still resolved with the outer context.
 
+A group can show only its first visible children with `opts.limit` (a number or a binding). Children
+hidden by `filter` or `when` don't count, so a group of facts can show "the first 5 facts that have a
+value":
+
+```json
+{
+  "type": "group",
+  "opts": { "limit": 5 },
+  "components": [
+    { "type": "text", "when": { "key": "$.price" }, "opts": { "text": { "fmt": "{$.price | number} kr" } } },
+    { "type": "text", "when": { "key": "$.fee" }, "opts": { "text": { "fmt": "{$.fee | number} kr/mån" } } }
+  ]
+}
+```
+
+### Visibility: `filter` and `when`
+
+Any component can declare:
+
+- `filter`: an object of key paths and the values they must equal (`{ "data.status": "sold" }`).
+- `when`: any binding; the component renders only when it resolves to a present value, i.e. not
+  `null`, blank text, `false`, `0`, `NaN` or an empty list.
+
+A component renders when both pass.
+
 ### Text
 
 Displays text content with support for autofit sizing.
