@@ -73,8 +73,14 @@ defmodule Castmill.Widgets.Integrations.Refresh do
   Calls the integration's fetcher for an organization. Returns
   `{:ok, data}` or `{:error, reason}`.
   """
-  def fetch(%WidgetIntegration{} = integration, organization_id, widget_options) do
-    with {:ok, credentials} <- Integrations.get_fetch_credentials(organization_id, integration) do
+  def fetch(
+        %WidgetIntegration{} = integration,
+        organization_id,
+        widget_options,
+        widget_config_id \\ nil
+      ) do
+    with {:ok, credentials} <-
+           Integrations.get_fetch_credentials(organization_id, integration, widget_config_id) do
       fetch_with_credentials(integration, credentials, widget_options)
     end
   end
@@ -141,22 +147,47 @@ defmodule Castmill.Widgets.Integrations.Refresh do
         %WidgetIntegration{} = integration,
         organization_id,
         widget_options,
-        widget_config_id \\ nil
+        widget_config_id \\ nil,
+        cache_opts \\ []
       ) do
     discriminator_id =
-      Integrations.build_discriminator_id(
-        integration,
-        widget_options || %{},
-        organization_id,
-        widget_config_id
+      Keyword.get(
+        cache_opts,
+        :discriminator_id,
+        Integrations.build_discriminator_id(
+          integration,
+          widget_options || %{},
+          organization_id,
+          widget_config_id
+        )
       )
 
-    case fetch(integration, organization_id, widget_options) do
+    cache_widget_config_id =
+      Keyword.get(
+        cache_opts,
+        :cache_widget_config_id,
+        cache_config_id(integration, widget_config_id)
+      )
+
+    case fetch(integration, organization_id, widget_options, widget_config_id) do
       {:ok, data} ->
-        store(integration, organization_id, discriminator_id, data, widget_config_id)
+        store_with_cache_config(
+          integration,
+          organization_id,
+          discriminator_id,
+          data,
+          cache_widget_config_id
+        )
 
       {:error, reason} = error ->
-        record_failure(integration, organization_id, discriminator_id, reason, widget_config_id)
+        record_failure_with_cache_config(
+          integration,
+          organization_id,
+          discriminator_id,
+          reason,
+          cache_widget_config_id
+        )
+
         error
     end
   end
@@ -169,12 +200,28 @@ defmodule Castmill.Widgets.Integrations.Refresh do
         data,
         widget_config_id \\ nil
       ) do
+    store_with_cache_config(
+      integration,
+      organization_id,
+      discriminator_id,
+      data,
+      cache_config_id(integration, widget_config_id)
+    )
+  end
+
+  defp store_with_cache_config(
+         %WidgetIntegration{} = integration,
+         organization_id,
+         discriminator_id,
+         data,
+         cache_widget_config_id
+       ) do
     now = DateTime.utc_now() |> DateTime.truncate(:second)
 
     Integrations.upsert_integration_data(%{
       widget_integration_id: integration.id,
       organization_id: organization_id,
-      widget_config_id: cache_config_id(integration, widget_config_id),
+      widget_config_id: cache_widget_config_id,
       discriminator_id: discriminator_id,
       data: data,
       status: "active",
@@ -199,6 +246,22 @@ defmodule Castmill.Widgets.Integrations.Refresh do
         reason,
         widget_config_id \\ nil
       ) do
+    record_failure_with_cache_config(
+        integration,
+        organization_id,
+        discriminator_id,
+        reason,
+        cache_config_id(integration, widget_config_id)
+    )
+  end
+
+  defp record_failure_with_cache_config(
+         %WidgetIntegration{} = integration,
+         organization_id,
+         discriminator_id,
+         reason,
+         cache_widget_config_id
+       ) do
     case Integrations.get_integration_data_by_discriminator(integration.id, discriminator_id) do
       %WidgetIntegrationData{} = data ->
         failures = (data.refresh_failures || 0) + 1
@@ -220,7 +283,7 @@ defmodule Castmill.Widgets.Integrations.Refresh do
         Integrations.upsert_integration_data(%{
           widget_integration_id: integration.id,
           organization_id: organization_id,
-          widget_config_id: cache_config_id(integration, widget_config_id),
+          widget_config_id: cache_widget_config_id,
           discriminator_id: discriminator_id,
           data: %{},
           status: "error",
@@ -274,9 +337,29 @@ defmodule Castmill.Widgets.Integrations.Refresh do
         organization_id,
         widget_id,
         widget_options,
-        widget_config_id \\ nil
+        widget_config_id \\ nil,
+        cache_opts \\ []
       ) do
     now = DateTime.utc_now()
+
+    discriminator_id =
+      Keyword.get(
+        cache_opts,
+        :discriminator_id,
+        Integrations.build_discriminator_id(
+          integration,
+          widget_options || %{},
+          organization_id,
+          widget_config_id
+        )
+      )
+
+    cache_widget_config_id =
+      Keyword.get(
+        cache_opts,
+        :cache_widget_config_id,
+        cache_config_id(integration, widget_config_id)
+      )
 
     case state(existing, integration, now) do
       :missing ->
@@ -285,6 +368,8 @@ defmodule Castmill.Widgets.Integrations.Refresh do
           organization_id,
           widget_options,
           widget_config_id,
+          discriminator_id,
+          cache_widget_config_id,
           timeout(:missing_timeout, 5_000)
         )
         |> case do
@@ -301,8 +386,23 @@ defmodule Castmill.Widgets.Integrations.Refresh do
         {:ok, existing}
 
       :stale ->
-        enqueue_refresh(integration, organization_id, widget_id, widget_options, widget_config_id)
-        {:ok, existing}
+        if Keyword.get(cache_opts, :preview?, false) do
+          case fetch_now(
+                 integration,
+                 organization_id,
+                 widget_options,
+                 widget_config_id,
+                 discriminator_id,
+                 cache_widget_config_id,
+                 timeout(:missing_timeout, 5_000)
+               ) do
+            {:ok, data} -> {:ok, data}
+            _ -> {:ok, existing}
+          end
+        else
+          enqueue_refresh(integration, organization_id, widget_id, widget_options, widget_config_id)
+          {:ok, existing}
+        end
 
       :very_stale ->
         case fetch_now(
@@ -310,6 +410,8 @@ defmodule Castmill.Widgets.Integrations.Refresh do
                organization_id,
                widget_options,
                widget_config_id,
+               discriminator_id,
+               cache_widget_config_id,
                timeout(:very_stale_timeout, 3_000)
              ) do
           {:ok, data} -> {:ok, data}
@@ -359,22 +461,23 @@ defmodule Castmill.Widgets.Integrations.Refresh do
   # Fetches now, under an advisory lock so that concurrent readers of the same
   # data cause one upstream call. Waits at most `timeout` ms; a fetch that is
   # still running keeps going and stores its result for later reads.
-  defp fetch_now(integration, organization_id, widget_options, widget_config_id, timeout) do
-    discriminator_id =
-      Integrations.build_discriminator_id(
-        integration,
-        widget_options || %{},
-        organization_id,
-        widget_config_id
-      )
-
+  defp fetch_now(
+         integration,
+         organization_id,
+         widget_options,
+         widget_config_id,
+         discriminator_id,
+         cache_widget_config_id,
+         timeout
+       ) do
     work = fn ->
       locked_fetch(
         integration,
         organization_id,
         widget_options,
         discriminator_id,
-        widget_config_id
+        widget_config_id,
+        cache_widget_config_id
       )
     end
 
@@ -398,8 +501,14 @@ defmodule Castmill.Widgets.Integrations.Refresh do
          organization_id,
          widget_options,
          discriminator_id,
-         widget_config_id
+         widget_config_id,
+         cache_widget_config_id \\ :same
        ) do
+    cache_widget_config_id =
+      if cache_widget_config_id == :same,
+        do: cache_config_id(integration, widget_config_id),
+        else: cache_widget_config_id
+
     key = lock_key(integration, discriminator_id)
 
     result =
@@ -418,7 +527,14 @@ defmodule Castmill.Widgets.Integrations.Refresh do
 
               _ ->
                 {:fetched,
-                 fetch_and_store(integration, organization_id, widget_options, widget_config_id)}
+                   fetch_and_store(
+                     integration,
+                     organization_id,
+                     widget_options,
+                     widget_config_id,
+                     discriminator_id: discriminator_id,
+                     cache_widget_config_id: cache_widget_config_id
+                   )}
             end
 
           _ ->

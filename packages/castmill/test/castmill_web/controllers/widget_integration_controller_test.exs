@@ -8,6 +8,7 @@ defmodule CastmillWeb.WidgetIntegrationControllerTest do
   import Castmill.PlaylistsFixtures
 
   alias Castmill.{Organizations, Repo}
+  alias Castmill.Widgets.Integrations
   alias Castmill.Widgets.Integrations.WidgetIntegrationData
 
   setup %{conn: conn} do
@@ -352,10 +353,11 @@ defmodule CastmillWeb.WidgetIntegrationControllerTest do
         })
 
       conn = get(conn, "/dashboard/widget-configs/#{widget_config.id}/data")
+      expected_discriminator = "cfg:#{widget_config.id}"
 
       assert %{
                "data" => %{"items" => [%{"title" => "stub"}]},
-               "discriminator_id" => "cfg:#{widget_config.id}"
+               "discriminator_id" => ^expected_discriminator
              } = json_response(conn, 200)
     end
   end
@@ -437,9 +439,11 @@ defmodule CastmillWeb.WidgetIntegrationControllerTest do
           %{widget_config_id: widget_config.id, preview: true}
         )
 
+      expected_discriminator = "cfg:#{widget_config.id}"
+
       assert %{
                "data" => %{"items" => [%{"title" => "stub"}]},
-               "discriminator_id" => "cfg:#{widget_config.id}"
+               "discriminator_id" => ^expected_discriminator
              } = json_response(conn, 200)
     end
 
@@ -476,6 +480,134 @@ defmodule CastmillWeb.WidgetIntegrationControllerTest do
         )
 
       assert response(conn, 204) == ""
+    end
+
+    test "isolates config-scoped on-demand previews from saved playback data", %{
+      conn: conn,
+      organization: organization
+    } do
+      suffix = System.unique_integer([:positive])
+
+      widget =
+        widget_fixture(%{
+          name: "Preview cache #{suffix}",
+          slug: "preview-cache-#{suffix}",
+          template: %{"type" => "group"}
+        })
+
+      integration =
+        widget_integration_fixture(%{
+          widget_id: widget.id,
+          name: "preview-cache-integration-#{suffix}",
+          integration_type: "pull",
+          refresh_mode: "on_demand",
+          discriminator_type: "widget_config",
+          pull_config: %{
+            "auth_type" => "none",
+            "fetcher_module" => "Castmill.Widgets.Integrations.Fetchers.TestStub"
+          }
+        })
+
+      playlist = playlist_fixture(%{organization_id: organization.id})
+      playlist_item = playlist_item_fixture(%{playlist_id: playlist.id})
+
+      widget_config =
+        widget_config_fixture(%{
+          widget_id: widget.id,
+          playlist_item_id: playlist_item.id,
+          options: %{"query" => "saved"}
+        })
+
+      saved_discriminator = "cfg:#{widget_config.id}"
+      saved_data = %{"items" => [%{"title" => "saved"}]}
+
+      assert {:ok, _} =
+               Integrations.Refresh.store(
+                 integration,
+                 organization.id,
+                 saved_discriminator,
+                 saved_data,
+                 widget_config.id
+               )
+
+      conn =
+        post(
+          conn,
+          "/dashboard/organizations/#{organization.id}/widgets/#{widget.id}/prefetch-data",
+          %{
+            widget_config_id: widget_config.id,
+            options: %{"query" => "unsaved"},
+            preview: true
+          }
+        )
+
+      response = json_response(conn, 200)
+      preview_discriminator = response["discriminator_id"]
+
+      assert response["data"] == %{"items" => [%{"title" => "stub"}]}
+      assert String.starts_with?(preview_discriminator, "#{saved_discriminator}|preview:")
+      refute preview_discriminator == saved_discriminator
+
+      assert %WidgetIntegrationData{data: ^saved_data, widget_config_id: saved_config_id} =
+               Integrations.get_integration_data_by_discriminator(
+                 integration.id,
+                 saved_discriminator
+               )
+
+      assert saved_config_id == widget_config.id
+
+      assert %WidgetIntegrationData{widget_config_id: nil} =
+               Integrations.get_integration_data_by_discriminator(
+                 integration.id,
+                 preview_discriminator
+               )
+    end
+
+    test "uses the authorized config ID for scheduled config-scoped previews", %{
+      conn: conn,
+      organization: organization
+    } do
+      suffix = System.unique_integer([:positive])
+
+      widget =
+        widget_fixture(%{
+          name: "Scheduled config preview #{suffix}",
+          slug: "scheduled-config-preview-#{suffix}",
+          template: %{"type" => "group"}
+        })
+
+      widget_integration_fixture(%{
+        widget_id: widget.id,
+        name: "scheduled-config-preview-#{suffix}",
+        integration_type: "pull",
+        discriminator_type: "widget_config",
+        pull_config: %{
+          "auth_type" => "none",
+          "fetcher_module" => "Castmill.Widgets.Integrations.Fetchers.TestStub"
+        }
+      })
+
+      playlist = playlist_fixture(%{organization_id: organization.id})
+      playlist_item = playlist_item_fixture(%{playlist_id: playlist.id})
+
+      widget_config =
+        widget_config_fixture(%{
+          widget_id: widget.id,
+          playlist_item_id: playlist_item.id,
+          options: %{}
+        })
+
+      conn =
+        post(
+          conn,
+          "/dashboard/organizations/#{organization.id}/widgets/#{widget.id}/prefetch-data",
+          %{widget_config_id: widget_config.id, preview: true}
+        )
+
+      response = json_response(conn, 200)
+
+      assert response["data"] == %{"items" => [%{"title" => "stub"}]}
+      assert String.starts_with?(response["discriminator_id"], "cfg:#{widget_config.id}|preview:")
     end
 
     test "rejects a widget config belonging to a different widget", %{

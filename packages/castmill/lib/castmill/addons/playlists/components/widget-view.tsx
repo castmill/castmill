@@ -67,6 +67,19 @@ export const matchesWidgetDataUpdate = (
   payload.widget_id === String(widgetId) &&
   payload.discriminator_id === discriminatorId;
 
+export const applyWidgetMaxItemsFilter = (
+  data: Record<string, any>,
+  options: OptionsDict
+): Record<string, any> => {
+  const maxItems = options.max_items || 10;
+
+  if (Array.isArray(data.items) && Number.isInteger(maxItems) && maxItems > 0) {
+    return { ...data, items: data.items.slice(0, maxItems) };
+  }
+
+  return data;
+};
+
 export const getWidgetViewAspectRatio = (
   widget: JsonWidget,
   options?: OptionsDict
@@ -240,10 +253,15 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
             discriminatorId
           )
         ) {
+          const filteredData = applyWidgetMaxItemsFilter(
+            payload.data,
+            props.options
+          );
+
           if (props.onPreviewDataUpdate) {
-            props.onPreviewDataUpdate(payload.data);
+            props.onPreviewDataUpdate(filteredData);
           } else {
-            setIntegrationData(payload.data);
+            setIntegrationData(filteredData);
           }
         }
       }

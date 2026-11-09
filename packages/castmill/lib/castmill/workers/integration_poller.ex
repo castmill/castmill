@@ -79,6 +79,7 @@ defmodule Castmill.Workers.IntegrationPoller do
           widget_id,
           integration_id,
           discriminator_id,
+          Map.get(args, "widget_config_id"),
           widget_options
         )
       end
@@ -98,13 +99,14 @@ defmodule Castmill.Workers.IntegrationPoller do
          widget_id,
          integration_id,
          discriminator_id,
+         widget_config_id,
          widget_options
        ) do
-    with {:ok, credentials} <- get_credentials(organization_id, integration_id),
+    with {:ok, credentials} <- get_credentials(organization_id, integration_id, widget_config_id),
          {:ok, data, _updated_credentials} <-
            fetch_data(integration, credentials, widget_options),
          {:ok, _integration_data} <-
-           Refresh.store(integration, organization_id, discriminator_id, data) do
+           Refresh.store(integration, organization_id, discriminator_id, data, widget_config_id) do
       # Broadcast the update to connected clients
       broadcast_update(widget_id, integration_id, discriminator_id, data)
 
@@ -366,12 +368,12 @@ defmodule Castmill.Workers.IntegrationPoller do
     end
   end
 
-  defp get_credentials(organization_id, integration_id) do
+  defp get_credentials(organization_id, integration_id, widget_config_id \\ nil) do
     case Integrations.get_integration(integration_id) do
       %WidgetIntegration{} = integration ->
         # Merges network-level credentials (shared across the network, e.g. a
         # commercial API key) with organization-level credentials.
-        Integrations.get_fetch_credentials(organization_id, integration)
+        Integrations.get_fetch_credentials(organization_id, integration, widget_config_id)
 
       _ ->
         {:error, :no_credentials}

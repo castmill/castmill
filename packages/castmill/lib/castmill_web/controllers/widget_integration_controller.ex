@@ -642,6 +642,7 @@ defmodule CastmillWeb.WidgetIntegrationController do
           widget_id,
           integration,
           widget_options,
+          preview?,
           widget_config_id
         )
 
@@ -655,7 +656,8 @@ defmodule CastmillWeb.WidgetIntegrationController do
           fetcher_module_name,
           pull_config,
           credential_schema,
-          preview?
+          preview?,
+          widget_config_id
         )
     end
   end
@@ -666,13 +668,24 @@ defmodule CastmillWeb.WidgetIntegrationController do
          widget_id,
          integration,
          widget_options,
+         preview?,
          widget_config_id
        ) do
     discriminator_id =
-      build_discriminator_id(integration, widget_options, organization_id, widget_config_id)
+      prefetch_discriminator_id(
+        integration,
+        widget_options,
+        organization_id,
+        widget_config_id,
+        preview?
+      )
 
     existing =
       Integrations.get_integration_data_by_discriminator(integration.id, discriminator_id)
+
+    cache_opts =
+      [discriminator_id: discriminator_id, preview?: preview?]
+      |> maybe_isolate_preview_cache(integration, preview?)
 
     case Integrations.Refresh.read(
            integration,
@@ -680,7 +693,8 @@ defmodule CastmillWeb.WidgetIntegrationController do
            organization_id,
            widget_id,
            widget_options,
-           widget_config_id
+           widget_config_id,
+           cache_opts
          ) do
       {:ok, data} ->
         conn
@@ -709,10 +723,18 @@ defmodule CastmillWeb.WidgetIntegrationController do
          fetcher_module_name,
          pull_config,
          credential_schema,
-         preview?
+         preview?,
+         widget_config_id
        ) do
     # Check if we already have cached data for this discriminator
-    discriminator_id = build_discriminator_id(integration, widget_options, organization_id)
+    discriminator_id =
+      prefetch_discriminator_id(
+        integration,
+        widget_options,
+        organization_id,
+        widget_config_id,
+        preview?
+      )
 
     case Integrations.get_integration_data_by_discriminator(integration.id, discriminator_id) do
       %Integrations.WidgetIntegrationData{} = data ->
@@ -740,7 +762,8 @@ defmodule CastmillWeb.WidgetIntegrationController do
           fetcher_module_name,
           pull_config,
           credential_schema,
-          preview?
+          preview?,
+          widget_config_id
         )
     end
   end
@@ -754,12 +777,13 @@ defmodule CastmillWeb.WidgetIntegrationController do
          fetcher_module_name,
          _pull_config,
          _credential_schema,
-         preview?
+         preview?,
+         widget_config_id
        ) do
     # Resolve credentials, merging network-level credentials (shared across the
     # network, e.g. a commercial API key) with any organization-level ones.
     credentials =
-      case Integrations.get_fetch_credentials(organization_id, integration) do
+      case Integrations.get_fetch_credentials(organization_id, integration, widget_config_id) do
         {:ok, creds} -> creds
         {:error, _reason} -> nil
       end
@@ -779,9 +803,28 @@ defmodule CastmillWeb.WidgetIntegrationController do
       case fetch_with_module(fetcher_module_name, credentials, merged_options) do
         {:ok, data, _creds} ->
           # Store the data
-          discriminator_id = build_discriminator_id(integration, widget_options, organization_id)
+          discriminator_id =
+            prefetch_discriminator_id(
+              integration,
+              widget_options,
+              organization_id,
+              widget_config_id,
+              preview?
+            )
 
-          case store_fetched_data(organization_id, widget_id, integration, discriminator_id, data) do
+          cache_widget_config_id =
+            if preview? and integration.discriminator_type == "widget_config",
+              do: nil,
+              else: widget_config_id
+
+          case store_fetched_data(
+                 organization_id,
+                 widget_id,
+                 integration,
+                 discriminator_id,
+                 data,
+                 cache_widget_config_id
+               ) do
             {:ok, integration_data} ->
               # Schedule background polling for future updates, unless this is
               # an ephemeral preview fetch whose options may never be saved.
@@ -791,7 +834,8 @@ defmodule CastmillWeb.WidgetIntegrationController do
                   widget_id,
                   integration,
                   discriminator_id,
-                  widget_options
+                  widget_options,
+                  widget_config_id: widget_config_id
                 )
               end
 
@@ -913,7 +957,8 @@ defmodule CastmillWeb.WidgetIntegrationController do
       integration,
       widget_options,
       organization_id,
-      widget_id
+      widget_id,
+      widget_config_id
     )
 
     respond_widget_data(conn, integration_data, current_version, widget_options)
@@ -1171,15 +1216,57 @@ defmodule CastmillWeb.WidgetIntegrationController do
     Integrations.build_discriminator_id(integration, options, organization_id, widget_config_id)
   end
 
-  defp store_fetched_data(organization_id, widget_id, integration, discriminator_id, data) do
+  defp prefetch_discriminator_id(
+         %{discriminator_type: "widget_config"} = integration,
+         options,
+         organization_id,
+         widget_config_id,
+         true
+       )
+       when not is_nil(widget_config_id) do
+    base = build_discriminator_id(integration, options, organization_id, widget_config_id)
+
+    options_hash =
+      :sha256
+      |> :crypto.hash(Jason.encode!(options || %{}))
+      |> Base.encode16(case: :lower)
+
+    "#{base}|preview:#{options_hash}"
+  end
+
+  defp prefetch_discriminator_id(integration, options, organization_id, widget_config_id, _preview?) do
+    build_discriminator_id(integration, options, organization_id, widget_config_id)
+  end
+
+  defp maybe_isolate_preview_cache(
+         cache_opts,
+         %{discriminator_type: "widget_config"},
+         true
+       ) do
+    Keyword.put(cache_opts, :cache_widget_config_id, nil)
+  end
+
+  defp maybe_isolate_preview_cache(cache_opts, _integration, _preview?), do: cache_opts
+
+  defp store_fetched_data(
+         organization_id,
+         widget_id,
+         integration,
+         discriminator_id,
+         data,
+         widget_config_id \\ nil
+       ) do
     now = DateTime.utc_now()
     interval = integration.pull_interval_seconds || 300
     refresh_at = DateTime.add(now, interval, :second)
+    cache_widget_config_id =
+      if integration.discriminator_type == "widget_config", do: widget_config_id, else: nil
 
     Integrations.upsert_integration_data(%{
       widget_integration_id: integration.id,
       organization_id: organization_id,
       widget_id: widget_id,
+      widget_config_id: cache_widget_config_id,
       discriminator_id: discriminator_id,
       data: data,
       status: "active",
@@ -1209,7 +1296,8 @@ defmodule CastmillWeb.WidgetIntegrationController do
             widget_id: widget_id,
             integration_id: integration.id,
             discriminator_id: discriminator_id,
-            widget_options: widget_options
+            widget_options: widget_options,
+            widget_config_id: Keyword.get(opts, :widget_config_id)
           },
           delay: delay
         )
@@ -1240,18 +1328,41 @@ defmodule CastmillWeb.WidgetIntegrationController do
          integration,
          widget_options,
          organization_id,
-         widget_id
+         widget_id,
+         widget_config_id
        )
        when not is_nil(integration) and not is_nil(widget_id) do
     if Integrations.Refresh.on_demand?(integration),
       do: :ok,
-      else: schedule_due_refresh(data, integration, widget_options, organization_id, widget_id)
+      else:
+        schedule_due_refresh(
+          data,
+          integration,
+          widget_options,
+          organization_id,
+          widget_id,
+          widget_config_id
+        )
   end
 
-  defp maybe_schedule_refresh(_data, _integration, _options, _organization_id, _widget_id),
+  defp maybe_schedule_refresh(
+         _data,
+         _integration,
+         _options,
+         _organization_id,
+         _widget_id,
+         _widget_config_id
+       ),
     do: :ok
 
-  defp schedule_due_refresh(data, integration, widget_options, organization_id, widget_id) do
+  defp schedule_due_refresh(
+         data,
+         integration,
+         widget_options,
+         organization_id,
+         widget_id,
+         widget_config_id
+       ) do
     now = DateTime.utc_now()
     interval = integration.pull_interval_seconds || 300
 
@@ -1264,7 +1375,12 @@ defmodule CastmillWeb.WidgetIntegrationController do
 
     if refresh_due do
       discriminator_id =
-        build_discriminator_id(integration, widget_options || %{}, organization_id)
+        build_discriminator_id(
+          integration,
+          widget_options || %{},
+          organization_id,
+          widget_config_id
+        )
 
       schedule_polling(
         organization_id,
@@ -1272,7 +1388,8 @@ defmodule CastmillWeb.WidgetIntegrationController do
         integration,
         discriminator_id,
         widget_options || %{},
-        delay: 0
+        delay: 0,
+        widget_config_id: widget_config_id
       )
     end
   end

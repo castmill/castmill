@@ -320,29 +320,46 @@ defmodule Castmill.Widgets.Integrations do
   # ============================================================================
 
   @doc """
-  Resolves the effective credentials to pass to a fetcher for an organization.
+  Resolves the effective credentials to pass to a fetcher.
 
   Credentials can come from two levels:
 
     - Network-level credentials shared across all organizations in the network
       (e.g. a single commercial Open-Meteo API key for the whole network).
-    - Organization-level credentials specific to the organization.
+    - Organization-level credentials or widget-config-level credentials,
+      depending on the integration's `credential_scope`.
 
-  Organization-level values take precedence over network-level values. For
-  integrations whose `auth_type` is `"optional"` or `"none"`, missing
-  credentials are not an error (the fetcher works without them); otherwise a
-  missing credential returns `{:error, :no_credentials}`.
+  Scoped values take precedence over network-level values. For integrations
+  whose `auth_type` is `"optional"` or `"none"`, missing credentials are not an
+  error (the fetcher works without them); otherwise a missing credential
+  returns `{:error, :no_credentials}`.
   """
-  def get_fetch_credentials(organization_id, %WidgetIntegration{} = integration) do
+  def get_fetch_credentials(
+        organization_id,
+        %WidgetIntegration{} = integration,
+        widget_config_id \\ nil
+      ) do
     network_creds = get_network_credentials_for_organization(organization_id, integration.id)
 
-    org_creds =
-      case get_organization_credentials(organization_id, integration.id) do
-        {:ok, creds} when is_map(creds) -> creds
-        _ -> %{}
+    scoped_creds =
+      case integration.credential_scope do
+        "widget" when not is_nil(widget_config_id) ->
+          case get_widget_credentials(widget_config_id, integration.id) do
+            {:ok, creds} when is_map(creds) -> creds
+            _ -> %{}
+          end
+
+        "organization" ->
+          case get_organization_credentials(organization_id, integration.id) do
+            {:ok, creds} when is_map(creds) -> creds
+            _ -> %{}
+          end
+
+        _ ->
+          %{}
       end
 
-    merged = Map.merge(network_creds, org_creds)
+    merged = Map.merge(network_creds, scoped_creds)
 
     cond do
       merged != %{} -> {:ok, merged}
@@ -500,16 +517,7 @@ defmodule Castmill.Widgets.Integrations do
   end
 
   defp get_organization_for_widget_config(widget_config_id) do
-    # Widget configs are linked to medias, which belong to organizations
-    query =
-      from(wc in Castmill.Widgets.WidgetConfig,
-        join: m in Castmill.Resources.Media,
-        on: m.id == wc.media_id,
-        where: wc.id == ^widget_config_id,
-        select: m.organization_id
-      )
-
-    case Repo.one(query) do
+    case Castmill.Widgets.get_organization_id_for_widget_config(widget_config_id) do
       nil -> {:error, :widget_config_not_found}
       organization_id -> {:ok, organization_id}
     end
@@ -1651,11 +1659,11 @@ defmodule Castmill.Widgets.Integrations do
         {:error, :not_found}
 
       %WidgetIntegrationCredential{
-        encrypted_credentials: encrypted,
-        organization_id: organization_id
+        encrypted_credentials: encrypted
       }
       when is_binary(encrypted) ->
-        with {:ok, organization} <- fetch_organization(organization_id),
+        with {:ok, organization_id} <- get_organization_for_widget_config(widget_config_id),
+             {:ok, organization} <- fetch_organization(organization_id),
              {:ok, encryption_key} <- get_or_create_encryption_key(organization),
              {:ok, credentials} <- Castmill.Crypto.decrypt(encrypted, encryption_key) do
           {:ok, credentials}

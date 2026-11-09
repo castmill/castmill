@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  applyWidgetMaxItemsFilter,
   getWidgetViewAspectRatio,
   getWidgetViewContainerStyle,
   matchesWidgetDataUpdate,
@@ -120,5 +121,19 @@ describe('matchesWidgetDataUpdate', () => {
         null
       )
     ).toBe(false);
+  });
+});
+
+describe('applyWidgetMaxItemsFilter', () => {
+  const data = { items: [{ id: 1 }, { id: 2 }, { id: 3 }] };
+
+  it('limits notification data using the current widget options', () => {
+    expect(applyWidgetMaxItemsFilter(data, { max_items: 2 })).toEqual({
+      items: [{ id: 1 }, { id: 2 }],
+    });
+  });
+
+  it('uses the default item limit when max_items is unset', () => {
+    expect(applyWidgetMaxItemsFilter(data, {})).toEqual(data);
   });
 });

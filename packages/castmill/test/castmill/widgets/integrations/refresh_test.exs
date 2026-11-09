@@ -98,6 +98,54 @@ defmodule Castmill.Widgets.Integrations.RefreshTest do
     end
   end
 
+  test "fetches with widget-config-scoped credentials", %{
+    organization: organization,
+    widget: widget
+  } do
+    {:ok, integration} =
+      Integrations.create_integration(%{
+        widget_id: widget.id,
+        name: "widget-credentials-#{System.unique_integer([:positive])}",
+        integration_type: "pull",
+        credential_scope: "widget",
+        pull_endpoint: "https://service.test/items",
+        pull_interval_seconds: 300,
+        refresh_mode: "on_demand",
+        discriminator_type: "widget_config",
+        pull_config: %{
+          "fetcher_module" => @fetcher,
+          "auth_type" => "api_key"
+        }
+      })
+
+    playlist = playlist_fixture(%{organization_id: organization.id})
+    playlist_item = playlist_item_fixture(%{playlist_id: playlist.id})
+
+    widget_config =
+      widget_config_fixture(%{
+        widget_id: widget.id,
+        playlist_item_id: playlist_item.id,
+        options: %{}
+      })
+
+    assert {:ok, _credential} =
+             Integrations.upsert_widget_credentials(
+               widget_config.id,
+               integration.id,
+               %{"api_key" => "widget-secret"}
+             )
+
+    assert {:ok, data} =
+             Refresh.fetch_and_store(
+               integration,
+               organization.id,
+               %{},
+               widget_config.id
+             )
+
+    assert data.discriminator_id == "cfg:#{widget_config.id}"
+  end
+
   describe "fetcher_module/1" do
     test "only resolves modules in the fetchers namespace", %{integration: integration} do
       assert {:ok, TestOnDemand} = Refresh.fetcher_module(integration)
