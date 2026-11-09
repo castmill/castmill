@@ -172,7 +172,7 @@ export const Template: Component<{
 
   return (
     <div
-      ref={rootRef}
+      ref={(el) => (rootRef = el)}
       data-component="template"
       data-name={props.name}
       style={props.style || { width: '100%', height: '100%' }}
