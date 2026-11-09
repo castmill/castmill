@@ -138,6 +138,28 @@ defmodule Castmill.Widgets.TemplateBindingsTest do
       assert message =~ ~s(unknown formatter "money")
     end
 
+    test "traverses switch case values without interpreting labels as bindings" do
+      template = %{
+        "type" => "text",
+        "opts" => %{
+          "text" => %{
+            "switch" => %{
+              "key" => "data.view",
+              "cases" => %{
+                "list" => "List view",
+                "first" => "First view",
+                "fmt" => "Format view",
+                "formatted" => %{"fmt" => "{data.view | upper}"},
+                "default" => "Grid view"
+              }
+            }
+          }
+        }
+      }
+
+      assert {[], []} = TemplateBindings.check(template)
+    end
+
     test "rejects list wrappers whose values are not objects" do
       for malformed <- [[], "data.viewings", nil] do
         assert {[{_, "list must be an object"}], []} =

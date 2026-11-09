@@ -99,6 +99,23 @@ defmodule Castmill.Widgets.TemplateBindings do
     map |> Map.delete("first") |> walk(path, acc)
   end
 
+  defp walk(%{"switch" => %{"cases" => cases} = switch} = map, path, acc)
+       when is_map(cases) do
+    acc =
+      switch
+      |> Map.delete("cases")
+      |> walk(path ++ ["switch"], acc)
+
+    acc =
+      cases
+      |> Enum.sort_by(fn {label, _value} -> to_string(label) end)
+      |> Enum.reduce(acc, fn {label, value}, acc ->
+        walk(value, path ++ ["switch", "cases", to_string(label)], acc)
+      end)
+
+    map |> Map.delete("switch") |> walk(path, acc)
+  end
+
   defp walk(map, path, acc) when is_map(map) do
     segment = fn key -> if is_binary(map["name"]), do: "#{map["name"]}.#{key}", else: key end
 

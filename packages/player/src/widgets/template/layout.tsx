@@ -1,4 +1,12 @@
-import { Component, For, JSX, mergeProps, onCleanup, onMount } from 'solid-js';
+import {
+  Component,
+  createMemo,
+  For,
+  JSX,
+  mergeProps,
+  onCleanup,
+  onMount,
+} from 'solid-js';
 import { TemplateConfig, resolveOption } from './binding';
 import { Subscription, share, switchMap, take } from 'rxjs';
 import { TemplateComponent, TemplateComponentType } from './template';
@@ -272,13 +280,15 @@ export const Layout: Component<LayoutProps> = (props) => {
   };
   props.timeline.add(timelineItem);
 
-  const merged = mergeProps(
-    {
-      width: '100%',
-      height: '100%',
-      position: 'relative' as const,
-    },
-    props.style
+  const merged = createMemo(() =>
+    mergeProps(
+      {
+        width: '100%',
+        height: '100%',
+        position: 'relative' as const,
+      },
+      props.style
+    )
   );
 
   onCleanup(() => {
@@ -298,7 +308,7 @@ export const Layout: Component<LayoutProps> = (props) => {
   });
 
   return (
-    <div style={merged}>
+    <div style={merged()}>
       <For each={props.opts.containers}>
         {(container) => (
           <LayoutContainer

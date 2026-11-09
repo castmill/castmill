@@ -1,7 +1,14 @@
 import gsap from 'gsap';
 import { getLogicalSize } from '../../utils/logical-size';
 
-import { Component, JSX, mergeProps, onCleanup, onMount } from 'solid-js';
+import {
+  Component,
+  createMemo,
+  JSX,
+  mergeProps,
+  onCleanup,
+  onMount,
+} from 'solid-js';
 import { TemplateConfig, resolveOption } from './binding';
 import { TemplateComponent, TemplateComponentType } from './template';
 import { TimelineItem } from './timeline';
@@ -102,26 +109,26 @@ export const Text: Component<TextProps> = (props) => {
   // 1. Positioned elements (absolute/fixed) - no default size, auto-size to content
   // 2. Flex items (have flex property) - let flex control sizing, don't override with 100%
   // 3. Other elements - apply width/height 100% for autofit to work
-  const isPositioned =
-    props.style?.position === 'absolute' || props.style?.position === 'fixed';
-  const isFlexItem = props.style?.flex !== undefined;
+  const merged = createMemo(() => {
+    const style = props.style;
+    const isPositioned =
+      style?.position === 'absolute' || style?.position === 'fixed';
+    const isFlexItem = style?.flex !== undefined;
 
-  let defaultStyle: JSX.CSSProperties;
-  if (isPositioned) {
-    // Positioned elements auto-size to content
-    defaultStyle = { 'line-height': '1em' };
-  } else if (isFlexItem) {
-    // Flex items: let flex control height, but keep width for autofit measurement
-    defaultStyle = { width: '100%', 'line-height': '1em' };
-  } else {
-    // Default: fill container for autofit to measure
-    defaultStyle = { width: '100%', height: '100%', 'line-height': '1em' };
-  }
-  const merged = mergeProps(defaultStyle, props.style);
+    let defaultStyle: JSX.CSSProperties;
+    if (isPositioned) {
+      defaultStyle = { 'line-height': '1em' };
+    } else if (isFlexItem) {
+      defaultStyle = { width: '100%', 'line-height': '1em' };
+    } else {
+      defaultStyle = { width: '100%', height: '100%', 'line-height': '1em' };
+    }
 
-  const spanStyle = {
-    'line-height': merged['line-height'],
-  };
+    return mergeProps(defaultStyle, style);
+  });
+  const spanStyle = createMemo(() => ({
+    'line-height': merged()['line-height'],
+  }));
 
   onCleanup(() => {
     cleanUpAnimations?.();
@@ -242,8 +249,8 @@ export const Text: Component<TextProps> = (props) => {
   });
 
   return (
-    <div data-component="text" data-name={props.name} style={merged}>
-      <span ref={textRef} style={spanStyle}>
+    <div data-component="text" data-name={props.name} style={merged()}>
+      <span ref={textRef} style={spanStyle()}>
         {props.opts.text}
       </span>
     </div>

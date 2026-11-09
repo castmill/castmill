@@ -7,6 +7,8 @@ import { firstValueFrom } from 'rxjs';
 
 import { TemplateWidget, tickClock } from '../dist/index.js';
 
+let templateWindow: any;
+
 const withClockWidget = async (
   type: 'paginated-list' | 'scroller',
   run: (
@@ -14,9 +16,13 @@ const withClockWidget = async (
     widget: TemplateWidget,
     updated: boolean
   ) => Promise<void>,
-  keepItems = false
+  keepItems = false,
+  templateOverride?: any,
+  dataOverride?: any,
+  beforeTick?: (root: HTMLElement) => void
 ) => {
   const dom = new JSDOM('<!doctype html><div id="root"></div>');
+  templateWindow ||= dom.window;
   const globals = globalThis as any;
   const globalKeys = [
     'window',
@@ -75,42 +81,44 @@ const withClockWidget = async (
     const pad = (value: number) => (value < 10 ? '0' : '') + value;
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:00`;
   };
+  const template = templateOverride || {
+    type,
+    name: 'viewings',
+    opts: {
+      items: {
+        list: {
+          key: 'data.viewings',
+          where: [{ key: '$.end', gte: '@now' }],
+        },
+      },
+      pageDuration: 30,
+      pageSize: 5,
+    },
+    component: {
+      type: 'text',
+      name: 'viewing',
+      opts: { text: { key: '$.name' }, autofit: {} },
+    },
+  };
+  const data = dataOverride || {
+    viewings: [
+      {
+        name: 'soon',
+        end: iso(new Date(2026, 0, 1, keepItems ? 12 : 10, 30)),
+      },
+      { name: 'later', end: iso(new Date(2026, 0, 1, 12, 0)) },
+    ],
+  };
   const widget = new TemplateWidget(
     { getMedia: async (url: string) => url } as any,
     {
       widget: {
         name: `clock-${type}`,
-        template: {
-          type,
-          name: 'viewings',
-          opts: {
-            items: {
-              list: {
-                key: 'data.viewings',
-                where: [{ key: '$.end', gte: '@now' }],
-              },
-            },
-            pageDuration: 30,
-            pageSize: 5,
-          },
-          component: {
-            type: 'text',
-            name: 'viewing',
-            opts: { text: { key: '$.name' }, autofit: {} },
-          },
-        },
+        template,
       } as any,
       config: {
         options: {},
-        data: {
-          viewings: [
-            {
-              name: 'soon',
-              end: iso(new Date(2026, 0, 1, keepItems ? 12 : 10, 30)),
-            },
-            { name: 'later', end: iso(new Date(2026, 0, 1, 12, 0)) },
-          ],
-        },
+        data,
       } as any,
       globals: { target: 'poster' },
     }
@@ -120,14 +128,18 @@ const withClockWidget = async (
   try {
     await firstValueFrom(widget.show(root, 0));
     await run(root, widget, false);
+    beforeTick?.(root);
     current = new Date(2026, 0, 1, 11, 0).getTime();
     tickClock();
     await new Promise((resolve) => setTimeout(resolve, 100));
     await run(root, widget, true);
   } finally {
     widget.stop();
+    await widget.unload();
     Date.now = realNow;
-    dom.window.HTMLElement.prototype.getBoundingClientRect = realRect;
+    if (dom.window !== templateWindow) {
+      dom.window.HTMLElement.prototype.getBoundingClientRect = realRect;
+    }
     if (savedFrame) {
       globals.requestAnimationFrame = savedFrame;
       globals.cancelAnimationFrame = savedCancelFrame;
@@ -135,11 +147,89 @@ const withClockWidget = async (
     globalKeys.forEach((key) => {
       globals[key] = saved[key];
     });
-    dom.window.close();
+    if (dom.window !== templateWindow) {
+      dom.window.close();
+    }
   }
 };
 
 describe('@now list consumers', () => {
+  it('does not reinitialize a scroller when nested paginated pages update', async function () {
+    this.timeout(10000);
+    const template = {
+      type: 'scroller',
+      name: 'scroller',
+      opts: { items: { key: 'data.groups' } },
+      component: {
+        type: 'paginated-list',
+        name: 'events',
+        opts: {
+          items: {
+            list: {
+              key: '$.events',
+              where: [{ key: '$.end', gte: '@now' }],
+            },
+          },
+          pageDuration: 30,
+          pageSize: 1,
+        },
+        component: {
+          type: 'text',
+          name: 'event',
+          opts: { text: { key: '$.name' } },
+        },
+      },
+    };
+    const data = {
+      groups: [
+        {
+          events: [
+            { name: 'expired', end: '2026-01-01T10:30:00' },
+            { name: 'current', end: '2026-01-01T12:00:00' },
+          ],
+        },
+      ],
+    };
+    let initialDuration: number;
+
+    await withClockWidget(
+      'scroller',
+      async (_root, widget, updated) => {
+        const scrollerItems = () =>
+          ((widget as any).timeline.items as any[]).filter(
+            (item) =>
+              item.repeat &&
+              Object.getPrototypeOf(item.child) === Object.prototype
+          );
+        if (updated) {
+          expect(scrollerItems()).to.have.length(1);
+          expect(scrollerItems()[0].duration).not.to.equal(initialDuration);
+        } else {
+          expect(scrollerItems()).to.have.length(1);
+          initialDuration = scrollerItems()[0].duration;
+        }
+      },
+      false,
+      template,
+      data,
+      (root) => {
+        const view = root.ownerDocument.defaultView!;
+        view.HTMLElement.prototype.getBoundingClientRect = () =>
+          ({
+            x: 0,
+            y: 0,
+            top: 0,
+            right: 600,
+            bottom: 200,
+            left: 0,
+            width: 600,
+            height: 200,
+            toJSON: () => ({}),
+          }) as any;
+      }
+    );
+  });
+
   it('rebuilds paginated pages when resolved items change', async () => {
     await withClockWidget('paginated-list', async (root, _widget, updated) => {
       if (updated) {

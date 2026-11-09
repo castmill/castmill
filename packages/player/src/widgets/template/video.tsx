@@ -1,5 +1,6 @@
 import {
   Component,
+  createMemo,
   JSX,
   mergeProps,
   onCleanup,
@@ -137,12 +138,14 @@ export const Video: Component<VideoProps> = (props) => {
   let timeline: Timeline;
   let timelineItem: TimelineItem;
 
-  const merged = mergeProps(
-    {
-      width: '100%',
-      height: '100%',
-    },
-    props.style
+  const merged = createMemo(() =>
+    mergeProps(
+      {
+        width: '100%',
+        height: '100%',
+      },
+      props.style
+    )
   );
 
   let loadingSubscription: Subscription;
@@ -409,7 +412,7 @@ export const Video: Component<VideoProps> = (props) => {
           data-component="video-placeholder"
           data-name={props.name}
           style={{
-            ...merged,
+            ...merged(),
             display: 'flex',
             'align-items': 'center',
             'justify-content': 'center',
@@ -428,7 +431,7 @@ export const Video: Component<VideoProps> = (props) => {
         data-component="video"
         data-name={props.name}
         style={{
-          ...merged,
+          ...merged(),
           display: props.opts.url ? 'block' : 'none',
         }}
         playsinline

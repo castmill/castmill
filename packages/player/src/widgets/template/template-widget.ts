@@ -55,6 +55,7 @@ export class TemplateWidget extends TimelineWidget {
   private displayDuration?: number;
   // Emits once the rendered template is ready, e.g. its videos have loaded.
   private ready$?: ReplaySubject<void>;
+  private disposeRender?: () => void;
   // Globals for the rendered components; blocked videos report to this
   // widget. Nested template widgets override the hook again, so a block
   // reaches the nearest playlist item.
@@ -184,6 +185,11 @@ export class TemplateWidget extends TimelineWidget {
   }
 
   async unload() {
+    this.disposeRender?.();
+    this.disposeRender = undefined;
+    this.ready$?.complete();
+    this.ready$ = undefined;
+
     // Note: there is a risk here that we remove a font that is still in use by another widget.
     // We would need to either keep track of the fonts in use or add a unique prefix to the font name.
     // Probably a global font cache would be the best solution.
@@ -209,10 +215,10 @@ export class TemplateWidget extends TimelineWidget {
 
     return this.load().pipe(
       switchMap(() => {
-        if (el.children.length === 0 || !this.ready$) {
+        if (!this.disposeRender || !this.ready$) {
           const ready$ = new ReplaySubject<void>(1);
           this.ready$ = ready$;
-          render(
+          this.disposeRender = render(
             () =>
               Template({
                 name: this.opts.widget.name,
