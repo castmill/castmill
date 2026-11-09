@@ -429,9 +429,15 @@ Slideshow of multiple images with transition effects.
 ```typescript
 {
   images: string[] | Binding,      // Array of image URLs
-  imageDuration: number            // Duration per image (seconds)
+  imageDuration: number,           // Duration per image (seconds)
+  transition?: "slide" | "fade"    // Default "slide" (slide + zoom); "fade" cross-fades
 }
 ```
+
+Images are cached for offline playback. An image that can't be cached (for
+example, its host sends no CORS headers) is shown from its original URL, so it
+only displays while the device is online. The device token is only sent to
+the Castmill server, never to external image hosts.
 
 **Example**:
 ```json
