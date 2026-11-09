@@ -360,10 +360,15 @@ describe('Device', () => {
     play.mockImplementation(() => {
       device['closing'] = true;
     });
+    device['baseUrl'] = 'https://api.castmill.example/';
     try {
       const started = device.start(document.createElement('div'));
       await vi.advanceTimersByTimeAsync(5000);
       await started;
+      expect(ResourceManager).toHaveBeenCalledWith(expect.anything(), {
+        authToken: 'test',
+        authOrigins: ['https://api.castmill.example/'],
+      });
       expect(fromPlaylist).toHaveBeenCalledWith(
         expect.anything(),
         expect.anything(),

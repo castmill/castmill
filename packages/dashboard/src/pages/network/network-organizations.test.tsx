@@ -26,6 +26,7 @@ vi.mock('../../services/network.service', () => ({
     deleteOrganization: vi.fn(),
     blockOrganization: vi.fn(),
     unblockOrganization: vi.fn(),
+    listIntegrationSettings: vi.fn(() => Promise.resolve([])),
   },
 }));
 
@@ -96,6 +97,28 @@ describe('NetworkOrganizations', () => {
       expect(screen.getByText('Organization 1')).toBeInTheDocument();
       expect(screen.getByText('Organization 2')).toBeInTheDocument();
     });
+  });
+
+  it('opens the integration settings of an organization', async () => {
+    renderOrganizations();
+    await waitFor(() => screen.getByText('Organization 1'));
+
+    fireEvent.click(screen.getAllByTitle('Integration settings')[0]);
+    await waitFor(() =>
+      expect(
+        screen.getByText('Integration settings – Organization 1')
+      ).toBeInTheDocument()
+    );
+    expect(NetworkService.listIntegrationSettings).toHaveBeenCalledWith(
+      'org-1'
+    );
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+    await waitFor(() =>
+      expect(
+        screen.queryByText('Integration settings – Organization 1')
+      ).toBeNull()
+    );
   });
 
   it('creates a new organization', async () => {

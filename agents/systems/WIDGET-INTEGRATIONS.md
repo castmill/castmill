@@ -96,6 +96,41 @@ end
 # Constraint: Exactly one of organization_id or widget_config_id must be set
 ```
 
+### organization_integration_settings
+
+Non-secret values a **network admin** sets per organization, shared by every integration that
+declares the same settings `key`. Organization users cannot see or change them. Typical use: identity
+that many widgets share, such as the agency and office IDs of a real estate office, used by every
+property listing widget so the organization only ever lists its own offices' listings.
+
+An integration opts in through its `pull_config`:
+
+```json
+"organization_settings": {
+  "key": "property-listing",
+  "name": "Property listings",
+  "description": "The agency and offices whose listings the organization shows.",
+  "schema": {
+    "agency": { "type": "string", "label": "Agency", "required": true, "order": 1 },
+    "office_ids": { "type": "list", "label": "Office IDs", "order": 2 }
+  }
+}
+```
+
+- Field types: `string`, `number`, `boolean` and `list` (of texts); optional `label`, `description`,
+  `placeholder`, `required` and `order`. Keys match `^[a-z0-9][a-z0-9_-]{0,63}$`; up to 20 fields.
+- Definitions come from integrations of system widgets and of the network's widgets; when several
+  declare a key, the most recently updated declaration wins.
+- Fetchers and choice providers receive the values as `credentials["organization_settings"]`
+  (`Integrations.get_fetch_credentials/2`), next to the credentials, so playlist items can never
+  override them.
+- Network admin API: `GET /dashboard/network/organizations/:id/integration-settings` (definitions with
+  values), `PUT …/:key` (`{"settings": {...}}`; unknown fields are dropped, empty optional values
+  removed, invalid fields return 422 with `required`, `invalid`, `too_long` or `too_many`) and
+  `DELETE …/:key`. Dashboard: the sliders action on the network Organizations page.
+- Migrations can write values before the declaring widgets exist with
+  `Castmill.Widgets.Integrations.OrganizationSettings.store/4`.
+
 ### widget_integration_data
 
 Caches data from PULL or PUSH operations.

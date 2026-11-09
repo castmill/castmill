@@ -340,6 +340,25 @@ defmodule CastmillWeb.Router do
     get("/network/organizations", NetworkDashboardController, :list_organizations)
     post("/network/organizations", NetworkDashboardController, :create_organization)
     delete("/network/organizations/:id", NetworkDashboardController, :delete_organization)
+
+    get(
+      "/network/organizations/:organization_id/integration-settings",
+      NetworkDashboardController,
+      :list_organization_integration_settings
+    )
+
+    put(
+      "/network/organizations/:organization_id/integration-settings/:key",
+      NetworkDashboardController,
+      :update_organization_integration_settings
+    )
+
+    delete(
+      "/network/organizations/:organization_id/integration-settings/:key",
+      NetworkDashboardController,
+      :delete_organization_integration_settings
+    )
+
     get("/network/users", NetworkDashboardController, :list_users)
     get("/network/invitations", NetworkDashboardController, :list_invitations)
     delete("/network/invitations/:id", NetworkDashboardController, :delete_invitation)

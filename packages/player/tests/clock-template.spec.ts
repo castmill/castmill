@@ -134,8 +134,10 @@ describe('time-dependent template updates', () => {
         )!;
         expect(carousel.children.length).to.equal(2);
         expect(media).to.include('expired.jpg');
-        expect(carousel.children[1].getAttribute('style')).to.contain(
-          '/cached/current.jpg'
+        // Images load when they come in (hidden ones are cleared to save
+        // memory on old players), so only the first one is set when shown.
+        expect(carousel.children[0].getAttribute('style')).to.contain(
+          '/cached/expired.jpg'
         );
         const tweenCount = () =>
           ((widget as any).timeline.items as any[])
