@@ -343,6 +343,7 @@ defmodule CastmillWeb.WidgetIntegrationControllerTest do
       })
 
       playlist = playlist_fixture(%{organization_id: organization.id})
+
       playlist_item =
         playlist_item_fixture(%{playlist_id: playlist.id, offset: 0, duration: 1000})
 
@@ -426,6 +427,7 @@ defmodule CastmillWeb.WidgetIntegrationControllerTest do
       })
 
       playlist = playlist_fixture(%{organization_id: organization.id})
+
       playlist_item =
         playlist_item_fixture(%{playlist_id: playlist.id, offset: 0, duration: 1000})
 
@@ -513,6 +515,7 @@ defmodule CastmillWeb.WidgetIntegrationControllerTest do
         })
 
       playlist = playlist_fixture(%{organization_id: organization.id})
+
       playlist_item =
         playlist_item_fixture(%{playlist_id: playlist.id, offset: 0, duration: 1000})
 
@@ -593,6 +596,7 @@ defmodule CastmillWeb.WidgetIntegrationControllerTest do
       })
 
       playlist = playlist_fixture(%{organization_id: organization.id})
+
       playlist_item =
         playlist_item_fixture(%{playlist_id: playlist.id, offset: 0, duration: 1000})
 
@@ -630,6 +634,7 @@ defmodule CastmillWeb.WidgetIntegrationControllerTest do
         end
 
       playlist = playlist_fixture(%{organization_id: organization.id})
+
       playlist_item =
         playlist_item_fixture(%{playlist_id: playlist.id, offset: 0, duration: 1000})
 
@@ -663,6 +668,7 @@ defmodule CastmillWeb.WidgetIntegrationControllerTest do
 
       other_organization = organization_fixture()
       playlist = playlist_fixture(%{organization_id: other_organization.id})
+
       playlist_item =
         playlist_item_fixture(%{playlist_id: playlist.id, offset: 0, duration: 1000})
 
