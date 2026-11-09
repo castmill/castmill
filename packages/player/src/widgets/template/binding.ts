@@ -177,6 +177,8 @@ export interface FirstBinding {
 export interface TemplateConfig<Options = any, Data = any> {
   options: Options;
   data: Data;
+  /** False when the widget declares its own regular `overrides` option. */
+  textOverridesEnabled?: boolean;
 }
 
 /**

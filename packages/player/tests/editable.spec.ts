@@ -8,6 +8,7 @@ import {
   TemplateWidget,
   TextComponent,
   getTextOverride,
+  isPlayerShortcutTarget,
   isTextInputTarget,
   resolveEditable,
 } from '../dist/index.js';
@@ -66,12 +67,13 @@ const show = async (
   root: HTMLElement,
   template: any,
   options: any = {},
-  data: any = {}
+  data: any = {},
+  optionsSchema?: any
 ) => {
   const widget = new TemplateWidget(
     { getMedia: async (url: string) => url } as any,
     {
-      widget: { name: 'listing', template } as any,
+      widget: { name: 'listing', template, options_schema: optionsSchema } as any,
       config: { options, data } as any,
       globals: { target: 'poster', locale: 'sv' },
     }
@@ -276,6 +278,20 @@ describe('Editable texts', () => {
       expect(isTextInputTarget({} as any)).to.equal(false);
       expect(isTextInputTarget(null)).to.equal(false);
     });
+
+    it('does not treat button activation as a player shortcut', async () => {
+      await withDom(async () => {
+        const button = document.createElement('button');
+        const child = document.createElement('span');
+        button.appendChild(child);
+
+        expect(isPlayerShortcutTarget(button)).to.equal(true);
+        expect(isPlayerShortcutTarget(child)).to.equal(true);
+        expect(isPlayerShortcutTarget(document.createElement('div'))).to.equal(
+          false
+        );
+      });
+    });
   });
 
   describe('rendering', () => {
@@ -367,6 +383,29 @@ describe('Editable texts', () => {
         );
         expect(root.textContent).to.equal('Hello');
         expect(root.querySelector('[data-editable-key]')).to.equal(null);
+        widget.stop();
+      });
+    });
+
+    it('does not apply text overrides when the widget declares that option', async () => {
+      await withDom(async (root) => {
+        const widget = await show(
+          root,
+          {
+            type: 'text',
+            name: 'street',
+            opts: { text: { key: 'data.street' }, autofit: {} },
+            editable: { key: 'street' },
+          },
+          { overrides: { street: { text: 'Regular option' } } },
+          { street: 'Bound street' },
+          { overrides: 'string' }
+        );
+
+        expect(root.textContent).to.equal('Bound street');
+        expect(
+          root.querySelector('[data-editable-overridden]')
+        ).to.equal(null);
         widget.stop();
       });
     });

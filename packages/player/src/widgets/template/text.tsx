@@ -175,9 +175,10 @@ export class TextComponent implements TemplateComponent {
     editableAttrs?: EditableAttributes
   ): TextComponentOptions {
     const editable = resolveEditable(editableAttrs, config, context, globals);
-    const override = editable
-      ? getTextOverride(config, editable.key)
-      : undefined;
+    const override =
+      editable && config.textOverridesEnabled !== false
+        ? getTextOverride(config, editable.key)
+        : undefined;
     let text: string;
     if (override && override.hidden) {
       text = '';

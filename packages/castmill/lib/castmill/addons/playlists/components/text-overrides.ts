@@ -79,12 +79,24 @@ export const templateEditables = (template: unknown): TemplateEditables => {
  */
 export const supportsTextOverrides = (widget: JsonWidget): boolean => {
   const schema = widget.options_schema as Record<string, unknown> | undefined;
-  if (schema && !Array.isArray(schema) && 'overrides' in schema) {
+  if (declaresOverridesOption(schema)) {
     return false;
   }
   const editables = templateEditables(widget.template);
   return editables.static.length > 0 || editables.dynamic;
 };
+
+export const declaresOverridesOption = (schema: unknown): boolean =>
+  Array.isArray(schema)
+    ? schema.some(
+        (option) =>
+          option &&
+          typeof option === 'object' &&
+          (option as { key?: unknown }).key === 'overrides'
+      )
+    : !!schema &&
+      typeof schema === 'object' &&
+      Object.prototype.hasOwnProperty.call(schema, 'overrides');
 
 const isOverride = (value: unknown): value is TextOverride =>
   !!value &&
@@ -94,10 +106,12 @@ const isOverride = (value: unknown): value is TextOverride =>
 /** The valid overrides stored in widget options. */
 export const getOverrides = (options: unknown): TextOverrides => {
   const overrides =
-    options && typeof options === 'object'
+    options &&
+    typeof options === 'object' &&
+    Object.prototype.hasOwnProperty.call(options, 'overrides')
       ? (options as Record<string, unknown>).overrides
       : undefined;
-  const result: TextOverrides = {};
+  const result = Object.create(null) as TextOverrides;
   if (overrides && typeof overrides === 'object' && !Array.isArray(overrides)) {
     for (const [key, value] of Object.entries(overrides)) {
       if (isOverride(value)) result[key] = value;
@@ -109,13 +123,21 @@ export const getOverrides = (options: unknown): TextOverrides => {
 export const countOverrides = (options: unknown): number =>
   Object.keys(getOverrides(options)).length;
 
+export const shouldShowTextOverrides = (
+  widget: JsonWidget,
+  options: unknown
+): boolean =>
+  supportsTextOverrides(widget) ||
+  (!declaresOverridesOption(widget.options_schema) &&
+    countOverrides(options) > 0);
+
 /** Returns new overrides with `key` set, or removed when `value` is undefined. */
 export const setOverride = (
   overrides: TextOverrides,
   key: string,
   value: TextOverride | undefined
 ): TextOverrides => {
-  const next = { ...overrides };
+  const next = Object.assign(Object.create(null), overrides) as TextOverrides;
   if (value) {
     next[key] = value;
   } else {

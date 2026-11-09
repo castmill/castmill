@@ -90,6 +90,12 @@ export function isTextInputTarget(target: EventTarget | null): boolean {
   );
 }
 
+export function isPlayerShortcutTarget(target: EventTarget | null): boolean {
+  if (isTextInputTarget(target)) return true;
+  const element = target as Element | null;
+  return !!element?.closest?.('button, [role="button"]');
+}
+
 function createPlayerElement(id: string): HTMLDivElement {
   const el = document.createElement('div');
   el.id = `player-${id}`;
@@ -213,8 +219,8 @@ export class PlayerUIControls {
     );
 
     this.$keyboard = fromEvent<KeyboardEvent>(document, 'keydown').pipe(
-      // Keys typed into form fields (e.g. widget settings) are not shortcuts.
-      filter((evt) => !isTextInputTarget(evt.target)),
+      // Interactive controls (e.g. widget settings) do not trigger shortcuts.
+      filter((evt) => !isPlayerShortcutTarget(evt.target)),
       switchMap((evt) => {
         // Hack so that we can animate the play button
         const { key, code, keyCode } = evt;

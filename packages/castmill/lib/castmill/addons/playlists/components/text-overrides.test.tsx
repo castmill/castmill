@@ -12,11 +12,13 @@ import type { JsonPlaylistItem, JsonWidget } from '@castmill/player';
 import {
   DEFAULT_MAX_LENGTH,
   countOverrides,
+  declaresOverridesOption,
   describeOverrides,
   getOverrides,
   readEditableElement,
   setOverride,
   supportsTextOverrides,
+  shouldShowTextOverrides,
   templateEditables,
   translateEditableLabel,
   TextOverride,
@@ -24,7 +26,10 @@ import {
 } from './text-overrides';
 import { EditableTextStage } from './editable-text-stage';
 import { TextOverridesList } from './text-overrides-list';
-import { normalizeWidgetOptionsForApi } from './widget-config';
+import {
+  normalizeWidgetOptionsForApi,
+  normalizeWidgetOptionsForIntegration,
+} from './widget-config';
 import { PlaylistItem } from './playlist-item';
 
 vi.mock('@atlaskit/pragmatic-drag-and-drop/element/adapter', () => ({
@@ -115,6 +120,23 @@ describe('text override helpers', () => {
         })
       )
     ).toBe(true);
+    expect(declaresOverridesOption([{ key: 'overrides' }])).toBe(true);
+    expect(shouldShowTextOverrides(widget(), {})).toBe(true);
+    expect(
+      shouldShowTextOverrides(
+        widget({ template: { type: 'text' } as any }),
+        { overrides: { old: { text: 'Old value' } } }
+      )
+    ).toBe(true);
+    expect(
+      shouldShowTextOverrides(
+        widget({
+          template: { type: 'text' } as any,
+          options_schema: { overrides: 'string' } as any,
+        }),
+        { overrides: { street: { text: 'Regular option' } } }
+      )
+    ).toBe(false);
   });
 
   it('reads and updates overrides', () => {
@@ -126,18 +148,37 @@ describe('text override helpers', () => {
         d: null,
       },
     };
-    expect(getOverrides(options)).toEqual({
+    expect({ ...getOverrides(options) }).toEqual({
       a: { text: 'A' },
       b: { hidden: true },
     });
-    expect(getOverrides({ overrides: [] })).toEqual({});
+    expect({ ...getOverrides({ overrides: [] }) }).toEqual({});
     expect(getOverrides(null)).toEqual({});
     expect(countOverrides(options)).toBe(2);
     expect(countOverrides(undefined)).toBe(0);
 
     const next = setOverride({ a: { text: 'A' } }, 'b', { hidden: true });
-    expect(next).toEqual({ a: { text: 'A' }, b: { hidden: true } });
-    expect(setOverride(next, 'a', undefined)).toEqual({ b: { hidden: true } });
+    expect({ ...next }).toEqual({ a: { text: 'A' }, b: { hidden: true } });
+    expect({ ...setOverride(next, 'a', undefined) }).toEqual({
+      b: { hidden: true },
+    });
+
+    const protoOverride = JSON.parse(
+      '{"overrides":{"__proto__":{"text":"Prototype key"},"constructor":{"text":"Constructor key"}}}'
+    );
+    const safeOverrides = getOverrides(protoOverride);
+    expect(Object.getPrototypeOf(safeOverrides)).toBeNull();
+    expect(safeOverrides.__proto__).toEqual({ text: 'Prototype key' });
+    expect(safeOverrides.constructor).toEqual({ text: 'Constructor key' });
+    expect(getOverrides({})['constructor']).toBeUndefined();
+    expect(getOverrides({})['toString']).toBeUndefined();
+
+    const updated = setOverride({}, '__proto__', { text: 'Prototype key' });
+    expect(Object.getPrototypeOf(updated)).toBeNull();
+    expect(Object.keys(updated)).toEqual(['__proto__']);
+    expect(JSON.stringify(updated)).toBe(
+      '{"__proto__":{"text":"Prototype key"}}'
+    );
   });
 
   it('translates labels through widget translations', () => {
@@ -232,6 +273,49 @@ describe('text override helpers', () => {
         [['overrides', { type: 'string' }]] as any
       )
     ).toEqual({ overrides: 'own' });
+    expect(
+      normalizeWidgetOptionsForIntegration(
+        { overrides: { street: { text: 'Edited' } } } as any,
+        entries,
+        true
+      )
+    ).toEqual({ title: undefined });
+    expect(
+      normalizeWidgetOptionsForIntegration(
+        { overrides: { street: { text: 'Regular option' } } } as any,
+        [['overrides', { type: 'string' }]] as any,
+        false
+      )
+    ).toEqual({ overrides: { street: { text: 'Regular option' } } });
+    expect(
+      normalizeWidgetOptionsForIntegration(
+        { overrides: { street: { text: 'First edit' } } } as any,
+        entries,
+        true
+      )
+    ).toEqual(
+      normalizeWidgetOptionsForIntegration(
+        { overrides: { street: { text: 'Second edit' } } } as any,
+        entries,
+        true
+      )
+    );
+    const noEditableTexts = widget({ template: { type: 'text' } as any });
+    const unusedOverrides = { overrides: { old: { text: 'Old value' } } };
+    expect(
+      normalizeWidgetOptionsForIntegration(
+        unusedOverrides as any,
+        [],
+        shouldShowTextOverrides(noEditableTexts, unusedOverrides)
+      )
+    ).toEqual({});
+    expect(
+      normalizeWidgetOptionsForIntegration(
+        { overrides: {} } as any,
+        [],
+        true
+      )
+    ).toEqual({});
   });
 });
 
@@ -384,15 +468,69 @@ describe('EditableTextStage', () => {
       'aria-label',
       'Edit text: Gata'
     );
+    expect(text('street').parentElement?.contains(screen.getByRole('dialog'))).toBe(
+      false
+    );
     expect(screen.queryByText('Reset to original')).toBeNull();
 
     fireEvent.input(input, { target: { value: 'Hemlig adr' } });
     expect(screen.getByText('10 / 10')).toBeInTheDocument();
+    fireEvent.keyDown(input, { key: 'Enter', isComposing: true });
+    expect(onChange).not.toHaveBeenCalled();
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    fireEvent.keyDown(input, { key: 'Enter', keyCode: 229 });
+    expect(onChange).not.toHaveBeenCalled();
     fireEvent.keyDown(input, { key: 'Enter' });
 
     expect(onChange).toHaveBeenCalledWith('street', { text: 'Hemlig adr' });
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(text('street')).toHaveTextContent('Hemlig adr');
+  });
+
+  it('keeps the editor visible when its text is near the viewport bottom', async () => {
+    const heightDescriptor = Object.getOwnPropertyDescriptor(
+      window,
+      'innerHeight'
+    );
+    Object.defineProperty(window, 'innerHeight', {
+      configurable: true,
+      value: 200,
+    });
+    const rect = (top: number, bottom: number, height: number) =>
+      ({
+        top,
+        bottom,
+        height,
+        left: 20,
+        right: 120,
+        width: 100,
+        x: 20,
+        y: top,
+        toJSON: () => ({}),
+      }) as DOMRect;
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(
+      function () {
+        if (this.hasAttribute('data-editable-key')) {
+          return rect(150, 175, 25);
+        }
+        if (this.getAttribute('role') === 'dialog') {
+          return rect(0, 120, 120);
+        }
+        return rect(0, 0, 0);
+      }
+    );
+
+    try {
+      const { text } = setup();
+      fireEvent.click(text('street'));
+      const dialog = await screen.findByRole('dialog');
+      await waitFor(() => expect(dialog.style.top).toBe('72px'));
+      expect(text('street').parentElement?.contains(dialog)).toBe(false);
+    } finally {
+      if (heightDescriptor) {
+        Object.defineProperty(window, 'innerHeight', heightDescriptor);
+      }
+    }
   });
 
   it('does not store an unchanged text', async () => {

@@ -2,8 +2,10 @@ import {
   Component,
   For,
   createEffect,
+  createMemo,
   createSignal,
   onCleanup,
+  on,
   Show,
 } from 'solid-js';
 import { authFetch } from '../../common/services/auth-fetch';
@@ -51,6 +53,7 @@ import {
   describeOverrides,
   getOverrides,
   setOverride,
+  shouldShowTextOverrides,
   supportsTextOverrides,
   templateEditables,
   translateEditableLabel,
@@ -181,6 +184,16 @@ export const normalizeWidgetOptionsForApi = (
   ) {
     normalized.overrides = options.overrides;
   }
+  return normalized;
+};
+
+export const normalizeWidgetOptionsForIntegration = (
+  options: OptionsDict,
+  schemaEntries: [string, SchemaAttributeType][],
+  textOverridesReserved: boolean
+): Record<string, any> => {
+  const normalized = normalizeWidgetOptionsForApi(options, schemaEntries);
+  if (textOverridesReserved) delete normalized.overrides;
   return normalized;
 };
 
@@ -383,10 +396,14 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
 
   const schemaEntries = normalizeSchemaEntries(rawOptionsSchema);
   const textOverridesEnabled = supportsTextOverrides(props.item.widget);
+  const showTextOverrides = shouldShowTextOverrides(
+    props.item.widget,
+    props.item.config.options
+  );
 
   if (
     (!rawOptionsSchema || schemaEntries.length === 0) &&
-    !textOverridesEnabled
+    !showTextOverrides
   ) {
     return <div>{t('common.noConfigurationAvailable')}</div>;
   }
@@ -445,44 +462,64 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
   // slow request cannot overwrite the preview of a newer one.
   let previewRequestId = 0;
 
-  createEffect(() => {
-    // Track option changes so the preview refetches when they change.
-    // Edited texts don't affect integration data.
-    const { overrides: _overrides, ...fetchOptions } =
-      normalizeWidgetOptionsForApi(widgetOptions(), schemaEntries);
-    const options = { ...fetchOptions, display_locale: displayLocale() };
-    const widgetId = props.item.widget?.id;
+  const previewFetchInput = createMemo(() => {
+    const currentOptions = widgetOptions();
+    const options = normalizeWidgetOptionsForIntegration(
+      currentOptions,
+      schemaEntries,
+      showTextOverrides
+    );
+    return JSON.stringify({
+      options,
+      displayLocale: displayLocale(),
+      widgetId: props.item.widget?.id,
+      baseUrl: props.baseUrl,
+      organizationId: props.organizationId,
+    });
+  });
 
-    if (!widgetId || !props.baseUrl || !props.organizationId) {
-      return;
-    }
-
-    // Debounce to avoid hammering the integration endpoint while the user is
-    // still editing (e.g. typing into text fields).
-    if (previewFetchTimer) {
-      clearTimeout(previewFetchTimer);
-    }
-
-    const requestId = ++previewRequestId;
-    previewFetchTimer = setTimeout(async () => {
-      const result = await PlaylistsService.prefetchWidgetData(
-        props.baseUrl,
-        props.organizationId,
+  createEffect(
+    on(previewFetchInput, (serialized) => {
+      const {
+        options: fetchOptions,
+        displayLocale: locale,
         widgetId,
-        options,
-        // Live preview fetches are ephemeral: they must not register background
-        // polling schedulers for option combinations that may never be saved.
-        { preview: true }
-      );
+        baseUrl,
+        organizationId,
+      } = JSON.parse(serialized);
+      const options = { ...fetchOptions, display_locale: locale };
 
-      // Ignore out-of-order responses from superseded requests.
-      if (requestId !== previewRequestId) {
+      if (!widgetId || !baseUrl || !organizationId) {
         return;
       }
 
-      setPreviewData(result && result.data ? result.data : null);
-    }, 500);
-  });
+      // Debounce to avoid hammering the integration endpoint while the user is
+      // still editing (e.g. typing into text fields).
+      if (previewFetchTimer) {
+        clearTimeout(previewFetchTimer);
+      }
+
+      const requestId = ++previewRequestId;
+      previewFetchTimer = setTimeout(async () => {
+        const result = await PlaylistsService.prefetchWidgetData(
+          baseUrl,
+          organizationId,
+          widgetId,
+          options,
+          // Live preview fetches are ephemeral: they must not register background
+          // polling schedulers for option combinations that may never be saved.
+          { preview: true }
+        );
+
+        // Ignore out-of-order responses from superseded requests.
+        if (requestId !== previewRequestId) {
+          return;
+        }
+
+        setPreviewData(result && result.data ? result.data : null);
+      }, 500);
+    })
+  );
 
   onCleanup(() => {
     if (previewFetchTimer) {
@@ -1096,7 +1133,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
                 return componentForItem(key, schema);
               }}
             </For>
-            <Show when={textOverridesEnabled}>
+            <Show when={showTextOverrides}>
               <TextOverridesList
                 used={overrideEntries().used}
                 unused={overrideEntries().unused}

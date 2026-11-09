@@ -78,11 +78,19 @@ export class TemplateWidget extends TimelineWidget {
         this.setBlocked(source, block),
     });
 
+    const optionsSchema = opts.widget.options_schema;
+    const declaresOverrides = Array.isArray(optionsSchema)
+      ? optionsSchema.some((option) => option && option.key === 'overrides')
+      : optionsSchema &&
+        Object.prototype.hasOwnProperty.call(optionsSchema, 'overrides');
     this.template = TemplateComponent.fromJSON(
       opts.widget.template,
       resourceManager,
       this.globals,
-      opts.config
+      {
+        ...opts.config,
+        textOverridesEnabled: !declaresOverrides,
+      }
     );
 
     // Check for display_duration or duration option and set timeline duration
