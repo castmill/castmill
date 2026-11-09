@@ -27,7 +27,7 @@ export function checkFilter(
 export function isPresent(value: any): boolean {
   if (value === undefined || value === null || value === false) return false;
   if (typeof value === 'number') return value !== 0 && !isNaN(value);
-  if (typeof value === 'string') return value.replace(/^\s+|\s+$/g, '') !== '';
+  if (typeof value === 'string') return /\S/.test(value);
   if (Array.isArray(value)) return value.length > 0;
   return true;
 }

@@ -146,32 +146,28 @@ export const Template: Component<{
 }> = (props) => {
   let rootRef: HTMLDivElement | undefined;
   let stopObserving: (() => void) | undefined;
-  let retry: ReturnType<typeof setTimeout> | undefined;
+  let appliedSize: number | null = null;
 
+  // Writes only on changes: the style write is itself observed without
+  // ResizeObserver, so this must settle.
   const applyBaseFont = () => {
-    const size = rootRef
-      ? baseFontSize(rootRef.clientWidth, rootRef.clientHeight)
-      : null;
-    if (size !== null) rootRef!.style.fontSize = size + 'px';
-    return size !== null;
+    const el = rootRef;
+    if (!el) return;
+    const size = baseFontSize(el.clientWidth, el.clientHeight);
+    if (size === null || size === appliedSize) return;
+    appliedSize = size;
+    el.style.fontSize = size + 'px';
   };
 
-  // Templates are often rendered before they are attached or shown, so keep
-  // measuring until the widget has a size; resizes are observed afterwards.
-  const applyWhenSized = (delay: number) => {
-    if (!applyBaseFont()) {
-      retry = setTimeout(() => applyWhenSized(500), delay);
-    }
-  };
-
+  // The player attaches layers (hidden but laid out) before showing them, so
+  // the size is usually known at mount; later sizes come from the observer.
   onMount(() => {
-    applyWhenSized(0);
-    stopObserving = observeElementResize(rootRef!, applyBaseFont);
+    applyBaseFont();
+    if (rootRef) stopObserving = observeElementResize(rootRef, applyBaseFont);
   });
 
   onCleanup(() => {
     stopObserving?.();
-    clearTimeout(retry);
   });
 
   return (

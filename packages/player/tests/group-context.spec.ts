@@ -236,17 +236,24 @@ describe('Group context, when and limit', () => {
       const size = { width: 960, height: 540 };
       Object.defineProperty(el, 'clientWidth', { get: () => size.width });
       Object.defineProperty(el, 'clientHeight', { get: () => size.height });
+      const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
-      // Measuring is retried every 500ms until the widget has a size.
-      await new Promise((resolve) => setTimeout(resolve, 1100));
+      // jsdom has no ResizeObserver, like Chrome 38: the player letterboxing
+      // the widget (an inline size) is followed through its style.
+      el.style.width = '960px';
+      await settle();
       expect(el.style.fontSize).to.equal('5px');
 
-      // Resizes are followed (jsdom has no ResizeObserver: window resize).
+      // Window resizes are followed too.
       size.width = 1080;
       size.height = 1920;
       (globalThis as any).window.dispatchEvent(
         new (globalThis as any).window.Event('resize')
       );
+      expect(el.style.fontSize).to.equal('5.625px');
+
+      // Its own write does not trigger it again.
+      await settle();
       expect(el.style.fontSize).to.equal('5.625px');
     });
   });
