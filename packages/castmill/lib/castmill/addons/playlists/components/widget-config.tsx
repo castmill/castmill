@@ -64,6 +64,9 @@ interface WidgetConfigProps {
   }) => Promise<void>;
 }
 
+export const resolvePlaybackLocale = (defaultLocale?: string) =>
+  defaultLocale || 'en';
+
 type FormTypes =
   | 'text'
   | 'number'
@@ -284,6 +287,8 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
   const t = (key: string, params?: Record<string, any>) =>
     props.store.i18n?.t(key, params) || key;
   const locale = () => props.store.i18n?.locale() || 'en';
+  const displayLocale = () =>
+    resolvePlaybackLocale(props.store.networkSettings?.defaultLocale);
 
   const translateWidgetOptionLabel = (
     optionKey: string,
@@ -410,7 +415,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
     // Track option changes so the preview refetches when they change.
     const options = {
       ...normalizeWidgetOptionsForApi(widgetOptions(), schemaEntries),
-      display_locale: locale(),
+      display_locale: displayLocale(),
     };
     const widgetId = props.item.widget?.id;
 
@@ -1043,7 +1048,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
           config={widgetConfig()}
           options={widgetOptions()}
           previewData={previewData()}
-          locale={locale()}
+          locale={displayLocale()}
           baseUrl={props.baseUrl}
           socket={props.store.socket}
         />

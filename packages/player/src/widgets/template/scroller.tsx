@@ -301,7 +301,15 @@ export const Scroller: Component<ScrollerProps> = (props) => {
 
   // Track ready state for all items (original + duplicates)
   let readyCount = 0;
-  const resolvedItems = createMemo(() => props.opts.items || []);
+  const resolvedItems = createMemo(
+    () => props.opts.items || [],
+    undefined,
+    {
+      equals: (previous, next) =>
+        previous.length === next.length &&
+        previous.every((item, index) => item === next[index]),
+    }
+  );
   const initialItems = resolvedItems();
   let previousItems = initialItems;
   let totalItems = initialItems.length * 2;

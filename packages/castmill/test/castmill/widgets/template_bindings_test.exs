@@ -119,6 +119,18 @@ defmodule Castmill.Widgets.TemplateBindingsTest do
                TemplateBindings.check(%{"first" => []})
     end
 
+    test "validates first bindings with additional keys" do
+      {errors, []} =
+        TemplateBindings.check(%{
+          "first" => [],
+          "other" => %{"fmt" => "{data.price | money}"}
+        })
+
+      messages = Enum.map(errors, &TemplateBindings.describe/1)
+      assert "first must be a non-empty list" in messages
+      assert Enum.any?(messages, &(&1 =~ ~s(unknown formatter "money")))
+    end
+
     test "validates fmt bindings with additional keys" do
       assert {[{_, message}], []} =
                TemplateBindings.check(%{"fmt" => "{data.price | money}", "default" => "—"})

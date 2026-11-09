@@ -84,16 +84,19 @@ defmodule Castmill.Widgets.TemplateBindings do
     map |> Map.delete("list") |> walk(path, acc)
   end
 
-  defp walk(%{"first" => first} = map, path, acc) when map_size(map) == 1 do
-    if is_list(first) and first != [] do
-      first
-      |> Enum.with_index()
-      |> Enum.reduce(acc, fn {value, index}, acc ->
-        walk(value, path ++ ["first[#{index}]"], acc)
-      end)
-    else
-      error(acc, path, "first must be a non-empty list")
-    end
+  defp walk(%{"first" => first} = map, path, acc) do
+    acc =
+      if is_list(first) and first != [] do
+        first
+        |> Enum.with_index()
+        |> Enum.reduce(acc, fn {value, index}, acc ->
+          walk(value, path ++ ["first[#{index}]"], acc)
+        end)
+      else
+        error(acc, path, "first must be a non-empty list")
+      end
+
+    map |> Map.delete("first") |> walk(path, acc)
   end
 
   defp walk(map, path, acc) when is_map(map) do

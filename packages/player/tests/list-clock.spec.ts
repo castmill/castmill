@@ -13,7 +13,8 @@ const withClockWidget = async (
     root: HTMLElement,
     widget: TemplateWidget,
     updated: boolean
-  ) => Promise<void>
+  ) => Promise<void>,
+  keepItems = false
 ) => {
   const dom = new JSDOM('<!doctype html><div id="root"></div>');
   const globals = globalThis as any;
@@ -103,7 +104,10 @@ const withClockWidget = async (
         options: {},
         data: {
           viewings: [
-            { name: 'soon', end: iso(new Date(2026, 0, 1, 10, 30)) },
+            {
+              name: 'soon',
+              end: iso(new Date(2026, 0, 1, keepItems ? 12 : 10, 30)),
+            },
             { name: 'later', end: iso(new Date(2026, 0, 1, 12, 0)) },
           ],
         },
@@ -156,5 +160,25 @@ describe('@now list consumers', () => {
       }
       expect(root.textContent).to.contain('later');
     });
+  });
+
+  it('keeps scroller items mounted when the resolved list is unchanged', async () => {
+    let firstItem: Element | null = null;
+    await withClockWidget(
+      'scroller',
+      async (root, _widget, updated) => {
+        if (updated) {
+          expect(
+            root.querySelector('[data-component="scroller"] > div > div')
+          ).to.equal(firstItem);
+        } else {
+          firstItem = root.querySelector(
+            '[data-component="scroller"] > div > div'
+          );
+          expect(firstItem).not.to.equal(null);
+        }
+      },
+      true
+    );
   });
 });
