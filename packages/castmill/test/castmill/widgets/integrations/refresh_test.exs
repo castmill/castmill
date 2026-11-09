@@ -171,8 +171,10 @@ defmodule Castmill.Widgets.Integrations.RefreshTest do
                now
              ) == :very_stale
 
+      # Rows that were never fetched (e.g. after a failed first fetch) hold no
+      # data, so they are missing rather than stale.
       assert Refresh.state(data.(%{refresh_at: nil, fetched_at: nil}), integration, now) ==
-               :very_stale
+               :missing
 
       # A failing source is only retried through the background, with backoff.
       assert Refresh.state(
@@ -586,7 +588,10 @@ defmodule Castmill.Widgets.Integrations.RefreshTest do
     } do
       {:ok, _integration} =
         integration
-        |> WidgetIntegration.changeset(%{integration_type: "both"})
+        |> WidgetIntegration.changeset(%{
+          integration_type: "both",
+          push_webhook_path: "/on-demand"
+        })
         |> Repo.update()
 
       playlist = playlist_fixture(%{organization_id: organization.id})

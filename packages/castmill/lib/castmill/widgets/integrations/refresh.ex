@@ -398,7 +398,7 @@ defmodule Castmill.Widgets.Integrations.Refresh do
          organization_id,
          widget_options,
          discriminator_id,
-         widget_config_id \\ nil
+         widget_config_id
        ) do
     key = lock_key(integration, discriminator_id)
 

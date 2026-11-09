@@ -548,7 +548,7 @@ defmodule Castmill.Repo.Migrations.ImplementWeatherWidget do
 
   # Schemaless, so later WidgetIntegration schema fields do not break this
   # migration on databases that do not have those columns yet.
-  defp insert_integration(attrs, now, opts \\ []) do
+  defp insert_integration(attrs, now, opts) do
     defaults = %{
       discriminator_type: "widget_config",
       config_schema: %{},
