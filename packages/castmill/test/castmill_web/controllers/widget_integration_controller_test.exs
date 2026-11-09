@@ -353,12 +353,14 @@ defmodule CastmillWeb.WidgetIntegrationControllerTest do
         })
 
       conn = get(conn, "/dashboard/widget-configs/#{widget_config.id}/data")
-      expected_discriminator = "cfg:#{widget_config.id}"
+      expected_discriminator_prefix = "cfg:#{widget_config.id}|preview:"
 
       assert %{
                "data" => %{"items" => [%{"title" => "stub"}]},
-               "discriminator_id" => ^expected_discriminator
+               "discriminator_id" => discriminator_id
              } = json_response(conn, 200)
+
+      assert String.starts_with?(discriminator_id, expected_discriminator_prefix)
     end
   end
 

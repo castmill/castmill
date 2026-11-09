@@ -136,4 +136,8 @@ describe('applyWidgetMaxItemsFilter', () => {
   it('uses the default item limit when max_items is unset', () => {
     expect(applyWidgetMaxItemsFilter(data, {})).toEqual(data);
   });
+
+  it('ignores non-numeric max_items values', () => {
+    expect(applyWidgetMaxItemsFilter(data, { max_items: '2' })).toEqual(data);
+  });
 });

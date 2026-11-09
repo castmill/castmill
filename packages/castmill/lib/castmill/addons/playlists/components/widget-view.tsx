@@ -73,7 +73,12 @@ export const applyWidgetMaxItemsFilter = (
 ): Record<string, any> => {
   const maxItems = options.max_items || 10;
 
-  if (Array.isArray(data.items) && Number.isInteger(maxItems) && maxItems > 0) {
+  if (
+    Array.isArray(data.items) &&
+    typeof maxItems === 'number' &&
+    Number.isInteger(maxItems) &&
+    maxItems > 0
+  ) {
     return { ...data, items: data.items.slice(0, maxItems) };
   }
 

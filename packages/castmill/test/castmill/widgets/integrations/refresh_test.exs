@@ -129,11 +129,41 @@ defmodule Castmill.Widgets.Integrations.RefreshTest do
       })
 
     assert {:ok, _credential} =
+             Integrations.upsert_organization_credentials(
+               organization.id,
+               integration.id,
+               %{"api_key" => "organization-secret"}
+             )
+
+    assert {:ok, organization_creds} =
+             Integrations.get_fetch_credentials(organization.id, integration)
+
+    assert organization_creds["api_key"] == "organization-secret"
+
+    assert {:ok, config_creds} =
+             Integrations.get_fetch_credentials(
+               organization.id,
+               integration,
+               widget_config.id
+             )
+
+    assert config_creds["api_key"] == "organization-secret"
+
+    assert {:ok, _credential} =
              Integrations.upsert_widget_credentials(
                widget_config.id,
                integration.id,
                %{"api_key" => "widget-secret"}
              )
+
+    assert {:ok, widget_creds} =
+             Integrations.get_fetch_credentials(
+               organization.id,
+               integration,
+               widget_config.id
+             )
+
+    assert widget_creds["api_key"] == "widget-secret"
 
     assert {:ok, data} =
              Refresh.fetch_and_store(

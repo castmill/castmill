@@ -989,7 +989,7 @@ defmodule CastmillWeb.WidgetIntegrationController do
            widget_config_id
          ) do
       {:ok, data} -> data
-      _ -> existing
+      _ -> nil
     end
   end
 

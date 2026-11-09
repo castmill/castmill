@@ -343,17 +343,21 @@ defmodule Castmill.Widgets.Integrations do
 
     scoped_creds =
       case integration.credential_scope do
-        "widget" when not is_nil(widget_config_id) ->
-          case get_widget_credentials(widget_config_id, integration.id) do
+        "widget" ->
+          widget_credentials =
+            if is_nil(widget_config_id) do
+              :not_found
+            else
+              get_widget_credentials(widget_config_id, integration.id)
+            end
+
+          case widget_credentials do
             {:ok, creds} when is_map(creds) -> creds
-            _ -> %{}
+            _ -> organization_credentials(organization_id, integration.id)
           end
 
         "organization" ->
-          case get_organization_credentials(organization_id, integration.id) do
-            {:ok, creds} when is_map(creds) -> creds
-            _ -> %{}
-          end
+          organization_credentials(organization_id, integration.id)
 
         _ ->
           %{}
@@ -372,6 +376,13 @@ defmodule Castmill.Widgets.Integrations do
       credential_values != %{} -> {:ok, merged}
       optional_or_none_auth?(integration) -> {:ok, merged}
       true -> {:error, :no_credentials}
+    end
+  end
+
+  defp organization_credentials(organization_id, integration_id) do
+    case get_organization_credentials(organization_id, integration_id) do
+      {:ok, creds} when is_map(creds) -> creds
+      _ -> %{}
     end
   end
 

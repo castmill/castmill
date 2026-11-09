@@ -93,7 +93,12 @@ defmodule Castmill.Widgets.Integrations.Refresh do
             module.fetch(credentials, fetch_options(integration, widget_options))
 
           {:error, :no_fetcher_module} ->
-            Integrations.do_fetch_integration_data(integration, credentials)
+            request_integration = %{
+              integration
+              | pull_config: fetch_options(integration, widget_options)
+            }
+
+            Integrations.do_fetch_integration_data(request_integration, credentials)
 
           {:error, reason} ->
             {:error, reason}
