@@ -172,9 +172,6 @@ describe('time-dependent template updates', () => {
   });
 
   it('keeps an unchanged time-filtered carousel mounted across clock ticks', async () => {
-    let initialMediaCount = 0;
-    let initialTweenCount = 0;
-    let initialTimeline: any;
     await withWidget(
       {
         type: 'image-carousel',
@@ -196,21 +193,24 @@ describe('time-dependent template updates', () => {
           { src: 'second.jpg', until: '2026-01-01T12:00:00' },
         ],
       },
-      async (_root, widget, media) => {
+      async (_root, widget, media, advanceClock) => {
         const timelineItem = ((widget as any).timeline.items as any[]).find(
           (item) => typeof item.child.getChildren === 'function'
         );
-        if (initialTimeline) {
-          expect(timelineItem).to.equal(initialTimeline);
-          expect(timelineItem.child.getChildren()).to.have.length(
-            initialTweenCount
-          );
-          expect(media).to.have.length(initialMediaCount);
-        } else {
-          initialTimeline = timelineItem;
-          initialTweenCount = timelineItem.child.getChildren().length;
-          initialMediaCount = media.length;
-        }
+        const initialTweenCount = timelineItem.child.getChildren().length;
+        const initialMediaCount = media.length;
+
+        advanceClock();
+        await flush();
+
+        const updatedTimelineItem = (
+          (widget as any).timeline.items as any[]
+        ).find((item) => typeof item.child.getChildren === 'function');
+        expect(updatedTimelineItem).to.equal(timelineItem);
+        expect(updatedTimelineItem.child.getChildren()).to.have.length(
+          initialTweenCount
+        );
+        expect(media).to.have.length(initialMediaCount);
       }
     );
   });
@@ -353,6 +353,73 @@ describe('time-dependent template updates', () => {
         new Promise((resolve) => {
           pending.push({ url, resolve });
         })
+    );
+  });
+
+  it('starts a time-selected video at the active parent playhead', async () => {
+    let mediaUrl: string | undefined;
+    let resolveMedia: ((url: string) => void) | undefined;
+    let playCalls = 0;
+    await withWidget(
+      {
+        type: 'video',
+        name: 'clock-playback-video',
+        opts: {
+          url: {
+            cond: {
+              key: '@now',
+              gte: new Date(2026, 0, 1, 11, 0).getTime(),
+              then: 'later.mp4',
+              else: '',
+            },
+          },
+        },
+      },
+      {},
+      async (root, widget, _media, advanceClock) => {
+        const timeline = (widget as any).timeline;
+        timeline.setDuration(600000);
+        timeline.play(60000);
+
+        advanceClock();
+        for (let i = 0; i < 50 && !mediaUrl; i++) {
+          await new Promise((resolve) => setTimeout(resolve, 2));
+        }
+        expect(mediaUrl).to.equal('later.mp4');
+
+        const video = root.querySelector('video')!;
+        video.load = () => {};
+        video.play = () => {
+          playCalls++;
+          return Promise.resolve();
+        };
+        video.pause = () => {};
+        resolveMedia!('/cached/later.mp4');
+        for (let i = 0; i < 50 && !video.src; i++) {
+          await new Promise((resolve) => setTimeout(resolve, 2));
+        }
+        expect(video.src).to.contain('/cached/later.mp4');
+        Object.defineProperty(video, 'duration', {
+          configurable: true,
+          value: 20,
+        });
+        const Event = root.ownerDocument.defaultView!.Event;
+        video.dispatchEvent(new Event('loadedmetadata'));
+        video.dispatchEvent(new Event('canplaythrough'));
+
+        for (let i = 0; i < 50 && playCalls === 0; i++) {
+          await new Promise((resolve) => setTimeout(resolve, 2));
+        }
+        expect(playCalls).to.be.greaterThan(0);
+        expect(video.currentTime).to.be.lessThan(20);
+      },
+      undefined,
+      (url) => {
+        mediaUrl = url;
+        return new Promise((resolve) => {
+          resolveMedia = resolve;
+        });
+      }
     );
   });
 

@@ -306,7 +306,7 @@ const VideoSource: Component<VideoSourceProps> = (props) => {
         };
 
         timelineItem = {
-          start: 0, // Videos should always start at the beginning of their timeline
+          start: props.timeline.time,
           duration: videoRef!.duration * 1000,
           child,
         };
