@@ -891,4 +891,100 @@ defmodule CastmillWeb.NetworkDashboardControllerTest do
              |> json_response(403)
     end
   end
+
+  describe "organization integration settings" do
+    setup do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+      admin = create_network_admin(network)
+      widget = widget_fixture(%{is_system: false, network_id: network.id})
+
+      {:ok, _} =
+        Castmill.Widgets.Integrations.create_integration(%{
+          widget_id: widget.id,
+          name: "listing",
+          integration_type: "pull",
+          pull_endpoint: "fetcher",
+          pull_interval_seconds: 300,
+          credential_scope: "organization",
+          pull_config: %{
+            "organization_settings" => %{
+              "key" => "property-listing",
+              "name" => "Property listings",
+              "schema" => %{
+                "agency" => %{"type" => "string", "required" => true},
+                "office_ids" => %{"type" => "list"}
+              }
+            }
+          }
+        })
+
+      %{network: network, organization: organization, admin: admin}
+    end
+
+    defp settings_path(org_id, suffix \\ ""),
+      do: "/dashboard/network/organizations/#{org_id}/integration-settings#{suffix}"
+
+    test "network admins list, set and remove settings", %{
+      conn: conn,
+      network: network,
+      organization: organization,
+      admin: admin
+    } do
+      conn = authenticate_conn(conn, admin, network)
+
+      assert %{"data" => [%{"key" => "property-listing", "settings" => %{}}]} =
+               conn |> get(settings_path(organization.id)) |> json_response(200)
+
+      assert %{"data" => %{"settings" => %{"agency" => "fb", "office_ids" => ["M1"]}}} =
+               conn
+               |> put(settings_path(organization.id, "/property-listing"), %{
+                 "settings" => %{"agency" => "fb", "office_ids" => ["M1"]}
+               })
+               |> json_response(200)
+
+      assert %{"data" => [%{"settings" => %{"agency" => "fb"}}]} =
+               conn |> get(settings_path(organization.id)) |> json_response(200)
+
+      assert %{"errors" => %{"agency" => "required"}} =
+               conn
+               |> put(settings_path(organization.id, "/property-listing"), %{"settings" => %{}})
+               |> json_response(422)
+
+      assert conn
+             |> put(settings_path(organization.id, "/unknown"), %{"settings" => %{}})
+             |> json_response(404)
+
+      assert conn |> delete(settings_path(organization.id, "/property-listing")) |> response(204)
+
+      assert Castmill.Widgets.Integrations.OrganizationSettings.get(
+               organization.id,
+               "property-listing"
+             ) == nil
+    end
+
+    test "only for the admin's own organizations", %{conn: conn, network: network, admin: admin} do
+      conn = authenticate_conn(conn, admin, network)
+      other = organization_fixture(%{network_id: network_fixture().id})
+
+      assert conn |> get(settings_path(other.id)) |> json_response(404)
+      assert conn |> get(settings_path("not-a-uuid")) |> json_response(404)
+      assert conn |> delete(settings_path(other.id, "/property-listing")) |> json_response(404)
+    end
+
+    test "rejects users who are not network admins", %{
+      conn: conn,
+      network: network,
+      organization: organization
+    } do
+      user = create_regular_user(network, organization)
+      conn = authenticate_conn(conn, user, network)
+
+      assert conn |> get(settings_path(organization.id)) |> json_response(403)
+
+      assert conn
+             |> put(settings_path(organization.id, "/property-listing"), %{"settings" => %{}})
+             |> json_response(403)
+    end
+  end
 end

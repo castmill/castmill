@@ -385,7 +385,26 @@
       "unblockTitle": "Avblockera Organisation",
       "unblockConfirmation": "Är du säker på att du vill avblockera \"{{name}}\"? Användare kommer kunna logga in igen.",
       "unblockSuccess": "Organisation avblockerad",
-      "unblockError": "Kunde inte avblockera organisation"
+      "unblockError": "Kunde inte avblockera organisation",
+      "integrationSettings": {
+        "action": "Integrationsinställningar",
+        "title": "Integrationsinställningar – {{name}}",
+        "description": "Värden som nätverkets widgetar använder för den här organisationen, till exempel kontors-ID. Bara nätverksadministratörer kan ändra dem.",
+        "empty": "Ingen widget i nätverket använder organisationsinställningar.",
+        "listHelp": "Ett värde per rad.",
+        "remove": "Ta bort inställningar",
+        "saved": "Inställningarna sparades.",
+        "removed": "Inställningarna togs bort.",
+        "invalid": "Kontrollera de markerade fälten.",
+        "loadError": "Det gick inte att läsa in integrationsinställningarna.",
+        "saveError": "Det gick inte att spara inställningarna: {{message}}",
+        "errors": {
+          "required": "Obligatoriskt.",
+          "invalid": "Ogiltigt värde.",
+          "too_long": "För långt.",
+          "too_many": "För många värden."
+        }
+      }
     },
     "users": {
       "listTitle": "Alla Användare",
