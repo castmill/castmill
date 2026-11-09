@@ -1,5 +1,6 @@
 import {
   Component,
+  createEffect,
   createMemo,
   JSX,
   mergeProps,
@@ -85,37 +86,31 @@ interface ImageProps extends BaseComponentProps {
 export const Image: Component<ImageProps> = (props: ImageProps) => {
   let imageRef: HTMLDivElement | undefined;
   let cleanUpAnimations: () => void;
+  let loadId = 0;
+  let hasReportedReady = false;
 
-  const primaryUrl = props.opts.url?.trim?.() || '';
-  const fallbackUrl = props.opts.fallbackUrl?.trim?.() || '';
-  const effectiveUrl = primaryUrl || fallbackUrl;
-
-  // Gracefully handle missing/empty image URLs - don't crash the player
-  const hasValidUrl = effectiveUrl !== '';
-
-  // Determine background-size: autozoom uses 'cover' to fill container without black borders
-  const backgroundSize = getImageBackgroundSize(props.opts);
-
-  const merged = createMemo(() =>
-    mergeProps(
+  const merged = createMemo(() => {
+    const effectiveUrl =
+      props.opts.url?.trim?.() || props.opts.fallbackUrl?.trim?.() || '';
+    return mergeProps(
       {
         width: '100%',
         height: '100%',
-        'background-size': backgroundSize,
+        'background-size': getImageBackgroundSize(props.opts),
         'background-repeat': 'no-repeat',
         'background-position': 'center',
-        // Show a subtle placeholder background when no image
-        ...(hasValidUrl ? {} : { 'background-color': 'rgba(0,0,0,0.2)' }),
+        ...(effectiveUrl ? {} : { 'background-color': 'rgba(0,0,0,0.2)' }),
       },
       props.style
-    )
-  );
+    );
+  });
 
   onCleanup(() => {
+    loadId++;
     cleanUpAnimations?.();
   });
 
-  onMount(async () => {
+  onMount(() => {
     if (imageRef) {
       if (props.animations) {
         cleanUpAnimations = applyAnimations(
@@ -125,23 +120,48 @@ export const Image: Component<ImageProps> = (props: ImageProps) => {
           props.timeline.duration()
         );
       }
+    }
+  });
 
-      if (hasValidUrl) {
-        const sourceUrl = primaryUrl || fallbackUrl;
-        let cachedUrl = sourceUrl
-          ? await props.resourceManager.getMedia(sourceUrl)
-          : null;
+  createEffect(() => {
+    const sourceUrl =
+      props.opts.url?.trim?.() || props.opts.fallbackUrl?.trim?.() || '';
+    const currentLoad = ++loadId;
+    if (!imageRef) return;
+
+    if (!sourceUrl) {
+      imageRef.style.backgroundImage = '';
+      if (!hasReportedReady) {
+        hasReportedReady = true;
+        props.onReady();
+      }
+      return;
+    }
+
+    void props.resourceManager
+      .getMedia(sourceUrl)
+      .then((cachedUrl) => {
+        if (currentLoad !== loadId || !imageRef) return;
         if (!cachedUrl) {
-          // Log warning but don't crash - use original URL as fallback
           console.warn(
             `Image ${sourceUrl} not found in cached medias, using original URL`
           );
         }
         imageRef.style.backgroundImage = `url(${cachedUrl || sourceUrl})`;
-      }
-      // If no valid URL, just leave the placeholder background
-    }
-    props.onReady();
+        if (!hasReportedReady) {
+          hasReportedReady = true;
+          props.onReady();
+        }
+      })
+      .catch((error) => {
+        if (currentLoad !== loadId || !imageRef) return;
+        console.warn(`Image ${sourceUrl} could not be loaded`, error);
+        imageRef.style.backgroundImage = `url(${sourceUrl})`;
+        if (!hasReportedReady) {
+          hasReportedReady = true;
+          props.onReady();
+        }
+      });
   });
 
   return (

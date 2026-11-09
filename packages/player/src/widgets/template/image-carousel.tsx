@@ -194,11 +194,23 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
   );
   let buildId = 0;
   let hasReportedReady = false;
+  let previousImageUrls: string[] | undefined;
+  let previousImageDuration: number | undefined;
 
   const buildTimeline = async () => {
-    const currentBuild = ++buildId;
     const imageUrls = props.opts.images || [];
     const imageDuration = props.opts.imageDuration;
+    if (
+      previousImageUrls &&
+      previousImageDuration === imageDuration &&
+      previousImageUrls.length === imageUrls.length &&
+      previousImageUrls.every((url, index) => url === imageUrls[index])
+    ) {
+      return;
+    }
+    previousImageUrls = imageUrls.slice();
+    previousImageDuration = imageDuration;
+    const currentBuild = ++buildId;
     const images = Array.from(parentRef?.children || []) as HTMLElement[];
 
     // Resolve all URLs first so the timeline is built in image order no

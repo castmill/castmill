@@ -1,5 +1,6 @@
 import {
   Component,
+  createEffect,
   createMemo,
   JSX,
   mergeProps,
@@ -109,6 +110,43 @@ interface VideoProps extends BaseComponentProps {
   globals: PlayerGlobals;
 }
 
+interface VideoSourceProps extends VideoProps {
+  sourceUrl: string;
+}
+
+export const Video: Component<VideoProps> = (props) => {
+  createEffect(() => {
+    if (!props.opts.url) props.onReady();
+  });
+
+  return (
+    <>
+      <Show when={props.opts.url} keyed>
+        {(sourceUrl) => <VideoSource {...props} sourceUrl={sourceUrl} />}
+      </Show>
+      <Show when={!props.opts.url}>
+        <div
+          data-component="video-placeholder"
+          data-name={props.name}
+          style={{
+            width: '100%',
+            height: '100%',
+            ...props.style,
+            display: 'flex',
+            'align-items': 'center',
+            'justify-content': 'center',
+            background: '#1a1a2e',
+            color: '#666',
+            'font-size': '1.5em',
+          }}
+        >
+          No video selected
+        </div>
+      </Show>
+    </>
+  );
+};
+
 export function playVideo(
   video: Pick<HTMLVideoElement, 'play'>,
   reportError?: PlayerGlobals['reportError']
@@ -132,7 +170,7 @@ export function playVideo(
   }
 }
 
-export const Video: Component<VideoProps> = (props) => {
+const VideoSource: Component<VideoSourceProps> = (props) => {
   let videoRef: HTMLVideoElement | undefined;
 
   let timeline: Timeline;
@@ -168,17 +206,10 @@ export const Video: Component<VideoProps> = (props) => {
 
   onMount(async () => {
     if (videoRef) {
-      // Check if URL is defined before trying to get media
-      if (!props.opts.url) {
-        // No video selected yet - this is normal when widget is first added
-        props.onReady();
-        return;
-      }
-
-      const videoUrl = await props.resourceManager.getMedia(props.opts.url);
+      const videoUrl = await props.resourceManager.getMedia(props.sourceUrl);
       if (disposed) return;
       if (!videoUrl) {
-        console.warn(`[Video] Video ${props.opts.url} not found in cache`);
+        console.warn(`[Video] Video ${props.sourceUrl} not found in cache`);
         props.onReady();
         return;
       }
@@ -188,7 +219,7 @@ export const Video: Component<VideoProps> = (props) => {
         {
           reportError: props.globals.reportError,
           refreshMedia: () =>
-            props.resourceManager.refreshMedia(props.opts.url),
+            props.resourceManager.refreshMedia(props.sourceUrl),
           setBlocked: (block) =>
             props.globals.setPlaybackBlocked?.(blockSource, block),
         }
@@ -407,23 +438,6 @@ export const Video: Component<VideoProps> = (props) => {
 
   return (
     <>
-      <Show when={!props.opts.url}>
-        <div
-          data-component="video-placeholder"
-          data-name={props.name}
-          style={{
-            ...merged(),
-            display: 'flex',
-            'align-items': 'center',
-            'justify-content': 'center',
-            background: '#1a1a2e',
-            color: '#666',
-            'font-size': '1.5em',
-          }}
-        >
-          No video selected
-        </div>
-      </Show>
       <video
         ref={(element) => {
           videoRef = element;
@@ -432,7 +446,7 @@ export const Video: Component<VideoProps> = (props) => {
         data-name={props.name}
         style={{
           ...merged(),
-          display: props.opts.url ? 'block' : 'none',
+          display: 'block',
         }}
         playsinline
         muted={props.globals.muted ?? false}

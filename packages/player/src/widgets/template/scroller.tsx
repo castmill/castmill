@@ -437,6 +437,7 @@ export const Scroller: Component<ScrollerProps> = (props) => {
   onMount(() => window.addEventListener('resize', resizeScroll));
 
   onCleanup(() => {
+    generation++;
     window.removeEventListener('resize', resizeScroll);
     if (timelineItem) props.timeline.remove(timelineItem);
     scrollAnimation?.destroy();

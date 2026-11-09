@@ -19,7 +19,17 @@ const withClockWidget = async (
   keepItems = false,
   templateOverride?: any,
   dataOverride?: any,
-  beforeTick?: (root: HTMLElement) => void
+  beforeTick?: (root: HTMLElement) => void,
+  options?: {
+    getMedia?: (url: string) => Promise<string | void>;
+    beforeShow?: (document: Document) => void;
+    beforeReady?: (
+      root: HTMLElement,
+      widget: TemplateWidget,
+      advanceClock: () => void
+    ) => Promise<void>;
+    awaitReady?: boolean;
+  }
 ) => {
   const dom = new JSDOM('<!doctype html><div id="root"></div>');
   templateWindow ||= dom.window;
@@ -76,6 +86,10 @@ const withClockWidget = async (
   let current = new Date(2026, 0, 1, 10, 0).getTime();
   Date.now = () => current;
   tickClock();
+  const advanceClock = () => {
+    current = new Date(2026, 0, 1, 11, 0).getTime();
+    tickClock();
+  };
 
   const iso = (date: Date) => {
     const pad = (value: number) => (value < 10 ? '0' : '') + value;
@@ -110,7 +124,9 @@ const withClockWidget = async (
     ],
   };
   const widget = new TemplateWidget(
-    { getMedia: async (url: string) => url } as any,
+    {
+      getMedia: options?.getMedia || (async (url: string) => url),
+    } as any,
     {
       widget: {
         name: `clock-${type}`,
@@ -126,11 +142,20 @@ const withClockWidget = async (
   const root = dom.window.document.getElementById('root')!;
 
   try {
-    await firstValueFrom(widget.show(root, 0));
+    options?.beforeShow?.(dom.window.document);
+    const showing = widget.show(root, 0);
+    if (options?.awaitReady === false) {
+      const subscription = showing.subscribe();
+      await options.beforeReady?.(root, widget, advanceClock);
+      subscription.unsubscribe();
+    } else {
+      const ready = firstValueFrom(showing);
+      await options?.beforeReady?.(root, widget, advanceClock);
+      await ready;
+    }
     await run(root, widget, false);
     beforeTick?.(root);
-    current = new Date(2026, 0, 1, 11, 0).getTime();
-    tickClock();
+    advanceClock();
     await new Promise((resolve) => setTimeout(resolve, 100));
     await run(root, widget, true);
   } finally {
@@ -250,6 +275,115 @@ describe('@now list consumers', () => {
       }
       expect(root.textContent).to.contain('later');
     });
+  });
+
+  it('ignores readiness from paginated pages removed by a clock update', async () => {
+    const pending: {
+      url: string;
+      resolve: (value: string) => void;
+    }[] = [];
+    const template = {
+      type: 'paginated-list',
+      name: 'events',
+      opts: {
+        items: {
+          list: {
+            key: 'data.events',
+            where: [{ key: '$.end', gte: '@now' }],
+          },
+        },
+        pageDuration: 30,
+        pageSize: 1,
+      },
+      component: {
+        type: 'image',
+        name: 'event-image',
+        opts: { url: { key: '$.src' } },
+      },
+    };
+    const data = {
+      events: [
+        { src: 'expired.jpg', end: '2026-01-01T10:30:00' },
+        { src: 'current.jpg', end: '2026-01-01T12:00:00' },
+      ],
+    };
+
+    await withClockWidget(
+      'paginated-list',
+      async (_root, widget, updated) => {
+        if (updated) expect(widget.duration()).to.equal(30000);
+      },
+      false,
+      template,
+      data,
+      undefined,
+      {
+        getMedia: (url) =>
+          new Promise((resolve) => pending.push({ url, resolve })),
+        beforeReady: async (_root, widget, advanceClock) => {
+          const waitForRequests = async (count: number) => {
+            for (let i = 0; i < 50 && pending.length < count; i++) {
+              await new Promise((resolve) => setTimeout(resolve, 2));
+            }
+            expect(pending.length).to.be.at.least(count);
+          };
+
+          await waitForRequests(2);
+          advanceClock();
+          await waitForRequests(3);
+
+          pending[0].resolve('/cached/expired.jpg');
+          await new Promise((resolve) => setTimeout(resolve, 20));
+          expect(widget.duration()).not.to.equal(30000);
+
+          pending[pending.length - 1].resolve('/cached/current.jpg');
+        },
+      }
+    );
+  });
+
+  it('does not initialize a scroller after it is unloaded while waiting for fonts', async () => {
+    let resolveFonts!: () => void;
+    const fontsReady = new Promise<void>((resolve) => {
+      resolveFonts = resolve;
+    });
+
+    await withClockWidget(
+      'scroller',
+      async (_root, widget) => {
+        expect(
+          (widget as any).timeline.items.filter((item: any) => item.repeat)
+        ).to.have.length(0);
+      },
+      false,
+      {
+        type: 'scroller',
+        name: 'pending-scroller',
+        opts: { items: ['one'] },
+        component: {
+          type: 'text',
+          name: 'item',
+          opts: { text: 'one' },
+        },
+      },
+      {},
+      undefined,
+      {
+        beforeShow: (document) => {
+          Object.defineProperty(document, 'fonts', {
+            configurable: true,
+            value: { ready: fontsReady },
+          });
+        },
+        awaitReady: false,
+        beforeReady: async (_root, widget) => {
+          await new Promise((resolve) => setTimeout(resolve, 10));
+          await widget.unload();
+          resolveFonts();
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        },
+      }
+    );
   });
 
   it('keeps scroller items mounted when the resolved list is unchanged', async () => {

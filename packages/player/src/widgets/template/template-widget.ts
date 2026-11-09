@@ -53,6 +53,7 @@ export class TemplateWidget extends TimelineWidget {
   private medias: { [key: string]: string } = {};
   private template: TemplateComponent;
   private displayDuration?: number;
+  private learnedDuration = 0;
   // Emits once the rendered template is ready, e.g. its videos have loaded.
   private ready$?: ReplaySubject<void>;
   private disposeRender?: () => void;
@@ -275,9 +276,10 @@ export class TemplateWidget extends TimelineWidget {
     const resolved = this.template.resolveDuration(this.medias);
 
     if (timelineDuration > 0) {
+      this.learnedDuration = timelineDuration;
       return timelineDuration;
     }
 
-    return resolved > 0 ? resolved : 10000;
+    return this.learnedDuration || (resolved > 0 ? resolved : 10000);
   }
 }

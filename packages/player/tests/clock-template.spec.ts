@@ -18,11 +18,17 @@ describe('time-dependent template updates', () => {
     run: (
       root: HTMLElement,
       widget: TemplateWidget,
-      media: string[]
+      media: string[],
+      advanceClock: (hour?: number) => void
     ) => Promise<void>,
-    beforeReady?: (root: HTMLElement) => void
+    beforeReady?: (
+      root: HTMLElement,
+      advanceClock: (hour?: number) => void
+    ) => void | Promise<void>,
+    getMedia?: (url: string) => Promise<string | void>
   ) => {
     const dom = new JSDOM('<!doctype html><div id="root"></div>');
+    const originalVideoLoad = dom.window.HTMLMediaElement.prototype.load;
     const keys = [
       'window',
       'document',
@@ -69,6 +75,10 @@ describe('time-dependent template updates', () => {
     const realNow = Date.now;
     let current = new Date(2026, 0, 1, 10, 0).getTime();
     Date.now = () => current;
+    const advanceClock = (hour = 11) => {
+      current = new Date(2026, 0, 1, hour, 0).getTime();
+      tickClock();
+    };
     tickClock();
 
     const media: string[] = [];
@@ -76,7 +86,7 @@ describe('time-dependent template updates', () => {
       {
         getMedia: async (url: string) => {
           media.push(url);
-          return `/cached/${url}`;
+          return getMedia ? getMedia(url) : `/cached/${url}`;
         },
       } as any,
       {
@@ -89,12 +99,13 @@ describe('time-dependent template updates', () => {
 
     try {
       const showing = firstValueFrom(widget.show(root, 0));
-      beforeReady?.(root);
+      await beforeReady?.(root, advanceClock);
       await showing;
-      await run(root, widget, media);
+      await run(root, widget, media, advanceClock);
     } finally {
       widget.stop();
       await widget.unload();
+      dom.window.HTMLMediaElement.prototype.load = originalVideoLoad;
       Date.now = realNow;
       if (savedFrame) {
         globals.requestAnimationFrame = savedFrame;
@@ -156,6 +167,221 @@ describe('time-dependent template updates', () => {
         );
         expect(media).to.include('current.jpg');
         expect(tweenCount()).to.be.lessThan(initialTweenCount);
+      }
+    );
+  });
+
+  it('keeps an unchanged time-filtered carousel mounted across clock ticks', async () => {
+    let initialMediaCount = 0;
+    let initialTweenCount = 0;
+    let initialTimeline: any;
+    await withWidget(
+      {
+        type: 'image-carousel',
+        name: 'stable-carousel',
+        opts: {
+          images: {
+            list: {
+              key: 'data.images',
+              where: [{ key: '$.until', gte: '@now' }],
+              item: { key: '$.src' },
+            },
+          },
+          imageDuration: 2,
+        },
+      },
+      {
+        images: [
+          { src: 'first.jpg', until: '2026-01-01T12:00:00' },
+          { src: 'second.jpg', until: '2026-01-01T12:00:00' },
+        ],
+      },
+      async (_root, widget, media) => {
+        const timelineItem = ((widget as any).timeline.items as any[]).find(
+          (item) => typeof item.child.getChildren === 'function'
+        );
+        if (initialTimeline) {
+          expect(timelineItem).to.equal(initialTimeline);
+          expect(timelineItem.child.getChildren()).to.have.length(
+            initialTweenCount
+          );
+          expect(media).to.have.length(initialMediaCount);
+        } else {
+          initialTimeline = timelineItem;
+          initialTweenCount = timelineItem.child.getChildren().length;
+          initialMediaCount = media.length;
+        }
+      }
+    );
+  });
+
+  it('updates an image URL when its time-dependent binding changes', async () => {
+    await withWidget(
+      {
+        type: 'image',
+        name: 'clock-image',
+        opts: {
+          url: {
+            cond: {
+              key: '@now',
+              gte: new Date(2026, 0, 1, 11, 0).getTime(),
+              then: 'later.jpg',
+              else: 'sooner.jpg',
+            },
+          },
+        },
+      },
+      {},
+      async (root, _widget, media, advanceClock) => {
+        const image = root.querySelector('[data-component="image"]')!;
+        expect(image.getAttribute('style')).to.contain('/cached/sooner.jpg');
+        expect(media).to.include('sooner.jpg');
+        advanceClock();
+        await flush();
+        expect(image.getAttribute('style')).to.contain('/cached/later.jpg');
+        expect(media).to.include('later.jpg');
+      },
+      undefined
+    );
+  });
+
+  it('does not apply an image cache result after its URL has changed', async () => {
+    const pending: {
+      url: string;
+      resolve: (value: string) => void;
+    }[] = [];
+    await withWidget(
+      {
+        type: 'image',
+        name: 'stale-clock-image',
+        opts: {
+          url: {
+            cond: {
+              key: '@now',
+              gte: new Date(2026, 0, 1, 11, 0).getTime(),
+              then: 'later.jpg',
+              else: 'sooner.jpg',
+            },
+          },
+        },
+      },
+      {},
+      async (root, _widget, _media, _advanceClock) => {
+        const image = root.querySelector('[data-component="image"]')!;
+        pending.find((item) => item.url === 'sooner.jpg')!.resolve('/old.jpg');
+        await flush();
+        expect(image.getAttribute('style')).to.contain('/cached/later.jpg');
+      },
+      async (_root, advanceClock) => {
+        const waitForUrl = async (url: string) => {
+          for (
+            let i = 0;
+            i < 50 && !pending.some((item) => item.url === url);
+            i++
+          ) {
+            await new Promise((resolve) => setTimeout(resolve, 2));
+          }
+          expect(pending.some((item) => item.url === url)).to.equal(true);
+        };
+        await waitForUrl('sooner.jpg');
+        advanceClock();
+        await waitForUrl('later.jpg');
+        pending
+          .find((item) => item.url === 'later.jpg')!
+          .resolve('/cached/later.jpg');
+      },
+      (url) =>
+        new Promise((resolve) => {
+          pending.push({ url, resolve });
+        })
+    );
+  });
+
+  it('replaces a video source when its time-dependent URL changes', async () => {
+    const pending: {
+      url: string;
+      resolve: (value: string) => void;
+    }[] = [];
+    await withWidget(
+      {
+        type: 'video',
+        name: 'clock-video',
+        opts: {
+          url: {
+            cond: {
+              key: '@now',
+              gte: new Date(2026, 0, 1, 12, 0).getTime(),
+              then: 'second.mp4',
+              else: {
+                cond: {
+                  key: '@now',
+                  gte: new Date(2026, 0, 1, 11, 0).getTime(),
+                  then: 'first.mp4',
+                  else: '',
+                },
+              },
+            },
+          },
+        },
+      },
+      {},
+      async (root, _widget, _media, advanceClock) => {
+        expect(root.querySelector('video')).to.equal(null);
+        advanceClock(11);
+        for (let i = 0; i < 50 && pending.length < 1; i++) {
+          await new Promise((resolve) => setTimeout(resolve, 2));
+        }
+        expect(pending[0].url).to.equal('first.mp4');
+        advanceClock(12);
+        for (let i = 0; i < 50 && pending.length < 2; i++) {
+          await new Promise((resolve) => setTimeout(resolve, 2));
+        }
+        expect(pending[1].url).to.equal('second.mp4');
+        pending[0].resolve('/cached/first.mp4');
+        await flush();
+        expect(root.querySelector('video')?.getAttribute('src')).to.equal(null);
+        pending[1].resolve('/cached/second.mp4');
+        await flush();
+        const video = root.querySelector('video')!;
+        expect(video.src).to.contain('/cached/second.mp4');
+      },
+      (root) => {
+        const view = root.ownerDocument.defaultView!;
+        view.HTMLMediaElement.prototype.load = () => {};
+      },
+      (url) =>
+        new Promise((resolve) => {
+          pending.push({ url, resolve });
+        })
+    );
+  });
+
+  it('regenerates QR content when its time-dependent binding changes', async () => {
+    await withWidget(
+      {
+        type: 'qr-code',
+        name: 'clock-qr',
+        opts: {
+          content: {
+            cond: {
+              key: '@now',
+              gte: new Date(2026, 0, 1, 11, 0).getTime(),
+              then: 'https://example.com/a-much-longer-qr-code-content',
+              else: 'x',
+            },
+          },
+        },
+      },
+      {},
+      async (root, _widget, _media, advanceClock) => {
+        const initialViewBox = root
+          .querySelector('svg')
+          ?.getAttribute('viewBox');
+        advanceClock();
+        await flush();
+        expect(root.querySelector('svg')?.getAttribute('viewBox')).not.to.equal(
+          initialViewBox
+        );
       }
     );
   });
