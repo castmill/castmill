@@ -359,11 +359,18 @@ defmodule Castmill.Widgets.Integrations do
           %{}
       end
 
-    merged = Map.merge(network_creds, scoped_creds)
+    credential_values =
+      network_creds
+      |> Map.merge(scoped_creds)
+      |> Map.delete("organization_settings")
+
+    merged =
+      credential_values
+      |> put_organization_settings(organization_id, integration)
 
     cond do
-      merged != %{} -> {:ok, merged}
-      optional_or_none_auth?(integration) -> {:ok, %{}}
+      credential_values != %{} -> {:ok, merged}
+      optional_or_none_auth?(integration) -> {:ok, merged}
       true -> {:error, :no_credentials}
     end
   end
@@ -380,6 +387,19 @@ defmodule Castmill.Widgets.Integrations do
       creds
     else
       _ -> %{}
+    end
+  end
+
+  # Organization-level settings (e.g. office IDs) reach fetchers next to the
+  # credentials, so playlist items can never override them.
+  defp put_organization_settings(credentials, organization_id, integration) do
+    alias Castmill.Widgets.Integrations.OrganizationSettings
+
+    with key when is_binary(key) <- OrganizationSettings.key_of(integration),
+         %{} = settings <- OrganizationSettings.get(organization_id, key) do
+      Map.put(credentials, "organization_settings", settings)
+    else
+      _ -> credentials
     end
   end
 
@@ -862,8 +882,12 @@ defmodule Castmill.Widgets.Integrations do
   end
 
   defp replace_placeholders(text, params) when is_binary(text) do
-    Enum.reduce(params, text, fn {key, value}, acc ->
-      String.replace(acc, "{{#{key}}}", to_string(value))
+    Enum.reduce(params, text, fn
+      {_key, value}, acc when is_map(value) or is_list(value) ->
+        acc
+
+      {key, value}, acc ->
+        String.replace(acc, "{{#{key}}}", to_string(value))
     end)
   end
 

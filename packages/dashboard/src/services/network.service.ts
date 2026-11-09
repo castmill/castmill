@@ -192,6 +192,40 @@ export interface PublicNetworkSettings {
   social_links: SocialLinks;
 }
 
+export type IntegrationSettingType = 'string' | 'number' | 'boolean' | 'list';
+
+/** A field of organization-level integration settings, declared by widgets. */
+export interface IntegrationSettingField {
+  type: IntegrationSettingType;
+  label?: string;
+  description?: string;
+  placeholder?: string;
+  required?: boolean;
+  order?: number;
+}
+
+export type IntegrationSettingValue = string | number | boolean | string[];
+
+/** Settings shared by the network's widgets that declare the same key. */
+export interface IntegrationSettings {
+  key: string;
+  name: string | null;
+  description: string | null;
+  schema: Record<string, IntegrationSettingField>;
+  settings: Record<string, IntegrationSettingValue>;
+}
+
+/** Field error codes returned when saving integration settings. */
+export type IntegrationSettingError =
+  | 'required'
+  | 'invalid'
+  | 'too_long'
+  | 'too_many';
+
+const integrationSettingsUrl = (organizationId: string, key?: string) =>
+  `${baseUrl}/dashboard/network/organizations/${organizationId}/integration-settings` +
+  (key ? `/${encodeURIComponent(key)}` : '');
+
 export const NetworkService = {
   /**
    * Get public network settings (available to all users).
@@ -605,6 +639,65 @@ export const NetworkService = {
     return handleResponse<{ success: boolean; message: string }>(response, {
       parse: true,
     });
+  },
+
+  /** An organization's integration settings, with the network's definitions. */
+  async listIntegrationSettings(
+    organizationId: string
+  ): Promise<IntegrationSettings[]> {
+    const response = await authFetch(integrationSettingsUrl(organizationId), {
+      method: 'GET',
+    });
+    const result = await handleResponse<{ data: IntegrationSettings[] }>(
+      response,
+      { parse: true }
+    );
+    return result.data;
+  },
+
+  /**
+   * Saves an organization's integration settings for one key. Invalid fields
+   * reject with an HttpError (status 422) whose data maps fields to codes.
+   */
+  async updateIntegrationSettings(
+    organizationId: string,
+    key: string,
+    settings: Record<string, IntegrationSettingValue>
+  ): Promise<Record<string, IntegrationSettingValue>> {
+    const response = await authFetch(
+      integrationSettingsUrl(organizationId, key),
+      {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ settings }),
+      }
+    );
+
+    if (response.status === 422) {
+      const body = await response.json().catch(() => ({}));
+      throw new HttpError<Record<string, IntegrationSettingError>>(
+        response.statusText,
+        422,
+        body.errors ?? {}
+      );
+    }
+
+    const result = await handleResponse<{
+      data: { settings: Record<string, IntegrationSettingValue> };
+    }>(response, { parse: true });
+    return result.data.settings;
+  },
+
+  /** Removes an organization's integration settings for one key. */
+  async deleteIntegrationSettings(
+    organizationId: string,
+    key: string
+  ): Promise<void> {
+    const response = await authFetch(
+      integrationSettingsUrl(organizationId, key),
+      { method: 'DELETE' }
+    );
+    return handleResponse(response);
   },
 
   /**
