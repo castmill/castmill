@@ -119,7 +119,8 @@ defmodule Castmill.Widgets.Integrations.RefreshTest do
       })
 
     playlist = playlist_fixture(%{organization_id: organization.id})
-    playlist_item = playlist_item_fixture(%{playlist_id: playlist.id})
+    playlist_item =
+      playlist_item_fixture(%{playlist_id: playlist.id, offset: 0, duration: 1000})
 
     widget_config =
       widget_config_fixture(%{
