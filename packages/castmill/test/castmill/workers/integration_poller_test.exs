@@ -2,12 +2,62 @@ defmodule Castmill.Workers.IntegrationPollerTest do
   use Castmill.DataCase, async: true
 
   import Ecto.Query
+  import Castmill.NetworksFixtures
   import Castmill.OrganizationsFixtures
   import Castmill.PlaylistsFixtures
 
   alias Castmill.Repo
+  alias Castmill.Widgets.Integrations.OrganizationSettings
   alias Castmill.Widgets.Integrations.WidgetIntegrationData
   alias Castmill.Workers.IntegrationPoller
+
+  test "generic polling skips organization settings metadata during placeholder replacement" do
+    network = network_fixture()
+    organization = organization_fixture(%{network_id: network.id})
+    suffix = System.unique_integer([:positive])
+
+    widget =
+      widget_fixture(%{
+        name: "Generic Integration Test #{suffix}",
+        slug: "generic-integration-test-#{suffix}",
+        is_system: false,
+        network_id: network.id,
+        template: %{"type" => "group"}
+      })
+
+    integration =
+      widget_integration_fixture(%{
+        widget_id: widget.id,
+        name: "generic-integration-test-#{suffix}",
+        pull_endpoint: "http://127.0.0.1:0",
+        pull_config: %{
+          "auth_type" => "none",
+          "organization_settings" => %{
+            "key" => "property-listing",
+            "schema" => %{"agency" => %{"type" => "string"}}
+          }
+        }
+      })
+
+    {:ok, _settings} =
+      OrganizationSettings.store(organization.id, "property-listing", %{"agency" => "Castmill"})
+
+    job =
+      BullMQ.Job.new(
+        "integrations",
+        "integration_poll",
+        %{
+          "organization_id" => organization.id,
+          "widget_id" => widget.id,
+          "integration_id" => integration.id,
+          "discriminator_id" => "property-listing:default",
+          "widget_options" => %{}
+        },
+        timestamp: System.system_time(:millisecond)
+      )
+
+    assert {:error, {:request_failed, _reason}} = IntegrationPoller.process(job)
+  end
 
   test "process returns fetcher 3-tuple errors without crashing" do
     organization = organization_fixture()

@@ -873,8 +873,12 @@ defmodule Castmill.Widgets.Integrations do
   end
 
   defp replace_placeholders(text, params) when is_binary(text) do
-    Enum.reduce(params, text, fn {key, value}, acc ->
-      String.replace(acc, "{{#{key}}}", to_string(value))
+    Enum.reduce(params, text, fn
+      {_key, value}, acc when is_map(value) or is_list(value) ->
+        acc
+
+      {key, value}, acc ->
+        String.replace(acc, "{{#{key}}}", to_string(value))
     end)
   end
 
