@@ -322,6 +322,7 @@ describe('Editable texts', () => {
         expect(price.getAttribute('data-editable-multiline')).to.equal(null);
         // Styles still apply to overrides.
         expect(price.style.textTransform).to.equal('uppercase');
+        expect(price.querySelector('span')!.style.lineHeight).to.equal('1em');
 
         const address = el(root, 'address');
         expect(address.textContent).to.equal('');
@@ -347,6 +348,7 @@ describe('Editable texts', () => {
         const span = el(root, 'address').querySelector('span')!;
         expect(span.textContent).to.equal('Storgatan 1\nStockholm');
         expect(span.style.whiteSpace).to.equal('pre-line');
+        expect(span.style.lineHeight).to.equal('1em');
         widget.stop();
       });
     });

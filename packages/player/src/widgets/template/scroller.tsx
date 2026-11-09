@@ -300,16 +300,13 @@ export const Scroller: Component<ScrollerProps> = (props) => {
   let timelineItem: TimelineItem | undefined;
 
   // Track ready state for all items (original + duplicates)
-  let readyCount = 0;
-  const resolvedItems = createMemo(
-    () => props.opts.items || [],
-    undefined,
-    {
-      equals: (previous, next) =>
-        previous.length === next.length &&
-        previous.every((item, index) => item === next[index]),
-    }
-  );
+  let readyEntries = new Set<object>();
+  let initializedGeneration = -1;
+  const resolvedItems = createMemo(() => props.opts.items || [], undefined, {
+    equals: (previous, next) =>
+      previous.length === next.length &&
+      previous.every((item, index) => item === next[index]),
+  });
   const initialItems = resolvedItems();
   let previousItems = initialItems;
   let totalItems = initialItems.length * 2;
@@ -323,10 +320,18 @@ export const Scroller: Component<ScrollerProps> = (props) => {
     }));
   });
 
-  const onItemReady = (itemGeneration: number) => {
+  const onItemReady = (entry: object, itemGeneration: number) => {
     if (itemGeneration !== generation) return;
-    readyCount++;
-    if (readyCount >= totalItems) {
+    if (readyEntries.has(entry)) {
+      resizeScroll();
+      return;
+    }
+    readyEntries.add(entry);
+    if (
+      readyEntries.size >= totalItems &&
+      initializedGeneration !== itemGeneration
+    ) {
+      initializedGeneration = itemGeneration;
       // Wait for fonts to be loaded, then defer to next frames for layout
       const waitForFontsAndInit = async () => {
         // Wait for all fonts to be loaded
@@ -449,7 +454,8 @@ export const Scroller: Component<ScrollerProps> = (props) => {
     firstItemsEffect = false;
     previousItems = items;
     generation++;
-    readyCount = 0;
+    readyEntries = new Set();
+    initializedGeneration = -1;
     totalItems = items.length * 2;
     if (timelineItem) props.timeline.remove(timelineItem);
     timelineItem = undefined;
@@ -463,11 +469,11 @@ export const Scroller: Component<ScrollerProps> = (props) => {
     props.opts.direction === 'left' || props.opts.direction === 'right';
 
   // Container style with overflow hidden
-  const containerStyle: JSX.CSSProperties = {
+  const containerStyle = createMemo<JSX.CSSProperties>(() => ({
     ...props.style,
     overflow: 'hidden',
     position: 'relative',
-  };
+  }));
 
   // Content wrapper style - flex container for items
   const contentStyle: JSX.CSSProperties = {
@@ -486,7 +492,7 @@ export const Scroller: Component<ScrollerProps> = (props) => {
       ref={(el) => (containerRef = el)}
       data-component="scroller"
       data-name={props.name}
-      style={containerStyle}
+      style={containerStyle()}
     >
       <div ref={(el) => (contentRef = el)} style={contentStyle}>
         <For each={duplicatedItems()}>
@@ -503,7 +509,7 @@ export const Scroller: Component<ScrollerProps> = (props) => {
                 component={props.component}
                 timeline={props.timeline}
                 resourceManager={props.resourceManager}
-                onReady={() => onItemReady(entry.revision)}
+                onReady={() => onItemReady(entry, entry.revision)}
                 globals={props.globals}
               />
             </div>

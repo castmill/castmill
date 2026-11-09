@@ -1,4 +1,11 @@
-import { Component, JSX, mergeProps, onCleanup, onMount } from 'solid-js';
+import {
+  Component,
+  createMemo,
+  JSX,
+  mergeProps,
+  onCleanup,
+  onMount,
+} from 'solid-js';
 import { TemplateConfig, resolveOption } from './binding';
 import { TemplateComponent, TemplateComponentType } from './template';
 import { ComponentAnimation, applyAnimations } from './animation';
@@ -89,17 +96,19 @@ export const Image: Component<ImageProps> = (props: ImageProps) => {
   // Determine background-size: autozoom uses 'cover' to fill container without black borders
   const backgroundSize = getImageBackgroundSize(props.opts);
 
-  const merged = mergeProps(
-    {
-      width: '100%',
-      height: '100%',
-      'background-size': backgroundSize,
-      'background-repeat': 'no-repeat',
-      'background-position': 'center',
-      // Show a subtle placeholder background when no image
-      ...(hasValidUrl ? {} : { 'background-color': 'rgba(0,0,0,0.2)' }),
-    },
-    props.style
+  const merged = createMemo(() =>
+    mergeProps(
+      {
+        width: '100%',
+        height: '100%',
+        'background-size': backgroundSize,
+        'background-repeat': 'no-repeat',
+        'background-position': 'center',
+        // Show a subtle placeholder background when no image
+        ...(hasValidUrl ? {} : { 'background-color': 'rgba(0,0,0,0.2)' }),
+      },
+      props.style
+    )
   );
 
   onCleanup(() => {
@@ -140,7 +149,7 @@ export const Image: Component<ImageProps> = (props: ImageProps) => {
       ref={imageRef}
       data-component="image"
       data-name={props.name}
-      style={merged}
+      style={merged()}
     ></div>
   );
 };

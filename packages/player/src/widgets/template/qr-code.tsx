@@ -1,4 +1,12 @@
-import { Component, JSX, mergeProps, onCleanup, onMount, For } from 'solid-js';
+import {
+  Component,
+  createMemo,
+  JSX,
+  mergeProps,
+  onCleanup,
+  onMount,
+  For,
+} from 'solid-js';
 import { TemplateConfig, resolveOption } from './binding';
 import { TemplateComponent, TemplateComponentType } from './template';
 import { ComponentAnimation, applyAnimations } from './animation';
@@ -571,15 +579,17 @@ export const QRCode: Component<QRCodeProps> = (props: QRCodeProps) => {
   const foregroundColor = props.opts.foregroundColor ?? '#000000';
   const backgroundColor = props.opts.backgroundColor ?? '#ffffff';
 
-  const merged = mergeProps(
-    {
-      width: '100%',
-      height: '100%',
-      display: 'flex',
-      'align-items': 'center',
-      'justify-content': 'center',
-    },
-    props.style
+  const merged = createMemo(() =>
+    mergeProps(
+      {
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        'align-items': 'center',
+        'justify-content': 'center',
+      },
+      props.style
+    )
   );
 
   onCleanup(() => {
@@ -611,7 +621,7 @@ export const QRCode: Component<QRCodeProps> = (props: QRCodeProps) => {
       ref={containerRef}
       data-component="qr-code"
       data-name={props.name}
-      style={merged}
+      style={merged()}
     >
       {hasValidContent && gridSize > 0 && (
         <svg

@@ -1,4 +1,4 @@
-import { Component, Switch, Match, Show } from 'solid-js';
+import { Component, Switch, Match, Show, createMemo } from 'solid-js';
 
 import { ResourceManager } from '@castmill/cache';
 
@@ -93,31 +93,32 @@ export const Item: Component<{
   globals: PlayerGlobals;
   onReady: () => void;
 }> = (props) => {
-  let style = props.component.style || {};
-  if ((props.component as TemplateComponent).$styles) {
-    const $styles = (props.component as TemplateComponent).$styles!;
-    for (let i = 0; i < $styles.length; i++) {
-      if (
-        $styles[i] &&
-        checkFilter(
-          $styles[i]!.filter,
-          props.config,
-          props.context,
-          props.globals
-        )
-      ) {
-        style = { ...style, ...$styles[i]!.style };
+  const style = createMemo(() => {
+    let resolvedStyle = props.component.style || {};
+    if ((props.component as TemplateComponent).$styles) {
+      const $styles = (props.component as TemplateComponent).$styles!;
+      for (let i = 0; i < $styles.length; i++) {
+        if (
+          $styles[i] &&
+          checkFilter(
+            $styles[i]!.filter,
+            props.config,
+            props.context,
+            props.globals
+          )
+        ) {
+          resolvedStyle = { ...resolvedStyle, ...$styles[i]!.style };
+        }
       }
     }
-  }
 
-  // Resolve any bindings in style properties (e.g., { key: "data.progress_percent" })
-  style = resolveStyleBindings(
-    style,
-    props.config,
-    props.context,
-    props.globals
-  );
+    return resolveStyleBindings(
+      resolvedStyle,
+      props.config,
+      props.context,
+      props.globals
+    );
+  });
 
   return (
     <Show
@@ -139,7 +140,7 @@ export const Item: Component<{
               props.context,
               props.globals
             )}
-            style={style}
+            style={style()}
             animations={props.component.animations}
             timeline={props.timeline}
             resourceManager={props.resourceManager}
@@ -155,7 +156,7 @@ export const Item: Component<{
               props.context,
               props.globals
             )}
-            style={style}
+            style={style()}
             timeline={props.timeline}
             resourceManager={props.resourceManager}
             globals={props.globals}
@@ -173,7 +174,7 @@ export const Item: Component<{
               (props.component as TextComponent).editable
             )}
             animations={(props.component as TextComponent).animations}
-            style={style}
+            style={style()}
             timeline={props.timeline}
             onReady={props.onReady}
           />
@@ -184,7 +185,7 @@ export const Item: Component<{
             config={props.config}
             context={props.context}
             components={(props.component as GroupComponent).components}
-            style={style}
+            style={style()}
             animations={(props.component as GroupComponent).animations}
             timeline={props.timeline}
             resourceManager={props.resourceManager}
@@ -202,7 +203,7 @@ export const Item: Component<{
               props.globals
             )}
             component={props.component as LayoutComponent}
-            style={style}
+            style={style()}
             timeline={props.timeline}
             resourceManager={props.resourceManager}
             globals={props.globals}
@@ -223,7 +224,7 @@ export const Item: Component<{
               props.globals
             )}
             component={(props.component as PaginatedListComponent).component}
-            style={style}
+            style={style()}
             timeline={props.timeline}
             resourceManager={props.resourceManager}
             globals={props.globals}
@@ -241,7 +242,7 @@ export const Item: Component<{
               props.globals
             )}
             component={(props.component as ScrollerComponent).component}
-            style={style}
+            style={style()}
             timeline={props.timeline}
             resourceManager={props.resourceManager}
             globals={props.globals}
@@ -261,7 +262,7 @@ export const Item: Component<{
               props.context,
               props.globals
             )}
-            style={style}
+            style={style()}
             timeline={props.timeline}
             resourceManager={props.resourceManager}
             globals={props.globals}
@@ -277,7 +278,7 @@ export const Item: Component<{
               props.context,
               props.globals
             )}
-            style={style}
+            style={style()}
             animations={props.component.animations}
             timeline={props.timeline}
             onReady={props.onReady}

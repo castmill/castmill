@@ -1,6 +1,14 @@
 import gsap from 'gsap';
 
-import { Component, For, JSX, mergeProps, onCleanup, onMount } from 'solid-js';
+import {
+  Component,
+  createEffect,
+  createMemo,
+  For,
+  JSX,
+  mergeProps,
+  onCleanup,
+} from 'solid-js';
 import { TemplateConfig, resolveOption } from './binding';
 import { TemplateComponent, TemplateComponentType } from './template';
 import { ComponentAnimation } from './animation';
@@ -96,30 +104,48 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
     props
   );
 
-  const style = Object.assign(
-    {
-      width: '100%',
-      height: '100%',
-      'background-size': 'cover',
-      'background-repeat': 'no-repeat',
-      'background-position': 'center',
-      position: 'absolute',
-    },
-    props.style
+  const style = createMemo(() =>
+    Object.assign(
+      {
+        width: '100%',
+        height: '100%',
+        'background-size': 'cover',
+        'background-repeat': 'no-repeat',
+        'background-position': 'center',
+        position: 'absolute',
+      },
+      props.style
+    )
   );
+  let buildId = 0;
+  let hasReportedReady = false;
 
-  onCleanup(() => {
+  const buildTimeline = async () => {
+    const currentBuild = ++buildId;
+    const imageUrls = props.opts.images || [];
+    const imageDuration = props.opts.imageDuration;
+    const images = Array.from(parentRef?.children || []) as HTMLElement[];
+
+    const mediaUrls = await Promise.all(
+      imageUrls.map((url) =>
+        props.resourceManager.getMedia(url).catch(() => undefined)
+      )
+    );
+    if (currentBuild !== buildId) return;
+
     props.timeline.remove(timelineItem);
-    timeline.kill();
-  });
+    timeline.pause(0);
+    timeline.clear();
 
-  onMount(async () => {
-    if (!parentRef) {
-      props.onReady();
-      return;
-    }
+    images.forEach((image) => {
+      gsap.set(image, { x: 0, y: 0, autoAlpha: 1, scale: 1 });
+    });
+    images.forEach((image, index) => {
+      gsap.set(image, {
+        backgroundImage: `url(${mediaUrls[index] || imageUrls[index]})`,
+      });
+    });
 
-    const images = parentRef.children;
     const targetArgs = {
       duration: 1,
       x: 0,
@@ -128,31 +154,23 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
       scale: 1,
     };
 
-    if (images && images.length == 1) {
-      const imageUrl = await props.resourceManager.getMedia(
-        props.opts.images[0]
-      );
+    if (images.length === 1) {
       timeline.set(
         images[0],
         {
-          backgroundImage: `url(${imageUrl})`,
+          backgroundImage: `url(${mediaUrls[0] || imageUrls[0]})`,
         },
-        '<'
+        0
       );
-      timeline.duration(props.opts.imageDuration);
-    }
-
-    if (images && images.length > 1) {
-      Array.from(images || []).forEach(async (image, index) => {
-        const imageUrl = await props.resourceManager.getMedia(
-          props.opts.images[index]
-        );
+      timeline.duration(imageDuration);
+    } else if (images.length > 1) {
+      images.forEach((image, index) => {
         timeline.set(
           image,
           {
-            backgroundImage: `url(${imageUrl})`,
+            backgroundImage: `url(${mediaUrls[index] || imageUrls[index]})`,
           },
-          '<'
+          0
         );
 
         if (index === 0) {
@@ -160,36 +178,42 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
             visibility: 'hidden',
             backgroundImage: 'none',
           });
-          timeline.set(image, Object.assign({}, targetArgs));
+          timeline.set(image, targetArgs);
         } else {
-          timeline.from(image, Object.assign({}, props.startArgs), '<');
+          timeline.from(image, props.startArgs!, '<');
           timeline.set(images[index - 1], {
             visibility: 'hidden',
             backgroundImage: 'none',
           });
         }
-        // When the last image fades out we need to cross-fade the first image
-        let position = `>+=${props.opts.imageDuration}`;
-        if (index === images.length - 1) {
-          const imageUrl = await props.resourceManager.getMedia(
-            props.opts.images[0]
-          );
 
+        let position = `>+=${imageDuration}`;
+        if (index === images.length - 1) {
           timeline.set(images[0], {
-            backgroundImage: `url(${imageUrl})`,
+            backgroundImage: `url(${mediaUrls[0] || imageUrls[0]})`,
           });
-          timeline.from(
-            images[0],
-            Object.assign({}, props.startArgs),
-            position
-          );
-          position = `<`;
+          timeline.from(images[0], props.startArgs!, position);
+          position = '<';
         }
-        timeline.to(image, Object.assign({}, props.endArgs), position);
+        timeline.to(image, props.endArgs!, position);
       });
     }
 
-    props.onReady();
+    props.timeline.add(timelineItem);
+    if (!hasReportedReady) {
+      hasReportedReady = true;
+      props.onReady();
+    }
+  };
+
+  onCleanup(() => {
+    buildId++;
+    props.timeline.remove(timelineItem);
+    timeline.kill();
+  });
+
+  createEffect(() => {
+    void buildTimeline();
   });
 
   return (
@@ -200,7 +224,7 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
       style="position: absolute; width: 100%; height: 100%;"
     >
       <For each={props.opts.images}>
-        {(item, i) => <div data-component="image" style={style}></div>}
+        {(item, i) => <div data-component="image" style={style()}></div>}
       </For>
     </div>
   );
