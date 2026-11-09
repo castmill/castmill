@@ -301,6 +301,7 @@ export const EditableTextStage: Component<EditableTextStageProps> = (props) => {
               ref={(el) => (editorRef = el)}
               class={styles.editor}
               role="dialog"
+              data-modal-overlay
               aria-label={props.labels.editAria(label(current().info))}
               style={{
                 top: `${current().top}px`,

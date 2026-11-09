@@ -52,6 +52,7 @@ export class TemplateWidget extends TimelineWidget {
   private fontFaces: { [key: string]: Promise<FontFace> } = {};
   private medias: { [key: string]: string } = {};
   private template: TemplateComponent;
+  private config: TemplateConfig;
   private displayDuration?: number;
   // Emits once the rendered template is ready, e.g. its videos have loaded.
   private ready$?: ReplaySubject<void>;
@@ -83,14 +84,15 @@ export class TemplateWidget extends TimelineWidget {
       ? optionsSchema.some((option) => option && option.key === 'overrides')
       : optionsSchema &&
         Object.prototype.hasOwnProperty.call(optionsSchema, 'overrides');
+    this.config = {
+      ...opts.config,
+      textOverridesEnabled: !declaresOverrides,
+    };
     this.template = TemplateComponent.fromJSON(
       opts.widget.template,
       resourceManager,
       this.globals,
-      {
-        ...opts.config,
-        textOverridesEnabled: !declaresOverrides,
-      }
+      this.config
     );
 
     // Check for display_duration or duration option and set timeline duration
@@ -231,7 +233,7 @@ export class TemplateWidget extends TimelineWidget {
               Template({
                 name: this.opts.widget.name,
                 root: this.template,
-                config: this.opts.config,
+                config: this.config,
                 style: this.opts?.style,
                 timeline: this.timeline,
                 globals: this.globals,

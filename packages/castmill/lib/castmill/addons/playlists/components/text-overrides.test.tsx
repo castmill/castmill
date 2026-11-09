@@ -468,6 +468,7 @@ describe('EditableTextStage', () => {
       'aria-label',
       'Edit text: Gata'
     );
+    expect(screen.getByRole('dialog')).toHaveAttribute('data-modal-overlay');
     expect(text('street').parentElement?.contains(screen.getByRole('dialog'))).toBe(
       false
     );
