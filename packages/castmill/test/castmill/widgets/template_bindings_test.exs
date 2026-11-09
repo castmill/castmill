@@ -58,6 +58,7 @@ defmodule Castmill.Widgets.TemplateBindingsTest do
                   "where" => [%{"key" => "$.end", "gte" => "@now", "lt" => 3}],
                   "item" => %{"first" => [%{"fmt" => "{$.start | date}"}]},
                   "limit" => -1,
+                  "skip" => "two",
                   "colour" => "red"
                 }
               }
@@ -75,6 +76,7 @@ defmodule Castmill.Widgets.TemplateBindingsTest do
       assert Enum.any?(messages, &(&1 =~ "takes exactly one of"))
       assert Enum.any?(messages, &(&1 =~ "first[0]: invalid fmt"))
       assert Enum.any?(messages, &(&1 =~ "limit must be a non-negative integer"))
+      assert Enum.any?(messages, &(&1 =~ "skip must be a non-negative integer"))
     end
 
     test "validates list sources and conditions" do
@@ -115,6 +117,32 @@ defmodule Castmill.Widgets.TemplateBindingsTest do
 
       assert {[{_, "first must be a non-empty list"}], []} =
                TemplateBindings.check(%{"first" => []})
+    end
+
+    test "validates first bindings with additional keys" do
+      {errors, []} =
+        TemplateBindings.check(%{
+          "first" => [],
+          "other" => %{"fmt" => "{data.price | money}"}
+        })
+
+      messages = Enum.map(errors, &TemplateBindings.describe/1)
+      assert "first must be a non-empty list" in messages
+      assert Enum.any?(messages, &(&1 =~ ~s(unknown formatter "money")))
+    end
+
+    test "validates fmt bindings with additional keys" do
+      assert {[{_, message}], []} =
+               TemplateBindings.check(%{"fmt" => "{data.price | money}", "default" => "—"})
+
+      assert message =~ ~s(unknown formatter "money")
+    end
+
+    test "rejects list wrappers whose values are not objects" do
+      for malformed <- [[], "data.viewings", nil] do
+        assert {[{_, "list must be an object"}], []} =
+                 TemplateBindings.check(%{"list" => malformed})
+      end
     end
 
     test "warns about plain strings that look like a format text" do

@@ -101,8 +101,13 @@ describe('Template formatting', () => {
       expect(parseDate(date.getTime())!.getTime()).to.equal(date.getTime());
       for (const bad of [
         'tomorrow',
+        '2026-00-12',
         '2026-13-01',
+        '2026-02-30',
+        '2026-11-12T12:00:99',
         '2026-11-12T25:00',
+        '2026-11-12T12:00+01:99',
+        '2026-11-12T12:00+99:00',
         null,
         undefined,
         NaN,
@@ -111,6 +116,8 @@ describe('Template formatting', () => {
       ]) {
         expect(parseDate(bad), String(bad)).to.equal(undefined);
       }
+      expect(parseDate('2026-02-29')).to.equal(undefined);
+      expect(parseDate('2024-02-29')).not.to.equal(undefined);
     });
   });
 
@@ -140,6 +147,14 @@ describe('Template formatting', () => {
         'Fr 6 Nov'
       );
       expect(formatDate(date, 'dddd', localeData('ja'))).to.equal('金曜日');
+    });
+
+    it('handles long unmatched brackets and still formats following tokens', () => {
+      const unmatchedBrackets = '['.repeat(10000);
+      expect(formatDate(date, unmatchedBrackets, localeData('en'))).to.equal(
+        unmatchedBrackets
+      );
+      expect(formatDate(date, '[YYYY', localeData('en'))).to.equal('[2026');
     });
   });
 
@@ -372,6 +387,25 @@ describe('Template formatting', () => {
       ]);
     });
 
+    it('skips the first results before the limit', () => {
+      const images = ['a', '', 'b', 'c', 'd'];
+      expect(
+        resolve({ list: { key: 'data.images', skip: 2 } }, { images })
+      ).to.deep.equal(['c', 'd']);
+      expect(
+        resolve({ list: { key: 'data.images', skip: 1, limit: 2 } }, { images })
+      ).to.deep.equal(['b', 'c']);
+      expect(
+        resolve({ list: { key: 'data.images', skip: 9 } }, { images })
+      ).to.deep.equal([]);
+      expect(
+        resolve(
+          { list: { key: 'data.images', skip: 0, join: ',' } },
+          { images }
+        )
+      ).to.equal('a,b,c,d');
+    });
+
     it('supports every condition operator', () => {
       const rows = [{ n: 1 }, { n: 2 }, { n: 3 }, { n: '2' }, {}];
       const ids = (condition: any) =>
@@ -413,10 +447,14 @@ describe('Template formatting', () => {
         saved[key] = globals[key];
         globals[key] = key === 'window' ? dom.window : dom.window[key];
       });
-      // gsap reads computed styles and may still tick after the test.
+      // gsap reads computed styles and may still tick after the test, so
+      // pending frames must not keep the test process alive.
       globals.getComputedStyle = dom.window.getComputedStyle.bind(dom.window);
-      globals.requestAnimationFrame = (callback: () => void) =>
-        setTimeout(callback, 0);
+      globals.requestAnimationFrame = (callback: () => void) => {
+        const id = setTimeout(callback, 0);
+        (id as any).unref?.();
+        return id;
+      };
       globals.cancelAnimationFrame = (id: any) => clearTimeout(id);
       const realNow = Date.now;
       let current = local(2026, 11, 12, 16, 59).getTime();

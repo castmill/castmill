@@ -78,6 +78,9 @@ interface WidgetConfigProps {
   }) => Promise<void>;
 }
 
+export const resolvePlaybackLocale = (defaultLocale?: string) =>
+  defaultLocale || 'en';
+
 type FormTypes =
   | 'text'
   | 'number'
@@ -314,6 +317,8 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
   const t = (key: string, params?: Record<string, any>) =>
     props.store.i18n?.t(key, params) || key;
   const locale = () => props.store.i18n?.locale() || 'en';
+  const displayLocale = () =>
+    resolvePlaybackLocale(props.store.networkSettings?.defaultLocale);
 
   const translateWidgetOptionLabel = (
     optionKey: string,
@@ -445,7 +450,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
     // Edited texts don't affect integration data.
     const { overrides: _overrides, ...fetchOptions } =
       normalizeWidgetOptionsForApi(widgetOptions(), schemaEntries);
-    const options = { ...fetchOptions, display_locale: locale() };
+    const options = { ...fetchOptions, display_locale: displayLocale() };
     const widgetId = props.item.widget?.id;
 
     if (!widgetId || !props.baseUrl || !props.organizationId) {
@@ -1154,6 +1159,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
               config={widgetConfig()}
               options={widgetOptions()}
               previewData={previewData()}
+              locale={displayLocale()}
               baseUrl={props.baseUrl}
               socket={props.store.socket}
               paused={editingTexts()}

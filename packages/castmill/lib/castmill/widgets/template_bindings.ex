@@ -21,7 +21,7 @@ defmodule Castmill.Widgets.TemplateBindings do
     "default" => {1, 1}
   }
 
-  @list_keys ~w(key items where sort desc item limit join)
+  @list_keys ~w(key items where sort desc item skip limit join)
   @editable_keys ~w(key label multiline max_length)
 
   @doc "Default and largest `max_length` of an editable text."
@@ -64,31 +64,44 @@ defmodule Castmill.Widgets.TemplateBindings do
 
   # --- traversal --------------------------------------------------------------
 
-  defp walk(%{"fmt" => fmt} = map, path, acc) when map_size(map) == 1 do
-    if is_binary(fmt) do
-      case parse(fmt) do
-        :ok -> acc
-        {:error, message} -> error(acc, path, "invalid fmt #{inspect(fmt)}: #{message}")
+  defp walk(%{"fmt" => fmt} = map, path, acc) do
+    acc =
+      if is_binary(fmt) do
+        case parse(fmt) do
+          :ok -> acc
+          {:error, message} -> error(acc, path, "invalid fmt #{inspect(fmt)}: #{message}")
+        end
+      else
+        error(acc, path, "fmt must be a string")
       end
-    else
-      error(acc, path, "fmt must be a string")
-    end
+
+    map |> Map.delete("fmt") |> walk(path, acc)
   end
 
-  defp walk(%{"list" => list} = map, path, acc) when map_size(map) == 1 and is_map(list) do
-    walk_list(list, path ++ ["list"], acc)
+  defp walk(%{"list" => list} = map, path, acc) do
+    acc =
+      if is_map(list) do
+        walk_list(list, path ++ ["list"], acc)
+      else
+        error(acc, path ++ ["list"], "list must be an object")
+      end
+
+    map |> Map.delete("list") |> walk(path, acc)
   end
 
-  defp walk(%{"first" => first} = map, path, acc) when map_size(map) == 1 do
-    if is_list(first) and first != [] do
-      first
-      |> Enum.with_index()
-      |> Enum.reduce(acc, fn {value, index}, acc ->
-        walk(value, path ++ ["first[#{index}]"], acc)
-      end)
-    else
-      error(acc, path, "first must be a non-empty list")
-    end
+  defp walk(%{"first" => first} = map, path, acc) do
+    acc =
+      if is_list(first) and first != [] do
+        first
+        |> Enum.with_index()
+        |> Enum.reduce(acc, fn {value, index}, acc ->
+          walk(value, path ++ ["first[#{index}]"], acc)
+        end)
+      else
+        error(acc, path, "first must be a non-empty list")
+      end
+
+    map |> Map.delete("first") |> walk(path, acc)
   end
 
   defp walk(map, path, acc) when is_map(map) do
@@ -255,6 +268,7 @@ defmodule Castmill.Widgets.TemplateBindings do
     acc
     |> check_type(list, "sort", path, &is_binary/1, "a key path")
     |> check_type(list, "desc", path, &is_boolean/1, "a boolean")
+    |> check_type(list, "skip", path, &(is_integer(&1) and &1 >= 0), "a non-negative integer")
     |> check_type(list, "limit", path, &(is_integer(&1) and &1 >= 0), "a non-negative integer")
     |> check_type(list, "join", path, &is_binary/1, "a string")
   end

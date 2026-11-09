@@ -1,5 +1,7 @@
 import {
   Component,
+  createEffect,
+  createMemo,
   createSignal,
   For,
   JSX,
@@ -295,13 +297,34 @@ export const Scroller: Component<ScrollerProps> = (props) => {
   let containerRef: HTMLDivElement | undefined;
   let contentRef: HTMLDivElement | undefined;
   let scrollAnimation: ScrollAnimation | null = null;
-  let timelineItem: TimelineItem;
+  let timelineItem: TimelineItem | undefined;
 
   // Track ready state for all items (original + duplicates)
   let readyCount = 0;
-  const totalItems = props.opts.items.length * 2; // Duplicated for seamless loop
+  const resolvedItems = createMemo(
+    () => props.opts.items || [],
+    undefined,
+    {
+      equals: (previous, next) =>
+        previous.length === next.length &&
+        previous.every((item, index) => item === next[index]),
+    }
+  );
+  const initialItems = resolvedItems();
+  let previousItems = initialItems;
+  let totalItems = initialItems.length * 2;
+  let generation = 0;
+  const [itemsRevision, setItemsRevision] = createSignal(0);
+  const duplicatedItems = createMemo(() => {
+    const revision = itemsRevision();
+    return [...resolvedItems(), ...resolvedItems()].map((item) => ({
+      item,
+      revision,
+    }));
+  });
 
-  const onItemReady = () => {
+  const onItemReady = (itemGeneration: number) => {
+    if (itemGeneration !== generation) return;
     readyCount++;
     if (readyCount >= totalItems) {
       // Wait for fonts to be loaded, then defer to next frames for layout
@@ -316,7 +339,9 @@ export const Scroller: Component<ScrollerProps> = (props) => {
         // Then defer to animation frame for final measurement
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
-            initializeScroll();
+            if (itemGeneration === generation) {
+              initializeScroll();
+            }
           });
         });
       };
@@ -412,17 +437,27 @@ export const Scroller: Component<ScrollerProps> = (props) => {
     scrollAnimation?.destroy();
   });
 
-  // If no items, render empty and signal ready
-  if (!props.opts.items || props.opts.items.length === 0) {
-    onMount(() => props.onReady());
-    return (
-      <div
-        data-component="scroller"
-        data-name={props.name}
-        style={props.style}
-      />
-    );
-  }
+  let firstItemsEffect = true;
+  createEffect(() => {
+    const items = resolvedItems();
+    if (items === previousItems) {
+      if (firstItemsEffect && items.length === 0) props.onReady();
+      firstItemsEffect = false;
+      return;
+    }
+
+    firstItemsEffect = false;
+    previousItems = items;
+    generation++;
+    readyCount = 0;
+    totalItems = items.length * 2;
+    if (timelineItem) props.timeline.remove(timelineItem);
+    timelineItem = undefined;
+    scrollAnimation?.destroy();
+    scrollAnimation = null;
+    setItemsRevision(generation);
+    if (totalItems === 0) props.onReady();
+  });
 
   const isHorizontal =
     props.opts.direction === 'left' || props.opts.direction === 'right';
@@ -446,9 +481,6 @@ export const Scroller: Component<ScrollerProps> = (props) => {
     transform: isHorizontal ? 'translateX(0px)' : 'translateY(0px)',
   };
 
-  // Duplicate items for seamless infinite scroll
-  const duplicatedItems = [...props.opts.items, ...props.opts.items];
-
   return (
     <div
       ref={(el) => (containerRef = el)}
@@ -457,8 +489,8 @@ export const Scroller: Component<ScrollerProps> = (props) => {
       style={containerStyle}
     >
       <div ref={(el) => (contentRef = el)} style={contentStyle}>
-        <For each={duplicatedItems}>
-          {(item, i) => (
+        <For each={duplicatedItems()}>
+          {(entry) => (
             <div
               style={{
                 'flex-shrink': 0,
@@ -467,11 +499,11 @@ export const Scroller: Component<ScrollerProps> = (props) => {
             >
               <Item
                 config={props.config}
-                context={item}
+                context={entry.item}
                 component={props.component}
                 timeline={props.timeline}
                 resourceManager={props.resourceManager}
-                onReady={onItemReady}
+                onReady={() => onItemReady(entry.revision)}
                 globals={props.globals}
               />
             </div>

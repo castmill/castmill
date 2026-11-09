@@ -171,7 +171,7 @@ bindings when a widget is created and warns about plain strings that look like f
 
 ### List Binding (`list`)
 
-Builds a list from an array: `where` → `sort` → `item` → drop empty results → `limit` → `join`.
+Builds a list from an array: `where` → `sort` → `item` → drop empty results → `skip` → `limit` → `join`.
 
 ```json
 {
@@ -189,7 +189,8 @@ Builds a list from an array: `where` → `sort` → `item` → drop empty result
 - `key` (a path) or `items` (a literal array whose elements may contain bindings).
 - `where`: conditions with one of `eq`, `neq`, `gt`, `gte`, `lt`, `lte` or `present: true`. `@now` compares
   dates as instants.
-- `sort` (a path) with optional `desc: true`; `limit`; `join` returns a string, otherwise an array.
+- `sort` (a path) with optional `desc: true`; `skip` (leave out the first results); `limit`; `join`
+  returns a string, otherwise an array.
 
 Because empty results are dropped before `limit`, `items` + `where: [{ "key": "$.value", "present": true }]` +
 `limit: 5` shows "the first five facts that have a value".

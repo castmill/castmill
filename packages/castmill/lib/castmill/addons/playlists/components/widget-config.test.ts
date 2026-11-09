@@ -11,8 +11,19 @@ import {
   isLocationValueValid,
   normalizeFormValue,
   normalizeWidgetOptionsForApi,
+  resolvePlaybackLocale,
   type SchemaAttributeType,
 } from './widget-config';
+
+describe('WidgetConfig - Playback Locale', () => {
+  it('uses the network display locale instead of the dashboard language', () => {
+    expect(resolvePlaybackLocale('sv')).toBe('sv');
+  });
+
+  it('defaults to English when no network display locale is available', () => {
+    expect(resolvePlaybackLocale()).toBe('en');
+  });
+});
 
 describe('WidgetConfig - Collection Parsing', () => {
   it('should parse collection string with media type filter', () => {

@@ -305,8 +305,16 @@ export class Timeline implements TimelineBasic {
     const index = this.items.findIndex((_item) => _item === item);
     if (index >= 0) {
       this.items.splice(index, 1);
-      this.hasRepeat = this.items.some((item) => item.repeat);
     }
+
+    if (this.playing.delete(item)) {
+      item.child.pause();
+    }
+
+    this.nextEndTick = 0;
+    this.hasRepeat =
+      this.items.some((item) => item.repeat) ||
+      [...this.playing].some((item) => item.repeat);
   }
 
   isPlaying(item: TimelineItem) {

@@ -2,11 +2,14 @@ import gsap from 'gsap';
 import { getLogicalSize } from '../../utils/logical-size';
 import {
   Component,
+  createEffect,
+  createMemo,
   createSignal,
   For,
   JSX,
   onCleanup,
   onMount,
+  untrack,
 } from 'solid-js';
 import { Item } from './item';
 import { resolveOption, TemplateConfig } from './binding';
@@ -156,6 +159,8 @@ export const PaginatedList: Component<PaginatedListProps> = (props) => {
   let disposed = false;
   let measuredWidth = 0;
   let measuredHeight = 0;
+  let resizeListener: (() => void) | undefined;
+  const resolvedItems = createMemo(() => props.opts.items || []);
 
   const resetTimeline = () => {
     if (timelineItem) {
@@ -167,7 +172,7 @@ export const PaginatedList: Component<PaginatedListProps> = (props) => {
   };
 
   const buildPages = (itemsPerPage: number): any[][] => {
-    const items = props.opts.items || [];
+    const items = resolvedItems();
     if (!items.length) {
       return [];
     }
@@ -256,7 +261,9 @@ export const PaginatedList: Component<PaginatedListProps> = (props) => {
 
   onCleanup(() => {
     disposed = true;
-    window.removeEventListener('resize', measureAndSetupPages);
+    if (resizeListener) {
+      window.removeEventListener('resize', resizeListener);
+    }
     if (timelineItem) {
       props.timeline.remove(timelineItem);
     }
@@ -277,7 +284,8 @@ export const PaginatedList: Component<PaginatedListProps> = (props) => {
   };
 
   onMount(() => {
-    window.addEventListener('resize', measureAndSetupPages);
+    resizeListener = () => measureAndSetupPages();
+    window.addEventListener('resize', resizeListener);
     // Defer measurement to ensure layout is computed
     // This is critical for proper autofit text sizing
     requestAnimationFrame(() => {
@@ -287,10 +295,10 @@ export const PaginatedList: Component<PaginatedListProps> = (props) => {
     });
   });
 
-  const measureAndSetupPages = () => {
+  const measureAndSetupPages = (force = false) => {
     if (disposed) return;
     if (!containerRef) {
-      const itemsPerPage = props.opts.pageSize || props.opts.items.length || 1;
+      const itemsPerPage = props.opts.pageSize || resolvedItems().length || 1;
       setupPages(itemsPerPage);
       return;
     }
@@ -303,7 +311,8 @@ export const PaginatedList: Component<PaginatedListProps> = (props) => {
     }
     if (
       containerRect.width === measuredWidth &&
-      containerRect.height === measuredHeight
+      containerRect.height === measuredHeight &&
+      !force
     )
       return;
     measuredWidth = containerRect.width;
@@ -314,8 +323,8 @@ export const PaginatedList: Component<PaginatedListProps> = (props) => {
       itemsPerPage = props.opts.pageSize;
     } else {
       itemsPerPage = Math.min(
-        Math.max(calcNumItemsPerPage(containerRef, props.opts.items.length), 1),
-        Math.max(props.opts.items.length, 1)
+        Math.max(calcNumItemsPerPage(containerRef, resolvedItems().length), 1),
+        Math.max(resolvedItems().length, 1)
       );
     }
 
@@ -323,6 +332,14 @@ export const PaginatedList: Component<PaginatedListProps> = (props) => {
       setupPages(itemsPerPage, containerRect.width, containerRect.height);
     }
   };
+
+  let previousItems = resolvedItems();
+  createEffect(() => {
+    const items = resolvedItems();
+    if (items === previousItems) return;
+    previousItems = items;
+    untrack(() => measureAndSetupPages(true));
+  });
 
   return (
     <div
