@@ -55,10 +55,14 @@ const withClockWidget = async (
   globals.getComputedStyle = dom.window.getComputedStyle.bind(dom.window);
   // Rendered templates are not disposed, so their pending frame callbacks may
   // run after the test: keep this shim unless another one was defined before.
+  // Pending frames must not keep the test process alive either.
   const savedFrame = globals.requestAnimationFrame;
   const savedCancelFrame = globals.cancelAnimationFrame;
-  globals.requestAnimationFrame = (callback: () => void) =>
-    setTimeout(callback, 0);
+  globals.requestAnimationFrame = (callback: () => void) => {
+    const id = setTimeout(callback, 0);
+    (id as any).unref?.();
+    return id;
+  };
   globals.cancelAnimationFrame = (id: any) => clearTimeout(id);
 
   const realNow = Date.now;

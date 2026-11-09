@@ -452,10 +452,14 @@ describe('Template formatting', () => {
         saved[key] = globals[key];
         globals[key] = key === 'window' ? dom.window : dom.window[key];
       });
-      // gsap reads computed styles and may still tick after the test.
+      // gsap reads computed styles and may still tick after the test, so
+      // pending frames must not keep the test process alive.
       globals.getComputedStyle = dom.window.getComputedStyle.bind(dom.window);
-      globals.requestAnimationFrame = (callback: () => void) =>
-        setTimeout(callback, 0);
+      globals.requestAnimationFrame = (callback: () => void) => {
+        const id = setTimeout(callback, 0);
+        (id as any).unref?.();
+        return id;
+      };
       globals.cancelAnimationFrame = (id: any) => clearTimeout(id);
       const realNow = Date.now;
       let current = local(2026, 11, 12, 16, 59).getTime();
