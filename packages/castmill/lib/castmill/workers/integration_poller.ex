@@ -368,7 +368,7 @@ defmodule Castmill.Workers.IntegrationPoller do
     end
   end
 
-  defp get_credentials(organization_id, integration_id, widget_config_id \\ nil) do
+  defp get_credentials(organization_id, integration_id, widget_config_id) do
     case Integrations.get_integration(integration_id) do
       %WidgetIntegration{} = integration ->
         # Merges network-level credentials (shared across the network, e.g. a
