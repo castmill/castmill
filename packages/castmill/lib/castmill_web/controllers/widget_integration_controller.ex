@@ -1234,7 +1234,13 @@ defmodule CastmillWeb.WidgetIntegrationController do
     "#{base}|preview:#{options_hash}"
   end
 
-  defp prefetch_discriminator_id(integration, options, organization_id, widget_config_id, _preview?) do
+  defp prefetch_discriminator_id(
+         integration,
+         options,
+         organization_id,
+         widget_config_id,
+         _preview?
+       ) do
     build_discriminator_id(integration, options, organization_id, widget_config_id)
   end
 
@@ -1259,6 +1265,7 @@ defmodule CastmillWeb.WidgetIntegrationController do
     now = DateTime.utc_now()
     interval = integration.pull_interval_seconds || 300
     refresh_at = DateTime.add(now, interval, :second)
+
     cache_widget_config_id =
       if integration.discriminator_type == "widget_config", do: widget_config_id, else: nil
 
@@ -1353,7 +1360,7 @@ defmodule CastmillWeb.WidgetIntegrationController do
          _widget_id,
          _widget_config_id
        ),
-    do: :ok
+       do: :ok
 
   defp schedule_due_refresh(
          data,

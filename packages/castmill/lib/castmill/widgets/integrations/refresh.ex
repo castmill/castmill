@@ -247,11 +247,11 @@ defmodule Castmill.Widgets.Integrations.Refresh do
         widget_config_id \\ nil
       ) do
     record_failure_with_cache_config(
-        integration,
-        organization_id,
-        discriminator_id,
-        reason,
-        cache_config_id(integration, widget_config_id)
+      integration,
+      organization_id,
+      discriminator_id,
+      reason,
+      cache_config_id(integration, widget_config_id)
     )
   end
 
@@ -400,7 +400,14 @@ defmodule Castmill.Widgets.Integrations.Refresh do
             _ -> {:ok, existing}
           end
         else
-          enqueue_refresh(integration, organization_id, widget_id, widget_options, widget_config_id)
+          enqueue_refresh(
+            integration,
+            organization_id,
+            widget_id,
+            widget_options,
+            widget_config_id
+          )
+
           {:ok, existing}
         end
 
@@ -527,14 +534,14 @@ defmodule Castmill.Widgets.Integrations.Refresh do
 
               _ ->
                 {:fetched,
-                   fetch_and_store(
-                     integration,
-                     organization_id,
-                     widget_options,
-                     widget_config_id,
-                     discriminator_id: discriminator_id,
-                     cache_widget_config_id: cache_widget_config_id
-                   )}
+                 fetch_and_store(
+                   integration,
+                   organization_id,
+                   widget_options,
+                   widget_config_id,
+                   discriminator_id: discriminator_id,
+                   cache_widget_config_id: cache_widget_config_id
+                 )}
             end
 
           _ ->
