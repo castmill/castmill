@@ -25,7 +25,13 @@ const withDom = async (fn: (root: HTMLElement) => Promise<void>) => {
   const savedComputed = g.getComputedStyle;
   g.getComputedStyle = dom.window.getComputedStyle.bind(dom.window);
   // gsap's ticker keeps calling these after the test, so they stay installed.
-  g.requestAnimationFrame ??= (callback: () => void) => setTimeout(callback, 0);
+  // Pending frames must not keep the test process alive (templates are not
+  // disposed, so their frame callbacks may never stop).
+  g.requestAnimationFrame ??= (callback: () => void) => {
+    const id = setTimeout(callback, 0);
+    id.unref?.();
+    return id;
+  };
   g.cancelAnimationFrame ??= (id: any) => clearTimeout(id);
   try {
     await fn(dom.window.document.getElementById('root'));
