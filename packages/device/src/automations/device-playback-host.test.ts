@@ -320,7 +320,7 @@ describe('DevicePlaybackHost', () => {
   });
 
   it('clears interruption playback when disposed', async () => {
-    const { host, deps, player } = setup();
+    const { host, deps } = setup();
     const signal = new AbortFlag();
     const done = host.playInterruption(playlist(5, 1), 1, signal);
     await settle();
