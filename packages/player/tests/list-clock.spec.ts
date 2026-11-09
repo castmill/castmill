@@ -25,8 +25,6 @@ const withClockWidget = async (
     'Element',
     'MutationObserver',
     'getComputedStyle',
-    'requestAnimationFrame',
-    'cancelAnimationFrame',
   ];
   const saved: Record<string, unknown> = {};
   globalKeys.forEach((key) => {
@@ -44,6 +42,9 @@ const withClockWidget = async (
     height: 200,
     toJSON: () => ({}),
   };
+  // Solid clones templates from the first document it renders into, so later
+  // specs may create elements from this window: restore the stub afterwards.
+  const realRect = dom.window.HTMLElement.prototype.getBoundingClientRect;
   dom.window.HTMLElement.prototype.getBoundingClientRect = () => rect as any;
   globals.window = dom.window;
   globals.document = dom.window.document;
@@ -52,6 +53,10 @@ const withClockWidget = async (
   globals.Element = dom.window.Element;
   globals.MutationObserver = dom.window.MutationObserver;
   globals.getComputedStyle = dom.window.getComputedStyle.bind(dom.window);
+  // Rendered templates are not disposed, so their pending frame callbacks may
+  // run after the test: keep this shim unless another one was defined before.
+  const savedFrame = globals.requestAnimationFrame;
+  const savedCancelFrame = globals.cancelAnimationFrame;
   globals.requestAnimationFrame = (callback: () => void) =>
     setTimeout(callback, 0);
   globals.cancelAnimationFrame = (id: any) => clearTimeout(id);
@@ -114,6 +119,11 @@ const withClockWidget = async (
   } finally {
     widget.stop();
     Date.now = realNow;
+    dom.window.HTMLElement.prototype.getBoundingClientRect = realRect;
+    if (savedFrame) {
+      globals.requestAnimationFrame = savedFrame;
+      globals.cancelAnimationFrame = savedCancelFrame;
+    }
     globalKeys.forEach((key) => {
       globals[key] = saved[key];
     });
