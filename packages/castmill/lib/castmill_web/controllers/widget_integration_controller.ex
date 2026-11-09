@@ -485,6 +485,8 @@ defmodule CastmillWeb.WidgetIntegrationController do
 
   Request body (optional):
     - options: Widget options to use for discriminator calculation (for widget_option type)
+    - widget_config_id: An existing config to authorize and scope config-specific data.
+      Config-scoped previews without a saved config are skipped.
     - preview: When true the fetch is ephemeral (used by the dashboard live
       preview): data is cached but no background polling scheduler is created,
       since the options being previewed may never be saved.
@@ -515,14 +517,57 @@ defmodule CastmillWeb.WidgetIntegrationController do
         preview? = Map.get(params, "preview", false) in [true, "true"]
         widget_config_id = Map.get(params, "widget_config_id")
 
-        do_prefetch_widget_data(
-          conn,
-          organization_id,
-          id,
-          widget_options,
-          preview?,
-          widget_config_id
-        )
+        case authorize_prefetch_widget_config(
+               conn,
+               organization_id,
+               id,
+               widget_config_id
+             ) do
+          :ok ->
+            do_prefetch_widget_data(
+              conn,
+              organization_id,
+              id,
+              widget_options,
+              preview?,
+              widget_config_id
+            )
+
+          {:error, status, message} ->
+            conn
+            |> put_status(status)
+            |> json(%{error: message})
+        end
+    end
+  end
+
+  defp authorize_prefetch_widget_config(_conn, _organization_id, _widget_id, nil), do: :ok
+
+  defp authorize_prefetch_widget_config(conn, organization_id, widget_id, widget_config_id) do
+    current_actor = conn.assigns[:current_actor] || conn.assigns[:current_user]
+
+    cond do
+      is_nil(current_actor) ->
+        {:error, :unauthorized, "Authentication required"}
+
+      true ->
+        with {:ok, widget_config} <- get_widget_config_or_error(widget_config_id),
+             true <- widget_config.widget_id == widget_id,
+             ^organization_id <-
+               Widgets.get_organization_id_for_widget_config(widget_config.id) do
+          if Organizations.has_access(
+               organization_id,
+               current_actor.id,
+               "playlists",
+               :show
+             ) do
+            :ok
+          else
+            {:error, :forbidden, "You don't have access to this widget data"}
+          end
+        else
+          _ -> {:error, :not_found, "Widget config not found"}
+        end
     end
   end
 
@@ -642,6 +687,7 @@ defmodule CastmillWeb.WidgetIntegrationController do
         |> put_status(:ok)
         |> json(%{
           data: apply_max_items_filter(data.data, widget_options),
+          discriminator_id: data.discriminator_id,
           version: data.version,
           fetched_at: data.fetched_at,
           status: if(data == existing, do: "cached", else: "fetched")
@@ -677,6 +723,7 @@ defmodule CastmillWeb.WidgetIntegrationController do
         |> put_status(:ok)
         |> json(%{
           data: filtered_data,
+          discriminator_id: data.discriminator_id,
           version: data.version,
           fetched_at: data.fetched_at,
           status: "cached"
@@ -754,6 +801,7 @@ defmodule CastmillWeb.WidgetIntegrationController do
               |> put_status(:ok)
               |> json(%{
                 data: filtered_data,
+                discriminator_id: integration_data.discriminator_id,
                 version: integration_data.version,
                 fetched_at: integration_data.fetched_at,
                 status: "fetched"
@@ -892,7 +940,8 @@ defmodule CastmillWeb.WidgetIntegrationController do
            existing,
            organization_id,
            widget_id,
-           widget_options
+           widget_options,
+           widget_config_id
          ) do
       {:ok, data} -> data
       _ -> existing
@@ -941,7 +990,7 @@ defmodule CastmillWeb.WidgetIntegrationController do
         # Return empty data with version 0 instead of 404
         conn
         |> put_status(:ok)
-        |> json(%{data: nil, version: 0, status: "no_integration"})
+        |> json(%{data: nil, discriminator_id: nil, version: 0, status: "no_integration"})
 
       data when not is_nil(current_version) and data.version == current_version ->
         # Version matches, return 304
@@ -959,6 +1008,7 @@ defmodule CastmillWeb.WidgetIntegrationController do
         |> put_status(:ok)
         |> json(%{
           data: filtered_data,
+          discriminator_id: data.discriminator_id,
           version: data.version,
           fetched_at: data.fetched_at,
           status: data.status

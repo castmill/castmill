@@ -315,6 +315,49 @@ defmodule CastmillWeb.WidgetIntegrationControllerTest do
       assert length(items) == 10
       # Test now runs in inline mode by default
     end
+
+    test "passes the config ID when reading config-scoped on-demand data", %{
+      conn: conn,
+      organization: organization
+    } do
+      suffix = System.unique_integer([:positive])
+
+      widget =
+        widget_fixture(%{
+          name: "Config read #{suffix}",
+          slug: "config-read-#{suffix}",
+          template: %{"type" => "group"}
+        })
+
+      widget_integration_fixture(%{
+        widget_id: widget.id,
+        name: "config-read-integration-#{suffix}",
+        integration_type: "pull",
+        refresh_mode: "on_demand",
+        discriminator_type: "widget_config",
+        pull_config: %{
+          "auth_type" => "none",
+          "fetcher_module" => "Castmill.Widgets.Integrations.Fetchers.TestStub"
+        }
+      })
+
+      playlist = playlist_fixture(%{organization_id: organization.id})
+      playlist_item = playlist_item_fixture(%{playlist_id: playlist.id})
+
+      widget_config =
+        widget_config_fixture(%{
+          widget_id: widget.id,
+          playlist_item_id: playlist_item.id,
+          options: %{}
+        })
+
+      conn = get(conn, "/dashboard/widget-configs/#{widget_config.id}/data")
+
+      assert %{
+               "data" => %{"items" => [%{"title" => "stub"}]},
+               "discriminator_id" => "cfg:#{widget_config.id}"
+             } = json_response(conn, 200)
+    end
   end
 
   describe "prefetch_widget_data/2" do
@@ -350,6 +393,154 @@ defmodule CastmillWeb.WidgetIntegrationControllerTest do
 
       assert %{"data" => nil, "status" => "error", "message" => "Failed to fetch data"} =
                json_response(conn, 200)
+    end
+
+    test "uses an authorized widget config for config-scoped on-demand data", %{
+      conn: conn,
+      organization: organization
+    } do
+      suffix = System.unique_integer([:positive])
+
+      widget =
+        widget_fixture(%{
+          name: "Config scoped #{suffix}",
+          slug: "config-scoped-#{suffix}",
+          template: %{"type" => "group"}
+        })
+
+      widget_integration_fixture(%{
+        widget_id: widget.id,
+        name: "config-scoped-integration-#{suffix}",
+        integration_type: "pull",
+        refresh_mode: "on_demand",
+        discriminator_type: "widget_config",
+        pull_config: %{
+          "auth_type" => "none",
+          "fetcher_module" => "Castmill.Widgets.Integrations.Fetchers.TestStub"
+        }
+      })
+
+      playlist = playlist_fixture(%{organization_id: organization.id})
+      playlist_item = playlist_item_fixture(%{playlist_id: playlist.id})
+
+      widget_config =
+        widget_config_fixture(%{
+          widget_id: widget.id,
+          playlist_item_id: playlist_item.id,
+          options: %{}
+        })
+
+      conn =
+        post(
+          conn,
+          "/dashboard/organizations/#{organization.id}/widgets/#{widget.id}/prefetch-data",
+          %{widget_config_id: widget_config.id, preview: true}
+        )
+
+      assert %{
+               "data" => %{"items" => [%{"title" => "stub"}]},
+               "discriminator_id" => "cfg:#{widget_config.id}"
+             } = json_response(conn, 200)
+    end
+
+    test "does not prefetch config-scoped data for an unsaved preview", %{
+      conn: conn,
+      organization: organization
+    } do
+      suffix = System.unique_integer([:positive])
+
+      widget =
+        widget_fixture(%{
+          name: "Unsaved config scoped #{suffix}",
+          slug: "unsaved-config-scoped-#{suffix}",
+          template: %{"type" => "group"}
+        })
+
+      widget_integration_fixture(%{
+        widget_id: widget.id,
+        name: "unsaved-config-scoped-integration-#{suffix}",
+        integration_type: "pull",
+        refresh_mode: "on_demand",
+        discriminator_type: "widget_config",
+        pull_config: %{
+          "auth_type" => "none",
+          "fetcher_module" => "Castmill.Widgets.Integrations.Fetchers.TestStub"
+        }
+      })
+
+      conn =
+        post(
+          conn,
+          "/dashboard/organizations/#{organization.id}/widgets/#{widget.id}/prefetch-data",
+          %{preview: true}
+        )
+
+      assert response(conn, 204) == ""
+    end
+
+    test "rejects a widget config belonging to a different widget", %{
+      conn: conn,
+      organization: organization
+    } do
+      [requested_widget, config_widget] =
+        for suffix <- 1..2 do
+          widget_fixture(%{
+            name: "Prefetch widget #{suffix}",
+            slug: "prefetch-widget-#{suffix}-#{System.unique_integer([:positive])}",
+            template: %{"type" => "group"}
+          })
+        end
+
+      playlist = playlist_fixture(%{organization_id: organization.id})
+      playlist_item = playlist_item_fixture(%{playlist_id: playlist.id})
+
+      widget_config =
+        widget_config_fixture(%{
+          widget_id: config_widget.id,
+          playlist_item_id: playlist_item.id,
+          options: %{}
+        })
+
+      conn =
+        post(
+          conn,
+          "/dashboard/organizations/#{organization.id}/widgets/#{requested_widget.id}/prefetch-data",
+          %{widget_config_id: widget_config.id}
+        )
+
+      assert %{"error" => "Widget config not found"} = json_response(conn, 404)
+    end
+
+    test "rejects a widget config belonging to a different organization", %{
+      conn: conn,
+      organization: organization
+    } do
+      widget =
+        widget_fixture(%{
+          name: "Cross-organization prefetch",
+          slug: "cross-org-prefetch-#{System.unique_integer([:positive])}",
+          template: %{"type" => "group"}
+        })
+
+      other_organization = organization_fixture()
+      playlist = playlist_fixture(%{organization_id: other_organization.id})
+      playlist_item = playlist_item_fixture(%{playlist_id: playlist.id})
+
+      widget_config =
+        widget_config_fixture(%{
+          widget_id: widget.id,
+          playlist_item_id: playlist_item.id,
+          options: %{}
+        })
+
+      conn =
+        post(
+          conn,
+          "/dashboard/organizations/#{organization.id}/widgets/#{widget.id}/prefetch-data",
+          %{widget_config_id: widget_config.id}
+        )
+
+      assert %{"error" => "Widget config not found"} = json_response(conn, 404)
     end
   end
 end

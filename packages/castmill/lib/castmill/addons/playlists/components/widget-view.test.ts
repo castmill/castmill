@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   getWidgetViewAspectRatio,
   getWidgetViewContainerStyle,
+  matchesWidgetDataUpdate,
   resolveEffectiveWidgetData,
 } from './widget-view';
 
@@ -81,5 +82,43 @@ describe('resolveEffectiveWidgetData', () => {
     expect(resolveEffectiveWidgetData(null, null, null, defaultData)).toBe(
       defaultData
     );
+  });
+});
+
+describe('matchesWidgetDataUpdate', () => {
+  const widgetId = 12;
+
+  it('accepts updates for the matching widget and discriminator', () => {
+    expect(
+      matchesWidgetDataUpdate(
+        { widget_id: '12', discriminator_id: 'org:1|query:a' },
+        widgetId,
+        'org:1|query:a'
+      )
+    ).toBe(true);
+  });
+
+  it('ignores updates for another widget, discriminator, or unknown discriminator', () => {
+    expect(
+      matchesWidgetDataUpdate(
+        { widget_id: '13', discriminator_id: 'org:1|query:a' },
+        widgetId,
+        'org:1|query:a'
+      )
+    ).toBe(false);
+    expect(
+      matchesWidgetDataUpdate(
+        { widget_id: '12', discriminator_id: 'org:1|query:b' },
+        widgetId,
+        'org:1|query:a'
+      )
+    ).toBe(false);
+    expect(
+      matchesWidgetDataUpdate(
+        { widget_id: '12', discriminator_id: 'org:1|query:a' },
+        widgetId,
+        null
+      )
+    ).toBe(false);
   });
 });
