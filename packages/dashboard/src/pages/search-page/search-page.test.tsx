@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { SearchService } from '../../services/search.service';
+import SearchPage from './search-page';
 
 // Mock the auth module to prevent side effects (setStore) during test imports
 vi.mock('../../components/auth', () => ({
@@ -7,6 +8,11 @@ vi.mock('../../components/auth', () => ({
   getAuthToken: vi.fn(() => null),
   getUser: vi.fn(() => ({ id: 'test-user' })),
   checkAuth: vi.fn(() => true),
+}));
+
+vi.mock('@solidjs/router', () => ({
+  useSearchParams: vi.fn(),
+  useNavigate: vi.fn(),
 }));
 
 // Note: Full component tests for SearchPage are challenging due to router and reactive dependencies.
@@ -19,9 +25,8 @@ describe('SearchPage', () => {
   });
 
   describe('Component Integration', () => {
-    it('should be importable', async () => {
-      const module = await import('./search-page');
-      expect(module.default).toBeDefined();
+    it('should be importable', () => {
+      expect(SearchPage).toBeDefined();
     });
 
     it('should use SearchService for data fetching', () => {
