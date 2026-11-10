@@ -8,6 +8,7 @@ import {
   createSignal,
   JSX,
   mergeProps,
+  on,
   onCleanup,
   onMount,
 } from 'solid-js';
@@ -390,6 +391,17 @@ export const Text: Component<TextProps> = (props) => {
       props.timeline.isRunning() ? props.timeline.time : 0
     );
   });
+
+  createEffect(
+    on(
+      () => props.opts.text,
+      () => {
+        if (!props.opts.autofit) {
+          props.onLayoutUpdate?.();
+        }
+      }
+    )
+  );
 
   onMount(() => {
     if (!textRef) {
