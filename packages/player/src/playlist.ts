@@ -43,7 +43,8 @@ class PlaylistClock {
   // already blocked before the first tick is held at its start offset.
   constructor(
     private readonly duration: number,
-    start = 0
+    start = 0,
+    private readonly loop = true
   ) {
     this.last = this.wrap(start);
   }
@@ -74,7 +75,9 @@ class PlaylistClock {
   }
 
   private wrap(value: number): number {
-    return ((value % this.duration) + this.duration) % this.duration;
+    return this.loop
+      ? ((value % this.duration) + this.duration) % this.duration
+      : value;
   }
 }
 
@@ -202,7 +205,7 @@ export class Playlist extends EventEmitter {
         (acc, item) => acc + item.duration,
         0
       );
-      const clock = new PlaylistClock(duration, this.time);
+      const clock = new PlaylistClock(duration, this.time, loop);
       const skips = { count: 0 };
       const playlistTimer$ = timer$.pipe(
         map((value) => clock.map(value)),

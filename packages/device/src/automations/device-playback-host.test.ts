@@ -273,6 +273,27 @@ describe('DevicePlaybackHost', () => {
     ]);
   });
 
+  it('rewinds the scheduler for prefetched programming discarded on interruption', async () => {
+    const { host, deps, player, queue } = setup();
+    const rewindProgramming = vi.fn();
+    const playbackHost = new DevicePlaybackHost({
+      ...deps,
+      rewindProgramming,
+    });
+    queue.length = 2;
+
+    const done = playbackHost.playInterruption(
+      playlist(5, 1),
+      1,
+      new AbortFlag()
+    );
+    await settle();
+
+    expect(rewindProgramming).toHaveBeenCalledWith(1);
+    player.emit('completed');
+    await done;
+  });
+
   it('keeps next-item resume behavior when the boundary wait times out', async () => {
     const { host, deps, player } = setup();
     const channel = playlist(10, 3);

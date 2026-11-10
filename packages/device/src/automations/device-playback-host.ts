@@ -21,9 +21,11 @@ export interface DevicePlaybackDeps {
   /** Stops the player and empties the content queue. */
   clearPlayback(): void;
   /** Queues a playlist of normal programming and starts playback. */
-  enqueueProgramming(json: JsonPlaylist): Promise<void>;
+  enqueueProgramming(json: JsonPlaylist): Promise<void | boolean>;
   /** Wakes the programming loop so it schedules content immediately. */
   wake(): void;
+  /** Rewinds the scheduler for normal playlists discarded after the current one. */
+  rewindProgramming?(pendingPlaylists: number): void;
 }
 
 interface ItemPosition {
@@ -150,6 +152,7 @@ export class DevicePlaybackHost implements PlaybackHost {
     }
 
     if (!this.interruptionActive) {
+      this.deps.rewindProgramming?.(Math.max(0, queue.length - 1));
       this.interruptionActive = true;
       const current = resumeAtCurrent ? this.boundaryResume : this.current;
       this.resume = current

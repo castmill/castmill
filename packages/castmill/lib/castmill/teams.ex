@@ -13,6 +13,7 @@ defmodule Castmill.Teams do
   alias Castmill.Repo
 
   alias Castmill.Organizations.Organization
+  alias Castmill.Automations.Automation
 
   alias Castmill.Teams.{
     Team,
@@ -237,25 +238,42 @@ defmodule Castmill.Teams do
   def add_resource_to_team(team_id, resource_type, resource_id, access) do
     case Map.get(resources_map(), resource_type) do
       {join_mod, foreign_key, _resource_mod, _assoc_field} ->
-        # Build the attributes, dynamically inserting the correct resource_id key
-        attrs =
-          %{
-            team_id: team_id,
-            access: access
-          }
-          |> Map.put(foreign_key, resource_id)
+        with :ok <- validate_team_automation_organization(team_id, resource_type, resource_id) do
+          # Build the attributes, dynamically inserting the correct resource_id key
+          attrs =
+            %{
+              team_id: team_id,
+              access: access
+            }
+            |> Map.put(foreign_key, resource_id)
 
-        # Create a struct for the join table
-        record = struct(join_mod, attrs)
+          # Create a struct for the join table
+          record = struct(join_mod, attrs)
 
-        # Build the changeset (each join schema should define its own changeset/2)
-        changeset = join_mod.changeset(record, attrs)
+          # Build the changeset (each join schema should define its own changeset/2)
+          changeset = join_mod.changeset(record, attrs)
 
-        # Insert into the DB (returns {:ok, record} or {:error, changeset})
-        Repo.insert(changeset)
+          # Insert into the DB (returns {:ok, record} or {:error, changeset})
+          Repo.insert(changeset)
+        end
 
       nil ->
         {:error, {:unsupported_resource_type, resource_type}}
+    end
+  end
+
+  defp validate_team_automation_organization(_team_id, resource_type, _resource_id)
+       when resource_type != "automations",
+       do: :ok
+
+  defp validate_team_automation_organization(team_id, "automations", automation_id) do
+    with {:ok, team_id} <- Ecto.Type.cast(:id, team_id),
+         {:ok, automation_id} <- Ecto.Type.cast(:id, automation_id),
+         %Team{organization_id: organization_id} <- Repo.get(Team, team_id),
+         %Automation{organization_id: ^organization_id} <- Repo.get(Automation, automation_id) do
+      :ok
+    else
+      _ -> {:error, :invalid_resource}
     end
   end
 

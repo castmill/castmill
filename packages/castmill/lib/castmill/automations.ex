@@ -12,7 +12,7 @@ defmodule Castmill.Automations do
   alias Castmill.Repo
   alias Castmill.Automations.{Automation, AutomationsDevices, AutomationsChannels, Registry, Rule}
   alias Castmill.Devices.{Device, DevicesChannels}
-  alias Castmill.Resources.Channel
+  alias Castmill.Resources.{Channel, Playlist}
 
   @preview_max_count 50
 
@@ -97,9 +97,16 @@ defmodule Castmill.Automations do
       )
 
     with :ok <- check_automations_quota(organization_id),
-         :ok <- check_references(organization_id, changeset),
-         :ok <- check_rules_quota(organization_id, changeset, 0),
-         {:ok, automation} <- Repo.insert(changeset) do
+         {:ok, automation} <-
+           Repo.transaction(fn ->
+             with :ok <- check_references(organization_id, changeset),
+                  :ok <- check_rules_quota(organization_id, changeset, 0),
+                  {:ok, automation} <- Repo.insert(changeset) do
+               automation
+             else
+               {:error, reason} -> Repo.rollback(reason)
+             end
+           end) do
       {:ok, preload_assignments(automation)}
     end
   end
@@ -111,10 +118,21 @@ defmodule Castmill.Automations do
     attrs = stringify_keys(attrs) |> Map.drop(["organization_id"])
     changeset = Automation.changeset(automation, attrs)
 
-    with :ok <- check_references(automation.organization_id, changeset),
-         :ok <-
-           check_rules_quota(automation.organization_id, changeset, length(automation.rules)),
-         {:ok, updated} <- Repo.update(changeset) do
+    with {:ok, updated} <-
+           Repo.transaction(fn ->
+             with :ok <- check_references(automation.organization_id, changeset),
+                  :ok <-
+                    check_rules_quota(
+                      automation.organization_id,
+                      changeset,
+                      length(automation.rules)
+                    ),
+                  {:ok, updated} <- Repo.update(changeset) do
+               updated
+             else
+               {:error, reason} -> Repo.rollback(reason)
+             end
+           end) do
       notify_devices(affected_device_ids(updated))
       {:ok, preload_assignments(updated)}
     end
@@ -518,18 +536,19 @@ defmodule Castmill.Automations do
       {:ok, rules} when changeset.valid? ->
         playlist_ids = Rule.referenced_playlist_ids(rules)
 
-        found =
+        found_ids =
           if playlist_ids == [],
-            do: 0,
+            do: [],
             else:
-              Repo.aggregate(
-                from(p in Castmill.Resources.Playlist,
-                  where: p.id in ^playlist_ids and p.organization_id == ^organization_id
-                ),
-                :count
+              Repo.all(
+                from(p in Playlist,
+                  where: p.id in ^playlist_ids and p.organization_id == ^organization_id,
+                  select: p.id,
+                  lock: "FOR KEY SHARE"
+                )
               )
 
-        if found == length(playlist_ids),
+        if length(found_ids) == length(playlist_ids),
           do: :ok,
           else:
             {:error,

@@ -547,7 +547,11 @@ export class Device extends EventEmitter {
                 continue;
               }
 
-              await this.enqueueProgramming(jsonPlaylist, currentGeneration);
+              const enqueued = await this.enqueueProgramming(
+                jsonPlaylist,
+                currentGeneration
+              );
+              if (!enqueued) continue;
             }
           }
 
@@ -576,8 +580,9 @@ export class Device extends EventEmitter {
   private async enqueueProgramming(
     jsonPlaylist: JsonPlaylist,
     generation = this.channelGeneration
-  ) {
-    if (!this.resourceManager || !this.contentQueue || !this.player) return;
+  ): Promise<boolean> {
+    if (!this.resourceManager || !this.contentQueue || !this.player)
+      return false;
     const layer = await Layer.fromPlaylist(
       jsonPlaylist,
       this.resourceManager,
@@ -594,7 +599,7 @@ export class Device extends EventEmitter {
       !this.player
     ) {
       layer.unload?.();
-      return;
+      return false;
     }
 
     this.contentQueue.add(layer);
@@ -607,6 +612,7 @@ export class Device extends EventEmitter {
     };
 
     layer.on('end', onEnd);
+    return true;
   }
 
   private startAutomations(deviceId: string, container: HTMLElement) {
@@ -619,6 +625,12 @@ export class Device extends EventEmitter {
       playerGlobals: () => this.getPlayerGlobals(),
       clearPlayback: () => this.clearPlayback(),
       enqueueProgramming: (json) => this.enqueueProgramming(json),
+      rewindProgramming: (pendingPlaylists) => {
+        if (!this.channels.length) return;
+        this.channelIndex =
+          (this.channelIndex - pendingPlaylists + this.channels.length) %
+          this.channels.length;
+      },
       wake: () => this.wakeProgramming?.(),
     });
     this.automationEngine = new AutomationEngine({

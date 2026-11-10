@@ -83,14 +83,20 @@ export class Player extends EventEmitter {
     const startTime = opts.synced ? baseline : this.playlist.time || 0;
     // Layer offsets are snapshotted when playback starts, so compare each
     // layer's duration: offsets can shift even when the total is unchanged.
-    const refreshOffsets = Boolean(opts.loop && !opts.synced);
+    const refreshOffsets = !opts.synced;
     const layerDurations = refreshOffsets ? this.playlist.layerDurations() : [];
     let restartScheduled = false;
     const timer$ = this.playlist.seek(startTime).pipe(
       first(),
       concatMap(([time, duration]) => {
         let currTime = time;
-        return timer(baseline, startTime, TIMER_RESOLUTION, duration).pipe(
+        return timer(
+          baseline,
+          startTime,
+          TIMER_RESOLUTION,
+          duration,
+          opts.loop === true
+        ).pipe(
           tap((value) => {
             // Unsure why this is needed
             if (value < currTime) {
@@ -103,10 +109,10 @@ export class Player extends EventEmitter {
             if (restartScheduled) return false;
             // Item offsets are computed when playback starts. Items without
             // an explicit duration (e.g. videos) use a 10 s fallback until
-            // their media has loaded, so refresh the offsets at each loop
-            // once the real durations are known.
+            // their media has loaded, so refresh offsets when durations
+            // change during finite playback or at the next loop boundary.
             if (
-              wrapped &&
+              (opts.loop ? wrapped : true) &&
               refreshOffsets &&
               timingChanged(layerDurations, this.playlist.layerDurations())
             ) {
@@ -114,9 +120,17 @@ export class Player extends EventEmitter {
               // Restart outside of the timer callback that is emitting.
               setTimeout(() => {
                 if (this.timerSubscription !== subscription) return;
+                if (
+                  !opts.loop &&
+                  this.playlist.time >= this.playlist.duration()
+                ) {
+                  this.stop();
+                  this.emit('completed');
+                  return;
+                }
                 this.stop();
-                this.playlist.time = 0;
-                this.play({ loop: true });
+                if (opts.loop) this.playlist.time = 0;
+                this.play({ ...opts, baseline: Date.now() });
               }, 0);
               return false;
             }
@@ -184,7 +198,8 @@ export function timer(
   baseline: number,
   start: number,
   interval: number,
-  period: number
+  period: number,
+  loop = true
 ) {
   return new Observable<number>((subscriber) => {
     let timeout: ReturnType<typeof setTimeout> | undefined;
@@ -195,9 +210,10 @@ export function timer(
 
     const updateTick = () => {
       const elapsed = Date.now() - baseline;
-      const tick = hasValidPeriod
-        ? normalize(start + elapsed, period)
-        : start + elapsed;
+      const tick =
+        loop && hasValidPeriod
+          ? normalize(start + elapsed, period)
+          : start + elapsed;
 
       subscriber.next(tick);
       timeout = setTimeout(updateTick, interval);

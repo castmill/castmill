@@ -33,6 +33,9 @@ export const AutomationEditor: Component<AutomationEditorProps> = (props) => {
   const { t } = useI18n();
   const toast = useToast();
   const [name, setName] = createSignal(props.automation.name);
+  const [saving, setSaving] = createSignal(false);
+  let mutationQueue = Promise.resolve();
+  let pendingMutations = 0;
 
   createEffect(
     on(
@@ -49,22 +52,35 @@ export const AutomationEditor: Component<AutomationEditorProps> = (props) => {
     )
   );
 
-  const update = async (attrs: AutomationAttrs): Promise<boolean> => {
-    try {
-      const updated = await AutomationsService.update(
-        props.organizationId,
-        props.automation.id,
-        attrs
-      );
-      props.onChange(updated);
-      return true;
-    } catch (error) {
-      toast.error(
-        t('automations.errors.saveFailed', { error: errorText(error) })
-      );
-      return false;
-    }
+  const serializeMutation = <T,>(mutation: () => Promise<T>): Promise<T> => {
+    pendingMutations++;
+    setSaving(true);
+    const result = mutationQueue.then(mutation, mutation);
+    const finish = () => {
+      pendingMutations--;
+      setSaving(pendingMutations > 0);
+    };
+    mutationQueue = result.then(finish, finish);
+    return result;
   };
+
+  const update = (attrs: AutomationAttrs): Promise<boolean> =>
+    serializeMutation(async () => {
+      try {
+        const updated = await AutomationsService.update(
+          props.organizationId,
+          props.automation.id,
+          attrs
+        );
+        props.onChange(updated);
+        return true;
+      } catch (error) {
+        toast.error(
+          t('automations.errors.saveFailed', { error: errorText(error) })
+        );
+        return false;
+      }
+    });
 
   const saveName = async () => {
     const value = name().trim();
@@ -82,23 +98,24 @@ export const AutomationEditor: Component<AutomationEditorProps> = (props) => {
     return ok;
   };
 
-  const saveAssignments = async (assignments: AutomationAssignments) => {
-    try {
-      const updated = await AutomationsService.setAssignments(
-        props.organizationId,
-        props.automation.id,
-        assignments
-      );
-      props.onChange(updated);
-      toast.success(t('automations.assignments.saved'));
-      return true;
-    } catch (error) {
-      toast.error(
-        t('automations.errors.saveFailed', { error: errorText(error) })
-      );
-      return false;
-    }
-  };
+  const saveAssignments = (assignments: AutomationAssignments) =>
+    serializeMutation(async () => {
+      try {
+        const updated = await AutomationsService.setAssignments(
+          props.organizationId,
+          props.automation.id,
+          assignments
+        );
+        props.onChange(updated);
+        toast.success(t('automations.assignments.saved'));
+        return true;
+      } catch (error) {
+        toast.error(
+          t('automations.errors.saveFailed', { error: errorText(error) })
+        );
+        return false;
+      }
+    });
 
   const runRule = async (rule: AutomationRule) => {
     if (!rule.id) return;
@@ -132,7 +149,7 @@ export const AutomationEditor: Component<AutomationEditorProps> = (props) => {
           <input
             type="text"
             value={name()}
-            disabled={!props.canEdit}
+            disabled={!props.canEdit || saving()}
             maxLength={255}
             onInput={(e) => setName(e.currentTarget.value)}
             onChange={saveName}
@@ -145,7 +162,7 @@ export const AutomationEditor: Component<AutomationEditorProps> = (props) => {
           checked={props.automation.enabled}
           label={t('automations.enabled')}
           showLabel
-          disabled={!props.canEdit}
+          disabled={!props.canEdit || saving()}
           onChange={(enabled) => update({ enabled })}
         />
       </div>
@@ -165,7 +182,7 @@ export const AutomationEditor: Component<AutomationEditorProps> = (props) => {
               <RulesTab
                 automation={props.automation}
                 organizationId={props.organizationId}
-                canEdit={props.canEdit}
+                canEdit={props.canEdit && !saving()}
                 serverSources={props.serverSources}
                 serverActions={props.serverActions}
                 onRulesChange={saveRules}
@@ -184,7 +201,7 @@ export const AutomationEditor: Component<AutomationEditorProps> = (props) => {
               <AssignmentsTab
                 automation={props.automation}
                 organizationId={props.organizationId}
-                canEdit={props.canEdit}
+                canEdit={props.canEdit && !saving()}
                 onSave={saveAssignments}
               />
             ),

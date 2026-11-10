@@ -350,6 +350,50 @@ describe('AutomationsPage', () => {
       );
     });
 
+    it('serializes editor updates to prevent stale responses from replacing newer state', async () => {
+      let finishFirst!: (value: typeof automation) => void;
+      vi.mocked(AutomationsService.update)
+        .mockImplementationOnce(
+          () =>
+            new Promise((resolve) => {
+              finishFirst = resolve;
+            })
+        )
+        .mockResolvedValueOnce({
+          ...automation,
+          name: 'Renamed',
+          enabled: false,
+        });
+
+      const input = await openEditor();
+      fireEvent.input(input, { target: { value: 'Renamed' } });
+      fireEvent.change(input);
+      await waitFor(() =>
+        expect(AutomationsService.update).toHaveBeenCalledTimes(1)
+      );
+      const toggle = screen.getByRole('switch', { name: 'Enabled' });
+      expect(toggle).toBeDisabled();
+      fireEvent.click(toggle);
+
+      expect(AutomationsService.update).toHaveBeenCalledTimes(1);
+      finishFirst({ ...automation, name: 'Renamed', enabled: true });
+
+      await waitFor(() => expect(toggle).toBeEnabled());
+      fireEvent.click(toggle);
+      await waitFor(() =>
+        expect(AutomationsService.update).toHaveBeenCalledTimes(2)
+      );
+      expect(vi.mocked(AutomationsService.update).mock.calls[1][2]).toEqual({
+        enabled: false,
+      });
+      await waitFor(() =>
+        expect(screen.getByRole('switch', { name: 'Enabled' })).toHaveAttribute(
+          'aria-checked',
+          'false'
+        )
+      );
+    });
+
     it('reorders rules, runs a rule and saves assignments', async () => {
       vi.mocked(AutomationsService.update).mockImplementation(
         async (_org, _id, attrs) => ({ ...automation, ...attrs }) as never
@@ -366,6 +410,7 @@ describe('AutomationsPage', () => {
       await waitFor(() =>
         expect(toastSpies.success).toHaveBeenCalledWith('Rules saved')
       );
+      await screen.findByText('Every hour at :30');
       expect(
         vi
           .mocked(AutomationsService.update)

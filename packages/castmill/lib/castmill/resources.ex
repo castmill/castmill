@@ -807,15 +807,37 @@ defmodule Castmill.Resources do
     or {:error, :playlist_has_automations} if an automation rule references it.
   """
   def delete_playlist(%Playlist{} = playlist) do
-    cond do
-      playlist_has_channels?(playlist) ->
-        {:error, :playlist_has_channels}
+    case Repo.transaction(fn ->
+           locked_playlist =
+             Repo.one(
+               from(p in Playlist,
+                 where: p.id == ^playlist.id,
+                 lock: "FOR UPDATE"
+               )
+             )
 
-      Castmill.Automations.playlist_referenced?(playlist.organization_id, playlist.id) ->
-        {:error, :playlist_has_automations}
+           cond do
+             is_nil(locked_playlist) ->
+               Repo.rollback(:not_found)
 
-      true ->
-        Repo.delete(playlist)
+             playlist_has_channels?(locked_playlist) ->
+               Repo.rollback(:playlist_has_channels)
+
+             Castmill.Automations.playlist_referenced?(
+               locked_playlist.organization_id,
+               locked_playlist.id
+             ) ->
+               Repo.rollback(:playlist_has_automations)
+
+             true ->
+               case Repo.delete(locked_playlist) do
+                 {:ok, deleted} -> deleted
+                 {:error, changeset} -> Repo.rollback(changeset)
+               end
+           end
+         end) do
+      {:ok, deleted} -> {:ok, deleted}
+      {:error, reason} -> {:error, reason}
     end
   end
 
