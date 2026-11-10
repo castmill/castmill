@@ -97,15 +97,14 @@ defmodule Castmill.Repo.Migrations.ScaleSystemWidgetsToTemplateBaseFont do
          "concat" => [%{"key" => "options.ticker_height"} = binding, "vh"]
        }) do
     %{
-      "concat" =>
-        [
-          Map.put(
-            binding,
-            "default",
-            scale_number(Map.get(binding, "default", 5), @ticker_height_vh_to_em)
-          ),
-          "em"
-        ]
+      "concat" => [
+        Map.put(
+          binding,
+          "default",
+          scale_number(Map.get(binding, "default", 5), @ticker_height_vh_to_em)
+        ),
+        "em"
+      ]
     }
   end
 
