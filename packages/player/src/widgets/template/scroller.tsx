@@ -296,6 +296,7 @@ export const Scroller: Component<ScrollerProps> = (props) => {
   let contentRef: HTMLDivElement | undefined;
   let scrollAnimation: ScrollAnimation | null = null;
   let timelineItem: TimelineItem;
+  let resizeObserver: ResizeObserver | undefined;
 
   // Track ready state for all items (original + duplicates)
   let readyCount = 0;
@@ -404,10 +405,17 @@ export const Scroller: Component<ScrollerProps> = (props) => {
     timelineItem.duration = scrollAnimation.duration * 1000;
   };
 
-  onMount(() => window.addEventListener('resize', resizeScroll));
+  onMount(() => {
+    window.addEventListener('resize', resizeScroll);
+    if (typeof ResizeObserver !== 'undefined' && contentRef) {
+      resizeObserver = new ResizeObserver(resizeScroll);
+      resizeObserver.observe(contentRef);
+    }
+  });
 
   onCleanup(() => {
     window.removeEventListener('resize', resizeScroll);
+    resizeObserver?.disconnect();
     if (timelineItem) props.timeline.remove(timelineItem);
     scrollAnimation?.destroy();
   });
