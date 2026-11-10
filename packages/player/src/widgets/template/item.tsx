@@ -170,7 +170,8 @@ export const Item: Component<{
               props.component.opts as TextComponentOptions,
               props.config,
               props.context,
-              props.globals
+              props.globals,
+              (props.component as TextComponent).editable
             )}
             animations={(props.component as TextComponent).animations}
             style={style()}

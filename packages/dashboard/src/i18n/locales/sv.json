@@ -1035,7 +1035,23 @@
       "noConfigurationRequired": "Ingen konfiguration krävs",
       "optional": "Valfritt"
     },
-    "translations": "Översättningar"
+    "translations": "Översättningar",
+    "editableTexts": {
+      "editTexts": "Redigera texter",
+      "doneEditing": "Klar",
+      "hint": "Klicka på en markerad text för att ändra den.",
+      "editAria": "Redigera text: {{label}}",
+      "hide": "Dölj den här texten",
+      "reset": "Återställ original",
+      "counter": "{{length}} / {{max}} tecken",
+      "listTitle": "Redigerade texter: {{count}}",
+      "hidden": "Dold",
+      "empty": "(tom)",
+      "resetAll": "Återställ alla",
+      "unusedTitle": "Används inte av widgeten",
+      "unusedHint": "De här ändringarna matchar inte längre någon text i widgeten.",
+      "editedIndicator": "Har redigerade texter"
+    }
   },
   "devices": {
     "orientation": {

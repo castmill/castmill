@@ -12,6 +12,7 @@ import {
   of,
   share,
   Subscription,
+  filter,
   switchMap,
 } from 'rxjs';
 import { Playlist, Renderer, Player, Viewport } from '../';
@@ -73,6 +74,27 @@ const controlsTemplate = (id: string) => `
   </div>
 </div>
 `;
+
+/** True for elements that take typed text: inputs, text areas, selects and editable content. */
+export function isTextInputTarget(target: EventTarget | null): boolean {
+  const element = target as HTMLElement | null;
+  if (!element || !element.tagName) {
+    return false;
+  }
+  const tag = element.tagName.toLowerCase();
+  return (
+    tag === 'input' ||
+    tag === 'textarea' ||
+    tag === 'select' ||
+    element.isContentEditable === true
+  );
+}
+
+export function isPlayerShortcutTarget(target: EventTarget | null): boolean {
+  if (isTextInputTarget(target)) return true;
+  const element = target as Element | null;
+  return !!element?.closest?.('button, [role="button"]');
+}
 
 function createPlayerElement(id: string): HTMLDivElement {
   const el = document.createElement('div');
@@ -197,6 +219,8 @@ export class PlayerUIControls {
     );
 
     this.$keyboard = fromEvent<KeyboardEvent>(document, 'keydown').pipe(
+      // Interactive controls (e.g. widget settings) do not trigger shortcuts.
+      filter((evt) => !isPlayerShortcutTarget(evt.target)),
       switchMap((evt) => {
         // Hack so that we can animate the play button
         const { key, code, keyCode } = evt;

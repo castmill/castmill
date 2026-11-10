@@ -1040,7 +1040,23 @@
       "noConfigurationRequired": "لا يتطلب أي إعداد",
       "optional": "اختياري"
     },
-    "translations": "الترجمات"
+    "translations": "الترجمات",
+    "editableTexts": {
+      "editTexts": "تعديل النصوص",
+      "doneEditing": "إنهاء التعديل",
+      "hint": "انقر على نص مميز لتغييره.",
+      "editAria": "تعديل النص: {{label}}",
+      "hide": "إخفاء هذا النص",
+      "reset": "استعادة الأصل",
+      "counter": "{{length}} / {{max}} حرفًا",
+      "listTitle": "النصوص المعدلة: {{count}}",
+      "hidden": "مخفي",
+      "empty": "(فارغ)",
+      "resetAll": "استعادة الكل",
+      "unusedTitle": "غير مستخدمة في الـ Widget",
+      "unusedHint": "لم تعد هذه التعديلات تطابق أي نص في الـ Widget.",
+      "editedIndicator": "يحتوي على نصوص معدلة"
+    }
   },
   "devices": {
     "orientation": {

@@ -2,8 +2,10 @@ import {
   Component,
   For,
   createEffect,
+  createMemo,
   createSignal,
   onCleanup,
+  on,
   Show,
 } from 'solid-js';
 import { authFetch } from '../../common/services/auth-fetch';
@@ -41,6 +43,21 @@ import { getTranslatedWidgetOption } from '../../common/utils/widget-catalog-uti
 
 import './widget-config.scss';
 import { WidgetView } from './widget-view';
+import { EditableTextStage, EditableTextLabels } from './editable-text-stage';
+import {
+  TextOverridesList,
+  TextOverridesListLabels,
+} from './text-overrides-list';
+import {
+  TextOverride,
+  describeOverrides,
+  getOverrides,
+  setOverride,
+  shouldShowTextOverrides,
+  supportsTextOverrides,
+  templateEditables,
+  translateEditableLabel,
+} from './text-overrides';
 import { LayoutEditor } from '../../common/components/layout-editor';
 import { LayoutRefEditor } from '../../common/components/layout-ref-editor';
 
@@ -155,6 +172,32 @@ export const normalizeFormValue = (
 };
 
 export const normalizeWidgetOptionsForApi = (
+  options: OptionsDict,
+  schemaEntries: [string, SchemaAttributeType][]
+): Record<string, any> => {
+  const normalized = normalizeSchemaOptions(options, schemaEntries);
+  // Edited texts are stored in the reserved `overrides` option, which is not
+  // part of the options schema.
+  if (
+    options.overrides !== undefined &&
+    !schemaEntries.some(([key]) => key === 'overrides')
+  ) {
+    normalized.overrides = options.overrides;
+  }
+  return normalized;
+};
+
+export const normalizeWidgetOptionsForIntegration = (
+  options: OptionsDict,
+  schemaEntries: [string, SchemaAttributeType][],
+  textOverridesReserved: boolean
+): Record<string, any> => {
+  const normalized = normalizeWidgetOptionsForApi(options, schemaEntries);
+  if (textOverridesReserved) delete normalized.overrides;
+  return normalized;
+};
+
+const normalizeSchemaOptions = (
   options: OptionsDict,
   schemaEntries: [string, SchemaAttributeType][]
 ): Record<string, any> =>
@@ -352,8 +395,16 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
   const rawOptionsSchema = props.item.widget.options_schema || {};
 
   const schemaEntries = normalizeSchemaEntries(rawOptionsSchema);
+  const textOverridesEnabled = supportsTextOverrides(props.item.widget);
+  const showTextOverrides = shouldShowTextOverrides(
+    props.item.widget,
+    props.item.config.options
+  );
 
-  if (!rawOptionsSchema || schemaEntries.length === 0) {
+  if (
+    (!rawOptionsSchema || schemaEntries.length === 0) &&
+    !showTextOverrides
+  ) {
     return <div>{t('common.noConfigurationAvailable')}</div>;
   }
 
@@ -414,49 +465,68 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
   // slow request cannot overwrite the preview of a newer one.
   let previewRequestId = 0;
 
-  createEffect(() => {
-    // Track option changes so the preview refetches when they change.
-    const options = {
-      ...normalizeWidgetOptionsForApi(widgetOptions(), schemaEntries),
-      display_locale: displayLocale(),
-    };
-    const widgetId = props.item.widget?.id;
-    setPreviewDiscriminatorId(null);
+  const previewFetchInput = createMemo(() => {
+    const currentOptions = widgetOptions();
+    const options = normalizeWidgetOptionsForIntegration(
+      currentOptions,
+      schemaEntries,
+      showTextOverrides
+    );
+    return JSON.stringify({
+      options,
+      displayLocale: displayLocale(),
+      widgetId: props.item.widget?.id,
+      widgetConfigId: props.item.config.id,
+      baseUrl: props.baseUrl,
+      organizationId: props.organizationId,
+    });
+  });
 
-    if (!widgetId || !props.baseUrl || !props.organizationId) {
-      return;
-    }
-
-    // Debounce to avoid hammering the integration endpoint while the user is
-    // still editing (e.g. typing into text fields).
-    if (previewFetchTimer) {
-      clearTimeout(previewFetchTimer);
-    }
-
-    const requestId = ++previewRequestId;
-    previewFetchTimer = setTimeout(async () => {
-      const result = await PlaylistsService.prefetchWidgetData(
-        props.baseUrl,
-        props.organizationId,
+  createEffect(
+    on(previewFetchInput, (serialized) => {
+      const {
+        options: fetchOptions,
+        displayLocale: locale,
         widgetId,
-        options,
-        // Live preview fetches are ephemeral: they must not register background
-        // polling schedulers for option combinations that may never be saved.
-        {
-          preview: true,
-          widgetConfigId: props.item.config.id,
-        }
-      );
+        widgetConfigId,
+        baseUrl,
+        organizationId,
+      } = JSON.parse(serialized);
+      const options = { ...fetchOptions, display_locale: locale };
+      setPreviewDiscriminatorId(null);
 
-      // Ignore out-of-order responses from superseded requests.
-      if (requestId !== previewRequestId) {
+      if (!widgetId || !baseUrl || !organizationId) {
         return;
       }
 
-      setPreviewDiscriminatorId(result.discriminator_id ?? null);
-      setPreviewData(result && result.data ? result.data : null);
-    }, 500);
-  });
+      // Debounce to avoid hammering the integration endpoint while the user is
+      // still editing (e.g. typing into text fields).
+      if (previewFetchTimer) {
+        clearTimeout(previewFetchTimer);
+      }
+
+      const requestId = ++previewRequestId;
+      previewFetchTimer = setTimeout(async () => {
+        const result = await PlaylistsService.prefetchWidgetData(
+          baseUrl,
+          organizationId,
+          widgetId,
+          options,
+          // Live preview fetches are ephemeral: they must not register background
+          // polling schedulers for option combinations that may never be saved.
+          { preview: true, widgetConfigId }
+        );
+
+        // Ignore out-of-order responses from superseded requests.
+        if (requestId !== previewRequestId) {
+          return;
+        }
+
+        setPreviewDiscriminatorId(result.discriminator_id ?? null);
+        setPreviewData(result && result.data ? result.data : null);
+      }, 500);
+    })
+  );
 
   onCleanup(() => {
     if (previewFetchTimer) {
@@ -969,6 +1039,48 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
     }
   }
 
+  // In-place text editing (see agents/systems/IN-PLACE-TEXT-EDITING.md)
+  const [editingTexts, setEditingTexts] = createSignal(false);
+  const [seenLabels, setSeenLabels] = createSignal(
+    new Map<string, string | undefined>()
+  );
+  const editables = templateEditables(props.item.widget.template);
+  const translateLabel = (label: string | undefined) =>
+    translateEditableLabel(props.item.widget, label, locale());
+  const overrides = () => getOverrides(widgetOptions());
+
+  const updateOverrides = (next: Record<string, TextOverride>) => {
+    setWidgetOptions({ ...widgetOptions(), overrides: next as any });
+    setIsFormModified(true);
+  };
+
+  const changeTextOverride = (key: string, value: TextOverride | undefined) =>
+    updateOverrides(setOverride(overrides(), key, value));
+
+  const overrideEntries = () =>
+    describeOverrides(overrides(), editables, seenLabels(), translateLabel);
+
+  const editableTextLabels = (): EditableTextLabels => ({
+    editAria: (label) => t('widgets.editableTexts.editAria', { label }),
+    save: t('common.save'),
+    cancel: t('common.cancel'),
+    hide: t('widgets.editableTexts.hide'),
+    reset: t('widgets.editableTexts.reset'),
+    counter: (length, max) =>
+      t('widgets.editableTexts.counter', { length, max }),
+  });
+
+  const textOverridesListLabels = (): TextOverridesListLabels => ({
+    title: (count) => t('widgets.editableTexts.listTitle', { count }),
+    hidden: t('widgets.editableTexts.hidden'),
+    empty: t('widgets.editableTexts.empty'),
+    reset: t('widgets.editableTexts.reset'),
+    resetAll: t('widgets.editableTexts.resetAll'),
+    unusedTitle: t('widgets.editableTexts.unusedTitle'),
+    unusedHint: t('widgets.editableTexts.unusedHint'),
+    remove: t('common.remove'),
+  });
+
   const resetForm = () => {
     setIsFormModified(false);
     setWidgetOptions(originalOptions);
@@ -1028,6 +1140,15 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
                 return componentForItem(key, schema);
               }}
             </For>
+            <Show when={showTextOverrides}>
+              <TextOverridesList
+                used={overrideEntries().used}
+                unused={overrideEntries().unused}
+                labels={textOverridesListLabels()}
+                onReset={(key) => changeTextOverride(key, undefined)}
+                onResetAll={() => updateOverrides({})}
+              />
+            </Show>
           </div>
           <div class="form-actions">
             <Button
@@ -1051,17 +1172,46 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
         </form>
       </div>
       <div class="preview">
-        <WidgetView
-          widget={props.item.widget}
-          config={widgetConfig()}
-          options={widgetOptions()}
-          previewData={previewData()}
-          locale={displayLocale()}
-          previewDiscriminatorId={previewDiscriminatorId()}
-          onPreviewDataUpdate={setPreviewData}
-          baseUrl={props.baseUrl}
-          socket={props.store.socket}
-        />
+        <Show when={textOverridesEnabled}>
+          <div class="preview-toolbar">
+            <Button
+              label={
+                editingTexts()
+                  ? t('widgets.editableTexts.doneEditing')
+                  : t('widgets.editableTexts.editTexts')
+              }
+              color={editingTexts() ? 'success' : 'secondary'}
+              aria-pressed={editingTexts()}
+              onClick={() => setEditingTexts(!editingTexts())}
+            />
+            <Show when={editingTexts()}>
+              <span>{t('widgets.editableTexts.hint')}</span>
+            </Show>
+          </div>
+        </Show>
+        <div class="preview-stage">
+          <EditableTextStage
+            active={editingTexts()}
+            overrides={overrides()}
+            labels={editableTextLabels()}
+            translateLabel={translateLabel}
+            onChange={changeTextOverride}
+            onDiscover={setSeenLabels}
+          >
+            <WidgetView
+              widget={props.item.widget}
+              config={widgetConfig()}
+              options={widgetOptions()}
+              previewData={previewData()}
+              locale={displayLocale()}
+              previewDiscriminatorId={previewDiscriminatorId()}
+              onPreviewDataUpdate={setPreviewData}
+              baseUrl={props.baseUrl}
+              socket={props.store.socket}
+              paused={editingTexts()}
+            />
+          </EditableTextStage>
+        </div>
       </div>
     </div>
   );

@@ -1040,7 +1040,23 @@
       "noConfigurationRequired": "구성이 필요하지 않음",
       "optional": "선택 사항"
     },
-    "translations": "번역"
+    "translations": "번역",
+    "editableTexts": {
+      "editTexts": "텍스트 편집",
+      "doneEditing": "편집 완료",
+      "hint": "강조 표시된 텍스트를 클릭하여 변경하세요.",
+      "editAria": "텍스트 편집: {{label}}",
+      "hide": "이 텍스트 숨기기",
+      "reset": "원래대로 복원",
+      "counter": "{{length}} / {{max}}자",
+      "listTitle": "편집된 텍스트: {{count}}",
+      "hidden": "숨김",
+      "empty": "(비어 있음)",
+      "resetAll": "모두 복원",
+      "unusedTitle": "Widget에서 사용되지 않음",
+      "unusedHint": "이 편집 내용은 더 이상 Widget의 텍스트와 일치하지 않습니다.",
+      "editedIndicator": "편집된 텍스트 있음"
+    }
   },
   "devices": {
     "orientation": {

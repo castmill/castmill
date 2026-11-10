@@ -10,7 +10,7 @@ import { debounce } from 'lodash';
 import { IconWrapper, Slider, formatDuration } from '@castmill/ui-common';
 import { RiEditorDraggable } from 'solid-icons/ri';
 import { AiOutlineEdit, AiOutlineWarning } from 'solid-icons/ai';
-import { BsTrash3 } from 'solid-icons/bs';
+import { BsPencilSquare, BsTrash3 } from 'solid-icons/bs';
 
 import { DEFAULT_WIDGET_ICON } from '../../common/constants';
 import { isImageIcon, getIconUrl } from '../utils/icon-utils';
@@ -20,6 +20,7 @@ import {
   getTranslatedWidgetDescription,
 } from '../../common/utils/widget-catalog-utils';
 import styles from './playlist-item.module.scss';
+import { countOverrides } from './text-overrides';
 
 import { Component, onMount, createSignal, onCleanup, Show } from 'solid-js';
 import { JsonPlaylistItem } from '@castmill/player';
@@ -177,6 +178,8 @@ const Thumbnail: Component<{
   item: JsonPlaylistItem;
   baseUrl: string;
   locale?: string;
+  /** Label of the indicator shown when the item has edited texts. */
+  editedLabel: string;
 }> = (props) => {
   const thumbnailUri = getThumbnailUri(props.item);
   const widgetName = getTranslatedWidgetName(props.item.widget, props.locale);
@@ -225,7 +228,20 @@ const Thumbnail: Component<{
         </div>
       </Show>
       <div class={styles.widgetInfo}>
-        <div class={styles.widgetTitle}>{widgetName}</div>
+        <div class={styles.widgetTitle}>
+          <Show when={countOverrides(props.item.config?.options) > 0}>
+            <span
+              class={styles.editedBadge}
+              title={props.editedLabel}
+              aria-label={props.editedLabel}
+              role="img"
+              data-testid="edited-texts-indicator"
+            >
+              <BsPencilSquare />
+            </span>
+          </Show>
+          {widgetName}
+        </div>
         <Show when={widgetSubtitle && !integrationError()}>
           <div class={styles.widgetSubtitle}>{widgetSubtitle}</div>
         </Show>
@@ -377,6 +393,7 @@ export const PlaylistItem: Component<{
               item={props.item}
               baseUrl={props.baseUrl}
               locale={props.locale}
+              editedLabel={t('widgets.editableTexts.editedIndicator')}
             />
           </div>
         </div>

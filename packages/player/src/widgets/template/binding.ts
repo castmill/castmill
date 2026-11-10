@@ -167,7 +167,7 @@ export interface ListBinding {
  *
  * @example
  * ```json
- * { "first": [{ "key": "options.overrides.price" }, { "fmt": "{data.price | number} kr" }] }
+ * { "first": [{ "key": "options.price_text" }, { "fmt": "{data.price | number} kr" }] }
  * ```
  */
 export interface FirstBinding {
@@ -177,6 +177,8 @@ export interface FirstBinding {
 export interface TemplateConfig<Options = any, Data = any> {
   options: Options;
   data: Data;
+  /** False when the widget declares its own regular `overrides` option. */
+  textOverridesEnabled?: boolean;
 }
 
 /**

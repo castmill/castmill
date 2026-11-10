@@ -1052,7 +1052,23 @@
       "noConfigurationRequired": "Aucune configuration requise",
       "optional": "Facultatif"
     },
-    "translations": "Traductions"
+    "translations": "Traductions",
+    "editableTexts": {
+      "editTexts": "Modifier les textes",
+      "doneEditing": "Terminer",
+      "hint": "Cliquez sur un texte en surbrillance pour le modifier.",
+      "editAria": "Modifier le texte : {{label}}",
+      "hide": "Masquer ce texte",
+      "reset": "Rétablir l'original",
+      "counter": "{{length}} / {{max}} caractères",
+      "listTitle": "Textes modifiés : {{count}}",
+      "hidden": "Masqué",
+      "empty": "(vide)",
+      "resetAll": "Tout rétablir",
+      "unusedTitle": "Non utilisés par le widget",
+      "unusedHint": "Ces modifications ne correspondent plus à aucun texte du widget.",
+      "editedIndicator": "Contient des textes modifiés"
+    }
   },
   "devices": {
     "orientation": {
