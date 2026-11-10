@@ -216,4 +216,78 @@ describe('Layout widget duration before rendering', () => {
     expect(plays.filter((name) => name === 'a')).to.have.length(1);
     expect(plays.filter((name) => name === 'b')).to.have.length(0);
   });
+
+  it('waits for blocked nested playlist content before finite completion', async () => {
+    clock = useFakeTimers({
+      now: 0,
+      shouldClearNativeTimers: true,
+      toFake: [
+        'setTimeout',
+        'clearTimeout',
+        'setInterval',
+        'clearInterval',
+        'Date',
+      ],
+    });
+    const block = {
+      category: 'playback' as const,
+      code: 'video-decoder-limit',
+      error: new Error('blocked'),
+    };
+    let blocked = false;
+    let finished = false;
+    const globalsWithVideo = {
+      target: 'poster' as const,
+      createVideoPlaybackController: (
+        video: HTMLVideoElement,
+        context: { setBlocked?: (value?: typeof block) => void }
+      ) => {
+        video.load = () => {
+          setTimeout(() => {
+            Object.defineProperty(video, 'duration', { value: 10 });
+            Object.defineProperty(video, 'readyState', { value: 4 });
+            const event = video.ownerDocument.createEvent('Event');
+            event.initEvent('canplaythrough', false, false);
+            video.dispatchEvent(event);
+          }, 500);
+        };
+        return {
+          play: () => {
+            if (blocked) return;
+            blocked = true;
+            context.setBlocked?.(block);
+            setTimeout(() => context.setBlocked?.(), 15000);
+          },
+          pause: () => {},
+          seek: () => {},
+          dispose: () => {},
+        };
+      },
+    };
+
+    const queue = new Playlist('interruption', resources);
+    queue.add(
+      Layer.fromPlaylist(
+        { name: 'channel', items: [videoItem('blocked', 10000)] } as any,
+        resources,
+        globalsWithVideo
+      )
+    );
+    const player = new Player(
+      queue,
+      new Renderer(dom.window.document.getElementById('root'))
+    );
+    player.on('completed', () => (finished = true));
+
+    try {
+      player.play({ loop: false });
+      await clock.tickAsync(12000);
+      expect(finished).to.equal(false);
+
+      await clock.tickAsync(14000);
+      expect(finished).to.equal(true);
+    } finally {
+      player.stop();
+    }
+  });
 });

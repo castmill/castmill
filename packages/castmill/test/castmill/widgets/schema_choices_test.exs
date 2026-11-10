@@ -91,6 +91,18 @@ defmodule Castmill.Widgets.SchemaChoicesTest do
              }) =~ "forms a cycle"
     end
 
+    test "validates dense acyclic dependency graphs without revisiting completed fields" do
+      schema =
+        for index <- 1..30, into: %{} do
+          dependencies =
+            if index > 1, do: Enum.map(1..(index - 1), &"field_#{&1}"), else: []
+
+          {"field_#{index}", listing(%{"depends_on" => dependencies})}
+        end
+
+      assert {:ok, nil} = validate(schema)
+    end
+
     test "still validates the rest of the field" do
       assert error(%{"listing" => Map.put(listing(), "default", 1)}) =~ "Default value"
     end

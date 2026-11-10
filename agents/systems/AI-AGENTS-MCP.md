@@ -89,6 +89,14 @@ in the path.
   return 403 so their existence is not disclosed.
 - An agent's org membership defines all access. Do not add bypasses in tools.
 
+## Automation tools
+
+`list_automations`, `get_automation`, `create_automation`, `update_automation`,
+`assign_automation` and `delete_automation` map to the automation routes in
+`agents/systems/AUTOMATIONS.md`. Creating, assigning and deleting require a
+role with automation create/update/delete permissions (admin, manager or
+device manager).
+
 ## Adding a tool
 
 1. Add the definition and a `build_request/3` clause in `CastmillWeb.MCP.Tools`.

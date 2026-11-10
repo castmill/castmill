@@ -14,6 +14,7 @@ export type ResourceType =
   | 'playlists'
   | 'medias'
   | 'channels'
+  | 'automations'
   | 'devices'
   | 'teams'
   | 'widgets'

@@ -178,7 +178,7 @@ export const ChoicesField: Component<ChoicesFieldProps> = (props) => {
   const [draft, setDraft] = createSignal<string[]>([]);
   const [enlarged, setEnlarged] = createSignal<Choice | null>(null);
   let modalRef: ModalRef | undefined;
-  let resultsRef: HTMLDivElement | undefined;
+  let resultsRef!: HTMLDivElement;
   let pageId = 0;
   let searchTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -200,6 +200,10 @@ export const ChoicesField: Component<ChoicesFieldProps> = (props) => {
     const id = ++pageId;
     setLoading(true);
     setError(null);
+    if (reset) {
+      setItems([]);
+      setNext(null);
+    }
     try {
       const page = await props.loadChoices({
         query: query(),
@@ -318,7 +322,8 @@ export const ChoicesField: Component<ChoicesFieldProps> = (props) => {
       'Home',
       'End',
     ];
-    if (!resultsRef || !keys.includes(e.key)) return;
+    if (!keys.includes(e.key)) return;
+    if (!resultsRef) return;
     const options = Array.from(
       resultsRef.querySelectorAll<HTMLElement>('[role="option"]')
     );
@@ -600,7 +605,10 @@ export const ChoicesField: Component<ChoicesFieldProps> = (props) => {
                       classList={{ [styles.selected]: isSelected() }}
                       onClick={() => toggle(choice)}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
+                        if (
+                          e.target === e.currentTarget &&
+                          (e.key === 'Enter' || e.key === ' ')
+                        ) {
                           e.preventDefault();
                           toggle(choice);
                         }

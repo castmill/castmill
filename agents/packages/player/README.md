@@ -53,6 +53,17 @@ This design allows:
 Template components (`layout.tsx`, `text.tsx`, `animation.tsx`, `image-carousel.tsx`) create
 timeline items with `start: 0` to allow parallel playback rather than sequential stacking.
 
+`image-carousel` resolves every image URL before building its timeline, so slide
+order never depends on download order. `opts.transition` is `"slide"` (default) or
+`"fade"`. Images that cannot be cached fall back to their original URL.
+
+### Resource Authentication
+
+`ResourceManager` sends the device token only to `authOrigins` (the device passes
+its API base URL). External hosts, such as listing image servers, receive no
+`Authorization` header, which also avoids CORS preflights there. They must still
+send `Access-Control-Allow-Origin` for their media to be cached.
+
 ### Optional Video Playback Controller
 
 `PlayerGlobals.createVideoPlaybackController(video, { reportError })` creates a

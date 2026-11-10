@@ -32,6 +32,8 @@ interface WidgetViewProps {
   options: OptionsDict;
   baseUrl?: string;
   socket?: Socket;
+  previewDiscriminatorId?: string | null;
+  onPreviewDataUpdate?: (data: Record<string, any>) => void;
   /**
    * When provided, the parent controls the integration data shown in the
    * preview (e.g. the widget config dialog fetches data based on the live,
@@ -71,6 +73,33 @@ export const getWidgetFeedId = (
   );
   const value = key ? options[key] : undefined;
   return typeof value === 'string' && value !== '' ? value : undefined;
+};
+
+export const matchesWidgetDataUpdate = (
+  payload: { widget_id: string; discriminator_id: string },
+  widgetId: number,
+  discriminatorId: string | null
+): boolean =>
+  discriminatorId !== null &&
+  payload.widget_id === String(widgetId) &&
+  payload.discriminator_id === discriminatorId;
+
+export const applyWidgetMaxItemsFilter = (
+  data: Record<string, any>,
+  options: OptionsDict
+): Record<string, any> => {
+  const maxItems = options.max_items || 10;
+
+  if (
+    Array.isArray(data.items) &&
+    typeof maxItems === 'number' &&
+    Number.isInteger(maxItems) &&
+    maxItems > 0
+  ) {
+    return { ...data, items: data.items.slice(0, maxItems) };
+  }
+
+  return data;
 };
 
 export const getWidgetViewAspectRatio = (
@@ -179,6 +208,8 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
     feedId: string;
     data: Record<string, any>;
   } | null>(null);
+  const [integrationDiscriminatorId, setIntegrationDiscriminatorId] =
+    createSignal<string | null>(null);
   // Start with dataLoaded=true so preview renders immediately with defaults
   // The fetch effect will set it to false only when actually fetching
   const [dataLoaded, setDataLoaded] = createSignal(true);
@@ -197,6 +228,7 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
 
         if (response.ok) {
           const result = await response.json();
+          setIntegrationDiscriminatorId(result.discriminator_id ?? null);
           if (result.data) {
             setIntegrationData(result.data);
           }
@@ -246,10 +278,28 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
           }
           return;
         }
-        // Check if this update is for our widget type
-        // widget_id in payload is a string, props.widget.id is a number
-        if (payload.widget_id === String(props.widget.id)) {
-          setIntegrationData(payload.data);
+        const discriminatorId =
+          props.previewData !== undefined
+            ? props.previewDiscriminatorId ?? null
+            : integrationDiscriminatorId();
+
+        if (
+          matchesWidgetDataUpdate(
+            payload,
+            props.widget.id,
+            discriminatorId
+          )
+        ) {
+          const filteredData = applyWidgetMaxItemsFilter(
+            payload.data,
+            props.options
+          );
+
+          if (props.onPreviewDataUpdate) {
+            props.onPreviewDataUpdate(filteredData);
+          } else {
+            setIntegrationData(filteredData);
+          }
         }
       }
     );
@@ -278,6 +328,8 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
       setDataLoaded(true);
       return;
     }
+
+    setIntegrationDiscriminatorId(null);
 
     // Only set loading state if we have something to fetch
     // For new widgets without an ID, we skip fetching and use defaults

@@ -56,13 +56,19 @@ export class TemplateWidget extends TimelineWidget {
   // Emits once the rendered template is ready, e.g. its videos have loaded.
   private ready$?: ReplaySubject<void>;
   // Globals for the rendered components; blocked videos report to this
-  // widget. Nested template widgets override the hook again, so a block
-  // reaches the nearest playlist item.
+  // widget's playlist item. Nested blocks are tracked separately for finite
+  // parent playback.
   private globals: PlayerGlobals;
   private blocks = new Map<object, PlayerRuntimeError>();
+  private readinessBlocks = new Map<object, PlayerRuntimeError>();
   private blocked = new BehaviorSubject<PlayerRuntimeError | undefined>(
     undefined
   );
+  private readiness = new BehaviorSubject<PlayerRuntimeError | undefined>(
+    undefined
+  );
+  private reportedReadiness?: PlayerRuntimeError;
+  private readinessActive = true;
   private blockedSince?: number;
   private blockedTotal = 0;
 
@@ -75,6 +81,10 @@ export class TemplateWidget extends TimelineWidget {
     this.globals = Object.assign({}, opts.globals, {
       setPlaybackBlocked: (source: object, block?: PlayerRuntimeError) =>
         this.setBlocked(source, block),
+      setPlaybackReadinessBlocked: (
+        source: object,
+        block?: PlayerRuntimeError
+      ) => this.setReadinessBlocked(source, block),
     });
 
     this.template = TemplateComponent.fromJSON(
@@ -98,6 +108,10 @@ export class TemplateWidget extends TimelineWidget {
     return this.blocked;
   }
 
+  readiness$(): Observable<PlayerRuntimeError | undefined> {
+    return this.readiness;
+  }
+
   private setBlocked(source: object, block?: PlayerRuntimeError): void {
     if (block) {
       this.blocks.set(source, block);
@@ -108,13 +122,52 @@ export class TemplateWidget extends TimelineWidget {
     this.blocks.forEach((value) => {
       current = current || value;
     });
-    if (current && this.blockedSince === undefined) {
-      this.blockedSince = Date.now();
-    } else if (!current && this.blockedSince !== undefined) {
-      this.blockedTotal += Date.now() - this.blockedSince;
-      this.blockedSince = undefined;
+    if (current !== this.blocked.getValue()) {
+      if (current && this.blockedSince === undefined) {
+        this.blockedSince = Date.now();
+      } else if (!current && this.blockedSince !== undefined) {
+        this.blockedTotal += Date.now() - this.blockedSince;
+        this.blockedSince = undefined;
+      }
+      this.blocked.next(current);
     }
-    if (current !== this.blocked.getValue()) this.blocked.next(current);
+    this.reportReadiness();
+  }
+
+  private setReadinessBlocked(
+    source: object,
+    block?: PlayerRuntimeError
+  ): void {
+    if (block) {
+      this.readinessBlocks.set(source, block);
+    } else {
+      this.readinessBlocks.delete(source);
+    }
+
+    let current: PlayerRuntimeError | undefined;
+    this.readinessBlocks.forEach((value) => {
+      current = current || value;
+    });
+    if (current !== this.readiness.getValue()) {
+      this.readiness.next(current);
+    }
+    this.reportReadiness();
+  }
+
+  private reportReadiness(): void {
+    let current: PlayerRuntimeError | undefined;
+    if (this.readinessActive) {
+      this.blocks.forEach((value) => {
+        current = current || value;
+      });
+      this.readinessBlocks.forEach((value) => {
+        current = current || value;
+      });
+    }
+    if (current !== this.reportedReadiness) {
+      this.reportedReadiness = current;
+      this.opts.globals.setPlaybackReadinessBlocked?.(this, current);
+    }
   }
 
   // Total time any rendered component has been blocked.
@@ -184,6 +237,9 @@ export class TemplateWidget extends TimelineWidget {
   }
 
   async unload() {
+    this.readinessActive = false;
+    this.reportReadiness();
+
     // Note: there is a risk here that we remove a font that is still in use by another widget.
     // We would need to either keep track of the fonts in use or add a unique prefix to the font name.
     // Probably a global font cache would be the best solution.
@@ -203,6 +259,9 @@ export class TemplateWidget extends TimelineWidget {
   }
 
   show(el: HTMLElement, offset: number) {
+    this.readinessActive = true;
+    this.reportReadiness();
+
     // Note: we need to think how data is refreshed when the model changes.
     const basetime = Date.now();
     const blockedAtBase = this.blockedTime();

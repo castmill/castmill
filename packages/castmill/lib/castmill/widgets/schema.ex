@@ -239,7 +239,7 @@ defmodule Castmill.Widgets.Schema do
         {:error,
          "Field #{inspect(field)}: choices.depends_on references invalid field #{inspect(dep)}"}
 
-      (cycle_field = Enum.find(Map.keys(graph), &cyclic?(graph, &1, [&1]))) != nil ->
+      (cycle_field = cycle_field(graph)) != nil ->
         {:error, "Field #{inspect(cycle_field)}: choices.depends_on forms a cycle"}
 
       true ->
@@ -247,10 +247,41 @@ defmodule Castmill.Widgets.Schema do
     end
   end
 
-  defp cyclic?(graph, field, path) do
-    Enum.any?(Map.get(graph, field, []), fn dep ->
-      dep in path or cyclic?(graph, dep, [dep | path])
+  defp cycle_field(graph) do
+    Enum.reduce_while(Map.keys(graph), {MapSet.new(), nil}, fn field, {visited, _} ->
+      case visit_dependencies(graph, field, visited, MapSet.new()) do
+        {:ok, visited} -> {:cont, {visited, nil}}
+        {:cycle, cycle_field, visited} -> {:halt, {visited, cycle_field}}
+      end
     end)
+    |> elem(1)
+  end
+
+  defp visit_dependencies(graph, field, visited, visiting) do
+    cond do
+      MapSet.member?(visiting, field) ->
+        {:cycle, field, visited}
+
+      MapSet.member?(visited, field) ->
+        {:ok, visited}
+
+      true ->
+        visiting = MapSet.put(visiting, field)
+
+        result =
+          Enum.reduce_while(Map.get(graph, field, []), {:ok, visited}, fn dependency,
+                                                                          {:ok, visited} ->
+            case visit_dependencies(graph, dependency, visited, visiting) do
+              {:ok, visited} -> {:cont, {:ok, visited}}
+              {:cycle, cycle_field, visited} -> {:halt, {:cycle, cycle_field, visited}}
+            end
+          end)
+
+        case result do
+          {:ok, visited} -> {:ok, MapSet.put(visited, field)}
+          {:cycle, _cycle_field, _visited} = cycle -> cycle
+        end
+    end
   end
 
   defp validate_field(%{"type" => type} = map, field) do

@@ -379,6 +379,32 @@ describe('WidgetConfig - Choices', () => {
     ).toEqual([]);
   });
 
+  it('finds transitive values through empty dependent choice fields', () => {
+    const calendar: SchemaAttributeType = {
+      type: 'string',
+      choices: { list: 'calendars', depends_on: ['listing'] },
+    };
+    const event: SchemaAttributeType = {
+      type: 'string',
+      choices: { list: 'events', depends_on: ['calendar'] },
+    };
+    const entries: [string, SchemaAttributeType][] = [
+      ['listing', listing],
+      ['calendar', calendar],
+      ['event', event],
+    ];
+
+    expect(
+      dependentChoiceFields(entries, 'listing', { calendar: '', event: 'e1' })
+    ).toEqual(['event']);
+    expect(
+      dependentChoiceFields(entries, 'listing', {
+        calendar: 'c1',
+        event: 'e1',
+      })
+    ).toEqual(['calendar', 'event']);
+  });
+
   it('validates required values and selection bounds', () => {
     const single = getFieldChoices(listing)!;
     const multiple = getFieldChoices(photos)!;

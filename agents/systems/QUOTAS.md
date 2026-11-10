@@ -169,6 +169,8 @@ The full list of allowed values (defined identically in `PlansQuotas`, `QuotasNe
 | teams | `:teams` | Number of teams | count |
 | layouts | `:layouts` | Number of layouts | count |
 | feeds | `:feeds` | Number of data feeds (default 20 per plan) | count |
+| automations | `:automations` | Number of automations (default plan: 50) | count |
+| automation_rules | `:automation_rules` | Rules across all automations (default plan: 500) | count |
 | storage | `:storage` | Total file storage quota | **MB** |
 | max_upload_size | `:max_upload_size` | Max upload size per file | **MB** |
 

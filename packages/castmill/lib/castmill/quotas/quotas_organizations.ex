@@ -21,6 +21,8 @@ defmodule Castmill.Quotas.QuotasOrganizations do
         :storage,
         :layouts,
         :feeds,
+        :automations,
+        :automation_rules,
         :max_upload_size
       ],
       primary_key: true

@@ -44,6 +44,7 @@ import TagsPage from './pages/tags-page/tags-page';
 import AgentsPage from './pages/agents-page/agents-page';
 import FeedsPage from './pages/feeds-page/feeds-page';
 import FeedPage from './pages/feeds-page/feed-page';
+import AutomationsPage from './pages/automations-page/automations-page';
 import {
   NetworkProvider,
   NetworkOverview,
@@ -274,6 +275,7 @@ render(() => {
                 <Route path="feeds/:feedId" component={FeedPage} />
                 <Route path="organization" component={OrganizationPage} />
                 <Route path="channels" component={ChannelsPage} />
+                <Route path="automations" component={AutomationsPage} />
                 <Route path="invite" component={TeamsInvitationPage} />
 
                 {/* Dynamically generate routes for AddOns */}

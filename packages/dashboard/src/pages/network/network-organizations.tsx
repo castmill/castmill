@@ -13,7 +13,14 @@ import {
 } from '@castmill/ui-common';
 import { NetworkService, Organization } from '../../services/network.service';
 import { useI18n } from '../../i18n';
-import { BsPlusLg, BsTrash, BsSlashCircle, BsUnlock } from 'solid-icons/bs';
+import {
+  BsPlusLg,
+  BsTrash,
+  BsSlashCircle,
+  BsUnlock,
+  BsSliders,
+} from 'solid-icons/bs';
+import { OrganizationIntegrationSettings } from './organization-integration-settings';
 import { useNetworkContext } from './network-context';
 import styles from './network.module.scss';
 
@@ -36,6 +43,9 @@ const NetworkOrganizations: Component = () => {
 
   // Block/unblock state
   const [orgToBlock, setOrgToBlock] = createSignal<Organization | null>(null);
+  const [orgForSettings, setOrgForSettings] = createSignal<Organization | null>(
+    null
+  );
   const [orgToUnblock, setOrgToUnblock] = createSignal<Organization | null>(
     null
   );
@@ -295,6 +305,15 @@ const NetworkOrganizations: Component = () => {
                     <td>{new Date(org.inserted_at).toLocaleDateString()}</td>
                     <td>
                       <div class={styles['actions-row']}>
+                        <Button
+                          label=""
+                          icon={BsSliders}
+                          color="secondary"
+                          onClick={() => setOrgForSettings(org)}
+                          title={t(
+                            'network.organizations.integrationSettings.action'
+                          )}
+                        />
                         <Show
                           when={org.blocked_at}
                           fallback={
@@ -401,6 +420,15 @@ const NetworkOrganizations: Component = () => {
             </div>
           </div>
         </Modal>
+      </Show>
+
+      <Show when={orgForSettings()}>
+        {(organization) => (
+          <OrganizationIntegrationSettings
+            organization={organization()}
+            onClose={() => setOrgForSettings(null)}
+          />
+        )}
       </Show>
 
       {/* Unblock Organization Modal */}

@@ -181,6 +181,35 @@ describe('ChoicesField', () => {
       fireEvent.keyDown(options()[0], { key: 'Enter' });
       expect(onChange).toHaveBeenCalledWith('p1');
     });
+
+    it('does not select an option when a nested preview button receives a key', async () => {
+      const { onChange } = setup({
+        display: 'cards',
+        loadChoices: pages([
+          photo(1, {
+            preview: {
+              type: 'video',
+              url: 'https://video.example/preview.mp4',
+            },
+          }),
+        ]),
+      });
+
+      fireEvent.click(screen.getByText('Choose'));
+      await waitFor(() => expect(options()).toHaveLength(1));
+
+      for (const key of ['Enter', ' ']) {
+        const event = new KeyboardEvent('keydown', {
+          key,
+          bubbles: true,
+          cancelable: true,
+        });
+        screen.getByLabelText('Play').dispatchEvent(event);
+        expect(event.defaultPrevented).toBe(false);
+      }
+
+      expect(onChange).not.toHaveBeenCalled();
+    });
   });
 
   describe('multiple values', () => {
@@ -349,6 +378,43 @@ describe('ChoicesField', () => {
       await waitFor(() =>
         expect(screen.getByText('No results')).toBeInTheDocument()
       );
+    });
+
+    it('retries a failed new search from its first page', async () => {
+      let failSearch = false;
+      const loadChoices = vi.fn(async (request: ChoicesRequest) => {
+        if (request.query === 'new search' && failSearch) {
+          throw new Error('provider_error');
+        }
+
+        return request.query
+          ? { items: [photo(3)], next: null }
+          : { items: [photo(1), photo(2)], next: '2' };
+      });
+      setup({ search: true, loadChoices });
+
+      fireEvent.click(screen.getByText('Choose'));
+      await waitFor(() => expect(options()).toHaveLength(2));
+
+      failSearch = true;
+      fireEvent.input(screen.getByLabelText('Search'), {
+        target: { value: 'new search' },
+      });
+      await waitFor(() =>
+        expect(screen.getByRole('alert')).toHaveTextContent(
+          'Failed: provider_error'
+        )
+      );
+      expect(screen.queryAllByRole('option')).toHaveLength(0);
+
+      failSearch = false;
+      fireEvent.click(screen.getByText('Retry'));
+      await waitFor(() => expect(options()).toHaveLength(1));
+      expect(loadChoices).toHaveBeenLastCalledWith({
+        query: 'new search',
+        cursor: null,
+        values: [],
+      });
     });
 
     it('shows errors with retry', async () => {
@@ -555,6 +621,82 @@ describe('ChoicesField', () => {
       );
       expect(options()[2]).toHaveTextContent('X');
 
+      vi.unstubAllGlobals();
+    });
+
+    it('updates font samples and ignores superseded font loads', async () => {
+      const pending: {
+        source: string;
+        resolve: () => void;
+      }[] = [];
+      class FakeFontFace {
+        constructor(
+          public family: string,
+          public source: string
+        ) {}
+        load() {
+          return new Promise<FontFace>((resolve) => {
+            pending.push({
+              source: this.source,
+              resolve: () => resolve(this as any),
+            });
+          });
+        }
+      }
+      vi.stubGlobal('FontFace', FakeFontFace);
+      Object.defineProperty(document, 'fonts', {
+        value: { add: vi.fn() },
+        configurable: true,
+      });
+
+      setup({
+        initial: 'p1',
+        display: 'cards',
+        loadChoices: pages([
+          photo(1, {
+            preview: {
+              type: 'font',
+              url: 'https://f.example/reactive-a.woff2',
+            },
+          }),
+          photo(2, {
+            preview: {
+              type: 'font',
+              url: 'https://f.example/reactive-b.woff2',
+            },
+          }),
+        ]),
+      });
+
+      const sample = await screen.findByTestId('font-sample');
+      await waitFor(() =>
+        expect(
+          pending.some(({ source }) => source.includes('reactive-a'))
+        ).toBe(true)
+      );
+
+      fireEvent.click(screen.getByText('Change'));
+      await waitFor(() => expect(options()).toHaveLength(2));
+      await waitFor(() =>
+        expect(
+          pending.some(({ source }) => source.includes('reactive-b'))
+        ).toBe(true)
+      );
+      fireEvent.click(screen.getByText('Photo 2'));
+
+      const fontB = pending.find(({ source }) =>
+        source.includes('reactive-b')
+      )!;
+      fontB.resolve();
+      await waitFor(() =>
+        expect(sample.style.fontFamily).toMatch(/castmill-choice/)
+      );
+      const selectedFamily = sample.style.fontFamily;
+
+      pending.find(({ source }) => source.includes('reactive-a'))!.resolve();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      expect(sample.style.fontFamily).toBe(selectedFamily);
       vi.unstubAllGlobals();
     });
 
