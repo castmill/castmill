@@ -323,6 +323,7 @@ export const ChoicesField: Component<ChoicesFieldProps> = (props) => {
       'End',
     ];
     if (!keys.includes(e.key)) return;
+    if (!resultsRef) return;
     const options = Array.from(
       resultsRef.querySelectorAll<HTMLElement>('[role="option"]')
     );
