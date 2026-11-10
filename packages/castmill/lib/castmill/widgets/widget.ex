@@ -103,8 +103,9 @@ defmodule Castmill.Widgets.Widget do
     |> unique_constraint(:name)
     |> unique_constraint(:slug)
     |> validate_template_bindings()
-    |> validate_schema(:options_schema)
+    |> validate_schema(:options_schema, choices: true)
     |> validate_schema(:data_schema)
+    |> validate_choices_provider()
   end
 
   @doc """
@@ -144,9 +145,9 @@ defmodule Castmill.Widgets.Widget do
     from(widget in Castmill.Widgets.Widget, as: :widget)
   end
 
-  def validate_schema(changeset, field) when is_atom(field) do
+  def validate_schema(changeset, field, opts \\ []) when is_atom(field) do
     validate_change(changeset, field, fn field, schema ->
-      case Castmill.Widgets.Schema.validate_schema(schema) do
+      case Castmill.Widgets.Schema.validate_schema(schema, opts) do
         {:ok, nil} ->
           []
 
@@ -154,5 +155,21 @@ defmodule Castmill.Widgets.Widget do
           [{field, message}]
       end
     end)
+  end
+
+  # Widgets whose options take values from integration choices need a fetcher that provides them.
+  defp validate_choices_provider(changeset) do
+    options_schema = get_field(changeset, :options_schema)
+
+    if Castmill.Widgets.Schema.has_choices?(options_schema) and
+         not Castmill.Widgets.Integrations.Choices.provider_for_meta?(get_field(changeset, :meta)) do
+      add_error(
+        changeset,
+        :options_schema,
+        "uses choices but the widget's integration fetcher does not implement choices/3"
+      )
+    else
+      changeset
+    end
   end
 end

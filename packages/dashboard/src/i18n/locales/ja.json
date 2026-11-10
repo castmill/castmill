@@ -1057,6 +1057,41 @@
       "unusedTitle": "Widgetで未使用",
       "unusedHint": "これらの編集はWidgetのどのテキストにも対応しなくなりました。",
       "editedIndicator": "編集済みのテキストあり"
+    },
+    "choices": {
+      "choose": "選択",
+      "moveBefore": "前へ移動",
+      "moveAfter": "後ろへ移動",
+      "search": "検索…",
+      "loadMore": "さらに読み込む",
+      "retry": "再試行",
+      "noResults": "一致する項目がありません",
+      "noSelection": "何も選択されていません",
+      "unavailable": "利用できなくなりました",
+      "selectAll": "すべて選択",
+      "selectNone": "選択を解除",
+      "selectedCount": "選択済み: {{count}}",
+      "selectedCountMax": "選択済み: {{count}} / {{max}}",
+      "done": "完了",
+      "play": "プレビューを再生",
+      "stop": "プレビューを停止",
+      "enlarge": "拡大",
+      "dialogDescription": "統合が提供する項目から選択してください。",
+      "dependencyRequired": "先に{{fields}}を設定してください。",
+      "confirmClearTitle": "依存する選択をクリアしますか？",
+      "confirmClearMessage": "{{field}}を変更すると{{fields}}がクリアされます。",
+      "minSelection": "{{min}}件以上選択してください。",
+      "maxSelection": "{{max}}件まで選択してください。",
+      "errors": {
+        "widgetNotFound": "このWidgetは利用できなくなりました。",
+        "notAChoiceField": "このフィールドでは選択肢を表示できません。",
+        "missingDependency": "先にこのフィールドが依存するフィールドを設定してください。",
+        "missingCredentials": "この組織では統合が設定されていません。",
+        "rateLimited": "リクエストが多すぎます。しばらく待ってから再試行してください。",
+        "providerError": "統合から項目を取得できませんでした。後でもう一度お試しください。",
+        "networkError": "サーバーに接続できません。接続を確認してください。",
+        "unknown": "項目を読み込めませんでした。"
+      }
     }
   },
   "devices": {
