@@ -265,20 +265,40 @@ export const choiceDependencies = (
 };
 
 /**
- * Keys of choice fields that depend on `key` and currently have a value.
+ * Keys of choice fields that depend directly or transitively on `key` and have a value.
  */
 export const dependentChoiceFields = (
   entries: [string, SchemaAttributeType][],
   key: string,
   options: Record<string, unknown>
-): string[] =>
-  entries
-    .filter(
-      ([fieldKey, schema]) =>
-        getFieldChoices(schema)?.depends_on?.includes(key) &&
-        !isEmptyOption(options[fieldKey])
-    )
-    .map(([fieldKey]) => fieldKey);
+): string[] => {
+  const dependents = new Map<string, string[]>();
+  for (const [fieldKey, schema] of entries) {
+    for (const dependency of getFieldChoices(schema)?.depends_on || []) {
+      const fields = dependents.get(dependency) || [];
+      fields.push(fieldKey);
+      dependents.set(dependency, fields);
+    }
+  }
+
+  const pending = [key];
+  const visited = new Set([key]);
+  const selected = new Set<string>();
+
+  for (let cursor = 0; cursor < pending.length; cursor++) {
+    const dependency = pending[cursor];
+    for (const fieldKey of dependents.get(dependency) || []) {
+      if (visited.has(fieldKey)) continue;
+      visited.add(fieldKey);
+      pending.push(fieldKey);
+      if (!isEmptyOption(options[fieldKey])) selected.add(fieldKey);
+    }
+  }
+
+  return entries
+    .map(([fieldKey]) => fieldKey)
+    .filter((fieldKey) => selected.has(fieldKey));
+};
 
 /**
  * Validates a choice field value. Returns an error message, or '' when valid.

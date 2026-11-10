@@ -1,4 +1,10 @@
-import { Component, Show, createSignal, onCleanup } from 'solid-js';
+import {
+  Component,
+  Show,
+  createEffect,
+  createSignal,
+  onCleanup,
+} from 'solid-js';
 import { BsArrowsFullscreen, BsPlayFill, BsStopFill } from 'solid-icons/bs';
 
 import styles from './choices-field.module.scss';
@@ -82,9 +88,19 @@ export const ChoiceVisual: Component<ChoiceVisualProps> = (props) => {
   let video: HTMLVideoElement | undefined;
   let audio: HTMLAudioElement | null = null;
 
-  if (previewType() === 'font') {
-    loadPreviewFont(props.choice.preview!.url).then(setFontFamily);
-  }
+  createEffect(() => {
+    const preview = props.choice.preview;
+    setFontFamily(null);
+    if (preview?.type !== 'font') return;
+
+    let active = true;
+    loadPreviewFont(preview.url).then((family) => {
+      if (active) setFontFamily(family);
+    });
+    onCleanup(() => {
+      active = false;
+    });
+  });
 
   const playVideo = () => {
     setPlaying(true);

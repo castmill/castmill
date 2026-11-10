@@ -160,6 +160,32 @@ defmodule Castmill.Widgets.Integrations.ChoicesTest do
       refute first.value == other.value
     end
 
+    test "does not reuse cached results after effective credentials change", %{
+      organization: organization
+    } do
+      widget = choices_widget("echo", config: %{"auth_type" => "optional"})
+      {:ok, integration} = Integrations.ensure_integration_for_widget(widget)
+
+      {:ok, _} =
+        Integrations.upsert_organization_credentials(organization.id, integration.id, %{
+          "account_id" => "account-one"
+        })
+
+      assert {:ok, %{items: [first]}} =
+               Choices.list(organization.id, widget, "listing", %{})
+
+      {:ok, _} =
+        Integrations.upsert_organization_credentials(organization.id, integration.id, %{
+          "account_id" => "account-two"
+        })
+
+      assert {:ok, %{items: [second]}} =
+               Choices.list(organization.id, widget, "listing", %{})
+
+      refute first.value == second.value
+      assert Jason.decode!(second.label)["account_id"] == "account-two"
+    end
+
     test "does not cache when the cache ttl is disabled", %{organization: organization} do
       put_config(cache_ttl: 0)
       widget = choices_widget("echo")
@@ -268,6 +294,21 @@ defmodule Castmill.Widgets.Integrations.ChoicesTest do
       assert {:error, :no_provider} = Choices.list(organization.id, widget, "listing", %{})
     end
 
+    test "accepts an active integration with type both", %{organization: organization} do
+      widget = choices_widget("photos")
+      {:ok, integration} = Integrations.ensure_integration_for_widget(widget)
+
+      integration
+      |> WidgetIntegration.changeset(%{
+        integration_type: "both",
+        push_webhook_path: "/choices"
+      })
+      |> Repo.update!()
+
+      assert {:ok, %{items: [_, _]}} =
+               Choices.list(organization.id, widget, "listing", %{})
+    end
+
     test "creates the widget's integration when missing", %{organization: organization} do
       widget = choices_widget("photos")
 
@@ -288,6 +329,17 @@ defmodule Castmill.Widgets.Integrations.ChoicesTest do
       assert :error = Choices.provider_module("Castmill.Repo")
       assert :error = Choices.provider_module("Castmill.Widgets.Integrations.Fetchers.A-B")
       assert :error = Choices.provider_module(nil)
+    end
+
+    test "does not create atoms for unknown fetcher names" do
+      name =
+        "Castmill.Widgets.Integrations.Fetchers.Unknown#{System.unique_integer([:positive])}"
+
+      assert :error = Choices.provider_module(name)
+
+      assert_raise ArgumentError, fn ->
+        String.to_existing_atom("Elixir." <> name)
+      end
     end
 
     test "reads the fetcher from widget meta" do

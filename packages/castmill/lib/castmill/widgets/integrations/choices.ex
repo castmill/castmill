@@ -64,7 +64,15 @@ defmodule Castmill.Widgets.Integrations.Choices do
         "values" => values(params["values"])
       }
 
-      key = {integration.id, organization_id, choices["list"], provider_params}
+      provider_context_fingerprint =
+        :crypto.hash(
+          :sha256,
+          :erlang.term_to_binary({credentials, provider_params["options"]})
+        )
+
+      key =
+        {integration.id, organization_id, choices["list"], provider_context_fingerprint,
+         provider_params}
 
       case ChoicesStore.get(key) do
         {:ok, result} ->
@@ -118,7 +126,11 @@ defmodule Castmill.Widgets.Integrations.Choices do
   # Names come from widget definitions and are limited to the fetcher namespace.
   defp existing_module(name) do
     if Regex.match?(~r/^[A-Za-z0-9_.]+$/, name) and byte_size(name) <= 200 do
-      {:ok, Module.concat([name])}
+      try do
+        {:ok, String.to_existing_atom("Elixir." <> name)}
+      rescue
+        ArgumentError -> :error
+      end
     else
       :error
     end
@@ -159,7 +171,8 @@ defmodule Castmill.Widgets.Integrations.Choices do
       end
 
     Enum.find_value(integrations, {:error, :no_provider}, fn
-      %WidgetIntegration{integration_type: "pull", is_active: true} = integration ->
+      %WidgetIntegration{integration_type: type, is_active: true} = integration
+      when type in ["pull", "both"] ->
         case provider_module(Map.get(integration.pull_config || %{}, "fetcher_module")) do
           {:ok, module} -> {:ok, integration, module}
           :error -> nil
