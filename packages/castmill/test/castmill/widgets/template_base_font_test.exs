@@ -19,4 +19,20 @@ defmodule Castmill.Widgets.TemplateBaseFontTest do
     assert root_font_size("weather") == "1.944em"
     assert Repo.get_by!(Widget, slug: "weather").template["fontScale"] == true
   end
+
+  test "stock ticker height scales with its layout zone" do
+    widget = Repo.get_by!(Widget, slug: "stock-ticker")
+
+    [ticker_scroller] =
+      Enum.filter(widget.template["components"], &(&1["name"] == "ticker-scroller"))
+
+    assert ticker_scroller["style"]["font-size"] == %{
+             "concat" => [%{"key" => "options.ticker_height", "default" => 3.375}, "em"]
+           }
+
+    assert widget.options_schema["ticker_height"]["default"] == 3.375
+    assert widget.options_schema["ticker_height"]["min"] == 1.35
+    assert widget.options_schema["ticker_height"]["max"] == 13.5
+    assert widget.options_schema["ticker_height"]["description"] == "Ticker height in em units"
+  end
 end

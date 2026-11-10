@@ -21,6 +21,8 @@ defmodule Castmill.Repo.Migrations.ScaleSystemWidgetsToTemplateBaseFont do
   @slugs ~w(location-display-demo qr-code rss-news spotify-now-playing stock-ticker weather)
   @factor 1.6
   @vmin_to_em 1.08
+  # 1vh is 10.8px at 1080p; the stock-ticker root font is 16px after scaling.
+  @ticker_height_vh_to_em 0.675
 
   def up, do: update_widgets(&up_size/2, true)
   def down, do: update_widgets(&down_size/2, false)
@@ -29,15 +31,23 @@ defmodule Castmill.Repo.Migrations.ScaleSystemWidgetsToTemplateBaseFont do
   defp update_widgets(convert, font_scale) do
     from(w in "widgets",
       where: w.slug in ^@slugs,
-      select: %{id: w.id, slug: w.slug, template: w.template}
+      select: %{
+        id: w.id,
+        slug: w.slug,
+        template: w.template,
+        options_schema: w.options_schema
+      }
     )
     |> repo().all()
-    |> Enum.each(fn %{id: id, slug: slug, template: template} ->
+    |> Enum.each(fn %{id: id, slug: slug, template: template, options_schema: options_schema} ->
       converted_template =
         case root_font_size(template, &convert.(slug, &1)) do
           :keep -> template
           converted -> converted
         end
+
+      converted_template = convert_ticker_template(converted_template, slug, font_scale)
+      converted_options_schema = convert_ticker_options_schema(options_schema, slug, font_scale)
 
       converted_template =
         if is_map(converted_template) do
@@ -50,12 +60,128 @@ defmodule Castmill.Repo.Migrations.ScaleSystemWidgetsToTemplateBaseFont do
           converted_template
         end
 
-      if converted_template != template do
+      if converted_template != template or converted_options_schema != options_schema do
         from(w in "widgets", where: w.id == ^id)
-        |> repo().update_all(set: [template: converted_template])
+        |> repo().update_all(
+          set: [template: converted_template, options_schema: converted_options_schema]
+        )
+      end
+
+      if slug == "stock-ticker", do: update_ticker_widget_configs(id, font_scale)
+    end)
+  end
+
+  defp convert_ticker_template(template, "stock-ticker", true),
+    do: update_ticker_scroller(template, &up_ticker_font_size/1)
+
+  defp convert_ticker_template(template, "stock-ticker", false),
+    do: update_ticker_scroller(template, &down_ticker_font_size/1)
+
+  defp convert_ticker_template(template, _slug, _font_scale), do: template
+
+  defp update_ticker_scroller(%{} = template, convert) do
+    Map.update(template, "components", [], fn components ->
+      Enum.map(components, fn
+        %{"name" => "ticker-scroller", "style" => style} = component ->
+          Map.put(component, "style", Map.update(style, "font-size", nil, convert))
+
+        component ->
+          component
+      end)
+    end)
+  end
+
+  defp update_ticker_scroller(template, _convert), do: template
+
+  defp up_ticker_font_size(%{
+         "concat" => [%{"key" => "options.ticker_height"} = binding, "vh"]
+       }) do
+    %{
+      "concat" =>
+        [
+          Map.put(
+            binding,
+            "default",
+            scale_number(Map.get(binding, "default", 5), @ticker_height_vh_to_em)
+          ),
+          "em"
+        ]
+    }
+  end
+
+  defp up_ticker_font_size(size), do: size
+
+  defp down_ticker_font_size(%{
+         "concat" => [%{"key" => "options.ticker_height", "default" => 3.375} = binding, "em"]
+       }) do
+    %{"concat" => [Map.put(binding, "default", 5), "vh"]}
+  end
+
+  defp down_ticker_font_size(size), do: size
+
+  defp convert_ticker_options_schema(schema, "stock-ticker", true),
+    do: update_ticker_height_schema(schema, &scale_number(&1, @ticker_height_vh_to_em), "em")
+
+  defp convert_ticker_options_schema(schema, "stock-ticker", false),
+    do: update_ticker_height_schema(schema, &scale_number(&1, 1 / @ticker_height_vh_to_em), "vh")
+
+  defp convert_ticker_options_schema(schema, _slug, _font_scale), do: schema
+
+  defp update_ticker_height_schema(%{} = schema, convert, unit) do
+    Map.update(schema, "ticker_height", nil, fn
+      %{} = field ->
+        field
+        |> Enum.reduce(%{}, fn
+          {key, value}, acc when key in ["default", "min", "max"] and is_number(value) ->
+            Map.put(acc, key, convert.(value))
+
+          {key, value}, acc ->
+            Map.put(acc, key, value)
+        end)
+        |> Map.update("description", "Ticker height in #{unit} units", fn _ ->
+          "Ticker height in #{unit} units"
+        end)
+
+      field ->
+        field
+    end)
+  end
+
+  defp update_ticker_height_schema(schema, _convert, _unit), do: schema
+
+  defp update_ticker_widget_configs(widget_id, true),
+    do: scale_ticker_widget_configs(widget_id, @ticker_height_vh_to_em)
+
+  defp update_ticker_widget_configs(widget_id, false),
+    do: scale_ticker_widget_configs(widget_id, 1 / @ticker_height_vh_to_em)
+
+  defp scale_ticker_widget_configs(widget_id, factor) do
+    from(wc in "widgets_config",
+      where: wc.widget_id == ^widget_id,
+      select: %{id: wc.id, options: wc.options}
+    )
+    |> repo().all()
+    |> Enum.each(fn %{id: id, options: options} ->
+      converted_options =
+        case options do
+          %{"ticker_height" => value} when is_number(value) ->
+            Map.put(options, "ticker_height", value * factor)
+
+          _ ->
+            options
+        end
+
+      if converted_options != options do
+        from(wc in "widgets_config", where: wc.id == ^id)
+        |> repo().update_all(set: [options: converted_options])
       end
     end)
   end
+
+  defp scale_number(value, factor) when is_number(value),
+    do: Float.round(value * factor, 4)
+
+  defp scale_number(value, _factor), do: value
 
   defp root_font_size(%{} = template, convert) do
     style = template["style"] || %{}
