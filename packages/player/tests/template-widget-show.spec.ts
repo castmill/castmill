@@ -194,51 +194,7 @@ describe('TemplateWidget.show', () => {
 
   it('remeasures scroller duration when the legacy font baseline changes', async () => {
     let templateWidth = 960;
-    const prototype = dom.window.HTMLElement.prototype;
-    const originalGetBoundingClientRect = prototype.getBoundingClientRect;
-    const originalClientWidth = Object.getOwnPropertyDescriptor(
-      prototype,
-      'clientWidth'
-    );
-    const originalClientHeight = Object.getOwnPropertyDescriptor(
-      prototype,
-      'clientHeight'
-    );
-    Object.defineProperty(prototype, 'clientWidth', {
-      configurable: true,
-      get() {
-        return this.getAttribute('data-component') === 'template'
-          ? templateWidth
-          : 0;
-      },
-    });
-    Object.defineProperty(prototype, 'clientHeight', {
-      configurable: true,
-      get() {
-        return this.getAttribute('data-component') === 'template' ? 540 : 0;
-      },
-    });
-    prototype.getBoundingClientRect = function () {
-      if (
-        this.parentElement?.getAttribute('data-component') === 'scroller' &&
-        this.style.position !== 'absolute'
-      ) {
-        const template = this.closest('[data-component="template"]');
-        const width = Number.parseFloat(template?.style.fontSize || '0') * 40;
-        return {
-          x: 0,
-          y: 0,
-          left: 0,
-          top: 0,
-          right: width,
-          bottom: 20,
-          width,
-          height: 20,
-          toJSON: () => ({}),
-        };
-      }
-      return originalGetBoundingClientRect.call(this);
-    };
+    let templateHeight = 540;
 
     const widget = new TemplateWidget(
       { getMedia: async (url: string) => url } as any,
@@ -269,23 +225,42 @@ describe('TemplateWidget.show', () => {
 
     try {
       await firstValueFrom(widget.show(el, 0));
-      expect(widget.duration()).to.equal(1000);
+      const template = el.querySelector(
+        '[data-component="template"]'
+      ) as HTMLElement;
+      Object.defineProperty(template, 'clientWidth', {
+        configurable: true,
+        get: () => templateWidth,
+      });
+      Object.defineProperty(template, 'clientHeight', {
+        configurable: true,
+        get: () => templateHeight,
+      });
+      const content = el.querySelector(
+        '[data-component="scroller"] > div'
+      ) as HTMLElement;
+      content.getBoundingClientRect = () => {
+        const width = Number.parseFloat(template.style.fontSize || '0') * 40;
+        return {
+          x: 0,
+          y: 0,
+          left: 0,
+          top: 0,
+          right: width,
+          bottom: 20,
+          width,
+          height: 20,
+          toJSON: () => ({}),
+        } as DOMRect;
+      };
 
+      dom.window.dispatchEvent(new dom.window.Event('resize'));
+      expect(widget.duration()).to.equal(1000);
       templateWidth = 1920;
+      templateHeight = 1080;
       dom.window.dispatchEvent(new dom.window.Event('resize'));
       expect(widget.duration()).to.equal(2000);
     } finally {
-      prototype.getBoundingClientRect = originalGetBoundingClientRect;
-      if (originalClientWidth) {
-        Object.defineProperty(prototype, 'clientWidth', originalClientWidth);
-      } else {
-        delete (prototype as any).clientWidth;
-      }
-      if (originalClientHeight) {
-        Object.defineProperty(prototype, 'clientHeight', originalClientHeight);
-      } else {
-        delete (prototype as any).clientHeight;
-      }
       await widget.unload();
     }
   });
