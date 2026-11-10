@@ -319,12 +319,7 @@ export class TemplateWidget extends TimelineWidget {
             // spent waiting for a decoder is excluded: playlists hold their
             // clock while an item is blocked.
             const blocked = this.blockedTime() - blockedAtBase;
-            // A re-rendered loop iteration must still begin at its first frame.
-            const replayingFromStart =
-              this.lastRuntimeDuration !== undefined && offset === 0;
-            const elapsed = replayingFromStart
-              ? 0
-              : Math.max(0, Date.now() - basetime - blocked);
+            const elapsed = Math.max(0, Date.now() - basetime - blocked);
             this.seek(offset + elapsed);
             return 'template-widget:shown';
           })

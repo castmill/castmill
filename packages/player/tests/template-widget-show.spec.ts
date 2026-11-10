@@ -94,17 +94,27 @@ describe('TemplateWidget.show', () => {
     await widget.unload();
     expect(widget.duration()).to.equal(13967);
 
-    const secondShow = firstValueFrom(widget.show(el, 0));
-    await flush();
-    expect(widget.duration()).to.equal(13967);
+    const timeline = (widget as any).timeline;
+    const originalNow = Date.now;
+    let now = originalNow();
+    Date.now = () => now;
+    try {
+      const secondShow = firstValueFrom(widget.show(el, 0));
+      await flush();
+      expect(widget.duration()).to.equal(13967);
 
-    const rerenderedVideo = el.querySelector('video')!;
-    Object.defineProperty(rerenderedVideo, 'duration', { value: 8.5 });
-    Object.defineProperty(rerenderedVideo, 'readyState', { value: 4 });
-    rerenderedVideo?.dispatchEvent(new dom.window.Event('loadedmetadata'));
-    rerenderedVideo?.dispatchEvent(new dom.window.Event('canplaythrough'));
-    await secondShow;
-    expect(widget.duration()).to.equal(8500);
+      now += 1500;
+      const rerenderedVideo = el.querySelector('video')!;
+      Object.defineProperty(rerenderedVideo, 'duration', { value: 8.5 });
+      Object.defineProperty(rerenderedVideo, 'readyState', { value: 4 });
+      rerenderedVideo?.dispatchEvent(new dom.window.Event('loadedmetadata'));
+      rerenderedVideo?.dispatchEvent(new dom.window.Event('canplaythrough'));
+      await secondShow;
+      expect(timeline.time).to.equal(1500);
+      expect(widget.duration()).to.equal(8500);
+    } finally {
+      Date.now = originalNow;
+    }
     await widget.unload();
   });
 
