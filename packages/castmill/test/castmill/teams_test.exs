@@ -188,7 +188,7 @@ defmodule Castmill.TeamsTest do
         })
 
       assert {:error, :invalid_resource} =
-              Teams.add_resource_to_team(team.id, "automations", automation.id, [:read])
+               Teams.add_resource_to_team(team.id, "automations", automation.id, [:read])
 
       assert Teams.list_resources("automations", %{team_id: team.id}) == []
       assert Teams.count_resources("automations", %{team_id: team.id, search: ""}) == 0
@@ -200,12 +200,12 @@ defmodule Castmill.TeamsTest do
         })
 
       assert {:ok, _} =
-              Teams.add_resource_to_team(
-                team.id,
-                "automations",
-                local_automation.id,
-                [:read]
-              )
+               Teams.add_resource_to_team(
+                 team.id,
+                 "automations",
+                 local_automation.id,
+                 [:read]
+               )
 
       assert Teams.count_resources("automations", %{team_id: team.id, search: ""}) == 1
     end

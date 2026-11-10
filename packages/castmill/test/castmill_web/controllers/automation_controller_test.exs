@@ -267,6 +267,7 @@ defmodule CastmillWeb.AutomationControllerTest do
       assert_receive %{event: "automation_run", rule: %{"id" => ^rule_id}}
 
       {:ok, _} = Automations.update_automation(automation, %{"enabled" => false})
+
       conn =
         build_conn()
         |> as(users.admin)
