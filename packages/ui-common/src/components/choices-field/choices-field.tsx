@@ -307,6 +307,7 @@ export const ChoicesField: Component<ChoicesFieldProps> = (props) => {
   };
 
   let dragIndex: number | null = null;
+  let resultsRef: HTMLDivElement | null = null;
 
   // Arrow keys move the focus between results; up/down skip a row in grids.
   const onResultsKeyDown = (e: KeyboardEvent) => {
