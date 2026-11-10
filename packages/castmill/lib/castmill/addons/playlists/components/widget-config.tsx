@@ -400,6 +400,9 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
     string,
     any
   > | null>(null);
+  const [previewDiscriminatorId, setPreviewDiscriminatorId] = createSignal<
+    string | null
+  >(null);
 
   let previewFetchTimer: ReturnType<typeof setTimeout> | undefined;
   // Monotonic id used to discard responses from superseded requests, so that a
@@ -413,6 +416,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
       display_locale: locale(),
     };
     const widgetId = props.item.widget?.id;
+    setPreviewDiscriminatorId(null);
 
     if (!widgetId || !props.baseUrl || !props.organizationId) {
       return;
@@ -433,7 +437,10 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
         options,
         // Live preview fetches are ephemeral: they must not register background
         // polling schedulers for option combinations that may never be saved.
-        { preview: true }
+        {
+          preview: true,
+          widgetConfigId: props.item.config.id,
+        }
       );
 
       // Ignore out-of-order responses from superseded requests.
@@ -441,6 +448,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
         return;
       }
 
+      setPreviewDiscriminatorId(result.discriminator_id ?? null);
       setPreviewData(result && result.data ? result.data : null);
     }, 500);
   });
@@ -1043,6 +1051,8 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
           config={widgetConfig()}
           options={widgetOptions()}
           previewData={previewData()}
+          previewDiscriminatorId={previewDiscriminatorId()}
+          onPreviewDataUpdate={setPreviewData}
           baseUrl={props.baseUrl}
           socket={props.store.socket}
         />
