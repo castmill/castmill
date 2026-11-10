@@ -511,6 +511,10 @@ export const Scroller: Component<ScrollerProps> = (props) => {
                 timeline={props.timeline}
                 resourceManager={props.resourceManager}
                 onReady={() => onItemReady(entry, entry.revision)}
+                onLayoutUpdate={() => {
+                  resizeScroll();
+                  props.onLayoutUpdate?.();
+                }}
                 globals={props.globals}
               />
             </div>

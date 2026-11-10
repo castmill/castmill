@@ -92,6 +92,7 @@ export const Item: Component<{
   resourceManager: ResourceManager;
   globals: PlayerGlobals;
   onReady: () => void;
+  onLayoutUpdate?: () => void;
 }> = (props) => {
   const style = createMemo(() => {
     let resolvedStyle = props.component.style || {};
@@ -191,6 +192,7 @@ export const Item: Component<{
             resourceManager={props.resourceManager}
             globals={props.globals}
             onReady={props.onReady}
+            onLayoutUpdate={props.onLayoutUpdate}
           />
         </Match>
         <Match when={props.component.type == TemplateComponentType.Layout}>
@@ -229,6 +231,7 @@ export const Item: Component<{
             resourceManager={props.resourceManager}
             globals={props.globals}
             onReady={props.onReady}
+            onLayoutUpdate={props.onLayoutUpdate}
           />
         </Match>
         <Match when={props.component.type == TemplateComponentType.Scroller}>
@@ -247,6 +250,7 @@ export const Item: Component<{
             resourceManager={props.resourceManager}
             globals={props.globals}
             onReady={props.onReady}
+            onLayoutUpdate={props.onLayoutUpdate}
           />
         </Match>
         <Match

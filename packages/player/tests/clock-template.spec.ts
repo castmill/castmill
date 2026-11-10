@@ -24,7 +24,8 @@ describe('time-dependent template updates', () => {
     beforeReady?: (
       root: HTMLElement,
       advanceClock: (hour?: number) => void,
-      showing: Promise<unknown>
+      showing: Promise<unknown>,
+      widget: TemplateWidget
     ) => void | Promise<void>,
     getMedia?: (url: string) => Promise<string | void>
   ) => {
@@ -100,7 +101,7 @@ describe('time-dependent template updates', () => {
 
     try {
       const showing = firstValueFrom(widget.show(root, 0));
-      await beforeReady?.(root, advanceClock, showing);
+      await beforeReady?.(root, advanceClock, showing, widget);
       await showing;
       await run(root, widget, media, advanceClock);
     } finally {
@@ -820,6 +821,98 @@ describe('time-dependent template updates', () => {
         await new Promise((resolve) => setTimeout(resolve, 20));
         expect(isReady).to.equal(false);
 
+        pending
+          .find((item) => item.url === 'slow.jpg')!
+          .resolve('/cached/slow.jpg');
+      },
+      (url) =>
+        new Promise((resolve) => {
+          pending.push({ url, resolve });
+        })
+    );
+  });
+
+  it('does not count a paginated scroller rebuild while a group sibling is loading', async () => {
+    const pending: { url: string; resolve: (value: string) => void }[] = [];
+    let initialTimelineItemCount = 0;
+
+    await withWidget(
+      {
+        type: 'group',
+        name: 'paginated-readiness-group',
+        components: [
+          {
+            type: 'paginated-list',
+            name: 'paginated-scroller',
+            opts: {
+              items: { key: 'data.groups' },
+              pageDuration: 30,
+              pageSize: 1,
+            },
+            component: {
+              type: 'scroller',
+              name: 'clock-scroller',
+              opts: {
+                items: {
+                  list: {
+                    key: '$.items',
+                    where: [{ key: '$.until', gte: '@now' }],
+                  },
+                },
+              },
+              component: {
+                type: 'text',
+                opts: { text: { key: '$.label' } },
+              },
+            },
+          },
+          {
+            type: 'image',
+            name: 'slow-image',
+            opts: { url: 'slow.jpg' },
+          },
+        ],
+      },
+      {
+        groups: [
+          {
+            items: [
+              { label: 'expired', until: '2026-01-01T10:30:00' },
+              { label: 'current', until: '2026-01-01T12:00:00' },
+            ],
+          },
+        ],
+      },
+      async (_root, widget) => {
+        expect((widget as any).timeline.items).to.have.length(
+          initialTimelineItemCount
+        );
+      },
+      async (_root, advanceClock, showing, widget) => {
+        const isReady = { value: false };
+        const timeline = (widget as any).timeline;
+        void showing.then(() => {
+          isReady.value = true;
+        });
+        for (
+          let i = 0;
+          i < 50 && !pending.some((item) => item.url === 'slow.jpg');
+          i++
+        ) {
+          await new Promise((resolve) => setTimeout(resolve, 2));
+        }
+        expect(pending.some((item) => item.url === 'slow.jpg')).to.equal(true);
+        for (let i = 0; i < 100 && timeline.items.length < 2; i++) {
+          await new Promise((resolve) => setTimeout(resolve, 10));
+        }
+        expect(timeline.items).to.have.length(2);
+        expect(isReady.value).to.equal(false);
+        initialTimelineItemCount = timeline.items.length;
+
+        advanceClock();
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        expect(isReady.value).to.equal(false);
+        expect(timeline.items).to.have.length(initialTimelineItemCount);
         pending
           .find((item) => item.url === 'slow.jpg')!
           .resolve('/cached/slow.jpg');

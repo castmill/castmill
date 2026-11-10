@@ -372,6 +372,7 @@ export const PaginatedList: Component<PaginatedListProps> = (props) => {
                 resourceManager={props.resourceManager}
                 globals={props.globals}
                 onReady={() => onPageReady(generation)}
+                onLayoutUpdate={props.onLayoutUpdate}
               />
             );
           }}
@@ -398,13 +399,18 @@ const Page: Component<{
   resourceManager: ResourceManager;
   globals: PlayerGlobals;
   onReady: () => void;
+  onLayoutUpdate?: () => void;
 }> = (props) => {
   let pageRef: HTMLDivElement | undefined;
 
-  let readyCount = 0;
-  const onItemReady = () => {
-    readyCount++;
-    if (readyCount === props.items.length) {
+  const readyItems = new Set<number>();
+  const onItemReady = (index: number) => {
+    if (readyItems.has(index)) {
+      props.onLayoutUpdate?.();
+      return;
+    }
+    readyItems.add(index);
+    if (readyItems.size === props.items.length) {
       props.onReady();
     }
   };
@@ -458,7 +464,8 @@ const Page: Component<{
             component={props.component}
             timeline={props.timeline}
             resourceManager={props.resourceManager}
-            onReady={onItemReady}
+            onReady={() => onItemReady(i())}
+            onLayoutUpdate={props.onLayoutUpdate}
             globals={props.globals}
           />
         )}
