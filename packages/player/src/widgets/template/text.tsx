@@ -230,7 +230,8 @@ export const Text: Component<TextProps> = (props) => {
       props.timeline,
       props.animations,
       splittedText.chars || splittedText.words,
-      props.timeline.duration()
+      props.timeline.duration(),
+      props.timeline.isRunning() ? props.timeline.time : 0
     );
   });
 

@@ -36,7 +36,8 @@ export const applyAnimations = (
    * Parent duration in milliseconds. Used to resolve negative start times.
    * If not provided, negative start times will be treated as 0.
    */
-  parentDuration?: number
+  parentDuration?: number,
+  startOffset = 0
 ) => {
   const addedItems: TimelineItem[] = [];
   const timelines: gsap.core.Timeline[] = [];
@@ -67,6 +68,7 @@ export const applyAnimations = (
       // No parent duration available, default to 0
       startTime = 0;
     }
+    startTime += startOffset;
 
     const tlItem = {
       start: startTime,

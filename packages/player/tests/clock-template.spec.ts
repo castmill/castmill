@@ -631,8 +631,9 @@ describe('time-dependent template updates', () => {
       {},
       async (root, widget, _media, advanceClock) => {
         const text = root.querySelector('[data-component="text"] span')!;
+        const timeline = (widget as any).timeline;
         const animationTargets = () =>
-          ((widget as any).timeline.items as any[])
+          (timeline.items as any[])
             .filter((item) => typeof item.child.getChildren === 'function')
             .flatMap((item) =>
               item.child.getChildren().flatMap((tween: any) => tween.targets())
@@ -643,6 +644,8 @@ describe('time-dependent template updates', () => {
         );
         expect(initialTargets).to.include(text.children[0]);
 
+        timeline.setDuration(60000);
+        timeline.play(5000);
         advanceClock();
         await flush();
 
@@ -653,6 +656,15 @@ describe('time-dependent template updates', () => {
         expect(text.children.length).to.be.greaterThan(0);
         expect(updatedTargets).to.include(text.children[0]);
         expect(updatedTargets).not.to.include(initialTargets[0]);
+        const updatedAnimation = [...timeline.items, ...timeline.playing].find(
+          (item: any) =>
+            typeof item.child.getChildren === 'function' &&
+            item.child
+              .getChildren()
+              .some((tween: any) => tween.targets().includes(text.children[0]))
+        );
+        expect(updatedAnimation).not.to.equal(undefined);
+        expect(updatedAnimation?.start).to.be.at.least(5000);
       }
     );
   });
