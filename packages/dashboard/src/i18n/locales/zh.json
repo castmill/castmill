@@ -390,7 +390,26 @@
       "unblockTitle": "解封组织",
       "unblockConfirmation": "您确定要解封 \"{{name}}\" 吗？用户将能够重新登录。",
       "unblockSuccess": "组织解封成功",
-      "unblockError": "解封组织失败"
+      "unblockError": "解封组织失败",
+      "integrationSettings": {
+        "action": "集成设置",
+        "title": "集成设置 – {{name}}",
+        "description": "此网络的小部件为该组织使用的值，例如办公室 ID。只有网络管理员可以更改。",
+        "empty": "此网络中没有小部件使用组织设置。",
+        "listHelp": "每行一个值。",
+        "remove": "移除设置",
+        "saved": "设置已保存。",
+        "removed": "设置已移除。",
+        "invalid": "请检查标记的字段。",
+        "loadError": "无法加载集成设置。",
+        "saveError": "无法保存设置：{{message}}",
+        "errors": {
+          "required": "必填。",
+          "invalid": "值无效。",
+          "too_long": "太长。",
+          "too_many": "值太多。"
+        }
+      }
     },
     "users": {
       "listTitle": "所有用户",

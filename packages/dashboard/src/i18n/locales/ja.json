@@ -390,7 +390,26 @@
       "unblockTitle": "組織のブロックを解除",
       "unblockConfirmation": "\"{{name}}\" のブロックを解除してもよろしいですか？ユーザーは再度ログインできるようになります。",
       "unblockSuccess": "組織のブロックを正常に解除しました",
-      "unblockError": "組織のブロック解除に失敗しました"
+      "unblockError": "組織のブロック解除に失敗しました",
+      "integrationSettings": {
+        "action": "統合設定",
+        "title": "統合設定 – {{name}}",
+        "description": "このネットワークのウィジェットがこの組織に使用する値（オフィス ID など）です。ネットワーク管理者のみが変更できます。",
+        "empty": "このネットワークで組織設定を使用するウィジェットはありません。",
+        "listHelp": "1 行に 1 つの値を入力します。",
+        "remove": "設定を削除",
+        "saved": "設定を保存しました。",
+        "removed": "設定を削除しました。",
+        "invalid": "強調表示されたフィールドを確認してください。",
+        "loadError": "統合設定を読み込めませんでした。",
+        "saveError": "設定を保存できませんでした: {{message}}",
+        "errors": {
+          "required": "必須です。",
+          "invalid": "無効な値です。",
+          "too_long": "長すぎます。",
+          "too_many": "値が多すぎます。"
+        }
+      }
     },
     "users": {
       "listTitle": "すべてのユーザー",

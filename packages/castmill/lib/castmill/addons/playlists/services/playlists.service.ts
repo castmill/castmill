@@ -459,6 +459,8 @@ export const PlaylistsService = {
    * @param organizationId - The organization ID
    * @param widgetId - The widget ID to prefetch data for
    * @param options - Optional widget options for discriminator calculation
+   * @param opts.widgetConfigId - Existing widget config used to authorize and
+   *   scope config-specific preview data
    * @param opts.preview - When true the fetch is ephemeral: the server caches
    *   the data but does not create a background polling scheduler for these
    *   options (used by the live preview while the user edits a widget).
@@ -469,9 +471,10 @@ export const PlaylistsService = {
     organizationId: string,
     widgetId: number,
     options?: Record<string, any>,
-    opts?: { preview?: boolean }
+    opts?: { preview?: boolean; widgetConfigId?: string }
   ): Promise<{
     data: Record<string, any> | null;
+    discriminator_id?: string | null;
     status:
       | 'cached'
       | 'fetched'
@@ -490,6 +493,7 @@ export const PlaylistsService = {
         body: JSON.stringify({
           options: options || {},
           preview: opts?.preview === true,
+          widget_config_id: opts?.widgetConfigId,
         }),
       });
 

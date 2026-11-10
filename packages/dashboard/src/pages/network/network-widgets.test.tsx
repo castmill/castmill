@@ -140,6 +140,15 @@ const selectWidget = async (name: RegExp) => {
   return screen.findByRole('heading', { level: 2, name: name });
 };
 
+const deferred = <T,>() => {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((done) => (resolve = done));
+  return { promise, resolve };
+};
+
+const rowText = (name: RegExp) =>
+  screen.getByRole('option', { name }).textContent;
+
 describe('NetworkWidgets', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -873,5 +882,110 @@ describe('NetworkWidgets', () => {
     await waitFor(() =>
       expect(toastSpies.error).toHaveBeenCalledWith('Failed to load widgets.')
     );
+  });
+  describe('saves while the catalog is loading', () => {
+    const savedWeather = { ...weather, access: 'except' as const };
+    const savedSummary = {
+      all: 1,
+      except: 2,
+      selected: 1,
+      hidden: 0,
+      total: 4,
+    };
+
+    it('ignores a filter reload requested before the save', async () => {
+      renderPage();
+      await selectWidget(/Weather/);
+
+      const stale = deferred<NetworkWidgetAccessList>();
+      vi.mocked(NetworkService.listWidgetAccess).mockReturnValueOnce(
+        stale.promise
+      );
+      fireEvent.change(screen.getByLabelText('Filter by type'), {
+        target: { value: 'system' },
+      });
+
+      vi.mocked(NetworkService.listWidgetAccess).mockResolvedValue(
+        widgetPage([savedWeather, spotify, image], { summary: savedSummary })
+      );
+      vi.mocked(NetworkService.setWidgetAccess).mockResolvedValue(savedWeather);
+      fireEvent.click(
+        await screen.findByRole('radio', { name: /^All except/ })
+      );
+
+      await waitFor(() => expect(rowText(/Weather/)).toContain('All except 0'));
+      stale.resolve(widgetPage([weather, spotify, image]));
+      await stale.promise;
+      await new Promise((done) => setTimeout(done, 0));
+
+      expect(rowText(/Weather/)).toContain('All except 0');
+      expect(
+        screen.getByRole('button', { name: /^Excluding\s*2$/ })
+      ).toBeInTheDocument();
+      expect(NetworkService.listWidgetAccess).toHaveBeenLastCalledWith(
+        expect.objectContaining({ page: 1, kind: 'system' })
+      );
+    });
+
+    it('ignores a load-more page requested before the save', async () => {
+      vi.mocked(NetworkService.listWidgetAccess).mockResolvedValueOnce(
+        widgetPage([weather, realty], {
+          pagination: {
+            page: 1,
+            page_size: 50,
+            total_count: 4,
+            total_pages: 2,
+          },
+        })
+      );
+      renderPage();
+      await selectWidget(/Weather/);
+
+      const stale = deferred<NetworkWidgetAccessList>();
+      vi.mocked(NetworkService.listWidgetAccess).mockReturnValueOnce(
+        stale.promise
+      );
+      fireEvent.click(await screen.findByRole('button', { name: 'Load more' }));
+
+      vi.mocked(NetworkService.listWidgetAccess).mockResolvedValue(
+        widgetPage([savedWeather, realty], {
+          summary: savedSummary,
+          pagination: {
+            page: 1,
+            page_size: 50,
+            total_count: 4,
+            total_pages: 2,
+          },
+        })
+      );
+      vi.mocked(NetworkService.setWidgetAccess).mockResolvedValue(savedWeather);
+      fireEvent.click(
+        await screen.findByRole('radio', { name: /^All except/ })
+      );
+
+      await waitFor(() =>
+        expect(NetworkService.listWidgetAccess).toHaveBeenLastCalledWith(
+          expect.objectContaining({ page: 1 })
+        )
+      );
+      stale.resolve(
+        widgetPage([spotify, image], {
+          pagination: {
+            page: 2,
+            page_size: 50,
+            total_count: 4,
+            total_pages: 2,
+          },
+        })
+      );
+      await stale.promise;
+      await new Promise((done) => setTimeout(done, 0));
+
+      expect(
+        await screen.findByRole('button', { name: /^Excluding\s*2$/ })
+      ).toBeInTheDocument();
+      expect(screen.queryByRole('option', { name: /Spotify/ })).toBeNull();
+      expect(rowText(/Weather/)).toContain('All except 0');
+    });
   });
 });

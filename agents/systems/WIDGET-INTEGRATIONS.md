@@ -96,6 +96,41 @@ end
 # Constraint: Exactly one of organization_id or widget_config_id must be set
 ```
 
+### organization_integration_settings
+
+Non-secret values a **network admin** sets per organization, shared by every integration that
+declares the same settings `key`. Organization users cannot see or change them. Typical use: identity
+that many widgets share, such as the agency and office IDs of a real estate office, used by every
+property listing widget so the organization only ever lists its own offices' listings.
+
+An integration opts in through its `pull_config`:
+
+```json
+"organization_settings": {
+  "key": "property-listing",
+  "name": "Property listings",
+  "description": "The agency and offices whose listings the organization shows.",
+  "schema": {
+    "agency": { "type": "string", "label": "Agency", "required": true, "order": 1 },
+    "office_ids": { "type": "list", "label": "Office IDs", "order": 2 }
+  }
+}
+```
+
+- Field types: `string`, `number`, `boolean` and `list` (of texts); optional `label`, `description`,
+  `placeholder`, `required` and `order`. Keys match `^[a-z0-9][a-z0-9_-]{0,63}$`; up to 20 fields.
+- Definitions come from integrations of system widgets and of the network's widgets; when several
+  declare a key, the most recently updated declaration wins.
+- Fetchers and choice providers receive the values as `credentials["organization_settings"]`
+  (`Integrations.get_fetch_credentials/2`), next to the credentials, so playlist items can never
+  override them.
+- Network admin API: `GET /dashboard/network/organizations/:id/integration-settings` (definitions with
+  values), `PUT …/:key` (`{"settings": {...}}`; unknown fields are dropped, empty optional values
+  removed, invalid fields return 422 with `required`, `invalid`, `too_long` or `too_many`) and
+  `DELETE …/:key`. Dashboard: the sliders action on the network Organizations page.
+- Migrations can write values before the declaring widgets exist with
+  `Castmill.Widgets.Integrations.OrganizationSettings.store/4`.
+
 ### widget_integration_data
 
 Caches data from PULL or PUSH operations.
@@ -151,6 +186,24 @@ A fetcher may also implement the optional `choices/3` callback to list values fo
 options_schema fields that declare `choices` (listings, photos, calendars), so users
 pick them visually instead of typing identifiers. See
 [WIDGET-OPTION-CHOICES.md](./WIDGET-OPTION-CHOICES.md).
+
+### Refresh Modes
+
+Pull integrations have a `refresh_mode`:
+
+- `scheduled` (default): the behavior described above, with repeatable polling every
+  `pull_interval_seconds`.
+- `on_demand`: no repeatable jobs. Data is refreshed only when it is read (device playlists, the
+  widget data endpoint, dashboard previews) and older than `pull_interval_seconds`. Missing data is
+  fetched synchronously, stale data is served while one deduplicated refresh is queued, and failing
+  sources back off. Use it for sources with per-call costs or many rarely shown configurations
+  (e.g. property listings). Widget packages set it with `"refresh_mode": "on_demand"` in their
+  integration definition. See [INTEGRATION-ON-DEMAND-REFRESH.md](./INTEGRATION-ON-DEMAND-REFRESH.md).
+
+All fetch paths build fetcher options with `Castmill.Widgets.Integrations.Refresh.fetch_options/3`:
+item options may override only the `pull_config` keys that the widget declares in its
+`options_schema` (e.g. a default `feed_url`), so integration settings such as service URLs can never
+be redirected by a playlist item.
 
 ### Serve-Time Filtering (max_items)
 
