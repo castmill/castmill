@@ -873,13 +873,41 @@ defmodule Castmill.Resources do
 
   @doc """
     Removes a playlist.
-    Returns {:error, :playlist_has_channels} if the playlist is used in any channels.
+    Returns {:error, :playlist_has_channels} if the playlist is used in any channels,
+    or {:error, :playlist_has_automations} if an automation rule references it.
   """
   def delete_playlist(%Playlist{} = playlist) do
-    if playlist_has_channels?(playlist) do
-      {:error, :playlist_has_channels}
-    else
-      Repo.delete(playlist)
+    case Repo.transaction(fn ->
+           locked_playlist =
+             Repo.one(
+               from(p in Playlist,
+                 where: p.id == ^playlist.id,
+                 lock: "FOR UPDATE"
+               )
+             )
+
+           cond do
+             is_nil(locked_playlist) ->
+               Repo.rollback(:not_found)
+
+             playlist_has_channels?(locked_playlist) ->
+               Repo.rollback(:playlist_has_channels)
+
+             Castmill.Automations.playlist_referenced?(
+               locked_playlist.organization_id,
+               locked_playlist.id
+             ) ->
+               Repo.rollback(:playlist_has_automations)
+
+             true ->
+               case Repo.delete(locked_playlist) do
+                 {:ok, deleted} -> deleted
+                 {:error, changeset} -> Repo.rollback(changeset)
+               end
+           end
+         end) do
+      {:ok, deleted} -> {:ok, deleted}
+      {:error, reason} -> {:error, reason}
     end
   end
 

@@ -715,6 +715,7 @@
   "sidebar": {
     "organization": "Organisation",
     "channels": "Kanaler",
+    "automations": "Automatiseringar",
     "teams": "Team",
     "usage": "Användning",
     "devices": "Enheter",
@@ -1737,6 +1738,227 @@
         "cursor": "Lägg till konfigurationen i ~/.cursor/mcp.json för alla projekt eller i .cursor/mcp.json i ett projekt och aktivera sedan servern under Cursor Settings > MCP.",
         "other": "Konfigurera en fjärr-MCP-server med dessa inställningar."
       }
+    }
+  },
+  "automations": {
+    "title": "Automatiseringar",
+    "description": "Låt skärmarna reagera på händelser, till exempel genom att avbryta uppspelningen med annat innehåll vid vissa tider.",
+    "new": "Ny automatisering",
+    "newDescription": "Ge automatiseringen ett namn. Du kan lägga till regler och tilldela skärmar efteråt.",
+    "namePlaceholder": "t.ex. Vårerbjudande varje timme",
+    "created": "Automatiseringen \"{{name}}\" skapades",
+    "deleted": "Automatiseringen \"{{name}}\" togs bort",
+    "saved": "Automatiseringen sparades",
+    "enabled": "Aktiverad",
+    "disabled": "Inaktiverad",
+    "disabledHint": "Inaktiverade automatiseringar körs aldrig på skärmarna.",
+    "toggleEnabled": "Aktivera eller inaktivera \"{{name}}\"",
+    "noUpcoming": "Inga kommande körningar",
+    "noRules": "Inga regler ännu",
+    "moreRules": "+{{count}} till",
+    "assignmentsDetail": "{{devices}} enheter och {{channels}} kanaler",
+    "noAccess": "Du har inte behörighet att visa automatiseringar.",
+    "deleteTitle": "Ta bort automatisering",
+    "deleteMessage": "Vill du verkligen ta bort \"{{name}}\"? Tilldelade skärmar slutar köra den omedelbart.",
+    "editorDescription": "Reglerna utvärderas uppifrån och ned; om flera utlöses samtidigt vinner den första.",
+    "columns": {
+      "rules": "Regler",
+      "assignments": "Tilldelad till",
+      "nextFiring": "Nästa körning"
+    },
+    "tabs": {
+      "rules": "Regler ({{count}})",
+      "assignments": "Tilldelningar ({{count}})"
+    },
+    "errors": {
+      "loadFailed": "Det gick inte att läsa in automatiseringarna",
+      "saveFailed": "Det gick inte att spara automatiseringen: {{error}}",
+      "deleteFailed": "Det gick inte att ta bort automatiseringen: {{error}}",
+      "runFailed": "Det gick inte att köra regeln: {{error}}"
+    },
+    "rules": {
+      "title": "Regler",
+      "empty": "Den här automatiseringen har inga regler ännu. Lägg till en regel för att bestämma när något händer och vad skärmarna gör.",
+      "add": "Lägg till regel",
+      "edit": "Redigera regel",
+      "save": "Spara regel",
+      "saved": "Reglerna sparades",
+      "when": "När",
+      "then": "Då",
+      "options": "Alternativ",
+      "chooseSource": "Välj vad som utlöser regeln",
+      "chooseAction": "Välj vad skärmarna gör",
+      "cooldown": "Spärrtid (sekunder)",
+      "cooldownHint": "Minsta tid mellan två körningar av regeln på samma skärm. Ange 0 för ingen spärrtid.",
+      "moveUp": "Flytta upp",
+      "moveDown": "Flytta ned",
+      "moveUpN": "Flytta upp regel {{n}}",
+      "moveDownN": "Flytta ned regel {{n}}",
+      "runNow": "Kör nu",
+      "runNowN": "Kör regel {{n}} nu",
+      "editN": "Redigera regel {{n}}",
+      "deleteN": "Ta bort regel {{n}}",
+      "deleteTitle": "Ta bort regel",
+      "deleteMessage": "Vill du verkligen ta bort den här regeln?",
+      "moved": "Regeln flyttades från position {{from}} till {{to}}",
+      "runSuccess": "Regeln skickades till {{count}} skärmar"
+    },
+    "summary": {
+      "hourly": "Varje timme vid :{{minute}}",
+      "interval": "Var {{minutes}}:e minut",
+      "times": "Varje dag kl. {{times}}",
+      "once": "En gång den {{date}} kl. {{time}}",
+      "unknown": "Okänt schema",
+      "dateRange": "från {{start}} till {{end}}",
+      "dateFrom": "från och med {{date}}",
+      "dateUntil": "till och med {{date}}",
+      "noPlaylist": "Ingen spellista vald",
+      "playlistFallback": "spellista nr {{id}}",
+      "interruptImmediately": "Avbryt med \"{{playlist}}\" direkt",
+      "interruptAfterItem": "Avbryt med \"{{playlist}}\" efter aktuellt objekt",
+      "plays": "spela {{count}} gånger",
+      "highPriority": "hög prioritet",
+      "cooldown": "Spärrtid: {{seconds}} s",
+      "unknownType": "Typen \"{{type}}\" stöds inte"
+    },
+    "validation": {
+      "minute": "Ange en minut mellan 0 och 59.",
+      "interval": "Intervallet måste vara ett heltal minuter mellan 5 och 1440.",
+      "timesCount": "Lägg till mellan 1 och 48 tider.",
+      "time": "Ange tider som TT:MM.",
+      "timesDuplicate": "Varje tid får bara förekomma en gång.",
+      "date": "Ange ett giltigt datum.",
+      "schedule": "Välj ett schema.",
+      "weekdays": "Välj minst en veckodag.",
+      "window": "Det dagliga tidsfönstret måste börja innan det slutar.",
+      "dates": "Startdatumet måste vara samma som eller före slutdatumet.",
+      "timezone": "Ange en giltig tidszon, t.ex. Europe/Stockholm, eller lämna fältet tomt.",
+      "playlist": "Välj en spellista.",
+      "start": "Välj när avbrottet börjar.",
+      "maxWait": "Den maximala väntetiden måste vara mellan 0 och 3600 sekunder.",
+      "plays": "Antalet uppspelningar måste vara mellan 1 och 100.",
+      "priority": "Välj en prioritet.",
+      "cooldown": "Spärrtiden måste vara ett heltal sekunder (0 eller mer).",
+      "source": "Välj en utlösare.",
+      "action": "Välj en åtgärd."
+    },
+    "sources": {
+      "clock": {
+        "label": "Klocka",
+        "description": "Vid bestämda tider: varje timme, med några minuters mellanrum, vid fasta tider eller en gång."
+      }
+    },
+    "actions": {
+      "interrupt": {
+        "label": "Avbryt med innehåll",
+        "description": "Spela en spellista tillfälligt och återgå sedan till det vanliga schemat."
+      }
+    },
+    "clock": {
+      "repeat": "Upprepning",
+      "types": {
+        "hourly": "Varje timme",
+        "interval": "Var N:e minut",
+        "times": "Vid tider",
+        "once": "En gång"
+      },
+      "minute": "Minut efter heltimme",
+      "everyMinutes": "Var (minuter)",
+      "intervalHint": "Minst {{min}} minuter, räknat från tidsfönstrets början (eller midnatt).",
+      "times": "Tider på dagen",
+      "timeN": "Tid {{n}}",
+      "removeTime": "Ta bort tid",
+      "removeTimeN": "Ta bort tiden {{time}}",
+      "addTime": "Lägg till tid",
+      "date": "Datum",
+      "time": "Tid",
+      "weekdays": "Veckodagar",
+      "window": "Bara under ett dagligt tidsfönster",
+      "from": "Från",
+      "to": "Till",
+      "dates": "Bara inom ett datumintervall",
+      "startDate": "Startdatum",
+      "endDate": "Slutdatum",
+      "timezone": "Tidszon",
+      "timezonePlaceholder": "Skärmens tidszon",
+      "timezoneHint": "Lämna tomt för att använda varje skärms egen tidszon.",
+      "previewTitle": "Nästa körningar",
+      "previewTimezone": "Visas i {{timezone}}.",
+      "previewDeviceTimezone": "Varje skärm använder sin egen tidszon; här visas de i {{timezone}}.",
+      "previewFailed": "Det gick inte att beräkna nästa körningar.",
+      "previewEmpty": "Det här schemat körs aldrig under de kommande dagarna."
+    },
+    "interrupt": {
+      "playlist": "Spellista",
+      "choosePlaylist": "Sök efter en spellista…",
+      "createPlaylist": "Skapa en spellista",
+      "start": "Starttid",
+      "startModes": {
+        "immediately": "Direkt",
+        "after_current_item": "Efter aktuellt objekt"
+      },
+      "startHints": {
+        "immediately": "Stoppar aktuellt objekt direkt; därefter fortsätter uppspelningen med nästa objekt.",
+        "after_current_item": "Väntar tills aktuellt objekt är klart så att inget klipps av."
+      },
+      "maxWait": "Maximal väntetid (sekunder)",
+      "maxWaitHint": "Om aktuellt objekt är längre än så avbryts det ändå.",
+      "plays": "Uppspelningar",
+      "playsHint": "Hur många gånger spellistan spelas innan uppspelningen återgår.",
+      "priority": "Prioritet",
+      "priorities": {
+        "normal": "Vanlig",
+        "high": "Hög"
+      },
+      "priorityHints": {
+        "normal": "Ett vanligt avbrott.",
+        "high": "Går före avbrott med normal prioritet."
+      }
+    },
+    "assignments": {
+      "description": "Välj de skärmar som kör automatiseringen, direkt eller via deras kanaler.",
+      "devices": "Enheter",
+      "channels": "Kanaler",
+      "none": {
+        "devices": "Inga enheter tilldelade",
+        "channels": "Inga kanaler tilldelade"
+      },
+      "search": {
+        "devices": "Sök enheter…",
+        "channels": "Sök kanaler…"
+      },
+      "remove": "Ta bort {{name}}",
+      "loadFailed": "Det gick inte att läsa in listan",
+      "noResults": "Inga träffar",
+      "save": "Spara tilldelningar",
+      "saved": "Tilldelningarna sparades"
+    },
+    "warnings": {
+      "missing": "{{device}} stöder inte {{capability}}",
+      "unsupported": "Stöder inte {{capability}}",
+      "viaChannels": "Skärmar som nås via kanaler"
+    },
+    "channel": {
+      "title": "Automatiseringar",
+      "manage": "Hantera automatiseringar",
+      "empty": "Inga automatiseringar är tilldelade till den här kanalen.",
+      "loadFailed": "Det gick inte att läsa in kanalens automatiseringar.",
+      "showMarkers": "Visa körningar i kalendern",
+      "firingsThisWeek": "({{count}} den här veckan)",
+      "upcoming": "Körningar den här veckan",
+      "markerLabel": "{{name}} kl. {{time}}"
+    },
+    "device": {
+      "title": "Automatiseringar",
+      "description": "Automatiseringar som enheten kör, tilldelade direkt eller via dess kanaler.",
+      "refresh": "Uppdatera automatiseringar",
+      "empty": "Inga automatiseringar gäller för den här enheten.",
+      "loadFailed": "Det gick inte att läsa in enhetens automatiseringar.",
+      "viaDevice": "Tilldelad direkt",
+      "viaChannel": "Via kanalen {{name}}",
+      "upcoming": "Kommande körningar",
+      "noUpcoming": "Inga körningar de närmaste dagarna.",
+      "timezoneNote": "Tiderna visas i enhetens tidszon ({{timezone}})."
     }
   }
 }

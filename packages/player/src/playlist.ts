@@ -43,7 +43,8 @@ class PlaylistClock {
   // already blocked before the first tick is held at its start offset.
   constructor(
     private readonly duration: number,
-    start = 0
+    start = 0,
+    private readonly loop = true
   ) {
     this.last = this.wrap(start);
   }
@@ -74,7 +75,9 @@ class PlaylistClock {
   }
 
   private wrap(value: number): number {
-    return ((value % this.duration) + this.duration) % this.duration;
+    return this.loop
+      ? ((value % this.duration) + this.duration) % this.duration
+      : value;
   }
 }
 
@@ -111,6 +114,11 @@ export class Playlist extends EventEmitter {
 
   private debugLayer?: HTMLElement;
 
+  /** Id of the JSON playlist this playlist was created from, if any. */
+  public id?: number | string;
+
+  private globals?: PlayerGlobals;
+
   constructor(
     public name: string,
     private resourceManager: ResourceManager
@@ -134,6 +142,8 @@ export class Playlist extends EventEmitter {
       globals = { ...globals, locale: json.locale };
     }
     const playlist = new Playlist(json.name, resourceManager);
+    playlist.id = json.id;
+    playlist.globals = globals;
     const items = json.items || [];
 
     for (let i = 0; i < items.length; i++) {
@@ -198,7 +208,7 @@ export class Playlist extends EventEmitter {
         (acc, item) => acc + item.duration,
         0
       );
-      const clock = new PlaylistClock(duration, this.time);
+      const clock = new PlaylistClock(duration, this.time, loop);
       const skips = { count: 0 };
       const playlistTimer$ = timer$.pipe(
         map((value) => clock.map(value)),
@@ -213,6 +223,10 @@ export class Playlist extends EventEmitter {
           const layerOffset = first ? offset : 0;
           current = element.layer;
           first = 0;
+          this.notifyItemStart(
+            layersWithOffsets.indexOf(element),
+            layersWithOffsets.length
+          );
           const next =
             i + 1 < elements.length
               ? elements[i + 1]
@@ -239,7 +253,8 @@ export class Playlist extends EventEmitter {
                   count: layersWithOffsets.length,
                   duration,
                 })
-            )
+            ),
+            !loop
           );
         })
       );
@@ -251,6 +266,16 @@ export class Playlist extends EventEmitter {
       }
     } else {
       return of('end');
+    }
+  }
+
+  private notifyItemStart(index: number, count: number) {
+    const onItemStart = this.globals?.onItemStart;
+    if (!onItemStart) return;
+    try {
+      onItemStart({ playlistId: this.id, index, count });
+    } catch {
+      // A host callback must never break playback.
     }
   }
 
@@ -267,7 +292,8 @@ export class Playlist extends EventEmitter {
     element: LayerWithOffsets,
     skips: { count: number },
     count: number,
-    play$: Observable<string | number>
+    play$: Observable<string | number>,
+    holdOnReadiness: boolean
   ): Observable<string | number> {
     return new Observable<string | number>((subscriber) => {
       let skipTimer: ReturnType<typeof setTimeout> | undefined;
@@ -296,23 +322,36 @@ export class Playlist extends EventEmitter {
       };
 
       let block: PlayerRuntimeError | undefined;
+      let readinessBlock: PlayerRuntimeError | undefined;
+      const updateClock = () => {
+        if (block || (holdOnReadiness && readinessBlock)) {
+          clock.hold(element.start, element.end);
+        } else {
+          clock.release();
+        }
+      };
       const onBlocked = (value: PlayerRuntimeError | undefined) => {
         block = value;
         if (value) {
-          clock.hold(element.start, element.end);
           if (!waiting && skipTimer === undefined) {
             skipTimer = setTimeout(onBlockExpired, BLOCKED_ITEM_SKIP_MS);
           }
         } else {
           stopTimer();
-          clock.release();
         }
+        updateClock();
       };
 
       // Keeps the clock running while the item waits to be shown, so holds
       // and skips start from the current time.
       const ticking = timer$.subscribe();
       const blocked = layer.blocked$().subscribe(onBlocked);
+      const readiness = holdOnReadiness
+        ? (layer.readiness$?.() ?? of(undefined)).subscribe((value) => {
+            readinessBlock = value;
+            updateClock();
+          })
+        : undefined;
       playing = play$.subscribe({
         next: (value) => subscriber.next(value),
         error: (error) => subscriber.error(error),
@@ -325,6 +364,7 @@ export class Playlist extends EventEmitter {
       return () => {
         stopTimer();
         blocked.unsubscribe();
+        readiness?.unsubscribe();
         playing?.unsubscribe();
         ticking.unsubscribe();
         clock.release();

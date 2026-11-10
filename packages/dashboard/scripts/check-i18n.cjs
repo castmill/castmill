@@ -308,7 +308,9 @@ class I18nChecker {
     const hasI18n =
       content.includes('useI18n') || content.includes('props.store.i18n');
 
-    this.findJSXTextNodes(content, relativePath);
+    if (filePath.endsWith('.tsx')) {
+      this.findJSXTextNodes(content, relativePath);
+    }
     this.findPropsWithStrings(content, relativePath);
     this.findAlertMessages(content, relativePath);
     this.findTableColumns(content, relativePath);

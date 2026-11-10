@@ -30,20 +30,25 @@ const BLOCK = {
 interface FakeLayer {
   name: string;
   blocked: BehaviorSubject<typeof BLOCK | undefined>;
+  readiness: BehaviorSubject<typeof BLOCK | undefined>;
   reportError: ReturnType<typeof spy>;
   duration: () => number;
   blocked$: () => Observable<typeof BLOCK | undefined>;
+  readiness$: () => Observable<typeof BLOCK | undefined>;
   debugInfo: {};
 }
 
 const fakeLayer = (name: string, duration: number): FakeLayer => {
   const blocked = new BehaviorSubject<typeof BLOCK | undefined>(undefined);
+  const readiness = new BehaviorSubject<typeof BLOCK | undefined>(undefined);
   return {
     name,
     blocked,
+    readiness,
     reportError: spy(),
     duration: () => duration,
     blocked$: () => blocked,
+    readiness$: () => readiness,
     debugInfo: {},
   };
 };
@@ -106,10 +111,10 @@ describe('Playlist skipping of blocked items', () => {
     }
   };
 
-  const start = (layers: FakeLayer[]) => {
+  const start = (layers: FakeLayer[], loop = true) => {
     const playlist = new Playlist('zone', {} as any);
     layers.forEach((layer) => playlist.add(layer as unknown as Layer));
-    subscription = playlist.play(renderer, timer$, { loop: true }).subscribe();
+    subscription = playlist.play(renderer, timer$, { loop }).subscribe();
     timer$.next(value);
     return playlist;
   };
@@ -178,6 +183,24 @@ describe('Playlist skipping of blocked items', () => {
     );
     run(2 * TICK_MS);
     expect(names()).to.deep.equal(['a', 'b']);
+  });
+
+  it('holds finite parent playback for nested readiness without skipping', () => {
+    const a = fakeLayer('a', 5000);
+    a.readiness.next(BLOCK);
+    const playlist = start([a], false);
+
+    run(3 * BLOCKED_ITEM_SKIP_MS);
+
+    expect(playlist.time).to.equal(0);
+    expect(a.reportError.called).to.equal(false);
+    expect(names()).to.deep.equal(['a']);
+
+    a.readiness.next(undefined);
+    run(1000);
+
+    expect(playlist.time).to.be.greaterThan(0);
+    expect(a.reportError.called).to.equal(false);
   });
 
   it('only starts the skip delay once a preloading item becomes current', () => {
@@ -316,7 +339,14 @@ describe('Renderer.blank', () => {
 describe('TemplateWidget blocked state', () => {
   const globals = globalThis as any;
   const saved: Record<string, unknown> = {};
-  const keys = ['window', 'document', 'Node', 'HTMLElement', 'Element'];
+  const keys = [
+    'window',
+    'document',
+    'Node',
+    'HTMLElement',
+    'Element',
+    'getComputedStyle',
+  ];
   let dom: any;
 
   beforeEach(() => {
@@ -376,5 +406,102 @@ describe('TemplateWidget blocked state', () => {
     setBlocked!(BLOCK);
     setBlocked!();
     expect(states).to.deep.equal([undefined, BLOCK, undefined]);
+  });
+
+  it('keeps nested blocks local while reporting finite playback readiness', async () => {
+    const blockedByParent: unknown[] = [];
+    const readinessByParent: unknown[] = [];
+    const parent = new TemplateWidget(
+      { getMedia: async (url: string) => url } as any,
+      {
+        widget: { name: 'parent', template: { type: 'text', opts: {} } } as any,
+        config: { options: {}, data: {} } as any,
+        globals: {
+          target: 'poster',
+          setPlaybackBlocked: (_source: object, block?: any) => {
+            blockedByParent.push(block);
+          },
+          setPlaybackReadinessBlocked: (_source: object, block?: any) => {
+            readinessByParent.push(block);
+          },
+        },
+      }
+    );
+    const nested = new TemplateWidget(
+      { getMedia: async (url: string) => url } as any,
+      {
+        widget: { name: 'nested', template: { type: 'text', opts: {} } } as any,
+        config: { options: {}, data: {} } as any,
+        globals: (parent as any).globals,
+      }
+    );
+    const source = {};
+    const blockedStates: unknown[] = [];
+    const parentBlockedStates: unknown[] = [];
+    const parentReadinessStates: unknown[] = [];
+    nested.blocked$().subscribe((block) => blockedStates.push(block));
+    parent.blocked$().subscribe((block) => parentBlockedStates.push(block));
+    parent.readiness$().subscribe((block) => parentReadinessStates.push(block));
+
+    (nested as any).setBlocked(source, BLOCK);
+
+    expect(blockedStates).to.deep.equal([undefined, BLOCK]);
+    expect(parentBlockedStates).to.deep.equal([undefined]);
+    expect(parentReadinessStates).to.deep.equal([undefined, BLOCK]);
+    expect(blockedByParent).to.deep.equal([]);
+    expect(readinessByParent).to.deep.equal([BLOCK]);
+
+    (nested as any).setBlocked(source);
+
+    expect(parentReadinessStates).to.deep.equal([undefined, BLOCK, undefined]);
+    expect(readinessByParent).to.deep.equal([BLOCK, undefined]);
+  });
+
+  it('unregisters nested readiness on unload and restores it when shown again', async () => {
+    const parent = new TemplateWidget(
+      { getMedia: async (url: string) => url } as any,
+      {
+        widget: { name: 'parent', template: { type: 'text', opts: {} } } as any,
+        config: { options: {}, data: {} } as any,
+        globals: {
+          target: 'poster',
+        },
+      }
+    );
+    const nested = new TemplateWidget(
+      { getMedia: async (url: string) => url } as any,
+      {
+        widget: { name: 'nested', template: { type: 'text', opts: {} } } as any,
+        config: { options: {}, data: {} } as any,
+        globals: (parent as any).globals,
+      }
+    );
+    const source = {};
+    const parentReadinessStates: unknown[] = [];
+    parent.readiness$().subscribe((block) => parentReadinessStates.push(block));
+
+    (nested as any).setBlocked(source, BLOCK);
+    await nested.unload();
+    (nested as any).setBlocked(source, BLOCK);
+    expect(parentReadinessStates).to.deep.equal([undefined, BLOCK, undefined]);
+
+    await firstValueFrom(
+      nested.show(dom.window.document.getElementById('root'), 0)
+    );
+    expect(parentReadinessStates).to.deep.equal([
+      undefined,
+      BLOCK,
+      undefined,
+      BLOCK,
+    ]);
+
+    await nested.unload();
+    expect(parentReadinessStates).to.deep.equal([
+      undefined,
+      BLOCK,
+      undefined,
+      BLOCK,
+      undefined,
+    ]);
   });
 });
