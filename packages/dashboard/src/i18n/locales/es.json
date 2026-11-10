@@ -1068,7 +1068,42 @@
       "noConfigurationRequired": "No requiere configuración",
       "optional": "Opcional"
     },
-    "translations": "Traducciones"
+    "translations": "Traducciones",
+    "choices": {
+      "choose": "Elegir",
+      "moveBefore": "Mover antes",
+      "moveAfter": "Mover después",
+      "search": "Buscar…",
+      "loadMore": "Cargar más",
+      "retry": "Reintentar",
+      "noResults": "No hay elementos que coincidan",
+      "noSelection": "Nada seleccionado",
+      "unavailable": "Ya no está disponible",
+      "selectAll": "Seleccionar todo",
+      "selectNone": "No seleccionar nada",
+      "selectedCount": "Seleccionados: {{count}}",
+      "selectedCountMax": "Seleccionados: {{count}} / {{max}}",
+      "done": "Listo",
+      "play": "Reproducir vista previa",
+      "stop": "Detener vista previa",
+      "enlarge": "Ampliar",
+      "dialogDescription": "Selecciona entre los elementos que proporciona la integración.",
+      "dependencyRequired": "Primero define {{fields}}.",
+      "confirmClearTitle": "¿Borrar las selecciones dependientes?",
+      "confirmClearMessage": "Cambiar {{field}} borra {{fields}}.",
+      "minSelection": "Selecciona al menos {{min}}.",
+      "maxSelection": "Selecciona como máximo {{max}}.",
+      "errors": {
+        "widgetNotFound": "Este widget ya no está disponible.",
+        "notAChoiceField": "Este campo no puede listar opciones.",
+        "missingDependency": "Primero define los campos de los que depende este.",
+        "missingCredentials": "La integración no está configurada para esta organización.",
+        "rateLimited": "Demasiadas solicitudes. Espera un momento y vuelve a intentarlo.",
+        "providerError": "La integración no pudo proporcionar los elementos. Inténtalo más tarde.",
+        "networkError": "No se pudo conectar con el servidor. Comprueba tu conexión.",
+        "unknown": "No se pudieron cargar los elementos."
+      }
+    }
   },
   "devices": {
     "orientation": {

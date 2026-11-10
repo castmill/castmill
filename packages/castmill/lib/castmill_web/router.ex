@@ -419,6 +419,13 @@ defmodule CastmillWeb.Router do
       :get_widget
     )
 
+    # List integration-provided choices for a widget option field
+    post(
+      "/organizations/:organization_id/widgets/:widget_id/choices/:field",
+      WidgetChoicesController,
+      :list_choices
+    )
+
     # Check if a widget's integration credentials are configured
     get(
       "/organizations/:organization_id/widgets/:widget_id/credentials-status",

@@ -1035,7 +1035,42 @@
       "noConfigurationRequired": "Ingen konfiguration krävs",
       "optional": "Valfritt"
     },
-    "translations": "Översättningar"
+    "translations": "Översättningar",
+    "choices": {
+      "choose": "Välj",
+      "moveBefore": "Flytta tidigare",
+      "moveAfter": "Flytta senare",
+      "search": "Sök…",
+      "loadMore": "Visa fler",
+      "retry": "Försök igen",
+      "noResults": "Inga matchande objekt",
+      "noSelection": "Inget valt",
+      "unavailable": "Inte längre tillgänglig",
+      "selectAll": "Markera alla",
+      "selectNone": "Avmarkera alla",
+      "selectedCount": "Valda: {{count}}",
+      "selectedCountMax": "Valda: {{count}} / {{max}}",
+      "done": "Klar",
+      "play": "Spela upp förhandsvisning",
+      "stop": "Stoppa förhandsvisning",
+      "enlarge": "Förstora",
+      "dialogDescription": "Välj bland objekten som integrationen tillhandahåller.",
+      "dependencyRequired": "Ange {{fields}} först.",
+      "confirmClearTitle": "Rensa beroende val?",
+      "confirmClearMessage": "Om du ändrar {{field}} rensas {{fields}}.",
+      "minSelection": "Välj minst {{min}}.",
+      "maxSelection": "Välj högst {{max}}.",
+      "errors": {
+        "widgetNotFound": "Widgeten är inte längre tillgänglig.",
+        "notAChoiceField": "Det här fältet kan inte lista val.",
+        "missingDependency": "Ange först fälten som det här fältet beror på.",
+        "missingCredentials": "Integrationen är inte konfigurerad för den här organisationen.",
+        "rateLimited": "För många förfrågningar. Vänta en stund och försök igen.",
+        "providerError": "Integrationen kunde inte hämta objekten. Försök igen senare.",
+        "networkError": "Det gick inte att nå servern. Kontrollera anslutningen.",
+        "unknown": "Det gick inte att läsa in objekten."
+      }
+    }
   },
   "devices": {
     "orientation": {

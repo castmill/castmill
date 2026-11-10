@@ -1,0 +1,420 @@
+@use '../../colors.scss' as *;
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  margin-bottom: 1em;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5em;
+}
+
+.actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.description {
+  font-size: 0.85em;
+  color: #a0a4ad;
+}
+
+.hint,
+.muted {
+  font-size: 0.85em;
+  color: #a0a4ad;
+}
+
+.error {
+  font-size: 0.85em;
+  color: #ff6b6b;
+}
+
+.link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: $highlight-color;
+  cursor: pointer;
+  font: inherit;
+  text-decoration: underline;
+}
+
+.card {
+  display: flex;
+  align-items: center;
+  gap: 0.75em;
+  min-height: 3em;
+  padding: 0.5em;
+  border: 1px solid $separator-color;
+  border-radius: 0.375em;
+  background: $component-background-color;
+
+  .visual {
+    width: 4.5em;
+    height: 3em;
+  }
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  &.busy {
+    opacity: 0.7;
+  }
+}
+
+.tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 7.5em;
+  border: 1px solid $separator-color;
+  border-radius: 0.375em;
+  background: $component-background-color;
+  overflow: hidden;
+
+  &[draggable='true'] {
+    cursor: grab;
+  }
+
+  .visual {
+    width: 100%;
+    height: 5em;
+  }
+
+  &.unavailable {
+    border-style: dashed;
+  }
+}
+
+.tileLabel {
+  padding: 0.25em 0.5em;
+  font-size: 0.8em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.unavailableText {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 5em;
+  padding: 0.5em;
+  font-size: 0.8em;
+  text-align: center;
+  color: #ffb86b;
+}
+
+.tileActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.125em;
+  padding: 0.125em;
+
+  button {
+    background: none;
+    border: none;
+    padding: 0.25em;
+    color: $base-color;
+    cursor: pointer;
+    border-radius: 0.25em;
+
+    &:hover:not(:disabled),
+    &:focus-visible {
+      background: $component-background-color-light;
+    }
+
+    &:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+  }
+}
+
+.badge {
+  position: absolute;
+  top: 0.25em;
+  left: 0.25em;
+  z-index: 1;
+  min-width: 1.5em;
+  padding: 0 0.375em;
+  border-radius: 0.75em;
+  background: $highlight-color;
+  color: $base-color;
+  font-size: 0.75em;
+  line-height: 1.5em;
+  text-align: center;
+}
+
+.skeleton,
+.optionSkeleton {
+  display: block;
+  min-height: 3em;
+  flex: 1 1 auto;
+  border-radius: 0.375em;
+  background: linear-gradient(
+    90deg,
+    $component-background-color 0%,
+    $component-background-color-light 50%,
+    $component-background-color 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.2s linear infinite;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+// Visual (thumbnail / preview)
+.visual {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  background: $background;
+}
+
+.thumbnail,
+.video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.video {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.hidden {
+  visibility: hidden;
+}
+
+.placeholder {
+  font-size: 1.5em;
+  color: $component-color;
+}
+
+.fontSample {
+  padding: 0 0.25em;
+  font-size: 1.25em;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.mediaButton {
+  position: absolute;
+  right: 0.25em;
+  bottom: 0.25em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75em;
+  height: 1.75em;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  color: $base-color;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid $highlight-color;
+  }
+}
+
+// Dialog
+.dialog {
+  width: min(56em, 90vw);
+}
+
+.dialogBody {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75em;
+  min-height: 20em;
+}
+
+.search {
+  padding: 0.5em 0.75em;
+  border: 1px solid $separator-color;
+  border-radius: 0.375em;
+  background: $component-background-color;
+  color: $base-color;
+  font: inherit;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9em;
+}
+
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375em;
+  max-height: 55vh;
+  overflow-y: auto;
+  padding: 0.125em;
+
+  &.grid {
+    flex-direction: row;
+    flex-wrap: wrap;
+
+    .option {
+      flex-direction: column;
+      align-items: stretch;
+      width: 9em;
+      padding: 0;
+
+      .visual {
+        width: 100%;
+        height: 6.5em;
+      }
+
+      .text {
+        padding: 0.25em 0.5em;
+        font-size: 0.85em;
+      }
+    }
+
+    .optionSkeleton {
+      flex: 0 0 9em;
+      height: 8em;
+    }
+  }
+
+  &.cards .option .visual {
+    width: 6em;
+    height: 4em;
+  }
+}
+
+.option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.75em;
+  padding: 0.5em;
+  border: 2px solid transparent;
+  border-radius: 0.375em;
+  background: $component-background-color;
+  cursor: pointer;
+  overflow: hidden;
+
+  &:hover,
+  &:focus-visible {
+    border-color: $component-background-color-light;
+    outline: none;
+  }
+
+  &.selected {
+    border-color: $highlight-color;
+    background: $highlight-background-color;
+  }
+
+  &[aria-disabled='true'] {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+.check {
+  position: absolute;
+  top: 0.25em;
+  left: 0.25em;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5em;
+  height: 1.5em;
+  border: 2px solid $base-color;
+  border-radius: 0.25em;
+  background: rgba(0, 0, 0, 0.5);
+  color: $base-color;
+  font-size: 0.75em;
+
+  .selected & {
+    border-color: $highlight-color;
+    background: $highlight-color;
+  }
+}
+
+.results:not(.grid) .check {
+  position: static;
+  flex-shrink: 0;
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5em;
+}
+
+.enlarged {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.85);
+
+  img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+}
+
+.closeEnlarged {
+  position: absolute;
+  top: 0.5em;
+  right: 0.5em;
+  border: none;
+  border-radius: 50%;
+  padding: 0.5em;
+  background: rgba(0, 0, 0, 0.6);
+  color: $base-color;
+  cursor: pointer;
+}

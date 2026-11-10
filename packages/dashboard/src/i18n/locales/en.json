@@ -1075,7 +1075,42 @@
       "noConfigurationRequired": "No Configuration Required",
       "optional": "Optional"
     },
-    "translations": "Translations"
+    "translations": "Translations",
+    "choices": {
+      "choose": "Choose",
+      "moveBefore": "Move earlier",
+      "moveAfter": "Move later",
+      "search": "Search…",
+      "loadMore": "Load more",
+      "retry": "Retry",
+      "noResults": "No matching items",
+      "noSelection": "Nothing selected",
+      "unavailable": "No longer available",
+      "selectAll": "Select all",
+      "selectNone": "Select none",
+      "selectedCount": "Selected: {{count}}",
+      "selectedCountMax": "Selected: {{count}} / {{max}}",
+      "done": "Done",
+      "play": "Play preview",
+      "stop": "Stop preview",
+      "enlarge": "Enlarge",
+      "dialogDescription": "Select from the items provided by the integration.",
+      "dependencyRequired": "Set {{fields}} first.",
+      "confirmClearTitle": "Clear dependent selections?",
+      "confirmClearMessage": "Changing {{field}} clears {{fields}}.",
+      "minSelection": "Select at least {{min}}.",
+      "maxSelection": "Select at most {{max}}.",
+      "errors": {
+        "widgetNotFound": "This widget is no longer available.",
+        "notAChoiceField": "This field cannot list choices.",
+        "missingDependency": "Set the fields this one depends on first.",
+        "missingCredentials": "The integration is not configured for this organization.",
+        "rateLimited": "Too many requests. Wait a moment and try again.",
+        "providerError": "The integration could not provide the items. Try again later.",
+        "networkError": "Could not reach the server. Check your connection.",
+        "unknown": "Could not load the items."
+      }
+    }
   },
   "devices": {
     "orientation": {

@@ -1040,7 +1040,42 @@
       "noConfigurationRequired": "لا يتطلب أي إعداد",
       "optional": "اختياري"
     },
-    "translations": "الترجمات"
+    "translations": "الترجمات",
+    "choices": {
+      "choose": "اختيار",
+      "moveBefore": "نقل إلى موضع سابق",
+      "moveAfter": "نقل إلى موضع لاحق",
+      "search": "بحث…",
+      "loadMore": "تحميل المزيد",
+      "retry": "إعادة المحاولة",
+      "noResults": "لا توجد عناصر مطابقة",
+      "noSelection": "لم يتم تحديد أي شيء",
+      "unavailable": "لم يعد متاحًا",
+      "selectAll": "تحديد الكل",
+      "selectNone": "إلغاء تحديد الكل",
+      "selectedCount": "المحدد: {{count}}",
+      "selectedCountMax": "المحدد: {{count}} / {{max}}",
+      "done": "تم",
+      "play": "تشغيل المعاينة",
+      "stop": "إيقاف المعاينة",
+      "enlarge": "تكبير",
+      "dialogDescription": "اختر من العناصر التي يوفرها التكامل.",
+      "dependencyRequired": "حدد {{fields}} أولاً.",
+      "confirmClearTitle": "مسح التحديدات التابعة؟",
+      "confirmClearMessage": "تغيير {{field}} يؤدي إلى مسح {{fields}}.",
+      "minSelection": "حدد {{min}} على الأقل.",
+      "maxSelection": "حدد {{max}} على الأكثر.",
+      "errors": {
+        "widgetNotFound": "لم يعد هذا الـ Widget متاحًا.",
+        "notAChoiceField": "لا يمكن لهذا الحقل عرض خيارات.",
+        "missingDependency": "حدد أولاً الحقول التي يعتمد عليها هذا الحقل.",
+        "missingCredentials": "التكامل غير مُعدّ لهذه المؤسسة.",
+        "rateLimited": "طلبات كثيرة جدًا. انتظر قليلاً ثم حاول مرة أخرى.",
+        "providerError": "تعذر على التكامل توفير العناصر. حاول مرة أخرى لاحقًا.",
+        "networkError": "تعذر الوصول إلى الخادم. تحقق من اتصالك.",
+        "unknown": "تعذر تحميل العناصر."
+      }
+    }
   },
   "devices": {
     "orientation": {

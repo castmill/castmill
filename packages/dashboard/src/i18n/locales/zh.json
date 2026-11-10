@@ -1040,7 +1040,42 @@
       "noConfigurationRequired": "无需配置",
       "optional": "可选"
     },
-    "translations": "翻译"
+    "translations": "翻译",
+    "choices": {
+      "choose": "选择",
+      "moveBefore": "前移",
+      "moveAfter": "后移",
+      "search": "搜索…",
+      "loadMore": "加载更多",
+      "retry": "重试",
+      "noResults": "没有匹配的项目",
+      "noSelection": "未选择任何内容",
+      "unavailable": "已不可用",
+      "selectAll": "全选",
+      "selectNone": "全不选",
+      "selectedCount": "已选择：{{count}}",
+      "selectedCountMax": "已选择：{{count}} / {{max}}",
+      "done": "完成",
+      "play": "播放预览",
+      "stop": "停止预览",
+      "enlarge": "放大",
+      "dialogDescription": "从集成提供的项目中选择。",
+      "dependencyRequired": "请先设置{{fields}}。",
+      "confirmClearTitle": "清除相关选择？",
+      "confirmClearMessage": "更改{{field}}将清除{{fields}}。",
+      "minSelection": "至少选择 {{min}} 项。",
+      "maxSelection": "最多选择 {{max}} 项。",
+      "errors": {
+        "widgetNotFound": "此 Widget 已不可用。",
+        "notAChoiceField": "此字段无法列出选项。",
+        "missingDependency": "请先设置此字段所依赖的字段。",
+        "missingCredentials": "此组织尚未配置该集成。",
+        "rateLimited": "请求过多。请稍候再试。",
+        "providerError": "集成无法提供这些项目。请稍后再试。",
+        "networkError": "无法连接到服务器。请检查网络连接。",
+        "unknown": "无法加载项目。"
+      }
+    }
   },
   "devices": {
     "orientation": {

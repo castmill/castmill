@@ -180,6 +180,13 @@ end
   last known data to avoid empty screens.
 ```
 
+### Option Choices
+
+A fetcher may also implement the optional `choices/3` callback to list values for
+options_schema fields that declare `choices` (listings, photos, calendars), so users
+pick them visually instead of typing identifiers. See
+[WIDGET-OPTION-CHOICES.md](./WIDGET-OPTION-CHOICES.md).
+
 ### Refresh Modes
 
 Pull integrations have a `refresh_mode`:

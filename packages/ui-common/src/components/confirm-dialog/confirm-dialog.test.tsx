@@ -29,6 +29,22 @@ describe('ConfirmDialog', () => {
     expect(screen.getByText('Cancel')).toBeInTheDocument();
   });
 
+  it('uses custom button labels', () => {
+    render(() => (
+      <ConfirmDialog
+        show={true}
+        title="Clear?"
+        message="Clears photos"
+        confirmLabel="Rensa"
+        cancelLabel="Avbryt"
+        onConfirm={vi.fn()}
+        onClose={vi.fn()}
+      />
+    ));
+    expect(screen.getByText('Rensa')).toBeInTheDocument();
+    expect(screen.getByText('Avbryt')).toBeInTheDocument();
+  });
+
   it('should not render when not shown', () => {
     render(() => (
       <ConfirmDialog

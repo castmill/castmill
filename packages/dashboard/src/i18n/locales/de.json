@@ -1062,7 +1062,42 @@
       "noConfigurationRequired": "Keine Konfiguration erforderlich",
       "optional": "Fakultativ"
     },
-    "translations": "Übersetzungen"
+    "translations": "Übersetzungen",
+    "choices": {
+      "choose": "Auswählen",
+      "moveBefore": "Nach vorne verschieben",
+      "moveAfter": "Nach hinten verschieben",
+      "search": "Suchen…",
+      "loadMore": "Mehr laden",
+      "retry": "Erneut versuchen",
+      "noResults": "Keine passenden Elemente",
+      "noSelection": "Nichts ausgewählt",
+      "unavailable": "Nicht mehr verfügbar",
+      "selectAll": "Alle auswählen",
+      "selectNone": "Auswahl aufheben",
+      "selectedCount": "Ausgewählt: {{count}}",
+      "selectedCountMax": "Ausgewählt: {{count}} / {{max}}",
+      "done": "Fertig",
+      "play": "Vorschau abspielen",
+      "stop": "Vorschau stoppen",
+      "enlarge": "Vergrößern",
+      "dialogDescription": "Wählen Sie aus den Elementen, die die Integration bereitstellt.",
+      "dependencyRequired": "Legen Sie zuerst {{fields}} fest.",
+      "confirmClearTitle": "Abhängige Auswahl löschen?",
+      "confirmClearMessage": "Wenn Sie {{field}} ändern, wird {{fields}} gelöscht.",
+      "minSelection": "Wählen Sie mindestens {{min}} aus.",
+      "maxSelection": "Wählen Sie höchstens {{max}} aus.",
+      "errors": {
+        "widgetNotFound": "Dieses Widget ist nicht mehr verfügbar.",
+        "notAChoiceField": "Dieses Feld kann keine Auswahl anzeigen.",
+        "missingDependency": "Legen Sie zuerst die Felder fest, von denen dieses Feld abhängt.",
+        "missingCredentials": "Die Integration ist für diese Organisation nicht konfiguriert.",
+        "rateLimited": "Zu viele Anfragen. Warten Sie einen Moment und versuchen Sie es erneut.",
+        "providerError": "Die Integration konnte die Elemente nicht bereitstellen. Versuchen Sie es später erneut.",
+        "networkError": "Der Server ist nicht erreichbar. Überprüfen Sie Ihre Verbindung.",
+        "unknown": "Die Elemente konnten nicht geladen werden."
+      }
+    }
   },
   "devices": {
     "orientation": {
