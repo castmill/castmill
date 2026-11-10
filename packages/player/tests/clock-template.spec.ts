@@ -806,19 +806,30 @@ describe('time-dependent template updates', () => {
           (item) => item.repeat
         );
         const initialDuration = scrollItem.duration;
+        expect(
+          root.querySelector('[data-component="text"] span')?.textContent
+        ).to.equal('Short');
+
+        advanceClock();
+        await flush();
+
+        expect(
+          root.querySelector('[data-component="text"] span')?.textContent
+        ).to.equal('A much longer clock label');
+        expect(scrollItem.duration).to.be.greaterThan(initialDuration);
+      },
+      (root) => {
         const elementPrototype =
           root.ownerDocument.defaultView!.HTMLElement.prototype;
         elementPrototype.getBoundingClientRect = function () {
-          const element = this as HTMLElement;
+          const text = Array.from(
+            root.querySelectorAll('[data-component="text"] span')
+          );
           const width =
-            element.style.willChange === 'transform'
-              ? Array.from(
-                  element.querySelectorAll('[data-component="text"] span')
-                ).reduce(
-                  (total, text) => total + (text.textContent?.length || 0) * 20,
-                  0
-                )
-              : 400;
+            text.reduce(
+              (total, span) => total + (span.textContent?.length || 0) * 20,
+              0
+            ) || 400;
           return {
             x: 0,
             y: 0,
@@ -831,11 +842,6 @@ describe('time-dependent template updates', () => {
             toJSON: () => ({}),
           } as DOMRect;
         };
-
-        advanceClock();
-        await flush();
-
-        expect(scrollItem.duration).to.be.greaterThan(initialDuration);
       }
     );
   });
