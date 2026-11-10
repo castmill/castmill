@@ -281,4 +281,33 @@ describe('Group context, when and limit', () => {
       expect(el.style.fontSize).to.equal('');
     });
   });
+
+  it('fits only texts that declare autofit', async () => {
+    await withDom(async (root) => {
+      await show(
+        root,
+        {
+          type: 'group',
+          name: 'root',
+          components: [
+            { type: 'text', name: 'plain', opts: { text: 'Plain' } },
+            {
+              type: 'text',
+              name: 'fitted',
+              opts: { text: 'Fitted', autofit: {} },
+            },
+          ],
+        },
+        {}
+      );
+
+      const span = (name: string) =>
+        root.querySelector(`[data-name="${name}"] span`) as HTMLElement;
+
+      // Unmeasured texts keep their em size; fitted ones get a computed size
+      // (1em while their container has no size yet).
+      expect(span('plain').style.fontSize).to.equal('');
+      expect(span('fitted').style.fontSize).to.equal('1em');
+    });
+  });
 });
