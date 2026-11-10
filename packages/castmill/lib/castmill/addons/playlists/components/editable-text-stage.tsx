@@ -189,11 +189,14 @@ export const EditableTextStage: Component<EditableTextStageProps> = (props) => {
   };
 
   onMount(() => {
+    const stage = stageRef;
+    if (!stage) return;
+
     // Capture phase: clicks on texts must not reach the player.
-    stageRef?.addEventListener('click', onStageClick, true);
+    stage.addEventListener('click', onStageClick, true);
     // Native (not delegated) so handled keys never reach document listeners.
-    stageRef?.addEventListener('keydown', onStageKeyDown);
-    if (typeof MutationObserver !== 'undefined' && stageRef) {
+    stage.addEventListener('keydown', onStageKeyDown);
+    if (typeof MutationObserver !== 'undefined') {
       observer = new MutationObserver((mutations) => {
         if (
           !props.active &&
@@ -203,7 +206,7 @@ export const EditableTextStage: Component<EditableTextStageProps> = (props) => {
         }
         scheduleScan();
       });
-      observer.observe(stageRef, {
+      observer.observe(stage, {
         childList: true,
         subtree: true,
         characterData: true,
