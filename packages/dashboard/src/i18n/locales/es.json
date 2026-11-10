@@ -1070,6 +1070,22 @@
       "optional": "Opcional"
     },
     "translations": "Traducciones",
+    "editableTexts": {
+      "editTexts": "Editar textos",
+      "doneEditing": "Terminar de editar",
+      "hint": "Haz clic en un texto resaltado para cambiarlo.",
+      "editAria": "Editar texto: {{label}}",
+      "hide": "Ocultar este texto",
+      "reset": "Restablecer original",
+      "counter": "{{length}} / {{max}} caracteres",
+      "listTitle": "Textos editados: {{count}}",
+      "hidden": "Oculto",
+      "empty": "(vacío)",
+      "resetAll": "Restablecer todo",
+      "unusedTitle": "No usados por el widget",
+      "unusedHint": "Estas ediciones ya no corresponden a ningún texto del widget.",
+      "editedIndicator": "Tiene textos editados"
+    },
     "choices": {
       "choose": "Elegir",
       "moveBefore": "Mover antes",

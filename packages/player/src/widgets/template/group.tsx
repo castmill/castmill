@@ -109,10 +109,14 @@ export const Group: Component<GroupProps> = (props) => {
       .slice(0, limit);
   });
 
-  let count = 0;
-  const onReadyAfter = () => {
-    count++;
-    if (count == children().length) {
+  const readyComponents = new Set<number>();
+  const onReadyAfter = (index: number) => {
+    if (readyComponents.has(index)) {
+      props.onLayoutUpdate?.();
+      return;
+    }
+    readyComponents.add(index);
+    if (readyComponents.size === children().length) {
       props.onReady();
     }
   };
@@ -152,7 +156,8 @@ export const Group: Component<GroupProps> = (props) => {
             globals={props.globals}
             timeline={props.timeline}
             resourceManager={props.resourceManager}
-            onReady={onReadyAfter}
+            onReady={() => onReadyAfter(i())}
+            onLayoutUpdate={props.onLayoutUpdate}
           />
         )}
       </For>

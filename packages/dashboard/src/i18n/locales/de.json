@@ -1064,6 +1064,22 @@
       "optional": "Fakultativ"
     },
     "translations": "Übersetzungen",
+    "editableTexts": {
+      "editTexts": "Texte bearbeiten",
+      "doneEditing": "Bearbeitung beenden",
+      "hint": "Klicken Sie auf einen markierten Text, um ihn zu ändern.",
+      "editAria": "Text bearbeiten: {{label}}",
+      "hide": "Diesen Text ausblenden",
+      "reset": "Original wiederherstellen",
+      "counter": "{{length}} / {{max}} Zeichen",
+      "listTitle": "Bearbeitete Texte: {{count}}",
+      "hidden": "Ausgeblendet",
+      "empty": "(leer)",
+      "resetAll": "Alle zurücksetzen",
+      "unusedTitle": "Vom Widget nicht verwendet",
+      "unusedHint": "Diese Änderungen passen zu keinem Text des Widgets mehr.",
+      "editedIndicator": "Hat bearbeitete Texte"
+    },
     "choices": {
       "choose": "Auswählen",
       "moveBefore": "Nach vorne verschieben",

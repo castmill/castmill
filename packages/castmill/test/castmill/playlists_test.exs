@@ -15,6 +15,20 @@ defmodule Castmill.PlaylistsTest do
   alias Castmill.Resources
 
   describe "playlists" do
+    test "get_playlist/1 includes the network's display locale for template formatting" do
+      network = network_fixture(%{default_locale: "sv"})
+      organization = organization_fixture(%{network_id: network.id})
+      playlist = playlist_fixture(%{organization_id: organization.id})
+
+      fetched = Resources.get_playlist(playlist.id)
+
+      assert fetched.locale == "sv"
+      assert fetched |> Jason.encode!() |> Jason.decode!() |> Map.get("locale") == "sv"
+
+      # Playlists not loaded for playback carry no locale.
+      refute playlist |> Jason.encode!() |> Jason.decode!() |> Map.has_key?("locale")
+    end
+
     test "list_playlists/1 returns all playlists" do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})

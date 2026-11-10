@@ -54,6 +54,11 @@ export interface PlayerGlobals {
    */
   setPlaybackBlocked?: (source: object, block?: PlayerRuntimeError) => void;
   /**
+   * Locale for template formatters (day/month names, number separators), e.g.
+   * the organization's display locale sent with each playlist. Defaults to "en".
+   */
+  locale?: string;
+  /**
    * Reports nested playback readiness separately from the nearest item's
    * blocked state, so finite parent playback can wait without skipping it.
    */

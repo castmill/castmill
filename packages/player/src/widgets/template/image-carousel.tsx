@@ -1,6 +1,13 @@
 import gsap from 'gsap';
 
-import { Component, For, JSX, mergeProps, onCleanup, onMount } from 'solid-js';
+import {
+  Component,
+  createEffect,
+  createMemo,
+  For,
+  JSX,
+  onCleanup,
+} from 'solid-js';
 import { TemplateConfig, resolveOption } from './binding';
 import { TemplateComponent, TemplateComponentType } from './template';
 import { ComponentAnimation } from './animation';
@@ -169,32 +176,65 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
 
   props.timeline.add(timelineItem);
 
-  props = mergeProps(carouselTransitionArgs(props.opts.transition), props);
-
-  const style = Object.assign(
-    {
-      width: '100%',
-      height: '100%',
-      'background-size': 'cover',
-      'background-repeat': 'no-repeat',
-      'background-position': 'center',
-      position: 'absolute',
-    },
-    props.style
+  const style = createMemo(() =>
+    Object.assign(
+      {
+        width: '100%',
+        height: '100%',
+        'background-size': 'cover',
+        'background-repeat': 'no-repeat',
+        'background-position': 'center',
+        position: 'absolute',
+      },
+      props.style
+    )
   );
+  let buildId = 0;
+  let hasReportedReady = false;
+  let previousImageUrls: string[] | undefined;
+  let previousImageDuration: number | undefined;
+  let previousTransition: string | undefined;
 
-  onCleanup(() => {
-    props.timeline.remove(timelineItem);
-    timeline.kill();
-  });
-
-  onMount(async () => {
-    if (!parentRef) {
-      props.onReady();
+  const buildTimeline = async () => {
+    const imageUrls = props.opts.images || [];
+    const imageDuration = props.opts.imageDuration;
+    const transition = props.opts.transition;
+    if (
+      previousImageUrls &&
+      previousImageDuration === imageDuration &&
+      previousTransition === transition &&
+      previousImageUrls.length === imageUrls.length &&
+      previousImageUrls.every((url, index) => url === imageUrls[index])
+    ) {
       return;
     }
+    previousImageUrls = imageUrls.slice();
+    previousImageDuration = imageDuration;
+    previousTransition = transition;
+    const transitionArgs = carouselTransitionArgs(transition);
+    const currentBuild = ++buildId;
+    const images = Array.from(parentRef?.children || []) as HTMLElement[];
 
-    const images = parentRef.children;
+    // Resolve all URLs first so the timeline is built in image order no
+    // matter which download finishes first.
+    const urls = await resolveCarouselImageUrls(
+      props.resourceManager,
+      imageUrls.slice(0, images.length)
+    );
+    // A newer build (the images changed meanwhile) or a cleanup supersedes it.
+    if (currentBuild !== buildId) return;
+
+    props.timeline.remove(timelineItem);
+    timeline.pause(0);
+    timeline.clear();
+
+    images.forEach((image) => {
+      // Undo a previous build's transitions, as on a first render.
+      gsap.set(image, {
+        clearProps: 'transform,opacity,visibility,backgroundImage',
+      });
+    });
+
     const targetArgs = {
       duration: TRANSITION_SECONDS,
       x: 0,
@@ -203,34 +243,17 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
       scale: 1,
     };
 
-    // Resolve all URLs first so the timeline is built in image order no
-    // matter which download finishes first.
-    const urls = await resolveCarouselImageUrls(
-      props.resourceManager,
-      props.opts.images.slice(0, images.length)
-    );
-
-    if (urls.length == 1) {
+    if (urls.length === 1) {
       timeline.set(
         images[0],
-        {
-          backgroundImage: backgroundImageUrl(urls[0]),
-        },
+        { backgroundImage: backgroundImageUrl(urls[0]) },
         '<'
       );
-      timeline.duration(props.opts.imageDuration);
-    }
-
-    if (urls.length > 1) {
-      for (let index = 0; index < urls.length; index++) {
+      timeline.duration(imageDuration);
+    } else if (urls.length > 1) {
+      urls.forEach((url, index) => {
         const image = images[index];
-        timeline.set(
-          image,
-          {
-            backgroundImage: backgroundImageUrl(urls[index]),
-          },
-          '<'
-        );
+        timeline.set(image, { backgroundImage: backgroundImageUrl(url) }, '<');
 
         if (index === 0) {
           timeline.set(images[urls.length - 1], {
@@ -239,30 +262,57 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
           });
           timeline.set(image, Object.assign({}, targetArgs));
         } else {
-          timeline.from(image, Object.assign({}, props.startArgs), '<');
+          timeline.from(
+            image,
+            Object.assign({}, props.startArgs || transitionArgs.startArgs),
+            '<'
+          );
           timeline.set(images[index - 1], {
             visibility: 'hidden',
             backgroundImage: 'none',
           });
         }
-        // When the last image fades out we need to cross-fade the first image
-        let position = `>+=${props.opts.imageDuration}`;
+
+        // When the last image leaves, the first one comes back in.
+        let position = `>+=${imageDuration}`;
         if (index === urls.length - 1) {
           timeline.set(images[0], {
             backgroundImage: backgroundImageUrl(urls[0]),
           });
           timeline.from(
             images[0],
-            Object.assign({}, props.startArgs),
+            Object.assign({}, props.startArgs || transitionArgs.startArgs),
             position
           );
-          position = `<`;
+          position = '<';
         }
-        timeline.to(image, Object.assign({}, props.endArgs), position);
-      }
+        timeline.to(
+          image,
+          Object.assign({}, props.endArgs || transitionArgs.endArgs),
+          position
+        );
+      });
     }
 
-    props.onReady();
+    // Show the first image now: seeking a timeline that is already at 0
+    // renders nothing, so it would stay hidden until playback moves.
+    timeline.render(0, false, true);
+    timelineItem.start = props.timeline.isRunning() ? props.timeline.time : 0;
+    props.timeline.add(timelineItem);
+    if (!hasReportedReady) {
+      hasReportedReady = true;
+      props.onReady();
+    }
+  };
+
+  onCleanup(() => {
+    buildId++;
+    props.timeline.remove(timelineItem);
+    timeline.kill();
+  });
+
+  createEffect(() => {
+    void buildTimeline();
   });
 
   return (
@@ -273,7 +323,7 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
       style="position: absolute; width: 100%; height: 100%;"
     >
       <For each={props.opts.images}>
-        {(item, i) => <div data-component="image" style={style}></div>}
+        {(item, i) => <div data-component="image" style={style()}></div>}
       </For>
     </div>
   );

@@ -52,11 +52,12 @@ export class TemplateWidget extends TimelineWidget {
   private fontFaces: { [key: string]: Promise<FontFace> } = {};
   private medias: { [key: string]: string } = {};
   private template: TemplateComponent;
+  private config: TemplateConfig;
   private displayDuration?: number;
   private lastRuntimeDuration?: number;
-  private renderDisposer?: () => void;
   // Emits once the rendered template is ready, e.g. its videos have loaded.
   private ready$?: ReplaySubject<void>;
+  private disposeRender?: () => void;
   // Globals for the rendered components; blocked videos report to this
   // widget's playlist item. Nested blocks are tracked separately for finite
   // parent playback.
@@ -89,11 +90,20 @@ export class TemplateWidget extends TimelineWidget {
       ) => this.setReadinessBlocked(source, block),
     });
 
+    const optionsSchema = opts.widget.options_schema;
+    const declaresOverrides = Array.isArray(optionsSchema)
+      ? optionsSchema.some((option) => option && option.key === 'overrides')
+      : optionsSchema &&
+        Object.prototype.hasOwnProperty.call(optionsSchema, 'overrides');
+    this.config = {
+      ...opts.config,
+      textOverridesEnabled: !declaresOverrides,
+    };
     this.template = TemplateComponent.fromJSON(
       opts.widget.template,
       resourceManager,
       this.globals,
-      opts.config
+      this.config
     );
 
     // Check for display_duration or duration option and set timeline duration
@@ -245,8 +255,8 @@ export class TemplateWidget extends TimelineWidget {
     this.readinessActive = false;
     this.reportReadiness();
 
-    this.renderDisposer?.();
-    this.renderDisposer = undefined;
+    this.disposeRender?.();
+    this.disposeRender = undefined;
     this.ready$?.complete();
     this.ready$ = undefined;
 
@@ -278,16 +288,16 @@ export class TemplateWidget extends TimelineWidget {
 
     return this.load().pipe(
       switchMap(() => {
-        if (el.children.length === 0 || !this.ready$) {
+        if (!this.disposeRender || !this.ready$) {
           const ready$ = new ReplaySubject<void>(1);
           this.ready$ = ready$;
-          this.renderDisposer = render(
+          this.disposeRender = render(
             () =>
               Template({
                 name: this.opts.widget.name,
                 root: this.template,
                 fontScale: this.opts.widget.template.fontScale === true,
-                config: this.opts.config,
+                config: this.config,
                 style: this.opts?.style,
                 timeline: this.timeline,
                 globals: this.globals,

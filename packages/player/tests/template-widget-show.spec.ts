@@ -94,7 +94,7 @@ describe('TemplateWidget.show', () => {
     await widget.unload();
     expect(widget.duration()).to.equal(13967);
 
-    widget.show(el, 0).subscribe();
+    const secondShow = firstValueFrom(widget.show(el, 0));
     await flush();
     expect(widget.duration()).to.equal(13967);
 
@@ -103,7 +103,7 @@ describe('TemplateWidget.show', () => {
     Object.defineProperty(rerenderedVideo, 'readyState', { value: 4 });
     rerenderedVideo?.dispatchEvent(new dom.window.Event('loadedmetadata'));
     rerenderedVideo?.dispatchEvent(new dom.window.Event('canplaythrough'));
-    await flush();
+    await secondShow;
     expect(widget.duration()).to.equal(8500);
     await widget.unload();
   });

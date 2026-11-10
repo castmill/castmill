@@ -11,6 +11,7 @@ import {
   isLocationValueValid,
   normalizeFormValue,
   normalizeWidgetOptionsForApi,
+  resolvePlaybackLocale,
   getFieldChoices,
   choiceDependencies,
   dependentChoiceFields,
@@ -20,6 +21,16 @@ import {
   type SchemaAttributeType,
 } from './widget-config';
 import { WidgetChoicesError } from '../services/playlists.service';
+
+describe('WidgetConfig - Playback Locale', () => {
+  it('uses the network display locale instead of the dashboard language', () => {
+    expect(resolvePlaybackLocale('sv')).toBe('sv');
+  });
+
+  it('defaults to English when no network display locale is available', () => {
+    expect(resolvePlaybackLocale()).toBe('en');
+  });
+});
 
 describe('WidgetConfig - Collection Parsing', () => {
   it('should parse collection string with media type filter', () => {

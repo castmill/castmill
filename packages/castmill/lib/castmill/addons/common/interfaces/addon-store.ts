@@ -61,6 +61,7 @@ export type SetSearchParams = (
 
 export interface AddonStore {
   organizations: { selectedId: string };
+  networkSettings?: { defaultLocale?: string };
   socket: Socket;
   env: Env;
 

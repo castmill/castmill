@@ -1,4 +1,12 @@
-import { Component, JSX, mergeProps, onCleanup, onMount, For } from 'solid-js';
+import {
+  Component,
+  createMemo,
+  JSX,
+  mergeProps,
+  onCleanup,
+  onMount,
+  For,
+} from 'solid-js';
 import { TemplateConfig, resolveOption } from './binding';
 import { TemplateComponent, TemplateComponentType } from './template';
 import { ComponentAnimation, applyAnimations } from './animation';
@@ -552,34 +560,34 @@ export const QRCode: Component<QRCodeProps> = (props: QRCodeProps) => {
   let containerRef: HTMLDivElement | undefined;
   let cleanUpAnimations: () => void;
 
-  // Generate QR code matrix
-  const content = props.opts.content;
-  const hasValidContent = content && content.trim() !== '';
-
-  let matrix: boolean[][] = [];
-  let gridSize = 0;
-
-  if (hasValidContent) {
+  const hasValidContent = createMemo(
+    () => !!props.opts.content && props.opts.content.trim() !== ''
+  );
+  const matrix = createMemo(() => {
+    const content = props.opts.content;
+    if (!content || content.trim() === '') return [];
     try {
-      matrix = generateQRMatrix(content);
-      gridSize = matrix.length;
+      return generateQRMatrix(content);
     } catch (error) {
       console.error('Failed to generate QR code:', error);
+      return [];
     }
-  }
+  });
+  const gridSize = () => matrix().length;
+  const foregroundColor = () => props.opts.foregroundColor ?? '#000000';
+  const backgroundColor = () => props.opts.backgroundColor ?? '#ffffff';
 
-  const foregroundColor = props.opts.foregroundColor ?? '#000000';
-  const backgroundColor = props.opts.backgroundColor ?? '#ffffff';
-
-  const merged = mergeProps(
-    {
-      width: '100%',
-      height: '100%',
-      display: 'flex',
-      'align-items': 'center',
-      'justify-content': 'center',
-    },
-    props.style
+  const merged = createMemo(() =>
+    mergeProps(
+      {
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        'align-items': 'center',
+        'justify-content': 'center',
+      },
+      props.style
+    )
   );
 
   onCleanup(() => {
@@ -599,21 +607,25 @@ export const QRCode: Component<QRCodeProps> = (props: QRCodeProps) => {
   });
 
   // Flatten the matrix so each dark module can be positioned in the SVG view box.
-  const flatMatrix: boolean[] = [];
-  for (let y = 0; y < matrix.length; y++) {
-    for (let x = 0; x < matrix[y].length; x++) {
-      flatMatrix.push(matrix[y][x]);
+  const flatMatrix = createMemo(() => {
+    const qrMatrix = matrix();
+    const flat: boolean[] = [];
+    for (let y = 0; y < qrMatrix.length; y++) {
+      for (let x = 0; x < qrMatrix[y].length; x++) {
+        flat.push(qrMatrix[y][x]);
+      }
     }
-  }
+    return flat;
+  });
 
   return (
     <div
       ref={containerRef}
       data-component="qr-code"
       data-name={props.name}
-      style={merged}
+      style={merged()}
     >
-      {hasValidContent && gridSize > 0 && (
+      {hasValidContent() && gridSize() > 0 && (
         <svg
           style={{
             width: '100%',
@@ -621,20 +633,24 @@ export const QRCode: Component<QRCodeProps> = (props: QRCodeProps) => {
             'max-width': '100%',
             'max-height': '100%',
           }}
-          viewBox={`0 0 ${gridSize} ${gridSize}`}
+          viewBox={`0 0 ${gridSize()} ${gridSize()}`}
           preserveAspectRatio="xMidYMid meet"
           shape-rendering="crispEdges"
         >
-          <rect width={gridSize} height={gridSize} fill={backgroundColor} />
-          <For each={flatMatrix}>
+          <rect
+            width={gridSize()}
+            height={gridSize()}
+            fill={backgroundColor()}
+          />
+          <For each={flatMatrix()}>
             {(isOn, index) =>
               isOn && (
                 <rect
-                  x={index() % gridSize}
-                  y={Math.floor(index() / gridSize)}
+                  x={index() % gridSize()}
+                  y={Math.floor(index() / gridSize())}
                   width="1"
                   height="1"
-                  fill={foregroundColor}
+                  fill={foregroundColor()}
                 />
               )
             }

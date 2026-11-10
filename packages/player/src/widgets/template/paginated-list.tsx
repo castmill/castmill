@@ -2,11 +2,14 @@ import gsap from 'gsap';
 import { getLogicalSize } from '../../utils/logical-size';
 import {
   Component,
+  createEffect,
+  createMemo,
   createSignal,
   For,
   JSX,
   onCleanup,
   onMount,
+  untrack,
 } from 'solid-js';
 import { Item } from './item';
 import { resolveOption, TemplateConfig } from './binding';
@@ -153,9 +156,12 @@ export const PaginatedList: Component<PaginatedListProps> = (props) => {
   let timelineItem: TimelineItem | null = null;
   let readyCount = 0;
   let expectedPages = 0;
+  let pageGeneration = 0;
   let disposed = false;
   let measuredWidth = 0;
   let measuredHeight = 0;
+  let resizeListener: (() => void) | undefined;
+  const resolvedItems = createMemo(() => props.opts.items || []);
 
   const resetTimeline = () => {
     if (timelineItem) {
@@ -167,7 +173,7 @@ export const PaginatedList: Component<PaginatedListProps> = (props) => {
   };
 
   const buildPages = (itemsPerPage: number): any[][] => {
-    const items = props.opts.items || [];
+    const items = resolvedItems();
     if (!items.length) {
       return [];
     }
@@ -210,6 +216,7 @@ export const PaginatedList: Component<PaginatedListProps> = (props) => {
       return;
     }
     expectedPages = pagesArray.length;
+    pageGeneration++;
     readyCount = 0;
     resetTimeline();
     setPages(pagesArray);
@@ -244,7 +251,8 @@ export const PaginatedList: Component<PaginatedListProps> = (props) => {
     props.onReady();
   };
 
-  const onPageReady = () => {
+  const onPageReady = (generation: number) => {
+    if (generation !== pageGeneration) return;
     if (!expectedPages) {
       return;
     }
@@ -256,7 +264,9 @@ export const PaginatedList: Component<PaginatedListProps> = (props) => {
 
   onCleanup(() => {
     disposed = true;
-    window.removeEventListener('resize', measureAndSetupPages);
+    if (resizeListener) {
+      window.removeEventListener('resize', resizeListener);
+    }
     if (timelineItem) {
       props.timeline.remove(timelineItem);
     }
@@ -277,7 +287,8 @@ export const PaginatedList: Component<PaginatedListProps> = (props) => {
   };
 
   onMount(() => {
-    window.addEventListener('resize', measureAndSetupPages);
+    resizeListener = () => measureAndSetupPages();
+    window.addEventListener('resize', resizeListener);
     // Defer measurement to ensure layout is computed
     // This is critical for proper autofit text sizing
     requestAnimationFrame(() => {
@@ -287,10 +298,10 @@ export const PaginatedList: Component<PaginatedListProps> = (props) => {
     });
   });
 
-  const measureAndSetupPages = () => {
+  const measureAndSetupPages = (force = false) => {
     if (disposed) return;
     if (!containerRef) {
-      const itemsPerPage = props.opts.pageSize || props.opts.items.length || 1;
+      const itemsPerPage = props.opts.pageSize || resolvedItems().length || 1;
       setupPages(itemsPerPage);
       return;
     }
@@ -303,7 +314,8 @@ export const PaginatedList: Component<PaginatedListProps> = (props) => {
     }
     if (
       containerRect.width === measuredWidth &&
-      containerRect.height === measuredHeight
+      containerRect.height === measuredHeight &&
+      !force
     )
       return;
     measuredWidth = containerRect.width;
@@ -314,8 +326,8 @@ export const PaginatedList: Component<PaginatedListProps> = (props) => {
       itemsPerPage = props.opts.pageSize;
     } else {
       itemsPerPage = Math.min(
-        Math.max(calcNumItemsPerPage(containerRef, props.opts.items.length), 1),
-        Math.max(props.opts.items.length, 1)
+        Math.max(calcNumItemsPerPage(containerRef, resolvedItems().length), 1),
+        Math.max(resolvedItems().length, 1)
       );
     }
 
@@ -323,6 +335,14 @@ export const PaginatedList: Component<PaginatedListProps> = (props) => {
       setupPages(itemsPerPage, containerRect.width, containerRect.height);
     }
   };
+
+  let previousItems = resolvedItems();
+  createEffect(() => {
+    const items = resolvedItems();
+    if (items === previousItems) return;
+    previousItems = items;
+    untrack(() => measureAndSetupPages(true));
+  });
 
   return (
     <div
@@ -335,23 +355,27 @@ export const PaginatedList: Component<PaginatedListProps> = (props) => {
         style={{ width: '100%', height: '100%', position: 'relative' }}
       >
         <For each={pages()}>
-          {(page, i) => (
-            <Page
-              config={props.config}
-              items={page}
-              component={props.component}
-              style={pageStyle()}
-              timeline={props.timeline}
-              gsapTimeline={gsapTimeline}
-              pageIndex={i()}
-              totalPages={pages().length}
-              duration={props.opts.pageDuration}
-              skipAnimation={pages().length === 1}
-              resourceManager={props.resourceManager}
-              globals={props.globals}
-              onReady={onPageReady}
-            />
-          )}
+          {(page, i) => {
+            const generation = pageGeneration;
+            return (
+              <Page
+                config={props.config}
+                items={page}
+                component={props.component}
+                style={pageStyle()}
+                timeline={props.timeline}
+                gsapTimeline={gsapTimeline}
+                pageIndex={i()}
+                totalPages={pages().length}
+                duration={props.opts.pageDuration}
+                skipAnimation={pages().length === 1}
+                resourceManager={props.resourceManager}
+                globals={props.globals}
+                onReady={() => onPageReady(generation)}
+                onLayoutUpdate={props.onLayoutUpdate}
+              />
+            );
+          }}
         </For>
       </div>
     </div>
@@ -375,13 +399,18 @@ const Page: Component<{
   resourceManager: ResourceManager;
   globals: PlayerGlobals;
   onReady: () => void;
+  onLayoutUpdate?: () => void;
 }> = (props) => {
   let pageRef: HTMLDivElement | undefined;
 
-  let readyCount = 0;
-  const onItemReady = () => {
-    readyCount++;
-    if (readyCount === props.items.length) {
+  const readyItems = new Set<number>();
+  const onItemReady = (index: number) => {
+    if (readyItems.has(index)) {
+      props.onLayoutUpdate?.();
+      return;
+    }
+    readyItems.add(index);
+    if (readyItems.size === props.items.length) {
       props.onReady();
     }
   };
@@ -393,9 +422,9 @@ const Page: Component<{
 
     // Set initial opacity: first page visible, others hidden
     if (props.pageIndex === 0) {
-      gsap.set(pageRef.children, { opacity: 1 });
+      gsap.set(pageRef.children, { autoAlpha: 1 });
     } else {
-      gsap.set(pageRef.children, { opacity: 0 });
+      gsap.set(pageRef.children, { autoAlpha: 0 });
     }
 
     if (!props.skipAnimation) {
@@ -405,20 +434,32 @@ const Page: Component<{
         // Hold for duration then fade out
         props.gsapTimeline.to(
           pageRef.children,
-          { opacity: 0, stagger: 0.1, duration: 1 },
+          {
+            autoAlpha: 0,
+            stagger: 0.1,
+            duration: 1,
+          },
           `+=${props.duration}`
         );
       } else {
         // For subsequent pages, fade in, hold, then fade out
         props.gsapTimeline.to(
           pageRef.children,
-          { opacity: 1, stagger: 0.1, duration: 1 },
+          {
+            autoAlpha: 1,
+            stagger: 0.1,
+            duration: 1,
+          },
           `>` // Start after previous animation
         );
         // Hold for duration then fade out
         props.gsapTimeline.to(
           pageRef.children,
-          { opacity: 0, stagger: 0.1, duration: 1 },
+          {
+            autoAlpha: 0,
+            stagger: 0.1,
+            duration: 1,
+          },
           `>+=${props.duration}`
         );
       }
@@ -435,7 +476,8 @@ const Page: Component<{
             component={props.component}
             timeline={props.timeline}
             resourceManager={props.resourceManager}
-            onReady={onItemReady}
+            onReady={() => onItemReady(i())}
+            onLayoutUpdate={props.onLayoutUpdate}
             globals={props.globals}
           />
         )}

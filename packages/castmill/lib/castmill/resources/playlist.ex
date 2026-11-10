@@ -13,6 +13,10 @@ defmodule Castmill.Resources.Playlist do
     # volume, loop, aspect ratio, auto_zoom,
     field(:settings, :map)
 
+    # The organization's display locale, set when loading a playlist for playback
+    # (see Castmill.Resources.get_playlist/1) so templates format dates and numbers.
+    field(:locale, :string, virtual: true)
+
     belongs_to(:organization, Castmill.Organizations.Organization,
       foreign_key: :organization_id,
       type: Ecto.UUID
@@ -148,6 +152,8 @@ defimpl Jason.Encoder, for: Castmill.Resources.Playlist do
       inserted_at: playlist.inserted_at,
       updated_at: playlist.updated_at
     }
+
+    map = if playlist.locale, do: Map.put(map, :locale, playlist.locale), else: map
 
     Jason.Encode.map(map, opts)
   end

@@ -1077,6 +1077,22 @@
       "optional": "Optional"
     },
     "translations": "Translations",
+    "editableTexts": {
+      "editTexts": "Edit texts",
+      "doneEditing": "Done editing",
+      "hint": "Click a highlighted text to change it.",
+      "editAria": "Edit text: {{label}}",
+      "hide": "Hide this text",
+      "reset": "Reset to original",
+      "counter": "{{length}} / {{max}} characters",
+      "listTitle": "Edited texts: {{count}}",
+      "hidden": "Hidden",
+      "empty": "(empty)",
+      "resetAll": "Reset all",
+      "unusedTitle": "Not used by the widget",
+      "unusedHint": "These edits no longer match a text in the widget.",
+      "editedIndicator": "Has edited texts"
+    },
     "choices": {
       "choose": "Choose",
       "moveBefore": "Move earlier",

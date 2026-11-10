@@ -36,6 +36,22 @@ defmodule Castmill.Widgets.WidgetConfig do
     |> validate_required([:widget_id, :playlist_item_id])
     |> validate_data(:data, :data_schema)
     |> validate_data(:options, :options_schema)
+    |> validate_text_overrides()
+  end
+
+  # `overrides` is reserved for template widgets with editable texts.
+  defp validate_text_overrides(changeset) do
+    validate_change(changeset, :options, fn :options, options ->
+      with %{"overrides" => overrides} <- options,
+           widget_id when not is_nil(widget_id) <- get_field(changeset, :widget_id),
+           %Castmill.Widgets.Widget{} = widget <- Castmill.Widgets.get_widget(widget_id),
+           true <- Castmill.Widgets.TextOverrides.reserved?(widget),
+           {:error, message} <- Castmill.Widgets.TextOverrides.validate(overrides, widget) do
+        [options: "overrides: #{message}"]
+      else
+        _ -> []
+      end
+    end)
   end
 
   def base_query() do

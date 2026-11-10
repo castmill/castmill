@@ -169,7 +169,7 @@ defmodule Castmill.Resources do
         get_playlist_items(id)
         |> Enum.map(&transform_item(&1, playlist.organization_id, display_locale))
 
-      %{playlist | items: items}
+      %{playlist | items: items, locale: display_locale}
     end
   end
 

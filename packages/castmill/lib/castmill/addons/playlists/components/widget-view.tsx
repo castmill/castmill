@@ -5,6 +5,7 @@ import {
   onCleanup,
   createSignal,
   createMemo,
+  untrack,
 } from 'solid-js';
 import { Socket, Channel } from 'phoenix';
 import { authFetch } from '../../common/services/auth-fetch';
@@ -32,6 +33,7 @@ interface WidgetViewProps {
   options: OptionsDict;
   baseUrl?: string;
   socket?: Socket;
+  locale?: string;
   previewDiscriminatorId?: string | null;
   onPreviewDataUpdate?: (data: Record<string, any>) => void;
   /**
@@ -42,6 +44,8 @@ interface WidgetViewProps {
    * changes such as switching temperature units.
    */
   previewData?: Record<string, any> | null;
+  /** Stops playback, e.g. while texts are edited in the preview. */
+  paused?: boolean;
 }
 
 /**
@@ -369,6 +373,7 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
       name: 'widget-playlist', // Dummy name
       items: [dummyJsonPlaylistItem],
       status: 'live',
+      locale: props.locale,
     };
 
     const playlist = Playlist.fromJSON(jsonPlaylist, resourceManager);
@@ -402,6 +407,9 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
     });
 
     // After seek completes, clean up old instances
+    if (untrack(() => props.paused)) {
+      playerUI.stop();
+    }
     playerUI.seek(initialPosition).subscribe({
       complete: () => {
         previousPlayerUI?.destroy();
@@ -412,6 +420,12 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
         previousControls?.destroy();
       },
     });
+  });
+
+  createEffect(() => {
+    if (props.paused) {
+      playerUI?.stop();
+    }
   });
 
   onCleanup(() => {

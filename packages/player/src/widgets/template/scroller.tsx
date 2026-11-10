@@ -1,5 +1,7 @@
 import {
   Component,
+  createEffect,
+  createMemo,
   createSignal,
   For,
   JSX,
@@ -184,6 +186,17 @@ class ScrollAnimation {
     this.updateTransform();
   }
 
+  updateOptions(
+    speed: number,
+    isHorizontal: boolean,
+    isReverse: boolean
+  ): void {
+    this.config.speed = speed;
+    this.config.isHorizontal = isHorizontal;
+    this.config.isReverse = isReverse;
+    this.updateTransform();
+  }
+
   play(): void {
     if (!this._paused) return;
     this._paused = false;
@@ -295,17 +308,44 @@ export const Scroller: Component<ScrollerProps> = (props) => {
   let containerRef: HTMLDivElement | undefined;
   let contentRef: HTMLDivElement | undefined;
   let scrollAnimation: ScrollAnimation | null = null;
-  let timelineItem: TimelineItem;
   let resizeObserver: ResizeObserver | undefined;
   let disposed = false;
+  let timelineItem: TimelineItem | undefined;
+  let optionsFrame: number | undefined;
 
   // Track ready state for all items (original + duplicates)
-  let readyCount = 0;
-  const totalItems = props.opts.items.length * 2; // Duplicated for seamless loop
+  let readyEntries = new Set<object>();
+  let initializedGeneration = -1;
+  const resolvedItems = createMemo(() => props.opts.items || [], undefined, {
+    equals: (previous, next) =>
+      previous.length === next.length &&
+      previous.every((item, index) => item === next[index]),
+  });
+  const initialItems = resolvedItems();
+  let previousItems = initialItems;
+  let totalItems = initialItems.length * 2;
+  let generation = 0;
+  const [itemsRevision, setItemsRevision] = createSignal(0);
+  const duplicatedItems = createMemo(() => {
+    const revision = itemsRevision();
+    return [...resolvedItems(), ...resolvedItems()].map((item) => ({
+      item,
+      revision,
+    }));
+  });
 
-  const onItemReady = () => {
-    readyCount++;
-    if (readyCount >= totalItems) {
+  const onItemReady = (entry: object, itemGeneration: number) => {
+    if (itemGeneration !== generation) return;
+    if (readyEntries.has(entry)) {
+      resizeScroll();
+      return;
+    }
+    readyEntries.add(entry);
+    if (
+      readyEntries.size >= totalItems &&
+      initializedGeneration !== itemGeneration
+    ) {
+      initializedGeneration = itemGeneration;
       // Wait for fonts to be loaded, then defer to next frames for layout
       const waitForFontsAndInit = async () => {
         // Wait for all fonts to be loaded
@@ -318,7 +358,9 @@ export const Scroller: Component<ScrollerProps> = (props) => {
         // Then defer to animation frame for final measurement
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
-            initializeScroll();
+            if (itemGeneration === generation) {
+              initializeScroll();
+            }
           });
         });
       };
@@ -326,7 +368,7 @@ export const Scroller: Component<ScrollerProps> = (props) => {
     }
   };
 
-  const measureScrollDistance = () => {
+  const measureScrollDistance = (gap = props.opts.gap || '2em') => {
     if (!contentRef) return 0;
     const isHorizontal =
       props.opts.direction === 'left' || props.opts.direction === 'right';
@@ -337,7 +379,7 @@ export const Scroller: Component<ScrollerProps> = (props) => {
     // Half the content gives us n items but only (n - 0.5) gaps worth.
     // We need to add half a gap to get the correct scroll distance
     // (which represents n items + n gaps, including the gap to the duplicate's first item)
-    const gapPx = parseGap(props.opts.gap || '2em', contentRef);
+    const gapPx = parseGap(gap, contentRef);
     const halfContentSize = isHorizontal
       ? contentRect.width / 2
       : contentRect.height / 2;
@@ -399,90 +441,128 @@ export const Scroller: Component<ScrollerProps> = (props) => {
     props.onReady();
   };
 
-  const resizeScroll = () => {
+  const resizeScroll = (gap = props.opts.gap || '2em') => {
     if (!scrollAnimation || !timelineItem) return;
-    const distance = measureScrollDistance();
+    const distance = measureScrollDistance(gap);
     if (distance <= 0) return;
     scrollAnimation.resize(distance);
     timelineItem.duration = scrollAnimation.duration * 1000;
   };
 
+  const onResize = () => resizeScroll();
+
   onMount(() => {
-    window.addEventListener('resize', resizeScroll);
+    window.addEventListener('resize', onResize);
     if (typeof ResizeObserver !== 'undefined' && contentRef) {
-      resizeObserver = new ResizeObserver(resizeScroll);
+      resizeObserver = new ResizeObserver(onResize);
       resizeObserver.observe(contentRef);
     }
   });
 
   onCleanup(() => {
     disposed = true;
-    window.removeEventListener('resize', resizeScroll);
     resizeObserver?.disconnect();
+    generation++;
+    window.removeEventListener('resize', onResize);
+    if (optionsFrame !== undefined) {
+      cancelAnimationFrame(optionsFrame);
+    }
     if (timelineItem) props.timeline.remove(timelineItem);
     scrollAnimation?.destroy();
   });
 
-  // If no items, render empty and signal ready
-  if (!props.opts.items || props.opts.items.length === 0) {
-    onMount(() => props.onReady());
-    return (
-      <div
-        data-component="scroller"
-        data-name={props.name}
-        style={props.style}
-      />
-    );
-  }
+  let firstItemsEffect = true;
+  createEffect(() => {
+    const items = resolvedItems();
+    if (items === previousItems) {
+      if (firstItemsEffect && items.length === 0) props.onReady();
+      firstItemsEffect = false;
+      return;
+    }
 
-  const isHorizontal =
-    props.opts.direction === 'left' || props.opts.direction === 'right';
+    firstItemsEffect = false;
+    previousItems = items;
+    generation++;
+    readyEntries = new Set();
+    initializedGeneration = -1;
+    totalItems = items.length * 2;
+    if (timelineItem) props.timeline.remove(timelineItem);
+    timelineItem = undefined;
+    scrollAnimation?.destroy();
+    scrollAnimation = null;
+    setItemsRevision(generation);
+    if (totalItems === 0) props.onReady();
+  });
+
+  const isHorizontal = createMemo(
+    () => props.opts.direction === 'left' || props.opts.direction === 'right'
+  );
 
   // Container style with overflow hidden
-  const containerStyle: JSX.CSSProperties = {
+  const containerStyle = createMemo<JSX.CSSProperties>(() => ({
     ...props.style,
     overflow: 'hidden',
     position: 'relative',
-  };
+  }));
 
   // Content wrapper style - flex container for items
-  const contentStyle: JSX.CSSProperties = {
+  const contentStyle = createMemo<JSX.CSSProperties>(() => ({
     display: 'flex',
-    'flex-direction': isHorizontal ? 'row' : 'column',
+    'flex-direction': isHorizontal() ? 'row' : 'column',
     gap: props.opts.gap || '2em',
     'will-change': 'transform',
     'flex-wrap': 'nowrap',
-    'white-space': isHorizontal ? 'nowrap' : undefined,
+    'white-space': isHorizontal() ? 'nowrap' : undefined,
     // Set initial transform to prevent clipping before animation initializes
-    transform: isHorizontal ? 'translateX(0px)' : 'translateY(0px)',
-  };
+    transform: isHorizontal() ? 'translateX(0px)' : 'translateY(0px)',
+  }));
 
-  // Duplicate items for seamless infinite scroll
-  const duplicatedItems = [...props.opts.items, ...props.opts.items];
+  createEffect(() => {
+    const direction = props.opts.direction || 'left';
+    const speed = props.opts.speed || 100;
+    const horizontal = direction === 'left' || direction === 'right';
+    const reverse = direction === 'right' || direction === 'down';
+    const gap = props.opts.gap || '2em';
+
+    if (scrollAnimation) {
+      scrollAnimation.updateOptions(speed, horizontal, reverse);
+      if (optionsFrame !== undefined) {
+        cancelAnimationFrame(optionsFrame);
+      }
+      optionsFrame = requestAnimationFrame(() => {
+        optionsFrame = undefined;
+        resizeScroll(gap);
+      });
+    }
+  });
 
   return (
     <div
       ref={(el) => (containerRef = el)}
       data-component="scroller"
       data-name={props.name}
-      style={containerStyle}
+      style={containerStyle()}
     >
-      <div ref={(el) => (contentRef = el)} style={contentStyle}>
-        <For each={duplicatedItems}>
-          {(item, i) => (
+      <div ref={(el) => (contentRef = el)} style={contentStyle()}>
+        <For each={duplicatedItems()}>
+          {(entry) => (
             <div
               style={{
                 'flex-shrink': 0,
-                display: isHorizontal ? 'inline-flex' : 'flex',
+                display: isHorizontal() ? 'inline-flex' : 'flex',
               }}
             >
               <Item
                 config={props.config}
-                context={item}
+                context={entry.item}
                 component={props.component}
                 timeline={props.timeline}
                 resourceManager={props.resourceManager}
-                onReady={onItemReady}
+                onReady={() => onItemReady(entry, entry.revision)}
+                onLayoutUpdate={() => {
+                  resizeScroll();
+                  props.onLayoutUpdate?.();
+                }}
                 globals={props.globals}
               />
             </div>
