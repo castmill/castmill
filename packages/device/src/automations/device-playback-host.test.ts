@@ -274,7 +274,7 @@ describe('DevicePlaybackHost', () => {
   });
 
   it('rewinds the scheduler for prefetched programming discarded on interruption', async () => {
-    const { host, deps, player, queue } = setup();
+    const { deps, player, queue } = setup();
     const rewindProgramming = vi.fn();
     const playbackHost = new DevicePlaybackHost({
       ...deps,
