@@ -297,6 +297,7 @@ export const Scroller: Component<ScrollerProps> = (props) => {
   let scrollAnimation: ScrollAnimation | null = null;
   let timelineItem: TimelineItem;
   let resizeObserver: ResizeObserver | undefined;
+  let disposed = false;
 
   // Track ready state for all items (original + duplicates)
   let readyCount = 0;
@@ -344,6 +345,7 @@ export const Scroller: Component<ScrollerProps> = (props) => {
   };
 
   const initializeScroll = () => {
+    if (disposed) return;
     if (!containerRef || !contentRef) {
       props.onReady();
       return;
@@ -414,6 +416,7 @@ export const Scroller: Component<ScrollerProps> = (props) => {
   });
 
   onCleanup(() => {
+    disposed = true;
     window.removeEventListener('resize', resizeScroll);
     resizeObserver?.disconnect();
     if (timelineItem) props.timeline.remove(timelineItem);

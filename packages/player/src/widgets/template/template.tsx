@@ -158,6 +158,9 @@ export const Template: Component<{
     if (size === null || size === appliedSize) return;
     appliedSize = size;
     el.style.fontSize = size + 'px';
+    const resizeEvent = document.createEvent('Event');
+    resizeEvent.initEvent('resize', false, false);
+    window.dispatchEvent(resizeEvent);
   };
 
   // The player attaches layers (hidden but laid out) before showing them, so

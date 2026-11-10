@@ -192,6 +192,163 @@ describe('TemplateWidget.show', () => {
     }
   });
 
+  it('remeasures scroller duration when the legacy font baseline changes', async () => {
+    let templateWidth = 960;
+    const prototype = dom.window.HTMLElement.prototype;
+    const originalGetBoundingClientRect = prototype.getBoundingClientRect;
+    const originalClientWidth = Object.getOwnPropertyDescriptor(
+      prototype,
+      'clientWidth'
+    );
+    const originalClientHeight = Object.getOwnPropertyDescriptor(
+      prototype,
+      'clientHeight'
+    );
+    Object.defineProperty(prototype, 'clientWidth', {
+      configurable: true,
+      get() {
+        return this.getAttribute('data-component') === 'template'
+          ? templateWidth
+          : 0;
+      },
+    });
+    Object.defineProperty(prototype, 'clientHeight', {
+      configurable: true,
+      get() {
+        return this.getAttribute('data-component') === 'template' ? 540 : 0;
+      },
+    });
+    prototype.getBoundingClientRect = function () {
+      if (
+        this.parentElement?.getAttribute('data-component') === 'scroller' &&
+        this.style.position !== 'absolute'
+      ) {
+        const template = this.closest('[data-component="template"]');
+        const width = Number.parseFloat(template?.style.fontSize || '0') * 40;
+        return {
+          x: 0,
+          y: 0,
+          left: 0,
+          top: 0,
+          right: width,
+          bottom: 20,
+          width,
+          height: 20,
+          toJSON: () => ({}),
+        };
+      }
+      return originalGetBoundingClientRect.call(this);
+    };
+
+    const widget = new TemplateWidget(
+      { getMedia: async (url: string) => url } as any,
+      {
+        widget: {
+          name: 'ticker',
+          template: {
+            type: 'scroller',
+            name: 'ticker',
+            fontScale: true,
+            opts: {
+              items: [{ label: 'first' }],
+              gap: '0px',
+              speed: 100,
+            },
+            component: {
+              type: 'text',
+              name: 'ticker-item',
+              opts: { text: { key: '$.label' } },
+            },
+          },
+        } as any,
+        config: { options: {}, data: {} } as any,
+        globals: { target: 'poster' },
+      }
+    );
+    const el = dom.window.document.getElementById('root');
+
+    try {
+      await firstValueFrom(widget.show(el, 0));
+      expect(widget.duration()).to.equal(1000);
+
+      templateWidth = 1920;
+      dom.window.dispatchEvent(new dom.window.Event('resize'));
+      expect(widget.duration()).to.equal(2000);
+    } finally {
+      prototype.getBoundingClientRect = originalGetBoundingClientRect;
+      if (originalClientWidth) {
+        Object.defineProperty(prototype, 'clientWidth', originalClientWidth);
+      } else {
+        delete (prototype as any).clientWidth;
+      }
+      if (originalClientHeight) {
+        Object.defineProperty(prototype, 'clientHeight', originalClientHeight);
+      } else {
+        delete (prototype as any).clientHeight;
+      }
+      await widget.unload();
+    }
+  });
+
+  it('does not initialize a scroller after cleanup while fonts are loading', async () => {
+    let resolveFonts!: () => void;
+    let markFontsPending!: () => void;
+    const fontsPending = new Promise<void>((resolve) => {
+      markFontsPending = resolve;
+    });
+    const fontsReady = new Promise<void>((resolve) => {
+      resolveFonts = resolve;
+    });
+    Object.defineProperty(dom.window.document, 'fonts', {
+      configurable: true,
+      value: {
+        get ready() {
+          markFontsPending();
+          return fontsReady;
+        },
+      },
+    });
+
+    const widget = new TemplateWidget(
+      { getMedia: async (url: string) => url } as any,
+      {
+        widget: {
+          name: 'ticker',
+          template: {
+            type: 'scroller',
+            name: 'ticker',
+            opts: { items: [{ label: 'first' }], gap: '0px' },
+            component: {
+              type: 'text',
+              name: 'ticker-item',
+              opts: { text: { key: '$.label' } },
+            },
+          },
+        } as any,
+        config: { options: {}, data: {} } as any,
+        globals: { target: 'poster' },
+      }
+    );
+    const el = dom.window.document.getElementById('root');
+    const timeline = (widget as any).timeline;
+    let addedItems = 0;
+    const add = timeline.add.bind(timeline);
+    timeline.add = (item: unknown) => {
+      addedItems++;
+      add(item);
+    };
+
+    widget.show(el, 0).subscribe();
+    await fontsPending;
+    await widget.unload();
+    resolveFonts();
+    await new Promise((resolve) => setTimeout(resolve, 60));
+    await flush();
+
+    expect(addedItems).to.equal(0);
+    expect(timeline.items).to.have.length(0);
+  });
+
   it('disposes observers on unload and renders again when shown', async () => {
     const widget = new TemplateWidget(
       { getMedia: async (url: string) => url } as any,

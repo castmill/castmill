@@ -190,8 +190,8 @@ value":
   "type": "group",
   "opts": { "limit": 5 },
   "components": [
-    { "type": "text", "when": { "key": "$.price" }, "opts": { "text": { "fmt": "{$.price | number} kr" } } },
-    { "type": "text", "when": { "key": "$.fee" }, "opts": { "text": { "fmt": "{$.fee | number} kr/mån" } } }
+    { "type": "text", "when": { "key": "$.price" }, "opts": { "text": { "concat": [{ "key": "$.price" }, " kr"] } } },
+    { "type": "text", "when": { "key": "$.fee" }, "opts": { "text": { "concat": [{ "key": "$.fee" }, " kr/mån"] } } }
   ]
 }
 ```

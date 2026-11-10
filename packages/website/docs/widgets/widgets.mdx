@@ -60,7 +60,7 @@ This widget displays an image for 10 seconds. The `options_schema` defines what 
 :::warning[Critical: Always Use Relative Units]
 **Never use absolute pixel units (`px`) in your widgets!** Digital signage displays come in many resolutions (1080p, 4K, vertical displays, etc.). Using pixels will make your widget look different on each screen size.
 
-Every template widget gets a base font size that follows its rendered size: **1em is 10px when the widget is 1920×1080**, scaled by the smaller of the width and height ratios (5px in a 960×540 zone, 5.625px for a 1080×1920 portrait widget). Sizes in `em` therefore look the same in any player region, layout zone or dashboard preview.
+Templates can opt into a base font size that follows the rendered size by setting `"fontScale": true` on the root template component. For opted-in templates, **1em is 10px when the widget is 1920×1080**, scaled by the smaller of the width and height ratios (5px in a 960×540 zone, 5.625px for a 1080×1920 portrait widget). Sizes in `em` therefore look the same in any player region, layout zone or dashboard preview.
 
 **✅ Use these relative units instead:**
 - **`em`** - Relative to the widget's size (font sizes, padding, margins, borders, box sizes)
