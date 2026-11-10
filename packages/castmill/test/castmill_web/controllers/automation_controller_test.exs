@@ -266,7 +266,7 @@ defmodule CastmillWeb.AutomationControllerTest do
       assert %{"devices" => 1} = json_response(conn, 200)["data"]
       assert_receive %{event: "automation_run", rule: %{"id" => ^rule_id}}
 
-      {:ok, _} = Automations.update_automation(automation, %{"enabled" => false})
+      {:ok, automation} = Automations.update_automation(automation, %{"enabled" => false})
 
       conn =
         build_conn()
