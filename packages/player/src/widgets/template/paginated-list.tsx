@@ -422,9 +422,9 @@ const Page: Component<{
 
     // Set initial opacity: first page visible, others hidden
     if (props.pageIndex === 0) {
-      gsap.set(pageRef.children, { opacity: 1 });
+      gsap.set(pageRef.children, { autoAlpha: 1 });
     } else {
-      gsap.set(pageRef.children, { opacity: 0 });
+      gsap.set(pageRef.children, { autoAlpha: 0 });
     }
 
     if (!props.skipAnimation) {
@@ -434,20 +434,32 @@ const Page: Component<{
         // Hold for duration then fade out
         props.gsapTimeline.to(
           pageRef.children,
-          { opacity: 0, stagger: 0.1, duration: 1 },
+          {
+            autoAlpha: 0,
+            stagger: 0.1,
+            duration: 1,
+          },
           `+=${props.duration}`
         );
       } else {
         // For subsequent pages, fade in, hold, then fade out
         props.gsapTimeline.to(
           pageRef.children,
-          { opacity: 1, stagger: 0.1, duration: 1 },
+          {
+            autoAlpha: 1,
+            stagger: 0.1,
+            duration: 1,
+          },
           `>` // Start after previous animation
         );
         // Hold for duration then fade out
         props.gsapTimeline.to(
           pageRef.children,
-          { opacity: 0, stagger: 0.1, duration: 1 },
+          {
+            autoAlpha: 0,
+            stagger: 0.1,
+            duration: 1,
+          },
           `>+=${props.duration}`
         );
       }

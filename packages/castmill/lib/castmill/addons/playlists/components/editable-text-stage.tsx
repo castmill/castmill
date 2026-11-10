@@ -42,6 +42,66 @@ interface EditableTextStageProps {
 
 const SELECTOR = '[data-editable-key]';
 const MANAGED = 'data-editable-managed';
+const graphemeSegmenter =
+  typeof Intl !== 'undefined' && 'Segmenter' in Intl
+    ? new (Intl as any).Segmenter(undefined, { granularity: 'grapheme' })
+    : undefined;
+const markPattern = (() => {
+  try {
+    return new RegExp('\\p{M}', 'u');
+  } catch {
+    return undefined;
+  }
+})();
+
+const graphemeSegments = (value: string): string[] => {
+  if (graphemeSegmenter) {
+    return Array.from(
+      graphemeSegmenter.segment(value),
+      (part: { segment: string }) => part.segment
+    );
+  }
+
+  const codePoints = Array.from(value);
+  const segments: string[] = [];
+  let joinNext = false;
+  let regionalIndicators = 0;
+  for (const codePoint of codePoints) {
+    const character = codePoint.codePointAt(0)!;
+    const isRegionalIndicator = character >= 0x1f1e6 && character <= 0x1f1ff;
+    const previous = segments.length ? segments[segments.length - 1] : '';
+    const isExtend =
+      markPattern?.test(codePoint) ||
+      /[\u0300-\u036f\u1ab0-\u1aff\u1dc0-\u1dff\u20d0-\u20ff\ufe00-\ufe0f]/.test(
+        codePoint
+      ) ||
+      (character >= 0x1f3fb && character <= 0x1f3ff) ||
+      (character >= 0xe0020 && character <= 0xe007f);
+
+    if (
+      segments.length > 0 &&
+      (isExtend ||
+        joinNext ||
+        codePoint === '\u200d' ||
+        (codePoint === '\n' && previous.endsWith('\r')) ||
+        (isRegionalIndicator && regionalIndicators % 2 === 1))
+    ) {
+      segments[segments.length - 1] += codePoint;
+    } else {
+      segments.push(codePoint);
+    }
+
+    joinNext = codePoint === '\u200d';
+    regionalIndicators = isRegionalIndicator ? regionalIndicators + 1 : 0;
+  }
+  return segments;
+};
+
+const countGraphemes = (value: string): number =>
+  graphemeSegments(value).length;
+
+const truncateGraphemes = (value: string, maxLength: number): string =>
+  graphemeSegments(value).slice(0, maxLength).join('');
 
 interface OpenEditor {
   info: EditableElementInfo;
@@ -75,6 +135,10 @@ export const EditableTextStage: Component<EditableTextStageProps> = (props) => {
       ? Array.from(stageRef.querySelectorAll<HTMLElement>(SELECTOR))
       : [];
 
+  const isInactivePage = (element: HTMLElement) =>
+    !!element.closest('[aria-hidden="true"]') ||
+    window.getComputedStyle(element).visibility === 'hidden';
+
   const scan = () => {
     scanScheduled = false;
     const discovered = new Map<string, string | undefined>();
@@ -84,7 +148,7 @@ export const EditableTextStage: Component<EditableTextStageProps> = (props) => {
       if (!info) continue;
       if (!discovered.has(info.key)) discovered.set(info.key, info.label);
 
-      if (props.active) {
+      if (props.active && !isInactivePage(element)) {
         const name = label(info);
         element.setAttribute(MANAGED, '');
         element.setAttribute('tabindex', '0');
@@ -101,7 +165,9 @@ export const EditableTextStage: Component<EditableTextStageProps> = (props) => {
     // The preview is rebuilt after each change: restore the focus to the text.
     if (refocusKey && props.active) {
       const target = editableElements().find(
-        (element) => element.getAttribute('data-editable-key') === refocusKey
+        (element) =>
+          element.getAttribute('data-editable-key') === refocusKey &&
+          !isInactivePage(element)
       );
       if (target && !stageRef?.contains(document.activeElement)) {
         target.focus();
@@ -128,7 +194,15 @@ export const EditableTextStage: Component<EditableTextStageProps> = (props) => {
     // Native (not delegated) so handled keys never reach document listeners.
     stageRef?.addEventListener('keydown', onStageKeyDown);
     if (typeof MutationObserver !== 'undefined' && stageRef) {
-      observer = new MutationObserver(scheduleScan);
+      observer = new MutationObserver((mutations) => {
+        if (
+          !props.active &&
+          mutations.every((mutation) => mutation.attributeName === 'style')
+        ) {
+          return;
+        }
+        scheduleScan();
+      });
       observer.observe(stageRef, {
         childList: true,
         subtree: true,
@@ -138,6 +212,8 @@ export const EditableTextStage: Component<EditableTextStageProps> = (props) => {
           'data-editable-key',
           'data-editable-label',
           'data-editable-overridden',
+          'aria-hidden',
+          'style',
         ],
       });
     }
@@ -232,13 +308,17 @@ export const EditableTextStage: Component<EditableTextStageProps> = (props) => {
       close();
       return;
     }
-    apply({ text: current.value.slice(0, current.info.maxLength) });
+    apply({ text: truncateGraphemes(current.value, current.info.maxLength) });
   };
 
   const onStageClick = (event: MouseEvent) => {
     if (!props.active) return;
     const target = (event.target as Element | null)?.closest?.(SELECTOR);
-    if (target && stageRef?.contains(target)) {
+    if (
+      target &&
+      stageRef?.contains(target) &&
+      !isInactivePage(target as HTMLElement)
+    ) {
       event.preventDefault();
       event.stopPropagation();
       open(target as HTMLElement);
@@ -248,7 +328,10 @@ export const EditableTextStage: Component<EditableTextStageProps> = (props) => {
   const onStageKeyDown = (event: KeyboardEvent) => {
     if (!props.active || (event.key !== 'Enter' && event.key !== ' ')) return;
     const target = event.target as HTMLElement;
-    if (target?.hasAttribute?.('data-editable-key')) {
+    if (
+      target?.hasAttribute?.('data-editable-key') &&
+      !isInactivePage(target)
+    ) {
       // Space would otherwise also toggle the preview playback.
       event.preventDefault();
       event.stopPropagation();
@@ -283,7 +366,9 @@ export const EditableTextStage: Component<EditableTextStageProps> = (props) => {
 
   const nearLimit = () => {
     const current = editor();
-    return !!current && current.value.length >= current.info.maxLength * 0.8;
+    return (
+      !!current && countGraphemes(current.value) >= current.info.maxLength * 0.8
+    );
   };
 
   return (
@@ -322,11 +407,13 @@ export const EditableTextStage: Component<EditableTextStageProps> = (props) => {
                     class={styles.input}
                     type="text"
                     value={current().value}
-                    maxLength={current().info.maxLength}
                     onInput={(event) =>
                       setEditor({
                         ...current(),
-                        value: event.currentTarget.value,
+                        value: truncateGraphemes(
+                          event.currentTarget.value,
+                          current().info.maxLength
+                        ),
                       })
                     }
                     onKeyDown={onEditorKeyDown}
@@ -339,11 +426,13 @@ export const EditableTextStage: Component<EditableTextStageProps> = (props) => {
                   class={styles.input}
                   rows={3}
                   value={current().value}
-                  maxLength={current().info.maxLength}
                   onInput={(event) =>
                     setEditor({
                       ...current(),
-                      value: event.currentTarget.value,
+                      value: truncateGraphemes(
+                        event.currentTarget.value,
+                        current().info.maxLength
+                      ),
                     })
                   }
                   onKeyDown={onEditorKeyDown}
@@ -352,7 +441,7 @@ export const EditableTextStage: Component<EditableTextStageProps> = (props) => {
               <Show when={nearLimit()}>
                 <div class={styles.counter} aria-live="polite">
                   {props.labels.counter(
-                    current().value.length,
+                    countGraphemes(current().value),
                     current().info.maxLength
                   )}
                 </div>

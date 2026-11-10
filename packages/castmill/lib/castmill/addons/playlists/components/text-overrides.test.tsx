@@ -123,10 +123,9 @@ describe('text override helpers', () => {
     expect(declaresOverridesOption([{ key: 'overrides' }])).toBe(true);
     expect(shouldShowTextOverrides(widget(), {})).toBe(true);
     expect(
-      shouldShowTextOverrides(
-        widget({ template: { type: 'text' } as any }),
-        { overrides: { old: { text: 'Old value' } } }
-      )
+      shouldShowTextOverrides(widget({ template: { type: 'text' } as any }), {
+        overrides: { old: { text: 'Old value' } },
+      })
     ).toBe(true);
     expect(
       shouldShowTextOverrides(
@@ -310,11 +309,7 @@ describe('text override helpers', () => {
       )
     ).toEqual({});
     expect(
-      normalizeWidgetOptionsForIntegration(
-        { overrides: {} } as any,
-        [],
-        true
-      )
+      normalizeWidgetOptionsForIntegration({ overrides: {} } as any, [], true)
     ).toEqual({});
   });
 });
@@ -387,7 +382,11 @@ describe('EditableTextStage', () => {
   };
 
   // Mimics the player: rerenders texts from the overrides.
-  const setup = (initial: TextOverrides = {}, startActive = true) => {
+  const setup = (
+    initial: TextOverrides = {},
+    startActive = true,
+    maxLength = 10
+  ) => {
     const [overrides, setOverrides] = createSignal<TextOverrides>(initial);
     const [active, setActive] = createSignal(startActive);
     const onChange = vi.fn((key: string, value: TextOverride | undefined) =>
@@ -412,7 +411,7 @@ describe('EditableTextStage', () => {
           <div
             data-editable-key="street"
             data-editable-label="Street"
-            data-editable-max-length="10"
+            data-editable-max-length={maxLength}
             data-editable-overridden={
               overrides().street
                 ? 'text' in overrides().street
@@ -463,15 +462,15 @@ describe('EditableTextStage', () => {
     fireEvent.click(text('street').querySelector('span')!);
     const input = await screen.findByLabelText('Gata');
     expect(input).toHaveValue('Storgatan 1');
-    expect(input).toHaveAttribute('maxlength', '10');
+    expect(input).not.toHaveAttribute('maxlength');
     expect(screen.getByRole('dialog')).toHaveAttribute(
       'aria-label',
       'Edit text: Gata'
     );
     expect(screen.getByRole('dialog')).toHaveAttribute('data-modal-overlay');
-    expect(text('street').parentElement?.contains(screen.getByRole('dialog'))).toBe(
-      false
-    );
+    expect(
+      text('street').parentElement?.contains(screen.getByRole('dialog'))
+    ).toBe(false);
     expect(screen.queryByText('Reset to original')).toBeNull();
 
     fireEvent.input(input, { target: { value: 'Hemlig adr' } });
@@ -486,6 +485,38 @@ describe('EditableTextStage', () => {
     expect(onChange).toHaveBeenCalledWith('street', { text: 'Hemlig adr' });
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(text('street')).toHaveTextContent('Hemlig adr');
+  });
+
+  it('counts and truncates by grapheme without splitting emoji sequences', async () => {
+    const { onChange, text } = setup({}, true, 1);
+
+    fireEvent.click(text('street'));
+    const input = await screen.findByLabelText('Gata');
+    const family = '👨‍👩‍👧‍👦';
+    fireEvent.input(input, { target: { value: `${family}x` } });
+
+    expect(input).toHaveValue(family);
+    expect(screen.getByText('1 / 1')).toBeInTheDocument();
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(onChange).toHaveBeenCalledWith('street', { text: family });
+  });
+
+  it('does not make editable texts in inactive pages interactive', async () => {
+    const { onChange } = setup();
+    const hiddenPage = document.createElement('div');
+    hiddenPage.style.visibility = 'hidden';
+    hiddenPage.innerHTML =
+      '<div data-editable-key="hidden" data-editable-label="Hidden"><span>Hidden</span></div>';
+    screen.getByTestId('preview').append(hiddenPage);
+    const hiddenText = hiddenPage.querySelector(
+      '[data-editable-key="hidden"]'
+    )!;
+
+    await waitFor(() => expect(hiddenText).not.toHaveAttribute('tabindex'));
+    fireEvent.click(hiddenText);
+
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(onChange).not.toHaveBeenCalled();
   });
 
   it('keeps the editor visible when its text is near the viewport bottom', async () => {

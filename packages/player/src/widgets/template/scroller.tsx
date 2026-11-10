@@ -186,6 +186,17 @@ class ScrollAnimation {
     this.updateTransform();
   }
 
+  updateOptions(
+    speed: number,
+    isHorizontal: boolean,
+    isReverse: boolean
+  ): void {
+    this.config.speed = speed;
+    this.config.isHorizontal = isHorizontal;
+    this.config.isReverse = isReverse;
+    this.updateTransform();
+  }
+
   play(): void {
     if (!this._paused) return;
     this._paused = false;
@@ -298,6 +309,7 @@ export const Scroller: Component<ScrollerProps> = (props) => {
   let contentRef: HTMLDivElement | undefined;
   let scrollAnimation: ScrollAnimation | null = null;
   let timelineItem: TimelineItem | undefined;
+  let optionsFrame: number | undefined;
 
   // Track ready state for all items (original + duplicates)
   let readyEntries = new Set<object>();
@@ -354,7 +366,7 @@ export const Scroller: Component<ScrollerProps> = (props) => {
     }
   };
 
-  const measureScrollDistance = () => {
+  const measureScrollDistance = (gap = props.opts.gap || '2em') => {
     if (!contentRef) return 0;
     const isHorizontal =
       props.opts.direction === 'left' || props.opts.direction === 'right';
@@ -365,7 +377,7 @@ export const Scroller: Component<ScrollerProps> = (props) => {
     // Half the content gives us n items but only (n - 0.5) gaps worth.
     // We need to add half a gap to get the correct scroll distance
     // (which represents n items + n gaps, including the gap to the duplicate's first item)
-    const gapPx = parseGap(props.opts.gap || '2em', contentRef);
+    const gapPx = parseGap(gap, contentRef);
     const halfContentSize = isHorizontal
       ? contentRect.width / 2
       : contentRect.height / 2;
@@ -426,19 +438,24 @@ export const Scroller: Component<ScrollerProps> = (props) => {
     props.onReady();
   };
 
-  const resizeScroll = () => {
+  const resizeScroll = (gap = props.opts.gap || '2em') => {
     if (!scrollAnimation || !timelineItem) return;
-    const distance = measureScrollDistance();
+    const distance = measureScrollDistance(gap);
     if (distance <= 0) return;
     scrollAnimation.resize(distance);
     timelineItem.duration = scrollAnimation.duration * 1000;
   };
 
-  onMount(() => window.addEventListener('resize', resizeScroll));
+  const onResize = () => resizeScroll();
+
+  onMount(() => window.addEventListener('resize', onResize));
 
   onCleanup(() => {
     generation++;
-    window.removeEventListener('resize', resizeScroll);
+    window.removeEventListener('resize', onResize);
+    if (optionsFrame !== undefined) {
+      cancelAnimationFrame(optionsFrame);
+    }
     if (timelineItem) props.timeline.remove(timelineItem);
     scrollAnimation?.destroy();
   });
@@ -466,8 +483,9 @@ export const Scroller: Component<ScrollerProps> = (props) => {
     if (totalItems === 0) props.onReady();
   });
 
-  const isHorizontal =
-    props.opts.direction === 'left' || props.opts.direction === 'right';
+  const isHorizontal = createMemo(
+    () => props.opts.direction === 'left' || props.opts.direction === 'right'
+  );
 
   // Container style with overflow hidden
   const containerStyle = createMemo<JSX.CSSProperties>(() => ({
@@ -477,16 +495,35 @@ export const Scroller: Component<ScrollerProps> = (props) => {
   }));
 
   // Content wrapper style - flex container for items
-  const contentStyle: JSX.CSSProperties = {
+  const contentStyle = createMemo<JSX.CSSProperties>(() => ({
     display: 'flex',
-    'flex-direction': isHorizontal ? 'row' : 'column',
+    'flex-direction': isHorizontal() ? 'row' : 'column',
     gap: props.opts.gap || '2em',
     'will-change': 'transform',
     'flex-wrap': 'nowrap',
-    'white-space': isHorizontal ? 'nowrap' : undefined,
+    'white-space': isHorizontal() ? 'nowrap' : undefined,
     // Set initial transform to prevent clipping before animation initializes
-    transform: isHorizontal ? 'translateX(0px)' : 'translateY(0px)',
-  };
+    transform: isHorizontal() ? 'translateX(0px)' : 'translateY(0px)',
+  }));
+
+  createEffect(() => {
+    const direction = props.opts.direction || 'left';
+    const speed = props.opts.speed || 100;
+    const horizontal = direction === 'left' || direction === 'right';
+    const reverse = direction === 'right' || direction === 'down';
+    const gap = props.opts.gap || '2em';
+
+    if (scrollAnimation) {
+      scrollAnimation.updateOptions(speed, horizontal, reverse);
+      if (optionsFrame !== undefined) {
+        cancelAnimationFrame(optionsFrame);
+      }
+      optionsFrame = requestAnimationFrame(() => {
+        optionsFrame = undefined;
+        resizeScroll(gap);
+      });
+    }
+  });
 
   return (
     <div
@@ -495,13 +532,13 @@ export const Scroller: Component<ScrollerProps> = (props) => {
       data-name={props.name}
       style={containerStyle()}
     >
-      <div ref={(el) => (contentRef = el)} style={contentStyle}>
+      <div ref={(el) => (contentRef = el)} style={contentStyle()}>
         <For each={duplicatedItems()}>
           {(entry) => (
             <div
               style={{
                 'flex-shrink': 0,
-                display: isHorizontal ? 'inline-flex' : 'flex',
+                display: isHorizontal() ? 'inline-flex' : 'flex',
               }}
             >
               <Item

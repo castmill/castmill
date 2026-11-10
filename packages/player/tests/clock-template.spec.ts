@@ -250,6 +250,141 @@ describe('time-dependent template updates', () => {
     );
   });
 
+  it('rebuilds an unchanged carousel when its resolved transition changes', async () => {
+    await withWidget(
+      {
+        type: 'image-carousel',
+        name: 'transition-carousel',
+        opts: {
+          images: ['first.jpg', 'second.jpg'],
+          imageDuration: 2,
+          transition: {
+            cond: {
+              key: '@now',
+              gte: new Date(2026, 0, 1, 11, 0).getTime(),
+              then: 'fade',
+              else: 'slide',
+            },
+          },
+        },
+      },
+      {},
+      async (_root, widget, _media, advanceClock) => {
+        const timelineItem = ((widget as any).timeline.items as any[]).find(
+          (item) => typeof item.child.getChildren === 'function'
+        );
+        const hasSlideTween = () =>
+          timelineItem.child
+            .getChildren()
+            .some(
+              (tween: any) => tween.vars.x === -100 || tween.vars.x === 100
+            );
+        expect(hasSlideTween()).to.equal(true);
+
+        advanceClock();
+        await flush();
+
+        expect(hasSlideTween()).to.equal(false);
+      }
+    );
+  });
+
+  it('updates scroller speed, direction and gap when resolved options change', async () => {
+    await withWidget(
+      {
+        type: 'scroller',
+        name: 'clock-options-scroller',
+        opts: {
+          items: { key: 'data.items' },
+          speed: {
+            cond: {
+              key: '@now',
+              gte: new Date(2026, 0, 1, 11, 0).getTime(),
+              then: 50,
+              else: 100,
+            },
+          },
+          direction: {
+            cond: {
+              key: '@now',
+              gte: new Date(2026, 0, 1, 11, 0).getTime(),
+              then: 'up',
+              else: 'left',
+            },
+          },
+          gap: {
+            cond: {
+              key: '@now',
+              gte: new Date(2026, 0, 1, 11, 0).getTime(),
+              then: '4em',
+              else: '2em',
+            },
+          },
+        },
+        component: {
+          type: 'text',
+          name: 'item',
+          opts: { text: { key: '$.name' } },
+        },
+      },
+      { items: [{ name: 'one' }, { name: 'two' }] },
+      async (root, widget, _media, advanceClock) => {
+        const scroller = root.querySelector('[data-component="scroller"]')!;
+        const content = scroller.firstElementChild as HTMLElement;
+        const scrollItem = ((widget as any).timeline.items as any[]).find(
+          (item) => typeof item.child.duration === 'function'
+        );
+        const initialDuration = scrollItem.child.duration();
+
+        expect(content.style.flexDirection).to.equal('row');
+        expect(content.style.gap).to.equal('2em');
+
+        advanceClock();
+        await flush();
+
+        expect(content.style.flexDirection).to.equal('column');
+        expect(content.style.gap).to.equal('4em');
+        expect(scrollItem.child.duration()).to.be.greaterThan(initialDuration);
+      }
+    );
+  });
+
+  it('marks only the visible paginated page as interactive', async () => {
+    await withWidget(
+      {
+        type: 'paginated-list',
+        name: 'editable-pages',
+        opts: {
+          items: { key: 'data.items' },
+          pageDuration: 2,
+          pageSize: 1,
+        },
+        component: {
+          type: 'text',
+          name: 'item',
+          opts: { text: { key: '$.name' } },
+        },
+      },
+      { items: [{ name: 'one' }, { name: 'two' }] },
+      async (root, widget) => {
+        const pages = root.querySelectorAll(
+          '[data-component="paginated-list"] > div > div'
+        );
+        expect(pages).to.have.length(2);
+
+        const pageItem = ((widget as any).timeline.items as any[]).find(
+          (item) => item.child && typeof item.child.getChildren === 'function'
+        );
+        pageItem.child.seek(3.5);
+
+        const getVisibility = (page: Element) =>
+          (page.firstElementChild as HTMLElement).style.visibility;
+        expect(getVisibility(pages[0])).to.equal('hidden');
+        expect(getVisibility(pages[1])).not.to.equal('hidden');
+      }
+    );
+  });
+
   it('rebases a clock-updated carousel to the active parent playhead', async () => {
     await withWidget(
       {

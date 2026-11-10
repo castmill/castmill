@@ -6,7 +6,6 @@ import {
   createMemo,
   For,
   JSX,
-  mergeProps,
   onCleanup,
 } from 'solid-js';
 import { TemplateConfig, resolveOption } from './binding';
@@ -177,8 +176,6 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
 
   props.timeline.add(timelineItem);
 
-  props = mergeProps(carouselTransitionArgs(props.opts.transition), props);
-
   const style = createMemo(() =>
     Object.assign(
       {
@@ -196,13 +193,16 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
   let hasReportedReady = false;
   let previousImageUrls: string[] | undefined;
   let previousImageDuration: number | undefined;
+  let previousTransition: string | undefined;
 
   const buildTimeline = async () => {
     const imageUrls = props.opts.images || [];
     const imageDuration = props.opts.imageDuration;
+    const transition = props.opts.transition;
     if (
       previousImageUrls &&
       previousImageDuration === imageDuration &&
+      previousTransition === transition &&
       previousImageUrls.length === imageUrls.length &&
       previousImageUrls.every((url, index) => url === imageUrls[index])
     ) {
@@ -210,6 +210,8 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
     }
     previousImageUrls = imageUrls.slice();
     previousImageDuration = imageDuration;
+    previousTransition = transition;
+    const transitionArgs = carouselTransitionArgs(transition);
     const currentBuild = ++buildId;
     const images = Array.from(parentRef?.children || []) as HTMLElement[];
 
@@ -260,7 +262,11 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
           });
           timeline.set(image, Object.assign({}, targetArgs));
         } else {
-          timeline.from(image, Object.assign({}, props.startArgs), '<');
+          timeline.from(
+            image,
+            Object.assign({}, props.startArgs || transitionArgs.startArgs),
+            '<'
+          );
           timeline.set(images[index - 1], {
             visibility: 'hidden',
             backgroundImage: 'none',
@@ -275,12 +281,16 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
           });
           timeline.from(
             images[0],
-            Object.assign({}, props.startArgs),
+            Object.assign({}, props.startArgs || transitionArgs.startArgs),
             position
           );
           position = '<';
         }
-        timeline.to(image, Object.assign({}, props.endArgs), position);
+        timeline.to(
+          image,
+          Object.assign({}, props.endArgs || transitionArgs.endArgs),
+          position
+        );
       });
     }
 
