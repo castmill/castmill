@@ -24,6 +24,26 @@ export interface LocationValue {
   postalCode?: string;
 }
 
+/**
+ * Takes a field's values from a list provided by the widget's integration
+ * (e.g. listings or photos) instead of free input. See
+ * agents/systems/WIDGET-OPTION-CHOICES.md.
+ */
+export interface ChoicesAttributes {
+  /** Name of the choice list the integration provides. */
+  list: string;
+  display?: 'list' | 'cards' | 'grid';
+  search?: boolean;
+  /** Several values; only on list fields. */
+  multiple?: boolean;
+  /** With multiple: the selection order is kept and can be changed. */
+  ordered?: boolean;
+  min?: number;
+  max?: number;
+  /** Fields whose values the provider needs. */
+  depends_on?: string[];
+}
+
 export interface FieldAttributes {
   type: SimpleType;
   required?: boolean;
@@ -32,6 +52,8 @@ export interface FieldAttributes {
   min?: number;
   max?: number;
   order?: number;
+  /** Only on string fields. */
+  choices?: ChoicesAttributes;
 }
 
 export interface ReferenceAttributes {
@@ -46,6 +68,19 @@ export interface ComplexFieldAttributes {
   schema: Schema;
   required?: boolean;
   default?: any;
+}
+
+/**
+ * A list field. With `choices`, items must be strings.
+ */
+export interface ListFieldAttributes {
+  type: 'list';
+  items: SimpleType | { type: SimpleType };
+  required?: boolean;
+  default?: any[];
+  description?: string;
+  order?: number;
+  choices?: ChoicesAttributes;
 }
 
 /**
@@ -153,6 +188,7 @@ export type Schema = {
     | SimpleType
     | FieldAttributes
     | ComplexFieldAttributes
+    | ListFieldAttributes
     | ReferenceAttributes
     | LayoutFieldAttributes
     | LayoutRefFieldAttributes

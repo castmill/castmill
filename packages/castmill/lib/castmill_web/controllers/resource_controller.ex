@@ -880,6 +880,21 @@ defmodule CastmillWeb.ResourceController do
               }
             })
 
+          {:error, :playlist_has_automations} ->
+            automations =
+              playlist.organization_id
+              |> Castmill.Automations.automations_referencing_playlist(playlist.id)
+              |> Enum.map(&%{id: &1.id, name: &1.name})
+
+            conn
+            |> put_status(:conflict)
+            |> Phoenix.Controller.json(%{
+              errors: %{
+                detail: "Cannot delete playlist that is used in automations",
+                automations: automations
+              }
+            })
+
           {:error, reason} ->
             send_resp(conn, 500, "Error deleting playlist: #{inspect(reason)}")
         end

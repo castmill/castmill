@@ -57,14 +57,19 @@ agents/
 - **[notifications.md](./systems/notifications.md)** - Real-time notification system with WebSocket and REST API
 - **[AI-AGENTS-MCP.md](./systems/AI-AGENTS-MCP.md)** - AI agents as organization members and the MCP server (`/mcp`)
 - **[WIDGET-INTEGRATIONS.md](./systems/WIDGET-INTEGRATIONS.md)** - Widget third-party integration system architecture
+- **[WIDGET-OPTION-CHOICES.md](./systems/WIDGET-OPTION-CHOICES.md)** - Picking widget option values from integration-provided choices
+- **[INTEGRATION-ON-DEMAND-REFRESH.md](./systems/INTEGRATION-ON-DEMAND-REFRESH.md)** - Refreshing pull-integration data only when it is read
 - **[WIDGET-INTEGRATION-API.md](./systems/WIDGET-INTEGRATION-API.md)** - Widget integration API reference
 - **[WIDGET-INTEGRATION-GUIDE.md](./systems/WIDGET-INTEGRATION-GUIDE.md)** - Developer guide for creating integrations
 - **[WIDGET-TEMPLATE-INTEGRATION.md](./systems/WIDGET-TEMPLATE-INTEGRATION.md)** - How integrations work with widget templates
 - **[WIDGET-ASSETS.md](./systems/WIDGET-ASSETS.md)** - Widget asset management architecture (icons, fonts, images)
 - **[WIDGET-SCOPES.md](./systems/WIDGET-SCOPES.md)** - Widget availability per system, network and organization
 - **[LAYOUT-WIDGETS.md](./systems/LAYOUT-WIDGETS.md)** - Layout widgets with circular reference prevention
+- **[AUTOMATIONS.md](./systems/AUTOMATIONS.md)** - Automations: pluggable event sources and actions (clock → interrupt)
 - **[DEVICE-ERROR-REPORTING.md](./systems/DEVICE-ERROR-REPORTING.md)** - Bounded offline-capable player error diagnostics
 - **[SPOTIFY-WIDGET-POC.md](./systems/SPOTIFY-WIDGET-POC.md)** - Spotify "Now Playing" widget proof of concept
+- **[TEMPLATE-VALUE-FORMATTING.md](./systems/TEMPLATE-VALUE-FORMATTING.md)** - Number, date and list formatting in widget templates (`fmt`, `list`, `first`)
+- **[IN-PLACE-TEXT-EDITING.md](./systems/IN-PLACE-TEXT-EDITING.md)** - Editable template texts and per-item text overrides
 - *Coming soon: Authentication, media pipeline, real-time synchronization*
 
 #### Infrastructure (`infrastructure/`)

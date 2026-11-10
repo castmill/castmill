@@ -175,6 +175,44 @@ defmodule Castmill.TeamsTest do
              ] = playlists
     end
 
+    test "add_resource_to_team/4 rejects automations from another organization" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+
+      other_organization =
+        organization_fixture(%{network_id: network.id, name: "Other organization"})
+
+      team = team_fixture(%{organization_id: organization.id})
+
+      {:ok, automation} =
+        Castmill.Automations.create_automation(other_organization.id, %{
+          name: "Foreign automation",
+          rules: []
+        })
+
+      assert {:error, :invalid_resource} =
+               Teams.add_resource_to_team(team.id, "automations", automation.id, [:read])
+
+      assert Teams.list_resources("automations", %{team_id: team.id}) == []
+      assert Teams.count_resources("automations", %{team_id: team.id, search: ""}) == 0
+
+      {:ok, local_automation} =
+        Castmill.Automations.create_automation(organization.id, %{
+          name: "Local automation",
+          rules: []
+        })
+
+      assert {:ok, _} =
+               Teams.add_resource_to_team(
+                 team.id,
+                 "automations",
+                 local_automation.id,
+                 [:read]
+               )
+
+      assert Teams.count_resources("automations", %{team_id: team.id, search: ""}) == 1
+    end
+
     test "remove_user_from_team/2 removes user from team" do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})

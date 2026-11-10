@@ -71,4 +71,43 @@ defmodule Castmill.Widgets.Integrations.Fetcher do
   @callback fetch(credentials :: map(), options :: map()) ::
               {:ok, data :: map(), updated_credentials :: map()}
               | {:error, reason :: term(), credentials :: map()}
+
+  @typedoc "A selectable value for an options_schema field with `choices`."
+  @type choice :: %{
+          required(:value) => String.t(),
+          required(:label) => String.t(),
+          optional(:description) => String.t(),
+          optional(:thumbnail_url) => String.t(),
+          optional(:preview) => %{
+            required(:type) => String.t(),
+            required(:url) => String.t(),
+            optional(:mime_type) => String.t()
+          },
+          optional(:disabled) => boolean()
+        }
+
+  @doc """
+  Lists choices for a widget option (optional).
+
+  Called for options_schema fields declaring `"choices": {"list": list, ...}`.
+
+  ## Parameters
+
+  - `list`: The choice list name from the schema (e.g. `"listings"`, `"images"`)
+  - `params`:
+    - `"options"`: the integration's `pull_config`, plus the values of the field's
+      `depends_on` fields (pull_config wins) and `"display_locale"`
+    - `"query"`: search text, or `""`
+    - `"cursor"`: the `next` value of the previous page, or `nil`
+    - `"values"`: the field's current values; the first page must include the choices
+      for these values that still exist
+  - `credentials`: the resolved network/organization credentials and settings
+
+  Values must be stable identifiers from the source, never URLs. Thumbnail and preview
+  URLs must use https.
+  """
+  @callback choices(list :: String.t(), params :: map(), credentials :: map()) ::
+              {:ok, %{items: [choice()], next: String.t() | nil}} | {:error, term()}
+
+  @optional_callbacks choices: 3
 end

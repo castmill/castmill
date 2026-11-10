@@ -8,10 +8,11 @@ The widget supports several smart components that can be used to create resoluti
 
 ## Data Model
 
-### Formatters
+### Formatting
 
-The data model supports some built-in formatters that can be used to format the data before it is passed to the view.
-Mostly to format numbers and dates.
+Integrations deliver raw values (numbers, ISO 8601 dates, arrays of objects). Templates format them with the
+`fmt`, `list` and `first` bindings below; the formatters live in `format/`. See
+`agents/systems/TEMPLATE-VALUE-FORMATTING.md` for the design.
 
 ## Bindings
 
@@ -139,6 +140,69 @@ This approach ensures all internal elements scale proportionally based on screen
 while numeric options (like `ticker_height: 5`) remain user-friendly without requiring
 users to understand CSS units.
 
+### Format Binding (`fmt`)
+
+A text with placeholders: `{path | formatter:arg | …}`. If any placeholder is empty (missing value, `null`,
+`""`), the whole text is `""`, so units next to a missing value disappear. `{{` and `}}` are literal braces.
+
+```json
+{ "fmt": "{data.price | number} kr" }
+{ "fmt": "{$.start | date:'D/M'} kl.{$.start | date:'HH'}-{$.end | date:'HH'}" }
+```
+
+Paths are the same as `key`: `data.…`, `options.…`, `$.…` (or `$`, the current item), and `@global`
+(`@now` is the current time and re-evaluates every minute; `@locale` is the playlist's locale).
+
+| Formatter | Result |
+|---|---|
+| `number[:decimals[:group[:decimal]]]` | Grouped digits; `decimals` is a count or `auto` (default). Separators default to the locale's. |
+| `date:pattern[:locale]` | Tokens `YYYY YY M MM MMM MMMM D DD d ddd dddd H HH h hh m mm A`; `[text]` is literal. |
+| `timed` | The date, or empty if its time is midnight. |
+| `upper`, `lower`, `capitalize`, `trim` | Text changes. |
+| `truncate:n` | At most `n` characters, then `…`. |
+| `default:'x'` | `x` when empty, so the text is never emptied by this placeholder. |
+
+Dates without an offset are local wall-clock times. Day/month names and number separators are bundled for
+en, es, sv, de, fr, zh, ar, ko and ja (no `Intl` needed on Chrome 38). The locale is the template's
+`options.locale`, else the playlist's `locale` (the organization's display locale), else `en`.
+
+Plain strings are never parsed: always wrap format texts as `{"fmt": …}`. The server rejects invalid
+bindings when a widget is created and warns about plain strings that look like format texts.
+
+### List Binding (`list`)
+
+Builds a list from an array: `where` → `sort` → `item` → drop empty results → `skip` → `limit` → `join`.
+
+```json
+{
+  "list": {
+    "key": "data.viewings",
+    "where": [{ "key": "$.end", "gte": "@now" }],
+    "sort": "$.start",
+    "limit": 2,
+    "item": { "fmt": "{$.start | date:'D/M'} kl.{$.start | date:'HH'}" },
+    "join": ", "
+  }
+}
+```
+
+- `key` (a path) or `items` (a literal array whose elements may contain bindings).
+- `where`: conditions with one of `eq`, `neq`, `gt`, `gte`, `lt`, `lte` or `present: true`. `@now` compares
+  dates as instants.
+- `sort` (a path) with optional `desc: true`; `skip` (leave out the first results); `limit`; `join`
+  returns a string, otherwise an array.
+
+Because empty results are dropped before `limit`, `items` + `where: [{ "key": "$.value", "present": true }]` +
+`limit: 5` shows "the first five facts that have a value".
+
+### First Binding (`first`)
+
+The first value that is not empty. Use it for fallbacks and optional parts:
+
+```json
+{ "first": [{ "key": "options.price_text" }, { "fmt": "{data.price | number} kr" }, "PÅ BEGÄRAN"] }
+```
+
 ### Nested Bindings
 
 All binding types support nested bindings. The values inside `cases`, `then`, `else`, and `concat`
@@ -190,18 +254,20 @@ value":
   "type": "group",
   "opts": { "limit": 5 },
   "components": [
-    { "type": "text", "when": { "key": "$.price" }, "opts": { "text": { "fmt": "{$.price | number} kr" } } },
-    { "type": "text", "when": { "key": "$.fee" }, "opts": { "text": { "fmt": "{$.fee | number} kr/mån" } } }
+    { "type": "text", "when": { "key": "$.price" }, "opts": { "text": { "concat": [{ "key": "$.price" }, " kr"] } } },
+    { "type": "text", "when": { "key": "$.fee" }, "opts": { "text": { "concat": [{ "key": "$.fee" }, " kr/mån"] } } }
   ]
 }
 ```
 
 ### Sizes: use `em`
 
-Every template widget gets a base font size that follows its rendered size: 10px for a
-1920×1080 widget, scaled by the smaller of the width and height ratios (a 960×540 zone gets
-5px, a 1080×1920 portrait widget 5.625px), and updated on resize. Size fonts, boxes, paddings
-and borders in `em` (or `%` of the parent) so a design looks the same in any player region,
+Templates can opt into a base font size that follows their rendered size by setting
+`"fontScale": true` on the root template component. It is 10px for a 1920×1080 widget,
+scaled by the smaller of the width and height ratios (a 960×540 zone gets 5px, a 1080×1920
+portrait widget 5.625px), and updated on resize. Without this option, existing templates
+keep their previous font baseline. For opted-in templates, size fonts, boxes, paddings and
+borders in `em` (or `%` of the parent) so a design looks the same in any player region,
 layout zone or dashboard preview. Avoid `px`, `rem` and viewport units (`vw`, `vh`, `vmin`):
 they don't follow the widget's size.
 
@@ -218,6 +284,22 @@ A component renders when both pass.
 ### Text
 
 Displays text content with support for autofit sizing.
+
+An `editable` attribute lets users replace the text per playlist item from the dashboard preview:
+
+```json
+{
+  "type": "text",
+  "name": "price",
+  "opts": { "text": { "fmt": "{data.price | number} kr" } },
+  "editable": { "key": "price", "label": "Price", "max_length": 40 }
+}
+```
+
+The item's `options.overrides[key]` is `{ "text": "…" }` (shown exactly as typed: no `fmt`, formatters,
+literals or `first` fallbacks apply, while styles and autofit still do) or `{ "hidden": true }` (empty
+text that keeps its box). `key` and `label` can be bindings, e.g. `{ "fmt": "fact.{$.id}" }` for texts
+inside lists. See `agents/systems/IN-PLACE-TEXT-EDITING.md`.
 
 ### Image
 
@@ -247,6 +329,7 @@ The binding system provides type guards for checking binding types:
 - `isSwitchBinding(value)` - Checks for switch bindings
 - `isConditionalBinding(value)` - Checks for conditional bindings
 - `isConcatBinding(value)` - Checks for concat bindings
+- `isFmtBinding(value)`, `isListBinding(value)`, `isFirstBinding(value)` - Check for formatting bindings
 - `isAnyBinding(value)` - Checks if value is any type of binding
 
 ## Resolution Functions
@@ -255,4 +338,5 @@ The binding system provides type guards for checking binding types:
 - `resolveSwitchBinding(binding, config, context, globals)` - Resolves switch bindings
 - `resolveConditionalBinding(binding, config, context, globals)` - Resolves conditional bindings
 - `resolveConcatBinding(binding, config, context, globals)` - Resolves concat bindings
+- `resolveFmtBinding`, `resolveListBinding`, `resolveFirstBinding` - Resolve formatting bindings
 - `resolveOption(option, config, context, globals)` - Universal resolver that handles all binding types

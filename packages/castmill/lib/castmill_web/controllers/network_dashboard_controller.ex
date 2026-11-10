@@ -17,6 +17,7 @@ defmodule CastmillWeb.NetworkDashboardController do
   alias Castmill.Accounts.User
   alias Castmill.Repo
   alias Castmill.Widgets.NetworkAccess
+  alias Castmill.Widgets.Integrations.OrganizationSettings
 
   action_fallback(CastmillWeb.FallbackController)
 
@@ -781,6 +782,77 @@ defmodule CastmillWeb.NetworkDashboardController do
       {:ok, %{is_admin: false, network_id: nil}}
     end
   end
+
+  @doc """
+  Lists the integration settings that apply to an organization of the network
+  (declared by the network's widgets) with their current values.
+  """
+  def list_organization_integration_settings(conn, %{"organization_id" => org_id}) do
+    with {:ok, network_id} <- get_admin_network_id(conn),
+         {:ok, organization} <- network_organization(network_id, org_id) do
+      json(conn, %{
+        data: OrganizationSettings.list_for_organization(network_id, organization.id)
+      })
+    end
+    |> integration_settings_error(conn)
+  end
+
+  @doc "Sets an organization's integration settings for one settings key."
+  def update_organization_integration_settings(
+        conn,
+        %{"organization_id" => org_id, "key" => key} = params
+      ) do
+    with {:ok, network_id} <- get_admin_network_id(conn),
+         {:ok, organization} <- network_organization(network_id, org_id),
+         {:ok, settings} <-
+           OrganizationSettings.put(
+             network_id,
+             organization.id,
+             key,
+             params["settings"],
+             conn.assigns[:current_user].id
+           ) do
+      json(conn, %{data: %{key: key, settings: settings}})
+    end
+    |> integration_settings_error(conn)
+  end
+
+  @doc "Removes an organization's integration settings for one settings key."
+  def delete_organization_integration_settings(
+        conn,
+        %{"organization_id" => org_id, "key" => key}
+      ) do
+    with {:ok, network_id} <- get_admin_network_id(conn),
+         {:ok, organization} <- network_organization(network_id, org_id) do
+      :ok = OrganizationSettings.delete(organization.id, key)
+      send_resp(conn, :no_content, "")
+    end
+    |> integration_settings_error(conn)
+  end
+
+  defp network_organization(network_id, org_id) do
+    with {:ok, uuid} <- Ecto.UUID.cast(org_id),
+         %Organization{network_id: ^network_id} = organization <-
+           Castmill.Organizations.get_organization(uuid) do
+      {:ok, organization}
+    else
+      _ -> {:error, :organization_not_found}
+    end
+  end
+
+  defp integration_settings_error(%Plug.Conn{} = conn, _conn), do: conn
+
+  defp integration_settings_error({:error, :not_admin}, conn),
+    do: conn |> put_status(:forbidden) |> json(%{error: "You must be a network admin"})
+
+  defp integration_settings_error({:error, :organization_not_found}, conn),
+    do: conn |> put_status(:not_found) |> json(%{error: "Organization not found"})
+
+  defp integration_settings_error({:error, :unknown_key}, conn),
+    do: conn |> put_status(:not_found) |> json(%{error: "Unknown integration settings"})
+
+  defp integration_settings_error({:error, {:invalid, errors}}, conn),
+    do: conn |> put_status(:unprocessable_entity) |> json(%{errors: errors})
 
   defp get_admin_network_id(conn) do
     user = conn.assigns[:current_user]

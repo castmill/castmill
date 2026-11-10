@@ -77,6 +77,9 @@ config :castmill, CastmillWeb.Endpoint,
 # Enable dev routes for dashboard and mailbox
 config :castmill, dev_routes: true
 
+# Local integration sources may serve choice thumbnails over plain http.
+config :castmill, Castmill.Widgets.Integrations.Choices, allow_http: true
+
 # Do not include metadata nor timestamps in development logs
 config :logger, :console, format: "[$level] $message\n"
 

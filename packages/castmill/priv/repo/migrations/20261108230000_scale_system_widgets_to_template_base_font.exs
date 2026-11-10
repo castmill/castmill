@@ -1,9 +1,9 @@
 defmodule Castmill.Repo.Migrations.ScaleSystemWidgetsToTemplateBaseFont do
   @moduledoc """
-  Template widgets now get a base font size that follows their rendered size
-  (10px at 1920×1080, see the player's `baseFontSize`). Before, `em` resolved
-  against the page's 16px and `vmin` against the window, whatever the widget's
-  size.
+  The system widget templates opt into a base font size that follows their
+  rendered size (10px at 1920×1080, see the player's `baseFontSize`). Before,
+  `em` resolved against the page's 16px and `vmin` against the window, whatever
+  the widget's size.
 
   Every `em` in a template resolves through its ancestors' font sizes, so
   converting the root font size of the system widgets that use `em` keeps them
@@ -22,24 +22,37 @@ defmodule Castmill.Repo.Migrations.ScaleSystemWidgetsToTemplateBaseFont do
   @factor 1.6
   @vmin_to_em 1.08
 
-  def up, do: update_widgets(&up_size/2)
-  def down, do: update_widgets(&down_size/2)
+  def up, do: update_widgets(&up_size/2, true)
+  def down, do: update_widgets(&down_size/2, false)
 
   # Schemaless, so later Widget schema fields do not break this migration.
-  defp update_widgets(convert) do
+  defp update_widgets(convert, font_scale) do
     from(w in "widgets",
       where: w.slug in ^@slugs,
       select: %{id: w.id, slug: w.slug, template: w.template}
     )
     |> repo().all()
     |> Enum.each(fn %{id: id, slug: slug, template: template} ->
-      case root_font_size(template, &convert.(slug, &1)) do
-        :keep ->
-          :ok
+      converted_template =
+        case root_font_size(template, &convert.(slug, &1)) do
+          :keep -> template
+          converted -> converted
+        end
 
-        template ->
-          from(w in "widgets", where: w.id == ^id)
-          |> repo().update_all(set: [template: template])
+      converted_template =
+        if is_map(converted_template) do
+          if font_scale do
+            Map.put(converted_template, "fontScale", true)
+          else
+            Map.delete(converted_template, "fontScale")
+          end
+        else
+          converted_template
+        end
+
+      if converted_template != template do
+        from(w in "widgets", where: w.id == ^id)
+        |> repo().update_all(set: [template: converted_template])
       end
     end)
   end

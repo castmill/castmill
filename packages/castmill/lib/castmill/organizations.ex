@@ -438,6 +438,7 @@ defmodule Castmill.Organizations do
         "teams" -> :teams
         "widgets" -> :widgets
         "layouts" -> :layouts
+        "automations" -> :automations
         _ -> nil
       end
 
@@ -468,6 +469,7 @@ defmodule Castmill.Organizations do
         :get_timers -> :show
         :set_timers -> :update
         :get_schedule -> :show
+        :get_automations -> :show
         :set_schedule -> :update
         # Keep other atoms as-is
         a when is_atom(a) -> a

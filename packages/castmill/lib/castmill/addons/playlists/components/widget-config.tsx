@@ -2,8 +2,10 @@ import {
   Component,
   For,
   createEffect,
+  createMemo,
   createSignal,
   onCleanup,
+  on,
   Show,
 } from 'solid-js';
 import { authFetch } from '../../common/services/auth-fetch';
@@ -23,6 +25,8 @@ import {
   LayoutRefValue,
   LocationValue,
   LocationFieldAttributes,
+  ChoicesAttributes,
+  ListFieldAttributes,
 } from '@castmill/player';
 import { BsCheckLg } from 'solid-icons/bs';
 import { BsX } from 'solid-icons/bs';
@@ -33,14 +37,35 @@ import {
   useToast,
   Timestamp,
   LocationPicker,
+  ChoicesField,
+  ChoicesFieldLabels,
+  ConfirmDialog,
 } from '@castmill/ui-common';
 import { ResourcesService } from '../services/resources.service';
-import { PlaylistsService } from '../services/playlists.service';
+import {
+  PlaylistsService,
+  WidgetChoicesError,
+} from '../services/playlists.service';
 import { AddonStore } from '../../common/interfaces/addon-store';
 import { getTranslatedWidgetOption } from '../../common/utils/widget-catalog-utils';
 
 import './widget-config.scss';
 import { WidgetView } from './widget-view';
+import { EditableTextStage, EditableTextLabels } from './editable-text-stage';
+import {
+  TextOverridesList,
+  TextOverridesListLabels,
+} from './text-overrides-list';
+import {
+  TextOverride,
+  describeOverrides,
+  getOverrides,
+  setOverride,
+  shouldShowTextOverrides,
+  supportsTextOverrides,
+  templateEditables,
+  translateEditableLabel,
+} from './text-overrides';
 import { LayoutEditor } from '../../common/components/layout-editor';
 import { LayoutRefEditor } from '../../common/components/layout-ref-editor';
 
@@ -64,6 +89,9 @@ interface WidgetConfigProps {
   }) => Promise<void>;
 }
 
+export const resolvePlaybackLocale = (defaultLocale?: string) =>
+  defaultLocale || 'en';
+
 type FormTypes =
   | 'text'
   | 'number'
@@ -76,7 +104,8 @@ type FormTypes =
   | 'layout-ref'
   | 'location'
   | 'map'
-  | 'list';
+  | 'list'
+  | 'choices';
 
 export type SchemaAttributeType =
   | SimpleType
@@ -85,7 +114,8 @@ export type SchemaAttributeType =
   | ReferenceAttributes
   | LayoutFieldAttributes
   | LayoutRefFieldAttributes
-  | LocationFieldAttributes;
+  | LocationFieldAttributes
+  | ListFieldAttributes;
 
 export const normalizeSchemaEntries = (
   rawOptionsSchema: unknown
@@ -154,6 +184,32 @@ export const normalizeFormValue = (
 export const normalizeWidgetOptionsForApi = (
   options: OptionsDict,
   schemaEntries: [string, SchemaAttributeType][]
+): Record<string, any> => {
+  const normalized = normalizeSchemaOptions(options, schemaEntries);
+  // Edited texts are stored in the reserved `overrides` option, which is not
+  // part of the options schema.
+  if (
+    options.overrides !== undefined &&
+    !schemaEntries.some(([key]) => key === 'overrides')
+  ) {
+    normalized.overrides = options.overrides;
+  }
+  return normalized;
+};
+
+export const normalizeWidgetOptionsForIntegration = (
+  options: OptionsDict,
+  schemaEntries: [string, SchemaAttributeType][],
+  textOverridesReserved: boolean
+): Record<string, any> => {
+  const normalized = normalizeWidgetOptionsForApi(options, schemaEntries);
+  if (textOverridesReserved) delete normalized.overrides;
+  return normalized;
+};
+
+const normalizeSchemaOptions = (
+  options: OptionsDict,
+  schemaEntries: [string, SchemaAttributeType][]
 ): Record<string, any> =>
   schemaEntries.reduce(
     (normalizedOptions, [key, schema]) => {
@@ -213,6 +269,168 @@ export const normalizeWidgetOptionsForApi = (
     },
     {} as Record<string, any>
   );
+
+/**
+ * Returns the `choices` attribute of a schema field, if it takes its values
+ * from an integration-provided list.
+ */
+export const getFieldChoices = (
+  schema: unknown
+): ChoicesAttributes | undefined => {
+  const choices =
+    schema && typeof schema === 'object'
+      ? (schema as { choices?: ChoicesAttributes }).choices
+      : undefined;
+  return choices && typeof choices.list === 'string' ? choices : undefined;
+};
+
+const isEmptyOption = (value: unknown) =>
+  value === undefined ||
+  value === null ||
+  value === '' ||
+  (Array.isArray(value) && value.length === 0);
+
+/**
+ * Splits a choice field's dependencies into the values to send to the
+ * provider and the dependencies that are still missing.
+ */
+export const choiceDependencies = (
+  choices: ChoicesAttributes,
+  options: Record<string, unknown>
+): { values: Record<string, unknown>; missing: string[] } => {
+  const values: Record<string, unknown> = {};
+  const missing: string[] = [];
+  for (const key of choices.depends_on || []) {
+    if (isEmptyOption(options[key])) {
+      missing.push(key);
+    } else {
+      values[key] = options[key];
+    }
+  }
+  return { values, missing };
+};
+
+/**
+ * Keys of choice fields that depend directly or transitively on `key` and have a value.
+ */
+export const dependentChoiceFields = (
+  entries: [string, SchemaAttributeType][],
+  key: string,
+  options: Record<string, unknown>
+): string[] => {
+  const dependents = new Map<string, string[]>();
+  for (const [fieldKey, schema] of entries) {
+    for (const dependency of getFieldChoices(schema)?.depends_on || []) {
+      const fields = dependents.get(dependency) || [];
+      fields.push(fieldKey);
+      dependents.set(dependency, fields);
+    }
+  }
+
+  const pending = [key];
+  const visited = new Set([key]);
+  const selected = new Set<string>();
+
+  for (let cursor = 0; cursor < pending.length; cursor++) {
+    const dependency = pending[cursor];
+    for (const fieldKey of dependents.get(dependency) || []) {
+      if (visited.has(fieldKey)) continue;
+      visited.add(fieldKey);
+      pending.push(fieldKey);
+      if (!isEmptyOption(options[fieldKey])) selected.add(fieldKey);
+    }
+  }
+
+  return entries
+    .map(([fieldKey]) => fieldKey)
+    .filter((fieldKey) => selected.has(fieldKey));
+};
+
+/**
+ * Validates a choice field value. Returns an error message, or '' when valid.
+ */
+export const validateChoicesValue = (
+  choices: ChoicesAttributes,
+  required: boolean | undefined,
+  value: unknown,
+  t: (key: string, params?: Record<string, any>) => string
+): string => {
+  const values = Array.isArray(value)
+    ? value
+    : isEmptyOption(value)
+      ? []
+      : [value];
+
+  if (required && values.length === 0) {
+    return t('validation.fieldRequired');
+  }
+  if (choices.multiple && typeof choices.min === 'number') {
+    if (values.length < choices.min) {
+      return t('widgets.choices.minSelection', { min: choices.min });
+    }
+  }
+  if (choices.multiple && typeof choices.max === 'number') {
+    if (values.length > choices.max) {
+      return t('widgets.choices.maxSelection', { max: choices.max });
+    }
+  }
+  return '';
+};
+
+const CHOICES_ERROR_KEYS: Record<string, string> = {
+  widget_not_found: 'widgetNotFound',
+  not_a_choice_field: 'notAChoiceField',
+  missing_dependency: 'missingDependency',
+  missing_credentials: 'missingCredentials',
+  rate_limited: 'rateLimited',
+  provider_error: 'providerError',
+  network_error: 'networkError',
+};
+
+/**
+ * Localized message for an error from the widget choices endpoint.
+ */
+export const choicesErrorMessage = (
+  error: unknown,
+  t: (key: string, params?: Record<string, any>) => string
+): string => {
+  const code = error instanceof WidgetChoicesError ? error.code : '';
+  return t(`widgets.choices.errors.${CHOICES_ERROR_KEYS[code] || 'unknown'}`);
+};
+
+/**
+ * Labels for the ChoicesField component.
+ */
+export const choicesFieldLabels = (
+  t: (key: string, params?: Record<string, any>) => string
+): ChoicesFieldLabels => ({
+  choose: t('widgets.choices.choose'),
+  change: t('common.change'),
+  add: t('common.add'),
+  clear: t('common.clear'),
+  remove: t('common.remove'),
+  moveBefore: t('widgets.choices.moveBefore'),
+  moveAfter: t('widgets.choices.moveAfter'),
+  search: t('widgets.choices.search'),
+  loadMore: t('widgets.choices.loadMore'),
+  retry: t('widgets.choices.retry'),
+  noResults: t('widgets.choices.noResults'),
+  noSelection: t('widgets.choices.noSelection'),
+  unavailable: t('widgets.choices.unavailable'),
+  selectAll: t('widgets.choices.selectAll'),
+  selectNone: t('widgets.choices.selectNone'),
+  selected: (count, max) =>
+    typeof max === 'number'
+      ? t('widgets.choices.selectedCountMax', { count, max })
+      : t('widgets.choices.selectedCount', { count }),
+  done: t('widgets.choices.done'),
+  cancel: t('common.cancel'),
+  play: t('widgets.choices.play'),
+  stop: t('widgets.choices.stop'),
+  enlarge: t('widgets.choices.enlarge'),
+  close: t('common.close'),
+  dialogDescription: t('widgets.choices.dialogDescription'),
+});
 
 export function isValidURL(url: string): boolean {
   if (!url || url.trim() === '') {
@@ -284,6 +502,8 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
   const t = (key: string, params?: Record<string, any>) =>
     props.store.i18n?.t(key, params) || key;
   const locale = () => props.store.i18n?.locale() || 'en';
+  const displayLocale = () =>
+    resolvePlaybackLocale(props.store.networkSettings?.defaultLocale);
 
   const translateWidgetOptionLabel = (
     optionKey: string,
@@ -347,8 +567,16 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
   const rawOptionsSchema = props.item.widget.options_schema || {};
 
   const schemaEntries = normalizeSchemaEntries(rawOptionsSchema);
+  const textOverridesEnabled = supportsTextOverrides(props.item.widget);
+  const showTextOverrides = shouldShowTextOverrides(
+    props.item.widget,
+    props.item.config.options
+  );
 
-  if (!rawOptionsSchema || schemaEntries.length === 0) {
+  if (
+    (!rawOptionsSchema || schemaEntries.length === 0) &&
+    !showTextOverrides
+  ) {
     return <div>{t('common.noConfigurationAvailable')}</div>;
   }
 
@@ -400,50 +628,77 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
     string,
     any
   > | null>(null);
+  const [previewDiscriminatorId, setPreviewDiscriminatorId] = createSignal<
+    string | null
+  >(null);
 
   let previewFetchTimer: ReturnType<typeof setTimeout> | undefined;
   // Monotonic id used to discard responses from superseded requests, so that a
   // slow request cannot overwrite the preview of a newer one.
   let previewRequestId = 0;
 
-  createEffect(() => {
-    // Track option changes so the preview refetches when they change.
-    const options = {
-      ...normalizeWidgetOptionsForApi(widgetOptions(), schemaEntries),
-      display_locale: locale(),
-    };
-    const widgetId = props.item.widget?.id;
+  const previewFetchInput = createMemo(() => {
+    const currentOptions = widgetOptions();
+    const options = normalizeWidgetOptionsForIntegration(
+      currentOptions,
+      schemaEntries,
+      showTextOverrides
+    );
+    return JSON.stringify({
+      options,
+      displayLocale: displayLocale(),
+      widgetId: props.item.widget?.id,
+      widgetConfigId: props.item.config.id,
+      baseUrl: props.baseUrl,
+      organizationId: props.organizationId,
+    });
+  });
 
-    if (!widgetId || !props.baseUrl || !props.organizationId) {
-      return;
-    }
-
-    // Debounce to avoid hammering the integration endpoint while the user is
-    // still editing (e.g. typing into text fields).
-    if (previewFetchTimer) {
-      clearTimeout(previewFetchTimer);
-    }
-
-    const requestId = ++previewRequestId;
-    previewFetchTimer = setTimeout(async () => {
-      const result = await PlaylistsService.prefetchWidgetData(
-        props.baseUrl,
-        props.organizationId,
+  createEffect(
+    on(previewFetchInput, (serialized) => {
+      const {
+        options: fetchOptions,
+        displayLocale: locale,
         widgetId,
-        options,
-        // Live preview fetches are ephemeral: they must not register background
-        // polling schedulers for option combinations that may never be saved.
-        { preview: true }
-      );
+        widgetConfigId,
+        baseUrl,
+        organizationId,
+      } = JSON.parse(serialized);
+      const options = { ...fetchOptions, display_locale: locale };
+      setPreviewDiscriminatorId(null);
 
-      // Ignore out-of-order responses from superseded requests.
-      if (requestId !== previewRequestId) {
+      if (!widgetId || !baseUrl || !organizationId) {
         return;
       }
 
-      setPreviewData(result && result.data ? result.data : null);
-    }, 500);
-  });
+      // Debounce to avoid hammering the integration endpoint while the user is
+      // still editing (e.g. typing into text fields).
+      if (previewFetchTimer) {
+        clearTimeout(previewFetchTimer);
+      }
+
+      const requestId = ++previewRequestId;
+      previewFetchTimer = setTimeout(async () => {
+        const result = await PlaylistsService.prefetchWidgetData(
+          baseUrl,
+          organizationId,
+          widgetId,
+          options,
+          // Live preview fetches are ephemeral: they must not register background
+          // polling schedulers for option combinations that may never be saved.
+          { preview: true, widgetConfigId }
+        );
+
+        // Ignore out-of-order responses from superseded requests.
+        if (requestId !== previewRequestId) {
+          return;
+        }
+
+        setPreviewDiscriminatorId(result.discriminator_id ?? null);
+        setPreviewData(result && result.data ? result.data : null);
+      }, 500);
+    })
+  );
 
   onCleanup(() => {
     if (previewFetchTimer) {
@@ -457,6 +712,9 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
    * Gets the form type for a schema entry.
    */
   const getFormType = (schema: any): FormTypes => {
+    if (getFieldChoices(schema)) {
+      return 'choices';
+    }
     // If it's an object schema with enum, render as select
     if (schema && typeof schema === 'object' && schema.enum) {
       return 'select';
@@ -494,6 +752,19 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
         if (!isLocationValueValid(locationValue)) {
           return false;
         }
+      }
+
+      if (fieldType === 'choices') {
+        const message = validateChoicesValue(
+          getFieldChoices(schema)!,
+          (schema as FieldAttributes).required,
+          options[key],
+          t
+        );
+        if (message) {
+          return false;
+        }
+        continue;
       }
 
       if (
@@ -553,6 +824,8 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
         break;
       case 'list':
         break;
+      case 'choices':
+        break;
       case 'location':
         if (!isLocationValueValid(value as LocationValue | null | undefined)) {
           errorMessage = t('validation.invalidCoordinates');
@@ -596,6 +869,9 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
    * Also handles special cases like enums (which render as select dropdowns).
    */
   const getType = (value: any): FormTypes => {
+    if (getFieldChoices(value)) {
+      return 'choices';
+    }
     // If it's an object schema with enum, render as select
     if (value && typeof value === 'object' && value.enum) {
       return 'select';
@@ -625,6 +901,73 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
     setIsFormValid(checkFormValidity());
   });
 
+  // A change of a choice field that other choice fields depend on waits for
+  // confirmation, because it clears their values.
+  const [pendingChoice, setPendingChoice] = createSignal<{
+    key: string;
+    value: string | string[] | undefined;
+    dependents: string[];
+  } | null>(null);
+
+  const applyChoice = (
+    key: string,
+    value: string | string[] | undefined,
+    clear: string[]
+  ) => {
+    const next: OptionsDict = { ...widgetOptions(), [key]: value as any };
+    const errorUpdates = new Map(errors());
+
+    for (const fieldKey of [key, ...clear]) {
+      const fieldSchema = schemaEntries.find(([k]) => k === fieldKey)?.[1];
+      const choices = getFieldChoices(fieldSchema);
+      if (!choices) continue;
+      if (fieldKey !== key) {
+        if (choices.multiple) {
+          next[fieldKey] = [] as any;
+        } else {
+          delete next[fieldKey];
+        }
+      }
+      errorUpdates.set(
+        fieldKey,
+        validateChoicesValue(
+          choices,
+          (fieldSchema as FieldAttributes).required,
+          next[fieldKey],
+          t
+        )
+      );
+    }
+
+    if (value === undefined) {
+      delete next[key];
+    }
+
+    setWidgetOptions(next);
+    setErrors(errorUpdates);
+    setIsFormModified(true);
+  };
+
+  const changeChoice = (key: string, value: string | string[] | undefined) => {
+    const dependents = dependentChoiceFields(
+      schemaEntries,
+      key,
+      widgetOptions()
+    );
+    const changed =
+      JSON.stringify(widgetOptions()[key] ?? null) !==
+      JSON.stringify(value ?? null);
+
+    if (dependents.length > 0 && changed) {
+      setPendingChoice({ key, value, dependents });
+    } else {
+      applyChoice(key, value, []);
+    }
+  };
+
+  const fieldLabels = (keys: string[]) =>
+    keys.map((k) => translateWidgetOptionLabel(k, k)).join(', ');
+
   function componentForItem(
     key: string,
     schema:
@@ -635,6 +978,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
       | LayoutFieldAttributes
       | LayoutRefFieldAttributes
       | LocationFieldAttributes
+      | ListFieldAttributes
   ) {
     const type = getType(schema);
     switch (type) {
@@ -949,12 +1293,115 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
             <div class="error">{errors().get(key)}</div>
           </div>
         );
+      case 'choices': {
+        const choicesSchema = schema as (
+          | FieldAttributes
+          | ListFieldAttributes
+        ) & {
+          title?: string;
+          placeholder?: string;
+        };
+        const choices = getFieldChoices(schema)!;
+        const dependencies = () =>
+          choiceDependencies(
+            choices,
+            widgetOptions() as Record<string, unknown>
+          );
+
+        return (
+          <div class="form-item-wrapper">
+            <ChoicesField
+              id={key}
+              label={translateWidgetOptionLabel(
+                key,
+                choicesSchema.title || key
+              )}
+              description={translateWidgetOptionDescription(
+                key,
+                choicesSchema.description
+              )}
+              value={widgetOptions()[key] as string | string[] | undefined}
+              multiple={!!choices.multiple}
+              ordered={!!choices.ordered}
+              min={choices.min}
+              max={choices.max}
+              display={choices.display}
+              search={!!choices.search}
+              required={!!choicesSchema.required}
+              disabled={dependencies().missing.length > 0}
+              disabledHint={t('widgets.choices.dependencyRequired', {
+                fields: fieldLabels(dependencies().missing),
+              })}
+              emptyHint={translateWidgetOptionPlaceholder(
+                key,
+                choicesSchema.placeholder
+              )}
+              reloadKey={JSON.stringify(dependencies().values)}
+              labels={choicesFieldLabels(t)}
+              loadChoices={(request) =>
+                PlaylistsService.listWidgetChoices(
+                  props.baseUrl,
+                  props.organizationId,
+                  props.item.widget.id!,
+                  key,
+                  { ...request, options: dependencies().values }
+                )
+              }
+              errorMessage={(error) => choicesErrorMessage(error, t)}
+              onChange={(value) => changeChoice(key, value)}
+            />
+            <div class="error">{errors().get(key)}</div>
+          </div>
+        );
+      }
       case 'map':
         return <div>Map type not implemented yet</div>;
       default:
         throw new Error(`Unknown type: ${type}`);
     }
   }
+
+  // In-place text editing (see agents/systems/IN-PLACE-TEXT-EDITING.md)
+  const [editingTexts, setEditingTexts] = createSignal(false);
+  const [seenLabels, setSeenLabels] = createSignal(
+    new Map<string, string | undefined>()
+  );
+  const editables = templateEditables(props.item.widget.template);
+  const translateLabel = (label: string | undefined) =>
+    translateEditableLabel(props.item.widget, label, locale());
+  const overrides = () => getOverrides(widgetOptions());
+
+  const updateOverrides = (next: Record<string, TextOverride>) => {
+    setWidgetOptions({ ...widgetOptions(), overrides: next as any });
+    setIsFormModified(true);
+  };
+
+  const changeTextOverride = (key: string, value: TextOverride | undefined) =>
+    updateOverrides(setOverride(overrides(), key, value));
+
+  const overrideEntries = () =>
+    describeOverrides(overrides(), editables, seenLabels(), translateLabel);
+
+  const editableTextLabels = (): EditableTextLabels => ({
+    editAria: (label) => t('widgets.editableTexts.editAria', { label }),
+    save: t('common.save'),
+    cancel: t('common.cancel'),
+    hide: t('widgets.editableTexts.hide'),
+    reset: t('widgets.editableTexts.reset'),
+    counter: (length, max) =>
+      t('widgets.editableTexts.counter', { length, max }),
+  });
+
+  const textOverridesListLabels = (): TextOverridesListLabels => ({
+    title: (count) => t('widgets.editableTexts.listTitle', { count }),
+    hidden: t('widgets.editableTexts.hidden'),
+    empty: t('widgets.editableTexts.empty'),
+    reset: t('widgets.editableTexts.reset'),
+    resetAll: t('widgets.editableTexts.resetAll'),
+    unusedTitle: t('widgets.editableTexts.unusedTitle'),
+    unusedHint: t('widgets.editableTexts.unusedHint'),
+    remove: t('common.remove'),
+  });
 
   const resetForm = () => {
     setIsFormModified(false);
@@ -1015,7 +1462,34 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
                 return componentForItem(key, schema);
               }}
             </For>
+            <Show when={showTextOverrides}>
+              <TextOverridesList
+                used={overrideEntries().used}
+                unused={overrideEntries().unused}
+                labels={textOverridesListLabels()}
+                onReset={(key) => changeTextOverride(key, undefined)}
+                onResetAll={() => updateOverrides({})}
+              />
+            </Show>
           </div>
+          <ConfirmDialog
+            show={!!pendingChoice()}
+            title={t('widgets.choices.confirmClearTitle')}
+            message={t('widgets.choices.confirmClearMessage', {
+              field: fieldLabels(pendingChoice() ? [pendingChoice()!.key] : []),
+              fields: fieldLabels(pendingChoice()?.dependents || []),
+            })}
+            confirmLabel={t('common.clear')}
+            cancelLabel={t('common.cancel')}
+            onConfirm={() => {
+              const pending = pendingChoice();
+              setPendingChoice(null);
+              if (pending) {
+                applyChoice(pending.key, pending.value, pending.dependents);
+              }
+            }}
+            onClose={() => setPendingChoice(null)}
+          />
           <div class="form-actions">
             <Button
               label={t('common.save')}
@@ -1038,14 +1512,46 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
         </form>
       </div>
       <div class="preview">
-        <WidgetView
-          widget={props.item.widget}
-          config={widgetConfig()}
-          options={widgetOptions()}
-          previewData={previewData()}
-          baseUrl={props.baseUrl}
-          socket={props.store.socket}
-        />
+        <Show when={textOverridesEnabled}>
+          <div class="preview-toolbar">
+            <Button
+              label={
+                editingTexts()
+                  ? t('widgets.editableTexts.doneEditing')
+                  : t('widgets.editableTexts.editTexts')
+              }
+              color={editingTexts() ? 'success' : 'secondary'}
+              aria-pressed={editingTexts()}
+              onClick={() => setEditingTexts(!editingTexts())}
+            />
+            <Show when={editingTexts()}>
+              <span>{t('widgets.editableTexts.hint')}</span>
+            </Show>
+          </div>
+        </Show>
+        <div class="preview-stage">
+          <EditableTextStage
+            active={editingTexts()}
+            overrides={overrides()}
+            labels={editableTextLabels()}
+            translateLabel={translateLabel}
+            onChange={changeTextOverride}
+            onDiscover={setSeenLabels}
+          >
+            <WidgetView
+              widget={props.item.widget}
+              config={widgetConfig()}
+              options={widgetOptions()}
+              previewData={previewData()}
+              locale={displayLocale()}
+              previewDiscriminatorId={previewDiscriminatorId()}
+              onPreviewDataUpdate={setPreviewData}
+              baseUrl={props.baseUrl}
+              socket={props.store.socket}
+              paused={editingTexts()}
+            />
+          </EditableTextStage>
+        </div>
       </div>
     </div>
   );

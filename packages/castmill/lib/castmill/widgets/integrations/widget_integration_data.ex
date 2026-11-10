@@ -70,6 +70,9 @@ defmodule Castmill.Widgets.Integrations.WidgetIntegrationData do
     field(:status, :string)
     field(:error_message, :string)
 
+    # Consecutive failed refreshes (on-demand integrations back off from failing sources).
+    field(:refresh_failures, :integer, default: 0)
+
     timestamps()
   end
 
@@ -87,7 +90,8 @@ defmodule Castmill.Widgets.Integrations.WidgetIntegrationData do
       :refresh_at,
       :last_used_at,
       :status,
-      :error_message
+      :error_message,
+      :refresh_failures
     ])
     |> validate_required([:widget_integration_id, :discriminator_id, :organization_id])
     |> validate_number(:version, greater_than: 0)

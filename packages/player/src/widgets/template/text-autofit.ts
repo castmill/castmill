@@ -20,14 +20,29 @@ export function observeTextContainerResize(
   return () => observer.disconnect();
 }
 
-/** Calls `onResize` when `element` changes size (or the window, without ResizeObserver). */
+/**
+ * Calls `onResize` when `element` changes size. Without ResizeObserver (e.g.
+ * Chrome 38 players) it follows window resizes and changes to the element's
+ * inline style, which is how the player letterboxes widgets (Layer).
+ */
 export function observeElementResize(
   element: HTMLElement,
   onResize: () => void
 ): () => void {
   if (typeof ResizeObserver === 'undefined') {
     window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
+    const styleObserver =
+      typeof MutationObserver === 'undefined'
+        ? null
+        : new MutationObserver(() => onResize());
+    styleObserver?.observe(element, {
+      attributes: true,
+      attributeFilter: ['style'],
+    });
+    return () => {
+      window.removeEventListener('resize', onResize);
+      styleObserver?.disconnect();
+    };
   }
 
   const observer = new ResizeObserver(() => onResize());

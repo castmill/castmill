@@ -11,6 +11,7 @@ export * from './template-widget';
 export * from './template';
 export * from './text';
 export * from './video';
+export * from './format';
 
 // Backward compatibility: re-export list from paginated-list
 // This allows existing code using 'list' to continue working

@@ -25,7 +25,13 @@ const withDom = async (fn: (root: HTMLElement) => Promise<void>) => {
   const savedComputed = g.getComputedStyle;
   g.getComputedStyle = dom.window.getComputedStyle.bind(dom.window);
   // gsap's ticker keeps calling these after the test, so they stay installed.
-  g.requestAnimationFrame ??= (callback: () => void) => setTimeout(callback, 0);
+  // Pending frames must not keep the test process alive (templates are not
+  // disposed, so their frame callbacks may never stop).
+  g.requestAnimationFrame ??= (callback: () => void) => {
+    const id = setTimeout(callback, 0);
+    id.unref?.();
+    return id;
+  };
   g.cancelAnimationFrame ??= (id: any) => clearTimeout(id);
   try {
     await fn(dom.window.document.getElementById('root'));
@@ -225,7 +231,11 @@ describe('Group context, when and limit', () => {
 
   it('sets the base font size on the template root', async () => {
     await withDom(async (root) => {
-      await show(root, { type: 'group', name: 'root', components: [] }, {});
+      await show(
+        root,
+        { type: 'group', name: 'root', fontScale: true, components: [] },
+        {}
+      );
       const el = root.querySelector(
         '[data-component="template"]'
       ) as HTMLElement;
@@ -236,18 +246,39 @@ describe('Group context, when and limit', () => {
       const size = { width: 960, height: 540 };
       Object.defineProperty(el, 'clientWidth', { get: () => size.width });
       Object.defineProperty(el, 'clientHeight', { get: () => size.height });
+      const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
-      // Measuring is retried every 500ms until the widget has a size.
-      await new Promise((resolve) => setTimeout(resolve, 1100));
+      // jsdom has no ResizeObserver, like Chrome 38: the player letterboxing
+      // the widget (an inline size) is followed through its style.
+      el.style.width = '960px';
+      await settle();
       expect(el.style.fontSize).to.equal('5px');
 
-      // Resizes are followed (jsdom has no ResizeObserver: window resize).
+      // Window resizes are followed too.
       size.width = 1080;
       size.height = 1920;
       (globalThis as any).window.dispatchEvent(
         new (globalThis as any).window.Event('resize')
       );
       expect(el.style.fontSize).to.equal('5.625px');
+
+      // Its own write does not trigger it again.
+      await settle();
+      expect(el.style.fontSize).to.equal('5.625px');
+    });
+  });
+
+  it('does not change the font baseline unless the template opts in', async () => {
+    await withDom(async (root) => {
+      await show(root, { type: 'group', name: 'root', components: [] }, {});
+      const el = root.querySelector(
+        '[data-component="template"]'
+      ) as HTMLElement;
+      const size = { width: 1920, height: 1080 };
+      Object.defineProperty(el, 'clientWidth', { get: () => size.width });
+      Object.defineProperty(el, 'clientHeight', { get: () => size.height });
+
+      expect(el.style.fontSize).to.equal('');
     });
   });
 

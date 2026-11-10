@@ -15,7 +15,7 @@ defmodule CastmillWeb.OrganizationQuotaController do
   }
 
   # All resource types that can have quotas
-  @all_resources ~w(organizations medias playlists channels channels_entries devices users teams storage layouts max_upload_size)
+  @all_resources ~w(organizations medias playlists channels channels_entries devices users teams storage layouts automations automation_rules max_upload_size)
 
   def index(conn, %{"organization_id" => organization_id}) do
     # Resolve all quotas through the full resolution chain

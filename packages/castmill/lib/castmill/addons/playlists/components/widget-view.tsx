@@ -5,6 +5,7 @@ import {
   onCleanup,
   createSignal,
   createMemo,
+  untrack,
 } from 'solid-js';
 import { Socket, Channel } from 'phoenix';
 import { authFetch } from '../../common/services/auth-fetch';
@@ -32,6 +33,9 @@ interface WidgetViewProps {
   options: OptionsDict;
   baseUrl?: string;
   socket?: Socket;
+  locale?: string;
+  previewDiscriminatorId?: string | null;
+  onPreviewDataUpdate?: (data: Record<string, any>) => void;
   /**
    * When provided, the parent controls the integration data shown in the
    * preview (e.g. the widget config dialog fetches data based on the live,
@@ -40,6 +44,8 @@ interface WidgetViewProps {
    * changes such as switching temperature units.
    */
   previewData?: Record<string, any> | null;
+  /** Stops playback, e.g. while texts are edited in the preview. */
+  paused?: boolean;
 }
 
 /**
@@ -54,6 +60,33 @@ export const resolveEffectiveWidgetData = (
   defaultData: Record<string, any>
 ): Record<string, any> => {
   return previewData ?? (integrationData || configData || defaultData);
+};
+
+export const matchesWidgetDataUpdate = (
+  payload: { widget_id: string; discriminator_id: string },
+  widgetId: number,
+  discriminatorId: string | null
+): boolean =>
+  discriminatorId !== null &&
+  payload.widget_id === String(widgetId) &&
+  payload.discriminator_id === discriminatorId;
+
+export const applyWidgetMaxItemsFilter = (
+  data: Record<string, any>,
+  options: OptionsDict
+): Record<string, any> => {
+  const maxItems = options.max_items || 10;
+
+  if (
+    Array.isArray(data.items) &&
+    typeof maxItems === 'number' &&
+    Number.isInteger(maxItems) &&
+    maxItems > 0
+  ) {
+    return { ...data, items: data.items.slice(0, maxItems) };
+  }
+
+  return data;
 };
 
 export const getWidgetViewAspectRatio = (
@@ -156,6 +189,8 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
     string,
     any
   > | null>(null);
+  const [integrationDiscriminatorId, setIntegrationDiscriminatorId] =
+    createSignal<string | null>(null);
   // Start with dataLoaded=true so preview renders immediately with defaults
   // The fetch effect will set it to false only when actually fetching
   const [dataLoaded, setDataLoaded] = createSignal(true);
@@ -174,6 +209,7 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
 
         if (response.ok) {
           const result = await response.json();
+          setIntegrationDiscriminatorId(result.discriminator_id ?? null);
           if (result.data) {
             setIntegrationData(result.data);
           }
@@ -214,10 +250,28 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
         data: Record<string, any>;
         updated_at: string;
       }) => {
-        // Check if this update is for our widget type
-        // widget_id in payload is a string, props.widget.id is a number
-        if (payload.widget_id === String(props.widget.id)) {
-          setIntegrationData(payload.data);
+        const discriminatorId =
+          props.previewData !== undefined
+            ? props.previewDiscriminatorId ?? null
+            : integrationDiscriminatorId();
+
+        if (
+          matchesWidgetDataUpdate(
+            payload,
+            props.widget.id,
+            discriminatorId
+          )
+        ) {
+          const filteredData = applyWidgetMaxItemsFilter(
+            payload.data,
+            props.options
+          );
+
+          if (props.onPreviewDataUpdate) {
+            props.onPreviewDataUpdate(filteredData);
+          } else {
+            setIntegrationData(filteredData);
+          }
         }
       }
     );
@@ -246,6 +300,8 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
       setDataLoaded(true);
       return;
     }
+
+    setIntegrationDiscriminatorId(null);
 
     // Only set loading state if we have something to fetch
     // For new widgets without an ID, we skip fetching and use defaults
@@ -317,6 +373,7 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
       name: 'widget-playlist', // Dummy name
       items: [dummyJsonPlaylistItem],
       status: 'live',
+      locale: props.locale,
     };
 
     const playlist = Playlist.fromJSON(jsonPlaylist, resourceManager);
@@ -350,6 +407,9 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
     });
 
     // After seek completes, clean up old instances
+    if (untrack(() => props.paused)) {
+      playerUI.stop();
+    }
     playerUI.seek(initialPosition).subscribe({
       complete: () => {
         previousPlayerUI?.destroy();
@@ -360,6 +420,12 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
         previousControls?.destroy();
       },
     });
+  });
+
+  createEffect(() => {
+    if (props.paused) {
+      playerUI?.stop();
+    }
   });
 
   onCleanup(() => {
