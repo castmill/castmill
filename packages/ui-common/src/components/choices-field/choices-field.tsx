@@ -178,7 +178,7 @@ export const ChoicesField: Component<ChoicesFieldProps> = (props) => {
   const [draft, setDraft] = createSignal<string[]>([]);
   const [enlarged, setEnlarged] = createSignal<Choice | null>(null);
   let modalRef: ModalRef | undefined;
-  let resultsRef: HTMLDivElement | null = null;
+  let resultsRef!: HTMLDivElement;
   let pageId = 0;
   let searchTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -322,7 +322,7 @@ export const ChoicesField: Component<ChoicesFieldProps> = (props) => {
       'Home',
       'End',
     ];
-    if (!resultsRef || !keys.includes(e.key)) return;
+    if (!keys.includes(e.key)) return;
     const options = Array.from(
       resultsRef.querySelectorAll<HTMLElement>('[role="option"]')
     );

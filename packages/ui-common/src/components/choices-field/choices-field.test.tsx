@@ -405,7 +405,7 @@ describe('ChoicesField', () => {
           'Failed: provider_error'
         )
       );
-      expect(options()).toHaveLength(0);
+      expect(screen.queryAllByRole('option')).toHaveLength(0);
 
       failSearch = false;
       fireEvent.click(screen.getByText('Retry'));
