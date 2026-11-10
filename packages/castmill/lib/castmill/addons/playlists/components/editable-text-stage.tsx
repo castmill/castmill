@@ -179,7 +179,7 @@ export const EditableTextStage: Component<EditableTextStageProps> = (props) => {
 
   const open = (element: HTMLElement) => {
     const info = readEditableElement(element);
-    if (!info || !stageRef) return;
+    if (!info) return;
     const stored = props.overrides[info.key];
     const value =
       stored && 'text' in stored ? stored.text : stored ? '' : info.text;
