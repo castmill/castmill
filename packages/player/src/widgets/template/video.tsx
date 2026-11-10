@@ -306,7 +306,7 @@ const VideoSource: Component<VideoSourceProps> = (props) => {
         };
 
         timelineItem = {
-          start: props.timeline.time,
+          start: props.timeline.isRunning() ? props.timeline.time : 0,
           duration: videoRef!.duration * 1000,
           child,
         };

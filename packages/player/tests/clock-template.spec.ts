@@ -423,6 +423,76 @@ describe('time-dependent template updates', () => {
     );
   });
 
+  it('keeps a paused time-selected video start at zero after a seek', async () => {
+    let resolveMedia: ((url: string) => void) | undefined;
+    await withWidget(
+      {
+        type: 'video',
+        name: 'paused-clock-video',
+        opts: {
+          url: {
+            cond: {
+              key: '@now',
+              gte: new Date(2026, 0, 1, 11, 0).getTime(),
+              then: 'later.mp4',
+              else: '',
+            },
+          },
+        },
+      },
+      {},
+      async (root, widget, _media, advanceClock) => {
+        const timeline = (widget as any).timeline;
+        timeline.setDuration(600000);
+        timeline.seek(2000);
+
+        advanceClock();
+        for (let i = 0; i < 50 && !resolveMedia; i++) {
+          await new Promise((resolve) => setTimeout(resolve, 2));
+        }
+        expect(resolveMedia).to.not.equal(undefined);
+
+        const video = root.querySelector('video')!;
+        video.load = () => {};
+        resolveMedia!('/cached/later.mp4');
+        for (let i = 0; i < 50 && !video.src; i++) {
+          await new Promise((resolve) => setTimeout(resolve, 2));
+        }
+        let currentTime = 0;
+        Object.defineProperty(video, 'currentTime', {
+          configurable: true,
+          get: () => currentTime,
+          set: (value: number) => {
+            currentTime = value;
+          },
+        });
+        Object.defineProperty(video, 'readyState', {
+          configurable: true,
+          value: 1,
+        });
+        Object.defineProperty(video, 'duration', {
+          configurable: true,
+          value: 12,
+        });
+        const Event = root.ownerDocument.defaultView!.Event;
+        video.dispatchEvent(new Event('loadedmetadata'));
+        video.dispatchEvent(new Event('canplaythrough'));
+
+        const videoItem = timeline.items.find(
+          (item: any) => item.child && item.duration === 12000
+        );
+        expect(videoItem.start).to.equal(0);
+        timeline.seek(2000);
+        expect(video.currentTime).to.equal(2);
+      },
+      undefined,
+      () =>
+        new Promise((resolve) => {
+          resolveMedia = resolve;
+        })
+    );
+  });
+
   it('regenerates QR content when its time-dependent binding changes', async () => {
     await withWidget(
       {
