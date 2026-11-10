@@ -71,10 +71,14 @@ export const Group: Component<GroupProps> = (props) => {
   let groupRef: HTMLDivElement | undefined;
   let cleanUpAnimations: () => void;
 
-  let count = 0;
-  const onReadyAfter = () => {
-    count++;
-    if (count == props.components.length) {
+  const readyComponents = new Set<number>();
+  const onReadyAfter = (index: number) => {
+    if (readyComponents.has(index)) {
+      props.onLayoutUpdate?.();
+      return;
+    }
+    readyComponents.add(index);
+    if (readyComponents.size === props.components.length) {
       props.onReady();
     }
   };
@@ -114,7 +118,8 @@ export const Group: Component<GroupProps> = (props) => {
             globals={props.globals}
             timeline={props.timeline}
             resourceManager={props.resourceManager}
-            onReady={onReadyAfter}
+            onReady={() => onReadyAfter(i())}
+            onLayoutUpdate={props.onLayoutUpdate}
           />
         )}
       </For>

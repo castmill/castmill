@@ -1043,6 +1043,22 @@
       "optional": "任意"
     },
     "translations": "翻訳",
+    "editableTexts": {
+      "editTexts": "テキストを編集",
+      "doneEditing": "編集を完了",
+      "hint": "強調表示されたテキストをクリックして変更します。",
+      "editAria": "テキストを編集: {{label}}",
+      "hide": "このテキストを非表示",
+      "reset": "元に戻す",
+      "counter": "{{length}} / {{max}} 文字",
+      "listTitle": "編集済みのテキスト: {{count}}",
+      "hidden": "非表示",
+      "empty": "（空）",
+      "resetAll": "すべて元に戻す",
+      "unusedTitle": "Widgetで未使用",
+      "unusedHint": "これらの編集はWidgetのどのテキストにも対応しなくなりました。",
+      "editedIndicator": "編集済みのテキストあり"
+    },
     "choices": {
       "choose": "選択",
       "moveBefore": "前へ移動",

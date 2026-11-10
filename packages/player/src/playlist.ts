@@ -138,6 +138,9 @@ export class Playlist extends EventEmitter {
     resourceManager: ResourceManager,
     globals: PlayerGlobals = { target: 'preview' }
   ) {
+    if (json.locale && !globals.locale) {
+      globals = { ...globals, locale: json.locale };
+    }
     const playlist = new Playlist(json.name, resourceManager);
     playlist.id = json.id;
     playlist.globals = globals;

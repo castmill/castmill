@@ -52,9 +52,12 @@ export class TemplateWidget extends TimelineWidget {
   private fontFaces: { [key: string]: Promise<FontFace> } = {};
   private medias: { [key: string]: string } = {};
   private template: TemplateComponent;
+  private config: TemplateConfig;
   private displayDuration?: number;
+  private learnedDuration = 0;
   // Emits once the rendered template is ready, e.g. its videos have loaded.
   private ready$?: ReplaySubject<void>;
+  private disposeRender?: () => void;
   // Globals for the rendered components; blocked videos report to this
   // widget's playlist item. Nested blocks are tracked separately for finite
   // parent playback.
@@ -87,11 +90,20 @@ export class TemplateWidget extends TimelineWidget {
       ) => this.setReadinessBlocked(source, block),
     });
 
+    const optionsSchema = opts.widget.options_schema;
+    const declaresOverrides = Array.isArray(optionsSchema)
+      ? optionsSchema.some((option) => option && option.key === 'overrides')
+      : optionsSchema &&
+        Object.prototype.hasOwnProperty.call(optionsSchema, 'overrides');
+    this.config = {
+      ...opts.config,
+      textOverridesEnabled: !declaresOverrides,
+    };
     this.template = TemplateComponent.fromJSON(
       opts.widget.template,
       resourceManager,
       this.globals,
-      opts.config
+      this.config
     );
 
     // Check for display_duration or duration option and set timeline duration
@@ -237,6 +249,10 @@ export class TemplateWidget extends TimelineWidget {
   }
 
   async unload() {
+    this.disposeRender?.();
+    this.disposeRender = undefined;
+    this.ready$?.complete();
+    this.ready$ = undefined;
     this.readinessActive = false;
     this.reportReadiness();
 
@@ -268,15 +284,15 @@ export class TemplateWidget extends TimelineWidget {
 
     return this.load().pipe(
       switchMap(() => {
-        if (el.children.length === 0 || !this.ready$) {
+        if (!this.disposeRender || !this.ready$) {
           const ready$ = new ReplaySubject<void>(1);
           this.ready$ = ready$;
-          render(
+          this.disposeRender = render(
             () =>
               Template({
                 name: this.opts.widget.name,
                 root: this.template,
-                config: this.opts.config,
+                config: this.config,
                 style: this.opts?.style,
                 timeline: this.timeline,
                 globals: this.globals,
@@ -328,9 +344,10 @@ export class TemplateWidget extends TimelineWidget {
     const resolved = this.template.resolveDuration(this.medias);
 
     if (timelineDuration > 0) {
+      this.learnedDuration = timelineDuration;
       return timelineDuration;
     }
 
-    return resolved > 0 ? resolved : 10000;
+    return this.learnedDuration || (resolved > 0 ? resolved : 10000);
   }
 }

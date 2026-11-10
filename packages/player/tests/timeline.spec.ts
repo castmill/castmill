@@ -482,6 +482,8 @@ describe('remove with multiple items', () => {
     timeline.add(item3);
   });
 
+  afterEach(() => restore());
+
   it('should remove the correct item when multiple items exist', () => {
     expect(timeline.items).to.have.lengthOf(3);
     expect(timeline.items).to.include(item1);
@@ -533,6 +535,38 @@ describe('remove with multiple items', () => {
     expect(timeline.items).to.include(item1);
     expect(timeline.items).to.include(item2);
     expect(timeline.items).to.include(item3);
+  });
+
+  it('pauses and detaches an item removed while playing', () => {
+    const active: TimelineItemSpy = {
+      start: 0,
+      duration: 10000,
+      child: {
+        play: spy(),
+        seek: spy(),
+        pause: spy(),
+        duration: () => 10000,
+      },
+    };
+    timeline.add(active);
+    stub(Date, 'now').returns(0);
+    const clock = useFakeTimers();
+
+    timeline.play(0);
+    clock.tick(100);
+    expect(timeline.isPlaying(active)).to.be.true;
+    expect(timeline.duration()).to.equal(10000);
+
+    timeline.remove(active);
+
+    expect(active.child.pause.calledOnce).to.be.true;
+    expect(timeline.isPlaying(active)).to.be.false;
+    expect(timeline.items).to.not.include(active);
+    expect(timeline.duration()).to.equal(7000);
+
+    clock.tick(100);
+    expect(active.child.play.calledOnce).to.be.true;
+    timeline.pause();
   });
 });
 

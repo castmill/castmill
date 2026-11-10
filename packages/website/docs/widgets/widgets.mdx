@@ -653,6 +653,79 @@ Each media item in Castmill has a `files` array containing multiple `File` objec
 
 This pattern works identically for both images and videos, ensuring optimal media delivery across all Castmill contexts.
 
+### Formatting Values
+
+Integrations deliver raw values; templates format them on the player, so time-based content (such as "upcoming
+viewings") stays correct even on a screen that is offline. Three bindings do this:
+
+**`fmt`** – a text with placeholders `{path | formatter:arg}`. If any placeholder is empty, the whole text is
+empty, so `kr/mån` never appears without a fee:
+
+```json
+{ "type": "text", "name": "price", "opts": { "text": { "fmt": "{data.price | number} kr" }, "autofit": {} } }
+```
+
+| Formatter | Example | Result (sv) |
+|-----------|---------|-------------|
+| `number[:decimals[:group[:decimal]]]` | `{data.price \| number}` | `4 950 000` |
+| `date:pattern[:locale]` | `{data.start \| date:'ddd D/M [kl.] HH:mm'}` | `tor 12/11 kl. 17:00` |
+| `timed` | `{data.start \| timed \| date:'HH'}` | empty at midnight |
+| `upper`, `lower`, `capitalize`, `trim` | `{data.day \| capitalize}` | `Torsdag` |
+| `truncate:n` | `{data.title \| truncate:20}` | at most 20 characters + `…` |
+| `default:'x'` | `{data.fee \| default:'—'}` | `—` when missing |
+
+Day/month names and number separators follow the organization's display locale (or the template's
+`options.locale`). Use `@now` for the current time; it re-evaluates every minute.
+
+**`list`** – filter, sort, map, skip, limit and join an array:
+
+```json
+{
+  "list": {
+    "key": "data.viewings",
+    "where": [{ "key": "$.end", "gte": "@now" }],
+    "sort": "$.start",
+    "limit": 2,
+    "item": { "fmt": "{$.start | date:'D/M'} kl.{$.start | date:'HH'}" },
+    "join": ", "
+  }
+}
+```
+
+**`first`** – the first non-empty value, for fallbacks and optional parts:
+
+```json
+{ "first": [{ "key": "options.price_text" }, { "fmt": "{data.price | number} kr" }, "On request"] }
+```
+
+Always wrap format texts as `{ "fmt": … }`; plain strings are shown as-is. Invalid bindings are rejected when the
+widget is uploaded.
+
+### Editable Texts
+
+Mark a `text` component as `editable` so users can replace it for one playlist item, directly in the
+widget preview (**Edit texts**):
+
+```json
+{
+  "type": "text",
+  "name": "price",
+  "opts": { "text": { "fmt": "{data.price | number} kr" } },
+  "editable": { "key": "price", "label": "Price", "max_length": 40 }
+}
+```
+
+| Attribute | Meaning |
+|-----------|---------|
+| `key` | Override key: a string, or a binding such as `{ "fmt": "fact.{$.id}" }` for texts inside lists. |
+| `label` | Shown in the editor (a string or a binding). Translate it in `translations.<locale>.editable`. |
+| `multiline` | Allow line breaks (default `false`). |
+| `max_length` | Maximum length, 1 to 5000 (default 500). |
+
+Edited texts are shown exactly as typed: formatting does not apply to them, but styles and autofit do.
+Avoid `text-transform` on editable texts (use the `upper`/`lower` formatters instead), since it would also
+change the case of edited texts. Users can also hide a text for an item.
+
 ---
 
 ## Schemas
