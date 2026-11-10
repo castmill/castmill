@@ -11,7 +11,15 @@ const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 describe('TemplateWidget.show', () => {
   const globals = globalThis as any;
   const saved: Record<string, unknown> = {};
-  const keys = ['window', 'document', 'Node', 'HTMLElement', 'Element'];
+  const keys = [
+    'window',
+    'document',
+    'Node',
+    'HTMLElement',
+    'Element',
+    'MutationObserver',
+    'ResizeObserver',
+  ];
   let dom: any;
 
   beforeEach(() => {
@@ -75,5 +83,49 @@ describe('TemplateWidget.show', () => {
     expect(await firstValueFrom(widget.show(el, 0))).to.equal(
       'template-widget:shown'
     );
+  });
+
+  it('disposes observers on unload and renders again when shown', async () => {
+    const widget = new TemplateWidget(
+      { getMedia: async (url: string) => url } as any,
+      {
+        widget: {
+          name: 'template',
+          template: {
+            type: 'group',
+            name: 'root',
+            fontScale: true,
+            components: [],
+          },
+        } as any,
+        config: { options: {}, data: {} } as any,
+        globals: { target: 'poster' },
+      }
+    );
+    const el = dom.window.document.getElementById('root');
+    let added = 0;
+    let removed = 0;
+    const addEventListener = dom.window.addEventListener.bind(dom.window);
+    const removeEventListener = dom.window.removeEventListener.bind(dom.window);
+    dom.window.addEventListener = (type: string, ...args: any[]) => {
+      if (type === 'resize') added++;
+      return addEventListener(type, ...args);
+    };
+    dom.window.removeEventListener = (type: string, ...args: any[]) => {
+      if (type === 'resize') removed++;
+      return removeEventListener(type, ...args);
+    };
+
+    await firstValueFrom(widget.show(el, 0));
+    expect(added).to.equal(1);
+    await widget.unload();
+    expect(removed).to.equal(1);
+    expect(el.children.length).to.equal(0);
+
+    await firstValueFrom(widget.show(el, 0));
+    expect(added).to.equal(2);
+    expect(el.children.length).to.equal(1);
+    await widget.unload();
+    expect(removed).to.equal(2);
   });
 });

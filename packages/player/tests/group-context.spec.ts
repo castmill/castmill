@@ -231,7 +231,11 @@ describe('Group context, when and limit', () => {
 
   it('sets the base font size on the template root', async () => {
     await withDom(async (root) => {
-      await show(root, { type: 'group', name: 'root', components: [] }, {});
+      await show(
+        root,
+        { type: 'group', name: 'root', fontScale: true, components: [] },
+        {}
+      );
       const el = root.querySelector(
         '[data-component="template"]'
       ) as HTMLElement;
@@ -261,6 +265,20 @@ describe('Group context, when and limit', () => {
       // Its own write does not trigger it again.
       await settle();
       expect(el.style.fontSize).to.equal('5.625px');
+    });
+  });
+
+  it('does not change the font baseline unless the template opts in', async () => {
+    await withDom(async (root) => {
+      await show(root, { type: 'group', name: 'root', components: [] }, {});
+      const el = root.querySelector(
+        '[data-component="template"]'
+      ) as HTMLElement;
+      const size = { width: 1920, height: 1080 };
+      Object.defineProperty(el, 'clientWidth', { get: () => size.width });
+      Object.defineProperty(el, 'clientHeight', { get: () => size.height });
+
+      expect(el.style.fontSize).to.equal('');
     });
   });
 });

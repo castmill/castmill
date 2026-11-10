@@ -198,10 +198,12 @@ value":
 
 ### Sizes: use `em`
 
-Every template widget gets a base font size that follows its rendered size: 10px for a
-1920×1080 widget, scaled by the smaller of the width and height ratios (a 960×540 zone gets
-5px, a 1080×1920 portrait widget 5.625px), and updated on resize. Size fonts, boxes, paddings
-and borders in `em` (or `%` of the parent) so a design looks the same in any player region,
+Templates can opt into a base font size that follows their rendered size by setting
+`"fontScale": true` on the root template component. It is 10px for a 1920×1080 widget,
+scaled by the smaller of the width and height ratios (a 960×540 zone gets 5px, a 1080×1920
+portrait widget 5.625px), and updated on resize. Without this option, existing templates
+keep their previous font baseline. For opted-in templates, size fonts, boxes, paddings and
+borders in `em` (or `%` of the parent) so a design looks the same in any player region,
 layout zone or dashboard preview. Avoid `px`, `rem` and viewport units (`vw`, `vh`, `vmin`):
 they don't follow the widget's size.
 

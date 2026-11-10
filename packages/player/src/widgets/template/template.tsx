@@ -134,6 +134,7 @@ export const baseFontSize = (width: number, height: number): number | null =>
 export const Template: Component<{
   name: string;
   root: TemplateComponentTypeUnion;
+  fontScale: boolean;
 
   style?: JSX.CSSProperties;
   timeline: Timeline;
@@ -162,6 +163,7 @@ export const Template: Component<{
   // The player attaches layers (hidden but laid out) before showing them, so
   // the size is usually known at mount; later sizes come from the observer.
   onMount(() => {
+    if (!props.fontScale) return;
     applyBaseFont();
     if (rootRef) stopObserving = observeElementResize(rootRef, applyBaseFont);
   });

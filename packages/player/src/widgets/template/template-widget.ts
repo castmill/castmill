@@ -53,6 +53,7 @@ export class TemplateWidget extends TimelineWidget {
   private medias: { [key: string]: string } = {};
   private template: TemplateComponent;
   private displayDuration?: number;
+  private renderDisposer?: () => void;
   // Emits once the rendered template is ready, e.g. its videos have loaded.
   private ready$?: ReplaySubject<void>;
   // Globals for the rendered components; blocked videos report to this
@@ -184,6 +185,11 @@ export class TemplateWidget extends TimelineWidget {
   }
 
   async unload() {
+    this.renderDisposer?.();
+    this.renderDisposer = undefined;
+    this.ready$?.complete();
+    this.ready$ = undefined;
+
     // Note: there is a risk here that we remove a font that is still in use by another widget.
     // We would need to either keep track of the fonts in use or add a unique prefix to the font name.
     // Probably a global font cache would be the best solution.
@@ -212,11 +218,12 @@ export class TemplateWidget extends TimelineWidget {
         if (el.children.length === 0 || !this.ready$) {
           const ready$ = new ReplaySubject<void>(1);
           this.ready$ = ready$;
-          render(
+          this.renderDisposer = render(
             () =>
               Template({
                 name: this.opts.widget.name,
                 root: this.template,
+                fontScale: this.opts.widget.template.fontScale === true,
                 config: this.opts.config,
                 style: this.opts?.style,
                 timeline: this.timeline,
