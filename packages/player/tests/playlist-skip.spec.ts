@@ -339,7 +339,14 @@ describe('Renderer.blank', () => {
 describe('TemplateWidget blocked state', () => {
   const globals = globalThis as any;
   const saved: Record<string, unknown> = {};
-  const keys = ['window', 'document', 'Node', 'HTMLElement', 'Element'];
+  const keys = [
+    'window',
+    'document',
+    'Node',
+    'HTMLElement',
+    'Element',
+    'getComputedStyle',
+  ];
   let dom: any;
 
   beforeEach(() => {
