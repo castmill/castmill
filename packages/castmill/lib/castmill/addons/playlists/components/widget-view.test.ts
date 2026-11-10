@@ -1,11 +1,27 @@
 import { describe, expect, it } from 'vitest';
 import {
   applyWidgetMaxItemsFilter,
+  feedSnapshotForSelection,
   getWidgetViewAspectRatio,
   getWidgetViewContainerStyle,
   matchesWidgetDataUpdate,
   resolveEffectiveWidgetData,
 } from './widget-view';
+
+describe('feedSnapshotForSelection', () => {
+  it('discards a pushed snapshot when the selected feed changes', () => {
+    const snapshot = { feedId: 'feed-a', data: { title: 'old' } };
+    const afterSwitchToB = feedSnapshotForSelection(snapshot, 'feed-b');
+
+    expect(afterSwitchToB).toBeNull();
+    expect(feedSnapshotForSelection(afterSwitchToB, 'feed-a')).toBeNull();
+  });
+
+  it('keeps snapshots belonging to the selected feed', () => {
+    const snapshot = { feedId: 'feed-a', data: { title: 'current' } };
+    expect(feedSnapshotForSelection(snapshot, 'feed-a')).toBe(snapshot);
+  });
+});
 
 describe('WidgetView aspect ratio helpers', () => {
   it('uses layout-ref aspect ratio when present in options', () => {

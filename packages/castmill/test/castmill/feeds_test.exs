@@ -55,12 +55,14 @@ defmodule Castmill.FeedsTest do
       assert Feeds.get_feed(feed.id) == nil
     end
 
-    test "validates settings", %{organization: organization} do
+    test "validates settings", %{organization: organization, feed: feed} do
       for {attrs, field} <- [
             {%{name: ""}, :name},
+            {%{name: nil}, :name},
             {%{name: "x", mode: "table"}, :mode},
             {%{name: "x", keep: 0}, :keep},
             {%{name: "x", keep: 101}, :keep},
+            {%{name: "x", media_fields: nil}, :media_fields},
             {%{name: "x", schema: %{"title" => "nope"}}, :schema},
             {%{name: "x", media_fields: [%{"path" => "bad path"}]}, :media_fields},
             {%{name: "x", media_fields: [%{"path" => "a", "mode" => "move"}]}, :media_fields},
@@ -73,6 +75,17 @@ defmodule Castmill.FeedsTest do
           ] do
         assert {:error, changeset} = Feeds.create_feed(organization.id, attrs)
         assert Keyword.has_key?(changeset.errors, field), inspect({attrs, changeset.errors})
+      end
+
+      for {attrs, field} <- [
+            {%{name: nil}, :name},
+            {%{name: ""}, :name},
+            {%{media_fields: nil}, :media_fields}
+          ] do
+        assert {:error, changeset} = Feeds.update_feed(feed, attrs)
+
+        assert Keyword.has_key?(changeset.errors, field),
+               inspect({attrs, changeset.errors})
       end
     end
 

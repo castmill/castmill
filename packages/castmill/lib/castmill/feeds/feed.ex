@@ -53,8 +53,11 @@ defmodule Castmill.Feeds.Feed do
   def changeset(feed, attrs) do
     feed
     |> cast(attrs, [:name, :description, :mode, :keep, :schema, :media_fields])
-    |> update_change(:name, &String.trim/1)
-    |> validate_required([:name, :mode, :keep])
+    |> update_change(:name, fn
+      name when is_binary(name) -> String.trim(name)
+      name -> name
+    end)
+    |> validate_required([:name, :mode, :keep, :media_fields])
     |> validate_length(:name, max: 120)
     |> validate_length(:description, max: 2_000)
     |> validate_inclusion(:mode, @modes)

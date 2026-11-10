@@ -1,4 +1,4 @@
-import { Component, For, Show, createSignal } from 'solid-js';
+import { Component, Index, Show, createSignal } from 'solid-js';
 import { Button, Dropdown, FormItem } from '@castmill/ui-common';
 
 import { useI18n } from '../../i18n';
@@ -161,25 +161,25 @@ export const FeedForm: Component<FeedFormProps> = (props) => {
       <fieldset class={styles.mediaFields}>
         <legend>{t('feeds.mediaFields')}</legend>
         <p class={styles.muted}>{t('feeds.mediaFieldsHelp')}</p>
-        <For each={values().media_fields}>
+        <Index each={values().media_fields}>
           {(field, index) => (
             <div class={styles.mediaField}>
               <input
                 type="text"
                 aria-label={t('feeds.mediaPath')}
                 placeholder="photos[].url"
-                value={field.path}
+                value={field().path}
                 disabled={props.disabled}
                 onInput={(event) =>
-                  updateField(index(), { path: event.currentTarget.value })
+                  updateField(index, { path: event.currentTarget.value })
                 }
               />
               <select
                 aria-label={t('feeds.mediaMode')}
-                value={field.mode || 'copy'}
+                value={field().mode || 'copy'}
                 disabled={props.disabled}
                 onChange={(event) =>
-                  updateField(index(), {
+                  updateField(index, {
                     mode: event.currentTarget.value as 'copy' | 'link',
                   })
                 }
@@ -194,14 +194,14 @@ export const FeedForm: Component<FeedFormProps> = (props) => {
                 onClick={() =>
                   update({
                     media_fields: values().media_fields.filter(
-                      (_, i) => i !== index()
+                      (_, i) => i !== index
                     ),
                   })
                 }
               />
             </div>
           )}
-        </For>
+        </Index>
         <Button
           label={t('feeds.addMediaField')}
           color="secondary"

@@ -1,8 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@solidjs/testing-library';
+import { createSignal } from 'solid-js';
 import { I18nProvider } from '../../i18n';
 import FeedsPage from './feeds-page';
 import { FeedForm, emptyFeedForm, feedFormToAttrs } from './feed-form';
+import { FeedConnect } from './feed-connect';
 import { FeedsError, FeedsService } from '../../services/feeds.service';
 
 const toastSpies = { success: vi.fn(), error: vi.fn(), info: vi.fn() };
@@ -12,12 +14,29 @@ let allowed = ['list', 'show', 'create', 'update', 'delete'];
 vi.mock('../../services/feeds.service', async (importOriginal) => {
   const actual =
     await importOriginal<typeof import('../../services/feeds.service')>();
-  return { ...actual, FeedsService: { list: vi.fn(), create: vi.fn() } };
+  return {
+    ...actual,
+    FeedsService: { list: vi.fn(), create: vi.fn(), tokens: vi.fn() },
+  };
 });
 
 vi.mock('../../components/auth', () => ({ authFetch: vi.fn() }));
 
-vi.mock('@solidjs/router', () => ({ useNavigate: () => navigate }));
+vi.mock('@solidjs/router', () => ({
+  useNavigate: () => navigate,
+  A: (props: any) => (
+    <a
+      href={props.href}
+      onClick={(event) => {
+        props.onClick?.(event);
+        event.preventDefault();
+        navigate(props.href);
+      }}
+    >
+      {props.children}
+    </a>
+  ),
+}));
 
 vi.mock('../../hooks/usePermissions', () => ({
   usePermissions: () => ({
@@ -75,13 +94,41 @@ describe('FeedsPage', () => {
     await waitFor(() =>
       expect(screen.getByText('Facebook posts')).toBeTruthy()
     );
-    expect(FeedsService.list).toHaveBeenCalledWith('org-1', { pageSize: 100 });
+    expect(FeedsService.list).toHaveBeenCalledWith('org-1', {
+      page: 1,
+      pageSize: 100,
+    });
     expect(screen.getByText('Latest posts')).toBeTruthy();
     expect(screen.getByText('List')).toBeTruthy();
     expect(screen.getByText('4')).toBeTruthy();
 
-    fireEvent.click(screen.getByText('Facebook posts'));
+    fireEvent.click(screen.getByRole('link', { name: 'Facebook posts' }));
     expect(navigate).toHaveBeenCalledWith('/org/org-1/feeds/feed-1');
+  });
+
+  it('loads all pages when the organization has more than 100 feeds', async () => {
+    const firstPage = Array.from({ length: 100 }, (_, index) => ({
+      ...feed,
+      id: `feed-${index}`,
+      name: `Feed ${index}`,
+    }));
+    const secondPage = { ...feed, id: 'feed-100', name: 'Feed 100' };
+    vi.mocked(FeedsService.list)
+      .mockResolvedValueOnce({ data: firstPage, count: 101 })
+      .mockResolvedValueOnce({ data: [secondPage], count: 101 });
+    renderPage();
+
+    await waitFor(() =>
+      expect(screen.getByRole('link', { name: 'Feed 100' })).toBeTruthy()
+    );
+    expect(FeedsService.list).toHaveBeenNthCalledWith(1, 'org-1', {
+      page: 1,
+      pageSize: 100,
+    });
+    expect(FeedsService.list).toHaveBeenNthCalledWith(2, 'org-1', {
+      page: 2,
+      pageSize: 100,
+    });
   });
 
   it('shows document feeds and feeds never written', async () => {
@@ -174,6 +221,30 @@ describe('FeedsPage', () => {
     expect(screen.queryByText('New feed')).toBeNull();
   });
 
+  it('loads tokens when feed management permission becomes available', async () => {
+    const [canManage, setCanManage] = createSignal(false);
+    render(() => (
+      <I18nProvider>
+        <FeedConnect
+          organizationId="org-1"
+          feed={{
+            ...feed,
+            used_by: [],
+            endpoints: { append: '', replace: '', read: '' },
+          }}
+          canManage={canManage()}
+        />
+      </I18nProvider>
+    ));
+
+    vi.mocked(FeedsService.tokens).mockResolvedValue([]);
+    expect(FeedsService.tokens).not.toHaveBeenCalled();
+    setCanManage(true);
+    await waitFor(() =>
+      expect(FeedsService.tokens).toHaveBeenCalledWith('org-1', 'feed-1')
+    );
+  });
+
   it('reports loading errors', async () => {
     vi.mocked(FeedsService.list).mockRejectedValue(new Error('boom'));
     renderPage();
@@ -237,7 +308,12 @@ describe('FeedForm', () => {
 
     fireEvent.click(screen.getByText('Add media field'));
     const paths = screen.getAllByLabelText('Path');
+    paths[1].focus();
+    fireEvent.input(paths[1], { target: { value: 'photos' } });
+    expect(paths[1].isConnected).toBe(true);
+    expect(document.activeElement).toBe(paths[1]);
     fireEvent.input(paths[1], { target: { value: 'photos[].url' } });
+    expect(document.activeElement).toBe(paths[1]);
     fireEvent.change(screen.getAllByLabelText('Handling')[1], {
       target: { value: 'link' },
     });

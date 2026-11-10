@@ -51,7 +51,7 @@ export const FeedConnect: Component<FeedConnectProps> = (props) => {
 
   createEffect(
     on(
-      () => props.feed.id,
+      () => [props.feed.id, props.organizationId, props.canManage],
       () => void loadTokens()
     )
   );

@@ -1,5 +1,5 @@
 import { Component, createEffect, createSignal, on, Show } from 'solid-js';
-import { useNavigate } from '@solidjs/router';
+import { A, useNavigate } from '@solidjs/router';
 import { BsPlus } from 'solid-icons/bs';
 import { TbRss } from 'solid-icons/tb';
 import { Button, Column, Modal, Table, useToast } from '@castmill/ui-common';
@@ -34,8 +34,22 @@ const FeedsPage: Component = () => {
     if (!organizationId) return;
     setLoading(true);
     try {
-      const result = await FeedsService.list(organizationId, { pageSize: 100 });
-      if (current === requestId) setFeeds(result.data);
+      const data: Feed[] = [];
+      let page = 1;
+      let count = 0;
+      let hasMore = true;
+      do {
+        const result = await FeedsService.list(organizationId, {
+          page,
+          pageSize: 100,
+        });
+        if (current !== requestId) return;
+        data.push(...result.data);
+        count = result.count;
+        hasMore = result.data.length > 0;
+        page += 1;
+      } while (data.length < count && hasMore);
+      if (current === requestId) setFeeds(data);
     } catch {
       if (current === requestId) toast.error(t('feeds.errors.load'));
     } finally {
@@ -45,7 +59,8 @@ const FeedsPage: Component = () => {
 
   createEffect(on(orgId, (organizationId) => void load(organizationId)));
 
-  const openFeed = (feed: Feed) => navigate(`/org/${orgId()}/feeds/${feed.id}`);
+  const feedPath = (feed: Feed) => `/org/${orgId()}/feeds/${feed.id}`;
+  const openFeed = (feed: Feed) => navigate(feedPath(feed));
 
   const create = async (attrs: FeedAttrs) => {
     setSaving(true);
@@ -71,7 +86,13 @@ const FeedsPage: Component = () => {
       title: () => t('common.name'),
       render: (feed) => (
         <div class={styles.nameCell}>
-          <span class={styles.feedName}>{feed.name}</span>
+          <A
+            class={styles.feedName}
+            href={feedPath(feed)}
+            onClick={(event) => event.stopPropagation()}
+          >
+            {feed.name}
+          </A>
           <Show when={feed.description}>
             <span class={styles.muted}>{feed.description}</span>
           </Show>

@@ -75,6 +75,16 @@ export const getWidgetFeedId = (
   return typeof value === 'string' && value !== '' ? value : undefined;
 };
 
+export interface WidgetFeedSnapshot {
+  feedId: string;
+  data: Record<string, any>;
+}
+
+export const feedSnapshotForSelection = (
+  snapshot: WidgetFeedSnapshot | null,
+  feedId: string | undefined
+): WidgetFeedSnapshot | null => (snapshot?.feedId === feedId ? snapshot : null);
+
 export const matchesWidgetDataUpdate = (
   payload: { widget_id: string; discriminator_id: string },
   widgetId: number,
@@ -204,10 +214,14 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
   > | null>(null);
   // Latest data pushed for the feed this widget shows. It wins over fetched or
   // parent-provided data until the selected feed changes.
-  const [feedData, setFeedData] = createSignal<{
-    feedId: string;
-    data: Record<string, any>;
-  } | null>(null);
+  const [feedData, setFeedData] = createSignal<WidgetFeedSnapshot | null>(null);
+  createEffect(
+    on(
+      () => getWidgetFeedId(props.widget, props.options),
+      (feedId) =>
+        setFeedData((snapshot) => feedSnapshotForSelection(snapshot, feedId))
+    )
+  );
   const [integrationDiscriminatorId, setIntegrationDiscriminatorId] =
     createSignal<string | null>(null);
   // Start with dataLoaded=true so preview renders immediately with defaults
@@ -368,9 +382,12 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
       currentConfig.data && Object.keys(currentConfig.data).length > 0
         ? currentConfig.data
         : null;
-    const pushed = feedData();
+    const pushed = feedSnapshotForSelection(
+      feedData(),
+      getWidgetFeedId(currentWidget, currentOptions)
+    );
     const effectiveData =
-      pushed && pushed.feedId === getWidgetFeedId(currentWidget, currentOptions)
+      pushed !== null
         ? pushed.data
         : resolveEffectiveWidgetData(
             props.previewData,
