@@ -449,8 +449,10 @@ defmodule CastmillWeb.WidgetIntegrationControllerTest do
 
       assert %{
                "data" => %{"items" => [%{"title" => "stub"}]},
-               "discriminator_id" => ^expected_discriminator
+               "discriminator_id" => discriminator_id
              } = json_response(conn, 200)
+
+      assert String.starts_with?(discriminator_id, "#{expected_discriminator}|preview:")
     end
 
     test "does not prefetch config-scoped data for an unsaved preview", %{
