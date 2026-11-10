@@ -4,6 +4,8 @@ import { getLogicalSize } from '../../utils/logical-size';
 import {
   Component,
   createMemo,
+  createEffect,
+  createSignal,
   JSX,
   mergeProps,
   onCleanup,
@@ -98,6 +100,7 @@ interface TextProps extends BaseComponentProps {
 
 export const Text: Component<TextProps> = (props) => {
   let textRef: HTMLDivElement | undefined;
+  const [textElement, setTextElement] = createSignal<HTMLDivElement>();
   let timelineItem: TimelineItem | undefined;
   let scrollTimeline: gsap.core.Timeline | undefined;
   let cleanUpAnimations: (() => void) | undefined;
@@ -208,10 +211,34 @@ export const Text: Component<TextProps> = (props) => {
     props.timeline.add(timelineItem);
   };
 
+  createEffect(() => {
+    const text = props.opts.text;
+    const element = textElement();
+    if (!element || !props.animations) {
+      return;
+    }
+
+    cleanUpAnimations?.();
+    element.textContent = text;
+    const splittedText = splitText(element, props.opts.chars);
+
+    if (props.opts.perspective) {
+      gsap.set(element, { perspective: props.opts.perspective });
+    }
+
+    cleanUpAnimations = applyAnimations(
+      props.timeline,
+      props.animations,
+      splittedText.chars || splittedText.words,
+      props.timeline.duration()
+    );
+  });
+
   onMount(() => {
     if (!textRef) {
       return;
     }
+    setTextElement(textRef);
 
     const fitText = () => {
       const size = autoFitText(textRef!, props.opts?.autofit || {});
@@ -229,21 +256,6 @@ export const Text: Component<TextProps> = (props) => {
     contentObserver = observeTextContentChanges(textRef, () => {
       fitText();
     });
-
-    if (props.animations) {
-      const splittedText = splitText(textRef, props.opts.chars);
-
-      if (props.opts.perspective) {
-        gsap.set(textRef, { perspective: props.opts.perspective });
-      }
-
-      cleanUpAnimations = applyAnimations(
-        props.timeline,
-        props.animations,
-        splittedText.chars || splittedText.words,
-        props.timeline.duration()
-      );
-    }
 
     props.onReady();
   });

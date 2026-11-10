@@ -115,14 +115,23 @@ interface VideoSourceProps extends VideoProps {
 }
 
 export const Video: Component<VideoProps> = (props) => {
+  let hasReportedReady = false;
+  const reportReady = () => {
+    if (hasReportedReady) return;
+    hasReportedReady = true;
+    props.onReady();
+  };
+
   createEffect(() => {
-    if (!props.opts.url) props.onReady();
+    if (!props.opts.url) reportReady();
   });
 
   return (
     <>
       <Show when={props.opts.url} keyed>
-        {(sourceUrl) => <VideoSource {...props} sourceUrl={sourceUrl} />}
+        {(sourceUrl) => (
+          <VideoSource {...props} onReady={reportReady} sourceUrl={sourceUrl} />
+        )}
       </Show>
       <Show when={!props.opts.url}>
         <div

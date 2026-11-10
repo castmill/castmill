@@ -287,6 +287,7 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
     // Show the first image now: seeking a timeline that is already at 0
     // renders nothing, so it would stay hidden until playback moves.
     timeline.render(0, false, true);
+    timelineItem.start = props.timeline.isRunning() ? props.timeline.time : 0;
     props.timeline.add(timelineItem);
     if (!hasReportedReady) {
       hasReportedReady = true;

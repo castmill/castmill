@@ -23,7 +23,8 @@ describe('time-dependent template updates', () => {
     ) => Promise<void>,
     beforeReady?: (
       root: HTMLElement,
-      advanceClock: (hour?: number) => void
+      advanceClock: (hour?: number) => void,
+      showing: Promise<unknown>
     ) => void | Promise<void>,
     getMedia?: (url: string) => Promise<string | void>
   ) => {
@@ -99,7 +100,7 @@ describe('time-dependent template updates', () => {
 
     try {
       const showing = firstValueFrom(widget.show(root, 0));
-      await beforeReady?.(root, advanceClock);
+      await beforeReady?.(root, advanceClock, showing);
       await showing;
       await run(root, widget, media, advanceClock);
     } finally {
@@ -211,6 +212,42 @@ describe('time-dependent template updates', () => {
           initialTweenCount
         );
         expect(media).to.have.length(initialMediaCount);
+      }
+    );
+  });
+
+  it('rebases a clock-updated carousel to the active parent playhead', async () => {
+    await withWidget(
+      {
+        type: 'image-carousel',
+        name: 'playing-carousel',
+        opts: {
+          images: {
+            list: {
+              key: 'data.images',
+              where: [{ key: '$.until', gte: '@now' }],
+              item: { key: '$.src' },
+            },
+          },
+          imageDuration: 2,
+        },
+      },
+      {
+        images: [
+          { src: 'expired.jpg', until: '2026-01-01T10:30:00' },
+          { src: 'current.jpg', until: '2026-01-01T12:00:00' },
+        ],
+      },
+      async (_root, widget, _media, advanceClock) => {
+        const timeline = (widget as any).timeline;
+        timeline.setDuration(600000);
+        timeline.play(60000);
+        advanceClock();
+        await new Promise((resolve) => setTimeout(resolve, 120));
+
+        const carouselItem = timeline.playing.values().next().value;
+        expect(carouselItem.start).to.be.at.least(60000);
+        expect(timeline.playing.has(carouselItem)).to.equal(true);
       }
     );
   });
@@ -564,6 +601,145 @@ describe('time-dependent template updates', () => {
             .opacity
         ).to.equal('0');
       }
+    );
+  });
+
+  it('rebuilds animated text when clock-resolved content changes', async () => {
+    await withWidget(
+      {
+        type: 'text',
+        name: 'clock-animated-text',
+        opts: {
+          text: {
+            cond: {
+              key: '@now',
+              gte: new Date(2026, 0, 1, 11, 0).getTime(),
+              then: 'Later clock',
+              else: 'Early clock',
+            },
+          },
+        },
+        animations: [
+          {
+            keyframes: [
+              { from: { opacity: 0 } },
+              { to: { opacity: 1, duration: 1 } },
+            ],
+          },
+        ],
+      },
+      {},
+      async (root, widget, _media, advanceClock) => {
+        const text = root.querySelector('[data-component="text"] span')!;
+        const animationTargets = () =>
+          ((widget as any).timeline.items as any[])
+            .filter((item) => typeof item.child.getChildren === 'function')
+            .flatMap((item) =>
+              item.child.getChildren().flatMap((tween: any) => tween.targets())
+            );
+        const initialTargets = animationTargets();
+        expect(text.textContent?.replace(/\u00a0/g, ' ')).to.equal(
+          'Early clock'
+        );
+        expect(initialTargets).to.include(text.children[0]);
+
+        advanceClock();
+        await flush();
+
+        const updatedTargets = animationTargets();
+        expect(text.textContent?.replace(/\u00a0/g, ' ')).to.equal(
+          'Later clock'
+        );
+        expect(text.children.length).to.be.greaterThan(0);
+        expect(updatedTargets).to.include(text.children[0]);
+        expect(updatedTargets).not.to.include(initialTargets[0]);
+      }
+    );
+  });
+
+  it('does not count repeated video readiness while a group sibling is loading', async () => {
+    const pending: { url: string; resolve: (value: string) => void }[] = [];
+
+    await withWidget(
+      {
+        type: 'group',
+        name: 'readiness-group',
+        components: [
+          {
+            type: 'video',
+            name: 'clock-video',
+            opts: {
+              url: {
+                cond: {
+                  key: '@now',
+                  gte: new Date(2026, 0, 1, 11, 0).getTime(),
+                  then: 'later.mp4',
+                  else: '',
+                },
+              },
+            },
+          },
+          {
+            type: 'image',
+            name: 'slow-image',
+            opts: { url: 'slow.jpg' },
+          },
+        ],
+      },
+      {},
+      async (root) => {
+        expect(root.querySelector('video')?.src).to.contain(
+          '/cached/later.mp4'
+        );
+      },
+      async (root, advanceClock, showing) => {
+        const view = root.ownerDocument.defaultView!;
+        view.HTMLMediaElement.prototype.load = () => {};
+        let isReady = false;
+        void showing.then(() => {
+          isReady = true;
+        });
+        const waitForUrl = async (url: string) => {
+          for (
+            let i = 0;
+            i < 50 && !pending.some((item) => item.url === url);
+            i++
+          ) {
+            await new Promise((resolve) => setTimeout(resolve, 2));
+          }
+          expect(pending.some((item) => item.url === url)).to.equal(true);
+        };
+
+        await waitForUrl('slow.jpg');
+        expect(isReady).to.equal(false);
+        advanceClock();
+        await waitForUrl('later.mp4');
+        pending
+          .find((item) => item.url === 'later.mp4')!
+          .resolve('/cached/later.mp4');
+
+        const video = root.querySelector('video')!;
+        for (let i = 0; i < 50 && !video.src; i++) {
+          await new Promise((resolve) => setTimeout(resolve, 2));
+        }
+        Object.defineProperty(video, 'duration', {
+          configurable: true,
+          value: 10,
+        });
+        const Event = view.Event;
+        video.dispatchEvent(new Event('loadedmetadata'));
+        video.dispatchEvent(new Event('canplaythrough'));
+        await new Promise((resolve) => setTimeout(resolve, 20));
+        expect(isReady).to.equal(false);
+
+        pending
+          .find((item) => item.url === 'slow.jpg')!
+          .resolve('/cached/slow.jpg');
+      },
+      (url) =>
+        new Promise((resolve) => {
+          pending.push({ url, resolve });
+        })
     );
   });
 });
