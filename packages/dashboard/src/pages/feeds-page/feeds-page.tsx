@@ -37,7 +37,6 @@ const FeedsPage: Component = () => {
       const data: Feed[] = [];
       let page = 1;
       let count = 0;
-      let hasMore = true;
       do {
         const result = await FeedsService.list(organizationId, {
           page,
@@ -46,9 +45,8 @@ const FeedsPage: Component = () => {
         if (current !== requestId) return;
         data.push(...result.data);
         count = result.count;
-        hasMore = result.data.length > 0;
         page += 1;
-      } while (data.length < count && hasMore);
+      } while (data.length < count);
       if (current === requestId) setFeeds(data);
     } catch {
       if (current === requestId) toast.error(t('feeds.errors.load'));
