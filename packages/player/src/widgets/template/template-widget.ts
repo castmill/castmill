@@ -68,6 +68,7 @@ export class TemplateWidget extends TimelineWidget {
     undefined
   );
   private reportedReadiness?: PlayerRuntimeError;
+  private readinessActive = true;
   private blockedSince?: number;
   private blockedTotal = 0;
 
@@ -155,12 +156,14 @@ export class TemplateWidget extends TimelineWidget {
 
   private reportReadiness(): void {
     let current: PlayerRuntimeError | undefined;
-    this.blocks.forEach((value) => {
-      current = current || value;
-    });
-    this.readinessBlocks.forEach((value) => {
-      current = current || value;
-    });
+    if (this.readinessActive) {
+      this.blocks.forEach((value) => {
+        current = current || value;
+      });
+      this.readinessBlocks.forEach((value) => {
+        current = current || value;
+      });
+    }
     if (current !== this.reportedReadiness) {
       this.reportedReadiness = current;
       this.opts.globals.setPlaybackReadinessBlocked?.(this, current);
@@ -234,6 +237,9 @@ export class TemplateWidget extends TimelineWidget {
   }
 
   async unload() {
+    this.readinessActive = false;
+    this.reportReadiness();
+
     // Note: there is a risk here that we remove a font that is still in use by another widget.
     // We would need to either keep track of the fonts in use or add a unique prefix to the font name.
     // Probably a global font cache would be the best solution.
@@ -253,6 +259,9 @@ export class TemplateWidget extends TimelineWidget {
   }
 
   show(el: HTMLElement, offset: number) {
+    this.readinessActive = true;
+    this.reportReadiness();
+
     // Note: we need to think how data is refreshed when the model changes.
     const basetime = Date.now();
     const blockedAtBase = this.blockedTime();

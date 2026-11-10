@@ -449,4 +449,52 @@ describe('TemplateWidget blocked state', () => {
     expect(parentReadinessStates).to.deep.equal([undefined, BLOCK, undefined]);
     expect(readinessByParent).to.deep.equal([BLOCK, undefined]);
   });
+
+  it('unregisters nested readiness on unload and restores it when shown again', async () => {
+    const parent = new TemplateWidget(
+      { getMedia: async (url: string) => url } as any,
+      {
+        widget: { name: 'parent', template: { type: 'text', opts: {} } } as any,
+        config: { options: {}, data: {} } as any,
+        globals: {
+          target: 'poster',
+        },
+      }
+    );
+    const nested = new TemplateWidget(
+      { getMedia: async (url: string) => url } as any,
+      {
+        widget: { name: 'nested', template: { type: 'text', opts: {} } } as any,
+        config: { options: {}, data: {} } as any,
+        globals: (parent as any).globals,
+      }
+    );
+    const source = {};
+    const parentReadinessStates: unknown[] = [];
+    parent.readiness$().subscribe((block) => parentReadinessStates.push(block));
+
+    (nested as any).setBlocked(source, BLOCK);
+    await nested.unload();
+    (nested as any).setBlocked(source, BLOCK);
+    expect(parentReadinessStates).to.deep.equal([undefined, BLOCK, undefined]);
+
+    await firstValueFrom(
+      nested.show(dom.window.document.getElementById('root'), 0)
+    );
+    expect(parentReadinessStates).to.deep.equal([
+      undefined,
+      BLOCK,
+      undefined,
+      BLOCK,
+    ]);
+
+    await nested.unload();
+    expect(parentReadinessStates).to.deep.equal([
+      undefined,
+      BLOCK,
+      undefined,
+      BLOCK,
+      undefined,
+    ]);
+  });
 });
