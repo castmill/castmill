@@ -5,7 +5,7 @@ import { describe, it } from 'mocha';
 import { JSDOM } from 'jsdom';
 import { firstValueFrom } from 'rxjs';
 
-import { TemplateWidget, tickClock } from '../dist/index.js';
+import { PlayerUI, TemplateWidget, tickClock } from '../dist/index.js';
 
 const flush = () => new Promise((resolve) => setTimeout(resolve, 20));
 
@@ -118,6 +118,39 @@ describe('time-dependent template updates', () => {
       });
     }
   };
+
+  it('unloads preview layers when the player UI is destroyed', async () => {
+    await withWidget(
+      {
+        type: 'image',
+        name: 'preview-clock-image',
+        opts: {
+          url: {
+            cond: {
+              key: '@now',
+              gte: new Date(2026, 0, 1, 11, 0).getTime(),
+              then: 'later.jpg',
+              else: 'early.jpg',
+            },
+          },
+        },
+      },
+      {},
+      async (_root, widget, media, advanceClock) => {
+        expect(media).to.include('early.jpg');
+        const playerUI = Object.create(PlayerUI.prototype) as any;
+        playerUI.stop = () => {};
+        playerUI.playlist = { unload: () => widget.unload() };
+        playerUI.ui = { remove: () => {} };
+
+        playerUI.destroy();
+        advanceClock();
+        await flush();
+
+        expect(media).not.to.include('later.jpg');
+      }
+    );
+  });
 
   it('updates image carousel media and animations when filtered images change', async () => {
     await withWidget(
@@ -742,6 +775,67 @@ describe('time-dependent template updates', () => {
         expect(text.firstElementChild).to.equal(animatedElement);
         expect(updatedAnimation).to.equal(animation);
         expect(updatedAnimation.child.getChildren()).to.have.length(tweenCount);
+      }
+    );
+  });
+
+  it('remeasures a scroller after clock-resolved text changes', async () => {
+    await withWidget(
+      {
+        type: 'scroller',
+        name: 'clock-text-scroller',
+        opts: { items: { key: 'data.items' }, gap: '0px' },
+        component: {
+          type: 'text',
+          opts: {
+            text: {
+              cond: {
+                key: '@now',
+                gte: new Date(2026, 0, 1, 11, 0).getTime(),
+                then: 'A much longer clock label',
+                else: 'Short',
+              },
+            },
+          },
+        },
+      },
+      { items: [{}] },
+      async (root, widget, _media, advanceClock) => {
+        const timeline = (widget as any).timeline;
+        const scrollItem = (timeline.items as any[]).find(
+          (item) => item.repeat
+        );
+        const initialDuration = scrollItem.duration;
+        const elementPrototype =
+          root.ownerDocument.defaultView!.HTMLElement.prototype;
+        elementPrototype.getBoundingClientRect = function () {
+          const element = this as HTMLElement;
+          const width =
+            element.style.willChange === 'transform'
+              ? Array.from(
+                  element.querySelectorAll('[data-component="text"] span')
+                ).reduce(
+                  (total, text) => total + (text.textContent?.length || 0) * 20,
+                  0
+                )
+              : 400;
+          return {
+            x: 0,
+            y: 0,
+            top: 0,
+            right: width,
+            bottom: 200,
+            left: 0,
+            width,
+            height: 200,
+            toJSON: () => ({}),
+          } as DOMRect;
+        };
+
+        advanceClock();
+        await flush();
+
+        expect(scrollItem.duration).to.be.greaterThan(initialDuration);
       }
     );
   });

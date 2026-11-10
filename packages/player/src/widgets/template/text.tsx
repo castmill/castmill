@@ -383,6 +383,7 @@ export const Text: Component<TextProps> = (props) => {
     const fitText = () => {
       const size = autoFitText(textRef!, props.opts?.autofit || {});
       updateScrollTimeline(size);
+      props.onLayoutUpdate?.();
       return size;
     };
 

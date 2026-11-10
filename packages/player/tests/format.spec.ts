@@ -68,6 +68,12 @@ describe('Template formatting', () => {
         formatters: [{ name: 'default', args: ["it's"] }],
       });
     });
+
+    it('resolves array-slice paths inside placeholders', () => {
+      expect(
+        resolve({ fmt: '{data.tags[1:3]}' }, { tags: ['zero', 'one', 'two'] })
+      ).to.equal('one,two');
+    });
   });
 
   describe('parseDate', () => {
@@ -261,6 +267,7 @@ describe('Template formatting', () => {
       expect(apply('truncate', 'Strindbergsgatan 54', '8')).to.equal(
         'Strindbe…'
       );
+      expect(apply('truncate', '🏠 for sale', '1')).to.equal('🏠…');
       expect(apply('truncate', 'Kort', '8')).to.equal('Kort');
       expect(apply('truncate', 'Two words', '4')).to.equal('Two…');
       expect(apply('upper', '')).to.equal(undefined);

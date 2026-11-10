@@ -350,7 +350,8 @@ defmodule Castmill.Widgets.TemplateBindings do
   defp literal(["}" | _], pos), do: {:error, "unexpected \"}\" at position #{pos}"}
 
   defp literal(["{" | rest], pos) do
-    with {:ok, parts, rest, next} <- placeholder(rest, pos + 1, [[]], "", nil, pos),
+    with {:ok, parts, rest, next} <-
+           placeholder(rest, pos + 1, [[]], "", nil, 0, pos),
          :ok <- check_placeholder(parts, pos) do
       literal(rest, next)
     end
@@ -359,46 +360,59 @@ defmodule Castmill.Widgets.TemplateBindings do
   defp literal([_ | rest], pos), do: literal(rest, pos + 1)
 
   # Collects "|"-separated parts of ":"-separated items until the closing "}".
-  defp placeholder([], _pos, _parts, _current, _quoted, start),
+  defp placeholder([], _pos, _parts, _current, _quoted, _bracket_depth, start),
     do: {:error, "unclosed placeholder at position #{start}"}
 
-  defp placeholder(["'" | rest], pos, parts, current, quoted, start) do
+  defp placeholder(["'" | rest], pos, parts, current, quoted, bracket_depth, start) do
     if is_nil(quoted) and String.trim(current) == "",
-      do: quote_value(rest, pos + 1, parts, "", pos, start),
+      do: quote_value(rest, pos + 1, parts, "", pos, bracket_depth, start),
       else: {:error, "unexpected quote at position #{pos}"}
   end
 
-  defp placeholder([char | rest], pos, parts, current, quoted, start)
-       when char in [":", "|", "}"] do
+  defp placeholder([char | rest], pos, parts, current, quoted, bracket_depth, start)
+       when char in ["|", "}"] or (char == ":" and bracket_depth == 0) do
     parts = finish_item(parts, current, quoted)
 
     case char do
-      "|" -> placeholder(rest, pos + 1, parts ++ [[]], "", nil, start)
-      ":" -> placeholder(rest, pos + 1, parts, "", nil, start)
+      "|" -> placeholder(rest, pos + 1, parts ++ [[]], "", nil, 0, start)
+      ":" -> placeholder(rest, pos + 1, parts, "", nil, 0, start)
       "}" -> {:ok, parts, rest, pos + 1}
     end
   end
 
-  defp placeholder(["{" | _], pos, _parts, _current, _quoted, _start),
+  defp placeholder(["{" | _], pos, _parts, _current, _quoted, _bracket_depth, _start),
     do: {:error, "unexpected \"{\" at position #{pos}"}
 
-  defp placeholder([char | rest], pos, parts, current, quoted, start) do
+  defp placeholder([char | rest], pos, parts, current, quoted, bracket_depth, start) do
     if not is_nil(quoted) and char != " ",
       do: {:error, "unexpected text after quote at position #{pos}"},
-      else: placeholder(rest, pos + 1, parts, current <> char, quoted, start)
+      else:
+        placeholder(
+          rest,
+          pos + 1,
+          parts,
+          current <> char,
+          quoted,
+          update_bracket_depth(bracket_depth, char),
+          start
+        )
   end
 
-  defp quote_value([], _pos, _parts, _value, quote_pos, _start),
+  defp quote_value([], _pos, _parts, _value, quote_pos, _bracket_depth, _start),
     do: {:error, "unclosed quote at position #{quote_pos}"}
 
-  defp quote_value(["'", "'" | rest], pos, parts, value, quote_pos, start),
-    do: quote_value(rest, pos + 2, parts, value <> "'", quote_pos, start)
+  defp quote_value(["'", "'" | rest], pos, parts, value, quote_pos, bracket_depth, start),
+    do: quote_value(rest, pos + 2, parts, value <> "'", quote_pos, bracket_depth, start)
 
-  defp quote_value(["'" | rest], pos, parts, value, _quote_pos, start),
-    do: placeholder(rest, pos + 1, parts, "", value, start)
+  defp quote_value(["'" | rest], pos, parts, value, _quote_pos, bracket_depth, start),
+    do: placeholder(rest, pos + 1, parts, "", value, bracket_depth, start)
 
-  defp quote_value([char | rest], pos, parts, value, quote_pos, start),
-    do: quote_value(rest, pos + 1, parts, value <> char, quote_pos, start)
+  defp quote_value([char | rest], pos, parts, value, quote_pos, bracket_depth, start),
+    do: quote_value(rest, pos + 1, parts, value <> char, quote_pos, bracket_depth, start)
+
+  defp update_bracket_depth(depth, "["), do: depth + 1
+  defp update_bracket_depth(depth, "]"), do: max(depth - 1, 0)
+  defp update_bracket_depth(depth, _char), do: depth
 
   defp finish_item(parts, current, quoted) do
     item = if is_nil(quoted), do: String.trim(current), else: quoted

@@ -68,6 +68,7 @@ function parsePlaceholder(source: string, start: number): [FmtSegment, number] {
   const parts: string[][] = [[]];
   let current = '';
   let quoted: string | undefined;
+  let bracketDepth = 0;
 
   const finishItem = () => {
     parts[parts.length - 1].push(
@@ -101,10 +102,21 @@ function parsePlaceholder(source: string, start: number): [FmtSegment, number] {
       }
       quoted = value;
       current = '';
-    } else if (char === ':' || char === '|' || char === '}') {
+    } else if (quoted === undefined && char === '[') {
+      current += char;
+      bracketDepth++;
+    } else if (quoted === undefined && char === ']') {
+      current += char;
+      bracketDepth = Math.max(0, bracketDepth - 1);
+    } else if (
+      (char === ':' && bracketDepth === 0) ||
+      char === '|' ||
+      char === '}'
+    ) {
       finishItem();
       if (char === '|') {
         parts.push([]);
+        bracketDepth = 0;
       } else if (char === '}') {
         return [placeholderFrom(parts, start), i];
       }

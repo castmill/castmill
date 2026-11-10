@@ -178,6 +178,7 @@ export const Item: Component<{
             style={style()}
             timeline={props.timeline}
             onReady={props.onReady}
+            onLayoutUpdate={props.onLayoutUpdate}
           />
         </Match>
         <Match when={props.component.type == TemplateComponentType.Group}>

@@ -13,6 +13,7 @@
     "{$ | upper}",
     "{@now | date:'HH:mm'}",
     "{data.text | truncate:20}",
+    "{data.tags[1:3]}",
     "{data.fee | default:'ENLIGT ÖK'}",
     "{data.name | lower | trim}",
     "{{literal braces}} and {data.x}",

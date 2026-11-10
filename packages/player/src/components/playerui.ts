@@ -375,6 +375,7 @@ export class PlayerUI {
     this.seekSubscription?.unsubscribe();
     this.loopSubscription?.unsubscribe();
     this.playSubscription?.unsubscribe();
+    this.playlist.unload();
   }
 
   mounted() {

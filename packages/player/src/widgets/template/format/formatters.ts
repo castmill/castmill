@@ -84,8 +84,10 @@ export const FORMATTERS: { [name: string]: Formatter } = {
       if (string === undefined || !(length >= 0)) {
         return string;
       }
-      return string.length > length
-        ? string.slice(0, length).replace(/\s+$/, '') + '…'
+      const characters =
+        string.match(/[\uD800-\uDBFF][\uDC00-\uDFFF]|[\s\S]/g) || [];
+      return characters.length > length
+        ? characters.slice(0, length).join('').replace(/\s+$/, '') + '…'
         : string;
     },
   },
