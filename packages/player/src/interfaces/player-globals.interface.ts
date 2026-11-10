@@ -54,6 +54,14 @@ export interface PlayerGlobals {
    */
   setPlaybackBlocked?: (source: object, block?: PlayerRuntimeError) => void;
   /**
+   * Reports nested playback readiness separately from the nearest item's
+   * blocked state, so finite parent playback can wait without skipping it.
+   */
+  setPlaybackReadinessBlocked?: (
+    source: object,
+    block?: PlayerRuntimeError
+  ) => void;
+  /**
    * Called when an item of a playlist created with these globals starts
    * playing. The device uses it to resume programming at the next item after
    * an automation interruption. Errors thrown by the callback are ignored.

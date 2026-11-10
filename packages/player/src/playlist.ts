@@ -250,7 +250,8 @@ export class Playlist extends EventEmitter {
                   count: layersWithOffsets.length,
                   duration,
                 })
-            )
+            ),
+            !loop
           );
         })
       );
@@ -288,7 +289,8 @@ export class Playlist extends EventEmitter {
     element: LayerWithOffsets,
     skips: { count: number },
     count: number,
-    play$: Observable<string | number>
+    play$: Observable<string | number>,
+    holdOnReadiness: boolean
   ): Observable<string | number> {
     return new Observable<string | number>((subscriber) => {
       let skipTimer: ReturnType<typeof setTimeout> | undefined;
@@ -317,23 +319,36 @@ export class Playlist extends EventEmitter {
       };
 
       let block: PlayerRuntimeError | undefined;
+      let readinessBlock: PlayerRuntimeError | undefined;
+      const updateClock = () => {
+        if (block || (holdOnReadiness && readinessBlock)) {
+          clock.hold(element.start, element.end);
+        } else {
+          clock.release();
+        }
+      };
       const onBlocked = (value: PlayerRuntimeError | undefined) => {
         block = value;
         if (value) {
-          clock.hold(element.start, element.end);
           if (!waiting && skipTimer === undefined) {
             skipTimer = setTimeout(onBlockExpired, BLOCKED_ITEM_SKIP_MS);
           }
         } else {
           stopTimer();
-          clock.release();
         }
+        updateClock();
       };
 
       // Keeps the clock running while the item waits to be shown, so holds
       // and skips start from the current time.
       const ticking = timer$.subscribe();
       const blocked = layer.blocked$().subscribe(onBlocked);
+      const readiness = holdOnReadiness
+        ? (layer.readiness$?.() ?? of(undefined)).subscribe((value) => {
+            readinessBlock = value;
+            updateClock();
+          })
+        : undefined;
       playing = play$.subscribe({
         next: (value) => subscriber.next(value),
         error: (error) => subscriber.error(error),
@@ -346,6 +361,7 @@ export class Playlist extends EventEmitter {
       return () => {
         stopTimer();
         blocked.unsubscribe();
+        readiness?.unsubscribe();
         playing?.unsubscribe();
         ticking.unsubscribe();
         clock.release();

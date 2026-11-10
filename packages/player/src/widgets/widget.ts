@@ -113,6 +113,14 @@ export abstract class Widget extends EventEmitter {
     return of(undefined);
   }
 
+  /**
+   * Emits nested blocks that should hold finite parent playback without
+   * making this item itself skippable.
+   */
+  readiness$(): Observable<PlayerRuntimeError | undefined> {
+    return of(undefined);
+  }
+
   duration_old(): Observable<number> {
     return of(0);
   }
