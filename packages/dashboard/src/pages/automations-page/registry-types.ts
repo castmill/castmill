@@ -18,6 +18,9 @@ export interface SummaryContext {
 export interface TypeEditorProps<C> {
   config: C;
   onChange: (config: C) => void;
+  condition?: string;
+  conditions?: string[];
+  onConditionChange?: (condition: string) => void;
   organizationId: string;
   /** Translation keys of the current validation errors. */
   errors: string[];
@@ -39,8 +42,8 @@ interface TypeDefinition<C> {
 
 /** An event source ("when" side of a rule). */
 export interface SourceDefinition<C = any> extends TypeDefinition<C> {
-  /** Condition name stored in `when.condition`. */
-  condition: string;
+  /** Condition names offered by this source. */
+  conditions: string[];
 }
 
 /** An action ("then" side of a rule). */

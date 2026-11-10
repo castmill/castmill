@@ -194,6 +194,7 @@ playlists referenced by its effective automations).
   membership changes.
 - `automation_run` `{automation_id, rule: <device rule>}` → "Run now": the
   device runs the rule's action once through the arbitration (ignores cooldown).
+  Only enabled automations can be run manually.
 
 ### Capabilities
 
@@ -255,6 +256,8 @@ dashboard routes above.
   `/org/:orgId/automations` (sidebar entry under content).
 - Type editors registered in `automations-page/registry.tsx`
   (`sourceEditors`, `actionEditors`, `sourceSummaries`, `actionSummaries`).
+- Source registrations expose all supported `conditions`; their editor receives
+  the selected condition and can change it without page-level wiring.
 - Device page shows effective automations and upcoming firings; channel page
   shows assigned automations.
 - Strings under `automations.*` in all nine locales.

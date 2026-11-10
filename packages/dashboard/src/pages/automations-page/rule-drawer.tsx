@@ -110,7 +110,7 @@ export const RuleDrawer: Component<RuleDrawerProps> = (props) => {
       ...draft(),
       when: {
         source: type,
-        condition: definition.condition,
+        condition: definition.conditions[0] ?? '',
         config: definition.defaultConfig(),
       },
     });
@@ -187,8 +187,16 @@ export const RuleDrawer: Component<RuleDrawerProps> = (props) => {
               <Dynamic
                 component={definition.editor}
                 config={draft().when.config}
+                condition={draft().when.condition}
+                conditions={definition.conditions}
                 organizationId={props.organizationId}
                 errors={sourceErrors()}
+                onConditionChange={(condition: string) =>
+                  setDraft({
+                    ...draft(),
+                    when: { ...draft().when, condition },
+                  })
+                }
                 onChange={(config: unknown) =>
                   setDraft({ ...draft(), when: { ...draft().when, config } })
                 }

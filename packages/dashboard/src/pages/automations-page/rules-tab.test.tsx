@@ -180,6 +180,14 @@ describe('RulesTab', () => {
     ).toBeDisabled();
   });
 
+  it('cannot run rules for a disabled automation', () => {
+    renderTab({ automation: automationFixture({ enabled: false }) });
+    expect(
+      screen.getByRole('button', { name: 'Run rule 1 now' })
+    ).toBeDisabled();
+    expect(onRun).not.toHaveBeenCalled();
+  });
+
   it('shows capability warnings and cooldowns', () => {
     const rule = { ...clockRule('r1', 8), cooldown_seconds: 60 };
     renderTab({

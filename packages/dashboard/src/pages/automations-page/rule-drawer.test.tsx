@@ -63,14 +63,28 @@ interface StubConfig {
 }
 
 const StubSourceEditor = (props: TypeEditorProps<StubConfig>) => (
-  <label>
-    Stub source value
-    <input
-      data-testid="stub-source-editor"
-      value={props.config.value}
-      onInput={(e) => props.onChange({ value: e.currentTarget.value })}
-    />
-  </label>
+  <>
+    <label>
+      Stub source condition
+      <select
+        data-testid="stub-source-condition"
+        value={props.condition}
+        onChange={(e) => props.onConditionChange?.(e.currentTarget.value)}
+      >
+        {props.conditions?.map((condition) => (
+          <option value={condition}>{condition}</option>
+        ))}
+      </select>
+    </label>
+    <label>
+      Stub source value
+      <input
+        data-testid="stub-source-editor"
+        value={props.config.value}
+        onInput={(e) => props.onChange({ value: e.currentTarget.value })}
+      />
+    </label>
+  </>
 );
 
 const StubActionEditor = (props: TypeEditorProps<StubConfig>) => (
@@ -218,7 +232,7 @@ describe('registry extensibility', () => {
     });
     registerSource<StubConfig>({
       type: 'test-source',
-      condition: 'happens',
+      conditions: ['received', 'active'],
       icon: BsQuestion,
       label: () => 'Test source',
       description: () => 'A source registered by the test',
@@ -256,6 +270,7 @@ describe('registry extensibility', () => {
 
     fireEvent.click(await screen.findByRole('radio', { name: /Test source/ }));
     expect(screen.getByTestId('stub-source-editor')).toBeInTheDocument();
+    expect(screen.getByTestId('stub-source-condition')).toHaveValue('received');
     expect(screen.queryByTestId('clock-editor')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('radio', { name: /Test action/ }));
@@ -267,6 +282,9 @@ describe('registry extensibility', () => {
     fireEvent.input(screen.getByTestId('stub-source-editor'), {
       target: { value: 'door opened' },
     });
+    fireEvent.change(screen.getByTestId('stub-source-condition'), {
+      target: { value: 'active' },
+    });
     fireEvent.input(screen.getByTestId('stub-action-editor'), {
       target: { value: 'beep' },
     });
@@ -277,7 +295,7 @@ describe('registry extensibility', () => {
     expect(saved).toEqual({
       when: {
         source: 'test-source',
-        condition: 'happens',
+        condition: 'active',
         config: { value: 'door opened' },
       },
       then: { action: 'test-action', config: { value: 'BEEP' } },

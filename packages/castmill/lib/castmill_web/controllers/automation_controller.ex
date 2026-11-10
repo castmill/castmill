@@ -180,6 +180,12 @@ defmodule CastmillWeb.AutomationController do
     |> json(%{errors: %{quota: ["Automation rules quota exceeded"]}})
   end
 
+  defp handle_error(conn, {:error, :automation_disabled}) do
+    conn
+    |> put_status(:unprocessable_entity)
+    |> json(%{errors: %{automation: ["Cannot run a disabled automation"]}})
+  end
+
   defp handle_error(_conn, error), do: error
 
   defp parse_datetime(value) when is_binary(value) do

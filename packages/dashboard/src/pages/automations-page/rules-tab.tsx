@@ -235,7 +235,11 @@ export const RulesTab: Component<RulesTabProps> = (props) => {
                     aria-label={t('automations.rules.runNowN', {
                       n: index() + 1,
                     })}
-                    disabled={!rule.id || running() === rule.id}
+                    disabled={
+                      !props.automation.enabled ||
+                      !rule.id ||
+                      running() === rule.id
+                    }
                     onClick={() => run(rule)}
                   >
                     <BsPlayFill />

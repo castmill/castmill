@@ -11,7 +11,7 @@ import {
 
 export const clockSource: SourceDefinition<ClockConfig> = {
   type: 'clock',
-  condition: 'at',
+  conditions: ['at'],
   icon: BsClock,
   label: (t) => t('automations.sources.clock.label'),
   description: (t) => t('automations.sources.clock.description'),

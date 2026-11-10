@@ -114,7 +114,10 @@ export class TemplateWidget extends TimelineWidget {
       this.blockedTotal += Date.now() - this.blockedSince;
       this.blockedSince = undefined;
     }
-    if (current !== this.blocked.getValue()) this.blocked.next(current);
+    if (current !== this.blocked.getValue()) {
+      this.blocked.next(current);
+      this.opts.globals.setPlaybackBlocked?.(this, current);
+    }
   }
 
   // Total time any rendered component has been blocked.

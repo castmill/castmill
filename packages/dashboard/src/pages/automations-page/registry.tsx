@@ -165,7 +165,7 @@ export const newRule = (
   return {
     when: {
       source: sourceType,
-      condition: source?.condition ?? '',
+      condition: source?.conditions[0] ?? '',
       config: source ? source.defaultConfig() : {},
     },
     then: {

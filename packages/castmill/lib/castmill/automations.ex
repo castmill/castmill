@@ -608,6 +608,14 @@ defmodule Castmill.Automations do
   automation. Returns `{:ok, count}` with the number of devices notified.
   """
   def run_rule(%Automation{} = automation, rule_id) do
+    if not automation.enabled do
+      {:error, :automation_disabled}
+    else
+      run_enabled_rule(automation, rule_id)
+    end
+  end
+
+  defp run_enabled_rule(automation, rule_id) do
     case Enum.find_index(automation.rules, &(&1["id"] == rule_id)) do
       nil ->
         {:error, :not_found}

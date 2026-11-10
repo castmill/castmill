@@ -92,7 +92,7 @@ export class Player extends EventEmitter {
         let currTime = time;
         return timer(
           baseline,
-          startTime,
+          time,
           TIMER_RESOLUTION,
           duration,
           opts.loop === true
@@ -216,6 +216,7 @@ export function timer(
           : start + elapsed;
 
       subscriber.next(tick);
+      if (subscriber.closed) return;
       timeout = setTimeout(updateTick, interval);
     };
     updateTick();
