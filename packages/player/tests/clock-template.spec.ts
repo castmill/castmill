@@ -712,7 +712,7 @@ describe('time-dependent template updates', () => {
       {
         type: 'text',
         name: 'stable-clock-text',
-        opts: { text: "{@now | date:'D/M'}" },
+        opts: { text: { fmt: "{@now | date:'D/M'}" } },
         animations: [
           {
             keyframes: [
