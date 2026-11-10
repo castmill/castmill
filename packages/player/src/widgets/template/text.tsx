@@ -8,6 +8,7 @@ import {
   createSignal,
   JSX,
   mergeProps,
+  on,
   onCleanup,
   onMount,
 } from 'solid-js';
@@ -121,7 +122,12 @@ export const getTextOverride = (
 
 export interface TextComponentOptions {
   text: string;
-  autofit: AutoFitOpts;
+  /**
+   * Fits the text to its container. Without it the text keeps its own size
+   * (in `em`, which follows the widget's size) and is never measured.
+   * `{}` fills the container; `baseSize`/`maxSize` keep a size and only shrink.
+   */
+  autofit?: AutoFitOpts;
 
   /** Set when the text is editable (resolved key and label). */
   editable?: ResolvedEditable;
@@ -195,16 +201,28 @@ export class TextComponent implements TemplateComponent {
     return {
       text,
       editable,
-      autofit: {
-        maxSize: resolveOption(opts.autofit?.maxSize, config, context, globals),
-        minSize: resolveOption(opts.autofit?.minSize, config, context, globals),
-        baseSize: resolveOption(
-          opts.autofit?.baseSize,
-          config,
-          context,
-          globals
-        ),
-      },
+      autofit: opts.autofit
+        ? {
+            maxSize: resolveOption(
+              opts.autofit.maxSize,
+              config,
+              context,
+              globals
+            ),
+            minSize: resolveOption(
+              opts.autofit.minSize,
+              config,
+              context,
+              globals
+            ),
+            baseSize: resolveOption(
+              opts.autofit.baseSize,
+              config,
+              context,
+              globals
+            ),
+          }
+        : undefined,
     };
   }
 }
@@ -294,7 +312,7 @@ export const Text: Component<TextProps> = (props) => {
     if (
       !element ||
       !props.opts.text ||
-      !props.opts.autofit.minSize ||
+      !props.opts.autofit?.minSize ||
       props.opts.autofit.minSize <= size
     ) {
       return;
@@ -374,29 +392,44 @@ export const Text: Component<TextProps> = (props) => {
     );
   });
 
+  createEffect(
+    on(
+      () => props.opts.text,
+      () => {
+        if (!props.opts.autofit) {
+          props.onLayoutUpdate?.();
+        }
+      }
+    )
+  );
+
   onMount(() => {
     if (!textRef) {
       return;
     }
     setTextElement(textRef);
 
-    const fitText = () => {
-      const size = autoFitText(textRef!, props.opts?.autofit || {});
-      updateScrollTimeline(size);
-      props.onLayoutUpdate?.();
-      return size;
-    };
+    // Only texts that ask to be fitted are measured; others keep their `em`
+    // size, which already follows the widget's size (the template's base).
+    if (props.opts?.autofit) {
+      const fitText = () => {
+        const size = autoFitText(textRef!, props.opts.autofit || {});
+        updateScrollTimeline(size);
+        props.onLayoutUpdate?.();
+        return size;
+      };
 
-    fitText();
-    animationFrame = requestAnimationFrame(() => {
       fitText();
-    });
-    stopObservingResize = observeTextContainerResize(textRef, () => {
-      fitText();
-    });
-    contentObserver = observeTextContentChanges(textRef, () => {
-      fitText();
-    });
+      animationFrame = requestAnimationFrame(() => {
+        fitText();
+      });
+      stopObservingResize = observeTextContainerResize(textRef, () => {
+        fitText();
+      });
+      contentObserver = observeTextContentChanges(textRef, () => {
+        fitText();
+      });
+    }
 
     props.onReady();
   });

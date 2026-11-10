@@ -231,6 +231,56 @@ Iterates over data arrays to create repeated elements (menus, schedules, feeds).
 
 Container for organizing multiple components with shared styling.
 
+A group can set the context of its children with `context`, any binding. Its children then bind to
+that value with `$.` paths, the same way list items bind to their item. This lets one layout be
+rendered both on its own and as the item of a list:
+
+```json
+{
+  "type": "group",
+  "context": { "key": "data.listing" },
+  "components": [{ "type": "text", "opts": { "text": { "key": "$.address.street" } } }]
+}
+```
+
+The group's own `filter` and `$styles` are still resolved with the outer context.
+
+A group can show only its first visible children with `opts.limit` (a number or a binding). Children
+hidden by `filter` or `when` don't count, so a group of facts can show "the first 5 facts that have a
+value":
+
+```json
+{
+  "type": "group",
+  "opts": { "limit": 5 },
+  "components": [
+    { "type": "text", "when": { "key": "$.price" }, "opts": { "text": { "concat": [{ "key": "$.price" }, " kr"] } } },
+    { "type": "text", "when": { "key": "$.fee" }, "opts": { "text": { "concat": [{ "key": "$.fee" }, " kr/mån"] } } }
+  ]
+}
+```
+
+### Sizes: use `em`
+
+Templates can opt into a base font size that follows their rendered size by setting
+`"fontScale": true` on the root template component. It is 10px for a 1920×1080 widget,
+scaled by the smaller of the width and height ratios (a 960×540 zone gets 5px, a 1080×1920
+portrait widget 5.625px), and updated on resize. Without this option, existing templates
+keep their previous font baseline. For opted-in templates, size fonts, boxes, paddings and
+borders in `em` (or `%` of the parent) so a design looks the same in any player region,
+layout zone or dashboard preview. Avoid `px`, `rem` and viewport units (`vw`, `vh`, `vmin`):
+they don't follow the widget's size.
+
+### Visibility: `filter` and `when`
+
+Any component can declare:
+
+- `filter`: an object of key paths and the values they must equal (`{ "data.status": "sold" }`).
+- `when`: any binding; the component renders only when it resolves to a present value, i.e. not
+  `null`, blank text, `false`, `0`, `NaN` or an empty list.
+
+A component renders when both pass.
+
 ### Text
 
 Displays text content with support for autofit sizing.

@@ -308,6 +308,8 @@ export const Scroller: Component<ScrollerProps> = (props) => {
   let containerRef: HTMLDivElement | undefined;
   let contentRef: HTMLDivElement | undefined;
   let scrollAnimation: ScrollAnimation | null = null;
+  let resizeObserver: ResizeObserver | undefined;
+  let disposed = false;
   let timelineItem: TimelineItem | undefined;
   let optionsFrame: number | undefined;
 
@@ -385,6 +387,7 @@ export const Scroller: Component<ScrollerProps> = (props) => {
   };
 
   const initializeScroll = () => {
+    if (disposed) return;
     if (!containerRef || !contentRef) {
       props.onReady();
       return;
@@ -448,9 +451,17 @@ export const Scroller: Component<ScrollerProps> = (props) => {
 
   const onResize = () => resizeScroll();
 
-  onMount(() => window.addEventListener('resize', onResize));
+  onMount(() => {
+    window.addEventListener('resize', onResize);
+    if (typeof ResizeObserver !== 'undefined' && contentRef) {
+      resizeObserver = new ResizeObserver(onResize);
+      resizeObserver.observe(contentRef);
+    }
+  });
 
   onCleanup(() => {
+    disposed = true;
+    resizeObserver?.disconnect();
     generation++;
     window.removeEventListener('resize', onResize);
     if (optionsFrame !== undefined) {

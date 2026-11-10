@@ -54,7 +54,7 @@ export class TemplateWidget extends TimelineWidget {
   private template: TemplateComponent;
   private config: TemplateConfig;
   private displayDuration?: number;
-  private learnedDuration = 0;
+  private lastRuntimeDuration?: number;
   // Emits once the rendered template is ready, e.g. its videos have loaded.
   private ready$?: ReplaySubject<void>;
   private disposeRender?: () => void;
@@ -249,12 +249,16 @@ export class TemplateWidget extends TimelineWidget {
   }
 
   async unload() {
+    const runtimeDuration = this.timeline.duration();
+    if (runtimeDuration > 0) this.lastRuntimeDuration = runtimeDuration;
+
+    this.readinessActive = false;
+    this.reportReadiness();
+
     this.disposeRender?.();
     this.disposeRender = undefined;
     this.ready$?.complete();
     this.ready$ = undefined;
-    this.readinessActive = false;
-    this.reportReadiness();
 
     // Note: there is a risk here that we remove a font that is still in use by another widget.
     // We would need to either keep track of the fonts in use or add a unique prefix to the font name.
@@ -292,6 +296,7 @@ export class TemplateWidget extends TimelineWidget {
               Template({
                 name: this.opts.widget.name,
                 root: this.template,
+                fontScale: this.opts.widget.template.fontScale === true,
                 config: this.config,
                 style: this.opts?.style,
                 timeline: this.timeline,
@@ -314,7 +319,8 @@ export class TemplateWidget extends TimelineWidget {
             // spent waiting for a decoder is excluded: playlists hold their
             // clock while an item is blocked.
             const blocked = this.blockedTime() - blockedAtBase;
-            this.seek(offset + Math.max(0, Date.now() - basetime - blocked));
+            const elapsed = Math.max(0, Date.now() - basetime - blocked);
+            this.seek(offset + elapsed);
             return 'template-widget:shown';
           })
         );
@@ -344,10 +350,14 @@ export class TemplateWidget extends TimelineWidget {
     const resolved = this.template.resolveDuration(this.medias);
 
     if (timelineDuration > 0) {
-      this.learnedDuration = timelineDuration;
+      this.lastRuntimeDuration = timelineDuration;
       return timelineDuration;
     }
 
-    return this.learnedDuration || (resolved > 0 ? resolved : 10000);
+    if (this.lastRuntimeDuration !== undefined) {
+      return this.lastRuntimeDuration;
+    }
+
+    return resolved > 0 ? resolved : 10000;
   }
 }

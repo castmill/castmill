@@ -2,7 +2,8 @@ import { Component, Switch, Match, Show, createMemo } from 'solid-js';
 
 import { ResourceManager } from '@castmill/cache';
 
-import { Group, GroupComponent } from './group';
+import { Group, GroupComponent, resolveGroupContext } from './group';
+import { checkFilter, isVisible } from './visibility';
 import { Image, ImageComponent } from './image';
 import {
   PaginatedList,
@@ -12,7 +13,7 @@ import {
 import { Scroller, ScrollerComponent } from './scroller';
 import { ImageCarousel, ImageCarouselComponent } from './image-carousel';
 import { Text, TextComponent, TextComponentOptions } from './text';
-import { TemplateConfig, resolveKey, resolveOption } from './binding';
+import { TemplateConfig, resolveOption } from './binding';
 import { Video, VideoComponent } from './video';
 import { QRCode, QRCodeComponent } from './qr-code';
 import {
@@ -23,32 +24,6 @@ import {
 import { Layout, LayoutComponent } from './layout';
 import { Timeline } from './timeline';
 import { PlayerGlobals } from '../../interfaces/player-globals.interface';
-
-/**
- *
- * Checks if the condition is true or false.
- *
- * @param filter The condition to check, as an object of keypaths to data and values.
- *
- *
- * @param config
- * @param context
- * @returns
- */
-function checkFilter(
-  filter: Record<string, any> | undefined,
-  config: TemplateConfig,
-  context: any,
-  globals: PlayerGlobals
-): boolean {
-  if (!filter) {
-    return true;
-  }
-
-  return Object.keys(filter).every(
-    (key) => filter[key] === resolveKey(key, config, context, globals)[0]
-  );
-}
 
 /**
  * Resolves bindings in style objects.
@@ -123,8 +98,8 @@ export const Item: Component<{
 
   return (
     <Show
-      when={checkFilter(
-        props.component.filter,
+      when={isVisible(
+        props.component as { filter?: Record<string, any>; when?: any },
         props.config,
         props.context,
         props.globals
@@ -185,7 +160,18 @@ export const Item: Component<{
           <Group
             name={props.component.name}
             config={props.config}
-            context={props.context}
+            context={resolveGroupContext(
+              props.component as GroupComponent,
+              props.config,
+              props.context,
+              props.globals
+            )}
+            limit={resolveOption(
+              (props.component as GroupComponent).opts?.limit,
+              props.config,
+              props.context,
+              props.globals
+            )}
             components={(props.component as GroupComponent).components}
             style={style()}
             animations={(props.component as GroupComponent).animations}
