@@ -164,6 +164,22 @@ defmodule Castmill.Workers.BullMQHelper do
   end
 
   @doc """
+  Lists the IDs of a queue's job schedulers. Returns `{:ok, []}` in testing mode.
+  """
+  def list_scheduler_ids(queue, opts \\ []) do
+    if testing_mode?() do
+      {:ok, []}
+    else
+      connection = Keyword.get(opts, :connection, :castmill_bullmq)
+
+      with {:ok, schedulers} <- BullMQ.JobScheduler.list(connection, to_string(queue)) do
+        {:ok,
+         Enum.map(schedulers, &(Map.get(&1, :key) || Map.get(&1, "key") || Map.get(&1, :id)))}
+      end
+    end
+  end
+
+  @doc """
   Returns the appropriate queue name for a worker module.
   """
   def queue_for_worker(worker_module) do
@@ -241,6 +257,12 @@ defmodule Castmill.Workers.BullMQHelper do
 
       {:job_id, job_id}, acc ->
         [{:job_id, job_id} | acc]
+
+      {:remove_on_complete, value}, acc ->
+        [{:remove_on_complete, value} | acc]
+
+      {:remove_on_fail, value}, acc ->
+        [{:remove_on_fail, value} | acc]
 
       {_key, _value}, acc ->
         # Skip unknown options (including :repeat - use upsert_scheduler for repeatable jobs)

@@ -142,6 +142,7 @@ defmodule CastmillWeb.ResourceJSON do
       id: playlist.id,
       name: playlist.name,
       settings: playlist.settings,
+      locale: playlist.locale,
       items: playlist.items
     }
   end

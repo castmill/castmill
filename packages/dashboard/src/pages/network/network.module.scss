@@ -497,3 +497,60 @@
   flex-direction: column;
   gap: 1em;
 }
+
+/* Organization integration settings */
+.settings-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25em;
+  min-width: min(36em, 80vw);
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75em;
+
+  h3 {
+    margin: 0;
+  }
+}
+
+.settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3em;
+}
+
+.settings-label {
+  font-weight: 600;
+}
+
+.settings-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  font-weight: 600;
+}
+
+.settings-input {
+  padding: 0.5em 0.75em;
+  border: 0.0625em solid var(--castmill-divider, rgba(255, 255, 255, 0.2));
+  border-radius: 0.375em;
+  background: rgba(0, 0, 0, 0.2);
+  color: inherit;
+  font: inherit;
+}
+
+.settings-help {
+  margin: 0;
+  opacity: 0.7;
+  font-size: 0.875em;
+}
+
+.settings-error {
+  color: var(--danger-color, #ef4444);
+  font-size: 0.875em;
+}

@@ -18,11 +18,18 @@ describe('time-dependent template updates', () => {
     run: (
       root: HTMLElement,
       widget: TemplateWidget,
-      media: string[]
+      media: string[],
+      advanceClock: (hour?: number) => void
     ) => Promise<void>,
-    beforeReady?: (root: HTMLElement) => void
+    beforeReady?: (
+      root: HTMLElement,
+      advanceClock: (hour?: number) => void,
+      showing: Promise<unknown>
+    ) => void | Promise<void>,
+    getMedia?: (url: string) => Promise<string | void>
   ) => {
     const dom = new JSDOM('<!doctype html><div id="root"></div>');
+    const originalVideoLoad = dom.window.HTMLMediaElement.prototype.load;
     const keys = [
       'window',
       'document',
@@ -69,6 +76,10 @@ describe('time-dependent template updates', () => {
     const realNow = Date.now;
     let current = new Date(2026, 0, 1, 10, 0).getTime();
     Date.now = () => current;
+    const advanceClock = (hour = 11) => {
+      current = new Date(2026, 0, 1, hour, 0).getTime();
+      tickClock();
+    };
     tickClock();
 
     const media: string[] = [];
@@ -76,7 +87,7 @@ describe('time-dependent template updates', () => {
       {
         getMedia: async (url: string) => {
           media.push(url);
-          return `/cached/${url}`;
+          return getMedia ? getMedia(url) : `/cached/${url}`;
         },
       } as any,
       {
@@ -89,12 +100,13 @@ describe('time-dependent template updates', () => {
 
     try {
       const showing = firstValueFrom(widget.show(root, 0));
-      beforeReady?.(root);
+      await beforeReady?.(root, advanceClock, showing);
       await showing;
-      await run(root, widget, media);
+      await run(root, widget, media, advanceClock);
     } finally {
       widget.stop();
       await widget.unload();
+      dom.window.HTMLMediaElement.prototype.load = originalVideoLoad;
       Date.now = realNow;
       if (savedFrame) {
         globals.requestAnimationFrame = savedFrame;
@@ -134,8 +146,10 @@ describe('time-dependent template updates', () => {
         )!;
         expect(carousel.children.length).to.equal(2);
         expect(media).to.include('expired.jpg');
-        expect(carousel.children[1].getAttribute('style')).to.contain(
-          '/cached/current.jpg'
+        // Images load when they come in (hidden ones are cleared to save
+        // memory on old players), so only the first one is set when shown.
+        expect(carousel.children[0].getAttribute('style')).to.contain(
+          '/cached/expired.jpg'
         );
         const tweenCount = () =>
           ((widget as any).timeline.items as any[])
@@ -154,6 +168,394 @@ describe('time-dependent template updates', () => {
         );
         expect(media).to.include('current.jpg');
         expect(tweenCount()).to.be.lessThan(initialTweenCount);
+      }
+    );
+  });
+
+  it('keeps an unchanged time-filtered carousel mounted across clock ticks', async () => {
+    await withWidget(
+      {
+        type: 'image-carousel',
+        name: 'stable-carousel',
+        opts: {
+          images: {
+            list: {
+              key: 'data.images',
+              where: [{ key: '$.until', gte: '@now' }],
+              item: { key: '$.src' },
+            },
+          },
+          imageDuration: 2,
+        },
+      },
+      {
+        images: [
+          { src: 'first.jpg', until: '2026-01-01T12:00:00' },
+          { src: 'second.jpg', until: '2026-01-01T12:00:00' },
+        ],
+      },
+      async (_root, widget, media, advanceClock) => {
+        const timelineItem = ((widget as any).timeline.items as any[]).find(
+          (item) => typeof item.child.getChildren === 'function'
+        );
+        const initialTweenCount = timelineItem.child.getChildren().length;
+        const initialMediaCount = media.length;
+
+        advanceClock();
+        await flush();
+
+        const updatedTimelineItem = (
+          (widget as any).timeline.items as any[]
+        ).find((item) => typeof item.child.getChildren === 'function');
+        expect(updatedTimelineItem).to.equal(timelineItem);
+        expect(updatedTimelineItem.child.getChildren()).to.have.length(
+          initialTweenCount
+        );
+        expect(media).to.have.length(initialMediaCount);
+      }
+    );
+  });
+
+  it('rebases a clock-updated carousel to the active parent playhead', async () => {
+    await withWidget(
+      {
+        type: 'image-carousel',
+        name: 'playing-carousel',
+        opts: {
+          images: {
+            list: {
+              key: 'data.images',
+              where: [{ key: '$.until', gte: '@now' }],
+              item: { key: '$.src' },
+            },
+          },
+          imageDuration: 2,
+        },
+      },
+      {
+        images: [
+          { src: 'expired.jpg', until: '2026-01-01T10:30:00' },
+          { src: 'current.jpg', until: '2026-01-01T12:00:00' },
+        ],
+      },
+      async (_root, widget, _media, advanceClock) => {
+        const timeline = (widget as any).timeline;
+        timeline.setDuration(600000);
+        timeline.play(60000);
+        advanceClock();
+        await new Promise((resolve) => setTimeout(resolve, 120));
+
+        const carouselItem = timeline.playing.values().next().value;
+        expect(carouselItem.start).to.be.at.least(60000);
+        expect(timeline.playing.has(carouselItem)).to.equal(true);
+      }
+    );
+  });
+
+  it('updates an image URL when its time-dependent binding changes', async () => {
+    await withWidget(
+      {
+        type: 'image',
+        name: 'clock-image',
+        opts: {
+          url: {
+            cond: {
+              key: '@now',
+              gte: new Date(2026, 0, 1, 11, 0).getTime(),
+              then: 'later.jpg',
+              else: 'sooner.jpg',
+            },
+          },
+        },
+      },
+      {},
+      async (root, _widget, media, advanceClock) => {
+        const image = root.querySelector('[data-component="image"]')!;
+        expect(image.getAttribute('style')).to.contain('/cached/sooner.jpg');
+        expect(media).to.include('sooner.jpg');
+        advanceClock();
+        await flush();
+        expect(image.getAttribute('style')).to.contain('/cached/later.jpg');
+        expect(media).to.include('later.jpg');
+      },
+      undefined
+    );
+  });
+
+  it('does not apply an image cache result after its URL has changed', async () => {
+    const pending: {
+      url: string;
+      resolve: (value: string) => void;
+    }[] = [];
+    await withWidget(
+      {
+        type: 'image',
+        name: 'stale-clock-image',
+        opts: {
+          url: {
+            cond: {
+              key: '@now',
+              gte: new Date(2026, 0, 1, 11, 0).getTime(),
+              then: 'later.jpg',
+              else: 'sooner.jpg',
+            },
+          },
+        },
+      },
+      {},
+      async (root, _widget, _media, _advanceClock) => {
+        const image = root.querySelector('[data-component="image"]')!;
+        pending.find((item) => item.url === 'sooner.jpg')!.resolve('/old.jpg');
+        await flush();
+        expect(image.getAttribute('style')).to.contain('/cached/later.jpg');
+      },
+      async (_root, advanceClock) => {
+        const waitForUrl = async (url: string) => {
+          for (
+            let i = 0;
+            i < 50 && !pending.some((item) => item.url === url);
+            i++
+          ) {
+            await new Promise((resolve) => setTimeout(resolve, 2));
+          }
+          expect(pending.some((item) => item.url === url)).to.equal(true);
+        };
+        await waitForUrl('sooner.jpg');
+        advanceClock();
+        await waitForUrl('later.jpg');
+        pending
+          .find((item) => item.url === 'later.jpg')!
+          .resolve('/cached/later.jpg');
+      },
+      (url) =>
+        new Promise((resolve) => {
+          pending.push({ url, resolve });
+        })
+    );
+  });
+
+  it('replaces a video source when its time-dependent URL changes', async () => {
+    const pending: {
+      url: string;
+      resolve: (value: string) => void;
+    }[] = [];
+    await withWidget(
+      {
+        type: 'video',
+        name: 'clock-video',
+        opts: {
+          url: {
+            cond: {
+              key: '@now',
+              gte: new Date(2026, 0, 1, 12, 0).getTime(),
+              then: 'second.mp4',
+              else: {
+                cond: {
+                  key: '@now',
+                  gte: new Date(2026, 0, 1, 11, 0).getTime(),
+                  then: 'first.mp4',
+                  else: '',
+                },
+              },
+            },
+          },
+        },
+      },
+      {},
+      async (root, _widget, _media, advanceClock) => {
+        expect(root.querySelector('video')).to.equal(null);
+        advanceClock(11);
+        for (let i = 0; i < 50 && pending.length < 1; i++) {
+          await new Promise((resolve) => setTimeout(resolve, 2));
+        }
+        expect(pending[0].url).to.equal('first.mp4');
+        advanceClock(12);
+        for (let i = 0; i < 50 && pending.length < 2; i++) {
+          await new Promise((resolve) => setTimeout(resolve, 2));
+        }
+        expect(pending[1].url).to.equal('second.mp4');
+        pending[0].resolve('/cached/first.mp4');
+        await flush();
+        expect(root.querySelector('video')?.getAttribute('src')).to.equal(null);
+        pending[1].resolve('/cached/second.mp4');
+        await flush();
+        const video = root.querySelector('video')!;
+        expect(video.src).to.contain('/cached/second.mp4');
+      },
+      (root) => {
+        const view = root.ownerDocument.defaultView!;
+        view.HTMLMediaElement.prototype.load = () => {};
+      },
+      (url) =>
+        new Promise((resolve) => {
+          pending.push({ url, resolve });
+        })
+    );
+  });
+
+  it('starts a time-selected video at the active parent playhead', async () => {
+    let mediaUrl: string | undefined;
+    let resolveMedia: ((url: string) => void) | undefined;
+    let playCalls = 0;
+    await withWidget(
+      {
+        type: 'video',
+        name: 'clock-playback-video',
+        opts: {
+          url: {
+            cond: {
+              key: '@now',
+              gte: new Date(2026, 0, 1, 11, 0).getTime(),
+              then: 'later.mp4',
+              else: '',
+            },
+          },
+        },
+      },
+      {},
+      async (root, widget, _media, advanceClock) => {
+        const timeline = (widget as any).timeline;
+        timeline.setDuration(600000);
+        timeline.play(60000);
+
+        advanceClock();
+        for (let i = 0; i < 50 && !mediaUrl; i++) {
+          await new Promise((resolve) => setTimeout(resolve, 2));
+        }
+        expect(mediaUrl).to.equal('later.mp4');
+
+        const video = root.querySelector('video')!;
+        video.load = () => {};
+        video.play = () => {
+          playCalls++;
+          return Promise.resolve();
+        };
+        video.pause = () => {};
+        resolveMedia!('/cached/later.mp4');
+        for (let i = 0; i < 50 && !video.src; i++) {
+          await new Promise((resolve) => setTimeout(resolve, 2));
+        }
+        expect(video.src).to.contain('/cached/later.mp4');
+        Object.defineProperty(video, 'duration', {
+          configurable: true,
+          value: 20,
+        });
+        const Event = root.ownerDocument.defaultView!.Event;
+        video.dispatchEvent(new Event('loadedmetadata'));
+        video.dispatchEvent(new Event('canplaythrough'));
+
+        for (let i = 0; i < 50 && playCalls === 0; i++) {
+          await new Promise((resolve) => setTimeout(resolve, 2));
+        }
+        expect(playCalls).to.be.greaterThan(0);
+        expect(video.currentTime).to.be.lessThan(20);
+      },
+      undefined,
+      (url) => {
+        mediaUrl = url;
+        return new Promise((resolve) => {
+          resolveMedia = resolve;
+        });
+      }
+    );
+  });
+
+  it('keeps a paused time-selected video start at zero after a seek', async () => {
+    let resolveMedia: ((url: string) => void) | undefined;
+    await withWidget(
+      {
+        type: 'video',
+        name: 'paused-clock-video',
+        opts: {
+          url: {
+            cond: {
+              key: '@now',
+              gte: new Date(2026, 0, 1, 11, 0).getTime(),
+              then: 'later.mp4',
+              else: '',
+            },
+          },
+        },
+      },
+      {},
+      async (root, widget, _media, advanceClock) => {
+        const timeline = (widget as any).timeline;
+        timeline.setDuration(600000);
+        timeline.seek(2000);
+
+        advanceClock();
+        for (let i = 0; i < 50 && !resolveMedia; i++) {
+          await new Promise((resolve) => setTimeout(resolve, 2));
+        }
+        expect(resolveMedia).to.not.equal(undefined);
+
+        const video = root.querySelector('video')!;
+        video.load = () => {};
+        resolveMedia!('/cached/later.mp4');
+        for (let i = 0; i < 50 && !video.src; i++) {
+          await new Promise((resolve) => setTimeout(resolve, 2));
+        }
+        let currentTime = 0;
+        Object.defineProperty(video, 'currentTime', {
+          configurable: true,
+          get: () => currentTime,
+          set: (value: number) => {
+            currentTime = value;
+          },
+        });
+        Object.defineProperty(video, 'readyState', {
+          configurable: true,
+          value: 1,
+        });
+        Object.defineProperty(video, 'duration', {
+          configurable: true,
+          value: 12,
+        });
+        const Event = root.ownerDocument.defaultView!.Event;
+        video.dispatchEvent(new Event('loadedmetadata'));
+        video.dispatchEvent(new Event('canplaythrough'));
+
+        const videoItem = timeline.items.find(
+          (item: any) => item.child && item.duration === 12000
+        );
+        expect(videoItem.start).to.equal(0);
+        timeline.seek(2000);
+        expect(video.currentTime).to.equal(2);
+      },
+      undefined,
+      () =>
+        new Promise((resolve) => {
+          resolveMedia = resolve;
+        })
+    );
+  });
+
+  it('regenerates QR content when its time-dependent binding changes', async () => {
+    await withWidget(
+      {
+        type: 'qr-code',
+        name: 'clock-qr',
+        opts: {
+          content: {
+            cond: {
+              key: '@now',
+              gte: new Date(2026, 0, 1, 11, 0).getTime(),
+              then: 'https://example.com/a-much-longer-qr-code-content',
+              else: 'x',
+            },
+          },
+        },
+      },
+      {},
+      async (root, _widget, _media, advanceClock) => {
+        const initialViewBox = root
+          .querySelector('svg')
+          ?.getAttribute('viewBox');
+        advanceClock();
+        await flush();
+        expect(root.querySelector('svg')?.getAttribute('viewBox')).not.to.equal(
+          initialViewBox
+        );
       }
     );
   });
@@ -199,6 +601,233 @@ describe('time-dependent template updates', () => {
             .opacity
         ).to.equal('0');
       }
+    );
+  });
+
+  it('rebuilds animated text when clock-resolved content changes', async () => {
+    await withWidget(
+      {
+        type: 'text',
+        name: 'clock-animated-text',
+        opts: {
+          text: {
+            cond: {
+              key: '@now',
+              gte: new Date(2026, 0, 1, 11, 0).getTime(),
+              then: 'Later clock',
+              else: 'Early clock',
+            },
+          },
+        },
+        animations: [
+          {
+            keyframes: [
+              { from: { opacity: 0 } },
+              { to: { opacity: 1, duration: 1 } },
+            ],
+          },
+        ],
+      },
+      {},
+      async (root, widget, _media, advanceClock) => {
+        const text = root.querySelector('[data-component="text"] span')!;
+        const timeline = (widget as any).timeline;
+        const animationTargets = () =>
+          (timeline.items as any[])
+            .filter((item) => typeof item.child.getChildren === 'function')
+            .flatMap((item) =>
+              item.child.getChildren().flatMap((tween: any) => tween.targets())
+            );
+        const initialTargets = animationTargets();
+        expect(text.textContent?.replace(/\u00a0/g, ' ')).to.equal(
+          'Early clock'
+        );
+        expect(initialTargets).to.include(text.children[0]);
+
+        timeline.setDuration(120000);
+        timeline.play(60000);
+        advanceClock();
+        await flush();
+
+        const updatedTargets = animationTargets();
+        expect(text.textContent?.replace(/\u00a0/g, ' ')).to.equal(
+          'Later clock'
+        );
+        expect(text.children.length).to.be.greaterThan(0);
+        expect(updatedTargets).to.include(text.children[0]);
+        expect(updatedTargets).not.to.include(initialTargets[0]);
+        const updatedAnimation = [...timeline.items, ...timeline.playing].find(
+          (item: any) =>
+            typeof item.child.getChildren === 'function' &&
+            item.child
+              .getChildren()
+              .some((tween: any) => tween.targets().includes(text.children[0]))
+        );
+        expect(updatedAnimation).not.to.equal(undefined);
+        expect(updatedAnimation?.start).to.equal(60000);
+      }
+    );
+  });
+
+  it('keeps end-relative animated text starts anchored when content changes', async () => {
+    await withWidget(
+      {
+        type: 'text',
+        name: 'end-relative-clock-text',
+        opts: {
+          text: {
+            cond: {
+              key: '@now',
+              gte: new Date(2026, 0, 1, 11, 0).getTime(),
+              then: 'Later clock',
+              else: 'Early clock',
+            },
+          },
+        },
+        animations: [
+          {
+            start: -1000,
+            keyframes: [{ to: { opacity: 0, duration: 1 } }],
+          },
+        ],
+      },
+      {},
+      async (_root, widget, _media, advanceClock) => {
+        const timeline = (widget as any).timeline;
+        timeline.setDuration(120000);
+        timeline.play(60000);
+        advanceClock();
+        await flush();
+
+        const animation = [...timeline.items, ...timeline.playing].find(
+          (item: any) => typeof item.child.getChildren === 'function'
+        );
+        expect(animation?.start).to.equal(119000);
+      }
+    );
+  });
+
+  it('keeps animated text mounted when clock-resolved content is unchanged', async () => {
+    await withWidget(
+      {
+        type: 'text',
+        name: 'stable-clock-text',
+        opts: { text: "{@now | date:'D/M'}" },
+        animations: [
+          {
+            keyframes: [
+              { from: { opacity: 0 } },
+              { to: { opacity: 1, duration: 1 } },
+            ],
+          },
+        ],
+      },
+      {},
+      async (root, widget, _media, advanceClock) => {
+        const text = root.querySelector('[data-component="text"] span')!;
+        const animatedElement = text.firstElementChild;
+        const timeline = (widget as any).timeline;
+        const animation = (timeline.items as any[]).find(
+          (item) => typeof item.child.getChildren === 'function'
+        );
+        const tweenCount = animation.child.getChildren().length;
+
+        advanceClock();
+        await flush();
+
+        const updatedAnimation = (timeline.items as any[]).find(
+          (item) => typeof item.child.getChildren === 'function'
+        );
+        expect(text.firstElementChild).to.equal(animatedElement);
+        expect(updatedAnimation).to.equal(animation);
+        expect(updatedAnimation.child.getChildren()).to.have.length(tweenCount);
+      }
+    );
+  });
+
+  it('does not count repeated video readiness while a group sibling is loading', async () => {
+    const pending: { url: string; resolve: (value: string) => void }[] = [];
+
+    await withWidget(
+      {
+        type: 'group',
+        name: 'readiness-group',
+        components: [
+          {
+            type: 'video',
+            name: 'clock-video',
+            opts: {
+              url: {
+                cond: {
+                  key: '@now',
+                  gte: new Date(2026, 0, 1, 11, 0).getTime(),
+                  then: 'later.mp4',
+                  else: '',
+                },
+              },
+            },
+          },
+          {
+            type: 'image',
+            name: 'slow-image',
+            opts: { url: 'slow.jpg' },
+          },
+        ],
+      },
+      {},
+      async (root) => {
+        expect(root.querySelector('video')?.src).to.contain(
+          '/cached/later.mp4'
+        );
+      },
+      async (root, advanceClock, showing) => {
+        const view = root.ownerDocument.defaultView!;
+        view.HTMLMediaElement.prototype.load = () => {};
+        let isReady = false;
+        void showing.then(() => {
+          isReady = true;
+        });
+        const waitForUrl = async (url: string) => {
+          for (
+            let i = 0;
+            i < 50 && !pending.some((item) => item.url === url);
+            i++
+          ) {
+            await new Promise((resolve) => setTimeout(resolve, 2));
+          }
+          expect(pending.some((item) => item.url === url)).to.equal(true);
+        };
+
+        await waitForUrl('slow.jpg');
+        expect(isReady).to.equal(false);
+        advanceClock();
+        await waitForUrl('later.mp4');
+        pending
+          .find((item) => item.url === 'later.mp4')!
+          .resolve('/cached/later.mp4');
+
+        const video = root.querySelector('video')!;
+        for (let i = 0; i < 50 && !video.src; i++) {
+          await new Promise((resolve) => setTimeout(resolve, 2));
+        }
+        Object.defineProperty(video, 'duration', {
+          configurable: true,
+          value: 10,
+        });
+        const Event = view.Event;
+        video.dispatchEvent(new Event('loadedmetadata'));
+        video.dispatchEvent(new Event('canplaythrough'));
+        await new Promise((resolve) => setTimeout(resolve, 20));
+        expect(isReady).to.equal(false);
+
+        pending
+          .find((item) => item.url === 'slow.jpg')!
+          .resolve('/cached/slow.jpg');
+      },
+      (url) =>
+        new Promise((resolve) => {
+          pending.push({ url, resolve });
+        })
     );
   });
 });

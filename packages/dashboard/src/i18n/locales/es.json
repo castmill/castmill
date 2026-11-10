@@ -391,7 +391,26 @@
       "unblockTitle": "Desbloquear Organización",
       "unblockConfirmation": "¿Estás seguro de que deseas desbloquear \"{{name}}\"? Los usuarios podrán iniciar sesión nuevamente.",
       "unblockSuccess": "Organización desbloqueada correctamente",
-      "unblockError": "Error al desbloquear la organización"
+      "unblockError": "Error al desbloquear la organización",
+      "integrationSettings": {
+        "action": "Ajustes de integración",
+        "title": "Ajustes de integración – {{name}}",
+        "description": "Valores que los widgets de esta red usan para esta organización, como los ID de oficina. Solo los administradores de la red pueden cambiarlos.",
+        "empty": "Ningún widget de esta red usa ajustes de organización.",
+        "listHelp": "Un valor por línea.",
+        "remove": "Quitar ajustes",
+        "saved": "Ajustes guardados.",
+        "removed": "Ajustes quitados.",
+        "invalid": "Revisa los campos marcados.",
+        "loadError": "No se pudieron cargar los ajustes de integración.",
+        "saveError": "No se pudieron guardar los ajustes: {{message}}",
+        "errors": {
+          "required": "Obligatorio.",
+          "invalid": "Valor no válido.",
+          "too_long": "Demasiado largo.",
+          "too_many": "Demasiados valores."
+        }
+      }
     },
     "users": {
       "listTitle": "Todos los Usuarios",

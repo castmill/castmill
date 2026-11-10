@@ -4,6 +4,8 @@ import { getLogicalSize } from '../../utils/logical-size';
 import {
   Component,
   createMemo,
+  createEffect,
+  createSignal,
   JSX,
   mergeProps,
   onCleanup,
@@ -215,9 +217,18 @@ interface TextProps extends BaseComponentProps {
 
 export const Text: Component<TextProps> = (props) => {
   let textRef: HTMLDivElement | undefined;
+  const [textElement, setTextElement] = createSignal<HTMLDivElement>();
   let timelineItem: TimelineItem | undefined;
   let scrollTimeline: gsap.core.Timeline | undefined;
   let cleanUpAnimations: (() => void) | undefined;
+  let previousAnimationInputs:
+    | {
+        text: string;
+        animations: ComponentAnimation[];
+        chars?: boolean;
+        perspective?: number;
+      }
+    | undefined;
   let stopObservingResize: (() => void) | undefined;
   let contentObserver: MutationObserver | null = null;
   let animationFrame: number | undefined;
@@ -326,10 +337,48 @@ export const Text: Component<TextProps> = (props) => {
     props.timeline.add(timelineItem);
   };
 
+  createEffect(() => {
+    const text = props.opts.text;
+    const animations = props.animations;
+    const chars = props.opts.chars;
+    const perspective = props.opts.perspective;
+    const element = textElement();
+    if (!element || !animations) {
+      return;
+    }
+
+    if (
+      previousAnimationInputs?.text === text &&
+      previousAnimationInputs.animations === animations &&
+      previousAnimationInputs.chars === chars &&
+      previousAnimationInputs.perspective === perspective
+    ) {
+      return;
+    }
+
+    previousAnimationInputs = { text, animations, chars, perspective };
+    cleanUpAnimations?.();
+    element.textContent = text;
+    const splittedText = splitText(element, chars);
+
+    if (perspective) {
+      gsap.set(element, { perspective });
+    }
+
+    cleanUpAnimations = applyAnimations(
+      props.timeline,
+      animations,
+      splittedText.chars || splittedText.words,
+      props.timeline.duration(),
+      props.timeline.isRunning() ? props.timeline.time : 0
+    );
+  });
+
   onMount(() => {
     if (!textRef) {
       return;
     }
+    setTextElement(textRef);
 
     const fitText = () => {
       const size = autoFitText(textRef!, props.opts?.autofit || {});
@@ -347,21 +396,6 @@ export const Text: Component<TextProps> = (props) => {
     contentObserver = observeTextContentChanges(textRef, () => {
       fitText();
     });
-
-    if (props.animations) {
-      const splittedText = splitText(textRef, props.opts.chars);
-
-      if (props.opts.perspective) {
-        gsap.set(textRef, { perspective: props.opts.perspective });
-      }
-
-      cleanUpAnimations = applyAnimations(
-        props.timeline,
-        props.animations,
-        splittedText.chars || splittedText.words,
-        props.timeline.duration()
-      );
-    }
 
     props.onReady();
   });

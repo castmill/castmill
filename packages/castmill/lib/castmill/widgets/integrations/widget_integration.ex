@@ -25,6 +25,7 @@ defmodule Castmill.Widgets.Integrations.WidgetIntegration do
   @integration_types ["pull", "push", "both"]
   @credential_scopes ["organization", "widget"]
   @discriminator_types ["organization", "widget_option", "widget_config"]
+  @refresh_modes ["scheduled", "on_demand"]
 
   @derive {Jason.Encoder,
            only: [
@@ -44,6 +45,7 @@ defmodule Castmill.Widgets.Integrations.WidgetIntegration do
              :push_webhook_path,
              :push_config,
              :is_active,
+             :refresh_mode,
              :inserted_at,
              :updated_at
            ]}
@@ -79,6 +81,11 @@ defmodule Castmill.Widgets.Integrations.WidgetIntegration do
 
     field(:is_active, :boolean, default: true)
 
+    # "scheduled": repeatable background polling every pull_interval_seconds.
+    # "on_demand": refreshed only when the data is read and older than
+    # pull_interval_seconds (see Castmill.Widgets.Integrations.Refresh).
+    field(:refresh_mode, :string, default: "scheduled")
+
     has_many(:credentials, WidgetIntegrationCredential)
     has_many(:data_records, WidgetIntegrationData)
 
@@ -103,7 +110,8 @@ defmodule Castmill.Widgets.Integrations.WidgetIntegration do
       :pull_config,
       :push_webhook_path,
       :push_config,
-      :is_active
+      :is_active,
+      :refresh_mode
     ])
     |> validate_required([
       :widget_id,
@@ -114,6 +122,7 @@ defmodule Castmill.Widgets.Integrations.WidgetIntegration do
     |> validate_inclusion(:integration_type, @integration_types)
     |> validate_inclusion(:credential_scope, @credential_scopes)
     |> validate_inclusion(:discriminator_type, @discriminator_types)
+    |> validate_inclusion(:refresh_mode, @refresh_modes)
     |> validate_discriminator_key()
     |> validate_pull_fields()
     |> validate_push_fields()

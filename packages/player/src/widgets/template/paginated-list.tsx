@@ -156,6 +156,7 @@ export const PaginatedList: Component<PaginatedListProps> = (props) => {
   let timelineItem: TimelineItem | null = null;
   let readyCount = 0;
   let expectedPages = 0;
+  let pageGeneration = 0;
   let disposed = false;
   let measuredWidth = 0;
   let measuredHeight = 0;
@@ -215,6 +216,7 @@ export const PaginatedList: Component<PaginatedListProps> = (props) => {
       return;
     }
     expectedPages = pagesArray.length;
+    pageGeneration++;
     readyCount = 0;
     resetTimeline();
     setPages(pagesArray);
@@ -249,7 +251,8 @@ export const PaginatedList: Component<PaginatedListProps> = (props) => {
     props.onReady();
   };
 
-  const onPageReady = () => {
+  const onPageReady = (generation: number) => {
+    if (generation !== pageGeneration) return;
     if (!expectedPages) {
       return;
     }
@@ -352,23 +355,26 @@ export const PaginatedList: Component<PaginatedListProps> = (props) => {
         style={{ width: '100%', height: '100%', position: 'relative' }}
       >
         <For each={pages()}>
-          {(page, i) => (
-            <Page
-              config={props.config}
-              items={page}
-              component={props.component}
-              style={pageStyle()}
-              timeline={props.timeline}
-              gsapTimeline={gsapTimeline}
-              pageIndex={i()}
-              totalPages={pages().length}
-              duration={props.opts.pageDuration}
-              skipAnimation={pages().length === 1}
-              resourceManager={props.resourceManager}
-              globals={props.globals}
-              onReady={onPageReady}
-            />
-          )}
+          {(page, i) => {
+            const generation = pageGeneration;
+            return (
+              <Page
+                config={props.config}
+                items={page}
+                component={props.component}
+                style={pageStyle()}
+                timeline={props.timeline}
+                gsapTimeline={gsapTimeline}
+                pageIndex={i()}
+                totalPages={pages().length}
+                duration={props.opts.pageDuration}
+                skipAnimation={pages().length === 1}
+                resourceManager={props.resourceManager}
+                globals={props.globals}
+                onReady={() => onPageReady(generation)}
+              />
+            );
+          }}
         </For>
       </div>
     </div>

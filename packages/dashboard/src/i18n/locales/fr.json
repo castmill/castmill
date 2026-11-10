@@ -390,7 +390,26 @@
       "unblockTitle": "Débloquer l'Organisation",
       "unblockConfirmation": "Êtes-vous sûr de vouloir débloquer \"{{name}}\"? Les utilisateurs pourront se connecter à nouveau.",
       "unblockSuccess": "Organisation débloquée avec succès",
-      "unblockError": "Échec du déblocage de l'organisation"
+      "unblockError": "Échec du déblocage de l'organisation",
+      "integrationSettings": {
+        "action": "Paramètres d'intégration",
+        "title": "Paramètres d'intégration – {{name}}",
+        "description": "Valeurs que les widgets de ce réseau utilisent pour cette organisation, comme les identifiants d'agence. Seuls les administrateurs du réseau peuvent les modifier.",
+        "empty": "Aucun widget de ce réseau n'utilise de paramètres d'organisation.",
+        "listHelp": "Une valeur par ligne.",
+        "remove": "Supprimer les paramètres",
+        "saved": "Paramètres enregistrés.",
+        "removed": "Paramètres supprimés.",
+        "invalid": "Vérifiez les champs signalés.",
+        "loadError": "Impossible de charger les paramètres d'intégration.",
+        "saveError": "Impossible d'enregistrer les paramètres : {{message}}",
+        "errors": {
+          "required": "Obligatoire.",
+          "invalid": "Valeur non valide.",
+          "too_long": "Trop long.",
+          "too_many": "Trop de valeurs."
+        }
+      }
     },
     "users": {
       "listTitle": "Tous les utilisateurs",

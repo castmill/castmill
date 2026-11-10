@@ -75,5 +75,18 @@ describe('TemplateWidget.show', () => {
     expect(await firstValueFrom(widget.show(el, 0))).to.equal(
       'template-widget:shown'
     );
+
+    await widget.unload();
+    expect(widget.duration()).to.equal(13967);
+
+    const secondShow = firstValueFrom(widget.show(el, 0));
+    await flush();
+    const secondVideo = el.querySelector('video')!;
+    Object.defineProperty(secondVideo, 'duration', { value: 8.5 });
+    Object.defineProperty(secondVideo, 'readyState', { value: 4 });
+    secondVideo.dispatchEvent(new dom.window.Event('loadedmetadata'));
+    secondVideo.dispatchEvent(new dom.window.Event('canplaythrough'));
+    await secondShow;
+    expect(widget.duration()).to.equal(8500);
   });
 });

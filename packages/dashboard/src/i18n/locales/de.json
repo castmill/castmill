@@ -406,7 +406,26 @@
       "unblockTitle": "Organisation entsperren",
       "unblockConfirmation": "Sind Sie sicher, dass Sie \"{{name}}\" entsperren möchten? Benutzer können sich wieder anmelden.",
       "unblockSuccess": "Organisation erfolgreich entsperrt",
-      "unblockError": "Fehler beim Entsperren der Organisation"
+      "unblockError": "Fehler beim Entsperren der Organisation",
+      "integrationSettings": {
+        "action": "Integrationseinstellungen",
+        "title": "Integrationseinstellungen – {{name}}",
+        "description": "Werte, die die Widgets dieses Netzwerks für diese Organisation verwenden, z. B. Büro-IDs. Nur Netzwerkadministratoren können sie ändern.",
+        "empty": "Kein Widget in diesem Netzwerk verwendet Organisationseinstellungen.",
+        "listHelp": "Ein Wert pro Zeile.",
+        "remove": "Einstellungen entfernen",
+        "saved": "Einstellungen gespeichert.",
+        "removed": "Einstellungen entfernt.",
+        "invalid": "Prüfe die markierten Felder.",
+        "loadError": "Die Integrationseinstellungen konnten nicht geladen werden.",
+        "saveError": "Die Einstellungen konnten nicht gespeichert werden: {{message}}",
+        "errors": {
+          "required": "Erforderlich.",
+          "invalid": "Ungültiger Wert.",
+          "too_long": "Zu lang.",
+          "too_many": "Zu viele Werte."
+        }
+      }
     },
     "users": {
       "listTitle": "Alle Benutzer",

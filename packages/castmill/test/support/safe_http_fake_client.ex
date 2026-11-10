@@ -46,17 +46,16 @@ defmodule Castmill.SafeHttp.FakeClient do
           target = options[:stream_to]
           chunks = chunks(body || "")
 
+          # Like hackney's `async: :once`, every message after the status
+          # is only sent when the caller asks for it with `stream_next/1`.
           send(target, struct(HTTPoison.AsyncStatus, id: ref, code: status))
-          send(target, struct(HTTPoison.AsyncHeaders, id: ref, headers: response_headers || []))
 
-          case Enum.map(chunks, &struct(HTTPoison.AsyncChunk, id: ref, chunk: &1)) ++
-                 [struct(HTTPoison.AsyncEnd, id: ref)] do
-            [first_event | remaining] ->
-              send(target, first_event)
+          remaining =
+            [struct(HTTPoison.AsyncHeaders, id: ref, headers: response_headers || [])] ++
+              Enum.map(chunks, &struct(HTTPoison.AsyncChunk, id: ref, chunk: &1)) ++
+              [struct(HTTPoison.AsyncEnd, id: ref)]
 
-              if remaining != [],
-                do: Process.put({__MODULE__, ref}, {target, remaining})
-          end
+          Process.put({__MODULE__, ref}, {target, remaining})
 
           {:ok, struct(HTTPoison.AsyncResponse, id: ref)}
         else
