@@ -50,6 +50,7 @@ defmodule Castmill.Authorization.Permissions do
           | :teams
           | :widgets
           | :layouts
+          | :automations
           | :organizations
   @type action :: :list | :show | :create | :update | :delete | :publish
 
@@ -65,6 +66,8 @@ defmodule Castmill.Authorization.Permissions do
       teams: [:list, :show, :create, :update, :delete],
       widgets: [:list, :show, :create, :update, :delete],
       layouts: [:list, :show, :create, :update, :delete],
+      # Automations follow the channel permissions (no publish)
+      automations: [:list, :show, :create, :update, :delete],
       # Full org management
       organizations: [:list, :show, :create, :update, :delete]
     },
@@ -79,6 +82,8 @@ defmodule Castmill.Authorization.Permissions do
       teams: [:list, :show, :create, :update, :delete],
       widgets: [:list, :show, :create, :update, :delete],
       layouts: [:list, :show, :create, :update, :delete],
+      # Automations follow the channel permissions (no publish)
+      automations: [:list, :show, :create, :update, :delete],
       # Read-only access to org members list
       organizations: [:list, :show]
     },
@@ -97,6 +102,8 @@ defmodule Castmill.Authorization.Permissions do
       widgets: [:list, :show],
       # Full layout access
       layouts: [:list, :show, :create, :update, :delete],
+      # Automations follow the channel permissions (no publish)
+      automations: [:list, :show, :update],
       # Read-only access to org members list
       organizations: [:list, :show]
     },
@@ -115,6 +122,8 @@ defmodule Castmill.Authorization.Permissions do
       widgets: [:list, :show, :create, :update, :delete],
       # Full layout access
       layouts: [:list, :show, :create, :update, :delete],
+      # Automations follow the channel permissions (no publish)
+      automations: [:list, :show, :update],
       # Read-only org
       organizations: [:list, :show]
     },
@@ -129,6 +138,8 @@ defmodule Castmill.Authorization.Permissions do
       teams: [:list, :show],
       widgets: [:list, :show, :create, :update, :delete],
       layouts: [:list, :show, :create, :update, :delete],
+      # Automations follow the channel permissions (no publish)
+      automations: [:list, :show, :update],
       organizations: [:list, :show]
     },
 
@@ -146,6 +157,8 @@ defmodule Castmill.Authorization.Permissions do
       widgets: [:list, :show],
       # Read-only layouts
       layouts: [:list, :show],
+      # Automations follow the channel permissions (no publish)
+      automations: [:list, :show, :create, :update, :delete],
       organizations: [:list, :show]
     },
 
@@ -158,6 +171,8 @@ defmodule Castmill.Authorization.Permissions do
       teams: [:list, :show],
       widgets: [:list, :show],
       layouts: [:list, :show],
+      # Automations follow the channel permissions (no publish)
+      automations: [:list, :show],
       organizations: [:list, :show]
     }
   }

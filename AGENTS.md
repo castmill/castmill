@@ -32,6 +32,7 @@ agents/
 | Widget Scopes (tenant isolation)     | `agents/systems/WIDGET-SCOPES.md`       |
 | Notifications                        | `agents/systems/notifications.md`       |
 | AI Agents & MCP Server               | `agents/systems/AI-AGENTS-MCP.md`       |
+| Automations (event-driven actions)   | `agents/systems/AUTOMATIONS.md`         |
 
 ## 🏗️ Project Structure
 
