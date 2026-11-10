@@ -178,7 +178,7 @@ defmodule Castmill.TeamsTest do
     test "add_resource_to_team/4 rejects automations from another organization" do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
-      other_organization = organization_fixture(%{network_id: network.id})
+      other_organization = organization_fixture(%{network_id: network.id, name: "Other organization"})
       team = team_fixture(%{organization_id: organization.id})
 
       {:ok, automation} =

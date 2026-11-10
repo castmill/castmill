@@ -273,8 +273,12 @@ defmodule CastmillWeb.AutomationControllerTest do
         |> as(users.admin)
         |> post(api_path(organization, "/#{automation.id}/rules/#{rule_id}/run"))
 
-      assert %{"errors" => %{"automation" => [_]}} = json_response(conn, 422)
+      assert %{"errors" => %{"automation" => ["Cannot run a disabled automation"]}} =
+               json_response(conn, 422)
+
       refute_receive %{event: "automation_run"}
+
+      {:ok, _} = Automations.update_automation(automation, %{"enabled" => true})
 
       conn =
         build_conn()

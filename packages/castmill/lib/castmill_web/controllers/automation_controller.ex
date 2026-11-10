@@ -147,6 +147,8 @@ defmodule CastmillWeb.AutomationController do
     with {:ok, automation} <- fetch(organization_id, id),
          {:ok, count} <- Automations.run_rule(automation, rule_id) do
       json(conn, %{data: %{devices: count}})
+    else
+      error -> handle_error(conn, error)
     end
   end
 
