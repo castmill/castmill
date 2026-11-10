@@ -525,4 +525,70 @@ describe('NetworkService', () => {
       await expect(NetworkService.listUsers()).rejects.toThrow();
     });
   });
+
+  describe('integration settings', () => {
+    const reply = (status: number, body?: unknown) => ({
+      ok: status < 300,
+      status,
+      statusText: 'Status',
+      json: () =>
+        body === undefined
+          ? Promise.reject(new Error('no body'))
+          : Promise.resolve(body),
+    });
+
+    it('lists, saves and removes settings', async () => {
+      mockFetch.mockResolvedValueOnce(reply(200, { data: [{ key: 'k' }] }));
+      expect(await NetworkService.listIntegrationSettings('org-1')).toEqual([
+        { key: 'k' },
+      ]);
+      expect(mockFetch.mock.calls.at(-1)[0]).toContain(
+        '/dashboard/network/organizations/org-1/integration-settings'
+      );
+
+      mockFetch.mockResolvedValueOnce(
+        reply(200, { data: { key: 'a b', settings: { agency: 'fb' } } })
+      );
+      expect(
+        await NetworkService.updateIntegrationSettings('org-1', 'a b', {
+          agency: 'fb',
+        })
+      ).toEqual({ agency: 'fb' });
+      const [url, init] = mockFetch.mock.calls.at(-1);
+      expect(url).toContain('/integration-settings/a%20b');
+      expect(init.method).toBe('PUT');
+      expect(JSON.parse(init.body)).toEqual({ settings: { agency: 'fb' } });
+
+      mockFetch.mockResolvedValueOnce(reply(204, undefined));
+      await NetworkService.deleteIntegrationSettings('org-1', 'k');
+      expect(mockFetch.mock.calls.at(-1)[1].method).toBe('DELETE');
+    });
+
+    it('reports invalid fields', async () => {
+      mockFetch.mockResolvedValueOnce(
+        reply(422, { errors: { agency: 'required' } })
+      );
+      const error = await NetworkService.updateIntegrationSettings(
+        'org-1',
+        'k',
+        {}
+      ).catch((e) => e);
+      expect(error).toBeInstanceOf(HttpError);
+      expect(error.status).toBe(422);
+      expect(error.details).toEqual({ agency: 'required' });
+
+      mockFetch.mockResolvedValueOnce(reply(422, undefined));
+      const empty = await NetworkService.updateIntegrationSettings(
+        'org-1',
+        'k',
+        {}
+      ).catch((e) => e);
+      expect(empty.details).toEqual({});
+
+      mockFetch.mockResolvedValueOnce(reply(404, { error: 'Unknown' }));
+      await expect(
+        NetworkService.updateIntegrationSettings('org-1', 'k', {})
+      ).rejects.toThrow('Unknown');
+    });
+  });
 });

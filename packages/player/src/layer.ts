@@ -338,6 +338,10 @@ export class Layer extends EventEmitter {
     return this.widget ? this.widget.blocked$() : of(undefined);
   }
 
+  readiness$(): Observable<PlayerRuntimeError | undefined> {
+    return this.widget ? this.widget.readiness$() : of(undefined);
+  }
+
   reportError(input: PlayerRuntimeError): void {
     this.globals?.reportError?.(input);
   }

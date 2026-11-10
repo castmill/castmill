@@ -5,7 +5,7 @@ import {
   JsonPlaylistItem,
 } from '@castmill/player';
 
-import { SortOptions, HttpError } from '@castmill/ui-common';
+import { SortOptions, HttpError, Choice } from '@castmill/ui-common';
 import { authFetch } from '../../common/services/auth-fetch';
 
 export interface FetchPlaylistsOptions {
@@ -19,6 +19,28 @@ export interface FetchPlaylistsOptions {
   tag_filter_mode?: 'any' | 'all';
   missing_tag_group_id?: number;
 }
+/**
+ * Error from the widget choices endpoint. `code` is the server's error code
+ * (e.g. `provider_error`), or `unknown`.
+ */
+export class WidgetChoicesError extends Error {
+  constructor(
+    public code: string,
+    public status?: number
+  ) {
+    super(code);
+    this.name = 'WidgetChoicesError';
+  }
+}
+
+export interface WidgetChoicesRequest {
+  /** Values of the fields the choice field depends on. */
+  options: Record<string, unknown>;
+  query: string;
+  cursor: string | null;
+  values: string[];
+}
+
 type HandleResponseOptions = {
   parse?: boolean;
 };
@@ -437,6 +459,8 @@ export const PlaylistsService = {
    * @param organizationId - The organization ID
    * @param widgetId - The widget ID to prefetch data for
    * @param options - Optional widget options for discriminator calculation
+   * @param opts.widgetConfigId - Existing widget config used to authorize and
+   *   scope config-specific preview data
    * @param opts.preview - When true the fetch is ephemeral: the server caches
    *   the data but does not create a background polling scheduler for these
    *   options (used by the live preview while the user edits a widget).
@@ -447,9 +471,10 @@ export const PlaylistsService = {
     organizationId: string,
     widgetId: number,
     options?: Record<string, any>,
-    opts?: { preview?: boolean }
+    opts?: { preview?: boolean; widgetConfigId?: string }
   ): Promise<{
     data: Record<string, any> | null;
+    discriminator_id?: string | null;
     status:
       | 'cached'
       | 'fetched'
@@ -468,6 +493,7 @@ export const PlaylistsService = {
         body: JSON.stringify({
           options: options || {},
           preview: opts?.preview === true,
+          widget_config_id: opts?.widgetConfigId,
         }),
       });
 
@@ -485,6 +511,47 @@ export const PlaylistsService = {
       console.warn('Failed to prefetch widget data:', error);
       return { data: null, status: 'error', message: String(error) };
     }
+  },
+
+  /**
+   * Lists the integration-provided choices for a widget option field.
+   *
+   * @throws WidgetChoicesError with the server's error code.
+   */
+  async listWidgetChoices(
+    baseUrl: string,
+    organizationId: string,
+    widgetId: number | string,
+    field: string,
+    request: WidgetChoicesRequest
+  ): Promise<{ items: Choice[]; next: string | null }> {
+    const url = `${baseUrl}/dashboard/organizations/${organizationId}/widgets/${encodeURIComponent(
+      String(widgetId)
+    )}/choices/${encodeURIComponent(field)}`;
+
+    let response: Response;
+    try {
+      response = await authFetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(request),
+      });
+    } catch {
+      throw new WidgetChoicesError('network_error');
+    }
+
+    const body = await response.json().catch(() => null);
+
+    if (!response.ok) {
+      const code =
+        body && typeof body.error === 'string' ? body.error : 'unknown';
+      throw new WidgetChoicesError(code, response.status);
+    }
+
+    return {
+      items: Array.isArray(body?.items) ? body.items : [],
+      next: typeof body?.next === 'string' ? body.next : null,
+    };
   },
 
   /**

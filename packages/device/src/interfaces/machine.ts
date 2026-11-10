@@ -19,6 +19,10 @@ export interface DeviceCapabilities {
   update: boolean;
   updateFirmware: boolean;
   orientation?: boolean;
+  /** Automation event sources this player can evaluate, e.g. `clock`. */
+  automation_sources?: string[];
+  /** Automation actions this player can run, e.g. `interrupt`. */
+  automation_actions?: string[];
 }
 
 export type Orientation = 0 | 90 | 180 | 270;

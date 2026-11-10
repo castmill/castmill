@@ -10,6 +10,7 @@ import {
   BsEye,
   BsGrid1x2,
   BsHddStack,
+  BsLightningCharge,
   BsListUl,
   BsTools,
 } from 'solid-icons/bs';
@@ -29,6 +30,7 @@ import { DevicePreview } from './device-preview';
 import { DeviceTelemetry } from './device-telemetry';
 import { DeviceSchedule } from './device-schedule';
 import { DeviceInfo } from './device-info';
+import { DeviceAutomations } from './device-automations';
 import { AddonStore } from '../../common/interfaces/addon-store';
 import './device-view.scss';
 
@@ -167,6 +169,18 @@ const DeviceView: Component<{
       icon: BsCalendar3,
       content: () => (
         <DeviceSchedule baseUrl={props.baseUrl} device={props.device} t={t} />
+      ),
+    },
+    {
+      id: 'automations',
+      title: () => t('automations.device.title'),
+      icon: BsLightningCharge,
+      content: () => (
+        <DeviceAutomations
+          baseUrl={props.baseUrl}
+          device={props.device}
+          t={t}
+        />
       ),
     },
     {

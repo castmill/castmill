@@ -390,7 +390,26 @@
       "unblockTitle": "解封组织",
       "unblockConfirmation": "您确定要解封 \"{{name}}\" 吗？用户将能够重新登录。",
       "unblockSuccess": "组织解封成功",
-      "unblockError": "解封组织失败"
+      "unblockError": "解封组织失败",
+      "integrationSettings": {
+        "action": "集成设置",
+        "title": "集成设置 – {{name}}",
+        "description": "此网络的小部件为该组织使用的值，例如办公室 ID。只有网络管理员可以更改。",
+        "empty": "此网络中没有小部件使用组织设置。",
+        "listHelp": "每行一个值。",
+        "remove": "移除设置",
+        "saved": "设置已保存。",
+        "removed": "设置已移除。",
+        "invalid": "请检查标记的字段。",
+        "loadError": "无法加载集成设置。",
+        "saveError": "无法保存设置：{{message}}",
+        "errors": {
+          "required": "必填。",
+          "invalid": "值无效。",
+          "too_long": "太长。",
+          "too_many": "值太多。"
+        }
+      }
     },
     "users": {
       "listTitle": "所有用户",
@@ -701,6 +720,7 @@
   "sidebar": {
     "organization": "组织",
     "channels": "频道",
+    "automations": "自动化",
     "teams": "团队",
     "usage": "使用情况",
     "devices": "设备",
@@ -1021,7 +1041,42 @@
       "noConfigurationRequired": "无需配置",
       "optional": "可选"
     },
-    "translations": "翻译"
+    "translations": "翻译",
+    "choices": {
+      "choose": "选择",
+      "moveBefore": "前移",
+      "moveAfter": "后移",
+      "search": "搜索…",
+      "loadMore": "加载更多",
+      "retry": "重试",
+      "noResults": "没有匹配的项目",
+      "noSelection": "未选择任何内容",
+      "unavailable": "已不可用",
+      "selectAll": "全选",
+      "selectNone": "全不选",
+      "selectedCount": "已选择：{{count}}",
+      "selectedCountMax": "已选择：{{count}} / {{max}}",
+      "done": "完成",
+      "play": "播放预览",
+      "stop": "停止预览",
+      "enlarge": "放大",
+      "dialogDescription": "从集成提供的项目中选择。",
+      "dependencyRequired": "请先设置{{fields}}。",
+      "confirmClearTitle": "清除相关选择？",
+      "confirmClearMessage": "更改{{field}}将清除{{fields}}。",
+      "minSelection": "至少选择 {{min}} 项。",
+      "maxSelection": "最多选择 {{max}} 项。",
+      "errors": {
+        "widgetNotFound": "此 Widget 已不可用。",
+        "notAChoiceField": "此字段无法列出选项。",
+        "missingDependency": "请先设置此字段所依赖的字段。",
+        "missingCredentials": "此组织尚未配置该集成。",
+        "rateLimited": "请求过多。请稍候再试。",
+        "providerError": "集成无法提供这些项目。请稍后再试。",
+        "networkError": "无法连接到服务器。请检查网络连接。",
+        "unknown": "无法加载项目。"
+      }
+    }
   },
   "devices": {
     "orientation": {
@@ -1672,6 +1727,227 @@
         "cursor": "将此配置添加到 ~/.cursor/mcp.json（适用于所有项目）或项目中的 .cursor/mcp.json，然后在 Cursor Settings > MCP 中启用该服务器。",
         "other": "使用以下设置配置远程 MCP 服务器。"
       }
+    }
+  },
+  "automations": {
+    "title": "自动化",
+    "description": "让显示屏对事件做出反应，例如在特定时间用其他内容打断播放。",
+    "new": "新建自动化",
+    "newDescription": "为自动化命名。之后可以添加规则并分配显示屏。",
+    "namePlaceholder": "例如：每小时春季优惠",
+    "created": "已创建自动化“{{name}}”",
+    "deleted": "已删除自动化“{{name}}”",
+    "saved": "自动化已保存",
+    "enabled": "已启用",
+    "disabled": "已停用",
+    "disabledHint": "已停用的自动化不会在显示屏上触发。",
+    "toggleEnabled": "启用或停用“{{name}}”",
+    "noUpcoming": "没有即将触发的时间",
+    "noRules": "暂无规则",
+    "moreRules": "另外 {{count}} 条",
+    "assignmentsDetail": "{{devices}} 台设备和 {{channels}} 个频道",
+    "noAccess": "您没有查看自动化的权限。",
+    "deleteTitle": "删除自动化",
+    "deleteMessage": "确定要删除“{{name}}”吗？已分配的显示屏将立即停止运行它。",
+    "editorDescription": "规则按从上到下的顺序评估；如果多条规则同时触发，以第一条为准。",
+    "columns": {
+      "rules": "规则",
+      "assignments": "分配给",
+      "nextFiring": "下次触发"
+    },
+    "tabs": {
+      "rules": "规则（{{count}}）",
+      "assignments": "分配（{{count}}）"
+    },
+    "errors": {
+      "loadFailed": "无法加载自动化",
+      "saveFailed": "无法保存自动化：{{error}}",
+      "deleteFailed": "无法删除自动化：{{error}}",
+      "runFailed": "无法运行规则：{{error}}"
+    },
+    "rules": {
+      "title": "规则",
+      "empty": "此自动化还没有规则。添加规则来决定何时发生什么以及显示屏执行什么操作。",
+      "add": "添加规则",
+      "edit": "编辑规则",
+      "save": "保存规则",
+      "saved": "规则已保存",
+      "when": "当",
+      "then": "则",
+      "options": "选项",
+      "chooseSource": "选择触发规则的条件",
+      "chooseAction": "选择显示屏执行的操作",
+      "cooldown": "冷却时间（秒）",
+      "cooldownHint": "同一显示屏上此规则两次运行之间的最短时间。填 0 表示不冷却。",
+      "moveUp": "上移",
+      "moveDown": "下移",
+      "moveUpN": "上移规则 {{n}}",
+      "moveDownN": "下移规则 {{n}}",
+      "runNow": "立即运行",
+      "runNowN": "立即运行规则 {{n}}",
+      "editN": "编辑规则 {{n}}",
+      "deleteN": "删除规则 {{n}}",
+      "deleteTitle": "删除规则",
+      "deleteMessage": "确定要删除此规则吗？",
+      "moved": "规则已从位置 {{from}} 移到 {{to}}",
+      "runSuccess": "规则已发送到 {{count}} 台显示屏"
+    },
+    "summary": {
+      "hourly": "每小时的第 {{minute}} 分",
+      "interval": "每 {{minutes}} 分钟",
+      "times": "每天 {{times}}",
+      "once": "仅一次：{{date}} {{time}}",
+      "unknown": "未知计划",
+      "dateRange": "从 {{start}} 到 {{end}}",
+      "dateFrom": "自 {{date}} 起",
+      "dateUntil": "截至 {{date}}",
+      "noPlaylist": "未选择播放列表",
+      "playlistFallback": "播放列表 #{{id}}",
+      "interruptImmediately": "立即用“{{playlist}}”打断",
+      "interruptAfterItem": "当前项目结束后用“{{playlist}}”打断",
+      "plays": "播放 {{count}} 次",
+      "highPriority": "高优先级",
+      "cooldown": "冷却：{{seconds}} 秒",
+      "unknownType": "不支持的类型“{{type}}”"
+    },
+    "validation": {
+      "minute": "请输入 0 到 59 之间的分钟数。",
+      "interval": "间隔必须是 5 到 1440 之间的整数分钟。",
+      "timesCount": "请添加 1 到 48 个时间。",
+      "time": "请按 HH:MM 格式输入时间。",
+      "timesDuplicate": "每个时间只能出现一次。",
+      "date": "请输入有效日期。",
+      "schedule": "请选择计划。",
+      "weekdays": "请至少选择一个星期几。",
+      "window": "每日时间段的开始时间必须早于结束时间。",
+      "dates": "开始日期必须早于或等于结束日期。",
+      "timezone": "请输入有效时区（例如 Europe/Stockholm），或留空。",
+      "playlist": "请选择播放列表。",
+      "start": "请选择打断的开始方式。",
+      "maxWait": "最长等待时间必须在 0 到 3600 秒之间。",
+      "plays": "播放次数必须在 1 到 100 之间。",
+      "priority": "请选择优先级。",
+      "cooldown": "冷却时间必须是整数秒（0 或以上）。",
+      "source": "请选择触发条件。",
+      "action": "请选择操作。"
+    },
+    "sources": {
+      "clock": {
+        "label": "时钟",
+        "description": "在特定时间：每小时、每隔几分钟、固定时间或仅一次。"
+      }
+    },
+    "actions": {
+      "interrupt": {
+        "label": "用内容打断",
+        "description": "临时播放一个播放列表，然后返回常规计划。"
+      }
+    },
+    "clock": {
+      "repeat": "重复",
+      "types": {
+        "hourly": "每小时",
+        "interval": "每 N 分钟",
+        "times": "指定时间",
+        "once": "仅一次"
+      },
+      "minute": "每小时的第几分钟",
+      "everyMinutes": "间隔（分钟）",
+      "intervalHint": "至少 {{min}} 分钟，从时间段开始（或午夜）起算。",
+      "times": "每天的时间",
+      "timeN": "时间 {{n}}",
+      "removeTime": "移除时间",
+      "removeTimeN": "移除时间 {{time}}",
+      "addTime": "添加时间",
+      "date": "日期",
+      "time": "时间",
+      "weekdays": "星期",
+      "window": "仅在每日时间段内",
+      "from": "从",
+      "to": "到",
+      "dates": "仅在日期范围内",
+      "startDate": "开始日期",
+      "endDate": "结束日期",
+      "timezone": "时区",
+      "timezonePlaceholder": "显示屏时区",
+      "timezoneHint": "留空则使用每台显示屏自己的时区。",
+      "previewTitle": "接下来的触发时间",
+      "previewTimezone": "以 {{timezone}} 显示。",
+      "previewDeviceTimezone": "每台显示屏使用自己的时区；此处以 {{timezone}} 显示。",
+      "previewFailed": "无法计算接下来的触发时间。",
+      "previewEmpty": "此计划在未来几天内不会触发。"
+    },
+    "interrupt": {
+      "playlist": "播放列表",
+      "choosePlaylist": "搜索播放列表…",
+      "createPlaylist": "创建播放列表",
+      "start": "开始",
+      "startModes": {
+        "immediately": "立即",
+        "after_current_item": "当前项目结束后"
+      },
+      "startHints": {
+        "immediately": "立即停止当前项目；之后从下一个项目继续播放。",
+        "after_current_item": "等待当前项目播放完毕，不会截断任何内容。"
+      },
+      "maxWait": "最长等待（秒）",
+      "maxWaitHint": "如果当前项目更长，仍会打断。",
+      "plays": "播放次数",
+      "playsHint": "返回前播放列表的播放次数。",
+      "priority": "优先级",
+      "priorities": {
+        "normal": "普通",
+        "high": "高"
+      },
+      "priorityHints": {
+        "normal": "常规打断。",
+        "high": "优先于普通优先级的打断。"
+      }
+    },
+    "assignments": {
+      "description": "选择运行此自动化的显示屏，可直接分配或通过其频道分配。",
+      "devices": "设备",
+      "channels": "频道",
+      "none": {
+        "devices": "未分配设备",
+        "channels": "未分配频道"
+      },
+      "search": {
+        "devices": "搜索设备…",
+        "channels": "搜索频道…"
+      },
+      "remove": "移除 {{name}}",
+      "loadFailed": "无法加载列表",
+      "noResults": "无匹配项",
+      "save": "保存分配",
+      "saved": "分配已保存"
+    },
+    "warnings": {
+      "missing": "{{device}} 不支持 {{capability}}",
+      "unsupported": "不支持 {{capability}}",
+      "viaChannels": "通过频道覆盖的显示屏"
+    },
+    "channel": {
+      "title": "自动化",
+      "manage": "管理自动化",
+      "empty": "此频道未分配任何自动化。",
+      "loadFailed": "无法加载此频道的自动化。",
+      "showMarkers": "在日历上显示触发时间",
+      "firingsThisWeek": "（本周 {{count}} 次）",
+      "upcoming": "本周触发时间",
+      "markerLabel": "{{name}}，{{time}}"
+    },
+    "device": {
+      "title": "自动化",
+      "description": "此设备运行的自动化，直接分配或通过其频道分配。",
+      "refresh": "刷新自动化",
+      "empty": "没有适用于此设备的自动化。",
+      "loadFailed": "无法加载此设备的自动化。",
+      "viaDevice": "直接分配",
+      "viaChannel": "通过频道 {{name}}",
+      "upcoming": "即将触发",
+      "noUpcoming": "未来几天没有触发。",
+      "timezoneNote": "时间以设备时区（{{timezone}}）显示。"
     }
   }
 }

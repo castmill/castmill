@@ -390,7 +390,26 @@
       "unblockTitle": "Débloquer l'Organisation",
       "unblockConfirmation": "Êtes-vous sûr de vouloir débloquer \"{{name}}\"? Les utilisateurs pourront se connecter à nouveau.",
       "unblockSuccess": "Organisation débloquée avec succès",
-      "unblockError": "Échec du déblocage de l'organisation"
+      "unblockError": "Échec du déblocage de l'organisation",
+      "integrationSettings": {
+        "action": "Paramètres d'intégration",
+        "title": "Paramètres d'intégration – {{name}}",
+        "description": "Valeurs que les widgets de ce réseau utilisent pour cette organisation, comme les identifiants d'agence. Seuls les administrateurs du réseau peuvent les modifier.",
+        "empty": "Aucun widget de ce réseau n'utilise de paramètres d'organisation.",
+        "listHelp": "Une valeur par ligne.",
+        "remove": "Supprimer les paramètres",
+        "saved": "Paramètres enregistrés.",
+        "removed": "Paramètres supprimés.",
+        "invalid": "Vérifiez les champs signalés.",
+        "loadError": "Impossible de charger les paramètres d'intégration.",
+        "saveError": "Impossible d'enregistrer les paramètres : {{message}}",
+        "errors": {
+          "required": "Obligatoire.",
+          "invalid": "Valeur non valide.",
+          "too_long": "Trop long.",
+          "too_many": "Trop de valeurs."
+        }
+      }
     },
     "users": {
       "listTitle": "Tous les utilisateurs",
@@ -713,6 +732,7 @@
   "sidebar": {
     "organization": "Organisation",
     "channels": "Canaux",
+    "automations": "Automatisations",
     "teams": "Équipes",
     "usage": "Utilisation",
     "devices": "Appareils",
@@ -1033,7 +1053,42 @@
       "noConfigurationRequired": "Aucune configuration requise",
       "optional": "Facultatif"
     },
-    "translations": "Traductions"
+    "translations": "Traductions",
+    "choices": {
+      "choose": "Choisir",
+      "moveBefore": "Déplacer avant",
+      "moveAfter": "Déplacer après",
+      "search": "Rechercher…",
+      "loadMore": "Charger plus",
+      "retry": "Réessayer",
+      "noResults": "Aucun élément correspondant",
+      "noSelection": "Aucune sélection",
+      "unavailable": "N'est plus disponible",
+      "selectAll": "Tout sélectionner",
+      "selectNone": "Tout désélectionner",
+      "selectedCount": "Sélectionnés : {{count}}",
+      "selectedCountMax": "Sélectionnés : {{count}} / {{max}}",
+      "done": "Terminé",
+      "play": "Lire l'aperçu",
+      "stop": "Arrêter l'aperçu",
+      "enlarge": "Agrandir",
+      "dialogDescription": "Sélectionnez parmi les éléments fournis par l'intégration.",
+      "dependencyRequired": "Renseignez d'abord {{fields}}.",
+      "confirmClearTitle": "Effacer les sélections dépendantes ?",
+      "confirmClearMessage": "Modifier {{field}} efface {{fields}}.",
+      "minSelection": "Sélectionnez au moins {{min}}.",
+      "maxSelection": "Sélectionnez au plus {{max}}.",
+      "errors": {
+        "widgetNotFound": "Ce widget n'est plus disponible.",
+        "notAChoiceField": "Ce champ ne peut pas proposer de choix.",
+        "missingDependency": "Renseignez d'abord les champs dont celui-ci dépend.",
+        "missingCredentials": "L'intégration n'est pas configurée pour cette organisation.",
+        "rateLimited": "Trop de requêtes. Patientez un instant et réessayez.",
+        "providerError": "L'intégration n'a pas pu fournir les éléments. Réessayez plus tard.",
+        "networkError": "Impossible de joindre le serveur. Vérifiez votre connexion.",
+        "unknown": "Impossible de charger les éléments."
+      }
+    }
   },
   "devices": {
     "orientation": {
@@ -1684,6 +1739,227 @@
         "cursor": "Ajoutez cette configuration à ~/.cursor/mcp.json pour tous les projets, ou à .cursor/mcp.json dans un projet, puis activez le serveur dans Cursor Settings > MCP.",
         "other": "Configurez un serveur MCP distant avec ces paramètres."
       }
+    }
+  },
+  "automations": {
+    "title": "Automatisations",
+    "description": "Faites réagir les écrans à des événements, par exemple en interrompant la diffusion avec un autre contenu à des heures précises.",
+    "new": "Nouvelle automatisation",
+    "newDescription": "Donnez un nom à l'automatisation. Vous pourrez ensuite ajouter des règles et attribuer des écrans.",
+    "namePlaceholder": "ex. Offre de printemps toutes les heures",
+    "created": "Automatisation « {{name}} » créée",
+    "deleted": "Automatisation « {{name}} » supprimée",
+    "saved": "Automatisation enregistrée",
+    "enabled": "Activée",
+    "disabled": "Désactivée",
+    "disabledHint": "Les automatisations désactivées ne se déclenchent jamais sur les écrans.",
+    "toggleEnabled": "Activer ou désactiver « {{name}} »",
+    "noUpcoming": "Aucun déclenchement à venir",
+    "noRules": "Aucune règle pour l'instant",
+    "moreRules": "+{{count}} de plus",
+    "assignmentsDetail": "{{devices}} appareils et {{channels}} canaux",
+    "noAccess": "Vous n'avez pas l'autorisation de voir les automatisations.",
+    "deleteTitle": "Supprimer l'automatisation",
+    "deleteMessage": "Voulez-vous vraiment supprimer « {{name}} » ? Les écrans attribués cesseront immédiatement de l'exécuter.",
+    "editorDescription": "Les règles sont évaluées de haut en bas ; si plusieurs se déclenchent en même temps, la première l'emporte.",
+    "columns": {
+      "rules": "Règles",
+      "assignments": "Attribuée à",
+      "nextFiring": "Prochain déclenchement"
+    },
+    "tabs": {
+      "rules": "Règles ({{count}})",
+      "assignments": "Attributions ({{count}})"
+    },
+    "errors": {
+      "loadFailed": "Impossible de charger les automatisations",
+      "saveFailed": "Impossible d'enregistrer l'automatisation : {{error}}",
+      "deleteFailed": "Impossible de supprimer l'automatisation : {{error}}",
+      "runFailed": "Impossible d'exécuter la règle : {{error}}"
+    },
+    "rules": {
+      "title": "Règles",
+      "empty": "Cette automatisation n'a pas encore de règles. Ajoutez une règle pour décider quand quelque chose se produit et ce que font les écrans.",
+      "add": "Ajouter une règle",
+      "edit": "Modifier la règle",
+      "save": "Enregistrer la règle",
+      "saved": "Règles enregistrées",
+      "when": "Quand",
+      "then": "Alors",
+      "options": "Paramètres",
+      "chooseSource": "Choisissez ce qui déclenche la règle",
+      "chooseAction": "Choisissez ce que font les écrans",
+      "cooldown": "Délai de récupération (secondes)",
+      "cooldownHint": "Temps minimal entre deux exécutions de cette règle sur le même écran. Indiquez 0 pour aucun délai.",
+      "moveUp": "Monter",
+      "moveDown": "Descendre",
+      "moveUpN": "Monter la règle {{n}}",
+      "moveDownN": "Descendre la règle {{n}}",
+      "runNow": "Exécuter maintenant",
+      "runNowN": "Exécuter la règle {{n}} maintenant",
+      "editN": "Modifier la règle {{n}}",
+      "deleteN": "Supprimer la règle {{n}}",
+      "deleteTitle": "Supprimer la règle",
+      "deleteMessage": "Voulez-vous vraiment supprimer cette règle ?",
+      "moved": "Règle déplacée de la position {{from}} à {{to}}",
+      "runSuccess": "Règle envoyée à {{count}} écrans"
+    },
+    "summary": {
+      "hourly": "Toutes les heures à :{{minute}}",
+      "interval": "Toutes les {{minutes}} minutes",
+      "times": "Tous les jours à {{times}}",
+      "once": "Une fois le {{date}} à {{time}}",
+      "unknown": "Programmation inconnue",
+      "dateRange": "du {{start}} au {{end}}",
+      "dateFrom": "à partir du {{date}}",
+      "dateUntil": "jusqu'au {{date}}",
+      "noPlaylist": "Aucune liste de lecture sélectionnée",
+      "playlistFallback": "liste de lecture n° {{id}}",
+      "interruptImmediately": "Interrompre avec « {{playlist}} » immédiatement",
+      "interruptAfterItem": "Interrompre avec « {{playlist}} » après l'élément en cours",
+      "plays": "lire {{count}} fois",
+      "highPriority": "priorité haute",
+      "cooldown": "Délai : {{seconds}} s",
+      "unknownType": "Type non pris en charge « {{type}} »"
+    },
+    "validation": {
+      "minute": "Saisissez une minute entre 0 et 59.",
+      "interval": "L'intervalle doit être un nombre entier de minutes entre 5 et 1440.",
+      "timesCount": "Ajoutez entre 1 et 48 horaires.",
+      "time": "Saisissez les horaires au format HH:MM.",
+      "timesDuplicate": "Chaque horaire ne peut apparaître qu'une fois.",
+      "date": "Saisissez une date valide.",
+      "schedule": "Choisissez une programmation.",
+      "weekdays": "Sélectionnez au moins un jour de la semaine.",
+      "window": "La plage horaire quotidienne doit commencer avant de se terminer.",
+      "dates": "La date de début doit être antérieure ou égale à la date de fin.",
+      "timezone": "Saisissez un fuseau horaire valide, ex. Europe/Stockholm, ou laissez vide.",
+      "playlist": "Choisissez une liste de lecture.",
+      "start": "Choisissez quand l'interruption commence.",
+      "maxWait": "L'attente maximale doit être comprise entre 0 et 3600 secondes.",
+      "plays": "Le nombre de lectures doit être compris entre 1 et 100.",
+      "priority": "Choisissez une priorité.",
+      "cooldown": "Le délai doit être un nombre entier de secondes (0 ou plus).",
+      "source": "Choisissez un déclencheur.",
+      "action": "Choisissez une action à effectuer."
+    },
+    "sources": {
+      "clock": {
+        "label": "Horloge",
+        "description": "À des heures précises : toutes les heures, toutes les quelques minutes, à heures fixes ou une seule fois."
+      }
+    },
+    "actions": {
+      "interrupt": {
+        "label": "Interrompre avec du contenu",
+        "description": "Diffuse temporairement une liste de lecture, puis revient à la programmation habituelle."
+      }
+    },
+    "clock": {
+      "repeat": "Répétition",
+      "types": {
+        "hourly": "Toutes les heures",
+        "interval": "Toutes les N minutes",
+        "times": "À heures fixes",
+        "once": "Une fois"
+      },
+      "minute": "Minute après l'heure",
+      "everyMinutes": "Toutes les (minutes)",
+      "intervalHint": "Minimum {{min}} minutes, comptées à partir du début de la plage horaire (ou de minuit).",
+      "times": "Heures de la journée",
+      "timeN": "Heure {{n}}",
+      "removeTime": "Retirer l'heure",
+      "removeTimeN": "Retirer l'heure {{time}}",
+      "addTime": "Ajouter une heure",
+      "date": "Jour",
+      "time": "Heure",
+      "weekdays": "Jours de la semaine",
+      "window": "Uniquement pendant une plage horaire quotidienne",
+      "from": "De",
+      "to": "À",
+      "dates": "Uniquement dans une période",
+      "startDate": "Date de début",
+      "endDate": "Date de fin",
+      "timezone": "Fuseau horaire",
+      "timezonePlaceholder": "Fuseau horaire de l'écran",
+      "timezoneHint": "Laissez vide pour utiliser le fuseau horaire de chaque écran.",
+      "previewTitle": "Prochains déclenchements",
+      "previewTimezone": "Affichés en {{timezone}}.",
+      "previewDeviceTimezone": "Chaque écran utilise son propre fuseau horaire ; affichés ici en {{timezone}}.",
+      "previewFailed": "Impossible de calculer les prochains déclenchements.",
+      "previewEmpty": "Cette programmation ne se déclenche pas dans les prochains jours."
+    },
+    "interrupt": {
+      "playlist": "Liste de lecture",
+      "choosePlaylist": "Rechercher une liste de lecture…",
+      "createPlaylist": "Créer une liste de lecture",
+      "start": "Démarrage",
+      "startModes": {
+        "immediately": "Immédiatement",
+        "after_current_item": "Après l'élément en cours"
+      },
+      "startHints": {
+        "immediately": "Arrête immédiatement l'élément en cours ; la diffusion reprend ensuite avec l'élément suivant.",
+        "after_current_item": "Attend la fin de l'élément en cours pour ne rien couper."
+      },
+      "maxWait": "Attente maximale (secondes)",
+      "maxWaitHint": "Si l'élément en cours est plus long, l'interruption a lieu quand même.",
+      "plays": "Lectures",
+      "playsHint": "Nombre de lectures de la liste avant le retour.",
+      "priority": "Priorité",
+      "priorities": {
+        "normal": "Standard",
+        "high": "Haute"
+      },
+      "priorityHints": {
+        "normal": "Une interruption ordinaire.",
+        "high": "Passe avant les interruptions de priorité normale."
+      }
+    },
+    "assignments": {
+      "description": "Choisissez les écrans qui exécutent cette automatisation, directement ou via leurs canaux.",
+      "devices": "Appareils",
+      "channels": "Canaux",
+      "none": {
+        "devices": "Aucun appareil attribué",
+        "channels": "Aucun canal attribué"
+      },
+      "search": {
+        "devices": "Rechercher des appareils…",
+        "channels": "Rechercher des canaux…"
+      },
+      "remove": "Retirer {{name}}",
+      "loadFailed": "Impossible de charger la liste",
+      "noResults": "Aucun résultat",
+      "save": "Enregistrer les attributions",
+      "saved": "Attributions enregistrées"
+    },
+    "warnings": {
+      "missing": "{{device}} ne prend pas en charge {{capability}}",
+      "unsupported": "Ne prend pas en charge {{capability}}",
+      "viaChannels": "Écrans atteints via des canaux"
+    },
+    "channel": {
+      "title": "Automatisations",
+      "manage": "Gérer les automatisations",
+      "empty": "Aucune automatisation n'est attribuée à ce canal.",
+      "loadFailed": "Impossible de charger les automatisations de ce canal.",
+      "showMarkers": "Afficher les déclenchements dans le calendrier",
+      "firingsThisWeek": "({{count}} cette semaine)",
+      "upcoming": "Déclenchements de cette semaine",
+      "markerLabel": "{{name}} à {{time}}"
+    },
+    "device": {
+      "title": "Automatisations",
+      "description": "Automatisations exécutées par cet appareil, attribuées directement ou via ses canaux.",
+      "refresh": "Actualiser les automatisations",
+      "empty": "Aucune automatisation ne s'applique à cet appareil.",
+      "loadFailed": "Impossible de charger les automatisations de cet appareil.",
+      "viaDevice": "Attribuée directement",
+      "viaChannel": "Via le canal {{name}}",
+      "upcoming": "Prochains déclenchements",
+      "noUpcoming": "Aucun déclenchement dans les prochains jours.",
+      "timezoneNote": "Les heures sont affichées dans le fuseau horaire de l'appareil ({{timezone}})."
     }
   }
 }

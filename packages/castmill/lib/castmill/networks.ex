@@ -169,6 +169,8 @@ defmodule Castmill.Networks do
       %{resource: :channels, max: 20},
       %{resource: :users, max: 50},
       %{resource: :layouts, max: 100},
+      %{resource: :automations, max: 50},
+      %{resource: :automation_rules, max: 500},
       # 1 GB storage (in MB)
       %{resource: :storage, max: 1024},
       # 2 GB max upload size per file (in MB)

@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import { describe, it, afterEach } from 'mocha';
 import { firstValueFrom, NEVER, of, Subscription } from 'rxjs';
+import { take } from 'rxjs/operators';
 import { spy, stub, restore, useFakeTimers } from 'sinon';
 
 import {
@@ -367,6 +368,34 @@ describe('Player loop duration refresh', () => {
       expect(play.calledOnce).to.equal(true);
     } finally {
       player.stop();
+      clock.restore();
+    }
+  });
+
+  it('starts finite playback from the normalized seek position', () => {
+    const clock = useFakeTimers({ now: 1_000_000 });
+    const { player, playlist } = setup(() => 1000);
+    playlist.time = 1000;
+    playlist.seek = () => of([0, 1000]);
+    const times: number[] = [];
+    player.on('time', (time: number) => times.push(time));
+    try {
+      player.play();
+      expect(times[0]).to.equal(0);
+    } finally {
+      player.stop();
+      clock.restore();
+    }
+  });
+});
+
+describe('timer teardown', () => {
+  it('does not schedule another tick after the subscriber closes', () => {
+    const clock = useFakeTimers({ now: 0 });
+    try {
+      timer(0, 0, 50, 1000).pipe(take(1)).subscribe();
+      expect(clock.countTimers()).to.equal(0);
+    } finally {
       clock.restore();
     }
   });
