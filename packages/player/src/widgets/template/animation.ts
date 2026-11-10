@@ -68,7 +68,9 @@ export const applyAnimations = (
       // No parent duration available, default to 0
       startTime = 0;
     }
-    startTime += startOffset;
+    if (animation.start === undefined || animation.start >= 0) {
+      startTime += startOffset;
+    }
 
     const tlItem = {
       start: startTime,

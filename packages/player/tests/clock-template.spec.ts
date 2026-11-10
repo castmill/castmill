@@ -644,8 +644,8 @@ describe('time-dependent template updates', () => {
         );
         expect(initialTargets).to.include(text.children[0]);
 
-        timeline.setDuration(60000);
-        timeline.play(5000);
+        timeline.setDuration(120000);
+        timeline.play(60000);
         advanceClock();
         await flush();
 
@@ -664,7 +664,83 @@ describe('time-dependent template updates', () => {
               .some((tween: any) => tween.targets().includes(text.children[0]))
         );
         expect(updatedAnimation).not.to.equal(undefined);
-        expect(updatedAnimation?.start).to.be.at.least(5000);
+        expect(updatedAnimation?.start).to.equal(60000);
+      }
+    );
+  });
+
+  it('keeps end-relative animated text starts anchored when content changes', async () => {
+    await withWidget(
+      {
+        type: 'text',
+        name: 'end-relative-clock-text',
+        opts: {
+          text: {
+            cond: {
+              key: '@now',
+              gte: new Date(2026, 0, 1, 11, 0).getTime(),
+              then: 'Later clock',
+              else: 'Early clock',
+            },
+          },
+        },
+        animations: [
+          {
+            start: -1000,
+            keyframes: [{ to: { opacity: 0, duration: 1 } }],
+          },
+        ],
+      },
+      {},
+      async (_root, widget, _media, advanceClock) => {
+        const timeline = (widget as any).timeline;
+        timeline.setDuration(120000);
+        timeline.play(60000);
+        advanceClock();
+        await flush();
+
+        const animation = [...timeline.items, ...timeline.playing].find(
+          (item: any) => typeof item.child.getChildren === 'function'
+        );
+        expect(animation?.start).to.equal(119000);
+      }
+    );
+  });
+
+  it('keeps animated text mounted when clock-resolved content is unchanged', async () => {
+    await withWidget(
+      {
+        type: 'text',
+        name: 'stable-clock-text',
+        opts: { text: "{@now | date:'D/M'}" },
+        animations: [
+          {
+            keyframes: [
+              { from: { opacity: 0 } },
+              { to: { opacity: 1, duration: 1 } },
+            ],
+          },
+        ],
+      },
+      {},
+      async (root, widget, _media, advanceClock) => {
+        const text = root.querySelector('[data-component="text"] span')!;
+        const animatedElement = text.firstElementChild;
+        const timeline = (widget as any).timeline;
+        const animation = (timeline.items as any[]).find(
+          (item) => typeof item.child.getChildren === 'function'
+        );
+        const tweenCount = animation.child.getChildren().length;
+
+        advanceClock();
+        await flush();
+
+        const updatedAnimation = (timeline.items as any[]).find(
+          (item) => typeof item.child.getChildren === 'function'
+        );
+        expect(text.firstElementChild).to.equal(animatedElement);
+        expect(updatedAnimation).to.equal(animation);
+        expect(updatedAnimation.child.getChildren()).to.have.length(tweenCount);
       }
     );
   });

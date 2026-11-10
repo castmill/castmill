@@ -104,6 +104,14 @@ export const Text: Component<TextProps> = (props) => {
   let timelineItem: TimelineItem | undefined;
   let scrollTimeline: gsap.core.Timeline | undefined;
   let cleanUpAnimations: (() => void) | undefined;
+  let previousAnimationInputs:
+    | {
+        text: string;
+        animations: ComponentAnimation[];
+        chars?: boolean;
+        perspective?: number;
+      }
+    | undefined;
   let stopObservingResize: (() => void) | undefined;
   let contentObserver: MutationObserver | null = null;
   let animationFrame: number | undefined;
@@ -213,22 +221,35 @@ export const Text: Component<TextProps> = (props) => {
 
   createEffect(() => {
     const text = props.opts.text;
+    const animations = props.animations;
+    const chars = props.opts.chars;
+    const perspective = props.opts.perspective;
     const element = textElement();
-    if (!element || !props.animations) {
+    if (!element || !animations) {
       return;
     }
 
+    if (
+      previousAnimationInputs?.text === text &&
+      previousAnimationInputs.animations === animations &&
+      previousAnimationInputs.chars === chars &&
+      previousAnimationInputs.perspective === perspective
+    ) {
+      return;
+    }
+
+    previousAnimationInputs = { text, animations, chars, perspective };
     cleanUpAnimations?.();
     element.textContent = text;
-    const splittedText = splitText(element, props.opts.chars);
+    const splittedText = splitText(element, chars);
 
-    if (props.opts.perspective) {
-      gsap.set(element, { perspective: props.opts.perspective });
+    if (perspective) {
+      gsap.set(element, { perspective });
     }
 
     cleanUpAnimations = applyAnimations(
       props.timeline,
-      props.animations,
+      animations,
       splittedText.chars || splittedText.words,
       props.timeline.duration(),
       props.timeline.isRunning() ? props.timeline.time : 0
