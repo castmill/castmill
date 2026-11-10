@@ -541,6 +541,43 @@ defmodule CastmillWeb.WidgetIntegrationController do
     end
   end
 
+  defp do_prefetch_widget_data(
+         conn,
+         organization_id,
+         widget_id,
+         widget_options,
+         preview?,
+         widget_config_id
+       ) do
+    case Castmill.Feeds.widget_data(
+           Widgets.get_widget(widget_id),
+           organization_id,
+           widget_options
+         ) do
+      :not_a_feed_widget ->
+        prefetch_integration_data(
+          conn,
+          organization_id,
+          widget_id,
+          widget_options,
+          preview?,
+          widget_config_id
+        )
+
+      feed_result ->
+        json(conn, feed_response(feed_result))
+    end
+  end
+
+  # Feed widgets read their feed's data directly: nothing to fetch or cache.
+  defp feed_response({:ok, nil}), do: %{data: nil, version: 0, status: "no_feed"}
+
+  defp feed_response({:ok, %{data: data, version: version}}),
+    do: %{data: data, version: version, status: "fetched"}
+
+  defp feed_response({:error, :feed_not_found}),
+    do: %{data: nil, version: 0, status: "error", message: "Feed not found"}
+
   defp authorize_prefetch_widget_config(_conn, _organization_id, _widget_id, nil), do: :ok
 
   defp authorize_prefetch_widget_config(conn, organization_id, widget_id, widget_config_id) do
@@ -571,7 +608,7 @@ defmodule CastmillWeb.WidgetIntegrationController do
     end
   end
 
-  defp do_prefetch_widget_data(
+  defp prefetch_integration_data(
          conn,
          organization_id,
          widget_id,
@@ -936,6 +973,35 @@ defmodule CastmillWeb.WidgetIntegrationController do
         true -> Widgets.get_widget_id_for_config(widget_config_id)
       end
 
+    widget = widget_id && Widgets.get_widget(widget_id)
+
+    case Castmill.Feeds.widget_data(widget, organization_id, widget_options) do
+      :not_a_feed_widget ->
+        return_integration_data(
+          conn,
+          widget_config_id,
+          organization_id,
+          widget_id,
+          widget_options,
+          current_version
+        )
+
+      {:ok, %{version: version}} when version == current_version ->
+        conn |> put_status(:not_modified) |> text("")
+
+      feed_result ->
+        json(conn, feed_response(feed_result))
+    end
+  end
+
+  defp return_integration_data(
+         conn,
+         widget_config_id,
+         organization_id,
+         widget_id,
+         widget_options,
+         current_version
+       ) do
     integration = get_widget_integration(widget_id)
 
     integration_data =

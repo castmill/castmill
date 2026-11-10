@@ -147,6 +147,21 @@ defmodule Castmill.Widgets.SchemaChoicesTest do
       end
     end
 
+    test "built-in choice lists need no provider" do
+      assert changeset(%{
+               options_schema: %{
+                 "feed" => %{"type" => "string", "choices" => %{"list" => "feeds"}}
+               }
+             }).valid?
+
+      refute changeset(%{
+               options_schema: %{
+                 "feed" => %{"type" => "string", "choices" => %{"list" => "feeds"}},
+                 "listing" => listing()
+               }
+             }).valid?
+    end
+
     test "rejects choices in data_schema" do
       changeset =
         changeset(%{

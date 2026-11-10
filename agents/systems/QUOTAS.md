@@ -90,7 +90,8 @@ Castmill.Quotas.has_organization_enough_quota?(organization_id, resource, amount
 # Check if network has enough quota
 Castmill.Quotas.has_network_enough_quota?(network_id, resource, amount)
 
-# Get current usage for a resource (count for most resources, bytes for :storage)
+# Get current usage for a resource (count for most resources, bytes for :storage;
+# storage includes media files and copied data feed media)
 Castmill.Quotas.get_quota_used_for_organization(organization_id, schema_module)
 Castmill.Quotas.get_quota_used_for_organization(organization_id, :storage)
 ```
@@ -167,6 +168,7 @@ The full list of allowed values (defined identically in `PlansQuotas`, `QuotasNe
 | users | `:users` | Number of users | count |
 | teams | `:teams` | Number of teams | count |
 | layouts | `:layouts` | Number of layouts | count |
+| feeds | `:feeds` | Number of data feeds (default 20 per plan) | count |
 | automations | `:automations` | Number of automations (default plan: 50) | count |
 | automation_rules | `:automation_rules` | Rules across all automations (default plan: 500) | count |
 | storage | `:storage` | Total file storage quota | **MB** |

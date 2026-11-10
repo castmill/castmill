@@ -52,8 +52,34 @@ defmodule Castmill.Widgets.Integrations.Choices do
   @spec list(String.t(), Castmill.Widgets.Widget.t() | map(), String.t(), map(), keyword()) ::
           {:ok, %{items: [map()], next: String.t() | nil}} | {:error, error()}
   def list(organization_id, widget, field, params, opts \\ []) when is_map(params) do
-    with {:ok, choices} <- field_choices(widget, field),
-         {:ok, dependencies} <- dependency_values(choices, params["options"]),
+    with {:ok, choices} <- field_choices(widget, field) do
+      if builtin_list?(choices["list"]),
+        do: list_builtin(organization_id, choices, params, opts),
+        else: list_from_provider(organization_id, widget, choices, params, opts)
+    end
+  end
+
+  @builtin_lists ["feeds"]
+
+  @doc """
+  True for choice lists Castmill provides itself, without an integration
+  (`"feeds"`: the organization's data feeds).
+  """
+  def builtin_list?(list), do: list in @builtin_lists
+
+  defp list_builtin(organization_id, %{"list" => "feeds"} = choices, params, opts) do
+    with {:ok, _dependencies} <- dependency_values(choices, params["options"]),
+         :ok <- rate_limit(opts[:actor_id]) do
+      Castmill.Feeds.choices(organization_id, %{
+        "query" => query(params["query"]),
+        "cursor" => cursor(params["cursor"]),
+        "values" => values(params["values"])
+      })
+    end
+  end
+
+  defp list_from_provider(organization_id, widget, choices, params, opts) do
+    with {:ok, dependencies} <- dependency_values(choices, params["options"]),
          :ok <- rate_limit(opts[:actor_id]),
          {:ok, integration, module} <- provider(widget),
          {:ok, credentials} <- credentials(organization_id, integration) do

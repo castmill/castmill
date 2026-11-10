@@ -484,7 +484,8 @@
       "channels": "Kanaler",
       "teams": "Team",
       "widgets": "Widgets",
-      "layouts": "Layouter"
+      "layouts": "Layouter",
+      "feeds": "Flöden"
     },
     "errors": {
       "fetchUsageData": "Misslyckades att hämta användningsdata: {{error}}"
@@ -732,7 +733,8 @@
     "networkUsers": "Användare & inbjudningar",
     "networkWidgets": "Widgetåtkomst",
     "tags": "Taggar",
-    "agents": "Agenter"
+    "agents": "Agenter",
+    "feeds": "Flöden"
   },
   "channels": {
     "title": "Kanaler",
@@ -1737,6 +1739,140 @@
         "vscode": "Lägg till konfigurationen i .vscode/mcp.json i din arbetsyta (eller kör \"MCP: Add Server\" från kommandopaletten), starta sedan servern och använd den från Copilot Chat i agentläge.",
         "cursor": "Lägg till konfigurationen i ~/.cursor/mcp.json för alla projekt eller i .cursor/mcp.json i ett projekt och aktivera sedan servern under Cursor Settings > MCP.",
         "other": "Konfigurera en fjärr-MCP-server med dessa inställningar."
+      }
+    }
+  },
+  "feeds": {
+    "title": "Dataflöden",
+    "description": "Flöden tar emot data från andra system, till exempel Make, Zapier eller egna skript. Widgetar som visar ett flöde uppdateras på alla skärmar när det ändras.",
+    "newFeed": "Nytt flöde",
+    "empty": "Inga flöden ännu. Skapa ett och anslut ett system som skickar data till det.",
+    "notFound": "Flödet finns inte eller har tagits bort.",
+    "mode": "Typ",
+    "modes": {
+      "list": "Lista",
+      "document": "Dokument"
+    },
+    "modeHelp": {
+      "list": "Behåller de senaste posterna, nyaste först. System lägger till poster en i taget.",
+      "document": "Innehåller ett dokument som system ersätter vid varje uppdatering."
+    },
+    "keep": "Poster att behålla",
+    "keepHelp": "Äldre poster tas bort när nya kommer (1–100).",
+    "schema": "Postschema (valfritt)",
+    "schemaHelp": "JSON som beskriver fälten i en post, som i en widgets dataschema. Skrivningar som inte matchar avvisas.",
+    "schemaInvalid": "Schemat måste vara ett giltigt JSON-objekt.",
+    "mediaFields": "Mediefält",
+    "mediaFieldsHelp": "Sökvägar i en post som innehåller bild- eller videoadresser, till exempel image eller photos[].url.",
+    "mediaPath": "Sökväg",
+    "mediaMode": "Hantering",
+    "mediaModes": {
+      "copy": "Kopiera till lagring",
+      "link": "Behåll länken"
+    },
+    "addMediaField": "Lägg till mediefält",
+    "entries": "Poster",
+    "lastUpdate": "Senast uppdaterad",
+    "usedBy": "Används i spellistor",
+    "never": "Aldrig",
+    "created": "Flödet har skapats",
+    "saved": "Flödet har sparats",
+    "deleted": "Flödet har tagits bort",
+    "deleteTitle": "Ta bort flödet?",
+    "deleteMessage": "Om du tar bort ”{{name}}” tas dess poster och tokens bort. Widgetar som visar det blir tomma.",
+    "back": "Alla flöden",
+    "tabs": {
+      "entries": "Poster",
+      "connect": "Anslut",
+      "settings": "Inställningar",
+      "media": "Media"
+    },
+    "noEntries": "Inga poster ännu. Skicka en testpost eller anslut ett system.",
+    "noDocument": "Inget dokument ännu.",
+    "receivedAt": "Mottagen {{time}}",
+    "updatedAt": "Senast uppdaterad: {{time}}",
+    "externalId": "Externt ID",
+    "deleteEntry": "Ta bort post",
+    "deleteEntryMessage": "Posten tas bort från alla skärmar som visar flödet.",
+    "clear": "Rensa allt",
+    "clearTitle": "Rensa flödet?",
+    "clearMessage": "Detta tar bort all data i ”{{name}}”.",
+    "refresh": "Uppdatera",
+    "test": {
+      "title": "Skicka en testpost",
+      "titleDocument": "Skicka ett testdokument",
+      "help": "Klistra in ett JSON-objekt. Det sparas som data från ett anslutet system.",
+      "send": "Skicka",
+      "sent": "Testdata har sparats",
+      "invalidJson": "Ange ett giltigt JSON-objekt."
+    },
+    "connect": {
+      "endpoints": "Slutpunkter",
+      "append": "Lägg till poster",
+      "replace": "Ersätt all data",
+      "read": "Läs data",
+      "copy": "Kopiera",
+      "copied": "Kopierat till urklipp",
+      "copyFailed": "Det gick inte att kopiera till urklipp"
+    },
+    "tokens": {
+      "title": "Tokens",
+      "help": "En token kan bara skriva till det här flödet. Skicka den i Authorization-headern som Bearer följt av token.",
+      "new": "Ny token",
+      "namePlaceholder": "Till exempel: Make-scenario",
+      "empty": "Inga tokens ännu.",
+      "lastUsed": "Senast använd",
+      "revoke": "Återkalla",
+      "revoked": "Återkallad",
+      "revokeTitle": "Återkalla token?",
+      "revokeMessage": "System som använder ”{{name}}” kan inte längre skriva till flödet.",
+      "secretTitle": "Kopiera din token",
+      "secretWarning": "Det här är enda gången token visas. Spara den i systemet som skickar data.",
+      "done": "Klar",
+      "memberHint": "Tokens för organisationens medlemmar och AI-agenter kan också skriva till flöden, även till flera flöden samtidigt."
+    },
+    "examples": {
+      "curl": "Från ett skript (curl)",
+      "make": "Från Make",
+      "makeStep1": "Lägg till en modul HTTP › Make a request.",
+      "makeStep2": "Ange slutpunkten ”Lägg till poster” som URL och POST som metod.",
+      "makeStep3": "Lägg till en Authorization-header med värdet Bearer följt av din token.",
+      "makeStep4": "Välj en rå JSON-body med fälten som ska visas. Ta med ett external_id så att redigerade objekt ersätter sin post i stället för att lägga till en ny."
+    },
+    "errors": {
+      "load": "Det gick inte att läsa in flödena.",
+      "loadFeed": "Det gick inte att läsa in flödet.",
+      "save": "Det gick inte att spara flödet: {{message}}",
+      "quota": "Organisationen har nått sin gräns för flöden.",
+      "action": "Åtgärden misslyckades: {{message}}"
+    },
+    "media": {
+      "help": "Bilder och videor i flödets kopierade mediefält lagras i Castmill, så att skärmarna fortsätter visa dem även när originallänkarna slutar gälla.",
+      "storage": "Lagrat: {{size}}",
+      "empty": "Inga media än.",
+      "noFields": "Det här flödet kopierar inga media. Lägg till mediefält under Inställningar.",
+      "retry": "Försök igen",
+      "retried": "Kopierar mediet igen.",
+      "entries": "Poster: {{count}}",
+      "seconds": "{{seconds}} s",
+      "status": {
+        "pending": "Kopierar",
+        "ready": "Lagrad",
+        "failed": "Misslyckades"
+      },
+      "failures": {
+        "not_found": "Originalfilen hittades inte.",
+        "forbidden": "Källan nekade åtkomst.",
+        "unauthorized": "Källan kräver inloggning.",
+        "too_large": "Filen är för stor.",
+        "unsupported_type": "Filen är inte en bild eller video som stöds.",
+        "quota_exceeded": "Organisationens lagring är full.",
+        "timeout": "Källan svarade inte i tid.",
+        "blocked_host": "URL:en pekar på ett privat nätverk.",
+        "other": "Filen kunde inte kopieras."
+      },
+      "errors": {
+        "load": "Det gick inte att läsa in flödets media."
       }
     }
   },

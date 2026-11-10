@@ -8,7 +8,7 @@ import { AddOnTree } from '../../classes/addon-tree';
 import { AddOnNode } from '../../interfaces/addon-node.interface';
 import { store, setStore } from '../../store/store';
 import { baseUrl } from '../../env';
-import { TbChartHistogram, TbRobot, TbBolt } from 'solid-icons/tb';
+import { TbChartHistogram, TbRobot, TbRss, TbBolt } from 'solid-icons/tb';
 import { AiOutlineTeam, AiOutlineTags } from 'solid-icons/ai';
 import { RiEditorOrganizationChart } from 'solid-icons/ri';
 import { BsCalendarWeek, BsBuilding } from 'solid-icons/bs';
@@ -187,6 +187,12 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
           text={t('sidebar.tags')}
           level={0}
           icon={AiOutlineTags}
+        />
+        <PanelItem
+          to={`/org/${store.organizations.selectedId}/feeds`}
+          text={t('sidebar.feeds')}
+          level={0}
+          icon={TbRss}
         />
         <Show
           when={

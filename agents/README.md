@@ -57,6 +57,7 @@ agents/
 - **[notifications.md](./systems/notifications.md)** - Real-time notification system with WebSocket and REST API
 - **[AI-AGENTS-MCP.md](./systems/AI-AGENTS-MCP.md)** - AI agents as organization members and the MCP server (`/mcp`)
 - **[WIDGET-INTEGRATIONS.md](./systems/WIDGET-INTEGRATIONS.md)** - Widget third-party integration system architecture
+- **[DATA-FEEDS.md](./systems/DATA-FEEDS.md)** - Data that external systems push (Make, Zapier, scripts) for widgets to show
 - **[WIDGET-OPTION-CHOICES.md](./systems/WIDGET-OPTION-CHOICES.md)** - Picking widget option values from integration-provided choices
 - **[INTEGRATION-ON-DEMAND-REFRESH.md](./systems/INTEGRATION-ON-DEMAND-REFRESH.md)** - Refreshing pull-integration data only when it is read
 - **[WIDGET-INTEGRATION-API.md](./systems/WIDGET-INTEGRATION-API.md)** - Widget integration API reference

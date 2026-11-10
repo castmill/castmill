@@ -489,7 +489,8 @@
       "channels": "채널",
       "teams": "팀",
       "widgets": "위젯",
-      "layouts": "레이아웃"
+      "layouts": "레이아웃",
+      "feeds": "피드"
     },
     "errors": {
       "fetchUsageData": "사용량 데이터를 가져오는데 실패했습니다: {{error}}"
@@ -737,7 +738,8 @@
     "networkUsers": "사용자 및 초대",
     "networkWidgets": "위젯 액세스",
     "tags": "태그",
-    "agents": "에이전트"
+    "agents": "에이전트",
+    "feeds": "피드"
   },
   "channels": {
     "title": "채널",
@@ -1742,6 +1744,140 @@
         "vscode": "작업 영역의 .vscode/mcp.json에 이 구성을 추가하거나 명령 팔레트에서 \"MCP: Add Server\"를 실행한 다음, 서버를 시작하고 Copilot Chat 에이전트 모드에서 사용하세요.",
         "cursor": "모든 프로젝트에는 ~/.cursor/mcp.json, 특정 프로젝트에는 .cursor/mcp.json에 이 구성을 추가한 다음 Cursor Settings > MCP에서 서버를 활성화하세요.",
         "other": "다음 설정으로 원격 MCP 서버를 구성하세요."
+      }
+    }
+  },
+  "feeds": {
+    "title": "데이터 피드",
+    "description": "피드는 Make, Zapier 또는 자체 스크립트 같은 다른 시스템에서 데이터를 받습니다. 피드를 표시하는 Widget은 피드가 바뀌면 모든 화면에서 업데이트됩니다.",
+    "newFeed": "새 피드",
+    "empty": "아직 피드가 없습니다. 피드를 만들고 데이터를 보내는 시스템을 연결하세요.",
+    "notFound": "이 피드가 없거나 삭제되었습니다.",
+    "mode": "유형",
+    "modes": {
+      "list": "목록",
+      "document": "문서"
+    },
+    "modeHelp": {
+      "list": "최신 항목을 최신순으로 보관합니다. 시스템이 항목을 하나씩 추가합니다.",
+      "document": "시스템이 업데이트할 때마다 교체하는 문서 하나를 보관합니다."
+    },
+    "keep": "보관할 항목 수",
+    "keepHelp": "새 항목이 도착하면 오래된 항목이 삭제됩니다(1–100).",
+    "schema": "항목 스키마(선택 사항)",
+    "schemaHelp": "Widget의 데이터 스키마처럼 항목의 필드를 설명하는 JSON입니다. 일치하지 않는 쓰기는 거부됩니다.",
+    "schemaInvalid": "스키마는 올바른 JSON 객체여야 합니다.",
+    "mediaFields": "미디어 필드",
+    "mediaFieldsHelp": "이미지 또는 동영상 URL이 있는 항목의 경로입니다(예: image 또는 photos[].url).",
+    "mediaPath": "경로",
+    "mediaMode": "처리 방식",
+    "mediaModes": {
+      "copy": "저장소에 복사",
+      "link": "링크 유지"
+    },
+    "addMediaField": "미디어 필드 추가",
+    "entries": "항목",
+    "lastUpdate": "마지막 업데이트",
+    "usedBy": "사용 중인 재생 목록",
+    "never": "없음",
+    "created": "피드를 만들었습니다",
+    "saved": "피드를 저장했습니다",
+    "deleted": "피드를 삭제했습니다",
+    "deleteTitle": "피드를 삭제하시겠습니까?",
+    "deleteMessage": "“{{name}}”을(를) 삭제하면 항목과 토큰이 제거됩니다. 이 피드를 표시하는 Widget은 비게 됩니다.",
+    "back": "모든 피드",
+    "tabs": {
+      "entries": "항목",
+      "connect": "연결",
+      "settings": "설정",
+      "media": "미디어"
+    },
+    "noEntries": "아직 항목이 없습니다. 테스트 항목을 보내거나 시스템을 연결하세요.",
+    "noDocument": "아직 문서가 없습니다.",
+    "receivedAt": "{{time}}에 받음",
+    "updatedAt": "마지막 업데이트: {{time}}",
+    "externalId": "외부 ID",
+    "deleteEntry": "항목 삭제",
+    "deleteEntryMessage": "이 피드를 표시하는 모든 화면에서 항목이 제거됩니다.",
+    "clear": "모두 지우기",
+    "clearTitle": "피드를 비우시겠습니까?",
+    "clearMessage": "“{{name}}”의 모든 데이터가 제거됩니다.",
+    "refresh": "새로 고침",
+    "test": {
+      "title": "테스트 항목 보내기",
+      "titleDocument": "테스트 문서 보내기",
+      "help": "JSON 객체를 붙여 넣으세요. 연결된 시스템이 보낸 데이터처럼 저장됩니다.",
+      "send": "보내기",
+      "sent": "테스트 데이터를 저장했습니다",
+      "invalidJson": "올바른 JSON 객체를 입력하세요."
+    },
+    "connect": {
+      "endpoints": "엔드포인트",
+      "append": "항목 추가",
+      "replace": "모든 데이터 교체",
+      "read": "데이터 읽기",
+      "copy": "복사",
+      "copied": "클립보드에 복사했습니다",
+      "copyFailed": "클립보드에 복사할 수 없습니다"
+    },
+    "tokens": {
+      "title": "토큰",
+      "help": "토큰은 이 피드에만 쓸 수 있습니다. Authorization 헤더에 Bearer 뒤에 토큰을 붙여 보내세요.",
+      "new": "새 토큰",
+      "namePlaceholder": "예: Make 시나리오",
+      "empty": "아직 토큰이 없습니다.",
+      "lastUsed": "마지막 사용",
+      "revoke": "취소",
+      "revoked": "취소됨",
+      "revokeTitle": "토큰을 취소하시겠습니까?",
+      "revokeMessage": "“{{name}}”을(를) 사용하는 시스템은 더 이상 피드에 쓸 수 없습니다.",
+      "secretTitle": "토큰 복사",
+      "secretWarning": "토큰은 이번 한 번만 표시됩니다. 데이터를 보내는 시스템에 저장하세요.",
+      "done": "완료",
+      "memberHint": "조직 구성원과 AI 에이전트의 토큰도 피드에 쓸 수 있으며, 여러 피드에 동시에 쓸 수도 있습니다."
+    },
+    "examples": {
+      "curl": "스크립트에서(curl)",
+      "make": "Make에서",
+      "makeStep1": "HTTP › Make a request 모듈을 추가하세요.",
+      "makeStep2": "URL을 “항목 추가” 엔드포인트로, 메서드를 POST로 설정하세요.",
+      "makeStep3": "값이 Bearer 뒤에 토큰을 붙인 Authorization 헤더를 추가하세요.",
+      "makeStep4": "표시할 필드가 포함된 원시 JSON 본문을 선택하세요. 수정된 항목이 새 항목을 추가하지 않고 기존 항목을 교체하도록 external_id를 포함하세요."
+    },
+    "errors": {
+      "load": "피드를 불러올 수 없습니다.",
+      "loadFeed": "피드를 불러올 수 없습니다.",
+      "save": "피드를 저장할 수 없습니다: {{message}}",
+      "quota": "조직이 피드 한도에 도달했습니다.",
+      "action": "작업에 실패했습니다: {{message}}"
+    },
+    "media": {
+      "help": "피드의 복사된 미디어 필드에 있는 이미지와 동영상은 Castmill에 저장되므로 원본 링크가 만료된 후에도 화면에 계속 표시됩니다.",
+      "storage": "저장됨: {{size}}",
+      "empty": "아직 미디어가 없습니다.",
+      "noFields": "이 피드는 미디어를 복사하지 않습니다. 설정에서 미디어 필드를 추가하세요.",
+      "retry": "다시 시도",
+      "retried": "미디어를 다시 복사하는 중입니다.",
+      "entries": "항목: {{count}}",
+      "seconds": "{{seconds}}초",
+      "status": {
+        "pending": "복사 중",
+        "ready": "저장됨",
+        "failed": "실패"
+      },
+      "failures": {
+        "not_found": "원본 파일을 찾을 수 없습니다.",
+        "forbidden": "소스에서 액세스를 거부했습니다.",
+        "unauthorized": "소스에 인증이 필요합니다.",
+        "too_large": "파일이 너무 큽니다.",
+        "unsupported_type": "지원되는 이미지나 동영상이 아닙니다.",
+        "quota_exceeded": "조직의 저장 공간이 가득 찼습니다.",
+        "timeout": "소스가 제때 응답하지 않았습니다.",
+        "blocked_host": "URL이 사설 네트워크를 가리킵니다.",
+        "other": "파일을 복사할 수 없습니다."
+      },
+      "errors": {
+        "load": "피드의 미디어를 불러올 수 없습니다."
       }
     }
   },

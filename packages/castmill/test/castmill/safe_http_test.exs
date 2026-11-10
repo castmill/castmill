@@ -138,6 +138,18 @@ defmodule Castmill.SafeHttpTest do
       refute Keyword.has_key?(options, :max_body_length)
     end
 
+    test "accepts a per-call size limit and Accept header" do
+      FakeClient.stub(@url, FakeClient.ok(String.duplicate("a", 20)))
+
+      assert {:error, :feed_too_large} = SafeHttp.get(@url, max_body_bytes: 10)
+      assert {:ok, %{body: _}} = SafeHttp.get(@url, max_body_bytes: 20, accept: "image/*")
+
+      assert_received {:safe_http_get, @url, _headers, _options}
+      assert_received {:safe_http_get, @url, headers, _options}
+      assert {"Accept", "image/*"} in headers
+      assert Enum.count(headers, fn {name, _} -> name == "Accept" end) == 1
+    end
+
     test "rejects non http(s) URLs" do
       for url <- ["ftp://example.com/feed", "file:///etc/passwd", "javascript:alert(1)", "/feed"] do
         assert {:error, :invalid_url} = SafeHttp.get(url)

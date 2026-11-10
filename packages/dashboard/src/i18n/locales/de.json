@@ -125,7 +125,8 @@
     "networkUsers": "Benutzer & Einladungen",
     "networkWidgets": "Widget-Zugriff",
     "tags": "Tags",
-    "agents": "Agenten"
+    "agents": "Agenten",
+    "feeds": "Feeds"
   },
   "topbar": {
     "help": "Hilfe",
@@ -506,7 +507,8 @@
       "channels": "Kanäle",
       "teams": "Teams",
       "widgets": "Widgets",
-      "layouts": "Layoutvorlagen"
+      "layouts": "Layoutvorlagen",
+      "feeds": "Feeds"
     },
     "errors": {
       "fetchUsageData": "Fehler beim Abrufen der Nutzungsdaten: {{error}}"
@@ -1737,6 +1739,140 @@
         "vscode": "Fügen Sie diese Konfiguration zu .vscode/mcp.json in Ihrem Arbeitsbereich hinzu (oder führen Sie \"MCP: Add Server\" über die Befehlspalette aus), starten Sie dann den Server und verwenden Sie ihn im Agentenmodus von Copilot Chat.",
         "cursor": "Fügen Sie diese Konfiguration zu ~/.cursor/mcp.json für alle Projekte oder zu .cursor/mcp.json in einem Projekt hinzu und aktivieren Sie den Server unter Cursor Settings > MCP.",
         "other": "Konfigurieren Sie einen Remote-MCP-Server mit diesen Einstellungen."
+      }
+    }
+  },
+  "feeds": {
+    "title": "Datenfeeds",
+    "description": "Feeds empfangen Daten aus anderen Systemen, etwa Make, Zapier oder eigenen Skripten. Widgets, die einen Feed anzeigen, werden auf allen Bildschirmen aktualisiert, wenn er sich ändert.",
+    "newFeed": "Neuer Feed",
+    "empty": "Noch keine Feeds. Erstellen Sie einen und verbinden Sie ein System, das Daten sendet.",
+    "notFound": "Dieser Feed existiert nicht oder wurde gelöscht.",
+    "mode": "Typ",
+    "modes": {
+      "list": "Liste",
+      "document": "Dokument"
+    },
+    "modeHelp": {
+      "list": "Behält die neuesten Einträge, die neuesten zuerst. Systeme fügen Einträge einzeln hinzu.",
+      "document": "Enthält ein Dokument, das Systeme bei jeder Aktualisierung ersetzen."
+    },
+    "keep": "Zu behaltende Einträge",
+    "keepHelp": "Ältere Einträge werden entfernt, wenn neue eintreffen (1–100).",
+    "schema": "Eintragsschema (optional)",
+    "schemaHelp": "JSON, das die Felder eines Eintrags beschreibt, wie im Datenschema eines Widgets. Nicht passende Schreibvorgänge werden abgelehnt.",
+    "schemaInvalid": "Das Schema muss ein gültiges JSON-Objekt sein.",
+    "mediaFields": "Medienfelder",
+    "mediaFieldsHelp": "Pfade in einem Eintrag, die Bild- oder Video-URLs enthalten, zum Beispiel image oder photos[].url.",
+    "mediaPath": "Pfad",
+    "mediaMode": "Behandlung",
+    "mediaModes": {
+      "copy": "In den Speicher kopieren",
+      "link": "Link beibehalten"
+    },
+    "addMediaField": "Medienfeld hinzufügen",
+    "entries": "Einträge",
+    "lastUpdate": "Letzte Aktualisierung",
+    "usedBy": "Verwendet in Playlists",
+    "never": "Nie",
+    "created": "Feed erstellt",
+    "saved": "Feed gespeichert",
+    "deleted": "Feed gelöscht",
+    "deleteTitle": "Feed löschen?",
+    "deleteMessage": "Wenn Sie „{{name}}“ löschen, werden seine Einträge und Tokens entfernt. Widgets, die ihn anzeigen, sind dann leer.",
+    "back": "Alle Feeds",
+    "tabs": {
+      "entries": "Einträge",
+      "connect": "Verbinden",
+      "settings": "Einstellungen",
+      "media": "Medien"
+    },
+    "noEntries": "Noch keine Einträge. Senden Sie einen Testeintrag oder verbinden Sie ein System.",
+    "noDocument": "Noch kein Dokument.",
+    "receivedAt": "Empfangen {{time}}",
+    "updatedAt": "Letzte Aktualisierung: {{time}}",
+    "externalId": "Externe ID",
+    "deleteEntry": "Eintrag löschen",
+    "deleteEntryMessage": "Der Eintrag wird von allen Bildschirmen entfernt, die den Feed anzeigen.",
+    "clear": "Alles löschen",
+    "clearTitle": "Feed leeren?",
+    "clearMessage": "Dadurch werden alle Daten von „{{name}}“ entfernt.",
+    "refresh": "Aktualisieren",
+    "test": {
+      "title": "Testeintrag senden",
+      "titleDocument": "Testdokument senden",
+      "help": "Fügen Sie ein JSON-Objekt ein. Es wird wie Daten eines verbundenen Systems gespeichert.",
+      "send": "Senden",
+      "sent": "Testdaten gespeichert",
+      "invalidJson": "Geben Sie ein gültiges JSON-Objekt ein."
+    },
+    "connect": {
+      "endpoints": "Endpunkte",
+      "append": "Einträge hinzufügen",
+      "replace": "Alle Daten ersetzen",
+      "read": "Daten lesen",
+      "copy": "Kopieren",
+      "copied": "In die Zwischenablage kopiert",
+      "copyFailed": "Kopieren in die Zwischenablage fehlgeschlagen"
+    },
+    "tokens": {
+      "title": "Tokens",
+      "help": "Ein Token kann nur in diesen Feed schreiben. Senden Sie es im Authorization-Header als Bearer gefolgt vom Token.",
+      "new": "Neues Token",
+      "namePlaceholder": "Zum Beispiel: Make-Szenario",
+      "empty": "Noch keine Tokens.",
+      "lastUsed": "Zuletzt verwendet",
+      "revoke": "Widerrufen",
+      "revoked": "Widerrufen",
+      "revokeTitle": "Token widerrufen?",
+      "revokeMessage": "Systeme, die „{{name}}“ verwenden, können nicht mehr in den Feed schreiben.",
+      "secretTitle": "Token kopieren",
+      "secretWarning": "Das Token wird nur dieses eine Mal angezeigt. Speichern Sie es in dem System, das die Daten sendet.",
+      "done": "Fertig",
+      "memberHint": "Tokens von Mitgliedern der Organisation und von KI-Agenten können ebenfalls in Feeds schreiben, auch in mehrere gleichzeitig."
+    },
+    "examples": {
+      "curl": "Aus einem Skript (curl)",
+      "make": "Aus Make",
+      "makeStep1": "Fügen Sie ein Modul HTTP › Make a request hinzu.",
+      "makeStep2": "Verwenden Sie den Endpunkt „Einträge hinzufügen“ als URL und POST als Methode.",
+      "makeStep3": "Fügen Sie einen Authorization-Header hinzu, dessen Wert Bearer gefolgt von Ihrem Token ist.",
+      "makeStep4": "Wählen Sie einen Raw-JSON-Body mit den anzuzeigenden Feldern. Geben Sie eine external_id an, damit bearbeitete Elemente ihren Eintrag ersetzen, statt einen neuen hinzuzufügen."
+    },
+    "errors": {
+      "load": "Die Feeds konnten nicht geladen werden.",
+      "loadFeed": "Der Feed konnte nicht geladen werden.",
+      "save": "Der Feed konnte nicht gespeichert werden: {{message}}",
+      "quota": "Ihre Organisation hat ihr Feed-Limit erreicht.",
+      "action": "Die Aktion ist fehlgeschlagen: {{message}}"
+    },
+    "media": {
+      "help": "Bilder und Videos in den kopierten Medienfeldern des Feeds werden in Castmill gespeichert, damit Bildschirme sie auch nach Ablauf der Originallinks anzeigen.",
+      "storage": "Gespeichert: {{size}}",
+      "empty": "Noch keine Medien.",
+      "noFields": "Dieser Feed kopiert keine Medien. Füge Medienfelder in den Einstellungen hinzu.",
+      "retry": "Erneut versuchen",
+      "retried": "Das Medium wird erneut kopiert.",
+      "entries": "Einträge: {{count}}",
+      "seconds": "{{seconds}} s",
+      "status": {
+        "pending": "Wird kopiert",
+        "ready": "Gespeichert",
+        "failed": "Fehlgeschlagen"
+      },
+      "failures": {
+        "not_found": "Die Originaldatei wurde nicht gefunden.",
+        "forbidden": "Die Quelle hat den Zugriff verweigert.",
+        "unauthorized": "Die Quelle erfordert eine Anmeldung.",
+        "too_large": "Die Datei ist zu groß.",
+        "unsupported_type": "Die Datei ist kein unterstütztes Bild oder Video.",
+        "quota_exceeded": "Der Speicher der Organisation ist voll.",
+        "timeout": "Die Quelle hat nicht rechtzeitig geantwortet.",
+        "blocked_host": "Die URL verweist auf ein privates Netzwerk.",
+        "other": "Die Datei konnte nicht kopiert werden."
+      },
+      "errors": {
+        "load": "Die Medien des Feeds konnten nicht geladen werden."
       }
     }
   },

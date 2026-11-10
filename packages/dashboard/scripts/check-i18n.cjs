@@ -55,6 +55,7 @@ const config = {
     /^#[0-9a-f]{3,6}$/i, // Hex colors
     /^https?:\/\//i, // URLs
     /^\//i, // Paths starting with /
+    /^(?=.*(?:\.|\[\]))[A-Za-z_$][\w$]*(?:\[\])?(?:\.[A-Za-z_$][\w$]*(?:\[\])?)*$/, // JSON field paths
     /^[A-Z_]+$/, // Constants
     /^\$\{.*\}$/, // Template variable references
     /^data-/i, // Data attributes

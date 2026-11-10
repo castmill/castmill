@@ -138,7 +138,8 @@
     "networkUsers": "Users & Invitations",
     "networkWidgets": "Widget Access",
     "tags": "Tags",
-    "agents": "Agents"
+    "agents": "Agents",
+    "feeds": "Feeds"
   },
   "topbar": {
     "help": "Help",
@@ -519,7 +520,8 @@
       "channels": "Channels",
       "teams": "Teams",
       "widgets": "Widgets",
-      "layouts": "Layouts"
+      "layouts": "Layouts",
+      "feeds": "Feeds"
     },
     "errors": {
       "fetchUsageData": "Failed to fetch usage data: {{error}}"
@@ -1737,6 +1739,140 @@
         "vscode": "Add this configuration to .vscode/mcp.json in your workspace (or run \"MCP: Add Server\" from the Command Palette), then start the server and use it from Copilot Chat in agent mode.",
         "cursor": "Add this configuration to ~/.cursor/mcp.json for all projects, or to .cursor/mcp.json in a project, then enable the server under Cursor Settings > MCP.",
         "other": "Configure a remote MCP server with these settings."
+      }
+    }
+  },
+  "feeds": {
+    "title": "Data feeds",
+    "description": "Feeds receive data from other systems, such as Make, Zapier or your own scripts. Widgets that show a feed update on every screen when it changes.",
+    "newFeed": "New feed",
+    "empty": "No feeds yet. Create one and connect a system that sends data to it.",
+    "notFound": "This feed doesn't exist or was deleted.",
+    "mode": "Type",
+    "modes": {
+      "list": "List",
+      "document": "Document"
+    },
+    "modeHelp": {
+      "list": "Keeps the latest entries, newest first. Systems add entries one at a time.",
+      "document": "Holds one document that systems replace on each update."
+    },
+    "keep": "Entries to keep",
+    "keepHelp": "Older entries are removed when new ones arrive (1–100).",
+    "schema": "Entry schema (optional)",
+    "schemaHelp": "JSON describing the fields of an entry, as in a widget's data schema. Writes that don't match are rejected.",
+    "schemaInvalid": "The schema must be a valid JSON object.",
+    "mediaFields": "Media fields",
+    "mediaFieldsHelp": "Paths in an entry that hold image or video URLs, for example image or photos[].url.",
+    "mediaPath": "Path",
+    "mediaMode": "Handling",
+    "mediaModes": {
+      "copy": "Copy to storage",
+      "link": "Keep the link"
+    },
+    "addMediaField": "Add media field",
+    "entries": "Entries",
+    "lastUpdate": "Last update",
+    "usedBy": "Used by playlists",
+    "never": "Never",
+    "created": "Feed created",
+    "saved": "Feed saved",
+    "deleted": "Feed deleted",
+    "deleteTitle": "Delete feed?",
+    "deleteMessage": "Deleting “{{name}}” removes its entries and tokens. Widgets that show it will be empty.",
+    "back": "All feeds",
+    "tabs": {
+      "entries": "Entries",
+      "connect": "Connect",
+      "settings": "Settings",
+      "media": "Media"
+    },
+    "noEntries": "No entries yet. Send a test entry or connect a system.",
+    "noDocument": "No document yet.",
+    "receivedAt": "Received {{time}}",
+    "updatedAt": "Last update: {{time}}",
+    "externalId": "External ID",
+    "deleteEntry": "Delete entry",
+    "deleteEntryMessage": "The entry is removed from every screen that shows the feed.",
+    "clear": "Clear all",
+    "clearTitle": "Clear feed?",
+    "clearMessage": "This removes all data of “{{name}}”.",
+    "refresh": "Refresh",
+    "test": {
+      "title": "Send a test entry",
+      "titleDocument": "Send a test document",
+      "help": "Paste a JSON object. It is stored like data sent by a connected system.",
+      "send": "Send",
+      "sent": "Test data stored",
+      "invalidJson": "Enter a valid JSON object."
+    },
+    "connect": {
+      "endpoints": "Endpoints",
+      "append": "Add entries",
+      "replace": "Replace all data",
+      "read": "Read data",
+      "copy": "Copy",
+      "copied": "Copied to the clipboard",
+      "copyFailed": "Couldn't copy to the clipboard"
+    },
+    "tokens": {
+      "title": "Tokens",
+      "help": "A token can only write to this feed. Send it in the Authorization header as Bearer followed by the token.",
+      "new": "New token",
+      "namePlaceholder": "For example: Make scenario",
+      "empty": "No tokens yet.",
+      "lastUsed": "Last used",
+      "revoke": "Revoke",
+      "revoked": "Revoked",
+      "revokeTitle": "Revoke token?",
+      "revokeMessage": "Systems that use “{{name}}” can no longer write to the feed.",
+      "secretTitle": "Copy your token",
+      "secretWarning": "This is the only time the token is shown. Store it in the system that sends the data.",
+      "done": "Done",
+      "memberHint": "Tokens of organization members and AI agents can also write to feeds, including to several feeds at once."
+    },
+    "examples": {
+      "curl": "From a script (curl)",
+      "make": "From Make",
+      "makeStep1": "Add an HTTP › Make a request module.",
+      "makeStep2": "Set the URL to the “Add entries” endpoint and the method to POST.",
+      "makeStep3": "Add an Authorization header whose value is Bearer followed by your token.",
+      "makeStep4": "Choose a raw JSON body with the fields to show. Include an external_id so that edited items replace their entry instead of adding a new one."
+    },
+    "errors": {
+      "load": "Couldn't load the feeds.",
+      "loadFeed": "Couldn't load the feed.",
+      "save": "Couldn't save the feed: {{message}}",
+      "quota": "Your organization has reached its feed limit.",
+      "action": "The action failed: {{message}}"
+    },
+    "media": {
+      "help": "Images and videos at the feed's copied media fields are stored in Castmill, so screens keep showing them after the original links expire.",
+      "storage": "Stored: {{size}}",
+      "empty": "No media yet.",
+      "noFields": "This feed doesn't copy media. Add media fields in Settings.",
+      "retry": "Retry",
+      "retried": "Copying the media again.",
+      "entries": "Entries: {{count}}",
+      "seconds": "{{seconds}} s",
+      "status": {
+        "pending": "Copying",
+        "ready": "Stored",
+        "failed": "Failed"
+      },
+      "failures": {
+        "not_found": "The original file was not found.",
+        "forbidden": "The source denied access.",
+        "unauthorized": "The source requires authentication.",
+        "too_large": "The file is too large.",
+        "unsupported_type": "The file is not a supported image or video.",
+        "quota_exceeded": "The organization's storage is full.",
+        "timeout": "The source didn't answer in time.",
+        "blocked_host": "The URL points to a private network.",
+        "other": "The file couldn't be copied."
+      },
+      "errors": {
+        "load": "Couldn't load the feed's media."
       }
     }
   },

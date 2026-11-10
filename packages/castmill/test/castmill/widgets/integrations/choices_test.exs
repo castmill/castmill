@@ -379,7 +379,7 @@ defmodule Castmill.Widgets.Integrations.ChoicesTest do
       assert :ok = ChoicesStore.allow(actor, 1, 60_000)
       assert {:error, :rate_limited} = ChoicesStore.allow(actor, 1, 60_000)
 
-      ChoicesStore.prune(System.system_time(:millisecond) + 120_000)
+      Castmill.RateLimiter.prune(System.system_time(:millisecond) + 120_000)
       assert :ok = ChoicesStore.allow(actor, 1, 60_000)
     end
 
@@ -389,10 +389,21 @@ defmodule Castmill.Widgets.Integrations.ChoicesTest do
 
       assert :miss = ChoicesStore.get(:key)
       assert :ok = ChoicesStore.put(:key, :value, 1_000)
-      assert :ok = ChoicesStore.allow(Ecto.UUID.generate(), 0)
       assert :ok = ChoicesStore.clear()
 
       {:ok, _} = Supervisor.restart_child(Castmill.Supervisor, ChoicesStore)
+    end
+
+    test "rate limits allow requests when the limiter is not running" do
+      :ok = Supervisor.terminate_child(Castmill.Supervisor, Castmill.RateLimiter)
+      on_exit(fn -> Supervisor.restart_child(Castmill.Supervisor, Castmill.RateLimiter) end)
+
+      assert :ok = ChoicesStore.allow(Ecto.UUID.generate(), 0)
+      assert :ok = Castmill.RateLimiter.clear()
+
+      {:ok, _} = Supervisor.restart_child(Castmill.Supervisor, Castmill.RateLimiter)
+      send(Castmill.RateLimiter, :prune)
+      :sys.get_state(Castmill.RateLimiter)
     end
 
     test "runs its periodic prune" do

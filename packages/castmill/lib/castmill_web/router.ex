@@ -32,6 +32,11 @@ defmodule CastmillWeb.Router do
     plug(:authenticate_with_token)
   end
 
+  # Data feeds authenticate in their controller (feed, member or agent tokens).
+  pipeline :feeds_api do
+    plug(:accepts, ["json"])
+  end
+
   scope "/", CastmillWeb do
     pipe_through([:browser, :redirect_if_user_is_authenticated])
 
@@ -291,6 +296,17 @@ defmodule CastmillWeb.Router do
   # Addon API routes - supports both public and authenticated endpoints
   # Public routes (defined via public_api_routes/0) don't require authentication
   # Routes are mounted under /api/addons/:addon_id/*path
+  scope "/api/v1/feeds", CastmillWeb do
+    pipe_through(:feeds_api)
+
+    post("/entries", FeedApiController, :append_many)
+    get("/:id", FeedApiController, :show)
+    post("/:id/entries", FeedApiController, :append)
+    put("/:id/data", FeedApiController, :replace)
+    delete("/:id/entries", FeedApiController, :clear)
+    delete("/:id/entries/:entry_id", FeedApiController, :delete_entry)
+  end
+
   scope "/api/addons", CastmillWeb do
     pipe_through(:dashboard)
 
@@ -418,6 +434,38 @@ defmodule CastmillWeb.Router do
       "/organizations/:organization_id/widgets/:widget_id",
       OrganizationController,
       :get_widget
+    )
+
+    # Data feeds (see agents/systems/DATA-FEEDS.md)
+    get("/organizations/:organization_id/feeds", FeedController, :index)
+    post("/organizations/:organization_id/feeds", FeedController, :create)
+    get("/organizations/:organization_id/feeds/:id", FeedController, :show)
+    patch("/organizations/:organization_id/feeds/:id", FeedController, :update)
+    delete("/organizations/:organization_id/feeds/:id", FeedController, :delete)
+    get("/organizations/:organization_id/feeds/:id/entries", FeedController, :entries)
+    post("/organizations/:organization_id/feeds/:id/test-entry", FeedController, :test_entry)
+    delete("/organizations/:organization_id/feeds/:id/entries", FeedController, :clear)
+
+    delete(
+      "/organizations/:organization_id/feeds/:id/entries/:entry_id",
+      FeedController,
+      :delete_entry
+    )
+
+    get("/organizations/:organization_id/feeds/:id/tokens", FeedController, :tokens)
+    post("/organizations/:organization_id/feeds/:id/tokens", FeedController, :create_token)
+    get("/organizations/:organization_id/feeds/:id/media", FeedController, :media)
+
+    post(
+      "/organizations/:organization_id/feeds/:id/media/:media_id/retry",
+      FeedController,
+      :retry_media
+    )
+
+    delete(
+      "/organizations/:organization_id/feeds/:id/tokens/:token_id",
+      FeedController,
+      :revoke_token
     )
 
     # List integration-provided choices for a widget option field

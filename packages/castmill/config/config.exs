@@ -114,7 +114,8 @@ config :castmill, :bullmq,
     {:integration_polling, concurrency: 5},
     {:integrations, concurrency: 5},
     {:maintenance, concurrency: 2},
-    {:email, concurrency: 5}
+    {:email, concurrency: 5},
+    {:feed_media, concurrency: 5}
   ],
   # Queues whose completion/failure events a web-capable node listens to (via
   # BullMQ.QueueEvents) when it does not process the queue locally. This lets a

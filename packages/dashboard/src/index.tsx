@@ -42,6 +42,8 @@ import OrganizationsInvitationPage from './pages/organization-invitations/organi
 import ChannelsPage from './pages/channels-page/channels-page';
 import TagsPage from './pages/tags-page/tags-page';
 import AgentsPage from './pages/agents-page/agents-page';
+import FeedsPage from './pages/feeds-page/feeds-page';
+import FeedPage from './pages/feeds-page/feed-page';
 import AutomationsPage from './pages/automations-page/automations-page';
 import {
   NetworkProvider,
@@ -269,6 +271,8 @@ render(() => {
                 <Route path="teams" component={TeamsPage} />
                 <Route path="tags" component={TagsPage} />
                 <Route path="agents" component={AgentsPage} />
+                <Route path="feeds" component={FeedsPage} />
+                <Route path="feeds/:feedId" component={FeedPage} />
                 <Route path="organization" component={OrganizationPage} />
                 <Route path="channels" component={ChannelsPage} />
                 <Route path="automations" component={AutomationsPage} />

@@ -127,6 +127,15 @@ const ALLOWED_IDENTICAL_KEYS = {
   'devices.maintenance.systemGroup': ['sv', 'de'],
   'widgets.scope.system': ['sv', 'de'],
   'network.widgets.kind.system': ['sv', 'de'],
+  // Data feeds: "Feeds", "Tokens", "Endpoints" and "Document" are used as-is.
+  'sidebar.feeds': ['es', 'de'],
+  'usage.resources.feeds': ['es', 'de'],
+  'feeds.connect.endpoints': ['es'],
+  'feeds.tokens.title': ['es', 'sv', 'de'],
+  'feeds.mode': ['fr'],
+  'feeds.modes.document': ['fr'],
+  // The SI unit symbol "s" is the same in these languages.
+  'feeds.media.seconds': ['es', 'sv', 'de', 'fr'],
 };
 
 class TranslationChecker {

@@ -63,20 +63,34 @@ defmodule Castmill.SafeHttp do
   @doc """
   Downloads `url`, following redirects, and returns the decoded body together
   with the final URL (useful to resolve relative links) and content type.
+
+  ## Options
+
+    * `:max_body_bytes` - overrides the configured body size limit
+    * `:accept` - the `Accept` header (defaults to syndication feed types)
   """
-  @spec get(String.t()) :: {:ok, response()} | {:error, error()}
-  def get(url) when is_binary(url), do: get(url, 0)
+  @spec get(String.t(), keyword()) :: {:ok, response()} | {:error, error()}
+  def get(url, opts \\ []) when is_binary(url) do
+    headers =
+      case Keyword.get(opts, :accept) do
+        nil -> @headers
+        accept -> List.keystore(@headers, "Accept", 0, {"Accept", accept})
+      end
 
-  defp get(_url, redirects) when redirects > @max_redirects, do: {:error, :too_many_redirects}
+    do_get(url, 0, %{max: Keyword.get(opts, :max_body_bytes, max_body_bytes()), headers: headers})
+  end
 
-  defp get(url, redirects) do
+  defp do_get(_url, redirects, _ctx) when redirects > @max_redirects,
+    do: {:error, :too_many_redirects}
+
+  defp do_get(url, redirects, ctx) do
     with {:ok, uri} <- validate_url(url),
          :ok <- ensure_public_host(uri.host) do
-      request(url, redirects)
+      request(url, redirects, ctx)
     end
   end
 
-  defp request(url, redirects) do
+  defp request(url, redirects, ctx) do
     options = [
       follow_redirect: false,
       recv_timeout: @recv_timeout,
@@ -85,15 +99,15 @@ defmodule Castmill.SafeHttp do
       async: :once
     ]
 
-    case client().get(url, @headers, options) do
+    case client().get(url, ctx.headers, options) do
       {:ok, %{__struct__: HTTPoison.AsyncResponse, id: ref}} ->
-        case collect_response(ref, %{status: nil, headers: [], chunks: [], size: 0}) do
-          {:ok, response} -> handle_response(response, url, redirects)
+        case collect_response(ref, %{status: nil, headers: [], chunks: [], size: 0}, ctx.max) do
+          {:ok, response} -> handle_response(response, url, redirects, ctx)
           error -> error
         end
 
       {:ok, response} ->
-        handle_response(response, url, redirects)
+        handle_response(response, url, redirects, ctx)
 
       {:error, %{reason: reason}} ->
         {:error, network_error(reason)}
@@ -103,27 +117,27 @@ defmodule Castmill.SafeHttp do
     end
   end
 
-  defp collect_response(ref, state) do
+  defp collect_response(ref, state, max) do
     receive do
       # With `async: :once` every message, including the status and the
       # headers, must be followed by `stream_next/1` to get the next one.
       %{__struct__: HTTPoison.AsyncStatus, id: ^ref, code: status} ->
         client().stream_next(%HTTPoison.AsyncResponse{id: ref})
-        collect_response(ref, %{state | status: status})
+        collect_response(ref, %{state | status: status}, max)
 
       %{__struct__: HTTPoison.AsyncHeaders, id: ^ref, headers: headers} ->
         client().stream_next(%HTTPoison.AsyncResponse{id: ref})
-        collect_response(ref, %{state | headers: headers})
+        collect_response(ref, %{state | headers: headers}, max)
 
       %{__struct__: HTTPoison.AsyncChunk, id: ^ref, chunk: chunk} ->
         size = state.size + byte_size(chunk)
 
-        if size > max_body_bytes() do
+        if size > max do
           cancel_request(ref)
           {:error, :feed_too_large}
         else
           client().stream_next(%HTTPoison.AsyncResponse{id: ref})
-          collect_response(ref, %{state | chunks: [chunk | state.chunks], size: size})
+          collect_response(ref, %{state | chunks: [chunk | state.chunks], size: size}, max)
         end
 
       %{__struct__: HTTPoison.AsyncEnd, id: ^ref} ->
@@ -149,22 +163,22 @@ defmodule Castmill.SafeHttp do
       else: :hackney.cancel_request(ref)
   end
 
-  defp handle_response(%{status_code: status, headers: headers, body: body}, url, _redirects)
+  defp handle_response(%{status_code: status, headers: headers, body: body}, url, _redirects, ctx)
        when status in 200..299 do
-    with {:ok, body} <- decode_body(body || "", header(headers, "content-encoding")) do
+    with {:ok, body} <- decode_body(body || "", header(headers, "content-encoding"), ctx.max) do
       {:ok, %{body: body, url: url, content_type: header(headers, "content-type") || ""}}
     end
   end
 
-  defp handle_response(%{status_code: status, headers: headers}, url, redirects)
+  defp handle_response(%{status_code: status, headers: headers}, url, redirects, ctx)
        when status in [301, 302, 303, 307, 308] do
     case header(headers, "location") do
       nil -> {:error, :redirect_without_location}
-      location -> get(resolve(url, location), redirects + 1)
+      location -> do_get(resolve(url, location), redirects + 1, ctx)
     end
   end
 
-  defp handle_response(%{status_code: status}, _url, _redirects),
+  defp handle_response(%{status_code: status}, _url, _redirects, _ctx),
     do: {:error, status_error(status)}
 
   @doc """
@@ -281,9 +295,7 @@ defmodule Castmill.SafeHttp do
   # Body decoding
   # ==========================================================================
 
-  defp decode_body(body, encoding) do
-    max = max_body_bytes()
-
+  defp decode_body(body, encoding, max) do
     cond do
       byte_size(body) > max -> {:error, :feed_too_large}
       gzip?(body, encoding) -> inflate(body, 31, max)

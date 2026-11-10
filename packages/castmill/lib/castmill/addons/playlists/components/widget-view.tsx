@@ -62,6 +62,33 @@ export const resolveEffectiveWidgetData = (
   return previewData ?? (integrationData || configData || defaultData);
 };
 
+/**
+ * The feed shown by a widget whose options pick a data feed
+ * (`"choices": {"list": "feeds"}`), or undefined.
+ */
+export const getWidgetFeedId = (
+  widget: JsonWidget,
+  options?: OptionsDict
+): string | undefined => {
+  const schema = (widget.options_schema || {}) as Record<string, any>;
+  if (Array.isArray(schema) || !options) return undefined;
+  const key = Object.keys(schema).find(
+    (field) => schema[field]?.choices?.list === 'feeds'
+  );
+  const value = key ? options[key] : undefined;
+  return typeof value === 'string' && value !== '' ? value : undefined;
+};
+
+export interface WidgetFeedSnapshot {
+  feedId: string;
+  data: Record<string, any>;
+}
+
+export const feedSnapshotForSelection = (
+  snapshot: WidgetFeedSnapshot | null,
+  feedId: string | undefined
+): WidgetFeedSnapshot | null => (snapshot?.feedId === feedId ? snapshot : null);
+
 export const matchesWidgetDataUpdate = (
   payload: { widget_id: string; discriminator_id: string },
   widgetId: number,
@@ -189,6 +216,16 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
     string,
     any
   > | null>(null);
+  // Latest data pushed for the feed this widget shows. It wins over fetched or
+  // parent-provided data until the selected feed changes.
+  const [feedData, setFeedData] = createSignal<WidgetFeedSnapshot | null>(null);
+  createEffect(
+    on(
+      () => getWidgetFeedId(props.widget, props.options),
+      (feedId) =>
+        setFeedData((snapshot) => feedSnapshotForSelection(snapshot, feedId))
+    )
+  );
   const [integrationDiscriminatorId, setIntegrationDiscriminatorId] =
     createSignal<string | null>(null);
   // Start with dataLoaded=true so preview renders immediately with defaults
@@ -249,7 +286,16 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
         discriminator_id: string;
         data: Record<string, any>;
         updated_at: string;
+        feed_id?: string;
       }) => {
+        if (payload.feed_id) {
+          if (
+            payload.feed_id === getWidgetFeedId(props.widget, props.options)
+          ) {
+            setFeedData({ feedId: payload.feed_id, data: payload.data });
+          }
+          return;
+        }
         const discriminatorId =
           props.previewData !== undefined
             ? props.previewDiscriminatorId ?? null
@@ -340,12 +386,19 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
       currentConfig.data && Object.keys(currentConfig.data).length > 0
         ? currentConfig.data
         : null;
-    const effectiveData = resolveEffectiveWidgetData(
-      props.previewData,
-      integration,
-      configData,
-      defaultData
+    const pushed = feedSnapshotForSelection(
+      feedData(),
+      getWidgetFeedId(currentWidget, currentOptions)
     );
+    const effectiveData =
+      pushed !== null
+        ? pushed.data
+        : resolveEffectiveWidgetData(
+            props.previewData,
+            integration,
+            configData,
+            defaultData
+          );
 
     // Calculate duration from options (supports 'duration' or 'display_duration')
     // Convert from seconds to milliseconds, default to 10 seconds

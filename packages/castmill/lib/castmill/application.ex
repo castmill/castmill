@@ -46,6 +46,7 @@ defmodule Castmill.Application do
           # Give BullMQ workers a moment to fully initialize
           Process.sleep(5_000)
           Castmill.Workers.JobRecovery.recover_all()
+          Castmill.Workers.FeedMediaCleanup.ensure_scheduled()
         end)
       end
 
@@ -134,7 +135,9 @@ defmodule Castmill.Application do
       # Bound diagnostic ingestion from faulty or modified players.
       Castmill.DeviceErrorRateLimiter,
       Castmill.LegacyPlayerLogRateLimiter,
-      # Cache and rate limits for widget option choice lookups.
+      # Request rate limits (widget choices, data feeds).
+      Castmill.RateLimiter,
+      # Cache for widget option choice lookups.
       Castmill.Widgets.Integrations.ChoicesStore,
       # Start Finch
       {Finch, name: Castmill.Finch}
@@ -431,6 +434,12 @@ defmodule Castmill.Application do
 
         {:maintenance, "encryption_rotation"} ->
           Castmill.Workers.EncryptionRotation
+
+        {:maintenance, "feed_media_cleanup"} ->
+          Castmill.Workers.FeedMediaCleanup
+
+        {:feed_media, _} ->
+          Castmill.Workers.FeedMediaDownloader
 
         # Email queue
         {:email, _} ->
