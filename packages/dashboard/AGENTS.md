@@ -119,6 +119,9 @@ Shared mobile behaviour (ui-common):
 - `Drawer` is always full screen below 50em. The panel has `max-width: 100%`,
   so `vw`-based widths can't push it past the pinned root on tablets. The `.drawerRoot .drawerPanel`
   rule beats any `contentClass` width.
+- `Drawer` default/`size` widths use `:where()` (below class specificity), so a
+  single-class `contentClass` width always wins. Addon bundles each inject their
+  own copy of ui-common CSS on load, so never rely on stylesheet order.
 - `ComboBox` opens a bottom sheet (Portal, `[data-combobox-sheet]`) when
   `COMBOBOX_SHEET_QUERY` matches (phones and touch tablets). Otherwise it flips
   upward when there is no room below. Pass `closeLabel={t('common.close')}`.

@@ -202,8 +202,12 @@ export const Drawer: Component<DrawerProps> = (_props) => {
 
     setIsVisible(true);
     activateTimeout = setTimeout(() => {
+      // Commit the off-screen start position so the slide-in transition runs.
+      void panelRef?.offsetWidth;
       setIsActive(true);
-      panelRef?.focus();
+      // Focusing the still off-screen panel would scroll it into view, which
+      // skips the slide-in and makes it overshoot as the scroll is undone.
+      panelRef?.focus({ preventScroll: true });
     }, 0);
 
     updateBackdropMode();

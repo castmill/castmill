@@ -47,6 +47,22 @@ describe('Drawer Component', () => {
     expect(onClose).toHaveBeenCalled();
   });
 
+  it('focuses the panel without scrolling it into view while it slides in', () => {
+    const focusSpy = vi.spyOn(HTMLElement.prototype, 'focus');
+
+    render(() => (
+      <Drawer title="Sliding" onClose={() => {}}>
+        <div />
+      </Drawer>
+    ));
+    vi.runAllTimers();
+
+    const panel = screen.getByRole('dialog');
+    expect(panel.className).toContain('active');
+    expect(focusSpy).toHaveBeenCalledWith({ preventScroll: true });
+    expect(focusSpy.mock.instances).toContain(panel);
+  });
+
   it('removes drawer root from DOM after close animation', () => {
     render(() => (
       <Drawer title="Closable" onClose={() => {}}>

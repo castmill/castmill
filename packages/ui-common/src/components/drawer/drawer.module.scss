@@ -26,7 +26,6 @@ $animation-duration: 0.3s;
   flex-direction: column;
   height: 100%;
   max-height: 100%;
-  width: min(92vw, 56em);
   // vw follows the layout viewport, which mobile/tablet browsers enlarge when
   // the page overflows; never grow past the (visual-viewport pinned) root.
   max-width: 100%;
@@ -54,19 +53,27 @@ $animation-duration: 0.3s;
   }
 }
 
-.sizeSm {
+// Default widths stay below class specificity so a `contentClass` width always
+// wins (sizes use an element selector to beat the base). Every addon bundles
+// its own copy of this stylesheet and injects it when it loads, so relying on
+// source order would let a later-loaded addon reset another drawer's width.
+:where(.drawerPanel) {
+  width: min(92vw, 56em);
+}
+
+div:where(.drawerPanel.sizeSm) {
   width: min(92vw, 28em);
 }
 
-.sizeMd {
+div:where(.drawerPanel.sizeMd) {
   width: min(92vw, 38em);
 }
 
-.sizeLg {
+div:where(.drawerPanel.sizeLg) {
   width: min(92vw, 48em);
 }
 
-.sizeXl {
+div:where(.drawerPanel.sizeXl) {
   width: min(96vw, 68em);
 }
 
