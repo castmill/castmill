@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, cleanup, waitFor } from '@solidjs/testing-library';
 import { buildRedirectUrl } from './protected-route';
 import ProtectedRoute from './protected-route';
+import { store, setStore } from '../store/store';
+import { OrganizationsService } from '../services/organizations.service';
 
 // ----- module mocks -----
 
@@ -17,11 +19,12 @@ vi.mock('./auth', () => ({
 
 const mockNavigate = vi.fn();
 const mockLocation = { pathname: '/org/org-1/devices', search: '' };
+const mockParams: { orgId?: string } = { orgId: 'org-1' };
 
 vi.mock('@solidjs/router', () => ({
   useNavigate: () => mockNavigate,
   useLocation: () => mockLocation,
-  useParams: () => ({ orgId: 'org-1' }),
+  useParams: () => mockParams,
 }));
 
 vi.mock('../store/store', () => ({
@@ -200,5 +203,80 @@ describe('ProtectedRoute auth-guard', () => {
     await waitFor(() => {
       expect(mockLoginUser).toHaveBeenCalledTimes(1);
     });
+  });
+});
+
+describe('ProtectedRoute organization selection', () => {
+  const organizations = [
+    { id: 'org-1', name: 'Tylöprint AB', onboarding_completed: true },
+    { id: 'org-2', name: 'Agency A', onboarding_completed: true },
+  ];
+
+  const selectedOrganization = async () => {
+    render(() => ProtectedRoute({ children: (_addons) => <></> }));
+
+    let selected: string | undefined;
+    await waitFor(() => {
+      const call = vi
+        .mocked(setStore)
+        .mock.calls.find(
+          ([key, value]: any[]) =>
+            key === 'organizations' && value?.loaded === true
+        );
+      expect(call).toBeDefined();
+      selected = (call![1] as any).selectedId;
+    });
+    return selected;
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    localStorage.clear();
+    mockCheckAuth.mockReturnValue(true);
+    mockGetUser.mockReturnValue({ id: 'user-1' });
+    vi.mocked(OrganizationsService.getAll).mockResolvedValue(
+      organizations as any
+    );
+    store.organizations.selectedId = null;
+    mockLocation.search = '';
+  });
+
+  afterEach(() => {
+    cleanup();
+    mockParams.orgId = 'org-1';
+    store.organizations.selectedId = null;
+  });
+
+  it('prefers the organization in the URL', async () => {
+    mockParams.orgId = 'org-1';
+    mockLocation.pathname = '/org/org-1/usage';
+    store.organizations.selectedId = 'org-2';
+
+    expect(await selectedOrganization()).toBe('org-1');
+  });
+
+  it('keeps the selected organization on routes without one, such as /settings', async () => {
+    mockParams.orgId = undefined;
+    mockLocation.pathname = '/settings';
+    store.organizations.selectedId = 'org-2';
+
+    expect(await selectedOrganization()).toBe('org-2');
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
+  it('uses the last selected organization after a reload', async () => {
+    mockParams.orgId = undefined;
+    mockLocation.pathname = '/settings';
+    localStorage.setItem('castmill_last_organization_id', 'org-2');
+
+    expect(await selectedOrganization()).toBe('org-2');
+  });
+
+  it('ignores a remembered organization the user is not a member of', async () => {
+    mockParams.orgId = undefined;
+    mockLocation.pathname = '/settings';
+    localStorage.setItem('castmill_last_organization_id', 'org-9');
+
+    expect(await selectedOrganization()).toBe('org-1');
   });
 });
