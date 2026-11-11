@@ -11,14 +11,18 @@ export const StyledInput: Component<{
   autofocus?: boolean;
   onFocus?: () => void;
   onBlur?: () => void;
+  rows?: number;
+  step?: string | number;
+  parseNumber?: boolean;
 }> = (props) => {
   let inputRef: HTMLInputElement | undefined;
+  let textareaRef: HTMLTextAreaElement | undefined;
 
   onMount(() => {
-    if (props.autofocus && inputRef) {
+    if (props.autofocus && (inputRef || textareaRef)) {
       // Use setTimeout to ensure the modal/dialog animation is complete
       setTimeout(() => {
-        inputRef?.focus();
+        (inputRef || textareaRef)?.focus();
       }, 100);
     }
   });
@@ -41,6 +45,20 @@ export const StyledInput: Component<{
         />
       }
     >
+      <Match when={props.type === 'textarea'}>
+        <textarea
+          ref={textareaRef}
+          id={props.id}
+          class={styles['input-textarea']}
+          value={String(props.value)}
+          onInput={(e) => props.onInput(e.currentTarget.value)}
+          placeholder={props.placeholder}
+          disabled={props.disabled}
+          rows={props.rows}
+          onFocus={props.onFocus}
+          onBlur={props.onBlur}
+        />
+      </Match>
       <Match when={props.type === 'boolean'}>
         <input
           ref={inputRef}
@@ -63,9 +81,16 @@ export const StyledInput: Component<{
           type="number"
           class={styles['input-number']}
           value={String(props.value)}
-          onInput={(e) => props.onInput(Number(e.currentTarget.value))}
+          onInput={(e) =>
+            props.onInput(
+              props.parseNumber === false
+                ? e.currentTarget.value
+                : Number(e.currentTarget.value)
+            )
+          }
           placeholder={props.placeholder}
           disabled={props.disabled}
+          step={props.step}
           onFocus={props.onFocus}
           onBlur={props.onBlur}
           autocomplete="off"

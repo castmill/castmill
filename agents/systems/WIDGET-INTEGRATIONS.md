@@ -119,8 +119,12 @@ An integration opts in through its `pull_config`:
 
 - Field types: `string`, `number`, `boolean` and `list` (of texts); optional `label`, `description`,
   `placeholder`, `required` and `order`. Keys match `^[a-z0-9][a-z0-9_-]{0,63}$`; up to 20 fields.
-- Definitions come from integrations of system widgets and of the network's widgets; when several
-  declare a key, the most recently updated declaration wins.
+- Definitions come from integrations of widgets available to that organization, including its
+  own widgets. Platform restrictions and network curation apply. When several available widgets
+  declare a key, the most recently updated valid declaration wins. Listing and saving use the
+  same availability rules, so stale saves for unavailable keys are rejected.
+- Removing widget access hides its settings but does not delete saved values; values reappear if
+  access is restored. The explicit delete endpoint remains available to network admins.
 - Fetchers and choice providers receive the values as `credentials["organization_settings"]`
   (`Integrations.get_fetch_credentials/2`), next to the credentials, so playlist items can never
   override them.

@@ -13,6 +13,9 @@ interface FormItemProps {
   disabled?: boolean;
   autofocus?: boolean;
   description?: string;
+  rows?: number;
+  step?: string | number;
+  parseNumber?: boolean;
 }
 
 export const FormItem: Component<FormItemProps> = (props) => {
@@ -35,6 +38,9 @@ export const FormItem: Component<FormItemProps> = (props) => {
           onFocus={handleFocus}
           onBlur={handleBlur}
           disabled={props.disabled}
+          rows={props.rows}
+          step={props.step}
+          parseNumber={props.parseNumber}
         />
         {props.children}
       </div>

@@ -63,9 +63,22 @@ See `agents/systems/TEMPLATE-VALUE-FORMATTING.md`.
 Template components (`layout.tsx`, `text.tsx`, `animation.tsx`, `image-carousel.tsx`) create
 timeline items with `start: 0` to allow parallel playback rather than sequential stacking.
 
-`image-carousel` resolves every image URL before building its timeline, so slide
-order never depends on download order. `opts.transition` is `"slide"` (default) or
-`"fade"`. Images that cannot be cached fall back to their original URL.
+`image-carousel` resolves its image URLs in order and assigns all backgrounds
+up front, keeping them assigned across transitions so the browser can load
+incoming images early. Cache resolution has a five-second timeout; failures are
+logged and images that cannot be cached fall back to their original URL.
+`opts.transition` is `"slide"` (default) or `"fade"`. The playlist editor sets
+`PlayerGlobals.freezePreviewDuringLoad` to wait up to five seconds for image
+loads and keep a paused preview at its requested position. Playlist previews
+use a callback so loading-time compensation resumes if playback starts.
+Device playback does
+not wait for image preloading; a very slow or failed image may therefore be
+unavailable at its scheduled transition.
+
+The playlist editor measures dynamic item durations using a separate offscreen
+playlist. Measurements are hints for uninitialized preview widgets; their actual
+runtime duration supersedes the hint once loaded. Priming must not seek or reset
+the visible player, including while the user is playing or seeking.
 
 ### Resource Authentication
 

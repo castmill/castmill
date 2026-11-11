@@ -65,6 +65,7 @@
 .text {
   display: flex;
   flex-direction: column;
+  flex: 1 1 0;
   min-width: 0;
 }
 
@@ -296,6 +297,7 @@
   &.grid {
     flex-direction: row;
     flex-wrap: wrap;
+    align-content: flex-start;
 
     .option {
       flex-direction: column;
@@ -321,14 +323,15 @@
   }
 
   &.cards .option .visual {
-    width: 6em;
-    height: 4em;
+    width: 5em;
+    height: 5em;
   }
 }
 
 .option {
   position: relative;
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   gap: 0.75em;
   padding: 0.5em;
@@ -337,6 +340,8 @@
   background: $component-background-color;
   cursor: pointer;
   overflow: hidden;
+  text-align: start;
+  line-height: 1.4;
 
   &:hover,
   &:focus-visible {
@@ -353,6 +358,10 @@
     opacity: 0.45;
     cursor: not-allowed;
   }
+}
+
+.results:not(.grid) .optionSkeleton {
+  flex: 0 0 3em;
 }
 
 .check {

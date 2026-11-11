@@ -420,6 +420,14 @@ export class Layer extends EventEmitter {
     return;
   }
 
+  setDurationHint(duration: number): void {
+    if (!this._duration && this.widget instanceof TemplateWidget) {
+      this.widget.setDurationHint(
+        duration - this.slack - (this.transition?.duration || 0)
+      );
+    }
+  }
+
   duration(): number {
     const transitionDuration = this.transition?.duration || 0;
     if (this._duration) {

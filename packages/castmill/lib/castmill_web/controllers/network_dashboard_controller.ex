@@ -785,7 +785,7 @@ defmodule CastmillWeb.NetworkDashboardController do
 
   @doc """
   Lists the integration settings that apply to an organization of the network
-  (declared by the network's widgets) with their current values.
+  (declared by widgets available to it) with their current values.
   """
   def list_organization_integration_settings(conn, %{"organization_id" => org_id}) do
     with {:ok, network_id} <- get_admin_network_id(conn),

@@ -124,6 +124,22 @@ describe('ChoicesField', () => {
       expect(screen.getByText('Change')).toBeInTheDocument();
     });
 
+    it('can select the last item in a full page of cards', async () => {
+      const { onChange } = setup({
+        display: 'cards',
+        loadChoices: pages(
+          Array.from({ length: 50 }, (_, index) => photo(index + 1)),
+          50
+        ),
+      });
+
+      fireEvent.click(screen.getByText('Choose'));
+      await waitFor(() => expect(options()).toHaveLength(50));
+      expect(screen.getByText('Room 50')).toBeInTheDocument();
+      fireEvent.click(screen.getByText('Photo 50'));
+      expect(onChange).toHaveBeenCalledWith('p50');
+    });
+
     it('shows the saved choice and clears it', async () => {
       const { onChange, loadChoices } = setup({
         initial: 'p3',
@@ -213,6 +229,54 @@ describe('ChoicesField', () => {
   });
 
   describe('multiple values', () => {
+    it('keeps selected thumbnails when the parent recomputes an unchanged dependency', async () => {
+      const [form, setForm] = createSignal<{
+        estate: string;
+        photos: string[];
+      }>({ estate: 'estate-a', photos: [] });
+      const loadChoices = vi
+        .fn()
+        .mockResolvedValueOnce({ items: [photo(1), photo(2)], next: null })
+        .mockImplementation(() => new Promise<ChoicesPage>(() => {}));
+
+      render(() => (
+        <ChoicesField
+          id="photos"
+          label="Photos"
+          labels={labels}
+          errorMessage={() => 'error'}
+          multiple
+          ordered
+          display="grid"
+          value={form().photos}
+          reloadKey={JSON.stringify({ estate: form().estate })}
+          loadChoices={loadChoices}
+          onChange={(value) =>
+            setForm({ ...form(), photos: Array.isArray(value) ? value : [] })
+          }
+        />
+      ));
+
+      fireEvent.click(screen.getByText('Add photos'));
+      await waitFor(() => expect(options()).toHaveLength(2));
+      fireEvent.click(screen.getByText('Photo 1'));
+      fireEvent.click(screen.getByText('Photo 2'));
+      fireEvent.click(screen.getByText('Done'));
+
+      await waitFor(() => {
+        const tiles = screen.getAllByTestId('selected-tile');
+        expect(tiles[0].querySelector('img')).toHaveAttribute(
+          'src',
+          'https://img.example/p1.jpg'
+        );
+        expect(tiles[1].querySelector('img')).toHaveAttribute(
+          'src',
+          'https://img.example/p2.jpg'
+        );
+      });
+      expect(loadChoices).toHaveBeenCalledTimes(1);
+    });
+
     it('adds choices in click order and applies them on done', async () => {
       const { onChange } = setup({
         multiple: true,
@@ -241,6 +305,14 @@ describe('ChoicesField', () => {
 
       fireEvent.click(screen.getByText('Done'));
       expect(onChange).toHaveBeenCalledWith(['p1']);
+      await waitFor(() => {
+        const tile = screen.getByTestId('selected-tile');
+        expect(tile.querySelector('img')).toHaveAttribute(
+          'src',
+          'https://img.example/p1.jpg'
+        );
+        expect(tile).toHaveTextContent('Photo 1');
+      });
     });
 
     it('selects all, none and cancels without changes', async () => {
@@ -474,6 +546,47 @@ describe('ChoicesField', () => {
 
       setReloadKey('b');
       await waitFor(() => expect(loadChoices).toHaveBeenCalledTimes(2));
+    });
+
+    it('re-resolves selections when dependencies change and ignores old responses', async () => {
+      const [reloadKey, setReloadKey] = createSignal('estate-a');
+      let finishOld!: (page: ChoicesPage) => void;
+      const loadChoices = vi
+        .fn()
+        .mockImplementationOnce(
+          () => new Promise<ChoicesPage>((resolve) => (finishOld = resolve))
+        )
+        .mockResolvedValueOnce({
+          items: [photo(1, { label: 'New estate photo' })],
+          next: null,
+        });
+
+      render(() => (
+        <ChoicesField
+          id="photos"
+          label="Photos"
+          labels={labels}
+          errorMessage={() => 'error'}
+          value={['p1']}
+          multiple
+          reloadKey={reloadKey()}
+          loadChoices={loadChoices}
+          onChange={() => {}}
+        />
+      ));
+
+      await waitFor(() => expect(loadChoices).toHaveBeenCalledTimes(1));
+      setReloadKey('estate-b');
+      await waitFor(() =>
+        expect(screen.getByText('New estate photo')).toBeInTheDocument()
+      );
+      finishOld({
+        items: [photo(1, { label: 'Old estate photo' })],
+        next: null,
+      });
+      await Promise.resolve();
+      expect(screen.queryByText('Old estate photo')).toBeNull();
+      expect(screen.getByText('New estate photo')).toBeInTheDocument();
     });
   });
 

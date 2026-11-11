@@ -919,7 +919,7 @@ defmodule CastmillWeb.NetworkDashboardControllerTest do
           }
         })
 
-      %{network: network, organization: organization, admin: admin}
+      %{network: network, organization: organization, admin: admin, widget: widget}
     end
 
     defp settings_path(org_id, suffix \\ ""),
@@ -969,7 +969,31 @@ defmodule CastmillWeb.NetworkDashboardControllerTest do
 
       assert conn |> get(settings_path(other.id)) |> json_response(404)
       assert conn |> get(settings_path("not-a-uuid")) |> json_response(404)
+
+      assert conn
+             |> put(settings_path(other.id, "/property-listing"), %{"settings" => %{}})
+             |> json_response(404)
+
       assert conn |> delete(settings_path(other.id, "/property-listing")) |> json_response(404)
+    end
+
+    test "hides unavailable settings, rejects stale saves and restores saved values", %{
+      conn: conn,
+      network: network,
+      organization: org,
+      admin: admin,
+      widget: widget
+    } do
+      conn = authenticate_conn(conn, admin, network)
+      path = settings_path(org.id, "/property-listing")
+      assert conn |> put(path, %{"settings" => %{"agency" => "fb"}}) |> json_response(200)
+      assert {:ok, _} = Castmill.Widgets.NetworkAccess.set_access(network.id, widget.id, "hidden")
+      assert %{"data" => []} = conn |> get(settings_path(org.id)) |> json_response(200)
+      assert conn |> put(path, %{"settings" => %{"agency" => "new"}}) |> json_response(404)
+      assert {:ok, _} = Castmill.Widgets.NetworkAccess.set_access(network.id, widget.id, "all")
+
+      assert %{"data" => [%{"settings" => %{"agency" => "fb"}}]} =
+               conn |> get(settings_path(org.id)) |> json_response(200)
     end
 
     test "rejects users who are not network admins", %{

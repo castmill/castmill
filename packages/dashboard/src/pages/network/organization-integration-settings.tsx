@@ -4,7 +4,13 @@
  * see and change them.
  */
 import { Component, For, Show, createSignal, onMount } from 'solid-js';
-import { Button, HttpError, Modal, useToast } from '@castmill/ui-common';
+import {
+  Button,
+  FormItem,
+  HttpError,
+  Modal,
+  useToast,
+} from '@castmill/ui-common';
 
 import { useI18n } from '../../i18n';
 import {
@@ -180,66 +186,34 @@ export const OrganizationIntegrationSettings: Component<
     const error = () => errors()[definition.key]?.[name];
 
     return (
-      <div class={styles['settings-field']}>
-        <Show
-          when={field.type === 'boolean'}
-          fallback={
-            <label class={styles['settings-label']} for={id}>
-              {field.label || name}
-              {field.required ? ' *' : ''}
-            </label>
-          }
-        >
-          <label class={styles['settings-checkbox']} for={id}>
-            <input
-              id={id}
-              type="checkbox"
-              checked={value() === true}
-              onChange={(e) =>
-                setValue(definition.key, name, e.currentTarget.checked)
-              }
-            />
-            {field.label || name}
-          </label>
-        </Show>
-        <Show when={field.type === 'list'}>
-          <textarea
-            id={id}
-            rows={3}
-            class={styles['settings-input']}
-            placeholder={field.placeholder}
-            value={String(value() ?? '')}
-            onInput={(e) =>
-              setValue(definition.key, name, e.currentTarget.value)
-            }
-          />
-        </Show>
-        <Show when={field.type === 'string' || field.type === 'number'}>
-          <input
-            id={id}
-            type={field.type === 'number' ? 'number' : 'text'}
-            step={field.type === 'number' ? 'any' : undefined}
-            class={styles['settings-input']}
-            placeholder={field.placeholder}
-            value={String(value() ?? '')}
-            onInput={(e) =>
-              setValue(definition.key, name, e.currentTarget.value)
-            }
-          />
-        </Show>
-        <Show when={field.description || field.type === 'list'}>
-          <span class={styles['settings-help']}>
-            {[field.description, field.type === 'list' ? text('listHelp') : '']
-              .filter(Boolean)
-              .join(' ')}
-          </span>
-        </Show>
+      <FormItem
+        id={id}
+        label={`${field.label || name}${field.required ? ' *' : ''}`}
+        type={field.type === 'list' ? 'textarea' : field.type}
+        rows={field.type === 'list' ? 3 : undefined}
+        step={field.type === 'number' ? 'any' : undefined}
+        parseNumber={false}
+        placeholder={field.placeholder}
+        value={value() ?? (field.type === 'boolean' ? false : '')}
+        onInput={(input) =>
+          setValue(
+            definition.key,
+            name,
+            typeof input === 'number' ? String(input) : input
+          )
+        }
+        description={
+          [field.description, field.type === 'list' ? text('listHelp') : '']
+            .filter(Boolean)
+            .join(' ') || undefined
+        }
+      >
         <Show when={error()}>
-          <span class={styles['settings-error']} role="alert">
+          <div class="error" role="alert">
             {text(`errors.${error()}`)}
-          </span>
+          </div>
         </Show>
-      </div>
+      </FormItem>
     );
   };
 
@@ -272,7 +246,7 @@ export const OrganizationIntegrationSettings: Component<
                     <For each={orderedFields(definition.schema)}>
                       {([name, field]) => fieldInput(definition, name, field)}
                     </For>
-                    <div class="modal-actions">
+                    <div class={styles['settings-actions']}>
                       <Button
                         label={t('common.save')}
                         type="submit"

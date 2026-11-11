@@ -6,6 +6,13 @@ defmodule Castmill.Widgets.TemplateBaseFontTest do
 
   alias Castmill.Widgets.Widget
 
+  unless Code.ensure_loaded?(Castmill.Repo.Migrations.RepairSystemWidgetFontScale) do
+    Code.require_file(
+      "../../../priv/repo/migrations/20261111120000_repair_system_widget_font_scale.exs",
+      __DIR__
+    )
+  end
+
   defp root_font_size(slug),
     do: Repo.get_by!(Widget, slug: slug).template["style"]["font-size"]
 
@@ -34,5 +41,42 @@ defmodule Castmill.Widgets.TemplateBaseFontTest do
     assert widget.options_schema["ticker_height"]["min"] == 1.35
     assert widget.options_schema["ticker_height"]["max"] == 13.5
     assert widget.options_schema["ticker_height"]["description"] == "Ticker height in em units"
+  end
+
+  test "repair enables scaling only for converted system widgets missing the flag" do
+    rss = Repo.get_by!(Widget, slug: "rss-news")
+    weather = Repo.get_by!(Widget, slug: "weather")
+    qr = Repo.get_by!(Widget, slug: "qr-code")
+
+    Repo.update!(Ecto.Changeset.change(rss, template: Map.delete(rss.template, "fontScale")))
+
+    Repo.update!(
+      Ecto.Changeset.change(weather, template: Map.put(weather.template, "fontScale", false))
+    )
+
+    custom_qr =
+      qr.template
+      |> Map.delete("fontScale")
+      |> put_in(["style", "font-size"], "2em")
+
+    Repo.update!(Ecto.Changeset.change(qr, template: custom_qr))
+
+    for _ <- 1..2 do
+      Ecto.Migration.Runner.run(
+        Repo,
+        Repo.config(),
+        20_261_111_120_000,
+        Castmill.Repo.Migrations.RepairSystemWidgetFontScale,
+        :forward,
+        :up,
+        :up,
+        log: false
+      )
+    end
+
+    repaired = Repo.get!(Widget, rss.id).template
+    assert repaired == Map.put(rss.template, "fontScale", true)
+    assert Repo.get!(Widget, weather.id).template["fontScale"] == false
+    assert Repo.get!(Widget, qr.id).template == custom_qr
   end
 end

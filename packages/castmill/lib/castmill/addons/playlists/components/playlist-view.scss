@@ -65,6 +65,8 @@
     min-width: 0;
     min-height: 0;
     align-self: stretch;
+    box-sizing: border-box;
+    padding-bottom: 2em;
 
     .playlist-preview {
       display: flex;

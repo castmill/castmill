@@ -13,7 +13,10 @@ import { TemplateComponent, TemplateComponentType } from './template';
 import { ComponentAnimation } from './animation';
 import { BaseComponentProps } from './interfaces/base-component-props';
 import { ResourceManager } from '@castmill/cache';
-import { PlayerGlobals } from '../../interfaces/player-globals.interface';
+import {
+  isPreviewLoadFrozen,
+  PlayerGlobals,
+} from '../../interfaces/player-globals.interface';
 
 export type ImageCarouselTransition = 'slide' | 'fade';
 
@@ -25,6 +28,7 @@ export interface ImageCarouselComponentOptions {
 
 const TRANSITION_SECONDS = 1;
 const MEDIA_CACHE_TIMEOUT_MS = 5000;
+const IMAGE_LOAD_TIMEOUT_MS = 5000;
 
 /**
  * Tween vars for an image entering (start) and leaving (end) the carousel.
@@ -99,13 +103,45 @@ function getMediaWithTimeout(
 }
 
 function fallbackUrl(url: string): string {
-  console.warn(`Image ${url} not found in cached medias, using original URL`);
+  console.warn('Carousel image not found in cached media, using original URL');
   return url;
 }
 
 function backgroundImageUrl(url: string): string {
   const escapedUrl = url.replace(/["\\()]/g, (character) => `\\${character}`);
   return `url("${escapedUrl}")`;
+}
+
+export function preloadCarouselImages(
+  urls: string[],
+  createImage: () => HTMLImageElement = () => new Image()
+): Promise<void> {
+  return Promise.all(
+    urls.map(
+      (url) =>
+        new Promise<void>((resolve) => {
+          const image = createImage();
+          let settled = false;
+          const finish = (error?: string) => {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timeout);
+            image.onload = null;
+            image.onerror = null;
+            if (error) console.warn(`Carousel image ${error}`);
+            resolve();
+          };
+          const timeout = setTimeout(
+            () => finish('load timed out'),
+            IMAGE_LOAD_TIMEOUT_MS
+          );
+          image.onload = () => finish();
+          image.onerror = () => finish('could not be loaded');
+          image.src = url;
+          if (image.complete && image.naturalWidth > 0) finish();
+        })
+    )
+  ).then(() => undefined);
 }
 
 export class ImageCarouselComponent implements TemplateComponent {
@@ -221,6 +257,13 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
       props.resourceManager,
       imageUrls.slice(0, images.length)
     );
+    if (currentBuild !== buildId) return;
+    urls.forEach((url, index) => {
+      images[index].style.backgroundImage = backgroundImageUrl(url);
+    });
+    if (isPreviewLoadFrozen(props.globals)) {
+      await preloadCarouselImages(urls);
+    }
     // A newer build (the images changed meanwhile) or a cleanup supersedes it.
     if (currentBuild !== buildId) return;
 
@@ -231,7 +274,7 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
     images.forEach((image) => {
       // Undo a previous build's transitions, as on a first render.
       gsap.set(image, {
-        clearProps: 'transform,opacity,visibility,backgroundImage',
+        clearProps: 'transform,opacity,visibility',
       });
     });
 
@@ -244,21 +287,15 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
     };
 
     if (urls.length === 1) {
-      timeline.set(
-        images[0],
-        { backgroundImage: backgroundImageUrl(urls[0]) },
-        '<'
-      );
+      timeline.set(images[0], Object.assign({}, targetArgs), 0);
       timeline.duration(imageDuration);
     } else if (urls.length > 1) {
-      urls.forEach((url, index) => {
+      urls.forEach((_url, index) => {
         const image = images[index];
-        timeline.set(image, { backgroundImage: backgroundImageUrl(url) }, '<');
 
         if (index === 0) {
           timeline.set(images[urls.length - 1], {
             visibility: 'hidden',
-            backgroundImage: 'none',
           });
           timeline.set(image, Object.assign({}, targetArgs));
         } else {
@@ -269,16 +306,12 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
           );
           timeline.set(images[index - 1], {
             visibility: 'hidden',
-            backgroundImage: 'none',
           });
         }
 
         // When the last image leaves, the first one comes back in.
         let position = `>+=${imageDuration}`;
         if (index === urls.length - 1) {
-          timeline.set(images[0], {
-            backgroundImage: backgroundImageUrl(urls[0]),
-          });
           timeline.from(
             images[0],
             Object.assign({}, props.startArgs || transitionArgs.startArgs),
