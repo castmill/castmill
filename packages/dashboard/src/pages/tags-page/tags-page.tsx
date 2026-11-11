@@ -74,18 +74,31 @@ const TagsPage: Component = () => {
 
   const [tagQuota, setTagQuota] = createSignal<ResourceQuota | null>(null);
   const [groupQuota, setGroupQuota] = createSignal<ResourceQuota | null>(null);
+  let quotaRequestSequence = 0;
   const isFull = (quota: ResourceQuota | null) =>
     !!quota && quota.used >= quota.total;
 
   const loadQuotas = async () => {
     const orgId = store.organizations.selectedId;
     if (!orgId) return;
+    const requestSequence = ++quotaRequestSequence;
     try {
       const usage = await QuotasService.getQuotaUsage(orgId);
+      if (
+        requestSequence !== quotaRequestSequence ||
+        orgId !== store.organizations.selectedId
+      ) {
+        return;
+      }
       setTagQuota(usage.tags || null);
       setGroupQuota(usage.tag_groups || null);
     } catch (error) {
-      console.error('Failed to fetch quotas:', error);
+      if (
+        requestSequence === quotaRequestSequence &&
+        orgId === store.organizations.selectedId
+      ) {
+        console.error('Failed to fetch quotas:', error);
+      }
     }
   };
 

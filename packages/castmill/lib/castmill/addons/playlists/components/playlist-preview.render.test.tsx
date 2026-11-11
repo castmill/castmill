@@ -25,6 +25,7 @@ const mocks = vi.hoisted(() => ({
     | undefined,
   shown: [] as unknown[],
   setTimeDuration: vi.fn(),
+  seek: 0,
 }));
 
 vi.mock('@castmill/cache', () => ({
@@ -41,6 +42,9 @@ vi.mock('@castmill/player', () => ({
   },
   PlayerUIControls: class {
     setTimeDuration = mocks.setTimeDuration;
+    get seek() {
+      return mocks.seek;
+    }
     destroy() {}
   },
   PlayerUI: class {
@@ -67,6 +71,7 @@ afterEach(() => {
   vi.clearAllMocks();
   mocks.player = undefined;
   mocks.shown.length = 0;
+  mocks.seek = 0;
   vi.useRealTimers();
 });
 
@@ -109,12 +114,13 @@ describe('PlaylistPreview', () => {
     expect(ref).toBeDefined();
     const player = mocks.player!;
     const priming = ref!.primeAllLayers();
-    player.position = 7500;
+    player.position = 0;
+    mocks.seek = 7500;
     await vi.advanceTimersByTimeAsync(40000);
     const offsets = await priming;
     expect(mocks.shown).toHaveLength(4);
     expect(player.seek).not.toHaveBeenCalled();
-    expect(player.position).toBe(7500);
+    expect(player.position).toBe(0);
     expect(mocks.setTimeDuration).toHaveBeenLastCalledWith(7500, 40000, true);
     expect(offsets?.map((item) => item.start)).toEqual([
       0, 10000, 20000, 30000,

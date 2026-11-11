@@ -23,6 +23,7 @@ defmodule Castmill.Agents do
   alias Castmill.Accounts.User
   alias Castmill.Agents.Agent
   alias Castmill.Agents.AgentAction
+  alias Castmill.Organizations.Organization
   alias Castmill.Organizations.OrganizationsUsers
 
   @secret_prefix "cmagt_"
@@ -99,13 +100,27 @@ defmodule Castmill.Agents do
   def create_agent(organization_id, attrs, created_by_id \\ nil) do
     attrs = stringify_keys(attrs)
 
-    with {:ok, role} <- parse_role(Map.get(attrs, "role"), @default_role),
-         :ok <- check_agents_quota(organization_id) do
+    with {:ok, role} <- parse_role(Map.get(attrs, "role"), @default_role) do
       agent_id = Ecto.UUID.generate()
       {secret, hash, prefix} = generate_secret()
       now = DateTime.utc_now() |> DateTime.truncate(:second)
 
       Ecto.Multi.new()
+      |> Ecto.Multi.run(:quota, fn repo, _changes ->
+        repo.one(
+          from(o in Organization,
+            where: o.id == ^organization_id,
+            lock: "FOR UPDATE",
+            select: o.id
+          )
+        )
+
+        check_agents_quota(organization_id)
+        |> case do
+          :ok -> {:ok, :checked}
+          error -> error
+        end
+      end)
       |> Ecto.Multi.insert(
         :user,
         User.agent_changeset(%User{}, %{
@@ -139,6 +154,9 @@ defmodule Castmill.Agents do
       |> case do
         {:ok, %{agent: agent}} ->
           {:ok, get_agent(organization_id, agent.id), secret}
+
+        {:error, :quota, :quota_exceeded, _} ->
+          {:error, :quota_exceeded}
 
         {:error, :user, changeset, _} ->
           # The agent changeset has the same name validations, report on it

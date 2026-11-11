@@ -249,7 +249,7 @@ export const PlaylistPreview: Component<PlaylistPreviewProps> = (props) => {
           if (cancelled || !active) return undefined;
           const totalDuration = playlist.duration();
           controls.setTimeDuration(
-            previewPlayer!.position,
+            controls.seek,
             totalDuration,
             previewPlayer!.loop
           );
