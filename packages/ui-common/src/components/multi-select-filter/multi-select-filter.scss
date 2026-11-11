@@ -83,6 +83,15 @@
   text-overflow: ellipsis;
 }
 
+/* Selected value in single-selection mode */
+.msf-value {
+  display: block;
+  color: var(--cm-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* ─── Chips (selected items in the trigger) ─────────── */
 
 .msf-chips {

@@ -1492,6 +1492,7 @@
     "teamLabel": "Équipe",
     "teamPlaceholder": "Sélectionner une équipe",
     "teamClear": "Effacer le filtre d'équipe",
+    "teamSearchPlaceholder": "Rechercher des équipes…",
     "tagLabel": "Tags",
     "tagPlaceholder": "Filtrer par tags…",
     "tagClear": "Effacer le filtre de tags",

@@ -91,6 +91,12 @@ export interface MultiSelectFilterProps<T extends MultiSelectItem> {
 
   /** Message shown when the item list is empty (default: "No items") */
   emptyMessage?: string;
+
+  /**
+   * 'single' replaces the selection on pick, closes the panel and shows the
+   * selected item's name in the trigger instead of chips.
+   */
+  selectionMode?: 'multiple' | 'single';
 }
 
 // ───────────────────── Component ─────────────────────
@@ -117,10 +123,17 @@ export const MultiSelectFilter = <T extends MultiSelectItem>(
 
   const isSelected = (id: number | string) => props.selectedIds.includes(id);
 
+  const isSingle = () => props.selectionMode === 'single';
+
   // ── Interaction ─────────────────────────────────────
 
   const toggleItem = (id: number | string) => {
     if (props.disabled) return;
+    if (isSingle()) {
+      props.onSelectionChange(isSelected(id) ? [] : [id]);
+      close();
+      return;
+    }
     const next = isSelected(id)
       ? props.selectedIds.filter((i) => i !== id)
       : [...props.selectedIds, id];
@@ -214,40 +227,49 @@ export const MultiSelectFilter = <T extends MultiSelectItem>(
                   </span>
                 }
               >
-                <div class="msf-chips">
-                  <For
-                    each={
-                      props.maxDisplayedChips
-                        ? selectedItems().slice(0, props.maxDisplayedChips)
-                        : selectedItems()
-                    }
-                  >
-                    {(item) => (
-                      <span
-                        class="msf-chip"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleItem(item.id);
-                        }}
-                      >
-                        {renderChipFn()(item)}
-                        <span class="msf-chip-remove">
-                          <IconWrapper icon={IoClose} />
+                <Show
+                  when={!isSingle()}
+                  fallback={
+                    <span class="msf-value">{selectedItems()[0]?.name}</span>
+                  }
+                >
+                  <div class="msf-chips">
+                    <For
+                      each={
+                        props.maxDisplayedChips
+                          ? selectedItems().slice(0, props.maxDisplayedChips)
+                          : selectedItems()
+                      }
+                    >
+                      {(item) => (
+                        <span
+                          class="msf-chip"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleItem(item.id);
+                          }}
+                        >
+                          {renderChipFn()(item)}
+                          <span class="msf-chip-remove">
+                            <IconWrapper icon={IoClose} />
+                          </span>
                         </span>
+                      )}
+                    </For>
+                    <Show
+                      when={
+                        props.maxDisplayedChips &&
+                        selectedItems().length > props.maxDisplayedChips
+                      }
+                    >
+                      <span class="msf-overflow">
+                        +
+                        {selectedItems().length -
+                          (props.maxDisplayedChips || 0)}
                       </span>
-                    )}
-                  </For>
-                  <Show
-                    when={
-                      props.maxDisplayedChips &&
-                      selectedItems().length > props.maxDisplayedChips
-                    }
-                  >
-                    <span class="msf-overflow">
-                      +{selectedItems().length - (props.maxDisplayedChips || 0)}
-                    </span>
-                  </Show>
-                </div>
+                    </Show>
+                  </div>
+                </Show>
               </Show>
             </div>
           </div>
@@ -278,7 +300,11 @@ export const MultiSelectFilter = <T extends MultiSelectItem>(
 
         {/* Floating panel */}
         <Show when={isOpen()}>
-          <div class="msf-panel" role="listbox">
+          <div
+            class="msf-panel"
+            role="listbox"
+            aria-multiselectable={!isSingle()}
+          >
             {/* Search */}
             <Show when={props.searchable}>
               <div class="msf-search">

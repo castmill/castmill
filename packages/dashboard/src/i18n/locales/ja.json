@@ -1481,6 +1481,7 @@
     "teamLabel": "チーム",
     "teamPlaceholder": "チームを選択",
     "teamClear": "チームフィルターをクリア",
+    "teamSearchPlaceholder": "チームを検索…",
     "tagLabel": "タグ",
     "tagPlaceholder": "タグでフィルター…",
     "tagClear": "タグフィルターをクリア",

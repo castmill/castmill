@@ -1475,6 +1475,7 @@
     "teamLabel": "Team",
     "teamPlaceholder": "Team auswählen",
     "teamClear": "Team-Filter löschen",
+    "teamSearchPlaceholder": "Teams suchen…",
     "tagLabel": "Tags",
     "tagPlaceholder": "Nach Tags filtern…",
     "tagClear": "Tag-Filter löschen",

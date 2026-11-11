@@ -109,6 +109,7 @@
     "teamLabel": "Team",
     "teamPlaceholder": "Select team",
     "teamClear": "Clear team filter",
+    "teamSearchPlaceholder": "Search teams…",
     "tagLabel": "Tags",
     "tagPlaceholder": "Filter by tags…",
     "tagClear": "Clear tag filter",

@@ -1475,6 +1475,7 @@
     "teamLabel": "Team",
     "teamPlaceholder": "Välj team",
     "teamClear": "Rensa teamfilter",
+    "teamSearchPlaceholder": "Sök team…",
     "tagLabel": "Taggar",
     "tagPlaceholder": "Filtrera efter taggar…",
     "tagClear": "Rensa taggfilter",

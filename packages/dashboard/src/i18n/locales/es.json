@@ -1481,6 +1481,7 @@
     "teamLabel": "Equipo",
     "teamPlaceholder": "Seleccionar equipo",
     "teamClear": "Limpiar filtro de equipo",
+    "teamSearchPlaceholder": "Buscar equipos…",
     "tagLabel": "Etiquetas",
     "tagPlaceholder": "Filtrar por etiquetas…",
     "tagClear": "Limpiar filtro de etiquetas",

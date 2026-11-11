@@ -1480,6 +1480,7 @@
     "teamLabel": "팀",
     "teamPlaceholder": "팀 선택",
     "teamClear": "팀 필터 지우기",
+    "teamSearchPlaceholder": "팀 검색…",
     "tagLabel": "태그",
     "tagPlaceholder": "태그로 필터링…",
     "tagClear": "태그 필터 지우기",

@@ -1,12 +1,15 @@
+/** @jsxImportSource solid-js */
+
 /**
  * TeamFilter Component
  *
- * A dropdown filter for selecting teams. Shows "Organization" option for resources
- * not assigned to any team, and individual team options. Hides the dropdown when no teams exist.
+ * A single-select team filter that shares the look of TagFilter (floating
+ * panel, optional search). Clearing the selection shows resources from all
+ * teams. Hidden when no teams exist.
  */
 
 import { Component, Show, createMemo } from 'solid-js';
-import { Dropdown } from '../dropdown/dropdown';
+import { MultiSelectFilter } from '../multi-select-filter/multi-select-filter';
 
 import './team-filter.scss';
 
@@ -22,42 +25,40 @@ export interface TeamFilterProps {
   label?: string;
   placeholder?: string;
   clearLabel?: string;
+  /** Search input placeholder (search is shown for longer team lists) */
+  searchPlaceholder?: string;
+  /** Message when search yields no results */
+  noMatchMessage?: string;
 }
 
-export const TeamFilter: Component<TeamFilterProps> = (props) => {
-  const items = createMemo(() =>
-    props.teams.map((team) => ({
-      value: team.id.toString(),
-      name: team.name,
-    }))
-  );
+/** Show the search field once the list no longer fits at a glance. */
+export const TEAM_FILTER_SEARCH_THRESHOLD = 7;
 
-  const currentValue = createMemo(() => {
+export const TeamFilter: Component<TeamFilterProps> = (props) => {
+  const selectedIds = createMemo(() => {
     const id = props.selectedTeamId;
-    return id === null || id === undefined ? null : id.toString();
+    return id === null || id === undefined ? [] : [id];
   });
 
-  const handleChange = (value: string | null) => {
-    if (value === null) {
-      props.onTeamChange(null);
-      return;
-    }
-
-    props.onTeamChange(parseInt(value, 10));
+  const handleChange = (ids: (number | string)[]) => {
+    const [id] = ids;
+    props.onTeamChange(id === undefined ? null : Number(id));
   };
 
-  // Only show dropdown if there are teams
   return (
     <Show when={props.teams.length > 0}>
       <div class="castmill-team-filter">
-        <Dropdown
+        <MultiSelectFilter<Team>
+          items={props.teams}
+          selectedIds={selectedIds()}
+          onSelectionChange={handleChange}
+          selectionMode="single"
           label={props.label || 'Team'}
-          items={items()}
-          onSelectChange={handleChange}
-          value={currentValue()}
-          placeholder={props.placeholder}
-          clearable
+          placeholder={props.placeholder || 'Select team'}
           clearLabel={props.clearLabel}
+          searchable={props.teams.length > TEAM_FILTER_SEARCH_THRESHOLD}
+          searchPlaceholder={props.searchPlaceholder || 'Search teams\u2026'}
+          noMatchMessage={props.noMatchMessage}
         />
       </div>
     </Show>

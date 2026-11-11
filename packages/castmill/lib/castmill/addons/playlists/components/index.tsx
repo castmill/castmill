@@ -1265,6 +1265,8 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
                   label={t('filters.teamLabel')}
                   placeholder={t('filters.teamPlaceholder')}
                   clearLabel={t('filters.teamClear')}
+                  searchPlaceholder={t('filters.teamSearchPlaceholder')}
+                  noMatchMessage={t('filters.noMatches')}
                 />
                 <TagFilter
                   tags={tags()}
@@ -1367,6 +1369,8 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
                 label={t('filters.teamLabel')}
                 placeholder={t('filters.teamPlaceholder')}
                 clearLabel={t('filters.teamClear')}
+                searchPlaceholder={t('filters.teamSearchPlaceholder')}
+                noMatchMessage={t('filters.noMatches')}
               />
             </div>
           }
