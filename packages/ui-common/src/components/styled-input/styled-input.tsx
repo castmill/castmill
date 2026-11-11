@@ -19,10 +19,14 @@ export const StyledInput: Component<{
   let textareaRef: HTMLTextAreaElement | undefined;
 
   onMount(() => {
-    if (props.autofocus && (inputRef || textareaRef)) {
+    if (props.autofocus) {
       // Use setTimeout to ensure the modal/dialog animation is complete
       setTimeout(() => {
-        (inputRef || textareaRef)?.focus();
+        if (props.type === 'textarea') {
+          textareaRef?.focus();
+        } else {
+          inputRef?.focus();
+        }
       }, 100);
     }
   });
