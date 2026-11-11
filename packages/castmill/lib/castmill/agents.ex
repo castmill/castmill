@@ -93,12 +93,14 @@ defmodule Castmill.Agents do
   role (defaults to `member`) and issues the first credential.
 
   Returns `{:ok, agent, secret}`. The secret is only available at this point;
-  it cannot be retrieved later.
+  it cannot be retrieved later. Returns `{:error, :quota_exceeded}` when the
+  organization's `agents` quota is used up (agents do not count as users).
   """
   def create_agent(organization_id, attrs, created_by_id \\ nil) do
     attrs = stringify_keys(attrs)
 
-    with {:ok, role} <- parse_role(Map.get(attrs, "role"), @default_role) do
+    with {:ok, role} <- parse_role(Map.get(attrs, "role"), @default_role),
+         :ok <- check_agents_quota(organization_id) do
       agent_id = Ecto.UUID.generate()
       {secret, hash, prefix} = generate_secret()
       now = DateTime.utc_now() |> DateTime.truncate(:second)
@@ -157,6 +159,13 @@ defmodule Castmill.Agents do
     else
       %{agent_changeset | action: :insert}
     end
+  end
+
+  defp check_agents_quota(organization_id) do
+    if Castmill.Quotas.get_quota_used_for_organization(organization_id, Agent) <
+         Castmill.Quotas.get_quota_for_organization(organization_id, :agents),
+       do: :ok,
+       else: {:error, :quota_exceeded}
   end
 
   @doc """

@@ -14,7 +14,11 @@ defmodule CastmillWeb.OrganizationUsageController do
     "teams" => Castmill.Teams.Team,
     "users" => Castmill.Organizations.OrganizationsUsers,
     "layouts" => Castmill.Resources.Layout,
-    "feeds" => Castmill.Feeds.Feed
+    "feeds" => Castmill.Feeds.Feed,
+    "automations" => Castmill.Automations.Automation,
+    "tags" => Castmill.Tags.Tag,
+    "tag_groups" => Castmill.Tags.TagGroup,
+    "agents" => Castmill.Agents.Agent
   }
 
   def index(conn, %{"organization_id" => organization_id}) do
@@ -40,6 +44,12 @@ defmodule CastmillWeb.OrganizationUsageController do
     storage_usage = Quotas.get_quota_used_for_organization(organization_id, :storage)
     storage_total = Quotas.get_quota_for_organization_bytes(organization_id, "storage")
 
-    Map.put(resource_usage, "storage", %{used: storage_usage, total: storage_total})
+    # Rules are counted across all of the organization's automations.
+    rules_usage = Castmill.Automations.rules_used(organization_id)
+    rules_total = Quotas.get_quota_for_organization(organization_id, "automation_rules")
+
+    resource_usage
+    |> Map.put("storage", %{used: storage_usage, total: storage_total})
+    |> Map.put("automation_rules", %{used: rules_usage, total: rules_total})
   end
 end

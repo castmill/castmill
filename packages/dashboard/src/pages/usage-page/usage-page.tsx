@@ -17,17 +17,20 @@ import { IoImagesOutline } from 'solid-icons/io';
 import { RiMediaPlayList2Fill } from 'solid-icons/ri';
 import { HiOutlineTv } from 'solid-icons/hi';
 import { BsCalendarWeek, BsGrid } from 'solid-icons/bs';
-import { TbRss } from 'solid-icons/tb';
+import { TbBolt, TbListCheck, TbRobot, TbRss } from 'solid-icons/tb';
 import {
   AiOutlineTeam,
   AiOutlineDatabase,
   AiOutlineAppstore,
+  AiOutlineFolder,
+  AiOutlineTags,
 } from 'solid-icons/ai';
 
 const [usage, setUsage] = createSignal<Usage>();
 const [loading, setLoading] = createSignal(true);
 
-// Map resource identifiers to translation keys for localized labels
+// Map resource identifiers to translation keys for localized labels. Cards
+// are shown in this order; resources not listed here come last.
 const resourceTranslationKeys = {
   medias: 'usage.resources.medias',
   storage: 'usage.resources.storage',
@@ -39,7 +42,18 @@ const resourceTranslationKeys = {
   widgets: 'usage.resources.widgets',
   layouts: 'usage.resources.layouts',
   feeds: 'usage.resources.feeds',
+  automations: 'usage.resources.automations',
+  automation_rules: 'usage.resources.automation_rules',
+  tags: 'usage.resources.tags',
+  tag_groups: 'usage.resources.tag_groups',
+  agents: 'usage.resources.agents',
 } as const;
+
+const resourceOrder = Object.keys(resourceTranslationKeys);
+const orderOf = (resource: string) => {
+  const index = resourceOrder.indexOf(resource);
+  return index === -1 ? resourceOrder.length : index;
+};
 
 type ResourceType = keyof typeof resourceTranslationKeys;
 
@@ -56,6 +70,11 @@ const ResourceIcon = (props: { type: ResourceType }) => {
     widgets: AiOutlineAppstore,
     layouts: BsGrid,
     feeds: TbRss,
+    automations: TbBolt,
+    automation_rules: TbListCheck,
+    tags: AiOutlineTags,
+    tag_groups: AiOutlineFolder,
+    agents: TbRobot,
   };
 
   const Icon = icons[props.type] || IoImagesOutline;
@@ -131,12 +150,12 @@ const UsagePage: Component = () => {
         <Show when={!loading() && usage()}>
           <div class={styles.grid}>
             <For
-              each={
+              each={(
                 Object.entries(usage() || {}) as [
                   ResourceType,
                   { used: number; total: number },
                 ][]
-              }
+              ).sort(([a], [b]) => orderOf(a) - orderOf(b))}
             >
               {([resource, { used, total }]) => {
                 const percentage =

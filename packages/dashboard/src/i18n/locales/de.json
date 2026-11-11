@@ -508,7 +508,12 @@
       "teams": "Teams",
       "widgets": "Widgets",
       "layouts": "Layoutvorlagen",
-      "feeds": "Feeds"
+      "feeds": "Feeds",
+      "automations": "Automatisierungen",
+      "automation_rules": "Automatisierungsregeln",
+      "tags": "Tags",
+      "tag_groups": "Tag-Gruppen",
+      "agents": "KI-Agenten"
     },
     "errors": {
       "fetchUsageData": "Fehler beim Abrufen der Nutzungsdaten: {{error}}"
@@ -676,7 +681,9 @@
       "createGroup": "Fehler beim Erstellen der Tag-Gruppe: {{error}}",
       "updateGroup": "Fehler beim Aktualisieren der Tag-Gruppe: {{error}}",
       "deleteGroup": "Fehler beim Löschen der Tag-Gruppe: {{error}}",
-      "loadFailed": "Fehler beim Laden der Tags"
+      "loadFailed": "Fehler beim Laden der Tags",
+      "tagQuotaExceeded": "Das Tag-Limit Ihres Plans ist erreicht. Löschen Sie nicht mehr benötigte Tags oder wechseln Sie zu einem größeren Plan.",
+      "groupQuotaExceeded": "Das Limit für Tag-Gruppen Ihres Plans ist erreicht. Löschen Sie nicht mehr benötigte Gruppen oder wechseln Sie zu einem größeren Plan."
     }
   },
   "channels": {
@@ -1711,7 +1718,8 @@
       "saveFailed": "Agent konnte nicht gespeichert werden: {{error}}",
       "actionFailed": "Aktion fehlgeschlagen: {{error}}",
       "copyFailed": "Kopieren in die Zwischenablage fehlgeschlagen",
-      "loadActionsFailed": "Aktivitätsprotokoll konnte nicht geladen werden"
+      "loadActionsFailed": "Aktivitätsprotokoll konnte nicht geladen werden",
+      "quotaExceeded": "Das Limit für KI-Agenten Ihres Plans ist erreicht. Löschen Sie nicht mehr benötigte Agenten oder wechseln Sie zu einem größeren Plan."
     },
     "activity": {
       "agent": "Agent",

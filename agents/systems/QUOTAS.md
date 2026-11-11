@@ -165,12 +165,15 @@ The full list of allowed values (defined identically in `PlansQuotas`, `QuotasNe
 | channels | `:channels` | Number of channels | count |
 | channels_entries | `:channels_entries` | Number of channel entries | count |
 | devices | `:devices` | Number of devices | count |
-| users | `:users` | Number of users | count |
+| users | `:users` | Number of people in the organization (AI agents excluded) | count |
 | teams | `:teams` | Number of teams | count |
 | layouts | `:layouts` | Number of layouts | count |
 | feeds | `:feeds` | Number of data feeds (default 20 per plan) | count |
 | automations | `:automations` | Number of automations (default plan: 50) | count |
 | automation_rules | `:automation_rules` | Rules across all automations (default plan: 500) | count |
+| tags | `:tags` | Number of tags (default plan: 500) | count |
+| tag_groups | `:tag_groups` | Number of tag groups (default plan: 50) | count |
+| agents | `:agents` | Number of AI agents (default plan: 5); agents do not count as `users` | count |
 | storage | `:storage` | Total file storage quota | **MB** |
 | max_upload_size | `:max_upload_size` | Max upload size per file | **MB** |
 

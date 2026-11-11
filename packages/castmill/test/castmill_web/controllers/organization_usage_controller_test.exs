@@ -45,6 +45,67 @@ defmodule CastmillWeb.OrganizationUsageControllerTest do
   end
 
   describe "index" do
+    test "reports automations, rules, tags, tag groups and agents; agents are not users", %{
+      conn: conn,
+      organization: organization
+    } do
+      for {resource, max} <- [
+            automations: 4,
+            automation_rules: 10,
+            tags: 20,
+            tag_groups: 5,
+            agents: 3
+          ],
+          do: Quotas.add_quota_to_organization(organization.id, resource, max)
+
+      users_before =
+        json_response(get(conn, "/dashboard/organizations/#{organization.id}/usage"), 200)[
+          "users"
+        ]["used"]
+
+      playlist =
+        Castmill.PlaylistsFixtures.playlist_fixture(%{organization_id: organization.id})
+
+      rule = %{
+        "when" => %{
+          "source" => "clock",
+          "condition" => "at",
+          "config" => %{"schedule" => %{"type" => "hourly", "minute" => 8}}
+        },
+        "then" => %{"action" => "interrupt", "config" => %{"playlist_id" => playlist.id}}
+      }
+
+      {:ok, _} =
+        Castmill.Automations.create_automation(organization.id, %{
+          "name" => "Spring",
+          "rules" => [rule, rule]
+        })
+
+      {:ok, group} =
+        Castmill.Tags.create_tag_group(%{name: "Location", organization_id: organization.id})
+
+      for name <- ["North", "South"],
+          do:
+            {:ok, _} =
+              Castmill.Tags.create_tag(%{
+                name: name,
+                organization_id: organization.id,
+                tag_group_id: group.id
+              })
+
+      {:ok, _agent, _secret} = Castmill.Agents.create_agent(organization.id, %{name: "Bot"})
+
+      response =
+        json_response(get(conn, "/dashboard/organizations/#{organization.id}/usage"), 200)
+
+      assert response["automations"] == %{"used" => 1, "total" => 4}
+      assert response["automation_rules"] == %{"used" => 2, "total" => 10}
+      assert response["tags"] == %{"used" => 2, "total" => 20}
+      assert response["tag_groups"] == %{"used" => 1, "total" => 5}
+      assert response["agents"] == %{"used" => 1, "total" => 3}
+      assert response["users"]["used"] == users_before
+    end
+
     test "returns usage data for all resources in an organization", %{
       conn: conn,
       organization: organization,

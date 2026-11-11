@@ -17,6 +17,7 @@ import {
   Table,
   Tabs,
   useToast,
+  isQuotaExceededError,
 } from '@castmill/ui-common';
 
 import { store } from '../../store/store';
@@ -29,6 +30,8 @@ import {
   parseServerDate,
 } from '../../services/agents.service';
 import { OrganizationRole } from '../../types/organization-role.type';
+import { QuotaIndicator } from '../../components/quota-indicator';
+import { QuotasService, ResourceQuota } from '../../services/quotas.service';
 import {
   AgentIntegrationInstructions,
   copyToClipboard,
@@ -99,6 +102,11 @@ const AgentsPage: Component = () => {
   const [pendingConfirm, setPendingConfirm] =
     createSignal<PendingConfirm>(null);
   let agentsRequestSequence = 0;
+  const [agentQuota, setAgentQuota] = createSignal<ResourceQuota | null>(null);
+  const quotaReached = () => {
+    const quota = agentQuota();
+    return !!quota && quota.used >= quota.total;
+  };
 
   const loadAgents = async (organizationId = orgId()) => {
     const requestSequence = ++agentsRequestSequence;
@@ -110,13 +118,18 @@ const AgentsPage: Component = () => {
 
     setLoading(true);
     try {
-      const result = await AgentsService.list(organizationId);
+      const [result, usage] = await Promise.all([
+        AgentsService.list(organizationId),
+        // The list still loads if the quota cannot be read.
+        QuotasService.getQuotaUsage(organizationId).catch(() => null),
+      ]);
       if (
         requestSequence === agentsRequestSequence &&
         organizationId === orgId() &&
         canView()
       ) {
         setAgents(result);
+        setAgentQuota(usage?.agents || null);
       }
     } catch (error) {
       if (
@@ -197,6 +210,11 @@ const AgentsPage: Component = () => {
       setShowForm(false);
       await loadAgents();
     } catch (error) {
+      if (isQuotaExceededError(error)) {
+        toast.error(t('agents.errors.quotaExceeded'));
+        await loadAgents();
+        return;
+      }
       toast.error(
         t('agents.errors.saveFailed', {
           error: error instanceof Error ? error.message : String(error),
@@ -388,6 +406,7 @@ const AgentsPage: Component = () => {
                   icon={BsPlus}
                   color="primary"
                   onClick={openCreate}
+                  disabled={quotaReached()}
                 />
               </Show>
             </Show>
@@ -422,11 +441,22 @@ const AgentsPage: Component = () => {
           </div>
           <Show when={canManage()}>
             <div class={styles.headerAction}>
+              <Show when={agentQuota()}>
+                {(quota) => (
+                  <QuotaIndicator
+                    used={quota().used}
+                    total={quota().total}
+                    resourceName={t('usage.resources.agents')}
+                    compact
+                  />
+                )}
+              </Show>
               <Button
                 label={t('agents.newAgent')}
                 icon={BsPlus}
                 color="primary"
                 onClick={openCreate}
+                disabled={quotaReached()}
               />
             </div>
           </Show>

@@ -490,7 +490,12 @@
       "teams": "チーム",
       "widgets": "ウィジェット",
       "layouts": "レイアウト",
-      "feeds": "フィード"
+      "feeds": "フィード",
+      "automations": "オートメーション",
+      "automation_rules": "オートメーションルール",
+      "tags": "タグ",
+      "tag_groups": "タググループ",
+      "agents": "AI エージェント"
     },
     "errors": {
       "fetchUsageData": "使用量データの取得に失敗しました：{{error}}"
@@ -658,7 +663,9 @@
       "createGroup": "タググループの作成中にエラーが発生しました：{{error}}",
       "updateGroup": "タググループの更新中にエラーが発生しました：{{error}}",
       "deleteGroup": "タググループの削除中にエラーが発生しました：{{error}}",
-      "loadFailed": "タグの読み込みに失敗しました"
+      "loadFailed": "タグの読み込みに失敗しました",
+      "tagQuotaExceeded": "ご利用のプランのタグ上限に達しました。使用していないタグを削除するか、プランをアップグレードしてください。",
+      "groupQuotaExceeded": "ご利用のプランのタググループ上限に達しました。使用していないグループを削除するか、プランをアップグレードしてください。"
     }
   },
   "login": {
@@ -1717,7 +1724,8 @@
       "saveFailed": "エージェントの保存に失敗しました：{{error}}",
       "actionFailed": "操作に失敗しました：{{error}}",
       "copyFailed": "クリップボードにコピーできませんでした",
-      "loadActionsFailed": "アクティビティログの読み込みに失敗しました"
+      "loadActionsFailed": "アクティビティログの読み込みに失敗しました",
+      "quotaExceeded": "ご利用のプランの AI エージェント上限に達しました。使用していないエージェントを削除するか、プランをアップグレードしてください。"
     },
     "activity": {
       "agent": "エージェント",

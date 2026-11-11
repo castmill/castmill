@@ -292,9 +292,12 @@ defmodule Castmill.Quotas do
   end
 
   def get_quota_used_for_organization(organization_id, Castmill.Organizations.OrganizationsUsers) do
-    # Count users in the organization (via the join table)
+    # Count the people in the organization. AI agents are users too, but they
+    # have their own quota (:agents).
     from(ou in Castmill.Organizations.OrganizationsUsers,
-      where: ou.organization_id == ^organization_id,
+      join: u in Castmill.Accounts.User,
+      on: u.id == ou.user_id,
+      where: ou.organization_id == ^organization_id and not u.is_agent,
       select: count(ou.user_id)
     )
     |> Repo.one()

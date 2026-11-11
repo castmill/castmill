@@ -19,6 +19,17 @@ defmodule Castmill.AgentsTest do
   end
 
   describe "create_agent/3" do
+    test "stops at the organization's agents quota", %{organization: organization} do
+      Castmill.Quotas.add_quota_to_organization(organization.id, :agents, 1)
+
+      assert {:ok, _agent, _secret} = Agents.create_agent(organization.id, %{name: "Bot 1"})
+
+      assert {:error, :quota_exceeded} =
+               Agents.create_agent(organization.id, %{name: "Bot 2"})
+
+      assert length(Agents.list_agents(organization.id)) == 1
+    end
+
     test "creates an agent user, membership and credentials", %{
       organization: organization,
       admin: admin
