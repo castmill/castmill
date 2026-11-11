@@ -10,6 +10,7 @@ import {
   JsonPlaylistItem,
   PlayerGlobals,
   VideoPlaybackControllerFactory,
+  isDebugOverlayEnabled,
 } from '@castmill/player';
 import {
   ResourceManager,
@@ -40,11 +41,26 @@ import {
 import { TimerManager } from './timer-manager';
 import { OrientationManager } from './orientation';
 import { showDeviceToast } from './device-toast';
+import {
+  AutomationDebugOverlay,
+  AutomationEngine,
+  AutomationRegistry,
+  createDefaultRegistry,
+  describeAutomations,
+  DevicePlaybackHost,
+  type AutomationsPayload,
+  type DeviceAutomation,
+  type DeviceRule,
+} from '../automations';
 
 const HEARTBEAT_INTERVAL = 1000 * 30; // 30 seconds
 const DEFAULT_MAX_LOGS = 100;
 const MAX_RECONNECT_DELAY_MS = 60_000; // 60 seconds max delay between reconnect attempts
 const DEFAULT_FETCH_TIMEOUT_MS = 5000;
+const PROGRAMMING_LOOP_INTERVAL_MS = 5000;
+/** Automations (clock occurrences) are refreshed at least daily. */
+const AUTOMATIONS_REFRESH_MS = 24 * 60 * 60 * 1000;
+const AUTOMATIONS_DEBUG_INTERVAL_MS = 1000;
 
 /** Time a maintenance toast is visible before the action may reload the page. */
 export const MAINTENANCE_TOAST_DELAY_MS = 1000;
@@ -154,6 +170,11 @@ export interface ChannelAddedMessage {
 export interface ChannelRemovedMessage {
   event: string;
   channel_id: number;
+}
+
+export interface AutomationRunMessage {
+  automation_id: number | string;
+  rule: DeviceRule;
 }
 
 export interface PlaylistUpdatedMessage {
@@ -270,6 +291,16 @@ export class Device extends EventEmitter {
   private recoveryWatcherRunning = false;
   private orientationManager: OrientationManager;
   private renderer?: Renderer;
+  private automationRegistry: AutomationRegistry;
+  private automationEngine?: AutomationEngine;
+  private automationPlayback?: DevicePlaybackHost;
+  private automationsPayload?: AutomationsPayload;
+  private automationsRefresh?: ReturnType<typeof setTimeout>;
+  private automationsDebug?: AutomationDebugOverlay;
+  private automationsDebugTimer?: ReturnType<typeof setInterval>;
+  private automationsLoad?: Promise<void>;
+  private automationsLoadQueued = false;
+  private wakeProgramming?: () => void;
 
   // The base url is the url of the Castmill API. By default it is assumed that the API is
   // hosted at the same domain as this device and accessible through a relative path.
@@ -291,9 +322,16 @@ export class Device extends EventEmitter {
       viewport?: Viewport;
       transport?: new (endpoint: string) => object;
       createVideoPlaybackController?: VideoPlaybackControllerFactory;
+      /**
+       * Automation sources and actions supported by this player. Defaults to
+       * the clock source and the interrupt action.
+       */
+      automationRegistry?: AutomationRegistry;
     }
   ) {
     super();
+    this.automationRegistry =
+      opts?.automationRegistry || createDefaultRegistry();
 
     this.logger.setLogger(new NullLogger());
     this.errorReporter = new DeviceErrorReporter();
@@ -421,6 +459,7 @@ export class Device extends EventEmitter {
 
     this.resourceManager = new ResourceManager(this.cache, {
       authToken: device.token,
+      authOrigins: [this.baseUrl],
     });
 
     await this.resourceManager.init();
@@ -453,6 +492,8 @@ export class Device extends EventEmitter {
       this.errorReporter
     );
 
+    this.startAutomations(device.id, content);
+
     this.emitProgress(5, 5, 'Starting player');
 
     this.emit('ready', device);
@@ -476,7 +517,10 @@ export class Device extends EventEmitter {
     while (!this.closing) {
       // Add next batch of items from the next calendar.
       // Play until only one item remains in the playlist or the device is stopped.
-      if (this.contentQueue.length < 2) {
+      if (
+        this.contentQueue.length < 2 &&
+        !this.automationPlayback?.interrupted
+      ) {
         if (this.channels.length) {
           // Capture current generation to detect if channels change during async operations
           const currentGeneration = this.channelGeneration;
@@ -504,27 +548,11 @@ export class Device extends EventEmitter {
                 continue;
               }
 
-              const layer = await Layer.fromPlaylist(
+              const enqueued = await this.enqueueProgramming(
                 jsonPlaylist,
-                this.resourceManager,
-                this.getPlayerGlobals()
+                currentGeneration
               );
-
-              // Final check before adding to queue
-              if (this.channelGeneration !== currentGeneration) {
-                continue;
-              }
-
-              this.contentQueue.add(layer);
-
-              this.player.play({ loop: true });
-
-              const onEnd = () => {
-                this.contentQueue!.remove(layer);
-                layer.off('end', onEnd);
-              };
-
-              layer.on('end', onEnd);
+              if (!enqueued) continue;
             }
           }
 
@@ -533,8 +561,200 @@ export class Device extends EventEmitter {
           this.channelIndex = (this.channelIndex + 1) % this.channels.length;
         }
       }
-      await new Promise((resolve) => setTimeout(resolve, 5000));
+      await new Promise<void>((resolve) => {
+        const timeout = setTimeout(done, PROGRAMMING_LOOP_INTERVAL_MS);
+        function done() {
+          clearTimeout(timeout);
+          resolve();
+        }
+        this.wakeProgramming = done;
+      });
+      this.wakeProgramming = undefined;
     }
+  }
+
+  /**
+   * Adds a playlist of normal programming to the content queue and plays it.
+   * Content is discarded when the channels changed while it was prepared, or
+   * while an automation interrupts playback.
+   */
+  private async enqueueProgramming(
+    jsonPlaylist: JsonPlaylist,
+    generation = this.channelGeneration
+  ): Promise<boolean> {
+    if (!this.resourceManager || !this.contentQueue || !this.player)
+      return false;
+    const layer = await Layer.fromPlaylist(
+      jsonPlaylist,
+      this.resourceManager,
+      this.automationPlayback
+        ? this.automationPlayback.programmingGlobals(jsonPlaylist)
+        : this.getPlayerGlobals()
+    );
+
+    // Final check before adding to queue
+    if (
+      this.channelGeneration !== generation ||
+      this.automationPlayback?.interrupted ||
+      !this.contentQueue ||
+      !this.player
+    ) {
+      layer.unload?.();
+      return false;
+    }
+
+    this.contentQueue.add(layer);
+
+    this.player.play({ loop: true });
+
+    const onEnd = () => {
+      this.contentQueue!.remove(layer);
+      layer.off('end', onEnd);
+    };
+
+    layer.on('end', onEnd);
+    return true;
+  }
+
+  private startAutomations(deviceId: string, container: HTMLElement) {
+    this.automationPlayback = new DevicePlaybackHost({
+      player: () => this.player,
+      queue: () => this.contentQueue,
+      loadPlaylist: (playlistId) => this.loadAutomationPlaylist(playlistId),
+      createLayer: async (json, globals) =>
+        Layer.fromPlaylist(json, this.resourceManager!, globals),
+      playerGlobals: () => this.getPlayerGlobals(),
+      clearPlayback: () => this.clearPlayback(),
+      enqueueProgramming: (json) => this.enqueueProgramming(json),
+      rewindProgramming: (pendingPlaylists) => {
+        if (!this.channels.length) return;
+        this.channelIndex =
+          (this.channelIndex - pendingPlaylists + this.channels.length) %
+          this.channels.length;
+      },
+      wake: () => this.wakeProgramming?.(),
+    });
+    this.automationEngine = new AutomationEngine({
+      registry: this.automationRegistry,
+      host: this.automationPlayback,
+      onRecord: (record) => {
+        if (record.result.status !== 'running') return;
+        this.logger.info(
+          `Automation ${record.automationId} rule ${record.ruleId}: ${record.result.status}`
+        );
+      },
+      onError: (error, record) => {
+        this.logger.error(
+          `Automation ${record.automationId} rule ${record.ruleId} failed: ${error}`
+        );
+        this.errorReporter.report({ category: 'runtime', error });
+      },
+    });
+    this.automationsDebug = new AutomationDebugOverlay(container);
+    this.automationsDebugTimer = setInterval(
+      () => this.updateAutomationsDebug(),
+      AUTOMATIONS_DEBUG_INTERVAL_MS
+    );
+    void this.refreshAutomations(deviceId, false);
+  }
+
+  private stopAutomations(final = false) {
+    this.automationEngine?.dispose();
+    this.automationPlayback?.dispose();
+    clearTimeout(this.automationsRefresh);
+    if (final) {
+      clearInterval(this.automationsDebugTimer);
+      this.automationsDebug?.hide();
+    }
+  }
+
+  private updateAutomationsDebug() {
+    const engine = this.automationEngine;
+    if (!engine || !this.automationsDebug) return;
+    this.automationsDebug.update(
+      isDebugOverlayEnabled() &&
+        (this.automationsPayload?.automations || []).length
+        ? describeAutomations(engine.nextFiring(), engine.lastFiring())
+        : undefined
+    );
+  }
+
+  private automationsUrl(deviceId: string) {
+    return `${this.baseUrl}/devices/${deviceId}/automations`;
+  }
+
+  /**
+   * Loads the device's effective automations (cached for offline starts)
+   * and restarts the engine with them. Like channel synchronizations, loads
+   * run one at a time and a request made during a load queues another one.
+   */
+  private refreshAutomations(deviceId: string, fresh: boolean): Promise<void> {
+    if (!this.automationEngine) return Promise.resolve();
+    this.automationsLoadQueued = true;
+    if (!this.automationsLoad) {
+      this.automationsLoad = this.runAutomationLoads(deviceId, fresh).then(
+        () => {
+          this.automationsLoad = undefined;
+        }
+      );
+    }
+    return this.automationsLoad;
+  }
+
+  private async runAutomationLoads(deviceId: string, fresh: boolean) {
+    while (this.automationsLoadQueued && !this.closing) {
+      this.automationsLoadQueued = false;
+      try {
+        const url = this.automationsUrl(deviceId);
+        const response = (await (fresh
+          ? this.resourceManager?.getFreshData(url)
+          : this.resourceManager?.getData(url, 1000))) as
+          | { data?: AutomationsPayload }
+          | undefined;
+        // After a fresh request fails, the cached payload keeps running.
+        if (response && response.data && !this.closing) {
+          this.automationsPayload = response.data;
+          this.automationEngine?.load(response.data);
+        }
+      } catch (error) {
+        this.logger.error(`Unable to load automations: ${error}`);
+        this.errorReporter.report({ category: 'network-sync', error });
+      }
+      fresh = true;
+    }
+    clearTimeout(this.automationsRefresh);
+    if (!this.closing) {
+      this.automationsRefresh = setTimeout(
+        () => void this.refreshAutomations(deviceId, true),
+        AUTOMATIONS_REFRESH_MS
+      );
+    }
+  }
+
+  private async loadAutomationPlaylist(playlistId: number | string) {
+    if (!this.resourceManager || !this.id) return;
+    const jsonPlaylist: JsonPlaylist | void =
+      await this.resourceManager.getData(
+        `${this.baseUrl}/devices/${this.id}/playlists/${playlistId}`,
+        1000
+      );
+    if (jsonPlaylist) {
+      await this.cacheMedias(this.getPlaylistMedias(jsonPlaylist));
+    }
+    return jsonPlaylist;
+  }
+
+  private runAutomationNow(message: AutomationRunMessage) {
+    if (!message || !message.rule) return;
+    const known = (this.automationsPayload?.automations || []).find(
+      (automation) => String(automation.id) === String(message.automation_id)
+    );
+    const automation: DeviceAutomation = known || {
+      id: message.automation_id,
+      name: String(message.automation_id),
+      rules: [message.rule],
+    };
+    this.automationEngine?.runNow(automation, message.rule);
   }
 
   private async fetchChannels(
@@ -646,6 +866,7 @@ export class Device extends EventEmitter {
 
   async stop() {
     this.closing = true;
+    this.stopAutomations(true);
     if (this.orientationChannel && this.orientationListenerRef !== undefined) {
       this.orientationChannel.off(
         'orientation_updated',
@@ -1095,6 +1316,7 @@ export class Device extends EventEmitter {
           // Phoenix re-runs join hooks on every rejoin, so this also catches
           // channel changes made while the device was disconnected.
           void this.syncChannels(device.id);
+          void this.refreshAutomations(device.id, true);
           safeResolve(channel);
         })
         .receive('error', (resp) => {
@@ -1134,6 +1356,16 @@ export class Device extends EventEmitter {
   }
 
   private resetPlaybackQueue() {
+    if (this.automationPlayback?.interrupted) {
+      // Keep the interruption; programming restarts fresh after it.
+      this.channelGeneration++;
+      this.automationPlayback.invalidateResume();
+      return;
+    }
+    this.clearPlayback();
+  }
+
+  private clearPlayback() {
     this.channelGeneration++;
     const currentLayer = this.player?.getCurrentLayer?.();
     this.player?.clear();
@@ -1370,6 +1602,15 @@ export class Device extends EventEmitter {
       this.logger.info(`Playlist ${message.playlist_id} updated`);
       this.resetPlaybackQueue();
     });
+
+    channel.on('automations_updated', () => {
+      this.logger.info('Automations updated');
+      if (this.id) void this.refreshAutomations(this.id, true);
+    });
+
+    channel.on('automation_run', (message: AutomationRunMessage) => {
+      this.runAutomationNow(message);
+    });
   }
 
   private async getCache({ page, page_size: perPage, type }: CachePage) {
@@ -1444,6 +1685,8 @@ export class Device extends EventEmitter {
       update: !!this.integration.update,
       updateFirmware: !!this.integration.updateFirmware,
       orientation: true,
+      automation_sources: this.automationRegistry?.sourceTypes() ?? [],
+      automation_actions: this.automationRegistry?.actionTypes() ?? [],
     };
   }
 
@@ -1674,6 +1917,8 @@ export class Device extends EventEmitter {
     run: () => unknown
   ): Promise<void> {
     const toast = MAINTENANCE_TOASTS[action];
+    // Maintenance takes precedence over automations.
+    this.stopAutomations();
     showDeviceToast(toast.start);
     await new Promise((resolve) =>
       setTimeout(resolve, this.maintenanceToastDelayMs)
@@ -1684,6 +1929,10 @@ export class Device extends EventEmitter {
       this.logger.error(`Maintenance action ${action} failed: ${error}`);
       this.errorReporter.report({ category: 'device', error });
       showDeviceToast(toast.failure);
+    }
+    // Actions that did not reload the player (e.g. no update available).
+    if (!this.closing && this.id) {
+      void this.refreshAutomations(this.id, false);
     }
   }
 

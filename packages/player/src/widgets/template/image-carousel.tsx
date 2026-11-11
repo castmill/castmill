@@ -1,6 +1,13 @@
 import gsap from 'gsap';
 
-import { Component, For, JSX, mergeProps, onCleanup, onMount } from 'solid-js';
+import {
+  Component,
+  createEffect,
+  createMemo,
+  For,
+  JSX,
+  onCleanup,
+} from 'solid-js';
 import { TemplateConfig, resolveOption } from './binding';
 import { TemplateComponent, TemplateComponentType } from './template';
 import { ComponentAnimation } from './animation';
@@ -8,9 +15,97 @@ import { BaseComponentProps } from './interfaces/base-component-props';
 import { ResourceManager } from '@castmill/cache';
 import { PlayerGlobals } from '../../interfaces/player-globals.interface';
 
+export type ImageCarouselTransition = 'slide' | 'fade';
+
 export interface ImageCarouselComponentOptions {
   images: string[];
   imageDuration: number;
+  transition?: ImageCarouselTransition;
+}
+
+const TRANSITION_SECONDS = 1;
+const MEDIA_CACHE_TIMEOUT_MS = 5000;
+
+/**
+ * Tween vars for an image entering (start) and leaving (end) the carousel.
+ * "slide" (default) slides and zooms; "fade" cross-fades in place.
+ */
+export function carouselTransitionArgs(transition?: string): {
+  startArgs: GSAPTweenVars;
+  endArgs: GSAPTweenVars;
+} {
+  if (transition === 'fade') {
+    return {
+      startArgs: { duration: TRANSITION_SECONDS, autoAlpha: 0 },
+      endArgs: { duration: TRANSITION_SECONDS, autoAlpha: 0 },
+    };
+  }
+  return {
+    startArgs: {
+      duration: TRANSITION_SECONDS,
+      x: -100,
+      autoAlpha: 0,
+      scale: 1.5,
+    },
+    endArgs: { duration: TRANSITION_SECONDS, x: 100, autoAlpha: 0, scale: 1.5 },
+  };
+}
+
+/**
+ * Resolves the cached URL of every image, in order. When an image cannot be
+ * cached (e.g. its host sends no CORS headers or storage is full) the original
+ * URL is used so it still displays while online.
+ */
+export function resolveCarouselImageUrls(
+  resourceManager: Pick<ResourceManager, 'getMedia'>,
+  urls: string[]
+): Promise<string[]> {
+  return Promise.all(
+    urls.map((url) =>
+      getMediaWithTimeout(resourceManager, url).then(
+        (cachedUrl) => cachedUrl || fallbackUrl(url),
+        () => fallbackUrl(url)
+      )
+    )
+  );
+}
+
+function getMediaWithTimeout(
+  resourceManager: Pick<ResourceManager, 'getMedia'>,
+  url: string
+): Promise<string | void> {
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const timeout = setTimeout(() => {
+      settled = true;
+      resolve(undefined);
+    }, MEDIA_CACHE_TIMEOUT_MS);
+
+    Promise.resolve()
+      .then(() => resourceManager.getMedia(url))
+      .then(
+        (cachedUrl) => {
+          if (settled) return;
+          clearTimeout(timeout);
+          resolve(cachedUrl);
+        },
+        (error) => {
+          if (settled) return;
+          clearTimeout(timeout);
+          reject(error);
+        }
+      );
+  });
+}
+
+function fallbackUrl(url: string): string {
+  console.warn(`Image ${url} not found in cached medias, using original URL`);
+  return url;
+}
+
+function backgroundImageUrl(url: string): string {
+  const escapedUrl = url.replace(/["\\()]/g, (character) => `\\${character}`);
+  return `url("${escapedUrl}")`;
 }
 
 export class ImageCarouselComponent implements TemplateComponent {
@@ -25,7 +120,8 @@ export class ImageCarouselComponent implements TemplateComponent {
   ) {}
 
   resolveDuration(medias: { [index: string]: string }): number {
-    return this.opts.imageDuration * this.opts.images.length;
+    const images = Array.isArray(this.opts.images) ? this.opts.images : [];
+    return this.opts.imageDuration * images.length;
   }
 
   static fromJSON(json: any): ImageCarouselComponent {
@@ -44,14 +140,16 @@ export class ImageCarouselComponent implements TemplateComponent {
     context: any,
     globals: PlayerGlobals
   ): ImageCarouselComponentOptions {
+    const images = resolveOption(opts.images, config, context, globals);
     return {
-      images: resolveOption(opts.images, config, context, globals),
+      images: Array.isArray(images) ? images : [],
       imageDuration: resolveOption(
         opts.imageDuration,
         config,
         context,
         globals
       ),
+      transition: resolveOption(opts.transition, config, context, globals),
     };
   }
 }
@@ -78,118 +176,143 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
 
   props.timeline.add(timelineItem);
 
-  props = mergeProps(
-    {
-      startArgs: {
-        duration: 1,
-        x: -100,
-        autoAlpha: 0,
-        scale: 1.5,
+  const style = createMemo(() =>
+    Object.assign(
+      {
+        width: '100%',
+        height: '100%',
+        'background-size': 'cover',
+        'background-repeat': 'no-repeat',
+        'background-position': 'center',
+        position: 'absolute',
       },
-      endArgs: {
-        duration: 1,
-        x: 100,
-        autoAlpha: 0,
-        scale: 1.5,
-      },
-    },
-    props
+      props.style
+    )
   );
+  let buildId = 0;
+  let hasReportedReady = false;
+  let previousImageUrls: string[] | undefined;
+  let previousImageDuration: number | undefined;
+  let previousTransition: string | undefined;
 
-  const style = Object.assign(
-    {
-      width: '100%',
-      height: '100%',
-      'background-size': 'cover',
-      'background-repeat': 'no-repeat',
-      'background-position': 'center',
-      position: 'absolute',
-    },
-    props.style
-  );
-
-  onCleanup(() => {
-    props.timeline.remove(timelineItem);
-    timeline.kill();
-  });
-
-  onMount(async () => {
-    if (!parentRef) {
-      props.onReady();
+  const buildTimeline = async () => {
+    const imageUrls = props.opts.images || [];
+    const imageDuration = props.opts.imageDuration;
+    const transition = props.opts.transition;
+    if (
+      previousImageUrls &&
+      previousImageDuration === imageDuration &&
+      previousTransition === transition &&
+      previousImageUrls.length === imageUrls.length &&
+      previousImageUrls.every((url, index) => url === imageUrls[index])
+    ) {
       return;
     }
+    previousImageUrls = imageUrls.slice();
+    previousImageDuration = imageDuration;
+    previousTransition = transition;
+    const transitionArgs = carouselTransitionArgs(transition);
+    const currentBuild = ++buildId;
+    const images = Array.from(parentRef?.children || []) as HTMLElement[];
 
-    const images = parentRef.children;
+    // Resolve all URLs first so the timeline is built in image order no
+    // matter which download finishes first.
+    const urls = await resolveCarouselImageUrls(
+      props.resourceManager,
+      imageUrls.slice(0, images.length)
+    );
+    // A newer build (the images changed meanwhile) or a cleanup supersedes it.
+    if (currentBuild !== buildId) return;
+
+    props.timeline.remove(timelineItem);
+    timeline.pause(0);
+    timeline.clear();
+
+    images.forEach((image) => {
+      // Undo a previous build's transitions, as on a first render.
+      gsap.set(image, {
+        clearProps: 'transform,opacity,visibility,backgroundImage',
+      });
+    });
+
     const targetArgs = {
-      duration: 1,
+      duration: TRANSITION_SECONDS,
       x: 0,
       y: 0,
       autoAlpha: 1,
       scale: 1,
     };
 
-    if (images && images.length == 1) {
-      const imageUrl = await props.resourceManager.getMedia(
-        props.opts.images[0]
-      );
+    if (urls.length === 1) {
       timeline.set(
         images[0],
-        {
-          backgroundImage: `url(${imageUrl})`,
-        },
+        { backgroundImage: backgroundImageUrl(urls[0]) },
         '<'
       );
-      timeline.duration(props.opts.imageDuration);
-    }
-
-    if (images && images.length > 1) {
-      Array.from(images || []).forEach(async (image, index) => {
-        const imageUrl = await props.resourceManager.getMedia(
-          props.opts.images[index]
-        );
-        timeline.set(
-          image,
-          {
-            backgroundImage: `url(${imageUrl})`,
-          },
-          '<'
-        );
+      timeline.duration(imageDuration);
+    } else if (urls.length > 1) {
+      urls.forEach((url, index) => {
+        const image = images[index];
+        timeline.set(image, { backgroundImage: backgroundImageUrl(url) }, '<');
 
         if (index === 0) {
-          timeline.set(images[images.length - 1], {
+          timeline.set(images[urls.length - 1], {
             visibility: 'hidden',
             backgroundImage: 'none',
           });
           timeline.set(image, Object.assign({}, targetArgs));
         } else {
-          timeline.from(image, Object.assign({}, props.startArgs), '<');
+          timeline.from(
+            image,
+            Object.assign({}, props.startArgs || transitionArgs.startArgs),
+            '<'
+          );
           timeline.set(images[index - 1], {
             visibility: 'hidden',
             backgroundImage: 'none',
           });
         }
-        // When the last image fades out we need to cross-fade the first image
-        let position = `>+=${props.opts.imageDuration}`;
-        if (index === images.length - 1) {
-          const imageUrl = await props.resourceManager.getMedia(
-            props.opts.images[0]
-          );
 
+        // When the last image leaves, the first one comes back in.
+        let position = `>+=${imageDuration}`;
+        if (index === urls.length - 1) {
           timeline.set(images[0], {
-            backgroundImage: `url(${imageUrl})`,
+            backgroundImage: backgroundImageUrl(urls[0]),
           });
           timeline.from(
             images[0],
-            Object.assign({}, props.startArgs),
+            Object.assign({}, props.startArgs || transitionArgs.startArgs),
             position
           );
-          position = `<`;
+          position = '<';
         }
-        timeline.to(image, Object.assign({}, props.endArgs), position);
+        timeline.to(
+          image,
+          Object.assign({}, props.endArgs || transitionArgs.endArgs),
+          position
+        );
       });
     }
 
-    props.onReady();
+    // Show the first image now: seeking a timeline that is already at 0
+    // renders nothing, so it would stay hidden until playback moves.
+    timeline.render(0, false, true);
+    timelineItem.start = props.timeline.isRunning() ? props.timeline.time : 0;
+    props.timeline.add(timelineItem);
+    if (!hasReportedReady) {
+      hasReportedReady = true;
+      props.onReady();
+    }
+  };
+
+  onCleanup(() => {
+    buildId++;
+    props.timeline.remove(timelineItem);
+    timeline.kill();
+  });
+
+  createEffect(() => {
+    void buildTimeline();
   });
 
   return (
@@ -200,7 +323,7 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
       style="position: absolute; width: 100%; height: 100%;"
     >
       <For each={props.opts.images}>
-        {(item, i) => <div data-component="image" style={style}></div>}
+        {(item, i) => <div data-component="image" style={style()}></div>}
       </For>
     </div>
   );

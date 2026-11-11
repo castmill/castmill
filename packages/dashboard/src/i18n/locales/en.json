@@ -121,6 +121,7 @@
   "sidebar": {
     "organization": "Organization",
     "channels": "Channels",
+    "automations": "Automations",
     "teams": "Teams",
     "usage": "Usage",
     "devices": "Devices",
@@ -135,8 +136,10 @@
     "networkSettings": "Settings",
     "networkOrganizations": "Organizations",
     "networkUsers": "Users & Invitations",
+    "networkWidgets": "Widget Access",
     "tags": "Tags",
-    "agents": "Agents"
+    "agents": "Agents",
+    "feeds": "Feeds"
   },
   "topbar": {
     "help": "Help",
@@ -227,6 +230,98 @@
     }
   },
   "network": {
+    "widgets": {
+      "title": "Widget Access",
+      "description": "Choose which widgets the organizations in your network can use. Hide widgets you don't offer, for example services that aren't available in your region or that need a subscription you don't have.",
+      "searchWidgets": "Search widgets",
+      "loadMore": "Load more",
+      "showing": "Showing {{shown}} of {{total}}",
+      "noWidgets": "No widgets match your filters.",
+      "clearFilters": "Clear filters",
+      "selectWidget": "Select a widget to manage who can use it.",
+      "core": "Core",
+      "usedBy": "Organizations using it: {{count}}",
+      "kind": {
+        "system": "System",
+        "network": "Network"
+      },
+      "filters": {
+        "any": "All",
+        "all": "Everyone",
+        "selected": "Selected",
+        "hidden": "Hidden",
+        "accessLabel": "Filter by access",
+        "anyKind": "All types",
+        "kindLabel": "Filter by type",
+        "except": "Excluding"
+      },
+      "summary": {
+        "all": "All organizations",
+        "selected": "{{count}} of {{total}} organizations",
+        "hidden": "Hidden",
+        "except": "All except {{count}}"
+      },
+      "access": {
+        "title": "Who can use this widget",
+        "all": "All organizations",
+        "allDescription": "Every organization, including ones created later.",
+        "except": "All except…",
+        "exceptDescription": "Everyone except the organizations you exclude. New organizations included.",
+        "selected": "Only selected…",
+        "selectedDescription": "Only the organizations you add. New organizations aren't included.",
+        "hidden": "Hidden",
+        "hiddenDescription": "Not offered anywhere in your network."
+      },
+      "notices": {
+        "core": "Core widget: always available, because playlists and media depend on it.",
+        "all": "Every organization can use this widget, including ones created later. Turning one off below excludes it.",
+        "except": "Organizations created later get this widget automatically.",
+        "selected": "Organizations created later don't get this widget.",
+        "hidden": "No organization in your network can add this widget to playlists.",
+        "platform": "The platform offers this widget to {{count}} of {{total}} organizations in your network."
+      },
+      "organizations": {
+        "title": "Organizations",
+        "search": "Search organizations",
+        "statusAll": "All",
+        "statusEnabled": "Can use",
+        "statusDisabled": "Can't use",
+        "enabledOf": "{{count}} of {{total}} can use this widget",
+        "matching": "{{count}} matching organizations",
+        "enableAll": "Enable all ({{count}})",
+        "disableAll": "Disable all ({{count}})",
+        "inUse": "In use",
+        "inUseHint": "Used in this organization's playlists. Remove it there before disabling access.",
+        "none": "No organizations match your filters.",
+        "noOrganizations": "There are no organizations in your network yet.",
+        "columnName": "Organization",
+        "columnUsage": "In playlists",
+        "columnAccess": "Access",
+        "accessFor": "Access for {{name}}",
+        "range": "{{from}}–{{to}} of {{total}}",
+        "selectedCount": "{{count}} selected",
+        "enableSelected": "Enable access",
+        "disableSelected": "Disable access"
+      },
+      "confirm": {
+        "hideTitle": "Hide {{widget}}?",
+        "hideMessage": "Organizations in your network will no longer be able to add this widget to playlists.",
+        "hideAction": "Hide widget",
+        "enableAllTitle": "Enable {{count}} organizations?",
+        "enableAllMessage": "They will be able to add {{widget}} to their playlists.",
+        "enableAction": "Enable",
+        "disableAllTitle": "Disable {{count}} organizations?",
+        "disableAllMessage": "They will no longer be able to add {{widget}} to their playlists.",
+        "disableAction": "Disable"
+      },
+      "errors": {
+        "load": "Failed to load widgets.",
+        "loadOrganizations": "Failed to load organizations.",
+        "save": "Failed to update widget access.",
+        "inUse": "Access can't be removed while these organizations use the widget in playlists: {{organizations}}",
+        "moreOrganizations": "{{names}} and {{count}} more"
+      }
+    },
     "title": "Network Settings",
     "adminBadge": "Network Admin",
     "saveSuccess": "Network settings saved successfully",
@@ -328,7 +423,26 @@
       "unblockTitle": "Unblock Organization",
       "unblockConfirmation": "Are you sure you want to unblock \"{{name}}\"? Users will be able to log in again.",
       "unblockSuccess": "Organization unblocked successfully",
-      "unblockError": "Failed to unblock organization"
+      "unblockError": "Failed to unblock organization",
+      "integrationSettings": {
+        "action": "Integration settings",
+        "title": "Integration settings – {{name}}",
+        "description": "Values that this network's widgets use for this organization, such as office IDs. Only network admins can change them.",
+        "empty": "No widget in this network uses organization settings.",
+        "listHelp": "One value per line.",
+        "remove": "Remove settings",
+        "saved": "Settings saved.",
+        "removed": "Settings removed.",
+        "invalid": "Check the highlighted fields.",
+        "loadError": "Couldn't load the integration settings.",
+        "saveError": "Couldn't save the settings: {{message}}",
+        "errors": {
+          "required": "Required.",
+          "invalid": "Invalid value.",
+          "too_long": "Too long.",
+          "too_many": "Too many values."
+        }
+      }
     },
     "users": {
       "listTitle": "All Users",
@@ -408,7 +522,8 @@
       "channels": "Channels",
       "teams": "Teams",
       "widgets": "Widgets",
-      "layouts": "Layouts"
+      "layouts": "Layouts",
+      "feeds": "Feeds"
     },
     "errors": {
       "fetchUsageData": "Failed to fetch usage data: {{error}}"
@@ -866,6 +981,13 @@
     "zonesCount": "{{count}} zones"
   },
   "widgets": {
+    "scope": {
+      "title": "Availability",
+      "system": "System",
+      "network": "Network",
+      "organization": "This organization",
+      "unassigned": "Unassigned"
+    },
     "title": "Widgets",
     "uploadWidget": "Upload Widget",
     "uploadDescription": "Upload a JSON widget definition file.",
@@ -958,7 +1080,58 @@
       "noConfigurationRequired": "No Configuration Required",
       "optional": "Optional"
     },
-    "translations": "Translations"
+    "translations": "Translations",
+    "editableTexts": {
+      "editTexts": "Edit texts",
+      "doneEditing": "Done editing",
+      "hint": "Click a highlighted text to change it.",
+      "editAria": "Edit text: {{label}}",
+      "hide": "Hide this text",
+      "reset": "Reset to original",
+      "counter": "{{length}} / {{max}} characters",
+      "listTitle": "Edited texts: {{count}}",
+      "hidden": "Hidden",
+      "empty": "(empty)",
+      "resetAll": "Reset all",
+      "unusedTitle": "Not used by the widget",
+      "unusedHint": "These edits no longer match a text in the widget.",
+      "editedIndicator": "Has edited texts"
+    },
+    "choices": {
+      "choose": "Choose",
+      "moveBefore": "Move earlier",
+      "moveAfter": "Move later",
+      "search": "Search…",
+      "loadMore": "Load more",
+      "retry": "Retry",
+      "noResults": "No matching items",
+      "noSelection": "Nothing selected",
+      "unavailable": "No longer available",
+      "selectAll": "Select all",
+      "selectNone": "Select none",
+      "selectedCount": "Selected: {{count}}",
+      "selectedCountMax": "Selected: {{count}} / {{max}}",
+      "done": "Done",
+      "play": "Play preview",
+      "stop": "Stop preview",
+      "enlarge": "Enlarge",
+      "dialogDescription": "Select from the items provided by the integration.",
+      "dependencyRequired": "Set {{fields}} first.",
+      "confirmClearTitle": "Clear dependent selections?",
+      "confirmClearMessage": "Changing {{field}} clears {{fields}}.",
+      "minSelection": "Select at least {{min}}.",
+      "maxSelection": "Select at most {{max}}.",
+      "errors": {
+        "widgetNotFound": "This widget is no longer available.",
+        "notAChoiceField": "This field cannot list choices.",
+        "missingDependency": "Set the fields this one depends on first.",
+        "missingCredentials": "The integration is not configured for this organization.",
+        "rateLimited": "Too many requests. Wait a moment and try again.",
+        "providerError": "The integration could not provide the items. Try again later.",
+        "networkError": "Could not reach the server. Check your connection.",
+        "unknown": "Could not load the items."
+      }
+    }
   },
   "devices": {
     "orientation": {
@@ -1569,6 +1742,361 @@
         "cursor": "Add this configuration to ~/.cursor/mcp.json for all projects, or to .cursor/mcp.json in a project, then enable the server under Cursor Settings > MCP.",
         "other": "Configure a remote MCP server with these settings."
       }
+    }
+  },
+  "feeds": {
+    "title": "Data feeds",
+    "description": "Feeds receive data from other systems, such as Make, Zapier or your own scripts. Widgets that show a feed update on every screen when it changes.",
+    "newFeed": "New feed",
+    "empty": "No feeds yet. Create one and connect a system that sends data to it.",
+    "notFound": "This feed doesn't exist or was deleted.",
+    "mode": "Type",
+    "modes": {
+      "list": "List",
+      "document": "Document"
+    },
+    "modeHelp": {
+      "list": "Keeps the latest entries, newest first. Systems add entries one at a time.",
+      "document": "Holds one document that systems replace on each update."
+    },
+    "keep": "Entries to keep",
+    "keepHelp": "Older entries are removed when new ones arrive (1–100).",
+    "schema": "Entry schema (optional)",
+    "schemaHelp": "JSON describing the fields of an entry, as in a widget's data schema. Writes that don't match are rejected.",
+    "schemaInvalid": "The schema must be a valid JSON object.",
+    "mediaFields": "Media fields",
+    "mediaFieldsHelp": "Paths in an entry that hold image or video URLs, for example image or photos[].url.",
+    "mediaPath": "Path",
+    "mediaMode": "Handling",
+    "mediaModes": {
+      "copy": "Copy to storage",
+      "link": "Keep the link"
+    },
+    "addMediaField": "Add media field",
+    "entries": "Entries",
+    "lastUpdate": "Last update",
+    "usedBy": "Used by playlists",
+    "never": "Never",
+    "created": "Feed created",
+    "saved": "Feed saved",
+    "deleted": "Feed deleted",
+    "deleteTitle": "Delete feed?",
+    "deleteMessage": "Deleting “{{name}}” removes its entries and tokens. Widgets that show it will be empty.",
+    "back": "All feeds",
+    "tabs": {
+      "entries": "Entries",
+      "connect": "Connect",
+      "settings": "Settings",
+      "media": "Media"
+    },
+    "noEntries": "No entries yet. Send a test entry or connect a system.",
+    "noDocument": "No document yet.",
+    "receivedAt": "Received {{time}}",
+    "updatedAt": "Last update: {{time}}",
+    "externalId": "External ID",
+    "deleteEntry": "Delete entry",
+    "deleteEntryMessage": "The entry is removed from every screen that shows the feed.",
+    "clear": "Clear all",
+    "clearTitle": "Clear feed?",
+    "clearMessage": "This removes all data of “{{name}}”.",
+    "refresh": "Refresh",
+    "test": {
+      "title": "Send a test entry",
+      "titleDocument": "Send a test document",
+      "help": "Paste a JSON object. It is stored like data sent by a connected system.",
+      "send": "Send",
+      "sent": "Test data stored",
+      "invalidJson": "Enter a valid JSON object."
+    },
+    "connect": {
+      "endpoints": "Endpoints",
+      "append": "Add entries",
+      "replace": "Replace all data",
+      "read": "Read data",
+      "copy": "Copy",
+      "copied": "Copied to the clipboard",
+      "copyFailed": "Couldn't copy to the clipboard"
+    },
+    "tokens": {
+      "title": "Tokens",
+      "help": "A token can only write to this feed. Send it in the Authorization header as Bearer followed by the token.",
+      "new": "New token",
+      "namePlaceholder": "For example: Make scenario",
+      "empty": "No tokens yet.",
+      "lastUsed": "Last used",
+      "revoke": "Revoke",
+      "revoked": "Revoked",
+      "revokeTitle": "Revoke token?",
+      "revokeMessage": "Systems that use “{{name}}” can no longer write to the feed.",
+      "secretTitle": "Copy your token",
+      "secretWarning": "This is the only time the token is shown. Store it in the system that sends the data.",
+      "done": "Done",
+      "memberHint": "Tokens of organization members and AI agents can also write to feeds, including to several feeds at once."
+    },
+    "examples": {
+      "curl": "From a script (curl)",
+      "make": "From Make",
+      "makeStep1": "Add an HTTP › Make a request module.",
+      "makeStep2": "Set the URL to the “Add entries” endpoint and the method to POST.",
+      "makeStep3": "Add an Authorization header whose value is Bearer followed by your token.",
+      "makeStep4": "Choose a raw JSON body with the fields to show. Include an external_id so that edited items replace their entry instead of adding a new one."
+    },
+    "errors": {
+      "load": "Couldn't load the feeds.",
+      "loadFeed": "Couldn't load the feed.",
+      "save": "Couldn't save the feed: {{message}}",
+      "quota": "Your organization has reached its feed limit.",
+      "action": "The action failed: {{message}}"
+    },
+    "media": {
+      "help": "Images and videos at the feed's copied media fields are stored in Castmill, so screens keep showing them after the original links expire.",
+      "storage": "Stored: {{size}}",
+      "empty": "No media yet.",
+      "noFields": "This feed doesn't copy media. Add media fields in Settings.",
+      "retry": "Retry",
+      "retried": "Copying the media again.",
+      "entries": "Entries: {{count}}",
+      "seconds": "{{seconds}} s",
+      "status": {
+        "pending": "Copying",
+        "ready": "Stored",
+        "failed": "Failed"
+      },
+      "failures": {
+        "not_found": "The original file was not found.",
+        "forbidden": "The source denied access.",
+        "unauthorized": "The source requires authentication.",
+        "too_large": "The file is too large.",
+        "unsupported_type": "The file is not a supported image or video.",
+        "quota_exceeded": "The organization's storage is full.",
+        "timeout": "The source didn't answer in time.",
+        "blocked_host": "The URL points to a private network.",
+        "other": "The file couldn't be copied."
+      },
+      "errors": {
+        "load": "Couldn't load the feed's media."
+      }
+    }
+  },
+  "automations": {
+    "title": "Automations",
+    "description": "Make displays react to events, such as interrupting playback with other content at specific times.",
+    "new": "New automation",
+    "newDescription": "Give the automation a name. You can add rules and assign displays afterwards.",
+    "namePlaceholder": "e.g. Hourly spring offer",
+    "created": "Automation \"{{name}}\" created",
+    "deleted": "Automation \"{{name}}\" deleted",
+    "saved": "Automation saved",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "disabledHint": "Disabled automations never fire on displays.",
+    "toggleEnabled": "Enable or disable \"{{name}}\"",
+    "noUpcoming": "No upcoming firings",
+    "noRules": "No rules yet",
+    "moreRules": "+{{count}} more",
+    "assignmentsDetail": "{{devices}} devices and {{channels}} channels",
+    "noAccess": "You do not have permission to view automations.",
+    "deleteTitle": "Delete automation",
+    "deleteMessage": "Are you sure you want to delete \"{{name}}\"? Assigned displays stop running it immediately.",
+    "editorDescription": "Rules run from top to bottom; when several rules fire at the same moment, the first one wins.",
+    "columns": {
+      "rules": "Rules",
+      "assignments": "Assigned to",
+      "nextFiring": "Next firing"
+    },
+    "tabs": {
+      "rules": "Rules ({{count}})",
+      "assignments": "Assignments ({{count}})"
+    },
+    "errors": {
+      "loadFailed": "Could not load automations",
+      "saveFailed": "Could not save the automation: {{error}}",
+      "deleteFailed": "Could not delete the automation: {{error}}",
+      "runFailed": "Could not run the rule: {{error}}"
+    },
+    "rules": {
+      "title": "Rules",
+      "empty": "This automation has no rules yet. Add a rule to decide when something happens and what the displays do.",
+      "add": "Add rule",
+      "edit": "Edit rule",
+      "save": "Save rule",
+      "saved": "Rules saved",
+      "when": "When",
+      "then": "Then",
+      "options": "Options",
+      "chooseSource": "Choose what triggers the rule",
+      "chooseAction": "Choose what the displays do",
+      "cooldown": "Cooldown (seconds)",
+      "cooldownHint": "Minimum time between two runs of this rule on the same display. Use 0 for no cooldown.",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "moveUpN": "Move rule {{n}} up",
+      "moveDownN": "Move rule {{n}} down",
+      "runNow": "Run now",
+      "runNowN": "Run rule {{n}} now",
+      "editN": "Edit rule {{n}}",
+      "deleteN": "Delete rule {{n}}",
+      "deleteTitle": "Delete rule",
+      "deleteMessage": "Are you sure you want to delete this rule?",
+      "moved": "Rule moved from position {{from}} to {{to}}",
+      "runSuccess": "Rule sent to {{count}} displays"
+    },
+    "summary": {
+      "hourly": "Every hour at :{{minute}}",
+      "interval": "Every {{minutes}} minutes",
+      "times": "Every day at {{times}}",
+      "once": "Once on {{date}} at {{time}}",
+      "unknown": "Unknown schedule",
+      "dateRange": "from {{start}} to {{end}}",
+      "dateFrom": "starting {{date}}",
+      "dateUntil": "until {{date}}",
+      "noPlaylist": "No playlist selected",
+      "playlistFallback": "playlist #{{id}}",
+      "interruptImmediately": "Interrupt with \"{{playlist}}\" immediately",
+      "interruptAfterItem": "Interrupt with \"{{playlist}}\" after the current item",
+      "plays": "play {{count}} times",
+      "highPriority": "high priority",
+      "cooldown": "Cooldown: {{seconds}} s",
+      "unknownType": "Unsupported type \"{{type}}\""
+    },
+    "validation": {
+      "minute": "Enter a minute between 0 and 59.",
+      "interval": "The interval must be a whole number of minutes between 5 and 1440.",
+      "timesCount": "Add between 1 and 48 times.",
+      "time": "Enter times as HH:MM.",
+      "timesDuplicate": "Each time can only be listed once.",
+      "date": "Enter a valid date.",
+      "schedule": "Choose a schedule.",
+      "weekdays": "Select at least one weekday.",
+      "window": "The daily window must start before it ends.",
+      "dates": "The start date must be on or before the end date.",
+      "timezone": "Enter a valid time zone, e.g. Europe/Stockholm, or leave it empty.",
+      "playlist": "Choose a playlist.",
+      "start": "Choose when the interruption starts.",
+      "maxWait": "The maximum wait must be between 0 and 3600 seconds.",
+      "plays": "Plays must be between 1 and 100.",
+      "priority": "Choose a priority.",
+      "cooldown": "The cooldown must be a whole number of seconds (0 or more).",
+      "source": "Choose a trigger.",
+      "action": "Choose an action."
+    },
+    "sources": {
+      "clock": {
+        "label": "Clock",
+        "description": "At specific times: every hour, every few minutes, at fixed times or once."
+      }
+    },
+    "actions": {
+      "interrupt": {
+        "label": "Interrupt with content",
+        "description": "Temporarily play a playlist, then return to the regular schedule."
+      }
+    },
+    "clock": {
+      "repeat": "Repeat",
+      "types": {
+        "hourly": "Hourly",
+        "interval": "Every N minutes",
+        "times": "At times",
+        "once": "Once"
+      },
+      "minute": "Minute past the hour",
+      "everyMinutes": "Every (minutes)",
+      "intervalHint": "Minimum {{min}} minutes, counted from the start of the time window (or midnight).",
+      "times": "Times of day",
+      "timeN": "Time {{n}}",
+      "removeTime": "Remove time",
+      "removeTimeN": "Remove time {{time}}",
+      "addTime": "Add time",
+      "date": "Date",
+      "time": "Time",
+      "weekdays": "Days of the week",
+      "window": "Only during a daily time window",
+      "from": "From",
+      "to": "To",
+      "dates": "Only within a date range",
+      "startDate": "Start date",
+      "endDate": "End date",
+      "timezone": "Time zone",
+      "timezonePlaceholder": "Display time zone",
+      "timezoneHint": "Leave empty to use each display's own time zone.",
+      "previewTitle": "Next firings",
+      "previewTimezone": "Shown in {{timezone}}.",
+      "previewDeviceTimezone": "Each display uses its own time zone; shown here in {{timezone}}.",
+      "previewFailed": "Could not calculate the next firings.",
+      "previewEmpty": "This schedule never fires in the coming days."
+    },
+    "interrupt": {
+      "playlist": "Playlist",
+      "choosePlaylist": "Search for a playlist…",
+      "createPlaylist": "Create a playlist",
+      "start": "Start",
+      "startModes": {
+        "immediately": "Immediately",
+        "after_current_item": "After the current item"
+      },
+      "startHints": {
+        "immediately": "Stops the current item right away; afterwards playback continues with the next item.",
+        "after_current_item": "Waits for the current item to finish so nothing is cut off."
+      },
+      "maxWait": "Maximum wait (seconds)",
+      "maxWaitHint": "If the current item is longer than this, interrupt anyway.",
+      "plays": "Plays",
+      "playsHint": "How many times the playlist is played before returning.",
+      "priority": "Priority",
+      "priorities": {
+        "normal": "Normal",
+        "high": "High"
+      },
+      "priorityHints": {
+        "normal": "A regular interruption.",
+        "high": "Takes precedence over normal-priority interruptions."
+      }
+    },
+    "assignments": {
+      "description": "Choose the displays that run this automation, directly or through their channels.",
+      "devices": "Devices",
+      "channels": "Channels",
+      "none": {
+        "devices": "No devices assigned",
+        "channels": "No channels assigned"
+      },
+      "search": {
+        "devices": "Search devices…",
+        "channels": "Search channels…"
+      },
+      "remove": "Remove {{name}}",
+      "loadFailed": "Could not load the list",
+      "noResults": "No matches",
+      "save": "Save assignments",
+      "saved": "Assignments saved"
+    },
+    "warnings": {
+      "missing": "{{device}} does not support {{capability}}",
+      "unsupported": "Does not support {{capability}}",
+      "viaChannels": "Displays reached through channels"
+    },
+    "channel": {
+      "title": "Automations",
+      "manage": "Manage automations",
+      "empty": "No automations are assigned to this channel.",
+      "loadFailed": "Could not load the automations of this channel.",
+      "showMarkers": "Show firings on the calendar",
+      "firingsThisWeek": "({{count}} this week)",
+      "upcoming": "Firings this week",
+      "markerLabel": "{{name}} at {{time}}"
+    },
+    "device": {
+      "title": "Automations",
+      "description": "Automations this device runs, assigned directly or through its channels.",
+      "refresh": "Refresh automations",
+      "empty": "No automations apply to this device.",
+      "loadFailed": "Could not load the automations of this device.",
+      "viaDevice": "Assigned directly",
+      "viaChannel": "Via channel {{name}}",
+      "upcoming": "Upcoming firings",
+      "noUpcoming": "No firings in the next days.",
+      "timezoneNote": "Times are shown in the device time zone ({{timezone}})."
     }
   }
 }

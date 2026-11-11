@@ -32,6 +32,11 @@ defmodule CastmillWeb.Router do
     plug(:authenticate_with_token)
   end
 
+  # Data feeds authenticate in their controller (feed, member or agent tokens).
+  pipeline :feeds_api do
+    plug(:accepts, ["json"])
+  end
+
   scope "/", CastmillWeb do
     pipe_through([:browser, :redirect_if_user_is_authenticated])
 
@@ -209,6 +214,7 @@ defmodule CastmillWeb.Router do
     get("/:device_id/channels", DeviceController, :get_channels)
     get("/:device_id/playlists/:playlist_id", DeviceController, :get_playlist)
     get("/:device_id/schedule", DeviceController, :get_schedule)
+    get("/:device_id/automations", DeviceController, :get_automations)
 
     put("/:device_id/channels/:channel_id", DeviceController, :add_channel)
     delete("/:device_id/channels/:channel_id", DeviceController, :remove_channel)
@@ -290,6 +296,17 @@ defmodule CastmillWeb.Router do
   # Addon API routes - supports both public and authenticated endpoints
   # Public routes (defined via public_api_routes/0) don't require authentication
   # Routes are mounted under /api/addons/:addon_id/*path
+  scope "/api/v1/feeds", CastmillWeb do
+    pipe_through(:feeds_api)
+
+    post("/entries", FeedApiController, :append_many)
+    get("/:id", FeedApiController, :show)
+    post("/:id/entries", FeedApiController, :append)
+    put("/:id/data", FeedApiController, :replace)
+    delete("/:id/entries", FeedApiController, :clear)
+    delete("/:id/entries/:entry_id", FeedApiController, :delete_entry)
+  end
+
   scope "/api/addons", CastmillWeb do
     pipe_through(:dashboard)
 
@@ -321,9 +338,44 @@ defmodule CastmillWeb.Router do
     get("/network/settings", NetworkDashboardController, :show_settings)
     put("/network/settings", NetworkDashboardController, :update_settings)
     get("/network/stats", NetworkDashboardController, :show_stats)
+    get("/network/widgets", NetworkDashboardController, :list_widgets)
+
+    get(
+      "/network/widgets/:widget_id/organizations",
+      NetworkDashboardController,
+      :list_widget_organizations
+    )
+
+    put("/network/widgets/:widget_id/access", NetworkDashboardController, :update_widget_access)
+
+    patch(
+      "/network/widgets/:widget_id/organizations",
+      NetworkDashboardController,
+      :update_widget_organizations
+    )
+
     get("/network/organizations", NetworkDashboardController, :list_organizations)
     post("/network/organizations", NetworkDashboardController, :create_organization)
     delete("/network/organizations/:id", NetworkDashboardController, :delete_organization)
+
+    get(
+      "/network/organizations/:organization_id/integration-settings",
+      NetworkDashboardController,
+      :list_organization_integration_settings
+    )
+
+    put(
+      "/network/organizations/:organization_id/integration-settings/:key",
+      NetworkDashboardController,
+      :update_organization_integration_settings
+    )
+
+    delete(
+      "/network/organizations/:organization_id/integration-settings/:key",
+      NetworkDashboardController,
+      :delete_organization_integration_settings
+    )
+
     get("/network/users", NetworkDashboardController, :list_users)
     get("/network/invitations", NetworkDashboardController, :list_invitations)
     delete("/network/invitations/:id", NetworkDashboardController, :delete_invitation)
@@ -386,6 +438,45 @@ defmodule CastmillWeb.Router do
       "/organizations/:organization_id/widgets/:widget_id",
       OrganizationController,
       :get_widget
+    )
+
+    # Data feeds (see agents/systems/DATA-FEEDS.md)
+    get("/organizations/:organization_id/feeds", FeedController, :index)
+    post("/organizations/:organization_id/feeds", FeedController, :create)
+    get("/organizations/:organization_id/feeds/:id", FeedController, :show)
+    patch("/organizations/:organization_id/feeds/:id", FeedController, :update)
+    delete("/organizations/:organization_id/feeds/:id", FeedController, :delete)
+    get("/organizations/:organization_id/feeds/:id/entries", FeedController, :entries)
+    post("/organizations/:organization_id/feeds/:id/test-entry", FeedController, :test_entry)
+    delete("/organizations/:organization_id/feeds/:id/entries", FeedController, :clear)
+
+    delete(
+      "/organizations/:organization_id/feeds/:id/entries/:entry_id",
+      FeedController,
+      :delete_entry
+    )
+
+    get("/organizations/:organization_id/feeds/:id/tokens", FeedController, :tokens)
+    post("/organizations/:organization_id/feeds/:id/tokens", FeedController, :create_token)
+    get("/organizations/:organization_id/feeds/:id/media", FeedController, :media)
+
+    post(
+      "/organizations/:organization_id/feeds/:id/media/:media_id/retry",
+      FeedController,
+      :retry_media
+    )
+
+    delete(
+      "/organizations/:organization_id/feeds/:id/tokens/:token_id",
+      FeedController,
+      :revoke_token
+    )
+
+    # List integration-provided choices for a widget option field
+    post(
+      "/organizations/:organization_id/widgets/:widget_id/choices/:field",
+      WidgetChoicesController,
+      :list_choices
     )
 
     # Check if a widget's integration credentials are configured
@@ -462,6 +553,46 @@ defmodule CastmillWeb.Router do
       "/organizations/:organization_id/widgets/:widget_id",
       OrganizationController,
       :update_widget
+    )
+
+    # Automations of the organization (event-driven actions on displays).
+    # Must be declared before the generic organization resources routes.
+    get("/organizations/:organization_id/automations", AutomationController, :index)
+    post("/organizations/:organization_id/automations", AutomationController, :create)
+
+    get(
+      "/organizations/:organization_id/automations/registry",
+      AutomationController,
+      :registry
+    )
+
+    post(
+      "/organizations/:organization_id/automations/preview",
+      AutomationController,
+      :preview
+    )
+
+    get("/organizations/:organization_id/automations/:id", AutomationController, :show)
+    patch("/organizations/:organization_id/automations/:id", AutomationController, :update)
+    put("/organizations/:organization_id/automations/:id", AutomationController, :update)
+    delete("/organizations/:organization_id/automations/:id", AutomationController, :delete)
+
+    put(
+      "/organizations/:organization_id/automations/:automation_id/assignments",
+      AutomationController,
+      :assign
+    )
+
+    post(
+      "/organizations/:organization_id/automations/:automation_id/rules/:rule_id/run",
+      AutomationController,
+      :run_rule
+    )
+
+    get(
+      "/organizations/:organization_id/channels/:channel_id/automations",
+      AutomationController,
+      :channel_automations
     )
 
     # AI agents of the organization (MCP access) and their activity log.
@@ -641,6 +772,9 @@ defmodule CastmillWeb.Router do
 
     # Endpoint to get a playlist for device preview in the dashboard scope
     get("/devices/:device_id/playlists/:playlist_id", DeviceController, :get_playlist)
+
+    # Effective automations of a device (same payload the device receives)
+    get("/devices/:device_id/automations", DeviceController, :get_automations)
 
     # Notification routes
     get("/notifications", NotificationController, :index)

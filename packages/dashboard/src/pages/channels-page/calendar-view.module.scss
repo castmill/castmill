@@ -147,3 +147,24 @@ body {
 :global(:root[data-theme='light']) .current-day {
   background-color: #fdf1cc !important;
 }
+
+/* Point-in-time markers (automation firings) */
+.marker-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 9;
+}
+
+.automation-marker {
+  position: absolute;
+  height: 0.2em;
+  margin-top: -0.1em;
+  background: var(--cm-warning);
+  border-radius: 0.1em;
+  box-shadow: 0 0 0.25em var(--cm-shadow-color);
+  pointer-events: auto;
+}

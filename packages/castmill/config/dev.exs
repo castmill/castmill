@@ -5,6 +5,7 @@ config :castmill, Castmill.Repo,
   username: "postgres",
   password: "postgres",
   hostname: "localhost",
+  port: String.to_integer(System.get_env("POSTGRES_PORT") || "5432"),
   database: "castmill_dev",
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
@@ -76,6 +77,9 @@ config :castmill, CastmillWeb.Endpoint,
 # Enable dev routes for dashboard and mailbox
 config :castmill, dev_routes: true
 
+# Local integration sources may serve choice thumbnails over plain http.
+config :castmill, Castmill.Widgets.Integrations.Choices, allow_http: true
+
 # Do not include metadata nor timestamps in development logs
 config :logger, :console, format: "[$level] $message\n"
 
@@ -104,6 +108,9 @@ config :castmill, :encryption, %{
 
 # widgets json files
 config :castmill, CastmillWeb.Widgets.WidgetsLoader, json_dir: "../widged/dist/widgets"
+
+# Allow SafeHttp (e.g. the RSS fetcher) to reach localhost/private networks in dev.
+config :castmill, Castmill.SafeHttp, allow_private_hosts: true
 
 # BullMQ uses PostgreSQL backend in dev.
 # Local Postgres normally doesn't use SSL. If you point dev at a managed DB that

@@ -246,6 +246,15 @@ defmodule CastmillWeb.PlaylistController do
           %{event: "playlist_updated", playlist_id: playlist_id}
         )
       end)
+
+      # Devices whose automations reference the playlist refetch their payload
+      # (and preload the updated content).
+      Enum.each(playlist_ids, fn id ->
+        case Resources.get_playlist_basic(id) do
+          nil -> :ok
+          playlist -> Castmill.Automations.notify_playlist_changed(playlist.organization_id, id)
+        end
+      end)
     end
 
     if Application.get_env(:castmill, :async_background_tasks, true) do

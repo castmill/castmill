@@ -255,6 +255,18 @@ defmodule CastmillWeb.DevicesChannel do
   end
 
   @impl true
+  def handle_info(%{event: "automations_updated"}, socket) do
+    push(socket, "automations_updated", %{})
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info(%{event: "automation_run"} = message, socket) do
+    push(socket, "automation_run", Map.take(message, [:automation_id, :rule]))
+    {:noreply, socket}
+  end
+
+  @impl true
   def handle_info({:device_response, _data}, socket) do
     # Silently discard timer sync responses sent back to the channel process
     {:noreply, socket}

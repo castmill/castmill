@@ -8,12 +8,14 @@ import { AddOnTree } from '../../classes/addon-tree';
 import { AddOnNode } from '../../interfaces/addon-node.interface';
 import { store, setStore } from '../../store/store';
 import { baseUrl } from '../../env';
-import { TbChartHistogram, TbRobot } from 'solid-icons/tb';
+import { TbChartHistogram, TbRobot, TbRss, TbBolt } from 'solid-icons/tb';
 import { AiOutlineTeam, AiOutlineTags } from 'solid-icons/ai';
 import { RiEditorOrganizationChart } from 'solid-icons/ri';
 import { BsCalendarWeek, BsBuilding } from 'solid-icons/bs';
+import { FiGrid } from 'solid-icons/fi';
 import { useI18n } from '../../i18n';
 import { useNavigate, useLocation } from '@solidjs/router';
+import { canPerformAction } from '../../services/permissions.service';
 
 const addOnBasePath = `${baseUrl}/assets/addons`;
 
@@ -159,6 +161,20 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
           level={0}
           icon={BsCalendarWeek}
         />
+        <Show
+          when={canPerformAction(
+            store.permissions?.matrix,
+            'automations',
+            'list'
+          )}
+        >
+          <PanelItem
+            to={`/org/${store.organizations.selectedId}/automations`}
+            text={t('sidebar.automations')}
+            level={0}
+            icon={TbBolt}
+          />
+        </Show>
 
         <PanelItem
           to={`/org/${store.organizations.selectedId}/teams`}
@@ -171,6 +187,12 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
           text={t('sidebar.tags')}
           level={0}
           icon={AiOutlineTags}
+        />
+        <PanelItem
+          to={`/org/${store.organizations.selectedId}/feeds`}
+          text={t('sidebar.feeds')}
+          level={0}
+          icon={TbRss}
         />
         <Show
           when={
@@ -229,6 +251,12 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
               text={t('sidebar.networkUsers')}
               level={1}
               icon={IoPersonOutline}
+            />
+            <PanelItem
+              to="/network/widgets"
+              text={t('sidebar.networkWidgets')}
+              level={1}
+              icon={FiGrid}
             />
             <Show when={addonsNetworkTree}>
               <SidePanelTree

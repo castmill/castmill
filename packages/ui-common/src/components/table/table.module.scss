@@ -94,6 +94,11 @@
       font: inherit;
       cursor: pointer;
       outline: inherit;
+
+      &:disabled {
+        cursor: not-allowed;
+        opacity: 0.35;
+      }
     }
 
     thead {

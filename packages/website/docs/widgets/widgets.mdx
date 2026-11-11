@@ -60,12 +60,14 @@ This widget displays an image for 10 seconds. The `options_schema` defines what 
 :::warning[Critical: Always Use Relative Units]
 **Never use absolute pixel units (`px`) in your widgets!** Digital signage displays come in many resolutions (1080p, 4K, vertical displays, etc.). Using pixels will make your widget look different on each screen size.
 
+Templates can opt into a base font size that follows the rendered size by setting `"fontScale": true` on the root template component. For opted-in templates, **1em is 10px when the widget is 1920×1080**, scaled by the smaller of the width and height ratios (5px in a 960×540 zone, 5.625px for a 1080×1920 portrait widget). Sizes in `em` therefore look the same in any player region, layout zone or dashboard preview.
+
 **✅ Use these relative units instead:**
-- **`em`** - Relative to the element's font size (best for padding, margins, borders)
-- **`rem`** - Relative to the root font size (good for consistent spacing)
+- **`em`** - Relative to the widget's size (font sizes, padding, margins, borders, box sizes)
 - **`%`** - Percentage of parent container (great for widths and heights)
-- **`vh`/`vw`** - Viewport height/width (useful for full-screen sections)
 - **Unitless values** - For properties like `flex`, `lineHeight`
+
+Avoid `rem` and viewport units (`vw`, `vh`, `vmin`): they follow the page or the window, not the widget, so they break in layout zones and previews.
 
 **Examples:**
 ```json
@@ -429,9 +431,15 @@ Slideshow of multiple images with transition effects.
 ```typescript
 {
   images: string[] | Binding,      // Array of image URLs
-  imageDuration: number            // Duration per image (seconds)
+  imageDuration: number,           // Duration per image (seconds)
+  transition?: "slide" | "fade"    // Default "slide" (slide + zoom); "fade" cross-fades
 }
 ```
+
+Images are cached for offline playback. An image that can't be cached (for
+example, its host sends no CORS headers) is shown from its original URL, so it
+only displays while the device is online. The device token is only sent to
+the Castmill server, never to external image hosts.
 
 **Example**:
 ```json
@@ -647,6 +655,79 @@ Each media item in Castmill has a `files` array containing multiple `File` objec
 
 This pattern works identically for both images and videos, ensuring optimal media delivery across all Castmill contexts.
 
+### Formatting Values
+
+Integrations deliver raw values; templates format them on the player, so time-based content (such as "upcoming
+viewings") stays correct even on a screen that is offline. Three bindings do this:
+
+**`fmt`** – a text with placeholders `{path | formatter:arg}`. If any placeholder is empty, the whole text is
+empty, so `kr/mån` never appears without a fee:
+
+```json
+{ "type": "text", "name": "price", "opts": { "text": { "fmt": "{data.price | number} kr" }, "autofit": {} } }
+```
+
+| Formatter | Example | Result (sv) |
+|-----------|---------|-------------|
+| `number[:decimals[:group[:decimal]]]` | `{data.price \| number}` | `4 950 000` |
+| `date:pattern[:locale]` | `{data.start \| date:'ddd D/M [kl.] HH:mm'}` | `tor 12/11 kl. 17:00` |
+| `timed` | `{data.start \| timed \| date:'HH'}` | empty at midnight |
+| `upper`, `lower`, `capitalize`, `trim` | `{data.day \| capitalize}` | `Torsdag` |
+| `truncate:n` | `{data.title \| truncate:20}` | at most 20 characters + `…` |
+| `default:'x'` | `{data.fee \| default:'—'}` | `—` when missing |
+
+Day/month names and number separators follow the organization's display locale (or the template's
+`options.locale`). Use `@now` for the current time; it re-evaluates every minute.
+
+**`list`** – filter, sort, map, skip, limit and join an array:
+
+```json
+{
+  "list": {
+    "key": "data.viewings",
+    "where": [{ "key": "$.end", "gte": "@now" }],
+    "sort": "$.start",
+    "limit": 2,
+    "item": { "fmt": "{$.start | date:'D/M'} kl.{$.start | date:'HH'}" },
+    "join": ", "
+  }
+}
+```
+
+**`first`** – the first non-empty value, for fallbacks and optional parts:
+
+```json
+{ "first": [{ "key": "options.price_text" }, { "fmt": "{data.price | number} kr" }, "On request"] }
+```
+
+Always wrap format texts as `{ "fmt": … }`; plain strings are shown as-is. Invalid bindings are rejected when the
+widget is uploaded.
+
+### Editable Texts
+
+Mark a `text` component as `editable` so users can replace it for one playlist item, directly in the
+widget preview (**Edit texts**):
+
+```json
+{
+  "type": "text",
+  "name": "price",
+  "opts": { "text": { "fmt": "{data.price | number} kr" } },
+  "editable": { "key": "price", "label": "Price", "max_length": 40 }
+}
+```
+
+| Attribute | Meaning |
+|-----------|---------|
+| `key` | Override key: a string, or a binding such as `{ "fmt": "fact.{$.id}" }` for texts inside lists. |
+| `label` | Shown in the editor (a string or a binding). Translate it in `translations.<locale>.editable`. |
+| `multiline` | Allow line breaks (default `false`). |
+| `max_length` | Maximum length, 1 to 5000 (default 500). |
+
+Edited texts are shown exactly as typed: formatting does not apply to them, but styles and autofit do.
+Avoid `text-transform` on editable texts (use the `upper`/`lower` formatters instead), since it would also
+change the case of edited texts. Users can also hide a text for an item.
+
 ---
 
 ## Schemas
@@ -697,6 +778,53 @@ Defines configurable parameters for your widget:
 | `ref` | Reference to media/playlist | `collection`, `required`, `description` |
 | `map` | Nested object | `schema`, `required` |
 | `list` | Array of items | `items`, `required` |
+
+### Choices from Integrations
+
+Widgets with an integration can let users pick values that only the integration knows
+(listings, photos, calendars, accounts) instead of typing identifiers. Add `choices` to a
+top-level `string` field, or to a `list` field of strings:
+
+```json
+{
+  "listing": {
+    "type": "string",
+    "required": true,
+    "choices": { "list": "listings", "display": "cards", "search": true }
+  },
+  "photos": {
+    "type": "list",
+    "items": { "type": "string" },
+    "choices": {
+      "list": "images",
+      "display": "grid",
+      "multiple": true,
+      "ordered": true,
+      "max": 30,
+      "depends_on": ["listing"]
+    }
+  }
+}
+```
+
+| Attribute | Meaning |
+|-----------|---------|
+| `list` | Name of the choice list the integration provides (required). |
+| `display` | `list` (default), `cards` (thumbnail and text) or `grid` (thumbnail tiles). |
+| `search` | Shows a search box. |
+| `multiple` | Several values; required on `list` fields and only allowed there. |
+| `ordered` | With `multiple`: the user can reorder the selection. |
+| `min`, `max` | Selection bounds for `multiple`. |
+| `depends_on` | Fields whose values the integration needs; the field stays disabled until they are set. |
+
+The widget's integration fetcher must implement the optional `choices/3` callback, or the
+widget is rejected on upload. The built-in `feeds` list needs no integration: it lets users pick one of
+the organization's data feeds, and the widget then receives the feed's data as `data.entries` (list
+feeds, newest first) or `data.document` (document feeds), plus `data.updated_at`. External systems such
+as Make or Zapier write to feeds through `/api/v1/feeds`; see the feed's **Connect** tab in the
+dashboard. The stored values are plain identifiers from the source, so
+templates and fetchers read them like any typed value. Use the field's `placeholder`
+translation for the hint shown when a multiple selection is empty.
 
 ### Data Schema
 
@@ -1349,4 +1477,3 @@ POST /api/webhook/widgets/custom-data-handler
 ---
 
 *For additional help, consult the [Player Documentation](/docs/player/widgets), or reach out to the Castmill community.*
-

@@ -53,4 +53,29 @@ export interface PlayerGlobals {
    * provided by the player host.
    */
   setPlaybackBlocked?: (source: object, block?: PlayerRuntimeError) => void;
+  /**
+   * Locale for template formatters (day/month names, number separators), e.g.
+   * the organization's display locale sent with each playlist. Defaults to "en".
+   */
+  locale?: string;
+  /**
+   * Reports nested playback readiness separately from the nearest item's
+   * blocked state, so finite parent playback can wait without skipping it.
+   */
+  setPlaybackReadinessBlocked?: (
+    source: object,
+    block?: PlayerRuntimeError
+  ) => void;
+  /**
+   * Called when an item of a playlist created with these globals starts
+   * playing. The device uses it to resume programming at the next item after
+   * an automation interruption. Errors thrown by the callback are ignored.
+   */
+  onItemStart?: (info: PlaylistItemStart) => void;
+}
+
+export interface PlaylistItemStart {
+  playlistId?: number | string;
+  index: number;
+  count: number;
 }

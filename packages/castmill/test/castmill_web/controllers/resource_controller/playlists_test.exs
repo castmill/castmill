@@ -166,6 +166,29 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
     end
   end
 
+  describe "show playlist" do
+    test "includes the display locale in the loaded playlist response", %{
+      conn: conn,
+      organization: organization
+    } do
+      network =
+        Castmill.Repo.get!(Castmill.Networks.Network, organization.network_id)
+        |> Ecto.Changeset.change(default_locale: "sv")
+        |> Castmill.Repo.update!()
+
+      playlist =
+        playlist_fixture(%{
+          organization_id: organization.id,
+          name: "localized playlist"
+        })
+
+      conn = get(conn, "/api/organizations/#{organization.id}/playlists/#{playlist.id}")
+
+      assert %{"data" => %{"locale" => "sv"}} = json_response(conn, 200)
+      assert network.default_locale == "sv"
+    end
+  end
+
   describe "create playlists" do
     test "creates a new playlist", %{conn: conn, organization: organization} do
       playlist_params = %{
@@ -1462,6 +1485,7 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
         Widgets.create_widget(%{
           name: "Spotify Test Widget #{System.unique_integer([:positive])}",
           slug: "spotify-test-#{System.unique_integer([:positive])}",
+          is_system: true,
           template: %{"html" => "<div>Spotify Test</div>"}
         })
 
@@ -1556,6 +1580,7 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
         Widgets.create_widget(%{
           name: "Simple Widget #{System.unique_integer([:positive])}",
           slug: "simple-#{System.unique_integer([:positive])}",
+          is_system: true,
           template: %{"html" => "<div>Simple</div>"}
         })
 

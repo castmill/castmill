@@ -11,4 +11,5 @@ export interface BaseComponentProps {
   style: JSX.CSSProperties;
   timeline: Timeline;
   onReady: () => void;
+  onLayoutUpdate?: () => void;
 }

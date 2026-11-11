@@ -660,3 +660,37 @@
     }
   }
 }
+
+.widget-scope {
+  display: inline-block;
+  padding: 0.25em 0.6em;
+  border-radius: 0.3em;
+  font-size: 0.85em;
+  font-weight: 500;
+  white-space: nowrap;
+  border: 1px solid transparent;
+
+  &--system {
+    background: #eef0f4;
+    color: #3d4452;
+    border-color: #cfd4dd;
+  }
+
+  &--network {
+    background: #f1ebfa;
+    color: #5b2d9e;
+    border-color: #d6c4f0;
+  }
+
+  &--organization {
+    background: #e7f6ec;
+    color: #1b6b3a;
+    border-color: #b7e2c6;
+  }
+
+  &--unassigned {
+    background: #fdf1e6;
+    color: #8a4b0f;
+    border-color: #f2d1b0;
+  }
+}

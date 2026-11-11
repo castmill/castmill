@@ -949,7 +949,7 @@ defmodule Castmill.WidgetsTest do
       organization = organization_fixture(%{network_id: network.id})
 
       {:ok, widget} =
-        Widgets.create_widget(%{
+        Widgets.create_organization_widget(organization.id, %{
           name: "Usage Test Widget",
           slug: "usage-test-widget",
           template: %{},
@@ -1000,7 +1000,7 @@ defmodule Castmill.WidgetsTest do
       organization = organization_fixture(%{network_id: network.id})
 
       {:ok, widget} =
-        Widgets.create_widget(%{
+        Widgets.create_organization_widget(organization.id, %{
           name: "Delete Test Widget",
           slug: "delete-test-widget",
           template: %{},
@@ -1049,6 +1049,9 @@ defmodule Castmill.WidgetsTest do
 
       # Verify widget_config is also deleted
       assert Widgets.get_widget_config(playlist.id, playlist_item.id) == nil
+
+      # The playlist item is removed too, not left orphaned in the linked list.
+      assert Castmill.Repo.get(Castmill.Resources.PlaylistItem, playlist_item.id) == nil
     end
   end
 end

@@ -15,5 +15,7 @@
 
   .content {
     flex-grow: 1;
+    // Let wide page content shrink instead of squeezing the side panel.
+    min-width: 0;
   }
 }

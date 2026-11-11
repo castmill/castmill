@@ -2,7 +2,8 @@
 import 'fake-indexeddb/auto';
 import { describe, it, expect, vi } from 'vitest';
 
-import { ResourceManager } from '../src/resource-manager';
+import { ResourceManager, urlOrigin } from '../src/resource-manager';
+import type { CacheBackend } from '../src/cache-backend';
 import { Cache } from '../src/cache';
 import { StorageMockup } from './storage.mockup';
 
@@ -434,6 +435,173 @@ describe('ResourceManager', () => {
       expect(await manager.getFreshData(uri)).to.be.undefined;
       // The cached copy remains available for offline startup.
       expect(await manager.getData(uri, 0)).to.eql({ version: 1 });
+    });
+  });
+
+  describe('auth header scoping', () => {
+    const apiBase = 'https://api.castmill.io/';
+    const auth = (token: string) => ({ Authorization: `Bearer ${token}` });
+    let fetchMock: Mock;
+
+    beforeEach(() => {
+      fetchMock = vi.fn(async () => new Response('{}', { status: 200 }));
+      vi.stubGlobal('fetch', fetchMock);
+    });
+
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    const stubCache = () => {
+      const set = vi.fn(async (url: string) => ({
+        url,
+        cachedUrl: `blob:${url}`,
+      }));
+      const cache = {
+        init: vi.fn(async () => undefined),
+        list: vi.fn(async () => []),
+        get: vi.fn(async () => undefined),
+        hasUrl: vi.fn(async () => false),
+        set,
+      } as unknown as CacheBackend;
+      return { cache, set };
+    };
+
+    const headersFor = (set: Mock, url: string) =>
+      set.mock.calls.find(([calledUrl]) => calledUrl === url)?.[3]?.headers;
+
+    it('sends the token only to the configured API origin', async () => {
+      const { cache, set } = stubCache();
+      const manager = new ResourceManager(cache, {
+        authToken: 'device-token',
+        authOrigins: [apiBase],
+      });
+
+      await manager.getMedia('https://api.castmill.io/medias/a.jpg');
+      await manager.getMedia('https://broker.images.castmill.io/e/1?w=1920');
+      await manager.cacheMedia('https://cdn.example.com/b.png');
+      await manager.getFreshData('https://api.castmill.io/devices/1/data');
+
+      expect(headersFor(set, 'https://api.castmill.io/medias/a.jpg')).toEqual(
+        auth('device-token')
+      );
+      expect(
+        headersFor(set, 'https://broker.images.castmill.io/e/1?w=1920')
+      ).toEqual({});
+      expect(headersFor(set, 'https://cdn.example.com/b.png')).toEqual({});
+      expect(headersFor(set, 'https://api.castmill.io/devices/1/data')).toEqual(
+        auth('device-token')
+      );
+    });
+
+    it('treats different ports and schemes as different origins', async () => {
+      const { cache, set } = stubCache();
+      const manager = new ResourceManager(cache, {
+        authToken: 'device-token',
+        authOrigins: ['http://localhost:4000'],
+      });
+
+      await manager.getMedia('http://localhost:4000/medias/a.jpg');
+      await manager.getMedia('http://localhost:4100/images/1/2');
+      await manager.getMedia('https://localhost:4000/medias/a.jpg');
+
+      expect(headersFor(set, 'http://localhost:4000/medias/a.jpg')).toEqual(
+        auth('device-token')
+      );
+      expect(headersFor(set, 'http://localhost:4100/images/1/2')).toEqual({});
+      expect(headersFor(set, 'https://localhost:4000/medias/a.jpg')).toEqual(
+        {}
+      );
+    });
+
+    it('sends no token when no auth origins can be resolved', async () => {
+      const { cache, set } = stubCache();
+      const manager = new ResourceManager(cache, {
+        authToken: 'device-token',
+        authOrigins: ['not a url'],
+      });
+
+      await manager.getMedia('https://api.castmill.io/medias/a.jpg');
+
+      expect(headersFor(set, 'https://api.castmill.io/medias/a.jpg')).toEqual(
+        {}
+      );
+    });
+
+    it('defaults to the document origin and sends nothing without a token', async () => {
+      vi.stubGlobal('location', { href: 'https://app.castmill.io/player/' });
+
+      const scoped = stubCache();
+      await new ResourceManager(scoped.cache, {
+        authToken: 'device-token',
+      }).getMedia('/medias/a.jpg');
+      await new ResourceManager(scoped.cache, {
+        authToken: 'device-token',
+      }).getMedia('https://api.castmill.io/medias/b.jpg');
+
+      expect(headersFor(scoped.set, '/medias/a.jpg')).toEqual(
+        auth('device-token')
+      );
+      expect(
+        headersFor(scoped.set, 'https://api.castmill.io/medias/b.jpg')
+      ).toEqual({});
+
+      const anonymous = stubCache();
+      await new ResourceManager(anonymous.cache).getMedia('/medias/a.jpg');
+      expect(headersFor(anonymous.set, '/medias/a.jpg')).toEqual({});
+    });
+
+    it('scopes the token on JSON and code fetches', async () => {
+      const cache = {
+        init: vi.fn(async () => undefined),
+        list: vi.fn(async () => [
+          {
+            url: 'https://api.castmill.io/widgets/a.js',
+            cachedUrl: 'blob:a',
+          },
+          { url: 'https://cdn.example.com/b.js', cachedUrl: 'blob:b' },
+        ]),
+        get: vi.fn(async (url: string) => ({ url, cachedUrl: url })),
+        set: vi.fn(async (url: string) => ({ url, cachedUrl: url })),
+      } as unknown as CacheBackend;
+      const manager = new ResourceManager(cache, {
+        authToken: 'device-token',
+        authOrigins: [apiBase],
+      });
+
+      await manager.init();
+      await manager.getData('https://api.castmill.io/devices/1/data', 1e9);
+      await manager.getData('https://data.example.com/feed.json', 1e9);
+
+      const header = (url: string) =>
+        (
+          fetchMock.mock.calls.find(([calledUrl]) => calledUrl === url) as
+            | [string, RequestInit]
+            | undefined
+        )?.[1]?.headers as Record<string, string>;
+      expect(header('https://api.castmill.io/devices/1/data')).toMatchObject(
+        auth('device-token')
+      );
+      expect(header('https://data.example.com/feed.json')).not.toHaveProperty(
+        'Authorization'
+      );
+      expect(header('https://api.castmill.io/widgets/a.js')).toMatchObject(
+        auth('device-token')
+      );
+      expect(header('https://cdn.example.com/b.js')).not.toHaveProperty(
+        'Authorization'
+      );
+    });
+  });
+
+  describe('urlOrigin', () => {
+    it('normalizes origins and rejects unusable URLs', () => {
+      expect(urlOrigin('HTTPS://API.castmill.io:443/x?y=1')).toBe(
+        'https://api.castmill.io'
+      );
+      expect(urlOrigin('http://localhost:4000')).toBe('http://localhost:4000');
+      expect(urlOrigin('data:image/png;base64,AAAA')).toBeUndefined();
+      expect(urlOrigin('relative/path')).toBeUndefined();
     });
   });
 });

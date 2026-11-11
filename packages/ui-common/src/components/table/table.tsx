@@ -30,6 +30,8 @@ export interface TableAction<Item> {
   label: string | (() => string);
   props?: (item: Item) => Record<string, any>;
   handler: (item: Item) => void;
+  // Disables the action for rows it does not apply to.
+  disabled?: (item: Item) => boolean;
 }
 
 export interface TableProps<
@@ -250,9 +252,12 @@ export const Table = <
                         {(action) => (
                           <button
                             aria-label={`${getActionLabel(action)} ${item.name}`} // Providing an aria-label for accessibility and testing
+                            disabled={action.disabled?.(item) ?? false}
                             onClick={(e) => {
                               e.stopPropagation();
-                              action.handler(item);
+                              if (!action.disabled?.(item)) {
+                                action.handler(item);
+                              }
                             }}
                           >
                             {typeof action.icon === 'function' ? (

@@ -169,7 +169,7 @@ defmodule Castmill.Resources do
         get_playlist_items(id)
         |> Enum.map(&transform_item(&1, playlist.organization_id, display_locale))
 
-      %{playlist | items: items}
+      %{playlist | items: items, locale: display_locale}
     end
   end
 
@@ -228,64 +228,46 @@ defmodule Castmill.Resources do
         display_locale
       )
 
+    feed_data =
+      Castmill.Feeds.widget_data(
+        item.widget_config.widget,
+        organization_id,
+        modified_widget_config_with_defaults.options
+      )
+
     integration_data =
-      case Castmill.Widgets.Integrations.get_integration_data_by_config(item.widget_config.id) do
-        %Castmill.Widgets.Integrations.WidgetIntegrationData{} = data ->
-          {:ok, data}
+      case feed_data do
+        :not_a_feed_widget ->
+          integration_data_for_item(item, organization_id, widget_options_for_filtering)
 
-        nil ->
-          # Try discriminator-based lookup using widget options
-          widget_id = item.widget_config.widget.id
+        {:ok, nil} ->
+          nil
 
-          case Castmill.Widgets.Integrations.get_integration_data_for_widget_with_options(
-                 organization_id,
-                 widget_id,
-                 widget_options_for_filtering
-               ) do
-            %Castmill.Widgets.Integrations.WidgetIntegrationData{} = data ->
-              {:ok, data}
+        {:ok, %{data: data}} ->
+          {:feed, data}
 
-            nil ->
-              # No cached data - try on-demand fetch for PULL integrations
-              try_on_demand_fetch_for_item(
-                organization_id,
-                item.widget_config.id,
-                widget_id,
-                widget_options_for_filtering
-              )
-          end
+        {:error, reason} ->
+          {:error, reason}
       end
 
     # Handle integration data result, tracking any errors
     {modified_widget_config_with_integration, integration_error} =
       case integration_data do
-        {:ok, %Castmill.Widgets.Integrations.WidgetIntegrationData{} = data} ->
-          # Make sure background polling is scheduled for this discriminator so
-          # that pre-existing widget configs (created before polling existed, or
-          # whose scheduler was lost) keep receiving fresh data.
-          maybe_schedule_refresh(
-            data,
+        # Feed data is read directly from the feed: no caching or polling.
+        {:feed, data} ->
+          existing_data = Map.get(modified_widget_config_with_defaults, :data, %{}) || %{}
+
+          {Map.put(modified_widget_config_with_defaults, :data, Map.merge(existing_data, data)),
+           nil}
+
+        other ->
+          apply_integration_data(
+            other,
+            item,
             organization_id,
-            item.widget_config.widget.id,
+            modified_widget_config_with_defaults,
             widget_options_for_filtering
           )
-
-          # Merge integration data into the existing data field (overrides defaults)
-          existing_data = Map.get(modified_widget_config_with_defaults, :data, %{}) || %{}
-          merged_data = Map.merge(existing_data, data.data || %{})
-
-          # Apply max_items filtering if the data has an "items" array
-          # This allows each widget instance to have its own max_items setting
-          # while sharing the same cached data
-          filtered_data = apply_max_items_filter(merged_data, widget_options_for_filtering)
-          {Map.put(modified_widget_config_with_defaults, :data, filtered_data), nil}
-
-        {:error, reason} ->
-          # Fetch failed - return defaults but track the error
-          {modified_widget_config_with_defaults, format_integration_error(reason)}
-
-        nil ->
-          {modified_widget_config_with_defaults, nil}
       end
 
     # Take required fields from item and merge the modified widget data and other info
@@ -302,6 +284,111 @@ defmodule Castmill.Resources do
       Map.put(result, :integration_error, integration_error)
     else
       result
+    end
+  end
+
+  defp integration_data_for_item(item, organization_id, widget_options_for_filtering) do
+    case on_demand_integration(item.widget_config.widget.id) do
+      %Castmill.Widgets.Integrations.WidgetIntegration{} = integration ->
+        existing =
+          Castmill.Widgets.Integrations.Refresh.stored(
+            integration,
+            organization_id,
+            widget_options_for_filtering,
+            item.widget_config.id
+          )
+
+        Castmill.Widgets.Integrations.Refresh.read(
+          integration,
+          existing,
+          organization_id,
+          item.widget_config.widget.id,
+          widget_options_for_filtering,
+          item.widget_config.id
+        )
+
+      nil ->
+        scheduled_integration_data(item, organization_id, widget_options_for_filtering)
+    end
+  end
+
+  # The widget's pull integration when it refreshes on demand, otherwise nil.
+  defp on_demand_integration(widget_id) do
+    case Castmill.Widgets.Integrations.list_integrations(widget_id: widget_id) do
+      [%{integration_type: integration_type} = integration | _]
+      when integration_type in ["pull", "both"] ->
+        if Castmill.Widgets.Integrations.Refresh.on_demand?(integration), do: integration
+
+      _ ->
+        nil
+    end
+  end
+
+  # Integration data for scheduled (polled) integrations.
+  defp scheduled_integration_data(item, organization_id, widget_options_for_filtering) do
+    case Castmill.Widgets.Integrations.get_integration_data_by_config(item.widget_config.id) do
+      %Castmill.Widgets.Integrations.WidgetIntegrationData{} = data ->
+        {:ok, data}
+
+      nil ->
+        # Try discriminator-based lookup using widget options
+        widget_id = item.widget_config.widget.id
+
+        case Castmill.Widgets.Integrations.get_integration_data_for_widget_with_options(
+               organization_id,
+               widget_id,
+               widget_options_for_filtering
+             ) do
+          %Castmill.Widgets.Integrations.WidgetIntegrationData{} = data ->
+            {:ok, data}
+
+          nil ->
+            # No cached data - try on-demand fetch for PULL integrations
+            try_on_demand_fetch_for_item(
+              organization_id,
+              item.widget_config.id,
+              widget_id,
+              widget_options_for_filtering
+            )
+        end
+    end
+  end
+
+  defp apply_integration_data(
+         integration_data,
+         item,
+         organization_id,
+         widget_config,
+         widget_options_for_filtering
+       ) do
+    case integration_data do
+      {:ok, %Castmill.Widgets.Integrations.WidgetIntegrationData{} = data} ->
+        # Make sure background polling is scheduled for this discriminator so
+        # that pre-existing widget configs (created before polling existed, or
+        # whose scheduler was lost) keep receiving fresh data.
+        maybe_schedule_refresh(
+          data,
+          organization_id,
+          item.widget_config.widget.id,
+          widget_options_for_filtering
+        )
+
+        # Merge integration data into the existing data field (overrides defaults)
+        existing_data = Map.get(widget_config, :data, %{}) || %{}
+        merged_data = Map.merge(existing_data, data.data || %{})
+
+        # Apply max_items filtering if the data has an "items" array
+        # This allows each widget instance to have its own max_items setting
+        # while sharing the same cached data
+        filtered_data = apply_max_items_filter(merged_data, widget_options_for_filtering)
+        {Map.put(widget_config, :data, filtered_data), nil}
+
+      {:error, reason} ->
+        # Fetch failed - return defaults but track the error
+        {widget_config, format_integration_error(reason)}
+
+      nil ->
+        {widget_config, nil}
     end
   end
 
@@ -349,6 +436,26 @@ defmodule Castmill.Resources do
   defp format_integration_error(:no_credentials), do: "Credentials not configured"
   defp format_integration_error(:storage_failed), do: "Failed to store fetched data"
   defp format_integration_error(:timeout), do: "Request timed out"
+  defp format_integration_error(:missing_feed_url), do: "Feed URL is required"
+
+  defp format_integration_error(:blocked_host),
+    do: "Feed URL points to a private or reserved network address"
+
+  defp format_integration_error(:host_not_found), do: "Feed host could not be resolved"
+  defp format_integration_error(:connection_refused), do: "Connection to the feed was refused"
+  defp format_integration_error(:network_error), do: "Network error while fetching the feed"
+  defp format_integration_error(:too_many_redirects), do: "Feed URL redirects too many times"
+
+  defp format_integration_error(:redirect_without_location),
+    do: "Feed URL returned an invalid redirect"
+
+  defp format_integration_error(:feed_too_large), do: "Feed is too large"
+  defp format_integration_error(:rate_limited), do: "Feed server is rate limiting requests (429)"
+  defp format_integration_error(:server_error), do: "Feed server error (5xx)"
+  defp format_integration_error(:http_error), do: "Feed server returned an unexpected response"
+  defp format_integration_error(:xml_parse_error), do: "Feed contains malformed XML"
+  defp format_integration_error(:unsupported_encoding), do: "Feed uses an unsupported encoding"
+  defp format_integration_error(:feed_not_found), do: "The selected data feed no longer exists"
   defp format_integration_error(reason) when is_atom(reason), do: "Fetch failed: #{reason}"
   defp format_integration_error(reason) when is_binary(reason), do: reason
   defp format_integration_error(_reason), do: "Unknown error"
@@ -405,7 +512,12 @@ defmodule Castmill.Resources do
 
             if credentials do
               # Try to fetch data using the fetcher
-              case fetch_with_module(fetcher_module_name, credentials, widget_options) do
+              # The fetcher needs the integration's pull_config as well; item
+              # options may only override the keys the widget declares.
+              fetch_options =
+                Castmill.Widgets.Integrations.Refresh.fetch_options(integration, widget_options)
+
+              case fetch_with_module(fetcher_module_name, credentials, fetch_options) do
                 {:ok, data, _creds} ->
                   # Store the data and return it
                   discriminator_id =
@@ -474,8 +586,11 @@ defmodule Castmill.Resources do
     alias Castmill.Widgets.Integrations
 
     case Integrations.list_integrations(widget_id: widget_id) do
-      [%{integration_type: "pull"} = integration | _] ->
-        if pollable_integration?(integration) and refresh_due?(data, integration) do
+      [%{integration_type: integration_type} = integration | _]
+      when integration_type in ["pull", "both"] ->
+        if pollable_integration?(integration) and
+             not Integrations.Refresh.on_demand?(integration) and
+             refresh_due?(data, integration) do
           discriminator_id =
             build_discriminator_id(integration, widget_options || %{}, organization_id)
 
@@ -803,13 +918,41 @@ defmodule Castmill.Resources do
 
   @doc """
     Removes a playlist.
-    Returns {:error, :playlist_has_channels} if the playlist is used in any channels.
+    Returns {:error, :playlist_has_channels} if the playlist is used in any channels,
+    or {:error, :playlist_has_automations} if an automation rule references it.
   """
   def delete_playlist(%Playlist{} = playlist) do
-    if playlist_has_channels?(playlist) do
-      {:error, :playlist_has_channels}
-    else
-      Repo.delete(playlist)
+    case Repo.transaction(fn ->
+           locked_playlist =
+             Repo.one(
+               from(p in Playlist,
+                 where: p.id == ^playlist.id,
+                 lock: "FOR UPDATE"
+               )
+             )
+
+           cond do
+             is_nil(locked_playlist) ->
+               Repo.rollback(:not_found)
+
+             playlist_has_channels?(locked_playlist) ->
+               Repo.rollback(:playlist_has_channels)
+
+             Castmill.Automations.playlist_referenced?(
+               locked_playlist.organization_id,
+               locked_playlist.id
+             ) ->
+               Repo.rollback(:playlist_has_automations)
+
+             true ->
+               case Repo.delete(locked_playlist) do
+                 {:ok, deleted} -> deleted
+                 {:error, changeset} -> Repo.rollback(changeset)
+               end
+           end
+         end) do
+      {:ok, deleted} -> {:ok, deleted}
+      {:error, reason} -> {:error, reason}
     end
   end
 
@@ -1049,7 +1192,8 @@ defmodule Castmill.Resources do
       if is_nil(playlist) do
         Repo.rollback("Playlist not found")
       else
-        with {:ok, prev_item, next_item_id} <- get_prev_and_next_items(playlist_id, prev_item_id),
+        with :ok <- ensure_widget_available(playlist.organization_id, widget_id),
+             {:ok, prev_item, next_item_id} <- get_prev_and_next_items(playlist_id, prev_item_id),
              # Validate circular references BEFORE creating the playlist item
              :ok <-
                Castmill.Widgets.validate_playlist_references_for_widget(
@@ -1145,6 +1289,13 @@ defmodule Castmill.Resources do
       {:ok, updated_item} -> {:ok, updated_item}
       {:error, reason} -> {:error, reason}
     end
+  end
+
+  # Share-locks the widget so its scope cannot change before the item is committed.
+  defp ensure_widget_available(organization_id, widget_id) do
+    if Castmill.Widgets.available?(organization_id, widget_id, lock: true),
+      do: :ok,
+      else: {:error, :not_found}
   end
 
   @doc """
@@ -1669,9 +1820,10 @@ defmodule Castmill.Resources do
     # Check if the media is being used as an organization logo
     org_using_logo =
       Repo.one(
-        from o in Organization,
+        from(o in Organization,
           where: o.logo_media_id == ^media.id,
           limit: 1
+        )
       )
 
     if org_using_logo do

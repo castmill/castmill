@@ -1,4 +1,7 @@
 import { Model } from './data/model';
+import { now } from './format/clock';
+import { parseDate } from './format/date';
+import { evaluateFmt } from './format/fmt';
 
 export interface Binding<T extends any> {
   key: string;
@@ -110,9 +113,72 @@ export interface ConcatBinding {
   concat: Array<string | number | Binding<any>>;
 }
 
+/**
+ * Format binding - a text with placeholders, each a path and formatters.
+ * If any placeholder is empty, the whole text is empty.
+ *
+ * @example
+ * ```json
+ * { "fmt": "{data.price | number} kr" }
+ * ```
+ */
+export interface FmtBinding {
+  fmt: string;
+}
+
+export interface ListCondition {
+  key: string;
+  eq?: any;
+  neq?: any;
+  gt?: any;
+  gte?: any;
+  lt?: any;
+  lte?: any;
+  present?: boolean;
+}
+
+/**
+ * List binding - builds a list from an array: where → sort → item → drop
+ * empty results → skip → limit → join.
+ *
+ * @example
+ * ```json
+ * { "list": { "key": "data.viewings", "where": [{ "key": "$.end", "gte": "@now" }],
+ *             "limit": 2, "item": { "fmt": "{$.start | date:'D/M'}" }, "join": ", " } }
+ * ```
+ */
+export interface ListBinding {
+  list: {
+    key?: string;
+    items?: any[];
+    where?: ListCondition[];
+    sort?: string;
+    desc?: boolean;
+    item?: any;
+    /** Leaves out the first `skip` results (e.g. photos already shown elsewhere). */
+    skip?: number;
+    limit?: number;
+    join?: string;
+  };
+}
+
+/**
+ * First binding - the first value that is not empty (fallbacks, overrides).
+ *
+ * @example
+ * ```json
+ * { "first": [{ "key": "options.price_text" }, { "fmt": "{data.price | number} kr" }] }
+ * ```
+ */
+export interface FirstBinding {
+  first: any[];
+}
+
 export interface TemplateConfig<Options = any, Data = any> {
   options: Options;
   data: Data;
+  /** False when the widget declares its own regular `overrides` option. */
+  textOverridesEnabled?: boolean;
 }
 
 /**
@@ -146,6 +212,19 @@ export const isConcatBinding = (value: any): value is ConcatBinding =>
   'concat' in value &&
   Array.isArray(value.concat);
 
+export const isFmtBinding = (value: any): value is FmtBinding =>
+  typeof value === 'object' && value !== null && typeof value.fmt === 'string';
+
+export const isListBinding = (value: any): value is ListBinding =>
+  typeof value === 'object' &&
+  value !== null &&
+  typeof value.list === 'object' &&
+  value.list !== null &&
+  !Array.isArray(value.list);
+
+export const isFirstBinding = (value: any): value is FirstBinding =>
+  typeof value === 'object' && value !== null && Array.isArray(value.first);
+
 /**
  * Type guard to check if a value is any type of binding.
  */
@@ -153,19 +232,48 @@ export const isAnyBinding = (value: any): boolean =>
   isBinding(value) ||
   isSwitchBinding(value) ||
   isConditionalBinding(value) ||
-  isConcatBinding(value);
+  isConcatBinding(value) ||
+  isFmtBinding(value) ||
+  isListBinding(value) ||
+  isFirstBinding(value);
 
+/**
+ * Resolves a key path. "$.path" (or "$") reads the current context, such as a
+ * list item; "@name" reads a player global ("@now" is the current time in
+ * milliseconds, re-evaluated every minute); anything else reads the template
+ * config (`options.…`, `data.…`).
+ */
 export const resolveKey = (
   key: string,
   config: TemplateConfig,
   context: any,
   globals: { [index: string]: any }
-) => {
-  if (key.startsWith('$.')) {
-    // Resolve context path removing the "$." prefix
-    return Model.get(context, key.substring(2), globals);
+): [any, Error | undefined] => {
+  if (key === '$') {
+    return [
+      context,
+      context === undefined ? new Error('No context') : undefined,
+    ];
   }
-  return Model.get(config, key, globals);
+  if (key.slice(0, 2) === '$.') {
+    // Resolve context path removing the "$." prefix
+    return Model.get(context, key.substring(2), globals) as [
+      any,
+      Error | undefined,
+    ];
+  }
+  if (key.charAt(0) === '@') {
+    const name = key.slice(1);
+    if (name === 'now') {
+      return [now(), undefined];
+    }
+    const value = globals ? globals[name] : undefined;
+    return [
+      value,
+      value === undefined ? new Error(`Unknown global ${key}`) : undefined,
+    ];
+  }
+  return Model.get(config, key, globals) as [any, Error | undefined];
 };
 
 export const resolveBinding = (
@@ -292,6 +400,15 @@ export const resolveOption = (
   context: any,
   globals: { [index: string]: any }
 ): any => {
+  if (isFmtBinding(option)) {
+    return resolveFmtBinding(option, config, context, globals);
+  }
+  if (isListBinding(option)) {
+    return resolveListBinding(option, config, context, globals);
+  }
+  if (isFirstBinding(option)) {
+    return resolveFirstBinding(option, config, context, globals);
+  }
   if (isSwitchBinding(option)) {
     return resolveSwitchBinding(option, config, context, globals);
   }
@@ -305,4 +422,206 @@ export const resolveOption = (
     return resolveBinding(option, config, context, globals);
   }
   return option;
+};
+
+const isEmptyValue = (value: unknown) =>
+  value === undefined ||
+  value === null ||
+  value === '' ||
+  (Array.isArray(value) && value.length === 0);
+
+/**
+ * The locale used by formatters: the template's `locale` option, else the
+ * player's `locale` global (the organization's display locale).
+ */
+const formatLocale = (
+  config: TemplateConfig,
+  globals: { [index: string]: any }
+): string | undefined =>
+  (config && config.options && config.options.locale) ||
+  (globals && globals.locale);
+
+export const resolveFmtBinding = (
+  binding: FmtBinding,
+  config: TemplateConfig,
+  context: any,
+  globals: { [index: string]: any }
+): string =>
+  evaluateFmt(
+    binding.fmt,
+    (path) => {
+      const [value, error] = resolveKey(path, config, context, globals);
+      return error ? undefined : value;
+    },
+    { locale: formatLocale(config, globals) }
+  );
+
+export const resolveFirstBinding = (
+  binding: FirstBinding,
+  config: TemplateConfig,
+  context: any,
+  globals: { [index: string]: any }
+): any => {
+  for (let i = 0; i < binding.first.length; i++) {
+    const value = resolveOption(binding.first[i], config, context, globals);
+    if (!isEmptyValue(value)) {
+      return value;
+    }
+  }
+  return undefined;
+};
+
+// Resolves bindings nested anywhere inside a literal value (list `items`).
+const resolveDeep = (
+  value: any,
+  config: TemplateConfig,
+  context: any,
+  globals: { [index: string]: any }
+): any => {
+  if (isAnyBinding(value)) {
+    return resolveOption(value, config, context, globals);
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => resolveDeep(item, config, context, globals));
+  }
+  if (typeof value === 'object' && value !== null) {
+    const result: { [key: string]: any } = {};
+    for (const key in value) {
+      if (Object.prototype.hasOwnProperty.call(value, key)) {
+        result[key] = resolveDeep(value[key], config, context, globals);
+      }
+    }
+    return result;
+  }
+  return value;
+};
+
+const NOW = '@now';
+
+// Dates and "@now" compare as instants, numbers as numbers.
+const comparable = (value: any, other: any): number | undefined => {
+  if (value === NOW) {
+    return now();
+  }
+  if (other === NOW) {
+    const date = parseDate(value);
+    return date ? date.getTime() : undefined;
+  }
+  return typeof value === 'number' ? value : undefined;
+};
+
+const ORDERING: { [op: string]: (a: number, b: number) => boolean } = {
+  gt: (a, b) => a > b,
+  gte: (a, b) => a >= b,
+  lt: (a, b) => a < b,
+  lte: (a, b) => a <= b,
+};
+
+const matches = (
+  condition: ListCondition,
+  element: any,
+  config: TemplateConfig,
+  globals: { [index: string]: any }
+): boolean => {
+  const [resolved, error] = resolveKey(condition.key, config, element, globals);
+  const value = error ? undefined : resolved;
+
+  if (condition.present !== undefined) {
+    return isEmptyValue(value) !== !!condition.present;
+  }
+
+  for (const op in ORDERING) {
+    if (Object.prototype.hasOwnProperty.call(condition, op)) {
+      const expected = (condition as any)[op];
+      const a = comparable(value, expected);
+      const b = comparable(expected, value);
+      return a !== undefined && b !== undefined && ORDERING[op](a, b);
+    }
+  }
+
+  for (const op of ['eq', 'neq']) {
+    if (Object.prototype.hasOwnProperty.call(condition, op)) {
+      const expected = (condition as any)[op];
+      const equal =
+        expected === NOW
+          ? comparable(value, NOW) === comparable(NOW, value)
+          : value === expected;
+      return op === 'eq' ? equal : !equal;
+    }
+  }
+
+  return true;
+};
+
+const sortKey = (value: any): number | string => {
+  if (typeof value === 'number') {
+    return value;
+  }
+  const date = parseDate(value);
+  if (date) {
+    return date.getTime();
+  }
+  return value === undefined || value === null ? '' : String(value);
+};
+
+export const resolveListBinding = (
+  binding: ListBinding,
+  config: TemplateConfig,
+  context: any,
+  globals: { [index: string]: any }
+): any[] | string => {
+  const spec = binding.list;
+
+  let source: any;
+  if (Array.isArray(spec.items)) {
+    source = resolveDeep(spec.items, config, context, globals);
+  } else if (typeof spec.key === 'string') {
+    const [value, error] = resolveKey(spec.key, config, context, globals);
+    source = error ? undefined : value;
+  }
+  let elements: any[] = Array.isArray(source) ? source.slice() : [];
+
+  if (Array.isArray(spec.where)) {
+    elements = elements.filter((element) =>
+      spec.where!.every((condition) =>
+        matches(condition, element, config, globals)
+      )
+    );
+  }
+
+  if (typeof spec.sort === 'string') {
+    const direction = spec.desc ? -1 : 1;
+    // Decorate with the index for a stable sort (Chrome 38's sort is not).
+    elements = elements
+      .map((element, index) => {
+        const [value] = resolveKey(spec.sort!, config, element, globals);
+        return { element, index, key: sortKey(value) };
+      })
+      .sort((a, b) => {
+        if (a.key < b.key) return -direction;
+        if (a.key > b.key) return direction;
+        return a.index - b.index;
+      })
+      .map((entry) => entry.element);
+  }
+
+  let results =
+    spec.item === undefined
+      ? elements
+      : elements.map((element) =>
+          resolveOption(spec.item, config, element, globals)
+        );
+  results = results.filter((value) => !isEmptyValue(value));
+
+  if (typeof spec.skip === 'number' && spec.skip > 0) {
+    results = results.slice(spec.skip);
+  }
+
+  if (typeof spec.limit === 'number' && spec.limit >= 0) {
+    results = results.slice(0, spec.limit);
+  }
+
+  return typeof spec.join === 'string'
+    ? results.map((value) => String(value)).join(spec.join)
+    : results;
 };

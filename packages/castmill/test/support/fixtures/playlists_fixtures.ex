@@ -24,7 +24,9 @@ defmodule Castmill.PlaylistsFixtures do
   end
 
   @doc """
-    Create a widget fixture.
+    Create a widget fixture. Defaults to a system widget (available to every
+    organization); pass `is_system: false` with `organization_id`/`network_id` for
+    scoped widgets.
   """
   def widget_fixture(attrs \\ %{}) do
     unique_id = System.unique_integer([:positive])
@@ -34,13 +36,15 @@ defmodule Castmill.PlaylistsFixtures do
       slug: "widget-#{unique_id}",
       template: %{"components" => []},
       options_schema: %{},
-      data_schema: %{}
+      data_schema: %{},
+      is_system: true
     }
 
     attrs = Enum.into(attrs, defaults)
 
     %Widget{}
     |> Widget.changeset(attrs)
+    |> Widget.scope_changeset(Map.take(attrs, [:network_id, :organization_id, :restricted]))
     |> Repo.insert!()
   end
 

@@ -320,34 +320,69 @@ defmodule Castmill.Widgets.Integrations do
   # ============================================================================
 
   @doc """
-  Resolves the effective credentials to pass to a fetcher for an organization.
+  Resolves the effective credentials to pass to a fetcher.
 
   Credentials can come from two levels:
 
     - Network-level credentials shared across all organizations in the network
       (e.g. a single commercial Open-Meteo API key for the whole network).
-    - Organization-level credentials specific to the organization.
+    - Organization-level credentials or widget-config-level credentials,
+      depending on the integration's `credential_scope`.
 
-  Organization-level values take precedence over network-level values. For
-  integrations whose `auth_type` is `"optional"` or `"none"`, missing
-  credentials are not an error (the fetcher works without them); otherwise a
-  missing credential returns `{:error, :no_credentials}`.
+  Scoped values take precedence over network-level values. For integrations
+  whose `auth_type` is `"optional"` or `"none"`, missing credentials are not an
+  error (the fetcher works without them); otherwise a missing credential
+  returns `{:error, :no_credentials}`.
   """
-  def get_fetch_credentials(organization_id, %WidgetIntegration{} = integration) do
+  def get_fetch_credentials(
+        organization_id,
+        %WidgetIntegration{} = integration,
+        widget_config_id \\ nil
+      ) do
     network_creds = get_network_credentials_for_organization(organization_id, integration.id)
 
-    org_creds =
-      case get_organization_credentials(organization_id, integration.id) do
-        {:ok, creds} when is_map(creds) -> creds
-        _ -> %{}
+    scoped_creds =
+      case integration.credential_scope do
+        "widget" ->
+          widget_credentials =
+            if is_nil(widget_config_id) do
+              :not_found
+            else
+              get_widget_credentials(widget_config_id, integration.id)
+            end
+
+          case widget_credentials do
+            {:ok, creds} when is_map(creds) -> creds
+            _ -> organization_credentials(organization_id, integration.id)
+          end
+
+        "organization" ->
+          organization_credentials(organization_id, integration.id)
+
+        _ ->
+          %{}
       end
 
-    merged = Map.merge(network_creds, org_creds)
+    credential_values =
+      network_creds
+      |> Map.merge(scoped_creds)
+      |> Map.delete("organization_settings")
+
+    merged =
+      credential_values
+      |> put_organization_settings(organization_id, integration)
 
     cond do
-      merged != %{} -> {:ok, merged}
-      optional_or_none_auth?(integration) -> {:ok, %{}}
+      credential_values != %{} -> {:ok, merged}
+      optional_or_none_auth?(integration) -> {:ok, merged}
       true -> {:error, :no_credentials}
+    end
+  end
+
+  defp organization_credentials(organization_id, integration_id) do
+    case get_organization_credentials(organization_id, integration_id) do
+      {:ok, creds} when is_map(creds) -> creds
+      _ -> %{}
     end
   end
 
@@ -363,6 +398,19 @@ defmodule Castmill.Widgets.Integrations do
       creds
     else
       _ -> %{}
+    end
+  end
+
+  # Organization-level settings (e.g. office IDs) reach fetchers next to the
+  # credentials, so playlist items can never override them.
+  defp put_organization_settings(credentials, organization_id, integration) do
+    alias Castmill.Widgets.Integrations.OrganizationSettings
+
+    with key when is_binary(key) <- OrganizationSettings.key_of(integration),
+         %{} = settings <- OrganizationSettings.get(organization_id, key) do
+      Map.put(credentials, "organization_settings", settings)
+    else
+      _ -> credentials
     end
   end
 
@@ -500,15 +548,7 @@ defmodule Castmill.Widgets.Integrations do
   end
 
   defp get_organization_for_widget_config(widget_config_id) do
-    # Widget configs are linked to medias, which belong to organizations
-    query =
-      from wc in Castmill.Widgets.WidgetConfig,
-        join: m in Castmill.Resources.Media,
-        on: m.id == wc.media_id,
-        where: wc.id == ^widget_config_id,
-        select: m.organization_id
-
-    case Repo.one(query) do
+    case Castmill.Widgets.get_organization_id_for_widget_config(widget_config_id) do
       nil -> {:error, :widget_config_not_found}
       organization_id -> {:ok, organization_id}
     end
@@ -853,8 +893,12 @@ defmodule Castmill.Widgets.Integrations do
   end
 
   defp replace_placeholders(text, params) when is_binary(text) do
-    Enum.reduce(params, text, fn {key, value}, acc ->
-      String.replace(acc, "{{#{key}}}", to_string(value))
+    Enum.reduce(params, text, fn
+      {_key, value}, acc when is_map(value) or is_list(value) ->
+        acc
+
+      {key, value}, acc ->
+        String.replace(acc, "{{#{key}}}", to_string(value))
     end)
   end
 
@@ -1045,7 +1089,12 @@ defmodule Castmill.Widgets.Integrations do
   the same options would share a single cache row, and could therefore be
   served data fetched with another network's credentials.
   """
-  def build_discriminator_id(%WidgetIntegration{} = integration, options, organization_id) do
+  def build_discriminator_id(
+        %WidgetIntegration{} = integration,
+        options,
+        organization_id,
+        widget_config_id \\ nil
+      ) do
     # For widget_option discriminators, also check pull_config for hardcoded values
     # (e.g., RSS widgets have feed_url in pull_config, not in widget_options)
     pull_config = integration.pull_config || %{}
@@ -1071,10 +1120,16 @@ defmodule Castmill.Widgets.Integrations do
         |> bound_discriminator_id()
 
       "organization" ->
-        "org"
+        "org:#{organization_id}"
+
+      "widget_config" when not is_nil(widget_config_id) ->
+        "cfg:#{widget_config_id}"
+
+      "widget_config" ->
+        "org:#{organization_id}|cfg:missing"
 
       _ ->
-        "default"
+        "org:#{organization_id}|default"
     end
   end
 
@@ -1639,11 +1694,11 @@ defmodule Castmill.Widgets.Integrations do
         {:error, :not_found}
 
       %WidgetIntegrationCredential{
-        encrypted_credentials: encrypted,
-        organization_id: organization_id
+        encrypted_credentials: encrypted
       }
       when is_binary(encrypted) ->
-        with {:ok, organization} <- fetch_organization(organization_id),
+        with {:ok, organization_id} <- get_organization_for_widget_config(widget_config_id),
+             {:ok, organization} <- fetch_organization(organization_id),
              {:ok, encryption_key} <- get_or_create_encryption_key(organization),
              {:ok, credentials} <- Castmill.Crypto.decrypt(encrypted, encryption_key) do
           {:ok, credentials}
@@ -1749,6 +1804,8 @@ defmodule Castmill.Widgets.Integrations do
           300,
       pull_config: build_pull_config(fetcher, fetcher_config),
       credential_schema: build_credential_schema(fetcher, config),
+      refresh_mode:
+        Map.get(config, "refresh_mode") || Map.get(config, :refresh_mode) || "scheduled",
       is_active: true
     }
 
@@ -1814,6 +1871,11 @@ defmodule Castmill.Widgets.Integrations do
     Map.merge(base_config, fetcher_config)
   end
 
+  @doc """
+  Returns the fetcher module name for a widget meta integration `fetcher` value.
+  """
+  def resolve_fetcher_module_name(fetcher), do: resolve_fetcher_module(fetcher)
+
   defp resolve_fetcher_module(fetcher) when is_binary(fetcher) do
     # Map short fetcher names to full module names
     case String.downcase(fetcher) do
@@ -1828,8 +1890,8 @@ defmodule Castmill.Widgets.Integrations do
 
       # If it already looks like a module name, use it as-is
       name when byte_size(name) > 0 ->
-        if String.starts_with?(name, "Castmill.") or String.starts_with?(name, "Elixir.") do
-          name
+        if String.starts_with?(fetcher, "Castmill.") or String.starts_with?(fetcher, "Elixir.") do
+          fetcher
         else
           # Try to construct a module name from the fetcher name
           "Castmill.Widgets.Integrations.Fetchers.#{Macro.camelize(name)}"

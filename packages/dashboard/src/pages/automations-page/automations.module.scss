@@ -1,0 +1,614 @@
+// Automations page, editor, rule drawer and type editors.
+// The dashboard shell centers text, so every view resets alignment.
+
+$border: var(--castmill-divider, rgba(255, 255, 255, 0.15));
+$muted: var(--text-secondary, #9ca3af);
+$primary: var(--primary-color, #5792ee);
+$surface: var(--background-secondary, rgba(255, 255, 255, 0.04));
+$warning: var(--castmill-warning-text, #f5b942);
+$danger: var(--danger-color, #ef6b6b);
+
+.page {
+  margin: 2em;
+  text-align: start;
+}
+
+.pageDescription {
+  max-width: 52em;
+  margin: 0 0 1em;
+  color: $muted;
+  line-height: 1.5;
+}
+
+.muted,
+.hint {
+  color: $muted;
+  font-size: 0.85em;
+  line-height: 1.4;
+}
+
+.hint {
+  display: block;
+  margin: 0.25em 0 0;
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.rulesCell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2em;
+  max-width: 36em;
+}
+
+.emptyState {
+  padding: 2em;
+  border: 0.0625em dashed $border;
+  border-radius: 0.75em;
+  text-align: center;
+  color: $muted;
+
+  p {
+    margin: 0;
+  }
+}
+
+/* ---- Forms ---- */
+.form,
+.editor,
+.ruleForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+  text-align: start;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35em;
+  min-width: 0;
+
+  input[type='text'],
+  input[type='number'],
+  input[type='time'],
+  input[type='date'],
+  input[type='search'] {
+    max-width: 22em;
+    padding: 0.5em 0.65em;
+    border: 0.0625em solid $border;
+    border-radius: 0.4em;
+    background: $surface;
+    color: inherit;
+    font: inherit;
+  }
+}
+
+.fieldLabel {
+  font-weight: 600;
+  font-size: 0.9em;
+}
+
+.fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  margin: 0;
+  padding: 0;
+  border: none;
+
+  legend {
+    margin-bottom: 0.4em;
+  }
+}
+
+.radioOption {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6em;
+  cursor: pointer;
+
+  input {
+    margin-top: 0.25em;
+  }
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  cursor: pointer;
+}
+
+.inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1em;
+  margin-top: 0.5em;
+}
+
+.formActions,
+.drawerFooter,
+.tabFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75em;
+  margin-top: 1em;
+}
+
+.errors {
+  margin: 0;
+  padding-inline-start: 1.2em;
+  color: $danger;
+  font-size: 0.85em;
+}
+
+.errorText {
+  margin: 0;
+  color: $danger;
+  font-size: 0.85em;
+}
+
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35em;
+  border: none;
+  border-radius: 0.35em;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: $surface;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 0.125em solid $primary;
+  }
+}
+
+.linkButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  align-self: flex-start;
+  padding: 0.25em 0;
+  border: none;
+  background: none;
+  color: $primary;
+  font: inherit;
+  font-size: 0.9em;
+  text-decoration: none;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+/* ---- Segmented control and chips ---- */
+.segmented {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-self: flex-start;
+  border: 0.0625em solid $border;
+  border-radius: 0.5em;
+  overflow: hidden;
+
+  button {
+    padding: 0.5em 0.9em;
+    border: none;
+    border-inline-end: 0.0625em solid $border;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+
+    &:last-child {
+      border-inline-end: none;
+    }
+
+    &.active {
+      background: $primary;
+      color: #fff;
+    }
+
+    &:focus-visible {
+      outline: 0.125em solid $primary;
+      outline-offset: -0.125em;
+    }
+  }
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em;
+}
+
+.chip {
+  min-width: 3.2em;
+  padding: 0.35em 0.7em;
+  border: 0.0625em solid $border;
+  border-radius: 999em;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+
+  &.active {
+    border-color: $primary;
+    background: $primary;
+    color: #fff;
+  }
+}
+
+.timeList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4em;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+  }
+}
+
+/* ---- Preview ---- */
+.preview {
+  padding: 0.9em 1em;
+  border: 0.0625em solid $border;
+  border-radius: 0.6em;
+  background: $surface;
+
+  h4 {
+    margin: 0;
+  }
+}
+
+.previewList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(12em, 1fr));
+  gap: 0.3em 1em;
+  margin: 0.6em 0 0;
+  padding-inline-start: 1.4em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Rule drawer ---- */
+.step {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9em;
+  padding-bottom: 1.2em;
+  border-bottom: 0.0625em solid $border;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    margin: 0;
+  }
+}
+
+.stepNumber {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6em;
+  height: 1.6em;
+  border-radius: 50%;
+  background: $primary;
+  color: #fff;
+  font-size: 0.85em;
+}
+
+.typeCards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75em;
+}
+
+.typeCard {
+  display: flex;
+  flex: 1 1 14em;
+  align-items: flex-start;
+  gap: 0.75em;
+  max-width: 22em;
+  padding: 0.85em 1em;
+  border: 0.0625em solid $border;
+  border-radius: 0.6em;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+
+  &.active {
+    border-color: $primary;
+    box-shadow: 0 0 0 0.0625em $primary inset;
+  }
+
+  &:focus-visible {
+    outline: 0.125em solid $primary;
+  }
+}
+
+.typeIcon {
+  display: inline-flex;
+  font-size: 1.4em;
+  color: $primary;
+}
+
+.typeText {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2em;
+}
+
+/* ---- Editor ---- */
+.editorHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1em;
+  margin-bottom: 1em;
+  text-align: start;
+
+  .field {
+    flex: 1 1 18em;
+  }
+}
+
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.2em;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 0.125em solid $primary;
+    border-radius: 999em;
+  }
+}
+
+.switchTrack {
+  position: relative;
+  display: inline-block;
+  width: 2.4em;
+  height: 1.3em;
+  border-radius: 999em;
+  background: $border;
+  transition: background 0.2s;
+}
+
+.switchThumb {
+  position: absolute;
+  top: 0.15em;
+  inset-inline-start: 0.15em;
+  width: 1em;
+  height: 1em;
+  border-radius: 50%;
+  background: #fff;
+  transition: inset-inline-start 0.2s;
+}
+
+.on .switchTrack {
+  background: $primary;
+}
+
+.on .switchThumb {
+  inset-inline-start: 1.25em;
+}
+
+/* ---- Rules ---- */
+.rulesTab,
+.assignmentsTab {
+  padding-top: 1em;
+  text-align: start;
+}
+
+.ruleList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75em;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ruleCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75em;
+  padding: 0.9em 1em;
+  border: 0.0625em solid $border;
+  border-radius: 0.6em;
+  background: $surface;
+
+  &.dragging {
+    opacity: 0.5;
+  }
+
+  &.dropTarget {
+    border-color: $primary;
+  }
+}
+
+.dragHandle {
+  display: inline-flex;
+  padding-top: 0.2em;
+  color: $muted;
+  cursor: grab;
+}
+
+.ruleBody {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.ruleLine {
+  display: flex;
+  gap: 0.6em;
+  margin: 0 0 0.3em;
+  line-height: 1.4;
+}
+
+.ruleKeyword {
+  flex-shrink: 0;
+  min-width: 3.5em;
+  color: $primary;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.8em;
+  padding-top: 0.15em;
+}
+
+.ruleActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15em;
+}
+
+.warnings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3em;
+  margin: 0.5em 0 0;
+  padding: 0;
+  list-style: none;
+  color: $warning;
+  font-size: 0.85em;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+  }
+}
+
+.warningBox {
+  margin-top: 1em;
+  padding: 0.75em 1em;
+  border: 0.0625em solid $warning;
+  border-radius: 0.6em;
+
+  h4 {
+    margin: 0;
+    font-size: 0.9em;
+  }
+}
+
+.warningBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  color: $warning;
+  font-size: 0.8em;
+}
+
+/* ---- Assignments ---- */
+.pickers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5em;
+  margin-top: 1em;
+}
+
+.picker {
+  display: flex;
+  flex: 1 1 18em;
+  flex-direction: column;
+  gap: 0.6em;
+  min-width: 0;
+
+  h4 {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    margin: 0;
+  }
+}
+
+.count {
+  padding: 0.05em 0.55em;
+  border-radius: 999em;
+  background: $surface;
+  font-size: 0.8em;
+}
+
+.selectedList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3em;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5em;
+    padding: 0.3em 0.6em;
+    border: 0.0625em solid $border;
+    border-radius: 0.4em;
+  }
+}
+
+.selectedName {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.searchInput {
+  padding: 0.5em 0.65em;
+  border: 0.0625em solid $border;
+  border-radius: 0.4em;
+  background: $surface;
+  color: inherit;
+  font: inherit;
+}
+
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35em;
+  max-height: 16em;
+  overflow-y: auto;
+}

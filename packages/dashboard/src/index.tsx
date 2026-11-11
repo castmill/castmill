@@ -42,12 +42,16 @@ import OrganizationsInvitationPage from './pages/organization-invitations/organi
 import ChannelsPage from './pages/channels-page/channels-page';
 import TagsPage from './pages/tags-page/tags-page';
 import AgentsPage from './pages/agents-page/agents-page';
+import FeedsPage from './pages/feeds-page/feeds-page';
+import FeedPage from './pages/feeds-page/feed-page';
+import AutomationsPage from './pages/automations-page/automations-page';
 import {
   NetworkProvider,
   NetworkOverview,
   NetworkSettings,
   NetworkOrganizations,
   NetworkUsers,
+  NetworkWidgets,
 } from './pages/network';
 import { I18nProvider, useI18n } from './i18n';
 import { KeyboardShortcutsProvider, useKeyboardShortcuts } from './hooks';
@@ -261,7 +265,6 @@ render(() => {
                     </Suspense>
                   )}
                 />
-
                 <Route
                   path="/org/:orgId"
                   component={(props: any) => (
@@ -283,8 +286,11 @@ render(() => {
                   <Route path="teams" component={TeamsPage} />
                   <Route path="tags" component={TagsPage} />
                   <Route path="agents" component={AgentsPage} />
+                  <Route path="feeds" component={FeedsPage} />
+                  <Route path="feeds/:feedId" component={FeedPage} />
                   <Route path="organization" component={OrganizationPage} />
                   <Route path="channels" component={ChannelsPage} />
+                  <Route path="automations" component={AutomationsPage} />
                   <Route path="invite" component={TeamsInvitationPage} />
 
                   {/* Dynamically generate routes for AddOns */}
@@ -388,6 +394,14 @@ render(() => {
                     component={() => (
                       <NetworkProvider>
                         <NetworkUsers />
+                      </NetworkProvider>
+                    )}
+                  />
+                  <Route
+                    path="/widgets"
+                    component={() => (
+                      <NetworkProvider>
+                        <NetworkWidgets />
                       </NetworkProvider>
                     )}
                   />

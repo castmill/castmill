@@ -96,6 +96,41 @@ end
 # Constraint: Exactly one of organization_id or widget_config_id must be set
 ```
 
+### organization_integration_settings
+
+Non-secret values a **network admin** sets per organization, shared by every integration that
+declares the same settings `key`. Organization users cannot see or change them. Typical use: identity
+that many widgets share, such as the agency and office IDs of a real estate office, used by every
+property listing widget so the organization only ever lists its own offices' listings.
+
+An integration opts in through its `pull_config`:
+
+```json
+"organization_settings": {
+  "key": "property-listing",
+  "name": "Property listings",
+  "description": "The agency and offices whose listings the organization shows.",
+  "schema": {
+    "agency": { "type": "string", "label": "Agency", "required": true, "order": 1 },
+    "office_ids": { "type": "list", "label": "Office IDs", "order": 2 }
+  }
+}
+```
+
+- Field types: `string`, `number`, `boolean` and `list` (of texts); optional `label`, `description`,
+  `placeholder`, `required` and `order`. Keys match `^[a-z0-9][a-z0-9_-]{0,63}$`; up to 20 fields.
+- Definitions come from integrations of system widgets and of the network's widgets; when several
+  declare a key, the most recently updated declaration wins.
+- Fetchers and choice providers receive the values as `credentials["organization_settings"]`
+  (`Integrations.get_fetch_credentials/2`), next to the credentials, so playlist items can never
+  override them.
+- Network admin API: `GET /dashboard/network/organizations/:id/integration-settings` (definitions with
+  values), `PUT …/:key` (`{"settings": {...}}`; unknown fields are dropped, empty optional values
+  removed, invalid fields return 422 with `required`, `invalid`, `too_long` or `too_many`) and
+  `DELETE …/:key`. Dashboard: the sliders action on the network Organizations page.
+- Migrations can write values before the declaring widgets exist with
+  `Castmill.Widgets.Integrations.OrganizationSettings.store/4`.
+
 ### widget_integration_data
 
 Caches data from PULL or PUSH operations.
@@ -144,6 +179,31 @@ end
   up to date even if the background worker is delayed, while still returning the
   last known data to avoid empty screens.
 ```
+
+### Option Choices
+
+A fetcher may also implement the optional `choices/3` callback to list values for
+options_schema fields that declare `choices` (listings, photos, calendars), so users
+pick them visually instead of typing identifiers. See
+[WIDGET-OPTION-CHOICES.md](./WIDGET-OPTION-CHOICES.md).
+
+### Refresh Modes
+
+Pull integrations have a `refresh_mode`:
+
+- `scheduled` (default): the behavior described above, with repeatable polling every
+  `pull_interval_seconds`.
+- `on_demand`: no repeatable jobs. Data is refreshed only when it is read (device playlists, the
+  widget data endpoint, dashboard previews) and older than `pull_interval_seconds`. Missing data is
+  fetched synchronously, stale data is served while one deduplicated refresh is queued, and failing
+  sources back off. Use it for sources with per-call costs or many rarely shown configurations
+  (e.g. property listings). Widget packages set it with `"refresh_mode": "on_demand"` in their
+  integration definition. See [INTEGRATION-ON-DEMAND-REFRESH.md](./INTEGRATION-ON-DEMAND-REFRESH.md).
+
+All fetch paths build fetcher options with `Castmill.Widgets.Integrations.Refresh.fetch_options/3`:
+item options may override only the `pull_config` keys that the widget declares in its
+`options_schema` (e.g. a default `feed_url`), so integration settings such as service URLs can never
+be redirected by a playlist item.
 
 ### Serve-Time Filtering (max_items)
 
@@ -512,6 +572,52 @@ Body: <integration-specific payload>
   "pull_interval_seconds": 300
 }
 ```
+
+#### RSS Fetcher (`Castmill.Widgets.Integrations.Fetchers.Rss`)
+
+The server-side fetcher used by news widgets (`fetcher: "rss"`, discriminator
+`feed_url`). Helper modules live in `lib/castmill/widgets/integrations/rss/`.
+
+- **Formats**: RSS 2.0/0.9x, RSS 1.0 (RDF), Atom 1.0/0.3 and JSON Feed 1.x.
+  If `feed_url` points to an HTML page, the advertised
+  `<link rel="alternate" type="application/rss+xml|atom+xml|feed+json">` feed is
+  followed (one level). URLs without a scheme get `https://`; `feed://` is accepted.
+- **Normalized output** (stored as integration data):
+  - Feed: `feedTitle`, `feedDescription`, `feedLink`, `feedImage`,
+    `feedLanguage`, `feedFormat` (`rss | rdf | atom | json`), `lastUpdated`, `items`.
+  - Item: `id`, `title` (plain text, ≤300 chars), `description` (plain text,
+    ≤500 chars; falls back to full content), `link`, `image` (also `imageUrl`),
+    `author`, `categories` (≤10), `source`, `pubDate` (ISO 8601 UTC),
+    `pubDateFormatted` (e.g. `Jan 1, 2025`). Missing values are empty strings.
+  - Images are chosen from Media RSS (largest), thumbnails, image enclosures,
+    `itunes:image`, Atom enclosure links, JSON Feed images and finally inline
+    `<img>` tags (tracking pixels skipped). Relative URLs are made absolute and
+    only `http(s)` URLs are kept.
+  - Items are de-duplicated (guid/id/link), sorted newest first (undated last)
+    and capped at 100 so `max_items` can be applied per widget.
+- **Robustness**: handles BOMs, UTF-16, ISO-8859-1/Windows-1252, HTML entities
+  in XML, CDATA HTML, double-escaped HTML, RFC 822/ISO 8601 dates with zones.
+  `Rss.Html` parses HTML fields with Floki (runtime dependency, mochiweb
+  backend) for HTML-to-text, `<img>` extraction and `<link>` autodiscovery, and
+  decodes the full HTML5 named-entity set (including multi-code-point entities)
+  in text and XML. Non-rendered content (comments, `script`, `style`,
+  `noscript`, `iframe`, `template`) yields neither text nor images.
+- **Security** (`Castmill.SafeHttp`, shared hardened HTTP client for
+  user-supplied URLs, reusable for other untrusted downloads): http(s) only;
+  every request and redirect hop (max 5) is checked against private/loopback/link-local/site-local/reserved IPv4/IPv6
+  ranges (`:blocked_host`); responses are streamed and canceled at the 5 MB
+  transfer limit, with an additional decompressed-body limit for gzip/deflate
+  bomb protection (`:feed_too_large`); XML is parsed with a SAX parser after DOCTYPE
+  removal (no DTD/entity expansion, no atom creation). Logs contain only the host.
+  Dev sets `allow_private_hosts: true` in `config/dev.exs`.
+- **Errors**: `{:error, reason, credentials}` with reasons such as
+  `:missing_feed_url`, `:invalid_url`, `:blocked_host`, `:host_not_found`,
+  `:not_found`, `:rate_limited`, `:server_error`, `:feed_too_large`,
+  `:xml_parse_error`, `:unknown_feed_format`; `Castmill.Resources` turns these
+  into user-facing messages.
+- **Tests**: `test/castmill/widgets/integrations/fetchers/rss_test.exs`,
+  `test/castmill/widgets/integrations/rss/` and `test/castmill/safe_http_test.exs`,
+  using `Castmill.SafeHttp.FakeClient` (no network).
 
 ## Implementation Phases
 

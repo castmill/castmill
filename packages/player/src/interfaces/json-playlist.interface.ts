@@ -7,6 +7,8 @@ export interface JsonPlaylist {
   status: 'draft' | 'live' | 'archived';
   items: JsonPlaylistItem[];
   settings?: any;
+  /** The organization's display locale, used by template formatters. */
+  locale?: string;
   inserted_at?: string;
   updated_at?: string;
 }
