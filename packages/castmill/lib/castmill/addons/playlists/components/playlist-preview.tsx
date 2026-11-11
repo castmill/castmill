@@ -285,7 +285,7 @@ export const PlaylistPreview: Component<PlaylistPreviewProps> = (props) => {
   });
 
   return (
-    <div class={styles.widgetView} ref={playerContainer}>
+    <div class={styles.widgetView} ref={(el) => (playerContainer = el)}>
       <div id="player" class={styles.widgetPlayer}></div>
       <div id="controls" class={styles.playlistControls}></div>
     </div>
