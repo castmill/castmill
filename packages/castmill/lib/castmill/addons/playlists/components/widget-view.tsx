@@ -514,9 +514,8 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
       const paddingY =
         parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
       const availableWidth = parentRect.width - paddingX;
-      const controlsHeight = containerRef
-        ? parseFloat(getComputedStyle(containerRef).paddingBottom) || 0
-        : 0;
+      const controlsHeight =
+        parseFloat(getComputedStyle(containerRef).paddingBottom) || 0;
       const availableHeight = parentRect.height - paddingY - controlsHeight;
 
       if (availableWidth > 0 && availableHeight > 0) {
