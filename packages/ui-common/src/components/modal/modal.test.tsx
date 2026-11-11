@@ -51,6 +51,56 @@ describe('Modal Component', () => {
     expect(mockOnClose).toHaveBeenCalled();
   });
 
+  it('labels the close button and can be vetoed by onCloseRequest', () => {
+    const onClose = vi.fn();
+    let allow = false;
+    let modalRef: { close: () => Promise<void> } | undefined;
+    render(() => (
+      <Modal
+        title="Edit"
+        description=""
+        closeLabel="Close editor"
+        onClose={onClose}
+        onCloseRequest={() => allow}
+        ref={(r) => (modalRef = r)}
+      />
+    ));
+
+    fireEvent.click(screen.getByTitle('Close editor'));
+    fireEvent.keyDown(document, { key: 'Escape' });
+    fireEvent.click(screen.getByTestId('modal-overlay'));
+    vi.runAllTimers();
+    expect(onClose).not.toHaveBeenCalled();
+
+    // Programmatic closes skip the guard.
+    modalRef!.close();
+    vi.runAllTimers();
+    expect(onClose).toHaveBeenCalledTimes(1);
+    allow = true;
+  });
+
+  it('renders a leading back button for the back variant', () => {
+    const onClose = vi.fn();
+    render(() => (
+      <Modal
+        title="Edit"
+        description=""
+        closeLabel="Back"
+        closeVariant="back"
+        onClose={onClose}
+      />
+    ));
+
+    const back = screen.getByTitle('Back');
+    const header = back.closest('[class*="modalHeader"]')!;
+    expect(header.firstElementChild!.contains(back)).toBe(true);
+    expect(screen.getAllByRole('button')).toHaveLength(1);
+
+    fireEvent.click(back);
+    vi.runAllTimers();
+    expect(onClose).toHaveBeenCalled();
+  });
+
   it('closes before its containing drawer on consecutive Escape presses', () => {
     const onDrawerClose = vi.fn();
     const onModalClose = vi.fn();

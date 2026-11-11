@@ -10,10 +10,11 @@ import {
   mergeProps,
 } from 'solid-js';
 import { Portal } from 'solid-js/web';
-import { BsCheckLg, BsArrowRepeat } from 'solid-icons/bs';
+import { BsCheckLg, BsArrowRepeat, BsArrowLeft } from 'solid-icons/bs';
 import { VsClose } from 'solid-icons/vs';
 import { IconButton } from '../icon-button/icon-button';
 import { Button } from '../button/button';
+import { useVisualViewportBox } from '../../hooks/useVisualViewportBox';
 
 import styles from './modal.module.scss';
 
@@ -31,6 +32,19 @@ interface ModalProps {
   autoCloseDelay?: number;
   showRetryButton?: boolean;
   contentClass?: string;
+  /** Accessible name and tooltip of the header close/back button. */
+  closeLabel?: string;
+  /**
+   * 'back' shows a leading back arrow instead of a trailing close button,
+   * for full-screen layers that feel like a drill-in on small screens.
+   */
+  closeVariant?: 'close' | 'back';
+  /**
+   * Called when the user tries to close the modal (close button, Escape or
+   * overlay click). Return false to keep it open, e.g. to confirm discarding
+   * changes. Programmatic `ref.close()` bypasses this check.
+   */
+  onCloseRequest?: () => boolean | void;
 
   ref?: (ref: ModalRef) => void;
 }
@@ -117,10 +131,13 @@ export const Modal: Component<ModalProps> = (props) => {
   props = mergeProps(
     {
       showRetryButton: false,
+      closeLabel: 'Close',
+      closeVariant: 'close' as const,
     },
     props
   );
 
+  const viewportBox = useVisualViewportBox();
   const [isLoading, setIsLoading] = createSignal(props.loading || false);
 
   const [isVisible, setIsVisible] = createSignal(false);
@@ -145,16 +162,21 @@ export const Modal: Component<ModalProps> = (props) => {
     }, animationDuration); // This should match the CSS transition duration
   };
 
+  const requestClose = () => {
+    if (props.onCloseRequest?.() === false) return;
+    closeModal();
+  };
+
   const handleKeyDown = (event: KeyboardEvent) => {
     if (event.key === 'Escape' && isTopModal(modalId)) {
       event.stopPropagation();
-      closeModal();
+      requestClose();
     }
   };
 
   const closeModalOnOverlayClick = (event: MouseEvent) => {
     if (event.target === event.currentTarget) {
-      closeModal();
+      requestClose();
     }
   };
 
@@ -206,15 +228,36 @@ export const Modal: Component<ModalProps> = (props) => {
         data-testid="modal-overlay"
         data-modal-overlay
         class={`${styles.modalOverlay} ${isActive() ? styles.active : ''}`}
+        style={viewportBox()}
         onClick={closeModalOnOverlayClick}
       >
         <div class={contentClasses()} onClick={(e) => e.stopPropagation()}>
-          <div class={styles.modalHeader}>
+          <div
+            class={styles.modalHeader}
+            classList={{ [styles.withBack]: props.closeVariant === 'back' }}
+          >
+            {props.closeVariant === 'back' && (
+              <span class={styles.backButton}>
+                <IconButton
+                  icon={BsArrowLeft}
+                  onClick={requestClose}
+                  color="secondary"
+                  title={props.closeLabel}
+                />
+              </span>
+            )}
             <div class={styles.title}>
               <h2>{props.title}</h2>
               <h3>{props.description}</h3>
             </div>
-            <IconButton icon={VsClose} onClick={closeModal} color="secondary" />
+            {props.closeVariant !== 'back' && (
+              <IconButton
+                icon={VsClose}
+                onClick={requestClose}
+                color="secondary"
+                title={props.closeLabel}
+              />
+            )}
           </div>
           {props.successMessage && (
             <div class={styles.modalSuccess}>{props.successMessage}</div>

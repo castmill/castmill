@@ -7,19 +7,26 @@ import {
 } from '@castmill/player';
 import {
   Component,
+  For,
   createEffect,
   createMemo,
   createSignal,
   Show,
+  on,
   onCleanup,
   untrack,
 } from 'solid-js';
+import { Dynamic } from 'solid-js/web';
+import type { IconTypes } from 'solid-icons';
+import { BsCollectionPlay, BsEye, BsGear, BsPlusLg } from 'solid-icons/bs';
 import {
   useToast,
   Modal,
   Button,
   Dropdown,
   FormItem,
+  formatDuration,
+  formatRelativeTimeLocalized,
 } from '@castmill/ui-common';
 
 import './playlist-view.scss';
@@ -42,6 +49,24 @@ import {
   isValidAspectRatio,
 } from '../utils/aspect-ratio-validation';
 import { getTranslatedWidgetName } from '../../common/utils/widget-catalog-utils';
+import { createMediaQuery } from '../utils/media-query';
+import { PlaylistNameField } from './playlist-details';
+
+type SectionId = 'content' | 'preview' | 'settings';
+
+interface PlaylistSection {
+  id: SectionId;
+  title: () => string;
+  icon: IconTypes;
+}
+
+// Below this viewport width the widgets, items and preview no longer fit
+// side by side in the drawer, so they move into tabs.
+export const WIDE_LAYOUT_QUERY = '(min-width: 64em)';
+// The three columns need ~56em plus gaps; below this measured editor width
+// (e.g. tablets, zoomed pages) fall back to tabs even if the viewport is wide.
+export const WIDE_LAYOUT_MIN_EM = 57;
+const RELATIVE_TIME_REFRESH_MS = 30_000;
 
 export const PlaylistView: Component<{
   store: AddonStore;
@@ -54,7 +79,7 @@ export const PlaylistView: Component<{
 }> = (props) => {
   const toast = useToast();
   const t = props.t || ((key: string) => key);
-  const locale = () => props.store.i18n?.locale() || 'en';
+  const locale = () => props.store?.i18n?.locale() || 'en';
   const [widgets, setWidgets] = createSignal<JsonWidget[]>([]);
   const [loading, setLoading] = createSignal(true);
   const [items, setItems] = createSignal<JsonPlaylistItem[]>([]);
@@ -72,6 +97,16 @@ export const PlaylistView: Component<{
     new Map<string, string>()
   );
   const [isAspectRatioModified, setIsAspectRatioModified] = createSignal(false);
+  let playlistSaveQueue: Promise<void> = Promise.resolve();
+
+  const serializePlaylistSave = <T,>(save: () => Promise<T>) => {
+    const result = playlistSaveQueue.then(save, save);
+    playlistSaveQueue = result.then(
+      () => undefined,
+      () => undefined
+    );
+    return result;
+  };
 
   // Track whether to constrain by width or height based on container size
   const [constrainByWidth, setConstrainByWidth] = createSignal(false);
@@ -107,7 +142,7 @@ export const PlaylistView: Component<{
       const url = `/org/${props.organizationId}/content/widgets/${error.widget.id}?tab=integrations`;
 
       // Use soft navigation if available, otherwise fall back to hard redirect
-      if (props.store.router?.navigate) {
+      if (props.store?.router?.navigate) {
         props.store.router.navigate(url);
       } else {
         window.location.href = url;
@@ -145,25 +180,30 @@ export const PlaylistView: Component<{
     });
   });
 
-  createEffect(() => {
-    (async () => {
-      const playlist: JsonPlaylist = await PlaylistsService.getPlaylist(
-        props.baseUrl,
-        props.organizationId,
-        props.playlistId
-      );
-      setPlaylist(playlist);
-      setItems(playlist.items);
+  // Parents may pass a fresh playlist object (e.g. after a rename); only
+  // reload when the id actually changes.
+  const playlistId = createMemo(() => props.playlistId);
+  createEffect(
+    on(playlistId, (id) => {
+      (async () => {
+        const playlist: JsonPlaylist = await PlaylistsService.getPlaylist(
+          props.baseUrl,
+          props.organizationId,
+          id
+        );
+        setPlaylist(playlist);
+        setItems(playlist.items);
 
-      const result = await PlaylistsService.getWidgets(
-        props.baseUrl,
-        props.organizationId
-      );
-      setWidgets(result.data);
+        const result = await PlaylistsService.getWidgets(
+          props.baseUrl,
+          props.organizationId
+        );
+        setWidgets(result.data);
 
-      setLoading(false);
-    })();
-  });
+        setLoading(false);
+      })();
+    })
+  );
 
   const handleWidgetSearch = async (searchText: string) => {
     const result = await PlaylistsService.getWidgets(
@@ -546,53 +586,74 @@ export const PlaylistView: Component<{
     width: number;
     height: number;
   }) => {
-    const currentPlaylist = playlist();
-    if (!currentPlaylist) {
+    const originatingPlaylist = playlist();
+    if (!originatingPlaylist) {
       return false;
     }
 
-    const currentAspectRatio = getCurrentAspectRatio();
-    if (
-      currentAspectRatio.width === nextAspectRatio.width &&
-      currentAspectRatio.height === nextAspectRatio.height
-    ) {
-      setIsAspectRatioModified(false);
-      return true;
-    }
+    return serializePlaylistSave(async () => {
+      if (
+        props.playlistId !== originatingPlaylist.id ||
+        playlist()?.id !== originatingPlaylist.id
+      ) {
+        return false;
+      }
 
-    try {
-      await PlaylistsService.updatePlaylist(
-        props.baseUrl,
-        props.organizationId,
-        `${currentPlaylist.id}`,
-        {
-          name: currentPlaylist.name,
-          description: '',
+      const currentPlaylist = playlist();
+      if (!currentPlaylist) {
+        return false;
+      }
+
+      const currentAspectRatio = getCurrentAspectRatio();
+      if (
+        currentAspectRatio.width === nextAspectRatio.width &&
+        currentAspectRatio.height === nextAspectRatio.height
+      ) {
+        setIsAspectRatioModified(false);
+        return true;
+      }
+
+      try {
+        await PlaylistsService.updatePlaylist(
+          props.baseUrl,
+          props.organizationId,
+          `${currentPlaylist.id}`,
+          {
+            name: currentPlaylist.name,
+            description: '',
+            settings: {
+              ...currentPlaylist.settings,
+              aspect_ratio: nextAspectRatio,
+            },
+          }
+        );
+        if (
+          props.playlistId !== originatingPlaylist.id ||
+          playlist()?.id !== originatingPlaylist.id
+        ) {
+          return false;
+        }
+
+        const updatedPlaylist = {
+          ...currentPlaylist,
           settings: {
+            ...currentPlaylist.settings,
             aspect_ratio: nextAspectRatio,
           },
-        }
-      );
+        };
 
-      const updatedPlaylist = {
-        ...currentPlaylist,
-        settings: {
-          ...currentPlaylist.settings,
-          aspect_ratio: nextAspectRatio,
-        },
-      };
-
-      setPlaylist(updatedPlaylist);
-      props.onChange?.(updatedPlaylist);
-      setIsAspectRatioModified(false);
-      toast.success(t('playlists.aspectRatioUpdated'));
-      return true;
-    } catch (error) {
-      toast.error(
-        t('playlists.errors.updateAspectRatio', { error: String(error) })
-      );
-      return false;
-    }
+        setPlaylist(updatedPlaylist);
+        props.onChange?.(updatedPlaylist);
+        setIsAspectRatioModified(false);
+        toast.success(t('playlists.aspectRatioUpdated'));
+        return true;
+      } catch (error) {
+        toast.error(
+          t('playlists.errors.updateAspectRatio', { error: String(error) })
+        );
+        return false;
+      }
+    });
   };
 
   const submitCustomAspectRatio = async () => {
@@ -638,6 +699,218 @@ export const PlaylistView: Component<{
     }, 100); // 100ms debounce
   };
 
+  const wideViewport = createMediaQuery(WIDE_LAYOUT_QUERY, true);
+  const [viewRef, setViewRef] = createSignal<HTMLDivElement>();
+  const [viewFits, setViewFits] = createSignal(true);
+  createEffect(() => {
+    const el = viewRef();
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const measure = () => {
+      const width = el.getBoundingClientRect().width;
+      if (!width) return;
+      const fontSize = parseFloat(getComputedStyle(el).fontSize) || 16;
+      setViewFits(width >= WIDE_LAYOUT_MIN_EM * fontSize);
+    };
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    measure();
+    onCleanup(() => observer.disconnect());
+  });
+  const wide = () => wideViewport() && viewFits();
+  const coarsePointer = createMediaQuery('(pointer: coarse)', false);
+  const [activeSection, setActiveSection] = createSignal<SectionId>('content');
+  const [pickerOpen, setPickerOpen] = createSignal(false);
+  const [addingWidget, setAddingWidget] = createSignal(false);
+  const [now, setNow] = createSignal(Date.now());
+  const relativeTimeTimer = setInterval(
+    () => setNow(Date.now()),
+    RELATIVE_TIME_REFRESH_MS
+  );
+  let addWidget:
+    | ((widget: JsonWidget, index?: number) => Promise<void>)
+    | undefined;
+  let itemsCardRef: HTMLElement | undefined;
+  const tabRefs: Partial<Record<SectionId, HTMLButtonElement>> = {};
+
+  onCleanup(() => {
+    clearInterval(relativeTimeTimer);
+  });
+
+  const allSections: PlaylistSection[] = [
+    {
+      id: 'content',
+      title: () => t('playlists.editor.content'),
+      icon: BsCollectionPlay,
+    },
+    { id: 'preview', title: () => t('common.preview'), icon: BsEye },
+    { id: 'settings', title: () => t('common.settings'), icon: BsGear },
+  ];
+
+  // On wide screens the preview sits next to the items, so it has no tab.
+  const sections = createMemo(() =>
+    allSections.filter((section) => !wide() || section.id !== 'preview')
+  );
+
+  createEffect(() => {
+    if (wide()) setPickerOpen(false);
+    if (!sections().some((section) => section.id === activeSection())) {
+      setActiveSection('content');
+    }
+  });
+
+  const tabId = (id: SectionId) => `playlist-${props.playlistId}-tab-${id}`;
+  const panelId = (id: 'editor' | 'settings') =>
+    `playlist-${props.playlistId}-panel-${id}`;
+
+  const selectSection = (id: SectionId, focus = false) => {
+    setActiveSection(id);
+    if (id !== 'content') setPickerOpen(false);
+    const tab = tabRefs[id];
+    if (focus) tab?.focus();
+    tab?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+  };
+
+  const onTabKeyDown = (event: KeyboardEvent) => {
+    const list = sections();
+    const index = list.findIndex((section) => section.id === activeSection());
+    const rtl =
+      (event.currentTarget as HTMLElement).closest('[dir="rtl"]') !== null;
+    const step = { ArrowRight: rtl ? -1 : 1, ArrowLeft: rtl ? 1 : -1 }[
+      event.key as 'ArrowRight' | 'ArrowLeft'
+    ];
+    let next: number | undefined;
+    if (step) next = (index + step + list.length) % list.length;
+    else if (event.key === 'Home') next = 0;
+    else if (event.key === 'End') next = list.length - 1;
+    if (next === undefined) return;
+    event.preventDefault();
+    selectSection(list[next].id, true);
+  };
+
+  const showWidgets = () => wide() || pickerOpen();
+  const showItems = () =>
+    wide() || (activeSection() === 'content' && !pickerOpen());
+  const showPreview = () => wide() || activeSection() === 'preview';
+
+  const totalDuration = () =>
+    items().reduce((total, item) => {
+      if (typeof item.duration === 'number' && item.duration > 0) {
+        return total + item.duration;
+      }
+      const dynamic =
+        typeof item.id === 'number' ? dynamicDurations()[item.id] : undefined;
+      return total + (dynamic && dynamic > 0 ? dynamic : 0);
+    }, 0);
+
+  const itemCount = () => {
+    const count = items().length;
+    return props.store?.i18n?.tp
+      ? props.store!.i18n.tp('plurals.items', count)
+      : String(count);
+  };
+
+  const lastUpdated = () => {
+    const updatedAt = playlist()?.updated_at;
+    if (!updatedAt) return '';
+    now();
+    return t('playlists.editor.updated', {
+      time: formatRelativeTimeLocalized(updatedAt, locale()),
+    });
+  };
+
+  const addWidgetToEnd = async (widget: JsonWidget) => {
+    if (!addWidget || addingWidget()) return;
+    setAddingWidget(true);
+    const countBefore = items().length;
+    try {
+      await addWidget(widget);
+      // Cancelling the config keeps the picker open so another widget can be
+      // chosen; a successful add returns to the list.
+      if (items().length > countBefore) {
+        setPickerOpen(false);
+        itemsCardRef
+          ?.querySelector('.playlist-end-drop-zone')
+          ?.scrollIntoView?.({ block: 'nearest' });
+      }
+    } finally {
+      setAddingWidget(false);
+    }
+  };
+
+  const settingsTimestamps = () => {
+    now();
+    const current = playlist();
+    if (!current) return '';
+    return [
+      current.inserted_at &&
+        t('playlists.editor.created', {
+          time: formatRelativeTimeLocalized(current.inserted_at, locale()),
+        }),
+      current.updated_at &&
+        t('playlists.editor.updated', {
+          time: formatRelativeTimeLocalized(current.updated_at, locale()),
+        }),
+    ]
+      .filter(Boolean)
+      .join(' · ');
+  };
+
+  const renamePlaylist = async ({ name }: { name: string }) => {
+    const originatingPlaylist = playlist();
+    if (!originatingPlaylist) return false;
+
+    return serializePlaylistSave(async () => {
+      if (
+        props.playlistId !== originatingPlaylist.id ||
+        playlist()?.id !== originatingPlaylist.id
+      ) {
+        return false;
+      }
+
+      const currentPlaylist = playlist();
+      if (!currentPlaylist) return false;
+
+      try {
+        await PlaylistsService.updatePlaylist(
+          props.baseUrl,
+          props.organizationId,
+          `${currentPlaylist.id}`,
+          {
+            name,
+            description: '',
+            ...(currentPlaylist.settings
+              ? { settings: currentPlaylist.settings }
+              : {}),
+          }
+        );
+        if (
+          props.playlistId !== originatingPlaylist.id ||
+          playlist()?.id !== originatingPlaylist.id
+        ) {
+          return false;
+        }
+
+        const latestPlaylist = playlist();
+        if (!latestPlaylist) return false;
+
+        const updatedPlaylist = {
+          ...latestPlaylist,
+          name,
+          updated_at: new Date().toISOString(),
+        };
+        setPlaylist(updatedPlaylist);
+        props.onChange?.(updatedPlaylist);
+        toast.success(t('playlists.playlistUpdated', { name }));
+        return true;
+      } catch (error) {
+        toast.error(
+          t('playlists.errorUpdating', { name, error: String(error) })
+        );
+        return false;
+      }
+    });
+  };
+
   onCleanup(() => {
     if (seekDebounceTimer) {
       clearTimeout(seekDebounceTimer);
@@ -655,23 +928,132 @@ export const PlaylistView: Component<{
         </div>
       }
     >
-      <div class="playlist-view-container" style={{ height: '100%' }}>
-        <div class="playlist-view">
-          <div class="playlist-items-wrapper">
+      <div
+        ref={setViewRef}
+        class="playlist-view"
+        classList={{
+          wide: wide(),
+          narrow: !wide(),
+          picking: !wide() && pickerOpen(),
+        }}
+      >
+        <section class="playlist-summary" aria-label={t('common.status')}>
+          <div class="playlist-summary-stats">
+            <span class="playlist-summary-stat">
+              <strong>{itemCount()}</strong>
+            </span>
+            <span class="playlist-summary-stat">
+              {t('playlists.editor.totalDuration', {
+                duration: formatDuration(totalDuration()),
+              })}
+            </span>
+            <Show when={lastUpdated()}>
+              <span class="playlist-summary-seen">{lastUpdated()}</span>
+            </Show>
+          </div>
+          <div class="playlist-summary-meta">
+            <span
+              class="playlist-summary-chip"
+              title={t('playlists.aspectRatio')}
+            >
+              {getCurrentAspectRatio().width}:{getCurrentAspectRatio().height}
+            </span>
+          </div>
+        </section>
+
+        <nav class="playlist-sections">
+          <div
+            class="playlist-sections-list"
+            role="tablist"
+            aria-label={t('playlists.editor.sections')}
+          >
+            <For each={sections()}>
+              {(section) => (
+                <button
+                  ref={(el) => (tabRefs[section.id] = el)}
+                  type="button"
+                  role="tab"
+                  id={tabId(section.id)}
+                  class="playlist-section-tab"
+                  classList={{ active: activeSection() === section.id }}
+                  aria-selected={activeSection() === section.id}
+                  aria-controls={panelId(
+                    section.id === 'settings' ? 'settings' : 'editor'
+                  )}
+                  tabIndex={activeSection() === section.id ? 0 : -1}
+                  title={section.title()}
+                  onClick={() => selectSection(section.id)}
+                  onKeyDown={onTabKeyDown}
+                >
+                  <Dynamic component={section.icon} aria-hidden="true" />
+                  <span class="playlist-section-label">{section.title()}</span>
+                </button>
+              )}
+            </For>
+          </div>
+        </nav>
+
+        <div
+          class="playlist-editor"
+          classList={{ 'is-hidden': activeSection() === 'settings' }}
+          role="tabpanel"
+          id={panelId('editor')}
+          aria-labelledby={tabId(
+            activeSection() === 'settings' ? 'content' : activeSection()
+          )}
+        >
+          <section
+            class="playlist-card playlist-widgets-card"
+            classList={{ 'is-hidden': !showWidgets() }}
+            aria-label={t('playlists.editor.widgets')}
+          >
             <WidgetChooser
               widgets={widgets()}
               baseUrl={props.baseUrl}
               locale={locale()}
               t={t}
               onSearch={handleWidgetSearch}
+              onAdd={addWidgetToEnd}
+              addDisabled={addingWidget()}
+              tapToAdd={!wide()}
+              title={
+                wide()
+                  ? t('playlists.editor.widgets')
+                  : t('playlists.editor.chooseWidget')
+              }
+              hint={
+                wide()
+                  ? t('playlists.editor.dragOrClickHint')
+                  : t('playlists.editor.tapToAddHint')
+              }
+              onClose={wide() ? undefined : () => setPickerOpen(false)}
             />
-            <div class="drag-indicator">
-              <div class="arrow-container">
-                <div class="arrow-line"></div>
-                <div class="arrow-head"></div>
+          </section>
+
+          <section
+            ref={itemsCardRef}
+            class="playlist-card playlist-items-card"
+            classList={{ 'is-hidden': !showItems() }}
+            aria-labelledby={`playlist-${props.playlistId}-items-title`}
+          >
+            <header class="playlist-card-header">
+              <div class="playlist-card-heading">
+                <h3 id={`playlist-${props.playlistId}-items-title`}>
+                  {t('playlists.editor.items')}
+                  <span class="playlist-card-count">{items().length}</span>
+                </h3>
               </div>
-              <span class="drag-hint">{t('playlists.dragToAdd')}</span>
-            </div>
+              <Show when={!wide()}>
+                <button
+                  type="button"
+                  class="playlist-add-button"
+                  onClick={() => setPickerOpen(true)}
+                >
+                  <BsPlusLg aria-hidden="true" />
+                  {t('playlists.editor.addWidget')}
+                </button>
+              </Show>
+            </header>
             <PlaylistItems
               store={props.store}
               baseUrl={props.baseUrl}
@@ -686,10 +1068,40 @@ export const PlaylistView: Component<{
               onChangeDuration={onChangeDuration}
               onCredentialsError={handleCredentialsError}
               onSeekToItem={seekToItem}
+              onAddWidgetReady={(add) => (addWidget = add)}
+              reorderButtons={!wide() || coarsePointer()}
+              dragEnabled={!coarsePointer()}
+              tapToEdit={!wide()}
+              emptyContent={
+                <>
+                  <p class="playlist-empty-title">
+                    {t('playlists.editor.emptyTitle')}
+                  </p>
+                  <p class="playlist-empty-description">
+                    {wide()
+                      ? t('playlists.editor.dragOrClickHint')
+                      : t('playlists.editor.emptyDescription')}
+                  </p>
+                  <Show when={!wide()}>
+                    <button
+                      type="button"
+                      class="playlist-add-button primary"
+                      onClick={() => setPickerOpen(true)}
+                    >
+                      <BsPlusLg aria-hidden="true" />
+                      {t('playlists.editor.addWidget')}
+                    </button>
+                  </Show>
+                </>
+              }
             />
-          </div>
+          </section>
 
-          <div class="playlist-preview-panel">
+          <section
+            class="playlist-card playlist-preview-card"
+            classList={{ 'is-hidden': !showPreview() }}
+            aria-label={t('common.preview')}
+          >
             <div
               ref={(el) => {
                 previewWrapperRef = el;
@@ -720,6 +1132,25 @@ export const PlaylistView: Component<{
                 />
               </div>
             </div>
+          </section>
+        </div>
+
+        <div
+          class="playlist-settings"
+          classList={{ 'is-hidden': activeSection() !== 'settings' }}
+          role="tabpanel"
+          id={panelId('settings')}
+          aria-labelledby={tabId('settings')}
+        >
+          <section
+            class="playlist-card playlist-settings-card"
+            aria-label={t('common.settings')}
+          >
+            <PlaylistNameField
+              playlist={playlist()!}
+              t={t}
+              onSubmit={renamePlaylist}
+            />
 
             <div class="playlist-aspect-ratio-form">
               <Dropdown
@@ -759,9 +1190,27 @@ export const PlaylistView: Component<{
                   }
                 }}
               />
+              <p class="playlist-settings-hint">
+                {t('playlists.editor.displayDescription')}
+              </p>
 
               <Show when={aspectRatioPreset() === 'custom'}>
-                <div class="custom-aspect-ratio">
+                <div
+                  class="custom-aspect-ratio"
+                  onFocusOut={(event) => {
+                    // Save once focus leaves the width/height pair.
+                    const next = event.relatedTarget as Node | null;
+                    if (next && event.currentTarget.contains(next)) return;
+                    if (isAspectRatioFormValid())
+                      void submitCustomAspectRatio();
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key !== 'Enter') return;
+                    event.preventDefault();
+                    if (isAspectRatioFormValid())
+                      void submitCustomAspectRatio();
+                  }}
+                >
                   <FormItem
                     label={t('playlists.aspectRatioWidth')}
                     id="detailsCustomWidth"
@@ -797,14 +1246,6 @@ export const PlaylistView: Component<{
                   >
                     <div class="error">{aspectRatioErrors().get('height')}</div>
                   </FormItem>
-
-                  <Button
-                    label={t('common.save')}
-                    color="success"
-                    onClick={() => submitCustomAspectRatio()}
-                    disabled={!isAspectRatioFormValid()}
-                    class="save-custom-aspect-ratio"
-                  />
                 </div>
 
                 <Show when={aspectRatioErrors().get('ratio')}>
@@ -814,7 +1255,13 @@ export const PlaylistView: Component<{
                 </Show>
               </Show>
             </div>
-          </div>
+
+            <Show when={settingsTimestamps()}>
+              <footer class="playlist-settings-meta">
+                {settingsTimestamps()}
+              </footer>
+            </Show>
+          </section>
         </div>
       </div>
 

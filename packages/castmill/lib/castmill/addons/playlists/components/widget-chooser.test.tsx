@@ -5,7 +5,22 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@solidjs/testing-library';
 import { WidgetChooser } from './widget-chooser';
-import type { JsonWidget } from '@castmill/player';
+import type { JsonWidget, JsonWidgetTemplate } from '@castmill/player';
+import { createSignal } from 'solid-js';
+
+const mockDraggable = vi.hoisted(() =>
+  vi.fn((_options: { element: HTMLElement }) => () => {})
+);
+
+vi.mock('@atlaskit/pragmatic-drag-and-drop/element/adapter', () => ({
+  draggable: mockDraggable,
+}));
+
+const mockTemplate = {
+  type: 'image',
+  name: 'image',
+  opts: {},
+} as JsonWidgetTemplate;
 
 // Mock widgets data
 const mockWidgets: JsonWidget[] = [
@@ -14,24 +29,21 @@ const mockWidgets: JsonWidget[] = [
     name: 'Image Widget',
     description: 'Display an image',
     icon: '📦',
-    options: {},
-    default_config: {},
+    template: mockTemplate,
   },
   {
     id: 2,
     name: 'Video Widget',
     description: 'Display a video',
     icon: '📹',
-    options: {},
-    default_config: {},
+    template: mockTemplate,
   },
   {
     id: 3,
     name: 'Weather Widget',
     description: 'Display weather information',
     icon: '🌤️',
-    options: {},
-    default_config: {},
+    template: mockTemplate,
   },
 ];
 
@@ -42,39 +54,34 @@ const mockWidgetsWithIcons: JsonWidget[] = [
     name: 'Widget with relative icon',
     description: 'Icon starts with /',
     icon: '/widgets/test/icon.svg',
-    options: {},
-    default_config: {},
+    template: mockTemplate,
   },
   {
     id: 2,
     name: 'Widget with absolute URL icon',
     description: 'Icon is absolute URL',
     icon: 'https://example.com/icon.svg',
-    options: {},
-    default_config: {},
+    template: mockTemplate,
   },
   {
     id: 3,
     name: 'Widget with data URI icon',
     description: 'Icon is data URI',
     icon: 'data:image/svg+xml,<svg></svg>',
-    options: {},
-    default_config: {},
+    template: mockTemplate,
   },
   {
     id: 4,
     name: 'Widget with emoji icon',
     description: 'Icon is emoji',
     icon: '📦',
-    options: {},
-    default_config: {},
+    template: mockTemplate,
   },
   {
     id: 5,
     name: 'Widget without icon',
     description: 'No icon specified',
-    options: {},
-    default_config: {},
+    template: mockTemplate,
   },
 ];
 
@@ -84,7 +91,7 @@ describe('WidgetChooser Component', () => {
   });
 
   it('renders all widgets correctly', () => {
-    render(() => <WidgetChooser widgets={mockWidgets} />);
+    render(() => <WidgetChooser baseUrl="" widgets={mockWidgets} />);
 
     // Check if all widgets are rendered
     expect(screen.getByText('Image Widget')).toBeInTheDocument();
@@ -95,8 +102,17 @@ describe('WidgetChooser Component', () => {
     expect(screen.getByText('Display weather information')).toBeInTheDocument();
   });
 
+  it('registers draggable elements after their refs are assigned', () => {
+    render(() => <WidgetChooser baseUrl="" widgets={mockWidgets} />);
+
+    expect(mockDraggable).toHaveBeenCalledTimes(mockWidgets.length);
+    for (const [options] of mockDraggable.mock.calls) {
+      expect(options.element).toBeInstanceOf(HTMLElement);
+    }
+  });
+
   it('renders search input with correct placeholder', () => {
-    render(() => <WidgetChooser widgets={mockWidgets} />);
+    render(() => <WidgetChooser baseUrl="" widgets={mockWidgets} />);
 
     const searchInput = screen.getByPlaceholderText('Search widgets...');
     expect(searchInput).toBeInTheDocument();
@@ -104,7 +120,9 @@ describe('WidgetChooser Component', () => {
   });
 
   it.skip('renders search icon', () => {
-    const { container } = render(() => <WidgetChooser widgets={mockWidgets} />);
+    const { container } = render(() => (
+      <WidgetChooser baseUrl="" widgets={mockWidgets} />
+    ));
 
     // Check if search container exists
     const searchContainer = container.querySelector('.search-container');
@@ -120,7 +138,7 @@ describe('WidgetChooser Component', () => {
     const onSearchMock = vi.fn();
 
     render(() => (
-      <WidgetChooser widgets={mockWidgets} onSearch={onSearchMock} />
+      <WidgetChooser baseUrl="" widgets={mockWidgets} onSearch={onSearchMock} />
     ));
 
     const searchInput = screen.getByPlaceholderText('Search widgets...');
@@ -146,7 +164,7 @@ describe('WidgetChooser Component', () => {
     const onSearchMock = vi.fn();
 
     render(() => (
-      <WidgetChooser widgets={mockWidgets} onSearch={onSearchMock} />
+      <WidgetChooser baseUrl="" widgets={mockWidgets} onSearch={onSearchMock} />
     ));
 
     const searchInput = screen.getByPlaceholderText('Search widgets...');
@@ -173,7 +191,7 @@ describe('WidgetChooser Component', () => {
   });
 
   it('updates search input value when user types', () => {
-    render(() => <WidgetChooser widgets={mockWidgets} />);
+    render(() => <WidgetChooser baseUrl="" widgets={mockWidgets} />);
 
     const searchInput = screen.getByPlaceholderText(
       'Search widgets...'
@@ -185,7 +203,9 @@ describe('WidgetChooser Component', () => {
   });
 
   it('renders empty list when no widgets provided', () => {
-    const { container } = render(() => <WidgetChooser widgets={[]} />);
+    const { container } = render(() => (
+      <WidgetChooser baseUrl="" widgets={[]} />
+    ));
 
     const itemsContainer = container.querySelector('.items-container');
     expect(itemsContainer).toBeInTheDocument();
@@ -193,7 +213,7 @@ describe('WidgetChooser Component', () => {
   });
 
   it('works without onSearch callback', () => {
-    render(() => <WidgetChooser widgets={mockWidgets} />);
+    render(() => <WidgetChooser baseUrl="" widgets={mockWidgets} />);
 
     const searchInput = screen.getByPlaceholderText('Search widgets...');
 
@@ -208,7 +228,7 @@ describe('WidgetChooser Component', () => {
     const onSearchMock = vi.fn();
 
     const { unmount } = render(() => (
-      <WidgetChooser widgets={mockWidgets} onSearch={onSearchMock} />
+      <WidgetChooser baseUrl="" widgets={mockWidgets} onSearch={onSearchMock} />
     ));
 
     const searchInput = screen.getByPlaceholderText('Search widgets...');
@@ -228,7 +248,9 @@ describe('WidgetChooser Component', () => {
   });
 
   it('renders widget items with correct structure', () => {
-    const { container } = render(() => <WidgetChooser widgets={mockWidgets} />);
+    const { container } = render(() => (
+      <WidgetChooser baseUrl="" widgets={mockWidgets} />
+    ));
 
     const widgetItems = container.querySelectorAll('.widget-item');
     expect(widgetItems.length).toBe(mockWidgets.length);
@@ -239,6 +261,100 @@ describe('WidgetChooser Component', () => {
     expect(firstItem.querySelector('.info')).toBeInTheDocument();
     expect(firstItem.querySelector('.name')).toBeInTheDocument();
     expect(firstItem.querySelector('.description')).toBeInTheDocument();
+  });
+
+  it('shows the full widget description as a hover tooltip', () => {
+    const { container } = render(() => (
+      <WidgetChooser baseUrl="" widgets={mockWidgets} />
+    ));
+
+    const firstItem = container.querySelector('.widget-item')!;
+    expect(firstItem.getAttribute('title')).toBe('Display an image');
+  });
+});
+
+describe('WidgetChooser adding widgets', () => {
+  const t = (key: string, params?: Record<string, any>) =>
+    params?.name ? `${key}:${params.name}` : key;
+
+  it('adds a widget with the + button without the row handling the click', () => {
+    const onAdd = vi.fn();
+    render(() => (
+      <WidgetChooser baseUrl="" widgets={mockWidgets} t={t} onAdd={onAdd} />
+    ));
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'playlists.editor.addWidgetNamed:Video Widget',
+      })
+    );
+
+    expect(onAdd).toHaveBeenCalledTimes(1);
+    expect(onAdd).toHaveBeenCalledWith(mockWidgets[1]);
+  });
+
+  it('disables add controls while an add is pending', () => {
+    const onAdd = vi.fn();
+    const { container } = render(() => (
+      <WidgetChooser
+        baseUrl=""
+        widgets={mockWidgets}
+        t={t}
+        onAdd={onAdd}
+        tapToAdd
+        addDisabled
+      />
+    ));
+
+    const addButton = screen.getAllByRole('button', {
+      name: /playlists.editor.addWidgetNamed/,
+    })[0];
+    expect(addButton).toBeDisabled();
+    fireEvent.click(container.querySelector('.widget-item')!);
+
+    expect(onAdd).not.toHaveBeenCalled();
+  });
+
+  it('only adds on row click in tap-to-add mode', () => {
+    const onAdd = vi.fn();
+    const [tapToAdd, setTapToAdd] = createSignal(false);
+    render(() => (
+      <WidgetChooser
+        baseUrl=""
+        widgets={mockWidgets}
+        t={t}
+        onAdd={onAdd}
+        tapToAdd={tapToAdd()}
+      />
+    ));
+
+    fireEvent.click(screen.getByText('Image Widget'));
+    expect(onAdd).not.toHaveBeenCalled();
+
+    setTapToAdd(true);
+    fireEvent.click(screen.getByText('Image Widget'));
+    expect(onAdd).toHaveBeenCalledWith(mockWidgets[0]);
+  });
+
+  it('renders the picker header with a back button', () => {
+    const onClose = vi.fn();
+    render(() => (
+      <WidgetChooser
+        baseUrl=""
+        widgets={mockWidgets}
+        t={t}
+        title="Choose a widget"
+        hint="Tap a widget"
+        onClose={onClose}
+      />
+    ));
+
+    expect(
+      screen.getByRole('heading', { name: 'Choose a widget' })
+    ).toBeInTheDocument();
+    expect(screen.getByText('Tap a widget')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'common.back' }));
+    expect(onClose).toHaveBeenCalled();
   });
 });
 

@@ -310,9 +310,11 @@ export const DeviceTelemetry: Component<{
             </Show>
 
             {/* CPU Usage Card */}
-            <Show when={telemetry()?.cpuUsagePercent !== undefined}>
-              {() => {
-                const percent = () => telemetry()!.cpuUsagePercent!;
+            <Show
+              when={telemetry()?.cpuUsagePercent !== undefined && telemetry()}
+            >
+              {(current) => {
+                const percent = () => current().cpuUsagePercent!;
                 return (
                   <div class={styles.card}>
                     <div class={styles.cardHeader}>

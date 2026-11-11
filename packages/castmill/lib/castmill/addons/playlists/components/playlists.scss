@@ -126,8 +126,7 @@
 }
 
 .playlist-modal {
-  width: 95vw;
-  height: 92vh;
+  width: min(96vw, 96em);
 }
 
 .add-playlist {
