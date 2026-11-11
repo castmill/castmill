@@ -511,7 +511,7 @@
   }
 
   .org-list .loading-overlay {
-    background: rgba(255, 255, 255, 0.8);
+    background: var(--cm-bg-overlay);
   }
 }
 

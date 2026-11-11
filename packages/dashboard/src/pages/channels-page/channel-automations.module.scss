@@ -1,9 +1,9 @@
 .panel {
   margin: 0 0 1em 0;
   padding: 0.75em 1em;
-  border: 1px solid var(--castmill-divider, rgba(255, 255, 255, 0.12));
+  border: 1px solid var(--cm-border-subtle);
   border-radius: 0.5em;
-  background: var(--background-secondary, rgba(255, 255, 255, 0.03));
+  background: var(--cm-bg-secondary);
 }
 
 .header {
@@ -23,7 +23,7 @@
 
 .manage {
   font-size: 0.875em;
-  color: var(--primary-color, #4a90e2);
+  color: var(--cm-link);
 }
 
 .list {
@@ -38,7 +38,7 @@
 .item {
   padding: 0.5em 0.75em;
   border-radius: 0.375em;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--cm-bg-hover);
 }
 
 .itemHeader {
@@ -51,15 +51,15 @@
   font-size: 0.75em;
   padding: 0.1em 0.5em;
   border-radius: 1em;
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--text-secondary, #aaa);
+  background: var(--cm-bg-tertiary);
+  color: var(--cm-text-secondary);
 }
 
 .rules {
   margin: 0.25em 0 0 0;
   padding-left: 1.25em;
   font-size: 0.875em;
-  color: var(--text-secondary, #bbb);
+  color: var(--cm-text-secondary);
 }
 
 .toggle {
@@ -75,15 +75,15 @@
   margin: 0.5em 0 0 0;
   padding-left: 1.5em;
   font-size: 0.8125em;
-  color: var(--text-secondary, #bbb);
+  color: var(--cm-text-secondary);
 }
 
 .muted {
-  color: var(--text-secondary, #999);
+  color: var(--cm-text-secondary);
   font-size: 0.875em;
 }
 
 .error {
-  color: var(--danger-color, #e5534b);
+  color: var(--cm-error);
   font-size: 0.875em;
 }

@@ -671,26 +671,26 @@
   border: 1px solid transparent;
 
   &--system {
-    background: #eef0f4;
-    color: #3d4452;
-    border-color: #cfd4dd;
+    background: var(--cm-bg-tertiary);
+    color: var(--cm-text-primary);
+    border-color: var(--cm-border-color);
   }
 
   &--network {
-    background: #f1ebfa;
-    color: #5b2d9e;
-    border-color: #d6c4f0;
+    background: var(--cm-info-bg);
+    color: var(--cm-info);
+    border-color: var(--cm-info);
   }
 
   &--organization {
-    background: #e7f6ec;
-    color: #1b6b3a;
-    border-color: #b7e2c6;
+    background: var(--cm-success-bg);
+    color: var(--cm-success);
+    border-color: var(--cm-success);
   }
 
   &--unassigned {
-    background: #fdf1e6;
-    color: #8a4b0f;
-    border-color: #f2d1b0;
+    background: var(--cm-warning-bg);
+    color: var(--cm-warning);
+    border-color: var(--cm-warning);
   }
 }
