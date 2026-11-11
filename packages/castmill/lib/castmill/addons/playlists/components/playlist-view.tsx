@@ -890,8 +890,11 @@ export const PlaylistView: Component<{
           return false;
         }
 
+        const latestPlaylist = playlist();
+        if (!latestPlaylist) return false;
+
         const updatedPlaylist = {
-          ...currentPlaylist,
+          ...latestPlaylist,
           name,
           updated_at: new Date().toISOString(),
         };

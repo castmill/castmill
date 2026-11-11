@@ -50,9 +50,13 @@ vi.mock('../services/playlists.service', () => ({
 
 // Mock the child components
 vi.mock('./playlist-preview', () => ({
-  PlaylistPreview: () => <div data-testid="playlist-preview">Preview</div>,
+  PlaylistPreview: (props: any) => {
+    playlistPreviewProps.current = props;
+    return <div data-testid="playlist-preview">Preview</div>;
+  },
 }));
 
+const playlistPreviewProps = vi.hoisted(() => ({ current: null as any }));
 const playlistItemsProps = vi.hoisted(() => ({ current: null as any }));
 const addWidgetSpy = vi.hoisted(() => vi.fn());
 
@@ -144,6 +148,8 @@ describe('PlaylistView Component', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    playlistPreviewProps.current = null;
+    playlistItemsProps.current = null;
 
     // Setup default mocks
     vi.mocked(PlaylistsService.getPlaylist).mockResolvedValue(mockPlaylist);
@@ -1083,6 +1089,44 @@ describe('PlaylistView Component', () => {
       );
     });
 
+    it('preserves item edits made while a playlist rename is pending', async () => {
+      let resolveRename!: () => void;
+      const item = { id: 44, duration: 10 } as any;
+      vi.mocked(PlaylistsService.getPlaylist).mockResolvedValue({
+        ...mockPlaylist,
+        items: [item],
+      });
+      vi.mocked(PlaylistsService.updatePlaylist).mockImplementationOnce(
+        () =>
+          new Promise<void>((resolve) => {
+            resolveRename = resolve;
+          })
+      );
+      renderView();
+
+      await waitFor(() => expect(tab('common.settings')).toBeTruthy());
+      fireEvent.click(tab('common.settings'));
+      const input = within(card('.playlist-settings-card')).getByLabelText(
+        'common.name'
+      );
+      fireEvent.input(input, { target: { value: 'Renamed playlist' } });
+      fireEvent.focusOut(input);
+      await waitFor(() =>
+        expect(PlaylistsService.updatePlaylist).toHaveBeenCalledTimes(1)
+      );
+
+      await playlistItemsProps.current.onChangeDuration(item, 30);
+      expect(playlistPreviewProps.current.playlist.items[0].duration).toBe(30);
+
+      resolveRename();
+      await waitFor(() =>
+        expect(playlistPreviewProps.current.playlist.name).toBe(
+          'Renamed playlist'
+        )
+      );
+      expect(playlistPreviewProps.current.playlist.items[0].duration).toBe(30);
+    });
+
     it('does not apply queued or completed saves after switching playlists', async () => {
       let setPlaylistId!: (id: number) => void;
       let resolveRename!: () => void;
@@ -1119,7 +1163,9 @@ describe('PlaylistView Component', () => {
       await waitFor(() => expect(tab('common.settings')).toBeTruthy());
       fireEvent.click(tab('common.settings'));
       const settings = card('.playlist-settings-card');
-      const input = within(settings).getByLabelText('common.name');
+      const input = within(settings).getByLabelText(
+        'common.name'
+      ) as HTMLInputElement;
       fireEvent.input(input, { target: { value: 'Renamed first' } });
       fireEvent.focusOut(input);
       await waitFor(() =>
@@ -1140,6 +1186,7 @@ describe('PlaylistView Component', () => {
           2
         )
       );
+      await waitFor(() => expect(input.value).toBe('Second playlist'));
 
       resolveRename();
       await waitFor(() => expect(onChange).not.toHaveBeenCalled());

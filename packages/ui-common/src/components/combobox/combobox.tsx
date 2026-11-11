@@ -244,10 +244,16 @@ export const ComboBox = <T extends { id: string | number }>(
       } else if (!sheetRef?.contains(active)) {
         event.preventDefault();
         (event.shiftKey ? last : first).focus();
-      } else if (event.shiftKey && (active === first || active === sheetRef)) {
+      } else if (
+        event.shiftKey &&
+        (active === first || first.contains(active) || active === sheetRef)
+      ) {
         event.preventDefault();
         last.focus();
-      } else if (!event.shiftKey && active === last) {
+      } else if (
+        !event.shiftKey &&
+        (active === last || last.contains(active))
+      ) {
         event.preventDefault();
         first.focus();
       }
@@ -297,6 +303,46 @@ export const ComboBox = <T extends { id: string | number }>(
     close(true);
   };
 
+  const handleListKeyDown = (event: KeyboardEvent) => {
+    const listbox = event.currentTarget as HTMLDivElement;
+    const options = Array.from(
+      listbox.querySelectorAll<HTMLElement>('[role="option"]')
+    );
+    if (options.length === 0) return;
+
+    const activeIndex = options.indexOf(document.activeElement as HTMLElement);
+    let nextIndex = activeIndex;
+
+    switch (event.key) {
+      case 'ArrowDown':
+        nextIndex = Math.min(activeIndex + 1, options.length - 1);
+        break;
+      case 'ArrowUp':
+        nextIndex = activeIndex < 0 ? options.length - 1 : activeIndex - 1;
+        if (nextIndex < 0) nextIndex = 0;
+        break;
+      case 'Home':
+        nextIndex = 0;
+        break;
+      case 'End':
+        nextIndex = options.length - 1;
+        break;
+      case 'Enter':
+      case ' ':
+        if (activeIndex >= 0) {
+          event.preventDefault();
+          const item = items()[activeIndex];
+          if (item) handleSelect(item);
+        }
+        return;
+      default:
+        return;
+    }
+
+    event.preventDefault();
+    options[nextIndex]?.focus();
+  };
+
   const handleClear = () => {
     setSelectedItem(undefined);
     props.onClear?.();
@@ -344,8 +390,13 @@ export const ComboBox = <T extends { id: string | number }>(
 
       <div
         class={styles['items-list']}
+        role="listbox"
+        id={`${dropdownId}-listbox`}
+        aria-labelledby={triggerId}
+        tabindex={0}
         style={listMaxHeight() ? { 'max-height': listMaxHeight() } : undefined}
         onScroll={handleScroll}
+        onKeyDown={handleListKeyDown}
       >
         <For each={items()}>
           {(item) => (
@@ -353,6 +404,9 @@ export const ComboBox = <T extends { id: string | number }>(
               class={`${styles['item']} ${
                 selectedItem()?.id === item.id ? styles['selected'] : ''
               }`}
+              role="option"
+              aria-selected={selectedItem()?.id === item.id}
+              tabindex={-1}
               onClick={() => handleSelect(item)}
             >
               {props.renderItem(item)}
@@ -440,8 +494,6 @@ export const ComboBox = <T extends { id: string | number }>(
           class={`${styles['base-box']} ${styles['dropdown']} ${
             placement() === 'up' ? styles['dropdown-up'] : ''
           }`}
-          role="listbox"
-          aria-labelledby={triggerId}
         >
           {listContent()}
         </div>

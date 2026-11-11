@@ -23,9 +23,19 @@ export const PlaylistNameField = (props: {
   const [saving, setSaving] = createSignal(false);
 
   // Follow external renames while the user has no pending edit.
+  let lastPlaylistId = props.playlist.id;
   let lastSavedName = props.playlist.name;
   createEffect(() => {
+    const nextId = props.playlist.id;
     const next = props.playlist.name;
+    if (nextId !== lastPlaylistId) {
+      lastPlaylistId = nextId;
+      lastSavedName = next;
+      setName(next);
+      setError('');
+      return;
+    }
+
     if (name() === lastSavedName) setName(next);
     lastSavedName = next;
   });

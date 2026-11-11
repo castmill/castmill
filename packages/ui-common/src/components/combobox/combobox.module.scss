@@ -145,6 +145,11 @@
       padding: 0.4em 1em;
     }
 
+    .item:focus-visible {
+      outline: 2px solid #4a90e2;
+      outline-offset: -2px;
+    }
+
     .item:hover {
       background-color: #1e1f25;
     }

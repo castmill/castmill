@@ -2,8 +2,12 @@
 // drawer cards. Wide screens show them side by side, narrower screens stack
 // the preview above a scrolling form and go full screen on phones.
 body [data-modal-overlay] .widget-config-modal {
+  box-sizing: border-box;
   width: min(94vw, 82em);
+  max-width: 100%;
   height: min(88vh, 56em);
+  max-height: 100%;
+  container-type: inline-size;
   padding: 1.4em 1.6em 1.6em;
   border: 1px solid #36324a;
   border-radius: 0.8em;
@@ -280,6 +284,18 @@ body [data-modal-overlay] .widget-config-modal {
     padding: 1.1em 1.2em 1.2em;
   }
 
+  .widget-config-dialog {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: clamp(9em, 30dvh, 18em) minmax(0, 1fr);
+    grid-template-areas:
+      'preview'
+      'form';
+    gap: 0.9em;
+    padding-top: 0.9em;
+  }
+}
+
+@container (max-width: 56em) {
   .widget-config-dialog {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: clamp(9em, 30dvh, 18em) minmax(0, 1fr);

@@ -208,7 +208,7 @@ describe('ComboBox Component', () => {
       const sheet = await screen.findByRole('dialog', { name: 'Media' });
       expect(sheet.closest('[data-combobox-sheet]')).not.toBeNull();
       expect(document.body.style.overflow).toBe('hidden');
-      expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+      expect(screen.getByRole('listbox')).toBeInTheDocument();
       const trigger = screen.getByRole('button', { name: /media/i });
 
       await fireEvent.click(await screen.findByText('Item 2'));
@@ -228,18 +228,53 @@ describe('ComboBox Component', () => {
       await fireEvent.click(screen.getByText('Test ComboBox'));
       const sheet = await screen.findByRole('dialog');
       const closeButton = screen.getByRole('button', { name: 'Close' });
-      const search = screen.getByRole('textbox');
+      const listbox = screen.getByRole('listbox');
+      const [option] = await screen.findAllByRole('option');
 
-      search.focus();
-      await fireEvent.keyDown(search, { key: 'Tab' });
+      option.focus();
+      await fireEvent.keyDown(option, { key: 'Tab' });
       expect(document.activeElement).toBe(closeButton);
 
       closeButton.focus();
       await fireEvent.keyDown(closeButton, { key: 'Tab', shiftKey: true });
-      expect(document.activeElement).toBe(search);
+      expect(document.activeElement).toBe(listbox);
 
       expect(sheet.contains(document.activeElement)).toBe(true);
     });
+
+    it.each([false, true])(
+      'supports keyboard result selection in %s sheet mode',
+      async (sheetMode) => {
+        mockSheetQuery(sheetMode);
+        const onSelect = vi.fn();
+        render(() => (
+          <ComboBox
+            id="keyboard-combo"
+            label="Media"
+            fetchItems={async () => ({ count: 2, data: mockItems })}
+            renderItem={(item) => <div>{item.name}</div>}
+            onSelect={onSelect}
+          />
+        ));
+
+        await fireEvent.click(screen.getByText('Media'));
+        const listbox = await screen.findByRole('listbox');
+        const options = await screen.findAllByRole('option');
+        expect(options[0]).toHaveAttribute('aria-selected', 'false');
+
+        listbox.focus();
+        await fireEvent.keyDown(listbox, { key: 'ArrowDown' });
+        expect(document.activeElement).toBe(options[0]);
+        await fireEvent.keyDown(options[0], { key: 'ArrowDown' });
+        expect(document.activeElement).toBe(options[1]);
+        await fireEvent.keyDown(options[1], { key: 'Enter' });
+
+        expect(onSelect).toHaveBeenCalledWith({ id: '2', name: 'Item 2' });
+        await waitFor(() =>
+          expect(screen.queryByRole('listbox')).not.toBeInTheDocument()
+        );
+      }
+    );
 
     it('closes the sheet with Escape before outer layers see it', async () => {
       mockSheetQuery(true);
@@ -298,8 +333,10 @@ describe('ComboBox Component', () => {
 
       await fireEvent.click(screen.getByText('Test ComboBox'));
 
-      const listbox = await screen.findByRole('listbox');
-      expect(listbox.className).toMatch(/dropdown-up/);
+      await screen.findByRole('listbox');
+      expect(document.getElementById('test-combo-dropdown')?.className).toMatch(
+        /dropdown-up/
+      );
     });
 
     it('uses the sheet when a clipping ancestor has too little room for the list', async () => {
