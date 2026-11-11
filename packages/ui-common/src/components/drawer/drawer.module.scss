@@ -51,6 +51,12 @@ $animation-duration: 0.3s;
   &.active {
     transform: translateX(0%);
   }
+
+  // The panel is only focused programmatically on open (to anchor keyboard
+  // focus); its controls keep their own focus rings.
+  &:focus {
+    outline: none;
+  }
 }
 
 // Default widths stay below class specificity so a `contentClass` width always
