@@ -957,6 +957,8 @@ describe('PlaylistView Component', () => {
 
     it('saves the name on Enter and reverts on Escape or invalid names', async () => {
       vi.mocked(PlaylistsService.updatePlaylist).mockResolvedValue(undefined);
+      const outerKeydown = vi.fn();
+      document.addEventListener('keydown', outerKeydown);
       renderView();
 
       await waitFor(() => expect(tab('common.settings')).toBeTruthy());
@@ -975,7 +977,9 @@ describe('PlaylistView Component', () => {
       fireEvent.keyDown(input, { key: 'Escape' });
       fireEvent.focusOut(input);
       expect(input.value).toBe(original);
+      expect(outerKeydown).not.toHaveBeenCalled();
       expect(PlaylistsService.updatePlaylist).not.toHaveBeenCalled();
+      document.removeEventListener('keydown', outerKeydown);
 
       fireEvent.input(input, { target: { value: 'Front desk' } });
       fireEvent.keyDown(input, { key: 'Enter' });
@@ -988,6 +992,76 @@ describe('PlaylistView Component', () => {
         organizationId,
         '1',
         expect.objectContaining({ name: 'Front desk' })
+      );
+    });
+
+    it('disables the name field while its save is pending', async () => {
+      let resolveSave!: () => void;
+      vi.mocked(PlaylistsService.updatePlaylist).mockImplementationOnce(
+        () =>
+          new Promise<void>((resolve) => {
+            resolveSave = resolve;
+          })
+      );
+      renderView();
+
+      await waitFor(() => expect(tab('common.settings')).toBeTruthy());
+      fireEvent.click(tab('common.settings'));
+      const input = within(card('.playlist-settings-card')).getByLabelText(
+        'common.name'
+      ) as HTMLInputElement;
+      fireEvent.input(input, { target: { value: 'Pending rename' } });
+      fireEvent.focusOut(input);
+
+      await waitFor(() => expect(input).toBeDisabled());
+      resolveSave();
+      await waitFor(() => expect(input).not.toBeDisabled());
+    });
+
+    it('serializes playlist name and aspect-ratio saves using the latest state', async () => {
+      let resolveRename!: () => void;
+      vi.mocked(PlaylistsService.updatePlaylist)
+        .mockImplementationOnce(
+          () =>
+            new Promise<void>((resolve) => {
+              resolveRename = resolve;
+            })
+        )
+        .mockResolvedValue(undefined);
+      renderView();
+
+      await waitFor(() => expect(tab('common.settings')).toBeTruthy());
+      fireEvent.click(tab('common.settings'));
+      const settings = card('.playlist-settings-card');
+      const input = within(settings).getByLabelText(
+        'common.name'
+      ) as HTMLInputElement;
+      fireEvent.input(input, { target: { value: 'Updated name' } });
+      fireEvent.focusOut(input);
+
+      await waitFor(() =>
+        expect(PlaylistsService.updatePlaylist).toHaveBeenCalledTimes(1)
+      );
+      fireEvent.change(
+        within(settings).getByRole('combobox', {
+          name: 'playlists.aspectRatio',
+        }),
+        { target: { value: '9:16' } }
+      );
+      expect(PlaylistsService.updatePlaylist).toHaveBeenCalledTimes(1);
+
+      resolveRename();
+      await waitFor(() =>
+        expect(PlaylistsService.updatePlaylist).toHaveBeenCalledTimes(2)
+      );
+      expect(PlaylistsService.updatePlaylist).toHaveBeenLastCalledWith(
+        baseUrl,
+        organizationId,
+        '1',
+        expect.objectContaining({
+          name: 'Updated name',
+          settings: { aspect_ratio: { width: 9, height: 16 } },
+        })
       );
     });
 

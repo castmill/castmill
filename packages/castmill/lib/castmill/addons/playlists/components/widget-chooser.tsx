@@ -61,7 +61,7 @@ const WidgetItem: Component<{
 
   return (
     <div
-      ref={draggableRef}
+      ref={(el) => (draggableRef = el)}
       class="widget-item"
       classList={{ dragging: dragging(), 'tap-to-add': props.tapToAdd }}
       title={widgetDescription() || undefined}

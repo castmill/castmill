@@ -365,8 +365,8 @@ export const PlaylistItem: Component<{
       () => [props.isFirst, props.isLast],
       () => {
         const active = document.activeElement;
-        if (props.isFirst && active === moveUpRef) moveDownRef.focus();
-        if (props.isLast && active === moveDownRef) moveUpRef.focus();
+        if (props.isFirst && active === moveUpRef) moveDownRef?.focus();
+        if (props.isLast && active === moveDownRef) moveUpRef?.focus();
       },
       { defer: true }
     )

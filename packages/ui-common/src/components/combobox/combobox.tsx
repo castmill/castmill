@@ -155,8 +155,15 @@ export const ComboBox = <T extends { id: string | number }>(
       return;
     }
 
-    const rect = comboBoxRef?.getBoundingClientRect();
-    if (!comboBoxRef || !rect || rect.height === 0) {
+    const comboBox = comboBoxRef;
+    if (!comboBox) {
+      setPlacement('down');
+      setListMaxHeight(undefined);
+      return;
+    }
+
+    const rect = comboBox.getBoundingClientRect();
+    if (rect.height === 0) {
       setPlacement('down');
       setListMaxHeight(undefined);
       return;
@@ -165,7 +172,7 @@ export const ComboBox = <T extends { id: string | number }>(
     let top = 0;
     let bottom = window.innerHeight;
     for (
-      let parent = comboBoxRef.parentElement;
+      let parent = comboBox.parentElement;
       parent && parent !== document.body;
       parent = parent.parentElement
     ) {
@@ -176,7 +183,7 @@ export const ComboBox = <T extends { id: string | number }>(
       }
     }
 
-    const em = parseFloat(getComputedStyle(comboBoxRef).fontSize) || 16;
+    const em = parseFloat(getComputedStyle(comboBox).fontSize) || 16;
     const below = bottom - rect.bottom;
     const above = rect.top - top;
     const opensUp = below < 22 * em && above > below;
@@ -217,6 +224,27 @@ export const ComboBox = <T extends { id: string | number }>(
       event.preventDefault();
       event.stopPropagation();
       close(true);
+    } else if (event.key === 'Tab' && isOpen() && placement() === 'sheet') {
+      const focusable = sheetRef?.querySelectorAll<HTMLElement>(
+        'a[href], button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])'
+      );
+      const first = focusable?.[0];
+      const last = focusable?.[focusable.length - 1];
+      const active = document.activeElement;
+
+      if (!first || !last) {
+        event.preventDefault();
+        sheetRef?.focus();
+      } else if (!sheetRef?.contains(active)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+      } else if (event.shiftKey && (active === first || active === sheetRef)) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && active === last) {
+        event.preventDefault();
+        first.focus();
+      }
     }
   };
 
@@ -260,13 +288,13 @@ export const ComboBox = <T extends { id: string | number }>(
     setSelectedItem(item as Exclude<T, Function>);
     props.onSelect(item);
     // Optionally close the dropdown or take other actions
-    setIsOpen(false);
+    close(true);
   };
 
   const handleClear = () => {
     setSelectedItem(undefined);
     props.onClear?.();
-    setIsOpen(false);
+    close(true);
   };
 
   const shouldShowClear = () =>

@@ -97,6 +97,16 @@ export const PlaylistView: Component<{
     new Map<string, string>()
   );
   const [isAspectRatioModified, setIsAspectRatioModified] = createSignal(false);
+  let playlistSaveQueue: Promise<void> = Promise.resolve();
+
+  const serializePlaylistSave = <T,>(save: () => Promise<T>) => {
+    const result = playlistSaveQueue.then(save, save);
+    playlistSaveQueue = result.then(
+      () => undefined,
+      () => undefined
+    );
+    return result;
+  };
 
   // Track whether to constrain by width or height based on container size
   const [constrainByWidth, setConstrainByWidth] = createSignal(false);
@@ -576,53 +586,56 @@ export const PlaylistView: Component<{
     width: number;
     height: number;
   }) => {
-    const currentPlaylist = playlist();
-    if (!currentPlaylist) {
-      return false;
-    }
+    return serializePlaylistSave(async () => {
+      const currentPlaylist = playlist();
+      if (!currentPlaylist) {
+        return false;
+      }
 
-    const currentAspectRatio = getCurrentAspectRatio();
-    if (
-      currentAspectRatio.width === nextAspectRatio.width &&
-      currentAspectRatio.height === nextAspectRatio.height
-    ) {
-      setIsAspectRatioModified(false);
-      return true;
-    }
+      const currentAspectRatio = getCurrentAspectRatio();
+      if (
+        currentAspectRatio.width === nextAspectRatio.width &&
+        currentAspectRatio.height === nextAspectRatio.height
+      ) {
+        setIsAspectRatioModified(false);
+        return true;
+      }
 
-    try {
-      await PlaylistsService.updatePlaylist(
-        props.baseUrl,
-        props.organizationId,
-        `${currentPlaylist.id}`,
-        {
-          name: currentPlaylist.name,
-          description: '',
+      try {
+        await PlaylistsService.updatePlaylist(
+          props.baseUrl,
+          props.organizationId,
+          `${currentPlaylist.id}`,
+          {
+            name: currentPlaylist.name,
+            description: '',
+            settings: {
+              ...currentPlaylist.settings,
+              aspect_ratio: nextAspectRatio,
+            },
+          }
+        );
+
+        const updatedPlaylist = {
+          ...(playlist() || currentPlaylist),
           settings: {
+            ...(playlist() || currentPlaylist).settings,
             aspect_ratio: nextAspectRatio,
           },
-        }
-      );
+        };
 
-      const updatedPlaylist = {
-        ...currentPlaylist,
-        settings: {
-          ...currentPlaylist.settings,
-          aspect_ratio: nextAspectRatio,
-        },
-      };
-
-      setPlaylist(updatedPlaylist);
-      props.onChange?.(updatedPlaylist);
-      setIsAspectRatioModified(false);
-      toast.success(t('playlists.aspectRatioUpdated'));
-      return true;
-    } catch (error) {
-      toast.error(
-        t('playlists.errors.updateAspectRatio', { error: String(error) })
-      );
-      return false;
-    }
+        setPlaylist(updatedPlaylist);
+        props.onChange?.(updatedPlaylist);
+        setIsAspectRatioModified(false);
+        toast.success(t('playlists.aspectRatioUpdated'));
+        return true;
+      } catch (error) {
+        toast.error(
+          t('playlists.errors.updateAspectRatio', { error: String(error) })
+        );
+        return false;
+      }
+    });
   };
 
   const submitCustomAspectRatio = async () => {
@@ -819,35 +832,39 @@ export const PlaylistView: Component<{
   };
 
   const renamePlaylist = async ({ name }: { name: string }) => {
-    const currentPlaylist = playlist();
-    if (!currentPlaylist) return false;
+    return serializePlaylistSave(async () => {
+      const currentPlaylist = playlist();
+      if (!currentPlaylist) return false;
 
-    try {
-      await PlaylistsService.updatePlaylist(
-        props.baseUrl,
-        props.organizationId,
-        `${currentPlaylist.id}`,
-        {
+      try {
+        await PlaylistsService.updatePlaylist(
+          props.baseUrl,
+          props.organizationId,
+          `${currentPlaylist.id}`,
+          {
+            name,
+            description: '',
+            ...(currentPlaylist.settings
+              ? { settings: currentPlaylist.settings }
+              : {}),
+          }
+        );
+        const updatedPlaylist = {
+          ...(playlist() || currentPlaylist),
           name,
-          description: '',
-          ...(currentPlaylist.settings
-            ? { settings: currentPlaylist.settings }
-            : {}),
-        }
-      );
-      const updatedPlaylist = {
-        ...currentPlaylist,
-        name,
-        updated_at: new Date().toISOString(),
-      };
-      setPlaylist(updatedPlaylist);
-      props.onChange?.(updatedPlaylist);
-      toast.success(t('playlists.playlistUpdated', { name }));
-      return true;
-    } catch (error) {
-      toast.error(t('playlists.errorUpdating', { name, error: String(error) }));
-      return false;
-    }
+          updated_at: new Date().toISOString(),
+        };
+        setPlaylist(updatedPlaylist);
+        props.onChange?.(updatedPlaylist);
+        toast.success(t('playlists.playlistUpdated', { name }));
+        return true;
+      } catch (error) {
+        toast.error(
+          t('playlists.errorUpdating', { name, error: String(error) })
+        );
+        return false;
+      }
+    });
   };
 
   onCleanup(() => {

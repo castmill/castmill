@@ -209,6 +209,7 @@ describe('ComboBox Component', () => {
       expect(sheet.closest('[data-combobox-sheet]')).not.toBeNull();
       expect(document.body.style.overflow).toBe('hidden');
       expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+      const trigger = screen.getByRole('button', { name: /media/i });
 
       await fireEvent.click(await screen.findByText('Item 2'));
 
@@ -217,6 +218,27 @@ describe('ComboBox Component', () => {
         expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
       );
       expect(document.body.style.overflow).toBe('');
+      expect(document.activeElement).toBe(trigger);
+    });
+
+    it('traps tab focus inside the sheet', async () => {
+      mockSheetQuery(true);
+      renderComboBox();
+
+      await fireEvent.click(screen.getByText('Test ComboBox'));
+      const sheet = await screen.findByRole('dialog');
+      const closeButton = screen.getByRole('button', { name: 'Close' });
+      const search = screen.getByRole('textbox');
+
+      search.focus();
+      await fireEvent.keyDown(search, { key: 'Tab' });
+      expect(document.activeElement).toBe(closeButton);
+
+      closeButton.focus();
+      await fireEvent.keyDown(closeButton, { key: 'Tab', shiftKey: true });
+      expect(document.activeElement).toBe(search);
+
+      expect(sheet.contains(document.activeElement)).toBe(true);
     });
 
     it('closes the sheet with Escape before outer layers see it', async () => {
