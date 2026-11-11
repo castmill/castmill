@@ -169,7 +169,7 @@ describe('theme-context', () => {
       expect(onChange).toHaveBeenCalledWith('light');
     });
 
-    it('toggles, persists locally and saves to the user preferences', () => {
+    it('toggles, persists locally and saves to the user preferences', async () => {
       const preferences = createPreferences();
       const onChange = vi.fn();
 
@@ -188,12 +188,16 @@ describe('theme-context', () => {
       expect(api.theme()).toBe('light');
       expect(document.documentElement.dataset.theme).toBe('light');
       expect(localStorage.getItem(THEME_STORAGE_KEY)).toBe('light');
-      expect(preferences.save).toHaveBeenCalledWith('user-1', 'light');
+      await waitFor(() =>
+        expect(preferences.save).toHaveBeenCalledWith('user-1', 'light')
+      );
       expect(onChange).toHaveBeenLastCalledWith('light');
 
       api.setTheme('dark');
       expect(api.theme()).toBe('dark');
-      expect(preferences.save).toHaveBeenLastCalledWith('user-1', 'dark');
+      await waitFor(() =>
+        expect(preferences.save).toHaveBeenLastCalledWith('user-1', 'dark')
+      );
     });
 
     it('serializes preference saves so the latest theme is saved last', async () => {
