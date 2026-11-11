@@ -366,6 +366,45 @@ defmodule CastmillWeb.MCP.Tools do
     end
   end
 
+  def build_request("list_automations", args, agent) do
+    query = Map.take(args, ["page", "page_size", "search"])
+    {:ok, "GET", org_path(agent, "/automations"), [query: query]}
+  end
+
+  def build_request("get_automation", args, agent) do
+    with {:ok, id} <- id_arg(args, "automation_id") do
+      {:ok, "GET", org_path(agent, "/automations/#{id}"), []}
+    end
+  end
+
+  def build_request("create_automation", args, agent) do
+    with {:ok, attributes} <- map_arg(args, "attributes") do
+      {:ok, "POST", org_path(agent, "/automations"), [body: %{"automation" => attributes}]}
+    end
+  end
+
+  def build_request("update_automation", args, agent) do
+    with {:ok, id} <- id_arg(args, "automation_id"),
+         {:ok, attributes} <- map_arg(args, "attributes") do
+      {:ok, "PATCH", org_path(agent, "/automations/#{id}"), [body: %{"automation" => attributes}]}
+    end
+  end
+
+  def build_request("assign_automation", args, agent) do
+    with {:ok, id} <- id_arg(args, "automation_id"),
+         {:ok, devices} <- list_arg(args, "devices"),
+         {:ok, channels} <- list_arg(args, "channels") do
+      {:ok, "PUT", org_path(agent, "/automations/#{id}/assignments"),
+       [body: %{"devices" => devices, "channels" => channels}]}
+    end
+  end
+
+  def build_request("delete_automation", args, agent) do
+    with {:ok, id} <- id_arg(args, "automation_id") do
+      {:ok, "DELETE", org_path(agent, "/automations/#{id}"), []}
+    end
+  end
+
   def build_request("api_request", args, agent) do
     with {:ok, method} <- method_arg(args),
          {:ok, path} <- resolve_api_path(Map.get(args, "path"), agent),
@@ -661,6 +700,14 @@ defmodule CastmillWeb.MCP.Tools do
       value when is_map(value) -> {:ok, value}
       nil -> {:error, "The '#{key}' argument is required."}
       _ -> {:error, "The '#{key}' argument must be an object."}
+    end
+  end
+
+  defp list_arg(args, key) do
+    case Map.get(args, key) do
+      nil -> {:ok, []}
+      value when is_list(value) -> {:ok, value}
+      _ -> {:error, "The '#{key}' argument must be an array."}
     end
   end
 
@@ -1021,6 +1068,97 @@ defmodule CastmillWeb.MCP.Tools do
             %{"device_id" => @id_schema, "command" => enum(@device_commands, "Command")},
             ["device_id", "command"]
           ),
+        "annotations" => write(true)
+      },
+      %{
+        "name" => "list_automations",
+        "title" => "List automations",
+        "description" =>
+          "Lists the automations of the organization: rules of the form 'when <event> then " <>
+            "<action>' (phase 1: clock source, interrupt action), with assignments, " <>
+            "next_firing and capability warnings. Returns {data: [...], count}.",
+        "inputSchema" => object(pagination()),
+        "annotations" => read_only()
+      },
+      %{
+        "name" => "get_automation",
+        "title" => "Get automation",
+        "description" => "Fetches one automation with its rules and assignments.",
+        "inputSchema" => object(%{"automation_id" => @id_schema}, ["automation_id"]),
+        "annotations" => read_only()
+      },
+      %{
+        "name" => "create_automation",
+        "title" => "Create automation",
+        "description" =>
+          "Creates an automation. attributes: {name, enabled, rules}. A rule is " <>
+            "{when: {source: 'clock', condition: 'at', config: {schedule: {type: 'hourly', " <>
+            "minute: 8} | {type: 'interval', every_minutes: 15} | {type: 'times', times: " <>
+            "['08:00']} | {type: 'once', date: 'YYYY-MM-DD', time: 'HH:MM'}, weekdays?: [1..7], " <>
+            "window?: {start, end}, dates?: {start, end}, timezone?}}, then: {action: " <>
+            "'interrupt', config: {playlist_id, start: 'immediately' | 'after_current_item', " <>
+            "max_wait_seconds, plays, priority: 'normal' | 'high'}}, cooldown_seconds}.",
+        "inputSchema" =>
+          object(
+            %{
+              "attributes" => %{
+                "type" => "object",
+                "description" => "Automation attributes: name, enabled, rules"
+              }
+            },
+            ["attributes"]
+          ),
+        "annotations" => write(false)
+      },
+      %{
+        "name" => "update_automation",
+        "title" => "Update automation",
+        "description" =>
+          "Updates an automation (name, enabled and/or the full ordered rules list). " <>
+            "Assigned devices are notified.",
+        "inputSchema" =>
+          object(
+            %{
+              "automation_id" => @id_schema,
+              "attributes" => %{
+                "type" => "object",
+                "description" => "Attributes to change: name, enabled, rules"
+              }
+            },
+            ["automation_id", "attributes"]
+          ),
+        "annotations" => write(false)
+      },
+      %{
+        "name" => "assign_automation",
+        "title" => "Assign automation",
+        "description" =>
+          "Replaces the devices and channels an automation is assigned to (order matters). " <>
+            "Devices also run the automations of the channels they play.",
+        "inputSchema" =>
+          object(
+            %{
+              "automation_id" => @id_schema,
+              "devices" => %{
+                "type" => "array",
+                "items" => %{"type" => "string"},
+                "description" => "Device ids"
+              },
+              "channels" => %{
+                "type" => "array",
+                "items" => %{"type" => "integer"},
+                "description" => "Channel ids"
+              }
+            },
+            ["automation_id"]
+          ),
+        "annotations" => write(true)
+      },
+      %{
+        "name" => "delete_automation",
+        "title" => "Delete automation",
+        "description" => "Deletes an automation. Assigned devices stop running it.",
+        "inputSchema" => object(%{"automation_id" => @id_schema}, ["automation_id"]),
         "annotations" => write(true)
       },
       %{

@@ -10,6 +10,33 @@ import { DeviceCommand } from '../types/device-command.type';
 import { DeviceEvent } from '../interfaces/device-event.interface';
 import { DeviceUpdate } from '../components/device-details';
 
+export interface DeviceAutomationRule {
+  id: string;
+  index: number;
+  source: string;
+  condition: string;
+  kind: 'event' | 'state';
+  /** Clock rules carry upcoming firings as UTC epoch milliseconds. */
+  source_payload: { occurrences?: number[] } & Record<string, unknown>;
+  action: string;
+  action_config: Record<string, any>;
+  cooldown_seconds: number;
+}
+
+export interface DeviceAutomation {
+  id: number;
+  name: string;
+  via: Array<{ type: 'device' | 'channel'; id?: number; name?: string }>;
+  rules: DeviceAutomationRule[];
+}
+
+export interface DeviceAutomationsPayload {
+  generated_at: number;
+  valid_until: number;
+  timezone: string;
+  automations: DeviceAutomation[];
+}
+
 export interface FetchDevicesOptions {
   page: number;
   page_size: number;
@@ -367,6 +394,26 @@ export const DevicesService = {
     );
 
     return handleResponse<Record<string, any>>(response, {
+      parse: true,
+    });
+  },
+
+  /**
+   * Effective automations of a device (directly or via its channels), with
+   * the upcoming clock firings precomputed by the server.
+   */
+  async getDeviceAutomations(baseUrl: string, deviceId: string) {
+    const response = await authFetch(
+      `${baseUrl}/dashboard/devices/${deviceId}/automations`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    return handleResponse<{ data: DeviceAutomationsPayload }>(response, {
       parse: true,
     });
   },

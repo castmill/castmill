@@ -531,6 +531,15 @@ const WidgetsPage: Component<{
       },
     },
     {
+      key: 'scope',
+      title: t('widgets.scope.title'),
+      render: (widget: WidgetWithId) => (
+        <span class={`widget-scope widget-scope--${widget.scope || 'system'}`}>
+          {t(`widgets.scope.${widget.scope || 'system'}`)}
+        </span>
+      ),
+    },
+    {
       key: 'update_interval_seconds',
       title: t('widgets.updateInterval'),
       sortable: true,
@@ -555,6 +564,8 @@ const WidgetsPage: Component<{
             label: t('widgets.delete'),
             icon: BsTrash,
             handler: (widget: WidgetWithId) => openDeleteConfirm(widget),
+            // Only the organization's own widgets can be deleted.
+            disabled: (widget: WidgetWithId) => !widget.can_manage,
           },
         ]
       : []),

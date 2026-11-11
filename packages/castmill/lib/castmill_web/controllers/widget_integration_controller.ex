@@ -32,7 +32,11 @@ defmodule CastmillWeb.WidgetIntegrationController do
     when action in [
            :upsert_organization_credentials,
            :delete_organization_credentials,
-           :test_integration
+           :test_integration,
+           :list_integrations,
+           :get_integration,
+           :check_widget_credentials,
+           :prefetch_widget_data
          ]
   )
 
@@ -53,7 +57,18 @@ defmodule CastmillWeb.WidgetIntegrationController do
     end
   end
 
-  # Default: allow other actions (list/show are public for authenticated users)
+  # Reading a widget's integrations requires access to the organization's widgets;
+  # the widget itself must also be available to the organization (checked per action).
+  def check_access(actor_id, action, %{"organization_id" => organization_id})
+      when action in [
+             :list_integrations,
+             :get_integration,
+             :check_widget_credentials,
+             :prefetch_widget_data
+           ] do
+    {:ok, Organizations.has_access(organization_id, actor_id, "widgets", :show)}
+  end
+
   def check_access(_actor_id, _action, _params), do: {:ok, true}
 
   # ============================================================================
@@ -74,7 +89,7 @@ defmodule CastmillWeb.WidgetIntegrationController do
         "widget_id" => widget_id_or_slug
       }) do
     # Try to parse as integer (widget_id), otherwise treat as slug
-    widget_id = resolve_widget_id(widget_id_or_slug)
+    widget_id = resolve_widget_id(organization_id, widget_id_or_slug)
 
     case widget_id do
       nil ->
@@ -117,7 +132,7 @@ defmodule CastmillWeb.WidgetIntegrationController do
         "organization_id" => organization_id,
         "widget_id" => widget_id_or_slug
       }) do
-    widget_id = resolve_widget_id(widget_id_or_slug)
+    widget_id = resolve_widget_id(organization_id, widget_id_or_slug)
 
     case widget_id do
       nil ->
@@ -210,19 +225,15 @@ defmodule CastmillWeb.WidgetIntegrationController do
     end)
   end
 
-  # Resolves a widget ID from either a numeric ID string or a slug
-  defp resolve_widget_id(id_or_slug) do
-    case Integer.parse(id_or_slug) do
-      {id, ""} ->
-        id
+  # Resolves a numeric ID or slug to the ID of a widget available to the organization.
+  defp resolve_widget_id(organization_id, id_or_slug) do
+    widget =
+      case Integer.parse(id_or_slug) do
+        {_id, ""} -> Widgets.get_available_widget(organization_id, id_or_slug)
+        _ -> Widgets.get_available_widget_by_slug(organization_id, id_or_slug)
+      end
 
-      _ ->
-        # Not an integer, try to find by slug
-        case Widgets.get_widget_by_slug(id_or_slug) do
-          nil -> nil
-          widget -> widget.id
-        end
-    end
+    widget && widget.id
   end
 
   @doc """
@@ -238,13 +249,13 @@ defmodule CastmillWeb.WidgetIntegrationController do
         "organization_id" => organization_id,
         "integration_id" => integration_id
       }) do
-    case Integrations.get_integration(integration_id) do
-      nil ->
+    case get_available_integration(organization_id, integration_id) do
+      {:error, :not_found} ->
         conn
         |> put_status(:not_found)
         |> json(%{error: "Integration not found"})
 
-      integration ->
+      {:ok, integration} ->
         # Check if network credentials are configured
         has_network_credentials = check_network_credentials(organization_id, integration.id)
 
@@ -282,7 +293,7 @@ defmodule CastmillWeb.WidgetIntegrationController do
           "credentials" => credentials
         }
       ) do
-    with {:ok, integration} <- get_integration_or_error(integration_id),
+    with {:ok, integration} <- get_available_integration(organization_id, integration_id),
          :ok <- validate_credential_scope(integration, "organization"),
          {:ok, organization} <- get_organization_or_error(organization_id),
          {:ok, encryption_key} <- get_or_create_encryption_key(organization),
@@ -344,6 +355,8 @@ defmodule CastmillWeb.WidgetIntegrationController do
     with {:ok, integration} <- get_integration_or_error(integration_id),
          :ok <- validate_credential_scope(integration, "widget"),
          {:ok, widget_config} <- get_widget_config_or_error(widget_config_id),
+         # The credentials must be for an integration of the configured widget.
+         :ok <- ensure_integration_of_widget(integration, widget_config),
          {:ok, organization} <- get_organization_from_widget_config(widget_config),
          :ok <- authorize_credential_management(current_user, organization),
          {:ok, encryption_key} <- get_or_create_encryption_key(organization),
@@ -430,7 +443,7 @@ defmodule CastmillWeb.WidgetIntegrationController do
       }) do
     # This is a placeholder - actual implementation would depend on integration type
     # For now, just verify credentials exist and are valid
-    with {:ok, integration} <- get_integration_or_error(integration_id),
+    with {:ok, integration} <- get_available_integration(organization_id, integration_id),
          {:ok, credentials} <-
            get_credentials_for_integration(integration, organization_id: organization_id) do
       conn
@@ -472,6 +485,8 @@ defmodule CastmillWeb.WidgetIntegrationController do
 
   Request body (optional):
     - options: Widget options to use for discriminator calculation (for widget_option type)
+    - widget_config_id: An existing config to authorize and scope config-specific data.
+      Config-scoped previews without a saved config are skipped.
     - preview: When true the fetch is ephemeral (used by the dashboard live
       preview): data is cached but no background polling scheduler is created,
       since the options being previewed may never be saved.
@@ -489,7 +504,7 @@ defmodule CastmillWeb.WidgetIntegrationController do
           "widget_id" => widget_id_or_slug
         } = params
       ) do
-    widget_id = resolve_widget_id(widget_id_or_slug)
+    widget_id = resolve_widget_id(organization_id, widget_id_or_slug)
 
     case widget_id do
       nil ->
@@ -500,11 +515,107 @@ defmodule CastmillWeb.WidgetIntegrationController do
       id ->
         widget_options = Map.get(params, "options", %{})
         preview? = Map.get(params, "preview", false) in [true, "true"]
-        do_prefetch_widget_data(conn, organization_id, id, widget_options, preview?)
+        widget_config_id = Map.get(params, "widget_config_id")
+
+        case authorize_prefetch_widget_config(
+               conn,
+               organization_id,
+               id,
+               widget_config_id
+             ) do
+          :ok ->
+            do_prefetch_widget_data(
+              conn,
+              organization_id,
+              id,
+              widget_options,
+              preview?,
+              widget_config_id
+            )
+
+          {:error, status, message} ->
+            conn
+            |> put_status(status)
+            |> json(%{error: message})
+        end
     end
   end
 
-  defp do_prefetch_widget_data(conn, organization_id, widget_id, widget_options, preview?) do
+  defp do_prefetch_widget_data(
+         conn,
+         organization_id,
+         widget_id,
+         widget_options,
+         preview?,
+         widget_config_id
+       ) do
+    case Castmill.Feeds.widget_data(
+           Widgets.get_widget(widget_id),
+           organization_id,
+           widget_options
+         ) do
+      :not_a_feed_widget ->
+        prefetch_integration_data(
+          conn,
+          organization_id,
+          widget_id,
+          widget_options,
+          preview?,
+          widget_config_id
+        )
+
+      feed_result ->
+        json(conn, feed_response(feed_result))
+    end
+  end
+
+  # Feed widgets read their feed's data directly: nothing to fetch or cache.
+  defp feed_response({:ok, nil}), do: %{data: nil, version: 0, status: "no_feed"}
+
+  defp feed_response({:ok, %{data: data, version: version}}),
+    do: %{data: data, version: version, status: "fetched"}
+
+  defp feed_response({:error, :feed_not_found}),
+    do: %{data: nil, version: 0, status: "error", message: "Feed not found"}
+
+  defp authorize_prefetch_widget_config(_conn, _organization_id, _widget_id, nil), do: :ok
+
+  defp authorize_prefetch_widget_config(conn, organization_id, widget_id, widget_config_id) do
+    current_actor = conn.assigns[:current_actor] || conn.assigns[:current_user]
+
+    cond do
+      is_nil(current_actor) ->
+        {:error, :unauthorized, "Authentication required"}
+
+      true ->
+        with {:ok, widget_config} <- get_widget_config_or_error(widget_config_id),
+             true <- widget_config.widget_id == widget_id,
+             ^organization_id <-
+               Widgets.get_organization_id_for_widget_config(widget_config.id) do
+          if Organizations.has_access(
+               organization_id,
+               current_actor.id,
+               "playlists",
+               :show
+             ) do
+            :ok
+          else
+            {:error, :forbidden, "You don't have access to this widget data"}
+          end
+        else
+          _ -> {:error, :not_found, "Widget config not found"}
+        end
+    end
+  end
+
+  defp prefetch_integration_data(
+         conn,
+         organization_id,
+         widget_id,
+         widget_options,
+         preview?,
+         widget_config_id
+       ) do
     # Get the widget's integrations
     case Integrations.list_integrations(widget_id: widget_id) do
       [] ->
@@ -515,14 +626,15 @@ defmodule CastmillWeb.WidgetIntegrationController do
 
       [integration | _] ->
         # Only handle PULL integrations with fetcher modules
-        if integration.integration_type == "pull" do
+        if integration.integration_type in ["pull", "both"] do
           prefetch_pull_integration(
             conn,
             organization_id,
             widget_id,
             integration,
             widget_options,
-            preview?
+            preview?,
+            widget_config_id
           )
         else
           # PUSH integrations don't support prefetching
@@ -539,49 +651,157 @@ defmodule CastmillWeb.WidgetIntegrationController do
          widget_id,
          integration,
          widget_options,
-         preview?
+         preview?,
+         widget_config_id
        ) do
     widget_options = Integrations.with_display_locale(organization_id, widget_options)
     pull_config = integration.pull_config || %{}
     credential_schema = integration.credential_schema || %{}
     fetcher_module_name = Map.get(pull_config, "fetcher_module")
 
-    unless fetcher_module_name do
-      conn
-      |> put_status(:no_content)
-      |> text("")
-    else
-      # Check if we already have cached data for this discriminator
-      discriminator_id = build_discriminator_id(integration, widget_options, organization_id)
+    cond do
+      integration.discriminator_type == "widget_config" and is_nil(widget_config_id) ->
+        conn
+        |> put_status(:no_content)
+        |> text("")
 
-      case Integrations.get_integration_data_by_discriminator(integration.id, discriminator_id) do
-        %Integrations.WidgetIntegrationData{} = data ->
-          # Already have cached data - return it
-          filtered_data = apply_max_items_filter(data.data, widget_options)
+      is_nil(fetcher_module_name) and
+          not (Integrations.Refresh.on_demand?(integration) and
+                   is_binary(integration.pull_endpoint)) ->
+        conn
+        |> put_status(:no_content)
+        |> text("")
 
-          conn
-          |> put_status(:ok)
-          |> json(%{
-            data: filtered_data,
-            version: data.version,
-            fetched_at: data.fetched_at,
-            status: "cached"
-          })
+      Integrations.Refresh.on_demand?(integration) ->
+        prefetch_on_demand(
+          conn,
+          organization_id,
+          widget_id,
+          integration,
+          widget_options,
+          preview?,
+          widget_config_id
+        )
 
-        nil ->
-          # No cached data - fetch it now
-          fetch_and_cache_for_prefetch(
-            conn,
-            organization_id,
-            widget_id,
-            integration,
-            widget_options,
-            fetcher_module_name,
-            pull_config,
-            credential_schema,
-            preview?
-          )
-      end
+      true ->
+        prefetch_scheduled(
+          conn,
+          organization_id,
+          widget_id,
+          integration,
+          widget_options,
+          fetcher_module_name,
+          pull_config,
+          credential_schema,
+          preview?,
+          widget_config_id
+        )
+    end
+  end
+
+  defp prefetch_on_demand(
+         conn,
+         organization_id,
+         widget_id,
+         integration,
+         widget_options,
+         preview?,
+         widget_config_id
+       ) do
+    discriminator_id =
+      prefetch_discriminator_id(
+        integration,
+        widget_options,
+        organization_id,
+        widget_config_id,
+        preview?
+      )
+
+    existing =
+      Integrations.get_integration_data_by_discriminator(integration.id, discriminator_id)
+
+    cache_opts =
+      [discriminator_id: discriminator_id, preview?: preview?]
+      |> maybe_isolate_preview_cache(integration, preview?)
+
+    case Integrations.Refresh.read(
+           integration,
+           existing,
+           organization_id,
+           widget_id,
+           widget_options,
+           widget_config_id,
+           cache_opts
+         ) do
+      {:ok, data} ->
+        conn
+        |> put_status(:ok)
+        |> json(%{
+          data: apply_max_items_filter(data.data, widget_options),
+          discriminator_id: data.discriminator_id,
+          version: data.version,
+          fetched_at: data.fetched_at,
+          status: if(data == existing, do: "cached", else: "fetched")
+        })
+
+      _ ->
+        conn
+        |> put_status(:ok)
+        |> json(%{data: nil, status: "error", message: "Failed to fetch data"})
+    end
+  end
+
+  defp prefetch_scheduled(
+         conn,
+         organization_id,
+         widget_id,
+         integration,
+         widget_options,
+         fetcher_module_name,
+         pull_config,
+         credential_schema,
+         preview?,
+         widget_config_id
+       ) do
+    # Check if we already have cached data for this discriminator
+    discriminator_id =
+      prefetch_discriminator_id(
+        integration,
+        widget_options,
+        organization_id,
+        widget_config_id,
+        preview?
+      )
+
+    case Integrations.get_integration_data_by_discriminator(integration.id, discriminator_id) do
+      %Integrations.WidgetIntegrationData{} = data ->
+        # Already have cached data - return it
+        filtered_data = apply_max_items_filter(data.data, widget_options)
+
+        conn
+        |> put_status(:ok)
+        |> json(%{
+          data: filtered_data,
+          discriminator_id: data.discriminator_id,
+          version: data.version,
+          fetched_at: data.fetched_at,
+          status: "cached"
+        })
+
+      nil ->
+        # No cached data - fetch it now
+        fetch_and_cache_for_prefetch(
+          conn,
+          organization_id,
+          widget_id,
+          integration,
+          widget_options,
+          fetcher_module_name,
+          pull_config,
+          credential_schema,
+          preview?,
+          widget_config_id
+        )
     end
   end
 
@@ -592,14 +812,15 @@ defmodule CastmillWeb.WidgetIntegrationController do
          integration,
          widget_options,
          fetcher_module_name,
-         pull_config,
+         _pull_config,
          _credential_schema,
-         preview?
+         preview?,
+         widget_config_id
        ) do
     # Resolve credentials, merging network-level credentials (shared across the
     # network, e.g. a commercial API key) with any organization-level ones.
     credentials =
-      case Integrations.get_fetch_credentials(organization_id, integration) do
+      case Integrations.get_fetch_credentials(organization_id, integration, widget_config_id) do
         {:ok, creds} -> creds
         {:error, _reason} -> nil
       end
@@ -613,15 +834,34 @@ defmodule CastmillWeb.WidgetIntegrationController do
         message: "Integration requires credentials that are not configured"
       })
     else
-      # Merge pull_config with widget_options for the fetcher
-      merged_options = Map.merge(pull_config, widget_options)
+      # Item options may only override the pull_config keys the widget declares.
+      merged_options = Integrations.Refresh.fetch_options(integration, widget_options)
 
       case fetch_with_module(fetcher_module_name, credentials, merged_options) do
         {:ok, data, _creds} ->
           # Store the data
-          discriminator_id = build_discriminator_id(integration, widget_options, organization_id)
+          discriminator_id =
+            prefetch_discriminator_id(
+              integration,
+              widget_options,
+              organization_id,
+              widget_config_id,
+              preview?
+            )
 
-          case store_fetched_data(organization_id, widget_id, integration, discriminator_id, data) do
+          cache_widget_config_id =
+            if preview? and integration.discriminator_type == "widget_config",
+              do: nil,
+              else: widget_config_id
+
+          case store_fetched_data(
+                 organization_id,
+                 widget_id,
+                 integration,
+                 discriminator_id,
+                 data,
+                 cache_widget_config_id
+               ) do
             {:ok, integration_data} ->
               # Schedule background polling for future updates, unless this is
               # an ephemeral preview fetch whose options may never be saved.
@@ -631,7 +871,8 @@ defmodule CastmillWeb.WidgetIntegrationController do
                   widget_id,
                   integration,
                   discriminator_id,
-                  widget_options
+                  widget_options,
+                  widget_config_id: widget_config_id
                 )
               end
 
@@ -641,6 +882,7 @@ defmodule CastmillWeb.WidgetIntegrationController do
               |> put_status(:ok)
               |> json(%{
                 data: filtered_data,
+                discriminator_id: integration_data.discriminator_id,
                 version: integration_data.version,
                 fetched_at: integration_data.fetched_at,
                 status: "fetched"
@@ -731,40 +973,49 @@ defmodule CastmillWeb.WidgetIntegrationController do
         true -> Widgets.get_widget_id_for_config(widget_config_id)
       end
 
+    widget = widget_id && Widgets.get_widget(widget_id)
+
+    case Castmill.Feeds.widget_data(widget, organization_id, widget_options) do
+      :not_a_feed_widget ->
+        return_integration_data(
+          conn,
+          widget_config_id,
+          organization_id,
+          widget_id,
+          widget_options,
+          current_version
+        )
+
+      {:ok, %{version: version}} when version == current_version ->
+        conn |> put_status(:not_modified) |> text("")
+
+      feed_result ->
+        json(conn, feed_response(feed_result))
+    end
+  end
+
+  defp return_integration_data(
+         conn,
+         widget_config_id,
+         organization_id,
+         widget_id,
+         widget_options,
+         current_version
+       ) do
     integration = get_widget_integration(widget_id)
 
-    # Try widget-config-specific data first, then fall back to org-level shared data
     integration_data =
-      case Integrations.get_integration_data_by_config(widget_config_id) do
-        %Integrations.WidgetIntegrationData{} = data ->
-          data
-
-        nil ->
-          # Try organization-level shared data using widget options for discriminator
-          case widget_id do
-            nil ->
-              nil
-
-            widget_id ->
-              # Use options for proper discriminator lookup (e.g., feed_url for RSS)
-              case Integrations.get_integration_data_for_widget_with_options(
-                     organization_id,
-                     widget_id,
-                     widget_options
-                   ) do
-                nil ->
-                  # No cached data - try on-demand fetch for PULL integrations
-                  try_on_demand_fetch(
-                    organization_id,
-                    widget_config_id,
-                    widget_id,
-                    widget_options
-                  )
-
-                data ->
-                  data
-              end
-          end
+      if integration && integration.integration_type in ["pull", "both"] &&
+           Integrations.Refresh.on_demand?(integration) do
+        on_demand_widget_data(
+          integration,
+          organization_id,
+          widget_id,
+          widget_options,
+          widget_config_id
+        )
+      else
+        scheduled_widget_data(widget_config_id, organization_id, widget_id, widget_options)
       end
 
     maybe_schedule_refresh(
@@ -772,16 +1023,85 @@ defmodule CastmillWeb.WidgetIntegrationController do
       integration,
       widget_options,
       organization_id,
-      widget_id
+      widget_id,
+      widget_config_id
     )
 
+    respond_widget_data(conn, integration_data, current_version, widget_options)
+  end
+
+  # On-demand integrations refresh when read (see Integrations.Refresh).
+  defp on_demand_widget_data(
+         integration,
+         organization_id,
+         widget_id,
+         widget_options,
+         widget_config_id
+       ) do
+    existing =
+      Integrations.Refresh.stored(
+        integration,
+        organization_id,
+        widget_options,
+        widget_config_id
+      )
+
+    case Integrations.Refresh.read(
+           integration,
+           existing,
+           organization_id,
+           widget_id,
+           widget_options,
+           widget_config_id
+         ) do
+      {:ok, data} -> data
+      _ -> nil
+    end
+  end
+
+  # Try widget-config-specific data first, then fall back to org-level shared data
+  defp scheduled_widget_data(widget_config_id, organization_id, widget_id, widget_options) do
+    case Integrations.get_integration_data_by_config(widget_config_id) do
+      %Integrations.WidgetIntegrationData{} = data ->
+        data
+
+      nil ->
+        # Try organization-level shared data using widget options for discriminator
+        case widget_id do
+          nil ->
+            nil
+
+          widget_id ->
+            # Use options for proper discriminator lookup (e.g., feed_url for RSS)
+            case Integrations.get_integration_data_for_widget_with_options(
+                   organization_id,
+                   widget_id,
+                   widget_options
+                 ) do
+              nil ->
+                # No cached data - try on-demand fetch for PULL integrations
+                try_on_demand_fetch(
+                  organization_id,
+                  widget_config_id,
+                  widget_id,
+                  widget_options
+                )
+
+              data ->
+                data
+            end
+        end
+    end
+  end
+
+  defp respond_widget_data(conn, integration_data, current_version, widget_options) do
     case integration_data do
       nil ->
         # No integration data found - this is normal for widgets without integrations
         # Return empty data with version 0 instead of 404
         conn
         |> put_status(:ok)
-        |> json(%{data: nil, version: 0, status: "no_integration"})
+        |> json(%{data: nil, discriminator_id: nil, version: 0, status: "no_integration"})
 
       data when not is_nil(current_version) and data.version == current_version ->
         # Version matches, return 304
@@ -799,6 +1119,7 @@ defmodule CastmillWeb.WidgetIntegrationController do
         |> put_status(:ok)
         |> json(%{
           data: filtered_data,
+          discriminator_id: data.discriminator_id,
           version: data.version,
           fetched_at: data.fetched_at,
           status: data.status
@@ -867,10 +1188,9 @@ defmodule CastmillWeb.WidgetIntegrationController do
                   nil
 
                 _widget_config ->
-                  # Merge pull_config with widget_options so fetcher has access to both
-                  # pull_config contains integration-level settings (like feed_url for RSS)
-                  # widget_options contains widget instance settings (like max_items)
-                  merged_options = Map.merge(pull_config, widget_options || %{})
+                  # Item options may only override the pull_config keys the widget
+                  # declares (see Integrations.Refresh.fetch_options/3).
+                  merged_options = Integrations.Refresh.fetch_options(integration, widget_options)
 
                   # Try to fetch data using the fetcher
                   case fetch_with_module(
@@ -958,19 +1278,68 @@ defmodule CastmillWeb.WidgetIntegrationController do
     end
   end
 
-  defp build_discriminator_id(integration, options, organization_id) do
-    Integrations.build_discriminator_id(integration, options, organization_id)
+  defp build_discriminator_id(integration, options, organization_id, widget_config_id \\ nil) do
+    Integrations.build_discriminator_id(integration, options, organization_id, widget_config_id)
   end
 
-  defp store_fetched_data(organization_id, widget_id, integration, discriminator_id, data) do
+  defp prefetch_discriminator_id(
+         %{discriminator_type: "widget_config"} = integration,
+         options,
+         organization_id,
+         widget_config_id,
+         true
+       )
+       when not is_nil(widget_config_id) do
+    base = build_discriminator_id(integration, options, organization_id, widget_config_id)
+
+    options_hash =
+      :sha256
+      |> :crypto.hash(Jason.encode!(options || %{}))
+      |> Base.encode16(case: :lower)
+
+    "#{base}|preview:#{options_hash}"
+  end
+
+  defp prefetch_discriminator_id(
+         integration,
+         options,
+         organization_id,
+         widget_config_id,
+         _preview?
+       ) do
+    build_discriminator_id(integration, options, organization_id, widget_config_id)
+  end
+
+  defp maybe_isolate_preview_cache(
+         cache_opts,
+         %{discriminator_type: "widget_config"},
+         true
+       ) do
+    Keyword.put(cache_opts, :cache_widget_config_id, nil)
+  end
+
+  defp maybe_isolate_preview_cache(cache_opts, _integration, _preview?), do: cache_opts
+
+  defp store_fetched_data(
+         organization_id,
+         widget_id,
+         integration,
+         discriminator_id,
+         data,
+         widget_config_id \\ nil
+       ) do
     now = DateTime.utc_now()
     interval = integration.pull_interval_seconds || 300
     refresh_at = DateTime.add(now, interval, :second)
+
+    cache_widget_config_id =
+      if integration.discriminator_type == "widget_config", do: widget_config_id, else: nil
 
     Integrations.upsert_integration_data(%{
       widget_integration_id: integration.id,
       organization_id: organization_id,
       widget_id: widget_id,
+      widget_config_id: cache_widget_config_id,
       discriminator_id: discriminator_id,
       data: data,
       status: "active",
@@ -1000,7 +1369,8 @@ defmodule CastmillWeb.WidgetIntegrationController do
             widget_id: widget_id,
             integration_id: integration.id,
             discriminator_id: discriminator_id,
-            widget_options: widget_options
+            widget_options: widget_options,
+            widget_config_id: Keyword.get(opts, :widget_config_id)
           },
           delay: delay
         )
@@ -1031,9 +1401,41 @@ defmodule CastmillWeb.WidgetIntegrationController do
          integration,
          widget_options,
          organization_id,
-         widget_id
+         widget_id,
+         widget_config_id
        )
        when not is_nil(integration) and not is_nil(widget_id) do
+    if Integrations.Refresh.on_demand?(integration),
+      do: :ok,
+      else:
+        schedule_due_refresh(
+          data,
+          integration,
+          widget_options,
+          organization_id,
+          widget_id,
+          widget_config_id
+        )
+  end
+
+  defp maybe_schedule_refresh(
+         _data,
+         _integration,
+         _options,
+         _organization_id,
+         _widget_id,
+         _widget_config_id
+       ),
+       do: :ok
+
+  defp schedule_due_refresh(
+         data,
+         integration,
+         widget_options,
+         organization_id,
+         widget_id,
+         widget_config_id
+       ) do
     now = DateTime.utc_now()
     interval = integration.pull_interval_seconds || 300
 
@@ -1046,7 +1448,12 @@ defmodule CastmillWeb.WidgetIntegrationController do
 
     if refresh_due do
       discriminator_id =
-        build_discriminator_id(integration, widget_options || %{}, organization_id)
+        build_discriminator_id(
+          integration,
+          widget_options || %{},
+          organization_id,
+          widget_config_id
+        )
 
       schedule_polling(
         organization_id,
@@ -1054,13 +1461,11 @@ defmodule CastmillWeb.WidgetIntegrationController do
         integration,
         discriminator_id,
         widget_options || %{},
-        delay: 0
+        delay: 0,
+        widget_config_id: widget_config_id
       )
     end
   end
-
-  defp maybe_schedule_refresh(_data, _integration, _options, _organization_id, _widget_id),
-    do: :ok
 
   defp get_widget_integration(nil), do: nil
 
@@ -1143,6 +1548,20 @@ defmodule CastmillWeb.WidgetIntegrationController do
   # Helper Functions
   # ============================================================================
 
+  # The integration, if its widget is available to the organization.
+  defp get_available_integration(organization_id, integration_id) do
+    with {:ok, integration} <- get_integration_or_error(integration_id),
+         true <- Widgets.available?(organization_id, integration.widget_id) do
+      {:ok, integration}
+    else
+      _ -> {:error, :not_found}
+    end
+  end
+
+  defp ensure_integration_of_widget(integration, widget_config) do
+    if integration.widget_id == widget_config.widget_id, do: :ok, else: {:error, :not_found}
+  end
+
   defp get_integration_or_error(integration_id) do
     case Integrations.get_integration(integration_id) do
       nil -> {:error, :not_found}
@@ -1158,9 +1577,11 @@ defmodule CastmillWeb.WidgetIntegrationController do
   end
 
   defp get_widget_config_or_error(widget_config_id) do
-    case Widgets.get_widget_config(nil, widget_config_id) do
-      nil -> {:error, :not_found}
-      widget_config -> {:ok, widget_config}
+    with {:ok, id} <- Ecto.UUID.cast(widget_config_id),
+         %Castmill.Widgets.WidgetConfig{} = widget_config <- Widgets.get_widget_config_by_id(id) do
+      {:ok, widget_config}
+    else
+      _ -> {:error, :not_found}
     end
   end
 

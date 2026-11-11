@@ -39,11 +39,11 @@ export const ConfirmDialog = (props: ConfirmDialogProps): JSX.Element => {
         )}
         <div class="confirm-dialog-actions">
           <Button
-            label={props.confirmLabel ?? 'Confirm'}
+            label={props.confirmLabel || 'Confirm'}
             color="danger"
             onClick={handleConfirm}
           />
-          <Button label={props.cancelLabel ?? 'Cancel'} onClick={handleClose} />
+          <Button label={props.cancelLabel || 'Cancel'} onClick={handleClose} />
         </div>
       </Modal>
     </Show>

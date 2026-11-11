@@ -564,9 +564,8 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
      ]}
   end
 
-  defp resources_for_network(_network_id, "widgets") do
-    # Widgets are global (not network-scoped), so list them all.
-    widgets = Castmill.Widgets.list_widgets()
+  defp resources_for_network(network_id, "widgets") do
+    widgets = Castmill.Widgets.list_network_widgets(network_id)
 
     rows =
       Enum.map(widgets, fn widget ->
@@ -575,7 +574,8 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
           name: widget.name,
           slug: widget.slug,
           description: widget.description,
-          is_system: if(widget.is_system, do: "Yes", else: "No")
+          scope: Castmill.Widgets.scope(widget),
+          restricted: if(widget.restricted, do: "Yes", else: "No")
         }
       end)
 
@@ -585,7 +585,8 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
        %{name: "Name", field: :name},
        %{name: "Slug", field: :slug},
        %{name: "Description", field: :description},
-       %{name: "System", field: :is_system}
+       %{name: "Scope", field: :scope},
+       %{name: "Restricted", field: :restricted}
      ]}
   end
 

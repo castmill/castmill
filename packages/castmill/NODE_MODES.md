@@ -127,7 +127,8 @@ config :castmill, :bullmq,
     {:integration_polling, concurrency: 5},
     {:integrations, concurrency: 5},
     {:maintenance, concurrency: 2},
-    {:email, concurrency: 5}
+    {:email, concurrency: 5},
+    {:feed_media, concurrency: 5}
   ],
   completion_event_queues: [:video_transcoder, :image_transcoder]
 

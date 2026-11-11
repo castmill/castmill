@@ -1,6 +1,7 @@
-import { Component, For, JSX, onCleanup, onMount } from 'solid-js';
+import { Component, For, JSX, createMemo, onCleanup, onMount } from 'solid-js';
 import { Item } from './item';
-import { TemplateConfig } from './binding';
+import { TemplateConfig, resolveOption } from './binding';
+import { isVisible } from './visibility';
 import {
   TemplateComponent,
   TemplateComponentType,
@@ -11,7 +12,10 @@ import { ComponentAnimation, applyAnimations } from './animation';
 import { BaseComponentProps } from './interfaces/base-component-props';
 import { PlayerGlobals } from '../../interfaces/player-globals.interface';
 
-export interface GroupComponentOptions {}
+export interface GroupComponentOptions {
+  /** Renders only the first `limit` visible children (see `when`). */
+  limit?: number | Record<string, any>;
+}
 
 export class GroupComponent implements TemplateComponent {
   readonly type = TemplateComponentType.Group;
@@ -59,9 +63,25 @@ export class GroupComponent implements TemplateComponent {
   }
 }
 
+/**
+ * The context of a group's children. A group may declare `context` (any
+ * binding, e.g. `{ "key": "data.listing" }`) so its children bind to that
+ * value with `$.` paths; otherwise they keep the group's own context.
+ */
+export const resolveGroupContext = (
+  component: GroupComponent,
+  config: TemplateConfig,
+  context: any,
+  globals: PlayerGlobals
+) =>
+  component.context === undefined || component.context === null
+    ? context
+    : resolveOption(component.context, config, context, globals);
+
 interface GroupProps extends BaseComponentProps {
   config: TemplateConfig;
   context: any;
+  limit?: number;
   components: TemplateComponentTypeUnion[];
   globals: PlayerGlobals;
   resourceManager: ResourceManager;
@@ -71,10 +91,32 @@ export const Group: Component<GroupProps> = (props) => {
   let groupRef: HTMLDivElement | undefined;
   let cleanUpAnimations: () => void;
 
-  let count = 0;
-  const onReadyAfter = () => {
-    count++;
-    if (count == props.components.length) {
+  // With a limit, only the first visible children render.
+  const children = createMemo(() => {
+    const limit = props.limit;
+    if (typeof limit !== 'number' || !(limit >= 0)) {
+      return props.components;
+    }
+    return props.components
+      .filter((component) =>
+        isVisible(
+          component as { filter?: Record<string, any>; when?: any },
+          props.config,
+          props.context,
+          props.globals
+        )
+      )
+      .slice(0, limit);
+  });
+
+  const readyComponents = new Set<number>();
+  const onReadyAfter = (index: number) => {
+    if (readyComponents.has(index)) {
+      props.onLayoutUpdate?.();
+      return;
+    }
+    readyComponents.add(index);
+    if (readyComponents.size === children().length) {
       props.onReady();
     }
   };
@@ -93,7 +135,7 @@ export const Group: Component<GroupProps> = (props) => {
       );
     }
     // If group has no children, call onReady immediately
-    if (props.components.length === 0) {
+    if (children().length === 0) {
       props.onReady();
     }
   });
@@ -105,7 +147,7 @@ export const Group: Component<GroupProps> = (props) => {
       data-name={props.name}
       style={props.style}
     >
-      <For each={props.components}>
+      <For each={children()}>
         {(component, i) => (
           <Item
             config={props.config}
@@ -114,7 +156,8 @@ export const Group: Component<GroupProps> = (props) => {
             globals={props.globals}
             timeline={props.timeline}
             resourceManager={props.resourceManager}
-            onReady={onReadyAfter}
+            onReady={() => onReadyAfter(i())}
+            onLayoutUpdate={props.onLayoutUpdate}
           />
         )}
       </For>

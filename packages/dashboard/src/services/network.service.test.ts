@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { HttpError } from '@castmill/ui-common';
 import { NetworkService } from './network.service';
 
 // Mock the auth module to prevent side effects (setStore) during test imports
@@ -196,6 +197,159 @@ describe('NetworkService', () => {
     });
   });
 
+  describe('widget access', () => {
+    const widget = {
+      id: 21,
+      name: 'Weather',
+      description: 'Forecast',
+      slug: 'weather',
+      icon: '/widgets/weather/icon.svg',
+      small_icon: null,
+      kind: 'system',
+      access: 'selected',
+      enabled_count: 1,
+      eligible_count: 3,
+      organizations_count: 3,
+      in_use_count: 0,
+      core: false,
+      platform_restricted: false,
+    };
+
+    const ok = (body: unknown) => ({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve(body),
+    });
+
+    it('lists widgets with filters as query parameters', async () => {
+      const result = {
+        data: [widget],
+        summary: { all: 0, selected: 1, hidden: 0, total: 1 },
+        organizations_count: 3,
+        pagination: { page: 2, page_size: 50, total_count: 51, total_pages: 2 },
+      };
+      mockFetch.mockResolvedValueOnce(ok(result));
+
+      await expect(
+        NetworkService.listWidgetAccess({
+          page: 2,
+          pageSize: 50,
+          search: 'wea',
+          kind: 'system',
+          access: 'selected',
+        })
+      ).resolves.toEqual(result);
+
+      const url = mockFetch.mock.calls[0][0] as string;
+      expect(url).toContain('/dashboard/network/widgets?');
+      expect(url).toContain('page=2');
+      expect(url).toContain('page_size=50');
+      expect(url).toContain('search=wea');
+      expect(url).toContain('kind=system');
+      expect(url).toContain('access=selected');
+    });
+
+    it('omits empty filters', async () => {
+      mockFetch.mockResolvedValueOnce(ok({ data: [] }));
+
+      await NetworkService.listWidgetAccess({ search: '' });
+
+      expect(mockFetch.mock.calls[0][0]).toMatch(
+        /\/dashboard\/network\/widgets$/
+      );
+    });
+
+    it("lists a widget's organizations", async () => {
+      mockFetch.mockResolvedValueOnce(ok({ data: [] }));
+
+      await NetworkService.listWidgetOrganizations(21, {
+        page: 1,
+        search: 'acme',
+        status: 'disabled',
+      });
+
+      const url = mockFetch.mock.calls[0][0] as string;
+      expect(url).toContain('/dashboard/network/widgets/21/organizations?');
+      expect(url).toContain('search=acme');
+      expect(url).toContain('status=disabled');
+    });
+
+    it('sets the access mode', async () => {
+      mockFetch.mockResolvedValueOnce(ok(widget));
+
+      await expect(
+        NetworkService.setWidgetAccess(21, 'hidden')
+      ).resolves.toEqual(widget);
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/dashboard/network/widgets/21/access'),
+        expect.objectContaining({
+          method: 'PUT',
+          body: JSON.stringify({ access: 'hidden' }),
+        })
+      );
+    });
+
+    it('updates organizations by id or by search', async () => {
+      mockFetch.mockResolvedValue(ok(widget));
+
+      await NetworkService.updateWidgetOrganizations(21, {
+        disable: ['org-1'],
+      });
+      await NetworkService.updateWidgetOrganizations(21, {
+        all_matching: true,
+        enabled: true,
+        search: 'acme',
+      });
+
+      expect(mockFetch.mock.calls[0][1]).toEqual(
+        expect.objectContaining({
+          method: 'PATCH',
+          body: JSON.stringify({ disable: ['org-1'] }),
+        })
+      );
+      expect(mockFetch.mock.calls[1][1].body).toBe(
+        JSON.stringify({ all_matching: true, enabled: true, search: 'acme' })
+      );
+    });
+
+    it('rejects with the organizations that still use the widget', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 409,
+        statusText: 'Conflict',
+        json: () =>
+          Promise.resolve({
+            error: 'in use',
+            organizations: [{ id: 'org-1', name: 'Acme' }],
+          }),
+      });
+
+      const error = await NetworkService.setWidgetAccess(21, 'hidden').catch(
+        (err) => err
+      );
+
+      expect(error).toBeInstanceOf(HttpError);
+      expect(error.status).toBe(409);
+      expect(error.details).toEqual({
+        organizations: [{ id: 'org-1', name: 'Acme' }],
+      });
+    });
+
+    it('rejects other errors with their message', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 422,
+        statusText: 'Unprocessable',
+        json: () =>
+          Promise.resolve({ error: 'Core widgets are always available' }),
+      });
+
+      await expect(
+        NetworkService.updateWidgetOrganizations(1, { disable: ['org-1'] })
+      ).rejects.toThrow('Core widgets are always available');
+    });
+  });
+
   describe('listOrganizations', () => {
     it('returns list of organizations', async () => {
       const mockOrganizations = {
@@ -369,6 +523,72 @@ describe('NetworkService', () => {
       });
 
       await expect(NetworkService.listUsers()).rejects.toThrow();
+    });
+  });
+
+  describe('integration settings', () => {
+    const reply = (status: number, body?: unknown) => ({
+      ok: status < 300,
+      status,
+      statusText: 'Status',
+      json: () =>
+        body === undefined
+          ? Promise.reject(new Error('no body'))
+          : Promise.resolve(body),
+    });
+
+    it('lists, saves and removes settings', async () => {
+      mockFetch.mockResolvedValueOnce(reply(200, { data: [{ key: 'k' }] }));
+      expect(await NetworkService.listIntegrationSettings('org-1')).toEqual([
+        { key: 'k' },
+      ]);
+      expect(mockFetch.mock.calls.at(-1)[0]).toContain(
+        '/dashboard/network/organizations/org-1/integration-settings'
+      );
+
+      mockFetch.mockResolvedValueOnce(
+        reply(200, { data: { key: 'a b', settings: { agency: 'fb' } } })
+      );
+      expect(
+        await NetworkService.updateIntegrationSettings('org-1', 'a b', {
+          agency: 'fb',
+        })
+      ).toEqual({ agency: 'fb' });
+      const [url, init] = mockFetch.mock.calls.at(-1);
+      expect(url).toContain('/integration-settings/a%20b');
+      expect(init.method).toBe('PUT');
+      expect(JSON.parse(init.body)).toEqual({ settings: { agency: 'fb' } });
+
+      mockFetch.mockResolvedValueOnce(reply(204, undefined));
+      await NetworkService.deleteIntegrationSettings('org-1', 'k');
+      expect(mockFetch.mock.calls.at(-1)[1].method).toBe('DELETE');
+    });
+
+    it('reports invalid fields', async () => {
+      mockFetch.mockResolvedValueOnce(
+        reply(422, { errors: { agency: 'required' } })
+      );
+      const error = await NetworkService.updateIntegrationSettings(
+        'org-1',
+        'k',
+        {}
+      ).catch((e) => e);
+      expect(error).toBeInstanceOf(HttpError);
+      expect(error.status).toBe(422);
+      expect(error.details).toEqual({ agency: 'required' });
+
+      mockFetch.mockResolvedValueOnce(reply(422, undefined));
+      const empty = await NetworkService.updateIntegrationSettings(
+        'org-1',
+        'k',
+        {}
+      ).catch((e) => e);
+      expect(empty.details).toEqual({});
+
+      mockFetch.mockResolvedValueOnce(reply(404, { error: 'Unknown' }));
+      await expect(
+        NetworkService.updateIntegrationSettings('org-1', 'k', {})
+      ).rejects.toThrow('Unknown');
     });
   });
 });

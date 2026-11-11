@@ -56,6 +56,19 @@ interface ComplexFieldAttributes extends BaseAttributes {
 }
 
 /**
+ * A list of simple values, e.g. picked from an integration's choices.
+ * Mirrors the player's ListFieldAttributes.
+ */
+interface ListFieldAttributes extends BaseAttributes {
+  type: 'list';
+  items: SimpleType | { type: SimpleType };
+  default?: any[];
+  description?: string;
+  order?: number;
+  choices?: object;
+}
+
+/**
  * Represents a zone/container within a layout.
  * All dimensions are percentages (0-100) for resolution independence.
  */
@@ -151,6 +164,7 @@ export type Schema = {
     | SimpleType
     | FieldAttributes
     | ComplexFieldAttributes
+    | ListFieldAttributes
     | ReferenceAttributes
     | LayoutFieldAttributes
     | LayoutRefFieldAttributes

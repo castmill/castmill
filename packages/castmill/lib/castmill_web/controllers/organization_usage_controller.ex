@@ -13,7 +13,8 @@ defmodule CastmillWeb.OrganizationUsageController do
     "widgets" => Castmill.Widgets.WidgetConfig,
     "teams" => Castmill.Teams.Team,
     "users" => Castmill.Organizations.OrganizationsUsers,
-    "layouts" => Castmill.Resources.Layout
+    "layouts" => Castmill.Resources.Layout,
+    "feeds" => Castmill.Feeds.Feed
   }
 
   def index(conn, %{"organization_id" => organization_id}) do

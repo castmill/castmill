@@ -2,7 +2,6 @@ defmodule Castmill.Repo.Migrations.AddSpotifyNowPlayingWidget do
   use Ecto.Migration
 
   alias Castmill.Repo
-  alias Castmill.Widgets.Integrations.WidgetIntegration
 
   def change do
     # Insert the Spotify Now Playing widget
@@ -305,10 +304,23 @@ defmodule Castmill.Repo.Migrations.AddSpotifyNowPlayingWidget do
       discriminator_type: "organization"
     }
 
-    %WidgetIntegration{}
-    |> WidgetIntegration.changeset(integration_attrs)
-    |> Ecto.Changeset.put_change(:inserted_at, now)
-    |> Ecto.Changeset.put_change(:updated_at, now)
-    |> Repo.insert!()
+    insert_integration(integration_attrs, now_naive)
+  end
+
+  # Schemaless, so later WidgetIntegration schema fields do not break this
+  # migration on databases that do not have those columns yet.
+  defp insert_integration(attrs, now, opts \\ []) do
+    defaults = %{
+      discriminator_type: "widget_config",
+      config_schema: %{},
+      credential_schema: %{},
+      pull_config: %{},
+      push_config: %{},
+      is_active: true,
+      inserted_at: now,
+      updated_at: now
+    }
+
+    Repo.insert_all("widget_integrations", [Map.merge(defaults, attrs)], opts)
   end
 end

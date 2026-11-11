@@ -197,6 +197,98 @@
     "deleteAccountPasskeyInfoWithSignalAPI": "削除後、パスキーは自動的にデバイスから削除されます。後でログインする場合は、新しいアカウントを作成する必要があります。"
   },
   "network": {
+    "widgets": {
+      "title": "ウィジェットのアクセス",
+      "description": "ネットワーク内の組織が使用できるウィジェットを選択します。地域で利用できないサービスや、契約していないサブスクリプションが必要なウィジェットなど、提供しないウィジェットは非表示にできます。",
+      "searchWidgets": "ウィジェットを検索",
+      "loadMore": "さらに読み込む",
+      "showing": "{{total}} 件中 {{shown}} 件を表示",
+      "noWidgets": "フィルターに一致するウィジェットはありません。",
+      "clearFilters": "フィルターをクリア",
+      "selectWidget": "ウィジェットを選択して、使用できる組織を管理します。",
+      "core": "コア",
+      "usedBy": "使用中の組織: {{count}}",
+      "kind": {
+        "system": "システム",
+        "network": "ネットワーク"
+      },
+      "filters": {
+        "any": "すべて",
+        "all": "全組織",
+        "selected": "選択した組織",
+        "hidden": "非表示",
+        "accessLabel": "アクセスで絞り込む",
+        "anyKind": "すべての種類",
+        "kindLabel": "種類で絞り込む",
+        "except": "除外あり"
+      },
+      "summary": {
+        "all": "すべての組織",
+        "selected": "{{total}} 組織中 {{count}} 組織",
+        "hidden": "非表示",
+        "except": "{{count}} 組織を除くすべて"
+      },
+      "access": {
+        "title": "このウィジェットを使用できる組織",
+        "all": "すべての組織",
+        "allDescription": "今後作成される組織を含むすべての組織。",
+        "except": "一部を除くすべて…",
+        "exceptDescription": "除外した組織以外のすべて。新しい組織も含まれます。",
+        "selected": "選択した組織のみ…",
+        "selectedDescription": "追加した組織のみ。新しい組織は含まれません。",
+        "hidden": "非表示",
+        "hiddenDescription": "ネットワーク内のどこにも提供しません。"
+      },
+      "notices": {
+        "core": "コアウィジェット: プレイリストとメディアが依存しているため、常に利用できます。",
+        "all": "今後作成される組織を含むすべての組織がこのウィジェットを使用できます。下で組織をオフにすると除外されます。",
+        "except": "今後作成される組織には、このウィジェットが自動で提供されます。",
+        "selected": "今後作成される組織には、このウィジェットは提供されません。",
+        "hidden": "ネットワーク内のどの組織もこのウィジェットをプレイリストに追加できません。",
+        "platform": "プラットフォームは、ネットワーク内の {{total}} 組織中 {{count}} 組織にこのウィジェットを提供しています。"
+      },
+      "organizations": {
+        "title": "組織",
+        "search": "組織を検索",
+        "statusAll": "すべて",
+        "statusEnabled": "使用可",
+        "statusDisabled": "使用不可",
+        "enabledOf": "{{total}} 組織中 {{count}} 組織がこのウィジェットを使用できます",
+        "matching": "一致する組織: {{count}}",
+        "enableAll": "すべて有効化（{{count}}）",
+        "disableAll": "すべて無効化（{{count}}）",
+        "inUse": "使用中",
+        "inUseHint": "この組織のプレイリストで使用中です。アクセスを無効にする前にプレイリストから削除してください。",
+        "none": "フィルターに一致する組織はありません。",
+        "noOrganizations": "ネットワークにはまだ組織がありません。",
+        "columnName": "組織",
+        "columnUsage": "プレイリストで使用",
+        "columnAccess": "アクセス",
+        "accessFor": "{{name}} のアクセス",
+        "range": "{{total}} 件中 {{from}}–{{to}} 件",
+        "selectedCount": "{{count}} 件選択",
+        "enableSelected": "アクセスを有効化",
+        "disableSelected": "アクセスを無効化"
+      },
+      "confirm": {
+        "hideTitle": "{{widget}} を非表示にしますか？",
+        "hideMessage": "ネットワーク内の組織は、このウィジェットをプレイリストに追加できなくなります。",
+        "hideAction": "ウィジェットを非表示",
+        "enableAllTitle": "{{count}} 組織を有効にしますか？",
+        "enableAllMessage": "これらの組織は {{widget}} をプレイリストに追加できるようになります。",
+        "enableAction": "有効にする",
+        "disableAllTitle": "{{count}} 組織を無効にしますか？",
+        "disableAllMessage": "これらの組織は {{widget}} をプレイリストに追加できなくなります。",
+        "disableAction": "無効にする"
+      },
+      "errors": {
+        "load": "ウィジェットを読み込めませんでした。",
+        "loadOrganizations": "組織を読み込めませんでした。",
+        "save": "ウィジェットのアクセスを更新できませんでした。",
+        "inUse": "次の組織がプレイリストでウィジェットを使用しているため、アクセスを削除できません: {{organizations}}",
+        "moreOrganizations": "{{names}} ほか {{count}} 件"
+      }
+    },
     "title": "ネットワーク設定",
     "adminBadge": "ネットワーク管理者",
     "saveSuccess": "ネットワーク設定が保存されました",
@@ -298,7 +390,26 @@
       "unblockTitle": "組織のブロックを解除",
       "unblockConfirmation": "\"{{name}}\" のブロックを解除してもよろしいですか？ユーザーは再度ログインできるようになります。",
       "unblockSuccess": "組織のブロックを正常に解除しました",
-      "unblockError": "組織のブロック解除に失敗しました"
+      "unblockError": "組織のブロック解除に失敗しました",
+      "integrationSettings": {
+        "action": "統合設定",
+        "title": "統合設定 – {{name}}",
+        "description": "このネットワークのウィジェットがこの組織に使用する値（オフィス ID など）です。ネットワーク管理者のみが変更できます。",
+        "empty": "このネットワークで組織設定を使用するウィジェットはありません。",
+        "listHelp": "1 行に 1 つの値を入力します。",
+        "remove": "設定を削除",
+        "saved": "設定を保存しました。",
+        "removed": "設定を削除しました。",
+        "invalid": "強調表示されたフィールドを確認してください。",
+        "loadError": "統合設定を読み込めませんでした。",
+        "saveError": "設定を保存できませんでした: {{message}}",
+        "errors": {
+          "required": "必須です。",
+          "invalid": "無効な値です。",
+          "too_long": "長すぎます。",
+          "too_many": "値が多すぎます。"
+        }
+      }
     },
     "users": {
       "listTitle": "すべてのユーザー",
@@ -378,7 +489,8 @@
       "channels": "チャンネル",
       "teams": "チーム",
       "widgets": "ウィジェット",
-      "layouts": "レイアウト"
+      "layouts": "レイアウト",
+      "feeds": "フィード"
     },
     "errors": {
       "fetchUsageData": "使用量データの取得に失敗しました：{{error}}"
@@ -609,6 +721,7 @@
   "sidebar": {
     "organization": "組織",
     "channels": "チャンネル",
+    "automations": "オートメーション",
     "teams": "チーム",
     "usage": "使用量",
     "devices": "デバイス",
@@ -623,8 +736,10 @@
     "networkSettings": "設定",
     "networkOrganizations": "組織",
     "networkUsers": "ユーザーと招待",
+    "networkWidgets": "ウィジェットのアクセス",
     "tags": "タグ",
-    "agents": "エージェント"
+    "agents": "エージェント",
+    "feeds": "フィード"
   },
   "channels": {
     "title": "チャンネル",
@@ -859,6 +974,13 @@
     "zonesCount": "{{count}}個のゾーン"
   },
   "widgets": {
+    "scope": {
+      "title": "利用範囲",
+      "system": "システム",
+      "network": "ネットワーク",
+      "organization": "この組織",
+      "unassigned": "未割り当て"
+    },
     "title": "Widgets",
     "uploadWidget": "Widgetをアップロード",
     "uploadDescription": "Widget JSON定義ファイルをアップロードします。",
@@ -951,7 +1073,58 @@
       "noConfigurationRequired": "設定不要",
       "optional": "任意"
     },
-    "translations": "翻訳"
+    "translations": "翻訳",
+    "editableTexts": {
+      "editTexts": "テキストを編集",
+      "doneEditing": "編集を完了",
+      "hint": "強調表示されたテキストをクリックして変更します。",
+      "editAria": "テキストを編集: {{label}}",
+      "hide": "このテキストを非表示",
+      "reset": "元に戻す",
+      "counter": "{{length}} / {{max}} 文字",
+      "listTitle": "編集済みのテキスト: {{count}}",
+      "hidden": "非表示",
+      "empty": "（空）",
+      "resetAll": "すべて元に戻す",
+      "unusedTitle": "Widgetで未使用",
+      "unusedHint": "これらの編集はWidgetのどのテキストにも対応しなくなりました。",
+      "editedIndicator": "編集済みのテキストあり"
+    },
+    "choices": {
+      "choose": "選択",
+      "moveBefore": "前へ移動",
+      "moveAfter": "後ろへ移動",
+      "search": "検索…",
+      "loadMore": "さらに読み込む",
+      "retry": "再試行",
+      "noResults": "一致する項目がありません",
+      "noSelection": "何も選択されていません",
+      "unavailable": "利用できなくなりました",
+      "selectAll": "すべて選択",
+      "selectNone": "選択を解除",
+      "selectedCount": "選択済み: {{count}}",
+      "selectedCountMax": "選択済み: {{count}} / {{max}}",
+      "done": "完了",
+      "play": "プレビューを再生",
+      "stop": "プレビューを停止",
+      "enlarge": "拡大",
+      "dialogDescription": "統合が提供する項目から選択してください。",
+      "dependencyRequired": "先に{{fields}}を設定してください。",
+      "confirmClearTitle": "依存する選択をクリアしますか？",
+      "confirmClearMessage": "{{field}}を変更すると{{fields}}がクリアされます。",
+      "minSelection": "{{min}}件以上選択してください。",
+      "maxSelection": "{{max}}件まで選択してください。",
+      "errors": {
+        "widgetNotFound": "このWidgetは利用できなくなりました。",
+        "notAChoiceField": "このフィールドでは選択肢を表示できません。",
+        "missingDependency": "先にこのフィールドが依存するフィールドを設定してください。",
+        "missingCredentials": "この組織では統合が設定されていません。",
+        "rateLimited": "リクエストが多すぎます。しばらく待ってから再試行してください。",
+        "providerError": "統合から項目を取得できませんでした。後でもう一度お試しください。",
+        "networkError": "サーバーに接続できません。接続を確認してください。",
+        "unknown": "項目を読み込めませんでした。"
+      }
+    }
   },
   "devices": {
     "orientation": {
@@ -1602,6 +1775,361 @@
         "cursor": "すべてのプロジェクトでは ~/.cursor/mcp.json、特定のプロジェクトでは .cursor/mcp.json にこの構成を追加し、Cursor Settings > MCP でサーバーを有効にしてください。",
         "other": "以下の設定でリモートMCPサーバーを構成してください。"
       }
+    }
+  },
+  "feeds": {
+    "title": "データフィード",
+    "description": "フィードは Make、Zapier、独自のスクリプトなど他のシステムからデータを受け取ります。フィードを表示する Widget は、フィードが変わるとすべての画面で更新されます。",
+    "newFeed": "新しいフィード",
+    "empty": "フィードはまだありません。作成して、データを送るシステムを接続してください。",
+    "notFound": "このフィードは存在しないか、削除されました。",
+    "mode": "種類",
+    "modes": {
+      "list": "リスト",
+      "document": "ドキュメント"
+    },
+    "modeHelp": {
+      "list": "最新のエントリーを新しい順に保持します。システムはエントリーを1件ずつ追加します。",
+      "document": "更新のたびにシステムが置き換えるドキュメントを1つ保持します。"
+    },
+    "keep": "保持するエントリー数",
+    "keepHelp": "新しいエントリーが届くと古いエントリーは削除されます（1–100）。",
+    "schema": "エントリースキーマ（任意）",
+    "schemaHelp": "Widget のデータスキーマと同様に、エントリーのフィールドを記述する JSON です。一致しない書き込みは拒否されます。",
+    "schemaInvalid": "スキーマは有効な JSON オブジェクトである必要があります。",
+    "mediaFields": "メディアフィールド",
+    "mediaFieldsHelp": "画像または動画の URL を含むエントリー内のパス（例: image、photos[].url）。",
+    "mediaPath": "パス",
+    "mediaMode": "処理方法",
+    "mediaModes": {
+      "copy": "ストレージにコピー",
+      "link": "リンクを保持"
+    },
+    "addMediaField": "メディアフィールドを追加",
+    "entries": "エントリー",
+    "lastUpdate": "最終更新",
+    "usedBy": "使用しているプレイリスト",
+    "never": "なし",
+    "created": "フィードを作成しました",
+    "saved": "フィードを保存しました",
+    "deleted": "フィードを削除しました",
+    "deleteTitle": "フィードを削除しますか？",
+    "deleteMessage": "「{{name}}」を削除すると、エントリーとトークンも削除されます。表示している Widget は空になります。",
+    "back": "すべてのフィード",
+    "tabs": {
+      "entries": "エントリー",
+      "connect": "接続",
+      "settings": "設定",
+      "media": "メディア"
+    },
+    "noEntries": "エントリーはまだありません。テストエントリーを送るか、システムを接続してください。",
+    "noDocument": "ドキュメントはまだありません。",
+    "receivedAt": "{{time}}に受信",
+    "updatedAt": "最終更新: {{time}}",
+    "externalId": "外部 ID",
+    "deleteEntry": "エントリーを削除",
+    "deleteEntryMessage": "このフィードを表示しているすべての画面からエントリーが削除されます。",
+    "clear": "すべて消去",
+    "clearTitle": "フィードを空にしますか？",
+    "clearMessage": "「{{name}}」のすべてのデータが削除されます。",
+    "refresh": "更新",
+    "test": {
+      "title": "テストエントリーを送信",
+      "titleDocument": "テストドキュメントを送信",
+      "help": "JSON オブジェクトを貼り付けてください。接続されたシステムから送られたデータと同様に保存されます。",
+      "send": "送信",
+      "sent": "テストデータを保存しました",
+      "invalidJson": "有効な JSON オブジェクトを入力してください。"
+    },
+    "connect": {
+      "endpoints": "エンドポイント",
+      "append": "エントリーを追加",
+      "replace": "すべてのデータを置換",
+      "read": "データを読み取る",
+      "copy": "コピー",
+      "copied": "クリップボードにコピーしました",
+      "copyFailed": "クリップボードにコピーできませんでした"
+    },
+    "tokens": {
+      "title": "トークン",
+      "help": "トークンはこのフィードにのみ書き込めます。Authorization ヘッダーで Bearer の後にトークンを付けて送信してください。",
+      "new": "新しいトークン",
+      "namePlaceholder": "例: Make シナリオ",
+      "empty": "トークンはまだありません。",
+      "lastUsed": "最終使用",
+      "revoke": "取り消す",
+      "revoked": "取り消し済み",
+      "revokeTitle": "トークンを取り消しますか？",
+      "revokeMessage": "「{{name}}」を使用しているシステムはフィードに書き込めなくなります。",
+      "secretTitle": "トークンをコピー",
+      "secretWarning": "トークンが表示されるのはこの一度だけです。データを送るシステムに保存してください。",
+      "done": "完了",
+      "memberHint": "組織のメンバーや AI エージェントのトークンもフィードに書き込めます。複数のフィードへの同時書き込みも可能です。"
+    },
+    "examples": {
+      "curl": "スクリプトから（curl）",
+      "make": "Make から",
+      "makeStep1": "HTTP › Make a request モジュールを追加します。",
+      "makeStep2": "URL に「エントリーを追加」エンドポイントを、メソッドに POST を設定します。",
+      "makeStep3": "値が Bearer とトークンの Authorization ヘッダーを追加します。",
+      "makeStep4": "表示するフィールドを含む Raw の JSON ボディを選びます。編集された項目が新しいエントリーを追加せず既存のエントリーを置き換えるよう、external_id を含めてください。"
+    },
+    "errors": {
+      "load": "フィードを読み込めませんでした。",
+      "loadFeed": "フィードを読み込めませんでした。",
+      "save": "フィードを保存できませんでした: {{message}}",
+      "quota": "組織のフィード上限に達しました。",
+      "action": "操作に失敗しました: {{message}}"
+    },
+    "media": {
+      "help": "フィードのコピー対象メディアフィールドにある画像と動画は Castmill に保存されるため、元のリンクの有効期限が切れた後も画面に表示され続けます。",
+      "storage": "保存済み: {{size}}",
+      "empty": "まだメディアはありません。",
+      "noFields": "このフィードはメディアをコピーしません。設定でメディアフィールドを追加してください。",
+      "retry": "再試行",
+      "retried": "メディアを再度コピーしています。",
+      "entries": "エントリー: {{count}}",
+      "seconds": "{{seconds}} 秒",
+      "status": {
+        "pending": "コピー中",
+        "ready": "保存済み",
+        "failed": "失敗"
+      },
+      "failures": {
+        "not_found": "元のファイルが見つかりません。",
+        "forbidden": "ソースがアクセスを拒否しました。",
+        "unauthorized": "ソースで認証が必要です。",
+        "too_large": "ファイルが大きすぎます。",
+        "unsupported_type": "サポートされている画像または動画ではありません。",
+        "quota_exceeded": "組織のストレージがいっぱいです。",
+        "timeout": "ソースが時間内に応答しませんでした。",
+        "blocked_host": "URL がプライベートネットワークを指しています。",
+        "other": "ファイルをコピーできませんでした。"
+      },
+      "errors": {
+        "load": "フィードのメディアを読み込めませんでした。"
+      }
+    }
+  },
+  "automations": {
+    "title": "オートメーション",
+    "description": "特定の時刻に別のコンテンツで再生を割り込ませるなど、ディスプレイがイベントに反応するようにします。",
+    "new": "新しいオートメーション",
+    "newDescription": "オートメーションに名前を付けてください。ルールの追加やディスプレイの割り当ては後から行えます。",
+    "namePlaceholder": "例：毎時の春のセール",
+    "created": "オートメーション「{{name}}」を作成しました",
+    "deleted": "オートメーション「{{name}}」を削除しました",
+    "saved": "オートメーションを保存しました",
+    "enabled": "有効",
+    "disabled": "無効",
+    "disabledHint": "無効なオートメーションはディスプレイで実行されません。",
+    "toggleEnabled": "「{{name}}」を有効または無効にする",
+    "noUpcoming": "予定されている実行はありません",
+    "noRules": "ルールはまだありません",
+    "moreRules": "ほか {{count}} 件",
+    "assignmentsDetail": "デバイス {{devices}} 台、チャンネル {{channels}} 件",
+    "noAccess": "オートメーションを表示する権限がありません。",
+    "deleteTitle": "オートメーションを削除",
+    "deleteMessage": "「{{name}}」を削除してもよろしいですか？割り当てられたディスプレイでは直ちに実行が停止されます。",
+    "editorDescription": "ルールは上から順に評価されます。複数のルールが同時に実行される場合は最初のルールが優先されます。",
+    "columns": {
+      "rules": "ルール",
+      "assignments": "割り当て先",
+      "nextFiring": "次回の実行"
+    },
+    "tabs": {
+      "rules": "ルール（{{count}}）",
+      "assignments": "割り当て（{{count}}）"
+    },
+    "errors": {
+      "loadFailed": "オートメーションを読み込めませんでした",
+      "saveFailed": "オートメーションを保存できませんでした：{{error}}",
+      "deleteFailed": "オートメーションを削除できませんでした：{{error}}",
+      "runFailed": "ルールを実行できませんでした：{{error}}"
+    },
+    "rules": {
+      "title": "ルール",
+      "empty": "このオートメーションにはまだルールがありません。ルールを追加して、いつ何が起きてディスプレイが何をするかを決めましょう。",
+      "add": "ルールを追加",
+      "edit": "ルールを編集",
+      "save": "ルールを保存",
+      "saved": "ルールを保存しました",
+      "when": "条件",
+      "then": "実行内容",
+      "options": "オプション",
+      "chooseSource": "ルールのトリガーを選択",
+      "chooseAction": "ディスプレイの動作を選択",
+      "cooldown": "クールダウン（秒）",
+      "cooldownHint": "同じディスプレイでこのルールを再度実行するまでの最短時間。0 でクールダウンなし。",
+      "moveUp": "上へ移動",
+      "moveDown": "下へ移動",
+      "moveUpN": "ルール {{n}} を上へ移動",
+      "moveDownN": "ルール {{n}} を下へ移動",
+      "runNow": "今すぐ実行",
+      "runNowN": "ルール {{n}} を今すぐ実行",
+      "editN": "ルール {{n}} を編集",
+      "deleteN": "ルール {{n}} を削除",
+      "deleteTitle": "ルールを削除",
+      "deleteMessage": "このルールを削除してもよろしいですか？",
+      "moved": "ルールを {{from}} 番目から {{to}} 番目に移動しました",
+      "runSuccess": "ルールを {{count}} 台のディスプレイに送信しました"
+    },
+    "summary": {
+      "hourly": "毎時 {{minute}} 分",
+      "interval": "{{minutes}} 分ごと",
+      "times": "毎日 {{times}}",
+      "once": "1 回のみ：{{date}} {{time}}",
+      "unknown": "不明なスケジュール",
+      "dateRange": "{{start}}〜{{end}}",
+      "dateFrom": "{{date}} から",
+      "dateUntil": "{{date}} まで",
+      "noPlaylist": "プレイリストが選択されていません",
+      "playlistFallback": "プレイリスト #{{id}}",
+      "interruptImmediately": "「{{playlist}}」ですぐに割り込む",
+      "interruptAfterItem": "現在のアイテムの後に「{{playlist}}」で割り込む",
+      "plays": "{{count}} 回再生",
+      "highPriority": "優先度：高",
+      "cooldown": "クールダウン：{{seconds}} 秒",
+      "unknownType": "サポートされていない種類「{{type}}」"
+    },
+    "validation": {
+      "minute": "0〜59 の分を入力してください。",
+      "interval": "間隔は 5〜1440 の整数（分）で指定してください。",
+      "timesCount": "時刻を 1〜48 個追加してください。",
+      "time": "時刻は HH:MM 形式で入力してください。",
+      "timesDuplicate": "同じ時刻は 1 回しか指定できません。",
+      "date": "有効な日付を入力してください。",
+      "schedule": "スケジュールを選択してください。",
+      "weekdays": "曜日を 1 つ以上選択してください。",
+      "window": "毎日の時間帯は開始が終了より前である必要があります。",
+      "dates": "開始日は終了日以前である必要があります。",
+      "timezone": "有効なタイムゾーン（例：Europe/Stockholm）を入力するか、空欄にしてください。",
+      "playlist": "プレイリストを選択してください。",
+      "start": "割り込みの開始方法を選択してください。",
+      "maxWait": "最大待機時間は 0〜3600 秒で指定してください。",
+      "plays": "再生回数は 1〜100 で指定してください。",
+      "priority": "優先度を選択してください。",
+      "cooldown": "クールダウンは 0 以上の整数（秒）で指定してください。",
+      "source": "トリガーを選択してください。",
+      "action": "アクションを選択してください。"
+    },
+    "sources": {
+      "clock": {
+        "label": "時計",
+        "description": "特定の時刻に：毎時、数分ごと、決まった時刻、または 1 回のみ。"
+      }
+    },
+    "actions": {
+      "interrupt": {
+        "label": "コンテンツで割り込む",
+        "description": "一時的にプレイリストを再生し、その後通常のスケジュールに戻ります。"
+      }
+    },
+    "clock": {
+      "repeat": "繰り返し",
+      "types": {
+        "hourly": "毎時",
+        "interval": "N 分ごと",
+        "times": "指定時刻",
+        "once": "1 回のみ"
+      },
+      "minute": "毎時の分",
+      "everyMinutes": "間隔（分）",
+      "intervalHint": "最小 {{min}} 分。時間帯の開始（または午前 0 時）から数えます。",
+      "times": "時刻",
+      "timeN": "時刻 {{n}}",
+      "removeTime": "時刻を削除",
+      "removeTimeN": "時刻 {{time}} を削除",
+      "addTime": "時刻を追加",
+      "date": "日付",
+      "time": "時刻",
+      "weekdays": "曜日",
+      "window": "毎日の時間帯のみ",
+      "from": "開始",
+      "to": "終了",
+      "dates": "期間内のみ",
+      "startDate": "開始日",
+      "endDate": "終了日",
+      "timezone": "タイムゾーン",
+      "timezonePlaceholder": "ディスプレイのタイムゾーン",
+      "timezoneHint": "空欄にすると各ディスプレイのタイムゾーンを使用します。",
+      "previewTitle": "次回以降の実行",
+      "previewTimezone": "{{timezone}} で表示しています。",
+      "previewDeviceTimezone": "各ディスプレイは独自のタイムゾーンを使用します。ここでは {{timezone}} で表示しています。",
+      "previewFailed": "次回以降の実行を計算できませんでした。",
+      "previewEmpty": "このスケジュールは今後数日間実行されません。"
+    },
+    "interrupt": {
+      "playlist": "プレイリスト",
+      "choosePlaylist": "プレイリストを検索…",
+      "createPlaylist": "プレイリストを作成",
+      "start": "開始",
+      "startModes": {
+        "immediately": "すぐに",
+        "after_current_item": "現在のアイテムの後"
+      },
+      "startHints": {
+        "immediately": "現在のアイテムをすぐに停止します。その後は次のアイテムから再生を続けます。",
+        "after_current_item": "現在のアイテムが終わるまで待つため、途中で切れません。"
+      },
+      "maxWait": "最大待機時間（秒）",
+      "maxWaitHint": "現在のアイテムがこれより長い場合でも割り込みます。",
+      "plays": "再生回数",
+      "playsHint": "元に戻る前にプレイリストを再生する回数。",
+      "priority": "優先度",
+      "priorities": {
+        "normal": "通常",
+        "high": "高"
+      },
+      "priorityHints": {
+        "normal": "通常の割り込みです。",
+        "high": "通常優先度の割り込みより優先されます。"
+      }
+    },
+    "assignments": {
+      "description": "このオートメーションを実行するディスプレイを、直接またはチャンネル経由で選択します。",
+      "devices": "デバイス",
+      "channels": "チャンネル",
+      "none": {
+        "devices": "割り当てられたデバイスはありません",
+        "channels": "割り当てられたチャンネルはありません"
+      },
+      "search": {
+        "devices": "デバイスを検索…",
+        "channels": "チャンネルを検索…"
+      },
+      "remove": "{{name}} を削除",
+      "loadFailed": "リストを読み込めませんでした",
+      "noResults": "一致する項目はありません",
+      "save": "割り当てを保存",
+      "saved": "割り当てを保存しました"
+    },
+    "warnings": {
+      "missing": "{{device}} は {{capability}} に対応していません",
+      "unsupported": "{{capability}} に非対応",
+      "viaChannels": "チャンネル経由のディスプレイ"
+    },
+    "channel": {
+      "title": "オートメーション",
+      "manage": "オートメーションを管理",
+      "empty": "このチャンネルに割り当てられたオートメーションはありません。",
+      "loadFailed": "このチャンネルのオートメーションを読み込めませんでした。",
+      "showMarkers": "カレンダーに実行時刻を表示",
+      "firingsThisWeek": "（今週 {{count}} 回）",
+      "upcoming": "今週の実行",
+      "markerLabel": "{{name}}（{{time}}）"
+    },
+    "device": {
+      "title": "オートメーション",
+      "description": "このデバイスが実行するオートメーション（直接またはチャンネル経由で割り当て）。",
+      "refresh": "オートメーションを更新",
+      "empty": "このデバイスに適用されるオートメーションはありません。",
+      "loadFailed": "このデバイスのオートメーションを読み込めませんでした。",
+      "viaDevice": "直接割り当て",
+      "viaChannel": "チャンネル {{name}} 経由",
+      "upcoming": "今後の実行",
+      "noUpcoming": "今後数日間の実行はありません。",
+      "timezoneNote": "時刻はデバイスのタイムゾーン（{{timezone}}）で表示しています。"
     }
   }
 }

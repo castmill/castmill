@@ -1,7 +1,17 @@
 import gsap from 'gsap';
 import { getLogicalSize } from '../../utils/logical-size';
 
-import { Component, JSX, mergeProps, onCleanup, onMount } from 'solid-js';
+import {
+  Component,
+  createMemo,
+  createEffect,
+  createSignal,
+  JSX,
+  mergeProps,
+  on,
+  onCleanup,
+  onMount,
+} from 'solid-js';
 import { TemplateConfig, resolveOption } from './binding';
 import { TemplateComponent, TemplateComponentType } from './template';
 import { TimelineItem } from './timeline';
@@ -23,9 +33,104 @@ interface AutoFitOpts {
   minSize?: number;
 }
 
+/**
+ * Declares a text that users can replace per playlist item (in-place editing).
+ * See agents/systems/IN-PLACE-TEXT-EDITING.md.
+ */
+export interface EditableAttributes {
+  /** Override key: a string, or a binding (e.g. for texts inside lists). */
+  key: any;
+  /** Label shown in the editor: a string or a binding. */
+  label?: any;
+  multiline?: boolean;
+  max_length?: number;
+}
+
+/** A stored override in the item's `options.overrides`. */
+export interface TextOverride {
+  text?: string;
+  hidden?: boolean;
+}
+
+export interface ResolvedEditable {
+  key: string;
+  label?: string;
+  multiline: boolean;
+  maxLength: number;
+  /** How the current text is overridden, if it is. */
+  overridden?: 'text' | 'hidden';
+}
+
+const DEFAULT_MAX_LENGTH = 500;
+
+const toText = (value: unknown): string | undefined =>
+  typeof value === 'string'
+    ? value
+    : typeof value === 'number' && isFinite(value)
+      ? String(value)
+      : undefined;
+
+/** Resolves an editable attribute; undefined when its key is not a text. */
+export const resolveEditable = (
+  editable: EditableAttributes | undefined,
+  config: TemplateConfig,
+  context: any,
+  globals: PlayerGlobals
+): ResolvedEditable | undefined => {
+  if (!editable || typeof editable !== 'object') {
+    return undefined;
+  }
+  const key = toText(resolveOption(editable.key, config, context, globals));
+  if (!key) {
+    return undefined;
+  }
+  const label = toText(resolveOption(editable.label, config, context, globals));
+  const maxLength = editable.max_length;
+  return {
+    key,
+    label: label || undefined,
+    multiline: editable.multiline === true,
+    maxLength:
+      typeof maxLength === 'number' && maxLength > 0
+        ? maxLength
+        : DEFAULT_MAX_LENGTH,
+  };
+};
+
+/** The stored override for a key, if it is a valid one. */
+export const getTextOverride = (
+  config: TemplateConfig,
+  key: string
+): TextOverride | undefined => {
+  const overrides = config && config.options && config.options.overrides;
+  if (
+    !overrides ||
+    typeof overrides !== 'object' ||
+    !Object.prototype.hasOwnProperty.call(overrides, key)
+  ) {
+    return undefined;
+  }
+  const override = overrides[key];
+  if (override && override.hidden === true) {
+    return { hidden: true };
+  }
+  if (override && typeof override.text === 'string') {
+    return { text: override.text };
+  }
+  return undefined;
+};
+
 export interface TextComponentOptions {
   text: string;
-  autofit: AutoFitOpts;
+  /**
+   * Fits the text to its container. Without it the text keeps its own size
+   * (in `em`, which follows the widget's size) and is never measured.
+   * `{}` fills the container; `baseSize`/`maxSize` keep a size and only shrink.
+   */
+  autofit?: AutoFitOpts;
+
+  /** Set when the text is editable (resolved key and label). */
+  editable?: ResolvedEditable;
 
   // Break text in chars when animating.
   chars?: boolean;
@@ -43,7 +148,11 @@ export class TextComponent implements TemplateComponent {
     public style: JSX.CSSProperties,
     public animations?: ComponentAnimation[],
     public filter?: Record<string, any>,
-    public $styles?: { filter: Record<string, any>; style: JSX.CSSProperties }[]
+    public $styles?: {
+      filter: Record<string, any>;
+      style: JSX.CSSProperties;
+    }[],
+    public editable?: EditableAttributes
   ) {}
 
   resolveDuration(): number {
@@ -57,42 +166,67 @@ export class TextComponent implements TemplateComponent {
       json.style,
       json.animations,
       json.filter,
-      json.$styles
+      json.$styles,
+      json.editable
     );
   }
 
+  /**
+   * An override of an editable text replaces its whole binding: it is shown as
+   * typed, without fmt, formatters, surrounding literals or first fallbacks.
+   */
   static resolveOptions(
     opts: TextComponentOptions,
     config: TemplateConfig,
     context: any,
-    globals: PlayerGlobals
+    globals: PlayerGlobals,
+    editableAttrs?: EditableAttributes
   ): TextComponentOptions {
+    const editable = resolveEditable(editableAttrs, config, context, globals);
+    const override =
+      editable && config.textOverridesEnabled !== false
+        ? getTextOverride(config, editable.key)
+        : undefined;
+    let text: string;
+    if (override && override.hidden) {
+      text = '';
+      editable!.overridden = 'hidden';
+    } else if (override) {
+      text = override.text!;
+      editable!.overridden = 'text';
+    } else {
+      text = resolveOption(opts.text, config, context, globals);
+    }
+
     return {
-      text: resolveOption(opts.text, config, context, globals),
-      autofit: {
-        maxSize: resolveOption(opts.autofit?.maxSize, config, context, globals),
-        minSize: resolveOption(opts.autofit?.minSize, config, context, globals),
-        baseSize: resolveOption(
-          opts.autofit?.baseSize,
-          config,
-          context,
-          globals
-        ),
-      },
+      text,
+      editable,
+      autofit: opts.autofit
+        ? {
+            maxSize: resolveOption(
+              opts.autofit.maxSize,
+              config,
+              context,
+              globals
+            ),
+            minSize: resolveOption(
+              opts.autofit.minSize,
+              config,
+              context,
+              globals
+            ),
+            baseSize: resolveOption(
+              opts.autofit.baseSize,
+              config,
+              context,
+              globals
+            ),
+          }
+        : undefined,
     };
   }
 }
 
-// TODO: We must support formatters and templates. For example:
-export interface formatter {
-  fn: string;
-  args: (string | number)[];
-}
-
-export type pipeline = formatter[];
-
-// pipeline: [{fn: "formatNumber", args: ["$val"]}, {fn: "format", args: ["$val SEK"]}]
-// Initial formatters must include the most important ones, such as formating numbers suitable for prices and quantities.
 // TODO: rename text to value (all components that need a value should have value as prop)
 
 interface TextProps extends BaseComponentProps {
@@ -101,9 +235,18 @@ interface TextProps extends BaseComponentProps {
 
 export const Text: Component<TextProps> = (props) => {
   let textRef: HTMLDivElement | undefined;
+  const [textElement, setTextElement] = createSignal<HTMLDivElement>();
   let timelineItem: TimelineItem | undefined;
   let scrollTimeline: gsap.core.Timeline | undefined;
   let cleanUpAnimations: (() => void) | undefined;
+  let previousAnimationInputs:
+    | {
+        text: string;
+        animations: ComponentAnimation[];
+        chars?: boolean;
+        perspective?: number;
+      }
+    | undefined;
   let stopObservingResize: (() => void) | undefined;
   let contentObserver: MutationObserver | null = null;
   let animationFrame: number | undefined;
@@ -112,26 +255,26 @@ export const Text: Component<TextProps> = (props) => {
   // 1. Positioned elements (absolute/fixed) - no default size, auto-size to content
   // 2. Flex items (have flex property) - let flex control sizing, don't override with 100%
   // 3. Other elements - apply width/height 100% for autofit to work
-  const isPositioned =
-    props.style?.position === 'absolute' || props.style?.position === 'fixed';
-  const isFlexItem = props.style?.flex !== undefined;
+  const merged = createMemo(() => {
+    const style = props.style;
+    const isPositioned =
+      style?.position === 'absolute' || style?.position === 'fixed';
+    const isFlexItem = style?.flex !== undefined;
 
-  let defaultStyle: JSX.CSSProperties;
-  if (isPositioned) {
-    // Positioned elements auto-size to content
-    defaultStyle = { 'line-height': '1em' };
-  } else if (isFlexItem) {
-    // Flex items: let flex control height, but keep width for autofit measurement
-    defaultStyle = { width: '100%', 'line-height': '1em' };
-  } else {
-    // Default: fill container for autofit to measure
-    defaultStyle = { width: '100%', height: '100%', 'line-height': '1em' };
-  }
-  const merged = mergeProps(defaultStyle, props.style);
+    let defaultStyle: JSX.CSSProperties;
+    if (isPositioned) {
+      defaultStyle = { 'line-height': '1em' };
+    } else if (isFlexItem) {
+      defaultStyle = { width: '100%', 'line-height': '1em' };
+    } else {
+      defaultStyle = { width: '100%', height: '100%', 'line-height': '1em' };
+    }
 
-  const spanStyle = {
-    'line-height': merged['line-height'],
-  };
+    return mergeProps(defaultStyle, style);
+  });
+  const spanStyle = createMemo(() => ({
+    'line-height': merged()['line-height'],
+  }));
 
   onCleanup(() => {
     cleanUpAnimations?.();
@@ -168,7 +311,8 @@ export const Text: Component<TextProps> = (props) => {
     const element = textRef;
     if (
       !element ||
-      !props.opts.autofit.minSize ||
+      !props.opts.text ||
+      !props.opts.autofit?.minSize ||
       props.opts.autofit.minSize <= size
     ) {
       return;
@@ -211,49 +355,106 @@ export const Text: Component<TextProps> = (props) => {
     props.timeline.add(timelineItem);
   };
 
+  createEffect(() => {
+    const text = props.opts.text;
+    const animations = props.animations;
+    const chars = props.opts.chars;
+    const perspective = props.opts.perspective;
+    const element = textElement();
+    if (!element || !animations) {
+      return;
+    }
+
+    if (
+      previousAnimationInputs?.text === text &&
+      previousAnimationInputs.animations === animations &&
+      previousAnimationInputs.chars === chars &&
+      previousAnimationInputs.perspective === perspective
+    ) {
+      return;
+    }
+
+    previousAnimationInputs = { text, animations, chars, perspective };
+    cleanUpAnimations?.();
+    element.textContent = text;
+    const splittedText = splitText(element, chars);
+
+    if (perspective) {
+      gsap.set(element, { perspective });
+    }
+
+    cleanUpAnimations = applyAnimations(
+      props.timeline,
+      animations,
+      splittedText.chars || splittedText.words,
+      props.timeline.duration(),
+      props.timeline.isRunning() ? props.timeline.time : 0
+    );
+  });
+
+  createEffect(
+    on(
+      () => props.opts.text,
+      () => {
+        if (!props.opts.autofit) {
+          props.onLayoutUpdate?.();
+        }
+      }
+    )
+  );
+
   onMount(() => {
     if (!textRef) {
       return;
     }
+    setTextElement(textRef);
 
-    const fitText = () => {
-      const size = autoFitText(textRef!, props.opts?.autofit || {});
-      updateScrollTimeline(size);
-      return size;
-    };
+    // Only texts that ask to be fitted are measured; others keep their `em`
+    // size, which already follows the widget's size (the template's base).
+    if (props.opts?.autofit) {
+      const fitText = () => {
+        const size = autoFitText(textRef!, props.opts.autofit || {});
+        updateScrollTimeline(size);
+        props.onLayoutUpdate?.();
+        return size;
+      };
 
-    fitText();
-    animationFrame = requestAnimationFrame(() => {
       fitText();
-    });
-    stopObservingResize = observeTextContainerResize(textRef, () => {
-      fitText();
-    });
-    contentObserver = observeTextContentChanges(textRef, () => {
-      fitText();
-    });
-
-    if (props.animations) {
-      const splittedText = splitText(textRef, props.opts.chars);
-
-      if (props.opts.perspective) {
-        gsap.set(textRef, { perspective: props.opts.perspective });
-      }
-
-      cleanUpAnimations = applyAnimations(
-        props.timeline,
-        props.animations,
-        splittedText.chars || splittedText.words,
-        props.timeline.duration()
-      );
+      animationFrame = requestAnimationFrame(() => {
+        fitText();
+      });
+      stopObservingResize = observeTextContainerResize(textRef, () => {
+        fitText();
+      });
+      contentObserver = observeTextContentChanges(textRef, () => {
+        fitText();
+      });
     }
 
     props.onReady();
   });
 
+  // Line breaks typed into multiline overrides are kept.
+  const textStyle = () =>
+    props.opts.editable?.multiline && props.opts.editable.overridden
+      ? { ...spanStyle(), 'white-space': 'pre-line' }
+      : spanStyle();
+
+  // The data-editable-* attributes are hooks for the dashboard editor only.
   return (
-    <div data-component="text" data-name={props.name} style={merged}>
-      <span ref={textRef} style={spanStyle}>
+    <div
+      data-component="text"
+      data-name={props.name}
+      data-editable-key={props.opts.editable?.key}
+      data-editable-label={props.opts.editable?.label}
+      data-editable-multiline={
+        props.opts.editable?.multiline ? 'true' : undefined
+      }
+      data-editable-max-length={props.opts.editable?.maxLength}
+      data-editable-overridden={props.opts.editable?.overridden}
+      style={merged()}
+    >
+      <span ref={textRef} style={textStyle()}>
         {props.opts.text}
       </span>
     </div>

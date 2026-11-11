@@ -12,8 +12,26 @@ import {
   isLocationValueValid,
   normalizeFormValue,
   normalizeWidgetOptionsForApi,
+  resolvePlaybackLocale,
+  getFieldChoices,
+  choiceDependencies,
+  dependentChoiceFields,
+  validateChoicesValue,
+  choicesErrorMessage,
+  choicesFieldLabels,
   type SchemaAttributeType,
 } from './widget-config';
+import { WidgetChoicesError } from '../services/playlists.service';
+
+describe('WidgetConfig - Playback Locale', () => {
+  it('uses the network display locale instead of the dashboard language', () => {
+    expect(resolvePlaybackLocale('sv')).toBe('sv');
+  });
+
+  it('defaults to English when no network display locale is available', () => {
+    expect(resolvePlaybackLocale()).toBe('en');
+  });
+});
 
 describe('WidgetConfig - Collection Parsing', () => {
   it('should parse collection string with media type filter', () => {
@@ -305,5 +323,146 @@ describe('WidgetConfig - API Option Normalization', () => {
     );
 
     expect(normalized).toEqual({ media: 42 });
+  });
+});
+
+describe('WidgetConfig - Choices', () => {
+  const t = (key: string, params?: Record<string, any>) =>
+    params ? `${key} ${JSON.stringify(params)}` : key;
+
+  const listing = {
+    type: 'string',
+    required: true,
+    choices: { list: 'listings', display: 'cards' },
+  } as unknown as SchemaAttributeType;
+
+  const photos = {
+    type: 'list',
+    items: { type: 'string' },
+    choices: {
+      list: 'images',
+      multiple: true,
+      min: 1,
+      max: 2,
+      depends_on: ['listing'],
+    },
+  } as unknown as SchemaAttributeType;
+
+  it('detects choice fields', () => {
+    expect(getFieldChoices(listing)).toEqual({
+      list: 'listings',
+      display: 'cards',
+    });
+    expect(getFieldChoices('string')).toBeUndefined();
+    expect(getFieldChoices({ type: 'string' })).toBeUndefined();
+    expect(getFieldChoices({ choices: { display: 'grid' } })).toBeUndefined();
+    expect(getFieldChoices(null)).toBeUndefined();
+  });
+
+  it('splits dependency values and missing dependencies', () => {
+    const choices = getFieldChoices(photos)!;
+
+    expect(choiceDependencies(choices, { listing: 'L1', other: 1 })).toEqual({
+      values: { listing: 'L1' },
+      missing: [],
+    });
+    expect(choiceDependencies(choices, { listing: '' })).toEqual({
+      values: {},
+      missing: ['listing'],
+    });
+    expect(choiceDependencies(getFieldChoices(listing)!, {})).toEqual({
+      values: {},
+      missing: [],
+    });
+  });
+
+  it('finds dependent choice fields that have values', () => {
+    const entries: [string, SchemaAttributeType][] = [
+      ['listing', listing],
+      ['photos', photos],
+      ['title', 'string' as SchemaAttributeType],
+    ];
+
+    expect(
+      dependentChoiceFields(entries, 'listing', { photos: ['p1'] })
+    ).toEqual(['photos']);
+    expect(dependentChoiceFields(entries, 'listing', { photos: [] })).toEqual(
+      []
+    );
+    expect(
+      dependentChoiceFields(entries, 'photos', { photos: ['p1'] })
+    ).toEqual([]);
+  });
+
+  it('finds transitive values through empty dependent choice fields', () => {
+    const calendar: SchemaAttributeType = {
+      type: 'string',
+      choices: { list: 'calendars', depends_on: ['listing'] },
+    };
+    const event: SchemaAttributeType = {
+      type: 'string',
+      choices: { list: 'events', depends_on: ['calendar'] },
+    };
+    const entries: [string, SchemaAttributeType][] = [
+      ['listing', listing],
+      ['calendar', calendar],
+      ['event', event],
+    ];
+
+    expect(
+      dependentChoiceFields(entries, 'listing', { calendar: '', event: 'e1' })
+    ).toEqual(['event']);
+    expect(
+      dependentChoiceFields(entries, 'listing', {
+        calendar: 'c1',
+        event: 'e1',
+      })
+    ).toEqual(['calendar', 'event']);
+  });
+
+  it('validates required values and selection bounds', () => {
+    const single = getFieldChoices(listing)!;
+    const multiple = getFieldChoices(photos)!;
+
+    expect(validateChoicesValue(single, true, undefined, t)).toBe(
+      'validation.fieldRequired'
+    );
+    expect(validateChoicesValue(single, true, 'L1', t)).toBe('');
+    expect(validateChoicesValue(single, false, '', t)).toBe('');
+    expect(validateChoicesValue(multiple, false, [], t)).toBe(
+      'widgets.choices.minSelection {"min":1}'
+    );
+    expect(validateChoicesValue(multiple, false, ['a', 'b', 'c'], t)).toBe(
+      'widgets.choices.maxSelection {"max":2}'
+    );
+    expect(validateChoicesValue(multiple, false, ['a'], t)).toBe('');
+  });
+
+  it('maps endpoint errors to localized messages', () => {
+    expect(
+      choicesErrorMessage(new WidgetChoicesError('provider_error', 502), t)
+    ).toBe('widgets.choices.errors.providerError');
+    expect(
+      choicesErrorMessage(new WidgetChoicesError('missing_credentials'), t)
+    ).toBe('widgets.choices.errors.missingCredentials');
+    expect(choicesErrorMessage(new WidgetChoicesError('teapot'), t)).toBe(
+      'widgets.choices.errors.unknown'
+    );
+    expect(choicesErrorMessage(new Error('boom'), t)).toBe(
+      'widgets.choices.errors.unknown'
+    );
+  });
+
+  it('builds field labels from translations', () => {
+    const labels = choicesFieldLabels(t);
+
+    expect(labels.choose).toBe('widgets.choices.choose');
+    expect(labels.cancel).toBe('common.cancel');
+    expect(labels.selected(3)).toBe(
+      'widgets.choices.selectedCount {"count":3}'
+    );
+    expect(labels.selected(3, 5)).toBe(
+      'widgets.choices.selectedCountMax {"count":3,"max":5}'
+    );
   });
 });

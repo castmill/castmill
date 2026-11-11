@@ -197,6 +197,98 @@
     "deleteAccountPasskeyInfoWithSignalAPI": "삭제 후 패스키가 기기에서 자동으로 삭제됩니다. 나중에 로그인하려면 새 계정을 만들어야 합니다."
   },
   "network": {
+    "widgets": {
+      "title": "위젯 액세스",
+      "description": "네트워크의 조직이 사용할 수 있는 위젯을 선택하세요. 해당 지역에서 이용할 수 없는 서비스나 구독하지 않은 서비스가 필요한 위젯처럼 제공하지 않는 위젯은 숨길 수 있습니다.",
+      "searchWidgets": "위젯 검색",
+      "loadMore": "더 보기",
+      "showing": "{{total}}개 중 {{shown}}개 표시",
+      "noWidgets": "필터와 일치하는 위젯이 없습니다.",
+      "clearFilters": "필터 지우기",
+      "selectWidget": "위젯을 선택해 사용할 수 있는 조직을 관리하세요.",
+      "core": "핵심",
+      "usedBy": "사용 중인 조직: {{count}}",
+      "kind": {
+        "system": "시스템",
+        "network": "네트워크"
+      },
+      "filters": {
+        "any": "전체",
+        "all": "모두 허용",
+        "selected": "선택 허용",
+        "hidden": "숨김",
+        "accessLabel": "액세스별 필터",
+        "anyKind": "모든 유형",
+        "kindLabel": "유형별 필터",
+        "except": "제외 있음"
+      },
+      "summary": {
+        "all": "모든 조직",
+        "selected": "{{total}}개 조직 중 {{count}}개",
+        "hidden": "숨김",
+        "except": "{{count}}개 제외 전체"
+      },
+      "access": {
+        "title": "이 위젯을 사용할 수 있는 조직",
+        "all": "모든 조직",
+        "allDescription": "나중에 생성되는 조직을 포함한 모든 조직.",
+        "except": "일부 제외…",
+        "exceptDescription": "제외한 조직을 뺀 모든 조직. 새 조직도 포함됩니다.",
+        "selected": "선택한 조직만…",
+        "selectedDescription": "추가한 조직만. 새 조직은 포함되지 않습니다.",
+        "hidden": "숨김",
+        "hiddenDescription": "네트워크 어디에서도 제공되지 않습니다."
+      },
+      "notices": {
+        "core": "핵심 위젯: 재생목록과 미디어가 의존하므로 항상 사용할 수 있습니다.",
+        "all": "나중에 생성되는 조직을 포함한 모든 조직이 이 위젯을 사용할 수 있습니다. 아래에서 조직을 끄면 제외됩니다.",
+        "except": "나중에 생성되는 조직은 이 위젯을 자동으로 받습니다.",
+        "selected": "나중에 생성되는 조직은 이 위젯을 받지 않습니다.",
+        "hidden": "네트워크의 어떤 조직도 이 위젯을 재생목록에 추가할 수 없습니다.",
+        "platform": "플랫폼이 네트워크의 {{total}}개 조직 중 {{count}}개에 이 위젯을 제공합니다."
+      },
+      "organizations": {
+        "title": "조직",
+        "search": "조직 검색",
+        "statusAll": "전체",
+        "statusEnabled": "사용 가능",
+        "statusDisabled": "사용 불가",
+        "enabledOf": "{{total}}개 중 {{count}}개 조직이 이 위젯을 사용할 수 있습니다",
+        "matching": "일치하는 조직 {{count}}개",
+        "enableAll": "모두 사용 설정({{count}})",
+        "disableAll": "모두 사용 해제({{count}})",
+        "inUse": "사용 중",
+        "inUseHint": "이 조직의 재생목록에서 사용 중입니다. 액세스를 해제하기 전에 재생목록에서 제거하세요.",
+        "none": "필터와 일치하는 조직이 없습니다.",
+        "noOrganizations": "아직 네트워크에 조직이 없습니다.",
+        "columnName": "조직",
+        "columnUsage": "재생목록 사용",
+        "columnAccess": "액세스",
+        "accessFor": "{{name}} 액세스",
+        "range": "{{total}}개 중 {{from}}–{{to}}",
+        "selectedCount": "{{count}}개 선택됨",
+        "enableSelected": "액세스 사용",
+        "disableSelected": "액세스 해제"
+      },
+      "confirm": {
+        "hideTitle": "{{widget}}을(를) 숨길까요?",
+        "hideMessage": "네트워크의 조직이 더 이상 이 위젯을 재생목록에 추가할 수 없습니다.",
+        "hideAction": "위젯 숨기기",
+        "enableAllTitle": "{{count}}개 조직을 사용 설정할까요?",
+        "enableAllMessage": "이 조직들이 {{widget}}을(를) 재생목록에 추가할 수 있게 됩니다.",
+        "enableAction": "사용 설정",
+        "disableAllTitle": "{{count}}개 조직을 사용 해제할까요?",
+        "disableAllMessage": "이 조직들은 더 이상 {{widget}}을(를) 재생목록에 추가할 수 없습니다.",
+        "disableAction": "사용 해제"
+      },
+      "errors": {
+        "load": "위젯을 불러오지 못했습니다.",
+        "loadOrganizations": "조직을 불러오지 못했습니다.",
+        "save": "위젯 액세스를 업데이트하지 못했습니다.",
+        "inUse": "다음 조직이 재생목록에서 위젯을 사용 중이므로 액세스를 제거할 수 없습니다: {{organizations}}",
+        "moreOrganizations": "{{names}} 외 {{count}}개"
+      }
+    },
     "title": "네트워크 설정",
     "adminBadge": "네트워크 관리자",
     "saveSuccess": "네트워크 설정이 저장되었습니다",
@@ -298,7 +390,26 @@
       "unblockTitle": "조직 차단 해제",
       "unblockConfirmation": "\"{{name}}\"의 차단을 해제하시겠습니까? 사용자가 다시 로그인할 수 있게 됩니다.",
       "unblockSuccess": "조직 차단이 성공적으로 해제되었습니다",
-      "unblockError": "조직 차단 해제에 실패했습니다"
+      "unblockError": "조직 차단 해제에 실패했습니다",
+      "integrationSettings": {
+        "action": "통합 설정",
+        "title": "통합 설정 – {{name}}",
+        "description": "이 네트워크의 위젯이 이 조직에 사용하는 값(예: 사무소 ID)입니다. 네트워크 관리자만 변경할 수 있습니다.",
+        "empty": "이 네트워크에서 조직 설정을 사용하는 위젯이 없습니다.",
+        "listHelp": "한 줄에 하나의 값을 입력하세요.",
+        "remove": "설정 제거",
+        "saved": "설정을 저장했습니다.",
+        "removed": "설정을 제거했습니다.",
+        "invalid": "표시된 필드를 확인하세요.",
+        "loadError": "통합 설정을 불러올 수 없습니다.",
+        "saveError": "설정을 저장할 수 없습니다: {{message}}",
+        "errors": {
+          "required": "필수 항목입니다.",
+          "invalid": "잘못된 값입니다.",
+          "too_long": "너무 깁니다.",
+          "too_many": "값이 너무 많습니다."
+        }
+      }
     },
     "users": {
       "listTitle": "모든 사용자",
@@ -378,7 +489,8 @@
       "channels": "채널",
       "teams": "팀",
       "widgets": "위젯",
-      "layouts": "레이아웃"
+      "layouts": "레이아웃",
+      "feeds": "피드"
     },
     "errors": {
       "fetchUsageData": "사용량 데이터를 가져오는데 실패했습니다: {{error}}"
@@ -609,6 +721,7 @@
   "sidebar": {
     "organization": "조직",
     "channels": "채널",
+    "automations": "자동화",
     "teams": "팀",
     "usage": "사용량",
     "devices": "장치",
@@ -623,8 +736,10 @@
     "networkSettings": "설정",
     "networkOrganizations": "조직",
     "networkUsers": "사용자 및 초대",
+    "networkWidgets": "위젯 액세스",
     "tags": "태그",
-    "agents": "에이전트"
+    "agents": "에이전트",
+    "feeds": "피드"
   },
   "channels": {
     "title": "채널",
@@ -858,6 +973,13 @@
     "zonesCount": "{{count}}개 영역"
   },
   "widgets": {
+    "scope": {
+      "title": "사용 범위",
+      "system": "시스템",
+      "network": "네트워크",
+      "organization": "이 조직",
+      "unassigned": "할당되지 않음"
+    },
     "title": "Widgets",
     "uploadWidget": "Widget 업로드",
     "uploadDescription": "Widget JSON 정의 파일을 업로드합니다.",
@@ -950,7 +1072,58 @@
       "noConfigurationRequired": "구성이 필요하지 않음",
       "optional": "선택 사항"
     },
-    "translations": "번역"
+    "translations": "번역",
+    "editableTexts": {
+      "editTexts": "텍스트 편집",
+      "doneEditing": "편집 완료",
+      "hint": "강조 표시된 텍스트를 클릭하여 변경하세요.",
+      "editAria": "텍스트 편집: {{label}}",
+      "hide": "이 텍스트 숨기기",
+      "reset": "원래대로 복원",
+      "counter": "{{length}} / {{max}}자",
+      "listTitle": "편집된 텍스트: {{count}}",
+      "hidden": "숨김",
+      "empty": "(비어 있음)",
+      "resetAll": "모두 복원",
+      "unusedTitle": "Widget에서 사용되지 않음",
+      "unusedHint": "이 편집 내용은 더 이상 Widget의 텍스트와 일치하지 않습니다.",
+      "editedIndicator": "편집된 텍스트 있음"
+    },
+    "choices": {
+      "choose": "선택",
+      "moveBefore": "앞으로 이동",
+      "moveAfter": "뒤로 이동",
+      "search": "검색…",
+      "loadMore": "더 불러오기",
+      "retry": "다시 시도",
+      "noResults": "일치하는 항목이 없습니다",
+      "noSelection": "선택된 항목 없음",
+      "unavailable": "더 이상 사용할 수 없음",
+      "selectAll": "모두 선택",
+      "selectNone": "선택 해제",
+      "selectedCount": "선택됨: {{count}}",
+      "selectedCountMax": "선택됨: {{count}} / {{max}}",
+      "done": "완료",
+      "play": "미리보기 재생",
+      "stop": "미리보기 중지",
+      "enlarge": "확대",
+      "dialogDescription": "통합에서 제공하는 항목 중에서 선택하세요.",
+      "dependencyRequired": "먼저 {{fields}}을(를) 설정하세요.",
+      "confirmClearTitle": "종속 선택을 지우시겠습니까?",
+      "confirmClearMessage": "{{field}}을(를) 변경하면 {{fields}}이(가) 지워집니다.",
+      "minSelection": "{{min}}개 이상 선택하세요.",
+      "maxSelection": "최대 {{max}}개까지 선택하세요.",
+      "errors": {
+        "widgetNotFound": "이 Widget은 더 이상 사용할 수 없습니다.",
+        "notAChoiceField": "이 필드는 선택 항목을 표시할 수 없습니다.",
+        "missingDependency": "먼저 이 필드가 의존하는 필드를 설정하세요.",
+        "missingCredentials": "이 조직에 대한 통합이 구성되지 않았습니다.",
+        "rateLimited": "요청이 너무 많습니다. 잠시 후 다시 시도하세요.",
+        "providerError": "통합에서 항목을 가져오지 못했습니다. 나중에 다시 시도하세요.",
+        "networkError": "서버에 연결할 수 없습니다. 연결을 확인하세요.",
+        "unknown": "항목을 불러올 수 없습니다."
+      }
+    }
   },
   "devices": {
     "orientation": {
@@ -1601,6 +1774,361 @@
         "cursor": "모든 프로젝트에는 ~/.cursor/mcp.json, 특정 프로젝트에는 .cursor/mcp.json에 이 구성을 추가한 다음 Cursor Settings > MCP에서 서버를 활성화하세요.",
         "other": "다음 설정으로 원격 MCP 서버를 구성하세요."
       }
+    }
+  },
+  "feeds": {
+    "title": "데이터 피드",
+    "description": "피드는 Make, Zapier 또는 자체 스크립트 같은 다른 시스템에서 데이터를 받습니다. 피드를 표시하는 Widget은 피드가 바뀌면 모든 화면에서 업데이트됩니다.",
+    "newFeed": "새 피드",
+    "empty": "아직 피드가 없습니다. 피드를 만들고 데이터를 보내는 시스템을 연결하세요.",
+    "notFound": "이 피드가 없거나 삭제되었습니다.",
+    "mode": "유형",
+    "modes": {
+      "list": "목록",
+      "document": "문서"
+    },
+    "modeHelp": {
+      "list": "최신 항목을 최신순으로 보관합니다. 시스템이 항목을 하나씩 추가합니다.",
+      "document": "시스템이 업데이트할 때마다 교체하는 문서 하나를 보관합니다."
+    },
+    "keep": "보관할 항목 수",
+    "keepHelp": "새 항목이 도착하면 오래된 항목이 삭제됩니다(1–100).",
+    "schema": "항목 스키마(선택 사항)",
+    "schemaHelp": "Widget의 데이터 스키마처럼 항목의 필드를 설명하는 JSON입니다. 일치하지 않는 쓰기는 거부됩니다.",
+    "schemaInvalid": "스키마는 올바른 JSON 객체여야 합니다.",
+    "mediaFields": "미디어 필드",
+    "mediaFieldsHelp": "이미지 또는 동영상 URL이 있는 항목의 경로입니다(예: image 또는 photos[].url).",
+    "mediaPath": "경로",
+    "mediaMode": "처리 방식",
+    "mediaModes": {
+      "copy": "저장소에 복사",
+      "link": "링크 유지"
+    },
+    "addMediaField": "미디어 필드 추가",
+    "entries": "항목",
+    "lastUpdate": "마지막 업데이트",
+    "usedBy": "사용 중인 재생 목록",
+    "never": "없음",
+    "created": "피드를 만들었습니다",
+    "saved": "피드를 저장했습니다",
+    "deleted": "피드를 삭제했습니다",
+    "deleteTitle": "피드를 삭제하시겠습니까?",
+    "deleteMessage": "“{{name}}”을(를) 삭제하면 항목과 토큰이 제거됩니다. 이 피드를 표시하는 Widget은 비게 됩니다.",
+    "back": "모든 피드",
+    "tabs": {
+      "entries": "항목",
+      "connect": "연결",
+      "settings": "설정",
+      "media": "미디어"
+    },
+    "noEntries": "아직 항목이 없습니다. 테스트 항목을 보내거나 시스템을 연결하세요.",
+    "noDocument": "아직 문서가 없습니다.",
+    "receivedAt": "{{time}}에 받음",
+    "updatedAt": "마지막 업데이트: {{time}}",
+    "externalId": "외부 ID",
+    "deleteEntry": "항목 삭제",
+    "deleteEntryMessage": "이 피드를 표시하는 모든 화면에서 항목이 제거됩니다.",
+    "clear": "모두 지우기",
+    "clearTitle": "피드를 비우시겠습니까?",
+    "clearMessage": "“{{name}}”의 모든 데이터가 제거됩니다.",
+    "refresh": "새로 고침",
+    "test": {
+      "title": "테스트 항목 보내기",
+      "titleDocument": "테스트 문서 보내기",
+      "help": "JSON 객체를 붙여 넣으세요. 연결된 시스템이 보낸 데이터처럼 저장됩니다.",
+      "send": "보내기",
+      "sent": "테스트 데이터를 저장했습니다",
+      "invalidJson": "올바른 JSON 객체를 입력하세요."
+    },
+    "connect": {
+      "endpoints": "엔드포인트",
+      "append": "항목 추가",
+      "replace": "모든 데이터 교체",
+      "read": "데이터 읽기",
+      "copy": "복사",
+      "copied": "클립보드에 복사했습니다",
+      "copyFailed": "클립보드에 복사할 수 없습니다"
+    },
+    "tokens": {
+      "title": "토큰",
+      "help": "토큰은 이 피드에만 쓸 수 있습니다. Authorization 헤더에 Bearer 뒤에 토큰을 붙여 보내세요.",
+      "new": "새 토큰",
+      "namePlaceholder": "예: Make 시나리오",
+      "empty": "아직 토큰이 없습니다.",
+      "lastUsed": "마지막 사용",
+      "revoke": "취소",
+      "revoked": "취소됨",
+      "revokeTitle": "토큰을 취소하시겠습니까?",
+      "revokeMessage": "“{{name}}”을(를) 사용하는 시스템은 더 이상 피드에 쓸 수 없습니다.",
+      "secretTitle": "토큰 복사",
+      "secretWarning": "토큰은 이번 한 번만 표시됩니다. 데이터를 보내는 시스템에 저장하세요.",
+      "done": "완료",
+      "memberHint": "조직 구성원과 AI 에이전트의 토큰도 피드에 쓸 수 있으며, 여러 피드에 동시에 쓸 수도 있습니다."
+    },
+    "examples": {
+      "curl": "스크립트에서(curl)",
+      "make": "Make에서",
+      "makeStep1": "HTTP › Make a request 모듈을 추가하세요.",
+      "makeStep2": "URL을 “항목 추가” 엔드포인트로, 메서드를 POST로 설정하세요.",
+      "makeStep3": "값이 Bearer 뒤에 토큰을 붙인 Authorization 헤더를 추가하세요.",
+      "makeStep4": "표시할 필드가 포함된 원시 JSON 본문을 선택하세요. 수정된 항목이 새 항목을 추가하지 않고 기존 항목을 교체하도록 external_id를 포함하세요."
+    },
+    "errors": {
+      "load": "피드를 불러올 수 없습니다.",
+      "loadFeed": "피드를 불러올 수 없습니다.",
+      "save": "피드를 저장할 수 없습니다: {{message}}",
+      "quota": "조직이 피드 한도에 도달했습니다.",
+      "action": "작업에 실패했습니다: {{message}}"
+    },
+    "media": {
+      "help": "피드의 복사된 미디어 필드에 있는 이미지와 동영상은 Castmill에 저장되므로 원본 링크가 만료된 후에도 화면에 계속 표시됩니다.",
+      "storage": "저장됨: {{size}}",
+      "empty": "아직 미디어가 없습니다.",
+      "noFields": "이 피드는 미디어를 복사하지 않습니다. 설정에서 미디어 필드를 추가하세요.",
+      "retry": "다시 시도",
+      "retried": "미디어를 다시 복사하는 중입니다.",
+      "entries": "항목: {{count}}",
+      "seconds": "{{seconds}}초",
+      "status": {
+        "pending": "복사 중",
+        "ready": "저장됨",
+        "failed": "실패"
+      },
+      "failures": {
+        "not_found": "원본 파일을 찾을 수 없습니다.",
+        "forbidden": "소스에서 액세스를 거부했습니다.",
+        "unauthorized": "소스에 인증이 필요합니다.",
+        "too_large": "파일이 너무 큽니다.",
+        "unsupported_type": "지원되는 이미지나 동영상이 아닙니다.",
+        "quota_exceeded": "조직의 저장 공간이 가득 찼습니다.",
+        "timeout": "소스가 제때 응답하지 않았습니다.",
+        "blocked_host": "URL이 사설 네트워크를 가리킵니다.",
+        "other": "파일을 복사할 수 없습니다."
+      },
+      "errors": {
+        "load": "피드의 미디어를 불러올 수 없습니다."
+      }
+    }
+  },
+  "automations": {
+    "title": "자동화",
+    "description": "특정 시간에 다른 콘텐츠로 재생을 중단하는 등 디스플레이가 이벤트에 반응하도록 합니다.",
+    "new": "새 자동화",
+    "newDescription": "자동화의 이름을 입력하세요. 규칙 추가와 디스플레이 할당은 나중에 할 수 있습니다.",
+    "namePlaceholder": "예: 매시간 봄 할인",
+    "created": "자동화 \"{{name}}\"을(를) 만들었습니다",
+    "deleted": "자동화 \"{{name}}\"을(를) 삭제했습니다",
+    "saved": "자동화를 저장했습니다",
+    "enabled": "사용",
+    "disabled": "사용 안 함",
+    "disabledHint": "사용하지 않는 자동화는 디스플레이에서 실행되지 않습니다.",
+    "toggleEnabled": "\"{{name}}\" 사용 또는 사용 안 함",
+    "noUpcoming": "예정된 실행 없음",
+    "noRules": "아직 규칙이 없습니다",
+    "moreRules": "외 {{count}}개",
+    "assignmentsDetail": "장치 {{devices}}대, 채널 {{channels}}개",
+    "noAccess": "자동화를 볼 권한이 없습니다.",
+    "deleteTitle": "자동화 삭제",
+    "deleteMessage": "\"{{name}}\"을(를) 삭제하시겠습니까? 할당된 디스플레이에서 즉시 실행이 중지됩니다.",
+    "editorDescription": "규칙은 위에서 아래로 평가되며, 여러 규칙이 동시에 실행되면 첫 번째 규칙이 우선합니다.",
+    "columns": {
+      "rules": "규칙",
+      "assignments": "할당 대상",
+      "nextFiring": "다음 실행"
+    },
+    "tabs": {
+      "rules": "규칙 ({{count}})",
+      "assignments": "할당 ({{count}})"
+    },
+    "errors": {
+      "loadFailed": "자동화를 불러올 수 없습니다",
+      "saveFailed": "자동화를 저장할 수 없습니다: {{error}}",
+      "deleteFailed": "자동화를 삭제할 수 없습니다: {{error}}",
+      "runFailed": "규칙을 실행할 수 없습니다: {{error}}"
+    },
+    "rules": {
+      "title": "규칙",
+      "empty": "이 자동화에는 아직 규칙이 없습니다. 언제 무엇이 일어나고 디스플레이가 무엇을 할지 정하려면 규칙을 추가하세요.",
+      "add": "규칙 추가",
+      "edit": "규칙 편집",
+      "save": "규칙 저장",
+      "saved": "규칙을 저장했습니다",
+      "when": "조건",
+      "then": "실행",
+      "options": "옵션",
+      "chooseSource": "규칙을 실행할 트리거 선택",
+      "chooseAction": "디스플레이가 수행할 동작 선택",
+      "cooldown": "재실행 대기 시간(초)",
+      "cooldownHint": "같은 디스플레이에서 이 규칙이 다시 실행되기까지의 최소 시간입니다. 0이면 대기 없음.",
+      "moveUp": "위로 이동",
+      "moveDown": "아래로 이동",
+      "moveUpN": "규칙 {{n}} 위로 이동",
+      "moveDownN": "규칙 {{n}} 아래로 이동",
+      "runNow": "지금 실행",
+      "runNowN": "규칙 {{n}} 지금 실행",
+      "editN": "규칙 {{n}} 편집",
+      "deleteN": "규칙 {{n}} 삭제",
+      "deleteTitle": "규칙 삭제",
+      "deleteMessage": "이 규칙을 삭제하시겠습니까?",
+      "moved": "규칙을 {{from}}번에서 {{to}}번으로 이동했습니다",
+      "runSuccess": "규칙을 디스플레이 {{count}}대에 보냈습니다"
+    },
+    "summary": {
+      "hourly": "매시간 {{minute}}분",
+      "interval": "{{minutes}}분마다",
+      "times": "매일 {{times}}",
+      "once": "한 번: {{date}} {{time}}",
+      "unknown": "알 수 없는 일정",
+      "dateRange": "{{start}}부터 {{end}}까지",
+      "dateFrom": "{{date}}부터",
+      "dateUntil": "{{date}}까지",
+      "noPlaylist": "선택한 재생 목록 없음",
+      "playlistFallback": "재생 목록 #{{id}}",
+      "interruptImmediately": "\"{{playlist}}\"(으)로 즉시 중단",
+      "interruptAfterItem": "현재 항목 후 \"{{playlist}}\"(으)로 중단",
+      "plays": "{{count}}회 재생",
+      "highPriority": "높은 우선순위",
+      "cooldown": "대기 시간: {{seconds}}초",
+      "unknownType": "지원되지 않는 유형 \"{{type}}\""
+    },
+    "validation": {
+      "minute": "0에서 59 사이의 분을 입력하세요.",
+      "interval": "간격은 5에서 1440 사이의 정수(분)여야 합니다.",
+      "timesCount": "시간을 1개에서 48개까지 추가하세요.",
+      "time": "시간을 HH:MM 형식으로 입력하세요.",
+      "timesDuplicate": "같은 시간은 한 번만 입력할 수 있습니다.",
+      "date": "올바른 날짜를 입력하세요.",
+      "schedule": "일정을 선택하세요.",
+      "weekdays": "요일을 하나 이상 선택하세요.",
+      "window": "일일 시간대는 시작 시간이 종료 시간보다 빨라야 합니다.",
+      "dates": "시작 날짜는 종료 날짜와 같거나 이전이어야 합니다.",
+      "timezone": "올바른 시간대(예: Europe/Stockholm)를 입력하거나 비워 두세요.",
+      "playlist": "재생 목록을 선택하세요.",
+      "start": "중단 시작 방식을 선택하세요.",
+      "maxWait": "최대 대기 시간은 0에서 3600초 사이여야 합니다.",
+      "plays": "재생 횟수는 1에서 100 사이여야 합니다.",
+      "priority": "우선순위를 선택하세요.",
+      "cooldown": "대기 시간은 0 이상의 정수(초)여야 합니다.",
+      "source": "트리거를 선택하세요.",
+      "action": "동작을 선택하세요."
+    },
+    "sources": {
+      "clock": {
+        "label": "시계",
+        "description": "특정 시간에: 매시간, 몇 분마다, 고정된 시간 또는 한 번."
+      }
+    },
+    "actions": {
+      "interrupt": {
+        "label": "콘텐츠로 중단",
+        "description": "재생 목록을 일시적으로 재생한 후 일반 일정으로 돌아갑니다."
+      }
+    },
+    "clock": {
+      "repeat": "반복",
+      "types": {
+        "hourly": "매시간",
+        "interval": "N분마다",
+        "times": "지정 시간",
+        "once": "한 번"
+      },
+      "minute": "매시간의 분",
+      "everyMinutes": "간격(분)",
+      "intervalHint": "최소 {{min}}분이며, 시간대 시작(또는 자정)부터 계산합니다.",
+      "times": "하루 중 시간",
+      "timeN": "시간 {{n}}",
+      "removeTime": "시간 제거",
+      "removeTimeN": "{{time}} 시간 제거",
+      "addTime": "시간 추가",
+      "date": "날짜",
+      "time": "시간",
+      "weekdays": "요일",
+      "window": "일일 시간대에만",
+      "from": "시작",
+      "to": "종료",
+      "dates": "기간 내에만",
+      "startDate": "시작 날짜",
+      "endDate": "종료 날짜",
+      "timezone": "시간대",
+      "timezonePlaceholder": "디스플레이 시간대",
+      "timezoneHint": "비워 두면 각 디스플레이의 시간대를 사용합니다.",
+      "previewTitle": "다음 실행",
+      "previewTimezone": "{{timezone}} 기준으로 표시됩니다.",
+      "previewDeviceTimezone": "각 디스플레이는 자체 시간대를 사용합니다. 여기서는 {{timezone}} 기준으로 표시됩니다.",
+      "previewFailed": "다음 실행을 계산할 수 없습니다.",
+      "previewEmpty": "이 일정은 앞으로 며칠 동안 실행되지 않습니다."
+    },
+    "interrupt": {
+      "playlist": "재생 목록",
+      "choosePlaylist": "재생 목록 검색…",
+      "createPlaylist": "재생 목록 만들기",
+      "start": "시작",
+      "startModes": {
+        "immediately": "즉시",
+        "after_current_item": "현재 항목 후"
+      },
+      "startHints": {
+        "immediately": "현재 항목을 즉시 중지하고, 이후 다음 항목부터 재생을 계속합니다.",
+        "after_current_item": "현재 항목이 끝날 때까지 기다리므로 잘리는 내용이 없습니다."
+      },
+      "maxWait": "최대 대기 시간(초)",
+      "maxWaitHint": "현재 항목이 이보다 길면 그래도 중단합니다.",
+      "plays": "재생 횟수",
+      "playsHint": "돌아가기 전에 재생 목록을 재생하는 횟수입니다.",
+      "priority": "우선순위",
+      "priorities": {
+        "normal": "보통",
+        "high": "높음"
+      },
+      "priorityHints": {
+        "normal": "일반적인 중단입니다.",
+        "high": "보통 우선순위의 중단보다 우선합니다."
+      }
+    },
+    "assignments": {
+      "description": "이 자동화를 실행할 디스플레이를 직접 또는 채널을 통해 선택하세요.",
+      "devices": "장치",
+      "channels": "채널",
+      "none": {
+        "devices": "할당된 장치 없음",
+        "channels": "할당된 채널 없음"
+      },
+      "search": {
+        "devices": "장치 검색…",
+        "channels": "채널 검색…"
+      },
+      "remove": "{{name}} 제거",
+      "loadFailed": "목록을 불러올 수 없습니다",
+      "noResults": "일치하는 항목 없음",
+      "save": "할당 저장",
+      "saved": "할당을 저장했습니다"
+    },
+    "warnings": {
+      "missing": "{{device}}에서 {{capability}}을(를) 지원하지 않습니다",
+      "unsupported": "{{capability}} 미지원",
+      "viaChannels": "채널을 통해 연결된 디스플레이"
+    },
+    "channel": {
+      "title": "자동화",
+      "manage": "자동화 관리",
+      "empty": "이 채널에 할당된 자동화가 없습니다.",
+      "loadFailed": "이 채널의 자동화를 불러올 수 없습니다.",
+      "showMarkers": "캘린더에 실행 시간 표시",
+      "firingsThisWeek": "(이번 주 {{count}}회)",
+      "upcoming": "이번 주 실행",
+      "markerLabel": "{{name}}, {{time}}"
+    },
+    "device": {
+      "title": "자동화",
+      "description": "이 장치에서 실행되는 자동화(직접 또는 채널을 통해 할당됨)입니다.",
+      "refresh": "자동화 새로 고침",
+      "empty": "이 장치에 적용되는 자동화가 없습니다.",
+      "loadFailed": "이 장치의 자동화를 불러올 수 없습니다.",
+      "viaDevice": "직접 할당됨",
+      "viaChannel": "채널 {{name}} 경유",
+      "upcoming": "예정된 실행",
+      "noUpcoming": "앞으로 며칠 동안 실행이 없습니다.",
+      "timezoneNote": "시간은 장치 시간대({{timezone}}) 기준으로 표시됩니다."
     }
   }
 }

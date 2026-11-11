@@ -288,6 +288,7 @@ defmodule Castmill.Quotas do
       nil -> 0
       size -> size
     end
+    |> Kernel.+(Castmill.Feeds.Media.storage_used(organization_id))
   end
 
   def get_quota_used_for_organization(organization_id, Castmill.Organizations.OrganizationsUsers) do

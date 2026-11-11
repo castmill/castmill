@@ -4,7 +4,7 @@
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { SortOptions } from '@castmill/ui-common';
-import { PlaylistsService } from './playlists.service';
+import { PlaylistsService, WidgetChoicesError } from './playlists.service';
 
 // Mock fetch globally
 global.fetch = vi.fn();
@@ -260,6 +260,114 @@ describe('PlaylistsService', () => {
         expect.stringContaining('search=test'),
         expect.any(Object)
       );
+    });
+  });
+
+  describe('listWidgetChoices', () => {
+    const request = {
+      options: { listing: 'L1' },
+      query: 'kitchen',
+      cursor: null,
+      values: ['p1'],
+    };
+
+    it('posts the request and returns the page', async () => {
+      (global.fetch as any).mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            items: [{ value: 'p1', label: 'Kitchen' }],
+            next: 'abc',
+          }),
+          { status: 200 }
+        )
+      );
+
+      const page = await PlaylistsService.listWidgetChoices(
+        baseUrl,
+        organizationId,
+        42,
+        'selected images',
+        request
+      );
+
+      expect(page).toEqual({
+        items: [{ value: 'p1', label: 'Kitchen' }],
+        next: 'abc',
+      });
+      const [url, init] = (global.fetch as any).mock.calls[0];
+      expect(url).toBe(
+        `${baseUrl}/dashboard/organizations/${organizationId}/widgets/42/choices/selected%20images`
+      );
+      expect(init.method).toBe('POST');
+      expect(JSON.parse(init.body)).toEqual(request);
+    });
+
+    it('defaults malformed pages', async () => {
+      (global.fetch as any).mockResolvedValueOnce(
+        new Response(JSON.stringify({ items: 'nope', next: 3 }), {
+          status: 200,
+        })
+      );
+
+      await expect(
+        PlaylistsService.listWidgetChoices(
+          baseUrl,
+          organizationId,
+          1,
+          'f',
+          request
+        )
+      ).resolves.toEqual({ items: [], next: null });
+    });
+
+    it('throws the server error code', async () => {
+      (global.fetch as any).mockResolvedValueOnce(
+        new Response(JSON.stringify({ error: 'provider_error' }), {
+          status: 502,
+        })
+      );
+
+      const error = await PlaylistsService.listWidgetChoices(
+        baseUrl,
+        organizationId,
+        1,
+        'f',
+        request
+      ).catch((e) => e);
+
+      expect(error).toBeInstanceOf(WidgetChoicesError);
+      expect(error.code).toBe('provider_error');
+      expect(error.status).toBe(502);
+    });
+
+    it('uses unknown for responses without a code', async () => {
+      (global.fetch as any).mockResolvedValueOnce(
+        new Response('<html>', { status: 500 })
+      );
+
+      await expect(
+        PlaylistsService.listWidgetChoices(
+          baseUrl,
+          organizationId,
+          1,
+          'f',
+          request
+        )
+      ).rejects.toMatchObject({ code: 'unknown', status: 500 });
+    });
+
+    it('reports network errors', async () => {
+      (global.fetch as any).mockRejectedValueOnce(new TypeError('offline'));
+
+      await expect(
+        PlaylistsService.listWidgetChoices(
+          baseUrl,
+          organizationId,
+          1,
+          'f',
+          request
+        )
+      ).rejects.toMatchObject({ code: 'network_error' });
     });
   });
 });

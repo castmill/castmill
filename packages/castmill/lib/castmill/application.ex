@@ -46,6 +46,7 @@ defmodule Castmill.Application do
           # Give BullMQ workers a moment to fully initialize
           Process.sleep(5_000)
           Castmill.Workers.JobRecovery.recover_all()
+          Castmill.Workers.FeedMediaCleanup.ensure_scheduled()
         end)
       end
 
@@ -134,6 +135,10 @@ defmodule Castmill.Application do
       # Bound diagnostic ingestion from faulty or modified players.
       Castmill.DeviceErrorRateLimiter,
       Castmill.LegacyPlayerLogRateLimiter,
+      # Request rate limits (widget choices, data feeds).
+      Castmill.RateLimiter,
+      # Cache for widget option choice lookups.
+      Castmill.Widgets.Integrations.ChoicesStore,
       # Start Finch
       {Finch, name: Castmill.Finch}
     ]
@@ -381,9 +386,10 @@ defmodule Castmill.Application do
       )
 
       # Create a processor function that routes to the correct worker based on job name
-      processor_fn = fn job ->
-        route_job_to_worker(queue_name, job)
-      end
+      processor_fn =
+        Castmill.Workers.BullMQCallbacks.processor(queue_name, fn job ->
+          route_job_to_worker(queue_name, job)
+        end)
 
       worker_id = Module.concat([Castmill.Workers.BullMQ, queue_name])
 
@@ -396,14 +402,7 @@ defmodule Castmill.Application do
          connection: connection,
          processor: processor_fn,
          concurrency: concurrency,
-         on_error: fn error ->
-           Logger.error("BullMQ worker error queue=#{queue_name}: #{inspect(error)}")
-         end,
-         on_failed: fn job, reason ->
-           Logger.error(
-             "BullMQ job failed queue=#{queue_name} job=#{job.name} id=#{job.id}: #{inspect(reason)}"
-           )
-         end},
+         on_failed: Castmill.Workers.BullMQCallbacks.on_failed(queue_name)},
         id: worker_id
       )
     end)
@@ -435,6 +434,12 @@ defmodule Castmill.Application do
 
         {:maintenance, "encryption_rotation"} ->
           Castmill.Workers.EncryptionRotation
+
+        {:maintenance, "feed_media_cleanup"} ->
+          Castmill.Workers.FeedMediaCleanup
+
+        {:feed_media, _} ->
+          Castmill.Workers.FeedMediaDownloader
 
         # Email queue
         {:email, _} ->

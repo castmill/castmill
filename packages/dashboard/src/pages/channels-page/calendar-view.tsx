@@ -36,6 +36,11 @@ import { DefaultPlaylistComboBox } from './default-playlist-combobox';
 import { Modal, useToast } from '@castmill/ui-common';
 import { ChanneEntrylView } from './channel-entry-view';
 import { useI18n } from '../../i18n';
+import {
+  CalendarMarker,
+  markerPosition,
+  markerStyle,
+} from './automation-markers';
 
 export interface DropTargetData {
   dayIndex: number;
@@ -46,6 +51,10 @@ export interface DropTargetData {
 interface CalendarViewProps {
   channel: JsonChannel;
   timeZone: string;
+  /** Optional point-in-time markers (e.g. automation firings). */
+  markers?: CalendarMarker[];
+  /** Called with the visible week range (epoch ms) whenever it changes. */
+  onWeekChange?: (start: number, end: number) => void;
 }
 
 export const CalendarView: Component<CalendarViewProps> = (props) => {
@@ -202,6 +211,18 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
   // Show 7 days
   const daysToShow = 7;
   const [entries, setEntries] = createStore<CalendarEntry[]>([]);
+
+  createEffect(() => {
+    const range = getWeekRangeTimestamps(startDate(), props.timeZone);
+    props.onWeekChange?.(range.start, range.end);
+  });
+
+  const visibleMarkers = createMemo(() =>
+    (props.markers ?? []).flatMap((marker) => {
+      const position = markerPosition(marker.time, startDate(), props.timeZone);
+      return position ? [{ marker, position }] : [];
+    })
+  );
 
   createEffect(async () => {
     const range = getWeekRangeTimestamps(startDate(), props.timeZone);
@@ -641,6 +662,26 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
                 )}
               </For>
             </div>
+
+            <Show when={visibleMarkers().length > 0}>
+              <div class={styles['marker-layer']}>
+                <For each={visibleMarkers()}>
+                  {(item) => (
+                    <div
+                      class={styles['automation-marker']}
+                      style={markerStyle(
+                        item.position,
+                        getCellDimensions().height
+                      )}
+                      title={item.marker.label}
+                      aria-label={item.marker.label}
+                      role="img"
+                      data-testid="automation-marker"
+                    />
+                  )}
+                </For>
+              </div>
+            </Show>
 
             <div style={getTimeBarStyle()}>
               <div

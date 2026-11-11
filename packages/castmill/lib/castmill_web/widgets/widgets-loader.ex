@@ -5,13 +5,13 @@ defmodule CastmillWeb.Widgets.WidgetsLoader do
 
   @json_dir Application.compile_env(:castmill, CastmillWeb.Widgets.WidgetsLoader)[:json_dir]
 
-  def load_and_insert_json_data do
+  def load_and_insert_json_data(json_dir \\ @json_dir) do
     normalize_stringified_translations()
 
-    @json_dir
+    json_dir
     |> File.ls!()
     |> Enum.filter(&String.ends_with?(&1, ".json"))
-    |> Enum.each(&insert_or_update_json_data_from_file/1)
+    |> Enum.each(&insert_or_update_json_data_from_file(json_dir, &1))
   end
 
   # Some deployments may contain widgets.translations stored as a JSON string
@@ -29,8 +29,8 @@ defmodule CastmillWeb.Widgets.WidgetsLoader do
     )
   end
 
-  defp insert_or_update_json_data_from_file(file) do
-    full_path = Path.join(@json_dir, file)
+  defp insert_or_update_json_data_from_file(json_dir, file) do
+    full_path = Path.join(json_dir, file)
 
     case File.read(full_path) do
       {:ok, content} ->
@@ -75,6 +75,15 @@ defmodule CastmillWeb.Widgets.WidgetsLoader do
           _ ->
             Widget.changeset(widget, Map.put(widget_data_with_icons, "slug", slug))
         end
+
+      # Refresh shipped definitions without reopening platform-restricted widgets.
+      changeset =
+        Widget.scope_changeset(changeset, %{
+          is_system: true,
+          network_id: nil,
+          organization_id: nil,
+          restricted: if(widget, do: widget.restricted, else: false)
+        })
 
       case Repo.insert_or_update(changeset) do
         {:ok, _widget} ->

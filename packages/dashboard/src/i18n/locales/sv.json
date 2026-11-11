@@ -192,6 +192,98 @@
     "deleteAccountPasskeyInfoWithSignalAPI": "Efter borttagning kommer nycklar automatiskt att tas bort från din enhet. Om du försöker logga in senare måste du skapa ett nytt konto."
   },
   "network": {
+    "widgets": {
+      "title": "Widgetåtkomst",
+      "description": "Välj vilka widgetar organisationerna i ditt nätverk får använda. Dölj widgetar som du inte erbjuder, till exempel tjänster som inte finns i din region eller som kräver en prenumeration du inte har.",
+      "searchWidgets": "Sök widgetar",
+      "loadMore": "Läs in fler",
+      "showing": "Visar {{shown}} av {{total}}",
+      "noWidgets": "Inga widgetar matchar filtren.",
+      "clearFilters": "Rensa filter",
+      "selectWidget": "Välj en widget för att hantera vem som får använda den.",
+      "core": "Kärna",
+      "usedBy": "Organisationer som använder den: {{count}}",
+      "kind": {
+        "system": "System",
+        "network": "Nätverk"
+      },
+      "filters": {
+        "any": "Alla",
+        "all": "För alla",
+        "selected": "Urval",
+        "hidden": "Dolda",
+        "accessLabel": "Filtrera efter åtkomst",
+        "anyKind": "Alla typer",
+        "kindLabel": "Filtrera efter typ",
+        "except": "Med undantag"
+      },
+      "summary": {
+        "all": "Alla organisationer",
+        "selected": "{{count}} av {{total}} organisationer",
+        "hidden": "Dold",
+        "except": "Alla utom {{count}}"
+      },
+      "access": {
+        "title": "Vem får använda widgeten",
+        "all": "Alla organisationer",
+        "allDescription": "Alla organisationer, även de som skapas senare.",
+        "except": "Alla utom…",
+        "exceptDescription": "Alla utom de organisationer du undantar. Nya organisationer ingår.",
+        "selected": "Endast utvalda…",
+        "selectedDescription": "Endast de organisationer du lägger till. Nya organisationer ingår inte.",
+        "hidden": "Dold",
+        "hiddenDescription": "Erbjuds inte någonstans i ditt nätverk."
+      },
+      "notices": {
+        "core": "Kärnwidget: alltid tillgänglig eftersom spellistor och media är beroende av den.",
+        "all": "Alla organisationer kan använda widgeten, även de som skapas senare. Om du stänger av en nedan undantas den.",
+        "except": "Organisationer som skapas senare får widgeten automatiskt.",
+        "selected": "Organisationer som skapas senare får inte widgeten.",
+        "hidden": "Ingen organisation i ditt nätverk kan lägga till widgeten i spellistor.",
+        "platform": "Plattformen erbjuder widgeten till {{count}} av {{total}} organisationer i ditt nätverk."
+      },
+      "organizations": {
+        "title": "Organisationer",
+        "search": "Sök organisationer",
+        "statusAll": "Alla",
+        "statusEnabled": "Har åtkomst",
+        "statusDisabled": "Saknar åtkomst",
+        "enabledOf": "{{count}} av {{total}} kan använda widgeten",
+        "matching": "{{count}} matchande organisationer",
+        "enableAll": "Aktivera alla ({{count}})",
+        "disableAll": "Inaktivera alla ({{count}})",
+        "inUse": "Används",
+        "inUseHint": "Används i organisationens spellistor. Ta bort den där innan du tar bort åtkomsten.",
+        "none": "Inga organisationer matchar filtren.",
+        "noOrganizations": "Det finns inga organisationer i ditt nätverk ännu.",
+        "columnName": "Organisation",
+        "columnUsage": "I spellistor",
+        "columnAccess": "Åtkomst",
+        "accessFor": "Åtkomst för {{name}}",
+        "range": "{{from}}–{{to}} av {{total}}",
+        "selectedCount": "{{count}} valda",
+        "enableSelected": "Aktivera åtkomst",
+        "disableSelected": "Inaktivera åtkomst"
+      },
+      "confirm": {
+        "hideTitle": "Dölja {{widget}}?",
+        "hideMessage": "Organisationerna i ditt nätverk kan inte längre lägga till widgeten i spellistor.",
+        "hideAction": "Dölj widget",
+        "enableAllTitle": "Aktivera {{count}} organisationer?",
+        "enableAllMessage": "De kommer att kunna lägga till {{widget}} i sina spellistor.",
+        "enableAction": "Aktivera",
+        "disableAllTitle": "Inaktivera {{count}} organisationer?",
+        "disableAllMessage": "De kommer inte längre att kunna lägga till {{widget}} i sina spellistor.",
+        "disableAction": "Inaktivera"
+      },
+      "errors": {
+        "load": "Det gick inte att läsa in widgetar.",
+        "loadOrganizations": "Det gick inte att läsa in organisationer.",
+        "save": "Det gick inte att uppdatera widgetåtkomsten.",
+        "inUse": "Åtkomsten kan inte tas bort medan dessa organisationer använder widgeten i spellistor: {{organizations}}",
+        "moreOrganizations": "{{names}} och {{count}} till"
+      }
+    },
     "title": "Nätverksinställningar",
     "adminBadge": "Nätverksadmin",
     "saveSuccess": "Nätverksinställningar sparade",
@@ -293,7 +385,26 @@
       "unblockTitle": "Avblockera Organisation",
       "unblockConfirmation": "Är du säker på att du vill avblockera \"{{name}}\"? Användare kommer kunna logga in igen.",
       "unblockSuccess": "Organisation avblockerad",
-      "unblockError": "Kunde inte avblockera organisation"
+      "unblockError": "Kunde inte avblockera organisation",
+      "integrationSettings": {
+        "action": "Integrationsinställningar",
+        "title": "Integrationsinställningar – {{name}}",
+        "description": "Värden som nätverkets widgetar använder för den här organisationen, till exempel kontors-ID. Bara nätverksadministratörer kan ändra dem.",
+        "empty": "Ingen widget i nätverket använder organisationsinställningar.",
+        "listHelp": "Ett värde per rad.",
+        "remove": "Ta bort inställningar",
+        "saved": "Inställningarna sparades.",
+        "removed": "Inställningarna togs bort.",
+        "invalid": "Kontrollera de markerade fälten.",
+        "loadError": "Det gick inte att läsa in integrationsinställningarna.",
+        "saveError": "Det gick inte att spara inställningarna: {{message}}",
+        "errors": {
+          "required": "Obligatoriskt.",
+          "invalid": "Ogiltigt värde.",
+          "too_long": "För långt.",
+          "too_many": "För många värden."
+        }
+      }
     },
     "users": {
       "listTitle": "Alla Användare",
@@ -373,7 +484,8 @@
       "channels": "Kanaler",
       "teams": "Team",
       "widgets": "Widgets",
-      "layouts": "Layouter"
+      "layouts": "Layouter",
+      "feeds": "Flöden"
     },
     "errors": {
       "fetchUsageData": "Misslyckades att hämta användningsdata: {{error}}"
@@ -604,6 +716,7 @@
   "sidebar": {
     "organization": "Organisation",
     "channels": "Kanaler",
+    "automations": "Automatiseringar",
     "teams": "Team",
     "usage": "Användning",
     "devices": "Enheter",
@@ -618,8 +731,10 @@
     "networkSettings": "Inställningar",
     "networkOrganizations": "Organisationer",
     "networkUsers": "Användare & inbjudningar",
+    "networkWidgets": "Widgetåtkomst",
     "tags": "Taggar",
-    "agents": "Agenter"
+    "agents": "Agenter",
+    "feeds": "Flöden"
   },
   "channels": {
     "title": "Kanaler",
@@ -853,6 +968,13 @@
     "zonesCount": "{{count}} zoner"
   },
   "widgets": {
+    "scope": {
+      "title": "Tillgänglighet",
+      "system": "System",
+      "network": "Nätverk",
+      "organization": "Den här organisationen",
+      "unassigned": "Ej tilldelad"
+    },
     "title": "Widgets",
     "uploadWidget": "Ladda upp Widget",
     "uploadDescription": "Ladda upp en Widget JSON-definitionsfil.",
@@ -945,7 +1067,58 @@
       "noConfigurationRequired": "Ingen konfiguration krävs",
       "optional": "Valfritt"
     },
-    "translations": "Översättningar"
+    "translations": "Översättningar",
+    "editableTexts": {
+      "editTexts": "Redigera texter",
+      "doneEditing": "Klar",
+      "hint": "Klicka på en markerad text för att ändra den.",
+      "editAria": "Redigera text: {{label}}",
+      "hide": "Dölj den här texten",
+      "reset": "Återställ original",
+      "counter": "{{length}} / {{max}} tecken",
+      "listTitle": "Redigerade texter: {{count}}",
+      "hidden": "Dold",
+      "empty": "(tom)",
+      "resetAll": "Återställ alla",
+      "unusedTitle": "Används inte av widgeten",
+      "unusedHint": "De här ändringarna matchar inte längre någon text i widgeten.",
+      "editedIndicator": "Har redigerade texter"
+    },
+    "choices": {
+      "choose": "Välj",
+      "moveBefore": "Flytta tidigare",
+      "moveAfter": "Flytta senare",
+      "search": "Sök…",
+      "loadMore": "Visa fler",
+      "retry": "Försök igen",
+      "noResults": "Inga matchande objekt",
+      "noSelection": "Inget valt",
+      "unavailable": "Inte längre tillgänglig",
+      "selectAll": "Markera alla",
+      "selectNone": "Avmarkera alla",
+      "selectedCount": "Valda: {{count}}",
+      "selectedCountMax": "Valda: {{count}} / {{max}}",
+      "done": "Klar",
+      "play": "Spela upp förhandsvisning",
+      "stop": "Stoppa förhandsvisning",
+      "enlarge": "Förstora",
+      "dialogDescription": "Välj bland objekten som integrationen tillhandahåller.",
+      "dependencyRequired": "Ange {{fields}} först.",
+      "confirmClearTitle": "Rensa beroende val?",
+      "confirmClearMessage": "Om du ändrar {{field}} rensas {{fields}}.",
+      "minSelection": "Välj minst {{min}}.",
+      "maxSelection": "Välj högst {{max}}.",
+      "errors": {
+        "widgetNotFound": "Widgeten är inte längre tillgänglig.",
+        "notAChoiceField": "Det här fältet kan inte lista val.",
+        "missingDependency": "Ange först fälten som det här fältet beror på.",
+        "missingCredentials": "Integrationen är inte konfigurerad för den här organisationen.",
+        "rateLimited": "För många förfrågningar. Vänta en stund och försök igen.",
+        "providerError": "Integrationen kunde inte hämta objekten. Försök igen senare.",
+        "networkError": "Det gick inte att nå servern. Kontrollera anslutningen.",
+        "unknown": "Det gick inte att läsa in objekten."
+      }
+    }
   },
   "devices": {
     "orientation": {
@@ -1596,6 +1769,361 @@
         "cursor": "Lägg till konfigurationen i ~/.cursor/mcp.json för alla projekt eller i .cursor/mcp.json i ett projekt och aktivera sedan servern under Cursor Settings > MCP.",
         "other": "Konfigurera en fjärr-MCP-server med dessa inställningar."
       }
+    }
+  },
+  "feeds": {
+    "title": "Dataflöden",
+    "description": "Flöden tar emot data från andra system, till exempel Make, Zapier eller egna skript. Widgetar som visar ett flöde uppdateras på alla skärmar när det ändras.",
+    "newFeed": "Nytt flöde",
+    "empty": "Inga flöden ännu. Skapa ett och anslut ett system som skickar data till det.",
+    "notFound": "Flödet finns inte eller har tagits bort.",
+    "mode": "Typ",
+    "modes": {
+      "list": "Lista",
+      "document": "Dokument"
+    },
+    "modeHelp": {
+      "list": "Behåller de senaste posterna, nyaste först. System lägger till poster en i taget.",
+      "document": "Innehåller ett dokument som system ersätter vid varje uppdatering."
+    },
+    "keep": "Poster att behålla",
+    "keepHelp": "Äldre poster tas bort när nya kommer (1–100).",
+    "schema": "Postschema (valfritt)",
+    "schemaHelp": "JSON som beskriver fälten i en post, som i en widgets dataschema. Skrivningar som inte matchar avvisas.",
+    "schemaInvalid": "Schemat måste vara ett giltigt JSON-objekt.",
+    "mediaFields": "Mediefält",
+    "mediaFieldsHelp": "Sökvägar i en post som innehåller bild- eller videoadresser, till exempel image eller photos[].url.",
+    "mediaPath": "Sökväg",
+    "mediaMode": "Hantering",
+    "mediaModes": {
+      "copy": "Kopiera till lagring",
+      "link": "Behåll länken"
+    },
+    "addMediaField": "Lägg till mediefält",
+    "entries": "Poster",
+    "lastUpdate": "Senast uppdaterad",
+    "usedBy": "Används i spellistor",
+    "never": "Aldrig",
+    "created": "Flödet har skapats",
+    "saved": "Flödet har sparats",
+    "deleted": "Flödet har tagits bort",
+    "deleteTitle": "Ta bort flödet?",
+    "deleteMessage": "Om du tar bort ”{{name}}” tas dess poster och tokens bort. Widgetar som visar det blir tomma.",
+    "back": "Alla flöden",
+    "tabs": {
+      "entries": "Poster",
+      "connect": "Anslut",
+      "settings": "Inställningar",
+      "media": "Media"
+    },
+    "noEntries": "Inga poster ännu. Skicka en testpost eller anslut ett system.",
+    "noDocument": "Inget dokument ännu.",
+    "receivedAt": "Mottagen {{time}}",
+    "updatedAt": "Senast uppdaterad: {{time}}",
+    "externalId": "Externt ID",
+    "deleteEntry": "Ta bort post",
+    "deleteEntryMessage": "Posten tas bort från alla skärmar som visar flödet.",
+    "clear": "Rensa allt",
+    "clearTitle": "Rensa flödet?",
+    "clearMessage": "Detta tar bort all data i ”{{name}}”.",
+    "refresh": "Uppdatera",
+    "test": {
+      "title": "Skicka en testpost",
+      "titleDocument": "Skicka ett testdokument",
+      "help": "Klistra in ett JSON-objekt. Det sparas som data från ett anslutet system.",
+      "send": "Skicka",
+      "sent": "Testdata har sparats",
+      "invalidJson": "Ange ett giltigt JSON-objekt."
+    },
+    "connect": {
+      "endpoints": "Slutpunkter",
+      "append": "Lägg till poster",
+      "replace": "Ersätt all data",
+      "read": "Läs data",
+      "copy": "Kopiera",
+      "copied": "Kopierat till urklipp",
+      "copyFailed": "Det gick inte att kopiera till urklipp"
+    },
+    "tokens": {
+      "title": "Tokens",
+      "help": "En token kan bara skriva till det här flödet. Skicka den i Authorization-headern som Bearer följt av token.",
+      "new": "Ny token",
+      "namePlaceholder": "Till exempel: Make-scenario",
+      "empty": "Inga tokens ännu.",
+      "lastUsed": "Senast använd",
+      "revoke": "Återkalla",
+      "revoked": "Återkallad",
+      "revokeTitle": "Återkalla token?",
+      "revokeMessage": "System som använder ”{{name}}” kan inte längre skriva till flödet.",
+      "secretTitle": "Kopiera din token",
+      "secretWarning": "Det här är enda gången token visas. Spara den i systemet som skickar data.",
+      "done": "Klar",
+      "memberHint": "Tokens för organisationens medlemmar och AI-agenter kan också skriva till flöden, även till flera flöden samtidigt."
+    },
+    "examples": {
+      "curl": "Från ett skript (curl)",
+      "make": "Från Make",
+      "makeStep1": "Lägg till en modul HTTP › Make a request.",
+      "makeStep2": "Ange slutpunkten ”Lägg till poster” som URL och POST som metod.",
+      "makeStep3": "Lägg till en Authorization-header med värdet Bearer följt av din token.",
+      "makeStep4": "Välj en rå JSON-body med fälten som ska visas. Ta med ett external_id så att redigerade objekt ersätter sin post i stället för att lägga till en ny."
+    },
+    "errors": {
+      "load": "Det gick inte att läsa in flödena.",
+      "loadFeed": "Det gick inte att läsa in flödet.",
+      "save": "Det gick inte att spara flödet: {{message}}",
+      "quota": "Organisationen har nått sin gräns för flöden.",
+      "action": "Åtgärden misslyckades: {{message}}"
+    },
+    "media": {
+      "help": "Bilder och videor i flödets kopierade mediefält lagras i Castmill, så att skärmarna fortsätter visa dem även när originallänkarna slutar gälla.",
+      "storage": "Lagrat: {{size}}",
+      "empty": "Inga media än.",
+      "noFields": "Det här flödet kopierar inga media. Lägg till mediefält under Inställningar.",
+      "retry": "Försök igen",
+      "retried": "Kopierar mediet igen.",
+      "entries": "Poster: {{count}}",
+      "seconds": "{{seconds}} s",
+      "status": {
+        "pending": "Kopierar",
+        "ready": "Lagrad",
+        "failed": "Misslyckades"
+      },
+      "failures": {
+        "not_found": "Originalfilen hittades inte.",
+        "forbidden": "Källan nekade åtkomst.",
+        "unauthorized": "Källan kräver inloggning.",
+        "too_large": "Filen är för stor.",
+        "unsupported_type": "Filen är inte en bild eller video som stöds.",
+        "quota_exceeded": "Organisationens lagring är full.",
+        "timeout": "Källan svarade inte i tid.",
+        "blocked_host": "URL:en pekar på ett privat nätverk.",
+        "other": "Filen kunde inte kopieras."
+      },
+      "errors": {
+        "load": "Det gick inte att läsa in flödets media."
+      }
+    }
+  },
+  "automations": {
+    "title": "Automatiseringar",
+    "description": "Låt skärmarna reagera på händelser, till exempel genom att avbryta uppspelningen med annat innehåll vid vissa tider.",
+    "new": "Ny automatisering",
+    "newDescription": "Ge automatiseringen ett namn. Du kan lägga till regler och tilldela skärmar efteråt.",
+    "namePlaceholder": "t.ex. Vårerbjudande varje timme",
+    "created": "Automatiseringen \"{{name}}\" skapades",
+    "deleted": "Automatiseringen \"{{name}}\" togs bort",
+    "saved": "Automatiseringen sparades",
+    "enabled": "Aktiverad",
+    "disabled": "Inaktiverad",
+    "disabledHint": "Inaktiverade automatiseringar körs aldrig på skärmarna.",
+    "toggleEnabled": "Aktivera eller inaktivera \"{{name}}\"",
+    "noUpcoming": "Inga kommande körningar",
+    "noRules": "Inga regler ännu",
+    "moreRules": "+{{count}} till",
+    "assignmentsDetail": "{{devices}} enheter och {{channels}} kanaler",
+    "noAccess": "Du har inte behörighet att visa automatiseringar.",
+    "deleteTitle": "Ta bort automatisering",
+    "deleteMessage": "Vill du verkligen ta bort \"{{name}}\"? Tilldelade skärmar slutar köra den omedelbart.",
+    "editorDescription": "Reglerna utvärderas uppifrån och ned; om flera utlöses samtidigt vinner den första.",
+    "columns": {
+      "rules": "Regler",
+      "assignments": "Tilldelad till",
+      "nextFiring": "Nästa körning"
+    },
+    "tabs": {
+      "rules": "Regler ({{count}})",
+      "assignments": "Tilldelningar ({{count}})"
+    },
+    "errors": {
+      "loadFailed": "Det gick inte att läsa in automatiseringarna",
+      "saveFailed": "Det gick inte att spara automatiseringen: {{error}}",
+      "deleteFailed": "Det gick inte att ta bort automatiseringen: {{error}}",
+      "runFailed": "Det gick inte att köra regeln: {{error}}"
+    },
+    "rules": {
+      "title": "Regler",
+      "empty": "Den här automatiseringen har inga regler ännu. Lägg till en regel för att bestämma när något händer och vad skärmarna gör.",
+      "add": "Lägg till regel",
+      "edit": "Redigera regel",
+      "save": "Spara regel",
+      "saved": "Reglerna sparades",
+      "when": "När",
+      "then": "Då",
+      "options": "Alternativ",
+      "chooseSource": "Välj vad som utlöser regeln",
+      "chooseAction": "Välj vad skärmarna gör",
+      "cooldown": "Spärrtid (sekunder)",
+      "cooldownHint": "Minsta tid mellan två körningar av regeln på samma skärm. Ange 0 för ingen spärrtid.",
+      "moveUp": "Flytta upp",
+      "moveDown": "Flytta ned",
+      "moveUpN": "Flytta upp regel {{n}}",
+      "moveDownN": "Flytta ned regel {{n}}",
+      "runNow": "Kör nu",
+      "runNowN": "Kör regel {{n}} nu",
+      "editN": "Redigera regel {{n}}",
+      "deleteN": "Ta bort regel {{n}}",
+      "deleteTitle": "Ta bort regel",
+      "deleteMessage": "Vill du verkligen ta bort den här regeln?",
+      "moved": "Regeln flyttades från position {{from}} till {{to}}",
+      "runSuccess": "Regeln skickades till {{count}} skärmar"
+    },
+    "summary": {
+      "hourly": "Varje timme vid :{{minute}}",
+      "interval": "Var {{minutes}}:e minut",
+      "times": "Varje dag kl. {{times}}",
+      "once": "En gång den {{date}} kl. {{time}}",
+      "unknown": "Okänt schema",
+      "dateRange": "från {{start}} till {{end}}",
+      "dateFrom": "från och med {{date}}",
+      "dateUntil": "till och med {{date}}",
+      "noPlaylist": "Ingen spellista vald",
+      "playlistFallback": "spellista nr {{id}}",
+      "interruptImmediately": "Avbryt med \"{{playlist}}\" direkt",
+      "interruptAfterItem": "Avbryt med \"{{playlist}}\" efter aktuellt objekt",
+      "plays": "spela {{count}} gånger",
+      "highPriority": "hög prioritet",
+      "cooldown": "Spärrtid: {{seconds}} s",
+      "unknownType": "Typen \"{{type}}\" stöds inte"
+    },
+    "validation": {
+      "minute": "Ange en minut mellan 0 och 59.",
+      "interval": "Intervallet måste vara ett heltal minuter mellan 5 och 1440.",
+      "timesCount": "Lägg till mellan 1 och 48 tider.",
+      "time": "Ange tider som TT:MM.",
+      "timesDuplicate": "Varje tid får bara förekomma en gång.",
+      "date": "Ange ett giltigt datum.",
+      "schedule": "Välj ett schema.",
+      "weekdays": "Välj minst en veckodag.",
+      "window": "Det dagliga tidsfönstret måste börja innan det slutar.",
+      "dates": "Startdatumet måste vara samma som eller före slutdatumet.",
+      "timezone": "Ange en giltig tidszon, t.ex. Europe/Stockholm, eller lämna fältet tomt.",
+      "playlist": "Välj en spellista.",
+      "start": "Välj när avbrottet börjar.",
+      "maxWait": "Den maximala väntetiden måste vara mellan 0 och 3600 sekunder.",
+      "plays": "Antalet uppspelningar måste vara mellan 1 och 100.",
+      "priority": "Välj en prioritet.",
+      "cooldown": "Spärrtiden måste vara ett heltal sekunder (0 eller mer).",
+      "source": "Välj en utlösare.",
+      "action": "Välj en åtgärd."
+    },
+    "sources": {
+      "clock": {
+        "label": "Klocka",
+        "description": "Vid bestämda tider: varje timme, med några minuters mellanrum, vid fasta tider eller en gång."
+      }
+    },
+    "actions": {
+      "interrupt": {
+        "label": "Avbryt med innehåll",
+        "description": "Spela en spellista tillfälligt och återgå sedan till det vanliga schemat."
+      }
+    },
+    "clock": {
+      "repeat": "Upprepning",
+      "types": {
+        "hourly": "Varje timme",
+        "interval": "Var N:e minut",
+        "times": "Vid tider",
+        "once": "En gång"
+      },
+      "minute": "Minut efter heltimme",
+      "everyMinutes": "Var (minuter)",
+      "intervalHint": "Minst {{min}} minuter, räknat från tidsfönstrets början (eller midnatt).",
+      "times": "Tider på dagen",
+      "timeN": "Tid {{n}}",
+      "removeTime": "Ta bort tid",
+      "removeTimeN": "Ta bort tiden {{time}}",
+      "addTime": "Lägg till tid",
+      "date": "Datum",
+      "time": "Tid",
+      "weekdays": "Veckodagar",
+      "window": "Bara under ett dagligt tidsfönster",
+      "from": "Från",
+      "to": "Till",
+      "dates": "Bara inom ett datumintervall",
+      "startDate": "Startdatum",
+      "endDate": "Slutdatum",
+      "timezone": "Tidszon",
+      "timezonePlaceholder": "Skärmens tidszon",
+      "timezoneHint": "Lämna tomt för att använda varje skärms egen tidszon.",
+      "previewTitle": "Nästa körningar",
+      "previewTimezone": "Visas i {{timezone}}.",
+      "previewDeviceTimezone": "Varje skärm använder sin egen tidszon; här visas de i {{timezone}}.",
+      "previewFailed": "Det gick inte att beräkna nästa körningar.",
+      "previewEmpty": "Det här schemat körs aldrig under de kommande dagarna."
+    },
+    "interrupt": {
+      "playlist": "Spellista",
+      "choosePlaylist": "Sök efter en spellista…",
+      "createPlaylist": "Skapa en spellista",
+      "start": "Starttid",
+      "startModes": {
+        "immediately": "Direkt",
+        "after_current_item": "Efter aktuellt objekt"
+      },
+      "startHints": {
+        "immediately": "Stoppar aktuellt objekt direkt; därefter fortsätter uppspelningen med nästa objekt.",
+        "after_current_item": "Väntar tills aktuellt objekt är klart så att inget klipps av."
+      },
+      "maxWait": "Maximal väntetid (sekunder)",
+      "maxWaitHint": "Om aktuellt objekt är längre än så avbryts det ändå.",
+      "plays": "Uppspelningar",
+      "playsHint": "Hur många gånger spellistan spelas innan uppspelningen återgår.",
+      "priority": "Prioritet",
+      "priorities": {
+        "normal": "Vanlig",
+        "high": "Hög"
+      },
+      "priorityHints": {
+        "normal": "Ett vanligt avbrott.",
+        "high": "Går före avbrott med normal prioritet."
+      }
+    },
+    "assignments": {
+      "description": "Välj de skärmar som kör automatiseringen, direkt eller via deras kanaler.",
+      "devices": "Enheter",
+      "channels": "Kanaler",
+      "none": {
+        "devices": "Inga enheter tilldelade",
+        "channels": "Inga kanaler tilldelade"
+      },
+      "search": {
+        "devices": "Sök enheter…",
+        "channels": "Sök kanaler…"
+      },
+      "remove": "Ta bort {{name}}",
+      "loadFailed": "Det gick inte att läsa in listan",
+      "noResults": "Inga träffar",
+      "save": "Spara tilldelningar",
+      "saved": "Tilldelningarna sparades"
+    },
+    "warnings": {
+      "missing": "{{device}} stöder inte {{capability}}",
+      "unsupported": "Stöder inte {{capability}}",
+      "viaChannels": "Skärmar som nås via kanaler"
+    },
+    "channel": {
+      "title": "Automatiseringar",
+      "manage": "Hantera automatiseringar",
+      "empty": "Inga automatiseringar är tilldelade till den här kanalen.",
+      "loadFailed": "Det gick inte att läsa in kanalens automatiseringar.",
+      "showMarkers": "Visa körningar i kalendern",
+      "firingsThisWeek": "({{count}} den här veckan)",
+      "upcoming": "Körningar den här veckan",
+      "markerLabel": "{{name}} kl. {{time}}"
+    },
+    "device": {
+      "title": "Automatiseringar",
+      "description": "Automatiseringar som enheten kör, tilldelade direkt eller via dess kanaler.",
+      "refresh": "Uppdatera automatiseringar",
+      "empty": "Inga automatiseringar gäller för den här enheten.",
+      "loadFailed": "Det gick inte att läsa in enhetens automatiseringar.",
+      "viaDevice": "Tilldelad direkt",
+      "viaChannel": "Via kanalen {{name}}",
+      "upcoming": "Kommande körningar",
+      "noUpcoming": "Inga körningar de närmaste dagarna.",
+      "timezoneNote": "Tiderna visas i enhetens tidszon ({{timezone}})."
     }
   }
 }

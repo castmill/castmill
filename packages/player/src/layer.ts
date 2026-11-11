@@ -174,6 +174,9 @@ export class Layer extends EventEmitter {
     resourceManager: ResourceManager,
     globals: PlayerGlobals
   ): Layer {
+    if (playlist.locale && !globals.locale) {
+      globals = { ...globals, locale: playlist.locale };
+    }
     const widget: TemplateWidget = new TemplateWidget(resourceManager, {
       name: 'layout',
       // Don't set a fixed duration - let the widget calculate it dynamically
@@ -336,6 +339,10 @@ export class Layer extends EventEmitter {
    */
   blocked$(): Observable<PlayerRuntimeError | undefined> {
     return this.widget ? this.widget.blocked$() : of(undefined);
+  }
+
+  readiness$(): Observable<PlayerRuntimeError | undefined> {
+    return this.widget ? this.widget.readiness$() : of(undefined);
   }
 
   reportError(input: PlayerRuntimeError): void {

@@ -19,7 +19,9 @@ defmodule Castmill.Widgets.Widget do
              :update_interval_seconds,
              :fonts,
              :assets,
-             :translations
+             :translations,
+             :scope,
+             :can_manage
            ]}
   schema "widgets" do
     field(:name, :string)
@@ -38,9 +40,24 @@ defmodule Castmill.Widgets.Widget do
     # Preferred aspect ratio for the widget (e.g., "16:9", "9:16", "4:3", "1:1", or "liquid" for any)
     field(:aspect_ratio, :string)
 
-    # Not sure we need this field. Widgets should be either global, per network or per organization, not sure which
-    # would be the best way to model this.
-    field(:is_system, :boolean)
+    # Scope: system widgets (is_system, no owner) are available everywhere, network
+    # widgets to the organizations of `network`, organization widgets only to
+    # `organization`. A restricted system/network widget is only available to the
+    # organizations it is enabled for (widgets_organizations). Non-system widgets
+    # without an owner are unassigned and available to no organization.
+    field(:is_system, :boolean, default: false)
+    belongs_to(:network, Castmill.Networks.Network, type: Ecto.UUID)
+    belongs_to(:organization, Castmill.Organizations.Organization, type: Ecto.UUID)
+    field(:restricted, :boolean, default: false)
+
+    many_to_many(:enabled_organizations, Castmill.Organizations.Organization,
+      join_through: Castmill.Widgets.WidgetOrganization,
+      join_keys: [widget_id: :id, organization_id: :id]
+    )
+
+    # Per-request projection for the requesting organization (see Castmill.Widgets.put_access/2).
+    field(:scope, :string, virtual: true)
+    field(:can_manage, :boolean, virtual: true)
 
     # The endpoint in which the widget should ask the server for data updates.
     field(:webhook_url, :string)
@@ -85,17 +102,52 @@ defmodule Castmill.Widgets.Widget do
     |> validate_required([:name, :template])
     |> unique_constraint(:name)
     |> unique_constraint(:slug)
-    |> validate_schema(:options_schema)
+    |> validate_template_bindings()
+    |> validate_schema(:options_schema, choices: true)
     |> validate_schema(:data_schema)
+    |> validate_choices_provider()
+  end
+
+  @doc """
+  Sets the widget's scope. Only for trusted callers (Castmill.Widgets scope functions).
+  """
+  def scope_changeset(widget, attrs) do
+    widget
+    |> cast(attrs, [:is_system, :network_id, :organization_id, :restricted])
+    |> check_constraint(:network_id, name: :widgets_single_owner)
+    |> check_constraint(:is_system, name: :widgets_system_has_no_owner)
+    |> check_constraint(:restricted, name: :widgets_organization_not_restricted)
+    |> foreign_key_constraint(:network_id)
+    |> foreign_key_constraint(:organization_id)
+  end
+
+  @doc """
+  The fields an organization may change on a widget it owns.
+  """
+  def organization_update_changeset(widget, attrs) do
+    widget
+    |> cast(attrs, [:name, :description])
+    |> validate_required([:name])
+    |> unique_constraint(:name)
+  end
+
+  # Rejects malformed fmt/list/first bindings (see Castmill.Widgets.TemplateBindings).
+  defp validate_template_bindings(changeset) do
+    validate_change(changeset, :template, fn :template, template ->
+      case Castmill.Widgets.TemplateBindings.validate(template) do
+        :ok -> []
+        {:error, messages} -> Enum.map(messages, &{:template, &1})
+      end
+    end)
   end
 
   def base_query() do
     from(widget in Castmill.Widgets.Widget, as: :widget)
   end
 
-  def validate_schema(changeset, field) when is_atom(field) do
+  def validate_schema(changeset, field, opts \\ []) when is_atom(field) do
     validate_change(changeset, field, fn field, schema ->
-      case Castmill.Widgets.Schema.validate_schema(schema) do
+      case Castmill.Widgets.Schema.validate_schema(schema, opts) do
         {:ok, nil} ->
           []
 
@@ -103,5 +155,30 @@ defmodule Castmill.Widgets.Widget do
           [{field, message}]
       end
     end)
+  end
+
+  # Widgets whose options take values from integration choices need a fetcher that provides them.
+  defp validate_choices_provider(changeset) do
+    options_schema = get_field(changeset, :options_schema)
+
+    needs_provider? =
+      Enum.any?(options_schema || %{}, fn
+        {_key, %{"choices" => %{"list" => list}}} ->
+          not Castmill.Widgets.Integrations.Choices.builtin_list?(list)
+
+        _ ->
+          false
+      end)
+
+    if needs_provider? and
+         not Castmill.Widgets.Integrations.Choices.provider_for_meta?(get_field(changeset, :meta)) do
+      add_error(
+        changeset,
+        :options_schema,
+        "uses choices but the widget's integration fetcher does not implement choices/3"
+      )
+    else
+      changeset
+    end
   end
 end

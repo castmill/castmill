@@ -255,6 +255,18 @@ body [data-modal-overlay] .widget-config-modal {
     }
   }
 
+  .preview-toolbar {
+    display: flex;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75em;
+    padding: 0.6em 1.2em;
+    border-bottom: 1px solid #36324a;
+    font-size: 0.85em;
+    color: var(--text-secondary, #bbb);
+  }
+
   .preview-stage {
     display: flex;
     flex: 1 1 auto;

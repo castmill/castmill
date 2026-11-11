@@ -382,7 +382,7 @@ describe('WebOS layout playback with the decoder budget', () => {
 
   const startsOf = (name: string) =>
     sessions
-      .filter((session) => session.name === name && session.from < 0.1)
+      .filter((session) => session.name === name)
       .map((session) => session.startedAt);
 
   // Each zone renders its current item and at most the preloaded next one.

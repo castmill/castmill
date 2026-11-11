@@ -17,6 +17,7 @@ import { IoImagesOutline } from 'solid-icons/io';
 import { RiMediaPlayList2Fill } from 'solid-icons/ri';
 import { HiOutlineTv } from 'solid-icons/hi';
 import { BsCalendarWeek, BsGrid } from 'solid-icons/bs';
+import { TbRss } from 'solid-icons/tb';
 import {
   AiOutlineTeam,
   AiOutlineDatabase,
@@ -37,6 +38,7 @@ const resourceTranslationKeys = {
   teams: 'usage.resources.teams',
   widgets: 'usage.resources.widgets',
   layouts: 'usage.resources.layouts',
+  feeds: 'usage.resources.feeds',
 } as const;
 
 type ResourceType = keyof typeof resourceTranslationKeys;
@@ -53,6 +55,7 @@ const ResourceIcon = (props: { type: ResourceType }) => {
     teams: AiOutlineTeam,
     widgets: AiOutlineAppstore,
     layouts: BsGrid,
+    feeds: TbRss,
   };
 
   const Icon = icons[props.type] || IoImagesOutline;

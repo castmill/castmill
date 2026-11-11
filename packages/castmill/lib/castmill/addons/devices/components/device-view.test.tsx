@@ -25,6 +25,9 @@ vi.mock('./device-cache', () => ({ DeviceCache: () => null }));
 vi.mock('./device-schedule', () => ({
   DeviceSchedule: () => <p>Schedule panel</p>,
 }));
+vi.mock('./device-automations', () => ({
+  DeviceAutomations: () => <p>Automations panel</p>,
+}));
 vi.mock('./device-details', () => ({
   DeviceDetails: (props: {
     onSubmit: (value: { orientation: 90 }) => Promise<boolean>;
@@ -185,6 +188,14 @@ describe('Device view layout', () => {
     expect(tabs[0]).toHaveFocus();
     fireEvent.keyDown(tabs[0], { key: 'ArrowLeft' });
     expect(tabs[tabs.length - 1]).toHaveAttribute('aria-selected', 'true');
+  });
+
+  it('shows the automations section', () => {
+    renderView({});
+    fireEvent.click(
+      screen.getByRole('tab', { name: 'automations.device.title' })
+    );
+    expect(screen.getByText('Automations panel')).toBeInTheDocument();
   });
 
   it('copies the device id and confirms it accessibly', async () => {

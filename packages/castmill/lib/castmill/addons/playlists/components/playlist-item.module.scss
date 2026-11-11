@@ -360,3 +360,12 @@
     border-color: #5792ee;
   }
 }
+
+.editedBadge {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 0.35em;
+  font-size: 0.85em;
+  color: #f0a030;
+  vertical-align: middle;
+}
