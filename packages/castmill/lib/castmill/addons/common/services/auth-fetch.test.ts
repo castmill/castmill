@@ -6,7 +6,7 @@ describe('authFetch', () => {
 
   beforeEach(() => {
     fetchMock = vi.fn().mockResolvedValue(new Response('{}', { status: 200 }));
-    global.fetch = fetchMock;
+    global.fetch = fetchMock as unknown as typeof fetch;
     localStorage.removeItem('castmill_auth_token');
   });
 

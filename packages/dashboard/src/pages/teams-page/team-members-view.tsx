@@ -367,6 +367,7 @@ export const TeamMembersView = (props: {
             }}
           >
             <ComboBox
+              closeLabel={t('common.close')}
               id="user-selector"
               label={t('teams.memberSelection.selectUser')}
               placeholder={t('teams.memberSelection.searchUser')}

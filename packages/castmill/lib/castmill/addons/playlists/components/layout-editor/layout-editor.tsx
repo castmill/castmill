@@ -306,7 +306,7 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
 
   // Update canvas when aspect ratio changes
   createEffect(() => {
-    props.value.aspectRatio; // Track changes
+    void props.value.aspectRatio; // Track changes
     updateCanvasSize();
   });
 

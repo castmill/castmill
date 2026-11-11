@@ -155,6 +155,7 @@ export const Channels: Component<{
 
       <div class="device-card-footer device-channel-add">
         <ComboBox<JsonChannel>
+          closeLabel={t('common.close')}
           id="channel-selector"
           label={t('devices.addChannel')}
           placeholder={t('devices.selectChannelToAdd')}

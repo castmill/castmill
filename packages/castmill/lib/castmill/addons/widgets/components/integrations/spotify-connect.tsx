@@ -73,21 +73,13 @@ export const SpotifyConnect: Component<SpotifyConnectProps> = (props) => {
     const errorMessage = urlParams.get('error_message');
 
     if (spotifyAuth === 'success') {
-      toast?.show({
-        message: t('widgets.spotify.connectionSuccess'),
-        type: 'success',
-        duration: 5000,
-      });
+      toast?.success(t('widgets.spotify.connectionSuccess'), 5000);
       // Clean up URL parameters
       cleanUrlParams();
       // Refresh connection status
       checkConnectionStatus();
     } else if (spotifyAuth === 'error') {
-      toast?.show({
-        message: errorMessage || t('widgets.spotify.connectionFailed'),
-        type: 'error',
-        duration: 5000,
-      });
+      toast?.error(errorMessage || t('widgets.spotify.connectionFailed'), 5000);
       cleanUrlParams();
     }
   };
@@ -197,11 +189,7 @@ export const SpotifyConnect: Component<SpotifyConnectProps> = (props) => {
   const disconnectSpotify = async () => {
     // Note: This would require an API endpoint to delete credentials
     // For now, just show a message
-    toast?.show({
-      message: t('widgets.spotify.disconnectNotSupported'),
-      type: 'info',
-      duration: 3000,
-    });
+    toast?.info(t('widgets.spotify.disconnectNotSupported'), 3000);
   };
 
   /**

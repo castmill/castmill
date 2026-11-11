@@ -1,24 +1,10 @@
-import type {
-  Schema,
-  SimpleType,
-  FieldAttributes,
-  ComplexFieldAttributes,
-} from '@castmill/player';
-
-/**
- * Represents a schema field entry - either a simple type string or an object with type info
- */
-type SchemaField =
-  | SimpleType
-  | FieldAttributes
-  | ComplexFieldAttributes
-  | { type: string; default?: unknown; [key: string]: unknown };
+import type { Schema, SimpleType } from '@castmill/player';
 
 /**
  * Type guard to check if a schema field has a default value
  */
 function hasDefault(
-  field: SchemaField
+  field: unknown
 ): field is { default: unknown } & Record<string, unknown> {
   return (
     typeof field === 'object' &&

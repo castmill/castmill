@@ -373,9 +373,9 @@ export const UploadComponent = (props: UploadComponentProps) => {
               <For each={files()}>
                 {(file) => {
                   const validation = validations()[file.name];
-                  const hasError = validation && !validation.valid;
+                  const hasError = !!validation && !validation.valid;
                   const hasWarning =
-                    validation && validation.valid && validation.warning;
+                    !!validation && validation.valid && !!validation.warning;
 
                   return (
                     <tr

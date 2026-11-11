@@ -5,6 +5,7 @@ import {
   onCleanup,
   createSignal,
   createMemo,
+  on,
   untrack,
 } from 'solid-js';
 import { Socket, Channel } from 'phoenix';
@@ -298,15 +299,11 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
         }
         const discriminatorId =
           props.previewData !== undefined
-            ? props.previewDiscriminatorId ?? null
+            ? (props.previewDiscriminatorId ?? null)
             : integrationDiscriminatorId();
 
         if (
-          matchesWidgetDataUpdate(
-            payload,
-            props.widget.id,
-            discriminatorId
-          )
+          matchesWidgetDataUpdate(payload, props.widget.id, discriminatorId)
         ) {
           const filteredData = applyWidgetMaxItemsFilter(
             payload.data,

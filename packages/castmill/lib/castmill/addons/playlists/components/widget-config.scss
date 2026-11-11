@@ -1,194 +1,377 @@
+// Widget config modal: preview card + form card, matching the playlist
+// drawer cards. Wide screens show them side by side, narrower screens stack
+// the preview above a scrolling form and go full screen on phones.
+body [data-modal-overlay] .widget-config-modal {
+  box-sizing: border-box;
+  width: min(94vw, 82em);
+  max-width: 100%;
+  height: min(88vh, 56em);
+  max-height: 100%;
+  container-type: inline-size;
+  padding: 1.4em 1.6em 1.6em;
+  border: 1px solid var(--cm-border-color);
+  border-radius: 0.8em;
+  box-shadow: 0 1.5em 4em var(--cm-shadow-color);
+
+  > [class*='modalHeader'] {
+    align-items: flex-start;
+    gap: 1em;
+    border-bottom-color: var(--cm-border-color);
+
+    h2 {
+      font-size: 1.2em;
+      font-weight: 700;
+      overflow-wrap: anywhere;
+    }
+
+    h3 {
+      margin-top: 0.35em;
+      font-size: 0.95em;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  > [class*='modalBody'] {
+    min-height: 0;
+  }
+}
+
 .widget-config-dialog {
-  width: 90vw;
-  height: 80vh;
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding-top: 1em;
+  display: grid;
+  grid-template-columns: minmax(20em, 2fr) minmax(0, 3fr);
+  grid-template-areas: 'form preview';
+  gap: 1.2em;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding-top: 1.2em;
   overflow: hidden;
 
   .widget-config {
+    grid-area: form;
     display: flex;
-    height: 100%;
-    width: 40%;
-    justify-content: flex-start;
     flex-direction: column;
-    align-items: flex-start;
+    min-width: 0;
     min-height: 0;
     overflow: hidden;
+    border: 1px solid var(--cm-border-color);
+    border-radius: 0.6em;
+    background: var(--cm-bg-sunken);
+  }
 
-    form {
-      height: 100%;
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
+  .widget-config-meta {
+    padding: 0.8em 1.2em;
+    border-bottom: 1px solid var(--cm-border-color);
+    color: var(--cm-text-secondary);
+    font-size: 0.82em;
+    line-height: 1.45;
+  }
+
+  form {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    width: 100%;
+    min-height: 0;
+    margin: 0;
+
+    .form-inputs {
+      flex: 1 1 auto;
       min-height: 0;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      padding: 0.4em 1.2em 1em;
 
-      .form-inputs {
-        flex: 1;
-        overflow-y: auto;
-        padding-right: 0.5em;
-        min-height: 0;
-        padding-bottom: 1em;
-
-        // Custom scrollbar styling
-        &::-webkit-scrollbar {
-          width: 0.5em;
-        }
-
-        &::-webkit-scrollbar-track {
-          background: var(--cm-bg-sunken);
-          border-radius: 0.25em;
-        }
-
-        &::-webkit-scrollbar-thumb {
-          background: var(--cm-scrollbar-thumb);
-          border-radius: 0.25em;
-
-          &:hover {
-            background: var(--cm-text-tertiary);
-          }
-        }
+      &::-webkit-scrollbar {
+        width: 0.5em;
       }
 
-      .error {
-        font-size: 0.8em;
-        color: var(--cm-error);
+      &::-webkit-scrollbar-track {
+        background: transparent;
       }
 
-      // Styling for select dropdowns (enum fields)
-      .form-item-wrapper {
-        margin: 0.75em 0;
+      &::-webkit-scrollbar-thumb {
+        background: var(--cm-scrollbar-thumb);
+        border-radius: 0.25em;
 
-        .form-item1 {
-          border: 1px solid var(--cm-border-strong);
-          border-radius: 0.3em;
-          margin-bottom: 0.3em;
-          padding: 0.5em 1.1em;
-          background-color: var(--cm-bg-primary);
-
-          label {
-            font-size: 0.8em;
-            color: var(--cm-link);
-            text-transform: capitalize;
-            text-align: left;
-            display: block;
-          }
-
-          &:hover {
-            border-color: var(--cm-text-secondary);
-          }
-
-          &:focus-within {
-            border-color: var(--cm-primary);
-          }
-
-          .styled-select {
-            width: 100%;
-            padding: 0.5em 0;
-            font-size: 1em;
-            color: var(--cm-text-primary);
-            background-color: transparent;
-            border: none;
-            outline: none;
-            cursor: pointer;
-
-            option {
-              background-color: var(--cm-bg-primary);
-              color: var(--cm-text-primary);
-            }
-          }
-
-          .error {
-            color: var(--cm-error);
-            font-size: 0.85em;
-            margin-top: 0.3em;
-          }
+        &:hover {
+          background: var(--cm-border-strong);
         }
+      }
+    }
 
-        .description {
-          padding-top: 0.2em;
-          margin-bottom: 0.75em;
-          color: var(--cm-text-secondary);
+    .error {
+      font-size: 0.8em;
+      color: var(--cm-error);
+    }
+
+    // Styling for select dropdowns (enum fields)
+    .form-item-wrapper {
+      margin: 0.75em 0;
+
+      .form-item1 {
+        border: 1px solid var(--cm-border-strong);
+        border-radius: 0.3em;
+        margin-bottom: 0.3em;
+        padding: 0.5em 1.1em;
+        background-color: var(--cm-bg-primary);
+
+        label {
           font-size: 0.8em;
+          color: var(--cm-link);
+          text-transform: capitalize;
+          text-align: left;
+          display: block;
+        }
+
+        &:hover {
+          border-color: var(--cm-text-secondary);
+        }
+
+        &:focus-within {
+          border-color: var(--cm-primary);
+        }
+
+        .styled-select {
+          width: 100%;
+          padding: 0.5em 0;
+          font-size: 1em;
+          color: var(--cm-text-primary);
+          background-color: transparent;
+          border: none;
+          outline: none;
+          cursor: pointer;
+
+          option {
+            background-color: var(--cm-bg-primary);
+            color: var(--cm-text-primary);
+          }
+        }
+
+        .error {
+          color: var(--cm-error);
+          font-size: 0.85em;
+          margin-top: 0.3em;
         }
       }
 
-      .media-item {
-        display: flex;
-        flex-direction: row;
-        justify-content: flex-start;
-        align-items: center;
+      .description {
+        padding-top: 0.2em;
+        margin-bottom: 0.75em;
+        color: var(--cm-text-secondary);
+        font-size: 0.8em;
+      }
+    }
 
-        padding: 0.2em;
+    .playlist-item {
+      display: flex;
+      flex-direction: row;
+      justify-content: flex-start;
+      align-items: center;
+      padding: 0.3em;
+      width: 100%;
+    }
 
-        width: 100%;
+    .form-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 0.5em;
+      padding: 0.8em 1.2em;
+      border-top: 1px solid var(--cm-border-color);
+      background: var(--cm-bg-hover);
 
-        gap: 1em;
-
-        .thumbnail {
-          width: 3em;
-          height: 3em;
-          background-size: cover;
-          background-position: center;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          overflow: hidden;
-        }
+      .form-actions-dirty {
+        flex: 1 1 auto;
+        color: var(--cm-warning);
+        font-size: 0.8em;
       }
 
-      .playlist-item {
-        display: flex;
-        flex-direction: row;
-        justify-content: flex-start;
-        align-items: center;
-        padding: 0.3em;
-        width: 100%;
-      }
-
-      .form-actions {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        justify-content: flex-start;
-        gap: 1em;
-        position: sticky;
-        bottom: 0;
-        z-index: 1;
-        padding: 0.75em 0 0.25em;
+      > button:disabled {
+        background-color: transparent;
+        box-shadow: inset 0 0 0 1px var(--cm-border-color);
+        color: var(--cm-text-tertiary);
       }
     }
   }
 
   .preview {
+    grid-area: preview;
+    position: relative;
     display: flex;
     flex-direction: column;
-    gap: 0.5em;
-    background-color: var(--cm-bg-tertiary);
-    width: 50%;
-    height: 100%;
-    justify-content: center;
-    align-items: center;
+    min-width: 0;
+    min-height: 0;
     overflow: hidden;
-    padding: 1em;
-    box-sizing: border-box;
+    border: 1px solid var(--cm-border-color);
+    border-radius: 0.6em;
+    background:
+      radial-gradient(
+        circle at 50% 0%,
+        rgba(var(--cm-primary-rgb), 0.08),
+        transparent 60%
+      ),
+      var(--cm-bg-sunken);
+  }
 
-    .preview-toolbar {
-      display: flex;
-      align-items: center;
-      gap: 0.75em;
-      width: 100%;
-      font-size: 0.85em;
-      color: var(--cm-text-secondary);
+  .preview-header {
+    flex-shrink: 0;
+    padding: 0.8em 1.2em;
+    border-bottom: 1px solid var(--cm-border-color);
+
+    h3 {
+      margin: 0;
+      color: var(--cm-text-primary);
+      font-size: 1em;
+      font-weight: 700;
+    }
+  }
+
+  .preview-toolbar {
+    display: flex;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75em;
+    padding: 0.6em 1.2em;
+    border-bottom: 1px solid var(--cm-border-color);
+    font-size: 0.85em;
+    color: var(--cm-text-secondary);
+  }
+
+  .preview-stage {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+    padding: 1em;
+    overflow: hidden;
+  }
+}
+
+.media-item {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  width: 100%;
+  gap: 1em;
+  padding: 0.2em;
+
+  .thumbnail {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 3em;
+    height: 3em;
+    overflow: hidden;
+    border-radius: 0.4em;
+    background-color: var(--cm-bg-sunken);
+    background-position: center;
+    background-size: cover;
+  }
+}
+
+// Tablet: stack the preview above the form.
+@media (max-width: 56em) {
+  body [data-modal-overlay] .widget-config-modal {
+    width: min(96vw, 46em);
+    height: min(92dvh, 60em);
+    padding: 1.1em 1.2em 1.2em;
+  }
+
+  .widget-config-dialog {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: clamp(9em, 30dvh, 18em) minmax(0, 1fr);
+    grid-template-areas:
+      'preview'
+      'form';
+    gap: 0.9em;
+    padding-top: 0.9em;
+  }
+}
+
+@container (max-width: 56em) {
+  .widget-config-dialog {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: clamp(9em, 30dvh, 18em) minmax(0, 1fr);
+    grid-template-areas:
+      'preview'
+      'form';
+    gap: 0.9em;
+    padding-top: 0.9em;
+  }
+}
+
+// Phones (incl. landscape): the widget description costs too much height.
+@media (max-width: 36em), (pointer: coarse) and (max-height: 32em) {
+  body [data-modal-overlay] .widget-config-modal > [class*='modalHeader'] h3 {
+    display: none;
+  }
+}
+
+// Phone: full-screen sheet with full-width actions.
+@media (max-width: 36em) {
+  body [data-modal-overlay] .widget-config-modal {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    max-height: 100%;
+    padding: 0.9em 0.9em calc(0.9em + env(safe-area-inset-bottom));
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+
+    > [class*='modalHeader'] {
+      padding-bottom: 0.7em;
+    }
+  }
+
+  .widget-config-dialog {
+    grid-template-rows: clamp(8em, 26dvh, 14em) minmax(0, 1fr);
+    gap: 0.7em;
+    padding-top: 0.7em;
+
+    .widget-config-meta,
+    .preview-header {
+      padding: 0.6em 1em;
+    }
+
+    form {
+      .form-inputs {
+        padding: 0.2em 1em 0.8em;
+      }
+
+      .form-actions {
+        padding: 0.7em 1em;
+      }
     }
 
     .preview-stage {
-      flex: 1;
-      width: 100%;
-      min-height: 0;
+      padding: 0.6em;
+    }
+  }
+}
+
+@media (max-width: 30em) {
+  .widget-config-dialog form .form-actions {
+    > button {
+      flex: 1 1 0;
+      justify-content: center;
+    }
+
+    .form-actions-dirty {
+      flex-basis: 100%;
+      text-align: center;
+
+      &:empty {
+        display: none;
+      }
     }
   }
 }

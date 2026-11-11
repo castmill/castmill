@@ -562,6 +562,7 @@ const NetworkUsers: Component = () => {
         >
           <div class={styles['invite-form']}>
             <ComboBox<Organization>
+              closeLabel={t('common.close')}
               id="invite-org-selector"
               label={t('network.users.selectOrganization')}
               placeholder={t('network.users.selectOrganizationPlaceholder')}

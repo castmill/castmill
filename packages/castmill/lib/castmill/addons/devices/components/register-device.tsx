@@ -92,9 +92,10 @@ const RegisterDevice: Component<{
               value={name()}
               placeholder={t('devices.enterDeviceName')}
               autofocus={true}
-              onInput={(value: string) => {
-                setName(value);
-                validateField('name', value);
+              onInput={(value: string | number | boolean) => {
+                const text = String(value);
+                setName(text);
+                validateField('name', text);
               }}
             >
               <div class="error">{errors().get('name')}</div>
@@ -107,9 +108,10 @@ const RegisterDevice: Component<{
               placeholder={t('devices.enterPincode', { length: pincodeLength })}
               disabled={!!props.pincode}
               description={t('devices.pincodeDescription')}
-              onInput={(value: string) => {
-                setPincode(value);
-                validateField('pincode', value);
+              onInput={(value: string | number | boolean) => {
+                const text = String(value);
+                setPincode(text);
+                validateField('pincode', text);
               }}
             >
               <div class="error">{errors().get('pincode')}</div>

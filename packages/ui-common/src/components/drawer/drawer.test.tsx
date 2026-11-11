@@ -47,6 +47,22 @@ describe('Drawer Component', () => {
     expect(onClose).toHaveBeenCalled();
   });
 
+  it('focuses the panel without scrolling it into view while it slides in', () => {
+    const focusSpy = vi.spyOn(HTMLElement.prototype, 'focus');
+
+    render(() => (
+      <Drawer title="Sliding" onClose={() => {}}>
+        <div />
+      </Drawer>
+    ));
+    vi.runAllTimers();
+
+    const panel = screen.getByRole('dialog');
+    expect(panel.className).toContain('active');
+    expect(focusSpy).toHaveBeenCalledWith({ preventScroll: true });
+    expect(focusSpy.mock.instances).toContain(panel);
+  });
+
   it('removes drawer root from DOM after close animation', () => {
     render(() => (
       <Drawer title="Closable" onClose={() => {}}>
@@ -169,6 +185,39 @@ describe('Drawer Component', () => {
     modalOverlay.remove();
   });
 
+  it('does not close on outside click inside a combobox sheet', () => {
+    const onClose = vi.fn();
+
+    // Create a modal overlay element in the document body
+    const modalOverlay = document.createElement('div');
+    modalOverlay.setAttribute('data-combobox-sheet', '');
+    const modalContent = document.createElement('div');
+    modalContent.textContent = 'Modal content';
+    modalOverlay.appendChild(modalContent);
+    document.body.appendChild(modalOverlay);
+
+    render(() => (
+      <Drawer
+        title="Drawer with modal"
+        onClose={onClose}
+        showBackdrop={false}
+        closeOnOutsideClick
+      >
+        <div>Drawer content</div>
+      </Drawer>
+    ));
+
+    vi.runAllTimers();
+
+    // Click inside the modal overlay — drawer should NOT close
+    fireEvent.click(modalContent);
+    vi.runAllTimers();
+
+    expect(onClose).not.toHaveBeenCalled();
+
+    // Clean up the modal overlay
+    modalOverlay.remove();
+  });
   it('does not close when clicking inside a drawer from another stack', () => {
     const onClose = vi.fn();
 
@@ -288,5 +337,37 @@ describe('Drawer Component', () => {
     expect(onClose).not.toHaveBeenCalled();
 
     outsideElement.remove();
+  });
+});
+
+describe('Drawer visual viewport pinning', () => {
+  afterEach(() => {
+    cleanup();
+    delete (window as { visualViewport?: unknown }).visualViewport;
+  });
+
+  it('pins the root to the visual viewport when the page is zoomed out', () => {
+    Object.defineProperty(window, 'visualViewport', {
+      configurable: true,
+      value: Object.assign(new EventTarget(), {
+        width: 390,
+        height: 600,
+        offsetLeft: 733,
+        offsetTop: 0,
+      }),
+    });
+
+    render(() => (
+      <Drawer title="Pinned" onClose={() => {}}>
+        <div />
+      </Drawer>
+    ));
+
+    const root = screen.getByTestId('drawer-root');
+    expect(root.style.left).toBe('733px');
+    expect(root.style.width).toBe('390px');
+    expect(root.style.height).toBe('600px');
+    const panel = root.querySelector('[data-drawer-panel]') as HTMLElement;
+    expect(panel.style.height).toBe('100%');
   });
 });

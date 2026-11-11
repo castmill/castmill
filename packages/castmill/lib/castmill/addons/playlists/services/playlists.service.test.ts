@@ -3,6 +3,7 @@
  * Testing the search functionality in getWidgets method
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import type { SortOptions } from '@castmill/ui-common';
 import { PlaylistsService, WidgetChoicesError } from './playlists.service';
 
 // Mock fetch globally
@@ -249,7 +250,7 @@ describe('PlaylistsService', () => {
         {
           page: 1,
           page_size: 10,
-          sortOptions: {},
+          sortOptions: {} as SortOptions,
           search: 'test',
         }
       );

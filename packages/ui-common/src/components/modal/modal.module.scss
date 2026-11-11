@@ -68,6 +68,24 @@ $animation-duration: 0.3s;
       .title {
         margin-bottom: 0.5em;
       }
+
+      &.withBack {
+        justify-content: flex-start;
+        gap: 0.5em;
+
+        .title {
+          flex: 1;
+          min-width: 0;
+        }
+      }
+
+      .backButton {
+        flex-shrink: 0;
+
+        :global([dir='rtl']) & svg {
+          transform: scaleX(-1);
+        }
+      }
     }
 
     .modalBody {
