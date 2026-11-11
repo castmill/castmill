@@ -114,7 +114,9 @@
   "topbar": {
     "help": "Ayuda",
     "notifications": "Notificaciones",
-    "gettingStarted": "Primeros pasos"
+    "gettingStarted": "Primeros pasos",
+    "switchToLightMode": "Cambiar a modo claro",
+    "switchToDarkMode": "Cambiar a modo oscuro"
   },
   "settings": {
     "title": "Configuración",
@@ -1486,6 +1488,7 @@
     "teamLabel": "Equipo",
     "teamPlaceholder": "Seleccionar equipo",
     "teamClear": "Limpiar filtro de equipo",
+    "teamSearchPlaceholder": "Buscar equipos…",
     "tagLabel": "Etiquetas",
     "tagPlaceholder": "Filtrar por etiquetas…",
     "tagClear": "Limpiar filtro de etiquetas",

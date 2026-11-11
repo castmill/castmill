@@ -10,7 +10,7 @@
     gap: 1.5em;
     margin-bottom: 2em;
     padding-bottom: 1.5em;
-    border-bottom: 2px solid var(--border-color);
+    border-bottom: 2px solid var(--cm-border-color);
   }
 
   &__header-icon {
@@ -21,12 +21,12 @@
     height: 4em;
     background: linear-gradient(
       135deg,
-      var(--primary-color),
-      var(--primary-color-dark, #0066cc)
+      var(--cm-primary),
+      var(--cm-primary-active)
     );
     border-radius: 1em;
-    color: white;
-    box-shadow: 0 0.25em 1em rgba(0, 102, 204, 0.2);
+    color: var(--cm-text-on-primary);
+    box-shadow: 0 0.25em 1em rgba(var(--cm-primary-rgb), 0.3);
   }
 
   &__header-content {
@@ -37,18 +37,18 @@
     font-size: 2em;
     margin: 0 0 0.25em 0;
     font-weight: 600;
-    color: var(--text-primary);
+    color: var(--cm-text-primary);
   }
 
   &__query {
     margin: 0;
     font-size: 1.1em;
-    color: var(--text-secondary);
+    color: var(--cm-text-secondary);
     font-weight: 500;
   }
 
   &__count {
-    color: var(--text-tertiary);
+    color: var(--cm-text-tertiary);
     font-weight: 400;
   }
 
@@ -59,16 +59,16 @@
     padding: 4em 2em;
     text-align: center;
     border-radius: 1em;
-    background-color: var(--background-secondary);
+    background-color: var(--cm-bg-secondary);
     margin-top: 2em;
   }
 
   &__empty {
-    color: var(--text-secondary);
+    color: var(--cm-text-secondary);
   }
 
   &__empty-icon {
-    color: var(--text-tertiary);
+    color: var(--cm-text-tertiary);
     margin-bottom: 1em;
     opacity: 0.5;
   }
@@ -83,7 +83,7 @@
     flex-direction: column;
     align-items: center;
     gap: 1em;
-    color: var(--text-secondary);
+    color: var(--cm-text-secondary);
 
     p {
       margin: 0;
@@ -94,15 +94,15 @@
   &__spinner {
     width: 3em;
     height: 3em;
-    border: 0.25em solid var(--border-color);
-    border-top-color: var(--primary-color);
+    border: 0.25em solid var(--cm-border-color);
+    border-top-color: var(--cm-primary);
     border-radius: 50%;
     animation: spin 1s linear infinite;
   }
 
   &__error {
-    color: var(--error-color);
-    border: 2px solid var(--error-color);
+    color: var(--cm-error);
+    border: 2px solid var(--cm-error);
 
     &-icon {
       font-size: 3em;
@@ -124,13 +124,13 @@
 
     h2 {
       margin: 0 0 0.5em 0;
-      color: var(--text-primary);
+      color: var(--cm-text-primary);
       font-size: 1.5em;
     }
 
     p {
       margin: 0;
-      color: var(--text-secondary);
+      color: var(--cm-text-secondary);
       font-size: 1.1em;
     }
   }
@@ -143,15 +143,15 @@
 }
 
 .search-result-group {
-  background-color: var(--background-primary);
-  border: 1px solid var(--border-color);
+  background-color: var(--cm-bg-primary);
+  border: 1px solid var(--cm-border-color);
   border-radius: 0.3em;
   overflow: hidden;
-  box-shadow: 0 0.125em 0.5em rgba(0, 0, 0, 0.05);
+  box-shadow: 0 0.125em 0.5em var(--cm-shadow-color);
   transition: box-shadow 0.2s ease;
 
   &:hover {
-    box-shadow: 0 0.25em 1em rgba(0, 0, 0, 0.1);
+    box-shadow: var(--cm-shadow-md);
   }
 
   &__header {
@@ -161,10 +161,10 @@
     padding: 1.25em 1.5em;
     background: linear-gradient(
       135deg,
-      var(--background-secondary),
-      var(--background-hover)
+      var(--cm-bg-secondary),
+      var(--cm-bg-hover)
     );
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--cm-border-color);
   }
 
   &__icon {
@@ -173,9 +173,9 @@
     justify-content: center;
     width: 3em;
     height: 3em;
-    background-color: var(--primary-color);
+    background-color: var(--cm-primary);
     border-radius: 0.75em;
-    color: white;
+    color: var(--cm-text-on-primary);
     flex-shrink: 0;
   }
 
@@ -184,15 +184,15 @@
     font-size: 1.25em;
     font-weight: 600;
     margin: 0;
-    color: var(--text-primary);
+    color: var(--cm-text-primary);
   }
 
   &__count {
     font-size: 1em;
     font-weight: 600;
     padding: 0.5em 1em;
-    background-color: var(--primary-color);
-    color: white;
+    background-color: var(--cm-primary);
+    color: var(--cm-text-on-primary);
     border-radius: 2em;
     min-width: 2.5em;
     text-align: center;
@@ -206,10 +206,10 @@
   &__pagination {
     padding: 1em 1.5em;
     text-align: center;
-    color: var(--text-secondary);
+    color: var(--cm-text-secondary);
     font-size: 0.95em;
-    border-top: 1px solid var(--border-color);
-    background-color: var(--background-secondary);
+    border-top: 1px solid var(--cm-border-color);
+    background-color: var(--cm-bg-secondary);
     font-weight: 500;
   }
 }
@@ -219,13 +219,13 @@
   align-items: center;
   gap: 1em;
   padding: 1.25em 1.5em;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--cm-border-color);
   cursor: pointer;
   transition: all 0.2s ease;
-  background-color: var(--background-primary);
+  background-color: var(--cm-bg-primary);
 
   &:hover {
-    background-color: var(--background-hover);
+    background-color: var(--cm-bg-hover);
     padding-left: 2em;
 
     .search-result-item__arrow {
@@ -239,7 +239,7 @@
   }
 
   &:focus {
-    outline: 2px solid var(--primary-color);
+    outline: 2px solid var(--cm-primary);
     outline-offset: -2px;
   }
 
@@ -249,9 +249,9 @@
     justify-content: center;
     width: 2.5em;
     height: 2.5em;
-    background-color: var(--background-secondary);
+    background-color: var(--cm-bg-secondary);
     border-radius: 0.5em;
-    color: var(--primary-color);
+    color: var(--cm-primary);
     flex-shrink: 0;
   }
 
@@ -264,7 +264,7 @@
   &__name {
     font-size: 1.05em;
     font-weight: 600;
-    color: var(--text-primary);
+    color: var(--cm-text-primary);
     margin-bottom: 0.25em;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -273,7 +273,7 @@
 
   &__description {
     font-size: 0.95em;
-    color: gray;
+    color: var(--cm-text-tertiary);
     margin-bottom: 0.25em;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -287,13 +287,13 @@
 
   &__meta {
     font-size: 0.85em;
-    color: gray;
+    color: var(--cm-text-tertiary);
     margin-top: 0.5em;
     font-weight: 500;
   }
 
   &__arrow {
-    color: var(--primary-color);
+    color: var(--cm-primary);
     opacity: 0.3;
     transform: translateX(-0.5em);
     transition: all 0.2s ease;
@@ -315,22 +315,5 @@
 @keyframes spin {
   to {
     transform: rotate(360deg);
-  }
-}
-
-// Dark mode support
-@media (prefers-color-scheme: dark) {
-  .search-page {
-    &__header-icon {
-      box-shadow: 0 0.25em 1em rgba(0, 102, 204, 0.4);
-    }
-  }
-
-  .search-result-group {
-    box-shadow: 0 0.125em 0.5em rgba(0, 0, 0, 0.2);
-
-    &:hover {
-      box-shadow: 0 0.25em 1em rgba(0, 0, 0, 0.3);
-    }
   }
 }

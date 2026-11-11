@@ -33,7 +33,7 @@
     color: colors.$base-color;
     background: colors.$component-background-color;
     border-radius: 12px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    box-shadow: var(--cm-shadow-lg);
     text-align: center;
     width: 28rem;
     max-width: 90vw;
@@ -45,7 +45,7 @@
     }
 
     p {
-      color: colors.$component-color;
+      color: var(--cm-text-tertiary);
       margin: 0.625em 0;
       line-height: 1.7em;
     }
@@ -130,7 +130,7 @@
   }
 
   .text-gray-600 {
-    color: colors.$component-color;
+    color: var(--cm-text-tertiary);
   }
 
   .font-semibold {
@@ -164,7 +164,7 @@
   }
 
   .text-gray-400 {
-    color: #9ca3af;
+    color: var(--cm-text-secondary);
   }
 
   .font-medium {
@@ -190,22 +190,22 @@
     }
 
     &.alert-error {
-      background: rgba(220, 38, 38, 0.15);
-      border: 1px solid rgba(220, 38, 38, 0.3);
-      color: #fca5a5;
+      background: var(--cm-error-bg);
+      border: 1px solid rgba(var(--cm-error-rgb), 0.3);
+      color: var(--cm-error);
 
       svg {
-        color: #fca5a5;
+        color: var(--cm-error);
       }
     }
 
     &.alert-warning {
-      background: rgba(245, 158, 11, 0.15);
-      border: 1px solid rgba(245, 158, 11, 0.3);
-      color: #fcd34d;
+      background: var(--cm-warning-bg);
+      border: 1px solid rgba(var(--cm-warning-rgb), 0.3);
+      color: var(--cm-warning);
 
       svg {
-        color: #fcd34d;
+        color: var(--cm-warning);
       }
     }
   }
@@ -246,11 +246,11 @@
 
       &.btn-reject {
         background: transparent;
-        color: #ef4444;
-        border: 1px solid #ef4444;
+        color: var(--cm-error);
+        border: 1px solid var(--cm-error);
 
         &:hover:not(:disabled) {
-          background: rgba(239, 68, 68, 0.1);
+          background: rgba(var(--cm-error-rgb), 0.1);
         }
       }
     }
@@ -286,11 +286,11 @@
   }
 
   .bg-red-100 {
-    background-color: rgba(220, 38, 38, 0.2);
+    background-color: rgba(var(--cm-error-rgb), 0.2);
   }
 
   .text-red-600 {
-    color: #dc2626;
+    color: var(--cm-error);
   }
 
   .text-xl {
@@ -299,5 +299,13 @@
 
   .text-gray-800 {
     color: colors.$base-color;
+  }
+}
+
+:root[data-theme='light'] .castmill-invitation .email-box {
+  background: var(--cm-bg-tertiary);
+
+  label {
+    color: var(--cm-text-secondary);
   }
 }

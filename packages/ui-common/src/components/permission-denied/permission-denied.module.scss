@@ -14,27 +14,27 @@
 
 .icon {
   font-size: 4em;
-  color: #f59e0b; /* Amber color for warning */
+  color: var(--cm-warning);
   opacity: 0.8;
 }
 
 .title {
   font-size: 1.5em;
   font-weight: 600;
-  color: #374151; /* Gray-700 */
+  color: var(--cm-text-primary);
   margin: 0 0 0.75em 0;
 }
 
 .message {
   font-size: 1em;
-  color: #6b7280; /* Gray-500 */
+  color: var(--cm-text-secondary);
   margin: 0 0 1em 0;
   max-width: 500px;
 }
 
 .hint {
   font-size: 0.875em;
-  color: #9ca3af; /* Gray-400 */
+  color: var(--cm-text-tertiary);
   margin: 0;
   font-style: italic;
 }

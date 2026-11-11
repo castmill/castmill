@@ -17,10 +17,12 @@ import { FaRegularBell } from 'solid-icons/fa';
 import { TbHelpCircle, TbKeyboard, TbRocket } from 'solid-icons/tb';
 
 import defaultLogo from '../../assets/castmill-logo-topbar.png';
+import defaultLogoLight from '../../assets/castmill-logo-topbar-light.png';
 import DropdownMenu from '../dropdown-menu/dropdown-menu';
 import LanguageSelector from '../language-selector/language-selector';
 import { LoadingProgressBar } from '../loading-progress-bar/loading-progress-bar';
 import NotificationBell from '../notification-bell/notification-bell';
+import { ThemeToggle, useTheme } from '../../theme';
 
 import { baseUrl } from '../../env';
 import { useI18n } from '../../i18n';
@@ -37,8 +39,12 @@ const Topbar: Component = () => {
   const { t } = useI18n();
   const { logoUrl: selectedOrgLogo } = useSelectedOrganizationLogo();
 
+  const { theme } = useTheme();
+
   // Use network logo if configured, otherwise fall back to default Castmill logo
-  const networkLogo = () => store.networkSettings.logo || defaultLogo;
+  const networkLogo = () =>
+    store.networkSettings.logo ||
+    (theme() === 'light' ? defaultLogoLight : defaultLogo);
 
   const navigate = useNavigate();
 
@@ -175,6 +181,9 @@ const Topbar: Component = () => {
                 <TbRocket />
               </div>
             </div>
+
+            {/* Light/dark mode toggle */}
+            <ThemeToggle />
 
             {/* Notification Bell */}
             <NotificationBell />

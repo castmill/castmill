@@ -5,6 +5,7 @@ import {
   screen,
   fireEvent,
   waitFor,
+  within,
 } from '@solidjs/testing-library';
 import { createSignal } from 'solid-js';
 
@@ -616,7 +617,8 @@ describe('ChoicesField', () => {
       expect(screen.getByRole('listbox')).toBeInTheDocument();
 
       fireEvent.click(screen.getByLabelText('Enlarge'));
-      fireEvent.click(screen.getByLabelText('Close'));
+      const enlargedAgain = screen.getByRole('dialog', { name: 'Photo 1' });
+      fireEvent.click(within(enlargedAgain).getByLabelText('Close'));
       expect(screen.queryByRole('dialog', { name: 'Photo 1' })).toBeNull();
     });
 

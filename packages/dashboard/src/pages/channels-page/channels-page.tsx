@@ -944,6 +944,8 @@ const ChannelsPage: Component = () => {
                     label={t('filters.teamLabel')}
                     placeholder={t('filters.teamPlaceholder')}
                     clearLabel={t('filters.teamClear')}
+                    searchPlaceholder={t('filters.teamSearchPlaceholder')}
+                    noMatchMessage={t('filters.noMatches')}
                   />
                   <TagFilter
                     tags={tags()}
@@ -1044,6 +1046,8 @@ const ChannelsPage: Component = () => {
                   label={t('filters.teamLabel')}
                   placeholder={t('filters.teamPlaceholder')}
                   clearLabel={t('filters.teamClear')}
+                  searchPlaceholder={t('filters.teamSearchPlaceholder')}
+                  noMatchMessage={t('filters.noMatches')}
                 />
               </div>
             }

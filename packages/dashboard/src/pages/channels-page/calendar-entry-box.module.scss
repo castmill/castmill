@@ -54,14 +54,14 @@
 .calendar-event {
   position: absolute;
   pointer-events: auto;
-  border: 1px solid #444;
+  border: 1px solid var(--cm-border-strong);
   border-radius: 4px;
   font-size: 12px;
   overflow: hidden;
   /* Example default dark block color if not set by event logic */
   background-color: #26282c;
   color: #ffffff;
-  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+  box-shadow: 2px 2px 5px var(--cm-shadow-color);
 }
 
 .entry-header {

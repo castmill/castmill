@@ -16,8 +16,8 @@
   .device-automations-item {
     padding: 0.6em 0.8em;
     border-radius: 0.5em;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: var(--cm-bg-secondary);
+    border: 1px solid var(--cm-border-subtle);
   }
 
   .device-automations-item-header {
@@ -31,15 +31,15 @@
     font-size: 0.75em;
     padding: 0.1em 0.6em;
     border-radius: 1em;
-    background: rgba(87, 146, 238, 0.15);
-    color: #b9c9f0;
+    background: var(--cm-primary-bg);
+    color: var(--cm-primary);
   }
 
   .device-automations-rules {
     margin: 0.35em 0 0 0;
     padding-left: 1.25em;
     font-size: 0.875em;
-    color: #b0aecb;
+    color: var(--cm-text-secondary);
   }
 
   .device-automations-firings li {
@@ -60,6 +60,6 @@
   }
 
   .device-automations-firing-action {
-    color: #8f8bb0;
+    color: var(--cm-text-tertiary);
   }
 }

@@ -1023,9 +1023,9 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
               <div
                 class="error"
                 style={{
-                  color: '#ef4444',
+                  color: 'var(--cm-error)',
                   padding: '0.5em',
-                  background: 'rgba(239, 68, 68, 0.1)',
+                  background: 'rgba(var(--cm-error-rgb), 0.1)',
                   'border-radius': '0.25em',
                 }}
               >
@@ -1274,6 +1274,8 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
                   label={t('filters.teamLabel')}
                   placeholder={t('filters.teamPlaceholder')}
                   clearLabel={t('filters.teamClear')}
+                  searchPlaceholder={t('filters.teamSearchPlaceholder')}
+                  noMatchMessage={t('filters.noMatches')}
                 />
                 <TagFilter
                   tags={tags()}
@@ -1376,6 +1378,8 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
                 label={t('filters.teamLabel')}
                 placeholder={t('filters.teamPlaceholder')}
                 clearLabel={t('filters.teamClear')}
+                searchPlaceholder={t('filters.teamSearchPlaceholder')}
+                noMatchMessage={t('filters.noMatches')}
               />
             </div>
           }

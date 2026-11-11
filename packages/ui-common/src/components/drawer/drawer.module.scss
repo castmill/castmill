@@ -10,7 +10,7 @@ $animation-duration: 0.3s;
 
   &.withBackdrop {
     pointer-events: auto;
-    background: rgba(0, 0, 0, 0.45);
+    background: var(--cm-bg-overlay);
     transition: background-color $animation-duration ease;
   }
 
@@ -30,11 +30,11 @@ $animation-duration: 0.3s;
   // the page overflows; never grow past the (visual-viewport pinned) root.
   max-width: 100%;
   box-sizing: border-box;
-  background-color: #211d32;
-  color: #ffffff;
-  box-shadow: 0 0.5em 2em rgba(0, 0, 0, 0.4);
-  border-left: 1px solid #3d3d3d;
-  border-right: 1px solid #3d3d3d;
+  background-color: var(--cm-bg-elevated);
+  color: var(--cm-text-primary);
+  box-shadow: 0 0.5em 2em var(--cm-shadow-color);
+  border-left: 1px solid var(--cm-border-color);
+  border-right: 1px solid var(--cm-border-color);
   transition: transform $animation-duration ease;
   will-change: transform;
 
@@ -94,7 +94,7 @@ div:where(.drawerPanel.sizeXl) {
   justify-content: space-between;
   gap: 1em;
   padding: 1.2em 1.2em 0.9em;
-  border-bottom: 1px solid #3d3d3d;
+  border-bottom: 1px solid var(--cm-border-color);
 }
 
 .titleWrapper {
@@ -111,7 +111,7 @@ div:where(.drawerPanel.sizeXl) {
 
   p {
     margin-top: 0.35em;
-    color: #a4a3b7;
+    color: var(--cm-text-secondary);
     font-size: 0.95em;
   }
 }
@@ -130,7 +130,7 @@ div:where(.drawerPanel.sizeXl) {
 }
 
 .footer {
-  border-top: 1px solid #3d3d3d;
+  border-top: 1px solid var(--cm-border-color);
   padding: 0.9em 1.2em;
 }
 

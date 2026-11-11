@@ -131,7 +131,9 @@
   "topbar": {
     "help": "Hilfe",
     "notifications": "Benachrichtigungen",
-    "gettingStarted": "Erste Schritte"
+    "gettingStarted": "Erste Schritte",
+    "switchToLightMode": "Zum hellen Modus wechseln",
+    "switchToDarkMode": "Zum dunklen Modus wechseln"
   },
   "settings": {
     "title": "Einstellungen",
@@ -1480,6 +1482,7 @@
     "teamLabel": "Team",
     "teamPlaceholder": "Team auswählen",
     "teamClear": "Team-Filter löschen",
+    "teamSearchPlaceholder": "Teams suchen…",
     "tagLabel": "Tags",
     "tagPlaceholder": "Nach Tags filtern…",
     "tagClear": "Tag-Filter löschen",

@@ -47,7 +47,7 @@
       background: linear-gradient(
         90deg,
         transparent,
-        rgba(59, 130, 246, 0.3),
+        rgba(var(--cm-primary-rgb), 0.3),
         transparent
       );
       margin: 1em 0;

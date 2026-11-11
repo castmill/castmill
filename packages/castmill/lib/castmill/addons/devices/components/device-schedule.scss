@@ -7,10 +7,10 @@
 
   position: relative;
   overflow: auto;
-  border: 1px solid #36324a;
+  border: 1px solid var(--cm-border-color);
   border-radius: 0.4em;
   max-height: 25em;
-  background: #151320;
+  background: var(--cm-bg-sunken);
   user-select: none;
 }
 
@@ -25,8 +25,8 @@
 
 /* Header row */
 .schedule-grid-day-header {
-  background: #1b1829;
-  color: #ccc;
+  background: var(--cm-bg-elevated-secondary);
+  color: var(--cm-text-primary);
   text-align: center;
   height: 20px;
   font-size: 0.8em;
@@ -34,17 +34,17 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  border-bottom: 1px solid #333;
-  border-right: 1px solid #2a2a3e;
+  border-bottom: 1px solid var(--cm-border-color);
+  border-right: 1px solid var(--cm-border-color);
   position: sticky;
   top: 0;
   z-index: 2;
 }
 
 .schedule-grid-corner {
-  background: #1b1829;
-  border-bottom: 1px solid #333;
-  border-right: 1px solid #2a2a3e;
+  background: var(--cm-bg-elevated-secondary);
+  border-bottom: 1px solid var(--cm-border-color);
+  border-right: 1px solid var(--cm-border-color);
   position: sticky;
   top: 0;
   z-index: 3;
@@ -52,16 +52,16 @@
 
 /* Time labels */
 .schedule-grid-time-label {
-  background: #1b1829;
-  color: #888;
+  background: var(--cm-bg-elevated-secondary);
+  color: var(--cm-text-tertiary);
   font-size: 0.7em;
   text-align: right;
   padding: 0 0.4em;
   display: flex;
   align-items: flex-start;
   justify-content: flex-end;
-  border-right: 1px solid #2a2a3e;
-  border-bottom: 1px solid #222;
+  border-right: 1px solid var(--cm-border-color);
+  border-bottom: 1px solid var(--cm-border-subtle);
   height: 20px;
   box-sizing: border-box;
   position: sticky;
@@ -73,16 +73,16 @@
 .schedule-grid-cell {
   height: 20px;
   box-sizing: border-box;
-  border-right: 1px solid #333;
-  border-bottom: 1px solid #333;
+  border-right: 1px solid var(--cm-border-color);
+  border-bottom: 1px solid var(--cm-border-color);
   position: relative;
   cursor: crosshair;
   transition: background-color 0.1s;
 }
 
 .schedule-grid-day-header.today {
-  background: #232c48;
-  color: #fff;
+  background: var(--cm-bg-selected);
+  color: var(--cm-text-primary);
   box-shadow: inset 0 -2px 0 #4285f4;
 }
 
@@ -128,8 +128,12 @@
     border-color 0.15s;
 }
 
+:root[data-theme='light'] .schedule-entry {
+  color: #1a4fa8;
+}
+
 .schedule-entry:focus-visible {
-  outline: 2px solid #8ab4ff;
+  outline: 2px solid var(--cm-focus-ring);
   outline-offset: 1px;
 }
 
@@ -192,7 +196,7 @@
   right: 0.2em;
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--cm-text-secondary);
   cursor: pointer;
   font-size: 1.1em;
   line-height: 1;
@@ -315,13 +319,13 @@
   padding: 1em;
   border: 1px solid #4285f4;
   border-radius: 0.4em;
-  background: #1b1829;
+  background: var(--cm-bg-elevated-secondary);
   scroll-margin: 1em;
 }
 
 .schedule-editor-title {
   margin: 0;
-  color: #fff;
+  color: var(--cm-text-primary);
   font-size: 1em;
   font-weight: 600;
 }
@@ -343,7 +347,7 @@
   flex-direction: column;
   gap: 0.3em;
   min-width: 0;
-  color: #cfcde0;
+  color: var(--cm-text-secondary);
   font-size: 0.85em;
 
   select,
@@ -352,13 +356,12 @@
     min-height: 2.75em;
     box-sizing: border-box;
     padding: 0.4em 0.6em;
-    border: 1px solid #36324a;
+    border: 1px solid var(--cm-border-color);
     border-radius: 0.4em;
-    background: #151320;
-    color: #fff;
+    background: var(--cm-bg-sunken);
+    color: var(--cm-text-primary);
     /* 16px+ prevents iOS from zooming into focused fields */
     font-size: max(1rem, 16px);
-    color-scheme: dark;
   }
 
   select:focus,
@@ -377,11 +380,11 @@
 }
 
 .schedule-editor-hint {
-  color: #a4a3b7;
+  color: var(--cm-text-secondary);
 }
 
 .schedule-editor-error {
-  color: #ff8a80;
+  color: var(--cm-error);
 }
 
 .schedule-editor-actions,
@@ -409,13 +412,13 @@
   flex: 1 1 16em;
   min-width: 0;
   margin: 0;
-  color: #cfcde0;
+  color: var(--cm-text-secondary);
   font-size: 0.85em;
   line-height: 1.5;
 }
 
 .schedule-summary-always-on {
-  color: #4cd68a;
+  color: var(--cm-success);
 }
 
 .schedule-actions {
@@ -426,12 +429,12 @@
 
   > button:disabled {
     background-color: transparent;
-    box-shadow: inset 0 0 0 1px #3d3a52;
-    color: #6b6790;
+    box-shadow: inset 0 0 0 1px var(--cm-border-strong);
+    color: var(--cm-text-tertiary);
   }
 }
 
 .schedule-loading {
-  color: #a4a3b7;
+  color: var(--cm-text-secondary);
   font-size: 0.85em;
 }

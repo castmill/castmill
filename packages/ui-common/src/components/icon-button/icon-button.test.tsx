@@ -25,6 +25,13 @@ describe('IconButton Component', () => {
     expect(button).toBeDisabled();
   });
 
+  it('renders the ghost variant with an accessible name', () => {
+    const FakeIcon = () => <div>Icon</div>;
+    render(() => <IconButton icon={FakeIcon} color="ghost" title="Close" />);
+    const button = screen.getByRole('button', { name: 'Close' });
+    expect(button).toHaveClass('icon-button-ghost');
+  });
+
   it('handles click event correctly', async () => {
     const mockOnClick = vi.fn();
     const FakeIcon = () => <div>Icon</div>;

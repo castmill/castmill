@@ -1,15 +1,15 @@
 // Widget Access (network admin) — master/detail catalog for large networks.
-$border: rgba(255, 255, 255, 0.1);
-$surface: #181818;
-$field: rgba(255, 255, 255, 0.04);
-$text: #f3f4f6;
-$muted: #9ca3af;
-$subtle: #6b7280;
-$accent: #3b82f6;
-$all: #10b981;
-$hidden: #f87171;
-$except: #a78bfa;
-$warning: #fbbf24;
+$border: var(--cm-border-subtle);
+$surface: var(--cm-bg-secondary);
+$field: var(--cm-bg-input);
+$text: var(--cm-text-primary);
+$muted: var(--cm-text-secondary);
+$subtle: var(--cm-text-tertiary);
+$accent: var(--cm-primary);
+$all: var(--cm-success);
+$hidden: var(--cm-error);
+$except: var(--cm-info);
+$warning: var(--cm-warning);
 
 @mixin focus-ring {
   outline: 0.125em solid $accent;
@@ -52,7 +52,7 @@ $warning: #fbbf24;
   gap: 0.5em;
   height: 2.5em;
   padding: 0 0.75em;
-  border: 0.0625em solid rgba(255, 255, 255, 0.12);
+  border: 0.0625em solid $border;
   border-radius: 0.5em;
   background: $field;
   color: $subtle;
@@ -60,7 +60,7 @@ $warning: #fbbf24;
 
   &:focus-within {
     border-color: $accent;
-    box-shadow: 0 0 0 0.1875em rgba(59, 130, 246, 0.2);
+    box-shadow: 0 0 0 0.1875em rgba(var(--cm-primary-rgb), 0.2);
   }
 
   input {
@@ -109,8 +109,8 @@ $warning: #fbbf24;
   }
 
   &[aria-pressed='true'] {
-    background: rgba(59, 130, 246, 0.18);
-    color: #fff;
+    background: rgba(var(--cm-primary-rgb), 0.18);
+    color: var(--cm-text-on-primary);
   }
 
   &:focus-visible {
@@ -121,7 +121,7 @@ $warning: #fbbf24;
 .segment-count {
   padding: 0.05em 0.5em;
   border-radius: 1em;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--cm-bg-hover);
   font-size: 0.8em;
   font-variant-numeric: tabular-nums;
 }
@@ -129,7 +129,7 @@ $warning: #fbbf24;
 .select-field select {
   height: 2.5em;
   padding: 0 0.75em;
-  border: 0.0625em solid rgba(255, 255, 255, 0.12);
+  border: 0.0625em solid $border;
   border-radius: 0.5em;
   background: $field;
   color: $text;
@@ -186,7 +186,7 @@ $warning: #fbbf24;
   transition: background 0.12s ease;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.04);
+    background: var(--cm-bg-hover);
   }
 
   &:focus-visible {
@@ -197,8 +197,8 @@ $warning: #fbbf24;
 
 .widget-row-selected,
 .widget-row-selected:hover {
-  border-color: rgba(59, 130, 246, 0.45);
-  background: rgba(59, 130, 246, 0.12);
+  border-color: rgba(var(--cm-primary-rgb), 0.45);
+  background: rgba(var(--cm-primary-rgb), 0.12);
 }
 
 .widget-row-text {
@@ -311,7 +311,7 @@ $warning: #fbbf24;
   gap: 0.3em;
   padding: 0.2em 0.5em;
   border-radius: 0.3em;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--cm-bg-tertiary);
   color: $muted;
   font-size: 0.7em;
   letter-spacing: 0.04em;
@@ -319,7 +319,7 @@ $warning: #fbbf24;
 }
 
 .tag-core {
-  background: rgba(245, 158, 11, 0.15);
+  background: var(--cm-warning-bg);
   color: $warning;
 }
 
@@ -342,9 +342,9 @@ $warning: #fbbf24;
   border-radius: 0.5em;
   background: linear-gradient(
     90deg,
-    rgba(255, 255, 255, 0.03) 25%,
-    rgba(255, 255, 255, 0.07) 50%,
-    rgba(255, 255, 255, 0.03) 75%
+    var(--cm-bg-secondary) 25%,
+    var(--cm-bg-tertiary) 50%,
+    var(--cm-bg-secondary) 75%
   );
   background-size: 200% 100%;
   animation: shimmer 1.4s ease-in-out infinite;
@@ -438,7 +438,7 @@ $warning: #fbbf24;
   code {
     padding: 0.1em 0.4em;
     border-radius: 0.3em;
-    background: rgba(255, 255, 255, 0.06);
+    background: var(--cm-bg-tertiary);
   }
 }
 
@@ -484,7 +484,7 @@ $warning: #fbbf24;
   padding: 0.9em 1em;
   border: 0.0625em solid $border;
   border-radius: 0.6em;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--cm-bg-hover);
   color: inherit;
   text-align: left;
   cursor: pointer;
@@ -493,7 +493,7 @@ $warning: #fbbf24;
     background 0.15s ease;
 
   &:hover:not(:disabled) {
-    border-color: rgba(255, 255, 255, 0.24);
+    border-color: var(--cm-border-strong);
   }
 
   &:disabled {
@@ -514,14 +514,14 @@ $warning: #fbbf24;
   width: 2.2em;
   height: 2.2em;
   border-radius: 0.5em;
-  background: rgba(255, 255, 255, 0.06);
-  color: #d1d5db;
+  background: var(--cm-bg-tertiary);
+  color: var(--cm-text-secondary);
 }
 
 .mode-card-active {
   &.mode-card-all {
     border-color: $all;
-    background: rgba(16, 185, 129, 0.1);
+    background: var(--cm-success-bg);
 
     .mode-card-icon {
       color: $all;
@@ -530,7 +530,7 @@ $warning: #fbbf24;
 
   &.mode-card-except {
     border-color: $except;
-    background: rgba(167, 139, 250, 0.1);
+    background: var(--cm-info-bg);
 
     .mode-card-icon {
       color: $except;
@@ -539,7 +539,7 @@ $warning: #fbbf24;
 
   &.mode-card-selected {
     border-color: $accent;
-    background: rgba(59, 130, 246, 0.1);
+    background: var(--cm-primary-bg);
 
     .mode-card-icon {
       color: $accent;
@@ -548,7 +548,7 @@ $warning: #fbbf24;
 
   &.mode-card-hidden {
     border-color: $hidden;
-    background: rgba(248, 113, 113, 0.08);
+    background: var(--cm-error-bg);
 
     .mode-card-icon {
       color: $hidden;
@@ -588,7 +588,7 @@ $warning: #fbbf24;
   svg {
     flex: none;
     margin-top: 0.15em;
-    color: #60a5fa;
+    color: var(--cm-info);
   }
 }
 
@@ -629,13 +629,13 @@ $warning: #fbbf24;
   border: none;
   border-radius: 0.35em;
   background: transparent;
-  color: #60a5fa;
+  color: var(--cm-link);
   font-size: 0.85em;
   font-weight: 500;
   cursor: pointer;
 
   &:hover:not(:disabled) {
-    background: rgba(59, 130, 246, 0.12);
+    background: rgba(var(--cm-primary-rgb), 0.12);
   }
 
   &:disabled {
@@ -652,7 +652,7 @@ $warning: #fbbf24;
   color: $hidden;
 
   &:hover:not(:disabled) {
-    background: rgba(248, 113, 113, 0.12);
+    background: var(--cm-error-bg);
   }
 }
 
@@ -727,7 +727,7 @@ $warning: #fbbf24;
   width: 2.2em;
   height: 1.25em;
   border-radius: 1em;
-  background: #4b5563;
+  background: var(--cm-bg-tertiary);
   transition: background 0.15s ease;
 
   [aria-checked='true'] > & {
@@ -742,7 +742,7 @@ $warning: #fbbf24;
   width: 0.95em;
   height: 0.95em;
   border-radius: 50%;
-  background: #fff;
+  background: var(--cm-bg-elevated);
   transition: transform 0.15s ease;
 
   [aria-checked='true'] > .access-switch-track > & {
@@ -764,7 +764,7 @@ $warning: #fbbf24;
   gap: 0.3em;
   padding: 0.15em 0.5em;
   border-radius: 1em;
-  background: rgba(245, 158, 11, 0.15);
+  background: var(--cm-warning-bg);
   color: $warning;
   font-size: 0.7em;
 }

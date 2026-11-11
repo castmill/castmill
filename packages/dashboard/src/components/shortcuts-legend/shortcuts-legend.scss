@@ -15,8 +15,8 @@
     font-size: 1.1em;
     font-weight: 600;
     margin: 0 0 0.75em 0;
-    color: #a4a3b7;
-    border-bottom: 1px solid #3d3d3d;
+    color: var(--cm-text-secondary);
+    border-bottom: 1px solid var(--cm-border-color);
     padding-bottom: 0.5em;
   }
 }
@@ -42,7 +42,7 @@
       top: 0;
       bottom: 0;
       width: 1px;
-      background-color: #3d3d3d;
+      background-color: var(--cm-border-color);
       transform: translateX(-50%);
     }
   }
@@ -55,7 +55,7 @@
   padding: 0.25em 0;
 
   .shortcut-description {
-    color: #fff;
+    color: var(--cm-text-primary);
     font-size: 0.95em;
   }
 
@@ -63,17 +63,17 @@
     font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
     font-size: 0.9em;
     font-weight: 600;
-    background-color: #2c2c2c;
-    color: #e8e8e8;
+    background-color: var(--cm-bg-secondary);
+    color: var(--cm-text-primary);
     padding: 0.35em 0.7em;
     border-radius: 0.3em;
-    border: 1px solid #555;
+    border: 1px solid var(--cm-border-strong);
     white-space: nowrap;
     margin-left: 0.75em;
     letter-spacing: 0.05em;
     min-width: 3em;
     text-align: center;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--cm-shadow-sm);
   }
 }
 

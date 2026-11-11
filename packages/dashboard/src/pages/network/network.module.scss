@@ -22,8 +22,8 @@
       gap: 0.5em;
       padding: 0.35em 0.75em;
       border-radius: 2em;
-      background: rgba(59, 130, 246, 0.15);
-      color: #3b82f6;
+      background: var(--cm-info-bg);
+      color: var(--cm-info);
       font-size: 0.85em;
       font-weight: 500;
     }
@@ -39,8 +39,8 @@
   .stat-card {
     padding: 1.25em;
     border-radius: 0.75em;
-    background: #1a1a1a;
-    border: 0.1em solid rgba(255, 255, 255, 0.1);
+    background: var(--cm-bg-sunken);
+    border: 0.1em solid var(--cm-border-subtle);
     display: flex;
     flex-direction: column;
     gap: 0.5em;
@@ -48,12 +48,12 @@
     .stat-value {
       font-size: 2em;
       font-weight: 700;
-      color: #fff;
+      color: var(--cm-text-primary);
     }
 
     .stat-label {
       font-size: 0.9em;
-      color: var(--castmill-text-muted, #6b7280);
+      color: var(--cm-text-tertiary);
     }
   }
 
@@ -61,20 +61,20 @@
     margin-bottom: 2em;
     padding: 1.5em;
     border-radius: 0.75em;
-    background: #181818;
-    border: 0.1em solid rgba(255, 255, 255, 0.1);
+    background: var(--cm-bg-sunken);
+    border: 0.1em solid var(--cm-border-subtle);
 
     h2 {
       margin: 0 0 0.5em 0;
       font-size: 1.25em;
       font-weight: 600;
-      color: #fff;
+      color: var(--cm-text-primary);
     }
 
     p {
       margin: 0 0 1.5em 0;
       font-size: 0.9em;
-      color: var(--castmill-text-muted, #6b7280);
+      color: var(--cm-text-tertiary);
     }
   }
 
@@ -91,7 +91,7 @@
 
   .help-text {
     font-size: 0.8em;
-    color: var(--castmill-text-muted, #6b7280);
+    color: var(--cm-text-tertiary);
     margin-top: 0.25em;
   }
 
@@ -101,7 +101,7 @@
     justify-content: space-between;
     padding: 1em;
     border-radius: 0.5em;
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--cm-bg-hover);
     margin-bottom: 1em;
 
     &:last-child {
@@ -115,12 +115,12 @@
 
       .toggle-label {
         font-weight: 500;
-        color: #fff;
+        color: var(--cm-text-primary);
       }
 
       .toggle-description {
         font-size: 0.85em;
-        color: var(--castmill-text-muted, #6b7280);
+        color: var(--cm-text-tertiary);
       }
     }
   }
@@ -131,18 +131,18 @@
     gap: 0.75em;
     padding: 0.75em 1em;
     border-radius: 0.5em;
-    background: rgba(255, 255, 255, 0.05);
-    border: 0.1em solid rgba(255, 255, 255, 0.1);
+    background: var(--cm-bg-hover);
+    border: 0.1em solid var(--cm-border-subtle);
 
     .domain-value {
       font-family: monospace;
       font-size: 0.95em;
-      color: #10b981;
+      color: var(--cm-success);
     }
 
     .domain-note {
       font-size: 0.8em;
-      color: var(--castmill-text-muted, #6b7280);
+      color: var(--cm-text-tertiary);
     }
   }
 
@@ -160,7 +160,7 @@
 
     label {
       font-weight: 500;
-      color: #fff;
+      color: var(--cm-text-primary);
       font-size: 0.9em;
     }
   }
@@ -174,7 +174,7 @@
     gap: 1em;
 
     .loading-text {
-      color: var(--castmill-text-muted, #6b7280);
+      color: var(--cm-text-tertiary);
     }
   }
 
@@ -189,17 +189,17 @@
 
     .error-icon {
       font-size: 3em;
-      color: #ef4444;
+      color: var(--cm-error);
     }
 
     .error-message {
       font-size: 1.1em;
-      color: #ef4444;
+      color: var(--cm-error);
     }
 
     .error-hint {
       font-size: 0.9em;
-      color: var(--castmill-text-muted, #6b7280);
+      color: var(--cm-text-tertiary);
     }
   }
 
@@ -214,18 +214,18 @@
 
     .not-admin-icon {
       font-size: 3em;
-      color: #f59e0b;
+      color: var(--cm-warning);
     }
 
     .not-admin-title {
       font-size: 1.25em;
       font-weight: 600;
-      color: #fff;
+      color: var(--cm-text-primary);
     }
 
     .not-admin-message {
       font-size: 0.95em;
-      color: var(--castmill-text-muted, #6b7280);
+      color: var(--cm-text-tertiary);
       max-width: 30em;
     }
   }
@@ -239,23 +239,23 @@
     td {
       padding: 0.75em 1em;
       text-align: left;
-      border-bottom: 0.1em solid rgba(255, 255, 255, 0.1);
+      border-bottom: 0.1em solid var(--cm-border-subtle);
     }
 
     th {
       font-weight: 600;
-      color: var(--castmill-text-muted, #6b7280);
+      color: var(--cm-text-tertiary);
       font-size: 0.85em;
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
 
     td {
-      color: #fff;
+      color: var(--cm-text-primary);
     }
 
     tbody tr:hover {
-      background: rgba(255, 255, 255, 0.03);
+      background: var(--cm-bg-hover);
     }
 
     tbody tr:last-child td {
@@ -275,36 +275,36 @@
   }
 
   .status-active {
-    color: #10b981;
+    color: var(--cm-success);
     font-weight: 500;
     font-size: 0.85em;
   }
 
   .status-blocked {
-    color: #ef4444;
+    color: var(--cm-error);
     font-weight: 500;
     font-size: 0.85em;
     cursor: help;
   }
 
   .status-pending {
-    color: #f59e0b;
+    color: var(--cm-warning);
     font-weight: 500;
     font-size: 0.85em;
   }
 
   .blocked-row {
-    background: rgba(239, 68, 68, 0.05);
+    background: rgba(var(--cm-error-rgb), 0.05);
 
     &:hover {
-      background: rgba(239, 68, 68, 0.1);
+      background: rgba(var(--cm-error-rgb), 0.1);
     }
   }
 
   .empty-list {
     padding: 2em;
     text-align: center;
-    color: var(--castmill-text-muted, #6b7280);
+    color: var(--cm-text-tertiary);
     font-size: 0.95em;
   }
 
@@ -314,13 +314,13 @@
     justify-content: space-between;
     margin-top: 1.5em;
     padding-top: 1em;
-    border-top: 0.1em solid rgba(255, 255, 255, 0.1);
+    border-top: 0.1em solid var(--cm-border-subtle);
     flex-wrap: wrap;
     gap: 1em;
 
     .pagination-info {
       font-size: 0.85em;
-      color: var(--castmill-text-muted, #6b7280);
+      color: var(--cm-text-tertiary);
     }
   }
 
@@ -328,21 +328,21 @@
   .create-org-form {
     padding: 1.5em;
     border-radius: 0.75em;
-    background: #181818;
-    border: 0.1em solid rgba(255, 255, 255, 0.1);
+    background: var(--cm-bg-sunken);
+    border: 0.1em solid var(--cm-border-subtle);
     margin-bottom: 2em;
 
     h3 {
       margin: 0 0 0.5em 0;
       font-size: 1.1em;
       font-weight: 600;
-      color: #fff;
+      color: var(--cm-text-primary);
     }
 
     p {
       margin: 0 0 1.5em 0;
       font-size: 0.9em;
-      color: var(--castmill-text-muted, #6b7280);
+      color: var(--cm-text-tertiary);
     }
 
     .create-org-row {
@@ -364,8 +364,8 @@
   .org-list {
     padding: 1.5em;
     border-radius: 0.75em;
-    background: #181818;
-    border: 0.1em solid rgba(255, 255, 255, 0.1);
+    background: var(--cm-bg-sunken);
+    border: 0.1em solid var(--cm-border-subtle);
     position: relative;
 
     .loading-overlay {
@@ -380,7 +380,7 @@
       justify-content: center;
       z-index: 10;
       border-radius: 0.75em;
-      color: var(--castmill-text-muted, #6b7280);
+      color: var(--cm-text-tertiary);
     }
   }
 
@@ -388,21 +388,21 @@
   .invite-section {
     padding: 1.5em;
     border-radius: 0.75em;
-    background: #181818;
-    border: 0.1em solid rgba(255, 255, 255, 0.1);
+    background: var(--cm-bg-sunken);
+    border: 0.1em solid var(--cm-border-subtle);
     margin-bottom: 1.5em;
 
     h3 {
       margin: 0 0 0.5em 0;
       font-size: 1.1em;
       font-weight: 600;
-      color: #fff;
+      color: var(--cm-text-primary);
     }
 
     p {
       margin: 0 0 1em 0;
       font-size: 0.9em;
-      color: var(--castmill-text-muted, #6b7280);
+      color: var(--cm-text-tertiary);
     }
   }
 
@@ -410,14 +410,14 @@
   .invitations-list {
     padding: 1.5em;
     border-radius: 0.75em;
-    background: #181818;
-    border: 0.1em solid rgba(255, 255, 255, 0.1);
+    background: var(--cm-bg-sunken);
+    border: 0.1em solid var(--cm-border-subtle);
 
     h3 {
       margin: 0 0 1em 0;
       font-size: 1.1em;
       font-weight: 600;
-      color: #fff;
+      color: var(--cm-text-primary);
     }
   }
 
@@ -428,20 +428,20 @@
       margin: 0 0 0.5em 0;
       font-size: 1.1em;
       font-weight: 600;
-      color: #fff;
+      color: var(--cm-text-primary);
     }
 
     p {
       margin: 0;
       font-size: 0.9em;
-      color: var(--castmill-text-muted, #6b7280);
+      color: var(--cm-text-tertiary);
     }
   }
 
   .loading-invitations {
     padding: 2em;
     text-align: center;
-    color: var(--castmill-text-muted, #6b7280);
+    color: var(--cm-text-tertiary);
   }
 
   // Section within a page
@@ -454,7 +454,7 @@
       margin: 0 0 1em 0;
       font-size: 1.1em;
       font-weight: 600;
-      color: #fff;
+      color: var(--cm-text-primary);
     }
   }
 }
@@ -471,7 +471,7 @@
 
   .org-name {
     font-weight: 500;
-    color: #fff;
+    color: var(--cm-text-primary);
   }
 }
 
@@ -481,14 +481,14 @@
   justify-content: flex-end;
   margin-top: 1.5em;
   padding-top: 1em;
-  border-top: 0.1em solid rgba(255, 255, 255, 0.1);
+  border-top: 0.1em solid var(--cm-border-subtle);
 }
 
 .error-message {
-  color: var(--castmill-error, #ef4444);
+  color: var(--cm-error);
   font-size: 0.9em;
   padding: 0.5em;
-  background: rgba(239, 68, 68, 0.1);
+  background: rgba(var(--cm-error-rgb), 0.1);
   border-radius: 0.25em;
 }
 
@@ -496,6 +496,23 @@
   display: flex;
   flex-direction: column;
   gap: 1em;
+}
+
+:global(:root[data-theme='light']) .network-page {
+  .stat-card,
+  .section,
+  .create-org-form,
+  .org-list,
+  .invite-section,
+  .users-list,
+  .invitations-list {
+    background: var(--cm-bg-secondary);
+    border-color: var(--cm-border-color);
+  }
+
+  .org-list .loading-overlay {
+    background: var(--cm-bg-overlay);
+  }
 }
 
 /* Organization integration settings */
@@ -521,9 +538,35 @@
   }
 }
 
+.settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3em;
+}
+
+.settings-label {
+  font-weight: 600;
+}
+
+.settings-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  font-weight: 600;
+}
+
+.settings-input {
+  padding: 0.5em 0.75em;
+  border: 0.0625em solid var(--cm-border-color);
+  border-radius: 0.375em;
+  background: var(--cm-bg-input);
+  color: var(--cm-text-primary);
+  font: inherit;
+}
+
 .settings-help {
   margin: 0;
-  opacity: 0.7;
+  color: var(--cm-text-tertiary);
   font-size: 0.875em;
   line-height: 1.5;
 }
@@ -536,4 +579,9 @@
   margin-top: 0.75em;
   padding-top: 1em;
   border-top: 0.1em solid rgba(255, 255, 255, 0.1);
+}
+
+.settings-error {
+  color: var(--cm-error);
+  font-size: 0.875em;
 }

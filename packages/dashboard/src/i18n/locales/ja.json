@@ -113,7 +113,9 @@
   "topbar": {
     "help": "ヘルプ",
     "notifications": "通知",
-    "gettingStarted": "はじめに"
+    "gettingStarted": "はじめに",
+    "switchToLightMode": "ライトモードに切り替え",
+    "switchToDarkMode": "ダークモードに切り替え"
   },
   "settings": {
     "title": "設定",
@@ -1486,6 +1488,7 @@
     "teamLabel": "チーム",
     "teamPlaceholder": "チームを選択",
     "teamClear": "チームフィルターをクリア",
+    "teamSearchPlaceholder": "チームを検索…",
     "tagLabel": "タグ",
     "tagPlaceholder": "タグでフィルター…",
     "tagClear": "タグフィルターをクリア",

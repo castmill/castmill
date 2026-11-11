@@ -9,7 +9,7 @@
   align-items: center;
 
   background-color: colors.$component-background-color;
-  color: colors.$component-color;
+  color: var(--cm-text-placeholder);
 
   svg {
     font-size: 1.2em;
@@ -71,6 +71,6 @@
 
   .reset-icon {
     font-size: 1.3em;
-    color: colors.$component-color;
+    color: var(--cm-text-placeholder);
   }
 }
