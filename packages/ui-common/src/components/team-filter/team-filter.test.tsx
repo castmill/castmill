@@ -39,6 +39,48 @@ describe('TeamFilter', () => {
     expect(screen.queryByRole('listbox')).toBeNull();
   });
 
+  it('keeps the selected team when it is picked again', async () => {
+    const onTeamChange = vi.fn();
+    render(() => (
+      <TeamFilter
+        teams={teams}
+        selectedTeamId={1}
+        onTeamChange={onTeamChange}
+      />
+    ));
+
+    await fireEvent.click(screen.getByRole('button', { name: /Lund/ }));
+    await fireEvent.click(screen.getByRole('option', { name: /Lund/ }));
+
+    expect(onTeamChange).toHaveBeenCalledWith(1);
+  });
+
+  it.each(['Enter', ' '])(
+    'returns focus to the trigger after selecting a team with %s',
+    async (key) => {
+      const onTeamChange = vi.fn();
+      const { container } = render(() => (
+        <TeamFilter
+          teams={teams}
+          selectedTeamId={1}
+          onTeamChange={onTeamChange}
+        />
+      ));
+
+      const trigger = screen.getByRole('button', { name: /Lund/ });
+      await fireEvent.click(trigger);
+      const option = screen.getByRole('option', { name: 'Malmö' });
+      option.focus();
+      await fireEvent.keyDown(option, { key });
+
+      expect(onTeamChange).toHaveBeenCalledWith(2);
+      expect(screen.queryByRole('listbox')).toBeNull();
+      expect(document.activeElement).toBe(
+        container.querySelector('.msf-trigger')
+      );
+    }
+  );
+
   it('clears the selection', async () => {
     const onTeamChange = vi.fn();
     render(() => (

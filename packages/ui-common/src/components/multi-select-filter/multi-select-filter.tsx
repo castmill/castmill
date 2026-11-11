@@ -108,6 +108,7 @@ export const MultiSelectFilter = <T extends MultiSelectItem>(
   const [searchQuery, setSearchQuery] = createSignal('');
   let containerRef: HTMLDivElement | undefined;
   let inputRef: HTMLInputElement | undefined;
+  let triggerRef: HTMLButtonElement | undefined;
 
   // ── Derived data ────────────────────────────────────
 
@@ -130,8 +131,9 @@ export const MultiSelectFilter = <T extends MultiSelectItem>(
   const toggleItem = (id: number | string) => {
     if (props.disabled) return;
     if (isSingle()) {
-      props.onSelectionChange(isSelected(id) ? [] : [id]);
+      props.onSelectionChange([id]);
       close();
+      triggerRef?.focus();
       return;
     }
     const next = isSelected(id)
@@ -209,6 +211,7 @@ export const MultiSelectFilter = <T extends MultiSelectItem>(
           type="button"
           class="msf-trigger"
           classList={{ open: isOpen() }}
+          ref={(el) => (triggerRef = el)}
           onClick={toggle}
           aria-expanded={isOpen()}
           aria-haspopup="listbox"
