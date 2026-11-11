@@ -30,6 +30,7 @@ const WidgetItem: Component<{
   locale?: string;
   t: Translate;
   tapToAdd?: boolean;
+  addDisabled?: boolean;
   onAdd?: (widget: JsonWidget) => void;
 }> = (props) => {
   const [dragging, setDragging] = createSignal(false);
@@ -66,7 +67,7 @@ const WidgetItem: Component<{
       classList={{ dragging: dragging(), 'tap-to-add': props.tapToAdd }}
       title={widgetDescription() || undefined}
       onClick={() => {
-        if (props.tapToAdd) props.onAdd?.(props.widget);
+        if (props.tapToAdd && !props.addDisabled) props.onAdd?.(props.widget);
       }}
     >
       <Show when={!props.tapToAdd}>
@@ -98,6 +99,7 @@ const WidgetItem: Component<{
         <button
           type="button"
           class="widget-item-add"
+          disabled={props.addDisabled}
           title={props.t('playlists.editor.addWidgetNamed', {
             name: widgetName(),
           })}
@@ -128,6 +130,7 @@ export const WidgetChooser: Component<{
   onAdd?: (widget: JsonWidget) => void;
   /** Touch picker mode: tapping a row adds it and dragging is disabled. */
   tapToAdd?: boolean;
+  addDisabled?: boolean;
   title?: string;
   hint?: string;
   onClose?: () => void;
@@ -203,6 +206,7 @@ export const WidgetChooser: Component<{
               locale={props.locale}
               t={t}
               tapToAdd={props.tapToAdd}
+              addDisabled={props.addDisabled}
               onAdd={props.onAdd}
             />
           )}

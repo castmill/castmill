@@ -586,7 +586,19 @@ export const PlaylistView: Component<{
     width: number;
     height: number;
   }) => {
+    const originatingPlaylist = playlist();
+    if (!originatingPlaylist) {
+      return false;
+    }
+
     return serializePlaylistSave(async () => {
+      if (
+        props.playlistId !== originatingPlaylist.id ||
+        playlist()?.id !== originatingPlaylist.id
+      ) {
+        return false;
+      }
+
       const currentPlaylist = playlist();
       if (!currentPlaylist) {
         return false;
@@ -615,11 +627,17 @@ export const PlaylistView: Component<{
             },
           }
         );
+        if (
+          props.playlistId !== originatingPlaylist.id ||
+          playlist()?.id !== originatingPlaylist.id
+        ) {
+          return false;
+        }
 
         const updatedPlaylist = {
-          ...(playlist() || currentPlaylist),
+          ...currentPlaylist,
           settings: {
-            ...(playlist() || currentPlaylist).settings,
+            ...currentPlaylist.settings,
             aspect_ratio: nextAspectRatio,
           },
         };
@@ -702,6 +720,7 @@ export const PlaylistView: Component<{
   const coarsePointer = createMediaQuery('(pointer: coarse)', false);
   const [activeSection, setActiveSection] = createSignal<SectionId>('content');
   const [pickerOpen, setPickerOpen] = createSignal(false);
+  const [addingWidget, setAddingWidget] = createSignal(false);
   const [now, setNow] = createSignal(Date.now());
   const relativeTimeTimer = setInterval(
     () => setNow(Date.now()),
@@ -800,16 +819,21 @@ export const PlaylistView: Component<{
   };
 
   const addWidgetToEnd = async (widget: JsonWidget) => {
-    if (!addWidget) return;
+    if (!addWidget || addingWidget()) return;
+    setAddingWidget(true);
     const countBefore = items().length;
-    await addWidget(widget);
-    // Cancelling the config keeps the picker open so another widget can be
-    // chosen; a successful add returns to the list.
-    if (items().length > countBefore) {
-      setPickerOpen(false);
-      itemsCardRef
-        ?.querySelector('.playlist-end-drop-zone')
-        ?.scrollIntoView?.({ block: 'nearest' });
+    try {
+      await addWidget(widget);
+      // Cancelling the config keeps the picker open so another widget can be
+      // chosen; a successful add returns to the list.
+      if (items().length > countBefore) {
+        setPickerOpen(false);
+        itemsCardRef
+          ?.querySelector('.playlist-end-drop-zone')
+          ?.scrollIntoView?.({ block: 'nearest' });
+      }
+    } finally {
+      setAddingWidget(false);
     }
   };
 
@@ -832,7 +856,17 @@ export const PlaylistView: Component<{
   };
 
   const renamePlaylist = async ({ name }: { name: string }) => {
+    const originatingPlaylist = playlist();
+    if (!originatingPlaylist) return false;
+
     return serializePlaylistSave(async () => {
+      if (
+        props.playlistId !== originatingPlaylist.id ||
+        playlist()?.id !== originatingPlaylist.id
+      ) {
+        return false;
+      }
+
       const currentPlaylist = playlist();
       if (!currentPlaylist) return false;
 
@@ -849,8 +883,15 @@ export const PlaylistView: Component<{
               : {}),
           }
         );
+        if (
+          props.playlistId !== originatingPlaylist.id ||
+          playlist()?.id !== originatingPlaylist.id
+        ) {
+          return false;
+        }
+
         const updatedPlaylist = {
-          ...(playlist() || currentPlaylist),
+          ...currentPlaylist,
           name,
           updated_at: new Date().toISOString(),
         };
@@ -970,6 +1011,7 @@ export const PlaylistView: Component<{
               t={t}
               onSearch={handleWidgetSearch}
               onAdd={addWidgetToEnd}
+              addDisabled={addingWidget()}
               tapToAdd={!wide()}
               title={
                 wide()

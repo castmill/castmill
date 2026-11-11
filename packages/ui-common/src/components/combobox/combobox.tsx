@@ -190,8 +190,14 @@ export const ComboBox = <T extends { id: string | number }>(
     // Room left for the list after the search box, footer and gap.
     const room = (opensUp ? above : below) - 6.5 * em;
 
+    if (room < 8 * em) {
+      setPlacement('sheet');
+      setListMaxHeight(undefined);
+      return;
+    }
+
     setPlacement(opensUp ? 'up' : 'down');
-    setListMaxHeight(`${Math.max(8 * em, Math.min(18 * em, room))}px`);
+    setListMaxHeight(`${Math.min(18 * em, room)}px`);
   };
 
   const setIsOpen = (value: boolean | ((prev: boolean) => boolean)) => {

@@ -301,5 +301,40 @@ describe('ComboBox Component', () => {
       const listbox = await screen.findByRole('listbox');
       expect(listbox.className).toMatch(/dropdown-up/);
     });
+
+    it('uses the sheet when a clipping ancestor has too little room for the list', async () => {
+      mockSheetQuery(false);
+      renderComboBox();
+      const trigger = screen.getByRole('button', { name: /test combobox/i });
+      const comboBox = trigger.parentElement!;
+      const clippingParent = comboBox.parentElement!;
+      clippingParent.style.overflowY = 'hidden';
+      vi.spyOn(clippingParent, 'getBoundingClientRect').mockReturnValue({
+        top: 0,
+        bottom: 120,
+        left: 0,
+        right: 300,
+        width: 300,
+        height: 120,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      });
+      vi.spyOn(comboBox, 'getBoundingClientRect').mockReturnValue({
+        top: 50,
+        bottom: 100,
+        left: 0,
+        right: 300,
+        width: 300,
+        height: 50,
+        x: 0,
+        y: 50,
+        toJSON: () => ({}),
+      });
+
+      await fireEvent.click(screen.getByText('Test ComboBox'));
+
+      expect(await screen.findByRole('dialog')).toBeInTheDocument();
+    });
   });
 });

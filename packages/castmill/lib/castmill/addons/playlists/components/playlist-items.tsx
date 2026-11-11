@@ -151,11 +151,17 @@ export const PlaylistItems: Component<{
     currentIndex: number,
     newIndex: number | undefined
   ) => {
-    await props.onMoveItem(item, currentIndex, newIndex);
-    if (props.reorderButtons) {
-      setMovedItem(() => item);
-      clearTimeout(movedTimer);
-      movedTimer = setTimeout(() => setMovedItem(undefined), 1200);
+    if (moving()) return;
+    setMoving(true);
+    try {
+      await props.onMoveItem(item, currentIndex, newIndex);
+      if (props.reorderButtons) {
+        setMovedItem(() => item);
+        clearTimeout(movedTimer);
+        movedTimer = setTimeout(() => setMovedItem(undefined), 1200);
+      }
+    } finally {
+      setMoving(false);
     }
   };
 
@@ -259,6 +265,7 @@ export const PlaylistItems: Component<{
   const [isDraggedOver, setIsDraggedOver] = createSignal(false);
   const [animationEnabled, setAnimationEnabled] = createSignal(true);
   const [endZoneHovered, setEndZoneHovered] = createSignal(false);
+  const [moving, setMoving] = createSignal(false);
 
   let droppableRef: HTMLDivElement | undefined = undefined;
   let endZoneRef: HTMLDivElement | undefined = undefined;

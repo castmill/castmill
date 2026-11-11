@@ -87,17 +87,23 @@ describe('PlaylistItems', () => {
     } as any);
   });
 
-  it('moves items with drop-equivalent indexes', () => {
+  it('moves items with drop-equivalent indexes', async () => {
     const props = renderItems({ reorderButtons: true });
 
     fireEvent.click(buttons('playlists.editor.moveUp')[1]);
+    await waitFor(() => expect(props.onMoveItem).toHaveBeenCalledTimes(1));
+    await Promise.resolve();
     expect(props.onMoveItem).toHaveBeenLastCalledWith(items[1], 1, 0);
 
     fireEvent.click(buttons('playlists.editor.moveDown')[0]);
+    await waitFor(() => expect(props.onMoveItem).toHaveBeenCalledTimes(2));
+    await Promise.resolve();
     expect(props.onMoveItem).toHaveBeenLastCalledWith(items[0], 0, 2);
 
     // Moving the second-to-last item down appends it.
     fireEvent.click(buttons('playlists.editor.moveDown')[1]);
+    await waitFor(() => expect(props.onMoveItem).toHaveBeenCalledTimes(3));
+    await Promise.resolve();
     expect(props.onMoveItem).toHaveBeenLastCalledWith(items[1], 1, undefined);
 
     expect(buttons('playlists.editor.moveUp')[0]).toBeDisabled();
@@ -112,6 +118,25 @@ describe('PlaylistItems', () => {
     fireEvent.click(buttons('playlists.editor.moveDown')[0]);
 
     await waitFor(() => expect(scroll).toHaveBeenCalledTimes(1));
+  });
+
+  it('ignores a second move while the first move is pending', async () => {
+    let resolveMove!: () => void;
+    const onMoveItem = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveMove = resolve;
+        })
+    );
+    const props = renderItems({ reorderButtons: true, onMoveItem });
+
+    fireEvent.click(buttons('playlists.editor.moveDown')[0]);
+    fireEvent.click(buttons('playlists.editor.moveUp')[1]);
+
+    expect(props.onMoveItem).toHaveBeenCalledTimes(1);
+
+    resolveMove();
+    await waitFor(() => expect(props.onMoveItem).toHaveBeenCalledTimes(1));
   });
 
   it('omits move buttons when reordering is drag-only', () => {

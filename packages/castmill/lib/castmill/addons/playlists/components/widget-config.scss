@@ -160,30 +160,6 @@ body [data-modal-overlay] .widget-config-modal {
       }
     }
 
-    .media-item {
-      display: flex;
-      flex-direction: row;
-      justify-content: flex-start;
-      align-items: center;
-
-      padding: 0.2em;
-
-      width: 100%;
-
-      gap: 1em;
-
-      .thumbnail {
-        width: 3em;
-        height: 3em;
-        background-size: cover;
-        background-position: center;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        overflow: hidden;
-      }
-    }
-
     .playlist-item {
       display: flex;
       flex-direction: row;
@@ -191,12 +167,6 @@ body [data-modal-overlay] .widget-config-modal {
       align-items: center;
       padding: 0.3em;
       width: 100%;
-    }
-
-    .media-item .thumbnail {
-      flex-shrink: 0;
-      border-radius: 0.4em;
-      background-color: #100e1a;
     }
 
     .form-actions {
@@ -275,6 +245,30 @@ body [data-modal-overlay] .widget-config-modal {
     min-height: 0;
     padding: 1em;
     overflow: hidden;
+  }
+}
+
+.media-item {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  width: 100%;
+  gap: 1em;
+  padding: 0.2em;
+
+  .thumbnail {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 3em;
+    height: 3em;
+    overflow: hidden;
+    border-radius: 0.4em;
+    background-color: #100e1a;
+    background-position: center;
+    background-size: cover;
   }
 }
 

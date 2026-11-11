@@ -10,6 +10,7 @@ import {
   fireEvent,
   within,
 } from '@solidjs/testing-library';
+import { createSignal } from 'solid-js';
 import { PlaylistView, WIDE_LAYOUT_QUERY } from './playlist-view';
 import { PlaylistsService } from '../services/playlists.service';
 import type { AddonStore } from '../../common/interfaces/addon-store';
@@ -925,6 +926,23 @@ describe('PlaylistView Component', () => {
       );
     });
 
+    it('prevents concurrent widget additions while configuration is pending', async () => {
+      let finishAdd!: () => void;
+      addWidgetSpy.mockReturnValueOnce(
+        new Promise<void>((resolve) => {
+          finishAdd = resolve;
+        })
+      );
+      renderView();
+
+      await waitFor(() => screen.getByTestId('add-trigger'));
+      fireEvent.click(screen.getByTestId('add-trigger'));
+      fireEvent.click(screen.getByTestId('add-trigger'));
+
+      expect(addWidgetSpy).toHaveBeenCalledTimes(1);
+      finishAdd();
+    });
+
     it('renames the playlist from the settings tab', async () => {
       vi.mocked(PlaylistsService.updatePlaylist).mockResolvedValue(undefined);
       const onChange = renderView();
@@ -1063,6 +1081,69 @@ describe('PlaylistView Component', () => {
           settings: { aspect_ratio: { width: 9, height: 16 } },
         })
       );
+    });
+
+    it('does not apply queued or completed saves after switching playlists', async () => {
+      let setPlaylistId!: (id: number) => void;
+      let resolveRename!: () => void;
+      const onChange = vi.fn();
+      vi.mocked(PlaylistsService.getPlaylist).mockImplementation(
+        async (_baseUrl, _organizationId, id) => ({
+          ...mockPlaylist,
+          id,
+          name: id === 1 ? 'First playlist' : 'Second playlist',
+          settings: { aspect_ratio: { width: 16, height: 9 } },
+        })
+      );
+      vi.mocked(PlaylistsService.updatePlaylist).mockImplementationOnce(
+        () =>
+          new Promise<void>((resolve) => {
+            resolveRename = resolve;
+          })
+      );
+
+      render(() => {
+        const [playlistId, setId] = createSignal(1);
+        setPlaylistId = setId;
+        return (
+          <PlaylistView
+            store={mockStore}
+            playlistId={playlistId()}
+            organizationId={organizationId}
+            baseUrl={baseUrl}
+            onChange={onChange}
+          />
+        );
+      });
+
+      await waitFor(() => expect(tab('common.settings')).toBeTruthy());
+      fireEvent.click(tab('common.settings'));
+      const settings = card('.playlist-settings-card');
+      const input = within(settings).getByLabelText('common.name');
+      fireEvent.input(input, { target: { value: 'Renamed first' } });
+      fireEvent.focusOut(input);
+      await waitFor(() =>
+        expect(PlaylistsService.updatePlaylist).toHaveBeenCalledTimes(1)
+      );
+
+      fireEvent.change(
+        within(settings).getByRole('combobox', {
+          name: 'playlists.aspectRatio',
+        }),
+        { target: { value: '9:16' } }
+      );
+      setPlaylistId(2);
+      await waitFor(() =>
+        expect(PlaylistsService.getPlaylist).toHaveBeenCalledWith(
+          baseUrl,
+          organizationId,
+          2
+        )
+      );
+
+      resolveRename();
+      await waitFor(() => expect(onChange).not.toHaveBeenCalled());
+      expect(PlaylistsService.updatePlaylist).toHaveBeenCalledTimes(1);
     });
 
     it('uses tabs when the drawer is too narrow for three columns', async () => {

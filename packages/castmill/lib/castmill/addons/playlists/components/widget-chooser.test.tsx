@@ -293,6 +293,28 @@ describe('WidgetChooser adding widgets', () => {
     expect(onAdd).toHaveBeenCalledWith(mockWidgets[1]);
   });
 
+  it('disables add controls while an add is pending', () => {
+    const onAdd = vi.fn();
+    const { container } = render(() => (
+      <WidgetChooser
+        baseUrl=""
+        widgets={mockWidgets}
+        t={t}
+        onAdd={onAdd}
+        tapToAdd
+        addDisabled
+      />
+    ));
+
+    const addButton = screen.getAllByRole('button', {
+      name: /playlists.editor.addWidgetNamed/,
+    })[0];
+    expect(addButton).toBeDisabled();
+    fireEvent.click(container.querySelector('.widget-item')!);
+
+    expect(onAdd).not.toHaveBeenCalled();
+  });
+
   it('only adds on row click in tap-to-add mode', () => {
     const onAdd = vi.fn();
     const [tapToAdd, setTapToAdd] = createSignal(false);

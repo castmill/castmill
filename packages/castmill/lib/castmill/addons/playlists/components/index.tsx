@@ -1111,11 +1111,19 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
               organizationId={props.store.organizations.selectedId}
               playlistId={playlist().id}
               t={t}
-              onChange={(playlist) => {
+              onChange={(updatedPlaylist) => {
+                if (currentPlaylist()?.id !== updatedPlaylist.id) return;
                 setCurrentPlaylist((prev) =>
-                  prev ? { ...prev, name: playlist.name } : prev
+                  prev?.id === updatedPlaylist.id
+                    ? {
+                        ...prev,
+                        name: updatedPlaylist.name,
+                        settings: updatedPlaylist.settings,
+                      }
+                    : prev
                 );
                 refreshData();
+                bumpTree();
               }}
               onNavigateAway={closePlaylistDrawer}
             />
