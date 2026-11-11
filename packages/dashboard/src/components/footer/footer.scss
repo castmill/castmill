@@ -30,3 +30,16 @@
     }
   }
 }
+
+:root[data-theme='light'] .castmill-footer {
+  background-color: var(--cm-bg-tertiary);
+  color: var(--cm-text-primary);
+
+  .footer-links a {
+    color: var(--cm-text-primary);
+
+    &:hover {
+      color: var(--cm-text-secondary);
+    }
+  }
+}

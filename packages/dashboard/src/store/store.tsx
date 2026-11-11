@@ -100,6 +100,10 @@ interface CastmillStore {
     setLocale: (locale: any) => void; // Using any to match i18n context signature
   };
 
+  // Active colour theme (set by ThemeProvider). Styles should use the
+  // `--cm-*` CSS tokens; this is for code that needs the theme in JS.
+  theme: 'light' | 'dark';
+
   // Keyboard shortcuts registry (set by index.tsx)
   keyboardShortcuts?: {
     registerShortcut: (id: string, shortcut: KeyboardShortcut) => void;
@@ -169,6 +173,8 @@ const [store, setStore] = createStore<CastmillStore>({
     defaultLocale: 'en',
     socialLinks: {},
   },
+
+  theme: 'dark',
 
   env: {
     baseUrl,

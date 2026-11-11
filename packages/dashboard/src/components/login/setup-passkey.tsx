@@ -230,7 +230,7 @@ const SetupPasskey: Component = () => {
           <Show when={success()}>
             <div
               class="success"
-              style={{ color: '#10b981', 'margin-top': '1em' }}
+              style={{ color: 'var(--cm-success)', 'margin-top': '1em' }}
             >
               {status()}
             </div>

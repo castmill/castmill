@@ -9,14 +9,14 @@ body [data-modal-overlay] .widget-config-modal {
   max-height: 100%;
   container-type: inline-size;
   padding: 1.4em 1.6em 1.6em;
-  border: 1px solid #36324a;
+  border: 1px solid var(--cm-border-color);
   border-radius: 0.8em;
-  box-shadow: 0 1.5em 4em rgba(0, 0, 0, 0.45);
+  box-shadow: 0 1.5em 4em var(--cm-shadow-color);
 
   > [class*='modalHeader'] {
     align-items: flex-start;
     gap: 1em;
-    border-bottom-color: #36324a;
+    border-bottom-color: var(--cm-border-color);
 
     h2 {
       font-size: 1.2em;
@@ -55,15 +55,15 @@ body [data-modal-overlay] .widget-config-modal {
     min-width: 0;
     min-height: 0;
     overflow: hidden;
-    border: 1px solid #36324a;
+    border: 1px solid var(--cm-border-color);
     border-radius: 0.6em;
-    background: #1b1829;
+    background: var(--cm-bg-sunken);
   }
 
   .widget-config-meta {
     padding: 0.8em 1.2em;
-    border-bottom: 1px solid #36324a;
-    color: #a4a3b7;
+    border-bottom: 1px solid var(--cm-border-color);
+    color: var(--cm-text-secondary);
     font-size: 0.82em;
     line-height: 1.45;
   }
@@ -92,18 +92,18 @@ body [data-modal-overlay] .widget-config-modal {
       }
 
       &::-webkit-scrollbar-thumb {
-        background: #3d3a52;
+        background: var(--cm-scrollbar-thumb);
         border-radius: 0.25em;
 
         &:hover {
-          background: #4d4968;
+          background: var(--cm-border-strong);
         }
       }
     }
 
     .error {
       font-size: 0.8em;
-      color: #a10000;
+      color: var(--cm-error);
     }
 
     // Styling for select dropdowns (enum fields)
@@ -111,46 +111,46 @@ body [data-modal-overlay] .widget-config-modal {
       margin: 0.75em 0;
 
       .form-item1 {
-        border: 1px solid #555;
+        border: 1px solid var(--cm-border-strong);
         border-radius: 0.3em;
         margin-bottom: 0.3em;
         padding: 0.5em 1.1em;
-        background-color: #151320;
+        background-color: var(--cm-bg-primary);
 
         label {
           font-size: 0.8em;
-          color: #577cbb;
+          color: var(--cm-link);
           text-transform: capitalize;
           text-align: left;
           display: block;
         }
 
         &:hover {
-          border-color: #b0b0b0;
+          border-color: var(--cm-text-secondary);
         }
 
         &:focus-within {
-          border-color: #4a90e2;
+          border-color: var(--cm-primary);
         }
 
         .styled-select {
           width: 100%;
           padding: 0.5em 0;
           font-size: 1em;
-          color: #ffffff;
+          color: var(--cm-text-primary);
           background-color: transparent;
           border: none;
           outline: none;
           cursor: pointer;
 
           option {
-            background-color: #151320;
-            color: #ffffff;
+            background-color: var(--cm-bg-primary);
+            color: var(--cm-text-primary);
           }
         }
 
         .error {
-          color: #e74c3c;
+          color: var(--cm-error);
           font-size: 0.85em;
           margin-top: 0.3em;
         }
@@ -159,7 +159,7 @@ body [data-modal-overlay] .widget-config-modal {
       .description {
         padding-top: 0.2em;
         margin-bottom: 0.75em;
-        color: #6a5da2;
+        color: var(--cm-text-secondary);
         font-size: 0.8em;
       }
     }
@@ -180,19 +180,19 @@ body [data-modal-overlay] .widget-config-modal {
       justify-content: flex-end;
       gap: 0.5em;
       padding: 0.8em 1.2em;
-      border-top: 1px solid #36324a;
-      background: rgba(0, 0, 0, 0.12);
+      border-top: 1px solid var(--cm-border-color);
+      background: var(--cm-bg-hover);
 
       .form-actions-dirty {
         flex: 1 1 auto;
-        color: #f0b75a;
+        color: var(--cm-warning);
         font-size: 0.8em;
       }
 
       > button:disabled {
         background-color: transparent;
-        box-shadow: inset 0 0 0 1px #3d3a52;
-        color: #6b6790;
+        box-shadow: inset 0 0 0 1px var(--cm-border-color);
+        color: var(--cm-text-tertiary);
       }
     }
   }
@@ -205,25 +205,25 @@ body [data-modal-overlay] .widget-config-modal {
     min-width: 0;
     min-height: 0;
     overflow: hidden;
-    border: 1px solid #36324a;
+    border: 1px solid var(--cm-border-color);
     border-radius: 0.6em;
     background:
       radial-gradient(
         circle at 50% 0%,
-        rgba(87, 146, 238, 0.08),
+        rgba(var(--cm-primary-rgb), 0.08),
         transparent 60%
       ),
-      #100e1a;
+      var(--cm-bg-sunken);
   }
 
   .preview-header {
     flex-shrink: 0;
     padding: 0.8em 1.2em;
-    border-bottom: 1px solid #36324a;
+    border-bottom: 1px solid var(--cm-border-color);
 
     h3 {
       margin: 0;
-      color: #fff;
+      color: var(--cm-text-primary);
       font-size: 1em;
       font-weight: 700;
     }
@@ -236,9 +236,9 @@ body [data-modal-overlay] .widget-config-modal {
     align-items: center;
     gap: 0.75em;
     padding: 0.6em 1.2em;
-    border-bottom: 1px solid #36324a;
+    border-bottom: 1px solid var(--cm-border-color);
     font-size: 0.85em;
-    color: var(--text-secondary, #bbb);
+    color: var(--cm-text-secondary);
   }
 
   .preview-stage {
@@ -270,7 +270,7 @@ body [data-modal-overlay] .widget-config-modal {
     height: 3em;
     overflow: hidden;
     border-radius: 0.4em;
-    background-color: #100e1a;
+    background-color: var(--cm-bg-sunken);
     background-position: center;
     background-size: cover;
   }

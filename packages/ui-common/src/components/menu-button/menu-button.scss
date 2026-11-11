@@ -53,9 +53,9 @@
     gap: 0.15em;
     padding: 0.4em;
     border-radius: 0.5em;
-    border: 0.06em solid #d6d6d6;
-    background: #ffffff;
-    box-shadow: 0 0.5em 1.4em rgba(0, 0, 0, 0.12);
+    border: 0.06em solid var(--cm-border-color);
+    background: var(--cm-bg-elevated);
+    box-shadow: 0 0.5em 1.4em var(--cm-shadow-color);
     z-index: 30;
 
     button {
@@ -66,11 +66,11 @@
       border-radius: 0.4em;
       padding: 0.5em 0.65em;
       font-size: 0.85em;
-      color: #2f2f2f;
+      color: var(--cm-text-primary);
       cursor: pointer;
 
       &:hover:not(:disabled) {
-        background: #f2f6ff;
+        background: var(--cm-bg-hover);
       }
 
       &:disabled {

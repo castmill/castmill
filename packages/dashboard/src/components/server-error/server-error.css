@@ -8,22 +8,22 @@
   align-items: center;
   justify-content: center;
   padding: 2em;
-  background-color: #151925;
+  background-color: var(--cm-bg-app);
   z-index: 9999;
 }
 
 .server-error-content {
-  background: #2c303b;
+  background: var(--cm-bg-secondary);
   border-radius: 1em;
   padding: 3em;
   max-width: 32em;
-  box-shadow: 0 1.25em 3.75em rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1.25em 3.75em var(--cm-shadow-color);
   text-align: center;
-  border: 1px solid #363a45;
+  border: 1px solid var(--cm-border-color);
 }
 
 .server-error-icon {
-  color: #ef4444;
+  color: var(--cm-error);
   margin-bottom: 1.5em;
 }
 
@@ -44,13 +44,13 @@
 .server-error-title {
   font-size: 1.875em;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--cm-text-primary);
   margin-bottom: 0.667em;
 }
 
 .server-error-description {
   font-size: 1.125em;
-  color: #b0b5c0;
+  color: var(--cm-text-secondary);
   margin-bottom: 1.778em;
   line-height: 1.6;
 }
@@ -60,7 +60,7 @@
   list-style: disc;
   padding-left: 1.5em;
   margin-bottom: 2em;
-  color: #9ca3af;
+  color: var(--cm-text-secondary);
 }
 
 .server-error-suggestions li {
@@ -69,7 +69,7 @@
 }
 
 .server-error-retry-button {
-  background: #5792ee;
+  background: var(--cm-primary);
   color: white;
   border: none;
   padding: 0.75em 2em;
@@ -83,7 +83,7 @@
 }
 
 .server-error-retry-button:hover {
-  background: #4178d4;
+  background: var(--cm-primary-active);
   transform: translateY(-0.125em);
 }
 

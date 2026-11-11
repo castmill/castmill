@@ -1,17 +1,21 @@
 .castmill-table {
+  --table-row-odd-bg: #18191e;
+  --table-row-even-bg: #1e1f25;
+  --table-head-bg: #1e1f25;
+
   text-align: center;
 
   table {
     font-size: 0.9em;
     width: 100%;
-    border: 1px solid #28292d;
+    border: 1px solid var(--cm-border-subtle);
     border-collapse: collapse;
     border-spacing: 0; /* Remove default spacing */
-    background-color: #333; /* Dark background color */
+    background-color: var(--cm-bg-tertiary);
 
     overflow: hidden; /* Ensures the content does not leak outside the border */
     border-style: hidden; /* hide standard table (collapsed) border */
-    box-shadow: 0 0 0 1px #666; /* this draws the table border  */
+    box-shadow: 0 0 0 1px var(--cm-border-strong); /* this draws the table border  */
 
     border-radius: 0.5em;
 
@@ -22,7 +26,7 @@
       -moz-appearance: none;
       width: 18px;
       height: 18px;
-      border: 2px solid #666;
+      border: 2px solid var(--cm-border-strong);
       border-radius: 3px;
       margin: 0;
       background-color: transparent;
@@ -35,8 +39,8 @@
       z-index: 1;
 
       &:checked {
-        background-color: #5792ee; /* Using the highlight-color from colors.scss */
-        border-color: #5792ee;
+        background-color: var(--cm-primary);
+        border-color: var(--cm-primary);
 
         &::after {
           content: '';
@@ -52,12 +56,12 @@
       }
 
       &:hover {
-        border-color: #888;
+        border-color: var(--cm-text-tertiary);
       }
 
       &:focus {
         outline: none;
-        box-shadow: 0 0 0 2px rgba(87, 146, 238, 0.4); /* Using highlight-color with opacity */
+        box-shadow: 0 0 0 2px var(--cm-focus-ring);
       }
     }
 
@@ -99,11 +103,11 @@
 
     thead {
       height: 2em;
-      background-color: #1e1f25;
-      border: 1px solid #28292d;
+      background-color: var(--table-head-bg);
+      border: 1px solid var(--cm-border-subtle);
       border-radius: 5em;
 
-      color: #5a5a5e;
+      color: var(--cm-text-tertiary);
 
       th {
         cursor: pointer;
@@ -135,9 +139,15 @@
   }
 
   table tr:nth-child(odd) td {
-    background-color: #18191e;
+    background-color: var(--table-row-odd-bg);
   }
   table tr:nth-child(even) td {
-    background-color: #1e1f25;
+    background-color: var(--table-row-even-bg);
   }
+}
+
+:global(:root[data-theme='light']) .castmill-table {
+  --table-row-odd-bg: var(--cm-bg-secondary);
+  --table-row-even-bg: var(--cm-bg-elevated-secondary);
+  --table-head-bg: var(--cm-bg-tertiary);
 }

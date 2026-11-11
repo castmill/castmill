@@ -5,12 +5,12 @@
   max-height: 24em;
   display: flex;
   flex-direction: column;
-  background: var(--background-color, #2c303b);
-  border: 1px solid var(--border-color, #363a45);
+  background: var(--cm-bg-secondary);
+  border: 1px solid var(--cm-border-color);
   border-radius: 0.5em;
   box-shadow:
-    0 8px 24px rgba(0, 0, 0, 0.35),
-    0 2px 8px rgba(0, 0, 0, 0.2);
+    0 8px 24px var(--cm-shadow-color),
+    0 2px 8px var(--cm-shadow-color);
 
   // Entrance animation
   opacity: 0;
@@ -34,7 +34,7 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: var(--text-tertiary, #6b7280);
+    color: var(--cm-text-tertiary);
   }
 
   // ---------------------------------------------------------------------------
@@ -46,12 +46,12 @@
     align-items: center;
     gap: 0.5em;
     padding: 0.5em 0.75em;
-    border-bottom: 1px solid var(--border-color, #363a45);
+    border-bottom: 1px solid var(--cm-border-color);
 
     .search-icon {
       width: 0.875em;
       height: 0.875em;
-      color: var(--text-tertiary, #6b7280);
+      color: var(--cm-text-tertiary);
       flex-shrink: 0;
     }
 
@@ -60,11 +60,11 @@
       border: none;
       background: transparent;
       font-size: 0.875em;
-      color: var(--text-primary, #e5e7eb);
+      color: var(--cm-text-primary);
       outline: none;
 
       &::placeholder {
-        color: var(--text-tertiary, #6b7280);
+        color: var(--cm-text-tertiary);
       }
     }
   }
@@ -83,7 +83,7 @@
     padding: 1.5em 0.75em;
     text-align: center;
     font-size: 0.875em;
-    color: var(--text-tertiary, #6b7280);
+    color: var(--cm-text-tertiary);
   }
 
   // ---------------------------------------------------------------------------
@@ -92,7 +92,7 @@
 
   .tag-popover-group {
     & + .tag-popover-group {
-      border-top: 1px solid var(--border-color, #363a45);
+      border-top: 1px solid var(--cm-border-color);
       margin-top: 0.125em;
       padding-top: 0.125em;
     }
@@ -107,7 +107,7 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: var(--text-tertiary, #6b7280);
+    color: var(--cm-text-tertiary);
 
     .group-dot {
       width: 0.5em;
@@ -134,12 +134,12 @@
     text-align: left;
 
     &:hover:not(:disabled) {
-      background: var(--background-secondary, #1c263a);
+      background: var(--cm-bg-selected);
     }
 
     &:focus-visible {
       outline: none;
-      background: var(--background-secondary, #1c263a);
+      background: var(--cm-bg-selected);
     }
 
     &.toggling {
@@ -158,7 +158,7 @@
     justify-content: center;
     width: 1em;
     height: 1em;
-    border: 1.5px solid var(--border-color, #4b5563);
+    border: 1.5px solid var(--cm-border-strong);
     border-radius: 0.1875em;
     flex-shrink: 0;
     transition: all 0.15s ease;
@@ -170,8 +170,8 @@
     }
 
     &.checked {
-      background: var(--primary-color, #5792ee);
-      border-color: var(--primary-color, #5792ee);
+      background: var(--cm-primary);
+      border-color: var(--cm-primary);
     }
   }
 
@@ -185,7 +185,7 @@
   .tag-popover-name {
     flex: 1;
     font-size: 0.875em;
-    color: var(--text-primary, #e5e7eb);
+    color: var(--cm-text-primary);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -196,7 +196,7 @@
   // ---------------------------------------------------------------------------
 
   .tag-popover-create {
-    border-top: 1px solid var(--border-color, #363a45);
+    border-top: 1px solid var(--cm-border-color);
     padding: 0.25em 0;
   }
 
@@ -208,7 +208,7 @@
     padding: 0.5em 0.75em;
     border: none;
     background: transparent;
-    color: var(--primary-color, #5792ee);
+    color: var(--cm-primary);
     font-size: 0.875em;
     font-weight: 500;
     cursor: pointer;
@@ -216,7 +216,7 @@
     text-align: left;
 
     &:hover:not(:disabled) {
-      background: rgba(87, 146, 238, 0.08);
+      background: rgba(var(--cm-primary-rgb), 0.08);
     }
 
     &:disabled {

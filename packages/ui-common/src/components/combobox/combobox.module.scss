@@ -4,9 +4,9 @@
   position: relative;
 
   .base-box {
-    border: 1px solid #555;
+    border: 1px solid var(--cm-border-strong);
     border-radius: 0.3em;
-    background-color: #151320;
+    background-color: var(--cm-bg-primary);
   }
 
   .header {
@@ -37,7 +37,7 @@
       margin: 0;
       border: none;
       background: none;
-      color: white;
+      color: var(--cm-text-primary);
       width: 2em;
       height: 2em;
       cursor: pointer;
@@ -47,22 +47,22 @@
     }
 
     .clear-button {
-      color: #888;
+      color: var(--cm-text-tertiary);
       transition: color 0.2s ease;
 
       &:hover {
-        color: #e74c3c;
+        color: var(--cm-error);
       }
     }
 
     &:hover {
-      border-color: #b0b0b0;
+      border-color: var(--cm-text-secondary);
     }
 
     .label {
       font-size: 0.8em;
       padding: 0 0 0.2em 3px;
-      color: #577cbb;
+      color: var(--cm-link);
       text-transform: capitalize;
     }
 
@@ -72,8 +72,8 @@
       margin: 0;
       font-size: 1em;
       border: none;
-      color: #b1b1b1;
-      background-color: #151320;
+      color: var(--cm-text-secondary);
+      background-color: var(--cm-bg-primary);
 
       &:focus {
         outline: none;
@@ -82,7 +82,7 @@
 
     .description {
       padding-top: 0.2em;
-      color: #6a5da2;
+      color: var(--cm-text-secondary);
       font-size: 0.8em;
     }
   }
@@ -105,19 +105,22 @@
 // List content shared by the dropdown and the mobile sheet.
 .dropdown,
 .sheet {
+  --combo-item-odd-bg: #18191e;
+  --combo-item-even-bg: #1e1f25;
+
   .search-box {
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: center;
     border-radius: 0.3em 0.3em 0 0;
-    border-bottom: 1px solid #555;
+    border-bottom: 1px solid var(--cm-border-strong);
 
     height: 2.5em;
-    background-color: #221e34;
+    background-color: var(--cm-bg-elevated);
 
     .search-icon {
-      color: #b1b1b1;
+      color: var(--cm-text-secondary);
       padding: 0 0.5em;
     }
 
@@ -128,7 +131,7 @@
       margin: 0;
       font-size: 1em;
       border: none;
-      color: #b1b1b1;
+      color: var(--cm-text-secondary);
       background: none;
 
       &:focus {
@@ -146,21 +149,21 @@
     }
 
     .item:focus-visible {
-      outline: 2px solid #4a90e2;
+      outline: 2px solid var(--cm-primary);
       outline-offset: -2px;
     }
 
     .item:hover {
-      background-color: #1e1f25;
+      background-color: var(--combo-item-even-bg);
     }
 
     .item:nth-child(odd) {
-      background-color: #18191e;
+      background-color: var(--combo-item-odd-bg);
       padding: 0.4em 1em;
     }
 
     .item:nth-child(even) {
-      background-color: #1e1f25;
+      background-color: var(--combo-item-even-bg);
       padding: 0.4em 1em;
     }
   }
@@ -173,13 +176,13 @@
     font-size: 0.7em;
     padding: 0.8em;
     font-style: italic;
-    border-top: 1px solid #555;
-    color: #b1b1b1;
+    border-top: 1px solid var(--cm-border-strong);
+    color: var(--cm-text-secondary);
   }
 
   .items-list .item.selected {
-    box-shadow: inset 3px 0 0 #5792ee;
-    background-color: rgba(87, 146, 238, 0.12);
+    box-shadow: inset 3px 0 0 var(--cm-primary);
+    background-color: rgba(var(--cm-primary-rgb), 0.12);
   }
 }
 
@@ -190,7 +193,7 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.55);
+  background: var(--cm-bg-overlay);
   animation: sheet-fade 0.2s ease;
 }
 
@@ -205,12 +208,12 @@
   max-height: min(85dvh, 100%);
   padding-bottom: env(safe-area-inset-bottom);
   overflow: hidden;
-  border: 1px solid #36324a;
+  border: 1px solid var(--cm-border-color);
   border-bottom: none;
   border-radius: 0.9em 0.9em 0 0;
-  background: #211d32;
-  color: #fff;
-  box-shadow: 0 -1em 3em rgba(0, 0, 0, 0.45);
+  background: var(--cm-bg-elevated);
+  color: var(--cm-text-primary);
+  box-shadow: 0 -1em 3em var(--cm-shadow-color);
   animation: sheet-slide-up 0.25s ease;
 
   &:focus {
@@ -223,7 +226,7 @@
     height: 0.25em;
     margin: 0.6em auto 0;
     border-radius: 999px;
-    background: #4d4968;
+    background: var(--cm-border-strong);
   }
 
   .sheet-header {
@@ -233,7 +236,7 @@
     justify-content: space-between;
     gap: 1em;
     padding: 0.6em 0.6em 0.6em 1.2em;
-    border-bottom: 1px solid #36324a;
+    border-bottom: 1px solid var(--cm-border-color);
 
     h2 {
       margin: 0;
@@ -256,12 +259,12 @@
     border: none;
     border-radius: 0.5em;
     background: transparent;
-    color: #cfcde0;
+    color: var(--cm-text-secondary);
     font-size: 1.1em;
     cursor: pointer;
 
     &:focus-visible {
-      outline: 2px solid #4a90e2;
+      outline: 2px solid var(--cm-primary);
       outline-offset: -2px;
     }
   }
@@ -270,9 +273,9 @@
     flex-shrink: 0;
     height: 3em;
     margin: 0.8em 1em 0.4em;
-    border: 1px solid #555;
+    border: 1px solid var(--cm-border-strong);
     border-radius: 0.5em;
-    background-color: #151320;
+    background-color: var(--cm-bg-primary);
 
     input {
       // 16px keeps iOS from zooming into the field.
@@ -294,22 +297,22 @@
       align-items: center;
       min-height: 3em;
       padding: 0.5em 1.2em;
-      border-bottom: 1px solid #2a2640;
+      border-bottom: 1px solid var(--cm-border-color);
       background-color: transparent;
     }
 
     .item:active {
-      background-color: rgba(87, 146, 238, 0.12);
+      background-color: rgba(var(--cm-primary-rgb), 0.12);
     }
 
     .item.selected {
-      background-color: rgba(87, 146, 238, 0.12);
+      background-color: rgba(var(--cm-primary-rgb), 0.12);
     }
   }
 
   .footer {
     flex-shrink: 0;
-    border-top-color: #36324a;
+    border-top-color: var(--cm-border-color);
   }
 }
 
@@ -337,5 +340,13 @@
   .sheet,
   .sheet-backdrop {
     animation: none;
+  }
+}
+
+:global(:root[data-theme='light']) {
+  .dropdown,
+  .sheet {
+    --combo-item-odd-bg: var(--cm-bg-elevated);
+    --combo-item-even-bg: var(--cm-bg-elevated-secondary);
   }
 }

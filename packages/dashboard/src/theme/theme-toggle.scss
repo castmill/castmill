@@ -1,0 +1,47 @@
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5em;
+  border: none;
+  border-radius: 0.3em;
+  background: transparent;
+  color: var(--cm-text-primary);
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: var(--cm-bg-hover-strong);
+  }
+
+  &:focus-visible {
+    outline: 0.125em solid var(--cm-focus-ring);
+    outline-offset: 0.125em;
+  }
+
+  &__icon {
+    display: flex;
+    animation: theme-toggle-spin 0.45s ease-in-out;
+
+    svg {
+      font-size: 1.5rem;
+    }
+  }
+}
+
+@keyframes theme-toggle-spin {
+  from {
+    opacity: 0;
+    transform: rotate(-90deg) scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-toggle__icon {
+    animation: none;
+  }
+}

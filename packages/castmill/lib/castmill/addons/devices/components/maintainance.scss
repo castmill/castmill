@@ -11,7 +11,7 @@
   align-items: center;
   gap: 0.8em;
   padding: 0.75em 0;
-  border-top: 1px solid #2a2639;
+  border-top: 1px solid var(--cm-border-color);
 
   &:first-child {
     border-top: none;
@@ -44,8 +44,8 @@
   width: 2.2em;
   height: 2.2em;
   border-radius: 0.45em;
-  background: rgba(87, 146, 238, 0.12);
-  color: #5792ee;
+  background: rgba(var(--cm-primary-rgb), 0.12);
+  color: var(--cm-primary);
 }
 
 .maintenance-action-text {
@@ -61,22 +61,22 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5em;
-  color: #fff;
+  color: var(--cm-text-primary);
   font-size: 0.92em;
   font-weight: 600;
 }
 
 .maintenance-action-description {
-  color: #a4a3b7;
+  color: var(--cm-text-secondary);
   font-size: 0.8em;
   line-height: 1.4;
 }
 
 .maintenance-badge {
   padding: 0.1em 0.5em;
-  border: 1px solid rgba(240, 183, 90, 0.4);
+  border: 1px solid rgba(var(--cm-warning-rgb), 0.4);
   border-radius: 999px;
-  color: #f0b75a;
+  color: var(--cm-warning);
   font-size: 0.75em;
   font-weight: 600;
 }
@@ -84,14 +84,14 @@
 .maintenance-status {
   padding: 0.25em 0.7em;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.06);
-  color: #a4a3b7;
+  background: var(--cm-bg-hover);
+  color: var(--cm-text-secondary);
   font-size: 0.78em;
   font-weight: 700;
 
   &.active {
-    background: rgba(46, 204, 113, 0.15);
-    color: #4cd68a;
+    background: var(--cm-success-bg);
+    color: var(--cm-success);
   }
 }
 

@@ -20,32 +20,56 @@
     min-width: 0;
   }
 
+  // Matches the ghost IconButton used for drawer/modal close and back.
   .widget-chooser-back {
     display: inline-flex;
     flex-shrink: 0;
     align-items: center;
     justify-content: center;
-    width: 2.2em;
-    height: 2.2em;
+    width: 2.25em;
+    height: 2.25em;
     padding: 0;
-    border: 1px solid #3d3a52;
-    border-radius: 0.45em;
+    border: none;
+    border-radius: 0.5em;
     background: transparent;
-    color: #cfcde0;
+    color: var(--cm-text-secondary);
+    font-size: 1em;
     cursor: pointer;
+    transition:
+      background-color 0.15s ease,
+      color 0.15s ease,
+      transform 0.1s ease;
+
+    svg {
+      width: 1.15em;
+      height: 1.15em;
+    }
 
     [dir='rtl'] & svg {
       transform: scaleX(-1);
     }
 
     &:hover {
-      border-color: #5792ee;
-      color: #fff;
+      background: var(--cm-bg-hover-strong);
+      color: var(--cm-text-primary);
+    }
+
+    &:active {
+      background: var(--cm-bg-active);
+      transform: scale(0.94);
     }
 
     &:focus-visible {
-      outline: 2px solid #4a90e2;
+      outline: 2px solid var(--cm-primary);
       outline-offset: 2px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+
+      &:active {
+        transform: none;
+      }
     }
   }
 
@@ -54,14 +78,14 @@
 
     h3 {
       margin: 0;
-      color: #fff;
+      color: var(--cm-text-primary);
       font-size: 1em;
       font-weight: 700;
     }
 
     p {
       margin: 0.3em 0 0;
-      color: #a4a3b7;
+      color: var(--cm-text-secondary);
       font-size: 0.82em;
       line-height: 1.45;
     }
@@ -73,22 +97,22 @@
     align-items: center;
     height: 2.5em;
     padding: 0 0.85em;
-    border: 1px solid #3d3a52;
+    border: 1px solid var(--cm-border-color);
     border-radius: 0.5em;
-    background-color: #151320;
+    background-color: var(--cm-bg-primary);
     transition:
       border-color 0.15s ease,
       box-shadow 0.15s ease;
 
     &:focus-within {
-      border-color: #5792ee;
-      box-shadow: 0 0 0 0.2em rgba(87, 146, 238, 0.15);
+      border-color: var(--cm-primary);
+      box-shadow: 0 0 0 0.2em rgba(var(--cm-primary-rgb), 0.15);
     }
 
     svg {
       flex-shrink: 0;
       margin-inline-end: 0.65em;
-      color: #8f8bb0;
+      color: var(--cm-text-secondary);
       font-size: 1em;
     }
 
@@ -98,11 +122,11 @@
       border: 0;
       outline: none;
       background-color: transparent;
-      color: #fff;
+      color: var(--cm-text-primary);
       font-size: 0.92em;
 
       &::placeholder {
-        color: #6b6790;
+        color: var(--cm-text-tertiary);
       }
     }
   }
@@ -117,7 +141,7 @@
     overflow-y: auto;
     padding-inline-end: 0.2em;
     scrollbar-width: thin;
-    scrollbar-color: #3d3a52 transparent;
+    scrollbar-color: var(--cm-scrollbar-thumb) transparent;
   }
 }
 
@@ -128,9 +152,9 @@
   gap: 0.6em;
   min-height: 3.2em;
   padding: 0.45em 0.5em;
-  border: 1px solid #36324a;
+  border: 1px solid var(--cm-border-color);
   border-radius: 0.5em;
-  background-color: #231f35;
+  background-color: var(--cm-bg-elevated);
   cursor: grab;
   transition:
     border-color 0.15s ease,
@@ -138,8 +162,8 @@
     opacity 0.15s ease;
 
   &:hover {
-    border-color: #4c4766;
-    background-color: #2a2541;
+    border-color: var(--cm-text-tertiary);
+    background-color: var(--cm-bg-elevated-secondary);
   }
 
   &.dragging {
@@ -151,14 +175,14 @@
     cursor: pointer;
 
     &:active {
-      background-color: rgba(87, 146, 238, 0.15);
+      background-color: rgba(var(--cm-primary-rgb), 0.15);
     }
   }
 
   .widget-item-grip {
     display: inline-flex;
     flex-shrink: 0;
-    color: #6b6790;
+    color: var(--cm-text-tertiary);
   }
 
   .widget-icon {
@@ -169,7 +193,7 @@
     width: 2.2em;
     height: 2.2em;
     border-radius: 0.4em;
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--cm-bg-hover);
     font-size: 1.2em;
 
     img {
@@ -194,7 +218,7 @@
 
   .name {
     overflow: hidden;
-    color: #fff;
+    color: var(--cm-text-primary);
     font-size: 0.88em;
     font-weight: 600;
     text-overflow: ellipsis;
@@ -203,7 +227,7 @@
 
   .description {
     overflow: hidden;
-    color: #a4a3b7;
+    color: var(--cm-text-secondary);
     font-size: 0.74em;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -217,10 +241,10 @@
     width: 2em;
     height: 2em;
     padding: 0;
-    border: 1px solid #3d3a52;
+    border: 1px solid var(--cm-border-color);
     border-radius: 0.45em;
     background: transparent;
-    color: #cfcde0;
+    color: var(--cm-text-secondary);
     cursor: pointer;
     transition:
       border-color 0.15s ease,
@@ -228,13 +252,13 @@
       background-color 0.15s ease;
 
     &:hover {
-      border-color: #5792ee;
-      background: rgba(87, 146, 238, 0.12);
-      color: #fff;
+      border-color: var(--cm-primary);
+      background: rgba(var(--cm-primary-rgb), 0.12);
+      color: var(--cm-text-primary);
     }
 
     &:focus-visible {
-      outline: 2px solid #4a90e2;
+      outline: 2px solid var(--cm-primary);
       outline-offset: 2px;
     }
   }
@@ -242,7 +266,7 @@
   &.tap-to-add .widget-item-add {
     width: 2.4em;
     height: 2.4em;
-    border-color: rgba(87, 146, 238, 0.45);
-    color: #8fb5f5;
+    border-color: rgba(var(--cm-primary-rgb), 0.45);
+    color: var(--cm-link);
   }
 }

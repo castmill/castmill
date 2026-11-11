@@ -8,3 +8,7 @@ export interface User {
   updatedAt: string;
   onboarding_progress?: OnboardingProgress;
 }
+
+export interface UserPreferences {
+  theme?: 'light' | 'dark';
+}

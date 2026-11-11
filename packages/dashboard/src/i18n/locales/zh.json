@@ -113,7 +113,9 @@
   "topbar": {
     "help": "帮助",
     "notifications": "通知",
-    "gettingStarted": "快速入门"
+    "gettingStarted": "快速入门",
+    "switchToLightMode": "切换到浅色模式",
+    "switchToDarkMode": "切换到深色模式"
   },
   "settings": {
     "title": "设置",
@@ -1478,6 +1480,7 @@
     "teamLabel": "团队",
     "teamPlaceholder": "选择团队",
     "teamClear": "清除团队筛选",
+    "teamSearchPlaceholder": "搜索团队…",
     "tagLabel": "标签",
     "tagPlaceholder": "按标签筛选…",
     "tagClear": "清除标签筛选",

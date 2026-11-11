@@ -12,9 +12,9 @@
 }
 
 .spinner {
-  border: 0.6em solid rgba(255, 255, 255, 0.3);
+  border: 0.6em solid var(--cm-border-strong);
   border-radius: 50%;
-  border-top: 0.6em solid white;
+  border-top: 0.6em solid var(--cm-text-primary);
   width: 8em;
   height: 8em;
   animation: spin 1s linear infinite;

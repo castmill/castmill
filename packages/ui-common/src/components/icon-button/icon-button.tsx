@@ -8,7 +8,7 @@ export const IconButton: Component<{
   disabled?: boolean;
   loading?: boolean;
   icon: Component; // This should be a component (icon)
-  color?: 'primary' | 'secondary' | 'danger' | 'success' | 'info';
+  color?: 'primary' | 'secondary' | 'danger' | 'success' | 'info' | 'ghost';
   title?: string;
 }> = (props) => {
   const defaultProps = mergeProps(
@@ -26,6 +26,7 @@ export const IconButton: Component<{
       onClick={defaultProps.loading ? undefined : defaultProps.onClick}
       disabled={defaultProps.disabled || defaultProps.loading}
       title={props.title || props.icon.name}
+      aria-label={props.title}
     >
       <Show
         when={defaultProps.loading}

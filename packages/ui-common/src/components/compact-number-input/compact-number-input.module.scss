@@ -3,8 +3,8 @@
   align-items: center;
   gap: 0.25em;
   padding: 0.25em 0.5em;
-  background: var(--cm-bg-secondary, #f5f5f5);
-  border: 1px solid var(--cm-border-color, #ddd);
+  background: var(--cm-bg-secondary);
+  border: 1px solid var(--cm-border-color);
   border-radius: 0.25em;
   cursor: ew-resize;
   user-select: none;
@@ -14,19 +14,19 @@
   min-width: 0;
 
   &:hover:not(.disabled) {
-    border-color: var(--cm-primary, #0066cc);
-    background: var(--cm-bg-primary, #fff);
+    border-color: var(--cm-primary);
+    background: var(--cm-bg-primary);
   }
 
   &.dragging {
-    border-color: var(--cm-primary, #0066cc);
-    background: var(--cm-bg-primary, #fff);
+    border-color: var(--cm-primary);
+    background: var(--cm-bg-primary);
   }
 
   &.editing {
     cursor: text;
-    border-color: var(--cm-primary, #0066cc);
-    background: var(--cm-bg-primary, #fff);
+    border-color: var(--cm-primary);
+    background: var(--cm-bg-primary);
   }
 
   &.disabled {
@@ -38,7 +38,7 @@
 .label {
   font-size: 0.7em;
   font-weight: 600;
-  color: var(--cm-text-secondary, #666);
+  color: var(--cm-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.02em;
   flex-shrink: 0;
@@ -52,7 +52,7 @@
   background: transparent;
   font-size: 0.85em;
   font-weight: 500;
-  color: var(--cm-text-primary, #333);
+  color: var(--cm-text-primary);
   text-align: right;
   padding: 0;
   margin: 0;

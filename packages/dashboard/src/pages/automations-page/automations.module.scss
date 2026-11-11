@@ -1,12 +1,12 @@
 // Automations page, editor, rule drawer and type editors.
 // The dashboard shell centers text, so every view resets alignment.
 
-$border: var(--castmill-divider, rgba(255, 255, 255, 0.15));
-$muted: var(--text-secondary, #9ca3af);
-$primary: var(--primary-color, #5792ee);
-$surface: var(--background-secondary, rgba(255, 255, 255, 0.04));
-$warning: var(--castmill-warning-text, #f5b942);
-$danger: var(--danger-color, #ef6b6b);
+$border: var(--cm-border-subtle);
+$muted: var(--cm-text-secondary);
+$primary: var(--cm-primary);
+$surface: var(--cm-bg-secondary);
+$warning: var(--cm-warning);
+$danger: var(--cm-error);
 
 .page {
   margin: 2em;
@@ -85,8 +85,8 @@ $danger: var(--danger-color, #ef6b6b);
     padding: 0.5em 0.65em;
     border: 0.0625em solid $border;
     border-radius: 0.4em;
-    background: $surface;
-    color: inherit;
+    background: var(--cm-bg-input);
+    color: var(--cm-text-primary);
     font: inherit;
   }
 }

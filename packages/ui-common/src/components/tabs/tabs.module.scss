@@ -1,20 +1,11 @@
-/* Tabs.css - Dark Mode */
-:root {
-  --bg-color: #2c2c2c; /* Dark background color */
-  --primary-color: #007bff; /* Accent color for active tabs */
-  --text-color: #e8e8e8; /* Light text color */
-  --hover-bg-color: #444444; /* Hover effect for buttons */
-  --border-color: #555555; /* Borders for separating tabs */
-  --active-bg-color: #333333; /* Background for active tab */
-  --transition-duration: 0.3s; /* Adjust duration for transitions */
-}
-
+/* Tabs.css */
 .tabs {
+  --transition-duration: 0.3s; /* Adjust duration for transitions */
   margin-top: 20px;
 
   .tabHeader {
     display: flex;
-    border-bottom: 2px solid var(--border-color);
+    border-bottom: 2px solid var(--cm-border-strong);
   }
 
   .tabButton {
@@ -22,11 +13,10 @@
     font-size: 1em;
     padding: 10px;
     cursor: pointer;
-    /*background-color: var(--bg-color);*/
     background-color: transparent;
     border: none;
     border-bottom: 2px solid transparent;
-    color: var(--text-color);
+    color: var(--cm-text-primary);
     transition:
       background-color var(--transition-duration),
       color var(--transition-duration);
@@ -35,12 +25,12 @@
   }
 
   .tabButton:hover {
-    background-color: var(--hover-bg-color);
+    background-color: var(--cm-bg-hover-strong);
   }
 
   .tabButton.active {
-    border-bottom: 2px solid var(--primary-color); /* Active tab indicator */
-    color: var(--primary-color); /* Accent color for active tab text */
+    border-bottom: 2px solid var(--cm-primary); /* Active tab indicator */
+    color: var(--cm-primary); /* Accent color for active tab text */
   }
 
   .tabContent {
@@ -48,7 +38,7 @@
     min-height: 22em;
     padding: 15px;
     border-top: none;
-    color: var(--text-color);
+    color: var(--cm-text-primary);
     opacity: 0;
     transform: translateY(10px); /* Shift content slightly for animation */
     transition:

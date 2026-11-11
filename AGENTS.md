@@ -176,6 +176,32 @@ decoder-blocking behavior, and test details.
   and run the action through `Device.runMaintenanceAction` so menu and
   dashboard triggers share it. Toast text is English only (no i18n).
 
+### Light and Dark Mode (Dashboard Theming)
+
+The dashboard, ui-common components, and dashboard addons support light and
+dark mode. **Every new view, dialog, component, and addon must be implemented
+in both themes.**
+
+- Take every surface, text, border, hover, overlay, and shadow colour from the
+  `--cm-*` CSS tokens in `packages/dashboard/src/theme/theme.scss` (for
+  example `var(--cm-bg-secondary)`, `var(--cm-text-primary)`,
+  `var(--cm-border-color)`, `rgba(var(--cm-primary-rgb), 0.15)`). Do not
+  hardcode dark-only colours such as `#151925`, `white` text, or
+  `rgba(255, 255, 255, 0.1)` hovers.
+- `colors.$...` SCSS variables resolve to tokens; never pass them to Sass
+  colour functions (`rgba($x, …)`, `color.adjust`) — use the `-rgb` tokens.
+- Do not redefine `--cm-*` tokens locally or use `prefers-color-scheme`; the
+  theme is set explicitly as `data-theme="light" | "dark"` on `<html>`.
+- When no token fits, add a light override:
+  `:root[data-theme='light'] .x {}` (CSS modules:
+  `:global(:root[data-theme='light']) .x {}`). Code that needs the theme in JS
+  (canvas, charts) reads `useTheme()` / `store.theme` or the computed token.
+- Brand fills with white text, status colours, and media/preview content may
+  stay literal if they read well on both backgrounds.
+- Check new UI in both themes with the topbar toggle before submitting.
+
+See `packages/dashboard/AGENTS.md` ("Light and Dark Mode") for details.
+
 ### Key Technologies
 
 - **Frontend**: SolidJS (Dashboard), React, TypeScript, Vite
@@ -248,6 +274,7 @@ When providing assistance, prioritize:
 - Don't ignore TypeScript errors
 - Don't skip writing tests
 - Don't hardcode user-facing strings
+- Don't add views, dialogs, or addon UI that only work in dark mode; use the `--cm-*` theme tokens so they support light mode too
 - Don't add translation keys without updating all 9 language files
 - Don't forget to update `agents/` docs when changing architecture
 - Don't create unnecessary files in the root directory

@@ -82,6 +82,10 @@ export interface AddonStore {
     setLocale: (locale: string) => void;
   };
 
+  // Active dashboard colour theme. Prefer the `--cm-*` CSS tokens for
+  // styling; use this only when JS needs to know the theme (e.g. canvas).
+  theme?: 'light' | 'dark';
+
   // Keyboard shortcuts registry passed from Dashboard
   keyboardShortcuts?: {
     registerShortcut: (id: string, shortcut: KeyboardShortcut) => void;

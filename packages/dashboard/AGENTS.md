@@ -13,6 +13,7 @@ This guide provides comprehensive information about internationalization in the 
 7. [Common Pitfalls](#common-pitfalls)
 8. [Validation Tools](#validation-tools)
 9. [URL-Based Routing & Organization Switching](#url-based-routing--organization-switching)
+10. [Light and Dark Mode](#light-and-dark-mode)
 
 ---
 
@@ -1013,3 +1014,77 @@ If organization switching isn't working:
 - [ ] Look for "Cannot mutate a Store directly" warnings (use `setStore`)
 
 ---
+
+---
+
+## Light and Dark Mode
+
+The dashboard supports light and dark mode. **Every new view, dialog,
+component, and addon must ship with both themes**; a dark-only (or light-only)
+view is a bug.
+
+### How it works
+
+- `src/theme/theme.scss` defines the `--cm-*` design tokens for
+  `:root[data-theme='dark']` (default) and `:root[data-theme='light']`, plus
+  the switch animation.
+- `src/theme/theme-context.tsx` (`ThemeProvider`, `useTheme`) sets
+  `data-theme` on `<html>`, caches the choice in localStorage
+  (`castmill_theme`) and saves it to the user's preferences
+  (`GET/PUT /dashboard/users/:user_id/preferences`, stored in `users.meta`).
+  Without a saved choice the OS `prefers-color-scheme` is used. The boot script
+  in `index.html` applies the cached theme before first paint.
+- `ThemeToggle` (topbar) switches themes. The switch cross-fades with the View
+  Transitions API, falls back to short CSS colour transitions, and skips the
+  animation when the user prefers reduced motion.
+- Addons receive the theme as `props.store.theme` but should style with tokens.
+
+### Token reference
+
+| Purpose                 | Tokens                                                                                                                         |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Page / panels / cards   | `--cm-bg-app`, `--cm-bg-primary`, `--cm-bg-secondary`, `--cm-bg-tertiary`, `--cm-bg-sunken`                                    |
+| Dialogs, menus, popover | `--cm-bg-elevated`, `--cm-bg-elevated-secondary`, `--cm-bg-overlay` (backdrop)                                                |
+| Inputs                  | `--cm-bg-input`, `--cm-border-color`, `--cm-focus-ring`                                                                       |
+| Interaction             | `--cm-bg-hover`, `--cm-bg-hover-strong`, `--cm-bg-active`, `--cm-bg-selected`                                                  |
+| Text                    | `--cm-text-primary`, `--cm-text-secondary`, `--cm-text-tertiary`, `--cm-text-disabled`, `--cm-text-placeholder`, `--cm-text-inverse`, `--cm-text-on-primary` |
+| Borders                 | `--cm-border-color`, `--cm-border-subtle`, `--cm-border-strong`                                                                |
+| Accent                  | `--cm-primary`, `--cm-primary-hover`, `--cm-primary-active`, `--cm-primary-bg`, `--cm-link`, `--cm-primary-rgb`                |
+| Status                  | `--cm-success`, `--cm-error`, `--cm-warning`, `--cm-info` (+ `-bg` and `-rgb` variants)                                        |
+| Shadows                 | `--cm-shadow-sm`, `--cm-shadow-md`, `--cm-shadow-lg`, `--cm-shadow-color`                                                      |
+
+### Rules for new UI
+
+```scss
+// ✅ Works in both themes
+.card {
+  background: var(--cm-bg-secondary);
+  color: var(--cm-text-primary);
+  border: 1px solid var(--cm-border-color);
+
+  &:hover {
+    background: var(--cm-bg-hover);
+  }
+}
+
+// ❌ Dark-only
+.card {
+  background: #2c303b;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+```
+
+- Translucent accents: `rgba(var(--cm-primary-rgb), 0.15)`.
+- `colors.$...` SCSS variables are tokens; never pass them to Sass colour
+  functions.
+- Don't redefine `--cm-*` tokens in a component and don't use
+  `@media (prefers-color-scheme)`.
+- If no token fits, add a light override: `:root[data-theme='light'] .x {}`
+  (CSS modules: `:global(:root[data-theme='light']) .x {}`).
+- Inline styles use `'var(--cm-…)'`. Canvas/chart code reads `useTheme()`
+  (dashboard), `props.store.theme` (addons), or the computed token value.
+- Brand buttons with white text, status colours, and media previews may keep
+  literal colours if they read well on both backgrounds.
+- Before submitting, check every new view, dialog, and state (empty, loading,
+  error, hover, selected, disabled) in both themes with the topbar toggle.

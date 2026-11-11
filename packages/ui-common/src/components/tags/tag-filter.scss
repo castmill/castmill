@@ -14,7 +14,7 @@
   height: 0.625em;
   border-radius: 50%;
   flex-shrink: 0;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 0 1px var(--cm-border-subtle);
 }
 
 .tag-option-name {
@@ -22,12 +22,12 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  color: #d0d5dd;
+  color: var(--cm-text-primary);
   font-size: 0.9em;
 }
 
 .tag-option-check {
-  color: #5792ee;
+  color: var(--cm-primary);
   font-weight: 600;
   font-size: 0.9em;
   flex-shrink: 0;

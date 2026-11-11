@@ -132,6 +132,19 @@ does not change dashboard localization requirements.
   and run the action through `Device.runMaintenanceAction` so menu and
   dashboard triggers share it. Toast text is English only (no i18n).
 
+## Light and Dark Mode
+
+- The dashboard, ui-common, and addons support light and dark mode. Every new
+  view, dialog, component, and addon must be implemented for both themes.
+- Use the `--cm-*` tokens from `packages/dashboard/src/theme/theme.scss` for
+  surfaces, text, borders, hovers, overlays, and shadows; never hardcode
+  dark-only colours. `colors.$...` SCSS variables resolve to tokens, so do not
+  pass them to Sass colour functions (use the `-rgb` tokens).
+- The theme is `data-theme="light" | "dark"` on `<html>`; do not use
+  `prefers-color-scheme` or redefine tokens locally. Light-only overrides use
+  `:root[data-theme='light'] .x` (`:global(...)` in CSS modules).
+- See `AGENTS.md` and `packages/dashboard/AGENTS.md` for details.
+
 ## 🔀 URL-Based Routing
 
 The Dashboard uses URL-based routing with organization context:
@@ -183,6 +196,7 @@ yarn workspace website start
 - Skip writing tests
 - Create unnecessary files in the root directory
 - Commit hardcoded user-facing strings in localized packages
+- Add views, dialogs, or addon UI that only work in dark mode
 
 ## 🎯 Focus Areas
 

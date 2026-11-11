@@ -108,7 +108,9 @@
   "topbar": {
     "help": "Hjälp",
     "notifications": "Notiser",
-    "gettingStarted": "Kom igång"
+    "gettingStarted": "Kom igång",
+    "switchToLightMode": "Byt till ljust läge",
+    "switchToDarkMode": "Byt till mörkt läge"
   },
   "settings": {
     "title": "Inställningar",
@@ -1473,6 +1475,7 @@
     "teamLabel": "Team",
     "teamPlaceholder": "Välj team",
     "teamClear": "Rensa teamfilter",
+    "teamSearchPlaceholder": "Sök team…",
     "tagLabel": "Taggar",
     "tagPlaceholder": "Filtrera efter taggar…",
     "tagClear": "Rensa taggfilter",

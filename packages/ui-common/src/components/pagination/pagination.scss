@@ -7,28 +7,29 @@
 
 .pagination-button {
   padding: 6px 12px;
-  border: 1px solid #555;
+  border: 1px solid var(--cm-border-strong);
   border-radius: 1em;
-  background-color: #00000000;
+  background-color: transparent;
   cursor: pointer;
   transition:
     background-color 0.3s ease,
     opacity 0.3s ease;
-  color: white;
+  color: var(--cm-text-primary);
 
   &:disabled {
     cursor: not-allowed;
     opacity: 0.6; /* Make disabled buttons appear dim */
-    color: #555;
+    color: var(--cm-text-disabled);
   }
 
   &:not(:disabled):hover {
-    background-color: #565656; /* Darker gray on hover */
+    background-color: var(--cm-bg-active);
   }
 
   &.active {
     background-color: #007bff; /* Primary color for active button */
     border-color: #007bff;
+    color: var(--cm-text-on-primary);
   }
 
   &.active:hover {
