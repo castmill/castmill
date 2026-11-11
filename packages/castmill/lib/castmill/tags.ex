@@ -86,12 +86,15 @@ defmodule Castmill.Tags do
   def get_tag_group(id), do: Repo.get(TagGroup, id)
 
   @doc """
-  Creates a tag group.
+  Creates a tag group. Returns `{:error, :quota_exceeded}` when the
+  organization's `tag_groups` quota is used up.
   """
   def create_tag_group(attrs \\ %{}) do
-    %TagGroup{}
-    |> TagGroup.changeset(attrs)
-    |> Repo.insert()
+    with :ok <- check_quota(attrs, TagGroup, :tag_groups) do
+      %TagGroup{}
+      |> TagGroup.changeset(attrs)
+      |> Repo.insert()
+    end
   end
 
   @doc """
@@ -162,12 +165,26 @@ defmodule Castmill.Tags do
   def get_tag(id), do: Repo.get(Tag, id)
 
   @doc """
-  Creates a tag.
+  Creates a tag. Returns `{:error, :quota_exceeded}` when the organization's
+  `tags` quota is used up.
   """
   def create_tag(attrs \\ %{}) do
-    %Tag{}
-    |> Tag.changeset(attrs)
-    |> Repo.insert()
+    with :ok <- check_quota(attrs, Tag, :tags) do
+      %Tag{}
+      |> Tag.changeset(attrs)
+      |> Repo.insert()
+    end
+  end
+
+  # Without an organization the changeset reports the missing field instead.
+  defp check_quota(attrs, schema, resource) do
+    organization_id = attrs[:organization_id] || attrs["organization_id"]
+
+    if is_nil(organization_id) or
+         Castmill.Quotas.get_quota_used_for_organization(organization_id, schema) <
+           Castmill.Quotas.get_quota_for_organization(organization_id, resource),
+       do: :ok,
+       else: {:error, :quota_exceeded}
   end
 
   @doc """

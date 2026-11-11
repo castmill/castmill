@@ -43,6 +43,7 @@ import {
   TagBadge,
   TagPopover,
   useViewMode,
+  isQuotaExceededError,
 } from '@castmill/ui-common';
 import { JsonPlaylist } from '@castmill/player';
 import { PlaylistsService } from '../services/playlists.service';
@@ -336,11 +337,19 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
     );
   };
 
+  // The tag pickers only log failures; tell the user when the plan's limit
+  // is the reason.
+  const reportTagQuota = (error: unknown): never => {
+    if (isQuotaExceededError(error)) {
+      toast.error(t('tags.errors.tagQuotaExceeded'));
+    }
+    throw error;
+  };
+
   const handleCreateTag = async (name: string): Promise<Tag> => {
-    const newTag = await tagsService.createTag(
-      props.store.organizations.selectedId,
-      { name }
-    );
+    const newTag = await tagsService
+      .createTag(props.store.organizations.selectedId, { name })
+      .catch(reportTagQuota);
     setAllTags((prev) => [...prev, newTag]);
     return newTag;
   };
@@ -1104,17 +1113,21 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
           outsideClickIgnoreSelector="tbody tr, .playlist-tree-item"
           contentClass="playlist-modal"
         >
-          <PlaylistView
-            store={props.store}
-            baseUrl={props.store.env.baseUrl}
-            organizationId={props.store.organizations.selectedId}
-            playlistId={currentPlaylist()?.id!}
-            t={t}
-            onChange={() => {
-              // Playlist changed
-            }}
-            onNavigateAway={closePlaylistDrawer}
-          />
+          <Show when={currentPlaylist()}>
+            {(playlist) => (
+              <PlaylistView
+                store={props.store}
+                baseUrl={props.store.env.baseUrl}
+                organizationId={props.store.organizations.selectedId}
+                playlistId={playlist().id}
+                t={t}
+                onChange={() => {
+                  // Playlist changed
+                }}
+                onNavigateAway={closePlaylistDrawer}
+              />
+            )}
+          </Show>
         </Drawer>
       </Show>
 

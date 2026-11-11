@@ -34,6 +34,9 @@ The role lives in `organizations_users` like for any user. Deleting an agent
 deletes its user (and thus its membership and log). Deleting an organization's
 last human member deletes the organization and its agent users.
 
+Agents have their own quota (`agents`, see `QUOTAS.md`), checked by
+`Agents.create_agent/3`. They are excluded from the `users` quota usage.
+
 ## Modules
 
 | Module                                         | Responsibility                                                                         |

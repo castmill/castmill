@@ -23,6 +23,9 @@ defmodule Castmill.Quotas.PlansQuotas do
         :feeds,
         :automations,
         :automation_rules,
+        :tags,
+        :tag_groups,
+        :agents,
         :max_upload_size
       ],
       primary_key: true

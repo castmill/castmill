@@ -21,6 +21,9 @@
 }
 
 .headerAction {
+  display: flex;
+  align-items: center;
+  gap: 0.75em;
   flex-shrink: 0;
   white-space: nowrap;
 }

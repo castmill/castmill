@@ -112,6 +112,9 @@ defmodule CastmillWeb.TagController do
         |> put_status(:created)
         |> json(%{data: tag_group})
 
+      {:error, :quota_exceeded} ->
+        quota_exceeded(conn, "The organization's tag group quota is used up")
+
       {:error, changeset} ->
         conn
         |> put_status(:unprocessable_entity)
@@ -236,6 +239,9 @@ defmodule CastmillWeb.TagController do
         conn
         |> put_status(:created)
         |> json(%{data: tag})
+
+      {:error, :quota_exceeded} ->
+        quota_exceeded(conn, "The organization's tag quota is used up")
 
       {:error, changeset} ->
         conn
@@ -494,6 +500,12 @@ defmodule CastmillWeb.TagController do
     resource_type
     |> String.trim_trailing("s")
     |> String.to_existing_atom()
+  end
+
+  defp quota_exceeded(conn, message) do
+    conn
+    |> put_status(:forbidden)
+    |> json(%{error: "quota_exceeded", message: message})
   end
 
   defp format_errors(%Ecto.Changeset{} = changeset) do
