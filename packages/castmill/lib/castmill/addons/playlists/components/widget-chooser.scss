@@ -20,32 +20,56 @@
     min-width: 0;
   }
 
+  // Matches the ghost IconButton used for drawer/modal close and back.
   .widget-chooser-back {
     display: inline-flex;
     flex-shrink: 0;
     align-items: center;
     justify-content: center;
-    width: 2.2em;
-    height: 2.2em;
+    width: 2.25em;
+    height: 2.25em;
     padding: 0;
-    border: 1px solid var(--cm-border-color);
-    border-radius: 0.45em;
+    border: none;
+    border-radius: 0.5em;
     background: transparent;
     color: var(--cm-text-secondary);
+    font-size: 1em;
     cursor: pointer;
+    transition:
+      background-color 0.15s ease,
+      color 0.15s ease,
+      transform 0.1s ease;
+
+    svg {
+      width: 1.15em;
+      height: 1.15em;
+    }
 
     [dir='rtl'] & svg {
       transform: scaleX(-1);
     }
 
     &:hover {
-      border-color: var(--cm-primary);
+      background: var(--cm-bg-hover-strong);
       color: var(--cm-text-primary);
+    }
+
+    &:active {
+      background: var(--cm-bg-active);
+      transform: scale(0.94);
     }
 
     &:focus-visible {
       outline: 2px solid var(--cm-primary);
       outline-offset: 2px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+
+      &:active {
+        transform: none;
+      }
     }
   }
 

@@ -316,7 +316,7 @@ export const Drawer: Component<DrawerProps> = (_props) => {
                 <IconButton
                   icon={VsClose}
                   onClick={closeDrawer}
-                  color="secondary"
+                  color="ghost"
                   title={props.closeButtonTitle}
                 />
               </div>

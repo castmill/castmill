@@ -43,6 +43,53 @@
     background-color: #17a2b8;
   }
 
+  // Borderless, theme-aware button for header actions such as close/back.
+  &.icon-button-ghost {
+    width: 2.25em;
+    height: 2.25em;
+    border-radius: 0.5em;
+    background-color: transparent;
+    color: var(--cm-text-secondary);
+    font-size: 1em;
+    transition:
+      background-color 0.15s ease,
+      color 0.15s ease,
+      transform 0.1s ease;
+
+    svg {
+      width: 1.15em;
+      height: 1.15em;
+    }
+
+    &:hover:not(:disabled) {
+      background-color: var(--cm-bg-hover-strong);
+      color: var(--cm-text-primary);
+    }
+
+    &:active:not(:disabled) {
+      background-color: var(--cm-bg-active);
+      transform: scale(0.94);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--cm-primary);
+      outline-offset: 2px;
+    }
+
+    &.icon-button-disabled {
+      background-color: transparent;
+      opacity: 0.5;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+
+      &:active:not(:disabled) {
+        transform: none;
+      }
+    }
+  }
+
   &-spinner {
     display: inline-flex;
     animation: icon-button-spin 1s linear infinite;

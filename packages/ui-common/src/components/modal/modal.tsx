@@ -241,7 +241,7 @@ export const Modal: Component<ModalProps> = (props) => {
                 <IconButton
                   icon={BsArrowLeft}
                   onClick={requestClose}
-                  color="secondary"
+                  color="ghost"
                   title={props.closeLabel}
                 />
               </span>
@@ -254,7 +254,7 @@ export const Modal: Component<ModalProps> = (props) => {
               <IconButton
                 icon={VsClose}
                 onClick={requestClose}
-                color="secondary"
+                color="ghost"
                 title={props.closeLabel}
               />
             )}
