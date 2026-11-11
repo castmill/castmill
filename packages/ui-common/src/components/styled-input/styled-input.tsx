@@ -31,7 +31,7 @@ export const StyledInput: Component<{
     <Switch
       fallback={
         <input
-          ref={inputRef}
+          ref={(el) => (inputRef = el)}
           id={props.id}
           type="text"
           class={styles['input-text']}
@@ -47,7 +47,7 @@ export const StyledInput: Component<{
     >
       <Match when={props.type === 'textarea'}>
         <textarea
-          ref={textareaRef}
+          ref={(el) => (textareaRef = el)}
           id={props.id}
           class={styles['input-textarea']}
           value={String(props.value)}
