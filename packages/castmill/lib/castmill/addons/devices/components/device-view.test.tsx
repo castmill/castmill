@@ -47,7 +47,9 @@ afterEach(() => {
   cleanup();
   vi.useRealTimers();
 });
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+  vi.clearAllMocks();
+});
 
 describe('Details save results', () => {
   it('preserves an application report received before the save response', async () => {

@@ -73,7 +73,11 @@ const show = async (
   const widget = new TemplateWidget(
     { getMedia: async (url: string) => url } as any,
     {
-      widget: { name: 'listing', template, options_schema: optionsSchema } as any,
+      widget: {
+        name: 'listing',
+        template,
+        options_schema: optionsSchema,
+      } as any,
       config: { options, data } as any,
       globals: { target: 'poster', locale: 'sv' },
     }
@@ -403,9 +407,7 @@ describe('Editable texts', () => {
         );
 
         expect(root.textContent).to.equal('Bound street');
-        expect(
-          root.querySelector('[data-editable-overridden]')
-        ).to.equal(null);
+        expect(root.querySelector('[data-editable-overridden]')).to.equal(null);
         widget.stop();
       });
     });

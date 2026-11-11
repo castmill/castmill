@@ -59,7 +59,7 @@ vi.mock('@castmill/ui-common', () => ({
               <td>
                 {column.render
                   ? column.render(tableEvent)
-                  : tableEvent[column.key]}
+                  : tableEvent[column.key as keyof typeof tableEvent]}
               </td>
             ))}
           </tr>

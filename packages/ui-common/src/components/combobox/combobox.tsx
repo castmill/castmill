@@ -14,12 +14,14 @@ import {
   onCleanup,
   Show,
 } from 'solid-js';
+import { Portal } from 'solid-js/web';
 import { RiArrowsArrowUpSLine, RiArrowsArrowDownSLine } from 'solid-icons/ri';
 import { AiOutlineSearch } from 'solid-icons/ai';
 import { IoClose } from 'solid-icons/io';
 
 import styles from './combobox.module.scss';
 import { IconWrapper } from '../icon-wrapper';
+import { useVisualViewportBox } from '../../hooks/useVisualViewportBox';
 import { IconTypes } from 'solid-icons';
 
 const SimpleIconButton = (props: { icon: IconTypes; onClick: () => void }) => {
@@ -52,15 +54,39 @@ interface ComboBoxProps<T extends { id: string | number }> {
   clearable?: boolean;
   clearLabel?: string;
   onClear?: () => void;
+  /** Accessible name of the close button in the mobile sheet. */
+  closeLabel?: string;
 }
+
+/** Touch and small screens pick from a bottom sheet instead of a dropdown. */
+export const COMBOBOX_SHEET_QUERY =
+  '(max-width: 36em), (pointer: coarse) and (max-width: 64em)';
+
+type Placement = 'down' | 'up' | 'sheet';
+
+const prefersSheet = () =>
+  typeof window !== 'undefined' &&
+  typeof window.matchMedia === 'function' &&
+  window.matchMedia(COMBOBOX_SHEET_QUERY).matches;
+
+const isClipping = (element: Element) =>
+  /(auto|scroll|hidden)/.test(getComputedStyle(element).overflowY);
 
 export const ComboBox = <T extends { id: string | number }>(
   props: ComboBoxProps<T>
 ): JSX.Element => {
+  const viewportBox = useVisualViewportBox();
   let comboBoxRef: HTMLDivElement | undefined;
+  let triggerRef: HTMLDivElement | undefined;
+  let dropdownRef: HTMLDivElement | undefined;
+  let sheetRootRef: HTMLDivElement | undefined;
+  let sheetRef: HTMLDivElement | undefined;
   const triggerId = `${props.id.toString()}-trigger`;
   const dropdownId = `${props.id.toString()}-dropdown`;
-  const [isOpen, setIsOpen] = createSignal(false);
+  const sheetTitleId = `${props.id.toString()}-sheet-title`;
+  const [isOpen, setIsOpenSignal] = createSignal(false);
+  const [placement, setPlacement] = createSignal<Placement>('down');
+  const [listMaxHeight, setListMaxHeight] = createSignal<string>();
   const [items, setItems] = createSignal<T[]>([]);
   const [selectedItem, setSelectedItem] = createSignal<T | undefined>(
     undefined
@@ -120,37 +146,207 @@ export const ComboBox = <T extends { id: string | number }>(
     }
   };
 
+  // Opens towards the side with more room inside the clipping ancestors and
+  // the viewport, and caps the list so the dropdown stays visible.
+  const updatePlacement = () => {
+    if (prefersSheet()) {
+      setPlacement('sheet');
+      setListMaxHeight(undefined);
+      return;
+    }
+
+    const comboBox = comboBoxRef;
+    if (!comboBox) {
+      setPlacement('down');
+      setListMaxHeight(undefined);
+      return;
+    }
+
+    const rect = comboBox.getBoundingClientRect();
+    if (rect.height === 0) {
+      setPlacement('down');
+      setListMaxHeight(undefined);
+      return;
+    }
+
+    let top = 0;
+    let bottom = window.innerHeight;
+    for (
+      let parent = comboBox.parentElement;
+      parent && parent !== document.body;
+      parent = parent.parentElement
+    ) {
+      if (isClipping(parent)) {
+        const bounds = parent.getBoundingClientRect();
+        top = Math.max(top, bounds.top);
+        bottom = Math.min(bottom, bounds.bottom);
+      }
+    }
+
+    const em = parseFloat(getComputedStyle(comboBox).fontSize) || 16;
+    const below = bottom - rect.bottom;
+    const above = rect.top - top;
+    const opensUp = below < 22 * em && above > below;
+    // Room left for the list after the search box, footer and gap.
+    const room = (opensUp ? above : below) - 6.5 * em;
+
+    if (room < 8 * em) {
+      setPlacement('sheet');
+      setListMaxHeight(undefined);
+      return;
+    }
+
+    setPlacement(opensUp ? 'up' : 'down');
+    setListMaxHeight(`${Math.min(18 * em, room)}px`);
+  };
+
+  const setIsOpen = (value: boolean | ((prev: boolean) => boolean)) => {
+    const next = typeof value === 'function' ? value(isOpen()) : value;
+    if (next && !isOpen()) {
+      updatePlacement();
+    }
+    setIsOpenSignal(next);
+  };
+
+  const close = (restoreFocus = false) => {
+    setIsOpen(false);
+    if (restoreFocus) {
+      triggerRef?.focus();
+    }
+  };
+
   const handlePointerDown = (event: PointerEvent) => {
     const target = event.target as Node;
 
-    if (!comboBoxRef?.contains(target)) {
+    if (!comboBoxRef?.contains(target) && !sheetRootRef?.contains(target)) {
       setIsOpen(false);
+    }
+  };
+
+  // Window capture runs before the document listeners of modals and drawers,
+  // so Escape closes only the open list.
+  const handleKeyDown = (event: KeyboardEvent) => {
+    if (event.key === 'Escape' && isOpen()) {
+      event.preventDefault();
+      event.stopPropagation();
+      close(true);
+    } else if (event.key === 'Tab' && isOpen() && placement() === 'sheet') {
+      const focusable = sheetRef?.querySelectorAll<HTMLElement>(
+        'a[href], button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])'
+      );
+      const first = focusable?.[0];
+      const last = focusable?.[focusable.length - 1];
+      const active = document.activeElement;
+
+      if (!first || !last) {
+        event.preventDefault();
+        sheetRef?.focus();
+      } else if (!sheetRef?.contains(active)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+      } else if (
+        event.shiftKey &&
+        (active === first || first.contains(active) || active === sheetRef)
+      ) {
+        event.preventDefault();
+        last.focus();
+      } else if (
+        !event.shiftKey &&
+        (active === last || last.contains(active))
+      ) {
+        event.preventDefault();
+        first.focus();
+      }
     }
   };
 
   onMount(() => {
     // Use capture phase so outside detection is consistent regardless of bubbling handlers.
     document.addEventListener('pointerdown', handlePointerDown, true);
+    window.addEventListener('keydown', handleKeyDown, true);
   });
 
   onCleanup(() => {
     document.removeEventListener('pointerdown', handlePointerDown, true);
+    window.removeEventListener('keydown', handleKeyDown, true);
     if (debounceTimer) {
       clearTimeout(debounceTimer);
     }
+  });
+
+  createEffect(() => {
+    if (!isOpen()) {
+      return;
+    }
+
+    if (placement() === 'sheet') {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      // Focus the sheet rather than the search box so the keyboard stays
+      // closed until the user asks for it.
+      queueMicrotask(() => sheetRef?.focus());
+      onCleanup(() => {
+        document.body.style.overflow = originalOverflow;
+      });
+      return;
+    }
+
+    requestAnimationFrame(() =>
+      dropdownRef?.scrollIntoView?.({ block: 'nearest' })
+    );
   });
 
   const handleSelect = (item: T) => {
     setSelectedItem(item as Exclude<T, Function>);
     props.onSelect(item);
     // Optionally close the dropdown or take other actions
-    setIsOpen(false);
+    close(true);
+  };
+
+  const handleListKeyDown = (event: KeyboardEvent) => {
+    const listbox = event.currentTarget as HTMLDivElement;
+    const options = Array.from(
+      listbox.querySelectorAll<HTMLElement>('[role="option"]')
+    );
+    if (options.length === 0) return;
+
+    const activeIndex = options.indexOf(document.activeElement as HTMLElement);
+    let nextIndex = activeIndex;
+
+    switch (event.key) {
+      case 'ArrowDown':
+        nextIndex = Math.min(activeIndex + 1, options.length - 1);
+        break;
+      case 'ArrowUp':
+        nextIndex = activeIndex < 0 ? options.length - 1 : activeIndex - 1;
+        if (nextIndex < 0) nextIndex = 0;
+        break;
+      case 'Home':
+        nextIndex = 0;
+        break;
+      case 'End':
+        nextIndex = options.length - 1;
+        break;
+      case 'Enter':
+      case ' ':
+        if (activeIndex >= 0) {
+          event.preventDefault();
+          const item = items()[activeIndex];
+          if (item) handleSelect(item);
+        }
+        return;
+      default:
+        return;
+    }
+
+    event.preventDefault();
+    options[nextIndex]?.focus();
   };
 
   const handleClear = () => {
     setSelectedItem(undefined);
     props.onClear?.();
-    setIsOpen(false);
+    close(true);
   };
 
   const shouldShowClear = () =>
@@ -177,9 +373,66 @@ export const ComboBox = <T extends { id: string | number }>(
     }
   };
 
+  const listContent = () => (
+    <>
+      <div class={styles['search-box']}>
+        <div class={styles['search-icon']}>
+          <IconWrapper icon={AiOutlineSearch} />
+        </div>
+        <input
+          id={typeof props.id == 'string' ? props.id : props.id.toString()}
+          type="text"
+          placeholder={props.placeholder || 'Search...'}
+          onInput={(e) => search(e.currentTarget.value)}
+          value={searchQuery()}
+        />
+      </div>
+
+      <div
+        class={styles['items-list']}
+        role="listbox"
+        id={`${dropdownId}-listbox`}
+        aria-labelledby={triggerId}
+        tabindex={0}
+        style={listMaxHeight() ? { 'max-height': listMaxHeight() } : undefined}
+        onScroll={handleScroll}
+        onKeyDown={handleListKeyDown}
+      >
+        <For each={items()}>
+          {(item) => (
+            <div
+              class={`${styles['item']} ${
+                selectedItem()?.id === item.id ? styles['selected'] : ''
+              }`}
+              role="option"
+              aria-selected={selectedItem()?.id === item.id}
+              tabindex={-1}
+              onClick={() => handleSelect(item)}
+            >
+              {props.renderItem(item)}
+            </div>
+          )}
+        </For>
+      </div>
+      <div class={styles['footer']}>
+        <Show
+          when={loading()}
+          fallback={
+            <span>
+              Showing {items().length} of {totalItems()} items
+            </span>
+          }
+        >
+          <div>Loading...</div>
+        </Show>
+      </div>
+    </>
+  );
+
   return (
     <div class={styles['combo-box']} ref={comboBoxRef}>
       <div
+        ref={triggerRef}
         id={triggerId}
         class={`${styles['base-box']} ${styles['header']}`}
         role="button"
@@ -234,48 +487,56 @@ export const ComboBox = <T extends { id: string | number }>(
         </div>
       </div>
 
-      <Show when={isOpen()}>
+      <Show when={isOpen() && placement() !== 'sheet'}>
         <div
+          ref={dropdownRef}
           id={dropdownId}
-          class={`${styles['base-box']} ${styles['dropdown']}`}
-          role="listbox"
-          aria-labelledby={triggerId}
+          class={`${styles['base-box']} ${styles['dropdown']} ${
+            placement() === 'up' ? styles['dropdown-up'] : ''
+          }`}
         >
-          <div class={styles['search-box']}>
-            <div class={styles['search-icon']}>
-              <IconWrapper icon={AiOutlineSearch} />
-            </div>
-            <input
-              id={typeof props.id == 'string' ? props.id : props.id.toString()}
-              type="text"
-              placeholder={props.placeholder || 'Search...'}
-              onInput={(e) => search(e.currentTarget.value)}
-              value={searchQuery()}
-            />
-          </div>
-
-          <div class={styles['items-list']} onScroll={handleScroll}>
-            <For each={items()}>
-              {(item) => (
-                <div class={styles['item']} onClick={() => handleSelect(item)}>
-                  {props.renderItem(item)}
-                </div>
-              )}
-            </For>
-          </div>
-          <div class={styles['footer']}>
-            <Show
-              when={loading()}
-              fallback={
-                <span>
-                  Showing {items().length} of {totalItems()} items
-                </span>
-              }
-            >
-              <div>Loading...</div>
-            </Show>
-          </div>
+          {listContent()}
         </div>
+      </Show>
+
+      <Show when={isOpen() && placement() === 'sheet'}>
+        <Portal>
+          <div
+            ref={sheetRootRef}
+            class={styles['sheet-backdrop']}
+            style={viewportBox()}
+            data-combobox-sheet
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                close(true);
+              }
+            }}
+          >
+            <div
+              ref={sheetRef}
+              id={dropdownId}
+              class={styles['sheet']}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby={sheetTitleId}
+              tabindex={-1}
+            >
+              <div class={styles['sheet-handle']} aria-hidden="true" />
+              <header class={styles['sheet-header']}>
+                <h2 id={sheetTitleId}>{props.label || props.placeholder}</h2>
+                <button
+                  type="button"
+                  class={styles['sheet-close']}
+                  aria-label={props.closeLabel || 'Close'}
+                  onClick={() => close(true)}
+                >
+                  <IconWrapper icon={IoClose} />
+                </button>
+              </header>
+              {listContent()}
+            </div>
+          </div>
+        </Portal>
       </Show>
     </div>
   );

@@ -148,7 +148,7 @@ export const PlaylistPreview: Component<PlaylistPreviewProps> = (props) => {
         const MIN_WAIT_MS = 500; // Minimum wait time for widgets with dynamic content (scrollers, etc.)
 
         const pl = currentPlaylist;
-        if (!playerUI) {
+        if (!playerUI || !pl) {
           return [];
         }
 

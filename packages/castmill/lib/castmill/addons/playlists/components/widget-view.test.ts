@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import type { JsonWidgetTemplate } from '@castmill/player';
 import {
   applyWidgetMaxItemsFilter,
   feedSnapshotForSelection,
@@ -27,7 +28,12 @@ describe('WidgetView aspect ratio helpers', () => {
   it('uses layout-ref aspect ratio when present in options', () => {
     expect(
       getWidgetViewAspectRatio(
-        { id: 1, name: 'Layout Widget', template: {}, aspect_ratio: '16:9' },
+        {
+          id: 1,
+          name: 'Layout Widget',
+          template: {} as JsonWidgetTemplate,
+          aspect_ratio: '16:9',
+        },
         {
           layout: {
             layoutId: 10,
@@ -40,7 +46,10 @@ describe('WidgetView aspect ratio helpers', () => {
 
   it('returns null when the widget has no fixed aspect ratio', () => {
     expect(
-      getWidgetViewAspectRatio({ id: 1, name: 'Weather', template: {} }, {})
+      getWidgetViewAspectRatio(
+        { id: 1, name: 'Weather', template: {} as JsonWidgetTemplate },
+        {}
+      )
     ).toBeNull();
   });
 

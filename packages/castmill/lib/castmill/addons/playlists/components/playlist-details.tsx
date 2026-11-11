@@ -1,125 +1,111 @@
-import { createSignal, createEffect } from 'solid-js';
+import { createEffect, createSignal } from 'solid-js';
 
-import { Button, FormItem, Timestamp } from '@castmill/ui-common';
-
-import { BsCheckLg, BsX } from 'solid-icons/bs';
+import { FormItem } from '@castmill/ui-common';
 import { JsonPlaylist } from '@castmill/player';
-import { PlaylistUpdate } from '../services/playlists.service';
-import { AddonStore } from '../../common/interfaces/addon-store';
 
 import './playlist-details.scss';
 
-export const PlaylistDetails = (props: {
+const MIN_NAME_LENGTH = 3;
+
+/**
+ * Playlist name field that saves on blur or Enter (no save/reset buttons).
+ * Escape, or leaving the field with an invalid name, restores the saved name.
+ */
+export const PlaylistNameField = (props: {
   playlist: JsonPlaylist;
-  store?: AddonStore;
-  onSubmit: (playlistUpdate: Partial<PlaylistUpdate>) => Promise<boolean>;
+  t: (key: string, params?: Record<string, any>) => string;
+  onSubmit: (update: { name: string }) => Promise<boolean>;
 }) => {
-  // Get i18n functions from store
-  const t = (key: string, params?: Record<string, any>) =>
-    props.store?.i18n?.t(key, params) || key;
+  const t = props.t;
 
   const [name, setName] = createSignal(props.playlist.name);
-  const [isFormModified, setIsFormModified] = createSignal(false);
-  const [errors, setErrors] = createSignal(new Map());
+  const [error, setError] = createSignal('');
+  const [saving, setSaving] = createSignal(false);
 
-  const validateField = (fieldId: string, value: string) => {
-    let error = '';
-    if (fieldId === 'name') {
-      if (!value) {
-        error = t('playlists.errors.nameRequired');
-      } else if (value.length < 3) {
-        error = t('playlists.errors.nameMinLength');
-      }
+  // Follow external renames while the user has no pending edit.
+  let lastPlaylistId = props.playlist.id;
+  let lastSavedName = props.playlist.name;
+  createEffect(() => {
+    const nextId = props.playlist.id;
+    const next = props.playlist.name;
+    if (nextId !== lastPlaylistId) {
+      lastPlaylistId = nextId;
+      lastSavedName = next;
+      setName(next);
+      setError('');
+      return;
     }
 
-    setErrors((prev) => new Map(prev).set(fieldId, error));
-    return !error;
-  };
-
-  createEffect(() => {
-    const hasModifiedName = name() !== props.playlist.name;
-    setIsFormModified(hasModifiedName);
+    if (name() === lastSavedName) setName(next);
+    lastSavedName = next;
   });
 
-  const isFormValid = () => {
-    // Just check name validity and if form is modified
-    const nameValue = name();
-    const hasValidName = nameValue.trim() !== '' && nameValue.length >= 3;
-    const hasNoErrors = ![...errors().values()].some((e) => e);
-    return hasValidName && hasNoErrors && isFormModified();
+  const validate = (value: string) => {
+    const trimmed = value.trim();
+    const message = !trimmed
+      ? t('playlists.errors.nameRequired')
+      : trimmed.length < MIN_NAME_LENGTH
+        ? t('playlists.errors.nameMinLength')
+        : '';
+    setError(message);
+    return !message;
+  };
+
+  const revert = () => {
+    setName(props.playlist.name);
+    setError('');
+  };
+
+  const commit = async () => {
+    if (saving()) return;
+    const trimmed = name().trim();
+    if (trimmed === props.playlist.name) {
+      revert();
+      return;
+    }
+    if (!validate(name())) {
+      revert();
+      return;
+    }
+    setSaving(true);
+    try {
+      if (await props.onSubmit({ name: trimmed })) setName(trimmed);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
-    <div class="playlist-details">
-      <div class="info">
-        {t('common.addedOn')}{' '}
-        <Timestamp
-          value={props.playlist.inserted_at}
-          mode="relative"
-          locale={props.store?.i18n?.locale?.()}
-        />
-        . {t('common.lastUpdatedOn')}{' '}
-        <Timestamp
-          value={props.playlist.updated_at}
-          mode="relative"
-          locale={props.store?.i18n?.locale?.()}
-        />
-        .
-      </div>
-      <form
-        onSubmit={async (e) => {
-          e.preventDefault();
-          // Validate name before submission
-          validateField('name', name());
-
-          if (isFormValid()) {
-            if (
-              await props.onSubmit({
-                name: name(),
-                description: '',
-              })
-            ) {
-              setIsFormModified(false);
-            }
-          }
+    <div
+      class="playlist-name-field"
+      aria-busy={saving()}
+      onFocusOut={() => void commit()}
+      on:keydown={(event) => {
+        const input = event.target as HTMLInputElement;
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          input.blur();
+        } else if (event.key === 'Escape') {
+          event.stopPropagation();
+          revert();
+          input.blur();
+        }
+      }}
+    >
+      <FormItem
+        label={t('common.name')}
+        id={`playlist-${props.playlist.id}-name`}
+        value={name()}
+        placeholder={t('playlists.enterPlaylistName')}
+        disabled={saving()}
+        onInput={(value: string | number | boolean) => {
+          const next = String(value);
+          setName(next);
+          validate(next);
         }}
       >
-        <div class="form-inputs">
-          <FormItem
-            label={t('common.name')}
-            id="name"
-            value={name()}
-            placeholder={t('playlists.enterPlaylistName')}
-            onInput={(value: string | number | boolean) => {
-              const strValue = String(value);
-              setName(strValue);
-              validateField('name', strValue);
-            }}
-          >
-            <div class="error">{errors().get('name')}</div>
-          </FormItem>
-        </div>
-
-        <div class="actions">
-          <Button
-            label={t('common.save')}
-            type="submit"
-            disabled={!isFormValid()}
-            icon={BsCheckLg}
-            color="success"
-          />
-          <Button
-            label={t('common.reset')}
-            onClick={() => {
-              setName(props.playlist.name);
-              setIsFormModified(false);
-              setErrors(new Map());
-            }}
-            icon={BsX}
-            color="danger"
-          />
-        </div>
-      </form>
+        <div class="error">{error()}</div>
+      </FormItem>
     </div>
   );
 };

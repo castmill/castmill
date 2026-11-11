@@ -205,6 +205,7 @@ defmodule CastmillWeb.ResourceJSON do
       name: layout.name,
       description: layout.description,
       aspect_ratio: layout.aspect_ratio,
+      is_system: layout.is_system,
       zones: layout.zones
     }
   end

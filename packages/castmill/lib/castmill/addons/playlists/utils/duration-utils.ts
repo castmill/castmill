@@ -59,16 +59,20 @@ export function containsDynamicDurationComponent(
     return true;
   }
 
+  // JsonWidgetTemplate does not declare the nested child fields.
+  const nested = template as JsonWidgetTemplate & {
+    components?: unknown;
+    component?: JsonWidgetTemplate;
+  };
+
   // Check nested components array (for group, layout, etc.)
-  if (template.components && Array.isArray(template.components)) {
-    return template.components.some(containsDynamicDurationComponent);
+  if (Array.isArray(nested.components)) {
+    return nested.components.some(containsDynamicDurationComponent);
   }
 
   // Check single nested component (for scroller's item template)
-  if (template.component) {
-    return containsDynamicDurationComponent(
-      template.component as JsonWidgetTemplate
-    );
+  if (nested.component) {
+    return containsDynamicDurationComponent(nested.component);
   }
 
   return false;

@@ -310,7 +310,7 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
 
   // Update canvas when aspect ratio changes
   createEffect(() => {
-    props.value.aspectRatio; // Track changes
+    void props.value.aspectRatio; // Track changes
     updateCanvasSize();
   });
 
@@ -1441,15 +1441,15 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
               {(guide) => (
                 <div
                   class={`layout-editor__snap-guide layout-editor__snap-guide--${guide.orientation}`}
-                  style={{
-                    ...(guide.orientation === 'vertical'
+                  style={
+                    guide.orientation === 'vertical'
                       ? { left: `${guide.position}%`, top: '0', height: '100%' }
                       : {
                           top: `${guide.position}%`,
                           left: '0',
                           width: '100%',
-                        }),
-                  }}
+                        }
+                  }
                 />
               )}
             </For>

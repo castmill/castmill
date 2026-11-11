@@ -249,7 +249,9 @@ describe('integration settings helpers', () => {
       settings: { ...listing.settings, office_ids: commaValues },
     });
     expect(commaForm.office_ids).toBe(commaValues.join('\n'));
-    expect(toSettings(listing.schema, commaForm).office_ids).toEqual(commaValues);
+    expect(toSettings(listing.schema, commaForm).office_ids).toEqual(
+      commaValues
+    );
 
     expect(toSettings(listing.schema, {})).toEqual({
       agency: '',
