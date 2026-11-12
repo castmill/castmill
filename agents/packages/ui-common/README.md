@@ -94,6 +94,40 @@ interface Column<IdType = string, Item extends ItemBase<IdType> = ItemBase<IdTyp
 
 **Important**: Use `title`, not `label` for column headers.
 
+### Card Layout for Narrow Containers (phones, drawers)
+
+`Table` and `TableView` (via `table.*`) support an opt-in stacked card
+rendering so tables don't overflow horizontally on phones or inside detail
+drawers:
+
+```typescript
+table: {
+  columns,
+  actions,
+  actionsLabel: t('common.actions'),
+  cardLayout: true,               // opt in
+  cardBreakpoint?: 36,            // container width in em (default 36)
+  cardPrimaryColumn?: 'name',     // card title (default: first column)
+  cardLabels: useTableCardLabels(), // localized sort/select-all labels
+}
+```
+
+- The breakpoint is container-based: a `ResizeObserver` measures the table's
+  own wrapper (no observer → regular table). Hidden (0-width) containers keep
+  their current layout. The root exposes `data-layout="table" | "cards"`.
+- Cards show the primary column as title, other columns as label/value rows
+  (stacked below a 20em container via `@container`), and row actions in a
+  `MenuButton` labelled with `actionsLabel`.
+- Selection (per-card checkbox + "Select all"), sorting (sort-by select +
+  direction toggle over `sortable` columns) and row click (also Enter/Space
+  on the focused card) share state with the table view, so switching layout
+  keeps the selection.
+- `cardLabels` default to English; in the dashboard always pass
+  `useTableCardLabels()` (`packages/dashboard/src/hooks/useTableCardLabels.ts`),
+  which maps to `common.sortBy`, `common.sortAscending`,
+  `common.sortDescending` and `common.selectAll`.
+- Styles use `--cm-*` tokens, `em` units and logical properties (RTL-safe).
+
 ### TableAction Interface
 
 Defines actions available for each row (view, edit, delete, etc.).

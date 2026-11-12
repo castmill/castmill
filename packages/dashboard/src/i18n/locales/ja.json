@@ -108,7 +108,11 @@
     "selectVideo": "ビデオを選択",
     "widget": "Widget",
     "selectionHint": "チェックボックスを使用してアイテムを選択し、一括操作を実行します",
-    "selectionCount": "{count} 件選択中"
+    "selectionCount": "{count} 件選択中",
+    "sortBy": "並べ替え",
+    "sortAscending": "昇順",
+    "sortDescending": "降順",
+    "selectAll": "すべて選択"
   },
   "topbar": {
     "help": "ヘルプ",

@@ -4,6 +4,53 @@
   --table-head-bg: #1e1f25;
 
   text-align: center;
+  min-width: 0;
+
+  /* Checkbox styling */
+  .styled-checkbox {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--cm-border-strong);
+    border-radius: 3px;
+    margin: 0;
+    background-color: transparent;
+    position: relative;
+    cursor: pointer;
+    vertical-align: middle;
+    transition:
+      background-color 0.2s,
+      border-color 0.2s;
+    z-index: 1;
+
+    &:checked {
+      background-color: var(--cm-primary);
+      border-color: var(--cm-primary);
+
+      &::after {
+        content: '';
+        position: absolute;
+        left: 50%;
+        top: 45%;
+        width: 5px;
+        height: 10px;
+        border: solid white;
+        border-width: 0 2px 2px 0;
+        transform: translate(-50%, -50%) rotate(45deg);
+      }
+    }
+
+    &:hover {
+      border-color: var(--cm-text-tertiary);
+    }
+
+    &:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px var(--cm-focus-ring);
+    }
+  }
 
   table {
     font-size: 0.9em;
@@ -18,52 +65,6 @@
     box-shadow: 0 0 0 1px var(--cm-border-strong); /* this draws the table border  */
 
     border-radius: 0.5em;
-
-    /* Checkbox styling */
-    .styled-checkbox {
-      appearance: none;
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      width: 18px;
-      height: 18px;
-      border: 2px solid var(--cm-border-strong);
-      border-radius: 3px;
-      margin: 0;
-      background-color: transparent;
-      position: relative;
-      cursor: pointer;
-      vertical-align: middle;
-      transition:
-        background-color 0.2s,
-        border-color 0.2s;
-      z-index: 1;
-
-      &:checked {
-        background-color: var(--cm-primary);
-        border-color: var(--cm-primary);
-
-        &::after {
-          content: '';
-          position: absolute;
-          left: 50%;
-          top: 45%;
-          width: 5px;
-          height: 10px;
-          border: solid white;
-          border-width: 0 2px 2px 0;
-          transform: translate(-50%, -50%) rotate(45deg);
-        }
-      }
-
-      &:hover {
-        border-color: var(--cm-text-tertiary);
-      }
-
-      &:focus {
-        outline: none;
-        box-shadow: 0 0 0 2px var(--cm-focus-ring);
-      }
-    }
 
     /* Checkbox cell styling */
     .checkbox-cell {
@@ -150,4 +151,192 @@
   --table-row-odd-bg: var(--cm-bg-secondary);
   --table-row-even-bg: var(--cm-bg-elevated-secondary);
   --table-head-bg: var(--cm-bg-tertiary);
+}
+
+/* Stacked card layout (opt-in via `cardLayout`) for narrow containers */
+.castmill-table.cards {
+  text-align: start;
+
+  .card-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5em 1em;
+    margin-block-end: 0.6em;
+    font-size: 0.9em;
+    color: var(--cm-text-secondary);
+  }
+
+  .card-select-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6em;
+    min-height: 2.75em;
+    padding-inline-start: 1.1em;
+    cursor: pointer;
+  }
+
+  .card-sort {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    margin-inline-start: auto;
+    min-width: 0;
+
+    select {
+      min-width: 0;
+      max-width: 12em;
+      min-height: 2.5em;
+      padding: 0 0.6em;
+      border: 0.0625em solid var(--cm-border-color);
+      border-radius: 0.4em;
+      background-color: var(--cm-bg-input);
+      color: var(--cm-text-primary);
+      font: inherit;
+    }
+  }
+
+  .card-sort-direction {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5em;
+    height: 2.5em;
+    padding: 0;
+    border: 0.0625em solid var(--cm-border-color);
+    border-radius: 0.4em;
+    background-color: var(--cm-bg-input);
+    color: var(--cm-text-primary);
+    cursor: pointer;
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+
+    &:focus-visible {
+      outline: 0.125em solid var(--cm-focus-ring);
+      outline-offset: 0.125em;
+    }
+  }
+
+  .card-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6em;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    container-type: inline-size;
+  }
+
+  .card {
+    padding: 0.5em 0.8em 0.7em;
+    border: 0.0625em solid var(--cm-border-color);
+    border-radius: 0.5em;
+    background-color: var(--cm-bg-secondary);
+    color: var(--cm-text-primary);
+    transition:
+      border-color 0.2s,
+      background-color 0.2s;
+
+    &.clickable {
+      cursor: pointer;
+
+      &:hover {
+        border-color: var(--cm-border-strong);
+      }
+    }
+
+    &.selected {
+      border-color: var(--cm-primary);
+      background-color: var(--cm-bg-selected);
+    }
+
+    &:focus-visible {
+      outline: 0.125em solid var(--cm-focus-ring);
+      outline-offset: 0.125em;
+    }
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+    min-height: 2.75em;
+  }
+
+  /* Large touch target for the row checkbox */
+  .card-select {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 2.75em;
+    height: 2.75em;
+    margin-inline-start: -0.6em;
+    cursor: pointer;
+  }
+
+  .card-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+
+  .card-actions {
+    flex: none;
+
+    /* Open the menu towards the card in both LTR and RTL */
+    :global(.castmill-menu-button-items) {
+      right: auto;
+      left: auto;
+      inset-inline-end: 0;
+      text-align: start;
+    }
+  }
+
+  .card-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35em;
+    margin: 0.3em 0 0;
+  }
+
+  .card-field {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75em;
+    min-width: 0;
+
+    dt {
+      flex: 0 0 40%;
+      max-width: 10em;
+      color: var(--cm-text-secondary);
+      font-size: 0.85em;
+      overflow-wrap: anywhere;
+    }
+
+    dd {
+      flex: 1 1 auto;
+      min-width: 0;
+      margin: 0;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  /* Very narrow containers: stack labels above values */
+  @container (max-width: 20em) {
+    .card-field {
+      flex-direction: column;
+      gap: 0.1em;
+
+      dt {
+        flex: none;
+        max-width: none;
+      }
+    }
+  }
 }

@@ -108,7 +108,11 @@
     "selectVideo": "Sélectionner une vidéo",
     "widget": "Widget",
     "selectionHint": "Utilisez les cases à cocher pour sélectionner des éléments et effectuer des actions groupées",
-    "selectionCount": "{count} sélectionnés"
+    "selectionCount": "{count} sélectionnés",
+    "sortBy": "Trier par",
+    "sortAscending": "Croissant",
+    "sortDescending": "Décroissant",
+    "selectAll": "Tout sélectionner"
   },
   "topbar": {
     "help": "Aide",

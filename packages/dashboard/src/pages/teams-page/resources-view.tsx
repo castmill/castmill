@@ -18,6 +18,7 @@ import {
 import { ResourceChooser } from './resource-chooser';
 
 import { useI18n } from '../../i18n';
+import { useTableCardLabels } from '../../hooks/useTableCardLabels';
 import { QuotaIndicator } from '../../components/quota-indicator';
 import { QuotasService, ResourceQuota } from '../../services/quotas.service';
 
@@ -73,6 +74,7 @@ export const ResourcesView = (props: {
   resourceName: string;
 }) => {
   const { t } = useI18n();
+  const cardLabels = useTableCardLabels();
 
   const openModal = () => {
     alert(t('teams.errors.openViewModal'));
@@ -325,6 +327,8 @@ export const ResourcesView = (props: {
           actions,
           actionsLabel: t('common.actions'),
           onRowSelect,
+          cardLayout: true,
+          cardLabels,
           defaultRowAction: {
             icon: BsEye,
             handler: openModal,

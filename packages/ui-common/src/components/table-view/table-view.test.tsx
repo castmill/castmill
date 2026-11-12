@@ -458,3 +458,76 @@ describe('TableView Component - Sorting Functionality', () => {
     expect(mockFetchData).not.toHaveBeenCalled();
   });
 });
+
+describe('TableView Component - Card Layout', () => {
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+  });
+
+  it('renders cards in narrow containers and sorts through the card controls', async () => {
+    let resize: ((entries: { contentRect: { width: number } }[]) => void)[] =
+      [];
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        constructor(cb: (typeof resize)[number]) {
+          resize.push(cb);
+        }
+        observe() {}
+        disconnect() {}
+      }
+    );
+
+    const fetchData = vi.fn().mockResolvedValue({
+      data: [{ id: '1', name: 'Resource 1', type: 'Image' }],
+      count: 1,
+    });
+    const onRowClick = vi.fn();
+
+    const { container } = render(() => (
+      <TableView
+        title="Resources"
+        resource="resources"
+        fetchData={fetchData}
+        pagination={{ itemsPerPage: 10 }}
+        table={{
+          columns: [
+            { key: 'name', title: 'Name', sortable: true },
+            { key: 'type', title: 'Type' },
+          ],
+          defaultRowAction: { icon: BsEye, label: 'View', handler: onRowClick },
+          cardLayout: true,
+          cardBreakpoint: 30,
+          cardPrimaryColumn: 'type',
+          cardLabels: { sortBy: 'Sort column' },
+        }}
+      />
+    ));
+
+    resize.forEach((cb) => cb([{ contentRect: { width: 320 } }]));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('table-card')).toBeInTheDocument();
+    });
+    expect(container.querySelector('table')).toBeNull();
+    expect(
+      screen.getByTestId('table-card').querySelector('[class*="card-title"]')
+    ).toHaveTextContent('Image');
+
+    fireEvent.click(screen.getByText('Resource 1'));
+    expect(onRowClick).toHaveBeenCalled();
+
+    fetchData.mockClear();
+    const select = screen.getByLabelText('Sort column') as HTMLSelectElement;
+    select.value = 'name';
+    fireEvent.change(select);
+    await waitFor(() => {
+      expect(fetchData).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sortOptions: { key: 'name', direction: 'ascending' },
+        })
+      );
+    });
+  });
+});
