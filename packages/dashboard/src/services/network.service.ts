@@ -16,6 +16,7 @@ export interface NetworkSettings {
   domain: string;
   email: string;
   logo: string;
+  logo_light?: string | null;
   copyright: string;
   default_locale: string;
   privacy_policy_url: string | null;
@@ -184,6 +185,7 @@ export interface PaginatedUsers {
 export interface PublicNetworkSettings {
   name: string;
   logo: string;
+  logo_light?: string | null;
   invitation_only: boolean;
   copyright: string;
   email: string;
@@ -280,6 +282,7 @@ export const NetworkService = {
         | 'name'
         | 'email'
         | 'logo'
+        | 'logo_light'
         | 'copyright'
         | 'invitation_only'
         | 'invitation_only_org_admins'

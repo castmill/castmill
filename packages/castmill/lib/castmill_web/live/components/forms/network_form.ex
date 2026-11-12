@@ -20,7 +20,8 @@ defmodule CastmillWeb.Live.Admin.NetworkForm do
         <.input field={@form[:name]} type="text" label="Name" />
         <.input field={@form[:email]} type="text" label="Email" />
         <.input field={@form[:domain]} type="text" label="Domain" />
-        <.input field={@form[:logo]} type="text" label="Logo" />
+        <.input field={@form[:logo]} type="text" label="Logo (dark backgrounds)" />
+        <.input field={@form[:logo_light]} type="text" label="Logo (light backgrounds)" />
         <.input field={@form[:copyright]} type="text" label="Copyright" />
 
         <div class="space-y-4 border-t pt-4 mt-4">

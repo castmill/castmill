@@ -28,6 +28,7 @@ defmodule CastmillWeb.NetworkSettingsController do
             name: network.name,
             invitation_only: network.invitation_only,
             logo: network.logo,
+            logo_light: network.logo_light,
             copyright: network.copyright,
             email: network.email,
             default_locale: network.default_locale,

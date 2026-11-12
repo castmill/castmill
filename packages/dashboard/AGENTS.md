@@ -1039,6 +1039,23 @@ view is a bug.
   animation when the user prefers reduced motion.
 - Addons receive the theme as `props.store.theme` but should style with tokens.
 
+### Logos and branding
+
+Images such as logos cannot be recoloured with tokens, so they need a variant
+per theme. The topbar picks its logo with `resolveNetworkLogo`
+(`src/theme/network-logo.ts`):
+
+| Network configuration     | Dark theme              | Light theme                                 |
+| ------------------------- | ----------------------- | ------------------------------------------- |
+| No logo                   | bundled Castmill (dark) | bundled Castmill (light)                    |
+| `logo` only               | `logo`                  | `logo` on a dark backdrop (stays legible)   |
+| `logo` and `logo_light`   | `logo`                  | `logo_light`                                |
+
+Network admins set both URLs in Network Settings (also in the Phoenix admin
+network form); `GET /dashboard/network/public-settings` returns them as `logo`
+and `logo_light`, stored in `store.networkSettings.logo`/`logoLight`. Reuse
+this resolver for any new place that shows the network logo.
+
 ### Token reference
 
 | Purpose                 | Tokens                                                                                                                         |

@@ -26,6 +26,7 @@ const NetworkSettings: Component = () => {
   const [name, setName] = createSignal('');
   const [email, setEmail] = createSignal('');
   const [logo, setLogo] = createSignal('');
+  const [logoLight, setLogoLight] = createSignal('');
   const [copyright, setCopyright] = createSignal('');
   const [privacyPolicyUrl, setPrivacyPolicyUrl] = createSignal('');
   const [defaultLocale, setDefaultLocale] = createSignal('en');
@@ -65,6 +66,7 @@ const NetworkSettings: Component = () => {
     setName(current.name || '');
     setEmail(current.email || '');
     setLogo(current.logo || '');
+    setLogoLight(current.logo_light || '');
     setCopyright(current.copyright || '');
     setPrivacyPolicyUrl(current.privacy_policy_url || '');
     setDefaultLocale(current.default_locale || 'en');
@@ -97,6 +99,7 @@ const NetworkSettings: Component = () => {
       name() !== current.name ||
       email() !== current.email ||
       logo() !== (current.logo || '') ||
+      logoLight() !== (current.logo_light || '') ||
       copyright() !== (current.copyright || '') ||
       privacyPolicyUrl() !== (current.privacy_policy_url || '') ||
       defaultLocale() !== (current.default_locale || 'en') ||
@@ -137,6 +140,7 @@ const NetworkSettings: Component = () => {
         name: name(),
         email: email(),
         logo: logo() || undefined,
+        logo_light: logoLight().trim() || null,
         copyright: copyright() || undefined,
         privacy_policy_url: privacyPolicyUrl() || undefined,
         default_locale: defaultLocale(),
@@ -152,6 +156,7 @@ const NetworkSettings: Component = () => {
       setStore('networkSettings', {
         ...store.networkSettings,
         logo: updated.logo || '',
+        logoLight: updated.logo_light || '',
         copyright: updated.copyright || '© 2011-2025 Castmill™',
         email: updated.email || 'support@castmill.com',
         defaultLocale: updated.default_locale || 'en',
@@ -232,6 +237,18 @@ const NetworkSettings: Component = () => {
           >
             <span class={styles['help-text']}>
               {t('network.identity.logoHelp')}
+            </span>
+          </FormItem>
+
+          <FormItem
+            label={t('network.identity.logoLight')}
+            id="network-logo-light"
+            value={logoLight()}
+            placeholder={t('network.identity.logoLightPlaceholder')}
+            onInput={(value) => setLogoLight(value as string)}
+          >
+            <span class={styles['help-text']}>
+              {t('network.identity.logoLightHelp')}
             </span>
           </FormItem>
 
