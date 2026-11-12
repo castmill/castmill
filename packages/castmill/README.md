@@ -35,7 +35,10 @@ HTTPS in production, or `http://localhost:4000` for local development.
 `CASTMILL_HOST` configures the production endpoint hostname. WebAuthn verifies the
 exact endpoint origin and uses its hostname as the RP ID; proxy headers and
 network/dashboard domains cannot override it. Changing that hostname requires
-new passkeys. Do not serve the admin tool under a different hostname.
+new passkeys. Do not serve the admin tool under a different hostname. When
+deploying behind a reverse proxy, set `TRUSTED_PROXIES` to a comma-separated
+list of proxy IP addresses or CIDRs so admin rate limits resolve client IPs
+without trusting spoofed forwarding headers.
 
 If all admin passkeys are lost, a trusted operator can reset **only admin**
 credentials from a release console (for example `bin/castmill remote`):

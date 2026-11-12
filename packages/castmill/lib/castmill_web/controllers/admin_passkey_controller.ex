@@ -23,7 +23,7 @@ defmodule CastmillWeb.AdminPasskeyController do
          {:ok, id} <- decode(params["id"]),
          key when not is_nil(key) <- AdminPasskeys.get(encode(id)),
          {:ok, handle} <- decode(params["user_handle"]),
-         true <- handle == key.user_id,
+         true <- handle == AdminPasskeys.user_handle(key.user_id),
          {:ok, client_data} <- client_data(params["client_data"]),
          {:ok, auth_data} <- decode(params["authenticator_data"]),
          {:ok, signature} <- decode(params["signature"]),
@@ -48,13 +48,17 @@ defmodule CastmillWeb.AdminPasskeyController do
   end
 
   def registration_options(conn, _params) do
-    with {:ok, user, bootstrap?} <- enrollment_user(conn) do
+    with {:ok, user, bootstrap?, _auth_token} <- enrollment_user(conn) do
       challenge = challenge(:attestation)
 
       issue(conn, challenge, :register, user.id, bootstrap?, %{
         challenge: encode(challenge.bytes),
         rp: %{id: challenge.rp_id, name: "Castmill Admin"},
-        user: %{id: encode(user.id), name: user.email, displayName: user.name},
+        user: %{
+          id: encode(AdminPasskeys.user_handle(user.id)),
+          name: user.email,
+          displayName: user.name
+        },
         pubKeyCredParams: [%{type: "public-key", alg: -7}, %{type: "public-key", alg: -257}],
         authenticatorSelection: %{residentKey: "required", userVerification: "required"},
         attestation: "none",
@@ -69,7 +73,7 @@ defmodule CastmillWeb.AdminPasskeyController do
 
   def register(conn, params) do
     with {:ok, challenge, pending} <- consume(conn, :register),
-         {:ok, user, bootstrap?} <- enrollment_user(conn),
+         {:ok, user, bootstrap?, auth_token} <- enrollment_user(conn),
          true <- pending.user_id == user.id && pending.bootstrap? == bootstrap?,
          {:ok, attestation} <- decode(params["attestation_object"]),
          {:ok, %{"fmt" => "none", "attStmt" => stmt, "authData" => bytes}, ""} <-
@@ -82,7 +86,7 @@ defmodule CastmillWeb.AdminPasskeyController do
          true <- byte_size(id) in 1..1023,
          true <- supported_key?(attested),
          {:ok, {_key, token}} <-
-           AdminPasskeys.register(user.id, auth_data, params["name"], bootstrap?) do
+           AdminPasskeys.register(user.id, auth_data, params["name"], bootstrap?, auth_token) do
       conn
       |> UserAuth.start_session(token)
       |> json(%{redirect: ~p"/admin/passkeys"})
@@ -116,12 +120,15 @@ defmodule CastmillWeb.AdminPasskeyController do
         token = get_session(conn, :admin_enrollment_token)
         user = token && Accounts.get_user_by_admin_enrollment_token(token)
 
-        if user && !AdminPasskeys.enrolled?(user.id),
-          do: {:ok, user, true},
+        if is_binary(token) && user && !AdminPasskeys.enrolled?(user.id),
+          do: {:ok, user, true, token},
           else: {:error, :unauthorized}
 
       user ->
-        {:ok, user, false}
+        case get_session(conn, :admin_user_token) do
+          token when is_binary(token) -> {:ok, user, false, token}
+          _ -> {:error, :unauthorized}
+        end
     end
   end
 
@@ -217,7 +224,7 @@ defmodule CastmillWeb.AdminPasskeyController do
   end
 
   defp rate_limit(conn, _opts) do
-    case Castmill.RateLimiter.allow({:admin_passkey, conn.remote_ip}, 30) do
+    case Castmill.RateLimiter.allow({:admin_passkey, Utils.RemoteIp.client_ip(conn)}, 30) do
       :ok ->
         conn
 

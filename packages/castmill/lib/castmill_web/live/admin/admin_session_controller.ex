@@ -10,8 +10,9 @@ defmodule CastmillWeb.AdminSessionController do
   def create(conn, %{"user" => %{"email" => email, "password" => password}})
       when is_binary(email) and is_binary(password) do
     token = email <> ":" <> password
+    ip = conn |> Utils.RemoteIp.client_ip() |> :inet.ntoa() |> to_string()
 
-    case Accounts.get_user_by_access_token(token, Utils.RemoteIp.get(conn)) do
+    case Accounts.get_user_by_access_token(token, ip) do
       {:ok, %{is_root: true} = user} ->
         if AdminPasskeys.root_user?(user) && !AdminPasskeys.enrolled?(user.id) do
           conn
@@ -42,7 +43,7 @@ defmodule CastmillWeb.AdminSessionController do
   end
 
   defp rate_limit(conn, _opts) do
-    case Castmill.RateLimiter.allow({:admin_password, conn.remote_ip}, 10) do
+    case Castmill.RateLimiter.allow({:admin_password, Utils.RemoteIp.client_ip(conn)}, 10) do
       :ok ->
         conn
 

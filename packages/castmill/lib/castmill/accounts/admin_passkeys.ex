@@ -23,10 +23,17 @@ defmodule Castmill.Accounts.AdminPasskeys do
 
   def get(id) when is_binary(id), do: Repo.get(AdminPasskey, id)
 
-  def register(user_id, auth_data, name, bootstrap?) do
+  def user_handle(user_id) when is_binary(user_id), do: "admin:" <> user_id
+
+  def register(user_id, auth_data, name, bootstrap?, auth_token)
+      when is_binary(user_id) and is_boolean(bootstrap?) and is_binary(auth_token) do
+    context = if bootstrap?, do: "admin_enrollment", else: "admin_passkey_session"
+
     mutate(fn ->
       lock_root!(user_id)
+      verify_authorizing_token!(user_id, auth_token, context)
       if bootstrap? && enrolled?(user_id), do: Repo.rollback(:already_enrolled)
+      if !bootstrap? && !enrolled?(user_id), do: Repo.rollback(:unauthorized)
 
       attested = auth_data.attested_credential_data
 
@@ -50,6 +57,8 @@ defmodule Castmill.Accounts.AdminPasskeys do
       end
     end)
   end
+
+  def register(_user_id, _auth_data, _name, _bootstrap?, _auth_token), do: {:error, :unauthorized}
 
   def authenticate(key, auth_data) do
     Repo.transaction(fn ->
@@ -98,6 +107,15 @@ defmodule Castmill.Accounts.AdminPasskeys do
     user = Repo.one(from u in User, where: u.id == ^user_id, lock: "FOR UPDATE")
     unless root_user?(user), do: Repo.rollback(:not_root)
     user
+  end
+
+  defp verify_authorizing_token!(user_id, token, context) do
+    query =
+      from t in UserToken.valid_session_token_query(user_id, token, context),
+        select: t.id,
+        lock: "FOR UPDATE"
+
+    if is_nil(Repo.one(query)), do: Repo.rollback(:unauthorized)
   end
 
   defp revoke_sessions(user_id) do

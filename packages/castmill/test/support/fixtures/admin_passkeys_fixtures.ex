@@ -70,9 +70,12 @@ defmodule Castmill.AdminPasskeysFixtures do
         do: :crypto.sign(:ecdsa, :sha256, message, [authenticator.private, :secp256r1]),
         else: :public_key.sign(message, :sha256, authenticator.private)
 
+    user_handle =
+      Map.get(overrides, :user_handle, Castmill.Accounts.AdminPasskeys.user_handle(user_id))
+
     %{
       "id" => encode(authenticator.id),
-      "user_handle" => encode(user_id),
+      "user_handle" => encode(user_handle),
       "authenticator_data" => encode(auth_data),
       "client_data" => client_data,
       "signature" => encode(signature)

@@ -80,6 +80,8 @@ config :phoenix, :filter_parameters, [
   "authenticator_data"
 ]
 
+config :castmill, :trusted_proxies, []
+
 # Ensure we use the Accounts impl.
 config :castmill, accounts: Castmill.Accounts
 

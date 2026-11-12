@@ -383,17 +383,8 @@ defmodule Castmill.Accounts do
   end
 
   def get_user_by_admin_enrollment_token(token) do
-    user =
-      Repo.one(
-        from t in UserToken,
-          join: u in User,
-          on: u.id == t.user_id,
-          where:
-            t.token == ^token and t.context == "admin_enrollment" and
-              t.inserted_at > ago(5, "minute"),
-          select: u
-      )
-
+    {:ok, query} = UserToken.verify_session_token_query(token, "admin_enrollment")
+    user = Repo.one(query)
     if Castmill.Accounts.AdminPasskeys.root_user?(user), do: user
   end
 

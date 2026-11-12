@@ -25,7 +25,12 @@ defmodule CastmillWeb.AdminPasskeyControllerTest do
   end
 
   test "registration validates attestation and enables passkey-only login", ctx do
-    {conn, _options, registration} = registration_request(ctx)
+    {conn, options, registration} = registration_request(ctx)
+
+    expected_handle = Base.url_encode64(AdminPasskeys.user_handle(ctx.root.id), padding: false)
+    assert options["user"]["id"] == expected_handle
+    refute options["user"]["id"] == Base.url_encode64(ctx.root.id, padding: false)
+
     replay_conn = recycle(conn)
     conn = post(recycle(conn), ~p"/admin/passkeys/register", registration)
     assert json_response(conn, 200)["redirect"] == "/admin/passkeys"
@@ -122,7 +127,8 @@ defmodule CastmillWeb.AdminPasskeyControllerTest do
     end
   end
 
-  test "dashboard passkeys cannot authenticate to the admin tool", ctx do
+  test "dashboard passkeys and dashboard user handles cannot authenticate to the admin tool",
+       ctx do
     public_key =
       ctx.authenticator.cose_key |> Wax.CoseKey.to_erlang_public_key() |> X509.PublicKey.to_der()
 
@@ -131,6 +137,17 @@ defmodule CastmillWeb.AdminPasskeyControllerTest do
     conn = post(ctx.conn, ~p"/admin/passkeys/login/options")
     params = assertion_fixture(ctx.authenticator, json_response(conn, 200), ctx.root.id)
     assert post(recycle(conn), ~p"/admin/passkeys/login", params) |> json_response(401)
+
+    enroll(ctx)
+    conn = post(build_conn(), ~p"/admin/passkeys/login/options")
+
+    dashboard_handle_params =
+      assertion_fixture(ctx.authenticator, json_response(conn, 200), ctx.root.id, %{
+        user_handle: ctx.root.id
+      })
+
+    assert post(recycle(conn), ~p"/admin/passkeys/login", dashboard_handle_params)
+           |> json_response(401)
   end
 
   test "blocked root users cannot bootstrap or use existing passkeys", ctx do
@@ -412,11 +429,133 @@ defmodule CastmillWeb.AdminPasskeyControllerTest do
     end
   end
 
-  test "limits challenge requests", %{conn: conn} do
+  test "registration revalidates authorizing token under the user lock", ctx do
+    import Ecto.Query
+
+    backup_auth = authenticator_fixture()
+
+    auth_data = %{
+      sign_count: 0,
+      attested_credential_data: %{
+        credential_id: backup_auth.id,
+        credential_public_key: backup_auth.cose_key
+      }
+    }
+
+    conn = enroll(ctx)
+    session_token = get_session(conn, :admin_user_token)
+
+    other_root = user_fixture()
+
+    access_token_fixture(%{
+      user_id: other_root.id,
+      secret: "#{other_root.email}:password",
+      is_root: true
+    })
+
+    other_session = Accounts.generate_admin_session_token(other_root.id)
+
+    assert {:error, :unauthorized} =
+             AdminPasskeys.register(ctx.root.id, auth_data, "Wrong owner", false, other_session)
+
+    for bad_context <- ["session", "admin_session", "admin_enrollment"] do
+      bad_token = :crypto.strong_rand_bytes(32)
+      Repo.insert!(%UserToken{user_id: ctx.root.id, token: bad_token, context: bad_context})
+
+      assert {:error, :unauthorized} =
+               AdminPasskeys.register(ctx.root.id, auth_data, "Wrong context", false, bad_token)
+    end
+
+    assert {:error, :unauthorized} =
+             AdminPasskeys.register(ctx.root.id, auth_data, "Wrong mode", true, session_token)
+
+    expired_token = Accounts.generate_admin_session_token(ctx.root.id)
+
+    Repo.update_all(from(t in UserToken, where: t.token == ^expired_token),
+      set: [
+        inserted_at: DateTime.add(DateTime.utc_now(), -61, :day) |> DateTime.truncate(:second)
+      ]
+    )
+
+    assert {:error, :unauthorized} =
+             AdminPasskeys.register(ctx.root.id, auth_data, "Expired", false, expired_token)
+
+    assert {:error, :unauthorized} =
+             AdminPasskeys.register(ctx.root.id, auth_data, "Missing token", false, nil)
+
+    # Simulate session revocation (e.g. reset/delete) after registration_options or pre-checks.
+    options_conn = post(recycle(conn), ~p"/admin/passkeys/register/options")
+    registration = registration_fixture(backup_auth, json_response(options_conn, 200))
+    assert {:ok, :ok} = AdminPasskeys.reset(ctx.root.id)
+
+    assert {:error, :unauthorized} =
+             AdminPasskeys.register(ctx.root.id, auth_data, "Revoked", false, session_token)
+
+    assert post(recycle(options_conn), ~p"/admin/passkeys/register", registration)
+           |> json_response(422)
+
+    refute AdminPasskeys.enrolled?(ctx.root.id)
+    assert Accounts.get_user_by_admin_session_token(session_token) == nil
+  end
+
+  test "limits challenge and password requests using trusted proxy client IPs", %{
+    conn: conn,
+    root: root
+  } do
+    previous = Application.get_env(:castmill, :trusted_proxies, [])
+    on_exit(fn -> Application.put_env(:castmill, :trusted_proxies, previous) end)
+
     for _ <- 1..30,
         do: assert(post(conn, ~p"/admin/passkeys/login/options") |> json_response(200))
 
     assert post(conn, ~p"/admin/passkeys/login/options") |> json_response(429)
+
+    # Untrusted peer cannot bypass rate limit with spoofed X-Forwarded-For.
+    spoofed = put_req_header(conn, "x-forwarded-for", "198.51.100.25")
+    assert post(spoofed, ~p"/admin/passkeys/login/options") |> json_response(429)
+
+    # Behind an explicitly trusted proxy, separate client IPs use separate buckets.
+    Application.put_env(:castmill, :trusted_proxies, ["10.0.0.0/8"])
+    Castmill.RateLimiter.clear()
+
+    proxy_client_a =
+      %{build_conn() | remote_ip: {10, 0, 0, 5}}
+      |> put_req_header("x-forwarded-for", "203.0.113.99, 198.51.100.10")
+
+    proxy_client_b =
+      %{build_conn() | remote_ip: {10, 0, 0, 5}}
+      |> put_req_header("x-forwarded-for", "198.51.100.11")
+
+    for i <- 1..30 do
+      req = put_req_header(proxy_client_a, "x-forwarded-for", "203.0.113.#{i}, 198.51.100.10")
+      assert post(req, ~p"/admin/passkeys/login/options") |> json_response(200)
+    end
+
+    assert post(proxy_client_a, ~p"/admin/passkeys/login/options") |> json_response(429)
+    assert post(proxy_client_b, ~p"/admin/passkeys/login/options") |> json_response(200)
+
+    for _ <- 1..10 do
+      assert post(proxy_client_a, ~p"/admin/login", %{
+               "user" => %{"email" => root.email, "password" => "wrong"}
+             })
+             |> redirected_to() == "/admin/login"
+    end
+
+    throttled =
+      post(proxy_client_a, ~p"/admin/login", %{
+        "user" => %{"email" => root.email, "password" => "password"}
+      })
+
+    assert redirected_to(throttled) == "/admin/login"
+    refute get_session(throttled, :admin_enrollment_token)
+
+    allowed =
+      post(proxy_client_b, ~p"/admin/login", %{
+        "user" => %{"email" => root.email, "password" => "password"}
+      })
+
+    assert redirected_to(allowed) == "/admin/passkeys/enroll"
+    assert get_session(allowed, :admin_enrollment_token)
   end
 
   defp bootstrap(conn, root) do

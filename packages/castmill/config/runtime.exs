@@ -31,6 +31,14 @@ if node_mode = System.get_env("CASTMILL_NODE_MODE") do
   config :castmill, :node_mode, node_mode
 end
 
+case System.get_env("TRUSTED_PROXIES") do
+  proxies when proxies in [nil, ""] ->
+    :ok
+
+  proxies ->
+    config :castmill, :trusted_proxies, Utils.RemoteIp.parse_trusted_proxies!(proxies)
+end
+
 case System.get_env("MEDIA_PUBLIC_BASE_URL") do
   base_url when base_url in [nil, ""] ->
     :ok
