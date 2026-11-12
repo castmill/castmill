@@ -1,0 +1,86 @@
+$card-padding: 1.2em;
+$card-padding-phone: 1em;
+
+.card {
+  min-width: 0;
+  padding: $card-padding;
+  border: 1px solid var(--cm-border-color);
+  border-radius: 0.6em;
+  background: var(--cm-bg-elevated-secondary);
+  color: var(--cm-text-primary);
+
+  > .header {
+    margin-bottom: 1em;
+  }
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.6em 1em;
+
+  h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    margin: 0;
+    color: var(--cm-text-primary);
+    font-size: 1em;
+    font-weight: 700;
+  }
+}
+
+.heading {
+  flex: 1 1 14em;
+  min-width: 0;
+}
+
+.icon {
+  display: inline-flex;
+  color: var(--cm-primary);
+}
+
+.count {
+  padding: 0.1em 0.55em;
+  border-radius: 999px;
+  background: rgba(var(--cm-primary-rgb), 0.15);
+  color: var(--cm-link);
+  font-size: 0.75em;
+  font-weight: 700;
+}
+
+.description {
+  margin: 0.35em 0 0;
+  color: var(--cm-text-secondary);
+  font-size: 0.82em;
+  line-height: 1.45;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5em;
+}
+
+// The footer bleeds to the card edges.
+.footer {
+  margin: 1em (-$card-padding) (-$card-padding);
+  padding: 1em $card-padding;
+  border-top: 1px solid var(--cm-border-color);
+  border-radius: 0 0 0.6em 0.6em;
+  background: var(--cm-bg-sunken);
+}
+
+@media (max-width: 36em) {
+  .card {
+    padding: $card-padding-phone;
+  }
+
+  .footer {
+    margin: 1em (-$card-padding-phone) (-$card-padding-phone);
+    padding: 0.8em $card-padding-phone;
+  }
+}

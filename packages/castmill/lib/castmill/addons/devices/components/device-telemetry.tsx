@@ -13,15 +13,15 @@ import {
   BsActivity,
   BsArrowClockwise,
 } from 'solid-icons/bs';
-import { LoadingOverlay, formatBytes } from '@castmill/ui-common';
+import {
+  LoadingOverlay,
+  SectionCardHeader,
+  formatBytes,
+} from '@castmill/ui-common';
 import { Device } from '../interfaces/device.interface';
 import { DevicesService } from '../services/devices.service';
 import styles from './device-telemetry.module.scss';
-import {
-  DeviceCardHeader,
-  DeviceIconButton,
-  DeviceNotice,
-} from './device-section';
+import { DeviceIconButton, DeviceNotice } from './device-section';
 
 interface TelemetryData {
   storage?: { totalBytes: number; usedBytes: number };
@@ -196,21 +196,19 @@ export const DeviceTelemetry: Component<{
           </DeviceNotice>
         }
       >
-        <div class={styles.header}>
-          <DeviceCardHeader
-            icon={BsActivity}
-            title={t('common.telemetry')}
-            description={t('devices.telemetry.description')}
-            actions={
-              <DeviceIconButton
-                icon={BsArrowClockwise}
-                label={t('devices.telemetry.refresh')}
-                disabled={loading()}
-                onClick={fetchTelemetry}
-              />
-            }
-          />
-        </div>
+        <SectionCardHeader
+          icon={BsActivity}
+          title={t('common.telemetry')}
+          description={t('devices.telemetry.description')}
+          actions={
+            <DeviceIconButton
+              icon={BsArrowClockwise}
+              label={t('devices.telemetry.refresh')}
+              disabled={loading()}
+              onClick={fetchTelemetry}
+            />
+          }
+        />
 
         <Show when={error()}>
           <DeviceNotice tone="error">

@@ -10,12 +10,13 @@ import {
   ConfirmDialog,
   Modal,
   useToast,
+  SectionCard,
 } from '@castmill/ui-common';
 
 import { Device } from '../interfaces/device.interface';
 
 import { DevicesService } from '../services/devices.service';
-import { DeviceCardHeader, DeviceTableTime } from './device-section';
+import { DeviceTableTime } from './device-section';
 import './device-events.scss';
 
 interface DeviceTableLogItem {
@@ -179,22 +180,22 @@ export const DeviceLogs: Component<{
 
   return (
     <>
-      <section class="device-card device-events">
-        <DeviceCardHeader
-          icon={BsListUl}
-          title={t('devices.events.title')}
-          description={t('devices.events.description')}
-          actions={
-            <button
-              type="button"
-              class="device-text-button danger"
-              onClick={() => setShowConfirmClearAll(true)}
-            >
-              <BsXCircle aria-hidden="true" />
-              {t('devices.events.clearAll')}
-            </button>
-          }
-        />
+      <SectionCard
+        class="device-events"
+        icon={BsListUl}
+        title={t('devices.events.title')}
+        description={t('devices.events.description')}
+        actions={
+          <button
+            type="button"
+            class="device-text-button danger"
+            onClick={() => setShowConfirmClearAll(true)}
+          >
+            <BsXCircle aria-hidden="true" />
+            {t('devices.events.clearAll')}
+          </button>
+        }
+      >
         <div class="device-table-scroll device-table-fit device-events-table">
           <TableView
             title={t('devices.events.title')}
@@ -215,7 +216,7 @@ export const DeviceLogs: Component<{
             pagination={{ itemsPerPage }}
           ></TableView>
         </div>
-      </section>
+      </SectionCard>
 
       {/* Confirm dialog for clearing all events */}
       <ConfirmDialog

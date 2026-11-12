@@ -206,11 +206,6 @@
   align-items: center;
   justify-content: flex-end;
   gap: 0.5em;
-  margin: 1.2em -1.2em -1.2em;
-  padding: 0.8em 1.2em;
-  border-top: 1px solid var(--cm-border-color);
-  border-radius: 0 0 0.6em 0.6em;
-  background: var(--cm-bg-elevated-secondary);
 
   .device-settings-dirty {
     flex: 1 1 auto;

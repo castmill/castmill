@@ -6,7 +6,9 @@ import { DevicesService } from '../services/devices.service';
 
 const toast = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn() }));
 
-vi.mock('@castmill/ui-common', () => ({
+vi.mock('@castmill/ui-common', async (importOriginal) => ({
+  SectionCard: (await importOriginal<typeof import('@castmill/ui-common')>())
+    .SectionCard,
   ComboBox: (props: any) => (
     <button
       onClick={() => props.onSelect({ id: 7, name: 'New', timezone: 'UTC' })}

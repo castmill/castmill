@@ -2,7 +2,7 @@ import { createSignal, createEffect, on, For, Show } from 'solid-js';
 import type { Orientation } from '@castmill/device';
 
 import { Device } from '../interfaces/device.interface';
-import { Button, FormItem } from '@castmill/ui-common';
+import { Button, FormItem, SectionCard } from '@castmill/ui-common';
 import { AddonStore } from '../../common/interfaces/addon-store';
 
 import { BsArrowUp, BsCheckLg, BsInfoCircle, BsX } from 'solid-icons/bs';
@@ -122,7 +122,7 @@ export const DeviceDetails = (props: {
 
   return (
     <form
-      class="device-settings device-card"
+      class="device-settings"
       classList={{ 'is-dirty': isFormModified() }}
       onSubmit={async (e) => {
         e.preventDefault();
@@ -138,163 +138,165 @@ export const DeviceDetails = (props: {
         }
       }}
     >
-      <header class="device-card-header">
-        <h3>{t('devices.details.settings')}</h3>
-      </header>
-
-      <div class="device-settings-fields">
-        <FormItem
-          label={t('common.name')}
-          id="name"
-          value={name()}
-          placeholder={t('devices.enterDeviceName')}
-          disabled={!canEdit()}
-          onInput={(value: string | number | boolean) => {
-            const nextValue = String(value);
-            setName(nextValue);
-            validateField('name', nextValue);
-          }}
-        >
-          <div class="error">{errors().get('name')}</div>
-        </FormItem>
-
-        <FormItem
-          label={t('common.description')}
-          id="description"
-          value={description()}
-          placeholder={t('devices.enterDescription')}
-          disabled={!canEdit()}
-          onInput={(value: string | number | boolean) => {
-            const nextValue = String(value);
-            setDescription(nextValue);
-            validateField('description', nextValue);
-          }}
-        >
-          <div class="error">{errors().get('description')}</div>
-        </FormItem>
-      </div>
-
-      <div class="device-orientation" classList={{ expanded: pickerOpen() }}>
-        <div class="device-orientation-row">
-          <span
-            class="orientation-screen"
-            classList={{ portrait: isPortrait(orientation()) }}
-            aria-hidden="true"
+      <SectionCard
+        title={t('devices.details.settings')}
+        footerClass="device-settings-actions"
+        footer={
+          canEdit() ? (
+            <>
+              <span class="device-settings-dirty" aria-live="polite">
+                {isFormModified() ? t('devices.details.unsavedChanges') : ''}
+              </span>
+              <Button
+                label={t('common.reset')}
+                onClick={resetForm}
+                icon={BsX}
+                color="secondary"
+                disabled={!isFormModified()}
+              />
+              <Button
+                label={t('common.save')}
+                type="submit"
+                disabled={!isFormValid()}
+                icon={BsCheckLg}
+                color="success"
+              />
+            </>
+          ) : undefined
+        }
+      >
+        <div class="device-settings-fields">
+          <FormItem
+            label={t('common.name')}
+            id="name"
+            value={name()}
+            placeholder={t('devices.enterDeviceName')}
+            disabled={!canEdit()}
+            onInput={(value: string | number | boolean) => {
+              const nextValue = String(value);
+              setName(nextValue);
+              validateField('name', nextValue);
+            }}
           >
-            <BsArrowUp style={{ transform: `rotate(${orientation()}deg)` }} />
-          </span>
-          <div class="device-orientation-summary">
-            <div class="device-orientation-label">
-              <span id={legendId()}>{t('devices.orientation.label')}</span>
-              <div class="device-orientation-help">
-                <button
-                  type="button"
-                  aria-label={t('devices.orientation.help')}
-                  aria-describedby={helpId()}
-                >
-                  <BsInfoCircle />
-                </button>
-                <span id={helpId()} role="tooltip">
-                  {t('devices.orientation.help')}
-                </span>
-              </div>
-            </div>
-            <span class="device-orientation-value" data-value={orientation()}>
-              {orientation()}° ·{' '}
-              {t(`devices.orientation.options.deg${orientation()}`)}
-            </span>
-          </div>
-          <Show when={!orientationLocked()}>
-            <button
-              type="button"
-              class="device-orientation-toggle"
-              aria-expanded={pickerOpen()}
-              aria-controls={pickerId()}
-              onClick={() => setPickerOpen(!pickerOpen())}
-            >
-              {pickerOpen()
-                ? t('devices.orientation.done')
-                : t('devices.orientation.change')}
-            </button>
-          </Show>
+            <div class="error">{errors().get('name')}</div>
+          </FormItem>
+
+          <FormItem
+            label={t('common.description')}
+            id="description"
+            value={description()}
+            placeholder={t('devices.enterDescription')}
+            disabled={!canEdit()}
+            onInput={(value: string | number | boolean) => {
+              const nextValue = String(value);
+              setDescription(nextValue);
+              validateField('description', nextValue);
+            }}
+          >
+            <div class="error">{errors().get('description')}</div>
+          </FormItem>
         </div>
 
-        <Show when={pickerOpen() && !orientationLocked()}>
-          <fieldset
-            id={pickerId()}
-            class="orientation-options"
-            role="radiogroup"
-            aria-labelledby={legendId()}
-            aria-describedby={helpId()}
-          >
-            <For each={ORIENTATIONS}>
-              {(angle) => (
-                <label
-                  class="orientation-option"
-                  classList={{ selected: orientation() === angle }}
-                  title={t(`devices.orientation.options.deg${angle}`)}
-                >
-                  <input
-                    type="radio"
-                    name={`orientation-${props.device.id}`}
-                    value={angle}
-                    checked={orientation() === angle}
-                    onChange={() => setOrientation(angle)}
-                  />
-                  <span
-                    class="orientation-screen mini"
-                    classList={{ portrait: isPortrait(angle) }}
-                    aria-hidden="true"
+        <div class="device-orientation" classList={{ expanded: pickerOpen() }}>
+          <div class="device-orientation-row">
+            <span
+              class="orientation-screen"
+              classList={{ portrait: isPortrait(orientation()) }}
+              aria-hidden="true"
+            >
+              <BsArrowUp style={{ transform: `rotate(${orientation()}deg)` }} />
+            </span>
+            <div class="device-orientation-summary">
+              <div class="device-orientation-label">
+                <span id={legendId()}>{t('devices.orientation.label')}</span>
+                <div class="device-orientation-help">
+                  <button
+                    type="button"
+                    aria-label={t('devices.orientation.help')}
+                    aria-describedby={helpId()}
                   >
-                    <BsArrowUp style={{ transform: `rotate(${angle}deg)` }} />
+                    <BsInfoCircle />
+                  </button>
+                  <span id={helpId()} role="tooltip">
+                    {t('devices.orientation.help')}
                   </span>
-                  <span class="orientation-angle">{angle}°</span>
-                  <span class="visually-hidden">
-                    {t(`devices.orientation.options.deg${angle}`)}
-                  </span>
-                </label>
-              )}
-            </For>
-          </fieldset>
-        </Show>
+                </div>
+              </div>
+              <span class="device-orientation-value" data-value={orientation()}>
+                {orientation()}° ·{' '}
+                {t(`devices.orientation.options.deg${orientation()}`)}
+              </span>
+            </div>
+            <Show when={!orientationLocked()}>
+              <button
+                type="button"
+                class="device-orientation-toggle"
+                aria-expanded={pickerOpen()}
+                aria-controls={pickerId()}
+                onClick={() => setPickerOpen(!pickerOpen())}
+              >
+                {pickerOpen()
+                  ? t('devices.orientation.done')
+                  : t('devices.orientation.change')}
+              </button>
+            </Show>
+          </div>
 
-        <Show
-          when={supportsOrientation()}
-          fallback={
-            <p class="device-settings-note">
-              {t('devices.orientation.unsupported')}
-            </p>
-          }
-        >
-          <Show when={orientationStatus()}>
-            <p class="device-settings-note" role="status">
-              {orientationStatus()}
-            </p>
+          <Show when={pickerOpen() && !orientationLocked()}>
+            <fieldset
+              id={pickerId()}
+              class="orientation-options"
+              role="radiogroup"
+              aria-labelledby={legendId()}
+              aria-describedby={helpId()}
+            >
+              <For each={ORIENTATIONS}>
+                {(angle) => (
+                  <label
+                    class="orientation-option"
+                    classList={{ selected: orientation() === angle }}
+                    title={t(`devices.orientation.options.deg${angle}`)}
+                  >
+                    <input
+                      type="radio"
+                      name={`orientation-${props.device.id}`}
+                      value={angle}
+                      checked={orientation() === angle}
+                      onChange={() => setOrientation(angle)}
+                    />
+                    <span
+                      class="orientation-screen mini"
+                      classList={{ portrait: isPortrait(angle) }}
+                      aria-hidden="true"
+                    >
+                      <BsArrowUp style={{ transform: `rotate(${angle}deg)` }} />
+                    </span>
+                    <span class="orientation-angle">{angle}°</span>
+                    <span class="visually-hidden">
+                      {t(`devices.orientation.options.deg${angle}`)}
+                    </span>
+                  </label>
+                )}
+              </For>
+            </fieldset>
           </Show>
-        </Show>
-      </div>
 
-      <Show when={canEdit()}>
-        <footer class="device-settings-actions">
-          <span class="device-settings-dirty" aria-live="polite">
-            {isFormModified() ? t('devices.details.unsavedChanges') : ''}
-          </span>
-          <Button
-            label={t('common.reset')}
-            onClick={resetForm}
-            icon={BsX}
-            color="secondary"
-            disabled={!isFormModified()}
-          />
-          <Button
-            label={t('common.save')}
-            type="submit"
-            disabled={!isFormValid()}
-            icon={BsCheckLg}
-            color="success"
-          />
-        </footer>
-      </Show>
+          <Show
+            when={supportsOrientation()}
+            fallback={
+              <p class="device-settings-note">
+                {t('devices.orientation.unsupported')}
+              </p>
+            }
+          >
+            <Show when={orientationStatus()}>
+              <p class="device-settings-note" role="status">
+                {orientationStatus()}
+              </p>
+            </Show>
+          </Show>
+        </div>
+      </SectionCard>
     </form>
   );
 };

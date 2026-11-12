@@ -6,6 +6,7 @@ import {
   createSignal,
   onMount,
 } from 'solid-js';
+import { SectionCard } from '@castmill/ui-common';
 import { BsArrowClockwise, BsLightningCharge } from 'solid-icons/bs';
 import { Device } from '../interfaces/device.interface';
 import {
@@ -14,11 +15,7 @@ import {
   DeviceAutomationsPayload,
   DevicesService,
 } from '../services/devices.service';
-import {
-  DeviceCardHeader,
-  DeviceIconButton,
-  DeviceNotice,
-} from './device-section';
+import { DeviceIconButton, DeviceNotice } from './device-section';
 import './device-automations.scss';
 
 type Translate = (key: string, params?: Record<string, any>) => string;
@@ -158,22 +155,20 @@ export const DeviceAutomations: Component<{
 
   return (
     <div class="device-automations">
-      <section class="device-card">
-        <DeviceCardHeader
-          icon={BsLightningCharge}
-          title={t('automations.device.title')}
-          description={t('automations.device.description')}
-          count={payload() ? automations().length : undefined}
-          actions={
-            <DeviceIconButton
-              icon={BsArrowClockwise}
-              label={t('automations.device.refresh')}
-              disabled={loading()}
-              onClick={load}
-            />
-          }
-        />
-
+      <SectionCard
+        icon={BsLightningCharge}
+        title={t('automations.device.title')}
+        description={t('automations.device.description')}
+        count={payload() ? automations().length : undefined}
+        actions={
+          <DeviceIconButton
+            icon={BsArrowClockwise}
+            label={t('automations.device.refresh')}
+            disabled={loading()}
+            onClick={load}
+          />
+        }
+      >
         <Show when={error()}>
           <DeviceNotice tone="error">
             <p>{t('automations.device.loadFailed')}</p>
@@ -215,20 +210,19 @@ export const DeviceAutomations: Component<{
             </For>
           </ul>
         </Show>
-      </section>
+      </SectionCard>
 
       <Show when={automations().length > 0}>
-        <section class="device-card">
-          <DeviceCardHeader
-            title={t('automations.device.upcoming')}
-            description={
-              timeZone()
-                ? t('automations.device.timezoneNote', {
-                    timezone: timeZone(),
-                  })
-                : undefined
-            }
-          />
+        <SectionCard
+          title={t('automations.device.upcoming')}
+          description={
+            timeZone()
+              ? t('automations.device.timezoneNote', {
+                  timezone: timeZone(),
+                })
+              : undefined
+          }
+        >
           <Show
             when={firings().length > 0}
             fallback={
@@ -253,7 +247,7 @@ export const DeviceAutomations: Component<{
               </For>
             </ol>
           </Show>
-        </section>
+        </SectionCard>
       </Show>
     </div>
   );
