@@ -98,7 +98,8 @@ defmodule CastmillWeb.AdminPasskeyController do
 
   def delete(conn, %{"id" => id}) do
     with user when not is_nil(user) <- conn.assigns[:current_user],
-         {:ok, _key} <- AdminPasskeys.delete(user.id, id) do
+         {:ok, _key} <-
+           AdminPasskeys.delete(user.id, id, get_session(conn, :admin_user_token)) do
       # Removing a key revokes every admin session; require a fresh assertion.
       conn |> UserAuth.log_out_user()
     else

@@ -80,9 +80,10 @@ defmodule Castmill.Accounts.AdminPasskeys do
     end)
   end
 
-  def delete(user_id, id) do
+  def delete(user_id, id, auth_token) when is_binary(auth_token) do
     mutate(fn ->
       lock_root!(user_id)
+      verify_authorizing_token!(user_id, auth_token, "admin_passkey_session")
       key = Repo.get_by(AdminPasskey, id: id, user_id: user_id)
       if is_nil(key), do: Repo.rollback(:not_found)
       if length(list(user_id)) <= 1, do: Repo.rollback(:last_passkey)
@@ -90,6 +91,8 @@ defmodule Castmill.Accounts.AdminPasskeys do
       {key, revoke_sessions(user_id)}
     end)
   end
+
+  def delete(_user_id, _id, _auth_token), do: {:error, :unauthorized}
 
   @doc """
   Operator-only recovery from a trusted release console. Removes admin passkeys

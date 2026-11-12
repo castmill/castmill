@@ -296,6 +296,16 @@ defmodule CastmillWeb.AdminPasskeyControllerTest do
     assert length(AdminPasskeys.list(ctx.root.id)) == 1
   end
 
+  test "management rejects deletion with a revoked admin session", ctx do
+    conn = enroll(ctx)
+    token = get_session(conn, :admin_user_token)
+    [key] = AdminPasskeys.list(ctx.root.id)
+    Accounts.delete_admin_session_token(token)
+
+    assert {:error, :unauthorized} = AdminPasskeys.delete(ctx.root.id, key.id, token)
+    assert AdminPasskeys.get(key.id)
+  end
+
   test "rejects duplicate credentials, invalid names and another admin's deletion request", ctx do
     conn = enroll(ctx)
     [key] = AdminPasskeys.list(ctx.root.id)
