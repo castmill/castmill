@@ -90,7 +90,12 @@ describe('Layout widget duration before rendering', () => {
     },
     config: {
       options: {
-        video: { files: { poster: { uri: `https://media.test/${name}.mp4` } } },
+        video: {
+          files: {
+            poster: { uri: `https://media.test/${name}.mp4` },
+            preview: { uri: `https://media.test/${name}.mp4` },
+          },
+        },
       },
       data: {},
     },
@@ -187,7 +192,7 @@ describe('Layout widget duration before rendering', () => {
     ];
     let ready = false;
     const layer = Layer.fromJSON(item as any, resources, {
-      target: 'poster',
+      target: 'preview',
       createVideoPlaybackController: (video: HTMLVideoElement) => {
         video.load = () => {
           setTimeout(
