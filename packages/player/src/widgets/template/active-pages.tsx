@@ -125,6 +125,8 @@ export const ActivePages: Component<ActivePagesProps> = (props) => {
 
   // Measured page durations by source index (auto mode).
   const measured = new Map<number, number>();
+  let measuredPages = pages();
+  let positionShift = 0;
   let rotation = (resumeKey && resumePositions.get(resumeKey)) || 0;
   let shownInRun = 0;
   let noted = -1;
@@ -331,9 +333,11 @@ export const ActivePages: Component<ActivePagesProps> = (props) => {
     const length = page.timeline.duration() || fixedMs();
     if (measured.get(page.source) === length) return;
     // Keep the current position within its page: only later pages move.
-    const at = locate(offset());
+    const previousPosition = offset();
+    const at = locate(previousPosition);
     measured.set(page.source, length);
     base = startOf(at.page) + at.local;
+    positionShift += base - previousPosition;
     started = Date.now();
     if (item) item.duration = duration();
   };
@@ -357,7 +361,8 @@ export const ActivePages: Component<ActivePagesProps> = (props) => {
     duration,
     play(value = 0) {
       stopTimer();
-      if (resumeKey && value < START_MS && reached - value >= START_MS) {
+      let position = value + positionShift;
+      if (resumeKey && position < START_MS && reached - position >= START_MS) {
         const next = resumePositions.get(resumeKey) || 0;
         shownInRun = 0;
         noted = -1;
@@ -366,18 +371,21 @@ export const ActivePages: Component<ActivePagesProps> = (props) => {
           rotation = next;
           reset();
         }
+        positionShift = 0;
+        position = value;
       }
-      base = value;
+      base = position;
       started = Date.now();
       running = true;
-      if (slide?.tween && locate(value).page === current) slide.tween.resume();
+      if (slide?.tween && locate(position).page === current)
+        slide.tween.resume();
       else finishSlide();
       sync(true);
       timer = setInterval(() => sync(), 50);
     },
     seek(value) {
       finishSlide();
-      base = value;
+      base = value + positionShift;
       started = Date.now();
       sync(true);
     },
@@ -391,7 +399,16 @@ export const ActivePages: Component<ActivePagesProps> = (props) => {
 
   createEffect(() => {
     const n = count();
+    const currentPages = pages();
     untrack(() => {
+      if (currentPages !== measuredPages) {
+        base = offset() - positionShift;
+        started = Date.now();
+        measured.clear();
+        measuredPages = currentPages;
+        positionShift = 0;
+        if (item) item.duration = duration();
+      }
       measured.forEach((_value, key) => {
         if (key >= n) measured.delete(key);
       });

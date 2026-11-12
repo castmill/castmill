@@ -42,7 +42,7 @@ class PlaylistClock {
   // `start` is the playlist time playback starts at, so an item that is
   // already blocked before the first tick is held at its start offset.
   constructor(
-    private readonly duration: number,
+    private readonly duration: () => number,
     start = 0,
     private readonly loop = true
   ) {
@@ -75,8 +75,9 @@ class PlaylistClock {
   }
 
   private wrap(value: number): number {
-    return this.loop
-      ? ((value % this.duration) + this.duration) % this.duration
+    const duration = this.duration();
+    return this.loop && duration > 0
+      ? ((value % duration) + duration) % duration
       : value;
   }
 }
@@ -166,19 +167,24 @@ export class Playlist extends EventEmitter {
   }
 
   private getLayersWithOffsets(): LayerWithOffsets[] {
-    // Compute offsets for every layer
-    let end = 0;
-    return this.layers.map((layer) => {
-      const duration = layer.duration();
-      const start = end;
-      end += duration;
-      const result = {
-        start,
-        end,
-        duration,
+    const layers = this.layers;
+    return layers.map((layer, index) => {
+      const start = () =>
+        layers
+          .slice(0, index)
+          .reduce((end, previous) => end + previous.duration(), 0);
+      return {
+        get start() {
+          return start();
+        },
+        get duration() {
+          return layer.duration();
+        },
+        get end() {
+          return start() + layer.duration();
+        },
         layer,
       };
-      return result;
     });
   }
 
@@ -204,10 +210,8 @@ export class Playlist extends EventEmitter {
 
       // We start playing from the found layer at the current offset.
       let current: Layer;
-      const duration = layersWithOffsets.reduce(
-        (acc, item) => acc + item.duration,
-        0
-      );
+      const duration = () =>
+        layersWithOffsets.reduce((acc, item) => acc + item.duration, 0);
       const clock = new PlaylistClock(duration, this.time, loop);
       const skips = { count: 0 };
       const playlistTimer$ = timer$.pipe(
@@ -245,13 +249,13 @@ export class Playlist extends EventEmitter {
               playlistTimer$,
               element.layer,
               layerOffset,
-              element.start,
-              element.end,
+              () => element.start,
+              () => element.end,
               (elapsed) =>
                 this.updateDebugOverlay(renderer, elapsed, element, next, {
                   index: layersWithOffsets.indexOf(element),
                   count: layersWithOffsets.length,
-                  duration,
+                  duration: duration(),
                 })
             ),
             !loop
@@ -377,16 +381,16 @@ export class Playlist extends EventEmitter {
     timer$: Observable<number>,
     layer: Layer,
     layerOffset: number,
-    start: number,
-    end: number,
+    start: () => number,
+    end: () => number,
     onTick?: (elapsed: number) => void
   ): Observable<string | number> {
     const volume = 100;
     return renderer.play(
       layer,
       timer$.pipe(
-        takeWhile((value) => value >= start && value < end),
-        map((value) => value - start),
+        takeWhile((value) => value >= start() && value < end()),
+        map((value) => value - start()),
         tap((elapsed) => onTick?.(elapsed)),
         share()
       ),

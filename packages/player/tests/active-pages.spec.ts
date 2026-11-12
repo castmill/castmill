@@ -118,9 +118,12 @@ describe('active-only paginated lists', () => {
         target: 'poster',
         createVideoPlaybackController: (video: HTMLVideoElement) => {
           Object.defineProperty(video, 'readyState', { get: () => 4 });
-          Object.defineProperty(video, 'duration', { get: () => 2 });
+          Object.defineProperty(video, 'duration', {
+            configurable: true,
+            get: () => 2,
+          });
+          configureVideo?.(video);
           if (!withPlaybackController) {
-            configureVideo?.(video);
             return undefined as any;
           }
           peak = Math.max(peak, ++loaded);
@@ -203,6 +206,54 @@ describe('active-only paginated lists', () => {
     expect(peak).to.equal(1);
     expect(text()).to.equal('Post 0');
     current.stop();
+  });
+
+  it('clears auto-duration measurements when the page contents change', async () => {
+    let now = new Date(2026, 0, 1, 10, 0).getTime();
+    originalNow = Date.now;
+    Date.now = () => now;
+    tickClock();
+    const entries = [
+      { ...posts[0], start: '2026-01-01T09:00:00', end: '2026-01-01T11:00:00' },
+      { ...posts[1], start: '2026-01-01T09:00:00', end: '2026-01-01T11:00:00' },
+      { ...posts[2], start: '2026-01-01T09:00:00', end: '2026-01-01T10:01:00' },
+      { ...posts[3], start: '2026-01-01T10:01:00', end: '2026-01-01T11:00:00' },
+    ];
+    const current = await show(
+      entries,
+      {
+        pageDuration: 'auto',
+        items: {
+          list: {
+            key: 'data.entries',
+            where: [
+              { key: '$.start', lte: '@now' },
+              { key: '$.end', gte: '@now' },
+            ],
+          },
+        },
+      },
+      undefined,
+      undefined,
+      true,
+      (video) => {
+        Object.defineProperty(video, 'duration', {
+          configurable: true,
+          get: () => (video.src.endsWith('/2.mp4') ? 10 : 2),
+        });
+      }
+    );
+
+    current.seek(4500);
+    await flush();
+    expect(text()).to.equal('Post 2');
+    expect(current.duration()).to.equal(18000);
+
+    now += 120_000;
+    tickClock();
+    await flush();
+
+    expect(current.duration()).to.equal(6000);
   });
 
   it('preserves local elapsed time for pages with repeating children', async () => {
@@ -342,6 +393,31 @@ describe('active-only paginated lists', () => {
     await flush();
     expect(text()).to.equal('Post 1');
     expect(peak).to.equal(1);
+  });
+
+  it('preserves a measured seek position when playback resumes', async () => {
+    const current = await show(
+      posts.slice(0, 3),
+      { pageDuration: 'auto' },
+      undefined,
+      undefined,
+      true,
+      (video) => {
+        Object.defineProperty(video, 'duration', {
+          configurable: true,
+          get: () => (video.src.endsWith('/2.mp4') ? 10 : 2),
+        });
+      }
+    );
+
+    current.seek(4500);
+    await flush();
+    expect(text()).to.equal('Post 2');
+    expect(current.duration()).to.equal(18000);
+
+    current.play(NEVER);
+    await flush();
+    expect(text()).to.equal('Post 2');
   });
 
   it('keeps the current page while auto durations are measured during playback', async () => {

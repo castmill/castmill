@@ -1523,7 +1523,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
                 <Show
                   when={isFieldVisible(schema, schemaEntries, widgetOptions())}
                 >
-                  {componentForItem(key, schema)}
+                  {(visible) => visible && componentForItem(key, schema)}
                 </Show>
               )}
             </For>
@@ -1622,7 +1622,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
             <WidgetView
               widget={props.item.widget}
               config={widgetConfig()}
-              options={widgetOptions()}
+              options={withoutHiddenOptions(widgetOptions(), schemaEntries)}
               previewData={previewData()}
               locale={displayLocale()}
               previewDiscriminatorId={previewDiscriminatorId()}

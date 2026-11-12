@@ -8,9 +8,9 @@ import { Layer, Playlist, Renderer } from '../dist/index.js';
 
 const TICK_MS = 100;
 
-const fakeLayer = (name: string, duration: number) => ({
+const fakeLayer = (name: string, duration: number | (() => number)) => ({
   name,
-  duration: () => duration,
+  duration: typeof duration === 'function' ? duration : () => duration,
   blocked$: () => new Subject<undefined>(),
   reportError: () => undefined,
   debugInfo: {},
@@ -81,5 +81,31 @@ describe('Playlist item start notifications', () => {
     timer$.next(value);
     run(4000);
     expect(calls).to.equal(3);
+  });
+
+  it('keeps an auto-duration layer active until its measured duration ends', () => {
+    let autoDuration = 6000;
+    const started: string[] = [];
+    const dynamicRenderer = {
+      play: (layer: unknown, layerTimer$: Observable<number>) => {
+        started.push((layer as { name: string }).name);
+        return layerTimer$.pipe(tap(() => undefined));
+      },
+      blank: () => undefined,
+    } as unknown as Renderer;
+    const playlist = new Playlist('dynamic-duration', {} as any);
+    playlist.add(fakeLayer('auto', () => autoDuration) as unknown as Layer);
+    playlist.add(fakeLayer('next', 4000) as unknown as Layer);
+
+    subscription = playlist
+      .play(dynamicRenderer, timer$, { loop: false })
+      .subscribe();
+    timer$.next(value);
+    autoDuration = 18000;
+    run(6000);
+    expect(started).to.deep.equal(['auto']);
+
+    run(12000);
+    expect(started).to.deep.equal(['auto', 'next']);
   });
 });

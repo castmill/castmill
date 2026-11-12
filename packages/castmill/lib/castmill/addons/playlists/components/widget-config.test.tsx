@@ -7,7 +7,10 @@ import { WidgetConfig } from './widget-config';
 // The preview shows an editable text, except when rotating through listings.
 vi.mock('./widget-view', () => ({
   WidgetView: (props: { options?: Record<string, unknown> }) => (
-    <div data-testid="widget-view">
+    <div
+      data-testid="widget-view"
+      data-options={JSON.stringify(props.options || {})}
+    >
       {props.options?.mode === 'listing' && (
         <span data-editable-key="title" data-editable-label="Title">
           Title
@@ -162,6 +165,49 @@ describe('WidgetConfig conditional fields', () => {
     await waitFor(() =>
       expect(button('playlists.editor.addToPlaylist')).toBeEnabled()
     );
+  });
+
+  it('keeps a field mounted while typing', () => {
+    renderConfig({
+      item: conditionalItem(5, { mode: 'listing', title: 'Initial title' }),
+    });
+
+    const title = field('title') as HTMLInputElement;
+    title.focus();
+    fireEvent.input(title, { target: { value: 'Updated title' } });
+
+    expect(document.activeElement).toBe(title);
+    expect(field('title')).toBe(title);
+    expect(title).toHaveValue('Updated title');
+  });
+
+  it('filters hidden options from the preview', async () => {
+    renderConfig({
+      item: conditionalItem(5, {
+        mode: 'listing',
+        title: 'Visible title',
+        max_listings: 9,
+      }),
+    });
+    const previewOptions = () =>
+      JSON.parse(
+        screen.getByTestId('widget-view').getAttribute('data-options') || '{}'
+      );
+
+    expect(previewOptions()).toMatchObject({
+      mode: 'listing',
+      title: 'Visible title',
+    });
+    expect(previewOptions()).not.toHaveProperty('max_listings');
+
+    fireEvent.change(field('mode')!, { target: { value: 'listings' } });
+    await waitFor(() =>
+      expect(previewOptions()).toMatchObject({
+        mode: 'listings',
+        max_listings: 9,
+      })
+    );
+    expect(previewOptions()).not.toHaveProperty('title');
   });
 
   it('does not save the values of hidden fields', async () => {
