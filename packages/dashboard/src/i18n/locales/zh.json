@@ -1,6 +1,7 @@
 {
   "common": {
     "save": "保存",
+    "sections": "分区",
     "saving": "保存中...",
     "cancel": "取消",
     "delete": "删除",

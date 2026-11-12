@@ -1,6 +1,7 @@
 {
   "common": {
     "save": "Spara",
+    "sections": "Sektioner",
     "saving": "Sparar...",
     "cancel": "Avbryt",
     "delete": "Ta bort",

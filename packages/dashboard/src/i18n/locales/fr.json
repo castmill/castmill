@@ -1,6 +1,7 @@
 {
   "common": {
     "save": "Enregistrer",
+    "sections": "Rubriques",
     "saving": "Enregistrement...",
     "cancel": "Annuler",
     "delete": "Supprimer",
