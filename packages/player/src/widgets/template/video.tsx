@@ -40,6 +40,8 @@ enum ReadyState {
 export interface VideoComponentOptions {
   url: string;
   size: 'cover' | 'contain';
+  muted?: boolean;
+  loop?: boolean;
 }
 
 export class VideoComponent implements TemplateComponent {
@@ -100,6 +102,8 @@ export class VideoComponent implements TemplateComponent {
     return {
       url: resolveOption(opts.url, config, context, globals),
       size: resolveOption(opts.size, config, context, globals),
+      muted: resolveOption(opts.muted, config, context, globals),
+      loop: resolveOption(opts.loop, config, context, globals),
     };
   }
 }
@@ -207,6 +211,11 @@ const VideoSource: Component<VideoSourceProps> = (props) => {
     props.globals.setPlaybackBlocked?.(blockSource);
     seekingVideoSubscription?.unsubscribe();
     loadingSubscription?.unsubscribe();
+    if (!playbackController && videoRef?.hasAttribute('src')) {
+      videoRef.pause();
+      videoRef.removeAttribute('src');
+      videoRef.load();
+    }
     if (timelineItem) {
       props.timeline.remove(timelineItem);
     }
@@ -317,6 +326,7 @@ const VideoSource: Component<VideoSourceProps> = (props) => {
         timelineItem = {
           start: props.timeline.isRunning() ? props.timeline.time : 0,
           duration: videoRef!.duration * 1000,
+          repeat: props.opts.loop === true,
           child,
         };
         props.timeline.add(timelineItem);
@@ -458,7 +468,8 @@ const VideoSource: Component<VideoSourceProps> = (props) => {
           display: 'block',
         }}
         playsinline
-        muted={props.globals.muted ?? false}
+        muted={props.globals.muted === true || props.opts.muted === true}
+        loop={props.opts.loop === true}
       ></video>
     </>
   );
