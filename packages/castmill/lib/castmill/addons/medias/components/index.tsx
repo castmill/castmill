@@ -405,6 +405,8 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
   };
 
   const [showDrawer, setShowDrawer] = createSignal(false);
+  // Drawer footer that hosts the sticky Save/Reset actions of MediaDetails.
+  const [mediaFooter, setMediaFooter] = createSignal<HTMLDivElement>();
   const [currentMedia, setCurrentMedia] = createSignal<JsonMedia | undefined>();
 
   const [showAddMediasModal, setShowAddMediasModal] = createSignal(false);
@@ -933,16 +935,26 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
           title={t('medias.drawerTitle', { name: currentMedia()?.name })}
           onClose={closeMediaDrawer}
           placement="right"
-          size="xl"
+          size="lg"
           closeOnOutsideClick
           outsideClickIgnoreSelector="tbody tr, .media-tree-item"
           contentClass="medias-modal"
+          footer={
+            <div
+              class="medias-drawer-footer"
+              ref={(el) => {
+                setMediaFooter(el);
+                onCleanup(() => setMediaFooter(undefined));
+              }}
+            />
+          }
         >
           <Show when={currentMedia()} keyed>
             {(media) => (
               <MediaDetails
                 store={props.store}
                 media={media}
+                actionsMount={mediaFooter()}
                 onSubmit={async (mediaUpdate) => {
                   try {
                     await MediasService.updateMedia(

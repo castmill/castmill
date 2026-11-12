@@ -546,7 +546,6 @@ const LayoutsPage: Component<AddonComponentProps> = (props) => {
           size="xl"
           closeOnOutsideClick
           outsideClickIgnoreSelector="tbody tr"
-          contentClass="layout-modal"
         >
           <Show when={currentLayout()} keyed>
             {(layout) => (

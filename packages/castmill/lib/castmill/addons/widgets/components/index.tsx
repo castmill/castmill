@@ -355,21 +355,6 @@ const WidgetsPage: Component<{
     }
   });
 
-  createEffect(() => {
-    if (showDrawer()) {
-      setTimeout(() => {
-        const modalElement = document.querySelector(
-          '.widget-details-modal'
-        ) as HTMLElement;
-        if (modalElement) {
-          modalElement.style.width = '50vw';
-          modalElement.style.maxWidth = '50vw';
-          modalElement.style.minWidth = '50vw';
-        }
-      }, 50);
-    }
-  });
-
   const openUploadModal = () => {
     setShowUploadModal(true);
   };
@@ -639,10 +624,9 @@ const WidgetsPage: Component<{
           title={getWidgetName(currentWidget()!)}
           onClose={closeWidgetDrawer}
           placement="right"
-          size="xl"
+          size="lg"
           closeOnOutsideClick
           outsideClickIgnoreSelector="tbody tr"
-          contentClass="widget-details-modal"
         >
           <div class="widget-details-content">
             {/* Widget metadata header */}

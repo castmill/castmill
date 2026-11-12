@@ -221,8 +221,6 @@
 }
 
 .medias-modal {
-  width: 60%;
-
   .info {
     font-size: 0.8em;
     color: var(--cm-text-secondary);
@@ -240,15 +238,6 @@
 
     .form-inputs {
       width: 100%;
-    }
-
-    .actions {
-      display: flex;
-      flex-direction: row;
-      justify-content: flex-start;
-      align-items: center;
-      width: 100%;
-      gap: 1em;
     }
 
     .preview {
@@ -287,5 +276,29 @@
         margin: auto;
       }
     }
+  }
+}
+
+// Sticky Save/Reset bar rendered in the media Drawer footer.
+.medias-drawer-footer .actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5em 1em;
+}
+
+.medias-modal form .actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  width: 100%;
+  gap: 0.5em 1em;
+}
+
+@media (max-width: 30em) {
+  .medias-drawer-footer .actions > button {
+    flex: 1 1 0;
+    justify-content: center;
   }
 }

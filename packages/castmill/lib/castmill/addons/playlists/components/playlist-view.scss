@@ -84,85 +84,10 @@
   }
 }
 
-/* Summary */
-
-.playlist-summary {
-  display: flex;
-  flex-shrink: 0;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75em 1em;
-  padding: 0.9em 1em;
-  border: 1px solid var(--cm-border-color);
-  border-radius: 0.6em;
-  background: linear-gradient(135deg, var(--cm-bg-elevated-secondary) 0%, var(--cm-bg-elevated) 100%);
-}
-
-.playlist-summary-stats,
-.playlist-summary-meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.4em 0.6em;
-  min-width: 0;
-}
-
-.playlist-summary-stat {
-  padding: 0.3em 0.75em;
-  border-radius: 999px;
-  background: rgba(var(--cm-primary-rgb), 0.15);
-  color: var(--cm-link);
-  font-size: 0.85em;
-  font-weight: 600;
-  white-space: nowrap;
-
-  strong {
-    font-weight: 700;
-  }
-}
-
-.playlist-summary-seen {
-  color: var(--cm-text-secondary);
-  font-size: 0.85em;
-}
-
-.playlist-summary-chip {
-  padding: 0.25em 0.6em;
-  border: 1px solid var(--cm-border-color);
-  border-radius: 0.35em;
-  background: var(--cm-bg-hover);
-  color: var(--cm-text-secondary);
-  font-size: 0.78em;
-}
-
-// Touch devices and phones: a slim inline strip instead of a boxed card.
+// Touch devices and phones: tighter spacing around the compact summary.
 @media (pointer: coarse), (max-width: 36em) {
   .playlist-view {
     gap: 0.6em;
-  }
-
-  .playlist-summary {
-    gap: 0.4em 0.6em;
-    padding: 0.1em 0;
-    border: 0;
-    border-radius: 0;
-    background: none;
-  }
-
-  .playlist-summary-stats,
-  .playlist-summary-meta {
-    gap: 0.3em 0.4em;
-  }
-
-  .playlist-summary-stat {
-    padding: 0.15em 0.6em;
-    font-size: 0.78em;
-  }
-
-  .playlist-summary-chip {
-    padding: 0.1em 0.45em;
-    font-size: 0.72em;
   }
 }
 

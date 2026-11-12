@@ -15,13 +15,17 @@ import {
   JsonWidgetConfig,
   OptionsDict,
 } from '@castmill/player';
-import { ConfirmDialog, Modal, ModalRef } from '@castmill/ui-common';
+import {
+  ConfirmDialog,
+  Modal,
+  ModalRef,
+  useMediaQuery,
+} from '@castmill/ui-common';
 
 import { PlaylistItem } from './playlist-item';
 import { WidgetConfig } from './widget-config';
 import { AddonStore } from '../../common/interfaces/addon-store';
 import { PlaylistsService } from '../services/playlists.service';
-import { createMediaQuery } from '../utils/media-query';
 import {
   getTranslatedWidgetName,
   getTranslatedWidgetDescription,
@@ -83,7 +87,7 @@ export const PlaylistItems: Component<{
   const [confirmDiscard, setConfirmDiscard] = createSignal(false);
   const [itemToRemove, setItemToRemove] = createSignal<JsonPlaylistItem>();
   // The config modal is full screen on phones, where a back arrow is expected.
-  const isPhone = createMediaQuery('(max-width: 36em)', false);
+  const isPhone = useMediaQuery('(max-width: 36em)', false);
   let configModal: ModalRef | undefined;
 
   /** Close request from the header, Escape, backdrop or Cancel. */
