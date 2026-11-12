@@ -269,7 +269,10 @@ export const Layout: Component<LayoutProps> = (props) => {
   const readyContainers = new Set<LayoutContainer>();
   const onContainerReady = (container: LayoutContainer) => {
     readyContainers.add(container);
-    if (containers().every((item) => readyContainers.has(item))) {
+    if (
+      props.globals.target === 'preview' &&
+      containers().every((item) => readyContainers.has(item))
+    ) {
       props.onReady();
     }
   };
@@ -312,7 +315,9 @@ export const Layout: Component<LayoutProps> = (props) => {
         timeline.play(props.timeline.time - timelineItem.start);
       }, 0);
     }
-    if (containers().length === 0) props.onReady();
+    if (containers().length === 0 || props.globals.target !== 'preview') {
+      props.onReady();
+    }
   });
 
   return (
