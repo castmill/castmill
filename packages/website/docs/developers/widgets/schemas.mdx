@@ -73,8 +73,40 @@ The `layout` and `layout-ref` types are used by the built-in Layout widget. See 
 | `aspectRatios` | `layout` | Aspect ratio presets offered by the zone editor. |
 | `defaultZoom` | `location` | Initial zoom level of the map. |
 | `choices` | `string`, list of `string` | Pick values from a list provided by an integration. See [Choices](#choices). |
+| `visible_when` | All top-level fields | Show the field only for some values of other fields. See [Conditional fields](#conditional-fields). |
 
 Unknown attributes are rejected at upload time. There is no `label` attribute: the form uses the option key as the label unless you provide one in [translations](#translations).
+
+### Conditional fields
+
+`visible_when` shows a field only while other fields have one of the listed values. Use it when one option switches between alternative sets of options:
+
+```json
+{
+  "options_schema": {
+    "source": { "type": "string", "enum": ["listing", "listings"], "default": "listing", "order": 1 },
+    "estate_id": {
+      "type": "string",
+      "required": true,
+      "visible_when": { "source": ["listing"] },
+      "order": 2
+    },
+    "max_listings": {
+      "type": "number",
+      "default": 10,
+      "visible_when": { "source": ["listings"] },
+      "order": 3
+    }
+  }
+}
+```
+
+- Each key names another top-level option: a `string`, `number` or `boolean` field that has no `visible_when` itself. Each value is a non-empty list of values. With several keys, all must match.
+- When the referenced option has no value, its `default` is compared.
+- A hidden field is not required, and the dashboard doesn't save its value. If a value is sent anyway, it is still validated.
+- `visible_when` is only allowed on top-level fields of `options_schema`.
+
+Label the values of an `enum` with `values` in the option's [translations](#translations).
 
 ### Duration
 
@@ -279,7 +311,7 @@ See the overview for [upload limits](./overview.mdx#upload-limits).
 
 ## Translations
 
-`translations` localizes the catalog entry and the configuration form. Keys are locale codes; each entry can override the name, description, option labels and editable text labels:
+`translations` localizes the catalog entry and the configuration form. Keys are locale codes; each entry can override the name, description, option labels, the labels of `enum` values (`values`) and editable text labels:
 
 ```json
 {
@@ -293,7 +325,11 @@ See the overview for [upload limits](./overview.mdx#upload-limits).
           "description": "Heading shown above the menu",
           "placeholder": "Today's specials"
         },
-        "accent": { "label": "Accent color" }
+        "accent": { "label": "Accent color" },
+        "layout": {
+          "label": "Layout",
+          "values": { "list": "List", "grid": "Grid" }
+        }
       },
       "editable": {
         "Footer note": "Footer note"
@@ -313,4 +349,4 @@ See the overview for [upload limits](./overview.mdx#upload-limits).
 }
 ```
 
-The dashboard looks up the user's locale first, then `en`, then the untranslated value (the widget `name`, the field's `description` or `placeholder`, or the option key). Keys under `editable` are the `label` values of [editable texts](./data-binding.mdx#editable-texts).
+The dashboard looks up the user's locale first, then `en`, then the untranslated value (the widget `name`, the field's `description` or `placeholder`, the option key, or the `enum` value). Keys under `editable` are the `label` values of [editable texts](./data-binding.mdx#editable-texts).

@@ -4,6 +4,7 @@ import {
   getTranslatedWidgetName,
   getTranslatedWidgetDescription,
   getTranslatedWidgetOption,
+  getTranslatedWidgetOptionValue,
 } from './widget-catalog-utils';
 
 const createWidget = (overrides: Partial<JsonWidget> = {}): JsonWidget =>
@@ -168,5 +169,44 @@ describe('widget-catalog-utils', () => {
         )
       ).toBe('Fallback');
     });
+  });
+});
+
+describe('getTranslatedWidgetOptionValue', () => {
+  const widget = createWidget({
+    translations: {
+      sv: {
+        options: { mode: { values: { listing: 'Ett specifikt objekt' } } },
+      },
+      en: {
+        options: {
+          mode: { values: { listing: 'A listing', listings: 'Our listings' } },
+        },
+      },
+    },
+  });
+
+  it('returns the locale label, then the English one, then the value', () => {
+    expect(
+      getTranslatedWidgetOptionValue(widget, 'mode', 'listing', 'sv')
+    ).toBe('Ett specifikt objekt');
+    expect(
+      getTranslatedWidgetOptionValue(widget, 'mode', 'listings', 'sv')
+    ).toBe('Our listings');
+    expect(getTranslatedWidgetOptionValue(widget, 'mode', 'other', 'sv')).toBe(
+      'other'
+    );
+    expect(getTranslatedWidgetOptionValue(widget, 'size', 'big', 'en')).toBe(
+      'big'
+    );
+  });
+
+  it('returns the value without a locale or translations', () => {
+    expect(getTranslatedWidgetOptionValue(widget, 'mode', 'listing')).toBe(
+      'listing'
+    );
+    expect(
+      getTranslatedWidgetOptionValue(createWidget(), 'mode', 'listing', 'en')
+    ).toBe('listing');
   });
 });
