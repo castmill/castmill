@@ -9,6 +9,7 @@ import {
   JSX,
   onCleanup,
   onMount,
+  Show,
   untrack,
 } from 'solid-js';
 import { Item } from './item';
@@ -23,6 +24,7 @@ import { Timeline, TimelineItem } from './timeline';
 import { ComponentAnimation } from './animation';
 import { BaseComponentProps } from './interfaces/base-component-props';
 import { PlayerGlobals } from '../../interfaces/player-globals.interface';
+import { ActivePages } from './active-pages';
 
 export interface PaginatedListComponentOptions {
   /**
@@ -41,6 +43,9 @@ export interface PaginatedListComponentOptions {
    * to the component template.
    */
   items: any[];
+
+  /** Mount only the current page; required for lists containing videos. */
+  activeOnly?: boolean;
 }
 
 /**
@@ -131,6 +136,7 @@ export class PaginatedListComponent implements TemplateComponent {
       pageDuration: resolveOption(opts.pageDuration, config, context, globals),
       pageSize: resolveOption(opts.pageSize, config, context, globals),
       items: resolvedItems,
+      activeOnly: resolveOption(opts.activeOnly, config, context, globals),
     };
   }
 }
@@ -148,6 +154,14 @@ interface PaginatedListProps extends BaseComponentProps {
  * Automatically calculates how many items fit per page based on container size.
  */
 export const PaginatedList: Component<PaginatedListProps> = (props) => {
+  return (
+    <Show when={props.opts.activeOnly} fallback={<AllPages {...props} />}>
+      <ActivePages {...props} />
+    </Show>
+  );
+};
+
+const AllPages: Component<PaginatedListProps> = (props) => {
   const [pages, setPages] = createSignal<any[][]>([]);
   const [pageStyle, setPageStyle] = createSignal('');
 

@@ -94,6 +94,13 @@ For example, the latest 3 posts as a list:
 { "list": { "key": "data.entries", "limit": 3 } }
 ```
 
+For rotating media posts, use a `paginated-list` with `items` bound to
+`data.entries`, `pageSize: 1` and `activeOnly: true`. Active-only lists mount
+only the current page and loop its media on a page-local timeline. They cut
+between posts rather than fading several mounted pages; this prevents hidden
+videos from consuming hardware decoders. Existing animated lists are unchanged.
+Videos can declare `opts.muted: true` for silent social posts.
+
 The data is stored **once per feed**, and every widget configuration that uses the feed reads it.
 
 ## API

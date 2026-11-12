@@ -315,6 +315,19 @@ hiding an empty QR caption and expanding the QR card. Ensure every component tha
 uses `$styles` preserves `json.$styles` in its `fromJSON` implementation; otherwise
 the template data reaches the player but its conditional style is silently dropped.
 
+## Paginated Media Posts
+
+Lists containing videos must opt into `paginated-list`'s `activeOnly: true` and
+use `pageSize: 1`. The normal animated list mounts every page and can exhaust
+hardware decoders. Active-only lists mount one page, release its media before
+mounting the next, and cut between posts. Existing lists keep their animated
+behavior unless explicitly opted in. The page-local timeline loops video within
+its slot; the parent timeline owns page timing, pause and seek. Video components
+can set `opts.muted: true`; a global preview mute cannot be overridden.
+Use `opts.loop: true` to loop video independently of longer text-scroll timelines;
+this repeats the video timeline item and enables the native media loop flag.
+Validate actual visible frames and mixed media loops on old hardware.
+
 ## Text Auto-Fitting
 
 Auto-fit text must compare the rendered text bounds with the available parent bounds:
