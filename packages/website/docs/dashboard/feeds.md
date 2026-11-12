@@ -168,7 +168,7 @@ For the rest of the API, see [REST API](/docs/developers/rest-api).
 
 A widget shows a feed when it has an option for choosing one. You pick the feed in the widget's settings in the playlist, and the widget receives the feed's data: `data.entries` (newest first, each with `id`, `received_at` and `external_id`) for a list feed, or `data.document` for a document feed. The built-in widgets don't read feeds yet, so you need a custom widget. See [Building widgets](/docs/developers/widgets/overview).
 
-The feed list shows which playlists use each feed. When a feed changes, previews in the dashboard update right away. Devices pick up the new data the next time they load the playlist, which happens once per playlist loop.
+The feed list shows which playlists use each feed. When a feed changes, previews in the dashboard update right away. Devices do not receive feed changes as live updates; they see new data when the player fetches the playlist containing the widget again. The timing depends on the device's playlist loading and cache behavior, so do not assume the widget refreshes once per loop, including in a playlist with one widget.
 
 ## Deleting a feed
 
