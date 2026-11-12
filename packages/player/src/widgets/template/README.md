@@ -315,7 +315,9 @@ Embeds other playlists or widget compositions within a template.
 
 ### QR Code
 
-Generates QR codes from dynamic or static data.
+Generates QR codes from dynamic or static data. Content is encoded as UTF-8
+by the `qrcode` package; `errorCorrectionLevel` accepts `L`, `M` (default), `Q`
+or `H`.
 
 ### Scroller
 

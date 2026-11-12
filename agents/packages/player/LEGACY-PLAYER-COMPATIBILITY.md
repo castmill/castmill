@@ -294,21 +294,26 @@ Flexbox is available, but use it conservatively:
 
 ### QR codes
 
-Render QR codes as SVG rather than a CSS Grid:
+Encode QR codes with the `qrcode` package's core encoder
+(`qrcode/lib/core/qrcode`, already shipped to legacy players by the device
+registration screen); never hand-roll the encoding. Render them as SVG rather
+than a CSS Grid:
 
 ```tsx
 <svg
-  viewBox={`0 0 ${gridSize} ${gridSize}`}
+  viewBox={`0 0 ${size} ${size}`}
   preserveAspectRatio="xMidYMid meet"
   shape-rendering="crispEdges"
 >
-  <rect width={gridSize} height={gridSize} fill={backgroundColor} />
-  {/* One rect per dark module */}
+  <rect width={size} height={size} fill={backgroundColor} />
+  {/* One path: each horizontal run of dark modules is one subpath */}
+  <path d={path} fill={foregroundColor} />
 </svg>
 ```
 
-`shape-rendering="crispEdges"` is required to prevent Chrome from antialiasing
-adjacent module edges into thin visible seams.
+A single path keeps the DOM small on old players, and `crispEdges` prevents
+Chrome from antialiasing adjacent module edges into thin visible seams.
+`tests/qr-code.spec.ts` checks the drawn modules against the reference encoder.
 
 Use template conditional styles (`$styles`) for state-dependent layouts, such as
 hiding an empty QR caption and expanding the QR card. Ensure every component that
