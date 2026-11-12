@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@solidjs/testing-library';
 import { I18nProvider } from '../../i18n';
 import AgentsPage from './agents-page';
 import { AgentsService } from '../../services/agents.service';
+import { QuotasService } from '../../services/quotas.service';
 import { setStore } from '../../store/store';
 
 const toastSpies = { success: vi.fn(), error: vi.fn(), info: vi.fn() };
@@ -26,6 +27,10 @@ vi.mock('../../services/agents.service', async (importOriginal) => {
 });
 
 vi.mock('../../components/auth', () => ({ authFetch: vi.fn() }));
+
+vi.mock('../../services/quotas.service', () => ({
+  QuotasService: { getQuotaUsage: vi.fn() },
+}));
 
 vi.mock('../../hooks/usePermissions', () => ({
   usePermissions: () => ({
@@ -75,6 +80,7 @@ describe('AgentsPage', () => {
     role = 'admin';
     setStore('organizations', 'selectedId', 'org-1');
     vi.mocked(AgentsService.list).mockResolvedValue([agent]);
+    vi.mocked(QuotasService.getQuotaUsage).mockResolvedValue({});
     vi.mocked(AgentsService.listActions).mockResolvedValue({
       data: [],
       count: 0,
@@ -280,6 +286,34 @@ describe('AgentsPage', () => {
 
     await waitFor(() =>
       expect(toastSpies.error).toHaveBeenCalledWith('Failed to load agents')
+    );
+  });
+
+  it('clears the previous organization quota when loading agents fails', async () => {
+    vi.mocked(AgentsService.list)
+      .mockResolvedValueOnce([agent])
+      .mockRejectedValueOnce(new Error('boom'));
+    vi.mocked(QuotasService.getQuotaUsage).mockResolvedValue({
+      agents: { used: 5, total: 5 },
+    });
+    renderPage();
+
+    await waitFor(() =>
+      expect(
+        screen.getAllByRole('button', { name: 'New agent' }).every((button) =>
+          (button as HTMLButtonElement).disabled
+        )
+      ).toBe(true)
+    );
+
+    setStore('organizations', 'selectedId', 'org-2');
+
+    await waitFor(() =>
+      expect(
+        screen.getAllByRole('button', { name: 'New agent' }).every((button) =>
+          (button as HTMLButtonElement).disabled
+        )
+      ).toBe(false)
     );
   });
 });

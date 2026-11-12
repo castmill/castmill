@@ -115,4 +115,35 @@ describe('TagsPage quota loading', () => {
 
     expect(createTagButton).toBeEnabled();
   });
+
+  it('clears tag and group quotas when the organization changes', async () => {
+    mocks.getQuotaUsage
+      .mockResolvedValueOnce({
+        tags: { used: 10, total: 10 },
+        tag_groups: { used: 10, total: 10 },
+      })
+      .mockRejectedValueOnce(new Error('quota unavailable'));
+
+    render(() => (
+      <I18nProvider>
+        <TagsPage />
+      </I18nProvider>
+    ));
+
+    const createTagButton = await screen.findByRole('button', {
+      name: 'Create Tag',
+    });
+    const createGroupButton = screen.getByRole('button', { name: 'Add Group' });
+    await waitFor(() => {
+      expect(createTagButton).toBeDisabled();
+      expect(createGroupButton).toBeDisabled();
+    });
+
+    setStore('organizations', 'selectedId', 'org-2');
+
+    await waitFor(() => {
+      expect(createTagButton).toBeEnabled();
+      expect(createGroupButton).toBeEnabled();
+    });
+  });
 });

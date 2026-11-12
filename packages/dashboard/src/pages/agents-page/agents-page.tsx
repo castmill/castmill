@@ -155,6 +155,7 @@ const AgentsPage: Component = () => {
       () => [orgId(), canView()] as const,
       ([organizationId, permitted]) => {
         setAgents([]);
+        setAgentQuota(null);
         if (permitted) {
           loadAgents(organizationId);
         } else {

@@ -13,12 +13,21 @@ defmodule Castmill.Repo.Migrations.AddTagsAndAgentsQuotasToPlans do
         SELECT plan_id FROM plans_quotas WHERE resource = '#{resource}'
       )
       """
+
+      execute """
+      INSERT INTO quotas_networks (network_id, resource, max, inserted_at, updated_at)
+      SELECT networks.network_id, '#{resource}', #{max}, now(), now()
+      FROM (SELECT DISTINCT network_id FROM quotas_networks) AS networks
+      WHERE NOT EXISTS (
+        SELECT 1
+        FROM quotas_networks
+        WHERE network_id = networks.network_id AND resource = '#{resource}'
+      )
+      """
     end
   end
 
   def down do
-    execute "DELETE FROM plans_quotas WHERE resource IN ('tags', 'tag_groups', 'agents')"
-    execute "DELETE FROM quotas_organizations WHERE resource IN ('tags', 'tag_groups', 'agents')"
-    execute "DELETE FROM quotas_networks WHERE resource IN ('tags', 'tag_groups', 'agents')"
+    :ok
   end
 end

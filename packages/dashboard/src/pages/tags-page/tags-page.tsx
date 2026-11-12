@@ -125,6 +125,8 @@ const TagsPage: Component = () => {
   // Reload data when organization changes
   createEffect(() => {
     const orgId = store.organizations.selectedId;
+    setTagQuota(null);
+    setGroupQuota(null);
     if (orgId) {
       loadData();
       loadQuotas();
