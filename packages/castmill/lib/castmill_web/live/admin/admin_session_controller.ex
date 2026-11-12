@@ -2,45 +2,55 @@ defmodule CastmillWeb.AdminSessionController do
   use CastmillWeb, :controller
 
   alias Castmill.Accounts
+  alias Castmill.Accounts.AdminPasskeys
   alias CastmillWeb.Admin.UserAuth
 
-  def create(conn, %{"_action" => "registered"} = params) do
-    create(conn, params, "Account created successfully!")
-  end
+  plug :rate_limit when action in [:create]
 
-  def create(conn, %{"_action" => "password_updated"} = params) do
-    conn
-    |> put_session(:user_return_to, ~p"/admin/networks")
-    |> create(params, "Password updated successfully!")
-  end
-
-  def create(conn, params) do
-    create(conn, params, "Welcome back!")
-  end
-
-  defp create(conn, %{"user" => user_params}, info) do
-    %{"email" => email, "password" => password} = user_params
-
+  def create(conn, %{"user" => %{"email" => email, "password" => password}})
+      when is_binary(email) and is_binary(password) do
     token = email <> ":" <> password
 
     case Accounts.get_user_by_access_token(token, Utils.RemoteIp.get(conn)) do
       {:ok, %{is_root: true} = user} ->
-        conn
-        |> put_flash(:info, info)
-        |> UserAuth.log_in_user(user, user_params)
+        if AdminPasskeys.root_user?(user) && !AdminPasskeys.enrolled?(user.id) do
+          conn
+          |> put_flash(:info, "Register your first admin passkey to continue.")
+          |> UserAuth.start_enrollment(user)
+        else
+          invalid_login(conn, email)
+        end
 
       _ ->
-        # In order to prevent user enumeration attacks, don't disclose whether the email is registered.
-        conn
-        |> put_flash(:error, "Invalid email or password")
-        |> put_flash(:email, String.slice(email, 0, 160))
-        |> redirect(to: ~p"/admin/login")
+        invalid_login(conn, email)
     end
+  end
+
+  def create(conn, _params), do: invalid_login(conn, "")
+
+  defp invalid_login(conn, email) do
+    conn
+    |> put_flash(:error, "Unable to sign in. Use your admin passkey if already enrolled.")
+    |> put_flash(:email, String.slice(email, 0, 160))
+    |> redirect(to: ~p"/admin/login")
   end
 
   def delete(conn, _params) do
     conn
     |> put_flash(:info, "Logged out successfully.")
     |> UserAuth.log_out_user()
+  end
+
+  defp rate_limit(conn, _opts) do
+    case Castmill.RateLimiter.allow({:admin_password, conn.remote_ip}, 10) do
+      :ok ->
+        conn
+
+      {:error, :rate_limited} ->
+        conn
+        |> put_flash(:error, "Too many attempts. Try again in a minute.")
+        |> redirect(to: ~p"/admin/login")
+        |> halt()
+    end
   end
 end

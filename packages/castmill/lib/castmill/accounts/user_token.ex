@@ -43,7 +43,7 @@ defmodule Castmill.Accounts.UserToken do
   session they deem invalid.
   """
   def build_session_token(user_id, context \\ "session")
-      when context in ["session", "admin_session"] do
+      when context in ["session", "admin_passkey_session", "admin_enrollment"] do
     token = :crypto.strong_rand_bytes(@rand_size)
     {token, %UserToken{token: token, context: context, user_id: user_id}}
   end
@@ -57,7 +57,7 @@ defmodule Castmill.Accounts.UserToken do
   not expired (after @session_validity_in_days).
   """
   def verify_session_token_query(token, context \\ "session")
-      when context in ["session", "admin_session"] do
+      when context in ["session", "admin_passkey_session", "admin_enrollment"] do
     query =
       from(token in token_and_context_query(token, context),
         join: user in assoc(token, :user),

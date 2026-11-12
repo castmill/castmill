@@ -13,7 +13,7 @@ defmodule CastmillWeb.Admin.UserAuth do
   @remember_me_options [sign: true, max_age: @max_age, same_site: "Lax"]
 
   @doc """
-  Logs the user in.
+  Establishes the browser session after successful admin passkey verification.
 
   It renews the session ID and clears the whole session
   to avoid fixation attacks. See the renew_session
@@ -24,15 +24,22 @@ defmodule CastmillWeb.Admin.UserAuth do
   disconnected on log out. The line can be safely removed
   if you are not using LiveView.
   """
-  def log_in_user(conn, user, params \\ %{}) do
-    token = Accounts.generate_admin_session_token(user.id)
-    user_return_to = get_session(conn, :user_return_to)
-
+  def start_session(conn, token, params \\ %{}) when is_binary(token) do
     conn
     |> renew_session()
     |> put_token_in_session(token)
+    |> delete_resp_cookie(@remember_me_cookie)
     |> maybe_write_remember_me_cookie(token, params)
-    |> redirect(to: user_return_to || signed_in_path(conn))
+  end
+
+  def start_enrollment(conn, user) do
+    token = Accounts.generate_admin_enrollment_token(user.id)
+
+    conn
+    |> renew_session()
+    |> delete_resp_cookie(@remember_me_cookie)
+    |> put_session(:admin_enrollment_token, token)
+    |> redirect(to: ~p"/admin/passkeys/enroll")
   end
 
   defp maybe_write_remember_me_cookie(conn, token, %{"remember_me" => "true"}) do
@@ -213,7 +220,7 @@ defmodule CastmillWeb.Admin.UserAuth do
   defp put_token_in_session(conn, token) do
     conn
     |> put_session(:admin_user_token, token)
-    |> put_session(:live_socket_id, "users_sessions:#{Base.url_encode64(token)}")
+    |> put_session(:live_socket_id, "admin_users_sessions:#{Base.url_encode64(token)}")
   end
 
   defp maybe_store_return_to(%{method: "GET"} = conn) do

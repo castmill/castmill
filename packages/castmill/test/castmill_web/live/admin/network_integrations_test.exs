@@ -16,6 +16,12 @@ defmodule CastmillWeb.Live.Admin.NetworkIntegrationsTest do
     organization = organization_fixture(%{network_id: network.id})
     admin_user = user_fixture()
 
+    Castmill.AccountsFixtures.access_token_fixture(%{
+      user_id: admin_user.id,
+      secret: "#{admin_user.email}:root-password",
+      is_root: true
+    })
+
     {:ok, widget} =
       Widgets.create_widget(%{
         name: "Spotify Widget #{System.unique_integer([:positive])}",
@@ -375,6 +381,6 @@ defmodule CastmillWeb.Live.Admin.NetworkIntegrationsTest do
     conn
     |> Phoenix.ConnTest.init_test_session(%{})
     |> Plug.Conn.put_session(:admin_user_token, token)
-    |> Plug.Conn.put_session(:live_socket_id, "users_sessions:#{Base.url_encode64(token)}")
+    |> Plug.Conn.put_session(:live_socket_id, "admin_users_sessions:#{Base.url_encode64(token)}")
   end
 end

@@ -54,6 +54,25 @@ defmodule CastmillWeb.Router do
     post("/admin/login", AdminSessionController, :create)
   end
 
+  scope "/admin", CastmillWeb do
+    pipe_through(:browser)
+
+    post("/passkeys/login/options", AdminPasskeyController, :login_options)
+    post("/passkeys/login", AdminPasskeyController, :login)
+    post("/passkeys/register/options", AdminPasskeyController, :registration_options)
+    post("/passkeys/register", AdminPasskeyController, :register)
+
+    live_session :admin_enrollment,
+      layout: {CastmillWeb.Layouts, :login} do
+      live("/passkeys/enroll", Live.Admin.Passkeys, :enroll)
+    end
+
+    scope "/" do
+      pipe_through(:require_authenticated_user)
+      delete("/passkeys/:id", AdminPasskeyController, :delete)
+    end
+  end
+
   scope "/", CastmillWeb do
     pipe_through(:browser)
 
@@ -65,6 +84,7 @@ defmodule CastmillWeb.Router do
         layout: {CastmillWeb.Layouts, :admin},
         on_mount: [{CastmillWeb.Admin.UserAuth, :ensure_authenticated}] do
         live("/", Admin, :index)
+        live("/passkeys", Admin.Passkeys, :index)
 
         # Networks
         live("/:resource", Admin.Resources, :index)

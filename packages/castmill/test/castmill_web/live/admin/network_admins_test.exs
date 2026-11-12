@@ -10,20 +10,22 @@ defmodule CastmillWeb.Live.Admin.NetworkAdminsTest do
   alias Castmill.Networks
 
   setup do
-    %{network: network_fixture(), root: user_fixture()}
-  end
+    root = user_fixture()
 
-  test "root login opens the admin page; ordinary credentials and sessions cannot", %{
-    conn: conn,
-    network: network,
-    root: root
-  } do
     access_token_fixture(%{
       user_id: root.id,
       secret: "#{root.email}:root-password",
       is_root: true
     })
 
+    %{network: network_fixture(), root: root}
+  end
+
+  test "root login only opens enrollment; ordinary credentials and sessions cannot", %{
+    conn: conn,
+    network: network,
+    root: root
+  } do
     ordinary = user_fixture()
 
     access_token_fixture(%{
@@ -56,9 +58,10 @@ defmodule CastmillWeb.Live.Admin.NetworkAdminsTest do
         "user" => %{"email" => root.email, "password" => "root-password"}
       })
 
-    assert redirected_to(root_conn) == ~p"/admin/networks"
-    assert {:ok, _, html} = live(recycle(root_conn), ~p"/admin/networks/#{network.id}/admins")
-    assert html =~ "Add admin"
+    assert redirected_to(root_conn) == ~p"/admin/passkeys/enroll"
+
+    assert {:error, {:redirect, %{to: "/admin/login"}}} =
+             live(recycle(root_conn), ~p"/admin/networks/#{network.id}/admins")
   end
 
   test "promotes existing members and removes only their admin role", %{
@@ -90,22 +93,13 @@ defmodule CastmillWeb.Live.Admin.NetworkAdminsTest do
     network: network,
     root: root
   } do
-    access_token_fixture(%{
-      user_id: root.id,
-      secret: "#{root.email}:root-password",
-      is_root: true
-    })
-
-    conn =
-      post(conn, ~p"/admin/login", %{
-        "user" => %{"email" => root.email, "password" => "root-password"}
-      })
+    conn = admin_conn(conn, root)
 
     admin_token = Plug.Conn.get_session(conn, :admin_user_token)
     assert Accounts.get_user_by_admin_session_token(admin_token).id == root.id
     assert Accounts.get_user_by_session_token(admin_token) == nil
 
-    conn = delete(recycle(conn), ~p"/admin/logout")
+    conn = delete(conn, ~p"/admin/logout")
     assert redirected_to(conn) == ~p"/admin/login"
     assert Accounts.get_user_by_admin_session_token(admin_token) == nil
 

@@ -5,6 +5,11 @@ defmodule CastmillWeb.Live.Admin.Sidebar do
   def mount(socket) do
     links = [
       %{
+        href: "passkeys",
+        name: "Admin passkeys",
+        icon: "hero-key-solid"
+      },
+      %{
         href: "networks",
         name: "Networks",
         icon: "hero-wrench-screwdriver-solid"
