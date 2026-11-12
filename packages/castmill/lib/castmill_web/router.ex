@@ -191,7 +191,7 @@ defmodule CastmillWeb.Router do
     plug(:accepts, ["html", "json"])
     plug(:fetch_session)
     plug(:put_secure_browser_headers)
-    plug(:fetch_current_user)
+    plug(:fetch_oauth_user)
   end
 
   # Generic OAuth routes for widget integrations
@@ -982,6 +982,18 @@ defmodule CastmillWeb.Router do
         conn
         |> assign(:network, network)
     end
+  end
+
+  defp fetch_oauth_user(conn, _opts) do
+    user =
+      Enum.find_value([:user_session_token, :user_token], fn key ->
+        case get_session(conn, key) do
+          token when is_binary(token) -> Castmill.Accounts.get_user_by_session_token(token)
+          _ -> nil
+        end
+      end)
+
+    assign(conn, :current_user, user)
   end
 
   defp load_organization(conn, _params) do

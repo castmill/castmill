@@ -118,6 +118,58 @@ defmodule CastmillWeb.WidgetOAuthControllerTest do
       assert json_response(conn, 401)["error"] == "Authentication required"
     end
 
+    test "accepts the dashboard session token", %{
+      conn: conn,
+      organization: organization,
+      integration: integration,
+      user: user
+    } do
+      Mox.stub(Castmill.AccountsMock, :generate_user_session_token, fn user_id ->
+        Accounts.generate_user_session_token(user_id)
+      end)
+
+      conn =
+        conn
+        |> Phoenix.ConnTest.init_test_session(%{})
+        |> CastmillWeb.SessionUtils.log_in_user(user.id)
+        |> get(
+          "/auth/widget-integrations/#{integration.id}/authorize",
+          %{"organization_id" => organization.id}
+        )
+
+      assert redirected_to(conn, 302) =~ "https://example-oauth.com/authorize"
+    end
+
+    test "rejects revoked ordinary and admin tokens", %{
+      conn: conn,
+      organization: organization,
+      integration: integration,
+      user: user
+    } do
+      revoked_token = Accounts.generate_user_session_token(user.id)
+      Accounts.delete_user_session_token(revoked_token)
+      admin_token = Accounts.generate_admin_session_token(user.id)
+
+      for {key, token} <- [
+            {:user_token, revoked_token},
+            {:user_session_token, revoked_token},
+            {:admin_user_token, admin_token},
+            {:user_token, admin_token},
+            {:user_session_token, admin_token}
+          ] do
+        response =
+          conn
+          |> Phoenix.ConnTest.init_test_session(%{})
+          |> Plug.Conn.put_session(key, token)
+          |> get(
+            "/auth/widget-integrations/#{integration.id}/authorize",
+            %{"organization_id" => organization.id}
+          )
+
+        assert json_response(response, 401)["error"] == "Authentication required"
+      end
+    end
+
     test "returns 403 when user does not belong to organization", %{
       conn: conn,
       organization: organization,
