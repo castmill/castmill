@@ -1,0 +1,103 @@
+---
+sidebar_position: 5
+title: Animations
+description: Add entrance, exit and looping animations to template components with GSAP keyframes.
+---
+
+import WidgetExample from '@site/src/components/WidgetExample';
+import {
+  fadeInWidget,
+  staggerWidget,
+  pulseWidget,
+} from '@site/src/components/WidgetExample/sampleWidgets';
+
+Template components can carry an `animations` array. The player runs them with [GSAP](https://gsap.com/docs/v3/) on the widget's timeline, so animations pause, resume and seek together with the rest of the playback.
+
+Animations are supported on `group`, `text`, `image` and `qr-code` components.
+
+## Structure
+
+```json
+{
+  "type": "group",
+  "name": "card",
+  "animations": [
+    {
+      "init": { "repeat": -1, "yoyo": true },
+      "start": 0,
+      "keyframes": [
+        { "from": { "opacity": 0, "duration": 1 } },
+        { "to": { "scale": 1.05, "duration": 0.5 } },
+        { "set": { "rotation": 0 } }
+      ]
+    }
+  ]
+}
+```
+
+Each entry in `animations` becomes one GSAP timeline:
+
+| Field | Description |
+| --- | --- |
+| `keyframes` | Steps added to the timeline in order. Within a keyframe, `from` runs first, then `to`, then `set`. |
+| `init` | [Timeline settings](https://gsap.com/docs/v3/GSAP/Timeline/), for example `repeat` (`-1` repeats forever), `yoyo`, `repeatDelay` or `delay`. |
+| `start` | Start time in milliseconds from the beginning of the widget. A negative value counts back from the end of the widget, so `-1000` starts one second before the widget ends. Default `0`. |
+
+Each keyframe holds GSAP tween variables:
+
+| Keyframe | Effect |
+| --- | --- |
+| `from` | Animates from these values to the element's current style. Use it for entrances. |
+| `to` | Animates from the current style to these values. Use it for exits and emphasis. |
+| `set` | Applies the values instantly. |
+
+Common tween variables are `opacity`, `x`, `y`, `xPercent`, `yPercent`, `scale`, `rotation`, `duration` (seconds), `delay` (seconds), `ease` (for example `power2.out`, `back.out(1.7)` or `sine.inOut`) and `stagger`. Numeric `x` and `y` values are pixels; prefer `xPercent` and `yPercent` so the motion scales with the element.
+
+## Entrance
+
+A `from` keyframe animates the component into its styled state. This card fades in and grows slightly:
+
+<WidgetExample
+  widget={fadeInWidget}
+  height="420px"
+  title="Fade-in entrance"
+  description="A group animated from transparent and slightly smaller to its final style."
+/>
+
+## Text, word by word
+
+On a `text` component, the animation targets each word separately. Add `stagger` to start each word a little after the previous one. This example also uses a second animation with a negative `start` to fade the headline out during the last second of the widget:
+
+<WidgetExample
+  widget={staggerWidget}
+  height="420px"
+  title="Staggered words with exit"
+  description="Words enter one after another, and the headline fades out one second before the widget ends."
+/>
+
+:::note
+Word splitting happens only when the text component has `animations`. To animate a text block as a single unit, wrap it in a `group` and animate the group.
+:::
+
+## Looping
+
+Set `init.repeat` to `-1` for an animation that repeats until the widget ends, and `init.yoyo` to `true` to play it back and forth:
+
+<WidgetExample
+  widget={pulseWidget}
+  height="420px"
+  title="Pulsing badge"
+  description="A badge that scales up and down for the whole duration of the widget."
+/>
+
+A repeating animation counts as one cycle when the player computes the widget duration. Set a `duration` option or the playlist item duration to control how long it plays.
+
+## Guidelines
+
+- Keep entrances between 0.5 and 1 second and exits between 0.3 and 0.8 seconds. Viewers often glance at a screen briefly, so content must be readable quickly.
+- Animate `opacity` and transforms (`x`, `y`, `scale`, `rotation`). Animating `width`, `height`, `top` or `left` forces layout work on every frame and stutters on low-end players.
+- Limit the number of elements animating at the same time, especially word-by-word animations of long texts.
+- Keep looping animations subtle. A constantly moving element distracts from the rest of the content.
+- Start exits with a negative `start` so they finish exactly when the widget ends, whatever duration the user sets.
+
+See [Best practices](./best-practices.md#performance-on-low-end-players) for performance on older devices.

@@ -1,126 +1,58 @@
 ---
 sidebar_position: 5
+title: Authentication
+description: How people, devices, AI agents and integrations authenticate with Castmill.
 ---
 
 # Authentication
 
-For the Castmill Dashboard and end-user login flow, Castmill uses **passkey-based authentication** by default. The admin interface can still use email-and-password authentication.
+Castmill authenticates four kinds of clients, each with its own credential.
 
-## What are Passkeys?
+| Client | Credential | Lifetime |
+| --- | --- | --- |
+| People in the dashboard | Passkey, then a signed session token | Session token: 24 hours |
+| Root user in the admin tool | Email and password from the server configuration | Browser session |
+| Players | Device token issued at registration | Until the device is removed |
+| AI agents | Agent secret starting with `cmagt_` | Until revoked |
+| Systems that push data to feeds | Feed token starting with `cmfeed_` | Until revoked |
 
-Passkeys are a modern authentication standard (WebAuthn/FIDO2) that replaces passwords with cryptographic key pairs stored on your device. They're:
+## Passkeys
 
-- **Phishing-resistant** — Passkeys are bound to a specific domain and can't be tricked into authenticating on fake sites
-- **Convenient** — Authenticate with Touch ID, Face ID, Windows Hello, or a PIN
-- **Secure** — Private keys never leave your device; only a signed proof is sent to the server
+The dashboard uses passkeys (WebAuthn) instead of passwords. During sign-up the browser creates a key pair. The private key stays on the user's device or in their password manager; the server only stores the public key. To sign in, the browser signs a one-time challenge from the server with the private key, and the server checks the signature.
 
-## How Authentication Works
+This has a few consequences:
 
-### Signup Flow
+- There is no password database to leak, and nothing to phish: a passkey only works on the domain it was created for.
+- A passkey created for one domain does not work on another. When a network moves to a new domain, users get an email to create a passkey for it.
+- Losing every passkey means using account recovery, which sends a link to the account's email address.
 
-```mermaid
-sequenceDiagram
-    participant U as User
-    participant B as Browser
-    participant S as Server
+Supported signature algorithms are Ed25519, ES256 and RS256, which covers current platform authenticators and security keys.
 
-    U->>B: Enter email
-    B->>S: POST /signups
-    S->>U: Verification email
-    U->>B: Click email link
-    B->>B: Create passkey (WebAuthn)
-    B->>S: POST /signups/:id/users (credential)
-    S->>S: Store public key
-    S-->>B: Account created
-```
+[First sign-in](../getting-started/first-login.md) describes the steps from a user's point of view.
 
-1. User enters their email and clicks **Continue**
-2. Server sends a verification email
-3. User clicks the link, browser prompts to create a passkey
-4. Browser registers the passkey and sends the public key to the server
-5. Account is created
+## Sessions
 
-### Login Flow
+After a successful passkey check, the server returns a signed session token. The dashboard keeps it in the browser's local storage and sends it as a bearer token with every API request and on the WebSocket connection. Tokens are valid for 24 hours. Because the dashboard does not depend on cookies, it works on any custom domain without third-party cookie restrictions.
 
-```mermaid
-sequenceDiagram
-    participant U as User
-    participant B as Browser
-    participant S as Server
+## Sign-up and invitations
 
-    U->>B: Click "Login with Passkey"
-    B->>S: GET /sessions/challenges
-    S-->>B: Challenge + token
-    B->>B: Sign challenge with passkey
-    B->>S: POST /sessions (signed assertion)
-    S->>S: Verify signature
-    S-->>B: Bearer token (signed Phoenix.Token)
-    B->>B: Store token in localStorage
-```
+1. The user enters an email address.
+2. The server emails a confirmation link. The address must belong to the user before an account exists.
+3. The link opens the dashboard, which creates the passkey and the account.
 
-`GET /sessions/challenges` only fetches a one-time challenge and challenge token. Credentials are sent later in `POST /sessions` after the passkey signs the challenge.
+A user who signs up on their own gets a new organization. A user who signs up from an invitation joins the inviting organization instead. Networks can be set to [invitation only](./networks.md#network-settings), in which case step 1 requires a valid invitation.
 
-1. User clicks **Login with Passkey**
-2. Server generates a cryptographic challenge
-3. Browser signs the challenge using the stored passkey
-4. Server verifies the signature and returns a Bearer token
-5. Token is stored in `localStorage` and used for all subsequent API calls
+## Device authentication
 
-### Token-Based Sessions
+A player that starts for the first time shows a **pincode**. When a user registers the device with that pincode in the dashboard, the server issues the player a device token, which it uses for all later requests. The pincode expires after one hour. Removing the device in the dashboard revokes its token. See [Devices](../dashboard/devices.md).
 
-After login, all API requests include the token in the `Authorization` header:
+## Tokens for integrations
 
-```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
-```
+- **Agent secrets** give an AI assistant access to one organization through the MCP server, with the permissions of the role chosen for the agent. See [AI agents](../dashboard/ai-agents.md).
+- **Feed tokens** allow writing to one feed and nothing else. See [Feeds](../dashboard/feeds.md).
 
-Tokens expire after 24 hours, requiring re-authentication.
+Secrets are shown once, when they are created. Store them in a secret manager and create a new one if a secret is lost.
 
-## Credential Recovery
+## Admin tool
 
-If you lose access to your passkey (e.g., device lost or reset):
-
-1. Click **Recover access** on the login page
-2. Enter your email address
-3. Check your email for a recovery link
-4. Click the link to create a new passkey
-5. The new passkey replaces your previous credentials
-
-## Managing Multiple Passkeys
-
-You can register passkeys on multiple devices for redundancy:
-
-1. Go to **Settings** > **Security & Authentication**
-2. Click **Add New Passkey**
-3. Follow the browser prompt to register
-
-Each passkey is listed with its name and creation date. You can rename or delete passkeys (you must keep at least one).
-
-:::tip
-Register a passkey on at least two devices — for example, your laptop and your phone — so you always have a backup way to log in.
-:::
-
-## Domain-Bound Passkeys
-
-Passkeys are **bound to the domain** where they were created. If your network uses a custom domain:
-
-- A passkey created on `app.castmill.com` won't work on `signage.company.com`
-- When a custom domain is configured, you'll receive an email to set up a domain-specific passkey
-- After setup, you can log in from the custom domain
-
-## Supported Algorithms
-
-Castmill supports these WebAuthn signature algorithms:
-
-- **Ed25519** (EdDSA) — Preferred
-- **ES256** (ECDSA with P-256)
-- **RS256** (RSA with SHA-256)
-
-Your browser and device determine which algorithm is used. All three provide strong cryptographic security.
-
-## Security Considerations
-
-- **No dashboard password database** — End-user dashboard login does not rely on user-chosen passwords
-- **No session cookies** — Authentication uses Bearer tokens, avoiding third-party cookie issues
-- **Cross-domain support** — Custom domains work via domain-specific passkeys
-- **Invitation-only option** — Networks can restrict registration to invitations only
+The admin tool at `/admin` on the server uses a separate email and password login for the root user, configured with `CASTMILL_ROOT_USER_EMAIL` and `CASTMILL_ROOT_USER_PASSWORD`. Use a long, unique password and restrict access to `/admin` at your reverse proxy if possible. See [Admin tool](../administration/admin-tool.md).

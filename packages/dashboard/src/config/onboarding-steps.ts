@@ -32,7 +32,7 @@ export const ONBOARDING_STEPS: OnboardingStepConfig[] = [
     targetPath: '/org/:orgId/content/medias',
     targetSelector: '[data-onboarding="upload-media"]',
     order: 3,
-    docsUrl: 'https://docs.castmill.com/content/medias',
+    docsUrl: 'https://docs.castmill.io/docs/dashboard/media',
   },
   {
     id: OnboardingStep.CreatePlaylist,
@@ -42,7 +42,7 @@ export const ONBOARDING_STEPS: OnboardingStepConfig[] = [
     targetPath: '/org/:orgId/content/playlists',
     targetSelector: '[data-onboarding="add-playlist"]',
     order: 4,
-    docsUrl: 'https://docs.castmill.com/content/playlists',
+    docsUrl: 'https://docs.castmill.io/docs/dashboard/playlists',
   },
   {
     id: OnboardingStep.CreateChannel,
@@ -52,7 +52,7 @@ export const ONBOARDING_STEPS: OnboardingStepConfig[] = [
     targetPath: '/org/:orgId/channels',
     targetSelector: '[data-onboarding="create-channel"]',
     order: 5,
-    docsUrl: 'https://docs.castmill.com/content/channels',
+    docsUrl: 'https://docs.castmill.io/docs/dashboard/channels',
   },
   {
     id: OnboardingStep.RegisterDevice,
@@ -62,7 +62,7 @@ export const ONBOARDING_STEPS: OnboardingStepConfig[] = [
     targetPath: '/org/:orgId/devices',
     targetSelector: '[data-onboarding="register-device"]',
     order: 6,
-    docsUrl: 'https://docs.castmill.com/devices',
+    docsUrl: 'https://docs.castmill.io/docs/dashboard/devices',
   },
   {
     id: OnboardingStep.AssignChannel,
@@ -91,7 +91,7 @@ export const ONBOARDING_STEPS: OnboardingStepConfig[] = [
     targetPath: '/org/:orgId/tags',
     targetSelector: '[data-onboarding="create-tag-group"]',
     order: 9,
-    docsUrl: 'https://docs.castmill.com/content/tags',
+    docsUrl: 'https://docs.castmill.io/docs/dashboard/tags',
   },
   {
     id: OnboardingStep.TagContent,

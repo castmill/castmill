@@ -1,210 +1,417 @@
 /**
- * Any CSS included here will be global. The classic template
- * bundles Infima by default. Infima is a CSS framework designed to
- * work well for content-centric websites.
+ * Castmill documentation theme.
+ *
+ * Colours follow the dashboard palette (packages/dashboard/src/theme/theme.scss)
+ * so the docs and the product look like one family in both colour modes.
+ * Site-specific tokens use the --cm-site-* prefix.
  */
 
-/* Professional color palette */
 :root {
-  --ifm-color-primary: #3b82f6;
-  --ifm-color-primary-dark: #2563eb;
-  --ifm-color-primary-darker: #1d4ed8;
-  --ifm-color-primary-darkest: #1e40af;
-  --ifm-color-primary-light: #60a5fa;
-  --ifm-color-primary-lighter: #93c5fd;
-  --ifm-color-primary-lightest: #dbeafe;
+  --ifm-color-primary: #2f6fdb;
+  --ifm-color-primary-dark: #255fc0;
+  --ifm-color-primary-darker: #2259b5;
+  --ifm-color-primary-darkest: #1f51a6;
+  --ifm-color-primary-light: #4a82e0;
+  --ifm-color-primary-lighter: #5a8de3;
+  --ifm-color-primary-lightest: #7ea6ea;
 
-  --ifm-color-secondary: #6366f1;
-  --ifm-color-secondary-dark: #4f46e5;
-  --ifm-color-secondary-darker: #4338ca;
-  --ifm-color-secondary-darkest: #3730a3;
+  --ifm-background-color: #ffffff;
+  --ifm-background-surface-color: #f6f8fc;
+  --ifm-font-color-base: #1a1f2e;
+  --ifm-heading-color: #0f1422;
+  --ifm-color-content-secondary: #4b5468;
 
-  --ifm-code-font-size: 95%;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
-
-  /* Enhanced typography */
   --ifm-font-family-base:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu',
-    'Cantarell', sans-serif;
+    Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  --ifm-heading-font-family: var(--ifm-font-family-base);
   --ifm-font-family-monospace:
-    'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Consolas', monospace;
+    'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --ifm-line-height-base: 1.7;
+  --ifm-code-font-size: 88%;
+  --ifm-h1-font-size: 2.4rem;
+  --ifm-heading-font-weight: 650;
 
-  /* Improved spacing */
-  --ifm-spacing-horizontal: 1.5rem;
-  --ifm-spacing-vertical: 1.5rem;
+  --ifm-global-radius: 0.6rem;
+  --ifm-code-border-radius: 0.35rem;
+  --ifm-navbar-height: 4rem;
+  --ifm-navbar-shadow: none;
+  --ifm-toc-border-color: var(--cm-site-border);
+  --ifm-hr-border-color: var(--cm-site-border);
+  --ifm-table-border-color: var(--cm-site-border);
+  --ifm-menu-link-padding-vertical: 0.4rem;
+  --ifm-footer-background-color: #0b0f18;
 
-  /* Enhanced shadows */
-  --ifm-global-shadow-lw:
-    0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-  --ifm-global-shadow-md:
-    0 4px 6px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.08);
-  --ifm-global-shadow-tl:
-    0 10px 25px rgba(0, 0, 0, 0.05), 0 4px 6px rgba(0, 0, 0, 0.1);
+  --docusaurus-highlighted-code-line-bg: rgba(47, 111, 219, 0.12);
+
+  --cm-site-accent: #7c5cff;
+  --cm-site-accent-2: #14b8a6;
+  --cm-site-border: #e3e8f1;
+  --cm-site-surface: #f6f8fc;
+  --cm-site-surface-raised: #ffffff;
+  --cm-site-muted: #5b6478;
+  --cm-site-shadow:
+    0 1px 2px rgba(16, 24, 40, 0.06), 0 8px 24px rgba(16, 24, 40, 0.06);
+  --cm-site-shadow-hover:
+    0 2px 4px rgba(16, 24, 40, 0.08), 0 16px 40px rgba(47, 111, 219, 0.14);
+  --cm-site-gradient: linear-gradient(
+    120deg,
+    #2f6fdb 0%,
+    #7c5cff 55%,
+    #14b8a6 100%
+  );
+  --cm-site-navbar-bg: rgba(11, 15, 24, 0.86);
 }
 
-/* Enhanced dark mode palette */
 [data-theme='dark'] {
-  --ifm-color-primary: #60a5fa;
-  --ifm-color-primary-dark: #3b82f6;
-  --ifm-color-primary-darker: #2563eb;
-  --ifm-color-primary-darkest: #1d4ed8;
-  --ifm-color-primary-light: #93c5fd;
-  --ifm-color-primary-lighter: #dbeafe;
-  --ifm-color-primary-lightest: #eff6ff;
+  --ifm-color-primary: #5792ee;
+  --ifm-color-primary-dark: #3f82eb;
+  --ifm-color-primary-darker: #3279ea;
+  --ifm-color-primary-darkest: #1a64d6;
+  --ifm-color-primary-light: #6ea2f1;
+  --ifm-color-primary-lighter: #7aaaf2;
+  --ifm-color-primary-lightest: #9fc1f5;
 
-  --ifm-color-secondary: #a78bfa;
-  --ifm-color-secondary-dark: #8b5cf6;
-  --ifm-color-secondary-darker: #7c3aed;
-  --ifm-color-secondary-darkest: #6d28d9;
+  --ifm-background-color: #0f131c;
+  --ifm-background-surface-color: #151925;
+  --ifm-font-color-base: #d7dce6;
+  --ifm-heading-color: #f4f6fb;
+  --ifm-color-content-secondary: #a3acbd;
 
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+  --docusaurus-highlighted-code-line-bg: rgba(87, 146, 238, 0.18);
 
-  /* Enhanced dark mode shadows */
-  --ifm-global-shadow-lw:
-    0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.6);
-  --ifm-global-shadow-md:
-    0 4px 6px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3);
-  --ifm-global-shadow-tl:
-    0 10px 25px rgba(0, 0, 0, 0.3), 0 4px 6px rgba(0, 0, 0, 0.2);
+  --cm-site-accent: #a28bff;
+  --cm-site-accent-2: #2dd4bf;
+  --cm-site-border: #252b3b;
+  --cm-site-surface: #151925;
+  --cm-site-surface-raised: #1a2030;
+  --cm-site-muted: #9aa3b5;
+  --cm-site-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.25);
+  --cm-site-shadow-hover:
+    0 2px 4px rgba(0, 0, 0, 0.4), 0 16px 40px rgba(87, 146, 238, 0.18);
+  --cm-site-gradient: linear-gradient(
+    120deg,
+    #5792ee 0%,
+    #a28bff 55%,
+    #2dd4bf 100%
+  );
 }
 
-/* Professional navbar styling - dark background for both themes for logo visibility */
-.navbar {
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  background-color: rgba(15, 23, 42, 0.95);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+/* Base ---------------------------------------------------------------- */
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
-[data-theme='dark'] .navbar {
-  background-color: rgba(15, 23, 42, 0.95);
-  border-bottom-color: rgba(255, 255, 255, 0.05);
+::selection {
+  background: rgba(47, 111, 219, 0.22);
 }
 
-/* Ensure navbar text is light colored for dark background */
-.navbar__title,
-.navbar__link {
-  color: rgba(255, 255, 255, 0.9) !important;
-}
-
-.navbar__link:hover {
-  color: var(--ifm-color-primary-light) !important;
-}
-
-.navbar__toggle {
-  color: rgba(255, 255, 255, 0.9);
-}
-
-/* Fix theme toggle button visibility */
-.navbar .navbar__items--right .clean-btn {
-  color: rgba(255, 255, 255, 0.9) !important;
-  background: rgba(255, 255, 255, 0.1) !important;
-  border-radius: 6px !important;
-  padding: 4px 8px !important;
-}
-
-.navbar .navbar__items--right .clean-btn:hover {
-  color: rgba(255, 255, 255, 1) !important;
-  background: rgba(255, 255, 255, 0.2) !important;
-}
-
-/* Make sure dark mode toggle is always visible */
-[data-theme='dark'] button[title='Switch between dark and light mode'],
-[data-theme='light'] button[title='Switch between dark and light mode'] {
-  color: rgba(255, 255, 255, 0.9) !important;
-  background: rgba(255, 255, 255, 0.1) !important;
-  border-radius: 6px !important;
-  padding: 6px !important;
-}
-
-[data-theme='dark'] button[title='Switch between dark and light mode']:hover,
-[data-theme='light'] button[title='Switch between dark and light mode']:hover {
-  color: rgba(255, 255, 255, 1) !important;
-  background: rgba(255, 255, 255, 0.2) !important;
-}
-
-/* Improved buttons */
-.button {
-  font-weight: 500;
-  letter-spacing: 0.025em;
-  transition: all 0.2s ease;
-  border-radius: 8px;
-}
-
-.button:hover {
-  transform: translateY(-1px);
-}
-
-/* Enhanced code blocks */
-.prism-code {
-  border-radius: 12px;
-  border: 1px solid var(--ifm-color-emphasis-300);
-}
-
-/* Improved cards and content */
-.card {
-  border-radius: 12px;
-  border: 1px solid var(--ifm-color-emphasis-200);
-  transition: all 0.3s ease;
-}
-
-.card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--ifm-global-shadow-md);
-}
-
-/* Clean footer */
-.footer {
-  border-top: 1px solid var(--ifm-color-emphasis-200);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-}
-
-/* Improved table of contents */
-.table-of-contents {
-  border-left: 2px solid var(--ifm-color-emphasis-300);
-}
-
-.table-of-contents__link--active {
-  border-left-color: var(--ifm-color-primary);
-  font-weight: 600;
-}
-
-/* Enhanced search */
-.DocSearch-Button {
-  border-radius: 8px !important;
-  border: 1px solid var(--ifm-color-emphasis-300) !important;
-  transition: all 0.2s ease !important;
-}
-
-.DocSearch-Button:hover {
-  border-color: var(--ifm-color-primary) !important;
-  box-shadow: var(--ifm-global-shadow-lw) !important;
-}
-
-/* Typography improvements */
 h1,
 h2,
 h3,
-h4,
-h5,
-h6 {
-  font-weight: 600;
+h4 {
+  letter-spacing: -0.015em;
+}
+
+.markdown h1:first-child {
+  font-size: var(--ifm-h1-font-size);
+  font-weight: 750;
   letter-spacing: -0.025em;
 }
 
-h1 {
-  font-weight: 700;
+.markdown > h2 {
+  margin-top: 2.6rem;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--cm-site-border);
 }
 
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
+.markdown > p:first-of-type {
+  font-size: 1.08rem;
+  color: var(--ifm-color-content-secondary);
 }
 
-/* Focus improvements for accessibility */
-*:focus {
+.markdown a {
+  text-underline-offset: 0.18em;
+}
+
+:focus-visible {
   outline: 2px solid var(--ifm-color-primary);
   outline-offset: 2px;
   border-radius: 4px;
+}
+
+/* Navbar: dark in both modes so the white logotype stays legible ------ */
+
+.navbar {
+  background-color: var(--cm-site-navbar-bg);
+  backdrop-filter: saturate(180%) blur(14px);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.navbar__logo img {
+  height: 1.9rem;
+}
+
+.navbar__link,
+.navbar__title,
+.navbar__toggle,
+.navbar .clean-btn {
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.navbar__link:hover,
+.navbar__link--active,
+.navbar .clean-btn:hover {
+  color: #ffffff;
+}
+
+.navbar__link--active {
+  position: relative;
+}
+
+.navbar__item.navbar__link {
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.navbar .clean-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.navbar-sidebar,
+.navbar-sidebar__brand {
+  background-color: var(--ifm-background-color);
+}
+
+.navbar-sidebar .navbar__link,
+.navbar-sidebar .clean-btn,
+.navbar-sidebar .navbar__toggle {
+  color: var(--ifm-font-color-base);
+}
+
+.navbar-sidebar__brand {
+  background-color: #0b0f18;
+}
+
+.navbar-sidebar__brand .clean-btn {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.header-github-link::before {
+  content: '';
+  display: flex;
+  width: 1.4rem;
+  height: 1.4rem;
+  background-color: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/%3E%3C/svg%3E")
+    no-repeat center / contain;
+  mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12'/%3E%3C/svg%3E")
+    no-repeat center / contain;
+}
+
+.navbar-sidebar .header-github-link::before {
+  display: inline-flex;
+  vertical-align: middle;
+  margin-right: 0.5rem;
+}
+
+.navbar-sidebar .header-github-link::after {
+  content: 'GitHub';
+}
+
+/* Search box (local search plugin) */
+.navbar__search-input {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+}
+
+.navbar__search-input::placeholder {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* Sidebar -------------------------------------------------------------- */
+
+.theme-doc-sidebar-container {
+  border-right-color: var(--cm-site-border) !important;
+}
+
+.menu {
+  font-size: 0.93rem;
+}
+
+.menu__link {
+  border-radius: 0.45rem;
+}
+
+.menu__link--active:not(.menu__link--sublist) {
+  background: rgba(47, 111, 219, 0.1);
+  font-weight: 600;
+}
+
+[data-theme='dark'] .menu__link--active:not(.menu__link--sublist) {
+  background: rgba(87, 146, 238, 0.14);
+}
+
+.theme-doc-sidebar-item-category-level-1
+  > .menu__list-item-collapsible
+  > .menu__link {
+  font-weight: 600;
+  color: var(--ifm-heading-color);
+}
+
+/* Table of contents ---------------------------------------------------- */
+
+.table-of-contents {
+  font-size: 0.85rem;
+}
+
+.table-of-contents__link--active {
+  font-weight: 600;
+}
+
+/* Content elements ----------------------------------------------------- */
+
+.markdown table {
+  display: table;
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--cm-site-border);
+  border-radius: var(--ifm-global-radius);
+  overflow: hidden;
+  font-size: 0.92rem;
+}
+
+.markdown table thead tr {
+  background: var(--cm-site-surface);
+  border-bottom: none;
+}
+
+.markdown table th,
+.markdown table td {
+  border: none;
+  border-bottom: 1px solid var(--cm-site-border);
+  padding: 0.6rem 0.85rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.markdown table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.markdown table tr:nth-child(2n) {
+  background: transparent;
+}
+
+code {
+  border: 1px solid var(--cm-site-border);
+  background: var(--cm-site-surface);
+  padding: 0.1em 0.35em;
+}
+
+pre code,
+.prism-code code {
+  border: none;
+  padding: 0;
+}
+
+.theme-code-block {
+  border: 1px solid var(--cm-site-border);
+  box-shadow: none;
+}
+
+[data-theme='dark'] .theme-code-block {
+  border-color: #232a3a;
+}
+
+.theme-admonition {
+  border-radius: var(--ifm-global-radius);
+  border-left-width: 4px;
+  box-shadow: none;
+}
+
+.breadcrumbs__item--active .breadcrumbs__link {
+  background: rgba(47, 111, 219, 0.1);
+}
+
+.pagination-nav__link {
+  border-color: var(--cm-site-border);
+  border-radius: var(--ifm-global-radius);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.pagination-nav__link:hover {
+  border-color: var(--ifm-color-primary);
+  box-shadow: var(--cm-site-shadow-hover);
+}
+
+/* Generated index pages (category landing pages) */
+.card {
+  border: 1px solid var(--cm-site-border);
+  border-radius: 0.8rem;
+  background: var(--cm-site-surface-raised);
+  box-shadow: none;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+a.card:hover {
+  border-color: var(--ifm-color-primary);
+  box-shadow: var(--cm-site-shadow-hover);
+  transform: translateY(-2px);
+}
+
+/* Footer --------------------------------------------------------------- */
+
+.footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.footer--dark {
+  --ifm-footer-background-color: #0b0f18;
+}
+
+.footer__title {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.footer__link-item {
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.footer__copyright {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* Docs landing helpers ------------------------------------------------- */
+
+.text-gradient {
+  background: var(--cm-site-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
 }

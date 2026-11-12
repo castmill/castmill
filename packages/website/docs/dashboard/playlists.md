@@ -1,100 +1,114 @@
 ---
 sidebar_position: 3
+title: Playlists
+description: Build ordered sequences of widgets, set their durations and preview them before they reach your screens.
 ---
 
 # Playlists
 
-Playlists are **ordered sequences of widget instances** that play on your devices. Each item in a playlist has a duration and a configuration that controls what is displayed.
+A playlist is an ordered list of items. Each item is a widget, such as an image, a video, a web page or a weather forecast, with its own settings and a duration. Screens play the items in order and start again from the top. You manage playlists in **Content → Playlists**.
 
-## Creating a Playlist
+## Creating a playlist
 
-1. Navigate to **Content → Playlists**
-2. Click **Create** (or press **Ctrl+N**)
-3. Enter a **name** and select an **aspect ratio**:
-   - 16:9 (landscape — most common)
-   - 9:16 (portrait)
-   - 4:3 (traditional)
-   - 21:9 (ultrawide)
-   - 1:1 (square)
-   - Custom dimensions
-4. Click **Create**
+1. Open **Content → Playlists**.
+2. Click **Add Playlist**.
+3. Enter a name of at least 3 characters.
+4. Choose an **Aspect Ratio**. The default is 16:9.
+5. Click **Create**. The playlist opens in the editor.
 
-The aspect ratio determines the proportions of the preview and affects how content renders on devices.
+### Aspect ratios
 
-## Playlist Editor
+The aspect ratio decides the shape of the editor preview. Choose the shape of the screens that will show the playlist.
 
-Opening a playlist reveals the **three-column editor**:
+| Preset | Use |
+| --- | --- |
+| **16:9 (Landscape)** | Standard landscape screens (default) |
+| **9:16 (Portrait)** | Screens mounted in portrait |
+| **4:3 (Classic)** and **3:4 (Portrait)** | Older or square-ish screens |
+| **21:9 (Ultrawide)** | Ultrawide screens |
+| **16:3 (Shelf/Ticker)** and **3:16 (Shelf/Ticker Portrait)** | Shelf-edge and ticker strips |
+| **1:1 (Square)** | Square screens |
+| **Custom** | Enter a **Width** and **Height**. Each value must be a positive number of 100 or less, and the ratio cannot be more extreme than 10:1. |
 
-### Widget Chooser (Left Column)
+You can change the aspect ratio later in the editor's **Settings** section.
 
-A searchable list of all available widget types. Each entry shows the widget's icon, name, and a brief description.
+## The playlist editor
 
-**To add a widget**: drag it from the chooser and drop it onto the playlist items list. The widget is inserted at the drop position.
+The editor has these sections:
 
-### Playlist Items (Center Column)
+- **Content**: the widgets you can add and the items of the playlist.
+- **Preview**: the playlist rendered by the Castmill player. On wide screens the preview sits next to the items and has no tab of its own.
+- **Settings**: the aspect ratio.
 
-The ordered list of widget instances in the playlist. Each item shows:
+The summary at the top shows the total duration and when the playlist was created and updated.
 
-- **Widget icon and name**
-- **Duration** (in seconds)
-- **Drag handle** for reordering
+## Adding items
 
-**Actions:**
+The **Widgets** list shows every widget available to your organization. Add a widget in one of these ways:
 
-| Action        | How                                           |
-| ------------- | --------------------------------------------- |
-| **Reorder**   | Drag items up or down within the list         |
-| **Configure** | Click an item to open its configuration panel |
-| **Remove**    | Click the delete button on an item            |
+- Drag it into the item list, at the position where you want it. Drop it on **Drop here to add at the end** to append it.
+- Click its **+** button to add it at the end.
+- On a narrow screen, tap **Add widget**, then tap a widget.
 
-### Live Preview (Right Column)
+A widget that has settings opens its settings dialog when you add it, so you can choose an image, enter a URL or set other options. Click **Add to playlist** to confirm. A widget without settings is added directly.
 
-A real-time rendering of the playlist using the actual Castmill player engine. The preview:
+:::note Credentials Required
+Some widgets read data from an external service and need an API key or an account connection first. If the credentials are missing, the dashboard shows **Credentials Required** with a **Go to Integrations** button that opens the widget's integration settings. See [Widgets](./widgets.md#integration-credentials).
+:::
 
-- Plays through items sequentially with their configured durations
-- Updates instantly when you change widget options
-- Supports **seek-to-item** — clicking an item in the list jumps the preview to that item
+## Working with items
 
-## Widget Configuration
+Each item shows the widget icon, its name and its duration.
 
-When you click a playlist item, a configuration panel opens. The form is **dynamically generated** from the widget's `options_schema`, meaning each widget type has its own set of configuration fields.
+| Action | How |
+| --- | --- |
+| Reorder | Drag the item, or use **Move up** and **Move down** |
+| Edit settings | Click **Edit item** |
+| Change duration | Use the **Duration** control on the item |
+| Remove | Click **Remove item** and confirm |
 
-### Common Field Types
+### Durations
 
-| Type                   | Control                   | Example                                 |
-| ---------------------- | ------------------------- | --------------------------------------- |
-| **Text**               | Text input                | Headline, caption                       |
-| **Number**             | Number input with min/max | Duration, font size                     |
-| **Boolean**            | Toggle switch             | Show title, autoplay                    |
-| **Color**              | Color picker              | Background color, text color            |
-| **URL**                | URL input with validation | Web page address                        |
-| **Media reference**    | Searchable dropdown       | Select an uploaded image or video       |
-| **Playlist reference** | Searchable dropdown       | Nest a playlist inside a layout zone    |
-| **Select**             | Dropdown                  | Transition effect, alignment            |
-| **Layout**             | Visual zone editor        | Multi-zone screen arrangement           |
-| **Layout reference**   | Zone → playlist mapper    | Assign playlists to layout zones        |
-| **Location**           | Map picker                | Geographic location for weather widgets |
+New items play for 10 seconds by default. Change the duration per item with the **Duration** control.
 
-### Validation
+Some widgets have a dynamic duration: a video plays for its full length and some animated widgets run until they finish. Their duration shows **Auto** until the real length is known.
 
-- Required fields are marked and validated before saving
-- Number fields enforce minimum and maximum bounds
-- URL fields validate format
-- The **Save** button is disabled until all required fields are valid
+## Widget settings
 
-### Default Values
+The settings dialog, **Widget "name"**, is generated from the options that the widget declares. Typical fields are:
 
-Each field in the schema can define a default value, which is applied automatically when you add a new widget to the playlist.
+| Field | Control |
+| --- | --- |
+| Text, number, URL | Input field with validation |
+| Yes/no setting | Switch |
+| Colour | Colour picker |
+| Option list | Dropdown |
+| Media | **Select an Image**, **Select a Video** or **Select a Media** picker |
+| Playlist | **Select a Playlist** picker |
+| Layout | Layout selector with **Assign Playlists to Zones** (Layout widget) |
+| Location | Map with **Search for a location...** |
+| Choices | A searchable list of items provided by the widget's integration, for example a feed or a list of stocks |
 
-## Widget Duration
+Required fields must be filled in before you can save. If you close the dialog with changes, the dashboard asks whether to **Discard** them or **Keep editing**.
 
-- **Static widgets** (images, text): default duration of 10 seconds, configurable per item
-- **Dynamic widgets** (videos, scrollers): duration is set to 0, meaning the player uses the widget's actual runtime (e.g., video length or scroller cycle time)
+### Editing texts in the preview
 
-## Integration Credentials
+Template widgets can mark some of their texts as editable. For those widgets, click **Edit texts** in the settings dialog, then click a highlighted text in the preview and type a replacement. You can also hide a text or **Reset to original**. The list **Edited texts** shows every change for the item; **Reset all** removes them. Edited texts apply to this playlist item only.
 
-Some widgets require external service credentials (e.g., weather API keys). When you add such a widget, the dashboard checks whether the required credentials are configured. If they are missing, a prompt appears directing you to the widget's integration settings page.
+## Using playlists
 
-## Circular Reference Prevention
+- Schedule a playlist on a [channel](./channels.md) as a calendar entry or as the channel's default playlist.
+- Show a playlist in a zone of a [layout](./layouts.md) through the Layout widget.
+- Play a playlist at set times with an [automation](./automations.md).
 
-When using **layout-ref** fields (assigning playlists to layout zones), the system prevents circular references. If Playlist A is nested inside Playlist B via a layout zone, then Playlist B cannot be selected as a reference inside Playlist A. The ancestor chain is computed automatically and excluded from the selection dropdown.
+## Deleting a playlist
+
+Use **Remove** on a row, or select several playlists and click **Delete**.
+
+Castmill refuses to delete a playlist that is still in use:
+
+- it is the default playlist of a channel;
+- it is scheduled in a current or future channel entry;
+- an automation rule plays it.
+
+Remove those references first, then delete the playlist.

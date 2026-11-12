@@ -1,0 +1,318 @@
+---
+sidebar_position: 3
+title: Data binding
+description: Connect template values to options and data, format them, and control what is rendered.
+---
+
+import WidgetExample from '@site/src/components/WidgetExample';
+import {
+  salesKpiWidget,
+  salesKpiData,
+  salesKpiOptions,
+  clockWidget,
+} from '@site/src/components/WidgetExample/sampleWidgets';
+
+Any option of a component, and any value in its `style`, can be a binding instead of a literal. The player resolves bindings when the widget renders and again whenever the options or data change.
+
+Plain strings are never parsed. `"Hello {options.name}"` is displayed literally; wrap it as `{ "fmt": "Hello {options.name}" }` to format it.
+
+## Key bindings
+
+A key binding reads a value by path:
+
+```json
+{ "key": "options.title", "default": "Welcome" }
+```
+
+`default` is used when the path does not resolve. Paths start with one of these roots:
+
+| Root | Value |
+| --- | --- |
+| `options.` | The options the user set for this playlist item, as defined in the [options schema](./schemas.mdx#options-schema). |
+| `data.` | The data delivered by the widget's [integration](./data-integrations.md). |
+| `$` or `$.` | The current context: the item inside a `paginated-list` or `scroller`, the element inside a `list` binding, or the `context` of a `group`. |
+| `@` | A player global, such as `@now`, `@locale`, or `@target`. |
+
+### Array access
+
+Use brackets to index arrays and objects:
+
+| Path | Meaning |
+| --- | --- |
+| `data.items[0].title` | The title of the first item |
+| `data.items[1:3]` | A slice: the second and third items |
+| `data.items[:4]` | The first four items |
+| `options.image.files[@target].uri` | The entry selected by the value of the `target` global |
+
+### Globals
+
+| Global | Value |
+| --- | --- |
+| `@now` | The current time in milliseconds. Bindings that use it are re-evaluated every minute. |
+| `@locale` | The display locale of the organization, when the player provides it. |
+| `@target` | The rendering target, used to pick a media file size. |
+
+### Media references
+
+When an option has type `ref` and `"collection": "medias"`, the server replaces the media ID with the full media object before it sends the widget to the player. The object's `files` map holds one file per size:
+
+| File | Size |
+| --- | --- |
+| `thumbnail` | Small preview, 128 pixels wide for images |
+| `preview` | 640 pixels wide; used by dashboard previews |
+| `poster` | 1920 pixels wide; used by devices |
+
+Use `[@target]` to let the player choose the right size, as the built-in Image widget does:
+
+```json
+{
+  "type": "image",
+  "name": "photo",
+  "opts": {
+    "url": { "key": "options.image.files[@target].uri" },
+    "size": "cover"
+  }
+}
+```
+
+## Choosing values
+
+### switch
+
+Picks a value by matching a key against cases. The `default` case is used when nothing matches or the key does not resolve.
+
+```json
+{
+  "switch": {
+    "key": "$.status",
+    "cases": {
+      "delayed": "#fb923c",
+      "cancelled": "#f87171",
+      "default": "#4ade80"
+    }
+  }
+}
+```
+
+### cond
+
+Compares a value and picks `then` or `else`. Use one operator per binding: `gte`, `gt`, `lte`, and `lt` compare numbers; `eq` and `neq` compare any value.
+
+```json
+{
+  "cond": {
+    "key": "data.change",
+    "gte": 0,
+    "then": "#4ade80",
+    "else": "#f87171"
+  }
+}
+```
+
+The `then`, `else`, and `cases` values can be bindings themselves.
+
+### concat
+
+Joins literal values and bindings into one string:
+
+```json
+{ "concat": [{ "key": "options.height", "default": 12 }, "em"] }
+```
+
+### first
+
+Returns the first value that is not empty. Use it for fallbacks:
+
+```json
+{
+  "first": [
+    { "key": "options.headline" },
+    { "key": "data.title" },
+    "Today's news"
+  ]
+}
+```
+
+## Formatting with fmt
+
+A `fmt` binding is a text with placeholders. Each placeholder holds a path and optional formatters separated by `|`:
+
+```json
+{ "fmt": "{$.price | number:2} {options.currency}" }
+```
+
+- Formatters apply from left to right.
+- If any placeholder resolves to an empty value, the whole text is empty. A price label therefore disappears instead of showing a lone currency. Use `default` or `first` when you need a fallback.
+- Write `{{` and `}}` for literal braces.
+
+### Formatters
+
+| Formatter | Result |
+| --- | --- |
+| `number[:decimals[:group[:decimal]]]` | Number with grouped digits. `decimals` is a count or `auto`. `group` and `decimal` override the locale's separators. Non-numeric text passes through unchanged. |
+| `date:pattern[:locale]` | A date or time from an ISO 8601 string or epoch milliseconds. |
+| `timed` | The value if its time of day is not midnight, otherwise empty. Combine with `first` to show a time only when there is one. |
+| `upper`, `lower`, `capitalize` | Case changes. `capitalize` uppercases the first character. |
+| `trim` | Removes surrounding whitespace. |
+| `truncate:n` | Cuts the text to `n` characters and adds an ellipsis. |
+| `default:'text'` | Uses `text` when the value is empty. |
+
+Quote arguments that contain spaces or punctuation: `{data.price | number:2:' ':','}`.
+
+### Date patterns
+
+| Token | Output |
+| --- | --- |
+| `YYYY`, `YY` | Year: `2026`, `26` |
+| `M`, `MM`, `MMM`, `MMMM` | Month: `3`, `03`, `Mar`, `March` |
+| `D`, `DD` | Day of the month: `2`, `02` |
+| `d`, `ddd`, `dddd` | Day of the week: `1` (0 is Sunday), `Mon`, `Monday` |
+| `H`, `HH` | Hour, 24-hour clock: `9`, `09` |
+| `h`, `hh` | Hour, 12-hour clock |
+| `m`, `mm` | Minutes |
+| `A` | `AM` or `PM` |
+| `[text]` | Literal text |
+
+Values with a time zone offset are converted to the player's local time. Values without an offset, such as `2026-03-02T14:00:00`, are treated as local wall-clock time.
+
+### Locale
+
+Month names, day names, and number separators come from tables bundled with the player, so formatting is identical on every device and does not depend on the browser. The supported locales are `en`, `es`, `sv`, `de`, `fr`, `zh`, `ar`, `ko`, and `ja`. The player picks the locale in this order:
+
+1. The formatter argument, as in `{@now | date:'dddd':'sv'}`.
+2. A `locale` option of the widget, if you define one.
+3. The `@locale` global.
+4. English.
+
+The following widget combines `fmt`, `cond`, and `switch`. The value turns green or red depending on `data.change`, and the status line depends on `data.status`.
+
+<WidgetExample
+  widget={salesKpiWidget}
+  data={salesKpiData}
+  options={salesKpiOptions}
+  height="420px"
+  title="Sales KPI"
+  description="Number and date formatting with a conditional color."
+/>
+
+The clock below formats `@now`. Because it uses `@now`, the player updates it every minute.
+
+<WidgetExample
+  widget={clockWidget}
+  height="420px"
+  title="Clock"
+  description="Time and date formatted from the @now global."
+/>
+
+## Building lists
+
+A `list` binding turns an array into a filtered, sorted, and formatted array or string.
+
+```json
+{
+  "list": {
+    "key": "data.events",
+    "where": [{ "key": "$.end", "gte": "@now" }],
+    "sort": "$.start",
+    "limit": 3,
+    "item": { "fmt": "{$.start | date:'HH:mm'} {$.title}" },
+    "join": "\n"
+  }
+}
+```
+
+| Attribute | Description |
+| --- | --- |
+| `key` or `items` | The source array: a path, or a literal array whose elements may contain bindings. |
+| `where` | Conditions that every element must meet. Each condition has a `key` and one of `eq`, `neq`, `gt`, `gte`, `lt`, `lte`, or `present: true`. Compared with `@now`, dates compare as instants. |
+| `sort` | Path to sort by. Add `"desc": true` for descending order. |
+| `item` | Binding evaluated for each element, with `$` as the element. Defaults to the element. |
+| `skip` | Number of results to leave out from the start. |
+| `limit` | Maximum number of results. |
+| `join` | If set, the result is a string joined with this separator. Otherwise the result is an array. |
+
+The steps run in this order: `where`, `sort`, `item`, drop empty results, `skip`, `limit`, `join`. Because empty results are dropped before `limit`, a list of facts shows the first ones that have a value.
+
+An array result can feed `paginated-list`, `scroller`, or `image-carousel`. A string result with `"join": "\n"` can feed a text whose style sets `"white-space": "pre-line"`.
+
+## Conditional rendering
+
+Two fields on any component control whether it renders.
+
+`when` renders the component only if a binding resolves to a present value. Missing values, `null`, blank text, `false`, `0`, `NaN`, and empty arrays count as absent.
+
+```json
+{
+  "type": "text",
+  "name": "tag",
+  "when": { "key": "$.tag" },
+  "opts": { "text": { "fmt": "{$.tag | upper}" } }
+}
+```
+
+`filter` renders the component only if every key path equals the given value:
+
+```json
+{
+  "type": "text",
+  "name": "sold-banner",
+  "filter": { "data.status": "sold" },
+  "opts": { "text": "Sold" }
+}
+```
+
+## Editable texts
+
+An editable text lets users replace or hide a text for one playlist item, directly in the dashboard preview, without a dedicated option. Add `editable` to a `text` component:
+
+```json
+{
+  "type": "text",
+  "name": "headline",
+  "opts": { "text": { "key": "data.title" } },
+  "editable": {
+    "key": "headline",
+    "label": "Headline",
+    "multiline": false,
+    "max_length": 80
+  }
+}
+```
+
+| Attribute | Description |
+| --- | --- |
+| `key` | Identifies the override. A string or a binding; inside lists, use a binding such as `{ "fmt": "fact.{$.id}" }` so each item has its own key. |
+| `label` | Label shown in the editor. Translate it in `translations.<locale>.editable`. See [Translations](./schemas.mdx#translations). |
+| `multiline` | Allows line breaks. Default `false`. |
+| `max_length` | Maximum length, from 1 to 5000. Default `500`. |
+
+Edited texts are stored in the item's options and shown verbatim. They bypass `fmt`, formatters, and `first`, but keep the component's style and auto-fit. Avoid `text-transform` on editable texts: it also changes what the user typed. Use the `upper` or `lower` formatter for the original value instead.
+
+## Font scaling
+
+Set `"fontScale": true` on the root component to make `em` units proportional to the screen:
+
+```json
+{
+  "template": {
+    "type": "group",
+    "name": "root",
+    "fontScale": true,
+    "style": { "width": "100%", "height": "100%" },
+    "components": []
+  }
+}
+```
+
+With font scaling, the base font size is 10 pixels on a 1920×1080 screen and scales with the smaller of the two ratios to that size:
+
+| Widget size | 1em |
+| --- | --- |
+| 1920×1080 | 10 px |
+| 3840×2160 | 20 px |
+| 960×540 | 5 px |
+| 1080×1920 (portrait) | 5.625 px |
+
+The player recalculates the size when the widget is resized, for example in a layout zone or a dashboard preview. Design at 1920×1080 with 10 pixels per `em`, and the widget keeps its proportions everywhere.
+
+Font scaling is opt-in. Without it, `em` units resolve against the inherited font size, as in older widgets. Do not set `font-size` on the root component itself, because it replaces the scaled base size.

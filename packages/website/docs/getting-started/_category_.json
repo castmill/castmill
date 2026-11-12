@@ -1,8 +1,10 @@
 {
-  "label": "Getting Started",
+  "label": "Getting started",
   "position": 2,
+  "collapsed": false,
   "link": {
     "type": "generated-index",
-    "description": "Get up and running with Castmill in minutes."
+    "title": "Getting started",
+    "description": "Install Castmill, sign in and put content on your first screen."
   }
 }

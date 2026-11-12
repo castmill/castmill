@@ -1,0 +1,8 @@
+{
+  "label": "Players",
+  "position": 5,
+  "link": {
+    "type": "doc",
+    "id": "players/overview"
+  }
+}

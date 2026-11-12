@@ -1,0 +1,200 @@
+---
+sidebar_position: 8
+title: Examples
+description: Complete widgets for a cafe menu board, a meeting room sign and a departures board, with their schemas and sample data.
+---
+
+import WidgetExample from '@site/src/components/WidgetExample';
+import {
+  cafeMenuWidget,
+  cafeMenuOptions,
+  cafeMenuData,
+  meetingRoomWidget,
+  meetingRoomOptions,
+  meetingRoomData,
+  departuresWidget,
+  departuresOptions,
+  departuresData,
+} from '@site/src/components/WidgetExample/sampleWidgets';
+
+The examples on this page combine the components, bindings and styles described in the previous pages. Each preview runs the real player with sample data; open the **Code** tab to see the full template. Below each preview you find the rest of the `widget.json`: the options the user configures and the data the template expects.
+
+All three templates use `fontScale: true` and `em` units, so they scale to any screen and layout zone.
+
+## Cafe menu board
+
+A menu with a photo panel and a paginated list of dishes. Unavailable dishes are filtered out with a `list` binding, optional tags such as "vegan" appear only when present, and prices are formatted with two decimals.
+
+<WidgetExample
+  widget={cafeMenuWidget}
+  options={cafeMenuOptions}
+  data={cafeMenuData}
+  height="420px"
+  title="Cafe menu board"
+  description="Available dishes, five per page, with tags and formatted prices."
+/>
+
+Techniques used:
+
+- `paginated-list` with `items` set to `{ "list": { "key": "data.items", "where": [{ "key": "$.available", "eq": true }] } }`.
+- `when` on the tag text, so items without a tag do not render an empty badge.
+- `fmt` with `number:2` for prices and `upper` for tags.
+- A `ref` option for the photo, bound with `options.hero_image`.
+
+Options and data:
+
+```json
+{
+  "name": "Cafe menu",
+  "slug": "cafe-menu",
+  "aspect_ratio": "16:9",
+  "options_schema": {
+    "section": { "type": "string", "default": "Breakfast", "order": 1 },
+    "hero_image": { "type": "ref", "collection": "medias|type:image", "order": 2 },
+    "currency": { "type": "string", "default": "EUR", "order": 3 },
+    "duration": { "type": "number", "default": 30, "min": 10, "order": 4 }
+  },
+  "data_schema": {
+    "items": {
+      "type": "list",
+      "items": {
+        "type": "map",
+        "schema": {
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "price": { "type": "number" },
+          "tag": { "type": "string" },
+          "available": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}
+```
+
+In the preview, `hero_image` is a plain URL. With a `ref` option, bind the selected image with `options.hero_image.files[@target].uri` instead; see [Media references](./data-binding.mdx#media-references). To maintain the menu without a custom integration, store it in a document [data feed](./data-integrations.md#reading-a-data-feed) and bind `data.document.items`.
+
+## Meeting room sign
+
+A door sign that shows whether a room is free, the current meeting and the next bookings. The background turns red while the room is busy.
+
+<WidgetExample
+  widget={meetingRoomWidget}
+  options={meetingRoomOptions}
+  data={meetingRoomData}
+  height="420px"
+  title="Meeting room sign"
+  description="Room status, current meeting and the next bookings."
+/>
+
+Techniques used:
+
+- `$styles` with `{ "filter": { "data.status": "busy" } }` to switch the background color.
+- `switch` on `data.status` to choose the status label.
+- `when` to hide the current meeting and the upcoming section when there is nothing to show.
+- A `list` binding that sorts upcoming meetings by start time and joins them into lines, rendered with `white-space: pre-line`.
+- `@now` with `date:'HH:mm'` for the clock in the corner.
+
+Options and data:
+
+```json
+{
+  "name": "Meeting room sign",
+  "slug": "meeting-room-sign",
+  "aspect_ratio": "16:9",
+  "options_schema": {
+    "room_name": { "type": "string", "required": true, "order": 1 }
+  },
+  "data_schema": {
+    "status": { "type": "string", "default": "free" },
+    "current": {
+      "type": "map",
+      "schema": {
+        "title": { "type": "string" },
+        "start": { "type": "string" },
+        "end": { "type": "string" }
+      }
+    },
+    "upcoming": {
+      "type": "list",
+      "items": {
+        "type": "map",
+        "schema": {
+          "title": { "type": "string" },
+          "start": { "type": "string" },
+          "end": { "type": "string" }
+        }
+      }
+    }
+  }
+}
+```
+
+The data typically comes from a calendar through a [pull integration](./data-integrations.md#pull-integrations) with one data copy per playlist item (`"discriminator_type": "widget_config"`) and a short `refresh_interval`, such as 60 seconds. Dates are ISO 8601 strings, which the `date` formatter accepts.
+
+## Departures board
+
+A public transport board with line colors, platforms and live status. The list pages through departures sorted by time.
+
+<WidgetExample
+  widget={departuresWidget}
+  options={departuresOptions}
+  data={departuresData}
+  height="420px"
+  title="Departures board"
+  description="Departures sorted by time, with line colors from the data and status-dependent text and colors."
+/>
+
+Techniques used:
+
+- A style binding, `{ "key": "$.color", "default": "#475569" }`, so each line badge takes its color from the data.
+- `switch` in both the status text and its color, with a nested `fmt` for delays (`+5 min`).
+- `paginated-list` with `sort: "$.time"`, so the board stays ordered whatever order the source returns.
+- Columns with `flex: 0 0 auto` and an explicit width around a flexible destination column (`flex: 1 1 auto`), so every row lines up.
+
+Options and data:
+
+```json
+{
+  "name": "Departures board",
+  "slug": "departures-board",
+  "aspect_ratio": "16:9",
+  "options_schema": {
+    "station": { "type": "string", "required": true, "order": 1 }
+  },
+  "data_schema": {
+    "departures": {
+      "type": "list",
+      "items": {
+        "type": "map",
+        "schema": {
+          "time": { "type": "string" },
+          "line": { "type": "string" },
+          "color": { "type": "color" },
+          "destination": { "type": "string" },
+          "platform": { "type": "string" },
+          "status": { "type": "string" },
+          "delay": { "type": "number" }
+        }
+      }
+    }
+  }
+}
+```
+
+A fetcher for a transit API would use `"discriminator_type": "widget_option"` with `"discriminator_key": "station"`, so all playlist items showing the same station share one copy of the data.
+
+## Packages in the repository
+
+The Castmill repository contains complete widget packages in `examples/custom-widgets/` that you can upload as they are:
+
+| Package | Shows |
+| --- | --- |
+| `examples/custom-widgets/hacker-news` | An RSS integration (`"fetcher": "rss"`) with a configurable `feed_url`, a scroller of stories and bundled icons. |
+| `examples/custom-widgets/quote-of-the-day` | A package with bundled fonts and icons, style options bound into `style` values, and `data_schema` defaults that provide the quote when no data source is connected. |
+
+Each folder has a ready-made archive next to it, such as `examples/custom-widgets/hacker-news.zip`. Upload it in **Content → Widgets**. See [Installing a widget](./overview.mdx#installing-a-widget).
+
+:::note
+These packages reference images with `{{asset:...}}` placeholders, which the server does not resolve yet. Their background images do not appear. See [Assets](./schemas.mdx#assets).
+:::

@@ -1,83 +1,43 @@
 ---
 sidebar_position: 2
+title: Networks
+description: Networks are the top-level tenants in Castmill, each with its own domain, branding, sign-up rules and plans.
 ---
 
 # Networks
 
-A **network** is the top-level organizational boundary in Castmill. It represents a fully isolated environment tied to a specific domain.
+A **network** is a complete Castmill service as its users see it: a dashboard on its own domain, with its own name, logo, sign-up rules and plans. Every organization, user membership and invitation belongs to one network.
 
-## What is a Network?
+One Castmill server can host many networks. Typical setups:
 
-Think of a network as an independent instance of Castmill. Each network:
+- **One network** for a company that runs its own signage.
+- **One network per customer** for a reseller or agency that offers Castmill under each customer's brand.
+- **Separate networks** for staging and production on the same server.
 
-- Has its own **domain** (e.g., `signage.company.com`)
-- Contains its own set of **organizations**
-- Has its own **users**, who may or may not overlap with other networks
-- Has independent **configuration** (branding, access controls, default plans)
-- Is completely **data-isolated** — no content, devices, or user data crosses network boundaries
+## How a network is selected
 
-## When to Use Multiple Networks
+The dashboard sends its own address with every sign-in and sign-up request. The server looks up the network whose **domain** matches that address. A dashboard served from `signage.example.com` therefore belongs to the network with the domain `signage.example.com`. Domains are stored without `http://` or `https://`, and include the port when it is not the default, for example `localhost:3000`.
 
-**Single network** (most common):
+The same domain list also controls which websites may call the API from a browser (CORS). A dashboard on a domain that no network knows about cannot sign in.
 
-- One company managing its own digital signage
-- A single deployment serving one set of organizations
+## Network settings
 
-**Multiple networks**:
+| Setting | Purpose |
+| --- | --- |
+| Name, email | How the network identifies itself, for example in emails |
+| Domain | The dashboard address that selects this network |
+| Logo, copyright, privacy policy URL | Branding shown in the dashboard and emails |
+| Default language | Language for users who have not chosen one |
+| Default plan | [Plan](../administration/plans-and-quotas.md) given to new organizations |
+| Invitation only | When enabled, people can only create an account from an invitation. Enabled by default for new networks. |
+| Organization admins may invite | When invitation-only is enabled, also allow organization admins (not only network admins) to invite people |
 
-- A managed service provider serving different clients, each needing complete isolation
-- Different business units requiring separate domains and branding
-- Regulatory requirements demanding strict data separation
+## Who manages a network
 
-## Network Properties
+**Network administrators** manage a network from the **Network** section of the dashboard sidebar: settings, organizations, users, invitations and which widgets are available. See [Network administration](../administration/network-administration.md).
 
-| Property            | Description                                                           |
-| ------------------- | --------------------------------------------------------------------- |
-| **Name**            | Display name for the network                                          |
-| **Domain**          | The domain associated with this network (e.g., `signage.company.com`) |
-| **Email**           | Contact email for the network                                         |
-| **Logo**            | Network branding logo                                                 |
-| **Default Plan**    | The plan assigned to new organizations by default                     |
-| **Invitation Only** | When enabled, only invited users can create accounts                  |
-| **Social Links**    | Optional links to social media profiles                               |
+The **root user** of the server manages all networks from the [admin tool](../administration/admin-tool.md). The admin tool is where you create the first network and appoint its first network administrators.
 
-## Network Administration
+## Isolation
 
-Network administrators have access to a dedicated section in the dashboard sidebar with:
-
-- **Overview** — Aggregate statistics across all organizations (devices, users, storage, etc.)
-- **Settings** — Network identity, domain configuration, access controls
-- **Organizations** — Create, manage, block, or remove organizations
-- **Users** — Invite users, manage access, block accounts
-
-Network administration is accessed via the **Network** section in the dashboard sidebar (visible only to network admins).
-
-## Domain Resolution
-
-When a user accesses the Castmill dashboard, the server determines which network to use based on the request's **origin domain**:
-
-```
-https://signage.company.com  →  Network "Company Signage"
-https://agency.castmill.com  →  Network "Agency Network"
-```
-
-This happens transparently. Users only see the content and organizations belonging to their network.
-
-## Access Control
-
-Network administrators can configure:
-
-- **Invitation-only mode** — Restricts sign-up. Only users who receive an invitation email can create accounts.
-- **User blocking** — Administrators can block individual users, preventing them from accessing the network.
-- **Organization blocking** — Entire organizations can be blocked if needed.
-
-## Custom Domains
-
-Networks can be accessed via custom domains. When a custom domain is configured:
-
-1. DNS is pointed to the Castmill platform
-2. TLS/SSL certificates are automatically provisioned
-3. The dashboard is accessible at the custom domain
-4. Users create passkeys bound to the custom domain
-
-Custom domain setup is managed through the network administration interface or via commercial addons.
+Networks share the server, the database and the media storage, but the dashboard and API only ever show data from the network that matches the dashboard's domain. Each organization belongs to exactly one network.

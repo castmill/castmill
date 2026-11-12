@@ -18,6 +18,7 @@ services:
         VITE_API_URL: ${VITE_API_URL:-http://localhost:4000}
         VITE_ORIGIN: ${VITE_ORIGIN:-http://localhost:3000}
         VITE_DOMAIN: ${VITE_DOMAIN:-localhost}
+        VITE_WS_ENDPOINT: ${VITE_WS_ENDPOINT:-ws://localhost:4000}
 
     ports:
       - '3000:3000'
@@ -52,6 +53,7 @@ services:
       AWS_ACCESS_KEY_ID_FILENAME: /run/secrets/aws_access_key_id
       AWS_SECRET_ACCESS_KEY_FILENAME: /run/secrets/aws_secret_access_key
       MAILGUN_API_KEY_FILENAME: /run/secrets/mailgun_api_key
+      ENCRYPTION_MASTER_KEY_FILENAME: /run/secrets/encryption_master_key
 
     restart: on-failure
     secrets:
@@ -63,6 +65,7 @@ services:
       - aws_access_key_id
       - aws_secret_access_key
       - mailgun_api_key
+      - encryption_master_key
 
 volumes:
   postgres_data:
@@ -86,3 +89,5 @@ secrets:
     environment: AWS_SECRET_ACCESS_KEY
   mailgun_api_key:
     environment: MAILGUN_API_KEY
+  encryption_master_key:
+    environment: ENCRYPTION_MASTER_KEY

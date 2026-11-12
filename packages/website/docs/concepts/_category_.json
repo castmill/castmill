@@ -3,6 +3,7 @@
   "position": 3,
   "link": {
     "type": "generated-index",
-    "description": "Core concepts and architecture of the Castmill platform."
+    "title": "Concepts",
+    "description": "How Castmill is structured: networks, organizations, users, content and the services that run them."
   }
 }

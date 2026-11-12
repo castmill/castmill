@@ -3,7 +3,7 @@ FROM node:20 AS builder
 
 # Set the environment variable
 ARG VITE_API_URL
-ENV VITE_API_URL=${VITE_API_URL:-'http://localhost:4000/dashboard'}
+ENV VITE_API_URL=${VITE_API_URL:-'http://localhost:4000'}
 
 ARG VITE_DOMAIN
 ENV VITE_DOMAIN=${VITE_DOMAIN:-'localhost'}
@@ -12,7 +12,7 @@ ARG VITE_ORIGIN
 ENV VITE_ORIGIN=${VITE_ORIGIN:-'http://localhost:3000'}
 
 ARG VITE_WS_ENDPOINT
-ENV VITE_WS_ENDPOINT=${VITE_WS_ENDPOINT:-'ws://localhost:4000/dashboard'}
+ENV VITE_WS_ENDPOINT=${VITE_WS_ENDPOINT:-'ws://localhost:4000'}
 
 # Copy all
 COPY . /app
@@ -23,11 +23,10 @@ WORKDIR /app
 # RUN npm install --global yarn
 RUN yarn install
 
-# Run the build script for all workspaces
-RUN yarn build:all
-
-# Build Dashboard
-RUN cd packages/dashboard && npm run build
+# Build the dashboard and the workspace packages it depends on. The player
+# platforms are not part of this image (see .dockerignore).
+RUN yarn build:ui-common && yarn build:cache && yarn build:player \
+  && yarn build:device && yarn build:dashboard
 
 # Step 2: Setting up the Nginx server
 FROM nginx:stable-alpine

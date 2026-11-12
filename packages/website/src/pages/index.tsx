@@ -1,108 +1,308 @@
 import React from 'react';
 import clsx from 'clsx';
 import Link from '@docusaurus/Link';
-import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Layout from '@theme/Layout';
-import Head from '@docusaurus/Head';
-import HomepageFeatures from '@site/src/components/HomepageFeatures';
-
+import Heading from '@theme/Heading';
+import Icon, { type IconName } from '@site/src/components/Icon';
+import HomeShowcase from '@site/src/components/HomeShowcase';
 import styles from './index.module.css';
 
-function HomepageHeader() {
-  const { siteConfig } = useDocusaurusContext();
+interface Path {
+  icon: IconName;
+  title: string;
+  description: string;
+  href: string;
+  cta: string;
+}
+
+const PATHS: Path[] = [
+  {
+    icon: 'monitor',
+    title: 'Manage screens',
+    description:
+      'Upload media, build playlists and layouts, schedule channels and keep an eye on every device.',
+    href: '/docs/dashboard/overview',
+    cta: 'Open the user guide',
+  },
+  {
+    icon: 'rocket',
+    title: 'Install a player',
+    description:
+      'Turn a browser, Android device, LG webOS display or desktop computer into a Castmill screen.',
+    href: '/docs/players/overview',
+    cta: 'Choose a player',
+  },
+  {
+    icon: 'server',
+    title: 'Run your own server',
+    description:
+      'Deploy Castmill with Docker, configure storage and email, and manage networks, plans and quotas.',
+    href: '/docs/administration/self-hosting',
+    cta: 'Self-host Castmill',
+  },
+  {
+    icon: 'code',
+    title: 'Build on Castmill',
+    description:
+      'Write template widgets, push data through feeds, call the REST API or connect AI agents over MCP.',
+    href: '/docs/developers/overview',
+    cta: 'Read the developer guide',
+  },
+];
+
+interface Feature {
+  icon: IconName;
+  title: string;
+  description: string;
+  href: string;
+}
+
+const FEATURES: Feature[] = [
+  {
+    icon: 'playlist',
+    title: 'Playlists and layouts',
+    description:
+      'Sequence images, video and widgets, or split the screen into zones that each run their own playlist.',
+    href: '/docs/dashboard/playlists',
+  },
+  {
+    icon: 'calendar',
+    title: 'Scheduling',
+    description:
+      'Channels map playlists to a weekly calendar in the timezone of each location.',
+    href: '/docs/dashboard/channels',
+  },
+  {
+    icon: 'zap',
+    title: 'Automations',
+    description:
+      'Interrupt normal programming at set times. Occurrences are synced ahead so they run offline.',
+    href: '/docs/dashboard/automations',
+  },
+  {
+    icon: 'widget',
+    title: 'Template widgets',
+    description:
+      'Describe a widget in JSON with data bindings and animations. Weather, RSS, QR codes and more are built in.',
+    href: '/docs/dashboard/widgets',
+  },
+  {
+    icon: 'rss',
+    title: 'Data feeds',
+    description:
+      'Push JSON from any system over a token-protected API and bind it to widgets on screen.',
+    href: '/docs/dashboard/feeds',
+  },
+  {
+    icon: 'wifiOff',
+    title: 'Offline playback',
+    description:
+      'Players cache media, widgets and schedules locally and keep playing through network outages.',
+    href: '/docs/players/offline-and-caching',
+  },
+  {
+    icon: 'users',
+    title: 'Teams and roles',
+    description:
+      'Seven organization roles, team grouping and passkey sign-in keep large deployments organized.',
+    href: '/docs/concepts/users-and-teams',
+  },
+  {
+    icon: 'bot',
+    title: 'AI agents',
+    description:
+      'Give an assistant scoped, revocable access to an organization through the built-in MCP server.',
+    href: '/docs/dashboard/ai-agents',
+  },
+];
+
+const FLOW: { icon: IconName; title: string; text: string }[] = [
+  { icon: 'image', title: 'Upload', text: 'Images, video and widgets' },
+  { icon: 'playlist', title: 'Arrange', text: 'Playlists and layouts' },
+  { icon: 'calendar', title: 'Schedule', text: 'Channels by time of week' },
+  { icon: 'monitor', title: 'Play', text: 'Registered devices' },
+];
+
+function Hero(): React.JSX.Element {
   return (
-    <header className={clsx('hero', styles.heroBanner)}>
-      <div className={styles.heroBackground}>
-        <div className={styles.heroPattern}></div>
-        <div className={styles.heroGradient}></div>
-      </div>
-      <div className="container">
-        <div className={styles.heroContent}>
-          <div className={styles.heroText}>
-            <h1 className={styles.heroTitle}>
-              <span className={styles.heroTitleMain}>Your Digital Signage</span>
-              <span className={styles.heroTitleAccent}>Partner</span>
-            </h1>
-            <p className={styles.heroSubtitle}>
-              Open source solution for creating, managing and deploying digital
-              signage content across any device or platform
-            </p>
-            <div className={styles.heroStats}>
-              <div className={styles.stat}>
-                <div className={styles.statNumber}>100%</div>
-                <div className={styles.statLabel}>Open Source</div>
-              </div>
-              <div className={styles.stat}>
-                <div className={styles.statNumber}>5+</div>
-                <div className={styles.statLabel}>Platforms</div>
-              </div>
-              <div className={styles.stat}>
-                <div className={styles.statNumber}>∞</div>
-                <div className={styles.statLabel}>Possibilities</div>
-              </div>
-            </div>
-          </div>
+    <header className={styles.hero}>
+      <div className={styles.heroBackdrop} aria-hidden="true" />
+      <div className={clsx('container', styles.heroInner)}>
+        <div className={styles.heroText}>
+          <span className={styles.eyebrow}>Open-source digital signage</span>
+          <Heading as="h1" className={styles.heroTitle}>
+            Every screen, <span className="text-gradient">one dashboard.</span>
+          </Heading>
+          <p className={styles.heroSubtitle}>
+            Castmill is a self-hostable platform for running digital signage at
+            any scale. Plan content once, schedule it per location and play it
+            on browsers, Android, LG webOS and desktop players.
+          </p>
           <div className={styles.heroActions}>
             <Link
-              className={clsx(
-                'button',
-                'button--primary',
-                'button--lg',
-                styles.heroButton,
-                styles.heroPrimaryButton
-              )}
-              to="/docs/intro"
+              className="button button--primary button--lg"
+              to="/docs/getting-started/quick-start"
             >
-              Get Started →
+              Get started
             </Link>
             <Link
-              className={clsx(
-                'button',
-                'button--secondary',
-                'button--lg',
-                styles.heroButton,
-                styles.heroSecondaryButton
-              )}
-              href="https://github.com/castmill/castmill"
+              className={clsx('button button--lg', styles.secondaryButton)}
+              to="/docs/intro"
             >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                style={{ marginRight: '8px' }}
-              >
-                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
-              </svg>
-              GitHub
+              Read the docs
             </Link>
           </div>
+          <ul className={styles.heroFacts}>
+            <li>AGPL-3.0 licensed</li>
+            <li>Docker deployment</li>
+            <li>Offline-capable players</li>
+          </ul>
         </div>
-      </div>
-      <div className={styles.heroScroll}>
-        <div className={styles.scrollIndicator}>
-          <span>Scroll to explore</span>
-          <div className={styles.scrollArrow}>↓</div>
+        <div className={styles.heroVisual}>
+          <HomeShowcase />
         </div>
       </div>
     </header>
   );
 }
 
+function Paths(): React.JSX.Element {
+  return (
+    <section className={styles.section}>
+      <div className="container">
+        <div className={styles.sectionHeader}>
+          <Heading as="h2">Start where you are</Heading>
+          <p>
+            The documentation is organized around what you want to do. Pick a
+            starting point.
+          </p>
+        </div>
+        <div className={styles.pathGrid}>
+          {PATHS.map((path) => (
+            <Link key={path.title} to={path.href} className={styles.pathCard}>
+              <span className={styles.pathIcon}>
+                <Icon name={path.icon} />
+              </span>
+              <Heading as="h3">{path.title}</Heading>
+              <p>{path.description}</p>
+              <span className={styles.pathCta}>{path.cta} →</span>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Flow(): React.JSX.Element {
+  return (
+    <section className={clsx(styles.section, styles.sectionAlt)}>
+      <div className="container">
+        <div className={styles.sectionHeader}>
+          <Heading as="h2">From upload to screen</Heading>
+          <p>
+            Content moves through four steps. Each one is a separate building
+            block, so you can reuse a playlist on many channels and a channel on
+            many devices.
+          </p>
+        </div>
+        <ol className={styles.flow}>
+          {FLOW.map((step, index) => (
+            <li key={step.title} className={styles.flowStep}>
+              <span className={styles.flowIcon}>
+                <Icon name={step.icon} />
+              </span>
+              <span className={styles.flowIndex}>Step {index + 1}</span>
+              <strong>{step.title}</strong>
+              <span className={styles.flowText}>{step.text}</span>
+            </li>
+          ))}
+        </ol>
+        <div className={styles.center}>
+          <Link
+            className={clsx('button button--lg', styles.secondaryButton)}
+            to="/docs/getting-started/first-screen"
+          >
+            Follow the first-screen tutorial
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Features(): React.JSX.Element {
+  return (
+    <section className={styles.section}>
+      <div className="container">
+        <div className={styles.sectionHeader}>
+          <Heading as="h2">What Castmill does</Heading>
+          <p>The main capabilities, each with its own chapter.</p>
+        </div>
+        <div className={styles.featureGrid}>
+          {FEATURES.map((feature) => (
+            <Link
+              key={feature.title}
+              to={feature.href}
+              className={styles.feature}
+            >
+              <span className={styles.featureIcon}>
+                <Icon name={feature.icon} />
+              </span>
+              <Heading as="h3">{feature.title}</Heading>
+              <p>{feature.description}</p>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function CallToAction(): React.JSX.Element {
+  return (
+    <section className={styles.section}>
+      <div className="container">
+        <div className={styles.cta}>
+          <div>
+            <Heading as="h2">Run it on your own infrastructure</Heading>
+            <p>
+              One Docker Compose file starts PostgreSQL, the backend and the
+              dashboard. No other services are required.
+            </p>
+          </div>
+          <div className={styles.ctaActions}>
+            <Link
+              className="button button--primary button--lg"
+              to="/docs/getting-started/quick-start"
+            >
+              Quick start
+            </Link>
+            <Link
+              className={clsx('button button--lg', styles.ctaSecondary)}
+              href="https://github.com/castmill/castmill"
+            >
+              View on GitHub
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function Home(): React.JSX.Element {
-  const { siteConfig } = useDocusaurusContext();
   return (
     <Layout
-      title={`${siteConfig.title} - Your Digital Signage Partner`}
-      description="Open source solution for creating, managing and deploying digital signage content across any device or platform"
+      title="Open-source digital signage"
+      description="Castmill is an open-source, self-hostable digital signage platform with players for browsers, Android, LG webOS and desktop."
     >
-      <Head>
-        <meta property="og:image" content="/img/social/home.jpg" />
-        <meta name="twitter:image" content="/img/social/home.jpg" />
-      </Head>
-      <main className={styles.main}>
-        <HomepageHeader />
-        <HomepageFeatures />
+      <Hero />
+      <main>
+        <Paths />
+        <Flow />
+        <Features />
+        <CallToAction />
       </main>
     </Layout>
   );

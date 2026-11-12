@@ -1,10 +1,12 @@
 ---
-sidebar_position: 10
+sidebar_position: 13
+title: AI agents
+description: Connect AI assistants such as Claude, GitHub Copilot or Cursor to your organization through the Castmill MCP server.
 ---
 
-# AI Agents (MCP)
+# AI agents
 
-Castmill can be controlled by AI agents such as Claude, GitHub Copilot or Cursor through the [Model Context Protocol](https://modelcontextprotocol.io) (MCP). An agent is an organization member like any other user: it has a role and is subject to exactly the same permission checks. The difference is that an agent cannot log in to the dashboard. It can only use the MCP server, and only with its own agent credentials.
+Castmill can be controlled by AI agents such as Claude, GitHub Copilot or Cursor through the [Model Context Protocol](https://modelcontextprotocol.io) (MCP). An agent is an organization member like any other user: it has a role and goes through the same permission checks. The difference is that an agent cannot log in to the dashboard. It can only use the MCP server, and only with its own agent credentials.
 
 Typical uses:
 
@@ -14,11 +16,11 @@ Typical uses:
 
 ## Who can manage agents
 
-| Role          | View agents and activity | Create, edit, rotate, revoke, delete |
-| ------------- | ------------------------ | ------------------------------------ |
-| Administrator | ✅                       | ✅                                   |
-| Manager       | ✅                       | ❌                                   |
-| Other roles   | ❌                       | ❌                                   |
+| Role | View agents and activity | Create, edit, rotate, revoke, delete |
+| --- | --- | --- |
+| Administrator | Yes | Yes |
+| Manager | Yes | No |
+| Other roles | No | No |
 
 Agents never appear in the **Members** list and cannot manage other agents.
 
@@ -149,3 +151,5 @@ Agent secrets and `Authorization` headers are never written to the log. Argument
 - Agents cannot sign in to the dashboard, and dashboard sessions cannot be used on the MCP server.
 - If the organization is blocked, its agents are blocked too.
 - Agents cannot create, modify or view other agents.
+
+For the tool reference and protocol details, see [MCP server](/docs/developers/mcp). Each agent counts toward your plan's agent quota; see [Usage and quotas](./usage-and-quotas.md).

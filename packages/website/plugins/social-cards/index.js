@@ -137,20 +137,6 @@ module.exports = function socialCardsPlugin(context, options) {
         <div class="description">${description || 'Open source solution for creating, managing and deploying digital signage content'}</div>
         <div class="badge">${type}</div>
     </div>
-    <div class="stats">
-        <div class="stat">
-            <div class="stat-number">100%</div>
-            <div class="stat-label">Open Source</div>
-        </div>
-        <div class="stat">
-            <div class="stat-number">5+</div>
-            <div class="stat-label">Platforms</div>
-        </div>
-        <div class="stat">
-            <div class="stat-number">∞</div>
-            <div class="stat-label">Possibilities</div>
-        </div>
-    </div>
 </body>
 </html>`;
       };
@@ -159,38 +145,37 @@ module.exports = function socialCardsPlugin(context, options) {
       const cards = [
         {
           route: '/',
-          title: 'Your Digital Signage Partner',
+          title: 'Open-source digital signage',
           description:
-            'Open source solution for creating, managing and deploying digital signage content across any device or platform',
+            'Plan, schedule and play content on browsers, Android, LG webOS and desktop players.',
           type: 'Homepage',
         },
         {
           route: '/docs/intro',
-          title: 'Getting Started',
+          title: 'Castmill documentation',
           description:
-            'Complete guide to building digital signage solutions with Castmill',
+            'User guide, players, self-hosting and developer reference.',
           type: 'Documentation',
         },
         {
-          route: '/docs/player',
-          title: 'Player Documentation',
+          route: '/docs/players/overview',
+          title: 'Players',
           description:
-            'Learn how to set up and configure Castmill players across different platforms',
-          type: 'Player Guide',
+            'Install and run Castmill players on every supported platform.',
+          type: 'Player guide',
         },
         {
-          route: '/docs/widgets',
-          title: 'Widget Development',
+          route: '/docs/developers/widgets/overview',
+          title: 'Widget development',
           description:
-            'Create custom widgets for your digital signage displays',
-          type: 'Developer Guide',
+            'Build template widgets with data bindings and animations.',
+          type: 'Developer guide',
         },
         {
-          route: '/docs/api',
-          title: 'API Reference',
-          description:
-            'Complete API documentation for integrating with Castmill',
-          type: 'API Docs',
+          route: '/docs/developers/rest-api',
+          title: 'REST API',
+          description: 'Integrate with Castmill over HTTP.',
+          type: 'API reference',
         },
       ];
 
