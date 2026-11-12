@@ -7,7 +7,9 @@ defmodule CastmillWeb.WidgetOAuthControllerTest do
   import Castmill.NetworksFixtures
 
   alias Castmill.Accounts
+  alias Castmill.Accounts.User
   alias Castmill.Organizations
+  alias Castmill.Organizations.Organization
   alias Castmill.Widgets.Integrations
   alias Castmill.Widgets.Integrations.OAuth.Generic, as: GenericOAuth
 
@@ -116,6 +118,62 @@ defmodule CastmillWeb.WidgetOAuthControllerTest do
         )
 
       assert json_response(conn, 401)["error"] == "Authentication required"
+    end
+
+    test "returns 403 when user is blocked", %{
+      conn: conn,
+      organization: organization,
+      integration: integration,
+      user: user
+    } do
+      {:ok, blocked_user} =
+        user
+        |> User.block_changeset(%{
+          blocked_at: DateTime.utc_now(),
+          blocked_reason: "Account blocked"
+        })
+        |> Castmill.Repo.update()
+
+      conn =
+        conn
+        |> log_in_user(blocked_user)
+        |> get(
+          "/auth/widget-integrations/#{integration.id}/authorize",
+          %{"organization_id" => organization.id}
+        )
+
+      assert json_response(conn, 403) == %{
+               "error" => "Account blocked",
+               "code" => "user_blocked"
+             }
+    end
+
+    test "returns 403 when user's organization is blocked", %{
+      conn: conn,
+      organization: organization,
+      integration: integration,
+      user: user
+    } do
+      {:ok, _blocked_organization} =
+        organization
+        |> Organization.block_changeset(%{
+          blocked_at: DateTime.utc_now(),
+          blocked_reason: "Organization blocked"
+        })
+        |> Castmill.Repo.update()
+
+      conn =
+        conn
+        |> log_in_user(user)
+        |> get(
+          "/auth/widget-integrations/#{integration.id}/authorize",
+          %{"organization_id" => organization.id}
+        )
+
+      assert json_response(conn, 403) == %{
+               "error" => "Organization blocked",
+               "code" => "organization_blocked"
+             }
     end
 
     test "accepts the dashboard session token", %{

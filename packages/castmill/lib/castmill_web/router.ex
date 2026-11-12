@@ -993,7 +993,10 @@ defmodule CastmillWeb.Router do
         end
       end)
 
-    assign(conn, :current_user, user)
+    case user do
+      nil -> assign(conn, :current_user, nil)
+      user -> verify_user_status(conn, user)
+    end
   end
 
   defp load_organization(conn, _params) do
