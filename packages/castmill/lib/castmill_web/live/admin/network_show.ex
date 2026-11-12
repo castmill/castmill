@@ -1,5 +1,6 @@
 defmodule CastmillWeb.Live.Admin.NetworkShow do
   use CastmillWeb, :live_view
+  alias Castmill.Accounts
   alias Castmill.Networks
   alias Castmill.Organizations
   alias Castmill.Widgets.Integrations
@@ -138,7 +139,36 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
           base_resource_url={
             if Map.has_key?(assigns, :base_resource_url), do: @base_resource_url, else: nil
           }
-        />
+        >
+          <:resource_content :if={@selected_tab == "admins"}>
+            <form id="network-admin-form" phx-submit="add_network_admin" class="py-4">
+              <p class="mb-2 text-sm text-gray-300">
+                Add an existing user by email. Users not already in this network will be added to it.
+              </p>
+              <label for="network-admin-email" class="block text-sm font-semibold">Email</label>
+              <input
+                id="network-admin-email"
+                name="email"
+                type="email"
+                required
+                class="mt-2 rounded-md text-gray-900"
+              />
+              <.button>Add admin</.button>
+            </form>
+            <.table id="network-admins" rows={@streams.rows} row_item={fn {_dom_id, user} -> user end}>
+              <:col :let={user} label="Name"><%= user.name %></:col>
+              <:col :let={user} label="Email"><%= user.email %></:col>
+              <:action :let={user}>
+                <.link
+                  phx-click={JS.push("demote_from_admin", value: %{id: user.id})}
+                  data-confirm={"Remove #{user.email} as a network admin? They will remain a network member."}
+                >
+                  Remove admin
+                </.link>
+              </:action>
+            </.table>
+          </:resource_content>
+        </.show_details>
       <% end %>
       <!-- Integration Configuration Modal -->
       <.modal
@@ -328,38 +358,78 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
     end
   end
 
-  def handle_event("promote_to_admin", %{"id" => user_id}, socket) do
+  def handle_event(
+        "add_network_admin",
+        %{"email" => email},
+        %{assigns: %{selected_tab: "admins"}} = socket
+      )
+      when is_binary(email) do
     network_id = socket.assigns.resource.id
 
-    case Networks.promote_to_network_admin(user_id, network_id) do
+    case Accounts.get_user_by_email(String.trim(email)) do
+      nil ->
+        {:noreply, put_flash(socket, :error, "No existing user found with that email")}
+
+      user ->
+        result =
+          case Networks.promote_to_network_admin(user.id, network_id) do
+            {:error, :user_not_in_network} ->
+              Networks.add_user_to_network(user.id, network_id, :admin)
+
+            other ->
+              other
+          end
+
+        case result do
+          {:ok, _} ->
+            {:noreply,
+             socket
+             |> stream_insert(:rows, user)
+             |> put_flash(:info, "User is now a network admin")}
+
+          {:error, _} ->
+            {:noreply, put_flash(socket, :error, "Failed to add network admin")}
+        end
+    end
+  end
+
+  def handle_event("add_network_admin", _params, socket) do
+    {:noreply, put_flash(socket, :error, "Enter an existing user's email")}
+  end
+
+  def handle_event(
+        "demote_from_admin",
+        %{"id" => user_id},
+        %{assigns: %{selected_tab: "admins"}} = socket
+      ) do
+    network_id = socket.assigns.resource.id
+
+    case Ecto.UUID.cast(user_id) do
+      {:ok, user_id} ->
+        demote_admin(socket, user_id, network_id)
+
+      :error ->
+        {:noreply, put_flash(socket, :error, "Invalid user ID")}
+    end
+  end
+
+  def handle_event("demote_from_admin", _params, socket) do
+    {:noreply, put_flash(socket, :error, "Cannot remove network admin")}
+  end
+
+  defp demote_admin(socket, user_id, network_id) do
+    case Networks.demote_from_network_admin(user_id, network_id) do
       {:ok, _} ->
         {:noreply,
          socket
-         |> put_flash(:info, "User promoted to network admin")}
+         |> stream_delete(:rows, %{id: user_id})
+         |> put_flash(:info, "User removed as network admin")}
 
       {:error, :user_not_found} ->
         {:noreply, put_flash(socket, :error, "User not found")}
 
       {:error, :user_not_in_network} ->
         {:noreply, put_flash(socket, :error, "User does not belong to this network")}
-
-      {:error, _} ->
-        {:noreply, put_flash(socket, :error, "Failed to promote user")}
-    end
-  end
-
-  def handle_event("demote_from_admin", %{"id" => user_id}, socket) do
-    network_id = socket.assigns.resource.id
-
-    case Networks.demote_from_network_admin(user_id, network_id) do
-      {:ok, _} ->
-        # Refresh the admins list
-        {rows, _cols} = resources_for_network(network_id, "admins")
-
-        {:noreply,
-         socket
-         |> stream(:rows, rows, reset: true)
-         |> put_flash(:info, "User demoted from network admin")}
 
       {:error, :not_admin} ->
         {:noreply, put_flash(socket, :error, "User is not an admin")}

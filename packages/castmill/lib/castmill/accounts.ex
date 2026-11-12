@@ -355,6 +355,25 @@ defmodule Castmill.Accounts do
     Repo.one(query)
   end
 
+  @doc "Generates a separate session token for an authenticated root admin."
+  def generate_admin_session_token(user_id) do
+    {token, user_token} = UserToken.build_session_token(user_id, "admin_session")
+    Repo.insert!(user_token)
+    token
+  end
+
+  @doc "Gets the user associated with an admin session token."
+  def get_user_by_admin_session_token(token) do
+    {:ok, query} = UserToken.verify_session_token_query(token, "admin_session")
+    Repo.one(query)
+  end
+
+  @doc "Revokes an admin session token."
+  def delete_admin_session_token(token) do
+    Repo.delete_all(UserToken.token_and_context_query(token, "admin_session"))
+    :ok
+  end
+
   @doc """
   Deletes the signed token with the given context.
   """

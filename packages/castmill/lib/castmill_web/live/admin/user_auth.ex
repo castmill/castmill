@@ -25,7 +25,7 @@ defmodule CastmillWeb.Admin.UserAuth do
   if you are not using LiveView.
   """
   def log_in_user(conn, user, params \\ %{}) do
-    token = Accounts.generate_user_session_token(user.id)
+    token = Accounts.generate_admin_session_token(user.id)
     user_return_to = get_session(conn, :user_return_to)
 
     conn
@@ -70,8 +70,8 @@ defmodule CastmillWeb.Admin.UserAuth do
   It clears all session data for safety. See renew_session.
   """
   def log_out_user(conn) do
-    user_token = get_session(conn, :user_token)
-    user_token && Accounts.delete_user_session_token(user_token)
+    user_token = get_session(conn, :admin_user_token)
+    user_token && Accounts.delete_admin_session_token(user_token)
 
     if live_socket_id = get_session(conn, :live_socket_id) do
       CastmillWeb.Endpoint.broadcast(live_socket_id, "disconnect", %{})
@@ -89,12 +89,12 @@ defmodule CastmillWeb.Admin.UserAuth do
   """
   def fetch_current_user(conn, _opts) do
     {user_token, conn} = ensure_user_token(conn)
-    user = user_token && Accounts.get_user_by_session_token(user_token)
+    user = user_token && Accounts.get_user_by_admin_session_token(user_token)
     assign(conn, :current_user, user)
   end
 
   defp ensure_user_token(conn) do
-    if token = get_session(conn, :user_token) do
+    if token = get_session(conn, :admin_user_token) do
       {token, conn}
     else
       conn = fetch_cookies(conn, signed: [@remember_me_cookie])
@@ -113,12 +113,12 @@ defmodule CastmillWeb.Admin.UserAuth do
   ## `on_mount` arguments
 
     * `:mount_current_user` - Assigns current_user
-      to socket assigns based on user_token, or nil if
-      there's no user_token or no matching user.
+      to socket assigns based on admin_user_token, or nil if
+      there's no admin_user_token or no matching user.
 
     * `:ensure_authenticated` - Authenticates the user from the session,
       and assigns the current_user to socket assigns based
-      on user_token.
+      on admin_user_token.
       Redirects to login page if there's no logged user.
 
     * `:redirect_if_user_is_authenticated` - Authenticates the user from the session.
@@ -173,8 +173,8 @@ defmodule CastmillWeb.Admin.UserAuth do
 
   defp mount_current_user(session, socket) do
     Phoenix.Component.assign_new(socket, :current_user, fn ->
-      if user_token = session["user_token"] do
-        Accounts.get_user_by_session_token(user_token)
+      if user_token = session["admin_user_token"] do
+        Accounts.get_user_by_admin_session_token(user_token)
       end
     end)
   end
@@ -212,7 +212,7 @@ defmodule CastmillWeb.Admin.UserAuth do
 
   defp put_token_in_session(conn, token) do
     conn
-    |> put_session(:user_token, token)
+    |> put_session(:admin_user_token, token)
     |> put_session(:live_socket_id, "users_sessions:#{Base.url_encode64(token)}")
   end
 

@@ -8,6 +8,22 @@ defmodule CastmillWeb.Live.Admin.Show do
   import CastmillWeb.Live.Admin.Tabs
   import CastmillWeb.Live.Admin.Search
 
+  attr :id, :any, required: true
+  attr :type, :string, required: true
+  attr :bucket, :string, required: true
+  attr :title, :string, required: true
+  attr :live_action, :atom, required: true
+  attr :resource, :any, required: true
+  attr :cols, :list, required: true
+  attr :resource_cols, :list, required: true
+  attr :tabs, :list, required: true
+  attr :selected_tab, :string, required: true
+  attr :base_url, :string, required: true
+  attr :rows, :any, required: true
+  attr :base_resource_url, :string, required: true
+  attr :form_module, :atom, required: true
+  slot :resource_content
+
   def show_details(assigns) do
     ~H"""
     <div>
@@ -32,23 +48,27 @@ defmodule CastmillWeb.Live.Admin.Show do
         </div>
         <.tabs tabs={@tabs} selected_tab={@selected_tab} base_url={@base_url}>
           <div :if={@selected_tab != nil} class="p-2">
-            <div class="flex flex-row justify-between py-2">
-              <.search placeholder="Search" phx-debounce="500" phx-target="search" value="" />
-              <!-- use href instead of patch because streams do not allow :reset yet -->
-              <.link
-                :if={Enum.find(@tabs, fn tab -> tab.href == @selected_tab end).form != nil}
-                href={~p"/admin/#{@bucket}/#{@resource}/#{@selected_tab}/new"}
-                phx-click={JS.push_focus()}
-              >
-                <.button>Add <%= @selected_tab %></.button>
-              </.link>
-            </div>
-            <.admin_table
-              rows={@rows}
-              cols={@resource_cols}
-              base_url={@base_resource_url}
-              resource={@selected_tab}
-            />
+            <%= if @resource_content != [] do %>
+              <%= render_slot(@resource_content) %>
+            <% else %>
+              <div class="flex flex-row justify-between py-2">
+                <.search placeholder="Search" phx-debounce="500" phx-target="search" value="" />
+                <!-- use href instead of patch because streams do not allow :reset yet -->
+                <.link
+                  :if={Enum.find(@tabs, fn tab -> tab.href == @selected_tab end).form != nil}
+                  href={~p"/admin/#{@bucket}/#{@resource}/#{@selected_tab}/new"}
+                  phx-click={JS.push_focus()}
+                >
+                  <.button>Add <%= @selected_tab %></.button>
+                </.link>
+              </div>
+              <.admin_table
+                rows={@rows}
+                cols={@resource_cols}
+                base_url={@base_resource_url}
+                resource={@selected_tab}
+              />
+            <% end %>
           </div>
         </.tabs>
       </div>

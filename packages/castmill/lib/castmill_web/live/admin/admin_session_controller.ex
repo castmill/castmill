@@ -24,7 +24,7 @@ defmodule CastmillWeb.AdminSessionController do
     token = email <> ":" <> password
 
     case Accounts.get_user_by_access_token(token, Utils.RemoteIp.get(conn)) do
-      {:ok, user} ->
+      {:ok, %{is_root: true} = user} ->
         conn
         |> put_flash(:info, info)
         |> UserAuth.log_in_user(user, user_params)
