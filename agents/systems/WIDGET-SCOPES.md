@@ -54,6 +54,13 @@ never reference unavailable widgets. Enable the organizations first, then restri
 
 ## Network curation (network admins)
 
+Root administrators can manage network admins in the Phoenix admin tool at
+`/admin/networks/:id/admins`. Add an existing user by email; a user outside the
+network is also added as a network member. Removing an admin demotes them to a
+member without removing them from the network. The admin tool requires a root
+access token at login and uses a separate admin session; existing sessions must
+sign in again after this change.
+
 Network admins curate the widget catalog of their network at `/network/widgets` in
 the dashboard (`Castmill.Widgets.NetworkAccess`), for example to hide widgets for
 services that are unavailable in their region or that need a subscription they don't
