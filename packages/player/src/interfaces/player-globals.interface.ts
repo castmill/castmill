@@ -44,6 +44,8 @@ export interface PlayerGlobals {
    * Default: false
    */
   muted?: boolean;
+  /** Keep a paused editor preview at its requested position while assets load. */
+  freezePreviewDuringLoad?: boolean | (() => boolean);
   reportError?: (input: PlayerRuntimeError) => void;
   /** Optional per-element integration; omitted to use the default HTML video behavior. */
   createVideoPlaybackController?: VideoPlaybackControllerFactory;
@@ -72,6 +74,11 @@ export interface PlayerGlobals {
    * an automation interruption. Errors thrown by the callback are ignored.
    */
   onItemStart?: (info: PlaylistItemStart) => void;
+}
+
+export function isPreviewLoadFrozen(globals: PlayerGlobals): boolean {
+  const freeze = globals.freezePreviewDuringLoad;
+  return typeof freeze === 'function' ? freeze() : freeze === true;
 }
 
 export interface PlaylistItemStart {

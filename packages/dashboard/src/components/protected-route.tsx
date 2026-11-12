@@ -37,6 +37,16 @@ export function buildRedirectUrl(pathname: string, search: string): string {
   return '/login';
 }
 
+const LAST_ORGANIZATION_KEY = 'castmill_last_organization_id';
+
+const readLastOrganizationId = (): string | null => {
+  try {
+    return localStorage.getItem(LAST_ORGANIZATION_KEY);
+  } catch {
+    return null;
+  }
+};
+
 const ProtectedRoute: Component<ProtectedRouteProps> = (
   props: ProtectedRouteProps
 ) => {
@@ -141,13 +151,19 @@ const ProtectedRoute: Component<ProtectedRouteProps> = (
           return;
         }
 
-        // Determine which organization to select
+        // Determine which organization to select: the URL's, else the one
+        // already selected (routes without an org, such as /settings, mount
+        // their own ProtectedRoute), else the last one used, else the first.
         const urlOrgId = params.orgId;
-        let selectedOrg = organizations.find((org) => org.id === urlOrgId);
+        const findOrg = (id?: string | null) =>
+          id ? organizations.find((org) => org.id === id) : undefined;
+        let selectedOrg = findOrg(urlOrgId);
 
-        // If URL org ID doesn't exist in user's organizations, use first one
         if (!selectedOrg && organizations.length > 0) {
-          selectedOrg = organizations[0];
+          selectedOrg =
+            findOrg(store.organizations.selectedId) ||
+            findOrg(readLastOrganizationId()) ||
+            organizations[0];
           // Only redirect if we're on an /org/ route with an invalid org ID
           if (urlOrgId) {
             const currentPath = location.pathname.replace(/^\/org\/[^/]+/, '');
@@ -436,6 +452,18 @@ const ProtectedRoute: Component<ProtectedRouteProps> = (
           selectedId: org.id,
           selectedName: org.name,
         });
+      }
+    }
+  });
+
+  // Remember the selection so routes without an org keep it after a reload
+  createEffect(() => {
+    const orgId = store.organizations.selectedId;
+    if (orgId) {
+      try {
+        localStorage.setItem(LAST_ORGANIZATION_KEY, orgId);
+      } catch {
+        // Storage may be unavailable (e.g. private mode); selection still works.
       }
     }
   });

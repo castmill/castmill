@@ -60,6 +60,26 @@ describe('TemplateWidget.show', () => {
       globals: { target: 'poster' },
     });
 
+  it('uses a measured duration hint until the visible widget loads its actual duration', async () => {
+    const widget = createVideoWidget();
+    widget.setDurationHint(13500);
+    widget.setDurationHint(20000);
+    expect(widget.duration()).to.equal(13500);
+    const shown = firstValueFrom(
+      widget.show(dom.window.document.getElementById('root'), 0)
+    );
+    await flush();
+    const video = dom.window.document.querySelector('video')!;
+    Object.defineProperty(video, 'duration', { value: 8.5 });
+    Object.defineProperty(video, 'readyState', { value: 4 });
+    video.dispatchEvent(new dom.window.Event('loadedmetadata'));
+    video.dispatchEvent(new dom.window.Event('canplaythrough'));
+    await shown;
+    expect(widget.duration()).to.equal(8500);
+    await widget.unload();
+    expect(widget.duration()).to.equal(8500);
+  });
+
   it('waits for the first render to be ready when shown again meanwhile', async () => {
     const widget = createVideoWidget();
     const el = dom.window.document.getElementById('root');
@@ -116,6 +136,84 @@ describe('TemplateWidget.show', () => {
       Date.now = originalNow;
     }
     await widget.unload();
+  });
+
+  it('keeps the requested paused preview position after a slow load', async () => {
+    const widget = new TemplateWidget(
+      { getMedia: async (url: string) => url } as any,
+      {
+        widget: {
+          name: 'video',
+          template: {
+            type: 'video',
+            name: 'video',
+            opts: { url: 'https://example.com/clip.mp4' },
+          },
+        } as any,
+        config: { options: {}, data: {} } as any,
+        globals: { target: 'preview', freezePreviewDuringLoad: true },
+      }
+    );
+    const originalNow = Date.now;
+    let now = originalNow();
+    Date.now = () => now;
+    try {
+      const shown = firstValueFrom(
+        widget.show(dom.window.document.getElementById('root'), 0)
+      );
+      await flush();
+      now += 8000;
+      const video = dom.window.document.querySelector('video')!;
+      Object.defineProperty(video, 'duration', { value: 20 });
+      Object.defineProperty(video, 'readyState', { value: 4 });
+      video.dispatchEvent(new dom.window.Event('loadedmetadata'));
+      video.dispatchEvent(new dom.window.Event('canplaythrough'));
+      await shown;
+      expect((widget as any).timeline.time).to.equal(0);
+    } finally {
+      Date.now = originalNow;
+      await widget.unload();
+    }
+  });
+
+  it('compensates loading time if the preview starts playing while loading', async () => {
+    let paused = true;
+    const widget = new TemplateWidget(
+      { getMedia: async (url: string) => url } as any,
+      {
+        widget: {
+          name: 'video',
+          template: {
+            type: 'video',
+            name: 'video',
+            opts: { url: 'https://example.com/clip.mp4' },
+          },
+        } as any,
+        config: { options: {}, data: {} } as any,
+        globals: { target: 'preview', freezePreviewDuringLoad: () => paused },
+      }
+    );
+    const originalNow = Date.now;
+    let now = originalNow();
+    Date.now = () => now;
+    try {
+      const shown = firstValueFrom(
+        widget.show(dom.window.document.getElementById('root'), 0)
+      );
+      await flush();
+      now += 1500;
+      paused = false;
+      const video = dom.window.document.querySelector('video')!;
+      Object.defineProperty(video, 'duration', { value: 20 });
+      Object.defineProperty(video, 'readyState', { value: 4 });
+      video.dispatchEvent(new dom.window.Event('loadedmetadata'));
+      video.dispatchEvent(new dom.window.Event('canplaythrough'));
+      await shown;
+      expect((widget as any).timeline.time).to.equal(1500);
+    } finally {
+      Date.now = originalNow;
+      await widget.unload();
+    }
   });
 
   it('remeasures scroller duration when its content size changes', async () => {

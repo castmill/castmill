@@ -158,7 +158,10 @@ describe('AgentActivityLog', () => {
   });
 
   it('ignores results from an earlier filter request', async () => {
-    let resolveFirst!: (result: { data: typeof actions; count: number }) => void;
+    let resolveFirst!: (result: {
+      data: typeof actions;
+      count: number;
+    }) => void;
     vi.mocked(AgentsService.listActions)
       .mockImplementationOnce(
         () =>

@@ -37,6 +37,7 @@ defmodule Castmill.Tags do
   alias Castmill.Tags.Tag
   alias Castmill.Tags.TagGroup
   alias Castmill.Tags.ResourceTag
+  alias Castmill.Organizations.Organization
 
   # ============================================================================
   # Tag Groups
@@ -86,12 +87,11 @@ defmodule Castmill.Tags do
   def get_tag_group(id), do: Repo.get(TagGroup, id)
 
   @doc """
-  Creates a tag group.
+  Creates a tag group. Returns `{:error, :quota_exceeded}` when the
+  organization's `tag_groups` quota is used up.
   """
   def create_tag_group(attrs \\ %{}) do
-    %TagGroup{}
-    |> TagGroup.changeset(attrs)
-    |> Repo.insert()
+    create_with_quota(attrs, TagGroup, :tag_groups)
   end
 
   @doc """
@@ -162,12 +162,54 @@ defmodule Castmill.Tags do
   def get_tag(id), do: Repo.get(Tag, id)
 
   @doc """
-  Creates a tag.
+  Creates a tag. Returns `{:error, :quota_exceeded}` when the organization's
+  `tags` quota is used up.
   """
   def create_tag(attrs \\ %{}) do
-    %Tag{}
-    |> Tag.changeset(attrs)
-    |> Repo.insert()
+    create_with_quota(attrs, Tag, :tags)
+  end
+
+  # Without an organization the changeset reports the missing field instead.
+  defp check_quota(attrs, schema, resource) do
+    organization_id = attrs[:organization_id] || attrs["organization_id"]
+
+    if is_nil(organization_id) or
+         Castmill.Quotas.get_quota_used_for_organization(organization_id, schema) <
+           Castmill.Quotas.get_quota_for_organization(organization_id, resource),
+       do: :ok,
+       else: {:error, :quota_exceeded}
+  end
+
+  defp create_with_quota(attrs, schema, resource) do
+    organization_id = attrs[:organization_id] || attrs["organization_id"]
+
+    Ecto.Multi.new()
+    |> Ecto.Multi.run(:quota, fn repo, _changes ->
+      if organization_id do
+        repo.one(
+          from(o in Organization,
+            where: o.id == ^organization_id,
+            lock: "FOR UPDATE",
+            select: o.id
+          )
+        )
+      end
+
+      check_quota(attrs, schema, resource)
+      |> case do
+        :ok -> {:ok, :checked}
+        error -> error
+      end
+    end)
+    |> Ecto.Multi.insert(:record, fn _changes ->
+      apply(schema, :changeset, [struct(schema), attrs])
+    end)
+    |> Repo.transaction()
+    |> case do
+      {:ok, %{record: record}} -> {:ok, record}
+      {:error, :quota, :quota_exceeded, _changes} -> {:error, :quota_exceeded}
+      {:error, :record, changeset, _changes} -> {:error, changeset}
+    end
   end
 
   @doc """

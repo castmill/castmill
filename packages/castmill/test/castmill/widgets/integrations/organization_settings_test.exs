@@ -7,6 +7,8 @@ defmodule Castmill.Widgets.Integrations.OrganizationSettingsTest do
 
   alias Castmill.Widgets.Integrations
   alias Castmill.Widgets.Integrations.OrganizationSettings
+  alias Castmill.Widgets.NetworkAccess
+  alias Castmill.Widgets
 
   @definition %{
     "key" => "property-listing",
@@ -42,10 +44,13 @@ defmodule Castmill.Widgets.Integrations.OrganizationSettingsTest do
     organization = organization_fixture(%{network_id: network.id})
     widget = widget_fixture(%{is_system: false, network_id: network.id})
     integration = integration_for(widget, @definition)
-    {:ok, network: network, organization: organization, integration: integration}
+    {:ok, network: network, organization: organization, widget: widget, integration: integration}
   end
 
-  test "lists valid definitions declared by the network's and system widgets", %{network: network} do
+  test "lists valid definitions declared by available widgets", %{
+    network: network,
+    organization: organization
+  } do
     system = widget_fixture(%{is_system: true})
 
     integration_for(system, %{
@@ -63,7 +68,7 @@ defmodule Castmill.Widgets.Integrations.OrganizationSettingsTest do
     integration_for(invalid, "not a map", "c")
 
     assert [%{"key" => "a-system", "name" => nil}, listing] =
-             OrganizationSettings.definitions(network.id)
+             OrganizationSettings.definitions(network.id, organization.id)
 
     assert listing["name"] == "Property listings"
     assert Map.keys(listing["schema"]) |> Enum.sort() == ~w(agency enabled limit office_ids)
@@ -73,6 +78,131 @@ defmodule Castmill.Widgets.Integrations.OrganizationSettingsTest do
              "label" => "Agency",
              "required" => true
            }
+  end
+
+  test "availability controls definitions and saves without deleting stored settings", %{
+    network: network,
+    organization: org,
+    widget: widget
+  } do
+    other = organization_fixture(%{network_id: network.id, name: "Other organization"})
+
+    {:ok, _} =
+      OrganizationSettings.put(network.id, org.id, "property-listing", %{"agency" => "fb"})
+
+    assert {:ok, _} = NetworkAccess.set_access(network.id, widget.id, "selected")
+
+    assert {:ok, _} =
+             NetworkAccess.update_organizations(network.id, widget.id, %{disable: [org.id]})
+
+    assert OrganizationSettings.list_for_organization(network.id, org.id) == []
+
+    assert [%{"key" => "property-listing"}] =
+             OrganizationSettings.list_for_organization(network.id, other.id)
+
+    assert {:error, :unknown_key} =
+             OrganizationSettings.put(network.id, org.id, "property-listing", %{"agency" => "x"})
+
+    assert OrganizationSettings.get(org.id, "property-listing") == %{"agency" => "fb"}
+
+    assert {:ok, _} =
+             NetworkAccess.update_organizations(network.id, widget.id, %{enable: [org.id]})
+
+    assert [%{"settings" => %{"agency" => "fb"}}] =
+             OrganizationSettings.list_for_organization(network.id, org.id)
+  end
+
+  test "includes organization-owned widgets and excludes other organizations and networks", %{
+    network: network,
+    organization: org
+  } do
+    other = organization_fixture(%{network_id: network.id, name: "Other organization"})
+    private = widget_fixture(%{is_system: false, organization_id: org.id})
+    integration_for(private, %{"key" => "private", "schema" => %{"x" => %{"type" => "string"}}})
+
+    assert Enum.any?(
+             OrganizationSettings.definitions(network.id, org.id),
+             &(&1["key"] == "private")
+           )
+
+    refute Enum.any?(
+             OrganizationSettings.definitions(network.id, other.id),
+             &(&1["key"] == "private")
+           )
+
+    assert OrganizationSettings.definitions(network_fixture().id, org.id) == []
+
+    assert {:error, :unknown_key} =
+             OrganizationSettings.put(network_fixture().id, org.id, "property-listing", %{
+               "agency" => "x"
+             })
+  end
+
+  test "a shared key remains available while any declaring widget is available", %{
+    network: network,
+    organization: org,
+    widget: widget
+  } do
+    other = widget_fixture(%{is_system: false, network_id: network.id})
+    integration_for(other, @definition)
+    assert {:ok, _} = NetworkAccess.set_access(network.id, widget.id, "hidden")
+    assert [%{"key" => "property-listing"}] = OrganizationSettings.definitions(network.id, org.id)
+    assert {:ok, _} = NetworkAccess.set_access(network.id, other.id, "hidden")
+    assert OrganizationSettings.definitions(network.id, org.id) == []
+  end
+
+  test "uses the newest available declaration for a shared key", %{
+    network: network,
+    organization: org,
+    widget: widget,
+    integration: integration
+  } do
+    older = Ecto.Changeset.change(integration, updated_at: ~U[2020-01-01 00:00:00Z])
+    Castmill.Repo.update!(older)
+    newer_widget = widget_fixture(%{is_system: true})
+    newer = integration_for(newer_widget, Map.put(@definition, "name", "Newer"))
+    Castmill.Repo.update!(Ecto.Changeset.change(newer, updated_at: ~U[2021-01-01 00:00:00Z]))
+
+    assert [%{"name" => "Newer"}] = OrganizationSettings.definitions(network.id, org.id)
+    assert {:ok, _} = NetworkAccess.set_access(network.id, newer_widget.id, "hidden")
+
+    assert [%{"name" => "Property listings"}] =
+             OrganizationSettings.definitions(network.id, org.id)
+
+    assert {:ok, _} = NetworkAccess.set_access(network.id, widget.id, "hidden")
+    assert OrganizationSettings.definitions(network.id, org.id) == []
+  end
+
+  test "honors except policies and platform restrictions", %{
+    network: network,
+    organization: org,
+    widget: widget
+  } do
+    other = organization_fixture(%{network_id: network.id, name: "Other organization"})
+
+    assert {:ok, _} =
+             NetworkAccess.update_organizations(network.id, widget.id, %{disable: [org.id]})
+
+    assert OrganizationSettings.definitions(network.id, org.id) == []
+
+    assert [%{"key" => "property-listing"}] =
+             OrganizationSettings.definitions(network.id, other.id)
+
+    system = widget_fixture(%{is_system: true, restricted: true})
+    integration_for(system, %{"key" => "restricted", "schema" => %{"x" => %{"type" => "string"}}})
+
+    refute Enum.any?(
+             OrganizationSettings.definitions(network.id, org.id),
+             &(&1["key"] == "restricted")
+           )
+
+    assert {:ok, _} = Widgets.enable_widget_for_organization(system, org.id)
+    assert [%{"key" => "restricted"}] = OrganizationSettings.definitions(network.id, org.id)
+
+    refute Enum.any?(
+             OrganizationSettings.definitions(network.id, other.id),
+             &(&1["key"] == "restricted")
+           )
   end
 
   test "validates, normalizes and stores settings", %{network: network, organization: org} do

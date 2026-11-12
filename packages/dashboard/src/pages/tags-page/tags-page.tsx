@@ -15,12 +15,15 @@ import {
   FormItem,
   TAG_COLOR_PALETTE,
   Dropdown,
+  isQuotaExceededError,
 } from '@castmill/ui-common';
 
 import { store } from '../../store/store';
 import { useI18n } from '../../i18n';
 import { usePermissions } from '../../hooks/usePermissions';
 import { baseUrl } from '../../env';
+import { QuotaIndicator } from '../../components/quota-indicator';
+import { QuotasService, ResourceQuota } from '../../services/quotas.service';
 
 import styles from './tags-page.module.scss';
 
@@ -69,6 +72,36 @@ const TagsPage: Component = () => {
 
   const tagsService = new TagsService(baseUrl);
 
+  const [tagQuota, setTagQuota] = createSignal<ResourceQuota | null>(null);
+  const [groupQuota, setGroupQuota] = createSignal<ResourceQuota | null>(null);
+  let quotaRequestSequence = 0;
+  const isFull = (quota: ResourceQuota | null) =>
+    !!quota && quota.used >= quota.total;
+
+  const loadQuotas = async () => {
+    const orgId = store.organizations.selectedId;
+    if (!orgId) return;
+    const requestSequence = ++quotaRequestSequence;
+    try {
+      const usage = await QuotasService.getQuotaUsage(orgId);
+      if (
+        requestSequence !== quotaRequestSequence ||
+        orgId !== store.organizations.selectedId
+      ) {
+        return;
+      }
+      setTagQuota(usage.tags || null);
+      setGroupQuota(usage.tag_groups || null);
+    } catch (error) {
+      if (
+        requestSequence === quotaRequestSequence &&
+        orgId === store.organizations.selectedId
+      ) {
+        console.error('Failed to fetch quotas:', error);
+      }
+    }
+  };
+
   const loadData = async () => {
     const orgId = store.organizations.selectedId;
     if (!orgId) return;
@@ -92,8 +125,11 @@ const TagsPage: Component = () => {
   // Reload data when organization changes
   createEffect(() => {
     const orgId = store.organizations.selectedId;
+    setTagQuota(null);
+    setGroupQuota(null);
     if (orgId) {
       loadData();
+      loadQuotas();
     }
   });
 
@@ -148,10 +184,16 @@ const TagsPage: Component = () => {
         const created = await tagsService.createTag(orgId, data);
         setTags([...tags(), created]);
         toast.success(t('tags.messages.tagCreated', { name: created.name }));
+        loadQuotas();
       }
       setShowTagModal(false);
     } catch (error) {
       console.error('Failed to save tag:', error);
+      if (isQuotaExceededError(error)) {
+        toast.error(t('tags.errors.tagQuotaExceeded'));
+        loadQuotas();
+        return;
+      }
       toast.error(
         editingTag()
           ? t('tags.errors.updateTag', { error: String(error) })
@@ -168,6 +210,7 @@ const TagsPage: Component = () => {
       await tagsService.deleteTag(orgId, tag.id);
       setTags(tags().filter((t) => t.id !== tag.id));
       toast.success(t('tags.messages.tagDeleted', { name: tag.name }));
+      loadQuotas();
     } catch (error) {
       console.error('Failed to delete tag:', error);
       toast.error(t('tags.errors.deleteTag', { error: String(error) }));
@@ -217,10 +260,16 @@ const TagsPage: Component = () => {
         const created = await tagsService.createTagGroup(orgId, data);
         setTagGroups([...tagGroups(), created]);
         toast.success(t('tags.messages.groupCreated', { name: created.name }));
+        loadQuotas();
       }
       setShowGroupModal(false);
     } catch (error) {
       console.error('Failed to save tag group:', error);
+      if (isQuotaExceededError(error)) {
+        toast.error(t('tags.errors.groupQuotaExceeded'));
+        loadQuotas();
+        return;
+      }
       toast.error(
         editingGroup()
           ? t('tags.errors.updateGroup', { error: String(error) })
@@ -239,6 +288,7 @@ const TagsPage: Component = () => {
       // Tags in this group are cascade-deleted by the database
       setTags(tags().filter((tag) => tag.tag_group_id !== group.id));
       toast.success(t('tags.messages.groupDeleted', { name: group.name }));
+      loadQuotas();
     } catch (error) {
       console.error('Failed to delete tag group:', error);
       toast.error(t('tags.errors.deleteGroup', { error: String(error) }));
@@ -252,10 +302,31 @@ const TagsPage: Component = () => {
         <h1>{t('tags.title')}</h1>
         <Show when={canManageTags()}>
           <div class={styles['header-actions']}>
+            <Show when={groupQuota()}>
+              {(quota) => (
+                <QuotaIndicator
+                  used={quota().used}
+                  total={quota().total}
+                  resourceName={t('usage.resources.tag_groups')}
+                  compact
+                />
+              )}
+            </Show>
+            <Show when={tagQuota()}>
+              {(quota) => (
+                <QuotaIndicator
+                  used={quota().used}
+                  total={quota().total}
+                  resourceName={t('usage.resources.tags')}
+                  compact
+                />
+              )}
+            </Show>
             <Button
               label={t('tags.groups.addGroup')}
               onClick={openCreateGroup}
               color="primary"
+              disabled={isFull(groupQuota())}
               data-onboarding="create-tag-group"
             />
             <Button
@@ -263,6 +334,7 @@ const TagsPage: Component = () => {
               onClick={() => openCreateTag()}
               icon={BsPlus}
               color="primary"
+              disabled={isFull(tagQuota())}
             />
           </div>
         </Show>
@@ -327,6 +399,7 @@ const TagsPage: Component = () => {
                       onClick={() => openCreateTag(group.id)}
                       color="primary"
                       title={t('tags.addTag')}
+                      disabled={isFull(tagQuota())}
                     />
                     <IconButton
                       icon={BsPencil}
@@ -384,6 +457,7 @@ const TagsPage: Component = () => {
                 onClick={() => openCreateTag()}
                 icon={BsPlus}
                 color="primary"
+                disabled={isFull(tagQuota())}
               />
             </Show>
           </div>

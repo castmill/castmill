@@ -1,35 +1,62 @@
 .widget-view {
   position: relative;
   display: flex;
-  flex-direction: column;
-  background-color: #000;
-
-  // Default dimensions - will be overridden by inline styles when calculated
-  // These ensure the element has some size before ResizeObserver kicks in
+  align-items: center;
+  justify-content: center;
   width: 100%;
-  max-width: 100%;
-  max-height: 100%;
+  height: 100%;
+
+  .widget-frame {
+    position: relative;
+    box-sizing: content-box;
+    padding-bottom: 2em;
+    font-family: Avenir, Helvetica, Arial, sans-serif;
+  }
 
   .widget-player {
     position: relative;
     width: 100%;
     height: 100%;
     background-color: #000;
-    font-family: Avenir, Helvetica, Arial, sans-serif;
+  }
+
+  .widget-controls,
+  .playlist-controls {
+    position: absolute;
+    width: 100%;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+
+    :global(#playerui-controls-controls-widget),
+    :global(#playerui-controls-controls) {
+      bottom: -2em !important;
+      left: 50%;
+      width: min(
+        max(100%, 16em),
+        var(--preview-available-width, 100%)
+      ) !important;
+      transform: translateX(-50%);
+      pointer-events: auto;
+
+      > div:first-child {
+        min-width: 0;
+      }
+
+      :global(#seek-controls-widget),
+      :global(#seek-controls) {
+        flex: 1;
+        min-width: 1em;
+      }
+    }
+
   }
 
   .widget-controls {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
-    font-family: Avenir, Helvetica, Arial, sans-serif;
-    pointer-events: none;
+    height: calc(100% - 2em);
+  }
 
-    // Allow pointer events on interactive elements within
-    & > div {
-      pointer-events: auto;
-    }
+  .playlist-controls {
+    height: 100%;
   }
 }

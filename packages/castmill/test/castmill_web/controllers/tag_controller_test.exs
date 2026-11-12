@@ -84,6 +84,24 @@ defmodule CastmillWeb.TagControllerTest do
   # Tags CRUD
   # ============================================================================
 
+  describe "quotas" do
+    test "creating a tag beyond the quota returns 403", %{conn: conn, organization: org} do
+      Castmill.Quotas.add_quota_to_organization(org.id, :tags, 0)
+
+      conn = post(conn, "/dashboard/organizations/#{org.id}/tags", %{name: "London"})
+
+      assert %{"error" => "quota_exceeded"} = json_response(conn, 403)
+    end
+
+    test "creating a tag group beyond the quota returns 403", %{conn: conn, organization: org} do
+      Castmill.Quotas.add_quota_to_organization(org.id, :tag_groups, 0)
+
+      conn = post(conn, "/dashboard/organizations/#{org.id}/tag-groups", %{name: "Location"})
+
+      assert %{"error" => "quota_exceeded"} = json_response(conn, 403)
+    end
+  end
+
   describe "tags CRUD" do
     test "create tag", %{conn: conn, organization: org} do
       conn =

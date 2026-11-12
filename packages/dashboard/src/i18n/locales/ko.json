@@ -492,7 +492,12 @@
       "teams": "팀",
       "widgets": "위젯",
       "layouts": "레이아웃",
-      "feeds": "피드"
+      "feeds": "피드",
+      "automations": "자동화",
+      "automation_rules": "자동화 규칙",
+      "tags": "태그",
+      "tag_groups": "태그 그룹",
+      "agents": "AI 에이전트"
     },
     "errors": {
       "fetchUsageData": "사용량 데이터를 가져오는데 실패했습니다: {{error}}"
@@ -660,7 +665,9 @@
       "createGroup": "태그 그룹 생성 오류: {{error}}",
       "updateGroup": "태그 그룹 업데이트 오류: {{error}}",
       "deleteGroup": "태그 그룹 삭제 오류: {{error}}",
-      "loadFailed": "태그 로드 실패"
+      "loadFailed": "태그 로드 실패",
+      "tagQuotaExceeded": "플랜의 태그 한도에 도달했습니다. 사용하지 않는 태그를 삭제하거나 플랜을 업그레이드하세요.",
+      "groupQuotaExceeded": "플랜의 태그 그룹 한도에 도달했습니다. 사용하지 않는 그룹을 삭제하거나 플랜을 업그레이드하세요."
     }
   },
   "login": {
@@ -1748,7 +1755,8 @@
       "saveFailed": "에이전트를 저장하지 못했습니다: {{error}}",
       "actionFailed": "작업 실패: {{error}}",
       "copyFailed": "클립보드에 복사할 수 없습니다",
-      "loadActionsFailed": "활동 로그를 불러오지 못했습니다"
+      "loadActionsFailed": "활동 로그를 불러오지 못했습니다",
+      "quotaExceeded": "플랜의 AI 에이전트 한도에 도달했습니다. 사용하지 않는 에이전트를 삭제하거나 플랜을 업그레이드하세요."
     },
     "activity": {
       "agent": "에이전트",

@@ -3,6 +3,7 @@ import {
   For,
   Show,
   createEffect,
+  createMemo,
   createSignal,
   on,
   onCleanup,
@@ -102,6 +103,7 @@ const mergeUnique = (items: Choice[], more: Choice[]) => {
 export const ChoicesField: Component<ChoicesFieldProps> = (props) => {
   const display = () => props.display || 'list';
   const selected = () => toValues(props.value);
+  const reloadKey = createMemo(() => props.reloadKey);
 
   const [known, setKnown] = createSignal<Map<string, Choice>>(new Map());
   const [lookedUp, setLookedUp] = createSignal<Set<string>>(new Set());
@@ -144,7 +146,7 @@ export const ChoicesField: Component<ChoicesFieldProps> = (props) => {
 
   createEffect(
     on(
-      () => props.reloadKey,
+      reloadKey,
       () => {
         resolveId++;
         setKnown(new Map());
@@ -156,7 +158,7 @@ export const ChoicesField: Component<ChoicesFieldProps> = (props) => {
   );
 
   createEffect(
-    on([selected, () => props.reloadKey, () => props.disabled], () => {
+    on([selected, reloadKey, () => props.disabled], () => {
       resolveSelected();
     })
   );

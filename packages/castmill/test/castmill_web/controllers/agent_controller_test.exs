@@ -29,6 +29,21 @@ defmodule CastmillWeb.AgentControllerTest do
   defp base_path(organization), do: "/dashboard/organizations/#{organization.id}/agents"
 
   describe "create" do
+    test "returns 403 when the agents quota is used up", %{
+      conn: conn,
+      organization: organization,
+      users: users
+    } do
+      Castmill.Quotas.add_quota_to_organization(organization.id, :agents, 0)
+
+      conn =
+        conn
+        |> as(users.admin)
+        |> post(base_path(organization), %{"agent" => %{"name" => "Menu bot"}})
+
+      assert %{"error" => "quota_exceeded"} = json_response(conn, 403)
+    end
+
     test "admins can create agents and get the secret once", %{
       conn: conn,
       organization: organization,

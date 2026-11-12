@@ -85,4 +85,56 @@ describe('StyledInput Component', () => {
 
     expect(screen.getByRole('checkbox')).toBeChecked();
   });
+
+  it('renders and updates a multiline input', () => {
+    const onInput = vi.fn();
+    render(() => (
+      <StyledInput
+        id="notes"
+        type="textarea"
+        value="one"
+        rows={3}
+        placeholder="Notes"
+        onInput={onInput}
+      />
+    ));
+
+    const input = screen.getByPlaceholderText('Notes') as HTMLTextAreaElement;
+    expect(input.tagName).toBe('TEXTAREA');
+    expect(input.rows).toBe(3);
+    fireEvent.input(input, { target: { value: 'one\ntwo' } });
+    expect(onInput).toHaveBeenCalledWith('one\ntwo');
+  });
+
+  it('preserves numeric input as text when requested and keeps the default numeric behavior', () => {
+    const rawInput = vi.fn();
+    const numericInput = vi.fn();
+    render(() => (
+      <>
+        <StyledInput
+          id="raw"
+          type="number"
+          value=""
+          step="any"
+          parseNumber={false}
+          onInput={rawInput}
+        />
+        <StyledInput
+          id="number"
+          type="number"
+          value={0}
+          onInput={numericInput}
+        />
+      </>
+    ));
+
+    const [raw, number] = screen.getAllByRole('spinbutton');
+    expect(raw).toHaveAttribute('step', 'any');
+    fireEvent.input(raw, { target: { value: '2.5' } });
+    expect(rawInput).toHaveBeenCalledWith('2.5');
+    fireEvent.input(raw, { target: { value: '' } });
+    expect(rawInput).toHaveBeenCalledWith('');
+    fireEvent.input(number, { target: { value: '2.5' } });
+    expect(numericInput).toHaveBeenCalledWith(2.5);
+  });
 });

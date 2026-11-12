@@ -120,8 +120,8 @@
       "oxfmt --write",
       "oxlint --fix"
     ],
-    "packages/castmill/**/*.{ex,exs}": "cd packages/castmill && mix format && cd ../..",
-    "packages/dashboard/src/i18n/locales/**/*.json": "cd packages/dashboard && yarn check-translations"
+    "packages/castmill/**/*.{ex,exs}": "sh -c 'cd packages/castmill && mix format \"$@\"' --",
+    "packages/dashboard/src/i18n/locales/**/*.json": "sh -c 'cd packages/dashboard && yarn check-translations' --"
   },
   "packageManager": "yarn@1.22.22"
 }

@@ -19,6 +19,32 @@ defmodule Castmill.TagsTest do
     {:ok, organization: organization}
   end
 
+  describe "quotas" do
+    test "create_tag/1 stops at the organization's tags quota", %{organization: org} do
+      Castmill.Quotas.add_quota_to_organization(org.id, :tags, 1)
+
+      assert {:ok, _} = Tags.create_tag(%{name: "North", organization_id: org.id})
+
+      assert {:error, :quota_exceeded} =
+               Tags.create_tag(%{"name" => "South", "organization_id" => org.id})
+    end
+
+    test "create_tag_group/1 stops at the organization's tag_groups quota", %{
+      organization: org
+    } do
+      Castmill.Quotas.add_quota_to_organization(org.id, :tag_groups, 1)
+
+      assert {:ok, _} = Tags.create_tag_group(%{name: "Location", organization_id: org.id})
+
+      assert {:error, :quota_exceeded} =
+               Tags.create_tag_group(%{name: "Campaign", organization_id: org.id})
+    end
+
+    test "without an organization the changeset reports it" do
+      assert {:error, %Ecto.Changeset{}} = Tags.create_tag(%{name: "Orphan"})
+    end
+  end
+
   # ============================================================================
   # Tag Groups
   # ============================================================================

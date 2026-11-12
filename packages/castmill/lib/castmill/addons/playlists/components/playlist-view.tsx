@@ -1127,7 +1127,7 @@ export const PlaylistView: Component<{
                     previewRef = ref;
                     // Prime all layers to calculate their actual durations
                     const offsets = await ref.primeAllLayers();
-                    handleLayerOffsets(offsets);
+                    if (offsets) handleLayerOffsets(offsets);
                   }}
                 />
               </div>

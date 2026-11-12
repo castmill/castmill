@@ -59,6 +59,11 @@ defmodule CastmillWeb.AgentController do
       {:error, :invalid_role} ->
         invalid_role(conn)
 
+      {:error, :quota_exceeded} ->
+        conn
+        |> put_status(:forbidden)
+        |> json(%{error: "quota_exceeded", message: "The organization's agent quota is used up"})
+
       error ->
         error
     end

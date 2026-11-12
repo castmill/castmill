@@ -36,6 +36,7 @@ import {
   TagBadge,
   TagPopover,
   useViewMode,
+  isQuotaExceededError,
 } from '@castmill/ui-common';
 
 import { store } from '../../store/store';
@@ -284,9 +285,20 @@ const ChannelsPage: Component = () => {
     );
   };
 
+  // The tag pickers only log failures; tell the user when the plan's limit
+  // is the reason.
+  const reportTagQuota = (error: unknown): never => {
+    if (isQuotaExceededError(error)) {
+      toast.error(t('tags.errors.tagQuotaExceeded'));
+    }
+    throw error;
+  };
+
   const handleCreateTag = async (name: string): Promise<Tag> => {
     const orgId = store.organizations.selectedId!;
-    const newTag = await tagsService.createTag(orgId, { name });
+    const newTag = await tagsService
+      .createTag(orgId, { name })
+      .catch(reportTagQuota);
     setAllTags((prev) => [...prev, newTag]);
     return newTag;
   };

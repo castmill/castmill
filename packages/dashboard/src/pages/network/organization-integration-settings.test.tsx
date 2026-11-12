@@ -9,6 +9,7 @@ import {
   toSettings,
 } from './organization-integration-settings';
 import { NetworkService } from '../../services/network.service';
+import styles from './network.module.scss';
 
 const toastSpies = { success: vi.fn(), error: vi.fn(), info: vi.fn() };
 
@@ -86,8 +87,21 @@ describe('OrganizationIntegrationSettings', () => {
     const offices = screen.getByLabelText('Office IDs') as HTMLTextAreaElement;
     expect(agency.value).toBe('fb');
     expect(offices.value).toBe('M1\nM2');
+    expect(agency.closest('.form-item-wrapper')).toBeTruthy();
+    expect(offices.closest('.form-item-wrapper')).toBeTruthy();
+    expect(
+      screen.getByLabelText('Enabled').closest('.form-item-wrapper')
+    ).toBeTruthy();
     expect(
       screen.getByText('Office IDs in the agency system. One value per line.')
+    ).toBeTruthy();
+    expect(
+      screen.getByText('Save').closest(`.${styles['settings-actions']}`)
+    ).toBeTruthy();
+    expect(
+      screen
+        .getByText('Remove settings')
+        .closest(`.${styles['settings-actions']}`)
     ).toBeTruthy();
 
     fireEvent.input(agency, { target: { value: 'lff' } });
@@ -148,6 +162,26 @@ describe('OrganizationIntegrationSettings', () => {
       )
     );
     expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  it('does not turn a cleared optional number into zero', async () => {
+    renderDialog();
+    await waitFor(() => screen.getByLabelText('Limit'));
+    fireEvent.input(screen.getByLabelText('Limit'), {
+      target: { value: '2.5' },
+    });
+    fireEvent.input(screen.getByLabelText('Limit'), { target: { value: '' } });
+    vi.mocked(NetworkService.updateIntegrationSettings).mockResolvedValueOnce(
+      {}
+    );
+    fireEvent.click(screen.getByText('Save'));
+    await waitFor(() =>
+      expect(NetworkService.updateIntegrationSettings).toHaveBeenCalledWith(
+        'org-1',
+        'property-listing',
+        { agency: 'fb', office_ids: ['M1', 'M2'], enabled: false }
+      )
+    );
   });
 
   it('removes settings', async () => {

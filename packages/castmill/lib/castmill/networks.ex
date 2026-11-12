@@ -172,6 +172,9 @@ defmodule Castmill.Networks do
       %{resource: :feeds, max: 20},
       %{resource: :automations, max: 50},
       %{resource: :automation_rules, max: 500},
+      %{resource: :tags, max: 500},
+      %{resource: :tag_groups, max: 50},
+      %{resource: :agents, max: 5},
       # 1 GB storage (in MB)
       %{resource: :storage, max: 1024},
       # 2 GB max upload size per file (in MB)

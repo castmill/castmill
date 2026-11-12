@@ -426,7 +426,10 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
       locale: props.locale,
     };
 
-    const playlist = Playlist.fromJSON(jsonPlaylist, resourceManager);
+    const playlist = Playlist.fromJSON(jsonPlaylist, resourceManager, {
+      target: 'preview',
+      freezePreviewDuringLoad: true,
+    });
 
     // Preserve current playback position before swapping instances
     // Use controls.seek (slider value) as it's more reliable than playerUI.position
@@ -511,7 +514,9 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
       const paddingY =
         parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
       const availableWidth = parentRect.width - paddingX;
-      const availableHeight = parentRect.height - paddingY;
+      const controlsHeight =
+        parseFloat(getComputedStyle(containerRef).paddingBottom) || 0;
+      const availableHeight = parentRect.height - paddingY - controlsHeight;
 
       if (availableWidth > 0 && availableHeight > 0) {
         setContainerSize({ width: availableWidth, height: availableHeight });
@@ -536,16 +541,26 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
   // Calculate container style based on aspect ratio and available space
   // This is reactive to both containerSize and props.options changes
   const containerStyle = createMemo(() => {
-    return getWidgetViewContainerStyle(
-      containerSize(),
-      getWidgetViewAspectRatio(props.widget, props.options)
-    );
+    const size = containerSize();
+    return {
+      ...getWidgetViewContainerStyle(
+        size,
+        getWidgetViewAspectRatio(props.widget, props.options)
+      ),
+      '--preview-available-width': size.width > 0 ? `${size.width}px` : '100%',
+    };
   });
 
   return (
-    <div ref={containerRef} class={styles.widgetView} style={containerStyle()}>
-      <div id="player-widget" class={styles.widgetPlayer}></div>
-      <div id="controls-widget" class={styles.widgetControls}></div>
+    <div class={styles.widgetView}>
+      <div
+        ref={containerRef}
+        class={styles.widgetFrame}
+        style={containerStyle()}
+      >
+        <div id="player-widget" class={styles.widgetPlayer}></div>
+        <div id="controls-widget" class={styles.widgetControls}></div>
+      </div>
     </div>
   );
 };

@@ -8,3 +8,10 @@ export class HttpError<TDetails = unknown> extends Error {
     this.name = 'HttpError';
   }
 }
+
+/**
+ * Whether a request failed because the organization's quota for the resource
+ * is used up (the API answers `{ error: "quota_exceeded" }`).
+ */
+export const isQuotaExceededError = (error: unknown): boolean =>
+  error instanceof Error && error.message === 'quota_exceeded';

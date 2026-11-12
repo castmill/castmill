@@ -6,6 +6,7 @@ import {
   PlayerUI,
   PlayerUIControls,
   JsonPlaylist,
+  Renderer,
 } from '@castmill/player';
 import { safeStringify } from './utils';
 import { ResourceManager, Cache, StorageDummy } from '@castmill/cache';
@@ -21,7 +22,7 @@ export interface LayerOffset {
 export interface PlaylistPreviewRef {
   seek: (offset: number) => void;
   getLayerOffsets: () => LayerOffset[];
-  primeAllLayers: () => Promise<LayerOffset[]>;
+  primeAllLayers: () => Promise<LayerOffset[] | undefined>;
 }
 
 interface PlaylistPreviewProps {
@@ -67,7 +68,6 @@ export const PlaylistPreview: Component<PlaylistPreviewProps> = (props) => {
   let playerUI: PlayerUI;
   let playerContainer: HTMLDivElement | undefined;
   let currentSeekSubscription: Subscription | null = null;
-  let currentPlaylist: Playlist | null = null;
 
   onMount(async () => {
     await cache.init();
@@ -79,8 +79,18 @@ export const PlaylistPreview: Component<PlaylistPreviewProps> = (props) => {
     // (e.g., when an item's config.options are updated)
     const _playlistFingerprint = safeStringify(props.playlist);
 
-    const playlist = Playlist.fromJSON(props.playlist, resourceManager);
-    currentPlaylist = playlist;
+    let previewPlayer: PlayerUI | undefined;
+    const playlistJSON = props.playlist;
+    const playlist = Playlist.fromJSON(playlistJSON, resourceManager, {
+      target: 'preview',
+      freezePreviewDuringLoad: () => !previewPlayer?.isPlaying,
+    });
+    let active = true;
+    let cancelPriming: (() => void) | undefined;
+    onCleanup(() => {
+      active = false;
+      cancelPriming?.();
+    });
 
     if (controls) {
       controls.destroy();
@@ -100,6 +110,7 @@ export const PlaylistPreview: Component<PlaylistPreviewProps> = (props) => {
       controls,
       controlsMaster: true,
     });
+    previewPlayer = playerUI;
 
     controls.setTimeDuration(
       0,
@@ -137,20 +148,55 @@ export const PlaylistPreview: Component<PlaylistPreviewProps> = (props) => {
           return { start, end, duration };
         });
       },
-      primeAllLayers: async (): Promise<LayerOffset[]> => {
-        // Trigger each layer to load and calculate its duration.
-        // We don't wait for seek() to complete (which blocks on canplaythrough),
-        // we just trigger it and wait for the duration to become available.
-        // This is much faster because loadedmetadata fires before canplaythrough.
+      primeAllLayers: async (): Promise<LayerOffset[] | undefined> => {
+        // Measure a separate playlist so priming never seeks the visible player.
         const FALLBACK_DURATION = 10000; // Player's default fallback in ms
         const MAX_WAIT_MS = 10000; // Maximum time to wait for duration per layer
         const POLL_INTERVAL_MS = 100; // How often to check for duration change
         const MIN_WAIT_MS = 500; // Minimum wait time for widgets with dynamic content (scrollers, etc.)
 
-        const pl = currentPlaylist;
-        if (!playerUI || !pl) {
-          return [];
-        }
+        cancelPriming?.();
+        if (!active || !playerContainer) return undefined;
+        const pl = Playlist.fromJSON(playlistJSON, resourceManager, {
+          target: 'preview',
+          freezePreviewDuringLoad: true,
+        });
+        const stage = document.createElement('div');
+        const bounds = playerContainer.getBoundingClientRect();
+        Object.assign(stage.style, {
+          position: 'fixed',
+          left: '-10000px',
+          top: '0',
+          width: `${bounds.width}px`,
+          height: `${bounds.height}px`,
+          opacity: '0',
+          pointerEvents: 'none',
+        });
+        document.body.appendChild(stage);
+        const renderer = new Renderer(stage);
+        let cancelled = false;
+        let showSubscription: Subscription | undefined;
+        let pendingTimer: ReturnType<typeof setTimeout> | undefined;
+        let wake: (() => void) | undefined;
+        const wait = (ms: number) =>
+          new Promise<void>((resolve) => {
+            wake = resolve;
+            pendingTimer = setTimeout(() => {
+              wake = undefined;
+              resolve();
+            }, ms);
+          });
+        const cancel = () => {
+          if (cancelled) return;
+          cancelled = true;
+          clearTimeout(pendingTimer);
+          wake?.();
+          showSubscription?.unsubscribe();
+          renderer.clear();
+          pl.unload();
+          stage.remove();
+        };
+        cancelPriming = cancel;
 
         // Helper: wait until a layer's duration changes from fallback, or timeout
         // For dynamic duration widgets (scrollers, videos), we wait a minimum time
@@ -167,7 +213,7 @@ export const PlaylistPreview: Component<PlaylistPreviewProps> = (props) => {
 
           // Always wait at least MIN_WAIT_MS to allow dynamic content to initialize
           // (scrollers need fonts + layout + animation frames)
-          await new Promise((r) => setTimeout(r, MIN_WAIT_MS));
+          await wait(MIN_WAIT_MS);
 
           // Check if duration changed during minimum wait
           let currentDuration = layer.duration();
@@ -176,8 +222,8 @@ export const PlaylistPreview: Component<PlaylistPreviewProps> = (props) => {
           }
 
           // Continue polling until duration changes or timeout
-          while (Date.now() - startTime < MAX_WAIT_MS) {
-            await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
+          while (!cancelled && Date.now() - startTime < MAX_WAIT_MS) {
+            await wait(POLL_INTERVAL_MS);
             currentDuration = layer.duration();
             if (currentDuration !== FALLBACK_DURATION) {
               return;
@@ -186,48 +232,38 @@ export const PlaylistPreview: Component<PlaylistPreviewProps> = (props) => {
           // Timeout - layer keeps fallback duration (might be intentional)
         };
 
-        // Process each layer
-        for (let i = 0; i < pl.layers.length; i++) {
-          // Calculate seek target based on current known durations
-          let seekTarget = 0;
-          for (let j = 0; j < i; j++) {
-            seekTarget += pl.layers[j].duration();
+        try {
+          for (let i = 0; i < pl.layers.length && !cancelled; i++) {
+            showSubscription?.unsubscribe();
+            showSubscription = renderer.show(pl.layers[i], 0).subscribe({
+              error: (err) =>
+                console.error('[primeAllLayers] show error:', err),
+            });
+            if (!(playlistJSON.items[i]?.duration > 0)) {
+              await waitForDuration(i);
+            }
+            if (!cancelled) {
+              playlist.layers[i].setDurationHint(pl.layers[i].duration());
+            }
           }
-
-          // Fire seek to trigger the layer to load - don't wait for completion
-          // The seek triggers show() which starts loading the widget
-          playerUI.seek(seekTarget).subscribe({
-            error: (err) => console.error('[primeAllLayers] seek error:', err),
+          if (cancelled || !active) return undefined;
+          const totalDuration = playlist.duration();
+          controls.setTimeDuration(
+            controls.seek,
+            totalDuration,
+            previewPlayer!.loop
+          );
+          let end = 0;
+          return playlist.layers.map((layer) => {
+            const duration = layer.duration();
+            const start = end;
+            end += duration;
+            return { start, end, duration };
           });
-
-          // Wait for this layer's duration to be calculated
-          // This completes quickly once loadedmetadata fires (for videos)
-          await waitForDuration(i);
+        } finally {
+          cancel();
+          if (cancelPriming === cancel) cancelPriming = undefined;
         }
-
-        // Seek back to start (fire and forget)
-        playerUI.seek(0).subscribe({
-          error: (err) =>
-            console.error('[primeAllLayers] seek to start error:', err),
-        });
-
-        // Update the controls with the correct total duration now that all layers are primed
-        const totalDuration = pl.layers.reduce(
-          (acc, layer) => acc + layer.duration(),
-          0
-        );
-        controls.setTimeDuration(0, totalDuration, true);
-
-        // Return the updated offsets
-        let end = 0;
-        const result = pl.layers.map((layer, i) => {
-          const duration = layer.duration();
-          const start = end;
-          end += duration;
-          return { start, end, duration };
-        });
-
-        return result;
       },
     });
   });
@@ -249,9 +285,9 @@ export const PlaylistPreview: Component<PlaylistPreviewProps> = (props) => {
   });
 
   return (
-    <div class={styles.widgetView} ref={playerContainer}>
+    <div class={styles.widgetView} ref={(el) => (playerContainer = el)}>
       <div id="player" class={styles.widgetPlayer}></div>
-      <div id="controls" class={styles.widgetControls}></div>
+      <div id="controls" class={styles.playlistControls}></div>
     </div>
   );
 };

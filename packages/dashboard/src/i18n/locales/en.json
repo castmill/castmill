@@ -524,7 +524,12 @@
       "teams": "Teams",
       "widgets": "Widgets",
       "layouts": "Layouts",
-      "feeds": "Feeds"
+      "feeds": "Feeds",
+      "automations": "Automations",
+      "automation_rules": "Automation rules",
+      "tags": "Tags",
+      "tag_groups": "Tag groups",
+      "agents": "AI agents"
     },
     "errors": {
       "fetchUsageData": "Failed to fetch usage data: {{error}}"
@@ -692,7 +697,9 @@
       "createGroup": "Error creating tag group: {{error}}",
       "updateGroup": "Error updating tag group: {{error}}",
       "deleteGroup": "Error deleting tag group: {{error}}",
-      "loadFailed": "Failed to load tags"
+      "loadFailed": "Failed to load tags",
+      "tagQuotaExceeded": "Your plan's tag limit has been reached. Delete tags you no longer use or upgrade your plan.",
+      "groupQuotaExceeded": "Your plan's tag group limit has been reached. Delete groups you no longer use or upgrade your plan."
     }
   },
   "channels": {
@@ -1743,7 +1750,8 @@
       "saveFailed": "Failed to save agent: {{error}}",
       "actionFailed": "Action failed: {{error}}",
       "copyFailed": "Could not copy to clipboard",
-      "loadActionsFailed": "Failed to load the activity log"
+      "loadActionsFailed": "Failed to load the activity log",
+      "quotaExceeded": "Your plan's AI agent limit has been reached. Delete agents you no longer use or upgrade your plan."
     },
     "activity": {
       "agent": "Agent",

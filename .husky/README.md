@@ -11,6 +11,10 @@ The pre-commit hook automatically formats your code and validates translations b
 - **Translation files** (i18n) are validated for completeness (100% coverage required)
 - **Only staged files** are checked (fast and efficient)
 
+The Elixir formatter receives the staged filenames, while translation
+validation always checks all supported languages. The hook command integration
+tests can be run with `node --test .husky/tests/lint-staged.test.cjs`.
+
 ### What gets formatted and validated?
 
 - `**/*.{js,jsx,ts,tsx,css,md}` - All JS/TS frontend code

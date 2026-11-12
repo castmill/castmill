@@ -493,7 +493,12 @@
       "teams": "Equipos",
       "widgets": "Widgets",
       "layouts": "Diseños",
-      "feeds": "Feeds"
+      "feeds": "Feeds",
+      "automations": "Automatizaciones",
+      "automation_rules": "Reglas de automatización",
+      "tags": "Etiquetas",
+      "tag_groups": "Grupos de etiquetas",
+      "agents": "Agentes de IA"
     },
     "errors": {
       "fetchUsageData": "Error al obtener datos de uso: {{error}}"
@@ -661,7 +666,9 @@
       "createGroup": "Error al crear grupo de etiquetas: {{error}}",
       "updateGroup": "Error al actualizar grupo de etiquetas: {{error}}",
       "deleteGroup": "Error al eliminar grupo de etiquetas: {{error}}",
-      "loadFailed": "Error al cargar etiquetas"
+      "loadFailed": "Error al cargar etiquetas",
+      "tagQuotaExceeded": "Has alcanzado el límite de etiquetas de tu plan. Elimina las que ya no uses o mejora tu plan.",
+      "groupQuotaExceeded": "Has alcanzado el límite de grupos de etiquetas de tu plan. Elimina los que ya no uses o mejora tu plan."
     }
   },
   "login": {
@@ -1749,7 +1756,8 @@
       "saveFailed": "Error al guardar el agente: {{error}}",
       "actionFailed": "La acción falló: {{error}}",
       "copyFailed": "No se pudo copiar al portapapeles",
-      "loadActionsFailed": "Error al cargar el registro de actividad"
+      "loadActionsFailed": "Error al cargar el registro de actividad",
+      "quotaExceeded": "Has alcanzado el límite de agentes de IA de tu plan. Elimina los que ya no uses o mejora tu plan."
     },
     "activity": {
       "agent": "Agente",

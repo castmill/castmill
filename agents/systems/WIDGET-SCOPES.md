@@ -37,6 +37,9 @@ system widgets have no owner, and organization widgets cannot be restricted.
 - Integration endpoints and OAuth start check that the integration's widget is
   available to the organization. Widget-scoped credentials must belong to an
   integration of the configured widget.
+- Network-admin organization integration settings are derived from available widgets,
+  including organization-owned widgets. Revoking access hides settings without deleting
+  their saved values; stale saves for unavailable keys are rejected.
 - The API adds `scope` and `can_manage` to widgets for the requesting organization
   (`Castmill.Widgets.put_access/2`); the dashboard shows the scope and only allows
   deleting widgets with `can_manage`.

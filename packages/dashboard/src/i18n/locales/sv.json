@@ -487,7 +487,12 @@
       "teams": "Team",
       "widgets": "Widgets",
       "layouts": "Layouter",
-      "feeds": "Flöden"
+      "feeds": "Flöden",
+      "automations": "Automatiseringar",
+      "automation_rules": "Automatiseringsregler",
+      "tags": "Taggar",
+      "tag_groups": "Taggrupper",
+      "agents": "AI-agenter"
     },
     "errors": {
       "fetchUsageData": "Misslyckades att hämta användningsdata: {{error}}"
@@ -655,7 +660,9 @@
       "createGroup": "Fel vid skapande av tagggrupp: {{error}}",
       "updateGroup": "Fel vid uppdatering av tagggrupp: {{error}}",
       "deleteGroup": "Fel vid borttagning av tagggrupp: {{error}}",
-      "loadFailed": "Kunde inte ladda taggar"
+      "loadFailed": "Kunde inte ladda taggar",
+      "tagQuotaExceeded": "Din plans gräns för taggar är nådd. Ta bort taggar som inte används eller uppgradera din plan.",
+      "groupQuotaExceeded": "Din plans gräns för taggrupper är nådd. Ta bort grupper som inte används eller uppgradera din plan."
     }
   },
   "login": {
@@ -1743,7 +1750,8 @@
       "saveFailed": "Det gick inte att spara agenten: {{error}}",
       "actionFailed": "Åtgärden misslyckades: {{error}}",
       "copyFailed": "Det gick inte att kopiera till urklipp",
-      "loadActionsFailed": "Det gick inte att läsa in aktivitetsloggen"
+      "loadActionsFailed": "Det gick inte att läsa in aktivitetsloggen",
+      "quotaExceeded": "Din plans gräns för AI-agenter är nådd. Ta bort agenter som inte används eller uppgradera din plan."
     },
     "activity": {
       "agent": "Agent",

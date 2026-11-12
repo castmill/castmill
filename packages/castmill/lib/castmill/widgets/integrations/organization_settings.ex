@@ -27,7 +27,8 @@ defmodule Castmill.Widgets.Integrations.OrganizationSettings do
   import Ecto.Query, warn: false
 
   alias Castmill.Repo
-  alias Castmill.Widgets.Widget
+  alias Castmill.Organizations.Organization
+  alias Castmill.Widgets
   alias Castmill.Widgets.Integrations.{OrganizationSetting, WidgetIntegration}
 
   @key_format ~r/^[a-z0-9][a-z0-9_-]{0,63}$/
@@ -46,17 +47,27 @@ defmodule Castmill.Widgets.Integrations.OrganizationSettings do
   end
 
   @doc """
-  The settings definitions available in a network: those declared by
-  integrations of system widgets and of the network's widgets. When several
-  integrations declare a key, the most recently updated declaration wins.
+  Settings declared by widgets available to the organization in the given
+  network. When several available integrations declare a key, the most
+  recently updated declaration wins.
   """
-  def definitions(network_id) do
+  def definitions(network_id, organization_id) do
+    available_widgets =
+      organization_id
+      |> Widgets.available_query()
+      |> select([widget: w], w.id)
+
+    organization =
+      from(o in Organization,
+        where: o.id == ^organization_id and o.network_id == ^network_id,
+        select: o.id
+      )
+
     from(i in WidgetIntegration,
-      join: w in Widget,
-      on: w.id == i.widget_id,
-      where: w.is_system == true or w.network_id == ^network_id,
+      where: i.widget_id in subquery(available_widgets),
+      where: exists(subquery(organization)),
       where: fragment("(? -> 'organization_settings') IS NOT NULL", i.pull_config),
-      order_by: [desc: i.updated_at],
+      order_by: [desc: i.updated_at, desc: i.id],
       select: i.pull_config
     )
     |> Repo.all()
@@ -66,11 +77,11 @@ defmodule Castmill.Widgets.Integrations.OrganizationSettings do
     |> Enum.sort_by(&String.downcase(&1["name"] || &1["key"]))
   end
 
-  @doc "A network's definitions with the organization's current values."
+  @doc "The organization's available definitions with its current values."
   def list_for_organization(network_id, organization_id) do
     values = values(organization_id)
 
-    Enum.map(definitions(network_id), fn definition ->
+    Enum.map(definitions(network_id, organization_id), fn definition ->
       Map.put(definition, "settings", Map.get(values, definition["key"], %{}))
     end)
   end
@@ -86,7 +97,7 @@ defmodule Castmill.Widgets.Integrations.OrganizationSettings do
   end
 
   @doc """
-  Validates `settings` against the network's definition for `key` and stores
+  Validates `settings` against the organization's available definition for `key` and stores
   them. Unknown fields are dropped; empty optional values are removed. Errors
   are `{:invalid, %{field => code}}` with codes `required`, `invalid`,
   `too_long` and `too_many`.
@@ -94,7 +105,8 @@ defmodule Castmill.Widgets.Integrations.OrganizationSettings do
   def put(network_id, organization_id, key, settings, updated_by_id \\ nil)
 
   def put(network_id, organization_id, key, settings, updated_by_id) when is_map(settings) do
-    with %{} = definition <- Enum.find(definitions(network_id), &(&1["key"] == key)),
+    with %{} = definition <-
+           Enum.find(definitions(network_id, organization_id), &(&1["key"] == key)),
          {:ok, settings} <- validate(definition["schema"], settings) do
       store(organization_id, key, settings, updated_by_id)
     else

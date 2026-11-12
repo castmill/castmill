@@ -492,7 +492,12 @@
       "teams": "Équipes",
       "widgets": "Widgets",
       "layouts": "Mises en page",
-      "feeds": "Flux"
+      "feeds": "Flux",
+      "automations": "Automatisations",
+      "automation_rules": "Règles d'automatisation",
+      "tags": "Étiquettes",
+      "tag_groups": "Groupes d'étiquettes",
+      "agents": "Agents IA"
     },
     "errors": {
       "fetchUsageData": "Échec de la récupération des données d'utilisation : {{error}}"
@@ -660,7 +665,9 @@
       "createGroup": "Erreur lors de la création du groupe d'étiquettes : {{error}}",
       "updateGroup": "Erreur lors de la mise à jour du groupe d'étiquettes : {{error}}",
       "deleteGroup": "Erreur lors de la suppression du groupe d'étiquettes : {{error}}",
-      "loadFailed": "Échec du chargement des étiquettes"
+      "loadFailed": "Échec du chargement des étiquettes",
+      "tagQuotaExceeded": "La limite d'étiquettes de votre forfait est atteinte. Supprimez celles que vous n'utilisez plus ou passez à un forfait supérieur.",
+      "groupQuotaExceeded": "La limite de groupes d'étiquettes de votre forfait est atteinte. Supprimez ceux que vous n'utilisez plus ou passez à un forfait supérieur."
     }
   },
   "login": {
@@ -1760,7 +1767,8 @@
       "saveFailed": "Échec de l'enregistrement de l'agent : {{error}}",
       "actionFailed": "L'action a échoué : {{error}}",
       "copyFailed": "Impossible de copier dans le presse-papiers",
-      "loadActionsFailed": "Échec du chargement du journal d'activité"
+      "loadActionsFailed": "Échec du chargement du journal d'activité",
+      "quotaExceeded": "La limite d'agents IA de votre forfait est atteinte. Supprimez ceux que vous n'utilisez plus ou passez à un forfait supérieur."
     },
     "activity": {
       "agent": "Agent",

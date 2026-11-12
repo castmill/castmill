@@ -492,7 +492,12 @@
       "teams": "团队",
       "widgets": "小部件",
       "layouts": "布局",
-      "feeds": "数据源"
+      "feeds": "数据源",
+      "automations": "自动化",
+      "automation_rules": "自动化规则",
+      "tags": "标签",
+      "tag_groups": "标签组",
+      "agents": "AI 智能体"
     },
     "errors": {
       "fetchUsageData": "获取使用数据失败：{{error}}"
@@ -660,7 +665,9 @@
       "createGroup": "创建标签组时出错：{{error}}",
       "updateGroup": "更新标签组时出错：{{error}}",
       "deleteGroup": "删除标签组时出错：{{error}}",
-      "loadFailed": "加载标签失败"
+      "loadFailed": "加载标签失败",
+      "tagQuotaExceeded": "已达到您套餐的标签数量上限。请删除不再使用的标签或升级套餐。",
+      "groupQuotaExceeded": "已达到您套餐的标签组数量上限。请删除不再使用的标签组或升级套餐。"
     }
   },
   "login": {
@@ -1748,7 +1755,8 @@
       "saveFailed": "保存智能体失败：{{error}}",
       "actionFailed": "操作失败：{{error}}",
       "copyFailed": "无法复制到剪贴板",
-      "loadActionsFailed": "加载活动日志失败"
+      "loadActionsFailed": "加载活动日志失败",
+      "quotaExceeded": "已达到您套餐的 AI 智能体数量上限。请删除不再使用的智能体或升级套餐。"
     },
     "activity": {
       "agent": "智能体",
