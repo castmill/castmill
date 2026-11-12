@@ -503,7 +503,7 @@ describe('active-only paginated lists', () => {
     expect(text()).to.equal('Note 1');
     // A different list does not share the position.
     await current.unload();
-    current = await resumable({ list: 'other' });
+    await resumable({ list: 'other' });
     expect(text()).to.equal('Note 0');
   });
 
