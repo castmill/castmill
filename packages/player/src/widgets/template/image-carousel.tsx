@@ -251,18 +251,27 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
     const currentBuild = ++buildId;
     const images = Array.from(parentRef?.children || []) as HTMLElement[];
 
-    // Resolve all URLs first so the timeline is built in image order no
-    // matter which download finishes first.
-    const urls = await resolveCarouselImageUrls(
-      props.resourceManager,
-      imageUrls.slice(0, images.length)
-    );
-    if (currentBuild !== buildId) return;
-    urls.forEach((url, index) => {
-      images[index].style.backgroundImage = backgroundImageUrl(url);
-    });
+    const sources = imageUrls.slice(0, images.length);
+    let urls: string[];
     if (isPreviewLoadFrozen(props.globals)) {
-      await preloadCarouselImages(urls);
+      urls = sources.slice();
+      const loading = sources.map(async (source, index) => {
+        const [url] = await resolveCarouselImageUrls(props.resourceManager, [
+          source,
+        ]);
+        if (currentBuild !== buildId) return;
+        urls[index] = url;
+        images[index].style.backgroundImage = backgroundImageUrl(url);
+        if (index === 0) await preloadCarouselImages([url]);
+      });
+      // Only the first frame gates a paused preview; later photos load independently.
+      await loading[0];
+    } else {
+      urls = await resolveCarouselImageUrls(props.resourceManager, sources);
+      if (currentBuild !== buildId) return;
+      urls.forEach((url, index) => {
+        images[index].style.backgroundImage = backgroundImageUrl(url);
+      });
     }
     // A newer build (the images changed meanwhile) or a cleanup supersedes it.
     if (currentBuild !== buildId) return;

@@ -265,6 +265,14 @@ interface LayoutProps extends BaseComponentProps {
 
 export const Layout: Component<LayoutProps> = (props) => {
   const timeline = new Timeline('layout', { loop: true });
+  const containers = createMemo(() => props.opts.containers);
+  const readyContainers = new Set<LayoutContainer>();
+  const onContainerReady = (container: LayoutContainer) => {
+    readyContainers.add(container);
+    if (containers().every((item) => readyContainers.has(item))) {
+      props.onReady();
+    }
+  };
 
   // Override play to safeguard against NaN offset (can happen if parent timeline had duration 0)
   const originalPlay = timeline.play.bind(timeline);
@@ -304,12 +312,12 @@ export const Layout: Component<LayoutProps> = (props) => {
         timeline.play(props.timeline.time - timelineItem.start);
       }, 0);
     }
-    props.onReady();
+    if (containers().length === 0) props.onReady();
   });
 
   return (
     <div style={merged()}>
-      <For each={props.opts.containers}>
+      <For each={containers()}>
         {(container) => (
           <LayoutContainer
             container={container}
@@ -318,6 +326,7 @@ export const Layout: Component<LayoutProps> = (props) => {
             resourceManager={props.resourceManager}
             globals={props.globals}
             component={props.component}
+            onReady={() => onContainerReady(container)}
           />
         )}
       </For>
@@ -357,7 +366,7 @@ const LayoutContainer: Component<{
   style: JSX.CSSProperties;
   timeline: Timeline;
   component?: LayoutComponent;
-  // onReady: () => void;
+  onReady: () => void;
 }> = (props) => {
   // If no playlist is selected or playlist has no items, render a placeholder
   if (
@@ -365,6 +374,7 @@ const LayoutContainer: Component<{
     !props.container.playlist.items ||
     props.container.playlist.items.length === 0
   ) {
+    onMount(() => props.onReady());
     return <LayoutContainerPlaceholder style={props.style} />;
   }
 
@@ -492,6 +502,7 @@ const LayoutContainer: Component<{
         .subscribe({
           next: () => {
             isReady = true;
+            props.onReady();
             // If play was called before show completed, start playback now
             if (pendingPlayOffset !== null) {
               const offset = pendingPlayOffset;

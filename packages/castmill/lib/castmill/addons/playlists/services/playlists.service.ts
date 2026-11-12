@@ -394,25 +394,41 @@ export const PlaylistsService = {
   },
 
   async getWidgets(baseUrl: string, organizationId: string, search?: string) {
-    const query: Record<string, string> = {};
+    const query: Record<string, string> = { page: '1', page_size: '100' };
 
     if (search) {
       query['search'] = search;
     }
 
-    const queryString = new URLSearchParams(query).toString();
-    const url = `${baseUrl}/dashboard/organizations/${organizationId}/widgets${queryString ? `?${queryString}` : ''}`;
+    const widgets: JsonWidget[] = [];
+    let page = 1;
+    let count = 0;
 
-    const response = await authFetch(url, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    do {
+      query.page = String(page);
+      const queryString = new URLSearchParams(query).toString();
+      const url = `${baseUrl}/dashboard/organizations/${organizationId}/widgets?${queryString}`;
+      const response = await authFetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      const result = await handleResponse<{
+        data: JsonWidget[];
+        count: number;
+      }>(response, { parse: true });
+      count = result.count;
+      if (result.data.length === 0 && widgets.length < count) {
+        throw new Error(
+          'Widget pagination returned an empty page before completion'
+        );
+      }
+      widgets.push(...result.data);
+      page += 1;
+    } while (widgets.length < count);
 
-    return handleResponse<{ data: JsonWidget[]; count: number }>(response, {
-      parse: true,
-    });
+    return { data: widgets, count };
   },
 
   /**

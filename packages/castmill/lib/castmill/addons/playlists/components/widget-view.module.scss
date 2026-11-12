@@ -20,6 +20,27 @@
     background-color: #000;
   }
 
+  .preview-loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    opacity: 0;
+    // Short loads don't flash a spinner.
+    animation: preview-loading-in 0.2s ease-out 0.3s forwards;
+  }
+
+  .preview-spinner {
+    width: 2.5em;
+    height: 2.5em;
+    border: 0.25em solid rgba(255, 255, 255, 0.25);
+    border-top-color: rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+    animation: preview-spin 0.9s linear infinite;
+  }
+
   .widget-controls,
   .playlist-controls {
     position: absolute;

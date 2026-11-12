@@ -155,6 +155,77 @@ describe('Layout widget duration before rendering', () => {
     expect(layer.duration()).to.equal(27776);
   });
 
+  it('reports an empty layout ready without waiting for media', () => {
+    const item = layoutItem();
+    item.config.options.layoutRef.zones.zones = [];
+    const layer = Layer.fromJSON(item as any, resources, { target: 'poster' });
+    const renderer = new Renderer(dom.window.document.getElementById('root'));
+    let ready = false;
+    const subscription = renderer.show(layer, 0).subscribe(() => {
+      ready = true;
+    });
+    try {
+      expect(ready).to.equal(true);
+    } finally {
+      subscription.unsubscribe();
+      renderer.clear();
+      layer.unload();
+    }
+  });
+
+  it('only reports a layout ready after all populated zones initialize', async () => {
+    clock = useFakeTimers({
+      shouldClearNativeTimers: true,
+      toFake: ['setTimeout', 'clearTimeout', 'Date'],
+    });
+    const item = layoutItem();
+    item.config.options.layoutRef.zonePlaylistMap.z1.playlist.items = [
+      videoItem('a', 0),
+    ];
+    item.config.options.layoutRef.zonePlaylistMap.z2.playlist.items = [
+      videoItem('c', 0),
+    ];
+    let ready = false;
+    const layer = Layer.fromJSON(item as any, resources, {
+      target: 'poster',
+      createVideoPlaybackController: (video: HTMLVideoElement) => {
+        video.load = () => {
+          setTimeout(
+            () => {
+              Object.defineProperty(video, 'duration', { value: 26 });
+              Object.defineProperty(video, 'readyState', { value: 4 });
+              const event = video.ownerDocument.createEvent('Event');
+              event.initEvent('canplaythrough', false, false);
+              video.dispatchEvent(event);
+            },
+            video.src.includes('/a.mp4') ? 100 : 700
+          );
+        };
+        return {
+          play: () => {},
+          pause: () => {},
+          seek: () => {},
+          dispose: () => {},
+        };
+      },
+    });
+    const renderer = new Renderer(dom.window.document.getElementById('root'));
+    const subscription = renderer.show(layer, 0).subscribe(() => {
+      ready = true;
+    });
+    try {
+      await clock.tickAsync(200);
+      expect(ready).to.equal(false);
+      await clock.tickAsync(500);
+      expect(ready).to.equal(true);
+      expect(layer.duration()).to.equal(26000);
+    } finally {
+      subscription.unsubscribe();
+      renderer.clear();
+      layer.unload();
+    }
+  });
+
   it('does not restart the layout videos after a 10s default duration', async () => {
     clock = useFakeTimers({
       now: 0,
