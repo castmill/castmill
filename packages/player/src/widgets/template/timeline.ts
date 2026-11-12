@@ -328,6 +328,10 @@ export class Timeline implements TimelineBasic {
     return !!this.intervalTimer;
   }
 
+  wrapsTime() {
+    return !!this.opts.loop && !this.hasRepeat;
+  }
+
   duration() {
     // Return static duration if explicitly set
     if (this.opts.duration) {

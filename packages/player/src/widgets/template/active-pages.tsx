@@ -31,15 +31,22 @@ interface ActivePagesProps extends BaseComponentProps {
  */
 export const ActivePages: Component<ActivePagesProps> = (props) => {
   const [index, setIndex] = createSignal(0);
-  const pages = createMemo(() => {
+  const pages = createMemo<unknown[][]>((previous) => {
     const items = props.opts.items || [];
     const size = Math.max(1, Math.floor(props.opts.pageSize || 1));
     const result: unknown[][] = [];
     for (let i = 0; i < items.length; i += size) {
       result.push(items.slice(i, i + size));
     }
-    return result;
-  });
+    return previous.length === result.length &&
+      previous.every(
+        (page, index) =>
+          page.length === result[index].length &&
+          page.every((item, itemIndex) => item === result[index][itemIndex])
+      )
+      ? previous
+      : result;
+  }, []);
   const pageDuration = () =>
     Math.max(0.1, props.opts.pageDuration || 10) * 1000;
   const duration = () => pages().length * pageDuration();
@@ -58,7 +65,7 @@ export const ActivePages: Component<ActivePagesProps> = (props) => {
   const localOffset = () => {
     const local = position() % pageDuration();
     const cycle = pageTimeline?.duration() || 0;
-    return cycle ? local % cycle : local;
+    return cycle && pageTimeline?.wrapsTime() ? local % cycle : local;
   };
   const sync = (force = false) => {
     const next = Math.floor(position() / pageDuration());

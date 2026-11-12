@@ -211,6 +211,11 @@ const VideoSource: Component<VideoSourceProps> = (props) => {
     props.globals.setPlaybackBlocked?.(blockSource);
     seekingVideoSubscription?.unsubscribe();
     loadingSubscription?.unsubscribe();
+    if (!playbackController && videoRef?.hasAttribute('src')) {
+      videoRef.pause();
+      videoRef.removeAttribute('src');
+      videoRef.load();
+    }
     if (timelineItem) {
       props.timeline.remove(timelineItem);
     }

@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, it } from 'mocha';
 import { JSDOM } from 'jsdom';
 import { firstValueFrom, NEVER } from 'rxjs';
 import { useFakeTimers } from 'sinon';
-import { TemplateWidget } from '../dist/index.js';
+import { TemplateWidget, tickClock } from '../dist/index.js';
 
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 
@@ -28,6 +28,7 @@ describe('active-only paginated lists', () => {
   let clock: ReturnType<typeof useFakeTimers> | undefined;
   let loaded = 0;
   let peak = 0;
+  let originalNow: (() => number) | undefined;
   const plays: number[] = [];
 
   beforeEach(() => {
@@ -52,6 +53,10 @@ describe('active-only paginated lists', () => {
     widget?.stop();
     await widget?.unload();
     widget = undefined;
+    if (originalNow) {
+      Date.now = originalNow;
+      originalNow = undefined;
+    }
     clock?.restore();
     clock = undefined;
     dom.window.close();
@@ -63,7 +68,10 @@ describe('active-only paginated lists', () => {
   async function show(
     entries: unknown[],
     options: Record<string, unknown> = {},
-    getMedia: (url: string) => Promise<string> = async (url) => url
+    getMedia: (url: string) => Promise<string> = async (url) => url,
+    textAnimations?: any[],
+    withPlaybackController = true,
+    configureVideo?: (video: HTMLVideoElement) => void
   ) {
     widget = new TemplateWidget({ getMedia } as any, {
       widget: {
@@ -87,6 +95,7 @@ describe('active-only paginated lists', () => {
                 type: 'text',
                 name: 'message',
                 opts: { text: { key: '$.message' } },
+                animations: textAnimations,
               },
               {
                 type: 'video',
@@ -106,9 +115,13 @@ describe('active-only paginated lists', () => {
       config: { options: {}, data: { entries } } as any,
       globals: {
         target: 'poster',
-        createVideoPlaybackController: (video) => {
+        createVideoPlaybackController: (video: HTMLVideoElement) => {
           Object.defineProperty(video, 'readyState', { get: () => 4 });
           Object.defineProperty(video, 'duration', { get: () => 2 });
+          if (!withPlaybackController) {
+            configureVideo?.(video);
+            return undefined as any;
+          }
           peak = Math.max(peak, ++loaded);
           return {
             play: (offset: number) => plays.push(offset),
@@ -162,6 +175,77 @@ describe('active-only paginated lists', () => {
     expect(text()).to.equal('Post 2');
     expect(plays[plays.length - 1]).to.be.within(1000, 1100);
     expect(peak).to.equal(1);
+  });
+
+  it('keeps pages mounted when a clock-dependent list resolves to the same items', async () => {
+    let now = new Date(2026, 0, 1, 10, 0).getTime();
+    originalNow = Date.now;
+    Date.now = () => now;
+    tickClock();
+    const current = await show(
+      posts.map((post) => ({ ...post, end: '2099-12-31T23:59:00' })),
+      {
+        items: {
+          list: {
+            key: 'data.entries',
+            where: [{ key: '$.end', gte: '@now' }],
+          },
+        },
+      }
+    );
+    const video = dom.window.document.querySelector('video');
+    now += 60_000;
+    tickClock();
+    await flush();
+    expect(dom.window.document.querySelector('video')).to.equal(video);
+    expect(loaded).to.equal(1);
+    expect(peak).to.equal(1);
+    expect(text()).to.equal('Post 0');
+    current.stop();
+  });
+
+  it('preserves local elapsed time for pages with repeating children', async () => {
+    const current = await show(
+      posts.slice(0, 1),
+      { pageDuration: 10 },
+      undefined,
+      [
+        {
+          init: { repeat: -1 },
+          keyframes: [{ to: { x: 1, duration: 3 } }],
+        },
+      ]
+    );
+    current.seek(5000);
+    current.play(NEVER);
+    await flush();
+    expect(plays[plays.length - 1]).to.be.within(1000, 1100);
+  });
+
+  it('releases the outgoing video source when no playback controller exists', async () => {
+    const calls: string[] = [];
+    const current = await show(
+      posts.slice(0, 2),
+      {},
+      undefined,
+      undefined,
+      false,
+      (video) => {
+        video.pause = () => calls.push('pause');
+        video.load = () => {
+          calls.push('load');
+          expect(video.getAttribute('src')).to.equal(null);
+        };
+      }
+    );
+    const outgoing = dom.window.document.querySelector('video');
+    expect(outgoing.getAttribute('src')).to.contain('/0.mp4');
+    current.seek(5000);
+    await flush();
+    expect(dom.window.document.querySelector('video')).not.to.equal(outgoing);
+    expect(outgoing.getAttribute('src')).to.equal(null);
+    expect(calls).to.include('load');
+    expect(calls.indexOf('pause')).to.be.lessThan(calls.indexOf('load'));
   });
 
   it('advances, loops, pauses and resumes without mounting hidden posts', async () => {
