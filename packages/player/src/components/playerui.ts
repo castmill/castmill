@@ -10,6 +10,7 @@ import {
   fromEvent,
   Observable,
   of,
+  ReplaySubject,
   share,
   Subscription,
   filter,
@@ -304,6 +305,9 @@ export class PlayerUI {
   renderer: Renderer;
   ui: HTMLDivElement;
 
+  /** Emits once the initial item has been shown (or failed to show). */
+  readonly shown$ = new ReplaySubject<void>(1);
+
   private durationSubscription?: Subscription;
   private keyboardSubscription?: Subscription;
   private seekSubscription?: Subscription;
@@ -397,16 +401,23 @@ export class PlayerUI {
     this.playlist
       .seek(startPosition)
       .pipe(switchMap(() => this.playlist.show(this.renderer)))
-      .subscribe(() => {
-        // Update the controls duration after the widgets have loaded.
-        // This is important for widgets like video that determine their duration dynamically.
-        if (this.opts.controls) {
-          this.opts.controls.setTimeDuration(
-            this.time,
-            this.playlist.duration(),
-            this.loop
-          );
-        }
+      .subscribe({
+        next: () => {
+          this.shown$.next();
+          // Update the controls duration after the widgets have loaded.
+          // This is important for widgets like video that determine their duration dynamically.
+          if (this.opts.controls) {
+            this.opts.controls.setTimeDuration(
+              this.time,
+              this.playlist.duration(),
+              this.loop
+            );
+          }
+        },
+        error: (error) => {
+          console.error('[PlayerUI] Initial show failed:', error);
+          this.shown$.next();
+        },
       });
   }
 

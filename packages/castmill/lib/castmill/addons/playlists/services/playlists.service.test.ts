@@ -82,7 +82,7 @@ describe('PlaylistsService', () => {
 
       expect(result).toEqual(mockWidgets);
       expect(global.fetch).toHaveBeenCalledWith(
-        `${baseUrl}/dashboard/organizations/${organizationId}/widgets`,
+        `${baseUrl}/dashboard/organizations/${organizationId}/widgets?page=1&page_size=100`,
         expect.objectContaining({
           method: 'GET',
           headers: {
@@ -120,7 +120,7 @@ describe('PlaylistsService', () => {
 
       expect(result).toEqual(mockWidgets);
       expect(global.fetch).toHaveBeenCalledWith(
-        `${baseUrl}/dashboard/organizations/${organizationId}/widgets?search=${searchTerm}`,
+        `${baseUrl}/dashboard/organizations/${organizationId}/widgets?page=1&page_size=100&search=${searchTerm}`,
         expect.objectContaining({
           method: 'GET',
           headers: {
@@ -158,14 +158,14 @@ describe('PlaylistsService', () => {
       expect(result).toEqual(mockWidgets);
       // Empty search should not add search parameter to URL
       expect(global.fetch).toHaveBeenCalledWith(
-        `${baseUrl}/dashboard/organizations/${organizationId}/widgets`,
+        `${baseUrl}/dashboard/organizations/${organizationId}/widgets?page=1&page_size=100`,
         expect.objectContaining({
           method: 'GET',
         })
       );
     });
 
-    it.skip('should handle URL encoding for search terms with special characters', async () => {
+    it('should handle URL encoding for search terms with special characters', async () => {
       const searchTerm = 'widget & layout';
       const mockWidgets = {
         data: [],
@@ -181,7 +181,7 @@ describe('PlaylistsService', () => {
       await PlaylistsService.getWidgets(baseUrl, organizationId, searchTerm);
 
       expect(global.fetch).toHaveBeenCalledWith(
-        `${baseUrl}/dashboard/organizations/${organizationId}/widgets?search=${encodeURIComponent(searchTerm)}`,
+        `${baseUrl}/dashboard/organizations/${organizationId}/widgets?page=1&page_size=100&search=widget+%26+layout`,
         expect.any(Object)
       );
     });
@@ -228,6 +228,100 @@ describe('PlaylistsService', () => {
 
       expect(result.data).toEqual([]);
       expect(result.count).toBe(0);
+    });
+
+    it.each([undefined, 'LF & Facebook'])(
+      'loads all widget pages with search %s, including beyond 100 widgets',
+      async (search) => {
+        const widgets = Array.from({ length: 205 }, (_, i) => ({
+          id: i + 1,
+          name: `Widget ${i + 1}`,
+        }));
+        for (let start = 0; start < widgets.length; start += 100) {
+          vi.mocked(global.fetch).mockResolvedValueOnce(
+            new Response(
+              JSON.stringify({
+                data: widgets.slice(start, start + 100),
+                count: 205,
+              }),
+              { status: 200 }
+            )
+          );
+        }
+
+        const result = await PlaylistsService.getWidgets(
+          baseUrl,
+          organizationId,
+          search
+        );
+
+        expect(result).toEqual({ data: widgets, count: 205 });
+        expect(global.fetch).toHaveBeenCalledTimes(3);
+        for (let page = 1; page <= 3; page++) {
+          const query = new URLSearchParams({
+            page: String(page),
+            page_size: '100',
+          });
+          if (search) query.set('search', search);
+          expect(global.fetch).toHaveBeenNthCalledWith(
+            page,
+            `${baseUrl}/dashboard/organizations/${organizationId}/widgets?${query}`,
+            expect.objectContaining({ method: 'GET' })
+          );
+        }
+      }
+    );
+
+    it('loads all widgets when the server returns smaller pages', async () => {
+      const widgets = Array.from({ length: 23 }, (_, i) => ({ id: i + 1 }));
+      for (let start = 0; start < widgets.length; start += 10) {
+        vi.mocked(global.fetch).mockResolvedValueOnce(
+          new Response(
+            JSON.stringify({
+              data: widgets.slice(start, start + 10),
+              count: 23,
+            })
+          )
+        );
+      }
+      expect(
+        await PlaylistsService.getWidgets(baseUrl, organizationId)
+      ).toEqual({
+        data: widgets,
+        count: 23,
+      });
+      expect(global.fetch).toHaveBeenCalledTimes(3);
+    });
+
+    it('rejects a failed later page instead of returning a truncated list', async () => {
+      vi.mocked(global.fetch)
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify({ data: [{ id: 1 }], count: 2 }))
+        )
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify({ errors: { detail: 'Page failed' } }), {
+            status: 500,
+          })
+        );
+      await expect(
+        PlaylistsService.getWidgets(baseUrl, organizationId)
+      ).rejects.toThrow('Page failed');
+    });
+
+    it('rejects an empty intermediate page instead of looping forever', async () => {
+      vi.mocked(global.fetch)
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify({ data: [{ id: 1 }], count: 2 }))
+        )
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify({ data: [], count: 2 }))
+        );
+      await expect(
+        PlaylistsService.getWidgets(baseUrl, organizationId)
+      ).rejects.toThrow(
+        'Widget pagination returned an empty page before completion'
+      );
+      expect(global.fetch).toHaveBeenCalledTimes(2);
     });
   });
 

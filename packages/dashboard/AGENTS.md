@@ -69,6 +69,20 @@ Registration and diagnostics are not part of the playback rotation subtree.
 
 ## Playlist Editor Drawer
 
+The widget picker uses `PlaylistsService.getWidgets` to load every available
+widget page (100 per request), including every page of search results. Do not
+rely on the organization widgets API's default page size of 10 or treat its
+first page as the full catalogue. The same list serves wide and narrow pickers.
+
+Playlist preview duration priming must only render items without an explicit
+positive duration. Fixed-duration items already have correct timeline offsets;
+rendering them again offscreen duplicates expensive widgets during editor startup.
+Yield between background measurements and cancel them when the preview changes
+or unmounts. Wait for `Renderer.show` readiness, never for a duration to differ
+from the 10-second fallback: 10 seconds is also a valid final duration, and a
+non-default value does not imply readiness. Failed or timed-out measurements
+must be logged and must not publish guessed offsets as successfully measured.
+
 `addons/playlists/components/playlist-view.tsx` follows the Device Details
 drawer design: a summary bar, sticky section tabs and dark cards.
 `WIDE_LAYOUT_QUERY` (`createMediaQuery`, 64em) chooses the layout, but only

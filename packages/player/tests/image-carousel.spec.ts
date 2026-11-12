@@ -336,12 +336,11 @@ describe('ImageCarousel', () => {
         shown = true;
       });
       await flush();
-      expect(preloads).to.have.length(2);
-      preloads[0].onload?.(new Event('load'));
-      await flush();
       expect(shown).to.equal(false);
-      preloads[1].onload?.(new Event('load'));
+      expect(preloads).to.have.length(1);
+      preloads[0].onload?.(new Event('load'));
       await show;
+      expect(shown).to.equal(true);
       const images = dom.window.document.querySelectorAll(
         '[data-component="image"]'
       );
@@ -350,6 +349,57 @@ describe('ImageCarousel', () => {
       expect(Number(images[0].style.opacity)).to.be.greaterThan(0);
       expect(Number(images[1].style.opacity)).to.be.greaterThan(0);
       await widget.unload();
+    });
+
+    it('shows the first preview image without waiting for later cache lookups', async () => {
+      let resolveLater: ((url: string) => void) | undefined;
+      const widget = new TemplateWidget(
+        {
+          getMedia: (url: string) =>
+            url.endsWith('/1')
+              ? Promise.resolve('blob:first')
+              : new Promise<string>((resolve) => {
+                  resolveLater = resolve;
+                }),
+        } as any,
+        {
+          widget: {
+            name: 'carousel',
+            template: {
+              type: 'image-carousel',
+              name: 'carousel',
+              opts: {
+                images: { key: 'data.images' },
+                imageDuration: 5,
+                transition: 'fade',
+              },
+            },
+          } as any,
+          config: {
+            options: {},
+            data: { images: ['https://img/1', 'https://img/2'] },
+          } as any,
+          globals: { target: 'preview', freezePreviewDuringLoad: true },
+        }
+      );
+      try {
+        await firstValueFrom(
+          widget.show(dom.window.document.getElementById('root'), 0)
+        );
+        const images = dom.window.document.querySelectorAll(
+          '[data-component="image"]'
+        );
+        expect(images[0].style.backgroundImage).to.contain('blob:first');
+        expect(images[0].style.opacity).to.equal('1');
+        expect(images[1].style.backgroundImage).to.equal('');
+        resolveLater!('blob:second');
+        await flush();
+        expect(images[1].style.backgroundImage).to.contain('blob:second');
+        await firstValueFrom(widget.seek(6500));
+        expect(images[1].style.opacity).to.equal('1');
+      } finally {
+        await widget.unload();
+      }
     });
 
     for (const loop of [false, true]) {

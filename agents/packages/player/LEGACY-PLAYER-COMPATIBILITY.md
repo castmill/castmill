@@ -14,6 +14,16 @@ legacy({ targets: { chrome: '38' } });
 Modern browser validation is not sufficient. Test affected changes on a connected
 legacy Android player before considering them compatible.
 
+Layout readiness waits for the initial content in every populated zone (empty
+zones are immediately ready). Keep this signal after nested media initialization:
+the dashboard uses renderer readiness to measure durations without polling a
+magic fallback value. This does not pre-load every later item in zone playlists.
+
+Paused dashboard carousel previews gate readiness only on the first image.
+Resolve later image URLs independently and update their backgrounds without
+rebuilding the timeline or delaying the first frame. Keep device playback's
+existing cache resolution and slot timing unchanged.
+
 The legacy adapter player displays English-only UI on Android, WebOS, and
 Electron. Keep startup and diagnostics strings in English; do not add locale
 files or language selection to `packages/platforms/legacy-adapter-player/`.
