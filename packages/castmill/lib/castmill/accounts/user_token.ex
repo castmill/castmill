@@ -12,6 +12,7 @@ defmodule Castmill.Accounts.UserToken do
   @confirm_validity_in_days 7
   @change_email_validity_in_days 7
   @session_validity_in_days 60
+  @admin_enrollment_validity_in_minutes 5
   @recover_credentials_validity_in_minutes 5
 
   schema "users_tokens" do
@@ -43,7 +44,7 @@ defmodule Castmill.Accounts.UserToken do
   session they deem invalid.
   """
   def build_session_token(user_id, context \\ "session")
-      when context in ["session", "admin_session"] do
+      when context in ["session", "admin_passkey_session", "admin_enrollment"] do
     token = :crypto.strong_rand_bytes(@rand_size)
     {token, %UserToken{token: token, context: context, user_id: user_id}}
   end
@@ -57,16 +58,35 @@ defmodule Castmill.Accounts.UserToken do
   not expired (after @session_validity_in_days).
   """
   def verify_session_token_query(token, context \\ "session")
-      when context in ["session", "admin_session"] do
+      when context in ["session", "admin_passkey_session", "admin_enrollment"] do
+    {time_value, time_unit} = session_validity(context)
+
     query =
       from(token in token_and_context_query(token, context),
         join: user in assoc(token, :user),
-        where: token.inserted_at > ago(@session_validity_in_days, "day"),
+        where: token.inserted_at > ago(^time_value, ^time_unit),
         select: user
       )
 
     {:ok, query}
   end
+
+  @doc """
+  Returns a query matching a non-expired session or enrollment token owned by `user_id`.
+  """
+  def valid_session_token_query(user_id, token, context)
+      when context in ["session", "admin_passkey_session", "admin_enrollment"] do
+    {time_value, time_unit} = session_validity(context)
+
+    from(t in token_and_context_query(token, context),
+      where: t.user_id == ^user_id and t.inserted_at > ago(^time_value, ^time_unit)
+    )
+  end
+
+  defp session_validity("admin_enrollment"), do: {@admin_enrollment_validity_in_minutes, "minute"}
+
+  defp session_validity(context) when context in ["session", "admin_passkey_session"],
+    do: {@session_validity_in_days, "day"}
 
   @doc """
   Builds a token and its hash to be delivered to the user's email.

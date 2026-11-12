@@ -72,6 +72,16 @@ config :logger, :console,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
+config :phoenix, :filter_parameters, [
+  "password",
+  "signature",
+  "client_data",
+  "attestation_object",
+  "authenticator_data"
+]
+
+config :castmill, :trusted_proxies, []
+
 # Ensure we use the Accounts impl.
 config :castmill, accounts: Castmill.Accounts
 

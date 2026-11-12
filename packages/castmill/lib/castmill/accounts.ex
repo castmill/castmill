@@ -355,23 +355,37 @@ defmodule Castmill.Accounts do
     Repo.one(query)
   end
 
-  @doc "Generates a separate session token for an authenticated root admin."
+  @doc "Generates a separate session token after root-admin passkey verification."
   def generate_admin_session_token(user_id) do
-    {token, user_token} = UserToken.build_session_token(user_id, "admin_session")
+    {token, user_token} = UserToken.build_session_token(user_id, "admin_passkey_session")
     Repo.insert!(user_token)
     token
   end
 
   @doc "Gets the user associated with an admin session token."
   def get_user_by_admin_session_token(token) do
-    {:ok, query} = UserToken.verify_session_token_query(token, "admin_session")
-    Repo.one(query)
+    {:ok, query} = UserToken.verify_session_token_query(token, "admin_passkey_session")
+    user = Repo.one(query)
+    if Castmill.Accounts.AdminPasskeys.root_user?(user), do: user
   end
 
   @doc "Revokes an admin session token."
   def delete_admin_session_token(token) do
-    Repo.delete_all(UserToken.token_and_context_query(token, "admin_session"))
+    Repo.delete_all(UserToken.token_and_context_query(token, "admin_passkey_session"))
     :ok
+  end
+
+  @doc "Generates a short-lived first-passkey enrollment token, not an admin session."
+  def generate_admin_enrollment_token(user_id) do
+    {token, user_token} = UserToken.build_session_token(user_id, "admin_enrollment")
+    Repo.insert!(user_token)
+    token
+  end
+
+  def get_user_by_admin_enrollment_token(token) do
+    {:ok, query} = UserToken.verify_session_token_query(token, "admin_enrollment")
+    user = Repo.one(query)
+    if Castmill.Accounts.AdminPasskeys.root_user?(user), do: user
   end
 
   @doc """
