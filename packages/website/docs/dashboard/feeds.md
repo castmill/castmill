@@ -6,11 +6,25 @@ description: Push data from other systems into Castmill feeds and show it on scr
 
 # Feeds
 
-A feed receives data from another system, such as Make, Zapier or your own scripts, and keeps it in Castmill. Widgets that read the feed show the data on screens. A system writes to the feed through the REST API; Castmill never polls the source.
+A feed stores data that another system pushes to Castmill through the REST API. You can send updates from your own software or automate them with [Make](https://www.make.com/) or [Zapier](https://zapier.com/); a custom widget reads the feed and displays the data on screens. Castmill does not poll the source. For the separate pull-integration model, where a Castmill server fetcher retrieves data from an external service, see [Pull integrations](../developers/widgets/data-integrations.md#pull-integrations).
 
 <Flow steps={["Your system|POST or PUT JSON", "Feed|stores entries or a document", "Widget|reads the feed", "Screens|show the data"]} />
 
 You manage feeds in **Feeds** in the sidebar, on the **Data feeds** page.
+
+## Examples
+
+Feeds let your existing systems publish information to screens without building a Castmill server integration for each source. For example, you can:
+
+| Use case | Example screen content | Feed type |
+| --- | --- | --- |
+| Corporate KPIs | Current sales, production, service-level or quality metrics from an internal reporting system | Document |
+| Ticketing and queues | Open tickets, queue positions, wait times or the next number to serve | List or document |
+| Timetables and schedules | Upcoming departures, class times, room bookings or appointments | List or document |
+| Retail pricing and promotions | Product prices, availability and timed offers from a point-of-sale or catalog system | Document or list |
+| Operations and alerts | Service status, incidents, safety notices or other time-sensitive updates | List or document |
+
+Choose a list when you want to append individual updates, such as new tickets or alerts. Choose a document when each update replaces the current state, such as a KPI board or price list. See [Feed types](#feed-types) for details.
 
 ## Feed types
 
