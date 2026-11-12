@@ -30,7 +30,7 @@ A [feed](../dashboard/feeds.md) holds JSON data that widgets display, for exampl
 
 Send the token in the `Authorization` header as `Bearer <token>`:
 
-- A **feed token** (`cmfeed_...`) is created on the feed's page and can only write to that feed. Prefer it for integrations.
+- A **feed token** (`cmfeed_...`) is created on the feed's page and can read and write only that feed. Prefer it for integrations.
 - The token of an **organization member** or an [AI agent](../dashboard/ai-agents.md) can write to every feed its role allows, and to several feeds in one request.
 
 ### Endpoints

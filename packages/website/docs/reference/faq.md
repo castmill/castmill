@@ -68,7 +68,7 @@ Castmill uses passkeys, which your device or password manager stores. If you los
 
 ### How do I give a colleague access to only some screens?
 
-Invite them with a role that fits their work, such as **Editor** or **Device manager**, and use [teams](../dashboard/teams.md) to group the resources they work with. See [Users and teams](../concepts/users-and-teams.md).
+Teams group and filter resources; they do not restrict members' access to screens. Members can access screens according to their organization role, regardless of team. If you need to isolate screen access, put those screens in a separate organization. See [Users and teams](../concepts/users-and-teams.md).
 
 ### Why can't I create more devices or upload more media?
 

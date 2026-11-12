@@ -38,7 +38,7 @@ A new player does not belong to any organization. It asks the Castmill server fo
 3. In the **Register device** dialog, enter a **Name** for the screen and the **Pincode** shown on the screen. Pincodes are not case-sensitive.
 4. Select **Register**.
 
-The player receives its credentials over its WebSocket connection, reloads, and starts playing the channels assigned to it. Until you assign a channel, it shows no content. See [Channels](../dashboard/channels.md) and [Your first screen](../getting-started/first-screen.md).
+The player receives its credentials over its WebSocket connection, reloads, and starts playing. Dashboard registration automatically creates a channel for the device with a welcome playlist; you can replace that channel or add others from the device's **Channels** tab. A registration that does not request a default channel needs one assigned before the player can show content. See [Channels](../dashboard/channels.md) and [Your first screen](../getting-started/first-screen.md).
 
 Instead of typing the pincode, you can scan the QR code with a phone. It opens the dashboard, asks you to log in if needed, and opens the registration form with the pincode filled in.
 

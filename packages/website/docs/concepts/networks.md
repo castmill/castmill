@@ -30,7 +30,7 @@ The same domain list also controls which websites may call the API from a browse
 | Default language | Language for users who have not chosen one |
 | Default plan | [Plan](../administration/plans-and-quotas.md) given to new organizations |
 | Invitation only | When enabled, people can only create an account from an invitation. Enabled by default for new networks. |
-| Organization admins may invite | When invitation-only is enabled, also allow organization admins (not only network admins) to invite people |
+| Organization admins may invite | Stored as a network setting, but currently has no effect: organization admins can invite people regardless of this setting. |
 
 ## Who manages a network
 

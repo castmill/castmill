@@ -69,11 +69,11 @@ A new platform implements the `Machine` interface from `@castmill/device` and pr
 
 | Method | Required | Purpose |
 | --- | --- | --- |
-| `getMachineGUID()` | Yes | A stable, unique ID for the hardware, for example derived from the MAC address. The device hashes it before it sends it to the server. |
+| `getMachineGUID()` | Yes | Return a stable, unique hashed hardware ID, for example a SHA-256 hash of the MAC address. The device sends this value unchanged to the server. |
 | `getDeviceInfo()` | Yes | Software and hardware versions shown in the dashboard |
 | `storeCredentials()`, `getCredentials()`, `removeCredentials()` | Yes | Keep the device credentials received at registration in secure storage |
 | `getSetting()`, `setSetting()` | Yes | Persist settings such as the server address and orientation |
-| `getLocation()`, `getTimezone()` | No | Report location and timezone |
+| `getLocation()`, `getTimezone()` | Yes, for registration | Registration calls both methods. `getLocation()` may return `undefined` when location is unavailable. |
 | `setOrientation()` | No | Rotate the output natively. Without it, the device rotates content with CSS. |
 | `restart()`, `quit()`, `reboot()`, `shutdown()` | No | Maintenance commands |
 | `update()`, `updateFirmware()` | No | Update the app or the firmware |

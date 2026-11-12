@@ -6,7 +6,7 @@ description: Connect AI assistants such as Claude, GitHub Copilot or Cursor to y
 
 # AI agents
 
-Castmill can be controlled by AI agents such as Claude, GitHub Copilot or Cursor through the [Model Context Protocol](https://modelcontextprotocol.io) (MCP). An agent is an organization member like any other user: it has a role and goes through the same permission checks. The difference is that an agent cannot log in to the dashboard. It can only use the MCP server, and only with its own agent credentials.
+Castmill can be controlled by AI agents such as Claude, GitHub Copilot or Cursor through the [Model Context Protocol](https://modelcontextprotocol.io) (MCP). An agent is an organization member like any other user: it has a role and goes through the same permission checks. An agent cannot log in to the dashboard, but its secret can authenticate to the MCP server and the [Feeds API](../developers/rest-api.md), subject to its organization role.
 
 Typical uses:
 
@@ -148,7 +148,7 @@ Agent secrets and `Authorization` headers are never written to the log. Argument
 ## Security notes
 
 - Agent secrets are long-lived and act on behalf of your organization. Treat them like passwords: do not commit them to source control, and prefer your client's secret storage or environment variables.
-- Agents cannot sign in to the dashboard, and dashboard sessions cannot be used on the MCP server.
+- Agents cannot sign in to the dashboard. Their secrets can authenticate to MCP and the Feeds API, but dashboard sessions cannot be used on the MCP server.
 - If the organization is blocked, its agents are blocked too.
 - Agents cannot create, modify or view other agents.
 

@@ -66,6 +66,6 @@ The server also publishes a guide for agents as the resource `castmill://docs/ag
 ## Security
 
 - Only a SHA-256 hash of each secret is stored. The secret is shown once, when you create or rotate it.
-- Agent secrets only work on `/mcp`. Agents cannot sign in to the dashboard, and dashboard sessions are rejected on `/mcp`.
+- Agent secrets authenticate to both `/mcp` and the [Feeds API](./rest-api.md), where the agent's organization permissions apply. Agents cannot sign in to the dashboard, and dashboard sessions are rejected on `/mcp`.
 - The activity log records the tool, arguments, result and duration of every call. Values that look like secrets, such as passwords, tokens and API keys, are replaced with `[REDACTED]`.
 - Blocking the agent's organization, or revoking the secret, stops the agent immediately.
