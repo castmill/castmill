@@ -3,24 +3,19 @@
 
 const path = require('path');
 const lightCodeTheme = require('prism-react-renderer/themes/github');
-const darkCodeTheme = require('prism-react-renderer/themes/dracula');
+const darkCodeTheme = require('prism-react-renderer/themes/vsDark');
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'Castmill',
-  tagline: 'Open Source Digital Signage',
+  tagline: 'Open-source digital signage',
   favicon: 'img/castmill_favicon.png',
 
-  // Set the production url of your site here
   url: 'https://docs.castmill.io',
-  // Set the /<baseUrl>/ pathname under which your site is served
-  // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: '/',
 
-  // GitHub pages deployment config.
-  // If you aren't using GitHub pages, you don't need these.
-  organizationName: 'castmill', // Usually your GitHub org/user name.
-  projectName: 'castmill', // Usually your repo name.
+  organizationName: 'castmill',
+  projectName: 'castmill',
 
   onBrokenLinks: 'throw',
   markdown: {
@@ -29,9 +24,6 @@ const config = {
     },
   },
 
-  // Even if you don't use internalization, you can use this field to set useful
-  // metadata like html lang. For example, if your site is Chinese, you may want
-  // to replace "en" with "zh-Hans".
   i18n: {
     defaultLocale: 'en',
     locales: ['en'],
@@ -44,21 +36,11 @@ const config = {
       ({
         docs: {
           sidebarPath: require.resolve('./sidebars.js'),
-          // Please change this to your repo.
-          // Remove this to remove the "edit this page" links.
           editUrl:
             'https://github.com/castmill/castmill/tree/main/packages/website/',
+          showLastUpdateTime: false,
         },
         blog: false,
-        /*
-        blog: {
-          showReadingTime: true,
-          // Please change this to your repo.
-          // Remove this to remove the "edit this page" links.
-          editUrl:
-            'https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/',
-        },
-        */
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
         },
@@ -87,13 +69,21 @@ const config = {
         // Plugin options can go here
       },
     ],
+    [
+      path.resolve(__dirname, 'plugins/llms-txt'),
+      {
+        summary:
+          'Castmill is an open source digital signage platform: a server, a web dashboard and players for browsers, Android, LG webOS and Electron.',
+        details:
+          'Content flows from media and feeds through widgets and playlists to channels, which devices play. Agents can manage Castmill through its MCP server at /mcp; see the MCP server page.',
+      },
+    ],
   ],
 
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
-      // Replace with your project's social card
-      image: 'img/social/home.jpg',
+      image: 'img/castmill-social-card.png',
       metadata: [
         {
           name: 'keywords',
@@ -103,89 +93,141 @@ const config = {
         {
           name: 'description',
           content:
-            'Open source digital signage solution for creating, managing and deploying content across any device or platform',
+            'Documentation for Castmill, the open-source digital signage platform: user guide, players, self-hosting and developer reference.',
         },
         {
           property: 'og:title',
-          content: 'Castmill - Your Digital Signage Partner',
+          content: 'Castmill documentation',
         },
         {
           property: 'og:description',
           content:
-            'Open source solution for creating, managing and deploying digital signage content across any device or platform',
+            'User guide, player setup, self-hosting and developer reference for the Castmill digital signage platform.',
         },
         { property: 'og:type', content: 'website' },
         { name: 'twitter:card', content: 'summary_large_image' },
         {
           name: 'twitter:title',
-          content: 'Castmill - Your Digital Signage Partner',
+          content: 'Castmill documentation',
         },
         {
           name: 'twitter:description',
           content:
-            'Open source solution for creating, managing and deploying digital signage content across any device or platform',
+            'User guide, player setup, self-hosting and developer reference for the Castmill digital signage platform.',
         },
       ],
+      colorMode: {
+        defaultMode: 'light',
+        respectPrefersColorScheme: true,
+      },
+      docs: {
+        sidebar: {
+          hideable: true,
+          autoCollapseCategories: true,
+        },
+      },
+      tableOfContents: {
+        minHeadingLevel: 2,
+        maxHeadingLevel: 3,
+      },
       navbar: {
+        hideOnScroll: false,
         logo: {
-          alt: 'Castmill Logo',
+          alt: 'Castmill',
           src: 'img/logo.png',
         },
         items: [
           {
             type: 'docSidebar',
-            sidebarId: 'tutorialSidebar',
+            sidebarId: 'docsSidebar',
             position: 'left',
-            label: 'Tutorial',
+            label: 'Docs',
           },
-          // {to: '/blog', label: 'Blog', position: 'left'},
+          {
+            to: '/docs/dashboard/overview',
+            label: 'User guide',
+            position: 'left',
+          },
+          {
+            to: '/docs/players/overview',
+            label: 'Players',
+            position: 'left',
+          },
+          {
+            to: '/docs/administration/self-hosting',
+            label: 'Self-hosting',
+            position: 'left',
+          },
+          {
+            to: '/docs/developers/overview',
+            label: 'Developers',
+            position: 'left',
+          },
           {
             href: 'https://github.com/castmill/castmill',
-            label: 'GitHub',
             position: 'right',
+            className: 'header-github-link',
+            'aria-label': 'GitHub repository',
           },
         ],
       },
       footer: {
         style: 'dark',
+        logo: {
+          alt: 'Castmill',
+          src: 'img/logo.png',
+          href: 'https://castmill.io',
+          width: 140,
+        },
         links: [
           {
-            title: 'Docs',
+            title: 'Get started',
             items: [
+              { label: 'Introduction', to: '/docs/intro' },
+              { label: 'Quick start', to: '/docs/getting-started/quick-start' },
               {
-                label: 'Tutorial',
-                to: '/docs/intro',
+                label: 'Your first screen',
+                to: '/docs/getting-started/first-screen',
               },
+              { label: 'Concepts', to: '/docs/concepts/architecture' },
             ],
           },
           {
-            title: 'Community',
+            title: 'Guides',
             items: [
+              { label: 'User guide', to: '/docs/dashboard/overview' },
+              { label: 'Players', to: '/docs/players/overview' },
               {
-                label: 'Stack Overflow',
-                href: 'https://stackoverflow.com/questions/tagged/castmill',
+                label: 'Self-hosting',
+                to: '/docs/administration/self-hosting',
               },
-              {
-                label: 'Twitter',
-                href: 'https://twitter.com/castmill',
-              },
+              { label: 'Developers', to: '/docs/developers/overview' },
             ],
           },
           {
-            title: 'More',
+            title: 'Reference',
             items: [
-              {
-                label: 'Blog',
-                href: 'https://castmill.com/blog',
-              },
+              { label: 'Glossary', to: '/docs/reference/glossary' },
+              { label: 'FAQ', to: '/docs/reference/faq' },
+              { label: 'llms.txt', href: 'https://docs.castmill.io/llms.txt' },
+            ],
+          },
+          {
+            title: 'Project',
+            items: [
               {
                 label: 'GitHub',
                 href: 'https://github.com/castmill/castmill',
               },
+              {
+                label: 'Issues',
+                href: 'https://github.com/castmill/castmill/issues',
+              },
+              { label: 'castmill.io', href: 'https://castmill.io' },
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} Castmill AB. AGPL Licensed. Built with Docusaurus.`,
+        copyright: `Copyright © ${new Date().getFullYear()} Castmill AB. Released under the AGPL-3.0 license.`,
       },
       prism: {
         theme: lightCodeTheme,

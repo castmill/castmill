@@ -1,0 +1,197 @@
+---
+sidebar_position: 1
+title: Widget development
+description: Build custom Castmill widgets with JSON templates, package them, and install them in the dashboard.
+---
+
+import WidgetExample from '@site/src/components/WidgetExample';
+import { welcomeWidget, welcomeOptions } from '@site/src/components/WidgetExample/sampleWidgets';
+
+A widget is a reusable piece of signage content: a menu board, a clock, a news feed, a meeting-room sign. Users add widgets to playlists in the dashboard and fill in the options you define. The player renders the widget on every device type, from current browsers to legacy Android and webOS displays.
+
+You describe a widget declaratively in a single JSON file. You do not write JavaScript: the template is a tree of components (texts, images, groups, lists) whose values come from user options or from data supplied by an integration.
+
+This chapter covers:
+
+| Page | Contents |
+| --- | --- |
+| [Components](./components.mdx) | Every template component type and its options |
+| [Data binding](./data-binding.mdx) | Bindings, formatting, conditional values, editable texts, and font scaling |
+| [Schemas](./schemas.mdx) | Option and data schemas, choices, aspect ratio, icons, and assets |
+| [Animations](./animations.mdx) | Entrance, exit, and looping animations |
+| [Styling](./styling.mdx) | CSS in templates, layout with flexbox, and units |
+| [Data integrations](./data-integrations.md) | Pull fetchers, push webhooks, credentials, and feeds |
+| [Examples](./examples.mdx) | Complete widgets you can copy |
+| [Best practices](./best-practices.md) | Readability, legacy players, and troubleshooting |
+
+To use the built-in widgets rather than build your own, see [Widgets](../../dashboard/widgets.md) in the dashboard guide.
+
+## The widget definition file
+
+A widget is defined by a `widget.json` file. Only `name` and `template` are required.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `name` | string | Display name in the widget catalog. Required. |
+| `slug` | string | Stable identifier. Defaults to a slug generated from `name`. See [Slug rules](#slug-rules). |
+| `description` | string | Short description shown in the catalog. |
+| `template` | object | The root [component](./components.mdx) of the widget. Required. |
+| `options_schema` | object | Fields users fill in when they add the widget to a playlist. See [Schemas](./schemas.mdx). |
+| `data_schema` | object | Shape of the data the widget receives from an integration. See [Schemas](./schemas.mdx#data-schema). |
+| `icon` | string | Catalog icon: a relative path inside the package, a URL, a data URI, or a short text symbol. See [Icons](./schemas.mdx#icons). |
+| `small_icon` | string | Optional smaller icon variant. |
+| `aspect_ratio` | string | Preferred aspect ratio such as `"16:9"` or `"9:16"`. See [Aspect ratio](./schemas.mdx#aspect-ratio). |
+| `assets` | object | Fonts, images, and styles shipped in a ZIP package. See [Assets](./schemas.mdx#assets). |
+| `translations` | object | Localized name, description, option labels, and editable text labels. See [Translations](./schemas.mdx#translations). |
+| `integration` | object | Connects the widget to a data source. See [Data integrations](./data-integrations.md). |
+| `meta` | object | Free-form metadata stored with the widget. |
+| `update_interval_seconds` | number | Informational refresh interval shown in the widget details. Defaults to `60`. Data refresh itself is configured in the integration. |
+
+The server ignores other top-level keys, so you can keep fields such as `version` or `author` in the file for your own bookkeeping.
+
+## Quick start
+
+The following `widget.json` defines a lobby welcome screen with two options:
+
+```json title="widget.json"
+{
+  "name": "Lobby welcome",
+  "slug": "lobby-welcome",
+  "description": "A full-screen welcome message for reception areas.",
+  "aspect_ratio": "16:9",
+  "options_schema": {
+    "title": {
+      "type": "string",
+      "required": true,
+      "default": "Welcome",
+      "order": 1
+    },
+    "subtitle": {
+      "type": "string",
+      "default": "Please sign in at the reception desk.",
+      "order": 2
+    }
+  },
+  "template": {
+    "type": "group",
+    "name": "root",
+    "fontScale": true,
+    "style": {
+      "width": "100%",
+      "height": "100%",
+      "display": "flex",
+      "flex-direction": "column",
+      "justify-content": "center",
+      "padding": "0 10em",
+      "box-sizing": "border-box",
+      "background-image": "linear-gradient(135deg, #0f2027, #203a43, #2c5364)"
+    },
+    "components": [
+      {
+        "type": "text",
+        "name": "title",
+        "opts": { "text": { "key": "options.title" } },
+        "style": {
+          "flex": "0 0 auto",
+          "font-size": "11em",
+          "font-weight": "700",
+          "color": "#ffffff"
+        }
+      },
+      {
+        "type": "text",
+        "name": "subtitle",
+        "opts": { "text": { "key": "options.subtitle" } },
+        "style": {
+          "flex": "0 0 auto",
+          "margin-top": "1.2em",
+          "font-size": "4.4em",
+          "line-height": "1.3em",
+          "color": "rgba(255, 255, 255, 0.8)"
+        }
+      }
+    ]
+  }
+}
+```
+
+The key ideas:
+
+- `template` is a `group` that stacks two `text` components with flexbox.
+- `{ "key": "options.title" }` is a [binding](./data-binding.mdx): the text shows whatever the user enters in the **title** option.
+- `"fontScale": true` makes `1em` equal to 10 pixels on a 1920×1080 screen and scales it with the display, so the layout looks the same on every resolution. See [Font scaling](./data-binding.mdx#font-scaling).
+
+The live preview below renders the same widget with entrance animations added. Use the **Code** tab to see its template.
+
+<WidgetExample
+  widget={welcomeWidget}
+  options={welcomeOptions}
+  height="420px"
+  title="Lobby welcome"
+  description="A text-only template with option bindings and entrance animations."
+/>
+
+## Installing a widget
+
+Organization administrators install custom widgets from the dashboard:
+
+1. Go to **Content** → **Widgets**.
+2. Click **Upload Widget**.
+3. Select a `widget.json` file, or a ZIP package that contains `widget.json` and an `assets/` folder. You can also drag and drop the file.
+
+The server validates the definition before it saves it. It rejects invalid option and data schemas and malformed `fmt`, `list`, `first`, and `editable` attributes, and returns the list of problems. Likely mistakes that are not errors, such as a format text without its `fmt` wrapper, are returned as warnings.
+
+:::note
+The server does not check component types. A misspelled `type` uploads successfully and fails when the widget renders, so preview the widget in a playlist before you publish it.
+:::
+
+After the upload, the widget appears in the catalog of your organization and you can add it to playlists. See [Playlists](../../dashboard/playlists.md).
+
+### Upload limits
+
+| Item | Limit |
+| --- | --- |
+| Package (`.json` or `.zip`) | 10 MB |
+| Icon (`.svg`, `.png`, `.jpg`, `.jpeg`, `.ico`) | 100 KB per file |
+| Font (`.woff`, `.woff2`, `.ttf`, `.otf`) | 512 KB per file |
+| Image (`.png`, `.jpg`, `.jpeg`, `.webp`, `.gif`, `.svg`) | 1 MB per file |
+| Stylesheet (`.css`) | 50 KB per file |
+
+## Widget scopes
+
+Every widget has a scope that decides which organizations can use it:
+
+| Scope | Available to | Managed by |
+| --- | --- | --- |
+| System | Every organization | The platform: built-in widgets installed with Castmill |
+| Network | The organizations of one network | Network administrators and platform add-ons |
+| Organization | One organization | Administrators of that organization, by uploading widgets |
+
+Uploads from the dashboard always create organization widgets. Scope fields in `widget.json` are ignored. An organization can rename or delete only the widgets it owns.
+
+Network administrators curate the catalog of their network in **Network** → **Widget Access**. For each system or network widget they choose one access mode:
+
+| Mode | Effect |
+| --- | --- |
+| All organizations | Every organization in the network, including organizations created later |
+| All except | Every organization except the listed ones |
+| Selected | Only the listed organizations |
+| Hidden | No organization in the network |
+
+The core Image, Video, and Layout widgets are always available. A change that would leave an organization with playlist items that use a widget it can no longer access is refused.
+
+## Slug rules
+
+The slug identifies the widget in URLs, asset paths (`/widget_assets/<slug>/...`), and integrations.
+
+- It must start with a letter or a digit and contain only letters, digits, hyphens, and underscores.
+- It must be unique on the server, across all scopes. An upload with a slug that is already taken fails with the error "has already been taken".
+- If you omit `slug`, the server derives it from `name`.
+
+Choose a descriptive slug with your own prefix, such as `acme-cafe-menu`, so it does not collide with widgets from other publishers.
+
+## Next steps
+
+- Learn the building blocks in [Components](./components.mdx).
+- Connect options and data in [Data binding](./data-binding.mdx).
+- Copy a complete widget from [Examples](./examples.mdx).

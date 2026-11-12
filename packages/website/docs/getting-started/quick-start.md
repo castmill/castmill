@@ -1,126 +1,142 @@
 ---
 sidebar_position: 1
+title: Quick start
+description: Run Castmill on your computer with Docker Compose and sign in to the dashboard.
 ---
 
-# Quick Start
+# Quick start
 
-Get a fully functional Castmill instance running locally in under 5 minutes using Docker Compose.
+This guide starts a complete Castmill installation on your computer with Docker Compose: a PostgreSQL database, the Castmill server and the dashboard. It takes about 15 minutes, most of which is spent building the images the first time.
 
-## Prerequisites
+The setup is meant for evaluation and development. For a public server, follow [Self-hosting](../administration/self-hosting.md) afterwards.
 
-- [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/) installed
-- At least 2 GB of free RAM
-- Ports 4000 and 3000 available
+## Requirements
 
-## 1. Clone the Repository
+- [Docker](https://docs.docker.com/get-docker/) with the Compose plugin (`docker compose version` should print v2 or later)
+- [Git](https://git-scm.com/)
+- 4 GB of free memory for the image build
+- Free ports 3000 (dashboard), 4000 (server), 5432 (database) and 8025 (test mailbox)
+
+## 1. Get the source code
 
 ```bash
 git clone https://github.com/castmill/castmill.git
 cd castmill
 ```
 
-## 2. Configure Environment Variables
+## 2. Create the environment file
 
-Create a `.env` file in the repository root with the required values:
+Docker Compose reads settings from a `.env` file next to `docker-compose.yaml`. Create it with the following content:
 
-```bash
+```bash title=".env"
+# Database connection used by the server
 DATABASE_URL=ecto://postgres:postgres@db/castmill_dev
-SECRET_KEY_BASE=replace-with-64-char-secret
-CASTMILL_DASHBOARD_USER_SALT=replace-with-random-salt
-CASTMILL_ROOT_USER_EMAIL=root@example.com
-CASTMILL_ROOT_USER_PASSWORD=root
-ENCRYPTION_MASTER_KEY=replace-with-base64-32-byte-key
 
-AWS_ACCESS_KEY_ID=minioadmin
-AWS_SECRET_ACCESS_KEY=minioadmin
-AWS_S3_BUCKET=castmill-media
-AWS_REGION=us-east-1
+# Secrets (replace the placeholders, see below)
+SECRET_KEY_BASE=replace-me
+ENCRYPTION_MASTER_KEY=replace-me
+CASTMILL_DASHBOARD_USER_SALT=replace-me
 
-MAILGUN_API_KEY=replace-with-mail-provider-key
-MAILGUN_DOMAIN=mail.example.com
-MAILER_FROM=noreply@example.com
+# Account for the admin tool at http://localhost:4000/admin
+CASTMILL_ROOT_USER_EMAIL=admin@example.com
+CASTMILL_ROOT_USER_PASSWORD=choose-a-password
+
+# Public address of uploaded media, as seen by browsers and players
+MEDIA_PUBLIC_BASE_URL=http://localhost:4000
+
+# Not used locally, but the server expects a value
+AWS_ACCESS_KEY_ID=unused
+AWS_SECRET_ACCESS_KEY=unused
+MAILGUN_API_KEY=unused
 ```
 
-You can generate secure values with:
+Generate the three secrets and paste them into the file:
 
 ```bash
-mix phx.gen.secret   # SECRET_KEY_BASE
+openssl rand -base64 48   # SECRET_KEY_BASE
 openssl rand -base64 32   # ENCRYPTION_MASTER_KEY
+openssl rand -hex 16      # CASTMILL_DASHBOARD_USER_SALT
 ```
 
-If your local `docker-compose.yaml` does not already pass `ENCRYPTION_MASTER_KEY` to the backend container, add:
+`ENCRYPTION_MASTER_KEY` protects stored integration credentials such as API keys and OAuth tokens. Keep a copy: if you lose it, those credentials cannot be decrypted. The [configuration reference](../administration/configuration.md) describes every variable.
 
-```yaml
-backend:
-  environment:
-    ENCRYPTION_MASTER_KEY: ${ENCRYPTION_MASTER_KEY}
+## 3. Add a test mailbox
+
+New users confirm their email address before they create a passkey, so the server must be able to send mail. For local use, add [Mailpit](https://mailpit.axllent.org/), which accepts all mail and shows it in a web page. Create `docker-compose.override.yaml` next to `docker-compose.yaml`:
+
+```yaml title="docker-compose.override.yaml"
+services:
+  mailpit:
+    image: axllent/mailpit
+    ports:
+      - '8025:8025'
+
+  backend:
+    environment:
+      SMTP_HOST: mailpit
+      SMTP_PORT: '1025'
+      MAILER_FROM: castmill@example.com
 ```
 
-## 3. Start the Services
+Docker Compose merges this file into the main one automatically.
+
+## 4. Start the services
 
 ```bash
-docker-compose up
+docker compose up --build
 ```
 
-This starts four services:
+The first build compiles the server, the dashboard and the players, so it takes several minutes. The server runs its database migrations on every start. When the log shows `Running CastmillWeb.Endpoint`, the services are ready:
 
-| Service       | URL                     | Purpose                     |
-| ------------- | ----------------------- | --------------------------- |
-| **Server**    | `http://localhost:4000` | Elixir/Phoenix API backend  |
-| **Dashboard** | `http://localhost:3000` | Management interface        |
-| **Database**  | internal                | PostgreSQL database         |
-| **Redis**     | internal                | Caching and background jobs |
+| Service | Address | Purpose |
+| --- | --- | --- |
+| Dashboard | http://localhost:3000 | Web interface for users |
+| Server | http://localhost:4000 | API, admin tool, players and media files |
+| Mailpit | http://localhost:8025 | Test mailbox |
+| PostgreSQL | `localhost:5432` | Database, also used for background jobs |
 
-The first run takes a few minutes to build images and set up the database. You'll see logs from all services in your terminal.
+Check that the server responds:
 
-## 4. Log In to the Admin Tool
-
-Once the services are running, open the admin tool at:
-
-```
-http://localhost:4000/admin
+```bash
+curl http://localhost:4000/api/health
+# {"status":"ok"}
 ```
 
-Use the default credentials:
+## 5. Create a network
 
-- **Email**: `root@example.com`
-- **Password**: `root`
+A [network](../concepts/networks.md) is the top-level tenant in Castmill. The dashboard only accepts sign-ups for a domain that belongs to a network, so create one first.
 
-:::caution
-Change the default credentials immediately in a production environment. The admin tool has full control over all networks, organizations, and data.
-:::
+1. Open the admin tool at http://localhost:4000/admin and sign in with `CASTMILL_ROOT_USER_EMAIL` and `CASTMILL_ROOT_USER_PASSWORD`.
+2. Open **Networks** and create a network.
+3. Enter a name and email, and set **Domain** to `localhost:3000`. The domain must match the address of the dashboard, including the port and without `http://`.
+4. Clear **Invitation Only Mode**. New networks only accept invited users, and you have nobody to invite you yet.
+5. Save.
 
-## 5. Create Your First Network
+## 6. Create your account
 
-A **network** is the top-level container in Castmill. Each network is tied to a domain and acts as an isolated silo of data.
+1. Open the dashboard at http://localhost:3000 and choose **Sign up**.
+2. Enter your email address.
+3. Open Mailpit at http://localhost:8025, open the Castmill email and follow the link.
+4. Create a passkey when the browser asks for one.
 
-1. In the admin tool, go to **Networks**
-2. Click **Create Network**
-3. Enter a name and domain. For localhost testing, set the **Domain** field to `localhost:3000` (host + port).
-   This ensures it matches the dashboard origin `http://localhost:3000` used by CORS checks.
-   In production, use your public domain (for example, `signage.example.com`).
-4. Save
+You are now signed in to a new organization in which you are an administrator. [First sign-in](./first-login.md) explains passkeys and account recovery in more detail.
 
-## 6. Access the Dashboard
+## Next steps
 
-Open the dashboard at:
+- Put content on a screen with [Your first screen](./first-screen.md).
+- Learn how the parts fit together in [Architecture](../concepts/architecture.md).
+- Prepare a production server with [Self-hosting](../administration/self-hosting.md).
 
-```
-http://localhost:3000
-```
+## Troubleshooting
 
-Sign up with your email address. Castmill uses **passkey-based authentication** — no passwords. Your browser will prompt you to create a passkey during signup.
+**The server container restarts in a loop.** Run `docker compose logs backend`. A message about a missing environment variable names the variable to add to `.env`. After changing `.env`, run `docker compose up -d` again.
 
-After signing up, you'll land in your organization's dashboard where you can:
+**Sign-up says that the network requires an invitation.** Edit the network in the admin tool and clear **Invitation Only Mode**.
 
-- Upload media (images and videos)
-- Create playlists with widgets
-- Set up channels with schedules
-- Register and manage display devices
+**Sign-up says "Network not found".** The network domain does not match the dashboard address. Edit the network in the admin tool and set the domain to exactly `localhost:3000`.
 
-## What's Next?
+**Sign-up says "Failed to send email".** The server cannot reach a mail server. Check that `docker-compose.override.yaml` exists and that the `mailpit` container is running.
 
-- [First Login](./first-login.md) — Detailed walkthrough of account creation and passkey setup
-- [Concepts: Architecture](../concepts/architecture.md) — Understand how Networks, Organizations, and Resources fit together
-- [Dashboard Overview](../dashboard/overview.md) — Learn the dashboard interface
-- [Self-Hosting Guide](./self-hosting.md) — Production deployment options
+**Uploaded images do not load.** Check that `MEDIA_PUBLIC_BASE_URL` is set to `http://localhost:4000`. Without it, the server generates HTTPS media addresses that do not work locally.
+
+**Uploaded files disappear after `docker compose down`.** The default configuration stores media inside the server container. That is fine for evaluation; production servers need [persistent media storage](../administration/self-hosting.md#media-storage).

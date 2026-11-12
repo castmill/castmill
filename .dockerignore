@@ -1,3 +1,6 @@
-/packages/platforms
+# The server image builds the legacy adapter player, which uses the webOS
+# player's shared sources, so only the native app platforms are excluded.
+/packages/platforms/android-player
+/packages/platforms/electron-player
 node_modules
 .env

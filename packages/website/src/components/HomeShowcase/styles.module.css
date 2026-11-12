@@ -1,0 +1,49 @@
+.figure {
+  margin: 0;
+  width: 100%;
+}
+
+.screen {
+  position: relative;
+  padding: 0.7rem;
+  border-radius: 1.1rem;
+  background: linear-gradient(160deg, #2a3142, #11151f);
+  box-shadow:
+    0 1.5rem 3.5rem rgba(15, 23, 42, 0.28),
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+}
+
+.viewport {
+  position: relative;
+  width: 100%;
+  padding-top: 56.25%;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: #0d1630;
+  /* Base size for em units inside the widget */
+  font-size: clamp(10px, 1.45vw, 18px);
+}
+
+.viewport > * {
+  position: absolute;
+  inset: 0;
+}
+
+.placeholder {
+  background: linear-gradient(135deg, #0d1630 0%, #173a86 55%, #2f6fdb 100%);
+}
+
+.stand {
+  width: 22%;
+  height: 0.65rem;
+  margin: 0 auto;
+  border-radius: 0 0 0.6rem 0.6rem;
+  background: linear-gradient(180deg, #1b2130, #2a3142);
+}
+
+.caption {
+  margin-top: 0.9rem;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--cm-site-muted);
+}

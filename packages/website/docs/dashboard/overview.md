@@ -1,97 +1,83 @@
 ---
 sidebar_position: 1
+title: Dashboard overview
+description: Find your way around the Castmill dashboard, its navigation, search, filters and keyboard shortcuts.
 ---
 
-# Dashboard Overview
+# Dashboard overview
 
-The Castmill Dashboard is a web-based management interface built with [SolidJS](https://www.solidjs.com/). It is the primary tool for managing your digital signage content, devices, and schedules.
+The dashboard is the web application you use to manage content, screens and people in Castmill. Everything you do in it happens inside one [organization](../concepts/organizations.md), and what you can see and change depends on your [role](../concepts/users-and-teams.md).
 
-## Sidebar Navigation
+## Layout
 
-The sidebar is the main way to navigate the dashboard. It is organized into sections:
+- **Sidebar** on the left: the organization switcher and the navigation.
+- **Top bar**: global search, **Help** (this documentation), **Getting Started** (the onboarding checklist and tour), **Notifications**, the light and dark mode toggle, and your user menu with **Settings** and log out.
+- **Main area**: the list or editor you opened.
 
-### Organization Selector
+## Navigation
 
-At the top of the sidebar, a dropdown lets you switch between organizations you belong to. Selecting an organization updates the URL and all pages to reflect that organization's data.
+| Sidebar entry | What you do there |
+| --- | --- |
+| **Organization** | Members, invitations and organization settings |
+| **Content → Medias** | Upload images and videos ([Media](./media.md)) |
+| **Content → Playlists** | Build sequences of content ([Playlists](./playlists.md)) |
+| **Content → Layouts** | Split the screen into zones ([Layouts](./layouts.md)) |
+| **Content → Widgets** | Browse widgets and set up integrations ([Widgets](./widgets.md)) |
+| **Channels** | Schedule playlists on a weekly calendar ([Channels](./channels.md)) |
+| **Automations** | Interrupt playback at set times ([Automations](./automations.md)) |
+| **Devices** | Register and monitor screens ([Devices](./devices.md)) |
+| **Feeds** | Push live data from other systems ([Feeds](./feeds.md)) |
+| **Tags** | Label and group resources ([Tags](./tags.md)) |
+| **Teams** | Group people and resources ([Teams](./teams.md)) |
+| **Agents** | Connect AI assistants over MCP ([AI agents](./ai-agents.md)) |
+| **Usage** | Check consumption against your plan ([Usage and quotas](./usage-and-quotas.md)) |
 
-### Main Sections
+Entries you have no permission for are hidden. Network administrators also see a **Network** section with **Overview**, **Settings**, **Organizations**, **Users & Invitations** and **Widget Access**; see [Network administration](../administration/network-administration.md).
 
-| Section               | Description                                                                  |
-| --------------------- | ---------------------------------------------------------------------------- |
-| **Organization**      | View and manage the current organization's details, members, and invitations |
-| **Content**           | Parent section for all content types (expandable)                            |
-| &nbsp;&nbsp;Medias    | Upload and manage images and videos                                          |
-| &nbsp;&nbsp;Playlists | Create ordered sequences of widgets                                          |
-| &nbsp;&nbsp;Layouts   | Design multi-zone screen arrangements                                        |
-| &nbsp;&nbsp;Widgets   | Browse and manage installed widgets                                          |
-| **Devices**           | Register and manage physical display devices                                 |
-| **Channels**          | Schedule playlists on a weekly calendar                                      |
-| **Teams**             | Create teams and manage permissions                                          |
-| **Tags**              | Organize resources with color-coded tags                                     |
-| **Usage**             | Monitor resource consumption and quotas                                      |
-| **Settings**          | User preferences, passkeys, and language                                     |
+Addons can add their own entries to the sidebar. See [Addons](../developers/addons.md).
 
-### Addon Sections
+## Addresses you can share
 
-The sidebar supports **dynamic addon entries** loaded from the backend. Addons can inject themselves into predefined mount points in the sidebar hierarchy. For example, a billing addon might appear at the bottom of the sidebar.
+Every page address includes the organization, for example `/org/<organization id>/content/playlists`. You can bookmark a page or send a link to a colleague, and it opens in the right organization. Adding `?itemId=<id>` to a list address opens that item directly; global search uses this.
 
-### Network Admin
+## Search
 
-If you are a **network administrator**, an additional section appears below the main navigation with links to:
+Press **Ctrl+F** (**⌘F** on macOS) or click the search field in the top bar to search across medias, playlists, channels, devices and teams at once. Results are grouped by type. Press **S** on a list page to search only that list.
 
-- **Network** — Network-wide settings and configuration
-- **Organizations** — Manage all organizations in the network
-- **Users** — Manage all users in the network
+## Lists, filters and bulk actions
 
-## URL Routing
+The list pages for medias, playlists, layouts, channels and devices work the same way:
 
-Every page in the dashboard includes the organization ID in the URL:
+- **Filters**: show only the resources of one team, or those with certain tags. With several tags you choose whether a resource must match **any** or **all** of them.
+- **Views**: switch between the table and a tree grouped by tag group and tag.
+- **Bulk actions**: select rows with the check boxes to delete them or to add and remove tags in one step.
 
-```
-/org/:orgId/content/playlists
-/org/:orgId/channels
-/org/:orgId/settings
-```
+## Keyboard shortcuts
 
-This means you can bookmark or share links to specific pages, and the correct organization context is always preserved.
+Press **Shift+?** to see every shortcut that works on the current page.
 
-## Keyboard Shortcuts
+| Shortcut | Action |
+| --- | --- |
+| **Shift+?** | Show the shortcut legend |
+| **Ctrl+F** | Global search |
+| **C** | Create a resource on the current page |
+| **S** | Search the current list |
+| **Delete** | Delete the selected resources |
+| **Ctrl+M** | Go to Medias |
+| **Ctrl+P** | Go to Playlists |
+| **Ctrl+L** | Go to Layouts |
+| **Ctrl+I** | Go to Widgets |
+| **Ctrl+C** | Go to Channels |
+| **Ctrl+D** | Go to Devices |
+| **Ctrl+G** | Go to Teams |
+| **Ctrl+O** | Go to Organization |
 
-Most resource pages support keyboard shortcuts for common actions:
+On macOS, use **⌘** instead of **Ctrl**. Single-key shortcuts are ignored while you type in a text field.
 
-| Shortcut   | Action                    |
-| ---------- | ------------------------- |
-| **Ctrl+N** | Create new resource       |
-| **Ctrl+F** | Focus search input        |
-| **Delete** | Delete selected resources |
+## Language and theme
 
-## Global Search
+The dashboard is available in English, Spanish, Swedish, German, French, Chinese, Arabic, Korean and Japanese. Change the language in **Settings**. The toggle in the top bar switches between the light and dark themes, and the dashboard remembers your choice.
 
-A search function lets you find resources across all types — medias, playlists, channels, devices, and teams. Results are grouped by type, and clicking a result navigates directly to that resource.
+## Getting started checklist
 
-## View Modes
-
-Resource pages (medias, playlists, channels, devices) support two view modes:
-
-- **Table view** — Traditional list with sortable columns
-- **Tree view** — Resources organized by tag hierarchy (groups → tags → items)
-
-You can toggle between views using the view mode button in the toolbar.
-
-## Filtering
-
-Every resource page provides two types of filters:
-
-- **Team filter** — Show only resources owned by a specific team
-- **Tag filter** — Filter by one or more tags, with **any** (match at least one) or **all** (match every selected tag) mode
-
-## Bulk Operations
-
-Select multiple resources using checkboxes, then perform bulk actions:
-
-- **Bulk delete** — Remove all selected resources
-- **Bulk tag** — Apply or remove tags from all selected resources
-
-## Deep Linking
-
-Resource pages support the `?itemId=` URL parameter. When present, the dashboard automatically opens the detail view for that resource. This is used by the global search feature and can be bookmarked.
+The **Getting Started** button opens a checklist that guides new users through uploading media, creating a playlist, creating a channel, registering a device and tagging content. Each step links to the matching page of this guide. You can restart the tour from **Settings**.

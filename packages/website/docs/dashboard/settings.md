@@ -1,91 +1,71 @@
 ---
-sidebar_position: 8
+sidebar_position: 15
+title: Settings
+description: Manage your profile, passkeys, language, onboarding tour and account.
 ---
 
 # Settings
 
-The Settings page lets you manage your account, security credentials, and preferences.
+The **Settings** page holds your personal account settings. They apply to you in every organization you belong to. Open it from **Settings** at the bottom of the sidebar or from the user menu in the top bar.
 
-## Profile
+## Profile information
 
-Edit your personal information:
+Under **Profile Information** you can change your **Full Name** and **Email Address**, then click **Save Changes**.
 
-- **Full name** — Your display name
-- **Email address** — Changing your email triggers a **verification flow**: a confirmation email is sent to the new address, and the change only takes effect after you click the verification link
+When you change your email address, Castmill sends a verification email to the new address. The change takes effect after you click the link in that email.
 
-Click **Save** to apply changes. The button is disabled until you modify a field.
+## Passkeys
 
-## Security & Authentication
+Castmill uses passkeys instead of passwords. A passkey is stored on your device or in your password manager, and you confirm it with your fingerprint, face, PIN or security key.
 
-Manage your **passkeys** (WebAuthn credentials) — the cryptographic keys used to log in to Castmill.
+Under **Security & Authentication**, **Your Passkeys** lists your passkeys with the date each was added.
 
-### Viewing Passkeys
+| Task | How |
+| --- | --- |
+| Add a passkey for another device or browser | Click **Add New Passkey** and follow your browser's prompts |
+| Give a passkey a recognisable name | Click **Rename** |
+| Remove a passkey | Click **Remove** and confirm |
 
-A list of all registered passkeys is shown, each displaying:
-
-- **Name** — A label you can customize (e.g., "MacBook Pro", "iPhone")
-- **Date added** — When the passkey was registered
-
-### Adding a Passkey
-
-1. Click **Add New Passkey**
-2. Your browser or device prompts you to create a new credential (fingerprint, Face ID, security key, etc.)
-3. Enter a **name** for the passkey
-4. The passkey is registered and can be used to log in from that device
+You cannot remove your last passkey, so you can always sign in. Removing a passkey from Castmill does not always delete it from your device; you may need to delete it in the device's settings, for example iCloud Keychain, Google Password Manager or Windows Hello.
 
 :::tip
-Register passkeys on multiple devices to ensure you can always access your account. If you lose access to all devices with registered passkeys, you will need to use the [credential recovery](../concepts/authentication.md#credential-recovery) flow.
-:::
-
-### Managing Passkeys
-
-- **Rename** — Click the edit button to change a passkey's display name
-- **Remove** — Click the delete button to remove a passkey
-
-:::caution
-You cannot remove your **last remaining passkey**. At least one passkey must always be registered to maintain account access.
+Add a second passkey on another device, so you can still sign in if you lose the first one.
 :::
 
 ## Language
 
-Choose your preferred **display language** from a grid of supported locales:
+Under **Language Settings**, choose the language of the dashboard:
 
-| Code | Language |
-| ---- | -------- |
-| EN   | English  |
-| ES   | Español  |
-| SV   | Svenska  |
-| DE   | Deutsch  |
-| FR   | Français |
-| ZH   | 中文     |
-| AR   | العربية  |
-| KO   | 한국어   |
-| JA   | 日本語   |
+| Language | Shown as |
+| --- | --- |
+| English | English |
+| Spanish | Español |
+| Swedish | Svenska |
+| German | Deutsch |
+| French | Français |
+| Chinese | 中文 |
+| Arabic | العربية |
+| Korean | 한국어 |
+| Japanese | 日本語 |
 
-Click a language to switch immediately. The active language is highlighted with a checkmark. Arabic (AR) enables **right-to-left** layout.
+Arabic uses a right-to-left layout. You can also change the language with the language selector in the top bar.
 
-## Onboarding Tour
+## Onboarding tour
 
-If you want to revisit the **guided walkthrough** that appears for new users:
+The onboarding tour guides you through the first steps in the dashboard. Under **Onboarding Tour**, click **Reset tour** and confirm to clear your progress and see the tour again.
 
-1. Click **Reset Tour**
-2. Confirm in the dialog
-3. The onboarding tour restarts on your next page load
+## Deleting your account
 
-## Account Management
+Under **Account Management**, click **Delete Account**, then confirm with **Yes, Delete Account**. This permanently deletes your account and its passkeys on the server, and cannot be undone.
 
-:::danger Danger Zone
-These actions are irreversible.
-:::
+You cannot delete your account while you are the only administrator of an organization that has other members. Make another member an administrator first.
 
-### Delete Account
+Passkeys stored on your devices remain there unless your browser supports automatic passkey removal. Remove them in your device settings to avoid failed sign-ins later.
 
-1. Click **Delete Account**
-2. Read the warning about data loss and passkey cleanup
-3. Confirm deletion
+## Other preferences in the top bar
 
-**Important considerations:**
+Some preferences are in the top bar instead of on the Settings page:
 
-- All your data, credentials, and organization memberships are permanently removed
-- If you are the **sole administrator** of an organization, deletion is blocked — you must first transfer admin rights or delete the organization
-- The system attempts to clean up passkeys from your devices using the browser's credential management API
+- the light and dark theme toggle;
+- the language selector;
+- [Notifications](./notifications.md).

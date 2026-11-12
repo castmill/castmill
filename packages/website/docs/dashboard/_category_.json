@@ -1,8 +1,10 @@
 {
-  "label": "Dashboard",
+  "label": "User guide",
   "position": 4,
   "link": {
     "type": "generated-index",
-    "description": "Learn how to use the Castmill Dashboard to manage your digital signage content, devices, and schedules."
+    "title": "User guide",
+    "slug": "/dashboard",
+    "description": "Day-to-day work in the Castmill dashboard: content, scheduling, devices, teams and organization settings."
   }
 }

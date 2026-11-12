@@ -1,0 +1,75 @@
+---
+sidebar_position: 1
+title: Introduction
+description: What Castmill is, how the documentation is organized and where to start.
+slug: /intro
+---
+
+# Castmill documentation
+
+Castmill is an open-source digital signage platform. You manage content, schedules and screens from a web dashboard, and players on each screen download what they need and keep playing when the network is down. You can run Castmill on your own servers or use a hosted installation.
+
+These pages cover every part of the platform, from uploading your first image to deploying a server and writing your own widgets.
+
+## Choose a starting point
+
+<CardGrid columns={2}>
+  <Card title="Quick start" href="/docs/getting-started/quick-start" icon="rocket">
+    Start a local server with Docker Compose and sign in to the dashboard.
+  </Card>
+  <Card title="Your first screen" href="/docs/getting-started/first-screen" icon="monitor">
+    Upload media, build a playlist, schedule it and register a player, step by step.
+  </Card>
+  <Card title="User guide" href="/docs/dashboard/overview" icon="book">
+    Every dashboard page explained: content, channels, devices, teams and settings.
+  </Card>
+  <Card title="Players" href="/docs/players/overview" icon="layers">
+    Install players on browsers, Android, LG webOS and desktop computers.
+  </Card>
+  <Card title="Self-hosting" href="/docs/administration/self-hosting" icon="server">
+    Deploy, configure and operate a production Castmill server.
+  </Card>
+  <Card title="Developers" href="/docs/developers/overview" icon="code">
+    Build widgets, push data through feeds, use the REST API and write add-ons.
+  </Card>
+</CardGrid>
+
+## How Castmill works
+
+Content reaches a screen in four steps:
+
+1. **Upload** images and videos in [Media](./dashboard/media.md), or configure a [widget](./dashboard/widgets.md) such as weather, RSS news or a QR code.
+2. **Arrange** them in a [playlist](./dashboard/playlists.md), where each item has a duration and a transition. A [layout](./dashboard/layouts.md) splits the screen into zones that each play their own playlist.
+3. **Schedule** playlists on a [channel](./dashboard/channels.md). A channel is a weekly calendar with a default playlist for the times nothing else is scheduled.
+4. **Play** the channel on one or more [devices](./dashboard/devices.md). Each device runs a Castmill player that caches the content locally.
+
+Everything lives inside an [organization](./concepts/organizations.md). Organizations belong to a [network](./concepts/networks.md), which is the top-level tenant with its own domain, branding and plans. The [content model](./concepts/content-model.md) explains how these resources relate.
+
+## Main features
+
+| Area | What you get |
+| --- | --- |
+| Content | Image and video upload with automatic thumbnails and transcoding, playlists, multi-zone layouts and tags |
+| Scheduling | Weekly channels with per-channel timezones, and [automations](./dashboard/automations.md) that interrupt programming at set times |
+| Widgets | Built-in weather, RSS, stock ticker, QR code, web page and Spotify widgets, plus custom JSON [template widgets](./developers/widgets/overview.mdx) |
+| Data | Token-protected [feeds](./dashboard/feeds.md) that let other systems push JSON to screens |
+| Devices | Remote preview, telemetry, event logs, cache inspection, maintenance actions, power schedules and screen orientation |
+| Players | Browser, Android, LG webOS (native and legacy), Electron for macOS and Linux |
+| Access | Passkey sign-in, seven organization roles, teams, invitations and network-wide administration |
+| Integrations | REST API, webhooks, an MCP server for [AI agents](./dashboard/ai-agents.md) and server [add-ons](./developers/addons.md) |
+
+## Conventions in these pages
+
+- Names of dashboard pages, buttons and fields are in **bold**, for example **Content → Playlists**.
+- Commands and file names are in `code`.
+- Notes marked **Tip**, **Note** and **Warning** contain practical advice, background information and risks of data loss, respectively.
+
+## Getting help
+
+- Search these pages with the search box at the top or press <kbd>Ctrl</kbd>+<kbd>K</kbd>.
+- The [FAQ](./reference/faq.md) answers common questions, and the [glossary](./reference/glossary.md) defines Castmill terms.
+- Report bugs and request features on [GitHub](https://github.com/castmill/castmill/issues).
+
+:::tip For AI assistants
+A plain-text summary of these docs with links to every page is available at [`/llms.txt`](pathname:///llms.txt).
+:::

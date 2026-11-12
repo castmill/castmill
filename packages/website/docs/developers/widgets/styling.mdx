@@ -1,0 +1,145 @@
+---
+sidebar_position: 6
+title: Styling and layout
+description: Style template components with CSS, size them with resolution-independent units, and change styles based on data.
+---
+
+import WidgetExample from '@site/src/components/WidgetExample';
+import {
+  splitLayoutWidget,
+  splitLayoutOptions,
+} from '@site/src/components/WidgetExample/sampleWidgets';
+
+Every template component accepts a `style` object with CSS declarations. The player applies them to the component's root element.
+
+## Writing styles
+
+Use CSS property names in kebab-case and string values, exactly as in a stylesheet:
+
+```json
+{
+  "style": {
+    "display": "flex",
+    "flex-direction": "column",
+    "background-color": "#1c1917",
+    "font-size": "4em",
+    "text-transform": "uppercase"
+  }
+}
+```
+
+:::caution
+The player sets each property with the DOM `setProperty` method, which only understands CSS names. CamelCase names such as `fontSize` or `backgroundColor` are silently ignored.
+:::
+
+Numbers without units, such as `"opacity": 0.8` or `"font-weight": 700`, work for unitless properties. For lengths, always include the unit.
+
+## Sizing with em units
+
+A widget runs on screens of every resolution, in full screen or inside a small layout zone, and in the dashboard preview. Size text, spacing and borders in `em` so the whole design scales with the space it gets.
+
+Set `fontScale: true` on the root template component. The player then sets the root font size from the size of the widget: 1 `em` is 10 pixels when the widget is 1920 by 1080 pixels, and scales proportionally to the smaller of the two ratios for other sizes. Do not set `font-size` on the root component itself. See [Font scaling](./data-binding.mdx#font-scaling) for the details.
+
+```json
+{
+  "type": "group",
+  "name": "root",
+  "fontScale": true,
+  "style": { "width": "100%", "height": "100%", "display": "flex" },
+  "components": [
+    {
+      "type": "text",
+      "name": "title",
+      "opts": { "text": { "key": "options.title" } },
+      "style": { "flex": "0 0 auto", "font-size": "8em" }
+    }
+  ]
+}
+```
+
+With this setup, `8em` is 80 pixels on a Full HD screen, 160 pixels on 4K, and proportionally smaller in a quarter-screen zone.
+
+Keep these rules in mind:
+
+- `em` values compound. A child with `font-size: 2em` inside a parent with `font-size: 4em` ends up at 8 root `em`. Set `font-size` on the leaf text components and leave containers at the root size.
+- On an element with its own `font-size`, other `em` values on the same element (`padding`, `margin`, `top`, `left`) are relative to that element's font size. A text with `font-size: 8em` and `margin-top: 1em` has a top margin of 8 root `em`.
+- Use percentages for widths and heights of layout areas.
+- Avoid `vw` and `vh`. They are relative to the whole screen, not to the widget, so a design sized with them breaks inside layout zones and in previews.
+- Avoid `px` except for hairlines such as `1px` borders.
+
+## Layout with flexbox
+
+Build layouts with nested `group` components and flexbox. Give the root `width: 100%` and `height: 100%`, then divide the space with `flex`:
+
+<WidgetExample
+  widget={splitLayoutWidget}
+  options={splitLayoutOptions}
+  height="420px"
+  title="Split layout"
+  description="An image on one half and a text column on the other, built with two flex children."
+/>
+
+Text components fill their parent by default: they get `width: 100%` and `height: 100%`, or only `width: 100%` when you set `flex`. Inside a flex container, give each text an explicit `flex` value, for example `"flex": "0 0 auto"` for a line that takes its natural height, or `"flex": "1 1 auto"` for an area that takes the remaining space.
+
+For overlays, such as a caption over a photo, set `position: relative` on the container and `position: absolute` with `top`, `left`, `width` and `height` on the children.
+
+:::note
+Some players run old browser engines. Do not use CSS Grid, the `aspect-ratio` property or the flexbox `gap` property; use margins between items instead. See [Best practices](./best-practices.md#performance-on-low-end-players).
+:::
+
+## Conditional styles
+
+### Style bindings
+
+Any style value can be a [binding](./data-binding.mdx). This lets users pick colors in the options, or derive a color from data:
+
+```json
+{
+  "style": {
+    "background-color": { "key": "options.accent", "default": "#e8b04b" },
+    "color": {
+      "switch": {
+        "key": "$.status",
+        "cases": {
+          "delayed": "#f59e0b",
+          "cancelled": "#ef4444",
+          "default": "#22c55e"
+        }
+      }
+    }
+  }
+}
+```
+
+### Style variants with $styles
+
+`$styles` is a list of extra style objects, each with a `filter`. When every key in the filter resolves to the given value, the style is merged over the base `style`. Later entries win. `$styles` is supported on `group` and `text` components; to restyle another component, wrap it in a `group`.
+
+```json
+{
+  "type": "group",
+  "name": "status-panel",
+  "style": { "background-color": "#16a34a", "padding": "3em" },
+  "$styles": [
+    {
+      "filter": { "data.status": "busy" },
+      "style": { "background-color": "#dc2626" }
+    },
+    {
+      "filter": { "data.status": "starting-soon" },
+      "style": { "background-color": "#d97706" }
+    }
+  ]
+}
+```
+
+Filter keys use the same paths as bindings, including `$.` for the current list item. To show or hide a component instead of restyling it, use [`when` or `filter`](./data-binding.mdx#conditional-rendering).
+
+## Visual guidelines
+
+- Use backgrounds with enough contrast for the text on top. Over photos, add a dark gradient such as `linear-gradient(to top, rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0))` behind the text.
+- Use `text-shadow` sparingly; a gradient or solid panel reads better from a distance.
+- Use `font-family` with a fallback, for example `"Lato, sans-serif"`. Fonts that are not installed on the player must be bundled as [assets](./schemas.mdx#assets).
+- Use `border-radius` and `box-shadow` in `em` so they scale with the rest of the design.
+
+See [Best practices](./best-practices.md) for readability guidelines.

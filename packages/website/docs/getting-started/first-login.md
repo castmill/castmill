@@ -1,97 +1,67 @@
 ---
 sidebar_position: 2
+title: First sign-in
+description: Create a Castmill account with a passkey, sign in, and recover access if you lose your passkeys.
 ---
 
-# First Login
+# First sign-in
 
-Castmill uses **passkey-based authentication** instead of traditional passwords. Passkeys are a modern, phishing-resistant authentication method built into your browser and operating system.
+The Castmill dashboard has no passwords. You sign in with a **passkey**, a credential stored by your device or password manager and unlocked with your fingerprint, face, PIN or security key. Passkeys cannot be phished or reused on another site.
 
-## Creating Your Account
+Any current browser supports passkeys, including Chrome, Edge, Safari and Firefox. A passkey can live in:
 
-### Step 1: Navigate to the Dashboard
+- Touch ID or Face ID on macOS and iOS (synced through iCloud Keychain)
+- Windows Hello
+- Google Password Manager on Android and Chrome
+- A password manager that supports passkeys
+- A hardware security key (USB or NFC)
 
-Open the Castmill dashboard in your browser. The URL depends on your deployment — for a local setup it's `http://localhost:3000`.
+## Create an account
 
-<!-- TODO: Screenshot — Login page showing the email input and "Login with Passkey" button -->
+1. Open the dashboard address you were given, or http://localhost:3000 for a [local installation](./quick-start.md).
+2. Choose **Sign up** and enter your email address.
+3. Open the email from Castmill and follow the link. The link only works for a limited time.
+4. Choose **Continue with Passkey** and confirm the prompt from your browser or device.
 
-### Step 2: Enter Your Email
+Castmill creates your account and an organization in which you are an administrator, then signs you in.
 
-Type your email address in the signup field and click **Continue**. Castmill will send a verification email to that address.
+If you were invited to an existing organization, follow the link in the invitation email instead. You join that organization with the role chosen by the person who invited you, and no new organization is created.
 
-<!-- TODO: Screenshot — Signup form with email entered -->
-
-:::note
-If the network is configured as **invitation-only**, you won't see the signup form. Instead, you'll see a notice that registration requires an invitation from a network administrator.
+:::note Invitation-only networks
+A network administrator can require an invitation for every new account. In that case the login page shows *This service requires an invitation to register*, and you need an invitation email to sign up.
 :::
 
-### Step 3: Check Your Email
+## Sign in
 
-Open the verification email and click the link. This takes you back to Castmill to complete your registration.
+1. Open the dashboard.
+2. Enter your email address and choose **Login with Passkey**.
+3. Confirm the prompt from your browser or device.
 
-<!-- TODO: Screenshot — Verification email example -->
+A session lasts 24 hours. After that, the dashboard asks you to sign in again.
 
-### Step 4: Create Your Passkey
+## Add more passkeys
 
-Your browser will prompt you to create a passkey. Depending on your device, this may use:
+Register a passkey on each device you use, so that losing one device does not lock you out.
 
-- **Touch ID / Face ID** on macOS and iOS
-- **Windows Hello** on Windows
-- **PIN or biometric** on Android
-- **Security key** (USB/NFC) on any platform
+1. Open **Settings** from the sidebar.
+2. Under **Passkeys**, choose **Add New Passkey**.
+3. Confirm the prompt on the new device or browser.
 
-<!-- TODO: Screenshot — Browser passkey creation dialog -->
+You can rename passkeys to recognize them later, for example "Work laptop". You can delete a passkey as long as at least one remains.
 
-Follow the browser prompt to register your passkey. Once complete, your account is created and you can log in.
+## Recover access
 
-## Logging In
+If you lose all your passkeys:
 
-After your account is created:
+1. On the login page, choose **Lost your credentials?**.
+2. Enter your email address.
+3. Follow the link in the recovery email and create a new passkey.
 
-1. Navigate to the dashboard
-2. Click **Login with Passkey**
-3. Your browser prompts you to authenticate with your passkey
-4. You're logged in — no password to remember
+## Custom domains
 
-<!-- TODO: Screenshot — Login with Passkey button -->
+Passkeys belong to a single domain. A passkey created on `app.example.com` does not work on `signage.example.com`. When a network moves to a new domain, users receive an email with a link that creates a passkey for the new domain. After that, they can sign in on both.
 
-## Managing Your Passkeys
+## Next steps
 
-You can manage your passkeys from the **Settings** page:
-
-1. Click the **Settings** gear icon in the sidebar
-2. Under **Security & Authentication**, you'll see your registered passkeys
-3. You can:
-   - **Rename** a passkey for easier identification
-   - **Add a new passkey** (e.g., register on a second device)
-   - **Delete** a passkey (disabled if it's your only one)
-
-<!-- TODO: Screenshot — Settings page showing passkey management section -->
-
-:::tip
-Register passkeys on multiple devices so you can always log in, even if one device is unavailable.
-:::
-
-## Recovering Access
-
-If you lose access to all your passkeys:
-
-1. On the login page, click **Recover access**
-2. Enter your email address
-3. Check your email for a recovery link
-4. Click the link and create a new passkey
-
-The recovery passkey replaces your previous credentials and logs you in immediately.
-
-## Invitation-Only Networks
-
-Network administrators can restrict registration to invitation-only. In this mode:
-
-1. An admin sends you an invitation email with a registration link
-2. Click the link to create your account and passkey
-3. You'll be added to the specified organization automatically
-
-## Custom Domain Passkey Setup
-
-When a network administrator sets up a custom domain (e.g., `signage.company.com`), existing users may receive an email to register a passkey for the new domain. This is because passkeys are domain-bound — a passkey created for `app.castmill.com` won't work on `signage.company.com`.
-
-Click the link in the email to create a domain-specific passkey. After setup, you can log in from either domain.
+- Take the in-app tour from the **Getting Started** button in the top bar, or read the [dashboard overview](../dashboard/overview.md).
+- Put content on a screen with [Your first screen](./first-screen.md).

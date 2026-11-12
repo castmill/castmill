@@ -1,0 +1,316 @@
+---
+sidebar_position: 4
+title: Schemas, assets and metadata
+description: Declare the options users configure, the data your widget expects, and the icons, fonts, aspect ratio and translations that ship with it.
+---
+
+Besides the template, a widget definition describes what users can configure (`options_schema`), the shape of the data it renders (`data_schema`), and metadata such as aspect ratio, icons, bundled assets and translations. Castmill validates both schemas when you upload the widget.
+
+## Options schema
+
+`options_schema` maps each option key to a field definition. The dashboard renders a form from it when a user adds the widget to a playlist, and the template reads the values with `options.<key>` bindings.
+
+```json
+{
+  "options_schema": {
+    "title": {
+      "type": "string",
+      "required": true,
+      "default": "Today's specials",
+      "order": 1
+    },
+    "accent": { "type": "color", "default": "#e8b04b", "order": 2 },
+    "duration": {
+      "type": "number",
+      "default": 20,
+      "min": 5,
+      "max": 300,
+      "description": "Seconds on screen",
+      "order": 3
+    },
+    "show_prices": { "type": "boolean", "default": true, "order": 4 },
+    "logo": { "type": "ref", "collection": "medias|type:image", "order": 5 }
+  }
+}
+```
+
+For a field with no attributes, you can use the shorthand form: `"subtitle": "string"` is equivalent to `"subtitle": { "type": "string" }`.
+
+### Field types
+
+| Type | Dashboard control | Value in `options` |
+| --- | --- | --- |
+| `string` | Text input (or a select when `enum` is set) | String |
+| `number` | Number input, bounded by `min`/`max` | Number |
+| `boolean` | Toggle | `true` or `false` |
+| `url` | URL input | String |
+| `color` | Color picker | CSS color string |
+| `location` | Map location picker | Object with `lat`, `lng`, and optionally `address`, `city`, `country`, `postalCode` |
+| `ref` | Resource picker for the collection in `collection` | The selected resource; see [References](#references) |
+| `map` | Nested form built from `schema` | Object |
+| `list` | Repeatable entries built from `items` | Array |
+| `layout` | Zone editor | Object with `aspectRatio` and `zones` |
+| `layout-ref` | Layout picker | Reference to a saved layout |
+
+The `layout` and `layout-ref` types are used by the built-in Layout widget. See [Layouts](../../dashboard/layouts.md) for the end-user side.
+
+### Field attributes
+
+| Attribute | Applies to | Description |
+| --- | --- | --- |
+| `type` | All | Field type from the table above. Required. |
+| `required` | All | The form cannot be saved without a value. |
+| `default` | All | Initial value in the form. |
+| `description` | All | Help text shown with the field. |
+| `help` | All | Additional help text. |
+| `placeholder` | Text fields | Placeholder shown when the field is empty. |
+| `min`, `max` | `number` | Lower and upper bounds. |
+| `order` | All | Position of the field in the form, ascending. |
+| `enum` | `string` | Allowed values, rendered as a select. |
+| `collection` | `ref` | Collection to pick from. Required for `ref`. |
+| `schema` | `map` | Field definitions of the nested object. Required for `map`. |
+| `items` | `list` | Field definition of each entry. Required for `list`. |
+| `aspectRatios` | `layout` | Aspect ratio presets offered by the zone editor. |
+| `defaultZoom` | `location` | Initial zoom level of the map. |
+| `choices` | `string`, list of `string` | Pick values from a list provided by an integration. See [Choices](#choices). |
+
+Unknown attributes are rejected at upload time. There is no `label` attribute: the form uses the option key as the label unless you provide one in [translations](#translations).
+
+### Duration
+
+If you declare a numeric `duration` option, its value, in seconds, sets how long the widget plays. See [Widget duration](./components.mdx#widget-duration).
+
+### References
+
+A `ref` field lets the user pick an existing resource. The `collection` value names the resource type, optionally followed by filters:
+
+| Collection | Picks |
+| --- | --- |
+| `medias` | Any media file |
+| `medias\|type:image` | Images only |
+| `medias\|type:video` | Videos only |
+| `playlists` | A playlist, used by the `layout` component |
+
+When the player receives the widget, Castmill replaces the stored ID with the full resource. A media reference becomes an object with a `files` map (keyed by `thumbnail`, `preview` and `poster`), which you bind with `[@target]`. See [Media references](./data-binding.mdx#media-references).
+
+### Nested maps and lists
+
+`map` and `list` fields group related values. For example, a list of labelled links:
+
+```json
+{
+  "options_schema": {
+    "links": {
+      "type": "list",
+      "items": {
+        "type": "map",
+        "schema": {
+          "label": { "type": "string", "required": true },
+          "url": { "type": "url", "required": true }
+        }
+      }
+    }
+  }
+}
+```
+
+Bind the entries with `options.links`, for example as the `items` of a `paginated-list`, or with array access such as `options.links[0].label`.
+
+## Choices
+
+A `choices` block turns a `string` field, or a list of strings, into a picker whose entries come from a list provided by the widget's integration, or from a built-in list.
+
+```json
+{
+  "options_schema": {
+    "calendar_id": {
+      "type": "string",
+      "required": true,
+      "order": 1,
+      "choices": { "list": "calendars", "search": true }
+    },
+    "photos": {
+      "type": "list",
+      "items": { "type": "string" },
+      "order": 2,
+      "choices": {
+        "list": "images",
+        "depends_on": ["calendar_id"],
+        "display": "grid",
+        "multiple": true,
+        "ordered": true,
+        "max": 30
+      }
+    }
+  }
+}
+```
+
+| Attribute | Required | Description |
+| --- | --- | --- |
+| `list` | Yes | Name of the choice list. |
+| `display` | No | `list` (default, label and description), `cards` (thumbnail, label and description) or `grid` (thumbnail tiles). |
+| `search` | No | Shows a search box; the provider receives the query. |
+| `multiple` | List fields | Allows several values. Required on list fields; not allowed on `string` fields. |
+| `ordered` | No | With `multiple`, the user can reorder the selection. |
+| `min`, `max` | No | Selection bounds. Require `multiple`. |
+| `depends_on` | No | Option keys the provider needs. The field is disabled until they have values. Keys must exist and must not form a cycle. |
+
+`choices` is allowed only on top-level fields of `options_schema`. A widget that declares `choices` must have an integration whose fetcher implements the `choices` callback, unless all of its choice fields use built-in lists. See [Data integrations](./data-integrations.md#choice-lists).
+
+### The built-in feeds list
+
+The `feeds` list contains the organization's [data feeds](../../dashboard/feeds.md) and needs no integration:
+
+```json
+{
+  "options_schema": {
+    "feed": {
+      "type": "string",
+      "required": true,
+      "choices": { "list": "feeds", "search": true }
+    }
+  }
+}
+```
+
+The player then receives the feed content as the widget's data. See [Reading a data feed](./data-integrations.md#reading-a-data-feed).
+
+## Data schema
+
+`data_schema` describes the data your template reads with `data.` bindings, usually produced by an integration or a feed. It uses the same field definitions as `options_schema`, without `choices`.
+
+```json
+{
+  "data_schema": {
+    "headline": { "type": "string", "default": "No news yet" },
+    "items": {
+      "type": "list",
+      "items": {
+        "type": "map",
+        "schema": {
+          "title": { "type": "string" },
+          "pubDateFormatted": { "type": "string" }
+        }
+      }
+    }
+  }
+}
+```
+
+When Castmill sends the widget to a player, it fills every missing top-level data key with its `default`. Use this to give the template sensible content before the first fetch completes.
+
+:::tip
+Use the object form (`{ "type": "string" }`) for every top-level `data_schema` field so defaults can be applied.
+:::
+
+## Aspect ratio
+
+Set `aspect_ratio` when your design only works at fixed proportions:
+
+```json
+{ "aspect_ratio": "16:9" }
+```
+
+The value is a `"width:height"` string such as `"16:9"`, `"9:16"`, `"4:3"` or `"1:1"`. When the playlist or layout zone has different proportions, the player letterboxes the widget: it scales the widget to the largest size that fits and leaves empty bars on the remaining sides. Omit `aspect_ratio` to let the widget fill any container, which is preferable for designs built with flexbox and `em` units.
+
+## Icons
+
+`icon` and `small_icon` identify the widget in the catalog and in playlists. Each accepts:
+
+- A path relative to `widget.json` inside an uploaded package, for example `"assets/icons/menu.svg"`. Castmill serves it from `/widget_assets/<slug>/assets/icons/menu.svg`.
+- An absolute `https://` URL or a path starting with `/`.
+- A `data:` URI.
+- A short text symbol, displayed as a glyph.
+
+Use an SVG with `viewBox="0 0 64 64"` for `icon` (displayed at about 64 by 64 pixels) and a simpler version for `small_icon` (about 32 by 32 pixels). If a relative path does not match a file in the package, the icon is removed.
+
+## Assets
+
+An uploaded widget can be a ZIP package instead of a single `widget.json`. The package contains `widget.json` at its root and an `assets/` folder:
+
+```text
+cafe-menu.zip
+├── widget.json
+└── assets/
+    ├── icons/
+    │   ├── icon.svg
+    │   └── small-icon.svg
+    ├── fonts/
+    │   └── Lato-Regular.woff2
+    └── images/
+        └── background.jpg
+```
+
+Declare the files in an `assets` object, grouped by category. Paths are relative to `widget.json`:
+
+```json
+{
+  "assets": {
+    "icons": {
+      "main": { "path": "assets/icons/icon.svg" }
+    },
+    "fonts": {
+      "body": { "path": "assets/fonts/Lato-Regular.woff2", "name": "Lato" }
+    },
+    "images": {
+      "background": { "path": "assets/images/background.jpg" }
+    }
+  }
+}
+```
+
+Castmill stores the files and serves them under `/widget_assets/<slug>/`. Fonts are loaded automatically before the widget starts, under the family name given in `name` (derived from the file name if omitted). Use that name in your styles:
+
+```json
+{
+  "type": "text",
+  "name": "headline",
+  "opts": { "text": { "key": "options.title" } },
+  "style": { "font-family": "Lato, sans-serif", "font-size": "4em" }
+}
+```
+
+:::caution
+Some example packages reference assets in templates with placeholders such as `{{asset:images.background}}`. Castmill does not currently replace these placeholders, so they reach the player unchanged. For images, use a `ref` option so users pick a media file, or an absolute HTTPS URL.
+:::
+
+See the overview for [upload limits](./overview.mdx#upload-limits).
+
+## Translations
+
+`translations` localizes the catalog entry and the configuration form. Keys are locale codes; each entry can override the name, description, option labels and editable text labels:
+
+```json
+{
+  "translations": {
+    "en": {
+      "name": "Cafe menu",
+      "description": "Menu board with prices and daily specials.",
+      "options": {
+        "title": {
+          "label": "Title",
+          "description": "Heading shown above the menu",
+          "placeholder": "Today's specials"
+        },
+        "accent": { "label": "Accent color" }
+      },
+      "editable": {
+        "Footer note": "Footer note"
+      }
+    },
+    "es": {
+      "name": "Menú de cafetería",
+      "options": {
+        "title": { "label": "Título" },
+        "accent": { "label": "Color de acento" }
+      },
+      "editable": {
+        "Footer note": "Nota al pie"
+      }
+    }
+  }
+}
+```
+
+The dashboard looks up the user's locale first, then `en`, then the untranslated value (the widget `name`, the field's `description` or `placeholder`, or the option key). Keys under `editable` are the `label` values of [editable texts](./data-binding.mdx#editable-texts).

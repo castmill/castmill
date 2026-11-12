@@ -1,0 +1,8 @@
+{
+  "label": "Widget development",
+  "position": 2,
+  "link": {
+    "type": "doc",
+    "id": "developers/widgets/overview"
+  }
+}

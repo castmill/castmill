@@ -1,87 +1,40 @@
 ---
 sidebar_position: 3
+title: Organizations
+description: Organizations are the workspaces that own content, devices and members, with their own plan and quotas.
 ---
 
 # Organizations
 
-An **organization** is a working space within a network where users collaborate on digital signage content.
+An **organization** is a workspace inside a [network](./networks.md). It owns everything you create in the dashboard: media, playlists, layouts, widgets you uploaded, channels, devices, feeds, automations, tags and teams. Each organization has its own members and its own [plan and quotas](../dashboard/usage-and-quotas.md).
 
-## What is an Organization?
+Use one organization per company, brand, region or department that manages its own screens. Content is not shared between organizations.
 
-Organizations are the primary unit of collaboration in Castmill. Each organization has its own:
+## How organizations are created
 
-- **Content** — Media files, playlists, channels, layouts, and widgets
-- **Devices** — Display screens registered to the organization
-- **Users** — Members with assigned roles and permissions
-- **Teams** — Groups for organizing users and controlling resource access
-- **Plan and quotas** — Limits on resources (devices, storage, media files, etc.)
+- **At sign-up.** A person who signs up without an invitation gets a new organization and becomes its admin.
+- **By a network administrator** from **Network → Organizations**, or by the root user in the admin tool.
 
-## Creating an Organization
+## Members and roles
 
-Organizations can be created in two ways:
+People join an organization by invitation. Each member has one of seven roles, from Admin to Guest; see [Users, roles and teams](./users-and-teams.md). A person can be a member of several organizations and switch between them with the organization selector at the top of the sidebar. Switching changes everything you see, including the URL, which always contains the organization ID.
 
-1. **By a network admin** — Through the Network > Organizations page
-2. **Automatically** — When a new user signs up, they may be placed in a default organization
+## Organization page
 
-## Plans and Quotas
+The **Organization** page in the sidebar has three tabs:
 
-Each organization is assigned a **plan** that defines resource quotas:
+| Tab | Contents |
+| --- | --- |
+| **Users** | Members and their roles. Admins change roles and remove members here. |
+| **Invitations** | Pending invitations and the **Invite Member** button. |
+| **Settings** | The organization name and logo. The logo is picked from the organization's media and shown in the top bar. |
 
-| Resource      | Description                            |
-| ------------- | -------------------------------------- |
-| **Devices**   | Maximum number of registered devices   |
-| **Media**     | Maximum number of uploaded media files |
-| **Storage**   | Maximum total storage (in MB)          |
-| **Users**     | Maximum number of organization members |
-| **Teams**     | Maximum number of teams                |
-| **Playlists** | Maximum number of playlists            |
-| **Channels**  | Maximum number of channels             |
-| **Layouts**   | Maximum number of layouts              |
-| **Widgets**   | Maximum number of custom widgets       |
+Any member can leave an organization. If it is the person's last organization, leaving deletes their account.
 
-Quotas are enforced when creating new resources. If a quota is reached, users must delete existing resources or upgrade their plan before creating new ones.
+## Quotas
 
-The **Usage** page in the dashboard shows current consumption against each quota.
+The plan of an organization limits how many resources it may have, for example devices, media files, storage and users. When a limit is reached, creating more of that resource fails until something is deleted or the limit is raised. The **Usage** page shows the current numbers; see [Usage and quotas](../dashboard/usage-and-quotas.md).
 
-→ See [Usage & Quotas](../dashboard/usage-and-quotas.md) for details.
+## Blocking
 
-## Switching Between Organizations
-
-Users who belong to multiple organizations can switch between them using the **organization selector** at the top of the sidebar. Switching organizations changes the entire dashboard context — all content, devices, and settings reflect the selected organization.
-
-<!-- TODO: Screenshot — Organization selector dropdown in the sidebar -->
-
-## Organization Settings
-
-Organization administrators can manage:
-
-- **Name** — The organization's display name
-- **Logo** — Upload a custom logo for branding
-- **Members** — View and manage organization users
-- **Invitations** — Send invitations to new members
-
-→ See [Dashboard: Settings](../dashboard/settings.md) for details.
-
-## Users Within an Organization
-
-Each user in an organization has a **role** that determines their permissions:
-
-| Role       | Capabilities                                                            |
-| ---------- | ----------------------------------------------------------------------- |
-| **Admin**  | Full access: manage users, settings, all content and devices            |
-| **Member** | Create and manage content, register devices (based on team permissions) |
-| **Viewer** | Read-only access to content and devices                                 |
-
-Permissions can be further refined through **teams**, which control access to specific resources.
-
-→ See [Users & Teams](./users-and-teams.md) for details on roles and permissions.
-
-## Tags
-
-Resources within an organization can be tagged for easier organization and filtering. Tags are grouped into **tag groups** and can be applied to media, playlists, channels, devices, and layouts.
-
-Tags enable:
-
-- Quick filtering in any resource list
-- Hierarchical organization via the tree view
-- Bulk operations on tagged resources
+A network administrator can block an organization, for example for unpaid invoices. Members of a blocked organization cannot sign in to it and see the reason given by the administrator.

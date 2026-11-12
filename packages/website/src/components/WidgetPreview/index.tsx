@@ -16,6 +16,8 @@ interface WidgetPreviewProps {
   options?: Record<string, any>;
   height?: string;
   showControls?: boolean;
+  /** Render without the frame, for embedding in custom chrome. */
+  bare?: boolean;
 }
 
 export default function WidgetPreview({
@@ -24,6 +26,7 @@ export default function WidgetPreview({
   options = {},
   height = '400px',
   showControls = false,
+  bare = false,
 }: WidgetPreviewProps): React.JSX.Element {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetInstanceRef = useRef<any>(null);
@@ -247,27 +250,39 @@ export default function WidgetPreview({
   };
 
   return (
-    <div className={styles.widgetPreviewContainer}>
+    <div
+      className={
+        bare ? styles.widgetPreviewBare : styles.widgetPreviewContainer
+      }
+    >
       {showControls && !error && TemplateWidget && (
         <div className={styles.controls}>
           <button
+            type="button"
             onClick={handlePlayPause}
             className={styles.controlButton}
-            title={isPlaying ? 'Pause' : 'Play'}
+            aria-label={isPlaying ? 'Pause preview' : 'Play preview'}
           >
-            {isPlaying ? '⏸' : '▶️'}
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              {isPlaying ? (
+                <path d="M7 5h3v14H7zM14 5h3v14h-3z" />
+              ) : (
+                <path d="M8 5v14l11-7z" />
+              )}
+            </svg>
+            {isPlaying ? 'Pause' : 'Play'}
           </button>
           <button
+            type="button"
             onClick={handleRestart}
             className={styles.controlButton}
-            title="Restart"
+            aria-label="Restart preview"
             disabled={!isPlaying}
-            style={{
-              opacity: isPlaying ? 1 : 0.5,
-              cursor: isPlaying ? 'pointer' : 'not-allowed',
-            }}
           >
-            ↻
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7z" />
+            </svg>
+            Restart
           </button>
         </div>
       )}
@@ -278,9 +293,7 @@ export default function WidgetPreview({
         </div>
       ) : !TemplateWidget ? (
         <div className={styles.widgetContainer} style={{ height }}>
-          <div style={{ padding: '2rem', textAlign: 'center' }}>
-            Loading widget player...
-          </div>
+          <div className={styles.loading}>Loading preview…</div>
         </div>
       ) : (
         <div

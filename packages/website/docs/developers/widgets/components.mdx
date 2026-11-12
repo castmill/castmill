@@ -1,0 +1,325 @@
+---
+sidebar_position: 2
+title: Components
+description: Reference for every component type you can use in a widget template.
+---
+
+import WidgetExample from '@site/src/components/WidgetExample';
+import {
+  textAutofitWidget,
+  textAutofitOptions,
+  textScrollWidget,
+  textScrollOptions,
+  imageWidget,
+  imageOptions,
+  groupWidget,
+  eventsListWidget,
+  eventsListData,
+  tickerWidget,
+  tickerData,
+  carouselWidget,
+  carouselData,
+  qrCodeWidget,
+  qrCodeOptions,
+} from '@site/src/components/WidgetExample/sampleWidgets';
+
+A template is a tree of components. The `template` field of `widget.json` holds the root component, and container components hold children. This page lists every component type the player supports.
+
+## Common fields
+
+Every component accepts these fields:
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `type` | string | The component type. Required. |
+| `name` | string | A name for the component. Used in debugging and as the `data-name` attribute of the rendered element. |
+| `opts` | object | Type-specific options, described below. Any option value can be a [binding](./data-binding.mdx). |
+| `style` | object | CSS properties in kebab-case, such as `"font-size"`. Values can be bindings. See [Styling](./styling.mdx). |
+| `animations` | array | GSAP animations, applied on `group`, `text`, `image` and `qr-code` components. See [Animations](./animations.mdx). |
+| `filter` | object | Renders the component only if every listed key path equals the given value. See [Conditional rendering](./data-binding.mdx#conditional-rendering). |
+| `when` | binding | Renders the component only if the binding resolves to a present value. See [Conditional rendering](./data-binding.mdx#conditional-rendering). |
+
+`group` and `text` components also accept `$styles`, a list of conditional style overrides. See [Conditional styles](./styling.mdx#conditional-styles).
+
+The root component can set `"fontScale": true` to scale `em` units with the screen size. See [Font scaling](./data-binding.mdx#font-scaling).
+
+## Component types
+
+| Type | Purpose |
+| --- | --- |
+| [`text`](#text) | A single text, with optional auto-fit and scrolling |
+| [`image`](#image) | An image |
+| [`video`](#video) | A video |
+| [`group`](#group) | A container for other components |
+| [`paginated-list`](#paginated-list) | A list of items shown page by page |
+| [`scroller`](#scroller) | A list of items scrolling continuously |
+| [`image-carousel`](#image-carousel) | A slideshow of images |
+| [`layout`](#layout) | Several playlists shown side by side |
+| [`qr-code`](#qr-code) | A QR code |
+
+The player throws an error for any other type, and the widget does not render.
+
+## text
+
+Displays text.
+
+| Option | Type | Description |
+| --- | --- | --- |
+| `text` | string or binding | The text to display. |
+| `autofit` | object | Sizes the font to fit the component. See below. |
+
+A text component fills its parent by default (`width` and `height` of 100%). If its style sets `flex`, only the width defaults to 100% and the height follows the flex layout. If it is absolutely positioned, it sizes to its content. The default `line-height` is `1em`; set a larger value for texts that wrap to several lines.
+
+Text components also accept an `editable` field that lets users change the text per playlist item. See [Editable texts](./data-binding.mdx#editable-texts).
+
+### Auto-fit
+
+With `autofit`, the player measures the text and sets the font size, in `em`, so that the text fits inside the component. Do not set `font-size` in the style of an auto-fit text; the player sets it.
+
+| Attribute | Type | Description |
+| --- | --- | --- |
+| `baseSize` | number | Preferred size. Kept if the text fits; otherwise the player shrinks the text. |
+| `maxSize` | number | Largest size the player may use. Default `10`. |
+| `minSize` | number | Smallest size. If the text does not fit at this size, it scrolls horizontally. |
+
+`"autofit": {}` fills the available space. Without `autofit`, the text keeps the size set in its style and is never measured, which is cheaper on slow players.
+
+<WidgetExample
+  widget={textAutofitWidget}
+  options={textAutofitOptions}
+  height="420px"
+  title="Auto-fit headline"
+  description="The headline grows or shrinks to fill 80% of the width and half of the height."
+/>
+
+When the fitted size would be smaller than `minSize`, the player keeps `minSize` and scrolls the text horizontally in a loop. The scroll takes 0.25 seconds per character after a 1-second pause.
+
+<WidgetExample
+  widget={textScrollWidget}
+  options={textScrollOptions}
+  height="420px"
+  title="Scrolling notice"
+  description="A long message that does not fit at the minimum size scrolls horizontally."
+/>
+
+## image
+
+Displays an image as the background of the component.
+
+| Option | Type | Description |
+| --- | --- | --- |
+| `url` | string or binding | Image URL. `src` is accepted as an alias. |
+| `fallbackUrl` | string or binding | Image shown if `url` is empty. `fallback` is accepted as an alias. |
+| `size` | `"contain"` or `"cover"` | How the image fills the component. Default `"contain"`. |
+| `autozoom` | boolean | Shortcut for `"size": "cover"`. |
+| `duration` | number | Display time in milliseconds when the widget has no duration option. Default `10000`. |
+
+The player caches images on the device and displays them from the cache. To show a media file the user picks in the dashboard, bind the URL to a `ref` option. See [Media references](./data-binding.mdx#media-references).
+
+<WidgetExample
+  widget={imageWidget}
+  options={imageOptions}
+  height="420px"
+  title="Image"
+  description="An image that covers the whole widget."
+/>
+
+## video
+
+Plays a video. The widget lasts as long as the video; if the length is unknown, the player uses 10 seconds.
+
+| Option | Type | Description |
+| --- | --- | --- |
+| `url` | string or binding | Video URL. |
+| `size` | `"contain"` or `"cover"` | How the video fills the component. |
+
+```json
+{
+  "type": "video",
+  "name": "clip",
+  "opts": {
+    "url": { "key": "options.video.files[@target].uri" },
+    "size": "cover"
+  },
+  "style": { "width": "100%", "height": "100%" }
+}
+```
+
+:::caution
+Legacy players can decode only a small number of videos at the same time. Use one video per widget and avoid videos inside lists. See [Best practices](./best-practices.md#performance-on-low-end-players).
+:::
+
+## group
+
+A container that renders its children, listed in `components`, inside a `div`. Use the group's `style` to lay out the children, usually with flexbox.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `components` | array | Child components. Top-level field, not inside `opts`. |
+| `context` | binding | Optional. Sets `$` for the children, so they can use short `$.` paths. |
+| `opts.limit` | number or binding | Optional. Renders only the first `limit` visible children. |
+
+```json
+{
+  "type": "group",
+  "name": "agent",
+  "context": { "key": "data.agent" },
+  "style": { "display": "flex", "align-items": "center" },
+  "components": [
+    { "type": "image", "name": "photo", "opts": { "url": { "key": "$.photo" }, "size": "cover" }, "style": { "flex": "0 0 auto", "width": "12em", "height": "12em" } },
+    { "type": "text", "name": "agent-name", "opts": { "text": { "key": "$.name" } }, "style": { "flex": "1 1 auto", "margin-left": "2em", "font-size": "4em" } }
+  ]
+}
+```
+
+<WidgetExample
+  widget={groupWidget}
+  height="420px"
+  title="KPI tiles"
+  description="A row of three groups, each stacking a value and a label."
+/>
+
+## paginated-list
+
+Renders an array as a list and shows it one page at a time, with a one-second cross-fade between pages. Use it for menus, schedules, and directories.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `opts.items` | binding | The array to display. |
+| `opts.pageDuration` | number | Seconds each page stays on screen. |
+| `opts.pageSize` | number | Optional. Items per page. If omitted, the player fits as many items as the component height allows. |
+| `component` | object | Template for one item. Inside it, `$` is the current item. Top-level field, not inside `opts`. |
+
+The widget plays all pages before it ends. The list needs a definite height: give it a fixed height, or `"flex": "1 1 auto"` with `"min-height": "0"` inside a column.
+
+<WidgetExample
+  widget={eventsListWidget}
+  data={eventsListData}
+  height="420px"
+  title="Upcoming events"
+  description="Six events shown three per page, with dates formatted by the player."
+/>
+
+The type `list` is a deprecated alias of `paginated-list`. Use `paginated-list` in new widgets.
+
+## scroller
+
+Scrolls an array of items continuously, like a news ticker or a vertical credits roll. The scroller runs for as long as the widget is shown.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `opts.items` | binding | The array to display. |
+| `opts.direction` | `"left"`, `"right"`, `"up"`, `"down"` | Scroll direction. Default `"left"`. |
+| `opts.speed` | number | Speed in pixels per second. Default `100`. |
+| `opts.gap` | string | Space between items, as a CSS length. Default `"2em"`. |
+| `opts.delay` | number | Seconds to wait before scrolling starts. Default `0`. |
+| `component` | object | Template for one item, with `$` as the current item. |
+
+The scroller repeats the items so that the loop has no visible seam, and clips everything outside its own box. Give it a definite width and height.
+
+:::note
+The `gap` option relies on flexbox `gap`, which Chrome 38 does not support. For widgets that must run on legacy players, set `"gap": "0"` and put a margin on the item template instead, as the example below does.
+:::
+
+<WidgetExample
+  widget={tickerWidget}
+  data={tickerData}
+  height="420px"
+  title="News ticker"
+  description="Headlines scroll from right to left in a bar at the bottom of the screen."
+/>
+
+## image-carousel
+
+Shows a list of images one after another.
+
+| Option | Type | Description |
+| --- | --- | --- |
+| `images` | array or binding | Image URLs. |
+| `imageDuration` | number | Seconds per image. |
+| `transition` | `"slide"` or `"fade"` | Transition between images. Default `"slide"`, which slides and zooms. |
+
+Transitions take one second. Images are cached on the device and fill the component (`cover`). If an image is not cached yet, the carousel loads it from its original URL, which works only while the device is online.
+
+<WidgetExample
+  widget={carouselWidget}
+  data={carouselData}
+  height="420px"
+  title="Image carousel"
+  description="Four photos with a fade transition."
+/>
+
+## layout
+
+Splits the widget into areas and plays a playlist in each one. The built-in layout widgets use this component; for most screens, use the dashboard's layout editor instead. See [Layouts](../../dashboard/layouts.md).
+
+| Option | Type | Description |
+| --- | --- | --- |
+| `containers` | array | One entry per area: `playlist` (a binding to a playlist) and `style` (the position of the area), or `rect` with `width`, `height`, `top`, and `left` as CSS lengths. |
+
+Bind each `playlist` to an option of type `ref` with `"collection": "playlists"`. The server resolves the reference to the full playlist when it delivers the widget. The layout lasts as long as its longest playlist.
+
+```json
+{
+  "type": "layout",
+  "name": "split",
+  "opts": {
+    "containers": [
+      {
+        "playlist": { "key": "options.left" },
+        "rect": { "width": "50%", "height": "100%", "top": "0%", "left": "0%" }
+      },
+      {
+        "playlist": { "key": "options.right" },
+        "rect": { "width": "50%", "height": "100%", "top": "0%", "left": "50%" }
+      }
+    ]
+  },
+  "style": { "position": "relative", "width": "100%", "height": "100%" }
+}
+```
+
+## qr-code
+
+Draws a QR code as SVG, so it stays sharp at any size.
+
+| Option | Type | Description |
+| --- | --- | --- |
+| `content` | string or binding | The text or URL to encode. |
+| `foregroundColor` | string | Color of the modules. Default `#000000`. |
+| `backgroundColor` | string | Background color. Default `#ffffff`. |
+| `duration` | number | Display time in milliseconds when the widget has no duration option. Default `10000`. |
+
+Keep a light margin around the code and enough contrast between the colors, or phones may fail to scan it.
+
+<WidgetExample
+  widget={qrCodeWidget}
+  options={qrCodeOptions}
+  height="420px"
+  title="QR code"
+  description="A QR code next to a call to action."
+/>
+
+## Widget duration
+
+The player decides how long a widget stays on screen in this order:
+
+1. A `display_duration` or `duration` option, in seconds, if the widget defines one in its options schema and the user sets it.
+2. The length of the widget's timeline: video length, all pages of a paginated list, the images of a carousel, or the longest animation.
+3. 10 seconds.
+
+Repeating content counts as one cycle: a `scroller` contributes the time it takes to scroll its items once, and a looping animation the length of one iteration. Add a `duration` option when you want the widget to stay on screen for a fixed time:
+
+```json
+{
+  "options_schema": {
+    "duration": {
+      "type": "number",
+      "default": 15,
+      "min": 5,
+      "max": 300,
+      "description": "Seconds on screen"
+    }
+  }
+}
+```

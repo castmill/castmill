@@ -1,84 +1,79 @@
 ---
-sidebar_position: 4
+sidebar_position: 6
+title: Channels
+description: Schedule playlists on a weekly calendar in the channel's timezone, with a default playlist for unscheduled time.
 ---
 
 # Channels
 
-Channels define **when** playlists play on your devices. Each channel has a **weekly calendar** where you schedule playlist entries across time slots.
+A channel decides **when** each playlist plays. It has a timezone, a weekly calendar of playlist entries and an optional default playlist that fills the time between entries. You assign channels to devices, and one channel can drive many devices. You manage channels in **Channels** in the sidebar.
 
-## Creating a Channel
+## Creating a channel
 
-1. Navigate to **Channels** in the sidebar
-2. Click **Create** (or press **Ctrl+N**)
-3. Enter a **name** and select a **timezone**
-   - The timezone defaults to your browser's timezone
-   - All times in the calendar are displayed in the channel's timezone
-4. Click **Create**
+1. Open **Channels**.
+2. Click **Add Channel**.
+3. Enter a name.
+4. Choose a **Timezone**. It defaults to your browser's timezone.
+5. Click **Create**.
 
-## Channel Editor
+All times in the channel are wall-clock times in the channel's timezone, wherever you or the screens are. A 09:00 entry in a Europe/Stockholm channel starts at 09:00 Stockholm time. Choose the timezone of the place where the screens are.
 
-Opening a channel reveals a **two-panel layout**:
-
-### Playlist Panel (Left)
-
-- **Default playlist** — A dropdown at the top lets you set a fallback playlist that plays during unscheduled times
-- **Playlist chooser** — A list of available playlists that you can drag onto the calendar
-
-### Weekly Calendar (Right)
-
-A **7-day week view** (Monday through Sunday) with **30-minute time slots** (48 slots per day).
-
-**Navigation controls:**
-
-| Control          | Action                                |
-| ---------------- | ------------------------------------- |
-| **← / →** arrows | Move to previous / next week          |
-| **Today** button | Jump to the current week              |
-| **Date range**   | Shows the displayed week's date range |
-
-**Visual elements:**
-
-- **Current time indicator** — A horizontal blue bar with clock label that updates every 60 seconds
-- **Auto-scroll** — The calendar scrolls to the current time on load
-- **Entries** — Colored blocks spanning their scheduled time range
-
-## Scheduling Playlists
-
-### Creating Entries
-
-**Drag and drop** a playlist from the left panel onto a calendar cell. This creates an entry starting at that time slot. By default, entries span one hour (two 30-minute slots).
-
-### Modifying Entries
-
-| Action           | How                                                     |
-| ---------------- | ------------------------------------------------------- |
-| **Move**         | Drag an entry to a different time slot or day           |
-| **Resize**       | Drag the bottom edge of an entry to change its duration |
-| **Delete**       | Click the delete button on the entry                    |
-| **View details** | Click an entry to open its detail view                  |
-
-### Repeat Weekly
-
-In the entry detail view, you can toggle **"Repeat weekly"** to make the entry recur every week. This is useful for recurring schedules (e.g., a morning news playlist every weekday at 8:00 AM).
-
-### Overlap Prevention
-
-The calendar enforces **no-overlap** rules. If you try to drop or resize an entry into a time slot that is already occupied, the action is prevented. Both day ranges and time ranges are checked to detect conflicts.
-
-## Default Playlist
-
-The default playlist acts as a **fallback** — it plays whenever no scheduled entry is active. This ensures your devices always show content, even during gaps in the schedule.
-
-Set the default playlist using the dropdown at the top of the playlist panel.
-
-## Timezone Handling
-
-Each channel stores its own timezone. All times displayed in the calendar are relative to this timezone, regardless of your browser's local time. This is important for managing devices in different geographic locations.
-
-## Assigning Channels to Devices
-
-After creating a channel and scheduling playlists, you assign it to one or more devices. This is done from the **Devices** page — see [Devices](devices.md) for details.
-
-:::info
-A channel cannot be deleted if it is currently assigned to any device. The dashboard shows which devices reference the channel and prevents deletion until all assignments are removed.
+:::note
+A device registered through the dashboard gets its own channel, named "*device name* Default", in the UTC timezone. See [Devices](./devices.md#registering-a-device).
 :::
+
+## The channel editor
+
+Click a channel to open it. The editor shows, from top to bottom:
+
+- a reminder that the channel needs a default playlist or a scheduled entry to show content;
+- the **Automations** assigned to the channel (see [Automations on a channel](#automations-on-a-channel));
+- the **Default playlist** selector and the **Drag playlists** list;
+- the weekly calendar.
+
+### The weekly calendar
+
+The calendar shows one week, Monday to Sunday, in 30-minute slots. Use the previous, today and next buttons to move between weeks. A line marks the current time, and the calendar scrolls to it when it opens.
+
+## Scheduling playlists
+
+### Adding an entry
+
+Drag a playlist from **Drag playlists** onto a slot of the calendar. The entry starts at that slot and lasts one hour.
+
+### Changing entries
+
+| Task | How |
+| --- | --- |
+| Move an entry | Drag it to another day or time |
+| Change its length | Drag its edges |
+| Repeat it every week | Click the entry, switch on **Repeat Weekly?** and click **Update** |
+| Delete it | Use the delete button on the entry, and confirm **Remove Channel Entry** |
+
+An entry without **Repeat Weekly?** plays once, in the week where you placed it. A weekly entry repeats on the same weekday and time every week.
+
+### No overlaps
+
+Entries in one channel cannot overlap. The calendar refuses a drop or a resize that would overlap another entry, so at any time at most one entry is active.
+
+## Default playlist
+
+The default playlist plays whenever no entry is active. Choose it with **Default playlist**, or remove it with **Clear default playlist**.
+
+If a channel has neither an active entry nor a default playlist, it has nothing to play at that moment. A device with several channels then skips it; a device with only that channel shows no content.
+
+:::tip
+Always set a default playlist, so screens never go blank between scheduled entries.
+:::
+
+## Automations on a channel
+
+Automations can interrupt a channel's programming, for example to play an offer every hour. The **Automations** section of a channel lists the automations assigned to it, and **Show firings on the calendar** marks when they fire in the displayed week. **Manage automations** opens the Automations page, where you assign automations to channels. Every device that plays the channel runs these automations. See [Automations](./automations.md).
+
+## Assigning a channel to devices
+
+You assign channels from the device: open the device in **Devices**, go to **Channels** and add the channel. A device with several channels plays them in turn. See [Devices](./devices.md#channels).
+
+## Deleting a channel
+
+Use **Remove** on a row, or select several channels and click **Delete**. A channel that is assigned to a device cannot be deleted: the dashboard shows **Cannot Delete Channel** with the devices that use it. Remove the channel from those devices first.
