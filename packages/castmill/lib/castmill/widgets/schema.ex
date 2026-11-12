@@ -228,11 +228,18 @@ defmodule Castmill.Widgets.Schema do
   """
   def visible?(schema, %{"visible_when" => conditions}, data) when is_map(conditions) do
     Enum.all?(conditions, fn {key, values} ->
-      is_list(values) and condition_value(schema, key, data) in values
+      value = condition_value(schema, key, data)
+      is_list(values) and Enum.any?(values, &condition_match?(&1, value))
     end)
   end
 
   def visible?(_schema, _field_schema, _data), do: true
+
+  # Numbers match by value (1 == 1.0), as in the dashboard.
+  defp condition_match?(expected, value) when is_number(expected) and is_number(value),
+    do: expected == value
+
+  defp condition_match?(expected, value), do: expected === value
 
   defp condition_value(schema, key, data) do
     case if(is_map(data), do: Map.get(data, key)) do

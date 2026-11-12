@@ -259,6 +259,9 @@ describe('Player loop duration refresh', () => {
       duration = 1500;
       playlist.time = 900;
       clock.tick(600);
+      // The loop boundary moved with the new duration.
+      expect(play.calledOnce).to.equal(true);
+      clock.tick(500);
 
       expect(play.calledTwice).to.equal(true);
       expect(seek.lastCall.args[0]).to.equal(0);
@@ -384,6 +387,33 @@ describe('Player loop duration refresh', () => {
       expect(times[0]).to.equal(0);
     } finally {
       player.stop();
+      clock.restore();
+    }
+  });
+});
+
+describe('timer with a dynamic period', () => {
+  it('wraps at the current period while keeping the time continuous', () => {
+    const clock = useFakeTimers({ now: 0 });
+    const values: number[] = [];
+    let period = 1000;
+    const sub = timer(0, 0, 100, () => period).subscribe((value) =>
+      values.push(value)
+    );
+    try {
+      clock.tick(700);
+      period = 3000;
+      clock.tick(600);
+      expect(values[values.length - 1]).to.equal(1300);
+      clock.tick(1800);
+      expect(values[values.length - 1]).to.equal(100);
+      // A period that shrinks below the current time restarts the cycle.
+      clock.tick(1000);
+      period = 500;
+      clock.tick(100);
+      expect(values[values.length - 1]).to.equal(100);
+    } finally {
+      sub.unsubscribe();
       clock.restore();
     }
   });

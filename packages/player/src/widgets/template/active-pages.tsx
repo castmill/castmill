@@ -357,11 +357,21 @@ export const ActivePages: Component<ActivePagesProps> = (props) => {
     mounted().forEach((page) => page.timeline.pause());
   };
 
+  // Parent offsets map to list positions shifted by the measurements made
+  // while playing. Only a continuation of the current playback keeps the
+  // shift; an explicit seek or a restart elsewhere drops it.
+  const positionFor = (value: number) => {
+    if (Math.abs(value - (offset() - positionShift)) >= START_MS) {
+      positionShift = 0;
+    }
+    return value + positionShift;
+  };
+
   const driver: TimelineBasic = {
     duration,
     play(value = 0) {
       stopTimer();
-      let position = value + positionShift;
+      let position = positionFor(value);
       if (resumeKey && position < START_MS && reached - position >= START_MS) {
         const next = resumePositions.get(resumeKey) || 0;
         shownInRun = 0;
@@ -385,7 +395,7 @@ export const ActivePages: Component<ActivePagesProps> = (props) => {
     },
     seek(value) {
       finishSlide();
-      base = value + positionShift;
+      base = positionFor(value);
       started = Date.now();
       sync(true);
     },
@@ -429,6 +439,13 @@ export const ActivePages: Component<ActivePagesProps> = (props) => {
       driver.pause();
       if (item === timelineItem) item = undefined;
     });
+  });
+
+  // Keep the parent's item in step with bound page durations, without
+  // remounting unchanged pages.
+  createEffect(() => {
+    const length = duration();
+    if (item) item.duration = length;
   });
 
   onCleanup(() => {

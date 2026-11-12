@@ -109,6 +109,15 @@ defmodule Castmill.Widgets.SchemaVisibleWhenTest do
       assert Schema.visible?(@schema, @schema["mode"], %{})
       assert Schema.visible?(@schema, "string", %{})
     end
+
+    test "compares numbers by value and other values strictly" do
+      field = %{"type" => "number", "visible_when" => %{"columns" => [1.0]}}
+
+      assert Schema.visible?(@schema, field, %{"columns" => 1})
+      assert Schema.visible?(@schema, field, %{"columns" => 1.0})
+      refute Schema.visible?(@schema, field, %{"columns" => 2})
+      refute Schema.visible?(@schema, field, %{"columns" => "1"})
+    end
   end
 
   describe "validate_data/2" do

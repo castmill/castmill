@@ -420,6 +420,55 @@ describe('active-only paginated lists', () => {
     expect(text()).to.equal('Post 2');
   });
 
+  it('drops the measured position shift on an explicit seek', async () => {
+    const current = await show(
+      posts.slice(0, 3),
+      { pageDuration: 'auto' },
+      undefined,
+      undefined,
+      true,
+      (video) => {
+        Object.defineProperty(video, 'duration', {
+          configurable: true,
+          get: () => (video.src.endsWith('/2.mp4') ? 10 : 2),
+        });
+      }
+    );
+
+    current.seek(4500);
+    await flush();
+    expect(text()).to.equal('Post 2');
+
+    current.seek(0);
+    await flush();
+    expect(text()).to.equal('Post 0');
+    current.seek(2500);
+    await flush();
+    expect(text()).to.equal('Post 1');
+  });
+
+  it('updates its duration when a bound page duration changes', async () => {
+    let now = new Date(2026, 0, 1, 10, 0).getTime();
+    originalNow = Date.now;
+    Date.now = () => now;
+    tickClock();
+    const current = await show(posts.slice(0, 2), {
+      pageDuration: {
+        // oxlint-disable-next-line unicorn/no-thenable -- `cond.then` binding
+        cond: { key: '@now', gte: now + 60_000, then: 10, else: 5 },
+      },
+    });
+    const video = dom.window.document.querySelector('video');
+    expect(current.duration()).to.equal(10000);
+
+    now += 60_000;
+    tickClock();
+    await flush();
+
+    expect(current.duration()).to.equal(20000);
+    expect(dom.window.document.querySelector('video')).to.equal(video);
+  });
+
   it('keeps the current page while auto durations are measured during playback', async () => {
     const current = await show([{ message: 'Intro' }, ...posts.slice(0, 2)], {
       pageDuration: 'auto',

@@ -38,6 +38,8 @@ class PlaylistClock {
   private skew = 0;
   private held?: number;
   private last = 0;
+  private lastValue?: number;
+  private period: number;
 
   // `start` is the playlist time playback starts at, so an item that is
   // already blocked before the first tick is held at its start offset.
@@ -46,10 +48,19 @@ class PlaylistClock {
     start = 0,
     private readonly loop = true
   ) {
+    this.period = duration();
     this.last = this.wrap(start);
   }
 
   map(value: number): number {
+    const period = this.duration();
+    if (period !== this.period) {
+      // An item duration changed (e.g. measured during playback): continue
+      // from the last playlist time instead of re-wrapping the skewed time.
+      if (this.lastValue !== undefined) this.skew = this.last - this.lastValue;
+      this.period = period;
+    }
+    this.lastValue = value;
     if (this.held !== undefined) {
       this.skew = this.held - value;
     }
