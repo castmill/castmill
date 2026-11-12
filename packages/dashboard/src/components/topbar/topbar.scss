@@ -22,6 +22,26 @@
     justify-content: flex-start;
     gap: 1em;
 
+    .network-logo {
+      display: flex;
+      align-items: center;
+
+      img {
+        display: block;
+        max-height: 3em;
+        max-width: 14em;
+        object-fit: contain;
+      }
+    }
+
+    // A network logo designed only for dark backgrounds (e.g. white text) is
+    // shown in the light theme on a dark chip so it stays legible.
+    .network-logo--dark-backdrop {
+      padding: 0.375em 0.75em;
+      border-radius: 0.5em;
+      background-color: var(--cm-text-primary);
+    }
+
     .org-logo-separator {
       width: 0.0625em;
       height: 2em;

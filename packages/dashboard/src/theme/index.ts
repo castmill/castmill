@@ -9,3 +9,9 @@ export {
 } from './theme-context';
 export type { Theme, ThemePreferencesApi } from './theme-context';
 export { ThemeToggle } from './theme-toggle';
+export { resolveNetworkLogo } from './network-logo';
+export type {
+  NetworkLogoSources,
+  BundledLogos,
+  ResolvedLogo,
+} from './network-logo';

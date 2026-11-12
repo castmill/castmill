@@ -22,7 +22,7 @@ import DropdownMenu from '../dropdown-menu/dropdown-menu';
 import LanguageSelector from '../language-selector/language-selector';
 import { LoadingProgressBar } from '../loading-progress-bar/loading-progress-bar';
 import NotificationBell from '../notification-bell/notification-bell';
-import { ThemeToggle, useTheme } from '../../theme';
+import { ThemeToggle, useTheme, resolveNetworkLogo } from '../../theme';
 
 import { baseUrl } from '../../env';
 import { useI18n } from '../../i18n';
@@ -41,10 +41,18 @@ const Topbar: Component = () => {
 
   const { theme } = useTheme();
 
-  // Use network logo if configured, otherwise fall back to default Castmill logo
-  const networkLogo = () =>
-    store.networkSettings.logo ||
-    (theme() === 'light' ? defaultLogoLight : defaultLogo);
+  // Pick the network logo variant for the current theme, falling back to the
+  // bundled Castmill logos when the network has not configured one.
+  const networkLogo = createMemo(() =>
+    resolveNetworkLogo(
+      theme(),
+      {
+        logo: store.networkSettings.logo,
+        logoLight: store.networkSettings.logoLight,
+      },
+      { dark: defaultLogo, light: defaultLogoLight }
+    )
+  );
 
   const navigate = useNavigate();
 
@@ -98,8 +106,14 @@ const Topbar: Component = () => {
       />
       <header class="castmill-header">
         <nav class="main">
-          <a href="/">
-            <img src={networkLogo()} alt="Castmill" />
+          <a
+            href="/"
+            class="network-logo"
+            classList={{
+              'network-logo--dark-backdrop': networkLogo().needsDarkBackdrop,
+            }}
+          >
+            <img src={networkLogo().src} alt="Castmill" />
           </a>
           <Show when={selectedOrgLogo()}>
             <div class="org-logo-separator" />

@@ -78,15 +78,18 @@ vi.mock('../../i18n', () => ({
 }));
 
 // Mock the store
+const mockNetworkSettings = vi.hoisted(() => ({
+  logo: '' as string,
+  logoLight: '' as string,
+}));
+
 vi.mock('../../store/store', () => ({
   store: {
     loadingAddons: false,
     organizations: {
       selectedName: 'Test Org',
     },
-    networkSettings: {
-      logo: null,
-    },
+    networkSettings: mockNetworkSettings,
   },
 }));
 
@@ -110,6 +113,8 @@ describe('Topbar Component', () => {
   beforeEach(() => {
     localStorage.clear();
     delete document.documentElement.dataset.theme;
+    mockNetworkSettings.logo = '';
+    mockNetworkSettings.logoLight = '';
     // Mock fetch for logout
     global.fetch = vi.fn();
   });
@@ -153,5 +158,28 @@ describe('Topbar Component', () => {
 
     fireEvent.click(screen.getByTestId('theme-toggle'));
     expect(logo).toHaveAttribute('src', 'logo-light.png');
+  });
+
+  it('uses the network light logo variant in light mode', () => {
+    mockNetworkSettings.logo = 'https://example.com/net-dark.png';
+    mockNetworkSettings.logoLight = 'https://example.com/net-light.png';
+    renderTopbar();
+    const logo = screen.getByAltText('Castmill');
+    expect(logo).toHaveAttribute('src', 'https://example.com/net-dark.png');
+
+    fireEvent.click(screen.getByTestId('theme-toggle'));
+    expect(logo).toHaveAttribute('src', 'https://example.com/net-light.png');
+    expect(logo.parentElement).not.toHaveClass('network-logo--dark-backdrop');
+  });
+
+  it('shows a dark-only network logo on a dark backdrop in light mode', () => {
+    mockNetworkSettings.logo = 'https://example.com/net-dark.png';
+    renderTopbar();
+    const logo = screen.getByAltText('Castmill');
+    expect(logo.parentElement).not.toHaveClass('network-logo--dark-backdrop');
+
+    fireEvent.click(screen.getByTestId('theme-toggle'));
+    expect(logo).toHaveAttribute('src', 'https://example.com/net-dark.png');
+    expect(logo.parentElement).toHaveClass('network-logo--dark-backdrop');
   });
 });

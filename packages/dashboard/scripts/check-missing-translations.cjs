@@ -105,6 +105,7 @@ const ALLOWED_IDENTICAL_STRINGS = new Set([
   'Facebook URL',
   'support@example.com',
   'https://example.com/logo.png',
+  'https://example.com/logo-light.png',
   'https://example.com/privacy',
   'https://github.com/yourcompany',
   'https://x.com/yourcompany',

@@ -63,6 +63,7 @@ interface CastmillStore {
     loaded: boolean;
     loading: boolean;
     logo: string;
+    logoLight: string;
     copyright: string;
     email: string;
     defaultLocale: string;
@@ -168,6 +169,7 @@ const [store, setStore] = createStore<CastmillStore>({
     loaded: false,
     loading: false,
     logo: '',
+    logoLight: '',
     copyright: '© 2011-2025 Castmill™',
     email: 'support@castmill.com',
     defaultLocale: 'en',

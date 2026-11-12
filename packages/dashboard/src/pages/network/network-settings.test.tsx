@@ -125,6 +125,45 @@ describe('NetworkSettings', () => {
     });
   });
 
+  it('saves the light mode logo and updates the global store', async () => {
+    const { setStore } = await import('../../store');
+    const updated = {
+      ...mockSettings,
+      logo_light: 'https://example.com/logo-light.png',
+    };
+    vi.mocked(NetworkService.updateSettings).mockResolvedValue(updated);
+
+    const { container } = renderSettings();
+
+    const logoLightInput = await waitFor(() => {
+      const input = container.querySelector('#network-logo-light');
+      expect(input).toBeInTheDocument();
+      return input as HTMLInputElement;
+    });
+    fireEvent.input(logoLightInput, {
+      target: { value: 'https://example.com/logo-light.png' },
+    });
+
+    const saveButton = screen.getByText(/save/i).closest('button');
+    fireEvent.click(saveButton!);
+
+    await waitFor(() => {
+      expect(NetworkService.updateSettings).toHaveBeenCalledWith(
+        expect.objectContaining({
+          logo: 'https://example.com/logo.png',
+          logo_light: 'https://example.com/logo-light.png',
+        })
+      );
+      expect(setStore).toHaveBeenCalledWith(
+        'networkSettings',
+        expect.objectContaining({
+          logo: 'https://example.com/logo.png',
+          logoLight: 'https://example.com/logo-light.png',
+        })
+      );
+    });
+  });
+
   it('shows toast error when save fails', async () => {
     vi.mocked(NetworkService.updateSettings).mockRejectedValue(
       new Error('Save failed')

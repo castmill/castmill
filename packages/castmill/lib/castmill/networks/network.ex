@@ -10,7 +10,10 @@ defmodule Castmill.Networks.Network do
     field(:copyright, :string, default: "© 2024 Castmill AB")
     field(:domain, :string)
     field(:email, :string)
-    field(:logo, :string, default: "https://castmill.com/images/logo.png")
+    # `logo` is shown on dark backgrounds; `logo_light` is an optional variant
+    # for light backgrounds (e.g. the dashboard light theme).
+    field(:logo, :string)
+    field(:logo_light, :string)
     field(:name, :string)
     field(:default_locale, :string, default: "en")
     field(:privacy_policy_url, :string)
@@ -45,6 +48,7 @@ defmodule Castmill.Networks.Network do
       :copyright,
       :email,
       :logo,
+      :logo_light,
       :domain,
       :meta,
       :default_plan_id,

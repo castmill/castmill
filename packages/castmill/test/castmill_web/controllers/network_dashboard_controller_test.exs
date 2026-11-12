@@ -167,6 +167,32 @@ defmodule CastmillWeb.NetworkDashboardControllerTest do
       assert response["email"] == "updated@test.com"
     end
 
+    test "updates and clears the light mode logo", %{conn: conn, network: network} do
+      admin = create_network_admin(network)
+      conn = authenticate_conn(conn, admin, network)
+
+      response =
+        conn
+        |> put("/dashboard/network/settings", %{
+          "network" => %{
+            "logo" => "https://example.com/logo-dark.png",
+            "logo_light" => "https://example.com/logo-light.png"
+          }
+        })
+        |> json_response(200)
+
+      assert response["logo"] == "https://example.com/logo-dark.png"
+      assert response["logo_light"] == "https://example.com/logo-light.png"
+
+      response =
+        conn
+        |> put("/dashboard/network/settings", %{"network" => %{"logo_light" => nil}})
+        |> json_response(200)
+
+      assert response["logo"] == "https://example.com/logo-dark.png"
+      assert response["logo_light"] == nil
+    end
+
     test "returns 403 for non-admin user", %{
       conn: conn,
       network: network,
