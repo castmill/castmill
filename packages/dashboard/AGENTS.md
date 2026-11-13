@@ -85,9 +85,9 @@ must be logged and must not publish guessed offsets as successfully measured.
 
 `addons/playlists/components/playlist-view.tsx` follows the Device Details
 drawer design: a summary bar, sticky section tabs and dark cards.
-`WIDE_LAYOUT_QUERY` (`createMediaQuery`, 64em) chooses the layout, but only
-if a ResizeObserver also measures the editor at `WIDE_LAYOUT_MIN_EM` (57em) or
-more. This keeps tablets with an enlarged layout viewport on tabs. Wide screens
+`useWideLayout` (ui-common) with `WIDE_LAYOUT_QUERY` (64em) chooses the layout,
+but only if its ResizeObserver also measures the editor at `WIDE_LAYOUT_MIN_EM`
+(57em) or more. This keeps tablets with an enlarged layout viewport on tabs. Wide screens
 show Widgets | Items | Preview side by side, with Content and Settings tabs.
 Narrow screens use Content, Preview and Settings tabs, and "Add widget" opens a
 tap-to-add widget picker. While it's open (`.playlist-view.picking`), the
@@ -137,6 +137,15 @@ Shared mobile behaviour (ui-common):
 - `Drawer` default/`size` widths use `:where()` (below class specificity), so a
   single-class `contentClass` width always wins. Addon bundles each inject their
   own copy of ui-common CSS on load, so never rely on stylesheet order.
+- Size drawers only with the `size` prop (`sm | md | lg | xl`). Don't set
+  width/height through `contentClass`; it fights the built-in sizing and the
+  ≤50em full-screen mode. Put sticky Save/Reset actions in the Drawer `footer`.
+- Details views share ui-common primitives: `DetailsSummary` (status pills,
+  note, meta chips and a copy-ID button; `compact` gives the slim strip on
+  phones and coarse pointers), `SectionCard`/`SectionCardHeader` (icon, title,
+  count, description, header actions and a `footer` for Save/Reset), and the
+  `useMediaQuery`/`useWideLayout` hooks (media query plus a container
+  ResizeObserver). Pass localized labels; the primitives contain no strings.
 - `ComboBox` opens a bottom sheet (Portal, `[data-combobox-sheet]`) when
   `COMBOBOX_SHEET_QUERY` matches (phones and touch tablets). Otherwise it flips
   upward when there is no room below. Pass `closeLabel={t('common.close')}`.

@@ -15,13 +15,13 @@ import {
   ConfirmDialog,
   useToast,
   formatBytes,
+  SectionCard,
 } from '@castmill/ui-common';
 
 import { Device } from '../interfaces/device.interface';
 
 import { DevicesService } from '../services/devices.service';
 import {
-  DeviceCardHeader,
   DeviceIconButton,
   DeviceNotice,
   DeviceTableTime,
@@ -233,24 +233,23 @@ export const DeviceCache: Component<{
           </DeviceNotice>
         }
       >
-        <section class="device-card device-cache">
-          <DeviceCardHeader
-            icon={BsDatabase}
-            title={t('devices.cache.title')}
-            description={t('devices.cache.description')}
-            actions={
-              <button
-                type="button"
-                class="device-text-button danger"
-                disabled={loadingClearAll()}
-                onClick={() => setShowConfirmClearAll(true)}
-              >
-                <BsXCircle aria-hidden="true" />
-                {t('devices.cache.clearAll')}
-              </button>
-            }
-          />
-
+        <SectionCard
+          class="device-cache"
+          icon={BsDatabase}
+          title={t('devices.cache.title')}
+          description={t('devices.cache.description')}
+          actions={
+            <button
+              type="button"
+              class="device-text-button danger"
+              disabled={loadingClearAll()}
+              onClick={() => setShowConfirmClearAll(true)}
+            >
+              <BsXCircle aria-hidden="true" />
+              {t('devices.cache.clearAll')}
+            </button>
+          }
+        >
           <div class="device-cache-toolbar">
             <div
               class="device-segmented"
@@ -271,7 +270,7 @@ export const DeviceCache: Component<{
                 )}
               </For>
             </div>
-            <div class="device-card-actions">
+            <div class="device-cache-actions">
               <DeviceIconButton
                 icon={BsArrowClockwise}
                 label={t('common.refresh')}
@@ -315,7 +314,7 @@ export const DeviceCache: Component<{
               )}
             </Show>
           </div>
-        </section>
+        </SectionCard>
       </Show>
 
       {/* Confirm dialog for single item deletion */}

@@ -4,10 +4,10 @@ import { Accessor, createSignal, onCleanup } from 'solid-js';
  * Reactive `matchMedia` signal. Returns `fallback` when matchMedia is not
  * available (e.g. in jsdom).
  */
-export const createMediaQuery = (
+export function useMediaQuery(
   query: string,
   fallback: boolean
-): Accessor<boolean> => {
+): Accessor<boolean> {
   if (typeof window === 'undefined' || typeof window.matchMedia !== 'function')
     return () => fallback;
 
@@ -19,9 +19,10 @@ export const createMediaQuery = (
     mql.addEventListener('change', onChange);
     onCleanup(() => mql.removeEventListener('change', onChange));
   } else {
+    // Chrome 38 era browsers only expose the deprecated listener API.
     mql.addListener(onChange);
     onCleanup(() => mql.removeListener(onChange));
   }
 
   return matches;
-};
+}

@@ -1,11 +1,9 @@
-import { Component, For, JSX, Show, createSignal, onCleanup } from 'solid-js';
+import { Component, For, JSX, createSignal, onCleanup } from 'solid-js';
 import { Dynamic } from 'solid-js/web';
 import type { IconTypes } from 'solid-icons';
 import {
   BsActivity,
   BsCalendar3,
-  BsCheck2,
-  BsClipboard,
   BsCollectionPlay,
   BsEye,
   BsGrid1x2,
@@ -15,6 +13,7 @@ import {
   BsTools,
 } from 'solid-icons/bs';
 import {
+  DetailsSummary,
   LoadingOverlay,
   formatRelativeTimeLocalized,
   useToast,
@@ -41,7 +40,6 @@ interface DeviceSection {
   content: () => JSX.Element;
 }
 
-const COPY_FEEDBACK_MS = 2000;
 const LAST_SEEN_REFRESH_MS = 30_000;
 
 const DeviceView: Component<{
@@ -57,17 +55,12 @@ const DeviceView: Component<{
   const toast = useToast();
   const [loading, setLoading] = createSignal(false);
   const [activeIndex, setActiveIndex] = createSignal(0);
-  const [copied, setCopied] = createSignal(false);
   const [now, setNow] = createSignal(Date.now());
   const lastSeenTimer = setInterval(
     () => setNow(Date.now()),
     LAST_SEEN_REFRESH_MS
   );
-  let copyTimer: ReturnType<typeof setTimeout> | undefined;
-  onCleanup(() => {
-    clearTimeout(copyTimer);
-    clearInterval(lastSeenTimer);
-  });
+  onCleanup(() => clearInterval(lastSeenTimer));
 
   const updateDevice = async (device: DeviceUpdate) => {
     setLoading(true);
@@ -120,17 +113,6 @@ const DeviceView: Component<{
         ? `${props.device.orientation ?? 0}°`
         : undefined,
     ].filter(Boolean) as string[];
-
-  const copyId = async () => {
-    try {
-      await navigator.clipboard.writeText(props.device.id);
-      setCopied(true);
-      clearTimeout(copyTimer);
-      copyTimer = setTimeout(() => setCopied(false), COPY_FEEDBACK_MS);
-    } catch {
-      toast.error(t('devices.details.copyFailed'));
-    }
-  };
 
   const sections: DeviceSection[] = [
     {
@@ -266,45 +248,28 @@ const DeviceView: Component<{
 
   return (
     <div class="device-view">
-      <section class="device-summary" aria-label={t('common.status')}>
-        <div class="device-summary-status">
-          <span
-            class="device-status-pill"
-            classList={{
-              online: props.device.online,
-              offline: !props.device.online,
-            }}
-          >
-            <span class="device-status-dot" aria-hidden="true" />
-            {props.device.online ? t('common.online') : t('common.offline')}
-          </span>
-          <Show when={lastSeen()}>
-            <span class="device-summary-seen">{lastSeen()}</span>
-          </Show>
-        </div>
-
-        <div class="device-summary-meta">
-          <For each={summaryChips()}>
-            {(chip) => <span class="device-summary-chip">{chip}</span>}
-          </For>
-          <button
-            type="button"
-            class="device-summary-id"
-            onClick={copyId}
-            title={t('devices.details.copyId')}
-            aria-label={t('devices.details.copyId')}
-          >
-            <span class="device-summary-id-label">{t('common.id')}</span>
-            <code>{props.device.id}</code>
-            <Show when={copied()} fallback={<BsClipboard aria-hidden="true" />}>
-              <BsCheck2 aria-hidden="true" />
-            </Show>
-          </button>
-          <span class="visually-hidden" aria-live="polite">
-            {copied() ? t('devices.details.copied') : ''}
-          </span>
-        </div>
-      </section>
+      <DetailsSummary
+        class="device-summary"
+        label={t('common.status')}
+        pills={[
+          {
+            label: props.device.online
+              ? t('common.online')
+              : t('common.offline'),
+            tone: props.device.online ? 'success' : 'error',
+            dot: true,
+          },
+        ]}
+        note={lastSeen()}
+        chips={summaryChips()}
+        copy={{
+          value: props.device.id,
+          label: t('devices.details.copyId'),
+          prefix: t('common.id'),
+          copiedMessage: t('devices.details.copied'),
+          onError: () => toast.error(t('devices.details.copyFailed')),
+        }}
+      />
 
       <nav class="device-sections">
         <div

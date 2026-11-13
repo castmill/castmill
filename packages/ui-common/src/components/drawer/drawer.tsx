@@ -322,7 +322,9 @@ export const Drawer: Component<DrawerProps> = (_props) => {
               </div>
             </div>
             <div class={styles.body}>{props.children}</div>
-            {props.footer && <div class={styles.footer}>{props.footer}</div>}
+            <Show when={props.footer}>
+              {(footer) => <div class={styles.footer}>{footer()}</div>}
+            </Show>
           </div>
         </div>
       </Show>

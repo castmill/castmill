@@ -21,6 +21,9 @@ import type { IconTypes } from 'solid-icons';
 import { BsCollectionPlay, BsEye, BsGear, BsPlusLg } from 'solid-icons/bs';
 import {
   useToast,
+  useMediaQuery,
+  useWideLayout,
+  DetailsSummary,
   Modal,
   Button,
   Dropdown,
@@ -49,7 +52,6 @@ import {
   isValidAspectRatio,
 } from '../utils/aspect-ratio-validation';
 import { getTranslatedWidgetName } from '../../common/utils/widget-catalog-utils';
-import { createMediaQuery } from '../utils/media-query';
 import { PlaylistNameField } from './playlist-details';
 
 type SectionId = 'content' | 'preview' | 'settings';
@@ -699,25 +701,11 @@ export const PlaylistView: Component<{
     }, 100); // 100ms debounce
   };
 
-  const wideViewport = createMediaQuery(WIDE_LAYOUT_QUERY, true);
-  const [viewRef, setViewRef] = createSignal<HTMLDivElement>();
-  const [viewFits, setViewFits] = createSignal(true);
-  createEffect(() => {
-    const el = viewRef();
-    if (!el || typeof ResizeObserver === 'undefined') return;
-    const measure = () => {
-      const width = el.getBoundingClientRect().width;
-      if (!width) return;
-      const fontSize = parseFloat(getComputedStyle(el).fontSize) || 16;
-      setViewFits(width >= WIDE_LAYOUT_MIN_EM * fontSize);
-    };
-    const observer = new ResizeObserver(measure);
-    observer.observe(el);
-    measure();
-    onCleanup(() => observer.disconnect());
+  const { ref: setViewRef, wide } = useWideLayout({
+    query: WIDE_LAYOUT_QUERY,
+    minEm: WIDE_LAYOUT_MIN_EM,
   });
-  const wide = () => wideViewport() && viewFits();
-  const coarsePointer = createMediaQuery('(pointer: coarse)', false);
+  const coarsePointer = useMediaQuery('(pointer: coarse)', false);
   const [activeSection, setActiveSection] = createSignal<SectionId>('content');
   const [pickerOpen, setPickerOpen] = createSignal(false);
   const [addingWidget, setAddingWidget] = createSignal(false);
@@ -937,29 +925,26 @@ export const PlaylistView: Component<{
           picking: !wide() && pickerOpen(),
         }}
       >
-        <section class="playlist-summary" aria-label={t('common.status')}>
-          <div class="playlist-summary-stats">
-            <span class="playlist-summary-stat">
-              <strong>{itemCount()}</strong>
-            </span>
-            <span class="playlist-summary-stat">
-              {t('playlists.editor.totalDuration', {
+        <DetailsSummary
+          class="playlist-summary"
+          label={t('common.status')}
+          compact
+          pills={[
+            { label: <strong>{itemCount()}</strong> },
+            {
+              label: t('playlists.editor.totalDuration', {
                 duration: formatDuration(totalDuration()),
-              })}
-            </span>
-            <Show when={lastUpdated()}>
-              <span class="playlist-summary-seen">{lastUpdated()}</span>
-            </Show>
-          </div>
-          <div class="playlist-summary-meta">
-            <span
-              class="playlist-summary-chip"
-              title={t('playlists.aspectRatio')}
-            >
-              {getCurrentAspectRatio().width}:{getCurrentAspectRatio().height}
-            </span>
-          </div>
-        </section>
+              }),
+            },
+          ]}
+          note={lastUpdated()}
+          chips={[
+            {
+              label: `${getCurrentAspectRatio().width}:${getCurrentAspectRatio().height}`,
+              title: t('playlists.aspectRatio'),
+            },
+          ]}
+        />
 
         <nav class="playlist-sections">
           <div

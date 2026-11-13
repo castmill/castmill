@@ -16,120 +16,6 @@
   }
 }
 
-.device-summary {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75em 1em;
-  padding: 0.9em 1em;
-  border: 1px solid var(--cm-border-color);
-  border-radius: 0.6em;
-  background: linear-gradient(
-    135deg,
-    var(--cm-bg-elevated-secondary) 0%,
-    var(--cm-bg-elevated) 100%
-  );
-}
-
-.device-summary-status {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.6em;
-  min-width: 0;
-}
-
-.device-status-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45em;
-  padding: 0.3em 0.75em;
-  border-radius: 999px;
-  font-size: 0.85em;
-  font-weight: 700;
-
-  .device-status-dot {
-    width: 0.55em;
-    height: 0.55em;
-    border-radius: 50%;
-    background: currentColor;
-  }
-
-  &.online {
-    background: rgba(var(--cm-success-rgb), 0.15);
-    color: var(--cm-success);
-
-    .device-status-dot {
-      box-shadow: 0 0 0 0.2em rgba(var(--cm-success-rgb), 0.25);
-    }
-  }
-
-  &.offline {
-    background: rgba(var(--cm-error-rgb), 0.15);
-    color: var(--cm-error);
-  }
-}
-
-.device-summary-seen {
-  color: var(--cm-text-secondary);
-  font-size: 0.85em;
-}
-
-.device-summary-meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.4em;
-  min-width: 0;
-}
-
-.device-summary-chip {
-  padding: 0.25em 0.6em;
-  border: 1px solid var(--cm-border-strong);
-  border-radius: 0.35em;
-  background: var(--cm-bg-sunken);
-  color: var(--cm-text-secondary);
-  font-size: 0.78em;
-}
-
-.device-summary-id {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45em;
-  max-width: 100%;
-  min-width: 0;
-  padding: 0.25em 0.6em;
-  border: 1px solid var(--cm-border-strong);
-  border-radius: 0.35em;
-  background: var(--cm-bg-sunken);
-  color: var(--cm-text-secondary);
-  font-size: 0.78em;
-  cursor: pointer;
-
-  &:hover,
-  &:focus-visible {
-    border-color: var(--cm-primary);
-    color: var(--cm-text-primary);
-  }
-
-  .device-summary-id-label {
-    color: var(--cm-text-secondary);
-  }
-
-  code {
-    max-width: 14em;
-    overflow: hidden;
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  svg {
-    flex-shrink: 0;
-  }
-}
-
 .device-sections {
   position: sticky;
   top: -1em;
@@ -219,74 +105,6 @@
   grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
   align-items: start;
   gap: 1em;
-}
-
-.device-card {
-  min-width: 0;
-  padding: 1.2em;
-  border: 1px solid var(--cm-border-color);
-  border-radius: 0.6em;
-  background: var(--cm-bg-elevated-secondary);
-
-  .device-card-header {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 0.6em 1em;
-    margin-bottom: 1em;
-
-    h3 {
-      display: flex;
-      align-items: center;
-      gap: 0.5em;
-      margin: 0;
-      color: var(--cm-text-primary);
-      font-size: 1em;
-      font-weight: 700;
-    }
-  }
-
-  .device-card-heading {
-    flex: 1 1 14em;
-    min-width: 0;
-  }
-
-  .device-card-icon {
-    display: inline-flex;
-    color: var(--cm-primary);
-  }
-
-  .device-card-count {
-    padding: 0.1em 0.55em;
-    border-radius: 999px;
-    background: rgba(var(--cm-primary-rgb), 0.15);
-    color: var(--cm-link);
-    font-size: 0.75em;
-    font-weight: 700;
-  }
-
-  .device-card-description {
-    margin: 0.35em 0 0;
-    color: var(--cm-text-secondary);
-    font-size: 0.82em;
-    line-height: 1.45;
-  }
-
-  .device-card-actions {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.5em;
-  }
-
-  .device-card-footer {
-    margin: 1em -1.2em -1.2em;
-    padding: 1em 1.2em;
-    border-top: 1px solid var(--cm-border-color);
-    border-radius: 0 0 0.6em 0.6em;
-    background: var(--cm-bg-sunken);
-  }
 }
 
 .device-panel-stack {
@@ -585,15 +403,6 @@
 }
 
 @media (max-width: 36em) {
-  .device-summary {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .device-summary-id code {
-    max-width: 10em;
-  }
-
   .device-section-tab {
     padding: 0.75em 0.7em;
 
@@ -607,15 +416,6 @@
     }
   }
 
-  .device-card {
-    padding: 1em;
-  }
-
-  .device-settings-actions,
-  .device-card .device-card-footer {
-    margin: 1em -1em -1em;
-    padding: 0.8em 1em;
-  }
 }
 
 @media (max-width: 24em) {

@@ -12,27 +12,6 @@
   }
 }
 
-// Widget details modal - fixed width for consistency
-:global {
-  .widget-details-modal {
-    width: 50vw !important;
-    max-width: 50vw !important;
-    min-width: 50vw !important;
-
-    @media (max-width: 1200px) {
-      width: 60vw !important;
-      max-width: 60vw !important;
-      min-width: 60vw !important;
-    }
-
-    @media (max-width: 768px) {
-      width: 90vw !important;
-      max-width: 90vw !important;
-      min-width: 90vw !important;
-    }
-  }
-}
-
 // Widget details modal content with tabs
 .widget-details-content {
   padding: 1rem;

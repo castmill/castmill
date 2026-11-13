@@ -1,4 +1,5 @@
-import { createSignal, createEffect } from 'solid-js';
+import { createSignal, createEffect, JSX, Show } from 'solid-js';
+import { Portal } from 'solid-js/web';
 
 import { Button, FormItem, Timestamp } from '@castmill/ui-common';
 
@@ -12,6 +13,11 @@ export const MediaDetails = (props: {
   media: JsonMedia;
   store?: AddonStore;
   onSubmit: (mediaUpdate: Partial<MediasUpdate>) => Promise<boolean>;
+  /**
+   * Element (e.g. the Drawer footer) that receives the Save/Reset actions so
+   * they stay visible while the details scroll. Rendered inline when unset.
+   */
+  actionsMount?: HTMLElement;
 }) => {
   // Get i18n functions from store
   const t = (key: string, params?: Record<string, any>) =>
@@ -49,6 +55,30 @@ export const MediaDetails = (props: {
     return ![...errors().values()].some((e) => e) && isFormModified();
   };
 
+  const formId = `media-details-${props.media.id}`;
+
+  const actions = (): JSX.Element => (
+    <div class="actions">
+      <Button
+        label={t('common.save')}
+        type="submit"
+        form={formId}
+        disabled={!isFormValid()}
+        icon={BsCheckLg}
+        color="success"
+      />
+      <Button
+        label={t('common.reset')}
+        onClick={() => {
+          setName(props.media.name);
+          setIsFormModified(false);
+        }}
+        icon={BsX}
+        color="danger"
+      />
+    </div>
+  );
+
   return (
     <>
       <div class="info">
@@ -58,6 +88,7 @@ export const MediaDetails = (props: {
         <Timestamp value={props.media.updated_at} mode="relative" />
       </div>
       <form
+        id={formId}
         onSubmit={async (e) => {
           e.preventDefault();
           if (isFormValid()) {
@@ -85,24 +116,9 @@ export const MediaDetails = (props: {
 
         <MediaPreview media={props.media} />
 
-        <div class="actions">
-          <Button
-            label={t('common.save')}
-            type="submit"
-            disabled={!isFormValid()}
-            icon={BsCheckLg}
-            color="success"
-          />
-          <Button
-            label={t('common.reset')}
-            onClick={() => {
-              setName(props.media.name);
-              setIsFormModified(false);
-            }}
-            icon={BsX}
-            color="danger"
-          />
-        </div>
+        <Show when={props.actionsMount} fallback={actions()}>
+          {(mount) => <Portal mount={mount()}>{actions()}</Portal>}
+        </Show>
       </form>
     </>
   );

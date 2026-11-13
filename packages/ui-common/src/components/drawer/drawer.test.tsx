@@ -32,6 +32,36 @@ describe('Drawer Component', () => {
     expect(screen.getByText('Drawer content')).toBeInTheDocument();
   });
 
+  it('renders the footer once, outside the scrolling body', () => {
+    const footerRef = vi.fn();
+
+    render(() => (
+      <Drawer
+        title="With footer"
+        onClose={() => {}}
+        footer={<button ref={footerRef}>Save</button>}
+      >
+        <div>Body</div>
+      </Drawer>
+    ));
+
+    const save = screen.getByRole('button', { name: 'Save' });
+    expect(footerRef).toHaveBeenCalledTimes(1);
+    expect(footerRef.mock.calls[0][0]).toBe(save);
+    expect(save.parentElement?.contains(screen.getByText('Body'))).toBe(false);
+    expect(save.parentElement?.parentElement).toBe(screen.getByRole('dialog'));
+  });
+
+  it('omits the footer when none is given', () => {
+    render(() => (
+      <Drawer title="No footer" onClose={() => {}}>
+        <div>Body</div>
+      </Drawer>
+    ));
+
+    expect(screen.getByRole('dialog').children).toHaveLength(2);
+  });
+
   it('closes on ESC key press', () => {
     const onClose = vi.fn();
 

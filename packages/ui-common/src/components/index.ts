@@ -34,3 +34,5 @@ export * from './selection-action-bar/selection-action-bar';
 export * from './menu-button/menu-button';
 export * from './drawer/drawer';
 export * from './choices-field/choices-field';
+export * from './details-summary/details-summary';
+export * from './section-card/section-card';
