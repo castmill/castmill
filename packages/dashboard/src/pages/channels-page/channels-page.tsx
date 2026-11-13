@@ -60,10 +60,12 @@ import { QuotasService, ResourceQuota } from '../../services/quotas.service';
 import { usePermissions } from '../../hooks/usePermissions';
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 import { useLocation } from '@solidjs/router';
+import { useTableCardLabels } from '../../hooks/useTableCardLabels';
 
 const ChannelsPage: Component = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { t } = useI18n();
+  const cardLabels = useTableCardLabels();
   const { canPerformAction } = usePermissions();
   const { registerShortcutAction, unregisterShortcutAction } =
     useKeyboardShortcuts();
@@ -903,6 +905,7 @@ const ChannelsPage: Component = () => {
             fetchData={fetchData}
             ref={setRef}
             toolbar={{
+              filtersLabel: () => t('filters.toggle'),
               filters: [],
               searchPlaceholder: t('common.search'),
               mainAction: (
@@ -993,6 +996,7 @@ const ChannelsPage: Component = () => {
               </>
             )}
             table={{
+              cardLabels,
               columns,
               actions,
               actionsLabel: t('common.actions'),
@@ -1011,6 +1015,7 @@ const ChannelsPage: Component = () => {
 
         <Show when={viewMode() === 'tree'}>
           <ToolBar
+            filtersLabel={() => t('filters.toggle')}
             title={t('channels.title')}
             titleActions={
               <ViewModeToggle mode={viewMode()} onChange={setViewMode} />
@@ -1053,6 +1058,7 @@ const ChannelsPage: Component = () => {
             }
           />
           <ResourceTreeView
+            dimensionLabel={t('tags.groups.organizeBy')}
             tagGroups={tagGroups()}
             allTags={allTags()}
             fetchResources={fetchTreeResources}

@@ -18,6 +18,7 @@ import { Device } from '../interfaces/device.interface';
 import { DevicesService } from '../services/devices.service';
 import { DeviceTableTime } from './device-section';
 import './device-events.scss';
+import { tableCardLabels, filtersLabel } from '../../common/utils/table-labels';
 
 interface DeviceTableLogItem {
   id: string;
@@ -204,10 +205,12 @@ export const DeviceLogs: Component<{
             ref={setRef}
             initialSortOptions={{ key: 'timestamp', direction: 'descending' }}
             table={{
+              cardLabels: tableCardLabels(t),
               columns,
               hideCheckboxes: true,
             }}
             toolbar={{
+              filtersLabel: filtersLabel(t),
               filters: eventFilters,
               requireOneActiveFilter: false,
               hideSearch: true,

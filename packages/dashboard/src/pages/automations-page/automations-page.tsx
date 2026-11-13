@@ -36,6 +36,7 @@ import { ruleSummary } from './registry';
 import { useSummaryContext } from './summary-context';
 
 import styles from './automations.module.scss';
+import { useTableCardLabels } from '../../hooks/useTableCardLabels';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -44,6 +45,7 @@ const errorText = (error: unknown) =>
 
 const AutomationsPage: Component = () => {
   const { t, locale } = useI18n();
+  const cardLabels = useTableCardLabels();
   const { canPerformAction } = usePermissions();
   const toast = useToast();
   const summaryContext = useSummaryContext();
@@ -307,6 +309,7 @@ const AutomationsPage: Component = () => {
             ),
           }}
           table={{
+            cardLabels,
             columns,
             actions,
             actionsLabel: () => t('common.actions'),

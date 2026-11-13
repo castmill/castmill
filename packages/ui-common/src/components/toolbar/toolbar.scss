@@ -17,8 +17,11 @@
   .toolbar-title {
     font-size: 2em;
     margin: 0;
-    text-align: left;
+    text-align: start;
     white-space: nowrap;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .toolbar-row {
@@ -104,6 +107,96 @@
       gap: 0.75em;
       flex-wrap: wrap;
     }
+
+    .toolbar-filters {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 0.75em;
+      flex-wrap: wrap;
+      min-width: 0;
+    }
+  }
+
+  .toolbar-filters-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5em;
+    min-height: 2.75em;
+    padding: 0 0.9em;
+    border: 0.0625em solid var(--cm-border-color);
+    border-radius: 0.4em;
+    background-color: colors.$component-background-color;
+    color: var(--cm-text-primary);
+    font: inherit;
+    font-size: 0.9em;
+    cursor: pointer;
+    flex-shrink: 0;
+
+    &.open {
+      border-color: var(--cm-primary);
+      background-color: rgba(var(--cm-primary-rgb), 0.12);
+    }
+
+    &:focus-visible {
+      outline: 0.125em solid var(--cm-focus-ring);
+      outline-offset: 0.125em;
+    }
+  }
+
+  /* Phones: search, "Filters" toggle and the primary action share the first
+     row; filters and secondary actions open in a full-width panel below. */
+  .toolbar-row.compact {
+    gap: 0.5em;
+
+    .toolbar-left {
+      display: contents;
+    }
+
+    .search-container {
+      order: 1;
+      flex: 1 1 8em;
+      min-width: 0;
+
+      input,
+      input:focus {
+        width: 100%;
+        min-width: 0;
+      }
+    }
+
+    .toolbar-filters-toggle {
+      order: 2;
+    }
+
+    .toolbar-right {
+      order: 3;
+      flex-shrink: 1;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      min-width: 0;
+      margin-inline-start: auto;
+    }
+
+    .toolbar-filters {
+      order: 4;
+      flex: 1 1 100%;
+      flex-direction: column;
+      align-items: stretch;
+      padding: 0.75em;
+      border: 0.0625em solid var(--cm-border-color);
+      border-radius: 0.5em;
+      background-color: var(--cm-bg-secondary);
+
+      &.collapsed {
+        display: none;
+      }
+
+      > * {
+        max-width: 100%;
+      }
+    }
   }
 
   .toolbar-right {
@@ -112,5 +205,17 @@
     align-items: center;
     gap: 0.75em;
     flex-shrink: 0;
+  }
+}
+
+@media (max-width: 36em) {
+  .toolbar-container {
+    .toolbar-title {
+      font-size: 1.5em;
+    }
+
+    .toolbar-title-row {
+      flex-wrap: wrap;
+    }
   }
 }

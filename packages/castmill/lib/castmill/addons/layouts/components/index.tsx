@@ -42,6 +42,7 @@ import { LayoutView } from './layout-view';
 import { AddonComponentProps } from '../../common/interfaces/addon-store';
 import { LayoutAddForm, AspectRatio } from './layout-add-form';
 import { useTeamFilter, useModalFromUrl } from '../../common/hooks';
+import { tableCardLabels, filtersLabel } from '../../common/utils/table-labels';
 
 const ASPECT_RATIO_OPTIONS = [
   { value: '16:9', label: '16:9 (Landscape)' },
@@ -451,6 +452,7 @@ const LayoutsPage: Component<AddonComponentProps> = (props) => {
         fetchData={fetchData}
         ref={setRef}
         toolbar={{
+          filtersLabel: filtersLabel(t),
           searchPlaceholder: t('common.search'),
           mainAction: (
             <div style="display: flex; align-items: center; gap: 1rem;">
@@ -502,6 +504,7 @@ const LayoutsPage: Component<AddonComponentProps> = (props) => {
           </button>
         )}
         table={{
+          cardLabels: tableCardLabels(t),
           columns,
           actions,
           actionsLabel: t('common.actions'),

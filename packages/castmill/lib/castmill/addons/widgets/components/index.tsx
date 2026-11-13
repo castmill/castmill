@@ -50,6 +50,7 @@ import {
   getTranslatedWidgetName,
   getTranslatedWidgetDescription,
 } from '../../common/utils/widget-catalog-utils';
+import { tableCardLabels, filtersLabel } from '../../common/utils/table-labels';
 
 // Widget type with required ID and slug for table display and API calls
 type WidgetWithId = JsonWidget & { id: number; slug: string };
@@ -658,6 +659,7 @@ const WidgetsPage: Component<{
         fetchData={fetchData}
         ref={setRef}
         toolbar={{
+          filtersLabel: filtersLabel(t),
           searchPlaceholder: t('common.search'),
           mainAction: (
             <Button
@@ -670,6 +672,7 @@ const WidgetsPage: Component<{
           ),
         }}
         table={{
+          cardLabels: tableCardLabels(t),
           columns,
           actions,
           actionsLabel: t('common.actions'),

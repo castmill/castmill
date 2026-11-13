@@ -96,16 +96,17 @@ interface Column<IdType = string, Item extends ItemBase<IdType> = ItemBase<IdTyp
 
 ### Card Layout for Narrow Containers (phones, drawers)
 
-`Table` and `TableView` (via `table.*`) support an opt-in stacked card
-rendering so tables don't overflow horizontally on phones or inside detail
-drawers:
+`Table` supports an opt-in stacked card rendering (`cardLayout`) so tables
+don't overflow horizontally on phones or inside detail drawers. `TableView`
+enables it **by default** (`table.cardLayout ?? true`); pass
+`cardLayout: false` to opt out:
 
 ```typescript
 table: {
   columns,
   actions,
   actionsLabel: t('common.actions'),
-  cardLayout: true,               // opt in
+  cardLayout?: true,              // TableView default; required on <Table>
   cardBreakpoint?: 36,            // container width in em (default 36)
   cardPrimaryColumn?: 'name',     // card title (default: first column)
   cardLabels: useTableCardLabels(), // localized sort/selection labels
@@ -126,8 +127,34 @@ table: {
   `useTableCardLabels()` (`packages/dashboard/src/hooks/useTableCardLabels.ts`),
   which maps to `common.sortBy`, `common.sortAscending`,
   `common.sortDescending`, `common.selectAll` and `common.selectRow`. The
-  `selectRow(id: string)` formatter receives the row ID.
+  `selectRow(id: string)` formatter receives the row ID. Addons (which bundle
+  their own ui-common) use `tableCardLabels(t)` from
+  `addons/common/utils/table-labels.ts`.
 - Styles use `--cm-*` tokens, `em` units and logical properties (RTL-safe).
+
+### Responsive List Pages (phones ≤ 36em)
+
+`usePhoneLayout()` (`PHONE_LAYOUT_QUERY = '(max-width: 36em)'`, false when
+`matchMedia` is missing) drives the phone behaviour of the shared list-page
+components:
+
+- **ToolBar**: wraps; search, a "Filters" toggle (`filtersLabel`, also
+  `TableView` `toolbar.filtersLabel`) and the primary `mainAction` stay on the
+  first row, while filter switches and `actions` move into a collapsible panel
+  (`aria-expanded`/`aria-controls`). The panel stays mounted so filter state
+  is kept. Pass `filtersLabel: () => t('filters.toggle')` (addons:
+  `filtersLabel(t)`).
+- **Pagination**: page numbers collapse to a "current / total" summary; buttons
+  are ≥ 2.75em on phones and coarse pointers.
+- **SelectionActionBar**: fixed to the bottom with safe-area padding; actions
+  scroll horizontally. `TableView` adds bottom padding (`has-selection`) so the
+  bar doesn't cover rows.
+- **Table**: row actions and card menu items get ≥ 2.75em tap targets.
+- **ResourceTreeView**: the "Organize by" dimension bar collapses into a toggle
+  that shows the current tag-group path as a breadcrumb (`dimensionLabel`,
+  pass `t('tags.groups.organizeBy')`); indentation is reduced.
+- Page roots use `margin: var(--cm-page-gutter, 2em)` (2em → 1.5em at ≤ 64em →
+  0.75em at ≤ 36em, defined in `dashboard/src/theme/theme.scss`).
 
 ### TableAction Interface
 

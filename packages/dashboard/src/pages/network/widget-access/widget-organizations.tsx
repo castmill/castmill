@@ -23,6 +23,7 @@ import {
 import { useI18n } from '../../../i18n';
 import { ConfirmAccessChange, accessErrorMessage } from './access-ui';
 import styles from './widget-access.module.scss';
+import { useTableCardLabels } from '../../../hooks/useTableCardLabels';
 
 export type StatusFilter = 'all' | 'enabled' | 'disabled';
 type BulkAction = 'enable' | 'disable';
@@ -42,6 +43,7 @@ export const WidgetOrganizations: Component<{
   ref?: (search: HTMLInputElement) => void;
 }> = (props) => {
   const { t } = useI18n();
+  const cardLabels = useTableCardLabels();
   const toast = useToast();
   const [searchInput, setSearchInput] = createSignal('');
   const [search, setSearch] = createSignal('');
@@ -417,6 +419,8 @@ export const WidgetOrganizations: Component<{
           }
         >
           <Table<string, NetworkWidgetOrganization>
+            cardLayout
+            cardLabels={cardLabels}
             columns={columns}
             data={rows()}
             onRowSelect={(ids) => setSelected(new Set(ids))}
@@ -469,6 +473,10 @@ export const WidgetOrganizations: Component<{
           {t('network.widgets.organizations.disableSelected')}
         </button>
       </SelectionActionBar>
+
+      <Show when={selected().size > 0}>
+        <div class={styles['selection-spacer']} aria-hidden="true" />
+      </Show>
 
       <Show when={bulkAction()} keyed>
         {(action) => (

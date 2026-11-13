@@ -1,6 +1,6 @@
 // The dashboard shell centers text, so every agents view resets alignment.
 .agentsPage {
-  margin: 2em;
+  margin: var(--cm-page-gutter, 2em);
   text-align: start;
 }
 
@@ -122,11 +122,34 @@
 }
 
 // Same layout as the shared Table's built-in actions cell.
-.rowActions {
+.agentsPage .rowActions {
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 0.5em;
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.75em;
+    min-height: 2.75em;
+    padding: 0.35em;
+    border: 0.0625em solid var(--cm-border-color);
+    border-radius: 0.375em;
+    background: var(--cm-bg-hover);
+    color: var(--cm-text-primary);
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      background: var(--cm-bg-tertiary);
+    }
+
+    &:focus-visible {
+      outline: 0.125em solid var(--cm-focus-ring);
+      outline-offset: 0.125em;
+    }
+  }
 }
 
 /* ---- Activity log ---- */

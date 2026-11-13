@@ -9,7 +9,7 @@ $warning: var(--cm-warning);
 $danger: var(--cm-error);
 
 .page {
-  margin: 2em;
+  margin: var(--cm-page-gutter, 2em);
   text-align: start;
 }
 

@@ -37,10 +37,12 @@ import { QuotasService, ResourceQuota } from '../../services/quotas.service';
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 import { useLocation } from '@solidjs/router';
 import { useModalFromUrl } from '../../hooks/useModalFromUrl';
+import { useTableCardLabels } from '../../hooks/useTableCardLabels';
 
 const TeamsPage: Component = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { t } = useI18n();
+  const cardLabels = useTableCardLabels();
   const { canPerformAction } = usePermissions();
   const { registerShortcutAction, unregisterShortcutAction } =
     useKeyboardShortcuts();
@@ -426,6 +428,7 @@ const TeamsPage: Component = () => {
           </button>
         )}
         table={{
+          cardLabels,
           columns,
           actions,
           actionsLabel: t('common.actions'),

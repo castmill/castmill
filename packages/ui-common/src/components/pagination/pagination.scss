@@ -36,3 +36,46 @@
     background-color: #0056b3; /* Darker primary color on hover */
   }
 }
+
+.pagination-summary {
+  display: none;
+  min-width: 4em;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  color: var(--cm-text-primary);
+}
+
+/* Touch screens: at least 2.75em tap targets */
+@media (pointer: coarse) {
+  .pagination-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.75em;
+    min-height: 2.75em;
+  }
+}
+
+/* Phones: prev / "current / total" / next instead of the page list */
+@media (max-width: 36em) {
+  .pagination {
+    gap: 0.75em;
+  }
+
+  .pagination-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.75em;
+    min-height: 2.75em;
+  }
+
+  .pagination-page,
+  .pagination-ellipsis {
+    display: none;
+  }
+
+  .pagination-summary {
+    display: inline-block;
+  }
+}

@@ -16,6 +16,7 @@ import {
   JSX,
   on,
   batch,
+  createUniqueId,
 } from 'solid-js';
 import { createStore } from 'solid-js/store';
 import { IoChevronForward, IoChevronDown } from 'solid-icons/io';
@@ -24,6 +25,7 @@ import { IconWrapper } from '../icon-wrapper';
 import { TagBadge } from '../tags/tag-badge';
 import { Dropdown } from '../dropdown/dropdown';
 import type { Tag, TagGroup } from '../../services/tags.service';
+import { usePhoneLayout } from '../../hooks/useMediaQuery';
 import './resource-tree-view.scss';
 
 // A generic resource item that the tree view can display
@@ -139,6 +141,17 @@ export const ResourceTreeView: Component<ResourceTreeViewProps> = (props) => {
   >(new Map(), {
     equals: false,
   });
+
+  // On phones the dimension selectors collapse into a toggle that shows the
+  // current "Group › Group" path as a breadcrumb.
+  const isPhone = usePhoneLayout();
+  const [dimensionsOpen, setDimensionsOpen] = createSignal(false);
+  const dimensionsPanelId = `tree-dimensions-${createUniqueId()}`;
+  const dimensionPath = () =>
+    dimensions()
+      .map((groupIdx) => props.tagGroups[groupIdx]?.name)
+      .filter((name): name is string => !!name);
+  const dimensionLabel = () => props.dimensionLabel || 'Organize by';
 
   // Build counter to cancel stale async builds
   let buildGeneration = 0;
@@ -658,11 +671,37 @@ export const ResourceTreeView: Component<ResourceTreeViewProps> = (props) => {
           </div>
         }
       >
-        <div class="dimension-bar">
-          <span class="dimension-label">
-            {props.dimensionLabel || 'Organize by'}:
-          </span>
-          <div class="dimension-selectors">
+        <div
+          class="dimension-bar"
+          classList={{ compact: isPhone(), open: dimensionsOpen() }}
+        >
+          <Show
+            when={isPhone()}
+            fallback={<span class="dimension-label">{dimensionLabel()}:</span>}
+          >
+            <button
+              type="button"
+              class="dimension-toggle"
+              aria-expanded={dimensionsOpen()}
+              aria-controls={dimensionsPanelId}
+              onClick={() => setDimensionsOpen(!dimensionsOpen())}
+            >
+              <span class="dimension-label">{dimensionLabel()}:</span>
+              <span class="dimension-breadcrumb">
+                <For each={dimensionPath()}>
+                  {(name) => <span class="dimension-crumb">{name}</span>}
+                </For>
+              </span>
+              <span class="dimension-toggle-chevron" aria-hidden="true">
+                <IconWrapper icon={IoChevronDown} />
+              </span>
+            </button>
+          </Show>
+          <div
+            id={dimensionsPanelId}
+            class="dimension-selectors"
+            classList={{ collapsed: isPhone() && !dimensionsOpen() }}
+          >
             <For each={dimensions()}>
               {(groupIdx, level) => (
                 <div class="dimension-chip">

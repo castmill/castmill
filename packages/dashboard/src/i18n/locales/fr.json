@@ -663,7 +663,8 @@
       "deleteGroup": "Supprimer le groupe",
       "noGroups": "Aucun groupe d'étiquettes",
       "ungrouped": "Non groupé",
-      "untagged": "Non étiqueté"
+      "untagged": "Non étiqueté",
+      "organizeBy": "Organiser par"
     },
     "messages": {
       "tagCreated": "Étiquette \"{{name}}\" créée avec succès",
@@ -1599,7 +1600,8 @@
     "tagFilterModeAny": "N'importe lequel",
     "tagFilterModeAll": "Tous",
     "noMatches": "Aucun résultat",
-    "noItems": "Aucun élément"
+    "noItems": "Aucun élément",
+    "toggle": "Filtres"
   },
   "shortcuts": {
     "showShortcutsLegend": "Afficher les raccourcis clavier",

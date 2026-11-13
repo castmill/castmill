@@ -72,6 +72,11 @@ import {
 } from '../../common/interfaces/addon-store';
 import { useTeamFilter, useModalFromUrl } from '../../common/hooks';
 import { getThumbnailProgress } from './thumbnail-status';
+import {
+  tableCardLabels,
+  filtersLabel,
+  organizeByLabel,
+} from '../../common/utils/table-labels';
 
 const MediasPage: Component<AddonComponentProps> = (props) => {
   // Get i18n functions from store
@@ -1017,6 +1022,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
           ref={setRef}
           itemIdKey="id"
           toolbar={{
+            filtersLabel: filtersLabel(t),
             searchPlaceholder: t('common.search'),
             mainAction: (
               <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
@@ -1113,6 +1119,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
             </>
           )}
           table={{
+            cardLabels: tableCardLabels(t),
             columns,
             actions,
             actionsLabel: t('common.actions'),
@@ -1131,6 +1138,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
 
       <Show when={viewMode() === 'tree'}>
         <ToolBar
+          filtersLabel={filtersLabel(t)}
           title="Medias"
           titleActions={
             <ViewModeToggle mode={viewMode()} onChange={setViewMode} />
@@ -1174,6 +1182,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
           }
         />
         <ResourceTreeView
+          dimensionLabel={organizeByLabel(t)()}
           tagGroups={tagGroups()}
           allTags={allTags()}
           fetchResources={fetchTreeResources}

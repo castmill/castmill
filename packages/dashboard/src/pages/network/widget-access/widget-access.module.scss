@@ -695,6 +695,10 @@ $warning: var(--cm-warning);
   margin-top: 0.75em;
 }
 
+.selection-spacer {
+  display: none;
+}
+
 .access-switch {
   display: inline-flex;
   align-items: center;
@@ -793,6 +797,14 @@ $warning: var(--cm-warning);
 
   .mode-cards {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 36em) {
+  .selection-spacer {
+    display: block;
+    flex: none;
+    height: calc(6em + env(safe-area-inset-bottom, 0em));
   }
 }
 

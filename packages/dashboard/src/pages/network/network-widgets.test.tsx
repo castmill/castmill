@@ -416,6 +416,9 @@ describe('NetworkWidgets', () => {
       target: { checked: true },
     });
     expect(await screen.findByText('2 selected')).toBeInTheDocument();
+    expect(
+      screen.getByText('2 selected').closest('section')?.lastElementChild
+    ).toHaveAttribute('aria-hidden', 'true');
 
     fireEvent.click(screen.getByRole('button', { name: 'Disable access' }));
 

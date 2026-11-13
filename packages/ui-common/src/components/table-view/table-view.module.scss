@@ -27,8 +27,27 @@
     }
 
     .pagination-text {
-      margin-left: 1em;
+      margin-inline-start: 1em;
       font-size: 0.8em;
+    }
+  }
+}
+
+@media (max-width: 36em) {
+  .table-view {
+    .pagination-wrapper {
+      flex-direction: column;
+      gap: 0.5em;
+      max-height: 7em;
+
+      .pagination-text {
+        margin-inline-start: 0;
+      }
+    }
+
+    /* Keep the last rows reachable above the fixed selection bar */
+    &.has-selection {
+      padding-bottom: calc(7em + env(safe-area-inset-bottom, 0em));
     }
   }
 }
