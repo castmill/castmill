@@ -51,7 +51,7 @@ export const TeamInvitationsView = (props: {
   onRemove: (invitation: Invitation) => void;
   refreshKey?: number;
 }) => {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const cardLabels = useTableCardLabels();
 
   const columns = [
@@ -62,7 +62,7 @@ export const TeamInvitationsView = (props: {
       title: t('common.insertedAt'),
       sortable: true,
       render: (item: any) => (
-        <Timestamp value={item.inserted_at} mode="relative" />
+        <Timestamp value={item.inserted_at} mode="relative" locale={locale()} />
       ),
     },
     {
@@ -70,7 +70,7 @@ export const TeamInvitationsView = (props: {
       title: t('common.expiresAt'),
       sortable: true,
       render: (item: any) => (
-        <Timestamp value={item.expires_at} mode="relative" />
+        <Timestamp value={item.expires_at} mode="relative" locale={locale()} />
       ),
     },
   ];

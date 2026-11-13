@@ -556,6 +556,13 @@
     "addedOn": "Tillagd den",
     "lastUpdatedOn": "Senast uppdaterad den",
     "enterTeamName": "Ange teamnamn",
+    "summary": "Teamöversikt",
+    "created": "Skapat {{time}}",
+    "updated": "Uppdaterat {{time}}",
+    "unsavedChanges": "Osparade ändringar",
+    "teamCreated": "Teamet {{name}} har skapats",
+    "teamUpdated": "Teamet {{name}} har uppdaterats",
+    "teamRemoved": "Teamet {{name}} har tagits bort",
     "insertedAt": "Tillagd",
     "expiresAt": "Utgår",
     "inviteMember": "Bjud in medlem",
@@ -575,7 +582,9 @@
       "removeResource": "Fel vid borttagning av resurs från team: {{error}}",
       "removeResources": "Fel vid borttagning av resurser från team: {{error}}",
       "addResourceToTeam": "Fel vid tillägg av resurs till team: {{error}}",
-      "cannotRemoveLastAdmin": "Du kan inte ta bort teamets sista administratör."
+      "cannotRemoveLastAdmin": "Du kan inte ta bort teamets sista administratör.",
+      "nameRequired": "Namn krävs",
+      "nameMinLength": "Namnet måste vara minst {{min}} tecken"
     },
     "confirmAddResources": "Är du säker på att du vill lägga till följande resurser?",
     "messages": {
@@ -1181,6 +1190,17 @@
         "networkError": "Det gick inte att nå servern. Kontrollera anslutningen.",
         "unknown": "Det gick inte att läsa in objekten."
       }
+    },
+    "details": {
+      "updatesEvery": "Uppdateras var {{seconds}}:e sekund",
+      "copySlug": "Kopiera widgetens identifierare",
+      "slugCopied": "Widgetens identifierare kopierad",
+      "copySlugFailed": "Det gick inte att kopiera widgetens identifierare."
+    },
+    "json": {
+      "copy": "Kopiera JSON",
+      "copied": "JSON kopierad",
+      "copyFailed": "Det gick inte att kopiera JSON."
     }
   },
   "devices": {
@@ -1681,7 +1701,25 @@
     },
     "drawerTitle": "Mediefil \"{{name}}\"",
     "mediaUpdated": "Mediefil \"{{name}}\" uppdaterad",
-    "errorUpdating": "Fel vid uppdatering av mediefil {{name}}: {{error}}"
+    "errorUpdating": "Fel vid uppdatering av mediefil {{name}}: {{error}}",
+    "details": {
+      "summary": "Mediesammanfattning",
+      "copyId": "Kopiera medie-ID",
+      "copied": "Medie-ID kopierat",
+      "copyFailed": "Det gick inte att kopiera medie-ID:t.",
+      "added": "Tillagd {{time}}",
+      "updated": "Uppdaterad {{time}}",
+      "dimensions": "Mått",
+      "duration": "Längd",
+      "namePlaceholder": "Ange mediets namn",
+      "nameRequired": "Namn krävs",
+      "nameTooShort": "Namnet måste vara minst 5 tecken",
+      "noPreview": "Ingen förhandsvisning tillgänglig",
+      "types": {
+        "image": "Bild",
+        "video": "Video"
+      }
+    }
   },
   "dashboard": {
     "noOrganizations": {

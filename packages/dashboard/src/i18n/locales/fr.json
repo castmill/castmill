@@ -561,6 +561,13 @@
     "addedOn": "Ajouté le",
     "lastUpdatedOn": "Dernière mise à jour le",
     "enterTeamName": "Entrez le nom de l'équipe",
+    "summary": "Résumé de l'équipe",
+    "created": "Créée {{time}}",
+    "updated": "Mise à jour {{time}}",
+    "unsavedChanges": "Modifications non enregistrées",
+    "teamCreated": "Équipe {{name}} créée avec succès",
+    "teamUpdated": "Équipe {{name}} mise à jour avec succès",
+    "teamRemoved": "Équipe {{name}} supprimée avec succès",
     "insertedAt": "Inséré le",
     "expiresAt": "Expire le",
     "inviteMember": "Inviter un membre",
@@ -580,7 +587,9 @@
       "removeResource": "Erreur lors de la suppression de la ressource de l'équipe : {{error}}",
       "removeResources": "Erreur lors de la suppression des ressources de l'équipe : {{error}}",
       "addResourceToTeam": "Erreur lors de l'ajout de la ressource à l'équipe : {{error}}",
-      "cannotRemoveLastAdmin": "Vous ne pouvez pas supprimer le dernier administrateur de l'équipe."
+      "cannotRemoveLastAdmin": "Vous ne pouvez pas supprimer le dernier administrateur de l'équipe.",
+      "nameRequired": "Le nom est requis",
+      "nameMinLength": "Le nom doit contenir au moins {{min}} caractères"
     },
     "confirmAddResources": "Êtes-vous sûr de vouloir ajouter les ressources suivantes ?",
     "messages": {
@@ -1198,6 +1207,17 @@
         "networkError": "Impossible de joindre le serveur. Vérifiez votre connexion.",
         "unknown": "Impossible de charger les éléments."
       }
+    },
+    "details": {
+      "updatesEvery": "Mise à jour toutes les {{seconds}} s",
+      "copySlug": "Copier l’identifiant du widget",
+      "slugCopied": "Identifiant du widget copié",
+      "copySlugFailed": "Impossible de copier l’identifiant du widget."
+    },
+    "json": {
+      "copy": "Copier le JSON",
+      "copied": "JSON copié",
+      "copyFailed": "Impossible de copier le JSON."
     }
   },
   "devices": {
@@ -1698,7 +1718,25 @@
     },
     "drawerTitle": "Média \"{{name}}\"",
     "mediaUpdated": "Média \"{{name}}\" mis à jour avec succès",
-    "errorUpdating": "Erreur lors de la mise à jour du média {{name}} : {{error}}"
+    "errorUpdating": "Erreur lors de la mise à jour du média {{name}} : {{error}}",
+    "details": {
+      "summary": "Résumé du média",
+      "copyId": "Copier l’ID du média",
+      "copied": "ID du média copié",
+      "copyFailed": "Impossible de copier l’ID du média.",
+      "added": "Ajouté {{time}}",
+      "updated": "Mis à jour {{time}}",
+      "dimensions": "Taille en pixels",
+      "duration": "Durée",
+      "namePlaceholder": "Saisissez le nom du média",
+      "nameRequired": "Le nom est obligatoire",
+      "nameTooShort": "Le nom doit comporter au moins 5 caractères",
+      "noPreview": "Aucun aperçu disponible",
+      "types": {
+        "image": "Image",
+        "video": "Vidéo"
+      }
+    }
   },
   "dashboard": {
     "noOrganizations": {

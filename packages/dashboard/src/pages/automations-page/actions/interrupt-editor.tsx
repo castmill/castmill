@@ -90,6 +90,7 @@ export const InterruptEditor: Component<TypeEditorProps<InterruptConfig>> = (
           id={`${id}-playlist`}
           label={t('automations.interrupt.playlist')}
           placeholder={t('automations.interrupt.choosePlaylist')}
+          closeLabel={t('common.close')}
           value={selectedPlaylist()}
           fetchItems={fetchPlaylists}
           renderItem={(item) => <span>{item.name}</span>}

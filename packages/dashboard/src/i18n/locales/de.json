@@ -579,6 +579,13 @@
     "addedOn": "Hinzugefügt am",
     "lastUpdatedOn": "Zuletzt aktualisiert am",
     "enterTeamName": "Teamnamen eingeben",
+    "summary": "Teamübersicht",
+    "created": "Erstellt {{time}}",
+    "updated": "Aktualisiert {{time}}",
+    "unsavedChanges": "Ungespeicherte Änderungen",
+    "teamCreated": "Team {{name}} erfolgreich erstellt",
+    "teamUpdated": "Team {{name}} erfolgreich aktualisiert",
+    "teamRemoved": "Team {{name}} erfolgreich entfernt",
     "insertedAt": "Eingefügt am",
     "expiresAt": "Läuft ab am",
     "inviteMember": "Mitglied einladen",
@@ -599,7 +606,9 @@
       "removeResource": "Fehler beim Entfernen der Ressource aus dem Team: {{error}}",
       "removeResources": "Fehler beim Entfernen der Ressourcen aus dem Team: {{error}}",
       "addResourceToTeam": "Fehler beim Hinzufügen der Ressource zum Team: {{error}}",
-      "cannotRemoveLastAdmin": "Du kannst den letzten Administrator eines Teams nicht entfernen."
+      "cannotRemoveLastAdmin": "Du kannst den letzten Administrator eines Teams nicht entfernen.",
+      "nameRequired": "Name ist erforderlich",
+      "nameMinLength": "Name muss mindestens {{min}} Zeichen lang sein"
     },
     "messages": {
       "memberRemoved": "Mitglied {{name}} wurde erfolgreich entfernt",
@@ -1208,6 +1217,17 @@
         "networkError": "Der Server ist nicht erreichbar. Überprüfen Sie Ihre Verbindung.",
         "unknown": "Die Elemente konnten nicht geladen werden."
       }
+    },
+    "details": {
+      "updatesEvery": "Aktualisierung alle {{seconds}} s",
+      "copySlug": "Widget-Kennung kopieren",
+      "slugCopied": "Widget-Kennung kopiert",
+      "copySlugFailed": "Die Widget-Kennung konnte nicht kopiert werden."
+    },
+    "json": {
+      "copy": "JSON kopieren",
+      "copied": "JSON kopiert",
+      "copyFailed": "Das JSON konnte nicht kopiert werden."
     }
   },
   "devices": {
@@ -1681,7 +1701,25 @@
     },
     "drawerTitle": "Medien \"{{name}}\"",
     "mediaUpdated": "Medien \"{{name}}\" erfolgreich aktualisiert",
-    "errorUpdating": "Fehler beim Aktualisieren von Medien {{name}}: {{error}}"
+    "errorUpdating": "Fehler beim Aktualisieren von Medien {{name}}: {{error}}",
+    "details": {
+      "summary": "Medienübersicht",
+      "copyId": "Medien-ID kopieren",
+      "copied": "Medien-ID kopiert",
+      "copyFailed": "Die Medien-ID konnte nicht kopiert werden.",
+      "added": "Hinzugefügt {{time}}",
+      "updated": "Aktualisiert {{time}}",
+      "dimensions": "Abmessungen",
+      "duration": "Dauer",
+      "namePlaceholder": "Mediennamen eingeben",
+      "nameRequired": "Name ist erforderlich",
+      "nameTooShort": "Der Name muss mindestens 5 Zeichen lang sein",
+      "noPreview": "Keine Vorschau verfügbar",
+      "types": {
+        "image": "Bild",
+        "video": "Video"
+      }
+    }
   },
   "dashboard": {
     "noOrganizations": {

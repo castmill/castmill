@@ -612,3 +612,64 @@ $danger: var(--cm-error);
   max-height: 16em;
   overflow-y: auto;
 }
+
+/* ---- Phones ---- */
+// Matches the shared Tabs/ComboBox phone breakpoint.
+@media (max-width: 36em) {
+  .editorHeader {
+    flex-direction: column;
+    align-items: stretch;
+
+    .field {
+      flex: 0 0 auto;
+    }
+
+    .field input[type='text'] {
+      max-width: none;
+    }
+
+    .switch {
+      align-self: flex-start;
+    }
+  }
+
+  .typeCard {
+    flex-basis: 100%;
+    max-width: none;
+  }
+
+  .segmented {
+    flex-direction: column;
+    align-self: stretch;
+
+    button {
+      border-inline-end: none;
+      border-bottom: 0.0625em solid $border;
+      text-align: start;
+
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+  }
+
+  .formActions,
+  .drawerFooter,
+  .tabFooter {
+    flex-direction: column;
+    align-items: stretch;
+
+    > * {
+      width: 100%;
+    }
+  }
+
+  .ruleCard {
+    flex-wrap: wrap;
+  }
+
+  .ruleActions {
+    flex-basis: 100%;
+    justify-content: flex-end;
+  }
+}

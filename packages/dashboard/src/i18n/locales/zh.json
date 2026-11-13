@@ -561,6 +561,13 @@
     "addedOn": "添加于",
     "lastUpdatedOn": "最后更新于",
     "enterTeamName": "输入团队名称",
+    "summary": "团队摘要",
+    "created": "创建于 {{time}}",
+    "updated": "更新于 {{time}}",
+    "unsavedChanges": "未保存的更改",
+    "teamCreated": "团队 {{name}} 创建成功",
+    "teamUpdated": "团队 {{name}} 更新成功",
+    "teamRemoved": "团队 {{name}} 删除成功",
     "insertedAt": "插入时间",
     "expiresAt": "过期时间",
     "inviteMember": "邀请成员",
@@ -580,7 +587,9 @@
       "removeResource": "从团队中删除资源时出错：{{error}}",
       "removeResources": "从团队中删除资源时出错：{{error}}",
       "addResourceToTeam": "向团队添加资源时出错：{{error}}",
-      "cannotRemoveLastAdmin": "你不能移除团队最后一位管理员。"
+      "cannotRemoveLastAdmin": "你不能移除团队最后一位管理员。",
+      "nameRequired": "名称是必需的",
+      "nameMinLength": "名称至少需要 {{min}} 个字符"
     },
     "confirmAddResources": "您确定要添加以下资源吗？",
     "messages": {
@@ -1186,6 +1195,17 @@
         "networkError": "无法连接到服务器。请检查网络连接。",
         "unknown": "无法加载项目。"
       }
+    },
+    "details": {
+      "updatesEvery": "每 {{seconds}} 秒更新",
+      "copySlug": "复制小部件标识符",
+      "slugCopied": "已复制小部件标识符",
+      "copySlugFailed": "无法复制小部件标识符。"
+    },
+    "json": {
+      "copy": "复制 JSON",
+      "copied": "已复制 JSON",
+      "copyFailed": "无法复制 JSON。"
     }
   },
   "devices": {
@@ -1686,7 +1706,25 @@
     },
     "drawerTitle": "媒体 \"{{name}}\"",
     "mediaUpdated": "媒体 \"{{name}}\" 更新成功",
-    "errorUpdating": "更新媒体 {{name}} 时出错：{{error}}"
+    "errorUpdating": "更新媒体 {{name}} 时出错：{{error}}",
+    "details": {
+      "summary": "媒体摘要",
+      "copyId": "复制媒体 ID",
+      "copied": "已复制媒体 ID",
+      "copyFailed": "无法复制媒体 ID。",
+      "added": "添加于 {{time}}",
+      "updated": "更新于 {{time}}",
+      "dimensions": "尺寸",
+      "duration": "时长",
+      "namePlaceholder": "输入媒体名称",
+      "nameRequired": "名称为必填项",
+      "nameTooShort": "名称至少需要 5 个字符",
+      "noPreview": "暂无预览",
+      "types": {
+        "image": "图片",
+        "video": "视频"
+      }
+    }
   },
   "dashboard": {
     "noOrganizations": {
