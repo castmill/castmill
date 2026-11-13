@@ -40,7 +40,7 @@ type AccessFilter = WidgetAccessMode | 'any';
 type KindFilter = WidgetKind | 'any';
 
 const NetworkWidgets: Component = () => {
-  const { t, locale } = useI18n();
+  const { t, tp, locale } = useI18n();
   const toast = useToast();
   const [searchInput, setSearchInput] = createSignal('');
   const [search, setSearch] = createSignal('');
@@ -195,9 +195,10 @@ const NetworkWidgets: Component = () => {
           fetcher: details?.fetcher ?? '',
         });
       case 'incompatible':
-        return t('network.widgets.upload.errors.incompatible', {
-          count: details?.total ?? details?.items?.length ?? 0,
-        });
+        return tp(
+          'network.widgets.upload.errors.incompatible',
+          details?.total ?? details?.items?.length ?? 0
+        );
       case 'invalid_widget':
         return t('network.widgets.upload.errors.invalidWidget', {
           details: Object.entries(details?.errors ?? {})

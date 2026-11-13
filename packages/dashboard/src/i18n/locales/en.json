@@ -337,7 +337,10 @@
           "managedWidget": "This widget is installed by the platform, so an upload can't replace it.",
           "unknownFetcher": "The widget's integration uses the fetcher \"{{fetcher}}\", which isn't installed on this server.",
           "invalidWidget": "The widget definition is invalid: {{details}}",
-          "incompatible": "This version would break {{count}} playlist items that use the widget. Make new options optional and keep existing ones compatible:",
+          "incompatible": {
+            "one": "This version would break {{count}} playlist item that uses the widget. Make new options optional and keep existing ones compatible:",
+            "other": "This version would break {{count}} playlist items that use the widget. Make new options optional and keep existing ones compatible:"
+          },
           "incompatibleItem": "{{playlist}} ({{organization}}): {{error}}",
           "incompatibleMore": "and {{count}} more",
           "invalidPackage": "The package is invalid: {{details}}",

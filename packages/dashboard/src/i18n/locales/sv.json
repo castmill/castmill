@@ -300,7 +300,10 @@
           "managedWidget": "Den här widgeten installeras av plattformen och kan inte ersättas med en uppladdning.",
           "unknownFetcher": "Widgetens integration använder hämtaren \"{{fetcher}}\", som inte är installerad på den här servern.",
           "invalidWidget": "Widgetdefinitionen är ogiltig: {{details}}",
-          "incompatible": "Den här versionen skulle göra {{count}} spellisteobjekt som använder widgeten ogiltiga. Gör nya inställningar valfria och håll de befintliga kompatibla:",
+          "incompatible": {
+            "one": "Den här versionen skulle göra {{count}} spellisteobjekt som använder widgeten ogiltigt. Gör nya inställningar valfria och håll de befintliga kompatibla:",
+            "other": "Den här versionen skulle göra {{count}} spellisteobjekt som använder widgeten ogiltiga. Gör nya inställningar valfria och håll de befintliga kompatibla:"
+          },
           "incompatibleItem": "{{playlist}} ({{organization}}): {{error}}",
           "incompatibleMore": "och {{count}} till",
           "invalidPackage": "Paketet är ogiltigt: {{details}}",

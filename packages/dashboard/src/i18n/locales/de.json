@@ -323,7 +323,10 @@
           "managedWidget": "Dieses Widget wird von der Plattform installiert und kann nicht durch einen Upload ersetzt werden.",
           "unknownFetcher": "Die Integration des Widgets verwendet den Fetcher „{{fetcher}}“, der auf diesem Server nicht installiert ist.",
           "invalidWidget": "Die Widget-Definition ist ungültig: {{details}}",
-          "incompatible": "Diese Version würde {{count}} Playlist-Einträge, die das Widget verwenden, ungültig machen. Machen Sie neue Optionen optional und halten Sie die bestehenden kompatibel:",
+          "incompatible": {
+            "one": "Diese Version würde {{count}} Playlist-Eintrag, der das Widget verwendet, ungültig machen. Machen Sie neue Optionen optional und halten Sie die bestehenden kompatibel:",
+            "other": "Diese Version würde {{count}} Playlist-Einträge, die das Widget verwenden, ungültig machen. Machen Sie neue Optionen optional und halten Sie die bestehenden kompatibel:"
+          },
           "incompatibleItem": "{{playlist}} ({{organization}}): {{error}}",
           "incompatibleMore": "und {{count}} weitere",
           "invalidPackage": "Das Paket ist ungültig: {{details}}",

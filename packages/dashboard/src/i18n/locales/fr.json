@@ -305,7 +305,10 @@
           "managedWidget": "Ce widget est installé par la plateforme : une importation ne peut pas le remplacer.",
           "unknownFetcher": "L'intégration du widget utilise le fetcher « {{fetcher}} », qui n'est pas installé sur ce serveur.",
           "invalidWidget": "La définition du widget n'est pas valide : {{details}}",
-          "incompatible": "Cette version rendrait invalides {{count}} éléments de playlist qui utilisent le widget. Rendez les nouvelles options facultatives et gardez les options existantes compatibles :",
+          "incompatible": {
+            "one": "Cette version rendrait invalide {{count}} élément de playlist qui utilise le widget. Rendez les nouvelles options facultatives et gardez les options existantes compatibles :",
+            "other": "Cette version rendrait invalides {{count}} éléments de playlist qui utilisent le widget. Rendez les nouvelles options facultatives et gardez les options existantes compatibles :"
+          },
           "incompatibleItem": "{{playlist}} ({{organization}}) : {{error}}",
           "incompatibleMore": "et {{count}} de plus",
           "invalidPackage": "Le paquet n'est pas valide : {{details}}",

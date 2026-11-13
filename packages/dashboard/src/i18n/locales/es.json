@@ -306,7 +306,10 @@
           "managedWidget": "La plataforma instala este widget, así que una subida no puede reemplazarlo.",
           "unknownFetcher": "La integración del widget usa el fetcher \"{{fetcher}}\", que no está instalado en este servidor.",
           "invalidWidget": "La definición del widget no es válida: {{details}}",
-          "incompatible": "Esta versión estropearía {{count}} elementos de listas de reproducción que usan el widget. Haz opcionales las opciones nuevas y mantén compatibles las existentes:",
+          "incompatible": {
+            "one": "Esta versión estropearía {{count}} elemento de lista de reproducción que usa el widget. Haz opcionales las opciones nuevas y mantén compatibles las existentes:",
+            "other": "Esta versión estropearía {{count}} elementos de listas de reproducción que usan el widget. Haz opcionales las opciones nuevas y mantén compatibles las existentes:"
+          },
           "incompatibleItem": "{{playlist}} ({{organization}}): {{error}}",
           "incompatibleMore": "y {{count}} más",
           "invalidPackage": "El paquete no es válido: {{details}}",

@@ -305,7 +305,10 @@
           "managedWidget": "이 위젯은 플랫폼에서 설치하므로 업로드로 교체할 수 없습니다.",
           "unknownFetcher": "위젯의 통합이 \"{{fetcher}}\" 페처를 사용하지만 이 서버에 설치되어 있지 않습니다.",
           "invalidWidget": "위젯 정의가 올바르지 않습니다: {{details}}",
-          "incompatible": "이 버전을 적용하면 위젯을 사용하는 재생목록 항목 {{count}}개가 유효하지 않게 됩니다. 새 옵션은 선택 사항으로 만들고 기존 옵션은 호환되도록 유지하세요:",
+          "incompatible": {
+            "one": "이 버전을 적용하면 위젯을 사용하는 재생목록 항목 {{count}}개가 유효하지 않게 됩니다. 새 옵션은 선택 사항으로 만들고 기존 옵션은 호환되도록 유지하세요:",
+            "other": "이 버전을 적용하면 위젯을 사용하는 재생목록 항목 {{count}}개가 유효하지 않게 됩니다. 새 옵션은 선택 사항으로 만들고 기존 옵션은 호환되도록 유지하세요:"
+          },
           "incompatibleItem": "{{playlist}} ({{organization}}): {{error}}",
           "incompatibleMore": "외 {{count}}개",
           "invalidPackage": "패키지가 올바르지 않습니다: {{details}}",

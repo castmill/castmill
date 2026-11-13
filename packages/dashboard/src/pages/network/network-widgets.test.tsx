@@ -1116,6 +1116,32 @@ describe('NetworkWidgets', () => {
       await waitFor(() => expect(screen.queryByRole('alert')).toBeNull());
     });
 
+    it('uses the singular for one playlist item it would break', async () => {
+      vi.mocked(NetworkService.uploadWidget).mockRejectedValue(
+        uploadError(409, {
+          code: 'incompatible',
+          total: 1,
+          items: [
+            {
+              playlist_id: 1,
+              playlist_name: 'Lobby',
+              organization_id: 'org-a',
+              organization_name: 'Alpha',
+              error: 'Field estate is required but missing',
+            },
+          ],
+        })
+      );
+      renderPage();
+      await chooseFile();
+
+      const alert = await screen.findByRole('alert');
+      expect(alert).toHaveTextContent(
+        'This version would break 1 playlist item that uses the widget.'
+      );
+      expect(alert).not.toHaveTextContent('more');
+    });
+
     it.each([
       [{ code: 'slug_taken' }, 'Another widget already uses this slug'],
       [{ code: 'invalid_slug' }, 'The slug in widget.json can only contain'],

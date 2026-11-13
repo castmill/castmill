@@ -305,7 +305,10 @@
           "managedWidget": "此组件由平台安装，无法通过上传替换。",
           "unknownFetcher": "组件的集成使用了获取器“{{fetcher}}”，但此服务器上未安装该获取器。",
           "invalidWidget": "组件定义无效：{{details}}",
-          "incompatible": "此版本会使 {{count}} 个使用该组件的播放列表项目失效。请将新选项设为可选，并保持现有选项兼容：",
+          "incompatible": {
+            "one": "此版本会使 {{count}} 个使用该组件的播放列表项目失效。请将新选项设为可选，并保持现有选项兼容：",
+            "other": "此版本会使 {{count}} 个使用该组件的播放列表项目失效。请将新选项设为可选，并保持现有选项兼容："
+          },
           "incompatibleItem": "{{playlist}}（{{organization}}）：{{error}}",
           "incompatibleMore": "以及另外 {{count}} 个",
           "invalidPackage": "组件包无效：{{details}}",
