@@ -162,6 +162,21 @@ describe('CalendarView responsive layouts', () => {
     expect(screen.queryByText('prev')).not.toBeInTheDocument();
   });
 
+  it('exposes each selectable slot as a named, focusable button', () => {
+    mockViewport(TABLET_PORTRAIT);
+    renderCalendar();
+
+    const slot = screen.getByRole('button', {
+      name: 'Add to schedule: Starts Monday, January 5 at 00:00',
+    });
+    expect(slot).toHaveAttribute('data-testid', 'calendar-slot');
+    slot.focus();
+    expect(document.activeElement).toBe(slot);
+
+    fireEvent.click(slot);
+    expect(screen.getByText('Starts Monday, January 5 at 00:00')).toBeTruthy();
+  });
+
   it('pages whole weeks outside the day view', async () => {
     mockViewport(DESKTOP);
     const onWeekChange = vi.fn();
@@ -342,7 +357,7 @@ describe('CalendarView tap-to-add', () => {
 
   const pickPlaylistAndAdd = async () => {
     fireEvent.click(screen.getByRole('button', { name: 'Playlist' }));
-    const add = screen.getByRole('button', { name: /Add to schedule/ });
+    const add = screen.getByRole('button', { name: 'Add to schedule' });
     await waitFor(() => expect(add).not.toBeDisabled());
     fireEvent.click(add);
   };
@@ -358,7 +373,7 @@ describe('CalendarView tap-to-add', () => {
       screen.getByText('Starts Wednesday, January 7 at 10:00')
     ).toBeInTheDocument();
 
-    const add = screen.getByRole('button', { name: /Add to schedule/ });
+    const add = screen.getByRole('button', { name: 'Add to schedule' });
     expect(add).toBeDisabled();
 
     const duration = screen.getByLabelText('Duration') as HTMLSelectElement;
@@ -449,7 +464,7 @@ describe('CalendarView tap-to-add', () => {
     fireEvent.change(screen.getByLabelText('Duration'), {
       target: { value: '30' },
     });
-    fireEvent.click(screen.getByRole('button', { name: /Add to schedule/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add to schedule' }));
     await waitFor(() => expect(addEntryToChannel).toHaveBeenCalled());
   });
 
@@ -544,6 +559,37 @@ describe('CalendarView tap-to-add', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(screen.queryByText(/Starts Monday/)).not.toBeInTheDocument();
+  });
+
+  it('does not let a disposed dialog close a newly opened dialog after saving', async () => {
+    let resolveAdd!: (entry: { id: number }) => void;
+    addEntryToChannel.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveAdd = resolve;
+        })
+    );
+    mockViewport(TABLET_PORTRAIT);
+    renderCalendar();
+    await waitFor(() => expect(getChannelEntries).toHaveBeenCalled());
+
+    tapWeekSlot(0, 0);
+    await pickPlaylistAndAdd();
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    tapWeekSlot(1, 1);
+    expect(screen.getByText('Starts Tuesday, January 6 at 00:30')).toBeTruthy();
+
+    resolveAdd({ id: 99 });
+    await waitFor(() =>
+      expect(addEntryToChannel).toHaveBeenCalledWith(
+        3,
+        expect.objectContaining({ playlist_id: 7 })
+      )
+    );
+    expect(
+      screen.getByText('Starts Tuesday, January 6 at 00:30')
+    ).toBeInTheDocument();
   });
 });
 

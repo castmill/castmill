@@ -12,6 +12,8 @@ interface CalendarCellProps {
   onDrop: (el: HTMLElement) => (args: { source: any }) => void; // Function to handle the drop action
   /** Tap/click on an empty slot (tap-to-add). */
   onSelect?: (data: DropTargetData) => void;
+  /** Accessible name for the slot's add action. */
+  ariaLabel?: string;
 }
 
 interface DropTargetData {
@@ -59,8 +61,16 @@ export const CalendarCell: Component<CalendarCellProps> = (props) => {
         [styles['current-day']]: props.isCurrentDay,
       }}
       data-drop-data={JSON.stringify(props.dropData)}
-      data-testid="calendar-slot"
-      onClick={() => props.onSelect?.(props.dropData)}
-    />
+    >
+      {props.onSelect && (
+        <button
+          type="button"
+          class={styles['slot-button']}
+          aria-label={props.ariaLabel}
+          data-testid="calendar-slot"
+          onClick={() => props.onSelect?.(props.dropData)}
+        />
+      )}
+    </td>
   );
 };

@@ -922,6 +922,23 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
                               canDrop={canDrop}
                               onDrop={onDrop}
                               onSelect={setPendingSlot}
+                              ariaLabel={`${t('channels.calendar.addEntry')}: ${t(
+                                'channels.calendar.startsAt',
+                                {
+                                  date: dayDate(dayIndex).toLocaleDateString(
+                                    locale(),
+                                    {
+                                      weekday: 'long',
+                                      month: 'long',
+                                      day: 'numeric',
+                                    }
+                                  ),
+                                  time: formatSlotTime(
+                                    dropData.hour,
+                                    dropData.minute
+                                  ),
+                                }
+                              )}`}
                             />
                           );
                         }}

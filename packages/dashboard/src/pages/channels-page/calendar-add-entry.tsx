@@ -1,7 +1,7 @@
 import { JsonPlaylist } from '@castmill/player';
 import { Button, ComboBox, Modal } from '@castmill/ui-common';
 import { BsCheckLg, BsX } from 'solid-icons/bs';
-import { Component, createMemo, createSignal, For } from 'solid-js';
+import { Component, createMemo, createSignal, For, onCleanup } from 'solid-js';
 import { useI18n } from '../../i18n';
 import { ChannelsService } from '../../services/channels.service';
 
@@ -45,6 +45,11 @@ export const CalendarAddEntry: Component<{
   onClose: () => void;
 }> = (props) => {
   const { t, locale } = useI18n();
+  let disposed = false;
+  onCleanup(() => {
+    disposed = true;
+  });
+
   const [playlist, setPlaylist] = createSignal<JsonPlaylist>();
   const options = createMemo(() => durationOptions(props.slot));
   const [duration, setDuration] = createSignal(
@@ -74,7 +79,7 @@ export const CalendarAddEntry: Component<{
     setSaving(true);
     try {
       if (await props.onAdd(selected, duration())) {
-        props.onClose();
+        if (!disposed) props.onClose();
       }
     } finally {
       setSaving(false);
