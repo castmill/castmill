@@ -121,7 +121,9 @@
     "notifications": "الإشعارات",
     "gettingStarted": "البدء",
     "switchToLightMode": "التبديل إلى الوضع الفاتح",
-    "switchToDarkMode": "التبديل إلى الوضع الداكن"
+    "switchToDarkMode": "التبديل إلى الوضع الداكن",
+    "openNavigation": "فتح التنقل",
+    "moreOptions": "مزيد من الخيارات"
   },
   "settings": {
     "title": "الإعدادات",
@@ -766,7 +768,8 @@
     "networkWidgets": "الوصول إلى الأدوات",
     "tags": "العلامات",
     "agents": "الوكلاء",
-    "feeds": "خلاصات البيانات"
+    "feeds": "خلاصات البيانات",
+    "navigation": "التنقل"
   },
   "channels": {
     "title": "القنوات",

@@ -121,7 +121,9 @@
     "notifications": "Notifications",
     "gettingStarted": "Prise en main",
     "switchToLightMode": "Passer en mode clair",
-    "switchToDarkMode": "Passer en mode sombre"
+    "switchToDarkMode": "Passer en mode sombre",
+    "openNavigation": "Ouvrir la navigation",
+    "moreOptions": "Plus d'options"
   },
   "settings": {
     "title": "Paramètres",
@@ -778,7 +780,8 @@
     "networkWidgets": "Accès aux widgets",
     "tags": "Étiquettes",
     "agents": "Agents",
-    "feeds": "Flux"
+    "feeds": "Flux",
+    "navigation": "Menu de navigation"
   },
   "channels": {
     "title": "Canaux",

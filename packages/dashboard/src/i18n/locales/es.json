@@ -122,7 +122,9 @@
     "notifications": "Notificaciones",
     "gettingStarted": "Primeros pasos",
     "switchToLightMode": "Cambiar a modo claro",
-    "switchToDarkMode": "Cambiar a modo oscuro"
+    "switchToDarkMode": "Cambiar a modo oscuro",
+    "openNavigation": "Abrir navegación",
+    "moreOptions": "Más opciones"
   },
   "settings": {
     "title": "Configuración",
@@ -767,7 +769,8 @@
     "networkWidgets": "Acceso a widgets",
     "tags": "Etiquetas",
     "agents": "Agentes",
-    "feeds": "Feeds"
+    "feeds": "Feeds",
+    "navigation": "Navegación"
   },
   "channels": {
     "title": "Canales",

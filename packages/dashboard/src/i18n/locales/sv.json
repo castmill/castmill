@@ -116,7 +116,9 @@
     "notifications": "Notiser",
     "gettingStarted": "Kom igång",
     "switchToLightMode": "Byt till ljust läge",
-    "switchToDarkMode": "Byt till mörkt läge"
+    "switchToDarkMode": "Byt till mörkt läge",
+    "openNavigation": "Öppna navigering",
+    "moreOptions": "Fler alternativ"
   },
   "settings": {
     "title": "Inställningar",
@@ -761,7 +763,8 @@
     "networkWidgets": "Widgetåtkomst",
     "tags": "Taggar",
     "agents": "Agenter",
-    "feeds": "Flöden"
+    "feeds": "Flöden",
+    "navigation": "Navigering"
   },
   "channels": {
     "title": "Kanaler",

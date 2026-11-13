@@ -121,7 +121,9 @@
     "notifications": "알림",
     "gettingStarted": "시작하기",
     "switchToLightMode": "라이트 모드로 전환",
-    "switchToDarkMode": "다크 모드로 전환"
+    "switchToDarkMode": "다크 모드로 전환",
+    "openNavigation": "탐색 열기",
+    "moreOptions": "추가 옵션"
   },
   "settings": {
     "title": "설정",
@@ -766,7 +768,8 @@
     "networkWidgets": "위젯 액세스",
     "tags": "태그",
     "agents": "에이전트",
-    "feeds": "피드"
+    "feeds": "피드",
+    "navigation": "탐색"
   },
   "channels": {
     "title": "채널",
