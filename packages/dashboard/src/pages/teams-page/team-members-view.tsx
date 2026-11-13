@@ -421,7 +421,7 @@ export const TeamMembersView = (props: {
               />
             </div>
 
-            <div style="margin-top: 1em;">
+            <div style="margin-top: 1em;" data-modal-actions>
               <Button
                 label={t('common.save')}
                 type="submit"

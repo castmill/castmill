@@ -89,4 +89,20 @@ describe('ConfirmDialog', () => {
     await fireEvent.click(cancelButton);
     expect(onCloseMock).toHaveBeenCalled();
   });
+
+  it('marks its buttons as the modal action row for phone layouts', () => {
+    render(() => (
+      <ConfirmDialog
+        show={true}
+        title="Delete?"
+        message="This cannot be undone"
+        onConfirm={vi.fn()}
+        onClose={vi.fn()}
+      />
+    ));
+    const actions = screen.getByText('Confirm').closest('[data-modal-actions]');
+    expect(actions).not.toBeNull();
+    expect(actions!.contains(screen.getByText('Cancel'))).toBe(true);
+    expect(actions!.closest('[class*="modalBody"]')).not.toBeNull();
+  });
 });

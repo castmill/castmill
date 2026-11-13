@@ -112,12 +112,13 @@ export const AnimatedSizeWrapper: Component<AnimatedSizeWrapperProps> = (
         width: '100%',
         height: '100%',
         transition: 'width 0.3s ease, height 0.3s ease',
-        overflow: 'hidden',
       }}
     >
-      {/* The actual content whose size is being observed */}
+      {/* The actual content whose size is being observed. It must not clip
+          or scroll itself: the modal body is the scroll container, which
+          also lets `data-modal-actions` rows stick to its bottom. */}
       <div
-        style="display: inline-block; width: 100%; height: 100%;"
+        style="display: flow-root; width: 100%; height: 100%;"
         ref={contentRef}
       >
         {props.children}

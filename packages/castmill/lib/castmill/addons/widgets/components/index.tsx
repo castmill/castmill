@@ -367,22 +367,6 @@ const WidgetsPage: Component<{
     }
   });
 
-  // Apply fixed width to modals when they're shown
-  createEffect(() => {
-    if (showUploadModal()) {
-      setTimeout(() => {
-        const modalElement = document.querySelector(
-          '.widget-upload-modal'
-        ) as HTMLElement;
-        if (modalElement) {
-          modalElement.style.width = '50vw';
-          modalElement.style.maxWidth = '50vw';
-          modalElement.style.minWidth = '50vw';
-        }
-      }, 50);
-    }
-  });
-
   const openUploadModal = () => {
     setShowUploadModal(true);
   };

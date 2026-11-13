@@ -533,7 +533,7 @@ const TagsPage: Component = () => {
               </div>
             </Show>
 
-            <div class={styles['form-actions']}>
+            <div class={styles['form-actions']} data-modal-actions>
               <Button
                 label={t('common.cancel')}
                 onClick={() => setShowTagModal(false)}
@@ -593,7 +593,7 @@ const TagsPage: Component = () => {
               </div>
             </div>
 
-            <div class={styles['form-actions']}>
+            <div class={styles['form-actions']} data-modal-actions>
               <Button
                 label={t('common.cancel')}
                 onClick={() => setShowGroupModal(false)}

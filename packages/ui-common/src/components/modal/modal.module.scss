@@ -66,7 +66,9 @@ $animation-duration: 0.3s;
       }
 
       .title {
+        min-width: 0;
         margin-bottom: 0.5em;
+        overflow-wrap: anywhere;
       }
 
       &.withBack {
@@ -88,14 +90,24 @@ $animation-duration: 0.3s;
       }
     }
 
-    .modalBody {
-      width: 100%;
-      height: 100%;
-      flex: 1;
+    .modalHeader,
+    .modalError,
+    .modalSuccess,
+    .modalFooter {
+      flex-shrink: 0;
+    }
 
-      flex-grow: 1; /* Ensures it grows to take available space */
-      flex-shrink: 1; /* Allows shrinking if necessary */
-      flex-basis: 0; /* Starts calculation from 0% of the container's remaining space */
+    // The body is the only scrolling part, so the header and footer stay put
+    // when the content is taller than the (visual) viewport. The small inline
+    // padding keeps focus rings of full-width inputs from being clipped.
+    .modalBody {
+      height: 100%;
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      margin-inline: -0.25em;
+      padding-inline: 0.25em;
     }
 
     .modalError,
@@ -116,5 +128,81 @@ $animation-duration: 0.3s;
         border-color: var(--cm-success);
       }
     }
+  }
+}
+
+// Keep every modal inside the visible area. Zero specificity so a width,
+// height or max size from `contentClass` always wins on larger screens.
+:where(.modalContent) {
+  box-sizing: border-box;
+  max-width: calc(100% - 2em);
+  max-height: calc(100% - 2em);
+}
+
+// Phones (and landscape phones): a bottom sheet across the full width that
+// grows up to (almost) the full height of the visual viewport, which the
+// overlay is pinned to, so the on-screen keyboard never covers inputs or
+// buttons. The extra class beats sizes set through `contentClass`.
+@media (max-width: 36em), (pointer: coarse) and (max-height: 32em) {
+  .modalOverlay {
+    align-items: flex-end;
+
+    .modalContent {
+      box-sizing: border-box;
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      max-height: calc(100% - 1em);
+      padding: 1em 1em calc(1em + env(safe-area-inset-bottom));
+      border-radius: 0.75em 0.75em 0 0;
+      transform: translateY(2em);
+
+      &.active {
+        transform: translateY(0);
+      }
+
+      .modalHeader {
+        align-items: flex-start;
+        gap: 0.5em;
+        padding-bottom: 0.6em;
+
+        h2 {
+          font-size: 1.25em;
+        }
+
+        h3 {
+          font-size: 0.95em;
+        }
+      }
+    }
+  }
+}
+
+// Phones: rows marked with `data-modal-actions` stick to the bottom of the
+// scrolling body and their buttons share the full width.
+@media (max-width: 36em) {
+  .modalOverlay .modalContent .modalBody :global([data-modal-actions]) {
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6em;
+    margin-bottom: 0;
+    padding-block: 0.75em 0;
+    background-color: var(--cm-bg-elevated);
+
+    > * {
+      flex: 1 1 0;
+      justify-content: center;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modalOverlay,
+  .modalOverlay.active,
+  .modalOverlay .modalContent {
+    transition: none;
   }
 }

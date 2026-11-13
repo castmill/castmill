@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, it, expect, afterEach, vi, beforeEach } from 'vitest';
 import { render, fireEvent, cleanup, screen } from '@solidjs/testing-library';
 import { createSignal, Show } from 'solid-js';
@@ -161,5 +163,108 @@ describe('Modal Component', () => {
       />
     ));
     expect(screen.getByText('Retry')).toBeInTheDocument();
+  });
+
+  it('scrolls only the body, without clipping wrappers around the content', () => {
+    render(() => (
+      <Modal title="Form" description="" onClose={() => {}}>
+        <form>
+          <input aria-label="Name" />
+          <div data-modal-actions>
+            <button type="submit">Save</button>
+          </div>
+        </form>
+      </Modal>
+    ));
+
+    const content = screen.getByTestId('modal-overlay').firstElementChild!;
+    const [header, body] = Array.from(content.children) as HTMLElement[];
+    expect(header.className).toContain('modalHeader');
+    expect(body.className).toContain('modalBody');
+
+    // Sticky action rows need the body to be their nearest scroll container,
+    // so nothing between the body and the content may clip or scroll.
+    let el: HTMLElement | null = screen.getByText('Save').parentElement!;
+    expect(el.hasAttribute('data-modal-actions')).toBe(true);
+    while (el && el !== body) {
+      expect(el.style.overflow).toBe('');
+      el = el.parentElement;
+    }
+    expect(el).toBe(body);
+    const inner = body.firstElementChild!.firstElementChild as HTMLElement;
+    expect(inner.style.display).toBe('flow-root');
+  });
+
+  it('pins the overlay to the visual viewport for on-screen keyboards', () => {
+    const original = Object.getOwnPropertyDescriptor(window, 'visualViewport');
+    class FakeVisualViewport extends EventTarget {
+      width = 375;
+      height = 400;
+      offsetLeft = 0;
+      offsetTop = 0;
+    }
+    const vv = new FakeVisualViewport();
+    Object.defineProperty(window, 'visualViewport', {
+      configurable: true,
+      value: vv,
+    });
+
+    try {
+      render(() => <Modal title="Form" description="" onClose={() => {}} />);
+      const overlay = screen.getByTestId('modal-overlay');
+      expect(overlay.style.height).toBe('400px');
+      expect(overlay.style.width).toBe('375px');
+
+      // The keyboard closes: the overlay follows the visual viewport.
+      vv.height = 700;
+      vv.dispatchEvent(new Event('resize'));
+      expect(overlay.style.height).toBe('700px');
+    } finally {
+      if (original) Object.defineProperty(window, 'visualViewport', original);
+      else delete (window as { visualViewport?: unknown }).visualViewport;
+    }
+  });
+});
+
+describe('Modal responsive styles', () => {
+  const css = readFileSync(
+    resolve('src/components/modal/modal.module.scss'),
+    'utf8'
+  );
+  const block = (start: string) => {
+    const index = css.indexOf(start);
+    expect(index).toBeGreaterThanOrEqual(0);
+    return css.slice(index, css.indexOf('\n}\n', index));
+  };
+
+  it('keeps every modal inside the viewport with a scrolling body', () => {
+    expect(block(':where(.modalContent) {')).toMatch(
+      /max-width: calc\(100% - 2em\);\s*max-height: calc\(100% - 2em\);/
+    );
+    expect(css).toMatch(
+      /\.modalBody \{[^}]*flex: 1 1 auto;\s*min-height: 0;\s*overflow-y: auto;/
+    );
+    expect(css).not.toContain('!important');
+  });
+
+  it('becomes a full-width bottom sheet on phones', () => {
+    const sheet = block(
+      '@media (max-width: 36em), (pointer: coarse) and (max-height: 32em) {'
+    );
+    expect(sheet).toContain('align-items: flex-end;');
+    expect(sheet).toMatch(/width: 100%;\s*min-width: 0;\s*max-width: 100%;/);
+    expect(sheet).toContain('env(safe-area-inset-bottom)');
+    expect(sheet).toContain('border-radius: 0.75em 0.75em 0 0;');
+    expect(sheet).not.toMatch(/\d+px/);
+  });
+
+  it('sticks full-width action rows to the bottom on phones', () => {
+    const actions = block(
+      '@media (max-width: 36em) {\n  .modalOverlay .modalContent .modalBody'
+    );
+    expect(actions).toContain(':global([data-modal-actions])');
+    expect(actions).toMatch(/position: sticky;\s*bottom: 0;/);
+    expect(actions).toContain('background-color: var(--cm-bg-elevated);');
+    expect(actions).toMatch(/> \* \{\s*flex: 1 1 0;/);
   });
 });

@@ -538,7 +538,7 @@ const AgentsPage: Component = () => {
             <p class={styles.muted}>
               {t(`organization.roleDescriptions.${formData().role}`)}
             </p>
-            <div class={styles.formActions}>
+            <div class={styles.formActions} data-modal-actions>
               <Button
                 label={t('common.cancel')}
                 color="secondary"
@@ -572,7 +572,7 @@ const AgentsPage: Component = () => {
               />
             </div>
             <AgentIntegrationInstructions secret={current().value} />
-            <div class={styles.formActions}>
+            <div class={styles.formActions} data-modal-actions>
               <Button
                 label={t('agents.secretDone')}
                 color="primary"

@@ -100,7 +100,7 @@ export const OrganizationInviteForm = (props: {
           }}
         />
       </div>
-      <div class={style['form-actions']}>
+      <div class={style['form-actions']} data-modal-actions>
         <Button
           label={t('common.add')}
           type="submit"

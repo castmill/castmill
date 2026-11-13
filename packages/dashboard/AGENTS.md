@@ -211,6 +211,14 @@ Existing teams show a compact `DetailsSummary` with the name, member count
 Teams from the API use `inserted_at`/`updated_at`. The nested tables use
 `cardLayout`; pass `locale={locale()}` to `Timestamp` cells.
 
+## Modals and Forms
+
+The ui-common `Modal` becomes a bottom sheet under `36em`, with the body as
+its only scroll container. Put `data-modal-actions` on a modal form's button
+row so it sticks to the bottom with full-width buttons on phones. Let form
+rows wrap to a single column at `(max-width: 36em)`, and size modals with
+`contentClass` in `em` (no `!important` or `vw` overrides).
+
 ## Critical Rules
 
 ### ⚠️ MANDATORY: All User-Facing Text Must Be Localized
