@@ -67,6 +67,7 @@ export const CalendarCell: Component<CalendarCellProps> = (props) => {
           type="button"
           class={styles['slot-button']}
           aria-label={props.ariaLabel}
+          data-drop-data={JSON.stringify(props.dropData)}
           data-testid="calendar-slot"
           onClick={() => props.onSelect?.(props.dropData)}
         />

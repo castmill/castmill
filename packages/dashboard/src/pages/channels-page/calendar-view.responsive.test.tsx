@@ -170,6 +170,9 @@ describe('CalendarView responsive layouts', () => {
       name: 'Add to schedule: Starts Monday, January 5 at 00:00',
     });
     expect(slot).toHaveAttribute('data-testid', 'calendar-slot');
+    expect(slot.dataset.dropData).toBe(
+      slot.closest('td')?.getAttribute('data-drop-data')
+    );
     slot.focus();
     expect(document.activeElement).toBe(slot);
 
@@ -590,6 +593,39 @@ describe('CalendarView tap-to-add', () => {
     expect(
       screen.getByText('Starts Tuesday, January 6 at 00:30')
     ).toBeInTheDocument();
+  });
+
+  it('does not add a late save to a different week', async () => {
+    let resolveAdd!: (entry: { id: number }) => void;
+    addEntryToChannel.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveAdd = resolve;
+        })
+    );
+    mockViewport(DESKTOP);
+    renderCalendar();
+    await waitFor(() => expect(getChannelEntries).toHaveBeenCalledTimes(1));
+
+    tapWeekSlot(0, 20);
+    fireEvent.change(screen.getByLabelText('Duration'), {
+      target: { value: '30' },
+    });
+    await pickPlaylistAndAdd();
+    expect(addEntryToChannel).toHaveBeenCalledWith(3, {
+      playlist_id: 7,
+      start: Date.UTC(2026, 0, 5, 10),
+      end: Date.UTC(2026, 0, 5, 10, 30),
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Next week' }));
+    await waitFor(() => expect(getChannelEntries).toHaveBeenCalledTimes(2));
+
+    resolveAdd({ id: 99 });
+    await waitFor(() =>
+      expect(screen.queryByText(/Starts Monday/)).not.toBeInTheDocument()
+    );
+    expect(screen.queryByText('10:00-10:30')).not.toBeInTheDocument();
   });
 });
 

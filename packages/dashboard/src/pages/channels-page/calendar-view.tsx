@@ -297,9 +297,10 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
   };
 
   const createEntry = async (newEntry: CalendarEntry) => {
+    const entryWeekStart = startDate();
     const opts = calendarEntryToTimestamps(
       newEntry,
-      startDate(),
+      entryWeekStart,
       props.timeZone
     );
     const addedEntry = await channelsService.addEntryToChannel(
@@ -311,7 +312,9 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
     );
 
     newEntry.id = addedEntry.id;
-    setEntries([...entries, newEntry]);
+    if (startDate().getTime() === entryWeekStart.getTime()) {
+      setEntries([...entries, newEntry]);
+    }
   };
 
   /** Tap-to-add: schedules `playlist` at `slot` for `durationMinutes`. */
