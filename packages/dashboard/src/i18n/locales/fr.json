@@ -796,7 +796,8 @@
       "created": "Canal {{name}} créé avec succès",
       "updated": "Canal {{name}} mis à jour avec succès",
       "updateDefaultPlaylist": "Playlist par défaut mise à jour avec succès",
-      "clearDefaultPlaylist": "Playlist par défaut effacée avec succès"
+      "clearDefaultPlaylist": "Playlist par défaut effacée avec succès",
+      "updateChannelEntry": "Entrée du canal mise à jour avec succès"
     },
     "info": {
       "contentRequired": "Pour afficher du contenu, définissez une playlist par défaut ou ajoutez une entrée planifiée pour ce canal."
@@ -809,6 +810,20 @@
       "updateDefaultPlaylist": "Échec de la mise à jour de la playlist par défaut du canal : {{error}}",
       "clearDefaultPlaylist": "Échec de l'effacement de la playlist par défaut du canal : {{error}}",
       "updateChannelEntry": "Erreur lors de la mise à jour de l'entrée du canal : {{error}}"
+    },
+    "calendar": {
+      "previousWeek": "Semaine précédente",
+      "nextWeek": "Semaine suivante",
+      "previousDay": "Jour précédent",
+      "nextDay": "Jour suivant",
+      "today": "Aujourd'hui",
+      "tapToAdd": "Touchez un créneau horaire pour ajouter une playlist à la programmation.",
+      "addEntry": "Ajouter à la programmation",
+      "startsAt": "Commence le {{date}} à {{time}}",
+      "duration": "Durée",
+      "untilEndOfDay": "Jusqu'à la fin de la journée",
+      "slotUnavailable": "Ce créneau chevauche une autre entrée ou ne tient pas dans la semaine.",
+      "confirmRemoveEntry": "Voulez-vous vraiment supprimer l'entrée « {{title}} » ?"
     }
   },
   "organization": {

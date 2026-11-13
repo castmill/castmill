@@ -7,6 +7,7 @@ import {
   onMount,
   createMemo,
   Show,
+  batch,
 } from 'solid-js';
 import { createStore } from 'solid-js/store';
 import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
@@ -33,7 +34,19 @@ import {
 } from './utils';
 import { CalendarCell } from './calendar-cell';
 import { DefaultPlaylistComboBox } from './default-playlist-combobox';
-import { Modal, useToast } from '@castmill/ui-common';
+import {
+  Modal,
+  useMediaQuery,
+  useToast,
+  useWideLayout,
+} from '@castmill/ui-common';
+import { JsonPlaylist } from '@castmill/player';
+import {
+  BsCalendarEvent,
+  BsChevronDown,
+  BsChevronLeft,
+  BsChevronRight,
+} from 'solid-icons/bs';
 import { ChanneEntrylView } from './channel-entry-view';
 import { useI18n } from '../../i18n';
 import {
@@ -41,6 +54,27 @@ import {
   markerPosition,
   markerStyle,
 } from './automation-markers';
+import {
+  CalendarAddEntry,
+  CalendarSlot,
+  formatSlotTime,
+} from './calendar-add-entry';
+
+/** Viewport query for the wide (side panel + week) layout. */
+export const WIDE_CALENDAR_QUERY = '(min-width: 64em)';
+/** The calendar layout container must also be this wide (em) to be wide. */
+export const WIDE_CALENDAR_MIN_EM = 50;
+/** Phones show a single day instead of the week. */
+export const DAY_VIEW_QUERY = '(max-width: 40em)';
+/** Minimum horizontal travel (px) for a swipe to page the day view. */
+export const SWIPE_MIN_PX = 50;
+
+const WEEK_DAYS = [0, 1, 2, 3, 4, 5, 6];
+
+const weekdayIndex = (date: Date) => (date.getDay() + 6) % 7;
+
+const isRtl = (el: Element) =>
+  el.closest('[dir]')?.getAttribute('dir')?.toLowerCase() === 'rtl';
 
 export interface DropTargetData {
   dayIndex: number;
@@ -58,14 +92,39 @@ interface CalendarViewProps {
 }
 
 export const CalendarView: Component<CalendarViewProps> = (props) => {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const toast = useToast();
   const [showEntryModal, setShowEntryModal] = createSignal<CalendarEntry>();
+  const [pendingSlot, setPendingSlot] = createSignal<CalendarSlot>();
 
   // Start date for a “week”
   const [startDate, setStartDate] = createSignal(
     getStartOfWeek(toZonedTime(new Date(), props.timeZone))
   );
+
+  // Responsive layout: wide (desktop) keeps the side panel and week grid,
+  // narrow (tablets, touch) stacks a collapsible playlist strip above the
+  // week grid, and phones page through single days.
+  const { ref: setLayoutRef, wide: wideViewport } = useWideLayout({
+    query: WIDE_CALENDAR_QUERY,
+    minEm: WIDE_CALENDAR_MIN_EM,
+  });
+  const coarsePointer = useMediaQuery('(pointer: coarse)', false);
+  const dayView = useMediaQuery(DAY_VIEW_QUERY, false);
+  const wide = () => wideViewport() && !coarsePointer() && !dayView();
+  const [chooserOpen, setChooserOpen] = createSignal(false);
+
+  // Day shown by the phone day view (0 = Monday of the visible week).
+  const [selectedDay, setSelectedDay] = createSignal(
+    weekdayIndex(toZonedTime(new Date(), props.timeZone))
+  );
+  const visibleDays = createMemo(() =>
+    dayView() ? [selectedDay()] : WEEK_DAYS
+  );
+  const visibleRange = createMemo(() => {
+    const days = visibleDays();
+    return { first: days[0], last: days[days.length - 1] };
+  });
 
   const [hoveredCells, setHoveredCells] = createSignal<string[]>([]);
   const hoveredSet = createMemo(() => new Set(hoveredCells()));
@@ -114,7 +173,6 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
     if (lastDropData) {
       const { dayIndex, hour, minute } = lastDropData;
       const cellsToHighlight: string[] = [];
-      const daysToShow = 7; // Match the calendar's visible days
       const startSlot = slotFromTime(hour, minute);
       const slots = calculateSlots(entry); // Duration in 30-minute slots
       const endSlot = Math.min(startSlot + slots, 48); // Cap at 24 hours
@@ -122,7 +180,7 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
       // Highlight across all days in numDays, starting from drop target's day and time
       for (let d = 0; d < entry.numDays; d++) {
         const currentDay = dayIndex + d;
-        if (currentDay >= daysToShow) break; // Don’t exceed calendar grid
+        if (currentDay > visibleRange().last) break; // Don’t exceed calendar grid
         for (let slot = startSlot; slot < endSlot; slot++) {
           if (slot < 48) {
             // Ensure within day bounds
@@ -208,9 +266,92 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
     return aStartTime < bEndTime && bStartTime < aEndTime;
   }
 
-  // Show 7 days
-  const daysToShow = 7;
   const [entries, setEntries] = createStore<CalendarEntry[]>([]);
+
+  /**
+   * Whether `candidate` fits in the visible week without overlapping any
+   * other entry (`ignoreId` is the entry being moved, if any).
+   */
+  const isValidPlacement = (candidate: CalendarEntry, ignoreId?: number) => {
+    if (
+      !canMoveCalendarEntry(
+        candidate,
+        candidate.dayIndex,
+        candidate.startHour,
+        candidate.startMinute
+      )
+    ) {
+      return false;
+    }
+
+    try {
+      calendarEntryToTimestamps(candidate, startDate(), props.timeZone);
+    } catch {
+      return false;
+    }
+
+    return !entries.some(
+      (existing) =>
+        existing.id !== ignoreId && doEntriesOverlap(candidate, existing)
+    );
+  };
+
+  const createEntry = async (newEntry: CalendarEntry) => {
+    const opts = calendarEntryToTimestamps(
+      newEntry,
+      startDate(),
+      props.timeZone
+    );
+    const addedEntry = await channelsService.addEntryToChannel(
+      props.channel.id,
+      {
+        playlist_id: newEntry.playlist.id,
+        ...opts,
+      }
+    );
+
+    newEntry.id = addedEntry.id;
+    setEntries([...entries, newEntry]);
+  };
+
+  /** Tap-to-add: schedules `playlist` at `slot` for `durationMinutes`. */
+  const addEntryAt = async (
+    slot: CalendarSlot,
+    playlist: JsonPlaylist,
+    durationMinutes: number
+  ): Promise<boolean> => {
+    const candidate = computeNewEntry(
+      {
+        id: 0,
+        title: '',
+        isNewEntry: true,
+        playlist: { id: playlist.id, name: playlist.name },
+        numDays: 1,
+        dayIndex: slot.dayIndex,
+        startHour: 0,
+        startMinute: 0,
+        endHour: Math.floor(durationMinutes / 60),
+        endMinute: durationMinutes % 60,
+        weekly: false,
+      },
+      slot
+    );
+
+    if (!isValidPlacement(candidate)) {
+      toast.error(t('channels.calendar.slotUnavailable'));
+      return false;
+    }
+
+    try {
+      await createEntry(candidate);
+      return true;
+    } catch (error) {
+      toast.error(
+        t('channels.errors.updateChannelEntry', { error: String(error) })
+      );
+      return false;
+    }
+  };
 
   createEffect(() => {
     const range = getWeekRangeTimestamps(startDate(), props.timeZone);
@@ -220,8 +361,17 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
   const visibleMarkers = createMemo(() =>
     (props.markers ?? []).flatMap((marker) => {
       const position = markerPosition(marker.time, startDate(), props.timeZone);
-      return position ? [{ marker, position }] : [];
+      const column = position ? visibleDays().indexOf(position.dayIndex) : -1;
+      return position && column >= 0 ? [{ marker, position, column }] : [];
     })
+  );
+
+  const visibleEntries = createMemo(() =>
+    entries.filter(
+      (entry) =>
+        entry.dayIndex <= visibleRange().last &&
+        entry.dayIndex + entry.numDays - 1 >= visibleRange().first
+    )
   );
 
   createEffect(async () => {
@@ -257,27 +407,83 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
     return arr;
   });
 
-  // Simple date-range label
+  /** Zoned date of the given day of the visible week. */
+  const dayDate = (dayIndex: number) => {
+    const date = new Date(startDate());
+    date.setDate(date.getDate() + dayIndex);
+    return date;
+  };
+
+  // Localized date-range label (a single day in the day view)
   const dateRangeText = () => {
-    const s = startDate();
-    const e = new Date(s);
-    e.setDate(e.getDate() + daysToShow - 1);
-    return `${s.toLocaleDateString()} - ${e.toLocaleDateString()}`;
+    if (dayView()) {
+      return dayDate(selectedDay()).toLocaleDateString(locale(), {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+    }
+    const format: Intl.DateTimeFormatOptions = {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    };
+    return `${dayDate(0).toLocaleDateString(locale(), format)} – ${dayDate(
+      6
+    ).toLocaleDateString(locale(), format)}`;
   };
 
   // Navigation
-  const goPrevWeek = () => {
+  const shiftWeek = (days: number) => {
     const curr = new Date(startDate());
-    curr.setDate(curr.getDate() - 7);
+    curr.setDate(curr.getDate() + days);
     setStartDate(getStartOfWeek(curr));
   };
-  const goNextWeek = () => {
-    const curr = new Date(startDate());
-    curr.setDate(curr.getDate() + 7);
-    setStartDate(getStartOfWeek(curr));
+  const goPrev = () => {
+    if (!dayView()) return shiftWeek(-7);
+    if (selectedDay() > 0) return setSelectedDay(selectedDay() - 1);
+    batch(() => {
+      shiftWeek(-7);
+      setSelectedDay(6);
+    });
+  };
+  const goNext = () => {
+    if (!dayView()) return shiftWeek(7);
+    if (selectedDay() < 6) return setSelectedDay(selectedDay() + 1);
+    batch(() => {
+      shiftWeek(7);
+      setSelectedDay(0);
+    });
   };
   const goToday = () => {
-    setStartDate(getStartOfWeek(toZonedTime(new Date(), props.timeZone)));
+    const today = toZonedTime(new Date(), props.timeZone);
+    batch(() => {
+      setStartDate(getStartOfWeek(today));
+      setSelectedDay(weekdayIndex(today));
+    });
+  };
+
+  // Swipe paging for the day view
+  let touchStart: { x: number; y: number } | undefined;
+  const onTouchStart = (e: TouchEvent) => {
+    const touch = e.touches[0];
+    touchStart = touch ? { x: touch.clientX, y: touch.clientY } : undefined;
+  };
+  const onTouchEnd = (e: TouchEvent) => {
+    const start = touchStart;
+    const touch = e.changedTouches[0];
+    touchStart = undefined;
+    if (!dayView() || !start || !touch) return;
+    const dx = touch.clientX - start.x;
+    const dy = touch.clientY - start.y;
+    if (Math.abs(dx) < SWIPE_MIN_PX || Math.abs(dx) < Math.abs(dy) * 1.5) {
+      return;
+    }
+    // Swiping towards the inline start reveals the next day.
+    const forward = isRtl(e.currentTarget as Element) ? dx > 0 : dx < 0;
+    if (forward) goNext();
+    else goPrev();
   };
 
   // DnD setup for each cell in the body table
@@ -298,31 +504,14 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
         lastDropData.dayIndex,
         lastDropData.hour,
         lastDropData.minute
+      ) ||
+      !isValidPlacement(
+        computeNewEntry(entryBeingDragged, lastDropData),
+        entryBeingDragged.id
       )
     ) {
       setHoveredCells([]);
       return false;
-    }
-
-    const newEntry = computeNewEntry(entryBeingDragged, lastDropData);
-
-    try {
-      calendarEntryToTimestamps(newEntry, startDate(), props.timeZone);
-    } catch {
-      setHoveredCells([]);
-      return false;
-    }
-
-    // Check for overlaps with existing entries
-    for (const existingEntry of entries) {
-      if (existingEntry.id === entryBeingDragged.id) {
-        continue; // Skip the dragged entry
-      }
-
-      if (doEntriesOverlap(newEntry, existingEntry)) {
-        setHoveredCells([]);
-        return false; // Overlap detected
-      }
     }
     return true; // Drop allowed
   };
@@ -344,24 +533,15 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
 
         try {
           const newEntry = computeNewEntry(entry, { dayIndex, hour, minute });
-          const opts = calendarEntryToTimestamps(
-            newEntry,
-            startDate(),
-            props.timeZone
-          );
 
           if (entry.isNewEntry) {
-            const addedEntry = await channelsService.addEntryToChannel(
-              props.channel.id,
-              {
-                playlist_id: newEntry.playlist.id,
-                ...opts,
-              }
-            );
-
-            newEntry.id = addedEntry.id;
-            setEntries([...entries, newEntry]);
+            await createEntry(newEntry);
           } else {
+            const opts = calendarEntryToTimestamps(
+              newEntry,
+              startDate(),
+              props.timeZone
+            );
             await channelsService.updateChannelEntry(
               props.channel.id,
               entry.id,
@@ -474,7 +654,7 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
   };
 
   const getCellDimensions = () => {
-    const measureCell = cellRefs.get('day-0-slot-1');
+    const measureCell = cellRefs.get(`day-${visibleRange().first}-slot-1`);
     if (!measureCell) {
       return { width: 0, height: 0 };
     }
@@ -484,37 +664,29 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
     return { width: cellRect.width, height: cellRect.height };
   };
 
-  const getTimeBarStyle = () => {
-    const totalMinutes = currentTimePosition();
+  const getTimeBarTop = () => {
     const minutesPerDay = 1440; // 24 hours * 60 minutes
-
-    const cellDims = getCellDimensions();
-
-    const cellHeight = cellDims.height;
     const slotsPerDay = 48; // 30-minute slots
-
-    const top = (totalMinutes / minutesPerDay) * slotsPerDay * cellHeight;
-
-    return {
-      position: 'absolute' as const,
-      top: `${top}px`,
-      left: '10%', // Align with time column (10% width as per CSS)
-      width: '90%', // Span across all day columns (90% width as per CSS)
-      height: '2px', // Thin line
-      background: '#007bff', // Blue line (match your image)
-      'z-index': 10, // Above other elements
-    };
+    const top =
+      (currentTimePosition() / minutesPerDay) *
+      slotsPerDay *
+      getCellDimensions().height;
+    return `${top}px`;
   };
 
-  const dayLabels = createMemo(() => {
-    const labels = [];
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(startDate());
-      date.setDate(date.getDate() + i);
-      labels.push(date.toDateString());
-    }
-    return labels;
-  });
+  const currentTimeLabel = () => {
+    const totalMinutes = Math.floor(currentTimePosition());
+    return formatSlotTime(Math.floor(totalMinutes / 60), totalMinutes % 60);
+  };
+
+  const prevLabel = () =>
+    dayView()
+      ? t('channels.calendar.previousDay')
+      : t('channels.calendar.previousWeek');
+  const nextLabel = () =>
+    dayView()
+      ? t('channels.calendar.nextDay')
+      : t('channels.calendar.nextWeek');
 
   return (
     <>
@@ -550,7 +722,7 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
                 );
 
                 setShowEntryModal();
-                toast.success('Channel entry updated successfully');
+                toast.success(t('channels.success.updateChannelEntry'));
               } catch (error) {
                 toast.error(
                   t('channels.errors.updateChannelEntry', {
@@ -562,34 +734,146 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
           />
         </Modal>
       </Show>
-      <div class={styles['calendar-layout']}>
+      <Show when={pendingSlot()}>
+        {(slot) => (
+          <CalendarAddEntry
+            slot={slot()}
+            dateLabel={dayDate(slot().dayIndex).toLocaleDateString(locale(), {
+              weekday: 'long',
+              month: 'long',
+              day: 'numeric',
+            })}
+            channelsService={channelsService}
+            onAdd={(playlist, duration) =>
+              addEntryAt(slot(), playlist, duration)
+            }
+            onClose={() => setPendingSlot(undefined)}
+          />
+        )}
+      </Show>
+      <div
+        ref={setLayoutRef}
+        class={styles['calendar-layout']}
+        classList={{
+          [styles.narrow]: !wide(),
+          [styles['day-view']]: dayView(),
+        }}
+        data-layout={wide() ? 'wide' : dayView() ? 'day' : 'narrow'}
+      >
         <div class={styles['left-panel']}>
           <DefaultPlaylistComboBox channel={props.channel} />
-          <PlaylistChooser onDragOverCell={handleDragOverCell} />
+          <Show
+            when={wide()}
+            fallback={
+              <>
+                <Show when={!dayView()}>
+                  <button
+                    type="button"
+                    class={styles['chooser-toggle']}
+                    aria-expanded={chooserOpen()}
+                    aria-controls={`channel-${props.channel.id}-playlists`}
+                    onClick={() => setChooserOpen(!chooserOpen())}
+                  >
+                    <span>{t('sidebar.playlists')}</span>
+                    <BsChevronDown
+                      class={styles['chooser-toggle-icon']}
+                      aria-hidden="true"
+                    />
+                  </button>
+                  <Show when={chooserOpen()}>
+                    <div
+                      id={`channel-${props.channel.id}-playlists`}
+                      class={styles['chooser-strip']}
+                    >
+                      <PlaylistChooser
+                        variant="strip"
+                        onDragOverCell={handleDragOverCell}
+                      />
+                    </div>
+                  </Show>
+                </Show>
+                <p class={styles['tap-hint']}>
+                  {t('channels.calendar.tapToAdd')}
+                </p>
+              </>
+            }
+          >
+            <PlaylistChooser onDragOverCell={handleDragOverCell} />
+          </Show>
         </div>
         <div class={styles['calendar-wrapper']}>
           {/* Top bar: nav + range */}
           <div class={styles['calendar-header']}>
-            <div>
-              <button onClick={goPrevWeek}>prev</button>
-              <button onClick={goToday}>today</button>
-              <button onClick={goNextWeek}>next</button>
+            <div class={styles.nav}>
+              <button
+                type="button"
+                class={styles['nav-button']}
+                onClick={goPrev}
+                aria-label={prevLabel()}
+                title={prevLabel()}
+              >
+                <BsChevronLeft class={styles['nav-icon']} aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                class={styles['nav-button']}
+                onClick={goToday}
+                aria-label={t('channels.calendar.today')}
+                title={t('channels.calendar.today')}
+              >
+                <BsCalendarEvent aria-hidden="true" />
+                <span class={styles['nav-label']}>
+                  {t('channels.calendar.today')}
+                </span>
+              </button>
+              <button
+                type="button"
+                class={styles['nav-button']}
+                onClick={goNext}
+                aria-label={nextLabel()}
+                title={nextLabel()}
+              >
+                <BsChevronRight class={styles['nav-icon']} aria-hidden="true" />
+              </button>
             </div>
-            <div style="font-size: 18px; font-weight: bold;">
+            <div
+              class={styles['range-label']}
+              aria-live="polite"
+              data-testid="calendar-range"
+            >
               {dateRangeText()}
             </div>
-            <button>Events</button>
           </div>
 
           {/* Pinned header table */}
           <div class={styles['header-table-container']}>
             <table class={styles['header-table']}>
+              <colgroup>
+                <col class={styles['time-col']} />
+                <For each={visibleDays()}>{() => <col />}</For>
+              </colgroup>
               <thead>
                 <tr>
-                  {/* Time column: 10% */}
-                  <th class={styles['header-time-col']}>{props.timeZone}</th>
-                  {/* 7 day columns => share 90% */}
-                  <For each={dayLabels()}>{(label) => <th>{label}</th>}</For>
+                  <th class={styles['header-time-col']}>
+                    <span class={styles['time-zone']}>{props.timeZone}</span>
+                  </th>
+                  <For each={visibleDays()}>
+                    {(dayIndex) => (
+                      <th data-testid="calendar-day-header">
+                        <span class={styles['day-name']}>
+                          {dayDate(dayIndex).toLocaleDateString(locale(), {
+                            weekday: 'short',
+                          })}
+                        </span>
+                        <span class={styles['day-date']}>
+                          {dayDate(dayIndex).toLocaleDateString(locale(), {
+                            month: 'short',
+                            day: 'numeric',
+                          })}
+                        </span>
+                      </th>
+                    )}
+                  </For>
                 </tr>
               </thead>
             </table>
@@ -599,8 +883,15 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
           <div
             class={styles['body-table-container']}
             ref={(el) => (scrollContainer = el)}
+            onTouchStart={onTouchStart}
+            onTouchEnd={onTouchEnd}
+            data-testid="calendar-body"
           >
             <table class={styles['body-table']}>
+              <colgroup>
+                <col class={styles['time-col']} />
+                <For each={visibleDays()}>{() => <col />}</For>
+              </colgroup>
               <tbody>
                 <For each={timeSlots()}>
                   {(slot, slotIndex) => (
@@ -611,12 +902,12 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
                         {slot.minute === 0 ? slot.label : ''}
                       </td>
 
-                      {/* 7 day cells */}
-                      <For each={[0, 1, 2, 3, 4, 5, 6]}>
-                        {(_, dayIndex) => {
-                          const key = `day-${dayIndex()}-slot-${slotIndex()}`;
+                      {/* Visible day cells (7, or 1 in the day view) */}
+                      <For each={visibleDays()}>
+                        {(dayIndex) => {
+                          const key = `day-${dayIndex}-slot-${slotIndex()}`;
                           const dropData = {
-                            dayIndex: dayIndex(),
+                            dayIndex,
                             hour: Math.floor(slotIndex() / 2),
                             minute: slotIndex() % 2 === 0 ? 0 : 30,
                           };
@@ -626,10 +917,11 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
                               key={key}
                               dropData={dropData}
                               isHovered={hoveredSet().has(key)}
-                              isCurrentDay={dayIndex() === currentDayIndex()}
+                              isCurrentDay={dayIndex === currentDayIndex()}
                               cellRefs={cellRefs}
                               canDrop={canDrop}
                               onDrop={onDrop}
+                              onSelect={setPendingSlot}
                             />
                           );
                         }}
@@ -642,11 +934,12 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
 
             {/* The event layer => absolutely positioned items */}
             <div class={styles['event-layer']}>
-              <For each={entries}>
+              <For each={visibleEntries()}>
                 {(ev) => (
                   <CalendarEntryBox
                     entry={ev}
                     cellGrid={cellRefs}
+                    visibleDays={visibleRange()}
                     onResizeComplete={onResizeComplete}
                     onDelete={onDelete}
                     onInfo={onInfo}
@@ -671,7 +964,9 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
                       class={styles['automation-marker']}
                       style={markerStyle(
                         item.position,
-                        getCellDimensions().height
+                        getCellDimensions().height,
+                        item.column,
+                        visibleDays().length
                       )}
                       title={item.marker.label}
                       aria-label={item.marker.label}
@@ -683,35 +978,8 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
               </div>
             </Show>
 
-            <div style={getTimeBarStyle()}>
-              <div
-                style={{
-                  position: 'absolute',
-                  left: '-4em',
-                  top: '-0.5em',
-                  width: '4em',
-                  height: '1em',
-                  background: '#007bff',
-                  color: 'var(--cm-text-on-primary)',
-                  'border-radius': '30%',
-                  'font-size': '0.8em',
-                  'text-align': 'center',
-                  padding: '0.2em',
-                  display: 'flex',
-                  'justify-content': 'center',
-                  'align-items': 'center',
-                }}
-              >
-                {(() => {
-                  const now = new Date();
-                  const zonedNow = toZonedTime(now, props.timeZone);
-                  return (
-                    zonedNow.getHours().toString().padStart(2, '0') +
-                    ':' +
-                    zonedNow.getMinutes().toString().padStart(2, '0')
-                  );
-                })()}
-              </div>
+            <div class={styles['time-bar']} style={{ top: getTimeBarTop() }}>
+              <div class={styles['time-bar-label']}>{currentTimeLabel()}</div>
             </div>
           </div>
         </div>

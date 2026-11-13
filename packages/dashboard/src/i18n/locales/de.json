@@ -722,7 +722,8 @@
       "created": "Kanal {{name}} wurde erfolgreich erstellt",
       "updated": "Kanal {{name}} wurde erfolgreich aktualisiert",
       "updateDefaultPlaylist": "Standard-Playlist erfolgreich aktualisiert",
-      "clearDefaultPlaylist": "Standard-Playlist erfolgreich gelöscht"
+      "clearDefaultPlaylist": "Standard-Playlist erfolgreich gelöscht",
+      "updateChannelEntry": "Kanaleintrag erfolgreich aktualisiert"
     },
     "info": {
       "contentRequired": "Damit Inhalte angezeigt werden, legen Sie eine Standard-Playlist fest oder fügen Sie einen geplanten Eintrag für diesen Kanal hinzu."
@@ -735,6 +736,20 @@
       "updateDefaultPlaylist": "Fehler beim Aktualisieren der Standard-Playlist des Kanals: {{error}}",
       "clearDefaultPlaylist": "Fehler beim Löschen der Standard-Playlist des Kanals: {{error}}",
       "updateChannelEntry": "Fehler beim Aktualisieren des Kanaleintrags: {{error}}"
+    },
+    "calendar": {
+      "previousWeek": "Vorherige Woche",
+      "nextWeek": "Nächste Woche",
+      "previousDay": "Vorheriger Tag",
+      "nextDay": "Nächster Tag",
+      "today": "Heute",
+      "tapToAdd": "Tippen Sie auf einen Zeitslot, um dem Zeitplan eine Playlist hinzuzufügen.",
+      "addEntry": "Zum Zeitplan hinzufügen",
+      "startsAt": "Beginnt am {{date}} um {{time}}",
+      "duration": "Dauer",
+      "untilEndOfDay": "Bis zum Ende des Tages",
+      "slotUnavailable": "Dieser Zeitslot überschneidet sich mit einem anderen Eintrag oder passt nicht in die Woche.",
+      "confirmRemoveEntry": "Sind Sie sicher, dass Sie den Eintrag \"{{title}}\" entfernen möchten?"
     }
   },
   "organization": {

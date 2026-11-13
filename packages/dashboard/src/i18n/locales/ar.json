@@ -784,7 +784,8 @@
       "created": "تم إنشاء القناة {{name}} بنجاح",
       "updated": "تم تحديث القناة {{name}} بنجاح",
       "updateDefaultPlaylist": "تم تحديث قائمة التشغيل الافتراضية بنجاح",
-      "clearDefaultPlaylist": "تم مسح قائمة التشغيل الافتراضية بنجاح"
+      "clearDefaultPlaylist": "تم مسح قائمة التشغيل الافتراضية بنجاح",
+      "updateChannelEntry": "تم تحديث إدخال القناة بنجاح"
     },
     "info": {
       "contentRequired": "لعرض المحتوى، عيّن قائمة تشغيل افتراضية أو أضف إدخالاً مجدولاً لهذه القناة."
@@ -797,6 +798,20 @@
       "updateDefaultPlaylist": "فشل تحديث قائمة التشغيل الافتراضية للقناة: {{error}}",
       "clearDefaultPlaylist": "فشل مسح قائمة التشغيل الافتراضية للقناة: {{error}}",
       "updateChannelEntry": "خطأ في تحديث إدخال القناة: {{error}}"
+    },
+    "calendar": {
+      "previousWeek": "الأسبوع السابق",
+      "nextWeek": "الأسبوع التالي",
+      "previousDay": "اليوم السابق",
+      "nextDay": "اليوم التالي",
+      "today": "اليوم",
+      "tapToAdd": "انقر على فترة زمنية لإضافة قائمة تشغيل إلى الجدول.",
+      "addEntry": "إضافة إلى الجدول",
+      "startsAt": "يبدأ في {{date}} الساعة {{time}}",
+      "duration": "المدة",
+      "untilEndOfDay": "حتى نهاية اليوم",
+      "slotUnavailable": "تتداخل هذه الفترة الزمنية مع إدخال آخر أو لا تتسع ضمن الأسبوع.",
+      "confirmRemoveEntry": "هل أنت متأكد من أنك تريد إزالة الإدخال \"{{title}}\"؟"
     }
   },
   "organization": {

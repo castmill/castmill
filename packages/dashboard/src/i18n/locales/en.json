@@ -736,7 +736,8 @@
       "created": "Channel {{name}} created successfully",
       "updated": "Channel {{name}} updated successfully",
       "updateDefaultPlaylist": "Default playlist updated successfully",
-      "clearDefaultPlaylist": "Default playlist cleared successfully"
+      "clearDefaultPlaylist": "Default playlist cleared successfully",
+      "updateChannelEntry": "Channel entry updated successfully"
     },
     "info": {
       "contentRequired": "To display content, set a default playlist or add a scheduled entry for this channel."
@@ -749,6 +750,20 @@
       "updateDefaultPlaylist": "Failed to update channel default playlist: {{error}}",
       "clearDefaultPlaylist": "Failed to clear channel default playlist: {{error}}",
       "updateChannelEntry": "Error updating channel entry: {{error}}"
+    },
+    "calendar": {
+      "previousWeek": "Previous week",
+      "nextWeek": "Next week",
+      "previousDay": "Previous day",
+      "nextDay": "Next day",
+      "today": "Today",
+      "tapToAdd": "Tap a time slot to add a playlist to the schedule.",
+      "addEntry": "Add to schedule",
+      "startsAt": "Starts {{date}} at {{time}}",
+      "duration": "Duration",
+      "untilEndOfDay": "Until end of day",
+      "slotUnavailable": "This time slot overlaps another entry or doesn't fit in the week.",
+      "confirmRemoveEntry": "Are you sure you want to remove entry \"{{title}}\"?"
     }
   },
   "organization": {
