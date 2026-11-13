@@ -487,6 +487,52 @@ describe('active-only paginated lists', () => {
     expect(text()).to.equal('Post 1');
   });
 
+  it('keeps an unready auto-duration page mounted and extends its playlist slot', async () => {
+    const current = await show(
+      posts.slice(0, 3),
+      { pageDuration: 'auto' },
+      (url) =>
+        url.endsWith('/1.mp4')
+          ? new Promise<string>(() => {})
+          : Promise.resolve(url),
+      undefined,
+      true
+    );
+    clock = useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval'] });
+    const estimatedDuration = current.duration();
+    current.play(NEVER);
+
+    await clock.tickAsync(2200);
+    await flush();
+    expect(text()).to.equal('Post 1');
+
+    await clock.tickAsync(2500);
+    await flush();
+    expect(text()).to.equal('Post 1');
+    expect(current.duration()).to.be.greaterThan(estimatedDuration + 2000);
+  });
+
+  it('records the next page when playback stops exactly at its boundary', async () => {
+    const current = await show(
+      notes,
+      { pageDuration: 5, resume: true },
+      undefined,
+      undefined,
+      true,
+      undefined,
+      { list: 'resume-boundary' }
+    );
+    clock = useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval'] });
+    current.play(NEVER);
+    await clock.tickAsync(10_000);
+    current.stop();
+    current.seek(0);
+    current.play(NEVER);
+    await flush();
+
+    expect(text()).to.equal('Note 2');
+  });
+
   it('continues with the interrupted page on the next play when resuming', async () => {
     const key = { list: 'resume-interrupted' };
     let current = await resumable(key);

@@ -170,10 +170,50 @@ export const ActivePages: Component<ActivePagesProps> = (props) => {
   let base = 0;
   let started = 0;
   let running = false;
+  let waiting: MountedPage | undefined;
+  let waitingSince: number | undefined;
+  let waited = 0;
   let reached = 0;
   let reportedReady = false;
 
-  const offset = () => base + (running ? Date.now() - started : 0);
+  const offset = () => base + (running && !waiting ? Date.now() - started : 0);
+  const updateDuration = () => {
+    if (item) {
+      item.duration =
+        duration() +
+        waited +
+        (waiting && running && waitingSince !== undefined
+          ? Date.now() - waitingSince
+          : 0);
+    }
+  };
+  const finishWaiting = () => {
+    if (!waiting) return;
+    const elapsed =
+      running && waitingSince !== undefined ? Date.now() - waitingSince : 0;
+    waited += elapsed;
+    positionShift -= elapsed;
+    waiting = undefined;
+    waitingSince = undefined;
+    started = Date.now();
+    updateDuration();
+  };
+  const waitFor = (page: MountedPage) => {
+    if (!auto() || page.ready || !running) return;
+    if (waiting === page) {
+      if (waitingSince === undefined) waitingSince = Date.now();
+      updateDuration();
+      return;
+    }
+    if (waiting) finishWaiting();
+    const pageStart = startOf(page.page);
+    positionShift += pageStart - offset();
+    base = pageStart;
+    started = Date.now();
+    waiting = page;
+    waitingSince = started;
+    updateDuration();
+  };
 
   const ready = () => {
     if (reportedReady) props.onLayoutUpdate?.();
@@ -314,6 +354,9 @@ export const ActivePages: Component<ActivePagesProps> = (props) => {
       const page = mounted().find((candidate) => candidate.page === current);
       if (page?.ready) startPage(page);
     }
+    const page = mounted().find((candidate) => candidate.page === current);
+    if (page && auto() && running && !page.ready) waitFor(page);
+    else if (waiting && waiting !== page) finishWaiting();
     note(at.page);
     if (running && sliding() && !slide) {
       if (durationAt(at.page) - at.local <= PRELOAD_MS) {
@@ -339,12 +382,13 @@ export const ActivePages: Component<ActivePagesProps> = (props) => {
     base = startOf(at.page) + at.local;
     positionShift += base - previousPosition;
     started = Date.now();
-    if (item) item.duration = duration();
+    updateDuration();
   };
 
   const pageReady = (page: MountedPage) => {
     page.ready = true;
     measure(page);
+    if (waiting === page) finishWaiting();
     if (page.page !== current) return;
     if (slide && slide.to === page && !slide.tween) runSlide(slide);
     startPage(page);
@@ -395,11 +439,14 @@ export const ActivePages: Component<ActivePagesProps> = (props) => {
     },
     seek(value) {
       finishSlide();
+      if (waiting) finishWaiting();
       base = positionFor(value);
       started = Date.now();
       sync(true);
     },
     pause() {
+      if (running) sync();
+      if (waiting) finishWaiting();
       base = offset();
       running = false;
       stopTimer();
@@ -417,7 +464,10 @@ export const ActivePages: Component<ActivePagesProps> = (props) => {
         measured.clear();
         measuredPages = currentPages;
         positionShift = 0;
-        if (item) item.duration = duration();
+        waiting = undefined;
+        waitingSince = undefined;
+        waited = 0;
+        updateDuration();
       }
       measured.forEach((_value, key) => {
         if (key >= n) measured.delete(key);
@@ -444,8 +494,8 @@ export const ActivePages: Component<ActivePagesProps> = (props) => {
   // Keep the parent's item in step with bound page durations, without
   // remounting unchanged pages.
   createEffect(() => {
-    const length = duration();
-    if (item) item.duration = length;
+    duration();
+    if (item) updateDuration();
   });
 
   onCleanup(() => {

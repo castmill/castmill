@@ -407,11 +407,11 @@ describe('timer with a dynamic period', () => {
       expect(values[values.length - 1]).to.equal(1300);
       clock.tick(1800);
       expect(values[values.length - 1]).to.equal(100);
-      // A period that shrinks below the current time restarts the cycle.
       clock.tick(1000);
       period = 500;
       clock.tick(100);
-      expect(values[values.length - 1]).to.equal(100);
+      // A shorter period wraps the existing position instead of resetting it.
+      expect(values[values.length - 1]).to.equal(200);
     } finally {
       sub.unsubscribe();
       clock.restore();

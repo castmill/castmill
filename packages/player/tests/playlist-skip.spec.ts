@@ -18,6 +18,7 @@ import {
   Playlist,
   Renderer,
   TemplateWidget,
+  timer,
 } from '../dist/index.js';
 
 const TICK_MS = 100;
@@ -33,6 +34,7 @@ interface FakeLayer {
   readiness: BehaviorSubject<typeof BLOCK | undefined>;
   reportError: ReturnType<typeof spy>;
   duration: () => number;
+  setDuration: (value: number) => void;
   blocked$: () => Observable<typeof BLOCK | undefined>;
   readiness$: () => Observable<typeof BLOCK | undefined>;
   debugInfo: {};
@@ -41,12 +43,16 @@ interface FakeLayer {
 const fakeLayer = (name: string, duration: number): FakeLayer => {
   const blocked = new BehaviorSubject<typeof BLOCK | undefined>(undefined);
   const readiness = new BehaviorSubject<typeof BLOCK | undefined>(undefined);
+  let length = duration;
   return {
     name,
     blocked,
     readiness,
     reportError: spy(),
-    duration: () => duration,
+    duration: () => length,
+    setDuration: (value) => {
+      length = value;
+    },
     blocked$: () => blocked,
     readiness$: () => readiness,
     debugInfo: {},
@@ -183,6 +189,29 @@ describe('Playlist skipping of blocked items', () => {
     );
     run(2 * TICK_MS);
     expect(names()).to.deep.equal(['a', 'b']);
+  });
+
+  it('keeps playlist time continuous when a skipped slot is followed by a duration shrink', () => {
+    const a = fakeLayer('a', 5000);
+    const b = fakeLayer('b', 20000);
+    a.blocked.next(BLOCK);
+    const playlist = new Playlist('zone', {} as any);
+    [a, b].forEach((layer) => playlist.add(layer as unknown as Layer));
+    subscription = playlist
+      .play(
+        renderer,
+        timer(0, 0, TICK_MS, () => playlist.duration()),
+        { loop: true }
+      )
+      .subscribe();
+
+    clock.tick(18_000);
+    expect(playlist.time).to.be.within(21_900, 22_100);
+
+    b.setDuration(10_000);
+    clock.tick(TICK_MS);
+
+    expect(playlist.time).to.be.within(7100, 7300);
   });
 
   it('holds finite parent playback for nested readiness without skipping', () => {

@@ -229,8 +229,7 @@ export function timer(
       } else if (!cycle) {
         tick = position + delta;
       } else {
-        // A period that shrank below the current time restarts the cycle.
-        tick = normalize(position >= cycle ? delta : position + delta, cycle);
+        tick = normalize(position + delta, cycle);
       }
       position = tick;
 
