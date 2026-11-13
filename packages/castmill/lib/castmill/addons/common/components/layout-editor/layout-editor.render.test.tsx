@@ -217,16 +217,18 @@ describe('LayoutEditor pointer interactions', () => {
     const handle = container.querySelector('[data-handle="se"]') as HTMLElement;
     expect(handle).toBeTruthy();
 
-    handle.dispatchEvent(pointer('pointerdown', { clientX: 160, clientY: 90 }));
-    // Move the bottom-right corner to 60% / 80%
+    // Grab away from the bottom-right edge, then move by +10% / +20%.
+    handle.dispatchEvent(
+      pointer('pointerdown', { clientX: 140, clientY: 67.5 })
+    );
     document.dispatchEvent(
-      pointer('pointermove', { clientX: 240, clientY: 180 })
+      pointer('pointermove', { clientX: 180, clientY: 112.5 })
     );
     expect(layout().zones[0].rect).toEqual({
       x: 10,
       y: 10,
-      width: 50,
-      height: 70,
+      width: 40,
+      height: 50,
     });
 
     document.dispatchEvent(pointer('pointercancel'));
@@ -235,6 +237,32 @@ describe('LayoutEditor pointer interactions', () => {
       pointer('pointermove', { clientX: 300, clientY: 200 })
     );
     expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('resizes an aspect-locked zone from an off-center handle grab', () => {
+    const { container, layout } = renderEditor();
+    fireEvent.click(zoneEl(container));
+    fireEvent.change(
+      container.querySelector(
+        '.layout-editor__zone-aspect-select'
+      ) as HTMLSelectElement,
+      { target: { value: '16:9' } }
+    );
+
+    const handle = container.querySelector('[data-handle="se"]') as HTMLElement;
+    handle.dispatchEvent(
+      pointer('pointerdown', { clientX: 140, clientY: 67.5 })
+    );
+    document.dispatchEvent(
+      pointer('pointermove', { clientX: 180, clientY: 112.5 })
+    );
+
+    expect(layout().zones[0].rect).toEqual({
+      x: 10,
+      y: 10,
+      width: 40,
+      height: 40,
+    });
   });
 
   it('ignores secondary pointers and other pointer ids', () => {
@@ -253,7 +281,15 @@ describe('LayoutEditor pointer interactions', () => {
     zone.dispatchEvent(
       pointer('pointerdown', { pointerId: 7, clientX: 80, clientY: 45 })
     );
-    // A second finger neither moves nor ends the drag
+    // Another primary pointer cannot take over or end the active drag.
+    zone.dispatchEvent(
+      pointer('pointerdown', {
+        pointerId: 8,
+        pointerType: 'mouse',
+        clientX: 160,
+        clientY: 90,
+      })
+    );
     document.dispatchEvent(
       pointer('pointermove', { pointerId: 8, clientX: 200, clientY: 45 })
     );

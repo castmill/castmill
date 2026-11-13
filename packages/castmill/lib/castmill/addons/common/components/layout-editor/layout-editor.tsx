@@ -809,6 +809,7 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
     zoneId: string,
     handle: string | null
   ) => {
+    if (dragStateRef.isDragging || dragStateRef.isResizing) return;
     if (e.isPrimary === false) return;
     // Ignore secondary mouse buttons (context menu, middle click)
     if (e.pointerType === 'mouse' && e.button > 0) return;
@@ -918,6 +919,14 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
       });
     } else if (dragStateRef.isResizing) {
       const handle = dragStateRef.resizeHandle;
+      const startRight = start.x + start.width;
+      const startBottom = start.y + start.height;
+      const resizeXPercent =
+        (handle?.includes('w') ? start.x : startRight) +
+        ((e.clientX - startMouse.x) / canvasBounds.width) * 100;
+      const resizeYPercent =
+        (handle?.includes('n') ? start.y : startBottom) +
+        ((e.clientY - startMouse.y) / canvasBounds.height) * 100;
       let newX = start.x;
       let newY = start.y;
       let newWidth = start.width;
@@ -925,10 +934,6 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
 
       // Check if zone has aspect ratio lock
       const aspectLock = zoneAspectLocks()[zoneId];
-
-      // Calculate the edges of the zone at start
-      const startRight = start.x + start.width;
-      const startBottom = start.y + start.height;
 
       if (aspectLock) {
         // Aspect-ratio-constrained resize
@@ -945,12 +950,12 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
         if (isCorner || isHorizontal) {
           // Width-driven resize: calculate height from width
           if (handle?.includes('e')) {
-            const newRight = Math.max(newX + 5, Math.min(100, mouseXPercent));
+            const newRight = Math.max(newX + 5, Math.min(100, resizeXPercent));
             newWidth = newRight - newX;
           }
           if (handle?.includes('w')) {
             const rightEdge = startRight;
-            newX = Math.max(0, Math.min(rightEdge - 5, mouseXPercent));
+            newX = Math.max(0, Math.min(rightEdge - 5, resizeXPercent));
             newWidth = rightEdge - newX;
           }
           // Calculate constrained height
@@ -980,12 +985,12 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
         } else if (isVertical) {
           // Height-driven resize: calculate width from height
           if (handle?.includes('s')) {
-            const newBottom = Math.max(newY + 5, Math.min(100, mouseYPercent));
+            const newBottom = Math.max(newY + 5, Math.min(100, resizeYPercent));
             newHeight = newBottom - newY;
           }
           if (handle?.includes('n')) {
             const bottomEdge = startBottom;
-            newY = Math.max(0, Math.min(bottomEdge - 5, mouseYPercent));
+            newY = Math.max(0, Math.min(bottomEdge - 5, resizeYPercent));
             newHeight = bottomEdge - newY;
           }
           // Calculate constrained width
@@ -1001,7 +1006,7 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
         // Free resize (no aspect lock)
         // East (right edge): set right edge to mouse position
         if (handle?.includes('e')) {
-          const newRight = Math.max(newX + 5, Math.min(100, mouseXPercent));
+          const newRight = Math.max(newX + 5, Math.min(100, resizeXPercent));
           newWidth = newRight - newX;
         }
 
@@ -1010,13 +1015,13 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
           const rightEdge = handle?.includes('e')
             ? newX + newWidth
             : startRight;
-          newX = Math.max(0, Math.min(rightEdge - 5, mouseXPercent));
+          newX = Math.max(0, Math.min(rightEdge - 5, resizeXPercent));
           newWidth = rightEdge - newX;
         }
 
         // South (bottom edge): set bottom edge to mouse position
         if (handle?.includes('s')) {
-          const newBottom = Math.max(newY + 5, Math.min(100, mouseYPercent));
+          const newBottom = Math.max(newY + 5, Math.min(100, resizeYPercent));
           newHeight = newBottom - newY;
         }
 
@@ -1025,7 +1030,7 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
           const bottomEdge = handle?.includes('s')
             ? newY + newHeight
             : startBottom;
-          newY = Math.max(0, Math.min(bottomEdge - 5, mouseYPercent));
+          newY = Math.max(0, Math.min(bottomEdge - 5, resizeYPercent));
           newHeight = bottomEdge - newY;
         }
 
