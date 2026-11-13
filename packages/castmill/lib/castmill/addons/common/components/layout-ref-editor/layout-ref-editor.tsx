@@ -305,6 +305,8 @@ export const LayoutRefEditor: Component<LayoutRefEditorProps> = (props) => {
                         class="layout-ref-editor__zone-assignment"
                         onMouseEnter={() => setHoveredZoneId(zone.id)}
                         onMouseLeave={() => setHoveredZoneId(null)}
+                        onFocusIn={() => setHoveredZoneId(zone.id)}
+                        onFocusOut={() => setHoveredZoneId(null)}
                       >
                         <div class="zone-label">
                           <span class="zone-name">{zone.name}</span>

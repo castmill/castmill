@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, it, expect, afterEach, vi, beforeEach } from 'vitest';
 import {
   render,
@@ -874,5 +876,19 @@ describe('ChoicesField', () => {
       ).resolves.toBeNull();
       vi.unstubAllGlobals();
     });
+  });
+});
+
+describe('ChoicesField touch styles', () => {
+  it('gives tile actions ≥2.75em tap targets on coarse pointers', () => {
+    const scss = readFileSync(
+      resolve(__dirname, 'choices-field.module.scss'),
+      'utf8'
+    );
+    const touch = scss.slice(scss.indexOf('@media (pointer: coarse)'));
+    expect(touch).toMatch(/\.tileActions \{[\s\S]*min-width: 2\.75em;/);
+    expect(touch).toMatch(/\.tileActions \{[\s\S]*min-height: 2\.75em;/);
+    // Three 2.75em buttons must fit inside a tile
+    expect(touch).toMatch(/\.tile \{\s*width: 8\.5em;/);
   });
 });

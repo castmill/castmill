@@ -1718,7 +1718,13 @@
       "uploadError": "خطأ في تحميل الملف.",
       "uploadFailed": "فشل التحميل: {{error}}",
       "serverError": "خطأ في الخادم (الحالة {{status}})",
-      "unknownError": "خطأ غير معروف"
+      "unknownError": "خطأ غير معروف",
+      "chooseFiles": "اختر الملفات",
+      "takePhotoOrVideo": "التقط صورة أو فيديو",
+      "dropFiles": "أو اسحب الملفات وأفلتها هنا...",
+      "upload": "رفع",
+      "noSupportedFiles": "لم يتم العثور على ملفات مدعومة ضمن الملفات المُفلتة.",
+      "unsupportedSkipped": "تم تخطي {{count}} ملف (ملفات) غير مدعومة. المدعوم: PNG وJPEG وGIF وتنسيقات الفيديو الشائعة."
     },
     "thumbnail": {
       "failedTitle": "فشل تحويل الوسائط",

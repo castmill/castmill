@@ -6,6 +6,7 @@ import {
   JSX,
   onMount,
   createEffect,
+  createUniqueId,
 } from 'solid-js';
 import { dropTargetForExternal } from '@atlaskit/pragmatic-drag-and-drop/external/adapter';
 import { authFetch, getAuthToken } from '../../common/services/auth-fetch';
@@ -16,6 +17,7 @@ import {
   AiOutlineDelete,
   AiOutlineCheck,
   AiOutlineWarning,
+  AiOutlineCamera,
 } from 'solid-icons/ai';
 
 import {
@@ -65,11 +67,57 @@ const supportedFileTypes = [
   'video/x-ms-wmv',
 ];
 
+// Some mobile pickers (notably older Android browsers) report an empty or
+// generic MIME type, so fall back to the file extension.
+const mimeTypesByExtension: Record<string, string> = {
+  png: 'image/png',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  gif: 'image/gif',
+  mp4: 'video/mp4',
+  m4v: 'video/mp4',
+  mov: 'video/quicktime',
+  avi: 'video/x-msvideo',
+  ogv: 'video/ogg',
+  ogg: 'video/ogg',
+  wmv: 'video/x-ms-wmv',
+};
+
+export const resolveSupportedFile = (file: File): File | undefined => {
+  if (supportedFileTypes.includes(file.type)) {
+    return file;
+  }
+  if (file.type && file.type !== 'application/octet-stream') {
+    return undefined;
+  }
+  const extension = file.name.split('.').pop()?.toLowerCase() ?? '';
+  const type = mimeTypesByExtension[extension];
+  return type
+    ? new File([file], file.name, { type, lastModified: file.lastModified })
+    : undefined;
+};
+
+export const partitionSupportedFiles = (candidates: File[]) => {
+  const supported: File[] = [];
+  let skipped = 0;
+  candidates.forEach((file) => {
+    const resolved = resolveSupportedFile(file);
+    if (resolved) {
+      supported.push(resolved);
+    } else {
+      skipped++;
+    }
+  });
+  return { supported, skipped };
+};
+
 export const UploadComponent = (props: UploadComponentProps) => {
   // Get i18n functions from store
   const t = (key: string, params?: Record<string, any>) =>
     props.store?.i18n?.t(key, params) || key;
   const toast = useToast();
+  const fileInputId = `upload-files-${createUniqueId()}`;
+  const cameraInputId = `upload-camera-${createUniqueId()}`;
 
   const [files, setFiles] = createSignal<File[]>([]);
   const [messages, setMessages] = createSignal<Messages>({});
@@ -148,12 +196,24 @@ export const UploadComponent = (props: UploadComponentProps) => {
   const handleFileChange = (e: Event) => {
     const target = e.target as HTMLInputElement;
     if (target.files) {
-      const selectedFiles = Array.from(target.files).filter((file) =>
-        supportedFileTypes.includes(file.type)
+      const { supported, skipped } = partitionSupportedFiles(
+        Array.from(target.files)
       );
-      setFiles(selectedFiles);
+      if (skipped > 0) {
+        toast.warning(
+          t('medias.upload.unsupportedSkipped', { count: skipped })
+        );
+      }
+      // The camera input appends captures so several shots can be queued.
+      setFiles(
+        target.dataset.append === 'true'
+          ? [...files(), ...supported]
+          : supported
+      );
       setProgresses({});
       setMessages({});
+      // Allow picking the same file (or taking another photo) again
+      target.value = '';
     }
   };
 
@@ -287,20 +347,24 @@ export const UploadComponent = (props: UploadComponentProps) => {
       onDrop: ({ source }) => {
         setIsDraggedOver(false);
 
-        const droppedFiles = Array.from(source.items).filter(
-          (file) =>
-            file.kind === 'file' && supportedFileTypes.includes(file.type)
+        const { supported, skipped } = partitionSupportedFiles(
+          Array.from(source.items)
+            .filter((item) => item.kind === 'file')
+            .map((item) => item.getAsFile())
+            .filter((file): file is File => !!file)
         );
 
-        if (droppedFiles.length === 0) {
-          toast.error('No supported files found in the dropped files.');
+        if (supported.length === 0) {
+          toast.error(t('medias.upload.noSupportedFiles'));
           return;
         }
+        if (skipped > 0) {
+          toast.warning(
+            t('medias.upload.unsupportedSkipped', { count: skipped })
+          );
+        }
 
-        setFiles([
-          ...files(),
-          ...droppedFiles.map((file) => file.getAsFile()!),
-        ]);
+        setFiles([...files(), ...supported]);
         setProgresses({});
         setMessages({});
       },
@@ -332,17 +396,31 @@ export const UploadComponent = (props: UploadComponentProps) => {
 
   return (
     <div class="upload-files">
-      <div>
+      <div class="file-pickers">
         <input
           type="file"
-          id="file"
+          id={fileInputId}
           class="file-input"
           multiple
           onChange={handleFileChange}
           accept={supportedFileTypes.join(',')}
         />
-        <label for="file" class="file-label">
-          Choose Files
+        <label for={fileInputId} class="file-label">
+          {t('medias.upload.chooseFiles')}
+        </label>
+        {/* Opens the camera directly on phones and tablets */}
+        <input
+          type="file"
+          id={cameraInputId}
+          class="file-input"
+          data-append="true"
+          capture="environment"
+          onChange={handleFileChange}
+          accept="image/*,video/*"
+        />
+        <label for={cameraInputId} class="file-label camera-label">
+          <IconWrapper icon={AiOutlineCamera} />
+          {t('medias.upload.takePhotoOrVideo')}
         </label>
       </div>
 
@@ -356,7 +434,7 @@ export const UploadComponent = (props: UploadComponentProps) => {
         }}
         onDragOver={(e) => e.preventDefault()} // This is crucial for making the drop event work
       >
-        Or Drag and drop files here...
+        {t('medias.upload.dropFiles')}
       </div>
       <Show when={files().length}>
         <div class="files">
@@ -410,12 +488,18 @@ export const UploadComponent = (props: UploadComponentProps) => {
                         <Show
                           when={messages()[file.name]}
                           fallback={
-                            <progress
-                              value={progresses()[file.name] || 0}
-                              max="100"
-                            >
-                              {progresses()[file.name]}%
-                            </progress>
+                            <div class="progress-cell">
+                              <progress
+                                value={progresses()[file.name] || 0}
+                                max="100"
+                                aria-label={file.name}
+                              >
+                                {progresses()[file.name] || 0}%
+                              </progress>
+                              <span class="progress-value" aria-hidden="true">
+                                {progresses()[file.name] || 0}%
+                              </span>
+                            </div>
                           }
                         >
                           <div>{messages()[file.name]}</div>
@@ -443,8 +527,8 @@ export const UploadComponent = (props: UploadComponentProps) => {
           <Button
             label={
               getCompletedFilesCount() === getValidFilesCount()
-                ? 'Close'
-                : 'Cancel'
+                ? t('common.close')
+                : t('common.cancel')
             }
             onClick={() => props.onCancel?.()}
             color="secondary"
@@ -459,7 +543,7 @@ export const UploadComponent = (props: UploadComponentProps) => {
           disabled={
             isUploading() || getCompletedFilesCount() === getValidFilesCount()
           }
-          label="Upload"
+          label={t('medias.upload.upload')}
           onClick={handleUpload}
           icon={AiOutlineUpload}
           color="primary"

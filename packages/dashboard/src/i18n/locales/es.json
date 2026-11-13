@@ -1719,7 +1719,13 @@
       "uploadError": "Error al cargar el archivo.",
       "uploadFailed": "Error de carga: {{error}}",
       "serverError": "Error del servidor (estado {{status}})",
-      "unknownError": "Error desconocido"
+      "unknownError": "Error desconocido",
+      "chooseFiles": "Elegir archivos",
+      "takePhotoOrVideo": "Tomar foto o vídeo",
+      "dropFiles": "O arrastra y suelta archivos aquí...",
+      "upload": "Subir",
+      "noSupportedFiles": "No se encontraron archivos compatibles entre los archivos soltados.",
+      "unsupportedSkipped": "Se omitieron {{count}} archivo(s) no compatibles. Compatibles: PNG, JPEG, GIF y formatos de vídeo habituales."
     },
     "thumbnail": {
       "failedTitle": "La transcodificación falló",

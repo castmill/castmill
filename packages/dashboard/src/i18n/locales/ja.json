@@ -1719,7 +1719,13 @@
       "uploadError": "ファイルのアップロード中にエラーが発生しました。",
       "uploadFailed": "アップロード失敗：{{error}}",
       "serverError": "サーバーエラー（ステータス {{status}}）",
-      "unknownError": "不明なエラー"
+      "unknownError": "不明なエラー",
+      "chooseFiles": "ファイルを選択",
+      "takePhotoOrVideo": "写真または動画を撮影",
+      "dropFiles": "またはここにファイルをドラッグ＆ドロップ...",
+      "upload": "アップロード",
+      "noSupportedFiles": "ドロップされたファイルにサポートされているファイルがありません。",
+      "unsupportedSkipped": "サポートされていないファイル {{count}} 件をスキップしました。対応形式：PNG、JPEG、GIF、一般的な動画形式。"
     },
     "thumbnail": {
       "failedTitle": "トランスコードに失敗しました",

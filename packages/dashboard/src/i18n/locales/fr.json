@@ -1730,7 +1730,13 @@
       "uploadError": "Erreur lors du téléchargement du fichier.",
       "uploadFailed": "Échec du téléchargement : {{error}}",
       "serverError": "Erreur serveur (statut {{status}})",
-      "unknownError": "Erreur inconnue"
+      "unknownError": "Erreur inconnue",
+      "chooseFiles": "Choisir des fichiers",
+      "takePhotoOrVideo": "Prendre une photo ou une vidéo",
+      "dropFiles": "Ou glissez-déposez des fichiers ici...",
+      "upload": "Téléverser",
+      "noSupportedFiles": "Aucun fichier pris en charge parmi les fichiers déposés.",
+      "unsupportedSkipped": "{{count}} fichier(s) non pris en charge ignoré(s). Formats acceptés : PNG, JPEG, GIF et formats vidéo courants."
     },
     "thumbnail": {
       "failedTitle": "Échec du transcodage",

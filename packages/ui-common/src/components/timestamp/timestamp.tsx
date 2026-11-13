@@ -19,7 +19,9 @@ export interface TimestampProps {
   mode?: 'relative' | 'absolute';
 
   /**
-   * Whether to show a tooltip with absolute time when hovering (only applies to relative mode)
+   * Whether to show a tooltip with absolute time when hovering (only applies
+   * to relative mode). Tapping or activating it with the keyboard toggles
+   * the absolute time, so touch users can reach it too.
    * @default true
    */
   showTooltip?: boolean;
@@ -57,6 +59,7 @@ export const Timestamp: Component<TimestampProps> = (props) => {
   };
 
   const [tick, setTick] = createSignal(0);
+  const [showAbsolute, setShowAbsolute] = createSignal(false);
 
   // Update tick every minute for relative time to trigger re-render
   onMount(() => {
@@ -76,10 +79,17 @@ export const Timestamp: Component<TimestampProps> = (props) => {
     return <span class={styles.timestamp}>{displayText()}</span>;
   }
 
-  // Render with tooltip
+  // Render with tooltip; hover-only tooltips are unreachable on touch, so a
+  // tap (or Enter/Space) swaps the relative text for the absolute time.
   return (
-    <span class={styles.timestampWithTooltip} title={tooltipText()}>
-      {displayText()}
-    </span>
+    <button
+      type="button"
+      class={styles.timestampWithTooltip}
+      title={tooltipText()}
+      aria-pressed={showAbsolute()}
+      onClick={() => setShowAbsolute(!showAbsolute())}
+    >
+      {showAbsolute() ? tooltipText() : displayText()}
+    </button>
   );
 };
