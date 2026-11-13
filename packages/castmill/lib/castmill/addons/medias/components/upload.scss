@@ -132,3 +132,95 @@
     gap: 1em;
   }
 }
+
+.upload-files {
+  .file-pickers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5em;
+  }
+
+  .file-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+  }
+
+  // Keyboard users must see where focus is on the hidden inputs' labels
+  .file-input:focus-visible + .file-label {
+    outline: 0.15em solid var(--cm-primary);
+    outline-offset: 0.15em;
+  }
+
+  // The camera shortcut only makes sense on phones and tablets
+  .camera-label {
+    display: none;
+  }
+
+  .progress-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+
+    progress {
+      flex: 1 1 auto;
+      min-width: 3em;
+    }
+  }
+
+  .progress-value {
+    min-width: 3em;
+    font-variant-numeric: tabular-nums;
+    text-align: end;
+  }
+}
+
+// Touch screens: camera capture, no drag-and-drop zone, ≥2.75em tap targets
+@media (hover: none), (pointer: coarse) {
+  .upload-files {
+    .camera-label {
+      display: inline-flex;
+    }
+
+    .drop-zone {
+      display: none;
+    }
+
+    .file-label {
+      min-height: 2.75em;
+      box-sizing: border-box;
+      justify-content: center;
+    }
+
+    .files button {
+      min-width: 2.75em;
+      min-height: 2.75em;
+    }
+  }
+}
+
+// Phones: hide the size column and let the file name use the space
+@media (max-width: 36em) {
+  .upload-files {
+    margin-top: 1em;
+
+    .file-pickers .file-label {
+      flex: 1 1 100%;
+    }
+
+    .files table {
+      th:nth-child(2),
+      td:nth-child(2) {
+        display: none;
+      }
+
+      .file .filename-cell {
+        max-width: 9em;
+      }
+    }
+
+    .buttons {
+      flex-wrap: wrap;
+    }
+  }
+}

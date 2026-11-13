@@ -34,3 +34,14 @@ export const PHONE_LAYOUT_QUERY = '(max-width: 36em)';
 export function usePhoneLayout(): Accessor<boolean> {
   return useMediaQuery(PHONE_LAYOUT_QUERY, false);
 }
+
+/**
+ * Touch-first input: HTML5 drag-and-drop and hover are unavailable, so
+ * components fall back to tap alternatives and ≥2.75em tap targets.
+ */
+export const COARSE_POINTER_QUERY = '(pointer: coarse)';
+
+/** Reactive coarse-pointer signal; `false` where matchMedia is unavailable. */
+export function useCoarsePointer(): Accessor<boolean> {
+  return useMediaQuery(COARSE_POINTER_QUERY, false);
+}

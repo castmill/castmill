@@ -1713,7 +1713,13 @@
       "uploadError": "Error uploading file.",
       "uploadFailed": "Upload failed: {{error}}",
       "serverError": "Server error (status {{status}})",
-      "unknownError": "Unknown error"
+      "unknownError": "Unknown error",
+      "chooseFiles": "Choose Files",
+      "takePhotoOrVideo": "Take Photo or Video",
+      "dropFiles": "Or drag and drop files here...",
+      "upload": "Upload",
+      "noSupportedFiles": "No supported files found in the dropped files.",
+      "unsupportedSkipped": "{{count}} unsupported file(s) skipped. Supported: PNG, JPEG, GIF and common video formats."
     },
     "thumbnail": {
       "failedTitle": "Transcoding failed",

@@ -262,6 +262,28 @@ components for phone/tablet layouts (see
 - Page roots use `margin: var(--cm-page-gutter, 2em)` instead of a fixed
   margin so gutters shrink on tablets and phones.
 
+## Touch Support
+
+- Never require drag-and-drop. Pair it with tap alternatives (move up/down
+  buttons, tap-to-add, menus) and turn HTML5 `draggable` off on touch screens
+  with `useCoarsePointer()` from `@castmill/ui-common`, as the automation rules
+  tab and `ChoicesField` do. Pointer-event drags set `touch-action: none` on
+  the dragged elements.
+- Hover-only affordances need a tap or focus equivalent. Make hover-revealed
+  buttons visible under `@media (hover: none), (pointer: coarse)` and on
+  `:focus-visible`/`:focus-within` (tree tag buttons, tag actions). Mirror
+  `mouseenter` highlights with `focusin`. Don't hide information in a `title`
+  tooltip alone: relative `Timestamp`s are buttons that toggle to the absolute
+  time.
+- Tap targets are at least `2.75em` on `(pointer: coarse)`.
+- Media upload (`addons/medias/components/upload.tsx`) shows a "Take Photo or
+  Video" (`capture="environment"`) picker instead of the drop zone on touch
+  screens. It falls back to the file extension when mobile pickers report an
+  empty MIME type and shows the percentage next to each progress bar.
+- Stylesheet tests live where `sass` is available. Dashboard tests compile SCSS
+  and inspect the CSSOM (`src/pages/touch-affordances.test.ts`). Addon and
+  ui-common tests read the source SCSS as text.
+
 ## Modals and Forms
 
 The ui-common `Modal` becomes a bottom sheet under `36em`, with the body as

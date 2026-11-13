@@ -427,3 +427,23 @@
   color: $base-color;
   cursor: pointer;
 }
+
+/* Touch screens: ≥2.75em tap targets for the move/remove buttons */
+@media (pointer: coarse) {
+  .tile {
+    width: 8.5em;
+  }
+
+  .tileActions {
+    gap: 0;
+    padding: 0;
+
+    button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 2.75em;
+      min-height: 2.75em;
+    }
+  }
+}

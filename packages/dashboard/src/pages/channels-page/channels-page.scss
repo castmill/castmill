@@ -83,6 +83,17 @@
     height: 0.875em;
   }
 
+  // Revealed on hover for mice; always visible and tap-sized on touch
+  @media (hover: none), (pointer: coarse) {
+    opacity: 1;
+    width: 2.75em;
+    height: 2.75em;
+  }
+
+  &:focus-visible {
+    opacity: 1;
+  }
+
   &:hover {
     color: var(--cm-primary);
     background: rgba(var(--cm-primary-rgb), 0.1);

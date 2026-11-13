@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, it, expect, afterEach, vi, beforeEach } from 'vitest';
 import {
   render,
@@ -408,6 +410,45 @@ describe('ChoicesField', () => {
 
       fireEvent.drop(tiles[1]);
       expect(onChange).toHaveBeenCalledTimes(1);
+    });
+
+    it('disables drag on touch screens but keeps the move buttons', async () => {
+      const originalMatchMedia = window.matchMedia;
+      window.matchMedia = vi.fn((query: string) => ({
+        matches: query === '(pointer: coarse)',
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      })) as unknown as typeof window.matchMedia;
+      try {
+        const { onChange } = setup({
+          multiple: true,
+          ordered: true,
+          initial: ['p1', 'p2'],
+        });
+
+        await waitFor(() =>
+          expect(screen.getByText('Photo 2')).toBeInTheDocument()
+        );
+        const tiles = screen.getAllByTestId('selected-tile');
+        tiles.forEach((tile) =>
+          expect(tile.getAttribute('draggable')).toBe('false')
+        );
+
+        fireEvent.click(screen.getAllByLabelText('Move later')[0]);
+        expect(onChange).toHaveBeenLastCalledWith(['p2', 'p1']);
+      } finally {
+        window.matchMedia = originalMatchMedia;
+      }
+    });
+
+    it('makes tiles draggable with a fine pointer', async () => {
+      setup({ multiple: true, ordered: true, initial: ['p1'] });
+      await waitFor(() =>
+        expect(screen.getByText('Photo 1')).toBeInTheDocument()
+      );
+      expect(
+        screen.getByTestId('selected-tile').getAttribute('draggable')
+      ).toBe('true');
     });
 
     it('removes values when not ordered', async () => {
@@ -835,5 +876,19 @@ describe('ChoicesField', () => {
       ).resolves.toBeNull();
       vi.unstubAllGlobals();
     });
+  });
+});
+
+describe('ChoicesField touch styles', () => {
+  it('gives tile actions ≥2.75em tap targets on coarse pointers', () => {
+    const scss = readFileSync(
+      resolve(__dirname, 'choices-field.module.scss'),
+      'utf8'
+    );
+    const touch = scss.slice(scss.indexOf('@media (pointer: coarse)'));
+    expect(touch).toMatch(/\.tileActions \{[\s\S]*min-width: 2\.75em;/);
+    expect(touch).toMatch(/\.tileActions \{[\s\S]*min-height: 2\.75em;/);
+    // Three 2.75em buttons must fit inside a tile
+    expect(touch).toMatch(/\.tile \{\s*width: 8\.5em;/);
   });
 });

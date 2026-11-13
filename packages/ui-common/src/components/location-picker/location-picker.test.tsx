@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, it, expect, afterEach, vi, beforeEach } from 'vitest';
 import { render, cleanup, screen, waitFor } from '@solidjs/testing-library';
 import { LocationPicker, LocationValue } from './location-picker';
@@ -144,5 +146,22 @@ describe('LocationPicker Component', () => {
     // Check that the map container exists
     const mapContainer = document.querySelector('.location-picker__map');
     expect(mapContainer).toBeInTheDocument();
+  });
+});
+
+describe('LocationPicker touch layout', () => {
+  it('uses em sizing, a shorter phone map and ≥2.75em touch targets', () => {
+    const scss = readFileSync(
+      resolve(__dirname, 'location-picker.scss'),
+      'utf8'
+    );
+    expect(scss).not.toMatch(/height:\s*\d+px/);
+    expect(scss).toMatch(
+      /@media \(max-width: 36em\) \{\s*\.location-picker__map \{\s*height: 18em;/
+    );
+    const touch = scss.slice(scss.indexOf('@media (pointer: coarse)'));
+    expect(touch).toContain('min-height: calc(2.75em / 0.85)');
+    expect(touch).toContain('min-width: calc(2.75em / 0.85)');
+    expect(touch).toContain('.location-picker__address-input');
   });
 });

@@ -4,12 +4,25 @@
 }
 
 .timestampWithTooltip {
-  font-family: inherit;
-  color: inherit;
-  cursor: help;
+  /* Reset button chrome so it reads as inline text */
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: none;
   border-bottom: 1px dotted currentColor;
+  border-radius: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: inherit;
+  cursor: help;
 
   &:hover {
     opacity: 0.8;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--cm-primary);
+    outline-offset: 2px;
   }
 }

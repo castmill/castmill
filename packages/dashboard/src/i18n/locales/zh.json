@@ -1718,7 +1718,13 @@
       "uploadError": "上传文件时出错。",
       "uploadFailed": "上传失败：{{error}}",
       "serverError": "服务器错误（状态 {{status}}）",
-      "unknownError": "未知错误"
+      "unknownError": "未知错误",
+      "chooseFiles": "选择文件",
+      "takePhotoOrVideo": "拍摄照片或视频",
+      "dropFiles": "或将文件拖放到此处...",
+      "upload": "上传",
+      "noSupportedFiles": "拖放的文件中没有受支持的文件。",
+      "unsupportedSkipped": "已跳过 {{count}} 个不受支持的文件。支持：PNG、JPEG、GIF 和常见视频格式。"
     },
     "thumbnail": {
       "failedTitle": "转码失败",

@@ -7,7 +7,7 @@ import {
 } from 'solid-icons/ai';
 import { BsPlayFill, BsPlus, BsExclamationTriangle } from 'solid-icons/bs';
 import { RiEditorDraggable } from 'solid-icons/ri';
-import { Button, ConfirmDialog } from '@castmill/ui-common';
+import { Button, ConfirmDialog, useCoarsePointer } from '@castmill/ui-common';
 
 import { useI18n } from '../../i18n';
 import type {
@@ -56,6 +56,9 @@ export const RulesTab: Component<RulesTabProps> = (props) => {
   const { t } = useI18n();
   const summaryContext = useSummaryContext();
   const missingLabel = useMissingCapabilityLabel();
+  // HTML5 drag-and-drop is unavailable on touch; the move buttons remain.
+  const coarsePointer = useCoarsePointer();
+  const canDrag = () => props.canEdit && !coarsePointer();
 
   const [editing, setEditing] = createSignal<{
     index: number | null;
@@ -139,7 +142,7 @@ export const RulesTab: Component<RulesTabProps> = (props) => {
                     dropIndex() === index() && dragIndex() !== index(),
                 }}
                 data-testid="rule-card"
-                draggable={props.canEdit}
+                draggable={canDrag()}
                 onDragStart={(e) => {
                   setDragIndex(index());
                   e.dataTransfer?.setData('text/plain', String(index()));
@@ -160,7 +163,7 @@ export const RulesTab: Component<RulesTabProps> = (props) => {
                   setDropIndex(null);
                 }}
               >
-                <Show when={props.canEdit}>
+                <Show when={canDrag()}>
                   <span class={styles.dragHandle} aria-hidden="true">
                     <RiEditorDraggable />
                   </span>

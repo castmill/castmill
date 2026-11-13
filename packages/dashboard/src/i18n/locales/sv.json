@@ -1713,7 +1713,13 @@
       "uploadError": "Fel vid uppladdning av fil.",
       "uploadFailed": "Uppladdning misslyckades: {{error}}",
       "serverError": "Serverfel (status {{status}})",
-      "unknownError": "Okänt fel"
+      "unknownError": "Okänt fel",
+      "chooseFiles": "Välj filer",
+      "takePhotoOrVideo": "Ta foto eller video",
+      "dropFiles": "Eller dra och släpp filer här...",
+      "upload": "Ladda upp",
+      "noSupportedFiles": "Inga filer som stöds hittades bland de släppta filerna.",
+      "unsupportedSkipped": "{{count}} fil(er) som inte stöds hoppades över. Stöds: PNG, JPEG, GIF och vanliga videoformat."
     },
     "thumbnail": {
       "failedTitle": "Transkodningen misslyckades",

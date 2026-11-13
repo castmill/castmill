@@ -1713,7 +1713,13 @@
       "uploadError": "Fehler beim Hochladen der Datei.",
       "uploadFailed": "Upload fehlgeschlagen: {{error}}",
       "serverError": "Serverfehler (Status {{status}})",
-      "unknownError": "Unbekannter Fehler"
+      "unknownError": "Unbekannter Fehler",
+      "chooseFiles": "Dateien auswählen",
+      "takePhotoOrVideo": "Foto oder Video aufnehmen",
+      "dropFiles": "Oder Dateien hierher ziehen und ablegen...",
+      "upload": "Hochladen",
+      "noSupportedFiles": "Unter den abgelegten Dateien wurden keine unterstützten Dateien gefunden.",
+      "unsupportedSkipped": "{{count}} nicht unterstützte Datei(en) übersprungen. Unterstützt: PNG, JPEG, GIF und gängige Videoformate."
     },
     "thumbnail": {
       "failedTitle": "Die Transkodierung ist fehlgeschlagen",

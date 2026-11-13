@@ -57,15 +57,15 @@ vi.mock('@castmill/ui-common', async () => {
 
 const PHONE_QUERY = '(max-width: 36em)';
 
-/** Style rules inside the phone media query of the compiled stylesheet. */
-const phoneRules = (): CSSStyleRule[] => {
+/** Style rules inside a media query of the compiled stylesheet. */
+const mediaRules = (mediaText: string): CSSStyleRule[] => {
   const css = compile(resolve(__dirname, 'automations.module.scss')).css;
   const style = document.createElement('style');
   style.textContent = css;
   document.head.appendChild(style);
   const media = Array.from(style.sheet!.cssRules).filter(
     (rule): rule is CSSMediaRule =>
-      rule instanceof CSSMediaRule && rule.media.mediaText === PHONE_QUERY
+      rule instanceof CSSMediaRule && rule.media.mediaText === mediaText
   );
   style.remove();
   return media.flatMap((rule) =>
@@ -90,7 +90,7 @@ describe('Automation editor on small screens', () => {
   };
 
   beforeAll(() => {
-    rules = phoneRules();
+    rules = mediaRules(PHONE_QUERY);
   });
 
   afterEach(() => {
@@ -247,5 +247,28 @@ describe('Automation editor on small screens', () => {
     expect(
       within(sheet).getByRole('button', { name: 'Cerrar' })
     ).toBeInTheDocument();
+  });
+});
+
+describe('Automation rules on touch screens', () => {
+  const touchRule = (selector: string) => {
+    const rule = mediaRules('(pointer: coarse)').find(
+      (candidate) => candidate.selectorText === selector
+    );
+    expect(rule, selector).toBeDefined();
+    return rule!.style;
+  };
+
+  it('gives icon buttons ≥2.75em tap targets', () => {
+    const button = touchRule('.iconButton');
+    expect(button.getPropertyValue('min-width')).toBe('2.75em');
+    expect(button.getPropertyValue('min-height')).toBe('2.75em');
+  });
+
+  it('wraps the rule actions onto their own row', () => {
+    expect(touchRule('.ruleCard').getPropertyValue('flex-wrap')).toBe('wrap');
+    expect(touchRule('.ruleActions').getPropertyValue('flex-basis')).toBe(
+      '100%'
+    );
   });
 });
