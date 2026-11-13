@@ -13,5 +13,6 @@ export function useTableCardLabels(): TableCardLabels {
     sortAscending: () => t('common.sortAscending'),
     sortDescending: () => t('common.sortDescending'),
     selectAll: () => t('common.selectAll'),
+    selectRow: (id) => t('common.selectRow', { id }),
   };
 }

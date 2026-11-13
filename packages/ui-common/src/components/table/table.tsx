@@ -46,6 +46,7 @@ export interface TableCardLabels {
   sortAscending?: Label;
   sortDescending?: Label;
   selectAll?: Label;
+  selectRow?: (id: string) => string;
 }
 
 /** Default container width (in em) below which `cardLayout` tables render as cards. */
@@ -186,8 +187,10 @@ export const Table = <
   const resolveLabel = (label: Label | undefined, fallback: string) =>
     (typeof label === 'function' ? label() : label) || fallback;
 
-  const cardLabel = (key: keyof TableCardLabels, fallback: string) =>
-    resolveLabel(props.cardLabels?.[key], fallback);
+  const cardLabel = (
+    key: Exclude<keyof TableCardLabels, 'selectRow'>,
+    fallback: string
+  ) => resolveLabel(props.cardLabels?.[key], fallback);
 
   const renderCell = (column: Column<IdType, Item>, item: Item) =>
     column.render
@@ -367,7 +370,11 @@ export const Table = <
                       onInput={(e) =>
                         handleSelectRow(getItemId(item), e.target.checked)
                       }
-                      aria-label={`Select row ${getItemId(item)}`}
+                      aria-label={
+                        props.cardLabels?.selectRow?.(
+                          String(getItemId(item))
+                        ) || `Select row ${getItemId(item)}`
+                      }
                       class={style['styled-checkbox']}
                     />
                   </label>
@@ -430,6 +437,7 @@ export const Table = <
                   <input
                     type="checkbox"
                     id={selectAllCheckboxId}
+                    checked={allSelected()}
                     onChange={handleSelectAll}
                     aria-label="Select all rows"
                     title="Select items for bulk actions"

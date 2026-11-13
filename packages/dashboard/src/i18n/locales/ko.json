@@ -112,7 +112,8 @@
     "sortBy": "정렬 기준",
     "sortAscending": "오름차순",
     "sortDescending": "내림차순",
-    "selectAll": "모두 선택"
+    "selectAll": "모두 선택",
+    "selectRow": "{{id}}행 선택"
   },
   "topbar": {
     "help": "도움말",

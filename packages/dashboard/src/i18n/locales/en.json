@@ -107,7 +107,8 @@
     "sortBy": "Sort by",
     "sortAscending": "Ascending",
     "sortDescending": "Descending",
-    "selectAll": "Select all"
+    "selectAll": "Select all",
+    "selectRow": "Select row {{id}}"
   },
   "filters": {
     "teamLabel": "Team",

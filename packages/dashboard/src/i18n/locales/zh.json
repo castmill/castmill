@@ -112,7 +112,8 @@
     "sortBy": "排序方式",
     "sortAscending": "升序",
     "sortDescending": "降序",
-    "selectAll": "全选"
+    "selectAll": "全选",
+    "selectRow": "选择第 {{id}} 行"
   },
   "topbar": {
     "help": "帮助",

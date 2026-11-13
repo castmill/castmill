@@ -107,7 +107,8 @@
     "sortBy": "Sortieren nach",
     "sortAscending": "Aufsteigend",
     "sortDescending": "Absteigend",
-    "selectAll": "Alle auswählen"
+    "selectAll": "Alle auswählen",
+    "selectRow": "Zeile {{id}} auswählen"
   },
   "sidebar": {
     "organization": "Organisation",

@@ -108,7 +108,7 @@ table: {
   cardLayout: true,               // opt in
   cardBreakpoint?: 36,            // container width in em (default 36)
   cardPrimaryColumn?: 'name',     // card title (default: first column)
-  cardLabels: useTableCardLabels(), // localized sort/select-all labels
+  cardLabels: useTableCardLabels(), // localized sort/selection labels
 }
 ```
 
@@ -125,7 +125,8 @@ table: {
 - `cardLabels` default to English; in the dashboard always pass
   `useTableCardLabels()` (`packages/dashboard/src/hooks/useTableCardLabels.ts`),
   which maps to `common.sortBy`, `common.sortAscending`,
-  `common.sortDescending` and `common.selectAll`.
+  `common.sortDescending`, `common.selectAll` and `common.selectRow`. The
+  `selectRow(id: string)` formatter receives the row ID.
 - Styles use `--cm-*` tokens, `em` units and logical properties (RTL-safe).
 
 ### TableAction Interface

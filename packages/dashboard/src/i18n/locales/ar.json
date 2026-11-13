@@ -112,7 +112,8 @@
     "sortBy": "ترتيب حسب",
     "sortAscending": "تصاعدي",
     "sortDescending": "تنازلي",
-    "selectAll": "تحديد الكل"
+    "selectAll": "تحديد الكل",
+    "selectRow": "تحديد الصف {{id}}"
   },
   "topbar": {
     "help": "مساعدة",

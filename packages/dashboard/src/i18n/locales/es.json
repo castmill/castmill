@@ -113,7 +113,8 @@
     "sortBy": "Ordenar por",
     "sortAscending": "Ascendente",
     "sortDescending": "Descendente",
-    "selectAll": "Seleccionar todo"
+    "selectAll": "Seleccionar todo",
+    "selectRow": "Seleccionar fila {{id}}"
   },
   "topbar": {
     "help": "Ayuda",

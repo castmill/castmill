@@ -112,7 +112,8 @@
     "sortBy": "並べ替え",
     "sortAscending": "昇順",
     "sortDescending": "降順",
-    "selectAll": "すべて選択"
+    "selectAll": "すべて選択",
+    "selectRow": "行 {{id}} を選択"
   },
   "topbar": {
     "help": "ヘルプ",

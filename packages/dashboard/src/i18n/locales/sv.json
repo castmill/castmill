@@ -107,7 +107,8 @@
     "sortBy": "Sortera efter",
     "sortAscending": "Stigande",
     "sortDescending": "Fallande",
-    "selectAll": "Markera alla"
+    "selectAll": "Markera alla",
+    "selectRow": "Markera rad {{id}}"
   },
   "topbar": {
     "help": "Hjälp",

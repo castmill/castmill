@@ -112,7 +112,8 @@
     "sortBy": "Trier par",
     "sortAscending": "Croissant",
     "sortDescending": "Décroissant",
-    "selectAll": "Tout sélectionner"
+    "selectAll": "Tout sélectionner",
+    "selectRow": "Sélectionner la ligne {{id}}"
   },
   "topbar": {
     "help": "Aide",

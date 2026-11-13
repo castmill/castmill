@@ -8,6 +8,7 @@ import {
   within,
 } from '@solidjs/testing-library';
 import { Table, TABLE_CARD_BREAKPOINT_EM } from './table';
+import { createSignal } from 'solid-js';
 
 type ResizeCallback = (entries: { contentRect: { width: number } }[]) => void;
 
@@ -328,6 +329,62 @@ describe('Table card layout', () => {
     screen
       .getAllByRole('checkbox', { name: /Select row/ })
       .forEach((checkbox) => expect(checkbox).not.toBeChecked());
+  });
+
+  it('updates localized row labels with the row ID and locale', () => {
+    const [spanish, setSpanish] = createSignal(false);
+    render(() => (
+      <Table
+        columns={[{ key: 'name', title: 'Name' }]}
+        data={[{ id: 42, name: 'Example' }]}
+        cardLayout
+        cardLabels={{
+          selectRow: (id) => (spanish() ? `Fila ${id}` : `Row ${id}`),
+        }}
+      />
+    ));
+    resizeTo(PHONE_WIDTH);
+    expect(
+      screen.getByRole('checkbox', { name: 'Row 42' })
+    ).toBeInTheDocument();
+    setSpanish(true);
+    expect(
+      screen.getByRole('checkbox', { name: 'Fila 42' })
+    ).toBeInTheDocument();
+  });
+
+  it('synchronizes select all when switching layouts and changing selection', async () => {
+    const onRowSelect = vi.fn();
+    let clear: (() => void) | undefined;
+    render(() => (
+      <Table
+        columns={columns}
+        data={data}
+        cardLayout
+        onRowSelect={onRowSelect}
+        clearSelectionRef={(fn) => (clear = fn)}
+      />
+    ));
+
+    resizeTo(PHONE_WIDTH);
+    await fireEvent.click(screen.getByLabelText('Select all'));
+    resizeTo(DESKTOP_WIDTH);
+    const tableSelectAll = screen.getByLabelText('Select all rows');
+    expect(tableSelectAll).toBeChecked();
+    await fireEvent.click(tableSelectAll);
+    expect(onRowSelect).toHaveBeenLastCalledWith(new Set());
+    expect(tableSelectAll).not.toBeChecked();
+
+    await fireEvent.click(screen.getByLabelText('Select row 1'));
+    expect(tableSelectAll).not.toBeChecked();
+    await fireEvent.click(screen.getByLabelText('Select row 2'));
+    expect(tableSelectAll).toBeChecked();
+    resizeTo(PHONE_WIDTH);
+    expect(screen.getByLabelText('Select all')).toBeChecked();
+    clear?.();
+    expect(screen.getByLabelText('Select all')).not.toBeChecked();
+    resizeTo(DESKTOP_WIDTH);
+    expect(screen.getByLabelText('Select all rows')).not.toBeChecked();
   });
 
   it('sorts through the sort select and direction toggle', async () => {

@@ -1,10 +1,9 @@
 import { describe, it, expect, afterEach, beforeEach } from 'vitest';
 import { render, screen, cleanup, waitFor } from '@solidjs/testing-library';
-import type { TableCardLabels } from '@castmill/ui-common';
 import { I18nProvider, useI18n } from '../i18n';
 import { useTableCardLabels } from './useTableCardLabels';
 
-const resolve = (label: TableCardLabels[keyof TableCardLabels]) =>
+const resolve = (label: string | (() => string) | undefined) =>
   typeof label === 'function' ? label() : label;
 
 function TestComponent() {
@@ -18,6 +17,7 @@ function TestComponent() {
           resolve(labels.sortAscending),
           resolve(labels.sortDescending),
           resolve(labels.selectAll),
+          labels.selectRow?.('42'),
         ].join('|')}
       </span>
       <button data-testid="es" onClick={() => setLocale('es')} />
@@ -37,14 +37,14 @@ describe('useTableCardLabels', () => {
     ));
 
     expect(screen.getByTestId('labels').textContent).toBe(
-      'Sort by|Ascending|Descending|Select all'
+      'Sort by|Ascending|Descending|Select all|Select row 42'
     );
 
     screen.getByTestId('es').click();
 
     await waitFor(() =>
       expect(screen.getByTestId('labels').textContent).toBe(
-        'Ordenar por|Ascendente|Descendente|Seleccionar todo'
+        'Ordenar por|Ascendente|Descendente|Seleccionar todo|Seleccionar fila 42'
       )
     );
   });
