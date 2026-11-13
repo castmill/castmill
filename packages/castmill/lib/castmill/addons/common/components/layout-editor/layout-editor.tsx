@@ -52,7 +52,8 @@ export {
  */
 interface LayoutTemplate {
   id: string;
-  name: string;
+  /** i18n key suffix under `layouts.editor.templates` */
+  labelKey: string;
   icon: string;
   zones: Array<{ x: number; y: number; width: number; height: number }>;
 }
@@ -60,13 +61,13 @@ interface LayoutTemplate {
 const LAYOUT_TEMPLATES: LayoutTemplate[] = [
   {
     id: 'full',
-    name: 'Full Screen',
+    labelKey: 'fullScreen',
     icon: '⬜',
     zones: [{ x: 0, y: 0, width: 100, height: 100 }],
   },
   {
     id: 'split-h-2',
-    name: '2 Columns',
+    labelKey: 'twoColumns',
     icon: '▌▐',
     zones: [
       { x: 0, y: 0, width: 50, height: 100 },
@@ -75,7 +76,7 @@ const LAYOUT_TEMPLATES: LayoutTemplate[] = [
   },
   {
     id: 'split-h-3',
-    name: '3 Columns',
+    labelKey: 'threeColumns',
     icon: '▌│▐',
     zones: [
       { x: 0, y: 0, width: 33.33, height: 100 },
@@ -85,7 +86,7 @@ const LAYOUT_TEMPLATES: LayoutTemplate[] = [
   },
   {
     id: 'split-v-2',
-    name: '2 Rows',
+    labelKey: 'twoRows',
     icon: '▀▄',
     zones: [
       { x: 0, y: 0, width: 100, height: 50 },
@@ -94,7 +95,7 @@ const LAYOUT_TEMPLATES: LayoutTemplate[] = [
   },
   {
     id: 'split-v-3',
-    name: '3 Rows',
+    labelKey: 'threeRows',
     icon: '▔━▁',
     zones: [
       { x: 0, y: 0, width: 100, height: 33.33 },
@@ -104,7 +105,7 @@ const LAYOUT_TEMPLATES: LayoutTemplate[] = [
   },
   {
     id: 'grid-2x2',
-    name: '2×2 Grid',
+    labelKey: 'grid2x2',
     icon: '▚',
     zones: [
       { x: 0, y: 0, width: 50, height: 50 },
@@ -115,7 +116,7 @@ const LAYOUT_TEMPLATES: LayoutTemplate[] = [
   },
   {
     id: 'grid-3x3',
-    name: '3×3 Grid',
+    labelKey: 'grid3x3',
     icon: '▦',
     zones: [
       { x: 0, y: 0, width: 33.33, height: 33.33 },
@@ -131,7 +132,7 @@ const LAYOUT_TEMPLATES: LayoutTemplate[] = [
   },
   {
     id: 'main-sidebar',
-    name: 'Main + Sidebar',
+    labelKey: 'mainSidebar',
     icon: '▌▏',
     zones: [
       { x: 0, y: 0, width: 70, height: 100 },
@@ -140,7 +141,7 @@ const LAYOUT_TEMPLATES: LayoutTemplate[] = [
   },
   {
     id: 'header-content',
-    name: 'Header + Content',
+    labelKey: 'headerContent',
     icon: '▔▇',
     zones: [
       { x: 0, y: 0, width: 100, height: 20 },
@@ -149,7 +150,7 @@ const LAYOUT_TEMPLATES: LayoutTemplate[] = [
   },
   {
     id: 'pip',
-    name: 'Picture in Picture',
+    labelKey: 'pictureInPicture',
     icon: '▢◱',
     zones: [
       { x: 0, y: 0, width: 100, height: 100 },
@@ -194,6 +195,17 @@ interface SnapGuide {
   orientation: 'horizontal' | 'vertical';
 }
 
+/**
+ * Below this editor width (in em of the editor's font size) the properties
+ * and zone list move below the canvas. Measured on the editor itself because
+ * it is also embedded in the playlist widget config, not only in a drawer.
+ */
+export const STACKED_MAX_WIDTH_EM = 48;
+
+/** Maximum canvas height in pixels, and its share of short viewports. */
+const MAX_CANVAS_HEIGHT = 400;
+const MAX_CANVAS_VIEWPORT_SHARE = 0.6;
+
 const FRACTIONAL_SIZES = [
   { label: '100%', value: 100 },
   { label: '1/2', value: 50 },
@@ -225,24 +237,23 @@ interface LayoutEditorProps {
   organizationId?: string;
   /** Base URL for API calls */
   baseUrl?: string;
+  /** Translation function (dashboard i18n) */
+  t?: (key: string, params?: Record<string, any>) => string;
 }
 
+const RESIZE_HANDLES = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'] as const;
+
 export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
+  let rootRef: HTMLDivElement | undefined;
   let canvasContainerRef: HTMLDivElement | undefined;
   let canvasRef: HTMLDivElement | undefined;
 
+  const t = (key: string, params?: Record<string, any>) =>
+    props.t?.(key, params) || key;
+
   const [selectedZoneId, setSelectedZoneId] = createSignal<string | null>(null);
   const [canvasSize, setCanvasSize] = createSignal({ width: 400, height: 225 });
-  const [isDragging, setIsDragging] = createSignal(false);
-  const [isResizing, setIsResizing] = createSignal(false);
-  const [dragStart, setDragStart] = createSignal({ x: 0, y: 0 });
-  const [dragZoneStart, setDragZoneStart] = createSignal({
-    x: 0,
-    y: 0,
-    width: 0,
-    height: 0,
-  });
-  const [resizeHandle, setResizeHandle] = createSignal<string | null>(null);
+  const [stacked, setStacked] = createSignal(false);
   const [isCustomAspectRatio, setIsCustomAspectRatio] = createSignal(false);
   const [customWidth, setCustomWidth] = createSignal(16);
   const [customHeight, setCustomHeight] = createSignal(9);
@@ -257,6 +268,8 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
     isDragging: false,
     isResizing: false,
     selectedZoneId: null as string | null,
+    // Pointer that started the interaction; other pointers are ignored
+    pointerId: undefined as number | undefined,
     dragStart: { x: 0, y: 0 },
     dragZoneStart: { x: 0, y: 0, width: 0, height: 0 },
     resizeHandle: null as string | null,
@@ -287,7 +300,13 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
     const containerRect = canvasContainerRef.getBoundingClientRect();
     // Leave some padding
     const containerWidth = containerRect.width - 40;
-    const containerHeight = 400; // Fixed max height for editor
+    // Fixed max height for the editor, reduced on short viewports
+    // (e.g. phones in landscape) so the canvas stays fully visible.
+    const containerHeight = Math.min(
+      MAX_CANVAS_HEIGHT,
+      (window.innerHeight || MAX_CANVAS_HEIGHT / MAX_CANVAS_VIEWPORT_SHARE) *
+        MAX_CANVAS_VIEWPORT_SHARE
+    );
     const size = calculateCanvasSize(
       containerWidth,
       containerHeight,
@@ -296,16 +315,36 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
     setCanvasSize(size);
   };
 
-  onMount(() => {
+  // Stack the sidebar below the canvas when the editor itself is narrow
+  const updateStacked = () => {
+    if (!rootRef) return;
+    const width = rootRef.getBoundingClientRect().width;
+    // Hidden or detached editors report 0; keep the last decision.
+    if (!width) return;
+    const fontSize = parseFloat(getComputedStyle(rootRef).fontSize) || 16;
+    setStacked(width < STACKED_MAX_WIDTH_EM * fontSize);
+  };
+
+  const updateLayout = () => {
+    updateStacked();
     updateCanvasSize();
-    window.addEventListener('resize', updateCanvasSize);
+  };
+
+  onMount(() => {
+    updateLayout();
+    window.addEventListener('resize', updateLayout);
+    if (typeof ResizeObserver !== 'undefined') {
+      const observer = new ResizeObserver(updateLayout);
+      if (rootRef) observer.observe(rootRef);
+      if (canvasContainerRef) observer.observe(canvasContainerRef);
+      onCleanup(() => observer.disconnect());
+    }
   });
 
   onCleanup(() => {
-    window.removeEventListener('resize', updateCanvasSize);
+    window.removeEventListener('resize', updateLayout);
     // Clean up any document-level listeners that might still be active
-    document.removeEventListener('mousemove', handleDocumentMouseMove);
-    document.removeEventListener('mouseup', handleDocumentMouseUp);
+    removeDocumentListeners();
   });
 
   // Update canvas when aspect ratio changes
@@ -466,7 +505,9 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
 
     const newZone: LayoutZone = {
       id: generateZoneId(),
-      name: `Zone ${props.value.zones.length + 1}`,
+      name: t('layouts.editor.zoneName', {
+        number: props.value.zones.length + 1,
+      }),
       rect: { x: 10, y: 10, width: 30, height: 30 },
       zIndex: props.value.zones.length + 1,
     };
@@ -506,7 +547,7 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
   const applyTemplate = (template: LayoutTemplate) => {
     const newZones: LayoutZone[] = template.zones.map((rect, index) => ({
       id: generateZoneId(),
-      name: `Zone ${index + 1}`,
+      name: t('layouts.editor.zoneName', { number: index + 1 }),
       rect: { ...rect },
       zIndex: index + 1,
     }));
@@ -749,59 +790,29 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
     props.onChange({ ...props.value, zones: newZones });
   };
 
-  // Handle mouse down on zone (start drag)
-  const handleZoneMouseDown = (e: MouseEvent, zoneId: string) => {
-    e.preventDefault();
-    e.stopPropagation();
+  // Pointer Events cover mouse, pen and touch. Only the primary pointer starts
+  // an interaction so a second finger cannot hijack an ongoing drag.
+  const isForeignPointer = (e: PointerEvent) =>
+    dragStateRef.pointerId !== undefined &&
+    e.pointerId !== undefined &&
+    e.pointerId !== dragStateRef.pointerId;
 
-    const zone = props.value.zones.find((z) => z.id === zoneId);
-    if (!zone || !canvasRef) return;
-
-    // Capture canvas bounds NOW, before any updates happen
-    const canvasRect = canvasRef.getBoundingClientRect();
-
-    setSelectedZoneId(zoneId);
-    setIsDragging(true);
-    setDragStart({ x: e.clientX, y: e.clientY });
-    setDragZoneStart({
-      x: zone.rect.x,
-      y: zone.rect.y,
-      width: zone.rect.width,
-      height: zone.rect.height,
-    });
-
-    // Update ref for use in document-level listeners
-    dragStateRef = {
-      isDragging: true,
-      isResizing: false,
-      selectedZoneId: zoneId,
-      dragStart: { x: e.clientX, y: e.clientY },
-      dragZoneStart: {
-        x: zone.rect.x,
-        y: zone.rect.y,
-        width: zone.rect.width,
-        height: zone.rect.height,
-      },
-      resizeHandle: null,
-      canvasBounds: {
-        left: canvasRect.left,
-        top: canvasRect.top,
-        width: canvasRect.width,
-        height: canvasRect.height,
-      },
-    };
-
-    // Attach document-level listeners to capture mouse even outside the canvas
-    document.addEventListener('mousemove', handleDocumentMouseMove);
-    document.addEventListener('mouseup', handleDocumentMouseUp);
+  const removeDocumentListeners = () => {
+    document.removeEventListener('pointermove', handleDocumentPointerMove);
+    document.removeEventListener('pointerup', handleDocumentPointerUp);
+    document.removeEventListener('pointercancel', handleDocumentPointerUp);
   };
 
-  // Handle mouse down on resize handle
-  const handleResizeMouseDown = (
-    e: MouseEvent,
+  // Start moving (handle === null) or resizing a zone
+  const startInteraction = (
+    e: PointerEvent,
     zoneId: string,
-    handle: string
+    handle: string | null
   ) => {
+    if (e.isPrimary === false) return;
+    // Ignore secondary mouse buttons (context menu, middle click)
+    if (e.pointerType === 'mouse' && e.button > 0) return;
+
     e.preventDefault();
     e.stopPropagation();
 
@@ -812,21 +823,13 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
     const canvasRect = canvasRef.getBoundingClientRect();
 
     setSelectedZoneId(zoneId);
-    setIsResizing(true);
-    setResizeHandle(handle);
-    setDragStart({ x: e.clientX, y: e.clientY });
-    setDragZoneStart({
-      x: zone.rect.x,
-      y: zone.rect.y,
-      width: zone.rect.width,
-      height: zone.rect.height,
-    });
 
     // Update ref for use in document-level listeners
     dragStateRef = {
-      isDragging: false,
-      isResizing: true,
+      isDragging: handle === null,
+      isResizing: handle !== null,
       selectedZoneId: zoneId,
+      pointerId: e.pointerId,
       dragStart: { x: e.clientX, y: e.clientY },
       dragZoneStart: {
         x: zone.rect.x,
@@ -843,14 +846,28 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
       },
     };
 
-    // Attach document-level listeners to capture mouse even outside the canvas
-    document.addEventListener('mousemove', handleDocumentMouseMove);
-    document.addEventListener('mouseup', handleDocumentMouseUp);
+    // Attach document-level listeners to track the pointer even outside the canvas
+    removeDocumentListeners();
+    document.addEventListener('pointermove', handleDocumentPointerMove);
+    document.addEventListener('pointerup', handleDocumentPointerUp);
+    document.addEventListener('pointercancel', handleDocumentPointerUp);
   };
 
-  // Handle mouse move at document level (drag or resize) - uses ref to avoid stale closures
-  const handleDocumentMouseMove = (e: MouseEvent) => {
+  // Handle pointer down on zone (start drag)
+  const handleZonePointerDown = (e: PointerEvent, zoneId: string) =>
+    startInteraction(e, zoneId, null);
+
+  // Handle pointer down on resize handle
+  const handleResizePointerDown = (
+    e: PointerEvent,
+    zoneId: string,
+    handle: string
+  ) => startInteraction(e, zoneId, handle);
+
+  // Handle pointer move at document level (drag or resize) - uses ref to avoid stale closures
+  const handleDocumentPointerMove = (e: PointerEvent) => {
     if (!dragStateRef.isDragging && !dragStateRef.isResizing) return;
+    if (isForeignPointer(e)) return;
 
     const zoneId = dragStateRef.selectedZoneId;
     if (!zoneId) return;
@@ -1036,24 +1053,20 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
     }
   };
 
-  // Handle mouse up at document level - removes listeners
-  const handleDocumentMouseUp = () => {
+  // Handle pointer up/cancel at document level - removes listeners
+  const handleDocumentPointerUp = (e: PointerEvent) => {
+    if (isForeignPointer(e)) return;
+
     // Reset ref state
     dragStateRef.isDragging = false;
     dragStateRef.isResizing = false;
     dragStateRef.resizeHandle = null;
-
-    // Reset signal state
-    setIsDragging(false);
-    setIsResizing(false);
-    setResizeHandle(null);
+    dragStateRef.pointerId = undefined;
 
     // Clear snap guides
     setSnapGuides([]);
 
-    // Remove document-level listeners
-    document.removeEventListener('mousemove', handleDocumentMouseMove);
-    document.removeEventListener('mouseup', handleDocumentMouseUp);
+    removeDocumentListeners();
   };
 
   // Change aspect ratio
@@ -1093,8 +1106,19 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
   const selectedZone = () =>
     props.value.zones.find((z) => z.id === selectedZoneId());
 
+  const fillTitle = (disabled: boolean, locked: boolean, key: string) =>
+    disabled
+      ? t('layouts.editor.selectZoneFirst')
+      : locked
+        ? t('layouts.editor.aspectLocked')
+        : t(key);
+
   return (
-    <div class="layout-editor">
+    <div
+      ref={rootRef}
+      class="layout-editor"
+      classList={{ 'layout-editor--stacked': stacked() }}
+    >
       {/* Main content area with toolbar and canvas */}
       <div class="layout-editor__main">
         {/* Compact Toolbar - aspect ratio, templates, add zone */}
@@ -1104,20 +1128,22 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
             <select
               value={isCustomAspectRatio() ? 'custom' : props.value.aspectRatio}
               onChange={(e) => handleAspectRatioChange(e.currentTarget.value)}
-              title="Aspect Ratio"
+              title={t('layouts.aspectRatio')}
+              aria-label={t('layouts.aspectRatio')}
             >
               <For each={aspectRatios()}>
                 {(ratio) => <option value={ratio}>{ratio}</option>}
               </For>
-              <option value="custom">Custom...</option>
+              <option value="custom">{t('layouts.editor.customRatio')}</option>
             </select>
             <Show when={isCustomAspectRatio()}>
-              <div class="layout-editor__custom-aspect-ratio">
+              <div class="layout-editor__custom-aspect-ratio" dir="ltr">
                 <input
                   type="number"
                   min="1"
                   max="32"
                   value={customWidth()}
+                  aria-label={t('layouts.editor.ratioWidth')}
                   onInput={(e) =>
                     handleCustomAspectRatioChange(
                       parseInt(e.currentTarget.value, 10) || 1,
@@ -1132,6 +1158,7 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
                   min="1"
                   max="32"
                   value={customHeight()}
+                  aria-label={t('layouts.editor.ratioHeight')}
                   onInput={(e) =>
                     handleCustomAspectRatioChange(
                       customWidth(),
@@ -1145,20 +1172,25 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
           </div>
           <div class="layout-editor__toolbar-actions">
             <button
+              type="button"
               class={`layout-editor__icon-btn ${showTemplates() ? 'active' : ''}`}
               onClick={() => setShowTemplates(!showTemplates())}
-              title="Layout Templates"
+              title={t('layouts.templates')}
+              aria-label={t('layouts.templates')}
+              aria-pressed={showTemplates()}
             >
               <BsGrid />
             </button>
             <button
+              type="button"
               class="layout-editor__icon-btn layout-editor__icon-btn--primary"
               onClick={addZone}
               title={
                 props.value.zones.length >= MAX_ZONES
-                  ? `Maximum ${MAX_ZONES} zones allowed`
-                  : 'Add Zone'
+                  ? t('layouts.editor.maxZones', { count: MAX_ZONES })
+                  : t('layouts.addZone')
               }
+              aria-label={t('layouts.addZone')}
               disabled={props.value.zones.length >= MAX_ZONES}
             >
               <BsPlus />
@@ -1173,36 +1205,47 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
               <For each={LAYOUT_TEMPLATES}>
                 {(template) => (
                   <button
+                    type="button"
                     class="layout-editor__template-item"
                     onClick={() => applyTemplate(template)}
-                    title={template.name}
+                    title={t(`layouts.editor.templates.${template.labelKey}`)}
                   >
-                    <span class="template-icon">{template.icon}</span>
-                    <span class="template-name">{template.name}</span>
+                    <span class="template-icon" aria-hidden="true">
+                      {template.icon}
+                    </span>
+                    <span class="template-name">
+                      {t(`layouts.editor.templates.${template.labelKey}`)}
+                    </span>
                   </button>
                 )}
               </For>
               <button
+                type="button"
                 class="layout-editor__template-item"
                 onClick={distributeHorizontally}
                 disabled={props.value.zones.length < 2}
-                title="Distribute all zones evenly in columns"
+                title={t('layouts.editor.distributeColumnsHint')}
               >
-                <span class="template-icon">
+                <span class="template-icon" aria-hidden="true">
                   <BsColumns />
                 </span>
-                <span class="template-name">Distribute H</span>
+                <span class="template-name">
+                  {t('layouts.editor.distributeColumns')}
+                </span>
               </button>
               <button
+                type="button"
                 class="layout-editor__template-item"
                 onClick={distributeVertically}
                 disabled={props.value.zones.length < 2}
-                title="Distribute all zones evenly in rows"
+                title={t('layouts.editor.distributeRowsHint')}
               >
-                <span class="template-icon">
+                <span class="template-icon" aria-hidden="true">
                   <BsLayoutSplit />
                 </span>
-                <span class="template-name">Distribute V</span>
+                <span class="template-name">
+                  {t('layouts.editor.distributeRows')}
+                </span>
               </button>
             </div>
           </div>
@@ -1219,56 +1262,55 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
               class={`layout-editor__zone-toolbar ${isDisabled() ? 'disabled' : ''}`}
             >
               <div class="layout-editor__zone-toolbar-group">
-                <span class="group-label">Size:</span>
+                <span class="group-label">{t('layouts.editor.size')}</span>
                 <button
+                  type="button"
                   class="layout-editor__quick-btn"
                   onClick={() => zone && fillWidth(zone.id)}
-                  title={
-                    isDisabled()
-                      ? 'Select a zone first'
-                      : hasAspectLock()
-                        ? 'Disabled: Would break aspect ratio'
-                        : 'Fill Width (100%)'
-                  }
+                  title={fillTitle(
+                    isDisabled(),
+                    hasAspectLock(),
+                    'layouts.editor.fillWidth'
+                  )}
                   disabled={isDisabled() || hasAspectLock()}
                 >
-                  ↔ Width
+                  <span aria-hidden="true">↔</span> {t('layouts.editor.width')}
                 </button>
                 <button
+                  type="button"
                   class="layout-editor__quick-btn"
                   onClick={() => zone && fillHeight(zone.id)}
-                  title={
-                    isDisabled()
-                      ? 'Select a zone first'
-                      : hasAspectLock()
-                        ? 'Disabled: Would break aspect ratio'
-                        : 'Fill Height (100%)'
-                  }
+                  title={fillTitle(
+                    isDisabled(),
+                    hasAspectLock(),
+                    'layouts.editor.fillHeight'
+                  )}
                   disabled={isDisabled() || hasAspectLock()}
                 >
-                  ↕ Height
+                  <span aria-hidden="true">↕</span> {t('layouts.editor.height')}
                 </button>
                 <button
+                  type="button"
                   class="layout-editor__quick-btn"
                   onClick={() => zone && fillBoth(zone.id)}
-                  title={
-                    isDisabled()
-                      ? 'Select a zone first'
-                      : hasAspectLock()
-                        ? 'Disabled: Would break aspect ratio'
-                        : 'Fill Both (100% x 100%)'
-                  }
+                  title={fillTitle(
+                    isDisabled(),
+                    hasAspectLock(),
+                    'layouts.editor.fillBoth'
+                  )}
                   disabled={isDisabled() || hasAspectLock()}
                 >
-                  <BsArrowsFullscreen /> Full
+                  <BsArrowsFullscreen /> {t('layouts.editor.full')}
                 </button>
               </div>
 
               <div class="layout-editor__zone-toolbar-group">
-                <span class="group-label">Width:</span>
+                <span class="group-label">{t('layouts.editor.width')}</span>
                 <For each={FRACTIONAL_SIZES}>
                   {(size) => (
                     <button
+                      type="button"
+                      dir="ltr"
                       class={`layout-editor__fraction-btn ${
                         zone && Math.abs(zone.rect.width - size.value) < 0.5
                           ? 'active'
@@ -1279,8 +1321,13 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
                       }
                       title={
                         isDisabled()
-                          ? 'Select a zone first'
-                          : `Set width to ${size.label}${hasAspectLock() ? ' (height adjusted)' : ''}`
+                          ? t('layouts.editor.selectZoneFirst')
+                          : t(
+                              hasAspectLock()
+                                ? 'layouts.editor.setWidthAdjusted'
+                                : 'layouts.editor.setWidth',
+                              { size: size.label }
+                            )
                       }
                       disabled={isDisabled()}
                     >
@@ -1291,10 +1338,12 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
               </div>
 
               <div class="layout-editor__zone-toolbar-group">
-                <span class="group-label">Height:</span>
+                <span class="group-label">{t('layouts.editor.height')}</span>
                 <For each={FRACTIONAL_SIZES}>
                   {(size) => (
                     <button
+                      type="button"
+                      dir="ltr"
                       class={`layout-editor__fraction-btn ${
                         zone && Math.abs(zone.rect.height - size.value) < 0.5
                           ? 'active'
@@ -1305,8 +1354,13 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
                       }
                       title={
                         isDisabled()
-                          ? 'Select a zone first'
-                          : `Set height to ${size.label}${hasAspectLock() ? ' (width adjusted)' : ''}`
+                          ? t('layouts.editor.selectZoneFirst')
+                          : t(
+                              hasAspectLock()
+                                ? 'layouts.editor.setHeightAdjusted'
+                                : 'layouts.editor.setHeight',
+                              { size: size.label }
+                            )
                       }
                       disabled={isDisabled()}
                     >
@@ -1317,8 +1371,11 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
               </div>
 
               <div class="layout-editor__zone-toolbar-group">
-                <span class="group-label">Zone Ratio:</span>
+                <label class="group-label" for="layout-editor-zone-ratio">
+                  {t('layouts.editor.zoneRatio')}
+                </label>
                 <select
+                  id="layout-editor-zone-ratio"
                   value={zone ? getZoneAspectLock(zone.id) || '' : ''}
                   onChange={(e) =>
                     zone &&
@@ -1327,7 +1384,7 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
                   class="layout-editor__zone-aspect-select"
                   disabled={isDisabled()}
                 >
-                  <option value="">None</option>
+                  <option value="">{t('layouts.editor.none')}</option>
                   <For each={ZONE_ASPECT_RATIOS}>
                     {(ratio) => <option value={ratio}>{ratio}</option>}
                   </For>
@@ -1342,9 +1399,11 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
 
         {/* Canvas Area */}
         <div ref={canvasContainerRef} class="layout-editor__canvas-container">
+          {/* Screen geometry is physical: keep the canvas LTR in RTL locales */}
           <div
             ref={canvasRef}
             class="layout-editor__canvas"
+            dir="ltr"
             style={{
               width: `${canvasSize().width}px`,
               height: `${canvasSize().height}px`,
@@ -1360,6 +1419,7 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
                   class={`layout-editor__zone ${
                     selectedZoneId() === zone.id ? 'selected' : ''
                   } ${getZoneAspectLock(zone.id) ? 'aspect-locked' : ''}`}
+                  data-zone-id={zone.id}
                   style={{
                     left: `${zone.rect.x}%`,
                     top: `${zone.rect.y}%`,
@@ -1367,14 +1427,14 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
                     height: `${zone.rect.height}%`,
                     'z-index': zone.zIndex,
                   }}
-                  onMouseDown={(e) => handleZoneMouseDown(e, zone.id)}
+                  onPointerDown={(e) => handleZonePointerDown(e, zone.id)}
                   onClick={(e) => {
                     // Handle click for trackpad soft taps - select zone without drag
                     e.stopPropagation();
                     setSelectedZoneId(zone.id);
                   }}
                 >
-                  <div class="layout-editor__zone-label">
+                  <div class="layout-editor__zone-label" dir="auto">
                     {zone.name}
                     <Show when={getZoneAspectLock(zone.id)}>
                       <BsLock class="zone-lock-icon" />
@@ -1383,54 +1443,17 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
 
                   {/* Resize handles - only show for selected zone */}
                   <Show when={selectedZoneId() === zone.id}>
-                    <div
-                      class="resize-handle nw"
-                      onMouseDown={(e) =>
-                        handleResizeMouseDown(e, zone.id, 'nw')
-                      }
-                    />
-                    <div
-                      class="resize-handle n"
-                      onMouseDown={(e) =>
-                        handleResizeMouseDown(e, zone.id, 'n')
-                      }
-                    />
-                    <div
-                      class="resize-handle ne"
-                      onMouseDown={(e) =>
-                        handleResizeMouseDown(e, zone.id, 'ne')
-                      }
-                    />
-                    <div
-                      class="resize-handle e"
-                      onMouseDown={(e) =>
-                        handleResizeMouseDown(e, zone.id, 'e')
-                      }
-                    />
-                    <div
-                      class="resize-handle se"
-                      onMouseDown={(e) =>
-                        handleResizeMouseDown(e, zone.id, 'se')
-                      }
-                    />
-                    <div
-                      class="resize-handle s"
-                      onMouseDown={(e) =>
-                        handleResizeMouseDown(e, zone.id, 's')
-                      }
-                    />
-                    <div
-                      class="resize-handle sw"
-                      onMouseDown={(e) =>
-                        handleResizeMouseDown(e, zone.id, 'sw')
-                      }
-                    />
-                    <div
-                      class="resize-handle w"
-                      onMouseDown={(e) =>
-                        handleResizeMouseDown(e, zone.id, 'w')
-                      }
-                    />
+                    <For each={RESIZE_HANDLES}>
+                      {(handle) => (
+                        <div
+                          class={`resize-handle ${handle}`}
+                          data-handle={handle}
+                          onPointerDown={(e) =>
+                            handleResizePointerDown(e, zone.id, handle)
+                          }
+                        />
+                      )}
+                    </For>
                   </Show>
                 </div>
               )}
@@ -1457,7 +1480,7 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
         </div>
       </div>
 
-      {/* Right Sidebar - Zone Properties and Zone List */}
+      {/* Sidebar (below the canvas when stacked) - Zone Properties and Zone List */}
       <div class="layout-editor__sidebar">
         {/* Zone Properties Panel */}
         <div class="layout-editor__properties">
@@ -1465,16 +1488,16 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
             when={selectedZone()}
             fallback={
               <div class="layout-editor__no-selection">
-                Select a zone to edit properties
+                {t('layouts.editor.noSelection')}
               </div>
             }
           >
             {(zone) => (
               <div class="layout-editor__zone-properties">
-                <h4>Zone Properties</h4>
+                <h4>{t('layouts.zoneProperties')}</h4>
 
                 <FormItem
-                  label="Name"
+                  label={t('common.name')}
                   id="zone-name"
                   type="text"
                   value={zone().name}
@@ -1513,7 +1536,7 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
                     precision={1}
                   />
                   <CompactNumberInput
-                    label="W"
+                    label={t('layouts.editor.widthShort')}
                     value={zone().rect.width}
                     onChange={(value) =>
                       setZoneWidthWithAspect(zone().id, value)
@@ -1524,7 +1547,7 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
                     precision={1}
                   />
                   <CompactNumberInput
-                    label="H"
+                    label={t('layouts.editor.heightShort')}
                     value={zone().rect.height}
                     onChange={(value) =>
                       setZoneHeightWithAspect(zone().id, value)
@@ -1541,19 +1564,19 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
                     onClick={() => moveZoneUp(zone().id)}
                     color="secondary"
                     icon={BsArrowUp}
-                    title="Bring Forward"
+                    title={t('layouts.bringForward')}
                   />
                   <Button
                     onClick={() => moveZoneDown(zone().id)}
                     color="secondary"
                     icon={BsArrowDown}
-                    title="Send Backward"
+                    title={t('layouts.sendBackward')}
                   />
                   <Button
                     onClick={() => deleteZone(zone().id)}
                     color="danger"
                     icon={BsTrash}
-                    title="Delete Zone"
+                    title={t('layouts.editor.deleteZone')}
                   />
                 </div>
               </div>
@@ -1563,18 +1586,28 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
 
         {/* Zones List */}
         <div class="layout-editor__zones-list">
-          <h4>Zones ({props.value.zones.length})</h4>
+          <h4>
+            {t('layouts.editor.zonesHeading', {
+              count: props.value.zones.length,
+            })}
+          </h4>
           <For
             each={[...props.value.zones].sort((a, b) => b.zIndex - a.zIndex)}
           >
             {(zone) => (
-              <div
+              <button
+                type="button"
                 class={`layout-editor__zone-item ${selectedZoneId() === zone.id ? 'selected' : ''}`}
+                aria-pressed={selectedZoneId() === zone.id}
                 onClick={() => setSelectedZoneId(zone.id)}
               >
-                <span class="zone-name">{zone.name}</span>
-                <span class="zone-z">z: {zone.zIndex}</span>
-              </div>
+                <span class="zone-name" dir="auto">
+                  {zone.name}
+                </span>
+                <span class="zone-z">
+                  {t('layouts.editor.layer', { value: zone.zIndex })}
+                </span>
+              </button>
             )}
           </For>
         </div>

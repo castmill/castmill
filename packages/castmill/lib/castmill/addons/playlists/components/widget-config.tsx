@@ -1222,6 +1222,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
               }}
               organizationId={props.organizationId}
               baseUrl={props.baseUrl}
+              t={t}
             />
           </div>
         );

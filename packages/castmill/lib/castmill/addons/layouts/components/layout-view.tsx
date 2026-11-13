@@ -1,4 +1,4 @@
-import { Component, createSignal, createEffect } from 'solid-js';
+import { Component, Show, createSignal, createEffect } from 'solid-js';
 import { Button, FormItem, useToast } from '@castmill/ui-common';
 import { BsSave } from 'solid-icons/bs';
 import type { LayoutZone, LayoutOptionValue } from '@castmill/player';
@@ -136,7 +136,7 @@ export const LayoutView: Component<{
   };
 
   return (
-    <div class="layout-view">
+    <div class="layout-view" classList={{ 'is-dirty': hasChanges() }}>
       <div class="layout-view-header">
         <div class="layout-info">
           <FormItem
@@ -156,18 +156,24 @@ export const LayoutView: Component<{
             <></>
           </FormItem>
         </div>
-        <div class="layout-actions">
-          <Button
-            onClick={handleSave}
-            disabled={!hasChanges() || isSaving()}
-            color="primary"
-            label={isSaving() ? t('common.saving') : t('common.save')}
-            icon={BsSave}
-          />
-        </div>
       </div>
 
-      <LayoutEditor value={layoutValue()} onChange={handleLayoutChange} />
+      <LayoutEditor value={layoutValue()} onChange={handleLayoutChange} t={t} />
+
+      <div class="layout-view-footer">
+        <Show when={hasChanges()}>
+          <span class="layout-view-dirty" role="status">
+            {t('layouts.unsavedChanges')}
+          </span>
+        </Show>
+        <Button
+          onClick={handleSave}
+          disabled={!hasChanges() || isSaving()}
+          color="primary"
+          label={isSaving() ? t('common.saving') : t('common.save')}
+          icon={BsSave}
+        />
+      </div>
     </div>
   );
 };
