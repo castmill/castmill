@@ -595,6 +595,22 @@ describe('CalendarView tap-to-add', () => {
     ).toBeInTheDocument();
   });
 
+  it('does not let delayed modal cleanup clear a newly opened slot', async () => {
+    mockViewport(TABLET_PORTRAIT);
+    renderCalendar();
+    await waitFor(() => expect(getChannelEntries).toHaveBeenCalled());
+
+    tapWeekSlot(0, 0);
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    tapWeekSlot(1, 1);
+    await new Promise((resolve) => setTimeout(resolve, 350));
+
+    expect(
+      screen.getByText('Starts Tuesday, January 6 at 00:30')
+    ).toBeInTheDocument();
+  });
+
   it('does not add a late save to a different week', async () => {
     let resolveAdd!: (entry: { id: number }) => void;
     addEntryToChannel.mockImplementationOnce(

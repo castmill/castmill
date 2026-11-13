@@ -94,7 +94,9 @@ export const CalendarAddEntry: Component<{
         time: formatSlotTime(props.slot.hour, props.slot.minute),
       })}
       closeLabel={t('common.close')}
-      onClose={props.onClose}
+      onClose={() => {
+        if (!disposed) props.onClose();
+      }}
     >
       <form
         class={styles.form}
