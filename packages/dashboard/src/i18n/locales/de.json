@@ -579,6 +579,13 @@
     "addedOn": "Hinzugefügt am",
     "lastUpdatedOn": "Zuletzt aktualisiert am",
     "enterTeamName": "Teamnamen eingeben",
+    "summary": "Teamübersicht",
+    "created": "Erstellt {{time}}",
+    "updated": "Aktualisiert {{time}}",
+    "unsavedChanges": "Ungespeicherte Änderungen",
+    "teamCreated": "Team {{name}} erfolgreich erstellt",
+    "teamUpdated": "Team {{name}} erfolgreich aktualisiert",
+    "teamRemoved": "Team {{name}} erfolgreich entfernt",
     "insertedAt": "Eingefügt am",
     "expiresAt": "Läuft ab am",
     "inviteMember": "Mitglied einladen",
@@ -599,7 +606,9 @@
       "removeResource": "Fehler beim Entfernen der Ressource aus dem Team: {{error}}",
       "removeResources": "Fehler beim Entfernen der Ressourcen aus dem Team: {{error}}",
       "addResourceToTeam": "Fehler beim Hinzufügen der Ressource zum Team: {{error}}",
-      "cannotRemoveLastAdmin": "Du kannst den letzten Administrator eines Teams nicht entfernen."
+      "cannotRemoveLastAdmin": "Du kannst den letzten Administrator eines Teams nicht entfernen.",
+      "nameRequired": "Name ist erforderlich",
+      "nameMinLength": "Name muss mindestens {{min}} Zeichen lang sein"
     },
     "messages": {
       "memberRemoved": "Mitglied {{name}} wurde erfolgreich entfernt",

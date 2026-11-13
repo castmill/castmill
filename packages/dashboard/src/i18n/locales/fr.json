@@ -561,6 +561,13 @@
     "addedOn": "Ajouté le",
     "lastUpdatedOn": "Dernière mise à jour le",
     "enterTeamName": "Entrez le nom de l'équipe",
+    "summary": "Résumé de l'équipe",
+    "created": "Créée {{time}}",
+    "updated": "Mise à jour {{time}}",
+    "unsavedChanges": "Modifications non enregistrées",
+    "teamCreated": "Équipe {{name}} créée avec succès",
+    "teamUpdated": "Équipe {{name}} mise à jour avec succès",
+    "teamRemoved": "Équipe {{name}} supprimée avec succès",
     "insertedAt": "Inséré le",
     "expiresAt": "Expire le",
     "inviteMember": "Inviter un membre",
@@ -580,7 +587,9 @@
       "removeResource": "Erreur lors de la suppression de la ressource de l'équipe : {{error}}",
       "removeResources": "Erreur lors de la suppression des ressources de l'équipe : {{error}}",
       "addResourceToTeam": "Erreur lors de l'ajout de la ressource à l'équipe : {{error}}",
-      "cannotRemoveLastAdmin": "Vous ne pouvez pas supprimer le dernier administrateur de l'équipe."
+      "cannotRemoveLastAdmin": "Vous ne pouvez pas supprimer le dernier administrateur de l'équipe.",
+      "nameRequired": "Le nom est requis",
+      "nameMinLength": "Le nom doit contenir au moins {{min}} caractères"
     },
     "confirmAddResources": "Êtes-vous sûr de vouloir ajouter les ressources suivantes ?",
     "messages": {

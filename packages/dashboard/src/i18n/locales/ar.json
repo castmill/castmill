@@ -561,6 +561,13 @@
     "addedOn": "تمت الإضافة في",
     "lastUpdatedOn": "آخر تحديث في",
     "enterTeamName": "أدخل اسم الفريق",
+    "summary": "ملخص الفريق",
+    "created": "أُنشئ {{time}}",
+    "updated": "حُدّث {{time}}",
+    "unsavedChanges": "تغييرات غير محفوظة",
+    "teamCreated": "تم إنشاء الفريق {{name}} بنجاح",
+    "teamUpdated": "تم تحديث الفريق {{name}} بنجاح",
+    "teamRemoved": "تمت إزالة الفريق {{name}} بنجاح",
     "insertedAt": "تاريخ الإدراج",
     "expiresAt": "تاريخ الانتهاء",
     "inviteMember": "دعوة عضو",
@@ -580,7 +587,9 @@
       "removeResource": "خطأ في إزالة المورد من الفريق: {{error}}",
       "removeResources": "خطأ في إزالة الموارد من الفريق: {{error}}",
       "addResourceToTeam": "خطأ في إضافة المورد إلى الفريق: {{error}}",
-      "cannotRemoveLastAdmin": "لا يمكنك إزالة آخر مشرف للفريق."
+      "cannotRemoveLastAdmin": "لا يمكنك إزالة آخر مشرف للفريق.",
+      "nameRequired": "الاسم مطلوب",
+      "nameMinLength": "يجب أن يتكون الاسم من {{min}} أحرف على الأقل"
     },
     "confirmAddResources": "هل أنت متأكد من أنك تريد إضافة الموارد التالية؟",
     "messages": {

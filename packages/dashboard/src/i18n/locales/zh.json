@@ -561,6 +561,13 @@
     "addedOn": "添加于",
     "lastUpdatedOn": "最后更新于",
     "enterTeamName": "输入团队名称",
+    "summary": "团队摘要",
+    "created": "创建于 {{time}}",
+    "updated": "更新于 {{time}}",
+    "unsavedChanges": "未保存的更改",
+    "teamCreated": "团队 {{name}} 创建成功",
+    "teamUpdated": "团队 {{name}} 更新成功",
+    "teamRemoved": "团队 {{name}} 删除成功",
     "insertedAt": "插入时间",
     "expiresAt": "过期时间",
     "inviteMember": "邀请成员",
@@ -580,7 +587,9 @@
       "removeResource": "从团队中删除资源时出错：{{error}}",
       "removeResources": "从团队中删除资源时出错：{{error}}",
       "addResourceToTeam": "向团队添加资源时出错：{{error}}",
-      "cannotRemoveLastAdmin": "你不能移除团队最后一位管理员。"
+      "cannotRemoveLastAdmin": "你不能移除团队最后一位管理员。",
+      "nameRequired": "名称是必需的",
+      "nameMinLength": "名称至少需要 {{min}} 个字符"
     },
     "confirmAddResources": "您确定要添加以下资源吗？",
     "messages": {

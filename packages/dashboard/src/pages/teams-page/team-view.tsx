@@ -1,28 +1,71 @@
-import { createSignal, createEffect, Show, on } from 'solid-js';
+import { createSignal, createEffect, Show, on, onCleanup } from 'solid-js';
 
-import { Button, FormItem } from '@castmill/ui-common';
+import {
+  Button,
+  DetailsSummary,
+  DetailsSummaryPill,
+  Drawer,
+  FormItem,
+  formatRelativeTimeLocalized,
+} from '@castmill/ui-common';
 import { usePermissions } from '../../hooks/usePermissions';
 
 import { BsCheckLg, BsX } from 'solid-icons/bs';
 import { JsonTeam } from '../../interfaces/team';
-import { TeamUpdate } from '../../services/teams.service';
+import { TeamsService, TeamUpdate } from '../../services/teams.service';
 import { TeamResourcesView } from './team-resources-view';
 import { useI18n } from '../../i18n';
 
 import styles from './teams-page.module.scss';
 
+export const MIN_TEAM_NAME_LENGTH = 5;
+
+/**
+ * Team shown in the details drawer. Teams fetched from the API use snake_case
+ * timestamps, while older callers pass camelCase ones.
+ */
+export type TeamDetails = Omit<TeamUpdate, 'id'> & {
+  id?: number;
+  inserted_at?: string;
+  updated_at?: string;
+};
+
 export const TeamView = (props: {
   organizationId: string;
-  team: Omit<TeamUpdate, 'id'> & { id?: number };
+  team: TeamDetails;
+  title: string;
+  onClose: () => void;
   onSubmit: (teamUpdate: TeamUpdate) => Promise<JsonTeam | void>;
 }) => {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { canPerformAction } = usePermissions();
   const [teamId, setTeamId] = createSignal<number | undefined>(props.team.id);
-  const [name, setName] = createSignal(props.team.name);
+  const [name, setName] = createSignal(props.team.name || '');
+  const [memberCount, setMemberCount] = createSignal<number>();
+  const [saving, setSaving] = createSignal(false);
+  // Re-render relative timestamps every minute.
+  const [now, setNow] = createSignal(Date.now());
+  const timer = setInterval(() => setNow(Date.now()), 60000);
+  onCleanup(() => clearInterval(timer));
 
   const [isFormModified, setIsFormModified] = createSignal(false);
   const [errors, setErrors] = createSignal(new Map());
+
+  const formId = () => `team-form-${props.team.id ?? 'new'}`;
+
+  const loadMemberCount = async (id: number) => {
+    try {
+      const result = await TeamsService.fetchMembers(props.organizationId, id, {
+        page: { num: 1, size: 1 },
+        sortOptions: { direction: 'ascending' },
+      });
+      if (teamId() === id) {
+        setMemberCount(result?.count);
+      }
+    } catch (error) {
+      console.error('Failed to fetch team member count:', error);
+    }
+  };
 
   createEffect(
     on(
@@ -32,6 +75,10 @@ export const TeamView = (props: {
         setName(props.team.name || '');
         setErrors(new Map());
         setIsFormModified(false);
+        setMemberCount(undefined);
+        if (props.team.id) {
+          loadMemberCount(props.team.id);
+        }
       }
     )
   );
@@ -52,9 +99,11 @@ export const TeamView = (props: {
     switch (fieldId) {
       case 'name':
         if (!value) {
-          error = 'Name is required';
-        } else if (value.length < 5) {
-          error = 'Name must be at least 5 characters';
+          error = t('teams.errors.nameRequired');
+        } else if (value.length < MIN_TEAM_NAME_LENGTH) {
+          error = t('teams.errors.nameMinLength', {
+            min: MIN_TEAM_NAME_LENGTH,
+          });
         }
         break;
       default:
@@ -66,9 +115,7 @@ export const TeamView = (props: {
   };
 
   createEffect(() => {
-    // We need to check both fields or create effect will not detect the dependencies.
-    const hasModifiedName = name() !== props.team.name;
-    setIsFormModified(hasModifiedName);
+    setIsFormModified(name() !== (props.team.name || ''));
   });
 
   const isFormValid = () => {
@@ -77,35 +124,126 @@ export const TeamView = (props: {
     );
   };
 
-  return (
-    <div style="width: 100%; box-sizing: border-box;">
-      <div class="info">
-        <Show when={props.team.insertedAt}>
-          <span>{t('teams.addedOn')} </span>{' '}
-          <span>{`${props.team.insertedAt}`}. </span>
-        </Show>
-        <Show when={props.team.updatedAt}>
-          <span>{t('teams.lastUpdatedOn')} </span>
-          <span>{`${props.team.updatedAt}`}</span>
-        </Show>
-      </div>
-      <form
-        onSubmit={async (e) => {
-          e.preventDefault();
-          if (isFormValid()) {
-            const team = await props.onSubmit({
-              id: props.team.id!,
-              name: name(),
-            });
+  const resetForm = () => {
+    setName(props.team.name || '');
+    setErrors(new Map());
+    setIsFormModified(false);
+  };
 
-            setIsFormModified(false);
-            if (team) {
-              setTeamId(team.id);
-            }
-          }
-        }}
-      >
-        <div class="form-inputs">
+  const submit = async () => {
+    if (!isFormValid() || saving()) {
+      return;
+    }
+    setSaving(true);
+    try {
+      const team = await props.onSubmit({
+        id: props.team.id!,
+        name: name(),
+      });
+
+      setIsFormModified(false);
+      if (team) {
+        setTeamId(team.id);
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const insertedAt = () => props.team.inserted_at ?? props.team.insertedAt;
+  const updatedAt = () => props.team.updated_at ?? props.team.updatedAt;
+
+  const timestamps = () => {
+    now();
+    return [
+      insertedAt() &&
+        t('teams.created', {
+          time: formatRelativeTimeLocalized(insertedAt()!, locale()),
+        }),
+      updatedAt() &&
+        t('teams.updated', {
+          time: formatRelativeTimeLocalized(updatedAt()!, locale()),
+        }),
+    ]
+      .filter(Boolean)
+      .join(' · ');
+  };
+
+  const summaryPills = (): DetailsSummaryPill[] => {
+    const pills: DetailsSummaryPill[] = [
+      {
+        label: <span class={styles.summaryName}>{props.team.name}</span>,
+        title: props.team.name,
+        tone: 'neutral',
+      },
+    ];
+    const count = memberCount();
+    if (count !== undefined) {
+      pills.push({
+        label: (
+          <>
+            {t('teams.members')} <strong>{count}</strong>
+          </>
+        ),
+        tone: 'info',
+      });
+    }
+    return pills;
+  };
+
+  return (
+    <Drawer
+      title={props.title}
+      closeButtonTitle={t('common.close')}
+      onClose={props.onClose}
+      placement="right"
+      size="xl"
+      closeOnOutsideClick
+      outsideClickIgnoreSelector="tbody tr"
+      footer={
+        canEdit() ? (
+          <div class={styles.teamFooter} data-testid="team-footer">
+            <span class={styles.teamDirty} aria-live="polite">
+              {isFormModified() ? t('teams.unsavedChanges') : ''}
+            </span>
+            <Button
+              label={t('common.reset')}
+              disabled={!isFormModified() || saving()}
+              onClick={resetForm}
+              icon={BsX}
+              color="secondary"
+            />
+            <Button
+              label={props.team.id ? t('common.save') : t('common.create')}
+              type="submit"
+              form={formId()}
+              disabled={!isFormValid()}
+              loading={saving()}
+              icon={BsCheckLg}
+              color="success"
+            />
+          </div>
+        ) : undefined
+      }
+    >
+      <div class={styles.teamView}>
+        <Show when={props.team.id}>
+          <DetailsSummary
+            class={styles.teamSummary}
+            label={t('teams.summary')}
+            compact
+            pills={summaryPills()}
+            note={timestamps()}
+          />
+        </Show>
+        <form
+          id={formId()}
+          class={styles.teamForm}
+          onSubmit={(e) => {
+            e.preventDefault();
+            submit();
+          }}
+        >
           <FormItem
             label={t('common.name')}
             id="name"
@@ -121,39 +259,18 @@ export const TeamView = (props: {
           >
             <div class="error">{errors().get('name')}</div>
           </FormItem>
-        </div>
+        </form>
 
-        {/* TableView for members */}
         <Show when={teamId()}>
           <TeamResourcesView
             organizationId={props.organizationId}
             teamId={teamId()!}
-            onRemove={(member) => {
-              console.log('Remove member', member);
+            onRemove={() => {
+              loadMemberCount(teamId()!);
             }}
           />
         </Show>
-
-        <div class={styles['actions']}>
-          <Button
-            label={props.team.id ? t('common.save') : t('common.create')}
-            type="submit"
-            disabled={!isFormValid()}
-            icon={BsCheckLg}
-            color="success"
-          />
-          <Button
-            label={t('common.reset')}
-            disabled={!canEdit()}
-            onClick={() => {
-              setName(props.team.name);
-              setIsFormModified(false);
-            }}
-            icon={BsX}
-            color="danger"
-          />
-        </div>
-      </form>
-    </div>
+      </div>
+    </Drawer>
   );
 };
