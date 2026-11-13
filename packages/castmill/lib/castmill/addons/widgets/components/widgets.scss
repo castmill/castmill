@@ -24,12 +24,6 @@
   }
 }
 
-// Widget upload modal. The shared Modal keeps it inside the viewport,
-// scrolls its body and turns it into a full-width bottom sheet on phones.
-.widget-upload-modal {
-  width: 48em;
-}
-
 // JSON viewer: themed through --cm-* tokens so it reads well in light and
 // dark mode. Long lines scroll horizontally instead of widening the drawer.
 .json-viewer {

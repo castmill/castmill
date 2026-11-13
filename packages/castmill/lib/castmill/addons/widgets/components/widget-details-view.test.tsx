@@ -239,6 +239,7 @@ describe('AssetsList', () => {
 
 describe('widgets.scss', () => {
   const widgetsScss = readFileSync(resolve(__dirname, 'widgets.scss'), 'utf8');
+  const widgetsIndex = readFileSync(resolve(__dirname, 'index.tsx'), 'utf8');
   const block = (selector: string) => {
     const start = widgetsScss.indexOf(selector);
     expect(start).toBeGreaterThanOrEqual(0);
@@ -266,9 +267,12 @@ describe('widgets.scss', () => {
     );
   });
 
-  it('sizes the upload modal without !important or viewport overrides', () => {
+  it('leaves upload modal sizing to the shared Modal', () => {
     expect(widgetsScss).not.toContain('!important');
-    expect(block('.widget-upload-modal {')).not.toMatch(/vw|vh/);
+    expect(widgetsScss).not.toContain('.widget-upload-modal {');
+    expect(widgetsIndex).not.toMatch(
+      /modalElement\.style\.(?:width|maxWidth|minWidth)/
+    );
     expect(block('.upload-widgets {')).toMatch(
       /@media \(max-width: 36em\) \{\s*padding: 0;/
     );
