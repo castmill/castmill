@@ -220,62 +220,93 @@
   }
 }
 
-.medias-modal {
-  .info {
-    font-size: 0.8em;
-    color: var(--cm-text-secondary);
-    margin-top: 1em;
+.media-details {
+  container: media-details / inline-size;
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+  width: 100%;
+  min-width: 0;
+}
+
+// Phones and narrow drawers: preview on top, form below.
+.media-details-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+  min-width: 0;
+}
+
+.media-details-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 12em;
+  overflow: hidden;
+  border: 1px solid var(--cm-border-color);
+  border-radius: 0.6em;
+  background: var(--cm-bg-sunken);
+
+  .placeholder {
+    padding: 2em 1em;
+    color: var(--cm-text-tertiary);
+    font-style: italic;
+    text-align: center;
   }
+
+  .preview-media {
+    display: block;
+    width: 100%;
+    height: auto;
+    // Keep the form below reachable without scrolling past a tall preview.
+    max-height: 45vh;
+    max-height: 45dvh;
+    object-fit: contain;
+  }
+}
+
+.media-details-form {
+  min-width: 0;
 
   form {
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    height: 95%;
     gap: 0.7em;
+    width: 100%;
+  }
 
-    .form-inputs {
-      width: 100%;
+  .form-inputs {
+    width: 100%;
+  }
+
+  .error {
+    color: var(--cm-error);
+    font-size: 0.85em;
+  }
+}
+
+// Tablet/desktop drawers (~56em wide): preview and form side by side, with
+// the preview filling the height left between the summary and the footer.
+@container media-details (min-width: 54em) {
+  .media-details-layout {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .media-details-preview {
+    flex: 1 1 60%;
+
+    .preview-media {
+      max-height: calc(100vh - 20em);
+      max-height: calc(100dvh - 20em);
+      min-height: 12em;
     }
+  }
 
-    .preview {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      width: 100%;
-      max-height: 45vh;
-      min-height: 30vh;
-      height: auto;
-      flex: 1 1 auto;
-      overflow: hidden;
-      margin: 0 0 0.5em 0;
-      border: 1px solid var(--cm-border-color);
-      border-radius: 4px;
-
-      .placeholder {
-        color: var(--cm-text-tertiary);
-        font-style: italic;
-      }
-
-      .image {
-        width: 100%;
-        height: 100%;
-        min-height: 30vh;
-        max-height: 50vh;
-        background-size: contain;
-        background-repeat: no-repeat;
-        background-position: center;
-      }
-
-      .video-preview {
-        max-width: 100%;
-        max-height: 100%;
-        object-fit: contain;
-        margin: auto;
-      }
-    }
+  .media-details-form {
+    flex: 1 1 40%;
+    max-width: 26em;
   }
 }
 
@@ -288,7 +319,7 @@
   gap: 0.5em 1em;
 }
 
-.medias-modal form .actions {
+.media-details form .actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;

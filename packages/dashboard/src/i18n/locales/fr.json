@@ -1653,7 +1653,25 @@
     },
     "drawerTitle": "Média \"{{name}}\"",
     "mediaUpdated": "Média \"{{name}}\" mis à jour avec succès",
-    "errorUpdating": "Erreur lors de la mise à jour du média {{name}} : {{error}}"
+    "errorUpdating": "Erreur lors de la mise à jour du média {{name}} : {{error}}",
+    "details": {
+      "summary": "Résumé du média",
+      "copyId": "Copier l’ID du média",
+      "copied": "ID du média copié",
+      "copyFailed": "Impossible de copier l’ID du média.",
+      "added": "Ajouté {{time}}",
+      "updated": "Mis à jour {{time}}",
+      "dimensions": "Taille en pixels",
+      "duration": "Durée",
+      "namePlaceholder": "Saisissez le nom du média",
+      "nameRequired": "Le nom est obligatoire",
+      "nameTooShort": "Le nom doit comporter au moins 5 caractères",
+      "noPreview": "Aucun aperçu disponible",
+      "types": {
+        "image": "Image",
+        "video": "Vidéo"
+      }
+    }
   },
   "dashboard": {
     "noOrganizations": {

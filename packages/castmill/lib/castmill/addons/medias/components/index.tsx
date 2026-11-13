@@ -935,10 +935,10 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
           title={t('medias.drawerTitle', { name: currentMedia()?.name })}
           onClose={closeMediaDrawer}
           placement="right"
-          size="lg"
+          size="xl"
           closeOnOutsideClick
           outsideClickIgnoreSelector="tbody tr, .media-tree-item"
-          contentClass="medias-modal"
+          closeButtonTitle={t('common.close')}
           footer={
             <div
               class="medias-drawer-footer"

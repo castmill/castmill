@@ -1636,7 +1636,25 @@
     },
     "drawerTitle": "Medien \"{{name}}\"",
     "mediaUpdated": "Medien \"{{name}}\" erfolgreich aktualisiert",
-    "errorUpdating": "Fehler beim Aktualisieren von Medien {{name}}: {{error}}"
+    "errorUpdating": "Fehler beim Aktualisieren von Medien {{name}}: {{error}}",
+    "details": {
+      "summary": "Medienübersicht",
+      "copyId": "Medien-ID kopieren",
+      "copied": "Medien-ID kopiert",
+      "copyFailed": "Die Medien-ID konnte nicht kopiert werden.",
+      "added": "Hinzugefügt {{time}}",
+      "updated": "Aktualisiert {{time}}",
+      "dimensions": "Abmessungen",
+      "duration": "Dauer",
+      "namePlaceholder": "Mediennamen eingeben",
+      "nameRequired": "Name ist erforderlich",
+      "nameTooShort": "Der Name muss mindestens 5 Zeichen lang sein",
+      "noPreview": "Keine Vorschau verfügbar",
+      "types": {
+        "image": "Bild",
+        "video": "Video"
+      }
+    }
   },
   "dashboard": {
     "noOrganizations": {
