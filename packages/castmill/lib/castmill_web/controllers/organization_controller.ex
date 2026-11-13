@@ -477,15 +477,25 @@ defmodule CastmillWeb.OrganizationController do
   end
 
   defp store_widget_assets(widget, widget_data, widget_slug, assets) do
+    alias Castmill.Widgets.PackageProcessor
+
     with {:ok, stored_assets} <-
-           Castmill.Widgets.AssetStorage.store_assets(widget_slug, assets) do
+           Castmill.Widgets.AssetStorage.store_assets(widget_slug, assets),
+         {:ok, referenced} <-
+           PackageProcessor.resolve_asset_references(widget_data, fn path ->
+             get_in(stored_assets, [:files, path, :url])
+           end) do
       resolved =
-        widget_data
+        referenced
         |> resolve_widget_icon(widget_slug, stored_assets)
         |> resolve_widget_fonts(widget_slug, stored_assets)
 
       widget
-      |> Ecto.Changeset.change(icon: resolved["icon"], fonts: resolved["fonts"] || widget.fonts)
+      |> Ecto.Changeset.change(
+        icon: resolved["icon"],
+        fonts: resolved["fonts"] || widget.fonts,
+        template: resolved["template"]
+      )
       |> Castmill.Repo.update()
     end
   end

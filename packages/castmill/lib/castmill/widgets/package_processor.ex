@@ -95,9 +95,7 @@ defmodule Castmill.Widgets.PackageProcessor do
          {:ok, widget_data} <- extract_and_parse_widget_json(zip_path, widget_json_path),
          :ok <- validate_widget_json(widget_data),
          {:ok, assets} <- extract_assets(zip_path, file_list, widget_json_path) do
-      # Update widget data with extracted asset paths if needed
-      updated_widget_data = process_asset_references(widget_data, assets)
-      {:ok, updated_widget_data, assets}
+      {:ok, widget_data, assets}
     end
   end
 
@@ -198,9 +196,11 @@ defmodule Castmill.Widgets.PackageProcessor do
     asset_files =
       file_list
       |> Enum.filter(fn path ->
-        # Must be under assets/ directory relative to widget.json
+        # Must be under assets/ directory relative to widget.json, without escaping it
         relative = String.replace_prefix(path, base_dir, "")
-        String.starts_with?(relative, "assets/") and not String.ends_with?(path, "/")
+
+        String.starts_with?(relative, "assets/") and not String.ends_with?(path, "/") and
+          safe_relative_path?(relative)
       end)
       |> Enum.filter(&valid_asset_file?/1)
 
@@ -230,6 +230,14 @@ defmodule Castmill.Widgets.PackageProcessor do
       {:error, reason} -> {:error, reason}
       assets_map -> {:ok, %{dir: assets_dir, files: assets_map}}
     end
+  end
+
+  # Rejects "..", absolute paths and backslashes, so extraction and storage stay
+  # inside their directories (zip slip).
+  defp safe_relative_path?(path) do
+    not String.contains?(path, "\\") and
+      match?({:ok, _}, Path.safe_relative(path)) and
+      ".." not in Path.split(path)
   end
 
   defp valid_asset_file?(path) do
@@ -308,22 +316,72 @@ defmodule Castmill.Widgets.PackageProcessor do
     end
   end
 
+  @asset_reference ~r/\{\{\s*asset:([A-Za-z0-9_-]+)\.([A-Za-z0-9_.-]+)\s*\}\}/
+
   @doc """
-  Process asset references in the widget template.
+  Replaces `{{asset:category.name}}` placeholders with the URLs of stored assets.
 
-  Replaces {{asset:category.name}} placeholders with actual asset paths.
-  This is called after assets are stored to update the template with
-  the correct URLs.
+  A placeholder names an entry of the package's `assets` declaration (e.g.
+  `"assets": {"images": {"logo": {"path": "assets/images/logo.png"}}}` for
+  `{{asset:images.logo}}`); `url_for` maps that entry's `path` to its URL, or
+  returns nil if the file is not in the package. Placeholders may be whole
+  strings or part of one (e.g. a CSS `url(...)`), anywhere except in `assets`
+  itself.
+
+  Returns `{:ok, widget_data}` or `{:error, message}` for unknown references.
   """
-  def process_asset_references(widget_data, %{files: files}) when map_size(files) > 0 do
-    # For now, we keep the asset references as-is in the widget data
-    # The player will resolve them at runtime based on the widget's asset manifest
-    widget_data
+  def resolve_asset_references(widget_data, url_for) when is_function(url_for, 1) do
+    {assets, rest} = Map.pop(widget_data, "assets")
+    declared = if is_map(assets), do: assets, else: %{}
+
+    resolve = fn category, name ->
+      with %{} = entries <- declared[category],
+           %{"path" => path} when is_binary(path) <- entries[name],
+           url when is_binary(url) <- url_for.(path) do
+        {:ok, url}
+      else
+        _ -> {:error, "Unknown asset reference {{asset:#{category}.#{name}}}"}
+      end
+    end
+
+    with {:ok, resolved} <- replace_references(rest, resolve) do
+      {:ok, if(is_nil(assets), do: resolved, else: Map.put(resolved, "assets", assets))}
+    end
   end
 
-  def process_asset_references(widget_data, _assets) do
-    widget_data
+  defp replace_references(value, resolve) when is_binary(value) do
+    Regex.scan(@asset_reference, value)
+    |> Enum.reduce_while({:ok, value}, fn [placeholder, category, name], {:ok, acc} ->
+      case resolve.(category, name) do
+        {:ok, url} -> {:cont, {:ok, String.replace(acc, placeholder, url)}}
+        error -> {:halt, error}
+      end
+    end)
   end
+
+  defp replace_references(value, resolve) when is_map(value) do
+    Enum.reduce_while(value, {:ok, %{}}, fn {key, item}, {:ok, acc} ->
+      case replace_references(item, resolve) do
+        {:ok, resolved} -> {:cont, {:ok, Map.put(acc, key, resolved)}}
+        error -> {:halt, error}
+      end
+    end)
+  end
+
+  defp replace_references(value, resolve) when is_list(value) do
+    Enum.reduce_while(value, {:ok, []}, fn item, {:ok, acc} ->
+      case replace_references(item, resolve) do
+        {:ok, resolved} -> {:cont, {:ok, [resolved | acc]}}
+        error -> {:halt, error}
+      end
+    end)
+    |> case do
+      {:ok, items} -> {:ok, Enum.reverse(items)}
+      error -> error
+    end
+  end
+
+  defp replace_references(value, _resolve), do: {:ok, value}
 
   @doc """
   Clean up temporary asset files after processing.

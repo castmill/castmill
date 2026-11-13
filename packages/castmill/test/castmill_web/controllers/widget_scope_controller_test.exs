@@ -262,6 +262,46 @@ defmodule CastmillWeb.WidgetScopeControllerTest do
       assert %{"errors" => %{"slug" => ["has invalid format"]}} = json_response(conn, 422)
     end
 
+    test "asset placeholders in the template become the stored assets' URLs", ctx do
+      alias Castmill.Widgets.AssetStorage
+
+      slug = "asset-refs-#{System.unique_integer([:positive])}"
+      on_exit(fn -> AssetStorage.delete_assets(slug) end)
+
+      widget = %{
+        "name" => "Asset refs #{slug}",
+        "slug" => slug,
+        "icon" => "{{asset:icons.main}}",
+        "template" => %{
+          "type" => "image",
+          "name" => "bg",
+          "opts" => %{"url" => "{{asset:images.bg}}"}
+        },
+        "assets" => %{
+          "icons" => %{"main" => %{"path" => "assets/icons/icon.svg"}},
+          "images" => %{"bg" => %{"path" => "assets/images/bg.png"}}
+        }
+      }
+
+      files = [{"assets/icons/icon.svg", "<svg/>"}, {"assets/images/bg.png", "png"}]
+
+      assert %{"icon" => icon, "template" => template} =
+               ctx.conn |> upload_zip(ctx.org_a, widget, files) |> json_response(201)
+
+      assert icon == "/widget_assets/#{slug}/assets/icons/icon.svg"
+      assert template["opts"]["url"] == "/widget_assets/#{slug}/assets/images/bg.png"
+
+      missing = Map.put(widget, "slug", slug <> "-missing")
+      on_exit(fn -> AssetStorage.delete_assets(slug <> "-missing") end)
+
+      assert %{"error" => "Unknown asset reference {{asset:images.bg}}"} =
+               ctx.conn
+               |> upload_zip(ctx.org_a, missing, [{"assets/icons/icon.svg", "<svg/>"}])
+               |> json_response(400)
+
+      refute Castmill.Widgets.get_widget_by_slug(slug <> "-missing")
+    end
+
     test "extracted package assets are cleaned up when an upload is rejected", ctx do
       extracted = fn -> Path.wildcard(Path.join(System.tmp_dir!(), "widget_assets_*")) end
       before = extracted.()
