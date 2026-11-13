@@ -1,46 +1,118 @@
 /* Tabs.css */
 .tabs {
   --transition-duration: 0.3s; /* Adjust duration for transitions */
-  margin-top: 20px;
+  margin-top: 1.25em;
+  min-width: 0;
 
   .tabHeader {
+    border-bottom: 0.125em solid var(--cm-border-strong);
+  }
+
+  /* Horizontally scrollable rail: tabs keep their natural width and the
+     list scrolls instead of squeezing labels on narrow screens. */
+  .tabList {
+    --cm-tabs-fade: 2em;
+    --cm-tabs-fade-start: 0em;
+    --cm-tabs-fade-end: 0em;
+    --cm-tabs-fade-left: var(--cm-tabs-fade-start);
+    --cm-tabs-fade-right: var(--cm-tabs-fade-end);
     display: flex;
-    border-bottom: 2px solid var(--cm-border-strong);
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin-bottom: -0.125em;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    &[data-overflow-start] {
+      --cm-tabs-fade-start: var(--cm-tabs-fade);
+    }
+
+    &[data-overflow-end] {
+      --cm-tabs-fade-end: var(--cm-tabs-fade);
+    }
+
+    /* Fade the edge(s) that hide more tabs */
+    &[data-overflow-start],
+    &[data-overflow-end] {
+      -webkit-mask-image: linear-gradient(
+        to right,
+        transparent,
+        #000 var(--cm-tabs-fade-left),
+        #000 calc(100% - var(--cm-tabs-fade-right)),
+        transparent
+      );
+      mask-image: linear-gradient(
+        to right,
+        transparent,
+        #000 var(--cm-tabs-fade-left),
+        #000 calc(100% - var(--cm-tabs-fade-right)),
+        transparent
+      );
+    }
+
+    [dir='rtl'] & {
+      --cm-tabs-fade-left: var(--cm-tabs-fade-end);
+      --cm-tabs-fade-right: var(--cm-tabs-fade-start);
+    }
   }
 
   .tabButton {
-    flex: 1;
+    position: relative;
+    display: inline-flex;
+    flex: 1 0 auto;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5em;
+    font: inherit;
     font-size: 1em;
-    padding: 10px;
+    font-weight: bold;
+    padding: 0.625em 0.9em;
     cursor: pointer;
     background-color: transparent;
     border: none;
-    border-bottom: 2px solid transparent;
+    border-bottom: 0.125em solid transparent;
     color: var(--cm-text-primary);
+    white-space: nowrap;
+    scroll-snap-align: start;
     transition:
       background-color var(--transition-duration),
-      color var(--transition-duration);
+      color var(--transition-duration),
+      border-color var(--transition-duration);
+  }
 
-    font-weight: bold;
+  .tabIcon {
+    flex-shrink: 0;
+    font-size: 1.1em;
   }
 
   .tabButton:hover {
     background-color: var(--cm-bg-hover-strong);
   }
 
+  .tabButton:focus-visible {
+    outline: 0.125em solid var(--cm-focus-ring);
+    outline-offset: -0.125em;
+  }
+
   .tabButton.active {
-    border-bottom: 2px solid var(--cm-primary); /* Active tab indicator */
+    border-bottom-color: var(--cm-primary); /* Active tab indicator */
     color: var(--cm-primary); /* Accent color for active tab text */
   }
 
   .tabContent {
     height: 100%;
     min-height: 22em;
-    padding: 15px;
+    min-width: 0;
+    padding: 1em;
     border-top: none;
     color: var(--cm-text-primary);
     opacity: 0;
-    transform: translateY(10px); /* Shift content slightly for animation */
+    transform: translateY(0.6em); /* Shift content slightly for animation */
     transition:
       opacity var(--transition-duration),
       transform var(--transition-duration);
@@ -50,5 +122,26 @@
   .tabContentActive {
     opacity: 1;
     transform: translateY(0); /* Reset position to align properly */
+  }
+
+  @media (max-width: 36em) {
+    .tabButton {
+      padding: 0.625em 0.7em;
+    }
+
+    /* Inactive tabs with an icon become icon-only; the label stays
+       available to assistive technology and as the tooltip. */
+    .tabButton.hasIcon:not(.active) .tabLabel {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+
+    .tabContent {
+      padding: 0.75em 0;
+    }
   }
 }

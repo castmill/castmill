@@ -156,6 +156,11 @@ Shared mobile behaviour (ui-common):
   full-screen modal content with `100%` of the overlay (and
   `box-sizing: border-box`), not `100vw`/`100dvh`.
   Drawers ignore outside clicks inside the sheet.
+- `Tabs` is an ARIA tablist (Arrow keys mirrored in RTL, Home/End) whose rail
+  scrolls horizontally instead of squeezing labels; the active tab is scrolled
+  into view and hidden edges fade. Give each `TabItem` an `icon` so inactive
+  tabs collapse to icon-only at ≤36em (the title stays as tooltip and
+  accessible name), and pass `ariaLabel={t('common.sections')}`.
 
 ## Critical Rules
 

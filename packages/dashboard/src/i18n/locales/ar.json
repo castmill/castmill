@@ -1,6 +1,7 @@
 {
   "common": {
     "save": "حفظ",
+    "sections": "الأقسام",
     "saving": "جارٍ الحفظ...",
     "cancel": "إلغاء",
     "delete": "حذف",

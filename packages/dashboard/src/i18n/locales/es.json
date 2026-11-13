@@ -1,6 +1,7 @@
 {
   "common": {
     "save": "Guardar",
+    "sections": "Secciones",
     "saving": "Guardando...",
     "cancel": "Cancelar",
     "delete": "Eliminar",

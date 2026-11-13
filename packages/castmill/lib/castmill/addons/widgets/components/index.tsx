@@ -1,4 +1,13 @@
-import { BsEye, BsTrash } from 'solid-icons/bs';
+import {
+  BsBraces,
+  BsDatabase,
+  BsEye,
+  BsImages,
+  BsPlug,
+  BsSliders,
+  BsTranslate,
+  BsTrash,
+} from 'solid-icons/bs';
 import { AiOutlineUpload } from 'solid-icons/ai';
 import {
   Component,
@@ -22,6 +31,7 @@ import {
   TableViewRef,
   ModalRef,
   Tabs,
+  TabItem,
   ConfirmDialog,
 } from '@castmill/ui-common';
 import { JsonWidget } from '@castmill/player';
@@ -100,9 +110,10 @@ const WidgetsPage: Component<{
 
     if (!widget) return [];
 
-    const tabs = [
+    const tabs: TabItem[] = [
       {
         title: t('widgets.template'),
+        icon: BsBraces,
         content: () => <JsonHighlight json={widget.template} />,
       },
     ];
@@ -110,6 +121,7 @@ const WidgetsPage: Component<{
     if (widget.options_schema) {
       tabs.push({
         title: t('widgets.optionsSchema'),
+        icon: BsSliders,
         content: () => <JsonHighlight json={widget.options_schema} />,
       });
     }
@@ -117,12 +129,14 @@ const WidgetsPage: Component<{
     if (widget.data_schema) {
       tabs.push({
         title: t('widgets.dataSchema'),
+        icon: BsDatabase,
         content: () => <JsonHighlight json={widget.data_schema} />,
       });
     }
 
     tabs.push({
       title: t('widgets.translations'),
+      icon: BsTranslate,
       content: () => <JsonHighlight json={widget.translations || {}} />,
     });
 
@@ -130,6 +144,7 @@ const WidgetsPage: Component<{
     if (widget.assets && Object.keys(widget.assets).length > 0) {
       tabs.push({
         title: t('widgets.assets.title'),
+        icon: BsImages,
         content: () => (
           <AssetsList
             assets={widget.assets}
@@ -144,6 +159,7 @@ const WidgetsPage: Component<{
     if (hasIntegrations) {
       tabs.push({
         title: t('widgets.integrations.title'),
+        icon: BsPlug,
         content: () => (
           <IntegrationsList
             store={props.store}
@@ -648,7 +664,11 @@ const WidgetsPage: Component<{
             </div>
 
             {/* Tabs using ui-common Tabs component */}
-            <Tabs tabs={detailsTabs()} initialIndex={initialTabIndex()} />
+            <Tabs
+              tabs={detailsTabs()}
+              initialIndex={initialTabIndex()}
+              ariaLabel={t('common.sections')}
+            />
           </div>
         </Drawer>
       </Show>

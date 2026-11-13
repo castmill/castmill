@@ -1,5 +1,6 @@
 import { Component, Show, createEffect, createSignal, on } from 'solid-js';
 import { Drawer, Tabs, useToast } from '@castmill/ui-common';
+import { BsDisplay, BsListCheck } from 'solid-icons/bs';
 
 import { useI18n } from '../../i18n';
 import {
@@ -172,8 +173,10 @@ export const AutomationEditor: Component<AutomationEditorProps> = (props) => {
       </Show>
 
       <Tabs
+        ariaLabel={t('common.sections')}
         tabs={[
           {
+            icon: BsListCheck,
             title: () =>
               t('automations.tabs.rules', {
                 count: props.automation.rules.length,
@@ -191,6 +194,7 @@ export const AutomationEditor: Component<AutomationEditorProps> = (props) => {
             ),
           },
           {
+            icon: BsDisplay,
             title: () =>
               t('automations.tabs.assignments', {
                 count:
