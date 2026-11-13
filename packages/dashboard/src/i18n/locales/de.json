@@ -307,6 +307,43 @@
         "save": "Der Widget-Zugriff konnte nicht aktualisiert werden.",
         "inUse": "Der Zugriff kann nicht entfernt werden, solange diese Organisationen das Widget in Playlists verwenden: {{organizations}}",
         "moreOrganizations": "{{names}} und {{count}} weitere"
+      },
+      "upload": {
+        "button": "Widget hochladen",
+        "uploading": "Wird hochgeladen…",
+        "hint": "Laden Sie ein Widget-Paket (.zip oder widget.json) hoch, um es ohne Plattform-Update in Ihrem Netzwerk anzubieten. Neue Widgets bleiben ausgeblendet, bis Sie festlegen, wer sie verwenden kann. Ein Paket mit dem Slug eines Ihrer Widgets aktualisiert dieses.",
+        "created": "{{name}} wurde hochgeladen. Legen Sie fest, wer es verwenden kann.",
+        "updated": "{{name}} wurde auf Version {{version}} aktualisiert.",
+        "warnings": "Prüfen Sie die Vorlage: {{warnings}}",
+        "failedTitle": "Das Paket wurde nicht hochgeladen",
+        "dismiss": "Schließen",
+        "errors": {
+          "slugTaken": "Ein anderes Widget verwendet diesen Slug bereits. Ändern Sie den Slug in widget.json.",
+          "invalidSlug": "Der Slug in widget.json darf nur Buchstaben, Ziffern, Bindestriche und Unterstriche enthalten.",
+          "managedWidget": "Dieses Widget wird von der Plattform installiert und kann nicht durch einen Upload ersetzt werden.",
+          "unknownFetcher": "Die Integration des Widgets verwendet den Fetcher „{{fetcher}}“, der auf diesem Server nicht installiert ist.",
+          "invalidWidget": "Die Widget-Definition ist ungültig: {{details}}",
+          "incompatible": "Diese Version würde {{count}} Playlist-Einträge, die das Widget verwenden, ungültig machen. Machen Sie neue Optionen optional und halten Sie die bestehenden kompatibel:",
+          "incompatibleItem": "{{playlist}} ({{organization}}): {{error}}",
+          "incompatibleMore": "und {{count}} weitere",
+          "invalidPackage": "Das Paket ist ungültig: {{details}}",
+          "unknown": "Der Upload ist fehlgeschlagen. Versuchen Sie es erneut."
+        }
+      },
+      "package": {
+        "title": "Paket",
+        "version": "Version {{version}}",
+        "uploaded": "Hochgeladen am {{date}}",
+        "download": "Herunterladen",
+        "delete": "Widget löschen",
+        "deleteTitle": "{{widget}} löschen?",
+        "deleteMessage": "Das Widget und seine hochgeladenen Versionen werden aus Ihrem Netzwerk entfernt. Dies kann nicht rückgängig gemacht werden.",
+        "deleteInUse": "Entfernen Sie das Widget aus allen Playlists, bevor Sie es löschen.",
+        "deleted": "{{widget}} wurde gelöscht.",
+        "managed": "Von der Plattform installiert: Es wird mit Plattform-Releases aktualisiert und kann hier weder ersetzt noch gelöscht werden.",
+        "errors": {
+          "download": "Das Paket konnte nicht heruntergeladen werden."
+        }
       }
     },
     "title": "Netzwerkeinstellungen",

@@ -15,7 +15,8 @@ defmodule Castmill.Widgets.Integrations do
     WidgetIntegration,
     WidgetIntegrationCredential,
     WidgetIntegrationData,
-    NetworkIntegrationCredential
+    NetworkIntegrationCredential,
+    Refresh
   }
 
   # `widget_integration_data.discriminator_id` is a varchar(255) column.
@@ -1783,12 +1784,65 @@ defmodule Castmill.Widgets.Integrations do
   Maps the simplified widget.json integration format to the full WidgetIntegration schema.
   """
   def create_integration_from_meta(widget_id, name, config) do
+    widget_id |> integration_attrs_from_meta(name, config) |> create_integration()
+  end
+
+  @doc """
+  Creates or updates a widget's integration from its `meta.integration`. Uploaded
+  network packages are the source of truth for their integration, so a new version
+  updates it. Returns `{:ok, integration}`, `{:ok, nil}` without a definition, or
+  `{:error, changeset}`.
+  """
+  def sync_integration_from_meta(%Castmill.Widgets.Widget{} = widget) do
+    case get_in(widget.meta || %{}, ["integration"]) do
+      %{} = config ->
+        name = Map.get(config, "name") || "default"
+        attrs = integration_attrs_from_meta(widget.id, name, config)
+
+        case get_integration_by_widget_and_name(widget.id, name) do
+          nil -> create_integration(attrs)
+          existing -> update_integration(existing, attrs)
+        end
+
+      _ ->
+        {:ok, nil}
+    end
+  end
+
+  @doc """
+  Checks a package's `integration` declaration before it is installed: a declared
+  fetcher must be an installed fetcher module (packages never bring code).
+  """
+  def validate_integration_meta(nil), do: :ok
+
+  def validate_integration_meta(%{} = config) do
+    case Map.get(config, "fetcher") do
+      nil ->
+        :ok
+
+      fetcher when is_binary(fetcher) and fetcher != "" ->
+        module = resolve_fetcher_module(fetcher)
+
+        case Refresh.fetcher_module(%WidgetIntegration{
+               pull_config: %{"fetcher_module" => module}
+             }) do
+          {:ok, _module} -> :ok
+          {:error, _reason} -> {:error, {:unknown_fetcher, fetcher}}
+        end
+
+      other ->
+        {:error, {:unknown_fetcher, inspect(other)}}
+    end
+  end
+
+  def validate_integration_meta(_config), do: {:error, :invalid_integration}
+
+  defp integration_attrs_from_meta(widget_id, name, config) do
     integration_type = normalize_integration_type(config)
     fetcher = Map.get(config, "fetcher") || Map.get(config, :fetcher)
     fetcher_config = Map.get(config, "config") || Map.get(config, :config) || %{}
 
-    # Build the integration attributes
-    attrs = %{
+    %{
       widget_id: widget_id,
       name: name,
       description:
@@ -1808,8 +1862,6 @@ defmodule Castmill.Widgets.Integrations do
         Map.get(config, "refresh_mode") || Map.get(config, :refresh_mode) || "scheduled",
       is_active: true
     }
-
-    create_integration(attrs)
   end
 
   defp normalize_integration_type(config) do
@@ -1913,6 +1965,10 @@ defmodule Castmill.Widgets.Integrations do
       _ -> "optional"
     end
   end
+
+  # A declared credential_schema (e.g. `{"auth_type": "none"}` for public sources)
+  # wins over the fetcher's default.
+  defp build_credential_schema(_fetcher, %{"credential_schema" => %{} = schema}), do: schema
 
   defp build_credential_schema(fetcher, _config) do
     case fetcher do

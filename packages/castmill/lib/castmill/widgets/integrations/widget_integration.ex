@@ -140,12 +140,17 @@ defmodule Castmill.Widgets.Integrations.WidgetIntegration do
     end
   end
 
+  # A pull integration needs an endpoint for the generic HTTP fetch, unless a
+  # fetcher module fetches the data itself (it may use an endpoint from config).
   defp validate_pull_fields(changeset) do
     integration_type = get_field(changeset, :integration_type)
+    fetcher? = is_binary(Map.get(get_field(changeset, :pull_config) || %{}, "fetcher_module"))
 
     if integration_type in ["pull", "both"] do
       changeset
-      |> validate_required([:pull_endpoint, :pull_interval_seconds])
+      |> validate_required(
+        if fetcher?, do: [:pull_interval_seconds], else: [:pull_endpoint, :pull_interval_seconds]
+      )
       |> validate_number(:pull_interval_seconds, greater_than: 0)
     else
       changeset

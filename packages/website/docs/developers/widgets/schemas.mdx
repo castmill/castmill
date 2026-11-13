@@ -260,7 +260,7 @@ Declare the files in an `assets` object, grouped by category. Paths are relative
 }
 ```
 
-Castmill stores the files and serves them under `/widget_assets/<slug>/`. Fonts are loaded automatically before the widget starts, under the family name given in `name` (derived from the file name if omitted). Use that name in your styles:
+Castmill stores the files: under `/widget_assets/<slug>/` for organization widgets, and in public storage for network widgets. Fonts are loaded automatically before the widget starts, under the family name given in `name` (derived from the file name if omitted). Use that name in your styles:
 
 ```json
 {
@@ -271,9 +271,18 @@ Castmill stores the files and serves them under `/widget_assets/<slug>/`. Fonts 
 }
 ```
 
-:::caution
-Some example packages reference assets in templates with placeholders such as `{{asset:images.background}}`. Castmill does not currently replace these placeholders, so they reach the player unchanged. For images, use a `ref` option so users pick a media file, or an absolute HTTPS URL.
-:::
+Reference a declared file anywhere in the widget, for example in the template or the `icon`, with a `{{asset:category.name}}` placeholder. Castmill replaces it with the stored file's URL when you upload the package. A placeholder can be a whole value or part of one, such as a CSS `url()`:
+
+```json
+{
+  "type": "image",
+  "name": "background",
+  "opts": { "url": "{{asset:images.background}}" },
+  "style": { "background-image": "url({{asset:images.pattern}})" }
+}
+```
+
+A placeholder that doesn't name a declared file in the package is rejected. The `icon` can also be the file's path, such as `assets/icons/icon.svg`.
 
 See the overview for [upload limits](./overview.mdx#upload-limits).
 

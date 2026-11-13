@@ -290,6 +290,43 @@
         "save": "No se pudo actualizar el acceso al widget.",
         "inUse": "No se puede retirar el acceso mientras estas organizaciones usen el widget en sus listas de reproducción: {{organizations}}",
         "moreOrganizations": "{{names}} y {{count}} más"
+      },
+      "upload": {
+        "button": "Subir widget",
+        "uploading": "Subiendo…",
+        "hint": "Sube un paquete de widget (.zip o widget.json) para ofrecerlo en tu red sin una actualización de la plataforma. Los widgets nuevos quedan ocultos hasta que elijas quién puede usarlos. Si subes un paquete con el slug de uno de tus widgets, este se actualiza.",
+        "created": "{{name}} subido. Elige quién puede usarlo.",
+        "updated": "{{name}} actualizado a la versión {{version}}.",
+        "warnings": "Revisa la plantilla: {{warnings}}",
+        "failedTitle": "No se subió el paquete",
+        "dismiss": "Descartar",
+        "errors": {
+          "slugTaken": "Otro widget ya usa este slug. Cambia el slug en widget.json.",
+          "invalidSlug": "El slug de widget.json solo puede contener letras, dígitos, guiones y guiones bajos.",
+          "managedWidget": "La plataforma instala este widget, así que una subida no puede reemplazarlo.",
+          "unknownFetcher": "La integración del widget usa el fetcher \"{{fetcher}}\", que no está instalado en este servidor.",
+          "invalidWidget": "La definición del widget no es válida: {{details}}",
+          "incompatible": "Esta versión estropearía {{count}} elementos de listas de reproducción que usan el widget. Haz opcionales las opciones nuevas y mantén compatibles las existentes:",
+          "incompatibleItem": "{{playlist}} ({{organization}}): {{error}}",
+          "incompatibleMore": "y {{count}} más",
+          "invalidPackage": "El paquete no es válido: {{details}}",
+          "unknown": "La subida falló. Inténtalo de nuevo."
+        }
+      },
+      "package": {
+        "title": "Paquete",
+        "version": "Versión {{version}}",
+        "uploaded": "Subido el {{date}}",
+        "download": "Descargar",
+        "delete": "Eliminar widget",
+        "deleteTitle": "¿Eliminar {{widget}}?",
+        "deleteMessage": "El widget y sus versiones subidas se eliminan de tu red. Esta acción no se puede deshacer.",
+        "deleteInUse": "Quita el widget de todas las listas de reproducción antes de eliminarlo.",
+        "deleted": "Se eliminó {{widget}}.",
+        "managed": "Lo instala la plataforma: se actualiza con las versiones de la plataforma y no se puede reemplazar ni eliminar aquí.",
+        "errors": {
+          "download": "No se pudo descargar el paquete."
+        }
       }
     },
     "title": "Configuración de Red",

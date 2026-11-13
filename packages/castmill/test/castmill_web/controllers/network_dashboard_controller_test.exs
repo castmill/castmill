@@ -918,6 +918,199 @@ defmodule CastmillWeb.NetworkDashboardControllerTest do
     end
   end
 
+  describe "network widget packages" do
+    setup do
+      Castmill.PublicStorage.Fake.install()
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id, name: "Agency A"})
+      admin = create_network_admin(network)
+      slug = "upload-#{System.unique_integer([:positive])}"
+
+      {:ok, network: network, organization: organization, admin: admin, slug: slug}
+    end
+
+    defp package_conn(ctx), do: authenticate_conn(ctx.conn, ctx.admin, ctx.network)
+
+    defp package(slug, options_schema \\ %{}) do
+      path = Path.join(System.tmp_dir!(), "#{slug}-#{System.unique_integer([:positive])}.zip")
+
+      widget = %{
+        "name" => "Package #{slug}",
+        "slug" => slug,
+        "icon" => "assets/icons/icon.svg",
+        "template" => %{
+          "type" => "image",
+          "name" => "logo",
+          "opts" => %{"url" => "{{asset:icons.main}}"}
+        },
+        "options_schema" => options_schema,
+        "assets" => %{"icons" => %{"main" => %{"path" => "assets/icons/icon.svg"}}}
+      }
+
+      {:ok, _} =
+        :zip.create(String.to_charlist(path), [
+          {~c"widget.json", Jason.encode!(widget)},
+          {~c"assets/icons/icon.svg", ~s(<svg xmlns="http://www.w3.org/2000/svg"/>)}
+        ])
+
+      on_exit(fn -> File.rm(path) end)
+      %Plug.Upload{path: path, filename: "#{slug}.zip", content_type: "application/zip"}
+    end
+
+    defp upload(ctx, upload),
+      do: ctx |> package_conn() |> post("/dashboard/network/widgets", %{"widget" => upload})
+
+    test "uploads a package as a hidden widget of the network, then new versions", ctx do
+      body = ctx |> upload(package(ctx.slug)) |> json_response(201)
+
+      assert %{
+               "created" => true,
+               "version" => 1,
+               "template_warnings" => [],
+               "data" => %{
+                 "id" => id,
+                 "slug" => slug,
+                 "kind" => "network",
+                 "access" => "hidden",
+                 "owned" => true,
+                 "managed" => false,
+                 "icon" => "https://cdn.test/widget-assets/" <> _,
+                 "package" => %{"version" => 1}
+               }
+             } = body
+
+      assert slug == ctx.slug
+
+      assert %{"created" => false, "version" => 2, "data" => %{"id" => ^id}} =
+               ctx |> upload(package(ctx.slug)) |> json_response(200)
+
+      assert %{"data" => [%{"version" => 2, "filename" => filename}, %{"version" => 1}]} =
+               ctx
+               |> package_conn()
+               |> get("/dashboard/network/widgets/#{id}/packages")
+               |> json_response(200)
+
+      assert filename == "#{ctx.slug}.zip"
+
+      download =
+        ctx |> package_conn() |> get("/dashboard/network/widgets/#{id}/packages/1")
+
+      assert download.status == 200
+      assert [disposition] = get_resp_header(download, "content-disposition")
+      assert disposition == ~s(attachment; filename="#{ctx.slug}-v1.zip")
+      assert {:ok, _files} = :zip.list_dir(download.resp_body)
+
+      for path <- ["/packages/9", "/packages/x"] do
+        assert ctx
+               |> package_conn()
+               |> get("/dashboard/network/widgets/#{id}#{path}")
+               |> json_response(404)
+      end
+
+      assert %{"data" => listed} =
+               ctx
+               |> package_conn()
+               |> get("/dashboard/network/widgets", %{"search" => "Package #{ctx.slug}"})
+               |> json_response(200)
+
+      assert [%{"id" => ^id, "package" => %{"version" => 2}, "owned" => true}] = listed
+    end
+
+    test "reports package errors", ctx do
+      taken = widget_fixture(%{is_system: true, name: "Taken #{ctx.slug}"})
+
+      assert %{"code" => "slug_taken"} =
+               ctx |> upload(package(taken.slug)) |> json_response(422)
+
+      managed =
+        widget_fixture(%{
+          is_system: false,
+          network_id: ctx.network.id,
+          name: "Managed #{ctx.slug}",
+          meta: %{"managed_by" => "castmill-saas"}
+        })
+
+      assert %{"code" => "managed_widget"} =
+               ctx |> upload(package(managed.slug)) |> json_response(422)
+
+      assert %{"code" => "invalid_widget", "errors" => %{"options_schema" => _}} =
+               ctx |> upload(package(ctx.slug, %{"x" => "nope"})) |> json_response(422)
+
+      assert %{"code" => "invalid_package"} =
+               ctx
+               |> package_conn()
+               |> post("/dashboard/network/widgets", %{})
+               |> json_response(422)
+
+      text = Path.join(System.tmp_dir!(), "#{ctx.slug}.txt")
+      File.write!(text, "hello")
+      on_exit(fn -> File.rm(text) end)
+
+      assert %{"code" => "invalid_package", "error" => "Unsupported file type" <> _} =
+               ctx
+               |> upload(%Plug.Upload{
+                 path: text,
+                 filename: "notes.txt",
+                 content_type: "text/plain"
+               })
+               |> json_response(422)
+    end
+
+    test "refuses versions that would break saved items and deletes unused widgets", ctx do
+      %{"data" => %{"id" => id}} = ctx |> upload(package(ctx.slug)) |> json_response(201)
+      widget = Widgets.get_widget(id)
+      {:ok, _} = Castmill.Widgets.NetworkAccess.set_access(ctx.network.id, id, "all")
+      playlist = playlist_fixture(%{organization_id: ctx.organization.id, name: "Front window"})
+
+      {:ok, _} =
+        Castmill.Resources.insert_item_into_playlist(playlist.id, nil, widget.id, 0, 1000)
+
+      required = %{"estate" => %{"type" => "string", "required" => true}}
+
+      assert %{
+               "code" => "incompatible",
+               "total" => 1,
+               "items" => [
+                 %{
+                   "playlist_name" => "Front window",
+                   "organization_name" => "Agency A",
+                   "error" => "Field estate is required but missing"
+                 }
+               ]
+             } = ctx |> upload(package(ctx.slug, required)) |> json_response(409)
+
+      assert %{"code" => "in_use", "organizations" => [%{"name" => "Agency A"}]} =
+               ctx
+               |> package_conn()
+               |> delete("/dashboard/network/widgets/#{id}")
+               |> json_response(409)
+
+      Repo.delete!(playlist)
+
+      assert ctx |> package_conn() |> delete("/dashboard/network/widgets/#{id}") |> response(204)
+      assert is_nil(Widgets.get_widget(id))
+
+      assert ctx
+             |> package_conn()
+             |> delete("/dashboard/network/widgets/#{id}")
+             |> json_response(404)
+    end
+
+    test "only network admins can manage packages", ctx do
+      regular = create_regular_user(ctx.network, ctx.organization)
+      conn = authenticate_conn(ctx.conn, regular, ctx.network)
+
+      assert conn
+             |> post("/dashboard/network/widgets", %{"widget" => package(ctx.slug)})
+             |> json_response(403)
+
+      assert conn |> delete("/dashboard/network/widgets/1") |> json_response(403)
+      assert conn |> get("/dashboard/network/widgets/1/packages") |> json_response(403)
+      assert conn |> get("/dashboard/network/widgets/1/packages/1") |> json_response(403)
+      assert conn |> post("/dashboard/network/widgets", %{}) |> json_response(403)
+    end
+  end
+
   describe "organization integration settings" do
     setup do
       network = network_fixture()

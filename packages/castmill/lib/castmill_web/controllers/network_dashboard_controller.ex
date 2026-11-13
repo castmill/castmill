@@ -16,7 +16,7 @@ defmodule CastmillWeb.NetworkDashboardController do
   alias Castmill.Organizations.Organization
   alias Castmill.Accounts.User
   alias Castmill.Repo
-  alias Castmill.Widgets.NetworkAccess
+  alias Castmill.Widgets.{NetworkAccess, Packages}
   alias Castmill.Widgets.Integrations.OrganizationSettings
 
   action_fallback(CastmillWeb.FallbackController)
@@ -115,11 +115,12 @@ defmodule CastmillWeb.NetworkDashboardController do
   def list_widgets(conn, params) do
     with {:ok, network_id} <- get_admin_network_id(conn) do
       result = NetworkAccess.list_widgets(network_id, widget_list_params(params))
+      packages = Packages.latest_versions(Enum.map(result.entries, & &1.widget.id))
 
       conn
       |> put_status(:ok)
       |> json(%{
-        data: Enum.map(result.entries, &widget_access_to_json/1),
+        data: Enum.map(result.entries, &widget_access_to_json(&1, packages)),
         summary: result.summary,
         organizations_count: result.organizations_count,
         pagination: pagination_json(result)
@@ -176,6 +177,150 @@ defmodule CastmillWeb.NetworkDashboardController do
     end
   end
 
+  @doc """
+  Uploads a widget package (`widget`: a `widget.json` or ZIP file) as a widget of
+  the network, hidden until the admin chooses who can use it, or as a new version
+  of the network's widget with the same slug. See `Castmill.Widgets.Packages`.
+  """
+  def upload_widget(conn, %{"widget" => %Plug.Upload{} = upload}) do
+    with {:ok, network_id} <- get_admin_network_id(conn),
+         {:ok, result} <-
+           Packages.install(network_id, upload, uploaded_by: conn.assigns[:current_user].id) do
+      conn
+      |> put_status(if(result.created, do: :created, else: :ok))
+      |> json(%{
+        data: widget_access_to_json(NetworkAccess.get_widget(network_id, result.widget.id)),
+        created: result.created,
+        version: result.version,
+        template_warnings: result.warnings
+      })
+    else
+      error -> package_error(conn, error)
+    end
+  end
+
+  def upload_widget(conn, _params) do
+    case get_admin_network_id(conn) do
+      {:ok, _network_id} ->
+        package_error(conn, {:error, "Upload a .json or .zip widget package"})
+
+      error ->
+        package_error(conn, error)
+    end
+  end
+
+  @doc "Deletes an uploaded widget of the network that no playlist uses."
+  def delete_widget(conn, %{"widget_id" => widget_id}) do
+    with {:ok, network_id} <- get_admin_network_id(conn),
+         {:ok, _widget} <- Packages.delete_network_widget(network_id, widget_id) do
+      send_resp(conn, :no_content, "")
+    else
+      {:error, :managed_widget} = error -> package_error(conn, error)
+      error -> widget_access_error(conn, error)
+    end
+  end
+
+  @doc "Lists the kept package versions of one of the network's widgets."
+  def list_widget_packages(conn, %{"widget_id" => widget_id}) do
+    with {:ok, network_id} <- get_admin_network_id(conn),
+         %{widget: widget} <-
+           NetworkAccess.get_widget(network_id, widget_id) || {:error, :not_found} do
+      json(conn, %{data: Packages.list_versions(widget.id)})
+    else
+      error -> widget_access_error(conn, error)
+    end
+  end
+
+  @doc "Downloads a kept package version of one of the network's widgets."
+  def download_widget_package(conn, %{"widget_id" => widget_id, "version" => version}) do
+    with {:ok, network_id} <- get_admin_network_id(conn),
+         %{widget: widget} <-
+           NetworkAccess.get_widget(network_id, widget_id) || {:error, :not_found},
+         {version, ""} <- Integer.parse(version),
+         %{} = package <- Packages.get_version(widget.id, version) || {:error, :not_found} do
+      conn
+      |> put_resp_content_type(package.content_type, nil)
+      |> put_resp_header(
+        "content-disposition",
+        ~s(attachment; filename="#{download_name(widget.slug, package)}")
+      )
+      |> send_resp(:ok, package.content)
+    else
+      :error -> widget_access_error(conn, {:error, :not_found})
+      error -> widget_access_error(conn, error)
+    end
+  end
+
+  defp download_name(slug, package) do
+    extension = package.filename |> Path.extname() |> String.downcase()
+    extension = if extension in [".zip", ".json"], do: extension, else: ""
+    "#{slug}-v#{package.version}#{extension}"
+  end
+
+  defp package_error(conn, {:error, :not_admin}), do: not_admin(conn)
+
+  defp package_error(conn, {:error, %Ecto.Changeset{} = changeset}) do
+    conn
+    |> put_status(:unprocessable_entity)
+    |> json(%{code: "invalid_widget", errors: format_changeset_errors(changeset)})
+  end
+
+  defp package_error(conn, {:error, {:incompatible, items}}) do
+    names =
+      items
+      |> Enum.map(& &1.organization_id)
+      |> Enum.uniq()
+      |> NetworkAccess.organization_names()
+      |> Map.new(&{&1.id, &1.name})
+
+    conn
+    |> put_status(:conflict)
+    |> json(%{
+      code: "incompatible",
+      error: "This version would make saved playlist items invalid",
+      total: length(items),
+      items:
+        items
+        |> Enum.take(20)
+        |> Enum.map(&Map.put(&1, :organization_name, Map.get(names, &1.organization_id)))
+    })
+  end
+
+  defp package_error(conn, {:error, {:unknown_fetcher, fetcher}}) do
+    conn
+    |> put_status(:unprocessable_entity)
+    |> json(%{
+      code: "unknown_fetcher",
+      fetcher: fetcher,
+      error: "The integration's fetcher #{inspect(fetcher)} is not installed"
+    })
+  end
+
+  defp package_error(conn, {:error, reason}) when is_atom(reason) do
+    message =
+      case reason do
+        :slug_taken -> "Another widget already uses this slug"
+        :invalid_slug -> "The widget slug has an invalid format"
+        :managed_widget -> "This widget is installed by the platform and cannot be replaced here"
+        :invalid_integration -> "The widget's integration must be an object"
+        _ -> "The widget package is invalid"
+      end
+
+    conn |> put_status(:unprocessable_entity) |> json(%{code: to_string(reason), error: message})
+  end
+
+  defp package_error(conn, {:error, message}) when is_binary(message) do
+    conn
+    |> put_status(:unprocessable_entity)
+    |> json(%{code: "invalid_package", error: message})
+  end
+
+  defp package_error(conn, _error) do
+    conn
+    |> put_status(:unprocessable_entity)
+    |> json(%{code: "invalid_package", error: "The widget package is invalid"})
+  end
+
   defp organization_changes(%{"all_matching" => true, "enabled" => enabled} = params)
        when is_boolean(enabled) do
     {:ok, %{search: params["search"], enabled: enabled}}
@@ -213,9 +358,19 @@ defmodule CastmillWeb.NetworkDashboardController do
   end
 
   defp widget_access_to_json(summary) do
+    widget_access_to_json(summary, Packages.latest_versions([summary.widget.id]))
+  end
+
+  # `owned`: an uploaded or installed widget of the network (not a system widget);
+  # `managed`: installed by the platform, so it cannot be replaced or deleted here;
+  # `package`: the latest uploaded version.
+  defp widget_access_to_json(summary, packages) do
     widget = summary.widget
 
     %{
+      owned: summary.kind == "network",
+      managed: Packages.managed?(widget),
+      package: Map.get(packages, widget.id),
       id: widget.id,
       name: widget.name,
       description: widget.description,

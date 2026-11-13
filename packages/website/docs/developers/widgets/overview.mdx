@@ -147,6 +147,16 @@ The server does not check component types. A misspelled `type` uploads successfu
 
 After the upload, the widget appears in the catalog of your organization and you can add it to playlists. See [Playlists](../../dashboard/playlists.md).
 
+### Network widgets
+
+Network administrators can upload the same packages as widgets of their whole network, without a platform update: **Network** → **Widget Access** → **Upload widget**.
+
+- A new widget is hidden until you choose which organizations can use it.
+- Uploading a package with the slug of one of the network's widgets updates it to a new version and keeps its access. Widgets of other networks or organizations, system widgets, and widgets the platform installs cannot be replaced.
+- A version that would make saved playlist items invalid, such as a new required option or a shorter editable text, is refused with the affected playlists. Make new options optional.
+- An `integration` must use a fetcher installed on the server. It is created with the widget, so network administrators can set the organization integration settings it declares before the widget is used. Packages never contain code or server-specific settings such as endpoints.
+- The last 10 uploaded versions are kept and can be downloaded from the widget's **Package** section, where you can also delete a widget no playlist uses.
+
 ### Upload limits
 
 | Item | Limit |
@@ -164,10 +174,10 @@ Every widget has a scope that decides which organizations can use it:
 | Scope | Available to | Managed by |
 | --- | --- | --- |
 | System | Every organization | The platform: built-in widgets installed with Castmill |
-| Network | The organizations of one network | Network administrators and platform add-ons |
+| Network | The organizations of one network | Network administrators, by uploading widgets, and platform add-ons |
 | Organization | One organization | Administrators of that organization, by uploading widgets |
 
-Uploads from the dashboard always create organization widgets. Scope fields in `widget.json` are ignored. An organization can rename or delete only the widgets it owns.
+Uploads in **Content** → **Widgets** create organization widgets, and uploads in **Network** → **Widget Access** create network widgets. Scope fields in `widget.json` are ignored. An organization can rename or delete only the widgets it owns.
 
 Network administrators curate the catalog of their network in **Network** → **Widget Access**. For each system or network widget they choose one access mode:
 

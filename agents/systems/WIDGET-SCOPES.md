@@ -9,7 +9,7 @@ never see another agency's templates.
 | Scope        | Columns                                   | Available to                                 | Managed by                         |
 | ------------ | ----------------------------------------- | -------------------------------------------- | ---------------------------------- |
 | System       | `is_system = true`, no owner              | Every organization                           | Migrations, seeds, widget loader   |
-| Network      | `network_id`                              | Organizations of that network                | Network admins (`/network/widgets`), SaaS addons |
+| Network      | `network_id`                              | Organizations of that network                | Network admins (`/network/widgets`, uploads), SaaS addons |
 | Organization | `organization_id`                         | That organization only                       | Its admins (dashboard upload)      |
 | Unassigned   | `is_system = false`, no owner             | No organization                              | Root admin (assign a scope)        |
 
@@ -30,7 +30,7 @@ system widgets have no owner, and organization widgets cannot be restricted.
 - Dashboard endpoints (`/dashboard/organizations/:id/widgets...`) require membership
   (`widgets` `:list`/`:show`) and return 404 for widgets that are not available.
 - Organizations can only update (name/description) and delete widgets they own
-  (`get_organization_widget/2`). Uploads always create organization widgets; scope
+  (`get_organization_widget/2`). Organization uploads always create organization widgets; scope
   fields in a `widget.json` are ignored.
 - Playlist items can only use widgets available to the playlist's organization
   (`Resources.insert_item_into_playlist/6` checks with a share lock).
@@ -144,3 +144,29 @@ non-system widgets without widening access:
 `location-display-demo` and `intro` (shipped with the platform) become system widgets.
 The widget loader (`WidgetsLoader`) always stores the widgets it loads as system
 widgets.
+
+## Network widget packages
+
+Network admins upload widget packages as network widgets
+(`POST /dashboard/network/widgets`, `Castmill.Widgets.Packages`), so new widgets
+(e.g. a customer's listing template) need no deploy:
+
+- The server sets the scope (`network_id` of the admin's network) and ignores scope
+  fields and `meta.managed_by` in the package. New widgets start `hidden`.
+- A package with the slug of one of the network's widgets is a new version: the widget
+  is updated in place (fields the package omits are reset) and keeps its access.
+  Slugs of other scopes or networks are refused (`slug_taken`), and so are widgets
+  with `meta.managed_by` (installed by the platform, e.g. castmill-saas at deploy).
+- A declared `integration` must name an installed fetcher (`Fetchers.*`, checked with
+  `Refresh.fetcher_module/1`); it is created or updated with the widget
+  (`Integrations.sync_integration_from_meta/1`), so its organization settings can be
+  set before first use. Pull integrations with a fetcher need no `pull_endpoint`.
+- `Packages.incompatible_items/2` refuses a version if saved `widgets_config`
+  options would fail `Schema.validate_data/2` or the editable-text overrides
+  (`TextOverrides.validate/2`) with the new definition (409 `incompatible`).
+- Assets go to `Castmill.PublicStorage` under content-hash keys
+  (`widget-assets/<slug>/<hash>/<path>`); `{{asset:category.name}}` placeholders are
+  replaced with their URLs (`PackageProcessor.resolve_asset_references/2`, also used
+  for organization uploads, where files stay under `/widget_assets/<slug>/`).
+- Every upload is stored in `widget_packages` (the last 10 versions) for download.
+  Network admins can delete an uploaded widget that no playlist uses.

@@ -289,6 +289,43 @@
         "save": "위젯 액세스를 업데이트하지 못했습니다.",
         "inUse": "다음 조직이 재생목록에서 위젯을 사용 중이므로 액세스를 제거할 수 없습니다: {{organizations}}",
         "moreOrganizations": "{{names}} 외 {{count}}개"
+      },
+      "upload": {
+        "button": "위젯 업로드",
+        "uploading": "업로드 중…",
+        "hint": "위젯 패키지(.zip 또는 widget.json)를 업로드하면 플랫폼 업데이트 없이 네트워크에 제공할 수 있습니다. 새 위젯은 사용할 수 있는 대상을 선택할 때까지 숨겨집니다. 기존 위젯과 slug가 같은 패키지를 업로드하면 해당 위젯이 업데이트됩니다.",
+        "created": "{{name}}을(를) 업로드했습니다. 사용할 수 있는 대상을 선택하세요.",
+        "updated": "{{name}}이(가) 버전 {{version}}(으)로 업데이트되었습니다.",
+        "warnings": "템플릿을 확인하세요: {{warnings}}",
+        "failedTitle": "패키지가 업로드되지 않았습니다",
+        "dismiss": "닫기",
+        "errors": {
+          "slugTaken": "다른 위젯이 이미 이 slug를 사용하고 있습니다. widget.json에서 slug를 변경하세요.",
+          "invalidSlug": "widget.json의 slug에는 문자, 숫자, 하이픈, 밑줄만 사용할 수 있습니다.",
+          "managedWidget": "이 위젯은 플랫폼에서 설치하므로 업로드로 교체할 수 없습니다.",
+          "unknownFetcher": "위젯의 통합이 \"{{fetcher}}\" 페처를 사용하지만 이 서버에 설치되어 있지 않습니다.",
+          "invalidWidget": "위젯 정의가 올바르지 않습니다: {{details}}",
+          "incompatible": "이 버전을 적용하면 위젯을 사용하는 재생목록 항목 {{count}}개가 유효하지 않게 됩니다. 새 옵션은 선택 사항으로 만들고 기존 옵션은 호환되도록 유지하세요:",
+          "incompatibleItem": "{{playlist}} ({{organization}}): {{error}}",
+          "incompatibleMore": "외 {{count}}개",
+          "invalidPackage": "패키지가 올바르지 않습니다: {{details}}",
+          "unknown": "업로드하지 못했습니다. 다시 시도하세요."
+        }
+      },
+      "package": {
+        "title": "패키지",
+        "version": "버전 {{version}}",
+        "uploaded": "업로드: {{date}}",
+        "download": "다운로드",
+        "delete": "위젯 삭제",
+        "deleteTitle": "{{widget}}을(를) 삭제할까요?",
+        "deleteMessage": "위젯과 업로드된 버전이 네트워크에서 제거됩니다. 이 작업은 되돌릴 수 없습니다.",
+        "deleteInUse": "삭제하기 전에 모든 재생목록에서 위젯을 제거하세요.",
+        "deleted": "{{widget}}을(를) 삭제했습니다.",
+        "managed": "플랫폼에서 설치한 위젯입니다. 플랫폼 릴리스와 함께 업데이트되며 여기에서 교체하거나 삭제할 수 없습니다.",
+        "errors": {
+          "download": "패키지를 다운로드하지 못했습니다."
+        }
       }
     },
     "title": "네트워크 설정",

@@ -21,6 +21,7 @@ const toastSpies = {
   success: vi.fn(),
   error: vi.fn(),
   info: vi.fn(),
+  warning: vi.fn(),
 };
 
 vi.mock('@castmill/ui-common', async () => {
@@ -37,6 +38,9 @@ vi.mock('../../services/network.service', () => ({
     listWidgetOrganizations: vi.fn(),
     setWidgetAccess: vi.fn(),
     updateWidgetOrganizations: vi.fn(),
+    uploadWidget: vi.fn(),
+    downloadWidgetPackage: vi.fn(),
+    deleteWidget: vi.fn(),
   },
 }));
 
@@ -986,6 +990,288 @@ describe('NetworkWidgets', () => {
       ).toBeInTheDocument();
       expect(screen.queryByRole('option', { name: /Spotify/ })).toBeNull();
       expect(rowText(/Weather/)).toContain('All except 0');
+    });
+  });
+
+  describe('widget packages', () => {
+    const listing = widget({
+      id: 7,
+      name: 'Listing',
+      slug: 'listing',
+      kind: 'network',
+      access: 'hidden',
+      enabled_count: 0,
+      in_use_count: 0,
+      owned: true,
+      managed: false,
+      package: { version: 3, inserted_at: '2026-11-13T10:00:00Z' },
+    });
+
+    const chooseFile = async (name = 'listing.zip') => {
+      await screen.findByRole('button', { name: 'Upload widget' });
+      const input = document.querySelector(
+        'input[type="file"]'
+      ) as HTMLInputElement;
+      const file = new File(['zip'], name, { type: 'application/zip' });
+      Object.defineProperty(input, 'files', {
+        value: [file],
+        configurable: true,
+      });
+      fireEvent.change(input);
+      return file;
+    };
+
+    // The dialog's button has the same label as the one that opened it.
+    const confirmDelete = () => {
+      const button = Array.from(document.querySelectorAll('button')).find(
+        (candidate) =>
+          candidate.closest('[class*="confirm-actions"]') &&
+          candidate.textContent?.includes('Delete widget')
+      );
+      fireEvent.click(button!);
+    };
+
+    const uploadError = (status: number, details: Record<string, unknown>) =>
+      new HttpError(String(details.message ?? 'Bad package'), status, {
+        code: 'invalid_package',
+        ...details,
+      });
+
+    it('uploads a package and selects the new widget', async () => {
+      vi.mocked(NetworkService.uploadWidget).mockResolvedValue({
+        data: listing,
+        created: true,
+        version: 1,
+        template_warnings: [],
+      });
+      renderPage();
+
+      const file = await chooseFile();
+
+      await waitFor(() =>
+        expect(NetworkService.uploadWidget).toHaveBeenCalledWith(file)
+      );
+      await waitFor(() =>
+        expect(toastSpies.success).toHaveBeenCalledWith(
+          'Listing uploaded. Choose who can use it.'
+        )
+      );
+      expect(
+        await screen.findByRole('heading', { level: 2, name: 'Listing' })
+      ).toBeInTheDocument();
+      expect(NetworkService.listWidgetAccess).toHaveBeenCalledTimes(2);
+      expect(toastSpies.warning).not.toHaveBeenCalled();
+    });
+
+    it('reports new versions and template warnings', async () => {
+      vi.mocked(NetworkService.uploadWidget).mockResolvedValue({
+        data: listing,
+        created: false,
+        version: 4,
+        template_warnings: ['Use fmt for "Price {price}"'],
+      });
+      renderPage();
+      await chooseFile();
+
+      await waitFor(() =>
+        expect(toastSpies.success).toHaveBeenCalledWith(
+          'Listing updated to version 4.'
+        )
+      );
+      expect(toastSpies.warning).toHaveBeenCalledWith(
+        'Check the template: Use fmt for "Price {price}"'
+      );
+    });
+
+    it('lists the playlist items a version would break', async () => {
+      vi.mocked(NetworkService.uploadWidget).mockRejectedValue(
+        uploadError(409, {
+          code: 'incompatible',
+          total: 3,
+          items: [
+            {
+              playlist_id: 1,
+              playlist_name: 'Lobby',
+              organization_id: 'org-a',
+              organization_name: 'Alpha',
+              error: 'Field estate is required but missing',
+            },
+          ],
+        })
+      );
+      renderPage();
+      await chooseFile();
+
+      const alert = await screen.findByRole('alert');
+      expect(alert).toHaveTextContent("The package wasn't uploaded");
+      expect(alert).toHaveTextContent(
+        'This version would break 3 playlist items'
+      );
+      expect(alert).toHaveTextContent(
+        'Lobby (Alpha): Field estate is required but missing'
+      );
+      expect(alert).toHaveTextContent('and 2 more');
+
+      fireEvent.click(within(alert).getByRole('button', { name: 'Dismiss' }));
+      await waitFor(() => expect(screen.queryByRole('alert')).toBeNull());
+    });
+
+    it.each([
+      [{ code: 'slug_taken' }, 'Another widget already uses this slug'],
+      [{ code: 'invalid_slug' }, 'The slug in widget.json can only contain'],
+      [{ code: 'managed_widget' }, 'installed by the platform'],
+      [
+        { code: 'unknown_fetcher', fetcher: 'nope' },
+        'uses the fetcher "nope", which isn\'t installed',
+      ],
+      [
+        {
+          code: 'invalid_widget',
+          errors: { name: ['has already been taken'] },
+        },
+        'The widget definition is invalid: name: has already been taken',
+      ],
+      [
+        { code: 'invalid_package', message: 'Missing widget.json in package' },
+        'The package is invalid: Missing widget.json in package',
+      ],
+    ])('explains upload errors (%o)', async (details, message) => {
+      vi.mocked(NetworkService.uploadWidget).mockRejectedValue(
+        uploadError(422, details)
+      );
+      renderPage();
+      await chooseFile();
+
+      expect(await screen.findByRole('alert')).toHaveTextContent(message);
+    });
+
+    it('explains unexpected upload failures', async () => {
+      vi.mocked(NetworkService.uploadWidget).mockRejectedValue(
+        new Error('offline')
+      );
+      renderPage();
+      await chooseFile();
+
+      expect(await screen.findByRole('alert')).toHaveTextContent(
+        'The upload failed. Try again.'
+      );
+    });
+
+    it('downloads and deletes uploaded widgets', async () => {
+      vi.mocked(NetworkService.listWidgetAccess).mockResolvedValue(
+        widgetPage([listing, weather])
+      );
+      vi.mocked(NetworkService.downloadWidgetPackage).mockResolvedValue({
+        blob: new Blob(['zip']),
+        filename: 'listing-v3.zip',
+      });
+      vi.mocked(NetworkService.deleteWidget).mockResolvedValue();
+      const createObjectURL = vi.fn(() => 'blob:package');
+      const revokeObjectURL = vi.fn();
+      Object.assign(URL, { createObjectURL, revokeObjectURL });
+      const click = vi
+        .spyOn(HTMLAnchorElement.prototype, 'click')
+        .mockImplementation(() => {});
+      renderPage();
+
+      await screen.findByRole('heading', { level: 2, name: 'Listing' });
+      expect(screen.getByText('Version 3')).toBeInTheDocument();
+      expect(screen.getByText(/^Uploaded /)).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Download' }));
+      await waitFor(() =>
+        expect(NetworkService.downloadWidgetPackage).toHaveBeenCalledWith(7, 3)
+      );
+      await waitFor(() => expect(revokeObjectURL).toHaveBeenCalled());
+      expect(click).toHaveBeenCalled();
+      expect(createObjectURL).toHaveBeenCalled();
+      click.mockRestore();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Delete widget' }));
+      expect(await screen.findByText('Delete Listing?')).toBeInTheDocument();
+      vi.mocked(NetworkService.listWidgetAccess).mockResolvedValue(
+        widgetPage([weather])
+      );
+      confirmDelete();
+
+      await waitFor(() =>
+        expect(NetworkService.deleteWidget).toHaveBeenCalledWith(7)
+      );
+      await waitFor(() =>
+        expect(toastSpies.success).toHaveBeenCalledWith('Listing was deleted.')
+      );
+      await waitFor(() =>
+        expect(screen.queryByRole('option', { name: /Listing/ })).toBeNull()
+      );
+    });
+
+    it('reports failed downloads and deletions', async () => {
+      vi.mocked(NetworkService.listWidgetAccess).mockResolvedValue(
+        widgetPage([listing])
+      );
+      vi.mocked(NetworkService.downloadWidgetPackage).mockRejectedValue(
+        new Error('gone')
+      );
+      vi.mocked(NetworkService.deleteWidget).mockRejectedValue(
+        new HttpError('in use', 409, {
+          organizations: [{ id: 'org-a', name: 'Alpha' }],
+        })
+      );
+      renderPage();
+      await screen.findByRole('heading', { level: 2, name: 'Listing' });
+
+      fireEvent.click(screen.getByRole('button', { name: 'Download' }));
+      await waitFor(() =>
+        expect(toastSpies.error).toHaveBeenCalledWith(
+          "The package couldn't be downloaded."
+        )
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: 'Delete widget' }));
+      await screen.findByText('Delete Listing?');
+      confirmDelete();
+      await waitFor(() =>
+        expect(toastSpies.error).toHaveBeenLastCalledWith(
+          expect.stringContaining('Alpha')
+        )
+      );
+    });
+
+    it('protects widgets in use and widgets the platform installs', async () => {
+      const used = { ...listing, in_use_count: 2 };
+      const managed = widget({
+        id: 8,
+        name: 'Managed listing',
+        slug: 'managed-listing',
+        kind: 'network',
+        owned: true,
+        managed: true,
+        package: null,
+      });
+      vi.mocked(NetworkService.listWidgetAccess).mockResolvedValue(
+        widgetPage([used, managed, weather])
+      );
+      renderPage();
+
+      await screen.findByRole('heading', { level: 2, name: 'Listing' });
+      expect(
+        screen.getByRole('button', { name: 'Delete widget' })
+      ).toBeDisabled();
+      expect(
+        screen.getByText(
+          'Remove the widget from all playlists before deleting it.'
+        )
+      ).toBeInTheDocument();
+
+      await selectWidget(/Managed listing/);
+      expect(screen.getByText(/Installed by the platform/)).toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: 'Delete widget' })
+      ).toBeNull();
+      expect(screen.queryByRole('button', { name: 'Download' })).toBeNull();
+
+      await selectWidget(/Weather/);
+      expect(screen.queryByText('Package')).toBeNull();
     });
   });
 });

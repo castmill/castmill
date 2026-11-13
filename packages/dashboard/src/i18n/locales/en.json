@@ -321,6 +321,43 @@
         "save": "Failed to update widget access.",
         "inUse": "Access can't be removed while these organizations use the widget in playlists: {{organizations}}",
         "moreOrganizations": "{{names}} and {{count}} more"
+      },
+      "upload": {
+        "button": "Upload widget",
+        "uploading": "Uploading…",
+        "hint": "Upload a widget package (.zip or widget.json) to offer it in your network without a platform update. New widgets stay hidden until you choose who can use them. Uploading a package with the slug of one of your widgets updates it.",
+        "created": "{{name}} uploaded. Choose who can use it.",
+        "updated": "{{name}} updated to version {{version}}.",
+        "warnings": "Check the template: {{warnings}}",
+        "failedTitle": "The package wasn't uploaded",
+        "dismiss": "Dismiss",
+        "errors": {
+          "slugTaken": "Another widget already uses this slug. Change the slug in widget.json.",
+          "invalidSlug": "The slug in widget.json can only contain letters, digits, dashes and underscores.",
+          "managedWidget": "This widget is installed by the platform, so an upload can't replace it.",
+          "unknownFetcher": "The widget's integration uses the fetcher \"{{fetcher}}\", which isn't installed on this server.",
+          "invalidWidget": "The widget definition is invalid: {{details}}",
+          "incompatible": "This version would break {{count}} playlist items that use the widget. Make new options optional and keep existing ones compatible:",
+          "incompatibleItem": "{{playlist}} ({{organization}}): {{error}}",
+          "incompatibleMore": "and {{count}} more",
+          "invalidPackage": "The package is invalid: {{details}}",
+          "unknown": "The upload failed. Try again."
+        }
+      },
+      "package": {
+        "title": "Package",
+        "version": "Version {{version}}",
+        "uploaded": "Uploaded {{date}}",
+        "download": "Download",
+        "delete": "Delete widget",
+        "deleteTitle": "Delete {{widget}}?",
+        "deleteMessage": "The widget and its uploaded versions are removed from your network. This can't be undone.",
+        "deleteInUse": "Remove the widget from all playlists before deleting it.",
+        "deleted": "{{widget}} was deleted.",
+        "managed": "Installed by the platform: it's updated with platform releases and can't be replaced or deleted here.",
+        "errors": {
+          "download": "The package couldn't be downloaded."
+        }
       }
     },
     "title": "Network Settings",

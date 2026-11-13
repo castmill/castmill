@@ -289,6 +289,43 @@
         "save": "无法更新组件访问权限。",
         "inUse": "以下组织的播放列表仍在使用此组件，无法移除访问权限：{{organizations}}",
         "moreOrganizations": "{{names}} 等另外 {{count}} 个"
+      },
+      "upload": {
+        "button": "上传组件",
+        "uploading": "正在上传…",
+        "hint": "上传组件包（.zip 或 widget.json），无需平台更新即可在您的网络中提供该组件。新组件在您选择谁可以使用之前保持隐藏。上传与您某个组件 slug 相同的包会更新该组件。",
+        "created": "已上传 {{name}}。请选择谁可以使用它。",
+        "updated": "{{name}} 已更新到版本 {{version}}。",
+        "warnings": "请检查模板：{{warnings}}",
+        "failedTitle": "组件包未上传",
+        "dismiss": "关闭",
+        "errors": {
+          "slugTaken": "另一个组件已使用此 slug。请在 widget.json 中更改 slug。",
+          "invalidSlug": "widget.json 中的 slug 只能包含字母、数字、连字符和下划线。",
+          "managedWidget": "此组件由平台安装，无法通过上传替换。",
+          "unknownFetcher": "组件的集成使用了获取器“{{fetcher}}”，但此服务器上未安装该获取器。",
+          "invalidWidget": "组件定义无效：{{details}}",
+          "incompatible": "此版本会使 {{count}} 个使用该组件的播放列表项目失效。请将新选项设为可选，并保持现有选项兼容：",
+          "incompatibleItem": "{{playlist}}（{{organization}}）：{{error}}",
+          "incompatibleMore": "以及另外 {{count}} 个",
+          "invalidPackage": "组件包无效：{{details}}",
+          "unknown": "上传失败，请重试。"
+        }
+      },
+      "package": {
+        "title": "组件包",
+        "version": "版本 {{version}}",
+        "uploaded": "上传于 {{date}}",
+        "download": "下载",
+        "delete": "删除组件",
+        "deleteTitle": "删除 {{widget}}？",
+        "deleteMessage": "该组件及其已上传的版本将从您的网络中移除。此操作无法撤销。",
+        "deleteInUse": "删除前请先从所有播放列表中移除该组件。",
+        "deleted": "已删除 {{widget}}。",
+        "managed": "由平台安装：它随平台版本更新，无法在此处替换或删除。",
+        "errors": {
+          "download": "无法下载组件包。"
+        }
       }
     },
     "title": "网络设置",

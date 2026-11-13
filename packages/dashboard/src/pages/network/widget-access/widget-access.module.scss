@@ -592,6 +592,80 @@ $warning: var(--cm-warning);
   }
 }
 
+// Package (uploaded network widgets)
+.package-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5em 1em;
+}
+
+.package-version {
+  color: $text;
+  font-weight: 600;
+}
+
+.package-date {
+  color: $muted;
+  font-size: 0.85em;
+}
+
+.package-actions {
+  display: flex;
+  gap: 0.5em;
+  margin-left: auto;
+}
+
+.page-header-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1em;
+}
+
+.upload-input {
+  display: none;
+}
+
+.upload-error {
+  margin: 0 0 1em;
+  padding: 0.75em 1em;
+  border: 0.0625em solid rgba(var(--cm-error-rgb), 0.45);
+  border-radius: 0.5em;
+  background: var(--cm-error-bg);
+  color: $text;
+  line-height: 1.4;
+
+  h2 {
+    margin: 0 0 0.35em;
+    font-size: 1em;
+    font-weight: 600;
+  }
+
+  p {
+    margin: 0;
+  }
+
+  ul {
+    margin: 0.5em 0 0;
+    padding-left: 1.25em;
+  }
+}
+
+.upload-error-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1em;
+}
+
+.upload-hint {
+  margin: 0.4em 0 0;
+  color: $muted;
+  font-size: 0.85em;
+}
+
 // Organizations
 .organizations {
   display: flex;
