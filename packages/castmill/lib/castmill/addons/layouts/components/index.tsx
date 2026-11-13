@@ -56,6 +56,7 @@ const LayoutsPage: Component<AddonComponentProps> = (props) => {
   const [data, setData] = createSignal<JsonLayout[]>([]);
   const [currentLayout, setCurrentLayout] = createSignal<JsonLayout>();
   const [showDrawer, setShowDrawer] = createSignal(false);
+  const [layoutFooter, setLayoutFooter] = createSignal<HTMLElement>();
   const [showRenameModal, setShowRenameModal] = createSignal(false);
 
   // Get itemId from URL params
@@ -546,6 +547,14 @@ const LayoutsPage: Component<AddonComponentProps> = (props) => {
           size="xl"
           closeOnOutsideClick
           outsideClickIgnoreSelector="tbody tr"
+          footer={
+            <div
+              ref={(el) => {
+                setLayoutFooter(el);
+                onCleanup(() => setLayoutFooter(undefined));
+              }}
+            />
+          }
         >
           <Show when={currentLayout()} keyed>
             {(layout) => (
@@ -557,6 +566,7 @@ const LayoutsPage: Component<AddonComponentProps> = (props) => {
                   refreshData();
                 }}
                 onClose={closeLayoutDrawer}
+                actionsMount={layoutFooter()}
               />
             )}
           </Show>

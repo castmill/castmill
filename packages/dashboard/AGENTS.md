@@ -162,6 +162,21 @@ Shared mobile behaviour (ui-common):
   tabs collapse to icon-only at ≤36em (the title stays as tooltip and
   accessible name), and pass `ariaLabel={t('common.sections')}`.
 
+## Layout Editor
+
+- `LayoutEditor` (`addons/common/components/layout-editor`) is shared by the
+  Layouts drawer and the playlist widget config. It measures its own width
+  with a ResizeObserver and adds `layout-editor--stacked` below
+  `STACKED_MAX_WIDTH_EM` (48em): properties and the zone list move below the
+  canvas. Never switch this on the viewport; embeds can be narrow on desktop.
+- Zone move/resize uses Pointer Events (mouse, pen and touch) with
+  `touch-action: none` on zones and handles; only the primary pointer drives
+  a drag and `pointercancel` ends it. Handles grow on `(pointer: coarse)`.
+- The canvas is `dir="ltr"`: zone rects are physical screen geometry, also in
+  Arabic. Pass `t` to the editor; its strings live under `layouts.editor.*`.
+- The Layouts drawer portals its Save bar into the Drawer `footer`
+  (`LayoutView` `actionsMount`), like media details.
+
 ## Team Details Drawer
 
 `pages/teams-page/team-view.tsx` owns its `Drawer` so the form state and the
