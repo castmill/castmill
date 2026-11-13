@@ -793,7 +793,8 @@
       "created": "채널 {{name}}이(가) 생성되었습니다",
       "updated": "채널 {{name}}이(가) 업데이트되었습니다",
       "updateDefaultPlaylist": "기본 재생목록 업데이트 성공",
-      "clearDefaultPlaylist": "기본 재생목록 지우기 성공"
+      "clearDefaultPlaylist": "기본 재생목록 지우기 성공",
+      "updateChannelEntry": "채널 항목이 업데이트되었습니다"
     },
     "info": {
       "contentRequired": "콘텐츠를 표시하려면 이 채널에 기본 재생목록을 설정하거나 예약된 항목을 추가하세요."
@@ -806,6 +807,20 @@
       "updateDefaultPlaylist": "채널 기본 재생목록 업데이트 실패: {{error}}",
       "clearDefaultPlaylist": "채널 기본 재생목록 지우기 실패: {{error}}",
       "updateChannelEntry": "채널 항목 업데이트 오류: {{error}}"
+    },
+    "calendar": {
+      "previousWeek": "이전 주",
+      "nextWeek": "다음 주",
+      "previousDay": "이전 날",
+      "nextDay": "다음 날",
+      "today": "오늘",
+      "tapToAdd": "시간대를 탭하여 일정에 재생 목록을 추가하세요.",
+      "addEntry": "일정에 추가",
+      "startsAt": "{{date}} {{time}}에 시작",
+      "duration": "기간",
+      "untilEndOfDay": "하루가 끝날 때까지",
+      "slotUnavailable": "이 시간대는 다른 항목과 겹치거나 이번 주에 맞지 않습니다.",
+      "confirmRemoveEntry": "\"{{title}}\" 항목을 삭제하시겠습니까?"
     }
   },
   "organization": {

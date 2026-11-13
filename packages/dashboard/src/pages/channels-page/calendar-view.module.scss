@@ -1,93 +1,169 @@
-/* Example dark-mode calendar CSS */
-
-html,
-body {
-  background-color: var(--cm-bg-sunken);
-  margin: 0;
-  padding: 0;
-  color: var(--cm-text-primary); /* Default text color */
-  font-family: 'Helvetica Neue', Arial, sans-serif;
-}
-
-.calendar-wrapper {
-  width: 100%;
-  background: var(--cm-bg-sunken); /* main dark background */
-  border: 1px solid var(--cm-border-color);
-  margin-top: 1em;
-}
+// Channel schedule calendar. Layouts (see calendar-view.tsx):
+// - wide: playlist chooser side panel next to the week grid
+// - narrow (tablets): collapsible playlist strip above the full-width week grid
+// - day view (phones): a single day column with prev/next/swipe paging
 
 .calendar-layout {
   display: flex;
   align-items: flex-start;
   gap: 1em;
+  min-width: 0;
+
+  &.narrow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75em;
+  }
+}
+
+.left-panel {
+  flex: 0 0 auto;
+  margin: 1em 0 0 0;
+}
+
+.narrow .left-panel {
+  margin: 0;
+}
+
+.chooser-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  margin-top: 0.75em;
+  padding: 0.5em 0.75em;
+  border: 1px solid var(--cm-border-strong);
+  border-radius: 0.375em;
+  background: var(--cm-bg-tertiary);
+  color: var(--cm-text-primary);
+  font: inherit;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--cm-bg-hover);
+  }
+
+  &:focus-visible {
+    outline: 0.15em solid var(--cm-focus-ring);
+    outline-offset: 0.1em;
+  }
+}
+
+.chooser-toggle-icon {
+  transition: transform 0.15s ease;
+}
+
+.chooser-toggle[aria-expanded='true'] .chooser-toggle-icon {
+  transform: rotate(180deg);
+}
+
+.chooser-strip {
+  margin-top: 0.75em;
+}
+
+.tap-hint {
+  margin: 0.75em 0 0 0;
+  color: var(--cm-text-secondary);
+  font-size: 0.875em;
+}
+
+.calendar-wrapper {
+  // Width of the leading time column, shared by the header, body, markers
+  // and the current-time line so they stay aligned.
+  --time-col-width: 4.5em;
+
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+  background: var(--cm-bg-sunken);
+  border: 1px solid var(--cm-border-color);
+  margin-top: 1em;
+}
+
+.narrow .calendar-wrapper {
+  margin-top: 0;
 }
 
 /* Top header (navigation + date range) */
 .calendar-header {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  background: var(--cm-bg-elevated-secondary); /* slightly lighter dark */
+  gap: 0.5em;
+  background: var(--cm-bg-elevated-secondary);
   border-bottom: 1px solid var(--cm-border-color);
-  padding: 8px 10px;
-  margin-bottom: 0;
+  padding: 0.5em 0.625em;
 }
 
-.calendar-header button {
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 0.375em;
+}
+
+.nav-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375em;
+  min-height: 2.25em;
+  min-width: 2.25em;
+  padding: 0.25em 0.625em;
   background: var(--cm-bg-tertiary);
   color: var(--cm-text-primary);
   border: 1px solid var(--cm-border-strong);
-  padding: 4px 8px;
-  border-radius: 3px;
+  border-radius: 0.25em;
+  font: inherit;
+  font-size: 0.875em;
   cursor: pointer;
+
+  &:hover {
+    background: var(--cm-border-strong);
+  }
+
+  &:focus-visible {
+    outline: 0.15em solid var(--cm-focus-ring);
+    outline-offset: 0.1em;
+  }
 }
 
-.calendar-header button:hover {
-  background: var(--cm-border-strong);
+// Chevrons point the other way in right-to-left languages.
+:global([dir='rtl']) .nav-icon {
+  transform: scaleX(-1);
+}
+
+.day-view .nav-label {
+  // Icon-only buttons on phones; the accessible name stays on aria-label.
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.range-label {
+  font-size: 1.125em;
+  font-weight: bold;
+  color: var(--cm-text-primary);
+}
+
+.day-view .range-label {
+  flex: 1 1 100%;
+  order: -1;
+  font-size: 1em;
+  text-align: center;
 }
 
 /* The pinned header table (days of the week) */
 .header-table-container {
   overflow: hidden;
-  border: 1px solid var(--cm-border-color);
-  background: var(--cm-bg-elevated-secondary);
-  margin-bottom: 0;
-}
-
-.header-table {
-  table-layout: fixed;
-  width: 100%;
-  border-collapse: collapse;
-  border-spacing: 0;
-}
-
-.header-table th {
-  border-right: 1px solid var(--cm-border-color);
+  scrollbar-gutter: stable;
   border-bottom: 1px solid var(--cm-border-color);
-  text-align: center;
-  height: 2em;
-  font-size: 13px;
-  color: var(--cm-text-primary);
-  padding: 0;
   background: var(--cm-bg-elevated-secondary);
 }
 
-.header-time-col {
-  width: 10%;
-  background: var(--cm-bg-elevated-secondary);
-  border-right: 1px solid var(--cm-border-color);
-  font-size: 0.5em !important;
-}
-
-/* The scrollable body table for time slots */
-.body-table-container {
-  position: relative;
-  max-height: 600px;
-  overflow-y: auto;
-  border: 1px solid var(--cm-border-color);
-  background: var(--cm-bg-sunken);
-}
-
+.header-table,
 .body-table {
   table-layout: fixed;
   width: 100%;
@@ -95,24 +171,107 @@ body {
   border-spacing: 0;
 }
 
+.time-col {
+  width: var(--time-col-width);
+}
+
+.header-table th {
+  border-inline-end: 1px solid var(--cm-border-color);
+  text-align: center;
+  height: 2.5em;
+  padding: 0.25em 0.125em;
+  font-weight: normal;
+  color: var(--cm-text-primary);
+  background: var(--cm-bg-elevated-secondary);
+  overflow: hidden;
+}
+
+.day-name {
+  display: block;
+  font-size: 0.8125em;
+  font-weight: bold;
+}
+
+.day-date {
+  display: block;
+  font-size: 0.75em;
+  color: var(--cm-text-secondary);
+}
+
+.header-time-col {
+  word-break: break-word;
+}
+
+.time-zone {
+  display: block;
+  font-size: 0.625em;
+  color: var(--cm-text-secondary);
+}
+
+/* The scrollable body table for time slots. Sized relative to the drawer
+   (viewport) height instead of a fixed pixel height. */
+.body-table-container {
+  position: relative;
+  height: clamp(20em, 60vh, 50em);
+  height: clamp(20em, 60dvh, 50em);
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  background: var(--cm-bg-sunken);
+  touch-action: pan-y;
+}
+
 .body-table td {
-  border-right: 1px solid var(--cm-border-color);
+  border-inline-end: 1px solid var(--cm-border-color);
   border-bottom: 1px solid var(--cm-border-color);
-  height: 1.5em; /* or your rowHeight */
+  height: 1.5em;
+  padding: 0;
   text-align: center;
   position: relative;
   background: var(--cm-bg-sunken);
 }
 
-.body-time-col {
-  width: 10%;
-  background: var(--cm-bg-elevated-secondary);
-  border-right: 1px solid var(--cm-border-color);
-  font-size: 12px;
-  text-align: right;
+.slot {
+  &:hover {
+    .slot-button {
+      background: var(--cm-bg-hover);
+    }
+  }
+}
+
+.slot-button {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+
+  &:focus-visible {
+    z-index: 1;
+    outline: 0.15em solid var(--cm-focus-ring);
+    outline-offset: -0.15em;
+  }
+}
+
+// Larger tap targets for touch.
+@media (pointer: coarse) {
+  .body-table td {
+    height: 2em;
+  }
+}
+
+.body-table td.body-time-col {
+  background: var(--cm-bg-elevated-secondary);
+  font-size: 0.75em;
+  text-align: end;
+  padding-inline-end: 0.5em;
   font-weight: bold;
   color: var(--cm-text-secondary);
+  vertical-align: top;
 }
 
 /* The absolutely positioned event layer */
@@ -125,27 +284,13 @@ body {
   pointer-events: none;
 }
 
-/* Hover effect for an event if you like */
-.calendar-event:hover {
-  border-color: var(--cm-text-tertiary);
-}
-
-/* Example hovered cell styling if you want a highlight on drag/resize */
-.hovered {
-  background-color: rgb(127, 127, 127) !important;
+.body-table td.hovered {
+  background-color: rgba(var(--cm-primary-rgb), 0.35) !important;
   border: none !important;
 }
 
 .current-day {
-  background-color: #685f43 !important; // Light yellowish color (adjust as needed)
-}
-
-.left-panel {
-  margin: 1em 1em 0 0;
-}
-
-:global(:root[data-theme='light']) .current-day {
-  background-color: #fdf1cc !important;
+  background-color: var(--cm-warning-bg) !important;
 }
 
 /* Point-in-time markers (automation firings) */
@@ -167,4 +312,29 @@ body {
   border-radius: 0.1em;
   box-shadow: 0 0 0.25em var(--cm-shadow-color);
   pointer-events: auto;
+}
+
+/* Current time line */
+.time-bar {
+  position: absolute;
+  inset-inline-start: var(--time-col-width);
+  inset-inline-end: 0;
+  height: 0.125em;
+  background: var(--cm-primary);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.time-bar-label {
+  position: absolute;
+  inset-inline-start: -4em;
+  top: -0.6em;
+  width: 3.6em;
+  padding: 0.1em 0;
+  border-radius: 0.6em;
+  background: var(--cm-primary);
+  color: var(--cm-text-on-primary);
+  font-size: 0.75em;
+  line-height: 1;
+  text-align: center;
 }

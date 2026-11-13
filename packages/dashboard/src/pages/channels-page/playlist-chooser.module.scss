@@ -2,3 +2,22 @@
   list-style-type: none;
   padding: 0;
 }
+
+.hint {
+  margin: 0 0 0.5em 0;
+  color: var(--cm-text-secondary);
+  font-size: 0.875em;
+}
+
+// Tablet strip: playlists wrap horizontally and scroll inside a short panel.
+.strip .playlists-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em;
+  max-height: 9em;
+  overflow-y: auto;
+
+  > * {
+    margin-bottom: 0;
+  }
+}

@@ -162,6 +162,29 @@ Shared mobile behaviour (ui-common):
   tabs collapse to icon-only at ≤36em (the title stays as tooltip and
   accessible name), and pass `ariaLabel={t('common.sections')}`.
 
+## Channel Details Drawer
+
+The channel schedule (`src/pages/channels-page/calendar-view.tsx`) has three
+layouts, exposed as `data-layout` on the calendar root:
+
+- `wide` (`WIDE_CALENDAR_QUERY`, ≥64em, fine pointer, calendar ≥50em wide):
+  week grid with the `PlaylistChooser` side panel; drag playlists onto slots
+  and drag/resize entries.
+- `narrow` (tablets and touch devices): full-width week grid; the chooser is a
+  collapsible horizontal strip (`variant="strip"`) above the calendar.
+- `day` (`DAY_VIEW_QUERY`, ≤40em): a single day with previous/next day buttons
+  and horizontal swipe paging (mirrored in RTL). Paging past Monday/Sunday
+  changes the week, so `onWeekChange` still fires.
+
+On touch layouts tapping a free slot opens `CalendarAddEntry` (duration select
+and playlist `ComboBox` bottom sheet). Placement uses the same overlap and
+end-of-week checks as drag and drop (`isValidPlacement`). Entry boxes and
+automation markers are clipped to the visible days, and they are measured from
+the cell refs, so keep cells registered synchronously and use the outer edges
+of the first and last day cells (days run right-to-left in RTL). Calendar
+height is relative to the viewport (`clamp(20em, 60dvh, 50em)`); never style
+`html`/`body` from the calendar styles.
+
 ## Layout Editor
 
 - `LayoutEditor` (`addons/common/components/layout-editor`) is shared by the

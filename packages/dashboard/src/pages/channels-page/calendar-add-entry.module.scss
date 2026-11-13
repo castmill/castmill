@@ -1,0 +1,35 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+  min-width: min(22em, 80vw);
+  margin-top: 1em;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375em;
+}
+
+.label {
+  color: var(--cm-text-secondary);
+  font-size: 0.875em;
+}
+
+.select {
+  min-height: 2.5em;
+  padding: 0.4em 0.6em;
+  border: 1px solid var(--cm-border-strong);
+  border-radius: 0.375em;
+  background: var(--cm-bg-secondary);
+  color: var(--cm-text-primary);
+  font: inherit;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.75em;
+}

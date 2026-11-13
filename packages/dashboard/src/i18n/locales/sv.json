@@ -788,7 +788,8 @@
       "created": "Kanal {{name}} skapades",
       "updated": "Kanal {{name}} uppdaterades",
       "updateDefaultPlaylist": "Standardspellista uppdaterad",
-      "clearDefaultPlaylist": "Standardspellista rensad"
+      "clearDefaultPlaylist": "Standardspellista rensad",
+      "updateChannelEntry": "Kanalposten har uppdaterats"
     },
     "info": {
       "contentRequired": "För att visa innehåll, ange en standardspellista eller lägg till ett schemalagt inlägg för den här kanalen."
@@ -801,6 +802,20 @@
       "updateDefaultPlaylist": "Misslyckades att uppdatera kanalens standardspellista: {{error}}",
       "clearDefaultPlaylist": "Misslyckades att rensa kanalens standardspellista: {{error}}",
       "updateChannelEntry": "Fel vid uppdatering av kanalinlägg: {{error}}"
+    },
+    "calendar": {
+      "previousWeek": "Föregående vecka",
+      "nextWeek": "Nästa vecka",
+      "previousDay": "Föregående dag",
+      "nextDay": "Nästa dag",
+      "today": "Idag",
+      "tapToAdd": "Tryck på en tidslucka för att lägga till en spellista i schemat.",
+      "addEntry": "Lägg till i schemat",
+      "startsAt": "Börjar {{date}} kl. {{time}}",
+      "duration": "Varaktighet",
+      "untilEndOfDay": "Till dagens slut",
+      "slotUnavailable": "Den här tidsluckan överlappar en annan post eller får inte plats i veckan.",
+      "confirmRemoveEntry": "Är du säker på att du vill ta bort posten \"{{title}}\"?"
     }
   },
   "organization": {

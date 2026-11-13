@@ -794,7 +794,8 @@
       "created": "Canal {{name}} creado correctamente",
       "updated": "Canal {{name}} actualizado correctamente",
       "updateDefaultPlaylist": "Lista de reproducción predeterminada actualizada correctamente",
-      "clearDefaultPlaylist": "Lista de reproducción predeterminada eliminada correctamente"
+      "clearDefaultPlaylist": "Lista de reproducción predeterminada eliminada correctamente",
+      "updateChannelEntry": "Entrada del canal actualizada correctamente"
     },
     "info": {
       "contentRequired": "Para mostrar contenido, establece una lista de reproducción predeterminada o añade una entrada programada para este canal."
@@ -807,6 +808,20 @@
       "updateDefaultPlaylist": "Error al actualizar la lista de reproducción predeterminada del canal: {{error}}",
       "clearDefaultPlaylist": "Error al limpiar la lista de reproducción predeterminada del canal: {{error}}",
       "updateChannelEntry": "Error al actualizar la entrada del canal: {{error}}"
+    },
+    "calendar": {
+      "previousWeek": "Semana anterior",
+      "nextWeek": "Semana siguiente",
+      "previousDay": "Día anterior",
+      "nextDay": "Día siguiente",
+      "today": "Hoy",
+      "tapToAdd": "Toca una franja horaria para añadir una lista de reproducción a la programación.",
+      "addEntry": "Añadir a la programación",
+      "startsAt": "Empieza el {{date}} a las {{time}}",
+      "duration": "Duración",
+      "untilEndOfDay": "Hasta el final del día",
+      "slotUnavailable": "Esta franja horaria se solapa con otra entrada o no cabe en la semana.",
+      "confirmRemoveEntry": "¿Estás seguro de que quieres eliminar la entrada \"{{title}}\"?"
     }
   },
   "organization": {

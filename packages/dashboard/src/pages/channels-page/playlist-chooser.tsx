@@ -1,5 +1,5 @@
 import { JsonPlaylist } from '@castmill/player';
-import { Component, createEffect, createSignal, For } from 'solid-js';
+import { Component, createEffect, createSignal, For, Show } from 'solid-js';
 import { PlaylistChooserItem } from './playlist-chooser-item';
 
 import style from './playlist-chooser.module.scss';
@@ -14,6 +14,11 @@ interface PlaylistChooserProps {
     entry: CalendarEntry,
     ghostPosition?: { x: number; y: number }
   ) => void;
+  /**
+   * `panel` (default) is the vertical side panel of the wide layout; `strip`
+   * is the wrapping strip shown above the calendar on tablets.
+   */
+  variant?: 'panel' | 'strip';
 }
 
 export const PlaylistChooser: Component<PlaylistChooserProps> = (props) => {
@@ -41,9 +46,14 @@ export const PlaylistChooser: Component<PlaylistChooserProps> = (props) => {
   });
 
   return (
-    <div>
-      <h2>{t('channels.dragPlaylists')}</h2>
-      <div class={style.playlistsList}>
+    <div classList={{ [style.strip]: props.variant === 'strip' }}>
+      <Show
+        when={props.variant === 'strip'}
+        fallback={<h2>{t('channels.dragPlaylists')}</h2>}
+      >
+        <p class={style.hint}>{t('channels.dragPlaylists')}</p>
+      </Show>
+      <div class={style.playlistsList} data-testid="playlist-chooser-list">
         <For each={playlists()}>
           {(playlist) => (
             <PlaylistChooserItem

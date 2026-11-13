@@ -793,7 +793,8 @@
       "created": "チャンネル{{name}}を作成しました",
       "updated": "チャンネル{{name}}を更新しました",
       "updateDefaultPlaylist": "デフォルトプレイリストの更新に成功しました",
-      "clearDefaultPlaylist": "デフォルトプレイリストのクリアに成功しました"
+      "clearDefaultPlaylist": "デフォルトプレイリストのクリアに成功しました",
+      "updateChannelEntry": "チャンネルエントリを更新しました"
     },
     "info": {
       "contentRequired": "コンテンツを表示するには、このチャンネルにデフォルトのプレイリストを設定するか、時間指定のエントリーを追加してください。"
@@ -806,6 +807,20 @@
       "updateDefaultPlaylist": "チャンネルのデフォルトプレイリストの更新に失敗しました：{{error}}",
       "clearDefaultPlaylist": "チャンネルのデフォルトプレイリストのクリアに失敗しました：{{error}}",
       "updateChannelEntry": "チャンネルエントリーの更新中にエラーが発生しました：{{error}}"
+    },
+    "calendar": {
+      "previousWeek": "前の週",
+      "nextWeek": "次の週",
+      "previousDay": "前の日",
+      "nextDay": "次の日",
+      "today": "今日",
+      "tapToAdd": "時間枠をタップして、スケジュールにプレイリストを追加します。",
+      "addEntry": "スケジュールに追加",
+      "startsAt": "{{date}} {{time}} 開始",
+      "duration": "長さ",
+      "untilEndOfDay": "一日の終わりまで",
+      "slotUnavailable": "この時間枠は他のエントリと重なっているか、週に収まりません。",
+      "confirmRemoveEntry": "エントリ「{{title}}」を削除してもよろしいですか？"
     }
   },
   "organization": {
