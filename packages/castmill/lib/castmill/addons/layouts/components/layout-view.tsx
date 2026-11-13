@@ -1,4 +1,5 @@
 import { Component, Show, createSignal, createEffect } from 'solid-js';
+import { Portal } from 'solid-js/web';
 import { Button, FormItem, useToast } from '@castmill/ui-common';
 import { BsSave } from 'solid-icons/bs';
 import type { LayoutZone, LayoutOptionValue } from '@castmill/player';
@@ -50,6 +51,8 @@ export const LayoutView: Component<{
   store: AddonStore;
   onUpdate: (layout: JsonLayout) => void;
   onClose: () => void;
+  /** Drawer footer element; the Save bar is portaled there when provided. */
+  actionsMount?: HTMLElement;
 }> = (props) => {
   const toast = useToast();
   const t = (key: string, params?: Record<string, unknown>) =>
@@ -135,6 +138,23 @@ export const LayoutView: Component<{
     }
   };
 
+  const actions = () => (
+    <div class="layout-view-actions">
+      <Show when={hasChanges()}>
+        <span class="layout-view-dirty" role="status">
+          {t('layouts.unsavedChanges')}
+        </span>
+      </Show>
+      <Button
+        onClick={handleSave}
+        disabled={!hasChanges() || isSaving()}
+        color="primary"
+        label={isSaving() ? t('common.saving') : t('common.save')}
+        icon={BsSave}
+      />
+    </div>
+  );
+
   return (
     <div class="layout-view" classList={{ 'is-dirty': hasChanges() }}>
       <div class="layout-view-header">
@@ -160,20 +180,12 @@ export const LayoutView: Component<{
 
       <LayoutEditor value={layoutValue()} onChange={handleLayoutChange} t={t} />
 
-      <div class="layout-view-footer">
-        <Show when={hasChanges()}>
-          <span class="layout-view-dirty" role="status">
-            {t('layouts.unsavedChanges')}
-          </span>
-        </Show>
-        <Button
-          onClick={handleSave}
-          disabled={!hasChanges() || isSaving()}
-          color="primary"
-          label={isSaving() ? t('common.saving') : t('common.save')}
-          icon={BsSave}
-        />
-      </div>
+      <Show
+        when={props.actionsMount}
+        fallback={<div class="layout-view-footer">{actions()}</div>}
+      >
+        {(mount) => <Portal mount={mount()}>{actions()}</Portal>}
+      </Show>
     </div>
   );
 };

@@ -43,7 +43,7 @@ const store = {
   i18n: { t: (key: string) => `tr:${key}` },
 } as any;
 
-const renderView = () => {
+const renderView = (actionsMount?: HTMLElement) => {
   const onUpdate = vi.fn();
   const result = render(() => (
     <LayoutView
@@ -51,6 +51,7 @@ const renderView = () => {
       store={store}
       onUpdate={onUpdate}
       onClose={vi.fn()}
+      actionsMount={actionsMount}
     />
   ));
   return { ...result, onUpdate };
@@ -118,6 +119,26 @@ describe('LayoutView', () => {
     );
     expect(toast.success).toHaveBeenCalledWith('tr:layouts.saveSuccess');
     expect(view).not.toHaveClass('is-dirty');
+  });
+
+  it('portals the save bar into the drawer footer when mounted', () => {
+    const footer = document.createElement('div');
+    document.body.appendChild(footer);
+    const { container } = renderView(footer);
+
+    expect(container.querySelector('.layout-view-footer')).toBeNull();
+    const save = footer.querySelector(
+      '.layout-view-actions button'
+    ) as HTMLButtonElement;
+    expect(save).toHaveTextContent('tr:common.save');
+    expect(save).toBeDisabled();
+
+    fireEvent.input(container.querySelector('#layout-description')!, {
+      target: { value: 'Updated' },
+    });
+    expect(save).toBeEnabled();
+    expect(footer).toHaveTextContent('tr:layouts.unsavedChanges');
+    footer.remove();
   });
 
   it('tracks zone edits from the editor', () => {

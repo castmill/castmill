@@ -1,8 +1,8 @@
 .layout-view {
   display: flex;
   flex-direction: column;
-  // min-height (not height) so the sticky footer stays pinned to the drawer
-  // edge while the stacked editor scrolls the drawer body.
+  // min-height (not height) so the sticky fallback footer stays pinned to the
+  // drawer edge while the stacked editor scrolls the drawer body.
   min-height: 100%;
   gap: 0.75em;
 
@@ -40,26 +40,16 @@
   // The LayoutEditor component will handle its own styling
   // via layout-editor.scss
 
-  // Save bar pinned to the bottom edge of the drawer body.
+  // Fallback Save bar (no Drawer footer mount): pinned to the bottom edge of
+  // the drawer body.
   .layout-view-footer {
     position: sticky;
     bottom: -1.2em;
     z-index: 2;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 0.5em;
     margin: auto -1.2em -1.2em;
     padding: 0.75em 1.2em;
     border-top: 1px solid var(--cm-border-color);
     background: var(--cm-bg-elevated);
-
-    .layout-view-dirty {
-      flex: 1 1 auto;
-      color: var(--cm-warning);
-      font-size: 0.8em;
-    }
   }
 
   &.is-dirty .layout-view-footer {
@@ -67,22 +57,35 @@
   }
 }
 
+// Save bar, rendered in the Drawer footer or the fallback footer above.
+.layout-view-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5em;
+
+  .layout-view-dirty {
+    flex: 1 1 auto;
+    color: var(--cm-warning);
+    font-size: 0.8em;
+  }
+}
+
 @media (max-width: 30em) {
-  .layout-view {
-    .layout-view-header .layout-info .form-item {
-      max-width: none;
+  .layout-view .layout-view-header .layout-info .form-item {
+    max-width: none;
+  }
+
+  .layout-view-actions {
+    > button {
+      flex: 1 1 0;
+      justify-content: center;
     }
 
-    .layout-view-footer {
-      > button {
-        flex: 1 1 0;
-        justify-content: center;
-      }
-
-      .layout-view-dirty {
-        flex-basis: 100%;
-        text-align: center;
-      }
+    .layout-view-dirty {
+      flex-basis: 100%;
+      text-align: center;
     }
   }
 }
