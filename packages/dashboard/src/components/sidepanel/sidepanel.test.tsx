@@ -212,6 +212,44 @@ describe('SidePanel responsive navigation', () => {
     expect(event.defaultPrevented).toBe(false);
   });
 
+  it('suspends the drawer focus trap while a modal is present', () => {
+    mockViewport(PHONE);
+    renderPanel();
+    navDrawer.open();
+
+    const overlay = document.createElement('div');
+    overlay.dataset.modalOverlay = '';
+    const modalClose = document.createElement('button');
+    overlay.append(modalClose);
+    document.body.append(overlay);
+    modalClose.focus();
+
+    const event = new KeyboardEvent('keydown', {
+      key: 'Tab',
+      cancelable: true,
+    });
+    document.dispatchEvent(event);
+
+    expect(event.defaultPrevented).toBe(false);
+    expect(document.activeElement).toBe(modalClose);
+    overlay.remove();
+  });
+
+  it('preserves the original opener when the viewport changes while open', () => {
+    const viewport = mockViewport(PHONE);
+    renderPanel();
+    const opener = screen.getByTestId('opener');
+    opener.focus();
+    navDrawer.open();
+
+    viewport.resize(TABLET_LANDSCAPE);
+    expect(panel()).toHaveAttribute('data-mode', 'rail');
+    expect(panel()).toHaveClass('is-open');
+    navDrawer.close();
+
+    expect(document.activeElement).toBe(opener);
+  });
+
   it('registers itself so the top bar can show the menu button', () => {
     mockViewport(PHONE);
     expect(navDrawer.isAvailable()).toBe(false);

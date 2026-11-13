@@ -135,6 +135,7 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
 
   let panelRef: HTMLElement | undefined;
   let previousFocus: HTMLElement | null = null;
+  let drawerWasOpen = false;
 
   onMount(() => onCleanup(navDrawer.register()));
 
@@ -162,6 +163,7 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
       return;
     }
     if (event.key !== 'Tab') return;
+    if (document.querySelector('[data-modal-overlay]')) return;
 
     // Keep focus inside the open drawer.
     const items = focusables();
@@ -185,19 +187,24 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
   createEffect(
     on(isOpen, (open) => {
       if (open) {
-        previousFocus = document.activeElement as HTMLElement | null;
+        const opening = !drawerWasOpen;
+        if (opening) {
+          previousFocus = document.activeElement as HTMLElement | null;
+        }
+        drawerWasOpen = true;
         document.addEventListener('keydown', handleKeyDown);
         const previousOverflow = document.body.style.overflow;
         document.body.style.overflow = 'hidden';
-        focusables()[0]?.focus();
+        if (opening) focusables()[0]?.focus();
         onCleanup(() => {
           document.removeEventListener('keydown', handleKeyDown);
           document.body.style.overflow = previousOverflow;
         });
-      } else if (previousFocus) {
+      } else if (drawerWasOpen) {
+        drawerWasOpen = false;
         const target = previousFocus;
         previousFocus = null;
-        if (target.isConnected) target.focus();
+        if (target?.isConnected) target.focus();
       }
     })
   );

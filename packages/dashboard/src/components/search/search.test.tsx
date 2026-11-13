@@ -3,6 +3,10 @@ import { cleanup, fireEvent, render, screen } from '@solidjs/testing-library';
 import Search from './search';
 
 const navigate = vi.hoisted(() => vi.fn());
+const keyboardShortcuts = vi.hoisted(() => ({
+  registerShortcut: vi.fn(),
+  unregisterShortcut: vi.fn(),
+}));
 
 vi.mock('@solidjs/router', () => ({
   useNavigate: () => navigate,
@@ -14,8 +18,7 @@ vi.mock('../../i18n', () => ({
 
 vi.mock('../../hooks', () => ({
   useKeyboardShortcuts: () => ({
-    registerShortcut: vi.fn(),
-    unregisterShortcut: vi.fn(),
+    ...keyboardShortcuts,
     formatShortcut: () => 'Ctrl+F',
     isMac: false,
   }),
@@ -25,6 +28,8 @@ describe('Search', () => {
   afterEach(() => {
     cleanup();
     navigate.mockReset();
+    keyboardShortcuts.registerShortcut.mockReset();
+    keyboardShortcuts.unregisterShortcut.mockReset();
   });
 
   it('does not steal focus by default', () => {
@@ -49,9 +54,17 @@ describe('Search', () => {
     fireEvent.input(input, { target: { value: 'lobby' } });
     fireEvent.keyDown(input, { key: 'Enter' });
     expect(navigate).toHaveBeenCalledWith('/search?s=lobby');
-    expect(onDone).toHaveBeenCalledTimes(1);
+    expect(onDone).toHaveBeenNthCalledWith(1, true);
 
     fireEvent.keyDown(input, { key: 'Escape' });
-    expect(onDone).toHaveBeenCalledTimes(2);
+    expect(onDone).toHaveBeenNthCalledWith(2, false);
+  });
+
+  it('can leave global shortcut registration to its parent', () => {
+    const { unmount } = render(() => <Search registerGlobalShortcut={false} />);
+    expect(keyboardShortcuts.registerShortcut).not.toHaveBeenCalled();
+
+    unmount();
+    expect(keyboardShortcuts.unregisterShortcut).not.toHaveBeenCalled();
   });
 });

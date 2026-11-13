@@ -4,6 +4,8 @@ import {
   createEffect,
   createSignal,
   createMemo,
+  onMount,
+  onCleanup,
 } from 'solid-js';
 import './topbar.scss';
 
@@ -40,6 +42,7 @@ import { GlobalShortcuts } from '../global-shortcuts/global-shortcuts';
 import { useSelectedOrganizationLogo } from '../../hooks/use-selected-organization-logo';
 import { OnboardingStep } from '../../interfaces/onboarding-progress.interface';
 import { ONBOARDING_STEPS } from '../../config/onboarding-steps';
+import { useKeyboardShortcuts } from '../../hooks';
 import TopbarOverflowMenu from './topbar-overflow-menu';
 import {
   COMPACT_TOPBAR_QUERY,
@@ -89,9 +92,35 @@ const Topbar: Component = () => {
   const showMenuButton = () => collapsedNav() && navDrawer.isAvailable();
 
   const [searchOpen, setSearchOpen] = createSignal(false);
+  let searchTriggerRef: HTMLButtonElement | undefined;
   createEffect(() => {
     if (!compact()) setSearchOpen(false);
   });
+
+  const { registerShortcut, unregisterShortcut } = useKeyboardShortcuts();
+  onMount(() => {
+    registerShortcut('global-search', {
+      key: 'F',
+      ctrl: true,
+      description: () => t('shortcuts.globalSearch'),
+      category: 'global',
+      action: () => {
+        if (compact()) {
+          setSearchOpen(true);
+        } else {
+          document
+            .querySelector<HTMLInputElement>('.castmill-search input')
+            ?.focus();
+        }
+      },
+    });
+  });
+  onCleanup(() => unregisterShortcut('global-search'));
+
+  const closeCompactSearch = (restoreFocus = false) => {
+    setSearchOpen(false);
+    if (restoreFocus) searchTriggerRef?.focus();
+  };
 
   const userLabel = () => getUser().name || getUser().email || '';
 
@@ -166,11 +195,15 @@ const Topbar: Component = () => {
           when={!searchOpen()}
           fallback={
             <div class="compact-search">
-              <Search autoFocus onDone={() => setSearchOpen(false)} />
+              <Search
+                autoFocus
+                registerGlobalShortcut={false}
+                onDone={(submitted) => closeCompactSearch(!submitted)}
+              />
               <button
                 type="button"
                 class="topbar-icon-button"
-                onClick={() => setSearchOpen(false)}
+                onClick={() => closeCompactSearch(true)}
                 aria-label={t('common.close')}
                 title={t('common.close')}
               >
@@ -222,6 +255,7 @@ const Topbar: Component = () => {
                 fallback={
                   <>
                     <button
+                      ref={searchTriggerRef}
                       type="button"
                       class="topbar-icon-button"
                       onClick={() => setSearchOpen(true)}
@@ -246,7 +280,7 @@ const Topbar: Component = () => {
                   </>
                 }
               >
-                <Search />
+                <Search registerGlobalShortcut={false} />
 
                 <TopbarLink
                   to="https://docs.castmill.io"

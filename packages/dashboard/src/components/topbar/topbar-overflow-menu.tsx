@@ -71,7 +71,7 @@ const TopbarOverflowMenu: Component<TopbarOverflowMenuProps> = (props) => {
   });
 
   const run = (action: () => void) => () => {
-    close();
+    close(true);
     action();
   };
 
@@ -145,7 +145,7 @@ const TopbarOverflowMenu: Component<TopbarOverflowMenuProps> = (props) => {
                 const next = event.currentTarget.value as Locale;
                 setLocale(next);
                 props.onLanguageChange?.(next);
-                close();
+                close(true);
               }}
             >
               <For each={SUPPORTED_LOCALES}>
@@ -162,7 +162,7 @@ const TopbarOverflowMenu: Component<TopbarOverflowMenuProps> = (props) => {
             href="https://docs.castmill.io"
             target="_blank"
             rel="noopener noreferrer"
-            onClick={() => close()}
+            onClick={() => close(true)}
           >
             <TbHelpCircle aria-hidden="true" />
             <span>{t('topbar.help')}</span>

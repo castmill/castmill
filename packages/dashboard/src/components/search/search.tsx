@@ -22,7 +22,9 @@ interface SearchProps {
   /** Focus the input when mounted (compact top bar search). */
   autoFocus?: boolean;
   /** Called after a search is submitted or dismissed with Escape. */
-  onDone?: () => void;
+  onDone?: (submitted?: boolean) => void;
+  /** The top bar owns the shortcut when this Search is mounted within it. */
+  registerGlobalShortcut?: boolean;
 }
 
 const Search: Component<SearchProps> = (props) => {
@@ -45,12 +47,16 @@ const Search: Component<SearchProps> = (props) => {
   };
 
   onMount(() => {
-    registerShortcut('global-search', globalSearchShortcut);
+    if (props.registerGlobalShortcut !== false) {
+      registerShortcut('global-search', globalSearchShortcut);
+    }
     if (props.autoFocus) inputRef?.focus();
   });
 
   onCleanup(() => {
-    unregisterShortcut('global-search');
+    if (props.registerGlobalShortcut !== false) {
+      unregisterShortcut('global-search');
+    }
   });
 
   const handleEnterKeyDown = (event: KeyboardEvent) => {
@@ -65,12 +71,12 @@ const Search: Component<SearchProps> = (props) => {
         navigate(`/search?s=${encodeURIComponent(searchString())}`);
       }
       inputRef?.blur();
-      props.onDone?.();
+      props.onDone?.(true);
     }
     // Blur the search input when ESC is pressed
     if (event.key === 'Escape') {
       inputRef?.blur();
-      props.onDone?.();
+      props.onDone?.(false);
     }
   };
 

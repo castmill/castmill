@@ -29,11 +29,18 @@ vi.mock('@solidjs/router', () => ({
 
 // Mock the search component
 vi.mock('../search/search', () => ({
-  default: (props: { autoFocus?: boolean; onDone?: () => void }) => (
+  default: (props: {
+    autoFocus?: boolean;
+    onDone?: (submitted?: boolean) => void;
+    registerGlobalShortcut?: boolean;
+  }) => (
     <div data-testid="search" data-autofocus={String(!!props.autoFocus)}>
       Search
-      <button type="button" onClick={() => props.onDone?.()}>
+      <button type="button" onClick={() => props.onDone?.(true)}>
         search-done
+      </button>
+      <button type="button" onClick={() => props.onDone?.(false)}>
+        search-escape
       </button>
     </div>
   ),
@@ -79,6 +86,14 @@ vi.mock('../../hooks/use-selected-organization-logo', () => ({
   useSelectedOrganizationLogo: () => ({
     logoUrl: () => null,
   }),
+}));
+
+const mockKeyboardShortcuts = vi.hoisted(() => ({
+  registerShortcut: vi.fn(),
+  unregisterShortcut: vi.fn(),
+}));
+vi.mock('../../hooks', () => ({
+  useKeyboardShortcuts: () => mockKeyboardShortcuts,
 }));
 
 // Mock the i18n hook
@@ -232,6 +247,8 @@ describe('Topbar responsive layout', () => {
     localStorage.clear();
     delete document.documentElement.dataset.theme;
     mockSetLocale.mockReset();
+    mockKeyboardShortcuts.registerShortcut.mockReset();
+    mockKeyboardShortcuts.unregisterShortcut.mockReset();
     mockCompleteStep.mockReset();
     mockSetStore.mockReset();
     mockNetworkSettings.logo = '';
@@ -344,7 +361,9 @@ describe('Topbar responsive layout', () => {
     mockViewport(PHONE);
     renderTopbar();
 
-    fireEvent.click(screen.getByTestId('topbar-search-button'));
+    const searchTrigger = screen.getByTestId('topbar-search-button');
+    searchTrigger.focus();
+    fireEvent.click(searchTrigger);
     const search = screen.getByTestId('search');
     expect(search).toHaveAttribute('data-autofocus', 'true');
     expect(screen.queryByAltText('Castmill')).toBeNull();
@@ -353,11 +372,46 @@ describe('Topbar responsive layout', () => {
     fireEvent.click(screen.getByText('search-done'));
     expect(screen.queryByTestId('search')).toBeNull();
     expect(screen.getByAltText('Castmill')).toBeInTheDocument();
+    expect(document.activeElement).not.toBe(
+      screen.getByTestId('topbar-search-button')
+    );
 
-    // Closing via the close button.
+    // Escape returns focus to the search trigger.
+    const nextSearchTrigger = screen.getByTestId('topbar-search-button');
+    nextSearchTrigger.focus();
+    fireEvent.click(nextSearchTrigger);
+    fireEvent.click(screen.getByText('search-escape'));
+    expect(document.activeElement).toBe(
+      screen.getByTestId('topbar-search-button')
+    );
+
+    // Closing via the close button also restores focus.
     fireEvent.click(screen.getByTestId('topbar-search-button'));
     fireEvent.click(screen.getByRole('button', { name: 'common.close' }));
     expect(screen.queryByTestId('search')).toBeNull();
+    expect(document.activeElement).toBe(
+      screen.getByTestId('topbar-search-button')
+    );
+  });
+
+  it('keeps global search registered and opens compact search from its shortcut', () => {
+    const viewport = mockViewport(DESKTOP);
+    renderTopbar();
+
+    const registration = mockKeyboardShortcuts.registerShortcut.mock.calls.find(
+      ([id]) => id === 'global-search'
+    );
+    expect(registration).toBeDefined();
+    viewport.resize(PHONE);
+    registration?.[1].action?.();
+
+    expect(screen.getByTestId('search')).toHaveAttribute(
+      'data-autofocus',
+      'true'
+    );
+    expect(mockKeyboardShortcuts.unregisterShortcut).not.toHaveBeenCalledWith(
+      'global-search'
+    );
   });
 
   it('collapses the expanded search when growing to desktop', () => {
@@ -411,9 +465,10 @@ describe('Topbar responsive layout', () => {
     it('toggles the theme', () => {
       mockViewport(PHONE);
       renderTopbar();
-      openMenu();
+      const trigger = openMenu();
       fireEvent.click(screen.getByTestId('overflow-theme-toggle'));
       expect(document.documentElement.dataset.theme).toBe('light');
+      expect(document.activeElement).toBe(trigger);
       openMenu();
       expect(screen.getByText('topbar.switchToDarkMode')).toBeInTheDocument();
     });
@@ -428,6 +483,9 @@ describe('Topbar responsive layout', () => {
       expect(mockSetLocale).toHaveBeenCalledWith('ar');
       expect(mockCompleteStep).toHaveBeenCalled();
       expect(screen.queryByRole('combobox')).toBeNull();
+      expect(document.activeElement).toBe(
+        screen.getByRole('button', { name: 'topbar.moreOptions' })
+      );
     });
 
     it('opens on the language step of the onboarding tour', () => {
