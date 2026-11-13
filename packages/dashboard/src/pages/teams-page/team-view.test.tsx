@@ -56,6 +56,7 @@ describe('TeamView', () => {
           organizationId="org-1"
           team={team}
           title="Team details"
+          sessionId={0}
           onClose={onClose}
           onSubmit={onSubmit}
         />
@@ -203,6 +204,24 @@ describe('TeamView', () => {
     );
   });
 
+  it('keeps unsaved changes after a failed save', async () => {
+    const { onSubmit } = renderView(
+      { id: 7, name: 'Marketing' },
+      vi.fn().mockResolvedValue(false)
+    );
+
+    typeName('Marketing EU');
+    fireEvent.submit(nameInput().form!);
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    expect(screen.getByTestId('team-footer')).toHaveTextContent(
+      'Unsaved changes'
+    );
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Reset' })).not.toBeDisabled()
+    );
+  });
+
   it('does not submit an invalid or unchanged form', () => {
     const { onSubmit } = renderView({ id: 7, name: 'Marketing' });
 
@@ -232,6 +251,7 @@ describe('TeamView', () => {
           organizationId="org-1"
           team={team()}
           title="Team"
+          sessionId={0}
           onClose={vi.fn()}
           onSubmit={vi.fn()}
         />
@@ -251,6 +271,51 @@ describe('TeamView', () => {
     );
     expect(screen.getByTestId('team-footer')).not.toHaveTextContent(
       'Unsaved changes'
+    );
+  });
+
+  it('ignores a save completion after the drawer session changes', async () => {
+    const [team, setTeam] = createSignal<TeamDetails>({
+      id: 7,
+      name: 'Marketing',
+    });
+    const [sessionId, setSessionId] = createSignal(0);
+    let resolveSave: ((value: any) => void) | undefined;
+    const onSubmit = vi.fn(
+      () =>
+        new Promise<any>((resolve) => {
+          resolveSave = resolve;
+        })
+    );
+    render(() => (
+      <I18nProvider>
+        <TeamView
+          organizationId="org-1"
+          team={team()}
+          title="Team"
+          sessionId={sessionId()}
+          onClose={vi.fn()}
+          onSubmit={onSubmit}
+        />
+      </I18nProvider>
+    ));
+
+    typeName('Marketing EU');
+    fireEvent.submit(nameInput().form!);
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+
+    setTeam({ id: 8, name: 'Sales team' });
+    setSessionId(1);
+    typeName('Sales team EU');
+    resolveSave?.({ id: 7, name: 'Marketing EU' });
+
+    await waitFor(() =>
+      expect(screen.getByTestId('team-footer')).toHaveTextContent(
+        'Unsaved changes'
+      )
+    );
+    expect(screen.getByTestId('team-resources')).toHaveTextContent(
+      'resources-8'
     );
   });
 });

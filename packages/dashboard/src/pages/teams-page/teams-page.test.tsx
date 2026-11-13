@@ -168,15 +168,22 @@ describe('TeamsPage', () => {
       id: 3,
       name: 'Marketing EU',
     });
-    expect(tableRef.updateItem).toHaveBeenCalledWith(3, {
-      id: 3,
-      name: 'Marketing EU',
-    });
+    expect(tableRef.updateItem).toHaveBeenCalledWith(
+      3,
+      expect.objectContaining({
+        id: 3,
+        name: 'Marketing EU',
+        updated_at: expect.any(String),
+      })
+    );
     expect(toastSpies.success).toHaveBeenCalledWith(
       'Team Marketing EU updated successfully'
     );
     await waitFor(() =>
       expect(screen.getByTestId('team-updated').textContent).not.toBe('')
+    );
+    expect(screen.getByTestId('team-updated')).toHaveTextContent(
+      tableRef.updateItem.mock.calls[0][1].updated_at
     );
     expect(screen.getByTestId('team-view')).toHaveTextContent(
       'Team "Marketing EU"'
@@ -188,10 +195,44 @@ describe('TeamsPage', () => {
     renderPage();
 
     fireEvent.click(screen.getByText('View'));
-    await latestTeamView().onSubmit({ id: 3, name: 'Marketing EU' });
+    const result = await latestTeamView().onSubmit({
+      id: 3,
+      name: 'Marketing EU',
+    });
 
+    expect(result).toBe(false);
     expect(toastSpies.error).toHaveBeenCalledWith(
       'Error saving team: Error: nope'
+    );
+  });
+
+  it('does not replace a new-team form when an older save completes', async () => {
+    let resolveUpdate: (() => void) | undefined;
+    vi.mocked(TeamsService.updateTeam).mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveUpdate = resolve;
+        })
+    );
+    renderPage();
+
+    fireEvent.click(screen.getByText('View'));
+    const save = latestTeamView().onSubmit({
+      id: 3,
+      name: 'Marketing EU',
+    });
+    fireEvent.click(screen.getByText('Add Team'));
+    resolveUpdate?.();
+    await save;
+
+    expect(latestTeamView().team.id).toBeUndefined();
+    expect(latestTeamView().team.name).toBe('');
+    expect(tableRef.updateItem).toHaveBeenCalledWith(
+      3,
+      expect.objectContaining({
+        name: 'Marketing EU',
+        updated_at: expect.any(String),
+      })
     );
   });
 

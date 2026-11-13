@@ -34,8 +34,9 @@ export const TeamView = (props: {
   organizationId: string;
   team: TeamDetails;
   title: string;
+  sessionId: number;
   onClose: () => void;
-  onSubmit: (teamUpdate: TeamUpdate) => Promise<JsonTeam | void>;
+  onSubmit: (teamUpdate: TeamUpdate) => Promise<JsonTeam | false | void>;
 }) => {
   const { t, locale } = useI18n();
   const { canPerformAction } = usePermissions();
@@ -135,15 +136,18 @@ export const TeamView = (props: {
       return;
     }
     setSaving(true);
+    const submittedSessionId = props.sessionId;
     try {
       const team = await props.onSubmit({
         id: props.team.id!,
         name: name(),
       });
 
-      setIsFormModified(false);
-      if (team) {
-        setTeamId(team.id);
+      if (team !== false && props.sessionId === submittedSessionId) {
+        setIsFormModified(false);
+        if (team) {
+          setTeamId(team.id);
+        }
       }
     } finally {
       setSaving(false);
