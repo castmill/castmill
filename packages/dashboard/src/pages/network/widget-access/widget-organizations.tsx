@@ -481,6 +481,7 @@ export const WidgetOrganizations: Component<{
       <Show when={bulkAction()} keyed>
         {(action) => (
           <ConfirmAccessChange
+            closeLabel={t('common.close')}
             title={t(
               action.action === 'enable'
                 ? 'network.widgets.confirm.enableAllTitle'

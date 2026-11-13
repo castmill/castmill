@@ -284,8 +284,10 @@ const NetworkOrganizations: Component = () => {
               <For each={organizations()}>
                 {(org) => (
                   <tr class={org.blocked_at ? styles['blocked-row'] : ''}>
-                    <td>{org.name}</td>
-                    <td>
+                    <td data-label={t('network.organizations.name')}>
+                      {org.name}
+                    </td>
+                    <td data-label={t('common.status')}>
                       <Show
                         when={org.blocked_at}
                         fallback={
@@ -302,8 +304,13 @@ const NetworkOrganizations: Component = () => {
                         </span>
                       </Show>
                     </td>
-                    <td>{new Date(org.inserted_at).toLocaleDateString()}</td>
-                    <td>
+                    <td data-label={t('common.created')}>
+                      {new Date(org.inserted_at).toLocaleDateString()}
+                    </td>
+                    <td
+                      class={styles['actions-column']}
+                      data-label={t('common.actions')}
+                    >
                       <div class={styles['actions-row']}>
                         <Button
                           label=""
@@ -370,6 +377,9 @@ const NetworkOrganizations: Component = () => {
 
       {/* Delete Confirmation Modal */}
       <ConfirmDialog
+        confirmLabel={t('common.confirm')}
+        cancelLabel={t('common.cancel')}
+        closeLabel={t('common.close')}
         show={!!orgToDelete()}
         title={t('network.organizations.deleteTitle')}
         message={t('network.organizations.deleteConfirmation', {
@@ -382,6 +392,7 @@ const NetworkOrganizations: Component = () => {
       {/* Block Organization Modal */}
       <Show when={orgToBlock()}>
         <Modal
+          closeLabel={t('common.close')}
           title={t('network.organizations.blockTitle')}
           description={t('network.organizations.blockConfirmation', {
             name: orgToBlock()?.name || '',
@@ -433,6 +444,9 @@ const NetworkOrganizations: Component = () => {
 
       {/* Unblock Organization Modal */}
       <ConfirmDialog
+        confirmLabel={t('common.confirm')}
+        cancelLabel={t('common.cancel')}
+        closeLabel={t('common.close')}
         show={!!orgToUnblock()}
         title={t('network.organizations.unblockTitle')}
         message={t('network.organizations.unblockConfirmation', {

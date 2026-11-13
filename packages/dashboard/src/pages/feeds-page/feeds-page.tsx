@@ -179,6 +179,7 @@ const FeedsPage: Component = () => {
 
       <Show when={showCreate()}>
         <Modal
+          closeLabel={t('common.close')}
           title={t('feeds.newFeed')}
           description={t('feeds.description')}
           onClose={() => setShowCreate(false)}

@@ -401,6 +401,7 @@ export const OrganizationMembersView = (props: {
     <>
       <Show when={showAddMemberDialog()}>
         <Modal
+          closeLabel={t('common.close')}
           title={t('organization.inviteMember')}
           description={`Add a new member to the organization ${props.organizationName}`}
           onClose={() => setShowAddMemberDialog(false)}
@@ -439,6 +440,9 @@ export const OrganizationMembersView = (props: {
       </Show>
 
       <ConfirmDialog
+        confirmLabel={t('common.confirm')}
+        cancelLabel={t('common.cancel')}
+        closeLabel={t('common.close')}
         show={showConfirmDialog()}
         title={t('organization.dialogs.removeMemberTitle')}
         message={t('organization.dialogs.removeMemberMessage', {
@@ -451,6 +455,9 @@ export const OrganizationMembersView = (props: {
       />
 
       <ConfirmDialog
+        confirmLabel={t('common.confirm')}
+        cancelLabel={t('common.cancel')}
+        closeLabel={t('common.close')}
         show={showConfirmDialogMultiple()}
         title={t('organization.dialogs.removeMembersTitle')}
         message={t('organization.dialogs.removeMembersMessage')}
@@ -527,6 +534,9 @@ export const OrganizationMembersView = (props: {
       </Show>
 
       <ConfirmDialog
+        confirmLabel={t('common.confirm')}
+        cancelLabel={t('common.cancel')}
+        closeLabel={t('common.close')}
         show={showLeaveWarningDialog()}
         title={t('organization.leaveLastOrganizationWarningTitle')}
         message={t('organization.leaveLastOrganizationWarningMessage')}

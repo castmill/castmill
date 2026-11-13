@@ -1,7 +1,9 @@
 .search-page {
-  padding: 2em;
+  padding: var(--cm-page-gutter, 2em);
   max-width: 80em;
   margin: 0 auto 4em auto;
+  box-sizing: border-box;
+  text-align: start;
   animation: fadeIn 0.3s ease-in;
 
   &__header {
@@ -31,6 +33,7 @@
 
   &__header-content {
     flex: 1;
+    min-width: 0;
   }
 
   &__title {
@@ -42,6 +45,7 @@
 
   &__query {
     margin: 0;
+    overflow-wrap: anywhere;
     font-size: 1.1em;
     color: var(--cm-text-secondary);
     font-weight: 500;
@@ -181,6 +185,7 @@
 
   &__title {
     flex: 1;
+    min-width: 0;
     font-size: 1.25em;
     font-weight: 600;
     margin: 0;
@@ -226,7 +231,7 @@
 
   &:hover {
     background-color: var(--cm-bg-hover);
-    padding-left: 2em;
+    padding-inline-start: 2em;
 
     .search-result-item__arrow {
       opacity: 1;
@@ -258,7 +263,7 @@
   &__content {
     flex: 1;
     min-width: 0;
-    text-align: left;
+    text-align: start;
   }
 
   &__name {
@@ -298,6 +303,93 @@
     transform: translateX(-0.5em);
     transition: all 0.2s ease;
     flex-shrink: 0;
+  }
+}
+
+// The chevron points "forward", so mirror it for right-to-left languages.
+[dir='rtl'] .search-result-item__arrow {
+  transform: translateX(0.5em) scaleX(-1);
+}
+
+[dir='rtl'] .search-result-item:hover .search-result-item__arrow {
+  transform: translateX(0) scaleX(-1);
+}
+
+@media (max-width: 36em) {
+  .search-page {
+    margin-bottom: 2em;
+
+    &__header {
+      gap: 1em;
+      margin-bottom: 1.25em;
+      padding-bottom: 1em;
+    }
+
+    &__header-icon {
+      width: 2.75em;
+      height: 2.75em;
+      border-radius: 0.75em;
+
+      svg {
+        width: 1.5em;
+        height: 1.5em;
+      }
+    }
+
+    &__title {
+      font-size: 1.5em;
+    }
+
+    &__query {
+      font-size: 1em;
+    }
+
+    &__empty,
+    &__loading,
+    &__error,
+    &__no-results {
+      padding: 2.5em 1.25em;
+      margin-top: 1em;
+    }
+
+    &__results {
+      gap: 1em;
+    }
+  }
+
+  .search-result-group {
+    &__header {
+      padding: 1em;
+      gap: 0.75em;
+    }
+
+    &__icon {
+      width: 2.5em;
+      height: 2.5em;
+    }
+
+    &__title {
+      font-size: 1.1em;
+    }
+
+    &__count {
+      padding: 0.35em 0.75em;
+    }
+
+    &__pagination {
+      padding: 0.75em 1em;
+    }
+  }
+
+  .search-result-item {
+    padding: 1em;
+    gap: 0.75em;
+    min-height: 2.75em;
+
+    // No hover shift on phones: it moves the row under the finger.
+    &:hover {
+      padding-inline-start: 1em;
+    }
   }
 }
 

@@ -447,7 +447,7 @@ $warning: var(--cm-warning);
   min-width: 5em;
   color: $muted;
   font-size: 0.8em;
-  text-align: right;
+  text-align: end;
 }
 
 .detail-section {
@@ -486,7 +486,7 @@ $warning: var(--cm-warning);
   border-radius: 0.6em;
   background: var(--cm-bg-hover);
   color: inherit;
-  text-align: left;
+  text-align: start;
   cursor: pointer;
   transition:
     border-color 0.15s ease,
@@ -673,7 +673,7 @@ $warning: var(--cm-warning);
 
   td,
   th {
-    text-align: left;
+    text-align: start;
   }
 
   // The shared table centres its header titles.
@@ -742,7 +742,7 @@ $warning: var(--cm-warning);
 .access-switch-thumb {
   position: absolute;
   top: 0.15em;
-  left: 0.15em;
+  inset-inline-start: 0.15em;
   width: 0.95em;
   height: 0.95em;
   border-radius: 50%;
@@ -751,6 +751,10 @@ $warning: var(--cm-warning);
 
   [aria-checked='true'] > .access-switch-track > & {
     transform: translateX(0.95em);
+  }
+
+  :global([dir='rtl']) [aria-checked='true'] > .access-switch-track > & {
+    transform: translateX(-0.95em);
   }
 }
 

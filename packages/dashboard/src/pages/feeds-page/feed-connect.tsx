@@ -221,6 +221,7 @@ export const FeedConnect: Component<FeedConnectProps> = (props) => {
 
       <Show when={showCreate()}>
         <Modal
+          closeLabel={t('common.close')}
           title={t('feeds.tokens.new')}
           description={t('feeds.tokens.help')}
           onClose={() => setShowCreate(false)}
@@ -256,6 +257,7 @@ export const FeedConnect: Component<FeedConnectProps> = (props) => {
       <Show when={secret()}>
         {(value) => (
           <Modal
+            closeLabel={t('common.close')}
             title={t('feeds.tokens.secretTitle')}
             description={t('feeds.tokens.secretWarning')}
             onClose={() => setSecret(null)}
@@ -285,6 +287,7 @@ export const FeedConnect: Component<FeedConnectProps> = (props) => {
       </Show>
 
       <ConfirmDialog
+        closeLabel={t('common.close')}
         show={revoking() !== null}
         title={t('feeds.tokens.revokeTitle')}
         message={t('feeds.tokens.revokeMessage', {

@@ -217,6 +217,7 @@ export const WidgetDetail: Component<{
 
       <Show when={confirmHide()}>
         <ConfirmAccessChange
+          closeLabel={t('common.close')}
           title={t('network.widgets.confirm.hideTitle', { widget: name() })}
           message={t('network.widgets.confirm.hideMessage')}
           confirmLabel={t('network.widgets.confirm.hideAction')}

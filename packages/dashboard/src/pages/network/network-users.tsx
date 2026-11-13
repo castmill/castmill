@@ -374,9 +374,11 @@ const NetworkUsers: Component = () => {
                 <For each={users()}>
                   {(user) => (
                     <tr class={user.blocked_at ? styles['blocked-row'] : ''}>
-                      <td>{user.name}</td>
-                      <td>{user.email}</td>
-                      <td>
+                      <td data-label={t('network.users.name')}>{user.name}</td>
+                      <td data-label={t('network.users.email')}>
+                        {user.email}
+                      </td>
+                      <td data-label={t('common.status')}>
                         <Show
                           when={user.blocked_at}
                           fallback={
@@ -393,8 +395,13 @@ const NetworkUsers: Component = () => {
                           </span>
                         </Show>
                       </td>
-                      <td>{new Date(user.inserted_at).toLocaleDateString()}</td>
-                      <td>
+                      <td data-label={t('common.created')}>
+                        {new Date(user.inserted_at).toLocaleDateString()}
+                      </td>
+                      <td
+                        class={styles['actions-column']}
+                        data-label={t('common.actions')}
+                      >
                         <div class={styles['actions-row']}>
                           <Show
                             when={user.blocked_at}
@@ -510,23 +517,34 @@ const NetworkUsers: Component = () => {
                   <For each={invitations()}>
                     {(invitation) => (
                       <tr>
-                        <td>{invitation.email}</td>
-                        <td>{invitation.organization_name}</td>
-                        <td>{invitation.role}</td>
-                        <td>
+                        <td data-label={t('common.email')}>
+                          {invitation.email}
+                        </td>
+                        <td
+                          data-label={t('network.invitations.organizationName')}
+                        >
+                          {invitation.organization_name}
+                        </td>
+                        <td data-label={t('network.users.roleLabel')}>
+                          {invitation.role}
+                        </td>
+                        <td data-label={t('common.status')}>
                           <span class={styles['status-pending']}>
                             {invitation.status}
                           </span>
                         </td>
-                        <td>
+                        <td data-label={t('common.created')}>
                           {new Date(
                             invitation.inserted_at
                           ).toLocaleDateString()}
                         </td>
-                        <td>
+                        <td data-label={t('network.invitations.expires')}>
                           {new Date(invitation.expires_at).toLocaleDateString()}
                         </td>
-                        <td>
+                        <td
+                          class={styles['actions-column']}
+                          data-label={t('common.actions')}
+                        >
                           <div class={styles['actions-row']}>
                             <Button
                               label=""
@@ -550,6 +568,7 @@ const NetworkUsers: Component = () => {
       {/* Invite Modal */}
       <Show when={showInviteModal()}>
         <Modal
+          closeLabel={t('common.close')}
           title={t('network.users.inviteModalTitle')}
           description={t('network.users.inviteDescription')}
           onClose={() => {
@@ -645,6 +664,7 @@ const NetworkUsers: Component = () => {
       {/* Block User Modal */}
       <Show when={userToBlock()}>
         <Modal
+          closeLabel={t('common.close')}
           title={t('network.users.blockTitle')}
           description={t('network.users.blockConfirmation', {
             name: userToBlock()?.name || '',
@@ -687,6 +707,9 @@ const NetworkUsers: Component = () => {
 
       {/* Unblock User Modal */}
       <ConfirmDialog
+        confirmLabel={t('common.confirm')}
+        cancelLabel={t('common.cancel')}
+        closeLabel={t('common.close')}
         show={!!userToUnblock()}
         title={t('network.users.unblockTitle')}
         message={t('network.users.unblockConfirmation', {
@@ -698,6 +721,9 @@ const NetworkUsers: Component = () => {
 
       {/* Delete User Modal */}
       <ConfirmDialog
+        confirmLabel={t('common.confirm')}
+        cancelLabel={t('common.cancel')}
+        closeLabel={t('common.close')}
         show={!!userToDelete()}
         title={t('network.users.deleteTitle')}
         message={t('network.users.deleteConfirmation', {
@@ -709,6 +735,9 @@ const NetworkUsers: Component = () => {
 
       {/* Delete Invitation Modal */}
       <ConfirmDialog
+        confirmLabel={t('common.confirm')}
+        cancelLabel={t('common.cancel')}
+        closeLabel={t('common.close')}
         show={!!invitationToDelete()}
         title={t('network.invitations.deleteTitle')}
         message={t('network.invitations.deleteConfirmation', {

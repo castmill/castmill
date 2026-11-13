@@ -150,6 +150,9 @@ export const OrganizationInvitationsView = (props: {
   return (
     <>
       <ConfirmDialog
+        confirmLabel={t('common.confirm')}
+        cancelLabel={t('common.cancel')}
+        closeLabel={t('common.close')}
         show={showConfirmDialog()}
         title={`Remove Invitation From Organization`}
         message={`Are you sure you want to remove the invitation of member "${currentInvitation()?.email}" from the organization?`}
@@ -160,6 +163,9 @@ export const OrganizationInvitationsView = (props: {
       />
 
       <ConfirmDialog
+        confirmLabel={t('common.confirm')}
+        cancelLabel={t('common.cancel')}
+        closeLabel={t('common.close')}
         show={showConfirmDialogMultiple()}
         title={`Remove members From Organization`}
         message={`Are you sure you want to remove the following members from the organization?`}

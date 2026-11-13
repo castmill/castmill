@@ -4,8 +4,10 @@
   color: colors.$base-color;
   background-color: colors.$background;
   padding: 2rem;
-  max-width: 800px;
+  max-width: 50em;
+  box-sizing: border-box;
   margin: 0 auto;
+  text-align: start;
   margin-bottom: 2em;
 
   .settings-header {
@@ -35,7 +37,7 @@
   .settings-section {
     background: colors.$component-background-color;
     border: 1px solid colors.$separator-color;
-    border-radius: 8px;
+    border-radius: 0.5em;
     padding: 1.5rem;
 
     &.danger-zone {
@@ -142,6 +144,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 1em;
           }
 
           .passkey-details {
@@ -151,13 +154,14 @@
 
             .passkey-name {
               font-weight: 500;
-              text-align: left;
+              text-align: start;
+              overflow-wrap: anywhere;
             }
 
             .passkey-date {
               color: var(--cm-text-tertiary);
               font-size: 0.875rem;
-              text-align: left;
+              text-align: start;
             }
           }
 
@@ -252,7 +256,7 @@
 
     .language-options {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 12.5em), 1fr));
       gap: 0.75rem;
       margin-top: 1rem;
 
@@ -266,7 +270,7 @@
         border-radius: 6px;
         cursor: pointer;
         transition: all 0.2s ease;
-        text-align: left;
+        text-align: start;
 
         &:hover {
           border-color: colors.$highlight-color;
@@ -282,7 +286,7 @@
         .language-code {
           font-weight: 600;
           font-size: 0.875rem;
-          min-width: 28px;
+          min-width: 1.75em;
           color: var(--cm-text-secondary);
         }
 
@@ -302,43 +306,71 @@
   }
 }
 
-// Responsive design
-@media (max-width: 768px) {
+// Responsive design. Rules repeat the full selector of the rule they adapt so
+// they win over it (the nested base selectors are more specific).
+$tablet: '(max-width: 48em)';
+$phone: '(max-width: 36em)';
+$touch: '(hover: none), (pointer: coarse)';
+
+@media #{$tablet} {
   .castmill-settings {
-    padding: 1rem;
+    padding: var(--cm-page-gutter, 1em);
+
+    .settings-header h1 {
+      font-size: 1.5em;
+    }
 
     .settings-section {
-      padding: 1rem;
+      padding: 1em;
+    }
+  }
+}
 
-      .passkey-item {
+@media #{$phone} {
+  .castmill-settings {
+    .settings-sections {
+      gap: 1.25em;
+    }
+
+    .settings-section {
+      .form-actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .passkey-info .passkey-list .passkey-item {
         .passkey-info-row {
           flex-direction: column;
-          align-items: flex-start;
-          gap: 1rem;
+          align-items: stretch;
+          gap: 0.75em;
         }
 
         .passkey-actions {
-          flex-direction: column;
-          width: 100%;
+          flex-wrap: wrap;
         }
 
-        .edit-actions {
+        .passkey-edit .edit-actions {
           flex-direction: column;
         }
       }
-    }
 
-    .settings-header h1 {
-      font-size: 1.5rem;
-    }
+      .onboarding-reset-actions,
+      .danger-actions .delete-confirmation .confirmation-actions {
+        flex-direction: column;
+      }
 
-    .form-actions {
-      flex-direction: column;
-      align-items: flex-start;
+      .language-options {
+        grid-template-columns: 1fr;
+      }
     }
+  }
+}
 
-    .confirmation-actions {
-      flex-direction: column;
+// Tap-friendly targets on touch screens.
+@media #{$touch} {
+  .castmill-settings .settings-section {
+    .language-options .language-option {
+      min-height: 2.75em;
     }
   }
 }

@@ -1,7 +1,14 @@
 import { Component, For, Show, createEffect, createSignal, on } from 'solid-js';
 import { A, useNavigate, useParams } from '@solidjs/router';
 import { AiOutlineDelete } from 'solid-icons/ai';
-import { BsArrowClockwise, BsArrowLeft } from 'solid-icons/bs';
+import {
+  BsArrowClockwise,
+  BsArrowLeft,
+  BsGear,
+  BsImages,
+  BsListUl,
+  BsPlug,
+} from 'solid-icons/bs';
 import { Button, ConfirmDialog, Tabs, useToast } from '@castmill/ui-common';
 
 import { store } from '../../store/store';
@@ -367,9 +374,14 @@ const FeedPage: Component = () => {
             </div>
             <Tabs
               tabs={[
-                { title: () => t('feeds.tabs.entries'), content: entriesTab },
+                {
+                  title: () => t('feeds.tabs.entries'),
+                  icon: BsListUl,
+                  content: entriesTab,
+                },
                 {
                   title: () => t('feeds.tabs.connect'),
+                  icon: BsPlug,
                   content: () => (
                     <div class={styles.tabPanel}>
                       <FeedConnect
@@ -382,6 +394,7 @@ const FeedPage: Component = () => {
                 },
                 {
                   title: () => t('feeds.tabs.media'),
+                  icon: BsImages,
                   content: () => (
                     <div class={styles.tabPanel}>
                       <FeedMedia
@@ -392,14 +405,20 @@ const FeedPage: Component = () => {
                     </div>
                   ),
                 },
-                { title: () => t('feeds.tabs.settings'), content: settingsTab },
+                {
+                  title: () => t('feeds.tabs.settings'),
+                  icon: BsGear,
+                  content: settingsTab,
+                },
               ]}
+              ariaLabel={t('common.sections')}
             />
           </>
         )}
       </Show>
 
       <ConfirmDialog
+        closeLabel={t('common.close')}
         show={confirm() !== null}
         title={confirmTexts().title}
         message={confirmTexts().message}

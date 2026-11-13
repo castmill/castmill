@@ -70,11 +70,13 @@ export const ConfirmAccessChange: Component<{
   message: string;
   confirmLabel: string;
   cancelLabel: string;
+  closeLabel: string;
   danger?: boolean;
   onConfirm: () => void;
   onClose: () => void;
 }> = (props) => (
   <Modal
+    closeLabel={props.closeLabel}
     title={props.title}
     description={props.message}
     onClose={props.onClose}
