@@ -1177,6 +1177,17 @@
         "networkError": "Could not reach the server. Check your connection.",
         "unknown": "Could not load the items."
       }
+    },
+    "details": {
+      "updatesEvery": "Updates every {{seconds}}s",
+      "copySlug": "Copy widget identifier",
+      "slugCopied": "Widget identifier copied",
+      "copySlugFailed": "Could not copy the widget identifier."
+    },
+    "json": {
+      "copy": "Copy JSON",
+      "copied": "JSON copied",
+      "copyFailed": "Could not copy the JSON."
     }
   },
   "devices": {

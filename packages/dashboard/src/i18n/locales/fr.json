@@ -1153,6 +1153,17 @@
         "networkError": "Impossible de joindre le serveur. Vérifiez votre connexion.",
         "unknown": "Impossible de charger les éléments."
       }
+    },
+    "details": {
+      "updatesEvery": "Mise à jour toutes les {{seconds}} s",
+      "copySlug": "Copier l’identifiant du widget",
+      "slugCopied": "Identifiant du widget copié",
+      "copySlugFailed": "Impossible de copier l’identifiant du widget."
+    },
+    "json": {
+      "copy": "Copier le JSON",
+      "copied": "JSON copié",
+      "copyFailed": "Impossible de copier le JSON."
     }
   },
   "devices": {

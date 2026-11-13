@@ -1169,6 +1169,17 @@
         "networkError": "No se pudo conectar con el servidor. Comprueba tu conexión.",
         "unknown": "No se pudieron cargar los elementos."
       }
+    },
+    "details": {
+      "updatesEvery": "Se actualiza cada {{seconds}} s",
+      "copySlug": "Copiar identificador del widget",
+      "slugCopied": "Identificador del widget copiado",
+      "copySlugFailed": "No se pudo copiar el identificador del widget."
+    },
+    "json": {
+      "copy": "Copiar JSON",
+      "copied": "JSON copiado",
+      "copyFailed": "No se pudo copiar el JSON."
     }
   },
   "devices": {

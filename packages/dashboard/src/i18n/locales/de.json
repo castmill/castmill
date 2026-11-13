@@ -1163,6 +1163,17 @@
         "networkError": "Der Server ist nicht erreichbar. Überprüfen Sie Ihre Verbindung.",
         "unknown": "Die Elemente konnten nicht geladen werden."
       }
+    },
+    "details": {
+      "updatesEvery": "Aktualisierung alle {{seconds}} s",
+      "copySlug": "Widget-Kennung kopieren",
+      "slugCopied": "Widget-Kennung kopiert",
+      "copySlugFailed": "Die Widget-Kennung konnte nicht kopiert werden."
+    },
+    "json": {
+      "copy": "JSON kopieren",
+      "copied": "JSON kopiert",
+      "copyFailed": "Das JSON konnte nicht kopiert werden."
     }
   },
   "devices": {

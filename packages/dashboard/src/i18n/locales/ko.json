@@ -1141,6 +1141,17 @@
         "networkError": "서버에 연결할 수 없습니다. 연결을 확인하세요.",
         "unknown": "항목을 불러올 수 없습니다."
       }
+    },
+    "details": {
+      "updatesEvery": "{{seconds}}초마다 업데이트",
+      "copySlug": "위젯 식별자 복사",
+      "slugCopied": "위젯 식별자가 복사되었습니다",
+      "copySlugFailed": "위젯 식별자를 복사할 수 없습니다."
+    },
+    "json": {
+      "copy": "JSON 복사",
+      "copied": "JSON이 복사되었습니다",
+      "copyFailed": "JSON을 복사할 수 없습니다."
     }
   },
   "devices": {
