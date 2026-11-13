@@ -197,33 +197,34 @@ export const Table = <
       ? column.render(item)
       : (getValueByKeyPath(item, column.key) as JSX.Element);
 
-  let rootRef: HTMLDivElement | undefined;
+  const [rootRef, setRootRef] = createSignal<HTMLDivElement>();
   const [isNarrow, setIsNarrow] = createSignal(false);
   const showCards = () => !!props.cardLayout && isNarrow();
 
-  const updateWidth = (width: number) => {
+  const updateWidth = (root: HTMLDivElement, width: number) => {
     // Hidden containers (e.g. inactive tabs) report 0; keep the last layout.
-    if (!rootRef || width <= 0) {
+    if (width <= 0) {
       return;
     }
-    const fontSize = parseFloat(getComputedStyle(rootRef).fontSize) || 16;
+    const fontSize = parseFloat(getComputedStyle(root).fontSize) || 16;
     setIsNarrow(
       width / fontSize < (props.cardBreakpoint ?? TABLE_CARD_BREAKPOINT_EM)
     );
   };
 
   onMount(() => {
-    if (!props.cardLayout || !rootRef || typeof ResizeObserver !== 'function') {
+    const root = rootRef();
+    if (!props.cardLayout || !root || typeof ResizeObserver !== 'function') {
       return;
     }
     const observer = new ResizeObserver((entries) => {
       const entry = entries[entries.length - 1];
       if (entry) {
-        updateWidth(entry.contentRect.width);
+        updateWidth(root, entry.contentRect.width);
       }
     });
-    observer.observe(rootRef);
-    updateWidth(rootRef.getBoundingClientRect().width);
+    observer.observe(root);
+    updateWidth(root, root.getBoundingClientRect().width);
     onCleanup(() => observer.disconnect());
   });
 
@@ -422,7 +423,7 @@ export const Table = <
 
   return (
     <div
-      ref={rootRef}
+      ref={setRootRef}
       class={style['castmill-table']}
       classList={{ [style['cards']]: showCards() }}
       data-layout={showCards() ? 'cards' : 'table'}

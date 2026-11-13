@@ -66,6 +66,7 @@ describe('Table card layout', () => {
 
   afterEach(() => {
     cleanup();
+    vi.restoreAllMocks();
     vi.unstubAllGlobals();
   });
 
@@ -99,6 +100,30 @@ describe('Table card layout', () => {
     resizeTo(DESKTOP_WIDTH);
     expect(layoutOf(container)).toBe('table');
     expect(container.querySelector('table')).toBeInTheDocument();
+  });
+
+  it('uses the wrapper width and font size for the initial measurement', () => {
+    const bounds = vi
+      .spyOn(HTMLDivElement.prototype, 'getBoundingClientRect')
+      .mockReturnValue({ width: 650 } as DOMRect);
+    const getComputedStyle = window.getComputedStyle;
+    const computedStyle = vi
+      .spyOn(window, 'getComputedStyle')
+      .mockImplementation((element, pseudo) =>
+        element.hasAttribute('data-layout')
+          ? ({ fontSize: '20px' } as CSSStyleDeclaration)
+          : getComputedStyle(element, pseudo)
+      );
+    const { container } = render(() => (
+      <Table columns={columns} data={data} cardLayout />
+    ));
+
+    const root = container.querySelector('[data-layout]');
+    expect(layoutOf(container)).toBe('cards');
+    expect(computedStyle).toHaveBeenCalledWith(root);
+
+    bounds.mockRestore();
+    computedStyle.mockRestore();
   });
 
   it('keeps the current layout when the container is hidden (0 width)', () => {
