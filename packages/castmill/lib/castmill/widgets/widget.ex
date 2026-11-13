@@ -103,7 +103,7 @@ defmodule Castmill.Widgets.Widget do
     |> unique_constraint(:name)
     |> unique_constraint(:slug)
     |> validate_template_bindings()
-    |> validate_schema(:options_schema, choices: true)
+    |> validate_schema(:options_schema, choices: true, visible_when: true)
     |> validate_schema(:data_schema)
     |> validate_choices_provider()
   end

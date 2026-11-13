@@ -71,7 +71,8 @@ describe('active-only paginated lists', () => {
     getMedia: (url: string) => Promise<string> = async (url) => url,
     textAnimations?: any[],
     withPlaybackController = true,
-    configureVideo?: (video: HTMLVideoElement) => void
+    configureVideo?: (video: HTMLVideoElement) => void,
+    widgetOptions: Record<string, unknown> = {}
   ) {
     widget = new TemplateWidget({ getMedia } as any, {
       widget: {
@@ -112,14 +113,17 @@ describe('active-only paginated lists', () => {
           },
         },
       } as any,
-      config: { options: {}, data: { entries } } as any,
+      config: { options: widgetOptions, data: { entries } } as any,
       globals: {
         target: 'poster',
         createVideoPlaybackController: (video: HTMLVideoElement) => {
           Object.defineProperty(video, 'readyState', { get: () => 4 });
-          Object.defineProperty(video, 'duration', { get: () => 2 });
+          Object.defineProperty(video, 'duration', {
+            configurable: true,
+            get: () => 2,
+          });
+          configureVideo?.(video);
           if (!withPlaybackController) {
-            configureVideo?.(video);
             return undefined as any;
           }
           peak = Math.max(peak, ++loaded);
@@ -202,6 +206,54 @@ describe('active-only paginated lists', () => {
     expect(peak).to.equal(1);
     expect(text()).to.equal('Post 0');
     current.stop();
+  });
+
+  it('clears auto-duration measurements when the page contents change', async () => {
+    let now = new Date(2026, 0, 1, 10, 0).getTime();
+    originalNow = Date.now;
+    Date.now = () => now;
+    tickClock();
+    const entries = [
+      { ...posts[0], start: '2026-01-01T09:00:00', end: '2026-01-01T11:00:00' },
+      { ...posts[1], start: '2026-01-01T09:00:00', end: '2026-01-01T11:00:00' },
+      { ...posts[2], start: '2026-01-01T09:00:00', end: '2026-01-01T10:01:00' },
+      { ...posts[3], start: '2026-01-01T10:01:00', end: '2026-01-01T11:00:00' },
+    ];
+    const current = await show(
+      entries,
+      {
+        pageDuration: 'auto',
+        items: {
+          list: {
+            key: 'data.entries',
+            where: [
+              { key: '$.start', lte: '@now' },
+              { key: '$.end', gte: '@now' },
+            ],
+          },
+        },
+      },
+      undefined,
+      undefined,
+      true,
+      (video) => {
+        Object.defineProperty(video, 'duration', {
+          configurable: true,
+          get: () => (video.src.endsWith('/2.mp4') ? 10 : 2),
+        });
+      }
+    );
+
+    current.seek(4500);
+    await flush();
+    expect(text()).to.equal('Post 2');
+    expect(current.duration()).to.equal(18000);
+
+    now += 120_000;
+    tickClock();
+    await flush();
+
+    expect(current.duration()).to.equal(6000);
   });
 
   it('preserves local elapsed time for pages with repeating children', async () => {
@@ -306,5 +358,281 @@ describe('active-only paginated lists', () => {
     await flush();
     expect(loaded).to.equal(1);
     expect(peak).to.equal(1);
+  });
+  const pages = () =>
+    Array.from(
+      dom.window.document.querySelectorAll(
+        '[data-component="paginated-list"] > div > div'
+      )
+    ) as HTMLElement[];
+  const notes = Array.from({ length: 3 }, (_, i) => ({ message: `Note ${i}` }));
+  const resumable = (widgetOptions: Record<string, unknown>) =>
+    show(
+      notes,
+      { resume: true },
+      undefined,
+      undefined,
+      true,
+      undefined,
+      widgetOptions
+    );
+
+  it('makes each page last as long as its content with pageDuration auto', async () => {
+    const current = await show([posts[0], { message: 'Text only' }, posts[1]], {
+      pageDuration: 'auto',
+    });
+    // The first page is measured (a 2s video); the rest are estimated.
+    expect(current.duration()).to.equal(6000);
+    current.seek(2500);
+    await flush();
+    expect(text()).to.equal('Text only');
+    // Static content falls back to 10s; the last page is now estimated from
+    // the average of both.
+    expect(current.duration()).to.equal(18000);
+    current.seek(12500);
+    await flush();
+    expect(text()).to.equal('Post 1');
+    expect(peak).to.equal(1);
+  });
+
+  it('preserves a measured seek position when playback resumes', async () => {
+    const current = await show(
+      posts.slice(0, 3),
+      { pageDuration: 'auto' },
+      undefined,
+      undefined,
+      true,
+      (video) => {
+        Object.defineProperty(video, 'duration', {
+          configurable: true,
+          get: () => (video.src.endsWith('/2.mp4') ? 10 : 2),
+        });
+      }
+    );
+
+    current.seek(4500);
+    await flush();
+    expect(text()).to.equal('Post 2');
+    expect(current.duration()).to.equal(18000);
+
+    current.play(NEVER);
+    await flush();
+    expect(text()).to.equal('Post 2');
+  });
+
+  it('drops the measured position shift on an explicit seek', async () => {
+    const current = await show(
+      posts.slice(0, 3),
+      { pageDuration: 'auto' },
+      undefined,
+      undefined,
+      true,
+      (video) => {
+        Object.defineProperty(video, 'duration', {
+          configurable: true,
+          get: () => (video.src.endsWith('/2.mp4') ? 10 : 2),
+        });
+      }
+    );
+
+    current.seek(4500);
+    await flush();
+    expect(text()).to.equal('Post 2');
+
+    current.seek(0);
+    await flush();
+    expect(text()).to.equal('Post 0');
+    current.seek(2500);
+    await flush();
+    expect(text()).to.equal('Post 1');
+  });
+
+  it('updates its duration when a bound page duration changes', async () => {
+    let now = new Date(2026, 0, 1, 10, 0).getTime();
+    originalNow = Date.now;
+    Date.now = () => now;
+    tickClock();
+    const current = await show(posts.slice(0, 2), {
+      pageDuration: {
+        // oxlint-disable-next-line unicorn/no-thenable -- `cond.then` binding
+        cond: { key: '@now', gte: now + 60_000, then: 10, else: 5 },
+      },
+    });
+    const video = dom.window.document.querySelector('video');
+    expect(current.duration()).to.equal(10000);
+
+    now += 60_000;
+    tickClock();
+    await flush();
+
+    expect(current.duration()).to.equal(20000);
+    expect(dom.window.document.querySelector('video')).to.equal(video);
+  });
+
+  it('keeps the current page while auto durations are measured during playback', async () => {
+    const current = await show([{ message: 'Intro' }, ...posts.slice(0, 2)], {
+      pageDuration: 'auto',
+    });
+    clock = useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval'] });
+    current.play(NEVER);
+    await clock.tickAsync(9000);
+    expect(text()).to.equal('Intro');
+    await clock.tickAsync(1100);
+    await flush();
+    expect(text()).to.equal('Post 0');
+    // Post 0 measured 2s instead of the 10s estimate: it ends 2s later.
+    await clock.tickAsync(1500);
+    expect(text()).to.equal('Post 0');
+    await clock.tickAsync(600);
+    expect(text()).to.equal('Post 1');
+  });
+
+  it('keeps an unready auto-duration page mounted and extends its playlist slot', async () => {
+    const current = await show(
+      posts.slice(0, 3),
+      { pageDuration: 'auto' },
+      (url) =>
+        url.endsWith('/1.mp4')
+          ? new Promise<string>(() => {})
+          : Promise.resolve(url),
+      undefined,
+      true
+    );
+    clock = useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval'] });
+    const estimatedDuration = current.duration();
+    current.play(NEVER);
+
+    await clock.tickAsync(2200);
+    await flush();
+    expect(text()).to.equal('Post 1');
+
+    await clock.tickAsync(2500);
+    await flush();
+    expect(text()).to.equal('Post 1');
+    expect(current.duration()).to.be.greaterThan(estimatedDuration + 2000);
+  });
+
+  it('records the next page when playback stops exactly at its boundary', async () => {
+    const current = await show(
+      notes,
+      { pageDuration: 5, resume: true },
+      undefined,
+      undefined,
+      true,
+      undefined,
+      { list: 'resume-boundary' }
+    );
+    clock = useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval'] });
+    current.play(NEVER);
+    await clock.tickAsync(10_000);
+    current.stop();
+    current.seek(0);
+    current.play(NEVER);
+    await flush();
+
+    expect(text()).to.equal('Note 2');
+  });
+
+  it('continues with the interrupted page on the next play when resuming', async () => {
+    const key = { list: 'resume-interrupted' };
+    let current = await resumable(key);
+    clock = useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval'] });
+    current.play(NEVER);
+    await clock.tickAsync(6000);
+    expect(text()).to.equal('Note 1');
+    current.stop();
+    await current.unload();
+    clock.restore();
+    clock = undefined;
+
+    current = await resumable(key);
+    expect(text()).to.equal('Note 1');
+    // A different list does not share the position.
+    await current.unload();
+    await resumable({ list: 'other' });
+    expect(text()).to.equal('Note 0');
+  });
+
+  it('moves past a page that took a whole play when resuming', async () => {
+    const key = { list: 'resume-long' };
+    let current = await resumable(key);
+    current.play(NEVER);
+    current.stop();
+    await current.unload();
+    current = await resumable(key);
+    expect(text()).to.equal('Note 1');
+    clock = useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval'] });
+    // Pausing and playing again at the same position is the same play.
+    current.play(NEVER);
+    await clock.tickAsync(100);
+    current.stop();
+    current.seek(100);
+    current.play(NEVER);
+    await clock.tickAsync(1000);
+    expect(text()).to.equal('Note 1');
+    // A new play from the start of a still-mounted list resumes as well.
+    current.stop();
+    current.seek(0);
+    current.play(NEVER);
+    await clock.tickAsync(100);
+    expect(text()).to.equal('Note 2');
+    await clock.tickAsync(1000);
+    current.stop();
+    current.seek(0);
+    current.play(NEVER);
+    await clock.tickAsync(100);
+    expect(text()).to.equal('Note 0');
+  });
+
+  it('preloads the next page and slides it in', async () => {
+    const current = await show(notes.slice(0, 2), {
+      transition: 'slide-left',
+      transitionDuration: 30,
+    });
+    clock = useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval'] });
+    current.play(NEVER);
+    await clock.tickAsync(1000);
+    expect(pages().length).to.equal(1);
+    await clock.tickAsync(1500);
+    // Mounted ahead of time, but hidden.
+    expect(pages().length).to.equal(2);
+    expect(pages()[1].style.visibility).to.equal('hidden');
+    await clock.tickAsync(2600);
+    expect(pages().length).to.equal(2);
+    expect(pages()[1].style.visibility).to.equal('');
+    expect(pages()[0].style.transform).to.contain('translate');
+    expect(pages()[1].style.transform).to.contain('translate');
+  });
+
+  it('cuts to the preloaded page without a transition duration', async () => {
+    const current = await show(notes.slice(0, 2), {
+      transition: 'slide-left',
+      transitionDuration: 0,
+    });
+    clock = useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval'] });
+    current.play(NEVER);
+    await clock.tickAsync(2500);
+    expect(pages().length).to.equal(2);
+    await clock.tickAsync(2600);
+    expect(pages().length).to.equal(1);
+    expect(pages()[0].style.visibility).to.equal('');
+    expect(text()).to.equal('Note 1');
+  });
+
+  it('cuts to the page when seeking during a slide', async () => {
+    const current = await show(notes.slice(0, 2), {
+      transition: 'slide-left',
+      transitionDuration: 5,
+    });
+    clock = useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval'] });
+    current.play(NEVER);
+    await clock.tickAsync(5200);
+    expect(pages().length).to.equal(2);
+    current.stop();
+    current.seek(5200);
+    await flush();
+    expect(pages().length).to.equal(1);
+    expect(text()).to.equal('Note 1');
+    expect(pages()[0].style.transform || '').to.not.contain('translate');
   });
 });

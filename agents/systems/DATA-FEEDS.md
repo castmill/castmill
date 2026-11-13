@@ -99,7 +99,10 @@ For rotating media posts, use a `paginated-list` with `items` bound to
 only the current page and loop its media on a page-local timeline. They cut
 between posts rather than fading several mounted pages; this prevents hidden
 videos from consuming hardware decoders. Existing animated lists are unchanged.
-Videos can declare `opts.muted: true` for silent social posts.
+Videos can declare `opts.muted: true` for silent social posts. Active-only lists
+can also use `pageDuration: "auto"` (each post lasts as long as its media),
+`resume: true` (the next play continues with the next post) and
+`transition: "slide-left"`; see the player template README.
 
 The data is stored **once per feed**, and every widget configuration that uses the feed reads it.
 

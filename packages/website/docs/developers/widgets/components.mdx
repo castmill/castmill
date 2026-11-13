@@ -186,11 +186,54 @@ Renders an array as a list and shows it one page at a time, with a one-second cr
 | Field | Type | Description |
 | --- | --- | --- |
 | `opts.items` | binding | The array to display. |
-| `opts.pageDuration` | number | Seconds each page stays on screen. |
+| `opts.pageDuration` | number or `"auto"` | Seconds each page stays on screen. `"auto"` requires `activeOnly`. |
 | `opts.pageSize` | number | Optional. Items per page. If omitted, the player fits as many items as the component height allows. |
+| `opts.activeOnly` | boolean | Optional. Mount only the page on screen. Required for lists of videos. |
+| `opts.resume` | boolean | Optional, with `activeOnly`. The next play continues where the previous one stopped. |
+| `opts.transition` | `"none"` or `"slide-left"` | Optional, with `activeOnly`. How pages change. Default `"none"` (a cut). |
+| `opts.transitionDuration` | number | Optional. Seconds the slide takes. Default `1`. |
 | `component` | object | Template for one item. Inside it, `$` is the current item. Top-level field, not inside `opts`. |
 
 The widget plays all pages before it ends. The list needs a definite height: give it a fixed height, or `"flex": "1 1 auto"` with `"min-height": "0"` inside a column.
+
+### Rotating one item at a time
+
+With `activeOnly: true` and `pageSize: 1` the list shows one item at a time and mounts only that item, so hidden videos never play. Use it to rotate through posts, listings, or products that each fill the widget:
+
+- `"pageDuration": "auto"` makes each page last as long as its content, such as the photos of an `image-carousel` or a video. Pages without timed content last 10 seconds. Until a page has been shown, its length is estimated from the pages measured so far.
+- `"resume": true` lets a list that is longer than its playlist item be shown in full over several plays. The next play starts with the page that was interrupted, or with the next page if the play showed only one page. Lists with the same widget options share the position.
+- `"transition": "slide-left"` loads the next page shortly before it is due and slides it in from the right. During the slide both pages are mounted.
+
+```json
+{
+  "type": "paginated-list",
+  "name": "listings",
+  "opts": {
+    "items": { "key": "data.listings" },
+    "pageSize": 1,
+    "activeOnly": true,
+    "pageDuration": "auto",
+    "resume": true,
+    "transition": "slide-left",
+    "transitionDuration": 2
+  },
+  "component": {
+    "type": "group",
+    "style": { "width": "100%", "height": "100%" },
+    "components": [
+      {
+        "type": "image-carousel",
+        "name": "photos",
+        "opts": { "images": { "key": "$.images" }, "imageDuration": 5 },
+        "style": { "width": "100%", "height": "80%" }
+      },
+      { "type": "text", "name": "address", "opts": { "text": { "key": "$.address" } } }
+    ]
+  }
+}
+```
+
+Each listing above stays on screen for its number of photos × 5 seconds, plus the carousel's transitions.
 
 <WidgetExample
   widget={eventsListWidget}

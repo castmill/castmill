@@ -343,6 +343,14 @@ Use `opts.loop: true` to loop video independently of longer text-scroll timeline
 this repeats the video timeline item and enables the native media loop flag.
 Validate actual visible frames and mixed media loops on old hardware.
 
+Active-only lists can opt into `transition: "slide-left"`. The next page is
+mounted hidden 3 s before it is due and both pages stay mounted until the slide
+ends, so a list of videos briefly needs two decoders; keep cuts (the default)
+for video posts on WebOS/old Android unless validated on hardware. The slide
+animates gsap `xPercent` transforms, which Chrome 38 supports. `pageDuration:
+"auto"` reads each page's timeline duration and `resume` keeps the position in
+memory only (a restart begins at the first page).
+
 ## Text Auto-Fitting
 
 Auto-fit text must compare the rendered text bounds with the available parent bounds:
