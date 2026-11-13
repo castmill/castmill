@@ -168,5 +168,8 @@ Network admins upload widget packages as network widgets
   (`widget-assets/<slug>/<hash>/<path>`); `{{asset:category.name}}` placeholders are
   replaced with their URLs (`PackageProcessor.resolve_asset_references/2`, also used
   for organization uploads, where files stay under `/widget_assets/<slug>/`).
-- Every upload is stored in `widget_packages` (the last 10 versions) for download.
-  Network admins can delete an uploaded widget that no playlist uses.
+- Every upload is stored in `widget_packages` (the last 10 versions) for download,
+  with the storage keys of its assets (`asset_keys`). Network admins can delete an
+  uploaded widget that no playlist uses. Assets no kept version uses are deleted
+  from storage after a refused upload, when old versions are dropped and when the
+  widget is deleted (failed deletes are logged).

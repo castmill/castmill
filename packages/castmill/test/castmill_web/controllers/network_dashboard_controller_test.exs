@@ -1094,9 +1094,11 @@ defmodule CastmillWeb.NetworkDashboardControllerTest do
                |> json_response(409)
 
       Repo.delete!(playlist)
+      assert Enum.any?(Map.keys(Castmill.PublicStorage.Fake.files()), &(&1 =~ ctx.slug))
 
       assert ctx |> package_conn() |> delete("/dashboard/network/widgets/#{id}") |> response(204)
       assert is_nil(Widgets.get_widget(id))
+      refute Enum.any?(Map.keys(Castmill.PublicStorage.Fake.files()), &(&1 =~ ctx.slug))
 
       assert ctx
              |> package_conn()

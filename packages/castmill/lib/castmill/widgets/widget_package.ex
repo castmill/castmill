@@ -13,6 +13,7 @@ defmodule Castmill.Widgets.WidgetPackage do
     field(:size, :integer)
     field(:sha256, :string)
     field(:content, :binary)
+    field(:asset_keys, {:array, :string}, default: [])
     field(:uploaded_by_id, Ecto.UUID)
 
     belongs_to(:widget, Castmill.Widgets.Widget)

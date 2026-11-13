@@ -12,6 +12,8 @@ defmodule Castmill.Repo.Migrations.CreateWidgetPackages do
       add(:size, :integer, null: false)
       add(:sha256, :string, null: false)
       add(:content, :binary, null: false)
+      # The public storage keys of the version's assets, deleted when no kept version uses them.
+      add(:asset_keys, {:array, :string}, null: false, default: [])
       add(:uploaded_by_id, references(:users, type: :uuid, on_delete: :nilify_all))
 
       timestamps(type: :utc_datetime, updated_at: false)

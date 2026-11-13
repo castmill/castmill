@@ -16,10 +16,14 @@ defmodule Castmill.Widgets.Packages do
     * An update that would make saved playlist items invalid (e.g. a new required
       option without a default, or a shorter editable text) is refused.
     * Assets are stored in public storage under content-hash keys, and
-      `{{asset:category.name}}` placeholders are replaced with their URLs.
+      `{{asset:category.name}}` placeholders are replaced with their URLs. Assets
+      no kept version uses are deleted (refused uploads, old versions, deleted
+      widgets).
     * Every upload is kept as a version (the last 10), to download or reinstall.
   """
   import Ecto.Query, only: [from: 2]
+
+  require Logger
 
   alias Castmill.Repo
   alias Castmill.Widgets
@@ -48,9 +52,10 @@ defmodule Castmill.Widgets.Packages do
   }
 
   @doc """
-  Installs an uploaded package in `network_id`. Options: `:uploaded_by` (user ID)
-  and `:store` (`fn key, body, content_type -> {:ok, url} | {:error, reason} end`,
-  default `Castmill.PublicStorage.put/3`).
+  Installs an uploaded package in `network_id`. Options: `:uploaded_by` (user ID),
+  `:store` (`fn key, body, content_type -> {:ok, url} | {:error, reason} end`,
+  default `Castmill.PublicStorage.put/3`) and `:delete` (`fn key -> :ok | {:error, reason} end`,
+  default `Castmill.PublicStorage.delete/1`).
 
   Returns `{:ok, %{widget: widget, created: boolean, version: integer, warnings: [String.t()]}}`
   or `{:error, reason}`, where reason is a message, a changeset, `:slug_taken`,
@@ -93,14 +98,30 @@ defmodule Castmill.Widgets.Packages do
     with :ok <- valid_slug(slug),
          {:ok, existing} <- replaceable(network_id, slug),
          :ok <- Integrations.validate_integration_meta(widget_data["integration"]),
-         {:ok, urls} <- store_assets(slug, assets, store),
-         {:ok, attrs} <- widget_attrs(widget_data, slug, urls),
+         {:ok, urls, keys} <- store_assets(slug, assets, store, opts) do
+      package = Map.put(package, :asset_keys, keys)
+
+      case install_widget(network_id, existing, widget_data, slug, urls, package, opts) do
+        {:ok, result, pruned_keys} ->
+          release_assets(pruned_keys, opts)
+          {:ok, result}
+
+        error ->
+          release_assets(keys, opts)
+          error
+      end
+    end
+  end
+
+  defp install_widget(network_id, existing, widget_data, slug, urls, package, opts) do
+    with {:ok, attrs} <- widget_attrs(widget_data, slug, urls),
          {:ok, changeset} <- changeset(existing, attrs, network_id),
          :ok <- compatible(existing, changeset),
-         {:ok, {widget, version}} <-
+         {:ok, {widget, version, pruned_keys}} <-
            save(network_id, changeset, is_nil(existing), package, opts[:uploaded_by]) do
       {:ok,
-       %{widget: widget, created: is_nil(existing), version: version, warnings: warnings(widget)}}
+       %{widget: widget, created: is_nil(existing), version: version, warnings: warnings(widget)},
+       pruned_keys}
     end
   end
 
@@ -126,20 +147,50 @@ defmodule Castmill.Widgets.Packages do
   def managed?(_widget), do: false
 
   # Same content, same key: unchanged assets are stored once.
-  defp store_assets(slug, %{files: files}, store) when map_size(files) > 0 do
-    Enum.reduce_while(files, {:ok, %{}}, fn {path, info}, {:ok, urls} ->
+  defp store_assets(slug, %{files: files}, store, opts) when map_size(files) > 0 do
+    Enum.reduce_while(files, {:ok, %{}, []}, fn {path, info}, {:ok, urls, keys} ->
       body = File.read!(info.path)
       hash = :crypto.hash(:sha256, body) |> Base.encode16(case: :lower) |> binary_part(0, 16)
       key = "widget-assets/#{slug}/#{hash}/#{String.replace_prefix(path, "assets/", "")}"
 
       case store.(key, body, info.type) do
-        {:ok, url} -> {:cont, {:ok, Map.put(urls, path, url)}}
-        {:error, reason} -> {:halt, {:error, "Failed to store asset #{path}: #{inspect(reason)}"}}
+        {:ok, url} ->
+          {:cont, {:ok, Map.put(urls, path, url), [key | keys]}}
+
+        {:error, reason} ->
+          release_assets(keys, opts)
+          {:halt, {:error, "Failed to store asset #{path}: #{inspect(reason)}"}}
       end
     end)
   end
 
-  defp store_assets(_slug, _assets, _store), do: {:ok, %{}}
+  defp store_assets(_slug, _assets, _store, _opts), do: {:ok, %{}, []}
+
+  # Deletes stored assets that no kept package version uses (versions with the same
+  # content share them). A failed delete only leaves a file behind, so it is logged.
+  defp release_assets([], _opts), do: :ok
+
+  defp release_assets(keys, opts) do
+    delete = Keyword.get(opts, :delete, &Castmill.PublicStorage.delete/1)
+    keys = Enum.uniq(keys)
+
+    used =
+      from(p in WidgetPackage,
+        where: fragment("? && ?", p.asset_keys, type(^keys, {:array, :string})),
+        select: p.asset_keys
+      )
+      |> Repo.all()
+      |> List.flatten()
+      |> MapSet.new()
+
+    for key <- keys, not MapSet.member?(used, key) do
+      with {:error, reason} <- delete.(key) do
+        Logger.warning("[Widgets.Packages] Could not delete asset #{key}: #{inspect(reason)}")
+      end
+    end
+
+    :ok
+  end
 
   defp widget_attrs(widget_data, slug, urls) do
     integration = widget_data["integration"]
@@ -255,14 +306,15 @@ defmodule Castmill.Widgets.Packages do
                else: {:ok, nil}
              ),
            {:ok, _} <- Integrations.sync_integration_from_meta(widget),
-           {:ok, version} <- record_package(widget, package, uploaded_by) do
-        {widget, version}
+           {:ok, version, pruned_keys} <- record_package(widget, package, uploaded_by) do
+        {widget, version, pruned_keys}
       else
         {:error, reason} -> Repo.rollback(reason)
       end
     end)
   end
 
+  # Returns the asset keys of the versions it no longer keeps.
   defp record_package(widget, package, uploaded_by) do
     version =
       (Repo.one(
@@ -275,13 +327,15 @@ defmodule Castmill.Widgets.Packages do
     |> Repo.insert()
     |> case do
       {:ok, _package} ->
-        Repo.delete_all(
-          from(p in WidgetPackage,
-            where: p.widget_id == ^widget.id and p.version <= ^(version - @kept_versions)
+        {_count, pruned} =
+          Repo.delete_all(
+            from(p in WidgetPackage,
+              where: p.widget_id == ^widget.id and p.version <= ^(version - @kept_versions),
+              select: p.asset_keys
+            )
           )
-        )
 
-        {:ok, version}
+        {:ok, version, List.flatten(pruned)}
 
       error ->
         error
@@ -336,15 +390,22 @@ defmodule Castmill.Widgets.Packages do
   end
 
   @doc """
-  Deletes an uploaded network widget of `network_id` that no playlist uses. Returns
-  `{:ok, widget}`, `{:error, :not_found}`, `{:error, :managed_widget}` or
-  `{:error, {:in_use, organization_ids}}`.
+  Deletes an uploaded network widget of `network_id` that no playlist uses, and the
+  assets of its packages. Returns `{:ok, widget}`, `{:error, :not_found}`,
+  `{:error, :managed_widget}` or `{:error, {:in_use, organization_ids}}`. Takes the
+  `:delete` option of `install/3`.
   """
-  def delete_network_widget(network_id, widget_id) do
+  def delete_network_widget(network_id, widget_id, opts \\ []) do
     with %Widget{network_id: ^network_id} = widget <- get_widget(widget_id),
          false <- managed?(widget),
          [] <- using_organizations(widget.id) do
-      Widgets.delete_widget_with_cascade(widget)
+      keys =
+        Repo.all(from(p in WidgetPackage, where: p.widget_id == ^widget.id, select: p.asset_keys))
+
+      with {:ok, deleted} <- Widgets.delete_widget_with_cascade(widget) do
+        release_assets(List.flatten(keys), opts)
+        {:ok, deleted}
+      end
     else
       true -> {:error, :managed_widget}
       [_ | _] = organization_ids -> {:error, {:in_use, organization_ids}}

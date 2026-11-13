@@ -26,7 +26,18 @@ defmodule Castmill.Widgets.PackagesTest do
       {:ok, "https://cdn.test/" <> key}
     end
 
-    %{network: network, organization: organization, slug: slug, store: store}
+    delete = fn key ->
+      send(test, {:deleted, key})
+      :ok
+    end
+
+    %{
+      network: network,
+      organization: organization,
+      slug: slug,
+      store: store,
+      delete: delete
+    }
   end
 
   defp widget_json(ctx, overrides \\ %{}) do
@@ -98,7 +109,28 @@ defmodule Castmill.Widgets.PackagesTest do
   end
 
   defp install(ctx, upload, opts \\ []),
-    do: Packages.install(ctx.network.id, upload, Keyword.merge([store: ctx.store], opts))
+    do:
+      Packages.install(
+        ctx.network.id,
+        upload,
+        Keyword.merge([store: ctx.store, delete: ctx.delete], opts)
+      )
+
+  defp stored_keys do
+    receive do
+      {:stored, key, _body, _type} -> [key | stored_keys()]
+    after
+      0 -> []
+    end
+  end
+
+  defp deleted_keys do
+    receive do
+      {:deleted, key} -> [key | deleted_keys()]
+    after
+      0 -> []
+    end
+  end
 
   defp use_widget(ctx, widget, options) do
     {:ok, _} = NetworkAccess.set_access(ctx.network.id, widget.id, "all")
@@ -151,6 +183,14 @@ defmodule Castmill.Widgets.PackagesTest do
 
       assert uploaded_by == user.id
       assert Packages.get_version(widget.id, 1).content == File.read!(upload.path)
+
+      urls = [widget.icon, hd(widget.fonts)["url"], logo]
+
+      assert Enum.sort(Packages.get_version(widget.id, 1).asset_keys) ==
+               urls
+               |> Enum.map(&String.replace_prefix(&1, "https://cdn.test/", ""))
+               |> Enum.sort()
+
       assert is_nil(Packages.get_version(widget.id, 2))
       widget_id = widget.id
       assert %{^widget_id => %{version: 1}} = Packages.latest_versions([widget.id])
@@ -191,13 +231,59 @@ defmodule Castmill.Widgets.PackagesTest do
       assert Enum.map(Packages.list_versions(widget.id), & &1.version) == [2, 1]
     end
 
-    test "keeps the last 10 versions", ctx do
-      upload = json(text_widget(ctx))
+    test "keeps the last 10 versions and deletes assets only older versions used", ctx do
+      {:ok, _} = install(ctx, zip(widget_json(ctx)))
+      first_keys = stored_keys()
+      assert length(first_keys) == 3
 
-      for _ <- 1..11, do: assert({:ok, _} = install(ctx, upload))
+      upload = json(text_widget(ctx))
+      for _ <- 2..10, do: assert({:ok, _} = install(ctx, upload))
+      assert deleted_keys() == []
+
+      assert {:ok, %{version: 11}} = install(ctx, upload)
 
       widget = Widgets.get_widget_by_slug(ctx.slug)
       assert Enum.map(Packages.list_versions(widget.id), & &1.version) == Enum.to_list(11..2//-1)
+      assert Enum.sort(deleted_keys()) == Enum.sort(first_keys)
+    end
+
+    test "deletes the assets of refused uploads unless a kept version uses them", ctx do
+      {:ok, %{widget: widget}} = install(ctx, zip(widget_json(ctx)))
+      kept = stored_keys()
+      use_widget(ctx, widget, %{})
+
+      required =
+        widget_json(ctx, %{
+          "options_schema" => %{"estate" => %{"type" => "string", "required" => true}}
+        })
+        |> put_in(["assets", "images", "photo"], %{"path" => "assets/images/photo.png"})
+
+      assert {:error, {:incompatible, [_]}} =
+               install(ctx, zip(required, [{~c"assets/images/photo.png", "photo"}]))
+
+      assert [photo] = stored_keys() -- kept
+      assert photo =~ ~r"/images/photo.png$"
+      assert deleted_keys() == [photo]
+
+      # A new widget that can't be installed keeps nothing.
+      other = %{ctx | slug: "#{ctx.slug}-other"}
+      invalid = widget_json(other, %{"options_schema" => %{"x" => "nope"}})
+      assert {:error, %Ecto.Changeset{}} = install(other, zip(invalid))
+      assert Enum.sort(deleted_keys()) == Enum.sort(stored_keys())
+    end
+
+    test "deletes the stored assets when storing one fails", ctx do
+      # Files are stored in path order, so the logo is stored last.
+      store = fn key, body, type ->
+        if type == "image/png", do: {:error, :unavailable}, else: ctx.store.(key, body, type)
+      end
+
+      assert {:error, "Failed to store asset assets/images/logo.png" <> _} =
+               install(ctx, zip(widget_json(ctx)), store: store)
+
+      stored = stored_keys()
+      assert length(stored) == 2
+      assert Enum.sort(deleted_keys()) == Enum.sort(stored)
     end
 
     test "refuses slugs used by other scopes and widgets the platform manages", ctx do
@@ -344,9 +430,31 @@ defmodule Castmill.Widgets.PackagesTest do
                Packages.delete_network_widget(ctx.network.id, widget.id)
 
       Castmill.Repo.delete!(playlist)
-      assert {:ok, _} = Packages.delete_network_widget(ctx.network.id, to_string(widget.id))
+      stored = stored_keys()
+      assert deleted_keys() == []
+
+      assert {:ok, _} =
+               Packages.delete_network_widget(ctx.network.id, to_string(widget.id),
+                 delete: ctx.delete
+               )
+
       assert is_nil(Widgets.get_widget_by_slug(ctx.slug))
       assert Packages.list_versions(widget.id) == []
+      assert Enum.sort(deleted_keys()) == Enum.sort(stored)
+    end
+
+    test "logs the assets it can't delete", ctx do
+      {:ok, %{widget: widget}} = install(ctx, zip(widget_json(ctx)))
+      failing = fn _key -> {:error, :unavailable} end
+
+      log =
+        ExUnit.CaptureLog.capture_log(fn ->
+          assert {:ok, _} =
+                   Packages.delete_network_widget(ctx.network.id, widget.id, delete: failing)
+        end)
+
+      assert log =~ "Could not delete asset widget-assets/#{ctx.slug}/"
+      assert is_nil(Widgets.get_widget_by_slug(ctx.slug))
     end
 
     test "never deletes widgets the platform manages", ctx do
