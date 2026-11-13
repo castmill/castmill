@@ -2,6 +2,7 @@ import {
   Component,
   createEffect,
   createSignal,
+  on,
   onCleanup,
   onMount,
   Show,
@@ -37,7 +38,7 @@ export const CalendarEntryBox: Component<{
    */
   visibleDays?: { first: number; last: number };
 }> = (props) => {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [dragging, setDragging] = createSignal(false);
   const [topOffset, setTopOffset] = createSignal(0);
   const [leftOffset, setLeftOffset] = createSignal(0);
@@ -189,9 +190,15 @@ export const CalendarEntryBox: Component<{
       return cell?.offsetTop || 0;
     }
 
+    // In RTL the first day is the rightmost column, so use the outer edges of
+    // the first and last day cells regardless of their order.
     function computeLeft(): number {
-      const cell = props.cellGrid.get(topLeftGridCell());
-      return cell?.offsetLeft || 0;
+      const firstCell = props.cellGrid.get(topLeftGridCell());
+      const lastCell = props.cellGrid.get(bottomRightGridCell());
+      if (firstCell && lastCell) {
+        return Math.min(firstCell.offsetLeft, lastCell.offsetLeft);
+      }
+      return firstCell?.offsetLeft || 0;
     }
 
     function computeHeight(): number {
@@ -207,12 +214,15 @@ export const CalendarEntryBox: Component<{
     }
 
     function computeWidth(): number {
-      const leftCell = props.cellGrid.get(topLeftGridCell());
-      const rightCell = props.cellGrid.get(bottomRightGridCell());
+      const firstCell = props.cellGrid.get(topLeftGridCell());
+      const lastCell = props.cellGrid.get(bottomRightGridCell());
 
-      if (leftCell && rightCell) {
+      if (firstCell && lastCell) {
         return (
-          rightCell.offsetLeft + rightCell.offsetWidth - leftCell.offsetLeft
+          Math.max(
+            firstCell.offsetLeft + firstCell.offsetWidth,
+            lastCell.offsetLeft + lastCell.offsetWidth
+          ) - Math.min(firstCell.offsetLeft, lastCell.offsetLeft)
         );
       }
       return 0;
@@ -225,6 +235,19 @@ export const CalendarEntryBox: Component<{
   };
 
   createEffect(() => updateEntryDimensions());
+
+  // The document direction is applied right after the locale signal changes,
+  // so re-measure on the next frame when switching to/from an RTL language.
+  createEffect(
+    on(
+      locale,
+      () => {
+        const frame = requestAnimationFrame(() => updateEntryDimensions());
+        onCleanup(() => cancelAnimationFrame(frame));
+      },
+      { defer: true }
+    )
+  );
 
   onMount(() => {
     // Create ResizeObserver to watch for size changes
