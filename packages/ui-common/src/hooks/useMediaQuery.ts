@@ -26,3 +26,11 @@ export function useMediaQuery(
 
   return matches;
 }
+
+/** Viewport query for phone layouts (compact toolbars, tree panels, etc.). */
+export const PHONE_LAYOUT_QUERY = '(max-width: 36em)';
+
+/** Reactive phone-layout signal; `false` where matchMedia is unavailable. */
+export function usePhoneLayout(): Accessor<boolean> {
+  return useMediaQuery(PHONE_LAYOUT_QUERY, false);
+}

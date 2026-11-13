@@ -289,6 +289,12 @@
   .card-actions {
     flex: none;
 
+    /* ≥2.75em tap target (the small trigger uses a 0.85em font size) */
+    :global(.castmill-menu-button-trigger) {
+      min-width: calc(2.75em / 0.85);
+      min-height: calc(2.75em / 0.85);
+    }
+
     /* Open the menu towards the card in both LTR and RTL */
     :global(.castmill-menu-button-items) {
       right: auto;
@@ -338,5 +344,21 @@
         max-width: none;
       }
     }
+  }
+}
+
+/* Touch screens and phones: ≥2.75em tap targets for row actions */
+@media (pointer: coarse), (max-width: 36em) {
+  .castmill-table table tbody .table-actions button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.75em;
+    min-height: 2.75em;
+  }
+
+  /* Small menu items use a 0.8em font size */
+  .castmill-table .card-actions :global(.castmill-menu-button-items button) {
+    min-height: calc(2.75em / 0.8);
   }
 }

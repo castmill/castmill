@@ -88,7 +88,8 @@ export const Pagination = (props: PaginationProps): JSX.Element => {
             fallback={<span class="pagination-ellipsis">...</span>}
           >
             <button
-              class={`pagination-button ${page === props.currentPage ? 'active' : ''}`}
+              class={`pagination-button pagination-page ${page === props.currentPage ? 'active' : ''}`}
+              aria-current={page === props.currentPage ? 'page' : undefined}
               onClick={() => handlePageClick(page as number)}
             >
               {page}
@@ -96,6 +97,11 @@ export const Pagination = (props: PaginationProps): JSX.Element => {
           </Show>
         )}
       </For>
+
+      {/* Compact "current / total" summary shown instead of page numbers on phones */}
+      <span class="pagination-summary" aria-hidden="true">
+        {props.currentPage} / {Math.max(totalPages(), 1)}
+      </span>
 
       {/* Next Button */}
       <button

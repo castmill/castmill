@@ -1,6 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createRoot } from 'solid-js';
-import { useMediaQuery } from './useMediaQuery';
+import {
+  PHONE_LAYOUT_QUERY,
+  useMediaQuery,
+  usePhoneLayout,
+} from './useMediaQuery';
 import { useWideLayout } from './useWideLayout';
 
 type Listener = (event: MediaQueryListEvent) => void;
@@ -173,5 +177,22 @@ describe('useWideLayout', () => {
     expect(observer.observe).toHaveBeenCalledTimes(2);
     expect(layout.wide()).toBe(false);
     dispose();
+  });
+});
+
+describe('usePhoneLayout', () => {
+  it('queries the phone breakpoint and falls back to false', () => {
+    (window as any).matchMedia = undefined;
+    createRoot((dispose) => {
+      expect(usePhoneLayout()()).toBe(false);
+      dispose();
+    });
+
+    mockMatchMedia(true);
+    createRoot((dispose) => {
+      expect(usePhoneLayout()()).toBe(true);
+      expect(window.matchMedia).toHaveBeenCalledWith(PHONE_LAYOUT_QUERY);
+      dispose();
+    });
   });
 });

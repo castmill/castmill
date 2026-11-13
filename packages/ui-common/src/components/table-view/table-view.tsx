@@ -78,7 +78,10 @@ interface TableViewProps<
     onRowSelect?: (selectedIds: Set<IdType>) => void;
     defaultRowAction?: TableAction<Item>;
     hideCheckboxes?: boolean;
-    /** Opt-in stacked card layout for narrow containers (e.g. phones). */
+    /**
+     * Stacked card layout for narrow containers (e.g. phones). Enabled by
+     * default; pass `false` to always render a table.
+     */
     cardLayout?: boolean;
     cardBreakpoint?: number;
     cardPrimaryColumn?: string;
@@ -98,6 +101,8 @@ interface TableViewProps<
     hideSearch?: boolean;
     searchPlaceholder?: string;
     hideTitle?: boolean;
+    /** Label of the toggle that reveals filters/actions on phones. */
+    filtersLabel?: string | (() => string);
   };
 
   /** Render prop for bulk actions shown in the floating selection bar */
@@ -375,7 +380,13 @@ export const TableView = <
           </Show>
         }
       >
-        <div class={style['table-view']}>
+        <div
+          class={style['table-view']}
+          classList={{
+            [style['has-selection']]:
+              !!props.selectionActions && selectedCount() > 0,
+          }}
+        >
           <Show when={props.toolbar}>
             <ToolBar
               title={props.toolbar?.hideTitle ? undefined : getTitle()}
@@ -389,6 +400,7 @@ export const TableView = <
               requireOneActiveFilter={props.toolbar?.requireOneActiveFilter}
               hideSearch={props.toolbar?.hideSearch}
               searchPlaceholder={props.toolbar?.searchPlaceholder}
+              filtersLabel={props.toolbar?.filtersLabel}
             />
           </Show>
 
@@ -402,7 +414,7 @@ export const TableView = <
             onRowClick={props.table.defaultRowAction?.handler}
             itemIdKey={props.itemIdKey}
             hideCheckboxes={props.table.hideCheckboxes}
-            cardLayout={props.table.cardLayout}
+            cardLayout={props.table.cardLayout ?? true}
             cardBreakpoint={props.table.cardBreakpoint}
             cardPrimaryColumn={props.table.cardPrimaryColumn}
             cardLabels={props.table.cardLabels}

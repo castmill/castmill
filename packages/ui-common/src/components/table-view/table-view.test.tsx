@@ -1,5 +1,5 @@
 /** @jsxImportSource solid-js */
-import { describe, it, expect, afterEach, vi } from 'vitest';
+import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest';
 import {
   render,
   fireEvent,
@@ -529,5 +529,100 @@ describe('TableView Component - Card Layout', () => {
         })
       );
     });
+  });
+});
+
+describe('TableView Component - Responsive defaults', () => {
+  type ResizeCb = (entries: { contentRect: { width: number } }[]) => void;
+  let resize: ResizeCb[] = [];
+
+  beforeEach(() => {
+    resize = [];
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        constructor(cb: ResizeCb) {
+          resize.push(cb);
+        }
+        observe() {}
+        disconnect() {}
+      }
+    );
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+  });
+
+  const renderView = (
+    cardLayout?: boolean,
+    toolbar?: Record<string, unknown>
+  ) => {
+    const fetchData = vi.fn().mockResolvedValue({
+      data: [{ id: '1', name: 'Resource 1' }],
+      count: 1,
+    });
+    return render(() => (
+      <TableView
+        title="Resources"
+        resource="resources"
+        fetchData={fetchData}
+        pagination={{ itemsPerPage: 10 }}
+        table={{ columns: [{ key: 'name', title: 'Name' }], cardLayout }}
+        toolbar={toolbar}
+        selectionActions={() => <button>Delete</button>}
+      />
+    ));
+  };
+
+  it('uses the card layout by default in narrow containers', async () => {
+    renderView();
+    resize.forEach((cb) => cb([{ contentRect: { width: 320 } }]));
+    await waitFor(() => {
+      expect(screen.getByTestId('table-card')).toBeInTheDocument();
+    });
+  });
+
+  it('keeps the table when cardLayout is false', async () => {
+    const { container } = renderView(false);
+    expect(resize).toHaveLength(0);
+    await waitFor(() => {
+      expect(screen.getByText('Resource 1')).toBeInTheDocument();
+    });
+    expect(container.querySelector('table')).toBeInTheDocument();
+  });
+
+  it('marks the view while rows are selected for the fixed phone selection bar', async () => {
+    const { container } = renderView(false);
+    await waitFor(() => {
+      expect(screen.getByText('Resource 1')).toBeInTheDocument();
+    });
+    const root = container.firstElementChild as HTMLElement;
+    expect(root.className).not.toContain('has-selection');
+
+    fireEvent.click(screen.getByLabelText('Select row 1'));
+    await waitFor(() => {
+      expect(root.className).toContain('has-selection');
+    });
+  });
+
+  it('passes the filters label to the toolbar on phones', async () => {
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn(() => ({
+        matches: true,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      }))
+    );
+    renderView(false, {
+      filters: [{ key: 'a', name: 'A', isActive: true }],
+      filtersLabel: 'Filtros',
+    });
+    expect(screen.getByRole('button', { name: 'Filtros' })).toHaveAttribute(
+      'aria-expanded',
+      'false'
+    );
   });
 });

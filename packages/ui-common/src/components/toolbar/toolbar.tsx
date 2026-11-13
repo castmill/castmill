@@ -1,9 +1,17 @@
 /** @jsxImportSource solid-js */
-import { createSignal, For, Show, JSX, onCleanup } from 'solid-js';
-import { FaSolidMagnifyingGlass } from 'solid-icons/fa';
+import {
+  createSignal,
+  createUniqueId,
+  For,
+  Show,
+  JSX,
+  onCleanup,
+} from 'solid-js';
+import { FaSolidMagnifyingGlass, FaSolidSliders } from 'solid-icons/fa';
 
 import { Switch } from '../switch/switch';
 import { IconWrapper } from '../icon-wrapper';
+import { usePhoneLayout } from '../../hooks/useMediaQuery';
 
 import './toolbar.scss';
 
@@ -27,6 +35,8 @@ interface ToolBarProps {
   requireOneActiveFilter?: boolean; // When true (default), at least one filter must remain active
   hideSearch?: boolean; // When true, hides the search input
   searchPlaceholder?: string; // Placeholder for the search input
+  /** Label of the toggle that reveals filters/actions on phones. Default: "Filters" */
+  filtersLabel?: string | (() => string);
 }
 
 export function ToolBar(props: ToolBarProps) {
@@ -95,6 +105,19 @@ export function ToolBar(props: ToolBarProps) {
   const getTitle = () =>
     typeof props.title === 'function' ? props.title() : props.title;
 
+  // On phones the filters and secondary actions collapse behind a toggle so
+  // that search and the primary action fit on one row.
+  const isPhone = usePhoneLayout();
+  const [filtersOpen, setFiltersOpen] = createSignal(false);
+  const filtersPanelId = `toolbar-filters-${createUniqueId()}`;
+  const hasFilters = () => !!props.filters && props.filters.length > 0;
+  const hasCollapsible = () => hasFilters() || !!props.actions;
+  const compact = () => isPhone() && hasCollapsible();
+  const getFiltersLabel = () =>
+    (typeof props.filtersLabel === 'function'
+      ? props.filtersLabel()
+      : props.filtersLabel) || 'Filters';
+
   return (
     <div class="toolbar-container">
       <Show when={props.title || props.titleActions}>
@@ -105,7 +128,7 @@ export function ToolBar(props: ToolBarProps) {
           <Show when={props.titleActions}>{props.titleActions}</Show>
         </div>
       </Show>
-      <div class="toolbar-row">
+      <div class="toolbar-row" classList={{ compact: compact() }}>
         <div class="toolbar-left">
           <Show when={props.onSearch && !props.hideSearch}>
             <div class="search-container">
@@ -122,30 +145,53 @@ export function ToolBar(props: ToolBarProps) {
             </div>
           </Show>
 
-          <Show when={props.filters && props.filters.length > 0}>
-            <div class="filter-container">
-              <For each={filters()}>
-                {(filter) => (
-                  <Switch
-                    name={filter.name}
-                    key={filter.key}
-                    isActive={filter.isActive}
-                    disabled={
-                      (props.requireOneActiveFilter ?? true) &&
-                      filter.isActive &&
-                      filters().filter((f) => f.isActive).length === 1
-                    }
-                    onToggle={() => toggleFilter(filter.key)}
-                  />
-                )}
-              </For>
-            </div>
+          <Show when={compact()}>
+            <button
+              type="button"
+              class="toolbar-filters-toggle"
+              classList={{ open: filtersOpen() }}
+              aria-expanded={filtersOpen()}
+              aria-controls={filtersPanelId}
+              onClick={() => setFiltersOpen(!filtersOpen())}
+            >
+              <IconWrapper icon={FaSolidSliders} />
+              <span>{getFiltersLabel()}</span>
+            </button>
           </Show>
 
-          <Show when={props.actions}>
-            {typeof props.actions === 'function'
-              ? props.actions()
-              : props.actions}
+          <Show when={hasCollapsible()}>
+            <div
+              id={filtersPanelId}
+              class="toolbar-filters"
+              classList={{ collapsed: compact() && !filtersOpen() }}
+              data-testid="toolbar-filters"
+            >
+              <Show when={hasFilters()}>
+                <div class="filter-container">
+                  <For each={filters()}>
+                    {(filter) => (
+                      <Switch
+                        name={filter.name}
+                        key={filter.key}
+                        isActive={filter.isActive}
+                        disabled={
+                          (props.requireOneActiveFilter ?? true) &&
+                          filter.isActive &&
+                          filters().filter((f) => f.isActive).length === 1
+                        }
+                        onToggle={() => toggleFilter(filter.key)}
+                      />
+                    )}
+                  </For>
+                </div>
+              </Show>
+
+              <Show when={props.actions}>
+                {typeof props.actions === 'function'
+                  ? props.actions()
+                  : props.actions}
+              </Show>
+            </div>
           </Show>
         </div>
 
