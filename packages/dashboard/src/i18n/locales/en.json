@@ -123,7 +123,8 @@
     "tagFilterModeAny": "Any",
     "tagFilterModeAll": "All",
     "noMatches": "No matches",
-    "noItems": "No items"
+    "noItems": "No items",
+    "toggle": "Filters"
   },
   "sidebar": {
     "organization": "Organization",
@@ -693,7 +694,8 @@
       "deleteGroup": "Delete Group",
       "noGroups": "No tag groups",
       "ungrouped": "Ungrouped",
-      "untagged": "Untagged"
+      "untagged": "Untagged",
+      "organizeBy": "Organize by"
     },
     "messages": {
       "tagCreated": "Tag \"{{name}}\" created successfully",

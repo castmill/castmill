@@ -662,7 +662,8 @@
       "deleteGroup": "Eliminar grupo",
       "noGroups": "Sin grupos de etiquetas",
       "ungrouped": "Sin agrupar",
-      "untagged": "Sin etiqueta"
+      "untagged": "Sin etiqueta",
+      "organizeBy": "Organizar por"
     },
     "messages": {
       "tagCreated": "Etiqueta \"{{name}}\" creada exitosamente",
@@ -1585,7 +1586,8 @@
     "tagFilterModeAny": "Cualquiera",
     "tagFilterModeAll": "Todas",
     "noMatches": "Sin coincidencias",
-    "noItems": "Sin elementos"
+    "noItems": "Sin elementos",
+    "toggle": "Filtros"
   },
   "shortcuts": {
     "showShortcutsLegend": "Mostrar atajos de teclado",

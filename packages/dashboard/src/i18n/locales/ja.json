@@ -661,7 +661,8 @@
       "deleteGroup": "グループを削除",
       "noGroups": "タググループなし",
       "ungrouped": "グループなし",
-      "untagged": "タグなし"
+      "untagged": "タグなし",
+      "organizeBy": "整理基準"
     },
     "messages": {
       "tagCreated": "タグ「{{name}}」を正常に作成しました",
@@ -1585,7 +1586,8 @@
     "tagFilterModeAny": "いずれか",
     "tagFilterModeAll": "すべて",
     "noMatches": "一致なし",
-    "noItems": "項目なし"
+    "noItems": "項目なし",
+    "toggle": "フィルター"
   },
   "shortcuts": {
     "showShortcutsLegend": "キーボードショートカットを表示",

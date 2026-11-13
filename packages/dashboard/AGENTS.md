@@ -211,6 +211,23 @@ Existing teams show a compact `DetailsSummary` with the name, member count
 Teams from the API use `inserted_at`/`updated_at`. The nested tables use
 `cardLayout`; pass `locale={locale()}` to `Timestamp` cells.
 
+## Responsive List Pages
+
+List pages (Devices, Medias, Playlists, Channels, Layouts, Widgets, Teams,
+Tags, Feeds, Agents, Automations, Network) rely on the shared ui-common
+components for phone/tablet layouts (see
+`agents/packages/ui-common/README.md`, "Responsive List Pages"):
+
+- `TableView` renders stacked cards in narrow containers by default; always
+  pass `cardLabels: useTableCardLabels()` (addons: `tableCardLabels(t)` from
+  `addons/common/utils/table-labels.ts`). Direct `<Table>` usages opt in with
+  `cardLayout cardLabels={...}`.
+- Toolbars with filters or actions pass `filtersLabel: () => t('filters.toggle')`
+  so the phone "Filters" toggle is localized; `ResourceTreeView` gets
+  `dimensionLabel={t('tags.groups.organizeBy')}`.
+- Page roots use `margin: var(--cm-page-gutter, 2em)` instead of a fixed
+  margin so gutters shrink on tablets and phones.
+
 ## Critical Rules
 
 ### ⚠️ MANDATORY: All User-Facing Text Must Be Localized

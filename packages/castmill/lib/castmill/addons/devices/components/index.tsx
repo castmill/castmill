@@ -59,6 +59,11 @@ import {
   QuotasService,
   ResourceQuota,
 } from '../../common/services/quotas.service';
+import {
+  tableCardLabels,
+  filtersLabel,
+  organizeByLabel,
+} from '../../common/utils/table-labels';
 
 interface DeviceTableItem extends Device {
   location: string;
@@ -930,6 +935,7 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
           fetchData={fetchData}
           ref={setRef}
           toolbar={{
+            filtersLabel: filtersLabel(t),
             filters: [
               { name: t('common.online'), key: 'online', isActive: true },
               { name: t('common.offline'), key: 'offline', isActive: true },
@@ -1018,6 +1024,7 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
             </>
           )}
           table={{
+            cardLabels: tableCardLabels(t),
             columns,
             actions,
             actionsLabel: t('common.actions'),
@@ -1036,6 +1043,7 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
 
       <Show when={viewMode() === 'tree'}>
         <ToolBar
+          filtersLabel={filtersLabel(t)}
           title={t('devices.title')}
           titleActions={
             <ViewModeToggle mode={viewMode()} onChange={setViewMode} />
@@ -1079,6 +1087,7 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
           }
         />
         <ResourceTreeView
+          dimensionLabel={organizeByLabel(t)()}
           tagGroups={tagGroups()}
           allTags={allTags()}
           fetchResources={fetchTreeResources}

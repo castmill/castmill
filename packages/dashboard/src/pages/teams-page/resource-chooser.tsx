@@ -17,6 +17,7 @@ import { FaSolidFolderPlus } from 'solid-icons/fa';
 import { TeamsService } from '../../services/teams.service';
 import { AccessSelector } from './access-selector';
 import { useI18n } from '../../i18n';
+import { useTableCardLabels } from '../../hooks/useTableCardLabels';
 
 type HandleResponseOptions = {
   parse?: boolean;
@@ -58,6 +59,7 @@ export const ResourceChooser = (props: {
   onSelect: (resources: { id: string }[]) => void;
 }) => {
   const { t } = useI18n();
+  const cardLabels = useTableCardLabels();
   const toast = useToast();
 
   const [data, setData] = createSignal<any[]>([]);
@@ -268,6 +270,7 @@ export const ResourceChooser = (props: {
         resource={props.resourceType}
         fetchData={fetchResources}
         toolbar={{
+          filtersLabel: () => t('filters.toggle'),
           filters: [],
           searchPlaceholder: t('common.search'),
 
@@ -283,6 +286,7 @@ export const ResourceChooser = (props: {
           ),
         }}
         table={{
+          cardLabels,
           columns,
           actions,
           actionsLabel: t('common.actions'),

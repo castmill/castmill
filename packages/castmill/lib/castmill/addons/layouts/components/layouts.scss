@@ -1,5 +1,5 @@
 .layouts-page {
-  margin: 2em;
+  margin: var(--cm-page-gutter, 2em);
 
   .layouts-header {
     display: flex;

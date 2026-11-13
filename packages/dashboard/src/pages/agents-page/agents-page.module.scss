@@ -1,6 +1,6 @@
 // The dashboard shell centers text, so every agents view resets alignment.
 .agentsPage {
-  margin: 2em;
+  margin: var(--cm-page-gutter, 2em);
   text-align: start;
 }
 

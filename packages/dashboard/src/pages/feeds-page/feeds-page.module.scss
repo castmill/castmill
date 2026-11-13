@@ -1,6 +1,6 @@
 // The dashboard shell centers text, so every feeds view resets alignment.
 .feedsPage {
-  margin: 2em;
+  margin: var(--cm-page-gutter, 2em);
   text-align: start;
 }
 

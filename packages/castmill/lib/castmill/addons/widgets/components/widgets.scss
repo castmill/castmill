@@ -1,5 +1,5 @@
 .widgets-page {
-  margin: 2em;
+  margin: var(--cm-page-gutter, 2em);
 
   .widget-icon {
     display: flex;

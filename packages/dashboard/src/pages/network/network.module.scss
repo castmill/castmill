@@ -1,7 +1,7 @@
 // Shared styles for all network sub-pages
 .network-page {
   text-align: left;
-  margin: 1em;
+  margin: min(1em, var(--cm-page-gutter, 1em));
   padding-bottom: 4em;
 
   .page-header {

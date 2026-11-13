@@ -661,7 +661,8 @@
       "deleteGroup": "حذف المجموعة",
       "noGroups": "لا توجد مجموعات علامات",
       "ungrouped": "غير مجمعة",
-      "untagged": "غير مُعلَّم"
+      "untagged": "غير مُعلَّم",
+      "organizeBy": "التنظيم حسب"
     },
     "messages": {
       "tagCreated": "تم إنشاء العلامة \"{{name}}\" بنجاح",
@@ -1584,7 +1585,8 @@
     "tagFilterModeAny": "أي",
     "tagFilterModeAll": "الكل",
     "noMatches": "لا توجد نتائج",
-    "noItems": "لا توجد عناصر"
+    "noItems": "لا توجد عناصر",
+    "toggle": "عوامل التصفية"
   },
   "shortcuts": {
     "showShortcutsLegend": "عرض اختصارات لوحة المفاتيح",

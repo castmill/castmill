@@ -463,6 +463,7 @@ export const TeamMembersView = (props: {
         fetchData={fetchData}
         ref={setRef}
         toolbar={{
+          filtersLabel: () => t('filters.toggle'),
           searchPlaceholder: t('common.search'),
           mainAction: (
             <PermissionButton

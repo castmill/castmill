@@ -679,7 +679,8 @@
       "deleteGroup": "Gruppe löschen",
       "noGroups": "Keine Tag-Gruppen",
       "ungrouped": "Nicht gruppiert",
-      "untagged": "Ohne Tag"
+      "untagged": "Ohne Tag",
+      "organizeBy": "Ordnen nach"
     },
     "messages": {
       "tagCreated": "Tag \"{{name}}\" erfolgreich erstellt",
@@ -1579,7 +1580,8 @@
     "tagFilterModeAny": "Beliebig",
     "tagFilterModeAll": "Alle",
     "noMatches": "Keine Treffer",
-    "noItems": "Keine Einträge"
+    "noItems": "Keine Einträge",
+    "toggle": "Filter"
   },
   "shortcuts": {
     "showShortcutsLegend": "Tastaturkürzel anzeigen",

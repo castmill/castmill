@@ -661,7 +661,8 @@
       "deleteGroup": "删除组",
       "noGroups": "无标签组",
       "ungrouped": "未分组",
-      "untagged": "未标记"
+      "untagged": "未标记",
+      "organizeBy": "组织方式"
     },
     "messages": {
       "tagCreated": "标签 \"{{name}}\" 创建成功",
@@ -1584,7 +1585,8 @@
     "tagFilterModeAny": "任一",
     "tagFilterModeAll": "全部",
     "noMatches": "无匹配项",
-    "noItems": "无项目"
+    "noItems": "无项目",
+    "toggle": "筛选"
   },
   "shortcuts": {
     "showShortcutsLegend": "显示键盘快捷键",

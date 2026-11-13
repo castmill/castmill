@@ -185,3 +185,21 @@ html.theme-transitioning *::after {
     animation: none;
   }
 }
+
+// Layout tokens (theme independent). Page margins scale down on tablets and
+// phones; list pages use `margin: var(--cm-page-gutter, 2em)`.
+:root {
+  --cm-page-gutter: 2em;
+}
+
+@media (max-width: 64em) {
+  :root {
+    --cm-page-gutter: 1.5em;
+  }
+}
+
+@media (max-width: 36em) {
+  :root {
+    --cm-page-gutter: 0.75em;
+  }
+}

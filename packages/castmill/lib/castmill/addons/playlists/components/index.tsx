@@ -67,6 +67,11 @@ import {
   validateCustomRatioField,
   validateAspectRatioExtreme as validateAspectRatioExtremeUtil,
 } from '../utils/aspect-ratio-validation';
+import {
+  tableCardLabels,
+  filtersLabel,
+  organizeByLabel,
+} from '../../common/utils/table-labels';
 
 const PlaylistsPage: Component<AddonComponentProps> = (props) => {
   const toast = useToast();
@@ -1238,6 +1243,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
           fetchData={fetchData}
           ref={setRef}
           toolbar={{
+            filtersLabel: filtersLabel(t),
             searchPlaceholder: t('common.search'),
             mainAction: (
               <div style="display: flex; align-items: center; gap: 1rem;">
@@ -1323,6 +1329,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
             </>
           )}
           table={{
+            cardLabels: tableCardLabels(t),
             columns,
             actions,
             actionsLabel: t('common.actions'),
@@ -1341,6 +1348,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
 
       <Show when={viewMode() === 'tree'}>
         <ToolBar
+          filtersLabel={filtersLabel(t)}
           title={t('playlists.title')}
           titleActions={
             <ViewModeToggle mode={viewMode()} onChange={setViewMode} />
@@ -1385,6 +1393,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
           }
         />
         <ResourceTreeView
+          dimensionLabel={organizeByLabel(t)()}
           tagGroups={tagGroups()}
           allTags={allTags()}
           fetchResources={fetchTreeResources}

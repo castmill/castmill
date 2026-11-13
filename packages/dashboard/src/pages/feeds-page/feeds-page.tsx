@@ -12,10 +12,12 @@ import { Feed, FeedAttrs, FeedsService } from '../../services/feeds.service';
 import { FeedForm, emptyFeedForm } from './feed-form';
 
 import styles from './feeds-page.module.scss';
+import { useTableCardLabels } from '../../hooks/useTableCardLabels';
 
 /** The organization's data feeds. */
 const FeedsPage: Component = () => {
   const { t, formatDate } = useI18n();
+  const cardLabels = useTableCardLabels();
   const { canPerformAction } = usePermissions();
   const toast = useToast();
   const navigate = useNavigate();
@@ -165,6 +167,8 @@ const FeedsPage: Component = () => {
       >
         <div data-testid="feeds-table" class={styles.table}>
           <Table<string, Feed>
+            cardLayout
+            cardLabels={cardLabels}
             columns={columns}
             data={feeds()}
             hideCheckboxes

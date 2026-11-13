@@ -27,6 +27,7 @@ import {
   DeviceTableTime,
 } from './device-section';
 import './device-cache.scss';
+import { tableCardLabels } from '../../common/utils/table-labels';
 
 type CacheType = 'data' | 'code' | 'media';
 const CACHE_TYPES: readonly CacheType[] = ['data', 'code', 'media'];
@@ -305,6 +306,7 @@ export const DeviceCache: Component<{
                     direction: 'descending',
                   }}
                   table={{
+                    cardLabels: tableCardLabels(t),
                     columns,
                     actions,
                     onRowSelect,

@@ -656,7 +656,8 @@
       "deleteGroup": "Ta bort grupp",
       "noGroups": "Inga taggrupper",
       "ungrouped": "Ogrupperad",
-      "untagged": "Omärkt"
+      "untagged": "Omärkt",
+      "organizeBy": "Ordna efter"
     },
     "messages": {
       "tagCreated": "Taggen \"{{name}}\" skapades framgångsrikt",
@@ -1579,7 +1580,8 @@
     "tagFilterModeAny": "Någon",
     "tagFilterModeAll": "Alla",
     "noMatches": "Inga träffar",
-    "noItems": "Inga objekt"
+    "noItems": "Inga objekt",
+    "toggle": "Filter"
   },
   "shortcuts": {
     "showShortcutsLegend": "Visa tangentbordsgenvägar",

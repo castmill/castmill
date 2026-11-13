@@ -285,6 +285,7 @@ export const ResourcesView = (props: {
         fetchData={fetchResources}
         ref={setRef}
         toolbar={{
+          filtersLabel: () => t('filters.toggle'),
           filters: [],
           searchPlaceholder: t('common.search'),
           mainAction: (
