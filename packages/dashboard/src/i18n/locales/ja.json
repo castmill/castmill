@@ -561,6 +561,13 @@
     "addedOn": "追加日",
     "lastUpdatedOn": "最終更新日",
     "enterTeamName": "チーム名を入力してください",
+    "summary": "チームの概要",
+    "created": "{{time}}に作成",
+    "updated": "{{time}}に更新",
+    "unsavedChanges": "未保存の変更",
+    "teamCreated": "チーム {{name}} を作成しました",
+    "teamUpdated": "チーム {{name}} を更新しました",
+    "teamRemoved": "チーム {{name}} を削除しました",
     "insertedAt": "挿入日時",
     "expiresAt": "有効期限",
     "inviteMember": "メンバーを招待",
@@ -580,7 +587,9 @@
       "removeResource": "チームからリソースを削除中にエラーが発生しました：{{error}}",
       "removeResources": "チームからリソースを削除中にエラーが発生しました：{{error}}",
       "addResourceToTeam": "チームにリソースを追加中にエラーが発生しました：{{error}}",
-      "cannotRemoveLastAdmin": "チームの最後の管理者を削除することはできません。"
+      "cannotRemoveLastAdmin": "チームの最後の管理者を削除することはできません。",
+      "nameRequired": "名前は必須です",
+      "nameMinLength": "名前は{{min}}文字以上である必要があります"
     },
     "confirmAddResources": "以下のリソースを追加してもよろしいですか？",
     "messages": {
@@ -1004,7 +1013,52 @@
     "selectLayout": "レイアウトを選択",
     "searchLayouts": "レイアウトを検索...",
     "assignPlaylists": "ゾーンにプレイリストを割り当て",
-    "zonesCount": "{{count}}個のゾーン"
+    "zonesCount": "{{count}}個のゾーン",
+    "unsavedChanges": "未保存の変更",
+    "editor": {
+      "customRatio": "カスタム…",
+      "ratioWidth": "比率の幅",
+      "ratioHeight": "比率の高さ",
+      "maxZones": "ゾーンは最大 {{count}} 個までです",
+      "size": "サイズ",
+      "width": "幅",
+      "height": "高さ",
+      "full": "全体",
+      "fillWidth": "幅を埋める (100%)",
+      "fillHeight": "高さを埋める (100%)",
+      "fillBoth": "幅と高さを埋める (100% × 100%)",
+      "setWidth": "幅を {{size}} に設定",
+      "setWidthAdjusted": "幅を {{size}} に設定 (高さを調整)",
+      "setHeight": "高さを {{size}} に設定",
+      "setHeightAdjusted": "高さを {{size}} に設定 (幅を調整)",
+      "zoneRatio": "ゾーン比率",
+      "none": "なし",
+      "selectZoneFirst": "先にゾーンを選択してください",
+      "aspectLocked": "無効: ゾーンのアスペクト比が崩れます",
+      "distributeColumns": "列に配置",
+      "distributeColumnsHint": "すべてのゾーンを列に均等配置",
+      "distributeRows": "行に配置",
+      "distributeRowsHint": "すべてのゾーンを行に均等配置",
+      "noSelection": "プロパティを編集するゾーンを選択してください",
+      "widthShort": "幅",
+      "heightShort": "高",
+      "deleteZone": "ゾーンを削除",
+      "zonesHeading": "ゾーン ({{count}})",
+      "layer": "レイヤー {{value}}",
+      "zoneName": "ゾーン {{number}}",
+      "templates": {
+        "fullScreen": "全画面",
+        "twoColumns": "2 列",
+        "threeColumns": "3 列",
+        "twoRows": "2 行",
+        "threeRows": "3 行",
+        "grid2x2": "2×2 グリッド",
+        "grid3x3": "3×3 グリッド",
+        "mainSidebar": "メイン + サイドバー",
+        "headerContent": "ヘッダー + コンテンツ",
+        "pictureInPicture": "ピクチャー・イン・ピクチャー"
+      }
+    }
   },
   "widgets": {
     "scope": {
@@ -1157,6 +1211,17 @@
         "networkError": "サーバーに接続できません。接続を確認してください。",
         "unknown": "項目を読み込めませんでした。"
       }
+    },
+    "details": {
+      "updatesEvery": "{{seconds}}秒ごとに更新",
+      "copySlug": "ウィジェット識別子をコピー",
+      "slugCopied": "ウィジェット識別子をコピーしました",
+      "copySlugFailed": "ウィジェット識別子をコピーできませんでした。"
+    },
+    "json": {
+      "copy": "JSON をコピー",
+      "copied": "JSON をコピーしました",
+      "copyFailed": "JSON をコピーできませんでした。"
     }
   },
   "devices": {
@@ -1657,7 +1722,25 @@
     },
     "drawerTitle": "メディア \"{{name}}\"",
     "mediaUpdated": "メディア \"{{name}}\" が正常に更新されました",
-    "errorUpdating": "メディア {{name}} の更新エラー：{{error}}"
+    "errorUpdating": "メディア {{name}} の更新エラー：{{error}}",
+    "details": {
+      "summary": "メディアの概要",
+      "copyId": "メディアIDをコピー",
+      "copied": "メディアIDをコピーしました",
+      "copyFailed": "メディアIDをコピーできませんでした。",
+      "added": "{{time}}に追加",
+      "updated": "{{time}}に更新",
+      "dimensions": "サイズ",
+      "duration": "再生時間",
+      "namePlaceholder": "メディア名を入力",
+      "nameRequired": "名前は必須です",
+      "nameTooShort": "名前は5文字以上である必要があります",
+      "noPreview": "プレビューはありません",
+      "types": {
+        "image": "画像",
+        "video": "動画"
+      }
+    }
   },
   "dashboard": {
     "noOrganizations": {

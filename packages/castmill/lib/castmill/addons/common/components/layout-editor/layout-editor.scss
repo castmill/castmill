@@ -5,7 +5,7 @@
   padding: 0.75em;
   background: var(--cm-bg-secondary);
   border-radius: 0.5em;
-  min-height: 350px;
+  min-height: 22em;
 
   // Main content area (toolbar + canvas)
   &__main {
@@ -24,6 +24,31 @@
     width: 14em;
     min-width: 12em;
     flex-shrink: 0;
+  }
+
+  // Narrow editor (phones, portrait tablets, narrow embeds): the properties
+  // and zone list move below the canvas and sit side by side when they fit.
+  &--stacked {
+    flex-direction: column;
+    min-height: 0;
+
+    .layout-editor__sidebar {
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: stretch;
+      width: auto;
+      min-width: 0;
+    }
+
+    .layout-editor__properties,
+    .layout-editor__zones-list {
+      flex: 1 1 16em;
+      min-width: 0;
+    }
+
+    .layout-editor__zones-list {
+      max-height: 16em;
+    }
   }
 
   &__toolbar {
@@ -168,7 +193,7 @@
     background: var(--cm-bg-tertiary);
     border-radius: 0.5em;
     flex: 1;
-    min-height: 200px;
+    min-height: 12.5em;
   }
 
   &__canvas {
@@ -187,6 +212,11 @@
 
   &__zone {
     position: absolute;
+    // Pointer Events drive move/resize; stop the browser from scrolling or
+    // zooming while a finger drags a zone.
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
     background: rgba(var(--cm-primary-rgb), 0.2);
     border-radius: 0.25em;
     cursor: move;
@@ -313,54 +343,65 @@
 
   // Resize handles
   .resize-handle {
+    --handle-size: 0.625em;
+    --handle-offset: calc(var(--handle-size) / -2);
     position: absolute;
-    width: 10px;
-    height: 10px;
+    width: var(--handle-size);
+    height: var(--handle-size);
     background: var(--cm-primary);
     border: 1px solid white;
-    border-radius: 2px;
+    border-radius: 0.125em;
+    box-sizing: border-box;
+    touch-action: none;
+
+    // Invisible, larger hit area around the visible handle
+    &::before {
+      content: '';
+      position: absolute;
+      inset: -0.25em;
+    }
 
     &.nw {
-      top: -5px;
-      left: -5px;
+      top: var(--handle-offset);
+      left: var(--handle-offset);
       cursor: nw-resize;
     }
     &.n {
-      top: -5px;
+      top: var(--handle-offset);
       left: 50%;
       transform: translateX(-50%);
       cursor: n-resize;
     }
     &.ne {
-      top: -5px;
-      right: -5px;
+      top: var(--handle-offset);
+      right: var(--handle-offset);
       cursor: ne-resize;
     }
     &.e {
       top: 50%;
-      right: -5px;
+      right: var(--handle-offset);
       transform: translateY(-50%);
       cursor: e-resize;
     }
     &.se {
-      bottom: -5px;
-      right: -5px;
+      bottom: var(--handle-offset);
+      right: var(--handle-offset);
       cursor: se-resize;
     }
     &.s {
-      bottom: -5px;
+      bottom: var(--handle-offset);
       left: 50%;
       transform: translateX(-50%);
       cursor: s-resize;
     }
     &.sw {
-      bottom: -5px;
-      left: -5px;
+      bottom: var(--handle-offset);
+      left: var(--handle-offset);
       cursor: sw-resize;
     }
     &.w {
       top: 50%;
-      left: -5px;
+      left: var(--handle-offset);
       transform: translateY(-50%);
       cursor: w-resize;
     }
@@ -452,10 +493,16 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 0.5em;
+    width: 100%;
     padding: 0.375em 0.5em;
     margin: 0.125em 0;
     background: var(--cm-bg-secondary);
+    border: none;
+    border-inline-start: 2px solid transparent;
     border-radius: 0.25em;
+    font: inherit;
+    text-align: start;
     cursor: pointer;
     transition: background-color 0.15s;
     font-size: 0.75em;
@@ -466,15 +513,25 @@
 
     &.selected {
       background: rgba(var(--cm-primary-rgb), 0.2);
-      border-left: 2px solid var(--cm-primary);
+      border-inline-start-color: var(--cm-primary);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--cm-focus-ring);
+      outline-offset: -2px;
     }
 
     .zone-name {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
       font-weight: 500;
       color: var(--cm-text-primary);
     }
 
     .zone-z {
+      flex-shrink: 0;
       font-size: 0.8em;
       color: var(--cm-text-tertiary);
     }
@@ -619,14 +676,14 @@
     background: var(--cm-bg-primary);
     border-radius: 0.25em;
     box-shadow: var(--cm-shadow-sm);
-    border-left: 2px solid var(--cm-primary);
+    border-inline-start: 2px solid var(--cm-primary);
     transition:
       opacity 0.15s,
       border-color 0.15s;
 
     &.disabled {
       opacity: 0.5;
-      border-left-color: var(--cm-border-color);
+      border-inline-start-color: var(--cm-border-color);
 
       .group-label {
         color: var(--cm-text-secondary);
@@ -636,6 +693,7 @@
 
   &__zone-toolbar-group {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 0.25em;
 
@@ -643,7 +701,7 @@
       font-size: 0.7em;
       font-weight: 500;
       color: var(--cm-text-secondary);
-      margin-right: 0.125em;
+      margin-inline-end: 0.125em;
       transition: color 0.15s;
     }
   }
@@ -732,6 +790,37 @@
     color: var(--cm-primary);
     width: 0.75em;
     height: 0.75em;
+  }
+}
+
+// Touch screens: bigger handles and tap targets.
+@media (pointer: coarse) {
+  .layout-editor {
+    .resize-handle {
+      --handle-size: 1.125em;
+
+      &::before {
+        inset: -0.5em;
+      }
+    }
+
+    &__icon-btn {
+      width: 2.5em;
+      height: 2.5em;
+    }
+
+    &__quick-btn,
+    &__fraction-btn,
+    &__zone-aspect-select {
+      min-height: 3em;
+      padding-inline: 0.75em;
+      font-size: 0.8em;
+    }
+
+    &__zone-item {
+      min-height: 3.25em;
+      font-size: 0.85em;
+    }
   }
 }
 

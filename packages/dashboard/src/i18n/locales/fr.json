@@ -561,6 +561,13 @@
     "addedOn": "Ajouté le",
     "lastUpdatedOn": "Dernière mise à jour le",
     "enterTeamName": "Entrez le nom de l'équipe",
+    "summary": "Résumé de l'équipe",
+    "created": "Créée {{time}}",
+    "updated": "Mise à jour {{time}}",
+    "unsavedChanges": "Modifications non enregistrées",
+    "teamCreated": "Équipe {{name}} créée avec succès",
+    "teamUpdated": "Équipe {{name}} mise à jour avec succès",
+    "teamRemoved": "Équipe {{name}} supprimée avec succès",
     "insertedAt": "Inséré le",
     "expiresAt": "Expire le",
     "inviteMember": "Inviter un membre",
@@ -580,7 +587,9 @@
       "removeResource": "Erreur lors de la suppression de la ressource de l'équipe : {{error}}",
       "removeResources": "Erreur lors de la suppression des ressources de l'équipe : {{error}}",
       "addResourceToTeam": "Erreur lors de l'ajout de la ressource à l'équipe : {{error}}",
-      "cannotRemoveLastAdmin": "Vous ne pouvez pas supprimer le dernier administrateur de l'équipe."
+      "cannotRemoveLastAdmin": "Vous ne pouvez pas supprimer le dernier administrateur de l'équipe.",
+      "nameRequired": "Le nom est requis",
+      "nameMinLength": "Le nom doit contenir au moins {{min}} caractères"
     },
     "confirmAddResources": "Êtes-vous sûr de vouloir ajouter les ressources suivantes ?",
     "messages": {
@@ -1015,7 +1024,52 @@
     "selectLayout": "Sélectionner une mise en page",
     "searchLayouts": "Rechercher des mises en page...",
     "assignPlaylists": "Attribuer des listes de lecture aux zones",
-    "zonesCount": "{{count}} zone(s)"
+    "zonesCount": "{{count}} zone(s)",
+    "unsavedChanges": "Modifications non enregistrées",
+    "editor": {
+      "customRatio": "Personnalisé…",
+      "ratioWidth": "Largeur du rapport",
+      "ratioHeight": "Hauteur du rapport",
+      "maxZones": "{{count}} zones maximum autorisées",
+      "size": "Taille",
+      "width": "Largeur",
+      "height": "Hauteur",
+      "full": "Plein",
+      "fillWidth": "Remplir la largeur (100 %)",
+      "fillHeight": "Remplir la hauteur (100 %)",
+      "fillBoth": "Remplir largeur et hauteur (100 % × 100 %)",
+      "setWidth": "Définir la largeur à {{size}}",
+      "setWidthAdjusted": "Définir la largeur à {{size}} (hauteur ajustée)",
+      "setHeight": "Définir la hauteur à {{size}}",
+      "setHeightAdjusted": "Définir la hauteur à {{size}} (largeur ajustée)",
+      "zoneRatio": "Rapport de la zone",
+      "none": "Aucun",
+      "selectZoneFirst": "Sélectionnez d’abord une zone",
+      "aspectLocked": "Désactivé : romprait le rapport d’aspect de la zone",
+      "distributeColumns": "Répartir en colonnes",
+      "distributeColumnsHint": "Répartir toutes les zones uniformément en colonnes",
+      "distributeRows": "Répartir en lignes",
+      "distributeRowsHint": "Répartir toutes les zones uniformément en lignes",
+      "noSelection": "Sélectionnez une zone pour modifier ses propriétés",
+      "widthShort": "L",
+      "heightShort": "Ht",
+      "deleteZone": "Supprimer la zone",
+      "zonesHeading": "Zones ({{count}})",
+      "layer": "Calque {{value}}",
+      "zoneName": "Zone {{number}}",
+      "templates": {
+        "fullScreen": "Plein écran",
+        "twoColumns": "2 colonnes",
+        "threeColumns": "3 colonnes",
+        "twoRows": "2 lignes",
+        "threeRows": "3 lignes",
+        "grid2x2": "Grille 2×2",
+        "grid3x3": "Grille 3×3",
+        "mainSidebar": "Principal + barre latérale",
+        "headerContent": "En-tête + contenu",
+        "pictureInPicture": "Image dans l’image"
+      }
+    }
   },
   "widgets": {
     "scope": {
@@ -1168,6 +1222,17 @@
         "networkError": "Impossible de joindre le serveur. Vérifiez votre connexion.",
         "unknown": "Impossible de charger les éléments."
       }
+    },
+    "details": {
+      "updatesEvery": "Mise à jour toutes les {{seconds}} s",
+      "copySlug": "Copier l’identifiant du widget",
+      "slugCopied": "Identifiant du widget copié",
+      "copySlugFailed": "Impossible de copier l’identifiant du widget."
+    },
+    "json": {
+      "copy": "Copier le JSON",
+      "copied": "JSON copié",
+      "copyFailed": "Impossible de copier le JSON."
     }
   },
   "devices": {
@@ -1668,7 +1733,25 @@
     },
     "drawerTitle": "Média \"{{name}}\"",
     "mediaUpdated": "Média \"{{name}}\" mis à jour avec succès",
-    "errorUpdating": "Erreur lors de la mise à jour du média {{name}} : {{error}}"
+    "errorUpdating": "Erreur lors de la mise à jour du média {{name}} : {{error}}",
+    "details": {
+      "summary": "Résumé du média",
+      "copyId": "Copier l’ID du média",
+      "copied": "ID du média copié",
+      "copyFailed": "Impossible de copier l’ID du média.",
+      "added": "Ajouté {{time}}",
+      "updated": "Mis à jour {{time}}",
+      "dimensions": "Taille en pixels",
+      "duration": "Durée",
+      "namePlaceholder": "Saisissez le nom du média",
+      "nameRequired": "Le nom est obligatoire",
+      "nameTooShort": "Le nom doit comporter au moins 5 caractères",
+      "noPreview": "Aucun aperçu disponible",
+      "types": {
+        "image": "Image",
+        "video": "Vidéo"
+      }
+    }
   },
   "dashboard": {
     "noOrganizations": {

@@ -185,6 +185,32 @@ of the first and last day cells (days run right-to-left in RTL). Calendar
 height is relative to the viewport (`clamp(20em, 60dvh, 50em)`); never style
 `html`/`body` from the calendar styles.
 
+## Layout Editor
+
+- `LayoutEditor` (`addons/common/components/layout-editor`) is shared by the
+  Layouts drawer and the playlist widget config. It measures its own width
+  with a ResizeObserver and adds `layout-editor--stacked` below
+  `STACKED_MAX_WIDTH_EM` (48em): properties and the zone list move below the
+  canvas. Never switch this on the viewport; embeds can be narrow on desktop.
+- Zone move/resize uses Pointer Events (mouse, pen and touch) with
+  `touch-action: none` on zones and handles; only the primary pointer drives
+  a drag and `pointercancel` ends it. Handles grow on `(pointer: coarse)`.
+- The canvas is `dir="ltr"`: zone rects are physical screen geometry, also in
+  Arabic. Pass `t` to the editor; its strings live under `layouts.editor.*`.
+- The Layouts drawer portals its Save bar into the Drawer `footer`
+  (`LayoutView` `actionsMount`), like media details.
+
+## Team Details Drawer
+
+`pages/teams-page/team-view.tsx` owns its `Drawer` so the form state and the
+Save/Reset footer stay together. The footer's submit button targets the form
+through the `form` attribute. Keep the members/invitations tabs outside that
+form; otherwise pressing Enter in a table search field submits the team.
+Existing teams show a compact `DetailsSummary` with the name, member count
+(reloaded when a member is removed), and localized created/updated times.
+Teams from the API use `inserted_at`/`updated_at`. The nested tables use
+`cardLayout`; pass `locale={locale()}` to `Timestamp` cells.
+
 ## Critical Rules
 
 ### ⚠️ MANDATORY: All User-Facing Text Must Be Localized

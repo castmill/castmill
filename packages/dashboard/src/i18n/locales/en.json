@@ -600,6 +600,13 @@
     "addedOn": "Added on",
     "lastUpdatedOn": "Last updated on",
     "enterTeamName": "Enter team name",
+    "summary": "Team summary",
+    "created": "Created {{time}}",
+    "updated": "Updated {{time}}",
+    "unsavedChanges": "Unsaved changes",
+    "teamCreated": "Team {{name}} created successfully",
+    "teamUpdated": "Team {{name}} updated successfully",
+    "teamRemoved": "Team {{name}} removed successfully",
     "insertedAt": "Inserted At",
     "expiresAt": "Expires At",
     "inviteMember": "Invite Member",
@@ -620,7 +627,9 @@
       "removeResource": "Error removing resource from team: {{error}}",
       "removeResources": "Error removing resources from team: {{error}}",
       "addResourceToTeam": "Error adding resource to team: {{error}}",
-      "cannotRemoveLastAdmin": "You can't remove the last admin of a team."
+      "cannotRemoveLastAdmin": "You can't remove the last admin of a team.",
+      "nameRequired": "Name is required",
+      "nameMinLength": "Name must be at least {{min}} characters"
     },
     "messages": {
       "memberRemoved": "Member {{name}} removed successfully",
@@ -1039,7 +1048,52 @@
     "selectLayout": "Select Layout",
     "searchLayouts": "Search layouts...",
     "assignPlaylists": "Assign Playlists to Zones",
-    "zonesCount": "{{count}} zones"
+    "zonesCount": "{{count}} zones",
+    "unsavedChanges": "Unsaved changes",
+    "editor": {
+      "customRatio": "Custom…",
+      "ratioWidth": "Ratio width",
+      "ratioHeight": "Ratio height",
+      "maxZones": "Maximum {{count}} zones allowed",
+      "size": "Size",
+      "width": "Width",
+      "height": "Height",
+      "full": "Full",
+      "fillWidth": "Fill width (100%)",
+      "fillHeight": "Fill height (100%)",
+      "fillBoth": "Fill width and height (100% × 100%)",
+      "setWidth": "Set width to {{size}}",
+      "setWidthAdjusted": "Set width to {{size}} (height adjusted)",
+      "setHeight": "Set height to {{size}}",
+      "setHeightAdjusted": "Set height to {{size}} (width adjusted)",
+      "zoneRatio": "Zone ratio",
+      "none": "None",
+      "selectZoneFirst": "Select a zone first",
+      "aspectLocked": "Disabled: would break the zone aspect ratio",
+      "distributeColumns": "Distribute columns",
+      "distributeColumnsHint": "Distribute all zones evenly in columns",
+      "distributeRows": "Distribute rows",
+      "distributeRowsHint": "Distribute all zones evenly in rows",
+      "noSelection": "Select a zone to edit its properties",
+      "widthShort": "W",
+      "heightShort": "H",
+      "deleteZone": "Delete zone",
+      "zonesHeading": "Zones ({{count}})",
+      "layer": "Layer {{value}}",
+      "zoneName": "Zone {{number}}",
+      "templates": {
+        "fullScreen": "Full screen",
+        "twoColumns": "2 columns",
+        "threeColumns": "3 columns",
+        "twoRows": "2 rows",
+        "threeRows": "3 rows",
+        "grid2x2": "2×2 grid",
+        "grid3x3": "3×3 grid",
+        "mainSidebar": "Main + sidebar",
+        "headerContent": "Header + content",
+        "pictureInPicture": "Picture in picture"
+      }
+    }
   },
   "widgets": {
     "scope": {
@@ -1192,6 +1246,17 @@
         "networkError": "Could not reach the server. Check your connection.",
         "unknown": "Could not load the items."
       }
+    },
+    "details": {
+      "updatesEvery": "Updates every {{seconds}}s",
+      "copySlug": "Copy widget identifier",
+      "slugCopied": "Widget identifier copied",
+      "copySlugFailed": "Could not copy the widget identifier."
+    },
+    "json": {
+      "copy": "Copy JSON",
+      "copied": "JSON copied",
+      "copyFailed": "Could not copy the JSON."
     }
   },
   "devices": {
@@ -1651,7 +1716,25 @@
     },
     "drawerTitle": "Media \"{{name}}\"",
     "mediaUpdated": "Media \"{{name}}\" updated successfully",
-    "errorUpdating": "Error updating media {{name}}: {{error}}"
+    "errorUpdating": "Error updating media {{name}}: {{error}}",
+    "details": {
+      "summary": "Media summary",
+      "copyId": "Copy media ID",
+      "copied": "Media ID copied",
+      "copyFailed": "Could not copy the media ID.",
+      "added": "Added {{time}}",
+      "updated": "Updated {{time}}",
+      "dimensions": "Dimensions",
+      "duration": "Duration",
+      "namePlaceholder": "Enter media name",
+      "nameRequired": "Name is required",
+      "nameTooShort": "Name must be at least 5 characters",
+      "noPreview": "No preview available",
+      "types": {
+        "image": "Image",
+        "video": "Video"
+      }
+    }
   },
   "dashboard": {
     "noOrganizations": {

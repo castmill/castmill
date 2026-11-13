@@ -2,14 +2,47 @@
   margin: 2em;
 }
 
-.actions {
+.team-view {
   display: flex;
-  flex-direction: row;
-  gap: 1em;
+  flex-direction: column;
+  gap: 1.25em;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.team-summary {
+  min-width: 0;
+}
+
+.summary-name {
+  display: inline-block;
+  max-width: 16em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: bottom;
+}
+
+.team-form {
+  min-width: 0;
+}
+
+.team-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5em;
+}
+
+.team-dirty {
+  flex: 1 1 auto;
+  color: var(--cm-warning);
+  font-size: 0.8em;
 }
 
 .resources-container {
-  margin-top: 2em;
+  min-width: 0;
 }
 
 .resources-section {
@@ -21,6 +54,7 @@
   flex-direction: column;
   gap: 1.5em;
   box-shadow: 0 0.5em 1.5em var(--cm-shadow-color);
+  min-width: 0;
 }
 
 .leave-team-panel {
@@ -81,4 +115,53 @@
   margin-top: 0.5em !important;
   color: var(--cm-text-tertiary) !important;
   font-size: 0.85em !important;
+}
+
+// Tablets and narrow drawers: tighter section padding.
+@media (max-width: 50em) {
+  .resources-section {
+    padding: 1em;
+    gap: 1em;
+  }
+}
+
+// Phones: full-width footer buttons and flat sections so card tables fit.
+@media (max-width: 30em) {
+  .summary-name {
+    max-width: 10em;
+  }
+
+  .team-footer {
+    > button {
+      flex: 1 1 0;
+      justify-content: center;
+    }
+  }
+
+  .team-dirty {
+    flex-basis: 100%;
+    text-align: center;
+
+    &:empty {
+      display: none;
+    }
+  }
+
+  .resources-section {
+    padding: 0.75em 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+  }
+
+  .leave-team-panel {
+    padding: 1em;
+    gap: 1em;
+
+    > button {
+      width: 100%;
+      justify-content: center;
+    }
+  }
 }

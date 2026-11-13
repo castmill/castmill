@@ -14,7 +14,6 @@ import {
   TableView,
   TableViewRef,
   TableAction,
-  Drawer,
   ConfirmDialog,
   FetchDataOptions,
   useToast,
@@ -31,7 +30,7 @@ import { Team } from '../../interfaces/team';
 import styles from './teams-page.module.scss';
 import { useSearchParams } from '@solidjs/router';
 import { TeamsService, TeamUpdate } from '../../services/teams.service';
-import { TeamView } from './team-view';
+import { TeamDetails, TeamView } from './team-view';
 import { useI18n } from '../../i18n';
 import { QuotaIndicator } from '../../components/quota-indicator';
 import { QuotasService, ResourceQuota } from '../../services/quotas.service';
@@ -57,7 +56,9 @@ const TeamsPage: Component = () => {
 
   const [showModal, setShowModal] = createSignal(false);
 
-  const [currentTeam, setCurrentTeam] = createSignal<TeamUpdate>();
+  const [drawerSession, setDrawerSession] = createSignal(0);
+
+  const [currentTeam, setCurrentTeam] = createSignal<TeamDetails>();
 
   const [selectedTeams, setSelectedTeams] = createSignal(new Set<number>());
 
@@ -129,10 +130,14 @@ const TeamsPage: Component = () => {
   useModalFromUrl({
     getItemIdFromUrl: () => searchParams.itemId,
     isModalOpen: () => showModal(),
-    closeModal: () => setShowModal(false),
+    closeModal: () => {
+      setDrawerSession((session) => session + 1);
+      setShowModal(false);
+    },
     openModal: (itemId: string) => {
       const team = data().find((t) => String(t.id) === String(itemId));
       if (team) {
+        setDrawerSession((session) => session + 1);
         setCurrentTeam(team);
         setShowModal(true);
       }
@@ -156,6 +161,7 @@ const TeamsPage: Component = () => {
     {
       icon: BsEye,
       handler: (item: TeamTableItem) => {
+        setDrawerSession((session) => session + 1);
         setCurrentTeam(item);
         setShowModal(true);
       },
@@ -213,14 +219,14 @@ const TeamsPage: Component = () => {
   const [showConfirmDialogMultiple, setShowConfirmDialogMultiple] =
     createSignal(false);
 
-  const confirmRemoveTeam = async (team: TeamUpdate | undefined) => {
-    if (!team) {
+  const confirmRemoveTeam = async (team: TeamDetails | undefined) => {
+    if (!team?.id) {
       return;
     }
     try {
       await TeamsService.removeTeam(store.organizations.selectedId!, team.id);
       refreshData();
-      toast.success(`Team ${team.name} removed successfully`);
+      toast.success(t('teams.teamRemoved', { name: team.name || '' }));
       loadQuota(); // Reload quota after deletion
     } catch (error) {
       toast.error(
@@ -274,11 +280,13 @@ const TeamsPage: Component = () => {
   // Function to close the modal and remove blur
   const closeModal = () => {
     // Always close the drawer, including "new team" mode where itemId is absent.
+    setDrawerSession((session) => session + 1);
     setShowModal(false);
     setSearchParams({ itemId: undefined });
   };
 
   const addTeam = () => {
+    setDrawerSession((session) => session + 1);
     setCurrentTeam();
     setShowModal(true);
   };
@@ -296,48 +304,57 @@ const TeamsPage: Component = () => {
   return (
     <div class={`${styles.teamsPage}`}>
       <Show when={showModal()}>
-        <Drawer
+        <TeamView
+          organizationId={store.organizations.selectedId!}
+          team={currentTeam() || { name: '' }}
           title={title()}
+          sessionId={drawerSession()}
           onClose={closeModal}
-          placement="right"
-          size="xl"
-          closeOnOutsideClick
-          outsideClickIgnoreSelector="tbody tr"
-        >
-          <TeamView
-            organizationId={store.organizations.selectedId!}
-            team={currentTeam() || { name: '' }}
-            onSubmit={async (team: TeamUpdate) => {
-              try {
-                if (!team.id) {
-                  const newTeam = await TeamsService.addTeam(
-                    store.organizations.selectedId!,
-                    team.name!
-                  );
-                  setCurrentTeam({ id: newTeam.id, name: newTeam.name });
-                  refreshData();
-
-                  toast.success(`Team ${newTeam.name} created successfully`);
-                  loadQuota(); // Reload quota after creation
-
-                  return newTeam;
-                } else {
-                  const updatedTeam = await TeamsService.updateTeam(
-                    store.organizations.selectedId!,
-                    team
-                  );
-                  updateItem(team.id, team);
-                  toast.success(`Team ${team.name} updated successfully`);
-                  return updatedTeam;
-                }
-              } catch (error) {
-                toast.error(
-                  t('teams.errors.saveTeam', { error: String(error) })
+          onSubmit={async (team: TeamUpdate) => {
+            const saveSession = drawerSession();
+            try {
+              if (!team.id) {
+                const newTeam = await TeamsService.addTeam(
+                  store.organizations.selectedId!,
+                  team.name!
                 );
+                if (showModal() && drawerSession() === saveSession) {
+                  setCurrentTeam(newTeam);
+                }
+                refreshData();
+
+                toast.success(t('teams.teamCreated', { name: newTeam.name }));
+                loadQuota(); // Reload quota after creation
+
+                return newTeam;
+              } else {
+                const updatedTeam = await TeamsService.updateTeam(
+                  store.organizations.selectedId!,
+                  team
+                );
+                const refreshedTeam = {
+                  ...team,
+                  updated_at: new Date().toISOString(),
+                };
+                updateItem(team.id, refreshedTeam);
+                if (
+                  showModal() &&
+                  drawerSession() === saveSession &&
+                  currentTeam()?.id === team.id
+                ) {
+                  setCurrentTeam({ ...currentTeam(), ...refreshedTeam });
+                }
+                toast.success(
+                  t('teams.teamUpdated', { name: team.name || '' })
+                );
+                return updatedTeam;
               }
-            }}
-          />
-        </Drawer>
+            } catch (error) {
+              toast.error(t('teams.errors.saveTeam', { error: String(error) }));
+              return false;
+            }
+          }}
+        />
       </Show>
 
       <ConfirmDialog
@@ -380,7 +397,7 @@ const TeamsPage: Component = () => {
                 <QuotaIndicator
                   used={quota()!.used}
                   total={quota()!.total}
-                  resourceName="Teams"
+                  resourceName={t('teams.title')}
                   compact
                 />
               </Show>

@@ -562,6 +562,13 @@
     "addedOn": "Añadido el",
     "lastUpdatedOn": "Última actualización el",
     "enterTeamName": "Ingresa el nombre del equipo",
+    "summary": "Resumen del equipo",
+    "created": "Creado {{time}}",
+    "updated": "Actualizado {{time}}",
+    "unsavedChanges": "Cambios sin guardar",
+    "teamCreated": "Equipo {{name}} creado correctamente",
+    "teamUpdated": "Equipo {{name}} actualizado correctamente",
+    "teamRemoved": "Equipo {{name}} eliminado correctamente",
     "insertedAt": "Insertado el",
     "expiresAt": "Expira el",
     "inviteMember": "Invitar miembro",
@@ -582,7 +589,9 @@
       "removeResource": "Error al eliminar recurso del equipo: {{error}}",
       "removeResources": "Error al eliminar recursos del equipo: {{error}}",
       "addResourceToTeam": "Error al añadir recurso al equipo: {{error}}",
-      "cannotRemoveLastAdmin": "No puedes eliminar al último administrador del equipo."
+      "cannotRemoveLastAdmin": "No puedes eliminar al último administrador del equipo.",
+      "nameRequired": "El nombre es obligatorio",
+      "nameMinLength": "El nombre debe tener al menos {{min}} caracteres"
     },
     "messages": {
       "memberRemoved": "El miembro {{name}} se eliminó correctamente",
@@ -1031,7 +1040,52 @@
     "selectLayout": "Seleccionar Diseño",
     "searchLayouts": "Buscar diseños...",
     "assignPlaylists": "Asignar Listas de Reproducción a Zonas",
-    "zonesCount": "{{count}} zonas"
+    "zonesCount": "{{count}} zonas",
+    "unsavedChanges": "Cambios sin guardar",
+    "editor": {
+      "customRatio": "Personalizada…",
+      "ratioWidth": "Ancho de la proporción",
+      "ratioHeight": "Alto de la proporción",
+      "maxZones": "Máximo de {{count}} zonas permitidas",
+      "size": "Tamaño",
+      "width": "Ancho",
+      "height": "Alto",
+      "full": "Completo",
+      "fillWidth": "Llenar ancho (100%)",
+      "fillHeight": "Llenar alto (100%)",
+      "fillBoth": "Llenar ancho y alto (100% × 100%)",
+      "setWidth": "Establecer ancho en {{size}}",
+      "setWidthAdjusted": "Establecer ancho en {{size}} (alto ajustado)",
+      "setHeight": "Establecer alto en {{size}}",
+      "setHeightAdjusted": "Establecer alto en {{size}} (ancho ajustado)",
+      "zoneRatio": "Proporción de zona",
+      "none": "Ninguna",
+      "selectZoneFirst": "Selecciona primero una zona",
+      "aspectLocked": "Desactivado: rompería la proporción de la zona",
+      "distributeColumns": "Distribuir en columnas",
+      "distributeColumnsHint": "Distribuir todas las zonas por igual en columnas",
+      "distributeRows": "Distribuir en filas",
+      "distributeRowsHint": "Distribuir todas las zonas por igual en filas",
+      "noSelection": "Selecciona una zona para editar sus propiedades",
+      "widthShort": "An",
+      "heightShort": "Al",
+      "deleteZone": "Eliminar zona",
+      "zonesHeading": "Zonas ({{count}})",
+      "layer": "Capa {{value}}",
+      "zoneName": "Zona {{number}}",
+      "templates": {
+        "fullScreen": "Pantalla completa",
+        "twoColumns": "2 columnas",
+        "threeColumns": "3 columnas",
+        "twoRows": "2 filas",
+        "threeRows": "3 filas",
+        "grid2x2": "Cuadrícula 2×2",
+        "grid3x3": "Cuadrícula 3×3",
+        "mainSidebar": "Principal + barra lateral",
+        "headerContent": "Cabecera + contenido",
+        "pictureInPicture": "Imagen en imagen"
+      }
+    }
   },
   "widgets": {
     "scope": {
@@ -1184,6 +1238,17 @@
         "networkError": "No se pudo conectar con el servidor. Comprueba tu conexión.",
         "unknown": "No se pudieron cargar los elementos."
       }
+    },
+    "details": {
+      "updatesEvery": "Se actualiza cada {{seconds}} s",
+      "copySlug": "Copiar identificador del widget",
+      "slugCopied": "Identificador del widget copiado",
+      "copySlugFailed": "No se pudo copiar el identificador del widget."
+    },
+    "json": {
+      "copy": "Copiar JSON",
+      "copied": "JSON copiado",
+      "copyFailed": "No se pudo copiar el JSON."
     }
   },
   "devices": {
@@ -1657,7 +1722,25 @@
     },
     "drawerTitle": "Medio \"{{name}}\"",
     "mediaUpdated": "Medio \"{{name}}\" actualizado correctamente",
-    "errorUpdating": "Error al actualizar medio {{name}}: {{error}}"
+    "errorUpdating": "Error al actualizar medio {{name}}: {{error}}",
+    "details": {
+      "summary": "Resumen del medio",
+      "copyId": "Copiar ID del medio",
+      "copied": "ID del medio copiado",
+      "copyFailed": "No se pudo copiar el ID del medio.",
+      "added": "Añadido {{time}}",
+      "updated": "Actualizado {{time}}",
+      "dimensions": "Dimensiones",
+      "duration": "Duración",
+      "namePlaceholder": "Introduce el nombre del medio",
+      "nameRequired": "El nombre es obligatorio",
+      "nameTooShort": "El nombre debe tener al menos 5 caracteres",
+      "noPreview": "No hay vista previa disponible",
+      "types": {
+        "image": "Imagen",
+        "video": "Video"
+      }
+    }
   },
   "dashboard": {
     "noOrganizations": {

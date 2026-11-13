@@ -561,6 +561,13 @@
     "addedOn": "添加于",
     "lastUpdatedOn": "最后更新于",
     "enterTeamName": "输入团队名称",
+    "summary": "团队摘要",
+    "created": "创建于 {{time}}",
+    "updated": "更新于 {{time}}",
+    "unsavedChanges": "未保存的更改",
+    "teamCreated": "团队 {{name}} 创建成功",
+    "teamUpdated": "团队 {{name}} 更新成功",
+    "teamRemoved": "团队 {{name}} 删除成功",
     "insertedAt": "插入时间",
     "expiresAt": "过期时间",
     "inviteMember": "邀请成员",
@@ -580,7 +587,9 @@
       "removeResource": "从团队中删除资源时出错：{{error}}",
       "removeResources": "从团队中删除资源时出错：{{error}}",
       "addResourceToTeam": "向团队添加资源时出错：{{error}}",
-      "cannotRemoveLastAdmin": "你不能移除团队最后一位管理员。"
+      "cannotRemoveLastAdmin": "你不能移除团队最后一位管理员。",
+      "nameRequired": "名称是必需的",
+      "nameMinLength": "名称至少需要 {{min}} 个字符"
     },
     "confirmAddResources": "您确定要添加以下资源吗？",
     "messages": {
@@ -1003,7 +1012,52 @@
     "selectLayout": "选择布局",
     "searchLayouts": "搜索布局...",
     "assignPlaylists": "为区域分配播放列表",
-    "zonesCount": "{{count}} 个区域"
+    "zonesCount": "{{count}} 个区域",
+    "unsavedChanges": "未保存的更改",
+    "editor": {
+      "customRatio": "自定义…",
+      "ratioWidth": "比例宽度",
+      "ratioHeight": "比例高度",
+      "maxZones": "最多允许 {{count}} 个区域",
+      "size": "尺寸",
+      "width": "宽度",
+      "height": "高度",
+      "full": "全部",
+      "fillWidth": "填满宽度 (100%)",
+      "fillHeight": "填满高度 (100%)",
+      "fillBoth": "填满宽度和高度 (100% × 100%)",
+      "setWidth": "将宽度设为 {{size}}",
+      "setWidthAdjusted": "将宽度设为 {{size}}（高度已调整）",
+      "setHeight": "将高度设为 {{size}}",
+      "setHeightAdjusted": "将高度设为 {{size}}（宽度已调整）",
+      "zoneRatio": "区域比例",
+      "none": "无",
+      "selectZoneFirst": "请先选择一个区域",
+      "aspectLocked": "已禁用：会破坏区域的宽高比",
+      "distributeColumns": "按列分布",
+      "distributeColumnsHint": "将所有区域均匀分布为列",
+      "distributeRows": "按行分布",
+      "distributeRowsHint": "将所有区域均匀分布为行",
+      "noSelection": "选择一个区域以编辑其属性",
+      "widthShort": "宽",
+      "heightShort": "高",
+      "deleteZone": "删除区域",
+      "zonesHeading": "区域（{{count}}）",
+      "layer": "图层 {{value}}",
+      "zoneName": "区域 {{number}}",
+      "templates": {
+        "fullScreen": "全屏",
+        "twoColumns": "2 列",
+        "threeColumns": "3 列",
+        "twoRows": "2 行",
+        "threeRows": "3 行",
+        "grid2x2": "2×2 网格",
+        "grid3x3": "3×3 网格",
+        "mainSidebar": "主区域 + 侧栏",
+        "headerContent": "页眉 + 内容",
+        "pictureInPicture": "画中画"
+      }
+    }
   },
   "widgets": {
     "scope": {
@@ -1156,6 +1210,17 @@
         "networkError": "无法连接到服务器。请检查网络连接。",
         "unknown": "无法加载项目。"
       }
+    },
+    "details": {
+      "updatesEvery": "每 {{seconds}} 秒更新",
+      "copySlug": "复制小部件标识符",
+      "slugCopied": "已复制小部件标识符",
+      "copySlugFailed": "无法复制小部件标识符。"
+    },
+    "json": {
+      "copy": "复制 JSON",
+      "copied": "已复制 JSON",
+      "copyFailed": "无法复制 JSON。"
     }
   },
   "devices": {
@@ -1656,7 +1721,25 @@
     },
     "drawerTitle": "媒体 \"{{name}}\"",
     "mediaUpdated": "媒体 \"{{name}}\" 更新成功",
-    "errorUpdating": "更新媒体 {{name}} 时出错：{{error}}"
+    "errorUpdating": "更新媒体 {{name}} 时出错：{{error}}",
+    "details": {
+      "summary": "媒体摘要",
+      "copyId": "复制媒体 ID",
+      "copied": "已复制媒体 ID",
+      "copyFailed": "无法复制媒体 ID。",
+      "added": "添加于 {{time}}",
+      "updated": "更新于 {{time}}",
+      "dimensions": "尺寸",
+      "duration": "时长",
+      "namePlaceholder": "输入媒体名称",
+      "nameRequired": "名称为必填项",
+      "nameTooShort": "名称至少需要 5 个字符",
+      "noPreview": "暂无预览",
+      "types": {
+        "image": "图片",
+        "video": "视频"
+      }
+    }
   },
   "dashboard": {
     "noOrganizations": {
