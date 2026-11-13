@@ -24,28 +24,10 @@
   }
 }
 
-// Widget upload modal - compact with scrolling
-:global {
-  .widget-upload-modal {
-    width: 50vw !important;
-    max-width: 50vw !important;
-    min-width: 50vw !important;
-    max-height: 85vh !important;
-    overflow-y: auto;
-
-    @media (max-width: 1200px) {
-      width: 60vw !important;
-      max-width: 60vw !important;
-      min-width: 60vw !important;
-    }
-
-    @media (max-width: 768px) {
-      width: 90vw !important;
-      max-width: 90vw !important;
-      min-width: 90vw !important;
-      max-height: 90vh !important;
-    }
-  }
+// Widget upload modal. The shared Modal keeps it inside the viewport,
+// scrolls its body and turns it into a full-width bottom sheet on phones.
+.widget-upload-modal {
+  width: 48em;
 }
 
 // JSON viewer: themed through --cm-* tokens so it reads well in light and
@@ -342,21 +324,24 @@
     }
 
     .json-example {
-      background: #1e1e1e;
-      border: 1px solid #333;
-      border-radius: 6px;
-      padding: 12px;
-      margin: 8px 0;
+      background: var(--cm-bg-sunken);
+      border: 1px solid var(--cm-border-color);
+      border-radius: 0.4em;
+      padding: 0.75em;
+      margin: 0.5em 0;
       font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
-      font-size: 12px;
+      font-size: 0.75em;
       overflow-x: auto;
-      max-height: 180px;
+      max-height: 15em;
       overflow-y: auto;
-      color: #d4d4d4;
+      color: var(--cm-text-primary);
       line-height: 1.4;
+      // JSON is always left-to-right, also inside RTL layouts.
+      direction: ltr;
+      text-align: left;
 
       code {
-        color: #d4d4d4;
+        color: inherit;
       }
     }
   }
@@ -465,6 +450,22 @@
     margin-top: 1rem;
     padding-top: 0.75rem;
     border-top: 1px solid var(--cm-border-color);
+  }
+
+  // Phones: no extra inset inside the sheet, and each file stacks its name
+  // above the upload status.
+  @media (max-width: 36em) {
+    padding: 0;
+
+    .files-list .file-item {
+      flex-wrap: wrap;
+      gap: 0.5em 1em;
+      padding: 0.75em;
+
+      .file-info {
+        flex-basis: 100%;
+      }
+    }
   }
 }
 

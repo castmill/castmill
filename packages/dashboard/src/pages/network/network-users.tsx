@@ -614,7 +614,7 @@ const NetworkUsers: Component = () => {
               <div class={styles['error-message']}>{inviteError()}</div>
             </Show>
 
-            <div class={styles['modal-actions']}>
+            <div class={styles['modal-actions']} data-modal-actions>
               <Button
                 label={
                   inviting()
@@ -662,7 +662,7 @@ const NetworkUsers: Component = () => {
               placeholder={t('network.blockReasonPlaceholder')}
               onInput={(value) => setBlockUserReason(value as string)}
             />
-            <div class={styles['modal-actions']}>
+            <div class={styles['modal-actions']} data-modal-actions>
               <Button
                 label={
                   blockingUser()

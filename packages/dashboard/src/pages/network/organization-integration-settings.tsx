@@ -246,7 +246,7 @@ export const OrganizationIntegrationSettings: Component<
                     <For each={orderedFields(definition.schema)}>
                       {([name, field]) => fieldInput(definition, name, field)}
                     </For>
-                    <div class={styles['settings-actions']}>
+                    <div class={styles['settings-actions']} data-modal-actions>
                       <Button
                         label={t('common.save')}
                         type="submit"

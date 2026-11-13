@@ -37,7 +37,7 @@ export const ConfirmDialog = (props: ConfirmDialogProps): JSX.Element => {
         {props.children && (
           <div class="confirm-dialog-content">{props.children}</div>
         )}
-        <div class="confirm-dialog-actions">
+        <div class="confirm-dialog-actions" data-modal-actions>
           <Button
             label={props.confirmLabel || 'Confirm'}
             color="danger"

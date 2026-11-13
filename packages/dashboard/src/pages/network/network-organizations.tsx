@@ -391,7 +391,7 @@ const NetworkOrganizations: Component = () => {
             setBlockOrgReason('');
           }}
         >
-          <div class="block-form">
+          <div class={styles['block-form']}>
             <FormItem
               label={t('network.blockReason')}
               id="block-org-reason"
@@ -399,7 +399,7 @@ const NetworkOrganizations: Component = () => {
               placeholder={t('network.blockReasonPlaceholder')}
               onInput={(value) => setBlockOrgReason(value as string)}
             />
-            <div class="modal-actions">
+            <div class={styles['modal-actions']} data-modal-actions>
               <Button
                 label={
                   blockingOrg()

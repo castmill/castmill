@@ -265,4 +265,13 @@ describe('widgets.scss', () => {
       /@media \(max-width: 36em\) \{\s*grid-template-columns: 1fr;/
     );
   });
+
+  it('sizes the upload modal without !important or viewport overrides', () => {
+    expect(widgetsScss).not.toContain('!important');
+    expect(block('.widget-upload-modal {')).not.toMatch(/vw|vh/);
+    expect(block('.upload-widgets {')).toMatch(
+      /@media \(max-width: 36em\) \{\s*padding: 0;/
+    );
+    expect(block('.upload-widgets {')).not.toMatch(/#[0-9a-f]{3,6}\b/i);
+  });
 });
