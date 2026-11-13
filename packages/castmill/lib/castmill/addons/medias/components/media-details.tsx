@@ -105,7 +105,7 @@ export const MediaDetails = (props: {
     const size = dimensions();
     if (size) {
       result.push({
-        label: `${size.width} × ${size.height}`,
+        label: `\u2066${size.width} × ${size.height}\u2069`,
         title: t('medias.details.dimensions'),
       });
     }

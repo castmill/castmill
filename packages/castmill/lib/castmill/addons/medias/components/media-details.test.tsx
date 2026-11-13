@@ -130,14 +130,19 @@ describe('MediaDetails summary and layout', () => {
   } as unknown as JsonMedia;
 
   it('summarises type, size, dimensions, duration and dates', () => {
-    render(() => <MediaDetails media={video} onSubmit={vi.fn()} />);
+    render(() => (
+      <div dir="rtl">
+        <MediaDetails media={video} onSubmit={vi.fn()} />
+      </div>
+    ));
 
     const summary = screen.getByRole('region', {
       name: 'medias.details.summary',
     });
+    expect(summary.closest('[dir="rtl"]')).not.toBeNull();
     expect(summary).toHaveTextContent('medias.details.types.video');
     expect(screen.getByText('2 KB')).toHaveAttribute('title', 'common.size');
-    expect(screen.getByText('1920 × 1080')).toHaveAttribute(
+    expect(screen.getByText('\u20661920 × 1080\u2069')).toHaveAttribute(
       'title',
       'medias.details.dimensions'
     );
