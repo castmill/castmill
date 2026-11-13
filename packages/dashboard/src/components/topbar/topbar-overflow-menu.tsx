@@ -43,6 +43,7 @@ const TopbarOverflowMenu: Component<TopbarOverflowMenuProps> = (props) => {
 
   let rootRef: HTMLDivElement | undefined;
   let triggerRef: HTMLButtonElement | undefined;
+  let selectRef: HTMLSelectElement | undefined;
 
   const close = (restoreFocus = false) => {
     setOpen(false);
@@ -79,11 +80,22 @@ const TopbarOverflowMenu: Component<TopbarOverflowMenuProps> = (props) => {
       ? t('topbar.switchToLightMode')
       : t('topbar.switchToDarkMode');
 
+  // While closed, the root stands in for the language selector so the
+  // onboarding tour can find it; the tour's click opens the menu and focuses
+  // the select.
+  const handleRootClick = (event: MouseEvent) => {
+    if (event.target !== rootRef) return;
+    setOpen(true);
+    selectRef?.focus();
+  };
+
   return (
     <div
       class="topbar-overflow"
       ref={rootRef}
       onKeyDown={handleKeyDown}
+      onClick={handleRootClick}
+      data-onboarding={open() ? undefined : 'language-selector'}
       data-testid="topbar-overflow"
     >
       <button
@@ -126,6 +138,7 @@ const TopbarOverflowMenu: Component<TopbarOverflowMenuProps> = (props) => {
             <TbLanguage aria-hidden="true" />
             <span>{t('common.language')}</span>
             <select
+              ref={selectRef}
               data-onboarding="language-selector"
               value={locale()}
               onChange={(event) => {

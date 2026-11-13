@@ -430,6 +430,23 @@ describe('Topbar responsive layout', () => {
       expect(screen.queryByRole('combobox')).toBeNull();
     });
 
+    it('opens on the language step of the onboarding tour', () => {
+      mockViewport(PHONE);
+      renderTopbar();
+      // The tour clicks whatever matches the selector.
+      const target = document.querySelector<HTMLElement>(
+        '[data-onboarding="language-selector"]'
+      )!;
+      expect(target).toHaveAttribute('data-testid', 'topbar-overflow');
+      target.click();
+      const select = screen.getByRole('combobox');
+      expect(document.activeElement).toBe(select);
+      expect(target).not.toHaveAttribute('data-onboarding');
+      expect(
+        document.querySelector('[data-onboarding="language-selector"]')
+      ).toBe(select);
+    });
+
     it('closes on help, outside tap and Escape', () => {
       mockViewport(PHONE);
       renderTopbar();

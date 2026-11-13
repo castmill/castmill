@@ -93,8 +93,9 @@ to the viewport. Breakpoints and shared state live in
   `Search` with `autoFocus`/`onDone`), notifications, overflow menu
   (`topbar-overflow-menu.tsx`: onboarding, theme, language, help, shortcuts)
   and the user avatar. The overflow trigger keeps
-  `data-onboarding="getting-started"` and its language `<select>` keeps
-  `data-onboarding="language-selector"` for the onboarding tour.
+  `data-onboarding="getting-started"`. While the menu is closed, its root
+  carries `data-onboarding="language-selector"`; the tour's click opens the
+  menu and focuses the language `<select>`.
 - Keyboard-shortcut UI (legend, keyboard icon, `Ctrl+F` chip) is hidden on
   touch devices (`(hover: none), (pointer: coarse)`).
 - Use `mockViewport()` from `sidepanel/viewport.test-utils.ts` to test layouts;
