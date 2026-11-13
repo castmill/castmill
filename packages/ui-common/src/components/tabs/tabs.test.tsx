@@ -70,6 +70,9 @@ describe('Tabs component', () => {
     const panel = screen.getByRole('tabpanel');
     expect(tabs[1]).toHaveAttribute('aria-controls', panel.id);
     expect(panel).toHaveAttribute('aria-labelledby', tabs[1].id);
+    expect(panel).toHaveAttribute('tabindex', '0');
+    panel.focus();
+    expect(panel).toHaveFocus();
     expect(panel).toHaveTextContent('Content 2');
   });
 
@@ -223,6 +226,7 @@ describe('Tabs component', () => {
   it('re-measures overflow when the list or its tabs resize', async () => {
     const observed: Element[] = [];
     const disconnect = vi.fn();
+    const unobserve = vi.fn();
     let callback: () => void = () => {};
     class MockResizeObserver {
       constructor(cb: () => void) {
@@ -231,7 +235,7 @@ describe('Tabs component', () => {
       observe(el: Element) {
         observed.push(el);
       }
-      unobserve() {}
+      unobserve = unobserve;
       disconnect = disconnect;
     }
     vi.stubGlobal('ResizeObserver', MockResizeObserver);
@@ -243,6 +247,9 @@ describe('Tabs component', () => {
 
     setTabs(sampleTabs);
     expect(observed).toContain(screen.getByRole('tab', { name: 'Tab 3' }));
+    const removed = screen.getByRole('tab', { name: 'Tab 1' });
+    setTabs(sampleTabs.slice(1));
+    expect(unobserve).toHaveBeenCalledWith(removed);
 
     Object.defineProperty(list, 'clientWidth', { value: 100 });
     Object.defineProperty(list, 'scrollWidth', { value: 300 });
@@ -272,6 +279,32 @@ describe('Tabs component', () => {
       'true'
     );
     expect(screen.getByText('Content 2')).toBeInTheDocument();
+  });
+
+  it('focuses and scrolls the current tab after removal and reordering', async () => {
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
+    const [tabs, setTabs] = createSignal(sampleTabs);
+    render(() => <Tabs tabs={tabs()} />);
+    const [, tab2, tab3] = screen.getAllByRole('tab');
+
+    setTabs([sampleTabs[1], sampleTabs[2]]);
+    await fireEvent.keyDown(tab2, { key: 'ArrowRight' });
+    expect(tab3).toHaveAttribute('aria-selected', 'true');
+    expect(tab3).toHaveFocus();
+    expect(scrollIntoView.mock.instances.at(-1)).toBe(tab3);
+
+    setTabs([sampleTabs[2], sampleTabs[1], sampleTabs[0]]);
+    const tab1 = screen.getByRole('tab', { name: 'Tab 1' });
+    await fireEvent.keyDown(tab2, { key: 'End' });
+    expect(tab1).toHaveAttribute('aria-selected', 'true');
+    expect(tab1).toHaveFocus();
+    expect(scrollIntoView.mock.instances.at(-1)).toBe(tab1);
+
+    await fireEvent.click(tab3);
+    expect(tab3).toHaveAttribute('aria-selected', 'true');
+    expect(scrollIntoView.mock.instances.at(-1)).toBe(tab3);
+    delete (Element.prototype as Partial<Element>).scrollIntoView;
   });
 
   it('renders an empty tab list without crashing', async () => {

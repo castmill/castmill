@@ -41,7 +41,6 @@ export const Tabs = (props: TabsProps) => {
   const baseId = `cm-tabs-${createUniqueId()}`;
   const tabId = (index: number) => `${baseId}-tab-${index}`;
   const panelId = `${baseId}-panel`;
-  const tabRefs: HTMLButtonElement[] = [];
   let listRef: HTMLDivElement | undefined;
 
   // Clamp in case the tabs array shrinks while mounted
@@ -61,12 +60,16 @@ export const Tabs = (props: TabsProps) => {
   };
 
   const scrollTabIntoView = (index: number) => {
-    tabRefs[index]?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+    listRef?.children.item(index)?.scrollIntoView?.({
+      block: 'nearest',
+      inline: 'nearest',
+    });
   };
 
   const selectTab = (index: number, focus = false) => {
     setActiveTab(index);
-    if (focus) tabRefs[index]?.focus();
+    if (focus)
+      (listRef?.children.item(index) as HTMLButtonElement | null)?.focus();
     scrollTabIntoView(index);
   };
 
@@ -90,9 +93,9 @@ export const Tabs = (props: TabsProps) => {
   // Tabs (and their titles) can change without the list resizing, so watch
   // the buttons as well as the list itself.
   let observer: ResizeObserver | undefined;
-  const setTabRef = (el: HTMLButtonElement, index: number) => {
-    tabRefs[index] = el;
+  const setTabRef = (el: HTMLButtonElement) => {
     observer?.observe(el);
+    onCleanup(() => observer?.unobserve(el));
   };
 
   onMount(() => {
@@ -101,7 +104,7 @@ export const Tabs = (props: TabsProps) => {
     if (typeof ResizeObserver !== 'undefined' && listRef) {
       observer = new ResizeObserver(updateOverflow);
       observer.observe(listRef);
-      tabRefs.forEach((tab) => observer!.observe(tab));
+      Array.from(listRef.children).forEach((tab) => observer!.observe(tab));
     }
   });
 
@@ -122,7 +125,7 @@ export const Tabs = (props: TabsProps) => {
           <For each={props.tabs}>
             {(tab, index) => (
               <button
-                ref={(el) => setTabRef(el, index())}
+                ref={setTabRef}
                 type="button"
                 role="tab"
                 id={tabId(index())}
@@ -153,6 +156,7 @@ export const Tabs = (props: TabsProps) => {
       <div
         class={`${styles.tabContent} ${styles.tabContentActive}`}
         role="tabpanel"
+        tabIndex={0}
         id={panelId}
         aria-labelledby={tabId(activeIndex())}
       >
