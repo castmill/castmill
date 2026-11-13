@@ -19,12 +19,15 @@
     border-radius: 8px;
     box-shadow: 0 4px 8px var(--cm-shadow-color);
     text-align: center;
+    box-sizing: border-box;
     width: 30rem;
-    height: 35rem;
+    max-width: 100%;
+    min-height: 35rem;
   }
 
   button {
     width: 20em;
+    max-width: 100%;
     padding: 10px 20px;
     cursor: pointer;
     border-radius: 3px;
@@ -34,6 +37,7 @@
 
   input[type='text'] {
     width: 20em;
+    max-width: 100%;
     padding: 10px 20px;
     margin: 10px 0;
     border: 1px solid var(--cm-border-strong);
@@ -91,5 +95,27 @@
     justify-content: center;
     align-items: center;
     z-index: 10; /* Ensure it covers other content */
+  }
+}
+
+// Phones and short screens: the card follows the content height and the page
+// scrolls instead of pushing the card below a fixed 10rem offset.
+@media (max-width: 36em), (max-height: 40em) {
+  .castmill-signup {
+    box-sizing: border-box;
+    height: auto;
+    min-height: 100%;
+    padding: 2em var(--cm-page-gutter, 0.75em);
+
+    .login-box {
+      min-height: 0;
+      padding: 1.5em 1.25em;
+    }
+
+    button,
+    input[type='text'] {
+      width: 100%;
+      min-height: 2.75em;
+    }
   }
 }

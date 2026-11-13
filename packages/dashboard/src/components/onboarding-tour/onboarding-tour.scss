@@ -55,7 +55,10 @@ $animation-duration: 0.3s;
   opacity: 0;
   animation: slideUp $animation-duration ease forwards;
   max-height: 90vh;
+  max-height: 90dvh;
+  box-sizing: border-box;
   overflow-y: auto;
+  text-align: start;
 }
 
 @keyframes slideUp {
@@ -87,6 +90,16 @@ $animation-duration: 0.3s;
 
 .onboarding-tour-title-section {
   flex: 1;
+  min-width: 0;
+}
+
+// Text arrows are not mirrored by the bidi algorithm.
+.onboarding-tour-nav-arrow {
+  display: inline-block;
+}
+
+[dir='rtl'] .onboarding-tour-nav-arrow {
+  transform: scaleX(-1);
 }
 
 .onboarding-tour-progress-text {
@@ -109,7 +122,8 @@ $animation-duration: 0.3s;
   justify-content: center;
   transition: color 0.2s ease;
   line-height: 1;
-  margin-left: 1em;
+  flex-shrink: 0;
+  margin-inline-start: 1em;
 
   &:hover:not(:disabled) {
     color: $text-color;
@@ -376,5 +390,76 @@ $animation-duration: 0.3s;
   .onboarding-tour-nav-button {
     font-size: 0.9em;
     padding: 0.5em 0.75em;
+  }
+}
+
+// Phones: bottom sheet; the step dots get their own row above Back/Skip.
+@media (max-width: 36em) {
+  .onboarding-tour-overlay {
+    align-items: flex-end;
+  }
+
+  .onboarding-tour {
+    width: 100%;
+    max-width: none;
+    max-height: 92vh;
+    max-height: 92dvh;
+    border-radius: 1em 1em 0 0;
+    padding: 1.25em 1em calc(1.25em + env(safe-area-inset-bottom, 0));
+
+    h2 {
+      font-size: 1.25em;
+    }
+  }
+
+  .onboarding-tour-header {
+    margin-bottom: 1em;
+  }
+
+  .onboarding-tour-progress-bar {
+    margin-bottom: 1.25em;
+  }
+
+  .onboarding-tour-content {
+    min-height: 0;
+  }
+
+  .onboarding-tour-step h3 {
+    font-size: 1.25em;
+  }
+
+  .onboarding-tour-step-number {
+    width: 2.5em;
+    height: 2.5em;
+  }
+
+  .onboarding-tour-footer {
+    margin-top: 1.25em;
+    padding-top: 1em;
+  }
+
+  .onboarding-tour-dots {
+    order: -1;
+    flex-basis: 100%;
+  }
+
+  .onboarding-tour-nav-button {
+    flex: 1 1 0;
+    min-height: 2.75em;
+  }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .onboarding-tour-dots {
+    gap: 1em;
+  }
+
+  .onboarding-tour-dot {
+    width: 1em;
+    height: 1em;
+  }
+
+  .onboarding-tour-action-button {
+    min-height: 2.75em;
   }
 }

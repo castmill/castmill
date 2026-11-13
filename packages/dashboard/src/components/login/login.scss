@@ -22,12 +22,15 @@
     border-radius: 8px;
     box-shadow: 0 4px 8px var(--cm-shadow-color);
     text-align: center;
+    box-sizing: border-box;
     width: 30rem;
-    height: 35rem;
+    max-width: 100%;
+    min-height: 35rem;
   }
 
   button {
     width: 20em;
+    max-width: 100%;
     padding: 10px 20px;
     cursor: pointer;
     border-radius: 3px;
@@ -38,6 +41,7 @@
 
   input[type='text'] {
     width: 20em;
+    max-width: 100%;
     padding: 10px 20px;
     margin: 10px 0;
     border: 1px solid var(--cm-border-strong);
@@ -106,15 +110,17 @@
   .error {
     margin: 15px 0;
     padding: 12px 16px;
-    background-color: #fef2f2;
-    border: 1px solid #fecaca;
-    border-left: 4px solid #ef4444;
-    border-radius: 4px;
-    color: #991b1b;
+    background-color: var(--cm-error-bg);
+    border: 0.0625em solid rgba(var(--cm-error-rgb), 0.3);
+    border-inline-start: 0.25em solid var(--cm-error);
+    border-radius: 0.25em;
+    color: var(--cm-error);
     font-size: 14px;
     line-height: 1.5;
-    text-align: left;
-    max-width: 20em;
+    text-align: start;
+    box-sizing: border-box;
+    width: 20em;
+    max-width: 100%;
     word-wrap: break-word;
   }
 
@@ -123,13 +129,14 @@
     padding: 15px 20px;
     background-color: colors.$highlight-background-color;
     border: 1px solid colors.$separator-color;
-    border-left: 4px solid colors.$highlight-color;
+    border-inline-start: 0.25em solid colors.$highlight-color;
     border-radius: 4px;
     color: colors.$base-color;
     font-size: 14px;
     line-height: 1.5;
-    text-align: left;
-    max-width: 20em;
+    text-align: start;
+    box-sizing: border-box;
+    max-width: min(20em, 100%);
 
     p {
       margin: 0;
@@ -138,11 +145,43 @@
 
   input[type='email'] {
     width: 20em;
+    max-width: 100%;
     padding: 10px 20px;
     margin: 10px 0;
     border: 1px solid var(--cm-border-strong);
     border-radius: 3px;
     box-sizing: border-box;
     font-size: 16px;
+  }
+}
+
+// Phones and short screens: the card follows the content height and the page
+// scrolls instead of pushing the card below a fixed 10rem offset.
+@media (max-width: 36em), (max-height: 40em) {
+  .castmill-login {
+    .login-container {
+      box-sizing: border-box;
+      height: auto;
+      min-height: 100%;
+      padding: 2em var(--cm-page-gutter, 0.75em);
+    }
+
+    .login-box {
+      min-height: 0;
+      padding: 1.5em 1.25em;
+    }
+
+    button,
+    input[type='text'],
+    input[type='email'] {
+      width: 100%;
+      min-height: 2.75em;
+    }
+
+    .error,
+    .invitation-only-notice {
+      max-width: none;
+      width: 100%;
+    }
   }
 }

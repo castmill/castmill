@@ -139,7 +139,9 @@ const TeamsInvitationPage = () => {
                 />
               </svg>
             </div>
-            <h2 class="text-xl font-bold text-gray-800 mb-2">{t('common.error')}</h2>
+            <h2 class="text-xl font-bold text-gray-800 mb-2">
+              {t('common.error')}
+            </h2>
             <p class="text-red-600">{errorMessage()}</p>
           </div>
         </Show>

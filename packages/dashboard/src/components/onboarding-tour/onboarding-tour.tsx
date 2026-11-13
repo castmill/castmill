@@ -264,6 +264,9 @@ export const OnboardingTour: Component<OnboardingTourProps> = (props) => {
     <Portal>
       <div class="onboarding-tour-overlay">
         <ConfirmDialog
+          confirmLabel={t('common.confirm')}
+          cancelLabel={t('common.cancel')}
+          closeLabel={t('common.close')}
           show={showDismissConfirm()}
           title={t('onboardingTour.dismissConfirmTitle')}
           message={t('onboardingTour.dismissConfirmMessage')}
@@ -365,7 +368,10 @@ export const OnboardingTour: Component<OnboardingTourProps> = (props) => {
               onClick={handlePrevious}
               disabled={currentStepIndex() === 0 || loading()}
             >
-              ← {t('common.back')}
+              <span class="onboarding-tour-nav-arrow" aria-hidden="true">
+                ←
+              </span>{' '}
+              {t('common.back')}
             </button>
 
             <div class="onboarding-tour-dots">
@@ -398,7 +404,10 @@ export const OnboardingTour: Component<OnboardingTourProps> = (props) => {
                 onClick={handleSkip}
                 disabled={loading()}
               >
-                {t('onboardingTour.skip')} →
+                {t('onboardingTour.skip')}{' '}
+                <span class="onboarding-tour-nav-arrow" aria-hidden="true">
+                  →
+                </span>
               </button>
             </Show>
           </div>

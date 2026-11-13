@@ -142,6 +142,19 @@ describe('FeedPage', () => {
     await waitFor(() => expect(FeedsService.data).toHaveBeenCalledTimes(2));
   });
 
+  it('names its tabs and gives each one an icon for compact phones', async () => {
+    renderPage();
+    await waitFor(() => expect(screen.getByText(/"Hello"/)).toBeTruthy());
+
+    const tablist = screen.getByRole('tablist');
+    expect(tablist.getAttribute('aria-label')).toBe('Sections');
+    const tabs = screen.getAllByRole('tab');
+    expect(tabs).toHaveLength(4);
+    for (const tab of tabs) {
+      expect(tab.querySelector('svg')).toBeTruthy();
+    }
+  });
+
   it('sends test entries', async () => {
     vi.mocked(FeedsService.sendTest)
       .mockResolvedValueOnce({

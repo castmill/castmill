@@ -8,6 +8,8 @@
   align-items: center;
   justify-content: center;
   padding: 2em;
+  box-sizing: border-box;
+  overflow-y: auto;
   background-color: var(--cm-bg-app);
   z-index: 9999;
 }
@@ -17,6 +19,8 @@
   border-radius: 1em;
   padding: 3em;
   max-width: 32em;
+  box-sizing: border-box;
+  margin: auto;
   box-shadow: 0 1.25em 3.75em var(--cm-shadow-color);
   text-align: center;
   border: 1px solid var(--cm-border-color);
@@ -56,9 +60,9 @@
 }
 
 .server-error-suggestions {
-  text-align: left;
+  text-align: start;
   list-style: disc;
-  padding-left: 1.5em;
+  padding-inline-start: 1.5em;
   margin-bottom: 2em;
   color: var(--cm-text-secondary);
 }
@@ -89,4 +93,28 @@
 
 .server-error-retry-button:active {
   transform: translateY(0);
+}
+
+@media (max-width: 36em) {
+  .server-error-container {
+    padding: 0.75em;
+  }
+
+  .server-error-content {
+    padding: 1.5em 1.25em;
+  }
+
+  .server-error-title {
+    font-size: 1.5em;
+  }
+
+  .server-error-description {
+    font-size: 1em;
+    margin-bottom: 1.25em;
+  }
+
+  .server-error-retry-button {
+    width: 100%;
+    min-height: 2.75em;
+  }
 }

@@ -99,6 +99,24 @@ describe('NetworkOrganizations', () => {
     });
   });
 
+  it('labels every cell with its column for the phone card layout', async () => {
+    renderOrganizations();
+    await waitFor(() =>
+      expect(screen.getByText('Organization 1')).toBeInTheDocument()
+    );
+
+    const table = screen.getByRole('table');
+    const headers = Array.from(table.querySelectorAll('thead th')).map(
+      (th) => th.textContent
+    );
+    for (const row of Array.from(table.querySelectorAll('tbody tr'))) {
+      const labels = Array.from(row.querySelectorAll('td')).map((td) =>
+        td.getAttribute('data-label')
+      );
+      expect(labels).toEqual(headers);
+    }
+  });
+
   it('opens the integration settings of an organization', async () => {
     renderOrganizations();
     await waitFor(() => screen.getByText('Organization 1'));

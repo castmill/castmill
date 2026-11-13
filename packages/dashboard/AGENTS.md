@@ -270,6 +270,33 @@ row so it sticks to the bottom with full-width buttons on phones. Let form
 rows wrap to a single column at `(max-width: 36em)`, and size modals with
 `contentClass` in `em` (no `!important` or `vw` overrides).
 
+Always pass localized `closeLabel={t('common.close')}` to `Modal`, and
+`confirmLabel`/`cancelLabel`/`closeLabel` to `ConfirmDialog` (they otherwise
+fall back to English).
+
+## Responsive Remaining Pages
+
+Settings, Usage, Organization, invitation, Search, Feed detail, Network,
+auth (login, signup, recover, passkey), 404/server-error and onboarding views
+follow these rules (asserted in `src/pages/responsive-pages.test.ts`, which
+compiles each stylesheet and checks its `36em`/`48em`/touch rules):
+
+- Breakpoints are `(max-width: 48em)` (tablet) and `(max-width: 36em)`
+  (phone); touch targets use `(hover: none), (pointer: coarse)` with a
+  `2.75em` minimum. Grids use `minmax(min(100%, Nem), 1fr)` so a column is
+  never wider than a phone.
+- Use `text-align: start`, `padding-inline-start`, `margin-inline-start` and
+  `border-inline-start`; mirror directional icons in RTL with
+  `[dir='rtl'] … { transform: scaleX(-1) }` (`:global(...)` in CSS modules).
+- `Tabs` get an `icon` per tab and `ariaLabel={t('common.sections')}` so they
+  collapse to icon-only tabs on phones (Organization, Feed detail).
+- Raw `<table>`s in Network give every `td` a `data-label` matching its
+  column header; under `36em` the table becomes one card per row with the
+  label rendered by `td::before { content: attr(data-label) }`.
+- Full-screen auth/invitation cards use `max-width: 100%` and `min-height`
+  instead of fixed heights so short screens scroll. Onboarding dialog and tour
+  become bottom sheets on phones (`dvh` heights, safe-area padding).
+
 ## Critical Rules
 
 ### ⚠️ MANDATORY: All User-Facing Text Must Be Localized
