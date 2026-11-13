@@ -36,6 +36,11 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh; /* Minimum height to fill the viewport */
+  min-height: 100dvh;
+  // With viewport-fit=cover, keep content clear of the notch in landscape.
+  box-sizing: border-box;
+  padding-left: env(safe-area-inset-left, 0em);
+  padding-right: env(safe-area-inset-right, 0em);
 }
 
 /* Onboarding highlight animation for guided tour */

@@ -4,7 +4,7 @@
   color: colors.$base-color;
   background-color: colors.$background;
   padding: 2rem;
-  max-width: 800px;
+  max-width: 50em;
   margin: 0 auto;
   margin-bottom: 2em;
 
@@ -35,7 +35,7 @@
   .settings-section {
     background: colors.$component-background-color;
     border: 1px solid colors.$separator-color;
-    border-radius: 8px;
+    border-radius: 0.5em;
     padding: 1.5rem;
 
     &.danger-zone {
@@ -134,7 +134,7 @@
         .passkey-item {
           background: colors.$highlight-background-color;
           border: 1px solid colors.$separator-color;
-          border-radius: 4px;
+          border-radius: 0.25em;
           padding: 1rem;
           margin-bottom: 0.5rem;
 
@@ -194,7 +194,7 @@
       .email-verification-notice {
         background: colors.$highlight-background-color;
         border: 1px solid colors.$highlight-color;
-        border-radius: 4px;
+        border-radius: 0.25em;
         padding: 1rem;
         margin: 1rem 0;
 
@@ -225,7 +225,7 @@
         margin-top: 1rem;
         padding: 1rem;
         background: colors.$highlight-background-color;
-        border-radius: 4px;
+        border-radius: 0.25em;
         border: 1px solid var(--cm-error);
 
         p {
@@ -237,7 +237,7 @@
           margin: 1rem 0;
           padding: 0.75rem;
           background: colors.$background;
-          border-left: 3px solid var(--cm-warning);
+          border-left: 0.208em solid var(--cm-warning);
           color: colors.$base-color;
           font-size: 0.9rem;
           line-height: 1.5;
@@ -252,7 +252,7 @@
 
     .language-options {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(12.5em, 1fr));
       gap: 0.75rem;
       margin-top: 1rem;
 
@@ -262,8 +262,8 @@
         gap: 0.75rem;
         padding: 0.75rem 1rem;
         background: colors.$highlight-background-color;
-        border: 2px solid colors.$separator-color;
-        border-radius: 6px;
+        border: 0.125em solid colors.$separator-color;
+        border-radius: 0.375em;
         cursor: pointer;
         transition: all 0.2s ease;
         text-align: left;
@@ -276,13 +276,13 @@
         &.active {
           border-color: colors.$highlight-color;
           background: colors.$component-background-color;
-          box-shadow: 0 0 0 3px rgba(var(--cm-primary-rgb), 0.1);
+          box-shadow: 0 0 0 0.188em rgba(var(--cm-primary-rgb), 0.1);
         }
 
         .language-code {
           font-weight: 600;
           font-size: 0.875rem;
-          min-width: 28px;
+          min-width: 2em;
           color: var(--cm-text-secondary);
         }
 
@@ -303,7 +303,7 @@
 }
 
 // Responsive design
-@media (max-width: 768px) {
+@media (max-width: 48em) {
   .castmill-settings {
     padding: 1rem;
 

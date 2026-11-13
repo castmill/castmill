@@ -189,7 +189,7 @@ $animation-duration: 0.3s;
   height: 3em;
   border-radius: 50%;
   background-color: $input-background;
-  border: 2px solid $border-color;
+  border: 0.1em solid $border-color;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -231,7 +231,7 @@ $animation-duration: 0.3s;
 
     &:hover:not(:disabled) {
       background-color: $primary-hover;
-      box-shadow: 0 2px 8px rgba($primary-color, 0.4);
+      box-shadow: 0 0.125em 0.5em rgba($primary-color, 0.4);
     }
   }
 
@@ -321,7 +321,7 @@ $animation-duration: 0.3s;
   height: 0.75em;
   border-radius: 50%;
   background-color: $input-background;
-  border: 2px solid $border-color;
+  border: 0.125em solid $border-color;
   cursor: pointer;
   transition:
     background-color 0.2s ease,

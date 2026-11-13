@@ -46,7 +46,7 @@
     gap: 0.25em;
     padding: 0.25em 0.5em;
     border: 1px dashed var(--cm-border-color);
-    border-radius: 9999px;
+    border-radius: 999em;
     background: transparent;
     color: var(--cm-text-secondary);
     font-size: 0.8125em;
@@ -99,8 +99,8 @@
     border: 1px solid var(--cm-border-color);
     border-radius: 0.375em;
     box-shadow:
-      0 4px 6px -1px var(--cm-shadow-color),
-      0 2px 4px -1px var(--cm-shadow-color);
+      0 0.25em 0.375em -1px var(--cm-shadow-color),
+      0 0.125em 0.25em -1px var(--cm-shadow-color);
     max-height: 16em;
     overflow-y: auto;
   }

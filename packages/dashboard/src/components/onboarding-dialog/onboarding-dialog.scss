@@ -190,7 +190,7 @@ $animation-duration: 0.3s;
 
   &:hover:not(:disabled) {
     background-color: $primary-hover;
-    box-shadow: 0 2px 4px var(--cm-shadow-color);
+    box-shadow: 0 0.125em 0.25em var(--cm-shadow-color);
   }
 
   &:disabled {

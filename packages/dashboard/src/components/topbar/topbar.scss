@@ -7,7 +7,9 @@
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  height: 5rem;
+  box-sizing: border-box;
+  height: calc(5rem + env(safe-area-inset-top, 0em));
+  padding-top: env(safe-area-inset-top, 0em);
 
   border-bottom: 1px solid colors.$separator-color;
 
@@ -290,7 +292,7 @@
 // Phones and portrait tablets: logo/menu, search icon, notifications, overflow
 // menu and avatar.
 .castmill-header--compact {
-  height: 3.75rem;
+  height: calc(3.75rem + env(safe-area-inset-top, 0em));
 
   nav {
     margin: 0 0.5em;

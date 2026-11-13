@@ -253,7 +253,7 @@
   cursor: pointer;
 
   &:focus-visible {
-    outline: 2px solid $highlight-color;
+    outline: 0.125em solid $highlight-color;
   }
 }
 
@@ -335,7 +335,7 @@
   align-items: center;
   gap: 0.75em;
   padding: 0.5em;
-  border: 2px solid transparent;
+  border: 0.125em solid transparent;
   border-radius: 0.375em;
   background: $component-background-color;
   cursor: pointer;
@@ -374,7 +374,7 @@
   justify-content: center;
   width: 1.5em;
   height: 1.5em;
-  border: 2px solid $base-color;
+  border: 0.167em solid $base-color;
   border-radius: 0.25em;
   background: rgba(0, 0, 0, 0.5);
   color: $base-color;

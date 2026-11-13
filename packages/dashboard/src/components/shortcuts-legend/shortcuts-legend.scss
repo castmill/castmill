@@ -1,5 +1,5 @@
 .shortcuts-legend-modal {
-  max-width: 700px;
+  max-width: 43.75em;
   width: 90vw;
 }
 
@@ -78,7 +78,7 @@
 }
 
 // Responsive: single column on smaller screens
-@media (max-width: 768px) {
+@media (max-width: 48em) {
   .shortcuts-list {
     .shortcuts-category:nth-child(2) & {
       grid-template-columns: 1fr;

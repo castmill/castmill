@@ -6,6 +6,8 @@ import {
   ThemePreferencesApi,
   applyTheme,
   getInitialTheme,
+  syncThemeColor,
+  THEME_COLORS,
   isTheme,
   useTheme,
   THEME_STORAGE_KEY,
@@ -84,6 +86,44 @@ describe('theme-context', () => {
     it('falls back to the OS light preference', () => {
       setMatchMedia({ '(prefers-color-scheme: light)': true });
       expect(getInitialTheme()).toBe('light');
+    });
+  });
+
+  describe('syncThemeColor', () => {
+    const themeColor = () =>
+      document.head.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+
+    beforeEach(() => themeColor()?.remove());
+
+    it('creates the theme-color meta tag when it is missing', () => {
+      syncThemeColor('light');
+      expect(themeColor()?.content).toBe(THEME_COLORS.light);
+    });
+
+    it('updates an existing theme-color meta tag', () => {
+      const meta = document.createElement('meta');
+      meta.name = 'theme-color';
+      meta.content = '#000000';
+      document.head.appendChild(meta);
+
+      syncThemeColor('dark');
+
+      expect(
+        document.head.querySelectorAll('meta[name="theme-color"]')
+      ).toHaveLength(1);
+      expect(meta.content).toBe(THEME_COLORS.dark);
+    });
+
+    it('follows applyTheme, also when the theme is already set', () => {
+      applyTheme('light');
+      expect(themeColor()?.content).toBe(THEME_COLORS.light);
+
+      themeColor()!.content = '#000000';
+      applyTheme('light');
+      expect(themeColor()?.content).toBe(THEME_COLORS.light);
+
+      applyTheme('dark');
+      expect(themeColor()?.content).toBe(THEME_COLORS.dark);
     });
   });
 

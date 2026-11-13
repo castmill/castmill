@@ -70,7 +70,7 @@
     align-items: center;
     width: 4em;
     height: 4em;
-    padding: 2px;
+    padding: 0.125em;
     border-radius: 0.5em;
     overflow: hidden;
 
@@ -101,7 +101,7 @@
     justify-content: center;
     width: 1.25em;
     height: 1.25em;
-    border-radius: 999px;
+    border-radius: 999em;
     background: var(--cm-error);
     color: white;
     font-size: 0.75em;
@@ -147,7 +147,7 @@
     align-items: center;
     gap: 0.75em;
     padding: 0.35em 0.5em;
-    border-radius: 6px;
+    border-radius: 0.375em;
     cursor: pointer;
     transition: background 0.15s ease;
 
@@ -194,7 +194,7 @@
     width: 2.5em;
     height: 2.5em;
     object-fit: cover;
-    border-radius: 4px;
+    border-radius: 0.25em;
     flex-shrink: 0;
     border: 1px solid var(--cm-border-color);
   }

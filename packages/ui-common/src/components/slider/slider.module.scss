@@ -2,11 +2,11 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 0.5em;
 }
 
 .filterLabel {
-  font-size: 14px;
+  font-size: 0.875em;
   color: var(--cm-text-primary);
   user-select: none;
 }
@@ -22,14 +22,14 @@
 .sliderWrapper {
   position: relative;
   width: 100%;
-  max-width: 300px;
+  max-width: 18.75em;
 }
 
 .slider {
   -webkit-appearance: none;
   width: 100%;
-  height: 6px;
-  border-radius: 6px;
+  height: 0.375em;
+  border-radius: 0.375em;
   background: linear-gradient(to right, #4caf50, #2196f3);
   outline: none;
   transition: 0.2s;
@@ -38,11 +38,11 @@
 
 .slider::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 18px;
-  height: 18px;
+  width: 1.125em;
+  height: 1.125em;
   border-radius: 50%;
   background: white;
-  box-shadow: 0 0 6px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 0 0.375em rgba(0, 0, 0, 0.2);
   cursor: grab;
 }
 
@@ -52,12 +52,12 @@
 
 .tooltip {
   position: absolute;
-  top: -30px;
+  top: -2.5em;
   background: black;
   color: white;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 12px;
+  padding: 0.333em 0.667em;
+  border-radius: 0.5em;
+  font-size: 0.75em;
   transform: translateX(-50%);
   transition: opacity 0.2s ease-in-out;
 }

@@ -51,12 +51,12 @@
   &:focus-visible {
     outline: none;
     border-color: colors.$highlight-color;
-    box-shadow: 0 0 0 2px rgba(var(--cm-primary-rgb), 0.2);
+    box-shadow: 0 0 0 0.125em rgba(var(--cm-primary-rgb), 0.2);
   }
 
   &.open {
     border-color: colors.$highlight-color;
-    box-shadow: 0 0 0 2px rgba(var(--cm-primary-rgb), 0.15);
+    box-shadow: 0 0 0 0.125em rgba(var(--cm-primary-rgb), 0.15);
   }
 }
 
@@ -144,7 +144,7 @@
   color: var(--cm-text-placeholder);
   background: colors.$component-background-color;
   padding: 0.15em 0.5em;
-  border-radius: 9999px;
+  border-radius: 999em;
   white-space: nowrap;
 }
 
@@ -211,7 +211,7 @@
 @keyframes msf-panel-in {
   from {
     opacity: 0;
-    transform: translateY(-4px);
+    transform: translateY(-0.25em);
   }
   to {
     opacity: 1;
@@ -315,7 +315,7 @@
   &:focus-visible {
     outline: none;
     background: colors.$highlight-background-color;
-    box-shadow: inset 2px 0 0 colors.$highlight-color;
+    box-shadow: inset 0.125em 0 0 colors.$highlight-color;
   }
 }
 

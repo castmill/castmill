@@ -30,7 +30,7 @@
   align-items: center;
   gap: 0.45em;
   padding: 0.3em 0.75em;
-  border-radius: 999px;
+  border-radius: 999em;
   font-size: 0.85em;
   font-weight: 700;
   white-space: nowrap;
@@ -103,8 +103,8 @@
   }
 
   &:focus-visible {
-    outline: 2px solid var(--cm-focus-ring);
-    outline-offset: 2px;
+    outline: 0.125em solid var(--cm-focus-ring);
+    outline-offset: 0.125em;
   }
 
   code {

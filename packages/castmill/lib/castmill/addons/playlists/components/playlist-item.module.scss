@@ -86,8 +86,8 @@
       }
 
       &:focus-visible {
-        outline: 2px solid var(--cm-primary);
-        outline-offset: -2px;
+        outline: 0.125em solid var(--cm-primary);
+        outline-offset: -0.125em;
       }
 
       &:disabled {
@@ -192,7 +192,7 @@
       }
 
       &:focus-visible {
-        outline: 2px solid var(--cm-primary);
+        outline: 0.125em solid var(--cm-primary);
         outline-offset: 1px;
       }
 

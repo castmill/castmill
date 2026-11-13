@@ -32,10 +32,10 @@ $animation-duration: 0.3s;
     background-color: var(--cm-bg-elevated);
     color: var(--cm-text-primary);
     box-shadow: var(--cm-shadow-lg);
-    border-radius: 8px;
+    border-radius: 0.5em;
 
     padding: 1.6em;
-    transform: translateY(-20px); // Starts slightly above the final position
+    transform: translateY(-1.25em); // Starts slightly above the final position
     opacity: 0; // Starts transparent
     transition:
       transform $animation-duration ease,
@@ -154,6 +154,8 @@ $animation-duration: 0.3s;
       max-width: 100%;
       max-height: calc(100% - 1em);
       padding: 1em 1em calc(1em + env(safe-area-inset-bottom));
+      padding-left: calc(1em + env(safe-area-inset-left, 0em));
+      padding-right: calc(1em + env(safe-area-inset-right, 0em));
       border-radius: 0.75em 0.75em 0 0;
       transform: translateY(2em);
 

@@ -30,6 +30,10 @@ $animation-duration: 0.3s;
   // the page overflows; never grow past the (visual-viewport pinned) root.
   max-width: 100%;
   box-sizing: border-box;
+  // Full-height panel: keep the header and footer clear of the notch, status
+  // bar and home indicator (all 0 on devices without them).
+  padding: env(safe-area-inset-top, 0em) env(safe-area-inset-right, 0em)
+    env(safe-area-inset-bottom, 0em) env(safe-area-inset-left, 0em);
   background-color: var(--cm-bg-elevated);
   color: var(--cm-text-primary);
   box-shadow: 0 0.5em 2em var(--cm-shadow-color);

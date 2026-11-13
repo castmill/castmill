@@ -2,13 +2,30 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
+    <!--
+      viewport-fit=cover lets fixed bars and drawers extend under the iOS notch
+      and home indicator; they pad themselves with env(safe-area-inset-*).
+      interactive-widget=resizes-content shrinks the layout viewport for the
+      on-screen keyboard (Chromium); other browsers use the visual viewport
+      (see useKeyboardInset in @castmill/ui-common).
+    -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
+    />
+    <meta name="theme-color" content="#151925" />
     <link
       rel="shortcut icon"
       type="image/png"
       href="/src/assets/castmill_favicon.png"
     />
+    <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Castmill" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 
     <link rel="preconnect" href="https://rsms.me/" />
     <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
@@ -42,6 +59,13 @@
           }
         } catch (e) {}
         document.documentElement.setAttribute('data-theme', theme);
+        var themeColor = document.querySelector('meta[name="theme-color"]');
+        if (themeColor) {
+          themeColor.setAttribute(
+            'content',
+            theme === 'light' ? '#f4f6fa' : '#151925'
+          );
+        }
       })();
     </script>
   </head>

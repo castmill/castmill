@@ -198,7 +198,7 @@
   flex-direction: column;
   gap: 0.5em;
   padding: 0.5em 0.75em;
-  padding-left: calc(0.75em + var(--indent, 0px) + 1.75em);
+  padding-left: calc(0.75em + var(--indent, 0em) + 1.75em);
 
   // Fade in gently; the parent tree-node-children handles the expand animation.
   opacity: 0;

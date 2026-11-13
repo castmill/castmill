@@ -25,6 +25,31 @@ export const THEME_STORAGE_KEY = 'castmill_theme';
 export const DEFAULT_THEME: Theme = 'dark';
 export const THEME_TRANSITION_MS = 450;
 
+/**
+ * Browser UI colour (`<meta name="theme-color">`) per theme. Matches
+ * `--cm-bg-primary` so the mobile status bar and installed app title bar blend
+ * with the page.
+ */
+export const THEME_COLORS: Record<Theme, string> = {
+  dark: '#151925',
+  light: '#f4f6fa',
+};
+
+/**
+ * Points `<meta name="theme-color">` at the colour of the given theme.
+ */
+export function syncThemeColor(theme: Theme) {
+  let meta = document.querySelector<HTMLMetaElement>(
+    'meta[name="theme-color"]'
+  );
+  if (!meta) {
+    meta = document.createElement('meta');
+    meta.name = 'theme-color';
+    document.head.appendChild(meta);
+  }
+  meta.content = THEME_COLORS[theme];
+}
+
 export const isTheme = (value: unknown): value is Theme =>
   value === 'light' || value === 'dark';
 
@@ -80,12 +105,14 @@ export function applyTheme(theme: Theme, animate = false) {
   const revision = ++themeApplicationRevision;
   const root = document.documentElement;
   if (root.dataset.theme === theme) {
+    syncThemeColor(theme);
     return;
   }
 
   const update = () => {
     if (revision === themeApplicationRevision) {
       root.dataset.theme = theme;
+      syncThemeColor(theme);
     }
   };
 

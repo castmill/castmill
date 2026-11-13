@@ -2,24 +2,24 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: 12px;
-  min-width: 300px;
-  max-width: 500px;
-  padding: 16px;
-  border-radius: 8px;
+  gap: 0.857em;
+  min-width: 21.429em;
+  max-width: 35.714em;
+  padding: 1.143em;
+  border-radius: 0.571em;
   box-shadow:
-    0 4px 12px var(--cm-shadow-color),
-    0 2px 4px var(--cm-shadow-color);
+    0 0.286em 0.857em var(--cm-shadow-color),
+    0 0.143em 0.286em var(--cm-shadow-color);
   color: #fff;
-  font-size: 14px;
+  font-size: 0.875em;
   font-weight: 500;
   opacity: 0;
   transform: translateX(100%);
   transition:
     opacity 0.3s ease-in-out,
     transform 0.3s ease-in-out;
-  margin-bottom: 12px;
-  backdrop-filter: blur(10px);
+  margin-bottom: 0.857em;
+  backdrop-filter: blur(0.714em);
 
   &.visible {
     opacity: 1;
@@ -34,7 +34,7 @@
   &Icon {
     display: flex;
     align-items: center;
-    font-size: 24px;
+    font-size: 1.5em;
     flex-shrink: 0;
   }
 
@@ -54,9 +54,9 @@
     border: none;
     color: inherit;
     cursor: pointer;
-    padding: 4px;
-    border-radius: 4px;
-    font-size: 18px;
+    padding: 0.222em;
+    border-radius: 0.222em;
+    font-size: 1.125em;
     flex-shrink: 0;
     transition: background-color 0.2s;
 

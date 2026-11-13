@@ -29,7 +29,11 @@ import Topbar from './components/topbar/topbar';
 import SettingsPage from './pages/settings-page/settings-page';
 import Footer from './components/footer/footer';
 import SearchPage from './pages/search-page/search-page';
-import { ToastProvider, useToast } from '@castmill/ui-common';
+import {
+  ToastProvider,
+  trackKeyboardInset,
+  useToast,
+} from '@castmill/ui-common';
 
 import { AddOnTree } from './classes/addon-tree';
 
@@ -68,6 +72,9 @@ const SetupPasskey = lazy(() => import('./components/login/setup-passkey'));
 const NotFound = lazy(() => import('./components/not-found'));
 
 const root = document.getElementById('root');
+
+// Publish the on-screen keyboard height (--cm-keyboard-inset) for fixed bars.
+trackKeyboardInset();
 
 const themePreferences: ThemePreferencesApi = {
   load: (userId) => UserService.getPreferences(userId),
