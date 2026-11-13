@@ -562,6 +562,13 @@
     "addedOn": "Añadido el",
     "lastUpdatedOn": "Última actualización el",
     "enterTeamName": "Ingresa el nombre del equipo",
+    "summary": "Resumen del equipo",
+    "created": "Creado {{time}}",
+    "updated": "Actualizado {{time}}",
+    "unsavedChanges": "Cambios sin guardar",
+    "teamCreated": "Equipo {{name}} creado correctamente",
+    "teamUpdated": "Equipo {{name}} actualizado correctamente",
+    "teamRemoved": "Equipo {{name}} eliminado correctamente",
     "insertedAt": "Insertado el",
     "expiresAt": "Expira el",
     "inviteMember": "Invitar miembro",
@@ -582,7 +589,9 @@
       "removeResource": "Error al eliminar recurso del equipo: {{error}}",
       "removeResources": "Error al eliminar recursos del equipo: {{error}}",
       "addResourceToTeam": "Error al añadir recurso al equipo: {{error}}",
-      "cannotRemoveLastAdmin": "No puedes eliminar al último administrador del equipo."
+      "cannotRemoveLastAdmin": "No puedes eliminar al último administrador del equipo.",
+      "nameRequired": "El nombre es obligatorio",
+      "nameMinLength": "El nombre debe tener al menos {{min}} caracteres"
     },
     "messages": {
       "memberRemoved": "El miembro {{name}} se eliminó correctamente",

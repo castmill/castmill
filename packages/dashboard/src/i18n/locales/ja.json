@@ -561,6 +561,13 @@
     "addedOn": "追加日",
     "lastUpdatedOn": "最終更新日",
     "enterTeamName": "チーム名を入力してください",
+    "summary": "チームの概要",
+    "created": "{{time}}に作成",
+    "updated": "{{time}}に更新",
+    "unsavedChanges": "未保存の変更",
+    "teamCreated": "チーム {{name}} を作成しました",
+    "teamUpdated": "チーム {{name}} を更新しました",
+    "teamRemoved": "チーム {{name}} を削除しました",
     "insertedAt": "挿入日時",
     "expiresAt": "有効期限",
     "inviteMember": "メンバーを招待",
@@ -580,7 +587,9 @@
       "removeResource": "チームからリソースを削除中にエラーが発生しました：{{error}}",
       "removeResources": "チームからリソースを削除中にエラーが発生しました：{{error}}",
       "addResourceToTeam": "チームにリソースを追加中にエラーが発生しました：{{error}}",
-      "cannotRemoveLastAdmin": "チームの最後の管理者を削除することはできません。"
+      "cannotRemoveLastAdmin": "チームの最後の管理者を削除することはできません。",
+      "nameRequired": "名前は必須です",
+      "nameMinLength": "名前は{{min}}文字以上である必要があります"
     },
     "confirmAddResources": "以下のリソースを追加してもよろしいですか？",
     "messages": {

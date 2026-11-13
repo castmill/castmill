@@ -561,6 +561,13 @@
     "addedOn": "추가됨",
     "lastUpdatedOn": "마지막 업데이트",
     "enterTeamName": "팀 이름 입력",
+    "summary": "팀 요약",
+    "created": "{{time}} 생성됨",
+    "updated": "{{time}} 업데이트됨",
+    "unsavedChanges": "저장되지 않은 변경 사항",
+    "teamCreated": "팀 {{name}}이(가) 생성되었습니다",
+    "teamUpdated": "팀 {{name}}이(가) 업데이트되었습니다",
+    "teamRemoved": "팀 {{name}}이(가) 제거되었습니다",
     "insertedAt": "삽입 시간",
     "expiresAt": "만료 시간",
     "inviteMember": "멤버 초대",
@@ -580,7 +587,9 @@
       "removeResource": "팀에서 리소스 제거 오류: {{error}}",
       "removeResources": "팀에서 리소스 제거 오류: {{error}}",
       "addResourceToTeam": "팀에 리소스 추가 오류: {{error}}",
-      "cannotRemoveLastAdmin": "팀의 마지막 관리자를 제거할 수 없습니다."
+      "cannotRemoveLastAdmin": "팀의 마지막 관리자를 제거할 수 없습니다.",
+      "nameRequired": "이름은 필수입니다",
+      "nameMinLength": "이름은 최소 {{min}}자 이상이어야 합니다"
     },
     "confirmAddResources": "다음 리소스를 추가하시겠습니까?",
     "messages": {

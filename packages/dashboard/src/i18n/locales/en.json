@@ -600,6 +600,13 @@
     "addedOn": "Added on",
     "lastUpdatedOn": "Last updated on",
     "enterTeamName": "Enter team name",
+    "summary": "Team summary",
+    "created": "Created {{time}}",
+    "updated": "Updated {{time}}",
+    "unsavedChanges": "Unsaved changes",
+    "teamCreated": "Team {{name}} created successfully",
+    "teamUpdated": "Team {{name}} updated successfully",
+    "teamRemoved": "Team {{name}} removed successfully",
     "insertedAt": "Inserted At",
     "expiresAt": "Expires At",
     "inviteMember": "Invite Member",
@@ -620,7 +627,9 @@
       "removeResource": "Error removing resource from team: {{error}}",
       "removeResources": "Error removing resources from team: {{error}}",
       "addResourceToTeam": "Error adding resource to team: {{error}}",
-      "cannotRemoveLastAdmin": "You can't remove the last admin of a team."
+      "cannotRemoveLastAdmin": "You can't remove the last admin of a team.",
+      "nameRequired": "Name is required",
+      "nameMinLength": "Name must be at least {{min}} characters"
     },
     "messages": {
       "memberRemoved": "Member {{name}} removed successfully",

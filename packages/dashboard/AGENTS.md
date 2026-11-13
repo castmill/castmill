@@ -162,6 +162,17 @@ Shared mobile behaviour (ui-common):
   tabs collapse to icon-only at ≤36em (the title stays as tooltip and
   accessible name), and pass `ariaLabel={t('common.sections')}`.
 
+## Team Details Drawer
+
+`pages/teams-page/team-view.tsx` owns its `Drawer` so the form state and the
+Save/Reset footer stay together. The footer's submit button targets the form
+through the `form` attribute. Keep the members/invitations tabs outside that
+form; otherwise pressing Enter in a table search field submits the team.
+Existing teams show a compact `DetailsSummary` with the name, member count
+(reloaded when a member is removed), and localized created/updated times.
+Teams from the API use `inserted_at`/`updated_at`. The nested tables use
+`cardLayout`; pass `locale={locale()}` to `Timestamp` cells.
+
 ## Critical Rules
 
 ### ⚠️ MANDATORY: All User-Facing Text Must Be Localized

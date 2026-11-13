@@ -102,7 +102,7 @@ export const TeamMembersView = (props: {
   onRemove: (member: User) => void;
   onInvitationSent?: () => void;
 }) => {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const cardLabels = useTableCardLabels();
   const { canPerformAction } = usePermissions();
   const toast = useToast();
@@ -184,7 +184,7 @@ export const TeamMembersView = (props: {
       title: t('teams.insertedAt'),
       sortable: true,
       render: (item: any) => (
-        <Timestamp value={item.inserted_at} mode="relative" />
+        <Timestamp value={item.inserted_at} mode="relative" locale={locale()} />
       ),
     },
   ];
@@ -359,7 +359,11 @@ export const TeamMembersView = (props: {
                   );
 
                   refreshData();
-                  toast.success(`Invitation sent to ${selectedUser()!.email}`);
+                  toast.success(
+                    t('teams.messages.invitationSent', {
+                      email: selectedUser()!.email,
+                    })
+                  );
                   props.onInvitationSent?.();
                   setShowAddMemberDialog(false);
                 } catch (error) {
