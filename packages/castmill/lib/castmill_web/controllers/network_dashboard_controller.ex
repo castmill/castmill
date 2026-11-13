@@ -244,6 +244,8 @@ defmodule CastmillWeb.NetworkDashboardController do
         "content-disposition",
         ~s(attachment; filename="#{download_name(widget.slug, package)}")
       )
+      # The dashboard may be on another origin; let it read the file name.
+      |> put_resp_header("access-control-expose-headers", "content-disposition")
       |> send_resp(:ok, package.content)
     else
       :error -> widget_access_error(conn, {:error, :not_found})

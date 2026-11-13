@@ -1005,6 +1005,7 @@ defmodule CastmillWeb.NetworkDashboardControllerTest do
       assert download.status == 200
       assert [disposition] = get_resp_header(download, "content-disposition")
       assert disposition == ~s(attachment; filename="#{ctx.slug}-v1.zip")
+      assert get_resp_header(download, "access-control-expose-headers") == ["content-disposition"]
       assert {:ok, _files} = :zip.list_dir(download.resp_body)
 
       for path <- ["/packages/9", "/packages/x"] do
