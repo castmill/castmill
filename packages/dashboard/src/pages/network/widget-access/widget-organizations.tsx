@@ -474,6 +474,10 @@ export const WidgetOrganizations: Component<{
         </button>
       </SelectionActionBar>
 
+      <Show when={selected().size > 0}>
+        <div class={styles['selection-spacer']} aria-hidden="true" />
+      </Show>
+
       <Show when={bulkAction()} keyed>
         {(action) => (
           <ConfirmAccessChange

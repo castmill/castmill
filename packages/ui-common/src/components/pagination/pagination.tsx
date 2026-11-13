@@ -99,7 +99,7 @@ export const Pagination = (props: PaginationProps): JSX.Element => {
       </For>
 
       {/* Compact "current / total" summary shown instead of page numbers on phones */}
-      <span class="pagination-summary" aria-hidden="true">
+      <span class="pagination-summary">
         {props.currentPage} / {Math.max(totalPages(), 1)}
       </span>
 

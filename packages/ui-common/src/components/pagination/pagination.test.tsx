@@ -72,9 +72,9 @@ describe('Pagination Component', () => {
     expect(current).toHaveTextContent('4');
     expect(current).toHaveClass('pagination-page');
     expect(container.querySelectorAll('[aria-current="page"]')).toHaveLength(1);
-    expect(container.querySelector('.pagination-summary')).toHaveTextContent(
-      '4 / 10'
-    );
+    const summary = container.querySelector('.pagination-summary');
+    expect(summary).toHaveTextContent('4 / 10');
+    expect(summary).not.toHaveAttribute('aria-hidden', 'true');
   });
 
   it('shows at least one total page in the summary when empty', () => {
