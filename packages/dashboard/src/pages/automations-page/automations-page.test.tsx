@@ -475,5 +475,19 @@ describe('AutomationsPage', () => {
         ).not.toBeInTheDocument()
       );
     });
+
+    it('closes the editor on outside clicks but not on table rows', async () => {
+      await openEditor();
+      fireEvent.click(document.querySelector('tbody tr') as HTMLElement);
+      await new Promise((resolve) => setTimeout(resolve, 350));
+      expect(screen.getByDisplayValue('Spring campaign')).toBeInTheDocument();
+
+      fireEvent.click(document.body);
+      await waitFor(() =>
+        expect(
+          screen.queryByDisplayValue('Spring campaign')
+        ).not.toBeInTheDocument()
+      );
+    });
   });
 });

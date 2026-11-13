@@ -143,6 +143,8 @@ export const AutomationEditor: Component<AutomationEditorProps> = (props) => {
       closeButtonTitle={t('common.close')}
       onClose={props.onClose}
       size="lg"
+      closeOnOutsideClick
+      outsideClickIgnoreSelector="tbody tr"
     >
       <div class={styles.editorHeader}>
         <label class={styles.field}>
