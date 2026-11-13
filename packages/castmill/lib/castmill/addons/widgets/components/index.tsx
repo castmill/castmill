@@ -30,15 +30,17 @@ import {
   TableView,
   TableViewRef,
   ModalRef,
-  Tabs,
   TabItem,
   ConfirmDialog,
+  ToastProvider,
+  useToast,
 } from '@castmill/ui-common';
 import { JsonWidget } from '@castmill/player';
 import { WidgetsService, WidgetUsage } from '../services/widgets.service';
 import { UploadComponent } from './upload';
 import { JsonHighlight } from './json-highlight';
 import { AssetsList } from './assets-list';
+import { WidgetDetailsView } from './widget-details-view';
 import { IntegrationsList } from '../../common/components/integrations-list';
 
 import { DEFAULT_WIDGET_ICON } from '../../common/constants';
@@ -60,6 +62,16 @@ const WidgetsPage: Component<{
   const t = (key: string, params?: Record<string, any>) =>
     props.store.i18n?.t(key, params) || key;
   const locale = () => props.store.i18n?.locale() || 'en';
+  const toast = useToast();
+
+  const renderJson = (json: unknown) => (
+    <JsonHighlight
+      json={json}
+      copyLabel={t('widgets.json.copy')}
+      copiedMessage={t('widgets.json.copied')}
+      onCopyError={() => toast.error(t('widgets.json.copyFailed'))}
+    />
+  );
 
   const getWidgetName = (widget: WidgetWithId): string =>
     getTranslatedWidgetName(widget, locale());
@@ -114,7 +126,7 @@ const WidgetsPage: Component<{
       {
         title: t('widgets.template'),
         icon: BsBraces,
-        content: () => <JsonHighlight json={widget.template} />,
+        content: () => renderJson(widget.template),
       },
     ];
 
@@ -122,7 +134,7 @@ const WidgetsPage: Component<{
       tabs.push({
         title: t('widgets.optionsSchema'),
         icon: BsSliders,
-        content: () => <JsonHighlight json={widget.options_schema} />,
+        content: () => renderJson(widget.options_schema),
       });
     }
 
@@ -130,14 +142,14 @@ const WidgetsPage: Component<{
       tabs.push({
         title: t('widgets.dataSchema'),
         icon: BsDatabase,
-        content: () => <JsonHighlight json={widget.data_schema} />,
+        content: () => renderJson(widget.data_schema),
       });
     }
 
     tabs.push({
       title: t('widgets.translations'),
       icon: BsTranslate,
-      content: () => <JsonHighlight json={widget.translations || {}} />,
+      content: () => renderJson(widget.translations || {}),
     });
 
     // Add assets tab if widget has assets
@@ -644,32 +656,14 @@ const WidgetsPage: Component<{
           closeOnOutsideClick
           outsideClickIgnoreSelector="tbody tr"
         >
-          <div class="widget-details-content">
-            {/* Widget metadata header */}
-            <div class="widget-metadata">
-              <div class="metadata-item">
-                <strong>{t('common.type')}:</strong>{' '}
-                <span class="type-value">
-                  {currentWidget()!.template?.type || t('common.unknown')}
-                </span>
-              </div>
-              {currentWidget()!.update_interval_seconds && (
-                <div class="metadata-item">
-                  <strong>{t('widgets.updateInterval')}:</strong>{' '}
-                  <span class="interval-value">
-                    {currentWidget()!.update_interval_seconds}s
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Tabs using ui-common Tabs component */}
-            <Tabs
-              tabs={detailsTabs()}
-              initialIndex={initialTabIndex()}
-              ariaLabel={t('common.sections')}
-            />
-          </div>
+          <WidgetDetailsView
+            widget={currentWidget()!}
+            description={getWidgetDescription(currentWidget()!)}
+            tabs={detailsTabs()}
+            initialIndex={initialTabIndex()}
+            t={t}
+            onCopyError={() => toast.error(t('widgets.details.copySlugFailed'))}
+          />
         </Drawer>
       </Show>
 
@@ -707,4 +701,8 @@ const WidgetsPage: Component<{
   );
 };
 
-export default WidgetsPage;
+export default (props: { store: AddonStore; params: any }) => (
+  <ToastProvider>
+    <WidgetsPage {...props} />
+  </ToastProvider>
+);

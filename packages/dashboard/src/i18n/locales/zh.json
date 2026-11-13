@@ -1141,6 +1141,17 @@
         "networkError": "无法连接到服务器。请检查网络连接。",
         "unknown": "无法加载项目。"
       }
+    },
+    "details": {
+      "updatesEvery": "每 {{seconds}} 秒更新",
+      "copySlug": "复制小部件标识符",
+      "slugCopied": "已复制小部件标识符",
+      "copySlugFailed": "无法复制小部件标识符。"
+    },
+    "json": {
+      "copy": "复制 JSON",
+      "copied": "已复制 JSON",
+      "copyFailed": "无法复制 JSON。"
     }
   },
   "devices": {

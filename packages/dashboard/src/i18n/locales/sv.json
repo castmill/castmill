@@ -1136,6 +1136,17 @@
         "networkError": "Det gick inte att nå servern. Kontrollera anslutningen.",
         "unknown": "Det gick inte att läsa in objekten."
       }
+    },
+    "details": {
+      "updatesEvery": "Uppdateras var {{seconds}}:e sekund",
+      "copySlug": "Kopiera widgetens identifierare",
+      "slugCopied": "Widgetens identifierare kopierad",
+      "copySlugFailed": "Det gick inte att kopiera widgetens identifierare."
+    },
+    "json": {
+      "copy": "Kopiera JSON",
+      "copied": "JSON kopierad",
+      "copyFailed": "Det gick inte att kopiera JSON."
     }
   },
   "devices": {

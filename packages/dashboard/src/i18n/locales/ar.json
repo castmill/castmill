@@ -1141,6 +1141,17 @@
         "networkError": "تعذر الوصول إلى الخادم. تحقق من اتصالك.",
         "unknown": "تعذر تحميل العناصر."
       }
+    },
+    "details": {
+      "updatesEvery": "يتم التحديث كل {{seconds}} ثانية",
+      "copySlug": "نسخ معرّف الأداة",
+      "slugCopied": "تم نسخ معرّف الأداة",
+      "copySlugFailed": "تعذّر نسخ معرّف الأداة."
+    },
+    "json": {
+      "copy": "نسخ JSON",
+      "copied": "تم نسخ JSON",
+      "copyFailed": "تعذّر نسخ JSON."
     }
   },
   "devices": {

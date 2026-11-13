@@ -1142,6 +1142,17 @@
         "networkError": "サーバーに接続できません。接続を確認してください。",
         "unknown": "項目を読み込めませんでした。"
       }
+    },
+    "details": {
+      "updatesEvery": "{{seconds}}秒ごとに更新",
+      "copySlug": "ウィジェット識別子をコピー",
+      "slugCopied": "ウィジェット識別子をコピーしました",
+      "copySlugFailed": "ウィジェット識別子をコピーできませんでした。"
+    },
+    "json": {
+      "copy": "JSON をコピー",
+      "copied": "JSON をコピーしました",
+      "copyFailed": "JSON をコピーできませんでした。"
     }
   },
   "devices": {
