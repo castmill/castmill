@@ -1,7 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createRoot } from 'solid-js';
 import {
+  COARSE_POINTER_QUERY,
   PHONE_LAYOUT_QUERY,
+  useCoarsePointer,
   useMediaQuery,
   usePhoneLayout,
 } from './useMediaQuery';
@@ -192,6 +194,24 @@ describe('usePhoneLayout', () => {
     createRoot((dispose) => {
       expect(usePhoneLayout()()).toBe(true);
       expect(window.matchMedia).toHaveBeenCalledWith(PHONE_LAYOUT_QUERY);
+      dispose();
+    });
+  });
+});
+
+describe('useCoarsePointer', () => {
+  it('queries a coarse pointer and falls back to false', () => {
+    (window as any).matchMedia = undefined;
+    createRoot((dispose) => {
+      expect(useCoarsePointer()()).toBe(false);
+      dispose();
+    });
+
+    mockMatchMedia(true);
+    createRoot((dispose) => {
+      expect(useCoarsePointer()()).toBe(true);
+      expect(window.matchMedia).toHaveBeenCalledWith(COARSE_POINTER_QUERY);
+      expect(COARSE_POINTER_QUERY).toBe('(pointer: coarse)');
       dispose();
     });
   });

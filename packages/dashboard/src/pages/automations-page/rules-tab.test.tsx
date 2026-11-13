@@ -140,6 +140,39 @@ describe('RulesTab', () => {
     expect(onRulesChange).toHaveBeenCalledTimes(1);
   });
 
+  it('replaces drag with the move buttons on touch screens', async () => {
+    const originalMatchMedia = window.matchMedia;
+    window.matchMedia = vi.fn((query: string) => ({
+      matches: query === '(pointer: coarse)',
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    })) as unknown as typeof window.matchMedia;
+    try {
+      const { container } = renderTab();
+      const cards = screen.getAllByTestId('rule-card');
+      cards.forEach((card) =>
+        expect(card).toHaveAttribute('draggable', 'false')
+      );
+      expect(container.querySelector('[class*="dragHandle"]')).toBeNull();
+
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Move rule 2 up' })
+      );
+      await waitFor(() => expect(ids()).toEqual(['r2', 'r1']));
+    } finally {
+      window.matchMedia = originalMatchMedia;
+    }
+  });
+
+  it('shows the drag handle with a fine pointer', () => {
+    const { container } = renderTab();
+    expect(screen.getAllByTestId('rule-card')[0]).toHaveAttribute(
+      'draggable',
+      'true'
+    );
+    expect(container.querySelector('[class*="dragHandle"]')).not.toBeNull();
+  });
+
   it('ignores drag over without an active drag', () => {
     renderTab();
     const [first] = screen.getAllByTestId('rule-card');

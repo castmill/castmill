@@ -11,6 +11,7 @@ import {
 import { BsChevronLeft, BsChevronRight, BsPlusLg, BsXLg } from 'solid-icons/bs';
 
 import { Button } from '../button/button';
+import { useCoarsePointer } from '../../hooks/useMediaQuery';
 import { Modal, ModalRef } from '../modal/modal';
 import { Choice, ChoiceVisual } from './choice-visual';
 import styles from './choices-field.module.scss';
@@ -103,6 +104,8 @@ const mergeUnique = (items: Choice[], more: Choice[]) => {
 export const ChoicesField: Component<ChoicesFieldProps> = (props) => {
   const display = () => props.display || 'list';
   const selected = () => toValues(props.value);
+  // HTML5 drag-and-drop is unavailable on touch; the move buttons remain.
+  const coarsePointer = useCoarsePointer();
   const reloadKey = createMemo(() => props.reloadKey);
 
   const [known, setKnown] = createSignal<Map<string, Choice>>(new Map());
@@ -370,7 +373,7 @@ export const ChoicesField: Component<ChoicesFieldProps> = (props) => {
       <li
         class={styles.tile}
         classList={{ [styles.unavailable]: !!state().unavailable }}
-        draggable={props.ordered && !props.disabled}
+        draggable={props.ordered && !props.disabled && !coarsePointer()}
         onDragStart={() => (dragIndex = index())}
         onDragOver={(e) => props.ordered && e.preventDefault()}
         onDrop={(e) => {

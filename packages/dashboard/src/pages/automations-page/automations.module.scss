@@ -673,3 +673,20 @@ $danger: var(--cm-error);
     justify-content: flex-end;
   }
 }
+
+/* Touch screens: ≥2.75em tap targets; rules wrap their action row */
+@media (pointer: coarse) {
+  .iconButton {
+    min-width: 2.75em;
+    min-height: 2.75em;
+  }
+
+  .ruleCard {
+    flex-wrap: wrap;
+  }
+
+  .ruleActions {
+    flex-basis: 100%;
+    justify-content: flex-end;
+  }
+}

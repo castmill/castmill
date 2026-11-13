@@ -117,7 +117,8 @@
     background: var(--cm-bg-hover);
   }
 
-  &:hover .tag-actions {
+  &:hover .tag-actions,
+  &:focus-within .tag-actions {
     max-width: 5em;
     opacity: 1;
     pointer-events: auto;
@@ -137,6 +138,16 @@
     max-width 0.25s cubic-bezier(0.4, 0, 0.2, 1),
     opacity 0.2s ease,
     margin-left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Touch screens have no hover: keep tag actions visible */
+@media (hover: none), (pointer: coarse) {
+  .tag-actions {
+    max-width: none;
+    opacity: 1;
+    pointer-events: auto;
+    margin-left: 0.25em;
+  }
 }
 
 .empty-message {
