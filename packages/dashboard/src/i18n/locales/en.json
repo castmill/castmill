@@ -1647,7 +1647,25 @@
     },
     "drawerTitle": "Media \"{{name}}\"",
     "mediaUpdated": "Media \"{{name}}\" updated successfully",
-    "errorUpdating": "Error updating media {{name}}: {{error}}"
+    "errorUpdating": "Error updating media {{name}}: {{error}}",
+    "details": {
+      "summary": "Media summary",
+      "copyId": "Copy media ID",
+      "copied": "Media ID copied",
+      "copyFailed": "Could not copy the media ID.",
+      "added": "Added {{time}}",
+      "updated": "Updated {{time}}",
+      "dimensions": "Dimensions",
+      "duration": "Duration",
+      "namePlaceholder": "Enter media name",
+      "nameRequired": "Name is required",
+      "nameTooShort": "Name must be at least 5 characters",
+      "noPreview": "No preview available",
+      "types": {
+        "image": "Image",
+        "video": "Video"
+      }
+    }
   },
   "dashboard": {
     "noOrganizations": {

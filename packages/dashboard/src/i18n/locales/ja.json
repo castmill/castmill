@@ -1653,7 +1653,25 @@
     },
     "drawerTitle": "メディア \"{{name}}\"",
     "mediaUpdated": "メディア \"{{name}}\" が正常に更新されました",
-    "errorUpdating": "メディア {{name}} の更新エラー：{{error}}"
+    "errorUpdating": "メディア {{name}} の更新エラー：{{error}}",
+    "details": {
+      "summary": "メディアの概要",
+      "copyId": "メディアIDをコピー",
+      "copied": "メディアIDをコピーしました",
+      "copyFailed": "メディアIDをコピーできませんでした。",
+      "added": "{{time}}に追加",
+      "updated": "{{time}}に更新",
+      "dimensions": "サイズ",
+      "duration": "再生時間",
+      "namePlaceholder": "メディア名を入力",
+      "nameRequired": "名前は必須です",
+      "nameTooShort": "名前は5文字以上である必要があります",
+      "noPreview": "プレビューはありません",
+      "types": {
+        "image": "画像",
+        "video": "動画"
+      }
+    }
   },
   "dashboard": {
     "noOrganizations": {

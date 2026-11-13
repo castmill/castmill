@@ -1652,7 +1652,25 @@
     },
     "drawerTitle": "الوسائط \"{{name}}\"",
     "mediaUpdated": "تم تحديث الوسائط \"{{name}}\" بنجاح",
-    "errorUpdating": "خطأ في تحديث الوسائط {{name}}: {{error}}"
+    "errorUpdating": "خطأ في تحديث الوسائط {{name}}: {{error}}",
+    "details": {
+      "summary": "ملخص الوسائط",
+      "copyId": "نسخ معرّف الوسائط",
+      "copied": "تم نسخ معرّف الوسائط",
+      "copyFailed": "تعذّر نسخ معرّف الوسائط.",
+      "added": "أُضيف {{time}}",
+      "updated": "حُدّث {{time}}",
+      "dimensions": "الأبعاد",
+      "duration": "المدة",
+      "namePlaceholder": "أدخل اسم الوسائط",
+      "nameRequired": "الاسم مطلوب",
+      "nameTooShort": "يجب أن يتكون الاسم من 5 أحرف على الأقل",
+      "noPreview": "لا تتوفر معاينة",
+      "types": {
+        "image": "صورة",
+        "video": "فيديو"
+      }
+    }
   },
   "dashboard": {
     "noOrganizations": {

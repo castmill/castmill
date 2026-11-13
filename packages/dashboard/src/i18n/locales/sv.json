@@ -1647,7 +1647,25 @@
     },
     "drawerTitle": "Mediefil \"{{name}}\"",
     "mediaUpdated": "Mediefil \"{{name}}\" uppdaterad",
-    "errorUpdating": "Fel vid uppdatering av mediefil {{name}}: {{error}}"
+    "errorUpdating": "Fel vid uppdatering av mediefil {{name}}: {{error}}",
+    "details": {
+      "summary": "Mediesammanfattning",
+      "copyId": "Kopiera medie-ID",
+      "copied": "Medie-ID kopierat",
+      "copyFailed": "Det gick inte att kopiera medie-ID:t.",
+      "added": "Tillagd {{time}}",
+      "updated": "Uppdaterad {{time}}",
+      "dimensions": "Mått",
+      "duration": "Längd",
+      "namePlaceholder": "Ange mediets namn",
+      "nameRequired": "Namn krävs",
+      "nameTooShort": "Namnet måste vara minst 5 tecken",
+      "noPreview": "Ingen förhandsvisning tillgänglig",
+      "types": {
+        "image": "Bild",
+        "video": "Video"
+      }
+    }
   },
   "dashboard": {
     "noOrganizations": {

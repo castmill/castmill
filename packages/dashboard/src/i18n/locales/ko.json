@@ -1652,7 +1652,25 @@
     },
     "drawerTitle": "미디어 \"{{name}}\"",
     "mediaUpdated": "미디어 \"{{name}}\"이(가) 성공적으로 업데이트되었습니다",
-    "errorUpdating": "미디어 {{name}} 업데이트 오류: {{error}}"
+    "errorUpdating": "미디어 {{name}} 업데이트 오류: {{error}}",
+    "details": {
+      "summary": "미디어 요약",
+      "copyId": "미디어 ID 복사",
+      "copied": "미디어 ID가 복사되었습니다",
+      "copyFailed": "미디어 ID를 복사할 수 없습니다.",
+      "added": "{{time}} 추가됨",
+      "updated": "{{time}} 업데이트됨",
+      "dimensions": "크기",
+      "duration": "재생 시간",
+      "namePlaceholder": "미디어 이름 입력",
+      "nameRequired": "이름은 필수입니다",
+      "nameTooShort": "이름은 5자 이상이어야 합니다",
+      "noPreview": "미리보기를 사용할 수 없습니다",
+      "types": {
+        "image": "이미지",
+        "video": "동영상"
+      }
+    }
   },
   "dashboard": {
     "noOrganizations": {

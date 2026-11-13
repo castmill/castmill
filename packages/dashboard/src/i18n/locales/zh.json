@@ -1652,7 +1652,25 @@
     },
     "drawerTitle": "媒体 \"{{name}}\"",
     "mediaUpdated": "媒体 \"{{name}}\" 更新成功",
-    "errorUpdating": "更新媒体 {{name}} 时出错：{{error}}"
+    "errorUpdating": "更新媒体 {{name}} 时出错：{{error}}",
+    "details": {
+      "summary": "媒体摘要",
+      "copyId": "复制媒体 ID",
+      "copied": "已复制媒体 ID",
+      "copyFailed": "无法复制媒体 ID。",
+      "added": "添加于 {{time}}",
+      "updated": "更新于 {{time}}",
+      "dimensions": "尺寸",
+      "duration": "时长",
+      "namePlaceholder": "输入媒体名称",
+      "nameRequired": "名称为必填项",
+      "nameTooShort": "名称至少需要 5 个字符",
+      "noPreview": "暂无预览",
+      "types": {
+        "image": "图片",
+        "video": "视频"
+      }
+    }
   },
   "dashboard": {
     "noOrganizations": {
