@@ -29,7 +29,12 @@ const TopbarLink: Component<TopbarLinkProps> = (props) => {
           </A>
         }
       >
-        <a href={props.to} target="_blank" rel="noopener noreferrer">
+        <a
+          href={props.to}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={props.text}
+        >
           {props.icon && <props.icon></props.icon>}
           <span>{props.text}</span>
         </a>

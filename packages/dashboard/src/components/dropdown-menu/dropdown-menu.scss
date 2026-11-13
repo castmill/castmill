@@ -52,7 +52,7 @@
         0 4px 6px -1px var(--cm-shadow-color),
         0 2px 4px -1px var(--cm-shadow-color);
       position: absolute;
-      right: 0;
+      inset-inline-end: 0;
       top: 100%;
       z-index: 1000;
       transition:
@@ -88,7 +88,7 @@
           cursor: pointer;
           font-size: 0.9rem;
           font-family: inherit;
-          text-align: left;
+          text-align: start;
           transition:
             background-color 0.2s ease,
             color 0.2s ease;

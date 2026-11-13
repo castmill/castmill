@@ -74,6 +74,123 @@
     gap: 0.5rem;
   }
 
+  .topbar-icon-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 2.5em;
+    height: 2.5em;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    svg {
+      font-size: 1.5em;
+    }
+
+    &:hover,
+    &[aria-expanded='true'] {
+      background-color: var(--cm-bg-hover-strong);
+    }
+
+    &:focus-visible {
+      outline: 0.125em solid colors.$highlight-color;
+      outline-offset: 0.125em;
+    }
+
+    &.animate-pulse {
+      animation: pulse-glow 1.5s ease-in-out infinite;
+    }
+  }
+
+  .user-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2em;
+    height: 2em;
+    border-radius: 50%;
+    font-weight: 600;
+    color: #fff;
+    background-color: var(--cm-primary);
+  }
+
+  .topbar-overflow {
+    position: relative;
+
+    &__menu {
+      position: absolute;
+      top: calc(100% + 0.5em);
+      inset-inline-end: 0;
+      z-index: 1000;
+      min-width: 16em;
+      max-width: calc(100vw - 2em);
+      padding: 0.5em;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25em;
+      color: colors.$base-color;
+      background-color: colors.$component-background-color;
+      border: 1px solid colors.$separator-color;
+      border-radius: 0.5em;
+      box-shadow: var(--cm-shadow-md);
+    }
+
+    &__item {
+      display: flex;
+      align-items: center;
+      gap: 0.75em;
+      width: 100%;
+      min-height: 2.75em;
+      padding: 0.5em 0.75em;
+      box-sizing: border-box;
+      border: none;
+      border-radius: 0.3em;
+      background: none;
+      color: inherit;
+      font: inherit;
+      font-size: 0.95em;
+      text-align: start;
+      text-decoration: none;
+      cursor: pointer;
+
+      svg {
+        flex-shrink: 0;
+        font-size: 1.25em;
+      }
+
+      &:hover,
+      &:focus-visible {
+        background-color: colors.$highlight-background-color;
+        color: colors.$highlight-color;
+        outline: none;
+      }
+    }
+
+    &__language {
+      cursor: default;
+
+      span {
+        flex: 1;
+      }
+
+      select {
+        font: inherit;
+        padding: 0.25em 0.5em;
+        color: colors.$base-color;
+        background-color: colors.$component-background-color-light;
+        border: 1px solid colors.$separator-color;
+        border-radius: 0.3em;
+      }
+    }
+  }
+
   .keyboard-shortcuts-icon {
     display: flex;
     align-items: center;
@@ -138,6 +255,96 @@
 
       svg {
         font-size: 1.25rem;
+      }
+    }
+  }
+}
+
+// Landscape tablets keep the full bar but tighten it so it fits next to the
+// icon rail: icon-only help link and no search widening on focus.
+@media (max-width: 64em) {
+  .castmill-header:not(.castmill-header--compact) {
+    nav {
+      margin: 0 1em;
+    }
+
+    .castmill-topbar-link a {
+      margin: 0 0.25em;
+
+      span {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+      }
+    }
+
+    .castmill-search input:focus {
+      width: 10em;
+    }
+  }
+}
+
+// Phones and portrait tablets: logo/menu, search icon, notifications, overflow
+// menu and avatar.
+.castmill-header--compact {
+  height: 3.75rem;
+
+  nav {
+    margin: 0 0.5em;
+  }
+
+  .main {
+    gap: 0.5em;
+    min-width: 0;
+
+    .network-logo img {
+      max-height: 2.25em;
+      max-width: 8em;
+    }
+  }
+
+  .right {
+    gap: 0.25em;
+  }
+
+  .topbar-dropdowns {
+    gap: 0.25em;
+  }
+
+  .topbar-user-menu .castmill-dropdown-menu {
+    padding: 0;
+    background-color: transparent;
+
+    .container .button-container {
+      padding: 0.25em;
+
+      .dropdown-icon {
+        display: none;
+      }
+    }
+  }
+
+  // Full-width search that replaces the bar while open.
+  .compact-search {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    margin: 0 0.5em;
+
+    .castmill-search {
+      flex: 1;
+      min-width: 0;
+
+      input,
+      input:focus {
+        flex: 1;
+        min-width: 0;
+        width: auto;
+        font-size: 1em;
       }
     }
   }

@@ -146,14 +146,17 @@
     "networkWidgets": "Widget Access",
     "tags": "Tags",
     "agents": "Agents",
-    "feeds": "Feeds"
+    "feeds": "Feeds",
+    "navigation": "Navigation"
   },
   "topbar": {
     "help": "Help",
     "notifications": "Notifications",
     "gettingStarted": "Getting Started",
     "switchToLightMode": "Switch to light mode",
-    "switchToDarkMode": "Switch to dark mode"
+    "switchToDarkMode": "Switch to dark mode",
+    "openNavigation": "Open navigation",
+    "moreOptions": "More options"
   },
   "settings": {
     "title": "Settings",

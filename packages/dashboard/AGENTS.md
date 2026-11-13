@@ -67,6 +67,39 @@ in a hover/focus tooltip; omit successful application text while retaining
 pending, offline, unsupported-player, and error feedback.
 Registration and diagnostics are not part of the playback rotation subtree.
 
+## Responsive App Shell
+
+The side panel (`components/sidepanel`) and top bar (`components/topbar`) adapt
+to the viewport. Breakpoints and shared state live in
+`components/sidepanel/nav-drawer.ts`:
+
+| Viewport                         | Side panel (`data-mode`)  | Top bar                                       |
+| -------------------------------- | ------------------------- | --------------------------------------------- |
+| `≤ 48em` (phones, 768px tablets) | `drawer` (off-canvas)     | Compact (`.castmill-header--compact`)         |
+| `48em – 64em` (1024px tablets)   | `rail` (icon-only)        | Full bar, menu button, avatar, icon-only help |
+| `> 64em`                         | `static` (15rem column)   | Full bar, no menu button                      |
+
+- `navDrawer` is a module-level store (`isOpen`, `open`, `close`, `toggle`,
+  `isAvailable`). `SidePanel` calls `navDrawer.register()` on mount, and the
+  top bar only shows its menu button while a side panel is registered.
+- The open drawer is a `role="dialog"` with `aria-modal`. It traps Tab focus,
+  closes on Escape, backdrop tap, the close button and any `location.pathname`
+  change, then restores focus to the trigger. It slides in from the inline
+  start, so from the right in Arabic. It sits at z-index 950, below
+  Modal/Drawer (1000).
+- Rail mode hides link text visually; `PanelItem` links carry a `title` tooltip
+  and keep their accessible names.
+- Compact top bar: menu button, logo, search icon (expands to a full-width
+  `Search` with `autoFocus`/`onDone`), notifications, overflow menu
+  (`topbar-overflow-menu.tsx`: onboarding, theme, language, help, shortcuts)
+  and the user avatar. The overflow trigger keeps
+  `data-onboarding="getting-started"` and its language `<select>` keeps
+  `data-onboarding="language-selector"` for the onboarding tour.
+- Keyboard-shortcut UI (legend, keyboard icon, `Ctrl+F` chip) is hidden on
+  touch devices (`(hover: none), (pointer: coarse)`).
+- Use `mockViewport()` from `sidepanel/viewport.test-utils.ts` to test layouts;
+  jsdom has no `matchMedia`, so components otherwise render the desktop layout.
+
 ## Playlist Editor Drawer
 
 The widget picker uses `PlaylistsService.getWidgets` to load every available

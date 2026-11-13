@@ -18,7 +18,14 @@ import { useNavigate } from '@solidjs/router';
 import { useI18n } from '../../i18n';
 import { useKeyboardShortcuts } from '../../hooks';
 
-const Search: Component = () => {
+interface SearchProps {
+  /** Focus the input when mounted (compact top bar search). */
+  autoFocus?: boolean;
+  /** Called after a search is submitted or dismissed with Escape. */
+  onDone?: () => void;
+}
+
+const Search: Component<SearchProps> = (props) => {
   const { t } = useI18n();
   const navigate = useNavigate();
   const { registerShortcut, unregisterShortcut, formatShortcut, isMac } =
@@ -39,6 +46,7 @@ const Search: Component = () => {
 
   onMount(() => {
     registerShortcut('global-search', globalSearchShortcut);
+    if (props.autoFocus) inputRef?.focus();
   });
 
   onCleanup(() => {
@@ -57,10 +65,12 @@ const Search: Component = () => {
         navigate(`/search?s=${encodeURIComponent(searchString())}`);
       }
       inputRef?.blur();
+      props.onDone?.();
     }
     // Blur the search input when ESC is pressed
     if (event.key === 'Escape') {
       inputRef?.blur();
+      props.onDone?.();
     }
   };
 
@@ -83,6 +93,7 @@ const Search: Component = () => {
       <input
         type="text"
         placeholder={t('common.search')}
+        aria-label={t('common.search')}
         value={searchString()}
         onInput={(e) => setSearchString(e.currentTarget.value)}
         onKeyDown={handleEnterKeyDown}

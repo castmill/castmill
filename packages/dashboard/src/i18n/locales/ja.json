@@ -121,7 +121,9 @@
     "notifications": "通知",
     "gettingStarted": "はじめに",
     "switchToLightMode": "ライトモードに切り替え",
-    "switchToDarkMode": "ダークモードに切り替え"
+    "switchToDarkMode": "ダークモードに切り替え",
+    "openNavigation": "ナビゲーションを開く",
+    "moreOptions": "その他のオプション"
   },
   "settings": {
     "title": "設定",
@@ -766,7 +768,8 @@
     "networkWidgets": "ウィジェットのアクセス",
     "tags": "タグ",
     "agents": "エージェント",
-    "feeds": "フィード"
+    "feeds": "フィード",
+    "navigation": "ナビゲーション"
   },
   "channels": {
     "title": "チャンネル",
