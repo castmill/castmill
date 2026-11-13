@@ -14,7 +14,7 @@ defmodule Castmill.Repo.Migrations.CreateWidgetPackages do
       add(:content, :binary, null: false)
       add(:uploaded_by_id, references(:users, type: :uuid, on_delete: :nilify_all))
 
-      timestamps(updated_at: false)
+      timestamps(type: :utc_datetime, updated_at: false)
     end
 
     create(unique_index(:widget_packages, [:widget_id, :version]))

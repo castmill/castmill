@@ -984,13 +984,20 @@ defmodule CastmillWeb.NetworkDashboardControllerTest do
       assert %{"created" => false, "version" => 2, "data" => %{"id" => ^id}} =
                ctx |> upload(package(ctx.slug)) |> json_response(200)
 
-      assert %{"data" => [%{"version" => 2, "filename" => filename}, %{"version" => 1}]} =
+      assert %{
+               "data" => [
+                 %{"version" => 2, "filename" => filename, "inserted_at" => inserted_at},
+                 %{"version" => 1}
+               ]
+             } =
                ctx
                |> package_conn()
                |> get("/dashboard/network/widgets/#{id}/packages")
                |> json_response(200)
 
       assert filename == "#{ctx.slug}.zip"
+      # UTC, so browsers show the upload time in their own time zone.
+      assert String.ends_with?(inserted_at, "Z")
 
       download =
         ctx |> package_conn() |> get("/dashboard/network/widgets/#{id}/packages/1")

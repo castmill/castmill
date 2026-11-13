@@ -17,6 +17,6 @@ defmodule Castmill.Widgets.WidgetPackage do
 
     belongs_to(:widget, Castmill.Widgets.Widget)
 
-    timestamps(updated_at: false)
+    timestamps(type: :utc_datetime, updated_at: false)
   end
 end
