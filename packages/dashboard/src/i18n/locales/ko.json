@@ -109,7 +109,12 @@
     "selectVideo": "비디오 선택",
     "widget": "Widget",
     "selectionHint": "체크박스를 사용하여 항목을 선택하고 일괄 작업을 수행하세요",
-    "selectionCount": "{count}개 선택됨"
+    "selectionCount": "{count}개 선택됨",
+    "sortBy": "정렬 기준",
+    "sortAscending": "오름차순",
+    "sortDescending": "내림차순",
+    "selectAll": "모두 선택",
+    "selectRow": "{{id}}행 선택"
   },
   "topbar": {
     "help": "도움말",

@@ -26,6 +26,7 @@ import { AiOutlineDelete } from 'solid-icons/ai';
 import { createMemo, createSignal, Show } from 'solid-js';
 import { User } from '../../interfaces/user.interface';
 import { useI18n } from '../../i18n';
+import { useTableCardLabels } from '../../hooks/useTableCardLabels';
 import { getUser } from '../../components/auth';
 import styles from './teams-page.module.scss';
 
@@ -102,6 +103,7 @@ export const TeamMembersView = (props: {
   onInvitationSent?: () => void;
 }) => {
   const { t } = useI18n();
+  const cardLabels = useTableCardLabels();
   const { canPerformAction } = usePermissions();
   const toast = useToast();
   const resolveRemoveMemberError = (message: string) => {
@@ -496,6 +498,8 @@ export const TeamMembersView = (props: {
           actions,
           actionsLabel: t('common.actions'),
           onRowSelect,
+          cardLayout: true,
+          cardLabels,
         }}
         pagination={{ itemsPerPage }}
         itemIdKey="user_id"

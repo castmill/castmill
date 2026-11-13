@@ -22,6 +22,7 @@ import { OrganizationsService } from '../../services/organizations.service';
 import { OrganizationInviteForm } from './organization-invite-form';
 import { OrganizationRole } from '../../types/organization-role.type';
 import { useI18n } from '../../i18n';
+import { useTableCardLabels } from '../../hooks/useTableCardLabels';
 import { getUser } from '../../components/auth';
 import { useNavigate } from '@solidjs/router';
 import styles from './organization-page.module.scss';
@@ -83,6 +84,7 @@ export const OrganizationMembersView = (props: {
   onRemove: (member: User) => void;
 }) => {
   const { t } = useI18n();
+  const cardLabels = useTableCardLabels();
   const { canPerformAction } = usePermissions();
   const toast = useToast();
   const navigate = useNavigate();
@@ -497,6 +499,8 @@ export const OrganizationMembersView = (props: {
           actions,
           actionsLabel: t('common.actions'),
           onRowSelect,
+          cardLayout: true,
+          cardLabels,
         }}
         pagination={{ itemsPerPage }}
         itemIdKey="user_id"

@@ -110,7 +110,12 @@
     "addPlaylist": "Añadir lista de reproducción",
     "widget": "Widget",
     "selectionHint": "Usa las casillas para seleccionar elementos y realizar acciones masivas",
-    "selectionCount": "{count} seleccionados"
+    "selectionCount": "{count} seleccionados",
+    "sortBy": "Ordenar por",
+    "sortAscending": "Ascendente",
+    "sortDescending": "Descendente",
+    "selectAll": "Seleccionar todo",
+    "selectRow": "Seleccionar fila {{id}}"
   },
   "topbar": {
     "help": "Ayuda",

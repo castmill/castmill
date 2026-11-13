@@ -109,7 +109,12 @@
     "selectVideo": "选择视频",
     "widget": "Widget",
     "selectionHint": "使用复选框选择项目以执行批量操作",
-    "selectionCount": "已选择 {count} 项"
+    "selectionCount": "已选择 {count} 项",
+    "sortBy": "排序方式",
+    "sortAscending": "升序",
+    "sortDescending": "降序",
+    "selectAll": "全选",
+    "selectRow": "选择第 {{id}} 行"
   },
   "topbar": {
     "help": "帮助",

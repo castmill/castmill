@@ -17,6 +17,7 @@ import { TeamsService } from '../../services/teams.service';
 import { AiOutlineDelete } from 'solid-icons/ai';
 import { createEffect, createSignal } from 'solid-js';
 import { useI18n } from '../../i18n';
+import { useTableCardLabels } from '../../hooks/useTableCardLabels';
 
 interface Invitation {
   id: number;
@@ -51,6 +52,7 @@ export const TeamInvitationsView = (props: {
   refreshKey?: number;
 }) => {
   const { t } = useI18n();
+  const cardLabels = useTableCardLabels();
 
   const columns = [
     { key: 'email', title: t('common.email'), sortable: true },
@@ -219,6 +221,8 @@ export const TeamInvitationsView = (props: {
           actions,
           actionsLabel: t('common.actions'),
           onRowSelect,
+          cardLayout: true,
+          cardLabels,
         }}
         pagination={{ itemsPerPage }}
         itemIdKey="id"

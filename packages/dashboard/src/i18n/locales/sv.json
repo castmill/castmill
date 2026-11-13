@@ -104,7 +104,12 @@
     "selectVideo": "Välj en video",
     "widget": "Widget",
     "selectionHint": "Använd kryssrutorna för att välja objekt för massåtgärder",
-    "selectionCount": "{count} valda"
+    "selectionCount": "{count} valda",
+    "sortBy": "Sortera efter",
+    "sortAscending": "Stigande",
+    "sortDescending": "Fallande",
+    "selectAll": "Markera alla",
+    "selectRow": "Markera rad {{id}}"
   },
   "topbar": {
     "help": "Hjälp",

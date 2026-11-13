@@ -12,6 +12,7 @@ import {
   Pagination,
   Table,
   TableAction,
+  TableCardLabels,
   ToolBar,
   SelectionActionBar,
 } from '../';
@@ -77,6 +78,11 @@ interface TableViewProps<
     onRowSelect?: (selectedIds: Set<IdType>) => void;
     defaultRowAction?: TableAction<Item>;
     hideCheckboxes?: boolean;
+    /** Opt-in stacked card layout for narrow containers (e.g. phones). */
+    cardLayout?: boolean;
+    cardBreakpoint?: number;
+    cardPrimaryColumn?: string;
+    cardLabels?: TableCardLabels;
   };
 
   pagination: {
@@ -396,6 +402,10 @@ export const TableView = <
             onRowClick={props.table.defaultRowAction?.handler}
             itemIdKey={props.itemIdKey}
             hideCheckboxes={props.table.hideCheckboxes}
+            cardLayout={props.table.cardLayout}
+            cardBreakpoint={props.table.cardBreakpoint}
+            cardPrimaryColumn={props.table.cardPrimaryColumn}
+            cardLabels={props.table.cardLabels}
             clearSelectionRef={(fn) => {
               clearSelectionRef = fn;
             }}

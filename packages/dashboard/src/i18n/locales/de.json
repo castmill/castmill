@@ -104,7 +104,12 @@
     "addPlaylist": "Wiedergabeliste hinzufügen",
     "widget": "Widget",
     "selectionHint": "Verwenden Sie die Kontrollkästchen, um Elemente für Massenaktionen auszuwählen",
-    "selectionCount": "{count} ausgewählt"
+    "selectionCount": "{count} ausgewählt",
+    "sortBy": "Sortieren nach",
+    "sortAscending": "Aufsteigend",
+    "sortDescending": "Absteigend",
+    "selectAll": "Alle auswählen",
+    "selectRow": "Zeile {{id}} auswählen"
   },
   "sidebar": {
     "organization": "Organisation",

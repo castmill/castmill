@@ -104,7 +104,12 @@
     "youIndicator": "(you)",
     "widget": "Widget",
     "selectionHint": "Use checkboxes to select items for bulk actions",
-    "selectionCount": "{count} selected"
+    "selectionCount": "{count} selected",
+    "sortBy": "Sort by",
+    "sortAscending": "Ascending",
+    "sortDescending": "Descending",
+    "selectAll": "Select all",
+    "selectRow": "Select row {{id}}"
   },
   "filters": {
     "teamLabel": "Team",

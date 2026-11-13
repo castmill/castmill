@@ -109,7 +109,12 @@
     "selectVideo": "اختر فيديو",
     "widget": "Widget",
     "selectionHint": "استخدم مربعات الاختيار لتحديد العناصر لتنفيذ إجراءات جماعية",
-    "selectionCount": "{count} محدد"
+    "selectionCount": "{count} محدد",
+    "sortBy": "ترتيب حسب",
+    "sortAscending": "تصاعدي",
+    "sortDescending": "تنازلي",
+    "selectAll": "تحديد الكل",
+    "selectRow": "تحديد الصف {{id}}"
   },
   "topbar": {
     "help": "مساعدة",
