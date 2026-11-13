@@ -228,6 +228,14 @@ components for phone/tablet layouts (see
 - Page roots use `margin: var(--cm-page-gutter, 2em)` instead of a fixed
   margin so gutters shrink on tablets and phones.
 
+## Modals and Forms
+
+The ui-common `Modal` becomes a bottom sheet under `36em`, with the body as
+its only scroll container. Put `data-modal-actions` on a modal form's button
+row so it sticks to the bottom with full-width buttons on phones. Let form
+rows wrap to a single column at `(max-width: 36em)`, and size modals with
+`contentClass` in `em` (no `!important` or `vw` overrides).
+
 ## Critical Rules
 
 ### ⚠️ MANDATORY: All User-Facing Text Must Be Localized

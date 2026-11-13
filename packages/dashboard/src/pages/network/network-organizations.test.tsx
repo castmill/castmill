@@ -121,6 +121,26 @@ describe('NetworkOrganizations', () => {
     );
   });
 
+  it('blocks through a phone-ready modal with a sticky action row', async () => {
+    renderOrganizations();
+    await waitFor(() => screen.getByText('Organization 1'));
+
+    fireEvent.click(screen.getAllByTitle('Block')[0]);
+    await waitFor(() =>
+      expect(screen.getByText('Block Organization')).toBeInTheDocument()
+    );
+
+    const reason = screen.getByLabelText('Reason (optional)');
+    const form = reason.closest('[class*="block-form"]');
+    expect(form).not.toBeNull();
+    expect(form!.classList.contains('block-form')).toBe(false);
+
+    const actions = form!.querySelector('[data-modal-actions]');
+    expect(actions).not.toBeNull();
+    expect(actions!.className).toContain('modal-actions');
+    expect(actions!.querySelectorAll('button')).toHaveLength(2);
+  });
+
   it('creates a new organization', async () => {
     const newOrg = {
       id: 'org-new',

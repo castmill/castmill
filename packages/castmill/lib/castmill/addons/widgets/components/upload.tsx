@@ -350,7 +350,7 @@ export const UploadComponent = (props: UploadComponentProps) => {
         </div>
       </Show>
 
-      <div class="buttons">
+      <div class="buttons" data-modal-actions>
         <Show when={!!props.onCancel}>
           <Button
             label={

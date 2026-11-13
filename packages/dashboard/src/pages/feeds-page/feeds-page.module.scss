@@ -181,6 +181,15 @@
     flex: 1 1 auto;
     width: auto;
   }
+
+  // Phones: the path takes a full row, mode and remove share the next one.
+  @media (max-width: 36em) {
+    flex-wrap: wrap;
+
+    input {
+      flex-basis: 100%;
+    }
+  }
 }
 
 .formActions {
@@ -332,6 +341,15 @@
     border-radius: 0.4em;
     background: var(--cm-bg-sunken);
     word-break: break-all;
+  }
+
+  // Phones: the secret gets its own line above the copy button.
+  @media (max-width: 36em) {
+    flex-wrap: wrap;
+
+    code {
+      flex-basis: 100%;
+    }
   }
 }
 

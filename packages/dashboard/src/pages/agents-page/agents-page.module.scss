@@ -330,6 +330,15 @@
     overflow-wrap: anywhere;
     user-select: all;
   }
+
+  // Phones: the secret gets its own line above the copy button.
+  @media (max-width: 36em) {
+    flex-wrap: wrap;
+
+    code {
+      flex-basis: 100%;
+    }
+  }
 }
 
 /* ---- Setup instructions ---- */

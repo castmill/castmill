@@ -233,6 +233,18 @@ let modalRef: ModalRef | undefined = undefined;
 - ✅ Do use: `<Show when={...}>` wrapper
 - ✅ Do explicitly set `color: #333;` or similar on modal content elements
 
+#### Responsive behavior
+
+- The overlay follows the visual viewport (`useVisualViewportBox`), so the
+  on-screen keyboard shrinks the modal instead of hiding inputs.
+- The header stays fixed and `.modalBody` is the only scroll container. Do not
+  add `overflow` to wrappers between the body and the form.
+- Under `36em` (or short touch screens) the modal becomes a full-width bottom
+  sheet. `:where()` viewport caps keep `contentClass` desktop widths working.
+- Mark form action rows with `data-modal-actions`: on phones they stick to the
+  bottom of the body and their buttons share the full width (`ConfirmDialog`
+  already does this). Don't use `!important` width overrides.
+
 ### TableViewRef Interface
 
 Provides methods to interact with the table programmatically.

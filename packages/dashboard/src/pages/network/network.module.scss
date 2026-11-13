@@ -526,6 +526,13 @@
   padding-top: 1.25em;
   overflow-y: auto;
   line-height: 1.5;
+
+  // Phones: the modal body already scrolls; avoid a nested scroll area.
+  @media (max-width: 36em) {
+    min-width: 0;
+    max-height: none;
+    overflow-y: visible;
+  }
 }
 
 .settings-section {
@@ -578,7 +585,7 @@
   gap: 0.75em;
   margin-top: 0.75em;
   padding-top: 1em;
-  border-top: 0.1em solid rgba(255, 255, 255, 0.1);
+  border-top: 0.1em solid var(--cm-border-subtle);
 }
 
 .settings-error {
