@@ -219,6 +219,7 @@ export const OrganizationIntegrationSettings: Component<
 
   return (
     <Modal
+      closeLabel={t('common.close')}
       title={text('title', { name: props.organization.name })}
       description={text('description')}
       onClose={props.onClose}

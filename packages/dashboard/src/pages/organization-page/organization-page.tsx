@@ -13,7 +13,7 @@ import { OrganizationMembersView } from './organization-members-view';
 import { LogoSettings } from './logo-settings';
 import { store, setStore } from '../../store';
 import { usePermissions } from '../../hooks/usePermissions';
-import { BsCheckLg } from 'solid-icons/bs';
+import { BsCheckLg, BsEnvelope, BsGear, BsPeople } from 'solid-icons/bs';
 
 import style from './organization-page.module.scss';
 import { OrganizationsService } from '../../services/organizations.service';
@@ -157,6 +157,7 @@ const OrganizationPage: Component = () => {
   const resourcesTabs: TabItem[] = [
     {
       title: () => t('organization.users'),
+      icon: BsPeople,
       content: () => (
         <Show when={store.organizations.selectedId}>
           <OrganizationMembersView
@@ -169,6 +170,7 @@ const OrganizationPage: Component = () => {
     },
     {
       title: () => t('organization.invitations'),
+      icon: BsEnvelope,
       content: () => (
         <Show
           when={canPerformAction('organizations', 'create')}
@@ -190,6 +192,7 @@ const OrganizationPage: Component = () => {
     // Settings tab for organization configuration
     {
       title: () => t('organization.settings'),
+      icon: BsGear,
       content: () => (
         <Show when={store.organizations.selectedId}>
           <LogoSettings
@@ -245,7 +248,11 @@ const OrganizationPage: Component = () => {
           </div>
         </form>
       </div>
-      <Tabs tabs={resourcesTabs} initialIndex={0} />
+      <Tabs
+        tabs={resourcesTabs}
+        initialIndex={0}
+        ariaLabel={t('common.sections')}
+      />
     </div>
   );
 };

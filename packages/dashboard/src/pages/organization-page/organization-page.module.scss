@@ -1,12 +1,13 @@
 .organization-page {
-  text-align: left;
-  margin: 1em;
+  text-align: start;
+  margin: var(--cm-page-gutter, 1em);
+  min-width: 0;
 
   .header {
     display: flex;
     flex-direction: column;
     width: 100%;
-    text-align: left;
+    text-align: start;
 
     .form-inputs {
       display: flex;
@@ -74,4 +75,36 @@
   font-weight: 500;
   font-size: 0.95em;
   margin: 0;
+}
+
+@media (max-width: 36em) {
+  .organization-page {
+    .header {
+      h1 {
+        font-size: 1.5em;
+        margin: 0.5em 0;
+      }
+
+      .form-inputs {
+        flex-direction: column;
+        align-items: stretch;
+
+        .form-item-wrapper {
+          flex-basis: auto;
+          min-width: 0;
+        }
+      }
+    }
+  }
+
+  .leave-organization-panel {
+    padding: 1em;
+    gap: 1em;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .leave-organization-content {
+    flex-basis: auto;
+  }
 }

@@ -6,11 +6,12 @@
   left: 0;
   right: 0;
   bottom: 0;
-  width: 100vw;
-  height: 100vh;
+  box-sizing: border-box;
   background: colors.$background; // Use app's dark background
   display: flex;
-  align-items: center;
+  // Top-aligned so tall content on short screens stays scrollable; the
+  // container (min-height: 100%) centres the card vertically.
+  align-items: flex-start;
   justify-content: center;
   overflow: auto; // Allow scrolling if content is too tall
 
@@ -19,8 +20,10 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    padding: 20px;
+    box-sizing: border-box;
+    padding: 1.25em;
     width: 100%;
+    min-height: 100%;
   }
 
   .invitation-box {
@@ -34,8 +37,10 @@
     border-radius: 12px;
     box-shadow: var(--cm-shadow-lg);
     text-align: center;
+    box-sizing: border-box;
     width: 28rem;
-    max-width: 90vw;
+    max-width: 100%;
+    overflow-wrap: anywhere;
 
     h2 {
       margin-bottom: 10px;
@@ -54,8 +59,9 @@
     border-radius: 8px;
     padding: 12px 16px;
     margin: 0 0 1em 0;
-    width: 90%;
-    text-align: left;
+    box-sizing: border-box;
+    width: 100%;
+    text-align: start;
 
     label {
       font-size: 14px;
@@ -84,6 +90,8 @@
     align-items: center;
     gap: 8px;
     width: 100%;
+    box-sizing: border-box;
+    text-align: start;
 
     svg {
       flex-shrink: 0;
@@ -351,5 +359,34 @@
 
   .text-gray-400 {
     color: var(--cm-text-secondary);
+  }
+}
+
+@media (max-width: 36em) {
+  .castmill-invitation {
+    .invitation-container {
+      padding: 0.75em;
+    }
+
+    .invitation-box {
+      padding: 1.5em 1.25em;
+
+      h2 {
+        font-size: 1.25em;
+      }
+    }
+
+    .action-buttons {
+      flex-direction: column;
+
+      button {
+        flex: none;
+        min-height: 2.75em;
+      }
+    }
+
+    .invitation-button {
+      min-height: 2.75em;
+    }
   }
 }

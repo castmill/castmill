@@ -99,6 +99,24 @@ describe('NetworkUsers', () => {
     });
   });
 
+  it('labels every user cell with its column for the phone card layout', async () => {
+    renderUsers();
+    await waitFor(() => expect(screen.getByText('User 1')).toBeInTheDocument());
+
+    const table = screen.getAllByRole('table')[0];
+    const headers = Array.from(table.querySelectorAll('thead th')).map(
+      (th) => th.textContent
+    );
+    const rows = Array.from(table.querySelectorAll('tbody tr'));
+    expect(rows).toHaveLength(2);
+    for (const row of rows) {
+      const labels = Array.from(row.querySelectorAll('td')).map((td) =>
+        td.getAttribute('data-label')
+      );
+      expect(labels).toEqual(headers);
+    }
+  });
+
   it('shows empty state when no users', async () => {
     vi.mocked(NetworkService.listUsers).mockResolvedValue({
       data: [],
@@ -110,6 +128,37 @@ describe('NetworkUsers', () => {
     await waitFor(() => {
       expect(screen.getByText(/no users/i)).toBeInTheDocument();
     });
+  });
+
+  it('labels every invitation cell with its column', async () => {
+    vi.mocked(NetworkService.listInvitations).mockResolvedValue([
+      {
+        id: 'inv-1',
+        email: 'invitee@example.com',
+        role: 'member',
+        organization_id: 'org-1',
+        organization_name: 'Acme',
+        status: 'invited',
+        inserted_at: '2024-01-01T00:00:00Z',
+        expires_at: '2024-01-08T00:00:00Z',
+      },
+    ]);
+    renderUsers();
+    await waitFor(() =>
+      expect(screen.getByText('invitee@example.com')).toBeInTheDocument()
+    );
+
+    const row = screen.getByText('invitee@example.com').closest('tr')!;
+    const table = row.closest('table')!;
+    const headers = Array.from(table.querySelectorAll('thead th')).map(
+      (th) => th.textContent
+    );
+    expect(headers).toHaveLength(7);
+    expect(
+      Array.from(row.querySelectorAll('td')).map((td) =>
+        td.getAttribute('data-label')
+      )
+    ).toEqual(headers);
   });
 
   it('loads invitations on mount', async () => {

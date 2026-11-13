@@ -202,3 +202,30 @@ $animation-duration: 0.3s;
     background-color: $primary-hover;
   }
 }
+
+// Phones: bottom sheet with a full-width call to action.
+@media (max-width: 36em) {
+  .onboarding-dialog-overlay {
+    align-items: flex-end;
+  }
+
+  .onboarding-dialog {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: none;
+    max-height: 90vh;
+    max-height: 90dvh;
+    overflow-y: auto;
+    border-radius: 0.75em 0.75em 0 0;
+    padding: 1.25em 1em calc(1.25em + env(safe-area-inset-bottom, 0));
+  }
+
+  .onboarding-dialog-header h2 {
+    font-size: 1.25em;
+  }
+
+  .onboarding-dialog-button {
+    width: 100%;
+    min-height: 2.75em;
+  }
+}

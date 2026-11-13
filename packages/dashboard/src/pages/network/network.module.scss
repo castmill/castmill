@@ -1,12 +1,14 @@
 // Shared styles for all network sub-pages
 .network-page {
-  text-align: left;
+  text-align: start;
+  min-width: 0;
   margin: min(1em, var(--cm-page-gutter, 1em));
   padding-bottom: 4em;
 
   .page-header {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 1em;
     margin-bottom: 2em;
 
@@ -31,7 +33,7 @@
 
   .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(12em, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 12em), 1fr));
     gap: 1em;
     margin-bottom: 2em;
   }
@@ -80,7 +82,7 @@
 
   .form-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(20em, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 20em), 1fr));
     gap: 1.5em;
   }
 
@@ -99,6 +101,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 1em;
     padding: 1em;
     border-radius: 0.5em;
     background: var(--cm-bg-hover);
@@ -109,6 +112,7 @@
     }
 
     .toggle-info {
+      min-width: 0;
       display: flex;
       flex-direction: column;
       gap: 0.25em;
@@ -127,6 +131,7 @@
 
   .domain-display {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 0.75em;
     padding: 0.75em 1em;
@@ -137,6 +142,7 @@
     .domain-value {
       font-family: monospace;
       font-size: 0.95em;
+      overflow-wrap: anywhere;
       color: var(--cm-success);
     }
 
@@ -238,7 +244,7 @@
     th,
     td {
       padding: 0.75em 1em;
-      text-align: left;
+      text-align: start;
       border-bottom: 0.1em solid var(--cm-border-subtle);
     }
 
@@ -263,7 +269,7 @@
     }
 
     .actions-column {
-      text-align: right;
+      text-align: end;
     }
   }
 
@@ -347,11 +353,13 @@
 
     .create-org-row {
       display: flex;
+      flex-wrap: wrap;
       gap: 1em;
       align-items: flex-end;
 
       > :first-child {
-        flex: 1;
+        flex: 1 1 16em;
+        min-width: 0;
         max-width: 25em;
       }
 
@@ -456,6 +464,141 @@
       font-weight: 600;
       color: var(--cm-text-primary);
     }
+  }
+}
+
+// Tablets and phones
+@media (max-width: 48em) {
+  .network-page {
+    .page-header {
+      margin-bottom: 1.25em;
+
+      h1 {
+        font-size: 1.5em;
+      }
+    }
+
+    .section,
+    .create-org-form,
+    .org-list,
+    .invite-section,
+    .users-list,
+    .invitations-list {
+      padding: 1em;
+    }
+
+    .loading-container,
+    .error-container,
+    .not-admin-container {
+      padding: 2em 1em;
+    }
+  }
+}
+
+// Phones: tables become one card per row with the column name before each
+// value (taken from the cell's data-label).
+@media (max-width: 36em) {
+  .network-page {
+    .data-table {
+      display: block;
+
+      thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        clip-path: inset(50%);
+        white-space: nowrap;
+      }
+
+      tbody {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75em;
+      }
+
+      tr {
+        display: block;
+        padding: 0.5em 0.75em;
+        border: 0.1em solid var(--cm-border-subtle);
+        border-radius: 0.5em;
+        background: var(--cm-bg-primary);
+      }
+
+      td {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1em;
+        padding: 0.4em 0;
+        text-align: end;
+        overflow-wrap: anywhere;
+      }
+
+      td::before {
+        content: attr(data-label);
+        flex-shrink: 0;
+        max-width: 45%;
+        font-size: 0.85em;
+        font-weight: 600;
+        color: var(--cm-text-tertiary);
+        text-align: start;
+      }
+
+      tbody tr td,
+      tbody tr:last-child td {
+        border-bottom: 0.1em solid var(--cm-border-subtle);
+      }
+
+      tbody tr td:last-child {
+        border-bottom: none;
+      }
+
+      .actions-column {
+        flex-wrap: wrap;
+      }
+
+      .blocked-row {
+        background: rgba(var(--cm-error-rgb), 0.05);
+        border-color: rgba(var(--cm-error-rgb), 0.3);
+      }
+    }
+
+    .actions,
+    .create-org-row {
+      flex-direction: column;
+      align-items: stretch;
+
+      > :first-child {
+        max-width: none;
+      }
+
+      > button {
+        margin-bottom: 0;
+      }
+    }
+
+    .toggle-row {
+      flex-wrap: wrap;
+    }
+
+    .pagination-container {
+      justify-content: center;
+    }
+  }
+
+  .modal-actions,
+  .settings-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .network-page .actions-row > button {
+    min-width: 2.75em;
+    min-height: 2.75em;
   }
 }
 

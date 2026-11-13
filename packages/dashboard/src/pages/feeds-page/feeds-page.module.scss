@@ -282,6 +282,7 @@
 
   code {
     flex: 1 1 auto;
+    min-width: 0;
     overflow-x: auto;
     padding: 0.4em 0.6em;
     border-radius: 0.4em;
@@ -428,5 +429,61 @@
   &[data-status='failed'] {
     background: var(--cm-error-bg);
     color: var(--cm-error);
+  }
+}
+
+// The back arrow points towards the start edge.
+:global([dir='rtl']) .backLink svg {
+  transform: scaleX(-1);
+}
+
+/* ---- Phones ---- */
+@media (max-width: 36em) {
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75em;
+
+    h1 {
+      font-size: 1.5em;
+    }
+  }
+
+  .headerAction {
+    white-space: normal;
+  }
+
+  // Modal forms fill the bottom sheet instead of forcing a minimum width.
+  .form,
+  .testForm {
+    min-width: 0;
+  }
+
+  .formActions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .actionsRow {
+    flex-wrap: wrap;
+  }
+
+  // Endpoint label above its URL so the URL gets the full width.
+  .endpoint {
+    flex-wrap: wrap;
+    gap: 0.35em 0.75em;
+  }
+
+  .endpointLabel {
+    flex-basis: 100%;
+  }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .iconButton {
+    min-width: 2.75em;
+    min-height: 2.75em;
+    align-items: center;
+    justify-content: center;
   }
 }

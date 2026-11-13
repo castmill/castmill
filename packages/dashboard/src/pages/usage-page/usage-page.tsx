@@ -79,7 +79,7 @@ const ResourceIcon = (props: { type: ResourceType }) => {
 
   const Icon = icons[props.type] || IoImagesOutline;
 
-  return <Icon size={28} />;
+  return <Icon size="1.75em" />;
 };
 
 /**
