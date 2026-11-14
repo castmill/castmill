@@ -139,6 +139,17 @@ describe('Details orientation', () => {
     }
   );
 
+  it('shows a device without a description as an empty field', () => {
+    render(() => (
+      <DeviceDetails
+        device={{ ...fixture, description: null as unknown as string }}
+        onSubmit={vi.fn()}
+      />
+    ));
+    expect(document.getElementById('description')).toHaveValue('');
+    expect(screen.getByText('common.save')).toBeDisabled();
+  });
+
   it('resets orientation and leaves Save disabled when unchanged', () => {
     render(() => <DeviceDetails device={fixture} onSubmit={vi.fn()} />);
     expect(screen.getByText('common.save')).toBeDisabled();

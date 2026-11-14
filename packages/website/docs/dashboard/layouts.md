@@ -45,6 +45,8 @@ The editor shows the layout as a canvas.
 
 Click **Save** to store the layout. You can also change its name and description here.
 
+<Screenshot src="layouts-editor" alt="The layout editor with a main zone and two sidebar zones, and the properties of the selected Main zone" />
+
 ## System layouts
 
 Castmill includes the system layout **Portrait 3 Zones**: three zones of equal height stacked vertically, for 9:16 portrait screens. System layouts appear in the layout list of every organization.
@@ -58,6 +60,8 @@ Castmill includes the system layout **Portrait 3 Zones**: three zones of equal h
 5. Click **Add to playlist**.
 
 When the item plays, every zone plays its playlist independently. The item's duration decides how long the whole layout stays on screen.
+
+<Screenshot src="layouts-widget" alt="The Layout Widget settings with a playlist assigned to each zone and a preview that plays all three zones" />
 
 :::tip
 Create the zone playlists with the same aspect ratio as the zone, so that the preview in the playlist editor matches what the zone shows.

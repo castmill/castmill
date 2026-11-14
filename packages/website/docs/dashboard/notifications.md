@@ -17,6 +17,8 @@ The bell shows the number of unread notifications. Click it to open **Notificati
 
 When you have none, the list shows "No notifications yet".
 
+<Screenshot src="notifications-panel" alt="The Notifications panel with unread device notifications and read upload and invitation notifications" />
+
 ## Notification types
 
 | Notification | Sent when | Who receives it |

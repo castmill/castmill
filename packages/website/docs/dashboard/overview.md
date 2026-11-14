@@ -14,6 +14,8 @@ The dashboard is the web application you use to manage content, screens and peop
 - **Top bar**: global search, **Help** (this documentation), **Getting Started** (the onboarding checklist and tour), **Notifications**, the light and dark mode toggle, and your user menu with **Settings** and log out.
 - **Main area**: the list or editor you opened.
 
+<Screenshot src="overview-dashboard" alt="The dashboard with the sidebar on the left, the top bar and the list of devices in the main area" />
+
 ## Navigation
 
 | Sidebar entry | What you do there |
@@ -44,6 +46,8 @@ Every page address includes the organization, for example `/org/<organization id
 
 Press **Ctrl+F** (**⌘F** on macOS) or click the search field in the top bar to search across medias, playlists, channels, devices and teams at once. Results are grouped by type. Press **S** on a list page to search only that list.
 
+<Screenshot src="overview-search" alt="Search results for harbor, grouped into a media file, a channel and a device" />
+
 ## Lists, filters and bulk actions
 
 The list pages for medias, playlists, layouts, channels and devices work the same way:
@@ -55,6 +59,8 @@ The list pages for medias, playlists, layouts, channels and devices work the sam
 ## Keyboard shortcuts
 
 Press **Shift+?** to see every shortcut that works on the current page.
+
+<Screenshot src="overview-shortcuts" alt="The Keyboard Shortcuts dialog with global, navigation and action shortcuts" width={640} />
 
 | Shortcut | Action |
 | --- | --- |

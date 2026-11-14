@@ -32,7 +32,7 @@ docs/
   reference/                Glossary and FAQ
 src/
   pages/index.tsx           Home page
-  components/               DocCards, Icon, HomeShowcase, WidgetPreview, WidgetExample
+  components/               DocCards, Icon, HomeShowcase, WidgetPreview, WidgetExample, Screenshot
   theme/MDXComponents.tsx   Components available in every page without an import
   css/custom.css            Theme tokens for light and dark mode
 plugins/
@@ -72,7 +72,7 @@ Use `"link": { "type": "doc", "id": "folder/page" }` instead to open an overview
 
 ## Components for pages
 
-These components work in every `.md` and `.mdx` file without an import:
+These components work in every `.md` and `.mdx` file without an import (`Screenshot` is described under [Screenshots](#screenshots)):
 
 ```mdx
 <CardGrid columns={2}>
@@ -97,6 +97,16 @@ Text of the second step.
 ```
 
 Icon names are listed in `src/components/Icon/index.tsx`. Live widget examples use `WidgetExample` with widgets from `src/components/WidgetExample/sampleWidgets.ts`; import both in an `.mdx` file. Mermaid is not enabled; use `Flow` or a table for diagrams.
+
+### Screenshots
+
+Dashboard screenshots exist in a light and a dark version, `static/img/screenshots/<id>-light.webp` and `<id>-dark.webp`. Show them with the `Screenshot` component, which picks the version that matches the site's colour mode:
+
+```mdx
+<Screenshot src="playlists-editor" alt="Playlist editor with five items and a live preview" />
+```
+
+Use `width={560}` for small captures such as dialogs. The screenshots are captured from a fictional demo with the scripts in `scripts/screenshots`; see its `README.md` to add or update one. Do not add screenshots taken from a real account.
 
 ## Style guide
 

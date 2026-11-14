@@ -16,6 +16,8 @@ A channel decides **when** each playlist plays. It has a timezone, a weekly cale
 4. Choose a **Timezone**. It defaults to your browser's timezone.
 5. Click **Create**.
 
+<Screenshot src="channels-create" alt="The New Channel dialog with a name and the Europe/Stockholm timezone" width={406} />
+
 All times in the channel are wall-clock times in the channel's timezone, wherever you or the screens are. A 09:00 entry in a Europe/Stockholm channel starts at 09:00 Stockholm time. Choose the timezone of the place where the screens are.
 
 :::note
@@ -30,6 +32,8 @@ Click a channel to open it. The editor shows, from top to bottom:
 - the **Automations** assigned to the channel (see [Automations on a channel](#automations-on-a-channel));
 - the **Default playlist** selector and the **Drag playlists** list;
 - the weekly calendar.
+
+<Screenshot src="channels-editor" alt="A channel with an automation, the default playlist, the playlists to drag and a weekly calendar of lunch, happy hour and brunch entries" />
 
 ### The weekly calendar
 
@@ -49,6 +53,8 @@ Drag a playlist from **Drag playlists** onto a slot of the calendar. The entry s
 | Change its length | Drag its edges |
 | Repeat it every week | Click the entry, switch on **Repeat Weekly?** and click **Update** |
 | Delete it | Use the delete button on the entry, and confirm **Remove Channel Entry** |
+
+<Screenshot src="channels-entry" alt="The details of a calendar entry with its playlist and the Repeat Weekly switch turned on" width={376} />
 
 An entry without **Repeat Weekly?** plays once, in the week where you placed it. A weekly entry repeats on the same weekday and time every week.
 

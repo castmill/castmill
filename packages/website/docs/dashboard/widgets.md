@@ -20,7 +20,11 @@ Open **Content → Widgets**. The list shows each widget's **Name**, its type, i
 | **Network** | Added by your network administrator for organizations in the network |
 | **This organization** | Uploaded by your organization; only your organization can use it |
 
+<Screenshot src="widgets-list" alt="The widgets list with the system widgets, their type, availability and update interval" />
+
 Use **View Details** to inspect a widget. The details show the **Template**, **Options Schema**, **Data Schema**, **Translations**, bundled **Assets** and, for widgets that connect to external services, **Integrations**.
+
+<Screenshot src="widgets-details" alt="The details of the QR Code widget with its template" />
 
 ## Built-in widgets
 
@@ -61,6 +65,8 @@ Credentials have a scope:
 
 Depending on the service, you enter an **API Key** and click **Save Credentials**, or you connect an account with **OAuth 2.0**, for example **Connect to Spotify**. **Test Connection** checks that the credentials work. **Connection Status** shows **Valid**, **Invalid** or **Pending Setup**.
 
+<Screenshot src="widgets-integrations" alt="The Integrations tab of the Stock Ticker widget asking for a Finnhub API key" />
+
 A network administrator can also configure credentials for the whole network. In that case the Integrations tab tells you that the credentials already exist, and for OAuth services you only connect your account.
 
 When you add a widget whose credentials are missing to a playlist, the dashboard shows **Credentials Required** with a **Go to Integrations** button.
@@ -77,6 +83,8 @@ Organizations can add their own widgets.
 2. Click **Upload Widget**.
 3. Select or drop a widget file. A JSON definition must contain at least the `name` and `template` fields. A ZIP file can bundle the definition with assets such as icons, images and fonts.
 4. Click **Upload Widget** in the dialog.
+
+<Screenshot src="widgets-upload" alt="The Upload Widget dialog with the required fields, an example definition and the file drop area" width={640} />
 
 The widget is added with the availability **This organization**. Uploading and deleting widgets needs the Administrator, Manager, Editor or Publisher role.
 

@@ -81,6 +81,27 @@ describe('calendar utilities', () => {
     });
   });
 
+  it('uses the given playlist name, or none until it is known', () => {
+    const dbEntry = {
+      id: 1,
+      name: 'Entry',
+      playlist_id: 7,
+      start: Date.UTC(2026, 7, 3, 9),
+      end: Date.UTC(2026, 7, 3, 10),
+      inserted_at: '',
+      updated_at: '',
+      repeat_weekly_until: 0,
+    };
+
+    expect(timestampsToCalendarEntry(dbEntry, 'UTC', 'Lunch').playlist).toEqual(
+      {
+        id: 7,
+        name: 'Lunch',
+      }
+    );
+    expect(timestampsToCalendarEntry(dbEntry, 'UTC').playlist.name).toBe('');
+  });
+
   it('rejects nonexistent local times during a DST transition', () => {
     expect(() =>
       calendarEntryToTimestamps(

@@ -10,15 +10,31 @@ The admin tool is a separate web interface served by the Castmill server at `/ad
 
 ## Sign in
 
-Sign in with the root user. The root user is created by the first database migration from `CASTMILL_ROOT_USER_EMAIL` and `CASTMILL_ROOT_USER_PASSWORD`; changing the variables later does not change the account. If you forget the password, use the reset link on the sign-in page, which sends an email to the root address.
+The admin tool signs in the root user with an admin passkey. Admin passkeys are separate from the passkeys you use in the dashboard.
+
+The root user is created by the first database migration from `CASTMILL_ROOT_USER_EMAIL` and `CASTMILL_ROOT_USER_PASSWORD`; changing the variables later does not change the account.
+
+1. The first time, enter the root user's **Email** and **Password** and choose **Set up first passkey**. Register the passkey within five minutes; until then, the password gives no access.
+2. After that, choose **Sign in with a passkey**. Select **Keep me signed in** to stay signed in on this computer.
+
+Once a passkey is registered, the password no longer signs you in. Register a backup passkey on another device under **Admin passkeys** in the sidebar. You cannot remove the last one.
+
+<Screenshot src="admin-tool-sign-in" alt="The admin tool sign-in page with Sign in with a passkey and the root credentials for setting up the first passkey" />
+
+If all admin passkeys are lost, an operator with access to a release console of the server (for example `bin/castmill remote`) can remove them, so that the root credentials can set up a new one:
+
+```elixir
+user = Castmill.Accounts.get_user_by_email("root@example.com")
+Castmill.Accounts.AdminPasskeys.reset(user.id)
+```
 
 :::warning
-The root user has full access to every network. Use a strong password, and consider making `/admin` reachable only from your internal network or VPN at the reverse proxy.
+The root user has full access to every network. Use a strong password, keep a backup passkey, and consider making `/admin` reachable only from your internal network or VPN at the reverse proxy.
 :::
 
 ## Sections
 
-The sidebar lists **Networks**, **Organizations**, **Teams**, **Users**, **Devices**, **Channels**, **Playlists** and **Medias**. Each section is a searchable table. Open a row to see its details and related records.
+The sidebar lists **Networks**, **Organizations**, **Teams**, **Users**, **Devices**, **Channels**, **Playlists**, **Medias** and **Admin passkeys**. Each section is a searchable table. Open a row to see its details and related records.
 
 ## Networks
 
