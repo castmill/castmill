@@ -416,17 +416,22 @@ export const ActivePages: Component<ActivePagesProps> = (props) => {
     play(value = 0) {
       stopTimer();
       let position = positionFor(value);
-      if (resumeKey && position < START_MS && reached - position >= START_MS) {
+      const restarted = position < START_MS && reached - position >= START_MS;
+      if (restarted) {
+        waited = 0;
+        positionShift = 0;
+        reached = value;
+        position = value;
+        updateDuration();
+      }
+      if (resumeKey && restarted) {
         const next = resumePositions.get(resumeKey) || 0;
         shownInRun = 0;
         noted = -1;
-        reached = value;
         if (count() && next % count() !== source(0)) {
           rotation = next;
           reset();
         }
-        positionShift = 0;
-        position = value;
       }
       base = position;
       started = Date.now();

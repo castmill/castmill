@@ -512,6 +512,45 @@ describe('active-only paginated lists', () => {
     expect(current.duration()).to.be.greaterThan(estimatedDuration + 2000);
   });
 
+  [false, true].forEach((resume) => {
+    it(`resets readiness delay on a fresh ${resume ? 'resumable' : 'non-resumable'} play`, async () => {
+      const current = await show(
+        posts.slice(0, 3),
+        { pageDuration: 'auto', resume },
+        (url) =>
+          url.endsWith('/1.mp4')
+            ? new Promise<string>(() => {})
+            : Promise.resolve(url),
+        undefined,
+        true,
+        undefined,
+        { list: `readiness-restart-${resume}` }
+      );
+      clock = useFakeTimers({
+        toFake: ['Date', 'setInterval', 'clearInterval'],
+      });
+      const estimatedDuration = current.duration();
+      current.play(NEVER);
+
+      await clock.tickAsync(4700);
+      expect(current.duration()).to.be.greaterThan(estimatedDuration + 2000);
+
+      current.stop();
+      current.seek(0);
+      current.play(NEVER);
+      await flush();
+      expect(current.duration()).to.be.closeTo(estimatedDuration, 1);
+
+      await clock.tickAsync(resume ? 1000 : 3200);
+      expect(current.duration()).to.be.greaterThan(estimatedDuration);
+      current.stop();
+      current.seek(2000);
+      current.play(NEVER);
+      await flush();
+      expect(current.duration()).to.be.greaterThan(estimatedDuration);
+    });
+  });
+
   it('records the next page when playback stops exactly at its boundary', async () => {
     const current = await show(
       notes,
