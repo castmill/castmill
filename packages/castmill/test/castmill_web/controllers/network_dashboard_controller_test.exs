@@ -4,6 +4,8 @@ defmodule CastmillWeb.NetworkDashboardControllerTest do
   import Castmill.NetworksFixtures
   import Castmill.OrganizationsFixtures
   import Castmill.PlaylistsFixtures
+  import Castmill.ChannelsFixtures
+  import Castmill.DevicesFixtures
 
   alias Castmill.Accounts
   alias Castmill.Organizations
@@ -1104,6 +1106,35 @@ defmodule CastmillWeb.NetworkDashboardControllerTest do
              |> package_conn()
              |> delete("/dashboard/network/widgets/#{id}")
              |> json_response(404)
+    end
+
+    test "notifies the devices playing a widget of its new versions", ctx do
+      %{"data" => %{"id" => id}} = ctx |> upload(package(ctx.slug)) |> json_response(201)
+      {:ok, _} = Castmill.Widgets.NetworkAccess.set_access(ctx.network.id, id, "all")
+      playlist = playlist_fixture(%{organization_id: ctx.organization.id, name: "Lobby"})
+      {:ok, _} = Castmill.Resources.insert_item_into_playlist(playlist.id, nil, id, 0, 1000)
+
+      channel =
+        channel_fixture(%{
+          organization_id: ctx.organization.id,
+          timezone: "UTC",
+          default_playlist_id: playlist.id
+        })
+
+      {:ok, registration} = device_registration_fixture()
+
+      {:ok, {device, _token}} =
+        Castmill.Devices.register_device(ctx.organization.id, registration.pincode, %{
+          name: "Lobby screen"
+        })
+
+      {:ok, _} = Castmill.Devices.add_channel(device.id, channel.id)
+      Phoenix.PubSub.subscribe(Castmill.PubSub, "devices:#{device.id}")
+
+      assert %{"version" => 2} = ctx |> upload(package(ctx.slug)) |> json_response(200)
+
+      playlist_id = playlist.id
+      assert_receive %{event: "playlist_updated", playlist_id: ^playlist_id}, 1000
     end
 
     test "only network admins can manage packages", ctx do

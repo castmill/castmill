@@ -227,11 +227,16 @@ defmodule CastmillWeb.PlaylistController do
     |> send_resp(:no_content, "")
   end
 
-  defp notify_devices_of_playlist_update(playlist_id) when is_binary(playlist_id) do
+  @doc """
+  Notifies the devices playing `playlist_id` or a playlist that contains it (e.g.
+  through a layout widget), and the automations that reference them, that its
+  content changed.
+  """
+  def notify_devices_of_playlist_update(playlist_id) when is_binary(playlist_id) do
     notify_devices_of_playlist_update(String.to_integer(playlist_id))
   end
 
-  defp notify_devices_of_playlist_update(playlist_id) do
+  def notify_devices_of_playlist_update(playlist_id) do
     notify_fn = fn ->
       playlist_ids = [playlist_id | Resources.get_playlist_ancestors(playlist_id)]
 

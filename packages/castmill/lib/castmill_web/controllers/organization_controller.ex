@@ -489,13 +489,10 @@ defmodule CastmillWeb.OrganizationController do
         referenced
         |> resolve_widget_icon(widget_slug, stored_assets)
         |> resolve_widget_fonts(widget_slug, stored_assets)
+        |> Map.drop(["slug", "is_system", "network_id", "organization_id", "restricted"])
 
       widget
-      |> Ecto.Changeset.change(
-        icon: resolved["icon"],
-        fonts: resolved["fonts"] || widget.fonts,
-        template: resolved["template"]
-      )
+      |> Castmill.Widgets.Widget.changeset(resolved)
       |> Castmill.Repo.update()
     end
   end

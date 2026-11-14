@@ -10,15 +10,20 @@ defmodule Castmill.Widgets.Packages do
       and keeps its access. Widgets of other networks and organizations, system
       widgets and widgets the platform manages (`meta.managed_by`, e.g. installed
       at deploy) cannot be replaced.
-    * A declared integration must use an installed fetcher (packages never bring
-      code). It is created or updated with the widget, so the organization
-      settings it declares can be configured before the widget is used.
+    * A declared integration (`integration`, or `meta.integration`) must use an
+      installed fetcher (packages never bring code) and can't set the fetcher
+      module or an endpoint in its config. It is created or updated with the
+      widget, so the organization settings it declares can be configured before
+      the widget is used. A new version can't rename or remove it.
     * An update that would make saved playlist items invalid (e.g. a new required
-      option without a default, or a shorter editable text) is refused.
+      option without a default, or a shorter editable text) is refused. It is
+      checked under the widget's row lock, which playlist insertions and config
+      edits share. The upload endpoint then notifies the playlists using it.
     * Assets are stored in public storage under content-hash keys, and
       `{{asset:category.name}}` placeholders are replaced with their URLs. Assets
       no kept version uses are deleted (refused uploads, old versions, deleted
-      widgets).
+      widgets). Storing, installing and deleting assets of a slug take a lock on
+      the slug, so they never race.
     * Every upload is kept as a version (the last 10), to download or reinstall.
   """
   import Ecto.Query, only: [from: 2]
@@ -30,6 +35,7 @@ defmodule Castmill.Widgets.Packages do
   alias Castmill.Widgets.{AssetStorage, NetworkAccess, PackageProcessor, Schema}
   alias Castmill.Widgets.{TextOverrides, Widget, WidgetConfig, WidgetPackage}
   alias Castmill.Widgets.Integrations
+  alias Castmill.Widgets.Integrations.WidgetIntegration
 
   @kept_versions 10
   @max_package_size 10 * 1024 * 1024
@@ -91,36 +97,75 @@ defmodule Castmill.Widgets.Packages do
     }
   end
 
+  # Storing a slug's assets, committing its package and deleting its unused assets
+  # hold the slug's lock: cleanup can't delete an asset (same content, same key)
+  # that a concurrent upload stored and is about to commit.
   defp do_install(network_id, widget_data, assets, package, opts) do
     store = Keyword.get(opts, :store, &Castmill.PublicStorage.put/3)
     slug = widget_data["slug"] || slugify(widget_data["name"])
+    integration = integration(widget_data)
 
     with :ok <- valid_slug(slug),
-         {:ok, existing} <- replaceable(network_id, slug),
-         :ok <- Integrations.validate_integration_meta(widget_data["integration"]),
-         {:ok, urls, keys} <- store_assets(slug, assets, store, opts) do
-      package = Map.put(package, :asset_keys, keys)
+         :ok <- Integrations.validate_integration_meta(integration) do
+      widget_data = Map.put(widget_data, "integration", integration)
 
-      case install_widget(network_id, existing, widget_data, slug, urls, package, opts) do
-        {:ok, result, pruned_keys} ->
-          release_assets(pruned_keys, opts)
+      Repo.transaction(fn ->
+        lock_slug(slug)
+
+        with {:ok, existing} <- replaceable(network_id, slug),
+             {:ok, urls, keys} <- store_assets(slug, assets, store) do
+          package = Map.put(package, :asset_keys, keys)
+
+          case install_widget(network_id, existing, widget_data, slug, urls, package, opts) do
+            {:ok, result, pruned_keys} -> {result, pruned_keys}
+            {:error, reason} -> Repo.rollback({reason, keys})
+          end
+        else
+          {:error, reason, keys} -> Repo.rollback({reason, keys})
+          {:error, reason} -> Repo.rollback({reason, []})
+        end
+      end)
+      |> case do
+        {:ok, {result, pruned_keys}} ->
+          release_assets(slug, pruned_keys, opts)
           {:ok, result}
 
-        error ->
-          release_assets(keys, opts)
-          error
+        {:error, {reason, keys}} ->
+          release_assets(slug, keys, opts)
+          {:error, reason}
       end
     end
   end
 
+  # The integration the widget will have: the package's `integration`, or the one
+  # in its `meta`.
+  defp integration(widget_data) do
+    case widget_data do
+      %{"integration" => integration} -> integration
+      %{"meta" => %{"integration" => integration}} -> integration
+      _ -> nil
+    end
+  end
+
+  # Runs in the install transaction, which holds the widget's row lock: playlist
+  # items and config edits (which hold a share lock on it) can't save options
+  # against the old version while the new one is checked and saved.
   defp install_widget(network_id, existing, widget_data, slug, urls, package, opts) do
+    created? = is_nil(existing)
+
     with {:ok, attrs} <- widget_attrs(widget_data, slug, urls),
          {:ok, changeset} <- changeset(existing, attrs, network_id),
          :ok <- compatible(existing, changeset),
-         {:ok, {widget, version, pruned_keys}} <-
-           save(network_id, changeset, is_nil(existing), package, opts[:uploaded_by]) do
-      {:ok,
-       %{widget: widget, created: is_nil(existing), version: version, warnings: warnings(widget)},
+         :ok <- keeps_integrations(existing, changeset),
+         {:ok, widget} <- Repo.insert_or_update(changeset),
+         {:ok, _} <-
+           if(created?,
+             do: NetworkAccess.set_access(network_id, widget.id, "hidden"),
+             else: {:ok, nil}
+           ),
+         {:ok, _} <- Integrations.sync_integration_from_meta(widget),
+         {:ok, version, pruned_keys} <- record_package(widget, package, opts[:uploaded_by]) do
+      {:ok, %{widget: widget, created: created?, version: version, warnings: warnings(widget)},
        pruned_keys}
     end
   end
@@ -129,8 +174,9 @@ defmodule Castmill.Widgets.Packages do
     if AssetStorage.valid_slug?(slug), do: :ok, else: {:error, :invalid_slug}
   end
 
+  # Locks the widget with the slug, if any, and returns its current version.
   defp replaceable(network_id, slug) do
-    case Widgets.get_widget_by_slug(slug) do
+    case Repo.one(from(w in Widget, where: w.slug == ^slug, lock: "FOR UPDATE")) do
       nil ->
         {:ok, nil}
 
@@ -142,12 +188,17 @@ defmodule Castmill.Widgets.Packages do
     end
   end
 
+  # A transaction lock on the slug, for every node.
+  defp lock_slug(slug) do
+    Repo.query!("SELECT pg_advisory_xact_lock(hashtext($1))", ["widget-package:#{slug}"])
+  end
+
   @doc "Whether the platform manages the widget (e.g. installs it at deploy)."
   def managed?(%Widget{meta: %{"managed_by" => by}}) when is_binary(by) and by != "", do: true
   def managed?(_widget), do: false
 
   # Same content, same key: unchanged assets are stored once.
-  defp store_assets(slug, %{files: files}, store, opts) when map_size(files) > 0 do
+  defp store_assets(slug, %{files: files}, store) when map_size(files) > 0 do
     Enum.reduce_while(files, {:ok, %{}, []}, fn {path, info}, {:ok, urls, keys} ->
       body = File.read!(info.path)
       hash = :crypto.hash(:sha256, body) |> Base.encode16(case: :lower) |> binary_part(0, 16)
@@ -158,43 +209,47 @@ defmodule Castmill.Widgets.Packages do
           {:cont, {:ok, Map.put(urls, path, url), [key | keys]}}
 
         {:error, reason} ->
-          release_assets(keys, opts)
-          {:halt, {:error, "Failed to store asset #{path}: #{inspect(reason)}"}}
+          {:halt, {:error, "Failed to store asset #{path}: #{inspect(reason)}", keys}}
       end
     end)
   end
 
-  defp store_assets(_slug, _assets, _store, _opts), do: {:ok, %{}, []}
+  defp store_assets(_slug, _assets, _store), do: {:ok, %{}, []}
 
-  # Deletes stored assets that no kept package version uses (versions with the same
-  # content share them). A failed delete only leaves a file behind, so it is logged.
-  defp release_assets([], _opts), do: :ok
+  # Deletes stored assets of `slug` that no kept package version uses (versions with
+  # the same content share them). A failed delete only leaves a file behind, so it
+  # is logged.
+  defp release_assets(_slug, [], _opts), do: :ok
 
-  defp release_assets(keys, opts) do
+  defp release_assets(slug, keys, opts) do
     delete = Keyword.get(opts, :delete, &Castmill.PublicStorage.delete/1)
     keys = Enum.uniq(keys)
 
-    used =
-      from(p in WidgetPackage,
-        where: fragment("? && ?", p.asset_keys, type(^keys, {:array, :string})),
-        select: p.asset_keys
-      )
-      |> Repo.all()
-      |> List.flatten()
-      |> MapSet.new()
+    Repo.transaction(fn ->
+      lock_slug(slug)
 
-    for key <- keys, not MapSet.member?(used, key) do
-      with {:error, reason} <- delete.(key) do
-        Logger.warning("[Widgets.Packages] Could not delete asset #{key}: #{inspect(reason)}")
+      used =
+        from(p in WidgetPackage,
+          where: fragment("? && ?", p.asset_keys, type(^keys, {:array, :string})),
+          select: p.asset_keys
+        )
+        |> Repo.all()
+        |> List.flatten()
+        |> MapSet.new()
+
+      for key <- keys, not MapSet.member?(used, key) do
+        with {:error, reason} <- delete.(key) do
+          Logger.warning("[Widgets.Packages] Could not delete asset #{key}: #{inspect(reason)}")
+        end
       end
-    end
+    end)
 
     :ok
   end
 
   defp widget_attrs(widget_data, slug, urls) do
     integration = widget_data["integration"]
-    meta = Map.delete(widget_data["meta"] || %{}, "managed_by")
+    meta = Map.drop(widget_data["meta"] || %{}, ["managed_by", "integration"])
     meta = if is_map(integration), do: Map.put(meta, "integration", integration), else: meta
 
     data =
@@ -261,9 +316,34 @@ defmodule Castmill.Widgets.Packages do
     end
   end
 
+  # A new version can't rename or remove the integration the widget has: its
+  # organizations' credentials, cached data and polling belong to it.
+  defp keeps_integrations(nil, _changeset), do: :ok
+
+  defp keeps_integrations(%Widget{id: widget_id}, changeset) do
+    name =
+      case get_in(Ecto.Changeset.get_field(changeset, :meta) || %{}, ["integration"]) do
+        %{} = integration -> Map.get(integration, "name") || "default"
+        _ -> nil
+      end
+
+    existing =
+      Repo.all(from(i in WidgetIntegration, where: i.widget_id == ^widget_id, select: i.name))
+
+    case existing -- [name] do
+      [] ->
+        :ok
+
+      names ->
+        {:error,
+         "This version can't rename or remove the widget's integration " <>
+           Enum.map_join(names, ", ", &~s("#{&1}"))}
+    end
+  end
+
   @doc """
   The saved playlist items of `widget_id` that would be invalid with `widget`'s
-  options schema and editable texts.
+  options and data schemas and editable texts.
   """
   def incompatible_items(widget_id, %Widget{} = widget) do
     reserved? = TextOverrides.reserved?(widget)
@@ -275,6 +355,7 @@ defmodule Castmill.Widgets.Packages do
       order_by: [asc: p.name, asc: pi.id],
       select: %{
         options: wc.options,
+        data: wc.data,
         playlist_id: p.id,
         playlist_name: p.name,
         organization_id: p.organization_id
@@ -286,6 +367,7 @@ defmodule Castmill.Widgets.Packages do
 
       error =
         with {:ok, _} <- Schema.validate_data(widget.options_schema || %{}, options),
+             {:ok, _} <- validate_saved_data(widget.data_schema || %{}, item.data),
              :ok <-
                if(reserved?, do: TextOverrides.validate(options["overrides"], widget), else: :ok) do
           nil
@@ -293,26 +375,15 @@ defmodule Castmill.Widgets.Packages do
           {:error, message} -> to_string(message)
         end
 
-      if error, do: [item |> Map.delete(:options) |> Map.put(:error, error)], else: []
+      if error,
+        do: [item |> Map.drop([:options, :data]) |> Map.put(:error, error)],
+        else: []
     end)
   end
 
-  defp save(network_id, changeset, created?, package, uploaded_by) do
-    Repo.transaction(fn ->
-      with {:ok, widget} <- Repo.insert_or_update(changeset),
-           {:ok, _} <-
-             if(created?,
-               do: NetworkAccess.set_access(network_id, widget.id, "hidden"),
-               else: {:ok, nil}
-             ),
-           {:ok, _} <- Integrations.sync_integration_from_meta(widget),
-           {:ok, version, pruned_keys} <- record_package(widget, package, uploaded_by) do
-        {widget, version, pruned_keys}
-      else
-        {:error, reason} -> Repo.rollback(reason)
-      end
-    end)
-  end
+  # Like WidgetConfig.changeset/2, which doesn't validate absent data.
+  defp validate_saved_data(_schema, nil), do: {:ok, nil}
+  defp validate_saved_data(schema, data), do: Schema.validate_data(schema, data)
 
   # Returns the asset keys of the versions it no longer keeps.
   defp record_package(widget, package, uploaded_by) do
@@ -396,21 +467,58 @@ defmodule Castmill.Widgets.Packages do
   `:delete` option of `install/3`.
   """
   def delete_network_widget(network_id, widget_id, opts \\ []) do
-    with %Widget{network_id: ^network_id} = widget <- get_widget(widget_id),
-         false <- managed?(widget),
-         [] <- using_organizations(widget.id) do
-      keys =
-        Repo.all(from(p in WidgetPackage, where: p.widget_id == ^widget.id, select: p.asset_keys))
+    case get_widget(widget_id) do
+      %Widget{network_id: ^network_id, slug: slug} = widget ->
+        # The widget's row lock, held until it is deleted, makes playlist insertions
+        # (which hold a share lock on it) wait, so the usage check stays true.
+        Repo.transaction(fn ->
+          lock_slug(slug)
 
-      with {:ok, deleted} <- Widgets.delete_widget_with_cascade(widget) do
-        release_assets(List.flatten(keys), opts)
-        {:ok, deleted}
-      end
-    else
-      true -> {:error, :managed_widget}
-      [_ | _] = organization_ids -> {:error, {:in_use, organization_ids}}
-      _ -> {:error, :not_found}
+          with %Widget{network_id: ^network_id} = widget <- lock_widget(widget.id),
+               false <- managed?(widget),
+               [] <- using_organizations(widget.id) do
+            keys =
+              Repo.all(
+                from(p in WidgetPackage, where: p.widget_id == ^widget.id, select: p.asset_keys)
+              )
+
+            case Widgets.delete_widget_with_cascade(widget) do
+              {:ok, deleted} -> {deleted, List.flatten(keys)}
+              {:error, reason} -> Repo.rollback(reason)
+            end
+          else
+            true -> Repo.rollback(:managed_widget)
+            [_ | _] = organization_ids -> Repo.rollback({:in_use, organization_ids})
+            _ -> Repo.rollback(:not_found)
+          end
+        end)
+        |> case do
+          {:ok, {deleted, keys}} ->
+            release_assets(slug, keys, opts)
+            {:ok, deleted}
+
+          error ->
+            error
+        end
+
+      _ ->
+        {:error, :not_found}
     end
+  end
+
+  defp lock_widget(widget_id) do
+    Repo.one(from(w in Widget, where: w.id == ^widget_id, lock: "FOR UPDATE"))
+  end
+
+  @doc "The IDs of the playlists with items of `widget_id`."
+  def using_playlists(widget_id) do
+    from(wc in WidgetConfig,
+      join: pi in assoc(wc, :playlist_item),
+      where: wc.widget_id == ^widget_id,
+      distinct: true,
+      select: pi.playlist_id
+    )
+    |> Repo.all()
   end
 
   defp get_widget(widget_id) do

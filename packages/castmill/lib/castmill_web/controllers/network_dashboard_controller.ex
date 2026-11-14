@@ -186,6 +186,13 @@ defmodule CastmillWeb.NetworkDashboardController do
     with {:ok, network_id} <- get_admin_network_id(conn),
          {:ok, result} <-
            Packages.install(network_id, upload, uploaded_by: conn.assigns[:current_user].id) do
+      # Players and automation payloads using the widget refetch the new version.
+      unless result.created do
+        result.widget.id
+        |> Packages.using_playlists()
+        |> Enum.each(&CastmillWeb.PlaylistController.notify_devices_of_playlist_update/1)
+      end
+
       conn
       |> put_status(if(result.created, do: :created, else: :ok))
       |> json(%{

@@ -236,7 +236,7 @@ defmodule Castmill.Widgets.PackagesTest do
       first_keys = stored_keys()
       assert length(first_keys) == 3
 
-      upload = json(text_widget(ctx))
+      upload = json(Map.put(text_widget(ctx), "integration", widget_json(ctx)["integration"]))
       for _ <- 2..10, do: assert({:ok, _} = install(ctx, upload))
       assert deleted_keys() == []
 
@@ -357,6 +357,48 @@ defmodule Castmill.Widgets.PackagesTest do
       assert is_nil(Widgets.get_widget_by_slug(ctx.slug))
     end
 
+    test "refuses integrations without an installed fetcher or with dispatch overrides", ctx do
+      integration = widget_json(ctx)["integration"]
+
+      no_fetcher = widget_json(ctx, %{"integration" => Map.delete(integration, "fetcher")})
+
+      assert {:error, "The widget's integration must declare an installed fetcher"} =
+               install(ctx, zip(no_fetcher))
+
+      for {key, value} <- [{"fetcher_module", nil}, {"endpoint", "http://10.0.0.1/"}] do
+        overriding = put_in(integration, ["config", key], value)
+        message = ~s(The widget's integration config can't set "#{key}")
+
+        assert {:error, ^message} =
+                 install(ctx, zip(widget_json(ctx, %{"integration" => overriding})))
+      end
+
+      # An integration in meta is checked too.
+      in_meta =
+        widget_json(ctx, %{"meta" => %{"integration" => %{"fetcher" => "nope"}}})
+        |> Map.delete("integration")
+
+      assert {:error, {:unknown_fetcher, "nope"}} = install(ctx, zip(in_meta))
+
+      assert {:ok, %{widget: widget}} =
+               install(ctx, zip(Map.put(in_meta, "meta", %{"integration" => integration})))
+
+      assert widget.meta == %{"integration" => integration}
+      assert Integrations.get_integration_by_widget_and_name(widget.id, "listing")
+    end
+
+    test "refuses versions that rename or remove the integration", ctx do
+      {:ok, %{widget: widget}} = install(ctx, zip(widget_json(ctx)))
+      renamed = put_in(widget_json(ctx), ["integration", "name"], "listings")
+      message = ~s(This version can't rename or remove the widget's integration "listing")
+
+      assert {:error, ^message} = install(ctx, zip(renamed))
+      assert {:error, ^message} = install(ctx, json(text_widget(ctx)))
+
+      assert is_nil(Integrations.get_integration_by_widget_and_name(widget.id, "listings"))
+      assert Enum.map(Packages.list_versions(widget.id), & &1.version) == [1]
+    end
+
     test "reports storage failures", ctx do
       store = fn _key, _body, _type -> {:error, :unavailable} end
 
@@ -393,6 +435,24 @@ defmodule Castmill.Widgets.PackagesTest do
 
       optional = put_in(required, ["options_schema", "estate"], %{"type" => "string"})
       assert {:ok, %{version: 2}} = install(ctx, zip(optional))
+    end
+
+    test "refuses updates that would make saved data invalid", ctx do
+      with_data = fn type -> widget_json(ctx, %{"data_schema" => %{"count" => type}}) end
+      {:ok, %{widget: widget}} = install(ctx, zip(with_data.("string")))
+      playlist = use_widget(ctx, widget, %{})
+      [item] = Resources.get_playlist_items(playlist.id)
+
+      # Absent data isn't validated.
+      assert {:ok, %{version: 2}} = install(ctx, zip(with_data.("number")))
+      assert {:ok, %{version: 3}} = install(ctx, zip(with_data.("string")))
+
+      assert {:ok, _} = Widgets.update_widget_config(playlist.id, item.id, nil, %{"count" => "a"})
+
+      assert {:error, {:incompatible, [%{playlist_id: playlist_id}]}} =
+               install(ctx, zip(with_data.("number")))
+
+      assert playlist_id == playlist.id
     end
 
     test "refuses updates that would shorten saved editable texts", ctx do

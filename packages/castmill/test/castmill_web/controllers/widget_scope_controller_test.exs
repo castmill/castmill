@@ -272,11 +272,17 @@ defmodule CastmillWeb.WidgetScopeControllerTest do
         "name" => "Asset refs #{slug}",
         "slug" => slug,
         "icon" => "{{asset:icons.main}}",
+        "small_icon" => "{{asset:icons.main}}",
         "template" => %{
           "type" => "image",
           "name" => "bg",
           "opts" => %{"url" => "{{asset:images.bg}}"}
         },
+        "options_schema" => %{
+          "image" => %{"type" => "string", "default" => "{{asset:images.bg}}"}
+        },
+        "translations" => %{"es" => %{"image" => "{{asset:images.bg}}"}},
+        "is_system" => true,
         "assets" => %{
           "icons" => %{"main" => %{"path" => "assets/icons/icon.svg"}},
           "images" => %{"bg" => %{"path" => "assets/images/bg.png"}}
@@ -285,11 +291,21 @@ defmodule CastmillWeb.WidgetScopeControllerTest do
 
       files = [{"assets/icons/icon.svg", "<svg/>"}, {"assets/images/bg.png", "png"}]
 
-      assert %{"icon" => icon, "template" => template} =
-               ctx.conn |> upload_zip(ctx.org_a, widget, files) |> json_response(201)
+      assert %{"id" => id, "icon" => icon, "template" => template} =
+               body = ctx.conn |> upload_zip(ctx.org_a, widget, files) |> json_response(201)
 
+      bg = "/widget_assets/#{slug}/assets/images/bg.png"
       assert icon == "/widget_assets/#{slug}/assets/icons/icon.svg"
-      assert template["opts"]["url"] == "/widget_assets/#{slug}/assets/images/bg.png"
+      assert body["small_icon"] == icon
+      assert template["opts"]["url"] == bg
+      assert body["options_schema"]["image"]["default"] == bg
+      assert body["translations"] == %{"es" => %{"image" => bg}}
+
+      stored = Castmill.Repo.get!(Castmill.Widgets.Widget, id)
+      assert stored.small_icon == icon
+      assert stored.options_schema["image"]["default"] == bg
+      assert stored.organization_id == ctx.org_a.id
+      refute stored.is_system
 
       missing = Map.put(widget, "slug", slug <> "-missing")
       on_exit(fn -> AssetStorage.delete_assets(slug <> "-missing") end)

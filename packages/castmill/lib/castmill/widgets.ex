@@ -830,7 +830,9 @@ defmodule Castmill.Widgets do
   # update advances the version. Optimistic locking makes the version bump
   # conflict-safe: concurrent writers raise `Ecto.StaleEntryError` and retry
   # against the freshly loaded record instead of silently writing the same
-  # version twice.
+  # version twice. A share lock on the widget, held through validation and
+  # commit, keeps a new widget package version (which takes its update lock)
+  # from being checked against configs that are still being saved.
   defp do_update_widget_config(%WidgetConfig{} = widget_config, options, data, attempts_left) do
     current_timestamp = DateTime.utc_now()
 
@@ -841,17 +843,30 @@ defmodule Castmill.Widgets do
       |> put_if_present(:options, options)
       |> put_if_present(:data, data)
 
-    changeset =
-      widget_config
-      |> Ecto.Changeset.optimistic_lock(:version)
-      |> WidgetConfig.changeset(attrs)
-
     try do
-      # `force: true` guarantees the update (and therefore the optimistic lock
-      # version bump) is issued even when the payload is identical to what is
-      # already stored, e.g. two updates within the same second where the
-      # truncated `last_request_at` does not change either.
-      case Repo.update(changeset, force: true) do
+      Repo.transaction(fn ->
+        from(w in Widget,
+          where: w.id == ^widget_config.widget_id,
+          lock: "FOR SHARE",
+          select: w.id
+        )
+        |> Repo.one()
+
+        changeset =
+          widget_config
+          |> Ecto.Changeset.optimistic_lock(:version)
+          |> WidgetConfig.changeset(attrs)
+
+        # `force: true` guarantees the update (and therefore the optimistic lock
+        # version bump) is issued even when the payload is identical to what is
+        # already stored, e.g. two updates within the same second where the
+        # truncated `last_request_at` does not change either.
+        case Repo.update(changeset, force: true) do
+          {:ok, updated_widget_config} -> updated_widget_config
+          {:error, changeset} -> Repo.rollback(changeset)
+        end
+      end)
+      |> case do
         {:ok, _updated_widget_config} ->
           {:ok, "Widget configuration updated successfully"}
 

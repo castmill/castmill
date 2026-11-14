@@ -157,13 +157,21 @@ Network admins upload widget packages as network widgets
   is updated in place (fields the package omits are reset) and keeps its access.
   Slugs of other scopes or networks are refused (`slug_taken`), and so are widgets
   with `meta.managed_by` (installed by the platform, e.g. castmill-saas at deploy).
-- A declared `integration` must name an installed fetcher (`Fetchers.*`, checked with
-  `Refresh.fetcher_module/1`); it is created or updated with the widget
-  (`Integrations.sync_integration_from_meta/1`), so its organization settings can be
-  set before first use. Pull integrations with a fetcher need no `pull_endpoint`.
+- A declared `integration` (top level or `meta.integration`) must name an installed
+  fetcher (`Fetchers.*`, checked with `Refresh.fetcher_module/1`), and its `config`
+  can't set `fetcher_module` or `endpoint` (`Integrations.validate_integration_meta/1`),
+  so packages never reach the unrestricted `do_fetch_integration_data/2` fallback. It
+  is created or updated with the widget (`Integrations.sync_integration_from_meta/1`),
+  so its organization settings can be set before first use. A new version can't
+  rename or remove it (its credentials, cached data and polling belong to it).
 - `Packages.incompatible_items/2` refuses a version if saved `widgets_config`
-  options would fail `Schema.validate_data/2` or the editable-text overrides
-  (`TextOverrides.validate/2`) with the new definition (409 `incompatible`).
+  options or data (absent data is skipped) would fail `Schema.validate_data/2` or the
+  editable-text overrides (`TextOverrides.validate/2`) with the new definition (409
+  `incompatible`). The check and save run under the widget's `FOR UPDATE` lock;
+  playlist insertions and `Widgets.update_widget_config/4` hold `FOR SHARE` on it
+  through validation and commit. Deletion checks usage under the same lock. After a
+  new version, the upload endpoint notifies the playlists using the widget
+  (`PlaylistController.notify_devices_of_playlist_update/1`).
 - Assets go to `Castmill.PublicStorage` under content-hash keys
   (`widget-assets/<slug>/<hash>/<path>`); `{{asset:category.name}}` placeholders are
   replaced with their URLs (`PackageProcessor.resolve_asset_references/2`, also used
@@ -172,4 +180,6 @@ Network admins upload widget packages as network widgets
   with the storage keys of its assets (`asset_keys`). Network admins can delete an
   uploaded widget that no playlist uses. Assets no kept version uses are deleted
   from storage after a refused upload, when old versions are dropped and when the
-  widget is deleted (failed deletes are logged).
+  widget is deleted (failed deletes are logged). Storing, committing and cleaning up
+  a slug's assets hold a per-slug advisory transaction lock, so cleanup never deletes
+  an asset a concurrent upload stored but has not committed yet.

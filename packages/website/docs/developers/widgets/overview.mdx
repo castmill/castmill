@@ -153,8 +153,8 @@ Network administrators can upload the same packages as widgets of their whole ne
 
 - A new widget is hidden until you choose which organizations can use it.
 - Uploading a package with the slug of one of the network's widgets updates it to a new version and keeps its access. Widgets of other networks or organizations, system widgets, and widgets the platform installs cannot be replaced.
-- A version that would make saved playlist items invalid, such as a new required option or a shorter editable text, is refused with the affected playlists. Make new options optional.
-- An `integration` must use a fetcher installed on the server. It is created with the widget, so network administrators can set the organization integration settings it declares before the widget is used. Packages never contain code or server-specific settings such as endpoints.
+- A version that would make saved playlist items invalid, such as a new required option, a changed data field type or a shorter editable text, is refused with the affected playlists. Make new options optional. Players using the widget load a new version right away.
+- An `integration` must use a fetcher installed on the server. It is created with the widget, so network administrators can set the organization integration settings it declares before the widget is used. Packages never contain code or server-specific settings such as endpoints, and a new version can't rename or remove the integration.
 - The last 10 uploaded versions are kept and can be downloaded from the widget's **Package** section, where you can also delete a widget no playlist uses. Deleting a widget also deletes its stored assets.
 
 ### Upload limits

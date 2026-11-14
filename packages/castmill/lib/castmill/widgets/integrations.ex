@@ -22,6 +22,10 @@ defmodule Castmill.Widgets.Integrations do
   # `widget_integration_data.discriminator_id` is a varchar(255) column.
   @discriminator_id_max_bytes 255
 
+  # Integration config keys a widget package can't set: they choose what the server
+  # calls and fetches (see validate_integration_meta/1).
+  @package_reserved_config ["fetcher_module", "endpoint"]
+
   # ============================================================================
   # Integration Data Broadcasting
   # ============================================================================
@@ -1810,15 +1814,34 @@ defmodule Castmill.Widgets.Integrations do
   end
 
   @doc """
-  Checks a package's `integration` declaration before it is installed: a declared
-  fetcher must be an installed fetcher module (packages never bring code).
+  Checks a package's `integration` declaration before it is installed: it must use
+  an installed fetcher module (packages never bring code), and its `config` cannot
+  override the fetcher module or set an endpoint, which would be fetched without
+  the fetchers' restrictions.
   """
   def validate_integration_meta(nil), do: :ok
 
   def validate_integration_meta(%{} = config) do
-    case Map.get(config, "fetcher") do
+    fetcher_config = Map.get(config, "config") || %{}
+
+    cond do
+      not is_map(fetcher_config) ->
+        {:error, :invalid_integration}
+
+      overridden = Enum.find(@package_reserved_config, &Map.has_key?(fetcher_config, &1)) ->
+        {:error, "The widget's integration config can't set \"#{overridden}\""}
+
+      true ->
+        validate_fetcher(Map.get(config, "fetcher"))
+    end
+  end
+
+  def validate_integration_meta(_config), do: {:error, :invalid_integration}
+
+  defp validate_fetcher(fetcher) do
+    case fetcher do
       nil ->
-        :ok
+        {:error, "The widget's integration must declare an installed fetcher"}
 
       fetcher when is_binary(fetcher) and fetcher != "" ->
         module = resolve_fetcher_module(fetcher)
@@ -1834,8 +1857,6 @@ defmodule Castmill.Widgets.Integrations do
         {:error, {:unknown_fetcher, inspect(other)}}
     end
   end
-
-  def validate_integration_meta(_config), do: {:error, :invalid_integration}
 
   defp integration_attrs_from_meta(widget_id, name, config) do
     integration_type = normalize_integration_type(config)
