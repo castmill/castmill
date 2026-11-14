@@ -333,8 +333,6 @@ defmodule Castmill.Widgets.Packages do
     |> Repo.all()
   end
 
-  defp forget_deferred_assets(_slug, []), do: :ok
-
   defp forget_deferred_assets(slug, keys) do
     Repo.delete_all(from(a in WidgetDeferredAsset, where: a.slug == ^slug and a.key in ^keys))
 
