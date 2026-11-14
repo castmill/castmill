@@ -49,8 +49,8 @@
       border: 1px solid colors.$separator-color;
       border-radius: 0.5rem;
       box-shadow:
-        0 4px 6px -1px var(--cm-shadow-color),
-        0 2px 4px -1px var(--cm-shadow-color);
+        0 0.25em 0.375em -1px var(--cm-shadow-color),
+        0 0.125em 0.25em -1px var(--cm-shadow-color);
       position: absolute;
       inset-inline-end: 0;
       top: 100%;

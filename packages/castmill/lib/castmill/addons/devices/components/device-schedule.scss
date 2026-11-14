@@ -28,7 +28,7 @@
   background: var(--cm-bg-elevated-secondary);
   color: var(--cm-text-primary);
   text-align: center;
-  height: 20px;
+  height: 1.562em;
   font-size: 0.8em;
   font-weight: 600;
   white-space: nowrap;
@@ -62,7 +62,7 @@
   justify-content: flex-end;
   border-right: 1px solid var(--cm-border-color);
   border-bottom: 1px solid var(--cm-border-subtle);
-  height: 20px;
+  height: 1.786em;
   box-sizing: border-box;
   position: sticky;
   left: 0;
@@ -71,7 +71,7 @@
 
 /* Grid cells */
 .schedule-grid-cell {
-  height: 20px;
+  height: 1.25em;
   box-sizing: border-box;
   border-right: 1px solid var(--cm-border-color);
   border-bottom: 1px solid var(--cm-border-color);
@@ -83,7 +83,7 @@
 .schedule-grid-day-header.today {
   background: var(--cm-bg-selected);
   color: var(--cm-text-primary);
-  box-shadow: inset 0 -2px 0 #4285f4;
+  box-shadow: inset 0 -0.125em 0 #4285f4;
 }
 
 .schedule-grid-cell.today {
@@ -133,7 +133,7 @@
 }
 
 .schedule-entry:focus-visible {
-  outline: 2px solid var(--cm-focus-ring);
+  outline: 0.125em solid var(--cm-focus-ring);
   outline-offset: 1px;
 }
 
@@ -283,8 +283,8 @@
 
 .schedule-now-marker {
   position: absolute;
-  top: -1.5px;
-  height: 2px;
+  top: -0.094em;
+  height: 0.125em;
   background: #ea4335;
 }
 
@@ -361,7 +361,7 @@
     background: var(--cm-bg-sunken);
     color: var(--cm-text-primary);
     /* 16px+ prevents iOS from zooming into focused fields */
-    font-size: max(1rem, 16px);
+    font-size: max(1rem, 1em);
   }
 
   select:focus,

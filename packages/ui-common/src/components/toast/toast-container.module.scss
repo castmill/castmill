@@ -1,7 +1,7 @@
 .toastContainer {
   position: fixed;
-  top: 20px;
-  right: 20px;
+  top: calc(1.25em + env(safe-area-inset-top, 0em));
+  right: calc(1.25em + env(safe-area-inset-right, 0em));
   z-index: 9999;
   display: flex;
   flex-direction: column;
@@ -14,11 +14,11 @@
 }
 
 // Responsive adjustments for mobile
-@media (max-width: 768px) {
+@media (max-width: 48em) {
   .toastContainer {
-    top: 10px;
-    right: 10px;
-    left: 10px;
+    top: calc(0.625em + env(safe-area-inset-top, 0em));
+    right: calc(0.625em + env(safe-area-inset-right, 0em));
+    left: calc(0.625em + env(safe-area-inset-left, 0em));
     align-items: stretch;
 
     & > * {

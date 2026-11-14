@@ -39,10 +39,10 @@
       padding: 0.4em 1.8em 0.4em 0.6em !important;
       background-color: var(--cm-bg-hover) !important;
       border: 1px solid var(--cm-border-color) !important;
-      border-radius: 4px !important;
+      border-radius: 0.278em !important;
       width: auto !important;
-      min-width: 140px;
-      max-width: 200px;
+      min-width: 9.722em;
+      max-width: 13.889em;
       cursor: pointer;
       transition: all 0.2s ease;
 
@@ -61,7 +61,7 @@
 
   .label {
     font-size: 0.8em;
-    padding: 0 0 0.2em 3px;
+    padding: 0 0 0.2em 0.234em;
     color: var(--cm-link);
     text-transform: capitalize;
   }

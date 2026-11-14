@@ -116,6 +116,11 @@
     overflow-y: auto;
     overscroll-behavior: contain;
     text-align: start;
+    // Off-canvas: clear the notch, status bar and home indicator.
+    padding-top: calc(1rem + env(safe-area-inset-top, 0em));
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0em));
+    padding-left: calc(1rem + env(safe-area-inset-left, 0em));
+    padding-right: calc(1rem + env(safe-area-inset-right, 0em));
   }
 
   .castmill-sidepanel.is-open {

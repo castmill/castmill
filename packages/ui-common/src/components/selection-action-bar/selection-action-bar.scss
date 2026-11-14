@@ -178,6 +178,8 @@
 @media (max-width: 36em) {
   .castmill-selection-bar {
     position: fixed;
+    // Stay above the on-screen keyboard (see useKeyboardInset).
+    bottom: var(--cm-keyboard-inset, 0em);
     padding: 0.5em 0.75em calc(0.5em + env(safe-area-inset-bottom, 0em));
     padding-inline-start: calc(0.75em + env(safe-area-inset-left, 0em));
     padding-inline-end: calc(0.75em + env(safe-area-inset-right, 0em));

@@ -8,47 +8,60 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: center;
-    height: 60vh;
-    padding-top: 10rem;
+    min-height: 60vh;
+    padding: 10rem 1em 2em;
+    box-sizing: border-box;
+
+    @media (max-width: 48em) {
+      padding-top: 3em;
+    }
   }
   .login-box {
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    padding: 20px;
+    padding: 1.25em;
     color: colors.$base-color;
     background: colors.$component-background-color;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px var(--cm-shadow-color);
+    border-radius: 0.5em;
+    box-shadow: 0 0.25em 0.5em var(--cm-shadow-color);
     text-align: center;
+    box-sizing: border-box;
     width: 30rem;
-    height: 35rem;
+    max-width: 100%;
+    min-height: 35rem;
+
+    @media (max-width: 48em) {
+      min-height: 0;
+    }
   }
 
   button {
     width: 20em;
-    padding: 10px 20px;
+    max-width: 100%;
+    padding: 0.625em 1.25em;
     cursor: pointer;
-    border-radius: 3px;
+    border-radius: 0.188em;
     transition: background-color 0.3s;
-    font-size: 16px;
-    margin-top: 10px;
+    font-size: 1em;
+    margin-top: 0.625em;
   }
 
   input[type='text'] {
     width: 20em;
-    padding: 10px 20px;
-    margin: 10px 0;
+    max-width: 100%;
+    padding: 0.625em 1.25em;
+    margin: 0.625em 0;
     border: 1px solid var(--cm-border-strong);
-    border-radius: 3px;
+    border-radius: 0.188em;
     box-sizing: border-box;
-    font-size: 16px;
+    font-size: 1em;
   }
 
   .login-box h2 {
-    margin-bottom: 20px;
-    font-size: 24px;
+    margin-bottom: 0.833em;
+    font-size: 1.5em;
   }
 
   .login-button {
@@ -73,9 +86,9 @@
   }
 
   .status {
-    margin-top: 15px;
+    margin-top: 1.071em;
     color: var(--cm-text-tertiary);
-    font-size: 14px;
+    font-size: 0.875em;
   }
 
   a {
@@ -97,21 +110,21 @@
   }
 
   .info-message {
-    margin: 15px 0;
+    margin: 0.938em 0;
     color: var(--cm-text-tertiary);
-    font-size: 16px;
+    font-size: 1em;
     line-height: 1.5;
   }
 
   .error {
-    margin: 15px 0;
-    padding: 12px 16px;
+    margin: 1.071em 0;
+    padding: 0.857em 1.143em;
     background-color: #fef2f2;
     border: 1px solid #fecaca;
-    border-left: 4px solid #ef4444;
-    border-radius: 4px;
+    border-left: 0.286em solid #ef4444;
+    border-radius: 0.286em;
     color: #991b1b;
-    font-size: 14px;
+    font-size: 0.875em;
     line-height: 1.5;
     text-align: left;
     max-width: 20em;
@@ -119,14 +132,14 @@
   }
 
   .invitation-only-notice {
-    margin: 20px 0;
-    padding: 15px 20px;
+    margin: 1.429em 0;
+    padding: 1.071em 1.429em;
     background-color: colors.$highlight-background-color;
     border: 1px solid colors.$separator-color;
-    border-left: 4px solid colors.$highlight-color;
-    border-radius: 4px;
+    border-left: 0.286em solid colors.$highlight-color;
+    border-radius: 0.286em;
     color: colors.$base-color;
-    font-size: 14px;
+    font-size: 0.875em;
     line-height: 1.5;
     text-align: left;
     max-width: 20em;
@@ -138,11 +151,12 @@
 
   input[type='email'] {
     width: 20em;
-    padding: 10px 20px;
-    margin: 10px 0;
+    max-width: 100%;
+    padding: 0.625em 1.25em;
+    margin: 0.625em 0;
     border: 1px solid var(--cm-border-strong);
-    border-radius: 3px;
+    border-radius: 0.188em;
     box-sizing: border-box;
-    font-size: 16px;
+    font-size: 1em;
   }
 }

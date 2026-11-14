@@ -19,7 +19,7 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    padding: 20px;
+    padding: 1.25em;
     width: 100%;
   }
 
@@ -28,40 +28,40 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    padding: 40px;
+    padding: 2.5em;
     color: colors.$base-color;
     background: colors.$component-background-color; // Dark mode card
-    border-radius: 12px;
+    border-radius: 0.75em;
     box-shadow: var(--cm-shadow-lg);
     text-align: center;
     width: 28rem;
     max-width: 90vw;
 
     h2 {
-      margin-bottom: 10px;
-      font-size: 24px;
+      margin-bottom: 0.417em;
+      font-size: 1.5em;
       color: colors.$base-color;
     }
 
     p {
       color: var(--cm-text-tertiary);
-      margin: 10px 0;
+      margin: 0.625em 0;
     }
   }
 
   .email-box {
     background: #585d67;
-    border-radius: 8px;
-    padding: 12px 16px;
+    border-radius: 0.5em;
+    padding: 0.75em 1em;
     margin: 0 0 1em 0;
     width: 90%;
     text-align: left;
 
     label {
-      font-size: 14px;
+      font-size: 0.875em;
       font-weight: 500;
       color: #bcc7dc; // Lighter color for better contrast
-      margin-bottom: 6px; // Reduced margin
+      margin-bottom: 0.429em; // Reduced margin
       display: block;
     }
 
@@ -77,12 +77,12 @@
   }
 
   .alert-box {
-    border-radius: 8px;
-    padding: 12px 16px;
-    margin: 20px 0;
+    border-radius: 0.5em;
+    padding: 0.75em 1em;
+    margin: 1.25em 0;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 0.5em;
     width: 100%;
 
     svg {
@@ -120,7 +120,7 @@
       justify-content: center;
       gap: 0.5em;
       padding: 0.75em 1.5em;
-      border-radius: 8px;
+      border-radius: 0.5em;
       font-weight: 500;
       font-size: 1em;
       border: none;
@@ -155,20 +155,20 @@
 
   .invitation-button {
     width: 100%;
-    padding: 12px 24px;
-    margin-top: 10px;
+    padding: 0.75em 1.5em;
+    margin-top: 0.625em;
     cursor: pointer;
-    border-radius: 8px;
+    border-radius: 0.5em;
     border: none;
     background-color: colors.$highlight-color; // Use app's highlight color
     color: var(--cm-text-on-primary);
-    font-size: 16px;
+    font-size: 1em;
     font-weight: 600;
     transition: all 0.2s ease-in-out;
 
     &:hover {
       background-color: var(--cm-primary-hover);
-      transform: translateY(-2px);
+      transform: translateY(-0.125em);
     }
 
     &:active {
@@ -177,7 +177,7 @@
 
     &:focus {
       outline: none;
-      box-shadow: 0 0 0 3px rgba(var(--cm-primary-rgb), 0.3);
+      box-shadow: 0 0 0 0.188em rgba(var(--cm-primary-rgb), 0.3);
     }
 
     &:disabled {
@@ -254,7 +254,7 @@
   }
 
   .rounded-full {
-    border-radius: 9999px;
+    border-radius: 999em;
   }
 
   .bg-indigo-100 {
@@ -332,7 +332,7 @@
   }
 
   .border-b-2 {
-    border-bottom-width: 2px;
+    border-bottom-width: 0.125em;
   }
 
   .border-indigo-600 {

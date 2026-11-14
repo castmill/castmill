@@ -10,7 +10,7 @@
     gap: 1.5em;
     margin-bottom: 2em;
     padding-bottom: 1.5em;
-    border-bottom: 2px solid var(--cm-border-color);
+    border-bottom: 0.125em solid var(--cm-border-color);
   }
 
   &__header-icon {
@@ -102,7 +102,7 @@
 
   &__error {
     color: var(--cm-error);
-    border: 2px solid var(--cm-error);
+    border: 0.125em solid var(--cm-error);
 
     &-icon {
       font-size: 3em;
@@ -239,8 +239,8 @@
   }
 
   &:focus {
-    outline: 2px solid var(--cm-primary);
-    outline-offset: -2px;
+    outline: 0.125em solid var(--cm-primary);
+    outline-offset: -0.125em;
   }
 
   &__icon {

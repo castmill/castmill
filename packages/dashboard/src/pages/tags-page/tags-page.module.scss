@@ -68,7 +68,7 @@
       bottom: 1em;
       left: 0;
       width: 0.35em;
-      border-radius: 0 3px 3px 0;
+      border-radius: 0 0.188em 0.188em 0;
       background: var(--group-accent, transparent);
     }
 
@@ -110,7 +110,7 @@
 .tag-item {
   display: inline-flex;
   align-items: center;
-  border-radius: 9999px;
+  border-radius: 999em;
   transition: background 0.2s ease;
 
   &:hover {
@@ -192,7 +192,7 @@
 .color-option {
   width: 1.75em;
   height: 1.75em;
-  border: 2px solid transparent;
+  border: 0.125em solid transparent;
   border-radius: 50%;
   cursor: pointer;
   transition:
@@ -207,8 +207,8 @@
   &.selected {
     border-color: var(--cm-text-primary);
     box-shadow:
-      0 0 0 2px var(--cm-bg-primary),
-      0 0 0 4px var(--cm-text-primary);
+      0 0 0 0.125em var(--cm-bg-primary),
+      0 0 0 0.25em var(--cm-text-primary);
     transform: scale(1.1);
   }
 }
@@ -257,7 +257,7 @@
     &:focus {
       outline: none;
       border-color: var(--cm-primary);
-      box-shadow: 0 0 0 2px rgba(var(--cm-primary-rgb), 0.2);
+      box-shadow: 0 0 0 0.125em rgba(var(--cm-primary-rgb), 0.2);
     }
   }
 }
@@ -278,7 +278,7 @@
   height: 1.5em;
   padding: 0 0.4em;
   margin-left: 0.5em;
-  border-radius: 9999px;
+  border-radius: 999em;
   background: var(--cm-bg-hover);
   font-size: 0.7em;
   font-weight: 600;

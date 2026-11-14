@@ -33,6 +33,7 @@ agents/
 | Notifications                        | `agents/systems/notifications.md`       |
 | AI Agents & MCP Server               | `agents/systems/AI-AGENTS-MCP.md`       |
 | Automations (event-driven actions)   | `agents/systems/AUTOMATIONS.md`         |
+| Responsive dashboard & e2e checks    | `agents/systems/RESPONSIVE-DASHBOARD.md` |
 
 ## 🏗️ Project Structure
 

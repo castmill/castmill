@@ -70,7 +70,7 @@
   &__preview-canvas {
     position: relative;
     width: 100%;
-    max-width: 300px;
+    max-width: 18.75em;
     background: #3a3a4a;
     border-radius: 0.25em;
     overflow: hidden;
@@ -98,8 +98,8 @@
     &.is-highlighted {
       background: rgba(var(--cm-warning-rgb), 0.4);
       border-color: rgba(var(--cm-warning-rgb), 0.9);
-      border-width: 2px;
-      box-shadow: 0 0 8px rgba(var(--cm-warning-rgb), 0.5);
+      border-width: 0.125em;
+      box-shadow: 0 0 0.5em rgba(var(--cm-warning-rgb), 0.5);
       z-index: 100 !important;
     }
 

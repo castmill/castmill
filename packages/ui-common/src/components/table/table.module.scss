@@ -11,10 +11,10 @@
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
-    width: 18px;
-    height: 18px;
-    border: 2px solid var(--cm-border-strong);
-    border-radius: 3px;
+    width: 1.125em;
+    height: 1.125em;
+    border: 0.125em solid var(--cm-border-strong);
+    border-radius: 0.188em;
     margin: 0;
     background-color: transparent;
     position: relative;
@@ -34,10 +34,10 @@
         position: absolute;
         left: 50%;
         top: 45%;
-        width: 5px;
-        height: 10px;
+        width: 0.312em;
+        height: 0.625em;
         border: solid white;
-        border-width: 0 2px 2px 0;
+        border-width: 0 0.125em 0.125em 0;
         transform: translate(-50%, -50%) rotate(45deg);
       }
     }
@@ -48,7 +48,7 @@
 
     &:focus {
       outline: none;
-      box-shadow: 0 0 0 2px var(--cm-focus-ring);
+      box-shadow: 0 0 0 0.125em var(--cm-focus-ring);
     }
   }
 
@@ -69,9 +69,9 @@
     /* Checkbox cell styling */
     .checkbox-cell {
       position: relative;
-      width: 48px;
-      min-width: 48px;
-      height: 48px;
+      width: 3.333em;
+      min-width: 3.333em;
+      height: 3.333em;
       padding: 0;
       text-align: center;
     }

@@ -11,29 +11,29 @@
     justify-content: center;
     align-items: center;
 
-    border: 2px dashed var(--cm-border-strong);
+    border: 0.125em dashed var(--cm-border-strong);
     margin-top: 1em;
   }
 
   progress {
     width: 100%;
-    height: 20px;
+    height: 1.25em;
   }
 
   progress::-webkit-progress-bar {
     background-color: var(--cm-bg-tertiary);
-    border-radius: 5px;
-    box-shadow: 0 0 3px var(--cm-shadow-color) inset;
+    border-radius: 0.312em;
+    box-shadow: 0 0 0.188em var(--cm-shadow-color) inset;
   }
 
   progress::-webkit-progress-value {
     background-color: #4caf50;
-    border-radius: 5px;
+    border-radius: 0.312em;
   }
 
   progress::-moz-progress-bar {
     background-color: #4caf50;
-    border-radius: 5px;
+    border-radius: 0.312em;
   }
 
   .file-input {
@@ -46,10 +46,10 @@
 
   .file-label {
     display: inline-block;
-    padding: 10px 20px;
+    padding: 0.625em 1.25em;
     background-color: #007bff;
     color: white;
-    border-radius: 5px;
+    border-radius: 0.312em;
     cursor: pointer;
     transition: background-color 0.3s ease;
   }

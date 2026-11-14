@@ -61,7 +61,7 @@
   gap: 0.5em;
   padding: 0.75em 0.9em;
   border: none;
-  border-bottom: 2px solid transparent;
+  border-bottom: 0.139em solid transparent;
   background: transparent;
   color: var(--cm-text-secondary);
   font-size: 0.9em;
@@ -85,8 +85,8 @@
   }
 
   &:focus-visible {
-    outline: 2px solid var(--cm-focus-ring);
-    outline-offset: -2px;
+    outline: 0.139em solid var(--cm-focus-ring);
+    outline-offset: -0.139em;
   }
 
   &.active {
@@ -192,8 +192,8 @@
   }
 
   &:focus-visible {
-    outline: 2px solid var(--cm-focus-ring);
-    outline-offset: 2px;
+    outline: 0.132em solid var(--cm-focus-ring);
+    outline-offset: 0.132em;
   }
 
   &:disabled {
@@ -242,8 +242,8 @@
   }
 
   &:focus-visible {
-    outline: 2px solid var(--cm-focus-ring);
-    outline-offset: 2px;
+    outline: 0.152em solid var(--cm-focus-ring);
+    outline-offset: 0.152em;
   }
 
   &:disabled {
@@ -284,8 +284,8 @@
     }
 
     &:focus-visible {
-      outline: 2px solid var(--cm-focus-ring);
-      outline-offset: -2px;
+      outline: 0.152em solid var(--cm-focus-ring);
+      outline-offset: -0.152em;
     }
 
     &[aria-pressed='true'],

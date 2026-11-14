@@ -1,15 +1,15 @@
 .filterLabel {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5em;
   cursor: pointer;
   user-select: none;
 
   .switch {
     position: relative;
     display: inline-block;
-    width: 34px;
-    height: 20px;
+    width: 2.125em;
+    height: 1.25em;
 
     input {
       opacity: 0;
@@ -29,15 +29,15 @@
       transition:
         background-color 0.4s,
         transform 0.4s;
-      border-radius: 20px;
+      border-radius: 1.25em;
 
       &:before {
         position: absolute;
         content: '';
-        height: 14px;
-        width: 14px;
-        left: 3px;
-        bottom: 3px;
+        height: 0.875em;
+        width: 0.875em;
+        left: 0.188em;
+        bottom: 0.188em;
         background-color: white;
         transition: transform 0.4s;
         border-radius: 50%;
@@ -49,7 +49,7 @@
     }
 
     input:checked + .slider:before {
-      transform: translateX(14px);
+      transform: translateX(0.875em);
     }
 
     input:disabled + .slider {

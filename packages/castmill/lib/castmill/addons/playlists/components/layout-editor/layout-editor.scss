@@ -13,7 +13,7 @@
     padding: 0.5em;
     background: var(--cm-bg-primary);
     border-radius: 0.25em;
-    box-shadow: 0 1px 3px var(--cm-shadow-color);
+    box-shadow: 0 1px 0.188em var(--cm-shadow-color);
   }
 
   &__aspect-ratio {
@@ -86,14 +86,14 @@
     padding: 1em;
     background: var(--cm-bg-tertiary);
     border-radius: 0.5em;
-    min-height: 300px;
+    min-height: 18.75em;
   }
 
   &__canvas {
     position: relative;
     background: var(--cm-bg-secondary);
-    border: 2px solid var(--cm-border-color);
-    box-shadow: 0 2px 8px var(--cm-shadow-color);
+    border: 0.125em solid var(--cm-border-color);
+    box-shadow: 0 0.125em 0.5em var(--cm-shadow-color);
     overflow: hidden;
 
     // Grid pattern for visual guidance
@@ -106,7 +106,7 @@
   &__zone {
     position: absolute;
     background: rgba(var(--cm-primary-rgb), 0.2);
-    border: 2px solid rgba(var(--cm-primary-rgb), 0.5);
+    border: 0.125em solid rgba(var(--cm-primary-rgb), 0.5);
     border-radius: 0.25em;
     cursor: move;
     transition:
@@ -120,7 +120,7 @@
 
     &.selected {
       border-color: var(--cm-primary);
-      box-shadow: 0 0 0 2px rgba(var(--cm-primary-rgb), 0.3);
+      box-shadow: 0 0 0 0.125em rgba(var(--cm-primary-rgb), 0.3);
     }
   }
 
@@ -143,53 +143,53 @@
   // Resize handles
   .resize-handle {
     position: absolute;
-    width: 10px;
-    height: 10px;
+    width: 0.625em;
+    height: 0.625em;
     background: var(--cm-primary);
     border: 1px solid white;
-    border-radius: 2px;
+    border-radius: 0.125em;
 
     &.nw {
-      top: -5px;
-      left: -5px;
+      top: -0.312em;
+      left: -0.312em;
       cursor: nw-resize;
     }
     &.n {
-      top: -5px;
+      top: -0.312em;
       left: 50%;
       transform: translateX(-50%);
       cursor: n-resize;
     }
     &.ne {
-      top: -5px;
-      right: -5px;
+      top: -0.312em;
+      right: -0.312em;
       cursor: ne-resize;
     }
     &.e {
       top: 50%;
-      right: -5px;
+      right: -0.312em;
       transform: translateY(-50%);
       cursor: e-resize;
     }
     &.se {
-      bottom: -5px;
-      right: -5px;
+      bottom: -0.312em;
+      right: -0.312em;
       cursor: se-resize;
     }
     &.s {
-      bottom: -5px;
+      bottom: -0.312em;
       left: 50%;
       transform: translateX(-50%);
       cursor: s-resize;
     }
     &.sw {
-      bottom: -5px;
-      left: -5px;
+      bottom: -0.312em;
+      left: -0.312em;
       cursor: sw-resize;
     }
     &.w {
       top: 50%;
-      left: -5px;
+      left: -0.312em;
       transform: translateY(-50%);
       cursor: w-resize;
     }
@@ -199,7 +199,7 @@
     background: var(--cm-bg-primary);
     border-radius: 0.25em;
     padding: 1em;
-    box-shadow: 0 1px 3px var(--cm-shadow-color);
+    box-shadow: 0 1px 0.188em var(--cm-shadow-color);
 
     h4 {
       margin: 0 0 0.75em 0;
@@ -255,7 +255,7 @@
     background: var(--cm-bg-primary);
     border-radius: 0.25em;
     padding: 1em;
-    box-shadow: 0 1px 3px var(--cm-shadow-color);
+    box-shadow: 0 1px 0.188em var(--cm-shadow-color);
 
     h4 {
       margin: 0 0 0.5em 0;
@@ -281,7 +281,7 @@
 
     &.selected {
       background: rgba(var(--cm-primary-rgb), 0.2);
-      border-left: 3px solid var(--cm-primary);
+      border-left: 0.188em solid var(--cm-primary);
     }
 
     .zone-name {
@@ -347,7 +347,7 @@
     background: var(--cm-bg-primary);
     border-radius: 0.5em;
     padding: 1em;
-    box-shadow: 0 2px 8px var(--cm-shadow-color);
+    box-shadow: 0 0.125em 0.5em var(--cm-shadow-color);
   }
 
   &__templates-header {
@@ -458,8 +458,8 @@
     padding: 0.75em 1em;
     background: var(--cm-bg-primary);
     border-radius: 0.375em;
-    box-shadow: 0 1px 4px var(--cm-shadow-color);
-    border-left: 3px solid var(--cm-primary);
+    box-shadow: 0 1px 0.25em var(--cm-shadow-color);
+    border-left: 0.188em solid var(--cm-primary);
   }
 
   &__zone-toolbar-group {

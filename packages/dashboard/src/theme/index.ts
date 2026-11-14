@@ -2,6 +2,8 @@ export {
   ThemeProvider,
   useTheme,
   applyTheme,
+  syncThemeColor,
+  THEME_COLORS,
   getInitialTheme,
   isTheme,
   THEME_STORAGE_KEY,

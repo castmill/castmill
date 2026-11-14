@@ -9,7 +9,10 @@
   justify-content: flex-end;
   align-items: flex-start;
   z-index: 1000;
-  padding: 1em;
+  padding: calc(1em + env(safe-area-inset-top, 0em))
+    calc(1em + env(safe-area-inset-right, 0em))
+    calc(1em + env(safe-area-inset-bottom, 0em))
+    calc(1em + env(safe-area-inset-left, 0em));
   animation: fadeIn 0.2s ease-out;
 }
 

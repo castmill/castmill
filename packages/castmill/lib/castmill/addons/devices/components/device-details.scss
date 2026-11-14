@@ -62,8 +62,8 @@
     }
 
     &:focus-visible {
-      outline: 2px solid var(--cm-focus-ring);
-      outline-offset: 2px;
+      outline: 0.156em solid var(--cm-focus-ring);
+      outline-offset: 0.156em;
     }
   }
 
@@ -142,7 +142,7 @@
   }
 
   &:focus-within {
-    outline: 2px solid var(--cm-focus-ring);
+    outline: 0.125em solid var(--cm-focus-ring);
     outline-offset: 1px;
   }
 
@@ -164,7 +164,7 @@
   justify-content: center;
   width: 2em;
   height: 1.25em;
-  border: 2px solid var(--cm-primary);
+  border: 0.139em solid var(--cm-primary);
   border-radius: 0.2em;
   color: var(--cm-primary);
   font-size: 0.9em;
@@ -177,7 +177,7 @@
   &.mini {
     width: 1.3em;
     height: 0.85em;
-    border-width: 1.5px;
+    border-width: 0.134em;
     border-color: var(--cm-text-tertiary);
     color: var(--cm-text-secondary);
     font-size: 0.7em;
