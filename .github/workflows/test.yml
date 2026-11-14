@@ -132,6 +132,9 @@ jobs:
 
     name: responsive e2e checks for the Dashboard (Playwright)
 
+    permissions:
+      contents: read
+
     defaults:
       run:
         working-directory: ./packages/dashboard
