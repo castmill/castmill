@@ -3,7 +3,8 @@
 //
 // The player loops a widget over its duration. Every animated element enters,
 // holds and fades out just before the end, so the loop restarts from an empty
-// background instead of snapping back. The background glow drifts away and
+// background instead of snapping back. The agenda boxes slide in from the left,
+// the bottom and the right of the screen. The background glow drifts away and
 // returns over exactly one cycle.
 
 /** Length of one cycle, in seconds. Passed to the player as the `duration` option. */
@@ -11,10 +12,15 @@ export const SHOWCASE_DURATION = 14;
 
 export const showcaseOptions = { duration: SHOWCASE_DURATION };
 
-const enterAndExit = (startMs: number) => [
+const enterAndExit = (
+  startMs: number,
+  // Where the element comes from; by default it rises a little while fading in.
+  from: Record<string, number> = { y: 14 },
+  duration = 1
+) => [
   {
     keyframes: [
-      { from: { opacity: 0, y: 14, duration: 1, ease: 'power2.out' } },
+      { from: { opacity: 0, ...from, duration, ease: 'power3.out' } },
     ],
     start: startMs,
   },
@@ -35,12 +41,14 @@ const text = (name: string, value: string, style: Record<string, string>) => ({
 });
 
 // Animations go on groups: on a text component they would split it into words.
+// Each agenda box slides in from outside the screen (`from`), in percent of its size.
 const agendaItem = (
   name: string,
   time: string,
   title: string,
   place: string,
-  startMs: number
+  startMs: number,
+  from: Record<string, number>
 ) => ({
   type: 'group',
   name,
@@ -53,7 +61,7 @@ const agendaItem = (
     'background-color': 'rgba(255, 255, 255, 0.1)',
     border: '0.06em solid rgba(255, 255, 255, 0.18)',
   },
-  animations: enterAndExit(startMs),
+  animations: enterAndExit(startMs, from, 1.2),
   components: [
     text(`${name}-time`, time, {
       'font-size': '0.8em',
@@ -180,9 +188,15 @@ export const showcaseWidget = {
             name: 'agenda',
             style: { display: 'flex', 'flex-direction': 'row', gap: '0.8em' },
             components: [
-              agendaItem('a1', '09:30', 'All hands', 'Auditorium', 900),
-              agendaItem('a2', '12:00', 'Team lunch', 'Level 2', 1100),
-              agendaItem('a3', '16:00', 'Demo day', 'Studio B', 1300),
+              agendaItem('a1', '09:30', 'All hands', 'Auditorium', 900, {
+                xPercent: -140,
+              }),
+              agendaItem('a2', '12:00', 'Team lunch', 'Level 2', 1050, {
+                yPercent: 280,
+              }),
+              agendaItem('a3', '16:00', 'Demo day', 'Studio B', 1200, {
+                xPercent: 140,
+              }),
             ],
           },
           line(
