@@ -1010,7 +1010,7 @@ defmodule CastmillWeb.NetworkDashboardControllerTest do
       assert get_resp_header(download, "access-control-expose-headers") == ["content-disposition"]
       assert {:ok, _files} = :zip.list_dir(download.resp_body)
 
-      for path <- ["/packages/9", "/packages/x"] do
+      for path <- ["/packages/9", "/packages/x", "/packages/1abc"] do
         assert ctx
                |> package_conn()
                |> get("/dashboard/network/widgets/#{id}#{path}")

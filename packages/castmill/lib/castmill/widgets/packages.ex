@@ -14,14 +14,17 @@ defmodule Castmill.Widgets.Packages do
       installed fetcher (packages never bring code) and can't set the fetcher
       module or an endpoint in its config. It is created or updated with the
       widget, so the organization settings it declares can be configured before
-      the widget is used. A new version can't rename or remove it.
+      the widget is used. A new version can't rename or remove it; after it
+      commits, the integration's polling schedulers follow its refresh mode and
+      interval.
     * An update that would make saved playlist items invalid (e.g. a new required
       option without a default, or a shorter editable text) is refused. It is
       checked under the widget's row lock, which playlist insertions and config
       edits share. The upload endpoint then notifies the playlists using it.
     * Assets are stored in public storage under content-hash keys, and
       `{{asset:category.name}}` placeholders are replaced with their URLs. Assets
-      no kept version uses are deleted (refused uploads, old versions, deleted
+      that neither a kept version nor a saved playlist item (e.g. an option's
+      copied default) uses are deleted (refused uploads, old versions, deleted
       widgets). Storing, installing and deleting assets of a slug take a lock on
       the slug, so they never race.
     * Every upload is kept as a version (the last 10), to download or reinstall.
@@ -36,6 +39,7 @@ defmodule Castmill.Widgets.Packages do
   alias Castmill.Widgets.{TextOverrides, Widget, WidgetConfig, WidgetPackage}
   alias Castmill.Widgets.Integrations
   alias Castmill.Widgets.Integrations.WidgetIntegration
+  alias Castmill.Workers.IntegrationPoller
 
   @kept_versions 10
   @max_package_size 10 * 1024 * 1024
@@ -128,6 +132,7 @@ defmodule Castmill.Widgets.Packages do
       |> case do
         {:ok, {result, pruned_keys}} ->
           release_assets(slug, pruned_keys, opts)
+          reconcile_polling(result)
           {:ok, result}
 
         {:error, {reason, keys}} ->
@@ -135,6 +140,41 @@ defmodule Castmill.Widgets.Packages do
           {:error, reason}
       end
     end
+  end
+
+  # Polling schedulers keep the settings they were created with: after a new
+  # version, move them to its refresh mode and interval.
+  defp reconcile_polling(%{created: true}), do: :ok
+
+  defp reconcile_polling(%{widget: widget}) do
+    integrations = Integrations.list_integrations(widget_id: widget.id)
+
+    reconcile = fn ->
+      for integration <- integrations do
+        try do
+          IntegrationPoller.reconcile_schedulers(integration)
+        rescue
+          error ->
+            Logger.warning(
+              "[Widgets.Packages] Could not reconcile polling of integration " <>
+                "#{integration.id}: #{inspect(error)}"
+            )
+        catch
+          :exit, reason ->
+            Logger.warning(
+              "[Widgets.Packages] Could not reconcile polling of integration " <>
+                "#{integration.id}: #{inspect(reason)}"
+            )
+        end
+      end
+    end
+
+    # Never block (or fail) the upload if the queue is unavailable.
+    if Application.get_env(:castmill, :async_poll_scheduling, true),
+      do: Task.start(reconcile),
+      else: reconcile.()
+
+    :ok
   end
 
   # The integration the widget will have: the package's `integration`, or the one
@@ -237,7 +277,10 @@ defmodule Castmill.Widgets.Packages do
         |> List.flatten()
         |> MapSet.new()
 
-      for key <- keys, not MapSet.member?(used, key) do
+      unused = Enum.reject(keys, &MapSet.member?(used, &1))
+      saved = saved_references(slug, unused)
+
+      for key <- unused, not MapSet.member?(saved, key) do
         with {:error, reason} <- delete.(key) do
           Logger.warning("[Widgets.Packages] Could not delete asset #{key}: #{inspect(reason)}")
         end
@@ -245,6 +288,35 @@ defmodule Castmill.Widgets.Packages do
     end)
 
     :ok
+  end
+
+  # The keys among `keys` that saved playlist items of the slug's widget still
+  # reference, e.g. an asset URL the playlist editor copied from an option's
+  # default. Matched by their content-hash directory, so files with the same
+  # content are kept together.
+  defp saved_references(_slug, []), do: MapSet.new()
+
+  defp saved_references(slug, keys) do
+    keys
+    |> Enum.group_by(&asset_dir/1)
+    |> Enum.filter(fn {dir, _keys} -> referenced?(slug, dir) end)
+    |> Enum.flat_map(fn {_dir, keys} -> keys end)
+    |> MapSet.new()
+  end
+
+  defp asset_dir(key),
+    do: key |> String.split("/") |> Enum.take(3) |> Enum.join("/") |> Kernel.<>("/")
+
+  defp referenced?(slug, dir) do
+    from(wc in WidgetConfig,
+      join: w in Widget,
+      on: w.id == wc.widget_id,
+      where:
+        w.slug == ^slug and
+          (fragment("strpos(?::text, ?) > 0", wc.options, ^dir) or
+             fragment("strpos(?::text, ?) > 0", wc.data, ^dir))
+    )
+    |> Repo.exists?()
   end
 
   defp widget_attrs(widget_data, slug, urls) do

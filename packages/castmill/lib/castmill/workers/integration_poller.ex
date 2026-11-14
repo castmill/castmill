@@ -255,7 +255,7 @@ defmodule Castmill.Workers.IntegrationPoller do
   `{:ok, removed_count}`.
   """
   def remove_schedulers(integration_id) do
-    pattern = ~r/^int_poll_[0-9a-fA-F-]+_#{integration_id}_/
+    pattern = scheduler_pattern(integration_id)
 
     with {:ok, ids} <- BullMQHelper.list_scheduler_ids(@queue) do
       removed =
@@ -266,6 +266,48 @@ defmodule Castmill.Workers.IntegrationPoller do
       {:ok, removed}
     end
   end
+
+  @doc """
+  Brings an integration's polling schedulers in line with its current settings,
+  e.g. after a new widget package version changed them: removes them when it is
+  refreshed on demand, and moves them to its current `pull_interval_seconds`
+  otherwise. Returns `{:ok, count}` of the schedulers removed or updated.
+  """
+  def reconcile_schedulers(%WidgetIntegration{} = integration) do
+    if Refresh.on_demand?(integration) do
+      remove_schedulers(integration.id)
+    else
+      every = (integration.pull_interval_seconds || 30) * 1000
+      pattern = scheduler_pattern(integration.id)
+
+      with {:ok, schedulers} <- BullMQHelper.list_schedulers(@queue) do
+        updated =
+          schedulers
+          |> Enum.filter(
+            &(is_binary(&1.key) and Regex.match?(pattern, &1.key) and &1.every != every)
+          )
+          |> Enum.count(&reschedule(&1, every))
+
+        {:ok, updated}
+      end
+    end
+  end
+
+  # Schedulers are keyed by their job's arguments, so they are upserted with the
+  # same data. One without its data is removed; reads schedule it again.
+  defp reschedule(%{key: scheduler_id, data: %{} = data}, every) do
+    match?(
+      {:ok, _},
+      BullMQHelper.upsert_scheduler(@queue, scheduler_id, %{every: every}, scheduler_id, data,
+        attempts: 3
+      )
+    )
+  end
+
+  defp reschedule(%{key: scheduler_id}, _every),
+    do: match?({:ok, true}, BullMQHelper.remove_scheduler(@queue, scheduler_id))
+
+  defp scheduler_pattern(integration_id), do: ~r/^int_poll_[0-9a-fA-F-]+_#{integration_id}_/
 
   @doc """
   Queues a single refresh of on-demand integration data. The job ID is derived

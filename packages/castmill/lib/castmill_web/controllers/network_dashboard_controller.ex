@@ -256,6 +256,7 @@ defmodule CastmillWeb.NetworkDashboardController do
       |> send_resp(:ok, package.content)
     else
       :error -> widget_access_error(conn, {:error, :not_found})
+      {version, _rest} when is_integer(version) -> widget_access_error(conn, {:error, :not_found})
       error -> widget_access_error(conn, error)
     end
   end

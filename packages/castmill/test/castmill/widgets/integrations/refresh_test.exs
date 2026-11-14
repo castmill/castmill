@@ -560,6 +560,16 @@ defmodule Castmill.Widgets.Integrations.RefreshTest do
       assert {:ok, 0} = IntegrationPoller.remove_schedulers(integration.id)
     end
 
+    test "reconciling an integration's schedulers is safe without BullMQ", %{
+      integration: integration
+    } do
+      assert {:ok, 0} = IntegrationPoller.reconcile_schedulers(integration)
+
+      scheduled = %{integration | refresh_mode: "scheduled", pull_interval_seconds: 60}
+      refute Castmill.Widgets.Integrations.Refresh.on_demand?(scheduled)
+      assert {:ok, 0} = IntegrationPoller.reconcile_schedulers(scheduled)
+    end
+
     test "a failed on-demand refresh job is recorded, not retried", %{
       integration: integration,
       organization: organization,

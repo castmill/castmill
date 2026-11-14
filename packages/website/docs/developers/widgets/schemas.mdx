@@ -271,7 +271,7 @@ Castmill stores the files: under `/widget_assets/<slug>/` for organization widge
 }
 ```
 
-Reference a declared file anywhere in the widget, for example in the template or the `icon`, with a `{{asset:category.name}}` placeholder. Castmill replaces it with the stored file's URL when you upload the package. A placeholder can be a whole value or part of one, such as a CSS `url()`:
+Reference a declared file anywhere in the widget, for example in the template or the `icon`, with a `{{asset:category.name}}` placeholder. Castmill replaces it with the stored file's absolute URL when you upload the package, so it can also be the default of a `url` option. A placeholder can be a whole value or part of one, such as a CSS `url()`:
 
 ```json
 {

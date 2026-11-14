@@ -177,7 +177,6 @@ const NetworkWidgets: Component = () => {
       );
     } finally {
       setUploading(false);
-      setPendingFile(null);
     }
   };
 
@@ -281,7 +280,9 @@ const NetworkWidgets: Component = () => {
             accept=".zip,.json,application/zip,application/json"
             class={styles['upload-input']}
             onChange={(event) => {
-              const file = event.currentTarget.files?.[0];
+              const input = event.currentTarget;
+              const file = input.files?.[0];
+              input.value = '';
               if (file) void uploadPackage(file);
             }}
           />

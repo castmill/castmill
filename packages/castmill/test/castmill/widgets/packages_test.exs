@@ -247,6 +247,25 @@ defmodule Castmill.Widgets.PackagesTest do
       assert Enum.sort(deleted_keys()) == Enum.sort(first_keys)
     end
 
+    test "keeps old assets that saved playlist items still reference", ctx do
+      schema = %{"background" => %{"type" => "string", "default" => "{{asset:images.logo}}"}}
+      first = widget_json(ctx, %{"options_schema" => schema})
+      {:ok, %{widget: widget}} = install(ctx, zip(first))
+      first_keys = stored_keys()
+      [logo] = Enum.filter(first_keys, &String.ends_with?(&1, "/images/logo.png"))
+      use_widget(ctx, widget, %{"background" => "https://cdn.test/" <> logo})
+
+      upload =
+        text_widget(ctx)
+        |> Map.put("options_schema", %{"background" => %{"type" => "string"}})
+        |> Map.put("integration", widget_json(ctx)["integration"])
+        |> json()
+
+      for _ <- 2..11, do: assert({:ok, _} = install(ctx, upload))
+
+      assert Enum.sort(deleted_keys()) == Enum.sort(first_keys -- [logo])
+    end
+
     test "deletes the assets of refused uploads unless a kept version uses them", ctx do
       {:ok, %{widget: widget}} = install(ctx, zip(widget_json(ctx)))
       kept = stored_keys()

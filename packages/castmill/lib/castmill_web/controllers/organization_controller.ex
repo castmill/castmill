@@ -397,6 +397,7 @@ defmodule CastmillWeb.OrganizationController do
 
     # Early, friendly check; the insert below is what actually reserves the slug.
     with :ok <- ensure_slug_available(widget_slug),
+         {:ok, widget_data} <- resolve_asset_references(widget_data, widget_slug, assets),
          {:ok, widget} <-
            create_widget_with_assets(organization_id, widget_data, widget_slug, assets) do
       conn
@@ -476,17 +477,25 @@ defmodule CastmillWeb.OrganizationController do
     end)
   end
 
-  defp store_widget_assets(widget, widget_data, widget_slug, assets) do
-    alias Castmill.Widgets.PackageProcessor
+  # `{{asset:...}}` placeholders are replaced before the widget is validated, so
+  # URL-typed options can default to an asset. The URLs are absolute (the server's
+  # `/widget_assets/{slug}/{path}`, where `store_widget_assets/4` stores them).
+  defp resolve_asset_references(widget_data, widget_slug, assets) do
+    alias Castmill.Widgets.{AssetStorage, PackageProcessor}
 
+    files = if is_map(assets), do: Map.get(assets, :files) || %{}, else: %{}
+
+    PackageProcessor.resolve_asset_references(widget_data, fn path ->
+      if Map.has_key?(files, path),
+        do: "#{CastmillWeb.Endpoint.url()}#{AssetStorage.widget_assets_url(widget_slug)}/#{path}"
+    end)
+  end
+
+  defp store_widget_assets(widget, widget_data, widget_slug, assets) do
     with {:ok, stored_assets} <-
-           Castmill.Widgets.AssetStorage.store_assets(widget_slug, assets),
-         {:ok, referenced} <-
-           PackageProcessor.resolve_asset_references(widget_data, fn path ->
-             get_in(stored_assets, [:files, path, :url])
-           end) do
+           Castmill.Widgets.AssetStorage.store_assets(widget_slug, assets) do
       resolved =
-        referenced
+        widget_data
         |> resolve_widget_icon(widget_slug, stored_assets)
         |> resolve_widget_fonts(widget_slug, stored_assets)
         |> Map.drop(["slug", "is_system", "network_id", "organization_id", "restricted"])

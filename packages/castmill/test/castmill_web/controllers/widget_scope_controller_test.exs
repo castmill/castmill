@@ -279,7 +279,8 @@ defmodule CastmillWeb.WidgetScopeControllerTest do
           "opts" => %{"url" => "{{asset:images.bg}}"}
         },
         "options_schema" => %{
-          "image" => %{"type" => "string", "default" => "{{asset:images.bg}}"}
+          "image" => %{"type" => "string", "default" => "{{asset:images.bg}}"},
+          "link" => %{"type" => "url", "default" => "{{asset:images.bg}}"}
         },
         "translations" => %{"es" => %{"image" => "{{asset:images.bg}}"}},
         "is_system" => true,
@@ -294,11 +295,14 @@ defmodule CastmillWeb.WidgetScopeControllerTest do
       assert %{"id" => id, "icon" => icon, "template" => template} =
                body = ctx.conn |> upload_zip(ctx.org_a, widget, files) |> json_response(201)
 
-      bg = "/widget_assets/#{slug}/assets/images/bg.png"
-      assert icon == "/widget_assets/#{slug}/assets/icons/icon.svg"
+      base = CastmillWeb.Endpoint.url() <> "/widget_assets/#{slug}"
+      bg = base <> "/assets/images/bg.png"
+      assert Castmill.Widgets.Schema.is_url(bg)
+      assert icon == base <> "/assets/icons/icon.svg"
       assert body["small_icon"] == icon
       assert template["opts"]["url"] == bg
       assert body["options_schema"]["image"]["default"] == bg
+      assert body["options_schema"]["link"]["default"] == bg
       assert body["translations"] == %{"es" => %{"image" => bg}}
 
       stored = Castmill.Repo.get!(Castmill.Widgets.Widget, id)

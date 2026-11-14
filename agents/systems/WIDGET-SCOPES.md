@@ -163,7 +163,9 @@ Network admins upload widget packages as network widgets
   so packages never reach the unrestricted `do_fetch_integration_data/2` fallback. It
   is created or updated with the widget (`Integrations.sync_integration_from_meta/1`),
   so its organization settings can be set before first use. A new version can't
-  rename or remove it (its credentials, cached data and polling belong to it).
+  rename or remove it (its credentials, cached data and polling belong to it). After
+  a new version commits, `IntegrationPoller.reconcile_schedulers/1` removes its
+  polling schedulers when it became on-demand, or moves them to its new interval.
 - `Packages.incompatible_items/2` refuses a version if saved `widgets_config`
   options or data (absent data is skipped) would fail `Schema.validate_data/2` or the
   editable-text overrides (`TextOverrides.validate/2`) with the new definition (409
@@ -175,10 +177,13 @@ Network admins upload widget packages as network widgets
 - Assets go to `Castmill.PublicStorage` under content-hash keys
   (`widget-assets/<slug>/<hash>/<path>`); `{{asset:category.name}}` placeholders are
   replaced with their URLs (`PackageProcessor.resolve_asset_references/2`, also used
-  for organization uploads, where files stay under `/widget_assets/<slug>/`).
+  for organization uploads, where files stay under `/widget_assets/<slug>/`). The
+  URLs are absolute and replaced before the widget is validated, so `url` options
+  can default to an asset.
 - Every upload is stored in `widget_packages` (the last 10 versions) for download,
   with the storage keys of its assets (`asset_keys`). Network admins can delete an
-  uploaded widget that no playlist uses. Assets no kept version uses are deleted
+  uploaded widget that no playlist uses. Assets that no kept version and no saved
+  playlist item (options/data, e.g. a copied asset default) uses are deleted
   from storage after a refused upload, when old versions are dropped and when the
   widget is deleted (failed deletes are logged). Storing, committing and cleaning up
   a slug's assets hold a per-slug advisory transaction lock, so cleanup never deletes
