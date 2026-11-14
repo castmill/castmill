@@ -5,8 +5,9 @@
 import {
   Component,
   createContext,
+  createEffect,
   createSignal,
-  onMount,
+  on,
   useContext,
   JSX,
   Show,
@@ -81,9 +82,16 @@ export const NetworkProvider: Component<{ children: JSX.Element }> = (
     }
   };
 
-  onMount(async () => {
-    await loadNetworkData();
-  });
+  // The admin status loads with the dashboard: on a direct link to a network
+  // page it can still be pending, so wait for it before denying access.
+  createEffect(
+    on(
+      () => store.network?.loaded,
+      (loaded) => {
+        if (loaded) void loadNetworkData();
+      }
+    )
+  );
 
   const contextValue: NetworkContextValue = {
     settings,

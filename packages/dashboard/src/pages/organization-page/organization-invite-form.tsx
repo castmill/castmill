@@ -5,6 +5,9 @@ import { useI18n } from '../../i18n';
 
 import style from './organization-invite-form.module.scss';
 
+// The server validates the address; this only catches obvious typos.
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export const OrganizationInviteForm = (props: {
   organizationId: string;
   onSubmit: (email: string, role: OrganizationRole) => void;
@@ -20,7 +23,7 @@ export const OrganizationInviteForm = (props: {
     if (field === 'email') {
       if (value.length === 0) {
         errors().set(field, t('organization.errors.emailRequired'));
-      } else if (!value.match(/^[\w-]+@([\w-]+\.)+[\w-]{2,4}$/)) {
+      } else if (!EMAIL_PATTERN.test(value)) {
         errors().set(field, t('organization.errors.invalidEmail'));
       } else {
         errors().delete(field);
@@ -44,8 +47,8 @@ export const OrganizationInviteForm = (props: {
       }}
     >
       <FormItem
-        label={t('common.name')}
-        id="name"
+        label={t('common.email')}
+        id="email"
         value={email()!}
         placeholder={t('organization.enterMemberEmail')}
         onInput={(value: string | number | boolean) => {

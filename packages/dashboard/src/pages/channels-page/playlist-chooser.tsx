@@ -14,6 +14,8 @@ interface PlaylistChooserProps {
     entry: CalendarEntry,
     ghostPosition?: { x: number; y: number }
   ) => void;
+  /** Called with the organization's playlists once they are loaded. */
+  onPlaylistsLoaded?: (playlists: JsonPlaylist[]) => void;
 }
 
 export const PlaylistChooser: Component<PlaylistChooserProps> = (props) => {
@@ -38,6 +40,7 @@ export const PlaylistChooser: Component<PlaylistChooserProps> = (props) => {
       },
     });
     setPlaylists(data);
+    props.onPlaylistsLoaded?.(data);
   });
 
   return (
