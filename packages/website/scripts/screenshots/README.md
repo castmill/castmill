@@ -21,6 +21,12 @@ All demo content is generated locally: `media.mjs` renders the images and video,
 
 You need Docker, `ffmpeg`, the Elixir toolchain and the repository dependencies (`yarn install`).
 
+Before starting Phoenix, build the shared packages and widget definitions from the repository root:
+
+```bash
+yarn build:server && yarn build:widged
+```
+
 1. Start an empty Postgres for the demo, on a port that no other database uses:
 
    ```bash

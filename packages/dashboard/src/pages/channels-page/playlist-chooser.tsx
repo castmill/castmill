@@ -9,6 +9,8 @@ import { baseUrl } from '../../env';
 import { store } from '../../store';
 import { useI18n } from '../../i18n';
 
+const PLAYLIST_PAGE_SIZE = 100;
+
 interface PlaylistChooserProps {
   onDragOverCell?: (
     entry: CalendarEntry,
@@ -28,19 +30,35 @@ export const PlaylistChooser: Component<PlaylistChooserProps> = (props) => {
   const [playlists, setPlaylists] = createSignal<JsonPlaylist[]>([]);
 
   createEffect(async () => {
-    // TODO: we should support pagination here.
-    const { data } = await channelsService.fetchPlaylists({
-      page: {
-        num: 1,
-        size: 100,
-      },
-      sortOptions: {
-        key: 'name',
-        direction: 'ascending',
-      },
-    });
-    setPlaylists(data);
-    props.onPlaylistsLoaded?.(data);
+    const fetchPage = (num: number) =>
+      channelsService.fetchPlaylists({
+        page: {
+          num,
+          size: PLAYLIST_PAGE_SIZE,
+        },
+        sortOptions: {
+          key: 'name',
+          direction: 'ascending',
+        },
+      });
+    const firstPage = await fetchPage(1);
+    const remainingPages = await Promise.all(
+      Array.from(
+        {
+          length: Math.max(
+            0,
+            Math.ceil(firstPage.count / PLAYLIST_PAGE_SIZE) - 1
+          ),
+        },
+        (_, index) => fetchPage(index + 2)
+      )
+    );
+    const allPlaylists = [
+      ...firstPage.data,
+      ...remainingPages.flatMap(({ data }) => data),
+    ];
+    setPlaylists(allPlaylists);
+    props.onPlaylistsLoaded?.(allPlaylists);
   });
 
   return (

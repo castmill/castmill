@@ -5,8 +5,8 @@ import { useI18n } from '../../i18n';
 
 import style from './organization-invite-form.module.scss';
 
-// The server validates the address; this only catches obvious typos.
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// The server only checks that an email is present; this catches obvious typos.
+const EMAIL_PATTERN = /^[^\s@]+@[^.\s@]+(?:\.[^.\s@]+)+$/;
 
 export const OrganizationInviteForm = (props: {
   organizationId: string;

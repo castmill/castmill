@@ -34,6 +34,10 @@ describe('OrganizationInviteForm', () => {
 
     typeEmail('taylor');
     expect(screen.getByText('Invalid email')).toBeInTheDocument();
+    typeEmail('alex@example..com');
+    expect(screen.getByText('Invalid email')).toBeInTheDocument();
+    typeEmail('alex@.example.com');
+    expect(screen.getByText('Invalid email')).toBeInTheDocument();
     typeEmail('');
     expect(screen.getByText('Email is required')).toBeInTheDocument();
     fireEvent.click(screen.getByText('Add'));
