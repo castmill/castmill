@@ -284,6 +284,46 @@
         "save": "Det gick inte att uppdatera widgetåtkomsten.",
         "inUse": "Åtkomsten kan inte tas bort medan dessa organisationer använder widgeten i spellistor: {{organizations}}",
         "moreOrganizations": "{{names}} och {{count}} till"
+      },
+      "upload": {
+        "button": "Ladda upp widget",
+        "uploading": "Laddar upp…",
+        "hint": "Ladda upp ett widgetpaket (.zip eller widget.json) för att erbjuda det i ditt nätverk utan en plattformsuppdatering. Nya widgetar är dolda tills du väljer vilka som får använda dem. Ett paket med samma slug som en av dina widgetar uppdaterar den.",
+        "created": "{{name}} har laddats upp. Välj vilka som får använda den.",
+        "updated": "{{name}} har uppdaterats till version {{version}}.",
+        "warnings": "Kontrollera mallen: {{warnings}}",
+        "failedTitle": "Paketet laddades inte upp",
+        "dismiss": "Stäng",
+        "errors": {
+          "slugTaken": "En annan widget använder redan denna slug. Ändra slug i widget.json.",
+          "invalidSlug": "Slug i widget.json får bara innehålla bokstäver, siffror, bindestreck och understreck.",
+          "managedWidget": "Den här widgeten installeras av plattformen och kan inte ersättas med en uppladdning.",
+          "unknownFetcher": "Widgetens integration använder hämtaren \"{{fetcher}}\", som inte är installerad på den här servern.",
+          "invalidWidget": "Widgetdefinitionen är ogiltig: {{details}}",
+          "incompatible": {
+            "one": "Den här versionen skulle göra {{count}} spellisteobjekt som använder widgeten ogiltigt. Gör nya inställningar valfria och håll de befintliga kompatibla:",
+            "other": "Den här versionen skulle göra {{count}} spellisteobjekt som använder widgeten ogiltiga. Gör nya inställningar valfria och håll de befintliga kompatibla:"
+          },
+          "incompatibleItem": "{{playlist}} ({{organization}}): {{error}}",
+          "incompatibleMore": "och {{count}} till",
+          "invalidPackage": "Paketet är ogiltigt: {{details}}",
+          "unknown": "Uppladdningen misslyckades. Försök igen."
+        }
+      },
+      "package": {
+        "title": "Paket",
+        "version": "Version {{version}}",
+        "uploaded": "Uppladdad {{date}}",
+        "download": "Ladda ner",
+        "delete": "Ta bort widget",
+        "deleteTitle": "Ta bort {{widget}}?",
+        "deleteMessage": "Widgeten och dess uppladdade versioner tas bort från ditt nätverk. Det går inte att ångra.",
+        "deleteInUse": "Ta bort widgeten från alla spellistor innan du tar bort den.",
+        "deleted": "{{widget}} har tagits bort.",
+        "managed": "Installeras av plattformen: den uppdateras med plattformens versioner och kan inte ersättas eller tas bort här.",
+        "errors": {
+          "download": "Paketet kunde inte laddas ner."
+        }
       }
     },
     "title": "Nätverksinställningar",

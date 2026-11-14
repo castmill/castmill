@@ -58,6 +58,18 @@ Core widgets, such as image and video, are always available, because playlists a
 
 Widgets are either **System** widgets, which come with Castmill, or **Network** widgets, which were added for this network only. See [Widget scopes](../developers/widgets/overview.mdx) for how widgets are installed.
 
+### Uploading network widgets
+
+Click **Upload widget** and select a widget package (a `widget.json` file or a ZIP with `widget.json` and an `assets/` folder; see [Installing a widget](../developers/widgets/overview.mdx#installing-a-widget)). The widget is added to your network, hidden, so you can enable it for a test organization before offering it to others.
+
+To publish a new version, upload a package with the same slug. The widget keeps who can use it. An upload is refused, with an explanation, when:
+
+- another widget already uses the slug, or the widget is installed by the platform;
+- the widget's integration needs a fetcher this server doesn't have;
+- the new version would break playlist items that use the widget, which are listed.
+
+The **Package** section of an uploaded widget shows its version, downloads the uploaded package, and deletes the widget once no playlist uses it. If the widget declares integration settings, such as an agency and office IDs, set them for each organization under **Organizations** → **Integration settings**.
+
 ## Plans and quotas
 
 Each organization has limits on how many resources it can create. Plans are managed by the installation operator. See [Plans and quotas](./plans-and-quotas.md).

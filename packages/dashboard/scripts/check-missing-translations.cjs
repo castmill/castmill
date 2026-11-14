@@ -137,6 +137,16 @@ const ALLOWED_IDENTICAL_KEYS = {
   'feeds.modes.document': ['fr'],
   // The SI unit symbol "s" is the same in these languages.
   'feeds.media.seconds': ['es', 'sv', 'de', 'fr'],
+  // "Version" is the same word in these languages.
+  'network.widgets.package.version': ['sv', 'de', 'fr'],
+  // Only placeholders and punctuation (localized where punctuation differs).
+  'network.widgets.upload.errors.incompatibleItem': [
+    'es',
+    'sv',
+    'de',
+    'ar',
+    'ko',
+  ],
 };
 
 class TranslationChecker {

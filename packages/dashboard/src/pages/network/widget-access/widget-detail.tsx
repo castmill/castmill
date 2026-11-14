@@ -17,6 +17,7 @@ import { useI18n } from '../../../i18n';
 import { WidgetIcon, widgetDescription, widgetName } from './widget-icon';
 import { ConfirmAccessChange, accessErrorMessage } from './access-ui';
 import { StatusFilter, WidgetOrganizations } from './widget-organizations';
+import { WidgetPackage } from './widget-package';
 import styles from './widget-access.module.scss';
 
 const MODES: { mode: WidgetAccessMode; icon: typeof BsGlobe2 }[] = [
@@ -29,6 +30,7 @@ const MODES: { mode: WidgetAccessMode; icon: typeof BsGlobe2 }[] = [
 export const WidgetDetail: Component<{
   widget: NetworkWidgetAccess;
   onWidgetChange: (widget: NetworkWidgetAccess) => void;
+  onWidgetDeleted?: (widget: NetworkWidgetAccess) => void;
 }> = (props) => {
   const { t, locale } = useI18n();
   const toast = useToast();
@@ -138,6 +140,14 @@ export const WidgetDetail: Component<{
           {saving() ? t('common.saving') : ''}
         </span>
       </header>
+
+      <Show when={props.widget.owned}>
+        <WidgetPackage
+          widget={props.widget}
+          widgetLabel={name()}
+          onDeleted={(widget) => props.onWidgetDeleted?.(widget)}
+        />
+      </Show>
 
       <section class={styles['detail-section']}>
         <h3>{t('network.widgets.access.title')}</h3>

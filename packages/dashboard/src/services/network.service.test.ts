@@ -591,4 +591,114 @@ describe('NetworkService', () => {
       ).rejects.toThrow('Unknown');
     });
   });
+
+  describe('widget packages', () => {
+    const response = (status: number, body: unknown, headers = {}) => ({
+      ok: status >= 200 && status < 300,
+      status,
+      statusText: status === 409 ? 'Conflict' : 'OK',
+      headers: new Headers(headers),
+      json: () => Promise.resolve(body),
+      blob: () => Promise.resolve(new Blob(['zip'])),
+    });
+
+    it('uploads a package as multipart form data', async () => {
+      const result = { data: { id: 7 }, created: true, version: 1 };
+      mockFetch.mockResolvedValueOnce(response(201, result));
+      const file = new File(['zip'], 'listing.zip');
+
+      await expect(NetworkService.uploadWidget(file)).resolves.toEqual(result);
+
+      const [url, init] = mockFetch.mock.calls[0];
+      expect(url).toMatch(/\/dashboard\/network\/widgets$/);
+      expect(init.method).toBe('POST');
+      expect((init.body as FormData).get('widget')).toBe(file);
+    });
+
+    it('rejects uploads with the reason the package was refused', async () => {
+      const items = [{ playlist_name: 'Lobby', error: 'Field x is required' }];
+      mockFetch.mockResolvedValueOnce(
+        response(409, {
+          code: 'incompatible',
+          error: 'This version would make saved playlist items invalid',
+          items,
+          total: 4,
+        })
+      );
+      const error = await NetworkService.uploadWidget(
+        new File([''], 'x.zip')
+      ).catch((err) => err);
+
+      expect(error).toBeInstanceOf(HttpError);
+      expect(error.status).toBe(409);
+      expect(error.details).toEqual({
+        code: 'incompatible',
+        fetcher: undefined,
+        errors: undefined,
+        items,
+        total: 4,
+      });
+
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 502,
+        statusText: 'Bad Gateway',
+        json: () => Promise.reject(new Error('not json')),
+      });
+      const gateway = await NetworkService.uploadWidget(
+        new File([''], 'x.zip')
+      ).catch((err) => err);
+      expect(gateway.message).toBe('Bad Gateway');
+      expect(gateway.details.code).toBe('invalid_package');
+    });
+
+    it('lists and downloads package versions', async () => {
+      const versions = [{ version: 2, filename: 'listing.zip' }];
+      mockFetch.mockResolvedValueOnce(response(200, { data: versions }));
+      await expect(NetworkService.listWidgetPackages(7)).resolves.toEqual(
+        versions
+      );
+      expect(mockFetch.mock.calls[0][0]).toMatch(
+        /\/dashboard\/network\/widgets\/7\/packages$/
+      );
+
+      mockFetch.mockResolvedValueOnce(
+        response(200, null, {
+          'content-disposition': 'attachment; filename="listing-v2.zip"',
+        })
+      );
+      const download = await NetworkService.downloadWidgetPackage(7, 2);
+      expect(download.filename).toBe('listing-v2.zip');
+      expect(download.blob).toBeInstanceOf(Blob);
+      expect(mockFetch.mock.calls[1][0]).toMatch(/\/widgets\/7\/packages\/2$/);
+
+      mockFetch.mockResolvedValueOnce(response(200, null));
+      expect((await NetworkService.downloadWidgetPackage(7, 3)).filename).toBe(
+        'widget-v3'
+      );
+
+      mockFetch.mockResolvedValueOnce(response(404, null));
+      await expect(
+        NetworkService.downloadWidgetPackage(7, 9)
+      ).rejects.toBeInstanceOf(HttpError);
+    });
+
+    it('deletes widgets, rejecting those still in use', async () => {
+      mockFetch.mockResolvedValueOnce(response(204, null));
+      await expect(NetworkService.deleteWidget(7)).resolves.toBeUndefined();
+      expect(mockFetch.mock.calls[0][1].method).toBe('DELETE');
+
+      mockFetch.mockResolvedValueOnce(
+        response(409, {
+          error: 'in use',
+          organizations: [{ id: 'org-1', name: 'Acme' }],
+        })
+      );
+      const error = await NetworkService.deleteWidget(7).catch((err) => err);
+      expect(error.status).toBe(409);
+      expect(error.details.organizations).toEqual([
+        { id: 'org-1', name: 'Acme' },
+      ]);
+    });
+  });
 });

@@ -8,14 +8,15 @@ import {
   on,
   onCleanup,
 } from 'solid-js';
-import { Button, useToast } from '@castmill/ui-common';
-import { BsSearch, BsShieldLock } from 'solid-icons/bs';
+import { Button, HttpError, useToast } from '@castmill/ui-common';
+import { BsSearch, BsShieldLock, BsUpload, BsX } from 'solid-icons/bs';
 import {
   NetworkService,
   NetworkWidgetAccess,
   NetworkWidgetAccessList,
   WidgetAccessMode,
   WidgetKind,
+  WidgetUploadErrorDetails,
 } from '../../services/network.service';
 import { useI18n } from '../../i18n';
 import { createPagedList, onScrollNearEnd } from './widget-access/paged-list';
@@ -27,12 +28,19 @@ import styles from './widget-access/widget-access.module.scss';
 
 const PAGE_SIZE = 50;
 
+// Translation keys of upload error codes without parameters.
+const UPLOAD_ERROR_KEYS: Record<string, string> = {
+  slug_taken: 'slugTaken',
+  invalid_slug: 'invalidSlug',
+  managed_widget: 'managedWidget',
+};
+
 type Summary = NetworkWidgetAccessList['summary'];
 type AccessFilter = WidgetAccessMode | 'any';
 type KindFilter = WidgetKind | 'any';
 
 const NetworkWidgets: Component = () => {
-  const { t, locale } = useI18n();
+  const { t, tp, locale } = useI18n();
   const toast = useToast();
   const [searchInput, setSearchInput] = createSignal('');
   const [search, setSearch] = createSignal('');
@@ -41,8 +49,13 @@ const NetworkWidgets: Component = () => {
   const [selected, setSelected] = createSignal<NetworkWidgetAccess | null>(
     null
   );
+  const [uploading, setUploading] = createSignal(false);
+  const [uploadError, setUploadError] = createSignal<HttpError<
+    WidgetUploadErrorDetails | undefined
+  > | null>(null);
   let debounce: ReturnType<typeof setTimeout> | undefined;
   let listElement: HTMLDivElement | undefined;
+  let fileInput: HTMLInputElement | undefined;
 
   onCleanup(() => clearTimeout(debounce));
 
@@ -127,6 +140,80 @@ const NetworkWidgets: Component = () => {
     }
   };
 
+  const onWidgetDeleted = (deleted: NetworkWidgetAccess) => {
+    widgets.setItems((items) => items.filter((item) => item.id !== deleted.id));
+    setSelected(null);
+    void widgets.reload();
+  };
+
+  const uploadPackage = async (file: File) => {
+    setUploading(true);
+    setUploadError(null);
+    try {
+      const result = await NetworkService.uploadWidget(file);
+      const name = widgetName(result.data, locale());
+      toast.success(
+        result.created
+          ? t('network.widgets.upload.created', { name })
+          : t('network.widgets.upload.updated', {
+              name,
+              version: result.version,
+            })
+      );
+      if (result.template_warnings.length > 0) {
+        toast.warning(
+          t('network.widgets.upload.warnings', {
+            warnings: result.template_warnings.join('; '),
+          })
+        );
+      }
+      setSelected(result.data);
+      await widgets.reload();
+    } catch (error) {
+      setUploadError(
+        error instanceof HttpError
+          ? (error as HttpError<WidgetUploadErrorDetails | undefined>)
+          : new HttpError<WidgetUploadErrorDetails | undefined>('', 0)
+      );
+    } finally {
+      setUploading(false);
+      setPendingFile(null);
+    }
+  };
+
+  const uploadErrorMessage = () => {
+    const error = uploadError();
+    const details = error?.details;
+    const code = details?.code ?? '';
+    switch (code) {
+      case 'slug_taken':
+      case 'invalid_slug':
+      case 'managed_widget':
+        return t(`network.widgets.upload.errors.${UPLOAD_ERROR_KEYS[code]}`);
+      case 'unknown_fetcher':
+        return t('network.widgets.upload.errors.unknownFetcher', {
+          fetcher: details?.fetcher ?? '',
+        });
+      case 'incompatible':
+        return tp(
+          'network.widgets.upload.errors.incompatible',
+          details?.total ?? details?.items?.length ?? 0
+        );
+      case 'invalid_widget':
+        return t('network.widgets.upload.errors.invalidWidget', {
+          details: Object.entries(details?.errors ?? {})
+            .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
+            .join('; '),
+        });
+      case 'invalid_package':
+        return t('network.widgets.upload.errors.invalidPackage', {
+          details: error?.message ?? '',
+        });
+      default:
+        return t('network.widgets.upload.errors.unknown');
+    }
+  };
+
   const onListKeyDown = (event: KeyboardEvent) => {
     if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
     event.preventDefault();
@@ -169,9 +256,85 @@ const NetworkWidgets: Component = () => {
   return (
     <div class={`${networkStyles['network-page']} ${styles['page']}`}>
       <header class={styles['page-header']}>
-        <h1>{t('network.widgets.title')}</h1>
-        <p>{t('network.widgets.description')}</p>
+        <div class={styles['page-header-row']}>
+          <div>
+            <h1>{t('network.widgets.title')}</h1>
+            <p>{t('network.widgets.description')}</p>
+            <p class={styles['upload-hint']}>
+              {t('network.widgets.upload.hint')}
+            </p>
+          </div>
+          <Button
+            label={
+              uploading()
+                ? t('network.widgets.upload.uploading')
+                : t('network.widgets.upload.button')
+            }
+            icon={BsUpload}
+            color="primary"
+            disabled={uploading()}
+            onClick={() => fileInput?.click()}
+          />
+          <input
+            ref={fileInput}
+            type="file"
+            accept=".zip,.json,application/zip,application/json"
+            class={styles['upload-input']}
+            onChange={(event) => {
+              const file = event.currentTarget.files?.[0];
+              if (file) void uploadPackage(file);
+            }}
+          />
+        </div>
       </header>
+
+      <Show when={uploadError()}>
+        <div class={styles['upload-error']} role="alert">
+          <div class={styles['upload-error-header']}>
+            <div>
+              <h2>{t('network.widgets.upload.failedTitle')}</h2>
+              <p>{uploadErrorMessage()}</p>
+            </div>
+            <button
+              type="button"
+              class={styles['text-button']}
+              aria-label={t('network.widgets.upload.dismiss')}
+              onClick={() => setUploadError(null)}
+            >
+              <BsX aria-hidden="true" />
+            </button>
+          </div>
+          <Show when={uploadError()?.details?.items?.length}>
+            <ul>
+              <For each={uploadError()?.details?.items}>
+                {(item) => (
+                  <li>
+                    {t('network.widgets.upload.errors.incompatibleItem', {
+                      playlist: item.playlist_name,
+                      organization: item.organization_name ?? '',
+                      error: item.error,
+                    })}
+                  </li>
+                )}
+              </For>
+              <Show
+                when={
+                  (uploadError()?.details?.total ?? 0) >
+                  (uploadError()?.details?.items?.length ?? 0)
+                }
+              >
+                <li>
+                  {t('network.widgets.upload.errors.incompatibleMore', {
+                    count:
+                      (uploadError()?.details?.total ?? 0) -
+                      (uploadError()?.details?.items?.length ?? 0),
+                  })}
+                </li>
+              </Show>
+            </ul>
+          </Show>
+        </div>
+      </Show>
 
       <div class={styles['toolbar']}>
         <label class={`${styles['search-field']} ${styles['search-wide']}`}>
@@ -339,6 +502,7 @@ const NetworkWidgets: Component = () => {
               <WidgetDetail
                 widget={selected()!}
                 onWidgetChange={onWidgetChange}
+                onWidgetDeleted={onWidgetDeleted}
               />
             )}
           </Show>

@@ -289,6 +289,46 @@
         "save": "Impossible de mettre à jour l'accès au widget.",
         "inUse": "Impossible de retirer l'accès tant que ces organisations utilisent le widget dans des playlists : {{organizations}}",
         "moreOrganizations": "{{names}} et {{count}} de plus"
+      },
+      "upload": {
+        "button": "Importer un widget",
+        "uploading": "Importation…",
+        "hint": "Importez un paquet de widget (.zip ou widget.json) pour le proposer dans votre réseau sans mise à jour de la plateforme. Les nouveaux widgets restent masqués jusqu'à ce que vous choisissiez qui peut les utiliser. Un paquet portant le slug de l'un de vos widgets le met à jour.",
+        "created": "{{name}} a été importé. Choisissez qui peut l’utiliser.",
+        "updated": "{{name}} a été mis à jour vers la version {{version}}.",
+        "warnings": "Vérifiez le modèle : {{warnings}}",
+        "failedTitle": "Le paquet n'a pas été importé",
+        "dismiss": "Fermer",
+        "errors": {
+          "slugTaken": "Un autre widget utilise déjà ce slug. Modifiez le slug dans widget.json.",
+          "invalidSlug": "Le slug de widget.json ne peut contenir que des lettres, des chiffres, des tirets et des traits de soulignement.",
+          "managedWidget": "Ce widget est installé par la plateforme : une importation ne peut pas le remplacer.",
+          "unknownFetcher": "L'intégration du widget utilise le fetcher « {{fetcher}} », qui n'est pas installé sur ce serveur.",
+          "invalidWidget": "La définition du widget n'est pas valide : {{details}}",
+          "incompatible": {
+            "one": "Cette version rendrait invalide {{count}} élément de playlist qui utilise le widget. Rendez les nouvelles options facultatives et gardez les options existantes compatibles :",
+            "other": "Cette version rendrait invalides {{count}} éléments de playlist qui utilisent le widget. Rendez les nouvelles options facultatives et gardez les options existantes compatibles :"
+          },
+          "incompatibleItem": "{{playlist}} ({{organization}}) : {{error}}",
+          "incompatibleMore": "et {{count}} de plus",
+          "invalidPackage": "Le paquet n'est pas valide : {{details}}",
+          "unknown": "L'importation a échoué. Réessayez."
+        }
+      },
+      "package": {
+        "title": "Paquet",
+        "version": "Version {{version}}",
+        "uploaded": "Importé le {{date}}",
+        "download": "Télécharger",
+        "delete": "Supprimer le widget",
+        "deleteTitle": "Supprimer {{widget}} ?",
+        "deleteMessage": "Le widget et ses versions importées sont retirés de votre réseau. Cette action est irréversible.",
+        "deleteInUse": "Retirez le widget de toutes les playlists avant de le supprimer.",
+        "deleted": "{{widget}} a été supprimé.",
+        "managed": "Installé par la plateforme : il est mis à jour avec les versions de la plateforme et ne peut être ni remplacé ni supprimé ici.",
+        "errors": {
+          "download": "Le paquet n'a pas pu être téléchargé."
+        }
       }
     },
     "title": "Paramètres Réseau",
