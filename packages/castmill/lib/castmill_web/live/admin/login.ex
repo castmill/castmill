@@ -12,14 +12,14 @@ defmodule CastmillWeb.Live.Admin.Login do
       </.header>
 
       <form id="admin-passkey-login" phx-hook="AdminPasskey" data-action="login" class="mt-8">
-        <label class="mb-4 block text-sm">
+        <label class="mb-4 block text-sm text-white">
           <input type="checkbox" name="remember_me" value="true" /> Keep me signed in
         </label>
         <.button class="w-full" type="submit">Sign in with a passkey</.button>
         <p data-passkey-error role="alert" class="mt-4 text-red-500" aria-live="polite"></p>
       </form>
 
-      <p class="mt-8 text-sm">
+      <p class="mt-8 text-sm text-white">
         First time here? Use root credentials below to register your first passkey.
         Once enrolled, a passkey is required to sign in.
       </p>
