@@ -8,7 +8,7 @@
 // returns over exactly one cycle.
 
 /** Length of one cycle, in seconds. Passed to the player as the `duration` option. */
-export const SHOWCASE_DURATION = 14;
+export const SHOWCASE_DURATION = 5;
 
 export const showcaseOptions = { duration: SHOWCASE_DURATION };
 
@@ -16,7 +16,7 @@ const enterAndExit = (
   startMs: number,
   // Where the element comes from; by default it rises a little while fading in.
   from: Record<string, number> = { y: 14 },
-  duration = 1
+  duration = 0.8
 ) => [
   {
     keyframes: [
@@ -25,11 +25,10 @@ const enterAndExit = (
     start: startMs,
   },
   {
-    keyframes: [
-      { to: { opacity: 0, y: -6, duration: 0.6, ease: 'power1.in' } },
-    ],
-    // Finishes 0.2 s before the loop.
-    start: -800,
+    keyframes: [{ to: { opacity: 0, duration: 0.45, ease: 'power1.in' } }],
+    // Finishes 0.15 s before the loop. Only the opacity changes, so the
+    // entrances of the next loop start from the same positions.
+    start: -600,
   },
 ];
 
@@ -61,7 +60,7 @@ const agendaItem = (
     'background-color': 'rgba(255, 255, 255, 0.1)',
     border: '0.06em solid rgba(255, 255, 255, 0.18)',
   },
-  animations: enterAndExit(startMs, from, 1.2),
+  animations: enterAndExit(startMs, from, 1),
   components: [
     text(`${name}-time`, time, {
       'font-size': '0.8em',
@@ -124,8 +123,8 @@ export const showcaseWidget = {
             keyframes: [
               {
                 to: {
-                  xPercent: -18,
-                  yPercent: 10,
+                  xPercent: -10,
+                  yPercent: 6,
                   duration: SHOWCASE_DURATION / 2,
                   ease: 'sine.inOut',
                 },
@@ -162,7 +161,7 @@ export const showcaseWidget = {
             components: [
               line(
                 'eyebrow',
-                200,
+                100,
                 text('eyebrow-text', 'WEDNESDAY · 12 NOVEMBER', {
                   'font-size': '0.75em',
                   'font-weight': '700',
@@ -172,7 +171,7 @@ export const showcaseWidget = {
               ),
               line(
                 'welcome',
-                400,
+                250,
                 text('welcome-text', 'Welcome to the Stockholm office', {
                   'font-size': '1.9em',
                   'font-weight': '800',
@@ -188,20 +187,20 @@ export const showcaseWidget = {
             name: 'agenda',
             style: { display: 'flex', 'flex-direction': 'row', gap: '0.8em' },
             components: [
-              agendaItem('a1', '09:30', 'All hands', 'Auditorium', 900, {
+              agendaItem('a1', '09:30', 'All hands', 'Auditorium', 500, {
                 xPercent: -140,
               }),
-              agendaItem('a2', '12:00', 'Team lunch', 'Level 2', 1050, {
+              agendaItem('a2', '12:00', 'Team lunch', 'Level 2', 620, {
                 yPercent: 280,
               }),
-              agendaItem('a3', '16:00', 'Demo day', 'Studio B', 1200, {
+              agendaItem('a3', '16:00', 'Demo day', 'Studio B', 740, {
                 xPercent: 140,
               }),
             ],
           },
           line(
             'footer',
-            1700,
+            1000,
             text(
               'footer-text',
               'Wi-Fi: Guest · Ask reception for a visitor badge',
