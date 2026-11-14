@@ -270,6 +270,34 @@ row so it sticks to the bottom with full-width buttons on phones. Let form
 rows wrap to a single column at `(max-width: 36em)`, and size modals with
 `contentClass` in `em` (no `!important` or `vw` overrides).
 
+## Responsive Conventions
+
+Full reference: `agents/systems/RESPONSIVE-DASHBOARD.md`.
+
+- **Targets**: 375×812 phone, 768×1024 and 1024×768 tablet, 1440×900 desktop.
+  The page must never scroll horizontally; wide content (tables, calendars)
+  scrolls inside its own container.
+- **Breakpoints** (always `em`): `36em` phone layouts and modal sheet, `48em`
+  off-canvas nav/compact top bar, `50em` full-screen `Drawer`, `64em` icon
+  rail. Use `useMediaQuery` with the queries from
+  `components/sidepanel/nav-drawer.ts` instead of new literals.
+- **Units**: `em` for spacing, sizes, radii and fonts in dashboard, ui-common
+  and addon styles; only `1px` hairlines stay in `px`. Inputs use
+  `font-size: max(1rem, 1em)` where iOS focus zoom matters.
+- **Safe areas**: fixed and edge-to-edge surfaces (top bar, footer, side
+  panel drawer, ui-common `Drawer`/`Modal`/`ComboBox` sheets, toasts) pad with
+  `env(safe-area-inset-*, 0)`; `index.html` sets `viewport-fit=cover`.
+- **On-screen keyboard**: overlays follow the visual viewport
+  (`useVisualViewportBox`). Fixed bottom bars use
+  `bottom: var(--cm-keyboard-inset, 0em)`; the variable is published by
+  `trackKeyboardInset()` from `@castmill/ui-common` (started in
+  `src/index.tsx`). Use `useKeyboardInset()` when JS needs the height.
+- **Installability**: `public/manifest.webmanifest` and `public/icons/`.
+  `syncThemeColor()` keeps `<meta name="theme-color">` in step with the theme.
+- **Tests**: unit-test breakpoint behaviour with `mockViewport()`; run the
+  Playwright responsive checks with `yarn e2e` (see `e2e/fixtures.ts` for the
+  mocked API). Add new core pages to `PAGES` in `e2e/responsive.spec.ts`.
+
 ## Critical Rules
 
 ### ⚠️ MANDATORY: All User-Facing Text Must Be Localized

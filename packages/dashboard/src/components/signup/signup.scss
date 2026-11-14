@@ -5,8 +5,13 @@
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
-  height: 60vh;
-  padding-top: 10rem;
+  min-height: 60vh;
+  padding: 10rem 1em 2em;
+  box-sizing: border-box;
+
+  @media (max-width: 48em) {
+    padding-top: 3em;
+  }
 
   .login-box {
     display: flex;
@@ -19,12 +24,19 @@
     border-radius: 0.5em;
     box-shadow: 0 0.25em 0.5em var(--cm-shadow-color);
     text-align: center;
+    box-sizing: border-box;
     width: 30rem;
-    height: 35rem;
+    max-width: 100%;
+    min-height: 35rem;
+
+    @media (max-width: 48em) {
+      min-height: 0;
+    }
   }
 
   button {
     width: 20em;
+    max-width: 100%;
     padding: 0.625em 1.25em;
     cursor: pointer;
     border-radius: 0.188em;
@@ -34,6 +46,7 @@
 
   input[type='text'] {
     width: 20em;
+    max-width: 100%;
     padding: 0.625em 1.25em;
     margin: 0.625em 0;
     border: 1px solid var(--cm-border-strong);

@@ -12,6 +12,7 @@
     "build": "vite build && node scripts/write-version.cjs",
     "serve": "vite preview",
     "test": "vitest",
+    "e2e": "playwright test",
     "check-i18n": "node scripts/check-i18n.cjs",
     "check-translations": "node scripts/check-missing-translations.cjs",
     "lint:i18n": "node scripts/check-i18n.cjs",
@@ -24,6 +25,7 @@
   },
   "devDependencies": {
     "@atlaskit/pragmatic-drag-and-drop-auto-scroll": "^2.1.0",
+    "@playwright/test": "^1.65.1",
     "@solidjs/router": "^0.13.2",
     "@solidjs/testing-library": "^0.8.6",
     "@testing-library/jest-dom": "^6.4.2",

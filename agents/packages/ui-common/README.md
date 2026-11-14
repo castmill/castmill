@@ -236,7 +236,11 @@ let modalRef: ModalRef | undefined = undefined;
 #### Responsive behavior
 
 - The overlay follows the visual viewport (`useVisualViewportBox`), so the
-  on-screen keyboard shrinks the modal instead of hiding inputs.
+  on-screen keyboard shrinks the modal instead of hiding inputs. For fixed
+  bars outside overlays, `trackKeyboardInset()` publishes the keyboard height
+  as `--cm-keyboard-inset` on `<html>` (`data-keyboard-open` while visible) and
+  `useKeyboardInset()` returns it as a signal (iOS does not resize the layout
+  viewport). Sheets and drawers pad with `env(safe-area-inset-*, 0)`.
 - The header stays fixed and `.modalBody` is the only scroll container. Do not
   add `overflow` to wrappers between the body and the form.
 - Under `36em` (or short touch screens) the modal becomes a full-width bottom
