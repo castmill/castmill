@@ -33,6 +33,8 @@ To try Castmill without hardware, open the browser player in another window. It 
 
 The list shows each device's **Name**, whether it is **Online**, its **Timezone**, player **Version**, last **IP Address** and **Tags**. Search, the **Team** and **Tags** filters and the tree view work as on other resource pages. A quota indicator shows how many devices your plan allows.
 
+<Screenshot src="devices-list" alt="The device list with three online devices, one offline device and their tags" />
+
 ### Online and offline
 
 A device is **Online** while its player is connected to the server. Commands, live telemetry, the cache view and immediate settings changes need an online device. Changes you make while a device is offline, such as channels, orientation or the power schedule, are stored and reach the player when it reconnects.
@@ -60,6 +62,8 @@ Click a device to open its details. The header shows when the device was last se
 **Settings** contains the **Name**, the **Description** (both at least 5 characters) and the [orientation](#orientation). Click **Save** to store changes, or **Reset** to undo them.
 
 **Info** shows what the player reports: **Platform**, **Player version**, **Operating system**, **Hardware**, **Timezone**, **IP Address**, runtime versions (environment, Chromium, V8, Node.js), the **User agent**, and when the device was added and last updated.
+
+<Screenshot src="devices-overview" alt="The Overview of an online device with its name, description and orientation, and the information reported by the player" />
 
 ## Orientation
 
@@ -106,6 +110,8 @@ The **Schedule** section, **Device Schedule**, defines when the screen is on. Ou
 2. Click an entry to edit its **Start day**, **End day**, **Start time** and **End time**. Set the end time to 00:00 to stay on until midnight. Entries cannot overlap.
 3. Click **Save Schedule**.
 
+<Screenshot src="devices-schedule" alt="The Device Schedule with the screen on from 07:00 to 22:00 on weekdays and from 09:00 to 22:00 at weekends" />
+
 The schedule is sent to the device right away, or when it reconnects if it is offline. Players that can control the display hardware use its on/off timers. Other players use a software fallback: they stop playback outside the scheduled hours.
 
 ## Automations
@@ -116,6 +122,8 @@ The **Automations** section lists the automations this device runs, whether **As
 
 **Preview** shows what the device should be playing now according to its channel schedules, and from which channel. It is computed by the dashboard, so it can differ from what the screen actually displays, for example while the device is offline.
 
+<Screenshot src="devices-preview" alt="The Preview of a device playing the Lobby welcome playlist from the Downtown channel" />
+
 ## Telemetry
 
 **Telemetry** shows live health readings reported by the player, when the platform supports them: storage, memory, CPU usage and load, network connection and WiFi signal, temperature, fan speed, battery and uptime. Use **Refresh telemetry** to read them again. Telemetry is available only while the device is online.
@@ -124,6 +132,8 @@ The **Automations** section lists the automations this device runs, whether **As
 
 **Events** lists connection changes and errors reported by the player. Filter by **Errors**, **Warnings**, **Info**, **Online** and **Offline**. Repeated errors are grouped, with the number of **Occurrences** and when they were first and last seen; **Details** shows sanitized diagnostic details. **Clear All Events** deletes the device's events.
 
+<Screenshot src="devices-events" alt="The Events of a device with its recent connections and disconnections" />
+
 ## Cache
 
 **Cache** lists the files the player stores locally so it can keep playing offline, in the tabs **Data**, **Code** and **Media**. You can delete single entries, **Delete selected items** or **Clear Entire Cache**. Clearing the whole cache makes the player reload and download everything again. The cache is visible only while the device is online.
@@ -131,6 +141,8 @@ The **Automations** section lists the automations this device runs, whether **As
 ## Maintenance
 
 **Maintenance** sends commands to an online device. Commands that the player does not support show **Not supported.**
+
+<Screenshot src="devices-maintenance" alt="The Maintenance section with playback and system commands, some marked Not supported" />
 
 | Group | Command | What it does |
 | --- | --- | --- |

@@ -26,6 +26,8 @@ The menu shows:
 - **Status:** **Playing** with the next scheduled off time, or **Playback turned off by timer** with the next on time, based on the device's power schedule.
 - **Footer:** the first part of the device ID, the device name, the organization, and the network the device belongs to.
 
+<Screenshot src="player-menu" alt="The on-screen menu of the browser player with Restart App, Settings, Status and the device, organization and network names" />
+
 **Quit App** and **Shutdown Device** are only available from this menu. The dashboard does not send these commands.
 
 ## Maintenance messages
@@ -51,6 +53,8 @@ The debug overlay shows what each part of the screen is playing. Every playlist 
 - the playlist name, with the progress and remaining time of the current loop;
 - the current item, with its progress and a countdown;
 - the next item, when it is known.
+
+<Screenshot src="player-debug-overlay" alt="The debug overlay in the corner of a playlist with its loop progress, the current item and the next item" />
 
 Use it to check schedules, item durations, and layouts without opening the dashboard. Turn it on in one of these ways:
 

@@ -27,6 +27,8 @@ Open **Tags** in the sidebar. The page lists **Ungrouped** tags and the **Tag Gr
 | Delete a tag | Use **Delete Tag**. The tag is removed from all resources. |
 | Delete a group | Use **Delete Group**. All tags in the group are deleted too. |
 
+<Screenshot src="tags-management" alt="The Tags page with an ungrouped tag and the Campaign and Location tag groups" />
+
 Creating, editing, deleting and assigning tags needs the Administrator or Manager role. Other roles see tags and can filter by them.
 
 ## Tagging resources
@@ -48,9 +50,13 @@ Use the tag filter in the toolbar of a resource page and select one or more tags
 | **Any** | Resources with at least one of the selected tags |
 | **All** | Only resources with every selected tag |
 
+<Screenshot src="tags-filter" alt="The media list filtered by the Lunch and Seasonal tags, with the tag filter open" />
+
 ## Tree view
 
 Resource pages can show their items as a tree instead of a table: tag groups at the top level, their tags below them, and the resources under each tag. A resource with several tags appears under each of them. Resources without tags are listed under **Untagged**.
+
+<Screenshot src="tags-tree" alt="The media list as a tree organized by the Campaign and Location tag groups" />
 
 ## Limits
 

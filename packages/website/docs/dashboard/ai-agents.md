@@ -36,19 +36,23 @@ Agents never appear in the **Members** list and cannot manage other agents.
    - **Manager** or **Administrator**: broad access. Give these roles only to agents you fully trust.
 4. Click **Create**. The agent's **secret** (it starts with `cmagt_`) is shown **only once**. Copy it, or copy one of the ready-made client configurations, and store it in a safe place.
 
+<Screenshot src="agents-list" alt="The AI Agents page with the Menu assistant agent, its role, credentials and last use" />
+
 :::tip Least privilege
 Give each agent the lowest role that lets it do its job, and use one agent per tool or person. Then the activity log shows exactly who did what, and you can revoke a single integration without affecting the others.
 :::
 
 ## Connecting an MCP client
 
-The MCP server URL is shown on the **Setup** tab of the Agents page. It is your Castmill server address followed by `/mcp`, for example `https://api.example.com/mcp`. The server uses the *Streamable HTTP* transport. Every request must send the secret in the `Authorization` header:
+The MCP server URL is shown on the **Setup instructions** tab of the Agents page. It is your Castmill server address followed by `/mcp`, for example `https://api.example.com/mcp`. The server uses the *Streamable HTTP* transport. Every request must send the secret in the `Authorization` header:
 
 ```text
 Authorization: Bearer cmagt_...
 ```
 
-The Setup tab and the dialog that shows a new secret contain copy-ready configurations for the clients below.
+The **Setup instructions** tab and the dialog that shows a new secret contain copy-ready configurations for the clients below.
+
+<Screenshot src="agents-setup" alt="The Setup instructions tab with the MCP server URL and a configuration for Claude Desktop" />
 
 ### Claude Desktop
 
@@ -141,7 +145,9 @@ Castmill stores only a hash of the secret, so a lost secret cannot be recovered.
 
 ## Activity log
 
-The **Activity** tab lists every tool call made by the organization's agents: when it happened, which agent made it, the tool, the underlying API request, the result and how long it took. Filter by agent or by status (success or error), and click a row to see the arguments, the error message and the client IP address.
+The **Activity log** tab lists every tool call made by the organization's agents: when it happened, which agent made it, the tool, the underlying API request, the result and how long it took. Filter by agent or by status (success or error), and click a row to see the arguments, the error message and the client IP address.
+
+<Screenshot src="agents-activity" alt="The Activity log with three successful tool calls of the Menu assistant agent" />
 
 Agent secrets and `Authorization` headers are never written to the log. Argument values that look like secrets (credentials, passwords, tokens, API keys) are shown as `[REDACTED]`.
 
