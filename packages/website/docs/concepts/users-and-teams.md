@@ -48,15 +48,19 @@ The server enforces every permission. The dashboard also hides actions you canno
 
 ## Invite people
 
-Admins invite people from **Organization → Invitations**:
+Admins invite people from **Organization → Users**:
 
 1. Choose **Invite Member**.
 2. Enter the email address and choose a role.
-3. Send the invitation.
+3. Choose **Add**.
 
-The person receives an email with a link. If they do not have an account yet, they create one with a passkey as part of accepting the invitation. Pending invitations are listed on the same page until they are accepted or removed.
+<Screenshot src="organization-invite" alt="The Invite Member dialog with an email address and the Member role" width={592} />
+
+The person receives an email with a link. If they do not have an account yet, they create one with a passkey as part of accepting the invitation. Pending invitations are listed on **Organization → Invitations** until they are accepted or removed.
 
 To change a member's role or remove a member, use **Organization → Users**. An organization must always keep at least one admin, and its only member cannot leave it.
+
+<Screenshot src="organization-members" alt="The Users tab of an organization with five members and their roles" />
 
 ## Teams
 

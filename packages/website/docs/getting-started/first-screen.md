@@ -22,6 +22,8 @@ You need:
 2. Choose **Upload Media**, then drag your files into the dialog or select them.
 3. Choose **Upload**.
 
+<Screenshot src="media-upload" alt="The Upload Medias dialog with an image and a video ready to upload" width={530} />
+
 Castmill creates thumbnails for images and transcodes videos in the background. The media is ready when its thumbnail appears. See [Media](../dashboard/media.md) for supported formats and limits.
 
 ### Build a playlist
@@ -32,7 +34,9 @@ Castmill creates thumbnails for images and transcodes videos in the background. 
 4. Set the **Duration**, for example 10 seconds.
 5. Repeat for more images. Use the **Video** widget for videos; a video item plays for the length of the video.
 
-The preview at the top of the editor plays the playlist as a screen would show it. [Playlists](../dashboard/playlists.md) covers transitions, aspect ratios and the other widgets.
+The preview next to the items plays the playlist as a screen would show it. [Playlists](../dashboard/playlists.md) covers transitions, aspect ratios and the other widgets.
+
+<Screenshot src="first-screen-playlist" alt="A playlist with four items in the editor, next to a preview that plays the Free Wi-Fi slide" />
 
 ### Create a channel
 
@@ -44,12 +48,16 @@ A channel decides which playlist plays at what time.
 
 The default playlist plays whenever the calendar has no other entry, so this channel now plays *Lobby* around the clock. You can add time-based entries later; see [Channels](../dashboard/channels.md).
 
+<Screenshot src="first-screen-channel" alt="A channel with its default playlist and a weekly calendar of lunch, happy hour and brunch entries" />
+
 ### Start a player
 
 Any modern browser can act as a Castmill player.
 
 1. In a new browser window, open the address of your Castmill server, for example http://localhost:4000 for a local installation.
 2. The player shows a **pincode** of 10 characters. Keep this window open.
+
+<Screenshot src="first-screen-player" alt="The browser player showing its 10-character registration code and a QR code" />
 
 For permanent installations, use one of the dedicated [players](../players/overview.md) instead. They start automatically, run full screen and keep playing without a network connection.
 
@@ -58,6 +66,8 @@ For permanent installations, use one of the dedicated [players](../players/overv
 1. In the dashboard, open **Devices** and choose **Add Device**.
 2. Enter a name, for example *Lobby*, and type the pincode shown by the player.
 3. Choose **Register**.
+
+<Screenshot src="first-screen-register" alt="The Register device dialog with the name Lobby and a pincode" width={412} />
 
 The player switches from the pincode to content within a few seconds. A pincode expires after one hour; reload the player to get a new one.
 
@@ -68,6 +78,8 @@ Castmill gives every newly registered device its own channel, named after the de
 1. Open the device in **Devices** and select the **Channels** tab.
 2. Add *Lobby screen*.
 3. Remove the channel that was created for the device.
+
+<Screenshot src="first-screen-device-channels" alt="The Channels tab of a device with one assigned channel and the Add Channel selector" />
 
 The player switches to your playlist. Your first screen is live.
 

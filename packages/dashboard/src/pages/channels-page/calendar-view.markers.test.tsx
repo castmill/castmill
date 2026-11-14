@@ -5,13 +5,21 @@ import { CalendarView } from './calendar-view';
 import type { JsonChannel } from '../../services/channels.service';
 
 const getChannelEntries = vi.fn().mockResolvedValue([]);
+let reportPlaylists:
+  | ((playlists: { id: number; name: string }[]) => void)
+  | undefined;
 
 vi.mock('../../services/channels.service', () => ({
   ChannelsService: class {
     getChannelEntries = getChannelEntries;
   },
 }));
-vi.mock('./playlist-chooser', () => ({ PlaylistChooser: () => null }));
+vi.mock('./playlist-chooser', () => ({
+  PlaylistChooser: (props: { onPlaylistsLoaded?: typeof reportPlaylists }) => {
+    reportPlaylists = props.onPlaylistsLoaded;
+    return null;
+  },
+}));
 vi.mock('./default-playlist-combobox', () => ({
   DefaultPlaylistComboBox: () => null,
 }));
@@ -66,5 +74,32 @@ describe('CalendarView automation markers', () => {
       </I18nProvider>
     ));
     expect(screen.queryByTestId('automation-marker')).not.toBeInTheDocument();
+  });
+
+  it('shows the playlist name of each entry', async () => {
+    const start = new Date().setUTCHours(10, 0, 0, 0);
+    getChannelEntries.mockResolvedValueOnce([
+      {
+        id: 1,
+        playlist_id: 7,
+        start,
+        end: start + 3600 * 1000,
+        repeat_weekly_until: null,
+      },
+    ]);
+    render(() => (
+      <I18nProvider>
+        <CalendarView channel={channel} timeZone="UTC" />
+      </I18nProvider>
+    ));
+    await waitFor(() => expect(getChannelEntries).toHaveBeenCalled());
+
+    reportPlaylists?.([
+      { id: 7, name: 'Lunch menu' },
+      { id: 8, name: 'Happy hour' },
+    ]);
+
+    expect(await screen.findByText('Lunch menu')).toBeInTheDocument();
+    expect(screen.queryByText('Happy hour')).not.toBeInTheDocument();
   });
 });

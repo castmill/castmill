@@ -14,6 +14,8 @@ Network administration is separate from organization roles. To work on an organi
 
 **Network → Overview** shows the number of organizations, users, devices and teams in the network, the total storage used, and the network details.
 
+<Screenshot src="network-overview" alt="The network overview with five organizations, eight users, four devices, two teams and the storage used" />
+
 ## Settings
 
 **Network → Settings** has these groups:
@@ -25,6 +27,8 @@ Network administration is separate from organization roles. To work on an organi
 | **Domain Configuration** | The network domain. It is read-only here; the installation operator changes it in the admin tool. |
 | **Access Control** | **Invitation Only**: when on, people can only join through an invitation and public sign-up is disabled. |
 
+<Screenshot src="network-settings" alt="The network settings with the Network Identity and Social Links groups" />
+
 ## Organizations
 
 **Network → Organizations** lists every organization in the network. From here you can:
@@ -34,6 +38,8 @@ Network administration is separate from organization roles. To work on an organi
 - Delete an organization with all its content. This cannot be undone.
 - Edit **Integration settings**: values that network-level widgets need per organization, for example an office ID. Only network administrators can change them.
 
+<Screenshot src="network-organizations" alt="The organizations of the network with their status, creation date and actions" />
+
 ## Users and invitations
 
 **Network → Users & Invitations** lists every user and every pending invitation.
@@ -42,6 +48,8 @@ Network administration is separate from organization roles. To work on an organi
 - **Block** a user to stop them from signing in, optionally with a reason. **Unblock** restores access. You cannot block yourself or another network administrator.
 - Delete a user permanently.
 - Delete pending invitations.
+
+<Screenshot src="network-users" alt="Users & Invitations with the Invite User button and the users of the network" />
 
 ## Widget access
 
@@ -53,6 +61,8 @@ Network administration is separate from organization roles. To work on an organi
 | **All except…** | Every organization except the ones you exclude. New organizations get the widget. |
 | **Only selected…** | Only the organizations you add. New organizations do not get the widget. |
 | **Hidden** | No organization can add the widget to playlists |
+
+<Screenshot src="network-widget-access" alt="Widget Access with the Weather widget offered to all organizations" />
 
 Core widgets, such as image and video, are always available, because playlists and media depend on them. You cannot remove access from an organization that uses the widget in a playlist; remove it from those playlists first. The list shows how many organizations use each widget.
 
@@ -67,6 +77,8 @@ To publish a new version, upload a package with the same slug. The widget keeps 
 - another widget already uses the slug, or the widget is installed by the platform;
 - the widget's integration needs a fetcher this server doesn't have;
 - the new version would break playlist items that use the widget, which are listed.
+
+<Screenshot src="network-widget-package" alt="An uploaded network widget with its package version, the Download and Delete widget buttons and who can use it" />
 
 The **Package** section of an uploaded widget shows its version, downloads the uploaded package, and deletes the widget once no playlist uses it. If the widget declares integration settings, such as an agency and office IDs, set them for each organization under **Organizations** → **Integration settings**.
 

@@ -16,6 +16,8 @@ Open **Usage** in the sidebar. **Resource Usage** shows one card per resource, w
 
 A card is marked **Approaching limit** at 90% of the quota and **Quota limit reached** at 100%.
 
+<Screenshot src="usage" alt="The Usage page with cards for media files, storage, users, devices, playlists and channels" />
+
 The **Widgets** card counts the widget items in your playlists. It has no limit.
 
 ## Quota resources

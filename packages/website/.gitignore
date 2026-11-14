@@ -22,3 +22,7 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Demo tokens and downloaded media for the documentation screenshots
+/scripts/screenshots/.demo.json
+/scripts/screenshots/.cache/

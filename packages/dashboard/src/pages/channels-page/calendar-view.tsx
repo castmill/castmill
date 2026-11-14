@@ -8,7 +8,7 @@ import {
   createMemo,
   Show,
 } from 'solid-js';
-import { createStore } from 'solid-js/store';
+import { createStore, produce } from 'solid-js/store';
 import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
 
 import { CalendarEntryBox } from './calendar-entry-box';
@@ -211,6 +211,22 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
   // Show 7 days
   const daysToShow = 7;
   const [entries, setEntries] = createStore<CalendarEntry[]>([]);
+  // Entries only carry the playlist ID; names come from the playlist chooser.
+  const [playlistNames, setPlaylistNames] = createSignal(
+    new Map<number, string>()
+  );
+
+  createEffect(() => {
+    const names = playlistNames();
+    setEntries(
+      produce((list) =>
+        list.forEach((entry) => {
+          const name = names.get(entry.playlist.id);
+          if (name !== undefined) entry.playlist.name = name;
+        })
+      )
+    );
+  });
 
   createEffect(() => {
     const range = getWeekRangeTimestamps(startDate(), props.timeZone);
@@ -237,7 +253,11 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
     if (result) {
       setEntries(
         result.map((entry: JsonChannelEntry) =>
-          timestampsToCalendarEntry(entry, props.timeZone)
+          timestampsToCalendarEntry(
+            entry,
+            props.timeZone,
+            playlistNames().get(entry.playlist_id)
+          )
         )
       );
     }
@@ -565,7 +585,16 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
       <div class={styles['calendar-layout']}>
         <div class={styles['left-panel']}>
           <DefaultPlaylistComboBox channel={props.channel} />
-          <PlaylistChooser onDragOverCell={handleDragOverCell} />
+          <PlaylistChooser
+            onDragOverCell={handleDragOverCell}
+            onPlaylistsLoaded={(playlists) =>
+              setPlaylistNames(
+                new Map(
+                  playlists.map((playlist) => [playlist.id, playlist.name])
+                )
+              )
+            }
+          />
         </div>
         <div class={styles['calendar-wrapper']}>
           {/* Top bar: nav + range */}

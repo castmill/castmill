@@ -16,6 +16,8 @@ A playlist is an ordered list of items. Each item is a widget, such as an image,
 4. Choose an **Aspect Ratio**. The default is 16:9.
 5. Click **Create**. The playlist opens in the editor.
 
+<Screenshot src="playlists-create" alt="The Add Playlist dialog with a name and the 16:9 aspect ratio" width={340} />
+
 ### Aspect ratios
 
 The aspect ratio decides the shape of the editor preview. Choose the shape of the screens that will show the playlist.
@@ -41,6 +43,8 @@ The editor has these sections:
 - **Settings**: the aspect ratio.
 
 The summary at the top shows the total duration and when the playlist was created and updated.
+
+<Screenshot src="playlists-editor" alt="The playlist editor with the widget list, five items with their durations and a preview of the lunch specials slide" />
 
 ## Adding items
 
@@ -90,6 +94,8 @@ The settings dialog, **Widget "name"**, is generated from the options that the w
 | Choices | A searchable list of items provided by the widget's integration, for example a feed or a list of stocks |
 
 Required fields must be filled in before you can save. If you close the dialog with changes, the dashboard asks whether to **Discard** them or **Keep editing**.
+
+<Screenshot src="playlists-widget-settings" alt="The settings of a QR Code item, with fields for the content, caption and colours next to a live preview" />
 
 ### Editing texts in the preview
 

@@ -33,6 +33,8 @@ Only people who are already members of the organization can join a team. Invite 
 3. Under **Select User**, search for and choose an organization member.
 4. Choose the role and send the invitation.
 
+<Screenshot src="teams-members" alt="The Members tab of the Marketing team with three members and their roles" />
+
 The person receives an invitation and joins the team when they accept it. Pending invitations are listed on the **Invitations** tab, where you can remove them. A team invitation expires after 7 days.
 
 ## Team roles
@@ -51,6 +53,8 @@ The backend also has an installer role for temporary helpers: it only allows reg
 A resource joins a team when you create it while a team is selected in the page's **Team** filter. For example, select a team on the Medias page and upload files: the files belong to that team.
 
 The **Team** filter on the **Medias**, **Playlists**, **Channels** and **Devices** pages then shows only the resources of the selected team.
+
+<Screenshot src="teams-resources" alt="The playlist list filtered by the Marketing team, showing its three playlists" />
 
 ## Removing a team
 
