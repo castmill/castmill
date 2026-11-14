@@ -147,6 +147,92 @@
   }
 }
 
+/* Compact density: used when the regular table overflows its container */
+.castmill-table.compact table {
+  font-size: 0.85em;
+  /* Let row menus extend past the table; round the corner cells instead */
+  overflow: visible;
+  border-collapse: separate;
+
+  thead th {
+    background-color: var(--table-head-bg);
+  }
+
+  thead tr:first-child > :first-child {
+    border-start-start-radius: 0.5em;
+  }
+
+  thead tr:first-child > :last-child {
+    border-start-end-radius: 0.5em;
+  }
+
+  tbody tr:last-child > :first-child {
+    border-end-start-radius: 0.5em;
+  }
+
+  tbody tr:last-child > :last-child {
+    border-end-end-radius: 0.5em;
+  }
+
+  th,
+  td {
+    padding: 0.35em 0.4em;
+  }
+
+  thead th .table-header-title {
+    gap: 0.25em;
+  }
+
+  .checkbox-cell {
+    width: 2.75em;
+    min-width: 2.75em;
+    padding: 0;
+  }
+
+  tbody .table-actions-menu {
+    /* Open the row menu towards the table in both LTR and RTL */
+    :global(.castmill-menu-button-items) {
+      right: auto;
+      left: auto;
+      inset-inline-end: 0;
+      text-align: start;
+    }
+  }
+}
+
+.table-actions-menu {
+  :global(.castmill-menu-button-trigger) {
+    min-width: 2.75em;
+    min-height: 2.75em;
+    justify-content: center;
+    padding: 0.35em;
+  }
+}
+
+/* Row-action "⋯" triggers: a quiet, theme-aware icon button instead of the
+   solid grey secondary button. */
+.table-actions-menu,
+.card-actions {
+  :global(.castmill-menu-button-trigger) {
+    border: 0.0625em solid var(--cm-border-color);
+    background-color: transparent;
+    color: var(--cm-text-secondary);
+    box-shadow: none;
+    -webkit-tap-highlight-color: transparent;
+
+    &:hover:not(:disabled) {
+      background-color: var(--cm-bg-hover);
+      color: var(--cm-text-primary);
+    }
+
+    &:active:not(:disabled),
+    &[aria-expanded='true'] {
+      background-color: var(--cm-bg-active);
+      color: var(--cm-text-primary);
+    }
+  }
+}
+
 :global(:root[data-theme='light']) .castmill-table {
   --table-row-odd-bg: var(--cm-bg-secondary);
   --table-row-even-bg: var(--cm-bg-elevated-secondary);
@@ -241,11 +327,16 @@
       border-color 0.2s,
       background-color 0.2s;
 
+    /* No mobile tap flash over the whole card (e.g. when tapping its menu) */
+    -webkit-tap-highlight-color: transparent;
+
     &.clickable {
       cursor: pointer;
 
-      &:hover {
-        border-color: var(--cm-border-strong);
+      @media (hover: hover) {
+        &:hover {
+          border-color: var(--cm-border-strong);
+        }
       }
     }
 
@@ -349,7 +440,7 @@
 
 /* Touch screens and phones: ≥2.75em tap targets for row actions */
 @media (pointer: coarse), (max-width: 36em) {
-  .castmill-table table tbody .table-actions button {
+  .castmill-table table tbody .table-actions > button {
     display: inline-flex;
     align-items: center;
     justify-content: center;

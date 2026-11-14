@@ -103,7 +103,11 @@ describe('NetworkOrganizations', () => {
     renderOrganizations();
     await waitFor(() => screen.getByText('Organization 1'));
 
-    fireEvent.click(screen.getAllByTitle('Integration settings')[0]);
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Integration settings Organization 1',
+      })
+    );
     await waitFor(() =>
       expect(
         screen.getByText('Integration settings – Organization 1')
@@ -125,7 +129,9 @@ describe('NetworkOrganizations', () => {
     renderOrganizations();
     await waitFor(() => screen.getByText('Organization 1'));
 
-    fireEvent.click(screen.getAllByTitle('Block')[0]);
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Block Organization 1' })
+    );
     await waitFor(() =>
       expect(screen.getByText('Block Organization')).toBeInTheDocument()
     );

@@ -586,11 +586,12 @@ describe('TableView Component - Responsive defaults', () => {
 
   it('keeps the table when cardLayout is false', async () => {
     const { container } = renderView(false);
-    expect(resize).toHaveLength(0);
     await waitFor(() => {
       expect(screen.getByText('Resource 1')).toBeInTheDocument();
     });
+    resize.forEach((cb) => cb([{ contentRect: { width: 320 } }]));
     expect(container.querySelector('table')).toBeInTheDocument();
+    expect(screen.queryByTestId('table-card')).toBeNull();
   });
 
   it('marks the view while rows are selected for the fixed phone selection bar', async () => {

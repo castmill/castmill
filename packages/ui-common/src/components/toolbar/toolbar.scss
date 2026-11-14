@@ -217,5 +217,19 @@
     .toolbar-title-row {
       flex-wrap: wrap;
     }
+
+    /* Main actions (often a quota + button wrapper) wrap instead of widening
+       the page, which would zoom it out and misplace dialogs. */
+    .toolbar-right,
+    .toolbar-right > div {
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .toolbar-right {
+      flex-shrink: 1;
+    }
   }
 }

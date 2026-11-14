@@ -118,6 +118,10 @@ $warning: var(--cm-warning);
   }
 }
 
+:global(:root[data-theme='light']) .segment[aria-pressed='true'] {
+  color: var(--cm-primary);
+}
+
 .segment-count {
   padding: 0.05em 0.5em;
   border-radius: 1em;
@@ -793,6 +797,7 @@ $warning: var(--cm-warning);
 
   .detail-pane {
     min-height: 36em;
+    scroll-margin-top: 0.75em;
   }
 
   .mode-cards {

@@ -7,8 +7,8 @@ import {
   createMemo,
   JSX,
   onCleanup,
-  onMount,
 } from 'solid-js';
+import { BsThreeDots } from 'solid-icons/bs';
 import { FaSolidSortDown } from 'solid-icons/fa';
 import { FaSolidSortUp } from 'solid-icons/fa';
 import { FaSolidSort } from 'solid-icons/fa';
@@ -36,6 +36,8 @@ export interface TableAction<Item> {
   handler: (item: Item) => void;
   // Disables the action for rows it does not apply to.
   disabled?: (item: Item) => boolean;
+  // Omits the action for a row, e.g. to show either "Block" or "Unblock".
+  hidden?: (item: Item) => boolean;
 }
 
 type Label = string | (() => string);
@@ -48,6 +50,12 @@ export interface TableCardLabels {
   selectAll?: Label;
   selectRow?: (id: string) => string;
 }
+
+/**
+ * `compact` is used when the full table overflows its container: cells are
+ * tighter and row actions move into a menu. `cards` requires `cardLayout`.
+ */
+export type TableLayout = 'table' | 'compact' | 'cards';
 
 /** Default container width (in em) below which `cardLayout` tables render as cards. */
 export const TABLE_CARD_BREAKPOINT_EM = 36;
@@ -198,34 +206,128 @@ export const Table = <
       : (getValueByKeyPath(item, column.key) as JSX.Element);
 
   let rootRef: HTMLDivElement | undefined;
-  const [isNarrow, setIsNarrow] = createSignal(false);
-  const showCards = () => !!props.cardLayout && isNarrow();
+  let tableRef: HTMLTableElement | undefined;
+  let tableObserver: ResizeObserver | undefined;
+  let containerWidth = 0;
+  // Table widths (px) that overflowed the container in each mode, used to
+  // switch back once the container is wide enough again.
+  let fullTableWidth = 0;
+  let compactTableWidth = 0;
+  let frame: number | undefined;
 
-  const updateWidth = (width: number) => {
-    // Hidden containers (e.g. inactive tabs) report 0; keep the last layout.
-    if (!rootRef || width <= 0) {
+  const [layout, setLayout] = createSignal<TableLayout>('table');
+  const showCards = () => !!props.cardLayout && layout() === 'cards';
+  const isCompact = () => layout() === 'compact';
+
+  const evaluateLayout = () => {
+    if (!rootRef || containerWidth <= 0) {
       return;
     }
+    const width = containerWidth;
     const fontSize = parseFloat(getComputedStyle(rootRef).fontSize) || 16;
-    setIsNarrow(
+    if (
+      props.cardLayout &&
       width / fontSize < (props.cardBreakpoint ?? TABLE_CARD_BREAKPOINT_EM)
-    );
+    ) {
+      setLayout('cards');
+      return;
+    }
+
+    const current = layout();
+    if (current !== 'cards' && tableRef) {
+      const needed = tableRef.offsetWidth;
+      if (needed > width + 1) {
+        if (current === 'table') {
+          fullTableWidth = needed;
+          setLayout('compact');
+        } else if (props.cardLayout) {
+          compactTableWidth = needed;
+          setLayout('cards');
+        }
+        return;
+      }
+    }
+
+    if (current === 'cards' || !props.cardLayout) {
+      if (props.cardLayout && compactTableWidth > width) {
+        setLayout('cards');
+      } else {
+        setLayout(fullTableWidth > width ? 'compact' : 'table');
+      }
+    } else if (current === 'compact' && fullTableWidth <= width) {
+      setLayout('table');
+    }
   };
 
-  onMount(() => {
-    if (!props.cardLayout || !rootRef || typeof ResizeObserver !== 'function') {
+  // Table resizes come from content changes or our own layout switches; run
+  // them in the next frame so the DOM is not mutated inside the observer.
+  const scheduleEvaluate = () => {
+    if (typeof requestAnimationFrame !== 'function') {
+      evaluateLayout();
+      return;
+    }
+    if (frame !== undefined) {
+      cancelAnimationFrame(frame);
+    }
+    frame = requestAnimationFrame(() => {
+      frame = undefined;
+      evaluateLayout();
+    });
+  };
+
+  // Observers are attached from ref callbacks instead of onMount: dashboard
+  // addons bundle their own Solid runtime and render without an owner, where
+  // onMount runs before refs are assigned.
+  const setRootRef = (el: HTMLDivElement) => {
+    rootRef = el;
+    if (typeof ResizeObserver !== 'function') {
       return;
     }
     const observer = new ResizeObserver((entries) => {
       const entry = entries[entries.length - 1];
-      if (entry) {
-        updateWidth(entry.contentRect.width);
+      // Hidden containers (e.g. inactive tabs) report 0; keep the last layout.
+      if (entry && entry.contentRect.width > 0) {
+        containerWidth = entry.contentRect.width;
+        evaluateLayout();
       }
     });
-    observer.observe(rootRef);
-    updateWidth(rootRef.getBoundingClientRect().width);
-    onCleanup(() => observer.disconnect());
-  });
+    observer.observe(el);
+    tableObserver = new ResizeObserver(() => scheduleEvaluate());
+    if (tableRef) {
+      tableObserver.observe(tableRef);
+    }
+    const width = el.getBoundingClientRect().width;
+    if (width > 0) {
+      containerWidth = width;
+      evaluateLayout();
+    }
+    onCleanup(() => {
+      observer.disconnect();
+      tableObserver?.disconnect();
+      if (frame !== undefined) {
+        cancelAnimationFrame(frame);
+      }
+    });
+  };
+
+  const setTableRef = (el: HTMLTableElement) => {
+    if (tableRef && tableRef !== el) {
+      tableObserver?.unobserve(tableRef);
+    }
+    tableRef = el;
+    tableObserver?.observe(el);
+  };
+
+  const rowActions = (item: Item) =>
+    (actions() || []).filter((action) => !action.hidden?.(item));
+
+  const actionMenuItems = (item: Item) =>
+    rowActions(item).map((action, index) => ({
+      key: `action-${index}`,
+      label: getActionLabel(action),
+      disabled: action.disabled?.(item) ?? false,
+      onClick: () => action.handler(item),
+    }));
 
   const primaryColumn = createMemo(
     () =>
@@ -384,19 +486,15 @@ export const Table = <
                     {(column) => renderCell(column(), item)}
                   </Show>
                 </div>
-                <Show when={actions()?.length}>
+                <Show when={rowActions(item).length}>
                   <div
                     class={`${style['table-actions']} ${style['card-actions']}`}
                   >
                     <MenuButton
                       size="small"
-                      label={getActionsColumnLabel() || 'Actions'}
-                      items={(actions() || []).map((action, index) => ({
-                        key: `action-${index}`,
-                        label: getActionLabel(action),
-                        disabled: action.disabled?.(item) ?? false,
-                        onClick: () => action.handler(item),
-                      }))}
+                      icon={BsThreeDots}
+                      label={`${getActionsColumnLabel() || 'Actions'} ${item.name ?? ''}`.trim()}
+                      items={actionMenuItems(item)}
                     />
                   </div>
                 </Show>
@@ -422,13 +520,17 @@ export const Table = <
 
   return (
     <div
-      ref={rootRef}
+      ref={setRootRef}
       class={style['castmill-table']}
-      classList={{ [style['cards']]: showCards() }}
+      classList={{
+        [style['cards']]: showCards(),
+        [style['compact']]: isCompact(),
+      }}
       data-layout={showCards() ? 'cards' : 'table'}
+      data-density={isCompact() ? 'compact' : 'regular'}
     >
       <Show when={!showCards()} fallback={renderCards()}>
-        <table>
+        <table ref={setTableRef}>
           <thead>
             <tr>
               {!props.hideCheckboxes && (
@@ -515,30 +617,48 @@ export const Table = <
                   </For>
                   {actions() && (
                     <td>
-                      <div class={style['table-actions']}>
-                        <For each={actions()}>
-                          {(action) => (
-                            <button
-                              aria-label={`${getActionLabel(action)} ${item.name}`} // Providing an aria-label for accessibility and testing
-                              disabled={action.disabled?.(item) ?? false}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (!action.disabled?.(item)) {
-                                  action.handler(item);
-                                }
-                              }}
-                            >
-                              {typeof action.icon === 'function' ? (
-                                <action.icon
-                                  {...(action.props ? action.props(item) : {})}
-                                />
-                              ) : (
-                                action.icon
-                              )}
-                            </button>
-                          )}
-                        </For>
-                      </div>
+                      <Show
+                        when={!isCompact()}
+                        fallback={
+                          <div
+                            class={`${style['table-actions']} ${style['table-actions-menu']}`}
+                          >
+                            <MenuButton
+                              size="small"
+                              icon={BsThreeDots}
+                              label={`${getActionsColumnLabel() || 'Actions'} ${item.name ?? ''}`.trim()}
+                              items={actionMenuItems(item)}
+                            />
+                          </div>
+                        }
+                      >
+                        <div class={style['table-actions']}>
+                          <For each={rowActions(item)}>
+                            {(action) => (
+                              <button
+                                aria-label={`${getActionLabel(action)} ${item.name ?? ''}`.trim()} // Providing an aria-label for accessibility and testing
+                                disabled={action.disabled?.(item) ?? false}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (!action.disabled?.(item)) {
+                                    action.handler(item);
+                                  }
+                                }}
+                              >
+                                {typeof action.icon === 'function' ? (
+                                  <action.icon
+                                    {...(action.props
+                                      ? action.props(item)
+                                      : {})}
+                                  />
+                                ) : (
+                                  action.icon
+                                )}
+                              </button>
+                            )}
+                          </For>
+                        </div>
+                      </Show>
                     </td>
                   )}
                 </tr>

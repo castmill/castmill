@@ -28,6 +28,20 @@
   white-space: nowrap;
 }
 
+@media (max-width: 36em) {
+  .header {
+    flex-wrap: wrap;
+    gap: 0.75em;
+  }
+
+  .headerAction {
+    flex-shrink: 1;
+    flex-wrap: wrap;
+    min-width: 0;
+    max-width: 100%;
+  }
+}
+
 .description {
   max-width: 48em;
   margin: 0;

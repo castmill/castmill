@@ -74,12 +74,37 @@
     table {
       width: 100%;
       height: 100%;
+      // Fixed layout lets the filename column shrink so the table fits phones.
+      table-layout: fixed;
+
+      th {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        padding: 0.25em;
+      }
+
+      th:nth-child(2),
+      th:nth-child(4) {
+        width: 4.5em;
+      }
+
+      th:nth-child(3) {
+        width: 5em;
+      }
+
+      progress {
+        width: 100%;
+      }
 
       .file {
         text-align: center;
 
+        td {
+          padding: 0.25em;
+        }
+
         .filename-cell {
-          max-width: 16em; /* Adjust based on your layout needs */
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;

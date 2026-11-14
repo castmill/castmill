@@ -255,12 +255,19 @@ components for phone/tablet layouts (see
 - `TableView` renders stacked cards in narrow containers by default; always
   pass `cardLabels: useTableCardLabels()` (addons: `tableCardLabels(t)` from
   `addons/common/utils/table-labels.ts`). Direct `<Table>` usages opt in with
-  `cardLayout cardLabels={...}`.
+  `cardLayout cardLabels={...}`. Don't hand-build `<table>` lists; use `Table`
+  with `actions` (use `hidden`/`disabled` for per-row actions) so overflowing
+  tables first go compact with a "⋯" row-actions menu, then become cards.
 - Toolbars with filters or actions pass `filtersLabel: () => t('filters.toggle')`
   so the phone "Filters" toggle is localized; `ResourceTreeView` gets
   `dimensionLabel={t('tags.groups.organizeBy')}`.
 - Page roots use `margin: var(--cm-page-gutter, 2em)` instead of a fixed
   margin so gutters shrink on tablets and phones.
+- Nothing may widen the page on phones (check 320px): page headers and
+  action rows must wrap. Horizontal overflow makes mobile browsers zoom the
+  layout out, which pushes dialogs off screen and misplaces native pickers.
+- Master/detail views that stack on phones must scroll the detail into view
+  when an item is picked (see Network → Widget Access).
 
 ## Modals and Forms
 

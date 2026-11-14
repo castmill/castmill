@@ -9,6 +9,7 @@ import {
   onCleanup,
   onMount,
 } from 'solid-js';
+import { IconTypes } from 'solid-icons';
 import { Button } from '../button/button';
 
 import './menu-button.scss';
@@ -27,6 +28,8 @@ interface MenuButtonProps {
   items: MenuButtonItem[];
   disabled?: boolean;
   size?: MenuButtonSize;
+  /** Renders an icon-only trigger; `label` becomes its tooltip and accessible name. */
+  icon?: IconTypes;
 }
 
 export const MenuButton: Component<MenuButtonProps> = (props) => {
@@ -77,13 +80,16 @@ export const MenuButton: Component<MenuButtonProps> = (props) => {
         'castmill-menu-button-size-small': mergedProps.size === 'small',
         'castmill-menu-button-size-medium': mergedProps.size === 'medium',
         'castmill-menu-button-size-large': mergedProps.size === 'large',
+        'castmill-menu-button-icon-only': !!mergedProps.icon,
       }}
       ref={rootRef}
     >
       <Button
         ref={triggerRef}
         class="castmill-menu-button-trigger"
-        label={`${mergedProps.label} ▾`}
+        label={mergedProps.icon ? undefined : `${mergedProps.label} ▾`}
+        icon={mergedProps.icon}
+        title={mergedProps.icon ? mergedProps.label : undefined}
         color="secondary"
         disabled={mergedProps.disabled}
         aria-haspopup="menu"

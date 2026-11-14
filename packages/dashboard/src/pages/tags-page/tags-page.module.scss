@@ -24,6 +24,29 @@
   gap: 0.75em;
 }
 
+// Phones: stack the title above the quotas and wrap the buttons so the
+// header never widens the page (which would push dialogs off screen).
+@media (max-width: 36em) {
+  .tags-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75em;
+
+    h1 {
+      text-align: start;
+    }
+  }
+
+  .header-actions {
+    flex-wrap: wrap;
+
+    > * {
+      min-width: 0;
+      max-width: 100%;
+    }
+  }
+}
+
 .loading {
   text-align: center;
   padding: 4em;

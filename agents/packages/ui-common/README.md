@@ -150,6 +150,20 @@ components:
   scroll horizontally. `TableView` adds bottom padding (`has-selection`) so the
   bar doesn't cover rows.
 - **Table**: row actions and card menu items get ≥ 2.75em tap targets.
+  Layout is driven by the container and the table's own width, not the
+  viewport: `table` → `compact` (`data-density="compact"`: tighter cells and
+  row actions collapsed into a "⋯" `MenuButton`) when the full table
+  overflows → `cards` (with `cardLayout`) when the compact table still
+  overflows or the container is below `cardBreakpoint`. It switches back once
+  the recorded widths fit again. Observers are attached from ref callbacks,
+  not `onMount`, because addon bundles render with their own Solid runtime
+  and no owner (`onMount` would run before the ref is set).
+  Row-action triggers (compact rows and cards) are quiet "⋯" icon buttons
+  styled with `--cm-*` tokens; cards disable the mobile tap highlight.
+- **ToolBar**: on phones `toolbar-right` and its wrapper `div` (e.g. quota +
+  add button) wrap instead of widening the page.
+- **MenuButton**: pass `icon` for an icon-only trigger; `label` becomes its
+  `title`/accessible name.
 - **ResourceTreeView**: the "Organize by" dimension bar collapses into a toggle
   that shows the current tag-group path as a breadcrumb (`dimensionLabel`,
   pass `t('tags.groups.organizeBy')`); indentation is reduced.
@@ -163,9 +177,11 @@ Defines actions available for each row (view, edit, delete, etc.).
 ```typescript
 interface TableAction<Item> {
   icon: Component | string;           // Icon component or emoji
-  label: string;                      // Action label
+  label: string | (() => string);     // Action label
   props?: (item: Item) => Record<string, any>;  // Dynamic props
   handler: (item: Item) => void;      // Action handler
+  disabled?: (item: Item) => boolean; // Disabled for some rows
+  hidden?: (item: Item) => boolean;   // Omitted for some rows (e.g. Block/Unblock)
 }
 ```
 

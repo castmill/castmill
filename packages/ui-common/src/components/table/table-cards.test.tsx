@@ -35,10 +35,11 @@ class MockResizeObserver {
   }
 }
 
+// Resizes the table containers; table observers are triggered explicitly.
 const resizeTo = (width: number) => {
-  observers.forEach((observer) =>
-    observer.callback([{ contentRect: { width } }])
-  );
+  observers
+    .filter((observer) => !(observer.observed[0] instanceof HTMLTableElement))
+    .forEach((observer) => observer.callback([{ contentRect: { width } }]));
 };
 
 const PHONE_WIDTH = 375;
@@ -71,7 +72,6 @@ describe('Table card layout', () => {
 
   it('renders a regular table when cardLayout is not enabled', () => {
     const { container } = render(() => <Table columns={columns} data={data} />);
-    expect(observers).toHaveLength(0);
     resizeTo(PHONE_WIDTH);
     expect(layoutOf(container)).toBe('table');
     expect(container.querySelector('table')).toBeInTheDocument();
@@ -82,10 +82,12 @@ describe('Table card layout', () => {
       <Table columns={columns} data={data} cardLayout />
     ));
 
-    expect(observers).toHaveLength(1);
+    // One observer for the container and one for the table's own width
+    expect(observers).toHaveLength(2);
     expect(observers[0].observed[0]).toBe(
       container.querySelector('[data-layout]')
     );
+    expect(observers[1].observed[0]).toBe(container.querySelector('table'));
 
     resizeTo(PHONE_WIDTH);
     expect(layoutOf(container)).toBe('cards');
@@ -125,7 +127,7 @@ describe('Table card layout', () => {
       <Table columns={columns} data={data} cardLayout />
     ));
     unmount();
-    expect(observers[0].disconnected).toBe(true);
+    expect(observers.every((observer) => observer.disconnected)).toBe(true);
   });
 
   it('falls back to the table when ResizeObserver is unavailable', () => {
@@ -461,5 +463,150 @@ describe('Table card layout', () => {
     expect(bare.querySelector('[class*="card-toolbar"]')).toBeNull();
     expect(screen.queryByRole('checkbox')).toBeNull();
     expect(container).toBeDefined();
+  });
+});
+
+describe('Table compact layout', () => {
+  let tableWidth = 0;
+
+  const modeOf = (container: HTMLElement) => {
+    const root = container.querySelector('[data-layout]');
+    return root?.getAttribute('data-layout') === 'cards'
+      ? 'cards'
+      : root?.getAttribute('data-density') === 'compact'
+        ? 'compact'
+        : 'table';
+  };
+
+  const actions = [
+    { icon: 'E', label: 'Edit', handler: vi.fn() },
+    {
+      icon: 'B',
+      label: 'Block',
+      handler: vi.fn(),
+      hidden: (item: (typeof data)[number]) => item.id === '2',
+    },
+    {
+      icon: 'R',
+      label: () => 'Remove',
+      handler: vi.fn(),
+      disabled: (item: (typeof data)[number]) => item.id === '2',
+    },
+  ];
+
+  beforeEach(() => {
+    observers = [];
+    tableWidth = 0;
+    vi.stubGlobal('ResizeObserver', MockResizeObserver);
+    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => {
+      cb(0);
+      return 1;
+    });
+    Object.defineProperty(HTMLTableElement.prototype, 'offsetWidth', {
+      configurable: true,
+      get: () => tableWidth,
+    });
+    actions.forEach((action) => action.handler.mockClear());
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+    delete (HTMLTableElement.prototype as { offsetWidth?: number }).offsetWidth;
+  });
+
+  it('compacts an overflowing table, then falls back to cards and grows back', () => {
+    const { container } = render(() => (
+      <Table columns={columns} data={data} cardLayout actions={actions} />
+    ));
+
+    tableWidth = 900;
+    resizeTo(800);
+    expect(modeOf(container)).toBe('compact');
+    expect(container.querySelector('table')).toBeInTheDocument();
+
+    // The compact table fits, but the full one would not
+    tableWidth = 700;
+    resizeTo(800);
+    expect(modeOf(container)).toBe('compact');
+
+    // Even the compact table overflows: use cards
+    resizeTo(650);
+    expect(modeOf(container)).toBe('cards');
+
+    resizeTo(750);
+    expect(modeOf(container)).toBe('compact');
+
+    resizeTo(1000);
+    expect(modeOf(container)).toBe('table');
+    expect(
+      container.querySelector('[data-density]')?.getAttribute('data-density')
+    ).toBe('regular');
+  });
+
+  it('stays compact without cardLayout when the table still overflows', () => {
+    const { container } = render(() => (
+      <Table columns={columns} data={data} actions={actions} />
+    ));
+    tableWidth = 900;
+    resizeTo(600);
+    expect(modeOf(container)).toBe('compact');
+    resizeTo(500);
+    expect(modeOf(container)).toBe('compact');
+    expect(container.querySelector('table')).toBeInTheDocument();
+  });
+
+  it('re-evaluates when the table itself grows', () => {
+    const { container } = render(() => (
+      <Table columns={columns} data={data} actions={actions} />
+    ));
+    tableWidth = 700;
+    resizeTo(800);
+    expect(modeOf(container)).toBe('table');
+
+    tableWidth = 900;
+    observers[1].callback([]);
+    expect(modeOf(container)).toBe('compact');
+  });
+
+  it('moves row actions into a menu in compact mode', async () => {
+    render(() => (
+      <Table
+        columns={columns}
+        data={data}
+        actions={actions}
+        actionsLabel={() => 'Acciones'}
+      />
+    ));
+    tableWidth = 900;
+    resizeTo(800);
+
+    expect(screen.queryByRole('button', { name: 'Edit John Doe' })).toBeNull();
+
+    await fireEvent.click(
+      screen.getByRole('button', { name: 'Acciones John Doe' })
+    );
+    expect(screen.getByRole('menuitem', { name: 'Block' })).toBeInTheDocument();
+    await fireEvent.click(screen.getByRole('menuitem', { name: 'Edit' }));
+    expect(actions[0].handler).toHaveBeenCalledWith(data[0]);
+
+    await fireEvent.click(
+      screen.getByRole('button', { name: 'Acciones Jane Smith' })
+    );
+    expect(screen.queryByRole('menuitem', { name: 'Block' })).toBeNull();
+    expect(screen.getByRole('menuitem', { name: 'Remove' })).toBeDisabled();
+  });
+
+  it('omits hidden actions from inline row buttons', () => {
+    render(() => <Table columns={columns} data={data} actions={actions} />);
+    expect(
+      screen.getByRole('button', { name: 'Block John Doe' })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Block Jane Smith' })
+    ).toBeNull();
+    expect(
+      screen.getByRole('button', { name: 'Remove Jane Smith' })
+    ).toBeDisabled();
   });
 });
