@@ -10,6 +10,7 @@ defmodule Castmill.Widgets.PackagesTest do
   alias Castmill.Resources
   alias Castmill.Repo
   alias Castmill.Widgets
+
   alias Castmill.Widgets.{
     Integrations,
     NetworkAccess,
@@ -274,6 +275,7 @@ defmodule Castmill.Widgets.PackagesTest do
       assert Repo.get_by(WidgetDeferredAsset, slug: ctx.slug, key: logo)
 
       [item] = Resources.get_playlist_items(playlist.id)
+
       assert {:ok, _} =
                Widgets.update_widget_config(
                  playlist.id,
@@ -281,6 +283,7 @@ defmodule Castmill.Widgets.PackagesTest do
                  %{"background" => "removed"},
                  nil
                )
+
       assert {:ok, _} = install(ctx, upload)
       assert deleted_keys() == [logo]
       refute Repo.get_by(WidgetDeferredAsset, slug: ctx.slug, key: logo)
@@ -546,6 +549,7 @@ defmodule Castmill.Widgets.PackagesTest do
 
       assert {:ok, _} =
                Packages.delete_network_widget(ctx.network.id, widget.id, delete: ctx.delete)
+
       assert deleted_keys() == [logo]
       refute Repo.get_by(WidgetDeferredAsset, slug: ctx.slug, key: logo)
     end

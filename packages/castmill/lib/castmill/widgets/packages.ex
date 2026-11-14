@@ -37,6 +37,7 @@ defmodule Castmill.Widgets.Packages do
   alias Castmill.Repo
   alias Castmill.Widgets
   alias Castmill.Widgets.{AssetStorage, NetworkAccess, PackageProcessor, Schema}
+
   alias Castmill.Widgets.{
     TextOverrides,
     Widget,
@@ -44,6 +45,7 @@ defmodule Castmill.Widgets.Packages do
     WidgetDeferredAsset,
     WidgetPackage
   }
+
   alias Castmill.Widgets.Integrations
   alias Castmill.Widgets.Integrations.WidgetIntegration
   alias Castmill.Workers.IntegrationPoller
@@ -334,9 +336,7 @@ defmodule Castmill.Widgets.Packages do
   defp forget_deferred_assets(_slug, []), do: :ok
 
   defp forget_deferred_assets(slug, keys) do
-    Repo.delete_all(
-      from(a in WidgetDeferredAsset, where: a.slug == ^slug and a.key in ^keys)
-    )
+    Repo.delete_all(from(a in WidgetDeferredAsset, where: a.slug == ^slug and a.key in ^keys))
 
     :ok
   end
