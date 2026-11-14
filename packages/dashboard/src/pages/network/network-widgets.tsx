@@ -177,7 +177,7 @@ const NetworkWidgets: Component = () => {
       );
     } finally {
       setUploading(false);
-      if (fileInput) fileInput.value = '';
+      setPendingFile(null);
     }
   };
 
