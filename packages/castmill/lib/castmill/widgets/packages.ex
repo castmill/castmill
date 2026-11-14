@@ -25,8 +25,9 @@ defmodule Castmill.Widgets.Packages do
       `{{asset:category.name}}` placeholders are replaced with their URLs. Assets
       that neither a kept version nor a saved playlist item (e.g. an option's
       copied default) uses are deleted (refused uploads, old versions, deleted
-      widgets). Storing, installing and deleting assets of a slug take a lock on
-      the slug, so they never race.
+      widgets). Deferred cleanup keys outlive pruned package rows until no saved
+      item references them. Storing, installing and deleting assets of a slug
+      take a lock on the slug, so they never race.
     * Every upload is kept as a version (the last 10), to download or reinstall.
   """
   import Ecto.Query, only: [from: 2]
@@ -36,7 +37,13 @@ defmodule Castmill.Widgets.Packages do
   alias Castmill.Repo
   alias Castmill.Widgets
   alias Castmill.Widgets.{AssetStorage, NetworkAccess, PackageProcessor, Schema}
-  alias Castmill.Widgets.{TextOverrides, Widget, WidgetConfig, WidgetPackage}
+  alias Castmill.Widgets.{
+    TextOverrides,
+    Widget,
+    WidgetConfig,
+    WidgetDeferredAsset,
+    WidgetPackage
+  }
   alias Castmill.Widgets.Integrations
   alias Castmill.Widgets.Integrations.WidgetIntegration
   alias Castmill.Workers.IntegrationPoller
@@ -256,17 +263,13 @@ defmodule Castmill.Widgets.Packages do
 
   defp store_assets(_slug, _assets, _store), do: {:ok, %{}, []}
 
-  # Deletes stored assets of `slug` that no kept package version uses (versions with
-  # the same content share them). A failed delete only leaves a file behind, so it
-  # is logged.
-  defp release_assets(_slug, [], _opts), do: :ok
-
   defp release_assets(slug, keys, opts) do
     delete = Keyword.get(opts, :delete, &Castmill.PublicStorage.delete/1)
-    keys = Enum.uniq(keys)
 
     Repo.transaction(fn ->
       lock_slug(slug)
+      keys = Enum.uniq(keys ++ deferred_asset_keys(slug))
+      defer_assets(slug, keys)
 
       used =
         from(p in WidgetPackage,
@@ -280,12 +283,60 @@ defmodule Castmill.Widgets.Packages do
       unused = Enum.reject(keys, &MapSet.member?(used, &1))
       saved = saved_references(slug, unused)
 
-      for key <- unused, not MapSet.member?(saved, key) do
-        with {:error, reason} <- delete.(key) do
-          Logger.warning("[Widgets.Packages] Could not delete asset #{key}: #{inspect(reason)}")
+      for key <- keys do
+        cond do
+          MapSet.member?(used, key) ->
+            forget_deferred_assets(slug, [key])
+
+          MapSet.member?(saved, key) ->
+            :ok
+
+          true ->
+            case delete.(key) do
+              :ok ->
+                forget_deferred_assets(slug, [key])
+
+              {:error, reason} ->
+                Logger.warning(
+                  "[Widgets.Packages] Could not delete asset #{key}: #{inspect(reason)}"
+                )
+
+              other ->
+                Logger.warning(
+                  "[Widgets.Packages] Could not delete asset #{key}: #{inspect(other)}"
+                )
+            end
         end
       end
     end)
+
+    :ok
+  end
+
+  defp defer_assets(_slug, []), do: :ok
+
+  defp defer_assets(slug, keys) do
+    entries = Enum.map(Enum.uniq(keys), &%{slug: slug, key: &1})
+
+    Repo.insert_all(WidgetDeferredAsset, entries,
+      on_conflict: :nothing,
+      conflict_target: [:slug, :key]
+    )
+
+    :ok
+  end
+
+  defp deferred_asset_keys(slug) do
+    from(a in WidgetDeferredAsset, where: a.slug == ^slug, select: a.key)
+    |> Repo.all()
+  end
+
+  defp forget_deferred_assets(_slug, []), do: :ok
+
+  defp forget_deferred_assets(slug, keys) do
+    Repo.delete_all(
+      from(a in WidgetDeferredAsset, where: a.slug == ^slug and a.key in ^keys)
+    )
 
     :ok
   end
@@ -478,7 +529,9 @@ defmodule Castmill.Widgets.Packages do
             )
           )
 
-        {:ok, version, List.flatten(pruned)}
+        pruned_keys = List.flatten(pruned)
+        defer_assets(widget.slug, pruned_keys)
+        {:ok, version, pruned_keys}
 
       error ->
         error
@@ -553,9 +606,15 @@ defmodule Castmill.Widgets.Packages do
               Repo.all(
                 from(p in WidgetPackage, where: p.widget_id == ^widget.id, select: p.asset_keys)
               )
+              |> List.flatten()
+
+            keys = keys ++ deferred_asset_keys(slug)
+            keys = Enum.uniq(keys)
+
+            defer_assets(slug, keys)
 
             case Widgets.delete_widget_with_cascade(widget) do
-              {:ok, deleted} -> {deleted, List.flatten(keys)}
+              {:ok, deleted} -> {deleted, keys}
               {:error, reason} -> Repo.rollback(reason)
             end
           else

@@ -810,6 +810,7 @@
     "selectPlaylist": "Seleccionar lista de reproducción",
     "clearDefaultPlaylist": "Limpiar lista de reproducción predeterminada",
     "dragPlaylists": "Arrastra listas de reproducción",
+    "retryPlaylists": "Reintentar",
     "repeatWeekly": "¿Repetir semanalmente?",
     "calendarEntryDetails": "Detalles de la entrada del calendario",
     "removeChannelEntry": "Eliminar entrada del canal",
@@ -831,7 +832,8 @@
       "saveChannel": "Error al guardar el canal: {{error}}",
       "updateDefaultPlaylist": "Error al actualizar la lista de reproducción predeterminada del canal: {{error}}",
       "clearDefaultPlaylist": "Error al limpiar la lista de reproducción predeterminada del canal: {{error}}",
-      "updateChannelEntry": "Error al actualizar la entrada del canal: {{error}}"
+      "updateChannelEntry": "Error al actualizar la entrada del canal: {{error}}",
+      "loadPlaylists": "No se pudieron cargar las listas de reproducción de las páginas: {{pages}}."
     }
   },
   "organization": {

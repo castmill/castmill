@@ -39,6 +39,7 @@ defmodule Castmill.Workers.IntegrationPoller do
 
   require Logger
 
+  alias Castmill.Repo
   alias Castmill.Widgets.Integrations
   alias Castmill.Widgets.Integrations.{Refresh, WidgetIntegration}
   alias Castmill.Workers.BullMQHelper
@@ -199,54 +200,40 @@ defmodule Castmill.Workers.IntegrationPoller do
   - `interval`: Poll interval in seconds (default: fetched from integration config)
   """
   def schedule_poll(params, opts \\ []) do
-    # Get the integration to determine the polling interval
     integration_id = normalize_param(params, :integration_id)
 
-    with {:ok, integration} <- get_integration(integration_id),
-         false <- Refresh.on_demand?(integration) do
-      interval_seconds =
-        Keyword.get(opts, :interval) ||
-          integration.pull_interval_seconds || 30
-
-      job_data = %{
-        "organization_id" => normalize_param(params, :organization_id),
-        "widget_id" => normalize_param(params, :widget_id),
-        "widget_config_id" => normalize_param(params, :widget_config_id),
-        "integration_id" => normalize_param(params, :integration_id),
-        "discriminator_id" => normalize_param(params, :discriminator_id),
-        "widget_options" => normalize_param(params, :widget_options, %{})
-      }
-
-      # Create a unique scheduler ID based on the integration parameters
-      # NOTE: Using underscores as separators to avoid having 5+ colon-separated parts,
-      # which BullMQ would misidentify as legacy repeatable jobs.
-      # The discriminator_id may contain colons (e.g., "org:uuid"), so we sanitize it.
-      sanitized_discriminator = String.replace(job_data["discriminator_id"] || "", ":", "_")
-
-      scheduler_id =
-        "int_poll_#{job_data["organization_id"]}_#{job_data["integration_id"]}_#{sanitized_discriminator}"
-
-      # Use BullMQ JobScheduler for repeatable jobs (via helper for test mode support)
-      BullMQHelper.upsert_scheduler(
-        @queue,
-        scheduler_id,
-        # BullMQ expects milliseconds
-        %{every: interval_seconds * 1000},
-        # job_name
-        scheduler_id,
-        job_data,
-        attempts: 3
-      )
-    else
-      # On-demand integrations are refreshed when their data is read, never by
-      # repeatable jobs (see Castmill.Widgets.Integrations.Refresh).
-      true ->
+    with_locked_integration(integration_id, fn integration ->
+      if Refresh.on_demand?(integration) do
         {:ok, :on_demand}
+      else
+        interval_seconds =
+          Keyword.get(opts, :interval) ||
+            integration.pull_interval_seconds || 30
 
-      {:error, reason} ->
-        Logger.error("IntegrationPoller: Failed to schedule poll: #{inspect(reason)}")
-        {:error, reason}
-    end
+        job_data = %{
+          "organization_id" => normalize_param(params, :organization_id),
+          "widget_id" => normalize_param(params, :widget_id),
+          "widget_config_id" => normalize_param(params, :widget_config_id),
+          "integration_id" => normalize_param(params, :integration_id),
+          "discriminator_id" => normalize_param(params, :discriminator_id),
+          "widget_options" => normalize_param(params, :widget_options, %{})
+        }
+
+        sanitized_discriminator = String.replace(job_data["discriminator_id"] || "", ":", "_")
+
+        scheduler_id =
+          "int_poll_#{job_data["organization_id"]}_#{job_data["integration_id"]}_#{sanitized_discriminator}"
+
+        BullMQHelper.upsert_scheduler(
+          @queue,
+          scheduler_id,
+          %{every: interval_seconds * 1000},
+          scheduler_id,
+          job_data,
+          attempts: 3
+        )
+      end
+    end)
   end
 
   @doc """
@@ -255,6 +242,12 @@ defmodule Castmill.Workers.IntegrationPoller do
   `{:ok, removed_count}`.
   """
   def remove_schedulers(integration_id) do
+    with_scheduler_lock(integration_id, fn ->
+      remove_schedulers_locked(integration_id)
+    end)
+  end
+
+  defp remove_schedulers_locked(integration_id) do
     pattern = scheduler_pattern(integration_id)
 
     with {:ok, ids} <- BullMQHelper.list_scheduler_ids(@queue) do
@@ -271,25 +264,55 @@ defmodule Castmill.Workers.IntegrationPoller do
   Brings an integration's polling schedulers in line with its current settings,
   e.g. after a new widget package version changed them: removes them when it is
   refreshed on demand, and moves them to its current `pull_interval_seconds`
-  otherwise. Returns `{:ok, count}` of the schedulers removed or updated.
+  otherwise. Scheduler changes are serialized by integration across nodes and
+  settings are reloaded under that lock. Returns `{:ok, count}` of the schedulers
+  removed or updated.
   """
   def reconcile_schedulers(%WidgetIntegration{} = integration) do
-    if Refresh.on_demand?(integration) do
-      remove_schedulers(integration.id)
-    else
-      every = (integration.pull_interval_seconds || 30) * 1000
-      pattern = scheduler_pattern(integration.id)
+    with_locked_integration(integration.id, fn current ->
+      if Refresh.on_demand?(current) do
+        remove_schedulers_locked(current.id)
+      else
+        every = (current.pull_interval_seconds || 30) * 1000
+        pattern = scheduler_pattern(current.id)
 
-      with {:ok, schedulers} <- BullMQHelper.list_schedulers(@queue) do
-        updated =
-          schedulers
-          |> Enum.filter(
-            &(is_binary(&1.key) and Regex.match?(pattern, &1.key) and &1.every != every)
-          )
-          |> Enum.count(&reschedule(&1, every))
+        with {:ok, schedulers} <- BullMQHelper.list_schedulers(@queue) do
+          updated =
+            schedulers
+            |> Enum.filter(
+              &(is_binary(&1.key) and Regex.match?(pattern, &1.key) and &1.every != every)
+            )
+            |> Enum.count(&reschedule(&1, every))
 
-        {:ok, updated}
+          {:ok, updated}
+        end
       end
+    end)
+  end
+
+  defp with_locked_integration(integration_id, fun) do
+    with_scheduler_lock(integration_id, fn ->
+      case get_integration(integration_id) do
+        {:ok, integration} -> fun.(integration)
+        {:error, reason} -> {:error, reason}
+      end
+    end)
+  end
+
+  defp with_scheduler_lock(integration_id, fun) do
+    Repo.transaction(fn ->
+      Repo.query!("SELECT pg_advisory_xact_lock(hashtext($1))", [
+        "integration-poller:#{integration_id}"
+      ])
+
+      case fun.() do
+        {:error, reason} -> Repo.rollback(reason)
+        result -> result
+      end
+    end)
+    |> case do
+      {:ok, result} -> result
+      {:error, reason} -> {:error, reason}
     end
   end
 
@@ -371,24 +394,24 @@ defmodule Castmill.Workers.IntegrationPoller do
   """
   def cancel_polling(organization_id, integration_id, discriminator_id \\ nil) do
     if discriminator_id do
-      # Remove specific scheduler
-      # NOTE: Must match the format used in schedule_poll - underscores instead of colons
-      sanitized_discriminator = String.replace(discriminator_id || "", ":", "_")
-      scheduler_id = "int_poll_#{organization_id}_#{integration_id}_#{sanitized_discriminator}"
+      with_scheduler_lock(integration_id, fn ->
+        sanitized_discriminator = String.replace(discriminator_id || "", ":", "_")
+        scheduler_id = "int_poll_#{organization_id}_#{integration_id}_#{sanitized_discriminator}"
 
-      case BullMQHelper.remove_scheduler(@queue, scheduler_id) do
-        {:ok, true} ->
-          Logger.info("IntegrationPoller: Canceled polling for scheduler #{scheduler_id}")
-          {:ok, 1}
+        case BullMQHelper.remove_scheduler(@queue, scheduler_id) do
+          {:ok, true} ->
+            Logger.info("IntegrationPoller: Canceled polling for scheduler #{scheduler_id}")
+            {:ok, 1}
 
-        {:ok, false} ->
-          Logger.info("IntegrationPoller: No scheduler found for #{scheduler_id}")
-          {:ok, 0}
+          {:ok, false} ->
+            Logger.info("IntegrationPoller: No scheduler found for #{scheduler_id}")
+            {:ok, 0}
 
-        {:error, reason} ->
-          Logger.error("IntegrationPoller: Failed to cancel polling: #{inspect(reason)}")
-          {:error, reason}
-      end
+          {:error, reason} ->
+            Logger.error("IntegrationPoller: Failed to cancel polling: #{inspect(reason)}")
+            {:error, reason}
+        end
+      end)
     else
       # Can't cancel without discriminator - would need to list and filter
       Logger.warning(

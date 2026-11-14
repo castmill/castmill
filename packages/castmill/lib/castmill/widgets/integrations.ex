@@ -1817,16 +1817,29 @@ defmodule Castmill.Widgets.Integrations do
   Checks a package's `integration` declaration before it is installed: it must use
   an installed fetcher module (packages never bring code), and its `config` cannot
   override the fetcher module or set an endpoint, which would be fetched without
-  the fetchers' restrictions.
+  the fetchers' restrictions. OAuth URLs must come from trusted server-side
+  configuration, not the package's credential schema.
   """
   def validate_integration_meta(nil), do: :ok
 
   def validate_integration_meta(%{} = config) do
     fetcher_config = Map.get(config, "config") || %{}
+    credential_schema = Map.get(config, "credential_schema") || %{}
+
+    oauth_config =
+      if is_map(credential_schema),
+        do: Map.get(credential_schema, "oauth2") || %{},
+        else: %{}
 
     cond do
       not is_map(fetcher_config) ->
         {:error, :invalid_integration}
+
+      not is_map(credential_schema) or not is_map(oauth_config) ->
+        {:error, :invalid_integration}
+
+      Enum.any?(["authorization_url", "token_url"], &Map.has_key?(oauth_config, &1)) ->
+        {:error, "The widget's integration can't set OAuth URLs"}
 
       overridden = Enum.find(@package_reserved_config, &Map.has_key?(fetcher_config, &1)) ->
         {:error, "The widget's integration config can't set \"#{overridden}\""}

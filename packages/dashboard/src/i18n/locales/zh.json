@@ -809,6 +809,7 @@
     "selectPlaylist": "选择播放列表",
     "clearDefaultPlaylist": "清除默认播放列表",
     "dragPlaylists": "拖动播放列表",
+    "retryPlaylists": "重试",
     "repeatWeekly": "每周重复？",
     "calendarEntryDetails": "日历条目详情",
     "removeChannelEntry": "删除频道条目",
@@ -830,7 +831,8 @@
       "saveChannel": "保存频道时出错：{{error}}",
       "updateDefaultPlaylist": "更新频道默认播放列表失败：{{error}}",
       "clearDefaultPlaylist": "清除频道默认播放列表失败：{{error}}",
-      "updateChannelEntry": "更新频道条目时出错：{{error}}"
+      "updateChannelEntry": "更新频道条目时出错：{{error}}",
+      "loadPlaylists": "无法加载以下页面中的播放列表：{{pages}}。"
     }
   },
   "organization": {

@@ -804,6 +804,7 @@
     "selectPlaylist": "Välj spellista",
     "clearDefaultPlaylist": "Rensa standardspellista",
     "dragPlaylists": "Dra spellistor",
+    "retryPlaylists": "Försök igen",
     "repeatWeekly": "Upprepa varje vecka?",
     "calendarEntryDetails": "Kalenderinläggsdetaljer",
     "removeChannelEntry": "Ta bort kanalinlägg",
@@ -825,7 +826,8 @@
       "saveChannel": "Fel vid sparande av kanal: {{error}}",
       "updateDefaultPlaylist": "Misslyckades att uppdatera kanalens standardspellista: {{error}}",
       "clearDefaultPlaylist": "Misslyckades att rensa kanalens standardspellista: {{error}}",
-      "updateChannelEntry": "Fel vid uppdatering av kanalinlägg: {{error}}"
+      "updateChannelEntry": "Fel vid uppdatering av kanalinlägg: {{error}}",
+      "loadPlaylists": "Det gick inte att läsa in spellistor från sidorna: {{pages}}."
     }
   },
   "organization": {

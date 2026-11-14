@@ -821,6 +821,7 @@
     "selectPlaylist": "Sélectionner une playlist",
     "clearDefaultPlaylist": "Effacer la playlist par défaut",
     "dragPlaylists": "Glisser les playlists",
+    "retryPlaylists": "Réessayer",
     "repeatWeekly": "Répéter chaque semaine ?",
     "calendarEntryDetails": "Détails de l'entrée du calendrier",
     "removeChannelEntry": "Supprimer l'entrée du canal",
@@ -842,7 +843,8 @@
       "saveChannel": "Erreur lors de l'enregistrement du canal : {{error}}",
       "updateDefaultPlaylist": "Échec de la mise à jour de la playlist par défaut du canal : {{error}}",
       "clearDefaultPlaylist": "Échec de l'effacement de la playlist par défaut du canal : {{error}}",
-      "updateChannelEntry": "Erreur lors de la mise à jour de l'entrée du canal : {{error}}"
+      "updateChannelEntry": "Erreur lors de la mise à jour de l'entrée du canal : {{error}}",
+      "loadPlaylists": "Impossible de charger les playlists des pages suivantes : {{pages}}."
     }
   },
   "organization": {

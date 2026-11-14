@@ -761,6 +761,7 @@
     "selectPlaylist": "Select Playlist",
     "clearDefaultPlaylist": "Clear default playlist",
     "dragPlaylists": "Drag playlists",
+    "retryPlaylists": "Retry",
     "repeatWeekly": "Repeat Weekly?",
     "calendarEntryDetails": "Calendar entry details",
     "removeChannelEntry": "Remove Channel Entry",
@@ -782,7 +783,8 @@
       "saveChannel": "Error saving channel: {{error}}",
       "updateDefaultPlaylist": "Failed to update channel default playlist: {{error}}",
       "clearDefaultPlaylist": "Failed to clear channel default playlist: {{error}}",
-      "updateChannelEntry": "Error updating channel entry: {{error}}"
+      "updateChannelEntry": "Error updating channel entry: {{error}}",
+      "loadPlaylists": "Could not load playlists from pages: {{pages}}."
     }
   },
   "organization": {

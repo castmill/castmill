@@ -809,6 +809,7 @@
     "selectPlaylist": "プレイリストを選択",
     "clearDefaultPlaylist": "デフォルトプレイリストをクリア",
     "dragPlaylists": "プレイリストをドラッグ",
+    "retryPlaylists": "再試行",
     "repeatWeekly": "毎週繰り返しますか？",
     "calendarEntryDetails": "カレンダーエントリーの詳細",
     "removeChannelEntry": "チャンネルエントリーを削除",
@@ -830,7 +831,8 @@
       "saveChannel": "チャンネルの保存中にエラーが発生しました：{{error}}",
       "updateDefaultPlaylist": "チャンネルのデフォルトプレイリストの更新に失敗しました：{{error}}",
       "clearDefaultPlaylist": "チャンネルのデフォルトプレイリストのクリアに失敗しました：{{error}}",
-      "updateChannelEntry": "チャンネルエントリーの更新中にエラーが発生しました：{{error}}"
+      "updateChannelEntry": "チャンネルエントリーの更新中にエラーが発生しました：{{error}}",
+      "loadPlaylists": "次のページのプレイリストを読み込めませんでした: {{pages}}。"
     }
   },
   "organization": {

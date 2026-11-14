@@ -747,6 +747,7 @@
     "selectPlaylist": "Playlist auswählen",
     "clearDefaultPlaylist": "Standard-Playlist löschen",
     "dragPlaylists": "Playlists ziehen",
+    "retryPlaylists": "Erneut versuchen",
     "repeatWeekly": "Wöchentlich wiederholen?",
     "calendarEntryDetails": "Kalendereintragsdetails",
     "removeChannelEntry": "Kanaleintrag entfernen",
@@ -768,7 +769,8 @@
       "saveChannel": "Fehler beim Speichern des Kanals: {{error}}",
       "updateDefaultPlaylist": "Fehler beim Aktualisieren der Standard-Playlist des Kanals: {{error}}",
       "clearDefaultPlaylist": "Fehler beim Löschen der Standard-Playlist des Kanals: {{error}}",
-      "updateChannelEntry": "Fehler beim Aktualisieren des Kanaleintrags: {{error}}"
+      "updateChannelEntry": "Fehler beim Aktualisieren des Kanaleintrags: {{error}}",
+      "loadPlaylists": "Playlists konnten auf den folgenden Seiten nicht geladen werden: {{pages}}."
     }
   },
   "organization": {

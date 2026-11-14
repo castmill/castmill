@@ -8,8 +8,15 @@ defmodule Castmill.Widgets.PackagesTest do
   import Castmill.PlaylistsFixtures
 
   alias Castmill.Resources
+  alias Castmill.Repo
   alias Castmill.Widgets
-  alias Castmill.Widgets.{Integrations, NetworkAccess, PackageProcessor, Packages}
+  alias Castmill.Widgets.{
+    Integrations,
+    NetworkAccess,
+    PackageProcessor,
+    Packages,
+    WidgetDeferredAsset
+  }
 
   @logo <<137, 80, 78, 71, 13, 10, 26, 10>>
   @font "wOF2-font"
@@ -253,7 +260,7 @@ defmodule Castmill.Widgets.PackagesTest do
       {:ok, %{widget: widget}} = install(ctx, zip(first))
       first_keys = stored_keys()
       [logo] = Enum.filter(first_keys, &String.ends_with?(&1, "/images/logo.png"))
-      use_widget(ctx, widget, %{"background" => "https://cdn.test/" <> logo})
+      playlist = use_widget(ctx, widget, %{"background" => "https://cdn.test/" <> logo})
 
       upload =
         text_widget(ctx)
@@ -264,6 +271,19 @@ defmodule Castmill.Widgets.PackagesTest do
       for _ <- 2..11, do: assert({:ok, _} = install(ctx, upload))
 
       assert Enum.sort(deleted_keys()) == Enum.sort(first_keys -- [logo])
+      assert Repo.get_by(WidgetDeferredAsset, slug: ctx.slug, key: logo)
+
+      [item] = Resources.get_playlist_items(playlist.id)
+      assert {:ok, _} =
+               Widgets.update_widget_config(
+                 playlist.id,
+                 item.id,
+                 %{"background" => "removed"},
+                 nil
+               )
+      assert {:ok, _} = install(ctx, upload)
+      assert deleted_keys() == [logo]
+      refute Repo.get_by(WidgetDeferredAsset, slug: ctx.slug, key: logo)
     end
 
     test "deletes the assets of refused uploads unless a kept version uses them", ctx do
@@ -392,6 +412,17 @@ defmodule Castmill.Widgets.PackagesTest do
                  install(ctx, zip(widget_json(ctx, %{"integration" => overriding})))
       end
 
+      for key <- ["authorization_url", "token_url"] do
+        oauth =
+          put_in(integration, ["credential_schema"], %{
+            "auth_type" => "oauth2",
+            "oauth2" => %{key => "http://127.0.0.1/token"}
+          })
+
+        assert {:error, "The widget's integration can't set OAuth URLs"} =
+                 install(ctx, zip(widget_json(ctx, %{"integration" => oauth})))
+      end
+
       # An integration in meta is checked too.
       in_meta =
         widget_json(ctx, %{"meta" => %{"integration" => %{"fetcher" => "nope"}}})
@@ -495,6 +526,30 @@ defmodule Castmill.Widgets.PackagesTest do
   end
 
   describe "delete_network_widget/2" do
+    test "deletes assets deferred while a saved playlist item referenced them", ctx do
+      first = widget_json(ctx)
+      {:ok, %{widget: widget}} = install(ctx, zip(first))
+      first_keys = stored_keys()
+      [logo] = Enum.filter(first_keys, &String.ends_with?(&1, "/images/logo.png"))
+      playlist = use_widget(ctx, widget, %{"background" => "https://cdn.test/" <> logo})
+
+      upload =
+        text_widget(ctx)
+        |> Map.put("integration", widget_json(ctx)["integration"])
+        |> json()
+
+      for _ <- 2..11, do: assert({:ok, _} = install(ctx, upload))
+      assert Enum.sort(deleted_keys()) == Enum.sort(first_keys -- [logo])
+      assert Repo.get_by(WidgetDeferredAsset, slug: ctx.slug, key: logo)
+
+      Repo.delete!(playlist)
+
+      assert {:ok, _} =
+               Packages.delete_network_widget(ctx.network.id, widget.id, delete: ctx.delete)
+      assert deleted_keys() == [logo]
+      refute Repo.get_by(WidgetDeferredAsset, slug: ctx.slug, key: logo)
+    end
+
     test "deletes uploaded widgets that no playlist uses", ctx do
       {:ok, %{widget: widget}} = install(ctx, zip(widget_json(ctx)))
       other = network_fixture()

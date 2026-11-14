@@ -809,6 +809,7 @@
     "selectPlaylist": "재생목록 선택",
     "clearDefaultPlaylist": "기본 재생목록 지우기",
     "dragPlaylists": "재생목록 드래그",
+    "retryPlaylists": "다시 시도",
     "repeatWeekly": "매주 반복?",
     "calendarEntryDetails": "캘린더 항목 세부정보",
     "removeChannelEntry": "채널 항목 제거",
@@ -830,7 +831,8 @@
       "saveChannel": "채널 저장 오류: {{error}}",
       "updateDefaultPlaylist": "채널 기본 재생목록 업데이트 실패: {{error}}",
       "clearDefaultPlaylist": "채널 기본 재생목록 지우기 실패: {{error}}",
-      "updateChannelEntry": "채널 항목 업데이트 오류: {{error}}"
+      "updateChannelEntry": "채널 항목 업데이트 오류: {{error}}",
+      "loadPlaylists": "다음 페이지에서 재생목록을 불러오지 못했습니다: {{pages}}."
     }
   },
   "organization": {
