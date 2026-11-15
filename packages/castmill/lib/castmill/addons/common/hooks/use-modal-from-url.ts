@@ -75,3 +75,31 @@ export function useModalFromUrl<T>(options: UseModalFromUrlOptions<T>) {
     });
   });
 }
+
+const DETAIL_ENTRY = 'castmillDetail';
+
+const isDetailEntry = () => Boolean(window.history.state?.[DETAIL_ENTRY]);
+
+/**
+ * Router navigation options for showing an item's details from a list. The
+ * first item opened gets its own history entry, so browser/swipe back returns
+ * to the list; switching items while details are shown replaces that entry.
+ */
+export const detailUrlOptions = () => ({
+  replace: isDetailEntry(),
+  scroll: false,
+  state: { [DETAIL_ENTRY]: true },
+});
+
+/**
+ * Removes the item from the URL when its details are closed from the UI. Goes
+ * back to the list entry that opened them, or calls `removeItemFromUrl` (which
+ * should navigate with `replace: true`) for deep links.
+ */
+export const closeDetailUrl = (removeItemFromUrl: () => void) => {
+  if (isDetailEntry()) {
+    window.history.back();
+  } else {
+    removeItemFromUrl();
+  }
+};

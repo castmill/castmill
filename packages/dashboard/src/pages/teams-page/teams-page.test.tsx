@@ -44,7 +44,8 @@ vi.mock('../../hooks/useKeyboardShortcuts', () => ({
   }),
 }));
 
-vi.mock('../../hooks/useModalFromUrl', () => ({
+vi.mock('../../hooks/useModalFromUrl', async () => ({
+  ...(await vi.importActual<object>('../../hooks/useModalFromUrl')),
   useModalFromUrl: vi.fn(),
 }));
 
@@ -258,6 +259,29 @@ describe('TeamsPage', () => {
     fireEvent.click(screen.getByText('close-drawer'));
 
     expect(screen.queryByTestId('team-view')).not.toBeInTheDocument();
-    expect(setSearchParams).toHaveBeenCalledWith({ itemId: undefined });
+    expect(setSearchParams).toHaveBeenCalledWith(
+      { itemId: undefined },
+      { replace: true }
+    );
+  });
+
+  it('opens a team in a new history entry and closes it by going back', () => {
+    const back = vi.spyOn(window.history, 'back').mockImplementation(() => {});
+    renderPage();
+
+    fireEvent.click(screen.getByText('View'));
+    expect(setSearchParams).toHaveBeenLastCalledWith(
+      { itemId: '3' },
+      { replace: false, scroll: false, state: { castmillDetail: true } }
+    );
+
+    window.history.replaceState({ castmillDetail: true }, '');
+    setSearchParams.mockClear();
+    fireEvent.click(screen.getByText('close-drawer'));
+
+    expect(back).toHaveBeenCalledOnce();
+    expect(setSearchParams).not.toHaveBeenCalled();
+    window.history.replaceState(null, '');
+    back.mockRestore();
   });
 });

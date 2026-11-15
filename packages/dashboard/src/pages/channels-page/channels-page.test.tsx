@@ -42,7 +42,8 @@ vi.mock('../../services/quotas.service', () => ({
 }));
 
 // Mock the hooks
-vi.mock('../../hooks', () => ({
+vi.mock('../../hooks', async () => ({
+  ...(await vi.importActual<object>('../../hooks/useModalFromUrl')),
   useTeamFilter: () => ({
     teams: () => [],
     selectedTeamId: () => null,

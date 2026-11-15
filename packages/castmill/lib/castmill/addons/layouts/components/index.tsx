@@ -41,7 +41,12 @@ import './layouts.scss';
 import { LayoutView } from './layout-view';
 import { AddonComponentProps } from '../../common/interfaces/addon-store';
 import { LayoutAddForm, AspectRatio } from './layout-add-form';
-import { useTeamFilter, useModalFromUrl } from '../../common/hooks';
+import {
+  useTeamFilter,
+  useModalFromUrl,
+  detailUrlOptions,
+  closeDetailUrl,
+} from '../../common/hooks';
 import { tableCardLabels, filtersLabel } from '../../common/utils/table-labels';
 
 const ASPECT_RATIO_OPTIONS = [
@@ -70,7 +75,9 @@ const LayoutsPage: Component<AddonComponentProps> = (props) => {
   const closeLayoutDrawer = () => {
     if (props.params) {
       const [, setSearchParams] = props.params;
-      setSearchParams({ itemId: undefined }, { replace: true });
+      closeDetailUrl(() =>
+        setSearchParams({ itemId: undefined }, { replace: true })
+      );
     }
     setShowDrawer(false);
   };
@@ -295,7 +302,7 @@ const LayoutsPage: Component<AddonComponentProps> = (props) => {
 
     if (props.params) {
       const [, setSearchParams] = props.params;
-      setSearchParams({ itemId: String(item.id) }, { replace: true });
+      setSearchParams({ itemId: String(item.id) }, detailUrlOptions());
     }
   };
 

@@ -17,6 +17,7 @@ import {
   Show,
   For,
   onMount,
+  onCleanup,
   batch,
 } from 'solid-js';
 
@@ -46,6 +47,7 @@ import { IntegrationsList } from '../../common/components/integrations-list';
 import { DEFAULT_WIDGET_ICON } from '../../common/constants';
 import './widgets.scss';
 import { AddonStore } from '../../common/interfaces/addon-store';
+import { closeDetailUrl, detailUrlOptions } from '../../common/hooks';
 import {
   getTranslatedWidgetName,
   getTranslatedWidgetDescription,
@@ -239,17 +241,25 @@ const WidgetsPage: Component<{
     }
   };
 
-  // Update URL when widget drawer is opened/closed
-  const updateUrlForWidget = (widgetId: number | null, tab?: string) => {
-    const orgId = props.store.organizations.selectedId;
-    let url = `/org/${orgId}/content/widgets`;
-    if (widgetId !== null) {
-      url += `/${widgetId}`;
-      if (tab) {
-        url += `?tab=${tab}`;
-      }
+  const widgetsUrl = (widgetId?: number) => {
+    const url = `/org/${props.store.organizations.selectedId}/content/widgets`;
+    return widgetId === undefined ? url : `${url}/${widgetId}`;
+  };
+
+  // Navigate through the dashboard router so its location (and browser/swipe
+  // back) stays in sync with the open widget.
+  const navigateTo = (
+    url: string,
+    options: { replace?: boolean; state?: Record<string, unknown> }
+  ) => {
+    const navigate = props.store.router?.navigate;
+    if (navigate) {
+      navigate(url, options);
+    } else if (options.replace) {
+      window.history.replaceState(options.state ?? null, '', url);
+    } else {
+      window.history.pushState(options.state ?? null, '', url);
     }
-    window.history.pushState({}, '', url);
   };
 
   // Open widget drawer and update URL
@@ -270,10 +280,9 @@ const WidgetsPage: Component<{
 
     // Update URL FIRST to prevent the createEffect from closing the drawer
     // The effect checks lastProcessedUrl to avoid duplicate processing
-    const orgId = props.store.organizations.selectedId;
-    const newUrl = `/org/${orgId}/content/widgets/${widget.id}`;
+    const newUrl = widgetsUrl(widget.id);
     lastProcessedUrl = newUrl;
-    window.history.pushState({}, '', newUrl);
+    navigateTo(newUrl, detailUrlOptions());
 
     batch(() => {
       setWidgetHasIntegrations(hasIntegrations);
@@ -294,22 +303,20 @@ const WidgetsPage: Component<{
     setCurrentWidget(undefined);
     setInitialTabIndex(0);
     setWidgetHasIntegrations(false);
-    updateUrlForWidget(null);
+    closeDetailUrl(() => navigateTo(widgetsUrl(), { replace: true }));
   };
 
   // Track last processed URL to avoid duplicate processing
   let lastProcessedUrl = '';
 
-  // Check URL for deep links - reactive to location changes for soft navigation
+  // Sync the drawer with the URL on load and on browser back/forward.
   // URL pattern: /org/:orgId/content/widgets/:widgetId?tab=integrations
-  createEffect(() => {
+  const syncDrawerWithUrl = () => {
     // Skip if we're in the middle of programmatically opening a drawer
     if (isOpeningDrawer) return;
 
-    // Get location from router (reactive) or fall back to window.location
-    const location = props.store.router?.location?.();
-    const path = location?.pathname || window.location.pathname;
-    const search = location?.search || window.location.search;
+    const path = window.location.pathname;
+    const search = window.location.search;
     const fullUrl = path + search;
 
     // Skip if we already processed this URL
@@ -338,6 +345,14 @@ const WidgetsPage: Component<{
         setInitialTabIndex(0);
       }
     }
+  };
+
+  createEffect(syncDrawerWithUrl);
+
+  // Addons don't share the dashboard router's reactivity, so listen directly.
+  onMount(() => {
+    window.addEventListener('popstate', syncDrawerWithUrl);
+    onCleanup(() => window.removeEventListener('popstate', syncDrawerWithUrl));
   });
 
   // Register keyboard shortcuts

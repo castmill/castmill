@@ -60,6 +60,8 @@ import { PlaylistAddForm, AspectRatio } from './playlist-add-form';
 import {
   useTeamFilter,
   useModalFromUrl,
+  detailUrlOptions,
+  closeDetailUrl,
   useOnboardingHighlight,
 } from '../../common/hooks';
 import { ASPECT_RATIO_OPTIONS } from '../constants';
@@ -91,7 +93,9 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
   const closePlaylistDrawer = () => {
     if (props.params) {
       const [, setSearchParams] = props.params;
-      setSearchParams({ itemId: undefined }, { replace: true });
+      closeDetailUrl(() =>
+        setSearchParams({ itemId: undefined }, { replace: true })
+      );
     }
     setShowDrawer(false);
   };
@@ -623,7 +627,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
     setShowDrawer(true);
     if (props.params) {
       const [searchParams, setSearchParams] = props.params;
-      setSearchParams({ itemId: String(item.id) }, { replace: true });
+      setSearchParams({ itemId: String(item.id) }, detailUrlOptions());
     }
   };
 
@@ -1139,7 +1143,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
                 refreshData();
                 bumpTree();
               }}
-              onNavigateAway={closePlaylistDrawer}
+              onNavigateAway={() => setShowDrawer(false)}
             />
           </Drawer>
         )}

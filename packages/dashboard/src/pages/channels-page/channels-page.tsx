@@ -53,7 +53,12 @@ import { ChannelView } from './channel-view';
 
 import { baseUrl } from '../../env';
 import { ChannelAddForm } from './channel-add-form';
-import { useTeamFilter, useModalFromUrl } from '../../hooks';
+import {
+  useTeamFilter,
+  useModalFromUrl,
+  detailUrlOptions,
+  closeDetailUrl,
+} from '../../hooks';
 import { useI18n } from '../../i18n';
 import { QuotaIndicator } from '../../components/quota-indicator';
 import { QuotasService, ResourceQuota } from '../../services/quotas.service';
@@ -388,11 +393,13 @@ const ChannelsPage: Component = () => {
   const openChannelDrawer = (channel: JsonChannel) => {
     setCurrentChannel(channel);
     setShowDrawer(true);
-    setSearchParams({ itemId: String(channel.id) });
+    setSearchParams({ itemId: String(channel.id) }, detailUrlOptions());
   };
 
   const closeChannelDrawer = () => {
-    setSearchParams({ itemId: undefined });
+    closeDetailUrl(() =>
+      setSearchParams({ itemId: undefined }, { replace: true })
+    );
     refreshData();
   };
 
@@ -417,7 +424,6 @@ const ChannelsPage: Component = () => {
 
   const columns = () =>
     [
-      { key: 'id', title: t('common.id'), sortable: true },
       { key: 'name', title: t('common.name'), sortable: true },
       {
         key: 'default_playlist_name',

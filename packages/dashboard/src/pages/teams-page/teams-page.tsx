@@ -5,6 +5,7 @@ import {
   onCleanup,
   onMount,
   Show,
+  untrack,
 } from 'solid-js';
 
 import {
@@ -36,7 +37,11 @@ import { QuotaIndicator } from '../../components/quota-indicator';
 import { QuotasService, ResourceQuota } from '../../services/quotas.service';
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 import { useLocation } from '@solidjs/router';
-import { useModalFromUrl } from '../../hooks/useModalFromUrl';
+import {
+  useModalFromUrl,
+  detailUrlOptions,
+  closeDetailUrl,
+} from '../../hooks/useModalFromUrl';
 import { useTableCardLabels } from '../../hooks/useTableCardLabels';
 
 const TeamsPage: Component = () => {
@@ -137,6 +142,10 @@ const TeamsPage: Component = () => {
       setShowModal(false);
     },
     openModal: (itemId: string) => {
+      // Already shown by openTeamDrawer before the URL updated.
+      if (untrack(() => showModal() && String(currentTeam()?.id) === itemId)) {
+        return;
+      }
       const team = data().find((t) => String(t.id) === String(itemId));
       if (team) {
         setDrawerSession((session) => session + 1);
@@ -153,20 +162,22 @@ const TeamsPage: Component = () => {
 
   const columns = () =>
     [
-      { key: 'id', title: () => t('common.id'), sortable: true },
       { key: 'name', title: () => t('common.name'), sortable: true },
     ] as Column<Team>[];
 
   interface TeamTableItem extends Team {}
 
+  const openTeamDrawer = (item: TeamTableItem) => {
+    setDrawerSession((session) => session + 1);
+    setCurrentTeam(item);
+    setShowModal(true);
+    setSearchParams({ itemId: String(item.id) }, detailUrlOptions());
+  };
+
   const actions: TableAction<Team>[] = [
     {
       icon: BsEye,
-      handler: (item: TeamTableItem) => {
-        setDrawerSession((session) => session + 1);
-        setCurrentTeam(item);
-        setShowModal(true);
-      },
+      handler: openTeamDrawer,
       label: () => t('common.view'),
     },
     {
@@ -284,7 +295,9 @@ const TeamsPage: Component = () => {
     // Always close the drawer, including "new team" mode where itemId is absent.
     setDrawerSession((session) => session + 1);
     setShowModal(false);
-    setSearchParams({ itemId: undefined });
+    closeDetailUrl(() =>
+      setSearchParams({ itemId: undefined }, { replace: true })
+    );
   };
 
   const addTeam = () => {
@@ -435,9 +448,7 @@ const TeamsPage: Component = () => {
           onRowSelect,
           defaultRowAction: {
             icon: BsEye,
-            handler: (item: TeamTableItem) => {
-              setSearchParams({ itemId: String(item.id) });
-            },
+            handler: openTeamDrawer,
             label: t('common.view'),
           },
         }}

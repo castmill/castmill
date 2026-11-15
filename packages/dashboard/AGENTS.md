@@ -904,6 +904,24 @@ The Dashboard uses **URL-based routing** with organization context to ensure:
 - Browser back/forward buttons work as expected
 - Data reloads properly when switching organizations
 
+### Detail Drawers and Back Navigation
+
+Resource details (`?itemId=` or `/content/widgets/:id`) must behave like a
+page: browser/swipe back from an item returns to its list.
+
+- Open with `setSearchParams({ itemId }, detailUrlOptions())` (or
+  `navigate(url, detailUrlOptions())`). The first item pushes a marked history
+  entry; switching items while details are open replaces it. Never open with
+  `replace: true` (back would leave the list) or raw `history.pushState` (the
+  router misses it).
+- Close from the UI with
+  `closeDetailUrl(() => setSearchParams({ itemId: undefined }, { replace: true }))`:
+  it goes back to the list entry, or strips a deep-linked `itemId`.
+- Sync the drawer with `useModalFromUrl`; addons also need its `popstate`
+  listener because they don't share the dashboard router's reactivity.
+- The helpers live in `src/hooks/useModalFromUrl.ts` and, for addons,
+  `addons/common/hooks/use-modal-from-url.ts`.
+
 ### URL Pattern
 
 All authenticated routes include the organization ID:

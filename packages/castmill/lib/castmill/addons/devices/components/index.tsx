@@ -52,7 +52,12 @@ import './devices.scss';
 import RegisterDevice from './register-device';
 import { DevicesService } from '../services/devices.service';
 import { AddonComponentProps } from '../../common/interfaces/addon-store';
-import { useTeamFilter, useModalFromUrl } from '../../common/hooks';
+import {
+  useTeamFilter,
+  useModalFromUrl,
+  detailUrlOptions,
+  closeDetailUrl,
+} from '../../common/hooks';
 
 import { QuotaIndicator } from '../../common/components/quota-indicator';
 import {
@@ -440,7 +445,9 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
   const closeDeviceDrawer = () => {
     if (props.params) {
       const [, setSearchParams] = props.params;
-      setSearchParams({ itemId: undefined }, { replace: true });
+      closeDetailUrl(() =>
+        setSearchParams({ itemId: undefined }, { replace: true })
+      );
     }
     setShowDrawer(false);
   };
@@ -558,7 +565,7 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
 
     if (props.params) {
       const [, setSearchParams] = props.params;
-      setSearchParams({ itemId: String(item.id) }, { replace: true });
+      setSearchParams({ itemId: String(item.id) }, detailUrlOptions());
     }
   };
 

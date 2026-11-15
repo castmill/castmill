@@ -70,7 +70,12 @@ import {
   AddonStore,
   AddonComponentProps,
 } from '../../common/interfaces/addon-store';
-import { useTeamFilter, useModalFromUrl } from '../../common/hooks';
+import {
+  useTeamFilter,
+  useModalFromUrl,
+  detailUrlOptions,
+  closeDetailUrl,
+} from '../../common/hooks';
 import { getThumbnailProgress } from './thumbnail-status';
 import {
   tableCardLabels,
@@ -420,7 +425,9 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
   const closeMediaDrawer = () => {
     if (props.params) {
       const [, setSearchParams] = props.params;
-      setSearchParams({ itemId: undefined }, { replace: true });
+      closeDetailUrl(() =>
+        setSearchParams({ itemId: undefined }, { replace: true })
+      );
     }
     setShowDrawer(false);
   };
@@ -767,7 +774,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
 
     if (props.params) {
       const [, setSearchParams] = props.params;
-      setSearchParams({ itemId: String(item.id) }, { replace: true });
+      setSearchParams({ itemId: String(item.id) }, detailUrlOptions());
     }
   };
 
