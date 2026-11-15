@@ -54,6 +54,23 @@ enrollment tokens, but leaves dashboard credentials intact. The user must then
 enroll a new key using their root email/password. There is deliberately no
 email/password fallback or HTTP recovery endpoint after enrollment.
 
+### Network domains
+
+The dashboard picks the network from the domain it is served on, so every
+network needs a domain that serves the dashboard. Deployments that can create
+those domains configure a `Castmill.Networks.DomainProvider`:
+
+```elixir
+config :castmill, :network_domain_provider, MyApp.NetworkDomains
+```
+
+A network created or saved in the admin tool with an empty domain then gets
+the provider's generated domain (for example `net-a7f3b2c1.example.com`), and
+the provider registers it (DNS, hosting) so network admins can sign in right
+away. Registration failures are logged and do not undo the save; retry with
+`Castmill.Networks.register_domain(network)`. Without a provider the domain is
+required and must already serve the dashboard.
+
 Media files retain their storage URL in the database. When the server returns media
 information, it generates player-facing URLs using `MEDIA_PUBLIC_BASE_URL` if set,
 or the current Phoenix endpoint (local storage) or S3 endpoint (S3 storage) otherwise.

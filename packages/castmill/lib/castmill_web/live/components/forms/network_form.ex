@@ -19,7 +19,16 @@ defmodule CastmillWeb.Live.Admin.NetworkForm do
       >
         <.input field={@form[:name]} type="text" label="Name" />
         <.input field={@form[:email]} type="text" label="Email" />
-        <.input field={@form[:domain]} type="text" label="Domain" />
+        <.input
+          field={@form[:domain]}
+          type="text"
+          label="Domain"
+          placeholder={if @default_domains?, do: "Leave empty to generate one", else: nil}
+        />
+        <p :if={@default_domains?} class="text-xs text-gray-500">
+          Leave the domain empty to give the network a generated address (net-xxxxxxxx) that
+          works right away. Network admins can add their own domain later in the dashboard.
+        </p>
         <.input field={@form[:logo]} type="text" label="Logo (dark backgrounds)" />
         <.input field={@form[:logo_light]} type="text" label="Logo (light backgrounds)" />
         <.input field={@form[:copyright]} type="text" label="Copyright" />
@@ -53,6 +62,7 @@ defmodule CastmillWeb.Live.Admin.NetworkForm do
     {:ok,
      socket
      |> assign(assigns)
+     |> assign(:default_domains?, Networks.default_domains?())
      |> assign_form(changeset)
      |> assign(:valid?, form_valid?(changeset, network))}
   end
@@ -81,7 +91,7 @@ defmodule CastmillWeb.Live.Admin.NetworkForm do
 
         {:noreply,
          socket
-         |> put_flash(:info, "Network updated successfully")
+         |> put_flash(:info, "Network updated. Dashboard: https://#{network.domain}")
          |> push_patch(to: socket.assigns.patch)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
@@ -96,7 +106,7 @@ defmodule CastmillWeb.Live.Admin.NetworkForm do
 
         {:noreply,
          socket
-         |> put_flash(:info, "Network created successfully")
+         |> put_flash(:info, "Network created. Dashboard: https://#{network.domain}")
          |> push_patch(to: socket.assigns.patch)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
@@ -114,7 +124,10 @@ defmodule CastmillWeb.Live.Admin.NetworkForm do
       # New network - check required fields have values
       has_name = not is_nil(network.name) and network.name != ""
       has_email = not is_nil(network.email) and network.email != ""
-      has_domain = not is_nil(network.domain) and network.domain != ""
+
+      has_domain =
+        Networks.default_domains?() or (not is_nil(network.domain) and network.domain != "")
+
       changeset.valid? and has_name and has_email and has_domain
     else
       # Existing network - just use changeset validity
