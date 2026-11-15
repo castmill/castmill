@@ -19,6 +19,8 @@ import {
   validateChoicesValue,
   choicesErrorMessage,
   choicesFieldLabels,
+  isFieldVisible,
+  withoutHiddenOptions,
   type SchemaAttributeType,
 } from './widget-config';
 import { WidgetChoicesError } from '../services/playlists.service';
@@ -464,5 +466,90 @@ describe('WidgetConfig - Choices', () => {
     expect(labels.selected(3, 5)).toBe(
       'widgets.choices.selectedCountMax {"count":3,"max":5}'
     );
+  });
+});
+
+describe('WidgetConfig - Conditional fields', () => {
+  const entries = normalizeSchemaEntries({
+    mode: { type: 'string', enum: ['listing', 'listings'], default: 'listing' },
+    columns: { type: 'number', default: 1 },
+    show_logo: 'boolean',
+    estate_id: {
+      type: 'string',
+      required: true,
+      visible_when: { mode: ['listing'] },
+    },
+    max_listings: {
+      type: 'number',
+      visible_when: { mode: ['listings'], columns: [1, 2] },
+    },
+    logo: {
+      type: 'ref',
+      collection: 'medias',
+      visible_when: { show_logo: [true] },
+    },
+  });
+  const schema = (key: string) => entries.find(([field]) => field === key)?.[1];
+
+  it('shows fields without conditions', () => {
+    expect(isFieldVisible(schema('mode'), entries, {})).toBe(true);
+    expect(isFieldVisible('string', entries, {})).toBe(true);
+    expect(isFieldVisible(undefined, entries, {})).toBe(true);
+  });
+
+  it('compares the referenced values, falling back to their defaults', () => {
+    expect(isFieldVisible(schema('estate_id'), entries, {})).toBe(true);
+    expect(
+      isFieldVisible(schema('estate_id'), entries, { mode: null as any })
+    ).toBe(true);
+    expect(
+      isFieldVisible(schema('estate_id'), entries, { mode: 'listings' })
+    ).toBe(false);
+    expect(
+      isFieldVisible(schema('max_listings'), entries, { mode: 'listings' })
+    ).toBe(true);
+    expect(
+      isFieldVisible(schema('max_listings'), entries, {
+        mode: 'listings',
+        columns: 3,
+      })
+    ).toBe(false);
+    expect(isFieldVisible(schema('logo'), entries, {})).toBe(false);
+    expect(isFieldVisible(schema('logo'), entries, { show_logo: true })).toBe(
+      true
+    );
+  });
+
+  it('ignores malformed conditions instead of throwing', () => {
+    expect(
+      isFieldVisible(
+        { type: 'string', visible_when: { mode: 'listing' as any } },
+        entries,
+        { mode: 'listing' }
+      )
+    ).toBe(false);
+  });
+
+  it('drops the values of hidden fields', () => {
+    const options = {
+      mode: 'listings',
+      estate_id: '42',
+      max_listings: 5,
+      logo: { id: 'media-1' } as any,
+      overrides: { title: { text: 'Hi' } } as any,
+    };
+
+    expect(withoutHiddenOptions(options, entries)).toEqual({
+      mode: 'listings',
+      max_listings: 5,
+      overrides: { title: { text: 'Hi' } },
+    });
+    expect(normalizeWidgetOptionsForApi(options, entries)).toEqual({
+      mode: 'listings',
+      columns: undefined,
+      show_logo: undefined,
+      max_listings: 5,
+      overrides: { title: { text: 'Hi' } },
+    });
   });
 });

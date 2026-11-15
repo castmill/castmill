@@ -44,16 +44,27 @@ export interface ChoicesAttributes {
   depends_on?: string[];
 }
 
+/**
+ * Shows a top-level options field only while every referenced field (a
+ * string, number or boolean without its own condition) has one of the listed
+ * values, or its default does. Hidden fields are not required and their values
+ * are not saved.
+ */
+export type VisibleWhen = Record<string, Array<string | number | boolean>>;
+
 export interface FieldAttributes {
   type: SimpleType;
   required?: boolean;
-  default?: string | number;
+  default?: string | number | boolean;
   description?: string;
   min?: number;
   max?: number;
   order?: number;
+  /** Only on string fields: the allowed values, shown as a select. */
+  enum?: string[];
   /** Only on string fields. */
   choices?: ChoicesAttributes;
+  visible_when?: VisibleWhen;
 }
 
 export interface ReferenceAttributes {
@@ -61,6 +72,7 @@ export interface ReferenceAttributes {
   required?: boolean;
   collection: string;
   description?: string;
+  visible_when?: VisibleWhen;
 }
 
 export interface ComplexFieldAttributes {
@@ -68,6 +80,7 @@ export interface ComplexFieldAttributes {
   schema: Schema;
   required?: boolean;
   default?: any;
+  visible_when?: VisibleWhen;
 }
 
 /**
@@ -81,6 +94,7 @@ export interface ListFieldAttributes {
   description?: string;
   order?: number;
   choices?: ChoicesAttributes;
+  visible_when?: VisibleWhen;
 }
 
 /**
@@ -96,6 +110,7 @@ export interface LocationFieldAttributes {
   default?: LocationValue;
   /** Initial zoom level for the map (1-18, default: 13) */
   defaultZoom?: number;
+  visible_when?: VisibleWhen;
 }
 
 /**
@@ -148,6 +163,7 @@ export interface LayoutFieldAttributes {
   default?: LayoutOptionValue;
   /** Available aspect ratio presets */
   aspectRatios?: string[];
+  visible_when?: VisibleWhen;
 }
 
 /**
@@ -181,6 +197,7 @@ export interface LayoutRefFieldAttributes {
   required?: boolean;
   description?: string;
   order?: number;
+  visible_when?: VisibleWhen;
 }
 
 export type Schema = {

@@ -4,6 +4,7 @@ import { I18nProvider } from '../../i18n';
 import FeedPage, { entryFields, parseJsonObject } from './feed-page';
 import { curlExample } from './feed-connect';
 import { FeedsError, FeedsService } from '../../services/feeds.service';
+import { setStore } from '../../store/store';
 
 const toastSpies = { success: vi.fn(), error: vi.fn(), info: vi.fn() };
 const navigate = vi.fn();
@@ -315,6 +316,19 @@ describe('FeedPage', () => {
     vi.mocked(FeedsService.data).mockRejectedValueOnce(new Error('boom'));
     renderPage();
     await waitFor(() => expect(toastSpies.error).toHaveBeenCalledTimes(2));
+  });
+
+  it('waits for the organization on a direct link', async () => {
+    setStore('organizations', 'selectedId', null as unknown as string);
+    renderPage();
+    expect(FeedsService.get).not.toHaveBeenCalled();
+
+    setStore('organizations', 'selectedId', 'org-1');
+    await waitFor(() =>
+      expect(screen.getByText('Facebook posts')).toBeTruthy()
+    );
+    expect(FeedsService.get).toHaveBeenCalledWith('org-1', expect.anything());
+    expect(toastSpies.error).not.toHaveBeenCalled();
   });
 
   describe('Connect tab', () => {

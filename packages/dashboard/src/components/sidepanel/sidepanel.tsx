@@ -158,6 +158,7 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
 
   const handleKeyDown = (event: KeyboardEvent) => {
     if (event.key === 'Escape') {
+      if (event.defaultPrevented) return;
       event.preventDefault();
       navDrawer.close();
       return;

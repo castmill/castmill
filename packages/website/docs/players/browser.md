@@ -16,6 +16,8 @@ The browser player uses the same runtime as the installed players, so registrati
 2. Wait for the **Register Your Device** screen with the pincode and QR code.
 3. Register the player in the dashboard as described in [Players overview](overview.md#how-registration-works).
 
+<Screenshot src="first-screen-player" alt="The browser player showing its 10-character registration code and a QR code" />
+
 Unless server addresses were compiled into the player, it connects to the server it was loaded from. It stores its credentials and a randomly generated device ID in the browser's local storage for that origin, so the same browser profile reopens as the same registered device.
 
 ## Run the browser player as a kiosk

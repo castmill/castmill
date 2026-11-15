@@ -19,7 +19,7 @@ Any current browser supports passkeys, including Chrome, Edge, Safari and Firefo
 ## Create an account
 
 1. Open the dashboard address you were given, or http://localhost:3000 for a [local installation](./quick-start.md).
-2. Choose **Sign up** and enter your email address.
+2. Under **Sign Up**, enter your email address and choose **Continue**.
 3. Open the email from Castmill and follow the link. The link only works for a limited time.
 4. Choose **Continue with Passkey** and confirm the prompt from your browser or device.
 
@@ -34,8 +34,10 @@ A network administrator can require an invitation for every new account. In that
 ## Sign in
 
 1. Open the dashboard.
-2. Enter your email address and choose **Login with Passkey**.
-3. Confirm the prompt from your browser or device.
+2. Choose **Login with Passkey**.
+3. Choose your passkey and confirm the prompt from your browser or device.
+
+<Screenshot src="login" alt="The login page with the Login with Passkey button and the Sign Up form" />
 
 A session lasts 24 hours. After that, the dashboard asks you to sign in again.
 
@@ -48,6 +50,8 @@ Register a passkey on each device you use, so that losing one device does not lo
 3. Confirm the prompt on the new device or browser.
 
 You can rename passkeys to recognize them later, for example "Work laptop". You can delete a passkey as long as at least one remains.
+
+<Screenshot src="settings-passkeys" alt="Your Passkeys with two passkeys and the Add New Passkey button" />
 
 ## Recover access
 

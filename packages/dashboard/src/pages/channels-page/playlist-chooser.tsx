@@ -1,5 +1,5 @@
 import { JsonPlaylist } from '@castmill/player';
-import { Component, createEffect, createSignal, For, Show } from 'solid-js';
+import { Component, createSignal, For, onMount, Show } from 'solid-js';
 import { PlaylistChooserItem } from './playlist-chooser-item';
 
 import style from './playlist-chooser.module.scss';
@@ -8,6 +8,8 @@ import { ChannelsService } from '../../services/channels.service';
 import { baseUrl } from '../../env';
 import { store } from '../../store';
 import { useI18n } from '../../i18n';
+
+const PLAYLIST_PAGE_SIZE = 100;
 
 interface PlaylistChooserProps {
   onDragOverCell?: (
@@ -19,6 +21,8 @@ interface PlaylistChooserProps {
    * is the wrapping strip shown above the calendar on tablets.
    */
   variant?: 'panel' | 'strip';
+  /** Called with the organization's playlists once they are loaded. */
+  onPlaylistsLoaded?: (playlists: JsonPlaylist[]) => void;
 }
 
 export const PlaylistChooser: Component<PlaylistChooserProps> = (props) => {
@@ -29,20 +33,91 @@ export const PlaylistChooser: Component<PlaylistChooserProps> = (props) => {
     store.organizations.selectedId!
   );
   const [playlists, setPlaylists] = createSignal<JsonPlaylist[]>([]);
+  const [loadedPages, setLoadedPages] = createSignal(
+    new Map<number, JsonPlaylist[]>()
+  );
+  const [pageCount, setPageCount] = createSignal<number>();
+  const [failedPages, setFailedPages] = createSignal<number[]>([]);
+  const [loading, setLoading] = createSignal(false);
 
-  createEffect(async () => {
-    // TODO: we should support pagination here.
-    const { data } = await channelsService.fetchPlaylists({
+  const fetchPage = (num: number) =>
+    channelsService.fetchPlaylists({
       page: {
-        num: 1,
-        size: 100,
+        num,
+        size: PLAYLIST_PAGE_SIZE,
       },
       sortOptions: {
         key: 'name',
         direction: 'ascending',
       },
     });
-    setPlaylists(data);
+
+  const publishPlaylists = (pages: Map<number, JsonPlaylist[]>) => {
+    const allPlaylists = Array.from(pages.entries())
+      .sort(([first], [second]) => first - second)
+      .flatMap(([, data]) => data);
+
+    setPlaylists(allPlaylists);
+    props.onPlaylistsLoaded?.(allPlaylists);
+  };
+
+  const fetchPages = async (pageNumbers: number[]) => {
+    if (pageNumbers.length === 0) return;
+
+    setLoading(true);
+    const results = await Promise.all(
+      pageNumbers.map(async (page) => {
+        try {
+          return { page, result: await fetchPage(page) };
+        } catch {
+          return { page, error: true };
+        }
+      })
+    );
+    const pages = new Map(loadedPages());
+    const failed = new Set(failedPages());
+    let updated = false;
+
+    for (const response of results) {
+      if ('result' in response) {
+        pages.set(response.page, response.result.data);
+        failed.delete(response.page);
+        updated = true;
+        if (response.page === 1) {
+          setPageCount(Math.ceil(response.result.count / PLAYLIST_PAGE_SIZE));
+        }
+      } else {
+        failed.add(response.page);
+      }
+    }
+
+    setLoadedPages(pages);
+    setFailedPages(Array.from(failed).sort((first, second) => first - second));
+    if (updated) publishPlaylists(pages);
+    setLoading(false);
+  };
+
+  const loadMissingPages = async () => {
+    const count = pageCount();
+    if (count === undefined) return;
+
+    const loaded = loadedPages();
+    const failed = new Set(failedPages());
+    const missing = Array.from(
+      { length: count },
+      (_, index) => index + 1
+    ).filter((page) => !loaded.has(page) && !failed.has(page));
+    await fetchPages(missing);
+  };
+
+  const retryFailedPages = async () => {
+    await fetchPages(failedPages());
+    await loadMissingPages();
+  };
+
+  onMount(async () => {
+    await fetchPages([1]);
+    await loadMissingPages();
   });
 
   return (
@@ -52,6 +127,18 @@ export const PlaylistChooser: Component<PlaylistChooserProps> = (props) => {
         fallback={<h2>{t('channels.dragPlaylists')}</h2>}
       >
         <p class={style.hint}>{t('channels.dragPlaylists')}</p>
+      </Show>
+      <Show when={failedPages().length > 0}>
+        <div role="alert">
+          <span>
+            {t('channels.errors.loadPlaylists', {
+              pages: failedPages().join(', '),
+            })}
+          </span>
+          <button type="button" disabled={loading()} onClick={retryFailedPages}>
+            {t('channels.retryPlaylists')}
+          </button>
+        </div>
       </Show>
       <div class={style.playlistsList} data-testid="playlist-chooser-list">
         <For each={playlists()}>

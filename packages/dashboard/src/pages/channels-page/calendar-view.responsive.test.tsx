@@ -6,6 +6,7 @@ import {
   screen,
   waitFor,
 } from '@solidjs/testing-library';
+import { onMount } from 'solid-js';
 import { COMBOBOX_SHEET_QUERY } from '@castmill/ui-common';
 import { I18nProvider } from '../../i18n';
 import {
@@ -29,12 +30,18 @@ vi.mock('../../services/channels.service', () => ({
   },
 }));
 vi.mock('./playlist-chooser', () => ({
-  PlaylistChooser: (props: { variant?: string }) => (
-    <div
-      data-testid="playlist-chooser"
-      data-variant={props.variant ?? 'panel'}
-    />
-  ),
+  PlaylistChooser: (props: {
+    variant?: string;
+    onPlaylistsLoaded?: (playlists: { id: number; name: string }[]) => void;
+  }) => {
+    onMount(() => props.onPlaylistsLoaded?.([{ id: 2, name: 'test' }]));
+    return (
+      <div
+        data-testid="playlist-chooser"
+        data-variant={props.variant ?? 'panel'}
+      />
+    );
+  },
 }));
 vi.mock('./default-playlist-combobox', () => ({
   DefaultPlaylistComboBox: () => null,
@@ -224,7 +231,7 @@ describe('CalendarView responsive layouts', () => {
 
       const toggle = screen.getByRole('button', { name: 'Playlists' });
       expect(toggle).toHaveAttribute('aria-expanded', 'false');
-      expect(screen.queryByTestId('playlist-chooser')).not.toBeInTheDocument();
+      expect(screen.getByTestId('playlist-chooser')).not.toBeVisible();
 
       fireEvent.click(toggle);
       expect(toggle).toHaveAttribute('aria-expanded', 'true');
@@ -234,7 +241,7 @@ describe('CalendarView responsive layouts', () => {
       );
 
       fireEvent.click(toggle);
-      expect(screen.queryByTestId('playlist-chooser')).not.toBeInTheDocument();
+      expect(screen.getByTestId('playlist-chooser')).not.toBeVisible();
     }
   );
 
@@ -250,7 +257,7 @@ describe('CalendarView responsive layouts', () => {
     expect(
       screen.queryByRole('button', { name: 'Playlists' })
     ).not.toBeInTheDocument();
-    expect(screen.queryByTestId('playlist-chooser')).not.toBeInTheDocument();
+    expect(screen.getByTestId('playlist-chooser')).not.toBeVisible();
     await waitFor(() =>
       expect(onWeekChange.mock.lastCall![0]).toBe(WEEK_START)
     );

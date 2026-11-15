@@ -92,7 +92,8 @@ export function calendarEntryToTimestamps(
 
 export function timestampsToCalendarEntry(
   dbEntry: JsonChannelEntry,
-  timezone: string
+  timezone: string,
+  playlistName = ''
 ): CalendarEntry {
   // Convert UTC timestamps to zoned time
   const startDate = toZonedTime(new Date(dbEntry.start), timezone);
@@ -129,7 +130,7 @@ export function timestampsToCalendarEntry(
   return {
     id: dbEntry.id,
     title,
-    playlist: { id: dbEntry.playlist_id, name: 'test' },
+    playlist: { id: dbEntry.playlist_id, name: playlistName },
     startHour,
     startMinute,
     endHour,

@@ -160,6 +160,22 @@ describe('SidePanel responsive navigation', () => {
     expect(navDrawer.isOpen()).toBe(false);
   });
 
+  it('keeps the drawer open when a nested control handles Escape', () => {
+    mockViewport(PHONE);
+    renderPanel();
+    navDrawer.open();
+
+    const nestedControl = document.createElement('button');
+    nestedControl.addEventListener('keydown', (event) =>
+      event.preventDefault()
+    );
+    panel().append(nestedControl);
+    fireEvent.keyDown(nestedControl, { key: 'Escape' });
+
+    expect(navDrawer.isOpen()).toBe(true);
+    nestedControl.remove();
+  });
+
   it('closes on navigation', () => {
     mockViewport(PHONE);
     renderPanel();

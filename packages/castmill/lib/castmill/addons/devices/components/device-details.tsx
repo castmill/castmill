@@ -28,7 +28,9 @@ export const DeviceDetails = (props: {
     props.t?.(key, params) || props.store?.i18n?.t(key, params) || key;
 
   const [name, setName] = createSignal(props.device.name);
-  const [description, setDescription] = createSignal(props.device.description);
+  // Devices without a description have none (null), shown as an empty field.
+  const savedDescription = () => props.device.description ?? '';
+  const [description, setDescription] = createSignal(savedDescription());
   const [orientation, setOrientation] = createSignal<Orientation>(
     props.device.orientation ?? 0
   );
@@ -56,7 +58,7 @@ export const DeviceDetails = (props: {
 
   const resetForm = () => {
     setName(props.device.name);
-    setDescription(props.device.description);
+    setDescription(savedDescription());
     setOrientation(props.device.orientation ?? 0);
     setIsFormModified(false);
     setPickerOpen(false);
@@ -108,7 +110,7 @@ export const DeviceDetails = (props: {
   createEffect(() => {
     setIsFormModified(
       name() !== props.device.name ||
-        description() !== props.device.description ||
+        description() !== savedDescription() ||
         orientation() !== (props.device.orientation ?? 0)
     );
   });

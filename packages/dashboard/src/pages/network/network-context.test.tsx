@@ -4,6 +4,7 @@ import { I18nProvider } from '../../i18n';
 import { NetworkProvider, useNetworkContext } from './network-context';
 import { NetworkService } from '../../services/network.service';
 import { Component } from 'solid-js';
+import { createStore } from 'solid-js/store';
 
 vi.mock('../../services/network.service', () => ({
   NetworkService: {
@@ -12,7 +13,9 @@ vi.mock('../../services/network.service', () => ({
   },
 }));
 
-let mockStoreState = { network: { isAdmin: true } };
+let mockStoreState: { network: { loaded: boolean; isAdmin: boolean } } = {
+  network: { loaded: true, isAdmin: true },
+};
 
 vi.mock('../../store', () => ({
   get store() {
@@ -70,7 +73,7 @@ const renderProvider = () =>
 describe('NetworkProvider', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockStoreState = { network: { isAdmin: true } };
+    mockStoreState = { network: { loaded: true, isAdmin: true } };
   });
 
   it('loads settings and stats for admin users', async () => {
@@ -86,7 +89,7 @@ describe('NetworkProvider', () => {
   });
 
   it('shows access denied for non-admin users', async () => {
-    mockStoreState = { network: { isAdmin: false } };
+    mockStoreState = { network: { loaded: true, isAdmin: false } };
 
     renderProvider();
 
@@ -95,6 +98,26 @@ describe('NetworkProvider', () => {
     });
 
     expect(NetworkService.getSettings).not.toHaveBeenCalled();
+  });
+
+  it('waits for the admin status before checking access', async () => {
+    vi.mocked(NetworkService.getSettings).mockResolvedValue(mockSettings);
+    vi.mocked(NetworkService.getStats).mockResolvedValue(mockStats);
+    const [state, setState] = createStore({
+      network: { loaded: false, isAdmin: false },
+    });
+    mockStoreState = state;
+
+    renderProvider();
+    expect(screen.queryByText(/access denied/i)).not.toBeInTheDocument();
+    expect(NetworkService.getSettings).not.toHaveBeenCalled();
+
+    setState('network', { loaded: true, isAdmin: true });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('name').textContent).toBe('Test Network');
+    });
+    expect(screen.queryByText(/access denied/i)).not.toBeInTheDocument();
   });
 
   it('shows error state when API fails', async () => {

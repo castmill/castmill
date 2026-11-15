@@ -141,7 +141,11 @@ export const Drawer: Component<DrawerProps> = (_props) => {
       return;
     }
 
-    if (event.key === 'Escape' && isTopDrawer(drawerId)) {
+    if (
+      event.key === 'Escape' &&
+      !event.defaultPrevented &&
+      isTopDrawer(drawerId)
+    ) {
       closeDrawer();
     }
   };

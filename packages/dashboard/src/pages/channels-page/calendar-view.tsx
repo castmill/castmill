@@ -9,7 +9,7 @@ import {
   Show,
   batch,
 } from 'solid-js';
-import { createStore } from 'solid-js/store';
+import { createStore, produce } from 'solid-js/store';
 import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
 
 import { CalendarEntryBox } from './calendar-entry-box';
@@ -267,6 +267,27 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
   }
 
   const [entries, setEntries] = createStore<CalendarEntry[]>([]);
+  // Entries only carry the playlist ID; names come from the playlist chooser.
+  const [playlistNames, setPlaylistNames] = createSignal(
+    new Map<number, string>()
+  );
+
+  createEffect(() => {
+    const names = playlistNames();
+    setEntries(
+      produce((list) =>
+        list.forEach((entry) => {
+          const name = names.get(entry.playlist.id);
+          if (name !== undefined) entry.playlist.name = name;
+        })
+      )
+    );
+  });
+
+  const onPlaylistsLoaded = (playlists: JsonPlaylist[]) =>
+    setPlaylistNames(
+      new Map(playlists.map((playlist) => [playlist.id, playlist.name]))
+    );
 
   /**
    * Whether `candidate` fits in the visible week without overlapping any
@@ -390,7 +411,11 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
     if (result) {
       setEntries(
         result.map((entry: JsonChannelEntry) =>
-          timestampsToCalendarEntry(entry, props.timeZone)
+          timestampsToCalendarEntry(
+            entry,
+            props.timeZone,
+            playlistNames().get(entry.playlist_id)
+          )
         )
       );
     }
@@ -783,25 +808,32 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
                       aria-hidden="true"
                     />
                   </button>
-                  <Show when={chooserOpen()}>
-                    <div
-                      id={`channel-${props.channel.id}-playlists`}
-                      class={styles['chooser-strip']}
-                    >
-                      <PlaylistChooser
-                        variant="strip"
-                        onDragOverCell={handleDragOverCell}
-                      />
-                    </div>
-                  </Show>
                 </Show>
-                <p class={styles['tap-hint']}>
-                  {t('channels.calendar.tapToAdd')}
-                </p>
+                <div
+                  id={`channel-${props.channel.id}-playlists`}
+                  class={styles['chooser-strip']}
+                  style={{
+                    display: !dayView() && chooserOpen() ? 'block' : 'none',
+                  }}
+                >
+                  <PlaylistChooser
+                    variant="strip"
+                    onDragOverCell={handleDragOverCell}
+                    onPlaylistsLoaded={onPlaylistsLoaded}
+                  />
+                </div>
+                <Show when={!dayView()}>
+                  <p class={styles['tap-hint']}>
+                    {t('channels.calendar.tapToAdd')}
+                  </p>
+                </Show>
               </>
             }
           >
-            <PlaylistChooser onDragOverCell={handleDragOverCell} />
+            <PlaylistChooser
+              onDragOverCell={handleDragOverCell}
+              onPlaylistsLoaded={onPlaylistsLoaded}
+            />
           </Show>
         </div>
         <div class={styles['calendar-wrapper']}>

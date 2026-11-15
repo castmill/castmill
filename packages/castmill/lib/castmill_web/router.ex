@@ -360,6 +360,20 @@ defmodule CastmillWeb.Router do
     put("/network/settings", NetworkDashboardController, :update_settings)
     get("/network/stats", NetworkDashboardController, :show_stats)
     get("/network/widgets", NetworkDashboardController, :list_widgets)
+    post("/network/widgets", NetworkDashboardController, :upload_widget)
+    delete("/network/widgets/:widget_id", NetworkDashboardController, :delete_widget)
+
+    get(
+      "/network/widgets/:widget_id/packages",
+      NetworkDashboardController,
+      :list_widget_packages
+    )
+
+    get(
+      "/network/widgets/:widget_id/packages/:version",
+      NetworkDashboardController,
+      :download_widget_package
+    )
 
     get(
       "/network/widgets/:widget_id/organizations",

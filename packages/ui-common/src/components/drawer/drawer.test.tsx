@@ -90,6 +90,23 @@ describe('Drawer Component', () => {
     expect(onClose).toHaveBeenCalled();
   });
 
+  it('does not close when a nested menu handles Escape', () => {
+    const onClose = vi.fn();
+    const menuTrigger = document.createElement('button');
+    menuTrigger.addEventListener('keydown', (event) => event.preventDefault());
+
+    render(() => (
+      <Drawer title="Menu" onClose={onClose}>
+        {menuTrigger}
+      </Drawer>
+    ));
+
+    fireEvent.keyDown(menuTrigger, { key: 'Escape' });
+    vi.runAllTimers();
+
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
   it('focuses the panel without scrolling it into view while it slides in', () => {
     const focusSpy = vi.spyOn(HTMLElement.prototype, 'focus');
 
