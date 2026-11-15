@@ -351,6 +351,23 @@ describe('TableView Component - Sorting Functionality', () => {
     });
   });
 
+  it('replaces a marked detail history entry when sorting', async () => {
+    const setParams = vi.fn();
+    window.history.replaceState({ castmillDetail: true }, '', '/?itemId=1');
+    render(() => <TableView {...defaultProps} params={[{}, setParams]} />);
+
+    await screen.findByText('Resource A');
+    fireEvent.click(screen.getByText('Created'));
+
+    await waitFor(() =>
+      expect(setParams).toHaveBeenCalledWith(
+        expect.objectContaining({ sortKey: 'created' }),
+        { replace: true, scroll: false }
+      )
+    );
+    window.history.replaceState(null, '', '/');
+  });
+
   it('updates sort options when column header is clicked', async () => {
     mockFetchData.mockClear();
     render(() => <TableView {...defaultProps} />);

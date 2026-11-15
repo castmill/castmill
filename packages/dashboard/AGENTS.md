@@ -930,6 +930,10 @@ page: browser/swipe back from an item returns to its list.
 - Close from the UI with
   `closeDetailUrl(() => setSearchParams({ itemId: undefined }, { replace: true }))`:
   it goes back to the list entry, or strips a deep-linked `itemId`.
+- List navigation (pagination, search, sort, filters) in `TableView` replaces a
+  marked detail entry and drops its mark, so closing then pressing Back cannot
+  reopen the detail. Other query-only list navigation while details are open
+  should do the same.
 - Sync the drawer with `useModalFromUrl`; addons also need its `popstate`
   listener because they don't share the dashboard router's reactivity.
 - The helpers live in `src/hooks/useModalFromUrl.ts` and, for addons,

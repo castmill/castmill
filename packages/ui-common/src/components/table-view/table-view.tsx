@@ -190,8 +190,18 @@ export const TableView = <
   }) => {
     if (props.params) {
       const [searchParams, setSearchParamsEx] = props.params;
-      console.log('setSearchParams', params);
-      setSearchParamsEx({ ...searchParams, ...params });
+      // While a detail opened from the list has its own marked history entry
+      // (see the dashboard's detailUrlOptions), list navigation replaces that
+      // entry and drops the mark. Pushing would leave the marked detail entry
+      // behind, so closing the detail and going Back would reopen it.
+      if (window.history.state?.castmillDetail) {
+        setSearchParamsEx(
+          { ...searchParams, ...params },
+          { replace: true, scroll: false }
+        );
+      } else {
+        setSearchParamsEx({ ...searchParams, ...params });
+      }
     } else {
       setFallbackParams({ ...fallbackParams(), ...params });
     }
