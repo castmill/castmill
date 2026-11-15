@@ -116,6 +116,10 @@ defmodule CastmillWeb.Live.Admin.AdminPagesTest do
         Enum.map(~w(organizations invitations), &"/admin/networks/#{ids.network}/#{&1}/new") ++
         ["/admin/organizations/#{ids.organization}/show/edit"] ++
         Enum.map(@organization_tabs, &"/admin/organizations/#{ids.organization}/#{&1}") ++
+        [
+          "/admin/organizations/#{ids.organization}/unknown",
+          "/admin/organizations/#{ids.organization}/unknown/new"
+        ] ++
         Enum.map(
           ~w(organizations teams users devices),
           &"/admin/organizations/#{ids.organization}/#{&1}/new"
@@ -142,6 +146,18 @@ defmodule CastmillWeb.Live.Admin.AdminPagesTest do
 
       for {event, value} <- actions do
         render_click(view, event, value)
+
+        if event == "block" do
+          unblock =
+            view
+            |> render()
+            |> offered_actions()
+            |> Enum.find(fn {name, _value} -> name == "unblock" end)
+
+          assert unblock, "blocking an organization should offer Unblock"
+          {unblock_event, unblock_value} = unblock
+          render_click(view, unblock_event, unblock_value)
+        end
       end
     end
   end
