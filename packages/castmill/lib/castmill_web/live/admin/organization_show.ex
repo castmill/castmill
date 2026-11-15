@@ -215,7 +215,14 @@ defmodule CastmillWeb.Live.Admin.OrganizationShow do
   end
 
   defp resources_for_organization(organization_id, "users") do
-    {Organizations.list_users(organization_id) || [],
+    members =
+      %{organization_id: organization_id, page_size: nil}
+      |> Organizations.list_users()
+      |> Enum.map(fn %{user: user, role: role, inserted_at: inserted_at} ->
+        %{id: user.id, name: user.name, email: user.email, role: role, inserted_at: inserted_at}
+      end)
+
+    {members,
      [
        %{
          name: "ID",
@@ -234,7 +241,7 @@ defmodule CastmillWeb.Live.Admin.OrganizationShow do
          field: :role
        },
        %{
-         name: "Created",
+         name: "Added",
          field: :inserted_at
        }
      ]}
