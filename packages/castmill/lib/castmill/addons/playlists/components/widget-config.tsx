@@ -46,7 +46,10 @@ import {
   WidgetChoicesError,
 } from '../services/playlists.service';
 import { AddonStore } from '../../common/interfaces/addon-store';
-import { getTranslatedWidgetOption } from '../../common/utils/widget-catalog-utils';
+import {
+  getTranslatedWidgetOption,
+  getTranslatedWidgetOptionValue,
+} from '../../common/utils/widget-catalog-utils';
 
 import './widget-config.scss';
 import { WidgetView } from './widget-view';
@@ -209,12 +212,55 @@ export const normalizeWidgetOptionsForIntegration = (
   return normalized;
 };
 
+/**
+ * True when a field is shown for the current options: it has no
+ * `visible_when`, or every referenced field's value (or its default) is one of
+ * the listed values. Hidden fields are not required and not saved.
+ */
+export const isFieldVisible = (
+  schema: SchemaAttributeType | undefined,
+  schemaEntries: [string, SchemaAttributeType][],
+  options: Record<string, unknown>
+): boolean => {
+  const conditions =
+    schema && typeof schema === 'object' ? schema.visible_when : undefined;
+  if (!conditions) return true;
+  return Object.entries(conditions).every(([key, values]) => {
+    let value = options[key];
+    if (value === undefined || value === null) {
+      const target = schemaEntries.find(([field]) => field === key)?.[1];
+      value =
+        target && typeof target === 'object'
+          ? (target as { default?: unknown }).default
+          : undefined;
+    }
+    return (
+      Array.isArray(values) && (values as unknown[]).some((v) => v === value)
+    );
+  });
+};
+
+/** The options without the values of hidden fields. */
+export const withoutHiddenOptions = (
+  options: OptionsDict,
+  schemaEntries: [string, SchemaAttributeType][]
+): OptionsDict => {
+  const visible = { ...options };
+  for (const [key, schema] of schemaEntries) {
+    if (!isFieldVisible(schema, schemaEntries, options)) delete visible[key];
+  }
+  return visible;
+};
+
 const normalizeSchemaOptions = (
   options: OptionsDict,
   schemaEntries: [string, SchemaAttributeType][]
 ): Record<string, any> =>
   schemaEntries.reduce(
     (normalizedOptions, [key, schema]) => {
+      if (!isFieldVisible(schema, schemaEntries, options)) {
+        return normalizedOptions;
+      }
       const value = options[key];
       const type =
         typeof schema === 'string'
@@ -549,6 +595,14 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
       locale()
     );
 
+  const translateWidgetOptionValue = (optionKey: string, value: string) =>
+    getTranslatedWidgetOptionValue(
+      props.item.widget,
+      optionKey,
+      value,
+      locale()
+    );
+
   // Fetch ancestor playlist IDs to prevent circular references
   createEffect(async () => {
     try {
@@ -738,6 +792,8 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
     const options = widgetOptions();
 
     for (const [key, schema] of entries) {
+      if (!isFieldVisible(schema, entries, options)) continue;
+
       // Check layout-ref fields have all zones assigned
       const fieldType = getFormType(schema);
       if (fieldType === 'layout-ref') {
@@ -1047,7 +1103,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
               >
                 {enumOptions.map((option) => (
                   <option value={option} selected={option === currentValue}>
-                    {option}
+                    {translateWidgetOptionValue(key, option)}
                   </option>
                 ))}
               </select>
@@ -1436,18 +1492,22 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
                 widgetOptions(),
                 schemaEntries
               );
+              const expandedOptions = withoutHiddenOptions(
+                widgetOptions(),
+                schemaEntries
+              );
 
               try {
                 await props.onSubmit({
                   config: { options },
-                  expandedOptions: widgetOptions(),
+                  expandedOptions,
                 });
 
                 // Update widgetConfig with the new options so WidgetView
                 // can reactively fetch new integration data
                 setWidgetConfig((prev) => ({
                   ...prev,
-                  options: widgetOptions(),
+                  options: expandedOptions,
                 }));
               } catch (err) {
                 toast.error(`Error submitting form ${(err as Error).message}`);
@@ -1459,9 +1519,13 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
         >
           <div class="form-inputs">
             <For each={schemaEntries}>
-              {([key, schema]) => {
-                return componentForItem(key, schema);
-              }}
+              {([key, schema]) => (
+                <Show
+                  when={isFieldVisible(schema, schemaEntries, widgetOptions())}
+                >
+                  {(visible) => visible && componentForItem(key, schema)}
+                </Show>
+              )}
             </For>
             <Show when={showTextOverrides}>
               <TextOverridesList
@@ -1523,7 +1587,13 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
         <header class="preview-header" aria-hidden="true">
           <h3>{t('common.preview')}</h3>
         </header>
-        <Show when={textOverridesEnabled}>
+        {/* Only while the preview shows editable texts: e.g. a widget that
+            rotates through listings has none to edit. */}
+        <Show
+          when={
+            textOverridesEnabled && (seenLabels().size > 0 || editingTexts())
+          }
+        >
           <div class="preview-toolbar">
             <Button
               label={
@@ -1552,7 +1622,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
             <WidgetView
               widget={props.item.widget}
               config={widgetConfig()}
-              options={widgetOptions()}
+              options={withoutHiddenOptions(widgetOptions(), schemaEntries)}
               previewData={previewData()}
               locale={displayLocale()}
               previewDiscriminatorId={previewDiscriminatorId()}

@@ -227,6 +227,20 @@ arrays can themselves be bindings:
 
 Iterates over data arrays to create repeated elements (menus, schedules, feeds).
 
+`paginated-list` shows the items page by page. By default it mounts every page and cross-fades
+between them. With `opts.activeOnly: true` (`active-pages.tsx`) it mounts only the current page,
+on a page-local timeline, which lists of videos require. Active-only lists also support:
+
+- `pageDuration: "auto"`: each page lasts as long as its timeline (e.g. an image carousel's
+  photos), measured when the page is ready; untimed pages last 10 s and unseen pages are
+  estimated from the average of measured ones. The list's timeline item is updated as pages are
+  measured, keeping the current page in place.
+- `resume: true`: the page to continue from is remembered per list name and widget options, so a
+  list longer than its playlist item continues on the next play (also when the same mounted
+  widget is played again from the start).
+- `transition: "slide-left"` with `transitionDuration` (seconds, default 1): the next page is
+  mounted hidden 3 s before it is due and slides in once ready. Seeking cuts instead.
+
 ### Group
 
 Container for organizing multiple components with shared styling.

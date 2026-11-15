@@ -88,13 +88,15 @@ export class Player extends EventEmitter {
     let restartScheduled = false;
     const timer$ = this.playlist.seek(startTime).pipe(
       first(),
-      concatMap(([time, duration]) => {
+      concatMap(([time]) => {
         let currTime = time;
+        // Wrap at the current playlist duration, so a duration measured
+        // during playback moves the loop boundary instead of cutting items.
         return timer(
           baseline,
           time,
           TIMER_RESOLUTION,
-          duration,
+          () => this.playlist.duration(),
           opts.loop === true
         ).pipe(
           tap((value) => {
@@ -194,26 +196,42 @@ export class Player extends EventEmitter {
 }
 
 // Custom timer. Simpler than RxJS and more accurate.
+// A dynamic period (e.g. a playlist whose item durations are measured during
+// playback) wraps at the current period while keeping the time continuous.
 export function timer(
   baseline: number,
   start: number,
   interval: number,
-  period: number,
+  period: number | (() => number),
   loop = true
 ) {
   return new Observable<number>((subscriber) => {
     let timeout: ReturnType<typeof setTimeout> | undefined;
+    let position: number | undefined;
+    let lastElapsed = 0;
 
-    const hasValidPeriod = Number.isFinite(period) && period > 0;
+    const currentPeriod = () => {
+      const value = typeof period === 'function' ? period() : period;
+      return loop && Number.isFinite(value) && value > 0 ? value : 0;
+    };
     const normalize = (value: number, modulo: number) =>
       ((value % modulo) + modulo) % modulo;
 
     const updateTick = () => {
       const elapsed = Date.now() - baseline;
-      const tick =
-        loop && hasValidPeriod
-          ? normalize(start + elapsed, period)
-          : start + elapsed;
+      const delta = elapsed - lastElapsed;
+      lastElapsed = elapsed;
+      const cycle = currentPeriod();
+      let tick: number;
+      if (position === undefined) {
+        tick = start + elapsed;
+        if (cycle) tick = normalize(tick, cycle);
+      } else if (!cycle) {
+        tick = position + delta;
+      } else {
+        tick = normalize(position + delta, cycle);
+      }
+      position = tick;
 
       subscriber.next(tick);
       if (subscriber.closed) return;

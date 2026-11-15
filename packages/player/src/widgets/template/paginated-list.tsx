@@ -29,8 +29,10 @@ import { ActivePages } from './active-pages';
 export interface PaginatedListComponentOptions {
   /**
    * Duration in seconds to display each page before transitioning to the next.
+   * With `activeOnly`, "auto" makes each page last as long as its content
+   * timeline, e.g. the photos of an image carousel.
    */
-  pageDuration: number;
+  pageDuration: number | 'auto';
 
   /**
    * Maximum number of items to display per page.
@@ -46,6 +48,18 @@ export interface PaginatedListComponentOptions {
 
   /** Mount only the current page; required for lists containing videos. */
   activeOnly?: boolean;
+
+  /**
+   * With `activeOnly`: a new play continues where the previous play of the
+   * same list (same name and widget options) stopped.
+   */
+  resume?: boolean;
+
+  /** With `activeOnly`: how pages change. Defaults to "none" (a cut). */
+  transition?: 'none' | 'slide-left';
+
+  /** Transition duration in seconds. Defaults to 1. */
+  transitionDuration?: number;
 }
 
 /**
@@ -137,6 +151,14 @@ export class PaginatedListComponent implements TemplateComponent {
       pageSize: resolveOption(opts.pageSize, config, context, globals),
       items: resolvedItems,
       activeOnly: resolveOption(opts.activeOnly, config, context, globals),
+      resume: resolveOption(opts.resume, config, context, globals),
+      transition: resolveOption(opts.transition, config, context, globals),
+      transitionDuration: resolveOption(
+        opts.transitionDuration,
+        config,
+        context,
+        globals
+      ),
     };
   }
 }
@@ -160,6 +182,10 @@ export const PaginatedList: Component<PaginatedListProps> = (props) => {
     </Show>
   );
 };
+
+// "auto" is only supported with activeOnly; the animated list uses the default.
+const pageSeconds = (opts: PaginatedListComponentOptions) =>
+  opts.pageDuration === 'auto' ? 10 : opts.pageDuration;
 
 const AllPages: Component<PaginatedListProps> = (props) => {
   const [pages, setPages] = createSignal<any[][]>([]);
@@ -248,7 +274,7 @@ const AllPages: Component<PaginatedListProps> = (props) => {
 
     const durationSeconds =
       currentPages.length === 1
-        ? props.opts.pageDuration
+        ? pageSeconds(props.opts)
         : gsapTimeline.duration();
     const totalDurationMs = durationSeconds * 1000;
 
@@ -381,7 +407,7 @@ const AllPages: Component<PaginatedListProps> = (props) => {
                 gsapTimeline={gsapTimeline}
                 pageIndex={i()}
                 totalPages={pages().length}
-                duration={props.opts.pageDuration}
+                duration={pageSeconds(props.opts)}
                 skipAnimation={pages().length === 1}
                 resourceManager={props.resourceManager}
                 globals={props.globals}

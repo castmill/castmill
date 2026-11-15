@@ -56,3 +56,23 @@ export const getTranslatedWidgetOption = (
     fallback
   );
 };
+
+/**
+ * Returns the translated label of an `enum` option value
+ * (`translations[locale].options[key].values[value]`), falling back to the
+ * English translation, then to the value itself.
+ */
+export const getTranslatedWidgetOptionValue = (
+  widget: JsonWidget,
+  optionKey: string,
+  value: string,
+  locale?: string
+): string => {
+  if (!locale || !widget.translations) return value;
+
+  return (
+    widget.translations[locale]?.options?.[optionKey]?.values?.[value] ??
+    widget.translations['en']?.options?.[optionKey]?.values?.[value] ??
+    value
+  );
+};

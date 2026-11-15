@@ -456,11 +456,11 @@ const LayoutContainer: Component<{
         // Clean up previous playback
         unsubscribePlaying();
 
-        const playlistDur = playlist.duration();
-
-        const timer$ = timer(Date.now(), startTime, 100, playlistDur).pipe(
-          share()
-        );
+        // Wrap at the current playlist duration: item durations measured
+        // during playback (e.g. auto-timed lists) move the loop boundary.
+        const timer$ = timer(Date.now(), startTime, 100, () =>
+          playlist.duration()
+        ).pipe(share());
 
         timerSubscription = timer$.subscribe();
 

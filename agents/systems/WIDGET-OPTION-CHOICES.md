@@ -276,6 +276,31 @@ removed photo). Templates and fetchers must tolerate unknown values. The propert
 listing fetcher already ignores photos that no longer exist and falls back to all
 photos.
 
+## Conditional fields (`visible_when`)
+
+Choice fields are often alternatives: pick one listing, or describe which listings to
+rotate through. Any top-level `options_schema` field can declare
+`"visible_when": {"<field>": [values…]}`; it is shown only while every referenced field's
+value (or its `default`) is listed.
+
+- `Castmill.Widgets.Schema.validate_schema/2` accepts it only with `visible_when: true`
+  (widget `options_schema`), on top-level fields. Referenced fields must exist, be
+  `string`/`number`/`boolean`, and not be conditional themselves (no chains or cycles);
+  values are non-empty lists of scalars.
+- `Schema.visible?/3` evaluates it. `Schema.validate_data/2` skips the required check of
+  hidden fields; values that are sent are still type-checked.
+- The dashboard (`isFieldVisible` in `widget-config.tsx`) hides those fields, ignores
+  them for form validity, and drops their values on save and in live preview fetches.
+  Values stay in the form until it is saved, so switching back restores them.
+- `enum` values can be labeled per locale with
+  `translations.<locale>.options.<key>.values.<value>`.
+
+Items saved from the dashboard store only visible options, and fetchers receive them
+merged with `pull_config`, so a widget can switch modes with an `enum` option declared
+in `options_schema` (declared options override `pull_config` keys). Include the mode in
+the integration's composite discriminator, and have the fetcher ignore options of the
+other mode.
+
 ## Example: property listings
 
 | List | Source | Choice |

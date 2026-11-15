@@ -54,7 +54,13 @@ export interface JsonWidget {
       description?: string;
       options?: Record<
         string,
-        { label?: string; description?: string; placeholder?: string }
+        {
+          label?: string;
+          description?: string;
+          placeholder?: string;
+          /** Labels of `enum` values, keyed by value. */
+          values?: Record<string, string>;
+        }
       >;
     }
   >;

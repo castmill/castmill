@@ -4,13 +4,13 @@ import { Observable, Subject, Subscription } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { SinonFakeTimers, useFakeTimers } from 'sinon';
 
-import { Layer, Playlist, Renderer } from '../dist/index.js';
+import { Layer, Playlist, Renderer, timer } from '../dist/index.js';
 
 const TICK_MS = 100;
 
-const fakeLayer = (name: string, duration: number) => ({
+const fakeLayer = (name: string, duration: number | (() => number)) => ({
   name,
-  duration: () => duration,
+  duration: typeof duration === 'function' ? duration : () => duration,
   blocked$: () => new Subject<undefined>(),
   reportError: () => undefined,
   debugInfo: {},
@@ -81,5 +81,63 @@ describe('Playlist item start notifications', () => {
     timer$.next(value);
     run(4000);
     expect(calls).to.equal(3);
+  });
+
+  it('keeps an auto-duration layer active until its measured duration ends', () => {
+    let autoDuration = 6000;
+    const started: string[] = [];
+    const dynamicRenderer = {
+      play: (layer: unknown, layerTimer$: Observable<number>) => {
+        started.push((layer as { name: string }).name);
+        return layerTimer$.pipe(tap(() => undefined));
+      },
+      blank: () => undefined,
+    } as unknown as Renderer;
+    const playlist = new Playlist('dynamic-duration', {} as any);
+    playlist.add(fakeLayer('auto', () => autoDuration) as unknown as Layer);
+    playlist.add(fakeLayer('next', 4000) as unknown as Layer);
+
+    subscription = playlist
+      .play(dynamicRenderer, timer$, { loop: false })
+      .subscribe();
+    timer$.next(value);
+    autoDuration = 18000;
+    run(6000);
+    expect(started).to.deep.equal(['auto']);
+
+    run(12000);
+    expect(started).to.deep.equal(['auto', 'next']);
+  });
+
+  it('loops at a measured duration with a dynamic playlist timer', () => {
+    let autoDuration = 4000;
+    const started: string[] = [];
+    const dynamicRenderer = {
+      play: (layer: unknown, layerTimer$: Observable<number>) => {
+        started.push((layer as { name: string }).name);
+        return layerTimer$.pipe(tap(() => undefined));
+      },
+      blank: () => undefined,
+    } as unknown as Renderer;
+    const playlist = new Playlist('dynamic-loop', {} as any);
+    playlist.add(fakeLayer('auto', () => autoDuration) as unknown as Layer);
+    playlist.add(fakeLayer('next', 5000) as unknown as Layer);
+
+    subscription = playlist
+      .play(
+        dynamicRenderer,
+        timer(Date.now(), 0, TICK_MS, () => playlist.duration()),
+        { loop: true }
+      )
+      .subscribe();
+    clock.tick(1000);
+    autoDuration = 22000;
+    // The 9 s period of the initial estimate must not wrap the timer.
+    clock.tick(20000);
+    expect(started).to.deep.equal(['auto']);
+    clock.tick(1500);
+    expect(started).to.deep.equal(['auto', 'next']);
+    clock.tick(5000);
+    expect(started).to.deep.equal(['auto', 'next', 'auto']);
   });
 });

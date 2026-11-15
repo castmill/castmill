@@ -87,27 +87,44 @@ defmodule Castmill.Widgets.Schema do
   @choice_displays ["list", "cards", "grid"]
   @choice_keys ["list", "display", "search", "multiple", "ordered", "min", "max", "depends_on"]
 
+  @condition_types ["string", "number", "boolean"]
+
   @doc """
-  Validates a schema. Pass `choices: true` to allow the `choices` attribute on
-  top-level string and list-of-string fields (only in a widget's options_schema).
+  Validates a schema. Only in a widget's options_schema, and only on top-level
+  fields:
+
+    * `choices: true` allows the `choices` attribute on string and
+      list-of-string fields.
+    * `visible_when: true` allows the `visible_when` attribute, which shows a
+      field only while other fields have one of the listed values.
   """
   def validate_schema(schema, opts \\ [])
 
   def validate_schema(schema, opts) when is_map(schema) and map_size(schema) > 0 do
     allow_choices? = Keyword.get(opts, :choices, false)
+    allow_conditions? = Keyword.get(opts, :visible_when, false)
 
     schema
     |> Enum.reduce_while({:ok, nil}, fn
-      {field, %{"choices" => choices} = value}, _acc ->
-        with :ok <- if(allow_choices?, do: :ok, else: {:error, choices_not_allowed(field)}),
-             :ok <- validate_choices(choices, value, field) do
-          validate_field(Map.delete(value, "choices"), field)
+      {field, value}, _acc when is_map(value) ->
+        with :ok <-
+               validate_top_level(value, "choices", allow_choices?, field, fn choices ->
+                 validate_choices(choices, value, field)
+               end),
+             :ok <-
+               validate_top_level(
+                 value,
+                 "visible_when",
+                 allow_conditions?,
+                 field,
+                 fn conditions ->
+                   validate_visible_when(conditions, schema, field)
+                 end
+               ) do
+          validate_field(Map.drop(value, ["choices", "visible_when"]), field)
         else
           {:error, message} -> {:halt, {:error, message}}
         end
-
-      {field, value}, _acc when is_map(value) ->
-        validate_field(value, field)
 
       {_field, value}, _acc ->
         case @type_validations[value] do
@@ -147,8 +164,94 @@ defmodule Castmill.Widgets.Schema do
 
   def has_choices?(_schema), do: false
 
-  defp choices_not_allowed(field) do
-    "Field #{inspect(field)}: 'choices' is only supported on top-level options_schema fields"
+  defp validate_top_level(field_schema, attribute, allowed?, field, validate) do
+    cond do
+      not Map.has_key?(field_schema, attribute) -> :ok
+      not allowed? -> {:error, top_level_only(field, attribute)}
+      true -> validate.(field_schema[attribute])
+    end
+  end
+
+  defp top_level_only(field, attribute) do
+    "Field #{inspect(field)}: '#{attribute}' is only supported on top-level options_schema fields"
+  end
+
+  # `visible_when` maps field keys to the values that show this field. The
+  # referenced fields must be plain values that are always visible, so a
+  # field's visibility never depends on other conditions.
+  defp validate_visible_when(conditions, schema, field)
+       when is_map(conditions) and map_size(conditions) > 0 do
+    Enum.find_value(conditions, :ok, fn {key, values} ->
+      target = Map.get(schema, key)
+
+      cond do
+        key == field ->
+          {:error, "Field #{inspect(field)}: visible_when cannot reference the field itself"}
+
+        target == nil ->
+          {:error,
+           "Field #{inspect(field)}: visible_when references invalid field #{inspect(key)}"}
+
+        is_map(target) and Map.has_key?(target, "visible_when") ->
+          {:error,
+           "Field #{inspect(field)}: visible_when field #{inspect(key)} must not be conditional itself"}
+
+        condition_type(target) not in @condition_types ->
+          {:error,
+           "Field #{inspect(field)}: visible_when field #{inspect(key)} must be a string, number or boolean"}
+
+        not (is_list(values) and values != [] and Enum.all?(values, &scalar?/1)) ->
+          {:error,
+           "Field #{inspect(field)}: visible_when values for #{inspect(key)} must be a non-empty list of strings, numbers or booleans"}
+
+        true ->
+          nil
+      end
+    end)
+  end
+
+  defp validate_visible_when(_conditions, _schema, field) do
+    {:error,
+     "Field #{inspect(field)}: visible_when must be a non-empty map of field keys to lists of values"}
+  end
+
+  defp condition_type(type) when is_binary(type), do: type
+  defp condition_type(%{"type" => type}), do: type
+  defp condition_type(_), do: nil
+
+  defp scalar?(value), do: is_binary(value) or is_number(value) or is_boolean(value)
+
+  @doc """
+  True when a top-level field is shown for the given options: it has no
+  `visible_when`, or every referenced field's value (or default) is listed.
+  Hidden fields are not required.
+  """
+  def visible?(schema, %{"visible_when" => conditions}, data) when is_map(conditions) do
+    Enum.all?(conditions, fn {key, values} ->
+      value = condition_value(schema, key, data)
+      is_list(values) and Enum.any?(values, &condition_match?(&1, value))
+    end)
+  end
+
+  def visible?(_schema, _field_schema, _data), do: true
+
+  # Numbers match by value (1 == 1.0), as in the dashboard.
+  defp condition_match?(expected, value) when is_number(expected) and is_number(value),
+    do: expected == value
+
+  defp condition_match?(expected, value), do: expected === value
+
+  defp condition_value(schema, key, data) do
+    case if(is_map(data), do: Map.get(data, key)) do
+      nil ->
+        case Map.get(schema, key) do
+          %{"default" => default} -> default
+          _ -> nil
+        end
+
+      value ->
+        value
+    end
   end
 
   defp validate_choices(choices, field_schema, field) when is_map(choices) do
@@ -450,7 +553,9 @@ defmodule Castmill.Widgets.Schema do
     |> Enum.reduce_while({:ok, %{}}, fn {field, field_schema}, {:ok, acc_data} ->
       case data[field] do
         nil ->
-          handle_missing_data_field(field_schema, field, acc_data)
+          if visible?(schema, field_schema, data),
+            do: handle_missing_data_field(field_schema, field, acc_data),
+            else: {:cont, {:ok, acc_data}}
 
         value ->
           validate_data_field(
