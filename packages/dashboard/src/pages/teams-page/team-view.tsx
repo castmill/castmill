@@ -203,7 +203,7 @@ export const TeamView = (props: {
       placement="right"
       size="xl"
       closeOnOutsideClick
-      outsideClickIgnoreSelector="tbody tr"
+      outsideClickIgnoreSelector="tbody tr, [data-testid='table-card']"
       footer={
         canEdit() ? (
           <div class={styles.teamFooter} data-testid="team-footer">

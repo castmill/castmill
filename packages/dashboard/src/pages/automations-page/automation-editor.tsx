@@ -144,7 +144,7 @@ export const AutomationEditor: Component<AutomationEditorProps> = (props) => {
       onClose={props.onClose}
       size="lg"
       closeOnOutsideClick
-      outsideClickIgnoreSelector="tbody tr"
+      outsideClickIgnoreSelector="tbody tr, [data-testid='table-card']"
     >
       <div class={styles.editorHeader}>
         <label class={styles.field}>

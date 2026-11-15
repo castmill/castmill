@@ -1120,7 +1120,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
             placement="right"
             size="xl"
             closeOnOutsideClick
-            outsideClickIgnoreSelector="tbody tr, .playlist-tree-item"
+            outsideClickIgnoreSelector="tbody tr, [data-testid='table-card'], .playlist-tree-item"
             contentClass="playlist-modal"
           >
             <PlaylistView

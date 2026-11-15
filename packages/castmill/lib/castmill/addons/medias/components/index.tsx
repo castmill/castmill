@@ -949,7 +949,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
           placement="right"
           size="xl"
           closeOnOutsideClick
-          outsideClickIgnoreSelector="tbody tr, .media-tree-item"
+          outsideClickIgnoreSelector="tbody tr, [data-testid='table-card'], .media-tree-item"
           closeButtonTitle={t('common.close')}
           footer={
             <div

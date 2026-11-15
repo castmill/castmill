@@ -556,7 +556,7 @@ const LayoutsPage: Component<AddonComponentProps> = (props) => {
           placement="right"
           size="xl"
           closeOnOutsideClick
-          outsideClickIgnoreSelector="tbody tr"
+          outsideClickIgnoreSelector="tbody tr, [data-testid='table-card']"
           footer={
             <div
               ref={(el) => {

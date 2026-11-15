@@ -85,15 +85,22 @@ const DETAIL_ENTRY = 'castmillDetail';
 const isDetailEntry = () => Boolean(window.history.state?.[DETAIL_ENTRY]);
 
 /**
- * Router navigation options for showing an item's details from a list. The
- * first item opened gets its own history entry, so browser/swipe back returns
- * to the list; switching items while details are shown replaces that entry.
+ * Router navigation options for showing an item's details. The first item
+ * opened from a list gets its own marked history entry; switching items while
+ * a detail is open replaces the current entry.
  */
-export const detailUrlOptions = () => ({
-  replace: isDetailEntry(),
-  scroll: false,
-  state: { [DETAIL_ENTRY]: true },
-});
+export const detailUrlOptions = (
+  detailAlreadyOpen = new URLSearchParams(window.location.search).has('itemId')
+) => {
+  const isMarkedDetail = isDetailEntry();
+  return {
+    replace: isMarkedDetail || detailAlreadyOpen,
+    scroll: false,
+    ...(isMarkedDetail || !detailAlreadyOpen
+      ? { state: { [DETAIL_ENTRY]: true } }
+      : {}),
+  };
+};
 
 /**
  * Removes the item from the URL when its details are closed from the UI. Goes

@@ -282,7 +282,10 @@ const WidgetsPage: Component<{
     // The effect checks lastProcessedUrl to avoid duplicate processing
     const newUrl = widgetsUrl(widget.id);
     lastProcessedUrl = newUrl;
-    navigateTo(newUrl, detailUrlOptions());
+    navigateTo(
+      newUrl,
+      detailUrlOptions(window.location.pathname !== widgetsUrl())
+    );
 
     batch(() => {
       setWidgetHasIntegrations(hasIntegrations);
@@ -654,7 +657,7 @@ const WidgetsPage: Component<{
           placement="right"
           size="lg"
           closeOnOutsideClick
-          outsideClickIgnoreSelector="tbody tr"
+          outsideClickIgnoreSelector="tbody tr, [data-testid='table-card']"
         >
           <WidgetDetailsView
             widget={currentWidget()!}

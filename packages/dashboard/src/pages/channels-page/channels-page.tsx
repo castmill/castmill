@@ -803,7 +803,7 @@ const ChannelsPage: Component = () => {
             placement="right"
             size="xl"
             closeOnOutsideClick
-            outsideClickIgnoreSelector="tbody tr, .channel-tree-item"
+            outsideClickIgnoreSelector="tbody tr, [data-testid='table-card'], .channel-tree-item"
           >
             <Show when={currentChannel()} keyed>
               {(channel) => (

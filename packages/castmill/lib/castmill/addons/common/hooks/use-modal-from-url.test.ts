@@ -3,19 +3,33 @@ import { closeDetailUrl, detailUrlOptions } from './use-modal-from-url';
 
 describe('detail history helpers', () => {
   afterEach(() => {
-    window.history.replaceState(null, '');
+    window.history.replaceState(null, '', '/');
     vi.restoreAllMocks();
   });
 
-  it('pushes the first detail entry and replaces it when switching items', () => {
+  it('marks a pushed list-to-detail navigation', () => {
+    window.history.replaceState(null, '', '/org/org-1/channels');
+
     expect(detailUrlOptions()).toEqual({
       replace: false,
       scroll: false,
       state: { castmillDetail: true },
     });
+  });
 
+  it('pushes the first detail entry and replaces it when switching items', () => {
     window.history.replaceState(detailUrlOptions().state, '');
     expect(detailUrlOptions().replace).toBe(true);
+  });
+
+  it('replaces an unmarked deep-linked detail without marking it', () => {
+    window.history.replaceState(null, '', '/org/org-1/channels?itemId=A');
+
+    expect(detailUrlOptions()).toEqual({ replace: true, scroll: false });
+  });
+
+  it('replaces path-based details without marking them', () => {
+    expect(detailUrlOptions(true)).toEqual({ replace: true, scroll: false });
   });
 
   it('goes back to the list entry that opened the details', () => {

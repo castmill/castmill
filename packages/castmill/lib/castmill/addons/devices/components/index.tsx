@@ -891,7 +891,7 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
           placement="right"
           size="xl"
           closeOnOutsideClick
-          outsideClickIgnoreSelector="tbody tr, .device-tree-item"
+          outsideClickIgnoreSelector="tbody tr, [data-testid='table-card'], .device-tree-item"
         >
           {/* Remount per device so tabs reload; status merges keep the same id. */}
           <Show when={currentDevice()?.id} keyed>
