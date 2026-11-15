@@ -25,6 +25,7 @@ defmodule CastmillWeb.Live.Admin.Resources do
         search: ""
       })
       |> assign(:form_module, CastmillWeb.Live.Admin.NetworkForm)
+      |> assign(:resource, nil)
 
     {:ok, socket}
   end
@@ -253,9 +254,29 @@ defmodule CastmillWeb.Live.Admin.Resources do
      |> assign(:page_title, "Medias")}
   end
 
+  def handle_params(%{"resource" => "widgets"} = params, _url, socket) do
+    columns = [
+      %{name: "Name", field: :name},
+      %{name: "Slug", field: :slug},
+      %{name: "Scope", field: :scope, render: &Castmill.Widgets.scope/1},
+      %{name: "Created", field: :inserted_at}
+    ]
+
+    socket = handle_resource("Widget", params, socket)
+
+    {:noreply,
+     socket
+     |> assign(:cols, columns)
+     |> assign(:selected_link, "widgets")
+     |> assign(:page_title, "Widgets")}
+  end
+
   @impl true
-  def handle_params(params, _url, socket) do
-    {:noreply, apply_action(socket, socket.assigns.live_action, params)}
+  def handle_params(%{"resource" => resource}, _url, socket) do
+    {:noreply,
+     socket
+     |> put_flash(:error, "Unknown resource: #{resource}")
+     |> push_navigate(to: ~p"/admin/networks")}
   end
 
   @impl true
@@ -284,12 +305,13 @@ defmodule CastmillWeb.Live.Admin.Resources do
         cols={@cols}
         resource={@selected_link}
         base_url={~p"/admin/#{@selected_link}"}
+        actions={resource_actions(@selected_link)}
       />
 
       <.pagination selected_link={@selected_link} total_items={@total_items} options={@options} />
     </div>
     <.modal
-      :if={@live_action in [:new, :edit]}
+      :if={@live_action in [:new, :edit] and @resource != nil}
       id={"#{@selected_link}-modal"}
       show
       on_cancel={JS.patch(~p"/admin/#{@selected_link}")}
@@ -448,6 +470,16 @@ defmodule CastmillWeb.Live.Admin.Resources do
     |> assign(:resource, nil)
   end
 
+  # Resources without a form (or an action they do not support) render the list.
+  defp apply_action(socket, _action, _params), do: assign(socket, :resource, nil)
+
+  # Row actions this page handles (see the handle_event clauses).
+  defp resource_actions("networks"), do: [:edit, :delete]
+  defp resource_actions("organizations"), do: [:edit, :delete, :block]
+  defp resource_actions("users"), do: [:edit, :delete]
+  defp resource_actions("devices"), do: [:delete]
+  defp resource_actions(_resource), do: []
+
   # Select rows for a given resource
   defp select_rows(resource_name, query_params) do
     case resource_name do
@@ -499,6 +531,14 @@ defmodule CastmillWeb.Live.Admin.Resources do
           count: Networks.count_networks(query_params)
         }
 
+      "Widget" ->
+        params = Map.merge(query_params, %{key: "name", direction: "ascending"})
+
+        %{
+          rows: Castmill.Widgets.list_widgets(params),
+          count: Castmill.Widgets.count_widgets(params)
+        }
+
       _ ->
         []
     end
@@ -512,8 +552,13 @@ defmodule CastmillWeb.Live.Admin.Resources do
 
   # Select the rows from the database and assign them to the socket
   defp handle_resource(resource_name, params, socket) do
-    {:ok, options} = Tarams.cast(params, @index_params_schema)
-    #
+    # Invalid query params (e.g. a hand-edited page=0) fall back to the defaults.
+    options =
+      case Tarams.cast(params, @index_params_schema) do
+        {:ok, options} -> options
+        {:error, _errors} -> %{page: 1, page_size: 10, search: ""}
+      end
+
     # select the rows from the database depending on the resource name
     %{rows: rows, count: total_items} = select_rows(resource_name, options)
 

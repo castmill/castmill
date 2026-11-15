@@ -105,6 +105,7 @@ defmodule CastmillWeb.Live.Admin.OrganizationShow do
         base_resource_url={
           if Map.has_key?(assigns, :base_resource_url), do: @base_resource_url, else: nil
         }
+        actions={tab_actions(@selected_tab)}
       />
     </div>
     """
@@ -266,7 +267,7 @@ defmodule CastmillWeb.Live.Admin.OrganizationShow do
   end
 
   defp resources_for_organization(organization_id, "channels") do
-    {Organizations.list_channels(organization_id) || [],
+    {Organizations.list_channels(%{organization_id: organization_id}),
      [
        %{
          name: "ID",
@@ -284,7 +285,7 @@ defmodule CastmillWeb.Live.Admin.OrganizationShow do
   end
 
   defp resources_for_organization(organization_id, "playlists") do
-    {Organizations.list_playlists(organization_id) || [],
+    {Organizations.list_playlists(%{organization_id: organization_id}),
      [
        %{
          name: "ID",
@@ -302,7 +303,7 @@ defmodule CastmillWeb.Live.Admin.OrganizationShow do
   end
 
   defp resources_for_organization(organization_id, "medias") do
-    {Organizations.list_medias(organization_id) || [],
+    {Organizations.list_medias(%{organization_id: organization_id}),
      [
        %{
          name: "ID",
@@ -318,4 +319,37 @@ defmodule CastmillWeb.Live.Admin.OrganizationShow do
        }
      ]}
   end
+
+  defp resources_for_organization(organization_id, "widgets") do
+    rows =
+      organization_id
+      |> Castmill.Widgets.list_available_widgets()
+      |> Enum.map(fn widget ->
+        %{
+          id: widget.id,
+          name: widget.name,
+          slug: widget.slug,
+          scope: Castmill.Widgets.scope(widget)
+        }
+      end)
+
+    {rows,
+     [
+       %{name: "ID", field: :id},
+       %{name: "Name", field: :name},
+       %{name: "Slug", field: :slug},
+       %{name: "Scope", field: :scope}
+     ]}
+  end
+
+  defp resources_for_organization(_organization_id, _tab) do
+    {[], [%{name: "Name", field: :name}]}
+  end
+
+  # Row actions this page handles (see the "delete" handle_event clauses).
+  defp tab_actions("organizations"), do: [:edit]
+  defp tab_actions("teams"), do: [:delete]
+  defp tab_actions("users"), do: [:edit, :delete]
+  defp tab_actions("devices"), do: [:delete]
+  defp tab_actions(_tab), do: []
 end

@@ -54,6 +54,15 @@ enrollment tokens, but leaves dashboard credentials intact. The user must then
 enroll a new key using their root email/password. There is deliberately no
 email/password fallback or HTTP recovery endpoint after enrollment.
 
+### Admin page tests
+
+`test/castmill_web/live/admin/admin_pages_test.exs` opens every admin page and
+tab with data in place, follows every admin link on them and runs every row
+action (Block, Unblock, Delete) they offer. Tables only offer the row actions
+the page handles: pass them with the `actions` attribute of `admin_table` (or
+`show_details`). When you add an admin page, tab or row action, add it to that
+test.
+
 Media files retain their storage URL in the database. When the server returns media
 information, it generates player-facing URLs using `MEDIA_PUBLIC_BASE_URL` if set,
 or the current Phoenix endpoint (local storage) or S3 endpoint (S3 storage) otherwise.
