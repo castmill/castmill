@@ -1,16 +1,17 @@
-import { createSignal, createEffect, JSX, Show, onCleanup } from 'solid-js';
-import { Portal } from 'solid-js/web';
+import { createSignal, createEffect, onCleanup } from 'solid-js';
 
 import {
   Button,
   DetailsSummary,
   DetailsSummaryChip,
+  DrawerFooter,
   FormItem,
   SectionCard,
   formatBytes,
   formatDuration,
   formatRelativeTimeLocalized,
   formatTimestamp,
+  SaveBar,
   useToast,
 } from '@castmill/ui-common';
 
@@ -30,11 +31,6 @@ export const MediaDetails = (props: {
   media: JsonMedia;
   store?: AddonStore;
   onSubmit: (mediaUpdate: Partial<MediasUpdate>) => Promise<boolean>;
-  /**
-   * Element (e.g. the Drawer footer) that receives the Save/Reset actions so
-   * they stay visible while the details scroll. Rendered inline when unset.
-   */
-  actionsMount?: HTMLElement;
 }) => {
   // Get i18n functions from store
   const t = (key: string, params?: Record<string, any>) =>
@@ -132,8 +128,8 @@ export const MediaDetails = (props: {
       ? t('medias.details.updated', { time: relative(props.media.updated_at) })
       : undefined;
 
-  const actions = (): JSX.Element => (
-    <div class="actions">
+  const actions = () => (
+    <SaveBar>
       <Button
         label={t('common.save')}
         type="submit"
@@ -151,7 +147,7 @@ export const MediaDetails = (props: {
         icon={BsX}
         color="danger"
       />
-    </div>
+    </SaveBar>
   );
 
   return (
@@ -212,9 +208,7 @@ export const MediaDetails = (props: {
               </FormItem>
             </div>
 
-            <Show when={props.actionsMount} fallback={actions()}>
-              {(mount) => <Portal mount={mount()}>{actions()}</Portal>}
-            </Show>
+            <DrawerFooter>{actions()}</DrawerFooter>
           </form>
         </SectionCard>
       </div>

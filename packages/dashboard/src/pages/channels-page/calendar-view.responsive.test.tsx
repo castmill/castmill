@@ -7,7 +7,11 @@ import {
   waitFor,
 } from '@solidjs/testing-library';
 import { onMount } from 'solid-js';
-import { COMBOBOX_SHEET_QUERY } from '@castmill/ui-common';
+import {
+  COARSE_POINTER_QUERY,
+  COMBOBOX_SHEET_QUERY,
+} from '@castmill/ui-common';
+import { mockMatchMedia } from '@castmill/ui-common/testing';
 import { I18nProvider } from '../../i18n';
 import {
   CalendarView,
@@ -77,21 +81,12 @@ const NOW = new Date('2026-01-11T12:00:00Z');
 const WEEK_START = Date.UTC(2026, 0, 5);
 const DAY_MS = 24 * 3600 * 1000;
 
-const mockViewport = (matching: string[]) => {
-  window.matchMedia = vi.fn().mockImplementation((query: string) => ({
-    matches: matching.includes(query),
-    media: query,
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    addListener: vi.fn(),
-    removeListener: vi.fn(),
-  }));
-};
+const mockViewport = (matching: string[]) => mockMatchMedia(matching);
 
 const DESKTOP = [WIDE_CALENDAR_QUERY];
 const TABLET_PORTRAIT: string[] = [];
-const TABLET_LANDSCAPE = [WIDE_CALENDAR_QUERY, '(pointer: coarse)'];
-const PHONE = [DAY_VIEW_QUERY, '(pointer: coarse)', COMBOBOX_SHEET_QUERY];
+const TABLET_LANDSCAPE = [WIDE_CALENDAR_QUERY, COARSE_POINTER_QUERY];
+const PHONE = [DAY_VIEW_QUERY, COARSE_POINTER_QUERY, COMBOBOX_SHEET_QUERY];
 
 const renderCalendar = (
   options: {

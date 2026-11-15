@@ -7,13 +7,11 @@ import { DevicesService } from '../services/devices.service';
 
 const toast = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }));
 vi.mock('@castmill/ui-common', async (importOriginal) => {
-  const { DetailsSummary, formatRelativeTimeLocalized } =
-    await importOriginal<typeof import('@castmill/ui-common')>();
+  const actual = await importOriginal<typeof import('@castmill/ui-common')>();
   return {
-    DetailsSummary,
+    ...actual,
     LoadingOverlay: () => null,
     useToast: () => toast,
-    formatRelativeTimeLocalized,
     formatTimestamp: (value: string) => value,
   };
 });

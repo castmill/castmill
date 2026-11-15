@@ -175,7 +175,18 @@
 
 /* Phones: pin the bar to the bottom of the viewport (above the home
    indicator) and let the bulk actions scroll horizontally. */
+.castmill-selection-bar-spacer {
+  display: none;
+}
+
 @media (max-width: 36em) {
+  // Room for the fixed bar, including wrapped action buttons.
+  .castmill-selection-bar-spacer {
+    display: block;
+    flex: none;
+    height: calc(7em + env(safe-area-inset-bottom, 0em));
+  }
+
   .castmill-selection-bar {
     position: fixed;
     padding: 0.5em 0.75em calc(0.5em + env(safe-area-inset-bottom, 0em));

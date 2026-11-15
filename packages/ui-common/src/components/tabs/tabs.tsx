@@ -11,6 +11,7 @@ import {
 } from 'solid-js';
 import { Dynamic } from 'solid-js/web';
 import styles from './tabs.module.scss';
+import { revealTab, tabKeyTarget } from './tab-keyboard';
 
 export interface TabItem {
   title: string | (() => string); // Can be string or function for reactive translations
@@ -59,35 +60,18 @@ export const Tabs = (props: TabsProps) => {
     setOverflowEnd(scrolled + listRef.clientWidth < listRef.scrollWidth - 1);
   };
 
-  const scrollTabIntoView = (index: number) => {
-    listRef?.children.item(index)?.scrollIntoView?.({
-      block: 'nearest',
-      inline: 'nearest',
-    });
-  };
+  const tabAt = (index: number) =>
+    listRef?.children.item(index) as HTMLElement | null | undefined;
+  const scrollTabIntoView = (index: number) => revealTab(tabAt(index));
 
   const selectTab = (index: number, focus = false) => {
     setActiveTab(index);
-    if (focus)
-      (listRef?.children.item(index) as HTMLButtonElement | null)?.focus();
-    scrollTabIntoView(index);
+    revealTab(tabAt(index), focus);
   };
 
   const onTabKeyDown = (event: KeyboardEvent) => {
-    const count = props.tabs.length;
-    if (!count) return;
-    const rtl =
-      (event.currentTarget as HTMLElement).closest('[dir="rtl"]') !== null;
-    const step = { ArrowRight: rtl ? -1 : 1, ArrowLeft: rtl ? 1 : -1 }[
-      event.key as 'ArrowRight' | 'ArrowLeft'
-    ];
-    let next: number | undefined;
-    if (step) next = (activeIndex() + step + count) % count;
-    else if (event.key === 'Home') next = 0;
-    else if (event.key === 'End') next = count - 1;
-    if (next === undefined) return;
-    event.preventDefault();
-    selectTab(next, true);
+    const next = tabKeyTarget(event, activeIndex(), props.tabs.length);
+    if (next !== undefined) selectTab(next, true);
   };
 
   // Tabs (and their titles) can change without the list resizing, so watch

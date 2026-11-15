@@ -145,7 +145,7 @@ export const CalendarAddEntry: Component<{
           onSelect={(item: JsonPlaylist) => setPlaylist(item)}
         />
 
-        <div class={styles.actions}>
+        <div class={styles.actions} data-modal-actions>
           <Button
             label={t('common.cancel')}
             onClick={props.onClose}

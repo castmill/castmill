@@ -602,8 +602,6 @@
     "removeTeams": "Eliminar equipos",
     "confirmRemoveTeam": "¿Estás seguro de que quieres eliminar el equipo \"{{name}}\"?",
     "confirmRemoveTeams": "¿Estás seguro de que quieres eliminar los siguientes equipos?",
-    "addedOn": "Añadido el",
-    "lastUpdatedOn": "Última actualización el",
     "enterTeamName": "Ingresa el nombre del equipo",
     "summary": "Resumen del equipo",
     "created": "Creado {{time}}",

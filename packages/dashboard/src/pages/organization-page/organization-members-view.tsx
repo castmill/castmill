@@ -10,6 +10,7 @@ import {
   HttpError,
   useToast,
   Dropdown,
+  tableCardLabels,
 } from '@castmill/ui-common';
 import { store, setStore } from '../../store/store';
 import { PermissionButton } from '../../components/permission-button/permission-button';
@@ -22,7 +23,6 @@ import { OrganizationsService } from '../../services/organizations.service';
 import { OrganizationInviteForm } from './organization-invite-form';
 import { OrganizationRole } from '../../types/organization-role.type';
 import { useI18n } from '../../i18n';
-import { useTableCardLabels } from '../../hooks/useTableCardLabels';
 import { getUser } from '../../components/auth';
 import { useNavigate } from '@solidjs/router';
 import styles from './organization-page.module.scss';
@@ -84,7 +84,7 @@ export const OrganizationMembersView = (props: {
   onRemove: (member: User) => void;
 }) => {
   const { t } = useI18n();
-  const cardLabels = useTableCardLabels();
+  const cardLabels = tableCardLabels(t);
   const { canPerformAction } = usePermissions();
   const toast = useToast();
   const navigate = useNavigate();

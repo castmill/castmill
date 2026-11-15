@@ -35,6 +35,10 @@ import {
   ConfirmDialog,
   ToastProvider,
   useToast,
+  closeDetailUrl,
+  detailUrlOptions,
+  tableCardLabels,
+  filtersLabel,
 } from '@castmill/ui-common';
 import { JsonWidget } from '@castmill/player';
 import { WidgetsService, WidgetUsage } from '../services/widgets.service';
@@ -47,12 +51,10 @@ import { IntegrationsList } from '../../common/components/integrations-list';
 import { DEFAULT_WIDGET_ICON } from '../../common/constants';
 import './widgets.scss';
 import { AddonStore } from '../../common/interfaces/addon-store';
-import { closeDetailUrl, detailUrlOptions } from '../../common/hooks';
 import {
   getTranslatedWidgetName,
   getTranslatedWidgetDescription,
 } from '../../common/utils/widget-catalog-utils';
-import { tableCardLabels, filtersLabel } from '../../common/utils/table-labels';
 
 // Widget type with required ID and slug for table display and API calls
 type WidgetWithId = JsonWidget & { id: number; slug: string };

@@ -16,6 +16,8 @@ import {
   DetailsSummary,
   LoadingOverlay,
   formatRelativeTimeLocalized,
+  revealTab,
+  tabKeyTarget,
   useToast,
 } from '@castmill/ui-common';
 import { Device } from '../interfaces/device.interface';
@@ -225,31 +227,17 @@ const DeviceView: Component<{
 
   const selectSection = (index: number, focus = false) => {
     setActiveIndex(index);
-    const tab = tabRefs[index];
-    if (focus) tab?.focus();
-    tab?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+    revealTab(tabRefs[index], focus);
   };
 
   const onTabKeyDown = (event: KeyboardEvent) => {
-    const last = sections.length - 1;
-    const rtl =
-      (event.currentTarget as HTMLElement).closest('[dir="rtl"]') !== null;
-    const step = { ArrowRight: rtl ? -1 : 1, ArrowLeft: rtl ? 1 : -1 }[
-      event.key as 'ArrowRight' | 'ArrowLeft'
-    ];
-    let next: number | undefined;
-    if (step) next = (activeIndex() + step + sections.length) % sections.length;
-    else if (event.key === 'Home') next = 0;
-    else if (event.key === 'End') next = last;
-    if (next === undefined) return;
-    event.preventDefault();
-    selectSection(next, true);
+    const next = tabKeyTarget(event, activeIndex(), sections.length);
+    if (next !== undefined) selectSection(next, true);
   };
 
   return (
     <div class="device-view">
       <DetailsSummary
-        class="device-summary"
         label={t('common.status')}
         pills={[
           {

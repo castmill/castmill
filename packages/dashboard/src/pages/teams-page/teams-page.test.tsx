@@ -44,11 +44,6 @@ vi.mock('../../hooks/useKeyboardShortcuts', () => ({
   }),
 }));
 
-vi.mock('../../hooks/useModalFromUrl', async () => ({
-  ...(await vi.importActual<object>('../../hooks/useModalFromUrl')),
-  useModalFromUrl: vi.fn(),
-}));
-
 vi.mock('../../components/quota-indicator', () => ({
   QuotaIndicator: (props: any) => (
     <span data-testid="quota">{props.resourceName}</span>
@@ -74,34 +69,46 @@ vi.mock('./team-view', () => ({
   },
 }));
 
-vi.mock('@castmill/ui-common', () => ({
-  TableView: (props: any) => {
-    props.ref?.(tableRef);
-    return (
-      <div>
-        {props.toolbar?.mainAction}
-        {props.table.actions.map((action: any) => (
-          <button onClick={() => action.handler({ id: 3, name: 'Marketing' })}>
-            {action.label()}
-          </button>
-        ))}
-      </div>
+vi.mock('@castmill/ui-common', async () => {
+  const { detailUrlOptions, closeDetailUrl, tableCardLabels } =
+    await vi.importActual<typeof import('@castmill/ui-common')>(
+      '@castmill/ui-common'
     );
-  },
-  ConfirmDialog: (props: any) => (
-    <>
-      {props.show ? (
+  return {
+    detailUrlOptions,
+    closeDetailUrl,
+    tableCardLabels,
+    useModalFromUrl: vi.fn(),
+    TableView: (props: any) => {
+      props.ref?.(tableRef);
+      return (
         <div>
-          <span>{props.title}</span>
-          <button onClick={props.onConfirm}>confirm</button>
+          {props.toolbar?.mainAction}
+          {props.table.actions.map((action: any) => (
+            <button
+              onClick={() => action.handler({ id: 3, name: 'Marketing' })}
+            >
+              {action.label()}
+            </button>
+          ))}
         </div>
-      ) : null}
-    </>
-  ),
-  Button: () => null,
-  IconButton: () => null,
-  useToast: () => toastSpies,
-}));
+      );
+    },
+    ConfirmDialog: (props: any) => (
+      <>
+        {props.show ? (
+          <div>
+            <span>{props.title}</span>
+            <button onClick={props.onConfirm}>confirm</button>
+          </div>
+        ) : null}
+      </>
+    ),
+    Button: () => null,
+    IconButton: () => null,
+    useToast: () => toastSpies,
+  };
+});
 
 const latestTeamView = () => teamViewProps[teamViewProps.length - 1];
 

@@ -596,8 +596,6 @@
     "removeTeams": "Ta bort team",
     "confirmRemoveTeam": "Är du säker på att du vill ta bort team \"{{name}}\"?",
     "confirmRemoveTeams": "Är du säker på att du vill ta bort följande team?",
-    "addedOn": "Tillagd den",
-    "lastUpdatedOn": "Senast uppdaterad den",
     "enterTeamName": "Ange teamnamn",
     "summary": "Teamöversikt",
     "created": "Skapat {{time}}",

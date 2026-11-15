@@ -37,6 +37,11 @@ import {
   TagPopover,
   useViewMode,
   isQuotaExceededError,
+  useModalFromUrl,
+  detailUrlOptions,
+  closeDetailUrl,
+  tableCardLabels,
+  filtersLabel,
 } from '@castmill/ui-common';
 
 import { store } from '../../store/store';
@@ -53,24 +58,18 @@ import { ChannelView } from './channel-view';
 
 import { baseUrl } from '../../env';
 import { ChannelAddForm } from './channel-add-form';
-import {
-  useTeamFilter,
-  useModalFromUrl,
-  detailUrlOptions,
-  closeDetailUrl,
-} from '../../hooks';
+import { useTeamFilter } from '../../hooks';
 import { useI18n } from '../../i18n';
 import { QuotaIndicator } from '../../components/quota-indicator';
 import { QuotasService, ResourceQuota } from '../../services/quotas.service';
 import { usePermissions } from '../../hooks/usePermissions';
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 import { useLocation } from '@solidjs/router';
-import { useTableCardLabels } from '../../hooks/useTableCardLabels';
 
 const ChannelsPage: Component = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { t } = useI18n();
-  const cardLabels = useTableCardLabels();
+  const cardLabels = tableCardLabels(t);
   const { canPerformAction } = usePermissions();
   const { registerShortcutAction, unregisterShortcutAction } =
     useKeyboardShortcuts();
@@ -911,7 +910,7 @@ const ChannelsPage: Component = () => {
             fetchData={fetchData}
             ref={setRef}
             toolbar={{
-              filtersLabel: () => t('filters.toggle'),
+              filtersLabel: filtersLabel(t),
               filters: [],
               searchPlaceholder: t('common.search'),
               mainAction: (
@@ -1021,7 +1020,7 @@ const ChannelsPage: Component = () => {
 
         <Show when={viewMode() === 'tree'}>
           <ToolBar
-            filtersLabel={() => t('filters.toggle')}
+            filtersLabel={filtersLabel(t)}
             title={t('channels.title')}
             titleActions={
               <ViewModeToggle mode={viewMode()} onChange={setViewMode} />

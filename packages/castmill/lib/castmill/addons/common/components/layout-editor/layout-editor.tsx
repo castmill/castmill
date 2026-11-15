@@ -12,7 +12,12 @@ import type {
   LayoutOptionValue,
   LayoutFieldAttributes,
 } from '@castmill/player';
-import { Button, FormItem, CompactNumberInput } from '@castmill/ui-common';
+import {
+  Button,
+  CompactNumberInput,
+  FormItem,
+  widthInEm,
+} from '@castmill/ui-common';
 import {
   BsPlus,
   BsTrash,
@@ -321,8 +326,7 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
     const width = rootRef.getBoundingClientRect().width;
     // Hidden or detached editors report 0; keep the last decision.
     if (!width) return;
-    const fontSize = parseFloat(getComputedStyle(rootRef).fontSize) || 16;
-    setStacked(width < STACKED_MAX_WIDTH_EM * fontSize);
+    setStacked(widthInEm(rootRef, width) < STACKED_MAX_WIDTH_EM);
   };
 
   const updateLayout = () => {

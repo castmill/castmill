@@ -54,6 +54,12 @@ import {
   formatBytes,
   useViewMode,
   isQuotaExceededError,
+  useModalFromUrl,
+  detailUrlOptions,
+  closeDetailUrl,
+  tableCardLabels,
+  filtersLabel,
+  organizeByLabel,
 } from '@castmill/ui-common';
 import { JsonMedia } from '@castmill/player';
 import { MediasService } from '../services/medias.service';
@@ -70,18 +76,8 @@ import {
   AddonStore,
   AddonComponentProps,
 } from '../../common/interfaces/addon-store';
-import {
-  useTeamFilter,
-  useModalFromUrl,
-  detailUrlOptions,
-  closeDetailUrl,
-} from '../../common/hooks';
+import { useTeamFilter } from '../../common/hooks';
 import { getThumbnailProgress } from './thumbnail-status';
-import {
-  tableCardLabels,
-  filtersLabel,
-  organizeByLabel,
-} from '../../common/utils/table-labels';
 
 const MediasPage: Component<AddonComponentProps> = (props) => {
   // Get i18n functions from store
@@ -415,8 +411,6 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
   };
 
   const [showDrawer, setShowDrawer] = createSignal(false);
-  // Drawer footer that hosts the sticky Save/Reset actions of MediaDetails.
-  const [mediaFooter, setMediaFooter] = createSignal<HTMLDivElement>();
   const [currentMedia, setCurrentMedia] = createSignal<JsonMedia | undefined>();
 
   const [showAddMediasModal, setShowAddMediasModal] = createSignal(false);
@@ -951,22 +945,12 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
           closeOnOutsideClick
           outsideClickIgnoreSelector="tbody tr, [data-testid='table-card'], .media-tree-item"
           closeButtonTitle={t('common.close')}
-          footer={
-            <div
-              class="medias-drawer-footer"
-              ref={(el) => {
-                setMediaFooter(el);
-                onCleanup(() => setMediaFooter(undefined));
-              }}
-            />
-          }
         >
           <Show when={currentMedia()} keyed>
             {(media) => (
               <MediaDetails
                 store={props.store}
                 media={media}
-                actionsMount={mediaFooter()}
                 onSubmit={async (mediaUpdate) => {
                   try {
                     await MediasService.updateMedia(

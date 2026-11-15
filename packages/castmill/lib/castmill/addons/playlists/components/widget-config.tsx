@@ -39,6 +39,7 @@ import {
   ChoicesField,
   ChoicesFieldLabels,
   ConfirmDialog,
+  SaveBar,
 } from '@castmill/ui-common';
 import { ResourcesService } from '../services/resources.service';
 import {
@@ -1556,12 +1557,11 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
             }}
             onClose={() => setPendingChoice(null)}
           />
-          <footer class="form-actions">
-            <span class="form-actions-dirty" aria-live="polite">
-              {!isNewItem() && isFormModified()
-                ? t('playlists.editor.unsavedChanges')
-                : ''}
-            </span>
+          <SaveBar
+            class="form-actions"
+            dirty={!isNewItem() && isFormModified()}
+            dirtyLabel={t('playlists.editor.unsavedChanges')}
+          >
             <Show when={props.onCancel}>
               <Button
                 label={t('common.cancel')}
@@ -1581,7 +1581,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
               icon={isNewItem() ? BsPlusLg : BsCheckLg}
               color="success"
             />
-          </footer>
+          </SaveBar>
         </form>
       </div>
       <section class="preview" aria-label={t('common.preview')}>

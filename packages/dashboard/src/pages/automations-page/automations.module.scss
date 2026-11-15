@@ -653,7 +653,7 @@ $danger: var(--cm-error);
     }
   }
 
-  .formActions,
+  // The create modal's .formActions use the shared data-modal-actions bar.
   .drawerFooter,
   .tabFooter {
     flex-direction: column;

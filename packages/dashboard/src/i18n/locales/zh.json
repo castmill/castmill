@@ -601,8 +601,6 @@
     "removeTeams": "删除团队",
     "confirmRemoveTeam": "您确定要删除团队 \"{{name}}\" 吗？",
     "confirmRemoveTeams": "您确定要删除以下团队吗？",
-    "addedOn": "添加于",
-    "lastUpdatedOn": "最后更新于",
     "enterTeamName": "输入团队名称",
     "summary": "团队摘要",
     "created": "创建于 {{time}}",

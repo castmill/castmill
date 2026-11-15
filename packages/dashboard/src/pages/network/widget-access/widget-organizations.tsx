@@ -11,8 +11,10 @@ import {
   Column,
   Pagination,
   SelectionActionBar,
+  SelectionActionBarSpacer,
   Table,
   useToast,
+  tableCardLabels,
 } from '@castmill/ui-common';
 import { BsLockFill, BsSearch } from 'solid-icons/bs';
 import {
@@ -23,7 +25,6 @@ import {
 import { useI18n } from '../../../i18n';
 import { ConfirmAccessChange, accessErrorMessage } from './access-ui';
 import styles from './widget-access.module.scss';
-import { useTableCardLabels } from '../../../hooks/useTableCardLabels';
 
 export type StatusFilter = 'all' | 'enabled' | 'disabled';
 type BulkAction = 'enable' | 'disable';
@@ -43,7 +44,7 @@ export const WidgetOrganizations: Component<{
   ref?: (search: HTMLInputElement) => void;
 }> = (props) => {
   const { t } = useI18n();
-  const cardLabels = useTableCardLabels();
+  const cardLabels = tableCardLabels(t);
   const toast = useToast();
   const [searchInput, setSearchInput] = createSignal('');
   const [search, setSearch] = createSignal('');
@@ -475,7 +476,7 @@ export const WidgetOrganizations: Component<{
       </SelectionActionBar>
 
       <Show when={selected().size > 0}>
-        <div class={styles['selection-spacer']} aria-hidden="true" />
+        <SelectionActionBarSpacer />
       </Show>
 
       <Show when={bulkAction()} keyed>

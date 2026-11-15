@@ -18,6 +18,7 @@ import {
   Tabs,
   useToast,
   isQuotaExceededError,
+  tableCardLabels,
 } from '@castmill/ui-common';
 
 import { store } from '../../store/store';
@@ -39,7 +40,6 @@ import {
 import { AgentActivityLog } from './agent-activity-log';
 
 import styles from './agents-page.module.scss';
-import { useTableCardLabels } from '../../hooks/useTableCardLabels';
 
 export const AGENT_ROLES: OrganizationRole[] = [
   'admin',
@@ -80,7 +80,7 @@ type PendingConfirm = {
 
 const AgentsPage: Component = () => {
   const { t, formatDate } = useI18n();
-  const cardLabels = useTableCardLabels();
+  const cardLabels = tableCardLabels(t);
   const { hasAnyRole, hasRole } = usePermissions();
   const toast = useToast();
 

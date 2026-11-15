@@ -39,6 +39,12 @@ import {
   TagPopover,
   useViewMode,
   isQuotaExceededError,
+  useModalFromUrl,
+  detailUrlOptions,
+  closeDetailUrl,
+  tableCardLabels,
+  filtersLabel,
+  organizeByLabel,
 } from '@castmill/ui-common';
 
 import { BsCheckLg, BsEye, BsTagFill } from 'solid-icons/bs';
@@ -52,23 +58,13 @@ import './devices.scss';
 import RegisterDevice from './register-device';
 import { DevicesService } from '../services/devices.service';
 import { AddonComponentProps } from '../../common/interfaces/addon-store';
-import {
-  useTeamFilter,
-  useModalFromUrl,
-  detailUrlOptions,
-  closeDetailUrl,
-} from '../../common/hooks';
+import { useTeamFilter } from '../../common/hooks';
 
 import { QuotaIndicator } from '../../common/components/quota-indicator';
 import {
   QuotasService,
   ResourceQuota,
 } from '../../common/services/quotas.service';
-import {
-  tableCardLabels,
-  filtersLabel,
-  organizeByLabel,
-} from '../../common/utils/table-labels';
 
 interface DeviceTableItem extends Device {
   location: string;

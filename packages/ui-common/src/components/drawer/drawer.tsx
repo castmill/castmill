@@ -1,14 +1,19 @@
 /** @jsxImportSource solid-js */
 
 import {
+  Accessor,
   Component,
   JSX,
+  ParentComponent,
   Show,
+  children,
+  createContext,
   createEffect,
   createSignal,
   mergeProps,
   onCleanup,
   onMount,
+  useContext,
 } from 'solid-js';
 import { Portal } from 'solid-js/web';
 import { VsClose } from 'solid-icons/vs';
@@ -38,6 +43,31 @@ export interface DrawerProps {
   footer?: JSX.Element;
   contentClass?: string;
 }
+
+interface DrawerFooterSlot {
+  mount: Accessor<HTMLElement | undefined>;
+  register: () => () => void;
+}
+
+const DrawerFooterContext = createContext<DrawerFooterSlot>();
+
+/**
+ * Renders its children in the sticky footer of the enclosing Drawer, so a
+ * details view can own its Save/Reset actions while they stay pinned to the
+ * drawer edge. Outside a Drawer the children render in place.
+ */
+export const DrawerFooter: ParentComponent = (props) => {
+  const slot = useContext(DrawerFooterContext);
+  if (!slot) {
+    return <>{props.children}</>;
+  }
+  onCleanup(slot.register());
+  return (
+    <Show when={slot.mount()}>
+      {(mount) => <Portal mount={mount()}>{props.children}</Portal>}
+    </Show>
+  );
+};
 
 const animationDuration = 300;
 let drawerStack: string[] = [];
@@ -70,6 +100,16 @@ export const Drawer: Component<DrawerProps> = (_props) => {
   );
 
   const drawerId = `drawer-${++drawerIdCounter}`;
+  const footer = children(() => props.footer);
+  const [footerSlots, setFooterSlots] = createSignal(0);
+  const [footerEl, setFooterEl] = createSignal<HTMLElement>();
+  const footerSlot: DrawerFooterSlot = {
+    mount: footerEl,
+    register: () => {
+      setFooterSlots((n) => n + 1);
+      return () => setFooterSlots((n) => n - 1);
+    },
+  };
   const [isVisible, setIsVisible] = createSignal(false);
   const [isActive, setIsActive] = createSignal(false);
   const [hasBackdrop, setHasBackdrop] = createSignal(
@@ -325,9 +365,21 @@ export const Drawer: Component<DrawerProps> = (_props) => {
                 />
               </div>
             </div>
-            <div class={styles.body}>{props.children}</div>
-            <Show when={props.footer}>
-              {(footer) => <div class={styles.footer}>{footer()}</div>}
+            <div class={styles.body}>
+              <DrawerFooterContext.Provider value={footerSlot}>
+                {props.children}
+              </DrawerFooterContext.Provider>
+            </div>
+            <Show when={footer() || footerSlots() > 0}>
+              <div
+                class={styles.footer}
+                ref={(el) => {
+                  setFooterEl(el);
+                  onCleanup(() => setFooterEl(undefined));
+                }}
+              >
+                {footer()}
+              </div>
             </Show>
           </div>
         </div>

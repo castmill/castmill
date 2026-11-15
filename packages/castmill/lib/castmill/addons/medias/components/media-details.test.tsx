@@ -5,8 +5,8 @@ import {
   render as baseRender,
   screen,
 } from '@solidjs/testing-library';
-import { JSX, createSignal } from 'solid-js';
-import { ToastProvider } from '@castmill/ui-common';
+import { JSX } from 'solid-js';
+import { Drawer, ToastProvider } from '@castmill/ui-common';
 import type { JsonMedia } from '@castmill/player';
 import { MediaDetails } from './media-details';
 import { probeDimensions } from './media-dimensions';
@@ -47,7 +47,14 @@ describe('MediaDetails', () => {
   });
   afterEach(cleanup);
 
-  it('renders Save/Reset inline when no actions mount is given', () => {
+  const renderInDrawer = (onSubmit = vi.fn()) =>
+    render(() => (
+      <Drawer title="Media" onClose={vi.fn()}>
+        <MediaDetails media={media} onSubmit={onSubmit} />
+      </Drawer>
+    ));
+
+  it('renders Save/Reset inline outside a drawer', () => {
     render(() => <MediaDetails media={media} onSubmit={vi.fn()} />);
 
     const form = document.querySelector('form')!;
@@ -56,14 +63,11 @@ describe('MediaDetails', () => {
     expect(save).toBeDisabled();
   });
 
-  it('moves the actions to the mount and still submits the form', async () => {
-    const footer = document.createElement('footer');
-    document.body.appendChild(footer);
+  it('moves the actions to the drawer footer and still submits the form', async () => {
     const onSubmit = vi.fn().mockResolvedValue(true);
-    render(() => (
-      <MediaDetails media={media} onSubmit={onSubmit} actionsMount={footer} />
-    ));
+    renderInDrawer(onSubmit);
 
+    const footer = screen.getByRole('dialog').lastElementChild!;
     const save = screen.getByRole('button', { name: 'common.save' });
     expect(footer.contains(save)).toBe(true);
     expect(document.querySelector('form')!.contains(save)).toBe(false);
@@ -76,38 +80,15 @@ describe('MediaDetails', () => {
       expect(onSubmit).toHaveBeenCalledWith({ name: 'Renamed media' })
     );
     await vi.waitFor(() => expect(save).toBeDisabled());
-    footer.remove();
   });
 
   it('resets the name from the footer actions', () => {
-    const footer = document.createElement('div');
-    document.body.appendChild(footer);
-    render(() => (
-      <MediaDetails media={media} onSubmit={vi.fn()} actionsMount={footer} />
-    ));
+    renderInDrawer();
 
     rename('Changed');
     fireEvent.click(screen.getByRole('button', { name: 'common.reset' }));
     expect(nameInput().value).toBe('Original name');
     expect(screen.getByRole('button', { name: 'common.save' })).toBeDisabled();
-    footer.remove();
-  });
-
-  it('switches from inline to the mount once it becomes available', () => {
-    const [mount, setMount] = createSignal<HTMLElement>();
-    const footer = document.createElement('div');
-    document.body.appendChild(footer);
-    render(() => (
-      <MediaDetails media={media} onSubmit={vi.fn()} actionsMount={mount()} />
-    ));
-
-    expect(footer.querySelector('button')).toBeNull();
-    setMount(footer);
-    expect(screen.getAllByRole('button', { name: 'common.save' })).toHaveLength(
-      1
-    );
-    expect(footer.querySelector('button')).not.toBeNull();
-    footer.remove();
   });
 });
 

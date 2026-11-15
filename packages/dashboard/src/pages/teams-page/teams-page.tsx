@@ -18,6 +18,10 @@ import {
   ConfirmDialog,
   FetchDataOptions,
   useToast,
+  useModalFromUrl,
+  detailUrlOptions,
+  closeDetailUrl,
+  tableCardLabels,
 } from '@castmill/ui-common';
 
 import { store } from '../../store/store';
@@ -37,17 +41,11 @@ import { QuotaIndicator } from '../../components/quota-indicator';
 import { QuotasService, ResourceQuota } from '../../services/quotas.service';
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 import { useLocation } from '@solidjs/router';
-import {
-  useModalFromUrl,
-  detailUrlOptions,
-  closeDetailUrl,
-} from '../../hooks/useModalFromUrl';
-import { useTableCardLabels } from '../../hooks/useTableCardLabels';
 
 const TeamsPage: Component = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { t } = useI18n();
-  const cardLabels = useTableCardLabels();
+  const cardLabels = tableCardLabels(t);
   const { canPerformAction } = usePermissions();
   const { registerShortcutAction, unregisterShortcutAction } =
     useKeyboardShortcuts();

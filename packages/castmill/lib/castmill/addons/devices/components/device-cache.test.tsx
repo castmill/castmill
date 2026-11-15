@@ -6,39 +6,47 @@ import { DevicesService } from '../services/devices.service';
 
 const reloadData = vi.fn();
 
-vi.mock('@castmill/ui-common', async (importOriginal) => ({
-  SectionCard: (await importOriginal<typeof import('@castmill/ui-common')>())
-    .SectionCard,
-  ConfirmDialog: (props: any) => (
-    <button onClick={props.onConfirm}>{`Confirm ${props.title}`}</button>
-  ),
-  TableView: vi.fn((props: any) => {
-    props.ref?.({ reloadData });
+vi.mock('@castmill/ui-common', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@castmill/ui-common')>();
+  return {
+    SectionCard: actual.SectionCard,
+    tableCardLabels: actual.tableCardLabels,
+    filtersLabel: actual.filtersLabel,
+    revealTab: actual.revealTab,
+    tabKeyTarget: actual.tabKeyTarget,
+    ConfirmDialog: (props: any) => (
+      <button onClick={props.onConfirm}>{`Confirm ${props.title}`}</button>
+    ),
+    TableView: vi.fn((props: any) => {
+      props.ref?.({ reloadData });
 
-    return (
-      <section
-        data-testid="table-view"
-        data-initial-sort-key={props.initialSortOptions?.key}
-        data-initial-sort-direction={props.initialSortOptions?.direction}
-      >
-        <button onClick={() => props.fetchData({ page: { num: 1, size: 10 } })}>
-          Load page
-        </button>
-        <button
-          onClick={() =>
-            props.table.actions[0].handler({
-              url: `${props.resource}.json`,
-            })
-          }
+      return (
+        <section
+          data-testid="table-view"
+          data-initial-sort-key={props.initialSortOptions?.key}
+          data-initial-sort-direction={props.initialSortOptions?.direction}
         >
-          {props.table.actions[0].label}
-        </button>
-      </section>
-    );
-  }),
-  formatBytes: (size: number) => String(size),
-  useToast: () => ({ error: vi.fn(), success: vi.fn() }),
-}));
+          <button
+            onClick={() => props.fetchData({ page: { num: 1, size: 10 } })}
+          >
+            Load page
+          </button>
+          <button
+            onClick={() =>
+              props.table.actions[0].handler({
+                url: `${props.resource}.json`,
+              })
+            }
+          >
+            {props.table.actions[0].label}
+          </button>
+        </section>
+      );
+    }),
+    formatBytes: (size: number) => String(size),
+    useToast: () => ({ error: vi.fn(), success: vi.fn() }),
+  };
+});
 
 vi.mock('../services/devices.service', () => ({
   DevicesService: {
@@ -54,6 +62,7 @@ describe('DeviceCache', () => {
       'devices.cache.confirmClearAll': 'Clear Entire Cache',
       'devices.cache.deleteSelected': 'Delete selected items',
       'devices.cache.dataTab': 'Data',
+      'devices.cache.codeTab': 'Code',
       'devices.cache.mediaTab': 'Media',
       'common.delete': 'Delete',
     })[key] || key;
@@ -204,6 +213,30 @@ describe('DeviceCache', () => {
       'device-1',
       expect.objectContaining({ type: 'media' })
     );
+  });
+
+  it('moves between cache types with the arrow keys', () => {
+    render(() => (
+      <DeviceCache
+        baseUrl="/api"
+        device={{ id: 'device-1', online: true } as any}
+        t={t}
+      />
+    ));
+
+    const data = screen.getByRole('tab', { name: 'Data' });
+    const code = screen.getByRole('tab', { name: 'Code' });
+    const media = screen.getByRole('tab', { name: 'Media' });
+    expect(data).toHaveAttribute('tabindex', '0');
+    expect(code).toHaveAttribute('tabindex', '-1');
+
+    fireEvent.keyDown(data, { key: 'ArrowRight' });
+    expect(code).toHaveAttribute('aria-selected', 'true');
+    expect(code).toHaveFocus();
+
+    fireEvent.keyDown(code, { key: 'End' });
+    expect(media).toHaveAttribute('aria-selected', 'true');
+    expect(media).toHaveFocus();
   });
 
   it('renders one global clear action and sends the all-cache request after confirmation', async () => {

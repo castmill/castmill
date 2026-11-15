@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, render, screen } from '@solidjs/testing-library';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { Drawer } from '@castmill/ui-common';
 import { LayoutView } from './layout-view';
 import { LayoutsService } from '../services/layouts.service';
 
@@ -43,7 +44,7 @@ const store = {
   i18n: { t: (key: string) => `tr:${key}` },
 } as any;
 
-const renderView = (actionsMount?: HTMLElement) => {
+const renderView = () => {
   const onUpdate = vi.fn();
   const result = render(() => (
     <LayoutView
@@ -51,11 +52,13 @@ const renderView = (actionsMount?: HTMLElement) => {
       store={store}
       onUpdate={onUpdate}
       onClose={vi.fn()}
-      actionsMount={actionsMount}
     />
   ));
   return { ...result, onUpdate };
 };
+
+const dirtyStatus = (root: ParentNode) =>
+  root.querySelector('[data-save-bar] [aria-live]')!;
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -66,7 +69,7 @@ describe('LayoutView', () => {
   it('renders the details form, editor and a footer save bar', () => {
     const { container } = renderView();
     const header = container.querySelector('.layout-view-header')!;
-    const footer = container.querySelector('.layout-view-footer')!;
+    const footer = container.querySelector('[data-save-bar]')!;
 
     expect(header.querySelector('#layout-name')).toHaveValue('Lobby');
     expect(header.querySelector('#layout-description')).toHaveValue(
@@ -91,20 +94,17 @@ describe('LayoutView', () => {
       name: 'Lobby 2',
     });
     const { container, onUpdate } = renderView();
-    const view = container.querySelector('.layout-view')!;
-    expect(view).not.toHaveClass('is-dirty');
-    expect(screen.queryByRole('status')).toBeNull();
+    expect(dirtyStatus(container)).toHaveTextContent('');
 
     fireEvent.input(container.querySelector('#layout-name')!, {
       target: { value: 'Lobby 2' },
     });
 
-    expect(view).toHaveClass('is-dirty');
-    expect(screen.getByRole('status')).toHaveTextContent(
+    expect(dirtyStatus(container)).toHaveTextContent(
       'tr:layouts.unsavedChanges'
     );
     const save = container.querySelector(
-      '.layout-view-footer button'
+      '[data-save-bar] button'
     ) as HTMLButtonElement;
     expect(save).toBeEnabled();
 
@@ -118,27 +118,34 @@ describe('LayoutView', () => {
       expect.objectContaining({ name: 'Lobby 2', aspect_ratio: '16:9' })
     );
     expect(toast.success).toHaveBeenCalledWith('tr:layouts.saveSuccess');
-    expect(view).not.toHaveClass('is-dirty');
+    expect(dirtyStatus(container)).toHaveTextContent('');
   });
 
-  it('portals the save bar into the drawer footer when mounted', () => {
-    const footer = document.createElement('div');
-    document.body.appendChild(footer);
-    const { container } = renderView(footer);
+  it('renders the save bar in the drawer footer', () => {
+    render(() => (
+      <Drawer title="Layout" onClose={vi.fn()}>
+        <LayoutView
+          layout={layout}
+          store={store}
+          onUpdate={vi.fn()}
+          onClose={vi.fn()}
+        />
+      </Drawer>
+    ));
 
-    expect(container.querySelector('.layout-view-footer')).toBeNull();
+    const dialog = screen.getByRole('dialog');
+    const footer = dialog.lastElementChild!;
     const save = footer.querySelector(
-      '.layout-view-actions button'
+      '[data-save-bar] button'
     ) as HTMLButtonElement;
     expect(save).toHaveTextContent('tr:common.save');
     expect(save).toBeDisabled();
 
-    fireEvent.input(container.querySelector('#layout-description')!, {
+    fireEvent.input(dialog.querySelector('#layout-description')!, {
       target: { value: 'Updated' },
     });
     expect(save).toBeEnabled();
     expect(footer).toHaveTextContent('tr:layouts.unsavedChanges');
-    footer.remove();
   });
 
   it('tracks zone edits from the editor', () => {
@@ -147,6 +154,8 @@ describe('LayoutView', () => {
       aspectRatio: '9:16',
       zones: editorProps.current.value.zones,
     });
-    expect(container.querySelector('.layout-view')).toHaveClass('is-dirty');
+    expect(dirtyStatus(container)).toHaveTextContent(
+      'tr:layouts.unsavedChanges'
+    );
   });
 });

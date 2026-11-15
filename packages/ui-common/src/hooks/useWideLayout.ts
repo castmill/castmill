@@ -1,5 +1,6 @@
 import { Accessor, createEffect, createSignal, onCleanup } from 'solid-js';
 import { useMediaQuery } from './useMediaQuery';
+import { widthInEm } from '../utils/element-em';
 
 export interface WideLayoutOptions {
   /** Viewport media query that must match for the wide layout. */
@@ -40,8 +41,7 @@ export function useWideLayout(options: WideLayoutOptions): WideLayout {
       const width = el.getBoundingClientRect().width;
       // Hidden or detached containers report 0; keep the last decision.
       if (!width) return;
-      const fontSize = parseFloat(getComputedStyle(el).fontSize) || 16;
-      setFits(width >= minEm * fontSize);
+      setFits(widthInEm(el, width) >= minEm);
     };
     const observer = new ResizeObserver(measure);
     observer.observe(el);

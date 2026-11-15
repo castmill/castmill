@@ -56,6 +56,35 @@ describe('SectionCard', () => {
     expect(screen.getByRole('heading', { name: 'Plain' })).toBeInTheDocument();
   });
 
+  it('renders without a header and forwards the ref and labels', () => {
+    let ref: HTMLElement | undefined;
+    render(() => (
+      <SectionCard ref={(el) => (ref = el)} aria-label="Preview">
+        Body
+      </SectionCard>
+    ));
+    const card = screen.getByRole('region', { name: 'Preview' });
+    expect(ref).toBe(card);
+    expect(card.querySelector('header')).toBeNull();
+  });
+
+  it('labels the card by its title id', () => {
+    render(() => (
+      <SectionCard
+        title="Items"
+        titleId="items-title"
+        aria-labelledby="items-title"
+        actions={<button type="button">Add</button>}
+      >
+        Body
+      </SectionCard>
+    ));
+    expect(screen.getByRole('region', { name: 'Items' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Add' }).parentElement
+    ).toHaveAttribute('data-section-actions');
+  });
+
   it('renders a standalone header with a custom class', () => {
     render(() => (
       <SectionCardHeader title="Telemetry" class="bare" count={0} />

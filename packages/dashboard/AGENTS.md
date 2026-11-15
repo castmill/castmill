@@ -100,6 +100,9 @@ to the viewport. Breakpoints and shared state live in
   touch devices (`(hover: none), (pointer: coarse)`).
 - Use `mockViewport()` from `sidepanel/viewport.test-utils.ts` to test layouts;
   jsdom has no `matchMedia`, so components otherwise render the desktop layout.
+  For other `matchMedia` stubs use `mockMatchMedia()` from
+  `@castmill/ui-common/testing` (boolean, query list or predicate; `set()`
+  notifies listeners, `restore()` puts the original back).
 
 ## Playlist Editor Drawer
 
@@ -173,11 +176,17 @@ Shared mobile behaviour (ui-common):
   own copy of ui-common CSS on load, so never rely on stylesheet order.
 - Size drawers only with the `size` prop (`sm | md | lg | xl`). Don't set
   width/height through `contentClass`; it fights the built-in sizing and the
-  ≤50em full-screen mode. Put sticky Save/Reset actions in the Drawer `footer`.
+  ≤50em full-screen mode. Put sticky Save/Reset actions in the Drawer `footer`,
+  or render `<DrawerFooter>` from a view nested inside the Drawer to portal
+  them there (falls back to inline outside a Drawer).
+- Save/Reset rows use ui-common `SaveBar` (`dirty`, localized `dirtyLabel`):
+  right-aligned buttons, an `aria-live` unsaved-changes status and stretched
+  buttons on narrow phones. Don't hand-roll dirty footers.
 - Details views share ui-common primitives: `DetailsSummary` (status pills,
   note, meta chips and a copy-ID button; `compact` gives the slim strip on
   phones and coarse pointers), `SectionCard`/`SectionCardHeader` (icon, title,
-  count, description, header actions and a `footer` for Save/Reset), and the
+  count, description, header actions and a `footer` for Save/Reset; the title
+  is optional, `titleId`/`aria-*`/`ref` are forwarded), and the
   `useMediaQuery`/`useWideLayout` hooks (media query plus a container
   ResizeObserver). Pass localized labels; the primitives contain no strings.
 - `ComboBox` opens a bottom sheet (Portal, `[data-combobox-sheet]`) when
@@ -207,6 +216,10 @@ Shared mobile behaviour (ui-common):
   into view and hidden edges fade. Give each `TabItem` an `icon` so inactive
   tabs collapse to icon-only at ≤36em (the title stays as tooltip and
   accessible name), and pass `ariaLabel={t('common.sections')}`.
+- Custom tablists (Device/Playlist section tabs, segmented controls) reuse
+  `tabKeyTarget(event, current, count)` and `revealTab(el, focus)` from
+  ui-common for the same roving keyboard behaviour; give the active tab
+  `tabIndex=0` and the others `-1`.
 
 ## Channel Details Drawer
 
@@ -244,8 +257,8 @@ height is relative to the viewport (`clamp(20em, 60dvh, 50em)`); never style
   a drag and `pointercancel` ends it. Handles grow on `(pointer: coarse)`.
 - The canvas is `dir="ltr"`: zone rects are physical screen geometry, also in
   Arabic. Pass `t` to the editor; its strings live under `layouts.editor.*`.
-- The Layouts drawer portals its Save bar into the Drawer `footer`
-  (`LayoutView` `actionsMount`), like media details.
+- The Layouts drawer puts its `SaveBar` in the Drawer footer via
+  `DrawerFooter`, like media details.
 
 ## Team Details Drawer
 
@@ -266,12 +279,11 @@ components for phone/tablet layouts (see
 `agents/packages/ui-common/README.md`, "Responsive List Pages"):
 
 - `TableView` renders stacked cards in narrow containers by default; always
-  pass `cardLabels: useTableCardLabels()` (addons: `tableCardLabels(t)` from
-  `addons/common/utils/table-labels.ts`). Direct `<Table>` usages opt in with
+  pass `cardLabels: tableCardLabels(t)` from `@castmill/ui-common`. Direct `<Table>` usages opt in with
   `cardLayout cardLabels={...}`. Don't hand-build `<table>` lists; use `Table`
   with `actions` (use `hidden`/`disabled` for per-row actions) so overflowing
   tables first go compact with a "⋯" row-actions menu, then become cards.
-- Toolbars with filters or actions pass `filtersLabel: () => t('filters.toggle')`
+- Toolbars with filters or actions pass `filtersLabel: filtersLabel(t)`
   so the phone "Filters" toggle is localized; `ResourceTreeView` gets
   `dimensionLabel={t('tags.groups.organizeBy')}`.
 - Page roots use `margin: var(--cm-page-gutter, 2em)` instead of a fixed
@@ -936,8 +948,9 @@ page: browser/swipe back from an item returns to its list.
   should do the same.
 - Sync the drawer with `useModalFromUrl`; addons also need its `popstate`
   listener because they don't share the dashboard router's reactivity.
-- The helpers live in `src/hooks/useModalFromUrl.ts` and, for addons,
-  `addons/common/hooks/use-modal-from-url.ts`.
+- `useModalFromUrl`, `detailUrlOptions`, `closeDetailUrl` and
+  `isDetailHistoryEntry` live in ui-common (`hooks/useModalFromUrl.ts`) and
+  are shared by the dashboard and addons.
 
 ### URL Pattern
 

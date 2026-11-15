@@ -4,7 +4,8 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, it, expect, afterEach, vi, beforeEach } from 'vitest';
 import { render, fireEvent, cleanup, screen } from '@solidjs/testing-library';
-import { Drawer } from './drawer';
+import { createSignal, Show } from 'solid-js';
+import { Drawer, DrawerFooter } from './drawer';
 
 describe('Drawer native picker positioning', () => {
   it('releases the transformed containing block when open', () => {
@@ -73,6 +74,43 @@ describe('Drawer Component', () => {
     ));
 
     expect(screen.getByRole('dialog').children).toHaveLength(2);
+  });
+
+  it('renders DrawerFooter content from the body in the sticky footer', () => {
+    const [shown, setShown] = createSignal(true);
+    render(() => (
+      <Drawer title="Slot" onClose={() => {}}>
+        <div>Body</div>
+        <Show when={shown()}>
+          <DrawerFooter>
+            <button>Save</button>
+          </DrawerFooter>
+        </Show>
+      </Drawer>
+    ));
+
+    const dialog = screen.getByRole('dialog');
+    const save = screen.getByRole('button', { name: 'Save' });
+    expect(dialog.children).toHaveLength(3);
+    expect(dialog.lastElementChild?.contains(save)).toBe(true);
+    expect(screen.getByText('Body').parentElement?.contains(save)).toBe(false);
+
+    setShown(false);
+    expect(dialog.children).toHaveLength(2);
+  });
+
+  it('renders DrawerFooter content in place outside a Drawer', () => {
+    render(() => (
+      <div data-testid="host">
+        <DrawerFooter>
+          <button>Save</button>
+        </DrawerFooter>
+      </div>
+    ));
+
+    expect(screen.getByTestId('host')).toContainElement(
+      screen.getByRole('button', { name: 'Save' })
+    );
   });
 
   it('closes on ESC key press', () => {

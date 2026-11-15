@@ -13,6 +13,7 @@ import {
   Table,
   type Column,
   type TableAction,
+  tableCardLabels,
 } from '@castmill/ui-common';
 import { NetworkService, Organization } from '../../services/network.service';
 import { useI18n } from '../../i18n';
@@ -25,13 +26,12 @@ import {
 } from 'solid-icons/bs';
 import { OrganizationIntegrationSettings } from './organization-integration-settings';
 import { useNetworkContext } from './network-context';
-import { useTableCardLabels } from '../../hooks/useTableCardLabels';
 import styles from './network.module.scss';
 
 const NetworkOrganizations: Component = () => {
   const { t } = useI18n();
   const toast = useToast();
-  const cardLabels = useTableCardLabels();
+  const cardLabels = tableCardLabels(t);
   const { stats, setStats } = useNetworkContext();
 
   // Organizations state

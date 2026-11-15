@@ -45,8 +45,8 @@ import { ONBOARDING_STEPS } from '../../config/onboarding-steps';
 import { useKeyboardShortcuts } from '../../hooks';
 import TopbarOverflowMenu from './topbar-overflow-menu';
 import {
-  COMPACT_TOPBAR_QUERY,
   NAV_COLLAPSED_QUERY,
+  NAV_OFFCANVAS_QUERY,
   NAV_DRAWER_ID,
   TOUCH_QUERY,
   navDrawer,
@@ -84,7 +84,7 @@ const Topbar: Component = () => {
 
   // Compact layout for phones and portrait tablets; the menu button is shown
   // whenever the side panel is collapsed (drawer or icon rail).
-  const compact = useMediaQuery(COMPACT_TOPBAR_QUERY, false);
+  const compact = useMediaQuery(NAV_OFFCANVAS_QUERY, false);
   const collapsedNav = useMediaQuery(NAV_COLLAPSED_QUERY, false);
   const touch = useMediaQuery(TOUCH_QUERY, false);
   const showShortcutsUi = () =>

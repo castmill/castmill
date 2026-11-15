@@ -27,20 +27,6 @@
   min-width: 0;
 }
 
-.team-footer {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.5em;
-}
-
-.team-dirty {
-  flex: 1 1 auto;
-  color: var(--cm-warning);
-  font-size: 0.8em;
-}
-
 .resources-container {
   min-width: 0;
 }
@@ -125,26 +111,10 @@
   }
 }
 
-// Phones: full-width footer buttons and flat sections so card tables fit.
+// Phones: flat sections so card tables fit, full-width leave action.
 @media (max-width: 30em) {
   .summary-name {
     max-width: 10em;
-  }
-
-  .team-footer {
-    > button {
-      flex: 1 1 0;
-      justify-content: center;
-    }
-  }
-
-  .team-dirty {
-    flex-basis: 100%;
-    text-align: center;
-
-    &:empty {
-      display: none;
-    }
   }
 
   .resources-section {

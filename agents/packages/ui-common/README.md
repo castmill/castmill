@@ -109,7 +109,7 @@ table: {
   cardLayout?: true,              // TableView default; required on <Table>
   cardBreakpoint?: 36,            // container width in em (default 36)
   cardPrimaryColumn?: 'name',     // card title (default: first column)
-  cardLabels: useTableCardLabels(), // localized sort/selection labels
+  cardLabels: tableCardLabels(t),  // localized sort/selection labels
 }
 ```
 
@@ -123,32 +123,40 @@ table: {
   direction toggle over `sortable` columns) and row click (also Enter/Space
   on the focused card) share state with the table view, so switching layout
   keeps the selection.
-- `cardLabels` default to English; in the dashboard always pass
-  `useTableCardLabels()` (`packages/dashboard/src/hooks/useTableCardLabels.ts`),
+- `cardLabels` default to English; always pass `tableCardLabels(t)`
+  (ui-common `utils/table-labels.ts`, used by the dashboard and addons),
   which maps to `common.sortBy`, `common.sortAscending`,
   `common.sortDescending`, `common.selectAll` and `common.selectRow`. The
-  `selectRow(id: string)` formatter receives the row ID. Addons (which bundle
-  their own ui-common) use `tableCardLabels(t)` from
-  `addons/common/utils/table-labels.ts`.
+  `selectRow(id: string)` formatter receives the row ID. `filtersLabel(t)`
+  and `organizeByLabel(t)` live in the same module.
 - Styles use `--cm-*` tokens, `em` units and logical properties (RTL-safe).
 
 ### Responsive List Pages (phones ≤ 36em)
 
-`usePhoneLayout()` (`PHONE_LAYOUT_QUERY = '(max-width: 36em)'`, false when
-`matchMedia` is missing) drives the phone behaviour of the shared list-page
+Breakpoints live in `hooks/useMediaQuery.ts`: `BREAKPOINTS_EM` (phone 36,
+tablet 48, wide 64), `PHONE_LAYOUT_QUERY`, `TABLET_LAYOUT_QUERY`,
+`WIDE_LAYOUT_QUERY`, `COARSE_POINTER_QUERY`, `useCoarsePointer()` and
+`matchesMediaQuery()` for one-off checks in event handlers. Use these instead
+of query literals in TS; SCSS `@media` rules repeat the em values. For
+em-based container measurements use `elementEm(el)`/`widthInEm(el)`
+(`utils/element-em.ts`).
+
+`usePhoneLayout()` (`PHONE_LAYOUT_QUERY`, false when `matchMedia` is
+missing) drives the phone behaviour of the shared list-page
 components:
 
 - **ToolBar**: wraps; search, a "Filters" toggle (`filtersLabel`, also
   `TableView` `toolbar.filtersLabel`) and the primary `mainAction` stay on the
   first row, while filter switches and `actions` move into a collapsible panel
   (`aria-expanded`/`aria-controls`). The panel stays mounted so filter state
-  is kept. Pass `filtersLabel: () => t('filters.toggle')` (addons:
-  `filtersLabel(t)`).
+  is kept. Pass `filtersLabel: filtersLabel(t)`.
 - **Pagination**: page numbers collapse to a "current / total" summary; buttons
   are ≥ 2.75em on phones and coarse pointers.
 - **SelectionActionBar**: fixed to the bottom with safe-area padding; actions
-  scroll horizontally. `TableView` adds bottom padding (`has-selection`) so the
-  bar doesn't cover rows.
+  scroll horizontally. Render `<SelectionActionBarSpacer />` after the
+  selectable content while items are selected (as `TableView` does) so the
+  bar doesn't cover the last rows; it is the single source of the reserved
+  height.
 - **Table**: row actions and card menu items get ≥ 2.75em tap targets.
   Layout is driven by the container and the table's own width, not the
   viewport: `table` → `compact` (`data-density="compact"`: tighter cells and

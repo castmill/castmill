@@ -6,6 +6,8 @@ import {
   TableView,
   TableViewRef,
   useToast,
+  tableCardLabels,
+  filtersLabel,
 } from '@castmill/ui-common';
 import { AiOutlineDelete } from 'solid-icons/ai';
 import { BsCheckLg, BsEye } from 'solid-icons/bs';
@@ -18,7 +20,6 @@ import {
 import { ResourceChooser } from './resource-chooser';
 
 import { useI18n } from '../../i18n';
-import { useTableCardLabels } from '../../hooks/useTableCardLabels';
 import { QuotaIndicator } from '../../components/quota-indicator';
 import { QuotasService, ResourceQuota } from '../../services/quotas.service';
 
@@ -74,7 +75,7 @@ export const ResourcesView = (props: {
   resourceName: string;
 }) => {
   const { t } = useI18n();
-  const cardLabels = useTableCardLabels();
+  const cardLabels = tableCardLabels(t);
 
   const openModal = () => {
     alert(t('teams.errors.openViewModal'));
@@ -285,7 +286,7 @@ export const ResourcesView = (props: {
         fetchData={fetchResources}
         ref={setRef}
         toolbar={{
-          filtersLabel: () => t('filters.toggle'),
+          filtersLabel: filtersLabel(t),
           filters: [],
           searchPlaceholder: t('common.search'),
           mainAction: (

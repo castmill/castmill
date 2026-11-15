@@ -21,7 +21,11 @@ import type { IconTypes } from 'solid-icons';
 import { BsCollectionPlay, BsEye, BsGear, BsPlusLg } from 'solid-icons/bs';
 import {
   useToast,
-  useMediaQuery,
+  revealTab,
+  SectionCard,
+  tabKeyTarget,
+  useCoarsePointer,
+  WIDE_LAYOUT_QUERY,
   useWideLayout,
   DetailsSummary,
   Modal,
@@ -64,7 +68,6 @@ interface PlaylistSection {
 
 // Below this viewport width the widgets, items and preview no longer fit
 // side by side in the drawer, so they move into tabs.
-export const WIDE_LAYOUT_QUERY = '(min-width: 64em)';
 // The three columns need ~56em plus gaps; below this measured editor width
 // (e.g. tablets, zoomed pages) fall back to tabs even if the viewport is wide.
 export const WIDE_LAYOUT_MIN_EM = 57;
@@ -705,7 +708,7 @@ export const PlaylistView: Component<{
     query: WIDE_LAYOUT_QUERY,
     minEm: WIDE_LAYOUT_MIN_EM,
   });
-  const coarsePointer = useMediaQuery('(pointer: coarse)', false);
+  const coarsePointer = useCoarsePointer();
   const [activeSection, setActiveSection] = createSignal<SectionId>('content');
   const [pickerOpen, setPickerOpen] = createSignal(false);
   const [addingWidget, setAddingWidget] = createSignal(false);
@@ -753,32 +756,22 @@ export const PlaylistView: Component<{
   const selectSection = (id: SectionId, focus = false) => {
     setActiveSection(id);
     if (id !== 'content') setPickerOpen(false);
-    const tab = tabRefs[id];
-    if (focus) tab?.focus();
-    tab?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+    revealTab(tabRefs[id], focus);
   };
 
   const onTabKeyDown = (event: KeyboardEvent) => {
     const list = sections();
     const index = list.findIndex((section) => section.id === activeSection());
-    const rtl =
-      (event.currentTarget as HTMLElement).closest('[dir="rtl"]') !== null;
-    const step = { ArrowRight: rtl ? -1 : 1, ArrowLeft: rtl ? 1 : -1 }[
-      event.key as 'ArrowRight' | 'ArrowLeft'
-    ];
-    let next: number | undefined;
-    if (step) next = (index + step + list.length) % list.length;
-    else if (event.key === 'Home') next = 0;
-    else if (event.key === 'End') next = list.length - 1;
-    if (next === undefined) return;
-    event.preventDefault();
-    selectSection(list[next].id, true);
+    const next = tabKeyTarget(event, index, list.length);
+    if (next !== undefined) selectSection(list[next].id, true);
   };
 
   const showWidgets = () => wide() || pickerOpen();
   const showItems = () =>
     wide() || (activeSection() === 'content' && !pickerOpen());
   const showPreview = () => wide() || activeSection() === 'preview';
+  const cardClass = (name: string, visible: boolean) =>
+    `playlist-card ${name}${visible ? '' : ' is-hidden'}`;
 
   const totalDuration = () =>
     items().reduce((total, item) => {
@@ -926,7 +919,6 @@ export const PlaylistView: Component<{
         }}
       >
         <DetailsSummary
-          class="playlist-summary"
           label={t('common.status')}
           compact
           pills={[
@@ -987,9 +979,8 @@ export const PlaylistView: Component<{
             activeSection() === 'settings' ? 'content' : activeSection()
           )}
         >
-          <section
-            class="playlist-card playlist-widgets-card"
-            classList={{ 'is-hidden': !showWidgets() }}
+          <SectionCard
+            class={cardClass('playlist-widgets-card', showWidgets())}
             aria-label={t('playlists.editor.widgets')}
           >
             <WidgetChooser
@@ -1013,22 +1004,17 @@ export const PlaylistView: Component<{
               }
               onClose={wide() ? undefined : () => setPickerOpen(false)}
             />
-          </section>
+          </SectionCard>
 
-          <section
+          <SectionCard
             ref={itemsCardRef}
-            class="playlist-card playlist-items-card"
-            classList={{ 'is-hidden': !showItems() }}
+            class={cardClass('playlist-items-card', showItems())}
             aria-labelledby={`playlist-${props.playlistId}-items-title`}
-          >
-            <header class="playlist-card-header">
-              <div class="playlist-card-heading">
-                <h3 id={`playlist-${props.playlistId}-items-title`}>
-                  {t('playlists.editor.items')}
-                  <span class="playlist-card-count">{items().length}</span>
-                </h3>
-              </div>
-              <Show when={!wide()}>
+            title={t('playlists.editor.items')}
+            titleId={`playlist-${props.playlistId}-items-title`}
+            count={items().length}
+            actions={
+              wide() ? undefined : (
                 <button
                   type="button"
                   class="playlist-add-button"
@@ -1037,8 +1023,9 @@ export const PlaylistView: Component<{
                   <BsPlusLg aria-hidden="true" />
                   {t('playlists.editor.addWidget')}
                 </button>
-              </Show>
-            </header>
+              )
+            }
+          >
             <PlaylistItems
               store={props.store}
               baseUrl={props.baseUrl}
@@ -1080,11 +1067,10 @@ export const PlaylistView: Component<{
                 </>
               }
             />
-          </section>
+          </SectionCard>
 
-          <section
-            class="playlist-card playlist-preview-card"
-            classList={{ 'is-hidden': !showPreview() }}
+          <SectionCard
+            class={cardClass('playlist-preview-card', showPreview())}
             aria-label={t('common.preview')}
           >
             <div
@@ -1118,7 +1104,7 @@ export const PlaylistView: Component<{
                 />
               </div>
             </div>
-          </section>
+          </SectionCard>
         </div>
 
         <div
@@ -1128,9 +1114,11 @@ export const PlaylistView: Component<{
           id={panelId('settings')}
           aria-labelledby={tabId('settings')}
         >
-          <section
+          <SectionCard
             class="playlist-card playlist-settings-card"
             aria-label={t('common.settings')}
+            footer={settingsTimestamps()}
+            footerClass="playlist-settings-meta"
           >
             <PlaylistNameField
               playlist={playlist()!}
@@ -1241,13 +1229,7 @@ export const PlaylistView: Component<{
                 </Show>
               </Show>
             </div>
-
-            <Show when={settingsTimestamps()}>
-              <footer class="playlist-settings-meta">
-                {settingsTimestamps()}
-              </footer>
-            </Show>
-          </section>
+          </SectionCard>
         </div>
       </div>
 

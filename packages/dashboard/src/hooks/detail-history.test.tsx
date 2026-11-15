@@ -7,8 +7,11 @@ import {
   waitFor,
 } from '@solidjs/testing-library';
 import { Route, Router, useSearchParams } from '@solidjs/router';
-import { TableView } from '@castmill/ui-common';
-import { closeDetailUrl, detailUrlOptions } from './useModalFromUrl';
+import {
+  TableView,
+  closeDetailUrl,
+  detailUrlOptions,
+} from '@castmill/ui-common';
 
 const ListPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();

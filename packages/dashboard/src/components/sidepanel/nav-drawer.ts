@@ -6,13 +6,15 @@
  * in a module-level root.
  */
 import { createRoot, createSignal } from 'solid-js';
+import { BREAKPOINTS_EM, TABLET_LAYOUT_QUERY } from '@castmill/ui-common';
 
-/** Up to this width the side panel is an off-canvas drawer (phones, portrait tablets). */
-export const NAV_OFFCANVAS_QUERY = '(max-width: 48em)';
+/**
+ * Up to this width the side panel is an off-canvas drawer and the top bar is
+ * compact (phones, portrait tablets).
+ */
+export const NAV_OFFCANVAS_QUERY = TABLET_LAYOUT_QUERY;
 /** Up to this width the side panel collapses (icon rail on landscape tablets). */
-export const NAV_COLLAPSED_QUERY = '(max-width: 64em)';
-/** Compact top bar (phones, portrait tablets). */
-export const COMPACT_TOPBAR_QUERY = '(max-width: 48em)';
+export const NAV_COLLAPSED_QUERY = `(max-width: ${BREAKPOINTS_EM.wide}em)`;
 /** Devices without a hover-capable fine pointer (no keyboard shortcuts UI). */
 export const TOUCH_QUERY = '(hover: none), (pointer: coarse)';
 

@@ -7,22 +7,12 @@ import {
   within,
 } from '@solidjs/testing-library';
 import { createSignal } from 'solid-js';
+import { mockMatchMedia } from '../../testing';
 import { NATIVE_SELECT_ATTRIBUTE, SelectSheetHost } from './select-sheet';
 
 const originalMatchMedia = window.matchMedia;
 
-const mockSheetQuery = (matches: boolean) => {
-  window.matchMedia = vi.fn((query: string) => ({
-    matches,
-    media: query,
-    onchange: null,
-    addListener: vi.fn(),
-    removeListener: vi.fn(),
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  })) as unknown as typeof window.matchMedia;
-};
+const mockSheetQuery = (matches: boolean) => mockMatchMedia(matches);
 
 const touch = (target: Element, type: 'touchstart' | 'touchend', y = 10) => {
   const point = { clientX: 10, clientY: y, target } as unknown as Touch;

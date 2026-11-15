@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { closeDetailUrl, detailUrlOptions } from './use-modal-from-url';
+import { createRoot, createSignal } from 'solid-js';
+import {
+  closeDetailUrl,
+  detailUrlOptions,
+  useModalFromUrl,
+} from './useModalFromUrl';
 
 describe('detail history helpers', () => {
   afterEach(() => {
@@ -17,9 +22,14 @@ describe('detail history helpers', () => {
     });
   });
 
-  it('pushes the first detail entry and replaces it when switching items', () => {
-    window.history.replaceState(detailUrlOptions().state, '');
-    expect(detailUrlOptions().replace).toBe(true);
+  it('replaces an already-marked detail when switching items', () => {
+    window.history.replaceState({ castmillDetail: true }, '', '/');
+
+    expect(detailUrlOptions()).toEqual({
+      replace: true,
+      scroll: false,
+      state: { castmillDetail: true },
+    });
   });
 
   it('replaces an unmarked deep-linked detail without marking it', () => {
@@ -51,5 +61,36 @@ describe('detail history helpers', () => {
 
     expect(removeItemFromUrl).toHaveBeenCalledOnce();
     expect(back).not.toHaveBeenCalled();
+  });
+});
+
+describe('useModalFromUrl', () => {
+  it('opens, switches and closes the modal as the URL itemId changes', () => {
+    const [itemId, setItemId] = createSignal<string | undefined>('A');
+    const [open, setOpen] = createSignal(false);
+    const openModal = vi.fn(() => setOpen(true));
+    const closeModal = vi.fn(() => setOpen(false));
+
+    const dispose = createRoot((dispose) => {
+      useModalFromUrl({
+        getItemIdFromUrl: itemId,
+        isModalOpen: open,
+        closeModal,
+        openModal,
+      });
+      return dispose;
+    });
+
+    expect(openModal).toHaveBeenLastCalledWith('A');
+
+    setItemId('B');
+    expect(openModal).toHaveBeenLastCalledWith('B');
+    expect(openModal).toHaveBeenCalledTimes(2);
+
+    setItemId(undefined);
+    expect(closeModal).toHaveBeenCalledOnce();
+    expect(open()).toBe(false);
+
+    dispose();
   });
 });

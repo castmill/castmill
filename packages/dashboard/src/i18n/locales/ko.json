@@ -601,8 +601,6 @@
     "removeTeams": "팀 제거",
     "confirmRemoveTeam": "팀 \"{{name}}\"을(를) 제거하시겠습니까?",
     "confirmRemoveTeams": "다음 팀을 제거하시겠습니까?",
-    "addedOn": "추가됨",
-    "lastUpdatedOn": "마지막 업데이트",
     "enterTeamName": "팀 이름 입력",
     "summary": "팀 요약",
     "created": "{{time}} 생성됨",

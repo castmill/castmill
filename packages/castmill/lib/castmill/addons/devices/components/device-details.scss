@@ -201,19 +201,7 @@
 }
 
 .device-settings-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.5em;
-
-  .device-settings-dirty {
-    flex: 1 1 auto;
-    color: var(--cm-warning);
-    font-size: 0.8em;
-  }
-
-  > button:disabled {
+  button:disabled {
     background-color: transparent;
     box-shadow: inset 0 0 0 1px var(--cm-border-strong);
     color: var(--cm-text-tertiary);
@@ -225,23 +213,5 @@
     bottom: -1.2em;
     z-index: 1;
     box-shadow: 0 -0.5em 1.5em var(--cm-shadow-color);
-  }
-}
-
-@media (max-width: 30em) {
-  .device-settings-actions {
-    > button {
-      flex: 1 1 0;
-      justify-content: center;
-    }
-
-    .device-settings-dirty {
-      flex-basis: 100%;
-      text-align: center;
-
-      &:empty {
-        display: none;
-      }
-    }
   }
 }

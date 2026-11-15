@@ -19,7 +19,7 @@ import {
   ConfirmDialog,
   Modal,
   ModalRef,
-  useMediaQuery,
+  usePhoneLayout,
 } from '@castmill/ui-common';
 
 import { PlaylistItem } from './playlist-item';
@@ -87,7 +87,7 @@ export const PlaylistItems: Component<{
   const [confirmDiscard, setConfirmDiscard] = createSignal(false);
   const [itemToRemove, setItemToRemove] = createSignal<JsonPlaylistItem>();
   // The config modal is full screen on phones, where a back arrow is expected.
-  const isPhone = useMediaQuery('(max-width: 36em)', false);
+  const isPhone = usePhoneLayout();
   let configModal: ModalRef | undefined;
 
   /** Close request from the header, Escape, backdrop or Cancel. */

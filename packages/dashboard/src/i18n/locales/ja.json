@@ -601,8 +601,6 @@
     "removeTeams": "チームを削除",
     "confirmRemoveTeam": "チーム「{{name}}」を削除してもよろしいですか？",
     "confirmRemoveTeams": "以下のチームを削除してもよろしいですか？",
-    "addedOn": "追加日",
-    "lastUpdatedOn": "最終更新日",
     "enterTeamName": "チーム名を入力してください",
     "summary": "チームの概要",
     "created": "{{time}}に作成",

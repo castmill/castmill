@@ -10,6 +10,7 @@ import {
 } from '@solidjs/testing-library';
 import { resolve } from 'node:path';
 import { compile } from 'sass';
+import { mockMatchMedia } from '@castmill/ui-common/testing';
 import { I18nProvider } from '../../i18n';
 import { LOCALE_STORAGE_KEY } from '../../i18n/types';
 import { AutomationEditor } from './automation-editor';
@@ -129,7 +130,7 @@ describe('Automation editor on small screens', () => {
       expect(button.getPropertyValue('text-align')).toBe('start');
     });
 
-    it.each(['.drawerFooter', '.tabFooter', '.formActions'])(
+    it.each(['.drawerFooter', '.tabFooter'])(
       'makes %s buttons full width',
       (footer) => {
         const container = ruleFor(footer);
@@ -211,19 +212,7 @@ describe('Automation editor on small screens', () => {
 
   it('localizes the playlist picker bottom sheet close button on phones', async () => {
     localStorage.setItem(LOCALE_STORAGE_KEY, 'es');
-    window.matchMedia = vi.fn(
-      (query: string) =>
-        ({
-          matches: true,
-          media: query,
-          onchange: null,
-          addListener: vi.fn(),
-          removeListener: vi.fn(),
-          addEventListener: vi.fn(),
-          removeEventListener: vi.fn(),
-          dispatchEvent: vi.fn(),
-        }) as unknown as MediaQueryList
-    );
+    mockMatchMedia(true);
 
     render(() => (
       <I18nProvider>

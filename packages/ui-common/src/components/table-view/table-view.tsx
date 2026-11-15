@@ -15,10 +15,12 @@ import {
   TableCardLabels,
   ToolBar,
   SelectionActionBar,
+  SelectionActionBarSpacer,
 } from '../';
 import { PermissionDenied } from '../permission-denied/permission-denied';
 import { SortOptions } from '../../interfaces/sort-options.interface';
 
+import { isDetailHistoryEntry } from '../../hooks/useModalFromUrl';
 import style from './table-view.module.scss';
 
 export interface FetchDataOptions {
@@ -191,10 +193,10 @@ export const TableView = <
     if (props.params) {
       const [searchParams, setSearchParamsEx] = props.params;
       // While a detail opened from the list has its own marked history entry
-      // (see the dashboard's detailUrlOptions), list navigation replaces that
+      // (see detailUrlOptions), list navigation replaces that
       // entry and drops the mark. Pushing would leave the marked detail entry
       // behind, so closing the detail and going Back would reopen it.
-      if (window.history.state?.castmillDetail) {
+      if (isDetailHistoryEntry()) {
         setSearchParamsEx(
           { ...searchParams, ...params },
           { replace: true, scroll: false }
@@ -390,13 +392,7 @@ export const TableView = <
           </Show>
         }
       >
-        <div
-          class={style['table-view']}
-          classList={{
-            [style['has-selection']]:
-              !!props.selectionActions && selectedCount() > 0,
-          }}
-        >
+        <div class={style['table-view']}>
           <Show when={props.toolbar}>
             <ToolBar
               title={props.toolbar?.hideTitle ? undefined : getTitle()}
@@ -445,6 +441,10 @@ export const TableView = <
                 clear: clearSelection,
               })}
             </SelectionActionBar>
+          </Show>
+
+          <Show when={!!props.selectionActions && selectedCount() > 0}>
+            <SelectionActionBarSpacer />
           </Show>
 
           <div

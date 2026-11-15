@@ -36,7 +36,9 @@ import { CalendarCell } from './calendar-cell';
 import { DefaultPlaylistComboBox } from './default-playlist-combobox';
 import {
   Modal,
+  useCoarsePointer,
   useMediaQuery,
+  WIDE_LAYOUT_QUERY,
   useToast,
   useWideLayout,
 } from '@castmill/ui-common';
@@ -61,7 +63,7 @@ import {
 } from './calendar-add-entry';
 
 /** Viewport query for the wide (side panel + week) layout. */
-export const WIDE_CALENDAR_QUERY = '(min-width: 64em)';
+export const WIDE_CALENDAR_QUERY = WIDE_LAYOUT_QUERY;
 /** The calendar layout container must also be this wide (em) to be wide. */
 export const WIDE_CALENDAR_MIN_EM = 50;
 /** Phones show a single day instead of the week. */
@@ -109,7 +111,7 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
     query: WIDE_CALENDAR_QUERY,
     minEm: WIDE_CALENDAR_MIN_EM,
   });
-  const coarsePointer = useMediaQuery('(pointer: coarse)', false);
+  const coarsePointer = useCoarsePointer();
   const dayView = useMediaQuery(DAY_VIEW_QUERY, false);
   const wide = () => wideViewport() && !coarsePointer() && !dayView();
   const [chooserOpen, setChooserOpen] = createSignal(false);

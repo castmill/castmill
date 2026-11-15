@@ -642,8 +642,6 @@
     "playlists": "Playlists",
     "devices": "Devices",
     "channels": "Channels",
-    "addedOn": "Added on",
-    "lastUpdatedOn": "Last updated on",
     "enterTeamName": "Enter team name",
     "summary": "Team summary",
     "created": "Created {{time}}",

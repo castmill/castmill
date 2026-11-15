@@ -2,7 +2,7 @@ import { createSignal, createEffect, on, For, Show } from 'solid-js';
 import type { Orientation } from '@castmill/device';
 
 import { Device } from '../interfaces/device.interface';
-import { Button, FormItem, SectionCard } from '@castmill/ui-common';
+import { Button, FormItem, SaveBar, SectionCard } from '@castmill/ui-common';
 import { AddonStore } from '../../common/interfaces/addon-store';
 
 import { BsArrowUp, BsCheckLg, BsInfoCircle, BsX } from 'solid-icons/bs';
@@ -145,10 +145,10 @@ export const DeviceDetails = (props: {
         footerClass="device-settings-actions"
         footer={
           canEdit() ? (
-            <>
-              <span class="device-settings-dirty" aria-live="polite">
-                {isFormModified() ? t('devices.details.unsavedChanges') : ''}
-              </span>
+            <SaveBar
+              dirty={isFormModified()}
+              dirtyLabel={t('devices.details.unsavedChanges')}
+            >
               <Button
                 label={t('common.reset')}
                 onClick={resetForm}
@@ -163,7 +163,7 @@ export const DeviceDetails = (props: {
                 icon={BsCheckLg}
                 color="success"
               />
-            </>
+            </SaveBar>
           ) : undefined
         }
       >

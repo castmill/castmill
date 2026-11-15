@@ -12,12 +12,13 @@ import {
   TableViewRef,
   Timestamp,
   useToast,
+  tableCardLabels,
+  filtersLabel,
 } from '@castmill/ui-common';
 import { TeamsService } from '../../services/teams.service';
 import { AiOutlineDelete } from 'solid-icons/ai';
 import { createEffect, createSignal } from 'solid-js';
 import { useI18n } from '../../i18n';
-import { useTableCardLabels } from '../../hooks/useTableCardLabels';
 
 interface Invitation {
   id: number;
@@ -52,7 +53,7 @@ export const TeamInvitationsView = (props: {
   refreshKey?: number;
 }) => {
   const { t, locale } = useI18n();
-  const cardLabels = useTableCardLabels();
+  const cardLabels = tableCardLabels(t);
 
   const columns = [
     { key: 'email', title: t('common.email'), sortable: true },
@@ -204,7 +205,7 @@ export const TeamInvitationsView = (props: {
         fetchData={fetchData}
         ref={setRef}
         toolbar={{
-          filtersLabel: () => t('filters.toggle'),
+          filtersLabel: filtersLabel(t),
           searchPlaceholder: t('common.search'),
           actions: (
             <div>

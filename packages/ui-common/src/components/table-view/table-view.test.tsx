@@ -611,17 +611,18 @@ describe('TableView Component - Responsive defaults', () => {
     expect(screen.queryByTestId('table-card')).toBeNull();
   });
 
-  it('marks the view while rows are selected for the fixed phone selection bar', async () => {
+  it('reserves room for the fixed phone selection bar while rows are selected', async () => {
     const { container } = renderView(false);
     await waitFor(() => {
       expect(screen.getByText('Resource 1')).toBeInTheDocument();
     });
-    const root = container.firstElementChild as HTMLElement;
-    expect(root.className).not.toContain('has-selection');
+    const spacer = () =>
+      container.querySelector('.castmill-selection-bar-spacer');
+    expect(spacer()).toBeNull();
 
     fireEvent.click(screen.getByLabelText('Select row 1'));
     await waitFor(() => {
-      expect(root.className).toContain('has-selection');
+      expect(spacer()).not.toBeNull();
     });
   });
 

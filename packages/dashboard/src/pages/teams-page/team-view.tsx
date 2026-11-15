@@ -7,6 +7,7 @@ import {
   Drawer,
   FormItem,
   formatRelativeTimeLocalized,
+  SaveBar,
 } from '@castmill/ui-common';
 import { usePermissions } from '../../hooks/usePermissions';
 
@@ -206,10 +207,11 @@ export const TeamView = (props: {
       outsideClickIgnoreSelector="tbody tr, [data-testid='table-card']"
       footer={
         canEdit() ? (
-          <div class={styles.teamFooter} data-testid="team-footer">
-            <span class={styles.teamDirty} aria-live="polite">
-              {isFormModified() ? t('teams.unsavedChanges') : ''}
-            </span>
+          <SaveBar
+            dirty={isFormModified()}
+            dirtyLabel={t('teams.unsavedChanges')}
+            data-testid="team-footer"
+          >
             <Button
               label={t('common.reset')}
               disabled={!isFormModified() || saving()}
@@ -226,7 +228,7 @@ export const TeamView = (props: {
               icon={BsCheckLg}
               color="success"
             />
-          </div>
+          </SaveBar>
         ) : undefined
       }
     >

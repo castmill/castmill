@@ -16,6 +16,8 @@ import {
   Dropdown,
   Timestamp,
   useToast,
+  tableCardLabels,
+  filtersLabel,
 } from '@castmill/ui-common';
 import { TeamsService } from '../../services/teams.service';
 import { OrganizationsService } from '../../services/organizations.service';
@@ -26,7 +28,6 @@ import { AiOutlineDelete } from 'solid-icons/ai';
 import { createMemo, createSignal, Show } from 'solid-js';
 import { User } from '../../interfaces/user.interface';
 import { useI18n } from '../../i18n';
-import { useTableCardLabels } from '../../hooks/useTableCardLabels';
 import { getUser } from '../../components/auth';
 import styles from './teams-page.module.scss';
 
@@ -103,7 +104,7 @@ export const TeamMembersView = (props: {
   onInvitationSent?: () => void;
 }) => {
   const { t, locale } = useI18n();
-  const cardLabels = useTableCardLabels();
+  const cardLabels = tableCardLabels(t);
   const { canPerformAction } = usePermissions();
   const toast = useToast();
   const resolveRemoveMemberError = (message: string) => {
@@ -463,7 +464,7 @@ export const TeamMembersView = (props: {
         fetchData={fetchData}
         ref={setRef}
         toolbar={{
-          filtersLabel: () => t('filters.toggle'),
+          filtersLabel: filtersLabel(t),
           searchPlaceholder: t('common.search'),
           mainAction: (
             <PermissionButton

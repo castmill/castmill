@@ -14,6 +14,7 @@ import {
   Table,
   type Column,
   type TableAction,
+  tableCardLabels,
 } from '@castmill/ui-common';
 import {
   NetworkService,
@@ -24,13 +25,12 @@ import {
 import { useI18n } from '../../i18n';
 import { BsPlusLg, BsTrash, BsSlashCircle, BsUnlock } from 'solid-icons/bs';
 import { useNetworkContext } from './network-context';
-import { useTableCardLabels } from '../../hooks/useTableCardLabels';
 import styles from './network.module.scss';
 
 const NetworkUsers: Component = () => {
   const { t } = useI18n();
   const toast = useToast();
-  const cardLabels = useTableCardLabels();
+  const cardLabels = tableCardLabels(t);
   const { stats, setStats } = useNetworkContext();
   let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 

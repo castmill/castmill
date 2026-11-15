@@ -8,6 +8,8 @@ import styles from './section-card.module.scss';
 
 export interface SectionCardHeaderProps {
   title: JSX.Element;
+  /** Id of the heading, for `aria-labelledby` references. */
+  titleId?: string;
   description?: JSX.Element;
   icon?: IconTypes;
   /** Optional badge next to the title, e.g. the number of items. */
@@ -24,7 +26,7 @@ const join = (...classes: Array<string | false | undefined>) =>
 export const SectionCardHeader = (props: SectionCardHeaderProps) => (
   <header class={join(styles.header, props.class)}>
     <div class={styles.heading}>
-      <h3>
+      <h3 id={props.titleId}>
         <Show when={props.icon}>
           {(icon) => (
             <span class={styles.icon} aria-hidden="true">
@@ -42,19 +44,28 @@ export const SectionCardHeader = (props: SectionCardHeaderProps) => (
       </Show>
     </div>
     <Show when={props.actions}>
-      {(actions) => <div class={styles.actions}>{actions()}</div>}
+      {(actions) => (
+        <div class={styles.actions} data-section-actions>
+          {actions()}
+        </div>
+      )}
     </Show>
   </header>
 );
 
 export interface SectionCardProps extends Omit<
   SectionCardHeaderProps,
-  'class'
+  'class' | 'title'
 > {
+  /** Card title. Without a title (and actions) the header is omitted. */
+  title?: JSX.Element;
   /** Footer actions, rendered on a sunken bar at the bottom of the card. */
   footer?: JSX.Element;
   footerClass?: string;
   class?: string;
+  ref?: HTMLElement | ((el: HTMLElement) => void);
+  'aria-label'?: string;
+  'aria-labelledby'?: string;
 }
 
 /**
@@ -62,14 +73,23 @@ export interface SectionCardProps extends Omit<
  * The card padding shrinks on phones and the footer bleeds to the card edges.
  */
 export const SectionCard: ParentComponent<SectionCardProps> = (props) => (
-  <section class={join(styles.card, props.class)} data-section-card>
-    <SectionCardHeader
-      title={props.title}
-      description={props.description}
-      icon={props.icon}
-      count={props.count}
-      actions={props.actions}
-    />
+  <section
+    ref={props.ref as HTMLElement}
+    class={join(styles.card, props.class)}
+    aria-label={props['aria-label']}
+    aria-labelledby={props['aria-labelledby']}
+    data-section-card
+  >
+    <Show when={props.title !== undefined || props.actions}>
+      <SectionCardHeader
+        title={props.title}
+        titleId={props.titleId}
+        description={props.description}
+        icon={props.icon}
+        count={props.count}
+        actions={props.actions}
+      />
+    </Show>
     {props.children}
     <Show when={props.footer}>
       {(footer) => (

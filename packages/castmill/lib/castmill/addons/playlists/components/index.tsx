@@ -44,6 +44,12 @@ import {
   TagPopover,
   useViewMode,
   isQuotaExceededError,
+  useModalFromUrl,
+  detailUrlOptions,
+  closeDetailUrl,
+  tableCardLabels,
+  filtersLabel,
+  organizeByLabel,
 } from '@castmill/ui-common';
 import { JsonPlaylist } from '@castmill/player';
 import { PlaylistsService } from '../services/playlists.service';
@@ -57,23 +63,12 @@ import './playlists.scss';
 import { PlaylistView } from './playlist-view';
 import { AddonComponentProps } from '../../common/interfaces/addon-store';
 import { PlaylistAddForm, AspectRatio } from './playlist-add-form';
-import {
-  useTeamFilter,
-  useModalFromUrl,
-  detailUrlOptions,
-  closeDetailUrl,
-  useOnboardingHighlight,
-} from '../../common/hooks';
+import { useTeamFilter, useOnboardingHighlight } from '../../common/hooks';
 import { ASPECT_RATIO_OPTIONS } from '../constants';
 import {
   validateCustomRatioField,
   validateAspectRatioExtreme as validateAspectRatioExtremeUtil,
 } from '../utils/aspect-ratio-validation';
-import {
-  tableCardLabels,
-  filtersLabel,
-  organizeByLabel,
-} from '../../common/utils/table-labels';
 
 const PlaylistsPage: Component<AddonComponentProps> = (props) => {
   const toast = useToast();

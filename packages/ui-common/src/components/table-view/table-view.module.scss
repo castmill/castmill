@@ -44,10 +44,5 @@
         margin-inline-start: 0;
       }
     }
-
-    /* Keep the last rows reachable above the fixed selection bar */
-    &.has-selection {
-      padding-bottom: calc(7em + env(safe-area-inset-bottom, 0em));
-    }
   }
 }

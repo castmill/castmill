@@ -25,8 +25,7 @@ if (!('pointerType' in MouseEvent.prototype)) {
 }
 
 vi.mock('@castmill/ui-common', async (importOriginal) => ({
-  SectionCard: (await importOriginal<typeof import('@castmill/ui-common')>())
-    .SectionCard,
+  ...(await importOriginal<typeof import('@castmill/ui-common')>()),
   Button: (props: {
     label: string;
     disabled?: boolean;

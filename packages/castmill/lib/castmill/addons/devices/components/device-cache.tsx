@@ -16,6 +16,9 @@ import {
   useToast,
   formatBytes,
   SectionCard,
+  tableCardLabels,
+  revealTab,
+  tabKeyTarget,
 } from '@castmill/ui-common';
 
 import { Device } from '../interfaces/device.interface';
@@ -27,7 +30,6 @@ import {
   DeviceTableTime,
 } from './device-section';
 import './device-cache.scss';
-import { tableCardLabels } from '../../common/utils/table-labels';
 
 type CacheType = 'data' | 'code' | 'media';
 const CACHE_TYPES: readonly CacheType[] = ['data', 'code', 'media'];
@@ -221,6 +223,15 @@ export const DeviceCache: Component<{
     setCurrentType(type);
   };
 
+  const typeTabs: Partial<Record<CacheType, HTMLButtonElement>> = {};
+  const onTypeKeyDown = (event: KeyboardEvent) => {
+    const index = CACHE_TYPES.indexOf(currentType());
+    const next = tabKeyTarget(event, index, CACHE_TYPES.length);
+    if (next === undefined) return;
+    selectType(CACHE_TYPES[next]);
+    revealTab(typeTabs[CACHE_TYPES[next]], true);
+  };
+
   const typeLabel = (type: CacheType) => t(`devices.cache.${type}Tab`);
   const tabId = (type: CacheType) => `device-cache-${props.device.id}-${type}`;
 
@@ -260,11 +271,14 @@ export const DeviceCache: Component<{
               <For each={CACHE_TYPES}>
                 {(type) => (
                   <button
+                    ref={(el) => (typeTabs[type] = el)}
                     type="button"
                     role="tab"
                     id={tabId(type)}
                     aria-selected={currentType() === type}
+                    tabIndex={currentType() === type ? 0 : -1}
                     onClick={() => selectType(type)}
+                    onKeyDown={onTypeKeyDown}
                   >
                     {typeLabel(type)}
                   </button>

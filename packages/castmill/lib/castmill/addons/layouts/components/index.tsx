@@ -25,6 +25,11 @@ import {
   Timestamp,
   ToastProvider,
   useToast,
+  useModalFromUrl,
+  detailUrlOptions,
+  closeDetailUrl,
+  tableCardLabels,
+  filtersLabel,
 } from '@castmill/ui-common';
 import {
   LayoutsService,
@@ -41,13 +46,7 @@ import './layouts.scss';
 import { LayoutView } from './layout-view';
 import { AddonComponentProps } from '../../common/interfaces/addon-store';
 import { LayoutAddForm, AspectRatio } from './layout-add-form';
-import {
-  useTeamFilter,
-  useModalFromUrl,
-  detailUrlOptions,
-  closeDetailUrl,
-} from '../../common/hooks';
-import { tableCardLabels, filtersLabel } from '../../common/utils/table-labels';
+import { useTeamFilter } from '../../common/hooks';
 
 const ASPECT_RATIO_OPTIONS = [
   { value: '16:9', label: '16:9 (Landscape)' },
@@ -62,7 +61,6 @@ const LayoutsPage: Component<AddonComponentProps> = (props) => {
   const [data, setData] = createSignal<JsonLayout[]>([]);
   const [currentLayout, setCurrentLayout] = createSignal<JsonLayout>();
   const [showDrawer, setShowDrawer] = createSignal(false);
-  const [layoutFooter, setLayoutFooter] = createSignal<HTMLElement>();
   const [showRenameModal, setShowRenameModal] = createSignal(false);
 
   // Get itemId from URL params
@@ -557,14 +555,6 @@ const LayoutsPage: Component<AddonComponentProps> = (props) => {
           size="xl"
           closeOnOutsideClick
           outsideClickIgnoreSelector="tbody tr, [data-testid='table-card']"
-          footer={
-            <div
-              ref={(el) => {
-                setLayoutFooter(el);
-                onCleanup(() => setLayoutFooter(undefined));
-              }}
-            />
-          }
         >
           <Show when={currentLayout()} keyed>
             {(layout) => (
@@ -576,7 +566,6 @@ const LayoutsPage: Component<AddonComponentProps> = (props) => {
                   refreshData();
                 }}
                 onClose={closeLayoutDrawer}
-                actionsMount={layoutFooter()}
               />
             )}
           </Show>

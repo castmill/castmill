@@ -620,8 +620,6 @@
     "playlists": "Playlists",
     "devices": "Geräte",
     "channels": "Kanäle",
-    "addedOn": "Hinzugefügt am",
-    "lastUpdatedOn": "Zuletzt aktualisiert am",
     "enterTeamName": "Teamnamen eingeben",
     "summary": "Teamübersicht",
     "created": "Erstellt {{time}}",

@@ -2,7 +2,7 @@
  * Localized labels for ui-common TableView/ToolBar responsive layouts
  * (stacked phone cards and the collapsible "Filters" toggle) in addons.
  */
-import type { TableCardLabels } from '@castmill/ui-common';
+import type { TableCardLabels } from '../components/table/table';
 
 export type Translate = (key: string, params?: Record<string, any>) => string;
 

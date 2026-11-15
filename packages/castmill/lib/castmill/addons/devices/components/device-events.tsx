@@ -11,6 +11,8 @@ import {
   Modal,
   useToast,
   SectionCard,
+  tableCardLabels,
+  filtersLabel,
 } from '@castmill/ui-common';
 
 import { Device } from '../interfaces/device.interface';
@@ -18,7 +20,6 @@ import { Device } from '../interfaces/device.interface';
 import { DevicesService } from '../services/devices.service';
 import { DeviceTableTime } from './device-section';
 import './device-events.scss';
-import { tableCardLabels, filtersLabel } from '../../common/utils/table-labels';
 
 interface DeviceTableLogItem {
   id: string;

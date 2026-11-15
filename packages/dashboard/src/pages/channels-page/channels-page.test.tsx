@@ -42,14 +42,12 @@ vi.mock('../../services/quotas.service', () => ({
 }));
 
 // Mock the hooks
-vi.mock('../../hooks', async () => ({
-  ...(await vi.importActual<object>('../../hooks/useModalFromUrl')),
+vi.mock('../../hooks', () => ({
   useTeamFilter: () => ({
     teams: () => [],
     selectedTeamId: () => null,
     setSelectedTeamId: vi.fn(),
   }),
-  useModalFromUrl: vi.fn(),
 }));
 
 const { mockUsePermissions } = vi.hoisted(() => ({

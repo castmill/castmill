@@ -12,12 +12,12 @@ import {
   TableViewRef,
   Timestamp,
   useToast,
+  tableCardLabels,
 } from '@castmill/ui-common';
 import { AiOutlineDelete } from 'solid-icons/ai';
 import { createSignal } from 'solid-js';
 import { OrganizationsService } from '../../services/organizations.service';
 import { useI18n } from '../../i18n';
-import { useTableCardLabels } from '../../hooks/useTableCardLabels';
 
 interface Invitation {
   id: number;
@@ -50,7 +50,7 @@ export const OrganizationInvitationsView = (props: {
   onRemove: (invitation: Invitation) => void;
 }) => {
   const { t } = useI18n();
-  const cardLabels = useTableCardLabels();
+  const cardLabels = tableCardLabels(t);
 
   const columns = [
     { key: 'email', title: t('common.email'), sortable: true },

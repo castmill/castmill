@@ -6,8 +6,7 @@ import { DeviceDetails } from './device-details';
 import type { AddonStore } from '../../common/interfaces/addon-store';
 
 vi.mock('@castmill/ui-common', async (importOriginal) => ({
-  SectionCard: (await importOriginal<typeof import('@castmill/ui-common')>())
-    .SectionCard,
+  ...(await importOriginal<typeof import('@castmill/ui-common')>()),
   Button: (props: {
     label: string;
     disabled?: boolean;

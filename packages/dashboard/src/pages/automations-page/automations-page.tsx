@@ -19,6 +19,7 @@ import {
   TableView,
   TableViewRef,
   useToast,
+  tableCardLabels,
 } from '@castmill/ui-common';
 
 import { store } from '../../store/store';
@@ -36,7 +37,6 @@ import { ruleSummary } from './registry';
 import { useSummaryContext } from './summary-context';
 
 import styles from './automations.module.scss';
-import { useTableCardLabels } from '../../hooks/useTableCardLabels';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -45,7 +45,7 @@ const errorText = (error: unknown) =>
 
 const AutomationsPage: Component = () => {
   const { t, locale } = useI18n();
-  const cardLabels = useTableCardLabels();
+  const cardLabels = tableCardLabels(t);
   const { canPerformAction } = usePermissions();
   const toast = useToast();
   const summaryContext = useSummaryContext();
@@ -342,7 +342,7 @@ const AutomationsPage: Component = () => {
                 onInput={(e) => setNewName(e.currentTarget.value)}
               />
             </label>
-            <div class={styles.formActions}>
+            <div class={styles.formActions} data-modal-actions>
               <Button
                 label={t('common.cancel')}
                 color="secondary"

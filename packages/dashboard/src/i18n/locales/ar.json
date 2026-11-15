@@ -601,8 +601,6 @@
     "removeTeams": "إزالة الفرق",
     "confirmRemoveTeam": "هل أنت متأكد من أنك تريد إزالة الفريق \"{{name}}\"؟",
     "confirmRemoveTeams": "هل أنت متأكد من أنك تريد إزالة الفرق التالية؟",
-    "addedOn": "تمت الإضافة في",
-    "lastUpdatedOn": "آخر تحديث في",
     "enterTeamName": "أدخل اسم الفريق",
     "summary": "ملخص الفريق",
     "created": "أُنشئ {{time}}",

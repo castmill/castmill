@@ -14,6 +14,7 @@ import { FaSolidSortUp } from 'solid-icons/fa';
 import { FaSolidSort } from 'solid-icons/fa';
 import { SortOptions } from '../../interfaces/sort-options.interface';
 import { MenuButton } from '../menu-button/menu-button';
+import { widthInEm } from '../../utils/element-em';
 
 import style from './table.module.scss';
 
@@ -224,10 +225,10 @@ export const Table = <
       return;
     }
     const width = containerWidth;
-    const fontSize = parseFloat(getComputedStyle(rootRef).fontSize) || 16;
     if (
       props.cardLayout &&
-      width / fontSize < (props.cardBreakpoint ?? TABLE_CARD_BREAKPOINT_EM)
+      widthInEm(rootRef, width) <
+        (props.cardBreakpoint ?? TABLE_CARD_BREAKPOINT_EM)
     ) {
       setLayout('cards');
       return;

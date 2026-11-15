@@ -10,7 +10,7 @@ import {
 import { Portal } from 'solid-js/web';
 import { IoClose } from 'solid-icons/io';
 import { IconWrapper } from '../icon-wrapper';
-import { COMBOBOX_SHEET_QUERY } from '../combobox/combobox';
+import { prefersPickerSheet } from '../combobox/combobox';
 import { useVisualViewportBox } from '../../hooks/useVisualViewportBox';
 import styles from './select-sheet.module.scss';
 
@@ -40,10 +40,6 @@ interface SheetState {
 export const NATIVE_SELECT_ATTRIBUTE = 'data-native-select';
 
 const TAP_SLOP_PX = 10;
-
-const prefersSheet = () =>
-  typeof window.matchMedia === 'function' &&
-  window.matchMedia(COMBOBOX_SHEET_QUERY).matches;
 
 const findSelect = (target: EventTarget | null) => {
   const element =
@@ -158,7 +154,7 @@ export const SelectSheetHost: Component<SelectSheetHostProps> = (props) => {
   };
 
   const handleTouchStart = (event: TouchEvent) => {
-    const select = prefersSheet() ? findSelect(event.target) : undefined;
+    const select = prefersPickerSheet() ? findSelect(event.target) : undefined;
     const touch = event.touches[0];
     touchStart =
       select && touch && event.touches.length === 1
@@ -171,7 +167,7 @@ export const SelectSheetHost: Component<SelectSheetHostProps> = (props) => {
   const handleTouchEnd = (event: TouchEvent) => {
     const start = touchStart;
     touchStart = null;
-    if (!start || !prefersSheet()) return;
+    if (!start || !prefersPickerSheet()) return;
 
     const touch = event.changedTouches[0];
     const moved =
@@ -186,7 +182,7 @@ export const SelectSheetHost: Component<SelectSheetHostProps> = (props) => {
   };
 
   const handleMouseDown = (event: MouseEvent) => {
-    if (!prefersSheet()) return;
+    if (!prefersPickerSheet()) return;
     const select = findSelect(event.target);
     if (!select) return;
 
@@ -234,7 +230,7 @@ export const SelectSheetHost: Component<SelectSheetHostProps> = (props) => {
       return;
     }
 
-    if (!prefersSheet()) return;
+    if (!prefersPickerSheet()) return;
     const select = findSelect(event.target);
     if (!select) return;
 
