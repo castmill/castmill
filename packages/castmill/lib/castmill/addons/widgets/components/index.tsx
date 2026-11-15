@@ -62,6 +62,8 @@ type WidgetWithId = JsonWidget & { id: number; slug: string };
 const WidgetsPage: Component<{
   store: AddonStore;
   params: any;
+  /** Router location (route props); reactive, unlike window.location. */
+  location?: { pathname: string; search: string };
 }> = (props) => {
   // Get i18n functions from store
   const t = (key: string, params?: Record<string, any>) =>
@@ -320,8 +322,8 @@ const WidgetsPage: Component<{
     // Skip if we're in the middle of programmatically opening a drawer
     if (isOpeningDrawer) return;
 
-    const path = window.location.pathname;
-    const search = window.location.search;
+    const path = props.location?.pathname ?? window.location.pathname;
+    const search = props.location?.search ?? window.location.search;
     const fullUrl = path + search;
 
     // Skip if we already processed this URL
@@ -352,7 +354,13 @@ const WidgetsPage: Component<{
     }
   };
 
-  createEffect(syncDrawerWithUrl);
+  createEffect(() => {
+    // Track before syncDrawerWithUrl's early returns so menu links to this
+    // page (no popstate) still close the drawer.
+    void props.location?.pathname;
+    void props.location?.search;
+    syncDrawerWithUrl();
+  });
 
   // Addons don't share the dashboard router's reactivity, so listen directly.
   onMount(() => {

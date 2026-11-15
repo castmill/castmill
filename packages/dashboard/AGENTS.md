@@ -179,6 +179,14 @@ Shared mobile behaviour (ui-common):
   ≤50em full-screen mode. Put sticky Save/Reset actions in the Drawer `footer`,
   or render `<DrawerFooter>` from a view nested inside the Drawer to portal
   them there (falls back to inline outside a Drawer).
+- With `closeOnOutsideClick`, a plain click on a link to another URL (e.g. a
+  menu item) hides the drawer immediately **without** calling `onClose`:
+  the owner's `closeDetailUrl` (`history.back()`) would race with and undo
+  the navigation. Addon pages aren't disposed on route changes, so the
+  portaled drawer must hide itself. Same-URL, new-tab and modified clicks
+  close normally; rows matching `outsideClickIgnoreSelector` keep it open.
+  Owners must derive their open state from the URL (`useModalFromUrl`, or the
+  router `location` for path-based items) so same-page links still close it.
 - Save/Reset rows use ui-common `SaveBar` (`dirty`, localized `dirtyLabel`):
   right-aligned buttons, an `aria-live` unsaved-changes status and stretched
   buttons on narrow phones. Don't hand-roll dirty footers.

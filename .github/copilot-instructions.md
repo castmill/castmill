@@ -145,6 +145,25 @@ does not change dashboard localization requirements.
   `:root[data-theme='light'] .x` (`:global(...)` in CSS modules).
 - See `AGENTS.md` and `packages/dashboard/AGENTS.md` for details.
 
+## Responsive UI and ui-common Reuse
+
+- Build every new view, dialog, component, and addon UI responsively so it
+  works on desktop, tablet, and mobile (phones down to 320px wide, touch and
+  coarse pointers). Nothing may widen the page horizontally.
+- Use reusable components from `@castmill/ui-common` whenever possible
+  (`TableView`/`Table` card layouts, `ToolBar`, `Drawer`/`DrawerFooter`,
+  `SaveBar`, `Modal` with `data-modal-actions`, `SectionCard`,
+  `DetailsSummary`, `Tabs`, `ComboBox`, `SelectionActionBar`). Extend a shared
+  component or add a new one to ui-common instead of duplicating UI or logic
+  in the dashboard or an addon.
+- Use the shared breakpoints and hooks from `useMediaQuery.ts`
+  (`BREAKPOINTS_EM`, `PHONE_`/`TABLET_`/`WIDE_LAYOUT_QUERY`,
+  `usePhoneLayout`, `useCoarsePointer`, `useWideLayout`) instead of literal
+  media queries in TS. Prefer container-based layouts and `em` units.
+- Test layouts with `mockMatchMedia` from `@castmill/ui-common/testing`.
+- See `agents/packages/ui-common/README.md` ("Responsive List Pages") and
+  `packages/dashboard/AGENTS.md`.
+
 ## 🔀 URL-Based Routing
 
 The Dashboard uses URL-based routing with organization context:
@@ -197,6 +216,7 @@ yarn workspace website start
 - Create unnecessary files in the root directory
 - Commit hardcoded user-facing strings in localized packages
 - Add views, dialogs, or addon UI that only work in dark mode
+- Add UI that only works on desktop, or reimplement components that exist in ui-common
 
 ## 🎯 Focus Areas
 

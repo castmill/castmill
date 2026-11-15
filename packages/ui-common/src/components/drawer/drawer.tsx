@@ -238,7 +238,39 @@ export const Drawer: Component<DrawerProps> = (_props) => {
       return;
     }
 
+    const link = target.closest<HTMLAnchorElement>('a[href]');
+    if (link && navigatesAway(link, event)) {
+      dismissForNavigation();
+      return;
+    }
+
     closeDrawer();
+  };
+
+  // Plain clicks on links that leave the current URL (e.g. menu items).
+  const navigatesAway = (link: HTMLAnchorElement, event: MouseEvent) =>
+    event.button === 0 &&
+    !event.metaKey &&
+    !event.ctrlKey &&
+    !event.shiftKey &&
+    !event.altKey &&
+    !link.hasAttribute('download') &&
+    (!link.target || link.target === '_self') &&
+    link.href.split('#')[0] !== window.location.href.split('#')[0];
+
+  // Hide without onClose: the owner's close handler usually restores the list
+  // URL (history.back()), which would race with and undo the link's
+  // navigation. The navigation itself updates the owner's URL-driven state.
+  // Addon pages are not disposed on route changes, so the portaled drawer
+  // must still disappear here.
+  const dismissForNavigation = () => {
+    if (isClosing) {
+      return;
+    }
+    isClosing = true;
+    setIsActive(false);
+    setIsVisible(false);
+    detachGlobalListeners();
   };
 
   onMount(() => {

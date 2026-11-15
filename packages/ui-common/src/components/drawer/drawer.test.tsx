@@ -316,6 +316,62 @@ describe('Drawer Component', () => {
     // Clean up the modal overlay
     modalOverlay.remove();
   });
+
+  it('hides without onClose when an outside link navigates away', () => {
+    const onClose = vi.fn();
+    const nav = document.createElement('nav');
+    nav.innerHTML = '<a href="/org/1/devices"><span>Devices</span></a>';
+    document.body.appendChild(nav);
+
+    render(() => (
+      <Drawer
+        title="Drawer"
+        onClose={onClose}
+        showBackdrop={false}
+        closeOnOutsideClick
+      >
+        <div>Drawer content</div>
+      </Drawer>
+    ));
+    vi.runAllTimers();
+
+    fireEvent.click(nav.querySelector('span')!);
+    expect(screen.queryByTestId('drawer-root')).not.toBeInTheDocument();
+    vi.runAllTimers();
+    expect(onClose).not.toHaveBeenCalled();
+
+    nav.remove();
+  });
+
+  it.each([
+    ['a same-URL link', '<a href="#top">Top</a>', {}],
+    ['a new-tab link', '<a href="/x" target="_blank">X</a>', {}],
+    ['a modified link click', '<a href="/x">X</a>', { ctrlKey: true }],
+  ])('closes normally on %s', (_label, html, init) => {
+    const onClose = vi.fn();
+    const nav = document.createElement('nav');
+    nav.innerHTML = html;
+    document.body.appendChild(nav);
+
+    render(() => (
+      <Drawer
+        title="Drawer"
+        onClose={onClose}
+        showBackdrop={false}
+        closeOnOutsideClick
+      >
+        <div>Drawer content</div>
+      </Drawer>
+    ));
+    vi.runAllTimers();
+
+    fireEvent.click(nav.querySelector('a')!, init);
+    vi.runAllTimers();
+    expect(onClose).toHaveBeenCalledTimes(1);
+
+    nav.remove();
+  });
+
   it('does not close when clicking inside a drawer from another stack', () => {
     const onClose = vi.fn();
 
