@@ -180,6 +180,31 @@ defmodule Castmill.Workers.BullMQHelper do
   end
 
   @doc """
+  Lists a queue's job schedulers as `%{key, every, data}` maps, `data` being the
+  data of the jobs they create. Returns `{:ok, []}` in testing mode.
+  """
+  def list_schedulers(queue, opts \\ []) do
+    if testing_mode?() do
+      {:ok, []}
+    else
+      connection = Keyword.get(opts, :connection, :castmill_bullmq)
+
+      with {:ok, schedulers} <- BullMQ.JobScheduler.list(connection, to_string(queue)) do
+        {:ok,
+         Enum.map(schedulers, fn scheduler ->
+           template = Map.get(scheduler, :template) || %{}
+
+           %{
+             key: Map.get(scheduler, :key) || Map.get(scheduler, :id),
+             every: Map.get(scheduler, :every),
+             data: Map.get(template, :data)
+           }
+         end)}
+      end
+    end
+  end
+
+  @doc """
   Returns the appropriate queue name for a worker module.
   """
   def queue_for_worker(worker_module) do

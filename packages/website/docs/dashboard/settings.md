@@ -14,11 +14,15 @@ Under **Profile Information** you can change your **Full Name** and **Email Addr
 
 When you change your email address, Castmill sends a verification email to the new address. The change takes effect after you click the link in that email.
 
+<Screenshot src="settings-profile" alt="The Settings page with the Profile Information form" />
+
 ## Passkeys
 
 Castmill uses passkeys instead of passwords. A passkey is stored on your device or in your password manager, and you confirm it with your fingerprint, face, PIN or security key.
 
 Under **Security & Authentication**, **Your Passkeys** lists your passkeys with the date each was added.
+
+<Screenshot src="settings-passkeys" alt="Your Passkeys with two passkeys, the Add New Passkey button and the Language Settings below" />
 
 | Task | How |
 | --- | --- |

@@ -18,7 +18,11 @@ An automation contains one or more **rules**. Each rule has a **When** (the trig
 2. Click **New automation**, enter a name, for example "Hourly spring offer", and create it.
 3. On the **Rules** tab, click **Add rule** and set the trigger and the action. See [Rules](#rules).
 4. Click **Save rule**.
+
+<Screenshot src="automations-editor" alt="An automation with a clock rule that interrupts playback with the Happy hour playlist every Friday at 15:00" />
 5. On the **Assignments** tab, add the devices and channels that should run the automation, then click **Save assignments**.
+
+<Screenshot src="automations-list" alt="The Automations page with two enabled automations, their rules, assignments and next firing" />
 
 The list on the Automations page shows each automation's **Rules**, what it is **Assigned to** and its **Next firing**. Use the switch to set it **Enabled** or **Disabled**. Disabled automations never fire on displays.
 

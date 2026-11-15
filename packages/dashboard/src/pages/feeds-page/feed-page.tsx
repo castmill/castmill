@@ -96,9 +96,11 @@ const FeedPage: Component = () => {
   };
 
   createEffect(
-    on([orgId, () => params.feedId], () => {
+    on([orgId, () => params.feedId], ([organizationId]) => {
       setFeed(null);
       setData(null);
+      // On a direct link, the organization is selected after the page mounts.
+      if (!organizationId) return;
       void load();
     })
   );

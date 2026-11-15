@@ -99,8 +99,9 @@ defmodule Castmill.Widgets.AssetStorage do
   """
   def resolve_icon(icon, widget_slug, _stored_assets) when is_binary(icon) do
     cond do
-      # Already a data URL or absolute URL
-      String.starts_with?(icon, "data:") or String.starts_with?(icon, "http") ->
+      # Already a data URL, an absolute URL or a resolved {{asset:...}} path
+      String.starts_with?(icon, "data:") or String.starts_with?(icon, "http") or
+          String.starts_with?(icon, "/") ->
         icon
 
       # Relative path - check if it's in stored assets
@@ -153,23 +154,29 @@ defmodule Castmill.Widgets.AssetStorage do
   Returns a list of %{\"url\" => string, \"name\" => string} maps.
   """
   def extract_fonts(widget_data, widget_slug, stored_assets) do
-    assets = Map.get(widget_data, "assets", %{})
-    fonts_config = Map.get(assets, "fonts", %{})
+    widget_data
+    |> font_entries(&resolve_asset_url(&1, widget_slug, stored_assets))
+    |> Enum.map(&Map.delete(&1, "path"))
+  end
+
+  @doc """
+  The fonts declared in a package's `assets.fonts`: `%{"url", "name", "path"}` maps,
+  `url` being `url_for.(path)` (nil when the file is missing). The name defaults
+  to one derived from the key or file name.
+  """
+  def font_entries(widget_data, url_for) when is_function(url_for, 1) do
+    assets = Map.get(widget_data, "assets") || %{}
+    fonts_config = if is_map(assets), do: Map.get(assets, "fonts") || %{}, else: %{}
 
     fonts_config
-    |> Enum.map(fn {font_key, font_info} ->
-      path = Map.get(font_info, "path")
-      # Use the font key as the name if no explicit name is provided
-      # Strip extension and format nicely (e.g., "PlayfairDisplay-Regular" -> "Playfair Display")
-      name = Map.get(font_info, "name") || format_font_name(font_key, path)
+    |> Enum.map(fn
+      {font_key, %{"path" => path} = font_info} when is_binary(path) ->
+        # Strip extension and format nicely (e.g., "PlayfairDisplay-Regular" -> "Playfair Display")
+        name = Map.get(font_info, "name") || format_font_name(font_key, path)
+        %{"url" => url_for.(path), "name" => name, "path" => path}
 
-      if path do
-        # Resolve the path to a full URL
-        url = resolve_asset_url(path, widget_slug, stored_assets)
-        %{"url" => url, "name" => name}
-      else
+      _ ->
         nil
-      end
     end)
     |> Enum.reject(&is_nil/1)
   end

@@ -8,7 +8,8 @@ Docusaurus 3 site deployed to https://docs.castmill.io by `.github/workflows/dep
 - Documentation must match the code. Verify UI labels, routes, environment variables and limits in the source before writing them down. When behaviour changes in another package, update the matching page in the same change.
 - Dashboard pages link to their docs from the onboarding guide (`packages/dashboard/src/config/onboarding-steps.ts`); `onboarding-steps.test.ts` fails if a linked page is moved or renamed.
 - No emoji, exclamation marks or marketing filler. Follow the style guide in `README.md`.
-- `CardGrid`, `Card`, `Flow` and `Steps` are global MDX components (`src/theme/MDXComponents.tsx`). Mermaid is not enabled.
+- `CardGrid`, `Card`, `Flow`, `Steps` and `Screenshot` are global MDX components (`src/theme/MDXComponents.tsx`). Mermaid is not enabled.
+- Every dashboard screenshot has a light and a dark version, captured from the fictional demo in `scripts/screenshots` (see its `README.md`) and shown with `<Screenshot src="<id>" alt="..." />`. Never add screenshots of real accounts or data.
 - `.md` files are compiled as MDX: escape `{`, `}` and `<` outside code, and do not use definition-list syntax.
 - Every component and page must work in light and dark mode. Use the variables in `src/css/custom.css`, not fixed colours.
 - Do not add dependencies with `yarn add` in this workspace without checking the monorepo install still works.

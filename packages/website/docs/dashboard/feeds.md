@@ -43,6 +43,8 @@ For a list feed, **Entries to keep** sets how many entries the feed keeps, from 
 4. Optionally, set an **Entry schema** and **Media fields** (see below).
 5. Save the feed.
 
+<Screenshot src="feeds-create" alt="The New feed dialog with the name, description, type, entries to keep, entry schema and media fields" />
+
 The feed page has four tabs:
 
 | Tab | Content |
@@ -51,6 +53,8 @@ The feed page has four tabs:
 | **Connect** | The **Endpoints** of this feed (**Add entries**, **Replace all data**, **Read data**), its **Tokens**, and examples for curl and Make |
 | **Settings** | Name, type, entries to keep, entry schema and media fields |
 | **Media** | The images and videos copied from entries, with their status |
+
+<Screenshot src="feeds-entries" alt="The Entries tab of a list feed with four dishes sent by a point-of-sale system" />
 
 ### Entry schema
 
@@ -74,6 +78,8 @@ Copied files can be JPEG, PNG, GIF, WebP, MP4, MOV or WebM, up to 20 MB or your 
 ### Tokens
 
 On the **Connect** tab, click **New token** and give it a name, for example "Make scenario". The token is shown once: copy it into the system that sends data. A feed token can read and write only its own feed. **Revoke** stops a token from working.
+
+<Screenshot src="feeds-connect" alt="The Connect tab with the feed's endpoints, a token named POS integration and a curl example" />
 
 Tokens of organization members and AI agents can also write to feeds, as long as the member's role allows it, and they can write to several feeds at once. See [AI agents](./ai-agents.md).
 

@@ -99,6 +99,49 @@ export interface NetworkWidgetAccess {
   in_use_count: number;
   core: boolean;
   platform_restricted: boolean;
+  /** A widget of the network (uploaded or installed), not a system widget. */
+  owned?: boolean;
+  /** Installed by the platform: it cannot be replaced or deleted here. */
+  managed?: boolean;
+  /** The latest uploaded package version, if the widget was uploaded. */
+  package?: { version: number; inserted_at: string } | null;
+}
+
+export interface WidgetUploadResult {
+  data: NetworkWidgetAccess;
+  created: boolean;
+  version: number;
+  template_warnings: string[];
+}
+
+export interface WidgetPackageVersion {
+  version: number;
+  filename: string;
+  size: number;
+  sha256: string;
+  inserted_at: string;
+}
+
+/** A saved playlist item a new package version would make invalid. */
+export interface IncompatibleItem {
+  playlist_id: number;
+  playlist_name: string;
+  organization_id: string;
+  organization_name: string | null;
+  error: string;
+}
+
+/**
+ * Details of a failed upload: `code` is `slug_taken`, `invalid_slug`,
+ * `managed_widget`, `unknown_fetcher`, `invalid_widget`, `incompatible` or
+ * `invalid_package`.
+ */
+export interface WidgetUploadErrorDetails {
+  code: string;
+  fetcher?: string;
+  errors?: Record<string, string[]>;
+  items?: IncompatibleItem[];
+  total?: number;
 }
 
 export interface PageInfo {
@@ -409,6 +452,81 @@ export const NetworkService = {
     );
 
     return handleWidgetAccessResponse<NetworkWidgetAccess>(response);
+  },
+
+  /**
+   * Upload a widget package (`widget.json` or ZIP) as a widget of the network, or
+   * as a new version of the network's widget with the same slug.
+   * Rejects with an HttpError whose details explain why the package was refused.
+   */
+  async uploadWidget(file: File): Promise<WidgetUploadResult> {
+    const body = new FormData();
+    body.append('widget', file);
+    const response = await authFetch(`${baseUrl}/dashboard/network/widgets`, {
+      method: 'POST',
+      body,
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new HttpError<WidgetUploadErrorDetails>(
+        error.error ?? response.statusText,
+        response.status,
+        {
+          code: error.code ?? 'invalid_package',
+          fetcher: error.fetcher,
+          errors: error.errors,
+          items: error.items,
+          total: error.total,
+        }
+      );
+    }
+
+    return response.json();
+  },
+
+  /** List the kept package versions of a network widget, newest first. */
+  async listWidgetPackages(widgetId: number): Promise<WidgetPackageVersion[]> {
+    const response = await authFetch(
+      `${baseUrl}/dashboard/network/widgets/${widgetId}/packages`,
+      { method: 'GET' }
+    );
+    const { data } = await handleResponse<{ data: WidgetPackageVersion[] }>(
+      response,
+      { parse: true }
+    );
+    return data;
+  },
+
+  /** Download a kept package version as a file. */
+  async downloadWidgetPackage(
+    widgetId: number,
+    version: number
+  ): Promise<{ blob: Blob; filename: string }> {
+    const response = await authFetch(
+      `${baseUrl}/dashboard/network/widgets/${widgetId}/packages/${version}`,
+      { method: 'GET' }
+    );
+    if (!response.ok) {
+      throw new HttpError(response.statusText, response.status);
+    }
+    const disposition = response.headers.get('content-disposition') ?? '';
+    const filename =
+      /filename="([^"]+)"/.exec(disposition)?.[1] ?? `widget-v${version}`;
+    return { blob: await response.blob(), filename };
+  },
+
+  /**
+   * Delete an uploaded network widget that no playlist uses.
+   * Rejects with an HttpError (status 409) if organizations still use it.
+   */
+  async deleteWidget(widgetId: number): Promise<void> {
+    const response = await authFetch(
+      `${baseUrl}/dashboard/network/widgets/${widgetId}`,
+      { method: 'DELETE' }
+    );
+    if (response.status === 204) return;
+    await handleWidgetAccessResponse(response);
   },
 
   /**
