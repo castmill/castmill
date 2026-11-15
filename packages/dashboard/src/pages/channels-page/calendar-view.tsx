@@ -509,7 +509,8 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
       return;
     }
     // Swiping towards the inline start reveals the next day.
-    const forward = isRtl(e.currentTarget as Element) ? dx > 0 : dx < 0;
+    const forward =
+      Math.sign(dx) === (isRtl(e.currentTarget as Element) ? 1 : -1);
     if (forward) goNext();
     else goPrev();
   };
