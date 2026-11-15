@@ -115,6 +115,7 @@
     "sortAscending": "Ascendente",
     "sortDescending": "Descendente",
     "selectAll": "Seleccionar todo",
+    "selectOption": "Selecciona una opción",
     "selectRow": "Seleccionar fila {{id}}"
   },
   "topbar": {

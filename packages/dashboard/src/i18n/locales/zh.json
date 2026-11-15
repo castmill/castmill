@@ -114,6 +114,7 @@
     "sortAscending": "升序",
     "sortDescending": "降序",
     "selectAll": "全选",
+    "selectOption": "选择一个选项",
     "selectRow": "选择第 {{id}} 行"
   },
   "topbar": {

@@ -114,6 +114,7 @@
     "sortAscending": "昇順",
     "sortDescending": "降順",
     "selectAll": "すべて選択",
+    "selectOption": "オプションを選択",
     "selectRow": "行 {{id}} を選択"
   },
   "topbar": {

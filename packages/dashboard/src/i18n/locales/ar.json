@@ -114,6 +114,7 @@
     "sortAscending": "تصاعدي",
     "sortDescending": "تنازلي",
     "selectAll": "تحديد الكل",
+    "selectOption": "اختر خيارًا",
     "selectRow": "تحديد الصف {{id}}"
   },
   "topbar": {

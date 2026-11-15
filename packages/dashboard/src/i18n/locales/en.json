@@ -109,6 +109,7 @@
     "sortAscending": "Ascending",
     "sortDescending": "Descending",
     "selectAll": "Select all",
+    "selectOption": "Select an option",
     "selectRow": "Select row {{id}}"
   },
   "filters": {

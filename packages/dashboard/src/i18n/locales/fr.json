@@ -114,6 +114,7 @@
     "sortAscending": "Croissant",
     "sortDescending": "Décroissant",
     "selectAll": "Tout sélectionner",
+    "selectOption": "Sélectionnez une option",
     "selectRow": "Sélectionner la ligne {{id}}"
   },
   "topbar": {

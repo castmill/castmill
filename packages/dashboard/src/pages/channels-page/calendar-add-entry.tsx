@@ -1,7 +1,7 @@
 import { JsonPlaylist } from '@castmill/player';
 import { Button, ComboBox, Modal } from '@castmill/ui-common';
 import { BsCheckLg, BsX } from 'solid-icons/bs';
-import { Component, createMemo, createSignal, For, onCleanup } from 'solid-js';
+import { Component, createMemo, createSignal, onCleanup } from 'solid-js';
 import { useI18n } from '../../i18n';
 import { ChannelsService } from '../../services/channels.service';
 
@@ -105,20 +105,28 @@ export const CalendarAddEntry: Component<{
           void submit();
         }}
       >
-        <label class={styles.field}>
-          <span class={styles.label}>{t('channels.calendar.duration')}</span>
-          <select
-            class={styles.select}
-            value={duration()}
-            onChange={(e) => setDuration(Number(e.currentTarget.value))}
-          >
-            <For each={options()}>
-              {(minutes) => (
-                <option value={minutes}>{durationLabel(minutes)}</option>
-              )}
-            </For>
-          </select>
-        </label>
+        <ComboBox<{ id: number }>
+          id="calendar-add-entry-duration"
+          closeLabel={t('common.close')}
+          label={t('channels.calendar.duration')}
+          placeholder={t('common.search')}
+          value={{ id: duration() }}
+          renderItem={(item) => <div>{durationLabel(item.id)}</div>}
+          fetchItems={async (page, pageSize, search) => {
+            const matches = options()
+              .filter((minutes) =>
+                durationLabel(minutes)
+                  .toLocaleLowerCase(locale())
+                  .includes(search.toLocaleLowerCase(locale()))
+              )
+              .map((minutes) => ({ id: minutes }));
+            return {
+              count: matches.length,
+              data: matches.slice((page - 1) * pageSize, page * pageSize),
+            };
+          }}
+          onSelect={(item) => setDuration(item.id)}
+        />
 
         <ComboBox<JsonPlaylist>
           id="calendar-add-entry-playlist"

@@ -36,7 +36,6 @@ $animation-duration: 0.3s;
   border-left: 1px solid var(--cm-border-color);
   border-right: 1px solid var(--cm-border-color);
   transition: transform $animation-duration ease;
-  will-change: transform;
 
   &.right {
     margin-left: auto;
@@ -49,7 +48,8 @@ $animation-duration: 0.3s;
   }
 
   &.active {
-    transform: translateX(0%);
+    // Persistent transforms (even identity ones) can misplace native pickers.
+    transform: none;
   }
 
   // The panel is only focused programmatically on open (to anchor keyboard

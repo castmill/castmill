@@ -121,7 +121,7 @@
   /* Show the tab content when active */
   .tabContentActive {
     opacity: 1;
-    transform: translateY(0); /* Reset position to align properly */
+    transform: none;
   }
 
   @media (max-width: 36em) {

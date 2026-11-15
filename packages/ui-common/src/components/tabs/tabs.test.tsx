@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { render, fireEvent, cleanup, screen } from '@solidjs/testing-library';
 import { createSignal, JSX } from 'solid-js';
@@ -21,6 +23,14 @@ describe('Tabs component', () => {
     { title: 'Tab 2', content: () => <div>Content 2</div> },
     { title: 'Tab 3', content: () => <div>Content 3</div> },
   ];
+
+  it('does not keep native pickers inside a transformed active panel', () => {
+    const css = readFileSync(
+      resolve('src/components/tabs/tabs.module.scss'),
+      'utf8'
+    );
+    expect(css).toMatch(/\.tabContentActive\s*\{[^}]*transform:\s*none;/);
+  });
 
   it('renders with initial tab active', () => {
     render(() => <Tabs tabs={sampleTabs} initialIndex={0} />);

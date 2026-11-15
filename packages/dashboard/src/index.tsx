@@ -29,7 +29,7 @@ import Topbar from './components/topbar/topbar';
 import SettingsPage from './pages/settings-page/settings-page';
 import Footer from './components/footer/footer';
 import SearchPage from './pages/search-page/search-page';
-import { ToastProvider, useToast } from '@castmill/ui-common';
+import { SelectSheetHost, ToastProvider, useToast } from '@castmill/ui-common';
 
 import { AddOnTree } from './classes/addon-tree';
 
@@ -229,6 +229,18 @@ const wrapLazyComponent = (addon: { path: string; name: string }) => {
   };
 };
 
+// Mobile browsers can draw native select popups away from their control, so
+// every select in the dashboard and its addons opens a bottom sheet there.
+const LocalizedSelectSheetHost = () => {
+  const { t } = useI18n();
+  return (
+    <SelectSheetHost
+      closeLabel={t('common.close')}
+      fallbackTitle={t('common.selectOption')}
+    />
+  );
+};
+
 render(() => {
   const Dashboard = lazy(() => import('./components/dashboard/dashboard'));
 
@@ -241,6 +253,7 @@ render(() => {
       >
         <KeyboardShortcutsProvider>
           <ToastProvider>
+            <LocalizedSelectSheetHost />
             <Router>
               {/* Routes without App wrapper (no Topbar/Footer) */}
               <Route path="/login" component={Login} />

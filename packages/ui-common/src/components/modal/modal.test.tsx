@@ -237,6 +237,18 @@ describe('Modal responsive styles', () => {
     return css.slice(index, css.indexOf('\n}\n', index));
   };
 
+  it('releases transformed containing blocks around native pickers on desktop and phones', () => {
+    for (const content of [
+      block('.modalContent {'),
+      block(
+        '@media (max-width: 36em), (pointer: coarse) and (max-height: 32em) {'
+      ),
+    ]) {
+      expect(content).toMatch(/&\.active\s*\{[^}]*transform:\s*none;/);
+    }
+    expect(css).not.toMatch(/will-change:\s*transform/);
+  });
+
   it('keeps every modal inside the viewport with a scrolling body', () => {
     expect(block(':where(.modalContent) {')).toMatch(
       /max-width: calc\(100% - 2em\);\s*max-height: calc\(100% - 2em\);/

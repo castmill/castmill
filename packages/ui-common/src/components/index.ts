@@ -18,6 +18,7 @@ export * from './loading-overlay/loading-overlay';
 export * from './switch/switch';
 export * from './slider/slider';
 export * from './combobox/combobox';
+export * from './select-sheet/select-sheet';
 export * from './circular-progress/circular-progress';
 export * from './team-filter/team-filter';
 export * from './multi-select-filter/multi-select-filter';

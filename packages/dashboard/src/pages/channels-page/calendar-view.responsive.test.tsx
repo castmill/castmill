@@ -6,6 +6,7 @@ import {
   screen,
   waitFor,
 } from '@solidjs/testing-library';
+import { COMBOBOX_SHEET_QUERY } from '@castmill/ui-common';
 import { I18nProvider } from '../../i18n';
 import {
   CalendarView,
@@ -39,22 +40,21 @@ vi.mock('./default-playlist-combobox', () => ({
   DefaultPlaylistComboBox: () => null,
 }));
 vi.mock('@castmill/ui-common', async () => {
-  const actual = await vi.importActual('@castmill/ui-common');
+  const actual = await vi.importActual<typeof import('@castmill/ui-common')>(
+    '@castmill/ui-common'
+  );
   return {
     ...actual,
     useToast: () => ({ success: vi.fn(), error: toastError, info: vi.fn() }),
-    // The real ComboBox is covered in ui-common; pick a playlist directly.
-    ComboBox: (props: {
-      label: string;
-      onSelect: (item: unknown) => void;
-      fetchItems: (page: number, size: number, search: string) => unknown;
-    }) => {
+    // Keep the duration picker real; avoid fetching playlists in these tests.
+    ComboBox: (props: Parameters<typeof actual.ComboBox>[0]) => {
+      if (props.id !== 'calendar-add-entry-playlist') {
+        return <actual.ComboBox {...props} />;
+      }
       props.fetchItems(1, 10, 'pro');
+      const playlist = { id: 7, name: 'Promo' };
       return (
-        <button
-          type="button"
-          onClick={() => props.onSelect({ id: 7, name: 'Promo' })}
-        >
+        <button type="button" onClick={() => props.onSelect(playlist)}>
           {props.label}
         </button>
       );
@@ -84,7 +84,7 @@ const mockViewport = (matching: string[]) => {
 const DESKTOP = [WIDE_CALENDAR_QUERY];
 const TABLET_PORTRAIT: string[] = [];
 const TABLET_LANDSCAPE = [WIDE_CALENDAR_QUERY, '(pointer: coarse)'];
-const PHONE = [DAY_VIEW_QUERY, '(pointer: coarse)'];
+const PHONE = [DAY_VIEW_QUERY, '(pointer: coarse)', COMBOBOX_SHEET_QUERY];
 
 const renderCalendar = (
   options: {
@@ -379,8 +379,9 @@ describe('CalendarView tap-to-add', () => {
     const add = screen.getByRole('button', { name: 'Add to schedule' });
     expect(add).toBeDisabled();
 
-    const duration = screen.getByLabelText('Duration') as HTMLSelectElement;
-    expect(Array.from(duration.options).map((o) => o.textContent)).toEqual([
+    fireEvent.click(screen.getByRole('button', { name: 'Duration 1 hour' }));
+    const durations = await screen.findAllByRole('option');
+    expect(durations.map((o) => o.textContent)).toEqual([
       '30 minutes',
       '1 hour',
       '2 hours',
@@ -388,7 +389,7 @@ describe('CalendarView tap-to-add', () => {
       '8 hours',
       'Until end of day',
     ]);
-    fireEvent.change(duration, { target: { value: '120' } });
+    fireEvent.click(screen.getByRole('option', { name: '2 hours' }));
 
     await pickPlaylistAndAdd();
 
@@ -422,9 +423,23 @@ describe('CalendarView tap-to-add', () => {
     expect(
       screen.getByText(/Starts Saturday, January 10 at 23:30/)
     ).toBeTruthy();
-    expect((screen.getByLabelText('Duration') as HTMLSelectElement).value).toBe(
-      '30'
-    );
+    const duration = screen.getByRole('button', {
+      name: 'Duration Until end of day',
+    });
+    fireEvent.click(duration);
+    const sheet = screen.getByRole('dialog', { name: 'Duration' });
+    expect(sheet.closest('[data-combobox-sheet]')).toBeInTheDocument();
+    expect(sheet.closest('[data-modal-overlay]')).toBeNull();
+    const durations = await screen.findAllByRole('option');
+    expect(durations).toHaveLength(1);
+    fireEvent.click(durations[0]);
+    expect(
+      screen.queryByRole('dialog', { name: 'Duration' })
+    ).not.toBeInTheDocument();
+    expect(duration).toHaveFocus();
+    expect(
+      screen.getByRole('button', { name: 'Add to schedule' })
+    ).toBeInTheDocument();
 
     await pickPlaylistAndAdd();
 
@@ -433,6 +448,45 @@ describe('CalendarView tap-to-add', () => {
         playlist_id: 7,
         start: Date.UTC(2026, 0, 10, 23, 30),
         end: Date.UTC(2026, 0, 11, 0),
+      })
+    );
+  });
+
+  it('changes duration in a mobile sheet without dismissing the schedule dialog', async () => {
+    mockViewport(PHONE);
+    renderCalendar();
+    await waitFor(() => expect(getChannelEntries).toHaveBeenCalled());
+
+    fireEvent.click(screen.getAllByTestId('calendar-slot')[26]);
+    const duration = screen.getByRole('button', { name: 'Duration 1 hour' });
+    fireEvent.click(duration);
+    expect(screen.getByRole('dialog', { name: 'Duration' })).toBeVisible();
+    expect(
+      await screen.findByRole('option', { name: '1 hour' })
+    ).toHaveAttribute('aria-selected', 'true');
+    fireEvent.input(screen.getByRole('textbox'), {
+      target: { value: '2 HOURS' },
+    });
+    await waitFor(() => expect(screen.getAllByRole('option')).toHaveLength(1));
+    fireEvent.click(screen.getByRole('option', { name: '2 hours' }));
+    expect(duration).toHaveTextContent('2 hours');
+
+    fireEvent.click(duration);
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(
+      screen.queryByRole('dialog', { name: 'Duration' })
+    ).not.toBeInTheDocument();
+    expect(duration).toHaveFocus();
+    expect(
+      screen.getByText(/Starts Sunday, January 11 at 13:00/)
+    ).toBeVisible();
+
+    await pickPlaylistAndAdd();
+    await waitFor(() =>
+      expect(addEntryToChannel).toHaveBeenCalledWith(3, {
+        playlist_id: 7,
+        start: Date.UTC(2026, 0, 11, 13),
+        end: Date.UTC(2026, 0, 11, 15),
       })
     );
   });
@@ -464,9 +518,8 @@ describe('CalendarView tap-to-add', () => {
     // The dialog stays open so another duration can be chosen.
     expect(screen.getByText(/Starts Wednesday/)).toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText('Duration'), {
-      target: { value: '30' },
-    });
+    fireEvent.click(screen.getByRole('button', { name: 'Duration 1 hour' }));
+    fireEvent.click(await screen.findByRole('option', { name: '30 minutes' }));
     fireEvent.click(screen.getByRole('button', { name: 'Add to schedule' }));
     await waitFor(() => expect(addEntryToChannel).toHaveBeenCalled());
   });
@@ -624,9 +677,8 @@ describe('CalendarView tap-to-add', () => {
     await waitFor(() => expect(getChannelEntries).toHaveBeenCalledTimes(1));
 
     tapWeekSlot(0, 20);
-    fireEvent.change(screen.getByLabelText('Duration'), {
-      target: { value: '30' },
-    });
+    fireEvent.click(screen.getByRole('button', { name: 'Duration 1 hour' }));
+    fireEvent.click(await screen.findByRole('option', { name: '30 minutes' }));
     await pickPlaylistAndAdd();
     expect(addEntryToChannel).toHaveBeenCalledWith(3, {
       playlist_id: 7,

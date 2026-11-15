@@ -261,6 +261,18 @@ let modalRef: ModalRef | undefined = undefined;
   bottom of the body and their buttons share the full width (`ConfirmDialog`
   already does this). Don't use `!important` width overrides.
 
+### SelectSheetHost (mobile `<select>` picker)
+
+Mount `<SelectSheetHost closeLabel fallbackTitle />` once at the app root;
+the dashboard already does this. When `COMBOBOX_SHEET_QUERY` matches, it
+cancels the native picker for every single-choice `<select>` in the document.
+It then lists the options, optgroups and disabled options in a portalled
+bottom sheet (`[data-select-sheet][data-combobox-sheet]`) pinned with
+`useVisualViewportBox`. Choosing an option sets `selectedIndex` and dispatches
+bubbling `input` and `change` events, so components keep using plain
+`<select onChange>`. `multiple`, `size > 1`, disabled selects and
+`data-native-select` (`NATIVE_SELECT_ATTRIBUTE`) are left native.
+
 ### TableViewRef Interface
 
 Provides methods to interact with the table programmatically.

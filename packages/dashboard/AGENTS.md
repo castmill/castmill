@@ -190,6 +190,18 @@ Shared mobile behaviour (ui-common):
   full-screen modal content with `100%` of the overlay (and
   `box-sizing: border-box`), not `100vw`/`100dvh`.
   Drawers ignore outside clicks inside the sheet.
+- Open Modal/Drawer panels and active Tabs must settle to `transform: none`,
+  without `will-change: transform`. Identity transforms still create a
+  transformed containing block and can detach native select popups from their
+  controls on mobile. Keep transforms only in the opening/closing states.
+- Native single-choice `<select>`s need no per-component mobile work. The root
+  `SelectSheetHost` (mounted once in `src/index.tsx`) intercepts taps,
+  clicks and Enter/Space when `COMBOBOX_SHEET_QUERY` matches. It shows the
+  options in a bottom sheet titled by the select's label and writes the choice
+  back with native `input`/`change` events. This also covers addon selects.
+  Give every select a `<label for>` or `aria-label` so the sheet has a title.
+  Add `data-native-select` only to opt out. Desktop keeps the native popup.
+  Sheet taps do not propagate, so popover outside-click handlers stay open.
 - `Tabs` is an ARIA tablist (Arrow keys mirrored in RTL, Home/End) whose rail
   scrolls horizontally instead of squeezing labels; the active tab is scrolled
   into view and hidden edges fade. Give each `TabItem` an `icon` so inactive
@@ -210,9 +222,10 @@ layouts, exposed as `data-layout` on the calendar root:
   and horizontal swipe paging (mirrored in RTL). Paging past Monday/Sunday
   changes the week, so `onWeekChange` still fires.
 
-On touch layouts tapping a free slot opens `CalendarAddEntry` (duration select
-and playlist `ComboBox` bottom sheet). Placement uses the same overlap and
-end-of-week checks as drag and drop (`isValidPlacement`). Entry boxes and
+On touch layouts tapping a free slot opens `CalendarAddEntry` (duration and
+playlist `ComboBox` bottom sheets, avoiding native picker positioning).
+Placement uses the same overlap and end-of-week checks as drag and drop
+(`isValidPlacement`). Entry boxes and
 automation markers are clipped to the visible days, and they are measured from
 the cell refs, so keep cells registered synchronously and use the outer edges
 of the first and last day cells (days run right-to-left in RTL). Calendar

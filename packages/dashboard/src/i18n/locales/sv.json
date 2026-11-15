@@ -109,6 +109,7 @@
     "sortAscending": "Stigande",
     "sortDescending": "Fallande",
     "selectAll": "Markera alla",
+    "selectOption": "Välj ett alternativ",
     "selectRow": "Markera rad {{id}}"
   },
   "topbar": {

@@ -1,8 +1,21 @@
 /** @jsxImportSource solid-js */
 
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, it, expect, afterEach, vi, beforeEach } from 'vitest';
 import { render, fireEvent, cleanup, screen } from '@solidjs/testing-library';
 import { Drawer } from './drawer';
+
+describe('Drawer native picker positioning', () => {
+  it('releases the transformed containing block when open', () => {
+    const css = readFileSync(
+      resolve('src/components/drawer/drawer.module.scss'),
+      'utf8'
+    );
+    expect(css).toMatch(/&\.active\s*\{[^}]*transform:\s*none;/);
+    expect(css).not.toMatch(/will-change:\s*transform/);
+  });
+});
 
 describe('Drawer Component', () => {
   beforeEach(() => {

@@ -109,6 +109,7 @@
     "sortAscending": "Aufsteigend",
     "sortDescending": "Absteigend",
     "selectAll": "Alle auswählen",
+    "selectOption": "Option auswählen",
     "selectRow": "Zeile {{id}} auswählen"
   },
   "sidebar": {
