@@ -113,6 +113,9 @@ defmodule CastmillWeb.CredentialRecoveryController do
 
       case Accounts.add_user_credential(user.id, credential_id, public_key_spki, device_info) do
         {:ok, credential} ->
+          # Network admin setup links work once.
+          Accounts.delete_network_admin_setup_token(token)
+
           # Return user data + token so the frontend can establish a session
           # via Bearer auth (cookies are not used for dashboard auth).
           token =

@@ -5,6 +5,7 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
   alias Castmill.Organizations
   alias Castmill.Widgets.Integrations
   alias CastmillWeb.Live.Admin.TabSearch
+  require Logger
 
   import CastmillWeb.Live.Admin.Show
   import CastmillWeb.Live.Admin.Tabs
@@ -143,22 +144,24 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
           actions={tab_actions(@selected_tab)}
         >
           <:tab_hint :if={@selected_tab == "users"}>
-            Users join a network by invitation. To give a new person access, invite them on
-            the
-            <.link href={~p"/admin/networks/#{@resource.id}/invitations"} class="underline">
-              Invitations
-            </.link>
-            tab (they create an organization when they sign up). To make an existing account
-            a network admin, add it on the
+            To add an administrator, use the
             <.link href={~p"/admin/networks/#{@resource.id}/admins"} class="underline">
               Admins
+            </.link>
+            tab: they are emailed a link to create a passkey and sign in. To give a new person
+            their own organization, invite them on the
+            <.link href={~p"/admin/networks/#{@resource.id}/invitations"} class="underline">
+              Invitations
             </.link>
             tab.
           </:tab_hint>
           <:resource_content :if={@selected_tab == "admins"}>
             <form id="network-admin-form" phx-submit="add_network_admin" class="py-4">
               <p class="mb-2 text-sm text-gray-300">
-                Add an existing user by email. Users not already in this network will be added to it.
+                Add a person by email, with or without a Castmill account. They become an admin of
+                this network and are emailed a link to create a passkey for <%= Networks.dashboard_url(
+                  @resource
+                ) %> and sign in.
               </p>
               <label for="network-admin-email" class="block text-sm font-semibold">Email</label>
               <input
@@ -173,6 +176,11 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
             <.table id="network-admins" rows={@streams.rows} row_item={fn {_dom_id, user} -> user end}>
               <:col :let={user} label="Name"><%= user.name %></:col>
               <:col :let={user} label="Email"><%= user.email %></:col>
+              <:action :let={user}>
+                <.link phx-click={JS.push("send_admin_setup_link", value: %{id: user.id})}>
+                  Send setup link
+                </.link>
+              </:action>
               <:action :let={user}>
                 <.link
                   phx-click={JS.push("demote_from_admin", value: %{id: user.id})}
@@ -356,6 +364,36 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
   # Ignore other messages (e.g. from mailers) instead of crashing the page.
   def handle_info(_message, socket), do: {:noreply, socket}
 
+  defp find_or_create_user(email) do
+    case Accounts.get_user_by_email(email) do
+      nil -> Accounts.create_user(%{email: email, name: email})
+      user -> {:ok, user}
+    end
+  end
+
+  defp make_network_admin(user, network_id) do
+    case Networks.promote_to_network_admin(user.id, network_id) do
+      {:error, :user_not_in_network} -> Networks.add_user_to_network(user.id, network_id, :admin)
+      other -> other
+    end
+  end
+
+  defp admin_added_message(user, network) do
+    "#{user.email} is now a network admin. " <> setup_link_message(user, network)
+  end
+
+  # Passkeys belong to a domain, so admins need one for this network's domain.
+  defp setup_link_message(user, network) do
+    case Accounts.deliver_network_admin_setup_instructions(user, network) do
+      {:ok, _email} ->
+        "A link to create a passkey for #{network.domain} was emailed to #{user.email}."
+
+      {:error, reason} ->
+        Logger.error("[NetworkShow] Could not email the admin setup link: #{inspect(reason)}")
+        "The setup link could not be emailed to #{user.email}; use Send setup link to retry."
+    end
+  end
+
   @impl true
   def handle_event("search", %{"search" => search}, %{assigns: %{selected_tab: tab}} = socket)
       when is_binary(tab) do
@@ -388,37 +426,38 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
         %{assigns: %{selected_tab: "admins"}} = socket
       )
       when is_binary(email) do
-    network_id = socket.assigns.resource.id
+    network = socket.assigns.resource
+    email = String.trim(email)
 
-    case Accounts.get_user_by_email(String.trim(email)) do
+    with {:ok, user} <- find_or_create_user(email),
+         {:ok, _membership} <- make_network_admin(user, network.id) do
+      {:noreply,
+       socket
+       |> stream_insert(:rows, user)
+       |> put_flash(:info, admin_added_message(user, network))}
+    else
+      {:error, %Ecto.Changeset{}} ->
+        {:noreply, put_flash(socket, :error, "Enter a valid email address")}
+
+      {:error, _reason} ->
+        {:noreply, put_flash(socket, :error, "Failed to add network admin")}
+    end
+  end
+
+  def handle_event("send_admin_setup_link", %{"id" => user_id}, socket) do
+    network = socket.assigns.resource
+
+    case Accounts.get_user(user_id) do
+      %Accounts.User{} = user ->
+        {:noreply, put_flash(socket, :info, setup_link_message(user, network))}
+
       nil ->
-        {:noreply, put_flash(socket, :error, "No existing user found with that email")}
-
-      user ->
-        result =
-          case Networks.promote_to_network_admin(user.id, network_id) do
-            {:error, :user_not_in_network} ->
-              Networks.add_user_to_network(user.id, network_id, :admin)
-
-            other ->
-              other
-          end
-
-        case result do
-          {:ok, _} ->
-            {:noreply,
-             socket
-             |> stream_insert(:rows, user)
-             |> put_flash(:info, "User is now a network admin")}
-
-          {:error, _} ->
-            {:noreply, put_flash(socket, :error, "Failed to add network admin")}
-        end
+        {:noreply, put_flash(socket, :error, "User not found")}
     end
   end
 
   def handle_event("add_network_admin", _params, socket) do
-    {:noreply, put_flash(socket, :error, "Enter an existing user's email")}
+    {:noreply, put_flash(socket, :error, "Enter an email address")}
   end
 
   def handle_event(

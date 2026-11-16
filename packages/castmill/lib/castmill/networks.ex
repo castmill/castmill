@@ -214,6 +214,17 @@ defmodule Castmill.Networks do
   end
 
   @doc """
+  The URL of the network's dashboard, e.g. `https://net-a7f3b2c1.example.com`
+  (`http` for local `localhost` domains).
+  """
+  def dashboard_url(%Network{domain: domain}) do
+    scheme =
+      if String.starts_with?(domain, ["localhost", "127.0.0.1"]), do: "http", else: "https"
+
+    "#{scheme}://#{domain}"
+  end
+
+  @doc """
   Whether networks saved with an empty domain get a generated one (see
   `Castmill.Networks.DomainProvider`).
   """

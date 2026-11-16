@@ -504,12 +504,40 @@ defmodule Castmill.Accounts do
       nil
   """
   def get_user_by_recover_credentials_token(token) do
-    with {:ok, query} <- UserToken.verify_email_token_query(token, "recover_credentials"),
-         %User{} = user <- Repo.one(query) do
-      user
-    else
-      _ -> nil
+    # Network admin setup links use the same passkey setup pages.
+    Enum.find_value(["recover_credentials", "network_admin_setup"], fn context ->
+      with {:ok, query} <- UserToken.verify_email_token_query(token, context),
+           %User{} = user <- Repo.one(query) do
+        user
+      else
+        _ -> nil
+      end
+    end)
+  end
+
+  @doc """
+  Emails `user`, a new admin of `network`, a link to create a passkey for the
+  network's dashboard domain (passkeys belong to a domain, so admins need one
+  for each network's domain). The link is valid for 7 days and works once.
+  """
+  def deliver_network_admin_setup_instructions(%User{} = user, network) do
+    {encoded_token, user_token} = UserToken.build_email_token(user, "network_admin_setup")
+    Repo.insert!(user_token)
+
+    url =
+      Castmill.Networks.dashboard_url(network) <>
+        "/setup-passkey?token=#{encoded_token}&email=#{URI.encode_www_form(user.email)}"
+
+    UserNotifier.deliver_network_admin_setup_instructions(user, network, url)
+  end
+
+  @doc "Deletes a used network admin setup token (see deliver_network_admin_setup_instructions/2)."
+  def delete_network_admin_setup_token(token) do
+    with {:ok, query} <- UserToken.email_token_query(token, "network_admin_setup") do
+      Repo.delete_all(query)
     end
+
+    :ok
   end
 
   @doc """
