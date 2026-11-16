@@ -214,6 +214,19 @@ defmodule Castmill.Networks do
   end
 
   @doc """
+  The URL of the network's dashboard, e.g. `https://net-a7f3b2c1.example.com`
+  (`http` for local `localhost` domains).
+  """
+  def dashboard_url(%Network{domain: domain}) do
+    host = URI.parse("//" <> domain).host
+
+    scheme =
+      if String.downcase(host || "") in ["localhost", "127.0.0.1"], do: "http", else: "https"
+
+    "#{scheme}://#{domain}"
+  end
+
+  @doc """
   Whether networks saved with an empty domain get a generated one (see
   `Castmill.Networks.DomainProvider`).
   """
@@ -497,7 +510,17 @@ defmodule Castmill.Networks do
     base_query =
       if search && String.trim(search) != "" do
         search_term = "%#{String.downcase(search)}%"
-        from(u in base_query, where: ilike(u.email, ^search_term) or ilike(u.name, ^search_term))
+
+        search_filter =
+          dynamic([u], ilike(u.email, ^search_term) or ilike(u.name, ^search_term))
+
+        search_filter =
+          case Ecto.UUID.cast(String.trim(search)) do
+            {:ok, id} -> dynamic([u], ^search_filter or u.id == ^id)
+            :error -> search_filter
+          end
+
+        from(u in base_query, where: ^search_filter)
       else
         base_query
       end

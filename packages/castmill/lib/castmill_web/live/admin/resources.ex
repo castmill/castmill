@@ -359,8 +359,10 @@ defmodule CastmillWeb.Live.Admin.Resources do
     {:noreply, assign(socket, :rows, rows)}
   end
 
+  # The search term is part of the URL, so handle_params lists the matching rows.
   def handle_event("search", %{"search" => search}, socket) do
-    {:noreply, assign(socket, search: search)}
+    options = %{socket.assigns.options | search: String.trim(search), page: 1}
+    {:noreply, push_patch(socket, to: ~p"/admin/#{socket.assigns.selected_link}?#{options}")}
   end
 
   @impl true

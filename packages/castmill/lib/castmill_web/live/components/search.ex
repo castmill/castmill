@@ -3,7 +3,7 @@ defmodule CastmillWeb.Live.Admin.Search do
 
   def search(assigns) do
     ~H"""
-    <form phx-change="search" class="flex items-center">
+    <form phx-change="search" phx-submit="search" class="flex items-center">
       <label for="simple-search" class="sr-only">Search</label>
       <div class="relative max-w-xs">
         <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">

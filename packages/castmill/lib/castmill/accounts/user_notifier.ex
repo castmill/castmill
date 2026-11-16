@@ -131,6 +131,30 @@ defmodule Castmill.Accounts.UserNotifier do
   end
 
   @doc """
+  Deliver the passkey setup link to a new network admin.
+  """
+  def deliver_network_admin_setup_instructions(user, network, url) do
+    deliver(user.email, "You are an administrator of #{network.name} on Castmill", """
+
+    ==============================
+
+    Hi #{user.email},
+
+    You have been made an administrator of the network #{network.name} on Castmill.
+
+    To sign in, create a passkey for #{network.domain} by visiting the URL below:
+
+    #{url}
+
+    This link expires in 7 days and can be used once.
+
+    If you were not expecting this, please ignore this email.
+
+    ==============================
+    """)
+  end
+
+  @doc """
   Deliver instructions to update a user email.
   """
   def deliver_update_email_instructions(user, url) do
