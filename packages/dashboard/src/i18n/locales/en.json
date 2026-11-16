@@ -872,6 +872,7 @@
     "ready": "Ready",
     "loading": "Loading...",
     "loginWithPasskey": "Login with Passkey",
+    "useCurrentDomainPasskey": "Use a passkey saved for this domain",
     "privacyPolicy": "Privacy Policy",
     "privacyNotice": "We care about your privacy. Read our",
     "lostCredentials": "Lost your credentials?",

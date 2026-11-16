@@ -722,6 +722,7 @@
     "ready": "Prêt",
     "loading": "Chargement...",
     "loginWithPasskey": "Se connecter avec une clé d'accès",
+    "useCurrentDomainPasskey": "Utiliser une clé d'accès enregistrée pour ce domaine",
     "privacyPolicy": "Politique de confidentialité",
     "privacyNotice": "Nous respectons votre vie privée. Lisez notre",
     "lostCredentials": "Identifiants perdus ?",

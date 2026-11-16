@@ -717,6 +717,7 @@
     "ready": "Redo",
     "loading": "Laddar...",
     "loginWithPasskey": "Logga in med nyckel",
+    "useCurrentDomainPasskey": "Använd en nyckel som sparats för den här domänen",
     "privacyPolicy": "Integritetspolicy",
     "privacyNotice": "Vi värnar om din integritet. Läs vår",
     "lostCredentials": "Tappat bort dina inloggningsuppgifter?",

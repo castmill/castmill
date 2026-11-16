@@ -722,6 +722,7 @@
     "ready": "준비됨",
     "loading": "로딩 중...",
     "loginWithPasskey": "패스키로 로그인",
+    "useCurrentDomainPasskey": "이 도메인에 저장된 패스키 사용",
     "privacyPolicy": "개인정보 처리방침",
     "privacyNotice": "귀하의 개인정보를 소중히 여깁니다.",
     "lostCredentials": "자격 증명을 잃어버리셨나요?",

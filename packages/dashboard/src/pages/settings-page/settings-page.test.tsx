@@ -3,6 +3,7 @@ import { vi, describe, it, expect, beforeEach } from 'vitest';
 import SettingsPage from './settings-page';
 import { I18nProvider } from '../../i18n';
 import { ToastProvider } from '@castmill/ui-common';
+import { resetPasskeyRpId } from '../../services/passkey-rp-id';
 
 // Mock the auth module
 vi.mock('../../components/auth', () => ({
@@ -69,6 +70,7 @@ describe('SettingsPage', () => {
     const module = await import('../../services/user.service');
     UserService = module.UserService;
     vi.clearAllMocks();
+    resetPasskeyRpId();
 
     // Reset default mock implementation
     (UserService.getUserCredentials as any).mockResolvedValue({
@@ -556,6 +558,55 @@ describe('SettingsPage', () => {
 
       // Cleanup
       delete (global as any).PublicKeyCredential;
+    });
+
+    it('signals both network and current-domain passkeys independently', async () => {
+      const consoleWarn = vi
+        .spyOn(console, 'warn')
+        .mockImplementation(() => {});
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue({
+          ok: true,
+          json: () => Promise.resolve({ passkey_rp_id: 'network.example' }),
+        })
+      );
+      const mockSignalUnknownCredential = vi
+        .fn()
+        .mockRejectedValueOnce(new Error('Network RP signal failed'))
+        .mockResolvedValue(undefined);
+      (global as any).PublicKeyCredential = {
+        signalUnknownCredential: mockSignalUnknownCredential,
+      };
+      (UserService.deleteAccount as any).mockResolvedValue({ status: 'ok' });
+
+      renderWithProviders(() => <SettingsPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText('My Laptop')).toBeInTheDocument();
+      });
+
+      fireEvent.click(screen.getByRole('button', { name: 'Delete Account' }));
+      fireEvent.click(
+        await screen.findByRole('button', { name: 'Yes, Delete Account' })
+      );
+
+      await waitFor(() => {
+        expect(mockSignalUnknownCredential).toHaveBeenCalledTimes(2);
+        expect(mockSignalUnknownCredential).toHaveBeenNthCalledWith(1, {
+          credentialId: 'cred1',
+          rpId: 'network.example',
+        });
+        expect(mockSignalUnknownCredential).toHaveBeenNthCalledWith(2, {
+          credentialId: 'cred1',
+          rpId: window.location.hostname,
+        });
+        expect(UserService.deleteAccount).toHaveBeenCalledWith('1');
+      });
+
+      delete (global as any).PublicKeyCredential;
+      vi.unstubAllGlobals();
+      consoleWarn.mockRestore();
     });
   });
 });

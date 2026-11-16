@@ -1,7 +1,8 @@
 import { Component, createSignal, onMount, Show } from 'solid-js';
 import { useNavigate, useSearchParams } from '@solidjs/router';
 import { arrayBufferToBase64, base64URLToArrayBuffer } from '../utils';
-import { baseUrl, domain } from '../../env';
+import { baseUrl } from '../../env';
+import { getPasskeyRpId } from '../../services/passkey-rp-id';
 import { authFetch, loginUser } from '../auth';
 import { useI18n } from '../../i18n';
 import './login.scss';
@@ -108,7 +109,7 @@ const CompleteRecovery: Component = () => {
       const createOptions: CredentialCreationOptions = {
         publicKey: {
           rp: {
-            id: domain,
+            id: await getPasskeyRpId(),
             name: 'Castmill AB',
           },
           user: {

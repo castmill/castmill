@@ -4,8 +4,9 @@
  * This component handles the passkey creation flow for custom domains.
  * When a network admin adds a custom domain (e.g. signage.acmecorp.com),
  * they receive a magic link via email. Clicking that link brings them
- * to this page on the custom domain, where they create a new passkey
- * bound to that domain. After that, they can log in normally.
+ * to this page on the custom domain, where they create a passkey. Passkeys
+ * belong to the network's primary domain, so they work on all of the
+ * network's domains (see getPasskeyRpId). After that, they can log in normally.
  *
  * The flow reuses the existing credential recovery infrastructure:
  * same token generation, same verification, same passkey creation API.
@@ -16,6 +17,7 @@ import { Component, createSignal, onMount, Show } from 'solid-js';
 import { useNavigate, useSearchParams } from '@solidjs/router';
 import { arrayBufferToBase64, base64URLToArrayBuffer } from '../utils';
 import { baseUrl, domain } from '../../env';
+import { getPasskeyRpId } from '../../services/passkey-rp-id';
 import { authFetch, loginUser } from '../auth';
 import { useI18n } from '../../i18n';
 import './login.scss';
@@ -111,11 +113,11 @@ const SetupPasskey: Component = () => {
         email: userEmail,
       } = await challengeResponse.json();
 
-      // Create passkey bound to THIS domain (the custom domain)
+      // Passkeys belong to the network's passkey domain (see getPasskeyRpId)
       const createOptions: CredentialCreationOptions = {
         publicKey: {
           rp: {
-            id: domain,
+            id: await getPasskeyRpId(),
             name: 'Castmill',
           },
           user: {
