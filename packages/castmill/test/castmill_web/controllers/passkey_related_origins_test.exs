@@ -146,8 +146,7 @@ defmodule CastmillWeb.PasskeyRelatedOriginsTest do
     network: network
   } do
     body =
-      conn
-      |> put_req_header("host", "#{@custom}:8443")
+      %{conn | host: @custom, port: 8443}
       |> get(~p"/dashboard/network/public-settings")
       |> json_response(200)
 
