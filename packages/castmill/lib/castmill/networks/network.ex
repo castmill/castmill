@@ -41,7 +41,14 @@ defmodule Castmill.Networks.Network do
   end
 
   @doc false
-  def changeset(network, attrs) do
+  # `require_domain: false` is used to validate forms where an empty domain is
+  # generated on save (see Castmill.Networks.DomainProvider).
+  def changeset(network, attrs, opts \\ []) do
+    required =
+      if Keyword.get(opts, :require_domain, true),
+        do: [:name, :email, :domain],
+        else: [:name, :email]
+
     network
     |> cast(attrs, [
       :name,
@@ -57,7 +64,7 @@ defmodule Castmill.Networks.Network do
       :invitation_only,
       :invitation_only_org_admins
     ])
-    |> validate_required([:name, :email, :domain])
+    |> validate_required(required)
     |> validate_format(:email, ~r/@/, message: "must be a valid email address")
     |> validate_format(
       :domain,
@@ -65,6 +72,7 @@ defmodule Castmill.Networks.Network do
       message: "must be a valid domain (e.g., app.example.com or localhost:3000)"
     )
     |> unique_constraint(:name)
+    |> unique_constraint(:domain)
   end
 
   def base_query() do
