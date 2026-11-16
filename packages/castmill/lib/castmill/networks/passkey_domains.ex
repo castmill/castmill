@@ -83,10 +83,9 @@ defmodule Castmill.Networks.PasskeyDomains do
         origins =
           network.id
           |> additional_domains()
-          |> Enum.map(&host/1)
-          |> Enum.reject(&(&1 in [nil, "", rp_id(network)]))
+          |> Enum.map(&related_origin/1)
+          |> Enum.reject(&(&1 in [nil, "", related_origin(network.domain)]))
           |> Enum.uniq()
-          |> Enum.map(&("https://" <> &1))
 
         {:ok, origins}
     end
@@ -164,5 +163,21 @@ defmodule Castmill.Networks.PasskeyDomains do
     |> String.split(["/", ":"], parts: 2)
     |> hd()
     |> String.downcase()
+  end
+
+  defp related_origin(nil), do: nil
+
+  defp related_origin(domain) do
+    domain = String.replace(domain, ~r{^https?://}, "")
+    uri = URI.parse("https://" <> domain)
+    host = uri.host && String.downcase(uri.host)
+
+    if host && Regex.match?(~r/^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$/, host) &&
+         is_nil(uri.userinfo) && is_nil(uri.query) && is_nil(uri.fragment) do
+      port = if uri.port in [nil, 443], do: "", else: ":#{uri.port}"
+      "https://" <> host <> port
+    end
+  rescue
+    URI.Error -> nil
   end
 end

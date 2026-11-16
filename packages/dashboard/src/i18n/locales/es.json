@@ -723,6 +723,7 @@
     "ready": "Listo",
     "loading": "Cargando...",
     "loginWithPasskey": "Iniciar sesión con llave de acceso",
+    "useCurrentDomainPasskey": "Usar una llave de acceso guardada para este dominio",
     "privacyPolicy": "Política de privacidad",
     "privacyNotice": "Nos importa tu privacidad. Lee nuestra",
     "lostCredentials": "¿Perdiste tus credenciales?",

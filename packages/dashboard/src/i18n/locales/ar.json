@@ -722,6 +722,7 @@
     "ready": "جاهز",
     "loading": "جاري التحميل...",
     "loginWithPasskey": "تسجيل الدخول باستخدام مفتاح المرور",
+    "useCurrentDomainPasskey": "استخدم مفتاح مرور محفوظًا لهذا النطاق",
     "privacyPolicy": "سياسة الخصوصية",
     "privacyNotice": "نحن نهتم بخصوصيتك. اقرأ",
     "lostCredentials": "هل فقدت بيانات الاعتماد؟",

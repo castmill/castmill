@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@solidjs/testing-library';
 import OrganizationsInvitationPage from './organizations-invitations-page';
 import { I18nProvider } from '../../i18n';
 import { ToastProvider } from '@castmill/ui-common';
+import { resetPasskeyRpId } from '../../services/passkey-rp-id';
 
 // Mock services
 vi.mock('../../services/organizations.service', () => ({
@@ -62,11 +63,13 @@ describe('OrganizationsInvitationPage', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    resetPasskeyRpId();
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
+    resetPasskeyRpId();
   });
 
   const renderComponent = () => {
@@ -312,7 +315,7 @@ describe('OrganizationsInvitationPage', () => {
   });
 
   describe('Login Flow', () => {
-    it('authenticates existing users with passkey directly', async () => {
+    it('authenticates existing users with a current-domain passkey', async () => {
       const { OrganizationsService } =
         await import('../../services/organizations.service');
       const { loginUser } = await import('../../components/auth');
@@ -338,6 +341,15 @@ describe('OrganizationsInvitationPage', () => {
           }),
         },
       });
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(() =>
+          Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ passkey_rp_id: 'network.example' }),
+          } as Response)
+        )
+      );
 
       const { authFetch } = await import('../../components/auth');
       vi.mocked(authFetch)
@@ -361,7 +373,9 @@ describe('OrganizationsInvitationPage', () => {
 
       renderComponent();
 
-      const loginButton = await screen.findByText('Login with Passkey');
+      const loginButton = await screen.findByText(
+        'Use a passkey saved for this domain'
+      );
       fireEvent.click(loginButton);
 
       await waitFor(() => {
@@ -371,7 +385,12 @@ describe('OrganizationsInvitationPage', () => {
       });
 
       await waitFor(() => {
-        expect((navigator as any).credentials.get).toHaveBeenCalled();
+        expect((navigator as any).credentials.get).toHaveBeenCalledWith({
+          publicKey: {
+            rpId: window.location.hostname,
+            challenge: expect.any(ArrayBuffer),
+          },
+        });
       });
 
       await waitFor(() => {

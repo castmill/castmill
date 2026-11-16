@@ -858,6 +858,7 @@
     "ready": "Bereit",
     "loading": "Wird geladen...",
     "loginWithPasskey": "Mit Passkey anmelden",
+    "useCurrentDomainPasskey": "Einen für diese Domain gespeicherten Passkey verwenden",
     "privacyPolicy": "Datenschutzrichtlinie",
     "privacyNotice": "Wir schätzen Ihre Privatsphäre. Lesen Sie unsere",
     "lostCredentials": "Anmeldedaten verloren?",

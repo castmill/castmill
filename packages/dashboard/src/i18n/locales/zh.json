@@ -722,6 +722,7 @@
     "ready": "就绪",
     "loading": "加载中...",
     "loginWithPasskey": "使用密钥登录",
+    "useCurrentDomainPasskey": "使用为此域保存的密钥",
     "privacyPolicy": "隐私政策",
     "privacyNotice": "我们重视您的隐私。请阅读我们的",
     "lostCredentials": "忘记凭据？",

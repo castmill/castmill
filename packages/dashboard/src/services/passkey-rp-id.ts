@@ -2,6 +2,8 @@ import { baseUrl, domain } from '../env';
 
 let cached: Promise<string> | undefined;
 
+export type PasskeyRpIdMode = 'network' | 'current-domain';
+
 /**
  * The relying party ID (domain) to create and use passkeys with.
  *
@@ -11,7 +13,13 @@ let cached: Promise<string> | undefined;
  * backend returns it in the public network settings; without it the current
  * hostname is used, as before.
  */
-export const getPasskeyRpId = (): Promise<string> => {
+export const getPasskeyRpId = (
+  mode: PasskeyRpIdMode = 'network'
+): Promise<string> => {
+  if (mode === 'current-domain') {
+    return Promise.resolve(domain);
+  }
+
   if (!cached) {
     const request = fetch(`${baseUrl}/dashboard/network/public-settings`, {
       method: 'GET',
@@ -33,6 +41,17 @@ export const getPasskeyRpId = (): Promise<string> => {
 
   return cached;
 };
+
+export const requestPasskeyCredential = async (
+  challenge: BufferSource,
+  mode: PasskeyRpIdMode = 'network'
+): Promise<Credential | null> =>
+  navigator.credentials.get({
+    publicKey: {
+      rpId: await getPasskeyRpId(mode),
+      challenge,
+    },
+  });
 
 /** Forgets the cached relying party ID (for tests). */
 export const resetPasskeyRpId = () => {

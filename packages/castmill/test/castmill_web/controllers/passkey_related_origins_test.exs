@@ -19,11 +19,14 @@ defmodule CastmillWeb.PasskeyRelatedOriginsTest do
     def resolve("app.tpd.test"),
       do: {:ok, Application.fetch_env!(:castmill, :passkey_test_network_id)}
 
+    def resolve("app.tpd.test:8443"),
+      do: {:ok, Application.fetch_env!(:castmill, :passkey_test_network_id)}
+
     def resolve(_domain), do: {:error, :network_not_found}
 
     def for_network(network_id) do
       if network_id == Application.fetch_env!(:castmill, :passkey_test_network_id),
-        do: ["app.tpd.test", "APP.TPD.TEST", "net-tpd.castmill.test"],
+        do: ["app.tpd.test", "APP.TPD.TEST", "app.tpd.test:8443", "net-tpd.castmill.test"],
         else: []
     end
 
@@ -83,12 +86,19 @@ defmodule CastmillWeb.PasskeyRelatedOriginsTest do
   describe "/.well-known/webauthn" do
     test "lists the network's other origins", %{conn: conn} do
       body = conn |> get(~p"/.well-known/webauthn?host=#{@primary}") |> json_response(200)
-      assert body == %{"origins" => ["https://#{@custom}"]}
+
+      assert body == %{
+               "origins" => ["https://#{@custom}", "https://#{@custom}:8443"]
+             }
     end
 
     test "uses the request host without the host parameter", %{conn: conn} do
       conn = %{conn | host: @primary} |> get(~p"/.well-known/webauthn")
-      assert json_response(conn, 200) == %{"origins" => ["https://#{@custom}"]}
+
+      assert json_response(conn, 200) == %{
+               "origins" => ["https://#{@custom}", "https://#{@custom}:8443"]
+             }
+
       assert get_resp_header(conn, "cache-control") == ["public, max-age=300"]
     end
 
@@ -129,6 +139,19 @@ defmodule CastmillWeb.PasskeyRelatedOriginsTest do
 
       assert body["passkey_rp_id"] == @primary
     end
+  end
+
+  test "public network settings use the request host when Origin is absent", %{
+    conn: conn,
+    network: network
+  } do
+    body =
+      conn
+      |> put_req_header("host", "#{@custom}:8443")
+      |> get(~p"/dashboard/network/public-settings")
+      |> json_response(200)
+
+    assert body["passkey_rp_id"] == network.domain
   end
 
   test "the RP ID is the domain host without port or scheme" do

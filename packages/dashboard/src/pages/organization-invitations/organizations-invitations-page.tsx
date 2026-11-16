@@ -12,8 +12,11 @@ import {
   arrayBufferToBase64,
   base64URLToArrayBuffer,
 } from '../../components/utils';
-import { baseUrl } from '../../env';
-import { getPasskeyRpId } from '../../services/passkey-rp-id';
+import { baseUrl, domain } from '../../env';
+import {
+  getPasskeyRpId,
+  requestPasskeyCredential,
+} from '../../services/passkey-rp-id';
 import { useToast } from '@castmill/ui-common';
 
 import './organizations-invitations-page.scss';
@@ -38,6 +41,8 @@ const OrganizationsInvitationPage = () => {
   const [loading, setLoading] = createSignal<boolean>(true);
   const [signingUp, setSigningUp] = createSignal<boolean>(false);
   const [loggingIn, setLoggingIn] = createSignal<boolean>(false);
+  const [showCurrentDomainPasskey, setShowCurrentDomainPasskey] =
+    createSignal<boolean>(false);
   const [accepting, setAccepting] = createSignal<boolean>(false);
   const [rejecting, setRejecting] = createSignal<boolean>(false);
 
@@ -173,7 +178,7 @@ const OrganizationsInvitationPage = () => {
     }
   }
 
-  async function loginExistingUserWithPasskey() {
+  async function loginExistingUserWithPasskey(useCurrentDomain = false) {
     if (!invitation()?.user_exists || loggingIn()) {
       return;
     }
@@ -200,12 +205,10 @@ const OrganizationsInvitationPage = () => {
 
       const { challenge, challenge_token } = await challengeResponse.json();
 
-      const credential = await navigator.credentials.get({
-        publicKey: {
-          rpId: await getPasskeyRpId(),
-          challenge: base64URLToArrayBuffer(challenge),
-        },
-      });
+      const credential = await requestPasskeyCredential(
+        base64URLToArrayBuffer(challenge),
+        useCurrentDomain ? 'current-domain' : 'network'
+      );
 
       if (!credential) {
         throw new Error('No credentials available for this passkey');
@@ -297,6 +300,7 @@ const OrganizationsInvitationPage = () => {
   // 6. On mount, preview invitation first (no auth needed)
   onMount(async () => {
     await previewInvitation();
+    setShowCurrentDomainPasskey((await getPasskeyRpId()) !== domain);
 
     // If already authenticated and invitation is valid, user can proceed
     // Otherwise, they need to login/signup based on user_exists flag
@@ -500,7 +504,7 @@ const OrganizationsInvitationPage = () => {
                     {t('organizations.invitation.loginToAccept')}
                   </p>
                   <button
-                    onClick={loginExistingUserWithPasskey}
+                    onClick={() => loginExistingUserWithPasskey()}
                     disabled={loggingIn()}
                     class="invitation-button"
                   >
@@ -508,6 +512,15 @@ const OrganizationsInvitationPage = () => {
                       ? t('login.loading')
                       : t('login.loginWithPasskey')}
                   </button>
+                  <Show when={showCurrentDomainPasskey()}>
+                    <button
+                      onClick={() => loginExistingUserWithPasskey(true)}
+                      disabled={loggingIn()}
+                      class="invitation-button"
+                    >
+                      {t('login.useCurrentDomainPasskey')}
+                    </button>
+                  </Show>
                 </Show>
 
                 <Show when={!invitation()?.user_exists}>
