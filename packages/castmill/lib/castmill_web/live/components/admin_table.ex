@@ -10,6 +10,10 @@ defmodule CastmillWeb.Live.Admin.Table do
   attr(:resource, :string, required: true)
   attr(:rows, :list, required: true)
 
+  # Only the row actions the page handles: :edit (needs base_url), :block
+  # (organizations) and :delete.
+  attr(:actions, :list, default: [])
+
   def admin_table(assigns) do
     # Helper function to extract the item from LiveStream tuple or return as-is for regular lists
     row_item = fn
@@ -44,11 +48,13 @@ defmodule CastmillWeb.Live.Admin.Table do
             <div class="sr-only">
               <.link navigate={"#{@base_url}/#{@row_item.(row).id}"}>Show</.link>
             </div>
-            <.link patch={"#{@base_url}/#{@row_item.(row).id}/edit"}>Edit</.link>
+            <.link :if={:edit in @actions} patch={"#{@base_url}/#{@row_item.(row).id}/edit"}>
+              Edit
+            </.link>
           <% end %>
         </:action>
         <:action :let={row}>
-          <%= if @resource == "organizations" do %>
+          <%= if :block in @actions and @resource == "organizations" do %>
             <%= if Organization.blocked?(@row_item.(row)) do %>
               <.link
                 phx-click={JS.push("unblock", value: %{id: @row_item.(row).id, resource: @resource})}
@@ -68,6 +74,7 @@ defmodule CastmillWeb.Live.Admin.Table do
         </:action>
         <:action :let={row}>
           <.link
+            :if={:delete in @actions}
             phx-click={
               JS.push("delete", value: %{id: @row_item.(row).id, resource: @resource})
               |> hide("##{@row_item.(row).id}")

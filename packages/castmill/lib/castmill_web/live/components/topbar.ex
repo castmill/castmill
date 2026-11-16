@@ -22,7 +22,7 @@ defmodule CastmillWeb.Live.Admin.Topbar do
 
         <div class="flex items-center gap-4 font-semibold leading-6 text-zinc-300">
           <div :if={@current_user} class="text-zink-200 font-bold">
-            <a href={~p"/admin/settings"} class="hover:text-zinc-600">
+            <a href={~p"/admin/passkeys"} class="hover:text-zinc-600">
               <%= @current_user.email %>
             </a>
 

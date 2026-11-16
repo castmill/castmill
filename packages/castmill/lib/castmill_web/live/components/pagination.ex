@@ -63,7 +63,7 @@ defmodule CastmillWeb.Live.Admin.Pagination do
         aria-label="Pagination"
       >
         <.link
-          patch={~p"/admin/#{@selected_link}?#{%{@options | page: @page - 1}}"}
+          patch={~p"/admin/#{@selected_link}?#{%{@options | page: max(@page - 1, 1)}}"}
           class={"relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 dark:text-slate-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 #{if !@has_previous, do: "pointer-events-none opacity-50"}"}
         >
           <span class="sr-only">Previous</span>
@@ -95,7 +95,7 @@ defmodule CastmillWeb.Live.Admin.Pagination do
         <% end %>
 
         <.link
-          patch={~p"/admin/#{@selected_link}?#{%{@options | page: @page + 1}}"}
+          patch={~p"/admin/#{@selected_link}?#{%{@options | page: min(@page + 1, @total_pages)}}"}
           class={"relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 #{if !@has_next, do: "pointer-events-none opacity-50"}"}
         >
           <span class="sr-only">Next</span>
