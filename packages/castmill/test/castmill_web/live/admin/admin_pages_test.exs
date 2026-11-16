@@ -289,11 +289,12 @@ defmodule CastmillWeb.Live.Admin.AdminPagesTest do
 
     {:ok, view, _html} = live(conn, path)
 
-    view
-    |> element("#child-modal button[aria-label=close]")
-    |> render_click()
-
-    assert_patch(view, "/admin/organizations/#{ids.organization}/teams")
+    # Cancelling runs the modal's data-cancel JS on the client (LiveViewTest
+    # cannot execute JS.exec), so check that it patches back to the tab.
+    assert has_element?(
+             view,
+             ~s(#child-modal[data-cancel*="/admin/organizations/#{ids.organization}/teams"])
+           )
   end
 
   # Visits the paths and, breadth first, every /admin link on the pages that
