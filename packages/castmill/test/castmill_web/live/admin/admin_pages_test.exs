@@ -57,7 +57,9 @@ defmodule CastmillWeb.Live.Admin.AdminPagesTest do
       widget: widget_fixture().id
     }
 
-    %{conn: admin_conn(conn, root), ids: ids}
+    other = user_fixture(%{network_id: network.id, name: "Carol Other"})
+
+    %{conn: admin_conn(conn, root), ids: ids, root: root, member: member, other: other}
   end
 
   # The row actions (Block, Unblock, Delete) each page offers. Every page is
@@ -162,6 +164,89 @@ defmodule CastmillWeb.Live.Admin.AdminPagesTest do
     end
   end
 
+  test "every search box filters without crashing", %{conn: conn, ids: ids} do
+    failures =
+      for {page, _actions} <- @action_pages,
+          path =
+            page
+            |> String.replace(":network", ids.network)
+            |> String.replace(":organization", ids.organization),
+          {:ok, view, _html} = live(conn, path),
+          has_element?(view, "form[phx-change=search]"),
+          reason = search_failure(view),
+          reason != nil,
+          do: {path, reason}
+
+    assert failures == [],
+           "searching failed:\n" <>
+             Enum.map_join(failures, "\n", fn {path, reason} -> "  #{path}: #{reason}" end)
+  end
+
+  test "the network users tab searches all of the network's users", %{
+    conn: conn,
+    ids: ids,
+    member: member,
+    other: other
+  } do
+    {:ok, view, _html} = live(conn, "/admin/networks/#{ids.network}/users")
+    assert has_element?(view, "#rows-#{other.id}")
+    assert has_element?(view, "#tab-hint a[href='/admin/networks/#{ids.network}/invitations']")
+    assert has_element?(view, "#tab-hint a[href='/admin/networks/#{ids.network}/admins']")
+
+    view |> form("form[phx-change=search]", %{search: "bob mem"}) |> render_change()
+    assert has_element?(view, "#rows-#{member.id}")
+    refute has_element?(view, "#rows-#{other.id}")
+
+    view |> form("form[phx-change=search]", %{search: other.email}) |> render_submit()
+    assert has_element?(view, "#rows-#{other.id}")
+    refute has_element?(view, "#rows-#{member.id}")
+
+    view |> form("form[phx-change=search]", %{search: ""}) |> render_change()
+    assert has_element?(view, "#rows-#{member.id}")
+    assert has_element?(view, "#rows-#{other.id}")
+  end
+
+  test "organization tabs are filtered by the search", %{conn: conn, ids: ids, member: member} do
+    {:ok, view, _html} = live(conn, "/admin/organizations/#{ids.organization}/users")
+
+    view |> form("form[phx-change=search]", %{search: "BOB"}) |> render_change()
+    assert has_element?(view, "#rows-#{member.id}")
+
+    view |> form("form[phx-change=search]", %{search: "nobody"}) |> render_change()
+    refute has_element?(view, "#rows-#{member.id}")
+  end
+
+  test "resource lists search through the URL", %{conn: conn, member: member, root: root} do
+    {:ok, view, _html} = live(conn, "/admin/users")
+    view |> form("form[phx-change=search]", %{search: " Bob "}) |> render_change()
+
+    path = assert_patch(view)
+    assert path =~ "search=Bob"
+    assert path =~ "page=1"
+    html = render(view)
+    assert html =~ member.email
+    refute html =~ "#{root.email}</td>"
+  end
+
+  test "sending a network invitation refreshes the invitations tab", %{conn: conn, ids: ids} do
+    {:ok, view, _html} = live(conn, "/admin/networks/#{ids.network}/invitations/new")
+
+    view
+    |> form("#network-invitation-form",
+      network_invitation: %{email: "newcomer@example.test", organization_name: "Newcomer Org"}
+    )
+    |> render_submit()
+
+    assert_patch(view, "/admin/networks/#{ids.network}/invitations")
+
+    for invitation <- Castmill.Networks.list_network_invitations(ids.network) do
+      assert has_element?(view, "#rows-#{invitation.id}", invitation.email)
+      assert has_element?(view, "#rows-#{invitation.id}", invitation.organization_name)
+    end
+
+    assert length(Castmill.Networks.list_network_invitations(ids.network)) == 2
+  end
+
   test "organization tabs list the organization's resources", %{conn: conn, ids: ids} do
     for {tab, id} <- [
           {"users", ids.user},
@@ -201,6 +286,15 @@ defmodule CastmillWeb.Live.Admin.AdminPagesTest do
       {:error, reason} ->
         crawl(conn, rest, seen, [{path, reason} | failures])
     end
+  end
+
+  # Types and submits a search; returns why it failed, or nil.
+  defp search_failure(view) do
+    view |> form("form[phx-change=search]", %{search: "zz-no-match"}) |> render_change()
+    view |> form("form[phx-change=search]", %{search: ""}) |> render_submit()
+    nil
+  catch
+    kind, reason -> Exception.format_banner(kind, reason) |> String.split("\n") |> hd()
   end
 
   defp visit(conn, path) do

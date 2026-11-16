@@ -4,6 +4,7 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
   alias Castmill.Networks
   alias Castmill.Organizations
   alias Castmill.Widgets.Integrations
+  alias CastmillWeb.Live.Admin.TabSearch
 
   import CastmillWeb.Live.Admin.Show
   import CastmillWeb.Live.Admin.Tabs
@@ -141,6 +142,19 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
           }
           actions={tab_actions(@selected_tab)}
         >
+          <:tab_hint :if={@selected_tab == "users"}>
+            Users join a network by invitation. To give a new person access, invite them on
+            the
+            <.link href={~p"/admin/networks/#{@resource.id}/invitations"} class="underline">
+              Invitations
+            </.link>
+            tab (they create an organization when they sign up). To make an existing account
+            a network admin, add it on the
+            <.link href={~p"/admin/networks/#{@resource.id}/admins"} class="underline">
+              Admins
+            </.link>
+            tab.
+          </:tab_hint>
           <:resource_content :if={@selected_tab == "admins"}>
             <form id="network-admin-form" phx-submit="add_network_admin" class="py-4">
               <p class="mb-2 text-sm text-gray-300">
@@ -309,7 +323,7 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
 
     {:noreply,
      socket
-     |> stream(:rows, rows, reset: true)}
+     |> reset_stream(:rows, rows)}
   end
 
   # Handle integration form events
@@ -323,7 +337,7 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
     {:noreply,
      socket
      |> assign(:selected_integration, nil)
-     |> stream(:rows, rows, reset: true)}
+     |> reset_stream(:rows, rows)}
   end
 
   def handle_info(
@@ -336,12 +350,21 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
     {:noreply,
      socket
      |> assign(:selected_integration, nil)
-     |> stream(:rows, rows, reset: true)}
+     |> reset_stream(:rows, rows)}
   end
 
-  # def handle_info(_params, socket), do: {:noreply, socket}
+  # Ignore other messages (e.g. from mailers) instead of crashing the page.
+  def handle_info(_message, socket), do: {:noreply, socket}
 
   @impl true
+  def handle_event("search", %{"search" => search}, %{assigns: %{selected_tab: tab}} = socket)
+      when is_binary(tab) do
+    rows = search_rows(socket.assigns.resource.id, tab, TabSearch.normalize(search))
+    {:noreply, reset_stream(socket, :rows, rows)}
+  end
+
+  def handle_event("search", _params, socket), do: {:noreply, socket}
+
   def handle_event("delete", %{"id" => id, "resource" => "organizations"}, socket) do
     organization = Organizations.get_organization!(id)
     {:ok, _} = Organizations.delete_organization(organization)
@@ -446,7 +469,7 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
     with %{:assigns => %{:streams => %{^key => _data}}} <- socket do
       socket
     else
-      _ -> stream(socket, key, data)
+      _ -> socket |> stream(key, data) |> assign(:shown_rows, data)
     end
   end
 
@@ -465,23 +488,24 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
   # See: https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html#stream/4
   defp reset_stream(socket, key, data) do
     case socket.assigns do
-      %{:streams => %{^key => existing_stream}} ->
-        # Stream exists - get current items and delete them, then insert new ones
-        # First delete all existing items
-        socket_cleared =
-          existing_stream
-          |> Enum.reduce(socket, fn {_dom_id, item}, acc ->
-            stream_delete(acc, key, item)
-          end)
+      %{:streams => %{^key => _stream}} ->
+        # Streams keep no items after rendering (LiveView 0.18), so delete the
+        # shown rows that are gone, then insert (or update in place) the new ones.
+        new_ids = MapSet.new(data, & &1.id)
 
-        # Then insert new items
-        Enum.reduce(data, socket_cleared, fn item, acc ->
-          stream_insert(acc, key, item, at: -1)
-        end)
+        socket =
+          socket.assigns
+          |> Map.get(:shown_rows, [])
+          |> Enum.reject(&MapSet.member?(new_ids, &1.id))
+          |> Enum.reduce(socket, &stream_delete(&2, key, &1))
+
+        data
+        |> Enum.reduce(socket, &stream_insert(&2, key, &1, at: -1))
+        |> assign(:shown_rows, data)
 
       _ ->
         # Stream doesn't exist yet, create it
-        stream(socket, key, data)
+        socket |> stream(key, data) |> assign(:shown_rows, data)
     end
   end
 
@@ -692,6 +716,18 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
   # result set so the admin page renders gracefully instead of crashing.
   defp resources_for_network(_network_id, _tab) do
     {[], [%{name: "Name", field: :name}]}
+  end
+
+  # The users tab lists only the first page of users, so search them in the
+  # database; other tabs are filtered in memory.
+  defp search_rows(network_id, "users", search) when search != "" do
+    {users, _total} = Networks.list_users(network_id, search: search, page_size: 100)
+    users
+  end
+
+  defp search_rows(network_id, tab, search) do
+    {rows, _cols} = resources_for_network(network_id, tab)
+    TabSearch.filter(rows, search)
   end
 
   # Row actions this page handles (see the "delete" handle_event clauses).

@@ -4,6 +4,7 @@ defmodule CastmillWeb.Live.Admin.OrganizationShow do
   alias Castmill.Organizations
   alias Castmill.Teams
   alias Castmill.Devices
+  alias CastmillWeb.Live.Admin.TabSearch
 
   import CastmillWeb.Live.Admin.Show
 
@@ -122,6 +123,7 @@ defmodule CastmillWeb.Live.Admin.OrganizationShow do
      socket
      |> assign(:base_resource_url, ~p"/admin/#{resource}")
      |> stream(:rows, rows)
+     |> assign(:shown_rows, rows)
      |> assign(:selected_tab, selected_tab)
      |> assign(:resource_cols, cols)}
   end
@@ -137,6 +139,14 @@ defmodule CastmillWeb.Live.Admin.OrganizationShow do
   end
 
   @impl true
+  def handle_event("search", %{"search" => search}, %{assigns: %{selected_tab: tab}} = socket)
+      when is_binary(tab) do
+    {rows, _cols} = resources_for_organization(socket.assigns.resource.id, tab)
+    {:noreply, replace_rows(socket, TabSearch.filter(rows, search))}
+  end
+
+  def handle_event("search", _params, socket), do: {:noreply, socket}
+
   def handle_event("delete", %{"id" => id, "resource" => "teams"}, socket) do
     team = Teams.get_team(id)
     {:ok, _} = Teams.delete_team(team)
@@ -175,6 +185,22 @@ defmodule CastmillWeb.Live.Admin.OrganizationShow do
   end
 
   def handle_info(_params, socket), do: {:noreply, socket}
+
+  # Streams keep no items after rendering (LiveView 0.18, no reset), so delete
+  # the shown rows that are gone, then insert (or update in place) the new ones.
+  defp replace_rows(socket, rows) do
+    new_ids = MapSet.new(rows, & &1.id)
+
+    socket =
+      socket.assigns
+      |> Map.get(:shown_rows, [])
+      |> Enum.reject(&MapSet.member?(new_ids, &1.id))
+      |> Enum.reduce(socket, &stream_delete(&2, :rows, &1))
+
+    rows
+    |> Enum.reduce(socket, &stream_insert(&2, :rows, &1, at: -1))
+    |> assign(:shown_rows, rows)
+  end
 
   defp page_title(:show), do: "Show Organization"
   defp page_title(:edit), do: "Edit Organization"
