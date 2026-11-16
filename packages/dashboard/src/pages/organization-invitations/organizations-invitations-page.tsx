@@ -12,7 +12,7 @@ import {
   arrayBufferToBase64,
   base64URLToArrayBuffer,
 } from '../../components/utils';
-import { baseUrl, origin } from '../../env';
+import { baseUrl } from '../../env';
 import { getPasskeyRpId } from '../../services/passkey-rp-id';
 import { useToast } from '@castmill/ui-common';
 
