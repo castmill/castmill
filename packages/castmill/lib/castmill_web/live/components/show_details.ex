@@ -22,6 +22,7 @@ defmodule CastmillWeb.Live.Admin.Show do
   attr :rows, :any, required: true
   attr :base_resource_url, :string, required: true
   attr :form_module, :atom, required: true
+  attr :actions, :list, default: []
   slot :resource_content
 
   def show_details(assigns) do
@@ -67,6 +68,7 @@ defmodule CastmillWeb.Live.Admin.Show do
                 cols={@resource_cols}
                 base_url={@base_resource_url}
                 resource={@selected_tab}
+                actions={@actions}
               />
             <% end %>
           </div>
