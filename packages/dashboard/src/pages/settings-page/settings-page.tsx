@@ -87,16 +87,25 @@ const SettingsPage: Component = () => {
       return false;
     }
 
-    try {
-      await (PublicKeyCredential as any).signalUnknownCredential({
-        credentialId: credentialId,
-        rpId: await getPasskeyRpId(),
-      });
-      return true;
-    } catch (error) {
-      console.warn('Failed to signal credential deletion:', error);
-      return false;
-    }
+    const rpIds = new Set([
+      await getPasskeyRpId(),
+      await getPasskeyRpId('current-domain'),
+    ]);
+    const results = await Promise.all(
+      [...rpIds].map(async (rpId) => {
+        try {
+          await (PublicKeyCredential as any).signalUnknownCredential({
+            credentialId: credentialId,
+            rpId,
+          });
+          return true;
+        } catch (error) {
+          console.warn('Failed to signal credential deletion:', error);
+          return false;
+        }
+      })
+    );
+    return results.some(Boolean);
   };
 
   const loadCredentials = async (userId: string) => {
