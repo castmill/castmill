@@ -71,6 +71,15 @@ away. Registration failures are logged and do not undo the save; retry with
 `Castmill.Networks.register_domain(network)`. Without a provider the domain is
 required and must already serve the dashboard.
 
+### Admin page tests
+
+`test/castmill_web/live/admin/admin_pages_test.exs` opens every admin page and
+tab with data in place, follows every admin link on them and runs every row
+action (Block, Unblock, Delete) they offer. Tables only offer the row actions
+the page handles: pass them with the `actions` attribute of `admin_table` (or
+`show_details`). When you add an admin page, tab or row action, add it to that
+test.
+
 Media files retain their storage URL in the database. When the server returns media
 information, it generates player-facing URLs using `MEDIA_PUBLIC_BASE_URL` if set,
 or the current Phoenix endpoint (local storage) or S3 endpoint (S3 storage) otherwise.

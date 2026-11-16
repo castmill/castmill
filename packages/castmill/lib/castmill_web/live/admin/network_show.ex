@@ -139,6 +139,7 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
           base_resource_url={
             if Map.has_key?(assigns, :base_resource_url), do: @base_resource_url, else: nil
           }
+          actions={tab_actions(@selected_tab)}
         >
           <:resource_content :if={@selected_tab == "admins"}>
             <form id="network-admin-form" phx-submit="add_network_admin" class="py-4">
@@ -692,4 +693,10 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
   defp resources_for_network(_network_id, _tab) do
     {[], [%{name: "Name", field: :name}]}
   end
+
+  # Row actions this page handles (see the "delete" handle_event clauses).
+  defp tab_actions("organizations"), do: [:edit, :delete]
+  defp tab_actions("invitations"), do: [:delete]
+  defp tab_actions("users"), do: [:edit]
+  defp tab_actions(_tab), do: []
 end
