@@ -288,6 +288,7 @@ defmodule CastmillWeb.Live.Admin.AdminPagesTest do
     assert has_element?(view, "#rows-#{team.id}")
 
     {:ok, view, _html} = live(conn, path)
+
     view
     |> element("#child-modal button[aria-label=close]")
     |> render_click()
