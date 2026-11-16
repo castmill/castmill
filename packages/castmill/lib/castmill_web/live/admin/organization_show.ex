@@ -119,13 +119,22 @@ defmodule CastmillWeb.Live.Admin.OrganizationShow do
     {rows, cols} = resources_for_organization(id, resource)
     selected_tab = if Enum.any?(socket.assigns.tabs, &(&1.href == resource)), do: resource
 
-    {:noreply,
-     socket
-     |> assign(:base_resource_url, ~p"/admin/#{resource}")
-     |> stream(:rows, rows)
-     |> assign(:shown_rows, rows)
-     |> assign(:selected_tab, selected_tab)
-     |> assign(:resource_cols, cols)}
+    socket =
+      socket
+      |> assign(:base_resource_url, ~p"/admin/#{resource}")
+      |> assign(:selected_tab, selected_tab)
+      |> assign(:resource_cols, cols)
+
+    socket =
+      if Map.has_key?(Map.get(socket.assigns, :streams, %{}), :rows) do
+        replace_rows(socket, rows)
+      else
+        socket
+        |> stream(:rows, rows)
+        |> assign(:shown_rows, rows)
+      end
+
+    {:noreply, socket}
   end
 
   def handle_params(%{"id" => id}, _, socket) do

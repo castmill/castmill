@@ -201,6 +201,10 @@ defmodule CastmillWeb.Live.Admin.AdminPagesTest do
     assert has_element?(view, "#rows-#{other.id}")
     refute has_element?(view, "#rows-#{member.id}")
 
+    view |> form("form[phx-change=search]", %{search: member.id}) |> render_change()
+    assert has_element?(view, "#rows-#{member.id}")
+    refute has_element?(view, "#rows-#{other.id}")
+
     view |> form("form[phx-change=search]", %{search: ""}) |> render_change()
     assert has_element?(view, "#rows-#{member.id}")
     assert has_element?(view, "#rows-#{other.id}")
@@ -260,6 +264,31 @@ defmodule CastmillWeb.Live.Admin.AdminPagesTest do
       {:ok, view, _html} = live(conn, "/admin/organizations/#{ids.organization}/#{tab}")
       assert has_element?(view, "#rows-#{id}"), "#{tab} tab does not list #{id}"
     end
+  end
+
+  test "organization child modal save and cancel return to the tab", %{
+    conn: conn,
+    ids: ids
+  } do
+    path = "/admin/organizations/#{ids.organization}/teams/new"
+    {:ok, view, _html} = live(conn, path)
+
+    view
+    |> form("#team-form", team: %{name: "New team"})
+    |> render_submit()
+
+    assert_patch(view, "/admin/organizations/#{ids.organization}/teams")
+
+    team = Enum.find(Castmill.Teams.list_teams(ids.organization), &(&1.name == "New team"))
+    assert team
+    assert has_element?(view, "#rows-#{team.id}")
+
+    {:ok, view, _html} = live(conn, path)
+    view
+    |> element("#child-modal button[aria-label=close]")
+    |> render_click()
+
+    assert_patch(view, "/admin/organizations/#{ids.organization}/teams")
   end
 
   # Visits the paths and, breadth first, every /admin link on the pages that
