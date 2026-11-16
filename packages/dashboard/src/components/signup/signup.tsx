@@ -6,7 +6,8 @@ import { arrayBufferToBase64, base64URLToArrayBuffer } from '../utils';
 
 import './signup.scss';
 
-import { baseUrl, origin, domain } from '../../env';
+import { baseUrl, origin } from '../../env';
+import { getPasskeyRpId } from '../../services/passkey-rp-id';
 import { authFetch } from '../auth';
 import { useI18n } from '../../i18n';
 import {
@@ -104,7 +105,7 @@ const SignUp: Component = () => {
       publicKey: {
         // rp -> Relying Party
         rp: {
-          id: domain, // your domain (should be sent from the server I guess)
+          id: await getPasskeyRpId(),
           name: 'Castmill AB', // your company name
         },
         user: {

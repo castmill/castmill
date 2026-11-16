@@ -20,7 +20,7 @@ import {
 } from '../../interfaces/credential.interface';
 import './settings-page.scss';
 import { useI18n, SUPPORTED_LOCALES } from '../../i18n';
-import { domain } from '../../env';
+import { getPasskeyRpId } from '../../services/passkey-rp-id';
 import { setStore } from '../../store/store';
 
 const SettingsPage: Component = () => {
@@ -90,7 +90,7 @@ const SettingsPage: Component = () => {
     try {
       await (PublicKeyCredential as any).signalUnknownCredential({
         credentialId: credentialId,
-        rpId: domain,
+        rpId: await getPasskeyRpId(),
       });
       return true;
     } catch (error) {
@@ -350,7 +350,7 @@ const SettingsPage: Component = () => {
           challenge: base64urlToUint8Array(challenge),
           rp: {
             name: 'Castmill',
-            id: window.location.hostname,
+            id: await getPasskeyRpId(),
           },
           user: {
             id: Uint8Array.from(user_id, (c) => c.charCodeAt(0)),

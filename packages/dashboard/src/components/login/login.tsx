@@ -14,7 +14,8 @@ import { useNavigate } from '@solidjs/router';
 import SignUpEmailSent from '../signup/signup-email-sent';
 import RecoverCredentials from './recover-credentials';
 
-import { baseUrl, domain } from '../../env';
+import { baseUrl } from '../../env';
+import { getPasskeyRpId } from '../../services/passkey-rp-id';
 import { useI18n } from '../../i18n';
 import {
   LOCALE_STORAGE_KEY,
@@ -126,7 +127,7 @@ const Login: Component = () => {
       };
 
       const publicKey: PublicKeyCredentialRequestOptions = {
-        rpId: domain,
+        rpId: await getPasskeyRpId(),
         challenge: base64URLToArrayBuffer(challenge),
       };
 
@@ -174,7 +175,9 @@ const Login: Component = () => {
           const errorData = await result.json();
           if (errorData.code === 'user_blocked') {
             setError(
-              t('login.errors.userBlocked', { reason: errorData.message || '' })
+              t('login.errors.userBlocked', {
+                reason: errorData.message || '',
+              })
             );
           } else if (errorData.code === 'organization_blocked') {
             setError(

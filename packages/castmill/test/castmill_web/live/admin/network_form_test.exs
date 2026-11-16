@@ -55,6 +55,31 @@ defmodule CastmillWeb.Live.Admin.NetworkFormTest do
     assert domain == network.domain
   end
 
+  test "warns before changing the domain of a network whose users have passkeys", %{
+    conn: conn
+  } do
+    network = network_fixture(%{domain: "net-warn.castmill.test"})
+    user = user_fixture(%{network_id: network.id})
+    {:ok, _} = Castmill.Accounts.add_user_credential(user.id, "credential-1", "spki")
+
+    {:ok, view, _html} = live(conn, ~p"/admin/networks/#{network.id}/show/edit")
+    refute has_element?(view, "#network-domain-warning")
+
+    view |> form("#network-form", network: %{domain: "app.other.test"}) |> render_change()
+    assert has_element?(view, "#network-domain-warning", "1 user(s)")
+
+    view |> form("#network-form", network: %{domain: network.domain}) |> render_change()
+    refute has_element?(view, "#network-domain-warning")
+  end
+
+  test "does not warn for networks without passkeys", %{conn: conn} do
+    network = network_fixture(%{domain: "net-nowarn.castmill.test"})
+
+    {:ok, view, _html} = live(conn, ~p"/admin/networks/#{network.id}/show/edit")
+    view |> form("#network-form", network: %{domain: "app.other.test"}) |> render_change()
+    refute has_element?(view, "#network-domain-warning")
+  end
+
   test "emptying a network's domain gives it a generated address", %{conn: conn} do
     network = network_fixture(%{domain: "app.customer.test"})
 

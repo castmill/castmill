@@ -12,7 +12,8 @@ import {
   arrayBufferToBase64,
   base64URLToArrayBuffer,
 } from '../../components/utils';
-import { baseUrl, domain, origin } from '../../env';
+import { baseUrl, origin } from '../../env';
+import { getPasskeyRpId } from '../../services/passkey-rp-id';
 import { useToast } from '@castmill/ui-common';
 
 import './organizations-invitations-page.scss';
@@ -95,7 +96,7 @@ const OrganizationsInvitationPage = () => {
       const createOptions: CredentialCreationOptions = {
         publicKey: {
           rp: {
-            id: domain,
+            id: await getPasskeyRpId(),
             name: 'Castmill AB',
           },
           user: {
@@ -201,7 +202,7 @@ const OrganizationsInvitationPage = () => {
 
       const credential = await navigator.credentials.get({
         publicKey: {
-          rpId: domain,
+          rpId: await getPasskeyRpId(),
           challenge: base64URLToArrayBuffer(challenge),
         },
       });

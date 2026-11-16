@@ -25,6 +25,15 @@ defmodule CastmillWeb.Live.Admin.NetworkForm do
           label="Domain"
           placeholder={if @default_domains?, do: "Leave empty to generate one", else: nil}
         />
+        <p
+          :if={@domain_changed? and @passkey_users > 0}
+          id="network-domain-warning"
+          class="text-sm font-semibold text-amber-600"
+        >
+          Passkeys belong to the network's domain. Changing it stops the passkeys of <%= @passkey_users %> user(s) from working; they will have to recover their
+          credentials. To use a customer's domain, add it as a custom domain in the dashboard
+          instead.
+        </p>
         <p :if={@default_domains?} class="text-xs text-gray-500">
           Leave the domain empty to give the network a generated address (net-xxxxxxxx) that
           works right away. Network admins can add their own domain later in the dashboard.
@@ -63,6 +72,8 @@ defmodule CastmillWeb.Live.Admin.NetworkForm do
      socket
      |> assign(assigns)
      |> assign(:default_domains?, Networks.default_domains?())
+     |> assign(:domain_changed?, false)
+     |> assign(:passkey_users, passkey_users(network))
      |> assign_form(changeset)
      |> assign(:valid?, form_valid?(changeset, network))}
   end
@@ -77,7 +88,8 @@ defmodule CastmillWeb.Live.Admin.NetworkForm do
     {:noreply,
      socket
      |> assign_form(changeset)
-     |> assign(:valid?, changeset.valid?)}
+     |> assign(:valid?, changeset.valid?)
+     |> assign(:domain_changed?, domain_changed?(socket.assigns.resource, params))}
   end
 
   def handle_event("save", %{"network" => params}, socket) do
@@ -134,6 +146,18 @@ defmodule CastmillWeb.Live.Admin.NetworkForm do
       changeset.valid?
     end
   end
+
+  defp passkey_users(%{id: nil}), do: 0
+
+  defp passkey_users(network),
+    do: Castmill.Networks.PasskeyDomains.count_users_with_passkeys(network.id)
+
+  defp domain_changed?(%{id: nil}, _params), do: false
+
+  defp domain_changed?(network, %{"domain" => domain}) when is_binary(domain),
+    do: String.trim(domain) != network.domain
+
+  defp domain_changed?(_network, _params), do: false
 
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
 end

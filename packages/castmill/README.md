@@ -71,6 +71,24 @@ away. Registration failures are logged and do not undo the save; retry with
 `Castmill.Networks.register_domain(network)`. Without a provider the domain is
 required and must already serve the dashboard.
 
+Passkeys only work on the domain they were created for, so all passkeys of a
+network belong to its primary domain (`network.domain`), also when the
+dashboard is opened on another of its domains such as a customer's custom
+domain (see `Castmill.Networks.PasskeyDomains`). Browsers allow this through
+WebAuthn Related Origin Requests:
+`https://<primary domain>/.well-known/webauthn` lists the network's other
+origins. The backend serves that file for hosts it serves; a dashboard host
+served elsewhere must proxy it to `GET /.well-known/webauthn?host=<host>`.
+Other domains of a network come from:
+
+```elixir
+config :castmill, :additional_domains_for_network, {MyApp.Domains, :for_network}
+```
+
+Adding a custom domain keeps existing passkeys working, but changing a
+network's primary domain does not: its users must recover their credentials,
+and the admin network form warns before doing so.
+
 Media files retain their storage URL in the database. When the server returns media
 information, it generates player-facing URLs using `MEDIA_PUBLIC_BASE_URL` if set,
 or the current Phoenix endpoint (local storage) or S3 endpoint (S3 storage) otherwise.
