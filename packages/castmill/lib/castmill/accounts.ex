@@ -614,6 +614,42 @@ defmodule Castmill.Accounts do
   Add a new credential/passkey for an existing user
   """
   def add_user_credential(user_id, credential_id, public_key_spki, device_info \\ %{}) do
+    insert_user_credential(user_id, credential_id, public_key_spki, device_info)
+  end
+
+  @doc """
+  Adds a credential and atomically consumes a network-admin setup token.
+  That token remains valid if credential insertion fails.
+  """
+  def add_recovery_credential(token, user_id, credential_id, public_key_spki, device_info \\ %{}) do
+    Repo.transaction(fn ->
+      {context, user} =
+        Enum.find_value(["network_admin_setup", "recover_credentials"], fn context ->
+          with {:ok, user_query} <- UserToken.verify_email_token_query(token, context),
+               %User{id: ^user_id} = user <- Repo.one(user_query),
+               do: {context, user}
+        end) || Repo.rollback(:invalid_token)
+
+      if context == "network_admin_setup" do
+        with {:ok, token_query} <- UserToken.email_token_query(token, context),
+             {1, _} <- Repo.delete_all(token_query) do
+          :ok
+        else
+          _ -> Repo.rollback(:invalid_token)
+        end
+      end
+
+      case insert_user_credential(user_id, credential_id, public_key_spki, device_info) do
+        {:ok, credential} ->
+          {user, credential}
+
+        {:error, changeset} ->
+          Repo.rollback({:credential, changeset})
+      end
+    end)
+  end
+
+  defp insert_user_credential(user_id, credential_id, public_key_spki, device_info) do
     %UserCredential{}
     |> UserCredential.changeset(%{
       id: credential_id,

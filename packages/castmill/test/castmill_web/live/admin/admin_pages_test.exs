@@ -205,6 +205,10 @@ defmodule CastmillWeb.Live.Admin.AdminPagesTest do
     assert has_element?(view, "#rows-#{member.id}")
     refute has_element?(view, "#rows-#{other.id}")
 
+    view |> form("form[phx-change=search]", %{search: other.id}) |> render_submit()
+    assert has_element?(view, "#rows-#{other.id}")
+    refute has_element?(view, "#rows-#{member.id}")
+
     view |> form("form[phx-change=search]", %{search: ""}) |> render_change()
     assert has_element?(view, "#rows-#{member.id}")
     assert has_element?(view, "#rows-#{other.id}")

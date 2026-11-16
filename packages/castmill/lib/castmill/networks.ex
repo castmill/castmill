@@ -218,8 +218,10 @@ defmodule Castmill.Networks do
   (`http` for local `localhost` domains).
   """
   def dashboard_url(%Network{domain: domain}) do
+    host = URI.parse("//" <> domain).host
+
     scheme =
-      if String.starts_with?(domain, ["localhost", "127.0.0.1"]), do: "http", else: "https"
+      if String.downcase(host || "") in ["localhost", "127.0.0.1"], do: "http", else: "https"
 
     "#{scheme}://#{domain}"
   end

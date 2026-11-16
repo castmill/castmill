@@ -313,24 +313,56 @@ defmodule CastmillWeb.CredentialRecoveryControllerTest do
     end
 
     test "add a passkey once", %{setup_token: setup_token, network: network, user: user} do
+      params = %{
+        "token" => setup_token,
+        "credential_id" => Base.url_encode64(:crypto.strong_rand_bytes(32), padding: false),
+        "public_key_spki" => Base.encode64(:crypto.strong_rand_bytes(64)),
+        "client_data_json" =>
+          Jason.encode!(%{
+            "type" => "webauthn.create",
+            "challenge" => expected_challenge_for(setup_token),
+            "origin" => "http://#{network.domain}"
+          })
+      }
+
       body =
         build_conn()
         |> put_req_header("accept", "application/json")
-        |> post(~p"/credentials/recover/credential", %{
-          "token" => setup_token,
-          "credential_id" => Base.url_encode64(:crypto.strong_rand_bytes(32), padding: false),
-          "public_key_spki" => Base.encode64(:crypto.strong_rand_bytes(64)),
-          "client_data_json" =>
-            Jason.encode!(%{
-              "type" => "webauthn.create",
-              "challenge" => expected_challenge_for(setup_token),
-              "origin" => "http://#{network.domain}"
-            })
-        })
+        |> post(~p"/credentials/recover/credential", params)
         |> json_response(201)
 
       assert body["user"]["id"] == user.id
       assert Castmill.Accounts.get_user_by_recover_credentials_token(setup_token) == nil
+
+      retry_params =
+        Map.put(
+          params,
+          "credential_id",
+          Base.url_encode64(:crypto.strong_rand_bytes(32), padding: false)
+        )
+
+      response =
+        build_conn()
+        |> put_req_header("accept", "application/json")
+        |> post(~p"/credentials/recover/credential", retry_params)
+
+      assert json_response(response, 422)["message"] == "Invalid or expired token"
+    end
+
+    test "keeps setup token valid if credential insertion fails", %{
+      setup_token: setup_token,
+      user: user
+    } do
+      assert {:error, {:credential, %Ecto.Changeset{}}} =
+               Castmill.Accounts.add_recovery_credential(
+                 setup_token,
+                 user.id,
+                 Base.url_encode64(:crypto.strong_rand_bytes(32), padding: false),
+                 "valid public key",
+                 %{device_name: 123}
+               )
+
+      assert Castmill.Accounts.get_user_by_recover_credentials_token(setup_token) == user
     end
   end
 end

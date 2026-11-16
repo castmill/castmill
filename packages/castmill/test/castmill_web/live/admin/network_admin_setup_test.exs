@@ -73,6 +73,20 @@ defmodule CastmillWeb.Live.Admin.NetworkAdminSetupTest do
     assert_email_sent(to: [{"", user.email}])
   end
 
+  test "long email addresses use a name within the supported length", %{
+    conn: conn,
+    network: network
+  } do
+    email = String.duplicate("a", 46) <> "@example.test"
+    {:ok, view, _html} = live(conn, ~p"/admin/networks/#{network.id}/admins")
+
+    html = view |> form("#network-admin-form", email: email) |> render_submit()
+
+    user = Accounts.get_user_by_email(email)
+    assert String.length(user.name) == 50
+    assert html =~ "A link to create a passkey"
+  end
+
   test "the setup link can be sent again", %{conn: conn, network: network} do
     admin = user_fixture(%{network_id: network.id, network_role: :admin})
     {:ok, view, _html} = live(conn, ~p"/admin/networks/#{network.id}/admins")

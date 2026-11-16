@@ -37,6 +37,20 @@ defmodule Castmill.NetworksTest do
       assert reloaded_network.default_plan_id != nil
     end
 
+    test "dashboard_url uses HTTP only for loopback hosts" do
+      assert Networks.dashboard_url(%Network{domain: "localhost:3000"}) ==
+               "http://localhost:3000"
+
+      assert Networks.dashboard_url(%Network{domain: "127.0.0.1:3000"}) ==
+               "http://127.0.0.1:3000"
+
+      assert Networks.dashboard_url(%Network{domain: "localhost.example.com"}) ==
+               "https://localhost.example.com"
+
+      assert Networks.dashboard_url(%Network{domain: "127.0.0.1.example.com"}) ==
+               "https://127.0.0.1.example.com"
+    end
+
     test "create_network/1 with valid data creates a network" do
       valid_attrs = %{
         copyright: "some copyright",

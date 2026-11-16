@@ -366,7 +366,7 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
 
   defp find_or_create_user(email) do
     case Accounts.get_user_by_email(email) do
-      nil -> Accounts.create_user(%{email: email, name: email})
+      nil -> Accounts.create_user(%{email: email, name: String.slice(email, 0, 50)})
       user -> {:ok, user}
     end
   end

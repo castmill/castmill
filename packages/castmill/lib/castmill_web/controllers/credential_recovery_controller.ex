@@ -111,11 +111,14 @@ defmodule CastmillWeb.CredentialRecoveryController do
 
       public_key_spki = Base.decode64!(public_key_spki_base64)
 
-      case Accounts.add_user_credential(user.id, credential_id, public_key_spki, device_info) do
-        {:ok, credential} ->
-          # Network admin setup links work once.
-          Accounts.delete_network_admin_setup_token(token)
-
+      case Accounts.add_recovery_credential(
+             token,
+             user.id,
+             credential_id,
+             public_key_spki,
+             device_info
+           ) do
+        {:ok, {user, credential}} ->
           # Return user data + token so the frontend can establish a session
           # via Bearer auth (cookies are not used for dashboard auth).
           token =
@@ -139,7 +142,12 @@ defmodule CastmillWeb.CredentialRecoveryController do
             }
           })
 
-        {:error, _changeset} ->
+        {:error, :invalid_token} ->
+          conn
+          |> put_status(:unprocessable_entity)
+          |> json(%{status: "error", message: "Invalid or expired token"})
+
+        {:error, _reason} ->
           conn
           |> put_status(:unprocessable_entity)
           |> json(%{status: "error", message: "Failed to add credential"})
