@@ -99,7 +99,7 @@ defmodule CastmillWeb.SignUpControllerTest do
     test "successfully creates a signup and returns serialized data", %{conn: conn} do
       origin = "https://example.com"
       conn = put_req_header(conn, "origin", origin)
-      _network = network_fixture(%{domain: "example.com", invitation_only: false})
+      network = network_fixture(%{domain: "example.com", invitation_only: false})
 
       email = "test@example.com"
 
@@ -118,15 +118,21 @@ defmodule CastmillWeb.SignUpControllerTest do
       refute Map.has_key?(signup, "__meta__")
       refute Map.has_key?(signup, "password_hash")
 
-      # Ensure an email was sent
-      assert_email_sent(subject: "Complete Your Castmill Signup")
+      # Ensure an email was sent, branded as the network signed up to
+      assert_email_sent(fn sent ->
+        assert sent.subject == "Complete Your #{network.name} Signup"
+        assert {network.name, elem(sent.from, 1)} == sent.from
+        refute sent.html_body =~ "Castmill"
+        refute sent.text_body =~ "Castmill"
+        true
+      end)
     end
 
     test "successfully creates a signup and sends instructions", %{conn: conn} do
       origin = "https://example.com"
       # Setting the origin header
       conn = put_req_header(conn, "origin", origin)
-      _network = network_fixture(%{domain: "example.com", invitation_only: false})
+      network = network_fixture(%{domain: "example.com", invitation_only: false})
 
       email = "test@example.com"
 
@@ -136,7 +142,7 @@ defmodule CastmillWeb.SignUpControllerTest do
       assert json_response(conn, 201)["status"] == "ok"
 
       # Use Swoosh test helpers to assert an email was sent
-      assert_email_sent(subject: "Complete Your Castmill Signup")
+      assert_email_sent(subject: "Complete Your #{network.name} Signup")
     end
 
     test "handles errors during signup creation", %{conn: conn} do

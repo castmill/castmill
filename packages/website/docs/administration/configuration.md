@@ -50,7 +50,7 @@ If `SMTP_HOST` is set, the server sends mail over SMTP. Otherwise it uses Mailgu
 | `MAILGUN_API_KEY` (file) | | Mailgun API key. Required when `SMTP_HOST` is not set. |
 | `MAILGUN_DOMAIN` | | Mailgun sending domain. |
 | `MAILGUN_BASE_URL` | | Mailgun API address, for example `https://api.eu.mailgun.net/v3` for the EU region. |
-| `MAILER_FROM` | | Sender address of all mail. |
+| `MAILER_FROM` | | Sender address of all mail. The sender name is the network's name for emails that belong to a network, and *Castmill* otherwise. |
 
 ### Database and background jobs
 

@@ -1,12 +1,12 @@
 ========================================
-CASTMILL™ - Digital Signage Platform
+<%= String.upcase(@brand.name) %>
 ========================================
 
 You already have an account
 
 Hi <%= @email %>,
 
-Someone (hopefully you) tried to sign up for Castmill™ using this email address. However, an account with this email already exists.
+Someone (hopefully you) tried to sign up for <%= @brand.name %> using this email address. However, an account with this email already exists.
 
 If this was you, you can simply log in by visiting:
 
@@ -21,12 +21,12 @@ If you didn't attempt to sign up, you can safely ignore this email. Your existin
 
 ----------------------------------------
 
-Need help?
-Visit our support center: https://castmill.com/support
-Contact us: support@castmill.com
-
-© <%= @year %> Castmill AB. All rights reserved.
-
+<%= if @brand.support_url || @brand.support_email do %>Need help?
+<%= if @brand.support_url do %>Visit our support center: <%= @brand.support_url %>
+<% end %><%= if @brand.support_email do %>Contact us: <%= @brand.support_email %>
+<% end %>
+<% end %><%= @brand.copyright %>
+<%= unless @brand.reply_to do %>
 This is an automated message, please do not reply to this email.
-
+<% end %>
 ========================================

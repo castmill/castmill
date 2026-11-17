@@ -3,7 +3,7 @@
 </p>
 
 <p style="color: #374151; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 1em; line-height: 1.6; margin: 0 0 1em 0;">
-  You have been invited to join the team <strong><%= @team_name %></strong> on Castmill™.
+  You have been invited to join the team <strong><%= @team_name %></strong> on <%= @brand.name %>.
 </p>
 
 <p style="color: #374151; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 1em; line-height: 1.6; margin: 0 0 1em 0;">

@@ -33,6 +33,7 @@ agents/
 | Notifications                        | `agents/systems/notifications.md`       |
 | AI Agents & MCP Server               | `agents/systems/AI-AGENTS-MCP.md`       |
 | Automations (event-driven actions)   | `agents/systems/AUTOMATIONS.md`         |
+| White-label email branding           | `agents/systems/EMAIL-BRANDING.md`      |
 
 ## 🏗️ Project Structure
 

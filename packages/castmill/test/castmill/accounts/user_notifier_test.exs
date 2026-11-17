@@ -8,7 +8,7 @@ defmodule Castmill.Accounts.UserNotifierRaisingAdapter do
 end
 
 defmodule Castmill.Accounts.UserNotifierTest do
-  use ExUnit.Case, async: false
+  use Castmill.DataCase, async: false
 
   import ExUnit.CaptureLog
   import Swoosh.TestAssertions
@@ -53,6 +53,56 @@ defmodule Castmill.Accounts.UserNotifierTest do
 
       assert sent_email.text_body =~ login_url
       assert sent_email.html_body =~ login_url
+    end)
+  end
+
+  test "emails for a network's dashboard are branded as the network" do
+    network =
+      Castmill.NetworksFixtures.network_fixture(%{
+        name: "Tylöprint <b>",
+        domain: "signage.tyloprint.test",
+        email: "info@tyloprint.test",
+        copyright: "© 2024 Castmill AB"
+      })
+
+    {:ok, _email} =
+      UserNotifier.deliver_already_registered_notice(
+        "existing@example.com",
+        "https://signage.tyloprint.test"
+      )
+
+    assert_email_sent(fn sent ->
+      assert sent.subject == "Tylöprint <b> — You Already Have an Account"
+      assert sent.from == {"Tylöprint <b>", "no-reply@castmill.com"}
+      assert sent.reply_to == {"", "info@tyloprint.test"}
+
+      for body <- [sent.text_body, sent.html_body] do
+        refute body =~ "Castmill"
+        assert body =~ "info@tyloprint.test"
+        assert body =~ "© #{Date.utc_today().year} Tylöprint"
+      end
+
+      assert sent.html_body =~ "Tylöprint &lt;b&gt;"
+      refute sent.html_body =~ "Tylöprint <b>"
+      refute sent.text_body =~ "please do not reply"
+      true
+    end)
+
+    signup = %SignUp{
+      id: Ecto.UUID.generate(),
+      email: "new@example.com",
+      challenge: "challenge",
+      network_id: network.id
+    }
+
+    {:ok, _email} =
+      UserNotifier.deliver_signup_instructions(signup, "https://signage.tyloprint.test")
+
+    assert_email_sent(fn sent ->
+      assert sent.subject == "Complete Your Tylöprint <b> Signup"
+      refute sent.text_body =~ "Castmill"
+      refute sent.html_body =~ "Castmill"
+      true
     end)
   end
 

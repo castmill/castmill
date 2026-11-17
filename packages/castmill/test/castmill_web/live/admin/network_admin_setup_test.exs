@@ -55,7 +55,9 @@ defmodule CastmillWeb.Live.Admin.NetworkAdminSetupTest do
 
     assert_email_sent(fn email ->
       assert email.to == [{"", "new.admin@example.test"}]
-      assert email.subject == "You are an administrator of Tylöprint on Castmill"
+      assert email.subject == "You are an administrator of Tylöprint"
+      assert {"Tylöprint", _address} = email.from
+      refute email.text_body =~ "Castmill"
       assert setup_token(email) |> Accounts.get_user_by_recover_credentials_token() == user
     end)
   end

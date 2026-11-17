@@ -24,7 +24,7 @@ The same domain list also controls which websites may call the API from a browse
 
 | Setting | Purpose |
 | --- | --- |
-| Name, email | How the network identifies itself, for example in emails |
+| Name, email | How the network identifies itself. Emails for the network use the name as the sender name and the email as the Reply-To address. |
 | Domain | The dashboard address that selects this network |
 | Logo, copyright, privacy policy URL | Branding shown in the dashboard and emails |
 | Default language | Language for users who have not chosen one |

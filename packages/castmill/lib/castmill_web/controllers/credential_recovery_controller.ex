@@ -23,7 +23,11 @@ defmodule CastmillWeb.CredentialRecoveryController do
       end
 
       # Send recovery email
-      Accounts.deliver_user_recover_credentials_instructions(user, recover_url_fun)
+      Accounts.deliver_user_recover_credentials_instructions(
+        user,
+        recover_url_fun,
+        Castmill.EmailBrand.for_origin(origin)
+      )
     end
 
     # Always return the same response to prevent email enumeration

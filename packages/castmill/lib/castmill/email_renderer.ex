@@ -6,6 +6,8 @@ defmodule Castmill.EmailRenderer do
 
   require EEx
 
+  alias Castmill.EmailBrand
+
   @template_dir "lib/castmill/templates/email"
 
   # Compile templates at compile time for performance
@@ -60,7 +62,14 @@ defmodule Castmill.EmailRenderer do
       iex> render_organization_invite("Acme Corp", "Castmill", "user@example.com", "abc123", "https://app.castmill.com")
       {html_body, text_body}
   """
-  def render_organization_invite(organization_name, network_name, email, token, base_url) do
+  def render_organization_invite(
+        organization_name,
+        network_name,
+        email,
+        token,
+        base_url,
+        brand \\ EmailBrand.castmill()
+      ) do
     invitation_url = "#{base_url}/invite-organization/?token=#{token}"
 
     assigns = %{
@@ -75,10 +84,11 @@ defmodule Castmill.EmailRenderer do
     html_body =
       render_base_layout_html(%{
         subject: "You have been invited to an Organization on #{network_name}",
-        body: html_body_content
+        body: html_body_content,
+        brand: EmailBrand.html_escape(brand)
       })
 
-    text_body = render_organization_invite_text(assigns)
+    text_body = render_organization_invite_text(Map.put(assigns, :brand, brand))
 
     {html_body, text_body}
   end
@@ -98,7 +108,7 @@ defmodule Castmill.EmailRenderer do
       iex> render_team_invite("Engineering Team", "user@example.com", "abc123", "https://app.castmill.com")
       {html_body, text_body}
   """
-  def render_team_invite(team_name, email, token, base_url) do
+  def render_team_invite(team_name, email, token, base_url, brand \\ EmailBrand.castmill()) do
     invitation_url = "#{base_url}/invite/?token=#{token}"
 
     assigns = %{
@@ -107,15 +117,17 @@ defmodule Castmill.EmailRenderer do
       invitation_url: invitation_url
     }
 
-    html_body_content = render_team_invite_body_html(assigns)
+    html_body_content =
+      render_team_invite_body_html(Map.put(assigns, :brand, EmailBrand.html_escape(brand)))
 
     html_body =
       render_base_layout_html(%{
-        subject: "You have been invited to a Team on Castmill™",
-        body: html_body_content
+        subject: "You have been invited to a Team on #{brand.name}",
+        body: html_body_content,
+        brand: EmailBrand.html_escape(brand)
       })
 
-    text_body = render_team_invite_text(assigns)
+    text_body = render_team_invite_text(Map.put(assigns, :brand, brand))
 
     {html_body, text_body}
   end

@@ -225,7 +225,7 @@ defmodule Castmill.NetworksTest do
 
       assert_email_sent(
         to: email,
-        subject: "You're invited to join #{org_name} on Castmill"
+        subject: "You're invited to join #{org_name} on #{network.name}"
       )
     end
 

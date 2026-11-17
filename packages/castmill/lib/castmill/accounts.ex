@@ -481,14 +481,19 @@ defmodule Castmill.Accounts do
       {:ok, %{to: ..., body: ...}}
 
   """
-  def deliver_user_recover_credentials_instructions(%User{} = user, recover_credentials_url_fun)
+  def deliver_user_recover_credentials_instructions(
+        %User{} = user,
+        recover_credentials_url_fun,
+        brand \\ Castmill.EmailBrand.castmill()
+      )
       when is_function(recover_credentials_url_fun, 1) do
     {encoded_token, user_token} = UserToken.build_email_token(user, "recover_credentials")
     Repo.insert!(user_token)
 
     UserNotifier.deliver_recover_credentials_instructions(
       user,
-      recover_credentials_url_fun.(encoded_token)
+      recover_credentials_url_fun.(encoded_token),
+      brand
     )
   end
 
@@ -578,7 +583,11 @@ defmodule Castmill.Accounts do
            :ok <- create_user_credential(user_id, credential_id, public_key_spki, device_info),
            :ok <- update_signup_status(signup, user_id),
            :ok <- handle_invitation_acceptance(invitation_token, user_id) do
-        Castmill.Hooks.trigger_hook(:user_signup, %{user_id: user_id, email: email})
+        Castmill.Hooks.trigger_hook(:user_signup, %{
+          user_id: user_id,
+          email: email,
+          network_id: signup.network_id
+        })
 
         sanitize_user(user)
       else
