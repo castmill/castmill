@@ -10,7 +10,9 @@ defmodule CastmillWeb.ChallengeStore do
   atomic `DELETE ... WHERE` and checks the affected-row count, ensuring
   exactly-once semantics even under concurrent requests.
 
-  A periodic sweep removes expired entries to bound table size.
+  A periodic sweep removes expired entries to bound table size. Tests turn it
+  off (`config :castmill, CastmillWeb.ChallengeStore, sweep: false`): it would
+  query the database from this process, which the SQL sandbox does not allow.
   """
   use GenServer
 
@@ -82,21 +84,28 @@ defmodule CastmillWeb.ChallengeStore do
 
   @impl true
   def handle_info(:sweep, state) do
-    sweep_expired()
+    sweep()
     schedule_sweep()
     {:noreply, state}
+  end
+
+  @doc "Deletes the expired challenges. Returns how many were deleted."
+  @spec sweep() :: non_neg_integer()
+  def sweep do
+    now = DateTime.utc_now()
+
+    {count, _} =
+      from(c in "webauthn_challenges", where: c.expires_at <= ^now)
+      |> Repo.delete_all()
+
+    count
   end
 
   # ── Internal ────────────────────────────────────────────────────────
 
   defp schedule_sweep do
-    Process.send_after(self(), :sweep, @sweep_interval_ms)
-  end
-
-  defp sweep_expired do
-    now = DateTime.utc_now()
-
-    from(c in "webauthn_challenges", where: c.expires_at <= ^now)
-    |> Repo.delete_all()
+    if Keyword.get(Application.get_env(:castmill, __MODULE__, []), :sweep, true) do
+      Process.send_after(self(), :sweep, @sweep_interval_ms)
+    end
   end
 end
