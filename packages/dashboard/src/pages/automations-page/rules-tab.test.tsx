@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Mock } from 'vitest';
 import {
   cleanup,
   fireEvent,
@@ -35,8 +36,10 @@ vi.mock('@solidjs/router', () => ({
   ),
 }));
 
-let onRulesChange: ReturnType<typeof vi.fn>;
-let onRun: ReturnType<typeof vi.fn>;
+type OnRulesChange = RulesTabProps['onRulesChange'];
+type OnRun = RulesTabProps['onRun'];
+let onRulesChange: Mock<Parameters<OnRulesChange>, ReturnType<OnRulesChange>>;
+let onRun: Mock<Parameters<OnRun>, ReturnType<OnRun>>;
 
 const renderTab = (props: Partial<RulesTabProps> = {}) =>
   render(() => (
@@ -69,8 +72,12 @@ describe('moveItem', () => {
 
 describe('RulesTab', () => {
   beforeEach(() => {
-    onRulesChange = vi.fn().mockResolvedValue(true);
-    onRun = vi.fn().mockResolvedValue(undefined);
+    onRulesChange = vi
+      .fn<Parameters<OnRulesChange>, ReturnType<OnRulesChange>>()
+      .mockResolvedValue(true);
+    onRun = vi
+      .fn<Parameters<OnRun>, ReturnType<OnRun>>()
+      .mockResolvedValue(undefined);
     vi.mocked(AutomationsService.preview).mockResolvedValue({
       timezone: 'UTC',
       occurrences: [],

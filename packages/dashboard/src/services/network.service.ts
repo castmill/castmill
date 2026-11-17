@@ -15,7 +15,7 @@ export interface NetworkSettings {
   name: string;
   domain: string;
   email: string;
-  logo: string;
+  logo: string | null;
   logo_light?: string | null;
   copyright: string;
   default_locale: string;
@@ -227,7 +227,7 @@ export interface PaginatedUsers {
 
 export interface PublicNetworkSettings {
   name: string;
-  logo: string;
+  logo: string | null;
   logo_light?: string | null;
   invitation_only: boolean;
   copyright: string;

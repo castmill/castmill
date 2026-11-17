@@ -74,7 +74,7 @@ export const PlaylistChooser: Component<PlaylistChooserProps> = (props) => {
     let updated = false;
 
     for (const response of results) {
-      if ('result' in response) {
+      if (response.result) {
         pages.set(response.page, response.result.data);
         failed.delete(response.page);
         updated = true;
