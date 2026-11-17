@@ -792,7 +792,8 @@
     "networkWidgets": "ウィジェットのアクセス",
     "tags": "タグ",
     "agents": "エージェント",
-    "feeds": "フィード"
+    "feeds": "フィード",
+    "requiresOrganization": "組織が必要です"
   },
   "channels": {
     "title": "チャンネル",
@@ -1684,7 +1685,9 @@
   "dashboard": {
     "noOrganizations": {
       "title": "組織がありません",
-      "description": "このネットワークのどの組織にもまだ所属していません。ネットワーク管理者に連絡してアクセス権を取得してください。"
+      "description": "このネットワークのどの組織にもまだ所属していません。ネットワーク管理者に連絡してアクセス権を取得してください。",
+      "networkAdminDescription": "まだどの組織にも所属していません。ネットワーク管理者は組織を作成し、自分自身を含むユーザーを招待できます。",
+      "manageOrganizations": "組織を管理"
     }
   },
   "aspectRatio": {

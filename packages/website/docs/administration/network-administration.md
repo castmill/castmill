@@ -10,6 +10,8 @@ Network administrators manage a whole [network](../concepts/networks.md) from th
 
 Network administration is separate from organization roles. To work on an organization's playlists or devices, you need a role in that organization like anyone else.
 
+If you don't belong to any organization yet, the dashboard says so and greys out the organization pages in the sidebar, while the **Network** section keeps working. Create an organization under [Organizations](#organizations), then invite yourself or its first administrator to it from [Users and invitations](#users-and-invitations).
+
 ## Overview
 
 **Network → Overview** shows the number of organizations, users, devices and teams in the network, the total storage used, and the network details.

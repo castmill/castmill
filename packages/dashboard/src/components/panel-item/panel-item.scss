@@ -1,7 +1,8 @@
 @use '../../colors.scss';
 
 .castmill-panel-item {
-  a {
+  a,
+  .panel-item-disabled {
     text-decoration: none;
 
     display: flex;
@@ -14,7 +15,14 @@
     svg {
       margin: 0 0.5rem;
     }
+  }
 
+  .panel-item-disabled {
+    color: var(--cm-text-disabled);
+    cursor: not-allowed;
+  }
+
+  a {
     &:link,
     &:visited {
       color: colors.$base-color;

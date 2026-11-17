@@ -792,7 +792,8 @@
     "networkWidgets": "组件访问权限",
     "tags": "标签",
     "agents": "智能体",
-    "feeds": "数据源"
+    "feeds": "数据源",
+    "requiresOrganization": "需要组织"
   },
   "channels": {
     "title": "频道",
@@ -1683,7 +1684,9 @@
   "dashboard": {
     "noOrganizations": {
       "title": "没有组织",
-      "description": "您尚未加入此网络中的任何组织。请联系您的网络管理员以获取访问权限。"
+      "description": "您尚未加入此网络中的任何组织。请联系您的网络管理员以获取访问权限。",
+      "networkAdminDescription": "您尚未加入任何组织。作为网络管理员，您可以创建组织并邀请他人（包括您自己）加入。",
+      "manageOrganizations": "管理组织"
     }
   },
   "aspectRatio": {
