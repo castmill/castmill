@@ -28,7 +28,7 @@
   },
   "scripts": {
     "format": "oxfmt --write .",
-    "format:check": "oxfmt .",
+    "format:check": "oxfmt --check .",
     "doc": "typedoc --out ./doc/ src/index.ts",
     "test": "vitest",
     "build": "rimraf dist && vite build && npm run ts-types",

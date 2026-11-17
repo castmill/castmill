@@ -14,7 +14,7 @@
   },
   "scripts": {
     "format": "oxfmt --write .",
-    "format:check": "oxfmt .",
+    "format:check": "oxfmt --check .",
     "start": "vite",
     "dev": "vite",
     "test": "vitest run",

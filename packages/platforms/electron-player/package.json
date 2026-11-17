@@ -8,7 +8,7 @@
   "main": "./out/main/index.js",
   "scripts": {
     "format": "oxfmt --write .",
-    "format:check": "oxfmt .",
+    "format:check": "oxfmt --check .",
     "lint": "oxlint .",
     "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
     "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",
