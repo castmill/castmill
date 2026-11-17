@@ -9,6 +9,7 @@
     "format": "oxfmt --write .",
     "format:check": "oxfmt .",
     "lint": "oxlint .",
+    "typecheck": "tsc --noEmit",
     "start": "vite",
     "test": "vitest run",
     "test:watch": "vitest",
