@@ -124,6 +124,13 @@ jobs:
       - name: Build @castmill/ui-common
         working-directory: ./packages/ui-common
         run: yarn build
+      # The dashboard imports types from @castmill/player, which tsc reads
+      # from the player's built declarations.
+      - name: Build @castmill/cache and @castmill/player
+        working-directory: ./
+        run: |
+          yarn workspace @castmill/cache build
+          yarn workspace @castmill/player build
       - run: yarn install --ignore-engines --frozen-lockfile --non-interactive
       - run: yarn build
       - run: yarn format:check
