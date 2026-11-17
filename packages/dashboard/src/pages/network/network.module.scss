@@ -359,6 +359,19 @@
         margin-bottom: 1em;
       }
     }
+
+    .join-option {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5em;
+      font-size: 0.9em;
+      color: var(--cm-text-secondary);
+      cursor: pointer;
+
+      input {
+        accent-color: var(--cm-primary);
+      }
+    }
   }
 
   .org-list {

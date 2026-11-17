@@ -12,6 +12,9 @@ import {
   Modal,
 } from '@castmill/ui-common';
 import { NetworkService, Organization } from '../../services/network.service';
+import { OrganizationsService } from '../../services/organizations.service';
+import { getUser } from '../../components/auth';
+import { store, setStore } from '../../store/store';
 import { useI18n } from '../../i18n';
 import {
   BsPlusLg,
@@ -19,6 +22,7 @@ import {
   BsSlashCircle,
   BsUnlock,
   BsSliders,
+  BsBoxArrowInRight,
 } from 'solid-icons/bs';
 import { OrganizationIntegrationSettings } from './organization-integration-settings';
 import { useNetworkContext } from './network-context';
@@ -55,6 +59,28 @@ const NetworkOrganizations: Component = () => {
   // New organization form
   const [newOrgName, setNewOrgName] = createSignal('');
   const [creatingOrg, setCreatingOrg] = createSignal(false);
+  const [joinNewOrg, setJoinNewOrg] = createSignal(true);
+  const [joiningOrgId, setJoiningOrgId] = createSignal<string | null>(null);
+
+  // Network admins only work in organizations they belong to.
+  const isMember = (orgId: string) =>
+    store.organizations.data.some((org) => org.id === orgId);
+
+  // Reloads the user's organizations and selects `selected`, so the sidebar
+  // and organization pages are available right away.
+  const showMyOrganization = async (selected: { id: string; name: string }) => {
+    const user = getUser();
+    if (!user?.id) return;
+
+    const organizations = await OrganizationsService.getAll(user.id);
+    setStore('organizations', {
+      data: organizations,
+      loaded: true,
+      loading: false,
+      selectedId: selected.id,
+      selectedName: selected.name,
+    });
+  };
 
   onMount(async () => {
     await loadOrganizations();
@@ -99,7 +125,10 @@ const NetworkOrganizations: Component = () => {
 
     setCreatingOrg(true);
     try {
-      await NetworkService.createOrganization(orgName);
+      const join = joinNewOrg();
+      const organization = await NetworkService.createOrganization(orgName, {
+        join,
+      });
       setNewOrgName('');
       const currentStats = stats();
       if (currentStats) {
@@ -109,6 +138,7 @@ const NetworkOrganizations: Component = () => {
         });
       }
       await loadOrganizations();
+      if (join) await showMyOrganization(organization);
       toast.success(t('network.organizations.createSuccess'));
     } catch (err) {
       console.error('Failed to create organization:', err);
@@ -119,6 +149,24 @@ const NetworkOrganizations: Component = () => {
       );
     } finally {
       setCreatingOrg(false);
+    }
+  };
+
+  const handleJoinOrganization = async (org: Organization) => {
+    setJoiningOrgId(org.id);
+    try {
+      await NetworkService.joinOrganization(org.id);
+      await showMyOrganization(org);
+      toast.success(t('network.organizations.joinSuccess', { name: org.name }));
+    } catch (err) {
+      console.error('Failed to join organization:', err);
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : t('network.organizations.joinError')
+      );
+    } finally {
+      setJoiningOrgId(null);
     }
   };
 
@@ -247,6 +295,14 @@ const NetworkOrganizations: Component = () => {
             color="primary"
           />
         </div>
+        <label class={styles['join-option']}>
+          <input
+            type="checkbox"
+            checked={joinNewOrg()}
+            onChange={(event) => setJoinNewOrg(event.currentTarget.checked)}
+          />
+          {t('network.organizations.addMeAsAdmin')}
+        </label>
       </div>
 
       {/* Organizations List */}
@@ -305,6 +361,16 @@ const NetworkOrganizations: Component = () => {
                     <td>{new Date(org.inserted_at).toLocaleDateString()}</td>
                     <td>
                       <div class={styles['actions-row']}>
+                        <Show when={!isMember(org.id)}>
+                          <Button
+                            label={t('network.organizations.join')}
+                            icon={BsBoxArrowInRight}
+                            color="primary"
+                            onClick={() => handleJoinOrganization(org)}
+                            disabled={joiningOrgId() !== null}
+                            title={t('network.organizations.joinTitle')}
+                          />
+                        </Show>
                         <Button
                           label=""
                           icon={BsSliders}

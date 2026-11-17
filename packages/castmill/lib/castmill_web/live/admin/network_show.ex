@@ -154,7 +154,11 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
             <.link href={~p"/admin/networks/#{@resource.id}/invitations"} class="underline">
               Invitations
             </.link>
-            tab.
+            tab. To add someone, yourself included, to an existing organization, open it from the
+            <.link href={~p"/admin/networks/#{@resource.id}/organizations"} class="underline">
+              Organizations
+            </.link>
+            tab and choose New on its Users tab.
           </:tab_hint>
           <:resource_content :if={@selected_tab == "admins"}>
             <form id="network-admin-form" phx-submit="add_network_admin" class="py-4">

@@ -449,7 +449,12 @@
           "too_long": "För långt.",
           "too_many": "För många värden."
         }
-      }
+      },
+      "addMeAsAdmin": "Lägg till mig som administratör",
+      "join": "Gå med",
+      "joinTitle": "Gå med som administratör",
+      "joinSuccess": "Du är nu administratör för {{name}}.",
+      "joinError": "Det gick inte att gå med i organisationen."
     },
     "users": {
       "listTitle": "Alla Användare",

@@ -473,7 +473,12 @@
           "too_long": "Zu lang.",
           "too_many": "Zu viele Werte."
         }
-      }
+      },
+      "addMeAsAdmin": "Mich als Administrator hinzufügen",
+      "join": "Beitreten",
+      "joinTitle": "Als Administrator beitreten",
+      "joinSuccess": "Sie sind jetzt Administrator von {{name}}.",
+      "joinError": "Beitritt zur Organisation fehlgeschlagen."
     },
     "users": {
       "listTitle": "Alle Benutzer",

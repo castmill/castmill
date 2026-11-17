@@ -454,7 +454,12 @@
           "too_long": "長すぎます。",
           "too_many": "値が多すぎます。"
         }
-      }
+      },
+      "addMeAsAdmin": "自分を管理者として追加",
+      "join": "参加",
+      "joinTitle": "管理者として参加",
+      "joinSuccess": "{{name}} の管理者になりました。",
+      "joinError": "組織に参加できませんでした。"
     },
     "users": {
       "listTitle": "すべてのユーザー",

@@ -373,6 +373,132 @@ defmodule CastmillWeb.NetworkDashboardControllerTest do
 
       assert json_response(conn, 401)
     end
+
+    test "makes the network admin an organization admin when asked to join", %{
+      conn: conn,
+      network: network
+    } do
+      admin = create_network_admin(network)
+
+      response =
+        conn
+        |> authenticate_conn(admin, network)
+        |> post("/dashboard/network/organizations", %{
+          "organization" => %{"name" => "Joined Organization"},
+          "join" => true
+        })
+        |> json_response(201)
+
+      assert Organizations.get_user_role(response["id"], admin.id) == :admin
+    end
+
+    test "does not add the network admin by default", %{conn: conn, network: network} do
+      admin = create_network_admin(network)
+
+      response =
+        conn
+        |> authenticate_conn(admin, network)
+        |> post("/dashboard/network/organizations", %{
+          "organization" => %{"name" => "Unjoined Organization"}
+        })
+        |> json_response(201)
+
+      assert Organizations.get_user_role(response["id"], admin.id) == nil
+    end
+
+    test "creates nothing when joining an invalid organization", %{
+      conn: conn,
+      network: network
+    } do
+      admin = create_network_admin(network)
+      count = length(Networks.list_organizations(network.id))
+
+      conn
+      |> authenticate_conn(admin, network)
+      |> post("/dashboard/network/organizations", %{
+        "organization" => %{"name" => ""},
+        "join" => true
+      })
+      |> json_response(422)
+
+      assert length(Networks.list_organizations(network.id)) == count
+    end
+  end
+
+  describe "join_organization/2" do
+    setup do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+
+      {:ok, network: network, organization: organization}
+    end
+
+    test "makes the network admin an administrator of the organization", %{
+      conn: conn,
+      network: network,
+      organization: organization
+    } do
+      admin = create_network_admin(network)
+
+      response =
+        conn
+        |> authenticate_conn(admin, network)
+        |> post("/dashboard/network/organizations/#{organization.id}/join")
+        |> json_response(200)
+
+      assert response["id"] == organization.id
+      assert response["name"] == organization.name
+      assert Organizations.get_user_role(organization.id, admin.id) == :admin
+    end
+
+    test "returns 409 for a member of the organization", %{
+      conn: conn,
+      network: network,
+      organization: organization
+    } do
+      admin = create_network_admin(network)
+      {:ok, _} = Organizations.add_user(organization.id, admin.id, :member)
+
+      conn
+      |> authenticate_conn(admin, network)
+      |> post("/dashboard/network/organizations/#{organization.id}/join")
+      |> json_response(409)
+
+      assert Organizations.get_user_role(organization.id, admin.id) == :member
+    end
+
+    test "returns 404 for organizations of other networks and unknown ids", %{
+      conn: conn,
+      network: network
+    } do
+      admin = create_network_admin(network)
+      other = organization_fixture(%{network_id: network_fixture().id})
+
+      for id <- [other.id, Ecto.UUID.generate(), "not-a-uuid"] do
+        conn
+        |> authenticate_conn(admin, network)
+        |> post("/dashboard/network/organizations/#{id}/join")
+        |> json_response(404)
+      end
+
+      assert Organizations.get_user_role(other.id, admin.id) == nil
+    end
+
+    test "returns 403 for users who are not network admins", %{
+      conn: conn,
+      network: network,
+      organization: organization
+    } do
+      other_org = organization_fixture(%{network_id: network.id, name: "Member Org"})
+      user = create_regular_user(network, other_org)
+
+      conn
+      |> authenticate_conn(user, network)
+      |> post("/dashboard/network/organizations/#{organization.id}/join")
+      |> json_response(403)
+
+      assert Organizations.get_user_role(organization.id, user.id) == nil
+    end
   end
 
   describe "list_users/2" do
