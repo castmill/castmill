@@ -48,6 +48,7 @@ const SidePanelTree: Component<{
   level: number;
   skipKeys?: string[];
   basePath?: string;
+  disabled?: boolean;
 }> = (props) => {
   const { t } = useI18n();
   const addon = props.node.addon;
@@ -83,6 +84,8 @@ const SidePanelTree: Component<{
             icon={lazy(
               () => import(/* @vite-ignore */ `${addOnBasePath}${addon?.icon}`)
             )}
+            disabled={props.disabled}
+            disabledTitle={t('sidebar.requiresOrganization')}
           />
         </Suspense>
       </Show>
@@ -99,6 +102,7 @@ const SidePanelTree: Component<{
               level={props.level + 1}
               skipKeys={props.skipKeys}
               basePath={props.basePath}
+              disabled={props.disabled}
             />
           </Show>
         )}
@@ -125,6 +129,8 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
   const addonsPanelTree = props.addons.getSubTree('sidepanel');
   const addonsBottomTree = props.addons.getSubTree('sidepanel.bottom');
   const addonsNetworkTree = props.addons.getSubTree('network');
+  const noOrganization = () => !store.organizations.selectedId;
+  const requiresOrganization = () => t('sidebar.requiresOrganization');
 
   // Phones and portrait tablets get an off-canvas drawer, landscape tablets an
   // icon rail that expands into the drawer, desktops the static panel.
@@ -244,40 +250,42 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
           </div>
         </Show>
         <div class="top">
-          <Dropdown
-            id="organization-selector"
-            name="organization"
-            label={t('sidebar.organization')}
-            items={store.organizations.data.map((org) => ({
-              name: org.name,
-              value: org.id,
-            }))}
-            defaultValue={store.organizations.selectedId ?? undefined}
-            onSelectChange={(value, name) => {
-              if (!value) {
-                return;
-              }
+          <Show when={store.organizations.data.length > 0}>
+            <Dropdown
+              id="organization-selector"
+              name="organization"
+              label={t('sidebar.organization')}
+              items={store.organizations.data.map((org) => ({
+                name: org.name,
+                value: org.id,
+              }))}
+              defaultValue={store.organizations.selectedId ?? undefined}
+              onSelectChange={(value, name) => {
+                if (!value) {
+                  return;
+                }
 
-              // Update store
-              setStore('organizations', {
-                selectedId: value,
-                selectedName: name,
-              });
+                // Update store
+                setStore('organizations', {
+                  selectedId: value,
+                  selectedName: name,
+                });
 
-              if (location.pathname.startsWith('/org/')) {
-                // Preserve current sub-path within the new organization
-                const currentPath =
-                  location.pathname.replace(/^\/org\/[^/]+/, '') || '/';
-                navigate(`/org/${value}${currentPath}`);
-              } else if (location.pathname === '/settings') {
-                // Settings is a global route and should not be org-prefixed
-                return;
-              } else {
-                // On non-org routes (e.g., network admin), navigate to the new org's home
-                navigate(`/org/${value}`);
-              }
-            }}
-          />
+                if (location.pathname.startsWith('/org/')) {
+                  // Preserve current sub-path within the new organization
+                  const currentPath =
+                    location.pathname.replace(/^\/org\/[^/]+/, '') || '/';
+                  navigate(`/org/${value}${currentPath}`);
+                } else if (location.pathname === '/settings') {
+                  // Settings is a global route and should not be org-prefixed
+                  return;
+                } else {
+                  // On non-org routes (e.g., network admin), navigate to the new org's home
+                  navigate(`/org/${value}`);
+                }
+              }}
+            />
+          </Show>
         </div>
         <div class="links">
           <PanelItem
@@ -285,6 +293,8 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
             text={t('sidebar.organization')}
             level={0}
             icon={RiEditorOrganizationChart}
+            disabled={noOrganization()}
+            disabledTitle={requiresOrganization()}
           />
 
           <Show when={addonsPanelTree}>
@@ -292,6 +302,7 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
               node={addonsPanelTree!}
               level={-1}
               skipKeys={['bottom']}
+              disabled={noOrganization()}
             />
           </Show>
           <PanelItem
@@ -299,6 +310,8 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
             text={t('sidebar.channels')}
             level={0}
             icon={BsCalendarWeek}
+            disabled={noOrganization()}
+            disabledTitle={requiresOrganization()}
           />
           <Show
             when={canPerformAction(
@@ -312,6 +325,8 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
               text={t('sidebar.automations')}
               level={0}
               icon={TbBolt}
+              disabled={noOrganization()}
+              disabledTitle={requiresOrganization()}
             />
           </Show>
 
@@ -320,18 +335,24 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
             text={t('sidebar.teams')}
             level={0}
             icon={AiOutlineTeam}
+            disabled={noOrganization()}
+            disabledTitle={requiresOrganization()}
           />
           <PanelItem
             to={`/org/${store.organizations.selectedId}/tags`}
             text={t('sidebar.tags')}
             level={0}
             icon={AiOutlineTags}
+            disabled={noOrganization()}
+            disabledTitle={requiresOrganization()}
           />
           <PanelItem
             to={`/org/${store.organizations.selectedId}/feeds`}
             text={t('sidebar.feeds')}
             level={0}
             icon={TbRss}
+            disabled={noOrganization()}
+            disabledTitle={requiresOrganization()}
           />
           <Show
             when={
@@ -344,6 +365,8 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
               text={t('sidebar.agents')}
               level={0}
               icon={TbRobot}
+              disabled={noOrganization()}
+              disabledTitle={requiresOrganization()}
             />
           </Show>
           <PanelItem
@@ -351,6 +374,8 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
             text={t('sidebar.usage')}
             level={0}
             icon={TbChartHistogram}
+            disabled={noOrganization()}
+            disabledTitle={requiresOrganization()}
           />
           <PanelItem
             to="/settings"
@@ -360,7 +385,11 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
           />
 
           <Show when={addonsBottomTree}>
-            <SidePanelTree node={addonsBottomTree!} level={-1} />
+            <SidePanelTree
+              node={addonsBottomTree!}
+              level={-1}
+              disabled={noOrganization()}
+            />
           </Show>
 
           {/* Network Admin Section - only visible to network admins */}

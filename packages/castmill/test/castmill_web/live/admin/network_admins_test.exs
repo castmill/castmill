@@ -113,7 +113,7 @@ defmodule CastmillWeb.Live.Admin.NetworkAdminsTest do
              live(conn, ~p"/admin/networks/#{network.id}/admins")
   end
 
-  test "adds an existing user from another network and reports unknown emails", %{
+  test "adds an existing user from another network and rejects invalid emails", %{
     conn: conn,
     network: network,
     root: root
@@ -122,8 +122,8 @@ defmodule CastmillWeb.Live.Admin.NetworkAdminsTest do
     user = user_fixture(%{network_id: other_network.id})
     {:ok, view, _} = live(admin_conn(conn, root), ~p"/admin/networks/#{network.id}/admins")
 
-    html = view |> form("#network-admin-form", email: "missing@example.com") |> render_submit()
-    assert html =~ "No existing user found"
+    html = view |> form("#network-admin-form", email: "not-an-email") |> render_submit()
+    assert html =~ "Enter a valid email address"
     refute Networks.is_network_member?(user.id, network.id)
 
     html = view |> form("#network-admin-form", email: user.email) |> render_submit()
@@ -151,7 +151,7 @@ defmodule CastmillWeb.Live.Admin.NetworkAdminsTest do
 
     member = user_fixture(%{network_id: network.id})
     assert render_click(view, "demote_from_admin", %{"id" => member.id}) =~ "User is not an admin"
-    assert render_submit(view, "add_network_admin", %{}) =~ "Enter an existing user"
+    assert render_submit(view, "add_network_admin", %{}) =~ "Enter an email address"
     assert Networks.is_network_admin?(user.id, other_network.id)
   end
 
@@ -165,7 +165,7 @@ defmodule CastmillWeb.Live.Admin.NetworkAdminsTest do
     {:ok, view, _} = live(admin_conn(conn, root), ~p"/admin/networks/#{network.id}/users")
 
     assert render_submit(view, "add_network_admin", %{"email" => member.email}) =~
-             "Enter an existing user"
+             "Enter an email address"
 
     assert render_click(view, "demote_from_admin", %{"id" => admin.id}) =~
              "Cannot remove network admin"

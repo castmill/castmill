@@ -149,7 +149,8 @@
     "tags": "Tags",
     "agents": "Agents",
     "feeds": "Feeds",
-    "navigation": "Navigation"
+    "navigation": "Navigation",
+    "requiresOrganization": "Requires an organization"
   },
   "topbar": {
     "help": "Help",
@@ -906,6 +907,7 @@
     "ready": "Ready",
     "loading": "Loading...",
     "loginWithPasskey": "Login with Passkey",
+    "useCurrentDomainPasskey": "Use a passkey saved for this domain",
     "privacyPolicy": "Privacy Policy",
     "privacyNotice": "We care about your privacy. Read our",
     "lostCredentials": "Lost your credentials?",
@@ -1785,7 +1787,9 @@
   "dashboard": {
     "noOrganizations": {
       "title": "No Organizations",
-      "description": "You don't belong to any organization in this network yet. Please contact your network administrator to get access."
+      "description": "You don't belong to any organization in this network yet. Please contact your network administrator to get access.",
+      "networkAdminDescription": "You don't belong to any organization yet. As a network administrator, you can create organizations and invite people to them, including yourself.",
+      "manageOrganizations": "Manage organizations"
     }
   },
   "aspectRatio": {

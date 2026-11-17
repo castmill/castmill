@@ -734,6 +734,7 @@
     "ready": "Redo",
     "loading": "Laddar...",
     "loginWithPasskey": "Logga in med nyckel",
+    "useCurrentDomainPasskey": "Använd en nyckel som sparats för den här domänen",
     "privacyPolicy": "Integritetspolicy",
     "privacyNotice": "Vi värnar om din integritet. Läs vår",
     "lostCredentials": "Tappat bort dina inloggningsuppgifter?",
@@ -804,7 +805,8 @@
     "tags": "Taggar",
     "agents": "Agenter",
     "feeds": "Flöden",
-    "navigation": "Navigering"
+    "navigation": "Navigering",
+    "requiresOrganization": "Kräver en organisation"
   },
   "channels": {
     "title": "Kanaler",
@@ -1785,7 +1787,9 @@
   "dashboard": {
     "noOrganizations": {
       "title": "Inga organisationer",
-      "description": "Du tillhör inte någon organisation i detta nätverk ännu. Kontakta din nätverksadministratör för att få åtkomst."
+      "description": "Du tillhör inte någon organisation i detta nätverk ännu. Kontakta din nätverksadministratör för att få åtkomst.",
+      "networkAdminDescription": "Du tillhör inte någon organisation ännu. Som nätverksadministratör kan du skapa organisationer och bjuda in personer till dem, även dig själv.",
+      "manageOrganizations": "Hantera organisationer"
     }
   },
   "aspectRatio": {

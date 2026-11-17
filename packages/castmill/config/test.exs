@@ -18,6 +18,9 @@ config :castmill, Castmill.Repo,
 
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
+# The periodic sweep would query the database outside the SQL sandbox.
+config :castmill, CastmillWeb.ChallengeStore, sweep: false
+
 config :castmill, CastmillWeb.Endpoint,
   http: [ip: {127, 0, 0, 1}, port: 4002],
   secret_key_base: "vQj/9DOCuLIfbd/SI7T2uxb0rVjBrP/eYAB33oWAjbIuhoJKgthj/+vt4Tr2XJKz",

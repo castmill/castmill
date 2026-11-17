@@ -130,6 +130,12 @@ defmodule CastmillWeb.Router do
     get("/", DeviceController, :home)
   end
 
+  # WebAuthn Related Origin Requests: which origins may use a network's
+  # passkeys (Castmill.Networks.PasskeyDomains). Public, fetched by browsers.
+  scope "/", CastmillWeb do
+    get("/.well-known/webauthn", WebauthnController, :related_origins)
+  end
+
   pipeline :legacy_device do
     plug(:accepts, ["html", "json"])
     plug(:put_secure_browser_headers)

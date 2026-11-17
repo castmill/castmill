@@ -54,6 +54,50 @@ enrollment tokens, but leaves dashboard credentials intact. The user must then
 enroll a new key using their root email/password. There is deliberately no
 email/password fallback or HTTP recovery endpoint after enrollment.
 
+### Network domains
+
+The dashboard picks the network from the domain it is served on, so every
+network needs a domain that serves the dashboard. Deployments that can create
+those domains configure a `Castmill.Networks.DomainProvider`:
+
+```elixir
+config :castmill, :network_domain_provider, MyApp.NetworkDomains
+```
+
+A network created or saved in the admin tool with an empty domain then gets
+the provider's generated domain (for example `net-a7f3b2c1.example.com`), and
+the provider registers it (DNS, hosting) so network admins can sign in right
+away. Registration failures are logged and do not undo the save; retry with
+`Castmill.Networks.register_domain(network)`. Without a provider the domain is
+required and must already serve the dashboard.
+
+Passkeys only work on the domain they were created for, so all passkeys of a
+network belong to its primary domain (`network.domain`), also when the
+dashboard is opened on another of its domains such as a customer's custom
+domain (see `Castmill.Networks.PasskeyDomains`). Browsers allow this through
+WebAuthn Related Origin Requests:
+`https://<primary domain>/.well-known/webauthn` lists the network's other
+origins. The backend serves that file for hosts it serves; a dashboard host
+served elsewhere must proxy it to `GET /.well-known/webauthn?host=<host>`.
+Other domains of a network come from:
+
+```elixir
+config :castmill, :additional_domains_for_network, {MyApp.Domains, :for_network}
+```
+
+Adding a custom domain keeps existing passkeys working, but changing a
+network's primary domain does not: its users must recover their credentials,
+and the admin network form warns before doing so.
+
+### Admin page tests
+
+`test/castmill_web/live/admin/admin_pages_test.exs` opens every admin page and
+tab with data in place, follows every admin link on them and runs every row
+action (Block, Unblock, Delete) they offer. Tables only offer the row actions
+the page handles: pass them with the `actions` attribute of `admin_table` (or
+`show_details`). When you add an admin page, tab or row action, add it to that
+test.
+
 Media files retain their storage URL in the database. When the server returns media
 information, it generates player-facing URLs using `MEDIA_PUBLIC_BASE_URL` if set,
 or the current Phoenix endpoint (local storage) or S3 endpoint (S3 storage) otherwise.

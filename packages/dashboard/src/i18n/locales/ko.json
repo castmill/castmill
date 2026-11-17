@@ -739,6 +739,7 @@
     "ready": "준비됨",
     "loading": "로딩 중...",
     "loginWithPasskey": "패스키로 로그인",
+    "useCurrentDomainPasskey": "이 도메인에 저장된 패스키 사용",
     "privacyPolicy": "개인정보 처리방침",
     "privacyNotice": "귀하의 개인정보를 소중히 여깁니다.",
     "lostCredentials": "자격 증명을 잃어버리셨나요?",
@@ -809,7 +810,8 @@
     "tags": "태그",
     "agents": "에이전트",
     "feeds": "피드",
-    "navigation": "탐색"
+    "navigation": "탐색",
+    "requiresOrganization": "조직이 필요합니다"
   },
   "channels": {
     "title": "채널",
@@ -1790,7 +1792,9 @@
   "dashboard": {
     "noOrganizations": {
       "title": "조직 없음",
-      "description": "아직 이 네트워크의 조직에 소속되어 있지 않습니다. 네트워크 관리자에게 연락하여 액세스 권한을 받으세요."
+      "description": "아직 이 네트워크의 조직에 소속되어 있지 않습니다. 네트워크 관리자에게 연락하여 액세스 권한을 받으세요.",
+      "networkAdminDescription": "아직 어떤 조직에도 소속되어 있지 않습니다. 네트워크 관리자는 조직을 만들고 자신을 포함한 사용자를 초대할 수 있습니다.",
+      "manageOrganizations": "조직 관리"
     }
   },
   "aspectRatio": {

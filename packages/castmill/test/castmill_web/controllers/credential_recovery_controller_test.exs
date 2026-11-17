@@ -280,4 +280,89 @@ defmodule CastmillWeb.CredentialRecoveryControllerTest do
       assert json_response(conn, 401)["status"] == "error"
     end
   end
+
+  # ── Network admin setup links ──────────────────────────────────────
+
+  describe "network admin setup links" do
+    setup %{user: user} do
+      {encoded_token, user_token} = UserToken.build_email_token(user, "network_admin_setup")
+      Repo.insert!(user_token)
+      %{setup_token: encoded_token}
+    end
+
+    defp age_tokens(context, days) do
+      import Ecto.Query
+
+      from(t in UserToken, where: t.context == ^context)
+      |> Repo.update_all(set: [inserted_at: DateTime.add(DateTime.utc_now(), -days, :day)])
+    end
+
+    test "are valid for 7 days, unlike recovery links", %{
+      conn: conn,
+      setup_token: setup_token,
+      token: token
+    } do
+      age_tokens("network_admin_setup", 6)
+      age_tokens("recover_credentials", 1)
+
+      assert json_response(get(conn, ~p"/credentials/recover/verify?token=#{setup_token}"), 200)
+      assert get(conn, ~p"/credentials/recover/verify?token=#{token}").status == 422
+
+      age_tokens("network_admin_setup", 8)
+      assert get(conn, ~p"/credentials/recover/verify?token=#{setup_token}").status == 422
+    end
+
+    test "add a passkey once", %{setup_token: setup_token, network: network, user: user} do
+      params = %{
+        "token" => setup_token,
+        "credential_id" => Base.url_encode64(:crypto.strong_rand_bytes(32), padding: false),
+        "public_key_spki" => Base.encode64(:crypto.strong_rand_bytes(64)),
+        "client_data_json" =>
+          Jason.encode!(%{
+            "type" => "webauthn.create",
+            "challenge" => expected_challenge_for(setup_token),
+            "origin" => "http://#{network.domain}"
+          })
+      }
+
+      body =
+        build_conn()
+        |> put_req_header("accept", "application/json")
+        |> post(~p"/credentials/recover/credential", params)
+        |> json_response(201)
+
+      assert body["user"]["id"] == user.id
+      assert Castmill.Accounts.get_user_by_recover_credentials_token(setup_token) == nil
+
+      retry_params =
+        Map.put(
+          params,
+          "credential_id",
+          Base.url_encode64(:crypto.strong_rand_bytes(32), padding: false)
+        )
+
+      response =
+        build_conn()
+        |> put_req_header("accept", "application/json")
+        |> post(~p"/credentials/recover/credential", retry_params)
+
+      assert json_response(response, 422)["message"] == "Invalid or expired token"
+    end
+
+    test "keeps setup token valid if credential insertion fails", %{
+      setup_token: setup_token,
+      user: user
+    } do
+      assert {:error, {:credential, %Ecto.Changeset{}}} =
+               Castmill.Accounts.add_recovery_credential(
+                 setup_token,
+                 user.id,
+                 Base.url_encode64(:crypto.strong_rand_bytes(32), padding: false),
+                 "valid public key",
+                 %{device_name: 123}
+               )
+
+      assert Castmill.Accounts.get_user_by_recover_credentials_token(setup_token) == user
+    end
+  end
 end

@@ -4,6 +4,7 @@ defmodule CastmillWeb.Live.Admin.OrganizationShow do
   alias Castmill.Organizations
   alias Castmill.Teams
   alias Castmill.Devices
+  alias CastmillWeb.Live.Admin.TabSearch
 
   import CastmillWeb.Live.Admin.Show
 
@@ -105,6 +106,7 @@ defmodule CastmillWeb.Live.Admin.OrganizationShow do
         base_resource_url={
           if Map.has_key?(assigns, :base_resource_url), do: @base_resource_url, else: nil
         }
+        actions={tab_actions(@selected_tab)}
       />
     </div>
     """
@@ -115,13 +117,24 @@ defmodule CastmillWeb.Live.Admin.OrganizationShow do
     {:noreply, socket} = handle_params(%{"id" => id}, uri, socket)
 
     {rows, cols} = resources_for_organization(id, resource)
+    selected_tab = if Enum.any?(socket.assigns.tabs, &(&1.href == resource)), do: resource
 
-    {:noreply,
-     socket
-     |> assign(:base_resource_url, ~p"/admin/#{resource}")
-     |> stream(:rows, rows)
-     |> assign(:selected_tab, resource)
-     |> assign(:resource_cols, cols)}
+    socket =
+      socket
+      |> assign(:base_resource_url, ~p"/admin/#{resource}")
+      |> assign(:selected_tab, selected_tab)
+      |> assign(:resource_cols, cols)
+
+    socket =
+      if Map.has_key?(Map.get(socket.assigns, :streams, %{}), :rows) do
+        replace_rows(socket, rows)
+      else
+        socket
+        |> stream(:rows, rows)
+        |> assign(:shown_rows, rows)
+      end
+
+    {:noreply, socket}
   end
 
   def handle_params(%{"id" => id}, _, socket) do
@@ -135,6 +148,14 @@ defmodule CastmillWeb.Live.Admin.OrganizationShow do
   end
 
   @impl true
+  def handle_event("search", %{"search" => search}, %{assigns: %{selected_tab: tab}} = socket)
+      when is_binary(tab) do
+    {rows, _cols} = resources_for_organization(socket.assigns.resource.id, tab)
+    {:noreply, replace_rows(socket, TabSearch.filter(rows, search))}
+  end
+
+  def handle_event("search", _params, socket), do: {:noreply, socket}
+
   def handle_event("delete", %{"id" => id, "resource" => "teams"}, socket) do
     team = Teams.get_team(id)
     {:ok, _} = Teams.delete_team(team)
@@ -173,6 +194,22 @@ defmodule CastmillWeb.Live.Admin.OrganizationShow do
   end
 
   def handle_info(_params, socket), do: {:noreply, socket}
+
+  # Streams keep no items after rendering (LiveView 0.18, no reset), so delete
+  # the shown rows that are gone, then insert (or update in place) the new ones.
+  defp replace_rows(socket, rows) do
+    new_ids = MapSet.new(rows, & &1.id)
+
+    socket =
+      socket.assigns
+      |> Map.get(:shown_rows, [])
+      |> Enum.reject(&MapSet.member?(new_ids, &1.id))
+      |> Enum.reduce(socket, &stream_delete(&2, :rows, &1))
+
+    rows
+    |> Enum.reduce(socket, &stream_insert(&2, :rows, &1, at: -1))
+    |> assign(:shown_rows, rows)
+  end
 
   defp page_title(:show), do: "Show Organization"
   defp page_title(:edit), do: "Edit Organization"
@@ -215,7 +252,14 @@ defmodule CastmillWeb.Live.Admin.OrganizationShow do
   end
 
   defp resources_for_organization(organization_id, "users") do
-    {Organizations.list_users(organization_id) || [],
+    members =
+      %{organization_id: organization_id, page_size: nil}
+      |> Organizations.list_users()
+      |> Enum.map(fn %{user: user, role: role, inserted_at: inserted_at} ->
+        %{id: user.id, name: user.name, email: user.email, role: role, inserted_at: inserted_at}
+      end)
+
+    {members,
      [
        %{
          name: "ID",
@@ -234,7 +278,7 @@ defmodule CastmillWeb.Live.Admin.OrganizationShow do
          field: :role
        },
        %{
-         name: "Created",
+         name: "Added",
          field: :inserted_at
        }
      ]}
@@ -259,7 +303,7 @@ defmodule CastmillWeb.Live.Admin.OrganizationShow do
   end
 
   defp resources_for_organization(organization_id, "channels") do
-    {Organizations.list_channels(organization_id) || [],
+    {Organizations.list_channels(%{organization_id: organization_id}),
      [
        %{
          name: "ID",
@@ -277,7 +321,7 @@ defmodule CastmillWeb.Live.Admin.OrganizationShow do
   end
 
   defp resources_for_organization(organization_id, "playlists") do
-    {Organizations.list_playlists(organization_id) || [],
+    {Organizations.list_playlists(%{organization_id: organization_id}),
      [
        %{
          name: "ID",
@@ -295,7 +339,7 @@ defmodule CastmillWeb.Live.Admin.OrganizationShow do
   end
 
   defp resources_for_organization(organization_id, "medias") do
-    {Organizations.list_medias(organization_id) || [],
+    {Organizations.list_medias(%{organization_id: organization_id}),
      [
        %{
          name: "ID",
@@ -311,4 +355,37 @@ defmodule CastmillWeb.Live.Admin.OrganizationShow do
        }
      ]}
   end
+
+  defp resources_for_organization(organization_id, "widgets") do
+    rows =
+      organization_id
+      |> Castmill.Widgets.list_available_widgets()
+      |> Enum.map(fn widget ->
+        %{
+          id: widget.id,
+          name: widget.name,
+          slug: widget.slug,
+          scope: Castmill.Widgets.scope(widget)
+        }
+      end)
+
+    {rows,
+     [
+       %{name: "ID", field: :id},
+       %{name: "Name", field: :name},
+       %{name: "Slug", field: :slug},
+       %{name: "Scope", field: :scope}
+     ]}
+  end
+
+  defp resources_for_organization(_organization_id, _tab) do
+    {[], [%{name: "Name", field: :name}]}
+  end
+
+  # Row actions this page handles (see the "delete" handle_event clauses).
+  defp tab_actions("organizations"), do: [:edit]
+  defp tab_actions("teams"), do: [:delete]
+  defp tab_actions("users"), do: [:edit, :delete]
+  defp tab_actions("devices"), do: [:delete]
+  defp tab_actions(_tab), do: []
 end

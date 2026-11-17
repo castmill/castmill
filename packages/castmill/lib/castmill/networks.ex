@@ -3,7 +3,9 @@ defmodule Castmill.Networks do
   The Networks context.
   """
   import Ecto.Query, warn: false
+  require Logger
   alias Castmill.Repo
+  alias Castmill.Networks.DomainProvider
   alias Castmill.Networks.Network
   alias Castmill.Accounts.User
 
@@ -142,7 +144,8 @@ defmodule Castmill.Networks do
 
   """
   def create_network(attrs \\ %{}) do
-    # Create the network
+    {attrs, generated_domain?} = put_default_domain(attrs, :create)
+
     result =
       %Network{}
       |> Network.changeset(attrs)
@@ -152,6 +155,7 @@ defmodule Castmill.Networks do
       {:ok, network} ->
         # Create a default plan for the new network
         create_default_plan_for_network(network)
+        if generated_domain?, do: register_domain(network)
         {:ok, network}
 
       error ->
@@ -201,10 +205,76 @@ defmodule Castmill.Networks do
 
   """
   def update_network(%Network{} = network, attrs) do
-    network
-    |> Network.changeset(attrs)
-    |> Repo.update()
+    {attrs, generated_domain?} = put_default_domain(attrs, :update)
+
+    with {:ok, network} <- network |> Network.changeset(attrs) |> Repo.update() do
+      if generated_domain?, do: register_domain(network)
+      {:ok, network}
+    end
   end
+
+  @doc """
+  The URL of the network's dashboard, e.g. `https://net-a7f3b2c1.example.com`
+  (`http` for local `localhost` domains).
+  """
+  def dashboard_url(%Network{domain: domain}) do
+    host = URI.parse("//" <> domain).host
+
+    scheme =
+      if String.downcase(host || "") in ["localhost", "127.0.0.1"], do: "http", else: "https"
+
+    "#{scheme}://#{domain}"
+  end
+
+  @doc """
+  Whether networks saved with an empty domain get a generated one (see
+  `Castmill.Networks.DomainProvider`).
+  """
+  def default_domains?, do: not is_nil(DomainProvider.configured())
+
+  @doc """
+  Asks the configured `Castmill.Networks.DomainProvider` to make the network's
+  domain serve the dashboard. Networks whose domain was generated are
+  registered automatically; call this to retry after a failure.
+  """
+  def register_domain(%Network{domain: domain}) do
+    case DomainProvider.configured() do
+      nil ->
+        {:error, :no_domain_provider}
+
+      provider ->
+        case provider.register_domain(domain) do
+          {:ok, _result} = ok ->
+            Logger.info("[Networks] Registered the network domain #{domain}")
+            ok
+
+          {:error, reason} = error ->
+            Logger.error(
+              "[Networks] Could not register the network domain #{domain}: #{inspect(reason)}"
+            )
+
+            error
+        end
+    end
+  end
+
+  # With a domain provider, an empty domain is replaced by a generated one. On
+  # update only a domain that is explicitly emptied is replaced.
+  defp put_default_domain(attrs, mode) do
+    key = if Enum.any?(Map.keys(attrs), &is_binary/1), do: "domain", else: :domain
+    provider = DomainProvider.configured()
+
+    cond do
+      is_nil(provider) -> {attrs, false}
+      not blank?(Map.get(attrs, key)) -> {attrs, false}
+      mode == :update and not Map.has_key?(attrs, key) -> {attrs, false}
+      true -> {Map.put(attrs, key, provider.generate_domain()), true}
+    end
+  end
+
+  defp blank?(nil), do: true
+  defp blank?(value) when is_binary(value), do: String.trim(value) == ""
+  defp blank?(_value), do: false
 
   @doc """
   Deletes a network.
@@ -232,7 +302,7 @@ defmodule Castmill.Networks do
 
   """
   def change_network(%Network{} = network, attrs \\ %{}) do
-    Network.changeset(network, attrs)
+    Network.changeset(network, attrs, require_domain: not default_domains?())
   end
 
   # ============================================================================
@@ -440,7 +510,17 @@ defmodule Castmill.Networks do
     base_query =
       if search && String.trim(search) != "" do
         search_term = "%#{String.downcase(search)}%"
-        from(u in base_query, where: ilike(u.email, ^search_term) or ilike(u.name, ^search_term))
+
+        search_filter =
+          dynamic([u], ilike(u.email, ^search_term) or ilike(u.name, ^search_term))
+
+        search_filter =
+          case Ecto.UUID.cast(String.trim(search)) do
+            {:ok, id} -> dynamic([u], ^search_filter or u.id == ^id)
+            :error -> search_filter
+          end
+
+        from(u in base_query, where: ^search_filter)
       else
         base_query
       end

@@ -739,6 +739,7 @@
     "ready": "就绪",
     "loading": "加载中...",
     "loginWithPasskey": "使用密钥登录",
+    "useCurrentDomainPasskey": "使用为此域保存的密钥",
     "privacyPolicy": "隐私政策",
     "privacyNotice": "我们重视您的隐私。请阅读我们的",
     "lostCredentials": "忘记凭据？",
@@ -809,7 +810,8 @@
     "tags": "标签",
     "agents": "智能体",
     "feeds": "数据源",
-    "navigation": "导航"
+    "navigation": "导航",
+    "requiresOrganization": "需要组织"
   },
   "channels": {
     "title": "频道",
@@ -1790,7 +1792,9 @@
   "dashboard": {
     "noOrganizations": {
       "title": "没有组织",
-      "description": "您尚未加入此网络中的任何组织。请联系您的网络管理员以获取访问权限。"
+      "description": "您尚未加入此网络中的任何组织。请联系您的网络管理员以获取访问权限。",
+      "networkAdminDescription": "您尚未加入任何组织。作为网络管理员，您可以创建组织并邀请他人（包括您自己）加入。",
+      "manageOrganizations": "管理组织"
     }
   },
   "aspectRatio": {

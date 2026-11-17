@@ -235,6 +235,8 @@ export interface PublicNetworkSettings {
   default_locale: string;
   privacy_policy_url: string | null;
   social_links: SocialLinks;
+  /** Domain (relying party ID) of the network's passkeys, see getPasskeyRpId. */
+  passkey_rp_id?: string;
 }
 
 export type IntegrationSettingType = 'string' | 'number' | 'boolean' | 'list';

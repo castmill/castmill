@@ -134,7 +134,8 @@
     "tags": "Tags",
     "agents": "Agenten",
     "feeds": "Feeds",
-    "navigation": "Navigationsmenü"
+    "navigation": "Navigationsmenü",
+    "requiresOrganization": "Erfordert eine Organisation"
   },
   "topbar": {
     "help": "Hilfe",
@@ -891,6 +892,7 @@
     "ready": "Bereit",
     "loading": "Wird geladen...",
     "loginWithPasskey": "Mit Passkey anmelden",
+    "useCurrentDomainPasskey": "Einen für diese Domain gespeicherten Passkey verwenden",
     "privacyPolicy": "Datenschutzrichtlinie",
     "privacyNotice": "Wir schätzen Ihre Privatsphäre. Lesen Sie unsere",
     "lostCredentials": "Anmeldedaten verloren?",
@@ -1785,7 +1787,9 @@
   "dashboard": {
     "noOrganizations": {
       "title": "Keine Organisationen",
-      "description": "Sie gehören noch keiner Organisation in diesem Netzwerk an. Bitte kontaktieren Sie Ihren Netzwerkadministrator, um Zugang zu erhalten."
+      "description": "Sie gehören noch keiner Organisation in diesem Netzwerk an. Bitte kontaktieren Sie Ihren Netzwerkadministrator, um Zugang zu erhalten.",
+      "networkAdminDescription": "Sie gehören noch keiner Organisation an. Als Netzwerkadministrator können Sie Organisationen erstellen und Personen dazu einladen, auch sich selbst.",
+      "manageOrganizations": "Organisationen verwalten"
     }
   },
   "aspectRatio": {

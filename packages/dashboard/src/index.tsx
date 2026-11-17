@@ -273,7 +273,18 @@ render(() => {
                   component={(props: any) => (
                     <Suspense fallback={<LoadingFallback />}>
                       <ProtectedRoute>
-                        {(addons) => <RootRedirect />}
+                        {(addons) => (
+                          <RootRedirect
+                            layout={(layoutProps) => (
+                              <Dashboard
+                                {...props}
+                                addons={new AddOnTree(addons)}
+                              >
+                                {layoutProps.children}
+                              </Dashboard>
+                            )}
+                          />
+                        )}
                       </ProtectedRoute>
                     </Suspense>
                   )}

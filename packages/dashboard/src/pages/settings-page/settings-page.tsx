@@ -20,7 +20,7 @@ import {
 } from '../../interfaces/credential.interface';
 import './settings-page.scss';
 import { useI18n, SUPPORTED_LOCALES } from '../../i18n';
-import { domain } from '../../env';
+import { getPasskeyRpId } from '../../services/passkey-rp-id';
 import { setStore } from '../../store/store';
 
 const SettingsPage: Component = () => {
@@ -87,16 +87,25 @@ const SettingsPage: Component = () => {
       return false;
     }
 
-    try {
-      await (PublicKeyCredential as any).signalUnknownCredential({
-        credentialId: credentialId,
-        rpId: domain,
-      });
-      return true;
-    } catch (error) {
-      console.warn('Failed to signal credential deletion:', error);
-      return false;
-    }
+    const rpIds = new Set([
+      await getPasskeyRpId(),
+      await getPasskeyRpId('current-domain'),
+    ]);
+    const results = await Promise.all(
+      [...rpIds].map(async (rpId) => {
+        try {
+          await (PublicKeyCredential as any).signalUnknownCredential({
+            credentialId: credentialId,
+            rpId,
+          });
+          return true;
+        } catch (error) {
+          console.warn('Failed to signal credential deletion:', error);
+          return false;
+        }
+      })
+    );
+    return results.some(Boolean);
   };
 
   const loadCredentials = async (userId: string) => {
@@ -350,7 +359,7 @@ const SettingsPage: Component = () => {
           challenge: base64urlToUint8Array(challenge),
           rp: {
             name: 'Castmill',
-            id: window.location.hostname,
+            id: await getPasskeyRpId(),
           },
           user: {
             id: Uint8Array.from(user_id, (c) => c.charCodeAt(0)),

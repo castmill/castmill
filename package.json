@@ -13,6 +13,23 @@
     "packages/platforms/*",
     "packages/castmill/assets"
   ],
+  "release": {
+    "branches": [
+      "main"
+    ],
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      [
+        "@semantic-release/github",
+        {
+          "successComment": false,
+          "releasedLabels": false,
+          "failComment": false
+        }
+      ]
+    ]
+  },
   "scripts": {
     "format:ui-common": "cd packages/ui-common && yarn format",
     "format:cache": "cd packages/cache && yarn format",
@@ -102,11 +119,9 @@
     "@castmill/electron-player/**/wrap-ansi": "7.0.0",
     "are-we-there-yet": "^4.0.0",
     "gauge": "^5.0.1",
-    "glob": "^10.3.10",
     "har-validator": "^5.1.5",
     "npmlog": "^7.0.1",
     "request": "^2.88.2",
-    "rimraf": "^5.0.5",
     "uuid": "^9.0.1",
     "**/cliui/strip-ansi": "6.0.0",
     "**/cliui/string-width": "4.2.2",

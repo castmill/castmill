@@ -1,12 +1,57 @@
-import { Component, createEffect, Show } from 'solid-js';
+import { Component, createEffect, JSX, Show } from 'solid-js';
+import { Dynamic } from 'solid-js/web';
 import { useNavigate, useSearchParams } from '@solidjs/router';
+import { Button } from '@castmill/ui-common';
 import { store } from '../store/store';
 import { useI18n } from '../i18n';
 
-const RootRedirect: Component = () => {
+type Layout = Component<{ children: JSX.Element }>;
+
+interface RootRedirectProps {
+  /** Wraps the "no organizations" message, e.g. in the dashboard layout. */
+  layout?: Layout;
+}
+
+const PlainLayout: Layout = (props) => <>{props.children}</>;
+
+const NoOrganizations: Component = () => {
+  const navigate = useNavigate();
+  const { t } = useI18n();
+
+  return (
+    <div
+      data-testid="no-organizations"
+      style={{
+        display: 'flex',
+        'flex-direction': 'column',
+        'align-items': 'center',
+        'justify-content': 'center',
+        flex: '1',
+        gap: '1em',
+        padding: '2em',
+        'text-align': 'center',
+      }}
+    >
+      <h2>{t('dashboard.noOrganizations.title')}</h2>
+      <p style={{ 'max-width': '30em', color: 'var(--cm-text-tertiary)' }}>
+        {store.network.isAdmin
+          ? t('dashboard.noOrganizations.networkAdminDescription')
+          : t('dashboard.noOrganizations.description')}
+      </p>
+      <Show when={store.network.isAdmin}>
+        <Button
+          label={t('dashboard.noOrganizations.manageOrganizations')}
+          onClick={() => navigate('/network/organizations')}
+          color="primary"
+        />
+      </Show>
+    </div>
+  );
+};
+
+const RootRedirect: Component<RootRedirectProps> = (props) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { t } = useI18n();
 
   // Wait for the authenticated user's organizations before resolving QR links.
   createEffect(() => {
@@ -31,22 +76,9 @@ const RootRedirect: Component = () => {
       when={store.organizations.loaded && store.organizations.data.length === 0}
       fallback={<div style="min-height: 10em;"></div>}
     >
-      <div
-        style={{
-          display: 'flex',
-          'flex-direction': 'column',
-          'align-items': 'center',
-          'justify-content': 'center',
-          flex: '1',
-          padding: '2em',
-          'text-align': 'center',
-        }}
-      >
-        <h2>{t('dashboard.noOrganizations.title')}</h2>
-        <p style={{ 'max-width': '30em', color: 'var(--cm-text-tertiary)' }}>
-          {t('dashboard.noOrganizations.description')}
-        </p>
-      </div>
+      <Dynamic component={props.layout ?? PlainLayout}>
+        <NoOrganizations />
+      </Dynamic>
     </Show>
   );
 };

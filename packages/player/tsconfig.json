@@ -30,5 +30,11 @@
     "tests",
     "src/widgets/proxy.ts",
     "src/store/index.ts_"
-  ]
+  ],
+  "ts-node": {
+    "compilerOptions": {
+      "lib": ["es2020", "dom"],
+      "types": ["node", "mocha", "vite/client"]
+    }
+  }
 }

@@ -23,6 +23,7 @@ defmodule CastmillWeb.Live.Admin.NetworkInvitationForm do
       >
         <.input field={@form[:email]} type="email" label="Email" required />
         <.input field={@form[:organization_name]} type="text" label="Organization Name" required />
+        <.error :if={@error}><%= @error %></.error>
 
         <:actions>
           <.button phx-disable-with="Sending invitation...">Send Invitation</.button>
@@ -43,6 +44,7 @@ defmodule CastmillWeb.Live.Admin.NetworkInvitationForm do
      socket
      |> assign(assigns)
      |> assign(:network_id, network_id)
+     |> assign(:error, nil)
      |> assign(:form, to_form(changeset))}
   end
 
@@ -60,7 +62,7 @@ defmodule CastmillWeb.Live.Admin.NetworkInvitationForm do
       |> NetworkInvitation.changeset(params_with_required)
       |> Map.put(:action, :validate)
 
-    {:noreply, assign(socket, :form, to_form(changeset))}
+    {:noreply, socket |> assign(:error, nil) |> assign(:form, to_form(changeset))}
   end
 
   # Handle old format for backwards compatibility
@@ -112,18 +114,20 @@ defmodule CastmillWeb.Live.Admin.NetworkInvitationForm do
            |> put_flash(:info, "Invitation sent successfully to #{email}")
            |> push_patch(to: socket.assigns.patch)}
 
-        {:error, error} when is_binary(error) ->
+        # A component's flash is dropped unless it navigates, so errors are
+        # shown in the form, which stays open.
+        {:error, message} when is_binary(message) ->
+          {:noreply,
+           assign(socket, :form, to_form(Ecto.Changeset.add_error(changeset, :email, message)))}
+
+        {:error, %Ecto.Changeset{} = invalid} ->
           {:noreply,
            socket
-           |> put_flash(:error, error)}
-
-        {:error, %Ecto.Changeset{} = changeset} ->
-          {:noreply, assign(socket, :form, to_form(changeset))}
+           |> assign(:form, to_form(invalid))
+           |> assign(:error, "Failed to create invitation")}
 
         {:error, _} ->
-          {:noreply,
-           socket
-           |> put_flash(:error, "Failed to create invitation")}
+          {:noreply, assign(socket, :error, "Failed to create invitation")}
       end
     else
       # Changeset has validation errors (e.g., invalid email)

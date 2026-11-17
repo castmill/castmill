@@ -1,5 +1,5 @@
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, waitFor } from '@solidjs/testing-library';
+import { fireEvent, render, screen, waitFor } from '@solidjs/testing-library';
 import {
   createMemoryHistory,
   MemoryRouter,
@@ -17,6 +17,7 @@ vi.mock('../store/store', () => {
       loaded: false,
       loading: false,
     },
+    network: { isAdmin: false },
   });
   return { store, setStore };
 });
@@ -39,13 +40,17 @@ const Destination = () => {
   );
 };
 
-const renderRedirect = (url = '/') => {
+const renderRedirect = (
+  url = '/',
+  layout?: Parameters<typeof RootRedirect>[0]['layout']
+) => {
   const history = createMemoryHistory();
   history.set({ value: url, replace: true, scroll: false });
   return render(() => (
     <MemoryRouter history={history}>
-      <Route path="/" component={RootRedirect} />
+      <Route path="/" component={() => <RootRedirect layout={layout} />} />
       <Route path="/org/:orgId/*" component={Destination} />
+      <Route path="/network/*" component={Destination} />
     </MemoryRouter>
   ));
 };
@@ -58,6 +63,7 @@ describe('RootRedirect', () => {
       loaded: false,
       loading: false,
     });
+    setStore('network', { isAdmin: false });
   });
 
   afterAll(async () => {
@@ -134,6 +140,58 @@ describe('RootRedirect', () => {
     expect(
       screen.getByText('dashboard.noOrganizations.title')
     ).toBeInTheDocument();
+    expect(
+      screen.getByText('dashboard.noOrganizations.description')
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText('dashboard.noOrganizations.manageOrganizations')
+    ).not.toBeInTheDocument();
     expect(screen.queryByTestId('destination')).not.toBeInTheDocument();
+  });
+
+  it('shows the no-organizations message inside the given layout', () => {
+    setStore('organizations', { loaded: true });
+    renderRedirect('/', (props) => (
+      <div data-testid="layout">{props.children}</div>
+    ));
+
+    expect(screen.getByTestId('layout')).toContainElement(
+      screen.getByTestId('no-organizations')
+    );
+  });
+
+  it('does not render the layout while redirecting to an organization', async () => {
+    setStore('organizations', { data: [organization], loaded: true });
+    renderRedirect('/', (props) => (
+      <div data-testid="layout">{props.children}</div>
+    ));
+
+    await waitFor(() =>
+      expect(screen.getByTestId('destination')).toHaveTextContent('/org/org-1/')
+    );
+    expect(screen.queryByTestId('layout')).not.toBeInTheDocument();
+  });
+
+  it('lets a network admin without organizations go manage them', async () => {
+    setStore('organizations', { loaded: true });
+    setStore('network', { isAdmin: true });
+    renderRedirect('/');
+
+    expect(
+      screen.getByText('dashboard.noOrganizations.networkAdminDescription')
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText('dashboard.noOrganizations.description')
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(
+      screen.getByText('dashboard.noOrganizations.manageOrganizations')
+    );
+
+    await waitFor(() =>
+      expect(screen.getByTestId('destination')).toHaveTextContent(
+        '/network/organizations'
+      )
+    );
   });
 });

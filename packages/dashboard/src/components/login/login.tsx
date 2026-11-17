@@ -15,6 +15,7 @@ import SignUpEmailSent from '../signup/signup-email-sent';
 import RecoverCredentials from './recover-credentials';
 
 import { baseUrl, domain } from '../../env';
+import { requestPasskeyCredential } from '../../services/passkey-rp-id';
 import { useI18n } from '../../i18n';
 import {
   LOCALE_STORAGE_KEY,
@@ -30,6 +31,7 @@ interface NetworkSettings {
   logo: string;
   default_locale: string;
   privacy_policy_url: string | null;
+  passkey_rp_id?: string;
 }
 
 const Login: Component = () => {
@@ -107,7 +109,7 @@ const Login: Component = () => {
     setIsMounted(true);
   });
 
-  const loginWithPasskey = async (): Promise<void> => {
+  const loginWithPasskey = async (useCurrentDomain = false): Promise<void> => {
     try {
       setError('');
       setLoading(true);
@@ -125,14 +127,10 @@ const Login: Component = () => {
         challenge_token: string;
       };
 
-      const publicKey: PublicKeyCredentialRequestOptions = {
-        rpId: domain,
-        challenge: base64URLToArrayBuffer(challenge),
-      };
-
-      const credential = await navigator.credentials.get({
-        publicKey: publicKey,
-      });
+      const credential = await requestPasskeyCredential(
+        base64URLToArrayBuffer(challenge),
+        useCurrentDomain ? 'current-domain' : 'network'
+      );
 
       if (!credential) {
         console.error('No credentials received');
@@ -174,7 +172,9 @@ const Login: Component = () => {
           const errorData = await result.json();
           if (errorData.code === 'user_blocked') {
             setError(
-              t('login.errors.userBlocked', { reason: errorData.message || '' })
+              t('login.errors.userBlocked', {
+                reason: errorData.message || '',
+              })
             );
           } else if (errorData.code === 'organization_blocked') {
             setError(
@@ -281,11 +281,25 @@ const Login: Component = () => {
 
                   <button
                     class="signup-button"
-                    onClick={loginWithPasskey}
+                    onClick={() => loginWithPasskey()}
                     disabled={!supportsPasskeys()}
                   >
                     {t('login.loginWithPasskey')}
                   </button>
+                  <Show
+                    when={
+                      networkSettings()?.passkey_rp_id &&
+                      networkSettings()?.passkey_rp_id !== domain
+                    }
+                  >
+                    <button
+                      class="signup-button"
+                      onClick={() => loginWithPasskey(true)}
+                      disabled={!supportsPasskeys()}
+                    >
+                      {t('login.useCurrentDomainPasskey')}
+                    </button>
+                  </Show>
 
                   <Show
                     when={!networkSettings()?.invitation_only}

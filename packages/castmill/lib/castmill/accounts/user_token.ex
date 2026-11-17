@@ -14,6 +14,7 @@ defmodule Castmill.Accounts.UserToken do
   @session_validity_in_days 60
   @admin_enrollment_validity_in_minutes 5
   @recover_credentials_validity_in_minutes 5
+  @network_admin_setup_validity_in_days 7
 
   schema "users_tokens" do
     field :token, :binary
@@ -119,6 +120,20 @@ defmodule Castmill.Accounts.UserToken do
   end
 
   @doc """
+  The query for the email token `token` (as sent in the email) of `context`,
+  e.g. to delete it once used.
+  """
+  def email_token_query(token, context) do
+    case Base.url_decode64(token, padding: false) do
+      {:ok, decoded_token} ->
+        {:ok, token_and_context_query(:crypto.hash(@hash_algorithm, decoded_token), context)}
+
+      :error ->
+        :error
+    end
+  end
+
+  @doc """
   Checks if the token is valid and returns its underlying lookup query.
 
   The query returns the user found by the token, if any.
@@ -157,6 +172,9 @@ defmodule Castmill.Accounts.UserToken do
 
   defp time_for_context("recover_credentials"),
     do: {@recover_credentials_validity_in_minutes, "minute"}
+
+  defp time_for_context("network_admin_setup"),
+    do: {@network_admin_setup_validity_in_days, "day"}
 
   @doc """
   Checks if the token is valid and returns its underlying lookup query.

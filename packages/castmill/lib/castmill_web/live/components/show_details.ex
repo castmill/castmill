@@ -22,7 +22,9 @@ defmodule CastmillWeb.Live.Admin.Show do
   attr :rows, :any, required: true
   attr :base_resource_url, :string, required: true
   attr :form_module, :atom, required: true
+  attr :actions, :list, default: []
   slot :resource_content
+  slot :tab_hint
 
   def show_details(assigns) do
     ~H"""
@@ -62,11 +64,15 @@ defmodule CastmillWeb.Live.Admin.Show do
                   <.button>Add <%= @selected_tab %></.button>
                 </.link>
               </div>
+              <p :for={hint <- @tab_hint} class="pb-2 text-sm text-gray-400" id="tab-hint">
+                <%= render_slot(hint) %>
+              </p>
               <.admin_table
                 rows={@rows}
                 cols={@resource_cols}
                 base_url={@base_resource_url}
                 resource={@selected_tab}
+                actions={@actions}
               />
             <% end %>
           </div>
@@ -94,7 +100,7 @@ defmodule CastmillWeb.Live.Admin.Show do
         :if={@live_action == :new && @selected_tab != nil}
         id="child-modal"
         show
-        on_cancel={JS.patch(~p"/admin/#{@bucket}/#{@resource}")}
+        on_cancel={JS.patch("/admin/#{@bucket}/#{@resource.id}/#{@selected_tab}")}
       >
         <.live_component
           module={Enum.find(@tabs, fn tab -> tab.href == @selected_tab end).form}
@@ -102,7 +108,7 @@ defmodule CastmillWeb.Live.Admin.Show do
           title={@title}
           action={@live_action}
           resource={@resource}
-          patch={~p"/admin/#{@bucket}/#{@resource}"}
+          patch={"/admin/#{@bucket}/#{@resource.id}/#{@selected_tab}"}
         />
       </.modal>
     </div>

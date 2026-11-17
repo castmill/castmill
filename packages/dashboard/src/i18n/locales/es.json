@@ -740,6 +740,7 @@
     "ready": "Listo",
     "loading": "Cargando...",
     "loginWithPasskey": "Iniciar sesión con llave de acceso",
+    "useCurrentDomainPasskey": "Usar una llave de acceso guardada para este dominio",
     "privacyPolicy": "Política de privacidad",
     "privacyNotice": "Nos importa tu privacidad. Lee nuestra",
     "lostCredentials": "¿Perdiste tus credenciales?",
@@ -810,7 +811,8 @@
     "tags": "Etiquetas",
     "agents": "Agentes",
     "feeds": "Feeds",
-    "navigation": "Navegación"
+    "navigation": "Navegación",
+    "requiresOrganization": "Requiere una organización"
   },
   "channels": {
     "title": "Canales",
@@ -1791,7 +1793,9 @@
   "dashboard": {
     "noOrganizations": {
       "title": "Sin organizaciones",
-      "description": "Aún no perteneces a ninguna organización en esta red. Contacta con el administrador de la red para obtener acceso."
+      "description": "Aún no perteneces a ninguna organización en esta red. Contacta con el administrador de la red para obtener acceso.",
+      "networkAdminDescription": "Aún no perteneces a ninguna organización. Como administrador de la red, puedes crear organizaciones e invitar a personas a ellas, incluido tú.",
+      "manageOrganizations": "Gestionar organizaciones"
     }
   },
   "aspectRatio": {

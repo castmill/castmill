@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, screen } from '@solidjs/testing-library';
 import { createSignal } from 'solid-js';
 import SidePanel from './sidepanel';
 import { AddOnTree } from '../../classes/addon-tree';
+import { setStore } from '../../store/store';
 import { navDrawer, navModeFor } from './nav-drawer';
 import {
   DESKTOP,
@@ -36,8 +37,13 @@ vi.mock('../../services/permissions.service', () => ({
   canPerformAction: () => true,
 }));
 
-vi.mock('../../store/store', () => ({
-  store: {
+vi.mock('solid-js', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('solid-js')>()),
+  lazy: () => () => null,
+}));
+
+vi.mock('../../store/store', () => {
+  const store = {
     organizations: {
       data: [{ id: 'org-1', name: 'Org One' }],
       selectedId: 'org-1',
@@ -45,19 +51,43 @@ vi.mock('../../store/store', () => ({
     },
     permissions: { role: 'admin', matrix: {} },
     network: { isAdmin: false },
-  },
-  setStore: vi.fn(),
-}));
+  };
+  return {
+    store,
+    setStore: (key: string, value: unknown) =>
+      Object.assign(store, { [key]: value }),
+  };
+});
+
+const addon = (name: string, mount_point: string, mount_path: string) => ({
+  id: name,
+  name,
+  description: '',
+  version: '1.0.0',
+  author: '',
+  license: '',
+  path: '',
+  mount_point,
+  mount_path,
+  icon: `/${name}.svg`,
+  component: '',
+});
+
+const addons = [
+  addon('Devices', 'sidepanel.devices', '/devices/*'),
+  addon('Help', 'sidepanel.bottom.help', '/help'),
+  addon('Billing', 'network.billing', '/billing'),
+];
 
 const originalMatchMedia = window.matchMedia;
 
-const renderPanel = () =>
+const renderPanel = (tree = new AddOnTree([])) =>
   render(() => (
     <>
       <button type="button" data-testid="opener">
         menu
       </button>
-      <SidePanel addons={new AddOnTree([])} />
+      <SidePanel addons={tree} />
     </>
   ));
 
@@ -66,6 +96,13 @@ const panel = () => document.getElementById('castmill-sidepanel')!;
 describe('SidePanel responsive navigation', () => {
   beforeEach(() => {
     setPathname('/org/org-1/channels');
+    setStore('organizations', {
+      data: [{ id: 'org-1', name: 'Org One' }],
+      selectedId: 'org-1',
+      selectedName: 'Org One',
+    });
+    setStore('permissions', { role: 'admin', matrix: {} });
+    setStore('network', { isAdmin: false });
     navDrawer.close();
   });
 
@@ -284,5 +321,42 @@ describe('SidePanel responsive navigation', () => {
       'href',
       '/org/org-1/teams'
     );
+  });
+
+  it('disables organization links when no organization is selected', () => {
+    mockViewport(PHONE);
+    setStore('organizations', {
+      data: [],
+      selectedId: undefined,
+      selectedName: undefined,
+    });
+    setStore('network', { isAdmin: true });
+    renderPanel(new AddOnTree(addons));
+
+    for (const text of [
+      'sidebar.organization',
+      'sidebar.channels',
+      'sidebar.teams',
+      'Devices',
+      'Help',
+    ]) {
+      expect(
+        screen.getByText(text).closest('[aria-disabled="true"]')
+      ).toHaveAttribute('title', 'sidebar.requiresOrganization');
+      expect(screen.getByText(text).closest('a')).toBeNull();
+    }
+
+    expect(screen.getByText('common.settings').closest('a')).toHaveAttribute(
+      'href',
+      '/settings'
+    );
+    expect(
+      screen.getByText('sidebar.networkOrganizations').closest('a')
+    ).toHaveAttribute('href', '/network/organizations');
+    expect(screen.getByText('Billing').closest('a')).toHaveAttribute(
+      'href',
+      '/network/billing'
+    );
+    expect(document.querySelector('#organization-selector')).toBeNull();
   });
 });
