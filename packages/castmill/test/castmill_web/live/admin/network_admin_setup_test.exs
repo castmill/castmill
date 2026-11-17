@@ -99,11 +99,46 @@ defmodule CastmillWeb.Live.Admin.NetworkAdminSetupTest do
              "User not found"
   end
 
-  defp setup_token(email) do
+  test "the setup link can be shown to send it without email", %{
+    conn: conn,
+    network: network
+  } do
+    admin = user_fixture(%{network_id: network.id, network_role: :admin})
+    member = user_fixture(%{network_id: network.id})
+    {:ok, view, _html} = live(conn, ~p"/admin/networks/#{network.id}/admins")
+    refute has_element?(view, "#admin-setup-link")
+
+    view |> element("#network-admins a", "Show setup link") |> render_click()
+
+    assert has_element?(view, "#admin-setup-link", admin.email)
+    assert has_element?(view, "#admin-setup-link-url[aria-label='Setup link for #{admin.email}']")
+    assert has_element?(view, "#admin-setup-link button[phx-click*='castmill:copy']")
+    url = view |> element("#admin-setup-link-url") |> render() |> input_value()
+    assert url =~ "&email=#{URI.encode_www_form(admin.email)}"
+    assert setup_token(url) |> Accounts.get_user_by_recover_credentials_token() == admin
+    assert_no_email_sent()
+
+    for {id, message} <- [
+          {member.id, "#{member.email} is not an admin of this network"},
+          {Ecto.UUID.generate(), "User not found"},
+          {"not-a-uuid", "User not found"}
+        ] do
+      assert render_click(view, "show_admin_setup_link", %{"id" => id}) =~ message
+    end
+  end
+
+  defp input_value(html) do
+    [_, value] = Regex.run(~r/value="([^"]+)"/, html)
+    String.replace(value, "&amp;", "&")
+  end
+
+  defp setup_token(%Swoosh.Email{text_body: text}), do: setup_token(text)
+
+  defp setup_token(text) when is_binary(text) do
     [_, token] =
       Regex.run(
         ~r{https://net-setup\.castmill\.test/setup-passkey\?token=([^&\s]+)&email=},
-        email.text_body
+        text
       )
 
     token

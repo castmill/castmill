@@ -103,6 +103,7 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
       ])
       |> assign(:selected_tab, nil)
       |> assign(:selected_integration, nil)
+      |> assign(:setup_link, nil)
 
     {:ok, socket}
   end
@@ -161,7 +162,8 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
                 Add a person by email, with or without a Castmill account. They become an admin of
                 this network and are emailed a link to create a passkey for <%= Networks.dashboard_url(
                   @resource
-                ) %> and sign in.
+                ) %> and sign in. If the email does not arrive, use Show setup link and send them
+                the link yourself.
               </p>
               <label for="network-admin-email" class="block text-sm font-semibold">Email</label>
               <input
@@ -173,12 +175,43 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
               />
               <.button>Add admin</.button>
             </form>
+            <div
+              :if={@setup_link}
+              id="admin-setup-link"
+              class="mb-4 rounded-md border border-gray-600 p-3"
+            >
+              <p class="mb-2 text-sm text-gray-300">
+                Setup link for <%= @setup_link.email %>. Send it only to them: anyone with it can
+                create a passkey for this account. It works once and expires in 7 days.
+              </p>
+              <div class="flex items-center gap-2">
+                <input
+                  id="admin-setup-link-url"
+                  aria-label={"Setup link for #{@setup_link.email}"}
+                  type="text"
+                  readonly
+                  value={@setup_link.url}
+                  class="flex-1 rounded-md text-gray-900"
+                />
+                <.button
+                  type="button"
+                  phx-click={JS.dispatch("castmill:copy", to: "#admin-setup-link-url")}
+                >
+                  Copy
+                </.button>
+              </div>
+            </div>
             <.table id="network-admins" rows={@streams.rows} row_item={fn {_dom_id, user} -> user end}>
               <:col :let={user} label="Name"><%= user.name %></:col>
               <:col :let={user} label="Email"><%= user.email %></:col>
               <:action :let={user}>
                 <.link phx-click={JS.push("send_admin_setup_link", value: %{id: user.id})}>
                   Send setup link
+                </.link>
+              </:action>
+              <:action :let={user}>
+                <.link phx-click={JS.push("show_admin_setup_link", value: %{id: user.id})}>
+                  Show setup link
                 </.link>
               </:action>
               <:action :let={user}>
@@ -390,7 +423,9 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
 
       {:error, reason} ->
         Logger.error("[NetworkShow] Could not email the admin setup link: #{inspect(reason)}")
-        "The setup link could not be emailed to #{user.email}; use Send setup link to retry."
+
+        "The setup link could not be emailed to #{user.email}; use Send setup link to retry, " <>
+          "or Show setup link to send it yourself."
     end
   end
 
@@ -453,6 +488,22 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
 
       nil ->
         {:noreply, put_flash(socket, :error, "User not found")}
+    end
+  end
+
+  def handle_event("show_admin_setup_link", %{"id" => user_id}, socket) do
+    network = socket.assigns.resource
+
+    with {:ok, user_id} <- Ecto.UUID.cast(user_id),
+         %Accounts.User{} = user <- Accounts.get_user(user_id) do
+      if Networks.is_network_admin?(user.id, network.id) do
+        url = Accounts.network_admin_setup_url(user, network)
+        {:noreply, assign(socket, :setup_link, %{email: user.email, url: url})}
+      else
+        {:noreply, put_flash(socket, :error, "#{user.email} is not an admin of this network")}
+      end
+    else
+      _ -> {:noreply, put_flash(socket, :error, "User not found")}
     end
   end
 

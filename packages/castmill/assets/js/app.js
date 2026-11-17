@@ -38,6 +38,19 @@ topbar.config({ barColors: { 0: '#29d' }, shadowColor: 'rgba(0, 0, 0, .3)' });
 window.addEventListener('phx:page-loading-start', (_info) => topbar.show(300));
 window.addEventListener('phx:page-loading-stop', (_info) => topbar.hide());
 
+// Copies an input's value: phx-click={JS.dispatch("castmill:copy", to: "#id")}
+window.addEventListener('castmill:copy', (event) => {
+  const input = event.target;
+  input.select();
+
+  const fallback = () => document.execCommand('copy');
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(input.value).catch(fallback);
+  } else {
+    fallback();
+  }
+});
+
 // connect if there are any LiveViews on the page
 liveSocket.connect();
 

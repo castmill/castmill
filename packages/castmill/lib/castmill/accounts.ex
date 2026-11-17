@@ -516,18 +516,21 @@ defmodule Castmill.Accounts do
   end
 
   @doc """
-  Emails `user`, a new admin of `network`, a link to create a passkey for the
+  Creates a link for `user`, an admin of `network`, to create a passkey for the
   network's dashboard domain (passkeys belong to a domain, so admins need one
   for each network's domain). The link is valid for 7 days and works once.
   """
-  def deliver_network_admin_setup_instructions(%User{} = user, network) do
+  def network_admin_setup_url(%User{} = user, network) do
     {encoded_token, user_token} = UserToken.build_email_token(user, "network_admin_setup")
     Repo.insert!(user_token)
 
-    url =
-      Castmill.Networks.dashboard_url(network) <>
-        "/setup-passkey?token=#{encoded_token}&email=#{URI.encode_www_form(user.email)}"
+    Castmill.Networks.dashboard_url(network) <>
+      "/setup-passkey?token=#{encoded_token}&email=#{URI.encode_www_form(user.email)}"
+  end
 
+  @doc "Emails `user` a link from network_admin_setup_url/2."
+  def deliver_network_admin_setup_instructions(%User{} = user, network) do
+    url = network_admin_setup_url(user, network)
     UserNotifier.deliver_network_admin_setup_instructions(user, network, url)
   end
 
