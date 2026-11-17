@@ -287,14 +287,25 @@ defmodule CastmillWeb.Live.Admin.AdminPagesTest do
     assert team
     assert has_element?(view, "#rows-#{team.id}")
 
-    {:ok, view, _html} = live(conn, path)
+    {:ok, view, html} = live(conn, path)
+    document = Floki.parse_document!(html)
+    return_path = "/admin/organizations/#{ids.organization}/teams"
 
-    # Cancelling runs the modal's data-cancel JS on the client (LiveViewTest
-    # cannot execute JS.exec), so check that it patches back to the tab.
-    assert has_element?(
-             view,
-             ~s(#child-modal[data-cancel*="/admin/organizations/#{ids.organization}/teams"])
-           )
+    assert [click] =
+             Floki.attribute(document, "#child-modal button[aria-label=close]", "phx-click")
+
+    assert [["exec", ["data-cancel", "#child-modal"]]] = Jason.decode!(click)
+
+    assert [cancel] = Floki.attribute(document, "#child-modal", "data-cancel")
+
+    assert [
+             ["patch", %{"href" => ^return_path, "replace" => false}],
+             ["exec", ["phx-remove"]]
+           ] = Jason.decode!(cancel)
+
+    render_patch(view, return_path)
+    refute has_element?(view, "#child-modal")
+    assert has_element?(view, "#rows-#{team.id}")
   end
 
   # Visits the paths and, breadth first, every /admin link on the pages that
