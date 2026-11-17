@@ -48,8 +48,9 @@ export function authFetch(
 }
 
 // Make authFetch available on the global store so addon components can
-// use `props.store.authFetch()` instead of raw `fetch()`.
-setStore('authFetch', authFetch);
+// use `props.store.authFetch()` instead of raw `fetch()`. Wrapped because the
+// store setter would call a bare function as an updater.
+setStore('authFetch', () => authFetch);
 
 /**
  * Establish a user session.
