@@ -255,6 +255,32 @@ defmodule CastmillWeb.Live.Admin.AdminPagesTest do
     assert length(Castmill.Networks.list_network_invitations(ids.network)) == 2
   end
 
+  test "an invitation that cannot be sent explains why in the form", %{
+    conn: conn,
+    ids: ids,
+    member: member
+  } do
+    {:ok, view, _html} = live(conn, "/admin/networks/#{ids.network}/invitations/new")
+
+    for {email, message} <- [
+          {"invitee@example.com", "An invitation for this email already exists"},
+          {member.email, "User with this email already exists in the network"}
+        ] do
+      html =
+        view
+        |> form("#network-invitation-form",
+          network_invitation: %{email: email, organization_name: "Another Org"}
+        )
+        |> render_submit()
+
+      assert html =~ message
+      assert has_element?(view, "#network-invitation-form", message)
+      assert has_element?(view, "#child-modal #network-invitation-form")
+    end
+
+    assert length(Castmill.Networks.list_network_invitations(ids.network)) == 1
+  end
+
   test "organization tabs list the organization's resources", %{conn: conn, ids: ids} do
     for {tab, id} <- [
           {"users", ids.user},
