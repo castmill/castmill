@@ -187,6 +187,7 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
               <div class="flex items-center gap-2">
                 <input
                   id="admin-setup-link-url"
+                  aria-label={"Setup link for #{@setup_link.email}"}
                   type="text"
                   readonly
                   value={@setup_link.url}

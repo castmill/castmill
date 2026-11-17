@@ -111,6 +111,7 @@ defmodule CastmillWeb.Live.Admin.NetworkAdminSetupTest do
     view |> element("#network-admins a", "Show setup link") |> render_click()
 
     assert has_element?(view, "#admin-setup-link", admin.email)
+    assert has_element?(view, "#admin-setup-link-url[aria-label='Setup link for #{admin.email}']")
     assert has_element?(view, "#admin-setup-link button[phx-click*='castmill:copy']")
     url = view |> element("#admin-setup-link-url") |> render() |> input_value()
     assert url =~ "&email=#{URI.encode_www_form(admin.email)}"
