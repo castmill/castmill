@@ -232,28 +232,6 @@ describe('TemplateWidget.show', () => {
     };
 
     let contentWidth = 200;
-    const prototype = dom.window.HTMLElement.prototype;
-    const originalGetBoundingClientRect = prototype.getBoundingClientRect;
-    prototype.getBoundingClientRect = function () {
-      if (
-        this.parentElement?.getAttribute('data-component') === 'scroller' &&
-        this.style.position !== 'absolute'
-      ) {
-        return {
-          x: 0,
-          y: 0,
-          left: 0,
-          top: 0,
-          right: contentWidth,
-          bottom: 20,
-          width: contentWidth,
-          height: 20,
-          toJSON: () => ({}),
-        };
-      }
-      return originalGetBoundingClientRect.call(this);
-    };
-
     const widget = new TemplateWidget(
       { getMedia: async (url: string) => url } as any,
       {
@@ -282,20 +260,37 @@ describe('TemplateWidget.show', () => {
 
     try {
       await firstValueFrom(widget.show(el, 0));
-      expect(widget.duration()).to.equal(1000);
 
       const scrollerContent = el.querySelector(
         '[data-component="scroller"] > div'
-      );
+      ) as HTMLElement;
+      // Solid clones elements from the document it first rendered this
+      // template into (possibly another spec's window), so stub the element
+      // itself rather than a window's prototype.
+      scrollerContent.getBoundingClientRect = () =>
+        ({
+          x: 0,
+          y: 0,
+          left: 0,
+          top: 0,
+          right: contentWidth,
+          bottom: 20,
+          width: contentWidth,
+          height: 20,
+          toJSON: () => ({}),
+        }) as DOMRect;
       const observer = observed.find(
         ({ target }) => target === scrollerContent
       );
       expect(observer).to.not.equal(undefined);
+
+      observer?.callback([], {} as ResizeObserver);
+      expect(widget.duration()).to.equal(1000);
+
       contentWidth = 400;
       observer?.callback([], {} as ResizeObserver);
       expect(widget.duration()).to.equal(2000);
     } finally {
-      prototype.getBoundingClientRect = originalGetBoundingClientRect;
       await widget.unload();
     }
   });

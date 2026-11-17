@@ -59,10 +59,16 @@ const withClockWidget = async (
     height: 200,
     toJSON: () => ({}),
   };
-  // Solid clones templates from the first document it renders into, so later
-  // specs may create elements from this window: restore the stub afterwards.
-  const realRect = dom.window.HTMLElement.prototype.getBoundingClientRect;
-  dom.window.HTMLElement.prototype.getBoundingClientRect = () => rect as any;
+  // Solid clones templates from the first document it renders into, so the
+  // elements may come from the template window: stub both windows and restore
+  // them afterwards so later specs measure real sizes.
+  const stubbedWindows = Array.from(new Set([dom.window, templateWindow]));
+  const realRects = stubbedWindows.map(
+    (view) => view.HTMLElement.prototype.getBoundingClientRect
+  );
+  stubbedWindows.forEach((view) => {
+    view.HTMLElement.prototype.getBoundingClientRect = () => rect as any;
+  });
   globals.window = dom.window;
   globals.document = dom.window.document;
   globals.Node = dom.window.Node;
@@ -162,9 +168,9 @@ const withClockWidget = async (
     widget.stop();
     await widget.unload();
     Date.now = realNow;
-    if (dom.window !== templateWindow) {
-      dom.window.HTMLElement.prototype.getBoundingClientRect = realRect;
-    }
+    stubbedWindows.forEach((view, index) => {
+      view.HTMLElement.prototype.getBoundingClientRect = realRects[index];
+    });
     if (savedFrame) {
       globals.requestAnimationFrame = savedFrame;
       globals.cancelAnimationFrame = savedCancelFrame;
