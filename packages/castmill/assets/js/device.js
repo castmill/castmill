@@ -9,8 +9,9 @@ import { mountDevice, Device, BrowserMachine } from '@castmill/device';
 import { enableDebugOverlayFromEnv } from '@castmill/player';
 
 // Inlined by esbuild from the VITE_DEBUG_OVERLAY environment variable, see
-// config/config.exs.
-enableDebugOverlayFromEnv(import.meta.env.VITE_DEBUG_OVERLAY);
+// config/config.exs. The optional chain keeps the player booting if a build
+// runs without that define, since esbuild then compiles `import.meta` to `{}`.
+enableDebugOverlayFromEnv(import.meta.env?.VITE_DEBUG_OVERLAY);
 
 (async () => {
   const browserMachine = new BrowserMachine();
