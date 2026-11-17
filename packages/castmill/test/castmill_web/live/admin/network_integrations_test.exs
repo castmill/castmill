@@ -200,14 +200,12 @@ defmodule CastmillWeb.Live.Admin.NetworkIntegrationsTest do
       )
       |> render_submit()
 
-      # Should show error - flash may need a render() call to appear
-      html = render(view)
+      assert has_element?(
+               view,
+               "#network-integration-form",
+               "Please fill in all required fields: Client ID, Client Secret"
+             )
 
-      assert html =~ "Please fill in all required fields" or
-               html =~ "Client ID" or
-               html =~ "Client Secret"
-
-      # Alternative: verify credentials were NOT saved
       assert {:error, :not_found} =
                Integrations.get_decrypted_network_credentials(network.id, integration.id)
     end
@@ -256,6 +254,26 @@ defmodule CastmillWeb.Live.Admin.NetworkIntegrationsTest do
       # Verify credentials were deleted
       assert {:error, :not_found} =
                Integrations.get_decrypted_network_credentials(network.id, integration.id)
+    end
+
+    test "explains in the form when credentials cannot be deleted", %{
+      conn: conn,
+      network: network,
+      admin_user: admin_user,
+      integration: integration
+    } do
+      credentials = %{"client_id" => "existing-id", "client_secret" => "existing-secret"}
+      {:ok, _} = Integrations.upsert_network_credentials(network.id, integration.id, credentials)
+      conn = log_in_admin(conn, admin_user)
+
+      {:ok, view, _html} =
+        live(conn, ~p"/admin/networks/#{network.id}/integrations/#{integration.id}/configure")
+
+      # Removed elsewhere after the page was opened.
+      {:ok, _} = Integrations.delete_network_credentials(network.id, integration.id)
+      view |> element("button", "Delete Credentials") |> render_click()
+
+      assert has_element?(view, "#network-integration-form", "Failed to delete credentials")
     end
   end
 
