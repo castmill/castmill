@@ -1284,6 +1284,45 @@ defmodule Castmill.Organizations do
   end
 
   @doc """
+  Adds the user with `attrs["email"]` to `organization` with `role`. Creates
+  the user when there is none (named `attrs["name"]`, or the email) and adds
+  them to the organization's network when they are not in it yet.
+
+  Returns `{:ok, user}`, `{:error, :already_member}` or
+  `{:error, %Ecto.Changeset{}}` for an invalid new user.
+  """
+  def add_member_by_email(%Organization{} = organization, attrs, role) do
+    email = String.trim(attrs["email"] || "")
+
+    Repo.transaction(fn ->
+      user = get_or_create_member(email, attrs["name"])
+
+      if get_user_role(organization.id, user.id), do: Repo.rollback(:already_member)
+
+      unless Repo.get_by(Castmill.Networks.NetworksUsers,
+               network_id: organization.network_id,
+               user_id: user.id
+             ) do
+        {:ok, _} = Castmill.Networks.add_user_to_network(user.id, organization.network_id)
+      end
+
+      {:ok, _} = add_user(organization.id, user.id, role)
+      user
+    end)
+  end
+
+  defp get_or_create_member(email, name) do
+    with nil <- Castmill.Accounts.get_user_by_email(email) do
+      name = if name in [nil, ""], do: String.slice(email, 0, 50), else: name
+
+      case Castmill.Accounts.create_user(%{"email" => email, "name" => name}) do
+        {:ok, user} -> user
+        {:error, changeset} -> Repo.rollback(changeset)
+      end
+    end
+  end
+
+  @doc """
     Remove a user from an organization.
     If this is the user's last organization, their account will be deleted automatically.
   """

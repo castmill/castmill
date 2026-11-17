@@ -10,7 +10,7 @@ Network administrators manage a whole [network](../concepts/networks.md) from th
 
 Network administration is separate from organization roles. To work on an organization's playlists or devices, you need a role in that organization like anyone else.
 
-If you don't belong to any organization yet, the dashboard says so and greys out the organization pages in the sidebar, while the **Network** section keeps working. Create an organization under [Organizations](#organizations), then invite yourself or its first administrator to it from [Users and invitations](#users-and-invitations).
+If you don't belong to any organization yet, the dashboard says so and greys out the organization pages in the sidebar, while the **Network** section keeps working. Create an organization under [Organizations](#organizations) with **Add me as an administrator** checked, or **Join** an existing one there.
 
 ## Overview
 
@@ -35,7 +35,8 @@ If you don't belong to any organization yet, the dashboard says so and greys out
 
 **Network → Organizations** lists every organization in the network. From here you can:
 
-- **Create Organization**. Then invite its first administrator from **Users & Invitations**.
+- **Create Organization**. Leave **Add me as an administrator** checked to work in it yourself, or invite its first administrator from **Users & Invitations**.
+- **Join** an organization you are not a member of. You become one of its administrators.
 - **Block** an organization. Its users can no longer sign in until you **Unblock** it. Network administrators are never locked out this way.
 - Delete an organization with all its content. This cannot be undone.
 - Edit **Integration settings**: values that network-level widgets need per organization, for example an office ID. Only network administrators can change them.

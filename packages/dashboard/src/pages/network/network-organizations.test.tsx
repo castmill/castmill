@@ -3,6 +3,8 @@ import { render, screen, fireEvent, waitFor } from '@solidjs/testing-library';
 import { I18nProvider } from '../../i18n';
 import NetworkOrganizations from './network-organizations';
 import { NetworkService } from '../../services/network.service';
+import { OrganizationsService } from '../../services/organizations.service';
+import { store, setStore } from '../../store/store';
 
 // Toast spies
 const toastSpies = {
@@ -23,11 +25,20 @@ vi.mock('../../services/network.service', () => ({
   NetworkService: {
     listOrganizations: vi.fn(),
     createOrganization: vi.fn(),
+    joinOrganization: vi.fn(),
     deleteOrganization: vi.fn(),
     blockOrganization: vi.fn(),
     unblockOrganization: vi.fn(),
     listIntegrationSettings: vi.fn(() => Promise.resolve([])),
   },
+}));
+
+vi.mock('../../services/organizations.service', () => ({
+  OrganizationsService: { getAll: vi.fn() },
+}));
+
+vi.mock('../../components/auth', () => ({
+  getUser: () => ({ id: 'user-1' }),
 }));
 
 const mockStats = {
@@ -88,6 +99,13 @@ describe('NetworkOrganizations', () => {
     vi.mocked(NetworkService.listOrganizations).mockResolvedValue(
       mockOrganizations
     );
+    setStore('organizations', {
+      data: [],
+      loaded: true,
+      loading: false,
+      selectedId: null,
+      selectedName: '',
+    });
   });
 
   it('displays list of organizations', async () => {
@@ -142,14 +160,98 @@ describe('NetworkOrganizations', () => {
     fireEvent.input(nameInput, { target: { value: 'New Organization' } });
 
     const createButton = screen.getByText(/^create$/i).closest('button');
+
+    vi.mocked(OrganizationsService.getAll).mockResolvedValue([
+      { ...newOrg, created_at: newOrg.inserted_at },
+    ]);
     fireEvent.click(createButton!);
 
     await waitFor(() => {
       expect(NetworkService.createOrganization).toHaveBeenCalledWith(
-        'New Organization'
+        'New Organization',
+        { join: true }
       );
       expect(toastSpies.success).toHaveBeenCalled();
     });
+    expect(OrganizationsService.getAll).toHaveBeenCalledWith('user-1');
+    expect(store.organizations.selectedId).toBe('org-new');
+    expect(store.organizations.selectedName).toBe('New Organization');
+  });
+
+  it('creates an organization without joining it when unchecked', async () => {
+    vi.mocked(NetworkService.createOrganization).mockResolvedValue({
+      id: 'org-new',
+      name: 'New Organization',
+      inserted_at: '2024-01-03T00:00:00Z',
+      updated_at: '2024-01-03T00:00:00Z',
+    });
+    renderOrganizations();
+    await waitFor(() => screen.getByText('Organization 1'));
+
+    fireEvent.click(screen.getByLabelText('Add me as an administrator'));
+    fireEvent.input(screen.getByPlaceholderText(/enter organization name/i), {
+      target: { value: 'New Organization' },
+    });
+    fireEvent.click(screen.getByText(/^create$/i).closest('button')!);
+
+    await waitFor(() =>
+      expect(NetworkService.createOrganization).toHaveBeenCalledWith(
+        'New Organization',
+        { join: false }
+      )
+    );
+    expect(OrganizationsService.getAll).not.toHaveBeenCalled();
+    expect(store.organizations.selectedId).toBeNull();
+  });
+
+  it('lets the network admin join organizations they are not in', async () => {
+    setStore('organizations', 'data', [
+      { ...mockOrganizations.data[0], created_at: '2024-01-01T00:00:00Z' },
+    ]);
+    vi.mocked(NetworkService.joinOrganization).mockResolvedValue({
+      id: 'org-2',
+      name: 'Organization 2',
+    });
+    vi.mocked(OrganizationsService.getAll).mockResolvedValue(
+      mockOrganizations.data.map((org) => ({
+        ...org,
+        created_at: org.inserted_at,
+      }))
+    );
+    renderOrganizations();
+    await waitFor(() => screen.getByText('Organization 2'));
+
+    const joinButtons = screen.getAllByTitle('Join as an administrator');
+    expect(joinButtons).toHaveLength(1);
+    fireEvent.click(joinButtons[0]);
+
+    await waitFor(() =>
+      expect(toastSpies.success).toHaveBeenCalledWith(
+        'You are now an administrator of Organization 2.'
+      )
+    );
+    expect(NetworkService.joinOrganization).toHaveBeenCalledWith('org-2');
+    expect(store.organizations.selectedId).toBe('org-2');
+    await waitFor(() =>
+      expect(screen.queryByTitle('Join as an administrator')).toBeNull()
+    );
+  });
+
+  it('shows why joining an organization failed', async () => {
+    vi.mocked(NetworkService.joinOrganization).mockRejectedValue(
+      new Error('You are already a member of this organization')
+    );
+    renderOrganizations();
+    await waitFor(() => screen.getByText('Organization 1'));
+
+    fireEvent.click(screen.getAllByTitle('Join as an administrator')[0]);
+
+    await waitFor(() =>
+      expect(toastSpies.error).toHaveBeenCalledWith(
+        'You are already a member of this organization'
+      )
+    );
+    expect(store.organizations.selectedId).toBeNull();
   });
 
   it('shows empty state when no organizations', async () => {

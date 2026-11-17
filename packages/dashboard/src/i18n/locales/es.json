@@ -455,7 +455,12 @@
           "too_long": "Demasiado largo.",
           "too_many": "Demasiados valores."
         }
-      }
+      },
+      "addMeAsAdmin": "Añadirme como administrador",
+      "join": "Unirme",
+      "joinTitle": "Unirme como administrador",
+      "joinSuccess": "Ahora eres administrador de {{name}}.",
+      "joinError": "No se pudo unir a la organización."
     },
     "users": {
       "listTitle": "Todos los Usuarios",

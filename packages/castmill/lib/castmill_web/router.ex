@@ -397,6 +397,13 @@ defmodule CastmillWeb.Router do
 
     get("/network/organizations", NetworkDashboardController, :list_organizations)
     post("/network/organizations", NetworkDashboardController, :create_organization)
+
+    post(
+      "/network/organizations/:organization_id/join",
+      NetworkDashboardController,
+      :join_organization
+    )
+
     delete("/network/organizations/:id", NetworkDashboardController, :delete_organization)
 
     get(
