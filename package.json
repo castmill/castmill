@@ -13,6 +13,23 @@
     "packages/platforms/*",
     "packages/castmill/assets"
   ],
+  "release": {
+    "branches": [
+      "main"
+    ],
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      [
+        "@semantic-release/github",
+        {
+          "successComment": false,
+          "releasedLabels": false,
+          "failComment": false
+        }
+      ]
+    ]
+  },
   "scripts": {
     "format:ui-common": "cd packages/ui-common && yarn format",
     "format:cache": "cd packages/cache && yarn format",
