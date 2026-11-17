@@ -576,6 +576,52 @@ describe('NetworkService', () => {
     });
   });
 
+  describe('network admin roles', () => {
+    it.each([
+      ['makeNetworkAdmin', 'POST', 'admin'],
+      ['removeNetworkAdmin', 'DELETE', 'member'],
+    ] as const)(
+      '%s sends %s to the user’s admin role',
+      async (method, httpMethod, role) => {
+        const user = {
+          id: 'user-1',
+          name: 'User 1',
+          email: 'user1@example.com',
+          role,
+          inserted_at: '2024-01-01T00:00:00Z',
+        };
+        mockFetch.mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve({ success: true, user }),
+        });
+
+        const result = await NetworkService[method]('user-1');
+
+        expect(mockFetch).toHaveBeenCalledWith(
+          expect.stringContaining('/dashboard/network/users/user-1/admin'),
+          expect.objectContaining({ method: httpMethod })
+        );
+        expect(result.user.role).toBe(role);
+      }
+    );
+
+    it('throws the server error when the change is not allowed', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 403,
+        json: () =>
+          Promise.resolve({
+            error: 'You cannot remove your own network admin role',
+          }),
+      });
+
+      await expect(NetworkService.removeNetworkAdmin('me')).rejects.toThrow(
+        'You cannot remove your own network admin role'
+      );
+    });
+  });
+
   describe('integration settings', () => {
     const reply = (status: number, body?: unknown) => ({
       ok: status < 300,

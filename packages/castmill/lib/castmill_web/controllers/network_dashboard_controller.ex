@@ -586,10 +586,12 @@ defmodule CastmillWeb.NetworkDashboardController do
           search: search
         )
 
+      admin_ids = network_id |> Networks.list_network_admins() |> MapSet.new(& &1.id)
+
       conn
       |> put_status(:ok)
       |> json(%{
-        data: Enum.map(users, &user_to_json/1),
+        data: Enum.map(users, &user_to_json(&1, network_role(&1, admin_ids))),
         pagination: %{
           page: page,
           page_size: page_size,
@@ -700,6 +702,72 @@ defmodule CastmillWeb.NetworkDashboardController do
         |> put_status(:unprocessable_entity)
         |> json(%{error: "Failed to send invitation", reason: inspect(reason)})
     end
+  end
+
+  @doc """
+  Makes a user of the network a network admin.
+  Only accessible to network admins. Blocked users must be unblocked first.
+  """
+  def promote_user(conn, %{"user_id" => user_id}) do
+    with {:ok, network_id} <- get_admin_network_id(conn),
+         {:ok, target} <- fetch_network_user(network_id, user_id),
+         :ok <- if(target.blocked_at, do: {:error, :blocked}, else: :ok),
+         {:ok, _} <- Networks.promote_to_network_admin(target.id, network_id) do
+      json(conn, %{success: true, user: user_to_json(target, :admin)})
+    else
+      error -> network_role_error(conn, error)
+    end
+  end
+
+  @doc """
+  Makes a network admin a regular member of the network again.
+  Only accessible to network admins, who cannot remove their own admin role,
+  so a network always keeps at least one admin.
+  """
+  def demote_user(conn, %{"user_id" => user_id}) do
+    current_user = conn.assigns[:current_user]
+
+    with {:ok, network_id} <- get_admin_network_id(conn),
+         {:ok, target} <- fetch_network_user(network_id, user_id),
+         :ok <- if(target.id == current_user.id, do: {:error, :self}, else: :ok),
+         {:ok, _} <- demote_network_admin(target, network_id) do
+      json(conn, %{success: true, user: user_to_json(target, :member)})
+    else
+      error -> network_role_error(conn, error)
+    end
+  end
+
+  defp demote_network_admin(user, network_id) do
+    case Networks.demote_from_network_admin(user.id, network_id) do
+      {:error, :not_admin} -> {:error, :not_network_admin}
+      result -> result
+    end
+  end
+
+  defp fetch_network_user(network_id, user_id) do
+    with {:ok, user_id} <- Ecto.UUID.cast(user_id),
+         %Castmill.Accounts.User{} = user <- Castmill.Accounts.get_user(user_id),
+         true <- Networks.is_network_member?(user.id, network_id) do
+      {:ok, user}
+    else
+      _ -> {:error, :not_found}
+    end
+  end
+
+  defp network_role_error(conn, {:error, reason}) do
+    {status, message} =
+      case reason do
+        :not_admin -> {:forbidden, "You must be a network admin to manage network admins"}
+        :not_found -> {:not_found, "User not found"}
+        :self -> {:forbidden, "You cannot remove your own network admin role"}
+        :blocked -> {:conflict, "Unblock this user before making them a network admin"}
+        :not_network_admin -> {:conflict, "This user is not a network admin"}
+        _ -> {:unprocessable_entity, "Could not change the network admin role"}
+      end
+
+    conn
+    |> put_status(status)
+    |> json(%{error: message})
   end
 
   @doc """
@@ -1154,16 +1222,20 @@ defmodule CastmillWeb.NetworkDashboardController do
     }
   end
 
-  defp user_to_json(user) do
+  defp user_to_json(user, role) do
     %{
       id: user.id,
       name: user.name,
       email: user.email,
+      role: role,
       blocked_at: user.blocked_at,
       blocked_reason: user.blocked_reason,
       inserted_at: user.inserted_at
     }
   end
+
+  defp network_role(user, admin_ids),
+    do: if(MapSet.member?(admin_ids, user.id), do: :admin, else: :member)
 
   defp user_to_json_with_blocked(user) do
     %{

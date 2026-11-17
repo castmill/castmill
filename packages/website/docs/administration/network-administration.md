@@ -48,8 +48,9 @@ If you don't belong to any organization yet, the dashboard says so and greys out
 **Network → Users & Invitations** lists every user and every pending invitation.
 
 - **Invite User** sends an invitation to join a chosen organization as **Administrator** or **Member**. This is how people join an invitation-only network.
+- The **Network role** column shows who is a **Network admin**. **Make network admin** gives a user of the network the same network administration rights as you; **Remove network admin** makes an administrator a regular member again. They keep their roles in organizations. You cannot remove your own admin role, so the network always keeps at least one administrator, and blocked users must be unblocked first.
 - **Block** a user to stop them from signing in, optionally with a reason. **Unblock** restores access. You cannot block yourself or another network administrator.
-- Delete a user permanently.
+- Delete a user permanently. Network administrators and your own account cannot be deleted.
 - Delete pending invitations.
 
 <Screenshot src="network-users" alt="Users & Invitations with the Invite User button and the users of the network" />

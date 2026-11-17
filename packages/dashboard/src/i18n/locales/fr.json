@@ -496,7 +496,20 @@
       "deleteTitle": "Supprimer l'Utilisateur",
       "deleteConfirmation": "Êtes-vous sûr de vouloir supprimer \"{{name}}\"? Cette action est irréversible.",
       "deleteSuccess": "Utilisateur supprimé avec succès",
-      "deleteError": "Échec de la suppression de l'utilisateur"
+      "deleteError": "Échec de la suppression de l'utilisateur",
+      "networkRole": "Rôle dans le réseau",
+      "networkAdmin": "Administrateur réseau",
+      "networkMember": "Membre",
+      "makeAdmin": "Nommer administrateur réseau",
+      "makeAdminTitle": "Nommer administrateur réseau",
+      "makeAdminConfirmation": "Nommer « {{name}} » administrateur réseau ? Cette personne pourra gérer les paramètres, les organisations, les utilisateurs et les widgets de ce réseau.",
+      "makeAdminSuccess": "{{name}} est maintenant administrateur réseau",
+      "makeAdminError": "Impossible de nommer l'utilisateur administrateur réseau",
+      "removeAdmin": "Retirer le rôle d'administrateur réseau",
+      "removeAdminTitle": "Retirer l'administrateur réseau",
+      "removeAdminConfirmation": "Retirer « {{name}} » des administrateurs réseau ? Cette personne reste dans le réseau et conserve ses rôles dans les organisations.",
+      "removeAdminSuccess": "{{name}} n'est plus administrateur réseau",
+      "removeAdminError": "Impossible de retirer le rôle d'administrateur réseau"
     },
     "invitations": {
       "title": "Invitations réseau",

@@ -62,6 +62,8 @@ export interface NetworkUser {
   id: string;
   name: string;
   email: string;
+  /** The user's role in the network. */
+  role?: 'admin' | 'member';
   blocked_at?: string | null;
   blocked_reason?: string | null;
   inserted_at: string;
@@ -765,6 +767,36 @@ export const NetworkService = {
       {
         method: 'DELETE',
       }
+    );
+
+    return handleResponse(response, { parse: true });
+  },
+
+  /**
+   * Make a user of the network a network admin.
+   * Only available to network admins.
+   */
+  async makeNetworkAdmin(
+    userId: string
+  ): Promise<{ success: boolean; user: NetworkUser }> {
+    const response = await authFetch(
+      `${baseUrl}/dashboard/network/users/${userId}/admin`,
+      { method: 'POST' }
+    );
+
+    return handleResponse(response, { parse: true });
+  },
+
+  /**
+   * Make a network admin a regular member of the network again. Network
+   * admins cannot remove their own admin role.
+   */
+  async removeNetworkAdmin(
+    userId: string
+  ): Promise<{ success: boolean; user: NetworkUser }> {
+    const response = await authFetch(
+      `${baseUrl}/dashboard/network/users/${userId}/admin`,
+      { method: 'DELETE' }
     );
 
     return handleResponse(response, { parse: true });

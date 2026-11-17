@@ -529,7 +529,20 @@
       "deleteTitle": "Delete User",
       "deleteConfirmation": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
       "deleteSuccess": "User deleted successfully",
-      "deleteError": "Failed to delete user"
+      "deleteError": "Failed to delete user",
+      "networkRole": "Network role",
+      "networkAdmin": "Network admin",
+      "networkMember": "Member",
+      "makeAdmin": "Make network admin",
+      "makeAdminTitle": "Make Network Admin",
+      "makeAdminConfirmation": "Make \"{{name}}\" a network admin? They will be able to manage this network's settings, organizations, users and widgets.",
+      "makeAdminSuccess": "{{name}} is now a network admin",
+      "makeAdminError": "Failed to make the user a network admin",
+      "removeAdmin": "Remove network admin",
+      "removeAdminTitle": "Remove Network Admin",
+      "removeAdminConfirmation": "Remove \"{{name}}\" as a network admin? They will stay in the network and keep their roles in organizations.",
+      "removeAdminSuccess": "{{name}} is no longer a network admin",
+      "removeAdminError": "Failed to remove the network admin role"
     },
     "invitations": {
       "title": "Network Invitations",

@@ -491,7 +491,20 @@
       "deleteTitle": "Ta bort Användare",
       "deleteConfirmation": "Är du säker på att du vill ta bort \"{{name}}\"? Denna åtgärd kan inte ångras.",
       "deleteSuccess": "Användare borttagen",
-      "deleteError": "Kunde inte ta bort användare"
+      "deleteError": "Kunde inte ta bort användare",
+      "networkRole": "Roll i nätverket",
+      "networkAdmin": "Nätverksadministratör",
+      "networkMember": "Medlem",
+      "makeAdmin": "Gör till nätverksadministratör",
+      "makeAdminTitle": "Gör till nätverksadministratör",
+      "makeAdminConfirmation": "Göra \"{{name}}\" till nätverksadministratör? Personen kan då hantera nätverkets inställningar, organisationer, användare och widgetar.",
+      "makeAdminSuccess": "{{name}} är nu nätverksadministratör",
+      "makeAdminError": "Det gick inte att göra användaren till nätverksadministratör",
+      "removeAdmin": "Ta bort som nätverksadministratör",
+      "removeAdminTitle": "Ta bort nätverksadministratör",
+      "removeAdminConfirmation": "Ta bort \"{{name}}\" som nätverksadministratör? Personen stannar kvar i nätverket och behåller sina roller i organisationerna.",
+      "removeAdminSuccess": "{{name}} är inte längre nätverksadministratör",
+      "removeAdminError": "Det gick inte att ta bort rollen som nätverksadministratör"
     },
     "invitations": {
       "title": "Nätverksinbjudningar",

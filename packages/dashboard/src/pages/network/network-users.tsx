@@ -26,7 +26,15 @@ import {
   NetworkInvitation,
 } from '../../services/network.service';
 import { useI18n } from '../../i18n';
-import { BsPlusLg, BsTrash, BsSlashCircle, BsUnlock } from 'solid-icons/bs';
+import {
+  BsPlusLg,
+  BsTrash,
+  BsSlashCircle,
+  BsUnlock,
+  BsShieldPlus,
+  BsShieldMinus,
+} from 'solid-icons/bs';
+import { getUser } from '../../components/auth';
 import { useNetworkContext } from './network-context';
 import styles from './network.module.scss';
 
@@ -55,6 +63,17 @@ const NetworkUsers: Component = () => {
   );
   const [blockingUser, setBlockingUser] = createSignal(false);
   const [blockUserReason, setBlockUserReason] = createSignal('');
+  const [userToPromote, setUserToPromote] = createSignal<NetworkUser | null>(
+    null
+  );
+  const [userToDemote, setUserToDemote] = createSignal<NetworkUser | null>(
+    null
+  );
+
+  // Network admins and yourself cannot be blocked or deleted, and you cannot
+  // remove your own admin role, so a network always keeps an admin.
+  const isSelf = (user: NetworkUser) => user.id === getUser()?.id;
+  const isNetworkAdmin = (user: NetworkUser) => user.role === 'admin';
 
   // Invitations state
   const [invitations, setInvitations] = createSignal<NetworkInvitation[]>([]);
@@ -121,6 +140,45 @@ const NetworkUsers: Component = () => {
   };
 
   // User actions
+  const changeNetworkRole = async (
+    user: NetworkUser,
+    role: 'admin' | 'member'
+  ) => {
+    const promoting = role === 'admin';
+    try {
+      if (promoting) {
+        await NetworkService.makeNetworkAdmin(user.id);
+      } else {
+        await NetworkService.removeNetworkAdmin(user.id);
+      }
+      setUsers((prev) =>
+        prev.map((u) => (u.id === user.id ? { ...u, role } : u))
+      );
+      toast.success(
+        t(
+          promoting
+            ? 'network.users.makeAdminSuccess'
+            : 'network.users.removeAdminSuccess',
+          { name: user.name }
+        )
+      );
+    } catch (err) {
+      console.error('Failed to change network role:', err);
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : t(
+              promoting
+                ? 'network.users.makeAdminError'
+                : 'network.users.removeAdminError'
+            )
+      );
+    } finally {
+      setUserToPromote(null);
+      setUserToDemote(null);
+    }
+  };
+
   const handleBlockUser = async () => {
     const user = userToBlock();
     if (!user) return;
@@ -363,6 +421,7 @@ const NetworkUsers: Component = () => {
                 <tr>
                   <th>{t('network.users.name')}</th>
                   <th>{t('network.users.email')}</th>
+                  <th>{t('network.users.networkRole')}</th>
                   <th>{t('common.status')}</th>
                   <th>{t('common.created')}</th>
                   <th class={styles['actions-column']}>
@@ -376,6 +435,20 @@ const NetworkUsers: Component = () => {
                     <tr class={user.blocked_at ? styles['blocked-row'] : ''}>
                       <td>{user.name}</td>
                       <td>{user.email}</td>
+                      <td>
+                        <Show
+                          when={isNetworkAdmin(user)}
+                          fallback={
+                            <span class={styles['role-member']}>
+                              {t('network.users.networkMember')}
+                            </span>
+                          }
+                        >
+                          <span class={styles['role-admin']}>
+                            {t('network.users.networkAdmin')}
+                          </span>
+                        </Show>
+                      </td>
                       <td>
                         <Show
                           when={user.blocked_at}
@@ -397,32 +470,58 @@ const NetworkUsers: Component = () => {
                       <td>
                         <div class={styles['actions-row']}>
                           <Show
-                            when={user.blocked_at}
+                            when={isNetworkAdmin(user)}
                             fallback={
-                              <Button
-                                label=""
-                                icon={BsSlashCircle}
-                                color="warning"
-                                onClick={() => setUserToBlock(user)}
-                                title={t('network.users.block')}
-                              />
+                              <Show when={!user.blocked_at}>
+                                <Button
+                                  label=""
+                                  icon={BsShieldPlus}
+                                  color="primary"
+                                  onClick={() => setUserToPromote(user)}
+                                  title={t('network.users.makeAdmin')}
+                                />
+                              </Show>
                             }
                           >
+                            <Show when={!isSelf(user)}>
+                              <Button
+                                label=""
+                                icon={BsShieldMinus}
+                                color="warning"
+                                onClick={() => setUserToDemote(user)}
+                                title={t('network.users.removeAdmin')}
+                              />
+                            </Show>
+                          </Show>
+                          <Show when={!isNetworkAdmin(user) && !isSelf(user)}>
+                            <Show
+                              when={user.blocked_at}
+                              fallback={
+                                <Button
+                                  label=""
+                                  icon={BsSlashCircle}
+                                  color="warning"
+                                  onClick={() => setUserToBlock(user)}
+                                  title={t('network.users.block')}
+                                />
+                              }
+                            >
+                              <Button
+                                label=""
+                                icon={BsUnlock}
+                                color="success"
+                                onClick={() => setUserToUnblock(user)}
+                                title={t('network.users.unblock')}
+                              />
+                            </Show>
                             <Button
                               label=""
-                              icon={BsUnlock}
-                              color="success"
-                              onClick={() => setUserToUnblock(user)}
-                              title={t('network.users.unblock')}
+                              icon={BsTrash}
+                              color="danger"
+                              onClick={() => setUserToDelete(user)}
+                              title={t('common.delete')}
                             />
                           </Show>
-                          <Button
-                            label=""
-                            icon={BsTrash}
-                            color="danger"
-                            onClick={() => setUserToDelete(user)}
-                            title={t('common.delete')}
-                          />
                         </div>
                       </td>
                     </tr>
@@ -705,6 +804,26 @@ const NetworkUsers: Component = () => {
         })}
         onConfirm={handleDeleteUser}
         onClose={() => setUserToDelete(null)}
+      />
+
+      {/* Network admin role modals */}
+      <ConfirmDialog
+        show={!!userToPromote()}
+        title={t('network.users.makeAdminTitle')}
+        message={t('network.users.makeAdminConfirmation', {
+          name: userToPromote()?.name || '',
+        })}
+        onConfirm={() => changeNetworkRole(userToPromote()!, 'admin')}
+        onClose={() => setUserToPromote(null)}
+      />
+      <ConfirmDialog
+        show={!!userToDemote()}
+        title={t('network.users.removeAdminTitle')}
+        message={t('network.users.removeAdminConfirmation', {
+          name: userToDemote()?.name || '',
+        })}
+        onConfirm={() => changeNetworkRole(userToDemote()!, 'member')}
+        onClose={() => setUserToDemote(null)}
       />
 
       {/* Delete Invitation Modal */}

@@ -515,7 +515,20 @@
       "deleteTitle": "Benutzer löschen",
       "deleteConfirmation": "Sind Sie sicher, dass Sie \"{{name}}\" löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
       "deleteSuccess": "Benutzer erfolgreich gelöscht",
-      "deleteError": "Fehler beim Löschen des Benutzers"
+      "deleteError": "Fehler beim Löschen des Benutzers",
+      "networkRole": "Netzwerkrolle",
+      "networkAdmin": "Netzwerkadministrator",
+      "networkMember": "Mitglied",
+      "makeAdmin": "Zum Netzwerkadministrator machen",
+      "makeAdminTitle": "Zum Netzwerkadministrator machen",
+      "makeAdminConfirmation": "\"{{name}}\" zum Netzwerkadministrator machen? Die Person kann dann die Einstellungen, Organisationen, Benutzer und Widgets dieses Netzwerks verwalten.",
+      "makeAdminSuccess": "{{name}} ist jetzt Netzwerkadministrator",
+      "makeAdminError": "Der Benutzer konnte nicht zum Netzwerkadministrator gemacht werden",
+      "removeAdmin": "Als Netzwerkadministrator entfernen",
+      "removeAdminTitle": "Netzwerkadministrator entfernen",
+      "removeAdminConfirmation": "\"{{name}}\" als Netzwerkadministrator entfernen? Die Person bleibt im Netzwerk und behält ihre Rollen in den Organisationen.",
+      "removeAdminSuccess": "{{name}} ist kein Netzwerkadministrator mehr",
+      "removeAdminError": "Die Rolle als Netzwerkadministrator konnte nicht entfernt werden"
     },
     "invitations": {
       "title": "Netzwerk-Einladungen",

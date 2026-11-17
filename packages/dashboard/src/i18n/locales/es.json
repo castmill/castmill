@@ -497,7 +497,20 @@
       "deleteTitle": "Eliminar Usuario",
       "deleteConfirmation": "¿Estás seguro de que deseas eliminar \"{{name}}\"? Esta acción no se puede deshacer.",
       "deleteSuccess": "Usuario eliminado correctamente",
-      "deleteError": "Error al eliminar el usuario"
+      "deleteError": "Error al eliminar el usuario",
+      "networkRole": "Rol en la red",
+      "networkAdmin": "Administrador de red",
+      "networkMember": "Miembro",
+      "makeAdmin": "Hacer administrador de red",
+      "makeAdminTitle": "Hacer administrador de red",
+      "makeAdminConfirmation": "¿Hacer a \"{{name}}\" administrador de red? Podrá gestionar la configuración, las organizaciones, los usuarios y los widgets de esta red.",
+      "makeAdminSuccess": "{{name}} ahora es administrador de red",
+      "makeAdminError": "No se pudo hacer administrador de red al usuario",
+      "removeAdmin": "Quitar administrador de red",
+      "removeAdminTitle": "Quitar administrador de red",
+      "removeAdminConfirmation": "¿Quitar a \"{{name}}\" como administrador de red? Seguirá en la red y conservará sus roles en las organizaciones.",
+      "removeAdminSuccess": "{{name}} ya no es administrador de red",
+      "removeAdminError": "No se pudo quitar el rol de administrador de red"
     },
     "invitations": {
       "title": "Invitaciones de Red",
