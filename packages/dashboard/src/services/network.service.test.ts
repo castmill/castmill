@@ -485,6 +485,39 @@ describe('NetworkService', () => {
     });
   });
 
+  describe('joinOrganization', () => {
+    it('joins an organization as an administrator', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ id: 'org-1', name: 'Acme' }),
+      });
+
+      const result = await NetworkService.joinOrganization('org-1');
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/dashboard/network/organizations/org-1/join'),
+        expect.objectContaining({ method: 'POST' })
+      );
+      expect(result).toEqual({ id: 'org-1', name: 'Acme' });
+    });
+
+    it('throws the server error when already a member', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 409,
+        json: () =>
+          Promise.resolve({
+            error: 'You are already a member of this organization',
+          }),
+      });
+
+      await expect(NetworkService.joinOrganization('org-1')).rejects.toThrow(
+        'You are already a member of this organization'
+      );
+    });
+  });
+
   describe('listUsers', () => {
     it('returns paginated list of users', async () => {
       const mockResponse = {
