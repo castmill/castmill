@@ -10,6 +10,9 @@
   "compilerOptions": {
     "composite": true,
     "jsxImportSource": "solid-js",
+    // Only load the types the renderer references. Without this, TypeScript
+    // loads every package in node_modules/@types, including type stubs.
+    "types": [],
     "baseUrl": ".",
     "paths": {
       "@renderer/*": ["src/renderer/src/*"]
