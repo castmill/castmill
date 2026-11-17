@@ -140,7 +140,8 @@
     "networkWidgets": "Widget Access",
     "tags": "Tags",
     "agents": "Agents",
-    "feeds": "Feeds"
+    "feeds": "Feeds",
+    "requiresOrganization": "Requires an organization"
   },
   "topbar": {
     "help": "Help",
@@ -1678,7 +1679,9 @@
   "dashboard": {
     "noOrganizations": {
       "title": "No Organizations",
-      "description": "You don't belong to any organization in this network yet. Please contact your network administrator to get access."
+      "description": "You don't belong to any organization in this network yet. Please contact your network administrator to get access.",
+      "networkAdminDescription": "You don't belong to any organization yet. As a network administrator, you can create organizations and invite people to them, including yourself.",
+      "manageOrganizations": "Manage organizations"
     }
   },
   "aspectRatio": {

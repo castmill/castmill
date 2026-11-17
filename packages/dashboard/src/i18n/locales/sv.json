@@ -787,7 +787,8 @@
     "networkWidgets": "Widgetåtkomst",
     "tags": "Taggar",
     "agents": "Agenter",
-    "feeds": "Flöden"
+    "feeds": "Flöden",
+    "requiresOrganization": "Kräver en organisation"
   },
   "channels": {
     "title": "Kanaler",
@@ -1678,7 +1679,9 @@
   "dashboard": {
     "noOrganizations": {
       "title": "Inga organisationer",
-      "description": "Du tillhör inte någon organisation i detta nätverk ännu. Kontakta din nätverksadministratör för att få åtkomst."
+      "description": "Du tillhör inte någon organisation i detta nätverk ännu. Kontakta din nätverksadministratör för att få åtkomst.",
+      "networkAdminDescription": "Du tillhör inte någon organisation ännu. Som nätverksadministratör kan du skapa organisationer och bjuda in personer till dem, även dig själv.",
+      "manageOrganizations": "Hantera organisationer"
     }
   },
   "aspectRatio": {

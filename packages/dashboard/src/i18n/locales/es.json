@@ -793,7 +793,8 @@
     "networkWidgets": "Acceso a widgets",
     "tags": "Etiquetas",
     "agents": "Agentes",
-    "feeds": "Feeds"
+    "feeds": "Feeds",
+    "requiresOrganization": "Requiere una organización"
   },
   "channels": {
     "title": "Canales",
@@ -1684,7 +1685,9 @@
   "dashboard": {
     "noOrganizations": {
       "title": "Sin organizaciones",
-      "description": "Aún no perteneces a ninguna organización en esta red. Contacta con el administrador de la red para obtener acceso."
+      "description": "Aún no perteneces a ninguna organización en esta red. Contacta con el administrador de la red para obtener acceso.",
+      "networkAdminDescription": "Aún no perteneces a ninguna organización. Como administrador de la red, puedes crear organizaciones e invitar a personas a ellas, incluido tú.",
+      "manageOrganizations": "Gestionar organizaciones"
     }
   },
   "aspectRatio": {

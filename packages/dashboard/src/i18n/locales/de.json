@@ -126,7 +126,8 @@
     "networkWidgets": "Widget-Zugriff",
     "tags": "Tags",
     "agents": "Agenten",
-    "feeds": "Feeds"
+    "feeds": "Feeds",
+    "requiresOrganization": "Erfordert eine Organisation"
   },
   "topbar": {
     "help": "Hilfe",
@@ -1678,7 +1679,9 @@
   "dashboard": {
     "noOrganizations": {
       "title": "Keine Organisationen",
-      "description": "Sie gehören noch keiner Organisation in diesem Netzwerk an. Bitte kontaktieren Sie Ihren Netzwerkadministrator, um Zugang zu erhalten."
+      "description": "Sie gehören noch keiner Organisation in diesem Netzwerk an. Bitte kontaktieren Sie Ihren Netzwerkadministrator, um Zugang zu erhalten.",
+      "networkAdminDescription": "Sie gehören noch keiner Organisation an. Als Netzwerkadministrator können Sie Organisationen erstellen und Personen dazu einladen, auch sich selbst.",
+      "manageOrganizations": "Organisationen verwalten"
     }
   },
   "aspectRatio": {
