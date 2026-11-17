@@ -289,11 +289,15 @@ jobs:
       - name: Check formatting
         run: yarn format:check
 
-      # Step 8: Run unit tests
+      # Step 8: Check types
+      - name: Check types
+        run: yarn typecheck
+
+      # Step 9: Run unit tests
       - name: Run unit tests
         run: yarn test
 
-      # Step 9: Run Android Java unit tests
+      # Step 10: Run Android Java unit tests
       - name: Run Android Java unit tests
         if: matrix.platform.name == 'android-player'
         run: |
