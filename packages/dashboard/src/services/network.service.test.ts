@@ -408,7 +408,19 @@ describe('NetworkService', () => {
   });
 
   describe('createOrganization', () => {
-    it('creates a new organization', async () => {
+    it.each([
+      { scenario: 'without opting in', options: undefined, join: false },
+      {
+        scenario: 'with an explicit opt-out',
+        options: { join: false },
+        join: false,
+      },
+      {
+        scenario: 'with an explicit opt-in',
+        options: { join: true },
+        join: true,
+      },
+    ])('creates a new organization $scenario', async ({ options, join }) => {
       const mockOrg = {
         id: 'org-new',
         name: 'New Organization',
@@ -422,8 +434,10 @@ describe('NetworkService', () => {
         json: () => Promise.resolve(mockOrg),
       });
 
-      const result =
-        await NetworkService.createOrganization('New Organization');
+      const result = await NetworkService.createOrganization(
+        'New Organization',
+        options
+      );
 
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining('/dashboard/network/organizations'),
@@ -432,7 +446,10 @@ describe('NetworkService', () => {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ organization: { name: 'New Organization' } }),
+          body: JSON.stringify({
+            organization: { name: 'New Organization' },
+            join,
+          }),
         })
       );
       expect(result.name).toBe('New Organization');
