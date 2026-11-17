@@ -46,5 +46,24 @@ defmodule CastmillWeb.ChallengeStoreTest do
 
       assert ChallengeStore.consume(challenge) == false
     end
+
+    test "sweep deletes only expired challenges" do
+      expired = Base.url_encode64(:crypto.strong_rand_bytes(32), padding: false)
+      valid = Base.url_encode64(:crypto.strong_rand_bytes(32), padding: false)
+
+      Castmill.Repo.insert_all("webauthn_challenges", [
+        %{challenge: expired, expires_at: DateTime.add(DateTime.utc_now(), -1, :second)}
+      ])
+
+      :ok = ChallengeStore.put(valid)
+
+      assert ChallengeStore.sweep() >= 1
+      assert ChallengeStore.consume(valid) == true
+      assert ChallengeStore.consume(expired) == false
+    end
+
+    test "the periodic sweep is off in tests" do
+      assert Application.get_env(:castmill, ChallengeStore)[:sweep] == false
+    end
   end
 end
