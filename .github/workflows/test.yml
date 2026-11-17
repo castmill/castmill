@@ -127,6 +127,7 @@ jobs:
       - run: yarn install --ignore-engines --frozen-lockfile --non-interactive
       - run: yarn build
       - run: yarn format:check
+      - run: yarn typecheck
       - run: yarn test --run
 
   test_player:

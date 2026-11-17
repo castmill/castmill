@@ -15,7 +15,8 @@
     "check-i18n": "node scripts/check-i18n.cjs",
     "check-translations": "node scripts/check-missing-translations.cjs",
     "lint:i18n": "node scripts/check-i18n.cjs",
-    "lint": "oxlint ."
+    "lint": "oxlint .",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@castmill/ui-common": "*",

@@ -8,6 +8,9 @@ export default defineConfig({
     globals: true,
     testTransformMode: { web: ['/.[jt]sx?$/'] },
     setupFiles: ['./vitest-setup.ts'],
+    // Pages with debounced searches can take a few seconds to settle when
+    // the whole suite runs in parallel (e.g. with coverage).
+    testTimeout: 15000,
     include: [
       'src/**/*.{test,spec}.?(c|m)[jt]s?(x)',
       '../castmill/lib/castmill/addons/**/services/*.{test,spec}.?(c|m)[jt]s?(x)',
