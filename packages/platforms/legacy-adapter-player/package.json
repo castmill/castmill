@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "format": "oxfmt --write .",
-    "format:check": "oxfmt .",
+    "format:check": "oxfmt --check .",
     "lint": "oxlint .",
     "typecheck": "tsc --noEmit",
     "start": "vite",

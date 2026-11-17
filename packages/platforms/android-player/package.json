@@ -7,7 +7,7 @@
   "main": "index.js",
   "scripts": {
     "format": "oxfmt --write .",
-    "format:check": "oxfmt .",
+    "format:check": "oxfmt --check .",
     "lint": "oxlint .",
     "start": "vite",
     "test": "vitest run",
