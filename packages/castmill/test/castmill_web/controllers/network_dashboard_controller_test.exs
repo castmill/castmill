@@ -620,6 +620,20 @@ defmodule CastmillWeb.NetworkDashboardControllerTest do
       refute Networks.is_network_admin?(other_admin.id, network.id)
     end
 
+    test "role changes reject a caller whose admin role was revoked", %{
+      network: network,
+      admin: admin
+    } do
+      other_admin = create_network_admin(network)
+      {:ok, _} = Networks.demote_from_network_admin(admin.id, network.id)
+
+      assert {:error, :actor_not_admin} =
+               Networks.promote_to_network_admin(admin.id, network.id, admin.id)
+
+      assert {:error, :actor_not_admin} =
+               Networks.demote_from_network_admin(other_admin.id, network.id, admin.id)
+    end
+
     test "cannot remove the final network admin", %{
       network: network,
       admin: admin

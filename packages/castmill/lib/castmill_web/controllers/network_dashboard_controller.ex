@@ -709,10 +709,12 @@ defmodule CastmillWeb.NetworkDashboardController do
   Only accessible to network admins. Blocked users must be unblocked first.
   """
   def promote_user(conn, %{"user_id" => user_id}) do
+    current_user = conn.assigns[:current_user]
+
     with {:ok, network_id} <- get_admin_network_id(conn),
          {:ok, target} <- fetch_network_user(network_id, user_id),
          :ok <- if(target.blocked_at, do: {:error, :blocked}, else: :ok),
-         {:ok, _} <- Networks.promote_to_network_admin(target.id, network_id) do
+         {:ok, _} <- Networks.promote_to_network_admin(target.id, network_id, current_user.id) do
       json(conn, %{success: true, user: user_to_json(target, :admin)})
     else
       error -> network_role_error(conn, error)
@@ -758,6 +760,7 @@ defmodule CastmillWeb.NetworkDashboardController do
     {status, message} =
       case reason do
         :not_admin -> {:forbidden, "You must be a network admin to manage network admins"}
+        :actor_not_admin -> {:forbidden, "You must be a network admin to manage network admins"}
         :not_found -> {:not_found, "User not found"}
         :self -> {:forbidden, "You cannot remove your own network admin role"}
         :blocked -> {:conflict, "Unblock this user before making them a network admin"}
