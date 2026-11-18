@@ -1,5 +1,11 @@
 import { Component, createSignal, createEffect } from 'solid-js';
-import { Button, FormItem, useToast } from '@castmill/ui-common';
+import {
+  Button,
+  DrawerFooter,
+  FormItem,
+  SaveBar,
+  useToast,
+} from '@castmill/ui-common';
 import { BsSave } from 'solid-icons/bs';
 import type { LayoutZone, LayoutOptionValue } from '@castmill/player';
 import {
@@ -156,7 +162,12 @@ export const LayoutView: Component<{
             <></>
           </FormItem>
         </div>
-        <div class="layout-actions">
+      </div>
+
+      <LayoutEditor value={layoutValue()} onChange={handleLayoutChange} t={t} />
+
+      <DrawerFooter>
+        <SaveBar dirty={hasChanges()} dirtyLabel={t('layouts.unsavedChanges')}>
           <Button
             onClick={handleSave}
             disabled={!hasChanges() || isSaving()}
@@ -164,10 +175,8 @@ export const LayoutView: Component<{
             label={isSaving() ? t('common.saving') : t('common.save')}
             icon={BsSave}
           />
-        </div>
-      </div>
-
-      <LayoutEditor value={layoutValue()} onChange={handleLayoutChange} />
+        </SaveBar>
+      </DrawerFooter>
     </div>
   );
 };

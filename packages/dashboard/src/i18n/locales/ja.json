@@ -1,6 +1,7 @@
 {
   "common": {
     "save": "保存",
+    "sections": "セクション",
     "saving": "保存中...",
     "cancel": "キャンセル",
     "delete": "削除",
@@ -108,14 +109,22 @@
     "selectVideo": "ビデオを選択",
     "widget": "Widget",
     "selectionHint": "チェックボックスを使用してアイテムを選択し、一括操作を実行します",
-    "selectionCount": "{count} 件選択中"
+    "selectionCount": "{count} 件選択中",
+    "sortBy": "並べ替え",
+    "sortAscending": "昇順",
+    "sortDescending": "降順",
+    "selectAll": "すべて選択",
+    "selectOption": "オプションを選択",
+    "selectRow": "行 {{id}} を選択"
   },
   "topbar": {
     "help": "ヘルプ",
     "notifications": "通知",
     "gettingStarted": "はじめに",
     "switchToLightMode": "ライトモードに切り替え",
-    "switchToDarkMode": "ダークモードに切り替え"
+    "switchToDarkMode": "ダークモードに切り替え",
+    "openNavigation": "ナビゲーションを開く",
+    "moreOptions": "その他のオプション"
   },
   "settings": {
     "title": "設定",
@@ -610,9 +619,14 @@
     "removeTeams": "チームを削除",
     "confirmRemoveTeam": "チーム「{{name}}」を削除してもよろしいですか？",
     "confirmRemoveTeams": "以下のチームを削除してもよろしいですか？",
-    "addedOn": "追加日",
-    "lastUpdatedOn": "最終更新日",
     "enterTeamName": "チーム名を入力してください",
+    "summary": "チームの概要",
+    "created": "{{time}}に作成",
+    "updated": "{{time}}に更新",
+    "unsavedChanges": "未保存の変更",
+    "teamCreated": "チーム {{name}} を作成しました",
+    "teamUpdated": "チーム {{name}} を更新しました",
+    "teamRemoved": "チーム {{name}} を削除しました",
     "insertedAt": "挿入日時",
     "expiresAt": "有効期限",
     "inviteMember": "メンバーを招待",
@@ -632,7 +646,9 @@
       "removeResource": "チームからリソースを削除中にエラーが発生しました：{{error}}",
       "removeResources": "チームからリソースを削除中にエラーが発生しました：{{error}}",
       "addResourceToTeam": "チームにリソースを追加中にエラーが発生しました：{{error}}",
-      "cannotRemoveLastAdmin": "チームの最後の管理者を削除することはできません。"
+      "cannotRemoveLastAdmin": "チームの最後の管理者を削除することはできません。",
+      "nameRequired": "名前は必須です",
+      "nameMinLength": "名前は{{min}}文字以上である必要があります"
     },
     "confirmAddResources": "以下のリソースを追加してもよろしいですか？",
     "messages": {
@@ -704,7 +720,8 @@
       "deleteGroup": "グループを削除",
       "noGroups": "タググループなし",
       "ungrouped": "グループなし",
-      "untagged": "タグなし"
+      "untagged": "タグなし",
+      "organizeBy": "整理基準"
     },
     "messages": {
       "tagCreated": "タグ「{{name}}」を正常に作成しました",
@@ -811,6 +828,7 @@
     "tags": "タグ",
     "agents": "エージェント",
     "feeds": "フィード",
+    "navigation": "ナビゲーション",
     "requiresOrganization": "組織が必要です"
   },
   "channels": {
@@ -839,7 +857,8 @@
       "created": "チャンネル{{name}}を作成しました",
       "updated": "チャンネル{{name}}を更新しました",
       "updateDefaultPlaylist": "デフォルトプレイリストの更新に成功しました",
-      "clearDefaultPlaylist": "デフォルトプレイリストのクリアに成功しました"
+      "clearDefaultPlaylist": "デフォルトプレイリストのクリアに成功しました",
+      "updateChannelEntry": "チャンネルエントリを更新しました"
     },
     "info": {
       "contentRequired": "コンテンツを表示するには、このチャンネルにデフォルトのプレイリストを設定するか、時間指定のエントリーを追加してください。"
@@ -853,6 +872,20 @@
       "clearDefaultPlaylist": "チャンネルのデフォルトプレイリストのクリアに失敗しました：{{error}}",
       "updateChannelEntry": "チャンネルエントリーの更新中にエラーが発生しました：{{error}}",
       "loadPlaylists": "次のページのプレイリストを読み込めませんでした: {{pages}}。"
+    },
+    "calendar": {
+      "previousWeek": "前の週",
+      "nextWeek": "次の週",
+      "previousDay": "前の日",
+      "nextDay": "次の日",
+      "today": "今日",
+      "tapToAdd": "時間枠をタップして、スケジュールにプレイリストを追加します。",
+      "addEntry": "スケジュールに追加",
+      "startsAt": "{{date}} {{time}} 開始",
+      "duration": "長さ",
+      "untilEndOfDay": "一日の終わりまで",
+      "slotUnavailable": "この時間枠は他のエントリと重なっているか、週に収まりません。",
+      "confirmRemoveEntry": "エントリ「{{title}}」を削除してもよろしいですか？"
     }
   },
   "organization": {
@@ -1045,7 +1078,52 @@
     "selectLayout": "レイアウトを選択",
     "searchLayouts": "レイアウトを検索...",
     "assignPlaylists": "ゾーンにプレイリストを割り当て",
-    "zonesCount": "{{count}}個のゾーン"
+    "zonesCount": "{{count}}個のゾーン",
+    "unsavedChanges": "未保存の変更",
+    "editor": {
+      "customRatio": "カスタム…",
+      "ratioWidth": "比率の幅",
+      "ratioHeight": "比率の高さ",
+      "maxZones": "ゾーンは最大 {{count}} 個までです",
+      "size": "サイズ",
+      "width": "幅",
+      "height": "高さ",
+      "full": "全体",
+      "fillWidth": "幅を埋める (100%)",
+      "fillHeight": "高さを埋める (100%)",
+      "fillBoth": "幅と高さを埋める (100% × 100%)",
+      "setWidth": "幅を {{size}} に設定",
+      "setWidthAdjusted": "幅を {{size}} に設定 (高さを調整)",
+      "setHeight": "高さを {{size}} に設定",
+      "setHeightAdjusted": "高さを {{size}} に設定 (幅を調整)",
+      "zoneRatio": "ゾーン比率",
+      "none": "なし",
+      "selectZoneFirst": "先にゾーンを選択してください",
+      "aspectLocked": "無効: ゾーンのアスペクト比が崩れます",
+      "distributeColumns": "列に配置",
+      "distributeColumnsHint": "すべてのゾーンを列に均等配置",
+      "distributeRows": "行に配置",
+      "distributeRowsHint": "すべてのゾーンを行に均等配置",
+      "noSelection": "プロパティを編集するゾーンを選択してください",
+      "widthShort": "幅",
+      "heightShort": "高",
+      "deleteZone": "ゾーンを削除",
+      "zonesHeading": "ゾーン ({{count}})",
+      "layer": "レイヤー {{value}}",
+      "zoneName": "ゾーン {{number}}",
+      "templates": {
+        "fullScreen": "全画面",
+        "twoColumns": "2 列",
+        "threeColumns": "3 列",
+        "twoRows": "2 行",
+        "threeRows": "3 行",
+        "grid2x2": "2×2 グリッド",
+        "grid3x3": "3×3 グリッド",
+        "mainSidebar": "メイン + サイドバー",
+        "headerContent": "ヘッダー + コンテンツ",
+        "pictureInPicture": "ピクチャー・イン・ピクチャー"
+      }
+    }
   },
   "widgets": {
     "scope": {
@@ -1198,6 +1276,17 @@
         "networkError": "サーバーに接続できません。接続を確認してください。",
         "unknown": "項目を読み込めませんでした。"
       }
+    },
+    "details": {
+      "updatesEvery": "{{seconds}}秒ごとに更新",
+      "copySlug": "ウィジェット識別子をコピー",
+      "slugCopied": "ウィジェット識別子をコピーしました",
+      "copySlugFailed": "ウィジェット識別子をコピーできませんでした。"
+    },
+    "json": {
+      "copy": "JSON をコピー",
+      "copied": "JSON をコピーしました",
+      "copyFailed": "JSON をコピーできませんでした。"
     }
   },
   "devices": {
@@ -1561,7 +1650,8 @@
     "tagFilterModeAny": "いずれか",
     "tagFilterModeAll": "すべて",
     "noMatches": "一致なし",
-    "noItems": "項目なし"
+    "noItems": "項目なし",
+    "toggle": "フィルター"
   },
   "shortcuts": {
     "showShortcutsLegend": "キーボードショートカットを表示",
@@ -1698,7 +1788,25 @@
     },
     "drawerTitle": "メディア \"{{name}}\"",
     "mediaUpdated": "メディア \"{{name}}\" が正常に更新されました",
-    "errorUpdating": "メディア {{name}} の更新エラー：{{error}}"
+    "errorUpdating": "メディア {{name}} の更新エラー：{{error}}",
+    "details": {
+      "summary": "メディアの概要",
+      "copyId": "メディアIDをコピー",
+      "copied": "メディアIDをコピーしました",
+      "copyFailed": "メディアIDをコピーできませんでした。",
+      "added": "{{time}}に追加",
+      "updated": "{{time}}に更新",
+      "dimensions": "サイズ",
+      "duration": "再生時間",
+      "namePlaceholder": "メディア名を入力",
+      "nameRequired": "名前は必須です",
+      "nameTooShort": "名前は5文字以上である必要があります",
+      "noPreview": "プレビューはありません",
+      "types": {
+        "image": "画像",
+        "video": "動画"
+      }
+    }
   },
   "dashboard": {
     "noOrganizations": {

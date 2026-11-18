@@ -35,11 +35,23 @@ describe('automation markers', () => {
   it('computes the absolute style of a marker', () => {
     expect(markerStyle({ dayIndex: 0, minutes: 0 }, 20)).toEqual({
       top: '0px',
-      left: '10%',
-      width: `${90 / 7}%`,
+      'inset-inline-start':
+        'calc(var(--time-col-width) + (100% - var(--time-col-width)) * 0 / 7)',
+      width: 'calc((100% - var(--time-col-width)) / 7)',
     });
     const style = markerStyle({ dayIndex: 2, minutes: 720 }, 20);
     expect(style.top).toBe('480px');
-    expect(style.left).toBe(`${10 + 2 * (90 / 7)}%`);
+    expect(style['inset-inline-start']).toBe(
+      'calc(var(--time-col-width) + (100% - var(--time-col-width)) * 2 / 7)'
+    );
+  });
+
+  it('places a marker in a single-day column', () => {
+    const style = markerStyle({ dayIndex: 4, minutes: 60 }, 30, 0, 1);
+    expect(style.top).toBe('60px');
+    expect(style['inset-inline-start']).toBe(
+      'calc(var(--time-col-width) + (100% - var(--time-col-width)) * 0 / 1)'
+    );
+    expect(style.width).toBe('calc((100% - var(--time-col-width)) / 1)');
   });
 });

@@ -121,7 +121,11 @@ describe('NetworkOrganizations', () => {
     renderOrganizations();
     await waitFor(() => screen.getByText('Organization 1'));
 
-    fireEvent.click(screen.getAllByTitle('Integration settings')[0]);
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Integration settings Organization 1',
+      })
+    );
     await waitFor(() =>
       expect(
         screen.getByText('Integration settings – Organization 1')
@@ -137,6 +141,28 @@ describe('NetworkOrganizations', () => {
         screen.queryByText('Integration settings – Organization 1')
       ).toBeNull()
     );
+  });
+
+  it('blocks through a phone-ready modal with a sticky action row', async () => {
+    renderOrganizations();
+    await waitFor(() => screen.getByText('Organization 1'));
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Block Organization 1' })
+    );
+    await waitFor(() =>
+      expect(screen.getByText('Block Organization')).toBeInTheDocument()
+    );
+
+    const reason = screen.getByLabelText('Reason (optional)');
+    const form = reason.closest('[class*="block-form"]');
+    expect(form).not.toBeNull();
+    expect(form!.classList.contains('block-form')).toBe(false);
+
+    const actions = form!.querySelector('[data-modal-actions]');
+    expect(actions).not.toBeNull();
+    expect(actions!.className).toContain('modal-actions');
+    expect(actions!.querySelectorAll('button')).toHaveLength(2);
   });
 
   it('creates a new organization', async () => {
@@ -221,7 +247,7 @@ describe('NetworkOrganizations', () => {
     renderOrganizations();
     await waitFor(() => screen.getByText('Organization 2'));
 
-    const joinButtons = screen.getAllByTitle('Join as an administrator');
+    const joinButtons = screen.getAllByRole('button', { name: /^Join / });
     expect(joinButtons).toHaveLength(1);
     fireEvent.click(joinButtons[0]);
 
@@ -233,7 +259,7 @@ describe('NetworkOrganizations', () => {
     expect(NetworkService.joinOrganization).toHaveBeenCalledWith('org-2');
     expect(store.organizations.selectedId).toBe('org-2');
     await waitFor(() =>
-      expect(screen.queryByTitle('Join as an administrator')).toBeNull()
+      expect(screen.queryByRole('button', { name: /^Join / })).toBeNull()
     );
   });
 
@@ -244,7 +270,9 @@ describe('NetworkOrganizations', () => {
     renderOrganizations();
     await waitFor(() => screen.getByText('Organization 1'));
 
-    fireEvent.click(screen.getAllByTitle('Join as an administrator')[0]);
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Join Organization 1' })
+    );
 
     await waitFor(() =>
       expect(toastSpies.error).toHaveBeenCalledWith(

@@ -2,14 +2,7 @@
  * Network Users & Invitations page — invite, list, block/unblock, delete users;
  * list and delete pending invitations.
  */
-import {
-  Component,
-  Show,
-  For,
-  createSignal,
-  onMount,
-  onCleanup,
-} from 'solid-js';
+import { Component, Show, createSignal, onMount, onCleanup } from 'solid-js';
 import {
   Button,
   FormItem,
@@ -18,6 +11,10 @@ import {
   Modal,
   ComboBox,
   Dropdown,
+  Table,
+  type Column,
+  type TableAction,
+  tableCardLabels,
 } from '@castmill/ui-common';
 import {
   NetworkService,
@@ -41,6 +38,7 @@ import styles from './network.module.scss';
 const NetworkUsers: Component = () => {
   const { t } = useI18n();
   const toast = useToast();
+  const cardLabels = tableCardLabels(t);
   const { stats, setStats } = useNetworkContext();
   let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
@@ -346,6 +344,126 @@ const NetworkUsers: Component = () => {
     }
   };
 
+  const userColumns = (): Column<string, NetworkUser>[] => [
+    { key: 'name', title: () => t('network.users.name') },
+    { key: 'email', title: () => t('network.users.email') },
+    {
+      key: 'role',
+      title: () => t('network.users.networkRole'),
+      render: (user) => (
+        <Show
+          when={isNetworkAdmin(user)}
+          fallback={
+            <span class={styles['role-member']}>
+              {t('network.users.networkMember')}
+            </span>
+          }
+        >
+          <span class={styles['role-admin']}>
+            {t('network.users.networkAdmin')}
+          </span>
+        </Show>
+      ),
+    },
+    {
+      key: 'blocked_at',
+      title: () => t('common.status'),
+      render: (user) => (
+        <Show
+          when={user.blocked_at}
+          fallback={
+            <span class={styles['status-active']}>
+              {t('network.status.active')}
+            </span>
+          }
+        >
+          <span
+            class={styles['status-blocked']}
+            title={user.blocked_reason || ''}
+          >
+            {t('network.status.blocked')}
+          </span>
+        </Show>
+      ),
+    },
+    {
+      key: 'inserted_at',
+      title: () => t('common.created'),
+      render: (user) => new Date(user.inserted_at).toLocaleDateString(),
+    },
+  ];
+
+  const userActions = (): TableAction<NetworkUser>[] => [
+    {
+      icon: BsShieldPlus,
+      label: () => t('network.users.makeAdmin'),
+      hidden: (user) =>
+        isNetworkAdmin(user) || !!user.blocked_at || isSelf(user),
+      handler: (user) => setUserToPromote(user),
+    },
+    {
+      icon: BsShieldMinus,
+      label: () => t('network.users.removeAdmin'),
+      hidden: (user) => !isNetworkAdmin(user) || isSelf(user),
+      handler: (user) => setUserToDemote(user),
+    },
+    {
+      icon: BsSlashCircle,
+      label: () => t('network.users.block'),
+      hidden: (user) =>
+        !!user.blocked_at || isNetworkAdmin(user) || isSelf(user),
+      handler: (user) => setUserToBlock(user),
+    },
+    {
+      icon: BsUnlock,
+      label: () => t('network.users.unblock'),
+      hidden: (user) => !user.blocked_at || isSelf(user),
+      handler: (user) => setUserToUnblock(user),
+    },
+    {
+      icon: BsTrash,
+      label: () => t('common.delete'),
+      hidden: (user) => isNetworkAdmin(user) || isSelf(user),
+      handler: (user) => setUserToDelete(user),
+    },
+  ];
+
+  const invitationColumns = (): Column<string, NetworkInvitation>[] => [
+    { key: 'email', title: () => t('common.email') },
+    {
+      key: 'organization_name',
+      title: () => t('network.invitations.organizationName'),
+    },
+    { key: 'role', title: () => t('network.users.roleLabel') },
+    {
+      key: 'status',
+      title: () => t('common.status'),
+      render: (invitation) => (
+        <span class={styles['status-pending']}>{invitation.status}</span>
+      ),
+    },
+    {
+      key: 'inserted_at',
+      title: () => t('common.created'),
+      render: (invitation) =>
+        new Date(invitation.inserted_at).toLocaleDateString(),
+    },
+    {
+      key: 'expires_at',
+      title: () => t('network.invitations.expires'),
+      render: (invitation) =>
+        new Date(invitation.expires_at).toLocaleDateString(),
+    },
+  ];
+
+  const invitationActions = (): TableAction<NetworkInvitation>[] => [
+    {
+      icon: BsTrash,
+      label: () => t('common.delete'),
+      handler: (invitation) => setInvitationToDelete(invitation),
+    },
+  ];
+
   return (
     <div class={styles['network-page']}>
       {/* Header */}
@@ -416,134 +534,15 @@ const NetworkUsers: Component = () => {
               </div>
             }
           >
-            <table class={styles['data-table']}>
-              <thead>
-                <tr>
-                  <th>{t('network.users.name')}</th>
-                  <th>{t('network.users.email')}</th>
-                  <th>{t('network.users.networkRole')}</th>
-                  <th>{t('common.status')}</th>
-                  <th>{t('common.created')}</th>
-                  <th class={styles['actions-column']}>
-                    {t('common.actions')}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <For each={users()}>
-                  {(user) => (
-                    <tr class={user.blocked_at ? styles['blocked-row'] : ''}>
-                      <td>{user.name}</td>
-                      <td>{user.email}</td>
-                      <td>
-                        <Show
-                          when={isNetworkAdmin(user)}
-                          fallback={
-                            <span class={styles['role-member']}>
-                              {t('network.users.networkMember')}
-                            </span>
-                          }
-                        >
-                          <span class={styles['role-admin']}>
-                            {t('network.users.networkAdmin')}
-                          </span>
-                        </Show>
-                      </td>
-                      <td>
-                        <Show
-                          when={user.blocked_at}
-                          fallback={
-                            <span class={styles['status-active']}>
-                              {t('network.status.active')}
-                            </span>
-                          }
-                        >
-                          <span
-                            class={styles['status-blocked']}
-                            title={user.blocked_reason || ''}
-                          >
-                            {t('network.status.blocked')}
-                          </span>
-                        </Show>
-                      </td>
-                      <td>{new Date(user.inserted_at).toLocaleDateString()}</td>
-                      <td>
-                        <div class={styles['actions-row']}>
-                          <Show
-                            when={isNetworkAdmin(user)}
-                            fallback={
-                              <Show when={!user.blocked_at}>
-                                <Button
-                                  label=""
-                                  icon={BsShieldPlus}
-                                  color="primary"
-                                  onClick={() => setUserToPromote(user)}
-                                  title={t('network.users.makeAdmin')}
-                                />
-                              </Show>
-                            }
-                          >
-                            <Show when={!isSelf(user)}>
-                              <Button
-                                label=""
-                                icon={BsShieldMinus}
-                                color="warning"
-                                onClick={() => setUserToDemote(user)}
-                                title={t('network.users.removeAdmin')}
-                              />
-                            </Show>
-                          </Show>
-                          <Show
-                            when={
-                              isNetworkAdmin(user) &&
-                              user.blocked_at &&
-                              !isSelf(user)
-                            }
-                          >
-                            <Button
-                              label=""
-                              icon={BsUnlock}
-                              color="success"
-                              onClick={() => setUserToUnblock(user)}
-                              title={t('network.users.unblock')}
-                            />
-                          </Show>
-                          <Show when={!isNetworkAdmin(user) && !isSelf(user)}>
-                            <Show
-                              when={user.blocked_at}
-                              fallback={
-                                <Button
-                                  label=""
-                                  icon={BsSlashCircle}
-                                  color="warning"
-                                  onClick={() => setUserToBlock(user)}
-                                  title={t('network.users.block')}
-                                />
-                              }
-                            >
-                              <Button
-                                label=""
-                                icon={BsUnlock}
-                                color="success"
-                                onClick={() => setUserToUnblock(user)}
-                                title={t('network.users.unblock')}
-                              />
-                            </Show>
-                            <Button
-                              label=""
-                              icon={BsTrash}
-                              color="danger"
-                              onClick={() => setUserToDelete(user)}
-                              title={t('common.delete')}
-                            />
-                          </Show>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </For>
-              </tbody>
-            </table>
+            <Table<string, NetworkUser>
+              cardLayout
+              cardLabels={cardLabels}
+              hideCheckboxes
+              columns={userColumns}
+              data={users()}
+              actions={userActions}
+              actionsLabel={() => t('common.actions')}
+            />
 
             {/* Pagination */}
             <Show when={usersTotalPages() > 1}>
@@ -606,56 +605,15 @@ const NetworkUsers: Component = () => {
                 </div>
               }
             >
-              <table class={styles['data-table']}>
-                <thead>
-                  <tr>
-                    <th>{t('common.email')}</th>
-                    <th>{t('network.invitations.organizationName')}</th>
-                    <th>{t('network.users.roleLabel')}</th>
-                    <th>{t('common.status')}</th>
-                    <th>{t('common.created')}</th>
-                    <th>{t('network.invitations.expires')}</th>
-                    <th class={styles['actions-column']}>
-                      {t('common.actions')}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <For each={invitations()}>
-                    {(invitation) => (
-                      <tr>
-                        <td>{invitation.email}</td>
-                        <td>{invitation.organization_name}</td>
-                        <td>{invitation.role}</td>
-                        <td>
-                          <span class={styles['status-pending']}>
-                            {invitation.status}
-                          </span>
-                        </td>
-                        <td>
-                          {new Date(
-                            invitation.inserted_at
-                          ).toLocaleDateString()}
-                        </td>
-                        <td>
-                          {new Date(invitation.expires_at).toLocaleDateString()}
-                        </td>
-                        <td>
-                          <div class={styles['actions-row']}>
-                            <Button
-                              label=""
-                              icon={BsTrash}
-                              color="danger"
-                              onClick={() => setInvitationToDelete(invitation)}
-                              title={t('common.delete')}
-                            />
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </For>
-                </tbody>
-              </table>
+              <Table<string, NetworkInvitation>
+                cardLayout
+                cardLabels={cardLabels}
+                hideCheckboxes
+                columns={invitationColumns}
+                data={invitations()}
+                actions={invitationActions}
+                actionsLabel={() => t('common.actions')}
+              />
             </Show>
           </Show>
         </div>
@@ -728,7 +686,7 @@ const NetworkUsers: Component = () => {
               <div class={styles['error-message']}>{inviteError()}</div>
             </Show>
 
-            <div class={styles['modal-actions']}>
+            <div class={styles['modal-actions']} data-modal-actions>
               <Button
                 label={
                   inviting()
@@ -776,7 +734,7 @@ const NetworkUsers: Component = () => {
               placeholder={t('network.blockReasonPlaceholder')}
               onInput={(value) => setBlockUserReason(value as string)}
             />
-            <div class={styles['modal-actions']}>
+            <div class={styles['modal-actions']} data-modal-actions>
               <Button
                 label={
                   blockingUser()

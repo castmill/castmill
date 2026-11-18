@@ -44,7 +44,7 @@ const PanelItem: Component<PanelItemProps> = (props) => {
           </span>
         }
       >
-        <A href={props.to} end={false}>
+        <A href={props.to} end={false} title={props.text}>
           {props.icon && <props.icon></props.icon>}
           <span>{props.text}</span>
         </A>

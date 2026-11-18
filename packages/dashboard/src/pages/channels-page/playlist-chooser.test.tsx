@@ -18,11 +18,56 @@ vi.mock('../../services/channels.service', () => ({
     fetchPlaylists = mocks.fetchPlaylists;
   },
 }));
+vi.mock('../../components/auth', () => ({ authFetch: vi.fn() }));
 
 describe('PlaylistChooser', () => {
   afterEach(() => {
     cleanup();
     vi.clearAllMocks();
+  });
+
+  it('renders the side panel with a heading by default', async () => {
+    mocks.fetchPlaylists.mockResolvedValueOnce({
+      data: [
+        { id: 1, name: 'Morning' },
+        { id: 2, name: 'Evening' },
+      ],
+      count: 2,
+    });
+
+    const { container } = render(() => (
+      <I18nProvider>
+        <PlaylistChooser />
+      </I18nProvider>
+    ));
+
+    expect(
+      screen.getByRole('heading', { name: 'Drag playlists' })
+    ).toBeInTheDocument();
+    expect(await screen.findByText('Morning')).toBeInTheDocument();
+    expect(screen.getByText('Evening')).toBeInTheDocument();
+    expect(container.firstElementChild!.className).toBe('');
+  });
+
+  it('renders a compact strip without a heading', async () => {
+    mocks.fetchPlaylists.mockResolvedValueOnce({
+      data: [
+        { id: 1, name: 'Morning' },
+        { id: 2, name: 'Evening' },
+      ],
+      count: 2,
+    });
+
+    const { container } = render(() => (
+      <I18nProvider>
+        <PlaylistChooser variant="strip" />
+      </I18nProvider>
+    ));
+
+    expect(screen.queryByRole('heading')).not.toBeInTheDocument();
+    expect(screen.getByText('Drag playlists')).toBeInTheDocument();
+    expect(await screen.findByText('Morning')).toBeInTheDocument();
+    expect(container.firstElementChild!.className).toMatch(/strip/);
   });
 
   it('reports playlists from every page', async () => {

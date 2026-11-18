@@ -236,7 +236,7 @@ export const FeedConnect: Component<FeedConnectProps> = (props) => {
               placeholder={t('feeds.tokens.namePlaceholder')}
               onInput={(event) => setTokenName(event.currentTarget.value)}
             />
-            <div class={styles.formActions}>
+            <div class={styles.formActions} data-modal-actions>
               <Button
                 label={t('common.cancel')}
                 color="secondary"
@@ -273,7 +273,7 @@ export const FeedConnect: Component<FeedConnectProps> = (props) => {
                 {curlExample(props.feed.endpoints.append, value())}
               </pre>
             </Show>
-            <div class={styles.formActions}>
+            <div class={styles.formActions} data-modal-actions>
               <Button
                 label={t('feeds.tokens.done')}
                 color="primary"

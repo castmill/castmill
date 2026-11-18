@@ -1,5 +1,5 @@
 .devices-page {
-  margin: 2em;
+  margin: var(--cm-page-gutter, 2em);
 }
 
 .device-tree-item {

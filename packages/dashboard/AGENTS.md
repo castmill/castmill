@@ -67,6 +67,43 @@ in a hover/focus tooltip; omit successful application text while retaining
 pending, offline, unsupported-player, and error feedback.
 Registration and diagnostics are not part of the playback rotation subtree.
 
+## Responsive App Shell
+
+The side panel (`components/sidepanel`) and top bar (`components/topbar`) adapt
+to the viewport. Breakpoints and shared state live in
+`components/sidepanel/nav-drawer.ts`:
+
+| Viewport                         | Side panel (`data-mode`)  | Top bar                                       |
+| -------------------------------- | ------------------------- | --------------------------------------------- |
+| `≤ 48em` (phones, 768px tablets) | `drawer` (off-canvas)     | Compact (`.castmill-header--compact`)         |
+| `48em – 64em` (1024px tablets)   | `rail` (icon-only)        | Full bar, menu button, avatar, icon-only help |
+| `> 64em`                         | `static` (15rem column)   | Full bar, no menu button                      |
+
+- `navDrawer` is a module-level store (`isOpen`, `open`, `close`, `toggle`,
+  `isAvailable`). `SidePanel` calls `navDrawer.register()` on mount, and the
+  top bar only shows its menu button while a side panel is registered.
+- The open drawer is a `role="dialog"` with `aria-modal`. It traps Tab focus,
+  closes on Escape, backdrop tap, the close button and any `location.pathname`
+  change, then restores focus to the trigger. It slides in from the inline
+  start, so from the right in Arabic. It sits at z-index 950, below
+  Modal/Drawer (1000).
+- Rail mode hides link text visually; `PanelItem` links carry a `title` tooltip
+  and keep their accessible names.
+- Compact top bar: menu button, logo, search icon (expands to a full-width
+  `Search` with `autoFocus`/`onDone`), notifications, overflow menu
+  (`topbar-overflow-menu.tsx`: onboarding, theme, language, help, shortcuts)
+  and the user avatar. The overflow trigger keeps
+  `data-onboarding="getting-started"`. While the menu is closed, its root
+  carries `data-onboarding="language-selector"`; the tour's click opens the
+  menu and focuses the language `<select>`.
+- Keyboard-shortcut UI (legend, keyboard icon, `Ctrl+F` chip) is hidden on
+  touch devices (`(hover: none), (pointer: coarse)`).
+- Use `mockViewport()` from `sidepanel/viewport.test-utils.ts` to test layouts;
+  jsdom has no `matchMedia`, so components otherwise render the desktop layout.
+  For other `matchMedia` stubs use `mockMatchMedia()` from
+  `@castmill/ui-common/testing` (boolean, query list or predicate; `set()`
+  notifies listeners, `restore()` puts the original back).
+
 ## Playlist Editor Drawer
 
 The widget picker uses `PlaylistsService.getWidgets` to load every available
@@ -85,9 +122,9 @@ must be logged and must not publish guessed offsets as successfully measured.
 
 `addons/playlists/components/playlist-view.tsx` follows the Device Details
 drawer design: a summary bar, sticky section tabs and dark cards.
-`WIDE_LAYOUT_QUERY` (`createMediaQuery`, 64em) chooses the layout, but only
-if a ResizeObserver also measures the editor at `WIDE_LAYOUT_MIN_EM` (57em) or
-more. This keeps tablets with an enlarged layout viewport on tabs. Wide screens
+`useWideLayout` (ui-common) with `WIDE_LAYOUT_QUERY` (64em) chooses the layout,
+but only if its ResizeObserver also measures the editor at `WIDE_LAYOUT_MIN_EM`
+(57em) or more. This keeps tablets with an enlarged layout viewport on tabs. Wide screens
 show Widgets | Items | Preview side by side, with Content and Settings tabs.
 Narrow screens use Content, Preview and Settings tabs, and "Add widget" opens a
 tap-to-add widget picker. While it's open (`.playlist-view.picking`), the
@@ -137,6 +174,29 @@ Shared mobile behaviour (ui-common):
 - `Drawer` default/`size` widths use `:where()` (below class specificity), so a
   single-class `contentClass` width always wins. Addon bundles each inject their
   own copy of ui-common CSS on load, so never rely on stylesheet order.
+- Size drawers only with the `size` prop (`sm | md | lg | xl`). Don't set
+  width/height through `contentClass`; it fights the built-in sizing and the
+  ≤50em full-screen mode. Put sticky Save/Reset actions in the Drawer `footer`,
+  or render `<DrawerFooter>` from a view nested inside the Drawer to portal
+  them there (falls back to inline outside a Drawer).
+- With `closeOnOutsideClick`, a plain click on a link to another URL (e.g. a
+  menu item) hides the drawer immediately **without** calling `onClose`:
+  the owner's `closeDetailUrl` (`history.back()`) would race with and undo
+  the navigation. Addon pages aren't disposed on route changes, so the
+  portaled drawer must hide itself. Same-URL, new-tab and modified clicks
+  close normally; rows matching `outsideClickIgnoreSelector` keep it open.
+  Owners must derive their open state from the URL (`useModalFromUrl`, or the
+  router `location` for path-based items) so same-page links still close it.
+- Save/Reset rows use ui-common `SaveBar` (`dirty`, localized `dirtyLabel`):
+  right-aligned buttons, an `aria-live` unsaved-changes status and stretched
+  buttons on narrow phones. Don't hand-roll dirty footers.
+- Details views share ui-common primitives: `DetailsSummary` (status pills,
+  note, meta chips and a copy-ID button; `compact` gives the slim strip on
+  phones and coarse pointers), `SectionCard`/`SectionCardHeader` (icon, title,
+  count, description, header actions and a `footer` for Save/Reset; the title
+  is optional, `titleId`/`aria-*`/`ref` are forwarded), and the
+  `useMediaQuery`/`useWideLayout` hooks (media query plus a container
+  ResizeObserver). Pass localized labels; the primitives contain no strings.
 - `ComboBox` opens a bottom sheet (Portal, `[data-combobox-sheet]`) when
   `COMBOBOX_SHEET_QUERY` matches (phones and touch tablets). Otherwise it flips
   upward when there is no room below. Pass `closeLabel={t('common.close')}`.
@@ -147,6 +207,108 @@ Shared mobile behaviour (ui-common):
   full-screen modal content with `100%` of the overlay (and
   `box-sizing: border-box`), not `100vw`/`100dvh`.
   Drawers ignore outside clicks inside the sheet.
+- Open Modal/Drawer panels and active Tabs must settle to `transform: none`,
+  without `will-change: transform`. Identity transforms still create a
+  transformed containing block and can detach native select popups from their
+  controls on mobile. Keep transforms only in the opening/closing states.
+- Native single-choice `<select>`s need no per-component mobile work. The root
+  `SelectSheetHost` (mounted once in `src/index.tsx`) intercepts taps,
+  clicks and Enter/Space when `COMBOBOX_SHEET_QUERY` matches. It shows the
+  options in a bottom sheet titled by the select's label and writes the choice
+  back with native `input`/`change` events. This also covers addon selects.
+  Give every select a `<label for>` or `aria-label` so the sheet has a title.
+  Add `data-native-select` only to opt out. Desktop keeps the native popup.
+  Sheet taps do not propagate, so popover outside-click handlers stay open.
+- `Tabs` is an ARIA tablist (Arrow keys mirrored in RTL, Home/End) whose rail
+  scrolls horizontally instead of squeezing labels; the active tab is scrolled
+  into view and hidden edges fade. Give each `TabItem` an `icon` so inactive
+  tabs collapse to icon-only at ≤36em (the title stays as tooltip and
+  accessible name), and pass `ariaLabel={t('common.sections')}`.
+- Custom tablists (Device/Playlist section tabs, segmented controls) reuse
+  `tabKeyTarget(event, current, count)` and `revealTab(el, focus)` from
+  ui-common for the same roving keyboard behaviour; give the active tab
+  `tabIndex=0` and the others `-1`.
+
+## Channel Details Drawer
+
+The channel schedule (`src/pages/channels-page/calendar-view.tsx`) has three
+layouts, exposed as `data-layout` on the calendar root:
+
+- `wide` (`WIDE_CALENDAR_QUERY`, ≥64em, fine pointer, calendar ≥50em wide):
+  week grid with the `PlaylistChooser` side panel; drag playlists onto slots
+  and drag/resize entries.
+- `narrow` (tablets and touch devices): full-width week grid; the chooser is a
+  collapsible horizontal strip (`variant="strip"`) above the calendar.
+- `day` (`DAY_VIEW_QUERY`, ≤40em): a single day with previous/next day buttons
+  and horizontal swipe paging (mirrored in RTL). Paging past Monday/Sunday
+  changes the week, so `onWeekChange` still fires.
+
+On touch layouts tapping a free slot opens `CalendarAddEntry` (duration and
+playlist `ComboBox` bottom sheets, avoiding native picker positioning).
+Placement uses the same overlap and end-of-week checks as drag and drop
+(`isValidPlacement`). Entry boxes and
+automation markers are clipped to the visible days, and they are measured from
+the cell refs, so keep cells registered synchronously and use the outer edges
+of the first and last day cells (days run right-to-left in RTL). Calendar
+height is relative to the viewport (`clamp(20em, 60dvh, 50em)`); never style
+`html`/`body` from the calendar styles.
+
+## Layout Editor
+
+- `LayoutEditor` (`addons/common/components/layout-editor`) is shared by the
+  Layouts drawer and the playlist widget config. It measures its own width
+  with a ResizeObserver and adds `layout-editor--stacked` below
+  `STACKED_MAX_WIDTH_EM` (48em): properties and the zone list move below the
+  canvas. Never switch this on the viewport; embeds can be narrow on desktop.
+- Zone move/resize uses Pointer Events (mouse, pen and touch) with
+  `touch-action: none` on zones and handles; only the primary pointer drives
+  a drag and `pointercancel` ends it. Handles grow on `(pointer: coarse)`.
+- The canvas is `dir="ltr"`: zone rects are physical screen geometry, also in
+  Arabic. Pass `t` to the editor; its strings live under `layouts.editor.*`.
+- The Layouts drawer puts its `SaveBar` in the Drawer footer via
+  `DrawerFooter`, like media details.
+
+## Team Details Drawer
+
+`pages/teams-page/team-view.tsx` owns its `Drawer` so the form state and the
+Save/Reset footer stay together. The footer's submit button targets the form
+through the `form` attribute. Keep the members/invitations tabs outside that
+form; otherwise pressing Enter in a table search field submits the team.
+Existing teams show a compact `DetailsSummary` with the name, member count
+(reloaded when a member is removed), and localized created/updated times.
+Teams from the API use `inserted_at`/`updated_at`. The nested tables use
+`cardLayout`; pass `locale={locale()}` to `Timestamp` cells.
+
+## Responsive List Pages
+
+List pages (Devices, Medias, Playlists, Channels, Layouts, Widgets, Teams,
+Tags, Feeds, Agents, Automations, Network) rely on the shared ui-common
+components for phone/tablet layouts (see
+`agents/packages/ui-common/README.md`, "Responsive List Pages"):
+
+- `TableView` renders stacked cards in narrow containers by default; always
+  pass `cardLabels: tableCardLabels(t)` from `@castmill/ui-common`. Direct `<Table>` usages opt in with
+  `cardLayout cardLabels={...}`. Don't hand-build `<table>` lists; use `Table`
+  with `actions` (use `hidden`/`disabled` for per-row actions) so overflowing
+  tables first go compact with a "⋯" row-actions menu, then become cards.
+- Toolbars with filters or actions pass `filtersLabel: filtersLabel(t)`
+  so the phone "Filters" toggle is localized; `ResourceTreeView` gets
+  `dimensionLabel={t('tags.groups.organizeBy')}`.
+- Page roots use `margin: var(--cm-page-gutter, 2em)` instead of a fixed
+  margin so gutters shrink on tablets and phones.
+- Nothing may widen the page on phones (check 320px): page headers and
+  action rows must wrap. Horizontal overflow makes mobile browsers zoom the
+  layout out, which pushes dialogs off screen and misplaces native pickers.
+- Master/detail views that stack on phones must scroll the detail into view
+  when an item is picked (see Network → Widget Access).
+
+## Modals and Forms
+
+The ui-common `Modal` becomes a bottom sheet under `36em`, with the body as
+its only scroll container. Put `data-modal-actions` on a modal form's button
+row so it sticks to the bottom with full-width buttons on phones. Let form
+rows wrap to a single column at `(max-width: 36em)`, and size modals with
+`contentClass` in `em` (no `!important` or `vw` overrides).
 
 ## Critical Rules
 
@@ -774,6 +936,29 @@ The Dashboard uses **URL-based routing** with organization context to ensure:
 - Deep linking works correctly
 - Browser back/forward buttons work as expected
 - Data reloads properly when switching organizations
+
+### Detail Drawers and Back Navigation
+
+Resource details (`?itemId=` or `/content/widgets/:id`) must behave like a
+page: browser/swipe back from an item returns to its list.
+
+- Open with `setSearchParams({ itemId }, detailUrlOptions())` (or
+  `navigate(url, detailUrlOptions())`). The first item pushes a marked history
+  entry; switching items while details are open replaces it. Never open with
+  `replace: true` (back would leave the list) or raw `history.pushState` (the
+  router misses it).
+- Close from the UI with
+  `closeDetailUrl(() => setSearchParams({ itemId: undefined }, { replace: true }))`:
+  it goes back to the list entry, or strips a deep-linked `itemId`.
+- List navigation (pagination, search, sort, filters) in `TableView` replaces a
+  marked detail entry and drops its mark, so closing then pressing Back cannot
+  reopen the detail. Other query-only list navigation while details are open
+  should do the same.
+- Sync the drawer with `useModalFromUrl`; addons also need its `popstate`
+  listener because they don't share the dashboard router's reactivity.
+- `useModalFromUrl`, `detailUrlOptions`, `closeDetailUrl` and
+  `isDetailHistoryEntry` live in ui-common (`hooks/useModalFromUrl.ts`) and
+  are shared by the dashboard and addons.
 
 ### URL Pattern
 

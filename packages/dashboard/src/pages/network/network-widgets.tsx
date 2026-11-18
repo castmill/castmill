@@ -55,6 +55,8 @@ const NetworkWidgets: Component = () => {
   > | null>(null);
   let debounce: ReturnType<typeof setTimeout> | undefined;
   let listElement: HTMLDivElement | undefined;
+  let masterElement: HTMLElement | undefined;
+  let detailElement: HTMLElement | undefined;
   let fileInput: HTMLInputElement | undefined;
 
   onCleanup(() => clearTimeout(debounce));
@@ -138,6 +140,26 @@ const NetworkWidgets: Component = () => {
     ) {
       void widgets.reload();
     }
+  };
+
+  // On phones and tablets the detail pane is stacked below the list, so bring
+  // it into view when a widget is picked (not while arrowing through the list).
+  const selectAndReveal = (widget: NetworkWidgetAccess) => {
+    setSelected(widget);
+    requestAnimationFrame(() => {
+      if (!detailElement || !masterElement) return;
+      const stacked =
+        detailElement.getBoundingClientRect().top >=
+        masterElement.getBoundingClientRect().bottom - 1;
+      if (!stacked) return;
+      const reduceMotion = window.matchMedia?.(
+        '(prefers-reduced-motion: reduce)'
+      ).matches;
+      detailElement.scrollIntoView?.({
+        block: 'start',
+        behavior: reduceMotion ? 'auto' : 'smooth',
+      });
+    });
   };
 
   const onWidgetDeleted = (deleted: NetworkWidgetAccess) => {
@@ -389,7 +411,7 @@ const NetworkWidgets: Component = () => {
       </div>
 
       <div class={styles['layout']}>
-        <aside class={styles['master']}>
+        <aside ref={masterElement} class={styles['master']}>
           <div
             ref={listElement}
             class={styles['widget-list']}
@@ -435,11 +457,11 @@ const NetworkWidgets: Component = () => {
                         classList={{
                           [styles['widget-row-selected']]: isSelected(),
                         }}
-                        onClick={() => setSelected(widget())}
+                        onClick={() => selectAndReveal(widget())}
                         onKeyDown={(event) => {
                           if (event.key === 'Enter' || event.key === ' ') {
                             event.preventDefault();
-                            setSelected(widget());
+                            selectAndReveal(widget());
                           }
                         }}
                       >
@@ -489,7 +511,7 @@ const NetworkWidgets: Component = () => {
           </Show>
         </aside>
 
-        <section class={styles['detail-pane']}>
+        <section ref={detailElement} class={styles['detail-pane']}>
           <Show
             when={selected()?.id}
             keyed

@@ -97,16 +97,48 @@ describe('time-dependent template updates', () => {
         globals: { target: 'poster' },
       }
     );
-    const root = dom.window.document.getElementById('root')!;
+    const root: HTMLElement = dom.window.document.getElementById('root')!;
+    const rectPrototypes = new Map<object, PropertyDescriptor>();
 
     try {
       const showing = firstValueFrom(widget.show(root, 0));
+      // Solid's cached template clones can retain prototypes from earlier DOMs.
+      root.querySelectorAll('*').forEach((element) => {
+        if (element instanceof dom.window.HTMLElement) return;
+        let prototype = Object.getPrototypeOf(element);
+        while (
+          prototype &&
+          !Object.prototype.hasOwnProperty.call(
+            prototype,
+            'getBoundingClientRect'
+          )
+        ) {
+          prototype = Object.getPrototypeOf(prototype);
+        }
+        if (!prototype || rectPrototypes.has(prototype)) return;
+        const descriptor = Object.getOwnPropertyDescriptor(
+          prototype,
+          'getBoundingClientRect'
+        )!;
+        rectPrototypes.set(prototype, descriptor);
+        Object.defineProperty(prototype, 'getBoundingClientRect', {
+          ...descriptor,
+          value: function (this: Element) {
+            return dom.window.HTMLElement.prototype.getBoundingClientRect.call(
+              this
+            );
+          },
+        });
+      });
       await beforeReady?.(root, advanceClock, showing, widget);
       await showing;
       await run(root, widget, media, advanceClock);
     } finally {
       widget.stop();
       await widget.unload();
+      rectPrototypes.forEach((descriptor, prototype) => {
+        Object.defineProperty(prototype, 'getBoundingClientRect', descriptor);
+      });
       dom.window.HTMLMediaElement.prototype.load = originalVideoLoad;
       Date.now = realNow;
       if (savedFrame) {

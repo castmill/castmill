@@ -28,47 +28,53 @@ const tableEvent: {
   context: { mediaId: 12 },
 };
 
-vi.mock('@castmill/ui-common', () => ({
-  Button: (props: any) => (
-    <button onClick={props.onClick}>{props.label}</button>
-  ),
-  ConfirmDialog: () => null,
-  Modal: (props: any) => (
-    <section>
-      <h2>{props.title}</h2>
-      <p>{props.description}</p>
-      {props.children}
-    </section>
-  ),
-  TableView: (props: any) => {
-    return (
-      <table
-        data-initial-sort-key={props.initialSortOptions?.key}
-        data-initial-sort-direction={props.initialSortOptions?.direction}
-      >
-        <thead>
-          <tr>
-            {props.table.columns.map((column: any) => (
-              <th>{column.title}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            {props.table.columns.map((column: any) => (
-              <td>
-                {column.render
-                  ? column.render(tableEvent)
-                  : tableEvent[column.key as keyof typeof tableEvent]}
-              </td>
-            ))}
-          </tr>
-        </tbody>
-      </table>
-    );
-  },
-  useToast: () => ({ error: vi.fn(), success: vi.fn() }),
-}));
+vi.mock('@castmill/ui-common', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@castmill/ui-common')>();
+  return {
+    SectionCard: actual.SectionCard,
+    tableCardLabels: actual.tableCardLabels,
+    filtersLabel: actual.filtersLabel,
+    Button: (props: any) => (
+      <button onClick={props.onClick}>{props.label}</button>
+    ),
+    ConfirmDialog: () => null,
+    Modal: (props: any) => (
+      <section>
+        <h2>{props.title}</h2>
+        <p>{props.description}</p>
+        {props.children}
+      </section>
+    ),
+    TableView: (props: any) => {
+      return (
+        <table
+          data-initial-sort-key={props.initialSortOptions?.key}
+          data-initial-sort-direction={props.initialSortOptions?.direction}
+        >
+          <thead>
+            <tr>
+              {props.table.columns.map((column: any) => (
+                <th>{column.title}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              {props.table.columns.map((column: any) => (
+                <td>
+                  {column.render
+                    ? column.render(tableEvent)
+                    : tableEvent[column.key as keyof typeof tableEvent]}
+                </td>
+              ))}
+            </tr>
+          </tbody>
+        </table>
+      );
+    },
+    useToast: () => ({ error: vi.fn(), success: vi.fn() }),
+  };
+});
 
 vi.mock('../services/devices.service', () => ({
   DevicesService: {

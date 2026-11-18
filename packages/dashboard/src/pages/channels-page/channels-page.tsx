@@ -37,6 +37,11 @@ import {
   TagPopover,
   useViewMode,
   isQuotaExceededError,
+  useModalFromUrl,
+  detailUrlOptions,
+  closeDetailUrl,
+  tableCardLabels,
+  filtersLabel,
 } from '@castmill/ui-common';
 
 import { store } from '../../store/store';
@@ -53,7 +58,7 @@ import { ChannelView } from './channel-view';
 
 import { baseUrl } from '../../env';
 import { ChannelAddForm } from './channel-add-form';
-import { useTeamFilter, useModalFromUrl } from '../../hooks';
+import { useTeamFilter } from '../../hooks';
 import { useI18n } from '../../i18n';
 import { QuotaIndicator } from '../../components/quota-indicator';
 import { QuotasService, ResourceQuota } from '../../services/quotas.service';
@@ -64,6 +69,7 @@ import { useLocation } from '@solidjs/router';
 const ChannelsPage: Component = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { t } = useI18n();
+  const cardLabels = tableCardLabels(t);
   const { canPerformAction } = usePermissions();
   const { registerShortcutAction, unregisterShortcutAction } =
     useKeyboardShortcuts();
@@ -386,11 +392,13 @@ const ChannelsPage: Component = () => {
   const openChannelDrawer = (channel: JsonChannel) => {
     setCurrentChannel(channel);
     setShowDrawer(true);
-    setSearchParams({ itemId: String(channel.id) });
+    setSearchParams({ itemId: String(channel.id) }, detailUrlOptions());
   };
 
   const closeChannelDrawer = () => {
-    setSearchParams({ itemId: undefined });
+    closeDetailUrl(() =>
+      setSearchParams({ itemId: undefined }, { replace: true })
+    );
     refreshData();
   };
 
@@ -415,7 +423,6 @@ const ChannelsPage: Component = () => {
 
   const columns = () =>
     [
-      { key: 'id', title: t('common.id'), sortable: true },
       { key: 'name', title: t('common.name'), sortable: true },
       {
         key: 'default_playlist_name',
@@ -795,7 +802,7 @@ const ChannelsPage: Component = () => {
             placement="right"
             size="xl"
             closeOnOutsideClick
-            outsideClickIgnoreSelector="tbody tr, .channel-tree-item"
+            outsideClickIgnoreSelector="tbody tr, [data-testid='table-card'], .channel-tree-item"
           >
             <Show when={currentChannel()} keyed>
               {(channel) => (
@@ -903,6 +910,7 @@ const ChannelsPage: Component = () => {
             fetchData={fetchData}
             ref={setRef}
             toolbar={{
+              filtersLabel: filtersLabel(t),
               filters: [],
               searchPlaceholder: t('common.search'),
               mainAction: (
@@ -993,6 +1001,7 @@ const ChannelsPage: Component = () => {
               </>
             )}
             table={{
+              cardLabels,
               columns,
               actions,
               actionsLabel: t('common.actions'),
@@ -1011,6 +1020,7 @@ const ChannelsPage: Component = () => {
 
         <Show when={viewMode() === 'tree'}>
           <ToolBar
+            filtersLabel={filtersLabel(t)}
             title={t('channels.title')}
             titleActions={
               <ViewModeToggle mode={viewMode()} onChange={setViewMode} />
@@ -1053,6 +1063,7 @@ const ChannelsPage: Component = () => {
             }
           />
           <ResourceTreeView
+            dimensionLabel={t('tags.groups.organizeBy')}
             tagGroups={tagGroups()}
             allTags={allTags()}
             fetchResources={fetchTreeResources}

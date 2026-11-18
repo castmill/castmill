@@ -54,6 +54,12 @@ import {
   formatBytes,
   useViewMode,
   isQuotaExceededError,
+  useModalFromUrl,
+  detailUrlOptions,
+  closeDetailUrl,
+  tableCardLabels,
+  filtersLabel,
+  organizeByLabel,
 } from '@castmill/ui-common';
 import { JsonMedia } from '@castmill/player';
 import { MediasService } from '../services/medias.service';
@@ -70,7 +76,7 @@ import {
   AddonStore,
   AddonComponentProps,
 } from '../../common/interfaces/addon-store';
-import { useTeamFilter, useModalFromUrl } from '../../common/hooks';
+import { useTeamFilter } from '../../common/hooks';
 import { getThumbnailProgress } from './thumbnail-status';
 
 const MediasPage: Component<AddonComponentProps> = (props) => {
@@ -413,7 +419,9 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
   const closeMediaDrawer = () => {
     if (props.params) {
       const [, setSearchParams] = props.params;
-      setSearchParams({ itemId: undefined }, { replace: true });
+      closeDetailUrl(() =>
+        setSearchParams({ itemId: undefined }, { replace: true })
+      );
     }
     setShowDrawer(false);
   };
@@ -760,7 +768,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
 
     if (props.params) {
       const [, setSearchParams] = props.params;
-      setSearchParams({ itemId: String(item.id) }, { replace: true });
+      setSearchParams({ itemId: String(item.id) }, detailUrlOptions());
     }
   };
 
@@ -935,8 +943,8 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
           placement="right"
           size="xl"
           closeOnOutsideClick
-          outsideClickIgnoreSelector="tbody tr, .media-tree-item"
-          contentClass="medias-modal"
+          outsideClickIgnoreSelector="tbody tr, [data-testid='table-card'], .media-tree-item"
+          closeButtonTitle={t('common.close')}
         >
           <Show when={currentMedia()} keyed>
             {(media) => (
@@ -1005,6 +1013,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
           ref={setRef}
           itemIdKey="id"
           toolbar={{
+            filtersLabel: filtersLabel(t),
             searchPlaceholder: t('common.search'),
             mainAction: (
               <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
@@ -1101,6 +1110,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
             </>
           )}
           table={{
+            cardLabels: tableCardLabels(t),
             columns,
             actions,
             actionsLabel: t('common.actions'),
@@ -1119,6 +1129,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
 
       <Show when={viewMode() === 'tree'}>
         <ToolBar
+          filtersLabel={filtersLabel(t)}
           title="Medias"
           titleActions={
             <ViewModeToggle mode={viewMode()} onChange={setViewMode} />
@@ -1162,6 +1173,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
           }
         />
         <ResourceTreeView
+          dimensionLabel={organizeByLabel(t)()}
           tagGroups={tagGroups()}
           allTags={allTags()}
           fetchResources={fetchTreeResources}

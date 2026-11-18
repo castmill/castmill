@@ -48,7 +48,6 @@ vi.mock('../../hooks', () => ({
     selectedTeamId: () => null,
     setSelectedTeamId: vi.fn(),
   }),
-  useModalFromUrl: vi.fn(),
 }));
 
 const { mockUsePermissions } = vi.hoisted(() => ({

@@ -12,6 +12,8 @@ import {
   TableViewRef,
   Timestamp,
   useToast,
+  tableCardLabels,
+  filtersLabel,
 } from '@castmill/ui-common';
 import { TeamsService } from '../../services/teams.service';
 import { AiOutlineDelete } from 'solid-icons/ai';
@@ -50,7 +52,8 @@ export const TeamInvitationsView = (props: {
   onRemove: (invitation: Invitation) => void;
   refreshKey?: number;
 }) => {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const cardLabels = tableCardLabels(t);
 
   const columns = [
     { key: 'email', title: t('common.email'), sortable: true },
@@ -60,7 +63,7 @@ export const TeamInvitationsView = (props: {
       title: t('common.insertedAt'),
       sortable: true,
       render: (item: any) => (
-        <Timestamp value={item.inserted_at} mode="relative" />
+        <Timestamp value={item.inserted_at} mode="relative" locale={locale()} />
       ),
     },
     {
@@ -68,7 +71,7 @@ export const TeamInvitationsView = (props: {
       title: t('common.expiresAt'),
       sortable: true,
       render: (item: any) => (
-        <Timestamp value={item.expires_at} mode="relative" />
+        <Timestamp value={item.expires_at} mode="relative" locale={locale()} />
       ),
     },
   ];
@@ -202,6 +205,7 @@ export const TeamInvitationsView = (props: {
         fetchData={fetchData}
         ref={setRef}
         toolbar={{
+          filtersLabel: filtersLabel(t),
           searchPlaceholder: t('common.search'),
           actions: (
             <div>
@@ -219,6 +223,8 @@ export const TeamInvitationsView = (props: {
           actions,
           actionsLabel: t('common.actions'),
           onRowSelect,
+          cardLayout: true,
+          cardLabels,
         }}
         pagination={{ itemsPerPage }}
         itemIdKey="id"

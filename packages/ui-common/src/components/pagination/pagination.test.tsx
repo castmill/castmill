@@ -65,4 +65,22 @@ describe('Pagination Component', () => {
     // "Next" button should be enabled
     expect(getByLabelText('Next page')).not.toBeDisabled();
   });
+
+  it('marks the current page and renders a compact summary for phones', () => {
+    const { container } = setup(100, 10, 4);
+    const current = container.querySelector('[aria-current="page"]');
+    expect(current).toHaveTextContent('4');
+    expect(current).toHaveClass('pagination-page');
+    expect(container.querySelectorAll('[aria-current="page"]')).toHaveLength(1);
+    const summary = container.querySelector('.pagination-summary');
+    expect(summary).toHaveTextContent('4 / 10');
+    expect(summary).not.toHaveAttribute('aria-hidden', 'true');
+  });
+
+  it('shows at least one total page in the summary when empty', () => {
+    const { container } = setup(0, 10, 1);
+    expect(container.querySelector('.pagination-summary')).toHaveTextContent(
+      '1 / 1'
+    );
+  });
 });

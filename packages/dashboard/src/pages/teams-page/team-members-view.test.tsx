@@ -46,6 +46,9 @@ vi.mock('../../components/auth', () => ({
 vi.mock('@castmill/ui-common', async () => {
   const { onMount } =
     await vi.importActual<typeof import('solid-js')>('solid-js');
+  const { tableCardLabels, filtersLabel } = await vi.importActual<
+    typeof import('@castmill/ui-common')
+  >('@castmill/ui-common');
   const defaultOptions = {
     page: { num: 1, size: 10 },
     sortOptions: { key: 'name', direction: 'ascending' },
@@ -103,6 +106,8 @@ vi.mock('@castmill/ui-common', async () => {
     TableView,
     ToastProvider: (props: any) => <div>{props.children}</div>,
     useToast: () => toastSpies,
+    tableCardLabels,
+    filtersLabel,
   };
 });
 

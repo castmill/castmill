@@ -1,5 +1,5 @@
 import { Component, For } from 'solid-js';
-import { formatTimestamp } from '@castmill/ui-common';
+import { SectionCard, formatTimestamp } from '@castmill/ui-common';
 import { Device } from '../interfaces/device.interface';
 
 interface InfoField {
@@ -91,10 +91,7 @@ export const DeviceInfo: Component<{
   ];
 
   return (
-    <section class="device-card device-info">
-      <header class="device-card-header">
-        <h3>{props.t('devices.info.title')}</h3>
-      </header>
+    <SectionCard class="device-info" title={props.t('devices.info.title')}>
       <dl class="device-info-list">
         <For each={fields().filter((field) => field.value || !field.optional)}>
           {(field) => (
@@ -109,6 +106,6 @@ export const DeviceInfo: Component<{
           )}
         </For>
       </dl>
-    </section>
+    </SectionCard>
   );
 };

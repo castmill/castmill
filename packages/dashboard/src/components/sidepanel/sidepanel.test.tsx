@@ -1,51 +1,70 @@
-import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, within } from '@solidjs/testing-library';
-import { createMemoryHistory, MemoryRouter, Route } from '@solidjs/router';
-import { createStore } from 'solid-js/store';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { cleanup, fireEvent, render, screen } from '@solidjs/testing-library';
+import { createSignal } from 'solid-js';
 import SidePanel from './sidepanel';
 import { AddOnTree } from '../../classes/addon-tree';
 import { setStore } from '../../store/store';
-import type { Action, ResourceType } from '../../services/permissions.service';
+import { navDrawer, navModeFor } from './nav-drawer';
+import {
+  DESKTOP,
+  PHONE,
+  TABLET_LANDSCAPE,
+  TABLET_PORTRAIT,
+  mockViewport,
+} from './viewport.test-utils';
 
-const organization = {
-  id: 'org-1',
-  name: 'Acme',
-  created_at: '2026-01-01T00:00:00Z',
-  updated_at: '2026-01-01T00:00:00Z',
-};
+const [pathname, setPathname] = createSignal('/org/org-1/channels');
 
-vi.mock('../../store/store', () => {
-  const [store, setStore] = createStore({
-    organizations: {
-      data: [] as { id: string; name: string }[],
-      selectedId: undefined as string | undefined,
-      selectedName: undefined as string | undefined,
+vi.mock('@solidjs/router', () => ({
+  useNavigate: () => vi.fn(),
+  useLocation: () => ({
+    get pathname() {
+      return pathname();
     },
-    network: { isAdmin: false },
-    permissions: undefined as
-      | { role: string; matrix: Record<string, string[]> }
-      | undefined,
-  });
-  return { store, setStore };
-});
+  }),
+  A: (props: { href: string; title?: string; children?: any }) => (
+    <a href={props.href} title={props.title}>
+      {props.children}
+    </a>
+  ),
+}));
 
 vi.mock('../../i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }));
 
 vi.mock('../../services/permissions.service', () => ({
-  canPerformAction: (
-    matrix: Record<string, string[]> | undefined,
-    resource: string,
-    action: string
-  ) => !!matrix?.[resource]?.includes(action),
+  canPerformAction: () => true,
 }));
 
-// Add-on icons are fetched from the server; render none in tests.
 vi.mock('solid-js', async (importOriginal) => ({
   ...(await importOriginal<typeof import('solid-js')>()),
   lazy: () => () => null,
 }));
+
+vi.mock('../../store/store', () => {
+  const store = {
+    organizations: {
+      data: [
+        {
+          id: 'org-1',
+          name: 'Org One',
+          created_at: '2024-01-01T00:00:00Z',
+          updated_at: '2024-01-01T00:00:00Z',
+        },
+      ],
+      selectedId: 'org-1',
+      selectedName: 'Org One',
+    },
+    permissions: { role: 'admin', matrix: undefined },
+    network: { isAdmin: false },
+  };
+  return {
+    store,
+    setStore: (key: string, value: unknown) =>
+      Object.assign(store, { [key]: value }),
+  };
+});
 
 const addon = (name: string, mount_point: string, mount_path: string) => ({
   id: name,
@@ -67,117 +86,291 @@ const addons = [
   addon('Billing', 'network.billing', '/billing'),
 ];
 
-const organizationLinks = [
-  'sidebar.organization',
-  'Devices',
-  'sidebar.channels',
-  'sidebar.automations',
-  'sidebar.teams',
-  'sidebar.tags',
-  'sidebar.feeds',
-  'sidebar.agents',
-  'sidebar.usage',
-  'Help',
-];
+const originalMatchMedia = window.matchMedia;
 
-const networkLinks = [
-  'sidebar.network',
-  'sidebar.networkSettings',
-  'sidebar.networkOrganizations',
-  'sidebar.networkUsers',
-  'sidebar.networkWidgets',
-  'Billing',
-];
-
-const renderSidePanel = () => {
-  const history = createMemoryHistory();
-  history.set({ value: '/', replace: true, scroll: false });
-  return render(() => (
-    <MemoryRouter history={history}>
-      <Route
-        path="*"
-        component={() => <SidePanel addons={new AddOnTree(addons)} />}
-      />
-    </MemoryRouter>
+const renderPanel = (tree = new AddOnTree([])) =>
+  render(() => (
+    <>
+      <button type="button" data-testid="opener">
+        menu
+      </button>
+      <SidePanel addons={tree} />
+    </>
   ));
-};
 
-const item = (text: string) =>
-  within(
-    document.querySelector<HTMLElement>('.castmill-sidepanel .links')!
-  ).getByText(text).parentElement!;
+const panel = () => document.getElementById('castmill-sidepanel')!;
 
-describe('SidePanel', () => {
+describe('SidePanel responsive navigation', () => {
   beforeEach(() => {
-    vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
-    setStore('network', { isAdmin: true });
-    setStore('permissions', {
-      role: 'admin',
-      matrix: { automations: ['list'] } as Record<ResourceType, Action[]>,
+    setPathname('/org/org-1/channels');
+    setStore('organizations', {
+      data: [
+        {
+          id: 'org-1',
+          name: 'Org One',
+          created_at: '2024-01-01T00:00:00Z',
+          updated_at: '2024-01-01T00:00:00Z',
+        },
+      ],
+      selectedId: 'org-1',
+      selectedName: 'Org One',
     });
+    setStore('permissions', { role: 'admin', matrix: undefined });
+    setStore('network', { isAdmin: false });
+    navDrawer.close();
   });
 
-  afterAll(async () => {
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    vi.restoreAllMocks();
+  afterEach(() => {
+    cleanup();
+    navDrawer.close();
+    window.matchMedia = originalMatchMedia;
+    document.body.style.overflow = '';
   });
 
-  it('disables organization pages but keeps settings and network pages without an organization', () => {
+  it('maps viewport queries to layout modes', () => {
+    expect(navModeFor(true, true)).toBe('drawer');
+    expect(navModeFor(false, true)).toBe('rail');
+    expect(navModeFor(false, false)).toBe('static');
+  });
+
+  it('is a static panel on desktop and ignores the drawer state', () => {
+    mockViewport(DESKTOP);
+    renderPanel();
+    expect(panel()).toHaveAttribute('data-mode', 'static');
+    expect(panel()).toHaveAttribute('aria-label', 'sidebar.navigation');
+
+    navDrawer.open();
+    expect(navDrawer.isOpen()).toBe(false);
+    expect(panel()).not.toHaveAttribute('role');
+    expect(screen.queryByTestId('sidepanel-backdrop')).toBeNull();
+  });
+
+  it('is an icon rail on landscape tablets that expands into a drawer', () => {
+    mockViewport(TABLET_LANDSCAPE);
+    renderPanel();
+    expect(panel()).toHaveAttribute('data-mode', 'rail');
+    expect(panel()).not.toHaveClass('is-open');
+    // Rail items keep their label as tooltip.
+    expect(screen.getByText('sidebar.channels').closest('a')).toHaveAttribute(
+      'title',
+      'sidebar.channels'
+    );
+
+    navDrawer.open();
+    expect(panel()).toHaveClass('is-open');
+    expect(panel()).toHaveAttribute('role', 'dialog');
+  });
+
+  it.each([
+    ['phone', PHONE],
+    ['portrait tablet', TABLET_PORTRAIT],
+  ])('is an off-canvas drawer on a %s', (_, viewport) => {
+    mockViewport(viewport);
+    renderPanel();
+    expect(panel()).toHaveAttribute('data-mode', 'drawer');
+    expect(panel()).not.toHaveClass('is-open');
+    expect(screen.queryByTestId('sidepanel-backdrop')).toBeNull();
+  });
+
+  it('opens as a modal dialog, locks scrolling and focuses the drawer', () => {
+    mockViewport(PHONE);
+    renderPanel();
+    const opener = screen.getByTestId('opener');
+    opener.focus();
+
+    navDrawer.open();
+    expect(panel()).toHaveClass('is-open');
+    expect(panel()).toHaveAttribute('role', 'dialog');
+    expect(panel()).toHaveAttribute('aria-modal', 'true');
+    expect(screen.getByTestId('sidepanel-backdrop')).toBeInTheDocument();
+    expect(document.body.style.overflow).toBe('hidden');
+    expect(document.activeElement).toBe(
+      screen.getByRole('button', { name: 'common.close' })
+    );
+
+    navDrawer.close();
+    expect(document.body.style.overflow).toBe('');
+    // Focus returns to the element that opened the drawer.
+    expect(document.activeElement).toBe(opener);
+  });
+
+  it('closes on Escape, backdrop tap and the close button', () => {
+    mockViewport(PHONE);
+    renderPanel();
+
+    navDrawer.open();
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(navDrawer.isOpen()).toBe(false);
+
+    navDrawer.open();
+    fireEvent.click(screen.getByTestId('sidepanel-backdrop'));
+    expect(navDrawer.isOpen()).toBe(false);
+
+    navDrawer.open();
+    fireEvent.click(screen.getByRole('button', { name: 'common.close' }));
+    expect(navDrawer.isOpen()).toBe(false);
+  });
+
+  it('keeps the drawer open when a nested control handles Escape', () => {
+    mockViewport(PHONE);
+    renderPanel();
+    navDrawer.open();
+
+    const nestedControl = document.createElement('button');
+    nestedControl.addEventListener('keydown', (event) =>
+      event.preventDefault()
+    );
+    panel().append(nestedControl);
+    fireEvent.keyDown(nestedControl, { key: 'Escape' });
+
+    expect(navDrawer.isOpen()).toBe(true);
+    nestedControl.remove();
+  });
+
+  it('closes on navigation', () => {
+    mockViewport(PHONE);
+    renderPanel();
+    navDrawer.open();
+    setPathname('/org/org-1/teams');
+    expect(navDrawer.isOpen()).toBe(false);
+    expect(panel()).not.toHaveClass('is-open');
+  });
+
+  it('closes when the viewport grows to the desktop layout', () => {
+    const viewport = mockViewport(PHONE);
+    renderPanel();
+    navDrawer.open();
+    viewport.resize(DESKTOP);
+    expect(panel()).toHaveAttribute('data-mode', 'static');
+    expect(navDrawer.isOpen()).toBe(false);
+  });
+
+  it('traps focus inside the open drawer', () => {
+    mockViewport(PHONE);
+    renderPanel();
+    navDrawer.open();
+
+    const focusables = Array.from(
+      panel().querySelectorAll<HTMLElement>('a[href], button:not([disabled])')
+    );
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    expect(first).toBe(screen.getByRole('button', { name: 'common.close' }));
+
+    last.focus();
+    fireEvent.keyDown(document, { key: 'Tab' });
+    expect(document.activeElement).toBe(first);
+
+    fireEvent.keyDown(document, { key: 'Tab', shiftKey: true });
+    expect(document.activeElement).toBe(last);
+
+    // Focus that escaped the drawer is pulled back in.
+    screen.getByTestId('opener').focus();
+    fireEvent.keyDown(document, { key: 'Tab' });
+    expect(document.activeElement).toBe(first);
+
+    // Tabbing between inner items is left to the browser.
+    first.focus();
+    const event = new KeyboardEvent('keydown', {
+      key: 'Tab',
+      cancelable: true,
+    });
+    document.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(false);
+  });
+
+  it('suspends the drawer focus trap while a modal is present', () => {
+    mockViewport(PHONE);
+    renderPanel();
+    navDrawer.open();
+
+    const overlay = document.createElement('div');
+    overlay.dataset.modalOverlay = '';
+    const modalClose = document.createElement('button');
+    overlay.append(modalClose);
+    document.body.append(overlay);
+    modalClose.focus();
+
+    const event = new KeyboardEvent('keydown', {
+      key: 'Tab',
+      cancelable: true,
+    });
+    document.dispatchEvent(event);
+
+    expect(event.defaultPrevented).toBe(false);
+    expect(document.activeElement).toBe(modalClose);
+    overlay.remove();
+  });
+
+  it('preserves the original opener when the viewport changes while open', () => {
+    const viewport = mockViewport(PHONE);
+    renderPanel();
+    const opener = screen.getByTestId('opener');
+    opener.focus();
+    navDrawer.open();
+
+    viewport.resize(TABLET_LANDSCAPE);
+    expect(panel()).toHaveAttribute('data-mode', 'rail');
+    expect(panel()).toHaveClass('is-open');
+    navDrawer.close();
+
+    expect(document.activeElement).toBe(opener);
+  });
+
+  it('registers itself so the top bar can show the menu button', () => {
+    mockViewport(PHONE);
+    expect(navDrawer.isAvailable()).toBe(false);
+    const { unmount } = renderPanel();
+    expect(navDrawer.isAvailable()).toBe(true);
+    navDrawer.open();
+    unmount();
+    expect(navDrawer.isAvailable()).toBe(false);
+    expect(navDrawer.isOpen()).toBe(false);
+  });
+
+  it('keeps organization-scoped links', () => {
+    mockViewport(PHONE);
+    renderPanel();
+    expect(screen.getByText('sidebar.teams').closest('a')).toHaveAttribute(
+      'href',
+      '/org/org-1/teams'
+    );
+  });
+
+  it('disables organization links when no organization is selected', () => {
+    mockViewport(PHONE);
     setStore('organizations', {
       data: [],
       selectedId: undefined,
       selectedName: undefined,
     });
-    renderSidePanel();
+    setStore('network', { isAdmin: true });
+    renderPanel(new AddOnTree(addons));
 
-    for (const text of organizationLinks) {
-      const link = item(text);
-      expect(link.tagName).toBe('SPAN');
-      expect(link).toHaveAttribute('aria-disabled', 'true');
-      expect(link).toHaveAttribute('title', 'sidebar.requiresOrganization');
-      expect(link).not.toHaveAttribute('href');
+    for (const text of [
+      'sidebar.organization',
+      'sidebar.channels',
+      'sidebar.teams',
+      'Devices',
+      'Help',
+    ]) {
+      expect(
+        screen.getByText(text).closest('[aria-disabled="true"]')
+      ).toHaveAttribute('title', 'sidebar.requiresOrganization');
+      expect(screen.getByText(text).closest('a')).toBeNull();
     }
 
-    expect(item('common.settings')).toHaveAttribute('href', '/settings');
-    expect(item('sidebar.networkOrganizations')).toHaveAttribute(
+    expect(screen.getByText('common.settings').closest('a')).toHaveAttribute(
       'href',
-      '/network/organizations'
+      '/settings'
     );
-    expect(item('Billing')).toHaveAttribute('href', '/network/billing');
-    for (const text of networkLinks) {
-      expect(item(text).tagName).toBe('A');
-    }
-
     expect(
-      document.querySelector('#organization-selector')
-    ).not.toBeInTheDocument();
-  });
-
-  it('links organization pages to the selected organization', () => {
-    setStore('organizations', {
-      data: [organization],
-      selectedId: 'org-1',
-      selectedName: 'Acme',
-    });
-    renderSidePanel();
-
-    for (const text of organizationLinks) {
-      const link = item(text);
-      expect(link.tagName).toBe('A');
-      expect(link.getAttribute('href')).toMatch(/^\/org\/org-1\//);
-      expect(link).not.toHaveAttribute('aria-disabled');
-    }
-    expect(item('Devices')).toHaveAttribute('href', '/org/org-1/devices');
-
-    expect(
-      document.querySelector('#organization-selector')
-    ).toBeInTheDocument();
-  });
-
-  it('hides the network section from users who are not network admins', () => {
-    setStore('network', { isAdmin: false });
-    renderSidePanel();
-
-    expect(screen.queryByText('sidebar.network')).not.toBeInTheDocument();
+      screen.getByText('sidebar.networkOrganizations').closest('a')
+    ).toHaveAttribute('href', '/network/organizations');
+    expect(screen.getByText('Billing').closest('a')).toHaveAttribute(
+      'href',
+      '/network/billing'
+    );
+    expect(document.querySelector('#organization-selector')).toBeNull();
   });
 });

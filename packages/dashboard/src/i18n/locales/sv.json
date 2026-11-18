@@ -1,6 +1,7 @@
 {
   "common": {
     "save": "Spara",
+    "sections": "Sektioner",
     "saving": "Sparar...",
     "cancel": "Avbryt",
     "delete": "Ta bort",
@@ -103,14 +104,22 @@
     "selectVideo": "Välj en video",
     "widget": "Widget",
     "selectionHint": "Använd kryssrutorna för att välja objekt för massåtgärder",
-    "selectionCount": "{count} valda"
+    "selectionCount": "{count} valda",
+    "sortBy": "Sortera efter",
+    "sortAscending": "Stigande",
+    "sortDescending": "Fallande",
+    "selectAll": "Markera alla",
+    "selectOption": "Välj ett alternativ",
+    "selectRow": "Markera rad {{id}}"
   },
   "topbar": {
     "help": "Hjälp",
     "notifications": "Notiser",
     "gettingStarted": "Kom igång",
     "switchToLightMode": "Byt till ljust läge",
-    "switchToDarkMode": "Byt till mörkt läge"
+    "switchToDarkMode": "Byt till mörkt läge",
+    "openNavigation": "Öppna navigering",
+    "moreOptions": "Fler alternativ"
   },
   "settings": {
     "title": "Inställningar",
@@ -605,9 +614,14 @@
     "removeTeams": "Ta bort team",
     "confirmRemoveTeam": "Är du säker på att du vill ta bort team \"{{name}}\"?",
     "confirmRemoveTeams": "Är du säker på att du vill ta bort följande team?",
-    "addedOn": "Tillagd den",
-    "lastUpdatedOn": "Senast uppdaterad den",
     "enterTeamName": "Ange teamnamn",
+    "summary": "Teamöversikt",
+    "created": "Skapat {{time}}",
+    "updated": "Uppdaterat {{time}}",
+    "unsavedChanges": "Osparade ändringar",
+    "teamCreated": "Teamet {{name}} har skapats",
+    "teamUpdated": "Teamet {{name}} har uppdaterats",
+    "teamRemoved": "Teamet {{name}} har tagits bort",
     "insertedAt": "Tillagd",
     "expiresAt": "Utgår",
     "inviteMember": "Bjud in medlem",
@@ -627,7 +641,9 @@
       "removeResource": "Fel vid borttagning av resurs från team: {{error}}",
       "removeResources": "Fel vid borttagning av resurser från team: {{error}}",
       "addResourceToTeam": "Fel vid tillägg av resurs till team: {{error}}",
-      "cannotRemoveLastAdmin": "Du kan inte ta bort teamets sista administratör."
+      "cannotRemoveLastAdmin": "Du kan inte ta bort teamets sista administratör.",
+      "nameRequired": "Namn krävs",
+      "nameMinLength": "Namnet måste vara minst {{min}} tecken"
     },
     "confirmAddResources": "Är du säker på att du vill lägga till följande resurser?",
     "messages": {
@@ -699,7 +715,8 @@
       "deleteGroup": "Ta bort grupp",
       "noGroups": "Inga taggrupper",
       "ungrouped": "Ogrupperad",
-      "untagged": "Omärkt"
+      "untagged": "Omärkt",
+      "organizeBy": "Ordna efter"
     },
     "messages": {
       "tagCreated": "Taggen \"{{name}}\" skapades framgångsrikt",
@@ -806,6 +823,7 @@
     "tags": "Taggar",
     "agents": "Agenter",
     "feeds": "Flöden",
+    "navigation": "Navigering",
     "requiresOrganization": "Kräver en organisation"
   },
   "channels": {
@@ -834,7 +852,8 @@
       "created": "Kanal {{name}} skapades",
       "updated": "Kanal {{name}} uppdaterades",
       "updateDefaultPlaylist": "Standardspellista uppdaterad",
-      "clearDefaultPlaylist": "Standardspellista rensad"
+      "clearDefaultPlaylist": "Standardspellista rensad",
+      "updateChannelEntry": "Kanalposten har uppdaterats"
     },
     "info": {
       "contentRequired": "För att visa innehåll, ange en standardspellista eller lägg till ett schemalagt inlägg för den här kanalen."
@@ -848,6 +867,20 @@
       "clearDefaultPlaylist": "Misslyckades att rensa kanalens standardspellista: {{error}}",
       "updateChannelEntry": "Fel vid uppdatering av kanalinlägg: {{error}}",
       "loadPlaylists": "Det gick inte att läsa in spellistor från sidorna: {{pages}}."
+    },
+    "calendar": {
+      "previousWeek": "Föregående vecka",
+      "nextWeek": "Nästa vecka",
+      "previousDay": "Föregående dag",
+      "nextDay": "Nästa dag",
+      "today": "Idag",
+      "tapToAdd": "Tryck på en tidslucka för att lägga till en spellista i schemat.",
+      "addEntry": "Lägg till i schemat",
+      "startsAt": "Börjar {{date}} kl. {{time}}",
+      "duration": "Varaktighet",
+      "untilEndOfDay": "Till dagens slut",
+      "slotUnavailable": "Den här tidsluckan överlappar en annan post eller får inte plats i veckan.",
+      "confirmRemoveEntry": "Är du säker på att du vill ta bort posten \"{{title}}\"?"
     }
   },
   "organization": {
@@ -1039,7 +1072,52 @@
     "selectLayout": "Välj Layout",
     "searchLayouts": "Sök layouter...",
     "assignPlaylists": "Tilldela Spellistor till Zoner",
-    "zonesCount": "{{count}} zoner"
+    "zonesCount": "{{count}} zoner",
+    "unsavedChanges": "Osparade ändringar",
+    "editor": {
+      "customRatio": "Anpassad…",
+      "ratioWidth": "Förhållandets bredd",
+      "ratioHeight": "Förhållandets höjd",
+      "maxZones": "Högst {{count}} zoner tillåtna",
+      "size": "Storlek",
+      "width": "Bredd",
+      "height": "Höjd",
+      "full": "Hela",
+      "fillWidth": "Fyll bredden (100%)",
+      "fillHeight": "Fyll höjden (100%)",
+      "fillBoth": "Fyll bredd och höjd (100% × 100%)",
+      "setWidth": "Sätt bredden till {{size}}",
+      "setWidthAdjusted": "Sätt bredden till {{size}} (höjden justeras)",
+      "setHeight": "Sätt höjden till {{size}}",
+      "setHeightAdjusted": "Sätt höjden till {{size}} (bredden justeras)",
+      "zoneRatio": "Zonförhållande",
+      "none": "Inget",
+      "selectZoneFirst": "Välj en zon först",
+      "aspectLocked": "Inaktiverad: skulle bryta zonens bildförhållande",
+      "distributeColumns": "Fördela i kolumner",
+      "distributeColumnsHint": "Fördela alla zoner jämnt i kolumner",
+      "distributeRows": "Fördela i rader",
+      "distributeRowsHint": "Fördela alla zoner jämnt i rader",
+      "noSelection": "Välj en zon för att redigera dess egenskaper",
+      "widthShort": "B",
+      "heightShort": "Hö",
+      "deleteZone": "Ta bort zon",
+      "zonesHeading": "Zoner ({{count}})",
+      "layer": "Lager {{value}}",
+      "zoneName": "Zon {{number}}",
+      "templates": {
+        "fullScreen": "Helskärm",
+        "twoColumns": "2 kolumner",
+        "threeColumns": "3 kolumner",
+        "twoRows": "2 rader",
+        "threeRows": "3 rader",
+        "grid2x2": "2×2-rutnät",
+        "grid3x3": "3×3-rutnät",
+        "mainSidebar": "Huvudyta + sidofält",
+        "headerContent": "Sidhuvud + innehåll",
+        "pictureInPicture": "Bild i bild"
+      }
+    }
   },
   "widgets": {
     "scope": {
@@ -1192,6 +1270,17 @@
         "networkError": "Det gick inte att nå servern. Kontrollera anslutningen.",
         "unknown": "Det gick inte att läsa in objekten."
       }
+    },
+    "details": {
+      "updatesEvery": "Uppdateras var {{seconds}}:e sekund",
+      "copySlug": "Kopiera widgetens identifierare",
+      "slugCopied": "Widgetens identifierare kopierad",
+      "copySlugFailed": "Det gick inte att kopiera widgetens identifierare."
+    },
+    "json": {
+      "copy": "Kopiera JSON",
+      "copied": "JSON kopierad",
+      "copyFailed": "Det gick inte att kopiera JSON."
     }
   },
   "devices": {
@@ -1555,7 +1644,8 @@
     "tagFilterModeAny": "Någon",
     "tagFilterModeAll": "Alla",
     "noMatches": "Inga träffar",
-    "noItems": "Inga objekt"
+    "noItems": "Inga objekt",
+    "toggle": "Filter"
   },
   "shortcuts": {
     "showShortcutsLegend": "Visa tangentbordsgenvägar",
@@ -1692,7 +1782,25 @@
     },
     "drawerTitle": "Mediefil \"{{name}}\"",
     "mediaUpdated": "Mediefil \"{{name}}\" uppdaterad",
-    "errorUpdating": "Fel vid uppdatering av mediefil {{name}}: {{error}}"
+    "errorUpdating": "Fel vid uppdatering av mediefil {{name}}: {{error}}",
+    "details": {
+      "summary": "Mediesammanfattning",
+      "copyId": "Kopiera medie-ID",
+      "copied": "Medie-ID kopierat",
+      "copyFailed": "Det gick inte att kopiera medie-ID:t.",
+      "added": "Tillagd {{time}}",
+      "updated": "Uppdaterad {{time}}",
+      "dimensions": "Mått",
+      "duration": "Längd",
+      "namePlaceholder": "Ange mediets namn",
+      "nameRequired": "Namn krävs",
+      "nameTooShort": "Namnet måste vara minst 5 tecken",
+      "noPreview": "Ingen förhandsvisning tillgänglig",
+      "types": {
+        "image": "Bild",
+        "video": "Video"
+      }
+    }
   },
   "dashboard": {
     "noOrganizations": {

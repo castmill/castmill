@@ -39,6 +39,12 @@ import {
   TagPopover,
   useViewMode,
   isQuotaExceededError,
+  useModalFromUrl,
+  detailUrlOptions,
+  closeDetailUrl,
+  tableCardLabels,
+  filtersLabel,
+  organizeByLabel,
 } from '@castmill/ui-common';
 
 import { BsCheckLg, BsEye, BsTagFill } from 'solid-icons/bs';
@@ -52,7 +58,7 @@ import './devices.scss';
 import RegisterDevice from './register-device';
 import { DevicesService } from '../services/devices.service';
 import { AddonComponentProps } from '../../common/interfaces/addon-store';
-import { useTeamFilter, useModalFromUrl } from '../../common/hooks';
+import { useTeamFilter } from '../../common/hooks';
 
 import { QuotaIndicator } from '../../common/components/quota-indicator';
 import {
@@ -435,7 +441,9 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
   const closeDeviceDrawer = () => {
     if (props.params) {
       const [, setSearchParams] = props.params;
-      setSearchParams({ itemId: undefined }, { replace: true });
+      closeDetailUrl(() =>
+        setSearchParams({ itemId: undefined }, { replace: true })
+      );
     }
     setShowDrawer(false);
   };
@@ -553,7 +561,7 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
 
     if (props.params) {
       const [, setSearchParams] = props.params;
-      setSearchParams({ itemId: String(item.id) }, { replace: true });
+      setSearchParams({ itemId: String(item.id) }, detailUrlOptions());
     }
   };
 
@@ -879,7 +887,7 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
           placement="right"
           size="xl"
           closeOnOutsideClick
-          outsideClickIgnoreSelector="tbody tr, .device-tree-item"
+          outsideClickIgnoreSelector="tbody tr, [data-testid='table-card'], .device-tree-item"
         >
           {/* Remount per device so tabs reload; status merges keep the same id. */}
           <Show when={currentDevice()?.id} keyed>
@@ -930,6 +938,7 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
           fetchData={fetchData}
           ref={setRef}
           toolbar={{
+            filtersLabel: filtersLabel(t),
             filters: [
               { name: t('common.online'), key: 'online', isActive: true },
               { name: t('common.offline'), key: 'offline', isActive: true },
@@ -1018,6 +1027,7 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
             </>
           )}
           table={{
+            cardLabels: tableCardLabels(t),
             columns,
             actions,
             actionsLabel: t('common.actions'),
@@ -1036,6 +1046,7 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
 
       <Show when={viewMode() === 'tree'}>
         <ToolBar
+          filtersLabel={filtersLabel(t)}
           title={t('devices.title')}
           titleActions={
             <ViewModeToggle mode={viewMode()} onChange={setViewMode} />
@@ -1079,6 +1090,7 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
           }
         />
         <ResourceTreeView
+          dimensionLabel={organizeByLabel(t)()}
           tagGroups={tagGroups()}
           allTags={allTags()}
           fetchResources={fetchTreeResources}

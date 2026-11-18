@@ -5,7 +5,13 @@ import cssInjectedByJsPlugin from 'vite-plugin-css-injected-by-js';
 import solidPlugin from 'vite-plugin-solid';
 
 export default defineConfig({
-  plugins: [solidPlugin(), cssInjectedByJsPlugin()],
+  plugins: [
+    solidPlugin(),
+    // Only the main entry carries the component styles.
+    cssInjectedByJsPlugin({
+      jsAssetsFilterFunction: (chunk) => chunk.name === 'index',
+    }),
+  ],
   test: {
     environment: 'jsdom',
     setupFiles: ['./test-setup.ts'],
@@ -24,10 +30,14 @@ export default defineConfig({
   },
   build: {
     lib: {
-      entry: resolve(__dirname, 'src/index.ts'),
+      entry: {
+        index: resolve(__dirname, 'src/index.ts'),
+        // Test helpers for dependants (no test-runner imports).
+        testing: resolve(__dirname, 'src/testing/index.ts'),
+      },
       name: 'castmill-common-ui',
       formats: ['es'],
-      fileName: 'index',
+      fileName: (_format, entryName) => `${entryName}.js`,
     },
     rollupOptions: {
       // make sure to externalize deps that shouldn't be bundled

@@ -16,7 +16,7 @@
   }
 
   input {
-    margin-left: 0.5em;
+    margin-inline-start: 0.5em;
     background-color: #00000000;
     height: 3em;
     border: 0;
@@ -35,7 +35,7 @@
   .keyboard-shortcut {
     font-size: 0.8em;
     padding: 0.25em;
-    margin-left: 1em;
+    margin-inline-start: 1em;
     border-radius: 0.2em;
     white-space: nowrap;
 
@@ -43,12 +43,19 @@
     background-color: colors.$component-background-color-light;
   }
 
+  // No physical keyboard expected on touch devices.
+  @media (hover: none), (pointer: coarse) {
+    .keyboard-shortcut {
+      display: none;
+    }
+  }
+
   .reset-button {
     background: transparent;
     border: none;
     padding: 0;
     margin: 0;
-    margin-left: 1em;
+    margin-inline-start: 1em;
     cursor: pointer;
     display: flex;
     align-items: center;

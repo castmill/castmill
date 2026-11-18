@@ -25,6 +25,11 @@ import {
   Timestamp,
   ToastProvider,
   useToast,
+  useModalFromUrl,
+  detailUrlOptions,
+  closeDetailUrl,
+  tableCardLabels,
+  filtersLabel,
 } from '@castmill/ui-common';
 import {
   LayoutsService,
@@ -41,7 +46,7 @@ import './layouts.scss';
 import { LayoutView } from './layout-view';
 import { AddonComponentProps } from '../../common/interfaces/addon-store';
 import { LayoutAddForm, AspectRatio } from './layout-add-form';
-import { useTeamFilter, useModalFromUrl } from '../../common/hooks';
+import { useTeamFilter } from '../../common/hooks';
 
 const ASPECT_RATIO_OPTIONS = [
   { value: '16:9', label: '16:9 (Landscape)' },
@@ -68,7 +73,9 @@ const LayoutsPage: Component<AddonComponentProps> = (props) => {
   const closeLayoutDrawer = () => {
     if (props.params) {
       const [, setSearchParams] = props.params;
-      setSearchParams({ itemId: undefined }, { replace: true });
+      closeDetailUrl(() =>
+        setSearchParams({ itemId: undefined }, { replace: true })
+      );
     }
     setShowDrawer(false);
   };
@@ -293,7 +300,7 @@ const LayoutsPage: Component<AddonComponentProps> = (props) => {
 
     if (props.params) {
       const [, setSearchParams] = props.params;
-      setSearchParams({ itemId: String(item.id) }, { replace: true });
+      setSearchParams({ itemId: String(item.id) }, detailUrlOptions());
     }
   };
 
@@ -450,6 +457,7 @@ const LayoutsPage: Component<AddonComponentProps> = (props) => {
         fetchData={fetchData}
         ref={setRef}
         toolbar={{
+          filtersLabel: filtersLabel(t),
           searchPlaceholder: t('common.search'),
           mainAction: (
             <div style="display: flex; align-items: center; gap: 1rem;">
@@ -501,6 +509,7 @@ const LayoutsPage: Component<AddonComponentProps> = (props) => {
           </button>
         )}
         table={{
+          cardLabels: tableCardLabels(t),
           columns,
           actions,
           actionsLabel: t('common.actions'),
@@ -545,8 +554,7 @@ const LayoutsPage: Component<AddonComponentProps> = (props) => {
           placement="right"
           size="xl"
           closeOnOutsideClick
-          outsideClickIgnoreSelector="tbody tr"
-          contentClass="layout-modal"
+          outsideClickIgnoreSelector="tbody tr, [data-testid='table-card']"
         >
           <Show when={currentLayout()} keyed>
             {(layout) => (

@@ -32,6 +32,15 @@ export interface SelectionActionBarProps {
   children?: JSX.Element;
 }
 
+/**
+ * Placeholder rendered after the selectable content while items are
+ * selected. On phones, where the bar is fixed to the viewport, it reserves
+ * the bar's height so the last rows stay reachable; elsewhere it is hidden.
+ */
+export const SelectionActionBarSpacer: Component = () => (
+  <div class="castmill-selection-bar-spacer" aria-hidden="true" />
+);
+
 export const SelectionActionBar: Component<SelectionActionBarProps> = (
   props
 ) => {

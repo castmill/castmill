@@ -223,7 +223,7 @@ export const FeedForm: Component<FeedFormProps> = (props) => {
         </p>
       </Show>
 
-      <div class={styles.formActions}>
+      <div class={styles.formActions} data-modal-actions>
         <Show when={props.onCancel}>
           <Button
             label={t('common.cancel')}

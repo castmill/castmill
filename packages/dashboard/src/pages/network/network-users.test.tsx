@@ -198,27 +198,53 @@ describe('NetworkUsers', () => {
 
       // Other admins can lose the admin role but are never blocked or deleted.
       const other = within(row('Other Admin'));
-      expect(other.getByTitle('Remove network admin')).toBeInTheDocument();
-      expect(other.queryByTitle('Block')).toBeNull();
-      expect(other.queryByTitle('Delete')).toBeNull();
+      expect(
+        other.getByRole('button', { name: 'Remove network admin Other Admin' })
+      ).toBeInTheDocument();
+      expect(
+        other.queryByRole('button', { name: 'Block Other Admin' })
+      ).toBeNull();
+      expect(
+        other.queryByRole('button', { name: 'Delete Other Admin' })
+      ).toBeNull();
 
       const member = within(row('Plain Member'));
-      expect(member.getByTitle('Make network admin')).toBeInTheDocument();
-      expect(member.getByTitle('Block')).toBeInTheDocument();
-      expect(member.getByTitle('Delete')).toBeInTheDocument();
+      expect(
+        member.getByRole('button', { name: 'Make network admin Plain Member' })
+      ).toBeInTheDocument();
+      expect(
+        member.getByRole('button', { name: 'Block Plain Member' })
+      ).toBeInTheDocument();
+      expect(
+        member.getByRole('button', { name: 'Delete Plain Member' })
+      ).toBeInTheDocument();
 
       // Blocked users must be unblocked before they can become admins.
       const blocked = within(row('Blocked Member'));
-      expect(blocked.queryByTitle('Make network admin')).toBeNull();
-      expect(blocked.getByTitle('Unblock')).toBeInTheDocument();
+      expect(
+        blocked.queryByRole('button', {
+          name: 'Make network admin Blocked Member',
+        })
+      ).toBeNull();
+      expect(
+        blocked.getByRole('button', { name: 'Unblock Blocked Member' })
+      ).toBeInTheDocument();
 
       const blockedAdmin = within(row('Blocked Admin'));
       expect(
-        blockedAdmin.getByTitle('Remove network admin')
+        blockedAdmin.getByRole('button', {
+          name: 'Remove network admin Blocked Admin',
+        })
       ).toBeInTheDocument();
-      expect(blockedAdmin.getByTitle('Unblock')).toBeInTheDocument();
-      expect(blockedAdmin.queryByTitle('Block')).toBeNull();
-      expect(blockedAdmin.queryByTitle('Delete')).toBeNull();
+      expect(
+        blockedAdmin.getByRole('button', { name: 'Unblock Blocked Admin' })
+      ).toBeInTheDocument();
+      expect(
+        blockedAdmin.queryByRole('button', { name: 'Block Blocked Admin' })
+      ).toBeNull();
+      expect(
+        blockedAdmin.queryByRole('button', { name: 'Delete Blocked Admin' })
+      ).toBeNull();
     });
 
     it('makes a member a network admin after confirmation', async () => {
@@ -230,7 +256,9 @@ describe('NetworkUsers', () => {
       await waitFor(() => screen.getByText('Plain Member'));
 
       fireEvent.click(
-        within(row('Plain Member')).getByTitle('Make network admin')
+        within(row('Plain Member')).getByRole('button', {
+          name: 'Make network admin Plain Member',
+        })
       );
       expect(
         await screen.findByText(/Make "Plain Member" a network admin\?/)
@@ -246,7 +274,11 @@ describe('NetworkUsers', () => {
       expect(
         within(row('Plain Member')).getByText('Network admin')
       ).toBeInTheDocument();
-      expect(within(row('Plain Member')).queryByTitle('Block')).toBeNull();
+      expect(
+        within(row('Plain Member')).queryByRole('button', {
+          name: 'Block Plain Member',
+        })
+      ).toBeNull();
     });
 
     it('removes another admin’s network admin role after confirmation', async () => {
@@ -258,7 +290,9 @@ describe('NetworkUsers', () => {
       await waitFor(() => screen.getByText('Other Admin'));
 
       fireEvent.click(
-        within(row('Other Admin')).getByTitle('Remove network admin')
+        within(row('Other Admin')).getByRole('button', {
+          name: 'Remove network admin Other Admin',
+        })
       );
       expect(
         await screen.findByText(/Remove "Other Admin" as a network admin\?/)
@@ -275,7 +309,9 @@ describe('NetworkUsers', () => {
         within(row('Other Admin')).getByText('Member')
       ).toBeInTheDocument();
       expect(
-        within(row('Other Admin')).getByTitle('Block')
+        within(row('Other Admin')).getByRole('button', {
+          name: 'Block Other Admin',
+        })
       ).toBeInTheDocument();
     });
 
@@ -287,7 +323,9 @@ describe('NetworkUsers', () => {
       await waitFor(() => screen.getByText('Plain Member'));
 
       fireEvent.click(
-        within(row('Plain Member')).getByTitle('Make network admin')
+        within(row('Plain Member')).getByRole('button', {
+          name: 'Make network admin Plain Member',
+        })
       );
       fireEvent.click(await screen.findByRole('button', { name: 'Confirm' }));
 

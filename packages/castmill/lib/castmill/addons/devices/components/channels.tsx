@@ -1,5 +1,5 @@
 import { Component, createSignal, For, onMount, Show } from 'solid-js';
-import { ComboBox, useToast } from '@castmill/ui-common';
+import { ComboBox, useToast, SectionCard } from '@castmill/ui-common';
 import { Device } from '../interfaces/device.interface';
 import {
   BsBoxArrowUpRight,
@@ -9,7 +9,7 @@ import {
 } from 'solid-icons/bs';
 import { DevicesService, JsonChannel } from '../services/devices.service';
 import { AddonStore } from '../../common/interfaces/addon-store';
-import { DeviceCardHeader, DeviceIconButton } from './device-section';
+import { DeviceIconButton } from './device-section';
 import './channels.scss';
 
 export const Channels: Component<{
@@ -95,14 +95,45 @@ export const Channels: Component<{
   };
 
   return (
-    <section class="device-card device-channels">
-      <DeviceCardHeader
-        icon={BsCollectionPlay}
-        title={t('devices.assignedChannels')}
-        count={loading() ? undefined : channels().length}
-        description={t('devices.channelList.description')}
-      />
-
+    <SectionCard
+      footerClass="device-channel-add"
+      footer={
+        <>
+          <ComboBox<JsonChannel>
+            closeLabel={t('common.close')}
+            id="channel-selector"
+            label={t('devices.addChannel')}
+            placeholder={t('devices.selectChannelToAdd')}
+            renderItem={(item: JsonChannel) => (
+              <div class="device-channel-option">{item.name}</div>
+            )}
+            fetchItems={async (
+              page: number,
+              pageSize: number,
+              search: string
+            ) =>
+              DevicesService.fetchChannels(
+                props.baseUrl,
+                props.organizationId,
+                {
+                  page: { num: page, size: pageSize },
+                  sortOptions: { key: 'name', direction: 'ascending' },
+                  search,
+                }
+              )
+            }
+            onSelect={async (selectedChannel: JsonChannel) => {
+              await addChannel(selectedChannel);
+            }}
+          />
+        </>
+      }
+      class="device-channels"
+      icon={BsCollectionPlay}
+      title={t('devices.assignedChannels')}
+      count={loading() ? undefined : channels().length}
+      description={t('devices.channelList.description')}
+    >
       <Show
         when={!loading()}
         fallback={<p class="device-empty">{t('common.loading')}</p>}
@@ -152,28 +183,6 @@ export const Channels: Component<{
           </ul>
         </Show>
       </Show>
-
-      <div class="device-card-footer device-channel-add">
-        <ComboBox<JsonChannel>
-          closeLabel={t('common.close')}
-          id="channel-selector"
-          label={t('devices.addChannel')}
-          placeholder={t('devices.selectChannelToAdd')}
-          renderItem={(item: JsonChannel) => (
-            <div class="device-channel-option">{item.name}</div>
-          )}
-          fetchItems={async (page: number, pageSize: number, search: string) =>
-            DevicesService.fetchChannels(props.baseUrl, props.organizationId, {
-              page: { num: page, size: pageSize },
-              sortOptions: { key: 'name', direction: 'ascending' },
-              search,
-            })
-          }
-          onSelect={async (selectedChannel: JsonChannel) => {
-            await addChannel(selectedChannel);
-          }}
-        />
-      </div>
-    </section>
+    </SectionCard>
   );
 };

@@ -10,6 +10,7 @@ import {
   HttpError,
   useToast,
   Dropdown,
+  tableCardLabels,
 } from '@castmill/ui-common';
 import { store, setStore } from '../../store/store';
 import { PermissionButton } from '../../components/permission-button/permission-button';
@@ -83,6 +84,7 @@ export const OrganizationMembersView = (props: {
   onRemove: (member: User) => void;
 }) => {
   const { t } = useI18n();
+  const cardLabels = tableCardLabels(t);
   const { canPerformAction } = usePermissions();
   const toast = useToast();
   const navigate = useNavigate();
@@ -497,6 +499,8 @@ export const OrganizationMembersView = (props: {
           actions,
           actionsLabel: t('common.actions'),
           onRowSelect,
+          cardLayout: true,
+          cardLabels,
         }}
         pagination={{ itemsPerPage }}
         itemIdKey="user_id"

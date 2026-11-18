@@ -2,8 +2,10 @@ import {
   Component,
   createEffect,
   createSignal,
+  on,
   onCleanup,
   onMount,
+  Show,
 } from 'solid-js';
 import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import styles from './calendar-entry-box.module.scss';
@@ -30,8 +32,13 @@ export const CalendarEntryBox: Component<{
     ghostPosition?: { x: number; y: number }
   ) => void;
   hasOverlap?: (candidate: CalendarEntry) => boolean;
+  /**
+   * Week days (0 = Monday) currently rendered as columns. Entries are clipped
+   * to them; the phone day view renders a single day. Defaults to the week.
+   */
+  visibleDays?: { first: number; last: number };
 }> = (props) => {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [dragging, setDragging] = createSignal(false);
   const [topOffset, setTopOffset] = createSignal(0);
   const [leftOffset, setLeftOffset] = createSignal(0);
@@ -44,6 +51,9 @@ export const CalendarEntryBox: Component<{
   // currentEntry returns the candidate (if exists) or the original.
   const currentEntry = () => tempEntry() ?? props.entry;
   const totalNumDays = 7;
+  const visibleDays = () => props.visibleDays ?? { first: 0, last: 6 };
+  // Changing the number of days only makes sense when several are visible.
+  const canResizeDays = () => visibleDays().last > visibleDays().first;
 
   let boxRef: HTMLDivElement | undefined;
 
@@ -164,12 +174,15 @@ export const CalendarEntryBox: Component<{
 
   const updateEntryDimensions = () => {
     const entry = clampEntry(currentEntry(), 7);
+    const { first, last } = visibleDays();
+    const firstDay = Math.max(entry.dayIndex, first);
+    const lastDay = Math.min(entry.dayIndex + entry.numDays - 1, last);
 
     const topLeftGridCell = () =>
-      `day-${entry.dayIndex}-slot-${slotFromTime(entry.startHour, entry.startMinute)}`;
+      `day-${firstDay}-slot-${slotFromTime(entry.startHour, entry.startMinute)}`;
 
     const bottomRightGridCell = () =>
-      `day-${entry.dayIndex + (entry.numDays - 1)}-slot-${slotFromTime(entry.endHour, entry.endMinute) - 1}`;
+      `day-${lastDay}-slot-${slotFromTime(entry.endHour, entry.endMinute) - 1}`;
 
     // Compute vertical offset (in px) based on the entry start time.
     function computeTop(): number {
@@ -177,9 +190,15 @@ export const CalendarEntryBox: Component<{
       return cell?.offsetTop || 0;
     }
 
+    // In RTL the first day is the rightmost column, so use the outer edges of
+    // the first and last day cells regardless of their order.
     function computeLeft(): number {
-      const cell = props.cellGrid.get(topLeftGridCell());
-      return cell?.offsetLeft || 0;
+      const firstCell = props.cellGrid.get(topLeftGridCell());
+      const lastCell = props.cellGrid.get(bottomRightGridCell());
+      if (firstCell && lastCell) {
+        return Math.min(firstCell.offsetLeft, lastCell.offsetLeft);
+      }
+      return firstCell?.offsetLeft || 0;
     }
 
     function computeHeight(): number {
@@ -195,12 +214,15 @@ export const CalendarEntryBox: Component<{
     }
 
     function computeWidth(): number {
-      const leftCell = props.cellGrid.get(topLeftGridCell());
-      const rightCell = props.cellGrid.get(bottomRightGridCell());
+      const firstCell = props.cellGrid.get(topLeftGridCell());
+      const lastCell = props.cellGrid.get(bottomRightGridCell());
 
-      if (leftCell && rightCell) {
+      if (firstCell && lastCell) {
         return (
-          rightCell.offsetLeft + rightCell.offsetWidth - leftCell.offsetLeft
+          Math.max(
+            firstCell.offsetLeft + firstCell.offsetWidth,
+            lastCell.offsetLeft + lastCell.offsetWidth
+          ) - Math.min(firstCell.offsetLeft, lastCell.offsetLeft)
         );
       }
       return 0;
@@ -213,6 +235,19 @@ export const CalendarEntryBox: Component<{
   };
 
   createEffect(() => updateEntryDimensions());
+
+  // The document direction is applied right after the locale signal changes,
+  // so re-measure on the next frame when switching to/from an RTL language.
+  createEffect(
+    on(
+      locale,
+      () => {
+        const frame = requestAnimationFrame(() => updateEntryDimensions());
+        onCleanup(() => cancelAnimationFrame(frame));
+      },
+      { defer: true }
+    )
+  );
 
   onMount(() => {
     // Create ResizeObserver to watch for size changes
@@ -229,7 +264,7 @@ export const CalendarEntryBox: Component<{
     e.stopPropagation();
     e.preventDefault();
 
-    const measureCell = props.cellGrid.get('day-0-slot-0');
+    const measureCell = props.cellGrid.get(`day-${visibleDays().first}-slot-0`);
     if (!measureCell) {
       return;
     }
@@ -252,9 +287,13 @@ export const CalendarEntryBox: Component<{
 
     const gridWidth = measureCell.offsetWidth;
     const gridHeight = measureCell.offsetHeight;
+    // Days run right-to-left in RTL languages; `left`/`right` edges are the
+    // inline start/end of the entry (see the handle styles).
+    const inlineDirection =
+      boxRef && getComputedStyle(boxRef).direction === 'rtl' ? -1 : 1;
 
     const onMouseMove = (moveEvent: MouseEvent) => {
-      const deltaX = moveEvent.clientX - startX;
+      const deltaX = (moveEvent.clientX - startX) * inlineDirection;
       const deltaY = moveEvent.clientY - startY;
 
       const cellDeltaX = Math.round(deltaX / gridWidth);
@@ -370,7 +409,9 @@ export const CalendarEntryBox: Component<{
       <ConfirmDialog
         show={showConfirmDialog()}
         title={t('channels.removeChannelEntry')}
-        message={`Are you sure you want to remove entry "${clampedEntry().title}"?`}
+        message={t('channels.calendar.confirmRemoveEntry', {
+          title: clampedEntry().title,
+        })}
         onClose={() => setShowConfirmDialog(false)}
         onConfirm={() => props.onDelete(clampedEntry().id)}
       />
@@ -401,17 +442,28 @@ export const CalendarEntryBox: Component<{
         >
           <span>{clampedEntry().title}</span>
 
-          <span
+          <button
+            type="button"
             class={styles['entry-delete']}
+            aria-label={t('channels.removeChannelEntry')}
+            title={t('channels.removeChannelEntry')}
             onClick={(e) => {
               e.stopPropagation();
               setShowConfirmDialog(true);
             }}
           >
-            x
-          </span>
+            ×
+          </button>
         </div>
-        <div class={styles['event-body']}>{clampedEntry().playlist.name}</div>
+        <div
+          class={styles['event-body']}
+          onClick={(e) => {
+            e.stopPropagation();
+            props.onInfo(clampedEntry());
+          }}
+        >
+          {clampedEntry().playlist.name}
+        </div>
 
         {/* Resizer Handles */}
         <div
@@ -422,18 +474,20 @@ export const CalendarEntryBox: Component<{
           class={`${styles['resize-handle']} ${styles.bottom}`}
           onMouseDown={(e) => handleResize(e, { bottom: true })}
         />
-        <div
-          class={`${styles['resize-handle']} ${styles.left}`}
-          onMouseDown={(e) => handleResize(e, { left: true })}
-        />
-        <div
-          class={`${styles['resize-handle']} ${styles.right}`}
-          onMouseDown={(e) => handleResize(e, { right: true })}
-        />
-        <div
-          class={`${styles['resize-handle']} ${styles.corner}`}
-          onMouseDown={(e) => handleResize(e, { bottom: true, right: true })}
-        />
+        <Show when={canResizeDays()}>
+          <div
+            class={`${styles['resize-handle']} ${styles.left}`}
+            onMouseDown={(e) => handleResize(e, { left: true })}
+          />
+          <div
+            class={`${styles['resize-handle']} ${styles.right}`}
+            onMouseDown={(e) => handleResize(e, { right: true })}
+          />
+          <div
+            class={`${styles['resize-handle']} ${styles.corner}`}
+            onMouseDown={(e) => handleResize(e, { bottom: true, right: true })}
+          />
+        </Show>
       </div>
     </>
   );

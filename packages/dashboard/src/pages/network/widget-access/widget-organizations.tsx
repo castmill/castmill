@@ -11,8 +11,10 @@ import {
   Column,
   Pagination,
   SelectionActionBar,
+  SelectionActionBarSpacer,
   Table,
   useToast,
+  tableCardLabels,
 } from '@castmill/ui-common';
 import { BsLockFill, BsSearch } from 'solid-icons/bs';
 import {
@@ -42,6 +44,7 @@ export const WidgetOrganizations: Component<{
   ref?: (search: HTMLInputElement) => void;
 }> = (props) => {
   const { t } = useI18n();
+  const cardLabels = tableCardLabels(t);
   const toast = useToast();
   const [searchInput, setSearchInput] = createSignal('');
   const [search, setSearch] = createSignal('');
@@ -417,6 +420,8 @@ export const WidgetOrganizations: Component<{
           }
         >
           <Table<string, NetworkWidgetOrganization>
+            cardLayout
+            cardLabels={cardLabels}
             columns={columns}
             data={rows()}
             onRowSelect={(ids) => setSelected(new Set(ids))}
@@ -469,6 +474,10 @@ export const WidgetOrganizations: Component<{
           {t('network.widgets.organizations.disableSelected')}
         </button>
       </SelectionActionBar>
+
+      <Show when={selected().size > 0}>
+        <SelectionActionBarSpacer />
+      </Show>
 
       <Show when={bulkAction()} keyed>
         {(action) => (

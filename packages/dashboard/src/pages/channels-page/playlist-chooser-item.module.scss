@@ -8,9 +8,16 @@
   justify-content: flex-start;
   align-items: center;
   width: 10em;
+  max-width: 100%;
   cursor: grab;
+  color: var(--cm-text-primary);
+  background: var(--cm-bg-secondary);
 
   .label {
-    margin-left: 0.5em;
+    margin-inline-start: 0.5em;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }

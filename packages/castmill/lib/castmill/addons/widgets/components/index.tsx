@@ -1,4 +1,13 @@
-import { BsEye, BsTrash } from 'solid-icons/bs';
+import {
+  BsBraces,
+  BsDatabase,
+  BsEye,
+  BsImages,
+  BsPlug,
+  BsSliders,
+  BsTranslate,
+  BsTrash,
+} from 'solid-icons/bs';
 import { AiOutlineUpload } from 'solid-icons/ai';
 import {
   Component,
@@ -8,6 +17,7 @@ import {
   Show,
   For,
   onMount,
+  onCleanup,
   batch,
 } from 'solid-js';
 
@@ -21,14 +31,21 @@ import {
   TableView,
   TableViewRef,
   ModalRef,
-  Tabs,
+  TabItem,
   ConfirmDialog,
+  ToastProvider,
+  useToast,
+  closeDetailUrl,
+  detailUrlOptions,
+  tableCardLabels,
+  filtersLabel,
 } from '@castmill/ui-common';
 import { JsonWidget } from '@castmill/player';
 import { WidgetsService, WidgetUsage } from '../services/widgets.service';
 import { UploadComponent } from './upload';
 import { JsonHighlight } from './json-highlight';
 import { AssetsList } from './assets-list';
+import { WidgetDetailsView } from './widget-details-view';
 import { IntegrationsList } from '../../common/components/integrations-list';
 
 import { DEFAULT_WIDGET_ICON } from '../../common/constants';
@@ -45,11 +62,23 @@ type WidgetWithId = JsonWidget & { id: number; slug: string };
 const WidgetsPage: Component<{
   store: AddonStore;
   params: any;
+  /** Router location (route props); reactive, unlike window.location. */
+  location?: { pathname: string; search: string };
 }> = (props) => {
   // Get i18n functions from store
   const t = (key: string, params?: Record<string, any>) =>
     props.store.i18n?.t(key, params) || key;
   const locale = () => props.store.i18n?.locale() || 'en';
+  const toast = useToast();
+
+  const renderJson = (json: unknown) => (
+    <JsonHighlight
+      json={json}
+      copyLabel={t('widgets.json.copy')}
+      copiedMessage={t('widgets.json.copied')}
+      onCopyError={() => toast.error(t('widgets.json.copyFailed'))}
+    />
+  );
 
   const getWidgetName = (widget: WidgetWithId): string =>
     getTranslatedWidgetName(widget, locale());
@@ -100,36 +129,41 @@ const WidgetsPage: Component<{
 
     if (!widget) return [];
 
-    const tabs = [
+    const tabs: TabItem[] = [
       {
         title: t('widgets.template'),
-        content: () => <JsonHighlight json={widget.template} />,
+        icon: BsBraces,
+        content: () => renderJson(widget.template),
       },
     ];
 
     if (widget.options_schema) {
       tabs.push({
         title: t('widgets.optionsSchema'),
-        content: () => <JsonHighlight json={widget.options_schema} />,
+        icon: BsSliders,
+        content: () => renderJson(widget.options_schema),
       });
     }
 
     if (widget.data_schema) {
       tabs.push({
         title: t('widgets.dataSchema'),
-        content: () => <JsonHighlight json={widget.data_schema} />,
+        icon: BsDatabase,
+        content: () => renderJson(widget.data_schema),
       });
     }
 
     tabs.push({
       title: t('widgets.translations'),
-      content: () => <JsonHighlight json={widget.translations || {}} />,
+      icon: BsTranslate,
+      content: () => renderJson(widget.translations || {}),
     });
 
     // Add assets tab if widget has assets
     if (widget.assets && Object.keys(widget.assets).length > 0) {
       tabs.push({
         title: t('widgets.assets.title'),
+        icon: BsImages,
         content: () => (
           <AssetsList
             assets={widget.assets}
@@ -144,6 +178,7 @@ const WidgetsPage: Component<{
     if (hasIntegrations) {
       tabs.push({
         title: t('widgets.integrations.title'),
+        icon: BsPlug,
         content: () => (
           <IntegrationsList
             store={props.store}
@@ -210,17 +245,25 @@ const WidgetsPage: Component<{
     }
   };
 
-  // Update URL when widget drawer is opened/closed
-  const updateUrlForWidget = (widgetId: number | null, tab?: string) => {
-    const orgId = props.store.organizations.selectedId;
-    let url = `/org/${orgId}/content/widgets`;
-    if (widgetId !== null) {
-      url += `/${widgetId}`;
-      if (tab) {
-        url += `?tab=${tab}`;
-      }
+  const widgetsUrl = (widgetId?: number) => {
+    const url = `/org/${props.store.organizations.selectedId}/content/widgets`;
+    return widgetId === undefined ? url : `${url}/${widgetId}`;
+  };
+
+  // Navigate through the dashboard router so its location (and browser/swipe
+  // back) stays in sync with the open widget.
+  const navigateTo = (
+    url: string,
+    options: { replace?: boolean; state?: Record<string, unknown> }
+  ) => {
+    const navigate = props.store.router?.navigate;
+    if (navigate) {
+      navigate(url, options);
+    } else if (options.replace) {
+      window.history.replaceState(options.state ?? null, '', url);
+    } else {
+      window.history.pushState(options.state ?? null, '', url);
     }
-    window.history.pushState({}, '', url);
   };
 
   // Open widget drawer and update URL
@@ -241,10 +284,12 @@ const WidgetsPage: Component<{
 
     // Update URL FIRST to prevent the createEffect from closing the drawer
     // The effect checks lastProcessedUrl to avoid duplicate processing
-    const orgId = props.store.organizations.selectedId;
-    const newUrl = `/org/${orgId}/content/widgets/${widget.id}`;
+    const newUrl = widgetsUrl(widget.id);
     lastProcessedUrl = newUrl;
-    window.history.pushState({}, '', newUrl);
+    navigateTo(
+      newUrl,
+      detailUrlOptions(window.location.pathname !== widgetsUrl())
+    );
 
     batch(() => {
       setWidgetHasIntegrations(hasIntegrations);
@@ -265,22 +310,20 @@ const WidgetsPage: Component<{
     setCurrentWidget(undefined);
     setInitialTabIndex(0);
     setWidgetHasIntegrations(false);
-    updateUrlForWidget(null);
+    closeDetailUrl(() => navigateTo(widgetsUrl(), { replace: true }));
   };
 
   // Track last processed URL to avoid duplicate processing
   let lastProcessedUrl = '';
 
-  // Check URL for deep links - reactive to location changes for soft navigation
+  // Sync the drawer with the URL on load and on browser back/forward.
   // URL pattern: /org/:orgId/content/widgets/:widgetId?tab=integrations
-  createEffect(() => {
+  const syncDrawerWithUrl = () => {
     // Skip if we're in the middle of programmatically opening a drawer
     if (isOpeningDrawer) return;
 
-    // Get location from router (reactive) or fall back to window.location
-    const location = props.store.router?.location?.();
-    const path = location?.pathname || window.location.pathname;
-    const search = location?.search || window.location.search;
+    const path = props.location?.pathname ?? window.location.pathname;
+    const search = props.location?.search ?? window.location.search;
     const fullUrl = path + search;
 
     // Skip if we already processed this URL
@@ -309,6 +352,20 @@ const WidgetsPage: Component<{
         setInitialTabIndex(0);
       }
     }
+  };
+
+  createEffect(() => {
+    // Track before syncDrawerWithUrl's early returns so menu links to this
+    // page (no popstate) still close the drawer.
+    void props.location?.pathname;
+    void props.location?.search;
+    syncDrawerWithUrl();
+  });
+
+  // Addons don't share the dashboard router's reactivity, so listen directly.
+  onMount(() => {
+    window.addEventListener('popstate', syncDrawerWithUrl);
+    onCleanup(() => window.removeEventListener('popstate', syncDrawerWithUrl));
   });
 
   // Register keyboard shortcuts
@@ -336,37 +393,6 @@ const WidgetsPage: Component<{
         },
         () => window.location.pathname.includes('/widgets')
       );
-    }
-  });
-
-  // Apply fixed width to modals when they're shown
-  createEffect(() => {
-    if (showUploadModal()) {
-      setTimeout(() => {
-        const modalElement = document.querySelector(
-          '.widget-upload-modal'
-        ) as HTMLElement;
-        if (modalElement) {
-          modalElement.style.width = '50vw';
-          modalElement.style.maxWidth = '50vw';
-          modalElement.style.minWidth = '50vw';
-        }
-      }, 50);
-    }
-  });
-
-  createEffect(() => {
-    if (showDrawer()) {
-      setTimeout(() => {
-        const modalElement = document.querySelector(
-          '.widget-details-modal'
-        ) as HTMLElement;
-        if (modalElement) {
-          modalElement.style.width = '50vw';
-          modalElement.style.maxWidth = '50vw';
-          modalElement.style.minWidth = '50vw';
-        }
-      }, 50);
     }
   });
 
@@ -639,33 +665,18 @@ const WidgetsPage: Component<{
           title={getWidgetName(currentWidget()!)}
           onClose={closeWidgetDrawer}
           placement="right"
-          size="xl"
+          size="lg"
           closeOnOutsideClick
-          outsideClickIgnoreSelector="tbody tr"
-          contentClass="widget-details-modal"
+          outsideClickIgnoreSelector="tbody tr, [data-testid='table-card']"
         >
-          <div class="widget-details-content">
-            {/* Widget metadata header */}
-            <div class="widget-metadata">
-              <div class="metadata-item">
-                <strong>{t('common.type')}:</strong>{' '}
-                <span class="type-value">
-                  {currentWidget()!.template?.type || t('common.unknown')}
-                </span>
-              </div>
-              {currentWidget()!.update_interval_seconds && (
-                <div class="metadata-item">
-                  <strong>{t('widgets.updateInterval')}:</strong>{' '}
-                  <span class="interval-value">
-                    {currentWidget()!.update_interval_seconds}s
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Tabs using ui-common Tabs component */}
-            <Tabs tabs={detailsTabs()} initialIndex={initialTabIndex()} />
-          </div>
+          <WidgetDetailsView
+            widget={currentWidget()!}
+            description={getWidgetDescription(currentWidget()!)}
+            tabs={detailsTabs()}
+            initialIndex={initialTabIndex()}
+            t={t}
+            onCopyError={() => toast.error(t('widgets.details.copySlugFailed'))}
+          />
         </Drawer>
       </Show>
 
@@ -676,6 +687,7 @@ const WidgetsPage: Component<{
         fetchData={fetchData}
         ref={setRef}
         toolbar={{
+          filtersLabel: filtersLabel(t),
           searchPlaceholder: t('common.search'),
           mainAction: (
             <Button
@@ -688,6 +700,7 @@ const WidgetsPage: Component<{
           ),
         }}
         table={{
+          cardLabels: tableCardLabels(t),
           columns,
           actions,
           actionsLabel: t('common.actions'),
@@ -703,4 +716,8 @@ const WidgetsPage: Component<{
   );
 };
 
-export default WidgetsPage;
+export default (props: { store: AddonStore; params: any }) => (
+  <ToastProvider>
+    <WidgetsPage {...props} />
+  </ToastProvider>
+);

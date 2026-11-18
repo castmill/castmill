@@ -12,6 +12,7 @@ import {
   TableViewRef,
   Timestamp,
   useToast,
+  tableCardLabels,
 } from '@castmill/ui-common';
 import { AiOutlineDelete } from 'solid-icons/ai';
 import { createSignal } from 'solid-js';
@@ -49,6 +50,7 @@ export const OrganizationInvitationsView = (props: {
   onRemove: (invitation: Invitation) => void;
 }) => {
   const { t } = useI18n();
+  const cardLabels = tableCardLabels(t);
 
   const columns = [
     { key: 'email', title: t('common.email'), sortable: true },
@@ -196,6 +198,8 @@ export const OrganizationInvitationsView = (props: {
           actions,
           actionsLabel: t('common.actions'),
           onRowSelect,
+          cardLayout: true,
+          cardLabels,
         }}
         pagination={{ itemsPerPage }}
         itemIdKey="user_id"

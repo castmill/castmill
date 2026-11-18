@@ -6,6 +6,7 @@ import {
   Show,
   For,
 } from 'solid-js';
+import { SectionCard } from '@castmill/ui-common';
 import { Device } from '../interfaces/device.interface';
 import { authFetch } from '../../common/services/auth-fetch';
 import { DevicesService, JsonChannel } from '../services/devices.service';
@@ -18,7 +19,7 @@ import {
 } from '@castmill/player';
 import { ResourceManager, Cache, StorageDummy } from '@castmill/cache';
 import { BsEye } from 'solid-icons/bs';
-import { DeviceCardHeader, DeviceNotice } from './device-section';
+import { DeviceNotice } from './device-section';
 import './device-preview.scss';
 
 /**
@@ -411,13 +412,12 @@ export const DevicePreview: Component<{
     props.device.orientation === 90 || props.device.orientation === 270;
 
   return (
-    <section class="device-card device-preview">
-      <DeviceCardHeader
-        icon={BsEye}
-        title={t('common.preview')}
-        description={t('devices.preview.note')}
-      />
-
+    <SectionCard
+      class="device-preview"
+      icon={BsEye}
+      title={t('common.preview')}
+      description={t('devices.preview.note')}
+    >
       <Show when={loading()}>
         <p class="device-empty">{t('common.loading')}</p>
       </Show>
@@ -445,6 +445,6 @@ export const DevicePreview: Component<{
           ref={playerContainer}
         ></div>
       </Show>
-    </section>
+    </SectionCard>
   );
 };

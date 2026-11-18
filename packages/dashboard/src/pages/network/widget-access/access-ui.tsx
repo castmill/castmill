@@ -79,7 +79,7 @@ export const ConfirmAccessChange: Component<{
     description={props.message}
     onClose={props.onClose}
   >
-    <div class={styles['confirm-actions']}>
+    <div class={styles['confirm-actions']} data-modal-actions>
       <Button
         label={props.cancelLabel}
         color="secondary"

@@ -6,6 +6,8 @@ import {
   TableView,
   TableViewRef,
   useToast,
+  tableCardLabels,
+  filtersLabel,
 } from '@castmill/ui-common';
 import { AiOutlineDelete } from 'solid-icons/ai';
 import { BsCheckLg, BsEye } from 'solid-icons/bs';
@@ -73,6 +75,7 @@ export const ResourcesView = (props: {
   resourceName: string;
 }) => {
   const { t } = useI18n();
+  const cardLabels = tableCardLabels(t);
 
   const openModal = () => {
     alert(t('teams.errors.openViewModal'));
@@ -283,6 +286,7 @@ export const ResourcesView = (props: {
         fetchData={fetchResources}
         ref={setRef}
         toolbar={{
+          filtersLabel: filtersLabel(t),
           filters: [],
           searchPlaceholder: t('common.search'),
           mainAction: (
@@ -325,6 +329,8 @@ export const ResourcesView = (props: {
           actions,
           actionsLabel: t('common.actions'),
           onRowSelect,
+          cardLayout: true,
+          cardLabels,
           defaultRowAction: {
             icon: BsEye,
             handler: openModal,

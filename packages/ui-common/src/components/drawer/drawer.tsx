@@ -1,14 +1,19 @@
 /** @jsxImportSource solid-js */
 
 import {
+  Accessor,
   Component,
   JSX,
+  ParentComponent,
   Show,
+  children,
+  createContext,
   createEffect,
   createSignal,
   mergeProps,
   onCleanup,
   onMount,
+  useContext,
 } from 'solid-js';
 import { Portal } from 'solid-js/web';
 import { VsClose } from 'solid-icons/vs';
@@ -38,6 +43,31 @@ export interface DrawerProps {
   footer?: JSX.Element;
   contentClass?: string;
 }
+
+interface DrawerFooterSlot {
+  mount: Accessor<HTMLElement | undefined>;
+  register: () => () => void;
+}
+
+const DrawerFooterContext = createContext<DrawerFooterSlot>();
+
+/**
+ * Renders its children in the sticky footer of the enclosing Drawer, so a
+ * details view can own its Save/Reset actions while they stay pinned to the
+ * drawer edge. Outside a Drawer the children render in place.
+ */
+export const DrawerFooter: ParentComponent = (props) => {
+  const slot = useContext(DrawerFooterContext);
+  if (!slot) {
+    return <>{props.children}</>;
+  }
+  onCleanup(slot.register());
+  return (
+    <Show when={slot.mount()}>
+      {(mount) => <Portal mount={mount()}>{props.children}</Portal>}
+    </Show>
+  );
+};
 
 const animationDuration = 300;
 let drawerStack: string[] = [];
@@ -70,6 +100,16 @@ export const Drawer: Component<DrawerProps> = (_props) => {
   );
 
   const drawerId = `drawer-${++drawerIdCounter}`;
+  const footer = children(() => props.footer);
+  const [footerSlots, setFooterSlots] = createSignal(0);
+  const [footerEl, setFooterEl] = createSignal<HTMLElement>();
+  const footerSlot: DrawerFooterSlot = {
+    mount: footerEl,
+    register: () => {
+      setFooterSlots((n) => n + 1);
+      return () => setFooterSlots((n) => n - 1);
+    },
+  };
   const [isVisible, setIsVisible] = createSignal(false);
   const [isActive, setIsActive] = createSignal(false);
   const [hasBackdrop, setHasBackdrop] = createSignal(
@@ -141,7 +181,11 @@ export const Drawer: Component<DrawerProps> = (_props) => {
       return;
     }
 
-    if (event.key === 'Escape' && isTopDrawer(drawerId)) {
+    if (
+      event.key === 'Escape' &&
+      !event.defaultPrevented &&
+      isTopDrawer(drawerId)
+    ) {
       closeDrawer();
     }
   };
@@ -194,7 +238,39 @@ export const Drawer: Component<DrawerProps> = (_props) => {
       return;
     }
 
+    const link = target.closest<HTMLAnchorElement>('a[href]');
+    if (link && navigatesAway(link, event)) {
+      dismissForNavigation();
+      return;
+    }
+
     closeDrawer();
+  };
+
+  // Plain clicks on links that leave the current URL (e.g. menu items).
+  const navigatesAway = (link: HTMLAnchorElement, event: MouseEvent) =>
+    event.button === 0 &&
+    !event.metaKey &&
+    !event.ctrlKey &&
+    !event.shiftKey &&
+    !event.altKey &&
+    !link.hasAttribute('download') &&
+    (!link.target || link.target === '_self') &&
+    link.href.split('#')[0] !== window.location.href.split('#')[0];
+
+  // Hide without onClose: the owner's close handler usually restores the list
+  // URL (history.back()), which would race with and undo the link's
+  // navigation. The navigation itself updates the owner's URL-driven state.
+  // Addon pages are not disposed on route changes, so the portaled drawer
+  // must still disappear here.
+  const dismissForNavigation = () => {
+    if (isClosing) {
+      return;
+    }
+    isClosing = true;
+    setIsActive(false);
+    setIsVisible(false);
+    detachGlobalListeners();
   };
 
   onMount(() => {
@@ -321,8 +397,22 @@ export const Drawer: Component<DrawerProps> = (_props) => {
                 />
               </div>
             </div>
-            <div class={styles.body}>{props.children}</div>
-            {props.footer && <div class={styles.footer}>{props.footer}</div>}
+            <div class={styles.body}>
+              <DrawerFooterContext.Provider value={footerSlot}>
+                {props.children}
+              </DrawerFooterContext.Provider>
+            </div>
+            <Show when={footer() || footerSlots() > 0}>
+              <div
+                class={styles.footer}
+                ref={(el) => {
+                  setFooterEl(el);
+                  onCleanup(() => setFooterEl(undefined));
+                }}
+              >
+                {footer()}
+              </div>
+            </Show>
           </div>
         </div>
       </Show>

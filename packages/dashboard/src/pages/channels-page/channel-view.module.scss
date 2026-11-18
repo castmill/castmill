@@ -1,5 +1,18 @@
 @use '../../colors.scss';
 
+.channel-view {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.content {
+  width: 100%;
+  min-width: 0;
+}
+
 .notice {
   margin: 0 0 1em 0;
   padding: 0.75em 1em;

@@ -8,10 +8,16 @@ import {
   createMemo,
 } from 'solid-js';
 import { Device } from '../interfaces/device.interface';
-import { Button, useToast } from '@castmill/ui-common';
+import {
+  Button,
+  COARSE_POINTER_QUERY,
+  matchesMediaQuery,
+  SectionCard,
+  TABLET_LAYOUT_QUERY,
+  useToast,
+} from '@castmill/ui-common';
 import { BsCalendar3, BsCheckLg, BsTrash, BsX } from 'solid-icons/bs';
 import { DevicesService } from '../services/devices.service';
-import { DeviceCardHeader } from './device-section';
 import './device-schedule.scss';
 
 // ── Types ──────────────────────────────────────────────────
@@ -112,7 +118,7 @@ export const getScheduleNow = (
 // Movement allowed before a touch is treated as a scroll instead of a tap
 const TAP_SLOP_PX = 10;
 // Keep in sync with the compact breakpoint in device-schedule.scss
-const COMPACT_LAYOUT_QUERY = '(max-width: 48em), (pointer: coarse)';
+const COMPACT_LAYOUT_QUERY = `${TABLET_LAYOUT_QUERY}, ${COARSE_POINTER_QUERY}`;
 
 let idCounter = 0;
 const genId = () => `entry-${++idCounter}`;
@@ -143,10 +149,7 @@ export const parseTimeInput = (value: string): number | null => {
 const toEndTimeInputValue = (h: number, m: number) =>
   h >= 24 ? '00:00' : fmtTime(h, m);
 
-const isCompactLayout = () =>
-  typeof window !== 'undefined' &&
-  typeof window.matchMedia === 'function' &&
-  window.matchMedia(COMPACT_LAYOUT_QUERY).matches;
+const isCompactLayout = () => matchesMediaQuery(COMPACT_LAYOUT_QUERY);
 
 /** Check if two entries overlap */
 function entriesOverlap(a: ScheduleEntry, b: ScheduleEntry): boolean {
@@ -1035,13 +1038,48 @@ export const DeviceSchedule: Component<{
   // ── Render ─────────────────────────────────────────────
 
   return (
-    <section class="device-card schedule-grid-container">
-      <DeviceCardHeader
-        icon={BsCalendar3}
-        title={t('deviceSchedule.title')}
-        description={t('deviceSchedule.description')}
-      />
-
+    <SectionCard
+      footerClass="schedule-footer"
+      footer={
+        <>
+          <p class="schedule-summary" aria-live="polite">
+            <Show
+              when={entries().length > 0}
+              fallback={
+                <span class="schedule-summary-always-on">
+                  {t('deviceSchedule.noScheduleAlwaysOn')}
+                </span>
+              }
+            >
+              {summary()}
+            </Show>
+          </p>
+          <div class="schedule-actions">
+            <Show when={loading()}>
+              <span class="schedule-loading">{t('common.loading')}</span>
+            </Show>
+            <Button
+              onClick={resetSchedule}
+              label={t('deviceSchedule.reset')}
+              icon={BsX}
+              color="secondary"
+              disabled={!isModified() || loading()}
+            />
+            <Button
+              onClick={saveSchedule}
+              color="success"
+              icon={BsCheckLg}
+              label={t('common.save')}
+              disabled={!isModified() || loading()}
+            />
+          </div>
+        </>
+      }
+      class="schedule-grid-container"
+      icon={BsCalendar3}
+      title={t('deviceSchedule.title')}
+      description={t('deviceSchedule.description')}
+    >
       <div
         class="schedule-grid-wrapper"
         onPointerDown={handleGridPointerDown}
@@ -1291,40 +1329,6 @@ export const DeviceSchedule: Component<{
           </div>
         )}
       </Show>
-
-      <footer class="device-card-footer schedule-footer">
-        <p class="schedule-summary" aria-live="polite">
-          <Show
-            when={entries().length > 0}
-            fallback={
-              <span class="schedule-summary-always-on">
-                {t('deviceSchedule.noScheduleAlwaysOn')}
-              </span>
-            }
-          >
-            {summary()}
-          </Show>
-        </p>
-        <div class="schedule-actions">
-          <Show when={loading()}>
-            <span class="schedule-loading">{t('common.loading')}</span>
-          </Show>
-          <Button
-            onClick={resetSchedule}
-            label={t('deviceSchedule.reset')}
-            icon={BsX}
-            color="secondary"
-            disabled={!isModified() || loading()}
-          />
-          <Button
-            onClick={saveSchedule}
-            color="success"
-            icon={BsCheckLg}
-            label={t('common.save')}
-            disabled={!isModified() || loading()}
-          />
-        </div>
-      </footer>
-    </section>
+    </SectionCard>
   );
 };

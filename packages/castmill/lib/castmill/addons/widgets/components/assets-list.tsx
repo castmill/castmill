@@ -44,12 +44,6 @@ const getCategoryIcon = (category: string) => {
   }
 };
 
-// Helper to format file size
-const formatType = (type?: string): string => {
-  if (!type) return 'Unknown';
-  return type;
-};
-
 // Asset category component
 const AssetCategory: Component<{
   title: string;
@@ -57,6 +51,7 @@ const AssetCategory: Component<{
   assets: Record<string, AssetDefinition>;
   widgetSlug: string;
   baseUrl: string;
+  unknownType: string;
 }> = (props) => {
   const entries = Object.entries(props.assets);
 
@@ -83,7 +78,7 @@ const AssetCategory: Component<{
                 <Show when={asset.description}>
                   <div class="asset-description">{asset.description}</div>
                 </Show>
-                <div class="asset-type">{formatType(asset.type)}</div>
+                <div class="asset-type">{asset.type || props.unknownType}</div>
               </div>
               <Show
                 when={props.category === 'icons' || props.category === 'images'}
@@ -136,6 +131,7 @@ export const AssetsList: Component<AssetsListProps> = (props) => {
             assets={props.assets!.icons!}
             widgetSlug={props.widgetSlug}
             baseUrl={props.baseUrl}
+            unknownType={props.t('common.unknown')}
           />
         </Show>
 
@@ -150,6 +146,7 @@ export const AssetsList: Component<AssetsListProps> = (props) => {
             assets={props.assets!.images!}
             widgetSlug={props.widgetSlug}
             baseUrl={props.baseUrl}
+            unknownType={props.t('common.unknown')}
           />
         </Show>
 
@@ -164,6 +161,7 @@ export const AssetsList: Component<AssetsListProps> = (props) => {
             assets={props.assets!.fonts!}
             widgetSlug={props.widgetSlug}
             baseUrl={props.baseUrl}
+            unknownType={props.t('common.unknown')}
           />
         </Show>
 
@@ -178,6 +176,7 @@ export const AssetsList: Component<AssetsListProps> = (props) => {
             assets={props.assets!.styles!}
             widgetSlug={props.widgetSlug}
             baseUrl={props.baseUrl}
+            unknownType={props.t('common.unknown')}
           />
         </Show>
       </Show>
