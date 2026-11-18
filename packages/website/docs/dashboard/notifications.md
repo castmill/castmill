@@ -1,7 +1,7 @@
 ---
 sidebar_position: 12
 title: Notifications
-description: Read invitations and organization events in the notification centre in the top bar.
+description: Read invitations, organization events and network events in the notification centre in the top bar.
 ---
 
 # Notifications
@@ -33,6 +33,10 @@ When you have none, the list shows "No notifications yet".
 | **Removed from Team**, **Team Member Removed** | A member is removed from a team | The removed member, and the team |
 
 Organization notifications can be limited to certain roles.
+
+### Network notifications
+
+Network administrators also receive notifications about the network itself, for example when a custom domain has been verified and its HTTPS certificate is active. Each network administrator receives them, also without belonging to an organization. Click one to open the network page it refers to.
 
 :::note
 The dashboard does not send notifications when a device goes offline or comes back online. Check the **Online** column on the Devices page and the device's **Events**. See [Devices](./devices.md#events).

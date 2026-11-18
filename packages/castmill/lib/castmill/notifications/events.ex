@@ -5,6 +5,7 @@ defmodule Castmill.Notifications.Events do
   to trigger notifications.
   """
 
+  alias Castmill.Networks
   alias Castmill.Notifications
 
   @doc """
@@ -450,6 +451,36 @@ defmodule Castmill.Notifications.Events do
 
       true ->
         {:error, :missing_recipient}
+    end
+  end
+
+  @doc """
+  Notifies every administrator of a network about a network-level event, for
+  example a custom domain that has become ready. Add-ons use this instead of
+  looking up the network's admins themselves.
+
+  `attrs` are notification attributes with atom keys (`:type`, `:title_key`,
+  `:description_key`, `:link`, `:metadata`, ...). Each admin gets their own
+  notification; `:actor_type` defaults to `"system"`. Links to network pages
+  (`/network/...`) open in the dashboard without an organization.
+
+  Returns `{:ok, notifications}` with one notification per admin, or the first
+  `{:error, reason}`.
+  """
+  def notify_network_admins(network_id, attrs) when is_map(attrs) do
+    attrs = Map.put_new(attrs, :actor_type, "system")
+
+    network_id
+    |> Networks.list_network_admins()
+    |> Enum.reduce_while({:ok, []}, fn admin, {:ok, notifications} ->
+      case Notifications.create_user_notification(Map.put(attrs, :user_id, admin.id)) do
+        {:ok, notification} -> {:cont, {:ok, [notification | notifications]}}
+        {:error, _reason} = error -> {:halt, error}
+      end
+    end)
+    |> case do
+      {:ok, notifications} -> {:ok, Enum.reverse(notifications)}
+      error -> error
     end
   end
 

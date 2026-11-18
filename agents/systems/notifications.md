@@ -1096,19 +1096,50 @@ Leave `roles` empty (`[]`) for no restrictions.
 
 ### 5. Link Format
 
-Links should follow the Dashboard's URL-based routing pattern:
+`resolveNotificationLink` in `notification-dialog.tsx` decides where a link
+opens:
 
 ```elixir
-# ✅ Correct - includes organization context
-link: "/org/#{organization_id}/devices/#{device_id}"
-link: "/org/#{organization_id}/teams"
+# Pages of an organization: either name the organization...
+link: "/org/#{organization_id}/devices?device=#{device_id}"
+# ...or use a relative page, opened in the user's selected organization
+link: "/content/medias?media=#{media_id}"
 
-# ⚠️ Exception - standalone routes (no org prefix)
+# Top-level routes, opened as they are
 link: "/invite-organization?token=#{token}"
 link: "/invite?token=#{token}"
+link: "/network/custom-domains"   # network pages, also for admins without an organization
+
+# Absolute http(s) addresses open in a new tab
+link: "https://#{domain}"
 ```
 
-Standalone routes are defined in `notification-dialog.tsx` and exclude org prefix.
+Top-level routes match whole path segments (`/network` does not match
+`/networking`).
+
+### Network Notifications
+
+Network-level events (for example a custom domain becoming ready) go to every
+network administrator. Use the generic helper instead of querying
+`networks_users`:
+
+```elixir
+Castmill.Notifications.Events.notify_network_admins(network_id, %{
+  type: "network_custom_domain_active",
+  title_key: "custom_domains.notifications.domainActive.title",
+  description_key: "custom_domains.notifications.domainActive.description",
+  link: "/network/custom-domains",
+  metadata: %{hostname: hostname}
+})
+# => {:ok, [%Notification{}, ...]}  one user notification per admin
+```
+
+- Name network event types `network_*`; the dialog shows them with the 🌐 icon.
+- `actor_type` defaults to `"system"`.
+- Add-ons may use their own translation keys (from their `translations_path`),
+  because the dashboard merges add-on translations into the global i18n.
+- Send notifications after the change is committed, and only once per event
+  (for example from a conditional update that detects the transition).
 
 ### 6. Metadata Parameters
 
