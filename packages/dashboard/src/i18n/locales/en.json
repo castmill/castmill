@@ -498,7 +498,12 @@
           "too_long": "Too long.",
           "too_many": "Too many values."
         }
-      }
+      },
+      "addMeAsAdmin": "Add me as an administrator",
+      "join": "Join",
+      "joinTitle": "Join as an administrator",
+      "joinSuccess": "You are now an administrator of {{name}}.",
+      "joinError": "Could not join the organization."
     },
     "users": {
       "listTitle": "All Users",

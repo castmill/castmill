@@ -1,3 +1,5 @@
+// Exported types use the global gsap namespace, so consumers need its types.
+/// <reference types="gsap" preserve="true" />
 export * from './components';
 export * from './interfaces';
 export * from './transitions';

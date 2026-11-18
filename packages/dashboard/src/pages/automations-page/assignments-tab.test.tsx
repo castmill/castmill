@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Mock } from 'vitest';
 import {
   cleanup,
   fireEvent,
@@ -23,7 +24,8 @@ vi.mock('../../services/automations.service', async (importOriginal) => {
 });
 vi.mock('../../components/auth', () => ({ authFetch: vi.fn() }));
 
-let onSave: ReturnType<typeof vi.fn>;
+type OnSave = AssignmentsTabProps['onSave'];
+let onSave: Mock<Parameters<OnSave>, ReturnType<OnSave>>;
 
 const renderTab = (props: Partial<AssignmentsTabProps> = {}) =>
   render(() => (
@@ -48,7 +50,9 @@ const saveButton = () =>
 
 describe('AssignmentsTab', () => {
   beforeEach(() => {
-    onSave = vi.fn().mockResolvedValue(true);
+    onSave = vi
+      .fn<Parameters<OnSave>, ReturnType<OnSave>>()
+      .mockResolvedValue(true);
     vi.mocked(AutomationsService.searchAssignable).mockImplementation(
       async (_org, kind) =>
         kind === 'devices'

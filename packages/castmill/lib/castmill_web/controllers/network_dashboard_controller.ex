@@ -450,9 +450,14 @@ defmodule CastmillWeb.NetworkDashboardController do
   Create a new organization in the network.
   Only accessible to network admins.
   """
-  def create_organization(conn, %{"organization" => org_params}) do
+  def create_organization(conn, %{"organization" => org_params} = params) do
     with {:ok, network_id} <- get_admin_network_id(conn),
-         {:ok, organization} <- create_organization_for_network(network_id, org_params) do
+         {:ok, organization} <-
+           create_organization_for_network(
+             network_id,
+             org_params,
+             params["join"] in [true, "true"] && conn.assigns.current_user
+           ) do
       conn
       |> put_status(:created)
       |> json(organization_to_json(organization))
@@ -1031,14 +1036,66 @@ defmodule CastmillWeb.NetworkDashboardController do
     end
   end
 
-  defp create_organization_for_network(network_id, params) do
+  defp create_organization_for_network(network_id, params, joining_user) do
     alias Castmill.Organizations
 
     org_attrs = Map.merge(params, %{"network_id" => network_id})
 
-    # Create the organization without assigning the network admin as org admin
-    # The network admin can later invite users to manage the organization
-    Organizations.create_organization(org_attrs)
+    # The network admin only becomes an organization admin when asked to
+    # join; otherwise they invite the organization's users.
+    Repo.transaction(fn ->
+      with {:ok, organization} <- Organizations.create_organization(org_attrs),
+           {:ok, _} <- maybe_join(organization, joining_user) do
+        organization
+      else
+        {:error, reason} -> Repo.rollback(reason)
+      end
+    end)
+  end
+
+  defp maybe_join(_organization, false), do: {:ok, nil}
+
+  defp maybe_join(organization, user),
+    do: Castmill.Organizations.add_user(organization.id, user.id, :admin)
+
+  @doc """
+  Makes the current network admin an administrator of an organization in
+  their network, so they can work in it from the dashboard.
+  """
+  def join_organization(conn, %{"organization_id" => org_id}) do
+    user = conn.assigns[:current_user]
+
+    with {:ok, network_id} <- get_admin_network_id(conn),
+         {:ok, organization} <- fetch_network_organization(network_id, org_id),
+         nil <- Castmill.Organizations.get_user_role(organization.id, user.id),
+         {:ok, _} <- Castmill.Organizations.add_user(organization.id, user.id, :admin) do
+      json(conn, organization_to_json(organization))
+    else
+      {:error, :not_admin} ->
+        conn
+        |> put_status(:forbidden)
+        |> json(%{error: "You must be a network admin to join organizations"})
+
+      {:error, :not_found} ->
+        conn
+        |> put_status(:not_found)
+        |> json(%{error: "Organization not found"})
+
+      role when is_atom(role) ->
+        conn
+        |> put_status(:conflict)
+        |> json(%{error: "You are already a member of this organization"})
+    end
+  end
+
+  defp fetch_network_organization(network_id, org_id) do
+    with {:ok, org_id} <- Ecto.UUID.cast(org_id),
+         %{network_id: ^network_id} = organization <-
+           Castmill.Organizations.get_organization(org_id) do
+      {:ok, organization}
+    else
+      _ -> {:error, :not_found}
+    end
   end
 
   defp get_network_stats(network_id) do

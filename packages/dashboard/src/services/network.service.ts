@@ -15,7 +15,7 @@ export interface NetworkSettings {
   name: string;
   domain: string;
   email: string;
-  logo: string;
+  logo: string | null;
   logo_light?: string | null;
   copyright: string;
   default_locale: string;
@@ -227,7 +227,7 @@ export interface PaginatedUsers {
 
 export interface PublicNetworkSettings {
   name: string;
-  logo: string;
+  logo: string | null;
   logo_light?: string | null;
   invitation_only: boolean;
   copyright: string;
@@ -600,9 +600,13 @@ export const NetworkService = {
 
   /**
    * Create a new organization in the network.
-   * Only available to network admins.
+   * Only available to network admins. With `join`, the network admin also
+   * becomes an administrator of the new organization.
    */
-  async createOrganization(name: string): Promise<{
+  async createOrganization(
+    name: string,
+    options: { join?: boolean } = {}
+  ): Promise<{
     id: string;
     name: string;
     inserted_at: string;
@@ -615,7 +619,10 @@ export const NetworkService = {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ organization: { name } }),
+        body: JSON.stringify({
+          organization: { name },
+          join: options.join ?? false,
+        }),
       }
     );
 
@@ -625,6 +632,24 @@ export const NetworkService = {
       inserted_at: string;
       updated_at: string;
     }>(response, { parse: true });
+  },
+
+  /**
+   * Make the current network admin an administrator of an organization in
+   * the network.
+   */
+  async joinOrganization(organizationId: string): Promise<{
+    id: string;
+    name: string;
+  }> {
+    const response = await authFetch(
+      `${baseUrl}/dashboard/network/organizations/${organizationId}/join`,
+      { method: 'POST' }
+    );
+
+    return handleResponse<{ id: string; name: string }>(response, {
+      parse: true,
+    });
   },
 
   /**

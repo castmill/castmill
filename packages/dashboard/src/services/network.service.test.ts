@@ -408,7 +408,19 @@ describe('NetworkService', () => {
   });
 
   describe('createOrganization', () => {
-    it('creates a new organization', async () => {
+    it.each([
+      { scenario: 'without opting in', options: undefined, join: false },
+      {
+        scenario: 'with an explicit opt-out',
+        options: { join: false },
+        join: false,
+      },
+      {
+        scenario: 'with an explicit opt-in',
+        options: { join: true },
+        join: true,
+      },
+    ])('creates a new organization $scenario', async ({ options, join }) => {
       const mockOrg = {
         id: 'org-new',
         name: 'New Organization',
@@ -422,8 +434,10 @@ describe('NetworkService', () => {
         json: () => Promise.resolve(mockOrg),
       });
 
-      const result =
-        await NetworkService.createOrganization('New Organization');
+      const result = await NetworkService.createOrganization(
+        'New Organization',
+        options
+      );
 
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining('/dashboard/network/organizations'),
@@ -432,7 +446,10 @@ describe('NetworkService', () => {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ organization: { name: 'New Organization' } }),
+          body: JSON.stringify({
+            organization: { name: 'New Organization' },
+            join,
+          }),
         })
       );
       expect(result.name).toBe('New Organization');
@@ -465,6 +482,39 @@ describe('NetworkService', () => {
       });
 
       await expect(NetworkService.createOrganization('')).rejects.toThrow();
+    });
+  });
+
+  describe('joinOrganization', () => {
+    it('joins an organization as an administrator', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ id: 'org-1', name: 'Acme' }),
+      });
+
+      const result = await NetworkService.joinOrganization('org-1');
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/dashboard/network/organizations/org-1/join'),
+        expect.objectContaining({ method: 'POST' })
+      );
+      expect(result).toEqual({ id: 'org-1', name: 'Acme' });
+    });
+
+    it('throws the server error when already a member', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 409,
+        json: () =>
+          Promise.resolve({
+            error: 'You are already a member of this organization',
+          }),
+      });
+
+      await expect(NetworkService.joinOrganization('org-1')).rejects.toThrow(
+        'You are already a member of this organization'
+      );
     });
   });
 

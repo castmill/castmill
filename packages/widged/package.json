@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "format": "oxfmt --write .",
-    "format:check": "oxfmt .",
+    "format:check": "oxfmt --check .",
     "start": "vite",
     "dev": "vite",
     "build": "yarn tsc --noEmit && vite build && node build.js",

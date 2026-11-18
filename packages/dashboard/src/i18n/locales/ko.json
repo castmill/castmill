@@ -463,7 +463,12 @@
           "too_long": "너무 깁니다.",
           "too_many": "값이 너무 많습니다."
         }
-      }
+      },
+      "addMeAsAdmin": "나를 관리자로 추가",
+      "join": "참여",
+      "joinTitle": "관리자로 참여",
+      "joinSuccess": "이제 {{name}}의 관리자입니다.",
+      "joinError": "조직에 참여할 수 없습니다."
     },
     "users": {
       "listTitle": "모든 사용자",

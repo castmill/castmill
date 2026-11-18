@@ -56,6 +56,8 @@ defmodule CastmillWeb.Live.Admin.NetworkIntegrationForm do
           />
         </div>
 
+        <.error :if={@error}><%= @error %></.error>
+
         <div class="flex items-center gap-2 py-4">
           <input
             type="checkbox"
@@ -130,6 +132,7 @@ defmodule CastmillWeb.Live.Admin.NetworkIntegrationForm do
      |> assign(:requires_config, Integrations.requires_network_credentials?(integration))
      |> assign(:optional, get_in(integration.credential_schema, ["auth_type"]) == "optional")
      |> assign(:has_config_form, credential_fields != [])
+     |> assign(:error, nil)
      |> assign_form(form_data)}
   end
 
@@ -143,6 +146,7 @@ defmodule CastmillWeb.Live.Admin.NetworkIntegrationForm do
     {:noreply,
      socket
      |> assign(:is_enabled, is_enabled)
+     |> assign(:error, nil)
      |> assign_form(form_data)}
   end
 
@@ -164,10 +168,11 @@ defmodule CastmillWeb.Live.Admin.NetworkIntegrationForm do
       :ok ->
         save_credentials(socket, network_id, integration_id, credentials, is_enabled)
 
+      # A component's flash is dropped unless it navigates, so errors are
+      # shown in the form, which stays open.
       {:error, errors} ->
         {:noreply,
-         socket
-         |> put_flash(:error, "Please fill in all required fields: #{Enum.join(errors, ", ")}")}
+         assign(socket, :error, "Please fill in all required fields: #{Enum.join(errors, ", ")}")}
     end
   end
 
@@ -185,9 +190,7 @@ defmodule CastmillWeb.Live.Admin.NetworkIntegrationForm do
          |> push_patch(to: socket.assigns.patch)}
 
       {:error, _reason} ->
-        {:noreply,
-         socket
-         |> put_flash(:error, "Failed to delete credentials")}
+        {:noreply, assign(socket, :error, "Failed to delete credentials")}
     end
   end
 
@@ -215,14 +218,10 @@ defmodule CastmillWeb.Live.Admin.NetworkIntegrationForm do
           |> Enum.map(fn {field, {msg, _}} -> "#{field}: #{msg}" end)
           |> Enum.join(", ")
 
-        {:noreply,
-         socket
-         |> put_flash(:error, "Failed to save: #{error_messages}")}
+        {:noreply, assign(socket, :error, "Failed to save: #{error_messages}")}
 
       {:error, reason} ->
-        {:noreply,
-         socket
-         |> put_flash(:error, "Failed to save credentials: #{inspect(reason)}")}
+        {:noreply, assign(socket, :error, "Failed to save credentials: #{inspect(reason)}")}
     end
   end
 

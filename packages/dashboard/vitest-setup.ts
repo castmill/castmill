@@ -1,4 +1,9 @@
 import '@testing-library/jest-dom';
+import { configure } from '@solidjs/testing-library';
+
+// findBy*/waitFor give up after 1s by default, which debounced pages exceed
+// when the whole suite runs in parallel; they still resolve as soon as possible.
+configure({ asyncUtilTimeout: 3000 });
 
 // Mock ResizeObserver for tests
 global.ResizeObserver = class ResizeObserver {

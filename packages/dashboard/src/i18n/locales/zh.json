@@ -463,7 +463,12 @@
           "too_long": "太长。",
           "too_many": "值太多。"
         }
-      }
+      },
+      "addMeAsAdmin": "将我添加为管理员",
+      "join": "加入",
+      "joinTitle": "以管理员身份加入",
+      "joinSuccess": "您现在是 {{name}} 的管理员。",
+      "joinError": "无法加入该组织。"
     },
     "users": {
       "listTitle": "所有用户",

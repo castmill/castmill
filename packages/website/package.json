@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "format": "oxfmt --write .",
-    "format:check": "oxfmt .",
+    "format:check": "oxfmt --check .",
     "docusaurus": "docusaurus",
     "start": "docusaurus start",
     "build": "docusaurus build",

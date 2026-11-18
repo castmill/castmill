@@ -300,9 +300,9 @@ describe('AgentsPage', () => {
 
     await waitFor(() =>
       expect(
-        screen.getAllByRole('button', { name: 'New agent' }).every((button) =>
-          (button as HTMLButtonElement).disabled
-        )
+        screen
+          .getAllByRole('button', { name: 'New agent' })
+          .every((button) => (button as HTMLButtonElement).disabled)
       ).toBe(true)
     );
 
@@ -310,9 +310,9 @@ describe('AgentsPage', () => {
 
     await waitFor(() =>
       expect(
-        screen.getAllByRole('button', { name: 'New agent' }).every((button) =>
-          (button as HTMLButtonElement).disabled
-        )
+        screen
+          .getAllByRole('button', { name: 'New agent' })
+          .every((button) => (button as HTMLButtonElement).disabled)
       ).toBe(false)
     );
   });

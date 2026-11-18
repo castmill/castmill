@@ -68,6 +68,8 @@ The next time the person loads the dashboard, the **Network** section appears in
 
 You can create organizations in a network and invite their first administrator from the network's **Organizations** and **Invitations** tabs. Network administrators can do the same from the dashboard, which is usually more convenient.
 
+To add someone to an organization directly, open the organization's **Users** tab and choose **New**. Enter their email and a role: existing users, yourself included, are added right away, and new people get an account in the organization's network. People without a passkey create one with **Lost your credentials?** on the network's dashboard.
+
 ## Integrations
 
 The **Integrations** tab of a network holds network-wide credentials for widget integrations, for example an API key that all organizations share. Credentials are encrypted with `ENCRYPTION_MASTER_KEY`. See [Widgets](../dashboard/widgets.md).

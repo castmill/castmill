@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "format": "oxfmt --write .",
-    "format:check": "oxfmt .",
+    "format:check": "oxfmt --check .",
     "start": "vite",
     "dev": "vite",
     "build": "vite build && node scripts/write-version.cjs",
@@ -15,7 +15,8 @@
     "check-i18n": "node scripts/check-i18n.cjs",
     "check-translations": "node scripts/check-missing-translations.cjs",
     "lint:i18n": "node scripts/check-i18n.cjs",
-    "lint": "oxlint ."
+    "lint": "oxlint .",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@castmill/ui-common": "*",
