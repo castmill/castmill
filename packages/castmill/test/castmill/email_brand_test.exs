@@ -85,4 +85,24 @@ defmodule Castmill.EmailBrandTest do
 
     assert %EmailBrand{name: "A &amp; &lt;B&gt;", reply_to: nil} = EmailBrand.html_escape(brand)
   end
+
+  test "escapes the network name in a team invitation HTML title" do
+    name = "Danger</title><script>alert(1)</script>"
+    brand = %EmailBrand{EmailBrand.castmill() | name: name}
+
+    {html_body, text_body} =
+      Castmill.EmailRenderer.render_team_invite(
+        "Team",
+        "user@example.com",
+        "token",
+        "https://example.com",
+        brand
+      )
+
+    assert html_body =~
+             "<title>You have been invited to a Team on Danger&lt;/title&gt;&lt;script&gt;alert(1)&lt;/script&gt;</title>"
+
+    refute html_body =~ "<title>You have been invited to a Team on Danger</title><script>"
+    assert text_body =~ "on #{name}."
+  end
 end

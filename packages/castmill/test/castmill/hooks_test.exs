@@ -28,9 +28,13 @@ defmodule Castmill.HooksTest do
       # Allow the Hooks GenServer to access the test database
       Ecto.Adapters.SQL.Sandbox.allow(Castmill.Repo, self(), Process.whereis(Castmill.Hooks))
 
-      # Adjusted test_args to match the expected schema for :user_signup
       user = user_fixture()
-      test_args = %{user_id: user.id, email: user.email}
+
+      test_args = %{
+        user_id: user.id,
+        email: user.email,
+        network_id: user.network_id
+      }
 
       send_self = self()
 
@@ -40,6 +44,28 @@ defmodule Castmill.HooksTest do
 
       Hooks.trigger_hook(:user_signup, test_args)
       assert_receive {:hook_called, ^test_args}
+    end
+  end
+
+  describe "signup hook dispatch" do
+    test "dispatches the network id through the signup hook schema" do
+      test_pid = self()
+
+      args = %{
+        user_id: Ecto.UUID.generate(),
+        email: "user@example.com",
+        network_id: Ecto.UUID.generate()
+      }
+
+      {:ok, id} =
+        Hooks.register_hook(:user_signup, fn hook_args ->
+          send(test_pid, {:signup_hook_called, hook_args})
+        end)
+
+      on_exit(fn -> Hooks.unregister_hook(:user_signup, id) end)
+
+      assert :ok = Hooks.trigger_hook(:user_signup, args)
+      assert_receive {:signup_hook_called, ^args}
     end
   end
 end

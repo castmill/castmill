@@ -5,7 +5,8 @@ defmodule Castmill.HookSchemasTest do
     test "validates known hook with correct arguments" do
       assert Castmill.HookSchemas.validate_hook(:user_signup, %{
                user_id: 1,
-               email: "user@example.com"
+               email: "user@example.com",
+               network_id: Ecto.UUID.generate()
              }) == :ok
     end
 

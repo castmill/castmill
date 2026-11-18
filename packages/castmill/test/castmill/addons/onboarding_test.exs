@@ -28,7 +28,8 @@ defmodule Castmill.Addons.OnboardingTest do
       # Trigger the user signup hook
       Castmill.Hooks.trigger_hook(:user_signup, %{
         user_id: user.id,
-        email: "john.doe@test.xom"
+        email: "john.doe@test.xom",
+        network_id: user.network_id
       })
 
       # Assert that the hook was triggered
