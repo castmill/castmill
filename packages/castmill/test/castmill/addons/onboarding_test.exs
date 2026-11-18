@@ -10,6 +10,7 @@ defmodule Castmill.Addons.OnboardingTest do
   setup :verify_on_exit!
 
   import Castmill.OrganizationsFixtures
+  import Castmill.NetworksFixtures
 
   @moduletag :onboarding
 
@@ -27,12 +28,13 @@ defmodule Castmill.Addons.OnboardingTest do
       # Trigger the user signup hook
       Castmill.Hooks.trigger_hook(:user_signup, %{
         user_id: user.id,
-        email: "john.doe@test.xom"
+        email: "john.doe@test.xom",
+        network_id: user.network_id
       })
 
       # Assert that the hook was triggered
       # Use Swoosh test helpers to assert an email was sent
-      assert_email_sent(subject: "Welcome to Castmill!")
+      assert_email_sent(subject: "Welcome to Castmill™!")
     end
   end
 
@@ -47,8 +49,27 @@ defmodule Castmill.Addons.OnboardingTest do
       assert_email_sent(
         to: user.email,
         from: {"Castmill", "no-reply@castmill.com"},
-        subject: "Welcome to Castmill!"
+        subject: "Welcome to Castmill™!"
       )
+    end
+
+    test "welcomes users as the network they signed up to" do
+      user = user_fixture()
+      network = network_fixture(%{name: "Tylöprint", email: "info@tyloprint.test"})
+
+      Castmill.Addons.Onboarding.on_user_signup(%{
+        user_id: user.id,
+        email: user.email,
+        network_id: network.id
+      })
+
+      assert_email_sent(fn email ->
+        assert email.subject == "Welcome to Tylöprint!"
+        assert email.from == {"Tylöprint", "no-reply@castmill.com"}
+        assert email.reply_to == {"", "info@tyloprint.test"}
+        refute email.text_body =~ "Castmill"
+        true
+      end)
     end
   end
 end

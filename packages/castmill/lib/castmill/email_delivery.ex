@@ -97,6 +97,7 @@ defmodule Castmill.EmailDelivery do
     %{
       "to" => serialize_recipients(email.to),
       "from" => serialize_recipient(email.from),
+      "reply_to" => email.reply_to && serialize_recipient(email.reply_to),
       "subject" => email.subject,
       "text_body" => email.text_body,
       "html_body" => email.html_body,
@@ -115,6 +116,13 @@ defmodule Castmill.EmailDelivery do
       |> to(deserialize_recipients(data["to"]))
       |> from(deserialize_recipient(data["from"]))
       |> subject(data["subject"])
+
+    email =
+      if data["reply_to"] do
+        reply_to(email, deserialize_recipient(data["reply_to"]))
+      else
+        email
+      end
 
     email =
       if data["text_body"] do

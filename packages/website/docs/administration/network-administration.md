@@ -31,6 +31,16 @@ If you don't belong to any organization yet, the dashboard says so and greys out
 
 <Screenshot src="network-settings" alt="The network settings with the Network Identity and Social Links groups" />
 
+### Emails
+
+Emails sent for your network carry your network's identity instead of Castmill's. This covers invitations, sign-up and welcome emails, network administrator setup links, and credential recovery from your network's domain:
+
+- The sender name is the **Network Name**. The sender address is the server's shared address (`MAILER_FROM`).
+- Replies go to the **Support Email**, which is also shown as the contact address in the email.
+- The footer shows the **Copyright Text**. If it still names Castmill, emails show *© year Network Name* instead.
+
+Keep the **Network Name** and **Support Email** up to date, because recipients see them in every email.
+
 ## Organizations
 
 **Network → Organizations** lists every organization in the network. From here you can:

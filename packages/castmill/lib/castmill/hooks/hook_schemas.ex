@@ -1,7 +1,7 @@
 defmodule Castmill.HookSchemas do
   @hook_schemas %{
     # Example hook with expected args
-    user_signup: [:user_id, :email],
+    user_signup: [:user_id, :email, :network_id],
     user_signin: [:user_id],
     file_upload: [:account_id, :file_id],
     device_registered: [:device_id]

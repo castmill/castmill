@@ -2,6 +2,7 @@ defmodule Castmill.Accounts.UserNotifier do
   import Swoosh.Email
   require EEx
 
+  alias Castmill.EmailBrand
   alias Castmill.EmailDelivery
 
   # Compile email templates at compile time
@@ -35,15 +36,17 @@ defmodule Castmill.Accounts.UserNotifier do
     [:assigns]
   )
 
-  # Delivers the email using the application mailer.
+  # Delivers the email using the application mailer, branded as `opts[:brand]`
+  # (Castmill by default).
   defp deliver(recipient, subject, body, opts \\ []) do
     context = Keyword.get(opts, :context, "user_notifier.text")
     metadata = Keyword.get(opts, :metadata, %{})
+    brand = Keyword.get(opts, :brand, EmailBrand.castmill())
 
     email =
       new()
       |> to(recipient)
-      |> from(Application.get_env(:castmill, :mailer_from))
+      |> EmailBrand.put_sender(brand)
       |> subject(subject)
       |> text_body(body)
 
@@ -51,14 +54,15 @@ defmodule Castmill.Accounts.UserNotifier do
   end
 
   # Delivers the email with both HTML and text body.
-  defp deliver_with_html(recipient, subject, text_body, html_body, opts \\ []) do
+  defp deliver_with_html(recipient, subject, text_body, html_body, opts) do
     context = Keyword.get(opts, :context, "user_notifier.html")
     metadata = Keyword.get(opts, :metadata, %{})
+    brand = Keyword.get(opts, :brand, EmailBrand.castmill())
 
     email =
       new()
       |> to(recipient)
-      |> from(Application.get_env(:castmill, :mailer_from))
+      |> EmailBrand.put_sender(brand)
       |> subject(subject)
       |> text_body(text_body)
       |> html_body(html_body)
@@ -107,51 +111,62 @@ defmodule Castmill.Accounts.UserNotifier do
   end
 
   @doc """
-  Deliver instructions to recover credentials (passkeys).
+  Deliver instructions to recover credentials (passkeys), branded as the
+  network whose dashboard the user recovers from.
   """
-  def deliver_recover_credentials_instructions(user, url) do
-    deliver(user.email, "Recover your credentials", """
+  def deliver_recover_credentials_instructions(user, url, brand \\ EmailBrand.castmill()) do
+    deliver(
+      user.email,
+      "Recover your credentials",
+      """
 
-    ==============================
+      ==============================
 
-    Hi #{user.email},
+      Hi #{user.email},
 
-    You requested to recover access to your Castmill account.
+      You requested to recover access to your #{brand.name} account.
 
-    You can add a new passkey to your account by visiting the URL below:
+      You can add a new passkey to your account by visiting the URL below:
 
-    #{url}
+      #{url}
 
-    This link will expire in 5 minutes.
+      This link will expire in 5 minutes.
 
-    If you didn't request this, please ignore this email.
+      If you didn't request this, please ignore this email.
 
-    ==============================
-    """)
+      ==============================
+      """,
+      brand: brand
+    )
   end
 
   @doc """
   Deliver the passkey setup link to a new network admin.
   """
   def deliver_network_admin_setup_instructions(user, network, url) do
-    deliver(user.email, "You are an administrator of #{network.name} on Castmill", """
+    deliver(
+      user.email,
+      "You are an administrator of #{network.name}",
+      """
 
-    ==============================
+      ==============================
 
-    Hi #{user.email},
+      Hi #{user.email},
 
-    You have been made an administrator of the network #{network.name} on Castmill.
+      You have been made an administrator of the network #{network.name}.
 
-    To sign in, create a passkey for #{network.domain} by visiting the URL below:
+      To sign in, create a passkey for #{network.domain} by visiting the URL below:
 
-    #{url}
+      #{url}
 
-    This link expires in 7 days and can be used once.
+      This link expires in 7 days and can be used once.
 
-    If you were not expecting this, please ignore this email.
+      If you were not expecting this, please ignore this email.
 
-    ==============================
-    """)
+      ==============================
+      """,
+      brand: EmailBrand.for_network(network)
+    )
   end
 
   @doc """
@@ -185,7 +200,7 @@ defmodule Castmill.Accounts.UserNotifier do
 
     Hi #{user.name},
 
-    You requested to change your email address for your Castmill account.
+    You requested to change the email address of your account.
 
     To prevent account lockout, please verify your new email address by clicking the link below:
 
@@ -210,21 +225,18 @@ defmodule Castmill.Accounts.UserNotifier do
   """
   def deliver_signup_instructions(signup, dashboard_uri) do
     url = signup_url(signup, dashboard_uri)
+    brand = EmailBrand.for_network(signup.network_id)
+    assigns = %{email: signup.email, signup_url: url}
 
-    assigns = %{
-      email: signup.email,
-      signup_url: url,
-      year: DateTime.utc_now().year
-    }
-
-    html_body = render_signup_html(assigns)
-    text_body = render_signup_text(assigns)
+    html_body = render_signup_html(Map.put(assigns, :brand, EmailBrand.html_escape(brand)))
+    text_body = render_signup_text(Map.put(assigns, :brand, brand))
 
     deliver_with_html(
       signup.email,
-      "Complete Your Castmill Signup",
+      "Complete Your #{brand.name} Signup",
       text_body,
-      html_body
+      html_body,
+      brand: brand
     )
   end
 
@@ -234,21 +246,20 @@ defmodule Castmill.Accounts.UserNotifier do
   """
   def deliver_already_registered_notice(email, dashboard_uri) do
     login_url = "#{dashboard_uri}/login?email=#{URI.encode_www_form(email)}"
+    brand = EmailBrand.for_origin(dashboard_uri)
+    assigns = %{email: email, login_url: login_url}
 
-    assigns = %{
-      email: email,
-      login_url: login_url,
-      year: DateTime.utc_now().year
-    }
+    html_body =
+      render_already_registered_html(Map.put(assigns, :brand, EmailBrand.html_escape(brand)))
 
-    html_body = render_already_registered_html(assigns)
-    text_body = render_already_registered_text(assigns)
+    text_body = render_already_registered_text(Map.put(assigns, :brand, brand))
 
     deliver_with_html(
       email,
-      "Castmill™ — You Already Have an Account",
+      "#{brand.name} — You Already Have an Account",
       text_body,
-      html_body
+      html_body,
+      brand: brand
     )
   end
 
@@ -259,9 +270,11 @@ defmodule Castmill.Accounts.UserNotifier do
     invitation_url =
       "#{dashboard_uri}/?email=#{URI.encode_www_form(invitation.email)}"
 
+    brand = EmailBrand.for_network(invitation.network_id)
+
     deliver(
       invitation.email,
-      "You're invited to join #{invitation.organization_name} on Castmill",
+      "You're invited to join #{invitation.organization_name} on #{brand.name}",
       """
 
       ==============================
@@ -282,7 +295,7 @@ defmodule Castmill.Accounts.UserNotifier do
 
       ==============================
       """,
-      opts
+      Keyword.put(opts, :brand, brand)
     )
   end
 

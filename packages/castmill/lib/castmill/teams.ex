@@ -644,7 +644,7 @@ defmodule Castmill.Teams do
     end
   end
 
-  def add_invitation_to_team(organization_id, team_id, email, role \\ :member) do
+  def add_invitation_to_team(_organization_id, team_id, email, role \\ :member) do
     token =
       :crypto.strong_rand_bytes(16)
       |> Base.url_encode64(padding: false)
@@ -691,12 +691,12 @@ defmodule Castmill.Teams do
       {:ok, %{invitation: invitation}} ->
         # Transaction committed successfully;
         # now we can send the email outside the transaction.
-        organization = Castmill.Organizations.get_organization(organization_id)
-        network = Castmill.Networks.get_network(organization.network_id)
-
         # Get team info for email
         team = get_team(team_id)
-        send_invitation_email(network.domain, team.name, email, token)
+        organization = Castmill.Organizations.get_organization(team.organization_id)
+        network = Castmill.Networks.get_network(organization.network_id)
+
+        send_invitation_email(network, team.name, email, token)
 
         # Send notification if user exists
         case Castmill.Accounts.get_user_by_email(email) do
@@ -741,26 +741,28 @@ defmodule Castmill.Teams do
     |> Repo.exists?()
   end
 
-  defp send_invitation_email(baseUrl, team_name, email, token) do
-    subject = "You have been invited to a Team on Castmill™"
+  defp send_invitation_email(network, team_name, email, token) do
+    brand = Castmill.EmailBrand.for_network(network)
+    subject = "You have been invited to a Team on #{brand.name}"
 
     {html_body, text_body} =
       Castmill.EmailRenderer.render_team_invite(
         team_name,
         email,
         token,
-        baseUrl
+        network.domain,
+        brand
       )
 
-    deliver(email, subject, html_body, text_body)
+    deliver(email, subject, html_body, text_body, brand)
   end
 
-  # Delivers the email using the application mailer.
-  defp deliver(recipient, subject, html_body, text_body) do
+  # Delivers the email using the application mailer, sent as `brand`.
+  defp deliver(recipient, subject, html_body, text_body, brand) do
     email =
       Email.new()
       |> Email.to(recipient)
-      |> Email.from(Application.get_env(:castmill, :mailer_from))
+      |> Castmill.EmailBrand.put_sender(brand)
       |> Email.subject(subject)
       |> Email.html_body(html_body)
       |> Email.text_body(text_body)

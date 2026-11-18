@@ -1,6 +1,6 @@
 Hello,
 
-You have been invited to join the team <%= @team_name %> on Castmill™.
+You have been invited to join the team <%= @team_name %> on <%= @brand.name %>.
 
 Click the link below to accept the invitation and start collaborating with your team:
 
@@ -12,9 +12,9 @@ Security Notice: This invitation was sent to <%= @email %>. If you did not expec
 
 ---
 
-Castmill AB
-Digital Signage Platform
+<%= @brand.name %>
 
-Need help? Visit https://castmill.com/support
-
-© <%= Calendar.strftime(DateTime.utc_now(), "%Y") %> Castmill AB. All rights reserved.
+<%= if @brand.support_url do %>Need help? Visit <%= @brand.support_url %>
+<% end %><%= if @brand.support_email do %>Need help? Contact <%= @brand.support_email %>
+<% end %>
+<%= @brand.copyright %>

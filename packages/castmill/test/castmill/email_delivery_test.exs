@@ -124,11 +124,27 @@ defmodule Castmill.EmailDeliveryTest do
              restored.to == [{"", "to@example.com"}]
 
     assert restored.from == {"Castmill", "noreply@castmill.com"}
+    assert restored.reply_to == nil
     assert restored.subject == "Hello"
     assert restored.text_body == "Plain text"
     assert restored.html_body == "<p>HTML</p>"
     assert data["context"] == "test"
     assert data["metadata"] == %{id: 1}
+  end
+
+  test "serialize/deserialize preserves the Reply-To" do
+    original =
+      new()
+      |> to("to@example.com")
+      |> from({"Tylöprint", "noreply@castmill.com"})
+      |> reply_to("info@tyloprint.test")
+
+    restored =
+      original
+      |> EmailDelivery.serialize_email([])
+      |> EmailDelivery.deserialize_email()
+
+    assert restored.reply_to == {"", "info@tyloprint.test"}
   end
 
   # ---------------------------------------------------------------------------

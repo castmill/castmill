@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>Account Already Exists — Castmill™</title>
+  <title>Account Already Exists — <%= @brand.name %></title>
   <!--[if mso]>
   <style type="text/css">
     body, table, td {font-family: Arial, Helvetica, sans-serif !important;}
@@ -25,7 +25,7 @@
                 <tr>
                   <td align="center">
                     <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 600; letter-spacing: -0.5px;">
-                      Castmill™
+                      <%= @brand.name %>
                     </h1>
                     <p style="margin: 10px 0 0 0; color: #e0e7ff; font-size: 14px; font-weight: 400;">
                       Digital Signage Platform
@@ -49,7 +49,7 @@
                       Hi <strong><%= @email %></strong>,
                     </p>
                     <p style="margin: 0 0 20px 0; color: #4a5568; font-size: 16px; line-height: 1.6;">
-                      Someone (hopefully you) tried to sign up for Castmill™ using this email address. However, an account with this email already exists.
+                      Someone (hopefully you) tried to sign up for <%= @brand.name %> using this email address. However, an account with this email already exists.
                     </p>
                     <p style="margin: 0 0 30px 0; color: #4a5568; font-size: 16px; line-height: 1.6;">
                       If this was you, you can simply log in using the link below. If you've lost your passkey or are having trouble logging in, use the credential recovery option on the login page.
@@ -90,18 +90,22 @@
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
                 <tr>
                   <td align="center">
+                    <%= if @brand.support_url || @brand.support_email do %>
                     <p style="margin: 0 0 15px 0; color: #718096; font-size: 14px; line-height: 1.5;">
-                      <strong>Need help?</strong> Visit our
-                      <a href="https://castmill.com/support" style="color: #667eea; text-decoration: none;">support center</a>
-                      or contact us at
-                      <a href="mailto:support@castmill.com" style="color: #667eea; text-decoration: none;">support@castmill.com</a>
+                      <strong>Need help?</strong>
+                      <%= if @brand.support_url do %>Visit our
+                      <a href="<%= @brand.support_url %>" style="color: #667eea; text-decoration: none;">support center</a><%= if @brand.support_email do %> or contact us at<% end %><% else %>Contact us at<% end %>
+                      <%= if @brand.support_email do %><a href="mailto:<%= @brand.support_email %>" style="color: #667eea; text-decoration: none;"><%= @brand.support_email %></a><% end %>
                     </p>
+                    <% end %>
                     <p style="margin: 0 0 10px 0; color: #a0aec0; font-size: 12px; line-height: 1.5;">
-                      © <%= @year %> Castmill AB. All rights reserved.
+                      <%= @brand.copyright %>
                     </p>
+                    <%= unless @brand.reply_to do %>
                     <p style="margin: 0; color: #a0aec0; font-size: 12px; line-height: 1.5;">
                       This is an automated message, please do not reply to this email.
                     </p>
+                    <% end %>
                   </td>
                 </tr>
               </table>
