@@ -1,0 +1,30 @@
+.saveBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5em;
+}
+
+.dirty {
+  flex: 1 1 auto;
+  color: var(--cm-warning);
+  font-size: 0.8em;
+}
+
+// Phones: full-width buttons with the status on its own line.
+@media (max-width: 30em) {
+  .saveBar > button {
+    flex: 1 1 0;
+    justify-content: center;
+  }
+
+  .dirty {
+    flex-basis: 100%;
+    text-align: center;
+
+    &:empty {
+      display: none;
+    }
+  }
+}

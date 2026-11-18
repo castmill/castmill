@@ -3,7 +3,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Maintainance } from './maintainance';
 import { DevicesService } from '../services/devices.service';
 
-vi.mock('@castmill/ui-common', () => ({
+vi.mock('@castmill/ui-common', async (importOriginal) => ({
+  SectionCard: (await importOriginal<typeof import('@castmill/ui-common')>())
+    .SectionCard,
   useToast: () => ({ error: vi.fn(), success: vi.fn() }),
 }));
 

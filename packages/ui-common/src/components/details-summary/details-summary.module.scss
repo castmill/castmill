@@ -1,0 +1,178 @@
+.summary {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75em 1em;
+  padding: 0.9em 1em;
+  border: 1px solid var(--cm-border-color);
+  border-radius: 0.6em;
+  background: linear-gradient(
+    135deg,
+    var(--cm-bg-elevated-secondary) 0%,
+    var(--cm-bg-elevated) 100%
+  );
+  color: var(--cm-text-primary);
+}
+
+.status,
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4em 0.6em;
+  min-width: 0;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  padding: 0.3em 0.75em;
+  border-radius: 999px;
+  font-size: 0.85em;
+  font-weight: 700;
+  white-space: nowrap;
+
+  .dot {
+    width: 0.55em;
+    height: 0.55em;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  &.success {
+    background: rgba(var(--cm-success-rgb), 0.15);
+    color: var(--cm-success);
+
+    .dot {
+      box-shadow: 0 0 0 0.2em rgba(var(--cm-success-rgb), 0.25);
+    }
+  }
+
+  &.error {
+    background: rgba(var(--cm-error-rgb), 0.15);
+    color: var(--cm-error);
+  }
+
+  &.warning {
+    background: rgba(var(--cm-warning-rgb), 0.15);
+    color: var(--cm-warning);
+  }
+
+  &.info {
+    background: rgba(var(--cm-primary-rgb), 0.15);
+    color: var(--cm-link);
+  }
+
+  &.neutral {
+    background: var(--cm-bg-sunken);
+    color: var(--cm-text-secondary);
+  }
+}
+
+.note {
+  color: var(--cm-text-secondary);
+  font-size: 0.85em;
+}
+
+.chip,
+.copy {
+  padding: 0.25em 0.6em;
+  border: 1px solid var(--cm-border-strong);
+  border-radius: 0.35em;
+  background: var(--cm-bg-sunken);
+  color: var(--cm-text-secondary);
+  font-size: 0.78em;
+}
+
+.copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  max-width: 100%;
+  min-width: 0;
+  font-family: inherit;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--cm-primary);
+    color: var(--cm-text-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--cm-focus-ring);
+    outline-offset: 2px;
+  }
+
+  code {
+    max-width: 14em;
+    overflow: hidden;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    // Keep LTR ids readable inside RTL layouts.
+    direction: ltr;
+    unicode-bidi: isolate;
+  }
+
+  svg {
+    flex-shrink: 0;
+  }
+}
+
+.copyPrefix {
+  color: var(--cm-text-secondary);
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+// Phones: stack status above the meta chips.
+@media (max-width: 36em) {
+  .summary {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .copy code {
+    max-width: 10em;
+  }
+}
+
+// Compact summaries become a slim inline strip on touch devices and phones.
+@media (pointer: coarse), (max-width: 36em) {
+  .summary.compact {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.4em 0.6em;
+    padding: 0.1em 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+
+    .status,
+    .meta {
+      gap: 0.3em 0.4em;
+    }
+
+    .pill {
+      padding: 0.15em 0.6em;
+      font-size: 0.78em;
+    }
+
+    .chip,
+    .copy {
+      padding: 0.1em 0.45em;
+      font-size: 0.72em;
+    }
+  }
+}

@@ -16,6 +16,8 @@ import {
   Dropdown,
   Timestamp,
   useToast,
+  tableCardLabels,
+  filtersLabel,
 } from '@castmill/ui-common';
 import { TeamsService } from '../../services/teams.service';
 import { OrganizationsService } from '../../services/organizations.service';
@@ -101,7 +103,8 @@ export const TeamMembersView = (props: {
   onRemove: (member: User) => void;
   onInvitationSent?: () => void;
 }) => {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const cardLabels = tableCardLabels(t);
   const { canPerformAction } = usePermissions();
   const toast = useToast();
   const resolveRemoveMemberError = (message: string) => {
@@ -182,7 +185,7 @@ export const TeamMembersView = (props: {
       title: t('teams.insertedAt'),
       sortable: true,
       render: (item: any) => (
-        <Timestamp value={item.inserted_at} mode="relative" />
+        <Timestamp value={item.inserted_at} mode="relative" locale={locale()} />
       ),
     },
   ];
@@ -357,7 +360,11 @@ export const TeamMembersView = (props: {
                   );
 
                   refreshData();
-                  toast.success(`Invitation sent to ${selectedUser()!.email}`);
+                  toast.success(
+                    t('teams.messages.invitationSent', {
+                      email: selectedUser()!.email,
+                    })
+                  );
                   props.onInvitationSent?.();
                   setShowAddMemberDialog(false);
                 } catch (error) {
@@ -415,7 +422,7 @@ export const TeamMembersView = (props: {
               />
             </div>
 
-            <div style="margin-top: 1em;">
+            <div style="margin-top: 1em;" data-modal-actions>
               <Button
                 label={t('common.save')}
                 type="submit"
@@ -457,6 +464,7 @@ export const TeamMembersView = (props: {
         fetchData={fetchData}
         ref={setRef}
         toolbar={{
+          filtersLabel: filtersLabel(t),
           searchPlaceholder: t('common.search'),
           mainAction: (
             <PermissionButton
@@ -496,6 +504,8 @@ export const TeamMembersView = (props: {
           actions,
           actionsLabel: t('common.actions'),
           onRowSelect,
+          cardLayout: true,
+          cardLabels,
         }}
         pagination={{ itemsPerPage }}
         itemIdKey="user_id"

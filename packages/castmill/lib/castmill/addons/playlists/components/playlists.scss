@@ -1,5 +1,5 @@
 .playlists-page {
-  margin: 2em;
+  margin: var(--cm-page-gutter, 2em);
 
   .tags-cell {
     display: flex;

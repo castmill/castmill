@@ -10,6 +10,7 @@ import {
   waitFor,
 } from '@solidjs/testing-library';
 
+import { mockMatchMedia } from '../../testing';
 import { ComboBox } from './combobox';
 
 const comboBoxCss = readFileSync(
@@ -171,18 +172,7 @@ describe('ComboBox Component', () => {
   describe('placement', () => {
     const originalMatchMedia = window.matchMedia;
 
-    const mockSheetQuery = (matches: boolean) => {
-      window.matchMedia = vi.fn((query: string) => ({
-        matches,
-        media: query,
-        onchange: null,
-        addListener: vi.fn(),
-        removeListener: vi.fn(),
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-        dispatchEvent: vi.fn(),
-      })) as unknown as typeof window.matchMedia;
-    };
+    const mockSheetQuery = (matches: boolean) => mockMatchMedia(matches);
 
     afterEach(() => {
       window.matchMedia = originalMatchMedia;

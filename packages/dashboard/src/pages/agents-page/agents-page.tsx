@@ -18,6 +18,7 @@ import {
   Tabs,
   useToast,
   isQuotaExceededError,
+  tableCardLabels,
 } from '@castmill/ui-common';
 
 import { store } from '../../store/store';
@@ -79,6 +80,7 @@ type PendingConfirm = {
 
 const AgentsPage: Component = () => {
   const { t, formatDate } = useI18n();
+  const cardLabels = tableCardLabels(t);
   const { hasAnyRole, hasRole } = usePermissions();
   const toast = useToast();
 
@@ -416,6 +418,8 @@ const AgentsPage: Component = () => {
       >
         <div data-testid="agents-table">
           <Table<string, Agent>
+            cardLayout
+            cardLabels={cardLabels}
             columns={columns}
             data={agents()}
             hideCheckboxes
@@ -538,7 +542,7 @@ const AgentsPage: Component = () => {
             <p class={styles.muted}>
               {t(`organization.roleDescriptions.${formData().role}`)}
             </p>
-            <div class={styles.formActions}>
+            <div class={styles.formActions} data-modal-actions>
               <Button
                 label={t('common.cancel')}
                 color="secondary"
@@ -572,7 +576,7 @@ const AgentsPage: Component = () => {
               />
             </div>
             <AgentIntegrationInstructions secret={current().value} />
-            <div class={styles.formActions}>
+            <div class={styles.formActions} data-modal-actions>
               <Button
                 label={t('agents.secretDone')}
                 color="primary"

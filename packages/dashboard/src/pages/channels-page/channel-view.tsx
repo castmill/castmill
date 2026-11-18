@@ -17,15 +17,10 @@ export const ChannelView = (props: {
   const { t } = useI18n();
   const [range, setRange] = createSignal<{ start: number; end: number }>();
   const [markers, setMarkers] = createSignal<CalendarMarker[]>([]);
-  const style = `
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: flex-start;`;
 
   return (
-    <div style={style}>
-      <div style="width: 100%;">
+    <div class={styles['channel-view']}>
+      <div class={styles.content}>
         <div class={styles.notice}>{t('channels.info.contentRequired')}</div>
         <ChannelAutomations
           organizationId={props.organizationId}

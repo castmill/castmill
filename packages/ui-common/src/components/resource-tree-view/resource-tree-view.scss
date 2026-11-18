@@ -88,6 +88,80 @@
   }
 }
 
+/* ---- Phones: collapsible dimension panel with breadcrumb ---- */
+.dimension-bar.compact {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5em;
+  padding: 0.25em 0.5em;
+
+  .dimension-selectors {
+    padding: 0.25em 0.5em 0.5em;
+
+    &.collapsed {
+      display: none;
+    }
+  }
+}
+
+.dimension-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  width: 100%;
+  min-height: 2.75em;
+  padding: 0 0.5em;
+  border: none;
+  background: transparent;
+  color: var(--cm-text-primary);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 0.125em solid var(--cm-focus-ring);
+    outline-offset: 0.125em;
+    border-radius: 0.375em;
+  }
+}
+
+.dimension-breadcrumb {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-weight: 500;
+}
+
+.dimension-crumb:not(:last-child)::after {
+  content: '›';
+  margin: 0 0.4em;
+  color: var(--cm-text-secondary);
+}
+
+[dir='rtl'] .dimension-crumb:not(:last-child)::after,
+[dir='rtl'] .dimension-chip:not(:last-child)::after {
+  content: '‹';
+}
+
+.dimension-toggle-chevron {
+  display: inline-flex;
+  flex: none;
+  color: var(--cm-text-secondary);
+  transition: transform 0.2s ease;
+}
+
+.dimension-bar.open .dimension-toggle-chevron {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dimension-toggle-chevron {
+    transition: none;
+  }
+}
+
 /* ---- Tree Container ---- */
 .tree-container {
   position: relative;
@@ -354,4 +428,11 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Phones: shallower indentation */
+@media (max-width: 36em) {
+  .tree-node {
+    --indent: calc(var(--depth, 0) * 0.75em);
+  }
 }

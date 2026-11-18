@@ -7,6 +7,8 @@ import {
   TableAction,
   TableView,
   useToast,
+  tableCardLabels,
+  filtersLabel,
 } from '@castmill/ui-common';
 import { BsEye } from 'solid-icons/bs';
 import { createSignal } from 'solid-js';
@@ -58,6 +60,7 @@ export const ResourceChooser = (props: {
   onSelect: (resources: { id: string }[]) => void;
 }) => {
   const { t } = useI18n();
+  const cardLabels = tableCardLabels(t);
   const toast = useToast();
 
   const [data, setData] = createSignal<any[]>([]);
@@ -268,6 +271,7 @@ export const ResourceChooser = (props: {
         resource={props.resourceType}
         fetchData={fetchResources}
         toolbar={{
+          filtersLabel: filtersLabel(t),
           filters: [],
           searchPlaceholder: t('common.search'),
 
@@ -283,6 +287,7 @@ export const ResourceChooser = (props: {
           ),
         }}
         table={{
+          cardLabels,
           columns,
           actions,
           actionsLabel: t('common.actions'),

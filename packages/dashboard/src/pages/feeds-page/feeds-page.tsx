@@ -2,7 +2,14 @@ import { Component, createEffect, createSignal, on, Show } from 'solid-js';
 import { A, useNavigate } from '@solidjs/router';
 import { BsPlus } from 'solid-icons/bs';
 import { TbRss } from 'solid-icons/tb';
-import { Button, Column, Modal, Table, useToast } from '@castmill/ui-common';
+import {
+  Button,
+  Column,
+  Modal,
+  Table,
+  useToast,
+  tableCardLabels,
+} from '@castmill/ui-common';
 
 import { store } from '../../store/store';
 import { useI18n } from '../../i18n';
@@ -16,6 +23,7 @@ import styles from './feeds-page.module.scss';
 /** The organization's data feeds. */
 const FeedsPage: Component = () => {
   const { t, formatDate } = useI18n();
+  const cardLabels = tableCardLabels(t);
   const { canPerformAction } = usePermissions();
   const toast = useToast();
   const navigate = useNavigate();
@@ -165,6 +173,8 @@ const FeedsPage: Component = () => {
       >
         <div data-testid="feeds-table" class={styles.table}>
           <Table<string, Feed>
+            cardLayout
+            cardLabels={cardLabels}
             columns={columns}
             data={feeds()}
             hideCheckboxes

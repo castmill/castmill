@@ -1,6 +1,7 @@
 {
   "common": {
     "save": "저장",
+    "sections": "섹션",
     "saving": "저장 중...",
     "cancel": "취소",
     "delete": "삭제",
@@ -108,14 +109,22 @@
     "selectVideo": "비디오 선택",
     "widget": "Widget",
     "selectionHint": "체크박스를 사용하여 항목을 선택하고 일괄 작업을 수행하세요",
-    "selectionCount": "{count}개 선택됨"
+    "selectionCount": "{count}개 선택됨",
+    "sortBy": "정렬 기준",
+    "sortAscending": "오름차순",
+    "sortDescending": "내림차순",
+    "selectAll": "모두 선택",
+    "selectOption": "옵션 선택",
+    "selectRow": "{{id}}행 선택"
   },
   "topbar": {
     "help": "도움말",
     "notifications": "알림",
     "gettingStarted": "시작하기",
     "switchToLightMode": "라이트 모드로 전환",
-    "switchToDarkMode": "다크 모드로 전환"
+    "switchToDarkMode": "다크 모드로 전환",
+    "openNavigation": "탐색 열기",
+    "moreOptions": "추가 옵션"
   },
   "settings": {
     "title": "설정",
@@ -597,9 +606,14 @@
     "removeTeams": "팀 제거",
     "confirmRemoveTeam": "팀 \"{{name}}\"을(를) 제거하시겠습니까?",
     "confirmRemoveTeams": "다음 팀을 제거하시겠습니까?",
-    "addedOn": "추가됨",
-    "lastUpdatedOn": "마지막 업데이트",
     "enterTeamName": "팀 이름 입력",
+    "summary": "팀 요약",
+    "created": "{{time}} 생성됨",
+    "updated": "{{time}} 업데이트됨",
+    "unsavedChanges": "저장되지 않은 변경 사항",
+    "teamCreated": "팀 {{name}}이(가) 생성되었습니다",
+    "teamUpdated": "팀 {{name}}이(가) 업데이트되었습니다",
+    "teamRemoved": "팀 {{name}}이(가) 제거되었습니다",
     "insertedAt": "삽입 시간",
     "expiresAt": "만료 시간",
     "inviteMember": "멤버 초대",
@@ -619,7 +633,9 @@
       "removeResource": "팀에서 리소스 제거 오류: {{error}}",
       "removeResources": "팀에서 리소스 제거 오류: {{error}}",
       "addResourceToTeam": "팀에 리소스 추가 오류: {{error}}",
-      "cannotRemoveLastAdmin": "팀의 마지막 관리자를 제거할 수 없습니다."
+      "cannotRemoveLastAdmin": "팀의 마지막 관리자를 제거할 수 없습니다.",
+      "nameRequired": "이름은 필수입니다",
+      "nameMinLength": "이름은 최소 {{min}}자 이상이어야 합니다"
     },
     "confirmAddResources": "다음 리소스를 추가하시겠습니까?",
     "messages": {
@@ -691,7 +707,8 @@
       "deleteGroup": "그룹 삭제",
       "noGroups": "태그 그룹 없음",
       "ungrouped": "그룹 없음",
-      "untagged": "태그 없음"
+      "untagged": "태그 없음",
+      "organizeBy": "정리 기준"
     },
     "messages": {
       "tagCreated": "태그 \"{{name}}\"이(가) 성공적으로 생성되었습니다",
@@ -798,6 +815,7 @@
     "tags": "태그",
     "agents": "에이전트",
     "feeds": "피드",
+    "navigation": "탐색",
     "requiresOrganization": "조직이 필요합니다"
   },
   "channels": {
@@ -826,7 +844,8 @@
       "created": "채널 {{name}}이(가) 생성되었습니다",
       "updated": "채널 {{name}}이(가) 업데이트되었습니다",
       "updateDefaultPlaylist": "기본 재생목록 업데이트 성공",
-      "clearDefaultPlaylist": "기본 재생목록 지우기 성공"
+      "clearDefaultPlaylist": "기본 재생목록 지우기 성공",
+      "updateChannelEntry": "채널 항목이 업데이트되었습니다"
     },
     "info": {
       "contentRequired": "콘텐츠를 표시하려면 이 채널에 기본 재생목록을 설정하거나 예약된 항목을 추가하세요."
@@ -840,6 +859,20 @@
       "clearDefaultPlaylist": "채널 기본 재생목록 지우기 실패: {{error}}",
       "updateChannelEntry": "채널 항목 업데이트 오류: {{error}}",
       "loadPlaylists": "다음 페이지에서 재생목록을 불러오지 못했습니다: {{pages}}."
+    },
+    "calendar": {
+      "previousWeek": "이전 주",
+      "nextWeek": "다음 주",
+      "previousDay": "이전 날",
+      "nextDay": "다음 날",
+      "today": "오늘",
+      "tapToAdd": "시간대를 탭하여 일정에 재생 목록을 추가하세요.",
+      "addEntry": "일정에 추가",
+      "startsAt": "{{date}} {{time}}에 시작",
+      "duration": "기간",
+      "untilEndOfDay": "하루가 끝날 때까지",
+      "slotUnavailable": "이 시간대는 다른 항목과 겹치거나 이번 주에 맞지 않습니다.",
+      "confirmRemoveEntry": "\"{{title}}\" 항목을 삭제하시겠습니까?"
     }
   },
   "organization": {
@@ -1031,7 +1064,52 @@
     "selectLayout": "레이아웃 선택",
     "searchLayouts": "레이아웃 검색...",
     "assignPlaylists": "영역에 재생 목록 할당",
-    "zonesCount": "{{count}}개 영역"
+    "zonesCount": "{{count}}개 영역",
+    "unsavedChanges": "저장되지 않은 변경 사항",
+    "editor": {
+      "customRatio": "사용자 지정…",
+      "ratioWidth": "비율 너비",
+      "ratioHeight": "비율 높이",
+      "maxZones": "최대 {{count}}개 영역까지 허용됩니다",
+      "size": "크기",
+      "width": "너비",
+      "height": "높이",
+      "full": "전체",
+      "fillWidth": "너비 채우기 (100%)",
+      "fillHeight": "높이 채우기 (100%)",
+      "fillBoth": "너비와 높이 채우기 (100% × 100%)",
+      "setWidth": "너비를 {{size}}(으)로 설정",
+      "setWidthAdjusted": "너비를 {{size}}(으)로 설정 (높이 조정됨)",
+      "setHeight": "높이를 {{size}}(으)로 설정",
+      "setHeightAdjusted": "높이를 {{size}}(으)로 설정 (너비 조정됨)",
+      "zoneRatio": "영역 비율",
+      "none": "없음",
+      "selectZoneFirst": "먼저 영역을 선택하세요",
+      "aspectLocked": "비활성화됨: 영역의 화면비가 깨집니다",
+      "distributeColumns": "열로 분배",
+      "distributeColumnsHint": "모든 영역을 열로 균등 분배",
+      "distributeRows": "행으로 분배",
+      "distributeRowsHint": "모든 영역을 행으로 균등 분배",
+      "noSelection": "속성을 편집할 영역을 선택하세요",
+      "widthShort": "너",
+      "heightShort": "높",
+      "deleteZone": "영역 삭제",
+      "zonesHeading": "영역 ({{count}})",
+      "layer": "레이어 {{value}}",
+      "zoneName": "영역 {{number}}",
+      "templates": {
+        "fullScreen": "전체 화면",
+        "twoColumns": "2열",
+        "threeColumns": "3열",
+        "twoRows": "2행",
+        "threeRows": "3행",
+        "grid2x2": "2×2 그리드",
+        "grid3x3": "3×3 그리드",
+        "mainSidebar": "메인 + 사이드바",
+        "headerContent": "헤더 + 콘텐츠",
+        "pictureInPicture": "화면 속 화면"
+      }
+    }
   },
   "widgets": {
     "scope": {
@@ -1184,6 +1262,17 @@
         "networkError": "서버에 연결할 수 없습니다. 연결을 확인하세요.",
         "unknown": "항목을 불러올 수 없습니다."
       }
+    },
+    "details": {
+      "updatesEvery": "{{seconds}}초마다 업데이트",
+      "copySlug": "위젯 식별자 복사",
+      "slugCopied": "위젯 식별자가 복사되었습니다",
+      "copySlugFailed": "위젯 식별자를 복사할 수 없습니다."
+    },
+    "json": {
+      "copy": "JSON 복사",
+      "copied": "JSON이 복사되었습니다",
+      "copyFailed": "JSON을 복사할 수 없습니다."
     }
   },
   "devices": {
@@ -1547,7 +1636,8 @@
     "tagFilterModeAny": "하나라도",
     "tagFilterModeAll": "모두",
     "noMatches": "일치하는 항목 없음",
-    "noItems": "항목 없음"
+    "noItems": "항목 없음",
+    "toggle": "필터"
   },
   "shortcuts": {
     "showShortcutsLegend": "키보드 단축키 표시",
@@ -1684,7 +1774,25 @@
     },
     "drawerTitle": "미디어 \"{{name}}\"",
     "mediaUpdated": "미디어 \"{{name}}\"이(가) 성공적으로 업데이트되었습니다",
-    "errorUpdating": "미디어 {{name}} 업데이트 오류: {{error}}"
+    "errorUpdating": "미디어 {{name}} 업데이트 오류: {{error}}",
+    "details": {
+      "summary": "미디어 요약",
+      "copyId": "미디어 ID 복사",
+      "copied": "미디어 ID가 복사되었습니다",
+      "copyFailed": "미디어 ID를 복사할 수 없습니다.",
+      "added": "{{time}} 추가됨",
+      "updated": "{{time}} 업데이트됨",
+      "dimensions": "크기",
+      "duration": "재생 시간",
+      "namePlaceholder": "미디어 이름 입력",
+      "nameRequired": "이름은 필수입니다",
+      "nameTooShort": "이름은 5자 이상이어야 합니다",
+      "noPreview": "미리보기를 사용할 수 없습니다",
+      "types": {
+        "image": "이미지",
+        "video": "동영상"
+      }
+    }
   },
   "dashboard": {
     "noOrganizations": {

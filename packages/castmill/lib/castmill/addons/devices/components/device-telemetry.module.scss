@@ -5,39 +5,6 @@
   gap: 1em;
 }
 
-// Reuses the shared card header without the card chrome.
-.header :global(.device-card-header) {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.6em 1em;
-
-  h3 {
-    display: flex;
-    align-items: center;
-    gap: 0.5em;
-    margin: 0;
-    color: var(--cm-text-primary);
-    font-size: 1em;
-  }
-
-  :global(.device-card-heading) {
-    flex: 1 1 14em;
-  }
-
-  :global(.device-card-icon) {
-    display: inline-flex;
-    color: var(--cm-primary);
-  }
-
-  :global(.device-card-description) {
-    margin: 0.35em 0 0;
-    color: var(--cm-text-secondary);
-    font-size: 0.82em;
-  }
-}
-
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(13em, 1fr));

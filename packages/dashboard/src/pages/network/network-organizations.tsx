@@ -1,7 +1,7 @@
 /**
  * Network Organizations page — create, list, block/unblock, delete organizations.
  */
-import { Component, Show, For, createSignal, onMount } from 'solid-js';
+import { Component, Show, createSignal, onMount } from 'solid-js';
 import {
   Button,
   FormItem,
@@ -10,6 +10,10 @@ import {
   ConfirmDialog,
   Pagination,
   Modal,
+  Table,
+  type Column,
+  type TableAction,
+  tableCardLabels,
 } from '@castmill/ui-common';
 import { NetworkService, Organization } from '../../services/network.service';
 import { OrganizationsService } from '../../services/organizations.service';
@@ -31,6 +35,7 @@ import styles from './network.module.scss';
 const NetworkOrganizations: Component = () => {
   const { t } = useI18n();
   const toast = useToast();
+  const cardLabels = tableCardLabels(t);
   const { stats, setStats } = useNetworkContext();
 
   // Organizations state
@@ -268,6 +273,68 @@ const NetworkOrganizations: Component = () => {
     }
   };
 
+  const orgColumns = (): Column<string, Organization>[] => [
+    { key: 'name', title: () => t('network.organizations.name') },
+    {
+      key: 'blocked_at',
+      title: () => t('common.status'),
+      render: (org) => (
+        <Show
+          when={org.blocked_at}
+          fallback={
+            <span class={styles['status-active']}>
+              {t('network.status.active')}
+            </span>
+          }
+        >
+          <span
+            class={styles['status-blocked']}
+            title={org.blocked_reason || ''}
+          >
+            {t('network.status.blocked')}
+          </span>
+        </Show>
+      ),
+    },
+    {
+      key: 'inserted_at',
+      title: () => t('common.created'),
+      render: (org) => new Date(org.inserted_at).toLocaleDateString(),
+    },
+  ];
+
+  const orgActions = (): TableAction<Organization>[] => [
+    {
+      icon: BsBoxArrowInRight,
+      label: () => t('network.organizations.join'),
+      hidden: (org) => isMember(org.id),
+      disabled: () => joiningOrgId() !== null,
+      handler: handleJoinOrganization,
+    },
+    {
+      icon: BsSliders,
+      label: () => t('network.organizations.integrationSettings.action'),
+      handler: (org) => setOrgForSettings(org),
+    },
+    {
+      icon: BsSlashCircle,
+      label: () => t('network.organizations.block'),
+      hidden: (org) => !!org.blocked_at,
+      handler: (org) => setOrgToBlock(org),
+    },
+    {
+      icon: BsUnlock,
+      label: () => t('network.organizations.unblock'),
+      hidden: (org) => !org.blocked_at,
+      handler: (org) => setOrgToUnblock(org),
+    },
+    {
+      icon: BsTrash,
+      label: () => t('common.delete'),
+      handler: (org) => setOrgToDelete(org),
+    },
+  ];
+
   return (
     <div class={styles['network-page']}>
       {/* Header */}
@@ -327,93 +394,15 @@ const NetworkOrganizations: Component = () => {
             </div>
           }
         >
-          <table class={styles['data-table']}>
-            <thead>
-              <tr>
-                <th>{t('network.organizations.name')}</th>
-                <th>{t('common.status')}</th>
-                <th>{t('common.created')}</th>
-                <th class={styles['actions-column']}>{t('common.actions')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <For each={organizations()}>
-                {(org) => (
-                  <tr class={org.blocked_at ? styles['blocked-row'] : ''}>
-                    <td>{org.name}</td>
-                    <td>
-                      <Show
-                        when={org.blocked_at}
-                        fallback={
-                          <span class={styles['status-active']}>
-                            {t('network.status.active')}
-                          </span>
-                        }
-                      >
-                        <span
-                          class={styles['status-blocked']}
-                          title={org.blocked_reason || ''}
-                        >
-                          {t('network.status.blocked')}
-                        </span>
-                      </Show>
-                    </td>
-                    <td>{new Date(org.inserted_at).toLocaleDateString()}</td>
-                    <td>
-                      <div class={styles['actions-row']}>
-                        <Show when={!isMember(org.id)}>
-                          <Button
-                            label={t('network.organizations.join')}
-                            icon={BsBoxArrowInRight}
-                            color="primary"
-                            onClick={() => handleJoinOrganization(org)}
-                            disabled={joiningOrgId() !== null}
-                            title={t('network.organizations.joinTitle')}
-                          />
-                        </Show>
-                        <Button
-                          label=""
-                          icon={BsSliders}
-                          color="secondary"
-                          onClick={() => setOrgForSettings(org)}
-                          title={t(
-                            'network.organizations.integrationSettings.action'
-                          )}
-                        />
-                        <Show
-                          when={org.blocked_at}
-                          fallback={
-                            <Button
-                              label=""
-                              icon={BsSlashCircle}
-                              color="warning"
-                              onClick={() => setOrgToBlock(org)}
-                              title={t('network.organizations.block')}
-                            />
-                          }
-                        >
-                          <Button
-                            label=""
-                            icon={BsUnlock}
-                            color="success"
-                            onClick={() => setOrgToUnblock(org)}
-                            title={t('network.organizations.unblock')}
-                          />
-                        </Show>
-                        <Button
-                          label=""
-                          icon={BsTrash}
-                          color="danger"
-                          onClick={() => setOrgToDelete(org)}
-                          title={t('common.delete')}
-                        />
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </For>
-            </tbody>
-          </table>
+          <Table<string, Organization>
+            cardLayout
+            cardLabels={cardLabels}
+            hideCheckboxes
+            columns={orgColumns}
+            data={organizations()}
+            actions={orgActions}
+            actionsLabel={() => t('common.actions')}
+          />
 
           <Show when={orgTotalPages() > 1}>
             <div class={styles['pagination-container']}>
@@ -457,7 +446,7 @@ const NetworkOrganizations: Component = () => {
             setBlockOrgReason('');
           }}
         >
-          <div class="block-form">
+          <div class={styles['block-form']}>
             <FormItem
               label={t('network.blockReason')}
               id="block-org-reason"
@@ -465,7 +454,7 @@ const NetworkOrganizations: Component = () => {
               placeholder={t('network.blockReasonPlaceholder')}
               onInput={(value) => setBlockOrgReason(value as string)}
             />
-            <div class="modal-actions">
+            <div class={styles['modal-actions']} data-modal-actions>
               <Button
                 label={
                   blockingOrg()

@@ -1,6 +1,7 @@
 {
   "common": {
     "save": "Save",
+    "sections": "Sections",
     "saving": "Saving...",
     "cancel": "Cancel",
     "delete": "Delete",
@@ -103,7 +104,13 @@
     "youIndicator": "(you)",
     "widget": "Widget",
     "selectionHint": "Use checkboxes to select items for bulk actions",
-    "selectionCount": "{count} selected"
+    "selectionCount": "{count} selected",
+    "sortBy": "Sort by",
+    "sortAscending": "Ascending",
+    "sortDescending": "Descending",
+    "selectAll": "Select all",
+    "selectOption": "Select an option",
+    "selectRow": "Select row {{id}}"
   },
   "filters": {
     "teamLabel": "Team",
@@ -117,7 +124,8 @@
     "tagFilterModeAny": "Any",
     "tagFilterModeAll": "All",
     "noMatches": "No matches",
-    "noItems": "No items"
+    "noItems": "No items",
+    "toggle": "Filters"
   },
   "sidebar": {
     "organization": "Organization",
@@ -141,6 +149,7 @@
     "tags": "Tags",
     "agents": "Agents",
     "feeds": "Feeds",
+    "navigation": "Navigation",
     "requiresOrganization": "Requires an organization"
   },
   "topbar": {
@@ -148,7 +157,9 @@
     "notifications": "Notifications",
     "gettingStarted": "Getting Started",
     "switchToLightMode": "Switch to light mode",
-    "switchToDarkMode": "Switch to dark mode"
+    "switchToDarkMode": "Switch to dark mode",
+    "openNavigation": "Open navigation",
+    "moreOptions": "More options"
   },
   "settings": {
     "title": "Settings",
@@ -637,9 +648,14 @@
     "playlists": "Playlists",
     "devices": "Devices",
     "channels": "Channels",
-    "addedOn": "Added on",
-    "lastUpdatedOn": "Last updated on",
     "enterTeamName": "Enter team name",
+    "summary": "Team summary",
+    "created": "Created {{time}}",
+    "updated": "Updated {{time}}",
+    "unsavedChanges": "Unsaved changes",
+    "teamCreated": "Team {{name}} created successfully",
+    "teamUpdated": "Team {{name}} updated successfully",
+    "teamRemoved": "Team {{name}} removed successfully",
     "insertedAt": "Inserted At",
     "expiresAt": "Expires At",
     "inviteMember": "Invite Member",
@@ -660,7 +676,9 @@
       "removeResource": "Error removing resource from team: {{error}}",
       "removeResources": "Error removing resources from team: {{error}}",
       "addResourceToTeam": "Error adding resource to team: {{error}}",
-      "cannotRemoveLastAdmin": "You can't remove the last admin of a team."
+      "cannotRemoveLastAdmin": "You can't remove the last admin of a team.",
+      "nameRequired": "Name is required",
+      "nameMinLength": "Name must be at least {{min}} characters"
     },
     "messages": {
       "memberRemoved": "Member {{name}} removed successfully",
@@ -724,7 +742,8 @@
       "deleteGroup": "Delete Group",
       "noGroups": "No tag groups",
       "ungrouped": "Ungrouped",
-      "untagged": "Untagged"
+      "untagged": "Untagged",
+      "organizeBy": "Organize by"
     },
     "messages": {
       "tagCreated": "Tag \"{{name}}\" created successfully",
@@ -777,7 +796,8 @@
       "created": "Channel {{name}} created successfully",
       "updated": "Channel {{name}} updated successfully",
       "updateDefaultPlaylist": "Default playlist updated successfully",
-      "clearDefaultPlaylist": "Default playlist cleared successfully"
+      "clearDefaultPlaylist": "Default playlist cleared successfully",
+      "updateChannelEntry": "Channel entry updated successfully"
     },
     "info": {
       "contentRequired": "To display content, set a default playlist or add a scheduled entry for this channel."
@@ -791,6 +811,20 @@
       "clearDefaultPlaylist": "Failed to clear channel default playlist: {{error}}",
       "updateChannelEntry": "Error updating channel entry: {{error}}",
       "loadPlaylists": "Could not load playlists from pages: {{pages}}."
+    },
+    "calendar": {
+      "previousWeek": "Previous week",
+      "nextWeek": "Next week",
+      "previousDay": "Previous day",
+      "nextDay": "Next day",
+      "today": "Today",
+      "tapToAdd": "Tap a time slot to add a playlist to the schedule.",
+      "addEntry": "Add to schedule",
+      "startsAt": "Starts {{date}} at {{time}}",
+      "duration": "Duration",
+      "untilEndOfDay": "Until end of day",
+      "slotUnavailable": "This time slot overlaps another entry or doesn't fit in the week.",
+      "confirmRemoveEntry": "Are you sure you want to remove entry \"{{title}}\"?"
     }
   },
   "organization": {
@@ -1067,7 +1101,52 @@
     "selectLayout": "Select Layout",
     "searchLayouts": "Search layouts...",
     "assignPlaylists": "Assign Playlists to Zones",
-    "zonesCount": "{{count}} zones"
+    "zonesCount": "{{count}} zones",
+    "unsavedChanges": "Unsaved changes",
+    "editor": {
+      "customRatio": "Custom…",
+      "ratioWidth": "Ratio width",
+      "ratioHeight": "Ratio height",
+      "maxZones": "Maximum {{count}} zones allowed",
+      "size": "Size",
+      "width": "Width",
+      "height": "Height",
+      "full": "Full",
+      "fillWidth": "Fill width (100%)",
+      "fillHeight": "Fill height (100%)",
+      "fillBoth": "Fill width and height (100% × 100%)",
+      "setWidth": "Set width to {{size}}",
+      "setWidthAdjusted": "Set width to {{size}} (height adjusted)",
+      "setHeight": "Set height to {{size}}",
+      "setHeightAdjusted": "Set height to {{size}} (width adjusted)",
+      "zoneRatio": "Zone ratio",
+      "none": "None",
+      "selectZoneFirst": "Select a zone first",
+      "aspectLocked": "Disabled: would break the zone aspect ratio",
+      "distributeColumns": "Distribute columns",
+      "distributeColumnsHint": "Distribute all zones evenly in columns",
+      "distributeRows": "Distribute rows",
+      "distributeRowsHint": "Distribute all zones evenly in rows",
+      "noSelection": "Select a zone to edit its properties",
+      "widthShort": "W",
+      "heightShort": "H",
+      "deleteZone": "Delete zone",
+      "zonesHeading": "Zones ({{count}})",
+      "layer": "Layer {{value}}",
+      "zoneName": "Zone {{number}}",
+      "templates": {
+        "fullScreen": "Full screen",
+        "twoColumns": "2 columns",
+        "threeColumns": "3 columns",
+        "twoRows": "2 rows",
+        "threeRows": "3 rows",
+        "grid2x2": "2×2 grid",
+        "grid3x3": "3×3 grid",
+        "mainSidebar": "Main + sidebar",
+        "headerContent": "Header + content",
+        "pictureInPicture": "Picture in picture"
+      }
+    }
   },
   "widgets": {
     "scope": {
@@ -1220,6 +1299,17 @@
         "networkError": "Could not reach the server. Check your connection.",
         "unknown": "Could not load the items."
       }
+    },
+    "details": {
+      "updatesEvery": "Updates every {{seconds}}s",
+      "copySlug": "Copy widget identifier",
+      "slugCopied": "Widget identifier copied",
+      "copySlugFailed": "Could not copy the widget identifier."
+    },
+    "json": {
+      "copy": "Copy JSON",
+      "copied": "JSON copied",
+      "copyFailed": "Could not copy the JSON."
     }
   },
   "devices": {
@@ -1679,7 +1769,25 @@
     },
     "drawerTitle": "Media \"{{name}}\"",
     "mediaUpdated": "Media \"{{name}}\" updated successfully",
-    "errorUpdating": "Error updating media {{name}}: {{error}}"
+    "errorUpdating": "Error updating media {{name}}: {{error}}",
+    "details": {
+      "summary": "Media summary",
+      "copyId": "Copy media ID",
+      "copied": "Media ID copied",
+      "copyFailed": "Could not copy the media ID.",
+      "added": "Added {{time}}",
+      "updated": "Updated {{time}}",
+      "dimensions": "Dimensions",
+      "duration": "Duration",
+      "namePlaceholder": "Enter media name",
+      "nameRequired": "Name is required",
+      "nameTooShort": "Name must be at least 5 characters",
+      "noPreview": "No preview available",
+      "types": {
+        "image": "Image",
+        "video": "Video"
+      }
+    }
   },
   "dashboard": {
     "noOrganizations": {

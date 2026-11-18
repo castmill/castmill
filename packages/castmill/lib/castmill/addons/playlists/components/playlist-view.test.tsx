@@ -11,7 +11,9 @@ import {
   within,
 } from '@solidjs/testing-library';
 import { createSignal } from 'solid-js';
-import { PlaylistView, WIDE_LAYOUT_QUERY } from './playlist-view';
+import { WIDE_LAYOUT_QUERY } from '@castmill/ui-common';
+import { mockMatchMedia } from '@castmill/ui-common/testing';
+import { PlaylistView } from './playlist-view';
 import { PlaylistsService } from '../services/playlists.service';
 import type { AddonStore } from '../../common/interfaces/addon-store';
 import type { JsonPlaylist, JsonWidgetTemplate } from '@castmill/player';
@@ -837,22 +839,8 @@ describe('PlaylistView Component', () => {
     const card = (selector: string) =>
       document.querySelector(selector) as HTMLElement;
 
-    const mockMatchMedia = (wide: boolean) => {
-      const original = window.matchMedia;
-      window.matchMedia = vi.fn((query: string) => ({
-        matches: query === WIDE_LAYOUT_QUERY ? wide : false,
-        media: query,
-        onchange: null,
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-        addListener: vi.fn(),
-        removeListener: vi.fn(),
-        dispatchEvent: vi.fn(),
-      })) as any;
-      return () => {
-        window.matchMedia = original;
-      };
-    };
+    const mockViewport = (wide: boolean) =>
+      mockMatchMedia(wide ? [WIDE_LAYOUT_QUERY] : []).restore;
 
     it('shows a summary with item count, total duration and aspect ratio', async () => {
       vi.mocked(PlaylistsService.getPlaylist).mockResolvedValue({
@@ -866,9 +854,9 @@ describe('PlaylistView Component', () => {
       renderView();
 
       await waitFor(() =>
-        expect(card('.playlist-summary')).toBeInTheDocument()
+        expect(card('[data-details-summary]')).toBeInTheDocument()
       );
-      const summary = card('.playlist-summary');
+      const summary = card('[data-details-summary]');
       expect(summary).toHaveTextContent('playlists.editor.totalDuration');
       expect(within(summary).getByText('4:3')).toBeInTheDocument();
       expect(
@@ -1194,7 +1182,7 @@ describe('PlaylistView Component', () => {
     });
 
     it('uses tabs when the drawer is too narrow for three columns', async () => {
-      const restore = mockMatchMedia(true);
+      const restore = mockViewport(true);
       const originalObserver = global.ResizeObserver;
       global.ResizeObserver = vi.fn(() => ({
         observe: vi.fn(),
@@ -1220,7 +1208,7 @@ describe('PlaylistView Component', () => {
       let restore: () => void;
 
       beforeEach(() => {
-        restore = mockMatchMedia(false);
+        restore = mockViewport(false);
       });
 
       afterEach(() => restore());

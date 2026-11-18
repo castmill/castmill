@@ -128,6 +128,9 @@ const ALLOWED_IDENTICAL_KEYS = {
   'devices.maintenance.systemGroup': ['sv', 'de'],
   'widgets.scope.system': ['sv', 'de'],
   'network.widgets.kind.system': ['sv', 'de'],
+  // "Zone" is the same word in German and French
+  'layouts.editor.zoneName': ['de', 'fr'],
+  'layouts.editor.zonesHeading': ['fr'],
   // Data feeds: "Feeds", "Tokens", "Endpoints" and "Document" are used as-is.
   'sidebar.feeds': ['es', 'de'],
   'usage.resources.feeds': ['es', 'de'],

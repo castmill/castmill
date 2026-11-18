@@ -94,6 +94,90 @@ interface Column<IdType = string, Item extends ItemBase<IdType> = ItemBase<IdTyp
 
 **Important**: Use `title`, not `label` for column headers.
 
+### Card Layout for Narrow Containers (phones, drawers)
+
+`Table` supports an opt-in stacked card rendering (`cardLayout`) so tables
+don't overflow horizontally on phones or inside detail drawers. `TableView`
+enables it **by default** (`table.cardLayout ?? true`); pass
+`cardLayout: false` to opt out:
+
+```typescript
+table: {
+  columns,
+  actions,
+  actionsLabel: t('common.actions'),
+  cardLayout?: true,              // TableView default; required on <Table>
+  cardBreakpoint?: 36,            // container width in em (default 36)
+  cardPrimaryColumn?: 'name',     // card title (default: first column)
+  cardLabels: tableCardLabels(t),  // localized sort/selection labels
+}
+```
+
+- The breakpoint is container-based: a `ResizeObserver` measures the table's
+  own wrapper (no observer → regular table). Hidden (0-width) containers keep
+  their current layout. The root exposes `data-layout="table" | "cards"`.
+- Cards show the primary column as title, other columns as label/value rows
+  (stacked below a 20em container via `@container`), and row actions in a
+  `MenuButton` labelled with `actionsLabel`.
+- Selection (per-card checkbox + "Select all"), sorting (sort-by select +
+  direction toggle over `sortable` columns) and row click (also Enter/Space
+  on the focused card) share state with the table view, so switching layout
+  keeps the selection.
+- `cardLabels` default to English; always pass `tableCardLabels(t)`
+  (ui-common `utils/table-labels.ts`, used by the dashboard and addons),
+  which maps to `common.sortBy`, `common.sortAscending`,
+  `common.sortDescending`, `common.selectAll` and `common.selectRow`. The
+  `selectRow(id: string)` formatter receives the row ID. `filtersLabel(t)`
+  and `organizeByLabel(t)` live in the same module.
+- Styles use `--cm-*` tokens, `em` units and logical properties (RTL-safe).
+
+### Responsive List Pages (phones ≤ 36em)
+
+Breakpoints live in `hooks/useMediaQuery.ts`: `BREAKPOINTS_EM` (phone 36,
+tablet 48, wide 64), `PHONE_LAYOUT_QUERY`, `TABLET_LAYOUT_QUERY`,
+`WIDE_LAYOUT_QUERY`, `COARSE_POINTER_QUERY`, `useCoarsePointer()` and
+`matchesMediaQuery()` for one-off checks in event handlers. Use these instead
+of query literals in TS; SCSS `@media` rules repeat the em values. For
+em-based container measurements use `elementEm(el)`/`widthInEm(el)`
+(`utils/element-em.ts`).
+
+`usePhoneLayout()` (`PHONE_LAYOUT_QUERY`, false when `matchMedia` is
+missing) drives the phone behaviour of the shared list-page
+components:
+
+- **ToolBar**: wraps; search, a "Filters" toggle (`filtersLabel`, also
+  `TableView` `toolbar.filtersLabel`) and the primary `mainAction` stay on the
+  first row, while filter switches and `actions` move into a collapsible panel
+  (`aria-expanded`/`aria-controls`). The panel stays mounted so filter state
+  is kept. Pass `filtersLabel: filtersLabel(t)`.
+- **Pagination**: page numbers collapse to a "current / total" summary; buttons
+  are ≥ 2.75em on phones and coarse pointers.
+- **SelectionActionBar**: fixed to the bottom with safe-area padding; actions
+  scroll horizontally. Render `<SelectionActionBarSpacer />` after the
+  selectable content while items are selected (as `TableView` does) so the
+  bar doesn't cover the last rows; it is the single source of the reserved
+  height.
+- **Table**: row actions and card menu items get ≥ 2.75em tap targets.
+  Layout is driven by the container and the table's own width, not the
+  viewport: `table` → `compact` (`data-density="compact"`: tighter cells and
+  row actions collapsed into a "⋯" `MenuButton`) when the full table
+  overflows → `cards` (with `cardLayout`) when the compact table still
+  overflows or the container is below `cardBreakpoint`. It switches back once
+  the recorded widths fit again. Observers are attached from ref callbacks,
+  not `onMount`, because addon bundles render with their own Solid runtime
+  and no owner (`onMount` would run before the ref is set).
+  Row-action triggers (compact rows and cards) are quiet "⋯" icon buttons
+  styled with `--cm-*` tokens; cards disable the mobile tap highlight.
+- **ToolBar**: on phones `toolbar-right` and its wrapper `div` (e.g. quota +
+  add button) wrap instead of widening the page.
+- **MenuButton**: pass `icon` for an icon-only trigger; `label` becomes its
+  `title`/accessible name.
+- **ResourceTreeView**: the "Organize by" dimension bar collapses into a toggle
+  that shows the current tag-group path as a breadcrumb (`dimensionLabel`,
+  pass `t('tags.groups.organizeBy')`); indentation is reduced.
+- Page roots use `margin: var(--cm-page-gutter, 2em)` (2em → 1.5em at ≤ 64em →
+  0.75em at ≤ 36em, defined in `dashboard/src/theme/theme.scss`).
+
 ### TableAction Interface
 
 Defines actions available for each row (view, edit, delete, etc.).
@@ -101,9 +185,11 @@ Defines actions available for each row (view, edit, delete, etc.).
 ```typescript
 interface TableAction<Item> {
   icon: Component | string;           // Icon component or emoji
-  label: string;                      // Action label
+  label: string | (() => string);     // Action label
   props?: (item: Item) => Record<string, any>;  // Dynamic props
   handler: (item: Item) => void;      // Action handler
+  disabled?: (item: Item) => boolean; // Disabled for some rows
+  hidden?: (item: Item) => boolean;   // Omitted for some rows (e.g. Block/Unblock)
 }
 ```
 
@@ -170,6 +256,30 @@ let modalRef: ModalRef | undefined = undefined;
 - ❌ Don't forget to set text colors in modal content (default may inherit white text)
 - ✅ Do use: `<Show when={...}>` wrapper
 - ✅ Do explicitly set `color: #333;` or similar on modal content elements
+
+#### Responsive behavior
+
+- The overlay follows the visual viewport (`useVisualViewportBox`), so the
+  on-screen keyboard shrinks the modal instead of hiding inputs.
+- The header stays fixed and `.modalBody` is the only scroll container. Do not
+  add `overflow` to wrappers between the body and the form.
+- Under `36em` (or short touch screens) the modal becomes a full-width bottom
+  sheet. `:where()` viewport caps keep `contentClass` desktop widths working.
+- Mark form action rows with `data-modal-actions`: on phones they stick to the
+  bottom of the body and their buttons share the full width (`ConfirmDialog`
+  already does this). Don't use `!important` width overrides.
+
+### SelectSheetHost (mobile `<select>` picker)
+
+Mount `<SelectSheetHost closeLabel fallbackTitle />` once at the app root;
+the dashboard already does this. When `COMBOBOX_SHEET_QUERY` matches, it
+cancels the native picker for every single-choice `<select>` in the document.
+It then lists the options, optgroups and disabled options in a portalled
+bottom sheet (`[data-select-sheet][data-combobox-sheet]`) pinned with
+`useVisualViewportBox`. Choosing an option sets `selectedIndex` and dispatches
+bubbling `input` and `change` events, so components keep using plain
+`<select onChange>`. `multiple`, `size > 1`, disabled selects and
+`data-native-select` (`NATIVE_SELECT_ATTRIBUTE`) are left native.
 
 ### TableViewRef Interface
 

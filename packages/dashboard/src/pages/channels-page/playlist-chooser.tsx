@@ -16,6 +16,11 @@ interface PlaylistChooserProps {
     entry: CalendarEntry,
     ghostPosition?: { x: number; y: number }
   ) => void;
+  /**
+   * `panel` (default) is the vertical side panel of the wide layout; `strip`
+   * is the wrapping strip shown above the calendar on tablets.
+   */
+  variant?: 'panel' | 'strip';
   /** Called with the organization's playlists once they are loaded. */
   onPlaylistsLoaded?: (playlists: JsonPlaylist[]) => void;
 }
@@ -116,8 +121,13 @@ export const PlaylistChooser: Component<PlaylistChooserProps> = (props) => {
   });
 
   return (
-    <div>
-      <h2>{t('channels.dragPlaylists')}</h2>
+    <div classList={{ [style.strip]: props.variant === 'strip' }}>
+      <Show
+        when={props.variant === 'strip'}
+        fallback={<h2>{t('channels.dragPlaylists')}</h2>}
+      >
+        <p class={style.hint}>{t('channels.dragPlaylists')}</p>
+      </Show>
       <Show when={failedPages().length > 0}>
         <div role="alert">
           <span>
@@ -130,7 +140,7 @@ export const PlaylistChooser: Component<PlaylistChooserProps> = (props) => {
           </button>
         </div>
       </Show>
-      <div class={style.playlistsList}>
+      <div class={style.playlistsList} data-testid="playlist-chooser-list">
         <For each={playlists()}>
           {(playlist) => (
             <PlaylistChooserItem

@@ -1,7 +1,7 @@
 // Shared styles for all network sub-pages
 .network-page {
   text-align: left;
-  margin: 1em;
+  margin: min(1em, var(--cm-page-gutter, 1em));
   padding-bottom: 4em;
 
   .page-header {
@@ -230,50 +230,7 @@
     }
   }
 
-  // Lists and tables (shared by orgs, users, invitations)
-  .data-table {
-    width: 100%;
-    border-collapse: collapse;
-
-    th,
-    td {
-      padding: 0.75em 1em;
-      text-align: left;
-      border-bottom: 0.1em solid var(--cm-border-subtle);
-    }
-
-    th {
-      font-weight: 600;
-      color: var(--cm-text-tertiary);
-      font-size: 0.85em;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    td {
-      color: var(--cm-text-primary);
-    }
-
-    tbody tr:hover {
-      background: var(--cm-bg-hover);
-    }
-
-    tbody tr:last-child td {
-      border-bottom: none;
-    }
-
-    .actions-column {
-      text-align: right;
-    }
-  }
-
-  .actions-row {
-    display: flex;
-    gap: 0.5em;
-    justify-content: flex-end;
-    align-items: center;
-  }
-
+  // Row statuses (shared by orgs, users, invitations)
   .status-active {
     color: var(--cm-success);
     font-weight: 500;
@@ -291,14 +248,6 @@
     color: var(--cm-warning);
     font-weight: 500;
     font-size: 0.85em;
-  }
-
-  .blocked-row {
-    background: rgba(var(--cm-error-rgb), 0.05);
-
-    &:hover {
-      background: rgba(var(--cm-error-rgb), 0.1);
-    }
   }
 
   .empty-list {
@@ -539,6 +488,13 @@
   padding-top: 1.25em;
   overflow-y: auto;
   line-height: 1.5;
+
+  // Phones: the modal body already scrolls; avoid a nested scroll area.
+  @media (max-width: 36em) {
+    min-width: 0;
+    max-height: none;
+    overflow-y: visible;
+  }
 }
 
 .settings-section {
@@ -591,7 +547,7 @@
   gap: 0.75em;
   margin-top: 0.75em;
   padding-top: 1em;
-  border-top: 0.1em solid rgba(255, 255, 255, 0.1);
+  border-top: 0.1em solid var(--cm-border-subtle);
 }
 
 .settings-error {

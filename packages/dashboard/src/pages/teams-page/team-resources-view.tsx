@@ -10,6 +10,7 @@ import { TeamMembersView } from './team-members-view';
 import { TeamInvitationsView } from './teams-invitations-view';
 import { useI18n } from '../../i18n';
 import { TabItem, Tabs } from '@castmill/ui-common';
+import { BsEnvelope, BsPeople } from 'solid-icons/bs';
 import styles from './teams-page.module.scss';
 
 export const TeamResourcesView = (props: {
@@ -26,6 +27,7 @@ export const TeamResourcesView = (props: {
   const tabs = createMemo<TabItem[]>(() => [
     {
       title: t('teams.members'),
+      icon: BsPeople,
       content: () => (
         <section class={styles.resourcesSection}>
           <TeamMembersView
@@ -39,6 +41,7 @@ export const TeamResourcesView = (props: {
     },
     {
       title: t('teams.invitations'),
+      icon: BsEnvelope,
       content: () => (
         <section class={styles.resourcesSection}>
           <TeamInvitationsView
@@ -56,7 +59,7 @@ export const TeamResourcesView = (props: {
 
   return (
     <div class={styles.resourcesContainer}>
-      <Tabs tabs={tabs()} initialIndex={0} />
+      <Tabs tabs={tabs()} initialIndex={0} ariaLabel={t('common.sections')} />
     </div>
   );
 };

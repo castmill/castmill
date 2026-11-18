@@ -202,6 +202,36 @@ in both themes.**
 
 See `packages/dashboard/AGENTS.md` ("Light and Dark Mode") for details.
 
+### Responsive UI and ui-common Reuse
+
+**Every new view, dialog, component, and addon UI must be responsive and work
+on desktop, tablet, and mobile** (phones down to 320px wide, touch and coarse
+pointers). Nothing may widen the page horizontally: mobile browsers then zoom
+the layout out and push dialogs off screen.
+
+- **Reuse `@castmill/ui-common` components whenever possible**: `TableView` /
+  `Table` (card layout on narrow containers), `ToolBar`, `Pagination`,
+  `Drawer` + `DrawerFooter`, `SaveBar`, `Modal` (bottom sheet on phones; mark
+  button rows with `data-modal-actions`), `SectionCard`, `DetailsSummary`,
+  `Tabs` (or `tabKeyTarget`/`revealTab` for custom tablists), `ComboBox`,
+  `SelectionActionBar` + `SelectionActionBarSpacer`, and `useModalFromUrl`.
+- If a shared component almost fits, extend it (or add a new one) in
+  ui-common instead of duplicating markup, styles, or logic in the dashboard
+  or an addon. Addons bundle their own ui-common copy, so shared code reaches
+  them automatically.
+- Use the shared breakpoints and hooks from `hooks/useMediaQuery.ts`
+  (`BREAKPOINTS_EM`: phone 36em, tablet 48em, wide 64em;
+  `PHONE_`/`TABLET_`/`WIDE_LAYOUT_QUERY`, `COARSE_POINTER_QUERY`,
+  `usePhoneLayout`, `useCoarsePointer`, `useWideLayout`) instead of literal
+  queries in TS. Prefer container-based layouts (`ResizeObserver`,
+  `@container`) for embeddable components, use `em` units and logical
+  properties (RTL), and give touch targets at least 2.75em.
+- Test phone/tablet/desktop layouts with `mockMatchMedia` from
+  `@castmill/ui-common/testing` (dashboard: `mockViewport`).
+
+See `agents/packages/ui-common/README.md` ("Responsive List Pages") and
+`packages/dashboard/AGENTS.md` for details.
+
 ### Key Technologies
 
 - **Frontend**: SolidJS (Dashboard), React, TypeScript, Vite
@@ -275,6 +305,7 @@ When providing assistance, prioritize:
 - Don't skip writing tests
 - Don't hardcode user-facing strings
 - Don't add views, dialogs, or addon UI that only work in dark mode; use the `--cm-*` theme tokens so they support light mode too
+- Don't build desktop-only UI or reimplement components that already exist in `@castmill/ui-common`; make new UI responsive and extend ui-common instead
 - Don't add translation keys without updating all 9 language files
 - Don't forget to update `agents/` docs when changing architecture
 - Don't create unnecessary files in the root directory

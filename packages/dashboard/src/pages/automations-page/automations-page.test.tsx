@@ -475,5 +475,27 @@ describe('AutomationsPage', () => {
         ).not.toBeInTheDocument()
       );
     });
+
+    it('closes the editor on outside clicks but not on table rows or cards', async () => {
+      await openEditor();
+      fireEvent.click(document.querySelector('tbody tr') as HTMLElement);
+      await new Promise((resolve) => setTimeout(resolve, 350));
+      expect(screen.getByDisplayValue('Spring campaign')).toBeInTheDocument();
+
+      const card = document.createElement('li');
+      card.setAttribute('data-testid', 'table-card');
+      document.body.append(card);
+      fireEvent.click(card);
+      await new Promise((resolve) => setTimeout(resolve, 350));
+      expect(screen.getByDisplayValue('Spring campaign')).toBeInTheDocument();
+      card.remove();
+
+      fireEvent.click(document.body);
+      await waitFor(() =>
+        expect(
+          screen.queryByDisplayValue('Spring campaign')
+        ).not.toBeInTheDocument()
+      );
+    });
   });
 });

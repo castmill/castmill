@@ -43,12 +43,22 @@ export const markerPosition = (
   return { dayIndex, minutes: zoned.getHours() * 60 + zoned.getMinutes() };
 };
 
-/** Absolute style of a marker tick for the given cell height (px). */
-export const markerStyle = (position: MarkerPosition, cellHeight: number) => {
-  const dayWidth = 90 / 7;
+/**
+ * Absolute style of a marker tick for the given cell height (px). `column`
+ * and `columns` locate the day among the visible day columns (7 in the week
+ * view, 1 in the phone day view). Horizontal placement uses logical
+ * properties and the calendar's `--time-col-width` so it also works in RTL.
+ */
+export const markerStyle = (
+  position: MarkerPosition,
+  cellHeight: number,
+  column: number = position.dayIndex,
+  columns: number = 7
+) => {
+  const days = '(100% - var(--time-col-width))';
   return {
     top: `${(position.minutes / 1440) * 48 * cellHeight}px`,
-    left: `${10 + position.dayIndex * dayWidth}%`,
-    width: `${dayWidth}%`,
+    'inset-inline-start': `calc(var(--time-col-width) + ${days} * ${column} / ${columns})`,
+    width: `calc(${days} / ${columns})`,
   };
 };

@@ -1,4 +1,4 @@
-import { JSX, ParentComponent, Show } from 'solid-js';
+import { ParentComponent } from 'solid-js';
 import { Dynamic } from 'solid-js/web';
 import type { IconTypes } from 'solid-icons';
 import {
@@ -7,38 +7,6 @@ import {
   BsWifiOff,
   BsXOctagon,
 } from 'solid-icons/bs';
-
-export const DeviceCardHeader = (props: {
-  title: string;
-  description?: JSX.Element;
-  icon?: IconTypes;
-  count?: number;
-  actions?: JSX.Element;
-}) => (
-  <header class="device-card-header">
-    <div class="device-card-heading">
-      <h3>
-        <Show when={props.icon}>
-          {(icon) => (
-            <span class="device-card-icon" aria-hidden="true">
-              <Dynamic component={icon()} />
-            </span>
-          )}
-        </Show>
-        <span>{props.title}</span>
-        <Show when={props.count !== undefined}>
-          <span class="device-card-count">{props.count}</span>
-        </Show>
-      </h3>
-      <Show when={props.description}>
-        <p class="device-card-description">{props.description}</p>
-      </Show>
-    </div>
-    <Show when={props.actions}>
-      <div class="device-card-actions">{props.actions}</div>
-    </Show>
-  </header>
-);
 
 export type DeviceNoticeTone = 'offline' | 'warning' | 'error' | 'info';
 

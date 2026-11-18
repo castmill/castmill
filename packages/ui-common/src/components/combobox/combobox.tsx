@@ -22,6 +22,13 @@ import { IoClose } from 'solid-icons/io';
 import styles from './combobox.module.scss';
 import { IconWrapper } from '../icon-wrapper';
 import { useVisualViewportBox } from '../../hooks/useVisualViewportBox';
+import { elementEm } from '../../utils/element-em';
+import {
+  BREAKPOINTS_EM,
+  COARSE_POINTER_QUERY,
+  PHONE_LAYOUT_QUERY,
+  matchesMediaQuery,
+} from '../../hooks/useMediaQuery';
 import { IconTypes } from 'solid-icons';
 
 const SimpleIconButton = (props: { icon: IconTypes; onClick: () => void }) => {
@@ -59,15 +66,12 @@ interface ComboBoxProps<T extends { id: string | number }> {
 }
 
 /** Touch and small screens pick from a bottom sheet instead of a dropdown. */
-export const COMBOBOX_SHEET_QUERY =
-  '(max-width: 36em), (pointer: coarse) and (max-width: 64em)';
+export const COMBOBOX_SHEET_QUERY = `${PHONE_LAYOUT_QUERY}, ${COARSE_POINTER_QUERY} and (max-width: ${BREAKPOINTS_EM.wide}em)`;
 
 type Placement = 'down' | 'up' | 'sheet';
 
-const prefersSheet = () =>
-  typeof window !== 'undefined' &&
-  typeof window.matchMedia === 'function' &&
-  window.matchMedia(COMBOBOX_SHEET_QUERY).matches;
+/** Whether pickers should open as a bottom sheet on this device right now. */
+export const prefersPickerSheet = () => matchesMediaQuery(COMBOBOX_SHEET_QUERY);
 
 const isClipping = (element: Element) =>
   /(auto|scroll|hidden)/.test(getComputedStyle(element).overflowY);
@@ -149,7 +153,7 @@ export const ComboBox = <T extends { id: string | number }>(
   // Opens towards the side with more room inside the clipping ancestors and
   // the viewport, and caps the list so the dropdown stays visible.
   const updatePlacement = () => {
-    if (prefersSheet()) {
+    if (prefersPickerSheet()) {
       setPlacement('sheet');
       setListMaxHeight(undefined);
       return;
@@ -183,7 +187,7 @@ export const ComboBox = <T extends { id: string | number }>(
       }
     }
 
-    const em = parseFloat(getComputedStyle(comboBox).fontSize) || 16;
+    const em = elementEm(comboBox);
     const below = bottom - rect.bottom;
     const above = rect.top - top;
     const opensUp = below < 22 * em && above > below;

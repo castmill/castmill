@@ -1,8 +1,22 @@
 /** @jsxImportSource solid-js */
 
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, it, expect, afterEach, vi, beforeEach } from 'vitest';
 import { render, fireEvent, cleanup, screen } from '@solidjs/testing-library';
-import { Drawer } from './drawer';
+import { createSignal, Show } from 'solid-js';
+import { Drawer, DrawerFooter } from './drawer';
+
+describe('Drawer native picker positioning', () => {
+  it('releases the transformed containing block when open', () => {
+    const css = readFileSync(
+      resolve('src/components/drawer/drawer.module.scss'),
+      'utf8'
+    );
+    expect(css).toMatch(/&\.active\s*\{[^}]*transform:\s*none;/);
+    expect(css).not.toMatch(/will-change:\s*transform/);
+  });
+});
 
 describe('Drawer Component', () => {
   beforeEach(() => {
@@ -32,6 +46,73 @@ describe('Drawer Component', () => {
     expect(screen.getByText('Drawer content')).toBeInTheDocument();
   });
 
+  it('renders the footer once, outside the scrolling body', () => {
+    const footerRef = vi.fn();
+
+    render(() => (
+      <Drawer
+        title="With footer"
+        onClose={() => {}}
+        footer={<button ref={footerRef}>Save</button>}
+      >
+        <div>Body</div>
+      </Drawer>
+    ));
+
+    const save = screen.getByRole('button', { name: 'Save' });
+    expect(footerRef).toHaveBeenCalledTimes(1);
+    expect(footerRef.mock.calls[0][0]).toBe(save);
+    expect(save.parentElement?.contains(screen.getByText('Body'))).toBe(false);
+    expect(save.parentElement?.parentElement).toBe(screen.getByRole('dialog'));
+  });
+
+  it('omits the footer when none is given', () => {
+    render(() => (
+      <Drawer title="No footer" onClose={() => {}}>
+        <div>Body</div>
+      </Drawer>
+    ));
+
+    expect(screen.getByRole('dialog').children).toHaveLength(2);
+  });
+
+  it('renders DrawerFooter content from the body in the sticky footer', () => {
+    const [shown, setShown] = createSignal(true);
+    render(() => (
+      <Drawer title="Slot" onClose={() => {}}>
+        <div>Body</div>
+        <Show when={shown()}>
+          <DrawerFooter>
+            <button>Save</button>
+          </DrawerFooter>
+        </Show>
+      </Drawer>
+    ));
+
+    const dialog = screen.getByRole('dialog');
+    const save = screen.getByRole('button', { name: 'Save' });
+    expect(dialog.children).toHaveLength(3);
+    expect(dialog.lastElementChild?.contains(save)).toBe(true);
+    expect(screen.getByText('Body').parentElement?.contains(save)).toBe(false);
+
+    setShown(false);
+    expect(dialog.children).toHaveLength(2);
+  });
+
+  it('renders DrawerFooter content in place outside a Drawer', () => {
+    render(() => (
+      <div data-testid="host">
+        <DrawerFooter>
+          <button>Save</button>
+        </DrawerFooter>
+      </div>
+    ));
+
+    expect(screen.getByTestId('host')).toContainElement(
+      screen.getByRole('button', { name: 'Save' })
+    );
+  });
+
   it('closes on ESC key press', () => {
     const onClose = vi.fn();
 
@@ -45,6 +126,23 @@ describe('Drawer Component', () => {
     vi.runAllTimers();
 
     expect(onClose).toHaveBeenCalled();
+  });
+
+  it('does not close when a nested menu handles Escape', () => {
+    const onClose = vi.fn();
+    const menuTrigger = document.createElement('button');
+    menuTrigger.addEventListener('keydown', (event) => event.preventDefault());
+
+    render(() => (
+      <Drawer title="Menu" onClose={onClose}>
+        {menuTrigger}
+      </Drawer>
+    ));
+
+    fireEvent.keyDown(menuTrigger, { key: 'Escape' });
+    vi.runAllTimers();
+
+    expect(onClose).not.toHaveBeenCalled();
   });
 
   it('focuses the panel without scrolling it into view while it slides in', () => {
@@ -218,6 +316,62 @@ describe('Drawer Component', () => {
     // Clean up the modal overlay
     modalOverlay.remove();
   });
+
+  it('hides without onClose when an outside link navigates away', () => {
+    const onClose = vi.fn();
+    const nav = document.createElement('nav');
+    nav.innerHTML = '<a href="/org/1/devices"><span>Devices</span></a>';
+    document.body.appendChild(nav);
+
+    render(() => (
+      <Drawer
+        title="Drawer"
+        onClose={onClose}
+        showBackdrop={false}
+        closeOnOutsideClick
+      >
+        <div>Drawer content</div>
+      </Drawer>
+    ));
+    vi.runAllTimers();
+
+    fireEvent.click(nav.querySelector('span')!);
+    expect(screen.queryByTestId('drawer-root')).not.toBeInTheDocument();
+    vi.runAllTimers();
+    expect(onClose).not.toHaveBeenCalled();
+
+    nav.remove();
+  });
+
+  it.each([
+    ['a same-URL link', '<a href="#top">Top</a>', {}],
+    ['a new-tab link', '<a href="/x" target="_blank">X</a>', {}],
+    ['a modified link click', '<a href="/x">X</a>', { ctrlKey: true }],
+  ])('closes normally on %s', (_label, html, init) => {
+    const onClose = vi.fn();
+    const nav = document.createElement('nav');
+    nav.innerHTML = html;
+    document.body.appendChild(nav);
+
+    render(() => (
+      <Drawer
+        title="Drawer"
+        onClose={onClose}
+        showBackdrop={false}
+        closeOnOutsideClick
+      >
+        <div>Drawer content</div>
+      </Drawer>
+    ));
+    vi.runAllTimers();
+
+    fireEvent.click(nav.querySelector('a')!, init);
+    vi.runAllTimers();
+    expect(onClose).toHaveBeenCalledTimes(1);
+
+    nav.remove();
+  });
+
   it('does not close when clicking inside a drawer from another stack', () => {
     const onClose = vi.fn();
 

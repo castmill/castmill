@@ -1,6 +1,7 @@
 {
   "common": {
     "save": "Guardar",
+    "sections": "Secciones",
     "saving": "Guardando...",
     "cancel": "Cancelar",
     "delete": "Eliminar",
@@ -109,14 +110,22 @@
     "addPlaylist": "Añadir lista de reproducción",
     "widget": "Widget",
     "selectionHint": "Usa las casillas para seleccionar elementos y realizar acciones masivas",
-    "selectionCount": "{count} seleccionados"
+    "selectionCount": "{count} seleccionados",
+    "sortBy": "Ordenar por",
+    "sortAscending": "Ascendente",
+    "sortDescending": "Descendente",
+    "selectAll": "Seleccionar todo",
+    "selectOption": "Selecciona una opción",
+    "selectRow": "Seleccionar fila {{id}}"
   },
   "topbar": {
     "help": "Ayuda",
     "notifications": "Notificaciones",
     "gettingStarted": "Primeros pasos",
     "switchToLightMode": "Cambiar a modo claro",
-    "switchToDarkMode": "Cambiar a modo oscuro"
+    "switchToDarkMode": "Cambiar a modo oscuro",
+    "openNavigation": "Abrir navegación",
+    "moreOptions": "Más opciones"
   },
   "settings": {
     "title": "Configuración",
@@ -598,9 +607,14 @@
     "removeTeams": "Eliminar equipos",
     "confirmRemoveTeam": "¿Estás seguro de que quieres eliminar el equipo \"{{name}}\"?",
     "confirmRemoveTeams": "¿Estás seguro de que quieres eliminar los siguientes equipos?",
-    "addedOn": "Añadido el",
-    "lastUpdatedOn": "Última actualización el",
     "enterTeamName": "Ingresa el nombre del equipo",
+    "summary": "Resumen del equipo",
+    "created": "Creado {{time}}",
+    "updated": "Actualizado {{time}}",
+    "unsavedChanges": "Cambios sin guardar",
+    "teamCreated": "Equipo {{name}} creado correctamente",
+    "teamUpdated": "Equipo {{name}} actualizado correctamente",
+    "teamRemoved": "Equipo {{name}} eliminado correctamente",
     "insertedAt": "Insertado el",
     "expiresAt": "Expira el",
     "inviteMember": "Invitar miembro",
@@ -621,7 +635,9 @@
       "removeResource": "Error al eliminar recurso del equipo: {{error}}",
       "removeResources": "Error al eliminar recursos del equipo: {{error}}",
       "addResourceToTeam": "Error al añadir recurso al equipo: {{error}}",
-      "cannotRemoveLastAdmin": "No puedes eliminar al último administrador del equipo."
+      "cannotRemoveLastAdmin": "No puedes eliminar al último administrador del equipo.",
+      "nameRequired": "El nombre es obligatorio",
+      "nameMinLength": "El nombre debe tener al menos {{min}} caracteres"
     },
     "messages": {
       "memberRemoved": "El miembro {{name}} se eliminó correctamente",
@@ -692,7 +708,8 @@
       "deleteGroup": "Eliminar grupo",
       "noGroups": "Sin grupos de etiquetas",
       "ungrouped": "Sin agrupar",
-      "untagged": "Sin etiqueta"
+      "untagged": "Sin etiqueta",
+      "organizeBy": "Organizar por"
     },
     "messages": {
       "tagCreated": "Etiqueta \"{{name}}\" creada exitosamente",
@@ -799,6 +816,7 @@
     "tags": "Etiquetas",
     "agents": "Agentes",
     "feeds": "Feeds",
+    "navigation": "Navegación",
     "requiresOrganization": "Requiere una organización"
   },
   "channels": {
@@ -827,7 +845,8 @@
       "created": "Canal {{name}} creado correctamente",
       "updated": "Canal {{name}} actualizado correctamente",
       "updateDefaultPlaylist": "Lista de reproducción predeterminada actualizada correctamente",
-      "clearDefaultPlaylist": "Lista de reproducción predeterminada eliminada correctamente"
+      "clearDefaultPlaylist": "Lista de reproducción predeterminada eliminada correctamente",
+      "updateChannelEntry": "Entrada del canal actualizada correctamente"
     },
     "info": {
       "contentRequired": "Para mostrar contenido, establece una lista de reproducción predeterminada o añade una entrada programada para este canal."
@@ -841,6 +860,20 @@
       "clearDefaultPlaylist": "Error al limpiar la lista de reproducción predeterminada del canal: {{error}}",
       "updateChannelEntry": "Error al actualizar la entrada del canal: {{error}}",
       "loadPlaylists": "No se pudieron cargar las listas de reproducción de las páginas: {{pages}}."
+    },
+    "calendar": {
+      "previousWeek": "Semana anterior",
+      "nextWeek": "Semana siguiente",
+      "previousDay": "Día anterior",
+      "nextDay": "Día siguiente",
+      "today": "Hoy",
+      "tapToAdd": "Toca una franja horaria para añadir una lista de reproducción a la programación.",
+      "addEntry": "Añadir a la programación",
+      "startsAt": "Empieza el {{date}} a las {{time}}",
+      "duration": "Duración",
+      "untilEndOfDay": "Hasta el final del día",
+      "slotUnavailable": "Esta franja horaria se solapa con otra entrada o no cabe en la semana.",
+      "confirmRemoveEntry": "¿Estás seguro de que quieres eliminar la entrada \"{{title}}\"?"
     }
   },
   "organization": {
@@ -1059,7 +1092,52 @@
     "selectLayout": "Seleccionar Diseño",
     "searchLayouts": "Buscar diseños...",
     "assignPlaylists": "Asignar Listas de Reproducción a Zonas",
-    "zonesCount": "{{count}} zonas"
+    "zonesCount": "{{count}} zonas",
+    "unsavedChanges": "Cambios sin guardar",
+    "editor": {
+      "customRatio": "Personalizada…",
+      "ratioWidth": "Ancho de la proporción",
+      "ratioHeight": "Alto de la proporción",
+      "maxZones": "Máximo de {{count}} zonas permitidas",
+      "size": "Tamaño",
+      "width": "Ancho",
+      "height": "Alto",
+      "full": "Completo",
+      "fillWidth": "Llenar ancho (100%)",
+      "fillHeight": "Llenar alto (100%)",
+      "fillBoth": "Llenar ancho y alto (100% × 100%)",
+      "setWidth": "Establecer ancho en {{size}}",
+      "setWidthAdjusted": "Establecer ancho en {{size}} (alto ajustado)",
+      "setHeight": "Establecer alto en {{size}}",
+      "setHeightAdjusted": "Establecer alto en {{size}} (ancho ajustado)",
+      "zoneRatio": "Proporción de zona",
+      "none": "Ninguna",
+      "selectZoneFirst": "Selecciona primero una zona",
+      "aspectLocked": "Desactivado: rompería la proporción de la zona",
+      "distributeColumns": "Distribuir en columnas",
+      "distributeColumnsHint": "Distribuir todas las zonas por igual en columnas",
+      "distributeRows": "Distribuir en filas",
+      "distributeRowsHint": "Distribuir todas las zonas por igual en filas",
+      "noSelection": "Selecciona una zona para editar sus propiedades",
+      "widthShort": "An",
+      "heightShort": "Al",
+      "deleteZone": "Eliminar zona",
+      "zonesHeading": "Zonas ({{count}})",
+      "layer": "Capa {{value}}",
+      "zoneName": "Zona {{number}}",
+      "templates": {
+        "fullScreen": "Pantalla completa",
+        "twoColumns": "2 columnas",
+        "threeColumns": "3 columnas",
+        "twoRows": "2 filas",
+        "threeRows": "3 filas",
+        "grid2x2": "Cuadrícula 2×2",
+        "grid3x3": "Cuadrícula 3×3",
+        "mainSidebar": "Principal + barra lateral",
+        "headerContent": "Cabecera + contenido",
+        "pictureInPicture": "Imagen en imagen"
+      }
+    }
   },
   "widgets": {
     "scope": {
@@ -1212,6 +1290,17 @@
         "networkError": "No se pudo conectar con el servidor. Comprueba tu conexión.",
         "unknown": "No se pudieron cargar los elementos."
       }
+    },
+    "details": {
+      "updatesEvery": "Se actualiza cada {{seconds}} s",
+      "copySlug": "Copiar identificador del widget",
+      "slugCopied": "Identificador del widget copiado",
+      "copySlugFailed": "No se pudo copiar el identificador del widget."
+    },
+    "json": {
+      "copy": "Copiar JSON",
+      "copied": "JSON copiado",
+      "copyFailed": "No se pudo copiar el JSON."
     }
   },
   "devices": {
@@ -1548,7 +1637,8 @@
     "tagFilterModeAny": "Cualquiera",
     "tagFilterModeAll": "Todas",
     "noMatches": "Sin coincidencias",
-    "noItems": "Sin elementos"
+    "noItems": "Sin elementos",
+    "toggle": "Filtros"
   },
   "shortcuts": {
     "showShortcutsLegend": "Mostrar atajos de teclado",
@@ -1685,7 +1775,25 @@
     },
     "drawerTitle": "Medio \"{{name}}\"",
     "mediaUpdated": "Medio \"{{name}}\" actualizado correctamente",
-    "errorUpdating": "Error al actualizar medio {{name}}: {{error}}"
+    "errorUpdating": "Error al actualizar medio {{name}}: {{error}}",
+    "details": {
+      "summary": "Resumen del medio",
+      "copyId": "Copiar ID del medio",
+      "copied": "ID del medio copiado",
+      "copyFailed": "No se pudo copiar el ID del medio.",
+      "added": "Añadido {{time}}",
+      "updated": "Actualizado {{time}}",
+      "dimensions": "Dimensiones",
+      "duration": "Duración",
+      "namePlaceholder": "Introduce el nombre del medio",
+      "nameRequired": "El nombre es obligatorio",
+      "nameTooShort": "El nombre debe tener al menos 5 caracteres",
+      "noPreview": "No hay vista previa disponible",
+      "types": {
+        "image": "Imagen",
+        "video": "Video"
+      }
+    }
   },
   "dashboard": {
     "noOrganizations": {

@@ -12,12 +12,15 @@ import {
   Pagination,
   Table,
   TableAction,
+  TableCardLabels,
   ToolBar,
   SelectionActionBar,
+  SelectionActionBarSpacer,
 } from '../';
 import { PermissionDenied } from '../permission-denied/permission-denied';
 import { SortOptions } from '../../interfaces/sort-options.interface';
 
+import { isDetailHistoryEntry } from '../../hooks/useModalFromUrl';
 import style from './table-view.module.scss';
 
 export interface FetchDataOptions {
@@ -77,6 +80,14 @@ interface TableViewProps<
     onRowSelect?: (selectedIds: Set<IdType>) => void;
     defaultRowAction?: TableAction<Item>;
     hideCheckboxes?: boolean;
+    /**
+     * Stacked card layout for narrow containers (e.g. phones). Enabled by
+     * default; pass `false` to always render a table.
+     */
+    cardLayout?: boolean;
+    cardBreakpoint?: number;
+    cardPrimaryColumn?: string;
+    cardLabels?: TableCardLabels;
   };
 
   pagination: {
@@ -92,6 +103,8 @@ interface TableViewProps<
     hideSearch?: boolean;
     searchPlaceholder?: string;
     hideTitle?: boolean;
+    /** Label of the toggle that reveals filters/actions on phones. */
+    filtersLabel?: string | (() => string);
   };
 
   /** Render prop for bulk actions shown in the floating selection bar */
@@ -179,8 +192,18 @@ export const TableView = <
   }) => {
     if (props.params) {
       const [searchParams, setSearchParamsEx] = props.params;
-      console.log('setSearchParams', params);
-      setSearchParamsEx({ ...searchParams, ...params });
+      // While a detail opened from the list has its own marked history entry
+      // (see detailUrlOptions), list navigation replaces that
+      // entry and drops the mark. Pushing would leave the marked detail entry
+      // behind, so closing the detail and going Back would reopen it.
+      if (isDetailHistoryEntry()) {
+        setSearchParamsEx(
+          { ...searchParams, ...params },
+          { replace: true, scroll: false }
+        );
+      } else {
+        setSearchParamsEx({ ...searchParams, ...params });
+      }
     } else {
       setFallbackParams({ ...fallbackParams(), ...params });
     }
@@ -383,6 +406,7 @@ export const TableView = <
               requireOneActiveFilter={props.toolbar?.requireOneActiveFilter}
               hideSearch={props.toolbar?.hideSearch}
               searchPlaceholder={props.toolbar?.searchPlaceholder}
+              filtersLabel={props.toolbar?.filtersLabel}
             />
           </Show>
 
@@ -396,6 +420,10 @@ export const TableView = <
             onRowClick={props.table.defaultRowAction?.handler}
             itemIdKey={props.itemIdKey}
             hideCheckboxes={props.table.hideCheckboxes}
+            cardLayout={props.table.cardLayout ?? true}
+            cardBreakpoint={props.table.cardBreakpoint}
+            cardPrimaryColumn={props.table.cardPrimaryColumn}
+            cardLabels={props.table.cardLabels}
             clearSelectionRef={(fn) => {
               clearSelectionRef = fn;
             }}
@@ -413,6 +441,10 @@ export const TableView = <
                 clear: clearSelection,
               })}
             </SelectionActionBar>
+          </Show>
+
+          <Show when={!!props.selectionActions && selectedCount() > 0}>
+            <SelectionActionBarSpacer />
           </Show>
 
           <div

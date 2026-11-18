@@ -44,6 +44,12 @@ import {
   TagPopover,
   useViewMode,
   isQuotaExceededError,
+  useModalFromUrl,
+  detailUrlOptions,
+  closeDetailUrl,
+  tableCardLabels,
+  filtersLabel,
+  organizeByLabel,
 } from '@castmill/ui-common';
 import { JsonPlaylist } from '@castmill/player';
 import { PlaylistsService } from '../services/playlists.service';
@@ -57,11 +63,7 @@ import './playlists.scss';
 import { PlaylistView } from './playlist-view';
 import { AddonComponentProps } from '../../common/interfaces/addon-store';
 import { PlaylistAddForm, AspectRatio } from './playlist-add-form';
-import {
-  useTeamFilter,
-  useModalFromUrl,
-  useOnboardingHighlight,
-} from '../../common/hooks';
+import { useTeamFilter, useOnboardingHighlight } from '../../common/hooks';
 import { ASPECT_RATIO_OPTIONS } from '../constants';
 import {
   validateCustomRatioField,
@@ -86,7 +88,9 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
   const closePlaylistDrawer = () => {
     if (props.params) {
       const [, setSearchParams] = props.params;
-      setSearchParams({ itemId: undefined }, { replace: true });
+      closeDetailUrl(() =>
+        setSearchParams({ itemId: undefined }, { replace: true })
+      );
     }
     setShowDrawer(false);
   };
@@ -618,7 +622,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
     setShowDrawer(true);
     if (props.params) {
       const [searchParams, setSearchParams] = props.params;
-      setSearchParams({ itemId: String(item.id) }, { replace: true });
+      setSearchParams({ itemId: String(item.id) }, detailUrlOptions());
     }
   };
 
@@ -1111,7 +1115,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
             placement="right"
             size="xl"
             closeOnOutsideClick
-            outsideClickIgnoreSelector="tbody tr, .playlist-tree-item"
+            outsideClickIgnoreSelector="tbody tr, [data-testid='table-card'], .playlist-tree-item"
             contentClass="playlist-modal"
           >
             <PlaylistView
@@ -1134,7 +1138,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
                 refreshData();
                 bumpTree();
               }}
-              onNavigateAway={closePlaylistDrawer}
+              onNavigateAway={() => setShowDrawer(false)}
             />
           </Drawer>
         )}
@@ -1238,6 +1242,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
           fetchData={fetchData}
           ref={setRef}
           toolbar={{
+            filtersLabel: filtersLabel(t),
             searchPlaceholder: t('common.search'),
             mainAction: (
               <div style="display: flex; align-items: center; gap: 1rem;">
@@ -1323,6 +1328,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
             </>
           )}
           table={{
+            cardLabels: tableCardLabels(t),
             columns,
             actions,
             actionsLabel: t('common.actions'),
@@ -1341,6 +1347,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
 
       <Show when={viewMode() === 'tree'}>
         <ToolBar
+          filtersLabel={filtersLabel(t)}
           title={t('playlists.title')}
           titleActions={
             <ViewModeToggle mode={viewMode()} onChange={setViewMode} />
@@ -1385,6 +1392,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
           }
         />
         <ResourceTreeView
+          dimensionLabel={organizeByLabel(t)()}
           tagGroups={tagGroups()}
           allTags={allTags()}
           fetchResources={fetchTreeResources}

@@ -195,3 +195,83 @@ describe('ToolBar Filter Change Functionality', () => {
     );
   });
 });
+
+describe('ToolBar responsive layout', () => {
+  const stubMatchMedia = (matches: boolean) =>
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn(() => ({
+        matches,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      }))
+    );
+
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+  });
+
+  it('shows filters inline without a toggle on wide screens', () => {
+    stubMatchMedia(false);
+    render(() => (
+      <ToolBar
+        filters={initialFilters}
+        actions={<span>Team filter</span>}
+        mainAction={<MockButton label="Add" onClick={() => {}} />}
+      />
+    ));
+    expect(screen.queryByRole('button', { name: 'Filters' })).toBeNull();
+    expect(screen.getByTestId('toolbar-filters').className).not.toContain(
+      'collapsed'
+    );
+  });
+
+  it('collapses filters and actions behind a toggle on phones', async () => {
+    stubMatchMedia(true);
+    const { container } = render(() => (
+      <ToolBar
+        onSearch={() => {}}
+        filters={initialFilters}
+        actions={<span>Team filter</span>}
+        mainAction={<MockButton label="Add" onClick={() => {}} />}
+        filtersLabel={() => 'Filtres'}
+      />
+    ));
+
+    expect(container.querySelector('.toolbar-row')).toHaveClass('compact');
+    // The primary action stays visible.
+    expect(screen.getByTestId('main-action')).toBeInTheDocument();
+
+    const toggle = screen.getByRole('button', { name: 'Filtres' });
+    const panel = screen.getByTestId('toolbar-filters');
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    expect(toggle).toHaveAttribute('aria-controls', panel.id);
+    expect(panel).toHaveClass('collapsed');
+    // Filters stay mounted so their state is preserved.
+    expect(screen.getByText('Team filter')).toBeInTheDocument();
+
+    await fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    expect(panel).not.toHaveClass('collapsed');
+
+    await fireEvent.click(toggle);
+    expect(panel).toHaveClass('collapsed');
+  });
+
+  it('uses the default label and skips the toggle when nothing can collapse', () => {
+    stubMatchMedia(true);
+    render(() => <ToolBar filters={initialFilters} />);
+    expect(screen.getByRole('button', { name: 'Filters' })).toBeInTheDocument();
+    cleanup();
+
+    render(() => (
+      <ToolBar
+        onSearch={() => {}}
+        mainAction={<MockButton label="Add" onClick={() => {}} />}
+      />
+    ));
+    expect(screen.queryByRole('button', { name: 'Filters' })).toBeNull();
+    expect(screen.queryByTestId('toolbar-filters')).toBeNull();
+  });
+});

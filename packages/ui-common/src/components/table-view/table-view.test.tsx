@@ -1,5 +1,5 @@
 /** @jsxImportSource solid-js */
-import { describe, it, expect, afterEach, vi } from 'vitest';
+import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest';
 import {
   render,
   fireEvent,
@@ -351,6 +351,23 @@ describe('TableView Component - Sorting Functionality', () => {
     });
   });
 
+  it('replaces a marked detail history entry when sorting', async () => {
+    const setParams = vi.fn();
+    window.history.replaceState({ castmillDetail: true }, '', '/?itemId=1');
+    render(() => <TableView {...defaultProps} params={[{}, setParams]} />);
+
+    await screen.findByText('Resource A');
+    fireEvent.click(screen.getByText('Created'));
+
+    await waitFor(() =>
+      expect(setParams).toHaveBeenCalledWith(
+        expect.objectContaining({ sortKey: 'created' }),
+        { replace: true, scroll: false }
+      )
+    );
+    window.history.replaceState(null, '', '/');
+  });
+
   it('updates sort options when column header is clicked', async () => {
     mockFetchData.mockClear();
     render(() => <TableView {...defaultProps} />);
@@ -456,5 +473,175 @@ describe('TableView Component - Sorting Functionality', () => {
 
     // fetchData should not be called again
     expect(mockFetchData).not.toHaveBeenCalled();
+  });
+});
+
+describe('TableView Component - Card Layout', () => {
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+  });
+
+  it('renders cards in narrow containers and sorts through the card controls', async () => {
+    let resize: ((entries: { contentRect: { width: number } }[]) => void)[] =
+      [];
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        constructor(cb: (typeof resize)[number]) {
+          resize.push(cb);
+        }
+        observe() {}
+        disconnect() {}
+      }
+    );
+
+    const fetchData = vi.fn().mockResolvedValue({
+      data: [{ id: '1', name: 'Resource 1', type: 'Image' }],
+      count: 1,
+    });
+    const onRowClick = vi.fn();
+
+    const { container } = render(() => (
+      <TableView
+        title="Resources"
+        resource="resources"
+        fetchData={fetchData}
+        pagination={{ itemsPerPage: 10 }}
+        table={{
+          columns: [
+            { key: 'name', title: 'Name', sortable: true },
+            { key: 'type', title: 'Type' },
+          ],
+          defaultRowAction: { icon: BsEye, label: 'View', handler: onRowClick },
+          cardLayout: true,
+          cardBreakpoint: 30,
+          cardPrimaryColumn: 'type',
+          cardLabels: { sortBy: 'Sort column' },
+        }}
+      />
+    ));
+
+    resize.forEach((cb) => cb([{ contentRect: { width: 320 } }]));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('table-card')).toBeInTheDocument();
+    });
+    expect(container.querySelector('table')).toBeNull();
+    expect(
+      screen.getByTestId('table-card').querySelector('[class*="card-title"]')
+    ).toHaveTextContent('Image');
+
+    fireEvent.click(screen.getByText('Resource 1'));
+    expect(onRowClick).toHaveBeenCalled();
+
+    fetchData.mockClear();
+    const select = screen.getByLabelText('Sort column') as HTMLSelectElement;
+    select.value = 'name';
+    fireEvent.change(select);
+    await waitFor(() => {
+      expect(fetchData).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sortOptions: { key: 'name', direction: 'ascending' },
+        })
+      );
+    });
+  });
+});
+
+describe('TableView Component - Responsive defaults', () => {
+  type ResizeCb = (entries: { contentRect: { width: number } }[]) => void;
+  let resize: ResizeCb[] = [];
+
+  beforeEach(() => {
+    resize = [];
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        constructor(cb: ResizeCb) {
+          resize.push(cb);
+        }
+        observe() {}
+        disconnect() {}
+      }
+    );
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+  });
+
+  const renderView = (
+    cardLayout?: boolean,
+    toolbar?: Record<string, unknown>
+  ) => {
+    const fetchData = vi.fn().mockResolvedValue({
+      data: [{ id: '1', name: 'Resource 1' }],
+      count: 1,
+    });
+    return render(() => (
+      <TableView
+        title="Resources"
+        resource="resources"
+        fetchData={fetchData}
+        pagination={{ itemsPerPage: 10 }}
+        table={{ columns: [{ key: 'name', title: 'Name' }], cardLayout }}
+        toolbar={toolbar}
+        selectionActions={() => <button>Delete</button>}
+      />
+    ));
+  };
+
+  it('uses the card layout by default in narrow containers', async () => {
+    renderView();
+    resize.forEach((cb) => cb([{ contentRect: { width: 320 } }]));
+    await waitFor(() => {
+      expect(screen.getByTestId('table-card')).toBeInTheDocument();
+    });
+  });
+
+  it('keeps the table when cardLayout is false', async () => {
+    const { container } = renderView(false);
+    await waitFor(() => {
+      expect(screen.getByText('Resource 1')).toBeInTheDocument();
+    });
+    resize.forEach((cb) => cb([{ contentRect: { width: 320 } }]));
+    expect(container.querySelector('table')).toBeInTheDocument();
+    expect(screen.queryByTestId('table-card')).toBeNull();
+  });
+
+  it('reserves room for the fixed phone selection bar while rows are selected', async () => {
+    const { container } = renderView(false);
+    await waitFor(() => {
+      expect(screen.getByText('Resource 1')).toBeInTheDocument();
+    });
+    const spacer = () =>
+      container.querySelector('.castmill-selection-bar-spacer');
+    expect(spacer()).toBeNull();
+
+    fireEvent.click(screen.getByLabelText('Select row 1'));
+    await waitFor(() => {
+      expect(spacer()).not.toBeNull();
+    });
+  });
+
+  it('passes the filters label to the toolbar on phones', async () => {
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn(() => ({
+        matches: true,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      }))
+    );
+    renderView(false, {
+      filters: [{ key: 'a', name: 'A', isActive: true }],
+      filtersLabel: 'Filtros',
+    });
+    expect(screen.getByRole('button', { name: 'Filtros' })).toHaveAttribute(
+      'aria-expanded',
+      'false'
+    );
   });
 });

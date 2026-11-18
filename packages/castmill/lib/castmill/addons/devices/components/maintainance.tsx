@@ -1,7 +1,7 @@
 import { Component, createEffect, createSignal, For, Show } from 'solid-js';
 import { Dynamic } from 'solid-js/web';
 import type { IconTypes } from 'solid-icons';
-import { useToast } from '@castmill/ui-common';
+import { useToast, SectionCard } from '@castmill/ui-common';
 import {
   BsArrowClockwise,
   BsArrowRepeat,
@@ -14,7 +14,7 @@ import {
 } from 'solid-icons/bs';
 import { Device } from '../interfaces/device.interface';
 import { DevicesService } from '../services/devices.service';
-import { DeviceCardHeader, DeviceNotice } from './device-section';
+import { DeviceNotice } from './device-section';
 
 import './maintainance.scss';
 import { DeviceCommand } from '../types/device-command.type';
@@ -258,38 +258,36 @@ export const Maintainance: Component<{
         </DeviceNotice>
       </Show>
 
-      <section class="device-card">
-        <DeviceCardHeader
-          icon={BsTools}
-          title={t('devices.maintenance.contentGroup')}
-          description={t('devices.maintenance.contentGroupDescription')}
-        />
+      <SectionCard
+        icon={BsTools}
+        title={t('devices.maintenance.contentGroup')}
+        description={t('devices.maintenance.contentGroupDescription')}
+      >
         <ActionList actions={contentActions()} />
-      </section>
+      </SectionCard>
 
-      <section class="device-card">
-        <DeviceCardHeader
-          icon={BsPower}
-          title={t('devices.maintenance.systemGroup')}
-          description={t('devices.maintenance.systemGroupDescription')}
-        />
+      <SectionCard
+        icon={BsPower}
+        title={t('devices.maintenance.systemGroup')}
+        description={t('devices.maintenance.systemGroupDescription')}
+      >
         <ActionList actions={systemActions()} />
-      </section>
+      </SectionCard>
 
-      <section class="device-card maintenance-autorecovery">
-        <DeviceCardHeader
-          icon={BsShieldCheck}
-          title={t('devices.maintenance.recoverLostSettingsLabel')}
-          description={t('devices.maintenance.recoverLostSettingsDescription')}
-          actions={
-            <span
-              class="maintenance-status"
-              classList={{ active: autoRecoverIsActive() }}
-            >
-              {autoRecoverStatusText()}
-            </span>
-          }
-        />
+      <SectionCard
+        class="maintenance-autorecovery"
+        icon={BsShieldCheck}
+        title={t('devices.maintenance.recoverLostSettingsLabel')}
+        description={t('devices.maintenance.recoverLostSettingsDescription')}
+        actions={
+          <span
+            class="maintenance-status"
+            classList={{ active: autoRecoverIsActive() }}
+          >
+            {autoRecoverStatusText()}
+          </span>
+        }
+      >
         <div
           class="device-segmented"
           role="group"
@@ -324,7 +322,7 @@ export const Maintainance: Component<{
             {t('devices.maintenance.disable')}
           </button>
         </div>
-      </section>
+      </SectionCard>
     </div>
   );
 };

@@ -15,13 +15,16 @@ import {
   ConfirmDialog,
   useToast,
   formatBytes,
+  SectionCard,
+  tableCardLabels,
+  revealTab,
+  tabKeyTarget,
 } from '@castmill/ui-common';
 
 import { Device } from '../interfaces/device.interface';
 
 import { DevicesService } from '../services/devices.service';
 import {
-  DeviceCardHeader,
   DeviceIconButton,
   DeviceNotice,
   DeviceTableTime,
@@ -220,6 +223,15 @@ export const DeviceCache: Component<{
     setCurrentType(type);
   };
 
+  const typeTabs: Partial<Record<CacheType, HTMLButtonElement>> = {};
+  const onTypeKeyDown = (event: KeyboardEvent) => {
+    const index = CACHE_TYPES.indexOf(currentType());
+    const next = tabKeyTarget(event, index, CACHE_TYPES.length);
+    if (next === undefined) return;
+    selectType(CACHE_TYPES[next]);
+    revealTab(typeTabs[CACHE_TYPES[next]], true);
+  };
+
   const typeLabel = (type: CacheType) => t(`devices.cache.${type}Tab`);
   const tabId = (type: CacheType) => `device-cache-${props.device.id}-${type}`;
 
@@ -233,24 +245,23 @@ export const DeviceCache: Component<{
           </DeviceNotice>
         }
       >
-        <section class="device-card device-cache">
-          <DeviceCardHeader
-            icon={BsDatabase}
-            title={t('devices.cache.title')}
-            description={t('devices.cache.description')}
-            actions={
-              <button
-                type="button"
-                class="device-text-button danger"
-                disabled={loadingClearAll()}
-                onClick={() => setShowConfirmClearAll(true)}
-              >
-                <BsXCircle aria-hidden="true" />
-                {t('devices.cache.clearAll')}
-              </button>
-            }
-          />
-
+        <SectionCard
+          class="device-cache"
+          icon={BsDatabase}
+          title={t('devices.cache.title')}
+          description={t('devices.cache.description')}
+          actions={
+            <button
+              type="button"
+              class="device-text-button danger"
+              disabled={loadingClearAll()}
+              onClick={() => setShowConfirmClearAll(true)}
+            >
+              <BsXCircle aria-hidden="true" />
+              {t('devices.cache.clearAll')}
+            </button>
+          }
+        >
           <div class="device-cache-toolbar">
             <div
               class="device-segmented"
@@ -260,18 +271,21 @@ export const DeviceCache: Component<{
               <For each={CACHE_TYPES}>
                 {(type) => (
                   <button
+                    ref={(el) => (typeTabs[type] = el)}
                     type="button"
                     role="tab"
                     id={tabId(type)}
                     aria-selected={currentType() === type}
+                    tabIndex={currentType() === type ? 0 : -1}
                     onClick={() => selectType(type)}
+                    onKeyDown={onTypeKeyDown}
                   >
                     {typeLabel(type)}
                   </button>
                 )}
               </For>
             </div>
-            <div class="device-card-actions">
+            <div class="device-cache-actions">
               <DeviceIconButton
                 icon={BsArrowClockwise}
                 label={t('common.refresh')}
@@ -306,6 +320,7 @@ export const DeviceCache: Component<{
                     direction: 'descending',
                   }}
                   table={{
+                    cardLabels: tableCardLabels(t),
                     columns,
                     actions,
                     onRowSelect,
@@ -315,7 +330,7 @@ export const DeviceCache: Component<{
               )}
             </Show>
           </div>
-        </section>
+        </SectionCard>
       </Show>
 
       {/* Confirm dialog for single item deletion */}

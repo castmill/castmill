@@ -194,6 +194,37 @@ describe('NetworkWidgets', () => {
     );
   });
 
+  it('scrolls the stacked detail pane into view when a widget is picked', async () => {
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
+    renderPage();
+    const option = await screen.findByRole('option', { name: /Realty/ });
+    const detail = screen
+      .getByRole('heading', { level: 2, name: 'Weather' })
+      .closest('section') as HTMLElement;
+    const master = screen.getByRole('listbox').closest('aside') as HTMLElement;
+    const rect = (top: number, bottom: number) => ({ top, bottom }) as DOMRect;
+
+    // Side by side: nothing to reveal
+    master.getBoundingClientRect = () => rect(100, 600);
+    detail.getBoundingClientRect = () => rect(100, 600);
+    fireEvent.click(option);
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    expect(scrollIntoView).not.toHaveBeenCalled();
+
+    // Stacked below the list (phones and tablets)
+    detail.getBoundingClientRect = () => rect(620, 1200);
+    fireEvent.keyDown(screen.getByRole('option', { name: /Spotify/ }), {
+      key: 'Enter',
+    });
+    await waitFor(() =>
+      expect(scrollIntoView).toHaveBeenCalledWith(
+        expect.objectContaining({ block: 'start' })
+      )
+    );
+    delete (Element.prototype as Partial<Element>).scrollIntoView;
+  });
+
   it('lists organizations in a table, locking those whose playlists use the widget', async () => {
     renderPage();
 
@@ -420,6 +451,9 @@ describe('NetworkWidgets', () => {
       target: { checked: true },
     });
     expect(await screen.findByText('2 selected')).toBeInTheDocument();
+    expect(
+      screen.getByText('2 selected').closest('section')?.lastElementChild
+    ).toHaveAttribute('aria-hidden', 'true');
 
     fireEvent.click(screen.getByRole('button', { name: 'Disable access' }));
 

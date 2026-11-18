@@ -174,20 +174,9 @@ body [data-modal-overlay] .widget-config-modal {
     }
 
     .form-actions {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: flex-end;
-      gap: 0.5em;
       padding: 0.8em 1.2em;
       border-top: 1px solid var(--cm-border-color);
       background: var(--cm-bg-hover);
-
-      .form-actions-dirty {
-        flex: 1 1 auto;
-        color: var(--cm-warning);
-        font-size: 0.8em;
-      }
 
       > button:disabled {
         background-color: transparent;
@@ -354,24 +343,6 @@ body [data-modal-overlay] .widget-config-modal {
 
     .preview-stage {
       padding: 0.6em;
-    }
-  }
-}
-
-@media (max-width: 30em) {
-  .widget-config-dialog form .form-actions {
-    > button {
-      flex: 1 1 0;
-      justify-content: center;
-    }
-
-    .form-actions-dirty {
-      flex-basis: 100%;
-      text-align: center;
-
-      &:empty {
-        display: none;
-      }
     }
   }
 }

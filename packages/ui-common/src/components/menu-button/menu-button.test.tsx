@@ -23,6 +23,28 @@ describe('MenuButton', () => {
     expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
 
+  it('renders an icon-only trigger labelled by its label', async () => {
+    const Icon = () => <svg data-testid="dots" />;
+    const { container } = render(() => (
+      <MenuButton
+        label="Actions Row 1"
+        icon={Icon}
+        items={[{ key: 'one', label: 'One', onClick: vi.fn() }]}
+      />
+    ));
+
+    const trigger = screen.getByRole('button', { name: 'Actions Row 1' });
+    expect(trigger).toHaveAttribute('title', 'Actions Row 1');
+    expect(trigger).not.toHaveTextContent('▾');
+    expect(screen.getByTestId('dots')).toBeInTheDocument();
+    expect(
+      container.querySelector('.castmill-menu-button-icon-only')
+    ).toBeInTheDocument();
+
+    await fireEvent.click(trigger);
+    expect(screen.getByRole('menuitem', { name: 'One' })).toBeInTheDocument();
+  });
+
   it('opens and closes when trigger is clicked', async () => {
     render(() => (
       <MenuButton
