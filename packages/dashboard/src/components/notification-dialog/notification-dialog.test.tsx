@@ -255,6 +255,36 @@ describe('NotificationDialog Component', () => {
       open.mockRestore();
     });
 
+    it('opens unread external links before the read request resolves', async () => {
+      let resolveRead!: (result: { id: string; read: boolean }) => void;
+      (notificationsService.markAsRead as any).mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            resolveRead = resolve;
+          })
+      );
+      const open = vi.spyOn(window, 'open').mockReturnValue(null);
+      const { item, onClose } = await clickOnly(
+        networkNotification({
+          link: 'https://signage.example.com',
+          read: false,
+        })
+      );
+
+      fireEvent.click(item);
+
+      expect(open).toHaveBeenCalledWith(
+        'https://signage.example.com',
+        '_blank',
+        'noopener,noreferrer'
+      );
+      expect(onClose).not.toHaveBeenCalled();
+
+      resolveRead({ id: '10', read: true });
+      await waitFor(() => expect(onClose).toHaveBeenCalled());
+      open.mockRestore();
+    });
+
     it('shows the network icon for network events', async () => {
       const { item } = await clickOnly(networkNotification({}));
 

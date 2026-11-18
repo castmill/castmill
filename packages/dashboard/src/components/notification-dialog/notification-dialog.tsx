@@ -161,6 +161,17 @@ export const NotificationDialog: Component<NotificationDialogProps> = (
   };
 
   const handleNotificationClick = async (notification: Notification) => {
+    const link = notification.link
+      ? resolveNotificationLink(
+          notification.link,
+          store.organizations.selectedId
+        )
+      : undefined;
+
+    if (link?.external) {
+      window.open(link.href, '_blank', 'noopener,noreferrer');
+    }
+
     // Mark as read
     if (!notification.read) {
       try {
@@ -180,17 +191,11 @@ export const NotificationDialog: Component<NotificationDialogProps> = (
     }
 
     // Navigate if there's a link
-    if (notification.link) {
+    if (link) {
       props.onClose();
-      const { external, href } = resolveNotificationLink(
-        notification.link,
-        store.organizations.selectedId
-      );
 
-      if (external) {
-        window.open(href, '_blank', 'noopener,noreferrer');
-      } else {
-        navigate(href);
+      if (!link.external) {
+        navigate(link.href);
       }
     }
   };
