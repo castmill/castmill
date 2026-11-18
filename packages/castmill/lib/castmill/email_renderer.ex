@@ -122,8 +122,7 @@ defmodule Castmill.EmailRenderer do
 
     html_body =
       render_base_layout_html(%{
-        subject:
-          Plug.HTML.html_escape("You have been invited to a Team on #{brand.name}"),
+        subject: Plug.HTML.html_escape("You have been invited to a Team on #{brand.name}"),
         body: html_body_content,
         brand: EmailBrand.html_escape(brand)
       })
