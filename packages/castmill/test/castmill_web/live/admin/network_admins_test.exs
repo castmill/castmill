@@ -84,7 +84,7 @@ defmodule CastmillWeb.Live.Admin.NetworkAdminsTest do
     assert length(Floki.find(Floki.parse_document!(render(view)), "#network-admins tr")) == 2
 
     view
-    |> element("#network-admins-#{user.id} a", "Remove admin")
+    |> element("#rows-#{user.id} a", "Remove admin")
     |> render_click()
 
     refute render(view) =~ user.email
