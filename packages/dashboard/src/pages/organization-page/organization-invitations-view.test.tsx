@@ -151,6 +151,25 @@ describe('OrganizationInvitationsView', () => {
     expect(toastSpies.success).not.toHaveBeenCalled();
   });
 
+  it('reloads the renewed invitation when its email could not be sent', async () => {
+    vi.mocked(OrganizationsService.resendInvitation).mockRejectedValue(
+      new HttpError('invitation_email_not_sent', 502)
+    );
+    await openResendDialog();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Resend' }));
+
+    await waitFor(() =>
+      expect(toastSpies.error).toHaveBeenCalledWith(
+        'The invitation for pending@example.com has a new link, but its email could not be sent. Resend it again.'
+      )
+    );
+    await waitFor(() =>
+      expect(OrganizationsService.fetchInvitations).toHaveBeenCalledTimes(2)
+    );
+    expect(screen.queryByText(/It will be valid for 7 more days/)).toBeNull();
+  });
+
   it('removes the selected invitations by their id', async () => {
     renderView();
 

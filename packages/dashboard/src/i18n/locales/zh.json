@@ -921,7 +921,8 @@
       "invitationAlreadyMember": "{{email}} 已是此组织的成员。",
       "invitationPending": "{{email}} 有一个更新的待处理邀请。请改为重新发送该邀请。",
       "resendInvitationFailed": "无法重新发送邀请",
-      "removeInvitationFailed": "无法移除邀请"
+      "removeInvitationFailed": "无法移除邀请",
+      "invitationEmailNotSent": "{{email}} 的邀请已有新链接，但邮件未能发送。请再次重新发送。"
     },
     "messages": {
       "memberRemoved": "已成功移除成员 {{name}}",

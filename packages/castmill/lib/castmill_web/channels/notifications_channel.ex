@@ -38,16 +38,6 @@ defmodule CastmillWeb.NotificationsChannel do
   end
 
   @impl true
-  def handle_info({:notifications_deleted, notification_ids, unread_count}, socket) do
-    push(socket, "notifications_deleted", %{
-      ids: notification_ids,
-      unread_count: unread_count
-    })
-
-    {:noreply, socket}
-  end
-
-  @impl true
   def handle_in("mark_read", %{"id" => id}, socket) do
     case Notifications.mark_as_read(id) do
       {:ok, _notification} ->
@@ -65,6 +55,17 @@ defmodule CastmillWeb.NotificationsChannel do
     user_id = socket.assigns.user.id
     {count, _} = Notifications.mark_all_as_read(user_id)
     {:reply, {:ok, %{marked_read: count, unread_count: 0}}, socket}
+  end
+
+  # Notifications deleted for this user, e.g. invitations whose link was replaced
+  @impl true
+  def handle_info({:notifications_deleted, notification_ids, unread_count}, socket) do
+    push(socket, "notifications_deleted", %{
+      ids: notification_ids,
+      unread_count: unread_count
+    })
+
+    {:noreply, socket}
   end
 
   # Listen for notifications broadcast via PubSub (with pre-computed count)

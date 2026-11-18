@@ -873,6 +873,17 @@ defmodule CastmillWeb.OrganizationController do
         conn
         |> put_status(:unprocessable_entity)
         |> json(%{errors: errors})
+
+      # The invitation has a new link, but its email could not be queued.
+      {:error, :email_not_sent} ->
+        conn
+        |> put_status(:bad_gateway)
+        |> json(%{error: "invitation_email_not_sent"})
+
+      {:error, _reason} ->
+        conn
+        |> put_status(:internal_server_error)
+        |> json(%{error: "invitation_not_resent"})
     end
   end
 end

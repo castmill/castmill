@@ -144,6 +144,8 @@ export const OrganizationInvitationsView = (props: {
           return t('organization.errors.invitationAlreadyMember', { email });
         case 'already_invited':
           return t('organization.errors.invitationPending', { email });
+        case 'invitation_email_not_sent':
+          return t('organization.errors.invitationEmailNotSent', { email });
       }
     }
     return t('organization.errors.resendInvitationFailed');
@@ -170,6 +172,14 @@ export const OrganizationInvitationsView = (props: {
       refreshData();
     } catch (error) {
       toast.error(resendErrorMessage(error, invitation.email));
+      // The invitation was renewed even though its email was not sent.
+      if (
+        error instanceof HttpError &&
+        error.message === 'invitation_email_not_sent'
+      ) {
+        setInvitationToResend(undefined);
+        refreshData();
+      }
     } finally {
       setResending(false);
     }

@@ -105,7 +105,7 @@ defmodule Castmill.OrganizationsConcurrentTest do
         Castmill.OrganizationsFixtures.organization_fixture(%{network_id: network.id})
 
       user =
-        Castmill.AccountsFixtures.user_fixture(%{
+        Castmill.OrganizationsFixtures.user_fixture(%{
           network_id: network.id,
           email: "racing-invitee@example.com"
         })
@@ -130,6 +130,40 @@ defmodule Castmill.OrganizationsConcurrentTest do
         results ->
           flunk("Unexpected concurrent invitation results: #{inspect(results)}")
       end
+    end
+
+    test "serializes concurrent resends so one notification with the current link remains",
+         %{network: network} do
+      organization =
+        Castmill.OrganizationsFixtures.organization_fixture(%{network_id: network.id})
+
+      user =
+        Castmill.OrganizationsFixtures.user_fixture(%{
+          network_id: network.id,
+          email: "double-click@example.com"
+        })
+
+      {:ok, token} = Organizations.invite_user(organization.id, user.email, :member)
+      invitation = Organizations.get_invitation(token)
+
+      results =
+        1..2
+        |> Enum.map(fn _ ->
+          Task.async(fn -> Organizations.resend_invitation(organization.id, invitation.id) end)
+        end)
+        |> Task.await_many(5000)
+
+      assert Enum.all?(results, &match?({:ok, _}, &1))
+
+      current =
+        Castmill.Repo.get_by!(Castmill.Organizations.OrganizationsInvitation, id: invitation.id)
+
+      assert [notification] =
+               user.id
+               |> Castmill.Notifications.list_user_notifications()
+               |> Enum.filter(&(&1.type == "organization_invitation"))
+
+      assert notification.metadata["token"] == current.token
     end
 
     test "prevents race condition when updating to conflicting names concurrently", %{

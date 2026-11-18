@@ -921,7 +921,8 @@
       "invitationAlreadyMember": "{{email}}はすでにこの組織のメンバーです。",
       "invitationPending": "{{email}}への新しい招待が保留中です。代わりにそちらを再送信してください。",
       "resendInvitationFailed": "招待を再送信できませんでした",
-      "removeInvitationFailed": "招待を削除できませんでした"
+      "removeInvitationFailed": "招待を削除できませんでした",
+      "invitationEmailNotSent": "{{email}}への招待に新しいリンクが発行されましたが、メールを送信できませんでした。もう一度再送信してください。"
     },
     "messages": {
       "memberRemoved": "メンバー{{name}}を正常に削除しました",

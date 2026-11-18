@@ -921,7 +921,8 @@
       "invitationAlreadyMember": "{{email}} عضو بالفعل في هذه المنظمة.",
       "invitationPending": "توجد دعوة أحدث معلقة لـ {{email}}. أعد إرسال تلك الدعوة بدلاً من ذلك.",
       "resendInvitationFailed": "تعذرت إعادة إرسال الدعوة",
-      "removeInvitationFailed": "تعذرت إزالة الدعوة"
+      "removeInvitationFailed": "تعذرت إزالة الدعوة",
+      "invitationEmailNotSent": "دعوة {{email}} لها رابط جديد، لكن تعذر إرسال البريد الإلكتروني. أعد إرسالها مرة أخرى."
     },
     "messages": {
       "memberRemoved": "تمت إزالة العضو {{name}} بنجاح",

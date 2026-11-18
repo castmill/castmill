@@ -16,28 +16,34 @@ defmodule Castmill.Notifications.Events do
     - organization_id: The ID of the organization
     - token: The invitation token for accepting the invitation
     - actor_id: The ID of the user who sent the invitation (optional)
+    - opts: `broadcast: false` to only insert it (see
+      `Castmill.Notifications.create_user_notification/2`)
   """
   def notify_organization_invitation(
         user_id,
         organization_name,
         organization_id,
         token,
-        actor_id \\ nil
+        actor_id \\ nil,
+        opts \\ []
       ) do
-    Notifications.create_user_notification(%{
-      user_id: user_id,
-      title_key: "organizations.notifications.types.organizationInvitation.title",
-      description_key: "organizations.notifications.types.organizationInvitation.description",
-      link: "/invite-organization?token=#{token}",
-      type: "organization_invitation",
-      actor_id: actor_id,
-      actor_type: "user",
-      metadata: %{
-        organization_id: organization_id,
-        organization_name: organization_name,
-        token: token
-      }
-    })
+    Notifications.create_user_notification(
+      %{
+        user_id: user_id,
+        title_key: "organizations.notifications.types.organizationInvitation.title",
+        description_key: "organizations.notifications.types.organizationInvitation.description",
+        link: "/invite-organization?token=#{token}",
+        type: "organization_invitation",
+        actor_id: actor_id,
+        actor_type: "user",
+        metadata: %{
+          organization_id: organization_id,
+          organization_name: organization_name,
+          token: token
+        }
+      },
+      opts
+    )
   end
 
   @doc """

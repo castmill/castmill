@@ -923,7 +923,8 @@
       "invitationAlreadyMember": "{{email}} ya es miembro de esta organización.",
       "invitationPending": "Hay una invitación más reciente pendiente para {{email}}. Reenvíe esa en su lugar.",
       "resendInvitationFailed": "No se pudo reenviar la invitación",
-      "removeInvitationFailed": "No se pudo eliminar la invitación"
+      "removeInvitationFailed": "No se pudo eliminar la invitación",
+      "invitationEmailNotSent": "La invitación de {{email}} tiene un enlace nuevo, pero no se pudo enviar el correo. Reenvíela de nuevo."
     },
     "messages": {
       "memberRemoved": "El miembro {{name}} se eliminó correctamente",

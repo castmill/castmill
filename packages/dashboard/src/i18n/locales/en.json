@@ -889,7 +889,8 @@
       "invitationAlreadyMember": "{{email}} is already a member of this organization.",
       "invitationPending": "A newer invitation for {{email}} is pending. Resend that one instead.",
       "resendInvitationFailed": "Failed to resend the invitation",
-      "removeInvitationFailed": "Failed to remove the invitation"
+      "removeInvitationFailed": "Failed to remove the invitation",
+      "invitationEmailNotSent": "The invitation for {{email}} has a new link, but its email could not be sent. Resend it again."
     },
     "messages": {
       "memberRemoved": "Member {{name}} removed successfully",

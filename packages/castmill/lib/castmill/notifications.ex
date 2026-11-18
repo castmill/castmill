@@ -12,16 +12,30 @@ defmodule Castmill.Notifications do
   @doc """
   Creates a notification for a specific user.
 
+  Pass `broadcast: false` to only insert it, for example inside a transaction,
+  and call `broadcast_created/1` after the transaction commits.
+
   ## Examples
 
       iex> create_user_notification(%{title: "Welcome", type: "system", user_id: user_id})
       {:ok, %Notification{}}
   """
-  def create_user_notification(attrs) do
-    %Notification{}
-    |> Notification.changeset(attrs)
-    |> Repo.insert()
-    |> broadcast_notification()
+  def create_user_notification(attrs, opts \\ []) do
+    result =
+      %Notification{}
+      |> Notification.changeset(attrs)
+      |> Repo.insert()
+
+    if Keyword.get(opts, :broadcast, true), do: broadcast_notification(result), else: result
+  end
+
+  @doc """
+  Sends a notification created with `broadcast: false` to its recipients'
+  open dashboards.
+  """
+  def broadcast_created(%Notification{} = notification) do
+    {:ok, notification} |> broadcast_notification()
+    :ok
   end
 
   @doc """
@@ -118,11 +132,12 @@ defmodule Castmill.Notifications do
     page_size = Keyword.get(opts, :page_size, 20)
     offset = max((page - 1) * page_size, 0)
 
-    from n in Notification,
+    from(n in Notification,
       where: n.organization_id == ^organization_id,
       order_by: [desc: n.inserted_at],
       limit: ^page_size,
       offset: ^offset
+    )
     |> Repo.all()
   end
 
@@ -255,29 +270,30 @@ defmodule Castmill.Notifications do
   end
 
   @doc """
-  Deletes the notifications of `type` whose metadata `key` is `value`, for
-  example invitation notifications whose link no longer works. Returns the
-  number of deleted notifications.
+  Deletes `user_id`'s notifications of `type` whose metadata `key` is `value`,
+  for example an invitation notification whose link no longer works. A single
+  `DELETE ... RETURNING` on the user's notifications (indexed by `user_id`), so
+  it returns exactly the deleted notifications, for
+  `broadcast_notifications_deleted/1`.
   """
-  def delete_notifications_by_metadata(type, key, value)
+  def delete_user_notifications(user_id, type, key, value)
       when is_binary(type) and is_binary(key) and is_binary(value) do
-    type
-    |> delete_notifications_by_metadata_with_records(key, value)
-    |> length()
-  end
-
-  def delete_notifications_by_metadata_with_records(type, key, value)
-      when is_binary(type) and is_binary(key) and is_binary(value) do
-    query =
+    {_count, deleted} =
       from(n in Notification,
-        where: n.type == ^type and fragment("?->>? = ?", n.metadata, ^key, ^value)
+        where:
+          n.user_id == ^user_id and n.type == ^type and
+            fragment("?->>? = ?", n.metadata, ^key, ^value),
+        select: n
       )
+      |> Repo.delete_all()
 
-    notifications = Repo.all(query)
-    Repo.delete_all(query)
-    notifications
+    deleted
   end
 
+  @doc """
+  Tells the recipients' open dashboards that `notifications` were deleted,
+  with their new unread count. Call it after the deletion has committed.
+  """
   def broadcast_notifications_deleted(notifications) do
     notifications
     |> Enum.filter(& &1.user_id)

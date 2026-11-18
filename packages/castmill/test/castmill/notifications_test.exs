@@ -267,33 +267,63 @@ defmodule Castmill.NotificationsTest do
     end
   end
 
-  describe "delete_notifications_by_metadata/3" do
-    test "deletes only notifications of the type with the metadata value", %{user: user} do
-      create = fn type, token ->
+  describe "delete_user_notifications/4" do
+    test "deletes only the user's notifications of the type with the metadata value", %{
+      user: user,
+      network: network
+    } do
+      other_user = user_fixture(%{network_id: network.id})
+
+      create = fn user_id, type, token, broadcast? ->
         {:ok, notification} =
-          Notifications.create_user_notification(%{
-            type: type,
-            user_id: user.id,
-            metadata: %{token: token}
-          })
+          Notifications.create_user_notification(
+            %{type: type, user_id: user_id, metadata: %{token: token}},
+            broadcast: broadcast?
+          )
 
         notification
       end
 
-      create.("organization_invitation", "old")
-      kept_token = create.("organization_invitation", "new")
-      kept_type = create.("team_invitation", "old")
+      old = create.(user.id, "organization_invitation", "old", true)
+      kept_token = create.(user.id, "organization_invitation", "new", false)
+      kept_type = create.(user.id, "team_invitation", "old", true)
+      other = create.(other_user.id, "organization_invitation", "old", true)
 
-      assert Notifications.delete_notifications_by_metadata(
-               "organization_invitation",
-               "token",
-               "old"
-             ) == 1
+      assert [deleted] =
+               Notifications.delete_user_notifications(
+                 user.id,
+                 "organization_invitation",
+                 "token",
+                 "old"
+               )
+
+      assert deleted.id == old.id
 
       assert user.id
              |> Notifications.list_user_notifications()
              |> Enum.map(& &1.id)
              |> Enum.sort() == Enum.sort([kept_token.id, kept_type.id])
+
+      assert [%{id: other_id}] = Notifications.list_user_notifications(other_user.id)
+      assert other_id == other.id
+    end
+  end
+
+  describe "create_user_notification/2 without broadcasting" do
+    test "only broadcasts when broadcast_created/1 is called", %{user: user} do
+      Phoenix.PubSub.subscribe(Castmill.PubSub, "users:#{user.id}")
+
+      {:ok, notification} =
+        Notifications.create_user_notification(
+          %{type: "info", user_id: user.id},
+          broadcast: false
+        )
+
+      refute_received {:new_notification, _, _}
+
+      assert :ok = Notifications.broadcast_created(notification)
+      assert_received {:new_notification, %{id: id}, 1}
+      assert id == notification.id
     end
   end
 

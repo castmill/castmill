@@ -56,48 +56,59 @@ export const NotificationDialog: Component<NotificationDialogProps> = (
     document.removeEventListener('keydown', handleKeyDown);
   });
 
-  // Listen for new notifications from WebSocket
+  // Notifications deleted while the dialog is open (for example invitations
+  // whose link was replaced). Lists loaded later must not bring them back.
+  const deletedIds = new Set<string>();
+  // Counts live events, so an older list response does not overwrite the
+  // unread count they reported.
+  let liveEvents = 0;
+
+  const reportUnreadCount = (count: number | undefined) => {
+    if (count !== undefined) {
+      setUnreadCount(count);
+      props.onNotificationRead(count);
+    }
+  };
+
+  // Listen for notifications from WebSocket. The channel outlives the dialog,
+  // so the listeners are removed when it closes.
   createEffect(() => {
     const channel = props.channel;
-    if (channel) {
-      channel.on('new_notification', (payload: any) => {
-        if (payload.notification) {
-          // Check if notification already exists to avoid duplicates
-          setNotifications((prev) => {
-            const exists = prev.some((n) => n.id === payload.notification.id);
-            if (exists) {
-              return prev;
-            }
-            return [payload.notification, ...prev];
-          });
+    if (!channel) return;
 
-          if (payload.unread_count !== undefined) {
-            setUnreadCount(payload.unread_count);
-            props.onNotificationRead(payload.unread_count);
-          }
-        }
-      });
+    const newRef = channel.on('new_notification', (payload: any) => {
+      const notification = payload.notification;
+      if (!notification || deletedIds.has(String(notification.id))) return;
 
-      channel.on('notifications_deleted', (payload: any) => {
-        const deletedIds = new Set((payload.ids ?? []).map(String));
-        setNotifications((prev) =>
-          prev.filter(
-            (notification) => !deletedIds.has(String(notification.id))
-          )
-        );
+      liveEvents++;
+      setNotifications((prev) =>
+        prev.some((n) => String(n.id) === String(notification.id))
+          ? prev
+          : [notification, ...prev]
+      );
+      reportUnreadCount(payload.unread_count);
+    });
 
-        if (payload.unread_count !== undefined) {
-          setUnreadCount(payload.unread_count);
-          props.onNotificationRead(payload.unread_count);
-        }
-      });
-    }
+    const deletedRef = channel.on('notifications_deleted', (payload: any) => {
+      liveEvents++;
+      for (const id of payload.ids ?? []) deletedIds.add(String(id));
+      setNotifications((prev) =>
+        prev.filter((notification) => !deletedIds.has(String(notification.id)))
+      );
+      reportUnreadCount(payload.unread_count);
+    });
+
+    onCleanup(() => {
+      channel.off('new_notification', newRef);
+      channel.off('notifications_deleted', deletedRef);
+    });
   });
 
   const loadNotifications = async () => {
     if (loading() || !hasMore()) return;
 
     setLoading(true);
+    const liveEventsBefore = liveEvents;
     try {
       const result = await notificationsService.getNotifications(page(), 20);
 
@@ -105,14 +116,19 @@ export const NotificationDialog: Component<NotificationDialogProps> = (
         setHasMore(false);
       }
 
-      if (page() === 1) {
-        setNotifications(result.data);
-      } else {
-        setNotifications((prev) => [...prev, ...result.data]);
-      }
+      // Merge rather than replace: notifications received while the request
+      // was in flight are newer, and deleted ones stay deleted.
+      setNotifications((prev) => {
+        const known = new Set(prev.map((n) => String(n.id)));
+        const loaded = result.data.filter(
+          (n) => !known.has(String(n.id)) && !deletedIds.has(String(n.id))
+        );
+        return [...prev, ...loaded];
+      });
 
-      setUnreadCount(result.unread_count);
-      props.onNotificationRead(result.unread_count);
+      if (liveEvents === liveEventsBefore) {
+        reportUnreadCount(result.unread_count);
+      }
     } catch (error) {
       console.error('Failed to load notifications:', error);
     } finally {

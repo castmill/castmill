@@ -742,14 +742,22 @@ defmodule Castmill.Organizations do
         # status defaults to "invited", unless you override it
       })
     end)
-    # 4) Execute the DB transaction
+    # 4) Store the invitee's in-app notification with the invitation, so a
+    #    resend that replaces this link also replaces the notification
+    |> Ecto.Multi.run(:notification, fn _repo, %{invitation: invitation} ->
+      insert_invitation_notification(
+        invitation,
+        Castmill.Accounts.get_user_by_email(invitation.email)
+      )
+    end)
+    # 5) Execute the DB transaction
     |> Repo.transaction()
-    # 5) Send the invitation email only if the transaction succeeds
+    # 6) Broadcast and email only once the invitation is committed
     |> case do
-      {:ok, %{invitation: invitation}} ->
-        # Transaction committed successfully;
-        # now we can send the email outside the transaction.
-        deliver_invitation(invitation)
+      {:ok, %{invitation: invitation, notification: notification}} ->
+        # The invitation exists even if its email could not be queued
+        # (dispatch_invitation/2 logs it); admins can resend it.
+        dispatch_invitation(invitation, notification)
 
         {:ok, invitation.token}
 
@@ -764,6 +772,9 @@ defmodule Castmill.Organizations do
       # If inserting the invitation failed (e.g. a constraint error):
       {:error, :invitation, changeset, _changes} ->
         {:error, changeset}
+
+      {:error, :notification, reason, _changes} ->
+        {:error, reason}
     end
   end
 
@@ -886,40 +897,66 @@ defmodule Castmill.Organizations do
   (a newer invitation for the same email is pending) or a changeset.
   """
   def resend_invitation(organization_id, invitation_id) do
-    with {:ok, id} <- parse_invitation_id(invitation_id) do
-      case Repo.transaction(fn ->
-             invitation =
-               Repo.one(
-                 from(i in OrganizationsInvitation,
-                   where: i.id == ^id and i.organization_id == ^organization_id,
-                   lock: "FOR UPDATE"
-                 )
-               )
+    with {:ok, id} <- parse_invitation_id(invitation_id),
+         {:ok, {renewed, deleted, notification}} <- renew_and_replace(organization_id, id) do
+      # Only after the commit: the email queue has its own database connection
+      # and broadcasts reach other processes, so nothing may see the new link
+      # before it is saved.
+      Castmill.Notifications.broadcast_notifications_deleted(deleted)
 
-             with %OrganizationsInvitation{} <- invitation,
-                  :ok <- check_resendable(invitation),
-                  {:ok, renewed} <- renew_invitation(invitation),
-                  deleted_notifications <-
-                    Castmill.Notifications.delete_notifications_by_metadata_with_records(
-                      "organization_invitation",
-                      "token",
-                      invitation.token
-                    ),
-                  :ok <- deliver_invitation(renewed) do
-               {renewed, deleted_notifications}
-             else
-               nil -> Repo.rollback(:not_found)
-               {:error, reason} -> Repo.rollback(reason)
-             end
-           end) do
-        {:ok, {renewed, deleted_notifications}} ->
-          Castmill.Notifications.broadcast_notifications_deleted(deleted_notifications)
-          {:ok, renewed}
-
-        {:error, reason} ->
-          {:error, reason}
+      if current_invitation_token?(renewed) do
+        case dispatch_invitation(renewed, notification) do
+          :ok -> {:ok, renewed}
+          {:error, reason} -> {:error, reason}
+        end
+      else
+        # A concurrent resend replaced this link; it sends its own email.
+        {:ok, renewed}
       end
     end
+  end
+
+  # Under the invitation's row lock, so concurrent resends and acceptances are
+  # serialized: rotates the token and replaces the invitee's notification.
+  defp renew_and_replace(organization_id, id) do
+    Repo.transaction(fn ->
+      invitation =
+        Repo.one(
+          from(i in OrganizationsInvitation,
+            where: i.id == ^id and i.organization_id == ^organization_id,
+            lock: "FOR UPDATE"
+          )
+        )
+
+      with %OrganizationsInvitation{} <- invitation,
+           :ok <- check_resendable(invitation),
+           {:ok, renewed} <- renew_invitation(invitation) do
+        user = Castmill.Accounts.get_user_by_email(invitation.email)
+
+        deleted =
+          if user,
+            do:
+              Castmill.Notifications.delete_user_notifications(
+                user.id,
+                "organization_invitation",
+                "token",
+                invitation.token
+              ),
+            else: []
+
+        case insert_invitation_notification(renewed, user) do
+          {:ok, notification} -> {renewed, deleted, notification}
+          {:error, reason} -> Repo.rollback(reason)
+        end
+      else
+        nil -> Repo.rollback(:not_found)
+        {:error, reason} -> Repo.rollback(reason)
+      end
+    end)
+  end
+
+  defp current_invitation_token?(%OrganizationsInvitation{id: id, token: token}) do
+    Repo.exists?(from(i in OrganizationsInvitation, where: i.id == ^id and i.token == ^token))
   end
 
   defp check_resendable(%OrganizationsInvitation{status: "accepted"}),
@@ -953,29 +990,42 @@ defmodule Castmill.Organizations do
     end
   end
 
-  # Sends the invitation email and, to people who already have an account, an
-  # in-app notification.
-  defp deliver_invitation(%OrganizationsInvitation{} = invitation) do
+  # Stores the in-app notification of an invitee who already has an account,
+  # without broadcasting it, so it is part of the caller's transaction.
+  defp insert_invitation_notification(_invitation, nil), do: {:ok, nil}
+
+  defp insert_invitation_notification(%OrganizationsInvitation{} = invitation, user) do
+    organization = get_organization(invitation.organization_id)
+
+    Castmill.Notifications.Events.notify_organization_invitation(
+      user.id,
+      organization.name,
+      organization.id,
+      invitation.token,
+      nil,
+      broadcast: false
+    )
+  end
+
+  # After the invitation has committed: shows the notification in the
+  # invitee's open dashboard and queues the email. The notification does not
+  # depend on the email.
+  defp dispatch_invitation(%OrganizationsInvitation{} = invitation, notification) do
+    if notification, do: Castmill.Notifications.broadcast_created(notification)
+
     organization = get_organization(invitation.organization_id)
     network = Castmill.Networks.get_network(organization.network_id)
 
-    with {:ok, :queued} <-
-           send_invitation_email(network, organization.name, invitation.email, invitation.token) do
-      case Castmill.Accounts.get_user_by_email(invitation.email) do
-        nil ->
-          :ok
+    case send_invitation_email(network, organization.name, invitation.email, invitation.token) do
+      {:ok, _} ->
+        :ok
 
-        user ->
-          case Castmill.Notifications.Events.notify_organization_invitation(
-                 user.id,
-                 organization.name,
-                 organization.id,
-                 invitation.token
-               ) do
-            {:ok, _notification} -> :ok
-            {:error, reason} -> {:error, reason}
-          end
-      end
+      {:error, reason} ->
+        Logger.error(
+          "Could not queue the email of organization invitation #{invitation.id}: #{inspect(reason)}"
+        )
+
+        {:error, :email_not_sent}
     end
   end
 
@@ -1061,7 +1111,7 @@ defmodule Castmill.Organizations do
                      user_id: user_id
                    ) do
                 nil -> Repo.rollback(:invitation_accepted_by_different_user)
-                _org_user -> invitation
+                _org_user -> {invitation, false}
               end
 
             invitation.status != "invited" ->
@@ -1082,17 +1132,7 @@ defmodule Castmill.Organizations do
                     _ -> Repo.rollback("Invalid token")
                   end
 
-                  user = Castmill.Accounts.get_user(user_id)
-
-                  if user do
-                    Castmill.Notifications.Events.notify_invitation_accepted(
-                      user.name,
-                      user_id,
-                      invitation.organization_id
-                    )
-                  end
-
-                  %{invitation | status: "accepted"}
+                  {%{invitation | status: "accepted"}, true}
 
                 {:error, changeset} ->
                   Repo.rollback(changeset)
@@ -1101,8 +1141,27 @@ defmodule Castmill.Organizations do
       end
     end)
     |> case do
-      {:ok, invitation} -> {:ok, invitation}
-      {:error, reason} -> {:error, reason}
+      {:ok, {invitation, newly_accepted?}} ->
+        # Notify members only once the membership is committed.
+        if newly_accepted?, do: notify_invitation_accepted(invitation, user_id)
+        {:ok, invitation}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  defp notify_invitation_accepted(invitation, user_id) do
+    case Castmill.Accounts.get_user(user_id) do
+      nil ->
+        :ok
+
+      user ->
+        Castmill.Notifications.Events.notify_invitation_accepted(
+          user.name,
+          user_id,
+          invitation.organization_id
+        )
     end
   end
 

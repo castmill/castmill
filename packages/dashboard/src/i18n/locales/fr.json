@@ -933,7 +933,8 @@
       "invitationAlreadyMember": "{{email}} est déjà membre de cette organisation.",
       "invitationPending": "Une invitation plus récente pour {{email}} est en attente. Renvoyez plutôt celle-ci.",
       "resendInvitationFailed": "Impossible de renvoyer l'invitation",
-      "removeInvitationFailed": "Impossible de retirer l'invitation"
+      "removeInvitationFailed": "Impossible de retirer l'invitation",
+      "invitationEmailNotSent": "L'invitation de {{email}} a un nouveau lien, mais l'e-mail n'a pas pu être envoyé. Renvoyez-la à nouveau."
     },
     "messages": {
       "memberRemoved": "Le membre {{name}} a été supprimé avec succès",

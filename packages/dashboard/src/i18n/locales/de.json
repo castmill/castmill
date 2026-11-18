@@ -859,7 +859,8 @@
       "invitationAlreadyMember": "{{email}} ist bereits Mitglied dieser Organisation.",
       "invitationPending": "Für {{email}} steht eine neuere Einladung aus. Senden Sie stattdessen diese erneut.",
       "resendInvitationFailed": "Die Einladung konnte nicht erneut gesendet werden",
-      "removeInvitationFailed": "Die Einladung konnte nicht entfernt werden"
+      "removeInvitationFailed": "Die Einladung konnte nicht entfernt werden",
+      "invitationEmailNotSent": "Die Einladung für {{email}} hat einen neuen Link, aber die E-Mail konnte nicht gesendet werden. Senden Sie sie erneut."
     },
     "messages": {
       "memberRemoved": "Mitglied {{name}} wurde erfolgreich entfernt",

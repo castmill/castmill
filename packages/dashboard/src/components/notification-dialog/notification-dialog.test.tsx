@@ -125,13 +125,21 @@ describe('NotificationDialog Component', () => {
     });
   });
 
-  it('removes deleted notifications and updates the unread count', async () => {
+  const fakeChannel = () => {
     const handlers: Record<string, (payload: any) => void> = {};
+    let nextRef = 0;
     const channel = {
       on: vi.fn((event: string, handler: (payload: any) => void) => {
         handlers[event] = handler;
+        return ++nextRef;
       }),
+      off: vi.fn(),
     };
+    return { channel, handlers };
+  };
+
+  it('removes deleted notifications and updates the unread count', async () => {
+    const { channel, handlers } = fakeChannel();
     const onNotificationRead = vi.fn();
 
     renderWithI18n(() => (
@@ -153,6 +161,74 @@ describe('NotificationDialog Component', () => {
       expect(document.querySelectorAll('.notification-item')).toHaveLength(1);
       expect(onNotificationRead).toHaveBeenLastCalledWith(0);
     });
+  });
+
+  it('stops listening to the channel when it closes', async () => {
+    const { channel } = fakeChannel();
+
+    const { unmount } = renderWithI18n(() => (
+      <NotificationDialog
+        onClose={vi.fn()}
+        onNotificationRead={vi.fn()}
+        channel={channel}
+      />
+    ));
+
+    await waitFor(() => expect(channel.on).toHaveBeenCalledTimes(2));
+    unmount();
+
+    expect(channel.off).toHaveBeenCalledWith('new_notification', 1);
+    expect(channel.off).toHaveBeenCalledWith('notifications_deleted', 2);
+  });
+
+  it('keeps live changes when an older list response arrives', async () => {
+    let respond: (value: any) => void = () => {};
+    (notificationsService.getNotifications as any).mockReturnValue(
+      new Promise((resolve) => (respond = resolve))
+    );
+    const { channel, handlers } = fakeChannel();
+    const onNotificationRead = vi.fn();
+
+    renderWithI18n(() => (
+      <NotificationDialog
+        onClose={vi.fn()}
+        onNotificationRead={onNotificationRead}
+        channel={channel}
+      />
+    ));
+
+    await waitFor(() => expect(handlers.notifications_deleted).toBeDefined());
+
+    // While the list request is in flight, notification 1 is replaced by 3.
+    handlers.notifications_deleted({ ids: [1], unread_count: 0 });
+    handlers.new_notification({
+      notification: {
+        ...mockNotifications[0],
+        id: '3',
+        metadata: { team_name: 'Design' },
+      },
+      unread_count: 1,
+    });
+
+    respond({ data: mockNotifications, unread_count: 1 });
+
+    await waitFor(() =>
+      expect(document.querySelectorAll('.notification-item')).toHaveLength(2)
+    );
+    // The new notification stays first; the deleted one does not come back.
+    const items = document.querySelectorAll('.notification-item');
+    expect(items[0].textContent).toContain('Design');
+    expect(document.body.textContent).not.toContain('Engineering');
+    // The older response did not report its unread count.
+    expect(onNotificationRead).toHaveBeenCalledTimes(2);
+    expect(onNotificationRead).toHaveBeenLastCalledWith(1);
+
+    // A late new_notification for a deleted id is ignored too.
+    handlers.new_notification({
+      notification: { ...mockNotifications[0], id: '1' },
+      unread_count: 1,
+    });
+    expect(document.querySelectorAll('.notification-item')).toHaveLength(2);
   });
 
   it('should call onClose when close button is clicked', async () => {

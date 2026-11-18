@@ -245,6 +245,27 @@ defmodule Castmill.OrganizationsTest do
       assert {:ok, _token2} = Organizations.invite_user(org2.id, email, :admin)
     end
 
+    test "notifies an invitee with an account even when the email cannot be queued", %{
+      network: network,
+      organization: organization
+    } do
+      user = user_fixture(%{network_id: network.id, email: "no-email@example.com"})
+
+      assert {:ok, token} =
+               Castmill.FailingMailerAdapter.with_failing_mailer(fn ->
+                 Organizations.invite_user(organization.id, user.email, :member)
+               end)
+
+      assert Organizations.get_invitation(token)
+
+      assert [notification] =
+               user.id
+               |> Castmill.Notifications.list_user_notifications()
+               |> Enum.filter(&(&1.type == "organization_invitation"))
+
+      assert notification.metadata["token"] == token
+    end
+
     test "allows re-invitation after previous invitation was rejected", %{
       organization: organization
     } do
@@ -351,6 +372,78 @@ defmodule Castmill.OrganizationsTest do
                |> Enum.filter(&(&1.type == "organization_invitation"))
 
       assert notification.link == "/invite-organization?token=#{resent.token}"
+    end
+
+    test "tells the invitee's open dashboard about the replaced notification after saving", %{
+      network: network,
+      organization: organization
+    } do
+      user = user_fixture(%{network_id: network.id, email: "watching@example.com"})
+      invitation = invite(organization, user.email)
+
+      [old_notification] =
+        Notifications.list_user_notifications(user.id)
+        |> Enum.filter(&(&1.type == "organization_invitation"))
+
+      Phoenix.PubSub.subscribe(Castmill.PubSub, "users:#{user.id}")
+
+      assert {:ok, resent} = Organizations.resend_invitation(organization.id, invitation.id)
+
+      old_id = old_notification.id
+      # The unread count already includes the new notification.
+      assert_received {:notifications_deleted, [^old_id], 1}
+      assert_received {:new_notification, %{type: "organization_invitation"} = new, 1}
+      assert new.metadata.token == resent.token
+    end
+
+    test "leaves one notification with the current link after several resends", %{
+      network: network,
+      organization: organization
+    } do
+      user = user_fixture(%{network_id: network.id, email: "many-resends@example.com"})
+      invitation = invite(organization, user.email)
+
+      for _ <- 1..3 do
+        assert {:ok, _} = Organizations.resend_invitation(organization.id, invitation.id)
+      end
+
+      current = Repo.get_by!(OrganizationsInvitation, id: invitation.id)
+
+      assert [notification] =
+               user.id
+               |> Notifications.list_user_notifications()
+               |> Enum.filter(&(&1.type == "organization_invitation"))
+
+      assert notification.metadata["token"] == current.token
+    end
+
+    test "reports an email that could not be queued, keeping the renewed invitation", %{
+      network: network,
+      organization: organization
+    } do
+      user = user_fixture(%{network_id: network.id, email: "queue-down@example.com"})
+      invitation = invite(organization, user.email)
+
+      assert {:error, :email_not_sent} =
+               Castmill.FailingMailerAdapter.with_failing_mailer(fn ->
+                 Organizations.resend_invitation(organization.id, invitation.id)
+               end)
+
+      current = Repo.get_by!(OrganizationsInvitation, id: invitation.id)
+      assert current.token != invitation.token
+      assert current.status == "invited"
+
+      # The in-app notification does not depend on the email.
+      assert [notification] =
+               user.id
+               |> Notifications.list_user_notifications()
+               |> Enum.filter(&(&1.type == "organization_invitation"))
+
+      assert notification.metadata["token"] == current.token
+
+      # Resending again sends the email.
+      assert {:ok, resent} = Organizations.resend_invitation(organization.id, invitation.id)
+      assert_email_sent(fn email -> email.text_body =~ resent.token end)
     end
 
     test "does not accept an invitation token after it has been resent", %{

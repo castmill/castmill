@@ -916,7 +916,8 @@
       "invitationAlreadyMember": "{{email}} är redan medlem i den här organisationen.",
       "invitationPending": "En nyare inbjudan till {{email}} väntar. Skicka den igen i stället.",
       "resendInvitationFailed": "Det gick inte att skicka inbjudan igen",
-      "removeInvitationFailed": "Det gick inte att ta bort inbjudan"
+      "removeInvitationFailed": "Det gick inte att ta bort inbjudan",
+      "invitationEmailNotSent": "Inbjudan till {{email}} har en ny länk, men mejlet kunde inte skickas. Skicka den igen."
     },
     "messages": {
       "memberRemoved": "Medlemmen {{name}} togs bort med framgång",

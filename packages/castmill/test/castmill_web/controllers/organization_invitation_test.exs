@@ -587,6 +587,21 @@ defmodule CastmillWeb.OrganizationInvitationTest do
       assert Organizations.get_invitation(token)
     end
 
+    test "returns 502 when the email cannot be queued", %{
+      conn: conn,
+      organization: organization
+    } do
+      {:ok, token} = Organizations.invite_user(organization.id, "queue@example.com", :member)
+      invitation = Organizations.get_invitation(token)
+
+      conn =
+        Castmill.FailingMailerAdapter.with_failing_mailer(fn ->
+          post(conn, resend_path(organization, invitation.id))
+        end)
+
+      assert json_response(conn, 502) == %{"error" => "invitation_email_not_sent"}
+    end
+
     test "does not resend accepted invitations", %{
       conn: conn,
       network: network,
