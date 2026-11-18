@@ -916,14 +916,22 @@
       "cannotRemoveUserFromLastOrganization": "이 사용자가 속한 유일한 조직이므로 제거할 수 없습니다. 사용자는 최소한 하나의 조직에 속해야 합니다.",
       "mediaInUseAsLogo": "조직 로고로 사용 중인 미디어는 삭제할 수 없습니다",
       "loadMedias": "미디어 로드 실패",
-      "updateRoleFailed": "멤버 역할 업데이트 실패"
+      "updateRoleFailed": "멤버 역할 업데이트 실패",
+      "invitationAlreadyAccepted": "이 초대는 이미 수락되었습니다.",
+      "invitationAlreadyMember": "{{email}}은(는) 이미 이 조직의 멤버입니다.",
+      "invitationPending": "{{email}}에 대한 더 최근의 초대가 대기 중입니다. 대신 해당 초대를 다시 보내세요.",
+      "resendInvitationFailed": "초대를 다시 보내지 못했습니다",
+      "removeInvitationFailed": "초대를 제거하지 못했습니다"
     },
     "messages": {
       "memberRemoved": "구성원 {{name}}을(를) 성공적으로 제거했습니다",
       "membersRemoved": "구성원을 성공적으로 제거했습니다",
       "leftOrganization": "{{name}} 조직을 떠났습니다",
       "noOrganizationsRemaining": "마지막 조직을 떠났습니다. 조직에 초대받으려면 관리자에게 문의하세요.",
-      "invitationSent": "{{email}}로 초대장을 보냈습니다"
+      "invitationSent": "{{email}}로 초대장을 보냈습니다",
+      "invitationResent": "{{email}}에게 초대를 다시 보냈습니다",
+      "invitationRemoved": "{{email}}에 대한 초대를 제거했습니다",
+      "invitationsRemoved": "초대를 제거했습니다"
     },
     "teamRoleInstaller": "설치자 (24시간)",
     "roleDescriptions": {
@@ -961,8 +969,16 @@
       "removeMemberTitle": "조직에서 사용자 제거",
       "removeMemberMessage": "멤버 \"{{name}}\"을(를) 조직에서 제거하시겠습니까?",
       "removeMembersTitle": "조직에서 멤버 제거",
-      "removeMembersMessage": "다음 멤버들을 조직에서 제거하시겠습니까?"
-    }
+      "removeMembersMessage": "다음 멤버들을 조직에서 제거하시겠습니까?",
+      "resendInvitationTitle": "초대 다시 보내기",
+      "resendInvitationMessage": "\"{{email}}\"에게 초대를 다시 보내시겠습니까? 초대는 7일 더 유효하며, 이전 초대 이메일의 링크는 더 이상 작동하지 않습니다.",
+      "removeInvitationTitle": "초대 제거",
+      "removeInvitationMessage": "\"{{email}}\"에 대한 초대를 제거하시겠습니까?",
+      "removeInvitationsTitle": "초대 제거",
+      "removeInvitationsMessage": "다음 초대를 제거하시겠습니까?"
+    },
+    "resend": "다시 보내기",
+    "resendInvitation": "초대 다시 보내기"
   },
   "playlists": {
     "title": "재생목록",

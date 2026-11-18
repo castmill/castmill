@@ -749,25 +749,7 @@ defmodule Castmill.Organizations do
       {:ok, %{invitation: invitation}} ->
         # Transaction committed successfully;
         # now we can send the email outside the transaction.
-        organization = Castmill.Organizations.get_organization(organization_id)
-        network = Castmill.Networks.get_network(organization.network_id)
-        send_invitation_email(network, organization.name, email, token)
-
-        # Check if user exists and send notification
-        case Castmill.Accounts.get_user_by_email(email) do
-          nil ->
-            # User doesn't exist yet, no notification to send
-            :ok
-
-          user ->
-            # User exists, send notification
-            Castmill.Notifications.Events.notify_organization_invitation(
-              user.id,
-              organization.name,
-              organization_id,
-              token
-            )
-        end
+        deliver_invitation(invitation)
 
         {:ok, invitation.token}
 
@@ -865,26 +847,11 @@ defmodule Castmill.Organizations do
   Used by the network admin dashboard.
   """
   def delete_invitation_for_network(invitation_id, network_id) do
-    parsed_id =
-      case invitation_id do
-        id when is_integer(id) ->
-          id
-
-        id when is_binary(id) ->
-          case Integer.parse(id) do
-            {int_id, ""} -> int_id
-            _ -> :error
-          end
-
-        _ ->
-          :error
-      end
-
-    case parsed_id do
-      :error ->
+    case parse_invitation_id(invitation_id) do
+      {:error, :not_found} ->
         {:error, :not_found}
 
-      id ->
+      {:ok, id} ->
         query =
           from(i in OrganizationsInvitation,
             join: o in Organization,
@@ -906,6 +873,98 @@ defmodule Castmill.Organizations do
     from [organizations_invitations: u] in query,
       where: ilike(u.email, ^"%#{search}%")
   end
+
+  @doc """
+  Sends an organization invitation again with a new link. Links in earlier
+  emails and notifications stop working, the invitation is valid for another
+  7 days, and an expired or declined invitation is reopened. People who
+  already have an account also get a new in-app notification, which replaces
+  the one for the previous link.
+
+  Returns `{:ok, invitation}`, or `{:error, reason}` where reason is
+  `:not_found`, `:already_accepted`, `:already_member`, `:already_invited`
+  (a newer invitation for the same email is pending) or a changeset.
+  """
+  def resend_invitation(organization_id, invitation_id) do
+    with {:ok, id} <- parse_invitation_id(invitation_id),
+         %OrganizationsInvitation{} = invitation <-
+           Repo.get_by(OrganizationsInvitation, id: id, organization_id: organization_id) ||
+             {:error, :not_found},
+         :ok <- check_resendable(invitation),
+         {:ok, renewed} <- renew_invitation(invitation) do
+      Castmill.Notifications.delete_notifications_by_metadata(
+        "organization_invitation",
+        "token",
+        invitation.token
+      )
+
+      deliver_invitation(renewed)
+      {:ok, renewed}
+    end
+  end
+
+  defp check_resendable(%OrganizationsInvitation{status: "accepted"}),
+    do: {:error, :already_accepted}
+
+  defp check_resendable(%OrganizationsInvitation{} = invitation) do
+    if user_in_organization?(invitation.organization_id, invitation.email),
+      do: {:error, :already_member},
+      else: :ok
+  end
+
+  defp renew_invitation(invitation) do
+    invitation
+    |> Ecto.Changeset.change(%{
+      token: generate_invitation_token(),
+      status: "invited",
+      expires_at: OrganizationsInvitation.default_expires_at()
+    })
+    |> Ecto.Changeset.unique_constraint([:organization_id, :email],
+      name: :unique_organization_email_invite_active
+    )
+    |> Repo.update()
+    |> case do
+      {:ok, invitation} ->
+        {:ok, invitation}
+
+      {:error, %Ecto.Changeset{errors: errors} = changeset} ->
+        if Keyword.has_key?(errors, :organization_id),
+          do: {:error, :already_invited},
+          else: {:error, changeset}
+    end
+  end
+
+  # Sends the invitation email and, to people who already have an account, an
+  # in-app notification.
+  defp deliver_invitation(%OrganizationsInvitation{} = invitation) do
+    organization = get_organization(invitation.organization_id)
+    network = Castmill.Networks.get_network(organization.network_id)
+    send_invitation_email(network, organization.name, invitation.email, invitation.token)
+
+    case Castmill.Accounts.get_user_by_email(invitation.email) do
+      nil ->
+        :ok
+
+      user ->
+        Castmill.Notifications.Events.notify_organization_invitation(
+          user.id,
+          organization.name,
+          organization.id,
+          invitation.token
+        )
+    end
+  end
+
+  defp parse_invitation_id(id) when is_integer(id), do: {:ok, id}
+
+  defp parse_invitation_id(id) when is_binary(id) do
+    case Integer.parse(id) do
+      {int_id, ""} -> {:ok, int_id}
+      _ -> {:error, :not_found}
+    end
+  end
+
+  defp parse_invitation_id(_id), do: {:error, :not_found}
 
   defp send_invitation_email(network, organization_name, email, token) do
     subject = "You have been invited to an Organization on #{network.name}"

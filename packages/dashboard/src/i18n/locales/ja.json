@@ -916,14 +916,22 @@
       "cannotRemoveUserFromLastOrganization": "このユーザーは唯一の組織に属しているため、削除できません。ユーザーは少なくとも1つの組織に属している必要があります。",
       "mediaInUseAsLogo": "組織のロゴとして使用されているメディアは削除できません",
       "loadMedias": "メディアの読み込みに失敗しました",
-      "updateRoleFailed": "メンバーの役割の更新に失敗しました"
+      "updateRoleFailed": "メンバーの役割の更新に失敗しました",
+      "invitationAlreadyAccepted": "この招待はすでに承諾されています。",
+      "invitationAlreadyMember": "{{email}}はすでにこの組織のメンバーです。",
+      "invitationPending": "{{email}}への新しい招待が保留中です。代わりにそちらを再送信してください。",
+      "resendInvitationFailed": "招待を再送信できませんでした",
+      "removeInvitationFailed": "招待を削除できませんでした"
     },
     "messages": {
       "memberRemoved": "メンバー{{name}}を正常に削除しました",
       "membersRemoved": "メンバーを正常に削除しました",
       "leftOrganization": "組織 {{name}} を離れました",
       "noOrganizationsRemaining": "最後の組織を離れました。組織に招待されるには管理者にお問い合わせください。",
-      "invitationSent": "{{email}}に招待状を送信しました"
+      "invitationSent": "{{email}}に招待状を送信しました",
+      "invitationResent": "{{email}}に招待を再送信しました",
+      "invitationRemoved": "{{email}}への招待を削除しました",
+      "invitationsRemoved": "招待を削除しました"
     },
     "teamRoleInstaller": "インストーラー (24時間)",
     "roleDescriptions": {
@@ -953,7 +961,13 @@
       "removeMemberTitle": "組織からユーザーを削除",
       "removeMemberMessage": "メンバー「{{name}}」を組織から削除してもよろしいですか？",
       "removeMembersTitle": "組織からメンバーを削除",
-      "removeMembersMessage": "以下のメンバーを組織から削除してもよろしいですか？"
+      "removeMembersMessage": "以下のメンバーを組織から削除してもよろしいですか？",
+      "resendInvitationTitle": "招待を再送信",
+      "resendInvitationMessage": "「{{email}}」に招待を再送信しますか？招待はさらに7日間有効になり、以前の招待メールのリンクは使用できなくなります。",
+      "removeInvitationTitle": "招待を削除",
+      "removeInvitationMessage": "「{{email}}」への招待を削除してもよろしいですか？",
+      "removeInvitationsTitle": "招待を削除",
+      "removeInvitationsMessage": "次の招待を削除してもよろしいですか？"
     },
     "logo": "ロゴ",
     "logoSettings": "ロゴ設定",
@@ -963,7 +977,9 @@
     "logoUpdated": "ロゴが正常に更新されました",
     "logoRemoved": "ロゴが正常に削除されました",
     "noLogo": "ロゴが選択されていません",
-    "noMediasAvailable": "画像メディアがありません。まず画像をアップロードしてください。"
+    "noMediasAvailable": "画像メディアがありません。まず画像をアップロードしてください。",
+    "resend": "再送信",
+    "resendInvitation": "招待を再送信"
   },
   "playlists": {
     "title": "プレイリスト",

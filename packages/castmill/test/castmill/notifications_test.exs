@@ -267,6 +267,36 @@ defmodule Castmill.NotificationsTest do
     end
   end
 
+  describe "delete_notifications_by_metadata/3" do
+    test "deletes only notifications of the type with the metadata value", %{user: user} do
+      create = fn type, token ->
+        {:ok, notification} =
+          Notifications.create_user_notification(%{
+            type: type,
+            user_id: user.id,
+            metadata: %{token: token}
+          })
+
+        notification
+      end
+
+      create.("organization_invitation", "old")
+      kept_token = create.("organization_invitation", "new")
+      kept_type = create.("team_invitation", "old")
+
+      assert Notifications.delete_notifications_by_metadata(
+               "organization_invitation",
+               "token",
+               "old"
+             ) == 1
+
+      assert user.id
+             |> Notifications.list_user_notifications()
+             |> Enum.map(& &1.id)
+             |> Enum.sort() == Enum.sort([kept_token.id, kept_type.id])
+    end
+  end
+
   describe "broadcast_notification/1" do
     test "broadcasts to user channel", %{user: user} do
       # Subscribe to user channel

@@ -911,14 +911,22 @@
       "cannotRemoveUserFromLastOrganization": "Kan inte ta bort denna användare eftersom det är deras enda organisation. Användare måste tillhöra minst en organisation.",
       "mediaInUseAsLogo": "Kan inte ta bort media som används som organisationslogotyp",
       "loadMedias": "Kunde inte ladda media",
-      "updateRoleFailed": "Misslyckades med att uppdatera medlemsroll"
+      "updateRoleFailed": "Misslyckades med att uppdatera medlemsroll",
+      "invitationAlreadyAccepted": "Den här inbjudan har redan accepterats.",
+      "invitationAlreadyMember": "{{email}} är redan medlem i den här organisationen.",
+      "invitationPending": "En nyare inbjudan till {{email}} väntar. Skicka den igen i stället.",
+      "resendInvitationFailed": "Det gick inte att skicka inbjudan igen",
+      "removeInvitationFailed": "Det gick inte att ta bort inbjudan"
     },
     "messages": {
       "memberRemoved": "Medlemmen {{name}} togs bort med framgång",
       "membersRemoved": "Medlemmarna togs bort med framgång",
       "leftOrganization": "Du har lämnat organisationen {{name}}",
       "noOrganizationsRemaining": "Du har lämnat din sista organisation. Kontakta en administratör för att bli inbjuden till en organisation.",
-      "invitationSent": "Inbjudan skickad till {{email}}"
+      "invitationSent": "Inbjudan skickad till {{email}}",
+      "invitationResent": "Inbjudan skickad igen till {{email}}",
+      "invitationRemoved": "Inbjudan till {{email}} borttagen",
+      "invitationsRemoved": "Inbjudningarna har tagits bort"
     },
     "teamRoleInstaller": "Installatör (24h)",
     "roleDescriptions": {
@@ -956,8 +964,16 @@
       "removeMemberTitle": "Ta bort användare från organisation",
       "removeMemberMessage": "Är du säker på att du vill ta bort medlemmen \"{{name}}\" från organisationen?",
       "removeMembersTitle": "Ta bort medlemmar från organisation",
-      "removeMembersMessage": "Är du säker på att du vill ta bort följande medlemmar från organisationen?"
-    }
+      "removeMembersMessage": "Är du säker på att du vill ta bort följande medlemmar från organisationen?",
+      "resendInvitationTitle": "Skicka inbjudan igen",
+      "resendInvitationMessage": "Skicka inbjudan till \"{{email}}\" igen? Den gäller i 7 dagar till, och länken i tidigare inbjudningsmejl slutar fungera.",
+      "removeInvitationTitle": "Ta bort inbjudan",
+      "removeInvitationMessage": "Är du säker på att du vill ta bort inbjudan till \"{{email}}\"?",
+      "removeInvitationsTitle": "Ta bort inbjudningar",
+      "removeInvitationsMessage": "Är du säker på att du vill ta bort följande inbjudningar?"
+    },
+    "resend": "Skicka igen",
+    "resendInvitation": "Skicka inbjudan igen"
   },
   "playlists": {
     "title": "Spellistor",

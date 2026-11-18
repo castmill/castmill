@@ -687,6 +687,12 @@ defmodule CastmillWeb.Router do
       :remove_invitation
     )
 
+    post(
+      "/organizations/:organization_id/invitations/:invitation_id/resend",
+      OrganizationController,
+      :resend_invitation
+    )
+
     get("/organizations_invitations/:token", OrganizationController, :show_invitation)
     post("/organizations_invitations/:token/accept", OrganizationController, :accept_invitation)
     post("/organizations_invitations/:token/reject", OrganizationController, :reject_invitation)

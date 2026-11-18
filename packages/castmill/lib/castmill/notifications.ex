@@ -255,6 +255,22 @@ defmodule Castmill.Notifications do
     Repo.delete(notification)
   end
 
+  @doc """
+  Deletes the notifications of `type` whose metadata `key` is `value`, for
+  example invitation notifications whose link no longer works. Returns the
+  number of deleted notifications.
+  """
+  def delete_notifications_by_metadata(type, key, value)
+      when is_binary(type) and is_binary(key) and is_binary(value) do
+    {count, _} =
+      from(n in Notification,
+        where: n.type == ^type and fragment("?->>? = ?", n.metadata, ^key, ^value)
+      )
+      |> Repo.delete_all()
+
+    count
+  end
+
   # Private function to broadcast notification via Phoenix PubSub
   defp broadcast_notification({:ok, notification} = result) do
     require Logger

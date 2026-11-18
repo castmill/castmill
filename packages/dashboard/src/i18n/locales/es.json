@@ -918,20 +918,34 @@
       "cannotRemoveUserFromLastOrganization": "No se puede eliminar a este usuario ya que es su única organización. Los usuarios deben pertenecer al menos a una organización.",
       "mediaInUseAsLogo": "No se puede eliminar un medio que se está utilizando como logo de organización",
       "loadMedias": "Error al cargar medios",
-      "updateRoleFailed": "Error al actualizar el rol del miembro"
+      "updateRoleFailed": "Error al actualizar el rol del miembro",
+      "invitationAlreadyAccepted": "Esta invitación ya ha sido aceptada.",
+      "invitationAlreadyMember": "{{email}} ya es miembro de esta organización.",
+      "invitationPending": "Hay una invitación más reciente pendiente para {{email}}. Reenvíe esa en su lugar.",
+      "resendInvitationFailed": "No se pudo reenviar la invitación",
+      "removeInvitationFailed": "No se pudo eliminar la invitación"
     },
     "messages": {
       "memberRemoved": "El miembro {{name}} se eliminó correctamente",
       "membersRemoved": "Miembros eliminados correctamente",
       "invitationSent": "Invitación enviada a {{email}}",
       "leftOrganization": "Ha abandonado la organización {{name}}",
-      "noOrganizationsRemaining": "Ha abandonado su última organización. Póngase en contacto con un administrador para ser invitado a una organización."
+      "noOrganizationsRemaining": "Ha abandonado su última organización. Póngase en contacto con un administrador para ser invitado a una organización.",
+      "invitationResent": "Invitación enviada de nuevo a {{email}}",
+      "invitationRemoved": "Invitación de {{email}} eliminada",
+      "invitationsRemoved": "Invitaciones eliminadas"
     },
     "dialogs": {
       "removeMemberTitle": "Eliminar usuario de la organización",
       "removeMemberMessage": "¿Está seguro de que desea eliminar al miembro \"{{name}}\" de la organización?",
       "removeMembersTitle": "Eliminar miembros de la organización",
-      "removeMembersMessage": "¿Está seguro de que desea eliminar los siguientes miembros de la organización?"
+      "removeMembersMessage": "¿Está seguro de que desea eliminar los siguientes miembros de la organización?",
+      "resendInvitationTitle": "Reenviar invitación",
+      "resendInvitationMessage": "¿Enviar de nuevo la invitación a \"{{email}}\"? Será válida 7 días más y el enlace de los correos de invitación anteriores dejará de funcionar.",
+      "removeInvitationTitle": "Eliminar invitación",
+      "removeInvitationMessage": "¿Está seguro de que desea eliminar la invitación de \"{{email}}\"?",
+      "removeInvitationsTitle": "Eliminar invitaciones",
+      "removeInvitationsMessage": "¿Está seguro de que desea eliminar las siguientes invitaciones?"
     },
     "leaveOrganizationTitle": "Abandonar esta organización",
     "leaveOrganizationDescription": "Abandonar elimina su acceso a los recursos de la organización inmediatamente.",
@@ -963,7 +977,9 @@
       "admin": "Puede gestionar miembros del equipo y recursos",
       "member": "Puede acceder y editar recursos del equipo",
       "installer": "Token temporal para registro de dispositivos (expira en 24h)"
-    }
+    },
+    "resend": "Reenviar",
+    "resendInvitation": "Reenviar invitación"
   },
   "signup": {
     "title": "Registrarse",

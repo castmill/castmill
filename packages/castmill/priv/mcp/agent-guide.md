@@ -125,6 +125,7 @@ Useful endpoints:
 | `GET /quotas`                                              | Organization quotas                            |
 | `GET /search`                                              | Global search (`query: {"query": "..."}`)      |
 | `GET /members`, `GET /invitations`, `POST /invitations`    | Organization members and invitations           |
+| `POST /invitations/:id/resend`                             | Send an invitation again (new link, valid 7 more days) |
 | `GET /playlists/:id/ancestors`                             | Layouts that embed a playlist                  |
 | `PATCH /channels/:channel_id/entries/:id`                  | Update a scheduled entry                       |
 | `GET /devices/:id/events`                                  | Device event log                               |

@@ -241,6 +241,27 @@ export const OrganizationsService = {
   },
 
   /**
+   * Send an invitation again with a new link and a new 7-day expiry. Links in
+   * earlier emails stop working.
+   *
+   * Throws an HttpError (409) with `already_accepted`, `already_member` or
+   * `already_invited` when the invitation cannot be sent again.
+   */
+  async resendInvitation(organizationId: string, invitationId: number) {
+    const response = await authFetch(
+      `${baseUrl}/dashboard/organizations/${organizationId}/invitations/${invitationId}/resend`,
+      {
+        method: 'POST',
+      }
+    );
+
+    const { data } = await handleResponse<{
+      data: { id: number; email: string; status: string; expires_at: string };
+    }>(response, { parse: true });
+    return data;
+  },
+
+  /**
    * Fetch invitations
    *
    */

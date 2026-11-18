@@ -1,20 +1,20 @@
 /**
- * Organization Members View
+ * Organization Invitations View
  *
  * (c) Castmill 2025
  */
 
 import {
-  IconButton,
   TableView,
   FetchDataOptions,
   ConfirmDialog,
   TableViewRef,
   Timestamp,
+  HttpError,
   useToast,
   tableCardLabels,
 } from '@castmill/ui-common';
-import { AiOutlineDelete } from 'solid-icons/ai';
+import { AiOutlineDelete, AiOutlineSend } from 'solid-icons/ai';
 import { createSignal } from 'solid-js';
 import { OrganizationsService } from '../../services/organizations.service';
 import { useI18n } from '../../i18n';
@@ -25,24 +25,6 @@ interface Invitation {
   status: string;
 }
 
-const [data, setData] = createSignal<Invitation[]>([], {
-  equals: false,
-});
-
-const [currentInvitation, setCurrentInvitation] = createSignal<Invitation>();
-const [showConfirmDialogMultiple, setShowConfirmDialogMultiple] =
-  createSignal(false);
-
-const [showConfirmDialog, setShowConfirmDialog] = createSignal(false);
-
-const [selectedInvitations, setSelectedInvitations] = createSignal(
-  new Set<number>()
-);
-
-const onRowSelect = (rowsSelected: Set<number>) => {
-  setSelectedInvitations(rowsSelected);
-};
-
 const itemsPerPage = 10;
 
 export const OrganizationInvitationsView = (props: {
@@ -51,6 +33,23 @@ export const OrganizationInvitationsView = (props: {
 }) => {
   const { t } = useI18n();
   const cardLabels = tableCardLabels(t);
+  const toast = useToast();
+
+  const [data, setData] = createSignal<Invitation[]>([], { equals: false });
+  const [currentInvitation, setCurrentInvitation] = createSignal<Invitation>();
+  const [showConfirmDialog, setShowConfirmDialog] = createSignal(false);
+  const [showConfirmDialogMultiple, setShowConfirmDialogMultiple] =
+    createSignal(false);
+  const [invitationToResend, setInvitationToResend] =
+    createSignal<Invitation>();
+  const [resending, setResending] = createSignal(false);
+  const [selectedInvitations, setSelectedInvitations] = createSignal(
+    new Set<number>()
+  );
+
+  const onRowSelect = (rowsSelected: Set<number>) => {
+    setSelectedInvitations(rowsSelected);
+  };
 
   const columns = [
     { key: 'email', title: t('common.email'), sortable: true },
@@ -76,15 +75,20 @@ export const OrganizationInvitationsView = (props: {
 
   const actions = [
     {
+      icon: AiOutlineSend,
+      handler: (item: Invitation) => setInvitationToResend(item),
+      label: t('organization.resendInvitation'),
+      hidden: (item: Invitation) => item.status === 'accepted',
+    },
+    {
       icon: AiOutlineDelete,
-      handler: (item: any) => {
+      handler: (item: Invitation) => {
         setCurrentInvitation(item);
         setShowConfirmDialog(true);
       },
       label: t('common.remove'),
     },
   ];
-  const toast = useToast();
 
   const fetchData = async (opts: FetchDataOptions) => {
     const result = await OrganizationsService.fetchInvitations(
@@ -107,6 +111,46 @@ export const OrganizationInvitationsView = (props: {
     }
   };
 
+  const resendErrorMessage = (error: unknown, email: string) => {
+    if (error instanceof HttpError) {
+      switch (error.message) {
+        case 'already_accepted':
+          return t('organization.errors.invitationAlreadyAccepted');
+        case 'already_member':
+          return t('organization.errors.invitationAlreadyMember', { email });
+        case 'already_invited':
+          return t('organization.errors.invitationPending', { email });
+      }
+    }
+    return t('organization.errors.resendInvitationFailed');
+  };
+
+  const confirmResendInvitation = async () => {
+    const invitation = invitationToResend();
+    if (!invitation || resending()) {
+      return;
+    }
+
+    setResending(true);
+    try {
+      await OrganizationsService.resendInvitation(
+        props.organizationId,
+        invitation.id
+      );
+      toast.success(
+        t('organization.messages.invitationResent', {
+          email: invitation.email,
+        })
+      );
+      setInvitationToResend(undefined);
+      refreshData();
+    } catch (error) {
+      toast.error(resendErrorMessage(error, invitation.email));
+    } finally {
+      setResending(false);
+    }
+  };
+
   const confirmRemoveInvitationFromOrganization = async (
     invitation?: Invitation
   ) => {
@@ -121,14 +165,18 @@ export const OrganizationInvitationsView = (props: {
       );
 
       refreshData();
-      toast.success(`Invitation for ${invitation.email} removed successfully`);
+      toast.success(
+        t('organization.messages.invitationRemoved', {
+          email: invitation.email,
+        })
+      );
       setShowConfirmDialog(false);
     } catch (error) {
-      toast.error((error as Error).message);
+      toast.error(t('organization.errors.removeInvitationFailed'));
     }
   };
 
-  const confirmRemoveMultipleMembersFromOrganization = async () => {
+  const confirmRemoveMultipleInvitationsFromOrganization = async () => {
     try {
       await Promise.all(
         Array.from(selectedInvitations()).map((invitationId) =>
@@ -140,19 +188,35 @@ export const OrganizationInvitationsView = (props: {
       );
 
       refreshData();
-      toast.success('Invitations removed successfully');
+      toast.success(t('organization.messages.invitationsRemoved'));
       setShowConfirmDialogMultiple(false);
     } catch (error) {
-      toast.error((error as Error).message);
+      toast.error(t('organization.errors.removeInvitationFailed'));
     }
   };
 
   return (
     <>
       <ConfirmDialog
+        show={!!invitationToResend()}
+        title={t('organization.dialogs.resendInvitationTitle')}
+        message={t('organization.dialogs.resendInvitationMessage', {
+          email: invitationToResend()?.email ?? '',
+        })}
+        confirmLabel={t('organization.resend')}
+        cancelLabel={t('common.cancel')}
+        onClose={() => setInvitationToResend(undefined)}
+        onConfirm={confirmResendInvitation}
+      />
+
+      <ConfirmDialog
         show={showConfirmDialog()}
-        title={`Remove Invitation From Organization`}
-        message={`Are you sure you want to remove the invitation of member "${currentInvitation()?.email}" from the organization?`}
+        title={t('organization.dialogs.removeInvitationTitle')}
+        message={t('organization.dialogs.removeInvitationMessage', {
+          email: currentInvitation()?.email ?? '',
+        })}
+        confirmLabel={t('common.remove')}
+        cancelLabel={t('common.cancel')}
         onClose={() => setShowConfirmDialog(false)}
         onConfirm={() =>
           confirmRemoveInvitationFromOrganization(currentInvitation())
@@ -161,10 +225,12 @@ export const OrganizationInvitationsView = (props: {
 
       <ConfirmDialog
         show={showConfirmDialogMultiple()}
-        title={`Remove members From Organization`}
-        message={`Are you sure you want to remove the following members from the organization?`}
+        title={t('organization.dialogs.removeInvitationsTitle')}
+        message={t('organization.dialogs.removeInvitationsMessage')}
+        confirmLabel={t('common.remove')}
+        cancelLabel={t('common.cancel')}
         onClose={() => setShowConfirmDialogMultiple(false)}
-        onConfirm={() => confirmRemoveMultipleMembersFromOrganization()}
+        onConfirm={() => confirmRemoveMultipleInvitationsFromOrganization()}
       >
         <div style="margin: 1.5em; line-height: 1.5em;">
           {Array.from(selectedInvitations()).map((invitationId) => {
@@ -184,7 +250,7 @@ export const OrganizationInvitationsView = (props: {
         }}
         selectionHint={t('common.selectionHint')}
         selectionLabel={t('common.selectionCount')}
-        selectionActions={({ count, clear }) => (
+        selectionActions={() => (
           <button
             class="selection-action-btn danger"
             onClick={() => setShowConfirmDialogMultiple(true)}
@@ -202,7 +268,7 @@ export const OrganizationInvitationsView = (props: {
           cardLabels,
         }}
         pagination={{ itemsPerPage }}
-        itemIdKey="user_id"
+        itemIdKey="id"
       ></TableView>
     </>
   );

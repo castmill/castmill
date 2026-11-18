@@ -141,6 +141,10 @@ defmodule CastmillWeb.OrganizationController do
     {:ok, Organizations.is_admin?(organization_id, actor_id)}
   end
 
+  def check_access(actor_id, :resend_invitation, %{"organization_id" => organization_id}) do
+    {:ok, Organizations.is_admin?(organization_id, actor_id)}
+  end
+
   def check_access(actor_id, :update, %{"id" => organization_id}) do
     {:ok, Organizations.is_admin?(organization_id, actor_id)}
   end
@@ -837,6 +841,38 @@ defmodule CastmillWeb.OrganizationController do
         conn
         |> put_status(:bad_request)
         |> json(%{})
+    end
+  end
+
+  @doc """
+  Sends an invitation again with a new link and a new 7-day expiry.
+  """
+  def resend_invitation(conn, %{
+        "organization_id" => organization_id,
+        "invitation_id" => invitation_id
+      }) do
+    case Organizations.resend_invitation(organization_id, invitation_id) do
+      {:ok, invitation} ->
+        conn
+        |> put_status(:ok)
+        |> json(%{data: invitation})
+
+      {:error, :not_found} ->
+        conn
+        |> put_status(:not_found)
+        |> json(%{error: "invitation_not_found"})
+
+      {:error, reason} when reason in [:already_accepted, :already_member, :already_invited] ->
+        conn
+        |> put_status(:conflict)
+        |> json(%{error: Atom.to_string(reason)})
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        errors = Ecto.Changeset.traverse_errors(changeset, fn {msg, _opts} -> msg end)
+
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{errors: errors})
     end
   end
 end
