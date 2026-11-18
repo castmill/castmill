@@ -163,6 +163,14 @@ describe('NetworkUsers', () => {
         blocked_at: '2024-02-01T00:00:00Z',
         inserted_at: '2024-01-01T00:00:00Z',
       },
+      {
+        id: 'blocked-admin',
+        name: 'Blocked Admin',
+        email: 'blocked-admin@example.com',
+        role: 'admin' as const,
+        blocked_at: '2024-02-01T00:00:00Z',
+        inserted_at: '2024-01-01T00:00:00Z',
+      },
     ];
 
     const row = (name: string) => screen.getByText(name).closest('tr')!;
@@ -170,7 +178,7 @@ describe('NetworkUsers', () => {
     beforeEach(() => {
       vi.mocked(NetworkService.listUsers).mockResolvedValue({
         data: roleUsers,
-        pagination: { page: 1, page_size: 20, total_count: 4, total_pages: 1 },
+        pagination: { page: 1, page_size: 20, total_count: 5, total_pages: 1 },
       });
     });
 
@@ -203,6 +211,14 @@ describe('NetworkUsers', () => {
       const blocked = within(row('Blocked Member'));
       expect(blocked.queryByTitle('Make network admin')).toBeNull();
       expect(blocked.getByTitle('Unblock')).toBeInTheDocument();
+
+      const blockedAdmin = within(row('Blocked Admin'));
+      expect(
+        blockedAdmin.getByTitle('Remove network admin')
+      ).toBeInTheDocument();
+      expect(blockedAdmin.getByTitle('Unblock')).toBeInTheDocument();
+      expect(blockedAdmin.queryByTitle('Block')).toBeNull();
+      expect(blockedAdmin.queryByTitle('Delete')).toBeNull();
     });
 
     it('makes a member a network admin after confirmation', async () => {

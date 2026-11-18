@@ -730,15 +730,15 @@ defmodule CastmillWeb.NetworkDashboardController do
     with {:ok, network_id} <- get_admin_network_id(conn),
          {:ok, target} <- fetch_network_user(network_id, user_id),
          :ok <- if(target.id == current_user.id, do: {:error, :self}, else: :ok),
-         {:ok, _} <- demote_network_admin(target, network_id) do
+         {:ok, _} <- demote_network_admin(target, network_id, current_user.id) do
       json(conn, %{success: true, user: user_to_json(target, :member)})
     else
       error -> network_role_error(conn, error)
     end
   end
 
-  defp demote_network_admin(user, network_id) do
-    case Networks.demote_from_network_admin(user.id, network_id) do
+  defp demote_network_admin(user, network_id, actor_id) do
+    case Networks.demote_from_network_admin(user.id, network_id, actor_id) do
       {:error, :not_admin} -> {:error, :not_network_admin}
       result -> result
     end
@@ -762,6 +762,7 @@ defmodule CastmillWeb.NetworkDashboardController do
         :self -> {:forbidden, "You cannot remove your own network admin role"}
         :blocked -> {:conflict, "Unblock this user before making them a network admin"}
         :not_network_admin -> {:conflict, "This user is not a network admin"}
+        :last_admin -> {:conflict, "A network must keep at least one network admin"}
         _ -> {:unprocessable_entity, "Could not change the network admin role"}
       end
 

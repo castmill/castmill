@@ -435,22 +435,60 @@ defmodule Castmill.Networks do
       iex> demote_from_network_admin(non_admin_user_id, network_id)
       {:error, :not_admin}
   """
-  def demote_from_network_admin(user_id, network_id) do
-    case Repo.get_by(NetworksUsers, user_id: user_id, network_id: network_id) do
-      nil ->
-        case Repo.get(User, user_id) do
-          nil -> {:error, :user_not_found}
-          _user -> {:error, :user_not_in_network}
-        end
+  def demote_from_network_admin(user_id, network_id, actor_id \\ nil) do
+    Repo.transaction(fn ->
+      case Repo.one(from(n in Network, where: n.id == ^network_id, lock: "FOR UPDATE")) do
+        nil ->
+          Repo.rollback(:network_not_found)
 
-      %NetworksUsers{role: :admin} = nu ->
-        nu
-        |> NetworksUsers.changeset(%{role: :member})
-        |> Repo.update()
+        _network ->
+          if actor_id && !is_network_admin?(actor_id, network_id) do
+            Repo.rollback(:not_admin)
+          else
+            if actor_id == user_id do
+              Repo.rollback(:self)
+            else
+              case Repo.one(
+                     from(nu in NetworksUsers,
+                       where: nu.user_id == ^user_id and nu.network_id == ^network_id,
+                       lock: "FOR UPDATE"
+                     )
+                   ) do
+                nil ->
+                  case Repo.get(User, user_id) do
+                    nil -> Repo.rollback(:user_not_found)
+                    _user -> Repo.rollback(:user_not_in_network)
+                  end
 
-      _nu ->
-        {:error, :not_admin}
-    end
+                %NetworksUsers{role: :member} ->
+                  Repo.rollback(:not_admin)
+
+                %NetworksUsers{role: :admin} = membership ->
+                  admin_count =
+                    Repo.aggregate(
+                      from(nu in NetworksUsers,
+                        where: nu.network_id == ^network_id and nu.role == :admin
+                      ),
+                      :count,
+                      :id
+                    )
+
+                  if admin_count <= 1 do
+                    Repo.rollback(:last_admin)
+                  else
+                    membership
+                    |> NetworksUsers.changeset(%{role: :member})
+                    |> Repo.update()
+                    |> case do
+                      {:ok, updated} -> updated
+                      {:error, changeset} -> Repo.rollback(changeset)
+                    end
+                  end
+              end
+            end
+          end
+      end
+    end)
   end
 
   @doc """

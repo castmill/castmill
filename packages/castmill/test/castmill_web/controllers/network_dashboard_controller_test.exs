@@ -620,6 +620,19 @@ defmodule CastmillWeb.NetworkDashboardControllerTest do
       refute Networks.is_network_admin?(other_admin.id, network.id)
     end
 
+    test "cannot remove the final network admin", %{
+      network: network,
+      admin: admin
+    } do
+      caller = create_network_admin(network)
+      {:ok, _} = Networks.demote_from_network_admin(admin.id, network.id)
+
+      assert {:error, :last_admin} =
+               Networks.demote_from_network_admin(caller.id, network.id)
+
+      assert Networks.is_network_admin?(caller.id, network.id)
+    end
+
     test "removing the admin role of a member returns 409", %{
       conn: conn,
       network: network,

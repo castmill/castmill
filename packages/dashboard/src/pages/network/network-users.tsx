@@ -493,6 +493,21 @@ const NetworkUsers: Component = () => {
                               />
                             </Show>
                           </Show>
+                          <Show
+                            when={
+                              isNetworkAdmin(user) &&
+                              user.blocked_at &&
+                              !isSelf(user)
+                            }
+                          >
+                            <Button
+                              label=""
+                              icon={BsUnlock}
+                              color="success"
+                              onClick={() => setUserToUnblock(user)}
+                              title={t('network.users.unblock')}
+                            />
+                          </Show>
                           <Show when={!isNetworkAdmin(user) && !isSelf(user)}>
                             <Show
                               when={user.blocked_at}
