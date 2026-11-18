@@ -886,20 +886,39 @@ defmodule Castmill.Organizations do
   (a newer invitation for the same email is pending) or a changeset.
   """
   def resend_invitation(organization_id, invitation_id) do
-    with {:ok, id} <- parse_invitation_id(invitation_id),
-         %OrganizationsInvitation{} = invitation <-
-           Repo.get_by(OrganizationsInvitation, id: id, organization_id: organization_id) ||
-             {:error, :not_found},
-         :ok <- check_resendable(invitation),
-         {:ok, renewed} <- renew_invitation(invitation) do
-      Castmill.Notifications.delete_notifications_by_metadata(
-        "organization_invitation",
-        "token",
-        invitation.token
-      )
+    with {:ok, id} <- parse_invitation_id(invitation_id) do
+      case Repo.transaction(fn ->
+             invitation =
+               Repo.one(
+                 from(i in OrganizationsInvitation,
+                   where: i.id == ^id and i.organization_id == ^organization_id,
+                   lock: "FOR UPDATE"
+                 )
+               )
 
-      deliver_invitation(renewed)
-      {:ok, renewed}
+             with %OrganizationsInvitation{} <- invitation,
+                  :ok <- check_resendable(invitation),
+                  {:ok, renewed} <- renew_invitation(invitation),
+                  deleted_notifications <-
+                    Castmill.Notifications.delete_notifications_by_metadata_with_records(
+                      "organization_invitation",
+                      "token",
+                      invitation.token
+                    ),
+                  :ok <- deliver_invitation(renewed) do
+               {renewed, deleted_notifications}
+             else
+               nil -> Repo.rollback(:not_found)
+               {:error, reason} -> Repo.rollback(reason)
+             end
+           end) do
+        {:ok, {renewed, deleted_notifications}} ->
+          Castmill.Notifications.broadcast_notifications_deleted(deleted_notifications)
+          {:ok, renewed}
+
+        {:error, reason} ->
+          {:error, reason}
+      end
     end
   end
 
@@ -939,19 +958,24 @@ defmodule Castmill.Organizations do
   defp deliver_invitation(%OrganizationsInvitation{} = invitation) do
     organization = get_organization(invitation.organization_id)
     network = Castmill.Networks.get_network(organization.network_id)
-    send_invitation_email(network, organization.name, invitation.email, invitation.token)
 
-    case Castmill.Accounts.get_user_by_email(invitation.email) do
-      nil ->
-        :ok
+    with {:ok, :queued} <-
+           send_invitation_email(network, organization.name, invitation.email, invitation.token) do
+      case Castmill.Accounts.get_user_by_email(invitation.email) do
+        nil ->
+          :ok
 
-      user ->
-        Castmill.Notifications.Events.notify_organization_invitation(
-          user.id,
-          organization.name,
-          organization.id,
-          invitation.token
-        )
+        user ->
+          case Castmill.Notifications.Events.notify_organization_invitation(
+                 user.id,
+                 organization.name,
+                 organization.id,
+                 invitation.token
+               ) do
+            {:ok, _notification} -> :ok
+            {:error, reason} -> {:error, reason}
+          end
+      end
     end
   end
 
@@ -1013,58 +1037,72 @@ defmodule Castmill.Organizations do
   # Accepts an invitation by updating the status of the invitation to accepted and
   # adding the user to the organization.
   def accept_invitation(token, user_id) do
-    case get_invitation(token) do
-      nil ->
-        {:error, "Invalid token"}
+    Repo.transaction(fn ->
+      invitation =
+        Repo.one(
+          from(i in OrganizationsInvitation,
+            where: i.token == ^token,
+            lock: "FOR UPDATE"
+          )
+        )
 
-      invitation ->
-        cond do
-          OrganizationsInvitation.expired?(invitation) ->
-            {:error, :expired}
+      case invitation do
+        nil ->
+          Repo.rollback("Invalid token")
 
-          invitation.status == "accepted" ->
-            # Check if the user is already in the organization (idempotent case)
-            case Repo.get_by(OrganizationsUsers,
-                   organization_id: invitation.organization_id,
-                   user_id: user_id
-                 ) do
-              nil ->
-                # Invitation was accepted by a different user
-                {:error, :invitation_accepted_by_different_user}
+        invitation ->
+          cond do
+            OrganizationsInvitation.expired?(invitation) ->
+              Repo.rollback(:expired)
 
-              _org_user ->
-                # User is already in the organization, return success (idempotent)
-                {:ok, invitation}
-            end
+            invitation.status == "accepted" ->
+              case Repo.get_by(OrganizationsUsers,
+                     organization_id: invitation.organization_id,
+                     user_id: user_id
+                   ) do
+                nil -> Repo.rollback(:invitation_accepted_by_different_user)
+                _org_user -> invitation
+              end
 
-          invitation.status != "invited" ->
-            {:error, :invalid_status}
+            invitation.status != "invited" ->
+              Repo.rollback(:invalid_status)
 
-          true ->
-            case add_user(invitation.organization_id, user_id, invitation.role) do
-              {:ok, _} ->
-                from(i in OrganizationsInvitation,
-                  where: i.token == ^token
-                )
-                |> Repo.update_all(set: [status: "accepted"])
+            true ->
+              case add_user(invitation.organization_id, user_id, invitation.role) do
+                {:ok, _} ->
+                  case Repo.update_all(
+                         from(i in OrganizationsInvitation,
+                           where:
+                             i.id == ^invitation.id and i.token == ^token and
+                               i.status == "invited"
+                         ),
+                         set: [status: "accepted"]
+                       ) do
+                    {1, _} -> :ok
+                    _ -> Repo.rollback("Invalid token")
+                  end
 
-                # Send notification to organization members that invitation was accepted
-                user = Castmill.Accounts.get_user(user_id)
+                  user = Castmill.Accounts.get_user(user_id)
 
-                if user do
-                  Castmill.Notifications.Events.notify_invitation_accepted(
-                    user.name,
-                    user_id,
-                    invitation.organization_id
-                  )
-                end
+                  if user do
+                    Castmill.Notifications.Events.notify_invitation_accepted(
+                      user.name,
+                      user_id,
+                      invitation.organization_id
+                    )
+                  end
 
-                {:ok, invitation}
+                  %{invitation | status: "accepted"}
 
-              {:error, changeset} ->
-                {:error, changeset}
-            end
-        end
+                {:error, changeset} ->
+                  Repo.rollback(changeset)
+              end
+          end
+      end
+    end)
+    |> case do
+      {:ok, invitation} -> {:ok, invitation}
+      {:error, reason} -> {:error, reason}
     end
   end
 

@@ -46,9 +46,23 @@ export const OrganizationInvitationsView = (props: {
   const [selectedInvitations, setSelectedInvitations] = createSignal(
     new Set<number>()
   );
+  const [selectedInvitationDetails, setSelectedInvitationDetails] =
+    createSignal(new Map<number, Invitation>());
+  let clearSelectedRows: (() => void) | undefined;
 
   const onRowSelect = (rowsSelected: Set<number>) => {
     setSelectedInvitations(rowsSelected);
+    setSelectedInvitationDetails((previous) => {
+      const next = new Map(
+        [...previous].filter(([id]) => rowsSelected.has(id))
+      );
+      data().forEach((invitation) => {
+        if (rowsSelected.has(invitation.id)) {
+          next.set(invitation.id, invitation);
+        }
+      });
+      return next;
+    });
   };
 
   const columns = [
@@ -96,6 +110,16 @@ export const OrganizationInvitationsView = (props: {
       opts
     );
     setData(result.data);
+    setSelectedInvitationDetails((previous) => {
+      const selected = selectedInvitations();
+      const next = new Map([...previous].filter(([id]) => selected.has(id)));
+      result.data.forEach((invitation: Invitation) => {
+        if (selected.has(invitation.id)) {
+          next.set(invitation.id, invitation);
+        }
+      });
+      return next;
+    });
     return result;
   };
 
@@ -107,7 +131,7 @@ export const OrganizationInvitationsView = (props: {
 
   const refreshData = () => {
     if (tableViewRef) {
-      tableViewRef.reloadData();
+      return tableViewRef.reloadData();
     }
   };
 
@@ -165,6 +189,7 @@ export const OrganizationInvitationsView = (props: {
       );
 
       refreshData();
+      clearSelectedRows?.();
       toast.success(
         t('organization.messages.invitationRemoved', {
           email: invitation.email,
@@ -177,21 +202,33 @@ export const OrganizationInvitationsView = (props: {
   };
 
   const confirmRemoveMultipleInvitationsFromOrganization = async () => {
-    try {
-      await Promise.all(
-        Array.from(selectedInvitations()).map((invitationId) =>
-          OrganizationsService.removeInvitationFromOrganization(
-            props.organizationId,
-            invitationId
-          )
+    const invitationIds = Array.from(selectedInvitations());
+    const results = await Promise.allSettled(
+      invitationIds.map((invitationId) =>
+        OrganizationsService.removeInvitationFromOrganization(
+          props.organizationId,
+          invitationId
         )
-      );
+      )
+    );
+    const succeededCount = results.filter(
+      (result) => result.status === 'fulfilled'
+    ).length;
+    const failedCount = results.length - succeededCount;
 
-      refreshData();
+    await refreshData();
+    if (succeededCount > 0) {
+      clearSelectedRows?.();
+    }
+
+    if (failedCount === 0) {
       toast.success(t('organization.messages.invitationsRemoved'));
       setShowConfirmDialogMultiple(false);
-    } catch (error) {
+    } else {
       toast.error(t('organization.errors.removeInvitationFailed'));
+      if (succeededCount > 0) {
+        setShowConfirmDialogMultiple(false);
+      }
     }
   };
 
@@ -234,8 +271,8 @@ export const OrganizationInvitationsView = (props: {
       >
         <div style="margin: 1.5em; line-height: 1.5em;">
           {Array.from(selectedInvitations()).map((invitationId) => {
-            const invitation = data().find((d) => d.id === invitationId);
-            return <div>{`- ${invitation?.email}`}</div>;
+            const invitation = selectedInvitationDetails().get(invitationId);
+            return <div>{`- ${invitation?.email ?? ''}`}</div>;
           })}
         </div>
       </ConfirmDialog>
@@ -250,15 +287,18 @@ export const OrganizationInvitationsView = (props: {
         }}
         selectionHint={t('common.selectionHint')}
         selectionLabel={t('common.selectionCount')}
-        selectionActions={() => (
-          <button
-            class="selection-action-btn danger"
-            onClick={() => setShowConfirmDialogMultiple(true)}
-          >
-            <AiOutlineDelete />
-            {t('common.remove')}
-          </button>
-        )}
+        selectionActions={({ clear }) => {
+          clearSelectedRows = clear;
+          return (
+            <button
+              class="selection-action-btn danger"
+              onClick={() => setShowConfirmDialogMultiple(true)}
+            >
+              <AiOutlineDelete />
+              {t('common.remove')}
+            </button>
+          );
+        }}
         table={{
           columns,
           actions,

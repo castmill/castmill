@@ -125,6 +125,36 @@ describe('NotificationDialog Component', () => {
     });
   });
 
+  it('removes deleted notifications and updates the unread count', async () => {
+    const handlers: Record<string, (payload: any) => void> = {};
+    const channel = {
+      on: vi.fn((event: string, handler: (payload: any) => void) => {
+        handlers[event] = handler;
+      }),
+    };
+    const onNotificationRead = vi.fn();
+
+    renderWithI18n(() => (
+      <NotificationDialog
+        onClose={vi.fn()}
+        onNotificationRead={onNotificationRead}
+        channel={channel}
+      />
+    ));
+
+    await waitFor(() =>
+      expect(document.querySelectorAll('.notification-item')).toHaveLength(2)
+    );
+    await waitFor(() => expect(handlers.notifications_deleted).toBeDefined());
+
+    handlers.notifications_deleted({ ids: ['1'], unread_count: 0 });
+
+    await waitFor(() => {
+      expect(document.querySelectorAll('.notification-item')).toHaveLength(1);
+      expect(onNotificationRead).toHaveBeenLastCalledWith(0);
+    });
+  });
+
   it('should call onClose when close button is clicked', async () => {
     const onClose = vi.fn();
     const onNotificationRead = vi.fn();

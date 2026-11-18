@@ -179,5 +179,109 @@ describe('OrganizationInvitationsView', () => {
     await waitFor(() =>
       expect(toastSpies.success).toHaveBeenCalledWith('Invitations removed')
     );
+    expect(document.querySelector('.selection-action-btn.danger')).toBeNull();
+  });
+
+  it('keeps selected invitation details when changing pages', async () => {
+    vi.mocked(OrganizationsService.fetchInvitations).mockImplementation(
+      async (_organizationId, options) => ({
+        data:
+          options.page.num === 1
+            ? invitations
+            : [
+                {
+                  ...invitations[0],
+                  id: 11,
+                  email: 'page-two@example.com',
+                },
+              ],
+        count: 20,
+      })
+    );
+
+    renderView();
+    fireEvent.click(await screen.findByLabelText('Select row 1'));
+    fireEvent.click(screen.getByLabelText('Next page'));
+
+    await waitFor(() =>
+      expect(OrganizationsService.fetchInvitations).toHaveBeenCalledWith(
+        'org-1',
+        expect.objectContaining({ page: expect.objectContaining({ num: 2 }) })
+      )
+    );
+
+    const removeSelected = document.querySelector(
+      '.selection-action-btn.danger'
+    ) as HTMLElement;
+    fireEvent.click(removeSelected);
+
+    await screen.findByText(
+      'Are you sure you want to remove the following invitations?'
+    );
+    expect(document.body.textContent).toContain('- pending@example.com');
+    expect(document.body.textContent).not.toContain('- undefined');
+  });
+
+  it('clears the selection after removing a selected invitation individually', async () => {
+    renderView();
+    fireEvent.click(await screen.findByLabelText('Select row 1'));
+
+    const rowRemove = screen.getAllByRole('button', { name: 'Remove' })[0];
+    fireEvent.click(rowRemove);
+    await screen.findByText(
+      'Are you sure you want to remove the invitation for "pending@example.com"?'
+    );
+
+    const removeButtons = screen.getAllByRole('button', { name: 'Remove' });
+    fireEvent.click(removeButtons[removeButtons.length - 1]);
+
+    await waitFor(() =>
+      expect(
+        OrganizationsService.removeInvitationFromOrganization
+      ).toHaveBeenCalledWith('org-1', 1)
+    );
+    await waitFor(() =>
+      expect(document.querySelector('.selection-action-btn.danger')).toBeNull()
+    );
+  });
+
+  it('waits for all bulk removals and refreshes after partial failure', async () => {
+    vi.mocked(
+      OrganizationsService.removeInvitationFromOrganization
+    ).mockImplementation(async (_organizationId, invitationId) => {
+      if (invitationId === 2) {
+        throw new Error('Failed to remove invitation');
+      }
+    });
+
+    renderView();
+    fireEvent.click(await screen.findByLabelText('Select row 1'));
+    fireEvent.click(screen.getByLabelText('Select row 2'));
+
+    const removeSelected = document.querySelector(
+      '.selection-action-btn.danger'
+    ) as HTMLElement;
+    fireEvent.click(removeSelected);
+
+    await screen.findByText(
+      'Are you sure you want to remove the following invitations?'
+    );
+    const removeButtons = screen.getAllByRole('button', { name: 'Remove' });
+    fireEvent.click(removeButtons[removeButtons.length - 1]);
+
+    await waitFor(() =>
+      expect(
+        OrganizationsService.removeInvitationFromOrganization
+      ).toHaveBeenCalledTimes(2)
+    );
+    await waitFor(() =>
+      expect(OrganizationsService.fetchInvitations).toHaveBeenCalledTimes(2)
+    );
+    await waitFor(() =>
+      expect(toastSpies.error).toHaveBeenCalledWith(
+        'Failed to remove the invitation'
+      )
+    );
+    expect(document.querySelector('.selection-action-btn.danger')).toBeNull();
   });
 });

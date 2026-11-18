@@ -118,12 +118,11 @@ defmodule Castmill.Notifications do
     page_size = Keyword.get(opts, :page_size, 20)
     offset = max((page - 1) * page_size, 0)
 
-    from(n in Notification,
+    from n in Notification,
       where: n.organization_id == ^organization_id,
       order_by: [desc: n.inserted_at],
       limit: ^page_size,
       offset: ^offset
-    )
     |> Repo.all()
   end
 
@@ -262,13 +261,37 @@ defmodule Castmill.Notifications do
   """
   def delete_notifications_by_metadata(type, key, value)
       when is_binary(type) and is_binary(key) and is_binary(value) do
-    {count, _} =
+    type
+    |> delete_notifications_by_metadata_with_records(key, value)
+    |> length()
+  end
+
+  def delete_notifications_by_metadata_with_records(type, key, value)
+      when is_binary(type) and is_binary(key) and is_binary(value) do
+    query =
       from(n in Notification,
         where: n.type == ^type and fragment("?->>? = ?", n.metadata, ^key, ^value)
       )
-      |> Repo.delete_all()
 
-    count
+    notifications = Repo.all(query)
+    Repo.delete_all(query)
+    notifications
+  end
+
+  def broadcast_notifications_deleted(notifications) do
+    notifications
+    |> Enum.filter(& &1.user_id)
+    |> Enum.group_by(& &1.user_id)
+    |> Enum.each(fn {user_id, deleted_notifications} ->
+      Phoenix.PubSub.broadcast(
+        Castmill.PubSub,
+        "users:#{user_id}",
+        {:notifications_deleted, Enum.map(deleted_notifications, & &1.id),
+         count_unread_notifications(user_id)}
+      )
+    end)
+
+    :ok
   end
 
   # Private function to broadcast notification via Phoenix PubSub

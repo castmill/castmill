@@ -100,6 +100,38 @@ defmodule Castmill.OrganizationsConcurrentTest do
       assert length(successes) == 3, "Expected all 3 to succeed"
     end
 
+    test "serializes invitation acceptance with a concurrent resend", %{network: network} do
+      organization =
+        Castmill.OrganizationsFixtures.organization_fixture(%{network_id: network.id})
+
+      user =
+        Castmill.AccountsFixtures.user_fixture(%{
+          network_id: network.id,
+          email: "racing-invitee@example.com"
+        })
+
+      {:ok, token} = Organizations.invite_user(organization.id, user.email, :member)
+      invitation = Organizations.get_invitation(token)
+
+      tasks = [
+        Task.async(fn -> Organizations.accept_invitation(token, user.id) end),
+        Task.async(fn -> Organizations.resend_invitation(organization.id, invitation.id) end)
+      ]
+
+      [accept_result, resend_result] = Task.await_many(tasks, 5000)
+
+      case {accept_result, resend_result} do
+        {{:ok, _}, {:error, :already_accepted}} ->
+          assert Organizations.get_organizations_user(organization.id, user.id)
+
+        {{:error, "Invalid token"}, {:ok, _}} ->
+          assert Organizations.get_organizations_user(organization.id, user.id) == nil
+
+        results ->
+          flunk("Unexpected concurrent invitation results: #{inspect(results)}")
+      end
+    end
+
     test "prevents race condition when updating to conflicting names concurrently", %{
       network: network
     } do

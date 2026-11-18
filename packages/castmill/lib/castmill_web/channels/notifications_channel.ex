@@ -38,6 +38,16 @@ defmodule CastmillWeb.NotificationsChannel do
   end
 
   @impl true
+  def handle_info({:notifications_deleted, notification_ids, unread_count}, socket) do
+    push(socket, "notifications_deleted", %{
+      ids: notification_ids,
+      unread_count: unread_count
+    })
+
+    {:noreply, socket}
+  end
+
+  @impl true
   def handle_in("mark_read", %{"id" => id}, socket) do
     case Notifications.mark_as_read(id) do
       {:ok, _notification} ->

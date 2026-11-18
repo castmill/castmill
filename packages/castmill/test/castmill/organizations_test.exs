@@ -353,6 +353,21 @@ defmodule Castmill.OrganizationsTest do
       assert notification.link == "/invite-organization?token=#{resent.token}"
     end
 
+    test "does not accept an invitation token after it has been resent", %{
+      network: network,
+      organization: organization
+    } do
+      user = user_fixture(%{network_id: network.id, email: "rotated@example.com"})
+      invitation = invite(organization, user.email)
+
+      assert {:ok, _resent} = Organizations.resend_invitation(organization.id, invitation.id)
+
+      assert {:error, "Invalid token"} =
+               Organizations.accept_invitation(invitation.token, user.id)
+
+      assert Organizations.get_organizations_user(organization.id, user.id) == nil
+    end
+
     test "does not resend accepted invitations", %{network: network, organization: organization} do
       user = user_fixture(%{network_id: network.id, email: "accepted@example.com"})
       invitation = invite(organization, user.email)

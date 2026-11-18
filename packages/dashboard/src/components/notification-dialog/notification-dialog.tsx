@@ -77,6 +77,20 @@ export const NotificationDialog: Component<NotificationDialogProps> = (
           }
         }
       });
+
+      channel.on('notifications_deleted', (payload: any) => {
+        const deletedIds = new Set((payload.ids ?? []).map(String));
+        setNotifications((prev) =>
+          prev.filter(
+            (notification) => !deletedIds.has(String(notification.id))
+          )
+        );
+
+        if (payload.unread_count !== undefined) {
+          setUnreadCount(payload.unread_count);
+          props.onNotificationRead(payload.unread_count);
+        }
+      });
     }
   });
 
