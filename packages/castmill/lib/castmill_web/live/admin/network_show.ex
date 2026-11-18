@@ -552,6 +552,9 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
       {:error, :not_admin} ->
         {:noreply, put_flash(socket, :error, "User is not an admin")}
 
+      {:error, :last_admin} ->
+        {:noreply, put_flash(socket, :error, "Cannot remove the last network admin")}
+
       {:error, _} ->
         {:noreply, put_flash(socket, :error, "Failed to demote user")}
     end

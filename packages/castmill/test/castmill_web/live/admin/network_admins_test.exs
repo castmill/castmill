@@ -69,6 +69,7 @@ defmodule CastmillWeb.Live.Admin.NetworkAdminsTest do
     network: network,
     root: root
   } do
+    existing_admin = user_fixture(%{network_id: network.id, network_role: :admin})
     user = user_fixture(%{network_id: network.id})
     other_network = network_fixture()
     {:ok, _} = Networks.add_user_to_network(user.id, other_network.id, :admin)
@@ -80,12 +81,30 @@ defmodule CastmillWeb.Live.Admin.NetworkAdminsTest do
     assert Networks.is_network_admin?(user.id, network.id)
 
     view |> form("#network-admin-form", email: user.email) |> render_submit()
-    assert length(Floki.find(Floki.parse_document!(render(view)), "#network-admins tr")) == 1
+    assert length(Floki.find(Floki.parse_document!(render(view)), "#network-admins tr")) == 2
 
-    view |> element("#network-admins a", "Remove admin") |> render_click()
+    view
+    |> element("#network-admins-#{user.id} a", "Remove admin")
+    |> render_click()
     refute render(view) =~ user.email
+    assert render(view) =~ existing_admin.email
     assert Networks.get_network_membership(user.id, network.id).role == :member
+    assert Networks.is_network_admin?(existing_admin.id, network.id)
     assert Networks.is_network_admin?(user.id, other_network.id)
+  end
+
+  test "shows an error when removing the final network admin", %{
+    conn: conn,
+    network: network,
+    root: root
+  } do
+    admin = user_fixture(%{network_id: network.id, network_role: :admin})
+    {:ok, view, _} = live(admin_conn(conn, root), ~p"/admin/networks/#{network.id}/admins")
+
+    assert render_click(view, "demote_from_admin", %{"id" => admin.id}) =~
+             "Cannot remove the last network admin"
+
+    assert Networks.is_network_admin?(admin.id, network.id)
   end
 
   test "admin sessions are separate from regular sessions and are revoked on logout", %{
