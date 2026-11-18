@@ -86,6 +86,7 @@ defmodule CastmillWeb.Live.Admin.NetworkAdminsTest do
     view
     |> element("#network-admins-#{user.id} a", "Remove admin")
     |> render_click()
+
     refute render(view) =~ user.email
     assert render(view) =~ existing_admin.email
     assert Networks.get_network_membership(user.id, network.id).role == :member
