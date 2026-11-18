@@ -97,11 +97,18 @@ describe('SidePanel responsive navigation', () => {
   beforeEach(() => {
     setPathname('/org/org-1/channels');
     setStore('organizations', {
-      data: [{ id: 'org-1', name: 'Org One' }],
+      data: [
+        {
+          id: 'org-1',
+          name: 'Org One',
+          created_at: '2026-01-01T00:00:00Z',
+          updated_at: '2026-01-01T00:00:00Z',
+        },
+      ],
       selectedId: 'org-1',
       selectedName: 'Org One',
     });
-    setStore('permissions', { role: 'admin', matrix: {} });
+    setStore('permissions', { role: 'admin' });
     setStore('network', { isAdmin: false });
     navDrawer.close();
   });
