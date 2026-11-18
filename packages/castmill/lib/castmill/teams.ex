@@ -644,7 +644,7 @@ defmodule Castmill.Teams do
     end
   end
 
-  def add_invitation_to_team(organization_id, team_id, email, role \\ :member) do
+  def add_invitation_to_team(_organization_id, team_id, email, role \\ :member) do
     token =
       :crypto.strong_rand_bytes(16)
       |> Base.url_encode64(padding: false)
@@ -691,11 +691,11 @@ defmodule Castmill.Teams do
       {:ok, %{invitation: invitation}} ->
         # Transaction committed successfully;
         # now we can send the email outside the transaction.
-        organization = Castmill.Organizations.get_organization(organization_id)
-        network = Castmill.Networks.get_network(organization.network_id)
-
         # Get team info for email
         team = get_team(team_id)
+        organization = Castmill.Organizations.get_organization(team.organization_id)
+        network = Castmill.Networks.get_network(organization.network_id)
+
         send_invitation_email(network, team.name, email, token)
 
         # Send notification if user exists

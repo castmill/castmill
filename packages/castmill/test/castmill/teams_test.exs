@@ -4,6 +4,8 @@ defmodule Castmill.TeamsTest do
   alias Castmill.Teams
   alias Ecto.UUID
 
+  import Swoosh.TestAssertions
+
   @moduletag :teams_data_case
   @moduletag :teams
 
@@ -13,6 +15,26 @@ defmodule Castmill.TeamsTest do
     import Castmill.PlaylistsFixtures
     import Castmill.TeamsFixtures
     import Castmill.MediasFixtures
+
+    test "team invitation branding comes from the team's organization" do
+      network = network_fixture(%{name: "Team Network", email: "team@example.com"})
+      organization = organization_fixture(%{network_id: network.id})
+      other_network = network_fixture(%{name: "Caller Network", email: "caller@example.com"})
+      other_organization = organization_fixture(%{network_id: other_network.id})
+      team = team_fixture(%{organization_id: organization.id})
+
+      assert {:ok, _token} =
+               Teams.add_invitation_to_team(
+                 other_organization.id,
+                 team.id,
+                 "invitee@example.com"
+               )
+
+      assert_email_sent(fn email ->
+        assert email.from == {"Team Network", "no-reply@castmill.com"}
+        assert email.reply_to == {"", "team@example.com"}
+      end)
+    end
 
     test "list_teams/1 returns all teams" do
       network = network_fixture()
