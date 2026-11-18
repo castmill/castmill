@@ -505,7 +505,20 @@
       "deleteTitle": "사용자 삭제",
       "deleteConfirmation": "\"{{name}}\"을(를) 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
       "deleteSuccess": "사용자가 성공적으로 삭제되었습니다",
-      "deleteError": "사용자 삭제에 실패했습니다"
+      "deleteError": "사용자 삭제에 실패했습니다",
+      "networkRole": "네트워크 역할",
+      "networkAdmin": "네트워크 관리자",
+      "networkMember": "멤버",
+      "makeAdmin": "네트워크 관리자로 지정",
+      "makeAdminTitle": "네트워크 관리자로 지정",
+      "makeAdminConfirmation": "\"{{name}}\"님을 네트워크 관리자로 지정할까요? 이 네트워크의 설정, 조직, 사용자, 위젯을 관리할 수 있게 됩니다.",
+      "makeAdminSuccess": "{{name}}님은 이제 네트워크 관리자입니다",
+      "makeAdminError": "사용자를 네트워크 관리자로 지정하지 못했습니다",
+      "removeAdmin": "네트워크 관리자 해제",
+      "removeAdminTitle": "네트워크 관리자 해제",
+      "removeAdminConfirmation": "\"{{name}}\"님을 네트워크 관리자에서 해제할까요? 네트워크에는 남아 있으며 조직에서의 역할은 유지됩니다.",
+      "removeAdminSuccess": "{{name}}님은 더 이상 네트워크 관리자가 아닙니다",
+      "removeAdminError": "네트워크 관리자 역할을 해제하지 못했습니다"
     },
     "invitations": {
       "title": "네트워크 초대",

@@ -56,11 +56,11 @@ Open a network to see its **Organizations**, **Invitations**, **Teams**, **Users
 
 ## Network administrators
 
-Network administrators manage a network from the dashboard; see [Network administration](./network-administration.md). To appoint one:
+Network administrators manage a network from the dashboard; see [Network administration](./network-administration.md). Existing network administrators can appoint others from the dashboard's **Network → Users** page. To appoint one from the admin tool, for example the first administrator of a new network:
 
-1. Ask the person to sign up in the dashboard first. Only existing users can become network administrators.
-2. Open the network and select the **Admins** tab.
-3. Add the person's email address.
+1. Open the network and select the **Admins** tab.
+2. Add the person's email address. They get an account if they do not have one, and are emailed a link to create a passkey for the network's domain.
+3. If the email does not arrive, use **Show setup link** on their row and send them the link yourself. It works once and expires after 7 days.
 
 The next time the person loads the dashboard, the **Network** section appears in the sidebar.
 

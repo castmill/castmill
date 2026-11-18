@@ -505,7 +505,20 @@
       "deleteTitle": "ユーザーを削除",
       "deleteConfirmation": "\"{{name}}\" を削除してもよろしいですか？この操作は元に戻せません。",
       "deleteSuccess": "ユーザーを正常に削除しました",
-      "deleteError": "ユーザーの削除に失敗しました"
+      "deleteError": "ユーザーの削除に失敗しました",
+      "networkRole": "ネットワークの役割",
+      "networkAdmin": "ネットワーク管理者",
+      "networkMember": "メンバー",
+      "makeAdmin": "ネットワーク管理者にする",
+      "makeAdminTitle": "ネットワーク管理者にする",
+      "makeAdminConfirmation": "「{{name}}」をネットワーク管理者にしますか？このネットワークの設定、組織、ユーザー、ウィジェットを管理できるようになります。",
+      "makeAdminSuccess": "{{name}} はネットワーク管理者になりました",
+      "makeAdminError": "ユーザーをネットワーク管理者にできませんでした",
+      "removeAdmin": "ネットワーク管理者を解除",
+      "removeAdminTitle": "ネットワーク管理者を解除",
+      "removeAdminConfirmation": "「{{name}}」のネットワーク管理者を解除しますか？ネットワークには残り、組織での役割はそのままです。",
+      "removeAdminSuccess": "{{name}} はネットワーク管理者ではなくなりました",
+      "removeAdminError": "ネットワーク管理者の役割を解除できませんでした"
     },
     "invitations": {
       "title": "ネットワーク招待",

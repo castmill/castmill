@@ -505,7 +505,20 @@
       "deleteTitle": "删除用户",
       "deleteConfirmation": "您确定要删除 \"{{name}}\" 吗？此操作无法撤销。",
       "deleteSuccess": "用户删除成功",
-      "deleteError": "删除用户失败"
+      "deleteError": "删除用户失败",
+      "networkRole": "网络角色",
+      "networkAdmin": "网络管理员",
+      "networkMember": "成员",
+      "makeAdmin": "设为网络管理员",
+      "makeAdminTitle": "设为网络管理员",
+      "makeAdminConfirmation": "将“{{name}}”设为网络管理员？该用户将可以管理此网络的设置、组织、用户和小组件。",
+      "makeAdminSuccess": "{{name}} 现在是网络管理员",
+      "makeAdminError": "无法将该用户设为网络管理员",
+      "removeAdmin": "移除网络管理员",
+      "removeAdminTitle": "移除网络管理员",
+      "removeAdminConfirmation": "将“{{name}}”从网络管理员中移除？该用户仍留在网络中，并保留其在各组织中的角色。",
+      "removeAdminSuccess": "{{name}} 已不再是网络管理员",
+      "removeAdminError": "无法移除网络管理员角色"
     },
     "invitations": {
       "title": "网络邀请",

@@ -437,6 +437,8 @@ defmodule CastmillWeb.Router do
     # Network admin user management
     post("/network/users/:user_id/block", NetworkDashboardController, :block_user)
     delete("/network/users/:user_id/block", NetworkDashboardController, :unblock_user)
+    post("/network/users/:user_id/admin", NetworkDashboardController, :promote_user)
+    delete("/network/users/:user_id/admin", NetworkDashboardController, :demote_user)
     delete("/network/users/:user_id", NetworkDashboardController, :delete_user)
 
     # Network admin organization management

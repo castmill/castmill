@@ -505,7 +505,20 @@
       "deleteTitle": "حذف المستخدم",
       "deleteConfirmation": "هل أنت متأكد من أنك تريد حذف \"{{name}}\"? لا يمكن التراجع عن هذا الإجراء.",
       "deleteSuccess": "تم حذف المستخدم بنجاح",
-      "deleteError": "فشل في حذف المستخدم"
+      "deleteError": "فشل في حذف المستخدم",
+      "networkRole": "الدور في الشبكة",
+      "networkAdmin": "مسؤول الشبكة",
+      "networkMember": "عضو",
+      "makeAdmin": "تعيين كمسؤول شبكة",
+      "makeAdminTitle": "تعيين كمسؤول شبكة",
+      "makeAdminConfirmation": "هل تريد تعيين \"{{name}}\" مسؤولاً للشبكة؟ سيتمكن من إدارة إعدادات هذه الشبكة ومنظماتها ومستخدميها وأدواتها.",
+      "makeAdminSuccess": "أصبح {{name}} مسؤولاً للشبكة",
+      "makeAdminError": "تعذر تعيين المستخدم مسؤولاً للشبكة",
+      "removeAdmin": "إزالة دور مسؤول الشبكة",
+      "removeAdminTitle": "إزالة مسؤول الشبكة",
+      "removeAdminConfirmation": "هل تريد إزالة \"{{name}}\" من مسؤولي الشبكة؟ سيبقى في الشبكة ويحتفظ بأدواره في المنظمات.",
+      "removeAdminSuccess": "لم يعد {{name}} مسؤولاً للشبكة",
+      "removeAdminError": "تعذرت إزالة دور مسؤول الشبكة"
     },
     "invitations": {
       "title": "دعوات الشبكة",

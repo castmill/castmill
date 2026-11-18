@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@solidjs/testing-library';
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@solidjs/testing-library';
 import { I18nProvider } from '../../i18n';
 import NetworkUsers from './network-users';
 import { NetworkService } from '../../services/network.service';
@@ -29,7 +35,13 @@ vi.mock('../../services/network.service', () => ({
     blockUser: vi.fn(),
     unblockUser: vi.fn(),
     deleteInvitation: vi.fn(),
+    makeNetworkAdmin: vi.fn(),
+    removeNetworkAdmin: vi.fn(),
   },
+}));
+
+vi.mock('../../components/auth', () => ({
+  getUser: () => ({ id: 'me' }),
 }));
 
 const mockStats = {
@@ -117,6 +129,214 @@ describe('NetworkUsers', () => {
 
     await waitFor(() => {
       expect(NetworkService.listInvitations).toHaveBeenCalled();
+    });
+  });
+
+  describe('network admin roles', () => {
+    const roleUsers = [
+      {
+        id: 'me',
+        name: 'Me Admin',
+        email: 'me@example.com',
+        role: 'admin' as const,
+        inserted_at: '2024-01-01T00:00:00Z',
+      },
+      {
+        id: 'admin-2',
+        name: 'Other Admin',
+        email: 'other@example.com',
+        role: 'admin' as const,
+        inserted_at: '2024-01-01T00:00:00Z',
+      },
+      {
+        id: 'member-1',
+        name: 'Plain Member',
+        email: 'member@example.com',
+        role: 'member' as const,
+        inserted_at: '2024-01-01T00:00:00Z',
+      },
+      {
+        id: 'blocked-1',
+        name: 'Blocked Member',
+        email: 'blocked@example.com',
+        role: 'member' as const,
+        blocked_at: '2024-02-01T00:00:00Z',
+        inserted_at: '2024-01-01T00:00:00Z',
+      },
+      {
+        id: 'blocked-admin',
+        name: 'Blocked Admin',
+        email: 'blocked-admin@example.com',
+        role: 'admin' as const,
+        blocked_at: '2024-02-01T00:00:00Z',
+        inserted_at: '2024-01-01T00:00:00Z',
+      },
+    ];
+
+    const row = (name: string) => screen.getByText(name).closest('tr')!;
+
+    beforeEach(() => {
+      vi.mocked(NetworkService.listUsers).mockResolvedValue({
+        data: roleUsers,
+        pagination: { page: 1, page_size: 20, total_count: 5, total_pages: 1 },
+      });
+    });
+
+    it('shows each user’s network role and only the actions that apply', async () => {
+      renderUsers();
+      await waitFor(() => screen.getByText('Plain Member'));
+
+      expect(
+        within(row('Me Admin')).getByText('Network admin')
+      ).toBeInTheDocument();
+      expect(
+        within(row('Plain Member')).getByText('Member')
+      ).toBeInTheDocument();
+
+      // Yourself: no way to remove your own admin role, block or delete yourself.
+      expect(within(row('Me Admin')).queryAllByRole('button')).toHaveLength(0);
+
+      // Other admins can lose the admin role but are never blocked or deleted.
+      const other = within(row('Other Admin'));
+      expect(
+        other.getByRole('button', { name: 'Remove network admin Other Admin' })
+      ).toBeInTheDocument();
+      expect(
+        other.queryByRole('button', { name: 'Block Other Admin' })
+      ).toBeNull();
+      expect(
+        other.queryByRole('button', { name: 'Delete Other Admin' })
+      ).toBeNull();
+
+      const member = within(row('Plain Member'));
+      expect(
+        member.getByRole('button', { name: 'Make network admin Plain Member' })
+      ).toBeInTheDocument();
+      expect(
+        member.getByRole('button', { name: 'Block Plain Member' })
+      ).toBeInTheDocument();
+      expect(
+        member.getByRole('button', { name: 'Delete Plain Member' })
+      ).toBeInTheDocument();
+
+      // Blocked users must be unblocked before they can become admins.
+      const blocked = within(row('Blocked Member'));
+      expect(
+        blocked.queryByRole('button', {
+          name: 'Make network admin Blocked Member',
+        })
+      ).toBeNull();
+      expect(
+        blocked.getByRole('button', { name: 'Unblock Blocked Member' })
+      ).toBeInTheDocument();
+
+      const blockedAdmin = within(row('Blocked Admin'));
+      expect(
+        blockedAdmin.getByRole('button', {
+          name: 'Remove network admin Blocked Admin',
+        })
+      ).toBeInTheDocument();
+      expect(
+        blockedAdmin.getByRole('button', { name: 'Unblock Blocked Admin' })
+      ).toBeInTheDocument();
+      expect(
+        blockedAdmin.queryByRole('button', { name: 'Block Blocked Admin' })
+      ).toBeNull();
+      expect(
+        blockedAdmin.queryByRole('button', { name: 'Delete Blocked Admin' })
+      ).toBeNull();
+    });
+
+    it('makes a member a network admin after confirmation', async () => {
+      vi.mocked(NetworkService.makeNetworkAdmin).mockResolvedValue({
+        success: true,
+        user: { ...roleUsers[2], role: 'admin' },
+      });
+      renderUsers();
+      await waitFor(() => screen.getByText('Plain Member'));
+
+      fireEvent.click(
+        within(row('Plain Member')).getByRole('button', {
+          name: 'Make network admin Plain Member',
+        })
+      );
+      expect(
+        await screen.findByText(/Make "Plain Member" a network admin\?/)
+      ).toBeInTheDocument();
+      fireEvent.click(await screen.findByRole('button', { name: 'Confirm' }));
+
+      await waitFor(() =>
+        expect(toastSpies.success).toHaveBeenCalledWith(
+          'Plain Member is now a network admin'
+        )
+      );
+      expect(NetworkService.makeNetworkAdmin).toHaveBeenCalledWith('member-1');
+      expect(
+        within(row('Plain Member')).getByText('Network admin')
+      ).toBeInTheDocument();
+      expect(
+        within(row('Plain Member')).queryByRole('button', {
+          name: 'Block Plain Member',
+        })
+      ).toBeNull();
+    });
+
+    it('removes another admin’s network admin role after confirmation', async () => {
+      vi.mocked(NetworkService.removeNetworkAdmin).mockResolvedValue({
+        success: true,
+        user: { ...roleUsers[1], role: 'member' },
+      });
+      renderUsers();
+      await waitFor(() => screen.getByText('Other Admin'));
+
+      fireEvent.click(
+        within(row('Other Admin')).getByRole('button', {
+          name: 'Remove network admin Other Admin',
+        })
+      );
+      expect(
+        await screen.findByText(/Remove "Other Admin" as a network admin\?/)
+      ).toBeInTheDocument();
+      fireEvent.click(await screen.findByRole('button', { name: 'Confirm' }));
+
+      await waitFor(() =>
+        expect(toastSpies.success).toHaveBeenCalledWith(
+          'Other Admin is no longer a network admin'
+        )
+      );
+      expect(NetworkService.removeNetworkAdmin).toHaveBeenCalledWith('admin-2');
+      expect(
+        within(row('Other Admin')).getByText('Member')
+      ).toBeInTheDocument();
+      expect(
+        within(row('Other Admin')).getByRole('button', {
+          name: 'Block Other Admin',
+        })
+      ).toBeInTheDocument();
+    });
+
+    it('shows why a role change failed and keeps the role', async () => {
+      vi.mocked(NetworkService.makeNetworkAdmin).mockRejectedValue(
+        new Error('Unblock this user before making them a network admin')
+      );
+      renderUsers();
+      await waitFor(() => screen.getByText('Plain Member'));
+
+      fireEvent.click(
+        within(row('Plain Member')).getByRole('button', {
+          name: 'Make network admin Plain Member',
+        })
+      );
+      fireEvent.click(await screen.findByRole('button', { name: 'Confirm' }));
+
+      await waitFor(() =>
+        expect(toastSpies.error).toHaveBeenCalledWith(
+          'Unblock this user before making them a network admin'
+        )
+      );
+      expect(
+        within(row('Plain Member')).getByText('Member')
+      ).toBeInTheDocument();
     });
   });
 });

@@ -250,6 +250,20 @@
     font-size: 0.85em;
   }
 
+  .role-admin {
+    display: inline-block;
+    padding: 0.15em 0.6em;
+    border-radius: 1em;
+    font-size: 0.8em;
+    font-weight: 600;
+    color: var(--cm-text-primary);
+    background: rgba(var(--cm-primary-rgb), 0.12);
+  }
+
+  .role-member {
+    font-size: 0.85em;
+    color: var(--cm-text-secondary);
+  }
   .empty-list {
     padding: 2em;
     text-align: center;

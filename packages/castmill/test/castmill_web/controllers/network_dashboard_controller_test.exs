@@ -532,6 +532,10 @@ defmodule CastmillWeb.NetworkDashboardControllerTest do
       assert admin.id in user_ids
       assert user1.id in user_ids
       assert user2.id in user_ids
+
+      roles = Map.new(response["data"], &{&1["id"], &1["role"]})
+      assert roles[admin.id] == "admin"
+      assert roles[user1.id] == "member"
     end
 
     test "returns 403 for non-admin user", %{
@@ -545,6 +549,178 @@ defmodule CastmillWeb.NetworkDashboardControllerTest do
       conn = get(conn, "/dashboard/network/users")
 
       assert json_response(conn, 403)
+    end
+  end
+
+  describe "network admin roles" do
+    setup do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+      admin = create_network_admin(network)
+
+      {:ok, network: network, organization: organization, admin: admin}
+    end
+
+    test "a network admin makes a member a network admin and back", %{
+      conn: conn,
+      network: network,
+      organization: organization,
+      admin: admin
+    } do
+      member = create_regular_user(network, organization)
+
+      response =
+        conn
+        |> authenticate_conn(admin, network)
+        |> post("/dashboard/network/users/#{member.id}/admin")
+        |> json_response(200)
+
+      assert response["user"]["id"] == member.id
+      assert response["user"]["role"] == "admin"
+      assert Networks.is_network_admin?(member.id, network.id)
+
+      response =
+        build_conn()
+        |> authenticate_conn(admin, network)
+        |> delete("/dashboard/network/users/#{member.id}/admin")
+        |> json_response(200)
+
+      assert response["user"]["role"] == "member"
+      refute Networks.is_network_admin?(member.id, network.id)
+      assert Networks.is_network_member?(member.id, network.id)
+    end
+
+    test "network admins cannot remove their own admin role", %{
+      conn: conn,
+      network: network,
+      admin: admin
+    } do
+      assert conn
+             |> authenticate_conn(admin, network)
+             |> delete("/dashboard/network/users/#{admin.id}/admin")
+             |> json_response(403) == %{
+               "error" => "You cannot remove your own network admin role"
+             }
+
+      assert Networks.is_network_admin?(admin.id, network.id)
+    end
+
+    test "another network admin can remove an admin role", %{
+      conn: conn,
+      network: network,
+      admin: admin
+    } do
+      other_admin = create_network_admin(network)
+
+      conn
+      |> authenticate_conn(admin, network)
+      |> delete("/dashboard/network/users/#{other_admin.id}/admin")
+      |> json_response(200)
+
+      refute Networks.is_network_admin?(other_admin.id, network.id)
+    end
+
+    test "role changes reject a caller whose admin role was revoked", %{
+      network: network,
+      admin: admin
+    } do
+      other_admin = create_network_admin(network)
+      {:ok, _} = Networks.demote_from_network_admin(admin.id, network.id)
+
+      assert {:error, :actor_not_admin} =
+               Networks.promote_to_network_admin(admin.id, network.id, admin.id)
+
+      assert {:error, :actor_not_admin} =
+               Networks.demote_from_network_admin(other_admin.id, network.id, admin.id)
+    end
+
+    test "cannot remove the final network admin", %{
+      network: network,
+      admin: admin
+    } do
+      caller = create_network_admin(network)
+      {:ok, _} = Networks.demote_from_network_admin(admin.id, network.id)
+
+      assert {:error, :last_admin} =
+               Networks.demote_from_network_admin(caller.id, network.id)
+
+      assert Networks.is_network_admin?(caller.id, network.id)
+    end
+
+    test "removing the admin role of a member returns 409", %{
+      conn: conn,
+      network: network,
+      organization: organization,
+      admin: admin
+    } do
+      member = create_regular_user(network, organization)
+
+      conn
+      |> authenticate_conn(admin, network)
+      |> delete("/dashboard/network/users/#{member.id}/admin")
+      |> json_response(409)
+    end
+
+    test "blocked users must be unblocked before becoming network admins", %{
+      conn: conn,
+      network: network,
+      organization: organization,
+      admin: admin
+    } do
+      member = create_regular_user(network, organization)
+
+      {:ok, _} =
+        member
+        |> Ecto.Changeset.change(blocked_at: DateTime.utc_now(), blocked_reason: "Spam")
+        |> Repo.update()
+
+      conn
+      |> authenticate_conn(admin, network)
+      |> post("/dashboard/network/users/#{member.id}/admin")
+      |> json_response(409)
+
+      refute Networks.is_network_admin?(member.id, network.id)
+    end
+
+    test "users of other networks and unknown ids return 404", %{
+      network: network,
+      admin: admin
+    } do
+      other_network = network_fixture()
+
+      outsider =
+        create_regular_user(
+          other_network,
+          organization_fixture(%{network_id: other_network.id})
+        )
+
+      for id <- [outsider.id, Ecto.UUID.generate(), "not-a-uuid"],
+          method <- [:post, :delete] do
+        build_conn()
+        |> authenticate_conn(admin, network)
+        |> dispatch(@endpoint, method, "/dashboard/network/users/#{id}/admin")
+        |> json_response(404)
+      end
+
+      refute Networks.is_network_admin?(outsider.id, other_network.id)
+    end
+
+    test "users who are not network admins cannot change roles", %{
+      network: network,
+      organization: organization,
+      admin: admin
+    } do
+      member = create_regular_user(network, organization)
+
+      for {method, target} <- [{:post, member}, {:delete, admin}] do
+        build_conn()
+        |> authenticate_conn(member, network)
+        |> dispatch(@endpoint, method, "/dashboard/network/users/#{target.id}/admin")
+        |> json_response(403)
+      end
+
+      refute Networks.is_network_admin?(member.id, network.id)
+      assert Networks.is_network_admin?(admin.id, network.id)
     end
   end
 
