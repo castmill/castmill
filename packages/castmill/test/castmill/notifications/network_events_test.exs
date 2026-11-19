@@ -71,6 +71,23 @@ defmodule Castmill.Notifications.NetworkEventsTest do
       assert {:ok, []} = Events.notify_network_admins(network_fixture().id, @attrs)
     end
 
+    test "only inserts the notifications with broadcast: false", %{
+      network: network,
+      admins: [admin | _]
+    } do
+      Phoenix.PubSub.subscribe(Castmill.PubSub, "users:#{admin.id}")
+
+      assert {:ok, notifications} =
+               Events.notify_network_admins(network.id, @attrs, broadcast: false)
+
+      refute_received {:new_notification, _, _}
+      assert length(notifications) == 2
+
+      notification = Enum.find(notifications, &(&1.user_id == admin.id))
+      assert :ok = Notifications.broadcast_created(notification)
+      assert_received {:new_notification, %{type: "network_test_event"}, 1}
+    end
+
     test "returns the error of an invalid notification", %{network: network} do
       assert {:error, %Ecto.Changeset{}} =
                Events.notify_network_admins(network.id, Map.delete(@attrs, :type))

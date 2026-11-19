@@ -472,14 +472,18 @@ defmodule Castmill.Notifications.Events do
 
   Returns `{:ok, notifications}` with one notification per admin, or the first
   `{:error, reason}`.
+
+  Pass `broadcast: false` to only insert the notifications, for example inside
+  a transaction together with a record that they were sent, and call
+  `Castmill.Notifications.broadcast_created/1` for each after it commits.
   """
-  def notify_network_admins(network_id, attrs) when is_map(attrs) do
+  def notify_network_admins(network_id, attrs, opts \\ []) when is_map(attrs) do
     attrs = Map.put_new(attrs, :actor_type, "system")
 
     network_id
     |> Networks.list_network_admins()
     |> Enum.reduce_while({:ok, []}, fn admin, {:ok, notifications} ->
-      case Notifications.create_user_notification(Map.put(attrs, :user_id, admin.id)) do
+      case Notifications.create_user_notification(Map.put(attrs, :user_id, admin.id), opts) do
         {:ok, notification} -> {:cont, {:ok, [notification | notifications]}}
         {:error, _reason} = error -> {:halt, error}
       end
