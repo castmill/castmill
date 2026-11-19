@@ -1140,6 +1140,21 @@ Castmill.Notifications.Events.notify_network_admins(network_id, %{
   because the dashboard merges add-on translations into the global i18n.
 - Send notifications after the change is committed, and only once per event
   (for example from a conditional update that detects the transition).
+- To make delivery retryable without duplicates, insert the notifications with
+  `broadcast: false` in the same transaction as a record that they were sent,
+  then call `Castmill.Notifications.broadcast_created/1` for each after the
+  commit:
+
+  ```elixir
+  Repo.transaction(fn ->
+    # ...lock the record, skip it if already notified...
+    {:ok, notifications} =
+      Castmill.Notifications.Events.notify_network_admins(network_id, attrs, broadcast: false)
+    # ...mark the record as notified...
+    notifications
+  end)
+  # then: Enum.each(notifications, &Castmill.Notifications.broadcast_created/1)
+  ```
 
 ### 6. Metadata Parameters
 
