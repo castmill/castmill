@@ -24,6 +24,48 @@ interface NotificationDialogProps {
   channel?: any;
 }
 
+// Routes outside the selected organization: invitation and sign-in pages, the
+// network section, and links that already name their organization.
+const TOP_LEVEL_ROUTES = [
+  '/invite-organization',
+  '/invite',
+  '/login',
+  '/signup',
+  '/recover-credentials',
+  '/network',
+  '/org',
+];
+
+const isUnderRoute = (link: string, route: string) =>
+  link === route ||
+  link.startsWith(`${route}/`) ||
+  link.startsWith(`${route}?`) ||
+  link.startsWith(`${route}#`);
+
+/**
+ * Where a notification link leads: an absolute http(s) address opens outside
+ * the dashboard, top-level routes are used as they are, and other relative
+ * links are pages of the selected organization.
+ */
+export const resolveNotificationLink = (
+  link: string,
+  organizationId: string | null | undefined
+): { external: boolean; href: string } => {
+  if (/^https?:\/\//i.test(link)) {
+    return { external: true, href: link };
+  }
+
+  if (
+    !link.startsWith('/') ||
+    !organizationId ||
+    TOP_LEVEL_ROUTES.some((route) => isUnderRoute(link, route))
+  ) {
+    return { external: false, href: link };
+  }
+
+  return { external: false, href: `/org/${organizationId}${link}` };
+};
+
 export const NotificationDialog: Component<NotificationDialogProps> = (
   props
 ) => {
@@ -119,6 +161,17 @@ export const NotificationDialog: Component<NotificationDialogProps> = (
   };
 
   const handleNotificationClick = async (notification: Notification) => {
+    const link = notification.link
+      ? resolveNotificationLink(
+          notification.link,
+          store.organizations.selectedId
+        )
+      : undefined;
+
+    if (link?.external) {
+      window.open(link.href, '_blank', 'noopener,noreferrer');
+    }
+
     // Mark as read
     if (!notification.read) {
       try {
@@ -138,26 +191,12 @@ export const NotificationDialog: Component<NotificationDialogProps> = (
     }
 
     // Navigate if there's a link
-    if (notification.link) {
+    if (link) {
       props.onClose();
-      // Check if link is a standalone route (invitation pages, auth, etc.)
-      const standaloneRoutes = [
-        '/invite-organization',
-        '/invite',
-        '/login',
-        '/signup',
-        '/recover-credentials',
-      ];
-      const isStandaloneRoute = standaloneRoutes.some((route) =>
-        notification.link!.startsWith(route)
-      );
 
-      // Add organization context only to org-specific relative links
-      const link =
-        notification.link.startsWith('/') && !isStandaloneRoute
-          ? `/org/${store.organizations.selectedId}${notification.link}`
-          : notification.link;
-      navigate(link);
+      if (!link.external) {
+        navigate(link.href);
+      }
     }
   };
 
@@ -196,7 +235,8 @@ export const NotificationDialog: Component<NotificationDialogProps> = (
       case 'device_online_alert':
         return '🟢';
       default:
-        return '🔔';
+        // Network events, also from add-ons, are named network_*.
+        return type.startsWith('network_') ? '🌐' : '🔔';
     }
   };
 
