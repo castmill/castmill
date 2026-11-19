@@ -23,7 +23,7 @@
   white-space: nowrap;
 }
 
-.manage {
+.cell .manage {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -39,5 +39,10 @@
   &:hover {
     background: var(--cm-bg-hover);
     color: var(--cm-text-primary);
+  }
+
+  &:focus-visible {
+    outline: 0.125em solid var(--cm-focus-ring);
+    outline-offset: 0.125em;
   }
 }
