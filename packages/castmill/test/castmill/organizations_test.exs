@@ -396,6 +396,56 @@ defmodule Castmill.OrganizationsTest do
       assert new.metadata.token == resent.token
     end
 
+    test "removes the old notification of an invitee who changed their email", %{
+      network: network,
+      organization: organization
+    } do
+      user = user_fixture(%{network_id: network.id, email: "before@example.com"})
+      invitation = invite(organization, user.email)
+
+      [old_notification] =
+        Notifications.list_user_notifications(user.id)
+        |> Enum.filter(&(&1.type == "organization_invitation"))
+
+      from(u in Castmill.Accounts.User, where: u.id == ^user.id)
+      |> Repo.update_all(set: [email: "after@example.com"])
+
+      Phoenix.PubSub.subscribe(Castmill.PubSub, "users:#{user.id}")
+
+      assert {:ok, _} = Organizations.resend_invitation(organization.id, invitation.id)
+
+      old_id = old_notification.id
+      assert_received {:notifications_deleted, [^old_id], 0}
+      assert Notifications.list_user_notifications(user.id) == []
+    end
+
+    test "releases its lock whether or not the resend succeeds", %{organization: organization} do
+      advisory_locks = fn ->
+        Repo.query!("SELECT count(*) FROM pg_locks WHERE locktype = 'advisory'").rows
+      end
+
+      invitation = invite(organization, "lock@example.com")
+
+      assert {:ok, _} = Organizations.resend_invitation(organization.id, invitation.id)
+      assert advisory_locks.() == [[0]]
+
+      assert {:error, :email_not_sent} =
+               Castmill.FailingMailerAdapter.with_failing_mailer(fn ->
+                 Organizations.resend_invitation(organization.id, invitation.id)
+               end)
+
+      assert advisory_locks.() == [[0]]
+
+      current = Repo.get_by!(OrganizationsInvitation, id: invitation.id)
+      {:ok, _} = Organizations.reject_invitation(current.token)
+      _pending = invite(organization, "lock@example.com")
+
+      assert {:error, :already_invited} =
+               Organizations.resend_invitation(organization.id, invitation.id)
+
+      assert advisory_locks.() == [[0]]
+    end
+
     test "leaves one notification with the current link after several resends", %{
       network: network,
       organization: organization

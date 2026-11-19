@@ -267,45 +267,38 @@ defmodule Castmill.NotificationsTest do
     end
   end
 
-  describe "delete_user_notifications/4" do
-    test "deletes only the user's notifications of the type with the metadata value", %{
+  describe "delete_notifications_with_token/2" do
+    test "deletes the type's notifications with the token, whoever received them", %{
       user: user,
       network: network
     } do
       other_user = user_fixture(%{network_id: network.id})
 
-      create = fn user_id, type, token, broadcast? ->
+      create = fn user_id, type, token ->
         {:ok, notification} =
           Notifications.create_user_notification(
             %{type: type, user_id: user_id, metadata: %{token: token}},
-            broadcast: broadcast?
+            broadcast: false
           )
 
         notification
       end
 
-      old = create.(user.id, "organization_invitation", "old", true)
-      kept_token = create.(user.id, "organization_invitation", "new", false)
-      kept_type = create.(user.id, "team_invitation", "old", true)
-      other = create.(other_user.id, "organization_invitation", "old", true)
+      old = create.(user.id, "organization_invitation", "old")
+      old_other = create.(other_user.id, "organization_invitation", "old")
+      kept_token = create.(user.id, "organization_invitation", "new")
+      kept_type = create.(user.id, "team_invitation", "old")
 
-      assert [deleted] =
-               Notifications.delete_user_notifications(
-                 user.id,
-                 "organization_invitation",
-                 "token",
-                 "old"
-               )
+      deleted = Notifications.delete_notifications_with_token("organization_invitation", "old")
 
-      assert deleted.id == old.id
+      assert deleted |> Enum.map(& &1.id) |> Enum.sort() == Enum.sort([old.id, old_other.id])
 
       assert user.id
              |> Notifications.list_user_notifications()
              |> Enum.map(& &1.id)
              |> Enum.sort() == Enum.sort([kept_token.id, kept_type.id])
 
-      assert [%{id: other_id}] = Notifications.list_user_notifications(other_user.id)
-      assert other_id == other.id
+      assert Notifications.list_user_notifications(other_user.id) == []
     end
   end
 

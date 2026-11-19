@@ -270,19 +270,17 @@ defmodule Castmill.Notifications do
   end
 
   @doc """
-  Deletes `user_id`'s notifications of `type` whose metadata `key` is `value`,
-  for example an invitation notification whose link no longer works. A single
-  `DELETE ... RETURNING` on the user's notifications (indexed by `user_id`), so
-  it returns exactly the deleted notifications, for
-  `broadcast_notifications_deleted/1`.
+  Deletes the notifications of `type` that carry `token` in their metadata,
+  for example invitation notifications whose link no longer works, whoever
+  received them. A single `DELETE ... RETURNING` that uses the token index
+  (`notifications_metadata_token_index`), so it returns exactly the deleted
+  notifications, for `broadcast_notifications_deleted/1`.
   """
-  def delete_user_notifications(user_id, type, key, value)
-      when is_binary(type) and is_binary(key) and is_binary(value) do
+  def delete_notifications_with_token(type, token)
+      when is_binary(type) and is_binary(token) do
     {_count, deleted} =
       from(n in Notification,
-        where:
-          n.user_id == ^user_id and n.type == ^type and
-            fragment("?->>? = ?", n.metadata, ^key, ^value),
+        where: fragment("(?->>'token')", n.metadata) == ^token and n.type == ^type,
         select: n
       )
       |> Repo.delete_all()

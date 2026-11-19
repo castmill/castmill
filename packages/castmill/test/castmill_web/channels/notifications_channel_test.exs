@@ -249,10 +249,8 @@ defmodule CastmillWeb.NotificationsChannelTest do
         )
 
       deleted =
-        Notifications.delete_user_notifications(
-          user.id,
+        Notifications.delete_notifications_with_token(
           "organization_invitation",
-          "token",
           "old-token"
         )
 

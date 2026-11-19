@@ -703,7 +703,18 @@ defmodule Castmill.Organizations do
     end
   end
 
-  def invite_user(organization_id, email, role) do
+  # Under the same lock as resend_invitation/2, so a resend right after the
+  # invite cannot replace its link before it is delivered.
+  def invite_user(organization_id, email, role) when is_binary(email) do
+    with_invitation_lock(organization_id, email, fn ->
+      do_invite_user(organization_id, email, role)
+    end)
+  end
+
+  def invite_user(organization_id, email, role),
+    do: do_invite_user(organization_id, email, role)
+
+  defp do_invite_user(organization_id, email, role) do
     token = generate_invitation_token()
     normalized_role = normalize_role_value(role, :member)
 
@@ -898,26 +909,24 @@ defmodule Castmill.Organizations do
   """
   def resend_invitation(organization_id, invitation_id) do
     with {:ok, id} <- parse_invitation_id(invitation_id),
-         {:ok, {renewed, deleted, notification}} <- renew_and_replace(organization_id, id) do
-      # Only after the commit: the email queue has its own database connection
-      # and broadcasts reach other processes, so nothing may see the new link
-      # before it is saved.
-      Castmill.Notifications.broadcast_notifications_deleted(deleted)
+         %OrganizationsInvitation{} = invitation <-
+           Repo.get_by(OrganizationsInvitation, id: id, organization_id: organization_id) ||
+             {:error, :not_found} do
+      with_invitation_lock(organization_id, invitation.email, fn ->
+        with {:ok, {renewed, deleted, notification}} <- renew_and_replace(organization_id, id) do
+          Castmill.Notifications.broadcast_notifications_deleted(deleted)
 
-      if current_invitation_token?(renewed) do
-        case dispatch_invitation(renewed, notification) do
-          :ok -> {:ok, renewed}
-          {:error, reason} -> {:error, reason}
+          case dispatch_invitation(renewed, notification) do
+            :ok -> {:ok, renewed}
+            {:error, reason} -> {:error, reason}
+          end
         end
-      else
-        # A concurrent resend replaced this link; it sends its own email.
-        {:ok, renewed}
-      end
+      end)
     end
   end
 
-  # Under the invitation's row lock, so concurrent resends and acceptances are
-  # serialized: rotates the token and replaces the invitee's notification.
+  # Under the invitation's row lock, so acceptances are serialized with it:
+  # rotates the token and replaces the invitation's notification.
   defp renew_and_replace(organization_id, id) do
     Repo.transaction(fn ->
       invitation =
@@ -931,18 +940,15 @@ defmodule Castmill.Organizations do
       with %OrganizationsInvitation{} <- invitation,
            :ok <- check_resendable(invitation),
            {:ok, renewed} <- renew_invitation(invitation) do
-        user = Castmill.Accounts.get_user_by_email(invitation.email)
-
+        # By token, so the old notification is found even if its recipient has
+        # changed their email address since they were invited.
         deleted =
-          if user,
-            do:
-              Castmill.Notifications.delete_user_notifications(
-                user.id,
-                "organization_invitation",
-                "token",
-                invitation.token
-              ),
-            else: []
+          Castmill.Notifications.delete_notifications_with_token(
+            "organization_invitation",
+            invitation.token
+          )
+
+        user = Castmill.Accounts.get_user_by_email(invitation.email)
 
         case insert_invitation_notification(renewed, user) do
           {:ok, notification} -> {renewed, deleted, notification}
@@ -955,8 +961,28 @@ defmodule Castmill.Organizations do
     end)
   end
 
-  defp current_invitation_token?(%OrganizationsInvitation{id: id, token: token}) do
-    Repo.exists?(from(i in OrganizationsInvitation, where: i.id == ^id and i.token == ^token))
+  # Publishing an invitation's link (saving it, broadcasting its notification
+  # and queueing its email) happens partly after the commit, and the email
+  # queue has its own connection. A session advisory lock per organization and
+  # email, held on one connection across all of it, keeps a concurrent invite
+  # or resend from replacing the link before it is delivered.
+  @invitation_lock_namespace 49_201
+
+  defp with_invitation_lock(organization_id, email, fun) do
+    key = "#{organization_id}:#{String.downcase(email)}"
+
+    Repo.checkout(fn ->
+      Repo.query!("SELECT pg_advisory_lock($1, hashtext($2))", [@invitation_lock_namespace, key])
+
+      try do
+        fun.()
+      after
+        Repo.query!("SELECT pg_advisory_unlock($1, hashtext($2))", [
+          @invitation_lock_namespace,
+          key
+        ])
+      end
+    end)
   end
 
   defp check_resendable(%OrganizationsInvitation{status: "accepted"}),
