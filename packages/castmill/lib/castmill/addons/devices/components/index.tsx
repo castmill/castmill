@@ -591,7 +591,7 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
     />
   );
 
-  // Compact mobile card: status · last seen · version, tags
+  // Compact mobile card: status · last seen, tags
   const deviceCard = (item: DeviceTableItem): TableCardContent => ({
     visual: (
       <EntityCardIcon
@@ -599,7 +599,6 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
         tone={item.online ? 'success' : 'neutral'}
       />
     ),
-    subtitle: item.description,
     meta: [
       <EntityCardStatus tone={item.online ? 'success' : 'danger'}>
         {item.online ? t('common.online') : t('common.offline')}
@@ -607,7 +606,6 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
       !item.online && item.last_online && (
         <Timestamp value={item.last_online} mode="relative" />
       ),
-      item.version,
     ],
     footer: renderTags(item),
   });
