@@ -18,12 +18,23 @@ const NotificationBell: Component<NotificationBellProps> = () => {
   const [unreadCount, setUnreadCount] = createSignal(0);
   const [showDialog, setShowDialog] = createSignal(false);
   const [channel, setChannel] = createSignal<any>(null);
+  // Counts unread count updates from events, so the initial request does not
+  // overwrite a newer count.
+  let countUpdates = 0;
+
+  const updateUnreadCount = (count: number | undefined) => {
+    if (count !== undefined) {
+      countUpdates++;
+      setUnreadCount(count);
+    }
+  };
 
   // Load initial unread count
   createEffect(async () => {
+    const updatesBefore = countUpdates;
     try {
       const count = await notificationsService.getUnreadCount();
-      setUnreadCount(count);
+      if (countUpdates === updatesBefore) setUnreadCount(count);
     } catch (error) {
       console.error('Failed to load unread count:', error);
     }
@@ -49,9 +60,7 @@ const NotificationBell: Component<NotificationBellProps> = () => {
       .join()
       .receive('ok', (resp: any) => {
         console.log('Joined notifications channel', resp);
-        if (resp.unread_count !== undefined) {
-          setUnreadCount(resp.unread_count);
-        }
+        updateUnreadCount(resp.unread_count);
       })
       .receive('error', (resp: any) => {
         console.error('Failed to join notifications channel', resp);
@@ -60,10 +69,14 @@ const NotificationBell: Component<NotificationBellProps> = () => {
     // Listen for new notifications
     notifChannel.on('new_notification', (payload: any) => {
       console.log('New notification received:', payload);
-      if (payload.unread_count !== undefined) {
-        setUnreadCount(payload.unread_count);
-      }
+      updateUnreadCount(payload.unread_count);
       // You can also show a toast notification here
+    });
+
+    // Deleted notifications (for example invitations whose link was replaced)
+    // change the unread count even while the dialog is closed.
+    notifChannel.on('notifications_deleted', (payload: any) => {
+      updateUnreadCount(payload.unread_count);
     });
 
     setChannel(notifChannel);
@@ -88,7 +101,7 @@ const NotificationBell: Component<NotificationBellProps> = () => {
   };
 
   const handleNotificationRead = (count: number) => {
-    setUnreadCount(count);
+    updateUnreadCount(count);
   };
 
   return (

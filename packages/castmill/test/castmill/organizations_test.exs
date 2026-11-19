@@ -245,6 +245,27 @@ defmodule Castmill.OrganizationsTest do
       assert {:ok, _token2} = Organizations.invite_user(org2.id, email, :admin)
     end
 
+    test "notifies an invitee with an account even when the email cannot be queued", %{
+      network: network,
+      organization: organization
+    } do
+      user = user_fixture(%{network_id: network.id, email: "no-email@example.com"})
+
+      assert {:ok, token} =
+               Castmill.FailingMailerAdapter.with_failing_mailer(fn ->
+                 Organizations.invite_user(organization.id, user.email, :member)
+               end)
+
+      assert Organizations.get_invitation(token)
+
+      assert [notification] =
+               user.id
+               |> Castmill.Notifications.list_user_notifications()
+               |> Enum.filter(&(&1.type == "organization_invitation"))
+
+      assert notification.metadata["token"] == token
+    end
+
     test "allows re-invitation after previous invitation was rejected", %{
       organization: organization
     } do
@@ -258,6 +279,303 @@ defmodule Castmill.OrganizationsTest do
 
       # Should be able to invite again since old invitation is no longer "invited"
       assert {:ok, _token2} = Organizations.invite_user(organization.id, email, :member)
+    end
+  end
+
+  describe "resend_invitation/2" do
+    import Swoosh.TestAssertions
+
+    alias Castmill.Notifications
+    alias Castmill.Organizations.OrganizationsInvitation
+
+    setup do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+      %{network: network, organization: organization}
+    end
+
+    defp invite(organization, email) do
+      {:ok, token} = Organizations.invite_user(organization.id, email, :member)
+      assert_email_sent(to: email)
+      Organizations.get_invitation(token)
+    end
+
+    defp expire(invitation) do
+      past = DateTime.utc_now() |> DateTime.add(-3600, :second) |> DateTime.truncate(:second)
+
+      from(i in OrganizationsInvitation, where: i.id == ^invitation.id)
+      |> Repo.update_all(set: [expires_at: past])
+    end
+
+    test "sends the invitation with a new link that is valid for 7 days", %{
+      network: network,
+      organization: organization
+    } do
+      invitation = invite(organization, "again@example.com")
+
+      assert {:ok, resent} = Organizations.resend_invitation(organization.id, invitation.id)
+
+      assert resent.id == invitation.id
+      assert resent.token != invitation.token
+      assert resent.status == "invited"
+
+      assert DateTime.diff(resent.expires_at, DateTime.utc_now()) in (7 * 86_400 - 5)..(7 * 86_400)
+
+      assert Organizations.get_invitation(invitation.token) == nil
+      assert Organizations.get_invitation(resent.token).id == invitation.id
+
+      assert_email_sent(fn email ->
+        assert email.to == [{"", "again@example.com"}]
+        assert email.subject == "You have been invited to an Organization on #{network.name}"
+        assert email.text_body =~ resent.token
+        true
+      end)
+    end
+
+    test "accepts the invitation id as a string", %{organization: organization} do
+      invitation = invite(organization, "string-id@example.com")
+
+      assert {:ok, _} =
+               Organizations.resend_invitation(organization.id, Integer.to_string(invitation.id))
+    end
+
+    test "reopens expired and declined invitations", %{organization: organization} do
+      expired = invite(organization, "expired@example.com")
+      expire(expired)
+
+      assert {:error, :expired} =
+               Organizations.accept_invitation(expired.token, Ecto.UUID.generate())
+
+      assert {:ok, resent} = Organizations.resend_invitation(organization.id, expired.id)
+      refute OrganizationsInvitation.expired?(resent)
+      assert_email_sent(to: "expired@example.com")
+
+      declined = invite(organization, "declined@example.com")
+      {:ok, _} = Organizations.reject_invitation(declined.token)
+
+      assert {:ok, %{status: "invited"}} =
+               Organizations.resend_invitation(organization.id, declined.id)
+    end
+
+    test "replaces the in-app notification of people with an account", %{
+      network: network,
+      organization: organization
+    } do
+      user = user_fixture(%{network_id: network.id, email: "has-account@example.com"})
+      invitation = invite(organization, user.email)
+
+      assert {:ok, resent} = Organizations.resend_invitation(organization.id, invitation.id)
+
+      assert [notification] =
+               user.id
+               |> Notifications.list_user_notifications()
+               |> Enum.filter(&(&1.type == "organization_invitation"))
+
+      assert notification.link == "/invite-organization?token=#{resent.token}"
+    end
+
+    test "tells the invitee's open dashboard about the replaced notification after saving", %{
+      network: network,
+      organization: organization
+    } do
+      user = user_fixture(%{network_id: network.id, email: "watching@example.com"})
+      invitation = invite(organization, user.email)
+
+      [old_notification] =
+        Notifications.list_user_notifications(user.id)
+        |> Enum.filter(&(&1.type == "organization_invitation"))
+
+      Phoenix.PubSub.subscribe(Castmill.PubSub, "users:#{user.id}")
+
+      assert {:ok, resent} = Organizations.resend_invitation(organization.id, invitation.id)
+
+      old_id = old_notification.id
+      # The unread count already includes the new notification.
+      assert_received {:notifications_deleted, [^old_id], 1}
+      assert_received {:new_notification, %{type: "organization_invitation"} = new, 1}
+      assert new.metadata.token == resent.token
+    end
+
+    test "removes the old notification of an invitee who changed their email", %{
+      network: network,
+      organization: organization
+    } do
+      user = user_fixture(%{network_id: network.id, email: "before@example.com"})
+      invitation = invite(organization, user.email)
+
+      [old_notification] =
+        Notifications.list_user_notifications(user.id)
+        |> Enum.filter(&(&1.type == "organization_invitation"))
+
+      from(u in Castmill.Accounts.User, where: u.id == ^user.id)
+      |> Repo.update_all(set: [email: "after@example.com"])
+
+      Phoenix.PubSub.subscribe(Castmill.PubSub, "users:#{user.id}")
+
+      assert {:ok, _} = Organizations.resend_invitation(organization.id, invitation.id)
+
+      old_id = old_notification.id
+      assert_received {:notifications_deleted, [^old_id], 0}
+      assert Notifications.list_user_notifications(user.id) == []
+    end
+
+    test "uses one lock for every spelling of the organization id and email", %{
+      organization: organization
+    } do
+      key = Organizations.invitation_lock_key(organization.id, "Someone@Example.com")
+
+      assert Organizations.invitation_lock_key(
+               String.upcase(organization.id),
+               "someone@example.com"
+             ) ==
+               key
+
+      refute Organizations.invitation_lock_key(organization.id, "other@example.com") == key
+    end
+
+    test "releases its lock whether or not the resend succeeds", %{organization: organization} do
+      advisory_locks = fn ->
+        Repo.query!("SELECT count(*) FROM pg_locks WHERE locktype = 'advisory'").rows
+      end
+
+      invitation = invite(organization, "lock@example.com")
+
+      assert {:ok, _} = Organizations.resend_invitation(organization.id, invitation.id)
+      assert advisory_locks.() == [[0]]
+
+      assert {:error, :email_not_sent} =
+               Castmill.FailingMailerAdapter.with_failing_mailer(fn ->
+                 Organizations.resend_invitation(organization.id, invitation.id)
+               end)
+
+      assert advisory_locks.() == [[0]]
+
+      current = Repo.get_by!(OrganizationsInvitation, id: invitation.id)
+      {:ok, _} = Organizations.reject_invitation(current.token)
+      _pending = invite(organization, "lock@example.com")
+
+      assert {:error, :already_invited} =
+               Organizations.resend_invitation(organization.id, invitation.id)
+
+      assert advisory_locks.() == [[0]]
+    end
+
+    test "leaves one notification with the current link after several resends", %{
+      network: network,
+      organization: organization
+    } do
+      user = user_fixture(%{network_id: network.id, email: "many-resends@example.com"})
+      invitation = invite(organization, user.email)
+
+      for _ <- 1..3 do
+        assert {:ok, _} = Organizations.resend_invitation(organization.id, invitation.id)
+      end
+
+      current = Repo.get_by!(OrganizationsInvitation, id: invitation.id)
+
+      assert [notification] =
+               user.id
+               |> Notifications.list_user_notifications()
+               |> Enum.filter(&(&1.type == "organization_invitation"))
+
+      assert notification.metadata["token"] == current.token
+    end
+
+    test "reports an email that could not be queued, keeping the renewed invitation", %{
+      network: network,
+      organization: organization
+    } do
+      user = user_fixture(%{network_id: network.id, email: "queue-down@example.com"})
+      invitation = invite(organization, user.email)
+
+      assert {:error, :email_not_sent} =
+               Castmill.FailingMailerAdapter.with_failing_mailer(fn ->
+                 Organizations.resend_invitation(organization.id, invitation.id)
+               end)
+
+      current = Repo.get_by!(OrganizationsInvitation, id: invitation.id)
+      assert current.token != invitation.token
+      assert current.status == "invited"
+
+      # The in-app notification does not depend on the email.
+      assert [notification] =
+               user.id
+               |> Notifications.list_user_notifications()
+               |> Enum.filter(&(&1.type == "organization_invitation"))
+
+      assert notification.metadata["token"] == current.token
+
+      # Resending again sends the email.
+      assert {:ok, resent} = Organizations.resend_invitation(organization.id, invitation.id)
+      assert_email_sent(fn email -> email.text_body =~ resent.token end)
+    end
+
+    test "does not accept an invitation token after it has been resent", %{
+      network: network,
+      organization: organization
+    } do
+      user = user_fixture(%{network_id: network.id, email: "rotated@example.com"})
+      invitation = invite(organization, user.email)
+
+      assert {:ok, _resent} = Organizations.resend_invitation(organization.id, invitation.id)
+
+      assert {:error, "Invalid token"} =
+               Organizations.accept_invitation(invitation.token, user.id)
+
+      assert Organizations.get_organizations_user(organization.id, user.id) == nil
+    end
+
+    test "does not resend accepted invitations", %{network: network, organization: organization} do
+      user = user_fixture(%{network_id: network.id, email: "accepted@example.com"})
+      invitation = invite(organization, user.email)
+      {:ok, _} = Organizations.accept_invitation(invitation.token, user.id)
+
+      assert {:error, :already_accepted} =
+               Organizations.resend_invitation(organization.id, invitation.id)
+
+      assert_no_email_sent()
+    end
+
+    test "does not resend to people who already joined", %{
+      network: network,
+      organization: organization
+    } do
+      user = user_fixture(%{network_id: network.id, email: "joined@example.com"})
+      invitation = invite(organization, user.email)
+      {:ok, _} = Organizations.add_user(organization.id, user.id, :member)
+
+      assert {:error, :already_member} =
+               Organizations.resend_invitation(organization.id, invitation.id)
+
+      assert Organizations.get_invitation(invitation.token)
+    end
+
+    test "does not reopen a declined invitation when a newer one is pending", %{
+      organization: organization
+    } do
+      declined = invite(organization, "twice@example.com")
+      {:ok, _} = Organizations.reject_invitation(declined.token)
+      _pending = invite(organization, "twice@example.com")
+
+      assert {:error, :already_invited} =
+               Organizations.resend_invitation(organization.id, declined.id)
+
+      assert Organizations.get_invitation(declined.token).status == "rejected"
+    end
+
+    test "only finds invitations of the organization", %{
+      network: network,
+      organization: organization
+    } do
+      other = organization_fixture(%{network_id: network.id, name: "Other Org"})
+      invitation = invite(other, "elsewhere@example.com")
+
+      assert {:error, :not_found} =
+               Organizations.resend_invitation(organization.id, invitation.id)
+
+      assert {:error, :not_found} = Organizations.resend_invitation(organization.id, "abc")
+      assert {:error, :not_found} = Organizations.resend_invitation(organization.id, nil)
+      assert Organizations.get_invitation(invitation.token)
     end
   end
 end

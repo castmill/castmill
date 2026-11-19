@@ -1009,9 +1009,7 @@ defmodule Castmill.Accounts do
         # Try organization invitation
         case Castmill.Organizations.get_invitation_by_token(invitation_token) do
           nil ->
-            # No valid invitation found, but we already created the user
-            # This is okay - they might accept the invitation later
-            :ok
+            {:error, :invalid_invitation_token}
 
           _org_invitation ->
             # Accept organization invitation

@@ -56,7 +56,9 @@ Admins invite people from **Organization → Users**:
 
 <Screenshot src="organization-invite" alt="The Invite Member dialog with an email address and the Member role" width={592} />
 
-The person receives an email with a link. If they do not have an account yet, they create one with a passkey as part of accepting the invitation. Pending invitations are listed on **Organization → Invitations** until they are accepted or removed.
+The person receives an email with a link. If they do not have an account yet, they create one with a passkey as part of accepting the invitation. Pending invitations are listed on **Organization → Invitations** until they are accepted or removed. An invitation expires after 7 days.
+
+If the email got lost or the invitation expired, choose **Resend invitation** on **Organization → Invitations**. The person gets a new email, and people who already have an account also get a new notification. The invitation is valid for another 7 days, and the link in earlier emails stops working. A declined invitation can be resent too; an accepted one cannot.
 
 To change a member's role or remove a member, use **Organization → Users**. An organization must always keep at least one admin, and its only member cannot leave it.
 

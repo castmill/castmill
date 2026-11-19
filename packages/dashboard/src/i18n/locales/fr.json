@@ -928,14 +928,24 @@
       "cannotRemoveUserFromLastOrganization": "Impossible de supprimer cet utilisateur car c'est sa seule organisation. Les utilisateurs doivent appartenir à au moins une organisation.",
       "mediaInUseAsLogo": "Impossible de supprimer un média utilisé comme logo d'organisation",
       "loadMedias": "Échec du chargement des médias",
-      "updateRoleFailed": "Échec de la mise à jour du rôle du membre"
+      "updateRoleFailed": "Échec de la mise à jour du rôle du membre",
+      "invitationAlreadyAccepted": "Cette invitation a déjà été acceptée.",
+      "invitationAlreadyMember": "{{email}} est déjà membre de cette organisation.",
+      "invitationPending": "Une invitation plus récente pour {{email}} est en attente. Renvoyez plutôt celle-ci.",
+      "resendInvitationFailed": "Impossible de renvoyer l'invitation",
+      "removeInvitationFailed": "Impossible de retirer l'invitation",
+      "invitationEmailNotSent": "L'invitation de {{email}} a un nouveau lien, mais l'e-mail n'a pas pu être envoyé. Renvoyez-la à nouveau.",
+      "invitationBusy": "Une invitation à {{email}} est en cours d'envoi. Réessayez dans un instant."
     },
     "messages": {
       "memberRemoved": "Le membre {{name}} a été supprimé avec succès",
       "membersRemoved": "Les membres ont été supprimés avec succès",
       "leftOrganization": "Vous avez quitté l'organisation {{name}}",
       "noOrganizationsRemaining": "Vous avez quitté votre dernière organisation. Veuillez contacter un administrateur pour être invité à une organisation.",
-      "invitationSent": "Invitation envoyée à {{email}}"
+      "invitationSent": "Invitation envoyée à {{email}}",
+      "invitationResent": "Invitation renvoyée à {{email}}",
+      "invitationRemoved": "Invitation de {{email}} retirée",
+      "invitationsRemoved": "Invitations retirées"
     },
     "teamRoleInstaller": "Installateur (24h)",
     "roleDescriptions": {
@@ -973,8 +983,16 @@
       "removeMemberTitle": "Retirer l'utilisateur de l'organisation",
       "removeMemberMessage": "Êtes-vous sûr de vouloir retirer le membre \"{{name}}\" de l'organisation?",
       "removeMembersTitle": "Retirer les membres de l'organisation",
-      "removeMembersMessage": "Êtes-vous sûr de vouloir retirer les membres suivants de l'organisation?"
-    }
+      "removeMembersMessage": "Êtes-vous sûr de vouloir retirer les membres suivants de l'organisation?",
+      "resendInvitationTitle": "Renvoyer l'invitation",
+      "resendInvitationMessage": "Renvoyer l'invitation à \"{{email}}\" ? Elle sera valable 7 jours de plus et le lien des e-mails d'invitation précédents ne fonctionnera plus.",
+      "removeInvitationTitle": "Retirer l'invitation",
+      "removeInvitationMessage": "Êtes-vous sûr de vouloir retirer l'invitation de \"{{email}}\" ?",
+      "removeInvitationsTitle": "Retirer les invitations",
+      "removeInvitationsMessage": "Êtes-vous sûr de vouloir retirer les invitations suivantes ?"
+    },
+    "resend": "Renvoyer",
+    "resendInvitation": "Renvoyer l'invitation"
   },
   "playlists": {
     "title": "Playlists",

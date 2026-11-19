@@ -533,4 +533,124 @@ defmodule CastmillWeb.OrganizationInvitationTest do
       assert response(conn, 400)
     end
   end
+
+  describe "resend_invitation/2" do
+    import Swoosh.TestAssertions
+
+    defp resend_path(organization, invitation_id),
+      do: ~p"/dashboard/organizations/#{organization.id}/invitations/#{invitation_id}/resend"
+
+    test "sends the invitation again with a new link", %{
+      conn: conn,
+      organization: organization
+    } do
+      {:ok, old_token} =
+        Organizations.invite_user(organization.id, "resend@example.com", :editor)
+
+      assert_email_sent(to: "resend@example.com")
+      invitation = Organizations.get_invitation(old_token)
+
+      conn = post(conn, resend_path(organization, invitation.id))
+
+      assert %{"data" => data} = json_response(conn, 200)
+      assert data["id"] == invitation.id
+      assert data["email"] == "resend@example.com"
+      assert data["role"] == "editor"
+      assert data["status"] == "invited"
+      assert data["token"] != old_token
+
+      assert_email_sent(fn email ->
+        assert email.to == [{"", "resend@example.com"}]
+        assert email.text_body =~ data["token"]
+        refute email.text_body =~ old_token
+        true
+      end)
+    end
+
+    test "only organization admins can resend", %{
+      network: network,
+      organization: organization
+    } do
+      {:ok, token} = Organizations.invite_user(organization.id, "guarded@example.com", :member)
+      invitation = Organizations.get_invitation(token)
+
+      member = user_fixture(%{network_id: network.id})
+      {:ok, _} = Organizations.add_user(organization.id, member.id, :member)
+
+      conn =
+        build_conn()
+        |> put_req_header("accept", "application/json")
+        |> put_bearer_auth(member)
+        |> post(resend_path(organization, invitation.id))
+
+      assert response(conn, 403)
+      assert Organizations.get_invitation(token)
+    end
+
+    test "returns 409 while the invitation is being delivered by another request", %{
+      conn: conn,
+      organization: organization
+    } do
+      {:ok, token} = Organizations.invite_user(organization.id, "busy@example.com", :member)
+      invitation = Organizations.get_invitation(token)
+
+      {:ok, session} =
+        Castmill.Repo.config()
+        |> Keyword.take([:hostname, :port, :username, :password, :database])
+        |> Postgrex.start_link()
+
+      {namespace, key} = Organizations.invitation_lock_key(organization.id, invitation.email)
+      Postgrex.query!(session, "SELECT pg_advisory_lock($1, hashtext($2))", [namespace, key])
+
+      conn = post(conn, resend_path(organization, invitation.id))
+      assert json_response(conn, 409) == %{"error" => "invitation_busy"}
+
+      GenServer.stop(session)
+    end
+
+    test "returns 502 when the email cannot be queued", %{
+      conn: conn,
+      organization: organization
+    } do
+      {:ok, token} = Organizations.invite_user(organization.id, "queue@example.com", :member)
+      invitation = Organizations.get_invitation(token)
+
+      conn =
+        Castmill.FailingMailerAdapter.with_failing_mailer(fn ->
+          post(conn, resend_path(organization, invitation.id))
+        end)
+
+      assert json_response(conn, 502) == %{"error" => "invitation_email_not_sent"}
+    end
+
+    test "does not resend accepted invitations", %{
+      conn: conn,
+      network: network,
+      organization: organization
+    } do
+      invitee = user_fixture(%{network_id: network.id, email: "accepted@example.com"})
+      {:ok, token} = Organizations.invite_user(organization.id, invitee.email, :member)
+      {:ok, invitation} = Organizations.accept_invitation(token, invitee.id)
+
+      conn = post(conn, resend_path(organization, invitation.id))
+
+      assert json_response(conn, 409) == %{"error" => "already_accepted"}
+    end
+
+    test "returns 404 for invitations of other organizations", %{
+      conn: conn,
+      network: network,
+      organization: organization
+    } do
+      other = organization_fixture(%{network_id: network.id, name: "Other Org"})
+      {:ok, token} = Organizations.invite_user(other.id, "other@example.com", :member)
+      invitation = Organizations.get_invitation(token)
+
+      conn = post(conn, resend_path(organization, invitation.id))
+      assert json_response(conn, 404) == %{"error" => "invitation_not_found"}
+
+      conn = post(conn, resend_path(organization, "not-an-id"))
+      assert json_response(conn, 404) == %{"error" => "invitation_not_found"}
+    end
+  end
 end

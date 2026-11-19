@@ -425,7 +425,9 @@ export const OrganizationMembersView = (props: {
                   const normalizedMessage =
                     error.message === 'role: is invalid'
                       ? t('organization.errors.invalidRole')
-                      : error.message;
+                      : error.message === 'invitation_busy'
+                        ? t('organization.errors.invitationBusy', { email })
+                        : error.message;
 
                   toast.error(normalizedMessage);
                   return;

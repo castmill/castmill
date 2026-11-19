@@ -93,6 +93,48 @@ defmodule CastmillWeb.NotificationControllerTest do
       page1_ids = Enum.map(response1["data"], & &1["id"])
       page2_ids = Enum.map(response2["data"], & &1["id"])
       assert page1_ids != page2_ids
+      assert response1["has_more"]
+
+      conn3 = get(conn, "/dashboard/notifications?page=3&page_size=10")
+      response3 = json_response(conn3, 200)
+      assert length(response3["data"]) == 5
+      refute response3["has_more"]
+    end
+
+    test "says more may follow when a page is filtered short", %{
+      conn_session: conn,
+      user: user,
+      organization: org
+    } do
+      {:ok, _} = Castmill.Organizations.add_user(org.id, user.id, :member)
+
+      for i <- 1..2 do
+        Notifications.create_user_notification(%{
+          title_key: "test.mine_#{i}",
+          type: "info",
+          user_id: user.id
+        })
+      end
+
+      # The newest two are for admins only, so the user does not see them.
+      for i <- 1..2 do
+        Notifications.create_organization_notification(%{
+          title_key: "test.admins_#{i}",
+          type: "info",
+          organization_id: org.id,
+          roles: ["admin"]
+        })
+      end
+
+      page = fn number ->
+        conn
+        |> get("/dashboard/notifications?page=#{number}&page_size=2")
+        |> json_response(200)
+      end
+
+      assert %{"data" => [], "has_more" => true} = page.(1)
+      assert %{"data" => [_, _], "has_more" => true} = page.(2)
+      assert %{"data" => [], "has_more" => false} = page.(3)
     end
 
     test "returns empty list when no notifications", %{conn_session: conn} do

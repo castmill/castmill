@@ -12,16 +12,30 @@ defmodule Castmill.Notifications do
   @doc """
   Creates a notification for a specific user.
 
+  Pass `broadcast: false` to only insert it, for example inside a transaction,
+  and call `broadcast_created/1` after the transaction commits.
+
   ## Examples
 
       iex> create_user_notification(%{title: "Welcome", type: "system", user_id: user_id})
       {:ok, %Notification{}}
   """
-  def create_user_notification(attrs) do
-    %Notification{}
-    |> Notification.changeset(attrs)
-    |> Repo.insert()
-    |> broadcast_notification()
+  def create_user_notification(attrs, opts \\ []) do
+    result =
+      %Notification{}
+      |> Notification.changeset(attrs)
+      |> Repo.insert()
+
+    if Keyword.get(opts, :broadcast, true), do: broadcast_notification(result), else: result
+  end
+
+  @doc """
+  Sends a notification created with `broadcast: false` to its recipients'
+  open dashboards.
+  """
+  def broadcast_created(%Notification{} = notification) do
+    {:ok, notification} |> broadcast_notification()
+    :ok
   end
 
   @doc """
@@ -50,6 +64,17 @@ defmodule Castmill.Notifications do
   Filters organization/team notifications by user's role if roles are specified.
   """
   def list_user_notifications(user_id, opts \\ []) do
+    {notifications, _has_more} = list_user_notifications_page(user_id, opts)
+    notifications
+  end
+
+  @doc """
+  Like `list_user_notifications/2`, and also returns whether older
+  notifications may follow. Pages are taken before notifications the user may
+  not see are filtered out, so a page can be short, or even empty, while more
+  follow.
+  """
+  def list_user_notifications_page(user_id, opts \\ []) do
     page = Keyword.get(opts, :page, 1)
     page_size = Keyword.get(opts, :page_size, 20)
     offset = max((page - 1) * page_size, 0)
@@ -75,38 +100,43 @@ defmodule Castmill.Notifications do
           n.user_id == ^user_id or
             n.organization_id in ^org_ids or
             n.team_id in ^team_ids,
-        order_by: [desc: n.inserted_at],
+        # The id breaks ties, so offset pages stay stable.
+        order_by: [desc: n.inserted_at, desc: n.id],
         limit: ^page_size,
         offset: ^offset
 
-    # Get all notifications and filter by roles in application code
-    Repo.all(query)
-    |> Enum.filter(fn notification ->
-      # Check if user is excluded from this notification
-      excluded_user_ids = get_in(notification.metadata, ["excluded_user_ids"]) || []
-      user_is_excluded = user_id in excluded_user_ids
+    rows = Repo.all(query)
 
-      cond do
-        # Skip if user is explicitly excluded
-        user_is_excluded ->
-          false
+    # Filter by roles in application code
+    notifications =
+      Enum.filter(rows, fn notification ->
+        # Check if user is excluded from this notification
+        excluded_user_ids = get_in(notification.metadata, ["excluded_user_ids"]) || []
+        user_is_excluded = user_id in excluded_user_ids
 
-        # User-specific notifications always included
-        notification.user_id == user_id ->
-          true
+        cond do
+          # Skip if user is explicitly excluded
+          user_is_excluded ->
+            false
 
-        # Organization notifications - check role if roles specified
-        notification.organization_id && notification.organization_id in org_ids ->
-          role_matches?(notification.roles, Map.get(org_roles, notification.organization_id))
+          # User-specific notifications always included
+          notification.user_id == user_id ->
+            true
 
-        # Team notifications - check role if roles specified
-        notification.team_id && notification.team_id in team_ids ->
-          role_matches?(notification.roles, Map.get(team_roles, notification.team_id))
+          # Organization notifications - check role if roles specified
+          notification.organization_id && notification.organization_id in org_ids ->
+            role_matches?(notification.roles, Map.get(org_roles, notification.organization_id))
 
-        true ->
-          false
-      end
-    end)
+          # Team notifications - check role if roles specified
+          notification.team_id && notification.team_id in team_ids ->
+            role_matches?(notification.roles, Map.get(team_roles, notification.team_id))
+
+          true ->
+            false
+        end
+      end)
+
+    {notifications, length(rows) == page_size}
   end
 
   @doc """
@@ -253,6 +283,45 @@ defmodule Castmill.Notifications do
   """
   def delete_notification(%Notification{} = notification) do
     Repo.delete(notification)
+  end
+
+  @doc """
+  Deletes the notifications of `type` that carry `token` in their metadata,
+  for example invitation notifications whose link no longer works, whoever
+  received them. A single `DELETE ... RETURNING` that uses the token index
+  (`notifications_metadata_token_index`), so it returns exactly the deleted
+  notifications, for `broadcast_notifications_deleted/1`.
+  """
+  def delete_notifications_with_token(type, token)
+      when is_binary(type) and is_binary(token) do
+    {_count, deleted} =
+      from(n in Notification,
+        where: fragment("(?->>'token')", n.metadata) == ^token and n.type == ^type,
+        select: n
+      )
+      |> Repo.delete_all()
+
+    deleted
+  end
+
+  @doc """
+  Tells the recipients' open dashboards that `notifications` were deleted,
+  with their new unread count. Call it after the deletion has committed.
+  """
+  def broadcast_notifications_deleted(notifications) do
+    notifications
+    |> Enum.filter(& &1.user_id)
+    |> Enum.group_by(& &1.user_id)
+    |> Enum.each(fn {user_id, deleted_notifications} ->
+      Phoenix.PubSub.broadcast(
+        Castmill.PubSub,
+        "users:#{user_id}",
+        {:notifications_deleted, Enum.map(deleted_notifications, & &1.id),
+         count_unread_notifications(user_id)}
+      )
+    end)
+
+    :ok
   end
 
   # Private function to broadcast notification via Phoenix PubSub

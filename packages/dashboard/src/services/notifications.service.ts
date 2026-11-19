@@ -16,6 +16,12 @@ export interface Notification {
 export interface NotificationsResponse {
   data: Notification[];
   unread_count: number;
+  /**
+   * Whether older notifications may follow. A page can be short, or empty,
+   * while more follow, because notifications the user may not see are
+   * filtered out after paginating.
+   */
+  has_more: boolean;
 }
 
 export class NotificationsService {
@@ -37,9 +43,11 @@ export class NotificationsService {
     }
 
     const result = await response.json();
+    const data = result.data || [];
     return {
-      data: result.data || [],
+      data,
       unread_count: result.unread_count || 0,
+      has_more: result.has_more ?? data.length >= pageSize,
     };
   }
 

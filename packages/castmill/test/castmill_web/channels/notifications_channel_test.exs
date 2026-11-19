@@ -229,6 +229,38 @@ defmodule CastmillWeb.NotificationsChannelTest do
     end
   end
 
+  describe "handle_info notifications_deleted" do
+    test "broadcasts deleted notification ids and the updated unread count", %{user: user} do
+      {:ok, notification} =
+        Notifications.create_user_notification(%{
+          title_key: "test.invitation",
+          type: "organization_invitation",
+          user_id: user.id,
+          metadata: %{token: "old-token"},
+          read: false
+        })
+
+      {:ok, _, _socket} =
+        CastmillWeb.UserSocket
+        |> socket(user.id, %{user: user})
+        |> subscribe_and_join(
+          CastmillWeb.NotificationsChannel,
+          "notifications:#{user.id}"
+        )
+
+      deleted =
+        Notifications.delete_notifications_with_token(
+          "organization_invitation",
+          "old-token"
+        )
+
+      Notifications.broadcast_notifications_deleted(deleted)
+
+      assert_push "notifications_deleted", %{ids: [id], unread_count: 0}
+      assert id == notification.id
+    end
+  end
+
   describe "handle_info notification_read" do
     test "broadcasts updated unread count when notification is read", %{
       user: user,

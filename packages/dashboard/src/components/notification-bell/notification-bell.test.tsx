@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@solidjs/testing-library';
+import { render, fireEvent, waitFor } from '@solidjs/testing-library';
 import NotificationBell from './notification-bell';
+import { authFetch } from '../auth';
 import { I18nProvider } from '../../i18n';
 
 // Mock the auth module
@@ -16,6 +17,15 @@ vi.mock('@solidjs/router', () => ({
   useNavigate: () => vi.fn(),
 }));
 
+const { mockStore } = vi.hoisted(() => ({
+  mockStore: {
+    socket: undefined as any,
+    organizations: { selectedId: 'org-1' },
+  },
+}));
+
+vi.mock('../../store', () => ({ store: mockStore }));
+
 describe('NotificationBell Component', () => {
   const renderWithI18n = (component: () => any) => {
     return render(() => <I18nProvider>{component()}</I18nProvider>);
@@ -23,6 +33,70 @@ describe('NotificationBell Component', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockStore.socket = undefined;
+  });
+
+  it('ignores an initial unread count older than a live update', async () => {
+    let respond: (value: any) => void = () => {};
+    vi.mocked(authFetch).mockReturnValueOnce(
+      new Promise((resolve) => (respond = resolve)) as any
+    );
+    const handlers: Record<string, (payload: any) => void> = {};
+    const push = { receive: () => push };
+    mockStore.socket = {
+      channel: () => ({
+        join: () => push,
+        on: (event: string, handler: (payload: any) => void) => {
+          handlers[event] = handler;
+        },
+        leave: vi.fn(),
+      }),
+    };
+
+    const { container } = renderWithI18n(() => <NotificationBell />);
+    const badge = () => container.querySelector('.notification-badge');
+
+    await waitFor(() => expect(handlers.notifications_deleted).toBeDefined());
+    handlers.notifications_deleted({ ids: [1], unread_count: 3 });
+    await waitFor(() => expect(badge()?.textContent).toBe('3'));
+
+    // The initial request was answered before the deletion.
+    respond({ ok: true, json: () => Promise.resolve({ count: 5 }) });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(badge()?.textContent).toBe('3');
+  });
+
+  it('updates the unread count when notifications are deleted', async () => {
+    const handlers: Record<string, (payload: any) => void> = {};
+    const push = { receive: () => push };
+    mockStore.socket = {
+      channel: () => ({
+        join: () => push,
+        on: (event: string, handler: (payload: any) => void) => {
+          handlers[event] = handler;
+        },
+        leave: vi.fn(),
+      }),
+    };
+
+    const { container } = renderWithI18n(() => <NotificationBell />);
+    const badge = () => container.querySelector('.notification-badge');
+
+    await waitFor(() => expect(handlers.notifications_deleted).toBeDefined());
+    // Let the initial unread count request finish first.
+    await waitFor(() => expect(authFetch).toHaveBeenCalled());
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    handlers.new_notification({ notification: { id: 1 }, unread_count: 2 });
+    await waitFor(() => expect(badge()?.textContent).toBe('2'));
+
+    // The dialog is closed, so only the bell can update the count.
+    handlers.notifications_deleted({ ids: [1], unread_count: 1 });
+    await waitFor(() => expect(badge()?.textContent).toBe('1'));
+
+    handlers.notifications_deleted({ ids: [2], unread_count: 0 });
+    await waitFor(() => expect(badge()).toBeNull());
   });
 
   it('should render the bell icon', () => {

@@ -267,6 +267,59 @@ defmodule Castmill.NotificationsTest do
     end
   end
 
+  describe "delete_notifications_with_token/2" do
+    test "deletes the type's notifications with the token, whoever received them", %{
+      user: user,
+      network: network
+    } do
+      other_user = user_fixture(%{network_id: network.id})
+
+      create = fn user_id, type, token ->
+        {:ok, notification} =
+          Notifications.create_user_notification(
+            %{type: type, user_id: user_id, metadata: %{token: token}},
+            broadcast: false
+          )
+
+        notification
+      end
+
+      old = create.(user.id, "organization_invitation", "old")
+      old_other = create.(other_user.id, "organization_invitation", "old")
+      kept_token = create.(user.id, "organization_invitation", "new")
+      kept_type = create.(user.id, "team_invitation", "old")
+
+      deleted = Notifications.delete_notifications_with_token("organization_invitation", "old")
+
+      assert deleted |> Enum.map(& &1.id) |> Enum.sort() == Enum.sort([old.id, old_other.id])
+
+      assert user.id
+             |> Notifications.list_user_notifications()
+             |> Enum.map(& &1.id)
+             |> Enum.sort() == Enum.sort([kept_token.id, kept_type.id])
+
+      assert Notifications.list_user_notifications(other_user.id) == []
+    end
+  end
+
+  describe "create_user_notification/2 without broadcasting" do
+    test "only broadcasts when broadcast_created/1 is called", %{user: user} do
+      Phoenix.PubSub.subscribe(Castmill.PubSub, "users:#{user.id}")
+
+      {:ok, notification} =
+        Notifications.create_user_notification(
+          %{type: "info", user_id: user.id},
+          broadcast: false
+        )
+
+      refute_received {:new_notification, _, _}
+
+      assert :ok = Notifications.broadcast_created(notification)
+      assert_received {:new_notification, %{id: id}, 1}
+      assert id == notification.id
+    end
+  end
+
   describe "broadcast_notification/1" do
     test "broadcasts to user channel", %{user: user} do
       # Subscribe to user channel

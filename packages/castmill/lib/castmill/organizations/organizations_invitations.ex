@@ -56,10 +56,14 @@ defmodule Castmill.Organizations.OrganizationsInvitation do
     DateTime.compare(DateTime.utc_now(), expires_at) == :gt
   end
 
+  @doc "When an invitation sent now expires: in 7 days."
+  def default_expires_at do
+    DateTime.utc_now() |> DateTime.add(7 * 24 * 3600, :second) |> DateTime.truncate(:second)
+  end
+
   defp maybe_set_default_expiration(changeset) do
-    # Example: if no expires_at is provided, default to 7 days from now
     if get_change(changeset, :expires_at) == nil do
-      put_change(changeset, :expires_at, DateTime.add(DateTime.utc_now(), 7 * 24 * 3600, :second))
+      put_change(changeset, :expires_at, default_expires_at())
     else
       changeset
     end

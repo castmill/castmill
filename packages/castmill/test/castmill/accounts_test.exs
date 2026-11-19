@@ -3,6 +3,43 @@ defmodule Castmill.AccountsTest do
 
   alias Castmill.Accounts
 
+  describe "create_user_from_signup/6" do
+    import Castmill.AccountsFixtures
+    import Castmill.NetworksFixtures
+    import Castmill.OrganizationsFixtures
+
+    test "rolls back signup when its organization invitation token was rotated" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+      email = "signup-race@example.com"
+      {:ok, stale_token} = Castmill.Organizations.invite_user(organization.id, email, :member)
+      invitation = Castmill.Organizations.get_invitation(stale_token)
+
+      signup =
+        signup_fixture(%{
+          network_id: network.id,
+          email: email,
+          challenge: "signup-challenge"
+        })
+
+      assert {:ok, _resent} =
+               Castmill.Organizations.resend_invitation(organization.id, invitation.id)
+
+      assert {:error, :invalid_invitation_token} =
+               Accounts.create_user_from_signup(
+                 signup.id,
+                 email,
+                 "credential-id",
+                 <<1, 2, 3>>,
+                 %{},
+                 stale_token
+               )
+
+      assert Accounts.get_user_by_email(email) == nil
+      assert Castmill.Repo.get(Castmill.Accounts.SignUp, signup.id).status == :created
+    end
+  end
+
   describe "access_tokens" do
     alias Castmill.Accounts.AccessToken
 

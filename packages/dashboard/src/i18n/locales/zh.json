@@ -916,14 +916,24 @@
       "cannotRemoveUserFromLastOrganization": "无法删除此用户，因为这是他们唯一的组织。用户必须至少属于一个组织。",
       "mediaInUseAsLogo": "无法删除正在用作组织标志的媒体",
       "loadMedias": "加载媒体失败",
-      "updateRoleFailed": "更新成员角色失败"
+      "updateRoleFailed": "更新成员角色失败",
+      "invitationAlreadyAccepted": "此邀请已被接受。",
+      "invitationAlreadyMember": "{{email}} 已是此组织的成员。",
+      "invitationPending": "{{email}} 有一个更新的待处理邀请。请改为重新发送该邀请。",
+      "resendInvitationFailed": "无法重新发送邀请",
+      "removeInvitationFailed": "无法移除邀请",
+      "invitationEmailNotSent": "{{email}} 的邀请已有新链接，但邮件未能发送。请再次重新发送。",
+      "invitationBusy": "正在向 {{email}} 发送邀请。请稍后再试。"
     },
     "messages": {
       "memberRemoved": "已成功移除成员 {{name}}",
       "membersRemoved": "已成功移除成员",
       "leftOrganization": "您已离开组织 {{name}}",
       "noOrganizationsRemaining": "您已离开最后一个组织。请联系管理员以被邀请加入组织。",
-      "invitationSent": "邀请已发送至 {{email}}"
+      "invitationSent": "邀请已发送至 {{email}}",
+      "invitationResent": "已重新向 {{email}} 发送邀请",
+      "invitationRemoved": "已移除 {{email}} 的邀请",
+      "invitationsRemoved": "邀请已移除"
     },
     "teamRoleInstaller": "安装人员 (24小时)",
     "roleDescriptions": {
@@ -961,8 +971,16 @@
       "removeMemberTitle": "从组织中移除用户",
       "removeMemberMessage": "您确定要从组织中移除成员\"{{name}}\"吗？",
       "removeMembersTitle": "从组织中移除成员",
-      "removeMembersMessage": "您确定要从组织中移除以下成员吗？"
-    }
+      "removeMembersMessage": "您确定要从组织中移除以下成员吗？",
+      "resendInvitationTitle": "重新发送邀请",
+      "resendInvitationMessage": "要再次向\"{{email}}\"发送邀请吗？邀请将再有效7天，之前邀请邮件中的链接将失效。",
+      "removeInvitationTitle": "移除邀请",
+      "removeInvitationMessage": "您确定要移除\"{{email}}\"的邀请吗？",
+      "removeInvitationsTitle": "移除邀请",
+      "removeInvitationsMessage": "您确定要移除以下邀请吗？"
+    },
+    "resend": "重新发送",
+    "resendInvitation": "重新发送邀请"
   },
   "playlists": {
     "title": "播放列表",

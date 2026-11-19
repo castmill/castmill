@@ -884,20 +884,36 @@
       "cannotRemoveUserFromLastOrganization": "Cannot remove this user as it is their only organization. Users must belong to at least one organization.",
       "mediaInUseAsLogo": "Cannot delete media that is being used as an organization logo",
       "loadMedias": "Failed to load medias",
-      "updateRoleFailed": "Failed to update member role"
+      "updateRoleFailed": "Failed to update member role",
+      "invitationAlreadyAccepted": "This invitation has already been accepted.",
+      "invitationAlreadyMember": "{{email}} is already a member of this organization.",
+      "invitationPending": "A newer invitation for {{email}} is pending. Resend that one instead.",
+      "resendInvitationFailed": "Failed to resend the invitation",
+      "removeInvitationFailed": "Failed to remove the invitation",
+      "invitationEmailNotSent": "The invitation for {{email}} has a new link, but its email could not be sent. Resend it again.",
+      "invitationBusy": "An invitation to {{email}} is being sent right now. Try again in a moment."
     },
     "messages": {
       "memberRemoved": "Member {{name}} removed successfully",
       "membersRemoved": "Members removed successfully",
       "invitationSent": "Invitation sent to {{email}}",
       "leftOrganization": "You left the organization {{name}}",
-      "noOrganizationsRemaining": "You have left your last organization. Please contact an administrator to be invited to an organization."
+      "noOrganizationsRemaining": "You have left your last organization. Please contact an administrator to be invited to an organization.",
+      "invitationResent": "Invitation sent again to {{email}}",
+      "invitationRemoved": "Invitation for {{email}} removed",
+      "invitationsRemoved": "Invitations removed"
     },
     "dialogs": {
       "removeMemberTitle": "Remove User From Organization",
       "removeMemberMessage": "Are you sure you want to remove member \"{{name}}\" from the organization?",
       "removeMembersTitle": "Remove Members From Organization",
-      "removeMembersMessage": "Are you sure you want to remove the following members from the organization?"
+      "removeMembersMessage": "Are you sure you want to remove the following members from the organization?",
+      "resendInvitationTitle": "Resend Invitation",
+      "resendInvitationMessage": "Send the invitation to \"{{email}}\" again? It will be valid for 7 more days, and the link in earlier invitation emails will stop working.",
+      "removeInvitationTitle": "Remove Invitation",
+      "removeInvitationMessage": "Are you sure you want to remove the invitation for \"{{email}}\"?",
+      "removeInvitationsTitle": "Remove Invitations",
+      "removeInvitationsMessage": "Are you sure you want to remove the following invitations?"
     },
     "leaveOrganizationTitle": "Leave this organization",
     "leaveOrganizationDescription": "Leaving removes your access to organization resources immediately.",
@@ -914,7 +930,9 @@
     "logoUpdated": "Logo updated successfully",
     "logoRemoved": "Logo removed successfully",
     "noLogo": "No logo selected",
-    "noMediasAvailable": "No image medias available. Please upload an image first."
+    "noMediasAvailable": "No image medias available. Please upload an image first.",
+    "resend": "Resend",
+    "resendInvitation": "Resend invitation"
   },
   "login": {
     "title": "Login",

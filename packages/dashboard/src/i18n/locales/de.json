@@ -854,14 +854,24 @@
       "cannotRemoveUserFromLastOrganization": "Dieser Benutzer kann nicht entfernt werden, da dies seine einzige Organisation ist. Benutzer müssen mindestens einer Organisation angehören.",
       "mediaInUseAsLogo": "Medien, die als Organisationslogo verwendet werden, können nicht gelöscht werden",
       "loadMedias": "Fehler beim Laden von Medien",
-      "updateRoleFailed": "Fehler beim Aktualisieren der Mitgliederrolle"
+      "updateRoleFailed": "Fehler beim Aktualisieren der Mitgliederrolle",
+      "invitationAlreadyAccepted": "Diese Einladung wurde bereits angenommen.",
+      "invitationAlreadyMember": "{{email}} ist bereits Mitglied dieser Organisation.",
+      "invitationPending": "Für {{email}} steht eine neuere Einladung aus. Senden Sie stattdessen diese erneut.",
+      "resendInvitationFailed": "Die Einladung konnte nicht erneut gesendet werden",
+      "removeInvitationFailed": "Die Einladung konnte nicht entfernt werden",
+      "invitationEmailNotSent": "Die Einladung für {{email}} hat einen neuen Link, aber die E-Mail konnte nicht gesendet werden. Senden Sie sie erneut.",
+      "invitationBusy": "Eine Einladung an {{email}} wird gerade gesendet. Versuchen Sie es gleich noch einmal."
     },
     "messages": {
       "memberRemoved": "Mitglied {{name}} wurde erfolgreich entfernt",
       "membersRemoved": "Mitglieder wurden erfolgreich entfernt",
       "leftOrganization": "Sie haben die Organisation {{name}} verlassen",
       "noOrganizationsRemaining": "Sie haben Ihre letzte Organisation verlassen. Bitte kontaktieren Sie einen Administrator, um zu einer Organisation eingeladen zu werden.",
-      "invitationSent": "Einladung an {{email}} gesendet"
+      "invitationSent": "Einladung an {{email}} gesendet",
+      "invitationResent": "Einladung erneut an {{email}} gesendet",
+      "invitationRemoved": "Einladung für {{email}} entfernt",
+      "invitationsRemoved": "Einladungen entfernt"
     },
     "teamRoleInstaller": "Installateur (24h)",
     "roleDescriptions": {
@@ -891,7 +901,13 @@
       "removeMemberTitle": "Benutzer aus Organisation entfernen",
       "removeMemberMessage": "Sind Sie sicher, dass Sie das Mitglied \"{{name}}\" aus der Organisation entfernen möchten?",
       "removeMembersTitle": "Mitglieder aus Organisation entfernen",
-      "removeMembersMessage": "Sind Sie sicher, dass Sie die folgenden Mitglieder aus der Organisation entfernen möchten?"
+      "removeMembersMessage": "Sind Sie sicher, dass Sie die folgenden Mitglieder aus der Organisation entfernen möchten?",
+      "resendInvitationTitle": "Einladung erneut senden",
+      "resendInvitationMessage": "Die Einladung an \"{{email}}\" erneut senden? Sie ist weitere 7 Tage gültig, und der Link in früheren Einladungs-E-Mails funktioniert nicht mehr.",
+      "removeInvitationTitle": "Einladung entfernen",
+      "removeInvitationMessage": "Sind Sie sicher, dass Sie die Einladung für \"{{email}}\" entfernen möchten?",
+      "removeInvitationsTitle": "Einladungen entfernen",
+      "removeInvitationsMessage": "Sind Sie sicher, dass Sie die folgenden Einladungen entfernen möchten?"
     },
     "leaveOrganizationTitle": "Diese Organisation verlassen",
     "leaveOrganizationDescription": "Das Verlassen entfernt Ihren Zugriff auf Organisationsressourcen sofort.",
@@ -899,7 +915,9 @@
     "leaveOrganizationLastAdminWarning": "Fügen Sie einen weiteren Administrator hinzu, bevor Sie gehen, um diese Organisation verwaltet zu halten.",
     "leaveOrganizationLastUserWarning": "Sie können nicht gehen, da Sie das einzige Mitglied dieser Organisation sind.",
     "leaveLastOrganizationWarningTitle": "Ihre letzte Organisation verlassen?",
-    "leaveLastOrganizationWarningMessage": "Dies ist Ihre einzige Organisation. Wenn Sie sie verlassen, wird Ihr Konto gelöscht und Sie verlieren den gesamten Zugriff auf Castmill. Sie müssen einen Administrator kontaktieren, um erneut eingeladen zu werden. Sind Sie sicher, dass Sie fortfahren möchten?"
+    "leaveLastOrganizationWarningMessage": "Dies ist Ihre einzige Organisation. Wenn Sie sie verlassen, wird Ihr Konto gelöscht und Sie verlieren den gesamten Zugriff auf Castmill. Sie müssen einen Administrator kontaktieren, um erneut eingeladen zu werden. Sind Sie sicher, dass Sie fortfahren möchten?",
+    "resend": "Erneut senden",
+    "resendInvitation": "Einladung erneut senden"
   },
   "login": {
     "title": "Anmelden",

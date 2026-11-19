@@ -98,53 +98,169 @@ export const NotificationDialog: Component<NotificationDialogProps> = (
     document.removeEventListener('keydown', handleKeyDown);
   });
 
-  // Listen for new notifications from WebSocket
+  const PAGE_SIZE = 20;
+
+  // Notifications deleted while the dialog is open (for example invitations
+  // whose link was replaced). Lists loaded later must not bring them back.
+  const deletedIds = new Set<string>();
+  // Notifications received live; the server lists them first.
+  const liveIds = new Set<string>();
+  // Notifications marked read here, and when all were marked read. A response
+  // to an older request must not make them unread again.
+  const readIds = new Set<string>();
+  let allReadAt = -1;
+  // Counts live events and local reads, so an older list response does not
+  // overwrite the unread count or read flags they changed.
+  let listChanges = 0;
+  // Bumped when the loaded pages are reloaded; older responses are ignored.
+  let listVersion = 0;
+
+  const reportUnreadCount = (count: number | undefined) => {
+    if (count !== undefined) {
+      setUnreadCount(count);
+      props.onNotificationRead(count);
+    }
+  };
+
+  // Adds a server response to a request made at `changesBefore` to the list.
+  // Returns how many notifications it added, and whether it contained
+  // notifications deleted meanwhile, which means its pages no longer line up
+  // with the server's.
+  const mergeLoaded = (
+    data: Notification[],
+    replace: boolean,
+    changesBefore: number
+  ) => {
+    const loaded = data
+      .filter((n) => !deletedIds.has(String(n.id)))
+      .map((n) =>
+        !n.read && (readIds.has(String(n.id)) || allReadAt > changesBefore)
+          ? { ...n, read: true }
+          : n
+      );
+    let added = 0;
+
+    setNotifications((prev) => {
+      if (replace) {
+        const loadedIds = new Set(loaded.map((n) => String(n.id)));
+        const newer = prev.filter(
+          (n) => liveIds.has(String(n.id)) && !loadedIds.has(String(n.id))
+        );
+        added = loaded.length;
+        return [...newer, ...loaded];
+      }
+
+      // Notifications received while the request was in flight are newer.
+      const known = new Set(prev.map((n) => String(n.id)));
+      const fresh = loaded.filter((n) => !known.has(String(n.id)));
+      added = fresh.length;
+      return [...prev, ...fresh];
+    });
+
+    return { added, shifted: loaded.length < data.length };
+  };
+
+  // Deleting a loaded notification shifts the server's offset-based pages, so
+  // the next page would skip one. Reload everything loaded so far instead.
+  const reloadLoadedPages = async () => {
+    const version = ++listVersion;
+    const size = page() * PAGE_SIZE;
+    const changesBefore = listChanges;
+
+    setLoading(true);
+    try {
+      const result = await notificationsService.getNotifications(1, size);
+      if (version !== listVersion) return;
+
+      setHasMore(result.has_more);
+      const { shifted } = mergeLoaded(result.data, true, changesBefore);
+
+      if (listChanges === changesBefore) {
+        reportUnreadCount(result.unread_count);
+      }
+      if (shifted && hasMore()) reloadLoadedPages();
+    } catch (error) {
+      console.error('Failed to reload notifications:', error);
+    } finally {
+      if (version === listVersion) setLoading(false);
+    }
+  };
+
+  // Listen for notifications from WebSocket. The channel outlives the dialog,
+  // so the listeners are removed when it closes.
   createEffect(() => {
     const channel = props.channel;
-    if (channel) {
-      channel.on('new_notification', (payload: any) => {
-        if (payload.notification) {
-          // Check if notification already exists to avoid duplicates
-          setNotifications((prev) => {
-            const exists = prev.some((n) => n.id === payload.notification.id);
-            if (exists) {
-              return prev;
-            }
-            return [payload.notification, ...prev];
-          });
+    if (!channel) return;
 
-          if (payload.unread_count !== undefined) {
-            setUnreadCount(payload.unread_count);
-            props.onNotificationRead(payload.unread_count);
-          }
-        }
-      });
-    }
+    const newRef = channel.on('new_notification', (payload: any) => {
+      const notification = payload.notification;
+      if (!notification || deletedIds.has(String(notification.id))) return;
+
+      listChanges++;
+      liveIds.add(String(notification.id));
+      setNotifications((prev) =>
+        prev.some((n) => String(n.id) === String(notification.id))
+          ? prev
+          : [notification, ...prev]
+      );
+      reportUnreadCount(payload.unread_count);
+    });
+
+    const deletedRef = channel.on('notifications_deleted', (payload: any) => {
+      listChanges++;
+      for (const id of payload.ids ?? []) deletedIds.add(String(id));
+
+      const before = notifications().length;
+      setNotifications((prev) =>
+        prev.filter((notification) => !deletedIds.has(String(notification.id)))
+      );
+      reportUnreadCount(payload.unread_count);
+
+      if (notifications().length < before && hasMore()) reloadLoadedPages();
+    });
+
+    onCleanup(() => {
+      channel.off('new_notification', newRef);
+      channel.off('notifications_deleted', deletedRef);
+    });
   });
 
   const loadNotifications = async () => {
     if (loading() || !hasMore()) return;
 
+    const version = listVersion;
+    const changesBefore = listChanges;
+    let loadNextPage = false;
     setLoading(true);
     try {
-      const result = await notificationsService.getNotifications(page(), 20);
+      const result = await notificationsService.getNotifications(
+        page(),
+        PAGE_SIZE
+      );
+      if (version !== listVersion) return;
 
-      if (result.data.length < 20) {
-        setHasMore(false);
+      setHasMore(result.has_more);
+      const { added, shifted } = mergeLoaded(result.data, false, changesBefore);
+
+      if (listChanges === changesBefore) {
+        reportUnreadCount(result.unread_count);
       }
-
-      if (page() === 1) {
-        setNotifications(result.data);
-      } else {
-        setNotifications((prev) => [...prev, ...result.data]);
+      if (shifted && hasMore()) {
+        reloadLoadedPages();
+      } else if (added === 0 && hasMore()) {
+        // Everything on this page was filtered out, so there is nothing new
+        // to scroll to: load the next page right away.
+        loadNextPage = true;
       }
-
-      setUnreadCount(result.unread_count);
-      props.onNotificationRead(result.unread_count);
     } catch (error) {
       console.error('Failed to load notifications:', error);
     } finally {
-      setLoading(false);
+      if (version === listVersion) setLoading(false);
+    }
+
+    if (loadNextPage) {
+      setPage((p) => p + 1);
+      loadNotifications();
     }
   };
 
@@ -176,6 +292,8 @@ export const NotificationDialog: Component<NotificationDialogProps> = (
     if (!notification.read) {
       try {
         await notificationsService.markAsRead(notification.id);
+        listChanges++;
+        readIds.add(String(notification.id));
 
         // Update local state
         setNotifications((prev) =>
@@ -203,6 +321,7 @@ export const NotificationDialog: Component<NotificationDialogProps> = (
   const handleMarkAllRead = async () => {
     try {
       await notificationsService.markAllAsRead();
+      allReadAt = ++listChanges;
 
       // Update all notifications to read
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));

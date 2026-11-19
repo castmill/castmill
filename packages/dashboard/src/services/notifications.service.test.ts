@@ -48,7 +48,19 @@ describe('NotificationsService', () => {
       expect(url).toBe(
         'http://localhost:4000/dashboard/notifications?page=1&page_size=20'
       );
-      expect(result).toEqual(mockResponse);
+      // Without has_more from the server, only a full page may have more.
+      expect(result).toEqual({ ...mockResponse, has_more: false });
+    });
+
+    it('uses the server has_more, which a short page can still have', async () => {
+      (global.fetch as any).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ data: [], unread_count: 0, has_more: true }),
+      });
+
+      const result = await service.getNotifications();
+
+      expect(result).toEqual({ data: [], unread_count: 0, has_more: true });
     });
 
     it('should handle pagination parameters', async () => {
