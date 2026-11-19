@@ -14,12 +14,16 @@ defmodule CastmillWeb.NotificationController do
     page = Map.get(params, "page", "1") |> String.to_integer()
     page_size = Map.get(params, "page_size", "20") |> String.to_integer()
 
-    notifications =
-      Notifications.list_user_notifications(user.id, page: page, page_size: page_size)
+    {notifications, has_more} =
+      Notifications.list_user_notifications_page(user.id, page: page, page_size: page_size)
 
     unread_count = Notifications.count_unread_notifications(user.id)
 
-    render(conn, :index, notifications: notifications, unread_count: unread_count)
+    render(conn, :index,
+      notifications: notifications,
+      unread_count: unread_count,
+      has_more: has_more
+    )
   end
 
   @doc """

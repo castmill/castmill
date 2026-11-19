@@ -63,9 +63,13 @@ export const NotificationDialog: Component<NotificationDialogProps> = (
   const deletedIds = new Set<string>();
   // Notifications received live; the server lists them first.
   const liveIds = new Set<string>();
-  // Counts live events, so an older list response does not overwrite the
-  // unread count they reported.
-  let liveEvents = 0;
+  // Notifications marked read here, and when all were marked read. A response
+  // to an older request must not make them unread again.
+  const readIds = new Set<string>();
+  let allReadAt = -1;
+  // Counts live events and local reads, so an older list response does not
+  // overwrite the unread count or read flags they changed.
+  let listChanges = 0;
   // Bumped when the loaded pages are reloaded; older responses are ignored.
   let listVersion = 0;
 
@@ -76,11 +80,23 @@ export const NotificationDialog: Component<NotificationDialogProps> = (
     }
   };
 
-  // Adds a server response to the list. Returns whether it contained
+  // Adds a server response to a request made at `changesBefore` to the list.
+  // Returns how many notifications it added, and whether it contained
   // notifications deleted meanwhile, which means its pages no longer line up
   // with the server's.
-  const mergeLoaded = (data: Notification[], replace: boolean) => {
-    const loaded = data.filter((n) => !deletedIds.has(String(n.id)));
+  const mergeLoaded = (
+    data: Notification[],
+    replace: boolean,
+    changesBefore: number
+  ) => {
+    const loaded = data
+      .filter((n) => !deletedIds.has(String(n.id)))
+      .map((n) =>
+        !n.read && (readIds.has(String(n.id)) || allReadAt > changesBefore)
+          ? { ...n, read: true }
+          : n
+      );
+    let added = 0;
 
     setNotifications((prev) => {
       if (replace) {
@@ -88,15 +104,18 @@ export const NotificationDialog: Component<NotificationDialogProps> = (
         const newer = prev.filter(
           (n) => liveIds.has(String(n.id)) && !loadedIds.has(String(n.id))
         );
+        added = loaded.length;
         return [...newer, ...loaded];
       }
 
       // Notifications received while the request was in flight are newer.
       const known = new Set(prev.map((n) => String(n.id)));
-      return [...prev, ...loaded.filter((n) => !known.has(String(n.id)))];
+      const fresh = loaded.filter((n) => !known.has(String(n.id)));
+      added = fresh.length;
+      return [...prev, ...fresh];
     });
 
-    return loaded.length < data.length;
+    return { added, shifted: loaded.length < data.length };
   };
 
   // Deleting a loaded notification shifts the server's offset-based pages, so
@@ -104,17 +123,17 @@ export const NotificationDialog: Component<NotificationDialogProps> = (
   const reloadLoadedPages = async () => {
     const version = ++listVersion;
     const size = page() * PAGE_SIZE;
-    const liveEventsBefore = liveEvents;
+    const changesBefore = listChanges;
 
     setLoading(true);
     try {
       const result = await notificationsService.getNotifications(1, size);
       if (version !== listVersion) return;
 
-      setHasMore(result.data.length >= size);
-      const shifted = mergeLoaded(result.data, true);
+      setHasMore(result.has_more);
+      const { shifted } = mergeLoaded(result.data, true, changesBefore);
 
-      if (liveEvents === liveEventsBefore) {
+      if (listChanges === changesBefore) {
         reportUnreadCount(result.unread_count);
       }
       if (shifted && hasMore()) reloadLoadedPages();
@@ -135,7 +154,7 @@ export const NotificationDialog: Component<NotificationDialogProps> = (
       const notification = payload.notification;
       if (!notification || deletedIds.has(String(notification.id))) return;
 
-      liveEvents++;
+      listChanges++;
       liveIds.add(String(notification.id));
       setNotifications((prev) =>
         prev.some((n) => String(n.id) === String(notification.id))
@@ -146,7 +165,7 @@ export const NotificationDialog: Component<NotificationDialogProps> = (
     });
 
     const deletedRef = channel.on('notifications_deleted', (payload: any) => {
-      liveEvents++;
+      listChanges++;
       for (const id of payload.ids ?? []) deletedIds.add(String(id));
 
       const before = notifications().length;
@@ -168,7 +187,8 @@ export const NotificationDialog: Component<NotificationDialogProps> = (
     if (loading() || !hasMore()) return;
 
     const version = listVersion;
-    const liveEventsBefore = liveEvents;
+    const changesBefore = listChanges;
+    let loadNextPage = false;
     setLoading(true);
     try {
       const result = await notificationsService.getNotifications(
@@ -177,20 +197,28 @@ export const NotificationDialog: Component<NotificationDialogProps> = (
       );
       if (version !== listVersion) return;
 
-      if (result.data.length < PAGE_SIZE) {
-        setHasMore(false);
-      }
+      setHasMore(result.has_more);
+      const { added, shifted } = mergeLoaded(result.data, false, changesBefore);
 
-      const shifted = mergeLoaded(result.data, false);
-
-      if (liveEvents === liveEventsBefore) {
+      if (listChanges === changesBefore) {
         reportUnreadCount(result.unread_count);
       }
-      if (shifted && hasMore()) reloadLoadedPages();
+      if (shifted && hasMore()) {
+        reloadLoadedPages();
+      } else if (added === 0 && hasMore()) {
+        // Everything on this page was filtered out, so there is nothing new
+        // to scroll to: load the next page right away.
+        loadNextPage = true;
+      }
     } catch (error) {
       console.error('Failed to load notifications:', error);
     } finally {
       if (version === listVersion) setLoading(false);
+    }
+
+    if (loadNextPage) {
+      setPage((p) => p + 1);
+      loadNotifications();
     }
   };
 
@@ -211,6 +239,8 @@ export const NotificationDialog: Component<NotificationDialogProps> = (
     if (!notification.read) {
       try {
         await notificationsService.markAsRead(notification.id);
+        listChanges++;
+        readIds.add(String(notification.id));
 
         // Update local state
         setNotifications((prev) =>
@@ -252,6 +282,7 @@ export const NotificationDialog: Component<NotificationDialogProps> = (
   const handleMarkAllRead = async () => {
     try {
       await notificationsService.markAllAsRead();
+      allReadAt = ++listChanges;
 
       // Update all notifications to read
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));

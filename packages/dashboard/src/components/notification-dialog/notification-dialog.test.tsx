@@ -241,8 +241,16 @@ describe('NotificationDialog Component', () => {
   it('reloads the loaded pages when a deletion shifts them', async () => {
     const { channel, handlers } = fakeChannel();
     (notificationsService.getNotifications as any)
-      .mockResolvedValueOnce({ data: page(1, 20), unread_count: 0 })
-      .mockResolvedValueOnce({ data: page(2, 20), unread_count: 0 });
+      .mockResolvedValueOnce({
+        data: page(1, 20),
+        unread_count: 0,
+        has_more: true,
+      })
+      .mockResolvedValueOnce({
+        data: page(2, 20),
+        unread_count: 0,
+        has_more: true,
+      });
 
     renderWithI18n(() => (
       <NotificationDialog
@@ -277,7 +285,11 @@ describe('NotificationDialog Component', () => {
     const { channel, handlers } = fakeChannel();
     (notificationsService.getNotifications as any)
       .mockReturnValueOnce(new Promise((resolve) => (respond = resolve)))
-      .mockResolvedValueOnce({ data: page(2, 20), unread_count: 0 });
+      .mockResolvedValueOnce({
+        data: page(2, 20),
+        unread_count: 0,
+        has_more: true,
+      });
 
     renderWithI18n(() => (
       <NotificationDialog
@@ -290,7 +302,7 @@ describe('NotificationDialog Component', () => {
     await waitFor(() => expect(handlers.notifications_deleted).toBeDefined());
     handlers.notifications_deleted({ ids: ['1'], unread_count: 0 });
     // The first page was read before notification 1 was deleted.
-    respond({ data: page(1, 20), unread_count: 0 });
+    respond({ data: page(1, 20), unread_count: 0, has_more: true });
 
     await waitFor(() =>
       expect(notificationsService.getNotifications).toHaveBeenCalledTimes(2)
@@ -299,6 +311,130 @@ describe('NotificationDialog Component', () => {
       expect(document.body.textContent).toContain('Screen-21')
     );
     expect(document.querySelectorAll('.notification-item')).toHaveLength(20);
+  });
+
+  const unreadPage = (from: number, count: number): Notification[] =>
+    Array.from({ length: count }, (_, i) => ({
+      ...mockNotifications[0],
+      id: String(from + i),
+      read: false,
+      metadata: { team_name: `Team-${from + i}` },
+    }));
+
+  it('keeps loading past a page whose notifications were all filtered out', async () => {
+    (notificationsService.getNotifications as any)
+      .mockResolvedValueOnce({ data: [], unread_count: 0, has_more: true })
+      .mockResolvedValueOnce({
+        data: page(1, 5),
+        unread_count: 0,
+        has_more: false,
+      });
+
+    renderWithI18n(() => (
+      <NotificationDialog onClose={vi.fn()} onNotificationRead={vi.fn()} />
+    ));
+
+    await waitFor(() =>
+      expect(document.querySelectorAll('.notification-item')).toHaveLength(5)
+    );
+    expect(notificationsService.getNotifications).toHaveBeenLastCalledWith(
+      2,
+      20
+    );
+    expect(notificationsService.getNotifications).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps local reads when a reload requested before them arrives', async () => {
+    let respond: (value: any) => void = () => {};
+    const { channel, handlers } = fakeChannel();
+    const onNotificationRead = vi.fn();
+    (notificationsService.getNotifications as any)
+      .mockResolvedValueOnce({
+        data: unreadPage(1, 20),
+        unread_count: 20,
+        has_more: true,
+      })
+      .mockReturnValueOnce(new Promise((resolve) => (respond = resolve)));
+
+    renderWithI18n(() => (
+      <NotificationDialog
+        onClose={vi.fn()}
+        onNotificationRead={onNotificationRead}
+        channel={channel}
+      />
+    ));
+
+    await waitFor(() =>
+      expect(
+        document.querySelectorAll('.notification-item.unread')
+      ).toHaveLength(20)
+    );
+
+    // A deletion starts a reload; notification 2 is read while it is in flight.
+    handlers.notifications_deleted({ ids: ['1'], unread_count: 19 });
+    await waitFor(() =>
+      expect(notificationsService.getNotifications).toHaveBeenCalledTimes(2)
+    );
+    (document.querySelector('.notification-item') as HTMLElement).click();
+    await waitFor(() =>
+      expect(notificationsService.markAsRead).toHaveBeenCalledWith('2')
+    );
+    await waitFor(() =>
+      expect(onNotificationRead).toHaveBeenLastCalledWith(18)
+    );
+
+    // The reload was generated before the read.
+    respond({ data: unreadPage(2, 20), unread_count: 19, has_more: true });
+
+    await waitFor(() => expect(document.body.textContent).toContain('Team-21'));
+    expect(document.querySelectorAll('.notification-item.unread')).toHaveLength(
+      19
+    );
+    expect(onNotificationRead).toHaveBeenLastCalledWith(18);
+  });
+
+  it('keeps mark all as read when a reload requested before it arrives', async () => {
+    let respond: (value: any) => void = () => {};
+    const { channel, handlers } = fakeChannel();
+    const onNotificationRead = vi.fn();
+    (notificationsService.getNotifications as any)
+      .mockResolvedValueOnce({
+        data: unreadPage(1, 20),
+        unread_count: 20,
+        has_more: true,
+      })
+      .mockReturnValueOnce(new Promise((resolve) => (respond = resolve)));
+
+    renderWithI18n(() => (
+      <NotificationDialog
+        onClose={vi.fn()}
+        onNotificationRead={onNotificationRead}
+        channel={channel}
+      />
+    ));
+
+    await waitFor(() =>
+      expect(
+        document.querySelectorAll('.notification-item.unread')
+      ).toHaveLength(20)
+    );
+
+    handlers.notifications_deleted({ ids: ['1'], unread_count: 19 });
+    await waitFor(() =>
+      expect(notificationsService.getNotifications).toHaveBeenCalledTimes(2)
+    );
+    (
+      document.querySelector('.notification-mark-all-read') as HTMLElement
+    ).click();
+    await waitFor(() => expect(onNotificationRead).toHaveBeenLastCalledWith(0));
+
+    respond({ data: unreadPage(2, 20), unread_count: 19, has_more: true });
+
+    await waitFor(() => expect(document.body.textContent).toContain('Team-21'));
+    expect(document.querySelectorAll('.notification-item.unread')).toHaveLength(
+      0
+    );
+    expect(onNotificationRead).toHaveBeenLastCalledWith(0);
   });
 
   it('should call onClose when close button is clicked', async () => {

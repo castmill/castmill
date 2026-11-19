@@ -2,12 +2,14 @@ defmodule CastmillWeb.NotificationJSON do
   alias Castmill.Notifications.Notification
 
   @doc """
-  Renders a list of notifications.
+  Renders a list of notifications. `has_more` says whether older
+  notifications may follow; a page can be short while more follow.
   """
-  def index(%{notifications: notifications, unread_count: unread_count}) do
+  def index(%{notifications: notifications, unread_count: unread_count} = assigns) do
     %{
       data: for(notification <- notifications, do: data(notification)),
-      unread_count: unread_count
+      unread_count: unread_count,
+      has_more: Map.get(assigns, :has_more, false)
     }
   end
 

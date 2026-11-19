@@ -64,6 +64,17 @@ defmodule Castmill.Notifications do
   Filters organization/team notifications by user's role if roles are specified.
   """
   def list_user_notifications(user_id, opts \\ []) do
+    {notifications, _has_more} = list_user_notifications_page(user_id, opts)
+    notifications
+  end
+
+  @doc """
+  Like `list_user_notifications/2`, and also returns whether older
+  notifications may follow. Pages are taken before notifications the user may
+  not see are filtered out, so a page can be short, or even empty, while more
+  follow.
+  """
+  def list_user_notifications_page(user_id, opts \\ []) do
     page = Keyword.get(opts, :page, 1)
     page_size = Keyword.get(opts, :page_size, 20)
     offset = max((page - 1) * page_size, 0)
@@ -89,38 +100,43 @@ defmodule Castmill.Notifications do
           n.user_id == ^user_id or
             n.organization_id in ^org_ids or
             n.team_id in ^team_ids,
-        order_by: [desc: n.inserted_at],
+        # The id breaks ties, so offset pages stay stable.
+        order_by: [desc: n.inserted_at, desc: n.id],
         limit: ^page_size,
         offset: ^offset
 
-    # Get all notifications and filter by roles in application code
-    Repo.all(query)
-    |> Enum.filter(fn notification ->
-      # Check if user is excluded from this notification
-      excluded_user_ids = get_in(notification.metadata, ["excluded_user_ids"]) || []
-      user_is_excluded = user_id in excluded_user_ids
+    rows = Repo.all(query)
 
-      cond do
-        # Skip if user is explicitly excluded
-        user_is_excluded ->
-          false
+    # Filter by roles in application code
+    notifications =
+      Enum.filter(rows, fn notification ->
+        # Check if user is excluded from this notification
+        excluded_user_ids = get_in(notification.metadata, ["excluded_user_ids"]) || []
+        user_is_excluded = user_id in excluded_user_ids
 
-        # User-specific notifications always included
-        notification.user_id == user_id ->
-          true
+        cond do
+          # Skip if user is explicitly excluded
+          user_is_excluded ->
+            false
 
-        # Organization notifications - check role if roles specified
-        notification.organization_id && notification.organization_id in org_ids ->
-          role_matches?(notification.roles, Map.get(org_roles, notification.organization_id))
+          # User-specific notifications always included
+          notification.user_id == user_id ->
+            true
 
-        # Team notifications - check role if roles specified
-        notification.team_id && notification.team_id in team_ids ->
-          role_matches?(notification.roles, Map.get(team_roles, notification.team_id))
+          # Organization notifications - check role if roles specified
+          notification.organization_id && notification.organization_id in org_ids ->
+            role_matches?(notification.roles, Map.get(org_roles, notification.organization_id))
 
-        true ->
-          false
-      end
-    end)
+          # Team notifications - check role if roles specified
+          notification.team_id && notification.team_id in team_ids ->
+            role_matches?(notification.roles, Map.get(team_roles, notification.team_id))
+
+          true ->
+            false
+        end
+      end)
+
+    {notifications, length(rows) == page_size}
   end
 
   @doc """
