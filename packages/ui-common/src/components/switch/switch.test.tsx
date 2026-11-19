@@ -81,4 +81,21 @@ describe('Switch component', () => {
     expect(onToggle).toHaveBeenCalledWith('activeKey');
     expect(onToggle).toHaveBeenCalledTimes(1);
   });
+
+  it('can use the name only as the accessible label', () => {
+    render(() => (
+      <Switch
+        name="Restrict creation"
+        key="restrict"
+        isActive={false}
+        disabled={false}
+        hideLabel
+        onToggle={() => {}}
+      />
+    ));
+    expect(
+      screen.getByRole('checkbox', { name: 'Restrict creation' })
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Restrict creation')).toBeNull();
+  });
 });

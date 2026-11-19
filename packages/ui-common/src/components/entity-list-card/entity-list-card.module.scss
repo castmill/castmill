@@ -1,0 +1,460 @@
+/* Compact horizontal entity card: [checkbox] [visual] [text] [actions] */
+.card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.75em;
+  min-width: 0;
+  padding: 0.625em 0.5em 0.625em 0.75em;
+  padding-inline: 0.75em 0.5em;
+  border: 0.0625em solid var(--cm-border-color);
+  border-radius: 0.5em;
+  background-color: var(--cm-bg-secondary);
+  color: var(--cm-text-primary);
+  text-align: start;
+  transition:
+    border-color 0.2s,
+    background-color 0.2s;
+  /* No mobile tap flash over the whole card (e.g. when tapping its menu) */
+  -webkit-tap-highlight-color: transparent;
+
+  /* Controls inside the card sit above the stretched "open" hit area */
+  :is(a, button, input, select, textarea, label, [tabindex]):not(.open) {
+    position: relative;
+    z-index: 2;
+  }
+
+  &.openable {
+    cursor: pointer;
+
+    @media (hover: hover) {
+      &:hover {
+        border-color: var(--cm-border-strong);
+        background-color: var(--cm-bg-hover);
+      }
+    }
+  }
+
+  &.selected {
+    border-color: var(--cm-primary);
+    background-color: var(--cm-bg-selected);
+  }
+
+  &.disabled {
+    opacity: 0.6;
+  }
+
+  &.busy .visual {
+    animation: entity-card-pulse 1.2s ease-in-out infinite;
+  }
+
+  &:focus-within:has(.open:focus-visible) {
+    outline: 0.125em solid var(--cm-focus-ring);
+    outline-offset: 0.125em;
+  }
+}
+
+@keyframes entity-card-pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card.busy .visual {
+    animation: none;
+  }
+}
+
+/* ≥2.75em touch target around the checkbox */
+.select {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 2.75em;
+  height: 2.75em;
+  margin-inline: -0.5em -0.5em;
+  cursor: pointer;
+}
+
+.checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  width: 1.125em;
+  height: 1.125em;
+  margin: 0;
+  border: 0.125em solid var(--cm-border-strong);
+  border-radius: 0.1875em;
+  background-color: transparent;
+  cursor: pointer;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s;
+
+  &:checked {
+    border-color: var(--cm-primary);
+    background-color: var(--cm-primary);
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 45%;
+      left: 50%;
+      width: 0.3125em;
+      height: 0.625em;
+      border: solid var(--cm-text-on-primary, #fff);
+      border-width: 0 0.125em 0.125em 0;
+      transform: translate(-50%, -50%) rotate(45deg);
+    }
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 0.125em var(--cm-focus-ring);
+  }
+}
+
+/* Fixed visual square: thumbnails and icons align the text column */
+.visual {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 4.5em;
+  height: 4.5em;
+  overflow: hidden;
+  border-radius: 0.5em;
+  background-color: var(--cm-bg-tertiary);
+  color: var(--cm-text-secondary);
+
+  > * {
+    max-width: 100%;
+    max-height: 100%;
+  }
+}
+
+.thumbnail {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+
+  &.contain {
+    width: 70%;
+    height: 70%;
+    object-fit: contain;
+  }
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 1.875em;
+  line-height: 1;
+
+  svg {
+    width: 1em;
+    height: 1em;
+  }
+
+  &[data-tone='success'] {
+    color: var(--cm-success);
+  }
+
+  &[data-tone='warning'] {
+    color: var(--cm-warning);
+  }
+
+  &[data-tone='danger'] {
+    color: var(--cm-error);
+  }
+}
+
+.body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 0.15em;
+  min-width: 0;
+}
+
+.title {
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 600;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The title doubles as the card's "open" control */
+.open {
+  display: block;
+  max-width: 100%;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: none;
+  }
+
+  /* Stretch the hit area over the whole card */
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+  }
+}
+
+.subtitle {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--cm-text-secondary);
+  font-size: 0.85em;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Every meta item starts with a "·" separator; the list is shifted by one
+// separator width and clipped, so separators that begin a line (the first
+// item or a wrapped one) are hidden instead of dangling at the line start.
+.meta-clip {
+  min-width: 0;
+  overflow-x: clip;
+}
+
+.meta {
+  --entity-meta-sep: 0.9em;
+  margin-inline-start: calc(-1 * var(--entity-meta-sep));
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.1em 0;
+  min-width: 0;
+  color: var(--cm-text-secondary);
+  font-size: 0.8em;
+  line-height: 1.4;
+}
+
+.meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &::before {
+    content: '·';
+    flex: 0 0 auto;
+    width: var(--entity-meta-sep);
+    // Cancel the item gap after the separator.
+    margin-inline-end: -0.35em;
+    text-align: center;
+    color: var(--cm-text-tertiary);
+  }
+}
+
+.meta-icon {
+  flex-shrink: 0;
+  font-size: 1.15em;
+}
+
+.subtitle .field {
+  display: inline;
+
+  .field-label {
+    margin-inline-end: 0.3em;
+  }
+}
+
+.field {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  min-width: 0;
+}
+
+.field-label {
+  color: var(--cm-text-tertiary);
+
+  &::after {
+    content: ':';
+  }
+}
+
+.footer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3em;
+  min-width: 0;
+  margin-block-start: 0.2em;
+  font-size: 0.8em;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  color: var(--cm-text-secondary);
+
+  &[data-tone='success'] .dot {
+    background-color: var(--cm-success);
+  }
+
+  &[data-tone='warning'] {
+    color: var(--cm-warning);
+
+    .dot {
+      background-color: var(--cm-warning);
+    }
+  }
+
+  &[data-tone='danger'] {
+    color: var(--cm-error);
+
+    .dot {
+      background-color: var(--cm-error);
+    }
+  }
+}
+
+.dot {
+  flex: none;
+  width: 0.5em;
+  height: 0.5em;
+  border-radius: 50%;
+  background-color: var(--cm-text-tertiary);
+}
+
+.notice {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  min-width: 0;
+  padding: 0.25em 0.5em;
+  border-radius: 0.3em;
+  overflow-wrap: anywhere;
+
+  &[data-tone='warning'] {
+    background-color: rgba(var(--cm-warning-rgb), 0.12);
+    color: var(--cm-warning);
+  }
+
+  &[data-tone='danger'] {
+    background-color: rgba(var(--cm-error-rgb), 0.12);
+    color: var(--cm-error);
+  }
+
+  &[data-tone='neutral'] {
+    background-color: var(--cm-bg-tertiary);
+    color: var(--cm-text-secondary);
+  }
+}
+
+.notice-text {
+  display: -webkit-box;
+  min-width: 0;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.notice-title {
+  font-weight: 600;
+}
+
+.notice-detail {
+  color: var(--cm-text-secondary);
+
+  &::before {
+    content: ' · ';
+  }
+}
+
+/* Overflow menu pinned to the top end of the card */
+.actions {
+  position: relative;
+  z-index: 2;
+  flex: none;
+  align-self: flex-start;
+  margin-block: -0.25em;
+
+  /* Keep an open menu above the following cards */
+  &:focus-within,
+  &:has([aria-expanded='true']) {
+    z-index: 3;
+  }
+
+  /* ≥2.75em tap target (the small trigger uses a 0.85em font size) */
+  :global(.castmill-menu-button-trigger) {
+    min-width: calc(2.75em / 0.85);
+    min-height: calc(2.75em / 0.85);
+    justify-content: center;
+    padding: 0.35em;
+    border: 0;
+    background-color: transparent;
+    color: var(--cm-text-secondary);
+    box-shadow: none;
+    -webkit-tap-highlight-color: transparent;
+
+    &:hover:not(:disabled) {
+      background-color: var(--cm-bg-hover);
+      color: var(--cm-text-primary);
+    }
+
+    &:active:not(:disabled),
+    &[aria-expanded='true'] {
+      background-color: var(--cm-bg-active);
+      color: var(--cm-text-primary);
+    }
+  }
+
+  /* Open the menu towards the card in both LTR and RTL */
+  :global(.castmill-menu-button-items) {
+    right: auto;
+    left: auto;
+    inset-inline-end: 0;
+    text-align: start;
+  }
+}
+
+@media (pointer: coarse), (max-width: 36em) {
+  /* Small menu items use a 0.8em font size */
+  .actions :global(.castmill-menu-button-items button) {
+    min-height: calc(2.75em / 0.8);
+  }
+}
+
+/* Small footer controls (e.g. "manage tags") keep a 2.75em touch target
+   without making the footer row taller */
+@media (pointer: coarse) {
+  .footer button {
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    margin-block: -0.75rem;
+  }
+}

@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   formatDuration,
+  formatInterval,
   formatTimestamp,
   formatRelativeTime,
   formatRelativeTimeLocalized,
@@ -210,5 +211,14 @@ describe('formatRelativeTimeLocalized', () => {
 
   it('returns "-" for an invalid date string', () => {
     expect(formatRelativeTimeLocalized('invalid-date', 'sv')).toBe('-');
+  });
+});
+
+describe('formatInterval', () => {
+  it('uses the largest whole unit', () => {
+    expect(formatInterval(900, 'en')).toBe('15 min');
+    expect(formatInterval(7200, 'en')).toBe('2 hr');
+    expect(formatInterval(45, 'en')).toBe('45 sec');
+    expect(formatInterval(90, 'en')).toBe('90 sec');
   });
 });

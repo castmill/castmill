@@ -13,7 +13,9 @@ import {
   Table,
   type Column,
   type TableAction,
+  type TableCardContent,
   tableCardLabels,
+  EntityCardIcon,
 } from '@castmill/ui-common';
 import { NetworkService, Organization } from '../../services/network.service';
 import { OrganizationsService } from '../../services/organizations.service';
@@ -27,10 +29,12 @@ import {
   BsUnlock,
   BsSliders,
   BsBoxArrowInRight,
+  BsBuilding,
 } from 'solid-icons/bs';
 import { OrganizationIntegrationSettings } from './organization-integration-settings';
 import { useNetworkContext } from './network-context';
 import styles from './network.module.scss';
+import { networkEntityCardParts } from '../../components/entity-cards/network-entity-card';
 
 const NetworkOrganizations: Component = () => {
   const { t } = useI18n();
@@ -273,6 +277,17 @@ const NetworkOrganizations: Component = () => {
     }
   };
 
+  // Compact mobile card: blocked status · created
+  const orgCard = (org: Organization): TableCardContent => {
+    const network = networkEntityCardParts(t, org);
+    return {
+      visual: <EntityCardIcon icon={BsBuilding} />,
+      busy: joiningOrgId() === org.id,
+      meta: [...network.meta],
+      footer: network.footer,
+    };
+  };
+
   const orgColumns = (): Column<string, Organization>[] => [
     { key: 'name', title: () => t('network.organizations.name') },
     {
@@ -398,6 +413,7 @@ const NetworkOrganizations: Component = () => {
             cardLayout
             cardLabels={cardLabels}
             hideCheckboxes
+            card={orgCard}
             columns={orgColumns}
             data={organizations()}
             actions={orgActions}

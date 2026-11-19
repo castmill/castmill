@@ -10,6 +10,8 @@ export * from './pagination/pagination';
 export * from './styled-input/styled-input';
 export * from './table-view/table-view';
 export * from './table/table';
+export * from './entity-list-card/entity-list-card';
+export * from './entity-list-card/mime-type-icon';
 export * from './tabs/tabs';
 export * from './tabs/tab-keyboard';
 export * from './toolbar/toolbar';

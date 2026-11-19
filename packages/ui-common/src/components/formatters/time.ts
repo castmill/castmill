@@ -134,3 +134,30 @@ export const formatRelativeTimeLocalized = (
     return rtf.format(Math.round(diffInSeconds / 2592000), 'month');
   return rtf.format(Math.round(diffInSeconds / 31536000), 'year');
 };
+
+const INTERVAL_UNITS = [
+  { unit: 'day', seconds: 86400, suffix: 'd' },
+  { unit: 'hour', seconds: 3600, suffix: 'h' },
+  { unit: 'minute', seconds: 60, suffix: 'min' },
+] as const;
+
+/**
+ * Formats an interval in seconds with the largest whole unit, localized via
+ * `Intl.NumberFormat` (e.g. 900 → "15 min", 7200 → "2 hr", 45 → "45 sec").
+ */
+export const formatInterval = (seconds: number, locale?: string): string => {
+  const match = INTERVAL_UNITS.find(
+    (entry) => seconds >= entry.seconds && seconds % entry.seconds === 0
+  );
+  const unit = match?.unit ?? 'second';
+  const value = match ? seconds / match.seconds : seconds;
+  try {
+    return new Intl.NumberFormat(locale, {
+      style: 'unit',
+      unit,
+      unitDisplay: 'short',
+    }).format(value);
+  } catch {
+    return `${value}${match?.suffix ?? 's'}`;
+  }
+};

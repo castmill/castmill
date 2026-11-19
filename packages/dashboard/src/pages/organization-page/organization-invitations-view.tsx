@@ -15,6 +15,7 @@ import {
   tableCardLabels,
 } from '@castmill/ui-common';
 import { AiOutlineDelete, AiOutlineSend } from 'solid-icons/ai';
+import { invitationCard } from '../../components/entity-cards/invitation-card';
 import { createSignal } from 'solid-js';
 import { OrganizationsService } from '../../services/organizations.service';
 import { useI18n } from '../../i18n';
@@ -318,6 +319,7 @@ export const OrganizationInvitationsView = (props: {
           onRowSelect,
           cardLayout: true,
           cardLabels,
+          card: invitationCard(t),
         }}
         pagination={{ itemsPerPage }}
         itemIdKey="id"

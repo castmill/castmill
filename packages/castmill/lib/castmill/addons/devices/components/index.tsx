@@ -1,6 +1,5 @@
 import {
   Component,
-  For,
   batch,
   createEffect,
   createSignal,
@@ -35,7 +34,7 @@ import {
   TagsService,
   Tag,
   TagGroup,
-  TagBadge,
+  TagsCell,
   TagPopover,
   useViewMode,
   isQuotaExceededError,
@@ -43,12 +42,17 @@ import {
   detailUrlOptions,
   closeDetailUrl,
   tableCardLabels,
+  TableCardContent,
+  Timestamp,
+  EntityCardIcon,
+  EntityCardStatus,
   filtersLabel,
   organizeByLabel,
 } from '@castmill/ui-common';
 
 import { BsCheckLg, BsEye, BsTagFill } from 'solid-icons/bs';
 import { AiOutlineDelete } from 'solid-icons/ai';
+import { HiOutlineTv } from 'solid-icons/hi';
 
 import { Device } from '../interfaces/device.interface';
 import DeviceView from './device-view';
@@ -579,6 +583,35 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
     setPincode('');
   };
 
+  const renderTags = (item: DeviceTableItem) => (
+    <TagsCell
+      tags={resourceTagsMap().get(item.id) || []}
+      manageLabel={t('tags.manageTags')}
+      onManage={(anchorEl) => setTagPopoverTarget({ item, anchorEl })}
+    />
+  );
+
+  // Compact mobile card: status · last seen · version, tags
+  const deviceCard = (item: DeviceTableItem): TableCardContent => ({
+    visual: (
+      <EntityCardIcon
+        icon={HiOutlineTv}
+        tone={item.online ? 'success' : 'neutral'}
+      />
+    ),
+    subtitle: item.description,
+    meta: [
+      <EntityCardStatus tone={item.online ? 'success' : 'danger'}>
+        {item.online ? t('common.online') : t('common.offline')}
+      </EntityCardStatus>,
+      !item.online && item.last_online && (
+        <Timestamp value={item.last_online} mode="relative" />
+      ),
+      item.version,
+    ],
+    footer: renderTags(item),
+  });
+
   // Use function to make columns reactive to i18n changes
   const columns = () =>
     [
@@ -605,32 +638,7 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
         key: 'tags',
         title: t('tags.title'),
         sortable: false,
-        render: (item: DeviceTableItem) => {
-          const itemTags = () => resourceTagsMap().get(item.id) || [];
-          return (
-            <div class="tags-cell">
-              <For each={itemTags().slice(0, 3)}>
-                {(tag) => <TagBadge tag={tag} size="small" />}
-              </For>
-              <Show when={itemTags().length > 3}>
-                <span class="tags-overflow">+{itemTags().length - 3}</span>
-              </Show>
-              <button
-                class="tag-manage-btn"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setTagPopoverTarget({
-                    item,
-                    anchorEl: e.currentTarget as HTMLElement,
-                  });
-                }}
-                title={t('tags.manageTags')}
-              >
-                <BsTagFill />
-              </button>
-            </div>
-          );
-        },
+        render: renderTags,
       },
     ] as Column<DeviceTableItem>[];
 
@@ -1028,6 +1036,7 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
           )}
           table={{
             cardLabels: tableCardLabels(t),
+            card: deviceCard,
             columns,
             actions,
             actionsLabel: t('common.actions'),

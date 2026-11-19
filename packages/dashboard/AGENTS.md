@@ -291,6 +291,17 @@ components for phone/tablet layouts (see
   `cardLayout cardLabels={...}`. Don't hand-build `<table>` lists; use `Table`
   with `actions` (use `hidden`/`disabled` for per-row actions) so overflowing
   tables first go compact with a "⋯" row-actions menu, then become cards.
+- Mobile cards all use ui-common's `EntityListCard`. Give every list a small
+  typed adapter via `card` (TableView `table.card`, or `<Table card={...}>`)
+  that returns `TableCardContent`: an `EntityCardIcon`/`EntityCardThumbnail`
+  visual, a concise subtitle and two or three label-free meta items
+  (statuses via `EntityCardStatus`). Reuse the column render helpers instead
+  of duplicating them, keep warnings in the `footer` (`EntityCardNotice`),
+  and share adapters used by several pages in
+  `src/components/entity-cards/` (members and `memberDisplayName`,
+  invitations, network users/organizations). Use ui-common's `TagsCell`,
+  `mimeTypeIcon` and `resolveWidgetIcon` instead of local copies. Never add
+  card markup to pages.
 - Toolbars with filters or actions pass `filtersLabel: filtersLabel(t)`
   so the phone "Filters" toggle is localized; `ResourceTreeView` gets
   `dimensionLabel={t('tags.groups.organizeBy')}`.

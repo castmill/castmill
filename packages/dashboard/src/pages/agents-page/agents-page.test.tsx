@@ -164,8 +164,12 @@ describe('AgentsPage', () => {
     renderPage();
 
     await waitFor(() => expect(screen.getByText('Revoked')).toBeTruthy());
-    expect(screen.queryByTitle('Revoke credentials')).toBeNull();
-    expect(screen.getByTitle('Rotate credentials')).toBeTruthy();
+    expect(
+      screen.queryByRole('button', { name: /^Revoke credentials / })
+    ).toBeNull();
+    expect(
+      screen.getByRole('button', { name: /^Rotate credentials / })
+    ).toBeTruthy();
   });
 
   it('shows when and from where an agent was last used', async () => {
@@ -192,7 +196,9 @@ describe('AgentsPage', () => {
 
     await waitFor(() => expect(screen.getByText('Menu bot')).toBeTruthy());
     expect(screen.queryByText('New agent')).toBeNull();
-    expect(screen.queryByTitle('Rotate credentials')).toBeNull();
+    expect(
+      screen.queryByRole('button', { name: /^Rotate credentials / })
+    ).toBeNull();
   });
 
   it('creates an agent and shows the secret once', async () => {
@@ -236,7 +242,9 @@ describe('AgentsPage', () => {
     renderPage();
     await waitFor(() => expect(screen.getByText('Menu bot')).toBeTruthy());
 
-    fireEvent.click(screen.getByTitle('Rotate credentials'));
+    fireEvent.click(
+      screen.getByRole('button', { name: /^Rotate credentials / })
+    );
     await waitFor(() =>
       expect(screen.getByText(/current secret stops working/)).toBeTruthy()
     );
@@ -264,7 +272,9 @@ describe('AgentsPage', () => {
     renderPage();
     await waitFor(() => expect(screen.getByText('Menu bot')).toBeTruthy());
 
-    fireEvent.click(screen.getByTitle('Revoke credentials'));
+    fireEvent.click(
+      screen.getByRole('button', { name: /^Revoke credentials / })
+    );
     fireEvent.click(await screen.findByText('Confirm'));
     await waitFor(() =>
       expect(AgentsService.revokeCredentials).toHaveBeenCalledWith(
@@ -273,7 +283,7 @@ describe('AgentsPage', () => {
       )
     );
 
-    fireEvent.click(screen.getByTitle('Delete'));
+    fireEvent.click(screen.getByRole('button', { name: /^Delete / }));
     fireEvent.click(await screen.findByText('Confirm'));
     await waitFor(() =>
       expect(AgentsService.remove).toHaveBeenCalledWith('org-1', 'agent-1')

@@ -9,8 +9,10 @@ import {
   useToast,
   tableCardLabels,
   filtersLabel,
+  TableCardContent,
+  EntityCardThumbnail,
 } from '@castmill/ui-common';
-import { BsEye } from 'solid-icons/bs';
+import { BsEye, BsFileEarmark } from 'solid-icons/bs';
 import { createSignal } from 'solid-js';
 
 import { baseUrl } from '../../env';
@@ -207,6 +209,21 @@ export const ResourceChooser = (props: {
 
   interface TableItem {}
 
+  // Compact mobile card: thumbnail, name and ID
+  const resourceCard = (item: any): TableCardContent => ({
+    visual: (
+      <EntityCardThumbnail
+        src={item.files?.['thumbnail']?.uri}
+        alt={item.name}
+        fit="contain"
+        fallbackIcon={BsFileEarmark}
+      />
+    ),
+    title: item.name,
+    titleText: item.name,
+    meta: [item.id !== undefined && `#${item.id}`],
+  });
+
   const actions: TableAction<any>[] = [
     {
       icon: BsEye,
@@ -288,6 +305,7 @@ export const ResourceChooser = (props: {
         }}
         table={{
           cardLabels,
+          card: resourceCard,
           columns,
           actions,
           actionsLabel: t('common.actions'),

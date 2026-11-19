@@ -17,6 +17,10 @@ import { PermissionButton } from '../../components/permission-button/permission-
 import { usePermissions } from '../../hooks/usePermissions';
 import { BsCheckLg } from 'solid-icons/bs';
 import { AiOutlineDelete } from 'solid-icons/ai';
+import {
+  memberCard,
+  memberDisplayName,
+} from '../../components/entity-cards/member-card';
 import { createEffect, createMemo, createSignal, Show } from 'solid-js';
 import { User } from '../../interfaces/user.interface';
 import { OrganizationsService } from '../../services/organizations.service';
@@ -193,47 +197,46 @@ export const OrganizationMembersView = (props: {
     return adminCount() > 1;
   });
 
+  const memberName = (item: any) => memberDisplayName(t, item, currentUser?.id);
+
+  const memberRole = (item: any) => {
+    const isCurrentUser = item.user_id === currentUser?.id;
+    const canUpdate = canPerformAction('organizations', 'update');
+
+    // Disable role change for current user or if no permission
+    if (isCurrentUser || !canUpdate) {
+      const roleLabel =
+        roleItems.find((r) => r.value === item.role)?.name || item.role;
+      return <span>{roleLabel}</span>;
+    }
+
+    return (
+      <Dropdown
+        label=""
+        variant="inline"
+        items={roleItems}
+        value={item.role}
+        id={`member-role-${item.user_id}`}
+        name="member_role"
+        onSelectChange={(value: string | null) =>
+          handleRoleChange(item.user_id, item.user.name, value)
+        }
+      />
+    );
+  };
+
   const columns = () => [
     {
       key: 'user.name',
       title: () => t('common.name'),
       sortable: true,
-      render: (item: any) => {
-        const isCurrentUser = item.user_id === currentUser?.id;
-        return isCurrentUser
-          ? `${item.user.name} ${t('common.youIndicator')}`
-          : item.user.name;
-      },
+      render: memberName,
     },
     {
       key: 'role',
       title: () => t('common.role'),
       sortable: true,
-      render: (item: any) => {
-        const isCurrentUser = item.user_id === currentUser?.id;
-        const canUpdate = canPerformAction('organizations', 'update');
-
-        // Disable role change for current user or if no permission
-        if (isCurrentUser || !canUpdate) {
-          const roleLabel =
-            roleItems.find((r) => r.value === item.role)?.name || item.role;
-          return <span>{roleLabel}</span>;
-        }
-
-        return (
-          <Dropdown
-            label=""
-            variant="inline"
-            items={roleItems}
-            value={item.role}
-            id={`member-role-${item.user_id}`}
-            name="member_role"
-            onSelectChange={(value: string | null) =>
-              handleRoleChange(item.user_id, item.user.name, value)
-            }
-          />
-        );
-      },
+      render: memberRole,
     },
     {
       key: 'inserted_at',
@@ -503,6 +506,11 @@ export const OrganizationMembersView = (props: {
           onRowSelect,
           cardLayout: true,
           cardLabels,
+          card: memberCard({
+            t,
+            currentUserId: currentUser?.id,
+            role: memberRole,
+          }),
         }}
         pagination={{ itemsPerPage }}
         itemIdKey="user_id"

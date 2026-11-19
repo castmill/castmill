@@ -168,6 +168,35 @@ components:
   and no owner (`onMount` would run before the ref is set).
   Row-action triggers (compact rows and cards) are quiet "⋯" icon buttons
   styled with `--cm-*` tokens; cards disable the mobile tap highlight.
+- **Entity cards**: every card-layout row renders through
+  `EntityListCard` (`components/entity-list-card/`), a compact horizontal
+  card: `[checkbox] [visual 4.5em] [title / subtitle / meta] [⋯ actions]`
+  plus an optional `footer`. The title is the only "open" control (a
+  `<button>` whose `::after` covers the card, calling `onRowClick`); the
+  checkbox, meta controls and the actions menu sit above it, so nothing is
+  nested inside another interactive element. Selected cards get a subtle
+  tinted border; `disabled`/`busy` dim the card or mark it `aria-busy`.
+  Provide content per entity with the Table/TableView `card` prop, an adapter
+  `(item) => TableCardContent` (`visual`, `title`, `titleText`, `subtitle`,
+  `meta[]`, `footer`, `actions`, `disabled`, `busy`). Without it, the first
+  column is the title and the other columns become `EntityCardField`
+  label/value items. Use the helpers instead of custom markup:
+  `EntityCardIcon` (icon/glyph with a `tone`), `EntityCardThumbnail`
+  (`object-fit` cover/contain, fallback icon), `EntityCardStatus` (dot +
+  text), `EntityCardNotice` (footer warnings/errors; put the reason in
+  `detail`), `EntityCardMetaIcon` (labelled icon as a meta value) and
+  `EntityCardField` (only when a value needs a label). Shared building blocks
+  for adapters and desktop cells: `TagsCell` (tag badges, "+N" and manage
+  button), `mimeTypeIcon`/`mimeTypeLabel` (file or photo/video icons) and
+  `resolveWidgetIcon`/`getIconUrl`/`isImageIcon` (widget image or glyph).
+  Never rely on `title` tooltips for meaning: they are unreachable on touch
+  screens. Meta items that are falsy are skipped,
+  so don't render empty values or redundant "Type:"/"Size:" labels; keep it
+  to two or three short items and use `formatBytes`, `Timestamp` and
+  `formatInterval` (`15 min`) for human-readable values. Use the footer only
+  for actionable problems (offline device, failed processing) or per-item
+  tags. The overflow menu lists the table's `actions` (honouring `hidden` and
+  `disabled`); an empty `actions` list renders no actions column.
 - **ToolBar**: on phones `toolbar-right` and its wrapper `div` (e.g. quota +
   add button) wrap instead of widening the page.
 - **MenuButton**: pass `icon` for an icon-only trigger; `label` becomes its

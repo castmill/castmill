@@ -14,7 +14,9 @@ import {
   Table,
   type Column,
   type TableAction,
+  type TableCardContent,
   tableCardLabels,
+  EntityCardIcon,
 } from '@castmill/ui-common';
 import {
   NetworkService,
@@ -32,8 +34,11 @@ import {
   BsShieldMinus,
 } from 'solid-icons/bs';
 import { getUser } from '../../components/auth';
+import { IoPersonOutline } from 'solid-icons/io';
 import { useNetworkContext } from './network-context';
+import { invitationCard as pendingInvitationCard } from '../../components/entity-cards/invitation-card';
 import styles from './network.module.scss';
+import { networkEntityCardParts } from '../../components/entity-cards/network-entity-card';
 
 const NetworkUsers: Component = () => {
   const { t } = useI18n();
@@ -344,6 +349,30 @@ const NetworkUsers: Component = () => {
     }
   };
 
+  // Compact mobile card: email, blocked status · created
+  const userCard = (user: NetworkUser): TableCardContent => {
+    const network = networkEntityCardParts(t, user);
+    return {
+      visual: <EntityCardIcon icon={IoPersonOutline} />,
+      title: user.name || user.email,
+      titleText: user.name || user.email,
+      subtitle: user.name ? user.email : undefined,
+      meta: [
+        isNetworkAdmin(user)
+          ? t('network.users.networkAdmin')
+          : t('network.users.networkMember'),
+        ...network.meta,
+      ],
+      footer: network.footer,
+    };
+  };
+
+  // Compact mobile card: organization, role · status · expiry
+  const invitationCard = (invitation: NetworkInvitation): TableCardContent => ({
+    ...pendingInvitationCard(t)(invitation),
+    subtitle: invitation.organization_name,
+  });
+
   const userColumns = (): Column<string, NetworkUser>[] => [
     { key: 'name', title: () => t('network.users.name') },
     { key: 'email', title: () => t('network.users.email') },
@@ -538,6 +567,7 @@ const NetworkUsers: Component = () => {
               cardLayout
               cardLabels={cardLabels}
               hideCheckboxes
+              card={userCard}
               columns={userColumns}
               data={users()}
               actions={userActions}
@@ -609,6 +639,7 @@ const NetworkUsers: Component = () => {
                 cardLayout
                 cardLabels={cardLabels}
                 hideCheckboxes
+                card={invitationCard}
                 columns={invitationColumns}
                 data={invitations()}
                 actions={invitationActions}

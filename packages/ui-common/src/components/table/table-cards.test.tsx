@@ -138,22 +138,19 @@ describe('Table card layout', () => {
     expect(layoutOf(container)).toBe('table');
   });
 
-  it('renders the primary column as title and others as label/value rows', () => {
+  it('renders the primary column as title and others as labelled metadata', () => {
     render(() => <Table columns={columns} data={data} cardLayout />);
     resizeTo(PHONE_WIDTH);
 
     const [first] = screen.getAllByTestId('table-card');
-    const title = first.querySelector('[class*="card-title"]');
+    expect(first.querySelector('[data-entity-card]')).toBeInTheDocument();
+    const title = first.querySelector('[class*="title"]');
     expect(title).toHaveTextContent('John Doe');
 
-    const labels = Array.from(first.querySelectorAll('dt')).map(
-      (dt) => dt.textContent
+    const meta = Array.from(first.querySelectorAll('[class*="meta-item"]')).map(
+      (item) => item.textContent
     );
-    const values = Array.from(first.querySelectorAll('dd')).map(
-      (dd) => dd.textContent
-    );
-    expect(labels).toEqual(['Role', 'Email']);
-    expect(values).toEqual(['admin', 'j@x.io']);
+    expect(meta).toEqual(['Roleadmin', 'Emailj@x.io']);
   });
 
   it('uses cardPrimaryColumn and custom renderers', () => {
@@ -175,20 +172,77 @@ describe('Table card layout', () => {
     resizeTo(PHONE_WIDTH);
 
     const [first] = screen.getAllByTestId('table-card');
-    expect(first.querySelector('[class*="card-title"]')).toHaveTextContent(
-      'admin'
-    );
+    expect(first.querySelector('[class*="title"]')).toHaveTextContent('admin');
     expect(within(first).getByText('JOHN DOE').tagName).toBe('STRONG');
     expect(within(first).getByText('Name')).toBeInTheDocument();
   });
 
-  it('omits the field list when there is only one column', () => {
+  it('omits the metadata when there is only one column', () => {
     render(() => (
       <Table columns={[columns[0]]} data={data} cardLayout hideCheckboxes />
     ));
     resizeTo(PHONE_WIDTH);
     const [first] = screen.getAllByTestId('table-card');
-    expect(first.querySelector('dl')).not.toBeInTheDocument();
+    expect(first.querySelector('[class*="meta"]')).not.toBeInTheDocument();
+    expect(within(first).queryByRole('checkbox')).not.toBeInTheDocument();
+  });
+
+  it('renders entity-specific content from the card adapter', () => {
+    const [suffix, setSuffix] = createSignal('');
+    render(() => (
+      <Table
+        columns={columns}
+        data={data}
+        cardLayout
+        actions={[{ icon: 'E', label: 'Edit', handler: vi.fn() }]}
+        card={(item) => ({
+          visual: <span data-testid="visual" />,
+          title: `${item.name}${suffix()}`,
+          titleText: `Entity ${item.name}`,
+          subtitle: item.user.email,
+          meta: [item.role, item.id === '2' && 'second', null],
+          footer: item.id === '1' ? <em>Offline</em> : undefined,
+        })}
+      />
+    ));
+    resizeTo(PHONE_WIDTH);
+
+    const [first, second] = screen.getAllByTestId('table-card');
+    expect(within(first).getByTestId('visual')).toBeInTheDocument();
+    expect(within(first).getByText('j@x.io')).toBeInTheDocument();
+    expect(within(first).getByText('Offline')).toBeInTheDocument();
+    expect(within(second).queryByText('Offline')).not.toBeInTheDocument();
+    expect(first.querySelectorAll('[class*="meta-item"]')).toHaveLength(1);
+    expect(second.querySelectorAll('[class*="meta-item"]')).toHaveLength(2);
+    // Column labels are not repeated when an adapter provides metadata
+    expect(within(first).queryByText('Role')).not.toBeInTheDocument();
+    expect(
+      within(first).getByRole('button', { name: 'Actions Entity John Doe' })
+    ).toBeInTheDocument();
+
+    setSuffix(' (copy)');
+    expect(within(first).getByText('John Doe (copy)')).toBeInTheDocument();
+  });
+
+  it('titles adapter cards with the item name, not the first column', () => {
+    render(() => (
+      <Table
+        columns={[
+          { key: 'thumb', title: 'Thumb', render: () => <img alt="thumb" /> },
+          ...columns,
+        ]}
+        data={data}
+        cardLayout
+        card={() => ({ meta: ['x'] })}
+      />
+    ));
+    resizeTo(PHONE_WIDTH);
+
+    const [first] = screen.getAllByTestId('table-card');
+    expect(first.querySelector('[class*="title"]')?.textContent).toContain(
+      'John Doe'
+    );
+    expect(within(first).queryByAltText('thumb')).not.toBeInTheDocument();
   });
 
   it('exposes row actions through a menu', async () => {
@@ -244,7 +298,7 @@ describe('Table card layout', () => {
     expect(screen.getAllByRole('button', { name: /Actions/ })).toHaveLength(2);
   });
 
-  it('handles card clicks and keyboard activation without hijacking controls', async () => {
+  it('opens through the title button without hijacking controls', async () => {
     const onRowClick = vi.fn();
     const onRowSelect = vi.fn();
     render(() => (
@@ -260,39 +314,34 @@ describe('Table card layout', () => {
     resizeTo(PHONE_WIDTH);
 
     const [first] = screen.getAllByTestId('table-card');
-    expect(first).toHaveAttribute('tabindex', '0');
+    expect(first).not.toHaveAttribute('tabindex');
 
-    await fireEvent.click(within(first).getByText('admin'));
+    await fireEvent.click(
+      within(first).getByRole('button', { name: 'John Doe' })
+    );
     expect(onRowClick).toHaveBeenCalledWith(data[0]);
 
-    await fireEvent.keyDown(first, { key: 'Enter' });
-    await fireEvent.keyDown(first, { key: ' ' });
-    await fireEvent.keyDown(first, { key: 'a' });
-    expect(onRowClick).toHaveBeenCalledTimes(3);
-
-    // Key presses on nested controls are ignored
     const checkbox = within(first).getByRole('checkbox');
-    await fireEvent.keyDown(checkbox, { key: 'Enter' });
-    expect(onRowClick).toHaveBeenCalledTimes(3);
-
     await fireEvent.click(checkbox);
-    expect(onRowClick).toHaveBeenCalledTimes(3);
+    expect(onRowClick).toHaveBeenCalledTimes(1);
     expect(onRowSelect).toHaveBeenLastCalledWith(new Set(['1']));
-    expect(first.className).toMatch(/selected/);
+    expect(first.querySelector('[data-entity-card]')?.className).toMatch(
+      /selected/
+    );
 
     await fireEvent.click(
       within(first).getByRole('button', { name: /Actions/ })
     );
-    expect(onRowClick).toHaveBeenCalledTimes(3);
+    expect(onRowClick).toHaveBeenCalledTimes(1);
   });
 
-  it('is not focusable without a row click handler', () => {
+  it('has no open control without a row click handler', () => {
     render(() => <Table columns={columns} data={data} cardLayout />);
     resizeTo(PHONE_WIDTH);
     const [first] = screen.getAllByTestId('table-card');
-    expect(first).not.toHaveAttribute('tabindex');
-    fireEvent.click(first);
-    fireEvent.keyDown(first, { key: 'Enter' });
+    expect(
+      within(first).queryByRole('button', { name: 'John Doe' })
+    ).not.toBeInTheDocument();
   });
 
   it('supports select all with localized labels and keeps it in sync', async () => {

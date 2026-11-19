@@ -19,6 +19,10 @@ import {
   useToast,
   isQuotaExceededError,
   tableCardLabels,
+  TableAction,
+  TableCardContent,
+  EntityCardIcon,
+  EntityCardStatus,
 } from '@castmill/ui-common';
 
 import { store } from '../../store/store';
@@ -289,110 +293,107 @@ const AgentsPage: Component = () => {
     }
   };
 
-  const columns = (): Column<string, Agent>[] => {
-    const base: Column<string, Agent>[] = [
-      {
-        key: 'name',
-        title: () => t('common.name'),
-        render: (agent) => (
-          <div class={styles.nameCell}>
-            <span class={styles.agentName}>{agent.name}</span>
-            <Show when={agent.description}>
-              <span class={styles.agentDescription}>{agent.description}</span>
-            </Show>
-          </div>
-        ),
-      },
-      {
-        key: 'role',
-        title: () => t('common.role'),
-        render: (agent) => <>{roleLabel(agent.role)}</>,
-      },
-      {
-        key: 'credentials',
-        title: () => t('agents.credentials'),
-        render: (agent) => (
-          <Show
-            when={agent.has_credentials}
-            fallback={
-              <span class={styles.badgeRevoked}>
-                {t('agents.credentialsRevoked')}
-              </span>
-            }
-          >
-            <code class={styles.secretChip}>
-              {`${agent.secret_prefix ?? ''}…`}
-            </code>
+  const lastUsed = (agent: Agent) =>
+    agent.last_used_at
+      ? formatDate(parseServerDate(agent.last_used_at), 'Pp')
+      : t('agents.neverUsed');
+
+  // Compact mobile card: description, role · credentials · last used
+  const agentCard = (agent: Agent): TableCardContent => ({
+    visual: <EntityCardIcon icon={TbRobot} />,
+    title: agent.name,
+    subtitle: agent.description,
+    meta: [
+      roleLabel(agent.role),
+      agent.has_credentials ? (
+        <code class={styles.secretChip} title={t('agents.credentials')}>
+          {`${agent.secret_prefix ?? ''}…`}
+        </code>
+      ) : (
+        <EntityCardStatus tone="danger">
+          {t('agents.credentialsRevoked')}
+        </EntityCardStatus>
+      ),
+      <span title={t('agents.lastUsed')}>{lastUsed(agent)}</span>,
+    ],
+  });
+
+  const actions = (): TableAction<Agent>[] =>
+    canManage()
+      ? [
+          {
+            icon: AiOutlineEdit,
+            label: () => t('common.edit'),
+            handler: openEdit,
+          },
+          {
+            icon: AiOutlineKey,
+            label: () => t('agents.rotate'),
+            handler: (agent) => setPendingConfirm({ kind: 'rotate', agent }),
+          },
+          {
+            icon: AiOutlineStop,
+            label: () => t('agents.revoke'),
+            hidden: (agent) => !agent.has_credentials,
+            handler: (agent) => setPendingConfirm({ kind: 'revoke', agent }),
+          },
+          {
+            icon: AiOutlineDelete,
+            label: () => t('common.delete'),
+            handler: (agent) => setPendingConfirm({ kind: 'delete', agent }),
+          },
+        ]
+      : [];
+
+  const columns = (): Column<string, Agent>[] => [
+    {
+      key: 'name',
+      title: () => t('common.name'),
+      render: (agent) => (
+        <div class={styles.nameCell}>
+          <span class={styles.agentName}>{agent.name}</span>
+          <Show when={agent.description}>
+            <span class={styles.agentDescription}>{agent.description}</span>
           </Show>
-        ),
-      },
-      {
-        key: 'last_used_at',
-        title: () => t('agents.lastUsed'),
-        render: (agent) => (
-          <div class={styles.lastUsed}>
-            <span>
-              {agent.last_used_at
-                ? formatDate(parseServerDate(agent.last_used_at), 'Pp')
-                : t('agents.neverUsed')}
+        </div>
+      ),
+    },
+    {
+      key: 'role',
+      title: () => t('common.role'),
+      render: (agent) => <>{roleLabel(agent.role)}</>,
+    },
+    {
+      key: 'credentials',
+      title: () => t('agents.credentials'),
+      render: (agent) => (
+        <Show
+          when={agent.has_credentials}
+          fallback={
+            <span class={styles.badgeRevoked}>
+              {t('agents.credentialsRevoked')}
             </span>
-            <Show when={agent.last_ip}>
-              <span class={styles.ip}>{agent.last_ip}</span>
-            </Show>
-          </div>
-        ),
-      },
-    ];
-
-    if (!canManage()) return base;
-
-    // Rendered as a column (not Table actions) because revoke is conditional.
-    return [
-      ...base,
-      {
-        key: 'actions',
-        title: () => t('common.actions'),
-        render: (agent) => (
-          <div class={styles.rowActions}>
-            <button
-              type="button"
-              title={t('common.edit')}
-              aria-label={`${t('common.edit')} ${agent.name}`}
-              onClick={() => openEdit(agent)}
-            >
-              <AiOutlineEdit />
-            </button>
-            <button
-              type="button"
-              title={t('agents.rotate')}
-              aria-label={`${t('agents.rotate')} ${agent.name}`}
-              onClick={() => setPendingConfirm({ kind: 'rotate', agent })}
-            >
-              <AiOutlineKey />
-            </button>
-            <Show when={agent.has_credentials}>
-              <button
-                type="button"
-                title={t('agents.revoke')}
-                aria-label={`${t('agents.revoke')} ${agent.name}`}
-                onClick={() => setPendingConfirm({ kind: 'revoke', agent })}
-              >
-                <AiOutlineStop />
-              </button>
-            </Show>
-            <button
-              type="button"
-              title={t('common.delete')}
-              aria-label={`${t('common.delete')} ${agent.name}`}
-              onClick={() => setPendingConfirm({ kind: 'delete', agent })}
-            >
-              <AiOutlineDelete />
-            </button>
-          </div>
-        ),
-      },
-    ];
-  };
+          }
+        >
+          <code class={styles.secretChip}>
+            {`${agent.secret_prefix ?? ''}…`}
+          </code>
+        </Show>
+      ),
+    },
+    {
+      key: 'last_used_at',
+      title: () => t('agents.lastUsed'),
+      render: (agent) => (
+        <div class={styles.lastUsed}>
+          <span>{lastUsed(agent)}</span>
+          <Show when={agent.last_ip}>
+            <span class={styles.ip}>{agent.last_ip}</span>
+          </Show>
+        </div>
+      ),
+    },
+  ];
 
   const agentsTable = () => (
     <div class={styles.tabPanel}>
@@ -420,6 +421,9 @@ const AgentsPage: Component = () => {
           <Table<string, Agent>
             cardLayout
             cardLabels={cardLabels}
+            card={agentCard}
+            actions={actions}
+            actionsLabel={() => t('common.actions')}
             columns={columns}
             data={agents()}
             hideCheckboxes

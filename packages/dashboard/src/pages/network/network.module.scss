@@ -31,7 +31,7 @@
 
   .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(12em, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(12em, 100%), 1fr));
     gap: 1em;
     margin-bottom: 2em;
   }
@@ -58,11 +58,17 @@
   }
 
   .section {
+    min-width: 0;
     margin-bottom: 2em;
     padding: 1.5em;
     border-radius: 0.75em;
     background: var(--cm-bg-sunken);
     border: 0.1em solid var(--cm-border-subtle);
+
+    @media (max-width: 36em) {
+      margin-bottom: 1em;
+      padding: 1em;
+    }
 
     h2 {
       margin: 0 0 0.5em 0;
@@ -80,7 +86,7 @@
 
   .form-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(20em, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(20em, 100%), 1fr));
     gap: 1.5em;
   }
 
@@ -99,6 +105,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 1em;
     padding: 1em;
     border-radius: 0.5em;
     background: var(--cm-bg-hover);
@@ -110,8 +117,10 @@
 
     .toggle-info {
       display: flex;
+      flex: 1;
       flex-direction: column;
       gap: 0.25em;
+      min-width: 0;
 
       .toggle-label {
         font-weight: 500;
