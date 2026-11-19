@@ -49,7 +49,7 @@ packages/
 ## Internationalization (i18n) System
 
 ### Overview
-The dashboard implements a comprehensive internationalization system supporting 9 languages with advanced features including pluralization, date/time formatting, number formatting, and currency formatting.
+The dashboard implements a comprehensive internationalization system supporting 10 languages with advanced features including pluralization, date/time formatting, number formatting, and currency formatting.
 
 ### Supported Languages
 1. **English (en)** - Base language
@@ -59,8 +59,9 @@ The dashboard implements a comprehensive internationalization system supporting 
 5. **French (fr)**
 6. **Chinese Mandarin (zh)**
 7. **Arabic (ar)** - RTL support
-8. **Korean (ko)**
-9. **Japanese (ja)**
+8. **Hebrew (he)** - RTL support
+9. **Korean (ko)**
+10. **Japanese (ja)**
 
 ### i18n Architecture
 
@@ -116,6 +117,7 @@ packages/dashboard/src/i18n/
 │   ├── fr.json          # French translations
 │   ├── zh.json          # Chinese translations
 │   ├── ar.json          # Arabic translations
+│   ├── he.json          # Hebrew translations
 │   ├── ko.json          # Korean translations
 │   └── ja.json          # Japanese translations
 ├── index.tsx            # I18n provider and hooks
@@ -221,7 +223,7 @@ A GitHub Actions workflow checks for missing translations:
 
 ### Translation Helper Scripts
 
-The dashboard includes a comprehensive CLI tool for managing translations across all 9 supported languages. This tool is located at `packages/dashboard/scripts/i18n/translation-helper.cjs` and should be used instead of manually editing translation files or creating ad-hoc scripts.
+The dashboard includes a comprehensive CLI tool for managing translations across all 10 supported languages. This tool is located at `packages/dashboard/scripts/i18n/translation-helper.cjs` and should be used instead of manually editing translation files or creating ad-hoc scripts.
 
 #### Installation and Setup
 ```bash
@@ -249,7 +251,7 @@ node scripts/i18n/translation-helper.cjs add teams.settings.title "Team Settings
 # Add a key with parameters
 node scripts/i18n/translation-helper.cjs add users.welcome "Welcome, {name}!"
 ```
-This creates the key in all 9 language files with the English value and `TODO: translate` markers for other languages.
+This creates the key in all 10 language files with the English value and `TODO: translate` markers for other languages.
 
 ##### Check Translation Completeness
 Scan all language files for missing keys and untranslated content:
@@ -319,7 +321,7 @@ node scripts/i18n/translation-helper.cjs list teams.invitations
 - Use nested keys for logical grouping: `teams.invitations.success`
 - Include context in translation keys: `buttons.save` vs `actions.save`
 - Use `tp()` for countable items with proper pluralization
-- Test with different locales, especially RTL (Arabic)
+- Test with different locales, especially RTL (Arabic, Hebrew)
 - Add new translation keys to all language files
 
 #### DON'T:
@@ -398,7 +400,7 @@ toast.success(t('operation.completed'));
 - Import `useI18n` from `'./i18n'` (relative path from components)
 - Toast messages should use `t()` function, not hardcoded strings
 - Watch for merge conflicts in translation files - they can cause missing translations
-- RTL languages (Arabic) may need special CSS considerations
+- RTL languages (Arabic, Hebrew) may need special CSS considerations
 
 ### Error Handling
 When encountering missing translations, the system falls back to the translation key itself, making it easy to spot untranslated content during development.

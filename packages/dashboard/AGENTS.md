@@ -19,14 +19,14 @@ This guide provides comprehensive information about internationalization in the 
 
 ## Overview
 
-The Dashboard is **fully internationalized** with support for 9 languages. Every user-facing string must be localized. The system provides:
+The Dashboard is **fully internationalized** with support for 10 languages. Every user-facing string must be localized. The system provides:
 
 - **Text translation** with parameter interpolation
 - **Pluralization** with locale-specific rules
 - **Date/time formatting** with locale awareness
 - **Number formatting** per locale conventions
 - **Currency formatting** with proper symbols
-- **RTL support** for Arabic
+- **RTL support** for Arabic and Hebrew
 
 ### Supported Languages
 
@@ -39,6 +39,7 @@ The Dashboard is **fully internationalized** with support for 9 languages. Every
 | `fr` | French   | Français    | 100%     | No  |
 | `zh` | Chinese  | 中文        | 100%     | No  |
 | `ar` | Arabic   | العربية     | 100%     | Yes |
+| `he` | Hebrew   | עברית       | 100%     | Yes |
 | `ko` | Korean   | 한국어      | 100%     | No  |
 | `ja` | Japanese | 日本語      | 100%     | No  |
 
@@ -47,7 +48,7 @@ The Dashboard is **fully internationalized** with support for 9 languages. Every
 ## Device Details Orientation
 
 The device addon Details form supports clockwise `0`, `90`, `180`, and `270`
-degrees. Translations live under `devices.orientation` in all nine locales.
+degrees. Translations live under `devices.orientation` in all ten locales.
 Offline edits persist on the server and apply at the next player connection.
 The device's `info.capabilities.orientation` flag must explicitly be true to
 enable the selector; absent flags identify older players. When a player posts
@@ -375,6 +376,7 @@ packages/dashboard/src/i18n/
     ├── fr.json              # French
     ├── zh.json              # Chinese
     ├── ar.json              # Arabic (RTL)
+    ├── he.json              # Hebrew (RTL)
     ├── ko.json              # Korean
     └── ja.json              # Japanese
 ```
@@ -569,7 +571,7 @@ When adding a new component or feature:
    ```
 
 3. **Add translations to all languages**
-   - Spanish, Swedish, German, French, Chinese, Arabic, Korean, Japanese
+   - Spanish, Swedish, German, French, Chinese, Arabic, Hebrew, Korean, Japanese
    - Use proper translations (not just English)
    - Maintain the same JSON structure
 
@@ -899,7 +901,7 @@ Already defined in all languages:
 ### For Every PR
 
 1. ✅ All user-facing text uses `t()` or other i18n functions
-2. ✅ New translation keys added to ALL 9 languages
+2. ✅ New translation keys added to ALL 10 languages
 3. ✅ Tests wrapped in `I18nProvider`
 4. ✅ `yarn check-translations` passes locally
 5. ✅ CI translation check passes
@@ -922,7 +924,7 @@ Already defined in all languages:
 
 ---
 
-**Remember**: Internationalization is not optional. Every user-facing string must be localized for all 9 supported languages. The translation coverage check in CI will enforce this standard.
+**Remember**: Internationalization is not optional. Every user-facing string must be localized for all 10 supported languages. The translation coverage check in CI will enforce this standard.
 
 ---
 

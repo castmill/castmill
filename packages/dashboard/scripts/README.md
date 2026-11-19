@@ -135,7 +135,7 @@ node scripts/check-missing-translations.cjs ja    # Japanese
 - Compares each language file against `en.json` (the source of truth)
 - Identifies missing keys in each language
 - Reports extra keys that don't exist in English
-- Verifies structural consistency across all 9 languages
+- Verifies structural consistency across all 10 languages
 
 #### Output
 
@@ -245,7 +245,7 @@ const path = require('path');
 3. **Verify with check-missing-translations** - Ensure completeness
 4. **Translate systematically** - One language at a time
 5. **Build frequently** - Catch JSON errors early (run `yarn build`)
-6. **Keep all 9 languages synchronized** - Always at 348 lines, 284 keys
+6. **Keep all 10 languages synchronized** - Always at 348 lines, 284 keys
 
 ## Related Documentation
 

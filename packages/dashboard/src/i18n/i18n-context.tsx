@@ -166,7 +166,7 @@ export function I18nProvider(props: { children: JSX.Element }) {
       // Set HTML lang attribute
       document.documentElement.lang = targetLocale;
 
-      // Set RTL direction for Arabic
+      // Set RTL direction for right-to-left locales (Arabic, Hebrew)
       const localeInfo = SUPPORTED_LOCALES.find((l) => l.code === targetLocale);
       if (localeInfo?.rtl) {
         document.documentElement.dir = 'rtl';

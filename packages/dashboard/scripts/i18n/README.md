@@ -4,7 +4,7 @@ This directory contains tools for managing translations across all supported lan
 
 ## Overview
 
-The Castmill dashboard supports 9 languages:
+The Castmill dashboard supports 10 languages:
 
 - English (en) - Base language
 - Spanish (es)
@@ -13,6 +13,7 @@ The Castmill dashboard supports 9 languages:
 - French (fr)
 - Chinese Mandarin (zh)
 - Arabic (ar) - RTL support
+- Hebrew (he) - RTL support
 - Korean (ko)
 - Japanese (ja)
 
@@ -100,7 +101,7 @@ node scripts/i18n/translation-helper.cjs add items.count "{count} items"
 
 **What it does:**
 
-- Creates the key in all 9 language files
+- Creates the key in all 10 language files
 - Sets the English translation directly
 - Marks other languages with `TODO: translate` prefix
 - Maintains proper nested JSON structure
@@ -336,6 +337,7 @@ packages/dashboard/
 │       │   ├── fr.json      # French translations
 │       │   ├── zh.json      # Chinese translations
 │       │   ├── ar.json      # Arabic translations
+│       │   ├── he.json      # Hebrew translations
 │       │   ├── ko.json      # Korean translations
 │       │   └── ja.json      # Japanese translations
 │       ├── index.tsx        # i18n provider and hooks
@@ -427,7 +429,7 @@ Translation file structure:
 - ✅ Use TODO markers to track incomplete translations
 - ✅ Run `check` command before committing translation changes
 - ✅ Keep translation keys descriptive and context-specific
-- ✅ Test with multiple locales, especially RTL (Arabic)
+- ✅ Test with multiple locales, especially RTL (Arabic, Hebrew)
 
 ### DON'T:
 
