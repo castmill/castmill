@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@solidjs/testing-library';
+import { render, fireEvent, waitFor } from '@solidjs/testing-library';
 import NotificationBell from './notification-bell';
 import { authFetch } from '../auth';
 import { I18nProvider } from '../../i18n';
