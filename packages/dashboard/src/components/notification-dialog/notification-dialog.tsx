@@ -56,17 +56,72 @@ export const NotificationDialog: Component<NotificationDialogProps> = (
     document.removeEventListener('keydown', handleKeyDown);
   });
 
+  const PAGE_SIZE = 20;
+
   // Notifications deleted while the dialog is open (for example invitations
   // whose link was replaced). Lists loaded later must not bring them back.
   const deletedIds = new Set<string>();
+  // Notifications received live; the server lists them first.
+  const liveIds = new Set<string>();
   // Counts live events, so an older list response does not overwrite the
   // unread count they reported.
   let liveEvents = 0;
+  // Bumped when the loaded pages are reloaded; older responses are ignored.
+  let listVersion = 0;
 
   const reportUnreadCount = (count: number | undefined) => {
     if (count !== undefined) {
       setUnreadCount(count);
       props.onNotificationRead(count);
+    }
+  };
+
+  // Adds a server response to the list. Returns whether it contained
+  // notifications deleted meanwhile, which means its pages no longer line up
+  // with the server's.
+  const mergeLoaded = (data: Notification[], replace: boolean) => {
+    const loaded = data.filter((n) => !deletedIds.has(String(n.id)));
+
+    setNotifications((prev) => {
+      if (replace) {
+        const loadedIds = new Set(loaded.map((n) => String(n.id)));
+        const newer = prev.filter(
+          (n) => liveIds.has(String(n.id)) && !loadedIds.has(String(n.id))
+        );
+        return [...newer, ...loaded];
+      }
+
+      // Notifications received while the request was in flight are newer.
+      const known = new Set(prev.map((n) => String(n.id)));
+      return [...prev, ...loaded.filter((n) => !known.has(String(n.id)))];
+    });
+
+    return loaded.length < data.length;
+  };
+
+  // Deleting a loaded notification shifts the server's offset-based pages, so
+  // the next page would skip one. Reload everything loaded so far instead.
+  const reloadLoadedPages = async () => {
+    const version = ++listVersion;
+    const size = page() * PAGE_SIZE;
+    const liveEventsBefore = liveEvents;
+
+    setLoading(true);
+    try {
+      const result = await notificationsService.getNotifications(1, size);
+      if (version !== listVersion) return;
+
+      setHasMore(result.data.length >= size);
+      const shifted = mergeLoaded(result.data, true);
+
+      if (liveEvents === liveEventsBefore) {
+        reportUnreadCount(result.unread_count);
+      }
+      if (shifted && hasMore()) reloadLoadedPages();
+    } catch (error) {
+      console.error('Failed to reload notifications:', error);
+    } finally {
+      if (version === listVersion) setLoading(false);
     }
   };
 
@@ -81,6 +136,7 @@ export const NotificationDialog: Component<NotificationDialogProps> = (
       if (!notification || deletedIds.has(String(notification.id))) return;
 
       liveEvents++;
+      liveIds.add(String(notification.id));
       setNotifications((prev) =>
         prev.some((n) => String(n.id) === String(notification.id))
           ? prev
@@ -92,10 +148,14 @@ export const NotificationDialog: Component<NotificationDialogProps> = (
     const deletedRef = channel.on('notifications_deleted', (payload: any) => {
       liveEvents++;
       for (const id of payload.ids ?? []) deletedIds.add(String(id));
+
+      const before = notifications().length;
       setNotifications((prev) =>
         prev.filter((notification) => !deletedIds.has(String(notification.id)))
       );
       reportUnreadCount(payload.unread_count);
+
+      if (notifications().length < before && hasMore()) reloadLoadedPages();
     });
 
     onCleanup(() => {
@@ -107,32 +167,30 @@ export const NotificationDialog: Component<NotificationDialogProps> = (
   const loadNotifications = async () => {
     if (loading() || !hasMore()) return;
 
-    setLoading(true);
+    const version = listVersion;
     const liveEventsBefore = liveEvents;
+    setLoading(true);
     try {
-      const result = await notificationsService.getNotifications(page(), 20);
+      const result = await notificationsService.getNotifications(
+        page(),
+        PAGE_SIZE
+      );
+      if (version !== listVersion) return;
 
-      if (result.data.length < 20) {
+      if (result.data.length < PAGE_SIZE) {
         setHasMore(false);
       }
 
-      // Merge rather than replace: notifications received while the request
-      // was in flight are newer, and deleted ones stay deleted.
-      setNotifications((prev) => {
-        const known = new Set(prev.map((n) => String(n.id)));
-        const loaded = result.data.filter(
-          (n) => !known.has(String(n.id)) && !deletedIds.has(String(n.id))
-        );
-        return [...prev, ...loaded];
-      });
+      const shifted = mergeLoaded(result.data, false);
 
       if (liveEvents === liveEventsBefore) {
         reportUnreadCount(result.unread_count);
       }
+      if (shifted && hasMore()) reloadLoadedPages();
     } catch (error) {
       console.error('Failed to load notifications:', error);
     } finally {
-      setLoading(false);
+      if (version === listVersion) setLoading(false);
     }
   };
 

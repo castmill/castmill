@@ -922,7 +922,8 @@
       "invitationPending": "{{email}}에 대한 더 최근의 초대가 대기 중입니다. 대신 해당 초대를 다시 보내세요.",
       "resendInvitationFailed": "초대를 다시 보내지 못했습니다",
       "removeInvitationFailed": "초대를 제거하지 못했습니다",
-      "invitationEmailNotSent": "{{email}}에 대한 초대에 새 링크가 생성되었지만 이메일을 보내지 못했습니다. 다시 보내 주세요."
+      "invitationEmailNotSent": "{{email}}에 대한 초대에 새 링크가 생성되었지만 이메일을 보내지 못했습니다. 다시 보내 주세요.",
+      "invitationBusy": "지금 {{email}}에게 초대를 보내는 중입니다. 잠시 후 다시 시도하세요."
     },
     "messages": {
       "memberRemoved": "구성원 {{name}}을(를) 성공적으로 제거했습니다",

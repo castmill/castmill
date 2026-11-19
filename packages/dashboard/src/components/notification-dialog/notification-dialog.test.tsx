@@ -231,6 +231,76 @@ describe('NotificationDialog Component', () => {
     expect(document.querySelectorAll('.notification-item')).toHaveLength(2);
   });
 
+  const page = (from: number, count: number): Notification[] =>
+    Array.from({ length: count }, (_, i) => ({
+      ...mockNotifications[1],
+      id: String(from + i),
+      metadata: { device_name: `Screen-${from + i}` },
+    }));
+
+  it('reloads the loaded pages when a deletion shifts them', async () => {
+    const { channel, handlers } = fakeChannel();
+    (notificationsService.getNotifications as any)
+      .mockResolvedValueOnce({ data: page(1, 20), unread_count: 0 })
+      .mockResolvedValueOnce({ data: page(2, 20), unread_count: 0 });
+
+    renderWithI18n(() => (
+      <NotificationDialog
+        onClose={vi.fn()}
+        onNotificationRead={vi.fn()}
+        channel={channel}
+      />
+    ));
+
+    await waitFor(() =>
+      expect(document.querySelectorAll('.notification-item')).toHaveLength(20)
+    );
+
+    // Deleting notification 1 moves notification 21 onto the first page.
+    handlers.notifications_deleted({ ids: ['1'], unread_count: 0 });
+
+    await waitFor(() =>
+      expect(notificationsService.getNotifications).toHaveBeenLastCalledWith(
+        1,
+        20
+      )
+    );
+    await waitFor(() =>
+      expect(document.body.textContent).toContain('Screen-21')
+    );
+    expect(document.querySelectorAll('.notification-item')).toHaveLength(20);
+    expect(document.body.textContent).not.toMatch(/Screen-1(?!\d)/);
+  });
+
+  it('reloads when a response contains a notification deleted meanwhile', async () => {
+    let respond: (value: any) => void = () => {};
+    const { channel, handlers } = fakeChannel();
+    (notificationsService.getNotifications as any)
+      .mockReturnValueOnce(new Promise((resolve) => (respond = resolve)))
+      .mockResolvedValueOnce({ data: page(2, 20), unread_count: 0 });
+
+    renderWithI18n(() => (
+      <NotificationDialog
+        onClose={vi.fn()}
+        onNotificationRead={vi.fn()}
+        channel={channel}
+      />
+    ));
+
+    await waitFor(() => expect(handlers.notifications_deleted).toBeDefined());
+    handlers.notifications_deleted({ ids: ['1'], unread_count: 0 });
+    // The first page was read before notification 1 was deleted.
+    respond({ data: page(1, 20), unread_count: 0 });
+
+    await waitFor(() =>
+      expect(notificationsService.getNotifications).toHaveBeenCalledTimes(2)
+    );
+    await waitFor(() =>
+      expect(document.body.textContent).toContain('Screen-21')
+    );
+    expect(document.querySelectorAll('.notification-item')).toHaveLength(20);
+  });
+
   it('should call onClose when close button is clicked', async () => {
     const onClose = vi.fn();
     const onNotificationRead = vi.fn();

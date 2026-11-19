@@ -419,6 +419,20 @@ defmodule Castmill.OrganizationsTest do
       assert Notifications.list_user_notifications(user.id) == []
     end
 
+    test "uses one lock for every spelling of the organization id and email", %{
+      organization: organization
+    } do
+      key = Organizations.invitation_lock_key(organization.id, "Someone@Example.com")
+
+      assert Organizations.invitation_lock_key(
+               String.upcase(organization.id),
+               "someone@example.com"
+             ) ==
+               key
+
+      refute Organizations.invitation_lock_key(organization.id, "other@example.com") == key
+    end
+
     test "releases its lock whether or not the resend succeeds", %{organization: organization} do
       advisory_locks = fn ->
         Repo.query!("SELECT count(*) FROM pg_locks WHERE locktype = 'advisory'").rows

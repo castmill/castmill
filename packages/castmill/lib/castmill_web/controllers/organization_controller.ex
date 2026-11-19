@@ -694,6 +694,12 @@ defmodule CastmillWeb.OrganizationController do
         |> put_status(:unprocessable_entity)
         |> json(%{errors: errors})
 
+      # Another invite or resend to the same email is being delivered.
+      {:error, :busy} ->
+        conn
+        |> put_status(:conflict)
+        |> json(%{error: "invitation_busy"})
+
       {:error, msg} ->
         conn
         |> put_status(:bad_request)
@@ -873,6 +879,12 @@ defmodule CastmillWeb.OrganizationController do
         conn
         |> put_status(:unprocessable_entity)
         |> json(%{errors: errors})
+
+      # Another invite or resend to the same email is being delivered.
+      {:error, :busy} ->
+        conn
+        |> put_status(:conflict)
+        |> json(%{error: "invitation_busy"})
 
       # The invitation has a new link, but its email could not be queued.
       {:error, :email_not_sent} ->

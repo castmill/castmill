@@ -697,6 +697,11 @@ defmodule CastmillWeb.NetworkDashboardController do
         |> put_status(:conflict)
         |> json(%{error: "User has already been invited to this organization"})
 
+      {:error, :busy} ->
+        conn
+        |> put_status(:conflict)
+        |> json(%{error: "An invitation to this email is being sent. Try again in a moment."})
+
       {:error, reason} ->
         conn
         |> put_status(:unprocessable_entity)

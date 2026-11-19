@@ -704,7 +704,8 @@ defmodule Castmill.Organizations do
   end
 
   # Under the same lock as resend_invitation/2, so a resend right after the
-  # invite cannot replace its link before it is delivered.
+  # invite cannot replace its link before it is delivered. Returns
+  # `{:error, :busy}` while another invite or resend to the email is delivered.
   def invite_user(organization_id, email, role) when is_binary(email) do
     with_invitation_lock(organization_id, email, fn ->
       do_invite_user(organization_id, email, role)
@@ -905,7 +906,9 @@ defmodule Castmill.Organizations do
 
   Returns `{:ok, invitation}`, or `{:error, reason}` where reason is
   `:not_found`, `:already_accepted`, `:already_member`, `:already_invited`
-  (a newer invitation for the same email is pending) or a changeset.
+  (a newer invitation for the same email is pending), `:busy` (another invite
+  or resend to the same email is being delivered; try again), `:email_not_sent`
+  or a changeset.
   """
   def resend_invitation(organization_id, invitation_id) do
     with {:ok, id} <- parse_invitation_id(invitation_id),
@@ -966,23 +969,55 @@ defmodule Castmill.Organizations do
   # queue has its own connection. A session advisory lock per organization and
   # email, held on one connection across all of it, keeps a concurrent invite
   # or resend from replacing the link before it is delivered.
+  #
+  # The lock is only tried, so requests waiting for it do not hold a pool
+  # connection: they retry briefly and then report `{:error, :busy}`.
   @invitation_lock_namespace 49_201
+  @invitation_lock_attempts 5
+  @invitation_lock_retry_ms 100
 
-  defp with_invitation_lock(organization_id, email, fun) do
-    key = "#{organization_id}:#{String.downcase(email)}"
-
-    Repo.checkout(fn ->
-      Repo.query!("SELECT pg_advisory_lock($1, hashtext($2))", [@invitation_lock_namespace, key])
-
-      try do
-        fun.()
-      after
-        Repo.query!("SELECT pg_advisory_unlock($1, hashtext($2))", [
-          @invitation_lock_namespace,
-          key
-        ])
+  @doc false
+  # The advisory lock of an organization's invitations to `email`. UUIDs and
+  # emails are compared without case, like PostgreSQL and invite_user/3 do.
+  def invitation_lock_key(organization_id, email) do
+    organization_id =
+      case Ecto.UUID.cast(organization_id) do
+        {:ok, uuid} -> uuid
+        :error -> to_string(organization_id)
       end
-    end)
+
+    {@invitation_lock_namespace, "#{organization_id}:#{String.downcase(email)}"}
+  end
+
+  defp with_invitation_lock(organization_id, email, fun, attempts \\ @invitation_lock_attempts) do
+    {namespace, key} = invitation_lock_key(organization_id, email)
+
+    result =
+      Repo.checkout(fn ->
+        case Repo.query!("SELECT pg_try_advisory_lock($1, hashtext($2))", [namespace, key]) do
+          %{rows: [[true]]} ->
+            try do
+              {:locked, fun.()}
+            after
+              Repo.query!("SELECT pg_advisory_unlock($1, hashtext($2))", [namespace, key])
+            end
+
+          _ ->
+            :busy
+        end
+      end)
+
+    case result do
+      {:locked, value} ->
+        value
+
+      :busy when attempts > 1 ->
+        Process.sleep(@invitation_lock_retry_ms)
+        with_invitation_lock(organization_id, email, fun, attempts - 1)
+
+      :busy ->
+        {:error, :busy}
+    end
   end
 
   defp check_resendable(%OrganizationsInvitation{status: "accepted"}),

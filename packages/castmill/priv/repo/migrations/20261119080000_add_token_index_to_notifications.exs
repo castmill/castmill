@@ -3,14 +3,11 @@ defmodule Castmill.Repo.Migrations.AddTokenIndexToNotifications do
 
   # Invitation notifications carry their link's token in their metadata. When
   # a link is replaced, its notification is found by token, whoever received
-  # it. Built concurrently so writes to notifications are not blocked.
-  @disable_ddl_transaction true
-  @disable_migration_lock true
-
+  # it. Built inside the regular migration transaction and lock, so instances
+  # deploying at the same time still run migrations one at a time.
   def change do
     create index(:notifications, ["(metadata->>'token')"],
-             name: :notifications_metadata_token_index,
-             concurrently: true
+             name: :notifications_metadata_token_index
            )
   end
 end

@@ -66,6 +66,14 @@ const NotificationBell: Component<NotificationBellProps> = () => {
       // You can also show a toast notification here
     });
 
+    // Deleted notifications (for example invitations whose link was replaced)
+    // change the unread count even while the dialog is closed.
+    notifChannel.on('notifications_deleted', (payload: any) => {
+      if (payload.unread_count !== undefined) {
+        setUnreadCount(payload.unread_count);
+      }
+    });
+
     setChannel(notifChannel);
   });
 

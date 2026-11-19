@@ -922,7 +922,8 @@
       "invitationPending": "توجد دعوة أحدث معلقة لـ {{email}}. أعد إرسال تلك الدعوة بدلاً من ذلك.",
       "resendInvitationFailed": "تعذرت إعادة إرسال الدعوة",
       "removeInvitationFailed": "تعذرت إزالة الدعوة",
-      "invitationEmailNotSent": "دعوة {{email}} لها رابط جديد، لكن تعذر إرسال البريد الإلكتروني. أعد إرسالها مرة أخرى."
+      "invitationEmailNotSent": "دعوة {{email}} لها رابط جديد، لكن تعذر إرسال البريد الإلكتروني. أعد إرسالها مرة أخرى.",
+      "invitationBusy": "يتم الآن إرسال دعوة إلى {{email}}. حاول مرة أخرى بعد قليل."
     },
     "messages": {
       "memberRemoved": "تمت إزالة العضو {{name}} بنجاح",

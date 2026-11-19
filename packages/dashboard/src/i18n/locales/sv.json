@@ -917,7 +917,8 @@
       "invitationPending": "En nyare inbjudan till {{email}} väntar. Skicka den igen i stället.",
       "resendInvitationFailed": "Det gick inte att skicka inbjudan igen",
       "removeInvitationFailed": "Det gick inte att ta bort inbjudan",
-      "invitationEmailNotSent": "Inbjudan till {{email}} har en ny länk, men mejlet kunde inte skickas. Skicka den igen."
+      "invitationEmailNotSent": "Inbjudan till {{email}} har en ny länk, men mejlet kunde inte skickas. Skicka den igen.",
+      "invitationBusy": "En inbjudan till {{email}} skickas just nu. Försök igen om en stund."
     },
     "messages": {
       "memberRemoved": "Medlemmen {{name}} togs bort med framgång",

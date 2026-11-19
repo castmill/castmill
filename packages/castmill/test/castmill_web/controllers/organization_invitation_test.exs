@@ -587,6 +587,27 @@ defmodule CastmillWeb.OrganizationInvitationTest do
       assert Organizations.get_invitation(token)
     end
 
+    test "returns 409 while the invitation is being delivered by another request", %{
+      conn: conn,
+      organization: organization
+    } do
+      {:ok, token} = Organizations.invite_user(organization.id, "busy@example.com", :member)
+      invitation = Organizations.get_invitation(token)
+
+      {:ok, session} =
+        Castmill.Repo.config()
+        |> Keyword.take([:hostname, :port, :username, :password, :database])
+        |> Postgrex.start_link()
+
+      {namespace, key} = Organizations.invitation_lock_key(organization.id, invitation.email)
+      Postgrex.query!(session, "SELECT pg_advisory_lock($1, hashtext($2))", [namespace, key])
+
+      conn = post(conn, resend_path(organization, invitation.id))
+      assert json_response(conn, 409) == %{"error" => "invitation_busy"}
+
+      GenServer.stop(session)
+    end
+
     test "returns 502 when the email cannot be queued", %{
       conn: conn,
       organization: organization

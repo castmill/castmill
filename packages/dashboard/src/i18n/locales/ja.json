@@ -922,7 +922,8 @@
       "invitationPending": "{{email}}への新しい招待が保留中です。代わりにそちらを再送信してください。",
       "resendInvitationFailed": "招待を再送信できませんでした",
       "removeInvitationFailed": "招待を削除できませんでした",
-      "invitationEmailNotSent": "{{email}}への招待に新しいリンクが発行されましたが、メールを送信できませんでした。もう一度再送信してください。"
+      "invitationEmailNotSent": "{{email}}への招待に新しいリンクが発行されましたが、メールを送信できませんでした。もう一度再送信してください。",
+      "invitationBusy": "現在{{email}}に招待を送信中です。しばらくしてからもう一度お試しください。"
     },
     "messages": {
       "memberRemoved": "メンバー{{name}}を正常に削除しました",

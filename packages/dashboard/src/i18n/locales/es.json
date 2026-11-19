@@ -924,7 +924,8 @@
       "invitationPending": "Hay una invitación más reciente pendiente para {{email}}. Reenvíe esa en su lugar.",
       "resendInvitationFailed": "No se pudo reenviar la invitación",
       "removeInvitationFailed": "No se pudo eliminar la invitación",
-      "invitationEmailNotSent": "La invitación de {{email}} tiene un enlace nuevo, pero no se pudo enviar el correo. Reenvíela de nuevo."
+      "invitationEmailNotSent": "La invitación de {{email}} tiene un enlace nuevo, pero no se pudo enviar el correo. Reenvíela de nuevo.",
+      "invitationBusy": "Se está enviando una invitación a {{email}} en este momento. Inténtelo de nuevo en un momento."
     },
     "messages": {
       "memberRemoved": "El miembro {{name}} se eliminó correctamente",
