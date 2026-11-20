@@ -259,26 +259,24 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
                 name: org.name,
                 value: org.id,
               }))}
-              defaultValue={store.organizations.selectedId ?? undefined}
+              value={store.organizations.selectedId}
               onSelectChange={(value, name) => {
                 if (!value) {
                   return;
                 }
 
-                // Update store
-                setStore('organizations', {
-                  selectedId: value,
-                  selectedName: name,
-                });
-
                 if (location.pathname.startsWith('/org/')) {
-                  // Preserve current sub-path within the new organization
+                  // Let ProtectedRoute sync the store from the new URL, not
+                  // from the previous route while navigation is still pending.
                   const currentPath =
                     location.pathname.replace(/^\/org\/[^/]+/, '') || '/';
                   navigate(`/org/${value}${currentPath}`);
                 } else if (location.pathname === '/settings') {
                   // Settings is a global route and should not be org-prefixed
-                  return;
+                  setStore('organizations', {
+                    selectedId: value,
+                    selectedName: name,
+                  });
                 } else {
                   // On non-org routes (e.g., network admin), navigate to the new org's home
                   navigate(`/org/${value}`);

@@ -1036,6 +1036,11 @@ navigate('/teams');
 
 **Organization dropdown:**
 
+Use a controlled `value` from the store. On organization routes, navigate
+without writing `selectedId` first: otherwise `ProtectedRoute` can restore the
+old URL's organization and trigger obsolete data loads before navigation commits.
+Only global `/settings` updates the selection directly without navigation.
+
 ```tsx
 const handleOrgChange = (value: string) => {
   const currentPath = location.pathname.replace(/^\/org\/[^\/]+/, '');
@@ -1043,29 +1048,19 @@ const handleOrgChange = (value: string) => {
 };
 ```
 
-#### 4. Addon Component Remounting
+#### 4. Organization Page Remounting
 
-**CRITICAL:** Addon components must remount when organization changes.
+**CRITICAL:** Both core pages and addon components must remount when organization
+changes, and must not initialize until the URL and store agree.
 
 **Problem:** SolidJS Router doesn't remount components when route params change. Going from `/org/abc/content/playlists` to `/org/xyz/content/playlists` keeps the same component instance.
 
-**Solution:** Use `Show` with `keyed` attribute to force remounting:
+**Solution:** Wrap organization route components with `organizationRoute` from
+`components/organization-route.tsx`. Its keyed `Show` waits for the URL's
+organization to match the loaded store, then mounts the page:
 
 ```tsx
-// In index.tsx - addon route wrapper
-const KeyedComponent = (props: any) => {
-  const params = useParams();
-  return (
-    <Show when={params.orgId} keyed>
-      {(orgId) => {
-        const Component = wrapLazyComponent(addon);
-        return <Component {...props} key={orgId} />;
-      }}
-    </Show>
-  );
-};
-
-<Route path={addon.mount_path} component={KeyedComponent} />;
+<Route path="teams" component={organizationRoute(TeamsPage)} />;
 ```
 
 This ensures:
@@ -1073,6 +1068,9 @@ This ensures:
 - Old component instance is **unmounted** when orgId changes
 - New component instance is **mounted** with fresh data
 - `onMount()` runs again, loading data for the new organization
+- Old local data, selections and dialogs are discarded, including late writes
+  from requests belonging to the disposed page
+- Query-only navigation (such as opening a detail drawer) does not remount
 
 #### 5. Data Reloading Patterns
 
@@ -1108,7 +1106,11 @@ onMount(() => {
 });
 ```
 
-The `createEffect` pattern is still included as a fallback, but the `keyed Show` wrapper handles most cases.
+The `createEffect` pattern is still included as a fallback, but the organization
+route wrapper handles page resets. Shared `TableView` additionally uses
+latest-request-wins ordering so overlapping reloads cannot restore old rows or
+errors. Global permissions clear while loading, and only the latest request for
+the selected organization can update them, even across route remounts.
 
 ### Store Structure for Addons
 
