@@ -315,15 +315,22 @@ defmodule CastmillWeb.DevicesChannel do
     device_id = socket.assigns.device.device_id
 
     # Mark the device as offline if no heartbeat was received
-    Devices.mark_offline(device_id)
+    case Devices.mark_offline(device_id) do
+      {:ok, last_online} ->
+        Devices.insert_event(%{
+          device_id: device_id,
+          type: "x",
+          msg: "Device went offline due to inactivity"
+        })
 
-    Devices.insert_event(%{
-      device_id: device_id,
-      type: "x",
-      msg: "Device went offline due to inactivity"
-    })
+        Phoenix.PubSub.broadcast(Castmill.PubSub, "device_updates:#{device_id}", %{
+          online: false,
+          last_online: last_online
+        })
 
-    Phoenix.PubSub.broadcast(Castmill.PubSub, "device_updates:#{device_id}", %{online: false})
+      _ ->
+        :ok
+    end
 
     {:noreply, socket}
   end
@@ -339,10 +346,13 @@ defmodule CastmillWeb.DevicesChannel do
     %{:device_id => device_id, :device_ip => _device_ip, :hardware_id => _hardware_id} =
       socket.assigns.device
 
-    Phoenix.PubSub.broadcast(Castmill.PubSub, "device_updates:#{device_id}", %{online: false})
-
     case Devices.mark_offline(device_id) do
-      {:ok, _device} ->
+      {:ok, last_online} ->
+        Phoenix.PubSub.broadcast(Castmill.PubSub, "device_updates:#{device_id}", %{
+          online: false,
+          last_online: last_online
+        })
+
         Devices.insert_event(%{device_id: device_id, type: "x", msg: "Device disconnected"})
 
       # No reason to communicate this error further as there is not a lot we can do
@@ -369,9 +379,18 @@ defmodule CastmillWeb.DevicesChannel do
     ip_string = Enum.join(Tuple.to_list(ip_address), ".")
 
     # Send a message to the devices observer channel to mark the device as online
-    Phoenix.PubSub.broadcast(Castmill.PubSub, "device_updates:#{device_id}", %{online: true})
+    case Devices.mark_online(device_id, ip_string) do
+      {:ok, last_online} = result ->
+        Phoenix.PubSub.broadcast(Castmill.PubSub, "device_updates:#{device_id}", %{
+          online: true,
+          last_online: last_online
+        })
 
-    Devices.mark_online(device_id, ip_string)
+        result
+
+      error ->
+        error
+    end
   end
 
   defp error_report_failure_reason(reason) when is_atom(reason), do: Atom.to_string(reason)

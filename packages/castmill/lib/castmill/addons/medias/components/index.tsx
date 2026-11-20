@@ -805,6 +805,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
           icon={mimeTypeIcon(item.mimetype, 'kind')}
           label={mimeTypeLabel(item.mimetype)}
         />,
+        formatBytes(item.size ?? 0),
         item.updated_at && (
           <Timestamp value={item.updated_at} mode="relative" />
         ),

@@ -67,6 +67,7 @@ export const DeviceLogs: Component<{
   const [selectedEvent, setSelectedEvent] = createSignal<DeviceTableLogItem>();
 
   const renderDetailsButton = (item: DeviceTableLogItem) =>
+    !!item.msg ||
     item.type === 'e' ||
     item.stack ||
     Object.keys(item.context || {}).length > 0 ? (

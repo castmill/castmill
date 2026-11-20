@@ -485,7 +485,14 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
     (
       resource: DeviceTableItem,
       update: Partial<
-        Pick<Device, 'online' | 'orientation' | 'orientation_status' | 'info'>
+        Pick<
+          Device,
+          | 'online'
+          | 'last_online'
+          | 'orientation'
+          | 'orientation_status'
+          | 'info'
+        >
       >
     ) => {
       updateItem(resource.id, update);

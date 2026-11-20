@@ -98,19 +98,36 @@ defmodule CastmillWeb.DeviceUpdatesChannelTest do
 
   describe "handle_info/2" do
     test "broadcasts that the device is online", %{socket: socket, device: device} do
+      last_online = DateTime.utc_now()
       # Send the information to the channel
-      DeviceUpdatesChannel.handle_info(%{online: true}, socket)
+      DeviceUpdatesChannel.handle_info(
+        %{online: true, last_online: last_online},
+        socket
+      )
 
       # Directly compare device_id without invoking functions within the pattern
-      expected_payload = %{device_id: device.id, online: true}
+      expected_payload = %{
+        device_id: device.id,
+        online: true,
+        last_online: last_online
+      }
 
       assert_push("device:status", ^expected_payload)
     end
 
     test "broadcasts that the device is offline", %{socket: socket, device: device} do
-      DeviceUpdatesChannel.handle_info(%{online: false}, socket)
+      last_online = DateTime.utc_now()
+      DeviceUpdatesChannel.handle_info(
+        %{online: false, last_online: last_online},
+        socket
+      )
 
-      expected_payload = %{device_id: device.id, online: false, orientation_status: nil}
+      expected_payload = %{
+        device_id: device.id,
+        online: false,
+        last_online: last_online,
+        orientation_status: nil
+      }
 
       assert_push("device:status", ^expected_payload)
     end

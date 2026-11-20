@@ -273,6 +273,7 @@ describe('OrganizationMembersView - leave organization', () => {
     });
 
     expect(leaveButton).not.toBeDisabled();
+    expect(await screen.findByRole('combobox', { name: 'Role' })).toBeTruthy();
   });
 
   it('disables the leave button when user is the last admin', async () => {

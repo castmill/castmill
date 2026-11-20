@@ -291,6 +291,10 @@
 .meta-clip {
   min-width: 0;
   overflow-x: clip;
+
+  &:focus-within {
+    overflow: visible;
+  }
 }
 
 .meta {
@@ -315,6 +319,11 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+
+  &:has(:is(a, button, input, select, textarea, [tabindex])) {
+    overflow: visible;
+    text-overflow: clip;
+  }
 
   &::before {
     content: '·';

@@ -212,7 +212,7 @@ export const OrganizationMembersView = (props: {
 
     return (
       <Dropdown
-        label=""
+        label={t('common.role')}
         variant="inline"
         items={roleItems}
         value={item.role}
