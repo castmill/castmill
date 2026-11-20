@@ -117,6 +117,7 @@ defmodule CastmillWeb.DeviceUpdatesChannelTest do
 
     test "broadcasts that the device is offline", %{socket: socket, device: device} do
       last_online = DateTime.utc_now()
+
       DeviceUpdatesChannel.handle_info(
         %{online: false, last_online: last_online},
         socket
