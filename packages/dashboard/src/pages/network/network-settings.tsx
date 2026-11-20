@@ -367,6 +367,7 @@ const NetworkSettings: Component = () => {
           <Switch
             name={t('network.access.invitationOnly')}
             key="invitationOnly"
+            hideLabel
             isActive={invitationOnly()}
             disabled={false}
             onToggle={() => setInvitationOnly(!invitationOnly())}
@@ -385,6 +386,7 @@ const NetworkSettings: Component = () => {
           <Switch
             name={t('network.access.invitationOnlyOrgAdmins')}
             key="invitationOnlyOrgAdmins"
+            hideLabel
             isActive={invitationOnlyOrgAdmins()}
             disabled={false}
             onToggle={() =>

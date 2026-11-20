@@ -12,6 +12,7 @@ import {
   Pagination,
   Table,
   TableAction,
+  TableCardContent,
   TableCardLabels,
   ToolBar,
   SelectionActionBar,
@@ -88,6 +89,8 @@ interface TableViewProps<
     cardBreakpoint?: number;
     cardPrimaryColumn?: string;
     cardLabels?: TableCardLabels;
+    /** Entity adapter for the stacked card layout (see `Table`). */
+    card?: (item: Item) => TableCardContent;
   };
 
   pagination: {
@@ -424,6 +427,7 @@ export const TableView = <
             cardBreakpoint={props.table.cardBreakpoint}
             cardPrimaryColumn={props.table.cardPrimaryColumn}
             cardLabels={props.table.cardLabels}
+            card={props.table.card}
             clearSelectionRef={(fn) => {
               clearSelectionRef = fn;
             }}

@@ -39,6 +39,11 @@ import {
   detailUrlOptions,
   tableCardLabels,
   filtersLabel,
+  TableCardContent,
+  EntityCardIcon,
+  EntityCardThumbnail,
+  resolveWidgetIcon,
+  formatInterval,
 } from '@castmill/ui-common';
 import { JsonWidget } from '@castmill/player';
 import { WidgetsService, WidgetUsage } from '../services/widgets.service';
@@ -477,6 +482,36 @@ const WidgetsPage: Component<{
     };
   };
 
+  // Compact mobile card: icon, description, type · availability · interval
+  const widgetCard = (widget: WidgetWithId): TableCardContent => {
+    const icon = resolveWidgetIcon(widget.icon, props.store.env.baseUrl);
+    const scope = widget.scope || 'system';
+    return {
+      visual: icon.src ? (
+        <EntityCardThumbnail
+          src={icon.src}
+          alt=""
+          fit="cover"
+          fallbackGlyph={DEFAULT_WIDGET_ICON}
+        />
+      ) : (
+        <EntityCardIcon glyph={icon.glyph || DEFAULT_WIDGET_ICON} />
+      ),
+      title: getWidgetName(widget),
+      titleText: getWidgetName(widget),
+      subtitle: getWidgetDescription(widget),
+      meta: [
+        widget.template?.type,
+        t(`widgets.scope.${scope}`),
+        !!widget.update_interval_seconds && (
+          <span title={t('widgets.updateInterval')}>
+            {formatInterval(widget.update_interval_seconds, locale())}
+          </span>
+        ),
+      ],
+    };
+  };
+
   // Use function to make columns reactive to i18n changes
   const columns = (): Column<number, WidgetWithId>[] => [
     {
@@ -484,24 +519,14 @@ const WidgetsPage: Component<{
       title: t('common.name'),
       sortable: true,
       render: (widget: WidgetWithId) => {
-        const isImageIcon =
-          widget.icon &&
-          (widget.icon.startsWith('data:image/') ||
-            widget.icon.startsWith('http://') ||
-            widget.icon.startsWith('https://') ||
-            widget.icon.startsWith('/'));
-
-        // Resolve icon URL - prepend baseUrl for relative paths starting with /
-        const iconUrl = widget.icon?.startsWith('/')
-          ? `${props.store.env.baseUrl}${widget.icon}`
-          : widget.icon;
+        const icon = resolveWidgetIcon(widget.icon, props.store.env.baseUrl);
 
         return (
           <div style="display: flex; align-items: flex-start; gap: 8px;">
             <div style="font-size: 1.5em; min-width: 32px; line-height: 1; display: flex; align-items: center; justify-content: center;">
-              {isImageIcon ? (
+              {icon.src ? (
                 <img
-                  src={iconUrl}
+                  src={icon.src}
                   alt={widget.name}
                   style="width: 32px; height: 32px; object-fit: contain; border-radius: 4px;"
                   onError={(e) => {
@@ -513,7 +538,7 @@ const WidgetsPage: Component<{
                   }}
                 />
               ) : (
-                <span>{widget.icon || DEFAULT_WIDGET_ICON}</span>
+                <span>{icon.glyph || DEFAULT_WIDGET_ICON}</span>
               )}
             </div>
             <div style="text-align: left; flex: 1;">
@@ -701,6 +726,7 @@ const WidgetsPage: Component<{
         }}
         table={{
           cardLabels: tableCardLabels(t),
+          card: widgetCard,
           columns,
           actions,
           actionsLabel: t('common.actions'),

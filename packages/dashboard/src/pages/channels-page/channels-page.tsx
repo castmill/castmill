@@ -1,6 +1,5 @@
 import {
   Component,
-  For,
   batch,
   createEffect,
   createSignal,
@@ -33,7 +32,7 @@ import {
   TagsService,
   Tag,
   TagGroup,
-  TagBadge,
+  TagsCell,
   TagPopover,
   useViewMode,
   isQuotaExceededError,
@@ -42,12 +41,15 @@ import {
   closeDetailUrl,
   tableCardLabels,
   filtersLabel,
+  TableCardContent,
+  EntityCardField,
+  EntityCardIcon,
 } from '@castmill/ui-common';
 
 import { store } from '../../store/store';
 import { OnboardingStep } from '../../interfaces/onboarding-progress.interface';
 
-import { BsCheckLg, BsEye, BsTagFill } from 'solid-icons/bs';
+import { BsCalendarWeek, BsCheckLg, BsEye, BsTagFill } from 'solid-icons/bs';
 import { AiOutlineDelete } from 'solid-icons/ai';
 
 import styles from './channels-page.module.scss';
@@ -421,6 +423,34 @@ const ChannelsPage: Component = () => {
     return q ? q.used >= q.total : false;
   };
 
+  const renderTags = (item: JsonChannel) => (
+    <TagsCell
+      tags={resourceTagsMap().get(item.id) || []}
+      manageLabel={t('tags.manageTags')}
+      onManage={(anchorEl) => setTagPopoverTarget({ item, anchorEl })}
+    />
+  );
+
+  // Compact mobile card: current (or default) playlist, tags
+  const channelCard = (item: JsonChannel): TableCardContent => {
+    const playlist = item.current_playlist_name || item.default_playlist_name;
+    return {
+      visual: <EntityCardIcon icon={BsCalendarWeek} />,
+      subtitle: playlist && (
+        <EntityCardField
+          label={
+            item.current_playlist_name
+              ? t('channels.currentPlaylist')
+              : t('channels.defaultPlaylist')
+          }
+        >
+          {playlist}
+        </EntityCardField>
+      ),
+      footer: renderTags(item),
+    };
+  };
+
   const columns = () =>
     [
       { key: 'name', title: t('common.name'), sortable: true },
@@ -442,32 +472,7 @@ const ChannelsPage: Component = () => {
         key: 'tags',
         title: t('tags.title'),
         sortable: false,
-        render: (item: JsonChannel) => {
-          const itemTags = () => resourceTagsMap().get(item.id) || [];
-          return (
-            <div class="tags-cell">
-              <For each={itemTags().slice(0, 3)}>
-                {(tag) => <TagBadge tag={tag} size="small" />}
-              </For>
-              <Show when={itemTags().length > 3}>
-                <span class="tags-overflow">+{itemTags().length - 3}</span>
-              </Show>
-              <button
-                class="tag-manage-btn"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setTagPopoverTarget({
-                    item,
-                    anchorEl: e.currentTarget as HTMLElement,
-                  });
-                }}
-                title={t('tags.manageTags')}
-              >
-                <BsTagFill />
-              </button>
-            </div>
-          );
-        },
+        render: renderTags,
       },
     ] as Column<JsonChannel>[];
 
@@ -1002,6 +1007,7 @@ const ChannelsPage: Component = () => {
             )}
             table={{
               cardLabels,
+              card: channelCard,
               columns,
               actions,
               actionsLabel: t('common.actions'),

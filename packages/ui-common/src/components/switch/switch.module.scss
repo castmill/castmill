@@ -8,6 +8,7 @@
   .switch {
     position: relative;
     display: inline-block;
+    flex-shrink: 0;
     width: 34px;
     height: 20px;
 

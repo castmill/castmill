@@ -9,13 +9,12 @@ import {
   onCleanup,
 } from 'solid-js';
 import { JsonWidget } from '@castmill/player';
-import { IconWrapper } from '@castmill/ui-common';
+import { IconWrapper, getIconUrl, isImageIcon } from '@castmill/ui-common';
 import { RiEditorDraggable } from 'solid-icons/ri';
 import { FaSolidMagnifyingGlass } from 'solid-icons/fa';
 import { BsArrowLeft, BsPlusLg } from 'solid-icons/bs';
 
 import { DEFAULT_WIDGET_ICON } from '../../common/constants';
-import { isImageIcon, getIconUrl } from '../utils/icon-utils';
 import {
   getTranslatedWidgetName,
   getTranslatedWidgetDescription,

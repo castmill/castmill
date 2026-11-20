@@ -156,9 +156,11 @@ describe('DeviceLogs', () => {
 
   it('hides the details action for lifecycle-only events', () => {
     const originalType = tableEvent.type;
+    const originalMessage = tableEvent.msg;
     const originalStack = tableEvent.stack;
     const originalContext = tableEvent.context;
     tableEvent.type = 'o';
+    tableEvent.msg = '';
     tableEvent.stack = undefined;
     tableEvent.context = undefined;
 
@@ -172,6 +174,32 @@ describe('DeviceLogs', () => {
       ).not.toBeInTheDocument();
     } finally {
       tableEvent.type = originalType;
+      tableEvent.msg = originalMessage;
+      tableEvent.stack = originalStack;
+      tableEvent.context = originalContext;
+    }
+  });
+
+  it('shows details for non-error events with a message', () => {
+    const originalType = tableEvent.type;
+    const originalMessage = tableEvent.msg;
+    const originalStack = tableEvent.stack;
+    const originalContext = tableEvent.context;
+    tableEvent.type = 'i';
+    tableEvent.msg = 'Informational details';
+    tableEvent.stack = undefined;
+    tableEvent.context = undefined;
+
+    try {
+      render(() => (
+        <DeviceLogs baseUrl="/api" device={{ id: 'device-1' } as any} t={t} />
+      ));
+
+      fireEvent.click(screen.getByRole('button', { name: 'Details' }));
+      expect(screen.getAllByText('Informational details')).toHaveLength(2);
+    } finally {
+      tableEvent.type = originalType;
+      tableEvent.msg = originalMessage;
       tableEvent.stack = originalStack;
       tableEvent.context = originalContext;
     }

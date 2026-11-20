@@ -160,14 +160,28 @@ defmodule Castmill.Devices do
     Mark a device as online. Sets the online field as well as the last_online field.
   """
   def mark_online(device_id, ip) do
-    fast_update_device(device_id, %{online: true, last_online: DateTime.utc_now(), last_ip: ip})
+    last_online = DateTime.utc_now() |> DateTime.truncate(:second)
+
+    case fast_update_device(device_id, %{
+           online: true,
+           last_online: last_online,
+           last_ip: ip
+         }) do
+      {:ok, _} -> {:ok, last_online}
+      error -> error
+    end
   end
 
   @doc """
     Mark a device as offline. Sets the online field as well as the last_online field.
   """
   def mark_offline(device_id) do
-    fast_update_device(device_id, %{online: false, last_online: DateTime.utc_now()})
+    last_online = DateTime.utc_now() |> DateTime.truncate(:second)
+
+    case fast_update_device(device_id, %{online: false, last_online: last_online}) do
+      {:ok, _} -> {:ok, last_online}
+      error -> error
+    end
   end
 
   @doc """

@@ -29,6 +29,8 @@ import {
   detailUrlOptions,
   closeDetailUrl,
   tableCardLabels,
+  TableCardContent,
+  EntityCardIcon,
   filtersLabel,
 } from '@castmill/ui-common';
 import {
@@ -398,6 +400,16 @@ const LayoutsPage: Component<AddonComponentProps> = (props) => {
     }
   };
 
+  // Compact mobile card: aspect ratio · zones · updated
+  const layoutCard = (item: JsonLayout): TableCardContent => ({
+    visual: <EntityCardIcon icon={BsGrid} />,
+    meta: [
+      item.aspect_ratio,
+      t('layouts.zonesCount', { count: item.zones?.zones?.length || 0 }),
+      item.updated_at && <Timestamp value={item.updated_at} mode="relative" />,
+    ],
+  });
+
   // Use function to make columns reactive to i18n changes
   const columns = () =>
     [
@@ -510,6 +522,7 @@ const LayoutsPage: Component<AddonComponentProps> = (props) => {
         )}
         table={{
           cardLabels: tableCardLabels(t),
+          card: layoutCard,
           columns,
           actions,
           actionsLabel: t('common.actions'),

@@ -7,7 +7,13 @@ import { pointerOutsideOfPreview } from '@atlaskit/pragmatic-drag-and-drop/eleme
 
 import { debounce } from 'lodash';
 
-import { IconWrapper, Slider, formatDuration } from '@castmill/ui-common';
+import {
+  IconWrapper,
+  Slider,
+  formatDuration,
+  getIconUrl,
+  isImageIcon,
+} from '@castmill/ui-common';
 import { RiEditorDraggable } from 'solid-icons/ri';
 import { AiOutlineEdit, AiOutlineWarning } from 'solid-icons/ai';
 import {
@@ -18,7 +24,6 @@ import {
 } from 'solid-icons/bs';
 
 import { DEFAULT_WIDGET_ICON } from '../../common/constants';
-import { isImageIcon, getIconUrl } from '../utils/icon-utils';
 import { hasDynamicDuration } from '../utils/duration-utils';
 import {
   getTranslatedWidgetName,

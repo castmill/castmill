@@ -1,16 +1,7 @@
-import {
-  BsCheckLg,
-  BsEye,
-  BsTagFill,
-  BsFileEarmarkImage,
-  BsFileEarmarkPlay,
-  BsFileEarmarkMusic,
-  BsFileEarmark,
-} from 'solid-icons/bs';
+import { BsCheckLg, BsEye, BsTagFill } from 'solid-icons/bs';
 import { AiOutlineDelete } from 'solid-icons/ai';
 import {
   Component,
-  For,
   batch,
   createEffect,
   createSignal,
@@ -48,7 +39,7 @@ import {
   TagsService,
   Tag,
   TagGroup,
-  TagBadge,
+  TagsCell,
   TagPopover,
   ToolBar,
   formatBytes,
@@ -58,6 +49,13 @@ import {
   detailUrlOptions,
   closeDetailUrl,
   tableCardLabels,
+  TableCardContent,
+  EntityCardIcon,
+  EntityCardMetaIcon,
+  mimeTypeIcon,
+  mimeTypeLabel,
+  EntityCardNotice,
+  EntityCardThumbnail,
   filtersLabel,
   organizeByLabel,
 } from '@castmill/ui-common';
@@ -71,6 +69,7 @@ import {
 } from '../../common/services/quotas.service';
 
 import './medias.scss';
+
 import { MediaDetails } from './media-details';
 import {
   AddonStore,
@@ -772,6 +771,64 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
     }
   };
 
+  const renderTags = (item: JsonMedia) => (
+    <TagsCell
+      tags={resourceTagsMap().get(item.id) || []}
+      manageLabel={t('tags.manageTags')}
+      manageButtonProps={{ 'data-onboarding': 'tag-content' }}
+      onManage={(anchorEl) => setTagPopoverTarget({ item, anchorEl })}
+    />
+  );
+
+  // Compact mobile card: thumbnail, type · size · updated, tags
+  const mediaCard = (item: JsonMedia): TableCardContent => {
+    const progress = getThumbnailProgress(item);
+    const thumbnail =
+      item.status === 'ready' ? item.files?.['thumbnail']?.uri : undefined;
+    const failed = item.status === 'failed';
+    return {
+      visual:
+        progress !== null ? (
+          <CircularProgress progress={progress} />
+        ) : (
+          <EntityCardThumbnail
+            src={thumbnail}
+            alt={item.name}
+            fallbackIcon={mimeTypeIcon(item.mimetype)}
+          />
+        ),
+      title: item.name,
+      titleText: item.name,
+      busy: progress !== null,
+      meta: [
+        <EntityCardMetaIcon
+          icon={mimeTypeIcon(item.mimetype, 'kind')}
+          label={mimeTypeLabel(item.mimetype)}
+        />,
+        formatBytes(item.size ?? 0),
+        item.updated_at && (
+          <Timestamp value={item.updated_at} mode="relative" />
+        ),
+      ],
+      footer: (
+        <>
+          <Show when={failed}>
+            <EntityCardNotice
+              tone="danger"
+              detail={
+                item.status_message ||
+                t('medias.thumbnail.failedDefaultMessage')
+              }
+            >
+              {t('medias.thumbnail.failedTitle')}
+            </EntityCardNotice>
+          </Show>
+          {renderTags(item)}
+        </>
+      ),
+    };
+  };
+
   // Use function to make columns reactive to i18n changes
   const columns = () =>
     [
@@ -814,16 +871,9 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
         title: t('common.type'),
         sortable: true,
         render: (item: JsonMedia) => {
-          const mime = item.mimetype || '';
-          const Icon = mime.startsWith('image/')
-            ? BsFileEarmarkImage
-            : mime.startsWith('video/')
-              ? BsFileEarmarkPlay
-              : mime.startsWith('audio/')
-                ? BsFileEarmarkMusic
-                : BsFileEarmark;
+          const Icon = mimeTypeIcon(item.mimetype);
           return (
-            <span class="mimetype-cell" title={mime}>
+            <span class="mimetype-cell" title={item.mimetype || ''}>
               <Icon />
             </span>
           );
@@ -849,33 +899,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
         key: 'tags',
         title: t('tags.title'),
         sortable: false,
-        render: (item: JsonMedia) => {
-          const itemTags = () => resourceTagsMap().get(item.id) || [];
-          return (
-            <div class="tags-cell">
-              <For each={itemTags().slice(0, 3)}>
-                {(tag) => <TagBadge tag={tag} size="small" />}
-              </For>
-              <Show when={itemTags().length > 3}>
-                <span class="tags-overflow">+{itemTags().length - 3}</span>
-              </Show>
-              <button
-                class="tag-manage-btn"
-                data-onboarding="tag-content"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setTagPopoverTarget({
-                    item,
-                    anchorEl: e.currentTarget as HTMLElement,
-                  });
-                }}
-                title={t('tags.manageTags')}
-              >
-                <BsTagFill />
-              </button>
-            </div>
-          );
-        },
+        render: renderTags,
       },
     ] as Column<number, JsonMedia>[];
 
@@ -1111,6 +1135,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
           )}
           table={{
             cardLabels: tableCardLabels(t),
+            card: mediaCard,
             columns,
             actions,
             actionsLabel: t('common.actions'),

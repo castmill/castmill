@@ -15,8 +15,10 @@ import {
   Table,
   useToast,
   tableCardLabels,
+  TableCardContent,
+  EntityCardIcon,
 } from '@castmill/ui-common';
-import { BsLockFill, BsSearch } from 'solid-icons/bs';
+import { BsBuilding, BsLockFill, BsSearch } from 'solid-icons/bs';
 import {
   NetworkService,
   NetworkWidgetAccess,
@@ -258,6 +260,66 @@ export const WidgetOrganizations: Component<{
     },
   ];
 
+  const usageCell = (organization: NetworkWidgetOrganization) => (
+    <Show
+      when={organization.in_use}
+      fallback={<span class={styles['muted']}>—</span>}
+    >
+      <span
+        class={styles['badge-in-use']}
+        title={
+          locked(organization)
+            ? t('network.widgets.organizations.inUseHint')
+            : undefined
+        }
+      >
+        <Show when={locked(organization)}>
+          <BsLockFill aria-hidden="true" />
+        </Show>
+        {t('network.widgets.organizations.inUse')}
+      </span>
+    </Show>
+  );
+
+  const accessSwitch = (organization: NetworkWidgetOrganization) => (
+    <button
+      type="button"
+      role="switch"
+      class={styles['access-switch']}
+      aria-checked={organization.enabled}
+      aria-label={t('network.widgets.organizations.accessFor', {
+        name: organization.name,
+      })}
+      title={
+        locked(organization)
+          ? t('network.widgets.organizations.inUseHint')
+          : undefined
+      }
+      disabled={locked(organization) || mutationPending() || resultsPending()}
+      onClick={() => void toggle(organization)}
+    >
+      <span class={styles['access-switch-track']} aria-hidden="true">
+        <span class={styles['access-switch-thumb']} />
+      </span>
+      <span class={styles['access-switch-label']}>
+        {organization.enabled
+          ? t('network.widgets.organizations.statusEnabled')
+          : t('network.widgets.organizations.statusDisabled')}
+      </span>
+    </button>
+  );
+
+  // Compact mobile card: access switch · usage
+  const organizationCard = (
+    organization: NetworkWidgetOrganization
+  ): TableCardContent => ({
+    visual: <EntityCardIcon icon={BsBuilding} />,
+    meta: [
+      accessSwitch(organization),
+      organization.in_use && usageCell(organization),
+    ],
+  });
+
   const columns = (): Column<string, NetworkWidgetOrganization>[] => [
     {
       key: 'name',
@@ -269,59 +331,12 @@ export const WidgetOrganizations: Component<{
     {
       key: 'in_use',
       title: t('network.widgets.organizations.columnUsage'),
-      render: (organization) => (
-        <Show
-          when={organization.in_use}
-          fallback={<span class={styles['muted']}>—</span>}
-        >
-          <span
-            class={styles['badge-in-use']}
-            title={
-              locked(organization)
-                ? t('network.widgets.organizations.inUseHint')
-                : undefined
-            }
-          >
-            <Show when={locked(organization)}>
-              <BsLockFill aria-hidden="true" />
-            </Show>
-            {t('network.widgets.organizations.inUse')}
-          </span>
-        </Show>
-      ),
+      render: (organization) => usageCell(organization),
     },
     {
       key: 'enabled',
       title: t('network.widgets.organizations.columnAccess'),
-      render: (organization) => (
-        <button
-          type="button"
-          role="switch"
-          class={styles['access-switch']}
-          aria-checked={organization.enabled}
-          aria-label={t('network.widgets.organizations.accessFor', {
-            name: organization.name,
-          })}
-          title={
-            locked(organization)
-              ? t('network.widgets.organizations.inUseHint')
-              : undefined
-          }
-          disabled={
-            locked(organization) || mutationPending() || resultsPending()
-          }
-          onClick={() => void toggle(organization)}
-        >
-          <span class={styles['access-switch-track']} aria-hidden="true">
-            <span class={styles['access-switch-thumb']} />
-          </span>
-          <span class={styles['access-switch-label']}>
-            {organization.enabled
-              ? t('network.widgets.organizations.statusEnabled')
-              : t('network.widgets.organizations.statusDisabled')}
-          </span>
-        </button>
-      ),
+      render: (organization) => accessSwitch(organization),
     },
   ];
 
@@ -422,6 +437,7 @@ export const WidgetOrganizations: Component<{
           <Table<string, NetworkWidgetOrganization>
             cardLayout
             cardLabels={cardLabels}
+            card={organizationCard}
             columns={columns}
             data={rows()}
             onRowSelect={(ids) => setSelected(new Set(ids))}

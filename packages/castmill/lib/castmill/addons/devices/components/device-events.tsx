@@ -1,5 +1,14 @@
 import { Component, createSignal, Show } from 'solid-js';
-import { BsFileEarmarkText, BsListUl, BsXCircle } from 'solid-icons/bs';
+import {
+  BsExclamationCircle,
+  BsExclamationTriangle,
+  BsFileEarmarkText,
+  BsInfoCircle,
+  BsListUl,
+  BsWifi,
+  BsWifiOff,
+  BsXCircle,
+} from 'solid-icons/bs';
 
 import {
   TableView,
@@ -13,6 +22,9 @@ import {
   SectionCard,
   tableCardLabels,
   filtersLabel,
+  TableCardContent,
+  EntityCardIcon,
+  EntityCardTone,
 } from '@castmill/ui-common';
 
 import { Device } from '../interfaces/device.interface';
@@ -53,6 +65,51 @@ export const DeviceLogs: Component<{
   };
   const [showConfirmClearAll, setShowConfirmClearAll] = createSignal(false);
   const [selectedEvent, setSelectedEvent] = createSignal<DeviceTableLogItem>();
+
+  const renderDetailsButton = (item: DeviceTableLogItem) =>
+    !!item.msg ||
+    item.type === 'e' ||
+    item.stack ||
+    Object.keys(item.context || {}).length > 0 ? (
+      <button
+        type="button"
+        class="device-icon-button"
+        aria-label={t('devices.events.details')}
+        title={t('devices.events.details')}
+        onClick={() => setSelectedEvent(item)}
+      >
+        <BsFileEarmarkText aria-hidden="true" />
+      </button>
+    ) : null;
+
+  const typeVisuals: Record<string, { icon: Component; tone: EntityCardTone }> =
+    {
+      e: { icon: BsExclamationCircle, tone: 'danger' },
+      w: { icon: BsExclamationTriangle, tone: 'warning' },
+      o: { icon: BsWifi, tone: 'success' },
+      x: { icon: BsWifiOff, tone: 'neutral' },
+      i: { icon: BsInfoCircle, tone: 'neutral' },
+    };
+
+  // Compact mobile card: type icon, message, type · time · occurrences
+  const eventCard = (item: DeviceTableLogItem): TableCardContent => {
+    const typeName = typeNameMap[item.type] || item.type;
+    const visual = typeVisuals[item.type] || typeVisuals.i;
+    const count = item.occurrence_count || 1;
+    return {
+      visual: <EntityCardIcon icon={visual.icon} tone={visual.tone} />,
+      title: item.msg || typeName,
+      titleText: item.msg || typeName,
+      meta: [
+        typeName,
+        <DeviceTableTime value={item.last_occurred_at || item.timestamp} />,
+        count > 1 && (
+          <span title={t('devices.events.occurrences')}>×{count}</span>
+        ),
+      ],
+      actions: renderDetailsButton(item),
+    };
+  };
 
   const columns = [
     {
@@ -100,20 +157,7 @@ export const DeviceLogs: Component<{
       key: 'details',
       title: t('devices.events.details'),
       sortable: false,
-      render: (item: DeviceTableLogItem) =>
-        item.type === 'e' ||
-        item.stack ||
-        Object.keys(item.context || {}).length > 0 ? (
-          <button
-            type="button"
-            class="device-icon-button"
-            aria-label={t('devices.events.details')}
-            title={t('devices.events.details')}
-            onClick={() => setSelectedEvent(item)}
-          >
-            <BsFileEarmarkText aria-hidden="true" />
-          </button>
-        ) : null,
+      render: (item: DeviceTableLogItem) => renderDetailsButton(item),
     },
   ] as Column<string, DeviceTableLogItem>[];
 
@@ -149,7 +193,8 @@ export const DeviceLogs: Component<{
       page.size,
       sortOptions,
       filterTypes
-    );
+      // JSON timestamps arrive as strings
+    ) as unknown as Promise<{ data: DeviceTableLogItem[]; count: number }>;
   };
 
   let tableViewRef: TableViewRef;
@@ -207,6 +252,7 @@ export const DeviceLogs: Component<{
             initialSortOptions={{ key: 'timestamp', direction: 'descending' }}
             table={{
               cardLabels: tableCardLabels(t),
+              card: eventCard,
               columns,
               hideCheckboxes: true,
             }}

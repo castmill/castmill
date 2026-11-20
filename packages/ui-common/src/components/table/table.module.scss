@@ -211,8 +211,7 @@
 
 /* Row-action "⋯" triggers: a quiet, theme-aware icon button instead of the
    solid grey secondary button. */
-.table-actions-menu,
-.card-actions {
+.table-actions-menu {
   :global(.castmill-menu-button-trigger) {
     border: 0.0625em solid var(--cm-border-color);
     background-color: transparent;
@@ -317,124 +316,8 @@
     container-type: inline-size;
   }
 
-  .card {
-    padding: 0.5em 0.8em 0.7em;
-    border: 0.0625em solid var(--cm-border-color);
-    border-radius: 0.5em;
-    background-color: var(--cm-bg-secondary);
-    color: var(--cm-text-primary);
-    transition:
-      border-color 0.2s,
-      background-color 0.2s;
-
-    /* No mobile tap flash over the whole card (e.g. when tapping its menu) */
-    -webkit-tap-highlight-color: transparent;
-
-    &.clickable {
-      cursor: pointer;
-
-      @media (hover: hover) {
-        &:hover {
-          border-color: var(--cm-border-strong);
-        }
-      }
-    }
-
-    &.selected {
-      border-color: var(--cm-primary);
-      background-color: var(--cm-bg-selected);
-    }
-
-    &:focus-visible {
-      outline: 0.125em solid var(--cm-focus-ring);
-      outline-offset: 0.125em;
-    }
-  }
-
-  .card-header {
-    display: flex;
-    align-items: center;
-    gap: 0.4em;
-    min-height: 2.75em;
-  }
-
-  /* Large touch target for the row checkbox */
-  .card-select {
-    display: inline-flex;
-    flex: none;
-    align-items: center;
-    justify-content: center;
-    width: 2.75em;
-    height: 2.75em;
-    margin-inline-start: -0.6em;
-    cursor: pointer;
-  }
-
-  .card-title {
-    flex: 1 1 auto;
+  .card-item {
     min-width: 0;
-    font-weight: 600;
-    overflow-wrap: anywhere;
-  }
-
-  .card-actions {
-    flex: none;
-
-    /* ≥2.75em tap target (the small trigger uses a 0.85em font size) */
-    :global(.castmill-menu-button-trigger) {
-      min-width: calc(2.75em / 0.85);
-      min-height: calc(2.75em / 0.85);
-    }
-
-    /* Open the menu towards the card in both LTR and RTL */
-    :global(.castmill-menu-button-items) {
-      right: auto;
-      left: auto;
-      inset-inline-end: 0;
-      text-align: start;
-    }
-  }
-
-  .card-fields {
-    display: flex;
-    flex-direction: column;
-    gap: 0.35em;
-    margin: 0.3em 0 0;
-  }
-
-  .card-field {
-    display: flex;
-    align-items: baseline;
-    gap: 0.75em;
-    min-width: 0;
-
-    dt {
-      flex: 0 0 40%;
-      max-width: 10em;
-      color: var(--cm-text-secondary);
-      font-size: 0.85em;
-      overflow-wrap: anywhere;
-    }
-
-    dd {
-      flex: 1 1 auto;
-      min-width: 0;
-      margin: 0;
-      overflow-wrap: anywhere;
-    }
-  }
-
-  /* Very narrow containers: stack labels above values */
-  @container (max-width: 20em) {
-    .card-field {
-      flex-direction: column;
-      gap: 0.1em;
-
-      dt {
-        flex: none;
-        max-width: none;
-      }
-    }
   }
 }
 
@@ -446,10 +329,5 @@
     justify-content: center;
     min-width: 2.75em;
     min-height: 2.75em;
-  }
-
-  /* Small menu items use a 0.8em font size */
-  .castmill-table .card-actions :global(.castmill-menu-button-items button) {
-    min-height: calc(2.75em / 0.8);
   }
 }

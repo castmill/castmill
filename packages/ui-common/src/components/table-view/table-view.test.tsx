@@ -529,10 +529,10 @@ describe('TableView Component - Card Layout', () => {
     });
     expect(container.querySelector('table')).toBeNull();
     expect(
-      screen.getByTestId('table-card').querySelector('[class*="card-title"]')
+      screen.getByTestId('table-card').querySelector('[class*="title"]')
     ).toHaveTextContent('Image');
 
-    fireEvent.click(screen.getByText('Resource 1'));
+    fireEvent.click(screen.getByRole('button', { name: 'Image' }));
     expect(onRowClick).toHaveBeenCalled();
 
     fetchData.mockClear();

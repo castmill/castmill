@@ -17,6 +17,9 @@ import {
   formatBytes,
   SectionCard,
   tableCardLabels,
+  TableCardContent,
+  EntityCardIcon,
+  mimeTypeIcon,
   revealTab,
   tabKeyTarget,
 } from '@castmill/ui-common';
@@ -41,6 +44,23 @@ interface DeviceTableCacheItem {
   accessed: number;
   mimeType: string;
 }
+
+// Last non-empty path segment, e.g. ".../files/logo.png?x=1" → "logo.png"
+const urlFileName = (url: string) =>
+  url.split(/[?#]/)[0].split('/').filter(Boolean).pop() || url;
+
+// Compact mobile card: file name, URL, type · size · time
+const cacheItemCard = (item: DeviceTableCacheItem): TableCardContent => ({
+  visual: <EntityCardIcon icon={mimeTypeIcon(item.mimeType)} />,
+  title: urlFileName(item.url),
+  titleText: item.url,
+  subtitle: <span title={item.url}>{item.url}</span>,
+  meta: [
+    item.mimeType,
+    formatBytes(item.size),
+    <DeviceTableTime value={item.timestamp} />,
+  ],
+});
 
 export const DeviceCache: Component<{
   baseUrl: string;
@@ -321,6 +341,7 @@ export const DeviceCache: Component<{
                   }}
                   table={{
                     cardLabels: tableCardLabels(t),
+                    card: cacheItemCard,
                     columns,
                     actions,
                     onRowSelect,

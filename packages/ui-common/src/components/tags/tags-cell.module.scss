@@ -1,0 +1,48 @@
+.cell {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25em;
+  min-width: 0;
+  max-width: 100%;
+
+  :global(.castmill-tag-badge) {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  :global(.tag-name) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.overflow {
+  color: var(--cm-text-tertiary);
+  font-size: 0.75em;
+  white-space: nowrap;
+}
+
+.cell .manage {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.75em;
+  min-height: 2.75em;
+  padding: 0.5em;
+  border: 0;
+  border-radius: 0.25em;
+  background: transparent;
+  color: var(--cm-text-secondary);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--cm-bg-hover);
+    color: var(--cm-text-primary);
+  }
+
+  &:focus-visible {
+    outline: 0.125em solid var(--cm-focus-ring);
+    outline-offset: 0.125em;
+  }
+}

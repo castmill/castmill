@@ -9,6 +9,7 @@ import {
 import { useSearchParams } from '@solidjs/router';
 import { BsPlus, BsEye } from 'solid-icons/bs';
 import { AiOutlineDelete } from 'solid-icons/ai';
+import { TbBolt } from 'solid-icons/tb';
 import {
   Button,
   Column,
@@ -20,6 +21,9 @@ import {
   TableViewRef,
   useToast,
   tableCardLabels,
+  TableCardContent,
+  EntityCardField,
+  EntityCardIcon,
 } from '@castmill/ui-common';
 
 import { store } from '../../store/store';
@@ -213,6 +217,48 @@ const AutomationsPage: Component = () => {
     );
   };
 
+  const enabledToggle = (automation: Automation) => (
+    <EnabledToggle
+      checked={automation.enabled}
+      label={t('automations.toggleEnabled', { name: automation.name })}
+      disabled={!canUpdate()}
+      onChange={(enabled) => toggleEnabled(automation, enabled)}
+    />
+  );
+
+  // Compact mobile card: first rule, enabled toggle · next firing · targets
+  const automationCard = (automation: Automation): TableCardContent => {
+    const rules = automation.rules || [];
+    const devices = automation.devices?.length || 0;
+    const channels = automation.channels?.length || 0;
+    return {
+      visual: (
+        <EntityCardIcon
+          icon={TbBolt}
+          tone={automation.enabled ? 'success' : 'neutral'}
+        />
+      ),
+      subtitle:
+        rules.length === 0
+          ? t('automations.noRules')
+          : rules.length > 1
+            ? `${ruleSummary(rules[0], summaryContext())} ${t('automations.moreRules', { count: rules.length - 1 })}`
+            : ruleSummary(rules[0], summaryContext()),
+      meta: [
+        enabledToggle(automation),
+        automation.enabled ? (
+          <EntityCardField label={t('automations.columns.nextFiring')}>
+            {formatFiring(automation.next_firing)}
+          </EntityCardField>
+        ) : (
+          t('automations.disabled')
+        ),
+        devices + channels > 0 &&
+          t('automations.assignmentsDetail', { devices, channels }),
+      ],
+    };
+  };
+
   const columns = (): Column<number, Automation>[] => [
     { key: 'name', title: () => t('common.name') },
     {
@@ -238,14 +284,7 @@ const AutomationsPage: Component = () => {
     {
       key: 'enabled',
       title: () => t('automations.enabled'),
-      render: (automation) => (
-        <EnabledToggle
-          checked={automation.enabled}
-          label={t('automations.toggleEnabled', { name: automation.name })}
-          disabled={!canUpdate()}
-          onChange={(enabled) => toggleEnabled(automation, enabled)}
-        />
-      ),
+      render: enabledToggle,
     },
     {
       key: 'next_firing',
@@ -310,6 +349,7 @@ const AutomationsPage: Component = () => {
           }}
           table={{
             cardLabels,
+            card: automationCard,
             columns,
             actions,
             actionsLabel: () => t('common.actions'),

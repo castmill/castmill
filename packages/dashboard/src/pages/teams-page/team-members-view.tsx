@@ -25,6 +25,10 @@ import { PermissionButton } from '../../components/permission-button/permission-
 import { usePermissions } from '../../hooks/usePermissions';
 import { BsCheckLg } from 'solid-icons/bs';
 import { AiOutlineDelete } from 'solid-icons/ai';
+import {
+  memberCard,
+  memberDisplayName,
+} from '../../components/entity-cards/member-card';
 import { createMemo, createSignal, Show } from 'solid-js';
 import { User } from '../../interfaces/user.interface';
 import { useI18n } from '../../i18n';
@@ -172,12 +176,7 @@ export const TeamMembersView = (props: {
       key: 'user.name',
       title: t('common.name'),
       sortable: true,
-      render: (item: any) => {
-        const isCurrentUser = item.user_id === currentUser?.id;
-        return isCurrentUser
-          ? `${item.user.name} ${t('common.youIndicator')}`
-          : item.user.name;
-      },
+      render: (item: any) => memberDisplayName(t, item, currentUser?.id),
     },
     { key: 'role', title: t('common.role'), sortable: true },
     {
@@ -506,6 +505,12 @@ export const TeamMembersView = (props: {
           onRowSelect,
           cardLayout: true,
           cardLabels,
+          card: memberCard({
+            t,
+            currentUserId: currentUser?.id,
+            locale,
+            joinedLabel: t('teams.insertedAt'),
+          }),
         }}
         pagination={{ itemsPerPage }}
         itemIdKey="user_id"

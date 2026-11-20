@@ -1,4 +1,5 @@
 import { BsCheckLg, BsEye, BsTagFill } from 'solid-icons/bs';
+import { RiMediaPlayList2Fill } from 'solid-icons/ri';
 import { AiOutlineDelete, AiOutlineEdit } from 'solid-icons/ai';
 import {
   Component,
@@ -40,7 +41,7 @@ import {
   TagsService,
   Tag,
   TagGroup,
-  TagBadge,
+  TagsCell,
   TagPopover,
   useViewMode,
   isQuotaExceededError,
@@ -48,6 +49,9 @@ import {
   detailUrlOptions,
   closeDetailUrl,
   tableCardLabels,
+  TableCardContent,
+  EntityCardIcon,
+  EntityCardStatus,
   filtersLabel,
   organizeByLabel,
 } from '@castmill/ui-common';
@@ -747,6 +751,45 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
     }
   };
 
+  const renderTags = (item: JsonPlaylist) => (
+    <TagsCell
+      tags={resourceTagsMap().get(item.id) || []}
+      manageLabel={t('tags.manageTags')}
+      onManage={(anchorEl) => setTagPopoverTarget({ item, anchorEl })}
+    />
+  );
+
+  const aspectRatioOf = (item: JsonPlaylist) => {
+    const aspectRatio = item.settings?.aspect_ratio;
+    const ratio = aspectRatio
+      ? `${aspectRatio.width}:${aspectRatio.height}`
+      : '16:9';
+    const preset = ASPECT_RATIO_OPTIONS.find((opt) => opt.value === ratio);
+    return { ratio, label: preset ? t(preset.label) : ratio };
+  };
+
+  // Compact mobile card: aspect ratio · status · updated, tags
+  const playlistCard = (item: JsonPlaylist): TableCardContent => {
+    const { ratio, label } = aspectRatioOf(item);
+    return {
+      visual: <EntityCardIcon icon={RiMediaPlayList2Fill} />,
+      meta: [
+        <span title={label !== ratio ? label : undefined}>{ratio}</span>,
+        item.status && (
+          <EntityCardStatus
+            tone={item.status === 'live' ? 'success' : 'neutral'}
+          >
+            {item.status}
+          </EntityCardStatus>
+        ),
+        item.updated_at && (
+          <Timestamp value={item.updated_at} mode="relative" />
+        ),
+      ],
+      footer: renderTags(item),
+    };
+  };
+
   // Use function to make columns reactive to i18n changes
   const columns = () =>
     [
@@ -756,21 +799,13 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
         title: () => t('playlists.aspectRatio'),
         sortable: false,
         render: (item: JsonPlaylist) => {
-          const aspectRatio = item.settings?.aspect_ratio;
-          const currentRatio = aspectRatio
-            ? `${aspectRatio.width}:${aspectRatio.height}`
-            : '16:9';
-          const preset = ASPECT_RATIO_OPTIONS.find(
-            (opt) => opt.value === currentRatio
-          );
-          const label = preset ? t(preset.label) : currentRatio;
-
+          const { ratio, label } = aspectRatioOf(item);
           return (
             <span
-              title={label !== currentRatio ? label : undefined}
+              title={label !== ratio ? label : undefined}
               style={{ 'font-size': '0.85em', 'white-space': 'nowrap' }}
             >
-              {currentRatio}
+              {ratio}
             </span>
           );
         },
@@ -796,32 +831,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
         key: 'tags',
         title: () => t('tags.title'),
         sortable: false,
-        render: (item: JsonPlaylist) => {
-          const itemTags = () => resourceTagsMap().get(item.id) || [];
-          return (
-            <div class="tags-cell">
-              <For each={itemTags().slice(0, 3)}>
-                {(tag) => <TagBadge tag={tag} size="small" />}
-              </For>
-              <Show when={itemTags().length > 3}>
-                <span class="tags-overflow">+{itemTags().length - 3}</span>
-              </Show>
-              <button
-                class="tag-manage-btn"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setTagPopoverTarget({
-                    item,
-                    anchorEl: e.currentTarget as HTMLElement,
-                  });
-                }}
-                title={t('tags.manageTags')}
-              >
-                <BsTagFill />
-              </button>
-            </div>
-          );
-        },
+        render: renderTags,
       },
     ] as Column<JsonPlaylist>[];
 
@@ -1329,6 +1339,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
           )}
           table={{
             cardLabels: tableCardLabels(t),
+            card: playlistCard,
             columns,
             actions,
             actionsLabel: t('common.actions'),

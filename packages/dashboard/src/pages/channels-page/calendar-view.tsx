@@ -765,19 +765,17 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
           />
         </Modal>
       </Show>
-      <Show when={pendingSlot()}>
+      <Show when={pendingSlot()} keyed>
         {(slot) => (
           <CalendarAddEntry
-            slot={slot()}
-            dateLabel={dayDate(slot().dayIndex).toLocaleDateString(locale(), {
+            slot={slot}
+            dateLabel={dayDate(slot.dayIndex).toLocaleDateString(locale(), {
               weekday: 'long',
               month: 'long',
               day: 'numeric',
             })}
             channelsService={channelsService}
-            onAdd={(playlist, duration) =>
-              addEntryAt(slot(), playlist, duration)
-            }
+            onAdd={(playlist, duration) => addEntryAt(slot, playlist, duration)}
             onClose={() => setPendingSlot(undefined)}
           />
         )}

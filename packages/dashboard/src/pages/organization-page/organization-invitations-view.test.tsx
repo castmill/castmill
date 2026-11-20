@@ -64,6 +64,18 @@ describe('OrganizationInvitationsView', () => {
     ).mockResolvedValue(undefined);
   });
 
+  // Modals become visible (and their buttons accessible) after a fade-in
+  // that starts on the next tick, so wait for it before using the buttons.
+  const findDialogText = async (text: string) => {
+    const message = await screen.findByText(text);
+    await waitFor(() =>
+      expect(message.closest('[class*="modalOverlay"]')?.className).toMatch(
+        /active/
+      )
+    );
+    return message;
+  };
+
   const renderView = () =>
     render(() => (
       <I18nProvider>
@@ -80,7 +92,7 @@ describe('OrganizationInvitationsView', () => {
       name: 'Resend invitation',
     });
     fireEvent.click(resendButton);
-    return screen.findByText(
+    return findDialogText(
       'Send the invitation to "pending@example.com" again? It will be valid for 7 more days, and the link in earlier invitation emails will stop working.'
     );
   };
@@ -184,7 +196,7 @@ describe('OrganizationInvitationsView', () => {
       return button as HTMLElement;
     });
     fireEvent.click(removeSelected);
-    await screen.findByText(
+    await findDialogText(
       'Are you sure you want to remove the following invitations?'
     );
 
@@ -238,7 +250,7 @@ describe('OrganizationInvitationsView', () => {
     ) as HTMLElement;
     fireEvent.click(removeSelected);
 
-    await screen.findByText(
+    await findDialogText(
       'Are you sure you want to remove the following invitations?'
     );
     expect(document.body.textContent).toContain('- pending@example.com');
@@ -251,7 +263,7 @@ describe('OrganizationInvitationsView', () => {
 
     const rowRemove = screen.getAllByRole('button', { name: 'Remove' })[0];
     fireEvent.click(rowRemove);
-    await screen.findByText(
+    await findDialogText(
       'Are you sure you want to remove the invitation for "pending@example.com"?'
     );
 
@@ -286,7 +298,7 @@ describe('OrganizationInvitationsView', () => {
     ) as HTMLElement;
     fireEvent.click(removeSelected);
 
-    await screen.findByText(
+    await findDialogText(
       'Are you sure you want to remove the following invitations?'
     );
     const removeButtons = screen.getAllByRole('button', { name: 'Remove' });

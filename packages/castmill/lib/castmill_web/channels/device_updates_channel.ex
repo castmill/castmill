@@ -39,6 +39,27 @@ defmodule CastmillWeb.DeviceUpdatesChannel do
     {:noreply, sync_orientation(socket)}
   end
 
+  def handle_info(%{online: true, last_online: last_online}, socket) do
+    push(socket, "device:status", %{
+      device_id: socket.assigns.device_id,
+      online: true,
+      last_online: last_online
+    })
+
+    {:noreply, sync_orientation(assign(socket, :online, true))}
+  end
+
+  def handle_info(%{online: false, last_online: last_online}, socket) do
+    push(socket, "device:status", %{
+      device_id: socket.assigns.device_id,
+      online: false,
+      last_online: last_online,
+      orientation_status: nil
+    })
+
+    {:noreply, assign(socket, online: false, orientation_status: nil)}
+  end
+
   def handle_info(%{online: true}, socket) do
     push(socket, "device:status", %{device_id: socket.assigns.device_id, online: true})
     {:noreply, sync_orientation(assign(socket, :online, true))}

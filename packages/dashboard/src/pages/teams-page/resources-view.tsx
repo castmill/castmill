@@ -8,8 +8,11 @@ import {
   useToast,
   tableCardLabels,
   filtersLabel,
+  TableCardContent,
+  EntityCardThumbnail,
 } from '@castmill/ui-common';
 import { AiOutlineDelete } from 'solid-icons/ai';
+import { BsFileEarmark } from 'solid-icons/bs';
 import { BsCheckLg, BsEye } from 'solid-icons/bs';
 import { createSignal, Show, onMount } from 'solid-js';
 import {
@@ -146,6 +149,24 @@ export const ResourcesView = (props: {
       render: (item: TeamResource) => item.access.join(','),
     },
   ];
+
+  // Compact mobile card: thumbnail, name and access levels
+  const resourceCard = (item: TeamResource): TableCardContent => {
+    const resource = (item as any)[resourceKey];
+    return {
+      visual: (
+        <EntityCardThumbnail
+          src={resource?.files?.['thumbnail']?.uri}
+          alt={resource?.name}
+          fit="contain"
+          fallbackIcon={BsFileEarmark}
+        />
+      ),
+      title: resource?.name,
+      titleText: resource?.name,
+      meta: [item.access?.join(', ')],
+    };
+  };
 
   const confirmRemoveResourceFromTeam = async (resource?: TeamResource) => {
     if (!resource) {
@@ -331,6 +352,7 @@ export const ResourcesView = (props: {
           onRowSelect,
           cardLayout: true,
           cardLabels,
+          card: resourceCard,
           defaultRowAction: {
             icon: BsEye,
             handler: openModal,

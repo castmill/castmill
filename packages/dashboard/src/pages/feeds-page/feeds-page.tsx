@@ -9,6 +9,9 @@ import {
   Table,
   useToast,
   tableCardLabels,
+  TableCardContent,
+  EntityCardField,
+  EntityCardIcon,
 } from '@castmill/ui-common';
 
 import { store } from '../../store/store';
@@ -86,6 +89,32 @@ const FeedsPage: Component = () => {
     }
   };
 
+  const lastUpdate = (feed: Feed) =>
+    feed.data_updated_at
+      ? formatDate(parseServerDate(feed.data_updated_at), 'Pp')
+      : t('feeds.never');
+
+  // Compact mobile card: description, type · entries · last update · usage
+  const feedCard = (feed: Feed): TableCardContent => ({
+    visual: <EntityCardIcon icon={TbRss} />,
+    title: feed.name,
+    subtitle: feed.description,
+    meta: [
+      t(`feeds.modes.${feed.mode}`),
+      feed.entry_count != null && (
+        <EntityCardField label={t('feeds.entries')}>
+          {feed.entry_count}
+        </EntityCardField>
+      ),
+      <span title={t('feeds.lastUpdate')}>{lastUpdate(feed)}</span>,
+      !!feed.usage_count && (
+        <EntityCardField label={t('feeds.usedBy')}>
+          {feed.usage_count}
+        </EntityCardField>
+      ),
+    ],
+  });
+
   const columns: Column<string, Feed>[] = [
     {
       key: 'name',
@@ -118,13 +147,7 @@ const FeedsPage: Component = () => {
     {
       key: 'data_updated_at',
       title: () => t('feeds.lastUpdate'),
-      render: (feed) => (
-        <span>
-          {feed.data_updated_at
-            ? formatDate(parseServerDate(feed.data_updated_at), 'Pp')
-            : t('feeds.never')}
-        </span>
-      ),
+      render: (feed) => <span>{lastUpdate(feed)}</span>,
     },
     {
       key: 'usage_count',
@@ -175,6 +198,7 @@ const FeedsPage: Component = () => {
           <Table<string, Feed>
             cardLayout
             cardLabels={cardLabels}
+            card={feedCard}
             columns={columns}
             data={feeds()}
             hideCheckboxes

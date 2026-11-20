@@ -15,6 +15,11 @@ import { FaSolidSort } from 'solid-icons/fa';
 import { SortOptions } from '../../interfaces/sort-options.interface';
 import { MenuButton } from '../menu-button/menu-button';
 import { widthInEm } from '../../utils/element-em';
+import {
+  EntityCardField,
+  EntityCardMetaItem,
+  EntityListCard,
+} from '../entity-list-card/entity-list-card';
 
 import style from './table.module.scss';
 
@@ -53,6 +58,24 @@ export interface TableCardLabels {
 }
 
 /**
+ * Entity-specific content of a card (see `EntityListCard`). Omitted fields
+ * fall back to the primary column (title) and nothing else.
+ */
+export interface TableCardContent {
+  visual?: JSX.Element;
+  title?: JSX.Element;
+  /** Plain-text title for tooltips and the actions menu label. */
+  titleText?: string;
+  subtitle?: JSX.Element;
+  meta?: EntityCardMetaItem[];
+  footer?: JSX.Element;
+  /** Trailing controls replacing the row-actions menu (e.g. a single button). */
+  actions?: JSX.Element;
+  disabled?: boolean;
+  busy?: boolean;
+}
+
+/**
  * `compact` is used when the full table overflows its container: cells are
  * tighter and row actions move into a menu. `cards` requires `cardLayout`.
  */
@@ -86,6 +109,11 @@ export interface TableProps<
   /** Column key used as the card title. Defaults to the first column. */
   cardPrimaryColumn?: string;
   cardLabels?: TableCardLabels;
+  /**
+   * Entity adapter for the card layout. Without it, cards show the primary
+   * column as title and the other columns as labelled metadata.
+   */
+  card?: (item: Item) => TableCardContent;
 }
 
 // Helper function to safely read nested properties using a dot path (e.g. "user.name")
@@ -353,15 +381,70 @@ export const Table = <
     props.data.length > 0 &&
     props.data.every((item) => selectedRows().has(getItemId(item)));
 
-  const handleCardClick = (e: MouseEvent, item: Item) => {
-    const target = e.target as Element | null;
-    if (
-      props.onRowClick &&
-      !target?.closest(`input, button, select, a, label, [role="menu"]`) &&
-      !target?.closest(`.${style['table-actions']}`)
-    ) {
-      props.onRowClick(item);
-    }
+  const fallbackCardContent = (item: Item): TableCardContent => ({
+    meta: secondaryColumns().map((column) => (
+      <EntityCardField label={getColumnTitle(column)}>
+        {renderCell(column, item)}
+      </EntityCardField>
+    )),
+  });
+
+  const renderCard = (item: Item) => {
+    const content = createMemo(() =>
+      props.card ? props.card(item) : fallbackCardContent(item)
+    );
+    const id = () => getItemId(item);
+    const titleText = () =>
+      content().titleText ??
+      (item.name != null ? String(item.name) : undefined);
+
+    return (
+      <EntityListCard
+        visual={content().visual}
+        title={
+          content().title ??
+          // Adapters that omit a title get the item name rather than the
+          // first column, which may be a thumbnail.
+          (props.card && item.name != null ? (
+            String(item.name)
+          ) : (
+            <Show when={primaryColumn()}>
+              {(column) => renderCell(column(), item)}
+            </Show>
+          ))
+        }
+        titleText={titleText()}
+        subtitle={content().subtitle}
+        meta={content().meta}
+        footer={content().footer}
+        disabled={content().disabled}
+        busy={content().busy}
+        onOpen={props.onRowClick ? () => props.onRowClick!(item) : undefined}
+        selection={
+          props.hideCheckboxes
+            ? undefined
+            : {
+                id: `row-checkbox-${tableId}-${id()}`,
+                checked: selectedRows().has(id()),
+                onChange: (checked) => handleSelectRow(id(), checked),
+                label:
+                  props.cardLabels?.selectRow?.(String(id())) ||
+                  `Select row ${id()}`,
+              }
+        }
+        actions={
+          content().actions ??
+          (rowActions(item).length ? (
+            <MenuButton
+              size="small"
+              icon={BsThreeDots}
+              label={`${getActionsColumnLabel() || 'Actions'} ${titleText() ?? ''}`.trim()}
+              items={actionMenuItems(item)}
+            />
+          ) : undefined)
+        }
+      />
+    );
   };
 
   const renderCards = () => (
@@ -443,75 +526,8 @@ export const Table = <
       <ul class={style['card-list']}>
         <For each={props.data}>
           {(item) => (
-            <li
-              class={style['card']}
-              classList={{
-                [style['selected']]: selectedRows().has(getItemId(item)),
-                [style['clickable']]: !!props.onRowClick,
-              }}
-              data-testid="table-card"
-              tabIndex={props.onRowClick ? 0 : undefined}
-              onClick={(e) => handleCardClick(e, item)}
-              onKeyDown={(e) => {
-                if (
-                  props.onRowClick &&
-                  e.target === e.currentTarget &&
-                  (e.key === 'Enter' || e.key === ' ')
-                ) {
-                  e.preventDefault();
-                  props.onRowClick(item);
-                }
-              }}
-            >
-              <div class={style['card-header']}>
-                <Show when={!props.hideCheckboxes}>
-                  <label class={style['card-select']}>
-                    <input
-                      type="checkbox"
-                      id={`row-checkbox-${tableId}-${getItemId(item)}`}
-                      checked={selectedRows().has(getItemId(item))}
-                      onInput={(e) =>
-                        handleSelectRow(getItemId(item), e.target.checked)
-                      }
-                      aria-label={
-                        props.cardLabels?.selectRow?.(
-                          String(getItemId(item))
-                        ) || `Select row ${getItemId(item)}`
-                      }
-                      class={style['styled-checkbox']}
-                    />
-                  </label>
-                </Show>
-                <div class={style['card-title']}>
-                  <Show when={primaryColumn()}>
-                    {(column) => renderCell(column(), item)}
-                  </Show>
-                </div>
-                <Show when={rowActions(item).length}>
-                  <div
-                    class={`${style['table-actions']} ${style['card-actions']}`}
-                  >
-                    <MenuButton
-                      size="small"
-                      icon={BsThreeDots}
-                      label={`${getActionsColumnLabel() || 'Actions'} ${item.name ?? ''}`.trim()}
-                      items={actionMenuItems(item)}
-                    />
-                  </div>
-                </Show>
-              </div>
-              <Show when={secondaryColumns().length > 0}>
-                <dl class={style['card-fields']}>
-                  <For each={secondaryColumns()}>
-                    {(column) => (
-                      <div class={style['card-field']}>
-                        <dt>{getColumnTitle(column)}</dt>
-                        <dd>{renderCell(column, item)}</dd>
-                      </div>
-                    )}
-                  </For>
-                </dl>
-              </Show>
+            <li class={style['card-item']} data-testid="table-card">
+              {renderCard(item)}
             </li>
           )}
         </For>
@@ -566,7 +582,9 @@ export const Table = <
                   </th>
                 )}
               </For>
-              {actions() && <th>{getActionsColumnLabel() || 'Actions'}</th>}
+              {!!actions()?.length && (
+                <th>{getActionsColumnLabel() || 'Actions'}</th>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -616,7 +634,7 @@ export const Table = <
                   <For each={columns()}>
                     {(column) => <td>{renderCell(column, item)}</td>}
                   </For>
-                  {actions() && (
+                  {!!actions()?.length && (
                     <td>
                       <Show
                         when={!isCompact()}

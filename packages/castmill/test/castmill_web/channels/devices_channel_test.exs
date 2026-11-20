@@ -31,6 +31,22 @@ defmodule CastmillWeb.DevicesChannelTest do
   end
 
   describe "handle_info/2 - channel_updated" do
+    test "broadcasts the server last-online timestamp on status changes", %{
+      socket: socket,
+      device: device,
+      token: token
+    } do
+      Phoenix.PubSub.subscribe(Castmill.PubSub, "device_updates:#{device.id}")
+
+      {:ok, _, socket} =
+        subscribe_and_join(socket, DevicesChannel, "devices:#{device.id}", %{"token" => token})
+
+      assert_receive %{online: true, last_online: %DateTime{}}
+
+      DevicesChannel.handle_info(:check_heartbeat, socket)
+      assert_receive %{online: false, last_online: %DateTime{}}
+    end
+
     test "synchronizes orientation on join and forwards live changes", %{
       socket: socket,
       device: device,

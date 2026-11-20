@@ -17,6 +17,7 @@ import {
 } from '@castmill/ui-common';
 import { TeamsService } from '../../services/teams.service';
 import { AiOutlineDelete } from 'solid-icons/ai';
+import { invitationCard } from '../../components/entity-cards/invitation-card';
 import { createEffect, createSignal } from 'solid-js';
 import { useI18n } from '../../i18n';
 
@@ -225,6 +226,7 @@ export const TeamInvitationsView = (props: {
           onRowSelect,
           cardLayout: true,
           cardLabels,
+          card: invitationCard(t, locale),
         }}
         pagination={{ itemsPerPage }}
         itemIdKey="id"

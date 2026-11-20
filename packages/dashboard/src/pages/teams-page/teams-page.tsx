@@ -22,6 +22,9 @@ import {
   detailUrlOptions,
   closeDetailUrl,
   tableCardLabels,
+  TableCardContent,
+  EntityCardIcon,
+  Timestamp,
 } from '@castmill/ui-common';
 
 import { store } from '../../store/store';
@@ -29,7 +32,7 @@ import { PermissionButton } from '../../components/permission-button/permission-
 import { usePermissions } from '../../hooks/usePermissions';
 
 import { BsCheckLg, BsEye } from 'solid-icons/bs';
-import { AiOutlineDelete } from 'solid-icons/ai';
+import { AiOutlineDelete, AiOutlineTeam } from 'solid-icons/ai';
 
 import { Team } from '../../interfaces/team';
 import styles from './teams-page.module.scss';
@@ -44,7 +47,7 @@ import { useLocation } from '@solidjs/router';
 
 const TeamsPage: Component = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const cardLabels = tableCardLabels(t);
   const { canPerformAction } = usePermissions();
   const { registerShortcutAction, unregisterShortcutAction } =
@@ -164,6 +167,22 @@ const TeamsPage: Component = () => {
     ] as Column<Team>[];
 
   interface TeamTableItem extends Team {}
+
+  // Compact mobile card: last updated (the API returns snake_case fields)
+  const teamCard = (item: Team): TableCardContent => {
+    const updated =
+      (item as Team & { updated_at?: string }).updated_at || item.updatedAt;
+    return {
+      visual: <EntityCardIcon icon={AiOutlineTeam} />,
+      meta: [
+        updated && (
+          <span title={t('common.updated')}>
+            <Timestamp value={updated} mode="relative" locale={locale()} />
+          </span>
+        ),
+      ],
+    };
+  };
 
   const openTeamDrawer = (item: TeamTableItem) => {
     setDrawerSession((session) => session + 1);
@@ -440,6 +459,7 @@ const TeamsPage: Component = () => {
         )}
         table={{
           cardLabels,
+          card: teamCard,
           columns,
           actions,
           actionsLabel: t('common.actions'),
