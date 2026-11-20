@@ -356,9 +356,12 @@ describe('CalendarView tap-to-add', () => {
     window.matchMedia = originalMatchMedia;
   });
 
+  const tapSlot = async (index: number) => {
+    fireEvent.click(screen.getAllByTestId('calendar-slot')[index]);
+    await screen.findByRole('button', { name: 'Add to schedule' });
+  };
   /** Clicks the week grid slot for `day` (0 = Monday) and half-hour `slot`. */
-  const tapWeekSlot = (day: number, slot: number) =>
-    fireEvent.click(screen.getAllByTestId('calendar-slot')[slot * 7 + day]);
+  const tapWeekSlot = (day: number, slot: number) => tapSlot(slot * 7 + day);
 
   const pickPlaylistAndAdd = async () => {
     fireEvent.click(screen.getByRole('button', { name: 'Playlist' }));
@@ -373,7 +376,7 @@ describe('CalendarView tap-to-add', () => {
     await waitFor(() => expect(getChannelEntries).toHaveBeenCalled());
 
     // Wednesday 10:00
-    tapWeekSlot(2, 20);
+    await tapWeekSlot(2, 20);
     expect(
       screen.getByText('Starts Wednesday, January 7 at 10:00')
     ).toBeInTheDocument();
@@ -421,7 +424,7 @@ describe('CalendarView tap-to-add', () => {
 
     // Saturday 23:30, the default hour is cut to the end of the day.
     fireEvent.click(screen.getByRole('button', { name: 'Previous day' }));
-    fireEvent.click(screen.getAllByTestId('calendar-slot')[47]);
+    await tapSlot(47);
     expect(
       screen.getByText(/Starts Saturday, January 10 at 23:30/)
     ).toBeTruthy();
@@ -459,7 +462,7 @@ describe('CalendarView tap-to-add', () => {
     renderCalendar();
     await waitFor(() => expect(getChannelEntries).toHaveBeenCalled());
 
-    fireEvent.click(screen.getAllByTestId('calendar-slot')[26]);
+    await tapSlot(26);
     const duration = screen.getByRole('button', { name: 'Duration 1 hour' });
     fireEvent.click(duration);
     expect(screen.getByRole('dialog', { name: 'Duration' })).toBeVisible();
@@ -508,7 +511,7 @@ describe('CalendarView tap-to-add', () => {
     expect(await screen.findByText('10:00-11:00')).toBeInTheDocument();
 
     // Wednesday 09:30 for an hour overlaps the 10:00 entry.
-    tapWeekSlot(2, 19);
+    await tapWeekSlot(2, 19);
     await pickPlaylistAndAdd();
 
     await waitFor(() =>
@@ -532,7 +535,7 @@ describe('CalendarView tap-to-add', () => {
     await waitFor(() => expect(getChannelEntries).toHaveBeenCalled());
 
     // Sunday 23:30 until midnight runs past the end of the week.
-    fireEvent.click(screen.getAllByTestId('calendar-slot')[47]);
+    await tapSlot(47);
     await pickPlaylistAndAdd();
 
     await waitFor(() =>
@@ -558,7 +561,7 @@ describe('CalendarView tap-to-add', () => {
     expect(await screen.findByText('10:00-11:00')).toBeInTheDocument();
 
     // Monday 10:00 does not collide with Wednesday 10:00.
-    tapWeekSlot(0, 20);
+    await tapWeekSlot(0, 20);
     await pickPlaylistAndAdd();
     await waitFor(() =>
       expect(addEntryToChannel).toHaveBeenCalledWith(3, {
@@ -605,7 +608,7 @@ describe('CalendarView tap-to-add', () => {
     renderCalendar();
     await waitFor(() => expect(getChannelEntries).toHaveBeenCalled());
 
-    tapWeekSlot(0, 0);
+    await tapWeekSlot(0, 0);
     await pickPlaylistAndAdd();
 
     await waitFor(() =>
@@ -631,11 +634,11 @@ describe('CalendarView tap-to-add', () => {
     renderCalendar();
     await waitFor(() => expect(getChannelEntries).toHaveBeenCalled());
 
-    tapWeekSlot(0, 0);
+    await tapWeekSlot(0, 0);
     await pickPlaylistAndAdd();
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
 
-    tapWeekSlot(1, 1);
+    await tapWeekSlot(1, 1);
     expect(screen.getByText('Starts Tuesday, January 6 at 00:30')).toBeTruthy();
 
     resolveAdd({ id: 99 });
@@ -655,10 +658,10 @@ describe('CalendarView tap-to-add', () => {
     renderCalendar();
     await waitFor(() => expect(getChannelEntries).toHaveBeenCalled());
 
-    tapWeekSlot(0, 0);
+    await tapWeekSlot(0, 0);
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
 
-    tapWeekSlot(1, 1);
+    await tapWeekSlot(1, 1);
     await new Promise((resolve) => setTimeout(resolve, 350));
 
     expect(
@@ -678,7 +681,7 @@ describe('CalendarView tap-to-add', () => {
     renderCalendar();
     await waitFor(() => expect(getChannelEntries).toHaveBeenCalledTimes(1));
 
-    tapWeekSlot(0, 20);
+    await tapWeekSlot(0, 20);
     fireEvent.click(screen.getByRole('button', { name: 'Duration 1 hour' }));
     fireEvent.click(await screen.findByRole('option', { name: '30 minutes' }));
     await pickPlaylistAndAdd();
