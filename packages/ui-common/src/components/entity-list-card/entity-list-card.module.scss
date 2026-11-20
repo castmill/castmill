@@ -308,6 +308,13 @@
   color: var(--cm-text-secondary);
   font-size: 0.8em;
   line-height: 1.4;
+
+  @media (pointer: coarse), (max-width: 36em) {
+    button[role='switch'] {
+      min-width: 2.75rem;
+      min-height: 2.75rem;
+    }
+  }
 }
 
 .meta-item {
@@ -502,6 +509,11 @@
 }
 
 @media (pointer: coarse), (max-width: 36em) {
+  .actions > button {
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+  }
+
   /* Small menu items use a 0.8em font size */
   .actions :global(.castmill-menu-button-items button) {
     min-height: calc(2.75em / 0.8);
