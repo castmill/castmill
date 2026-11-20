@@ -5,6 +5,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from '@solidjs/testing-library';
 import { onMount } from 'solid-js';
 import {
@@ -356,16 +357,27 @@ describe('CalendarView tap-to-add', () => {
     window.matchMedia = originalMatchMedia;
   });
 
+  // The add dialog fades in on the next tick; until its overlay is active it
+  // is hidden, so its buttons are not yet accessible by role.
+  const addOverlay = () =>
+    [...document.querySelectorAll<HTMLElement>('[class*="modalOverlay"]')]
+      .filter((overlay) => /Starts /.test(overlay.textContent ?? ''))
+      .at(-1);
+
+  // Role queries scoped to the add dialog stay fast next to the large grid.
+  const addDialog = () => within(addOverlay()!);
+
   const tapSlot = async (index: number) => {
     fireEvent.click(screen.getAllByTestId('calendar-slot')[index]);
-    await screen.findByRole('button', { name: 'Add to schedule' });
+    await waitFor(() => expect(addOverlay()?.className).toMatch(/active/));
   };
-  /** Clicks the week grid slot for `day` (0 = Monday) and half-hour `slot`. */
+
+  /** Taps the week grid slot for `day` (0 = Monday) and half-hour `slot`. */
   const tapWeekSlot = (day: number, slot: number) => tapSlot(slot * 7 + day);
 
   const pickPlaylistAndAdd = async () => {
-    fireEvent.click(screen.getByRole('button', { name: 'Playlist' }));
-    const add = screen.getByRole('button', { name: 'Add to schedule' });
+    fireEvent.click(addDialog().getByRole('button', { name: 'Playlist' }));
+    const add = addDialog().getByRole('button', { name: 'Add to schedule' });
     await waitFor(() => expect(add).not.toBeDisabled());
     fireEvent.click(add);
   };
@@ -381,10 +393,12 @@ describe('CalendarView tap-to-add', () => {
       screen.getByText('Starts Wednesday, January 7 at 10:00')
     ).toBeInTheDocument();
 
-    const add = screen.getByRole('button', { name: 'Add to schedule' });
+    const add = addDialog().getByRole('button', { name: 'Add to schedule' });
     expect(add).toBeDisabled();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Duration 1 hour' }));
+    fireEvent.click(
+      addDialog().getByRole('button', { name: 'Duration 1 hour' })
+    );
     const durations = await screen.findAllByRole('option');
     expect(durations.map((o) => o.textContent)).toEqual([
       '30 minutes',
@@ -428,7 +442,7 @@ describe('CalendarView tap-to-add', () => {
     expect(
       screen.getByText(/Starts Saturday, January 10 at 23:30/)
     ).toBeTruthy();
-    const duration = screen.getByRole('button', {
+    const duration = addDialog().getByRole('button', {
       name: 'Duration Until end of day',
     });
     fireEvent.click(duration);
@@ -443,7 +457,7 @@ describe('CalendarView tap-to-add', () => {
     ).not.toBeInTheDocument();
     expect(duration).toHaveFocus();
     expect(
-      screen.getByRole('button', { name: 'Add to schedule' })
+      addDialog().getByRole('button', { name: 'Add to schedule' })
     ).toBeInTheDocument();
 
     await pickPlaylistAndAdd();
@@ -463,7 +477,9 @@ describe('CalendarView tap-to-add', () => {
     await waitFor(() => expect(getChannelEntries).toHaveBeenCalled());
 
     await tapSlot(26);
-    const duration = screen.getByRole('button', { name: 'Duration 1 hour' });
+    const duration = addDialog().getByRole('button', {
+      name: 'Duration 1 hour',
+    });
     fireEvent.click(duration);
     expect(screen.getByRole('dialog', { name: 'Duration' })).toBeVisible();
     expect(
@@ -523,9 +539,13 @@ describe('CalendarView tap-to-add', () => {
     // The dialog stays open so another duration can be chosen.
     expect(screen.getByText(/Starts Wednesday/)).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Duration 1 hour' }));
+    fireEvent.click(
+      addDialog().getByRole('button', { name: 'Duration 1 hour' })
+    );
     fireEvent.click(await screen.findByRole('option', { name: '30 minutes' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Add to schedule' }));
+    fireEvent.click(
+      addDialog().getByRole('button', { name: 'Add to schedule' })
+    );
     await waitFor(() => expect(addEntryToChannel).toHaveBeenCalled());
   });
 
@@ -618,7 +638,7 @@ describe('CalendarView tap-to-add', () => {
     );
     expect(screen.getByText(/Starts Monday/)).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    fireEvent.click(addDialog().getByRole('button', { name: 'Cancel' }));
     expect(screen.queryByText(/Starts Monday/)).not.toBeInTheDocument();
   });
 
@@ -636,7 +656,7 @@ describe('CalendarView tap-to-add', () => {
 
     await tapWeekSlot(0, 0);
     await pickPlaylistAndAdd();
-    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    fireEvent.click(addDialog().getByRole('button', { name: 'Cancel' }));
 
     await tapWeekSlot(1, 1);
     expect(screen.getByText('Starts Tuesday, January 6 at 00:30')).toBeTruthy();
@@ -659,7 +679,7 @@ describe('CalendarView tap-to-add', () => {
     await waitFor(() => expect(getChannelEntries).toHaveBeenCalled());
 
     await tapWeekSlot(0, 0);
-    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    fireEvent.click(addDialog().getByRole('button', { name: 'Cancel' }));
 
     await tapWeekSlot(1, 1);
     await new Promise((resolve) => setTimeout(resolve, 350));
@@ -682,7 +702,9 @@ describe('CalendarView tap-to-add', () => {
     await waitFor(() => expect(getChannelEntries).toHaveBeenCalledTimes(1));
 
     await tapWeekSlot(0, 20);
-    fireEvent.click(screen.getByRole('button', { name: 'Duration 1 hour' }));
+    fireEvent.click(
+      addDialog().getByRole('button', { name: 'Duration 1 hour' })
+    );
     fireEvent.click(await screen.findByRole('option', { name: '30 minutes' }));
     await pickPlaylistAndAdd();
     expect(addEntryToChannel).toHaveBeenCalledWith(3, {
