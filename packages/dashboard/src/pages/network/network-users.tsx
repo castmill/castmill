@@ -41,7 +41,7 @@ import styles from './network.module.scss';
 import { networkEntityCardParts } from '../../components/entity-cards/network-entity-card';
 
 const NetworkUsers: Component = () => {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const toast = useToast();
   const cardLabels = tableCardLabels(t);
   const { stats, setStats } = useNetworkContext();
@@ -369,7 +369,7 @@ const NetworkUsers: Component = () => {
 
   // Compact mobile card: organization, role · status · expiry
   const invitationCard = (invitation: NetworkInvitation): TableCardContent => ({
-    ...pendingInvitationCard(t)(invitation),
+    ...pendingInvitationCard(t, locale)(invitation),
     subtitle: invitation.organization_name,
   });
 

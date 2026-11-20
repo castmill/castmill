@@ -604,7 +604,11 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
         {item.online ? t('common.online') : t('common.offline')}
       </EntityCardStatus>,
       !item.online && item.last_online && (
-        <Timestamp value={item.last_online} mode="relative" />
+        <Timestamp
+          value={item.last_online}
+          mode="relative"
+          locale={props.store.i18n?.locale()}
+        />
       ),
     ],
     footer: renderTags(item),

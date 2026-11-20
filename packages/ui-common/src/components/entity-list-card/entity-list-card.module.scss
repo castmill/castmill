@@ -54,6 +54,56 @@
   }
 }
 
+.card:has(.meta-item select) {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+
+  .select {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .visual {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .body {
+    display: contents;
+  }
+
+  .title {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .subtitle {
+    grid-column: 3;
+    grid-row: 2;
+  }
+
+  .meta-clip {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    overflow: visible;
+  }
+
+  .meta-item:has(select) {
+    overflow: visible;
+    white-space: normal;
+  }
+
+  .footer {
+    grid-column: 1 / -1;
+    grid-row: 4;
+  }
+
+  .actions {
+    grid-column: 4;
+    grid-row: 1;
+  }
+}
+
 @keyframes entity-card-pulse {
   50% {
     opacity: 0.5;

@@ -47,7 +47,7 @@ import { useLocation } from '@solidjs/router';
 
 const TeamsPage: Component = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const cardLabels = tableCardLabels(t);
   const { canPerformAction } = usePermissions();
   const { registerShortcutAction, unregisterShortcutAction } =
@@ -177,7 +177,7 @@ const TeamsPage: Component = () => {
       meta: [
         updated && (
           <span title={t('common.updated')}>
-            <Timestamp value={updated} mode="relative" />
+            <Timestamp value={updated} mode="relative" locale={locale()} />
           </span>
         ),
       ],
