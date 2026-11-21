@@ -216,6 +216,10 @@ export const KeyboardShortcutsProvider: Component<ParentProps> = (props) => {
       return;
     }
 
+    if (event.repeat) {
+      return;
+    }
+
     const pressedKey = event.key.toUpperCase();
 
     // Holding a modifier on its own (e.g. Shift) doesn't affect a sequence
