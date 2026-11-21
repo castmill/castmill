@@ -29,6 +29,11 @@ Electron. Keep startup and diagnostics strings in English; do not add locale
 files or language selection to `packages/platforms/legacy-adapter-player/`.
 Dashboard localization remains separate.
 
+The legacy Android adapter and native Android app use `getBrowserLocation` from
+`@castmill/device`. Geolocation is optional: use coordinates when available, but
+continue registration without them on failure or after five seconds. Keep both
+the browser API timeout and the independent timer for unresponsive WebViews.
+
 The Android, WebOS, and Electron debug menus send the literal `console`
 message to the adapter. The Android, WebOS, and Electron wrappers use file origins that
 can be serialized as either `null` or `file://`, including when the referrer

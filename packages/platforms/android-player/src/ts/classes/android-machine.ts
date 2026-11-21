@@ -7,6 +7,7 @@ import {
   DeviceInfo,
   SettingKey,
   TelemetryData,
+  getBrowserLocation,
 } from '@castmill/device';
 import { Castmill } from '../../plugins/castmill';
 import { delay } from '../utils';
@@ -48,21 +49,7 @@ export class AndroidMachine implements Machine {
   async getLocation(): Promise<
     undefined | { latitude: number; longitude: number }
   > {
-    try {
-      const location = await new Promise<GeolocationPosition>(
-        (resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject);
-        }
-      );
-
-      return {
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-      };
-    } catch (error) {
-      console.error(`Error getting location: ${error}`);
-      return undefined;
-    }
+    return getBrowserLocation();
   }
 
   async getTimezone(): Promise<string> {

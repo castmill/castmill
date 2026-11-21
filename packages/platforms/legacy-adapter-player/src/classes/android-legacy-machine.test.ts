@@ -1,4 +1,4 @@
-import { vi, describe, it, beforeEach, expect } from 'vitest';
+import { vi, describe, it, beforeEach, afterEach, expect } from 'vitest';
 import { AndroidLegacyMachine, UNSET_VALUE } from './android-legacy-machine';
 vi.mock('../android-legacy-api', () => ({
   initAndroidLegacyApi: vi.fn(),
@@ -32,6 +32,11 @@ describe('AndroidLegacyMachine', () => {
 
   beforeEach(() => {
     machine = new AndroidLegacyMachine();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
   });
 
   it('should initialize legacy with heartbeat and player ready', () => {
@@ -75,6 +80,42 @@ describe('AndroidLegacyMachine', () => {
   it('should return location as undefined', async () => {
     const location = await machine.getLocation();
     expect(location).toBeUndefined();
+  });
+
+  it('returns coordinates when geolocation is available', async () => {
+    const getCurrentPosition = vi.fn((success) =>
+      success({ coords: { latitude: 59.33, longitude: 18.07 } })
+    );
+    vi.stubGlobal('navigator', { geolocation: { getCurrentPosition } });
+
+    await expect(machine.getLocation()).resolves.toEqual({
+      latitude: 59.33,
+      longitude: 18.07,
+    });
+    expect(getCurrentPosition.mock.calls[0]).toHaveLength(3);
+  });
+
+  it('stops waiting when geolocation never responds', async () => {
+    vi.useFakeTimers();
+    const getCurrentPosition = vi.fn();
+    vi.stubGlobal('navigator', { geolocation: { getCurrentPosition } });
+
+    const location = machine.getLocation();
+    await vi.advanceTimersByTimeAsync(5000);
+
+    await expect(location).resolves.toBeUndefined();
+    expect(getCurrentPosition.mock.calls[0][2]).toEqual({ timeout: 5000 });
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('continues without location when permission is denied', async () => {
+    vi.stubGlobal('navigator', {
+      geolocation: {
+        getCurrentPosition: vi.fn((_success, error) => error({ code: 1 })),
+      },
+    });
+
+    await expect(machine.getLocation()).resolves.toBeUndefined();
   });
 
   it('should return the current timezone', async () => {

@@ -1,4 +1,4 @@
-import { DeviceInfo, SettingKey } from '@castmill/device';
+import { DeviceInfo, SettingKey, getBrowserLocation } from '@castmill/device';
 import { LegacyMachine, PING_INTERVAL } from './legacy-machine';
 import {
   initAndroidLegacyApi,
@@ -90,21 +90,7 @@ export class AndroidLegacyMachine implements LegacyMachine {
     undefined | { latitude: number; longitude: number }
   > {
     logger.log('getLocation');
-    try {
-      const location = await new Promise<GeolocationPosition>(
-        (resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject);
-        }
-      );
-
-      return {
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-      };
-    } catch (error) {
-      console.error(`Failed to get location: ${error}`);
-      return undefined;
-    }
+    return getBrowserLocation();
   }
 
   async getTimezone(): Promise<string> {
