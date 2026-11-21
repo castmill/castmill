@@ -73,7 +73,7 @@ end
 | `icon` | Bundle of the sidebar icon component. |
 | `mount_path` | Dashboard route of the page, below `/org/:orgId`. Append `/*` if the addon has its own sub-routes, for example `/reports/*`. |
 | `mount_point` | Position in the sidebar as a dotted path, such as `sidepanel.reports` or `sidepanel.content.reports`. The parent must exist. |
-| `keyboard_shortcut` | Optional `Ctrl` + key shortcut that opens the page. |
+| `keyboard_shortcut` | Optional key that opens the page as a **G** then *key* sequence, for example **G** then **R**. Pick a letter that no other page uses (C, D, I, L, M, O, P and T are taken). |
 | `translations_path` | Optional folder with `<locale>.json` files. The dashboard loads the user's language and falls back to `en.json`. |
 
 ### Hooks

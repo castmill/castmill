@@ -12,6 +12,12 @@ export type ShortcutCategory = 'global' | 'navigation' | 'actions';
 
 export interface KeyboardShortcut {
   key: string;
+  /**
+   * Prefix key for a two-key sequence, e.g. `sequence: 'G', key: 'C'` means
+   * "press G, then C". Sequence shortcuts never use Ctrl/⌘/Alt, so they
+   * cannot collide with browser or OS shortcuts such as ⌘C (copy).
+   */
+  sequence?: string;
   ctrl?: boolean;
   shift?: boolean;
   alt?: boolean;
@@ -32,10 +38,23 @@ interface KeyboardShortcutsContextType {
   ) => void;
   unregisterShortcutAction: (id: string) => void;
   getShortcuts: () => Map<string, KeyboardShortcut>;
-  formatShortcut: (shortcut: KeyboardShortcut) => string;
+  formatShortcut: (
+    shortcut: KeyboardShortcut,
+    options?: FormatShortcutOptions
+  ) => string;
   isMac: () => boolean;
   isMobile: () => boolean;
 }
+
+export interface FormatShortcutOptions {
+  /** Localized word placed between the keys of a sequence, e.g. "then". */
+  thenLabel?: string;
+}
+
+/** How long the second key of a sequence may take after the prefix key. */
+export const SEQUENCE_TIMEOUT_MS = 1500;
+
+const MODIFIER_KEYS = new Set(['SHIFT', 'CONTROL', 'ALT', 'META', 'ALTGRAPH']);
 
 const KeyboardShortcutsContext = createContext<KeyboardShortcutsContextType>();
 
@@ -109,7 +128,15 @@ export const KeyboardShortcutsProvider: Component<ParentProps> = (props) => {
 
   const getShortcuts = () => shortcuts();
 
-  const formatShortcut = (shortcut: KeyboardShortcut): string => {
+  const formatShortcut = (
+    shortcut: KeyboardShortcut,
+    options?: FormatShortcutOptions
+  ): string => {
+    if (shortcut.sequence) {
+      const thenLabel = options?.thenLabel ?? 'then';
+      return `${shortcut.sequence.toUpperCase()} ${thenLabel} ${shortcut.key.toUpperCase()}`;
+    }
+
     const parts: string[] = [];
     const mac = isMac();
 
@@ -152,6 +179,23 @@ export const KeyboardShortcutsProvider: Component<ParentProps> = (props) => {
     return ctrlMatch && shiftMatch && altMatch;
   };
 
+  // Prefix key of a sequence that is waiting for its second key
+  let pendingPrefix: { key: string; at: number } | null = null;
+
+  const findShortcut = (
+    predicate: (shortcut: KeyboardShortcut) => boolean
+  ): KeyboardShortcut | undefined => {
+    for (const [, shortcut] of shortcuts()) {
+      if (shortcut.condition && !shortcut.condition()) {
+        continue;
+      }
+      if (predicate(shortcut)) {
+        return shortcut;
+      }
+    }
+    return undefined;
+  };
+
   const handleKeyDown = (event: KeyboardEvent) => {
     const target = event.target as HTMLElement;
 
@@ -168,12 +212,66 @@ export const KeyboardShortcutsProvider: Component<ParentProps> = (props) => {
     // But Delete/Backspace should NOT be processed as shortcuts when in input fields
     // - they should just work normally for text editing
     if (isInInputField && event.key !== 'Escape') {
+      pendingPrefix = null;
       return;
+    }
+
+    const pressedKey = event.key.toUpperCase();
+
+    // Holding a modifier on its own (e.g. Shift) doesn't affect a sequence
+    if (MODIFIER_KEYS.has(pressedKey)) {
+      return;
+    }
+
+    const plainKey = !event.ctrlKey && !event.metaKey && !event.altKey;
+
+    // Second key of a sequence such as "G then C"
+    if (pendingPrefix) {
+      const prefix = pendingPrefix;
+      pendingPrefix = null;
+
+      if (Date.now() - prefix.at <= SEQUENCE_TIMEOUT_MS) {
+        if (plainKey) {
+          const match = findShortcut(
+            (shortcut) =>
+              shortcut.sequence?.toUpperCase() === prefix.key &&
+              shortcut.key.toUpperCase() === pressedKey
+          );
+          if (match) {
+            event.preventDefault();
+            match.action?.();
+            return;
+          }
+        }
+        // An unknown second key cancels the sequence without triggering
+        // single-key shortcuts (e.g. "G" then "Delete" must not delete).
+        // Escape and modified keys (⌘C, Ctrl+F…) keep working normally.
+        if (plainKey && event.key !== 'Escape') {
+          return;
+        }
+      }
+    }
+
+    // First key of a sequence. Sequence prefixes take precedence over a
+    // single-key shortcut on the same key.
+    if (plainKey && !event.shiftKey && !isInInputField) {
+      const startsSequence = findShortcut(
+        (shortcut) => shortcut.sequence?.toUpperCase() === pressedKey
+      );
+      if (startsSequence) {
+        pendingPrefix = { key: pressedKey, at: Date.now() };
+        return;
+      }
     }
 
     const mac = isMac();
 
     for (const [, shortcut] of shortcuts()) {
+      // Sequence shortcuts only run through the prefix handling above
+      if (shortcut.sequence) {
+        continue;
+      }
+
       // Check if condition is met (if defined)
       if (shortcut.condition && !shortcut.condition()) {
         continue;

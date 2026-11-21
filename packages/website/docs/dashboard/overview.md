@@ -69,16 +69,18 @@ Press **Shift+?** to see every shortcut that works on the current page.
 | **C** | Create a resource on the current page |
 | **S** | Search the current list |
 | **Delete** | Delete the selected resources |
-| **Ctrl+M** | Go to Medias |
-| **Ctrl+P** | Go to Playlists |
-| **Ctrl+L** | Go to Layouts |
-| **Ctrl+I** | Go to Widgets |
-| **Ctrl+C** | Go to Channels |
-| **Ctrl+D** | Go to Devices |
-| **Ctrl+G** | Go to Teams |
-| **Ctrl+O** | Go to Organization |
+| **G** then **M** | Go to Medias |
+| **G** then **P** | Go to Playlists |
+| **G** then **L** | Go to Layouts |
+| **G** then **I** | Go to Widgets |
+| **G** then **C** | Go to Channels |
+| **G** then **D** | Go to Devices |
+| **G** then **T** | Go to Teams |
+| **G** then **O** | Go to Organization |
 
-On macOS, use **⌘** instead of **Ctrl**. Single-key shortcuts are ignored while you type in a text field.
+To go to a page, press **G**, release it, and then press the page's letter within a second and a half. Navigation doesn't use **Ctrl** or **⌘**, so browser shortcuts such as **⌘C** (copy), **⌘P** (print) and **⌘L** (address bar) keep working.
+
+On macOS, use **⌘** instead of **Ctrl** for global search. Single-key shortcuts and **G** sequences are ignored while you type in a text field.
 
 ## Language and theme
 
