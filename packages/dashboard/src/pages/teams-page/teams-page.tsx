@@ -214,6 +214,9 @@ const TeamsPage: Component = () => {
     },
   ];
 
+  // TableView ignores responses that finish out of order; the drawer lookup
+  // must do the same so it never holds older rows than the table shows.
+  let latestFetch = 0;
   const fetchData = async ({
     page,
     sortOptions,
@@ -224,6 +227,7 @@ const TeamsPage: Component = () => {
       return { count: 0, data: [] };
     }
 
+    const request = ++latestFetch;
     const result = await TeamsService.fetchTeams(
       store.organizations.selectedId,
       {
@@ -234,7 +238,7 @@ const TeamsPage: Component = () => {
       }
     );
 
-    setData(result.data);
+    if (request === latestFetch) setData(result.data);
 
     return result;
   };

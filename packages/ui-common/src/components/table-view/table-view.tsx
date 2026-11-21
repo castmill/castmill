@@ -5,7 +5,7 @@
  * Provides a common table view including pagination, searching, sorting, and selection.
  * (c) 2024 Castmill AB.
  */
-import { JSX, Show, createSignal, onMount } from 'solid-js';
+import { JSX, Show, createSignal, onCleanup, onMount } from 'solid-js';
 import {
   Filter,
   ItemBase,
@@ -139,6 +139,15 @@ export const TableView = <
   const [loadingError, setLoadingError] = createSignal('');
   const [errorStatus, setErrorStatus] = createSignal<number | null>(null);
 
+  let latestRequest = 0;
+  let disposed = false;
+  let initialLoadTimer: ReturnType<typeof setTimeout>;
+  onCleanup(() => {
+    disposed = true;
+    latestRequest++;
+    clearTimeout(initialLoadTimer);
+  });
+
   const [filters, setFilters] = createSignal<Filter[]>(
     props.toolbar?.filters || []
   );
@@ -233,7 +242,7 @@ export const TableView = <
 
     // For dynamic loaded components we need this to wait for the next event loop
     // Not sure why, something to do with SolidJS reactivity internals.
-    setTimeout(async () => {
+    initialLoadTimer = setTimeout(async () => {
       await updateData();
     });
   });
@@ -244,6 +253,8 @@ export const TableView = <
       .map((filter: { key: string }) => filter.key);
 
   const updateData = async () => {
+    if (disposed) return;
+    const request = ++latestRequest;
     const params = getSearchParams();
     const { search = '', page = 1 } = params;
 
@@ -263,15 +274,18 @@ export const TableView = <
         filters: filters().length ? filtersObject : undefined,
       });
 
+      // Reloads (notably organization switches) can finish out of order.
+      if (request !== latestRequest) return;
       setData(result.data);
       setTotalItems(result.count);
+      setLoadingError('');
+      setErrorStatus(null);
     } catch (err: any) {
       console.log('error', err);
+      if (request !== latestRequest) return;
 
       // Check if it's an HttpError with status code
-      if (err && typeof err.status === 'number') {
-        setErrorStatus(err.status);
-      }
+      setErrorStatus(err && typeof err.status === 'number' ? err.status : null);
 
       setLoadingError(`Error fetching ${props.resource}: ${err}`);
     }
@@ -287,6 +301,12 @@ export const TableView = <
     // Since it takes one event loop to update the search params, we need to wait for it.
     await new Promise<void>((resolve) =>
       setTimeout(async () => {
+        // After an organization switch remounts the page, this table's
+        // queued change must not write its parameters into the new URL.
+        if (disposed) {
+          resolve();
+          return;
+        }
         const params = {} as SetParams;
 
         console.log({ opts });
