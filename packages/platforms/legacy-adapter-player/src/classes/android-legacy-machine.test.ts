@@ -96,11 +96,12 @@ describe('AndroidLegacyMachine', () => {
   });
 
   it('stops waiting when geolocation never responds', async () => {
-    vi.useFakeTimers();
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
     const getCurrentPosition = vi.fn();
     vi.stubGlobal('navigator', { geolocation: { getCurrentPosition } });
 
     const location = machine.getLocation();
+    expect(vi.getTimerCount()).toBe(1);
     await vi.advanceTimersByTimeAsync(5000);
 
     await expect(location).resolves.toBeUndefined();
