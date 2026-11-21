@@ -6,6 +6,7 @@ import {
   onMount,
   createEffect,
   createSignal,
+  untrack,
 } from 'solid-js';
 import { authFetch, checkAuth, getUser, loginUser } from './auth';
 import { AddOn } from '../interfaces/addon.interface';
@@ -61,6 +62,10 @@ const ProtectedRoute: Component<ProtectedRouteProps> = (
   const [onboardingOrgId, setOnboardingOrgId] = createSignal<string | null>(
     null
   );
+  // True once this instance fetched the organizations. The store may hold a
+  // stale list until then (e.g. right after accepting an invitation), so
+  // unknown URL organizations are only redirected after this fetch.
+  const [organizationsFetched, setOrganizationsFetched] = createSignal(false);
 
   const handleRetry = () => {
     setServerError(false);
@@ -148,6 +153,7 @@ const ProtectedRoute: Component<ProtectedRouteProps> = (
             selectedId: incompleteOrg.id,
             selectedName: incompleteOrg.name,
           });
+          setOrganizationsFetched(true);
           return;
         }
 
@@ -157,21 +163,12 @@ const ProtectedRoute: Component<ProtectedRouteProps> = (
         const urlOrgId = params.orgId;
         const findOrg = (id?: string | null) =>
           id ? organizations.find((org) => org.id === id) : undefined;
-        let selectedOrg = findOrg(urlOrgId);
-
-        if (!selectedOrg && organizations.length > 0) {
-          selectedOrg =
-            findOrg(store.organizations.selectedId) ||
-            findOrg(readLastOrganizationId()) ||
-            organizations[0];
-          // Only redirect if we're on an /org/ route with an invalid org ID
-          if (urlOrgId) {
-            const currentPath = location.pathname.replace(/^\/org\/[^/]+/, '');
-            navigate(`/org/${selectedOrg.id}${currentPath || '/'}`, {
-              replace: true,
-            });
-          }
-        }
+        // An unknown URL organization is redirected by the effect below.
+        const selectedOrg =
+          findOrg(urlOrgId) ||
+          findOrg(store.organizations.selectedId) ||
+          findOrg(readLastOrganizationId()) ||
+          organizations[0];
 
         // Set the organizations in the store
         setStore('organizations', {
@@ -181,6 +178,7 @@ const ProtectedRoute: Component<ProtectedRouteProps> = (
           selectedId: selectedOrg?.id,
           selectedName: selectedOrg?.name,
         });
+        setOrganizationsFetched(true);
 
         // Load network admin status
         loadNetworkAdminStatus();
@@ -456,6 +454,29 @@ const ProtectedRoute: Component<ProtectedRouteProps> = (
         });
       }
     }
+  });
+
+  // Leave organization URLs the user cannot open (unknown ID, removed
+  // membership): organizationRoute would otherwise render nothing forever.
+  createEffect(() => {
+    const urlOrgId = params.orgId;
+    if (!urlOrgId || !organizationsFetched()) return;
+    const organizations = store.organizations.data;
+    if (organizations.some((org) => org.id === urlOrgId)) return;
+
+    const fallback =
+      organizations.find((org) => org.id === store.organizations.selectedId) ||
+      organizations[0];
+    if (!fallback) {
+      // RootRedirect shows the no-organizations view.
+      navigate('/', { replace: true });
+      return;
+    }
+    const currentPath = untrack(() => location.pathname).replace(
+      /^\/org\/[^/]+/,
+      ''
+    );
+    navigate(`/org/${fallback.id}${currentPath || '/'}`, { replace: true });
   });
 
   // Remember the selection so routes without an org keep it after a reload

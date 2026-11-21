@@ -298,6 +298,12 @@ export const TableView = <
     // Since it takes one event loop to update the search params, we need to wait for it.
     await new Promise<void>((resolve) =>
       setTimeout(async () => {
+        // After an organization switch remounts the page, this table's
+        // queued change must not write its parameters into the new URL.
+        if (disposed) {
+          resolve();
+          return;
+        }
         const params = {} as SetParams;
 
         console.log({ opts });

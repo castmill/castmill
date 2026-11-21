@@ -1,5 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render, screen, waitFor } from '@solidjs/testing-library';
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@solidjs/testing-library';
 import { TableView, TableViewRef } from './table-view';
 
 type Result = { data: { id: string; name: string }[]; count: number };
@@ -127,5 +133,32 @@ describe('TableView overlapping organization requests', () => {
     await reload();
     expect(fetchData).toHaveBeenCalledTimes(1);
     expect(screen.queryByText('Old team')).not.toBeInTheDocument();
+  });
+
+  it('does not write a queued page change into the URL after disposal', async () => {
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    const setSearchParams = vi.fn();
+    const fetchData = vi.fn().mockResolvedValue({
+      data: [{ id: 'team', name: 'Team' }],
+      count: 30,
+    });
+    const { unmount } = render(() => (
+      <TableView
+        resource="teams"
+        params={[{}, setSearchParams]}
+        fetchData={fetchData}
+        table={{ columns: [{ key: 'name', title: 'Name' }] }}
+        pagination={{ itemsPerPage: 10 }}
+      />
+    ));
+    await waitFor(() => expect(screen.getByText('Team')).toBeInTheDocument());
+
+    // The page change is queued for the next task; the organization switch
+    // remounts the page before it runs.
+    fireEvent.click(screen.getByLabelText('Next page'));
+    unmount();
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    expect(setSearchParams).not.toHaveBeenCalled();
+    expect(fetchData).toHaveBeenCalledTimes(1);
   });
 });

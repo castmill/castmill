@@ -1072,6 +1072,13 @@ This ensures:
   from requests belonging to the disposed page
 - Query-only navigation (such as opening a detail drawer) does not remount
 
+Because the wrapper renders nothing until the URL organization is selected,
+`ProtectedRoute` redirects organization URLs the user cannot open (unknown ID,
+removed membership) once its own organization fetch finishes: to the selected
+or first organization with the same subpath, or to `/` (organization picker)
+when the user has none. It waits for that fetch because the store can be stale,
+for example right after accepting an invitation to a new organization.
+
 #### 5. Data Reloading Patterns
 
 **Dashboard Core Pages** (Teams, Channels, Usage):
@@ -1109,7 +1116,9 @@ onMount(() => {
 The `createEffect` pattern is still included as a fallback, but the organization
 route wrapper handles page resets. Shared `TableView` additionally uses
 latest-request-wins ordering so overlapping reloads cannot restore old rows or
-errors. Global permissions clear while loading, and only the latest request for
+errors. Pages that keep their own copy of fetched rows (for example the drawer
+lookups in Teams and Channels) must apply the same ordering inside `fetchData`.
+Global permissions clear while loading, and only the latest request for
 the selected organization can update them, even across route remounts.
 
 ### Store Structure for Addons

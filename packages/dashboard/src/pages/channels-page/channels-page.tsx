@@ -498,12 +498,16 @@ const ChannelsPage: Component = () => {
     },
   ];
 
+  // TableView ignores responses that finish out of order; the drawer lookup
+  // must do the same so it never holds older rows than the table shows.
+  let latestFetch = 0;
   const fetchData = async ({
     page,
     sortOptions,
     search,
     filters,
   }: FetchDataOptions) => {
+    const request = ++latestFetch;
     const result = await channelsService.fetchChannels({
       page,
       sortOptions,
@@ -514,7 +518,7 @@ const ChannelsPage: Component = () => {
       tag_filter_mode: tagFilterMode() as 'any' | 'all',
     });
 
-    setData(result.data);
+    if (request === latestFetch) setData(result.data);
     return result;
   };
 

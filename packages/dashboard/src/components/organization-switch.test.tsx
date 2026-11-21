@@ -39,8 +39,9 @@ vi.mock('./auth', () => ({
   getUser: () => ({ id: 'user-1' }),
   loginUser: vi.fn(),
 }));
+const getAll = vi.hoisted(() => vi.fn());
 vi.mock('../services/organizations.service', () => ({
-  OrganizationsService: { getAll: async () => organizations },
+  OrganizationsService: { getAll },
 }));
 vi.mock('../services/network.service', () => ({
   NetworkService: {
@@ -116,6 +117,7 @@ const renderDashboard = (
         <Route path="/settings" component={Page} />
         <Route path="/network" component={Page} />
         <Route path="/org/:orgId" component={Page} />
+        <Route path="/" component={Page} />
       </Route>
     </MemoryRouter>
   ));
@@ -138,6 +140,8 @@ describe('organization switching with the real router and store', () => {
     vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
     localStorage.clear();
     loads.length = 0;
+    getAll.mockReset();
+    getAll.mockResolvedValue(organizations);
     setStore('organizations', {
       data: organizations,
       loaded: true,
@@ -280,5 +284,56 @@ describe('organization switching with the real router and store', () => {
     expect(screen.getByTestId('path')).toHaveTextContent('/org/org-1/teams');
     expect(screen.getByRole('combobox')).toHaveValue('org-1');
     expect(localStorage.getItem('castmill_last_organization_id')).toBe('org-1');
+  });
+
+  it('redirects a deep link to an unknown organization', async () => {
+    renderDashboard('/org/org-9/teams');
+    await waitFor(() =>
+      expect(screen.getByTestId('path')).toHaveTextContent('/org/org-1/teams')
+    );
+    expect(store.organizations.selectedId).toBe('org-1');
+  });
+
+  it('redirects client-side navigation to an unknown organization', async () => {
+    const history = renderDashboard();
+    await waitFor(() => expect(store.organizations.loading).toBe(false));
+    selectOrganization('org-2');
+    // Let the switch settle so it cannot mask the redirect under test.
+    await waitFor(() =>
+      expect(screen.getByTestId('path')).toHaveTextContent('/org/org-2/teams')
+    );
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    history.set({ value: '/org/org-9/teams', replace: false, scroll: false });
+    // Let the navigation commit; otherwise the old path would satisfy waitFor.
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    await waitFor(() =>
+      expect(screen.getByTestId('path')).toHaveTextContent('/org/org-2/teams')
+    );
+    expect(store.organizations.selectedId).toBe('org-2');
+  });
+
+  it('sends users without organizations to the organization picker', async () => {
+    getAll.mockResolvedValue([]);
+    renderDashboard('/org/org-1/teams');
+    await waitFor(() =>
+      expect(screen.getByTestId('path')).toHaveTextContent(/^\/$/)
+    );
+  });
+
+  it('does not redirect a newly joined organization before the list reloads', async () => {
+    // Accepting an invitation navigates to an organization that the stale
+    // store does not contain yet.
+    setStore('organizations', 'data', [organizations[0]]);
+    let finishLoading!: (orgs: typeof organizations) => void;
+    getAll.mockReturnValue(new Promise((resolve) => (finishLoading = resolve)));
+    renderDashboard('/org/org-2/teams');
+    await waitFor(() => expect(getAll).toHaveBeenCalled());
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(screen.getByTestId('path')).toHaveTextContent('/org/org-2/teams');
+
+    finishLoading(organizations);
+    await waitFor(() => expect(store.organizations.selectedId).toBe('org-2'));
+    expect(screen.getByTestId('path')).toHaveTextContent('/org/org-2/teams');
   });
 });
