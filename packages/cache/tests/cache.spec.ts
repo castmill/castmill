@@ -50,6 +50,7 @@ describe('Cache', () => {
       expect(store).toHaveBeenCalledWith(url, {
         force: false,
         headers: { Authorization: 'Bearer test-token' },
+        type,
       });
     }
   );

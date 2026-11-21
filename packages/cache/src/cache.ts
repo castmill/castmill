@@ -311,7 +311,7 @@ export class Cache extends Dexie {
     try {
       const { result, item: storageItem } = await this.integration.storeFile(
         url,
-        opts
+        { ...opts, type }
       );
       switch (result.code) {
         case 'SUCCESS':

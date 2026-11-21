@@ -34,6 +34,20 @@ The legacy Android adapter and native Android app use `getBrowserLocation` from
 continue registration without them on failure or after five seconds. Keep both
 the browser API timeout and the independent timer for unresponsive WebViews.
 
+The Android adapter must not send JSON/configuration or widget code through the
+APK's native downloader: it assumes HEAD provides a nonnegative Content-Length
+and generates byte ranges from it. `Cache` and `MemoryCache` pass the item `type`
+to storage. Android uses authenticated XHR GETs for data/code and persists
+versioned data URLs in `FILE_MAP` for offline startup, without persisting headers.
+Put revisions in the data URL's MIME parameters, never a `#fragment`: Crosswalk
+23/Chromium 53 includes that fragment in XHR responseText, breaking JSON/code.
+The fetch polyfill upgrades older fragment-versioned cache URLs while reading
+them so existing offline data remains usable.
+Keep its 30-second timeout, HTTP failure/206 rejection, and Range-request guard.
+Only media uses native files. Do not log configuration payloads or native URLs
+containing auth parameters. The native Java/downloader sources are not in this
+repository; the adapter does not fix their range arithmetic.
+
 The Android, WebOS, and Electron debug menus send the literal `console`
 message to the adapter. The Android, WebOS, and Electron wrappers use file origins that
 can be serialized as either `null` or `file://`, including when the referrer

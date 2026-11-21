@@ -36,7 +36,7 @@ export async function getPlayerData(): Promise<PlayerData> {
 
 export async function setItem(key: string, value: string): Promise<void> {
   initAndroidLegacyApi();
-  logger.log('setItem', key, value);
+  logger.log('setItem', key);
   await outbound.set(key, value);
 }
 
@@ -63,7 +63,7 @@ export async function downloadFile(
   localPath: string
 ): Promise<string> {
   initAndroidLegacyApi();
-  logger.log('downloadFile', path, localPath);
+  logger.log('downloadFile', localPath);
   return outbound.downloadFile(path, localPath) as unknown as string;
 }
 

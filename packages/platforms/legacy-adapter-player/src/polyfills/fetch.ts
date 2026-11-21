@@ -7,7 +7,12 @@ const fetchPolyfill = (
     throw new Error('fetchPolyfill: input is not a string');
   }
 
-  const url = input as string;
+  // Crosswalk includes data URL fragments in the body. Upgrade cache URLs
+  // written before revisions moved into MIME parameters, without losing data.
+  const url = input.replace(
+    /^(data:(?:application\/json|text\/javascript);charset=utf-8),([^#]*)#(\d+)$/,
+    '$1;castmill-revision=$3,$2'
+  );
   const method = init?.method ?? 'GET';
   const headers = (init?.headers as Record<string, string> | undefined) ?? {};
   const body = init?.body as string | undefined;
