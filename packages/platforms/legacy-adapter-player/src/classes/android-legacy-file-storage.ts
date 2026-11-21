@@ -1,9 +1,8 @@
 /**
  * This storage integration uses the API provided by the legacy Android
- * Castmill player app. It stores files in the device's internal storage but
- * since the api is very limited, it assumes that there is room for exactly
- * 1GB of files and that each file is 1MB in size. This is unfortunately the
- * best we can do with this API.
+ * Castmill player app. Media uses native file storage with estimated sizes
+ * and a 1GB capacity. Configuration and code use authenticated XHR and are
+ * persisted as data URLs through the wrapper's key/value API.
  */
 
 import {
@@ -29,11 +28,13 @@ interface FileData {
 }
 
 const TOTAL_STORAGE = 1e9; // 1GB
+const DOWNLOAD_TIMEOUT_MS = 30_000;
 
 export class AndroidLegacyFileStorage implements StorageIntegration {
   private storagePath: string;
   private fileMap = new Map<string, FileData>();
   private fileRevision = Date.now();
+  private fileMapWrites: Promise<void> = Promise.resolve();
 
   constructor(storagePath: string) {
     this.storagePath = storagePath;
@@ -69,11 +70,21 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
     return new Map<string, FileData>();
   }
 
-  private async saveFileMap(): Promise<void> {
-    await setItem(
-      'FILE_MAP',
-      JSON.stringify(Array.from(this.fileMap.entries()))
+  private updateFileMap(
+    update: (files: Map<string, FileData>) => void
+  ): Promise<void> {
+    const write = this.fileMapWrites.then(async () => {
+      const updated = new Map(this.fileMap);
+      update(updated);
+      await setItem('FILE_MAP', JSON.stringify(Array.from(updated.entries())));
+      this.fileMap = updated;
+    });
+    // Keep later writes usable after failure; each caller still awaits its error.
+    this.fileMapWrites = write.then(
+      () => undefined,
+      () => undefined
     );
+    return write;
   }
 
   async init(): Promise<void> {
@@ -93,13 +104,16 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
   }
 
   async listFiles(): Promise<StorageItem[]> {
-    let changed = false;
+    await this.fileMapWrites;
+    const missing = new Map<string, FileData>();
 
     for (const [sourceUrl, file] of Array.from(this.fileMap.entries())) {
+      if (file.url.startsWith('data:')) {
+        continue;
+      }
       try {
         if (!(await fileExists(file.url))) {
-          this.fileMap.delete(sourceUrl);
-          changed = true;
+          missing.set(sourceUrl, file);
         }
       } catch {
         // Older Android wrappers do not expose fileExists. Keep their mappings
@@ -108,8 +122,14 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
       }
     }
 
-    if (changed) {
-      await this.saveFileMap();
+    if (missing.size) {
+      await this.updateFileMap((files) => {
+        for (const [sourceUrl, file] of missing) {
+          if (files.get(sourceUrl) === file) {
+            files.delete(sourceUrl);
+          }
+        }
+      });
     }
 
     return Array.from(this.fileMap.values()).map((file) => ({
@@ -124,17 +144,30 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
   ): Promise<StoreFileReturnValue> {
     const mappedUrl = this.mapLocalhostUrl(url);
 
-    const fileName = this.getFileName(mappedUrl, this.fileRevision++);
-    const localPath = this.getLocalUrl(fileName);
-
-    // Android legacy player does not support headers in the downloadFile API
-    // so we need to pass the Authorization header as a query parameter
-    const auth = opts?.headers?.Authorization;
-    const urlWithParams = auth
-      ? `${mappedUrl}?auth=${encodeURIComponent(auth)}`
-      : mappedUrl;
-
     try {
+      if (
+        Object.keys(opts?.headers ?? {}).some(
+          (key) => key.toLowerCase() === 'range'
+        )
+      ) {
+        throw new Error(
+          'Partial download ranges are not supported by the cache'
+        );
+      }
+      if (opts?.type !== 'media') {
+        return await this.storeTextFile(url, mappedUrl, opts);
+      }
+
+      const fileName = this.getFileName(mappedUrl, this.fileRevision++);
+      const localPath = this.getLocalUrl(fileName);
+
+      // The legacy media downloader cannot send headers.
+      const auth = opts?.headers?.Authorization;
+      const nativeUrl = new URL(mappedUrl);
+      if (auth) {
+        nativeUrl.search += `${nativeUrl.search ? '&' : '?'}auth=${encodeURIComponent(auth)}`;
+      }
+      const urlWithParams = auth ? nativeUrl.toString() : mappedUrl;
       const localUrl = await downloadFile(urlWithParams, localPath);
 
       const size = this.estimateSize(mappedUrl);
@@ -147,11 +180,13 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
         if (staleMappedFile) {
           await deleteFile(staleMappedFile.url);
         }
-        this.fileMap.delete(mappedUrl);
       }
-      this.fileMap.set(url, { url: localUrl, size });
-
-      await this.saveFileMap();
+      await this.updateFileMap((files) => {
+        if (mappedUrl !== url) {
+          files.delete(mappedUrl);
+        }
+        files.set(url, { url: localUrl, size });
+      });
 
       return {
         result: { code: 'SUCCESS' },
@@ -191,6 +226,48 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
     }
   }
 
+  private async storeTextFile(
+    sourceUrl: string,
+    downloadUrl: string,
+    opts?: StoreOptions
+  ): Promise<StoreFileReturnValue> {
+    const text = await new Promise<string>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('GET', downloadUrl);
+      xhr.timeout = DOWNLOAD_TIMEOUT_MS;
+      for (const [key, value] of Object.entries(opts?.headers ?? {})) {
+        xhr.setRequestHeader(key, value);
+      }
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300 && xhr.status !== 206) {
+          resolve(xhr.responseText);
+        } else {
+          reject(
+            new Error(`Configuration download failed: HTTP ${xhr.status}`)
+          );
+        }
+      };
+      xhr.onerror = () =>
+        reject(new Error('Configuration download failed: network error'));
+      xhr.ontimeout = () =>
+        reject(new Error('Configuration download failed: request timed out'));
+      xhr.onabort = () =>
+        reject(new Error('Configuration download failed: request aborted'));
+      xhr.send();
+    });
+
+    const mimeType =
+      opts?.type === 'code' ? 'text/javascript' : 'application/json';
+    // Persist the payload through the wrapper's key/value API, not its ranged
+    // downloader. Data URLs also survive offline starts and content changes.
+    const item = {
+      url: `data:${mimeType};charset=utf-8;castmill-revision=${this.fileRevision++},${encodeURIComponent(text)}`,
+      size: new Blob([text]).size,
+    };
+    await this.updateFileMap((files) => files.set(sourceUrl, item));
+    return { result: { code: 'SUCCESS' }, item };
+  }
+
   /*
    * Retrieve a file from the storage. Returns the file path if the file exists,
    */
@@ -210,13 +287,20 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
     const entry = this.getFileEntry(url);
 
     if (entry) {
-      await deleteFile(entry.file.url);
-      this.fileMap.delete(entry.key);
-      await this.saveFileMap();
+      if (!entry.file.url.startsWith('data:')) {
+        await deleteFile(entry.file.url);
+      }
+      await this.updateFileMap((files) => {
+        if (files.get(entry.key) === entry.file) {
+          files.delete(entry.key);
+        }
+      });
     } else {
       // Cache replaces a source URL with a newly downloaded local URI before
       // asking the integration to remove the superseded local URI.
-      await deleteFile(url);
+      if (!url.startsWith('data:')) {
+        await deleteFile(url);
+      }
     }
   }
 
@@ -227,9 +311,7 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
     // Clear the complete storage path rather than only FILE_MAP entries because
     // a corrupt or interrupted map can leave otherwise unreachable orphan files.
     await deletePath(this.storagePath);
-    this.fileMap.clear();
-
-    await this.saveFileMap();
+    await this.updateFileMap((files) => files.clear());
   }
 
   async close(): Promise<void> {

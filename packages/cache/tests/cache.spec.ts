@@ -50,6 +50,7 @@ describe('Cache', () => {
       expect(store).toHaveBeenCalledWith(url, {
         force: false,
         headers: { Authorization: 'Bearer test-token' },
+        type,
       });
     }
   );
@@ -406,6 +407,51 @@ describe('Cache', () => {
     await expect(cache.init()).resolves.toBeUndefined();
     expect(storage.deleteFile).toHaveBeenCalledWith(orphan.url);
   });
+
+  it.each(['unreferenced', 'missing metadata'])(
+    'redacts cached configuration when %s cleanup fails',
+    async (scenario) => {
+      const sourceUrl = 'https://example.com/devices/1/channels';
+      const cachedUrl = `data:application/json;charset=utf-8;castmill-revision=1,${encodeURIComponent('{"data":"private-configuration"}')}`;
+      const storage = new StorageMockup({});
+      const cache = new Cache(storage, `test-redacted-cleanup-${scenario}`, 10);
+      const failure = new Error('Key/value persistence failed');
+      const remove = vi.spyOn(storage, 'deleteFile').mockRejectedValue(failure);
+      const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      try {
+        if (scenario === 'unreferenced') {
+          storage.files[sourceUrl] = { url: cachedUrl, size: 32 };
+        } else {
+          await cache.items.put({
+            url: sourceUrl,
+            cachedUrl,
+            size: 32,
+            timestamp: Date.now(),
+            accessed: 0,
+            type: ItemType.Data,
+            mimeType: 'application/json',
+          });
+        }
+
+        await expect(cache.init()).resolves.toBeUndefined();
+        expect(remove).toHaveBeenCalledWith(cachedUrl);
+        expect(log).toHaveBeenCalledWith(
+          scenario === 'unreferenced'
+            ? 'Cache: Failed to delete unreferenced file'
+            : 'Cache: Failed to delete file with missing integration metadata',
+          'data:[redacted]',
+          failure
+        );
+        expect(JSON.stringify(log.mock.calls)).not.toContain(
+          'private-configuration'
+        );
+      } finally {
+        log.mockRestore();
+        cache.close();
+      }
+    }
+  );
 
   it('should rebuild corrupt IndexedDB metadata and clean native orphans', async () => {
     const orphan = { url: 'content://cache/orphan', size: 12 };

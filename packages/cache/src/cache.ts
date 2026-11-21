@@ -17,6 +17,10 @@
 import { Dexie } from 'dexie';
 import { StorageIntegration, StoreOptions } from './storage.integration';
 
+function redactDataUrl(url: string): string {
+  return /^data:/i.test(url) ? 'data:[redacted]' : url;
+}
+
 /*
 if ("storage" in navigator && "estimate" in navigator.storage) {
   navigator.storage.estimate().then(function (estimate) {
@@ -120,7 +124,7 @@ export class Cache extends Dexie {
         } catch (error) {
           console.error(
             'Cache: Failed to delete unreferenced file',
-            file.url,
+            redactDataUrl(file.url),
             error
           );
         }
@@ -141,7 +145,7 @@ export class Cache extends Dexie {
         } catch (error) {
           console.error(
             'Cache: Failed to delete file with missing integration metadata',
-            item.cachedUrl,
+            redactDataUrl(item.cachedUrl),
             error
           );
         }
@@ -279,7 +283,7 @@ export class Cache extends Dexie {
       })
       .catch(async (err) => {
         // TODO: we should use the device logger instead of console.error
-        console.error('Error caching file', url, err);
+        console.error('Error caching file', redactDataUrl(url), err);
 
         // Only clean up if there was no pre-existing item we want to preserve.
         // When force-refreshing stale data, the old entry should be kept as
@@ -291,7 +295,7 @@ export class Cache extends Dexie {
               await this.del(url);
             }
           } catch (err) {
-            console.error('Error deleting item', url, err);
+            console.error('Error deleting item', redactDataUrl(url), err);
           }
         }
 
@@ -311,7 +315,7 @@ export class Cache extends Dexie {
     try {
       const { result, item: storageItem } = await this.integration.storeFile(
         url,
-        opts
+        { ...opts, type }
       );
       switch (result.code) {
         case 'SUCCESS':
@@ -363,7 +367,7 @@ export class Cache extends Dexie {
           throw new Error(`Unhandled result code ${result.code}`);
       }
     } catch (err) {
-      console.error('Error caching file', url, err);
+      console.error('Error caching file', redactDataUrl(url), err);
       throw err as Error;
     }
   }
@@ -440,7 +444,11 @@ export class Cache extends Dexie {
     try {
       await this.integration.deleteFile(key);
     } catch (error) {
-      console.error('Cache: Failed to remove invalid file', key, error);
+      console.error(
+        'Cache: Failed to remove invalid file',
+        redactDataUrl(key),
+        error
+      );
     }
   }
 

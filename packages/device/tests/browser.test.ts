@@ -12,6 +12,7 @@ describe('BrowserMachine location', () => {
       'geolocation'
     );
     getCurrentPosition = vi.fn();
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
     Object.defineProperty(navigator, 'geolocation', {
       configurable: true,
       value: { getCurrentPosition },
@@ -42,6 +43,9 @@ describe('BrowserMachine location', () => {
       latitude: 59.33,
       longitude: 18.07,
     });
+    expect(getCurrentPosition.mock.calls[0][2]).toEqual({ timeout: 5000 });
+    expect(vi.getTimerCount()).toBe(0);
+    expect(console.warn).not.toHaveBeenCalled();
   });
 
   it('stops waiting when the browser leaves geolocation pending', async () => {
@@ -51,5 +55,49 @@ describe('BrowserMachine location', () => {
     await vi.advanceTimersByTimeAsync(5000);
 
     await expect(location).resolves.toBeUndefined();
+    expect(console.warn).toHaveBeenCalledOnce();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it.each([1, 2, 3])(
+    'continues without location after geolocation error %s',
+    async (code) => {
+      getCurrentPosition.mockImplementation((_success, error) =>
+        error({ code })
+      );
+
+      await expect(new BrowserMachine().getLocation()).resolves.toBeUndefined();
+      expect(vi.getTimerCount()).toBe(0);
+      expect(console.warn).toHaveBeenCalledOnce();
+    }
+  );
+
+  it('continues when the geolocation API is absent', async () => {
+    delete (navigator as Partial<Navigator>).geolocation;
+
+    await expect(new BrowserMachine().getLocation()).resolves.toBeUndefined();
+    expect(vi.getTimerCount()).toBe(0);
+    expect(console.warn).toHaveBeenCalledOnce();
+  });
+
+  it('continues when geolocation throws synchronously', async () => {
+    getCurrentPosition.mockImplementation(() => {
+      throw new Error('Geolocation unavailable');
+    });
+
+    await expect(new BrowserMachine().getLocation()).resolves.toBeUndefined();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('ignores callbacks arriving after the deadline', async () => {
+    const location = new BrowserMachine().getLocation();
+    await vi.advanceTimersByTimeAsync(5000);
+    const [success, error] = getCurrentPosition.mock.calls[0];
+    success({ coords: { latitude: 59.33, longitude: 18.07 } });
+    error({ code: 3 });
+
+    await expect(location).resolves.toBeUndefined();
+    expect(console.warn).toHaveBeenCalledOnce();
+    expect(vi.getTimerCount()).toBe(0);
   });
 });

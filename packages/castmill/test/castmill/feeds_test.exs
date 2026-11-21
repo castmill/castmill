@@ -312,7 +312,7 @@ defmodule Castmill.FeedsTest do
       assert {:error, :invalid_token} = Feeds.authenticate_token("other")
 
       {:ok, _unnamed, _} = Feeds.create_token(feed, %{})
-      assert ["Make", "Token"] = Enum.map(Feeds.list_tokens(feed), & &1.name)
+      assert ["Make", "Token"] = Enum.sort(Enum.map(Feeds.list_tokens(feed), & &1.name))
 
       assert {:ok, revoked} = Feeds.revoke_token(feed, token.id)
       assert revoked.revoked_at

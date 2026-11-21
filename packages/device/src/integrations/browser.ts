@@ -4,6 +4,48 @@ import {
   type SettingKey,
 } from '../interfaces/machine';
 
+export function getBrowserLocation(): Promise<
+  undefined | { latitude: number; longitude: number }
+> {
+  return new Promise((resolve) => {
+    let settled = false;
+    const complete = (location?: Pick<GeolocationPosition, 'coords'>): void => {
+      if (settled) {
+        return;
+      }
+
+      settled = true;
+      clearTimeout(timeoutId);
+      resolve(
+        location
+          ? {
+              latitude: location.coords.latitude,
+              longitude: location.coords.longitude,
+            }
+          : undefined
+      );
+    };
+    const fail = (): void => {
+      if (!settled) {
+        console.warn('Geolocation unavailable; continuing without location');
+        complete();
+      }
+    };
+
+    // Old WebViews can ignore the API timeout or never answer a permission prompt.
+    const timeoutId = setTimeout(fail, 5000);
+    try {
+      navigator.geolocation.getCurrentPosition(
+        (location) => complete(location),
+        fail,
+        { timeout: 5000 }
+      );
+    } catch {
+      fail();
+    }
+  });
+}
+
 /**
  * Parse browser name and version from user agent string
  */
@@ -116,41 +158,7 @@ export class BrowserMachine implements Machine {
   async getLocation(): Promise<
     undefined | { latitude: number; longitude: number }
   > {
-    return new Promise((resolve) => {
-      let settled = false;
-      const timeoutId = window.setTimeout(() => {
-        settled = true;
-        resolve(undefined);
-      }, 5000);
-
-      const complete = (
-        location?: Pick<GeolocationPosition, 'coords'>
-      ): void => {
-        if (settled) {
-          return;
-        }
-
-        settled = true;
-        window.clearTimeout(timeoutId);
-        resolve(
-          location
-            ? {
-                latitude: location.coords.latitude,
-                longitude: location.coords.longitude,
-              }
-            : undefined
-        );
-      };
-
-      try {
-        navigator.geolocation.getCurrentPosition(
-          (location) => complete(location),
-          () => complete()
-        );
-      } catch {
-        complete();
-      }
-    });
+    return getBrowserLocation();
   }
 
   async getTimezone(): Promise<string> {

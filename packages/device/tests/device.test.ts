@@ -12,6 +12,7 @@ import { Layer, Player } from '@castmill/player';
 import { Channel } from '../src/classes/channel';
 import type { Channel as PhoenixChannel } from 'phoenix';
 import type { Machine } from '../src/interfaces/machine';
+import { getBrowserLocation } from '../src/integrations/browser';
 
 vi.mock('@castmill/cache', () => ({
   Cache: vi.fn().mockImplementation(() => ({
@@ -1353,6 +1354,46 @@ describe('Device - Pincode Polling', () => {
     vi.useRealTimers();
     vi.restoreAllMocks();
   });
+
+  it.each([true, false])(
+    'registers with optional geolocation (available: %s)',
+    async (available) => {
+      vi.stubGlobal('navigator', {
+        geolocation: {
+          getCurrentPosition: vi.fn((success) => {
+            if (available) {
+              success({ coords: { latitude: 59.33, longitude: 18.07 } });
+            }
+          }),
+        },
+      });
+      mockIntegration.getLocation = getBrowserLocation;
+      fetchSpy.mockResolvedValue({
+        status: 201,
+        json: async () => ({ data: { pincode: 'ABC123' } }),
+      });
+
+      try {
+        const pincodePromise = device['requestPincode']('test-hardware-id');
+        await vi.advanceTimersByTimeAsync(5000);
+
+        await expect(pincodePromise).resolves.toBe('ABC123');
+        expect(fetchSpy).toHaveBeenCalledOnce();
+        expect(fetchSpy.mock.calls[0][0]).toBe(
+          'http://localhost:4000/registrations'
+        );
+        expect(JSON.parse(fetchSpy.mock.calls[0][1].body)).toEqual({
+          hardware_id: 'test-hardware-id',
+          timezone: 'UTC',
+          ...(available
+            ? { location: { latitude: 59.33, longitude: 18.07 } }
+            : {}),
+        });
+      } finally {
+        vi.unstubAllGlobals();
+      }
+    }
+  );
 
   it('should keep retrying pincode request when network is unavailable', async () => {
     // First 3 calls fail with network error, 4th succeeds

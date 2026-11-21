@@ -159,9 +159,22 @@ MEDIA_PUBLIC_BASE_URL="http://192.168.1.1:4000"
 This setting applies when media is processed, so existing media with stored
 unreachable URLs must be reprocessed after changing it.
 
-The Android adapter gives every rewritten cached resource a new native filename.
-This changes its `content://` URI and prevents Crosswalk from reusing stale
-in-memory channel or playlist JSON after a refresh.
+The Android adapter downloads channel/automation/playlist JSON and widget code
+with authenticated XHR GETs (30-second timeout), without requiring HEAD,
+Content-Length, or byte ranges. It persists versioned data URLs in `FILE_MAP`
+through the wrapper's key/value API so these resources remain available offline.
+Authorization headers are sent only on the download, not saved in the map.
+Partial requests (`Range`) and partial responses (HTTP 206) are rejected because
+the cache requires complete resources.
+
+Media still uses the native downloader. Every rewrite gets a new native filename;
+text resources also get a new data URL identity, preventing Crosswalk from
+reusing stale cached content. Data URL revisions are MIME parameters, not URL
+fragments: Crosswalk 23 includes fragments in the downloaded body. The fetch
+polyfill converts previously persisted fragment revisions when reading them.
+The APK's `Storage.java` and ranged downloader are
+outside this repository; their unknown-length/range handling must be fixed in
+the legacy APK sources, separately from this server-hosted adapter.
 
 The WebOS adapter downloads public `/medias/` files and unsigned external media
 (including videos) through the legacy wrapper's native file API. It persists

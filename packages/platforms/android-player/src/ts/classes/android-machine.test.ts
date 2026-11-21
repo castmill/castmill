@@ -54,6 +54,8 @@ describe('AndroidMachine', () => {
   });
 
   afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
     vi.resetAllMocks();
   });
 
@@ -132,6 +134,20 @@ describe('AndroidMachine', () => {
 
     const location = await machine.getLocation();
     expect(location).toBeUndefined();
+  });
+
+  it('stops waiting when geolocation never responds', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const getCurrentPosition = vi.fn();
+    vi.stubGlobal('navigator', { geolocation: { getCurrentPosition } });
+
+    const location = machine.getLocation();
+    expect(vi.getTimerCount()).toBe(1);
+    await vi.advanceTimersByTimeAsync(5000);
+
+    await expect(location).resolves.toBeUndefined();
+    expect(getCurrentPosition.mock.calls[0][2]).toEqual({ timeout: 5000 });
+    expect(vi.getTimerCount()).toBe(0);
   });
 
   it('should return the current timezone', async () => {
