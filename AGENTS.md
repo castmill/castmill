@@ -61,7 +61,7 @@ adapter player.
 
 ### Quick Reference
 
-- **Dashboard: 9 Languages**: English, Spanish, Swedish, German, French, Chinese, Arabic (RTL), Korean, Japanese
+- **Dashboard: 10 Languages**: English, Spanish, Swedish, German, French, Chinese, Arabic (RTL), Hebrew (RTL), Korean, Japanese
 - **Dashboard: 100% Coverage Required**: CI validates all languages are complete
 
 ### Dashboard Rules
@@ -165,7 +165,7 @@ decoder-blocking behavior, and test details.
   constants, or automatically reboot a display to apply orientation.
 - Preserve renderer viewport clipping and use logical layout measurements for
   rotated text fitting, pagination, and scrolling. Do not remount video layers.
-- Localize Details labels/status in all nine dashboard languages. Keep save
+- Localize Details labels/status in all ten dashboard languages. Keep save
   success separate from player application; old capability flags remain unsupported.
 
 ### Device Maintenance Actions
@@ -307,7 +307,7 @@ When providing assistance, prioritize:
 - Don't hardcode user-facing strings
 - Don't add views, dialogs, or addon UI that only work in dark mode; use the `--cm-*` theme tokens so they support light mode too
 - Don't build desktop-only UI or reimplement components that already exist in `@castmill/ui-common`; make new UI responsive and extend ui-common instead
-- Don't add translation keys without updating all 9 language files
+- Don't add translation keys without updating all 10 language files
 - Don't forget to update `agents/` docs when changing architecture
 - Don't create unnecessary files in the root directory
 

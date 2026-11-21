@@ -38,7 +38,7 @@ const LOCALES_DIR = path.join(__dirname, '../src/i18n/locales');
 const REFERENCE_LANG = 'en';
 
 // All supported languages
-const LANGUAGES = ['es', 'sv', 'de', 'fr', 'zh', 'ar', 'ko', 'ja'];
+const LANGUAGES = ['es', 'sv', 'de', 'fr', 'zh', 'ar', 'he', 'ko', 'ja'];
 
 // Strings that are acceptable to be identical across languages
 // (cognates, proper nouns, technical terms, abbreviations)
@@ -148,6 +148,7 @@ const ALLOWED_IDENTICAL_KEYS = {
     'sv',
     'de',
     'ar',
+    'he',
     'ko',
   ],
 };
@@ -233,9 +234,9 @@ class TranslationChecker {
       return true;
     }
 
-    // For non-Latin script languages (Chinese, Arabic, Korean, Japanese),
+    // For non-Latin script languages (Chinese, Arabic, Hebrew, Korean, Japanese),
     // the translation MUST use non-Latin characters
-    const nonLatinLanguages = ['zh', 'ar', 'ko', 'ja'];
+    const nonLatinLanguages = ['zh', 'ar', 'he', 'ko', 'ja'];
     if (nonLatinLanguages.includes(targetLang)) {
       return this.usesNonLatinScript(translatedValue);
     }

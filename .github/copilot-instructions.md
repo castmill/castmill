@@ -95,7 +95,7 @@ WebOS hardware before release. Consult
 **CRITICAL**: Localize user-facing text except in the English-only legacy
 adapter player.
 
-- **Dashboard: 9 Languages**: English, Spanish, Swedish, German, French, Chinese, Arabic (RTL), Korean, Japanese
+- **Dashboard: 10 Languages**: English, Spanish, Swedish, German, French, Chinese, Arabic (RTL), Hebrew (RTL), Korean, Japanese
 - **Dashboard: 100% Coverage Required**: CI validates all languages are complete
 - **Before Commit**: Run `cd packages/dashboard && yarn check-translations`
 
@@ -120,7 +120,7 @@ does not change dashboard localization requirements.
   after a native change or auto-reboot. OSD portrait mode is a different API.
 - Keep viewport clipping separate from orientation and use logical dimensions
   for text fitting, pagination, and scrollers. Preserve Chrome 38 fallbacks.
-- All new dashboard orientation labels/status/errors must exist in all nine
+- All new dashboard orientation labels/status/errors must exist in all ten
   locales. Saving desired orientation is not an application acknowledgement.
 
 ## Device Maintenance Actions
@@ -204,7 +204,7 @@ yarn workspace website start
 - Follow existing ESLint/Prettier configurations
 - Update `agents/` docs when making architectural changes
 - Localize user-facing strings in localized packages using their i18n systems
-- Add dashboard translation keys to all 9 language files
+- Add dashboard translation keys to all 10 language files
 
 ### DON'T:
 - Modify `yarn.lock` manually

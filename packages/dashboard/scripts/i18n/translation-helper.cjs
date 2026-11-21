@@ -30,6 +30,7 @@ const SUPPORTED_LANGUAGES = {
   fr: { name: 'French', nativeName: 'Français' },
   zh: { name: 'Chinese', nativeName: '中文' },
   ar: { name: 'Arabic', nativeName: 'العربية' },
+  he: { name: 'Hebrew', nativeName: 'עברית' },
   ko: { name: 'Korean', nativeName: '한국어' },
   ja: { name: 'Japanese', nativeName: '日本語' },
 };
@@ -44,6 +45,7 @@ const AUTO_TRANSLATIONS = {
   fr: (text) => `[FR] ${text}`, // French
   zh: (text) => `[ZH] ${text}`, // Chinese
   ar: (text) => `[AR] ${text}`, // Arabic
+  he: (text) => `[HE] ${text}`, // Hebrew
   ko: (text) => `[KO] ${text}`, // Korean
   ja: (text) => `[JA] ${text}`, // Japanese
 };

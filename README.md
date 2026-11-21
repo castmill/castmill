@@ -28,7 +28,7 @@ This project uses **automatic code formatting and translation validation** via G
 
 - **JavaScript/TypeScript** files are automatically formatted with Prettier
 - **Elixir** files in `packages/castmill/` are automatically formatted with `mix format`
-- **Translation files** (i18n) are automatically validated for 100% coverage across all 9 languages
+- **Translation files** (i18n) are automatically validated for 100% coverage across all 10 languages
 
 **No manual formatting or translation checking needed!** Just `git commit` and:
 1. Your code will be formatted automatically

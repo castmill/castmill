@@ -49,10 +49,11 @@ Under **Language Settings**, choose the language of the dashboard:
 | French | Français |
 | Chinese | 中文 |
 | Arabic | العربية |
+| Hebrew | עברית |
 | Korean | 한국어 |
 | Japanese | 日本語 |
 
-Arabic uses a right-to-left layout. You can also change the language with the language selector in the top bar.
+Arabic and Hebrew use a right-to-left layout. You can also change the language with the language selector in the top bar.
 
 ## Onboarding tour
 

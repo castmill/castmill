@@ -9,7 +9,7 @@ const path = require('path');
 
 const localesDir = path.join(__dirname, '../src/i18n/locales');
 const enPath = path.join(localesDir, 'en.json');
-const locales = ['es', 'sv', 'de', 'fr', 'zh', 'ar', 'ko', 'ja'];
+const locales = ['es', 'sv', 'de', 'fr', 'zh', 'ar', 'he', 'ko', 'ja'];
 
 // Read English translations (source of truth for structure)
 const enTranslations = JSON.parse(fs.readFileSync(enPath, 'utf8'));
