@@ -1,0 +1,59 @@
+# Castmill OS platform
+
+[Castmill OS](https://github.com/castmill/castmill-os) is an immutable Linux
+distribution for Castmill players (Intel mini PCs, Raspberry Pi 5). It is a
+Castmill platform like `packages/platforms/*`, but it does not bundle the
+device app: its kiosk shell loads the backend-hosted web player (`GET /`,
+`packages/castmill/assets/js/device.js`) and gives it native OS access through
+a bridge.
+
+## How the device app detects it
+
+The Castmill OS kiosk shell (Electron) exposes `window.castmillOS` to the main
+frame of the backend origin:
+
+```ts
+interface CastmillOSBridge {
+  readonly version: number; // 1
+  call(method: string, ...args: unknown[]): Promise<unknown>;
+}
+```
+
+`device.js` calls `getCastmillOSBridge()` and, when it finds a bridge, uses
+`CastmillOSMachine` (`packages/device/src/integrations/castmill-os.ts`)
+instead of `BrowserMachine`. Everything else (registration with pincode,
+`devices:<id>` channel, commands, telemetry, cache, schedules) is the normal
+device flow.
+
+## Machine methods
+
+| Method | Answered by (on the device) |
+|---|---|
+| `getSetting` / `setSetting`, `storeCredentials` / `getCredentials` / `removeCredentials` | kiosk shell, files on the data partition |
+| `getMachineGUID` | castmill-agent: random ID kept until a factory reset, plus the output name |
+| `getDeviceInfo` | castmill-agent + kiosk shell (`appType: "Castmill OS"`, OS version, hardware, Electron/Chromium versions) |
+| `getTelemetry` | castmill-agent, already in `TelemetryData` shape |
+| `getTimezone`, `reboot` | castmill-agent |
+| `restart`, `clearCache` | kiosk shell |
+
+Not implemented on purpose: `shutdown`, `update` (the shell is part of the OS
+image), `updateFirmware` (until the backend manages OS versions) and
+`setOrientation` (the device uses CSS rotation). Capabilities follow from this.
+
+## Things to know when changing the device app
+
+- Each output (screen) of a Castmill OS device is a separate Castmill device
+  with its own credentials and machine GUID.
+- The bridge only answers the top-level page of the origin the device loaded,
+  so device code that calls the machine from an iframe won't work there.
+- Keep `CastmillOSMachine` backwards compatible: devices in the field run the
+  bridge version of their OS image, while the device app updates with the
+  backend. New methods must be optional and feature-detected.
+
+## Planned backend work
+
+OS updates managed from Castmill: a release registry (version, compatible
+hardware, bundle URL, security flag), a desired OS version per device or group
+with channels and staged rollouts, and update status reported over the device
+channel. See the Castmill OS
+[integration document](https://github.com/castmill/castmill-os/blob/main/docs/castmill-integration.md#os-updates).
