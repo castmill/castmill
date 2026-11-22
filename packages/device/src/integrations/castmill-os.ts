@@ -86,6 +86,17 @@ export class CastmillOSMachine implements Machine {
     await this.call('removeCredentials');
   }
 
+  /**
+   * Castmill OS has no location source (Chromium's geolocation in Electron
+   * needs a Google API key), so devices register without a location. The
+   * device calls this unconditionally while registering.
+   */
+  async getLocation(): Promise<
+    undefined | { latitude: number; longitude: number }
+  > {
+    return undefined;
+  }
+
   getTimezone(): Promise<string> {
     return this.call<string>('getTimezone');
   }

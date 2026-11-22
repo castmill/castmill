@@ -93,6 +93,21 @@ describe('CastmillOSMachine', () => {
     });
   });
 
+  it('has the methods the device calls unconditionally while registering', async () => {
+    const { bridge, call } = fakeBridge({ getTimezone: 'Europe/Madrid' });
+    const machine = new CastmillOSMachine(bridge);
+
+    // Device.requestPincode and the registration recovery watcher call these
+    // without checking that they exist.
+    expect(await machine.getLocation()).toBeUndefined();
+    expect(await machine.getTimezone()).toBe('Europe/Madrid');
+    await machine.storeCredentials('{}');
+    expect(call.mock.calls).toEqual([
+      ['getTimezone'],
+      ['storeCredentials', '{}'],
+    ]);
+  });
+
   it('forwards restart, reboot and cache clearing', async () => {
     const { bridge, call } = fakeBridge();
     const machine = new CastmillOSMachine(bridge);
