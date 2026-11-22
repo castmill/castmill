@@ -24,6 +24,7 @@ import {
   Show,
 } from 'solid-js';
 import ProtectedRoute from './components/protected-route';
+import { organizationRoute } from './components/organization-route';
 import RootRedirect from './components/root-redirect';
 import Topbar from './components/topbar/topbar';
 import SettingsPage from './pages/settings-page/settings-page';
@@ -304,18 +305,51 @@ render(() => {
                     </Suspense>
                   )}
                 >
-                  <Route path="/" component={EmptyComponent} />
-                  <Route path="search" component={SearchPage} />
-                  <Route path="usage" component={UsagePage} />
-                  <Route path="teams" component={TeamsPage} />
-                  <Route path="tags" component={TagsPage} />
-                  <Route path="agents" component={AgentsPage} />
-                  <Route path="feeds" component={FeedsPage} />
-                  <Route path="feeds/:feedId" component={FeedPage} />
-                  <Route path="organization" component={OrganizationPage} />
-                  <Route path="channels" component={ChannelsPage} />
-                  <Route path="automations" component={AutomationsPage} />
-                  <Route path="invite" component={TeamsInvitationPage} />
+                  <Route
+                    path="/"
+                    component={organizationRoute(EmptyComponent)}
+                  />
+                  <Route
+                    path="search"
+                    component={organizationRoute(SearchPage)}
+                  />
+                  <Route
+                    path="usage"
+                    component={organizationRoute(UsagePage)}
+                  />
+                  <Route
+                    path="teams"
+                    component={organizationRoute(TeamsPage)}
+                  />
+                  <Route path="tags" component={organizationRoute(TagsPage)} />
+                  <Route
+                    path="agents"
+                    component={organizationRoute(AgentsPage)}
+                  />
+                  <Route
+                    path="feeds"
+                    component={organizationRoute(FeedsPage)}
+                  />
+                  <Route
+                    path="feeds/:feedId"
+                    component={organizationRoute(FeedPage)}
+                  />
+                  <Route
+                    path="organization"
+                    component={organizationRoute(OrganizationPage)}
+                  />
+                  <Route
+                    path="channels"
+                    component={organizationRoute(ChannelsPage)}
+                  />
+                  <Route
+                    path="automations"
+                    component={organizationRoute(AutomationsPage)}
+                  />
+                  <Route
+                    path="invite"
+                    component={organizationRoute(TeamsInvitationPage)}
+                  />
 
                   {/* Dynamically generate routes for AddOns */}
                   <For each={store.addons}>
@@ -323,25 +357,13 @@ render(() => {
                       if (!addon.mount_path) {
                         return null;
                       }
-                      // Wrap component to force remount when orgId changes
-                      const KeyedComponent = (props: any) => {
+                      const KeyedComponent = organizationRoute((props) => {
                         const routeParams = useParams();
+                        const Component = wrapLazyComponent(addon);
                         return (
-                          <Show when={routeParams.orgId} keyed>
-                            {(orgId) => {
-                              const Component = wrapLazyComponent(addon);
-                              // Pass routeParams from this context where wildcard is available
-                              return (
-                                <Component
-                                  {...props}
-                                  key={orgId}
-                                  routeParams={routeParams}
-                                />
-                              );
-                            }}
-                          </Show>
+                          <Component {...props} routeParams={routeParams} />
                         );
-                      };
+                      });
 
                       return (
                         <Route
@@ -352,7 +374,7 @@ render(() => {
                     }}
                   </For>
 
-                  <Route path="/*404" component={NotFound} />
+                  <Route path="/*404" component={organizationRoute(NotFound)} />
                 </Route>
 
                 <Route

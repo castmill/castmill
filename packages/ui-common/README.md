@@ -13,6 +13,13 @@ events sorted by `timestamp`. Sort options in URL parameters take precedence.
 Organization and team member tables use the membership's update time; invitation
 tables use the invitation's update time. Sorting is applied before pagination.
 
+Overlapping `TableView` loads use latest-request-wins ordering: a slow previous
+organization, search, or page request cannot replace newer rows or errors.
+Unmounting invalidates pending responses, cancels the deferred initial load, and
+drops queued search, page, or sort changes so they cannot rewrite the next
+page's URL.
+A successful reload clears any previous loading error.
+
 ## Learn more
 
 - Official website: https://castmill.com/

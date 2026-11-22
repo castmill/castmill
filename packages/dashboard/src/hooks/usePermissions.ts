@@ -16,6 +16,10 @@ import {
   type Role,
 } from '../services/permissions.service';
 
+// Permissions live in the global store, so requests from different hook
+// instances must share the same ordering (including across route remounts).
+let permissionsRequest = 0;
+
 /**
  * Hook to manage and check permissions
  */
@@ -28,10 +32,20 @@ export function usePermissions() {
       return;
     }
 
-    setStore('permissions', 'loading', true);
+    const request = ++permissionsRequest;
+    const isCurrent = () =>
+      request === permissionsRequest &&
+      store.organizations.selectedId === organizationId;
+    setStore('permissions', {
+      loaded: false,
+      loading: true,
+      role: undefined,
+      matrix: undefined,
+    });
 
     try {
       const response = await fetchPermissions(organizationId);
+      if (!isCurrent()) return;
 
       setStore('permissions', {
         loaded: true,
@@ -41,6 +55,7 @@ export function usePermissions() {
       });
     } catch (error) {
       console.error('Failed to load permissions:', error);
+      if (!isCurrent()) return;
       setStore('permissions', {
         loaded: false,
         loading: false,
