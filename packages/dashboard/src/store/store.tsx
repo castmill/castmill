@@ -13,7 +13,10 @@ import type {
   ResourceType,
   Action,
 } from '../services/permissions.service';
-import type { KeyboardShortcut } from '../hooks/useKeyboardShortcuts';
+import type {
+  FormatShortcutOptions,
+  KeyboardShortcut,
+} from '../hooks/useKeyboardShortcuts';
 import type {
   OnboardingProgress,
   OnboardingStep,
@@ -116,7 +119,10 @@ interface CastmillStore {
     ) => void;
     unregisterShortcutAction: (id: string) => void;
     getShortcuts: () => Map<string, KeyboardShortcut>;
-    formatShortcut: (shortcut: KeyboardShortcut) => string;
+    formatShortcut: (
+      shortcut: KeyboardShortcut,
+      options?: FormatShortcutOptions
+    ) => string;
     isMac: () => boolean;
     isMobile: () => boolean;
   };

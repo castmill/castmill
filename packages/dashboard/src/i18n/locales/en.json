@@ -1682,6 +1682,7 @@
     "gotoOrganization": "Go to Organization",
     "gotoTeams": "Go to Teams",
     "gotoDevices": "Go to Devices",
+    "then": "then",
     "categories": {
       "global": "Global",
       "navigation": "Navigation",

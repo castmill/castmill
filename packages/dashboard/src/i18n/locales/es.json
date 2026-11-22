@@ -1688,6 +1688,7 @@
     "gotoOrganization": "Ir a Organización",
     "gotoTeams": "Ir a Equipos",
     "gotoDevices": "Ir a Dispositivos",
+    "then": "luego",
     "categories": {
       "global": "General",
       "navigation": "Navegación",

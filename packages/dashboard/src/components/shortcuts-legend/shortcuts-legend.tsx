@@ -69,7 +69,9 @@ export const ShortcutsLegend: Component<ShortcutsLegendProps> = (props) => {
                               : shortcut.description}
                           </span>
                           <span class="shortcut-keys">
-                            {formatShortcut(shortcut)}
+                            {formatShortcut(shortcut, {
+                              thenLabel: t('shortcuts.then'),
+                            })}
                           </span>
                         </div>
                       )}
