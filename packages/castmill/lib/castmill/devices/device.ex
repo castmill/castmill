@@ -52,7 +52,7 @@ defmodule Castmill.Devices.Device do
     field(:token_hash, :string)
     field(:mode, :string, default: "normal")
     field(:schedule, :map)
-    field(:autorecover_until, :utc_datetime)
+    field(:autorecover_until, :utc_datetime, default: ~U[9999-12-31 23:59:59Z])
 
     field(:token, :string, virtual: true)
 

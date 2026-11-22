@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { EventEmitter } from 'eventemitter3';
+import { render, screen } from '@solidjs/testing-library';
+import { createComponent } from 'solid-js';
+import { DeviceComponent } from '../src/components/device.component';
 import {
   Device,
   MAINTENANCE_TOAST_DELAY_MS,
@@ -2333,6 +2336,51 @@ describe('Device - Progress Events', () => {
 
     window.location = originalLocation;
     vi.restoreAllMocks();
+  });
+
+  it('replaces registration progress with credential recovery instructions on a blocked response', async () => {
+    vi.useFakeTimers();
+    mockIntegration.getCredentials.mockResolvedValue(null);
+    const fetchMock = vi.fn().mockResolvedValue({
+      status: 403,
+      json: async () => ({
+        error: 'Device recovery blocked for security reasons',
+        error_code: 'recovery_blocked',
+      }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const view = render(() => createComponent(DeviceComponent, { device }));
+
+    try {
+      await vi.advanceTimersByTimeAsync(0);
+
+      const alert = screen.getByRole('alert');
+      expect(alert).toHaveTextContent('lost its stored credentials');
+      expect(alert).toHaveTextContent('Castmill dashboard');
+      expect(alert).toHaveTextContent('Maintenance tab');
+      expect(alert).toHaveTextContent('enable Recover lost settings');
+      expect(
+        screen.getByRole('link', { name: 'docs.castmill.io' })
+      ).toHaveAttribute(
+        'href',
+        'https://docs.castmill.io/docs/players/troubleshooting#the-screen-shows-automatic-recovery-is-blocked'
+      );
+      expect(screen.queryByText('Initializing…')).not.toBeInTheDocument();
+      expect(
+        screen.queryByText('Connecting to server')
+      ).not.toBeInTheDocument();
+      expect(mockIntegration.storeCredentials).not.toHaveBeenCalled();
+      expect(fetchMock).toHaveBeenCalledWith(
+        'http://localhost:4000/registrations',
+        expect.objectContaining({ method: 'POST' })
+      );
+    } finally {
+      view.unmount();
+      await device.stop();
+      await vi.advanceTimersByTimeAsync(5000);
+      vi.useRealTimers();
+      vi.unstubAllGlobals();
+    }
   });
 });
 
