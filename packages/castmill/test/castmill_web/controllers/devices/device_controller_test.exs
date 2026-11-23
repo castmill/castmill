@@ -952,6 +952,91 @@ defmodule CastmillWeb.DeviceControllerTest do
       assert json_response(conn, 200) == %{"data" => [], "count" => 0}
     end
 
+    test "adds resource names to cached entries of the device organization", %{
+      conn: conn,
+      organization: organization
+    } do
+      {:ok, devices_registration} =
+        device_registration_fixture(%{hardware_id: "cache-hw-names", pincode: "cache07"})
+
+      {:ok, {device, _token}} =
+        Castmill.Devices.register_device(organization.id, devices_registration.pincode, %{
+          name: "Cache Device Names"
+        })
+
+      media =
+        Castmill.MediasFixtures.media_fixture(%{
+          organization_id: organization.id,
+          name: "Summer campaign"
+        })
+
+      {:ok, file} =
+        Castmill.FilesFixtures.file_fixture(%{
+          organization_id: organization.id,
+          name: "summer.mp4",
+          uri: "http://localhost:4000/medias/#{organization.id}/#{media.id}/summer.mp4"
+        })
+
+      {:ok, _} = Castmill.Files.add_file_to_media(file.id, media.id, "default")
+
+      {:ok, orphan_file} =
+        Castmill.FilesFixtures.file_fixture(%{
+          organization_id: organization.id,
+          name: "orphan.png",
+          uri: "http://localhost:4000/medias/#{organization.id}/orphan.png"
+        })
+
+      other_organization = organization_fixture(%{name: "Other cache org"})
+
+      {:ok, _} =
+        Castmill.FilesFixtures.file_fixture(%{
+          organization_id: other_organization.id,
+          name: "secret.png",
+          uri: "http://localhost:4000/medias/#{other_organization.id}/secret.png"
+        })
+
+      playlist = playlist_fixture(%{organization_id: organization.id, name: "Lobby loop"})
+
+      other_playlist =
+        playlist_fixture(%{organization_id: other_organization.id, name: "Hidden"})
+
+      media_url = "https://cdn.example.com/#{organization.id}/#{media.id}/summer.mp4?v=1"
+      orphan_url = "https://cdn.example.com/medias/#{organization.id}/orphan.png"
+      secret_url = "https://cdn.example.com/#{other_organization.id}/secret.png"
+      playlist_url = "https://api.example.com/devices/#{device.id}/playlists/#{playlist.id}"
+
+      other_playlist_url =
+        "https://api.example.com/devices/#{device.id}/playlists/#{other_playlist.id}"
+
+      unknown_url = "https://example.com/unknown.js"
+
+      entries =
+        Enum.map(
+          [media_url, orphan_url, secret_url, playlist_url, other_playlist_url, unknown_url],
+          &%{"url" => &1, "size" => 10}
+        )
+
+      conn =
+        run_request_with_device_response(
+          fn ->
+            get(conn, "/dashboard/devices/#{device.id}/cache?type=media&page=1&page_size=10")
+          end,
+          %{"data" => entries, "count" => 6}
+        )
+
+      response = json_response(conn, 200)
+      assert response["count"] == 6
+      names = Map.new(response["data"], &{&1["url"], &1["name"]})
+
+      assert names[media_url] == "Summer campaign"
+      assert names[orphan_url] == orphan_file.name
+      assert names[playlist_url] == "Lobby loop"
+      assert names[secret_url] == nil
+      assert names[other_playlist_url] == nil
+      assert names[unknown_url] == nil
+      assert Enum.all?(response["data"], &(&1["size"] == 10))
+    end
+
     test "rejects an invalid cache type with a proper inclusion error", %{
       conn: conn,
       organization: organization
