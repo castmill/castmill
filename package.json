@@ -107,7 +107,7 @@
   "devDependencies": {
     "husky": "^9.1.7",
     "lint-staged": "^16.2.4",
-    "oxfmt": "^0.65.0",
+    "oxfmt": "^0.80.0",
     "oxlint": "^1.80.0",
     "typescript": "^5.0.0"
   },
@@ -119,16 +119,10 @@
     "@castmill/electron-player/**/wrap-ansi": "7.0.0",
     "are-we-there-yet": "^4.0.0",
     "gauge": "^5.0.1",
-    "har-validator": "^5.1.5",
     "npmlog": "^7.0.1",
-    "request": "^2.88.2",
-    "uuid": "^9.0.1",
-    "**/cliui/strip-ansi": "6.0.0",
-    "**/cliui/string-width": "4.2.2",
-    "**/cliui/wrap-ansi": "6.2.0",
-    "**/cliui/**/strip-ansi": "6.0.0",
-    "**/cliui/**/string-width": "4.2.2",
-    "**/cliui/**/wrap-ansi": "6.2.0"
+    "uuid": "^11.1.1",
+    "**/@docusaurus/core/tinypool": "^2.2.0",
+    "serialize-javascript": "^7.1.3"
   },
   "lint-staged": {
     "packages/**/*.{js,jsx,ts,tsx}": [

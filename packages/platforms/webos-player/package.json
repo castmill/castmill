@@ -34,7 +34,7 @@
     "@solidjs/testing-library": "^0.8.5",
     "@vitejs/plugin-legacy": "^5.4.1",
     "@vitest/coverage-v8": "1.6.1",
-    "express": "^4.19.2",
+    "express": "^4.22.3",
     "jsdom": "^23.2.0",
     "on-finished": "^2.4.1",
     "solid-devtools": "^0.29.2",
