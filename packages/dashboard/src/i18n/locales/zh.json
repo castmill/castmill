@@ -1337,6 +1337,24 @@
       "currentlyPlaying": "当前从频道安排",
       "note": "这显示设备现在根据频道时间表应该播放的内容，不一定是设备上实际显示的内容。"
     },
+    "health": {
+      "title": "设备健康状况",
+      "description": "播放器资源、在线时长和缓存的概览。",
+      "refresh": "刷新健康指标",
+      "offline": "设备离线。设备连接后将显示健康指标。",
+      "loadError": "无法从设备加载健康指标。",
+      "loading": "正在加载健康指标…",
+      "noData": "此设备未报告任何健康指标。",
+      "appMemory": "应用内存",
+      "cpu": "处理器",
+      "onlineFor": "在线时长",
+      "playerUptime": "播放器运行时间",
+      "systemUptime": "系统运行时间",
+      "cacheSize": "缓存大小",
+      "cacheItems": "{{count}} 个缓存项",
+      "cacheUsage": "按类型的缓存使用情况",
+      "usedOf": "{{used}} / {{total}}"
+    },
     "telemetry": {
       "placeholder": "跟踪、日志、指标和连接性(WiFi质量等)",
       "storage": "存储",

@@ -41,3 +41,4 @@ export * from './choices-field/choices-field';
 export * from './details-summary/details-summary';
 export * from './section-card/section-card';
 export * from './save-bar/save-bar';
+export * from './metrics/metrics';

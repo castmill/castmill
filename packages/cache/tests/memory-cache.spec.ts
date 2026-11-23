@@ -360,4 +360,31 @@ describe('MemoryCache', () => {
     expect(store).toHaveBeenCalledTimes(1);
     expect(await cache.get(first)).toBeDefined();
   });
+
+  it('sums items and bytes per type in one consistent pass', async () => {
+    const storage = new StorageMockup({});
+    const urls = Array.from(
+      { length: 5 },
+      (_, i) => `https://castmill.test/medias/${i}.mp4`
+    );
+    urls.forEach((url, i) => {
+      storage.files[url] = {
+        url: `http://127.0.0.1:9080/castmill-cache/${i}.mp4`,
+        size: 10 * (i + 1),
+        sourceUrl: url,
+      };
+    });
+    const cache = new MemoryCache(storage);
+    await cache.init();
+
+    // Reads move items to the end of the map; they must not change the totals.
+    const [usage] = await Promise.all([
+      cache.usage(ItemType.Media),
+      cache.get(urls[0]),
+      cache.get(urls[1]),
+    ]);
+
+    expect(usage).toEqual({ items: 5, bytes: 150 });
+    expect(await cache.usage(ItemType.Data)).toEqual({ items: 0, bytes: 0 });
+  });
 });

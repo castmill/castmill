@@ -128,6 +128,34 @@ export interface TelemetryData {
   uptimeSeconds?: number;
 }
 
+/** Items and bytes stored in one category of the content cache. */
+export interface CacheUsage {
+  items: number;
+  bytes: number;
+}
+
+/**
+ * Telemetry sent to the dashboard: the platform readings (`TelemetryData`)
+ * plus player statistics collected by the device on every platform.
+ */
+export interface DeviceTelemetryData extends TelemetryData {
+  player?: {
+    /** Seconds since the player started. */
+    uptimeSeconds: number;
+    /** Seconds since the server connection was last (re)established. */
+    connectedSeconds?: number;
+    /** JavaScript heap usage, when the runtime exposes it (Chromium). */
+    heap?: {
+      usedBytes: number;
+      limitBytes: number;
+    };
+  };
+  /** Content cache usage per category. */
+  cache?: CacheUsage & {
+    types: Record<'code' | 'data' | 'media', CacheUsage>;
+  };
+}
+
 // The keys of the settings that the machine can store. For type safety defined
 // as a union type.
 export type SettingKey = 'BASE_URL' | 'TIMERS' | 'TIMER_OFF' | 'ORIENTATION';
