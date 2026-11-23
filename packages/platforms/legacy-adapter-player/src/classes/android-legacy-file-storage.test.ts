@@ -33,6 +33,8 @@ const requests: MockXHR[] = [];
 let response = { status: 200, text: '{"data":[]}', event: 'load' };
 const responses = new Map<string, string>();
 const cachedReads: string[] = [];
+let binaryResponse: Blob | null = null;
+let progressLoaded = 0;
 
 class MockXHR {
   method = '';
@@ -41,6 +43,10 @@ class MockXHR {
   timeout = 0;
   status = 0;
   responseText = '';
+  responseType = '';
+  response: Blob | null = null;
+  aborted = false;
+  onprogress?: (event: { loaded: number; lengthComputable: boolean }) => void;
   onload?: () => void;
   onerror?: () => void;
   ontimeout?: () => void;
@@ -59,6 +65,11 @@ class MockXHR {
     return null;
   }
 
+  abort() {
+    this.aborted = true;
+    this.onabort?.();
+  }
+
   send() {
     if (this.url.startsWith('data:')) {
       // Match Crosswalk 23: a trailing fragment is returned as response text.
@@ -73,6 +84,11 @@ class MockXHR {
     requests.push(this);
     this.status = response.status;
     this.responseText = responses.get(this.url) ?? response.text;
+    this.response = binaryResponse;
+    if (progressLoaded) {
+      this.onprogress?.({ loaded: progressLoaded, lengthComputable: false });
+      if (this.aborted) return;
+    }
     switch (response.event) {
       case 'load':
         this.onload?.();
@@ -99,6 +115,8 @@ describe('AndroidLegacyFileStorage', () => {
     responses.clear();
     cachedReads.length = 0;
     response = { status: 200, text: '{"data":[]}', event: 'load' };
+    binaryResponse = null;
+    progressLoaded = 0;
     vi.stubGlobal('XMLHttpRequest', MockXHR);
     storage = new AndroidLegacyFileStorage('');
     await storage.init();
@@ -573,5 +591,400 @@ describe('AndroidLegacyFileStorage', () => {
     expect(vi.mocked(downloadFile).mock.calls[0][0]).toBe(
       'https://castmill.example/media/movie.mp4?version=1&auth=Bearer%20test-token#fragment'
     );
+  });
+
+  it.each([
+    [
+      'https://cdn.castmill.example/fonts/Brandon-Medium.OTF?version=1',
+      'font/otf',
+    ],
+    ['https://cdn.castmill.example/fonts/Brandon-Black.otf', 'font/otf'],
+    ['https://broker.images.castmill.io/photo/123?width=800', 'image/jpeg'],
+  ])(
+    'persists unknown-length binary %s without HEAD or ranges',
+    async (url, type) => {
+      const bytes = [0, 255, 128, 35, 10, 195, 169];
+      binaryResponse = new Blob([new Uint8Array(bytes)], { type });
+      const stored = await storage.storeFile(url, {
+        type: 'media',
+        headers: { Authorization: 'Bearer test-token' },
+      });
+
+      expect(stored.result.code).toBe('SUCCESS');
+      expect(stored.item?.size).toBe(bytes.length);
+      expect(stored.item?.url).toMatch(
+        new RegExp(`^data:${type};castmill-revision=\\d+;base64,`)
+      );
+      const base64 = stored.item!.url.split(',')[1];
+      expect(Array.from(atob(base64), (char) => char.charCodeAt(0))).toEqual(
+        bytes
+      );
+      expect(requests).toHaveLength(1);
+      expect(requests[0]).toMatchObject({
+        method: 'GET',
+        url,
+        responseType: 'blob',
+        timeout: 30_000,
+        headers: { Authorization: 'Bearer test-token' },
+      });
+      expect(downloadFile).not.toHaveBeenCalled();
+      const saved = vi.mocked(setItem).mock.calls.at(-1)![1];
+      expect(saved).not.toContain('test-token');
+
+      vi.mocked(getItem).mockResolvedValueOnce(saved);
+      const restored = new AndroidLegacyFileStorage('');
+      await restored.init();
+      response.event = 'error';
+      expect(await restored.retrieveFile(url)).toBe(stored.item?.url);
+      expect(await restored.listFiles()).toEqual([stored.item]);
+      expect(fileExists).not.toHaveBeenCalled();
+    }
+  );
+
+  it('falls back from a failed native image without putting auth in the XHR URL', async () => {
+    const url = 'https://cdn.castmill.example/13/poster.jpg?version=1';
+    vi.mocked(downloadFile).mockRejectedValueOnce(
+      new Error('too many failed download attempts')
+    );
+    binaryResponse = new Blob([new Uint8Array([0, 255])], {
+      type: 'image/jpeg',
+    });
+
+    const stored = await storage.storeFile(url, {
+      type: 'media',
+      headers: { Authorization: 'Bearer test-token' },
+    });
+
+    expect(stored.result.code).toBe('SUCCESS');
+    expect(stored.item?.url).toMatch(/^data:image\/jpeg;/);
+    expect(downloadFile).toHaveBeenCalledOnce();
+    expect(requests[0].url).toBe(url);
+    expect(requests[0].headers).toEqual({
+      Authorization: 'Bearer test-token',
+    });
+  });
+
+  it.each(['movie.mp4', 'unknown-resource'])(
+    'does not turn a failed native %s into a persisted binary',
+    async (path) => {
+      vi.mocked(downloadFile).mockRejectedValueOnce(
+        new Error('Native failure')
+      );
+      const stored = await storage.storeFile(
+        `https://cdn.castmill.example/${path}`,
+        {
+          type: 'media',
+        }
+      );
+      expect(stored.result.code).toBe('FAILURE');
+      expect(requests).toHaveLength(0);
+      expect(setItem).not.toHaveBeenCalled();
+    }
+  );
+
+  it('keeps native image disk exhaustion on the capacity-recovery path', async () => {
+    vi.mocked(downloadFile).mockRejectedValueOnce({ message: 'CacheFull' });
+    const stored = await storage.storeFile(
+      'https://cdn.castmill.example/14/poster.jpg',
+      {
+        type: 'media',
+      }
+    );
+    expect(stored.result).toEqual({
+      code: 'FAILURE',
+      error: 'NOT_ENOUGH_SPACE',
+      errMsg: '1000000',
+    });
+    expect(requests).toHaveLength(0);
+  });
+
+  it.each([
+    ['logo.PNG', '', 'image/png'],
+    ['regular.ttf', 'application/octet-stream', 'font/ttf'],
+    ['regular.woff', 'application/font-woff', 'application/font-woff'],
+  ])(
+    'preserves or infers the MIME type of %s',
+    async (path, type, expectedType) => {
+      vi.mocked(downloadFile).mockRejectedValueOnce(
+        new Error('Native failure')
+      );
+      binaryResponse = new Blob(['binary'], { type });
+      const stored = await storage.storeFile(
+        `https://cdn.castmill.example/${path}`,
+        {
+          type: 'media',
+        }
+      );
+      expect(stored.result.code).toBe('SUCCESS');
+      expect(stored.item?.url.startsWith(`data:${expectedType};`)).toBe(true);
+    }
+  );
+
+  it.each(['text/html', 'application/json', 'video/mp4', ''])(
+    'rejects an unsupported broker response type %s',
+    async (type) => {
+      binaryResponse = new Blob(['not an image'], { type });
+      const stored = await storage.storeFile(
+        'https://broker.images.castmill.io/photo',
+        {
+          type: 'media',
+        }
+      );
+      expect(stored.result.code).toBe('FAILURE');
+      expect(stored.result.errMsg).toBe(
+        'Binary download failed: unsupported content type'
+      );
+      expect(setItem).not.toHaveBeenCalled();
+      expect(downloadFile).not.toHaveBeenCalled();
+    }
+  );
+
+  it.each([401, 403, 206, 500])(
+    'rejects binary HTTP %s without persisting the response',
+    async (status) => {
+      response.status = status;
+      binaryResponse = new Blob(['binary'], { type: 'font/otf' });
+      const stored = await storage.storeFile(
+        'https://cdn.castmill.example/font.otf',
+        {
+          type: 'media',
+        }
+      );
+      expect(stored.result).toEqual({
+        code: 'FAILURE',
+        error: 'UNKNOWN',
+        errMsg: `Binary download failed: HTTP ${status}`,
+      });
+      expect(setItem).not.toHaveBeenCalled();
+      expect(downloadFile).not.toHaveBeenCalled();
+    }
+  );
+
+  it.each(['error', 'timeout', 'abort'])(
+    'reports binary request %s without trying the unsafe native downloader',
+    async (event) => {
+      response.event = event;
+      const stored = await storage.storeFile(
+        'https://cdn.castmill.example/font.otf',
+        {
+          type: 'media',
+        }
+      );
+      expect(stored.result.code).toBe('FAILURE');
+      expect(requests[0].timeout).toBe(30_000);
+      expect(setItem).not.toHaveBeenCalled();
+      expect(downloadFile).not.toHaveBeenCalled();
+    }
+  );
+
+  it.each([null, new Blob([], { type: 'font/otf' })])(
+    'rejects an invalid or empty binary response',
+    async (blob) => {
+      binaryResponse = blob;
+      const stored = await storage.storeFile(
+        'https://cdn.castmill.example/font.otf',
+        {
+          type: 'media',
+        }
+      );
+      expect(stored.result.code).toBe('FAILURE');
+      expect(setItem).not.toHaveBeenCalled();
+    }
+  );
+
+  it('aborts an oversized chunked binary download without knowing its length', async () => {
+    progressLoaded = 2 * 1024 * 1024 + 1;
+    const stored = await storage.storeFile(
+      'https://broker.images.castmill.io/photo',
+      {
+        type: 'media',
+      }
+    );
+    expect(stored.result).toEqual({
+      code: 'FAILURE',
+      error: 'TOO_LARGE',
+      errMsg: 'Binary asset exceeds the 2 MiB persistent cache limit',
+    });
+    expect(requests[0].aborted).toBe(true);
+    expect(setItem).not.toHaveBeenCalled();
+    expect(downloadFile).not.toHaveBeenCalled();
+  });
+
+  it('checks actual binary size even when progress events are unavailable', async () => {
+    binaryResponse = new Blob([new Uint8Array(2 * 1024 * 1024 + 1)], {
+      type: 'font/otf',
+    });
+    const stored = await storage.storeFile(
+      'https://cdn.castmill.example/font.otf',
+      {
+        type: 'media',
+      }
+    );
+    expect(stored.result.error).toBe('TOO_LARGE');
+    expect(setItem).not.toHaveBeenCalled();
+  });
+
+  it('allows the per-file boundary and preserves revisions and deletion semantics', async () => {
+    const url = 'https://broker.images.castmill.io/photo';
+    binaryResponse = new Blob([new Uint8Array(2 * 1024 * 1024)], {
+      type: 'image/jpeg',
+    });
+    const first = await storage.storeFile(url, { type: 'media' });
+    const second = await storage.storeFile(url, { type: 'media' });
+    expect(first.result.code).toBe('SUCCESS');
+    expect(second.result.code).toBe('SUCCESS');
+    expect(first.item?.url).not.toBe(second.item?.url);
+    await storage.deleteFile(first.item!.url);
+    expect(await storage.retrieveFile(url)).toBe(second.item?.url);
+    await storage.deleteFile(url);
+    expect(await storage.retrieveFile(url)).toBeUndefined();
+    expect(deleteFile).not.toHaveBeenCalled();
+    expect(downloadFile).not.toHaveBeenCalled();
+  });
+
+  it('enforces the shared binary budget inside serialized map writes and permits replacements', async () => {
+    const existing = Array.from({ length: 4 }, (_, index) => [
+      `https://broker.images.castmill.io/${index}`,
+      {
+        url: `data:image/jpeg;castmill-revision=${index};base64,AA==`,
+        size: 2 * 1024 * 1024 - (index === 3 ? 2 : 0),
+      },
+    ]);
+    vi.mocked(getItem).mockResolvedValueOnce(JSON.stringify(existing));
+    storage = new AndroidLegacyFileStorage('');
+    await storage.init();
+    binaryResponse = new Blob([new Uint8Array([0, 1])], {
+      type: 'image/jpeg',
+    });
+    const urls = [
+      'https://broker.images.castmill.io/new-1',
+      'https://broker.images.castmill.io/new-2',
+    ];
+    const results = await Promise.all(
+      urls.map((url) => storage.storeFile(url, { type: 'media' }))
+    );
+    expect(
+      results.filter((stored) => stored.result.code === 'SUCCESS')
+    ).toHaveLength(1);
+    expect(
+      results
+        .filter((stored) => stored.result.code === 'FAILURE')
+        .map((stored) => stored.result)
+    ).toEqual([{ code: 'FAILURE', error: 'NOT_ENOUGH_SPACE', errMsg: '2' }]);
+    expect(setItem).toHaveBeenCalledOnce();
+    const replacement = await storage.storeFile(
+      'https://broker.images.castmill.io/0',
+      {
+        type: 'media',
+      }
+    );
+    expect(replacement.result.code).toBe('SUCCESS');
+    const failedUrl =
+      urls[results.findIndex((stored) => stored.result.code === 'FAILURE')];
+    expect(await storage.retrieveFile(failedUrl)).toBeUndefined();
+    const recovered = await storage.storeFile(failedUrl, { type: 'media' });
+    expect(recovered.result.code).toBe('SUCCESS');
+  });
+
+  it('evicts old binary media through Cache and restores the new image offline through ResourceManager', async () => {
+    const cacheName = 'legacy-binary-media-eviction';
+    const cache = new Cache(storage, cacheName, 10);
+    const resources = new ResourceManager(cache);
+    const urls = Array.from(
+      { length: 4 },
+      (_, index) => `https://broker.images.castmill.io/cached-${index}`
+    );
+    try {
+      await resources.init();
+      binaryResponse = new Blob([new Uint8Array(2 * 1024 * 1024)], {
+        type: 'image/jpeg',
+      });
+      for (const url of urls) {
+        expect(await resources.getMedia(url)).toMatch(/^data:image\/jpeg;/);
+      }
+      binaryResponse = new Blob([new Uint8Array([255, 0, 128])], {
+        type: 'image/jpeg',
+      });
+      const url = 'https://broker.images.castmill.io/new-image';
+      const cachedUrl = await resources.getMedia(url);
+      expect(cachedUrl).toMatch(/^data:image\/jpeg;/);
+      expect(await cache.items.count()).toBe(4);
+      expect(await storage.retrieveFile(urls[0])).toBeUndefined();
+      const saved = vi.mocked(setItem).mock.calls.at(-1)![1];
+      cache.close();
+
+      vi.mocked(getItem).mockResolvedValueOnce(saved);
+      const restored = new AndroidLegacyFileStorage('');
+      const offlineCache = new Cache(restored, cacheName, 10);
+      const offlineResources = new ResourceManager(offlineCache);
+      try {
+        await offlineResources.init();
+        response.event = 'error';
+        const requestCount = requests.length;
+        expect(await offlineResources.getMedia(url)).toBe(cachedUrl);
+        expect(requests).toHaveLength(requestCount);
+        expect(await restored.retrieveFile(url)).toBe(cachedUrl);
+        expect(downloadFile).not.toHaveBeenCalled();
+        expect(fileExists).not.toHaveBeenCalled();
+      } finally {
+        offlineCache.close();
+      }
+    } finally {
+      cache.close();
+    }
+  });
+
+  it('retains the prior binary mapping if persistence fails', async () => {
+    const url = 'https://broker.images.castmill.io/photo';
+    binaryResponse = new Blob(['first'], { type: 'image/jpeg' });
+    const first = await storage.storeFile(url, { type: 'media' });
+    binaryResponse = new Blob(['second'], { type: 'image/jpeg' });
+    vi.mocked(setItem).mockRejectedValueOnce(new Error('Storage write failed'));
+    const second = await storage.storeFile(url, { type: 'media' });
+    expect(second.result.code).toBe('FAILURE');
+    expect(await storage.retrieveFile(url)).toBe(first.item?.url);
+  });
+
+  it.each(['error', 'abort', 'invalid'])(
+    'reports binary encoding %s without persisting an unusable URL',
+    async (event) => {
+      vi.stubGlobal(
+        'FileReader',
+        class {
+          result = null;
+          onload?: () => void;
+          onerror?: () => void;
+          onabort?: () => void;
+          readAsDataURL() {
+            if (event === 'error') this.onerror?.();
+            else if (event === 'abort') this.onabort?.();
+            else this.onload?.();
+          }
+        }
+      );
+      binaryResponse = new Blob(['binary'], { type: 'font/otf' });
+      const stored = await storage.storeFile(
+        'https://cdn.castmill.example/font.otf',
+        {
+          type: 'media',
+        }
+      );
+      expect(stored.result.code).toBe('FAILURE');
+      expect(stored.result.errMsg).toMatch(/^Binary encoding failed:/);
+      expect(setItem).not.toHaveBeenCalled();
+    }
+  );
+
+  it('rejects binary Range headers before sending either downloader', async () => {
+    const stored = await storage.storeFile(
+      'https://broker.images.castmill.io/photo',
+      {
+        type: 'media',
+        headers: { rAnGe: 'bytes=0-31' },
+      }
+    );
+    expect(stored.result.code).toBe('FAILURE');
+    expect(requests).toHaveLength(0);
+    expect(downloadFile).not.toHaveBeenCalled();
   });
 });

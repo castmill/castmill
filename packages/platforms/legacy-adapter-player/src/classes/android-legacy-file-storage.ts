@@ -1,8 +1,8 @@
 /**
  * This storage integration uses the API provided by the legacy Android
- * Castmill player app. Media uses native file storage with estimated sizes
- * and a 1GB capacity. Configuration and code use authenticated XHR and are
- * persisted as data URLs through the wrapper's key/value API.
+ * Castmill player app. Compatible media uses native file storage with estimated
+ * sizes and a 1GB capacity. Configuration, code, and bounded binary fallbacks
+ * use authenticated XHR and persistent data URLs through the key/value API.
  */
 
 import {
@@ -29,6 +29,33 @@ interface FileData {
 
 const TOTAL_STORAGE = 1e9; // 1GB
 const DOWNLOAD_TIMEOUT_MS = 30_000;
+const MAX_BINARY_FILE_BYTES = 2 * 1024 * 1024;
+const MAX_BINARY_CACHE_BYTES = 8 * 1024 * 1024;
+const BINARY_MIME_TYPES = new Map<string, string>([
+  ['jpg', 'image/jpeg'],
+  ['jpeg', 'image/jpeg'],
+  ['png', 'image/png'],
+  ['gif', 'image/gif'],
+  ['webp', 'image/webp'],
+  ['bmp', 'image/bmp'],
+  ['svg', 'image/svg+xml'],
+  ['ico', 'image/x-icon'],
+  ['otf', 'font/otf'],
+  ['ttf', 'font/ttf'],
+  ['woff', 'font/woff'],
+  ['woff2', 'font/woff2'],
+  ['eot', 'application/vnd.ms-fontobject'],
+]);
+
+class BinaryAssetLimitError extends Error {
+  constructor(
+    readonly code: 'TOO_LARGE' | 'NOT_ENOUGH_SPACE',
+    message: string,
+    readonly requiredBytes?: number
+  ) {
+    super(message);
+  }
+}
 
 export class AndroidLegacyFileStorage implements StorageIntegration {
   private storagePath: string;
@@ -158,6 +185,15 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
         return await this.storeTextFile(url, mappedUrl, opts);
       }
 
+      const extension = this.getBinaryExtension(mappedUrl);
+      const isFont = /^(otf|ttf|woff2?|eot)$/.test(extension);
+      // This broker is known to omit HEAD lengths and ignore byte ranges.
+      const isBrokerImage =
+        new URL(mappedUrl).hostname === 'broker.images.castmill.io';
+      if (isFont || isBrokerImage) {
+        return await this.storeBinaryFile(url, mappedUrl, opts);
+      }
+
       const fileName = this.getFileName(mappedUrl, this.fileRevision++);
       const localPath = this.getLocalUrl(fileName);
 
@@ -168,7 +204,26 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
         nativeUrl.search += `${nativeUrl.search ? '&' : '?'}auth=${encodeURIComponent(auth)}`;
       }
       const urlWithParams = auth ? nativeUrl.toString() : mappedUrl;
-      const localUrl = await downloadFile(urlWithParams, localPath);
+      let localUrl: string;
+      try {
+        localUrl = await downloadFile(urlWithParams, localPath);
+      } catch (err) {
+        if (
+          BINARY_MIME_TYPES.has(extension) &&
+          !(
+            typeof err === 'object' &&
+            err !== null &&
+            'message' in err &&
+            err.message === 'CacheFull'
+          )
+        ) {
+          console.warn(
+            'Native image download failed; retrying with bounded XHR'
+          );
+          return await this.storeBinaryFile(url, mappedUrl, opts);
+        }
+        throw err;
+      }
 
       const size = this.estimateSize(mappedUrl);
 
@@ -198,6 +253,19 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
     } catch (err) {
       console.error('Error downloading file', err);
 
+      if (err instanceof BinaryAssetLimitError) {
+        return {
+          result: {
+            code: 'FAILURE',
+            error: err.code,
+            errMsg:
+              err.requiredBytes === undefined
+                ? err.message
+                : String(err.requiredBytes),
+          },
+        };
+      }
+
       const errorMessage =
         typeof err === 'object' &&
         err !== null &&
@@ -224,6 +292,129 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
         },
       };
     }
+  }
+
+  private getBinaryExtension(url: string): string {
+    return (
+      /\.([a-z0-9]+)$/i.exec(new URL(url).pathname)?.[1].toLowerCase() ?? ''
+    );
+  }
+
+  private async storeBinaryFile(
+    sourceUrl: string,
+    downloadUrl: string,
+    opts?: StoreOptions
+  ): Promise<StoreFileReturnValue> {
+    const blob = await new Promise<Blob>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('GET', downloadUrl);
+      xhr.responseType = 'blob';
+      xhr.timeout = DOWNLOAD_TIMEOUT_MS;
+      for (const [key, value] of Object.entries(opts?.headers ?? {})) {
+        xhr.setRequestHeader(key, value);
+      }
+      const rejectTooLarge = () =>
+        reject(
+          new BinaryAssetLimitError(
+            'TOO_LARGE',
+            'Binary asset exceeds the 2 MiB persistent cache limit'
+          )
+        );
+      xhr.onprogress = (event) => {
+        if (event.loaded > MAX_BINARY_FILE_BYTES) {
+          rejectTooLarge();
+          xhr.abort();
+        }
+      };
+      xhr.onload = () => {
+        if (xhr.status < 200 || xhr.status >= 300 || xhr.status === 206) {
+          reject(new Error(`Binary download failed: HTTP ${xhr.status}`));
+        } else if (!(xhr.response instanceof Blob)) {
+          reject(new Error('Binary download failed: invalid response'));
+        } else if (xhr.response.size > MAX_BINARY_FILE_BYTES) {
+          rejectTooLarge();
+        } else if (xhr.response.size === 0) {
+          reject(new Error('Binary download failed: empty response'));
+        } else {
+          resolve(xhr.response);
+        }
+      };
+      xhr.onerror = () =>
+        reject(new Error('Binary download failed: network error'));
+      xhr.ontimeout = () =>
+        reject(new Error('Binary download failed: request timed out'));
+      xhr.onabort = () =>
+        reject(new Error('Binary download failed: request aborted'));
+      xhr.send();
+    });
+
+    const mimeType = blob.type.split(';')[0].trim().toLowerCase();
+    const expectedType = BINARY_MIME_TYPES.get(
+      this.getBinaryExtension(downloadUrl)
+    );
+    const binaryType =
+      !mimeType || mimeType === 'application/octet-stream'
+        ? expectedType
+        : mimeType;
+    if (
+      !binaryType ||
+      !(
+        binaryType.startsWith('image/') ||
+        binaryType.startsWith('font/') ||
+        /^application\/(?:x-)?font-(?:sfnt|ttf|otf|truetype|opentype|woff2?)$/.test(
+          binaryType
+        ) ||
+        binaryType === 'application/vnd.ms-opentype' ||
+        binaryType === 'application/vnd.ms-fontobject'
+      )
+    ) {
+      throw new Error('Binary download failed: unsupported content type');
+    }
+
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (
+          typeof reader.result !== 'string' ||
+          !/^data:[^,]*;base64,/.test(reader.result)
+        ) {
+          reject(new Error('Binary encoding failed: invalid result'));
+          return;
+        }
+        const base64 = reader.result.slice(reader.result.indexOf(',') + 1);
+        resolve(
+          `data:${binaryType};castmill-revision=${this.fileRevision++};base64,${base64}`
+        );
+      };
+      reader.onerror = () =>
+        reject(new Error('Binary encoding failed: read error'));
+      reader.onabort = () =>
+        reject(new Error('Binary encoding failed: read aborted'));
+      reader.readAsDataURL(blob);
+    });
+
+    const item = { url: dataUrl, size: blob.size };
+    await this.updateFileMap((files) => {
+      let binaryBytes = item.size;
+      for (const [url, file] of files) {
+        if (
+          url !== sourceUrl &&
+          file.url.startsWith('data:') &&
+          file.url.includes(';base64,')
+        ) {
+          binaryBytes += file.size;
+        }
+      }
+      if (binaryBytes > MAX_BINARY_CACHE_BYTES) {
+        throw new BinaryAssetLimitError(
+          'NOT_ENOUGH_SPACE',
+          'Binary assets exceed the 8 MiB persistent cache budget',
+          binaryBytes - MAX_BINARY_CACHE_BYTES
+        );
+      }
+      files.set(sourceUrl, item);
+    });
+    return { result: { code: 'SUCCESS' }, item };
   }
 
   private async storeTextFile(

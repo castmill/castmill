@@ -44,9 +44,36 @@ Put revisions in the data URL's MIME parameters, never a `#fragment`: Crosswalk
 The fetch polyfill upgrades older fragment-versioned cache URLs while reading
 them so existing offline data remains usable.
 Keep its 30-second timeout, HTTP failure/206 rejection, and Range-request guard.
-Only media uses native files. Do not log configuration payloads or native URLs
-containing auth parameters. The native Java/downloader sources are not in this
-repository; the adapter does not fix their range arithmetic.
+Fonts (`otf`, `ttf`, `woff`, `woff2`, `eot`) and media from
+`broker.images.castmill.io` bypass the native downloader as well: the broker
+omits HEAD lengths and ignores ranges, which can also produce corrupted native
+files without a download error. Use full authenticated binary XHR GETs and
+versioned base64 data URLs, preserving the response MIME type (or inferring it
+from a recognized extension for missing/octet-stream types). Other recognized
+images use the same fallback after a native download error, except `CacheFull`,
+which retains normal native cache eviction. Successful native media downloads,
+videos, and unrecognized media URLs keep the existing native path.
+
+Binary persistence is capped at 2 MiB per asset and 8 MiB total raw binary
+bytes in `FILE_MAP` (base64 adds about one-third). Abort oversized downloads
+using progress bytes even when the total is unknown, and check the final Blob
+size too. Reject empty, partial, non-image/font, or failed responses; never
+persist session-only blob URLs. Enforce the total budget inside serialized
+map writes and report capacity pressure through the cache's eviction path.
+Configuration/code do not count toward that binary budget. Failed downloads,
+encoding, and persistence must leave the old mapping intact.
+
+Large incompatible media still needs hosting that supplies accurate HEAD
+lengths and actual `206` byte-range responses. The existing Android bridge
+cannot set downloader headers or write arbitrary binary files, so adapter size
+estimates and `Accept-Encoding` options cannot repair the native downloader.
+XHR downloads require CORS permission on external hosts. Validate binary
+image/font rendering, refresh, and offline restart on physical Crosswalk
+hardware before release.
+
+Do not log configuration payloads or native URLs containing auth parameters.
+The native Java/downloader sources are not in this repository; the adapter
+does not fix their range arithmetic.
 
 The Android, WebOS, and Electron debug menus send the literal `console`
 message to the adapter. The Android, WebOS, and Electron wrappers use file origins that
