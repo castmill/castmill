@@ -93,12 +93,12 @@ describe('Video playback integration', () => {
       'readyState',
       'get'
     ).mockImplementation(() => readyState);
-    vi.spyOn(HTMLMediaElement.prototype, 'load').mockImplementation(
-      function (this: HTMLMediaElement) {
-        readyState = 1;
-        this.dispatchEvent(new Event('loadedmetadata'));
-      }
-    );
+    vi.spyOn(HTMLMediaElement.prototype, 'load').mockImplementation(function (
+      this: HTMLMediaElement
+    ) {
+      readyState = 1;
+      this.dispatchEvent(new Event('loadedmetadata'));
+    });
     const resources = new ResourceManager(
       new Cache(new StorageDummy('test'), 'test', 10)
     );
@@ -166,12 +166,12 @@ describe('Video playback integration', () => {
       'readyState',
       'get'
     ).mockImplementation(() => readyState);
-    vi.spyOn(HTMLMediaElement.prototype, 'load').mockImplementation(
-      function (this: HTMLMediaElement) {
-        readyState = 1;
-        this.dispatchEvent(new Event('loadedmetadata'));
-      }
-    );
+    vi.spyOn(HTMLMediaElement.prototype, 'load').mockImplementation(function (
+      this: HTMLMediaElement
+    ) {
+      readyState = 1;
+      this.dispatchEvent(new Event('loadedmetadata'));
+    });
     const resources = new ResourceManager(
       new Cache(new StorageDummy('test'), 'test', 10)
     );
@@ -210,12 +210,12 @@ describe('Video playback integration', () => {
       'readyState',
       'get'
     ).mockImplementation(() => readyState);
-    vi.spyOn(HTMLMediaElement.prototype, 'load').mockImplementation(
-      function (this: HTMLMediaElement) {
-        readyState = 2;
-        this.dispatchEvent(new Event('loadeddata'));
-      }
-    );
+    vi.spyOn(HTMLMediaElement.prototype, 'load').mockImplementation(function (
+      this: HTMLMediaElement
+    ) {
+      readyState = 2;
+      this.dispatchEvent(new Event('loadeddata'));
+    });
     const resources = new ResourceManager(
       new Cache(new StorageDummy('test'), 'test', 10)
     );
@@ -300,17 +300,17 @@ describe('Video playback integration', () => {
       'readyState',
       'get'
     ).mockImplementation(() => readyState);
-    vi.spyOn(HTMLMediaElement.prototype, 'load').mockImplementation(
-      function (this: HTMLMediaElement) {
-        if (++loads === 1) {
-          this.dispatchEvent(new Event('error'));
-        } else {
-          readyState = 2;
-          this.dispatchEvent(new Event('loadedmetadata'));
-          this.dispatchEvent(new Event('canplay'));
-        }
+    vi.spyOn(HTMLMediaElement.prototype, 'load').mockImplementation(function (
+      this: HTMLMediaElement
+    ) {
+      if (++loads === 1) {
+        this.dispatchEvent(new Event('error'));
+      } else {
+        readyState = 2;
+        this.dispatchEvent(new Event('loadedmetadata'));
+        this.dispatchEvent(new Event('canplay'));
       }
-    );
+    });
     const resources = new ResourceManager(
       new Cache(new StorageDummy('test'), 'test', 10)
     );

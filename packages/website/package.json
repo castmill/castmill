@@ -33,13 +33,13 @@
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "rxjs": "^7.8.0",
-    "sharp": "^0.34.4",
+    "sharp": "^0.35.5",
     "solid-js": "^1.8.0"
   },
   "devDependencies": {
     "@docusaurus/module-type-aliases": "^3.9.0",
     "@tsconfig/docusaurus": "^1.0.5",
-    "puppeteer": "^24.22.3",
+    "puppeteer": "^25.18.1",
     "typescript": "^5.4.5"
   },
   "browserslist": {
